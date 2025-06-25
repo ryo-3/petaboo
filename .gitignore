@@ -1,38 +1,22 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# Dependencies
-node_modules
-.pnp
-.pnp.js
-
-# Local env files
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Testing
-coverage
-
-# Turbo
-.turbo
-
-# Vercel
-.vercel
-
-# Build Outputs
+# 必須（Node + Next.js）
+node_modules/
 .next/
 out/
-build
-dist
+.vercel/
 
+# 環境変数（安全のため必須）
+.env
+.env.*  # .env.local 等も含めて
 
-# Debug
+# Turborepo / Turbopack 使用時
+.turbo/
+
+# ログファイル
 npm-debug.log*
+pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Misc
+# OSファイル
 .DS_Store
-*.pem
+Thumbs.db

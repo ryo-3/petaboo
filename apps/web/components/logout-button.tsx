@@ -8,14 +8,16 @@ export default function LogoutButton() {
   const router = useRouter();
 
   return (
-    <button
-      onClick={async () => {
-        await signOut();
-        router.push("/"); // ログアウト後にルートへリダイレクト
-      }}
-      className="rounded-full border border-red-400 text-red-600 px-4 py-2 hover:bg-red-50"
-    >
-      ログアウト
-    </button>
+    <div className="rounded-full border border-red-400 mx-2 text-center cursor-pointer">
+      <button
+        onClick={async () => {
+          await signOut();
+          router.push("/"); // ログアウト後にルートへリダイレクト
+        }}
+        className=" text-red-600 hover:bg-red-50 mx-2 font-medium"
+      >
+        ログアウト
+      </button>
+    </div>
   );
 }

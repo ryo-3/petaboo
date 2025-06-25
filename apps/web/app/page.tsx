@@ -1,18 +1,14 @@
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import LogoutButton from "../components/logout-button";
+import Main from "./main";
 
 export default async function HomePage() {
   const { userId } = await auth(); // ✅ await を追加
 
   // ログイン済みならメモ画面などにリダイレクト（または表示）
   if (userId) {
-    return (
-      <main className="flex flex-col items-center justify-center h-screen bg-white gap-4">
-        <h2 className="text-2xl font-bold">ようこそ！メモ画面へようこそ 📝</h2>
-        <LogoutButton />
-      </main>
-    );
+    return <Main />;
   }
 
   // 未ログイン時はウェルカムページを表示

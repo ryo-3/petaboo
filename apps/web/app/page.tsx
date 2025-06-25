@@ -11,7 +11,7 @@ export default async function HomePage() {
     return (
       <main className="flex flex-col items-center justify-center h-screen bg-white gap-4">
         <h2 className="text-2xl font-bold">ようこそ！メモ画面へようこそ 📝</h2>
-        <LogoutButton />
+        {/* <LogoutButton /> */}
       </main>
     );
   }

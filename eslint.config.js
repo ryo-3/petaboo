@@ -1,5 +1,5 @@
-// eslint.config.cjs
-const { nextJsConfig } = require("@repo/eslint-config/next-js");
+// eslint.config.js (ESM形式)
+import { nextJsConfig } from "@repo/eslint-config/next-js";
 
 /** @type {import("eslint").Linter.Config} */
-module.exports = nextJsConfig;
+export default nextJsConfig;

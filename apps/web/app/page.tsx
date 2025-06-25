@@ -1,4 +1,3 @@
-
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import LogoutButton from "../components/logout-button";
@@ -11,7 +10,7 @@ export default async function HomePage() {
     return (
       <main className="flex flex-col items-center justify-center h-screen bg-white gap-4">
         <h2 className="text-2xl font-bold">ようこそ！メモ画面へようこそ 📝</h2>
-        {/* <LogoutButton /> */}
+        <LogoutButton />
       </main>
     );
   }
@@ -35,13 +34,4 @@ export default async function HomePage() {
         >
           ログイン
         </Link>
-        <Link
-          href="/sign-up"
-          className="rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 px-6 py-2 text-sm font-medium text-white shadow-md transition hover:shadow-lg hover:brightness-110 cursor-pointer"
-        >
-          新規作成
-        </Link>
-      </div>
-    </main>
-  );
-}
+

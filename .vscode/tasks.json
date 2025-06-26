@@ -1,0 +1,38 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start Web Dev",
+      "type": "shell",
+      "command": "pnpm dev",
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": [
+          {
+            "regexp": ".",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Starting",
+          "endsPattern": "Ready in .*ms"
+        }
+      }
+    },
+    {
+      "label": "Run After Web Ready",
+      "type": "shell",
+      "command": "pnpm exec tsx run-after-web-ready.ts"
+    },
+    {
+      "label": "Start All",
+      "dependsOn": ["Start Web Dev", "Run After Web Ready"],
+      "dependsOrder": "sequence",
+      "problemMatcher": [],
+      "group": "build"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
-import { Hono } from "hono";
 import { serve } from "@hono/node-server";
 import { swaggerUI } from "@hono/swagger-ui";
+import { Hono } from "hono";
 import openapiApp from "./src/openapi";
 import notesRoute from "./src/routes/notes/route";
 

@@ -1,11 +1,9 @@
-import LogoutButton from "@/components/logout-button";
 import MemoList from "@/components/memo-list";
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import React from "react";
 
 function Main() {
   return (

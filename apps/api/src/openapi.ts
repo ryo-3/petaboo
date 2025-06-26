@@ -1,35 +1,33 @@
-import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
-import { z } from "zod";
+// apps/api/src/openapi.ts
+import { OpenAPIHono } from "@hono/zod-openapi";
+import { readdir, stat } from "node:fs/promises";
+import { join, resolve } from "node:path";
 
 const app = new OpenAPIHono();
 
-// 例: /notes GET のみ定義（実装はroute.ts側と揃える）
-app.openapi(
-  createRoute({
-    method: "get",
-    path: "/notes",
-    responses: {
-      200: {
-        description: "List of notes",
-        content: {
-          "application/json": {
-            schema: z.array(
-              z.object({
-                id: z.number(),
-                title: z.string(),
-                content: z.string().nullable(),
-                createdAt: z.number(),
-              })
-            ),
-          },
-        },
-      },
-    },
-  }),
-  async (c) => {
-    // 実際のroute.tsと同じ実装内容は不要。ドキュメント用なのでreturnだけでOK
-    return c.json([]);
+async function loadRoutesRecursively(baseDir: string, currentDir = "") {
+  const fullDir = resolve(baseDir, currentDir);
+  const entries = await readdir(fullDir);
+
+  for (const entry of entries) {
+    const entryPath = join(fullDir, entry);
+    const stats = await stat(entryPath);
+
+    if (stats.isDirectory()) {
+      await loadRoutesRecursively(baseDir, join(currentDir, entry));
+    } else if (entry === "route.ts") {
+      const routePath = "/" + currentDir.replace(/\\/g, "/");
+      const fullModulePath = "file://" + join(fullDir, entry);
+      const module = await import(fullModulePath);
+      const routeApp = module.default;
+
+      if (routeApp) {
+        app.route(routePath, routeApp);
+      }
+    }
   }
-);
+}
+
+await loadRoutesRecursively(resolve("./src/routes"));
 
 export default app;

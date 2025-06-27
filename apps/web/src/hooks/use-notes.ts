@@ -43,3 +43,30 @@ export function useDeleteNote() {
     },
   })
 }
+
+// 削除済みメモ取得用フック
+export function useDeletedNotes() {
+  return useQuery({
+    queryKey: ['deleted-notes'],
+    queryFn: async () => {
+      const response = await notesApi.getDeletedNotes()
+      return response.json()
+    },
+  })
+}
+
+// 完全削除用フック
+export function usePermanentDeleteNote() {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const response = await notesApi.permanentDeleteNote(id)
+      return response.json()
+    },
+    onSuccess: () => {
+      // 完全削除後に削除済みメモリストを再取得
+      queryClient.invalidateQueries({ queryKey: ['deleted-notes'] })
+    },
+  })
+}

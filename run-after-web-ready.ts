@@ -23,8 +23,4 @@ const checkReady = async (): Promise<void> => {
 
   exec("pnpm --filter api dev", { cwd: "./" });
   exec("pnpm --filter api db:studio", { cwd: "./" });
-  // Windows用: 'start' コマンドでブラウザを開く
-  exec('start "" "http://localhost:3000/"');
-  exec('start "" "http://localhost:8787/docs"');
-  exec('start "" "https://local.drizzle.studio/"');
 })();

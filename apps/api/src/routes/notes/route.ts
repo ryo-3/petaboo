@@ -1,9 +1,9 @@
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
 import { drizzle } from "drizzle-orm/better-sqlite3";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import Database from "better-sqlite3";
-import { notes } from "@/db/schema/notes";
+import { notes, deletedNotes } from "@/db/schema/notes";
 
 // SQLite & drizzle セットアップ
 const sqlite = new Database("sqlite.db");
@@ -136,13 +136,110 @@ app.openapi(
   async (c) => {
     const { id } = c.req.valid("param");
     
-    const result = await db.delete(notes).where(eq(notes.id, id));
+    // まず該当メモを取得
+    const note = await db.select().from(notes).where(eq(notes.id, id)).get();
     
-    if (result.changes === 0) {
+    if (!note) {
       return c.json({ error: "Note not found" }, 404);
     }
 
+    // トランザクションで削除済みテーブルに移動してから元テーブルから削除
+    db.transaction((tx) => {
+      // 削除済みテーブルに挿入
+      tx.insert(deletedNotes).values({
+        originalId: note.id,
+        title: note.title,
+        content: note.content,
+        createdAt: note.createdAt,
+        deletedAt: Math.floor(Date.now() / 1000),
+      }).run();
+
+      // 元テーブルから削除
+      tx.delete(notes).where(eq(notes.id, id)).run();
+    });
+
     return c.json({ success: true }, 200);
+  }
+);
+
+// GET /deleted（削除済みメモ一覧）
+app.openapi(
+  createRoute({
+    method: "get",
+    path: "/deleted",
+    responses: {
+      200: {
+        description: "List of deleted notes",
+        content: {
+          "application/json": {
+            schema: z.array(z.object({
+              id: z.number(),
+              originalId: z.number(),
+              title: z.string(),
+              content: z.string().nullable(),
+              createdAt: z.number(),
+              deletedAt: z.number(),
+            })),
+          },
+        },
+      },
+    },
+  }),
+  async (c) => {
+    try {
+      const result = await db.select().from(deletedNotes).orderBy(desc(deletedNotes.deletedAt));
+      return c.json(result);
+    } catch (error) {
+      console.error('削除済みメモ取得エラー:', error);
+      return c.json({ error: 'Internal server error' }, 500);
+    }
+  }
+);
+
+// DELETE /deleted/:id（完全削除）
+app.openapi(
+  createRoute({
+    method: "delete",
+    path: "/deleted/{id}",
+    request: {
+      params: z.object({
+        id: z.string().regex(/^\d+$/).transform(Number),
+      }),
+    },
+    responses: {
+      200: {
+        description: "Note permanently deleted",
+        content: {
+          "application/json": {
+            schema: z.object({ success: z.boolean() }),
+          },
+        },
+      },
+      404: {
+        description: "Deleted note not found",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
+    },
+  }),
+  async (c) => {
+    const { id } = c.req.valid("param");
+    
+    try {
+      const result = await db.delete(deletedNotes).where(eq(deletedNotes.id, id));
+      
+      if (result.changes === 0) {
+        return c.json({ error: "Deleted note not found" }, 404);
+      }
+
+      return c.json({ success: true }, 200);
+    } catch (error) {
+      console.error('完全削除エラー:', error);
+      return c.json({ error: 'Internal server error' }, 500);
+    }
   }
 );
 

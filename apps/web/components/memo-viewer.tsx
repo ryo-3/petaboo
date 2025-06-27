@@ -1,7 +1,9 @@
 'use client'
 
+import { useState } from 'react'
 import { useDeleteNote } from '@/src/hooks/use-notes'
 import TrashIcon from '@/components/ui/trash-icon'
+import DeleteConfirmationModal from '@/components/ui/delete-confirmation-modal'
 
 interface MemoViewerProps {
   memo: {
@@ -14,6 +16,7 @@ interface MemoViewerProps {
 }
 
 function MemoViewer({ memo, onClose }: MemoViewerProps) {
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
   const deleteNote = useDeleteNote()
 
   const formatDate = (timestamp: number) => {
@@ -29,6 +32,7 @@ function MemoViewer({ memo, onClose }: MemoViewerProps) {
   const handleDelete = async () => {
     try {
       await deleteNote.mutateAsync(memo.id)
+      setShowDeleteModal(false)
       onClose() // 削除後に閉じる
     } catch (error) {
       console.error('削除に失敗しました:', error)
@@ -39,15 +43,10 @@ function MemoViewer({ memo, onClose }: MemoViewerProps) {
     <div className="flex flex-col h-full bg-white p-6">
       <div className="flex justify-end items-center mb-4">
         <button
-          onClick={handleDelete}
-          disabled={deleteNote.isPending}
-          className="fixed bottom-6 right-6 bg-gray-500 hover:bg-gray-600 disabled:bg-gray-300 text-white p-3 rounded-full shadow-lg transition-colors"
+          onClick={() => setShowDeleteModal(true)}
+          className="fixed bottom-6 right-6 bg-gray-500 hover:bg-gray-600 text-white p-3 rounded-full shadow-lg transition-colors"
         >
-          {deleteNote.isPending ? (
-            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <TrashIcon />
-          )}
+          <TrashIcon />
         </button>
       </div>
 
@@ -71,6 +70,18 @@ function MemoViewer({ memo, onClose }: MemoViewerProps) {
           )}
         </div>
       </div>
+
+      {/* 削除確認モーダル */}
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDelete}
+        title="削除の確認"
+        message={`「${memo.title}」を削除しますか？削除されたメモは削除済みメモ一覧から確認できます。`}
+        confirmText="削除"
+        isLoading={deleteNote.isPending}
+        variant="warning"
+      />
     </div>
   )
 }

@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import MemoList from "@/components/memo-list";
+import DeletedMemoList from "@/components/deleted-memo-list";
 import MemoEditor from "@/components/memo-editor";
 import MemoViewer from "@/components/memo-viewer";
+import DeletedMemoViewer from "@/components/deleted-memo-viewer";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -17,33 +19,76 @@ type Memo = {
   createdAt: number
 }
 
+type DeletedMemo = {
+  id: number
+  originalId: number
+  title: string
+  content: string | null
+  createdAt: number
+  deletedAt: number
+}
+
 function Main() {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null);
+  const [selectedDeletedMemo, setSelectedDeletedMemo] = useState<DeletedMemo | null>(null);
+  const [showDeleted, setShowDeleted] = useState(false);
 
   const handleSelectMemo = (memo: Memo) => {
     setSelectedMemo(memo);
+    setSelectedDeletedMemo(null);
+    setIsEditing(false);
+  };
+
+  const handleSelectDeletedMemo = (memo: DeletedMemo) => {
+    setSelectedDeletedMemo(memo);
+    setSelectedMemo(null);
     setIsEditing(false);
   };
 
   const handleNewMemo = () => {
     setIsEditing(true);
     setSelectedMemo(null);
+    setSelectedDeletedMemo(null);
+    setShowDeleted(false);
   };
 
   const handleClose = () => {
     setIsEditing(false);
     setSelectedMemo(null);
+    setSelectedDeletedMemo(null);
+  };
+
+  const handleShowDeleted = () => {
+    setShowDeleted(true);
+    setSelectedMemo(null);
+    setSelectedDeletedMemo(null);
+    setIsEditing(false);
+  };
+
+  const handleBackToNotes = () => {
+    setShowDeleted(false);
+    setSelectedMemo(null);
+    setSelectedDeletedMemo(null);
+    setIsEditing(false);
   };
 
   return (
     <main>
       <ResizablePanelGroup direction="horizontal" className="h-screen w-full">
         <ResizablePanel defaultSize={20} minSize={10} maxSize={40}>
-          <MemoList 
-            onNewMemo={handleNewMemo}
-            onSelectMemo={handleSelectMemo}
-          />
+          {showDeleted ? (
+            <DeletedMemoList 
+              onBackToNotes={handleBackToNotes}
+              onSelectDeletedMemo={handleSelectDeletedMemo}
+            />
+          ) : (
+            <MemoList 
+              onNewMemo={handleNewMemo}
+              onSelectMemo={handleSelectMemo}
+              onShowDeleted={handleShowDeleted}
+            />
+          )}
         </ResizablePanel>
         <ResizableHandle className="bg-gray-300 w-[2px]" />
         <ResizablePanel>
@@ -51,6 +96,8 @@ function Main() {
             <MemoEditor onClose={handleClose} />
           ) : selectedMemo ? (
             <MemoViewer memo={selectedMemo} onClose={handleClose} />
+          ) : selectedDeletedMemo ? (
+            <DeletedMemoViewer memo={selectedDeletedMemo} onClose={handleClose} />
           ) : (
             <div className="flex flex-col items-center justify-center h-screen bg-white gap-4">
               <h1 className="text-2xl font-bold">

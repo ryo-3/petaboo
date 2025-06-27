@@ -38,4 +38,25 @@ export const notesApi = {
     }
     return response
   },
+
+  // GET /notes/deleted
+  getDeletedNotes: async () => {
+    const response = await fetch(`${API_BASE_URL}/notes/deleted`)
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    return response
+  },
+
+  // DELETE /notes/deleted/:id (完全削除)
+  permanentDeleteNote: async (id: number) => {
+    const response = await fetch(`${API_BASE_URL}/notes/deleted/${id}`, {
+      method: 'DELETE',
+    })
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    return response
+  },
 }

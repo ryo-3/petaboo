@@ -64,7 +64,7 @@ app.openapi(
         description: "Created note",
         content: {
           "application/json": {
-            schema: z.object({ success: z.literal(true) }),
+            schema: z.object({ success: z.boolean() }),
           },
         },
       },
@@ -74,7 +74,7 @@ app.openapi(
           "application/json": {
             schema: z.object({
               error: z.string(),
-              issues: z.any(),
+              issues: z.any().optional(),
             }),
           },
         },
@@ -99,7 +99,7 @@ app.openapi(
       createdAt: Math.floor(Date.now() / 1000),
     });
 
-    return c.json({ success: true });
+    return c.json({ success: true }, 200);
   }
 );
 

@@ -8,13 +8,17 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint --max-warnings 0",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "generate-api-types": "openapi-typescript http://localhost:8787/openapi -o ./src/types/api.ts"
   },
   "dependencies": {
     "@clerk/localizations": "^3.17.0",
     "@clerk/nextjs": "^6.23.0",
     "@clerk/types": "^4.61.0",
     "@repo/ui": "workspace:*",
+    "@tanstack/react-query": "^5.56.2",
+    "@hono/zod-openapi": "^0.18.4",
+    "hono": "^4.6.15",
     "clsx": "^2.1.1",
     "lucide-react": "^0.523.0",
     "next": "^15.3.0",
@@ -29,6 +33,7 @@
     "@types/node": "^22.15.3",
     "@types/react": "19.1.0",
     "@types/react-dom": "19.1.1",
+    "openapi-typescript": "^7.4.4",
     "autoprefixer": "^10.4.21",
     "eslint": "^9.29.0",
     "postcss": "^8.5.6",

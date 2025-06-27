@@ -27,3 +27,19 @@ export function useCreateNote() {
     },
   })
 }
+
+// Note削除用フック
+export function useDeleteNote() {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const response = await notesApi.deleteNote(id)
+      return response.json()
+    },
+    onSuccess: () => {
+      // 削除後にnotesリストを再取得
+      queryClient.invalidateQueries({ queryKey: ['notes'] })
+    },
+  })
+}

@@ -1,6 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
-import LogoutButton from "../components/logout-button";
 import Main from "./main";
 
 export default async function HomePage() {

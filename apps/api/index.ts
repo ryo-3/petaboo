@@ -1,10 +1,18 @@
 import { serve } from "@hono/node-server";
 import { swaggerUI } from "@hono/swagger-ui";
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import openapiApp from "./src/openapi";
 import notesRoute from "./src/routes/notes/route";
 
 const app = new Hono();
+
+// CORS設定
+app.use("*", cors({
+  origin: "http://localhost:3000",
+  allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowHeaders: ["Content-Type"],
+}));
 
 console.log("サーバー起動！");
 

@@ -1,6 +1,7 @@
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
 import { drizzle } from "drizzle-orm/better-sqlite3";
+import { eq } from "drizzle-orm";
 import Database from "better-sqlite3";
 import { notes } from "@/db/schema/notes";
 
@@ -98,6 +99,48 @@ app.openapi(
       content,
       createdAt: Math.floor(Date.now() / 1000),
     });
+
+    return c.json({ success: true }, 200);
+  }
+);
+
+// DELETE /notes/:id（OpenAPI付き）
+app.openapi(
+  createRoute({
+    method: "delete",
+    path: "/{id}",
+    request: {
+      params: z.object({
+        id: z.string().regex(/^\d+$/).transform(Number),
+      }),
+    },
+    responses: {
+      200: {
+        description: "Note deleted successfully",
+        content: {
+          "application/json": {
+            schema: z.object({ success: z.boolean() }),
+          },
+        },
+      },
+      404: {
+        description: "Note not found",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
+    },
+  }),
+  async (c) => {
+    const { id } = c.req.valid("param");
+    
+    const result = await db.delete(notes).where(eq(notes.id, id));
+    
+    if (result.changes === 0) {
+      return c.json({ error: "Note not found" }, 404);
+    }
 
     return c.json({ success: true }, 200);
   }

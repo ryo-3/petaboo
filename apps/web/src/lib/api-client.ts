@@ -1,15 +1,41 @@
-import { hc } from 'hono/client'
-import type { paths } from '@/src/types/api'
+// 直接fetchを使用したAPIクライアント
+const API_BASE_URL = 'http://localhost:8787'
 
-// API型からクライアント型を生成
-export const apiClient = hc<paths>('http://localhost:8787')
-
-// Notes API クライアント
 export const notesApi = {
   // GET /notes
-  getNotes: () => apiClient.notes.$get(),
+  getNotes: async () => {
+    const response = await fetch(`${API_BASE_URL}/notes`)
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    return response
+  },
   
   // POST /notes
-  createNote: (data: { title: string; content?: string }) => 
-    apiClient.notes.$post({ json: data }),
+  createNote: async (data: { title: string; content?: string }) => {
+    const response = await fetch(`${API_BASE_URL}/notes`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    return response
+  },
+
+  // DELETE /notes/:id
+  deleteNote: async (id: number) => {
+    const response = await fetch(`${API_BASE_URL}/notes/${id}`, {
+      method: 'DELETE',
+    })
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    return response
+  },
 }

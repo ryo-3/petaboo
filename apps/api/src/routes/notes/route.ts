@@ -65,7 +65,10 @@ app.openapi(
         description: "Created note",
         content: {
           "application/json": {
-            schema: z.object({ success: z.boolean() }),
+            schema: z.object({ 
+              success: z.boolean(),
+              id: z.number()
+            }),
           },
         },
       },
@@ -94,11 +97,83 @@ app.openapi(
     }
 
     const { title, content } = parsed.data;
-    await db.insert(notes).values({
+    const result = await db.insert(notes).values({
       title,
       content,
       createdAt: Math.floor(Date.now() / 1000),
-    });
+    }).returning({ id: notes.id });
+
+    return c.json({ success: true, id: result[0].id }, 200);
+  }
+);
+
+// PUT /notes/:id（メモ更新）
+app.openapi(
+  createRoute({
+    method: "put",
+    path: "/{id}",
+    request: {
+      params: z.object({
+        id: z.string().regex(/^\d+$/).transform(Number),
+      }),
+      body: {
+        content: {
+          "application/json": {
+            schema: NoteInputSchema,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: "Updated note",
+        content: {
+          "application/json": {
+            schema: z.object({ success: z.boolean() }),
+          },
+        },
+      },
+      404: {
+        description: "Note not found",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
+      400: {
+        description: "Invalid input",
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+              issues: z.any().optional(),
+            }),
+          },
+        },
+      },
+    },
+  }),
+  async (c) => {
+    const { id } = c.req.valid("param");
+    const body = await c.req.json();
+    const parsed = NoteInputSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return c.json(
+        { error: "Invalid input", issues: parsed.error.issues },
+        400
+      );
+    }
+
+    const { title, content } = parsed.data;
+    const result = await db.update(notes)
+      .set({ title, content })
+      .where(eq(notes.id, id));
+
+    if (result.changes === 0) {
+      return c.json({ error: "Note not found" }, 404);
+    }
 
     return c.json({ success: true }, 200);
   }

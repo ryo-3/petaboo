@@ -28,6 +28,22 @@ export function useCreateNote() {
   })
 }
 
+// Note更新用フック
+export function useUpdateNote() {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: { title: string; content?: string } }) => {
+      const response = await notesApi.updateNote(id, data)
+      return response.json()
+    },
+    onSuccess: () => {
+      // 更新後にnotesリストを再取得
+      queryClient.invalidateQueries({ queryKey: ['notes'] })
+    },
+  })
+}
+
 // Note削除用フック
 export function useDeleteNote() {
   const queryClient = useQueryClient()

@@ -27,6 +27,22 @@ export const notesApi = {
     return response
   },
 
+  // PUT /notes/:id
+  updateNote: async (id: number, data: { title: string; content?: string }) => {
+    const response = await fetch(`${API_BASE_URL}/notes/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    return response
+  },
+
   // DELETE /notes/:id
   deleteNote: async (id: number) => {
     const response = await fetch(`${API_BASE_URL}/notes/${id}`, {

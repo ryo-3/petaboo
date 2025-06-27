@@ -1,20 +1,29 @@
 'use client'
 
 import TrashIcon from '@/components/ui/trash-icon'
-import { useCreateNote } from '@/src/hooks/use-notes'
+import CheckIcon from '@/components/ui/check-icon'
+import { useCreateNote, useUpdateNote } from '@/src/hooks/use-notes'
 import { useEffect, useRef, useState } from 'react'
 
 interface MemoEditorProps {
   onClose: () => void
+  memo?: {
+    id: number
+    title: string
+    content: string | null
+  } | null
 }
 
-function MemoEditor({ onClose }: MemoEditorProps) {
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
+function MemoEditor({ onClose, memo = null }: MemoEditorProps) {
+  const [title, setTitle] = useState(memo?.title || '')
+  const [content, setContent] = useState(memo?.content || '')
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [savedSuccessfully, setSavedSuccessfully] = useState(false)
+  const [currentMemoId, setCurrentMemoId] = useState<number | null>(memo?.id || null)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   const createNote = useCreateNote()
+  const updateNote = useUpdateNote()
 
   // 3秒後の自動保存処理
   const handleAutoSave = () => {
@@ -26,12 +35,28 @@ function MemoEditor({ onClose }: MemoEditorProps) {
       if (title.trim()) {
         setIsSaving(true)
         setError(null)
+        setSavedSuccessfully(false)
         try {
-          await createNote.mutateAsync({
-            title: title.trim(),
-            content: content.trim() || undefined
-          })
-          onClose() // 保存完了後に閉じる
+          if (currentMemoId) {
+            // 既存メモの更新
+            await updateNote.mutateAsync({
+              id: currentMemoId,
+              data: {
+                title: title.trim(),
+                content: content.trim() || undefined
+              }
+            })
+          } else {
+            // 新規メモの作成
+            const result = await createNote.mutateAsync({
+              title: title.trim(),
+              content: content.trim() || undefined
+            })
+            // 作成されたメモのIDを保存
+            setCurrentMemoId(result.id)
+          }
+          setSavedSuccessfully(true)
+          // 保存成功時は編集モードを継続（閉じない）
         } catch (error) {
           console.error('保存に失敗しました:', error)
           setError('保存に失敗しました。APIサーバーが起動していることを確認してください。')
@@ -45,6 +70,7 @@ function MemoEditor({ onClose }: MemoEditorProps) {
   // タイトルまたは内容が変更されたら自動保存タイマーをリセット
   useEffect(() => {
     if (title.trim() || content.trim()) {
+      setSavedSuccessfully(false) // 入力時は保存成功状態をリセット
       handleAutoSave()
     }
 
@@ -69,14 +95,19 @@ function MemoEditor({ onClose }: MemoEditorProps) {
       </div>
 
       <div className="flex flex-col gap-4 flex-1">
-        <input
-          type="text"
-          placeholder="タイトルを入力..."
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="text-lg font-medium border-b border-gray-200 outline-none pb-2 focus:border-blue-500"
-          autoFocus
-        />
+        <div className="flex items-center gap-3">
+          <input
+            type="text"
+            placeholder="タイトルを入力..."
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="flex-1 text-lg font-medium border-b border-gray-200 outline-none pb-2 focus:border-blue-500"
+            autoFocus
+          />
+          {savedSuccessfully && !isSaving && (
+            <CheckIcon className="w-5 h-5 text-green-600 flex-shrink-0" />
+          )}
+        </div>
 
         <textarea
           placeholder="内容を入力..."

@@ -3,6 +3,8 @@
 import { useNotes } from '@/src/hooks/use-notes'
 import LogoutButton from "./logout-button";
 import TrashIcon from "@/components/ui/trash-icon";
+import PlusIcon from "@/components/ui/plus-icon";
+import MemoIcon from "@/components/ui/memo-icon";
 
 interface MemoListProps {
   onNewMemo: () => void;
@@ -18,8 +20,9 @@ function MemoList({ onNewMemo, onSelectMemo, onShowDeleted }: MemoListProps) {
       <div>
         <button
           onClick={onNewMemo}
-          className="bg-emerald-200 hover:bg-emerald-300 text-center mx-2 rounded-lg mt-4 w-[calc(100%-16px)] py-2 transition-colors"
+          className="bg-emerald-200 hover:bg-emerald-300 text-center mx-2 rounded-lg mt-4 w-[calc(100%-16px)] py-2 transition-colors flex items-center justify-center gap-2"
         >
+          <PlusIcon className="w-5 h-5 text-slate-600" />
           <span className="text-slate-600 font-medium text-lg">新規追加</span>
         </button>
 
@@ -33,7 +36,10 @@ function MemoList({ onNewMemo, onSelectMemo, onShowDeleted }: MemoListProps) {
         </button>
         
         <div className="mx-2 mt-4">
-          <h3 className="text-sm font-medium text-gray-600 mb-2">メモ一覧</h3>
+          <div className="flex items-center gap-1 mb-2">
+            <MemoIcon className="w-4 h-4 text-gray-600" />
+            <h3 className="text-sm font-medium text-gray-600">メモ一覧</h3>
+          </div>
           
           {isLoading && (
             <div className="text-center py-4 text-gray-500">読み込み中...</div>

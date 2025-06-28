@@ -78,7 +78,10 @@ function MemoList({ onNewMemo, onSelectMemo, onShowFullList, onHome, onEditMemo 
                         {memo.content || '内容なし'}
                       </div>
                       <div className="text-xs text-gray-400 mt-1">
-                        {formatDateOnly(memo.createdAt)}
+                        作成: {formatDateOnly(memo.createdAt)}
+                        {memo.updatedAt && memo.updatedAt !== memo.createdAt && (
+                          <span className="ml-2">編集: {formatDateOnly(memo.updatedAt)}</span>
+                        )}
                       </div>
                     </button>
                     <button

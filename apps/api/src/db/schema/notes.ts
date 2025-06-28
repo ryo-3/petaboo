@@ -6,6 +6,7 @@ export const notes = sqliteTable("notes", {
   title: text("title").notNull(),
   content: text("content"),
   createdAt: integer("created_at").notNull(),
+  updatedAt: integer("updated_at"),
 });
 
 export const deletedNotes = sqliteTable("deleted_notes", {
@@ -15,5 +16,6 @@ export const deletedNotes = sqliteTable("deleted_notes", {
   title: text("title").notNull(),
   content: text("content"),
   createdAt: integer("created_at").notNull(),
+  updatedAt: integer("updated_at"),
   deletedAt: integer("deleted_at").notNull(), // 削除日時
 });

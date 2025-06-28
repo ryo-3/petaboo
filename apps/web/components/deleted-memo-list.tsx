@@ -61,6 +61,12 @@ function DeletedMemoList({ onBackToNotes, onSelectDeletedMemo }: DeletedMemoList
                     <div className="text-xs text-gray-500 truncate mt-1">
                       {memo.content || '内容なし'}
                     </div>
+                    <div className="text-xs text-gray-400 mt-1">
+                      作成: {formatDateOnly(memo.createdAt)}
+                      {memo.updatedAt && memo.updatedAt !== memo.createdAt && (
+                        <span className="ml-2">編集: {formatDateOnly(memo.updatedAt)}</span>
+                      )}
+                    </div>
                     <div className="text-xs text-red-400 mt-1">
                       削除: {formatDateOnly(memo.deletedAt)}
                     </div>

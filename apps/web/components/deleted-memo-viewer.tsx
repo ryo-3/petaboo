@@ -43,6 +43,9 @@ function DeletedMemoViewer({ memo, onClose }: DeletedMemoViewerProps) {
           <h1 className="text-2xl font-bold text-gray-800">{memo.title}</h1>
           <div className="text-sm text-gray-500 mt-2 space-y-1">
             <p>作成日時: {formatDate(memo.createdAt)}</p>
+            {memo.updatedAt && memo.updatedAt !== memo.createdAt && (
+              <p>編集日時: {formatDate(memo.updatedAt)}</p>
+            )}
             <p className="text-red-500">削除日時: {formatDate(memo.deletedAt)}</p>
           </div>
         </div>

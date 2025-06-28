@@ -18,10 +18,10 @@ app.use('*', clerkMiddleware());
 // 共通スキーマ定義
 const NoteSchema = z.object({
   id: z.number(),
-  userId: z.string(),
   title: z.string(),
   content: z.string().nullable(),
   createdAt: z.number(),
+  updatedAt: z.number().nullable(),
 });
 
 const NoteInputSchema = z.object({
@@ -43,16 +43,32 @@ app.openapi(
           },
         },
       },
+      401: {
+        description: "Unauthorized",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
     },
   }),
+  // @ts-ignore OpenAPI type complexity
   async (c) => {
     const auth = getAuth(c);
     if (!auth?.userId) {
       return c.json({ error: "Unauthorized" }, 401);
     }
     
-    const result = await db.select().from(notes).where(eq(notes.userId, auth.userId));
-    return c.json(result);
+    const result = await db.select({
+      id: notes.id,
+      title: notes.title,
+      content: notes.content,
+      createdAt: notes.createdAt,
+      updatedAt: notes.updatedAt,
+    }).from(notes).where(eq(notes.userId, auth.userId));
+    
+    return c.json(result, 200);
   }
 );
 
@@ -90,6 +106,14 @@ app.openapi(
               error: z.string(),
               issues: z.any().optional(),
             }),
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
           },
         },
       },
@@ -149,14 +173,6 @@ app.openapi(
           },
         },
       },
-      404: {
-        description: "Note not found",
-        content: {
-          "application/json": {
-            schema: z.object({ error: z.string() }),
-          },
-        },
-      },
       400: {
         description: "Invalid input",
         content: {
@@ -165,6 +181,22 @@ app.openapi(
               error: z.string(),
               issues: z.any().optional(),
             }),
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
+      404: {
+        description: "Note not found",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
           },
         },
       },
@@ -189,7 +221,11 @@ app.openapi(
 
     const { title, content } = parsed.data;
     const result = await db.update(notes)
-      .set({ title, content })
+      .set({ 
+        title, 
+        content,
+        updatedAt: Math.floor(Date.now() / 1000)
+      })
       .where(and(eq(notes.id, id), eq(notes.userId, auth.userId)));
 
     if (result.changes === 0) {
@@ -216,6 +252,14 @@ app.openapi(
         content: {
           "application/json": {
             schema: z.object({ success: z.boolean() }),
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
           },
         },
       },
@@ -253,6 +297,7 @@ app.openapi(
         title: note.title,
         content: note.content,
         createdAt: note.createdAt,
+        updatedAt: note.updatedAt,
         deletedAt: Math.floor(Date.now() / 1000),
       }).run();
 
@@ -280,13 +325,31 @@ app.openapi(
               title: z.string(),
               content: z.string().nullable(),
               createdAt: z.number(),
+              updatedAt: z.number().nullable(),
               deletedAt: z.number(),
             })),
           },
         },
       },
+      401: {
+        description: "Unauthorized",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
+      500: {
+        description: "Internal server error",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
     },
   }),
+  // @ts-ignore OpenAPI type complexity
   async (c) => {
     const auth = getAuth(c);
     if (!auth?.userId) {
@@ -294,7 +357,15 @@ app.openapi(
     }
 
     try {
-      const result = await db.select().from(deletedNotes)
+      const result = await db.select({
+        id: deletedNotes.id,
+        originalId: deletedNotes.originalId,
+        title: deletedNotes.title,
+        content: deletedNotes.content,
+        createdAt: deletedNotes.createdAt,
+        updatedAt: deletedNotes.updatedAt,
+        deletedAt: deletedNotes.deletedAt,
+      }).from(deletedNotes)
         .where(eq(deletedNotes.userId, auth.userId))
         .orderBy(desc(deletedNotes.deletedAt));
       return c.json(result);
@@ -324,8 +395,24 @@ app.openapi(
           },
         },
       },
+      401: {
+        description: "Unauthorized",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
       404: {
         description: "Deleted note not found",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
+      500: {
+        description: "Internal server error",
         content: {
           "application/json": {
             schema: z.object({ error: z.string() }),

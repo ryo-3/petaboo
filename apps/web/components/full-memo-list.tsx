@@ -102,7 +102,10 @@ function FullMemoList({ onSelectMemo, onSelectDeletedMemo, onClose }: FullMemoLi
                         </div>
                       </div>
                       <div className="text-xs text-gray-400 mt-2 pt-2 border-t border-gray-100">
-                        {formatDateOnly(memo.createdAt)}
+                        作成: {formatDateOnly(memo.createdAt)}
+                        {memo.updatedAt && memo.updatedAt !== memo.createdAt && (
+                          <span className="block">編集: {formatDateOnly(memo.updatedAt)}</span>
+                        )}
                       </div>
                     </div>
                   </button>
@@ -141,7 +144,11 @@ function FullMemoList({ onSelectMemo, onSelectDeletedMemo, onClose }: FullMemoLi
                         </div>
                       </div>
                       <div className="text-xs text-red-400 mt-2 pt-2 border-t border-red-200">
-                        削除: {formatDateOnly(memo.deletedAt)}
+                        作成: {formatDateOnly(memo.createdAt)}
+                        {memo.updatedAt && memo.updatedAt !== memo.createdAt && (
+                          <span className="block">編集: {formatDateOnly(memo.updatedAt)}</span>
+                        )}
+                        <span className="block">削除: {formatDateOnly(memo.deletedAt)}</span>
                       </div>
                     </div>
                   </button>

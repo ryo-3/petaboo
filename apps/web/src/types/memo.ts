@@ -3,6 +3,7 @@ export interface Memo {
   title: string
   content: string | null
   createdAt: number
+  updatedAt?: number
 }
 
 export interface DeletedMemo {
@@ -11,6 +12,7 @@ export interface DeletedMemo {
   title: string
   content: string | null
   createdAt: number
+  updatedAt?: number
   deletedAt: number
 }
 

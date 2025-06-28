@@ -85,8 +85,8 @@ function Main() {
 
   return (
     <main>
-      <ResizablePanelGroup direction="horizontal" className="h-screen w-full">
-        <ResizablePanel defaultSize={20} minSize={10} maxSize={40}>
+      <div className="flex h-screen w-full">
+        <div className="w-64 flex-shrink-0 border-r-2 border-gray-400">
           {showDeleted ? (
             <DeletedMemoList 
               onBackToNotes={handleBackToNotes}
@@ -102,9 +102,8 @@ function Main() {
               selectedMemoId={selectedMemo?.id}
             />
           )}
-        </ResizablePanel>
-        <ResizableHandle className="bg-gray-300 w-[2px]" />
-        <ResizablePanel>
+        </div>
+        <div className="flex-1">
           {showFullList ? (
             <FullMemoList onSelectMemo={handleSelectMemo} onSelectDeletedMemo={handleSelectDeletedMemo} onClose={handleClose} />
           ) : isEditing ? (
@@ -116,8 +115,8 @@ function Main() {
           ) : (
             <WelcomeScreen />
           )}
-        </ResizablePanel>
-      </ResizablePanelGroup>
+        </div>
+      </div>
     </main>
   );
 }

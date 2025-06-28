@@ -49,8 +49,9 @@ function SidebarMemoList({ onSelectMemo, onEditMemo, onDeleteMemo, selectedMemoI
   }
 
   return (
-    <ul className="space-y-1">
-      {notes.map((memo: Memo) => (
+    <div className="h-full overflow-y-auto overflow-x-hidden">
+      <ul className="space-y-1 pb-8">
+        {notes.map((memo: Memo) => (
         <li key={memo.id}>
           <div className={`relative flex p-2 rounded transition-colors group ${
             selectedMemoId === memo.id 
@@ -97,8 +98,9 @@ function SidebarMemoList({ onSelectMemo, onEditMemo, onDeleteMemo, selectedMemoI
             </div>
           </div>
         </li>
-      ))}
-    </ul>
+        ))}
+      </ul>
+    </div>
   )
 }
 

@@ -36,10 +36,10 @@ function Sidebar({ onNewMemo, onSelectMemo, onShowFullList, onHome, onEditMemo, 
   ]
 
   return (
-    <div className="flex flex-col justify-between h-screen">
-      <div>
+    <div className="flex flex-col h-screen">
+      <div className="flex-shrink-0">
         {/* ホームボタンとモード切り替えスイッチ */}
-        <div className="flex justify-between items-center mx-2 mt-2">
+        <div className="flex justify-between items-center ml-2 mr-2 mt-2">
           <HomeButton onClick={onHome} />
           <SwitchTabs 
             tabs={modeTabs}
@@ -48,7 +48,7 @@ function Sidebar({ onNewMemo, onSelectMemo, onShowFullList, onHome, onEditMemo, 
           />
         </div>
         
-        <div className="mx-2 mt-2 flex gap-2">
+        <div className="ml-2 mr-2 mt-2 flex gap-2">
           <button
             onClick={onShowFullList}
             className="flex-1 bg-gray-100 hover:bg-gray-200 text-center rounded-lg py-2 transition-colors flex items-center justify-center gap-1"
@@ -69,8 +69,9 @@ function Sidebar({ onNewMemo, onSelectMemo, onShowFullList, onHome, onEditMemo, 
           </button>
         </div>
 
+      </div>
         
-        <div className="mx-2 mt-4">
+      <div className="flex-1 overflow-hidden ml-2 mr-0 mt-4 mb-2">
           {currentMode === 'memo' ? (
             <SidebarMemoList 
               onSelectMemo={onSelectMemo}
@@ -82,10 +83,6 @@ function Sidebar({ onNewMemo, onSelectMemo, onShowFullList, onHome, onEditMemo, 
               タスク機能は準備中です
             </div>
           )}
-        </div>
-      </div>
-      <div className="flex justify-start px-2 pb-4">
-        <LogoutButton />
       </div>
     </div>
   );

@@ -3,3 +3,16 @@
 @tailwind utilities;
 
 @layer theme, base, clerk, components, utilities;
+
+/* スクロールバー全体 */
+::-webkit-scrollbar {
+  width: 10px; /* 太さ */
+  border-radius: 8px;
+}
+
+/* スクロールつまみ */
+::-webkit-scrollbar-thumb {
+  background: #8f8f8f; /* お好きな色 */
+  border-radius: 8px;
+  border: 2px solid #e5e7eb; /* 外枠（オプション） */
+}

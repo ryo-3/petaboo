@@ -20,3 +20,9 @@ yarn-error.log*
 # OSファイル
 .DS_Store
 Thumbs.db
+
+# データベース
+*.db
+*.sqlite
+*.sqlite3
+apps/api/sqlite.db

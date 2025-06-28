@@ -20,7 +20,7 @@ function MemoCard({ memo, isChecked, onToggleCheck, onSelect, variant = 'normal'
           e.stopPropagation()
           onToggleCheck()
         }}
-        className={`absolute top-1.5 right-1.5 size-4 rounded-full border-2 flex items-center justify-center z-10 transition-colors ${
+        className={`absolute top-1.5 right-1.5 size-5 rounded-full border-2 flex items-center justify-center z-10 transition-colors ${
           isChecked
             ? isDeleted 
               ? 'bg-white border-gray-400'

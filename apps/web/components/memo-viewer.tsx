@@ -3,9 +3,7 @@
 import TrashIcon from '@/components/icons/trash-icon'
 import MemoDateInfo from '@/components/memo-date-info'
 import EditButton from '@/components/ui/edit-button'
-import DeleteConfirmationModal from '@/components/ui/delete-confirmation-modal'
 import { useDeleteNote } from '@/src/hooks/use-notes'
-import { useState } from 'react'
 import type { Memo } from '@/src/types/memo'
 
 interface MemoViewerProps {
@@ -17,14 +15,11 @@ interface MemoViewerProps {
 }
 
 function MemoViewer({ memo, onClose, onEdit, onExitEdit, isEditMode = false }: MemoViewerProps) {
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
   const deleteNote = useDeleteNote()
-
 
   const handleDelete = async () => {
     try {
       await deleteNote.mutateAsync(memo.id)
-      setShowDeleteModal(false)
       onClose() // 削除後に閉じる
     } catch (error) {
       console.error('削除に失敗しました:', error)
@@ -42,7 +37,7 @@ function MemoViewer({ memo, onClose, onEdit, onExitEdit, isEditMode = false }: M
           />
         )}
         <button
-          onClick={() => setShowDeleteModal(true)}
+          onClick={handleDelete}
           className="fixed bottom-6 right-6 bg-gray-500 hover:bg-gray-600 text-white p-3 rounded-full shadow-lg transition-colors"
         >
           <TrashIcon />
@@ -69,17 +64,6 @@ function MemoViewer({ memo, onClose, onEdit, onExitEdit, isEditMode = false }: M
         </div>
       </div>
 
-      {/* 削除確認モーダル */}
-      <DeleteConfirmationModal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onConfirm={handleDelete}
-        title="削除の確認"
-        message={`「${memo.title}」を削除しますか？削除されたメモは削除済みメモ一覧から確認できます。`}
-        confirmText="削除"
-        isLoading={deleteNote.isPending}
-        variant="warning"
-      />
     </div>
   )
 }

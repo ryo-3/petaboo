@@ -3,6 +3,7 @@
 import TrashIcon from '@/components/icons/trash-icon'
 import RestoreIcon from '@/components/icons/restore-icon'
 import MemoDateInfo from '@/components/memo-date-info'
+import Tooltip from '@/components/ui/tooltip'
 import DeleteConfirmationModal from '@/components/ui/delete-confirmation-modal'
 import { usePermanentDeleteNote, useRestoreNote } from '@/src/hooks/use-notes'
 import { useState } from 'react'
@@ -42,13 +43,14 @@ function DeletedMemoViewer({ memo, onClose }: DeletedMemoViewerProps) {
   return (
     <div className="flex flex-col h-full bg-white p-6">
       <div className="flex justify-start items-center mb-4">
-        <button
-          onClick={handleRestore}
-          className="p-2 rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-800 transition-colors"
-          title="メモを復元"
-        >
-          <RestoreIcon className="w-4 h-4" />
-        </button>
+        <Tooltip text="メモを復元" position="bottom">
+          <button
+            onClick={handleRestore}
+            className="p-2 rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-800 transition-colors"
+          >
+            <RestoreIcon className="w-4 h-4" />
+          </button>
+        </Tooltip>
         <div className="flex-1" />
         <button
           onClick={() => setShowDeleteModal(true)}

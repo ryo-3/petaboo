@@ -1,18 +1,30 @@
 'use client'
 
 import PenIcon from "@/components/icons/pen-icon";
-import { useNotes } from '@/src/hooks/use-notes';
+import TrashIcon from "@/components/icons/trash-icon";
+import Tooltip from '@/components/ui/tooltip';
+import { useNotes, useDeleteNote } from '@/src/hooks/use-notes';
 import type { Memo } from "@/src/types/memo";
 import { formatDateOnly } from "@/src/utils/formatDate";
 
 interface SidebarMemoListProps {
   onSelectMemo: (memo: Memo) => void;
   onEditMemo: (memo: Memo) => void;
+  onDeleteMemo?: (memo: Memo) => void;
   selectedMemoId?: number;
 }
 
-function SidebarMemoList({ onSelectMemo, onEditMemo, selectedMemoId }: SidebarMemoListProps) {
+function SidebarMemoList({ onSelectMemo, onEditMemo, onDeleteMemo, selectedMemoId }: SidebarMemoListProps) {
   const { data: notes, isLoading, error } = useNotes()
+  const deleteNote = useDeleteNote()
+
+  const handleDelete = async (memo: Memo) => {
+    try {
+      await deleteNote.mutateAsync(memo.id)
+    } catch (error) {
+      console.error('削除に失敗しました:', error)
+    }
+  }
 
   if (isLoading) {
     return (
@@ -40,7 +52,7 @@ function SidebarMemoList({ onSelectMemo, onEditMemo, selectedMemoId }: SidebarMe
     <ul className="space-y-1">
       {notes.map((memo: Memo) => (
         <li key={memo.id}>
-          <div className={`flex items-start p-2 rounded transition-colors group ${
+          <div className={`relative flex p-2 rounded transition-colors group ${
             selectedMemoId === memo.id 
               ? 'bg-Green/10 hover:bg-Green/20' 
               : 'hover:bg-gray-100'
@@ -59,16 +71,29 @@ function SidebarMemoList({ onSelectMemo, onEditMemo, selectedMemoId }: SidebarMe
                 }
               </div>
             </div>
-            <div className="flex-shrink-0 ml-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEditMemo(memo);
-                }}
-                className="flex items-center justify-center text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity rounded"
-              >
-                <PenIcon className="w-3 h-3" />
-              </button>
+            <div className="flex-shrink-0 ml-2 flex flex-col justify-between self-stretch opacity-0 group-hover:opacity-100 transition-opacity">
+              <Tooltip text="編集" position="bottom">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEditMemo(memo);
+                  }}
+                  className="flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors rounded"
+                >
+                  <PenIcon className="w-3 h-3" />
+                </button>
+              </Tooltip>
+              <Tooltip text="削除" position="bottom">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(memo);
+                  }}
+                  className="flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors rounded self-end"
+                >
+                  <TrashIcon className="w-3 h-3" />
+                </button>
+              </Tooltip>
             </div>
           </div>
         </li>

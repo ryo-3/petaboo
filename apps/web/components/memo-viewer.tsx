@@ -5,6 +5,7 @@ import DeleteConfirmationModal from '@/components/ui/delete-confirmation-modal'
 import { useDeleteNote } from '@/src/hooks/use-notes'
 import { useState } from 'react'
 import type { Memo } from '@/src/types/memo'
+import { formatDate } from '@/src/utils/formatDate'
 
 interface MemoViewerProps {
   memo: Memo
@@ -15,15 +16,6 @@ function MemoViewer({ memo, onClose }: MemoViewerProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const deleteNote = useDeleteNote()
 
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp * 1000).toLocaleString('ja-JP', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
 
   const handleDelete = async () => {
     try {

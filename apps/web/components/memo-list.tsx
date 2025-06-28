@@ -6,6 +6,7 @@ import { useNotes } from '@/src/hooks/use-notes';
 import LogoutButton from "./button/logout-button";
 import HomeButton from "./button/home-button";
 import type { Memo } from "@/src/types/memo";
+import { formatDateOnly } from "@/src/utils/formatDate";
 
 interface MemoListProps {
   onNewMemo: () => void;
@@ -77,7 +78,7 @@ function MemoList({ onNewMemo, onSelectMemo, onShowFullList, onHome, onEditMemo 
                         {memo.content || '内容なし'}
                       </div>
                       <div className="text-xs text-gray-400 mt-1">
-                        {new Date(memo.createdAt * 1000).toLocaleDateString('ja-JP')}
+                        {formatDateOnly(memo.createdAt)}
                       </div>
                     </button>
                     <button

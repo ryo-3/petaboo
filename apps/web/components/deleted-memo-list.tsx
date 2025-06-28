@@ -4,6 +4,7 @@ import TrashIcon from "@/components/icons/trash-icon";
 import { useDeletedNotes } from '@/src/hooks/use-notes';
 import LogoutButton from "./button/logout-button";
 import type { DeletedMemo } from "@/src/types/memo";
+import { formatDateOnly } from "@/src/utils/formatDate";
 
 interface DeletedMemoListProps {
   onBackToNotes: () => void;
@@ -61,7 +62,7 @@ function DeletedMemoList({ onBackToNotes, onSelectDeletedMemo }: DeletedMemoList
                       {memo.content || '内容なし'}
                     </div>
                     <div className="text-xs text-red-400 mt-1">
-                      削除: {new Date(memo.deletedAt * 1000).toLocaleDateString('ja-JP')}
+                      削除: {formatDateOnly(memo.deletedAt)}
                     </div>
                   </button>
                 </li>

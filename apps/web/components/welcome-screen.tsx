@@ -5,10 +5,6 @@ import SwitchTabs from '@/components/ui/switch-tabs'
 import MemoIcon from '@/components/icons/memo-icon'
 import TaskIcon from '@/components/icons/task-icon'
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-interface WelcomeScreenProps {
-}
-
 function WelcomeScreen() {
   const [activeMode, setActiveMode] = useState<'memo' | 'task'>('memo')
 

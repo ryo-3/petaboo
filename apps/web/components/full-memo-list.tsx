@@ -6,6 +6,7 @@ import SwitchTabs from '@/components/ui/switch-tabs'
 import { useDeletedNotes, useNotes } from '@/src/hooks/use-notes'
 import { useState } from 'react'
 import type { Memo, DeletedMemo } from '@/src/types/memo'
+import { formatDateOnly } from '@/src/utils/formatDate'
 
 interface FullMemoListProps {
   onSelectMemo: (memo: Memo) => void;
@@ -101,11 +102,7 @@ function FullMemoList({ onSelectMemo, onSelectDeletedMemo, onClose }: FullMemoLi
                         </div>
                       </div>
                       <div className="text-xs text-gray-400 mt-2 pt-2 border-t border-gray-100">
-                        {new Date(memo.createdAt * 1000).toLocaleDateString('ja-JP', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric'
-                        })}
+                        {formatDateOnly(memo.createdAt)}
                       </div>
                     </div>
                   </button>
@@ -144,11 +141,7 @@ function FullMemoList({ onSelectMemo, onSelectDeletedMemo, onClose }: FullMemoLi
                         </div>
                       </div>
                       <div className="text-xs text-red-400 mt-2 pt-2 border-t border-red-200">
-                        削除: {new Date(memo.deletedAt * 1000).toLocaleDateString('ja-JP', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric'
-                        })}
+                        削除: {formatDateOnly(memo.deletedAt)}
                       </div>
                     </div>
                   </button>

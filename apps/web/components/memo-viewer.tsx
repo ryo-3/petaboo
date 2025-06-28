@@ -1,8 +1,8 @@
 'use client'
 
 import TrashIcon from '@/components/icons/trash-icon'
-import MemoIcon from '@/components/icons/memo-icon'
 import MemoDateInfo from '@/components/memo-date-info'
+import EditButton from '@/components/ui/edit-button'
 import DeleteConfirmationModal from '@/components/ui/delete-confirmation-modal'
 import { useDeleteNote } from '@/src/hooks/use-notes'
 import { useState } from 'react'
@@ -12,9 +12,11 @@ interface MemoViewerProps {
   memo: Memo
   onClose: () => void
   onEdit?: (memo: Memo) => void
+  onExitEdit?: () => void
+  isEditMode?: boolean
 }
 
-function MemoViewer({ memo, onClose, onEdit }: MemoViewerProps) {
+function MemoViewer({ memo, onClose, onEdit, onExitEdit, isEditMode = false }: MemoViewerProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const deleteNote = useDeleteNote()
 
@@ -33,12 +35,11 @@ function MemoViewer({ memo, onClose, onEdit }: MemoViewerProps) {
     <div className="flex flex-col h-full bg-white p-6">
       <div className="flex justify-start items-center mb-4">
         {onEdit && (
-          <button
-            onClick={() => onEdit(memo)}
-            className="text-gray-600 hover:text-gray-800 p-1 h-6 transition-colors"
-          >
-            <MemoIcon className="w-4 h-4" />
-          </button>
+          <EditButton
+            isEditing={isEditMode}
+            onEdit={() => onEdit(memo)}
+            onExitEdit={onExitEdit}
+          />
         )}
         <button
           onClick={() => setShowDeleteModal(true)}

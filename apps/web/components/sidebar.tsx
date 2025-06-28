@@ -16,9 +16,10 @@ interface SidebarProps {
   onShowFullList: () => void;
   onHome: () => void;
   onEditMemo: (memo: Memo) => void;
+  selectedMemoId?: number;
 }
 
-function Sidebar({ onNewMemo, onSelectMemo, onShowFullList, onHome, onEditMemo }: SidebarProps) {
+function Sidebar({ onNewMemo, onSelectMemo, onShowFullList, onHome, onEditMemo, selectedMemoId }: SidebarProps) {
   const [currentMode, setCurrentMode] = useState<'memo' | 'task'>('memo')
 
   const modeTabs = [
@@ -61,10 +62,10 @@ function Sidebar({ onNewMemo, onSelectMemo, onShowFullList, onHome, onEditMemo }
           </button>
           <button
             onClick={onNewMemo}
-            className="flex-1 bg-emerald-200 hover:bg-emerald-300 text-center rounded-lg py-2 transition-colors flex items-center justify-center gap-1"
+            className="flex-1 bg-Green hover:bg-Green/85 text-center rounded-lg py-2 transition-colors flex items-center justify-center gap-1"
           >
-            <PlusIcon className="w-4 h-4 text-slate-600" />
-            <span className="text-slate-600 font-medium text-sm">新規{currentMode === 'memo' ? 'メモ' : 'タスク'}</span>
+            <PlusIcon className="w-4 h-4 text-gray-100" />
+            <span className="font-medium text-sm text-gray-100">新規{currentMode === 'memo' ? 'メモ' : 'タスク'}</span>
           </button>
         </div>
 
@@ -74,6 +75,7 @@ function Sidebar({ onNewMemo, onSelectMemo, onShowFullList, onHome, onEditMemo }
             <SidebarMemoList 
               onSelectMemo={onSelectMemo}
               onEditMemo={onEditMemo}
+              selectedMemoId={selectedMemoId}
             />
           ) : (
             <div className="text-center py-4 text-gray-400 text-sm">

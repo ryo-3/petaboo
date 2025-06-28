@@ -6,7 +6,11 @@ const config = {
     "../../packages/ui/**/*.{ts,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        Green: "#329277",
+      },
+    },
   },
   plugins: [],
 };

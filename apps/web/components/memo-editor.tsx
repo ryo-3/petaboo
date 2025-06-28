@@ -5,7 +5,7 @@ import type { Memo } from '@/src/types/memo'
 
 interface MemoEditorProps {
   onClose: () => void
-  memo: Memo // 編集専用なので必須
+  memo?: Memo | null // 新規メモの場合はnull
 }
 
 function MemoEditor({ onClose, memo }: MemoEditorProps) {

@@ -2,18 +2,21 @@
 
 import CheckIcon from '@/components/icons/check-icon'
 import TrashIcon from '@/components/icons/trash-icon'
-import MemoIcon from '@/components/icons/memo-icon'
 import MemoDateInfo from '@/components/memo-date-info'
+import EditButton from '@/components/ui/edit-button'
 import { useMemoForm } from '@/src/hooks/use-memo-form'
+import { useState } from 'react'
 import type { Memo } from '@/src/types/memo'
 
 interface MemoFormProps {
   onClose: () => void
   memo?: Memo | null
   onSave?: (id: number) => void
+  onExitEdit?: () => void
 }
 
-function MemoForm({ onClose, memo = null, onSave }: MemoFormProps) {
+function MemoForm({ onClose, memo = null, onSave, onExitEdit }: MemoFormProps) {
+  const [isEditing, setIsEditing] = useState(true)
   const {
     title,
     setTitle,
@@ -29,9 +32,15 @@ function MemoForm({ onClose, memo = null, onSave }: MemoFormProps) {
   return (
     <div className="flex flex-col h-full bg-white p-6">
       <div className="flex justify-start items-center mb-4">
-        <div className="flex items-center text-gray-600 p-1 h-6">
-          <MemoIcon className="w-4 h-4" />
-        </div>
+        <EditButton 
+          isEditing={isEditing} 
+          onEdit={() => setIsEditing(true)}
+          onExitEdit={() => {
+            setIsEditing(false)
+            if (onExitEdit) onExitEdit()
+          }} 
+        />
+        
         <div className="flex items-center gap-3 ml-auto">
           {error && (
             <span className="text-sm text-red-500">エラー</span>
@@ -48,7 +57,11 @@ function MemoForm({ onClose, memo = null, onSave }: MemoFormProps) {
             placeholder="タイトルを入力..."
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="flex-1 text-lg font-medium border-b border-gray-200 outline-none pb-2 focus:border-blue-500"
+            className={`flex-1 text-lg font-medium border-b outline-none pb-2 ${
+              isEditing 
+                ? 'border-Green focus:border-Green' 
+                : 'border-gray-200 focus:border-blue-500'
+            }`}
             autoFocus
           />
           {savedSuccessfully && !isSaving && (

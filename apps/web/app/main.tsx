@@ -98,6 +98,7 @@ function Main() {
               onShowFullList={handleShowFullList}
               onHome={handleHome}
               onEditMemo={handleEditMemo}
+              selectedMemoId={selectedMemo?.id}
             />
           )}
         </ResizablePanel>

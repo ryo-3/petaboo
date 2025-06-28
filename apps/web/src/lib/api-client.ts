@@ -3,8 +3,14 @@ const API_BASE_URL = 'http://localhost:8787'
 
 export const notesApi = {
   // GET /notes
-  getNotes: async () => {
-    const response = await fetch(`${API_BASE_URL}/notes`)
+  getNotes: async (token?: string) => {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    if (token) {
+      headers.Authorization = `Bearer ${token}`
+    }
+    const response = await fetch(`${API_BASE_URL}/notes`, { headers })
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
@@ -12,12 +18,16 @@ export const notesApi = {
   },
   
   // POST /notes
-  createNote: async (data: { title: string; content?: string }) => {
+  createNote: async (data: { title: string; content?: string }, token?: string) => {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    if (token) {
+      headers.Authorization = `Bearer ${token}`
+    }
     const response = await fetch(`${API_BASE_URL}/notes`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(data),
     })
     
@@ -28,12 +38,16 @@ export const notesApi = {
   },
 
   // PUT /notes/:id
-  updateNote: async (id: number, data: { title: string; content?: string }) => {
+  updateNote: async (id: number, data: { title: string; content?: string }, token?: string) => {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    if (token) {
+      headers.Authorization = `Bearer ${token}`
+    }
     const response = await fetch(`${API_BASE_URL}/notes/${id}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(data),
     })
     
@@ -44,9 +58,16 @@ export const notesApi = {
   },
 
   // DELETE /notes/:id
-  deleteNote: async (id: number) => {
+  deleteNote: async (id: number, token?: string) => {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    if (token) {
+      headers.Authorization = `Bearer ${token}`
+    }
     const response = await fetch(`${API_BASE_URL}/notes/${id}`, {
       method: 'DELETE',
+      headers,
     })
     
     if (!response.ok) {
@@ -56,8 +77,14 @@ export const notesApi = {
   },
 
   // GET /notes/deleted
-  getDeletedNotes: async () => {
-    const response = await fetch(`${API_BASE_URL}/notes/deleted`)
+  getDeletedNotes: async (token?: string) => {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    if (token) {
+      headers.Authorization = `Bearer ${token}`
+    }
+    const response = await fetch(`${API_BASE_URL}/notes/deleted`, { headers })
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
@@ -65,9 +92,16 @@ export const notesApi = {
   },
 
   // DELETE /notes/deleted/:id (完全削除)
-  permanentDeleteNote: async (id: number) => {
+  permanentDeleteNote: async (id: number, token?: string) => {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    if (token) {
+      headers.Authorization = `Bearer ${token}`
+    }
     const response = await fetch(`${API_BASE_URL}/notes/deleted/${id}`, {
       method: 'DELETE',
+      headers,
     })
     
     if (!response.ok) {

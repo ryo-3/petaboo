@@ -1,8 +1,9 @@
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
 import { drizzle } from "drizzle-orm/better-sqlite3";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import Database from "better-sqlite3";
+import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { notes, deletedNotes } from "@/db/schema/notes";
 
 // SQLite & drizzle セットアップ
@@ -11,9 +12,13 @@ const db = drizzle(sqlite);
 
 const app = new OpenAPIHono();
 
+// Clerk認証ミドルウェアを追加
+app.use('*', clerkMiddleware());
+
 // 共通スキーマ定義
 const NoteSchema = z.object({
   id: z.number(),
+  userId: z.string(),
   title: z.string(),
   content: z.string().nullable(),
   createdAt: z.number(),
@@ -41,7 +46,12 @@ app.openapi(
     },
   }),
   async (c) => {
-    const result = await db.select().from(notes);
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+    
+    const result = await db.select().from(notes).where(eq(notes.userId, auth.userId));
     return c.json(result);
   }
 );
@@ -86,6 +96,11 @@ app.openapi(
     },
   }),
   async (c) => {
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
     const body = await c.req.json();
     const parsed = NoteInputSchema.safeParse(body);
 
@@ -98,6 +113,7 @@ app.openapi(
 
     const { title, content } = parsed.data;
     const result = await db.insert(notes).values({
+      userId: auth.userId,
       title,
       content,
       createdAt: Math.floor(Date.now() / 1000),
@@ -155,6 +171,11 @@ app.openapi(
     },
   }),
   async (c) => {
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
     const { id } = c.req.valid("param");
     const body = await c.req.json();
     const parsed = NoteInputSchema.safeParse(body);
@@ -169,7 +190,7 @@ app.openapi(
     const { title, content } = parsed.data;
     const result = await db.update(notes)
       .set({ title, content })
-      .where(eq(notes.id, id));
+      .where(and(eq(notes.id, id), eq(notes.userId, auth.userId)));
 
     if (result.changes === 0) {
       return c.json({ error: "Note not found" }, 404);
@@ -209,10 +230,15 @@ app.openapi(
     },
   }),
   async (c) => {
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
     const { id } = c.req.valid("param");
     
-    // まず該当メモを取得
-    const note = await db.select().from(notes).where(eq(notes.id, id)).get();
+    // まず該当メモを取得（ユーザー確認込み）
+    const note = await db.select().from(notes).where(and(eq(notes.id, id), eq(notes.userId, auth.userId))).get();
     
     if (!note) {
       return c.json({ error: "Note not found" }, 404);
@@ -222,6 +248,7 @@ app.openapi(
     db.transaction((tx) => {
       // 削除済みテーブルに挿入
       tx.insert(deletedNotes).values({
+        userId: auth.userId,
         originalId: note.id,
         title: note.title,
         content: note.content,
@@ -261,8 +288,15 @@ app.openapi(
     },
   }),
   async (c) => {
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
     try {
-      const result = await db.select().from(deletedNotes).orderBy(desc(deletedNotes.deletedAt));
+      const result = await db.select().from(deletedNotes)
+        .where(eq(deletedNotes.userId, auth.userId))
+        .orderBy(desc(deletedNotes.deletedAt));
       return c.json(result);
     } catch (error) {
       console.error('削除済みメモ取得エラー:', error);
@@ -301,10 +335,17 @@ app.openapi(
     },
   }),
   async (c) => {
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
     const { id } = c.req.valid("param");
     
     try {
-      const result = await db.delete(deletedNotes).where(eq(deletedNotes.id, id));
+      const result = await db.delete(deletedNotes).where(
+        and(eq(deletedNotes.id, id), eq(deletedNotes.userId, auth.userId))
+      );
       
       if (result.changes === 0) {
         return c.json({ error: "Deleted note not found" }, 404);

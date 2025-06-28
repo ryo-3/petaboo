@@ -5,13 +5,16 @@ import { cors } from "hono/cors";
 import openapiApp from "./src/openapi";
 import notesRoute from "./src/routes/notes/route";
 
+// 環境変数確認（デバッグ用）
+console.log("CLERK_SECRET_KEY:", process.env.CLERK_SECRET_KEY ? "設定済み" : "未設定");
+
 const app = new Hono();
 
 // CORS設定
 app.use("*", cors({
   origin: "http://localhost:3000",
   allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowHeaders: ["Content-Type"],
+  allowHeaders: ["Content-Type", "Authorization"],
 }));
 
 console.log("サーバー起動！");

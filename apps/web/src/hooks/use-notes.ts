@@ -102,3 +102,22 @@ export function usePermanentDeleteNote() {
     },
   })
 }
+
+// 復元用フック
+export function useRestoreNote() {
+  const queryClient = useQueryClient()
+  const { getToken } = useAuth()
+  
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const token = await getToken()
+      const response = await notesApi.restoreNote(id, token || undefined)
+      return response.json()
+    },
+    onSuccess: () => {
+      // 復元後に通常メモと削除済みメモの両方を再取得
+      queryClient.invalidateQueries({ queryKey: ['notes'] })
+      queryClient.invalidateQueries({ queryKey: ['deleted-notes'] })
+    },
+  })
+}

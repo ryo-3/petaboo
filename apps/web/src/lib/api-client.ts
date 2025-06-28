@@ -112,6 +112,25 @@ export const notesApi = {
     }
     return response
   },
+
+  // POST /notes/deleted/:id/restore (復元)
+  restoreNote: async (id: number, token?: string) => {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    if (token) {
+      headers.Authorization = `Bearer ${token}`
+    }
+    const response = await fetch(`${API_BASE_URL}/notes/deleted/${id}/restore`, {
+      method: 'POST',
+      headers,
+    })
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    return response
+  },
 }
 
 export const tasksApi = {

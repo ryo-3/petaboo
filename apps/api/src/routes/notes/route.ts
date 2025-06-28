@@ -446,4 +446,92 @@ app.openapi(
   }
 );
 
+// POST /deleted/:id/restore（復元）
+app.openapi(
+  createRoute({
+    method: "post",
+    path: "/deleted/{id}/restore",
+    request: {
+      params: z.object({
+        id: z.string().regex(/^\d+$/).transform(Number),
+      }),
+    },
+    responses: {
+      200: {
+        description: "Note restored successfully",
+        content: {
+          "application/json": {
+            schema: z.object({ success: z.boolean(), id: z.number() }),
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
+      404: {
+        description: "Deleted note not found",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
+      500: {
+        description: "Internal server error",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
+    },
+  }),
+  async (c) => {
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const { id } = c.req.valid("param");
+    
+    try {
+      // まず削除済みメモを取得
+      const deletedNote = await db.select().from(deletedNotes).where(
+        and(eq(deletedNotes.id, id), eq(deletedNotes.userId, auth.userId))
+      ).get();
+      
+      if (!deletedNote) {
+        return c.json({ error: "Deleted note not found" }, 404);
+      }
+
+      // トランザクションで復元処理
+      const restoredNote = db.transaction((tx) => {
+        // 通常メモテーブルに復元
+        const result = tx.insert(notes).values({
+          userId: auth.userId,
+          title: deletedNote.title,
+          content: deletedNote.content,
+          createdAt: deletedNote.createdAt,
+          updatedAt: deletedNote.updatedAt,
+        }).returning({ id: notes.id }).get();
+
+        // 削除済みテーブルから削除
+        tx.delete(deletedNotes).where(eq(deletedNotes.id, id)).run();
+
+        return result;
+      });
+
+      return c.json({ success: true, id: restoredNote.id }, 200);
+    } catch (error) {
+      console.error('復元エラー:', error);
+      return c.json({ error: 'Internal server error' }, 500);
+    }
+  }
+);
+
 export default app;

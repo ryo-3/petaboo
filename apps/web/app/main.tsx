@@ -33,6 +33,7 @@ function Main() {
     setSelectedDeletedMemo(memo);
     setSelectedMemo(null);
     setIsEditing(false);
+    setShowFullList(false);
   };
 
   const handleNewMemo = () => {

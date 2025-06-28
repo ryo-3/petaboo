@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "@/components/sidebar";
 import DeletedMemoList from "@/components/deleted-memo-list";
 import MemoEditor from "@/components/memo-editor";
@@ -22,6 +22,19 @@ function Main() {
   const [showDeleted, setShowDeleted] = useState(false);
   const [showFullList, setShowFullList] = useState(false);
   const [currentMode, setCurrentMode] = useState<'memo' | 'task'>('memo');
+  const [windowWidth, setWindowWidth] = useState(0);
+
+  useEffect(() => {
+    const updateWindowWidth = () => {
+      setWindowWidth(window.innerWidth);
+    };
+    
+    updateWindowWidth();
+    window.addEventListener('resize', updateWindowWidth);
+    return () => window.removeEventListener('resize', updateWindowWidth);
+  }, []);
+
+  const isMobile = windowWidth <= 768;
 
   const handleSelectMemo = (memo: Memo, fromFullList = false) => {
     setSelectedMemo(memo);
@@ -90,8 +103,9 @@ function Main() {
 
   return (
     <main>
-      <div className="flex h-screen w-full">
-        <div className={`${showFullList ? 'w-16' : 'w-64'} flex-shrink-0 border-r-2 border-gray-400 animate-sidebar-transition ${showFullList ? 'overflow-visible' : 'overflow-hidden'}`}>
+      {isMobile ? (
+        // モバイル: サイドバー100%
+        <div className="h-screen w-full">
           {showDeleted ? (
             <DeletedMemoList 
               onBackToNotes={handleBackToNotes}
@@ -105,34 +119,58 @@ function Main() {
               onHome={handleHome}
               onEditMemo={handleEditMemo}
               selectedMemoId={selectedMemo?.id}
-              isCompact={showFullList}
+              isCompact={false}
               currentMode={currentMode}
               onModeChange={setCurrentMode}
             />
           )}
         </div>
-        <div className="flex-1">
-          {showFullList ? (
-            <FullListView 
-              onSelectMemo={handleSelectMemo} 
-              onSelectDeletedMemo={handleSelectDeletedMemo} 
-              onClose={handleClose} 
-              currentMode={currentMode}
-              selectedMemo={selectedMemo}
-              selectedDeletedMemo={selectedDeletedMemo}
-              onEditMemo={handleEditMemo}
-            />
-          ) : isEditing ? (
-            <MemoEditor onClose={handleClose} memo={selectedMemo} />
-          ) : selectedMemo ? (
-            <MemoViewer memo={selectedMemo} onClose={handleClose} onEdit={handleEditMemo} />
-          ) : selectedDeletedMemo ? (
-            <DeletedMemoViewer memo={selectedDeletedMemo} onClose={handleClose} />
-          ) : (
-            <WelcomeScreen />
-          )}
+      ) : (
+        // デスクトップ: 常にアイコンサイドバー
+        <div className="flex h-screen w-full">
+          <div className="w-16 flex-shrink-0 border-r-2 border-gray-400 overflow-visible">
+            {showDeleted ? (
+              <DeletedMemoList 
+                onBackToNotes={handleBackToNotes}
+                onSelectDeletedMemo={handleSelectDeletedMemo}
+              />
+            ) : (
+              <Sidebar 
+                onNewMemo={handleNewMemo}
+                onSelectMemo={handleSelectMemo}
+                onShowFullList={handleShowFullList}
+                onHome={handleHome}
+                onEditMemo={handleEditMemo}
+                selectedMemoId={selectedMemo?.id}
+                isCompact={true}
+                currentMode={currentMode}
+                onModeChange={setCurrentMode}
+              />
+            )}
+          </div>
+          <div className="flex-1">
+            {showFullList ? (
+              <FullListView 
+                onSelectMemo={handleSelectMemo} 
+                onSelectDeletedMemo={handleSelectDeletedMemo} 
+                onClose={handleClose} 
+                currentMode={currentMode}
+                selectedMemo={selectedMemo}
+                selectedDeletedMemo={selectedDeletedMemo}
+                onEditMemo={handleEditMemo}
+              />
+            ) : isEditing ? (
+              <MemoEditor onClose={handleClose} memo={selectedMemo} />
+            ) : selectedMemo ? (
+              <MemoViewer memo={selectedMemo} onClose={handleClose} onEdit={handleEditMemo} />
+            ) : selectedDeletedMemo ? (
+              <DeletedMemoViewer memo={selectedDeletedMemo} onClose={handleClose} />
+            ) : (
+              <WelcomeScreen />
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </main>
   );
 }

@@ -7,6 +7,7 @@ import SwitchTabs from "@/components/ui/switch-tabs";
 import SidebarMemoList from "@/components/sidebar-memo-list";
 import LogoutButton from "./button/logout-button";
 import HomeButton from "./button/home-button";
+import HomeIcon from "./icons/home-icon";
 import type { Memo } from "@/src/types/memo";
 import { useState } from "react";
 
@@ -17,9 +18,10 @@ interface SidebarProps {
   onHome: () => void;
   onEditMemo: (memo: Memo) => void;
   selectedMemoId?: number;
+  isCompact?: boolean;
 }
 
-function Sidebar({ onNewMemo, onSelectMemo, onShowFullList, onHome, onEditMemo, selectedMemoId }: SidebarProps) {
+function Sidebar({ onNewMemo, onSelectMemo, onShowFullList, onHome, onEditMemo, selectedMemoId, isCompact = false }: SidebarProps) {
   const [currentMode, setCurrentMode] = useState<'memo' | 'task'>('memo')
 
   const modeTabs = [
@@ -35,8 +37,27 @@ function Sidebar({ onNewMemo, onSelectMemo, onShowFullList, onHome, onEditMemo, 
     }
   ]
 
+  if (isCompact) {
+    return (
+      <div className="flex flex-col items-center py-4 h-screen bg-gray-50">
+        <button
+          onClick={onHome}
+          className="mb-4 p-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
+        >
+          <HomeIcon className="w-5 h-5 text-gray-600" />
+        </button>
+        <button
+          onClick={onNewMemo}
+          className="p-2 rounded-lg bg-Green hover:bg-Green/85 transition-colors"
+        >
+          <PlusIcon className="w-5 h-5 text-white" />
+        </button>
+      </div>
+    )
+  }
+
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen min-w-64">
       <div className="flex-shrink-0">
         {/* ホームボタンとモード切り替えスイッチ */}
         <div className="flex justify-between items-center ml-2 mr-2 mt-2">

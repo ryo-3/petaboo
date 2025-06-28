@@ -86,7 +86,7 @@ function Main() {
   return (
     <main>
       <div className="flex h-screen w-full">
-        <div className="w-64 flex-shrink-0 border-r-2 border-gray-400">
+        <div className={`${showFullList ? 'w-16' : 'w-64'} flex-shrink-0 border-r-2 border-gray-400 transition-all duration-300 overflow-hidden`}>
           {showDeleted ? (
             <DeletedMemoList 
               onBackToNotes={handleBackToNotes}
@@ -100,6 +100,7 @@ function Main() {
               onHome={handleHome}
               onEditMemo={handleEditMemo}
               selectedMemoId={selectedMemo?.id}
+              isCompact={showFullList}
             />
           )}
         </div>

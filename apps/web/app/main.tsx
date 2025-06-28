@@ -96,6 +96,13 @@ function Main() {
     setShowFullList(false);
   };
 
+  const handleEditMemo = (memo?: Memo) => {
+    if (memo) {
+      setSelectedMemo(memo);
+    }
+    setIsEditing(true);
+  };
+
   return (
     <main>
       <ResizablePanelGroup direction="horizontal" className="h-screen w-full">
@@ -113,6 +120,7 @@ function Main() {
               onShowFullList={handleShowFullList}
               onSelectDeletedMemo={handleSelectDeletedMemo}
               onHome={handleHome}
+              onEditMemo={handleEditMemo}
             />
           )}
         </ResizablePanel>
@@ -121,7 +129,7 @@ function Main() {
           {showFullList ? (
             <FullMemoList onSelectMemo={handleSelectMemo} onSelectDeletedMemo={handleSelectDeletedMemo} onClose={handleClose} />
           ) : isEditing ? (
-            <MemoEditor onClose={handleClose} />
+            <MemoEditor onClose={handleClose} memo={selectedMemo} />
           ) : selectedMemo ? (
             <MemoViewer memo={selectedMemo} onClose={handleClose} />
           ) : selectedDeletedMemo ? (

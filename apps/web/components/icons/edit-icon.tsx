@@ -1,8 +1,8 @@
-interface MemoIconProps {
+interface EditIconProps {
   className?: string
 }
 
-function MemoIcon({ className = "w-5 h-5" }: MemoIconProps) {
+function EditIcon({ className = "w-5 h-5" }: EditIconProps) {
   return (
     <svg 
       className={className} 
@@ -20,4 +20,4 @@ function MemoIcon({ className = "w-5 h-5" }: MemoIconProps) {
   )
 }
 
-export default MemoIcon
+export default EditIcon

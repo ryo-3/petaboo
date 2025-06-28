@@ -1,7 +1,7 @@
 'use client'
 
 import MemoIcon from "@/components/icons/memo-icon";
-import PlusIcon from "@/components/ui/plus-icon";
+import PlusIcon from "@/components/icons/plus-icon";
 import { useDeletedNotes, useNotes } from '@/src/hooks/use-notes';
 import LogoutButton from "./button/logout-button";
 import HomeButton from "./button/home-button";
@@ -13,9 +13,10 @@ interface MemoListProps {
   onShowFullList: () => void;
   onSelectDeletedMemo: (memo: any) => void;
   onHome: () => void;
+  onEditMemo: (memo: any) => void;
 }
 
-function MemoList({ onNewMemo, onSelectMemo, onShowDeleted, onShowFullList, onSelectDeletedMemo, onHome }: MemoListProps) {
+function MemoList({ onNewMemo, onSelectMemo, onShowDeleted, onShowFullList, onSelectDeletedMemo, onHome, onEditMemo }: MemoListProps) {
   const { data: notes, isLoading, error } = useNotes()
   const { data: deletedNotes } = useDeletedNotes()
 
@@ -66,20 +67,31 @@ function MemoList({ onNewMemo, onSelectMemo, onShowDeleted, onShowFullList, onSe
             <ul className="space-y-1">
               {notes.map((memo: any) => (
                 <li key={memo.id}>
-                  <button
-                    onClick={() => onSelectMemo(memo)}
-                    className="w-full text-left p-2 rounded hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="font-medium text-sm text-gray-800 truncate">
-                      {memo.title}
-                    </div>
-                    <div className="text-xs text-gray-500 truncate mt-1">
-                      {memo.content || '内容なし'}
-                    </div>
-                    <div className="text-xs text-gray-400 mt-1">
-                      {new Date(memo.createdAt * 1000).toLocaleDateString('ja-JP')}
-                    </div>
-                  </button>
+                  <div className="relative group">
+                    <button
+                      onClick={() => onSelectMemo(memo)}
+                      className="w-full text-left p-2 rounded hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="font-medium text-sm text-gray-800 truncate pr-8">
+                        {memo.title}
+                      </div>
+                      <div className="text-xs text-gray-500 truncate mt-1">
+                        {memo.content || '内容なし'}
+                      </div>
+                      <div className="text-xs text-gray-400 mt-1">
+                        {new Date(memo.createdAt * 1000).toLocaleDateString('ja-JP')}
+                      </div>
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEditMemo(memo);
+                      }}
+                      className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 p-1 opacity-0 group-hover:opacity-100 transition-all"
+                    >
+                      <MemoIcon className="w-3 h-3" />
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>

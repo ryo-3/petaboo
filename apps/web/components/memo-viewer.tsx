@@ -1,6 +1,7 @@
 'use client'
 
 import TrashIcon from '@/components/icons/trash-icon'
+import MemoIcon from '@/components/icons/memo-icon'
 import DeleteConfirmationModal from '@/components/ui/delete-confirmation-modal'
 import { useDeleteNote } from '@/src/hooks/use-notes'
 import { useState } from 'react'
@@ -13,9 +14,10 @@ interface MemoViewerProps {
     createdAt: number
   }
   onClose: () => void
+  onEdit?: () => void
 }
 
-function MemoViewer({ memo, onClose }: MemoViewerProps) {
+function MemoViewer({ memo, onClose, onEdit }: MemoViewerProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const deleteNote = useDeleteNote()
 

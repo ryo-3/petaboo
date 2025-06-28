@@ -8,6 +8,7 @@ import SidebarMemoList from "@/components/sidebar-memo-list";
 import LogoutButton from "./button/logout-button";
 import HomeButton from "./button/home-button";
 import HomeIcon from "./icons/home-icon";
+import Tooltip from "@/components/ui/tooltip";
 import type { Memo } from "@/src/types/memo";
 import { useState } from "react";
 
@@ -19,10 +20,11 @@ interface SidebarProps {
   onEditMemo: (memo: Memo) => void;
   selectedMemoId?: number;
   isCompact?: boolean;
+  currentMode?: 'memo' | 'task';
+  onModeChange?: (mode: 'memo' | 'task') => void;
 }
 
-function Sidebar({ onNewMemo, onSelectMemo, onShowFullList, onHome, onEditMemo, selectedMemoId, isCompact = false }: SidebarProps) {
-  const [currentMode, setCurrentMode] = useState<'memo' | 'task'>('memo')
+function Sidebar({ onNewMemo, onSelectMemo, onShowFullList, onHome, onEditMemo, selectedMemoId, isCompact = false, currentMode = 'memo', onModeChange }: SidebarProps) {
 
   const modeTabs = [
     {
@@ -40,18 +42,34 @@ function Sidebar({ onNewMemo, onSelectMemo, onShowFullList, onHome, onEditMemo, 
   if (isCompact) {
     return (
       <div className="flex flex-col items-center py-4 h-screen bg-gray-50">
-        <button
-          onClick={onHome}
-          className="mb-4 p-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
-        >
-          <HomeIcon className="w-5 h-5 text-gray-600" />
-        </button>
-        <button
-          onClick={onNewMemo}
-          className="p-2 rounded-lg bg-Green hover:bg-Green/85 transition-colors"
-        >
-          <PlusIcon className="w-5 h-5 text-white" />
-        </button>
+        <Tooltip text="ホーム" position="right">
+          <button
+            onClick={onHome}
+            className="mb-4 p-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
+          >
+            <HomeIcon className="w-5 h-5 text-gray-600" />
+          </button>
+        </Tooltip>
+        <Tooltip text={currentMode === 'memo' ? 'タスク一覧' : 'メモ一覧'} position="right">
+          <button
+            onClick={() => onModeChange && onModeChange(currentMode === 'memo' ? 'task' : 'memo')}
+            className="mb-4 p-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
+          >
+            {currentMode === 'memo' ? (
+              <TaskIcon className="w-5 h-5 text-gray-600" />
+            ) : (
+              <MemoIcon className="w-5 h-5 text-gray-600" />
+            )}
+          </button>
+        </Tooltip>
+        <Tooltip text={`新規${currentMode === 'memo' ? 'メモ' : 'タスク'}`} position="right">
+          <button
+            onClick={onNewMemo}
+            className="p-2 rounded-lg bg-Green hover:bg-Green/85 transition-colors"
+          >
+            <PlusIcon className="w-5 h-5 text-white" />
+          </button>
+        </Tooltip>
       </div>
     )
   }
@@ -65,7 +83,7 @@ function Sidebar({ onNewMemo, onSelectMemo, onShowFullList, onHome, onEditMemo, 
           <SwitchTabs 
             tabs={modeTabs}
             activeTab={currentMode}
-            onTabChange={(tabId) => setCurrentMode(tabId as 'memo' | 'task')}
+            onTabChange={(tabId) => onModeChange && onModeChange(tabId as 'memo' | 'task')}
           />
         </div>
         

@@ -1,6 +1,7 @@
 "use client";
 
 import MemoIcon from "@/components/icons/memo-icon";
+import TaskIcon from "@/components/icons/task-icon";
 import TrashIcon from "@/components/icons/trash-icon";
 import SwitchTabs from "@/components/ui/switch-tabs";
 import MemoCard from "@/components/ui/memo-card";
@@ -8,17 +9,19 @@ import { useDeletedNotes, useNotes, useDeleteNote, usePermanentDeleteNote } from
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import { useState } from "react";
 
-interface FullMemoListProps {
+interface FullListViewProps {
   onSelectMemo: (memo: Memo) => void;
   onSelectDeletedMemo: (memo: DeletedMemo) => void;
   onClose: () => void;
+  currentMode?: 'memo' | 'task';
 }
 
-function FullMemoList({
+function FullListView({
   onSelectMemo,
   onSelectDeletedMemo,
   onClose,
-}: FullMemoListProps) {
+  currentMode = 'memo'
+}: FullListViewProps) {
   const { data: notes, isLoading, error } = useNotes();
   const { data: deletedNotes } = useDeletedNotes();
   const [activeTab, setActiveTab] = useState<"normal" | "deleted">("normal");
@@ -75,8 +78,12 @@ function FullMemoList({
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <MemoIcon className="w-6 h-6 text-gray-600" />
-            <h1 className="text-2xl font-bold text-gray-800">メモ一覧</h1>
+            {currentMode === 'memo' ? (
+              <MemoIcon className="w-6 h-6 text-gray-600" />
+            ) : (
+              <TaskIcon className="w-6 h-6 text-gray-600" />
+            )}
+            <h1 className="text-2xl font-bold text-gray-800">{currentMode === 'memo' ? 'メモ一覧' : 'タスク一覧'}</h1>
           </div>
 
           {/* スイッチ風タブ */}
@@ -200,4 +207,4 @@ function FullMemoList({
   );
 }
 
-export default FullMemoList;
+export default FullListView;

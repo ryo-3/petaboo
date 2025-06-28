@@ -4,7 +4,8 @@
       "Bash(cp:*)",
       "Bash(rsync:*)",
       "Bash(mkdir:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(npm run lint)"
     ],
     "deny": []
   }

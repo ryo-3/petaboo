@@ -13,22 +13,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-
-type Memo = {
-  id: number
-  title: string
-  content: string | null
-  createdAt: number
-}
-
-type DeletedMemo = {
-  id: number
-  originalId: number
-  title: string
-  content: string | null
-  createdAt: number
-  deletedAt: number
-}
+import type { Memo, DeletedMemo } from "@/src/types/memo";
 
 function Main() {
   const [isEditing, setIsEditing] = useState(false);
@@ -65,12 +50,6 @@ function Main() {
     setShowFullList(false);
   };
 
-  const handleShowDeleted = () => {
-    setShowDeleted(true);
-    setSelectedMemo(null);
-    setSelectedDeletedMemo(null);
-    setIsEditing(false);
-  };
 
   const handleBackToNotes = () => {
     setShowDeleted(false);
@@ -116,9 +95,7 @@ function Main() {
             <MemoList 
               onNewMemo={handleNewMemo}
               onSelectMemo={handleSelectMemo}
-              onShowDeleted={handleShowDeleted}
               onShowFullList={handleShowFullList}
-              onSelectDeletedMemo={handleSelectDeletedMemo}
               onHome={handleHome}
               onEditMemo={handleEditMemo}
             />

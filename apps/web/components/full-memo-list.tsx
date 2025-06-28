@@ -5,10 +5,11 @@ import TrashIcon from '@/components/icons/trash-icon'
 import SwitchTabs from '@/components/ui/switch-tabs'
 import { useDeletedNotes, useNotes } from '@/src/hooks/use-notes'
 import { useState } from 'react'
+import type { Memo, DeletedMemo } from '@/src/types/memo'
 
 interface FullMemoListProps {
-  onSelectMemo: (memo: any) => void;
-  onSelectDeletedMemo: (memo: any) => void;
+  onSelectMemo: (memo: Memo) => void;
+  onSelectDeletedMemo: (memo: DeletedMemo) => void;
   onClose: () => void;
 }
 
@@ -84,7 +85,7 @@ function FullMemoList({ onSelectMemo, onSelectDeletedMemo, onClose }: FullMemoLi
           {notes && notes.length > 0 ? (
             <div className="flex-1 overflow-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {notes.map((memo: any) => (
+                {notes.map((memo: Memo) => (
                   <button
                     key={memo.id}
                     onClick={() => onSelectMemo(memo)}
@@ -127,7 +128,7 @@ function FullMemoList({ onSelectMemo, onSelectDeletedMemo, onClose }: FullMemoLi
           {deletedNotes && deletedNotes.length > 0 ? (
             <div className="flex-1 overflow-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {deletedNotes.map((memo: any) => (
+                {deletedNotes.map((memo: DeletedMemo) => (
                   <button
                     key={memo.id}
                     onClick={() => onSelectDeletedMemo(memo)}

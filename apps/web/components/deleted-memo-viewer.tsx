@@ -4,16 +4,10 @@ import TrashIcon from '@/components/icons/trash-icon'
 import DeleteConfirmationModal from '@/components/ui/delete-confirmation-modal'
 import { usePermanentDeleteNote } from '@/src/hooks/use-notes'
 import { useState } from 'react'
+import type { DeletedMemo } from '@/src/types/memo'
 
 interface DeletedMemoViewerProps {
-  memo: {
-    id: number
-    originalId: number
-    title: string
-    content: string | null
-    createdAt: number
-    deletedAt: number
-  }
+  memo: DeletedMemo
   onClose: () => void
 }
 

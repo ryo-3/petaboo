@@ -1,12 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@clerk/nextjs'
 import { notesApi } from '@/src/lib/api-client'
+import type { Memo, DeletedMemo, CreateMemoData, UpdateMemoData } from '@/src/types/memo'
 
 // Notes取得用フック
 export function useNotes() {
   const { getToken } = useAuth()
   
-  return useQuery({
+  return useQuery<Memo[]>({
     queryKey: ['notes'],
     queryFn: async () => {
       const token = await getToken()
@@ -21,8 +22,8 @@ export function useCreateNote() {
   const queryClient = useQueryClient()
   const { getToken } = useAuth()
   
-  return useMutation({
-    mutationFn: async (data: { title: string; content?: string }) => {
+  return useMutation<Memo, Error, CreateMemoData>({
+    mutationFn: async (data: CreateMemoData) => {
       const token = await getToken()
       const response = await notesApi.createNote(data, token || undefined)
       return response.json()
@@ -39,8 +40,8 @@ export function useUpdateNote() {
   const queryClient = useQueryClient()
   const { getToken } = useAuth()
   
-  return useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: { title: string; content?: string } }) => {
+  return useMutation<Memo, Error, { id: number; data: UpdateMemoData }>({
+    mutationFn: async ({ id, data }: { id: number; data: UpdateMemoData }) => {
       const token = await getToken()
       const response = await notesApi.updateNote(id, data, token || undefined)
       return response.json()
@@ -74,7 +75,7 @@ export function useDeleteNote() {
 export function useDeletedNotes() {
   const { getToken } = useAuth()
   
-  return useQuery({
+  return useQuery<DeletedMemo[]>({
     queryKey: ['deleted-notes'],
     queryFn: async () => {
       const token = await getToken()

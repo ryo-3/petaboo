@@ -3,10 +3,11 @@
 import TrashIcon from "@/components/icons/trash-icon";
 import { useDeletedNotes } from '@/src/hooks/use-notes';
 import LogoutButton from "./button/logout-button";
+import type { DeletedMemo } from "@/src/types/memo";
 
 interface DeletedMemoListProps {
   onBackToNotes: () => void;
-  onSelectDeletedMemo: (memo: any) => void;
+  onSelectDeletedMemo: (memo: DeletedMemo) => void;
 }
 
 function DeletedMemoList({ onBackToNotes, onSelectDeletedMemo }: DeletedMemoListProps) {
@@ -47,7 +48,7 @@ function DeletedMemoList({ onBackToNotes, onSelectDeletedMemo }: DeletedMemoList
           
           {deletedNotes && deletedNotes.length > 0 && (
             <ul className="space-y-1">
-              {deletedNotes.map((memo: any) => (
+              {deletedNotes.map((memo: DeletedMemo) => (
                 <li key={memo.id}>
                   <button
                     onClick={() => onSelectDeletedMemo(memo)}

@@ -1,4 +1,6 @@
 // 直接fetchを使用したAPIクライアント
+import type { CreateMemoData, UpdateMemoData } from '@/src/types/memo'
+
 const API_BASE_URL = 'http://localhost:8787'
 
 export const notesApi = {
@@ -18,7 +20,7 @@ export const notesApi = {
   },
   
   // POST /notes
-  createNote: async (data: { title: string; content?: string }, token?: string) => {
+  createNote: async (data: CreateMemoData, token?: string) => {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     }
@@ -38,7 +40,7 @@ export const notesApi = {
   },
 
   // PUT /notes/:id
-  updateNote: async (id: number, data: { title: string; content?: string }, token?: string) => {
+  updateNote: async (id: number, data: UpdateMemoData, token?: string) => {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     }

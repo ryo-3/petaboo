@@ -2,23 +2,21 @@
 
 import MemoIcon from "@/components/icons/memo-icon";
 import PlusIcon from "@/components/icons/plus-icon";
-import { useDeletedNotes, useNotes } from '@/src/hooks/use-notes';
+import { useNotes } from '@/src/hooks/use-notes';
 import LogoutButton from "./button/logout-button";
 import HomeButton from "./button/home-button";
+import type { Memo } from "@/src/types/memo";
 
 interface MemoListProps {
   onNewMemo: () => void;
-  onSelectMemo: (memo: any) => void;
-  onShowDeleted: () => void;
+  onSelectMemo: (memo: Memo) => void;
   onShowFullList: () => void;
-  onSelectDeletedMemo: (memo: any) => void;
   onHome: () => void;
-  onEditMemo: (memo: any) => void;
+  onEditMemo: (memo: Memo) => void;
 }
 
-function MemoList({ onNewMemo, onSelectMemo, onShowDeleted, onShowFullList, onSelectDeletedMemo, onHome, onEditMemo }: MemoListProps) {
+function MemoList({ onNewMemo, onSelectMemo, onShowFullList, onHome, onEditMemo }: MemoListProps) {
   const { data: notes, isLoading, error } = useNotes()
-  const { data: deletedNotes } = useDeletedNotes()
 
   return (
     <div className="flex flex-col justify-between h-screen">
@@ -65,7 +63,7 @@ function MemoList({ onNewMemo, onSelectMemo, onShowDeleted, onShowFullList, onSe
           
           {notes && notes.length > 0 && (
             <ul className="space-y-1">
-              {notes.map((memo: any) => (
+              {notes.map((memo: Memo) => (
                 <li key={memo.id}>
                   <div className="relative group">
                     <button

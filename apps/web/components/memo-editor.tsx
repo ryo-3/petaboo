@@ -3,15 +3,13 @@
 import CheckIcon from '@/components/icons/check-icon'
 import TrashIcon from '@/components/icons/trash-icon'
 import { useCreateNote, useUpdateNote } from '@/src/hooks/use-notes'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
+
+import type { Memo } from '@/src/types/memo'
 
 interface MemoEditorProps {
   onClose: () => void
-  memo?: {
-    id: number
-    title: string
-    content: string | null
-  } | null
+  memo?: Memo | null
 }
 
 function MemoEditor({ onClose, memo = null }: MemoEditorProps) {
@@ -26,7 +24,7 @@ function MemoEditor({ onClose, memo = null }: MemoEditorProps) {
   const updateNote = useUpdateNote()
 
   // 3秒後の自動保存処理
-  const handleAutoSave = () => {
+  const handleAutoSave = useCallback(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current)
     }
@@ -65,7 +63,7 @@ function MemoEditor({ onClose, memo = null }: MemoEditorProps) {
         }
       }
     }, 3000)
-  }
+  }, [title, content, currentMemoId, createNote, updateNote])
 
   // タイトルまたは内容が変更されたら自動保存タイマーをリセット
   useEffect(() => {
@@ -79,7 +77,7 @@ function MemoEditor({ onClose, memo = null }: MemoEditorProps) {
         clearTimeout(timeoutRef.current)
       }
     }
-  }, [title, content])
+  }, [title, content, handleAutoSave])
 
   return (
     <div className="flex flex-col h-full bg-white p-6">

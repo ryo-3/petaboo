@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from "react";
-import MemoList from "@/components/memo-list";
+import Sidebar from "@/components/sidebar";
 import DeletedMemoList from "@/components/deleted-memo-list";
 import MemoEditor from "@/components/memo-editor";
 import MemoViewer from "@/components/memo-viewer";
@@ -92,7 +92,7 @@ function Main() {
               onSelectDeletedMemo={handleSelectDeletedMemo}
             />
           ) : (
-            <MemoList 
+            <Sidebar 
               onNewMemo={handleNewMemo}
               onSelectMemo={handleSelectMemo}
               onShowFullList={handleShowFullList}
@@ -108,7 +108,7 @@ function Main() {
           ) : isEditing ? (
             <MemoEditor onClose={handleClose} memo={selectedMemo} />
           ) : selectedMemo ? (
-            <MemoViewer memo={selectedMemo} onClose={handleClose} />
+            <MemoViewer memo={selectedMemo} onClose={handleClose} onEdit={handleEditMemo} />
           ) : selectedDeletedMemo ? (
             <DeletedMemoViewer memo={selectedDeletedMemo} onClose={handleClose} />
           ) : (

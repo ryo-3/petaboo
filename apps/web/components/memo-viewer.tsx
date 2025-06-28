@@ -1,6 +1,7 @@
 'use client'
 
 import TrashIcon from '@/components/icons/trash-icon'
+import MemoIcon from '@/components/icons/memo-icon'
 import DeleteConfirmationModal from '@/components/ui/delete-confirmation-modal'
 import { useDeleteNote } from '@/src/hooks/use-notes'
 import { useState } from 'react'
@@ -10,9 +11,10 @@ import { formatDate } from '@/src/utils/formatDate'
 interface MemoViewerProps {
   memo: Memo
   onClose: () => void
+  onEdit?: () => void
 }
 
-function MemoViewer({ memo, onClose }: MemoViewerProps) {
+function MemoViewer({ memo, onClose, onEdit }: MemoViewerProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const deleteNote = useDeleteNote()
 
@@ -29,7 +31,15 @@ function MemoViewer({ memo, onClose }: MemoViewerProps) {
 
   return (
     <div className="flex flex-col h-full bg-white p-6">
-      <div className="flex justify-end items-center mb-4">
+      <div className="flex justify-start items-center mb-4">
+        {onEdit && (
+          <button
+            onClick={onEdit}
+            className="text-gray-600 hover:text-gray-800 p-1 transition-colors"
+          >
+            <MemoIcon className="w-4 h-4" />
+          </button>
+        )}
         <button
           onClick={() => setShowDeleteModal(true)}
           className="fixed bottom-6 right-6 bg-gray-500 hover:bg-gray-600 text-white p-3 rounded-full shadow-lg transition-colors"
@@ -41,7 +51,7 @@ function MemoViewer({ memo, onClose }: MemoViewerProps) {
       <div className="flex flex-col gap-4 flex-1">
         <div className="border-b border-gray-200 pb-4">
           <h1 className="text-2xl font-bold text-gray-800">{memo.title}</h1>
-          <div className="text-sm text-gray-500 mt-2 space-y-1">
+          <div className="text-sm text-gray-500 mt-2 flex gap-4">
             <p>作成日時: {formatDate(memo.createdAt)}</p>
             {memo.updatedAt && memo.updatedAt !== memo.createdAt && (
               <p>編集日時: {formatDate(memo.updatedAt)}</p>

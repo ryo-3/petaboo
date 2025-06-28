@@ -20,7 +20,7 @@ function MemoCard({ memo, isChecked, onToggleCheck, onSelect, variant = 'normal'
           e.stopPropagation()
           onToggleCheck()
         }}
-        className={`absolute top-1 left-1 size-4 rounded-full border-2 flex items-center justify-center z-10 transition-colors ${
+        className={`absolute top-1.5 right-1.5 size-4 rounded-full border-2 flex items-center justify-center z-10 transition-colors ${
           isChecked
             ? isDeleted 
               ? 'bg-white border-gray-400'
@@ -51,7 +51,7 @@ function MemoCard({ memo, isChecked, onToggleCheck, onSelect, variant = 'normal'
         } p-4 rounded-lg transition-all text-left h-40 w-full`}
       >
         <div className="flex flex-col h-full">
-          <div className={`font-semibold text-base mb-2 line-clamp-2 mt-1 ${
+          <div className={`font-semibold text-base mb-2 line-clamp-2${
             isDeleted ? 'text-gray-700' : 'text-gray-800'
           }`}>
             {memo.title}

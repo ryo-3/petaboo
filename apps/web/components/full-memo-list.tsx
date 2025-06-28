@@ -4,7 +4,7 @@ import MemoIcon from "@/components/icons/memo-icon";
 import TrashIcon from "@/components/icons/trash-icon";
 import SwitchTabs from "@/components/ui/switch-tabs";
 import MemoCard from "@/components/ui/memo-card";
-import { useDeletedNotes, useNotes } from "@/src/hooks/use-notes";
+import { useDeletedNotes, useNotes, useDeleteNote, usePermanentDeleteNote } from "@/src/hooks/use-notes";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import { useState } from "react";
 
@@ -26,6 +26,35 @@ function FullMemoList({
   const [checkedDeletedMemos, setCheckedDeletedMemos] = useState<Set<number>>(
     new Set()
   );
+
+  console.log('Debug - activeTab:', activeTab);
+  console.log('Debug - checkedMemos.size:', checkedMemos.size);
+  console.log('Debug - checkedDeletedMemos.size:', checkedDeletedMemos.size);
+  const deleteNote = useDeleteNote();
+  const permanentDeleteNote = usePermanentDeleteNote();
+
+  const handleBulkDelete = async () => {
+    try {
+      if (activeTab === 'normal') {
+        // 通常メモの一括削除
+        const deletePromises = Array.from(checkedMemos).map(id => 
+          deleteNote.mutateAsync(id)
+        );
+        await Promise.all(deletePromises);
+        setCheckedMemos(new Set());
+      } else {
+        // 削除済みメモの完全削除
+        const deletePromises = Array.from(checkedDeletedMemos).map(id => 
+          permanentDeleteNote.mutateAsync(id)
+        );
+        await Promise.all(deletePromises);
+        setCheckedDeletedMemos(new Set());
+      }
+    } catch (error) {
+      console.error('一括削除に失敗しました:', error);
+      alert('一括削除に失敗しました。');
+    }
+  };
 
   const tabs = [
     {
@@ -152,6 +181,25 @@ function FullMemoList({
             </div>
           )}
         </>
+      )}
+
+      {/* 一括削除ボタン */}
+      {(() => {
+        const shouldShow = (activeTab === 'normal' && checkedMemos.size > 0) || 
+                          (activeTab === 'deleted' && checkedDeletedMemos.size > 0);
+        console.log('Debug - shouldShow bulk delete button:', shouldShow);
+        return shouldShow;
+      })() && (
+        <button
+          onClick={handleBulkDelete}
+          className="fixed bottom-6 right-6 bg-gray-500 hover:bg-gray-600 text-white p-3 rounded-full shadow-lg transition-colors z-50"
+          title={activeTab === 'normal' ? `${checkedMemos.size}件のメモを削除` : `${checkedDeletedMemos.size}件のメモを完全削除`}
+        >
+          <TrashIcon />
+          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
+            {activeTab === 'normal' ? checkedMemos.size : checkedDeletedMemos.size}
+          </span>
+        </button>
       )}
     </div>
   );

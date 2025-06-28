@@ -1,44 +1,50 @@
 'use client'
 
-import { useNotes } from '@/src/hooks/use-notes'
+import { useNotes, useDeletedNotes } from '@/src/hooks/use-notes'
 import LogoutButton from "./logout-button";
 import TrashIcon from "@/components/ui/trash-icon";
 import PlusIcon from "@/components/ui/plus-icon";
 import MemoIcon from "@/components/ui/memo-icon";
+import HomeButton from "./home-button";
 
 interface MemoListProps {
   onNewMemo: () => void;
   onSelectMemo: (memo: any) => void;
   onShowDeleted: () => void;
+  onShowFullList: () => void;
+  onSelectDeletedMemo: (memo: any) => void;
+  onHome: () => void;
 }
 
-function MemoList({ onNewMemo, onSelectMemo, onShowDeleted }: MemoListProps) {
+function MemoList({ onNewMemo, onSelectMemo, onShowDeleted, onShowFullList, onSelectDeletedMemo, onHome }: MemoListProps) {
   const { data: notes, isLoading, error } = useNotes()
+  const { data: deletedNotes } = useDeletedNotes()
 
   return (
-    <div className="flex flex-col justify-between h-[97vh]">
+    <div className="flex flex-col justify-between h-screen">
       <div>
+        {/* ホームボタン */}
+        <div className="flex justify-start mx-2 mt-2">
+          <HomeButton onClick={onHome} />
+        </div>
+        
         <button
           onClick={onNewMemo}
-          className="bg-emerald-200 hover:bg-emerald-300 text-center mx-2 rounded-lg mt-4 w-[calc(100%-16px)] py-2 transition-colors flex items-center justify-center gap-2"
+          className="bg-emerald-200 hover:bg-emerald-300 text-center mx-2 rounded-lg mt-2 w-[calc(100%-16px)] py-2 transition-colors flex items-center justify-center gap-2"
         >
           <PlusIcon className="w-5 h-5 text-slate-600" />
           <span className="text-slate-600 font-medium text-lg">新規追加</span>
         </button>
 
-        {/* ゴミ箱ボタン */}
-        <button
-          onClick={onShowDeleted}
-          className="bg-gray-200 hover:bg-gray-300 text-center mx-2 rounded-lg mt-2 w-[calc(100%-16px)] py-2 transition-colors flex items-center justify-center gap-2"
-        >
-          <TrashIcon className="w-4 h-4 text-slate-600" />
-          <span className="text-slate-600 font-medium text-sm">削除済みメモ</span>
-        </button>
         
         <div className="mx-2 mt-4">
-          <div className="flex items-center gap-1 mb-2">
-            <MemoIcon className="w-4 h-4 text-gray-600" />
-            <h3 className="text-sm font-medium text-gray-600">メモ一覧</h3>
+          <div className="flex items-center gap-1 mb-2 group cursor-pointer" onClick={onShowFullList}>
+            <MemoIcon className="w-4 h-4 text-gray-600 group-hover:scale-110 transition-all duration-200" />
+            <button
+              className="text-sm font-medium text-gray-600 transition-all duration-200 group-hover:translate-x-1"
+            >
+              メモ一覧
+            </button>
           </div>
           
           {isLoading && (
@@ -79,9 +85,12 @@ function MemoList({ onNewMemo, onSelectMemo, onShowDeleted }: MemoListProps) {
               ))}
             </ul>
           )}
+
         </div>
       </div>
-      <LogoutButton />
+      <div className="flex justify-start px-2 pb-4">
+        <LogoutButton />
+      </div>
     </div>
   );
 }

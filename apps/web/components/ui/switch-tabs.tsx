@@ -31,7 +31,7 @@ function SwitchTabs({ tabs, activeTab, onTabChange }: SwitchTabsProps) {
           >
             {/* アニメーション背景 */}
             {activeTab === tab.id && (
-              <div className="absolute inset-0 bg-white rounded-md shadow-sm transition-all duration-200 ease-in-out" />
+              <div className="absolute inset-0 bg-white rounded-lg shadow-sm transition-all duration-200 ease-in-out" />
             )}
             
             <div className="relative flex items-center gap-1">

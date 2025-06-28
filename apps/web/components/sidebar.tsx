@@ -49,28 +49,29 @@ function Sidebar({ onNewMemo, onSelectMemo, onShowFullList, onHome, onEditMemo }
           />
         </div>
         
-        <button
-          onClick={onNewMemo}
-          className="bg-emerald-200 hover:bg-emerald-300 text-center mx-2 rounded-lg mt-2 w-[calc(100%-16px)] py-2 transition-colors flex items-center justify-center gap-2"
-        >
-          <PlusIcon className="w-5 h-5 text-slate-600" />
-          <span className="text-slate-600 font-medium text-lg">新規{currentMode === 'memo' ? 'メモ' : 'タスク'}追加</span>
-        </button>
+        <div className="mx-2 mt-2 flex gap-2">
+          <button
+            onClick={onShowFullList}
+            className="flex-1 bg-gray-100 hover:bg-gray-200 text-center rounded-lg py-2 transition-colors flex items-center justify-center gap-1"
+          >
+            {currentMode === 'memo' ? (
+              <MemoIcon className="w-4 h-4 text-gray-600" />
+            ) : (
+              <TaskIcon className="w-4 h-4 text-gray-600" />
+            )}
+            <span className="text-gray-600 font-medium text-sm">{currentMode === 'memo' ? 'メモ' : 'タスク'}一覧</span>
+          </button>
+          <button
+            onClick={onNewMemo}
+            className="flex-1 bg-emerald-200 hover:bg-emerald-300 text-center rounded-lg py-2 transition-colors flex items-center justify-center gap-1"
+          >
+            <PlusIcon className="w-4 h-4 text-slate-600" />
+            <span className="text-slate-600 font-medium text-sm">新規{currentMode === 'memo' ? 'メモ' : 'タスク'}</span>
+          </button>
+        </div>
 
         
         <div className="mx-2 mt-4">
-          <div className="flex items-center gap-1 mb-2 group cursor-pointer" onClick={onShowFullList}>
-            {currentMode === 'memo' ? (
-              <MemoIcon className="w-4 h-4 text-gray-600 group-hover:scale-110 transition-all duration-200" />
-            ) : (
-              <TaskIcon className="w-4 h-4 text-gray-600 group-hover:scale-110 transition-all duration-200" />
-            )}
-            <button
-              className="text-sm font-medium text-gray-600 transition-all duration-200 group-hover:translate-x-1"
-            >
-              {currentMode === 'memo' ? 'メモ' : 'タスク'}一覧
-            </button>
-          </div>
           
           {isLoading && (
             <div className="text-center py-4 text-gray-500">読み込み中...</div>

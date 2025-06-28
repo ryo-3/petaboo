@@ -12,11 +12,8 @@ function PlusIcon({ className = "w-5 h-5" }: PlusIconProps) {
       stroke="currentColor" 
       className={className}
     >
-      <path 
-        strokeLinecap="round" 
-        strokeLinejoin="round" 
-        d="M12 4.5v15m7.5-7.5h-15" 
-      />
+      <circle cx="12" cy="12" r="10" />
+      <path d="M8 12h8m-4-4v8" />
     </svg>
   )
 }

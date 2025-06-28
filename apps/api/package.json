@@ -8,7 +8,7 @@
     "tsx": "^4.20.3"
   },
   "scripts": {
-    "db:studio": "drizzle-kit studio",
+    "db:studio": "drizzle-kit studio --port 8795",
     "db:push": "drizzle-kit push",
     "dev": "tsx --env-file=.env index.ts"
   },

@@ -12,7 +12,7 @@ const app = new Hono();
 
 // CORS設定
 app.use("*", cors({
-  origin: "http://localhost:3000",
+  origin: "http://localhost:7593",
   allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowHeaders: ["Content-Type", "Authorization"],
 }));
@@ -34,4 +34,4 @@ app.get("/openapi", (c) => {
 
 app.get("/docs", swaggerUI({ url: "/openapi" }));
 
-serve({ fetch: app.fetch, port: 8787 });
+serve({ fetch: app.fetch, port: 8794 });

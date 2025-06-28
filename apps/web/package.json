@@ -4,12 +4,12 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack --port 3000",
+    "dev": "next dev --turbopack --port 7593",
     "build": "next build",
     "start": "next start",
     "lint": "next lint --max-warnings 0",
     "check-types": "tsc --noEmit",
-    "generate-api-types": "openapi-typescript http://localhost:8787/openapi -o ./src/types/api.ts"
+    "generate-api-types": "openapi-typescript http://localhost:8794/openapi -o ./src/types/api.ts"
   },
   "dependencies": {
     "@clerk/localizations": "^3.17.0",

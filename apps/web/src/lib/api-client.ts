@@ -1,7 +1,7 @@
 // 直接fetchを使用したAPIクライアント
 import type { CreateMemoData, UpdateMemoData } from '@/src/types/memo'
 
-const API_BASE_URL = 'http://localhost:8787'
+const API_BASE_URL = 'http://localhost:8794'
 
 export const notesApi = {
   // GET /notes

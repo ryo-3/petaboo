@@ -7,6 +7,7 @@ import MemoEditor from "@/components/memo-editor";
 import MemoViewer from "@/components/memo-viewer";
 import DeletedMemoViewer from "@/components/deleted-memo-viewer";
 import FullMemoList from "@/components/full-memo-list";
+import WelcomeScreen from "@/components/welcome-screen";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -126,14 +127,7 @@ function Main() {
           ) : selectedDeletedMemo ? (
             <DeletedMemoViewer memo={selectedDeletedMemo} onClose={handleClose} />
           ) : (
-            <div className="flex flex-col items-center justify-center h-screen bg-white gap-4">
-              <h1 className="text-2xl font-bold">
-                ようこそ！メモ画面へようこそ 📝
-              </h1>
-              <p className="text-gray-600">
-                左側からメモを選択するか、新規追加してください
-              </p>
-            </div>
+            <WelcomeScreen />
           )}
         </ResizablePanel>
       </ResizablePanelGroup>

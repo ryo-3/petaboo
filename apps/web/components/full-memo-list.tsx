@@ -1,7 +1,7 @@
 'use client'
 
-import MemoIcon from '@/components/ui/memo-icon'
-import TrashIcon from '@/components/ui/trash-icon'
+import MemoIcon from '@/components/icons/memo-icon'
+import TrashIcon from '@/components/icons/trash-icon'
 import SwitchTabs from '@/components/ui/switch-tabs'
 import { useDeletedNotes, useNotes } from '@/src/hooks/use-notes'
 import { useState } from 'react'

@@ -1,8 +1,8 @@
 'use client'
 
-import { useDeletedNotes } from '@/src/hooks/use-notes'
-import LogoutButton from "./logout-button";
-import TrashIcon from "@/components/ui/trash-icon";
+import TrashIcon from "@/components/icons/trash-icon";
+import { useDeletedNotes } from '@/src/hooks/use-notes';
+import LogoutButton from "./button/logout-button";
 
 interface DeletedMemoListProps {
   onBackToNotes: () => void;

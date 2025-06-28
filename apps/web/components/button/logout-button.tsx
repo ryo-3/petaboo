@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useClerk } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import DoorIcon from "@/components/ui/door-icon";
+import DoorIcon from "@/components/icons/door-icon";
 import LogoutConfirmationModal from "@/components/ui/logout-confirmation-modal";
 
 export default function LogoutButton() {

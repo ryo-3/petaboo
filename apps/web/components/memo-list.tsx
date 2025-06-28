@@ -1,11 +1,10 @@
 'use client'
 
-import { useNotes, useDeletedNotes } from '@/src/hooks/use-notes'
-import LogoutButton from "./logout-button";
-import TrashIcon from "@/components/ui/trash-icon";
+import MemoIcon from "@/components/icons/memo-icon";
 import PlusIcon from "@/components/ui/plus-icon";
-import MemoIcon from "@/components/ui/memo-icon";
-import HomeButton from "./home-button";
+import { useDeletedNotes, useNotes } from '@/src/hooks/use-notes';
+import LogoutButton from "./button/logout-button";
+import HomeButton from "./button/home-button";
 
 interface MemoListProps {
   onNewMemo: () => void;

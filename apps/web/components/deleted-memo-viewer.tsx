@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { usePermanentDeleteNote } from '@/src/hooks/use-notes'
-import TrashIcon from '@/components/ui/trash-icon'
+import TrashIcon from '@/components/icons/trash-icon'
 import DeleteConfirmationModal from '@/components/ui/delete-confirmation-modal'
+import { usePermanentDeleteNote } from '@/src/hooks/use-notes'
+import { useState } from 'react'
 
 interface DeletedMemoViewerProps {
   memo: {

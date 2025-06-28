@@ -1,7 +1,7 @@
 'use client'
 
+import TrashIcon from '../icons/trash-icon'
 import Modal from './modal'
-import TrashIcon from './trash-icon'
 
 interface DeleteConfirmationModalProps {
   isOpen: boolean

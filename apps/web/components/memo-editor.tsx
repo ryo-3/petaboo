@@ -1,7 +1,7 @@
 'use client'
 
-import TrashIcon from '@/components/ui/trash-icon'
-import CheckIcon from '@/components/ui/check-icon'
+import CheckIcon from '@/components/icons/check-icon'
+import TrashIcon from '@/components/icons/trash-icon'
 import { useCreateNote, useUpdateNote } from '@/src/hooks/use-notes'
 import { useEffect, useRef, useState } from 'react'
 

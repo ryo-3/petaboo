@@ -1,6 +1,6 @@
 "use client";
 
-import HomeIcon from "@/components/ui/home-icon";
+import HomeIcon from "@/components/icons/home-icon";
 
 interface HomeButtonProps {
   onClick: () => void;

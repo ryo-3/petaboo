@@ -27,7 +27,7 @@ function MemoViewer({ memo, onClose, onEdit, onExitEdit, isEditMode = false }: M
   }
 
   return (
-    <div className="flex flex-col h-full bg-white p-6">
+    <div className="flex flex-col h-full bg-white">
       <div className="flex justify-start items-center mb-4">
         {onEdit && (
           <EditButton

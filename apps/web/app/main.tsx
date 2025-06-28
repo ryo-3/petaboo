@@ -155,7 +155,7 @@ function Main() {
               />
             )}
             </div>
-            <div className="flex-1 ml-16 pt-16">
+            <div className={`flex-1 ml-16 ${isEditing || selectedMemo || selectedDeletedMemo ? 'h-[calc(100vh-64px)] pt-16' : 'pt-16'}`}>
             {showFullList ? (
               <FullListView 
                 onSelectMemo={handleSelectMemo} 

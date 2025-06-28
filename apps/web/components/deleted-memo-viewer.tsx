@@ -41,7 +41,7 @@ function DeletedMemoViewer({ memo, onClose }: DeletedMemoViewerProps) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-white p-6">
+    <div className="flex flex-col h-full bg-white">
       <div className="flex justify-start items-center mb-4">
         <Tooltip text="メモを復元" position="bottom">
           <button

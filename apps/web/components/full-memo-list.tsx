@@ -107,11 +107,6 @@ function FullMemoList({
         </div>
       )}
 
-      {notes && notes.length === 0 && (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center text-gray-400">メモがありません</div>
-        </div>
-      )}
 
       {/* 通常メモタブ */}
       {activeTab === "normal" && (

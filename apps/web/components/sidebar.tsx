@@ -71,7 +71,7 @@ function Sidebar({ onNewMemo, onSelectMemo, onShowFullList, onHome, onEditMemo, 
 
       </div>
         
-      <div className="flex-1 overflow-hidden ml-2 mr-0 mt-4 mb-2">
+      <div className="flex-1 overflow-hidden ml-2 mr-[2px] mt-4 mb-2">
           {currentMode === 'memo' ? (
             <SidebarMemoList 
               onSelectMemo={onSelectMemo}

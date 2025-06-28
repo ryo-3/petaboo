@@ -2,16 +2,16 @@
 
 import TrashIcon from '@/components/icons/trash-icon'
 import MemoIcon from '@/components/icons/memo-icon'
+import MemoDateInfo from '@/components/memo-date-info'
 import DeleteConfirmationModal from '@/components/ui/delete-confirmation-modal'
 import { useDeleteNote } from '@/src/hooks/use-notes'
 import { useState } from 'react'
 import type { Memo } from '@/src/types/memo'
-import { formatDate } from '@/src/utils/formatDate'
 
 interface MemoViewerProps {
   memo: Memo
   onClose: () => void
-  onEdit?: () => void
+  onEdit?: (memo: Memo) => void
 }
 
 function MemoViewer({ memo, onClose, onEdit }: MemoViewerProps) {
@@ -34,8 +34,8 @@ function MemoViewer({ memo, onClose, onEdit }: MemoViewerProps) {
       <div className="flex justify-start items-center mb-4">
         {onEdit && (
           <button
-            onClick={onEdit}
-            className="text-gray-600 hover:text-gray-800 p-1 transition-colors"
+            onClick={() => onEdit(memo)}
+            className="text-gray-600 hover:text-gray-800 p-1 h-6 transition-colors"
           >
             <MemoIcon className="w-4 h-4" />
           </button>
@@ -49,14 +49,10 @@ function MemoViewer({ memo, onClose, onEdit }: MemoViewerProps) {
       </div>
 
       <div className="flex flex-col gap-4 flex-1">
-        <div className="border-b border-gray-200 pb-4">
-          <h1 className="text-2xl font-bold text-gray-800">{memo.title}</h1>
-          <div className="text-sm text-gray-500 mt-2 flex gap-4">
-            <p>作成日時: {formatDate(memo.createdAt)}</p>
-            {memo.updatedAt && memo.updatedAt !== memo.createdAt && (
-              <p>編集日時: {formatDate(memo.updatedAt)}</p>
-            )}
-          </div>
+        <MemoDateInfo memo={memo} />
+        
+        <div className="border-b border-gray-200 pb-2">
+          <h1 className="text-lg font-medium text-gray-800">{memo.title}</h1>
         </div>
 
         <div className="flex-1 overflow-y-auto">

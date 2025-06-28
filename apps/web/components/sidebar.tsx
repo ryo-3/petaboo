@@ -4,11 +4,10 @@ import MemoIcon from "@/components/icons/memo-icon";
 import TaskIcon from "@/components/icons/task-icon";
 import PlusIcon from "@/components/icons/plus-icon";
 import SwitchTabs from "@/components/ui/switch-tabs";
-import { useNotes } from '@/src/hooks/use-notes';
+import SidebarMemoList from "@/components/sidebar-memo-list";
 import LogoutButton from "./button/logout-button";
 import HomeButton from "./button/home-button";
 import type { Memo } from "@/src/types/memo";
-import { formatDateOnly } from "@/src/utils/formatDate";
 import { useState } from "react";
 
 interface SidebarProps {
@@ -20,7 +19,6 @@ interface SidebarProps {
 }
 
 function Sidebar({ onNewMemo, onSelectMemo, onShowFullList, onHome, onEditMemo }: SidebarProps) {
-  const { data: notes, isLoading, error } = useNotes()
   const [currentMode, setCurrentMode] = useState<'memo' | 'task'>('memo')
 
   const modeTabs = [
@@ -72,60 +70,16 @@ function Sidebar({ onNewMemo, onSelectMemo, onShowFullList, onHome, onEditMemo }
 
         
         <div className="mx-2 mt-4">
-          
-          {isLoading && (
-            <div className="text-center py-4 text-gray-500">読み込み中...</div>
-          )}
-          
-          {error && (
-            <div className="text-center py-4 text-red-500 text-sm">
-              エラーが発生しました
-            </div>
-          )}
-          
-          {notes && notes.length === 0 && (
+          {currentMode === 'memo' ? (
+            <SidebarMemoList 
+              onSelectMemo={onSelectMemo}
+              onEditMemo={onEditMemo}
+            />
+          ) : (
             <div className="text-center py-4 text-gray-400 text-sm">
-              {currentMode === 'memo' ? 'メモ' : 'タスク'}がありません
+              タスク機能は準備中です
             </div>
           )}
-          
-          {notes && notes.length > 0 && (
-            <ul className="space-y-1">
-              {notes.map((memo: Memo) => (
-                <li key={memo.id}>
-                  <div className="relative group">
-                    <button
-                      onClick={() => onSelectMemo(memo)}
-                      className="w-full text-left p-2 rounded hover:bg-gray-100 transition-colors"
-                    >
-                      <div className="font-medium text-sm text-gray-800 truncate pr-8">
-                        {memo.title}
-                      </div>
-                      <div className="text-xs text-gray-500 truncate mt-1">
-                        {memo.content || '内容なし'}
-                      </div>
-                      <div className="text-xs text-gray-400 mt-1">
-                        {memo.updatedAt && memo.updatedAt !== memo.createdAt 
-                          ? formatDateOnly(memo.updatedAt)
-                          : formatDateOnly(memo.createdAt)
-                        }
-                      </div>
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onEditMemo(memo);
-                      }}
-                      className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 p-1 opacity-0 group-hover:opacity-100 transition-all"
-                    >
-                      <MemoIcon className="w-3 h-3" />
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-
         </div>
       </div>
       <div className="flex justify-start px-2 pb-4">

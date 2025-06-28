@@ -8,7 +8,8 @@ const config = {
   theme: {
     extend: {
       colors: {
-        Green: "#329277",
+        Green: "#00873f",
+        Yellow: "#7b9237",
       },
     },
   },

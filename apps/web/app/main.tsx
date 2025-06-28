@@ -8,6 +8,7 @@ import MemoViewer from "@/components/memo-viewer";
 import DeletedMemoViewer from "@/components/deleted-memo-viewer";
 import FullListView from "@/components/full-list-view";
 import WelcomeScreen from "@/components/welcome-screen";
+import Header from "@/components/header";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -79,11 +80,13 @@ function Main() {
   };
 
   const handleShowFullList = () => {
+    console.log('handleShowFullList called');
     setShowFullList(true);
     setIsEditing(false);
     setSelectedMemo(null);
     setSelectedDeletedMemo(null);
     setShowDeleted(false);
+    console.log('showFullList set to true');
   };
 
   const handleHome = () => {
@@ -126,9 +129,13 @@ function Main() {
           )}
         </div>
       ) : (
-        // デスクトップ: 常にアイコンサイドバー
-        <div className="flex h-screen w-full">
-          <div className="w-16 flex-shrink-0 border-r-2 border-gray-400 overflow-visible">
+        // デスクトップ: ヘッダー + アイコンサイドバー
+        <div className="flex flex-col h-screen w-full">
+          <Header 
+            currentMode={currentMode}
+          />
+          <div className="flex flex-1">
+            <div className="fixed left-0 top-16 w-16 h-[calc(100vh-64px)] border-r-2 border-gray-400 overflow-visible z-10">
             {showDeleted ? (
               <DeletedMemoList 
                 onBackToNotes={handleBackToNotes}
@@ -147,8 +154,8 @@ function Main() {
                 onModeChange={setCurrentMode}
               />
             )}
-          </div>
-          <div className="flex-1">
+            </div>
+            <div className="flex-1 ml-16 pt-16">
             {showFullList ? (
               <FullListView 
                 onSelectMemo={handleSelectMemo} 
@@ -168,6 +175,7 @@ function Main() {
             ) : (
               <WelcomeScreen />
             )}
+            </div>
           </div>
         </div>
       )}

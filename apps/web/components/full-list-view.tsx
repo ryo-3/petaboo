@@ -104,12 +104,6 @@ function FullListView({
           />
         </div>
 
-        <button
-          onClick={onClose}
-          className="text-gray-500 hover:text-gray-700 text-sm font-medium px-3 py-1 rounded hover:bg-gray-100 transition-colors"
-        >
-          閉じる
-        </button>
       </div>
 
       {isLoading && (

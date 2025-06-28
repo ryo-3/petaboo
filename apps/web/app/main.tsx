@@ -23,18 +23,22 @@ function Main() {
   const [showFullList, setShowFullList] = useState(false);
   const [currentMode, setCurrentMode] = useState<'memo' | 'task'>('memo');
 
-  const handleSelectMemo = (memo: Memo) => {
+  const handleSelectMemo = (memo: Memo, fromFullList = false) => {
     setSelectedMemo(memo);
     setSelectedDeletedMemo(null);
     setIsEditing(false);
-    setShowFullList(false);
+    if (!fromFullList) {
+      setShowFullList(false);
+    }
   };
 
-  const handleSelectDeletedMemo = (memo: DeletedMemo) => {
+  const handleSelectDeletedMemo = (memo: DeletedMemo, fromFullList = false) => {
     setSelectedDeletedMemo(memo);
     setSelectedMemo(null);
     setIsEditing(false);
-    setShowFullList(false);
+    if (!fromFullList) {
+      setShowFullList(false);
+    }
   };
 
   const handleNewMemo = () => {
@@ -87,7 +91,7 @@ function Main() {
   return (
     <main>
       <div className="flex h-screen w-full">
-        <div className={`${showFullList ? 'w-16' : 'w-64'} flex-shrink-0 border-r-2 border-gray-400 transition-all duration-300 ${showFullList ? 'overflow-visible' : 'overflow-hidden'}`}>
+        <div className={`${showFullList ? 'w-16' : 'w-64'} flex-shrink-0 border-r-2 border-gray-400 animate-sidebar-transition ${showFullList ? 'overflow-visible' : 'overflow-hidden'}`}>
           {showDeleted ? (
             <DeletedMemoList 
               onBackToNotes={handleBackToNotes}
@@ -109,7 +113,15 @@ function Main() {
         </div>
         <div className="flex-1">
           {showFullList ? (
-            <FullListView onSelectMemo={handleSelectMemo} onSelectDeletedMemo={handleSelectDeletedMemo} onClose={handleClose} currentMode={currentMode} />
+            <FullListView 
+              onSelectMemo={handleSelectMemo} 
+              onSelectDeletedMemo={handleSelectDeletedMemo} 
+              onClose={handleClose} 
+              currentMode={currentMode}
+              selectedMemo={selectedMemo}
+              selectedDeletedMemo={selectedDeletedMemo}
+              onEditMemo={handleEditMemo}
+            />
           ) : isEditing ? (
             <MemoEditor onClose={handleClose} memo={selectedMemo} />
           ) : selectedMemo ? (

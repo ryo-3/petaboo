@@ -5,22 +5,30 @@ import TaskIcon from "@/components/icons/task-icon";
 import TrashIcon from "@/components/icons/trash-icon";
 import SwitchTabs from "@/components/ui/switch-tabs";
 import MemoCard from "@/components/ui/memo-card";
+import MemoViewer from "@/components/memo-viewer";
+import DeletedMemoViewer from "@/components/deleted-memo-viewer";
 import { useDeletedNotes, useNotes, useDeleteNote, usePermanentDeleteNote } from "@/src/hooks/use-notes";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import { useState } from "react";
 
 interface FullListViewProps {
-  onSelectMemo: (memo: Memo) => void;
-  onSelectDeletedMemo: (memo: DeletedMemo) => void;
+  onSelectMemo: (memo: Memo, fromFullList?: boolean) => void;
+  onSelectDeletedMemo: (memo: DeletedMemo, fromFullList?: boolean) => void;
   onClose: () => void;
   currentMode?: 'memo' | 'task';
+  selectedMemo?: Memo | null;
+  selectedDeletedMemo?: DeletedMemo | null;
+  onEditMemo?: (memo: Memo) => void;
 }
 
 function FullListView({
   onSelectMemo,
   onSelectDeletedMemo,
   onClose,
-  currentMode = 'memo'
+  currentMode = 'memo',
+  selectedMemo,
+  selectedDeletedMemo,
+  onEditMemo
 }: FullListViewProps) {
   const { data: notes, isLoading, error } = useNotes();
   const { data: deletedNotes } = useDeletedNotes();
@@ -74,7 +82,9 @@ function FullListView({
   ];
 
   return (
-    <div className="flex flex-col h-full bg-white p-6">
+    <div className="flex h-full bg-white">
+      {/* 左側：一覧表示 */}
+      <div className={`${selectedMemo || selectedDeletedMemo ? 'w-1/2' : 'w-full'} ${selectedMemo || selectedDeletedMemo ? 'border-r border-gray-300' : ''} p-6 flex flex-col transition-all duration-300`}>
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
@@ -135,7 +145,7 @@ function FullListView({
                       }
                       setCheckedMemos(newChecked);
                     }}
-                    onSelect={() => onSelectMemo(memo)}
+                    onSelect={() => onSelectMemo(memo, true)}
                     variant="normal"
                   />
                 ))}
@@ -169,7 +179,7 @@ function FullListView({
                       }
                       setCheckedDeletedMemos(newChecked);
                     }}
-                    onSelect={() => onSelectDeletedMemo(memo)}
+                    onSelect={() => onSelectDeletedMemo(memo, true)}
                     variant="deleted"
                   />
                 ))}
@@ -202,6 +212,42 @@ function FullListView({
             {activeTab === 'normal' ? checkedMemos.size : checkedDeletedMemos.size}
           </span>
         </button>
+      )}
+      </div>
+      
+      {/* 右側：詳細表示（選択時のみ表示） */}
+      {(selectedMemo || selectedDeletedMemo) && (
+        <div className="w-1/2 p-6 animate-slide-in-right relative">
+          {/* 区切り線の閉じるボタン */}
+          <button
+            onClick={() => {
+              if (selectedMemo) {
+                onSelectMemo(null as any, true);
+              } else if (selectedDeletedMemo) {
+                onSelectDeletedMemo(null as any, true);
+              }
+            }}
+            className="absolute -left-3 top-1/2 transform -translate-y-1/2 bg-white border border-gray-300 rounded-full p-1 text-gray-500 hover:text-gray-700 hover:border-gray-400 transition-colors z-10"
+            title="パネルを閉じる"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+          {selectedMemo ? (
+            <MemoViewer 
+              memo={selectedMemo} 
+              onClose={() => {}} 
+              onEdit={onEditMemo}
+              isEditMode={false}
+            />
+          ) : selectedDeletedMemo ? (
+            <DeletedMemoViewer 
+              memo={selectedDeletedMemo} 
+              onClose={() => {}} 
+            />
+          ) : null}
+        </div>
       )}
     </div>
   );

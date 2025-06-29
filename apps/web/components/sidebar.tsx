@@ -9,7 +9,6 @@ import SwitchTabs from "@/components/ui/switch-tabs";
 import Tooltip from "@/components/ui/tooltip";
 import type { Memo } from "@/src/types/memo";
 import type { Task } from "@/src/types/task";
-import HomeButton from "./button/home-button";
 import HomeIcon from "./icons/home-icon";
 import SettingsIcon from "./icons/settings-icon";
 
@@ -59,6 +58,7 @@ function Sidebar({
     },
   ];
 
+  // PC表示サイドバー
   if (isCompact) {
     return (
       <div className="flex flex-col items-center py-4 h-screen bg-gray-50 justify-between">
@@ -132,13 +132,30 @@ function Sidebar({
       </div>
     );
   }
-
+  // モバイル表示メニューバー
   return (
     <div className="flex flex-col h-screen min-w-64">
       <div className="flex-shrink-0">
         {/* ホームボタンとモード切り替えスイッチ */}
         <div className="flex justify-between items-center ml-2 mr-2 mt-2">
-          <HomeButton onClick={onHome} />
+          <div className="flex">
+            {/* <HomeButton onClick={onHome} /> */}
+            <button
+              onClick={onHome}
+              className="p-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
+            >
+              <HomeIcon className="w-5 h-5 text-gray-600" />
+            </button>
+            {/* 設定ボタン */}
+            <div className="flex-shrink-0 p-2 border-t border-gray-200">
+              <button
+                onClick={() => onSettings?.()}
+                className="w-full p-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors flex items-center justify-center gap-2"
+              >
+                <SettingsIcon className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
           <SwitchTabs
             tabs={modeTabs}
             activeTab={currentMode}
@@ -190,19 +207,6 @@ function Sidebar({
             selectedTaskId={selectedTaskId}
           />
         )}
-      </div>
-
-      {/* 設定ボタン */}
-      <div className="flex-shrink-0 p-2 border-t border-gray-200">
-        <Tooltip text="設定" position="right">
-          <button
-            onClick={() => onSettings?.()}
-            className="w-full p-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors flex items-center justify-center gap-2"
-          >
-            <SettingsIcon className="w-4 h-4" />
-            <span className="text-sm font-medium">設定</span>
-          </button>
-        </Tooltip>
       </div>
     </div>
   );

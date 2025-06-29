@@ -92,6 +92,7 @@ function Main() {
     setSelectedDeletedTask(null);
     setShowDeleted(false);
     setShowFullList(false);
+    setShowSettings(false);
   };
 
   const handleNewTask = () => {
@@ -102,6 +103,7 @@ function Main() {
     setSelectedDeletedTask(null);
     setShowDeleted(false);
     setShowFullList(false);
+    setShowSettings(false);
   };
 
   const handleClose = () => {

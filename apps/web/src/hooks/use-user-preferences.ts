@@ -6,6 +6,8 @@ export interface UserPreferences {
   taskColumnCount: number;
   memoViewMode: 'card' | 'list';
   taskViewMode: 'card' | 'list';
+  memoHideControls: boolean;
+  taskHideControls: boolean;
   createdAt: number;
   updatedAt: number;
 }
@@ -40,6 +42,8 @@ export function useUserPreferences(userId: number = 1) {
         taskColumnCount: 2,
         memoViewMode: 'list',
         taskViewMode: 'list',
+        memoHideControls: false,
+        taskHideControls: false,
         createdAt: Date.now(),
         updatedAt: Date.now()
       });
@@ -49,7 +53,7 @@ export function useUserPreferences(userId: number = 1) {
   };
 
   // ユーザー設定を更新
-  const updatePreferences = async (updates: Partial<Pick<UserPreferences, 'memoColumnCount' | 'taskColumnCount' | 'memoViewMode' | 'taskViewMode'>>) => {
+  const updatePreferences = async (updates: Partial<Pick<UserPreferences, 'memoColumnCount' | 'taskColumnCount' | 'memoViewMode' | 'taskViewMode' | 'memoHideControls' | 'taskHideControls'>>) => {
     try {
       setError(null);
       const response = await fetch(`${API_BASE}/user-preferences/${userId}`, {

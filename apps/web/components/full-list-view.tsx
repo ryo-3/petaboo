@@ -194,7 +194,7 @@ function FullListView({
     <div className="flex h-full bg-white">
       {/* 左側：一覧表示 */}
       <div className={`${selectedMemo || selectedDeletedMemo || selectedTask || selectedDeletedTask ? 'w-1/2' : 'w-full'} ${selectedMemo || selectedDeletedMemo || selectedTask || selectedDeletedTask ? 'border-r border-gray-300' : ''} pt-6 pl-6 pr-2 flex flex-col transition-all duration-300`}>
-      <div className="mb-6">
+      <div className="mb-3">
         <div className="flex justify-between items-center mb-3">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
@@ -216,17 +216,19 @@ function FullListView({
         </div>
         
         {/* コントロール */}
-        <div className="flex items-center gap-2">
-          <ViewModeToggle 
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-          />
-          <ColumnCountSelector 
-            columnCount={columnCount}
-            onColumnCountChange={setColumnCount}
-            isRightPanelShown={!!(selectedMemo || selectedDeletedMemo || selectedTask || selectedDeletedTask)}
-          />
-        </div>
+        {!((currentMode === 'memo' && preferences?.memoHideControls) || (currentMode === 'task' && preferences?.taskHideControls)) && (
+          <div className="flex items-center gap-2">
+            <ViewModeToggle 
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+            />
+            <ColumnCountSelector 
+              columnCount={columnCount}
+              onColumnCountChange={setColumnCount}
+              isRightPanelShown={!!(selectedMemo || selectedDeletedMemo || selectedTask || selectedDeletedTask)}
+            />
+          </div>
+        )}
       </div>
 
       {(currentMode === 'memo' ? memoLoading : taskLoading) && (

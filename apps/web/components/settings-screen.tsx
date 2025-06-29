@@ -30,6 +30,8 @@ function SettingsScreen({ onBack }: SettingsScreenProps) {
       setTaskColumnCount(preferences.taskColumnCount);
       setMemoViewMode(preferences.memoViewMode);
       setTaskViewMode(preferences.taskViewMode);
+      setMemoHideControls(preferences.memoHideControls);
+      setTaskHideControls(preferences.taskHideControls);
     }
   }, [preferences]);
 
@@ -40,6 +42,8 @@ function SettingsScreen({ onBack }: SettingsScreenProps) {
         taskColumnCount,
         memoViewMode,
         taskViewMode,
+        memoHideControls,
+        taskHideControls,
       });
       alert("設定を保存しました！");
     } catch (error) {
@@ -82,7 +86,7 @@ function SettingsScreen({ onBack }: SettingsScreenProps) {
 
         {/* メモ設定 */}
         <div className="mt-4">
-          <div className="flex items-center justify-between mb-2 w-60">
+          <div className="flex items-center justify-between mb-2 w-64">
             <div className="flex items-center gap-2">
               <MemoIcon className="w-5 h-5 mt-0.5" />
               <h2 className="text-lg font-semibold text-gray-800">メモ設定</h2>
@@ -90,7 +94,7 @@ function SettingsScreen({ onBack }: SettingsScreenProps) {
             <Switch
               checked={memoHideControls}
               onCheckedChange={setMemoHideControls}
-              label="一覧で非表示"
+              label="コントロール非表示"
             />
           </div>
 
@@ -109,7 +113,7 @@ function SettingsScreen({ onBack }: SettingsScreenProps) {
 
         {/* タスク設定 */}
         <div className="mt-4">
-          <div className="flex items-center justify-between mb-2 w-60">
+          <div className="flex items-center justify-between mb-2 w-64">
             <div className="flex items-center gap-2">
               <TaskIcon className="w-5 h-5 mt-0.5" />
               <h2 className="text-lg font-semibold text-gray-800">
@@ -119,7 +123,7 @@ function SettingsScreen({ onBack }: SettingsScreenProps) {
             <Switch
               checked={taskHideControls}
               onCheckedChange={setTaskHideControls}
-              label="一覧で非表示"
+              label="コントロール非表示"
             />
           </div>
 

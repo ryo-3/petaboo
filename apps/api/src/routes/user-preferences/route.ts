@@ -31,6 +31,8 @@ app.get('/:userId', async (c) => {
         taskColumnCount: 2,
         memoViewMode: 'list',
         taskViewMode: 'list',
+        memoHideControls: false,
+        taskHideControls: false,
         createdAt: Date.now(),
         updatedAt: Date.now()
       });
@@ -53,7 +55,12 @@ app.put('/:userId', async (c) => {
       return c.json({ error: 'Invalid user ID' }, 400);
     }
 
-    const { memoColumnCount, taskColumnCount, memoViewMode, taskViewMode } = body;
+    const { memoColumnCount, taskColumnCount, memoViewMode, taskViewMode, memoHideControls, taskHideControls } = body;
+    
+    // デバッグログ
+    console.log('Received request body:', body);
+    console.log('memoHideControls type:', typeof memoHideControls, 'value:', memoHideControls);
+    console.log('taskHideControls type:', typeof taskHideControls, 'value:', taskHideControls);
 
     if (memoColumnCount !== undefined && (typeof memoColumnCount !== 'number' || memoColumnCount < 1 || memoColumnCount > 4)) {
       return c.json({ error: 'Invalid memo column count' }, 400);
@@ -71,6 +78,14 @@ app.put('/:userId', async (c) => {
       return c.json({ error: 'Invalid task view mode' }, 400);
     }
 
+    if (memoHideControls !== undefined && typeof memoHideControls !== 'boolean') {
+      return c.json({ error: 'Invalid memo hide controls value' }, 400);
+    }
+
+    if (taskHideControls !== undefined && typeof taskHideControls !== 'boolean') {
+      return c.json({ error: 'Invalid task hide controls value' }, 400);
+    }
+
     // 既存の設定があるかチェック
     const existing = await db
       .select()
@@ -83,6 +98,10 @@ app.put('/:userId', async (c) => {
     if (taskColumnCount !== undefined) updateData.taskColumnCount = taskColumnCount;
     if (memoViewMode !== undefined) updateData.memoViewMode = memoViewMode;
     if (taskViewMode !== undefined) updateData.taskViewMode = taskViewMode;
+    if (memoHideControls !== undefined) updateData.memoHideControls = memoHideControls;
+    if (taskHideControls !== undefined) updateData.taskHideControls = taskHideControls;
+    
+    console.log('updateData being sent to database:', updateData);
 
     if (existing) {
       // 更新
@@ -104,6 +123,8 @@ app.put('/:userId', async (c) => {
           taskColumnCount: taskColumnCount || 2,
           memoViewMode: memoViewMode || 'list',
           taskViewMode: taskViewMode || 'list',
+          memoHideControls: memoHideControls || false,
+          taskHideControls: taskHideControls || false,
           createdAt: Date.now(),
           updatedAt: Date.now()
         })

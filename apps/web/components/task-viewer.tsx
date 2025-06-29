@@ -59,6 +59,7 @@ function TaskViewer({ task, onClose, onEdit, onExitEdit, isEditMode = false }: T
         id: task.id,
         data: taskData
       })
+      setIsSaving(false)
       setSavedSuccessfully(true)
       
       setTimeout(() => {
@@ -69,16 +70,10 @@ function TaskViewer({ task, onClose, onEdit, onExitEdit, isEditMode = false }: T
     } catch (error) {
       console.error('保存に失敗しました:', error)
       setError('保存に失敗しました。APIサーバーが起動していることを確認してください。')
-    } finally {
       setIsSaving(false)
     }
   }, [title, description, status, priority, dueDate, task, updateTask, onExitEdit])
 
-  useEffect(() => {
-    if (savedSuccessfully) {
-      setSavedSuccessfully(false)
-    }
-  }, [title, description, status, priority, dueDate, savedSuccessfully])
 
   const statusOptions = [
     { value: 'todo', label: '未着手', color: 'bg-gray-100 text-gray-800' },
@@ -105,12 +100,6 @@ function TaskViewer({ task, onClose, onEdit, onExitEdit, isEditMode = false }: T
         />
         
         <div className="flex items-center gap-3 ml-auto">
-          {isSaving && (
-            <span className="text-sm text-gray-500">保存中...</span>
-          )}
-          {savedSuccessfully && (
-            <span className="text-sm text-green-600">保存しました</span>
-          )}
           {error && (
             <span className="text-sm text-red-500">エラー</span>
           )}
@@ -209,17 +198,24 @@ function TaskViewer({ task, onClose, onEdit, onExitEdit, isEditMode = false }: T
             <div className="flex justify-start">
               <button
                 onClick={handleSave}
-                disabled={!title.trim() || isSaving}
+                disabled={!title.trim() || isSaving || savedSuccessfully}
                 className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors ${
-                  !title.trim() || isSaving
+                  !title.trim() || isSaving || savedSuccessfully
                     ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                     : 'bg-blue-600 hover:bg-blue-700 text-white'
                 }`}
               >
-                {isSaving ? (
+{isSaving ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
                     保存中...
+                  </>
+                ) : savedSuccessfully ? (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    保存完了
                   </>
                 ) : (
                   <>

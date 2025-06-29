@@ -79,9 +79,9 @@ function FullListView({
   const deleteTask = useDeleteTask();
   const permanentDeleteTask = usePermanentDeleteTask();
   
-  // 右側パネル表示時は列数を-1する（2列以下の場合は変更しない）
+  // 右側パネル表示時は列数を調整（3,4列→2列、1,2列→そのまま）
   const effectiveColumnCount = (selectedMemo || selectedDeletedMemo || selectedTask || selectedDeletedTask) 
-    ? (columnCount <= 2 ? columnCount : columnCount - 1)
+    ? (columnCount <= 2 ? columnCount : 2)
     : columnCount;
 
   const handleBulkDelete = async () => {
@@ -226,23 +226,22 @@ function FullListView({
             {[1, 2, 3, 4].map((count) => {
               const isRightShown = selectedMemo || selectedDeletedMemo || selectedTask || selectedDeletedTask;
               
-              // 右側表示時: 3は非表示、4は「3」として表示
-              if (isRightShown && count === 3) return null;
+              // 右側表示時: 3と4は非表示
+              if (isRightShown && (count === 3 || count === 4)) return null;
               
               return (
                 <button
                   key={count}
                   onClick={() => setColumnCount(count)}
                   className={`px-2 py-1 text-xs rounded transition-colors ${
-                    (isRightShown && count === 4 && columnCount === 3) || // 右側表示時の3列設定
-                    (isRightShown && count === 4 && columnCount === 4) || // 右側表示時の4列設定  
                     (!isRightShown && columnCount === count) || // 通常時
-                    (isRightShown && columnCount <= 2 && columnCount === count) // 右側表示時の1-2列
+                    (isRightShown && columnCount <= 2 && columnCount === count) || // 右側表示時の1-2列
+                    (isRightShown && columnCount >= 3 && count === 2) // 右側表示時の3-4列→2列表示
                       ? 'bg-white text-gray-700 shadow-sm'
                       : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
-                  {isRightShown && count === 4 ? '3' : count}
+                  {count}
                 </button>
               );
             })}

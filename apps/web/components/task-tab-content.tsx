@@ -29,7 +29,13 @@ function TaskTabContent({
 }: TaskTabContentProps) {
   const getFilteredTasks = () => {
     if (!tasks) return [];
-    return tasks.filter(task => task.status === activeTab);
+    const filtered = tasks.filter(task => task.status === activeTab);
+    
+    // 優先度順でソート（high > medium > low）
+    return filtered.sort((a, b) => {
+      const priorityOrder = { high: 3, medium: 2, low: 1 };
+      return priorityOrder[b.priority] - priorityOrder[a.priority];
+    });
   };
 
   const getEmptyMessage = () => {

@@ -2,7 +2,6 @@
 
 import TrashIcon from '@/components/icons/trash-icon'
 import PhotoIcon from '@/components/icons/photo-icon'
-import CheckIcon from '@/components/icons/check-icon'
 import DateInfo from '@/components/shared/date-info'
 import { useDeleteNote, useUpdateNote } from '@/src/hooks/use-notes'
 import { useState, useCallback, useEffect } from 'react'
@@ -24,7 +23,6 @@ function MemoViewer({ memo, onClose, onEdit, onExitEdit, isEditMode = false }: M
   const [title, setTitle] = useState(memo.title)
   const [content, setContent] = useState(memo.content || '')
   const [isSaving, setIsSaving] = useState(false)
-  const [savedSuccessfully, setSavedSuccessfully] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const handleDelete = async () => {
@@ -42,7 +40,6 @@ function MemoViewer({ memo, onClose, onEdit, onExitEdit, isEditMode = false }: M
 
     setIsSaving(true)
     setError(null)
-    setSavedSuccessfully(false)
     try {
       await updateNote.mutateAsync({
         id: memo.id,
@@ -51,12 +48,6 @@ function MemoViewer({ memo, onClose, onEdit, onExitEdit, isEditMode = false }: M
           content: content.trim() || undefined,
         }
       })
-      setSavedSuccessfully(true)
-      
-      // 保存成功表示を2秒後に消す
-      setTimeout(() => {
-        setSavedSuccessfully(false)
-      }, 2000)
     } catch (error) {
       console.error('保存に失敗しました:', error)
       setError('保存に失敗しました。')
@@ -95,9 +86,6 @@ function MemoViewer({ memo, onClose, onEdit, onExitEdit, isEditMode = false }: M
           {isSaving && (
             <span className="text-sm text-gray-500">保存中...</span>
           )}
-          {savedSuccessfully && (
-            <span className="text-sm text-green-600">保存しました</span>
-          )}
           {error && (
             <span className="text-sm text-red-500">{error}</span>
           )}
@@ -123,9 +111,6 @@ function MemoViewer({ memo, onClose, onEdit, onExitEdit, isEditMode = false }: M
             className="flex-1 text-lg font-medium border-b border-Green outline-none pb-2 focus:border-Green"
             autoFocus
           />
-          {savedSuccessfully && !isSaving && (
-            <CheckIcon className="w-5 h-5 text-green-600 flex-shrink-0" />
-          )}
         </div>
 
         <textarea

@@ -109,7 +109,6 @@ function MemoViewer({ memo, onClose, onEdit, onExitEdit, isEditMode = false }: M
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="flex-1 text-lg font-medium border-b border-Green outline-none pb-2 focus:border-Green"
-            autoFocus
           />
         </div>
 

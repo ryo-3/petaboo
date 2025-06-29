@@ -9,16 +9,16 @@ import type { Task } from '@/src/types/task'
 
 interface TaskEditorProps {
   onClose: () => void
-  task: Task // 編集専用なので必須
+  task?: Task // 新規作成時はundefinedの可能性
 }
 
 function TaskEditor({ onClose, task }: TaskEditorProps) {
-  const [title, setTitle] = useState(task.title || '')
-  const [description, setDescription] = useState(task.description || '')
-  const [status, setStatus] = useState<'todo' | 'in_progress' | 'completed'>(task.status || 'todo')
-  const [priority, setPriority] = useState<'low' | 'medium' | 'high'>(task.priority || 'medium')
+  const [title, setTitle] = useState(task?.title || '')
+  const [description, setDescription] = useState(task?.description || '')
+  const [status, setStatus] = useState<'todo' | 'in_progress' | 'completed'>(task?.status || 'todo')
+  const [priority, setPriority] = useState<'low' | 'medium' | 'high'>(task?.priority || 'medium')
   const [dueDate, setDueDate] = useState<string>(
-    task.dueDate !== null ? new Date(task.dueDate * 1000).toISOString().split('T')[0] : ''
+    task?.dueDate ? new Date(task.dueDate * 1000).toISOString().split('T')[0] : ''
   )
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)

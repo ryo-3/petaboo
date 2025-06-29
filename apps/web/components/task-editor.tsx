@@ -18,7 +18,7 @@ function TaskEditor({ onClose, task }: TaskEditorProps) {
   const [status, setStatus] = useState<'todo' | 'in_progress' | 'completed'>(task?.status || 'todo')
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>(task?.priority || 'medium')
   const [dueDate, setDueDate] = useState<string>(
-    task?.dueDate ? new Date(task.dueDate * 1000).toISOString().split('T')[0] : ''
+    (task?.dueDate ? new Date(task.dueDate * 1000).toISOString().split('T')[0] : '') || ''
   )
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -48,7 +48,7 @@ function TaskEditor({ onClose, task }: TaskEditorProps) {
 
           // 既存タスクの更新
           await updateTask.mutateAsync({
-            id: task.id,
+            id: task!.id,
             data: taskData
           })
           setSavedSuccessfully(true)
@@ -61,7 +61,7 @@ function TaskEditor({ onClose, task }: TaskEditorProps) {
         }
       }
     }, 3000)
-  }, [title, description, status, priority, dueDate, task.id, updateTask])
+  }, [title, description, status, priority, dueDate, task?.id, updateTask])
 
   // フィールドが変更されたら自動保存タイマーをリセット
   useEffect(() => {

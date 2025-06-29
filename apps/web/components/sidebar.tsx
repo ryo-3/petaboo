@@ -2,6 +2,8 @@
 
 import MemoIcon from "@/components/icons/memo-icon";
 import PlusIcon from "@/components/icons/plus-icon";
+import PenIcon from "@/components/icons/pen-icon";
+import PlusSimpleIcon from "@/components/icons/plus-simple-icon";
 import TaskIcon from "@/components/icons/task-icon";
 import SidebarMemoList from "@/components/sidebar-memo-list";
 import SidebarTaskList from "@/components/sidebar-task-list";
@@ -73,9 +75,9 @@ function Sidebar({
               onModeChange?.("memo");
               onShowFullList();
             }}
-            className={`mb-2 p-2 rounded-lg transition-colors ${
+            className={`mb-4 p-2 rounded-lg transition-colors ${
               currentMode === "memo"
-                ? "bg-Yellow text-white"
+                ? "bg-Green text-white"
                 : "bg-gray-200 hover:bg-gray-300 text-gray-600"
             }`}
           >
@@ -103,9 +105,13 @@ function Sidebar({
         >
           <button
             onClick={currentMode === "memo" ? onNewMemo : onNewTask}
-            className="p-2 rounded-lg bg-Green hover:bg-Green/85 text-white transition-colors"
+            className={`p-2 rounded-lg text-white transition-colors ${
+              currentMode === "memo" 
+                ? "bg-Green hover:bg-Green/85" 
+                : "bg-Yellow hover:bg-Yellow/85"
+            }`}
           >
-            <PlusIcon className="w-5 h-5" />
+            <PlusSimpleIcon className="w-5 h-5" />
           </button>
         </Tooltip>
       </div>
@@ -143,9 +149,13 @@ function Sidebar({
           </button>
           <button
             onClick={currentMode === "memo" ? onNewMemo : onNewTask}
-            className="flex-1 bg-Green hover:bg-Green/85 text-center rounded-lg py-2 transition-colors flex items-center justify-center gap-1"
+            className={`flex-1 text-center rounded-lg py-2 transition-colors flex items-center justify-center gap-1 ${
+              currentMode === "memo" 
+                ? "bg-Green hover:bg-Green/85" 
+                : "bg-Yellow hover:bg-Yellow/85"
+            }`}
           >
-            <PlusIcon className="w-4 h-4 text-gray-100" />
+            <PlusSimpleIcon className="w-4 h-4 text-gray-100" />
             <span className="font-medium text-sm text-gray-100">
               新規{currentMode === "memo" ? "メモ" : "タスク"}
             </span>

@@ -7,9 +7,10 @@ interface MemoCardProps {
   onToggleCheck: () => void
   onSelect: () => void
   variant?: 'normal' | 'deleted'
+  isSelected?: boolean
 }
 
-function MemoCard({ memo, isChecked, onToggleCheck, onSelect, variant = 'normal' }: MemoCardProps) {
+function MemoCard({ memo, isChecked, onToggleCheck, onSelect, variant = 'normal', isSelected = false }: MemoCardProps) {
   const isDeleted = variant === 'deleted'
   const deletedMemo = memo as DeletedMemo
 
@@ -45,7 +46,9 @@ function MemoCard({ memo, isChecked, onToggleCheck, onSelect, variant = 'normal'
       <button
         onClick={onSelect}
         className={`${
-          isDeleted
+          isSelected
+            ? 'bg-gray-100 border border-gray-400'
+            : isDeleted
             ? 'bg-red-50 border border-red-200 hover:shadow-md hover:border-red-300'
             : 'bg-white border border-gray-200 hover:shadow-md hover:border-gray-300'
         } p-4 rounded-lg transition-all text-left h-40 w-full`}

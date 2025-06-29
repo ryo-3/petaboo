@@ -25,6 +25,13 @@ function MemoViewer({ memo, onClose, onEdit, onExitEdit, isEditMode = false }: M
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // メモが変更された時に状態を更新
+  useEffect(() => {
+    setTitle(memo.title)
+    setContent(memo.content || '')
+    setError(null)
+  }, [memo.id, memo.title, memo.content])
+
   const handleDelete = async () => {
     try {
       await deleteNote.mutateAsync(memo.id)

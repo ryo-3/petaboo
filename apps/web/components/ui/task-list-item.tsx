@@ -7,9 +7,10 @@ interface TaskListItemProps {
   onToggleCheck: () => void
   onSelect: () => void
   variant?: 'normal' | 'deleted'
+  isSelected?: boolean
 }
 
-function TaskListItem({ task, isChecked, onToggleCheck, onSelect, variant = 'normal' }: TaskListItemProps) {
+function TaskListItem({ task, isChecked, onToggleCheck, onSelect, variant = 'normal', isSelected = false }: TaskListItemProps) {
   const isDeleted = variant === 'deleted'
   const deletedTask = task as DeletedTask
 
@@ -59,7 +60,9 @@ function TaskListItem({ task, isChecked, onToggleCheck, onSelect, variant = 'nor
 
   return (
     <div className={`${
-      isDeleted
+      isSelected
+        ? 'bg-gray-100'
+        : isDeleted
         ? 'bg-red-50 border-red-200 hover:bg-red-100'
         : 'bg-white hover:bg-gray-50'
     } border-b border-gray-200 transition-colors`}>

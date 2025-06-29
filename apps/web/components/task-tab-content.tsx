@@ -14,6 +14,7 @@ interface TaskTabContentProps {
   checkedTasks: Set<number>;
   onToggleCheck: (taskId: number) => void;
   onSelectTask: (task: Task) => void;
+  selectedTaskId?: number;
 }
 
 function TaskTabContent({
@@ -23,7 +24,8 @@ function TaskTabContent({
   effectiveColumnCount,
   checkedTasks,
   onToggleCheck,
-  onSelectTask
+  onSelectTask,
+  selectedTaskId
 }: TaskTabContentProps) {
   const getFilteredTasks = () => {
     if (!tasks) return [];
@@ -61,6 +63,7 @@ function TaskTabContent({
             onToggleCheck={() => onToggleCheck(task.id)}
             onSelect={() => onSelectTask(task)}
             variant="normal"
+            isSelected={selectedTaskId === task.id}
           />
         );
       })}

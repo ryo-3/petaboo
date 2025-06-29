@@ -28,6 +28,18 @@ function TaskViewer({ task, onClose, onEdit, onExitEdit, isEditMode = false }: T
     (task?.dueDate ? new Date(task.dueDate * 1000).toISOString().split('T')[0] : '') || ''
   )
   const [isSaving, setIsSaving] = useState(false)
+
+  // タスクが変更された時に状態を更新
+  useEffect(() => {
+    if (task) {
+      setTitle(task.title || '')
+      setDescription(task.description || '')
+      setStatus(task.status || 'todo')
+      setPriority(task.priority || 'medium')
+      setDueDate(task.dueDate ? new Date(task.dueDate * 1000).toISOString().split('T')[0] : '')
+      setIsEditing(false)
+    }
+  }, [task?.id])
   const [error, setError] = useState<string | null>(null)
   const [savedSuccessfully, setSavedSuccessfully] = useState(false)
 

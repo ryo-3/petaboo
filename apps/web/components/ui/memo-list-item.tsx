@@ -7,15 +7,18 @@ interface MemoListItemProps {
   onToggleCheck: () => void
   onSelect: () => void
   variant?: 'normal' | 'deleted'
+  isSelected?: boolean
 }
 
-function MemoListItem({ memo, isChecked, onToggleCheck, onSelect, variant = 'normal' }: MemoListItemProps) {
+function MemoListItem({ memo, isChecked, onToggleCheck, onSelect, variant = 'normal', isSelected = false }: MemoListItemProps) {
   const isDeleted = variant === 'deleted'
   const deletedMemo = memo as DeletedMemo
 
   return (
     <div className={`${
-      isDeleted
+      isSelected
+        ? 'bg-gray-100'
+        : isDeleted
         ? 'bg-red-50 border-red-200 hover:bg-red-100'
         : 'bg-white hover:bg-gray-50'
     } border-b border-gray-200 transition-colors`}>

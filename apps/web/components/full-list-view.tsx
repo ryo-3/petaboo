@@ -317,6 +317,7 @@ function FullListView({
                     }}
                     onSelect={() => onSelectMemo(memo, true)}
                     variant="normal"
+                    isSelected={selectedMemo?.id === memo.id}
                   />
                 );
               })}
@@ -345,6 +346,7 @@ function FullListView({
             setCheckedTasks(newChecked);
           }}
           onSelectTask={(task) => onSelectTask!(task, true)}
+          selectedTaskId={selectedTask?.id}
         />
       )}
 
@@ -372,6 +374,7 @@ function FullListView({
                       }}
                       onSelect={() => onSelectDeletedMemo(memo, true)}
                       variant="deleted"
+                      isSelected={selectedDeletedMemo?.id === memo.id}
                     />
                   );
                 })}
@@ -400,6 +403,7 @@ function FullListView({
                       }}
                       onSelect={() => onSelectDeletedTask!(task, true)}
                       variant="deleted"
+                      isSelected={selectedDeletedTask?.id === task.id}
                     />
                   );
                 })}

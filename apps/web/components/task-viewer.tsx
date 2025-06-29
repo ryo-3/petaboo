@@ -31,6 +31,20 @@ function TaskViewer({ task, onClose, onEdit, onExitEdit, isEditMode = false }: T
   const [error, setError] = useState<string | null>(null)
   const [savedSuccessfully, setSavedSuccessfully] = useState(false)
 
+  // taskプロパティが変更された時にstateを更新
+  useEffect(() => {
+    if (task) {
+      setTitle(task.title || '')
+      setDescription(task.description || '')
+      setStatus(task.status || 'todo')
+      setPriority(task.priority || 'medium')
+      setDueDate((task.dueDate ? new Date(task.dueDate * 1000).toISOString().split('T')[0] : '') as string)
+      setIsEditing(false) // 新しいタスクを選択した時は表示モードに戻る
+      setSavedSuccessfully(false)
+      setError(null)
+    }
+  }, [task])
+
   const handleDelete = async () => {
     try {
       await deleteTask.mutateAsync(task.id)

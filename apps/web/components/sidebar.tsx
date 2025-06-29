@@ -120,7 +120,6 @@ function Sidebar({
           <Tooltip text="設定" position="right">
             <button
               onClick={() => {
-                console.log("設定ボタンクリック");
                 onSettings?.();
               }}
               className="p-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-600 transition-colors"

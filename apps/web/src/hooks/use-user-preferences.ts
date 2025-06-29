@@ -2,7 +2,10 @@ import { useState, useEffect } from 'react';
 
 export interface UserPreferences {
   userId: number;
-  columnCount: number;
+  memoColumnCount: number;
+  taskColumnCount: number;
+  memoViewMode: 'card' | 'list';
+  taskViewMode: 'card' | 'list';
   createdAt: number;
   updatedAt: number;
 }
@@ -33,7 +36,10 @@ export function useUserPreferences(userId: number = 1) {
       // エラー時はデフォルト値を設定
       setPreferences({
         userId,
-        columnCount: 4,
+        memoColumnCount: 4,
+        taskColumnCount: 2,
+        memoViewMode: 'list',
+        taskViewMode: 'list',
         createdAt: Date.now(),
         updatedAt: Date.now()
       });
@@ -43,7 +49,7 @@ export function useUserPreferences(userId: number = 1) {
   };
 
   // ユーザー設定を更新
-  const updatePreferences = async (updates: Partial<Pick<UserPreferences, 'columnCount'>>) => {
+  const updatePreferences = async (updates: Partial<Pick<UserPreferences, 'memoColumnCount' | 'taskColumnCount' | 'memoViewMode' | 'taskViewMode'>>) => {
     try {
       setError(null);
       const response = await fetch(`${API_BASE}/user-preferences/${userId}`, {

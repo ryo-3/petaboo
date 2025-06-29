@@ -13,6 +13,8 @@ import DeletedMemoViewer from "@/components/deleted-memo-viewer";
 import { useDeletedNotes, useNotes, useDeleteNote, usePermanentDeleteNote } from "@/src/hooks/use-notes";
 import { useDeletedTasks, useTasks, useDeleteTask, usePermanentDeleteTask } from "@/src/hooks/use-tasks";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
+import ViewModeToggle from "@/components/ui/view-mode-toggle";
+import ColumnCountSelector from "@/components/ui/column-count-selector";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
 import { useState, useEffect } from "react";
@@ -72,9 +74,32 @@ function FullListView({
   const [checkedDeletedTasks, setCheckedDeletedTasks] = useState<Set<number>>(
     new Set()
   );
-  const [viewMode, setViewMode] = useState<'card' | 'list'>('list');
-  const { preferences, updatePreferences } = useUserPreferences(1); // TODO: 実際のユーザーIDを使用
-  const columnCount = preferences?.columnCount || 4;
+  const { preferences } = useUserPreferences(1);
+  
+  // 現在のモードに応じた初期値を取得
+  const initialViewMode = currentMode === 'task' 
+    ? (preferences?.taskViewMode || 'list')
+    : (preferences?.memoViewMode || 'list');
+  const initialColumnCount = currentMode === 'task'
+    ? (preferences?.taskColumnCount || 2)
+    : (preferences?.memoColumnCount || 4);
+
+  // ローカル状態（データベースに保存しない）
+  const [viewMode, setViewMode] = useState<'card' | 'list'>(initialViewMode);
+  const [columnCount, setColumnCount] = useState(initialColumnCount);
+
+  // 設定値が変更されたらローカル状態を更新
+  useEffect(() => {
+    const newViewMode = currentMode === 'task' 
+      ? (preferences?.taskViewMode || 'list')
+      : (preferences?.memoViewMode || 'list');
+    const newColumnCount = currentMode === 'task'
+      ? (preferences?.taskColumnCount || 2)
+      : (preferences?.memoColumnCount || 4);
+    
+    setViewMode(newViewMode);
+    setColumnCount(newColumnCount);
+  }, [preferences, currentMode]);
 
   const deleteNote = useDeleteNote();
   const permanentDeleteNote = usePermanentDeleteNote();
@@ -192,62 +217,15 @@ function FullListView({
         
         {/* コントロール */}
         <div className="flex items-center gap-2">
-          {/* ビューモード切り替えボタン */}
-          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-            <button
-              onClick={() => setViewMode('card')}
-              className={`p-1.5 rounded transition-colors ${
-                viewMode === 'card'
-                  ? 'bg-white text-gray-700 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-              title="カード表示"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-              </svg>
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-1.5 rounded transition-colors ${
-                viewMode === 'list'
-                  ? 'bg-white text-gray-700 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-              title="リスト表示"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-          </div>
-          
-          {/* カラム数調整 */}
-          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-            <span className="text-xs text-gray-600 px-2">列数</span>
-            {[1, 2, 3, 4].map((count) => {
-              const isRightShown = selectedMemo || selectedDeletedMemo || selectedTask || selectedDeletedTask;
-              
-              // 右側表示時: 3と4は非表示
-              if (isRightShown && (count === 3 || count === 4)) return null;
-              
-              return (
-                <button
-                  key={count}
-                  onClick={() => updatePreferences({ columnCount: count })}
-                  className={`px-2 py-1 text-xs rounded transition-colors ${
-                    (!isRightShown && columnCount === count) || // 通常時
-                    (isRightShown && columnCount <= 2 && columnCount === count) || // 右側表示時の1-2列
-                    (isRightShown && columnCount >= 3 && count === 2) // 右側表示時の3-4列→2列表示
-                      ? 'bg-white text-gray-700 shadow-sm'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  {count}
-                </button>
-              );
-            })}
-          </div>
+          <ViewModeToggle 
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+          />
+          <ColumnCountSelector 
+            columnCount={columnCount}
+            onColumnCountChange={setColumnCount}
+            isRightPanelShown={!!(selectedMemo || selectedDeletedMemo || selectedTask || selectedDeletedTask)}
+          />
         </div>
       </div>
 

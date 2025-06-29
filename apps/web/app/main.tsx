@@ -12,6 +12,7 @@ import Header from "@/components/header";
 import TaskCreator from "@/components/task-creator";
 import TaskEditor from "@/components/task-editor";
 import TaskViewer from "@/components/task-viewer";
+import SettingsScreen from "@/components/settings-screen";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
 
@@ -23,6 +24,7 @@ function Main() {
   const [selectedDeletedTask, setSelectedDeletedTask] = useState<DeletedTask | null>(null);
   const [showDeleted, setShowDeleted] = useState(false);
   const [showFullList, setShowFullList] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [currentMode, setCurrentMode] = useState<'memo' | 'task'>('memo');
   const [windowWidth, setWindowWidth] = useState(0);
 
@@ -130,6 +132,7 @@ function Main() {
     setSelectedTask(null);
     setSelectedDeletedTask(null);
     setShowDeleted(false);
+    setShowSettings(false);
   };
 
   const handleHome = () => {
@@ -140,6 +143,7 @@ function Main() {
     setSelectedDeletedTask(null);
     setShowDeleted(false);
     setShowFullList(false);
+    setShowSettings(false);
   };
 
   const handleEditMemo = (memo?: Memo) => {
@@ -154,6 +158,21 @@ function Main() {
       setSelectedTask(task);
     }
     setIsEditing(true);
+  };
+
+  const handleSettings = () => {
+    setShowSettings(true);
+    setIsEditing(false);
+    setSelectedMemo(null);
+    setSelectedDeletedMemo(null);
+    setSelectedTask(null);
+    setSelectedDeletedTask(null);
+    setShowDeleted(false);
+    setShowFullList(false);
+  };
+
+  const handleBackFromSettings = () => {
+    setShowSettings(false);
   };
 
   return (
@@ -181,7 +200,7 @@ function Main() {
               isCompact={false}
               currentMode={currentMode}
               onModeChange={setCurrentMode}
-              onSettings={() => alert('設定画面（未実装）')}
+              onSettings={handleSettings}
             />
           )}
         </div>
@@ -213,12 +232,16 @@ function Main() {
                 isCompact={true}
                 currentMode={currentMode}
                 onModeChange={setCurrentMode}
-                onSettings={() => alert('設定画面（未実装）')}
+                onSettings={handleSettings}
               />
             )}
             </div>
             <div className={`flex-1 ml-16 ${isEditing || selectedMemo || selectedDeletedMemo || selectedTask || selectedDeletedTask ? 'h-[calc(100vh-64px)] pt-16' : 'pt-16'}`}>
-            {showFullList ? (
+            {showSettings ? (
+              <SettingsScreen 
+                onBack={handleBackFromSettings}
+              />
+            ) : showFullList ? (
               <FullListView 
                 onSelectMemo={handleSelectMemo} 
                 onSelectDeletedMemo={handleSelectDeletedMemo}

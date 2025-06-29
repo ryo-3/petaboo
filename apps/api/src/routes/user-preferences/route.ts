@@ -27,7 +27,10 @@ app.get('/:userId', async (c) => {
       // デフォルト値を返す
       return c.json({
         userId,
-        columnCount: 4,
+        memoColumnCount: 4,
+        taskColumnCount: 2,
+        memoViewMode: 'list',
+        taskViewMode: 'list',
         createdAt: Date.now(),
         updatedAt: Date.now()
       });
@@ -50,10 +53,22 @@ app.put('/:userId', async (c) => {
       return c.json({ error: 'Invalid user ID' }, 400);
     }
 
-    const { columnCount } = body;
+    const { memoColumnCount, taskColumnCount, memoViewMode, taskViewMode } = body;
 
-    if (typeof columnCount !== 'number' || columnCount < 1 || columnCount > 4) {
-      return c.json({ error: 'Invalid column count' }, 400);
+    if (memoColumnCount !== undefined && (typeof memoColumnCount !== 'number' || memoColumnCount < 1 || memoColumnCount > 4)) {
+      return c.json({ error: 'Invalid memo column count' }, 400);
+    }
+
+    if (taskColumnCount !== undefined && (typeof taskColumnCount !== 'number' || taskColumnCount < 1 || taskColumnCount > 4)) {
+      return c.json({ error: 'Invalid task column count' }, 400);
+    }
+
+    if (memoViewMode !== undefined && !['card', 'list'].includes(memoViewMode)) {
+      return c.json({ error: 'Invalid memo view mode' }, 400);
+    }
+
+    if (taskViewMode !== undefined && !['card', 'list'].includes(taskViewMode)) {
+      return c.json({ error: 'Invalid task view mode' }, 400);
     }
 
     // 既存の設定があるかチェック
@@ -63,14 +78,17 @@ app.put('/:userId', async (c) => {
       .where(eq(userPreferences.userId, userId))
       .get();
 
+    const updateData: any = { updatedAt: Date.now() };
+    if (memoColumnCount !== undefined) updateData.memoColumnCount = memoColumnCount;
+    if (taskColumnCount !== undefined) updateData.taskColumnCount = taskColumnCount;
+    if (memoViewMode !== undefined) updateData.memoViewMode = memoViewMode;
+    if (taskViewMode !== undefined) updateData.taskViewMode = taskViewMode;
+
     if (existing) {
       // 更新
       const updated = await db
         .update(userPreferences)
-        .set({
-          columnCount,
-          updatedAt: Date.now()
-        })
+        .set(updateData)
         .where(eq(userPreferences.userId, userId))
         .returning()
         .get();
@@ -82,7 +100,10 @@ app.put('/:userId', async (c) => {
         .insert(userPreferences)
         .values({
           userId,
-          columnCount,
+          memoColumnCount: memoColumnCount || 4,
+          taskColumnCount: taskColumnCount || 2,
+          memoViewMode: memoViewMode || 'list',
+          taskViewMode: taskViewMode || 'list',
           createdAt: Date.now(),
           updatedAt: Date.now()
         })

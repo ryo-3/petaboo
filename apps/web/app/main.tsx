@@ -80,13 +80,11 @@ function Main() {
   };
 
   const handleShowFullList = () => {
-    console.log('handleShowFullList called');
     setShowFullList(true);
     setIsEditing(false);
     setSelectedMemo(null);
     setSelectedDeletedMemo(null);
     setShowDeleted(false);
-    console.log('showFullList set to true');
   };
 
   const handleHome = () => {

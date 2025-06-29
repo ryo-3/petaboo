@@ -38,9 +38,6 @@ function FullListView({
     new Set()
   );
 
-  console.log('Debug - activeTab:', activeTab);
-  console.log('Debug - checkedMemos.size:', checkedMemos.size);
-  console.log('Debug - checkedDeletedMemos.size:', checkedDeletedMemos.size);
   const deleteNote = useDeleteNote();
   const permanentDeleteNote = usePermanentDeleteNote();
 
@@ -193,7 +190,6 @@ function FullListView({
       {(() => {
         const shouldShow = (activeTab === 'normal' && checkedMemos.size > 0) || 
                           (activeTab === 'deleted' && checkedDeletedMemos.size > 0);
-        console.log('Debug - shouldShow bulk delete button:', shouldShow);
         return shouldShow;
       })() && (
         <button

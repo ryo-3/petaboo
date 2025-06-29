@@ -3,7 +3,7 @@
 import CheckIcon from '@/components/icons/check-icon'
 import TrashIcon from '@/components/icons/trash-icon'
 import { useCreateTask } from '@/src/hooks/use-tasks'
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 
 interface TaskCreatorProps {
   onClose: () => void
@@ -19,58 +19,48 @@ function TaskCreator({ onClose }: TaskCreatorProps) {
   const [error, setError] = useState<string | null>(null)
   const [savedSuccessfully, setSavedSuccessfully] = useState(false)
   const [createdTaskId, setCreatedTaskId] = useState<number | null>(null)
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   const createTask = useCreateTask()
 
-  // 3秒後の自動保存処理
-  const handleAutoSave = useCallback(() => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current)
-    }
+  // 手動保存処理
+  const handleSave = useCallback(async () => {
+    if (!title.trim()) return
 
-    timeoutRef.current = setTimeout(async () => {
-      if (title.trim() && !createdTaskId) {
-        setIsSaving(true)
-        setError(null)
-        setSavedSuccessfully(false)
-        try {
-          const taskData = {
-            title: title.trim(),
-            description: description.trim() || undefined,
-            status,
-            priority,
-            dueDate: dueDate ? Math.floor(new Date(dueDate).getTime() / 1000) : undefined,
-          }
-
-          // 新規タスクの作成
-          const result = await createTask.mutateAsync(taskData)
-          // 作成されたタスクのIDを保存
-          setCreatedTaskId(result.id)
-          setSavedSuccessfully(true)
-          // 保存成功時は編集モードを継続（閉じない）
-        } catch (error) {
-          console.error('保存に失敗しました:', error)
-          setError('保存に失敗しました。APIサーバーが起動していることを確認してください。')
-        } finally {
-          setIsSaving(false)
-        }
+    setIsSaving(true)
+    setError(null)
+    setSavedSuccessfully(false)
+    try {
+      const taskData = {
+        title: title.trim(),
+        description: description.trim() || undefined,
+        status,
+        priority,
+        dueDate: dueDate ? Math.floor(new Date(dueDate).getTime() / 1000) : undefined,
       }
-    }, 3000)
-  }, [title, description, status, priority, dueDate, createdTaskId, createTask])
 
-  // フィールドが変更されたら自動保存タイマーをリセット
+      // 新規タスクの作成
+      const result = await createTask.mutateAsync(taskData)
+      // 作成されたタスクのIDを保存
+      setCreatedTaskId(result.id)
+      setSavedSuccessfully(true)
+      
+      // 保存成功後、少し待ってから閉じる
+      setTimeout(() => {
+        onClose()
+      }, 1000)
+    } catch (error) {
+      console.error('保存に失敗しました:', error)
+      setError('保存に失敗しました。APIサーバーが起動していることを確認してください。')
+    } finally {
+      setIsSaving(false)
+    }
+  }, [title, description, status, priority, dueDate, createTask, onClose])
+
+  // 入力時は保存成功状態をリセット
   useEffect(() => {
-    if (title.trim()) {
-      setSavedSuccessfully(false) // 入力時は保存成功状態をリセット
-      handleAutoSave()
+    if (savedSuccessfully) {
+      setSavedSuccessfully(false)
     }
-
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
-      }
-    }
-  }, [title, description, status, priority, dueDate, handleAutoSave])
+  }, [title, description, status, priority, dueDate, savedSuccessfully])
 
   const statusOptions = [
     { value: 'todo', label: '未着手', color: 'bg-gray-100 text-gray-800' },
@@ -91,6 +81,9 @@ function TaskCreator({ onClose }: TaskCreatorProps) {
           {isSaving && (
             <span className="text-sm text-gray-500">保存中...</span>
           )}
+          {savedSuccessfully && (
+            <span className="text-sm text-green-600">保存しました</span>
+          )}
           {error && (
             <span className="text-sm text-red-500">エラー</span>
           )}
@@ -104,12 +97,9 @@ function TaskCreator({ onClose }: TaskCreatorProps) {
             placeholder="タスクタイトルを入力..."
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="flex-1 text-lg font-medium border-b border-gray-200 outline-none pb-2 focus:border-blue-500"
+            className="flex-1 text-lg font-medium border-b border-Green outline-none pb-2 focus:border-Green"
             autoFocus
           />
-          {savedSuccessfully && !isSaving && (
-            <CheckIcon className="w-5 h-5 text-green-600 flex-shrink-0" />
-          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -172,12 +162,30 @@ function TaskCreator({ onClose }: TaskCreatorProps) {
           />
         </div>
 
-        <div className="text-xs text-gray-400 mt-auto">
-          {error ? (
-            <div className="text-red-500">{error}</div>
-          ) : (
-            '入力完了から3秒後に自動保存されます'
-          )}
+        <div className="flex justify-start">
+          <button
+            onClick={handleSave}
+            disabled={!title.trim() || isSaving}
+            className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors ${
+              !title.trim() || isSaving
+                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                : 'bg-blue-600 hover:bg-blue-700 text-white'
+            }`}
+          >
+            {isSaving ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                保存中...
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                保存
+              </>
+            )}
+          </button>
         </div>
       </div>
 

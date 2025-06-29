@@ -1,9 +1,11 @@
 'use client'
 
 import TrashIcon from '@/components/icons/trash-icon'
-import MemoDateInfo from '@/components/memo-date-info'
-import EditButton from '@/components/ui/edit-button'
-import { useDeleteNote } from '@/src/hooks/use-notes'
+import PhotoIcon from '@/components/icons/photo-icon'
+import CheckIcon from '@/components/icons/check-icon'
+import DateInfo from '@/components/shared/date-info'
+import { useDeleteNote, useUpdateNote } from '@/src/hooks/use-notes'
+import { useState, useCallback, useEffect } from 'react'
 import type { Memo } from '@/src/types/memo'
 
 interface MemoViewerProps {
@@ -16,6 +18,14 @@ interface MemoViewerProps {
 
 function MemoViewer({ memo, onClose, onEdit, onExitEdit, isEditMode = false }: MemoViewerProps) {
   const deleteNote = useDeleteNote()
+  const updateNote = useUpdateNote()
+  
+  // 常に編集可能モード
+  const [title, setTitle] = useState(memo.title)
+  const [content, setContent] = useState(memo.content || '')
+  const [isSaving, setIsSaving] = useState(false)
+  const [savedSuccessfully, setSavedSuccessfully] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleDelete = async () => {
     try {
@@ -26,16 +36,73 @@ function MemoViewer({ memo, onClose, onEdit, onExitEdit, isEditMode = false }: M
     }
   }
 
+  // 自動保存処理（3秒後）
+  const handleAutoSave = useCallback(async () => {
+    if (!title.trim()) return
+
+    setIsSaving(true)
+    setError(null)
+    setSavedSuccessfully(false)
+    try {
+      await updateNote.mutateAsync({
+        id: memo.id,
+        data: {
+          title: title.trim(),
+          content: content.trim() || undefined,
+        }
+      })
+      setSavedSuccessfully(true)
+      
+      // 保存成功表示を2秒後に消す
+      setTimeout(() => {
+        setSavedSuccessfully(false)
+      }, 2000)
+    } catch (error) {
+      console.error('保存に失敗しました:', error)
+      setError('保存に失敗しました。')
+    } finally {
+      setIsSaving(false)
+    }
+  }, [title, content, memo.id, updateNote])
+
+  // 3秒後の自動保存タイマー
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleAutoSave()
+    }, 3000)
+
+    return () => clearTimeout(timer)
+  }, [title, content, handleAutoSave])
+
   return (
     <div className="flex flex-col h-full bg-white">
       <div className="flex justify-start items-center mb-4">
-        {onEdit && (
-          <EditButton
-            isEditing={isEditMode}
-            onEdit={() => onEdit(memo)}
-            onExitEdit={onExitEdit}
-          />
-        )}
+        <div className="flex items-center gap-2">
+          {/* 写真アイコン（今後の画像添付機能用） */}
+          <button
+            className="p-2 rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-800 transition-colors"
+            title="画像を添付（今後対応予定）"
+            onClick={() => {
+              // TODO: 画像添付機能の実装
+              alert('画像添付機能は今後実装予定です')
+            }}
+          >
+            <PhotoIcon className="w-4 h-4" />
+          </button>
+        </div>
+        
+        <div className="flex items-center gap-3 ml-auto">
+          {isSaving && (
+            <span className="text-sm text-gray-500">保存中...</span>
+          )}
+          {savedSuccessfully && (
+            <span className="text-sm text-green-600">保存しました</span>
+          )}
+          {error && (
+            <span className="text-sm text-red-500">{error}</span>
+          )}
+        </div>
+        
         <button
           onClick={handleDelete}
           className="fixed bottom-6 right-6 bg-gray-500 hover:bg-gray-600 text-white p-3 rounded-full shadow-lg transition-colors"
@@ -45,23 +112,28 @@ function MemoViewer({ memo, onClose, onEdit, onExitEdit, isEditMode = false }: M
       </div>
 
       <div className="flex flex-col gap-4 flex-1">
-        <MemoDateInfo memo={memo} />
+        <DateInfo item={memo} />
         
-        <div className="border-b border-gray-200 pb-2">
-          <h1 className="text-lg font-medium text-gray-800">{memo.title}</h1>
-        </div>
-
-        <div className="flex-1 overflow-y-auto">
-          {memo.content ? (
-            <div className="whitespace-pre-wrap text-gray-700 leading-relaxed">
-              {memo.content}
-            </div>
-          ) : (
-            <div className="text-gray-400 italic">
-              内容がありません
-            </div>
+        <div className="flex items-center gap-3">
+          <input
+            type="text"
+            placeholder="タイトルを入力..."
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="flex-1 text-lg font-medium border-b border-Green outline-none pb-2 focus:border-Green"
+            autoFocus
+          />
+          {savedSuccessfully && !isSaving && (
+            <CheckIcon className="w-5 h-5 text-green-600 flex-shrink-0" />
           )}
         </div>
+
+        <textarea
+          placeholder="内容を入力..."
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          className="flex-1 resize-none outline-none text-gray-700 leading-relaxed"
+        />
       </div>
 
     </div>

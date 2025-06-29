@@ -1,7 +1,7 @@
 'use client'
 
 import TrashIcon from '@/components/icons/trash-icon'
-import TaskDateInfo from '@/components/task-date-info'
+import DateInfo from '@/components/shared/date-info'
 import EditButton from '@/components/ui/edit-button'
 import { useDeleteTask } from '@/src/hooks/use-tasks'
 import type { Task } from '@/src/types/task'
@@ -89,7 +89,7 @@ function TaskViewer({ task, onClose, onEdit, onExitEdit, isEditMode = false }: T
       </div>
 
       <div className="flex flex-col gap-4 flex-1">
-        <TaskDateInfo task={task} />
+        <DateInfo item={task} />
         
         <div className="border-b border-gray-200 pb-2">
           <h1 className="text-lg font-medium text-gray-800">{task.title}</h1>

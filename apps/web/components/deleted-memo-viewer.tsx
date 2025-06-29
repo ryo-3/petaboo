@@ -2,7 +2,7 @@
 
 import TrashIcon from '@/components/icons/trash-icon'
 import RestoreIcon from '@/components/icons/restore-icon'
-import MemoDateInfo from '@/components/memo-date-info'
+import DateInfo from '@/components/shared/date-info'
 import Tooltip from '@/components/ui/tooltip'
 import DeleteConfirmationModal from '@/components/ui/delete-confirmation-modal'
 import { usePermanentDeleteNote, useRestoreNote } from '@/src/hooks/use-notes'
@@ -61,7 +61,7 @@ function DeletedMemoViewer({ memo, onClose }: DeletedMemoViewerProps) {
       </div>
 
       <div className="flex flex-col gap-4 flex-1">
-        <MemoDateInfo memo={memo} />
+        <DateInfo item={memo} />
         
         <div className="border-b border-gray-200 pb-4">
           <h1 className="text-2xl font-bold text-gray-800">{memo.title}</h1>

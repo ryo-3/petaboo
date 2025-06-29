@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Sidebar from "@/components/sidebar";
 import DeletedMemoList from "@/components/deleted-memo-list";
-import MemoEditor from "@/components/memo-editor";
+import MemoForm from "@/components/memo-form";
 import MemoViewer from "@/components/memo-viewer";
 import DeletedMemoViewer from "@/components/deleted-memo-viewer";
 import FullListView from "@/components/full-list-view";
@@ -232,7 +232,7 @@ function Main() {
               />
             ) : isEditing ? (
               currentMode === 'memo' ? (
-                <MemoEditor onClose={handleClose} memo={selectedMemo} />
+                <MemoForm onClose={handleClose} memo={selectedMemo} />
               ) : selectedTask ? (
                 <TaskEditor onClose={handleClose} task={selectedTask} />
               ) : (

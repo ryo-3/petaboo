@@ -2,7 +2,8 @@
 
 import CheckIcon from '@/components/icons/check-icon'
 import TrashIcon from '@/components/icons/trash-icon'
-import MemoDateInfo from '@/components/memo-date-info'
+import PhotoIcon from '@/components/icons/photo-icon'
+import DateInfo from '@/components/shared/date-info'
 import EditButton from '@/components/ui/edit-button'
 import { useMemoForm } from '@/src/hooks/use-memo-form'
 import { useState } from 'react'
@@ -16,7 +17,8 @@ interface MemoFormProps {
 }
 
 function MemoForm({ onClose, memo = null, onSave, onExitEdit }: MemoFormProps) {
-  const [isEditing, setIsEditing] = useState(true)
+  // 新規作成時は常に編集モード、既存メモの場合は表示モードから開始
+  const [isEditing, setIsEditing] = useState(memo === null)
   const {
     title,
     setTitle,
@@ -33,14 +35,31 @@ function MemoForm({ onClose, memo = null, onSave, onExitEdit }: MemoFormProps) {
   return (
     <div className="flex flex-col h-full bg-white p-6">
       <div className="flex justify-start items-center mb-4">
-        <EditButton 
-          isEditing={isEditing} 
-          onEdit={() => setIsEditing(true)}
-          onExitEdit={() => {
-            setIsEditing(false)
-            if (onExitEdit) onExitEdit()
-          }} 
-        />
+        <div className="flex items-center gap-2">
+          {/* 既存メモの場合のみ編集ボタンを表示 */}
+          {memo && (
+            <EditButton 
+              isEditing={isEditing} 
+              onEdit={() => setIsEditing(true)}
+              onExitEdit={() => {
+                setIsEditing(false)
+                if (onExitEdit) onExitEdit()
+              }} 
+            />
+          )}
+          
+          {/* 写真アイコン（今後の画像添付機能用） */}
+          <button
+            className="p-2 rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-800 transition-colors"
+            title="画像を添付（今後対応予定）"
+            onClick={() => {
+              // TODO: 画像添付機能の実装
+              alert('画像添付機能は今後実装予定です')
+            }}
+          >
+            <PhotoIcon className="w-4 h-4" />
+          </button>
+        </div>
         
         <div className="flex items-center gap-3 ml-auto">
           {error && (
@@ -50,7 +69,7 @@ function MemoForm({ onClose, memo = null, onSave, onExitEdit }: MemoFormProps) {
       </div>
 
       <div className="flex flex-col gap-4 flex-1">
-        <MemoDateInfo memo={memo} createdMemoId={createdMemoId} />
+        {memo && <DateInfo item={memo} createdItemId={createdMemoId} />}
         
         <div className="flex items-center gap-3">
           <input

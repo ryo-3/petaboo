@@ -39,9 +39,15 @@ function FullListView({
     new Set()
   );
   const [viewMode, setViewMode] = useState<'card' | 'list'>('list');
+  const [columnCount, setColumnCount] = useState(4);
 
   const deleteNote = useDeleteNote();
   const permanentDeleteNote = usePermanentDeleteNote();
+  
+  // 右側パネル表示時は列数を-1する（2列以下の場合は変更しない）
+  const effectiveColumnCount = (selectedMemo || selectedDeletedMemo) 
+    ? (columnCount <= 2 ? columnCount : columnCount - 1)
+    : columnCount;
 
   const handleBulkDelete = async () => {
     try {
@@ -84,8 +90,8 @@ function FullListView({
     <div className="flex h-full bg-white">
       {/* 左側：一覧表示 */}
       <div className={`${selectedMemo || selectedDeletedMemo ? 'w-1/2' : 'w-full'} ${selectedMemo || selectedDeletedMemo ? 'border-r border-gray-300' : ''} pt-6 pl-6 pr-2 flex flex-col transition-all duration-300`}>
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-4">
+      <div className="mb-6">
+        <div className="flex justify-between items-center mb-3">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               {currentMode === 'memo' ? (
@@ -95,46 +101,76 @@ function FullListView({
               )}
               <h1 className="text-2xl font-bold text-gray-800">{currentMode === 'memo' ? 'メモ一覧' : 'タスク一覧'}</h1>
             </div>
-            
-            {/* ビューモード切り替えボタン */}
-            <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-              <button
-                onClick={() => setViewMode('card')}
-                className={`p-1.5 rounded transition-colors ${
-                  viewMode === 'card'
-                    ? 'bg-white text-gray-700 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-                title="カード表示"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                </svg>
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-1.5 rounded transition-colors ${
-                  viewMode === 'list'
-                    ? 'bg-white text-gray-700 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-                title="リスト表示"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-            </div>
+
+            {/* スイッチ風タブ */}
+            <SwitchTabs
+              tabs={tabs}
+              activeTab={activeTab}
+              onTabChange={(tabId) => setActiveTab(tabId as "normal" | "deleted")}
+            />
           </div>
-
-          {/* スイッチ風タブ */}
-          <SwitchTabs
-            tabs={tabs}
-            activeTab={activeTab}
-            onTabChange={(tabId) => setActiveTab(tabId as "normal" | "deleted")}
-          />
         </div>
-
+        
+        {/* コントロール */}
+        <div className="flex items-center gap-2">
+          {/* ビューモード切り替えボタン */}
+          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setViewMode('card')}
+              className={`p-1.5 rounded transition-colors ${
+                viewMode === 'card'
+                  ? 'bg-white text-gray-700 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+              title="カード表示"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              </svg>
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-1.5 rounded transition-colors ${
+                viewMode === 'list'
+                  ? 'bg-white text-gray-700 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+              title="リスト表示"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
+          
+          {/* カラム数調整 */}
+          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+            <span className="text-xs text-gray-600 px-2">列数</span>
+            {[1, 2, 3, 4].map((count) => {
+              const isRightShown = selectedMemo || selectedDeletedMemo;
+              
+              // 右側表示時: 3は非表示、4は「3」として表示
+              if (isRightShown && count === 3) return null;
+              
+              return (
+                <button
+                  key={count}
+                  onClick={() => setColumnCount(count)}
+                  className={`px-2 py-1 text-xs rounded transition-colors ${
+                    (isRightShown && count === 4 && columnCount === 3) || // 右側表示時の3列設定
+                    (isRightShown && count === 4 && columnCount === 4) || // 右側表示時の4列設定  
+                    (!isRightShown && columnCount === count) || // 通常時
+                    (isRightShown && columnCount <= 2 && columnCount === count) // 右側表示時の1-2列
+                      ? 'bg-white text-gray-700 shadow-sm'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  {isRightShown && count === 4 ? '3' : count}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {isLoading && (
@@ -155,7 +191,17 @@ function FullListView({
         <>
           {notes && notes.length > 0 ? (
             <div className="flex-1 overflow-auto pr-2">
-              <div className={viewMode === 'card' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4' : 'space-y-0'}>
+              <div className={viewMode === 'card' ? `grid gap-4 ${
+                effectiveColumnCount === 1 ? 'grid-cols-1' :
+                effectiveColumnCount === 2 ? 'grid-cols-1 md:grid-cols-2' :
+                effectiveColumnCount === 3 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' :
+                'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+              }` : `${
+                effectiveColumnCount === 1 ? 'space-y-0' :
+                effectiveColumnCount === 2 ? 'grid grid-cols-2 gap-x-4' :
+                effectiveColumnCount === 3 ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4' :
+                'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4'
+              }`}>
                 {notes.map((memo: Memo) => {
                   const Component = viewMode === 'card' ? MemoCard : MemoListItem;
                   return (
@@ -192,7 +238,17 @@ function FullListView({
         <>
           {deletedNotes && deletedNotes.length > 0 ? (
             <div className="flex-1 overflow-auto pr-2">
-              <div className={viewMode === 'card' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4' : 'space-y-0'}>
+              <div className={viewMode === 'card' ? `grid gap-4 ${
+                effectiveColumnCount === 1 ? 'grid-cols-1' :
+                effectiveColumnCount === 2 ? 'grid-cols-1 md:grid-cols-2' :
+                effectiveColumnCount === 3 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' :
+                'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+              }` : `${
+                effectiveColumnCount === 1 ? 'space-y-0' :
+                effectiveColumnCount === 2 ? 'grid grid-cols-2 gap-x-4' :
+                effectiveColumnCount === 3 ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4' :
+                'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4'
+              }`}>
                 {deletedNotes.map((memo: DeletedMemo) => {
                   const Component = viewMode === 'card' ? MemoCard : MemoListItem;
                   return (

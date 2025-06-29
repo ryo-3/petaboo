@@ -6,6 +6,7 @@ import MemoIcon from "./icons/memo-icon";
 import SettingsIcon from "./icons/settings-icon";
 import TaskIcon from "./icons/task-icon";
 import ColumnCountSelector from "./ui/column-count-selector";
+import Switch from "./ui/switch";
 import ViewModeToggle from "./ui/view-mode-toggle";
 
 interface SettingsScreenProps {
@@ -19,6 +20,8 @@ function SettingsScreen({ onBack }: SettingsScreenProps) {
   const [taskColumnCount, setTaskColumnCount] = useState(2);
   const [memoViewMode, setMemoViewMode] = useState<"card" | "list">("list");
   const [taskViewMode, setTaskViewMode] = useState<"card" | "list">("list");
+  const [memoHideControls, setMemoHideControls] = useState(false);
+  const [taskHideControls, setTaskHideControls] = useState(false);
 
   // 設定を読み込んだらローカル状態を更新
   useEffect(() => {
@@ -69,16 +72,26 @@ function SettingsScreen({ onBack }: SettingsScreenProps) {
             ここではメモとタスクの表示設定を変更できます。設定は自動的に保存され、次回アクセス時にも適用されます。
           </p>
           <p className="text-sm leading-relaxed">
-            <strong>表示モード:</strong> リスト表示は詳細情報が見やすく、カード表示は視覚的に分かりやすい表示です。<br/>
-            <strong>列数:</strong> 列数を調整することで、画面サイズに合わせた最適な表示が可能です。
+            <strong>表示モード:</strong>{" "}
+            リスト表示は詳細情報が見やすく、カード表示は視覚的に分かりやすい表示です。
+            <br />
+            <strong>列数:</strong>{" "}
+            列数を調整することで、画面サイズに合わせた最適な表示が可能です。
           </p>
         </div>
 
         {/* メモ設定 */}
         <div className="mt-4">
-          <div className="flex items-center gap-2 mb-2">
-            <MemoIcon className="w-5 h-5 mt-0.5" />
-            <h2 className="text-lg font-semibold text-gray-800">メモ設定</h2>
+          <div className="flex items-center justify-between mb-2 w-60">
+            <div className="flex items-center gap-2">
+              <MemoIcon className="w-5 h-5 mt-0.5" />
+              <h2 className="text-lg font-semibold text-gray-800">メモ設定</h2>
+            </div>
+            <Switch
+              checked={memoHideControls}
+              onCheckedChange={setMemoHideControls}
+              label="一覧で非表示"
+            />
           </div>
 
           {/* メモのコントロール */}
@@ -96,9 +109,18 @@ function SettingsScreen({ onBack }: SettingsScreenProps) {
 
         {/* タスク設定 */}
         <div className="mt-4">
-          <div className="flex items-center gap-2 mb-2">
-            <TaskIcon className="w-5 h-5 mt-0.5" />
-            <h2 className="text-lg font-semibold text-gray-800">タスク設定</h2>
+          <div className="flex items-center justify-between mb-2 w-60">
+            <div className="flex items-center gap-2">
+              <TaskIcon className="w-5 h-5 mt-0.5" />
+              <h2 className="text-lg font-semibold text-gray-800">
+                タスク設定
+              </h2>
+            </div>
+            <Switch
+              checked={taskHideControls}
+              onCheckedChange={setTaskHideControls}
+              label="一覧で非表示"
+            />
           </div>
 
           {/* タスクのコントロール */}
@@ -115,10 +137,10 @@ function SettingsScreen({ onBack }: SettingsScreenProps) {
         </div>
 
         {/* 保存ボタン */}
-        <div className="border-t border-gray-200 mt-6">
+        <div className="mt-6">
           <button
             onClick={handleSave}
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
+            className="px-6 py-3 bg-Emerald hover:bg-Emerald-dark text-white rounded-lg transition-colors font-medium"
           >
             設定を保存
           </button>

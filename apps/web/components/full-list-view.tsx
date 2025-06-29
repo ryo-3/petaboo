@@ -299,7 +299,9 @@ function FullListView({
         <>
           {notes && notes.length > 0 ? (
             <ItemGrid viewMode={viewMode} effectiveColumnCount={effectiveColumnCount}>
-              {notes.map((memo: Memo) => {
+              {notes
+                .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0)) // 最終編集時刻順（新しい順）
+                .map((memo: Memo) => {
                 const Component = viewMode === 'card' ? MemoCard : MemoListItem;
                 return (
                   <Component
@@ -356,7 +358,9 @@ function FullListView({
           {currentMode === 'memo' ? (
             deletedNotes && deletedNotes.length > 0 ? (
               <ItemGrid viewMode={viewMode} effectiveColumnCount={effectiveColumnCount}>
-                {deletedNotes.map((memo: DeletedMemo) => {
+                {deletedNotes
+                  .sort((a, b) => b.deletedAt - a.deletedAt) // 削除時刻順（新しい順）
+                  .map((memo: DeletedMemo) => {
                   const Component = viewMode === 'card' ? MemoCard : MemoListItem;
                   return (
                     <Component

@@ -24,9 +24,7 @@ function TaskViewer({ task, onClose, onEdit, onExitEdit, isEditMode = false }: T
   const [description, setDescription] = useState(task?.description || '')
   const [status, setStatus] = useState<'todo' | 'in_progress' | 'completed'>(task?.status || 'todo')
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>(task?.priority || 'medium')
-  const [dueDate, setDueDate] = useState<string>(
-    (task?.dueDate ? new Date(task.dueDate * 1000).toISOString().split('T')[0] : '') || ''
-  )
+  const [dueDate, setDueDate] = useState<string>('')
   const [isSaving, setIsSaving] = useState(false)
 
   // タスクが変更された時に状態を更新
@@ -36,7 +34,8 @@ function TaskViewer({ task, onClose, onEdit, onExitEdit, isEditMode = false }: T
       setDescription(task.description || '')
       setStatus(task.status || 'todo')
       setPriority(task.priority || 'medium')
-      setDueDate(task.dueDate ? new Date(task.dueDate * 1000).toISOString().split('T')[0] : '')
+      const formattedDate: string = task.dueDate ? new Date(task.dueDate * 1000).toISOString().split('T')[0] || '' : ''
+      setDueDate(formattedDate)
       setIsEditing(false)
     }
   }, [task?.id])

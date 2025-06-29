@@ -206,12 +206,62 @@ function FullListView({
               <h1 className="text-2xl font-bold text-gray-800">{currentMode === 'memo' ? 'メモ一覧' : 'タスク一覧'}</h1>
             </div>
 
-            {/* スイッチ風タブ */}
-            <SwitchTabs
-              tabs={tabs}
-              activeTab={activeTab}
-              onTabChange={(tabId) => setActiveTab(tabId as "normal" | "deleted" | "todo" | "in_progress" | "completed")}
-            />
+            {/* タブ */}
+            {currentMode === 'task' ? (
+              <div className="flex items-center gap-2">
+                {tabs.map((tab) => {
+                  const getTabColors = () => {
+                    if (activeTab === tab.id) {
+                      switch (tab.id) {
+                        case 'todo':
+                          return 'bg-gray-600 text-white';
+                        case 'in_progress':
+                          return 'bg-blue-600 text-white';
+                        case 'completed':
+                          return 'bg-green-600 text-white';
+                        case 'deleted':
+                          return 'bg-red-600 text-white';
+                        default:
+                          return 'bg-gray-600 text-white';
+                      }
+                    } else {
+                      switch (tab.id) {
+                        case 'todo':
+                          return 'bg-gray-100 text-gray-600 hover:bg-gray-200';
+                        case 'in_progress':
+                          return 'bg-gray-100 text-gray-600 hover:bg-blue-200';
+                        case 'completed':
+                          return 'bg-gray-100 text-gray-600 hover:bg-green-200';
+                        case 'deleted':
+                          return 'bg-gray-100 text-gray-600 hover:bg-red-200';
+                        default:
+                          return 'bg-gray-100 text-gray-600 hover:bg-gray-200';
+                      }
+                    }
+                  };
+
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id as "normal" | "deleted" | "todo" | "in_progress" | "completed")}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${getTabColors()}`}
+                    >
+                      {tab.icon && tab.icon}
+                      <span>{tab.label}</span>
+                      <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full">
+                        {tab.count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <SwitchTabs
+                tabs={tabs}
+                activeTab={activeTab}
+                onTabChange={(tabId) => setActiveTab(tabId as "normal" | "deleted" | "todo" | "in_progress" | "completed")}
+              />
+            )}
           </div>
         </div>
         

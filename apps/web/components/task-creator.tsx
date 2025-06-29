@@ -1,87 +1,93 @@
-'use client'
+"use client";
 
-import CheckIcon from '@/components/icons/check-icon'
-import TrashIcon from '@/components/icons/trash-icon'
-import { useCreateTask } from '@/src/hooks/use-tasks'
-import { useEffect, useState, useCallback } from 'react'
+import TrashIcon from "@/components/icons/trash-icon";
+import { useCreateTask } from "@/src/hooks/use-tasks";
+import { useCallback, useState } from "react";
 
 interface TaskCreatorProps {
-  onClose: () => void
+  onClose: () => void;
 }
 
 function TaskCreator({ onClose }: TaskCreatorProps) {
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [status, setStatus] = useState<'todo' | 'in_progress' | 'completed'>('todo')
-  const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium')
-  const [dueDate, setDueDate] = useState<string>('')
-  const [isSaving, setIsSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [savedSuccessfully, setSavedSuccessfully] = useState(false)
-  const [createdTaskId, setCreatedTaskId] = useState<number | null>(null)
-  const createTask = useCreateTask()
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [status, setStatus] = useState<"todo" | "in_progress" | "completed">(
+    "todo"
+  );
+  const [priority, setPriority] = useState<"low" | "medium" | "high">("medium");
+  const [dueDate, setDueDate] = useState<string>("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [savedSuccessfully, setSavedSuccessfully] = useState(false);
+  const [createdTaskId, setCreatedTaskId] = useState<number | null>(null);
+  const createTask = useCreateTask();
 
   // 手動保存処理
   const handleSave = useCallback(async () => {
-    if (!title.trim()) return
+    if (!title.trim()) return;
 
-    setIsSaving(true)
-    setError(null)
-    setSavedSuccessfully(false)
+    setIsSaving(true);
+    setError(null);
+    setSavedSuccessfully(false);
     try {
       const taskData = {
         title: title.trim(),
         description: description.trim() || undefined,
         status,
         priority,
-        dueDate: dueDate ? Math.floor(new Date(dueDate).getTime() / 1000) : undefined,
-      }
+        dueDate: dueDate
+          ? Math.floor(new Date(dueDate).getTime() / 1000)
+          : undefined,
+      };
 
       // 新規タスクの作成
-      const result = await createTask.mutateAsync(taskData)
+      const result = await createTask.mutateAsync(taskData);
       // 作成されたタスクのIDを保存
-      setCreatedTaskId(result.id)
+      setCreatedTaskId(result.id);
       // 保存完了状態にして、保存中状態を終了
-      setIsSaving(false)
-      setSavedSuccessfully(true)
-      
+      setIsSaving(false);
+      setSavedSuccessfully(true);
+
       // 保存成功後、フォームをリセットして新しいタスク追加を続ける
       setTimeout(() => {
         // フォームをリセット
-        setTitle('')
-        setDescription('')
-        setStatus('todo')
-        setPriority('medium')
-        setDueDate('')
-        setSavedSuccessfully(false)
-      }, 1500)
+        setTitle("");
+        setDescription("");
+        setStatus("todo");
+        setPriority("medium");
+        setDueDate("");
+        setSavedSuccessfully(false);
+      }, 1500);
     } catch (error) {
-      console.error('保存に失敗しました:', error)
-      setError('保存に失敗しました。APIサーバーが起動していることを確認してください。')
-      setIsSaving(false)
+      console.error("保存に失敗しました:", error);
+      setError(
+        "保存に失敗しました。APIサーバーが起動していることを確認してください。"
+      );
+      setIsSaving(false);
     }
-  }, [title, description, status, priority, dueDate, createTask, onClose])
-
+  }, [title, description, status, priority, dueDate, createTask, onClose]);
 
   const statusOptions = [
-    { value: 'todo', label: '未着手', color: 'bg-gray-100 text-gray-800' },
-    { value: 'in_progress', label: '進行中', color: 'bg-blue-100 text-blue-800' },
-    { value: 'completed', label: '完了', color: 'bg-green-100 text-green-800' },
-  ]
+    { value: "todo", label: "未着手", color: "bg-gray-100 text-gray-800" },
+    {
+      value: "in_progress",
+      label: "進行中",
+      color: "bg-blue-100 text-blue-800",
+    },
+    { value: "completed", label: "完了", color: "bg-green-100 text-green-800" },
+  ];
 
   const priorityOptions = [
-    { value: 'low', label: '低', color: 'bg-green-100 text-green-800' },
-    { value: 'medium', label: '中', color: 'bg-yellow-100 text-yellow-800' },
-    { value: 'high', label: '高', color: 'bg-red-100 text-red-800' },
-  ]
+    { value: "low", label: "低", color: "bg-green-100 text-green-800" },
+    { value: "medium", label: "中", color: "bg-yellow-100 text-yellow-800" },
+    { value: "high", label: "高", color: "bg-red-100 text-red-800" },
+  ];
 
   return (
     <div className="flex flex-col h-full bg-white p-6">
       <div className="flex justify-end items-center mb-4">
         <div className="flex items-center gap-3">
-          {error && (
-            <span className="text-sm text-red-500">エラー</span>
-          )}
+          {error && <span className="text-sm text-red-500">エラー</span>}
         </div>
       </div>
 
@@ -104,7 +110,11 @@ function TaskCreator({ onClose }: TaskCreatorProps) {
             </label>
             <select
               value={status}
-              onChange={(e) => setStatus(e.target.value as 'todo' | 'in_progress' | 'completed')}
+              onChange={(e) =>
+                setStatus(
+                  e.target.value as "todo" | "in_progress" | "completed"
+                )
+              }
               className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 outline-none"
             >
               {statusOptions.map((option) => (
@@ -121,7 +131,9 @@ function TaskCreator({ onClose }: TaskCreatorProps) {
             </label>
             <select
               value={priority}
-              onChange={(e) => setPriority(e.target.value as 'low' | 'medium' | 'high')}
+              onChange={(e) =>
+                setPriority(e.target.value as "low" | "medium" | "high")
+              }
               className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 outline-none"
             >
               {priorityOptions.map((option) => (
@@ -163,26 +175,46 @@ function TaskCreator({ onClose }: TaskCreatorProps) {
             disabled={!title.trim() || isSaving || savedSuccessfully}
             className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors ${
               !title.trim() || isSaving || savedSuccessfully
-                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                : "bg-Emerald hover:bg-Emerald-dark text-white"
             }`}
           >
-{isSaving ? (
+            {isSaving ? (
               <>
                 <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
                 保存中...
               </>
             ) : savedSuccessfully ? (
               <>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
                 保存完了
               </>
             ) : (
               <>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" />
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12"
+                  />
                 </svg>
                 保存
               </>
@@ -199,7 +231,7 @@ function TaskCreator({ onClose }: TaskCreatorProps) {
         <TrashIcon />
       </button>
     </div>
-  )
+  );
 }
 
-export default TaskCreator
+export default TaskCreator;

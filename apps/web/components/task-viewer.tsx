@@ -216,7 +216,7 @@ function TaskViewer({ task, onClose, onEdit, onExitEdit, isEditMode = false }: T
                 className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors ${
                   !title.trim() || isSaving || savedSuccessfully
                     ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    : 'bg-Emerald hover:bg-Emerald-dark text-white'
                 }`}
               >
 {isSaving ? (

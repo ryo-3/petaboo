@@ -12,6 +12,7 @@ import MemoViewer from "@/components/memo-viewer";
 import DeletedMemoViewer from "@/components/deleted-memo-viewer";
 import { useDeletedNotes, useNotes, useDeleteNote, usePermanentDeleteNote } from "@/src/hooks/use-notes";
 import { useDeletedTasks, useTasks, useDeleteTask, usePermanentDeleteTask } from "@/src/hooks/use-tasks";
+import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
 import { useState, useEffect } from "react";
@@ -72,7 +73,8 @@ function FullListView({
     new Set()
   );
   const [viewMode, setViewMode] = useState<'card' | 'list'>('list');
-  const [columnCount, setColumnCount] = useState(4);
+  const { preferences, updatePreferences } = useUserPreferences(1); // TODO: 実際のユーザーIDを使用
+  const columnCount = preferences?.columnCount || 4;
 
   const deleteNote = useDeleteNote();
   const permanentDeleteNote = usePermanentDeleteNote();
@@ -232,7 +234,7 @@ function FullListView({
               return (
                 <button
                   key={count}
-                  onClick={() => setColumnCount(count)}
+                  onClick={() => updatePreferences({ columnCount: count })}
                   className={`px-2 py-1 text-xs rounded transition-colors ${
                     (!isRightShown && columnCount === count) || // 通常時
                     (isRightShown && columnCount <= 2 && columnCount === count) || // 右側表示時の1-2列

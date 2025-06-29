@@ -9,6 +9,8 @@ const config = {
     extend: {
       colors: {
         Green: "#00873f",
+        Emerald: "#249a84",
+        "Emerald-dark": "#3f8b7d",
         Yellow: "#7b9237",
       },
     },

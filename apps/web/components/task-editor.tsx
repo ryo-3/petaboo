@@ -18,7 +18,7 @@ function TaskEditor({ onClose, task }: TaskEditorProps) {
   const [status, setStatus] = useState<'todo' | 'in_progress' | 'completed'>(task.status || 'todo')
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>(task.priority || 'medium')
   const [dueDate, setDueDate] = useState<string>(
-    task.dueDate ? new Date(task.dueDate * 1000).toISOString().split('T')[0] : ''
+    task?.dueDate ? new Date(task.dueDate * 1000).toISOString().split('T')[0] : ''
   )
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)

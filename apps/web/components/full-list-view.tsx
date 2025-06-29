@@ -14,7 +14,7 @@ import { useDeletedNotes, useNotes, useDeleteNote, usePermanentDeleteNote } from
 import { useDeletedTasks, useTasks, useDeleteTask, usePermanentDeleteTask } from "@/src/hooks/use-tasks";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import TaskViewer from "./task-viewer";
 
 interface FullListViewProps {
@@ -48,7 +48,18 @@ function FullListView({
   const { data: deletedNotes } = useDeletedNotes();
   const { data: tasks, isLoading: taskLoading, error: taskError } = useTasks();
   const { data: deletedTasks } = useDeletedTasks();
-  const [activeTab, setActiveTab] = useState<"normal" | "deleted">("normal");
+  const [activeTab, setActiveTab] = useState<"normal" | "deleted" | "todo" | "in_progress" | "completed">(
+    currentMode === 'task' ? "todo" : "normal"
+  );
+
+  // currentModeが変更された時にactiveTabを適切にリセット
+  useEffect(() => {
+    if (currentMode === 'task') {
+      setActiveTab("todo");
+    } else {
+      setActiveTab("normal");
+    }
+  }, [currentMode]);
   const [checkedMemos, setCheckedMemos] = useState<Set<number>>(new Set());
   const [checkedDeletedMemos, setCheckedDeletedMemos] = useState<Set<number>>(
     new Set()
@@ -111,19 +122,43 @@ function FullListView({
     }
   };
 
-  const tabs = [
-    {
-      id: "normal",
-      label: "通常",
-      count: currentMode === 'memo' ? (notes?.length || 0) : (tasks?.length || 0),
-    },
-    {
-      id: "deleted",
-      label: "削除済み",
-      icon: <TrashIcon className="w-3 h-3" />,
-      count: currentMode === 'memo' ? (deletedNotes?.length || 0) : (deletedTasks?.length || 0),
-    },
-  ];
+  const tabs = currentMode === 'task' 
+    ? [
+        {
+          id: "todo",
+          label: "未着手",
+          count: tasks?.filter(task => task.status === 'todo').length || 0,
+        },
+        {
+          id: "in_progress",
+          label: "進行中", 
+          count: tasks?.filter(task => task.status === 'in_progress').length || 0,
+        },
+        {
+          id: "completed",
+          label: "完了",
+          count: tasks?.filter(task => task.status === 'completed').length || 0,
+        },
+        {
+          id: "deleted",
+          label: "削除済み",
+          icon: <TrashIcon className="w-3 h-3" />,
+          count: deletedTasks?.length || 0,
+        },
+      ]
+    : [
+        {
+          id: "normal",
+          label: "通常",
+          count: notes?.length || 0,
+        },
+        {
+          id: "deleted",
+          label: "削除済み",
+          icon: <TrashIcon className="w-3 h-3" />,
+          count: deletedNotes?.length || 0,
+        },
+      ];
 
   return (
     <div className="flex h-full bg-white">
@@ -145,7 +180,7 @@ function FullListView({
             <SwitchTabs
               tabs={tabs}
               activeTab={activeTab}
-              onTabChange={(tabId) => setActiveTab(tabId as "normal" | "deleted")}
+              onTabChange={(tabId) => setActiveTab(tabId as "normal" | "deleted" | "todo" | "in_progress" | "completed")}
             />
           </div>
         </div>
@@ -225,93 +260,190 @@ function FullListView({
       )}
 
 
-      {/* 通常タブ */}
-      {activeTab === "normal" && (
+      {/* メモの通常タブ */}
+      {activeTab === "normal" && currentMode === 'memo' && (
         <>
-          {currentMode === 'memo' ? (
-            notes && notes.length > 0 ? (
-              <div className="flex-1 overflow-auto pr-2">
-                <div className={viewMode === 'card' ? `grid gap-4 ${
-                  effectiveColumnCount === 1 ? 'grid-cols-1' :
-                  effectiveColumnCount === 2 ? 'grid-cols-1 md:grid-cols-2' :
-                  effectiveColumnCount === 3 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' :
-                  'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-                }` : `${
-                  effectiveColumnCount === 1 ? 'space-y-0' :
-                  effectiveColumnCount === 2 ? 'grid grid-cols-2 gap-x-4' :
-                  effectiveColumnCount === 3 ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4' :
-                  'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4'
-                }`}>
-                  {notes.map((memo: Memo) => {
-                    const Component = viewMode === 'card' ? MemoCard : MemoListItem;
-                    return (
-                      <Component
-                        key={memo.id}
-                        memo={memo}
-                        isChecked={checkedMemos.has(memo.id)}
-                        onToggleCheck={() => {
-                          const newChecked = new Set(checkedMemos);
-                          if (checkedMemos.has(memo.id)) {
-                            newChecked.delete(memo.id);
-                          } else {
-                            newChecked.add(memo.id);
-                          }
-                          setCheckedMemos(newChecked);
-                        }}
-                        onSelect={() => onSelectMemo(memo, true)}
-                        variant="normal"
-                      />
-                    );
-                  })}
-                </div>
+          {notes && notes.length > 0 ? (
+            <div className="flex-1 overflow-auto pr-2">
+              <div className={viewMode === 'card' ? `grid gap-4 ${
+                effectiveColumnCount === 1 ? 'grid-cols-1' :
+                effectiveColumnCount === 2 ? 'grid-cols-1 md:grid-cols-2' :
+                effectiveColumnCount === 3 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' :
+                'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+              }` : `${
+                effectiveColumnCount === 1 ? 'space-y-0' :
+                effectiveColumnCount === 2 ? 'grid grid-cols-2 gap-x-4' :
+                effectiveColumnCount === 3 ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4' :
+                'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4'
+              }`}>
+                {notes.map((memo: Memo) => {
+                  const Component = viewMode === 'card' ? MemoCard : MemoListItem;
+                  return (
+                    <Component
+                      key={memo.id}
+                      memo={memo}
+                      isChecked={checkedMemos.has(memo.id)}
+                      onToggleCheck={() => {
+                        const newChecked = new Set(checkedMemos);
+                        if (checkedMemos.has(memo.id)) {
+                          newChecked.delete(memo.id);
+                        } else {
+                          newChecked.add(memo.id);
+                        }
+                        setCheckedMemos(newChecked);
+                      }}
+                      onSelect={() => onSelectMemo(memo, true)}
+                      variant="normal"
+                    />
+                  );
+                })}
               </div>
-            ) : (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="text-center text-gray-400">メモがありません</div>
-              </div>
-            )
+            </div>
           ) : (
-            tasks && tasks.length > 0 ? (
-              <div className="flex-1 overflow-auto pr-2">
-                <div className={viewMode === 'card' ? `grid gap-4 ${
-                  effectiveColumnCount === 1 ? 'grid-cols-1' :
-                  effectiveColumnCount === 2 ? 'grid-cols-1 md:grid-cols-2' :
-                  effectiveColumnCount === 3 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' :
-                  'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-                }` : `${
-                  effectiveColumnCount === 1 ? 'space-y-0' :
-                  effectiveColumnCount === 2 ? 'grid grid-cols-2 gap-x-4' :
-                  effectiveColumnCount === 3 ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4' :
-                  'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4'
-                }`}>
-                  {tasks.map((task: Task) => {
-                    const Component = viewMode === 'card' ? TaskCard : TaskListItem;
-                    return (
-                      <Component
-                        key={task.id}
-                        task={task}
-                        isChecked={checkedTasks.has(task.id)}
-                        onToggleCheck={() => {
-                          const newChecked = new Set(checkedTasks);
-                          if (checkedTasks.has(task.id)) {
-                            newChecked.delete(task.id);
-                          } else {
-                            newChecked.add(task.id);
-                          }
-                          setCheckedTasks(newChecked);
-                        }}
-                        onSelect={() => onSelectTask!(task, true)}
-                        variant="normal"
-                      />
-                    );
-                  })}
-                </div>
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center text-gray-400">メモがありません</div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* タスクの未着手タブ */}
+      {activeTab === "todo" && currentMode === 'task' && (
+        <>
+          {tasks && tasks.filter(task => task.status === 'todo').length > 0 ? (
+            <div className="flex-1 overflow-auto pr-2">
+              <div className={viewMode === 'card' ? `grid gap-4 ${
+                effectiveColumnCount === 1 ? 'grid-cols-1' :
+                effectiveColumnCount === 2 ? 'grid-cols-1 md:grid-cols-2' :
+                effectiveColumnCount === 3 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' :
+                'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+              }` : `${
+                effectiveColumnCount === 1 ? 'space-y-0' :
+                effectiveColumnCount === 2 ? 'grid grid-cols-2 gap-x-4' :
+                effectiveColumnCount === 3 ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4' :
+                'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4'
+              }`}>
+                {tasks.filter(task => task.status === 'todo').map((task: Task) => {
+                  const Component = viewMode === 'card' ? TaskCard : TaskListItem;
+                  return (
+                    <Component
+                      key={task.id}
+                      task={task}
+                      isChecked={checkedTasks.has(task.id)}
+                      onToggleCheck={() => {
+                        const newChecked = new Set(checkedTasks);
+                        if (checkedTasks.has(task.id)) {
+                          newChecked.delete(task.id);
+                        } else {
+                          newChecked.add(task.id);
+                        }
+                        setCheckedTasks(newChecked);
+                      }}
+                      onSelect={() => onSelectTask!(task, true)}
+                      variant="normal"
+                    />
+                  );
+                })}
               </div>
-            ) : (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="text-center text-gray-400">タスクがありません</div>
+            </div>
+          ) : (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center text-gray-400">未着手のタスクがありません</div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* タスクの進行中タブ */}
+      {activeTab === "in_progress" && currentMode === 'task' && (
+        <>
+          {tasks && tasks.filter(task => task.status === 'in_progress').length > 0 ? (
+            <div className="flex-1 overflow-auto pr-2">
+              <div className={viewMode === 'card' ? `grid gap-4 ${
+                effectiveColumnCount === 1 ? 'grid-cols-1' :
+                effectiveColumnCount === 2 ? 'grid-cols-1 md:grid-cols-2' :
+                effectiveColumnCount === 3 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' :
+                'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+              }` : `${
+                effectiveColumnCount === 1 ? 'space-y-0' :
+                effectiveColumnCount === 2 ? 'grid grid-cols-2 gap-x-4' :
+                effectiveColumnCount === 3 ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4' :
+                'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4'
+              }`}>
+                {tasks.filter(task => task.status === 'in_progress').map((task: Task) => {
+                  const Component = viewMode === 'card' ? TaskCard : TaskListItem;
+                  return (
+                    <Component
+                      key={task.id}
+                      task={task}
+                      isChecked={checkedTasks.has(task.id)}
+                      onToggleCheck={() => {
+                        const newChecked = new Set(checkedTasks);
+                        if (checkedTasks.has(task.id)) {
+                          newChecked.delete(task.id);
+                        } else {
+                          newChecked.add(task.id);
+                        }
+                        setCheckedTasks(newChecked);
+                      }}
+                      onSelect={() => onSelectTask!(task, true)}
+                      variant="normal"
+                    />
+                  );
+                })}
               </div>
-            )
+            </div>
+          ) : (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center text-gray-400">進行中のタスクがありません</div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* タスクの完了タブ */}
+      {activeTab === "completed" && currentMode === 'task' && (
+        <>
+          {tasks && tasks.filter(task => task.status === 'completed').length > 0 ? (
+            <div className="flex-1 overflow-auto pr-2">
+              <div className={viewMode === 'card' ? `grid gap-4 ${
+                effectiveColumnCount === 1 ? 'grid-cols-1' :
+                effectiveColumnCount === 2 ? 'grid-cols-1 md:grid-cols-2' :
+                effectiveColumnCount === 3 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' :
+                'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+              }` : `${
+                effectiveColumnCount === 1 ? 'space-y-0' :
+                effectiveColumnCount === 2 ? 'grid grid-cols-2 gap-x-4' :
+                effectiveColumnCount === 3 ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4' :
+                'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4'
+              }`}>
+                {tasks.filter(task => task.status === 'completed').map((task: Task) => {
+                  const Component = viewMode === 'card' ? TaskCard : TaskListItem;
+                  return (
+                    <Component
+                      key={task.id}
+                      task={task}
+                      isChecked={checkedTasks.has(task.id)}
+                      onToggleCheck={() => {
+                        const newChecked = new Set(checkedTasks);
+                        if (checkedTasks.has(task.id)) {
+                          newChecked.delete(task.id);
+                        } else {
+                          newChecked.add(task.id);
+                        }
+                        setCheckedTasks(newChecked);
+                      }}
+                      onSelect={() => onSelectTask!(task, true)}
+                      variant="normal"
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center text-gray-400">完了したタスクがありません</div>
+            </div>
           )}
         </>
       )}

@@ -25,6 +25,7 @@ function MemoForm({ onClose, memo = null, onSave, onExitEdit }: MemoFormProps) {
     isSaving,
     error,
     savedSuccessfully,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     isEditMode,
     createdMemoId
   } = useMemoForm({ memo, onSave })

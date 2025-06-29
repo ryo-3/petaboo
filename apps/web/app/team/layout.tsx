@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "チームメモ | Note App",
@@ -30,9 +31,9 @@ export default function TeamLayout({
               <a href="/team/tasks" className="text-gray-500 hover:text-gray-900 px-3 py-2 text-sm font-medium">
                 タスク
               </a>
-              <a href="/" className="text-gray-400 hover:text-gray-600 px-3 py-2 text-sm font-medium">
+              <Link href="/" className="text-gray-400 hover:text-gray-600 px-3 py-2 text-sm font-medium">
                 個人用に戻る
-              </a>
+              </Link>
             </nav>
           </div>
         </div>

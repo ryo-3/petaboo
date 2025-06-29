@@ -4,34 +4,44 @@ import MemoIcon from "@/components/icons/memo-icon";
 import PlusIcon from "@/components/icons/plus-icon";
 import TaskIcon from "@/components/icons/task-icon";
 import SidebarMemoList from "@/components/sidebar-memo-list";
+import SidebarTaskList from "@/components/sidebar-task-list";
 import SwitchTabs from "@/components/ui/switch-tabs";
 import Tooltip from "@/components/ui/tooltip";
 import type { Memo } from "@/src/types/memo";
+import type { Task } from "@/src/types/task";
 import HomeButton from "./button/home-button";
 import HomeIcon from "./icons/home-icon";
 
 interface SidebarProps {
   onNewMemo: () => void;
   onSelectMemo: (memo: Memo) => void;
+  onSelectTask?: (task: Task) => void;
+  onEditTask?: (task: Task) => void;
   onShowFullList: () => void;
   onHome: () => void;
   onEditMemo: (memo: Memo) => void;
   selectedMemoId?: number;
+  selectedTaskId?: number;
   isCompact?: boolean;
   currentMode?: "memo" | "task";
   onModeChange?: (mode: "memo" | "task") => void;
+  onNewTask?: () => void;
 }
 
 function Sidebar({
   onNewMemo,
   onSelectMemo,
+  onSelectTask,
+  onEditTask,
   onShowFullList,
   onHome,
   onEditMemo,
   selectedMemoId,
+  selectedTaskId,
   isCompact = false,
   currentMode = "memo",
   onModeChange,
+  onNewTask,
 }: SidebarProps) {
   const modeTabs = [
     {
@@ -60,7 +70,7 @@ function Sidebar({
         <Tooltip text="メモ一覧" position="right">
           <button
             onClick={() => {
-              onModeChange && onModeChange("memo");
+              onModeChange?.("memo");
               onShowFullList();
             }}
             className={`mb-2 p-2 rounded-lg transition-colors ${
@@ -75,7 +85,7 @@ function Sidebar({
         <Tooltip text="タスク一覧" position="right">
           <button
             onClick={() => {
-              onModeChange && onModeChange("task");
+              onModeChange?.("task");
               onShowFullList();
             }}
             className={`mb-4 p-2 rounded-lg transition-colors ${
@@ -92,7 +102,7 @@ function Sidebar({
           position="right"
         >
           <button
-            onClick={onNewMemo}
+            onClick={currentMode === "memo" ? onNewMemo : onNewTask}
             className="p-2 rounded-lg bg-Green hover:bg-Green/85 text-white transition-colors"
           >
             <PlusIcon className="w-5 h-5" />
@@ -112,7 +122,7 @@ function Sidebar({
             tabs={modeTabs}
             activeTab={currentMode}
             onTabChange={(tabId) =>
-              onModeChange && onModeChange(tabId as "memo" | "task")
+              onModeChange?.(tabId as "memo" | "task")
             }
           />
         </div>
@@ -132,7 +142,7 @@ function Sidebar({
             </span>
           </button>
           <button
-            onClick={onNewMemo}
+            onClick={currentMode === "memo" ? onNewMemo : onNewTask}
             className="flex-1 bg-Green hover:bg-Green/85 text-center rounded-lg py-2 transition-colors flex items-center justify-center gap-1"
           >
             <PlusIcon className="w-4 h-4 text-gray-100" />
@@ -151,9 +161,11 @@ function Sidebar({
             selectedMemoId={selectedMemoId}
           />
         ) : (
-          <div className="text-center py-4 text-gray-400 text-sm">
-            タスク機能は準備中です
-          </div>
+          <SidebarTaskList
+            onSelectTask={onSelectTask!}
+            onEditTask={onEditTask!}
+            selectedTaskId={selectedTaskId}
+          />
         )}
       </div>
     </div>

@@ -4,6 +4,7 @@ interface HeaderProps {
   currentMode: "memo" | "task";
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function Header({ currentMode }: HeaderProps) {
   return (
     <header className="fixed top-0 left-0 right-0 h-16 border-b border-gray-200 bg-white flex items-center pl-[14px] pr-8 z-10">

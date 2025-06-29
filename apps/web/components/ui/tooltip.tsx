@@ -48,11 +48,13 @@ function Tooltip({
              position === 'right' ? 'border-r-blue-600' : 'border-t-blue-600 border-b-blue-600'
            : position === 'right' ? 'border-r-gray-800' : 'border-t-gray-800 border-b-gray-800'}`}></div>
       </div>
-      <style jsx>{`
-        .tooltip-wrapper:hover .tooltip-content {
-          opacity: 1;
-        }
-      `}</style>
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .tooltip-wrapper:hover .tooltip-content {
+            opacity: 1;
+          }
+        `
+      }} />
     </div>
   )
 }

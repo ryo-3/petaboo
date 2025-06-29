@@ -8,6 +8,7 @@ interface MemoDateInfoProps {
   createdMemoId?: number | null
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function MemoDateInfo({ memo, createdMemoId }: MemoDateInfoProps) {
   // 編集モードの場合のみ表示
   if (!memo) {

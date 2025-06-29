@@ -2,7 +2,7 @@
 
 import CheckIcon from '@/components/icons/check-icon'
 import TrashIcon from '@/components/icons/trash-icon'
-import { useCreateTask, useUpdateTask } from '@/src/hooks/use-tasks'
+import { useUpdateTask } from '@/src/hooks/use-tasks'
 import { useEffect, useRef, useState, useCallback } from 'react'
 
 import type { Task } from '@/src/types/task'

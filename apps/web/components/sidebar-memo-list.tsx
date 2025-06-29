@@ -14,6 +14,7 @@ interface SidebarMemoListProps {
   selectedMemoId?: number;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function SidebarMemoList({ onSelectMemo, onEditMemo, onDeleteMemo, selectedMemoId }: SidebarMemoListProps) {
   const { data: notes, isLoading, error } = useNotes()
   const deleteNote = useDeleteNote()

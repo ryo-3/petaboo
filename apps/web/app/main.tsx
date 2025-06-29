@@ -9,17 +9,18 @@ import DeletedMemoViewer from "@/components/deleted-memo-viewer";
 import FullListView from "@/components/full-list-view";
 import WelcomeScreen from "@/components/welcome-screen";
 import Header from "@/components/header";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
+import TaskCreator from "@/components/task-creator";
+import TaskEditor from "@/components/task-editor";
+import TaskViewer from "@/components/task-viewer";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
+import type { Task, DeletedTask } from "@/src/types/task";
 
 function Main() {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null);
   const [selectedDeletedMemo, setSelectedDeletedMemo] = useState<DeletedMemo | null>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [selectedDeletedTask, setSelectedDeletedTask] = useState<DeletedTask | null>(null);
   const [showDeleted, setShowDeleted] = useState(false);
   const [showFullList, setShowFullList] = useState(false);
   const [currentMode, setCurrentMode] = useState<'memo' | 'task'>('memo');
@@ -40,6 +41,8 @@ function Main() {
   const handleSelectMemo = (memo: Memo, fromFullList = false) => {
     setSelectedMemo(memo);
     setSelectedDeletedMemo(null);
+    setSelectedTask(null);
+    setSelectedDeletedTask(null);
     setIsEditing(false);
     if (!fromFullList) {
       setShowFullList(false);
@@ -49,6 +52,30 @@ function Main() {
   const handleSelectDeletedMemo = (memo: DeletedMemo, fromFullList = false) => {
     setSelectedDeletedMemo(memo);
     setSelectedMemo(null);
+    setSelectedTask(null);
+    setSelectedDeletedTask(null);
+    setIsEditing(false);
+    if (!fromFullList) {
+      setShowFullList(false);
+    }
+  };
+
+  const handleSelectTask = (task: Task, fromFullList = false) => {
+    setSelectedTask(task);
+    setSelectedMemo(null);
+    setSelectedDeletedMemo(null);
+    setSelectedDeletedTask(null);
+    setIsEditing(false);
+    if (!fromFullList) {
+      setShowFullList(false);
+    }
+  };
+
+  const handleSelectDeletedTask = (task: DeletedTask, fromFullList = false) => {
+    setSelectedDeletedTask(task);
+    setSelectedTask(null);
+    setSelectedMemo(null);
+    setSelectedDeletedMemo(null);
     setIsEditing(false);
     if (!fromFullList) {
       setShowFullList(false);
@@ -59,6 +86,18 @@ function Main() {
     setIsEditing(true);
     setSelectedMemo(null);
     setSelectedDeletedMemo(null);
+    setSelectedTask(null);
+    setSelectedDeletedTask(null);
+    setShowDeleted(false);
+    setShowFullList(false);
+  };
+
+  const handleNewTask = () => {
+    setIsEditing(true);
+    setSelectedMemo(null);
+    setSelectedDeletedMemo(null);
+    setSelectedTask(null);
+    setSelectedDeletedTask(null);
     setShowDeleted(false);
     setShowFullList(false);
   };
@@ -67,6 +106,8 @@ function Main() {
     setIsEditing(false);
     setSelectedMemo(null);
     setSelectedDeletedMemo(null);
+    setSelectedTask(null);
+    setSelectedDeletedTask(null);
     setShowFullList(false);
   };
 
@@ -75,6 +116,8 @@ function Main() {
     setShowDeleted(false);
     setSelectedMemo(null);
     setSelectedDeletedMemo(null);
+    setSelectedTask(null);
+    setSelectedDeletedTask(null);
     setIsEditing(false);
     setShowFullList(false);
   };
@@ -84,6 +127,8 @@ function Main() {
     setIsEditing(false);
     setSelectedMemo(null);
     setSelectedDeletedMemo(null);
+    setSelectedTask(null);
+    setSelectedDeletedTask(null);
     setShowDeleted(false);
   };
 
@@ -91,6 +136,8 @@ function Main() {
     setIsEditing(false);
     setSelectedMemo(null);
     setSelectedDeletedMemo(null);
+    setSelectedTask(null);
+    setSelectedDeletedTask(null);
     setShowDeleted(false);
     setShowFullList(false);
   };
@@ -98,6 +145,13 @@ function Main() {
   const handleEditMemo = (memo?: Memo) => {
     if (memo) {
       setSelectedMemo(memo);
+    }
+    setIsEditing(true);
+  };
+
+  const handleEditTask = (task?: Task) => {
+    if (task) {
+      setSelectedTask(task);
     }
     setIsEditing(true);
   };
@@ -115,11 +169,15 @@ function Main() {
           ) : (
             <Sidebar 
               onNewMemo={handleNewMemo}
+              onNewTask={handleNewTask}
               onSelectMemo={handleSelectMemo}
+              onSelectTask={handleSelectTask}
+              onEditTask={handleEditTask}
               onShowFullList={handleShowFullList}
               onHome={handleHome}
               onEditMemo={handleEditMemo}
               selectedMemoId={selectedMemo?.id}
+              selectedTaskId={selectedTask?.id}
               isCompact={false}
               currentMode={currentMode}
               onModeChange={setCurrentMode}
@@ -142,34 +200,52 @@ function Main() {
             ) : (
               <Sidebar 
                 onNewMemo={handleNewMemo}
+                onNewTask={handleNewTask}
                 onSelectMemo={handleSelectMemo}
+                onSelectTask={handleSelectTask}
+                onEditTask={handleEditTask}
                 onShowFullList={handleShowFullList}
                 onHome={handleHome}
                 onEditMemo={handleEditMemo}
                 selectedMemoId={selectedMemo?.id}
+                selectedTaskId={selectedTask?.id}
                 isCompact={true}
                 currentMode={currentMode}
                 onModeChange={setCurrentMode}
               />
             )}
             </div>
-            <div className={`flex-1 ml-16 ${isEditing || selectedMemo || selectedDeletedMemo ? 'h-[calc(100vh-64px)] pt-16' : 'pt-16'}`}>
+            <div className={`flex-1 ml-16 ${isEditing || selectedMemo || selectedDeletedMemo || selectedTask || selectedDeletedTask ? 'h-[calc(100vh-64px)] pt-16' : 'pt-16'}`}>
             {showFullList ? (
               <FullListView 
                 onSelectMemo={handleSelectMemo} 
-                onSelectDeletedMemo={handleSelectDeletedMemo} 
-                onClose={handleClose} 
+                onSelectDeletedMemo={handleSelectDeletedMemo}
+                onSelectTask={handleSelectTask}
+                onSelectDeletedTask={handleSelectDeletedTask}
                 currentMode={currentMode}
                 selectedMemo={selectedMemo}
                 selectedDeletedMemo={selectedDeletedMemo}
+                selectedTask={selectedTask}
+                selectedDeletedTask={selectedDeletedTask}
                 onEditMemo={handleEditMemo}
+                onEditTask={handleEditTask}
               />
             ) : isEditing ? (
-              <MemoEditor onClose={handleClose} memo={selectedMemo} />
+              currentMode === 'memo' ? (
+                <MemoEditor onClose={handleClose} memo={selectedMemo} />
+              ) : selectedTask ? (
+                <TaskEditor onClose={handleClose} task={selectedTask} />
+              ) : (
+                <TaskCreator onClose={handleClose} />
+              )
             ) : selectedMemo ? (
               <MemoViewer memo={selectedMemo} onClose={handleClose} onEdit={handleEditMemo} />
+            ) : selectedTask ? (
+              <TaskViewer task={selectedTask} onClose={handleClose} onEdit={handleEditTask} />
             ) : selectedDeletedMemo ? (
               <DeletedMemoViewer memo={selectedDeletedMemo} onClose={handleClose} />
+            ) : selectedDeletedTask ? (
+              <div className="p-6">削除済みタスクビューアー（未実装）</div>
             ) : (
               <WelcomeScreen />
             )}

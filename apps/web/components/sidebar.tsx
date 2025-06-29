@@ -1,8 +1,6 @@
 "use client";
 
 import MemoIcon from "@/components/icons/memo-icon";
-import PlusIcon from "@/components/icons/plus-icon";
-import PenIcon from "@/components/icons/pen-icon";
 import PlusSimpleIcon from "@/components/icons/plus-simple-icon";
 import TaskIcon from "@/components/icons/task-icon";
 import SidebarMemoList from "@/components/sidebar-memo-list";
@@ -13,6 +11,7 @@ import type { Memo } from "@/src/types/memo";
 import type { Task } from "@/src/types/task";
 import HomeButton from "./button/home-button";
 import HomeIcon from "./icons/home-icon";
+import SettingsIcon from "./icons/settings-icon";
 
 interface SidebarProps {
   onNewMemo: () => void;
@@ -28,6 +27,7 @@ interface SidebarProps {
   currentMode?: "memo" | "task";
   onModeChange?: (mode: "memo" | "task") => void;
   onNewTask?: () => void;
+  onSettings?: () => void;
 }
 
 function Sidebar({
@@ -44,6 +44,7 @@ function Sidebar({
   currentMode = "memo",
   onModeChange,
   onNewTask,
+  onSettings,
 }: SidebarProps) {
   const modeTabs = [
     {
@@ -60,60 +61,74 @@ function Sidebar({
 
   if (isCompact) {
     return (
-      <div className="flex flex-col items-center py-4 h-screen bg-gray-50">
-        <Tooltip text="ホーム" position="right">
-          <button
-            onClick={onHome}
-            className="mb-4 p-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
+      <div className="flex flex-col items-center py-4 h-screen bg-gray-50 justify-between">
+        <div className="flex flex-col items-center gap-y-3">
+          <Tooltip text="ホーム" position="right">
+            <button
+              onClick={onHome}
+              className="p-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
+            >
+              <HomeIcon className="w-5 h-5 text-gray-600" />
+            </button>
+          </Tooltip>
+          <Tooltip text="メモ一覧" position="right">
+            <button
+              onClick={() => {
+                onModeChange?.("memo");
+                onShowFullList();
+              }}
+              className={`p-2 rounded-lg transition-colors ${
+                currentMode === "memo"
+                  ? "bg-Green text-white"
+                  : "bg-gray-200 hover:bg-gray-300 text-gray-600"
+              }`}
+            >
+              <MemoIcon className="w-5 h-5" />
+            </button>
+          </Tooltip>
+          <Tooltip text="タスク一覧" position="right">
+            <button
+              onClick={() => {
+                onModeChange?.("task");
+                onShowFullList();
+              }}
+              className={`p-2 rounded-lg transition-colors ${
+                currentMode === "task"
+                  ? "bg-Yellow text-white"
+                  : "bg-gray-200 hover:bg-gray-300 text-gray-600"
+              }`}
+            >
+              <TaskIcon className="w-5 h-5" />
+            </button>
+          </Tooltip>
+          <Tooltip
+            text={`新規${currentMode === "memo" ? "メモ" : "タスク"}作成`}
+            position="right"
           >
-            <HomeIcon className="w-5 h-5 text-gray-600" />
-          </button>
-        </Tooltip>
-        <Tooltip text="メモ一覧" position="right">
-          <button
-            onClick={() => {
-              onModeChange?.("memo");
-              onShowFullList();
-            }}
-            className={`mb-4 p-2 rounded-lg transition-colors ${
-              currentMode === "memo"
-                ? "bg-Green text-white"
-                : "bg-gray-200 hover:bg-gray-300 text-gray-600"
-            }`}
-          >
-            <MemoIcon className="w-5 h-5" />
-          </button>
-        </Tooltip>
-        <Tooltip text="タスク一覧" position="right">
-          <button
-            onClick={() => {
-              onModeChange?.("task");
-              onShowFullList();
-            }}
-            className={`mb-4 p-2 rounded-lg transition-colors ${
-              currentMode === "task"
-                ? "bg-Yellow text-white"
-                : "bg-gray-200 hover:bg-gray-300 text-gray-600"
-            }`}
-          >
-            <TaskIcon className="w-5 h-5" />
-          </button>
-        </Tooltip>
-        <Tooltip
-          text={`新規${currentMode === "memo" ? "メモ" : "タスク"}作成`}
-          position="right"
-        >
-          <button
-            onClick={currentMode === "memo" ? onNewMemo : onNewTask}
-            className={`p-2 rounded-lg text-white transition-colors ${
-              currentMode === "memo" 
-                ? "bg-Green hover:bg-Green/85" 
-                : "bg-Yellow hover:bg-Yellow/85"
-            }`}
-          >
-            <PlusSimpleIcon className="w-5 h-5" />
-          </button>
-        </Tooltip>
+            <button
+              onClick={currentMode === "memo" ? onNewMemo : onNewTask}
+              className={`p-2 rounded-lg text-white transition-colors ${
+                currentMode === "memo"
+                  ? "bg-Green hover:bg-Green/85"
+                  : "bg-Yellow hover:bg-Yellow/85"
+              }`}
+            >
+              <PlusSimpleIcon className="w-5 h-5" />
+            </button>
+          </Tooltip>
+          {/* 設定ボタン（コンパクトモード） */}
+          <Tooltip text="設定" position="right">
+            <button
+              onClick={() => {
+                console.log("設定ボタンクリック");
+                onSettings?.();
+              }}
+              className="p-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-600 transition-colors"
+            >
+              <SettingsIcon className="w-5 h-5" />
+            </button>
+          </Tooltip>
+        </div>
       </div>
     );
   }
@@ -127,9 +142,7 @@ function Sidebar({
           <SwitchTabs
             tabs={modeTabs}
             activeTab={currentMode}
-            onTabChange={(tabId) =>
-              onModeChange?.(tabId as "memo" | "task")
-            }
+            onTabChange={(tabId) => onModeChange?.(tabId as "memo" | "task")}
           />
         </div>
 
@@ -150,8 +163,8 @@ function Sidebar({
           <button
             onClick={currentMode === "memo" ? onNewMemo : onNewTask}
             className={`flex-1 text-center rounded-lg py-2 transition-colors flex items-center justify-center gap-1 ${
-              currentMode === "memo" 
-                ? "bg-Green hover:bg-Green/85" 
+              currentMode === "memo"
+                ? "bg-Green hover:bg-Green/85"
                 : "bg-Yellow hover:bg-Yellow/85"
             }`}
           >
@@ -177,6 +190,19 @@ function Sidebar({
             selectedTaskId={selectedTaskId}
           />
         )}
+      </div>
+
+      {/* 設定ボタン */}
+      <div className="flex-shrink-0 p-2 border-t border-gray-200">
+        <Tooltip text="設定" position="right">
+          <button
+            onClick={() => onSettings?.()}
+            className="w-full p-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors flex items-center justify-center gap-2"
+          >
+            <SettingsIcon className="w-4 h-4" />
+            <span className="text-sm font-medium">設定</span>
+          </button>
+        </Tooltip>
       </div>
     </div>
   );

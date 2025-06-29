@@ -181,6 +181,7 @@ function Main() {
               isCompact={false}
               currentMode={currentMode}
               onModeChange={setCurrentMode}
+              onSettings={() => alert('設定画面（未実装）')}
             />
           )}
         </div>
@@ -212,6 +213,7 @@ function Main() {
                 isCompact={true}
                 currentMode={currentMode}
                 onModeChange={setCurrentMode}
+                onSettings={() => alert('設定画面（未実装）')}
               />
             )}
             </div>

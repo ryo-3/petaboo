@@ -23,7 +23,7 @@ function SwitchTabs({ tabs, activeTab, onTabChange }: SwitchTabsProps) {
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
-            className={`relative z-10 inline-flex items-center justify-center whitespace-nowrap px-3 py-1.5 text-sm font-medium transition-colors duration-200 ${
+            className={`relative inline-flex items-center justify-center whitespace-nowrap px-3 py-1.5 text-sm font-medium transition-colors duration-200 ${
               activeTab === tab.id
                 ? 'text-slate-950'
                 : 'text-slate-500 hover:text-slate-900'

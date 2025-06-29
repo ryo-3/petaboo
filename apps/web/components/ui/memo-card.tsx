@@ -69,16 +69,12 @@ function MemoCard({ memo, isChecked, onToggleCheck, onSelect, variant = 'normal'
             {isDeleted ? (
               <div>削除: {formatDateOnly(deletedMemo.deletedAt)}</div>
             ) : (
-              <>
-                <div>作成: {formatDateOnly(memo.createdAt)}</div>
-                <div>
-                  {memo.updatedAt && memo.updatedAt !== memo.createdAt && (
-                    <span className="block">
-                      編集: {formatDateOnly(memo.updatedAt)}
-                    </span>
-                  )}
-                </div>
-              </>
+              <div>
+                {memo.updatedAt && memo.updatedAt !== memo.createdAt
+                  ? formatDateOnly(memo.updatedAt)
+                  : formatDateOnly(memo.createdAt)
+                }
+              </div>
             )}
           </div>
         </div>

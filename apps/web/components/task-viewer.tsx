@@ -29,23 +29,17 @@ function TaskViewer({
   );
   const [dueDate, setDueDate] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
-
-  // タスクが変更された時に状態を更新
-  useEffect(() => {
-    if (task) {
-      setTitle(task.title || "");
-      setDescription(task.description || "");
-      setStatus(task.status || "todo");
-      setPriority(task.priority || "medium");
-      const formattedDate: string = task.dueDate
-        ? new Date(task.dueDate * 1000).toISOString().split("T")[0] || ""
-        : "";
-      setDueDate(formattedDate);
-      setIsEditing(false);
-    }
-  }, [task]);
   const [error, setError] = useState<string | null>(null);
   const [savedSuccessfully, setSavedSuccessfully] = useState(false);
+
+  // 保存したデータを保持するためのstate
+  const [savedData, setSavedData] = useState<{
+    title: string;
+    description: string;
+    status: "todo" | "in_progress" | "completed";
+    priority: "low" | "medium" | "high";
+    dueDate?: number;
+  } | null>(null);
 
   // taskプロパティが変更された時にstateを更新
   useEffect(() => {
@@ -98,7 +92,19 @@ function TaskViewer({
       setIsSaving(false);
       setSavedSuccessfully(true);
 
+      // 保存したデータを保持
+      const savedTaskData = {
+        title: taskData.title,
+        description: taskData.description || "",
+        status: taskData.status,
+        priority: taskData.priority,
+        dueDate: taskData.dueDate,
+      };
+      console.log("Setting savedData:", savedTaskData);
+      setSavedData(savedTaskData);
+
       setTimeout(() => {
+        console.log("Switching to view mode");
         setIsEditing(false);
         setSavedSuccessfully(false);
         // Edit mode exited
@@ -167,7 +173,11 @@ function TaskViewer({
             />
           ) : (
             <h1 className="flex-1 text-lg font-medium text-gray-800 pb-2">
-              {task.title}
+              {(() => {
+                const displayTitle = savedData?.title || task.title;
+                console.log("Displaying title:", { savedData: savedData?.title, task: task.title, display: displayTitle });
+                return displayTitle;
+              })()}
             </h1>
           )}
         </div>
@@ -302,12 +312,12 @@ function TaskViewer({
                 </label>
                 <span
                   className={`inline-block px-3 py-1 rounded-full text-sm ${
-                    statusOptions.find((opt) => opt.value === task.status)
+                    statusOptions.find((opt) => opt.value === (savedData?.status || task.status))
                       ?.color
                   }`}
                 >
                   {
-                    statusOptions.find((opt) => opt.value === task.status)
+                    statusOptions.find((opt) => opt.value === (savedData?.status || task.status))
                       ?.label
                   }
                 </span>
@@ -319,12 +329,12 @@ function TaskViewer({
                 </label>
                 <span
                   className={`inline-block px-3 py-1 rounded-full text-sm ${
-                    priorityOptions.find((opt) => opt.value === task.priority)
+                    priorityOptions.find((opt) => opt.value === (savedData?.priority || task.priority))
                       ?.color
                   }`}
                 >
                   {
-                    priorityOptions.find((opt) => opt.value === task.priority)
+                    priorityOptions.find((opt) => opt.value === (savedData?.priority || task.priority))
                       ?.label
                   }
                 </span>
@@ -335,8 +345,8 @@ function TaskViewer({
                   期限日
                 </label>
                 <span className="text-gray-700">
-                  {task.dueDate
-                    ? new Date(task.dueDate * 1000).toLocaleDateString("ja-JP")
+                  {(savedData?.dueDate || task.dueDate)
+                    ? new Date((savedData?.dueDate || task.dueDate || 0) * 1000).toLocaleDateString("ja-JP")
                     : "設定なし"}
                 </span>
               </div>
@@ -347,7 +357,7 @@ function TaskViewer({
                 説明
               </label>
               <div className="w-full min-h-32 p-3 bg-gray-50 rounded-lg text-gray-700 leading-relaxed">
-                {task.description || "説明なし"}
+                {savedData?.description || task.description || "説明なし"}
               </div>
             </div>
           </>

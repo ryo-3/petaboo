@@ -4,7 +4,7 @@ import TrashIcon from '@/components/icons/trash-icon'
 import RestoreIcon from '@/components/icons/restore-icon'
 import DateInfo from '@/components/shared/date-info'
 import Tooltip from '@/components/ui/tooltip'
-import DeleteConfirmationModal from '@/components/ui/delete-confirmation-modal'
+import ConfirmationModal from '@/components/ui/confirmation-modal'
 import { usePermanentDeleteNote, useRestoreNote } from '@/src/hooks/use-notes'
 import { useState } from 'react'
 import type { DeletedMemo } from '@/src/types/memo'
@@ -93,15 +93,16 @@ function DeletedMemoViewer({ memo, onClose }: DeletedMemoViewerProps) {
       </div>
 
       {/* 削除確認モーダル */}
-      <DeleteConfirmationModal
+      <ConfirmationModal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handlePermanentDelete}
         title="完全削除の確認"
-        message={`「${memo.title}」を完全に削除しますか？この操作は取り消すことができません。`}
+        message={`「${memo.title}」を完全に削除しますか？\nこの操作は取り消すことができません。`}
         confirmText="完全削除"
         isLoading={permanentDeleteNote.isPending}
         variant="danger"
+        icon="trash"
       />
     </div>
   )

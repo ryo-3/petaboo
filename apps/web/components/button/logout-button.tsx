@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useClerk } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import DoorIcon from "@/components/icons/door-icon";
-import LogoutConfirmationModal from "@/components/ui/logout-confirmation-modal";
+import ConfirmationModal from "@/components/ui/confirmation-modal";
 
 export default function LogoutButton() {
   const { signOut } = useClerk();
@@ -26,10 +26,15 @@ export default function LogoutButton() {
         <DoorIcon className="w-4 h-4" />
       </button>
       
-      <LogoutConfirmationModal
+      <ConfirmationModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
         onConfirm={handleLogout}
+        title="ログアウトしますか？"
+        message="ログアウトすると、再度ログインが必要になります。"
+        confirmText="ログアウト"
+        variant="danger"
+        icon="logout"
       />
     </>
   );

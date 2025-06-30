@@ -69,7 +69,7 @@ export function useDeleteNote() {
           if (key.startsWith('memo_draft_new_')) {
             try {
               const data = JSON.parse(localStorage.getItem(key) || '{}');
-              const hashId = -Math.abs(data.id.split('').reduce((a, b) => {
+              const hashId = -Math.abs(data.id.split('').reduce((a: number, b: string) => {
                 a = ((a << 5) - a) + b.charCodeAt(0);
                 return a & a;
               }, 0));

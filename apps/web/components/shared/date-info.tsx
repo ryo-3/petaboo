@@ -14,7 +14,7 @@ interface DateInfoProps {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function DateInfo({ item, createdItemId, isEditing = false }: DateInfoProps) {
   const [localEditTime, setLocalEditTime] = useState<number | null>(null)
-  const [isLocallyEdited, setIsLocallyEdited] = useState(false)
+  // Removed unused variable: isLocallyEdited
 
   useEffect(() => {
     if (!item) return
@@ -26,18 +26,14 @@ function DateInfo({ item, createdItemId, isEditing = false }: DateInfoProps) {
           const parsed = JSON.parse(localData)
           if (parsed.id === item.id && parsed.lastEditedAt) {
             setLocalEditTime(parsed.lastEditedAt)
-            setIsLocallyEdited(parsed.isEditing || false)
           } else {
             setLocalEditTime(null)
-            setIsLocallyEdited(false)
           }
         } catch {
           setLocalEditTime(null)
-          setIsLocallyEdited(false)
         }
       } else {
         setLocalEditTime(null)
-        setIsLocallyEdited(false)
       }
     }
 

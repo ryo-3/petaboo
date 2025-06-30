@@ -3,26 +3,23 @@
 import TrashIcon from '@/components/icons/trash-icon'
 import PhotoIcon from '@/components/icons/photo-icon'
 import DateInfo from '@/components/shared/date-info'
-import { useDeleteNote, useUpdateNote } from '@/src/hooks/use-notes'
-import { useState, useCallback, useEffect } from 'react'
+import { useDeleteNote } from '@/src/hooks/use-notes'
+import { useState, useEffect } from 'react'
 import type { Memo } from '@/src/types/memo'
 
 interface MemoViewerProps {
   memo: Memo
   onClose: () => void
   onEdit?: (memo: Memo) => void
-  onExitEdit?: () => void
-  isEditMode?: boolean
 }
 
-function MemoViewer({ memo, onClose, onEdit, onExitEdit, isEditMode = false }: MemoViewerProps) {
+function MemoViewer({ memo, onClose }: MemoViewerProps) {
   const deleteNote = useDeleteNote()
-  const updateNote = useUpdateNote()
   
   // 常に編集可能モード
   const [title, setTitle] = useState(memo.title)
   const [content, setContent] = useState(memo.content || '')
-  const [isSaving, setIsSaving] = useState(false)
+  // Removed unused variables: updateNote, onEdit, onExitEdit, isEditMode, isSaving, setIsSaving
   const [error, setError] = useState<string | null>(null)
   const [hasUserEdited, setHasUserEdited] = useState(false)
   const [currentMemoId, setCurrentMemoId] = useState(memo.id)
@@ -132,9 +129,6 @@ function MemoViewer({ memo, onClose, onEdit, onExitEdit, isEditMode = false }: M
         </div>
         
         <div className="flex items-center gap-3 ml-auto">
-          {isSaving && (
-            <span className="text-sm text-gray-500">保存中...</span>
-          )}
           {error && (
             <span className="text-sm text-red-500">{error}</span>
           )}

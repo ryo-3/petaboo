@@ -1,26 +1,19 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { useCreateNote, useUpdateNote } from '@/src/hooks/use-notes'
-import { useQueryClient } from '@tanstack/react-query'
 import type { Memo } from '@/src/types/memo'
 
 interface UseMemoFormOptions {
   memo?: Memo | null
-  onSave?: (id: number) => void
 }
 
-export function useMemoForm({ memo = null, onSave }: UseMemoFormOptions = {}) {
+export function useMemoForm({ memo = null }: UseMemoFormOptions = {}) {
   const [title, setTitle] = useState(() => memo?.title || '')
   const [content, setContent] = useState(() => memo?.content || '')
-  const [isSaving, setIsSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [savedSuccessfully, setSavedSuccessfully] = useState(false)
   const [createdMemoId, setCreatedMemoId] = useState<number | null>(memo?.id || null)
   const [tempId] = useState(() => `new_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   
-  const createNote = useCreateNote()
-  const updateNote = useUpdateNote()
-  const queryClient = useQueryClient()
+  // Removed unused variables: createNote, updateNote, queryClient, isSaving, error, onSave, setIsSaving, setError
   
   const isEditMode = Boolean(memo)
 
@@ -109,9 +102,10 @@ export function useMemoForm({ memo = null, onSave }: UseMemoFormOptions = {}) {
 
   // タイマークリーンアップ
   useEffect(() => {
+    const currentTimeout = timeoutRef.current
     return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
+      if (currentTimeout) {
+        clearTimeout(currentTimeout)
       }
     }
   }, [])
@@ -121,8 +115,6 @@ export function useMemoForm({ memo = null, onSave }: UseMemoFormOptions = {}) {
     setTitle,
     content,
     setContent,
-    isSaving,
-    error,
     savedSuccessfully,
     isEditMode,
     createdMemoId

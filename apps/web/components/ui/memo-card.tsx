@@ -16,10 +16,13 @@ function MemoCard({ memo, isChecked, onToggleCheck, onSelect, variant = 'normal'
   const deletedMemo = memo as DeletedMemo
   
   // ローカルストレージから最新の内容を取得（リアルタイム同期）
+  // Always call the hook but conditionally use its results
+  const localSync = useLocalStorageSync(memo.id, memo.title, memo.content || '', isSelected)
+  
   // 削除済みメモや新規作成メモ（ID: 負の値）の場合はlocalStorageを使用せず、元のデータを表示
   const { displayTitle, displayContent, lastEditTime } = (isDeleted || memo.id < 0)
     ? { displayTitle: memo.title, displayContent: memo.content || '', lastEditTime: null }
-    : useLocalStorageSync(memo.id, memo.title, memo.content || '', isSelected)
+    : localSync
 
   return (
     <div className="relative">

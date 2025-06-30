@@ -12,11 +12,10 @@ import type { Memo } from '@/src/types/memo'
 interface MemoFormProps {
   onClose: () => void
   memo?: Memo | null
-  onSave?: (id: number) => void
   onExitEdit?: () => void
 }
 
-function MemoForm({ onClose, memo = null, onSave, onExitEdit }: MemoFormProps) {
+function MemoForm({ onClose, memo = null, onExitEdit }: MemoFormProps) {
   // 新規作成時は常に編集モード、既存メモの場合は表示モードから開始
   const [isEditing, setIsEditing] = useState(memo === null)
   const {
@@ -24,13 +23,11 @@ function MemoForm({ onClose, memo = null, onSave, onExitEdit }: MemoFormProps) {
     setTitle,
     content,
     setContent,
-    isSaving,
-    error,
     savedSuccessfully,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     isEditMode,
     createdMemoId
-  } = useMemoForm({ memo, onSave })
+  } = useMemoForm({ memo })
 
   return (
     <div className="flex flex-col h-full bg-white p-6">
@@ -62,9 +59,7 @@ function MemoForm({ onClose, memo = null, onSave, onExitEdit }: MemoFormProps) {
         </div>
         
         <div className="flex items-center gap-3 ml-auto">
-          {error && (
-            <span className="text-sm text-red-500">エラー</span>
-          )}
+          {/* Removed error display as error is no longer available */}
         </div>
       </div>
 
@@ -84,7 +79,7 @@ function MemoForm({ onClose, memo = null, onSave, onExitEdit }: MemoFormProps) {
             }`}
             autoFocus
           />
-          {savedSuccessfully && !isSaving && (
+          {savedSuccessfully && (
             <CheckIcon className="w-5 h-5 text-green-600 flex-shrink-0" />
           )}
         </div>
@@ -97,11 +92,7 @@ function MemoForm({ onClose, memo = null, onSave, onExitEdit }: MemoFormProps) {
         />
 
         <div className="text-xs text-gray-400 mt-auto">
-          {error ? (
-            <div className="text-red-500">{error}</div>
-          ) : (
-            'ローカルストレージに自動保存中...'
-          )}
+          ローカルストレージに自動保存中...
         </div>
       </div>
 

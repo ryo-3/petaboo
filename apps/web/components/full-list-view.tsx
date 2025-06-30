@@ -33,8 +33,6 @@ interface FullListViewProps {
   selectedDeletedMemo?: DeletedMemo | null;
   selectedTask?: Task | null;
   selectedDeletedTask?: DeletedTask | null;
-  onEditMemo?: (memo: Memo) => void;
-  onEditTask?: (task: Task) => void;
 }
 
 function FullListView({
@@ -46,9 +44,8 @@ function FullListView({
   selectedMemo,
   selectedDeletedMemo,
   selectedTask,
-  selectedDeletedTask,
-  onEditMemo,
-  onEditTask
+  selectedDeletedTask
+  // Removed unused props: onEditMemo, onEditTask
 }: FullListViewProps) {
   const { data: notes, isLoading: memoLoading, error: memoError } = useNotes();
   const [localMemos, setLocalMemos] = useState<Memo[]>([]);
@@ -75,7 +72,7 @@ function FullListView({
   const [checkedDeletedTasks, setCheckedDeletedTasks] = useState<Set<number>>(
     new Set()
   );
-  const { preferences, isLoading: preferencesLoading } = useUserPreferences(1);
+  const { preferences } = useUserPreferences(1);
   
   // ローカル状態（初期値をlocalStorageから取得）
   const [viewMode, setViewMode] = useState<'card' | 'list'>(() => {
@@ -178,7 +175,7 @@ function FullListView({
               };
               
               // 一意のIDを生成（文字列IDをハッシュ化して負の数にする）
-              const hashId = -Math.abs(data.id.split('').reduce((a, b) => {
+              const hashId = -Math.abs(data.id.split('').reduce((a: number, b: string) => {
                 a = ((a << 5) - a) + b.charCodeAt(0);
                 return a & a;
               }, 0));
@@ -189,8 +186,6 @@ function FullListView({
                 content: data.content || '',
                 createdAt: normalizeTime(data.lastModified),
                 updatedAt: normalizeTime(data.lastEditedAt || data.lastModified),
-                isPrivate: false,
-                userId: 1,
                 tempId: data.id // 元のtempIdを保持
               });
             }
@@ -671,15 +666,11 @@ function FullListView({
             <MemoViewer 
               memo={selectedMemo} 
               onClose={() => {}} 
-              onEdit={onEditMemo}
-              isEditMode={false}
             />
           ) : selectedTask ? (
             <TaskViewer 
               task={selectedTask} 
               onClose={() => {}} 
-              onEdit={onEditTask}
-              isEditMode={false}
             />
           ) : selectedDeletedMemo ? (
             <DeletedMemoViewer 

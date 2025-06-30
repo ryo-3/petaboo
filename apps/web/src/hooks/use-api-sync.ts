@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useUpdateNote, useCreateNote } from './use-notes'
 
 interface LocalMemoData {
@@ -23,7 +23,7 @@ export function useApiSync() {
   const updateNote = useUpdateNote()
   const createNote = useCreateNote()
 
-  const syncSingleMemo = async (storageKey: string, data: LocalMemoData) => {
+  const syncSingleMemo = useCallback(async (storageKey: string, data: LocalMemoData) => {
     const currentRetry = syncStatus[storageKey]?.retryCount || 0
     
     // 最大3回までリトライ
@@ -66,14 +66,16 @@ export function useApiSync() {
       })
       
       console.log('API保存成功、ローカルデータ削除:', data.title || '無題', storageKey)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('API保存失敗:', error)
       
       // 404エラーの場合は新規作成として再試行
-      if (error?.message?.includes('404') && typeof data.id === 'number' && data.id > 0) {
+      if (error && typeof error === 'object' && 'message' in error && 
+          typeof error.message === 'string' && error.message.includes('404') && 
+          typeof data.id === 'number' && data.id > 0) {
         console.log('404エラーのため新規作成として再試行:', data.id)
         try {
-          await createNote.mutateAsync(memoData)
+          await createNote.mutateAsync(data)
           // 成功：ローカルデータ削除
           localStorage.removeItem(storageKey)
           setSyncStatus(prev => {
@@ -103,7 +105,7 @@ export function useApiSync() {
         [storageKey]: { retryCount: currentRetry + 1, isLoading: false }
       }))
     }
-  }
+  }, [updateNote, createNote, syncStatus, setSyncStatus, setErrors])
 
   useEffect(() => {
     const checkAndSync = () => {
@@ -137,7 +139,7 @@ export function useApiSync() {
     const interval = setInterval(checkAndSync, 1000)
 
     return () => clearInterval(interval)
-  }, [syncStatus, updateNote, createNote])
+  }, [syncStatus, updateNote, createNote, syncSingleMemo])
 
   // エラーをクリアする関数
   const clearErrors = () => setErrors([])

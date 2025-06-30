@@ -1,48 +1,72 @@
-import { formatDateOnly } from '@/src/utils/formatDate'
-import type { Memo, DeletedMemo } from '@/src/types/memo'
-import { useLocalStorageSync } from '@/src/hooks/use-local-storage-sync'
+import { useLocalStorageSync } from "@/src/hooks/use-local-storage-sync";
+import type { DeletedMemo, Memo } from "@/src/types/memo";
+import { formatDateOnly } from "@/src/utils/formatDate";
 
 interface MemoListItemProps {
-  memo: Memo | DeletedMemo
-  isChecked: boolean
-  onToggleCheck: () => void
-  onSelect: () => void
-  variant?: 'normal' | 'deleted'
-  isSelected?: boolean
+  memo: Memo | DeletedMemo;
+  isChecked: boolean;
+  onToggleCheck: () => void;
+  onSelect: () => void;
+  variant?: "normal" | "deleted";
+  isSelected?: boolean;
 }
 
-function MemoListItem({ memo, isChecked, onToggleCheck, onSelect, variant = 'normal', isSelected = false }: MemoListItemProps) {
-  const isDeleted = variant === 'deleted'
-  const deletedMemo = memo as DeletedMemo
-  
+function MemoListItem({
+  memo,
+  isChecked,
+  onToggleCheck,
+  onSelect,
+  variant = "normal",
+  isSelected = false,
+}: MemoListItemProps) {
+  const isDeleted = variant === "deleted";
+  const deletedMemo = memo as DeletedMemo;
+
   // ローカルストレージから最新の内容を取得（リアルタイム同期）
+  // Always call the hook but conditionally use its results
+  const localSync = useLocalStorageSync(
+    memo.id,
+    memo.title,
+    memo.content || "",
+    isSelected
+  );
+
   // 削除済みメモや新規作成メモ（ID: 負の値）の場合はlocalStorageを使用せず、元のデータを表示
-  const { displayTitle, displayContent, isLocallyEdited, lastEditTime } = (isDeleted || memo.id < 0)
-    ? { displayTitle: memo.title, displayContent: memo.content || '', isLocallyEdited: false, lastEditTime: null }
-    : useLocalStorageSync(memo.id, memo.title, memo.content || '', isSelected)
+  const { displayTitle, displayContent, lastEditTime } =
+    isDeleted || memo.id < 0
+      ? {
+          displayTitle: memo.title,
+          displayContent: memo.content || "",
+          lastEditTime: null,
+        }
+      : localSync;
+
+  // Removed unused variable: isLocallyEdited
 
   return (
-    <div className={`${
-      isSelected
-        ? 'bg-gray-100'
-        : isDeleted
-        ? 'bg-red-50 border-red-200 hover:bg-red-100'
-        : 'bg-white hover:bg-gray-50'
-    } border-b border-gray-200 transition-colors`}>
+    <div
+      className={`${
+        isSelected
+          ? "bg-gray-100"
+          : isDeleted
+            ? "bg-red-50 border-red-200 hover:bg-red-100"
+            : "bg-white hover:bg-gray-50"
+      } border-b border-gray-200 transition-colors`}
+    >
       <div className="p-4 flex items-center gap-3">
         <button
           onClick={onToggleCheck}
           className={`size-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
             isChecked
-              ? isDeleted 
-                ? 'bg-white border-gray-400'
-                : 'bg-Green border-Green'
-              : 'bg-white border-gray-300 hover:border-gray-400'
+              ? isDeleted
+                ? "bg-white border-gray-400"
+                : "bg-Green border-Green"
+              : "bg-white border-gray-300 hover:border-gray-400"
           }`}
         >
           {isChecked && (
             <svg
-              className={`w-2.5 h-2.5 ${isDeleted ? 'text-black' : 'text-white'}`}
+              className={`w-2.5 h-2.5 ${isDeleted ? "text-black" : "text-white"}`}
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -55,39 +79,43 @@ function MemoListItem({ memo, isChecked, onToggleCheck, onSelect, variant = 'nor
           )}
         </button>
 
-        <button
-          onClick={onSelect}
-          className="flex-1 min-w-0 text-left"
-        >
-          <div className="flex items-start justify-between gap-4">
+        <button onClick={onSelect} className="flex-1 min-w-0 text-left">
+          <div className="flex flex-col gap-2">
             <div className="flex-1 min-w-0">
-              <h3 className={`font-semibold text-sm mb-1 truncate ${
-                isDeleted ? 'text-gray-700' : 'text-gray-800'
-              }`}>
+              <h3
+                className={`font-semibold text-sm mb-1 truncate ${
+                  isDeleted ? "text-gray-700" : "text-gray-800"
+                }`}
+              >
                 {displayTitle}
               </h3>
               <p className="text-xs text-gray-600 line-clamp-2">
-                {displayContent || '内容なし'}
+                {displayContent || "内容なし"}
               </p>
             </div>
-            
-            <div className={`text-xs flex-shrink-0 ${
-              isDeleted ? 'text-red-400' : 'text-gray-400'
-            }`}>
+
+            <div
+              className={`text-xs text-right ${
+                isDeleted ? "text-red-400" : "text-gray-400"
+              }`}
+            >
               {isDeleted ? (
                 <div>削除: {formatDateOnly(deletedMemo.deletedAt)}</div>
               ) : (
-                <div className="text-right">
+                <div>
                   {(() => {
                     // 新規作成メモの場合
                     if (memo.id < 0) {
                       return formatDateOnly(memo.updatedAt || memo.createdAt);
                     }
-                    
+
                     // ローカル編集時間とAPI更新時間のうち最新のものを表示
-                    const latestTime = lastEditTime && lastEditTime > (memo.updatedAt || 0)
-                      ? lastEditTime
-                      : (memo.updatedAt && memo.updatedAt !== memo.createdAt ? memo.updatedAt : memo.createdAt);
+                    const latestTime =
+                      lastEditTime && lastEditTime > (memo.updatedAt || 0)
+                        ? lastEditTime
+                        : memo.updatedAt && memo.updatedAt !== memo.createdAt
+                          ? memo.updatedAt
+                          : memo.createdAt;
                     return formatDateOnly(latestTime);
                   })()}
                 </div>
@@ -97,7 +125,7 @@ function MemoListItem({ memo, isChecked, onToggleCheck, onSelect, variant = 'nor
         </button>
       </div>
     </div>
-  )
+  );
 }
 
-export default MemoListItem
+export default MemoListItem;

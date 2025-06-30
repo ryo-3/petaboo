@@ -4,6 +4,7 @@ export interface Memo {
   content: string | null
   createdAt: number
   updatedAt?: number
+  tempId?: string
 }
 
 export interface DeletedMemo {

@@ -13,7 +13,6 @@ import TaskCreator from "@/components/task-creator";
 import TaskEditor from "@/components/task-editor";
 import TaskViewer from "@/components/task-viewer";
 import SettingsScreen from "@/components/settings-screen";
-import { useApiSync } from "@/src/hooks/use-api-sync";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
 
@@ -30,10 +29,9 @@ function Main() {
   const [windowWidth, setWindowWidth] = useState(0);
 
   // API同期フック（一時的に無効化 - 挙動整理のため）
-  // const { errors, clearErrors, syncStatus } = useApiSync();
+  // Removed unused imports: useApiSync, syncStatus
   const errors: string[] = [];
   const clearErrors = () => {};
-  const syncStatus = {};
 
   useEffect(() => {
     const updateWindowWidth = () => {
@@ -180,9 +178,7 @@ function Main() {
     setShowFullList(false);
   };
 
-  const handleBackFromSettings = () => {
-    setShowSettings(false);
-  };
+  // Removed unused function: handleBackFromSettings
 
   return (
     <main>
@@ -269,9 +265,7 @@ function Main() {
             </div>
             <div className={`flex-1 ml-16 ${isEditing || selectedMemo || selectedDeletedMemo || selectedTask || selectedDeletedTask ? 'h-[calc(100vh-64px)] pt-16' : 'pt-16'}`}>
             {showSettings ? (
-              <SettingsScreen 
-                onBack={handleBackFromSettings}
-              />
+              <SettingsScreen />
             ) : showFullList ? (
               <FullListView 
                 onSelectMemo={handleSelectMemo} 
@@ -283,8 +277,6 @@ function Main() {
                 selectedDeletedMemo={selectedDeletedMemo}
                 selectedTask={selectedTask}
                 selectedDeletedTask={selectedDeletedTask}
-                onEditMemo={handleEditMemo}
-                onEditTask={handleEditTask}
               />
             ) : isEditing ? (
               currentMode === 'memo' ? (
@@ -295,9 +287,9 @@ function Main() {
                 <TaskCreator onClose={handleClose} />
               )
             ) : selectedMemo ? (
-              <MemoViewer memo={selectedMemo} onClose={handleClose} onEdit={handleEditMemo} />
+              <MemoViewer memo={selectedMemo} onClose={handleClose} />
             ) : selectedTask ? (
-              <TaskViewer task={selectedTask} onClose={handleClose} onEdit={handleEditTask} />
+              <TaskViewer task={selectedTask} onClose={handleClose} />
             ) : selectedDeletedMemo ? (
               <DeletedMemoViewer memo={selectedDeletedMemo} onClose={handleClose} />
             ) : selectedDeletedTask ? (

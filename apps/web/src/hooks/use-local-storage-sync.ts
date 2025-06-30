@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 
 export function useLocalStorageSync(memoId: number, defaultTitle: string, defaultContent: string, isEditing: boolean = false) {
   const [displayTitle, setDisplayTitle] = useState(defaultTitle)

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export interface UserPreferences {
   userId: number;
@@ -20,7 +20,7 @@ export function useUserPreferences(userId: number = 1) {
   const [error, setError] = useState<string | null>(null);
 
   // ユーザー設定を取得
-  const fetchPreferences = async () => {
+  const fetchPreferences = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -50,7 +50,7 @@ export function useUserPreferences(userId: number = 1) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userId]);
 
   // ユーザー設定を更新
   const updatePreferences = async (updates: Partial<Pick<UserPreferences, 'memoColumnCount' | 'taskColumnCount' | 'memoViewMode' | 'taskViewMode' | 'memoHideControls' | 'taskHideControls'>>) => {
@@ -80,7 +80,7 @@ export function useUserPreferences(userId: number = 1) {
 
   useEffect(() => {
     fetchPreferences();
-  }, [userId]);
+  }, [fetchPreferences]);
 
   return {
     preferences,

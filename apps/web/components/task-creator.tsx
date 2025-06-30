@@ -19,7 +19,7 @@ function TaskCreator({ onClose }: TaskCreatorProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedSuccessfully, setSavedSuccessfully] = useState(false);
-  const [createdTaskId, setCreatedTaskId] = useState<number | null>(null);
+  // Removed unused variable: createdTaskId, setCreatedTaskId
   const createTask = useCreateTask();
 
   // 手動保存処理
@@ -41,9 +41,8 @@ function TaskCreator({ onClose }: TaskCreatorProps) {
       };
 
       // 新規タスクの作成
-      const result = await createTask.mutateAsync(taskData);
-      // 作成されたタスクのIDを保存
-      setCreatedTaskId(result.id);
+      await createTask.mutateAsync(taskData);
+      // Task created successfully
       // 保存完了状態にして、保存中状態を終了
       setIsSaving(false);
       setSavedSuccessfully(true);
@@ -65,7 +64,7 @@ function TaskCreator({ onClose }: TaskCreatorProps) {
       );
       setIsSaving(false);
     }
-  }, [title, description, status, priority, dueDate, createTask, onClose]);
+  }, [title, description, status, priority, dueDate, createTask]);
 
   const statusOptions = [
     { value: "todo", label: "未着手", color: "bg-gray-100 text-gray-800" },

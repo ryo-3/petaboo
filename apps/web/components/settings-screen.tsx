@@ -9,11 +9,9 @@ import ColumnCountSelector from "./ui/column-count-selector";
 import Switch from "./ui/switch";
 import ViewModeToggle from "./ui/view-mode-toggle";
 
-interface SettingsScreenProps {
-  onBack: () => void;
-}
+// Removed empty interface - using empty props instead
 
-function SettingsScreen({ onBack }: SettingsScreenProps) {
+function SettingsScreen() {
   const { preferences, updatePreferences, isLoading } = useUserPreferences(1);
 
   const [memoColumnCount, setMemoColumnCount] = useState(4);
@@ -46,7 +44,7 @@ function SettingsScreen({ onBack }: SettingsScreenProps) {
         taskHideControls,
       });
       alert("設定を保存しました！");
-    } catch (error) {
+    } catch {
       alert("設定の保存に失敗しました。");
     }
   };

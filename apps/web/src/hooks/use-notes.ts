@@ -60,6 +60,34 @@ export function useDeleteNote() {
   
   return useMutation({
     mutationFn: async (id: number) => {
+      // 負のID（ローカルメモ）の場合はlocalStorageから削除
+      if (id < 0) {
+        console.log('ローカルメモを削除:', id)
+        
+        // ハッシュIDから元のtempIdを見つけて削除
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('memo_draft_new_')) {
+            try {
+              const data = JSON.parse(localStorage.getItem(key) || '{}');
+              const hashId = -Math.abs(data.id.split('').reduce((a, b) => {
+                a = ((a << 5) - a) + b.charCodeAt(0);
+                return a & a;
+              }, 0));
+              
+              if (hashId === id) {
+                localStorage.removeItem(key);
+                console.log('ローカルメモ削除完了:', key);
+              }
+            } catch (error) {
+              console.error('ローカルメモ削除エラー:', error);
+            }
+          }
+        });
+        
+        return { success: true }; // ダミーレスポンス
+      }
+      
+      console.log('APIメモ削除実行:', id)
       const token = await getToken()
       const response = await notesApi.deleteNote(id, token || undefined)
       return response.json()

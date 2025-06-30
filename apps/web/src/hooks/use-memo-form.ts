@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useCreateNote, useUpdateNote } from '@/src/hooks/use-notes'
+import { useQueryClient } from '@tanstack/react-query'
 import type { Memo } from '@/src/types/memo'
 
 interface UseMemoFormOptions {
@@ -14,10 +15,12 @@ export function useMemoForm({ memo = null, onSave }: UseMemoFormOptions = {}) {
   const [error, setError] = useState<string | null>(null)
   const [savedSuccessfully, setSavedSuccessfully] = useState(false)
   const [createdMemoId, setCreatedMemoId] = useState<number | null>(memo?.id || null)
+  const [tempId] = useState(() => `new_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   
   const createNote = useCreateNote()
   const updateNote = useUpdateNote()
+  const queryClient = useQueryClient()
   
   const isEditMode = Boolean(memo)
 
@@ -35,14 +38,17 @@ export function useMemoForm({ memo = null, onSave }: UseMemoFormOptions = {}) {
     const memoData = {
       title: title.trim(),
       content: content.trim(),
-      id: createdMemoId || memo?.id || 'new',
-      lastModified: Date.now()
+      id: memo?.id || tempId,
+      lastModified: Date.now(),
+      lastEditedAt: Math.floor(Date.now() / 1000),
+      isEditing: true
     }
     
     // ローカルストレージに保存
-    localStorage.setItem(`memo_draft_${memoData.id}`, JSON.stringify(memoData))
-    console.log('ローカル保存:', memoData.title || '(無題)', memoData.content)
-  }, [title, content, createdMemoId, memo])
+    const currentKey = `memo_draft_${memoData.id}`
+    localStorage.setItem(currentKey, JSON.stringify(memoData))
+    console.log('ローカル保存:', memoData.title || '(無題)')
+  }, [title, content, memo, tempId])
 
   // 3秒後の自動保存処理（コメントアウト）
   // const handleAutoSave = useCallback(() => {
@@ -86,6 +92,12 @@ export function useMemoForm({ memo = null, onSave }: UseMemoFormOptions = {}) {
   //     }
   //   }, 3000)
   // }, [title, content, isEditMode, memo, createdMemoId, createNote, updateNote, onSave])
+
+  // 新規メモの即座API同期（無効化 - use-api-syncに一本化）
+  // const handleImmediateSync = useCallback(async () => {
+  //   ...
+  // }, [...])
+
 
   // タイトルまたは内容が変更されたらローカルストレージに保存
   useEffect(() => {

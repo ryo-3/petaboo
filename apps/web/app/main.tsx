@@ -13,6 +13,7 @@ import TaskCreator from "@/components/task-creator";
 import TaskEditor from "@/components/task-editor";
 import TaskViewer from "@/components/task-viewer";
 import SettingsScreen from "@/components/settings-screen";
+import { useApiSync } from "@/src/hooks/use-api-sync";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
 
@@ -27,6 +28,12 @@ function Main() {
   const [showSettings, setShowSettings] = useState(false);
   const [currentMode, setCurrentMode] = useState<'memo' | 'task'>('memo');
   const [windowWidth, setWindowWidth] = useState(0);
+
+  // API同期フック（一時的に無効化 - 挙動整理のため）
+  // const { errors, clearErrors, syncStatus } = useApiSync();
+  const errors: string[] = [];
+  const clearErrors = () => {};
+  const syncStatus = {};
 
   useEffect(() => {
     const updateWindowWidth = () => {
@@ -179,6 +186,28 @@ function Main() {
 
   return (
     <main>
+      {/* API同期エラー表示 */}
+      {errors.length > 0 && (
+        <div className="fixed top-4 right-4 z-50 space-y-2">
+          {errors.map((error, index) => (
+            <div
+              key={index}
+              className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded shadow-lg max-w-sm"
+            >
+              <div className="flex justify-between items-start">
+                <span className="text-sm">{error}</span>
+                <button
+                  onClick={clearErrors}
+                  className="ml-2 text-red-500 hover:text-red-700"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {isMobile ? (
         // モバイル: サイドバー100%
         <div className="h-screen w-full">

@@ -51,6 +51,7 @@ function FullListView({
   onEditTask
 }: FullListViewProps) {
   const { data: notes, isLoading: memoLoading, error: memoError } = useNotes();
+  const [localMemos, setLocalMemos] = useState<Memo[]>([]);
   const { data: deletedNotes } = useDeletedNotes();
   const { data: tasks, isLoading: taskLoading, error: taskError } = useTasks();
   const { data: deletedTasks } = useDeletedTasks();
@@ -74,32 +75,172 @@ function FullListView({
   const [checkedDeletedTasks, setCheckedDeletedTasks] = useState<Set<number>>(
     new Set()
   );
-  const { preferences } = useUserPreferences(1);
+  const { preferences, isLoading: preferencesLoading } = useUserPreferences(1);
   
-  // 現在のモードに応じた初期値を取得
-  const initialViewMode = currentMode === 'task' 
-    ? (preferences?.taskViewMode || 'list')
-    : (preferences?.memoViewMode || 'list');
-  const initialColumnCount = currentMode === 'task'
-    ? (preferences?.taskColumnCount || 2)
-    : (preferences?.memoColumnCount || 4);
+  // ローカル状態（初期値をlocalStorageから取得）
+  const [viewMode, setViewMode] = useState<'card' | 'list'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(`${currentMode}_viewMode`);
+      if (saved === 'card' || saved === 'list') {
+        return saved;
+      }
+    }
+    return currentMode === 'task' ? 'list' : 'list';
+  });
+  
+  const [columnCount, setColumnCount] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(`${currentMode}_columnCount`);
+      if (saved) {
+        const num = parseInt(saved, 10);
+        if (num >= 1 && num <= 6) {
+          return num;
+        }
+      }
+    }
+    return currentMode === 'task' ? 2 : 4;
+  });
 
-  // ローカル状態（データベースに保存しない）
-  const [viewMode, setViewMode] = useState<'card' | 'list'>(initialViewMode);
-  const [columnCount, setColumnCount] = useState(initialColumnCount);
+  // currentMode変更時にlocalStorageから設定を読み込み
+  useEffect(() => {
+    // localStorageから現在のモードの設定を取得
+    const savedViewMode = localStorage.getItem(`${currentMode}_viewMode`);
+    const savedColumnCount = localStorage.getItem(`${currentMode}_columnCount`);
+    
+    if (savedViewMode === 'card' || savedViewMode === 'list') {
+      setViewMode(savedViewMode);
+    } else {
+      setViewMode(currentMode === 'task' ? 'list' : 'list');
+    }
+    
+    if (savedColumnCount) {
+      const num = parseInt(savedColumnCount, 10);
+      if (num >= 1 && num <= 6) {
+        setColumnCount(num);
+      } else {
+        setColumnCount(currentMode === 'task' ? 2 : 4);
+      }
+    } else {
+      setColumnCount(currentMode === 'task' ? 2 : 4);
+    }
+  }, [currentMode]);
 
   // 設定値が変更されたらローカル状態を更新
   useEffect(() => {
-    const newViewMode = currentMode === 'task' 
-      ? (preferences?.taskViewMode || 'list')
-      : (preferences?.memoViewMode || 'list');
-    const newColumnCount = currentMode === 'task'
-      ? (preferences?.taskColumnCount || 2)
-      : (preferences?.memoColumnCount || 4);
-    
-    setViewMode(newViewMode);
-    setColumnCount(newColumnCount);
+    if (preferences) {
+      const newViewMode = currentMode === 'task' 
+        ? (preferences.taskViewMode || 'list')
+        : (preferences.memoViewMode || 'list');
+      const newColumnCount = currentMode === 'task'
+        ? (preferences.taskColumnCount || 2)
+        : (preferences.memoColumnCount || 4);
+      
+      setViewMode(newViewMode);
+      setColumnCount(newColumnCount);
+      
+      // localStorageにも保存（次回の初期値用）
+      localStorage.setItem(`${currentMode}_viewMode`, newViewMode);
+      localStorage.setItem(`${currentMode}_columnCount`, newColumnCount.toString());
+    }
   }, [preferences, currentMode]);
+
+  // ローカル設定変更時にlocalStorageを更新
+  const handleViewModeChange = (newViewMode: 'card' | 'list') => {
+    setViewMode(newViewMode);
+    localStorage.setItem(`${currentMode}_viewMode`, newViewMode);
+  };
+
+  const handleColumnCountChange = (newColumnCount: number) => {
+    setColumnCount(newColumnCount);
+    localStorage.setItem(`${currentMode}_columnCount`, newColumnCount.toString());
+  };
+
+  // ローカルストレージから新規作成メモを取得
+  useEffect(() => {
+    let monitoringInterval: NodeJS.Timeout | null = null;
+    
+    const updateLocalMemos = () => {
+      const localMemosList: Memo[] = [];
+      
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('memo_draft_')) {
+          try {
+            const data = JSON.parse(localStorage.getItem(key) || '{}');
+            // 新規作成のメモ（IDが文字列で'new'で始まる場合）のみを対象
+            if (typeof data.id === 'string' && data.id.startsWith('new_') && (data.title?.trim() || data.content?.trim())) {
+              const now = Math.floor(Date.now() / 1000);
+              
+              // データの時間がミリ秒形式の場合は秒に変換、すでに秒の場合はそのまま
+              const normalizeTime = (timestamp: number) => {
+                if (!timestamp) return now;
+                // 13桁（ミリ秒）なら10桁（秒）に変換
+                return timestamp > 9999999999 ? Math.floor(timestamp / 1000) : Math.floor(timestamp);
+              };
+              
+              // 一意のIDを生成（文字列IDをハッシュ化して負の数にする）
+              const hashId = -Math.abs(data.id.split('').reduce((a, b) => {
+                a = ((a << 5) - a) + b.charCodeAt(0);
+                return a & a;
+              }, 0));
+              
+              localMemosList.push({
+                id: hashId, // ユニークな負のID
+                title: data.title || '無題',
+                content: data.content || '',
+                createdAt: normalizeTime(data.lastModified),
+                updatedAt: normalizeTime(data.lastEditedAt || data.lastModified),
+                isPrivate: false,
+                userId: 1,
+                tempId: data.id // 元のtempIdを保持
+              });
+            }
+          } catch (error) {
+            console.error('ローカルメモの解析エラー:', key, error);
+          }
+        }
+      });
+      
+      setLocalMemos(localMemosList);
+      return localMemosList.length > 0;
+    };
+
+    const startMonitoring = () => {
+      if (monitoringInterval) return; // 既に監視中の場合は何もしない
+      
+      monitoringInterval = setInterval(() => {
+        const hasNewMemos = updateLocalMemos();
+        if (!hasNewMemos && monitoringInterval) {
+          clearInterval(monitoringInterval);
+          monitoringInterval = null;
+        }
+      }, 1000);
+    };
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key?.startsWith('memo_draft_new_')) {
+        const hasNewMemos = updateLocalMemos();
+        if (hasNewMemos && !monitoringInterval) {
+          startMonitoring();
+        }
+      }
+    };
+
+    // 初回チェック
+    const hasNewMemos = updateLocalMemos();
+    if (hasNewMemos) {
+      startMonitoring();
+    }
+
+    // localStorage変更イベントリスナー
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      if (monitoringInterval) {
+        clearInterval(monitoringInterval);
+      }
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   const deleteNote = useDeleteNote();
   const permanentDeleteNote = usePermanentDeleteNote();
@@ -115,11 +256,43 @@ function FullListView({
     try {
       if (activeTab === 'normal') {
         if (currentMode === 'memo') {
-          // 通常メモの一括削除
-          const deletePromises = Array.from(checkedMemos).map(id => 
-            deleteNote.mutateAsync(id)
-          );
-          await Promise.all(deletePromises);
+          // APIメモとローカルメモを分離
+          const apiMemoIds = Array.from(checkedMemos).filter(id => id > 0);
+          const localMemoIds = Array.from(checkedMemos).filter(id => id < 0);
+          
+          // APIメモの削除
+          if (apiMemoIds.length > 0) {
+            const deletePromises = apiMemoIds.map(id => 
+              deleteNote.mutateAsync(id)
+            );
+            await Promise.all(deletePromises);
+          }
+          
+          // ローカルメモの削除（localStorageから削除）
+          if (localMemoIds.length > 0) {
+            localMemoIds.forEach(id => {
+              // ハッシュIDから元のtempIdを見つけて削除
+              Object.keys(localStorage).forEach(key => {
+                if (key.startsWith('memo_draft_new_')) {
+                  try {
+                    const data = JSON.parse(localStorage.getItem(key) || '{}');
+                    const hashId = -Math.abs(data.id.split('').reduce((a: number, b: string) => {
+                      a = ((a << 5) - a) + b.charCodeAt(0);
+                      return a & a;
+                    }, 0));
+                    
+                    if (hashId === id) {
+                      localStorage.removeItem(key);
+                      console.log('ローカルメモを削除:', key);
+                    }
+                  } catch (error) {
+                    console.error('ローカルメモ削除エラー:', error);
+                  }
+                }
+              });
+            });
+          }
+          
           setCheckedMemos(new Set());
         } else {
           // 通常タスクの一括削除
@@ -180,7 +353,7 @@ function FullListView({
         {
           id: "normal",
           label: "通常",
-          count: notes?.length || 0,
+          count: (notes?.length || 0) + localMemos.length,
         },
         {
           id: "deleted",
@@ -270,11 +443,11 @@ function FullListView({
           <div className="flex items-center gap-2">
             <ViewModeToggle 
               viewMode={viewMode}
-              onViewModeChange={setViewMode}
+              onViewModeChange={handleViewModeChange}
             />
             <ColumnCountSelector 
               columnCount={columnCount}
-              onColumnCountChange={setColumnCount}
+              onColumnCountChange={handleColumnCountChange}
               isRightPanelShown={!!(selectedMemo || selectedDeletedMemo || selectedTask || selectedDeletedTask)}
             />
           </div>
@@ -297,12 +470,17 @@ function FullListView({
       {/* メモの通常タブ */}
       {activeTab === "normal" && currentMode === 'memo' && (
         <>
-          {notes && notes.length > 0 ? (
+          {((notes && notes.length > 0) || localMemos.length > 0) ? (
             <ItemGrid viewMode={viewMode} effectiveColumnCount={effectiveColumnCount}>
-              {notes
+              {[...(notes || []), ...localMemos]
                 .sort((a, b) => {
                   // ローカル編集時間も考慮してソート
                   const getLatestTime = (memo: Memo) => {
+                    // 新規作成メモ（ID: -1）の場合
+                    if (memo.id === -1) {
+                      return memo.updatedAt || memo.createdAt
+                    }
+                    
                     const localData = localStorage.getItem(`memo_draft_${memo.id}`)
                     let localEditTime = 0
                     if (localData) {
@@ -324,10 +502,13 @@ function FullListView({
                 const Component = viewMode === 'card' ? MemoCard : MemoListItem;
                 return (
                   <Component
-                    key={memo.id}
+                    key={memo.id < 0 ? `local-new-${memo.id}` : memo.id}
                     memo={memo}
                     isChecked={checkedMemos.has(memo.id)}
                     onToggleCheck={() => {
+                      // 新規作成メモ（ID: 負の値）はチェック不可
+                      if (memo.id < 0) return;
+                      
                       const newChecked = new Set(checkedMemos);
                       if (checkedMemos.has(memo.id)) {
                         newChecked.delete(memo.id);

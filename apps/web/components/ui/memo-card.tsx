@@ -16,9 +16,9 @@ function MemoCard({ memo, isChecked, onToggleCheck, onSelect, variant = 'normal'
   const deletedMemo = memo as DeletedMemo
   
   // ローカルストレージから最新の内容を取得（リアルタイム同期）
-  // 削除済みメモの場合はlocalStorageを使用せず、元のデータを表示
-  const { displayTitle, displayContent } = isDeleted 
-    ? { displayTitle: memo.title, displayContent: memo.content || '' }
+  // 削除済みメモや新規作成メモ（ID: 負の値）の場合はlocalStorageを使用せず、元のデータを表示
+  const { displayTitle, displayContent, lastEditTime } = (isDeleted || memo.id < 0)
+    ? { displayTitle: memo.title, displayContent: memo.content || '', lastEditTime: null }
     : useLocalStorageSync(memo.id, memo.title, memo.content || '', isSelected)
 
   return (
@@ -80,10 +80,18 @@ function MemoCard({ memo, isChecked, onToggleCheck, onSelect, variant = 'normal'
               <div>削除: {formatDateOnly(deletedMemo.deletedAt)}</div>
             ) : (
               <div>
-                {memo.updatedAt && memo.updatedAt !== memo.createdAt
-                  ? formatDateOnly(memo.updatedAt)
-                  : formatDateOnly(memo.createdAt)
-                }
+                {(() => {
+                  // 新規作成メモの場合
+                  if (memo.id < 0) {
+                    return formatDateOnly(memo.updatedAt || memo.createdAt);
+                  }
+                  
+                  // ローカル編集時間とAPI更新時間のうち最新のものを表示
+                  const latestTime = lastEditTime && lastEditTime > (memo.updatedAt || 0)
+                    ? lastEditTime
+                    : (memo.updatedAt && memo.updatedAt !== memo.createdAt ? memo.updatedAt : memo.createdAt);
+                  return formatDateOnly(latestTime);
+                })()}
               </div>
             )}
           </div>

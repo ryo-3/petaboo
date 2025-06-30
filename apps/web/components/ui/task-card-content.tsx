@@ -56,7 +56,7 @@ function TaskCardContent({ task, variant = 'normal' }: TaskCardContentProps) {
 
   return (
     <>
-      <div className={`font-semibold text-base mb-2 line-clamp-2 ${
+      <div className={`font-semibold text-base mb-2 line-clamp-2 leading-tight ${
         isDeleted ? 'text-gray-700' : 'text-gray-800'
       }`}>
         {task.title}
@@ -79,8 +79,8 @@ function TaskCardContent({ task, variant = 'normal' }: TaskCardContentProps) {
         </div>
       )}
       
-      <div className="text-sm text-gray-600 flex-1 overflow-hidden">
-        <div className="line-clamp-3">
+      <div className="text-sm text-gray-600 flex-1 overflow-hidden mb-2">
+        <div className="line-clamp-1">
           {task.description || '説明なし'}
         </div>
       </div>

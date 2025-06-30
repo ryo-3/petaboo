@@ -23,13 +23,13 @@ function MemoCardContent({ memo, variant = 'normal', isSelected = false }: MemoC
 
   return (
     <>
-      <div className={`font-semibold text-base mb-2 line-clamp-2${
+      <div className={`font-semibold text-base mb-2 line-clamp-2 leading-tight ${
         isDeleted ? 'text-gray-700' : 'text-gray-800'
       }`}>
         {displayTitle}
       </div>
-      <div className="text-sm text-gray-600 flex-1 overflow-hidden">
-        <div className="line-clamp-4">
+      <div className="text-sm text-gray-600 flex-1 overflow-hidden mb-2 min-h-[4rem]">
+        <div className="line-clamp-3">
           {displayContent || '内容なし'}
         </div>
       </div>

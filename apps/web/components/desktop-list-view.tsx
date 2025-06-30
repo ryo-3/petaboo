@@ -440,7 +440,7 @@ function DesktopListView({
                     if (activeTab === tab.id) {
                       switch (tab.id) {
                         case "todo":
-                          return "bg-gray-600 text-white";
+                          return "bg-zinc-500 text-white";
                         case "in_progress":
                           return "bg-blue-600 text-white";
                         case "completed":
@@ -448,14 +448,14 @@ function DesktopListView({
                         case "deleted":
                           return "bg-red-600 text-white";
                         case "normal":
-                          return "bg-gray-600 text-white";
+                          return "bg-zinc-500 text-white";
                         default:
-                          return "bg-gray-600 text-white";
+                          return "bg-gray-500 text-white";
                       }
                     } else {
                       switch (tab.id) {
                         case "todo":
-                          return "bg-gray-100 text-gray-600 hover:bg-gray-200";
+                          return "bg-gray-100 text-gray-600 hover:bg-gray-300";
                         case "in_progress":
                           return "bg-gray-100 text-gray-600 hover:bg-blue-200";
                         case "completed":
@@ -463,9 +463,9 @@ function DesktopListView({
                         case "deleted":
                           return "bg-gray-100 text-gray-600 hover:bg-red-200";
                         case "normal":
-                          return "bg-gray-100 text-gray-600 hover:bg-gray-200";
+                          return "bg-gray-100 text-gray-600 hover:bg-gray-300";
                         default:
-                          return "bg-gray-100 text-gray-600 hover:bg-gray-200";
+                          return "bg-gray-100 text-gray-600 hover:bg-gray-300";
                       }
                     }
                   };

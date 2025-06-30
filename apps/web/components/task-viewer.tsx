@@ -1,7 +1,6 @@
 "use client";
 
-import TrashIcon from "@/components/icons/trash-icon";
-import DateInfo from "@/components/shared/date-info";
+import BaseViewer from "@/components/shared/base-viewer";
 import EditButton from "@/components/ui/edit-button";
 import { useDeleteTask, useUpdateTask } from "@/src/hooks/use-tasks";
 import type { Task } from "@/src/types/task";
@@ -139,8 +138,12 @@ function TaskViewer({
   ];
 
   return (
-    <div className="flex flex-col h-full bg-white p-2">
-      <div className="flex justify-start items-center mb-4">
+    <BaseViewer
+      item={task}
+      onClose={onClose}
+      onDelete={handleDelete}
+      error={error ? "エラー" : null}
+      headerActions={
         <EditButton
           isEditing={isEditing}
           onEdit={() => setIsEditing(true)}
@@ -149,21 +152,8 @@ function TaskViewer({
             // Edit mode exited
           }}
         />
-
-        <div className="flex items-center gap-3 ml-auto">
-          {error && <span className="text-sm text-red-500">エラー</span>}
-        </div>
-
-        <button
-          onClick={handleDelete}
-          className="fixed bottom-6 right-6 bg-gray-500 hover:bg-gray-600 text-white p-3 rounded-full shadow-lg transition-colors"
-        >
-          <TrashIcon />
-        </button>
-      </div>
-
-      <div className="flex flex-col gap-4 flex-1">
-        <DateInfo item={task} />
+      }
+    >
 
         <div className="flex items-center gap-3">
           {isEditing ? (
@@ -362,8 +352,7 @@ function TaskViewer({
             </div>
           </>
         )}
-      </div>
-    </div>
+    </BaseViewer>
   );
 }
 

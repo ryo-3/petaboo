@@ -300,7 +300,26 @@ function FullListView({
           {notes && notes.length > 0 ? (
             <ItemGrid viewMode={viewMode} effectiveColumnCount={effectiveColumnCount}>
               {notes
-                .sort((a, b) => Math.max(b.updatedAt || 0, b.createdAt) - Math.max(a.updatedAt || 0, a.createdAt)) // 最終編集時間と作成日の最新順
+                .sort((a, b) => {
+                  // ローカル編集時間も考慮してソート
+                  const getLatestTime = (memo: Memo) => {
+                    const localData = localStorage.getItem(`memo_draft_${memo.id}`)
+                    let localEditTime = 0
+                    if (localData) {
+                      try {
+                        const parsed = JSON.parse(localData)
+                        if (parsed.id === memo.id && parsed.lastEditedAt) {
+                          localEditTime = parsed.lastEditedAt
+                        }
+                      } catch {
+                        // パースエラーは無視
+                      }
+                    }
+                    return Math.max(localEditTime, memo.updatedAt || 0, memo.createdAt)
+                  }
+                  
+                  return getLatestTime(b) - getLatestTime(a)
+                })
                 .map((memo: Memo) => {
                 const Component = viewMode === 'card' ? MemoCard : MemoListItem;
                 return (

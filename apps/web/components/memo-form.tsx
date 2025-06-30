@@ -100,7 +100,7 @@ function MemoForm({ onClose, memo = null, onSave, onExitEdit }: MemoFormProps) {
           {error ? (
             <div className="text-red-500">{error}</div>
           ) : (
-            '入力完了から3秒後に自動保存されます'
+            'ローカルストレージに自動保存中...'
           )}
         </div>
       </div>

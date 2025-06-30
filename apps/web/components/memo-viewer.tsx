@@ -24,13 +24,34 @@ function MemoViewer({ memo, onClose, onEdit, onExitEdit, isEditMode = false }: M
   const [content, setContent] = useState(memo.content || '')
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [hasUserEdited, setHasUserEdited] = useState(false)
+  const [currentMemoId, setCurrentMemoId] = useState(memo.id)
 
-  // メモが変更された時に状態を更新
+  // メモが変更された時に状態を更新（ローカルストレージから復元を優先）
   useEffect(() => {
-    setTitle(memo.title)
-    setContent(memo.content || '')
-    setError(null)
-  }, [memo.id, memo.title, memo.content])
+    // memo.idが変わった時の処理
+    if (memo.id !== currentMemoId) {
+      setHasUserEdited(false)
+      setCurrentMemoId(memo.id)
+      
+      // 状態を更新
+      const localData = localStorage.getItem(`memo_draft_${memo.id}`)
+      if (localData) {
+        try {
+          const parsed = JSON.parse(localData)
+          setTitle(parsed.title || memo.title)
+          setContent(parsed.content || memo.content || '')
+        } catch {
+          setTitle(memo.title)
+          setContent(memo.content || '')
+        }
+      } else {
+        setTitle(memo.title)
+        setContent(memo.content || '')
+      }
+      setError(null)
+    }
+  }, [memo.id, memo.title, memo.content, currentMemoId])
 
   const handleDelete = async () => {
     try {
@@ -41,36 +62,57 @@ function MemoViewer({ memo, onClose, onEdit, onExitEdit, isEditMode = false }: M
     }
   }
 
-  // 自動保存処理（3秒後）
-  const handleAutoSave = useCallback(async () => {
-    if (!title.trim()) return
 
-    setIsSaving(true)
-    setError(null)
-    try {
-      await updateNote.mutateAsync({
-        id: memo.id,
-        data: {
-          title: title.trim(),
-          content: content.trim() || undefined,
-        }
-      })
-    } catch (error) {
-      console.error('保存に失敗しました:', error)
-      setError('保存に失敗しました。')
-    } finally {
-      setIsSaving(false)
-    }
-  }, [title, content, memo.id, updateNote])
+  // 自動保存処理（3秒後）（コメントアウト）
+  // const handleAutoSave = useCallback(async () => {
+  //   if (!title.trim()) return
 
-  // 3秒後の自動保存タイマー
+  //   setIsSaving(true)
+  //   setError(null)
+  //   try {
+  //     await updateNote.mutateAsync({
+  //       id: memo.id,
+  //       data: {
+  //         title: title.trim(),
+  //         content: content.trim() || undefined,
+  //       }
+  //     })
+  //   } catch (error) {
+  //     console.error('保存に失敗しました:', error)
+  //     setError('保存に失敗しました。')
+  //   } finally {
+  //     setIsSaving(false)
+  //   }
+  // }, [title, content, memo.id, updateNote])
+
+  // ユーザーが実際に編集した時のみローカルストレージに保存
   useEffect(() => {
-    const timer = setTimeout(() => {
-      handleAutoSave()
-    }, 3000)
+    // 現在のメモIDと一致し、ユーザーが編集した場合のみ保存
+    if (hasUserEdited && memo.id === currentMemoId && (title.trim() || content.trim())) {
+      const now = Math.floor(Date.now() / 1000)
+      const memoData = {
+        title: title.trim(),
+        content: content.trim(),
+        id: memo.id,
+        lastModified: now,
+        lastEditedAt: now,
+        isEditing: true
+      }
+      
+      const storageKey = `memo_draft_${memo.id}`
+      localStorage.setItem(storageKey, JSON.stringify(memoData))
+      
+    }
+  }, [title, content, hasUserEdited, memo.id, currentMemoId])
 
-    return () => clearTimeout(timer)
-  }, [title, content, handleAutoSave])
+  // 3秒後の自動保存タイマー（コメントアウト）
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     handleAutoSave()
+  //   }, 3000)
+
+  //   return () => clearTimeout(timer)
+  // }, [title, content, handleAutoSave])
 
   return (
     <div className="flex flex-col h-full bg-white">
@@ -107,14 +149,17 @@ function MemoViewer({ memo, onClose, onEdit, onExitEdit, isEditMode = false }: M
       </div>
 
       <div className="flex flex-col gap-4 flex-1">
-        <DateInfo item={memo} />
+        <DateInfo item={memo} isEditing={true} />
         
         <div className="flex items-center gap-3">
           <input
             type="text"
             placeholder="タイトルを入力..."
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              setTitle(e.target.value)
+              setHasUserEdited(true)
+            }}
             className="flex-1 text-lg font-medium border-b border-Green outline-none pb-2 focus:border-Green"
           />
         </div>
@@ -122,7 +167,10 @@ function MemoViewer({ memo, onClose, onEdit, onExitEdit, isEditMode = false }: M
         <textarea
           placeholder="内容を入力..."
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={(e) => {
+            setContent(e.target.value)
+            setHasUserEdited(true)
+          }}
           className="flex-1 resize-none outline-none text-gray-700 leading-relaxed"
         />
       </div>

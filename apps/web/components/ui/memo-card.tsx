@@ -1,5 +1,6 @@
 import { formatDateOnly } from '@/src/utils/formatDate'
 import type { Memo, DeletedMemo } from '@/src/types/memo'
+import { useLocalStorageSync } from '@/src/hooks/use-local-storage-sync'
 
 interface MemoCardProps {
   memo: Memo | DeletedMemo
@@ -13,6 +14,12 @@ interface MemoCardProps {
 function MemoCard({ memo, isChecked, onToggleCheck, onSelect, variant = 'normal', isSelected = false }: MemoCardProps) {
   const isDeleted = variant === 'deleted'
   const deletedMemo = memo as DeletedMemo
+  
+  // ローカルストレージから最新の内容を取得（リアルタイム同期）
+  // 削除済みメモの場合はlocalStorageを使用せず、元のデータを表示
+  const { displayTitle, displayContent } = isDeleted 
+    ? { displayTitle: memo.title, displayContent: memo.content || '' }
+    : useLocalStorageSync(memo.id, memo.title, memo.content || '', isSelected)
 
   return (
     <div className="relative">
@@ -57,11 +64,11 @@ function MemoCard({ memo, isChecked, onToggleCheck, onSelect, variant = 'normal'
           <div className={`font-semibold text-base mb-2 line-clamp-2${
             isDeleted ? 'text-gray-700' : 'text-gray-800'
           }`}>
-            {memo.title}
+            {displayTitle}
           </div>
           <div className="text-sm text-gray-600 flex-1 overflow-hidden">
             <div className="line-clamp-4">
-              {memo.content || '内容なし'}
+              {displayContent || '内容なし'}
             </div>
           </div>
           <div className={`text-xs mt-2 pt-2 ${

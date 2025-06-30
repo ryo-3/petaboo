@@ -62,3 +62,5 @@ note/
 ### 開発履歴
 - 2025-06-30: 共通化ファーストアプローチ設計原則確立
 - 2025-06-30: BaseViewer, LoadingState/ErrorState, ConfirmationModal共通化完了
+
+npx tsc --noEmit

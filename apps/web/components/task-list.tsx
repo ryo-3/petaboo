@@ -9,7 +9,7 @@ import type { Task } from "@/src/types/task";
 import { formatDateOnly } from "@/src/utils/formatDate";
 import { getStatusColorForText, getStatusText, getPriorityIndicator } from '@/src/utils/taskUtils';
 
-interface SidebarTaskListProps {
+interface TaskListProps {
   onSelectTask: (task: Task) => void;
   onEditTask: (task: Task) => void;
   onDeleteTask?: (task: Task) => void;
@@ -17,7 +17,7 @@ interface SidebarTaskListProps {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function SidebarTaskList({ onSelectTask, onEditTask, onDeleteTask, selectedTaskId }: SidebarTaskListProps) {
+function TaskList({ onSelectTask, onEditTask, onDeleteTask, selectedTaskId }: TaskListProps) {
   const { data: tasks, isLoading, error } = useTasks()
   const deleteTask = useDeleteTask()
 
@@ -79,9 +79,9 @@ function SidebarTaskList({ onSelectTask, onEditTask, onDeleteTask, selectedTaskI
           </SidebarItem>
         </li>
         ))}
-      </ul>
+        </ul>
     </div>
   )
 }
 
-export default SidebarTaskList;
+export default TaskList;

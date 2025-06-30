@@ -4,9 +4,10 @@ import MemoIcon from "@/components/icons/memo-icon";
 import PlusSimpleIcon from "@/components/icons/plus-simple-icon";
 import TaskIcon from "@/components/icons/task-icon";
 import SidebarMemoList from "@/components/sidebar-memo-list";
-import SidebarTaskList from "@/components/sidebar-task-list";
+import TaskList from "@/components/task-list";
 import SwitchTabs from "@/components/ui/switch-tabs";
 import Tooltip from "@/components/ui/tooltip";
+import AddItemButton from "@/components/ui/add-item-button";
 import type { Memo } from "@/src/types/memo";
 import type { Task } from "@/src/types/task";
 import HomeIcon from "./icons/home-icon";
@@ -101,21 +102,11 @@ function Sidebar({
               <TaskIcon className="w-5 h-5" />
             </button>
           </Tooltip>
-          <Tooltip
-            text={`新規${currentMode === "memo" ? "メモ" : "タスク"}作成`}
+          <AddItemButton
+            itemType={currentMode}
+            onClick={currentMode === "memo" ? onNewMemo : onNewTask!}
             position="right"
-          >
-            <button
-              onClick={currentMode === "memo" ? onNewMemo : onNewTask}
-              className={`p-2 rounded-lg text-white transition-colors ${
-                currentMode === "memo"
-                  ? "bg-Green hover:bg-Green/85"
-                  : "bg-Yellow hover:bg-Yellow/85"
-              }`}
-            >
-              <PlusSimpleIcon className="w-5 h-5" />
-            </button>
-          </Tooltip>
+          />
           {/* 設定ボタン（コンパクトモード） */}
           <Tooltip text="設定" position="right">
             <button
@@ -200,7 +191,7 @@ function Sidebar({
             selectedMemoId={selectedMemoId}
           />
         ) : (
-          <SidebarTaskList
+          <TaskList
             onSelectTask={onSelectTask!}
             onEditTask={onEditTask!}
             selectedTaskId={selectedTaskId}

@@ -6,7 +6,7 @@ import DeletedMemoList from "@/components/deleted-memo-list";
 import MemoForm from "@/components/memo-form";
 import MemoViewer from "@/components/memo-viewer";
 import DeletedMemoViewer from "@/components/deleted-memo-viewer";
-import FullListView from "@/components/full-list-view";
+import DesktopListView from "@/components/desktop-list-view";
 import WelcomeScreen from "@/components/welcome-screen";
 import Header from "@/components/header";
 import TaskCreator from "@/components/task-creator";
@@ -267,7 +267,7 @@ function Main() {
             {showSettings ? (
               <SettingsScreen />
             ) : showFullList ? (
-              <FullListView 
+              <DesktopListView 
                 onSelectMemo={handleSelectMemo} 
                 onSelectDeletedMemo={handleSelectDeletedMemo}
                 onSelectTask={handleSelectTask}

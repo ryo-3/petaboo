@@ -1,44 +1,76 @@
 "use client";
 
-import PhotoIcon from "@/components/icons/photo-icon";
-import TrashIcon from "@/components/icons/trash-icon";
-import DateInfo from "@/components/shared/date-info";
+import BaseViewer from "@/components/shared/base-viewer";
 import EditButton from "@/components/ui/edit-button";
-import { useUpdateTask } from "@/src/hooks/use-tasks";
-import { useCallback, useEffect, useState } from "react";
-
+import { useDeleteTask, useUpdateTask } from "@/src/hooks/use-tasks";
 import type { Task } from "@/src/types/task";
+import { useCallback, useEffect, useState, useRef } from "react";
 
 interface TaskEditorProps {
+  task: Task;
   onClose: () => void;
-  task?: Task;
-  onExitEdit?: () => void;
 }
 
-function TaskEditor({ onClose, task, onExitEdit }: TaskEditorProps) {
-  // 既存タスクの場合は表示モードから開始
+function TaskEditor({
+  task,
+  onClose,
+}: TaskEditorProps) {
+  const deleteTask = useDeleteTask();
+  const updateTask = useUpdateTask();
+
   const [isEditing, setIsEditing] = useState(false);
-  const [title, setTitle] = useState(task?.title ?? "");
-  const [description, setDescription] = useState(task?.description ?? "");
+  const [title, setTitle] = useState(task?.title || "");
+  const [description, setDescription] = useState(task?.description || "");
   const [status, setStatus] = useState<"todo" | "in_progress" | "completed">(
-    task?.status ?? "todo"
+    task?.status || "todo"
   );
   const [priority, setPriority] = useState<"low" | "medium" | "high">(
-    task?.priority ?? "medium"
+    task?.priority || "medium"
   );
-  const [dueDate, setDueDate] = useState<string | undefined>(() => {
-    if (task?.dueDate && task.dueDate !== null) {
-      return new Date(task.dueDate * 1000).toISOString().split("T")[0];
-    }
-    return undefined;
-  });
-
+  const [dueDate, setDueDate] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedSuccessfully, setSavedSuccessfully] = useState(false);
-  const updateTask = useUpdateTask();
 
-  // 手動保存処理
+  // 保存したデータを保持するためのstate
+  const [savedData, setSavedData] = useState<{
+    title: string;
+    description: string;
+    status: "todo" | "in_progress" | "completed";
+    priority: "low" | "medium" | "high";
+    dueDate?: number;
+  } | null>(null);
+
+  // textareaのrefを追加
+  const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // taskプロパティが変更された時にstateを更新
+  useEffect(() => {
+    if (task) {
+      setTitle(task.title || "");
+      setDescription(task.description || "");
+      setStatus(task.status || "todo");
+      setPriority(task.priority || "medium");
+      setDueDate(
+        (task.dueDate
+          ? new Date(task.dueDate * 1000).toISOString().split("T")[0]
+          : "") as string
+      );
+      setIsEditing(false); // 新しいタスクを選択した時は表示モードに戻る
+      setSavedSuccessfully(false);
+      setError(null);
+    }
+  }, [task]);
+
+  const handleDelete = async () => {
+    try {
+      await deleteTask.mutateAsync(task.id);
+      onClose();
+    } catch (error) {
+      console.error("削除に失敗しました:", error);
+    }
+  };
+
   const handleSave = useCallback(async () => {
     if (!title.trim() || !task) return;
 
@@ -56,49 +88,47 @@ function TaskEditor({ onClose, task, onExitEdit }: TaskEditorProps) {
           : undefined,
       };
 
-      // 既存タスクの更新
       await updateTask.mutateAsync({
         id: task.id,
         data: taskData,
       });
+      setIsSaving(false);
       setSavedSuccessfully(true);
 
-      // 保存成功後、少し待ってから表示モードに戻る
+      // 保存したデータを保持
+      const savedTaskData = {
+        title: taskData.title,
+        description: taskData.description || "",
+        status: taskData.status,
+        priority: taskData.priority,
+        dueDate: taskData.dueDate,
+      };
+      console.log("Setting savedData:", savedTaskData);
+      setSavedData(savedTaskData);
+
       setTimeout(() => {
+        console.log("Switching to view mode");
         setIsEditing(false);
         setSavedSuccessfully(false);
+        // Edit mode exited
       }, 1000);
     } catch (error) {
       console.error("保存に失敗しました:", error);
       setError(
         "保存に失敗しました。APIサーバーが起動していることを確認してください。"
       );
-    } finally {
       setIsSaving(false);
     }
-  }, [title, description, status, priority, dueDate, task, updateTask]);
-
-  // taskプロパティが更新された時にstateを同期（編集中でない場合のみ）
-  useEffect(() => {
-    if (task && !isEditing) {
-      setTitle(task.title ?? "");
-      setDescription(task.description ?? "");
-      setStatus(task.status ?? "todo");
-      setPriority(task.priority ?? "medium");
-      setDueDate(
-        task.dueDate && task.dueDate !== null
-          ? new Date(task.dueDate * 1000).toISOString().split("T")[0]
-          : ""
-      );
-    }
-  }, [task, isEditing]);
-
-  // 入力時は保存成功状態をリセット
-  useEffect(() => {
-    if (savedSuccessfully) {
-      setSavedSuccessfully(false);
-    }
-  }, [title, description, status, priority, dueDate]);
+  }, [
+    title,
+    description,
+    status,
+    priority,
+    dueDate,
+    task,
+    updateTask,
+    // Removed unused variable: onExitEdit
+  ]);
 
   const statusOptions = [
     { value: "todo", label: "未着手", color: "bg-gray-100 text-gray-800" },
@@ -117,43 +147,22 @@ function TaskEditor({ onClose, task, onExitEdit }: TaskEditorProps) {
   ];
 
   return (
-    <div className="flex flex-col h-full bg-white p-6">
-      <div className="flex justify-start items-center mb-4">
-        <div className="flex items-center gap-2">
-          {/* 編集ボタン */}
-          <EditButton
-            isEditing={isEditing}
-            onEdit={() => setIsEditing(true)}
-            onExitEdit={() => {
-              setIsEditing(false);
-              if (onExitEdit) onExitEdit();
-            }}
-          />
-
-          {/* 写真アイコン（今後の画像添付機能用） */}
-          <button
-            className="p-2 rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-800 transition-colors"
-            title="画像を添付（今後対応予定）"
-            onClick={() => {
-              // TODO: 画像添付機能の実装
-              alert("画像添付機能は今後実装予定です");
-            }}
-          >
-            <PhotoIcon className="w-4 h-4" />
-          </button>
-        </div>
-
-        <div className="flex items-center gap-3 ml-auto">
-          {isSaving && <span className="text-sm text-gray-500">保存中...</span>}
-          {savedSuccessfully && (
-            <span className="text-sm text-green-600">保存しました</span>
-          )}
-          {error && <span className="text-sm text-red-500">エラー</span>}
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-4 flex-1">
-        {task && <DateInfo item={task} />}
+    <BaseViewer
+      item={task}
+      onClose={onClose}
+      onDelete={handleDelete}
+      error={error ? "エラー" : null}
+      headerActions={
+        <EditButton
+          isEditing={isEditing}
+          onEdit={() => setIsEditing(true)}
+          onExitEdit={() => {
+            setIsEditing(false);
+            // Edit mode exited
+          }}
+        />
+      }
+    >
 
         <div className="flex items-center gap-3">
           {isEditing ? (
@@ -162,12 +171,22 @@ function TaskEditor({ onClose, task, onExitEdit }: TaskEditorProps) {
               placeholder="タスクタイトルを入力..."
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="flex-1 text-lg font-medium border-b border-Green outline-none pb-2 focus:border-Green"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  descriptionTextareaRef.current?.focus();
+                }
+              }}
+              className="flex-1 text-lg font-medium border-b border-green-500 outline-none pb-2 focus:border-green-500"
               autoFocus
             />
           ) : (
             <h1 className="flex-1 text-lg font-medium text-gray-800 pb-2">
-              {task?.title}
+              {(() => {
+                const displayTitle = savedData?.title || task.title;
+                console.log("Displaying title:", { savedData: savedData?.title, task: task.title, display: displayTitle });
+                return displayTitle;
+              })()}
             </h1>
           )}
         </div>
@@ -233,6 +252,7 @@ function TaskEditor({ onClose, task, onExitEdit }: TaskEditorProps) {
                 説明
               </label>
               <textarea
+                ref={descriptionTextareaRef}
                 placeholder="タスクの詳細を入力..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -243,17 +263,34 @@ function TaskEditor({ onClose, task, onExitEdit }: TaskEditorProps) {
             <div className="flex justify-start">
               <button
                 onClick={handleSave}
-                disabled={!title.trim() || isSaving}
+                disabled={!title.trim() || isSaving || savedSuccessfully}
                 className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors ${
-                  !title.trim() || isSaving
+                  !title.trim() || isSaving || savedSuccessfully
                     ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                    : "bg-blue-600 hover:bg-blue-700 text-white"
+                    : "bg-Emerald hover:bg-Emerald-dark text-white"
                 }`}
               >
                 {isSaving ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
                     保存中...
+                  </>
+                ) : savedSuccessfully ? (
+                  <>
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    保存完了
                   </>
                 ) : (
                   <>
@@ -285,12 +322,12 @@ function TaskEditor({ onClose, task, onExitEdit }: TaskEditorProps) {
                 </label>
                 <span
                   className={`inline-block px-3 py-1 rounded-full text-sm ${
-                    statusOptions.find((opt) => opt.value === task?.status)
+                    statusOptions.find((opt) => opt.value === (savedData?.status || task.status))
                       ?.color
                   }`}
                 >
                   {
-                    statusOptions.find((opt) => opt.value === task?.status)
+                    statusOptions.find((opt) => opt.value === (savedData?.status || task.status))
                       ?.label
                   }
                 </span>
@@ -302,12 +339,12 @@ function TaskEditor({ onClose, task, onExitEdit }: TaskEditorProps) {
                 </label>
                 <span
                   className={`inline-block px-3 py-1 rounded-full text-sm ${
-                    priorityOptions.find((opt) => opt.value === task?.priority)
+                    priorityOptions.find((opt) => opt.value === (savedData?.priority || task.priority))
                       ?.color
                   }`}
                 >
                   {
-                    priorityOptions.find((opt) => opt.value === task?.priority)
+                    priorityOptions.find((opt) => opt.value === (savedData?.priority || task.priority))
                       ?.label
                   }
                 </span>
@@ -318,8 +355,8 @@ function TaskEditor({ onClose, task, onExitEdit }: TaskEditorProps) {
                   期限日
                 </label>
                 <span className="text-gray-700">
-                  {task?.dueDate
-                    ? new Date(task.dueDate * 1000).toLocaleDateString("ja-JP")
+                  {(savedData?.dueDate || task.dueDate)
+                    ? new Date((savedData?.dueDate || task.dueDate || 0) * 1000).toLocaleDateString("ja-JP")
                     : "設定なし"}
                 </span>
               </div>
@@ -330,21 +367,12 @@ function TaskEditor({ onClose, task, onExitEdit }: TaskEditorProps) {
                 説明
               </label>
               <div className="w-full min-h-32 p-3 bg-gray-50 rounded-lg text-gray-700 leading-relaxed">
-                {task?.description || "説明なし"}
+                {savedData?.description || task.description || "説明なし"}
               </div>
             </div>
           </>
         )}
-      </div>
-
-      {/* 右下の閉じるボタン */}
-      <button
-        onClick={onClose}
-        className="fixed bottom-6 right-6 bg-gray-500 hover:bg-gray-600 text-white p-3 rounded-full shadow-lg transition-colors"
-      >
-        <TrashIcon />
-      </button>
-    </div>
+    </BaseViewer>
   );
 }
 

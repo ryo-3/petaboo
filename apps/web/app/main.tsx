@@ -10,7 +10,6 @@ import SettingsScreen from "@/components/settings-screen";
 import Sidebar from "@/components/sidebar";
 import TaskCreator from "@/components/task-creator";
 import TaskEditor from "@/components/task-editor";
-import TaskViewer from "@/components/task-viewer";
 import WelcomeScreen from "@/components/welcome-screen";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
@@ -283,14 +282,14 @@ function Main() {
                 currentMode === "memo" ? (
                   <MemoEditor onClose={handleClose} memo={selectedMemo} />
                 ) : selectedTask ? (
-                  <TaskEditor onClose={handleClose} task={selectedTask} />
+                  <TaskEditor task={selectedTask} onClose={handleClose} />
                 ) : (
                   <TaskCreator onClose={handleClose} />
                 )
               ) : selectedMemo ? (
                 <MemoViewer memo={selectedMemo} onClose={handleClose} />
               ) : selectedTask ? (
-                <TaskViewer task={selectedTask} onClose={handleClose} />
+                <TaskEditor task={selectedTask} onClose={handleClose} />
               ) : selectedDeletedMemo ? (
                 <DeletedMemoViewer
                   memo={selectedDeletedMemo}

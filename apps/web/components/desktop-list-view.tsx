@@ -9,7 +9,6 @@ import AddItemButton from "@/components/ui/add-item-button";
 import ColumnCountSelector from "@/components/ui/column-count-selector";
 import MemoCard from "@/components/ui/memo-card";
 import MemoListItem from "@/components/ui/memo-list-item";
-import SwitchTabs from "@/components/ui/switch-tabs";
 import TaskCard from "@/components/ui/task-card";
 import TaskListItem from "@/components/ui/task-list-item";
 import ViewModeToggle from "@/components/ui/view-mode-toggle";
@@ -32,7 +31,7 @@ import { useEffect, useState } from "react";
 import TaskTabContent from "./task-tab-content";
 import MemoEditor from "./memo-editor";
 import TaskCreator from "./task-creator";
-import TaskViewer from "./task-viewer";
+import TaskEditor from "./task-editor";
 import EmptyState from "./ui/empty-state";
 import ItemGrid from "./ui/item-grid";
 
@@ -788,7 +787,7 @@ function DesktopListView({
               {selectedMemo ? (
                 <MemoViewer memo={selectedMemo} onClose={() => {}} />
               ) : selectedTask ? (
-                <TaskViewer task={selectedTask} onClose={() => {}} />
+                <TaskEditor task={selectedTask} onClose={() => {}} />
               ) : selectedDeletedMemo ? (
                 <DeletedMemoViewer memo={selectedDeletedMemo} onClose={() => {}} />
               ) : selectedDeletedTask ? (

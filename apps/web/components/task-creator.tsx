@@ -20,6 +20,7 @@ function TaskCreator({ onClose }: TaskCreatorProps) {
   const [error, setError] = useState<string | null>(null);
   const [savedSuccessfully, setSavedSuccessfully] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
+  const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
   // Removed unused variable: createdTaskId, setCreatedTaskId
   const createTask = useCreateTask();
 
@@ -65,6 +66,8 @@ function TaskCreator({ onClose }: TaskCreatorProps) {
         setPriority("medium");
         setDueDate("");
         setSavedSuccessfully(false);
+        // タイトル入力にフォーカスを戻す
+        titleInputRef.current?.focus();
       }, 1500);
     } catch (error) {
       console.error("保存に失敗しました:", error);
@@ -107,6 +110,17 @@ function TaskCreator({ onClose }: TaskCreatorProps) {
             placeholder="タスクタイトルを入力..."
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            onKeyDown={(e) => {
+              console.log('Key pressed:', e.key);
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                console.log('Enter pressed, focusing description', descriptionTextareaRef.current);
+                if (descriptionTextareaRef.current) {
+                  descriptionTextareaRef.current.focus();
+                  descriptionTextareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+              }
+            }}
             className="flex-1 text-lg font-medium border-b border-Green outline-none pb-2 focus:border-Green"
           />
         </div>
@@ -170,6 +184,7 @@ function TaskCreator({ onClose }: TaskCreatorProps) {
             説明
           </label>
           <textarea
+            ref={descriptionTextareaRef}
             placeholder="タスクの詳細を入力..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}

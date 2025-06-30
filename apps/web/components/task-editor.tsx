@@ -18,19 +18,21 @@ interface TaskEditorProps {
 function TaskEditor({ onClose, task, onExitEdit }: TaskEditorProps) {
   // 既存タスクの場合は表示モードから開始
   const [isEditing, setIsEditing] = useState(false);
-  const [title, setTitle] = useState(task?.title || "");
-  const [description, setDescription] = useState(task?.description || "");
+  const [title, setTitle] = useState(task?.title ?? "");
+  const [description, setDescription] = useState(task?.description ?? "");
   const [status, setStatus] = useState<"todo" | "in_progress" | "completed">(
-    task?.status || "todo"
+    task?.status ?? "todo"
   );
   const [priority, setPriority] = useState<"low" | "medium" | "high">(
-    task?.priority || "medium"
+    task?.priority ?? "medium"
   );
-  const [dueDate, setDueDate] = useState<string>(
-    (task?.dueDate
-      ? new Date(task.dueDate * 1000).toISOString().split("T")[0]
-      : "") || ""
-  );
+  const [dueDate, setDueDate] = useState<string | undefined>(() => {
+    if (task?.dueDate && task.dueDate !== null) {
+      return new Date(task.dueDate * 1000).toISOString().split("T")[0];
+    }
+    return undefined;
+  });
+
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedSuccessfully, setSavedSuccessfully] = useState(false);
@@ -76,12 +78,27 @@ function TaskEditor({ onClose, task, onExitEdit }: TaskEditorProps) {
     }
   }, [title, description, status, priority, dueDate, task, updateTask]);
 
+  // taskプロパティが更新された時にstateを同期（編集中でない場合のみ）
+  useEffect(() => {
+    if (task && !isEditing) {
+      setTitle(task.title ?? "");
+      setDescription(task.description ?? "");
+      setStatus(task.status ?? "todo");
+      setPriority(task.priority ?? "medium");
+      setDueDate(
+        task.dueDate && task.dueDate !== null
+          ? new Date(task.dueDate * 1000).toISOString().split("T")[0]
+          : ""
+      );
+    }
+  }, [task, isEditing]);
+
   // 入力時は保存成功状態をリセット
   useEffect(() => {
     if (savedSuccessfully) {
       setSavedSuccessfully(false);
     }
-  }, [title, description, status, priority, dueDate, savedSuccessfully]);
+  }, [title, description, status, priority, dueDate]);
 
   const statusOptions = [
     { value: "todo", label: "未着手", color: "bg-gray-100 text-gray-800" },

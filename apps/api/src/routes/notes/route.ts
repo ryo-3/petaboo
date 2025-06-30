@@ -4,7 +4,7 @@ import { drizzle } from "drizzle-orm/better-sqlite3";
 import { eq, desc, and } from "drizzle-orm";
 import Database from "better-sqlite3";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
-import { notes, deletedNotes } from "@/db/schema/notes";
+import { notes, deletedNotes } from "../../db/schema/notes";
 
 // SQLite & drizzle セットアップ
 const sqlite = new Database("sqlite.db");
@@ -143,7 +143,7 @@ app.openapi(
       createdAt: Math.floor(Date.now() / 1000),
     }).returning({ id: notes.id });
 
-    return c.json({ success: true, id: result[0].id }, 200);
+    return c.json({ success: true, id: result[0].id as number }, 200);
   }
 );
 
@@ -526,7 +526,7 @@ app.openapi(
         return result;
       });
 
-      return c.json({ success: true, id: restoredNote.id }, 200);
+      return c.json({ success: true, id: restoredNote.id as number }, 200);
     } catch (error) {
       console.error('復元エラー:', error);
       return c.json({ error: 'Internal server error' }, 500);

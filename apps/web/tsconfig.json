@@ -6,9 +6,18 @@
         "name": "next"
       }
     ],
+    "jsx": "preserve",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": [
+        "./*"
+      ],
+      "@/src/*": [
+        "./src/*"
+      ],
+      "@/components/*": [
+        "./components/*"
+      ]
     }
   },
   "include": [
@@ -19,5 +28,7 @@
     ".next/types/**/*.ts",
     "tailwind.config.cjs"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }

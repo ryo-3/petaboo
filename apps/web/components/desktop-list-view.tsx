@@ -576,9 +576,6 @@ function DesktopListView({
                         memo={memo}
                         isChecked={checkedMemos.has(memo.id)}
                         onToggleCheck={() => {
-                          // 新規作成メモ（ID: 負の値）はチェック不可
-                          if (memo.id < 0) return;
-
                           const newChecked = new Set(checkedMemos);
                           if (checkedMemos.has(memo.id)) {
                             newChecked.delete(memo.id);

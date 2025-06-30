@@ -405,7 +405,7 @@ function DesktopListView({
     <div className="flex h-[calc(100vh-64px)] bg-white">
       {/* 左側：一覧表示 */}
       <div
-        className={`${rightPanelMode !== "hidden" ? "w-1/2" : "w-full"} ${rightPanelMode !== "hidden" ? "border-r border-gray-300 pb-10" : ""} pt-6 pl-6 pr-2 flex flex-col transition-all duration-300`}
+        className={`${rightPanelMode !== "hidden" ? "w-1/2" : "w-full"} ${rightPanelMode !== "hidden" ? "border-r border-gray-300 pb-10" : ""} pt-6 pl-6 pr-2 flex flex-col transition-all duration-300 relative`}
       >
         <div className="mb-3">
           <div className="flex justify-between items-center mb-3">
@@ -719,7 +719,11 @@ function DesktopListView({
         })() && (
           <button
             onClick={handleBulkDelete}
-            className="fixed bottom-6 right-6 bg-gray-500 hover:bg-gray-600 text-white p-3 rounded-full shadow-lg transition-colors z-50"
+            className={`${
+              rightPanelMode !== "hidden" 
+                ? "absolute bottom-6 right-6" 
+                : "fixed bottom-6 right-6"
+            } bg-gray-500 hover:bg-gray-600 text-white p-3 rounded-full shadow-lg transition-colors z-50`}
             title={
               activeTab === "deleted"
                 ? `${currentMode === "memo" ? checkedDeletedMemos.size : checkedDeletedTasks.size}件の${currentMode === "memo" ? "メモ" : "タスク"}を完全削除`

@@ -11,6 +11,8 @@ interface AddItemButtonProps {
   position?: 'right' | 'top' | 'bottom'
   className?: string
   disabled?: boolean
+  size?: 'small' | 'normal'
+  showTooltip?: boolean
 }
 
 function AddItemButton({
@@ -18,7 +20,9 @@ function AddItemButton({
   onClick,
   position = 'right',
   className = '',
-  disabled = false
+  disabled = false,
+  size = 'normal',
+  showTooltip = true
 }: AddItemButtonProps) {
   const typeConfig = {
     memo: {
@@ -32,23 +36,37 @@ function AddItemButton({
   }
 
   const config = typeConfig[itemType]
+  
+  const sizeClasses = {
+    small: 'p-2',
+    normal: 'p-2'
+  }
+  
+  const iconSizeClasses = {
+    small: 'w-4 h-4',
+    normal: 'w-5 h-5'
+  }
 
-  return (
+  const button = (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`${sizeClasses[size]} rounded-lg text-white transition-colors ${config.bgColor} ${
+        disabled ? 'opacity-50 cursor-not-allowed' : ''
+      } ${className}`}
+    >
+      <PlusSimpleIcon className={iconSizeClasses[size]} />
+    </button>
+  )
+
+  return showTooltip ? (
     <Tooltip
       text={`新規${config.label}作成`}
       position={position}
     >
-      <button
-        onClick={onClick}
-        disabled={disabled}
-        className={`p-2 rounded-lg text-white transition-colors ${config.bgColor} ${
-          disabled ? 'opacity-50 cursor-not-allowed' : ''
-        } ${className}`}
-      >
-        <PlusSimpleIcon className="w-5 h-5" />
-      </button>
+      {button}
     </Tooltip>
-  )
+  ) : button
 }
 
 export default AddItemButton

@@ -5,6 +5,7 @@ import MemoIcon from "@/components/icons/memo-icon";
 import TaskIcon from "@/components/icons/task-icon";
 import TrashIcon from "@/components/icons/trash-icon";
 import MemoViewer from "@/components/memo-viewer";
+import AddItemButton from "@/components/ui/add-item-button";
 import ColumnCountSelector from "@/components/ui/column-count-selector";
 import MemoCard from "@/components/ui/memo-card";
 import MemoListItem from "@/components/ui/memo-list-item";
@@ -414,6 +415,18 @@ function DesktopListView({
                   {currentMode === "memo" ? "メモ一覧" : "タスク一覧"}
                 </h1>
               </div>
+              
+              {/* 新規追加ボタン */}
+              <AddItemButton
+                itemType={currentMode}
+                onClick={() => {
+                  // TODO: 新規作成処理
+                  console.log('新規追加ボタンがクリックされました');
+                }}
+                position="bottom"
+                size="small"
+                showTooltip={false}
+              />
 
               {/* タブ */}
               {currentMode === "task" ? (

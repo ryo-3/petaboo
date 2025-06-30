@@ -4,8 +4,8 @@ import DeletedMemoList from "@/components/deleted-memo-list";
 import DeletedMemoViewer from "@/components/deleted-memo-viewer";
 import DesktopListView from "@/components/desktop-list-view";
 import Header from "@/components/header";
+import MemoCreator from "@/components/memo-creator";
 import MemoEditor from "@/components/memo-editor";
-import MemoViewer from "@/components/memo-viewer";
 import SettingsScreen from "@/components/settings-screen";
 import Sidebar from "@/components/sidebar";
 import TaskCreator from "@/components/task-creator";
@@ -280,14 +280,14 @@ function Main() {
                 />
               ) : isEditing ? (
                 currentMode === "memo" ? (
-                  <MemoEditor onClose={handleClose} memo={selectedMemo} />
+                  <MemoCreator onClose={handleClose} memo={selectedMemo} />
                 ) : selectedTask ? (
                   <TaskEditor task={selectedTask} onClose={handleClose} />
                 ) : (
                   <TaskCreator onClose={handleClose} />
                 )
               ) : selectedMemo ? (
-                <MemoViewer memo={selectedMemo} onClose={handleClose} />
+                <MemoEditor memo={selectedMemo} onClose={handleClose} />
               ) : selectedTask ? (
                 <TaskEditor task={selectedTask} onClose={handleClose} />
               ) : selectedDeletedMemo ? (

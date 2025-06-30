@@ -4,7 +4,7 @@ import DeletedMemoViewer from "@/components/deleted-memo-viewer";
 import MemoIcon from "@/components/icons/memo-icon";
 import TaskIcon from "@/components/icons/task-icon";
 import TrashIcon from "@/components/icons/trash-icon";
-import MemoViewer from "@/components/memo-viewer";
+import MemoEditor from "@/components/memo-editor";
 import AddItemButton from "@/components/ui/add-item-button";
 import ColumnCountSelector from "@/components/ui/column-count-selector";
 import MemoCard from "@/components/ui/memo-card";
@@ -29,7 +29,7 @@ import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
 import { useEffect, useState } from "react";
 import TaskTabContent from "./task-tab-content";
-import MemoEditor from "./memo-editor";
+import MemoCreator from "./memo-creator";
 import TaskCreator from "./task-creator";
 import TaskEditor from "./task-editor";
 import EmptyState from "./ui/empty-state";
@@ -780,12 +780,12 @@ function DesktopListView({
             currentMode === "task" ? (
               <TaskCreator onClose={() => setRightPanelMode("hidden")} />
             ) : (
-              <MemoEditor onClose={() => setRightPanelMode("hidden")} />
+              <MemoCreator onClose={() => setRightPanelMode("hidden")} />
             )
           ) : rightPanelMode === "view" ? (
             <div className="p-6">
               {selectedMemo ? (
-                <MemoViewer memo={selectedMemo} onClose={() => {}} />
+                <MemoEditor memo={selectedMemo} onClose={() => {}} />
               ) : selectedTask ? (
                 <TaskEditor task={selectedTask} onClose={() => {}} />
               ) : selectedDeletedMemo ? (

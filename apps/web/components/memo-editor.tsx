@@ -1,62 +1,124 @@
 'use client'
 
-import CheckIcon from '@/components/icons/check-icon'
-import TrashIcon from '@/components/icons/trash-icon'
+import BaseViewer from '@/components/shared/base-viewer'
 import PhotoIcon from '@/components/icons/photo-icon'
-import DateInfo from '@/components/shared/date-info'
-import EditButton from '@/components/ui/edit-button'
-import { useMemoForm } from '@/src/hooks/use-memo-form'
-import { useState, useEffect, useRef } from 'react'
+import { useDeleteNote } from '@/src/hooks/use-notes'
+import { useState, useEffect } from 'react'
 import type { Memo } from '@/src/types/memo'
 
 interface MemoEditorProps {
+  memo: Memo
   onClose: () => void
-  memo?: Memo | null
-  onExitEdit?: () => void
+  onEdit?: (memo: Memo) => void
 }
 
-function MemoEditor({ onClose, memo = null, onExitEdit }: MemoEditorProps) {
-  // 新規作成時は常に編集モード、既存メモの場合は表示モードから開始
-  const [isEditing, setIsEditing] = useState(memo === null)
-  const titleInputRef = useRef<HTMLInputElement>(null)
-  const {
-    title,
-    setTitle,
-    content,
-    setContent,
-    savedSuccessfully,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    isEditMode,
-    createdMemoId
-  } = useMemoForm({ memo })
+function MemoEditor({ memo, onClose }: MemoEditorProps) {
+  const deleteNote = useDeleteNote()
+  
+  // 常に編集可能モード
+  const [title, setTitle] = useState(memo.title)
+  const [content, setContent] = useState(memo.content || '')
+  // Removed unused variables: updateNote, onEdit, onExitEdit, isEditMode, isSaving, setIsSaving
+  const [error, setError] = useState<string | null>(null)
+  const [hasUserEdited, setHasUserEdited] = useState(false)
+  const [currentMemoId, setCurrentMemoId] = useState(memo.id)
 
-  // 新規作成時のフォーカス遅延
+  // メモが変更された時に状態を更新（ローカルストレージから復元を優先）
   useEffect(() => {
-    if (memo === null && titleInputRef.current) {
-      const timer = setTimeout(() => {
-        titleInputRef.current?.focus()
-      }, 300)
-      return () => clearTimeout(timer)
+    // memo.idが変わった時の処理
+    if (memo.id !== currentMemoId) {
+      setHasUserEdited(false)
+      setCurrentMemoId(memo.id)
+      
+      // 状態を更新
+      const localData = localStorage.getItem(`memo_draft_${memo.id}`)
+      if (localData) {
+        try {
+          const parsed = JSON.parse(localData)
+          setTitle(parsed.title || memo.title)
+          setContent(parsed.content || memo.content || '')
+        } catch {
+          setTitle(memo.title)
+          setContent(memo.content || '')
+        }
+      } else {
+        setTitle(memo.title)
+        setContent(memo.content || '')
+      }
+      setError(null)
     }
-  }, [])
+  }, [memo.id, memo.title, memo.content, currentMemoId])
+
+  const handleDelete = async () => {
+    try {
+      await deleteNote.mutateAsync(memo.id)
+      onClose() // 削除後に閉じる
+    } catch (error) {
+      console.error('削除に失敗しました:', error)
+    }
+  }
+
+
+  // 自動保存処理（3秒後）（コメントアウト）
+  // const handleAutoSave = useCallback(async () => {
+  //   if (!title.trim()) return
+
+  //   setIsSaving(true)
+  //   setError(null)
+  //   try {
+  //     await updateNote.mutateAsync({
+  //       id: memo.id,
+  //       data: {
+  //         title: title.trim(),
+  //         content: content.trim() || undefined,
+  //       }
+  //     })
+  //   } catch (error) {
+  //     console.error('保存に失敗しました:', error)
+  //     setError('保存に失敗しました。')
+  //   } finally {
+  //     setIsSaving(false)
+  //   }
+  // }, [title, content, memo.id, updateNote])
+
+  // ユーザーが実際に編集した時のみローカルストレージに保存
+  useEffect(() => {
+    // 現在のメモIDと一致し、ユーザーが編集した場合のみ保存
+    if (hasUserEdited && memo.id === currentMemoId && (title.trim() || content.trim())) {
+      const now = Math.floor(Date.now() / 1000)
+      const memoData = {
+        title: title.trim(),
+        content: content.trim(),
+        id: memo.id,
+        lastModified: now,
+        lastEditedAt: now,
+        isEditing: true
+      }
+      
+      const storageKey = `memo_draft_${memo.id}`
+      localStorage.setItem(storageKey, JSON.stringify(memoData))
+      
+    }
+  }, [title, content, hasUserEdited, memo.id, currentMemoId])
+
+  // 3秒後の自動保存タイマー（コメントアウト）
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     handleAutoSave()
+  //   }, 3000)
+
+  //   return () => clearTimeout(timer)
+  // }, [title, content, handleAutoSave])
 
   return (
-    <div className="flex flex-col h-full bg-white p-6">
-      <div className="flex justify-start items-center mb-4">
+    <BaseViewer
+      item={memo}
+      onClose={onClose}
+      onDelete={handleDelete}
+      error={error}
+      isEditing={true}
+      headerActions={
         <div className="flex items-center gap-2">
-          {/* 既存メモの場合のみ編集ボタンを表示 */}
-          {memo && (
-            <EditButton 
-              isEditing={isEditing} 
-              onEdit={() => setIsEditing(true)}
-              onExitEdit={() => {
-                setIsEditing(false)
-                if (onExitEdit) onExitEdit()
-              }} 
-            />
-          )}
-          
-          {/* 写真アイコン（今後の画像添付機能用） */}
           <button
             className="p-2 rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-800 transition-colors"
             title="画像を添付（今後対応予定）"
@@ -68,53 +130,32 @@ function MemoEditor({ onClose, memo = null, onExitEdit }: MemoEditorProps) {
             <PhotoIcon className="w-4 h-4" />
           </button>
         </div>
-        
-        <div className="flex items-center gap-3 ml-auto">
-          {/* Removed error display as error is no longer available */}
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-4 flex-1">
-        {memo && <DateInfo item={memo} createdItemId={createdMemoId} />}
+      }
+    >
         
         <div className="flex items-center gap-3">
           <input
-            ref={titleInputRef}
             type="text"
             placeholder="タイトルを入力..."
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className={`flex-1 text-lg font-medium border-b outline-none pb-2 ${
-              isEditing 
-                ? 'border-Green focus:border-Green' 
-                : 'border-gray-200 focus:border-blue-500'
-            }`}
+            onChange={(e) => {
+              setTitle(e.target.value)
+              setHasUserEdited(true)
+            }}
+            className="flex-1 text-lg font-medium border-b border-Green outline-none pb-2 focus:border-Green"
           />
-          {savedSuccessfully && (
-            <CheckIcon className="w-5 h-5 text-green-600 flex-shrink-0" />
-          )}
         </div>
 
         <textarea
           placeholder="内容を入力..."
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={(e) => {
+            setContent(e.target.value)
+            setHasUserEdited(true)
+          }}
           className="flex-1 resize-none outline-none text-gray-700 leading-relaxed"
         />
-
-        <div className="text-xs text-gray-400 mt-auto">
-          ローカルストレージに自動保存中...
-        </div>
-      </div>
-
-      {/* 右下の閉じるボタン */}
-      <button
-        onClick={onClose}
-        className="fixed bottom-6 right-6 bg-gray-500 hover:bg-gray-600 text-white p-3 rounded-full shadow-lg transition-colors"
-      >
-        <TrashIcon />
-      </button>
-    </div>
+    </BaseViewer>
   )
 }
 

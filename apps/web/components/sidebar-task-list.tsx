@@ -3,9 +3,13 @@
 import PenIcon from "@/components/icons/pen-icon";
 import TrashIcon from "@/components/icons/trash-icon";
 import Tooltip from '@/components/ui/tooltip';
+import LoadingState from '@/components/ui/loading-state';
+import ErrorState from '@/components/ui/error-state';
+import EmptyState from '@/components/ui/empty-state';
 import { useTasks, useDeleteTask } from '@/src/hooks/use-tasks';
 import type { Task } from "@/src/types/task";
 import { formatDateOnly } from "@/src/utils/formatDate";
+import { getStatusColorForText, getStatusText, getPriorityIndicator } from '@/src/utils/taskUtils';
 
 interface SidebarTaskListProps {
   onSelectTask: (task: Task) => void;
@@ -27,59 +31,17 @@ function SidebarTaskList({ onSelectTask, onEditTask, onDeleteTask, selectedTaskI
     }
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'text-green-600'
-      case 'in_progress':
-        return 'text-blue-600'
-      default:
-        return 'text-gray-600'
-    }
-  }
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return '完了'
-      case 'in_progress':
-        return '進行中'
-      default:
-        return '未着手'
-    }
-  }
-
-  const getPriorityIndicator = (priority: string) => {
-    switch (priority) {
-      case 'high':
-        return '🔴'
-      case 'medium':
-        return '🟡'
-      default:
-        return '🟢'
-    }
-  }
 
   if (isLoading) {
-    return (
-      <div className="text-center py-4 text-gray-500">読み込み中...</div>
-    )
+    return <LoadingState />;
   }
 
   if (error) {
-    return (
-      <div className="text-center py-4 text-red-500 text-sm">
-        エラーが発生しました
-      </div>
-    )
+    return <ErrorState />;
   }
 
   if (!tasks || tasks.length === 0) {
-    return (
-      <div className="text-center py-4 text-gray-400 text-sm">
-        タスクがありません
-      </div>
-    )
+    return <EmptyState message="タスクがありません" variant="simple" />;
   }
 
   return (
@@ -101,7 +63,7 @@ function SidebarTaskList({ onSelectTask, onEditTask, onDeleteTask, selectedTaskI
                 {task.description || '説明なし'}
               </div>
               <div className="flex items-center gap-2 text-xs">
-                <span className={getStatusColor(task.status)}>
+                <span className={getStatusColorForText(task.status)}>
                   {getStatusText(task.status)}
                 </span>
                 <span className="text-gray-400">

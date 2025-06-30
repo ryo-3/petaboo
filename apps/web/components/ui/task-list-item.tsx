@@ -1,5 +1,6 @@
 import type { DeletedTask, Task } from "@/src/types/task";
 import { formatDateOnly } from "@/src/utils/formatDate";
+import { getStatusColor, getPriorityColor, getStatusText, getPriorityText } from "@/src/utils/taskUtils";
 
 interface TaskListItemProps {
   task: Task | DeletedTask;
@@ -21,49 +22,6 @@ function TaskListItem({
   const isDeleted = variant === "deleted";
   const deletedTask = task as DeletedTask;
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "bg-green-100 text-green-700";
-      case "in_progress":
-        return "bg-blue-100 text-blue-700";
-      default:
-        return "bg-gray-100 text-gray-700";
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return "bg-red-100 text-red-700";
-      case "medium":
-        return "bg-yellow-100 text-yellow-700";
-      default:
-        return "bg-gray-100 text-gray-700";
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "完了";
-      case "in_progress":
-        return "進行中";
-      default:
-        return "未着手";
-    }
-  };
-
-  const getPriorityText = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return "高";
-      case "medium":
-        return "中";
-      default:
-        return "低";
-    }
-  };
 
   return (
     <div

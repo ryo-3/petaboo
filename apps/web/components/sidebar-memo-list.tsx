@@ -3,6 +3,9 @@
 import PenIcon from "@/components/icons/pen-icon";
 import TrashIcon from "@/components/icons/trash-icon";
 import Tooltip from '@/components/ui/tooltip';
+import LoadingState from '@/components/ui/loading-state';
+import ErrorState from '@/components/ui/error-state';
+import EmptyState from '@/components/ui/empty-state';
 import { useNotes, useDeleteNote } from '@/src/hooks/use-notes';
 import { useLocalStorageSync } from '@/src/hooks/use-local-storage-sync';
 import type { Memo } from "@/src/types/memo";
@@ -91,25 +94,15 @@ function SidebarMemoList({ onSelectMemo, onEditMemo, onDeleteMemo, selectedMemoI
   }
 
   if (isLoading) {
-    return (
-      <div className="text-center py-4 text-gray-500">読み込み中...</div>
-    )
+    return <LoadingState />;
   }
 
   if (error) {
-    return (
-      <div className="text-center py-4 text-red-500 text-sm">
-        エラーが発生しました
-      </div>
-    )
+    return <ErrorState />;
   }
 
   if (!notes || notes.length === 0) {
-    return (
-      <div className="text-center py-4 text-gray-400 text-sm">
-        メモがありません
-      </div>
-    )
+    return <EmptyState message="メモがありません" variant="simple" />;
   }
 
   return (

@@ -1,6 +1,9 @@
 'use client'
 
 import TrashIcon from "@/components/icons/trash-icon";
+import LoadingState from '@/components/ui/loading-state';
+import ErrorState from '@/components/ui/error-state';
+import EmptyState from '@/components/ui/empty-state';
 import { useDeletedNotes } from '@/src/hooks/use-notes';
 import LogoutButton from "./button/logout-button";
 import type { DeletedMemo } from "@/src/types/memo";
@@ -31,20 +34,12 @@ function DeletedMemoList({ onBackToNotes, onSelectDeletedMemo }: DeletedMemoList
             <h3 className="text-sm font-medium text-gray-600">削除済みメモ</h3>
           </div>
           
-          {isLoading && (
-            <div className="text-center py-4 text-gray-500">読み込み中...</div>
-          )}
+          {isLoading && <LoadingState />}
           
-          {error && (
-            <div className="text-center py-4 text-red-500 text-sm">
-              エラーが発生しました
-            </div>
-          )}
+          {error && <ErrorState />}
           
           {deletedNotes && deletedNotes.length === 0 && (
-            <div className="text-center py-4 text-gray-400 text-sm">
-              削除済みメモはありません
-            </div>
+            <EmptyState message="削除済みメモはありません" variant="simple" />
           )}
           
           {deletedNotes && deletedNotes.length > 0 && (

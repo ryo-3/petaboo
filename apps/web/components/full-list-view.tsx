@@ -300,7 +300,7 @@ function FullListView({
           {notes && notes.length > 0 ? (
             <ItemGrid viewMode={viewMode} effectiveColumnCount={effectiveColumnCount}>
               {notes
-                .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0)) // 最終編集時刻順（新しい順）
+                .sort((a, b) => Math.max(b.updatedAt || 0, b.createdAt) - Math.max(a.updatedAt || 0, a.createdAt)) // 最終編集時間と作成日の最新順
                 .map((memo: Memo) => {
                 const Component = viewMode === 'card' ? MemoCard : MemoListItem;
                 return (

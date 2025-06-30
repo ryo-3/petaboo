@@ -4,6 +4,11 @@
 
 @layer theme, base, clerk, components, utilities;
 
+/* 横スクロールバーを非表示 */
+html, body {
+  overflow-x: hidden;
+}
+
 /* スクロールバー全体 */
 ::-webkit-scrollbar {
   width: 10px; /* 太さ */

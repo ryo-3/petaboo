@@ -53,7 +53,7 @@ function MemoListItem({
             : "bg-white hover:bg-gray-50"
       } border-b border-gray-200 transition-colors`}
     >
-      <div className="p-4 flex items-center gap-3">
+      <div className="p-2 flex items-center gap-3">
         <button
           onClick={onToggleCheck}
           className={`size-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
@@ -83,7 +83,7 @@ function MemoListItem({
           <div className="flex flex-col gap-2">
             <div className="flex-1 min-w-0">
               <h3
-                className={`font-semibold text-sm mb-1 truncate ${
+                className={`font-semibold text-sm mb-1 line-clamp-1 ${
                   isDeleted ? "text-gray-700" : "text-gray-800"
                 }`}
               >

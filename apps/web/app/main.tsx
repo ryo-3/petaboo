@@ -1,31 +1,33 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from "react";
-import Sidebar from "@/components/sidebar";
 import DeletedMemoList from "@/components/deleted-memo-list";
-import MemoForm from "@/components/memo-form";
-import MemoViewer from "@/components/memo-viewer";
 import DeletedMemoViewer from "@/components/deleted-memo-viewer";
 import DesktopListView from "@/components/desktop-list-view";
-import WelcomeScreen from "@/components/welcome-screen";
 import Header from "@/components/header";
+import MemoEditor from "@/components/memo-editor";
+import MemoViewer from "@/components/memo-viewer";
+import SettingsScreen from "@/components/settings-screen";
+import Sidebar from "@/components/sidebar";
 import TaskCreator from "@/components/task-creator";
 import TaskEditor from "@/components/task-editor";
 import TaskViewer from "@/components/task-viewer";
-import SettingsScreen from "@/components/settings-screen";
-import type { Memo, DeletedMemo } from "@/src/types/memo";
-import type { Task, DeletedTask } from "@/src/types/task";
+import WelcomeScreen from "@/components/welcome-screen";
+import type { DeletedMemo, Memo } from "@/src/types/memo";
+import type { DeletedTask, Task } from "@/src/types/task";
+import { useEffect, useState } from "react";
 
 function Main() {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null);
-  const [selectedDeletedMemo, setSelectedDeletedMemo] = useState<DeletedMemo | null>(null);
+  const [selectedDeletedMemo, setSelectedDeletedMemo] =
+    useState<DeletedMemo | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [selectedDeletedTask, setSelectedDeletedTask] = useState<DeletedTask | null>(null);
+  const [selectedDeletedTask, setSelectedDeletedTask] =
+    useState<DeletedTask | null>(null);
   const [showDeleted, setShowDeleted] = useState(false);
   const [showFullList, setShowFullList] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [currentMode, setCurrentMode] = useState<'memo' | 'task'>('memo');
+  const [currentMode, setCurrentMode] = useState<"memo" | "task">("memo");
   const [windowWidth, setWindowWidth] = useState(0);
 
   // API同期フック（一時的に無効化 - 挙動整理のため）
@@ -37,10 +39,10 @@ function Main() {
     const updateWindowWidth = () => {
       setWindowWidth(window.innerWidth);
     };
-    
+
     updateWindowWidth();
-    window.addEventListener('resize', updateWindowWidth);
-    return () => window.removeEventListener('resize', updateWindowWidth);
+    window.addEventListener("resize", updateWindowWidth);
+    return () => window.removeEventListener("resize", updateWindowWidth);
   }, []);
 
   const isMobile = windowWidth <= 768;
@@ -119,7 +121,6 @@ function Main() {
     setSelectedDeletedTask(null);
     setShowFullList(false);
   };
-
 
   const handleBackToNotes = () => {
     setShowDeleted(false);
@@ -208,12 +209,12 @@ function Main() {
         // モバイル: サイドバー100%
         <div className="h-screen w-full">
           {showDeleted ? (
-            <DeletedMemoList 
+            <DeletedMemoList
               onBackToNotes={handleBackToNotes}
               onSelectDeletedMemo={handleSelectDeletedMemo}
             />
           ) : (
-            <Sidebar 
+            <Sidebar
               onNewMemo={handleNewMemo}
               onNewTask={handleNewTask}
               onSelectMemo={handleSelectMemo}
@@ -234,69 +235,72 @@ function Main() {
       ) : (
         // デスクトップ: ヘッダー + アイコンサイドバー
         <div className="flex flex-col h-screen w-full">
-          <Header 
-            currentMode={currentMode}
-          />
+          <Header currentMode={currentMode} />
           <div className="flex flex-1">
             <div className="fixed left-0 top-16 w-16 h-[calc(100vh-64px)] border-r-2 border-gray-400 overflow-visible z-10">
-            {showDeleted ? (
-              <DeletedMemoList 
-                onBackToNotes={handleBackToNotes}
-                onSelectDeletedMemo={handleSelectDeletedMemo}
-              />
-            ) : (
-              <Sidebar 
-                onNewMemo={handleNewMemo}
-                onNewTask={handleNewTask}
-                onSelectMemo={handleSelectMemo}
-                onSelectTask={handleSelectTask}
-                onEditTask={handleEditTask}
-                onShowFullList={handleShowFullList}
-                onHome={handleHome}
-                onEditMemo={handleEditMemo}
-                selectedMemoId={selectedMemo?.id}
-                selectedTaskId={selectedTask?.id}
-                isCompact={true}
-                currentMode={currentMode}
-                onModeChange={setCurrentMode}
-                onSettings={handleSettings}
-              />
-            )}
-            </div>
-            <div className={`flex-1 ml-16 ${isEditing || selectedMemo || selectedDeletedMemo || selectedTask || selectedDeletedTask ? 'h-[calc(100vh-64px)] pt-16' : 'pt-16'}`}>
-            {showSettings ? (
-              <SettingsScreen />
-            ) : showFullList ? (
-              <DesktopListView 
-                onSelectMemo={handleSelectMemo} 
-                onSelectDeletedMemo={handleSelectDeletedMemo}
-                onSelectTask={handleSelectTask}
-                onSelectDeletedTask={handleSelectDeletedTask}
-                currentMode={currentMode}
-                selectedMemo={selectedMemo}
-                selectedDeletedMemo={selectedDeletedMemo}
-                selectedTask={selectedTask}
-                selectedDeletedTask={selectedDeletedTask}
-              />
-            ) : isEditing ? (
-              currentMode === 'memo' ? (
-                <MemoForm onClose={handleClose} memo={selectedMemo} />
-              ) : selectedTask ? (
-                <TaskEditor onClose={handleClose} task={selectedTask} />
+              {showDeleted ? (
+                <DeletedMemoList
+                  onBackToNotes={handleBackToNotes}
+                  onSelectDeletedMemo={handleSelectDeletedMemo}
+                />
               ) : (
-                <TaskCreator onClose={handleClose} />
-              )
-            ) : selectedMemo ? (
-              <MemoViewer memo={selectedMemo} onClose={handleClose} />
-            ) : selectedTask ? (
-              <TaskViewer task={selectedTask} onClose={handleClose} />
-            ) : selectedDeletedMemo ? (
-              <DeletedMemoViewer memo={selectedDeletedMemo} onClose={handleClose} />
-            ) : selectedDeletedTask ? (
-              <div className="p-6">削除済みタスクビューアー（未実装）</div>
-            ) : (
-              <WelcomeScreen />
-            )}
+                <Sidebar
+                  onNewMemo={handleNewMemo}
+                  onNewTask={handleNewTask}
+                  onSelectMemo={handleSelectMemo}
+                  onSelectTask={handleSelectTask}
+                  onEditTask={handleEditTask}
+                  onShowFullList={handleShowFullList}
+                  onHome={handleHome}
+                  onEditMemo={handleEditMemo}
+                  selectedMemoId={selectedMemo?.id}
+                  selectedTaskId={selectedTask?.id}
+                  isCompact={true}
+                  currentMode={currentMode}
+                  onModeChange={setCurrentMode}
+                  onSettings={handleSettings}
+                />
+              )}
+            </div>
+            <div
+              className={`flex-1 ml-16 ${isEditing || selectedMemo || selectedDeletedMemo || selectedTask || selectedDeletedTask ? "h-[calc(100vh-64px)] pt-16" : "pt-16"}`}
+            >
+              {showSettings ? (
+                <SettingsScreen />
+              ) : showFullList ? (
+                <DesktopListView
+                  onSelectMemo={handleSelectMemo}
+                  onSelectDeletedMemo={handleSelectDeletedMemo}
+                  onSelectTask={handleSelectTask}
+                  onSelectDeletedTask={handleSelectDeletedTask}
+                  currentMode={currentMode}
+                  selectedMemo={selectedMemo}
+                  selectedDeletedMemo={selectedDeletedMemo}
+                  selectedTask={selectedTask}
+                  selectedDeletedTask={selectedDeletedTask}
+                />
+              ) : isEditing ? (
+                currentMode === "memo" ? (
+                  <MemoEditor onClose={handleClose} memo={selectedMemo} />
+                ) : selectedTask ? (
+                  <TaskEditor onClose={handleClose} task={selectedTask} />
+                ) : (
+                  <TaskCreator onClose={handleClose} />
+                )
+              ) : selectedMemo ? (
+                <MemoViewer memo={selectedMemo} onClose={handleClose} />
+              ) : selectedTask ? (
+                <TaskViewer task={selectedTask} onClose={handleClose} />
+              ) : selectedDeletedMemo ? (
+                <DeletedMemoViewer
+                  memo={selectedDeletedMemo}
+                  onClose={handleClose}
+                />
+              ) : selectedDeletedTask ? (
+                <div className="p-6">削除済みタスクビューアー（未実装）</div>
+              ) : (
+                <WelcomeScreen />
+              )}
             </div>
           </div>
         </div>

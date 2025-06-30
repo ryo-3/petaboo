@@ -2,7 +2,7 @@
 
 import TrashIcon from "@/components/icons/trash-icon";
 import { useCreateTask } from "@/src/hooks/use-tasks";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 
 interface TaskCreatorProps {
   onClose: () => void;
@@ -19,8 +19,17 @@ function TaskCreator({ onClose }: TaskCreatorProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedSuccessfully, setSavedSuccessfully] = useState(false);
+  const titleInputRef = useRef<HTMLInputElement>(null);
   // Removed unused variable: createdTaskId, setCreatedTaskId
   const createTask = useCreateTask();
+
+  // 新規作成時のフォーカス遅延
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      titleInputRef.current?.focus();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
 
   // 手動保存処理
   const handleSave = useCallback(async () => {
@@ -93,12 +102,12 @@ function TaskCreator({ onClose }: TaskCreatorProps) {
       <div className="flex flex-col gap-4 flex-1">
         <div className="flex items-center gap-3">
           <input
+            ref={titleInputRef}
             type="text"
             placeholder="タスクタイトルを入力..."
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="flex-1 text-lg font-medium border-b border-Green outline-none pb-2 focus:border-Green"
-            autoFocus
           />
         </div>
 

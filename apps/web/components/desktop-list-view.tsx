@@ -30,6 +30,8 @@ import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
 import { useEffect, useState } from "react";
 import TaskTabContent from "./task-tab-content";
+import MemoEditor from "./memo-editor";
+import TaskCreator from "./task-creator";
 import TaskViewer from "./task-viewer";
 import EmptyState from "./ui/empty-state";
 import ItemGrid from "./ui/item-grid";
@@ -66,14 +68,18 @@ function DesktopListView({
   const [activeTab, setActiveTab] = useState<
     "normal" | "deleted" | "todo" | "in_progress" | "completed"
   >(currentMode === "task" ? "todo" : "normal");
+  const [rightPanelMode, setRightPanelMode] = useState<
+    "hidden" | "view" | "create"
+  >("hidden");
 
-  // currentModeが変更された時にactiveTabを適切にリセット
+  // currentModeが変更された時にactiveTabとrightPanelModeを適切にリセット
   useEffect(() => {
     if (currentMode === "task") {
       setActiveTab("todo");
     } else {
       setActiveTab("normal");
     }
+    setRightPanelMode("hidden");
   }, [currentMode]);
   const [checkedMemos, setCheckedMemos] = useState<Set<number>>(new Set());
   const [checkedDeletedMemos, setCheckedDeletedMemos] = useState<Set<number>>(
@@ -273,7 +279,7 @@ function DesktopListView({
 
   // 右側パネル表示時は列数を調整（3,4列→2列、1,2列→そのまま）
   const effectiveColumnCount =
-    selectedMemo || selectedDeletedMemo || selectedTask || selectedDeletedTask
+    rightPanelMode !== "hidden"
       ? columnCount <= 2
         ? columnCount
         : 2
@@ -397,10 +403,10 @@ function DesktopListView({
         ];
 
   return (
-    <div className="flex h-[calc(100%+64px)] bg-white">
+    <div className="flex h-[calc(100vh-64px)] bg-white">
       {/* 左側：一覧表示 */}
       <div
-        className={`${selectedMemo || selectedDeletedMemo || selectedTask || selectedDeletedTask ? "w-1/2" : "w-full"} ${selectedMemo || selectedDeletedMemo || selectedTask || selectedDeletedTask ? "border-r border-gray-300 pb-10" : ""} pt-6 pl-6 pr-2 flex flex-col transition-all duration-300`}
+        className={`${rightPanelMode !== "hidden" ? "w-1/2" : "w-full"} ${rightPanelMode !== "hidden" ? "border-r border-gray-300 pb-10" : ""} pt-6 pl-6 pr-2 flex flex-col transition-all duration-300`}
       >
         <div className="mb-3">
           <div className="flex justify-between items-center mb-3">
@@ -411,7 +417,7 @@ function DesktopListView({
                 ) : (
                   <TaskIcon className="w-6 h-6 text-gray-600" />
                 )}
-                <h1 className="text-2xl font-bold text-gray-800">
+                <h1 className="text-2xl font-bold text-gray-800 w-[105px]">
                   {currentMode === "memo" ? "メモ一覧" : "タスク一覧"}
                 </h1>
               </div>
@@ -420,8 +426,7 @@ function DesktopListView({
               <AddItemButton
                 itemType={currentMode}
                 onClick={() => {
-                  // TODO: 新規作成処理
-                  console.log('新規追加ボタンがクリックされました');
+                  setRightPanelMode("create");
                 }}
                 position="bottom"
                 size="small"
@@ -429,79 +434,66 @@ function DesktopListView({
               />
 
               {/* タブ */}
-              {currentMode === "task" ? (
-                <div className="flex items-center gap-2">
-                  {tabs.map((tab) => {
-                    const getTabColors = () => {
-                      if (activeTab === tab.id) {
-                        switch (tab.id) {
-                          case "todo":
-                            return "bg-gray-600 text-white";
-                          case "in_progress":
-                            return "bg-blue-600 text-white";
-                          case "completed":
-                            return "bg-green-600 text-white";
-                          case "deleted":
-                            return "bg-red-600 text-white";
-                          default:
-                            return "bg-gray-600 text-white";
-                        }
-                      } else {
-                        switch (tab.id) {
-                          case "todo":
-                            return "bg-gray-100 text-gray-600 hover:bg-gray-200";
-                          case "in_progress":
-                            return "bg-gray-100 text-gray-600 hover:bg-blue-200";
-                          case "completed":
-                            return "bg-gray-100 text-gray-600 hover:bg-green-200";
-                          case "deleted":
-                            return "bg-gray-100 text-gray-600 hover:bg-red-200";
-                          default:
-                            return "bg-gray-100 text-gray-600 hover:bg-gray-200";
-                        }
+              <div className="flex items-center gap-2">
+                {tabs.map((tab) => {
+                  const getTabColors = () => {
+                    if (activeTab === tab.id) {
+                      switch (tab.id) {
+                        case "todo":
+                          return "bg-gray-600 text-white";
+                        case "in_progress":
+                          return "bg-blue-600 text-white";
+                        case "completed":
+                          return "bg-green-600 text-white";
+                        case "deleted":
+                          return "bg-red-600 text-white";
+                        case "normal":
+                          return "bg-gray-600 text-white";
+                        default:
+                          return "bg-gray-600 text-white";
                       }
-                    };
+                    } else {
+                      switch (tab.id) {
+                        case "todo":
+                          return "bg-gray-100 text-gray-600 hover:bg-gray-200";
+                        case "in_progress":
+                          return "bg-gray-100 text-gray-600 hover:bg-blue-200";
+                        case "completed":
+                          return "bg-gray-100 text-gray-600 hover:bg-green-200";
+                        case "deleted":
+                          return "bg-gray-100 text-gray-600 hover:bg-red-200";
+                        case "normal":
+                          return "bg-gray-100 text-gray-600 hover:bg-gray-200";
+                        default:
+                          return "bg-gray-100 text-gray-600 hover:bg-gray-200";
+                      }
+                    }
+                  };
 
-                    return (
-                      <button
-                        key={tab.id}
-                        onClick={() =>
-                          setActiveTab(
-                            tab.id as
-                              | "normal"
-                              | "deleted"
-                              | "todo"
-                              | "in_progress"
-                              | "completed"
-                          )
-                        }
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${getTabColors()}`}
-                      >
-                        {tab.icon && tab.icon}
-                        <span>{tab.label}</span>
-                        <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full">
-                          {tab.count}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : (
-                <SwitchTabs
-                  tabs={tabs}
-                  activeTab={activeTab}
-                  onTabChange={(tabId) =>
-                    setActiveTab(
-                      tabId as
-                        | "normal"
-                        | "deleted"
-                        | "todo"
-                        | "in_progress"
-                        | "completed"
-                    )
-                  }
-                />
-              )}
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() =>
+                        setActiveTab(
+                          tab.id as
+                            | "normal"
+                            | "deleted"
+                            | "todo"
+                            | "in_progress"
+                            | "completed"
+                        )
+                      }
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${getTabColors()}`}
+                    >
+                      {tab.icon && tab.icon}
+                      <span>{tab.label}</span>
+                      <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full">
+                        {tab.count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
@@ -518,14 +510,7 @@ function DesktopListView({
               <ColumnCountSelector
                 columnCount={columnCount}
                 onColumnCountChange={handleColumnCountChange}
-                isRightPanelShown={
-                  !!(
-                    selectedMemo ||
-                    selectedDeletedMemo ||
-                    selectedTask ||
-                    selectedDeletedTask
-                  )
-                }
+                isRightPanelShown={rightPanelMode !== "hidden"}
               />
             </div>
           )}
@@ -603,7 +588,10 @@ function DesktopListView({
                           }
                           setCheckedMemos(newChecked);
                         }}
-                        onSelect={() => onSelectMemo(memo, true)}
+                        onSelect={() => {
+                          onSelectMemo(memo, true);
+                          setRightPanelMode("view");
+                        }}
                         variant="normal"
                         isSelected={selectedMemo?.id === memo.id}
                       />
@@ -636,7 +624,10 @@ function DesktopListView({
                 }
                 setCheckedTasks(newChecked);
               }}
-              onSelectTask={(task) => onSelectTask!(task, true)}
+              onSelectTask={(task) => {
+                onSelectTask!(task, true);
+                setRightPanelMode("view");
+              }}
               selectedTaskId={selectedTask?.id}
             />
           )}
@@ -669,7 +660,10 @@ function DesktopListView({
                             }
                             setCheckedDeletedMemos(newChecked);
                           }}
-                          onSelect={() => onSelectDeletedMemo(memo, true)}
+                          onSelect={() => {
+                            onSelectDeletedMemo(memo, true);
+                            setRightPanelMode("view");
+                          }}
                           variant="deleted"
                           isSelected={selectedDeletedMemo?.id === memo.id}
                         />
@@ -701,7 +695,10 @@ function DesktopListView({
                         }
                         setCheckedDeletedTasks(newChecked);
                       }}
-                      onSelect={() => onSelectDeletedTask!(task, true)}
+                      onSelect={() => {
+                        onSelectDeletedTask!(task, true);
+                        setRightPanelMode("view");
+                      }}
                       variant="deleted"
                       isSelected={selectedDeletedTask?.id === task.id}
                     />
@@ -748,14 +745,12 @@ function DesktopListView({
       </div>
 
       {/* 右側：詳細表示（選択時のみ表示） */}
-      {(selectedMemo ||
-        selectedDeletedMemo ||
-        selectedTask ||
-        selectedDeletedTask) && (
-        <div className="w-1/2 p-6 animate-slide-in-right relative">
+      {rightPanelMode !== "hidden" && (
+        <div className="w-1/2 h-full overflow-y-auto animate-slide-in-right relative">
           {/* 区切り線の閉じるボタン */}
           <button
             onClick={() => {
+              setRightPanelMode("hidden");
               if (selectedMemo) {
                 onSelectMemo(null as unknown as Memo, true);
               } else if (selectedDeletedMemo) {
@@ -782,14 +777,24 @@ function DesktopListView({
               />
             </svg>
           </button>
-          {selectedMemo ? (
-            <MemoViewer memo={selectedMemo} onClose={() => {}} />
-          ) : selectedTask ? (
-            <TaskViewer task={selectedTask} onClose={() => {}} />
-          ) : selectedDeletedMemo ? (
-            <DeletedMemoViewer memo={selectedDeletedMemo} onClose={() => {}} />
-          ) : selectedDeletedTask ? (
-            <div className="p-6">削除済みタスクビューアー（未実装）</div>
+          {rightPanelMode === "create" ? (
+            currentMode === "task" ? (
+              <TaskCreator onClose={() => setRightPanelMode("hidden")} />
+            ) : (
+              <MemoEditor onClose={() => setRightPanelMode("hidden")} />
+            )
+          ) : rightPanelMode === "view" ? (
+            <div className="p-6">
+              {selectedMemo ? (
+                <MemoViewer memo={selectedMemo} onClose={() => {}} />
+              ) : selectedTask ? (
+                <TaskViewer task={selectedTask} onClose={() => {}} />
+              ) : selectedDeletedMemo ? (
+                <DeletedMemoViewer memo={selectedDeletedMemo} onClose={() => {}} />
+              ) : selectedDeletedTask ? (
+                <div>削除済みタスクビューアー（未実装）</div>
+              ) : null}
+            </div>
           ) : null}
         </div>
       )}

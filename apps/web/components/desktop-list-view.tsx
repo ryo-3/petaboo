@@ -286,7 +286,7 @@ function DesktopListView({
 
   const handleBulkDelete = async () => {
     try {
-      if (activeTab === "normal") {
+      if (activeTab !== "deleted") {
         if (currentMode === "memo") {
           // APIメモとローカルメモを分離
           const apiMemoIds = Array.from(checkedMemos).filter((id) => id > 0);
@@ -713,7 +713,7 @@ function DesktopListView({
             currentMode === "memo"
               ? (activeTab === "normal" && checkedMemos.size > 0) ||
                 (activeTab === "deleted" && checkedDeletedMemos.size > 0)
-              : (activeTab === "normal" && checkedTasks.size > 0) ||
+              : ((activeTab === "todo" || activeTab === "in_progress" || activeTab === "completed") && checkedTasks.size > 0) ||
                 (activeTab === "deleted" && checkedDeletedTasks.size > 0);
           return shouldShow;
         })() && (
@@ -721,20 +721,20 @@ function DesktopListView({
             onClick={handleBulkDelete}
             className="fixed bottom-6 right-6 bg-gray-500 hover:bg-gray-600 text-white p-3 rounded-full shadow-lg transition-colors z-50"
             title={
-              activeTab === "normal"
-                ? `${currentMode === "memo" ? checkedMemos.size : checkedTasks.size}件の${currentMode === "memo" ? "メモ" : "タスク"}を削除`
-                : `${currentMode === "memo" ? checkedDeletedMemos.size : checkedDeletedTasks.size}件の${currentMode === "memo" ? "メモ" : "タスク"}を完全削除`
+              activeTab === "deleted"
+                ? `${currentMode === "memo" ? checkedDeletedMemos.size : checkedDeletedTasks.size}件の${currentMode === "memo" ? "メモ" : "タスク"}を完全削除`
+                : `${currentMode === "memo" ? checkedMemos.size : checkedTasks.size}件の${currentMode === "memo" ? "メモ" : "タスク"}を削除`
             }
           >
             <TrashIcon />
             <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
               {currentMode === "memo"
-                ? activeTab === "normal"
-                  ? checkedMemos.size
-                  : checkedDeletedMemos.size
-                : activeTab === "normal"
-                  ? checkedTasks.size
-                  : checkedDeletedTasks.size}
+                ? activeTab === "deleted"
+                  ? checkedDeletedMemos.size
+                  : checkedMemos.size
+                : activeTab === "deleted"
+                  ? checkedDeletedTasks.size
+                  : checkedTasks.size}
             </span>
           </button>
         )}

@@ -139,7 +139,7 @@ function TaskViewer({
   ];
 
   return (
-    <div className="flex flex-col h-full bg-white p-6">
+    <div className="flex flex-col h-full bg-white p-2">
       <div className="flex justify-start items-center mb-4">
         <EditButton
           isEditing={isEditing}

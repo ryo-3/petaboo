@@ -1,34 +1,44 @@
 "use client";
 
+import DeletedMemoViewer from "@/components/deleted-memo-viewer";
 import MemoIcon from "@/components/icons/memo-icon";
 import TaskIcon from "@/components/icons/task-icon";
 import TrashIcon from "@/components/icons/trash-icon";
-import SwitchTabs from "@/components/ui/switch-tabs";
+import MemoViewer from "@/components/memo-viewer";
+import ColumnCountSelector from "@/components/ui/column-count-selector";
 import MemoCard from "@/components/ui/memo-card";
 import MemoListItem from "@/components/ui/memo-list-item";
+import SwitchTabs from "@/components/ui/switch-tabs";
 import TaskCard from "@/components/ui/task-card";
 import TaskListItem from "@/components/ui/task-list-item";
-import MemoViewer from "@/components/memo-viewer";
-import DeletedMemoViewer from "@/components/deleted-memo-viewer";
-import { useDeletedNotes, useNotes, useDeleteNote, usePermanentDeleteNote } from "@/src/hooks/use-notes";
-import { useDeletedTasks, useTasks, useDeleteTask, usePermanentDeleteTask } from "@/src/hooks/use-tasks";
-import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import ViewModeToggle from "@/components/ui/view-mode-toggle";
-import ColumnCountSelector from "@/components/ui/column-count-selector";
+import {
+  useDeletedNotes,
+  useDeleteNote,
+  useNotes,
+  usePermanentDeleteNote,
+} from "@/src/hooks/use-notes";
+import {
+  useDeletedTasks,
+  useDeleteTask,
+  usePermanentDeleteTask,
+  useTasks,
+} from "@/src/hooks/use-tasks";
+import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
-import { useState, useEffect } from "react";
-import TaskViewer from "./task-viewer";
+import { useEffect, useState } from "react";
 import TaskTabContent from "./task-tab-content";
-import ItemGrid from "./ui/item-grid";
+import TaskViewer from "./task-viewer";
 import EmptyState from "./ui/empty-state";
+import ItemGrid from "./ui/item-grid";
 
 interface FullListViewProps {
   onSelectMemo: (memo: Memo, fromFullList?: boolean) => void;
   onSelectDeletedMemo: (memo: DeletedMemo, fromFullList?: boolean) => void;
   onSelectTask?: (task: Task, fromFullList?: boolean) => void;
   onSelectDeletedTask?: (task: DeletedTask, fromFullList?: boolean) => void;
-  currentMode?: 'memo' | 'task';
+  currentMode?: "memo" | "task";
   selectedMemo?: Memo | null;
   selectedDeletedMemo?: DeletedMemo | null;
   selectedTask?: Task | null;
@@ -40,11 +50,11 @@ function FullListView({
   onSelectDeletedMemo,
   onSelectTask,
   onSelectDeletedTask,
-  currentMode = 'memo',
+  currentMode = "memo",
   selectedMemo,
   selectedDeletedMemo,
   selectedTask,
-  selectedDeletedTask
+  selectedDeletedTask,
   // Removed unused props: onEditMemo, onEditTask
 }: FullListViewProps) {
   const { data: notes, isLoading: memoLoading, error: memoError } = useNotes();
@@ -52,13 +62,13 @@ function FullListView({
   const { data: deletedNotes } = useDeletedNotes();
   const { data: tasks, isLoading: taskLoading, error: taskError } = useTasks();
   const { data: deletedTasks } = useDeletedTasks();
-  const [activeTab, setActiveTab] = useState<"normal" | "deleted" | "todo" | "in_progress" | "completed">(
-    currentMode === 'task' ? "todo" : "normal"
-  );
+  const [activeTab, setActiveTab] = useState<
+    "normal" | "deleted" | "todo" | "in_progress" | "completed"
+  >(currentMode === "task" ? "todo" : "normal");
 
   // currentModeが変更された時にactiveTabを適切にリセット
   useEffect(() => {
-    if (currentMode === 'task') {
+    if (currentMode === "task") {
       setActiveTab("todo");
     } else {
       setActiveTab("normal");
@@ -73,20 +83,20 @@ function FullListView({
     new Set()
   );
   const { preferences } = useUserPreferences(1);
-  
+
   // ローカル状態（初期値をlocalStorageから取得）
-  const [viewMode, setViewMode] = useState<'card' | 'list'>(() => {
-    if (typeof window !== 'undefined') {
+  const [viewMode, setViewMode] = useState<"card" | "list">(() => {
+    if (typeof window !== "undefined") {
       const saved = localStorage.getItem(`${currentMode}_viewMode`);
-      if (saved === 'card' || saved === 'list') {
+      if (saved === "card" || saved === "list") {
         return saved;
       }
     }
-    return currentMode === 'task' ? 'list' : 'list';
+    return currentMode === "task" ? "list" : "list";
   });
-  
+
   const [columnCount, setColumnCount] = useState(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const saved = localStorage.getItem(`${currentMode}_columnCount`);
       if (saved) {
         const num = parseInt(saved, 10);
@@ -95,7 +105,7 @@ function FullListView({
         }
       }
     }
-    return currentMode === 'task' ? 2 : 4;
+    return currentMode === "task" ? 2 : 4;
   });
 
   // currentMode変更時にlocalStorageから設定を読み込み
@@ -103,105 +113,123 @@ function FullListView({
     // localStorageから現在のモードの設定を取得
     const savedViewMode = localStorage.getItem(`${currentMode}_viewMode`);
     const savedColumnCount = localStorage.getItem(`${currentMode}_columnCount`);
-    
-    if (savedViewMode === 'card' || savedViewMode === 'list') {
+
+    if (savedViewMode === "card" || savedViewMode === "list") {
       setViewMode(savedViewMode);
     } else {
-      setViewMode(currentMode === 'task' ? 'list' : 'list');
+      setViewMode(currentMode === "task" ? "list" : "list");
     }
-    
+
     if (savedColumnCount) {
       const num = parseInt(savedColumnCount, 10);
       if (num >= 1 && num <= 6) {
         setColumnCount(num);
       } else {
-        setColumnCount(currentMode === 'task' ? 2 : 4);
+        setColumnCount(currentMode === "task" ? 2 : 4);
       }
     } else {
-      setColumnCount(currentMode === 'task' ? 2 : 4);
+      setColumnCount(currentMode === "task" ? 2 : 4);
     }
   }, [currentMode]);
 
   // 設定値が変更されたらローカル状態を更新
   useEffect(() => {
     if (preferences) {
-      const newViewMode = currentMode === 'task' 
-        ? (preferences.taskViewMode || 'list')
-        : (preferences.memoViewMode || 'list');
-      const newColumnCount = currentMode === 'task'
-        ? (preferences.taskColumnCount || 2)
-        : (preferences.memoColumnCount || 4);
-      
+      const newViewMode =
+        currentMode === "task"
+          ? preferences.taskViewMode || "list"
+          : preferences.memoViewMode || "list";
+      const newColumnCount =
+        currentMode === "task"
+          ? preferences.taskColumnCount || 2
+          : preferences.memoColumnCount || 4;
+
       setViewMode(newViewMode);
       setColumnCount(newColumnCount);
-      
+
       // localStorageにも保存（次回の初期値用）
       localStorage.setItem(`${currentMode}_viewMode`, newViewMode);
-      localStorage.setItem(`${currentMode}_columnCount`, newColumnCount.toString());
+      localStorage.setItem(
+        `${currentMode}_columnCount`,
+        newColumnCount.toString()
+      );
     }
   }, [preferences, currentMode]);
 
   // ローカル設定変更時にlocalStorageを更新
-  const handleViewModeChange = (newViewMode: 'card' | 'list') => {
+  const handleViewModeChange = (newViewMode: "card" | "list") => {
     setViewMode(newViewMode);
     localStorage.setItem(`${currentMode}_viewMode`, newViewMode);
   };
 
   const handleColumnCountChange = (newColumnCount: number) => {
     setColumnCount(newColumnCount);
-    localStorage.setItem(`${currentMode}_columnCount`, newColumnCount.toString());
+    localStorage.setItem(
+      `${currentMode}_columnCount`,
+      newColumnCount.toString()
+    );
   };
 
   // ローカルストレージから新規作成メモを取得
   useEffect(() => {
     let monitoringInterval: NodeJS.Timeout | null = null;
-    
+
     const updateLocalMemos = () => {
       const localMemosList: Memo[] = [];
-      
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('memo_draft_')) {
+
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith("memo_draft_")) {
           try {
-            const data = JSON.parse(localStorage.getItem(key) || '{}');
+            const data = JSON.parse(localStorage.getItem(key) || "{}");
             // 新規作成のメモ（IDが文字列で'new'で始まる場合）のみを対象
-            if (typeof data.id === 'string' && data.id.startsWith('new_') && (data.title?.trim() || data.content?.trim())) {
+            if (
+              typeof data.id === "string" &&
+              data.id.startsWith("new_") &&
+              (data.title?.trim() || data.content?.trim())
+            ) {
               const now = Math.floor(Date.now() / 1000);
-              
+
               // データの時間がミリ秒形式の場合は秒に変換、すでに秒の場合はそのまま
               const normalizeTime = (timestamp: number) => {
                 if (!timestamp) return now;
                 // 13桁（ミリ秒）なら10桁（秒）に変換
-                return timestamp > 9999999999 ? Math.floor(timestamp / 1000) : Math.floor(timestamp);
+                return timestamp > 9999999999
+                  ? Math.floor(timestamp / 1000)
+                  : Math.floor(timestamp);
               };
-              
+
               // 一意のIDを生成（文字列IDをハッシュ化して負の数にする）
-              const hashId = -Math.abs(data.id.split('').reduce((a: number, b: string) => {
-                a = ((a << 5) - a) + b.charCodeAt(0);
-                return a & a;
-              }, 0));
-              
+              const hashId = -Math.abs(
+                data.id.split("").reduce((a: number, b: string) => {
+                  a = (a << 5) - a + b.charCodeAt(0);
+                  return a & a;
+                }, 0)
+              );
+
               localMemosList.push({
                 id: hashId, // ユニークな負のID
-                title: data.title || '無題',
-                content: data.content || '',
+                title: data.title || "無題",
+                content: data.content || "",
                 createdAt: normalizeTime(data.lastModified),
-                updatedAt: normalizeTime(data.lastEditedAt || data.lastModified),
-                tempId: data.id // 元のtempIdを保持
+                updatedAt: normalizeTime(
+                  data.lastEditedAt || data.lastModified
+                ),
+                tempId: data.id, // 元のtempIdを保持
               });
             }
           } catch (error) {
-            console.error('ローカルメモの解析エラー:', key, error);
+            console.error("ローカルメモの解析エラー:", key, error);
           }
         }
       });
-      
+
       setLocalMemos(localMemosList);
       return localMemosList.length > 0;
     };
 
     const startMonitoring = () => {
       if (monitoringInterval) return; // 既に監視中の場合は何もしない
-      
+
       monitoringInterval = setInterval(() => {
         const hasNewMemos = updateLocalMemos();
         if (!hasNewMemos && monitoringInterval) {
@@ -212,7 +240,7 @@ function FullListView({
     };
 
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key?.startsWith('memo_draft_new_')) {
+      if (e.key?.startsWith("memo_draft_new_")) {
         const hasNewMemos = updateLocalMemos();
         if (hasNewMemos && !monitoringInterval) {
           startMonitoring();
@@ -227,13 +255,13 @@ function FullListView({
     }
 
     // localStorage変更イベントリスナー
-    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener("storage", handleStorageChange);
 
     return () => {
       if (monitoringInterval) {
         clearInterval(monitoringInterval);
       }
-      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener("storage", handleStorageChange);
     };
   }, []);
 
@@ -241,73 +269,78 @@ function FullListView({
   const permanentDeleteNote = usePermanentDeleteNote();
   const deleteTask = useDeleteTask();
   const permanentDeleteTask = usePermanentDeleteTask();
-  
+
   // 右側パネル表示時は列数を調整（3,4列→2列、1,2列→そのまま）
-  const effectiveColumnCount = (selectedMemo || selectedDeletedMemo || selectedTask || selectedDeletedTask) 
-    ? (columnCount <= 2 ? columnCount : 2)
-    : columnCount;
+  const effectiveColumnCount =
+    selectedMemo || selectedDeletedMemo || selectedTask || selectedDeletedTask
+      ? columnCount <= 2
+        ? columnCount
+        : 2
+      : columnCount;
 
   const handleBulkDelete = async () => {
     try {
-      if (activeTab === 'normal') {
-        if (currentMode === 'memo') {
+      if (activeTab === "normal") {
+        if (currentMode === "memo") {
           // APIメモとローカルメモを分離
-          const apiMemoIds = Array.from(checkedMemos).filter(id => id > 0);
-          const localMemoIds = Array.from(checkedMemos).filter(id => id < 0);
-          
+          const apiMemoIds = Array.from(checkedMemos).filter((id) => id > 0);
+          const localMemoIds = Array.from(checkedMemos).filter((id) => id < 0);
+
           // APIメモの削除
           if (apiMemoIds.length > 0) {
-            const deletePromises = apiMemoIds.map(id => 
+            const deletePromises = apiMemoIds.map((id) =>
               deleteNote.mutateAsync(id)
             );
             await Promise.all(deletePromises);
           }
-          
+
           // ローカルメモの削除（localStorageから削除）
           if (localMemoIds.length > 0) {
-            localMemoIds.forEach(id => {
+            localMemoIds.forEach((id) => {
               // ハッシュIDから元のtempIdを見つけて削除
-              Object.keys(localStorage).forEach(key => {
-                if (key.startsWith('memo_draft_new_')) {
+              Object.keys(localStorage).forEach((key) => {
+                if (key.startsWith("memo_draft_new_")) {
                   try {
-                    const data = JSON.parse(localStorage.getItem(key) || '{}');
-                    const hashId = -Math.abs(data.id.split('').reduce((a: number, b: string) => {
-                      a = ((a << 5) - a) + b.charCodeAt(0);
-                      return a & a;
-                    }, 0));
-                    
+                    const data = JSON.parse(localStorage.getItem(key) || "{}");
+                    const hashId = -Math.abs(
+                      data.id.split("").reduce((a: number, b: string) => {
+                        a = (a << 5) - a + b.charCodeAt(0);
+                        return a & a;
+                      }, 0)
+                    );
+
                     if (hashId === id) {
                       localStorage.removeItem(key);
-                      console.log('ローカルメモを削除:', key);
+                      console.log("ローカルメモを削除:", key);
                     }
                   } catch (error) {
-                    console.error('ローカルメモ削除エラー:', error);
+                    console.error("ローカルメモ削除エラー:", error);
                   }
                 }
               });
             });
           }
-          
+
           setCheckedMemos(new Set());
         } else {
           // 通常タスクの一括削除
-          const deletePromises = Array.from(checkedTasks).map(id => 
+          const deletePromises = Array.from(checkedTasks).map((id) =>
             deleteTask.mutateAsync(id)
           );
           await Promise.all(deletePromises);
           setCheckedTasks(new Set());
         }
       } else {
-        if (currentMode === 'memo') {
+        if (currentMode === "memo") {
           // 削除済みメモの完全削除
-          const deletePromises = Array.from(checkedDeletedMemos).map(id => 
+          const deletePromises = Array.from(checkedDeletedMemos).map((id) =>
             permanentDeleteNote.mutateAsync(id)
           );
           await Promise.all(deletePromises);
           setCheckedDeletedMemos(new Set());
         } else {
           // 削除済みタスクの完全削除
-          const deletePromises = Array.from(checkedDeletedTasks).map(id => 
+          const deletePromises = Array.from(checkedDeletedTasks).map((id) =>
             permanentDeleteTask.mutateAsync(id)
           );
           await Promise.all(deletePromises);
@@ -315,277 +348,332 @@ function FullListView({
         }
       }
     } catch (error) {
-      console.error('一括削除に失敗しました:', error);
-      alert('一括削除に失敗しました。');
+      console.error("一括削除に失敗しました:", error);
+      alert("一括削除に失敗しました。");
     }
   };
 
-  const tabs = currentMode === 'task' 
-    ? [
-        {
-          id: "todo",
-          label: "未着手",
-          count: tasks?.filter(task => task.status === 'todo').length || 0,
-        },
-        {
-          id: "in_progress",
-          label: "進行中", 
-          count: tasks?.filter(task => task.status === 'in_progress').length || 0,
-        },
-        {
-          id: "completed",
-          label: "完了",
-          count: tasks?.filter(task => task.status === 'completed').length || 0,
-        },
-        {
-          id: "deleted",
-          label: "削除済み",
-          icon: <TrashIcon className="w-3 h-3" />,
-          count: deletedTasks?.length || 0,
-        },
-      ]
-    : [
-        {
-          id: "normal",
-          label: "通常",
-          count: (notes?.length || 0) + localMemos.length,
-        },
-        {
-          id: "deleted",
-          label: "削除済み",
-          icon: <TrashIcon className="w-3 h-3" />,
-          count: deletedNotes?.length || 0,
-        },
-      ];
+  const tabs =
+    currentMode === "task"
+      ? [
+          {
+            id: "todo",
+            label: "未着手",
+            count: tasks?.filter((task) => task.status === "todo").length || 0,
+          },
+          {
+            id: "in_progress",
+            label: "進行中",
+            count:
+              tasks?.filter((task) => task.status === "in_progress").length ||
+              0,
+          },
+          {
+            id: "completed",
+            label: "完了",
+            count:
+              tasks?.filter((task) => task.status === "completed").length || 0,
+          },
+          {
+            id: "deleted",
+            label: "削除済み",
+            icon: <TrashIcon className="w-3 h-3" />,
+            count: deletedTasks?.length || 0,
+          },
+        ]
+      : [
+          {
+            id: "normal",
+            label: "通常",
+            count: (notes?.length || 0) + localMemos.length,
+          },
+          {
+            id: "deleted",
+            label: "削除済み",
+            icon: <TrashIcon className="w-3 h-3" />,
+            count: deletedNotes?.length || 0,
+          },
+        ];
 
   return (
-    <div className="flex h-full bg-white">
+    <div className="flex h-[calc(100%+64px)] bg-white">
       {/* 左側：一覧表示 */}
-      <div className={`${selectedMemo || selectedDeletedMemo || selectedTask || selectedDeletedTask ? 'w-1/2' : 'w-full'} ${selectedMemo || selectedDeletedMemo || selectedTask || selectedDeletedTask ? 'border-r border-gray-300' : ''} pt-6 pl-6 pr-2 flex flex-col transition-all duration-300`}>
-      <div className="mb-3">
-        <div className="flex justify-between items-center mb-3">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              {currentMode === 'memo' ? (
-                <MemoIcon className="w-6 h-6 text-gray-600" />
-              ) : (
-                <TaskIcon className="w-6 h-6 text-gray-600" />
-              )}
-              <h1 className="text-2xl font-bold text-gray-800">{currentMode === 'memo' ? 'メモ一覧' : 'タスク一覧'}</h1>
-            </div>
-
-            {/* タブ */}
-            {currentMode === 'task' ? (
+      <div
+        className={`${selectedMemo || selectedDeletedMemo || selectedTask || selectedDeletedTask ? "w-1/2" : "w-full"} ${selectedMemo || selectedDeletedMemo || selectedTask || selectedDeletedTask ? "border-r border-gray-300 pb-10" : ""} pt-6 pl-6 pr-2 flex flex-col transition-all duration-300`}
+      >
+        <div className="mb-3">
+          <div className="flex justify-between items-center mb-3">
+            <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                {tabs.map((tab) => {
-                  const getTabColors = () => {
-                    if (activeTab === tab.id) {
-                      switch (tab.id) {
-                        case 'todo':
-                          return 'bg-gray-600 text-white';
-                        case 'in_progress':
-                          return 'bg-blue-600 text-white';
-                        case 'completed':
-                          return 'bg-green-600 text-white';
-                        case 'deleted':
-                          return 'bg-red-600 text-white';
-                        default:
-                          return 'bg-gray-600 text-white';
-                      }
-                    } else {
-                      switch (tab.id) {
-                        case 'todo':
-                          return 'bg-gray-100 text-gray-600 hover:bg-gray-200';
-                        case 'in_progress':
-                          return 'bg-gray-100 text-gray-600 hover:bg-blue-200';
-                        case 'completed':
-                          return 'bg-gray-100 text-gray-600 hover:bg-green-200';
-                        case 'deleted':
-                          return 'bg-gray-100 text-gray-600 hover:bg-red-200';
-                        default:
-                          return 'bg-gray-100 text-gray-600 hover:bg-gray-200';
-                      }
-                    }
-                  };
-
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id as "normal" | "deleted" | "todo" | "in_progress" | "completed")}
-                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${getTabColors()}`}
-                    >
-                      {tab.icon && tab.icon}
-                      <span>{tab.label}</span>
-                      <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full">
-                        {tab.count}
-                      </span>
-                    </button>
-                  );
-                })}
+                {currentMode === "memo" ? (
+                  <MemoIcon className="w-6 h-6 text-gray-600" />
+                ) : (
+                  <TaskIcon className="w-6 h-6 text-gray-600" />
+                )}
+                <h1 className="text-2xl font-bold text-gray-800">
+                  {currentMode === "memo" ? "メモ一覧" : "タスク一覧"}
+                </h1>
               </div>
-            ) : (
-              <SwitchTabs
-                tabs={tabs}
-                activeTab={activeTab}
-                onTabChange={(tabId) => setActiveTab(tabId as "normal" | "deleted" | "todo" | "in_progress" | "completed")}
-              />
-            )}
+
+              {/* タブ */}
+              {currentMode === "task" ? (
+                <div className="flex items-center gap-2">
+                  {tabs.map((tab) => {
+                    const getTabColors = () => {
+                      if (activeTab === tab.id) {
+                        switch (tab.id) {
+                          case "todo":
+                            return "bg-gray-600 text-white";
+                          case "in_progress":
+                            return "bg-blue-600 text-white";
+                          case "completed":
+                            return "bg-green-600 text-white";
+                          case "deleted":
+                            return "bg-red-600 text-white";
+                          default:
+                            return "bg-gray-600 text-white";
+                        }
+                      } else {
+                        switch (tab.id) {
+                          case "todo":
+                            return "bg-gray-100 text-gray-600 hover:bg-gray-200";
+                          case "in_progress":
+                            return "bg-gray-100 text-gray-600 hover:bg-blue-200";
+                          case "completed":
+                            return "bg-gray-100 text-gray-600 hover:bg-green-200";
+                          case "deleted":
+                            return "bg-gray-100 text-gray-600 hover:bg-red-200";
+                          default:
+                            return "bg-gray-100 text-gray-600 hover:bg-gray-200";
+                        }
+                      }
+                    };
+
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() =>
+                          setActiveTab(
+                            tab.id as
+                              | "normal"
+                              | "deleted"
+                              | "todo"
+                              | "in_progress"
+                              | "completed"
+                          )
+                        }
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${getTabColors()}`}
+                      >
+                        {tab.icon && tab.icon}
+                        <span>{tab.label}</span>
+                        <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full">
+                          {tab.count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <SwitchTabs
+                  tabs={tabs}
+                  activeTab={activeTab}
+                  onTabChange={(tabId) =>
+                    setActiveTab(
+                      tabId as
+                        | "normal"
+                        | "deleted"
+                        | "todo"
+                        | "in_progress"
+                        | "completed"
+                    )
+                  }
+                />
+              )}
+            </div>
           </div>
+
+          {/* コントロール */}
+          {!(
+            (currentMode === "memo" && preferences?.memoHideControls) ||
+            (currentMode === "task" && preferences?.taskHideControls)
+          ) && (
+            <div className="flex items-center gap-2">
+              <ViewModeToggle
+                viewMode={viewMode}
+                onViewModeChange={handleViewModeChange}
+              />
+              <ColumnCountSelector
+                columnCount={columnCount}
+                onColumnCountChange={handleColumnCountChange}
+                isRightPanelShown={
+                  !!(
+                    selectedMemo ||
+                    selectedDeletedMemo ||
+                    selectedTask ||
+                    selectedDeletedTask
+                  )
+                }
+              />
+            </div>
+          )}
         </div>
-        
-        {/* コントロール */}
-        {!((currentMode === 'memo' && preferences?.memoHideControls) || (currentMode === 'task' && preferences?.taskHideControls)) && (
-          <div className="flex items-center gap-2">
-            <ViewModeToggle 
-              viewMode={viewMode}
-              onViewModeChange={handleViewModeChange}
-            />
-            <ColumnCountSelector 
-              columnCount={columnCount}
-              onColumnCountChange={handleColumnCountChange}
-              isRightPanelShown={!!(selectedMemo || selectedDeletedMemo || selectedTask || selectedDeletedTask)}
-            />
+
+        {(currentMode === "memo" ? memoLoading : taskLoading) && (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center text-gray-500">読み込み中...</div>
           </div>
         )}
-      </div>
 
-      {(currentMode === 'memo' ? memoLoading : taskLoading) && (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center text-gray-500">読み込み中...</div>
-        </div>
-      )}
+        {(currentMode === "memo" ? memoError : taskError) && (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center text-red-500">エラーが発生しました</div>
+          </div>
+        )}
 
-      {(currentMode === 'memo' ? memoError : taskError) && (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center text-red-500">エラーが発生しました</div>
-        </div>
-      )}
-
-
-      {/* メモの通常タブ */}
-      {activeTab === "normal" && currentMode === 'memo' && (
-        <>
-          {((notes && notes.length > 0) || localMemos.length > 0) ? (
-            <ItemGrid viewMode={viewMode} effectiveColumnCount={effectiveColumnCount}>
-              {[...(notes || []), ...localMemos]
-                .sort((a, b) => {
-                  // ローカル編集時間も考慮してソート
-                  const getLatestTime = (memo: Memo) => {
-                    // 新規作成メモ（ID: -1）の場合
-                    if (memo.id === -1) {
-                      return memo.updatedAt || memo.createdAt
-                    }
-                    
-                    const localData = localStorage.getItem(`memo_draft_${memo.id}`)
-                    let localEditTime = 0
-                    if (localData) {
-                      try {
-                        const parsed = JSON.parse(localData)
-                        if (parsed.id === memo.id && parsed.lastEditedAt) {
-                          localEditTime = parsed.lastEditedAt
-                        }
-                      } catch {
-                        // パースエラーは無視
+        {/* メモの通常タブ */}
+        {activeTab === "normal" && currentMode === "memo" && (
+          <>
+            {(notes && notes.length > 0) || localMemos.length > 0 ? (
+              <ItemGrid
+                viewMode={viewMode}
+                effectiveColumnCount={effectiveColumnCount}
+              >
+                {[...(notes || []), ...localMemos]
+                  .sort((a, b) => {
+                    // ローカル編集時間も考慮してソート
+                    const getLatestTime = (memo: Memo) => {
+                      // 新規作成メモ（ID: -1）の場合
+                      if (memo.id === -1) {
+                        return memo.updatedAt || memo.createdAt;
                       }
-                    }
-                    return Math.max(localEditTime, memo.updatedAt || 0, memo.createdAt)
-                  }
-                  
-                  return getLatestTime(b) - getLatestTime(a)
-                })
-                .map((memo: Memo) => {
-                const Component = viewMode === 'card' ? MemoCard : MemoListItem;
-                return (
-                  <Component
-                    key={memo.id < 0 ? `local-new-${memo.id}` : memo.id}
-                    memo={memo}
-                    isChecked={checkedMemos.has(memo.id)}
-                    onToggleCheck={() => {
-                      // 新規作成メモ（ID: 負の値）はチェック不可
-                      if (memo.id < 0) return;
-                      
-                      const newChecked = new Set(checkedMemos);
-                      if (checkedMemos.has(memo.id)) {
-                        newChecked.delete(memo.id);
-                      } else {
-                        newChecked.add(memo.id);
-                      }
-                      setCheckedMemos(newChecked);
-                    }}
-                    onSelect={() => onSelectMemo(memo, true)}
-                    variant="normal"
-                    isSelected={selectedMemo?.id === memo.id}
-                  />
-                );
-              })}
-            </ItemGrid>
-          ) : (
-            <EmptyState message="メモがありません" />
-          )}
-        </>
-      )}
 
-      {/* タスクタブ（未着手、進行中、完了） */}
-      {(activeTab === "todo" || activeTab === "in_progress" || activeTab === "completed") && currentMode === 'task' && (
-        <TaskTabContent
-          activeTab={activeTab}
-          tasks={tasks}
-          viewMode={viewMode}
-          effectiveColumnCount={effectiveColumnCount}
-          checkedTasks={checkedTasks}
-          onToggleCheck={(taskId) => {
-            const newChecked = new Set(checkedTasks);
-            if (checkedTasks.has(taskId)) {
-              newChecked.delete(taskId);
-            } else {
-              newChecked.add(taskId);
-            }
-            setCheckedTasks(newChecked);
-          }}
-          onSelectTask={(task) => onSelectTask!(task, true)}
-          selectedTaskId={selectedTask?.id}
-        />
-      )}
-
-      {/* 削除済みタブ */}
-      {activeTab === "deleted" && (
-        <>
-          {currentMode === 'memo' ? (
-            deletedNotes && deletedNotes.length > 0 ? (
-              <ItemGrid viewMode={viewMode} effectiveColumnCount={effectiveColumnCount}>
-                {deletedNotes
-                  .sort((a, b) => b.deletedAt - a.deletedAt) // 削除時刻順（新しい順）
-                  .map((memo: DeletedMemo) => {
-                  const Component = viewMode === 'card' ? MemoCard : MemoListItem;
-                  return (
-                    <Component
-                      key={memo.id}
-                      memo={memo}
-                      isChecked={checkedDeletedMemos.has(memo.id)}
-                      onToggleCheck={() => {
-                        const newChecked = new Set(checkedDeletedMemos);
-                        if (checkedDeletedMemos.has(memo.id)) {
-                          newChecked.delete(memo.id);
-                        } else {
-                          newChecked.add(memo.id);
+                      const localData = localStorage.getItem(
+                        `memo_draft_${memo.id}`
+                      );
+                      let localEditTime = 0;
+                      if (localData) {
+                        try {
+                          const parsed = JSON.parse(localData);
+                          if (parsed.id === memo.id && parsed.lastEditedAt) {
+                            localEditTime = parsed.lastEditedAt;
+                          }
+                        } catch {
+                          // パースエラーは無視
                         }
-                        setCheckedDeletedMemos(newChecked);
-                      }}
-                      onSelect={() => onSelectDeletedMemo(memo, true)}
-                      variant="deleted"
-                      isSelected={selectedDeletedMemo?.id === memo.id}
-                    />
-                  );
-                })}
+                      }
+                      return Math.max(
+                        localEditTime,
+                        memo.updatedAt || 0,
+                        memo.createdAt
+                      );
+                    };
+
+                    return getLatestTime(b) - getLatestTime(a);
+                  })
+                  .map((memo: Memo) => {
+                    const Component =
+                      viewMode === "card" ? MemoCard : MemoListItem;
+                    return (
+                      <Component
+                        key={memo.id < 0 ? `local-new-${memo.id}` : memo.id}
+                        memo={memo}
+                        isChecked={checkedMemos.has(memo.id)}
+                        onToggleCheck={() => {
+                          // 新規作成メモ（ID: 負の値）はチェック不可
+                          if (memo.id < 0) return;
+
+                          const newChecked = new Set(checkedMemos);
+                          if (checkedMemos.has(memo.id)) {
+                            newChecked.delete(memo.id);
+                          } else {
+                            newChecked.add(memo.id);
+                          }
+                          setCheckedMemos(newChecked);
+                        }}
+                        onSelect={() => onSelectMemo(memo, true)}
+                        variant="normal"
+                        isSelected={selectedMemo?.id === memo.id}
+                      />
+                    );
+                  })}
               </ItemGrid>
             ) : (
-              <EmptyState message="削除済みメモはありません" />
-            )
-          ) : (
-            deletedTasks && deletedTasks.length > 0 ? (
-              <ItemGrid viewMode={viewMode} effectiveColumnCount={effectiveColumnCount}>
+              <EmptyState message="メモがありません" />
+            )}
+          </>
+        )}
+
+        {/* タスクタブ（未着手、進行中、完了） */}
+        {(activeTab === "todo" ||
+          activeTab === "in_progress" ||
+          activeTab === "completed") &&
+          currentMode === "task" && (
+            <TaskTabContent
+              activeTab={activeTab}
+              tasks={tasks}
+              viewMode={viewMode}
+              effectiveColumnCount={effectiveColumnCount}
+              checkedTasks={checkedTasks}
+              onToggleCheck={(taskId) => {
+                const newChecked = new Set(checkedTasks);
+                if (checkedTasks.has(taskId)) {
+                  newChecked.delete(taskId);
+                } else {
+                  newChecked.add(taskId);
+                }
+                setCheckedTasks(newChecked);
+              }}
+              onSelectTask={(task) => onSelectTask!(task, true)}
+              selectedTaskId={selectedTask?.id}
+            />
+          )}
+
+        {/* 削除済みタブ */}
+        {activeTab === "deleted" && (
+          <>
+            {currentMode === "memo" ? (
+              deletedNotes && deletedNotes.length > 0 ? (
+                <ItemGrid
+                  viewMode={viewMode}
+                  effectiveColumnCount={effectiveColumnCount}
+                >
+                  {deletedNotes
+                    .sort((a, b) => b.deletedAt - a.deletedAt) // 削除時刻順（新しい順）
+                    .map((memo: DeletedMemo) => {
+                      const Component =
+                        viewMode === "card" ? MemoCard : MemoListItem;
+                      return (
+                        <Component
+                          key={memo.id}
+                          memo={memo}
+                          isChecked={checkedDeletedMemos.has(memo.id)}
+                          onToggleCheck={() => {
+                            const newChecked = new Set(checkedDeletedMemos);
+                            if (checkedDeletedMemos.has(memo.id)) {
+                              newChecked.delete(memo.id);
+                            } else {
+                              newChecked.add(memo.id);
+                            }
+                            setCheckedDeletedMemos(newChecked);
+                          }}
+                          onSelect={() => onSelectDeletedMemo(memo, true)}
+                          variant="deleted"
+                          isSelected={selectedDeletedMemo?.id === memo.id}
+                        />
+                      );
+                    })}
+                </ItemGrid>
+              ) : (
+                <EmptyState message="削除済みメモはありません" />
+              )
+            ) : deletedTasks && deletedTasks.length > 0 ? (
+              <ItemGrid
+                viewMode={viewMode}
+                effectiveColumnCount={effectiveColumnCount}
+              >
                 {deletedTasks.map((task: DeletedTask) => {
-                  const Component = viewMode === 'card' ? TaskCard : TaskListItem;
+                  const Component =
+                    viewMode === "card" ? TaskCard : TaskListItem;
                   return (
                     <Component
                       key={task.id}
@@ -609,39 +697,48 @@ function FullListView({
               </ItemGrid>
             ) : (
               <EmptyState message="削除済みタスクはありません" />
-            )
-          )}
-        </>
-      )}
+            )}
+          </>
+        )}
 
-      {/* 一括削除ボタン */}
-      {(() => {
-        const shouldShow = currentMode === 'memo' 
-          ? (activeTab === 'normal' && checkedMemos.size > 0) || (activeTab === 'deleted' && checkedDeletedMemos.size > 0)
-          : (activeTab === 'normal' && checkedTasks.size > 0) || (activeTab === 'deleted' && checkedDeletedTasks.size > 0);
-        return shouldShow;
-      })() && (
-        <button
-          onClick={handleBulkDelete}
-          className="fixed bottom-6 right-6 bg-gray-500 hover:bg-gray-600 text-white p-3 rounded-full shadow-lg transition-colors z-50"
-          title={activeTab === 'normal' 
-            ? `${currentMode === 'memo' ? checkedMemos.size : checkedTasks.size}件の${currentMode === 'memo' ? 'メモ' : 'タスク'}を削除`
-            : `${currentMode === 'memo' ? checkedDeletedMemos.size : checkedDeletedTasks.size}件の${currentMode === 'memo' ? 'メモ' : 'タスク'}を完全削除`
-          }
-        >
-          <TrashIcon />
-          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
-            {currentMode === 'memo'
-              ? (activeTab === 'normal' ? checkedMemos.size : checkedDeletedMemos.size)
-              : (activeTab === 'normal' ? checkedTasks.size : checkedDeletedTasks.size)
+        {/* 一括削除ボタン */}
+        {(() => {
+          const shouldShow =
+            currentMode === "memo"
+              ? (activeTab === "normal" && checkedMemos.size > 0) ||
+                (activeTab === "deleted" && checkedDeletedMemos.size > 0)
+              : (activeTab === "normal" && checkedTasks.size > 0) ||
+                (activeTab === "deleted" && checkedDeletedTasks.size > 0);
+          return shouldShow;
+        })() && (
+          <button
+            onClick={handleBulkDelete}
+            className="fixed bottom-6 right-6 bg-gray-500 hover:bg-gray-600 text-white p-3 rounded-full shadow-lg transition-colors z-50"
+            title={
+              activeTab === "normal"
+                ? `${currentMode === "memo" ? checkedMemos.size : checkedTasks.size}件の${currentMode === "memo" ? "メモ" : "タスク"}を削除`
+                : `${currentMode === "memo" ? checkedDeletedMemos.size : checkedDeletedTasks.size}件の${currentMode === "memo" ? "メモ" : "タスク"}を完全削除`
             }
-          </span>
-        </button>
-      )}
+          >
+            <TrashIcon />
+            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
+              {currentMode === "memo"
+                ? activeTab === "normal"
+                  ? checkedMemos.size
+                  : checkedDeletedMemos.size
+                : activeTab === "normal"
+                  ? checkedTasks.size
+                  : checkedDeletedTasks.size}
+            </span>
+          </button>
+        )}
       </div>
-      
+
       {/* 右側：詳細表示（選択時のみ表示） */}
-      {(selectedMemo || selectedDeletedMemo || selectedTask || selectedDeletedTask) && (
+      {(selectedMemo ||
+        selectedDeletedMemo ||
+        selectedTask ||
+        selectedDeletedTask) && (
         <div className="w-1/2 p-6 animate-slide-in-right relative">
           {/* 区切り線の閉じるボタン */}
           <button
@@ -656,27 +753,28 @@ function FullListView({
                 onSelectDeletedTask!(null as unknown as DeletedTask, true);
               }
             }}
-            className="absolute -left-3 top-1/2 transform -translate-y-1/2 bg-white border border-gray-300 rounded-full p-1 text-gray-500 hover:text-gray-700 hover:border-gray-400 transition-colors z-10"
+            className="absolute -left-3 top-[40%] transform -translate-y-1/2 bg-white border border-gray-300 rounded-full p-1 text-gray-500 hover:text-gray-700 hover:border-gray-400 transition-colors z-10"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </button>
           {selectedMemo ? (
-            <MemoViewer 
-              memo={selectedMemo} 
-              onClose={() => {}} 
-            />
+            <MemoViewer memo={selectedMemo} onClose={() => {}} />
           ) : selectedTask ? (
-            <TaskViewer 
-              task={selectedTask} 
-              onClose={() => {}} 
-            />
+            <TaskViewer task={selectedTask} onClose={() => {}} />
           ) : selectedDeletedMemo ? (
-            <DeletedMemoViewer 
-              memo={selectedDeletedMemo} 
-              onClose={() => {}} 
-            />
+            <DeletedMemoViewer memo={selectedDeletedMemo} onClose={() => {}} />
           ) : selectedDeletedTask ? (
             <div className="p-6">削除済みタスクビューアー（未実装）</div>
           ) : null}

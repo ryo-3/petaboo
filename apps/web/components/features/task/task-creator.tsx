@@ -8,7 +8,8 @@ interface TaskCreatorProps {
   onClose: () => void;
 }
 
-function TaskCreator({ onClose: _onClose }: TaskCreatorProps) { // eslint-disable-line @typescript-eslint/no-unused-vars
+function TaskCreator({ onClose: _onClose }: TaskCreatorProps) {
+   
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<"todo" | "in_progress" | "completed">(
@@ -143,7 +144,7 @@ function TaskCreator({ onClose: _onClose }: TaskCreatorProps) { // eslint-disabl
                   e.target.value as "todo" | "in_progress" | "completed"
                 )
               }
-              className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 outline-none"
+              className="w-full p-2 border border-gray-300 rounded-lg focus:border-Yellow outline-none"
             >
               {statusOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -162,7 +163,7 @@ function TaskCreator({ onClose: _onClose }: TaskCreatorProps) { // eslint-disabl
               onChange={(e) =>
                 setPriority(e.target.value as "low" | "medium" | "high")
               }
-              className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 outline-none"
+              className="w-full p-2 border border-gray-300 rounded-lg focus:border-Yellow outline-none"
             >
               {priorityOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -180,7 +181,7 @@ function TaskCreator({ onClose: _onClose }: TaskCreatorProps) { // eslint-disabl
               type="date"
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 outline-none"
+              className="w-full p-2 border border-gray-300 rounded-lg focus:border-Yellow outline-none"
             />
           </div>
         </div>
@@ -194,7 +195,7 @@ function TaskCreator({ onClose: _onClose }: TaskCreatorProps) { // eslint-disabl
             placeholder="タスクの詳細を入力..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full h-32 p-3 border border-gray-300 rounded-lg resize-none outline-none text-gray-700 leading-relaxed focus:border-blue-500"
+            className="w-full h-[calc(100vh-450px)] p-3 border border-gray-300 rounded-lg resize-none outline-none text-gray-700 leading-relaxed focus:border-Yellow"
           />
         </div>
 
@@ -249,7 +250,7 @@ function TaskCreator({ onClose: _onClose }: TaskCreatorProps) { // eslint-disabl
               </>
             )}
           </button>
-          
+
           <button
             className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
             title="画像を追加"

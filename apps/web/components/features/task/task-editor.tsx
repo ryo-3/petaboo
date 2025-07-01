@@ -4,10 +4,10 @@ import BaseViewer from "@/components/shared/base-viewer";
 import DeleteButton from "@/components/ui/buttons/delete-button";
 import EditButton from "@/components/ui/buttons/edit-button";
 import { SingleDeleteConfirmation } from "@/components/ui/modals";
-import { useTaskDelete } from "./use-task-delete";
 import { useUpdateTask } from "@/src/hooks/use-tasks";
 import type { Task } from "@/src/types/task";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTaskDelete } from "./use-task-delete";
 
 interface TaskEditorProps {
   task: Task;
@@ -25,13 +25,19 @@ function TaskEditor({
   onDeleteAndSelectNext,
 }: TaskEditorProps) {
   const updateTask = useUpdateTask();
-  const { 
-    handleDelete, 
-    showDeleteConfirmation, 
-    hideDeleteConfirmation, 
-    showDeleteModal, 
-    isDeleting 
-  } = useTaskDelete({ task, onClose, onSelectTask, onClosePanel, onDeleteAndSelectNext });
+  const {
+    handleDelete,
+    showDeleteConfirmation,
+    hideDeleteConfirmation,
+    showDeleteModal,
+    isDeleting,
+  } = useTaskDelete({
+    task,
+    onClose,
+    onSelectTask,
+    onClosePanel,
+    onDeleteAndSelectNext,
+  });
 
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(task?.title || "");
@@ -76,7 +82,6 @@ function TaskEditor({
       setError(null);
     }
   }, [task]);
-
 
   const handleSave = useCallback(async () => {
     if (!title.trim() || !task) return;
@@ -211,7 +216,7 @@ function TaskEditor({
                       e.target.value as "todo" | "in_progress" | "completed"
                     )
                   }
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 outline-none"
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:border-Yellow outline-none"
                 >
                   {statusOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -230,7 +235,7 @@ function TaskEditor({
                   onChange={(e) =>
                     setPriority(e.target.value as "low" | "medium" | "high")
                   }
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 outline-none"
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:border-Yellow outline-none"
                 >
                   {priorityOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -248,7 +253,7 @@ function TaskEditor({
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 outline-none"
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:border-Yellow outline-none"
                 />
               </div>
             </div>
@@ -262,7 +267,7 @@ function TaskEditor({
                 placeholder="タスクの詳細を入力..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full h-32 p-3 border border-gray-300 rounded-lg resize-none outline-none text-gray-700 leading-relaxed focus:border-blue-500"
+                className="w-full h-[calc(100vh-450px)] p-3 border border-gray-300 rounded-lg resize-none outline-none text-gray-700 leading-relaxed focus:border-Yellow"
               />
             </div>
 
@@ -380,7 +385,7 @@ function TaskEditor({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 説明
               </label>
-              <div className="w-full min-h-32 p-3 bg-gray-50 rounded-lg text-gray-700 leading-relaxed">
+              <div className="w-full h-[calc(100vh-450px)] p-3 bg-gray-50 rounded-lg text-gray-700 leading-relaxed">
                 {savedData?.description || task.description || "説明なし"}
               </div>
             </div>
@@ -391,7 +396,7 @@ function TaskEditor({
         className="fixed bottom-6 right-6"
         onDelete={showDeleteConfirmation}
       />
-      
+
       {/* 削除確認モーダル */}
       <SingleDeleteConfirmation
         isOpen={showDeleteModal}

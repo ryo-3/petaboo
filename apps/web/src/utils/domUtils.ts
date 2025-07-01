@@ -76,3 +76,70 @@ export function getNextItemAfterDeletion<T extends { id: number }>(
   
   return null;
 }
+
+/**
+ * 削除済みアイテムの次選択（削除日時順）
+ */
+export function getNextDeletedItem<T extends { id: number; deletedAt: number }>(
+  deletedItems: T[],
+  deletedItem: T
+): T | null {
+  const sortedItems = [...deletedItems].sort((a, b) => b.deletedAt - a.deletedAt);
+  const deletedIndex = sortedItems.findIndex((item) => item.id === deletedItem.id);
+  
+  if (deletedIndex === -1) return null;
+  
+  // 削除されたアイテムの次のアイテムを選択
+  if (deletedIndex < sortedItems.length - 1) {
+    return sortedItems[deletedIndex + 1] || null;
+  }
+  // 最後のアイテムが削除された場合は前のアイテムを選択
+  else if (deletedIndex > 0) {
+    return sortedItems[deletedIndex - 1] || null;
+  }
+  
+  return null;
+}
+
+/**
+ * アイテム削除後の次選択とビューモード制御のハンドラー生成
+ */
+export function createNextSelectionHandler<T extends { id: number }>(
+  items: T[],
+  deletedItem: T,
+  displayOrder: number[],
+  onSelect: (item: T) => void,
+  onClose: () => void,
+  setViewMode: (mode: "view" | "list") => void
+) {
+  const nextItem = getNextItemAfterDeletion(items, deletedItem, displayOrder);
+  
+  if (nextItem) {
+    onSelect(nextItem);
+    setViewMode("view");
+  } else {
+    setViewMode("list");
+    onClose();
+  }
+}
+
+/**
+ * 削除済みアイテム削除後の次選択ハンドラー生成
+ */
+export function createDeletedNextSelectionHandler<T extends { id: number; deletedAt: number }>(
+  deletedItems: T[],
+  deletedItem: T,
+  onSelect: (item: T) => void,
+  onClose: () => void,
+  setViewMode: (mode: "view" | "list") => void
+) {
+  const nextItem = getNextDeletedItem(deletedItems, deletedItem);
+  
+  if (nextItem) {
+    onSelect(nextItem);
+    setViewMode("view");
+  } else {
+    setViewMode("list");
+    onClose();
+  }
+}

@@ -13,7 +13,11 @@ import { useDeletedTasks, useTasks } from "@/src/hooks/use-tasks";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import type { DeletedTask, Task } from "@/src/types/task";
 import { useEffect, useState } from "react";
-import { getTaskDisplayOrder, getNextItemAfterDeletion } from "@/src/utils/domUtils";
+import { 
+  getTaskDisplayOrder, 
+  createNextSelectionHandler, 
+  createDeletedNextSelectionHandler 
+} from "@/src/utils/domUtils";
 import { createToggleHandler } from "@/src/utils/toggleUtils";
 
 type TaskScreenMode = 'list' | 'view' | 'create' | 'edit';
@@ -82,52 +86,30 @@ function TaskScreen({
   const handleDeletedTaskAndSelectNext = (deletedTask: DeletedTask) => {
     if (!deletedTasks) return;
     
-    const sortedDeletedTasks = [...deletedTasks].sort((a, b) => b.deletedAt - a.deletedAt);
-    const deletedIndex = sortedDeletedTasks.findIndex((t) => t.id === deletedTask.id);
-    let nextTask: DeletedTask | null = null;
-
-    if (deletedIndex !== -1) {
-      // 削除されたタスクの次のタスクを選択
-      if (deletedIndex < sortedDeletedTasks.length - 1) {
-        nextTask = sortedDeletedTasks[deletedIndex + 1] || null;
-      }
-      // 最後のタスクが削除された場合は前のタスクを選択
-      else if (deletedIndex > 0) {
-        nextTask = sortedDeletedTasks[deletedIndex - 1] || null;
-      }
-    }
-
-    if (nextTask) {
-      // 次のタスクを選択してビューモードに切り替え
-      onSelectDeletedTask(nextTask, true);
-      setTaskScreenMode('view');
-    } else {
-      // 次のタスクが見つからない - リストモードに戻る
-      setTaskScreenMode('list');
-      onClose();
-    }
+    createDeletedNextSelectionHandler(
+      deletedTasks,
+      deletedTask,
+      (task) => onSelectDeletedTask(task, true),
+      onClose,
+      setTaskScreenMode
+    );
   };
 
   // 通常タスクでの次のタスク選択ハンドラー（実際の画面表示順序に基づく）
   const handleTaskDeleteAndSelectNext = (deletedTask: Task) => {
     if (!tasks) return;
     
-    // 現在のタブのタスクをフィルタリング
     const filteredTasks = tasks.filter((t) => t.status === activeTab);
-    
-    // DOM表示順序を取得して次のタスクを決定
     const displayOrder = getTaskDisplayOrder();
-    const nextTask = getNextItemAfterDeletion(filteredTasks, deletedTask, displayOrder);
-
-    if (nextTask) {
-      // 次のタスクを選択してビューモードに切り替え
-      onSelectTask(nextTask, true);
-      setTaskScreenMode('view');
-    } else {
-      // 次のタスクが見つからない - リストモードに戻る
-      setTaskScreenMode('list');
-      onClose();
-    }
+    
+    createNextSelectionHandler(
+      filteredTasks,
+      deletedTask,
+      displayOrder,
+      (task) => onSelectTask(task, true),
+      onClose,
+      setTaskScreenMode
+    );
   };
 
   // 右側パネル表示時は列数を調整

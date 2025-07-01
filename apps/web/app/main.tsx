@@ -13,27 +13,35 @@ import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
 import { useEffect, useState } from "react";
 
-// type ScreenMode = 'home' | 'list' | 'edit' | 'view' | 'settings';
+// 画面モード定義（5つのシンプルな画面状態）
 type ScreenMode = 'home' | 'memo' | 'task' | 'create' | 'settings';
 
 function Main() {
+  // ==========================================
+  // State管理
+  // ==========================================
+  
+  // 画面状態管理
   const [screenMode, setScreenMode] = useState<ScreenMode>('home');
+  const [currentMode, setCurrentMode] = useState<"memo" | "task">("memo"); // サイドバータブ状態
+  
+  // 選択中アイテム管理
   const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null);
-  const [selectedDeletedMemo, setSelectedDeletedMemo] =
-    useState<DeletedMemo | null>(null);
+  const [selectedDeletedMemo, setSelectedDeletedMemo] = useState<DeletedMemo | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [selectedDeletedTask, setSelectedDeletedTask] =
-    useState<DeletedTask | null>(null);
-  const [showDeleted, setShowDeleted] = useState(false);
-  const [currentMode, setCurrentMode] = useState<"memo" | "task">("memo");
-  const [windowWidth, setWindowWidth] = useState(0);
+  const [selectedDeletedTask, setSelectedDeletedTask] = useState<DeletedTask | null>(null);
+  
+  // UI状態管理
+  const [showDeleted, setShowDeleted] = useState(false); // モバイル版削除済み表示フラグ
+  const [windowWidth, setWindowWidth] = useState(0); // レスポンシブ制御用
 
-
-  // API同期フック（一時的に無効化 - 挙動整理のため）
-  // Removed unused imports: useApiSync, syncStatus
+  // エラー管理（将来的にAPI同期エラー表示用）
   const errors: string[] = [];
   const clearErrors = () => {};
 
+  // ==========================================
+  // 画面幅監視（レスポンシブ対応）
+  // ==========================================
   useEffect(() => {
     const updateWindowWidth = () => {
       setWindowWidth(window.innerWidth);
@@ -46,110 +54,56 @@ function Main() {
 
   const isMobile = windowWidth <= 768;
 
+  // ==========================================
+  // 共通ユーティリティ関数
+  // ==========================================
+  
+  /** 全選択状態をクリア */
+  const clearAllSelections = () => {
+    setSelectedMemo(null);
+    setSelectedDeletedMemo(null);
+    setSelectedTask(null);
+    setSelectedDeletedTask(null);
+    setShowDeleted(false);
+  };
+
+  // ==========================================
+  // アイテム選択ハンドラー（デスクトップ・モバイル共通）
+  // ==========================================
+  
+  /** メモ選択 - メモ画面に遷移 */
   const handleSelectMemo = (memo: Memo) => {
+    clearAllSelections();
     setSelectedMemo(memo);
-    setSelectedDeletedMemo(null);
-    setSelectedTask(null);
-    setSelectedDeletedTask(null);
     setScreenMode('memo');
   };
 
-  // メモ削除後に次のメモを選択するためのハンドラー
-  const handleDeleteMemo = (nextMemo: Memo) => {
-    setSelectedMemo(nextMemo);
-    setSelectedDeletedMemo(null);
-    setSelectedTask(null);
-    setSelectedDeletedTask(null);
-    setScreenMode('memo');
-  };
-
-
+  /** 削除済みメモ選択 - メモ画面に遷移 */
   const handleSelectDeletedMemo = (memo: DeletedMemo) => {
+    clearAllSelections();
     setSelectedDeletedMemo(memo);
-    setSelectedMemo(null);
-    setSelectedTask(null);
-    setSelectedDeletedTask(null);
     setScreenMode('memo');
   };
 
+  /** タスク選択 - タスク画面に遷移 */
   const handleSelectTask = (task: Task | null) => {
+    clearAllSelections();
     setSelectedTask(task);
-    setSelectedMemo(null);
-    setSelectedDeletedMemo(null);
-    setSelectedDeletedTask(null);
     setScreenMode('task');
   };
 
+  /** 削除済みタスク選択 - タスク画面に遷移 */
   const handleSelectDeletedTask = (task: DeletedTask) => {
+    clearAllSelections();
     setSelectedDeletedTask(task);
-    setSelectedTask(null);
-    setSelectedMemo(null);
-    setSelectedDeletedMemo(null);
     setScreenMode('task');
   };
 
-  const handleNewMemo = () => {
-    setSelectedMemo(null);
-    setSelectedDeletedMemo(null);
-    setSelectedTask(null);
-    setSelectedDeletedTask(null);
-    setShowDeleted(false);
-    setScreenMode('create');
-  };
-
-  const handleNewTask = () => {
-    setSelectedMemo(null);
-    setSelectedDeletedMemo(null);
-    setSelectedTask(null);
-    setSelectedDeletedTask(null);
-    setShowDeleted(false);
-    setScreenMode('create');
-  };
-
-  const handleClose = () => {
-    setSelectedMemo(null);
-    setSelectedDeletedMemo(null);
-    setSelectedTask(null);
-    setSelectedDeletedTask(null);
-    setScreenMode('home');
-  };
-
-  const handleBackToNotes = () => {
-    setShowDeleted(false);
-    setSelectedMemo(null);
-    setSelectedDeletedMemo(null);
-    setSelectedTask(null);
-    setSelectedDeletedTask(null);
-    setScreenMode('home');
-  };
-
-  const handleShowFullList = () => {
-    setSelectedMemo(null);
-    setSelectedDeletedMemo(null);
-    setSelectedTask(null);
-    setSelectedDeletedTask(null);
-    setShowDeleted(false);
-    setScreenMode('memo');
-  };
-
-  const handleShowTaskList = () => {
-    setSelectedMemo(null);
-    setSelectedDeletedMemo(null);
-    setSelectedTask(null);
-    setSelectedDeletedTask(null);
-    setShowDeleted(false);
-    setScreenMode('task');
-  };
-
-  const handleHome = () => {
-    setSelectedMemo(null);
-    setSelectedDeletedMemo(null);
-    setSelectedTask(null);
-    setSelectedDeletedTask(null);
-    setShowDeleted(false);
-    setScreenMode('home');
-  };
-
+  // ==========================================
+  // 編集・削除ハンドラー（デスクトップ・モバイル共通）
+  // ==========================================
+  
+  /** メモ編集 - メモ画面に遷移 */
   const handleEditMemo = (memo?: Memo) => {
     if (memo) {
       setSelectedMemo(memo);
@@ -157,6 +111,7 @@ function Main() {
     setScreenMode('memo');
   };
 
+  /** タスク編集 - タスク画面に遷移 */
   const handleEditTask = (task?: Task) => {
     if (task) {
       setSelectedTask(task);
@@ -164,18 +119,67 @@ function Main() {
     setScreenMode('task');
   };
 
+  /** メモ削除後の次メモ選択（モバイル版自動選択用） */
+  const handleDeleteMemo = (nextMemo: Memo) => {
+    clearAllSelections();
+    setSelectedMemo(nextMemo);
+    setScreenMode('memo');
+  };
+
+  // ==========================================
+  // 画面遷移ハンドラー（デスクトップ・モバイル共通）
+  // ==========================================
+  
+  /** ホーム画面に戻る */
+  const handleHome = () => {
+    clearAllSelections();
+    setScreenMode('home');
+  };
+
+  /** 設定画面に遷移 */
   const handleSettings = () => {
-    setSelectedMemo(null);
-    setSelectedDeletedMemo(null);
-    setSelectedTask(null);
-    setSelectedDeletedTask(null);
-    setShowDeleted(false);
+    clearAllSelections();
     setScreenMode('settings');
+  };
+
+  /** 新規作成画面に遷移 */
+  const handleNewMemo = () => {
+    clearAllSelections();
+    setScreenMode('create');
+  };
+
+  const handleNewTask = () => {
+    clearAllSelections();
+    setScreenMode('create');
+  };
+
+  /** 詳細表示を閉じてホームに戻る */
+  const handleClose = () => {
+    clearAllSelections();
+    setScreenMode('home');
+  };
+
+  /** 一覧表示に遷移（memo/task画面） */
+  const handleShowList = (mode: 'memo' | 'task') => {
+    clearAllSelections();
+    setScreenMode(mode);
+  };
+
+  // ==========================================
+  // モバイル専用ハンドラー
+  // ==========================================
+  
+  /** モバイル版：削除済み一覧から通常表示に戻る */
+  const handleBackToNotes = () => {
+    clearAllSelections();
+    setScreenMode('home');
   };
 
   return (
     <main>
-      {/* API同期エラー表示 */}
+      {/* ==========================================
+          エラー表示領域（将来的なAPI同期エラー用）
+          ========================================== */}
       {errors.length > 0 && (
         <div className="fixed top-4 right-4 z-50 space-y-2">
           {errors.map((error, index) => (
@@ -198,27 +202,31 @@ function Main() {
       )}
 
       {isMobile ? (
-        // モバイル: サイドバー100%
+        /* ==========================================
+           モバイル版レイアウト：サイドバー全画面表示
+           ========================================== */
         <div className="h-screen w-full">
           {showDeleted ? (
+            // 削除済みメモ一覧表示
             <DeletedMemoList
               onBackToNotes={handleBackToNotes}
               onSelectDeletedMemo={handleSelectDeletedMemo}
             />
           ) : (
+            // 通常のサイドバー表示（フルサイズ）
             <Sidebar
               onNewMemo={handleNewMemo}
               onNewTask={handleNewTask}
               onSelectMemo={handleSelectMemo}
               onSelectTask={handleSelectTask}
               onEditTask={handleEditTask}
-              onShowFullList={handleShowFullList}
+              onShowFullList={() => handleShowList('memo')}
               onHome={handleHome}
               onEditMemo={handleEditMemo}
               onDeleteMemo={handleDeleteMemo}
               selectedMemoId={selectedMemo?.id}
               selectedTaskId={selectedTask?.id}
-              isCompact={false}
+              isCompact={false} // モバイルは常にフルサイズ
               currentMode={currentMode}
               onModeChange={setCurrentMode}
               onSettings={handleSettings}
@@ -226,39 +234,47 @@ function Main() {
           )}
         </div>
       ) : (
-        // デスクトップ: ヘッダー + レイアウト
+        /* ==========================================
+           デスクトップ版レイアウト：ヘッダー + サイドバー + メインコンテンツ
+           ========================================== */
         <div className="flex flex-col h-screen w-full">
+          {/* ヘッダー */}
           <Header currentMode={currentMode} />
+          
+          {/* メインレイアウト */}
           <DesktopLayout
             sidebarContent={
+              // コンパクトサイドバー（アイコンナビ）
               <Sidebar
                 onNewMemo={handleNewMemo}
                 onNewTask={handleNewTask}
                 onSelectMemo={handleSelectMemo}
                 onSelectTask={handleSelectTask}
                 onEditTask={handleEditTask}
-                onShowFullList={handleShowFullList}
-                onShowTaskList={handleShowTaskList}
+                onShowFullList={() => handleShowList('memo')}
+                onShowTaskList={() => handleShowList('task')}
                 onHome={handleHome}
                 onEditMemo={handleEditMemo}
                 onDeleteMemo={handleDeleteMemo}
                 selectedMemoId={selectedMemo?.id}
                 selectedTaskId={selectedTask?.id}
-                isCompact={true}
+                isCompact={true} // デスクトップは常にコンパクト
                 currentMode={currentMode}
                 onModeChange={setCurrentMode}
                 onSettings={handleSettings}
               />
             }
           >
-
-            {/* 新バージョン（アイコンベース） */}
-            {screenMode === 'settings' && (
-              <SettingsScreen />
-            )}
+            {/* ==========================================
+                メインコンテンツエリア（5つの画面モード）
+                ========================================== */}
+            
+            {/* ホーム画面 */}
             {screenMode === 'home' && (
               <WelcomeScreen />
             )}
+            
+            {/* メモ関連画面（一覧・表示・編集） */}
             {screenMode === 'memo' && (
               <MemoScreen
                 selectedMemo={selectedMemo}
@@ -268,6 +284,8 @@ function Main() {
                 onClose={handleClose}
               />
             )}
+            
+            {/* タスク関連画面（一覧・表示・編集） */}
             {screenMode === 'task' && (
               <TaskScreen
                 selectedTask={selectedTask}
@@ -277,14 +295,21 @@ function Main() {
                 onClose={handleClose}
               />
             )}
+            
+            {/* 新規作成画面（メモ・タスク統合） */}
             {screenMode === 'create' && (
               <CreateScreen
                 initialMode={currentMode}
                 onClose={handleClose}
                 onModeChange={setCurrentMode}
-                onShowMemoList={handleShowFullList}
-                onShowTaskList={handleShowTaskList}
+                onShowMemoList={() => handleShowList('memo')}
+                onShowTaskList={() => handleShowList('task')}
               />
+            )}
+            
+            {/* 設定画面 */}
+            {screenMode === 'settings' && (
+              <SettingsScreen />
             )}
           </DesktopLayout>
         </div>

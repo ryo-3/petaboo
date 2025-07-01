@@ -42,6 +42,10 @@ export function useLocalStorageSync(memoId: number, defaultTitle: string, defaul
         try {
           const parsed = JSON.parse(localData)
           if (parsed.id === memoId) {
+            // console.log(`useLocalStorageSync update - memo ${memoId}:`, {
+            //   title: parsed.title,
+            //   isEditing: isEditing
+            // });
             setDisplayTitle(parsed.title || defaultTitle)
             setDisplayContent(parsed.content || defaultContent)
             setIsLocallyEdited(parsed.isEditing || false)

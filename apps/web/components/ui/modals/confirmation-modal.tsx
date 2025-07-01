@@ -1,8 +1,8 @@
 'use client'
 
-import { ReactNode } from 'react'
+import { ReactNode, useState } from 'react'
 import TrashIcon from '@/components/icons/trash-icon'
-import Modal from '@/components/ui/base/modal'
+import Modal from './modal'
 
 type IconType = 'trash' | 'logout' | 'save' | 'warning' | 'info' | 'custom'
 type Variant = 'danger' | 'warning' | 'primary' | 'secondary'
@@ -19,6 +19,60 @@ interface ConfirmationModalProps {
   variant?: Variant
   icon?: IconType
   customIcon?: ReactNode
+}
+
+// 一括削除用のカスタムhook
+export function useBulkDelete() {
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [targetIds, setTargetIds] = useState<number[]>([])
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const confirmBulkDelete = async (
+    ids: number[], 
+    threshold: number = 10, 
+    deleteCallback: (ids: number[]) => Promise<void>
+  ) => {
+    if (ids.length === 0) return
+
+    // 閾値以上の場合のみモーダル表示
+    if (ids.length >= threshold) {
+      setTargetIds(ids)
+      setIsModalOpen(true)
+      return
+    }
+
+    // 閾値未満は即座に削除
+    await executeDelete(ids, deleteCallback)
+  }
+
+  const executeDelete = async (ids: number[], deleteCallback: (ids: number[]) => Promise<void>) => {
+    try {
+      setIsDeleting(true)
+      await deleteCallback(ids)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const handleConfirm = async (deleteCallback: (ids: number[]) => Promise<void>) => {
+    setIsModalOpen(false)
+    await executeDelete(targetIds, deleteCallback)
+    setTargetIds([])
+  }
+
+  const handleCancel = () => {
+    setIsModalOpen(false)
+    setTargetIds([])
+  }
+
+  return {
+    isModalOpen,
+    targetIds,
+    isDeleting,
+    confirmBulkDelete,
+    handleConfirm,
+    handleCancel
+  }
 }
 
 function ConfirmationModal({
@@ -145,6 +199,49 @@ function ConfirmationModal({
         </div>
       </div>
     </Modal>
+  )
+}
+
+// 一括削除専用コンポーネント
+interface BulkDeleteConfirmationProps {
+  isOpen: boolean
+  onClose: () => void
+  onConfirm: () => void
+  count: number
+  itemType: 'memo' | 'task'
+  deleteType: 'normal' | 'permanent'
+  isLoading?: boolean
+}
+
+export function BulkDeleteConfirmation({
+  isOpen,
+  onClose,
+  onConfirm,
+  count,
+  itemType,
+  deleteType,
+  isLoading = false
+}: BulkDeleteConfirmationProps) {
+  const itemTypeName = itemType === 'memo' ? 'メモ' : 'タスク'
+  
+  const title = '一括削除の確認'
+  const message = deleteType === 'normal'
+    ? `${count}件の${itemTypeName}を削除しますか？\n（ゴミ箱に移動されます）`
+    : `${count}件の${itemTypeName}を完全に削除しますか？\n（復元できません）`
+
+  return (
+    <ConfirmationModal
+      isOpen={isOpen}
+      onClose={onClose}
+      onConfirm={onConfirm}
+      title={title}
+      message={message}
+      confirmText="削除"
+      cancelText="キャンセル"
+      variant="danger"
+      icon="trash"
+      isLoading={isLoading}
+    />
   )
 }
 

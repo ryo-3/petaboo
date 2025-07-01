@@ -33,7 +33,7 @@ function BaseViewer({
 
       </div>
 
-      <div className="flex flex-col gap-4 flex-1">
+      <div className="flex flex-col gap-2 flex-1">
         <DateInfo item={item} isEditing={isEditing} />
         {children}
       </div>

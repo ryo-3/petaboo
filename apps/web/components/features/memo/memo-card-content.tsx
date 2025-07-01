@@ -16,8 +16,9 @@ function MemoCardContent({ memo, variant = 'normal', isSelected = false }: MemoC
   // Always call the hook but conditionally use its results
   const localSync = useLocalStorageSync(memo.id, memo.title, memo.content || '', isSelected)
   
-  // 削除済みメモや新規作成メモ（ID: 負の値）の場合はlocalStorageを使用せず、元のデータを表示
-  const { displayTitle, displayContent, lastEditTime } = (isDeleted || memo.id < 0)
+  // 削除済みメモの場合のみlocalStorageを使用せず、元のデータを表示
+  // 新規作成メモ（ID: 負の値）の場合もlocalStorageSyncを使用する
+  const { displayTitle, displayContent, lastEditTime } = isDeleted
     ? { displayTitle: memo.title, displayContent: memo.content || '', lastEditTime: null }
     : localSync
 

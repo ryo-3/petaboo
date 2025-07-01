@@ -5,16 +5,24 @@ import TrashIcon from "@/components/icons/trash-icon";
 interface DeleteButtonProps {
   onDelete: () => void;
   className?: string;
+  count?: number;
 }
 
-function DeleteButton({ onDelete, className = "" }: DeleteButtonProps) {
+function DeleteButton({ onDelete, className = "", count }: DeleteButtonProps) {
   return (
-    <button
-      onClick={onDelete}
-      className={`fixed bottom-6 right-6 bg-gray-500 hover:bg-gray-600 text-white p-3 rounded-full shadow-lg transition-colors ${className}`}
-    >
-      <TrashIcon />
-    </button>
+    <div className={className}>
+      <button
+        onClick={onDelete}
+        className="bg-gray-500 hover:bg-gray-600 text-white p-3 rounded-full shadow-lg transition-colors relative"
+      >
+        <TrashIcon />
+        {count && count > 0 && (
+          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
+            {count}
+          </span>
+        )}
+      </button>
+    </div>
   );
 }
 

@@ -3,14 +3,17 @@
 import DeletedMemoViewer from "@/components/features/memo/deleted-memo-viewer";
 import MemoCreator from "@/components/features/memo/memo-creator";
 import MemoEditor from "@/components/features/memo/memo-editor";
-import DesktopUpper from "@/components/layout/desktop-upper";
 import DesktopLower from "@/components/layout/desktop-lower";
+import DesktopUpper from "@/components/layout/desktop-upper";
+import DeleteButton from "@/components/ui/buttons/delete-button";
+import { BulkDeleteConfirmation } from "@/components/ui/modals";
 import { useDeletedNotes, useNotes } from "@/src/hooks/use-notes";
+import { useMemosBulkDelete } from "@/components/features/memo/use-memo-bulk-delete";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import { useEffect, useState } from "react";
 
-type MemoScreenMode = 'list' | 'view' | 'create' | 'edit';
+type MemoScreenMode = "list" | "view" | "create" | "edit";
 
 interface MemoScreenProps {
   selectedMemo?: Memo | null;
@@ -29,18 +32,34 @@ function MemoScreen({
   onDeleteAndSelectNext,
   onClose,
 }: MemoScreenProps) {
-  const [memoScreenMode, setMemoScreenMode] = useState<MemoScreenMode>('list');
+  const [memoScreenMode, setMemoScreenMode] = useState<MemoScreenMode>("list");
   const [activeTab, setActiveTab] = useState<"normal" | "deleted">("normal");
   const [viewMode, setViewMode] = useState<"card" | "list">("list");
   const [columnCount, setColumnCount] = useState(4);
   const [checkedMemos, setCheckedMemos] = useState<Set<number>>(new Set());
-  const [checkedDeletedMemos, setCheckedDeletedMemos] = useState<Set<number>>(new Set());
+  const [checkedDeletedMemos, setCheckedDeletedMemos] = useState<Set<number>>(
+    new Set()
+  );
   const [localMemos, setLocalMemos] = useState<Memo[]>([]);
 
   // データ取得
   const { data: notes, isLoading: memoLoading, error: memoError } = useNotes();
   const { data: deletedNotes } = useDeletedNotes();
   const { preferences } = useUserPreferences(1);
+
+  // 一括削除関連
+  const { handleBulkDelete, bulkDeleteState } = useMemosBulkDelete({
+    activeTab,
+    checkedMemos,
+    checkedDeletedMemos,
+    onClearSelection: (tab) => {
+      if (tab === 'normal') {
+        setCheckedMemos(new Set());
+      } else {
+        setCheckedDeletedMemos(new Set());
+      }
+    }
+  });
 
   // 設定値が変更されたらローカル状態を更新
   useEffect(() => {
@@ -54,11 +73,11 @@ function MemoScreen({
 
   // メモが選択されている場合は表示モードに
   useEffect(() => {
-    if (selectedMemo && memoScreenMode === 'list') {
-      setMemoScreenMode('view');
+    if (selectedMemo && memoScreenMode === "list") {
+      setMemoScreenMode("view");
     }
-    if (selectedDeletedMemo && memoScreenMode === 'list') {
-      setMemoScreenMode('view');
+    if (selectedDeletedMemo && memoScreenMode === "list") {
+      setMemoScreenMode("view");
     }
   }, [selectedMemo, selectedDeletedMemo, memoScreenMode]);
 
@@ -93,7 +112,9 @@ function MemoScreen({
                 title: data.title || "無題",
                 content: data.content || "",
                 createdAt: normalizeTime(data.lastModified),
-                updatedAt: normalizeTime(data.lastEditedAt || data.lastModified),
+                updatedAt: normalizeTime(
+                  data.lastEditedAt || data.lastModified
+                ),
                 tempId: data.id,
               });
             }
@@ -104,7 +125,7 @@ function MemoScreen({
       });
       setLocalMemos(localMemosList);
     };
-    
+
     updateLocalMemos();
     const interval = setInterval(updateLocalMemos, 1000);
     return () => clearInterval(interval);
@@ -112,46 +133,39 @@ function MemoScreen({
 
   // 表示順序でソートされたメモリストを取得する関数
   const getSortedMemos = () => {
-    return [...(notes || []), ...localMemos]
-      .sort((a, b) => {
-        // ローカル編集時間も考慮してソート
-        const getLatestTime = (memo: Memo) => {
-          // 新規作成メモ（ID: -1）の場合
-          if (memo.id === -1) {
-            return memo.updatedAt || memo.createdAt;
-          }
+    return [...(notes || []), ...localMemos].sort((a, b) => {
+      // ローカル編集時間も考慮してソート
+      const getLatestTime = (memo: Memo) => {
+        // 新規作成メモ（ID: -1）の場合
+        if (memo.id === -1) {
+          return memo.updatedAt || memo.createdAt;
+        }
 
-          const localData = localStorage.getItem(
-            `memo_draft_${memo.id}`
-          );
-          let localEditTime = 0;
-          if (localData) {
-            try {
-              const parsed = JSON.parse(localData);
-              if (parsed.id === memo.id && parsed.lastEditedAt) {
-                localEditTime = parsed.lastEditedAt;
-              }
-            } catch {
-              // パースエラーは無視
+        const localData = localStorage.getItem(`memo_draft_${memo.id}`);
+        let localEditTime = 0;
+        if (localData) {
+          try {
+            const parsed = JSON.parse(localData);
+            if (parsed.id === memo.id && parsed.lastEditedAt) {
+              localEditTime = parsed.lastEditedAt;
             }
+          } catch {
+            // パースエラーは無視
           }
-          return Math.max(
-            localEditTime,
-            memo.updatedAt || 0,
-            memo.createdAt
-          );
-        };
+        }
+        return Math.max(localEditTime, memo.updatedAt || 0, memo.createdAt);
+      };
 
-        return getLatestTime(b) - getLatestTime(a);
-      });
+      return getLatestTime(b) - getLatestTime(a);
+    });
   };
 
   // 表示順序での次のメモを選択するハンドラー
   const handleDeleteAndSelectNextInOrder = (deletedMemo: Memo) => {
     const sortedMemos = getSortedMemos();
-    const deletedIndex = sortedMemos.findIndex(m => m.id === deletedMemo.id);
+    const deletedIndex = sortedMemos.findIndex((m) => m.id === deletedMemo.id);
     let nextMemo: Memo | null = null;
-    
+
     if (deletedIndex !== -1) {
       // 削除されたメモの次のメモを選択
       if (deletedIndex < sortedMemos.length - 1) {
@@ -162,7 +176,7 @@ function MemoScreen({
         nextMemo = sortedMemos[deletedIndex - 1] || null;
       }
     }
-    
+
     if (nextMemo) {
       // 次のメモを選択してビューモードに切り替え
       onSelectMemo(nextMemo, true);
@@ -173,6 +187,7 @@ function MemoScreen({
       onClose();
     }
   };
+
 
   // 右側パネル表示時は列数を調整
   const effectiveColumnCount =
@@ -185,18 +200,19 @@ function MemoScreen({
   return (
     <div className="flex h-[calc(100vh-64px)] bg-white">
       {/* 左側：一覧表示エリア */}
-      <div className={`${memoScreenMode === 'list' ? 'w-full' : 'w-1/2'} ${memoScreenMode !== 'list' ? 'border-r border-gray-300' : ''} pt-6 pl-6 pr-2 flex flex-col transition-all duration-300 relative`}>
-        
+      <div
+        className={`${memoScreenMode === "list" ? "w-full" : "w-1/2"} ${memoScreenMode !== "list" ? "border-r border-gray-300" : ""} pt-6 pl-6 pr-2 flex flex-col transition-all duration-300 relative`}
+      >
         <DesktopUpper
           currentMode="memo"
           activeTab={activeTab}
           onTabChange={(tab) => setActiveTab(tab as "normal" | "deleted")}
-          onCreateNew={() => setMemoScreenMode('create')}
+          onCreateNew={() => setMemoScreenMode("create")}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
           columnCount={columnCount}
           onColumnCountChange={setColumnCount}
-          rightPanelMode={memoScreenMode === 'list' ? 'hidden' : 'view'}
+          rightPanelMode={memoScreenMode === "list" ? "hidden" : "view"}
           normalCount={(notes?.length || 0) + localMemos.length}
           deletedNotesCount={deletedNotes?.length || 0}
         />
@@ -243,60 +259,99 @@ function MemoScreen({
           onToggleCheckDeletedTask={() => {}} // 不要だがpropsで必要
           onSelectMemo={(memo) => {
             onSelectMemo(memo, true);
-            setMemoScreenMode('view');
+            setMemoScreenMode("view");
           }}
           onSelectDeletedMemo={(memo) => {
             onSelectDeletedMemo(memo, true);
-            setMemoScreenMode('view');
+            setMemoScreenMode("view");
           }}
           onSelectTask={() => {}} // 不要だがpropsで必要
           onSelectDeletedTask={() => {}} // 不要だがpropsで必要
         />
+
+        {/* 一括削除ボタン */}
+        {(() => {
+          const shouldShow =
+            (activeTab === "normal" && checkedMemos.size > 0) ||
+            (activeTab === "deleted" && checkedDeletedMemos.size > 0);
+          return shouldShow;
+        })() && (
+          <DeleteButton
+            onDelete={handleBulkDelete}
+            className="absolute bottom-6 right-6 z-10"
+            count={
+              activeTab === "deleted"
+                ? checkedDeletedMemos.size
+                : checkedMemos.size
+            }
+          />
+        )}
       </div>
 
       {/* 右側：詳細表示エリア */}
-      {memoScreenMode !== 'list' && (
+      {memoScreenMode !== "list" && (
         <div className="w-1/2 h-full overflow-y-auto animate-slide-in-right relative">
           {/* 閉じるボタン */}
           <button
             onClick={() => {
-              setMemoScreenMode('list');
+              setMemoScreenMode("list");
               onClose();
             }}
             className="absolute -left-3 top-[40%] transform -translate-y-1/2 bg-white border border-gray-300 rounded-full p-1 text-gray-500 hover:text-gray-700 hover:border-gray-400 transition-colors z-10"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </button>
 
           <div className="p-6">
-            {memoScreenMode === 'create' && (
-              <MemoCreator onClose={() => setMemoScreenMode('list')} />
+            {memoScreenMode === "create" && (
+              <MemoCreator onClose={() => setMemoScreenMode("list")} />
             )}
-            {memoScreenMode === 'view' && selectedMemo && (
+            {memoScreenMode === "view" && selectedMemo && (
               <MemoEditor
                 memo={selectedMemo}
-                onClose={() => setMemoScreenMode('list')}
+                onClose={() => setMemoScreenMode("list")}
                 onDeleteAndSelectNext={handleDeleteAndSelectNextInOrder}
               />
             )}
-            {memoScreenMode === 'view' && selectedDeletedMemo && (
+            {memoScreenMode === "view" && selectedDeletedMemo && (
               <DeletedMemoViewer
                 memo={selectedDeletedMemo}
-                onClose={() => setMemoScreenMode('list')}
+                onClose={() => setMemoScreenMode("list")}
               />
             )}
-            {memoScreenMode === 'edit' && selectedMemo && (
+            {memoScreenMode === "edit" && selectedMemo && (
               <MemoEditor
                 memo={selectedMemo}
-                onClose={() => setMemoScreenMode('view')}
+                onClose={() => setMemoScreenMode("view")}
                 onDeleteAndSelectNext={handleDeleteAndSelectNextInOrder}
               />
             )}
           </div>
         </div>
       )}
+
+      {/* 一括削除確認モーダル */}
+      <BulkDeleteConfirmation
+        isOpen={bulkDeleteState.isModalOpen}
+        onClose={bulkDeleteState.handleCancel}
+        onConfirm={bulkDeleteState.handleConfirm}
+        count={bulkDeleteState.targetIds.length}
+        itemType="memo"
+        deleteType={activeTab === "normal" ? "normal" : "permanent"}
+        isLoading={bulkDeleteState.isDeleting}
+      />
     </div>
   );
 }

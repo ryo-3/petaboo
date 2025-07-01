@@ -27,6 +27,9 @@ interface DesktopUpperProps {
   todoCount?: number;
   inProgressCount?: number;
   completedCount?: number;
+  // Bulk actions
+  checkedCount?: number;
+  onBulkDelete?: () => void;
 }
 
 function DesktopUpper({
@@ -45,6 +48,8 @@ function DesktopUpper({
   todoCount = 0,
   inProgressCount = 0,
   completedCount = 0,
+  checkedCount = 0,
+  onBulkDelete,
 }: DesktopUpperProps) {
   const { preferences } = useUserPreferences(1);
 
@@ -181,6 +186,17 @@ function DesktopUpper({
         (currentMode === "task" && preferences?.taskHideControls)
       ) && (
         <div className="flex items-center gap-2">
+          {/* 一括削除ボタン */}
+          {checkedCount > 0 && onBulkDelete && (
+            <button
+              onClick={onBulkDelete}
+              className="flex items-center gap-1 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg transition-colors"
+            >
+              <TrashIcon className="w-4 h-4" />
+              削除 ({checkedCount})
+            </button>
+          )}
+          
           <ViewModeToggle
             viewMode={viewMode}
             onViewModeChange={onViewModeChange}

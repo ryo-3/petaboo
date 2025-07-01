@@ -107,13 +107,14 @@ function DesktopLower({
           >
             {[...(notes || []), ...localMemos]
               .sort((a, b) => {
-                // ローカル編集時間も考慮してソート
+                // 編集日と作成日を比較してソート（最新が上）
                 const getLatestTime = (memo: Memo) => {
-                  // 新規作成メモ（ID: -1）の場合
-                  if (memo.id === -1) {
+                  // 新規作成メモ（ID < 0）の場合
+                  if (memo.id < 0) {
                     return memo.updatedAt || memo.createdAt;
                   }
 
+                  // ローカルストレージの編集時間も考慮
                   const localData = localStorage.getItem(
                     `memo_draft_${memo.id}`
                   );
@@ -128,6 +129,8 @@ function DesktopLower({
                       // パースエラーは無視
                     }
                   }
+                  
+                  // ローカル編集時間、更新日、作成日の最新を取得
                   return Math.max(
                     localEditTime,
                     memo.updatedAt || 0,

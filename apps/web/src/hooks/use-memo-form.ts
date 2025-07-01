@@ -11,6 +11,7 @@ export function useMemoForm({ memo = null }: UseMemoFormOptions = {}) {
   const [savedSuccessfully, setSavedSuccessfully] = useState(false)
   const [createdMemoId, setCreatedMemoId] = useState<number | null>(memo?.id || null)
   const [tempId] = useState(() => `new_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`)
+  const [hasUserEdited, setHasUserEdited] = useState(false)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   
   // Removed unused variables: createNote, updateNote, queryClient, isSaving, error, onSave, setIsSaving, setError
@@ -23,6 +24,7 @@ export function useMemoForm({ memo = null }: UseMemoFormOptions = {}) {
       setTitle(memo.title || '')
       setContent(memo.content || '')
       setCreatedMemoId(memo.id)
+      setHasUserEdited(false) // 新しいメモに切り替わった時はリセット
     }
   }, [memo, createdMemoId])
 
@@ -40,7 +42,7 @@ export function useMemoForm({ memo = null }: UseMemoFormOptions = {}) {
     // ローカルストレージに保存
     const currentKey = `memo_draft_${memoData.id}`
     localStorage.setItem(currentKey, JSON.stringify(memoData))
-    console.log('ローカル保存:', memoData.title || '(無題)')
+    // console.log('ローカル保存:', memoData.title || '(無題)')
   }, [title, content, memo, tempId])
 
   // 3秒後の自動保存処理（コメントアウト）
@@ -92,13 +94,13 @@ export function useMemoForm({ memo = null }: UseMemoFormOptions = {}) {
   // }, [...])
 
 
-  // タイトルまたは内容が変更されたらローカルストレージに保存
+  // ユーザーが実際に編集した時のみローカルストレージに保存
   useEffect(() => {
-    if (title.trim() || content.trim()) {
+    if (hasUserEdited && (title.trim() || content.trim())) {
       setSavedSuccessfully(false)
       handleLocalSave()
     }
-  }, [title, content, handleLocalSave])
+  }, [title, content, hasUserEdited, handleLocalSave])
 
   // タイマークリーンアップ
   useEffect(() => {
@@ -110,11 +112,22 @@ export function useMemoForm({ memo = null }: UseMemoFormOptions = {}) {
     }
   }, [])
 
+  // カスタムセッター（編集フラグ付き）
+  const setTitleWithEdit = useCallback((newTitle: string) => {
+    setTitle(newTitle)
+    setHasUserEdited(true)
+  }, [])
+
+  const setContentWithEdit = useCallback((newContent: string) => {
+    setContent(newContent)
+    setHasUserEdited(true)
+  }, [])
+
   return {
     title,
-    setTitle,
+    setTitle: setTitleWithEdit,
     content,
-    setContent,
+    setContent: setContentWithEdit,
     savedSuccessfully,
     isEditMode,
     createdMemoId

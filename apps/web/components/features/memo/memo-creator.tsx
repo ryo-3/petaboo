@@ -19,7 +19,7 @@ interface MemoCreatorProps {
 function MemoCreator({ onClose, memo = null, onExitEdit }: MemoCreatorProps) {
   // 新規作成時は常に編集モード、既存メモの場合は表示モードから開始
   const [isEditing, setIsEditing] = useState(memo === null);
-  const titleInputRef = useRef<HTMLInputElement>(null);
+  const titleInputRef = useRef<HTMLTextAreaElement>(null);
   const deleteNote = useDeleteNote();
   const {
     title,
@@ -112,42 +112,39 @@ function MemoCreator({ onClose, memo = null, onExitEdit }: MemoCreatorProps) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-4 flex-1">
+      <div className="flex flex-col gap-2 flex-1">
         {memo && <DateInfo item={memo} createdItemId={createdMemoId} />}
 
-        <div className="flex items-center gap-3">
-          <input
-            ref={titleInputRef}
-            type="text"
-            placeholder="タイトルを入力..."
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className={`flex-1 text-lg font-medium border-b outline-none pb-2 ${
-              isEditing
-                ? "border-Green focus:border-Green"
-                : "border-gray-200 focus:border-blue-500"
-            }`}
-          />
+        <div className="flex items-center gap-3 mb-2">
           {savedSuccessfully && (
             <CheckIcon className="w-5 h-5 text-green-600 flex-shrink-0" />
           )}
         </div>
 
         <textarea
-          placeholder="内容を入力..."
+          ref={titleInputRef}
+          placeholder="メモを入力...&#10;&#10;最初の行がタイトルになります"
           value={content}
-          onChange={(e) => setContent(e.target.value)}
-          className="flex-1 resize-none outline-none text-gray-700 leading-relaxed"
+          onChange={(e) => {
+            setContent(e.target.value);
+            // 最初の行をタイトルとして設定
+            const firstLine = e.target.value.split("\n")[0] || "";
+            setTitle(firstLine);
+          }}
+          className="w-full h-[calc(100vh-280px)] resize-none outline-none text-gray-500 leading-relaxed font-medium"
         />
       </div>
 
-      {/* 右下の削除ボタン */}
       <button
         onClick={handleDelete}
-        className="fixed bottom-6 right-6 bg-gray-500 hover:bg-gray-600 text-white p-3 rounded-full shadow-lg transition-colors"
-        title="メモを削除"
+        className="
+          fixed bottom-6 right-6
+          bg-gray-500 hover:bg-gray-600 text-white
+          size-10 flex items-center justify-center
+          rounded-full shadow-lg transition-colors
+        "
       >
-        <TrashIcon />
+        <TrashIcon className="w-5 h-5" />
       </button>
     </div>
   );

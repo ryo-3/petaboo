@@ -73,18 +73,54 @@ function Main() {
 
   // エディターからメモ削除時に次のメモを選択するハンドラー
   const handleDeleteAndSelectNext = (deletedMemo: Memo) => {
-    if (notes && notes.length > 1) {
-      const deletedIndex = notes.findIndex((m) => m.id === deletedMemo.id);
+    // ソート済み配列を取得（表示と同じ順序）
+    const getSortedMemos = () => {
+      const allMemos = [...(notes || [])];
+      
+      return allMemos.sort((a, b) => {
+        const getLatestTime = (memo: Memo) => {
+          if (memo.id < 0) {
+            return memo.updatedAt || memo.createdAt;
+          }
+
+          const localData = localStorage.getItem(`memo_draft_${memo.id}`);
+          let localEditTime = 0;
+          if (localData) {
+            try {
+              const parsed = JSON.parse(localData);
+              if (parsed.id === memo.id && parsed.lastEditedAt) {
+                localEditTime = parsed.lastEditedAt;
+              }
+            } catch {
+              // パースエラーは無視
+            }
+          }
+          
+          return Math.max(
+            localEditTime,
+            memo.updatedAt || 0,
+            memo.createdAt
+          );
+        };
+
+        return getLatestTime(b) - getLatestTime(a);
+      });
+    };
+
+    const sortedMemos = getSortedMemos();
+    
+    if (sortedMemos.length > 1) {
+      const deletedIndex = sortedMemos.findIndex((m) => m.id === deletedMemo.id);
       let nextMemo: Memo | null = null;
 
       if (deletedIndex !== -1) {
         // 削除されたメモの次のメモを選択
-        if (deletedIndex < notes.length - 1) {
-          nextMemo = notes[deletedIndex + 1] || null;
+        if (deletedIndex < sortedMemos.length - 1) {
+          nextMemo = sortedMemos[deletedIndex + 1] || null;
         }
         // 最後のメモが削除された場合は前のメモを選択
         else if (deletedIndex > 0) {
-          nextMemo = notes[deletedIndex - 1] || null;
+          nextMemo = sortedMemos[deletedIndex - 1] || null;
         }
       }
 

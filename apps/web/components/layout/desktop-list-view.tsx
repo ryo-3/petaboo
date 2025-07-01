@@ -40,6 +40,7 @@ interface DesktopListViewProps {
   onSelectDeletedMemo: (memo: DeletedMemo, fromFullList?: boolean) => void;
   onSelectTask?: (task: Task, fromFullList?: boolean) => void;
   onSelectDeletedTask?: (task: DeletedTask, fromFullList?: boolean) => void;
+  onDeleteAndSelectNext?: (deletedMemo: Memo) => void;
   currentMode?: "memo" | "task";
   selectedMemo?: Memo | null;
   selectedDeletedMemo?: DeletedMemo | null;
@@ -52,6 +53,7 @@ function DesktopListView({
   onSelectDeletedMemo,
   onSelectTask,
   onSelectDeletedTask,
+  onDeleteAndSelectNext,
   currentMode = "memo",
   selectedMemo,
   selectedDeletedMemo,
@@ -275,6 +277,79 @@ function DesktopListView({
   const permanentDeleteNote = usePermanentDeleteNote();
   const deleteTask = useDeleteTask();
   const permanentDeleteTask = usePermanentDeleteTask();
+
+  // 表示順序でソートされたメモリストを取得する関数
+  const getSortedMemos = () => {
+    return [...(notes || []), ...localMemos]
+      .sort((a, b) => {
+        // ローカル編集時間も考慮してソート
+        const getLatestTime = (memo: Memo) => {
+          // 新規作成メモ（ID: -1）の場合
+          if (memo.id === -1) {
+            return memo.updatedAt || memo.createdAt;
+          }
+
+          const localData = localStorage.getItem(
+            `memo_draft_${memo.id}`
+          );
+          let localEditTime = 0;
+          if (localData) {
+            try {
+              const parsed = JSON.parse(localData);
+              if (parsed.id === memo.id && parsed.lastEditedAt) {
+                localEditTime = parsed.lastEditedAt;
+              }
+            } catch {
+              // パースエラーは無視
+            }
+          }
+          return Math.max(
+            localEditTime,
+            memo.updatedAt || 0,
+            memo.createdAt
+          );
+        };
+
+        return getLatestTime(b) - getLatestTime(a);
+      });
+  };
+
+  // 表示順序での次のメモを選択するハンドラー
+  const handleDeleteAndSelectNextInOrder = (deletedMemo: Memo) => {
+    // console.log('=== DesktopListView: handleDeleteAndSelectNextInOrder ===');
+    // console.log('削除されたメモ:', deletedMemo);
+    
+    const sortedMemos = getSortedMemos();
+    // console.log('ソート済みメモリスト:', sortedMemos.map(m => ({ id: m.id, title: m.title })));
+    
+    const deletedIndex = sortedMemos.findIndex(m => m.id === deletedMemo.id);
+    // console.log('削除されたメモの表示順インデックス:', deletedIndex);
+    
+    let nextMemo: Memo | null = null;
+    
+    if (deletedIndex !== -1) {
+      // 削除されたメモの次のメモを選択
+      if (deletedIndex < sortedMemos.length - 1) {
+        nextMemo = sortedMemos[deletedIndex + 1] || null;
+        // console.log('次のメモを選択:', nextMemo);
+      }
+      // 最後のメモが削除された場合は前のメモを選択
+      else if (deletedIndex > 0) {
+        nextMemo = sortedMemos[deletedIndex - 1] || null;
+        // console.log('前のメモを選択:', nextMemo);
+      }
+    }
+    
+    if (nextMemo) {
+      // console.log('次のメモに切り替え実行');
+      // 次のメモを選択してビューモードに切り替え
+      onSelectMemo(nextMemo, true);
+      setRightPanelMode("view");
+    } else {
+      // console.log('次のメモが見つからない - パネルを閉じる');
+      setRightPanelMode("hidden");
+    }
+  };
 
   // 右側パネル表示時は列数を調整（3,4列→2列、1,2列→そのまま）
   const effectiveColumnCount =
@@ -786,7 +861,7 @@ function DesktopListView({
           ) : rightPanelMode === "view" ? (
             <div className="p-6">
               {selectedMemo ? (
-                <MemoEditor memo={selectedMemo} onClose={() => {}} />
+                <MemoEditor memo={selectedMemo} onClose={() => {}} onDeleteAndSelectNext={handleDeleteAndSelectNextInOrder} />
               ) : selectedTask ? (
                 <TaskEditor task={selectedTask} onClose={() => {}} />
               ) : selectedDeletedMemo ? (

@@ -184,7 +184,7 @@ function TaskEditor({
             <h1 className="flex-1 text-lg font-medium text-gray-800 pb-2">
               {(() => {
                 const displayTitle = savedData?.title || task.title;
-                console.log("Displaying title:", { savedData: savedData?.title, task: task.title, display: displayTitle });
+                // console.log("Displaying title:", { savedData: savedData?.title, task: task.title, display: displayTitle });
                 return displayTitle;
               })()}
             </h1>

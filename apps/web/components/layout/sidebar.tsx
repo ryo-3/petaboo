@@ -21,6 +21,7 @@ interface SidebarProps {
   onShowFullList: () => void;
   onHome: () => void;
   onEditMemo: (memo: Memo) => void;
+  onDeleteMemo?: (memo: Memo) => void;
   selectedMemoId?: number;
   selectedTaskId?: number;
   isCompact?: boolean;
@@ -38,6 +39,7 @@ function Sidebar({
   onShowFullList,
   onHome,
   onEditMemo,
+  onDeleteMemo,
   selectedMemoId,
   selectedTaskId,
   isCompact = false,
@@ -188,6 +190,7 @@ function Sidebar({
           <MemoList
             onSelectMemo={onSelectMemo}
             onEditMemo={onEditMemo}
+            onDeleteMemo={onDeleteMemo}
             selectedMemoId={selectedMemoId}
           />
         ) : (

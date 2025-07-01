@@ -14,6 +14,7 @@ import WelcomeScreen from "@/components/screens/welcome-screen";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
 import { useEffect, useState } from "react";
+import { useNotes } from "@/src/hooks/use-notes";
 
 function Main() {
   const [isEditing, setIsEditing] = useState(false);
@@ -28,6 +29,9 @@ function Main() {
   const [showSettings, setShowSettings] = useState(false);
   const [currentMode, setCurrentMode] = useState<"memo" | "task">("memo");
   const [windowWidth, setWindowWidth] = useState(0);
+  
+  const { data: notes } = useNotes();
+  
 
   // API同期フック（一時的に無効化 - 挙動整理のため）
   // Removed unused imports: useApiSync, syncStatus
@@ -46,6 +50,7 @@ function Main() {
 
   const isMobile = windowWidth <= 768;
 
+
   const handleSelectMemo = (memo: Memo, fromFullList = false) => {
     setSelectedMemo(memo);
     setSelectedDeletedMemo(null);
@@ -56,6 +61,64 @@ function Main() {
       setShowFullList(false);
     }
   };
+
+  // メモ削除後に次のメモを選択するためのハンドラー
+  const handleDeleteMemo = (nextMemo: Memo) => {
+    // console.log('=== handleDeleteMemo呼び出し ===')
+    // console.log('次のメモ:', nextMemo)
+    // console.log('現在選択中のメモ:', selectedMemo)
+    
+    setSelectedMemo(nextMemo);
+    setSelectedDeletedMemo(null);
+    setSelectedTask(null);
+    setSelectedDeletedTask(null);
+    setIsEditing(false);
+    
+    // console.log('状態更新完了')
+  };
+
+  // エディターからメモ削除時に次のメモを選択するハンドラー
+  const handleDeleteAndSelectNext = (deletedMemo: Memo) => {
+    // console.log('=== handleDeleteAndSelectNext呼び出し ===')
+    // console.log('削除されたメモ:', deletedMemo)
+    // console.log('全メモ数:', notes?.length)
+    
+    if (notes && notes.length > 1) {
+      const deletedIndex = notes.findIndex(m => m.id === deletedMemo.id)
+      // console.log('削除されたメモのインデックス:', deletedIndex)
+      
+      let nextMemo: Memo | null = null
+      
+      if (deletedIndex !== -1) {
+        // 削除されたメモの次のメモを選択
+        if (deletedIndex < notes.length - 1) {
+          nextMemo = notes[deletedIndex + 1] || null
+          // console.log('次のメモを選択:', nextMemo)
+        }
+        // 最後のメモが削除された場合は前のメモを選択
+        else if (deletedIndex > 0) {
+          nextMemo = notes[deletedIndex - 1] || null
+          // console.log('前のメモを選択:', nextMemo)
+        }
+      }
+      
+      if (nextMemo) {
+        // console.log('次のメモに切り替え:', nextMemo)
+        setSelectedMemo(nextMemo);
+        setSelectedDeletedMemo(null);
+        setSelectedTask(null);
+        setSelectedDeletedTask(null);
+        setIsEditing(false);
+      } else {
+        // console.log('次のメモが見つからないためエディターを閉じる')
+        handleClose();
+      }
+    } else {
+      // console.log('メモが1個以下のためエディターを閉じる')
+      handleClose();
+    }
+  };
+
 
   const handleSelectDeletedMemo = (memo: DeletedMemo, fromFullList = false) => {
     setSelectedDeletedMemo(memo);
@@ -222,6 +285,7 @@ function Main() {
               onShowFullList={handleShowFullList}
               onHome={handleHome}
               onEditMemo={handleEditMemo}
+              onDeleteMemo={handleDeleteMemo}
               selectedMemoId={selectedMemo?.id}
               selectedTaskId={selectedTask?.id}
               isCompact={false}
@@ -252,6 +316,7 @@ function Main() {
                   onShowFullList={handleShowFullList}
                   onHome={handleHome}
                   onEditMemo={handleEditMemo}
+                  onDeleteMemo={handleDeleteMemo}
                   selectedMemoId={selectedMemo?.id}
                   selectedTaskId={selectedTask?.id}
                   isCompact={true}
@@ -272,6 +337,7 @@ function Main() {
                   onSelectDeletedMemo={handleSelectDeletedMemo}
                   onSelectTask={handleSelectTask}
                   onSelectDeletedTask={handleSelectDeletedTask}
+                  onDeleteAndSelectNext={handleDeleteAndSelectNext}
                   currentMode={currentMode}
                   selectedMemo={selectedMemo}
                   selectedDeletedMemo={selectedDeletedMemo}
@@ -287,7 +353,19 @@ function Main() {
                   <TaskCreator onClose={handleClose} />
                 )
               ) : selectedMemo ? (
-                <MemoEditor memo={selectedMemo} onClose={handleClose} />
+                (() => {
+                  console.log('=== Rendering MemoEditor ===');
+                  console.log('selectedMemo:', selectedMemo);
+                  console.log('handleDeleteAndSelectNext type:', typeof handleDeleteAndSelectNext);
+                  console.log('handleDeleteAndSelectNext value:', handleDeleteAndSelectNext);
+                  return (
+                    <MemoEditor 
+                      memo={selectedMemo} 
+                      onClose={handleClose} 
+                      onDeleteAndSelectNext={handleDeleteAndSelectNext} 
+                    />
+                  );
+                })()
               ) : selectedTask ? (
                 <TaskEditor task={selectedTask} onClose={handleClose} />
               ) : selectedDeletedMemo ? (

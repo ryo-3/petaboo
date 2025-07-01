@@ -139,10 +139,6 @@ function MemoCreator({ onClose, memo = null, onExitEdit }: MemoCreatorProps) {
           onChange={(e) => setContent(e.target.value)}
           className="flex-1 resize-none outline-none text-gray-700 leading-relaxed"
         />
-
-        <div className="text-xs text-gray-400 mt-auto">
-          ローカルストレージに自動保存中...
-        </div>
       </div>
 
       {/* 右下の削除ボタン */}

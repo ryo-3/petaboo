@@ -10,9 +10,10 @@ interface MemoEditorProps {
   memo: Memo
   onClose: () => void
   onEdit?: (memo: Memo) => void
+  onDeleteAndSelectNext?: (deletedMemo: Memo) => void
 }
 
-function MemoEditor({ memo, onClose }: MemoEditorProps) {
+function MemoEditor({ memo, onClose, onDeleteAndSelectNext }: MemoEditorProps) {
   const deleteNote = useDeleteNote()
   
   // 常に編集可能モード
@@ -50,8 +51,21 @@ function MemoEditor({ memo, onClose }: MemoEditorProps) {
 
   const handleDelete = async () => {
     try {
+      // console.log('=== MemoEditor: メモ削除処理開始 ===')
+      // console.log('削除対象メモ:', memo)
+      // console.log('onDeleteAndSelectNext関数存在:', !!onDeleteAndSelectNext)
+      
       await deleteNote.mutateAsync(memo.id)
-      onClose() // 削除後に閉じる
+      // console.log('削除完了')
+      
+      // 削除後に次のメモを選択する処理があれば実行、なければエディターを閉じる
+      if (onDeleteAndSelectNext) {
+        // console.log('次のメモ選択処理を実行')
+        onDeleteAndSelectNext(memo)
+      } else {
+        // console.log('エディターを閉じます')
+        onClose()
+      }
     } catch (error) {
       console.error('削除に失敗しました:', error)
     }

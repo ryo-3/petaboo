@@ -380,6 +380,9 @@ function Main() {
               <CreateScreen
                 initialMode={currentMode}
                 onClose={handleClose}
+                onModeChange={setCurrentMode}
+                onShowMemoList={handleShowFullList}
+                onShowTaskList={handleShowTaskList}
               />
             )}
           </DesktopLayout>

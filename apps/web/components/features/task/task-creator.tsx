@@ -1,5 +1,6 @@
 "use client";
 
+import PhotoIcon from "@/components/icons/photo-icon";
 import { useCreateTask } from "@/src/hooks/use-tasks";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -126,7 +127,7 @@ function TaskCreator({ onClose }: TaskCreatorProps) {
                 }
               }
             }}
-            className="flex-1 text-lg font-medium border-b border-Green outline-none pb-2 focus:border-Green"
+            className="flex-1 text-lg font-medium border-b border-Yellow outline-none pb-2 focus:border-Yellow"
           />
         </div>
 
@@ -197,7 +198,7 @@ function TaskCreator({ onClose }: TaskCreatorProps) {
           />
         </div>
 
-        <div className="flex justify-start">
+        <div className="flex justify-start items-center gap-3">
           <button
             onClick={handleSave}
             disabled={!title.trim() || isSaving || savedSuccessfully}
@@ -247,6 +248,13 @@ function TaskCreator({ onClose }: TaskCreatorProps) {
                 保存
               </>
             )}
+          </button>
+          
+          <button
+            className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
+            title="画像を追加"
+          >
+            <PhotoIcon className="w-5 h-5" />
           </button>
         </div>
       </div>

@@ -1,55 +1,104 @@
 "use client";
 
-import MemoIcon from "@/components/icons/memo-icon";
-import TaskIcon from "@/components/icons/task-icon";
 import MemoCreator from "@/components/features/memo/memo-creator";
 import TaskCreator from "@/components/features/task/task-creator";
+import MemoIcon from "@/components/icons/memo-icon";
+import TaskIcon from "@/components/icons/task-icon";
 import { useState } from "react";
 
-type CreateMode = 'memo' | 'task';
+type CreateMode = "memo" | "task";
 
 interface CreateScreenProps {
   initialMode?: CreateMode;
   onClose: () => void;
+  onModeChange?: (mode: CreateMode) => void;
+  onShowMemoList?: () => void;
+  onShowTaskList?: () => void;
 }
 
-function CreateScreen({ 
-  initialMode = 'memo',
-  onClose 
+function CreateScreen({
+  initialMode = "memo",
+  onClose,
+  onModeChange,
+  onShowMemoList,
+  onShowTaskList,
 }: CreateScreenProps) {
   const [createMode, setCreateMode] = useState<CreateMode>(initialMode);
+
+  const handleModeChange = (mode: CreateMode) => {
+    setCreateMode(mode);
+    onModeChange?.(mode);
+  };
 
   return (
     <div className="h-[calc(100vh-64px)] bg-white">
       {/* 上部：モード切り替えタブ */}
       <div className="flex border-b border-gray-200 bg-gray-50">
         <button
-          onClick={() => setCreateMode('memo')}
-          className={`flex-1 py-3 px-4 text-center font-medium flex items-center justify-center gap-2 border-b-2 transition-all duration-200 ${
-            createMode === 'memo'
-              ? 'text-Green border-Green'
-              : 'text-gray-600 border-transparent hover:text-Green hover:border-Green/30'
+          onClick={() => handleModeChange("memo")}
+          className={`flex-1 border-b-2 transition-all duration-200 ${
+            createMode === "memo"
+              ? "border-Green"
+              : "border-transparent hover:border-Green/30"
           }`}
         >
-          <MemoIcon className="w-5 h-5" />
-          新規メモ
+          <div className="flex items-center gap-3 px-4 py-3">
+            <div
+              className={`flex items-center gap-2 font-medium transition-colors ${
+                createMode === "memo" ? "text-Green" : "text-gray-600"
+              }`}
+            >
+              <MemoIcon className="w-5 h-5" />
+              新規メモ
+            </div>
+            {onShowMemoList && (
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onShowMemoList();
+                }}
+                className="text-xs text-gray-400 hover:text-gray-500 transition-colors px-2 pt-1.5 pb-1 rounded font-bold"
+              >
+                一覧へ
+              </div>
+            )}
+          </div>
         </button>
         <button
-          onClick={() => setCreateMode('task')}
-          className={`flex-1 py-3 px-4 text-center font-medium flex items-center justify-center gap-2 border-b-2 transition-all duration-200 ${
-            createMode === 'task'
-              ? 'text-Yellow border-Yellow'
-              : 'text-gray-600 border-transparent hover:text-Yellow hover:border-Yellow/30'
+          onClick={() => handleModeChange("task")}
+          className={`flex-1 border-b-2 transition-all duration-200 ${
+            createMode === "task"
+              ? "border-Yellow"
+              : "border-transparent hover:border-Yellow/30"
           }`}
         >
-          <TaskIcon className="w-5 h-5" />
-          新規タスク
+          <div className="flex items-center gap-3 px-4 py-3">
+            <div
+              className={`flex items-center gap-2 font-medium transition-colors ${
+                createMode === "task" ? "text-Yellow" : "text-gray-600"
+              }`}
+            >
+              <TaskIcon className="w-5 h-5" />
+              新規タスク
+            </div>
+            {onShowTaskList && (
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onShowTaskList();
+                }}
+                className="text-xs text-gray-400 hover:text-gray-500 transition-colors px-2 pt-1.5 pb-1 rounded font-bold"
+              >
+                一覧へ
+              </div>
+            )}
+          </div>
         </button>
       </div>
 
       {/* メイン：作成エリア */}
-      <div className="h-[calc(100%-65px)]">
-        {createMode === 'memo' ? (
+      <div className="h-[calc(100%-65px)] p-5">
+        {createMode === "memo" ? (
           <MemoCreator onClose={onClose} />
         ) : (
           <TaskCreator onClose={onClose} />

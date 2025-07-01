@@ -3,8 +3,8 @@
 import MemoIcon from "@/components/icons/memo-icon";
 import PlusSimpleIcon from "@/components/icons/plus-simple-icon";
 import TaskIcon from "@/components/icons/task-icon";
-import SidebarMemoList from "@/components/features/memo/sidebar-memo-list";
-import TaskList from "@/components/features/task/task-list";
+import MemoList from "@/components/mobile/memo-list";
+import TaskList from "@/components/mobile/task-list";
 import SwitchTabs from "@/components/ui/base/switch-tabs";
 import Tooltip from "@/components/ui/base/tooltip";
 import AddItemButton from "@/components/ui/buttons/add-item-button";
@@ -185,7 +185,7 @@ function Sidebar({
 
       <div className="flex-1 overflow-hidden ml-2 mr-[2px] mt-4 mb-2">
         {currentMode === "memo" ? (
-          <SidebarMemoList
+          <MemoList
             onSelectMemo={onSelectMemo}
             onEditMemo={onEditMemo}
             selectedMemoId={selectedMemoId}

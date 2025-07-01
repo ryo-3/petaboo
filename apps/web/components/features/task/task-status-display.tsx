@@ -6,7 +6,7 @@ import ItemGrid from '@/components/ui/layout/item-grid';
 import EmptyState from '@/components/ui/feedback/empty-state';
 import type { Task } from '@/src/types/task';
 
-interface TaskTabContentProps {
+interface TaskStatusDisplayProps {
   activeTab: 'todo' | 'in_progress' | 'completed';
   tasks: Task[] | undefined;
   viewMode: 'card' | 'list';
@@ -17,7 +17,7 @@ interface TaskTabContentProps {
   selectedTaskId?: number;
 }
 
-function TaskTabContent({
+function TaskStatusDisplay({
   activeTab,
   tasks,
   viewMode,
@@ -26,7 +26,7 @@ function TaskTabContent({
   onToggleCheck,
   onSelectTask,
   selectedTaskId
-}: TaskTabContentProps) {
+}: TaskStatusDisplayProps) {
   const getFilteredTasks = () => {
     if (!tasks) return [];
     const filtered = tasks.filter(task => task.status === activeTab);
@@ -77,4 +77,4 @@ function TaskTabContent({
   );
 }
 
-export default TaskTabContent;
+export default TaskStatusDisplay;

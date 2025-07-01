@@ -18,7 +18,6 @@ function MemoEditor({ memo, onClose }: MemoEditorProps) {
   // 常に編集可能モード
   const [title, setTitle] = useState(memo.title)
   const [content, setContent] = useState(memo.content || '')
-  // Removed unused variables: updateNote, onEdit, onExitEdit, isEditMode, isSaving, setIsSaving
   const [error, setError] = useState<string | null>(null)
   const [hasUserEdited, setHasUserEdited] = useState(false)
   const [currentMemoId, setCurrentMemoId] = useState(memo.id)
@@ -58,29 +57,6 @@ function MemoEditor({ memo, onClose }: MemoEditorProps) {
     }
   }
 
-
-  // 自動保存処理（3秒後）（コメントアウト）
-  // const handleAutoSave = useCallback(async () => {
-  //   if (!title.trim()) return
-
-  //   setIsSaving(true)
-  //   setError(null)
-  //   try {
-  //     await updateNote.mutateAsync({
-  //       id: memo.id,
-  //       data: {
-  //         title: title.trim(),
-  //         content: content.trim() || undefined,
-  //       }
-  //     })
-  //   } catch (error) {
-  //     console.error('保存に失敗しました:', error)
-  //     setError('保存に失敗しました。')
-  //   } finally {
-  //     setIsSaving(false)
-  //   }
-  // }, [title, content, memo.id, updateNote])
-
   // ユーザーが実際に編集した時のみローカルストレージに保存
   useEffect(() => {
     // 現在のメモIDと一致し、ユーザーが編集した場合のみ保存
@@ -100,15 +76,6 @@ function MemoEditor({ memo, onClose }: MemoEditorProps) {
       
     }
   }, [title, content, hasUserEdited, memo.id, currentMemoId])
-
-  // 3秒後の自動保存タイマー（コメントアウト）
-  // useEffect(() => {
-  //   const timer = setTimeout(() => {
-  //     handleAutoSave()
-  //   }, 3000)
-
-  //   return () => clearTimeout(timer)
-  // }, [title, content, handleAutoSave])
 
   return (
     <BaseViewer

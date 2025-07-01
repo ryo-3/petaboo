@@ -28,7 +28,7 @@ import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
 import { useEffect, useState } from "react";
-import TaskTabContent from "@/components/features/task/task-tab-content";
+import TaskStatusDisplay from "@/components/features/task/task-status-display";
 import MemoCreator from "@/components/features/memo/memo-creator";
 import TaskCreator from "@/components/features/task/task-creator";
 import TaskEditor from "@/components/features/task/task-editor";
@@ -605,7 +605,7 @@ function DesktopListView({
           activeTab === "in_progress" ||
           activeTab === "completed") &&
           currentMode === "task" && (
-            <TaskTabContent
+            <TaskStatusDisplay
               activeTab={activeTab}
               tasks={tasks}
               viewMode={viewMode}

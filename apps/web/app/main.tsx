@@ -282,6 +282,10 @@ function Main() {
                 onSelectMemo={handleSelectMemo}
                 onSelectDeletedMemo={handleSelectDeletedMemo}
                 onClose={handleClose}
+                onClearSelection={() => {
+                  setSelectedMemo(null);
+                  setSelectedDeletedMemo(null);
+                }}
               />
             )}
             
@@ -293,6 +297,10 @@ function Main() {
                 onSelectTask={handleSelectTask}
                 onSelectDeletedTask={handleSelectDeletedTask}
                 onClose={handleClose}
+                onClearSelection={() => {
+                  setSelectedTask(null);
+                  setSelectedDeletedTask(null);
+                }}
               />
             )}
             

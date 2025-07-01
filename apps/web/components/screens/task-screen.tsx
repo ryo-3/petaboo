@@ -6,6 +6,7 @@ import DeletedTaskViewer from "@/components/features/task/deleted-task-viewer";
 import DesktopUpper from "@/components/layout/desktop-upper";
 import DesktopLower from "@/components/layout/desktop-lower";
 import DeleteButton from "@/components/ui/buttons/delete-button";
+import RightPanel from "@/components/ui/layout/right-panel";
 import { BulkDeleteConfirmation } from "@/components/ui/modals";
 import { useTasksBulkDelete } from "@/components/features/task/use-task-bulk-delete";
 import { useDeletedTasks, useTasks } from "@/src/hooks/use-tasks";
@@ -23,6 +24,7 @@ interface TaskScreenProps {
   onSelectTask: (task: Task | null, fromFullList?: boolean) => void;
   onSelectDeletedTask: (task: DeletedTask, fromFullList?: boolean) => void;
   onClose: () => void;
+  onClearSelection?: () => void; // 選択状態だけクリアする関数
 }
 
 function TaskScreen({
@@ -31,6 +33,7 @@ function TaskScreen({
   onSelectTask,
   onSelectDeletedTask,
   onClose,
+  onClearSelection,
 }: TaskScreenProps) {
   const [taskScreenMode, setTaskScreenMode] = useState<TaskScreenMode>('list');
   const [activeTab, setActiveTab] = useState<"todo" | "in_progress" | "completed" | "deleted">("todo");
@@ -202,53 +205,42 @@ function TaskScreen({
       </div>
 
       {/* 右側：詳細表示エリア */}
-      {taskScreenMode !== 'list' && (
-        <div className="w-1/2 h-full overflow-y-auto animate-slide-in-right relative">
-          {/* 閉じるボタン */}
-          <button
-            onClick={() => {
-              setTaskScreenMode('list');
-              onClose();
-            }}
-            className="absolute -left-3 top-[40%] transform -translate-y-1/2 bg-white border border-gray-300 rounded-full p-1 text-gray-500 hover:text-gray-700 hover:border-gray-400 transition-colors z-10"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-
-          <div className="p-6">
-            {taskScreenMode === 'create' && (
-              <TaskCreator onClose={() => setTaskScreenMode('list')} />
-            )}
-            {taskScreenMode === 'view' && selectedTask && (
-              <TaskEditor
-                task={selectedTask}
-                onClose={() => setTaskScreenMode('list')}
-                onSelectTask={onSelectTask}
-                onClosePanel={() => setTaskScreenMode('list')}
-                onDeleteAndSelectNext={handleTaskDeleteAndSelectNext}
-              />
-            )}
-            {taskScreenMode === 'view' && selectedDeletedTask && (
-              <DeletedTaskViewer
-                task={selectedDeletedTask}
-                onClose={() => setTaskScreenMode('list')}
-                onDeleteAndSelectNext={handleDeletedTaskAndSelectNext}
-              />
-            )}
-            {taskScreenMode === 'edit' && selectedTask && (
-              <TaskEditor
-                task={selectedTask}
-                onClose={() => setTaskScreenMode('view')}
-                onSelectTask={onSelectTask}
-                onClosePanel={() => setTaskScreenMode('list')}
-                onDeleteAndSelectNext={handleTaskDeleteAndSelectNext}
-              />
-            )}
-          </div>
-        </div>
-      )}
+      <RightPanel
+        isOpen={taskScreenMode !== 'list'}
+        onClose={() => {
+          setTaskScreenMode('list');
+          onClearSelection?.(); // 選択状態のみクリア（画面は変更しない）
+        }}
+      >
+        {taskScreenMode === 'create' && (
+          <TaskCreator onClose={() => setTaskScreenMode('list')} />
+        )}
+        {taskScreenMode === 'view' && selectedTask && (
+          <TaskEditor
+            task={selectedTask}
+            onClose={() => setTaskScreenMode('list')}
+            onSelectTask={onSelectTask}
+            onClosePanel={() => setTaskScreenMode('list')}
+            onDeleteAndSelectNext={handleTaskDeleteAndSelectNext}
+          />
+        )}
+        {taskScreenMode === 'view' && selectedDeletedTask && (
+          <DeletedTaskViewer
+            task={selectedDeletedTask}
+            onClose={() => setTaskScreenMode('list')}
+            onDeleteAndSelectNext={handleDeletedTaskAndSelectNext}
+          />
+        )}
+        {taskScreenMode === 'edit' && selectedTask && (
+          <TaskEditor
+            task={selectedTask}
+            onClose={() => setTaskScreenMode('view')}
+            onSelectTask={onSelectTask}
+            onClosePanel={() => setTaskScreenMode('list')}
+            onDeleteAndSelectNext={handleTaskDeleteAndSelectNext}
+          />
+        )}
+      </RightPanel>
 
       {/* 一括削除確認モーダル */}
       <BulkDeleteConfirmation

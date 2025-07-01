@@ -6,6 +6,7 @@ import MemoEditor from "@/components/features/memo/memo-editor";
 import DesktopLower from "@/components/layout/desktop-lower";
 import DesktopUpper from "@/components/layout/desktop-upper";
 import DeleteButton from "@/components/ui/buttons/delete-button";
+import RightPanel from "@/components/ui/layout/right-panel";
 import { BulkDeleteConfirmation } from "@/components/ui/modals";
 import { useDeletedNotes, useNotes } from "@/src/hooks/use-notes";
 import { useMemosBulkDelete } from "@/components/features/memo/use-memo-bulk-delete";
@@ -23,6 +24,7 @@ interface MemoScreenProps {
   onSelectMemo: (memo: Memo) => void;
   onSelectDeletedMemo: (memo: DeletedMemo) => void;
   onClose: () => void;
+  onClearSelection?: () => void; // 選択状態だけクリアする関数
 }
 
 function MemoScreen({
@@ -31,6 +33,7 @@ function MemoScreen({
   onSelectMemo,
   onSelectDeletedMemo,
   onClose,
+  onClearSelection,
 }: MemoScreenProps) {
   const [memoScreenMode, setMemoScreenMode] = useState<MemoScreenMode>("list");
   const [activeTab, setActiveTab] = useState<"normal" | "deleted">("normal");
@@ -255,59 +258,38 @@ function MemoScreen({
       </div>
 
       {/* 右側：詳細表示エリア */}
-      {memoScreenMode !== "list" && (
-        <div className="w-1/2 h-full overflow-y-auto animate-slide-in-right relative">
-          {/* 閉じるボタン */}
-          <button
-            onClick={() => {
-              setMemoScreenMode("list");
-              onClose();
-            }}
-            className="absolute -left-3 top-[40%] transform -translate-y-1/2 bg-white border border-gray-300 rounded-full p-1 text-gray-500 hover:text-gray-700 hover:border-gray-400 transition-colors z-10"
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </button>
-
-          <div className="p-6">
-            {memoScreenMode === "create" && (
-              <MemoCreator onClose={() => setMemoScreenMode("list")} />
-            )}
-            {memoScreenMode === "view" && selectedMemo && (
-              <MemoEditor
-                memo={selectedMemo}
-                onClose={() => setMemoScreenMode("list")}
-                onDeleteAndSelectNext={handleDeleteAndSelectNextInOrder}
-              />
-            )}
-            {memoScreenMode === "view" && selectedDeletedMemo && (
-              <DeletedMemoViewer
-                memo={selectedDeletedMemo}
-                onClose={() => setMemoScreenMode("list")}
-                onDeleteAndSelectNext={handleDeletedMemoAndSelectNext}
-              />
-            )}
-            {memoScreenMode === "edit" && selectedMemo && (
-              <MemoEditor
-                memo={selectedMemo}
-                onClose={() => setMemoScreenMode("view")}
-                onDeleteAndSelectNext={handleDeleteAndSelectNextInOrder}
-              />
-            )}
-          </div>
-        </div>
-      )}
+      <RightPanel
+        isOpen={memoScreenMode !== "list"}
+        onClose={() => {
+          setMemoScreenMode("list");
+          onClearSelection?.(); // 選択状態のみクリア（画面は変更しない）
+        }}
+      >
+        {memoScreenMode === "create" && (
+          <MemoCreator onClose={() => setMemoScreenMode("list")} />
+        )}
+        {memoScreenMode === "view" && selectedMemo && (
+          <MemoEditor
+            memo={selectedMemo}
+            onClose={() => setMemoScreenMode("list")}
+            onDeleteAndSelectNext={handleDeleteAndSelectNextInOrder}
+          />
+        )}
+        {memoScreenMode === "view" && selectedDeletedMemo && (
+          <DeletedMemoViewer
+            memo={selectedDeletedMemo}
+            onClose={() => setMemoScreenMode("list")}
+            onDeleteAndSelectNext={handleDeletedMemoAndSelectNext}
+          />
+        )}
+        {memoScreenMode === "edit" && selectedMemo && (
+          <MemoEditor
+            memo={selectedMemo}
+            onClose={() => setMemoScreenMode("view")}
+            onDeleteAndSelectNext={handleDeleteAndSelectNextInOrder}
+          />
+        )}
+      </RightPanel>
 
       {/* 一括削除確認モーダル */}
       <BulkDeleteConfirmation

@@ -1,7 +1,7 @@
 'use client'
 
 import PlusSimpleIcon from '@/components/icons/plus-simple-icon'
-import Tooltip from '@/components/ui/tooltip'
+import Tooltip from '@/components/ui/base/tooltip'
 
 type ItemType = 'memo' | 'task'
 

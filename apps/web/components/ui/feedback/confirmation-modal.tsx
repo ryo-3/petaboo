@@ -1,8 +1,8 @@
 'use client'
 
 import { ReactNode } from 'react'
-import TrashIcon from '../icons/trash-icon'
-import Modal from './modal'
+import TrashIcon from '@/components/icons/trash-icon'
+import Modal from '@/components/ui/base/modal'
 
 type IconType = 'trash' | 'logout' | 'save' | 'warning' | 'info' | 'custom'
 type Variant = 'danger' | 'warning' | 'primary' | 'secondary'

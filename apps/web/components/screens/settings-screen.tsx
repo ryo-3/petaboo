@@ -2,12 +2,12 @@
 
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useEffect, useState } from "react";
-import MemoIcon from "./icons/memo-icon";
-import SettingsIcon from "./icons/settings-icon";
-import TaskIcon from "./icons/task-icon";
-import ColumnCountSelector from "./ui/column-count-selector";
-import Switch from "./ui/switch";
-import ViewModeToggle from "./ui/view-mode-toggle";
+import MemoIcon from "@/components/icons/memo-icon";
+import SettingsIcon from "@/components/icons/settings-icon";
+import TaskIcon from "@/components/icons/task-icon";
+import ColumnCountSelector from "@/components/ui/layout/column-count-selector";
+import Switch from "@/components/ui/base/switch";
+import ViewModeToggle from "@/components/ui/layout/view-mode-toggle";
 
 // Removed empty interface - using empty props instead
 

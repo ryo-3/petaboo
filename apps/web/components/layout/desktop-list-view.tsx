@@ -1,17 +1,17 @@
 "use client";
 
-import DeletedMemoViewer from "@/components/deleted-memo-viewer";
+import DeletedMemoViewer from "@/components/features/memo/deleted-memo-viewer";
 import MemoIcon from "@/components/icons/memo-icon";
 import TaskIcon from "@/components/icons/task-icon";
 import TrashIcon from "@/components/icons/trash-icon";
-import MemoEditor from "@/components/memo-editor";
-import AddItemButton from "@/components/ui/add-item-button";
-import ColumnCountSelector from "@/components/ui/column-count-selector";
-import MemoCard from "@/components/ui/memo-card";
-import MemoListItem from "@/components/ui/memo-list-item";
-import TaskCard from "@/components/ui/task-card";
-import TaskListItem from "@/components/ui/task-list-item";
-import ViewModeToggle from "@/components/ui/view-mode-toggle";
+import MemoEditor from "@/components/features/memo/memo-editor";
+import AddItemButton from "@/components/ui/buttons/add-item-button";
+import ColumnCountSelector from "@/components/ui/layout/column-count-selector";
+import MemoCard from "@/components/features/memo/memo-card";
+import MemoListItem from "@/components/features/memo/memo-list-item";
+import TaskCard from "@/components/features/task/task-card";
+import TaskListItem from "@/components/features/task/task-list-item";
+import ViewModeToggle from "@/components/ui/layout/view-mode-toggle";
 import {
   useDeletedNotes,
   useDeleteNote,
@@ -28,12 +28,12 @@ import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
 import { useEffect, useState } from "react";
-import TaskTabContent from "./task-tab-content";
-import MemoCreator from "./memo-creator";
-import TaskCreator from "./task-creator";
-import TaskEditor from "./task-editor";
-import EmptyState from "./ui/empty-state";
-import ItemGrid from "./ui/item-grid";
+import TaskTabContent from "@/components/features/task/task-tab-content";
+import MemoCreator from "@/components/features/memo/memo-creator";
+import TaskCreator from "@/components/features/task/task-creator";
+import TaskEditor from "@/components/features/task/task-editor";
+import EmptyState from "@/components/ui/feedback/empty-state";
+import ItemGrid from "@/components/ui/layout/item-grid";
 
 interface DesktopListViewProps {
   onSelectMemo: (memo: Memo, fromFullList?: boolean) => void;

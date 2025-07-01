@@ -1,16 +1,16 @@
 "use client";
 
-import DeletedMemoList from "@/components/deleted-memo-list";
-import DeletedMemoViewer from "@/components/deleted-memo-viewer";
-import DesktopListView from "@/components/desktop-list-view";
-import Header from "@/components/header";
-import MemoCreator from "@/components/memo-creator";
-import MemoEditor from "@/components/memo-editor";
-import SettingsScreen from "@/components/settings-screen";
-import Sidebar from "@/components/sidebar";
-import TaskCreator from "@/components/task-creator";
-import TaskEditor from "@/components/task-editor";
-import WelcomeScreen from "@/components/welcome-screen";
+import DeletedMemoList from "@/components/features/memo/deleted-memo-list";
+import DeletedMemoViewer from "@/components/features/memo/deleted-memo-viewer";
+import DesktopListView from "@/components/layout/desktop-list-view";
+import Header from "@/components/layout/header";
+import MemoCreator from "@/components/features/memo/memo-creator";
+import MemoEditor from "@/components/features/memo/memo-editor";
+import SettingsScreen from "@/components/screens/settings-screen";
+import Sidebar from "@/components/layout/sidebar";
+import TaskCreator from "@/components/features/task/task-creator";
+import TaskEditor from "@/components/features/task/task-editor";
+import WelcomeScreen from "@/components/screens/welcome-screen";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
 import { useEffect, useState } from "react";

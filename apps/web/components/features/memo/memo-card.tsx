@@ -1,5 +1,5 @@
 import type { Memo, DeletedMemo } from '@/src/types/memo'
-import BaseCard from './base-card'
+import BaseCard from '@/components/ui/layout/base-card'
 import MemoCardContent from './memo-card-content'
 
 interface MemoCardProps {

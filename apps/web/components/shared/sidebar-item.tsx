@@ -3,7 +3,7 @@
 import { ReactNode } from 'react'
 import PenIcon from '@/components/icons/pen-icon'
 import TrashIcon from '@/components/icons/trash-icon'
-import Tooltip from '@/components/ui/tooltip'
+import Tooltip from '@/components/ui/base/tooltip'
 
 interface SidebarItemProps {
   isSelected?: boolean

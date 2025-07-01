@@ -1,5 +1,5 @@
 import type { Task, DeletedTask } from '@/src/types/task'
-import BaseCard from './base-card'
+import BaseCard from '@/components/ui/layout/base-card'
 import TaskCardContent from './task-card-content'
 
 interface TaskCardProps {

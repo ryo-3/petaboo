@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useClerk } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import DoorIcon from "@/components/icons/door-icon";
-import ConfirmationModal from "@/components/ui/confirmation-modal";
+import ConfirmationModal from "@/components/ui/feedback/confirmation-modal";
 
 export default function LogoutButton() {
   const { signOut } = useClerk();

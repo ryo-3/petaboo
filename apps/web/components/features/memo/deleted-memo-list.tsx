@@ -1,11 +1,11 @@
 'use client'
 
 import TrashIcon from "@/components/icons/trash-icon";
-import LoadingState from '@/components/ui/loading-state';
-import ErrorState from '@/components/ui/error-state';
-import EmptyState from '@/components/ui/empty-state';
+import LoadingState from '@/components/ui/feedback/loading-state';
+import ErrorState from '@/components/ui/feedback/error-state';
+import EmptyState from '@/components/ui/feedback/empty-state';
 import { useDeletedNotes } from '@/src/hooks/use-notes';
-import LogoutButton from "./button/logout-button";
+import LogoutButton from "@/components/ui/buttons/logout-button";
 import type { DeletedMemo } from "@/src/types/memo";
 import { formatDateOnly } from "@/src/utils/formatDate";
 

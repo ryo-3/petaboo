@@ -1,9 +1,9 @@
 'use client'
 
 import SidebarItem from '@/components/shared/sidebar-item';
-import LoadingState from '@/components/ui/loading-state';
-import ErrorState from '@/components/ui/error-state';
-import EmptyState from '@/components/ui/empty-state';
+import LoadingState from '@/components/ui/feedback/loading-state';
+import ErrorState from '@/components/ui/feedback/error-state';
+import EmptyState from '@/components/ui/feedback/empty-state';
 import { useTasks, useDeleteTask } from '@/src/hooks/use-tasks';
 import type { Task } from "@/src/types/task";
 import { formatDateOnly } from "@/src/utils/formatDate";

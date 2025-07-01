@@ -1,12 +1,12 @@
 'use client'
 
-import type { Memo } from '@/src/types/memo'
-import type { Task } from '@/src/types/task'
+import type { Memo, DeletedMemo } from '@/src/types/memo'
+import type { Task, DeletedTask } from '@/src/types/task'
 import { formatDate } from '@/src/utils/formatDate'
 import { useState, useEffect } from 'react'
 
 interface DateInfoProps {
-  item?: Memo | Task | null
+  item?: Memo | Task | DeletedMemo | DeletedTask | null
   createdItemId?: number | null
   isEditing?: boolean
 }

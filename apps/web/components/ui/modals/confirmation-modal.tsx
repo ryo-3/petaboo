@@ -245,4 +245,47 @@ export function BulkDeleteConfirmation({
   )
 }
 
+// 単体削除専用コンポーネント
+interface SingleDeleteConfirmationProps {
+  isOpen: boolean
+  onClose: () => void
+  onConfirm: () => void
+  itemTitle: string
+  itemType: 'memo' | 'task'
+  deleteType: 'normal' | 'permanent'
+  isLoading?: boolean
+}
+
+export function SingleDeleteConfirmation({
+  isOpen,
+  onClose,
+  onConfirm,
+  itemTitle,
+  itemType,
+  deleteType,
+  isLoading = false
+}: SingleDeleteConfirmationProps) {
+  const itemTypeName = itemType === 'memo' ? 'メモ' : 'タスク'
+  
+  const title = `${itemTypeName}削除の確認`
+  const message = deleteType === 'normal'
+    ? `「${itemTitle}」を削除しますか？\n（ゴミ箱に移動されます）`
+    : `「${itemTitle}」を完全に削除しますか？\n（復元できません）`
+
+  return (
+    <ConfirmationModal
+      isOpen={isOpen}
+      onClose={onClose}
+      onConfirm={onConfirm}
+      title={title}
+      message={message}
+      confirmText="削除"
+      cancelText="キャンセル"
+      variant="danger"
+      icon="trash"
+      isLoading={isLoading}
+    />
+  )
+}
+
 export default ConfirmationModal

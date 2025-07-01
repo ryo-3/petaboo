@@ -2,8 +2,12 @@
 
 import TaskCreator from "@/components/features/task/task-creator";
 import TaskEditor from "@/components/features/task/task-editor";
+import DeletedTaskViewer from "@/components/features/task/deleted-task-viewer";
 import DesktopUpper from "@/components/layout/desktop-upper";
 import DesktopLower from "@/components/layout/desktop-lower";
+import DeleteButton from "@/components/ui/buttons/delete-button";
+import { BulkDeleteConfirmation } from "@/components/ui/modals";
+import { useTasksBulkDelete } from "@/components/features/task/use-task-bulk-delete";
 import { useDeletedTasks, useTasks } from "@/src/hooks/use-tasks";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import type { DeletedTask, Task } from "@/src/types/task";
@@ -37,6 +41,17 @@ function TaskScreen({
   const { data: tasks, isLoading: taskLoading, error: taskError } = useTasks();
   const { data: deletedTasks } = useDeletedTasks();
   const { preferences } = useUserPreferences(1);
+
+  // 一括削除関連
+  const { handleBulkDelete, bulkDeleteState } = useTasksBulkDelete({
+    activeTab,
+    checkedTasks,
+    checkedDeletedTasks,
+    setCheckedTasks,
+    setCheckedDeletedTasks,
+    tasks,
+    deletedTasks
+  });
 
   // 設定値が変更されたらローカル状態を更新
   useEffect(() => {
@@ -139,6 +154,24 @@ function TaskScreen({
             setTaskScreenMode('view');
           }}
         />
+
+        {/* 一括削除ボタン */}
+        {(() => {
+          const shouldShow = 
+            (activeTab !== "deleted" && checkedTasks.size > 0) ||
+            (activeTab === "deleted" && checkedDeletedTasks.size > 0);
+          return shouldShow;
+        })() && (
+          <DeleteButton
+            onDelete={handleBulkDelete}
+            className="absolute bottom-6 right-6 z-10"
+            count={
+              activeTab === "deleted"
+                ? checkedDeletedTasks.size
+                : checkedTasks.size
+            }
+          />
+        )}
       </div>
 
       {/* 右側：詳細表示エリア */}
@@ -170,7 +203,10 @@ function TaskScreen({
               />
             )}
             {taskScreenMode === 'view' && selectedDeletedTask && (
-              <div className="p-6">削除済みタスクビューアー（未実装）</div>
+              <DeletedTaskViewer
+                task={selectedDeletedTask}
+                onClose={() => setTaskScreenMode('list')}
+              />
             )}
             {taskScreenMode === 'edit' && selectedTask && (
               <TaskEditor
@@ -183,6 +219,17 @@ function TaskScreen({
           </div>
         </div>
       )}
+
+      {/* 一括削除確認モーダル */}
+      <BulkDeleteConfirmation
+        isOpen={bulkDeleteState.isModalOpen}
+        onClose={bulkDeleteState.handleCancel}
+        onConfirm={bulkDeleteState.handleConfirm}
+        count={bulkDeleteState.targetIds.length}
+        itemType="task"
+        deleteType={activeTab === "deleted" ? "permanent" : "normal"}
+        isLoading={bulkDeleteState.isDeleting}
+      />
     </div>
   );
 }

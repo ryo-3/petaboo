@@ -1,11 +1,13 @@
 "use client";
 
 import BaseViewer from "@/components/shared/base-viewer";
-import EditButton from "@/components/ui/buttons/edit-button";
 import DeleteButton from "@/components/ui/buttons/delete-button";
-import { useDeleteTask, useUpdateTask } from "@/src/hooks/use-tasks";
+import EditButton from "@/components/ui/buttons/edit-button";
+import { SingleDeleteConfirmation } from "@/components/ui/modals";
+import { useTaskDelete } from "./use-task-delete";
+import { useUpdateTask } from "@/src/hooks/use-tasks";
 import type { Task } from "@/src/types/task";
-import { useCallback, useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface TaskEditorProps {
   task: Task;
@@ -20,8 +22,14 @@ function TaskEditor({
   onSelectTask,
   onClosePanel,
 }: TaskEditorProps) {
-  const deleteTask = useDeleteTask();
   const updateTask = useUpdateTask();
+  const { 
+    handleDelete, 
+    showDeleteConfirmation, 
+    hideDeleteConfirmation, 
+    showDeleteModal, 
+    isDeleting 
+  } = useTaskDelete({ task, onClose, onSelectTask, onClosePanel });
 
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(task?.title || "");
@@ -67,24 +75,6 @@ function TaskEditor({
     }
   }, [task]);
 
-  const handleDelete = async () => {
-    try {
-      // 先にエディターを閉じる
-      if (onSelectTask && onClosePanel) {
-        onClosePanel();
-        onSelectTask(null, true);
-      } else {
-        onClose();
-      }
-      
-      // 少し遅延してから削除API実行
-      setTimeout(async () => {
-        await deleteTask.mutateAsync(task.id);
-      }, 500);
-    } catch (error) {
-      console.error("削除に失敗しました:", error);
-    }
-  };
 
   const handleSave = useCallback(async () => {
     if (!title.trim() || !task) return;
@@ -178,7 +168,6 @@ function TaskEditor({
           />
         }
       >
-
         <div className="flex items-center gap-3">
           {isEditing ? (
             <input
@@ -187,7 +176,7 @@ function TaskEditor({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') {
+                if (e.key === "Enter") {
                   e.preventDefault();
                   descriptionTextareaRef.current?.focus();
                 }
@@ -337,13 +326,15 @@ function TaskEditor({
                 </label>
                 <span
                   className={`inline-block px-3 py-1 rounded-full text-sm ${
-                    statusOptions.find((opt) => opt.value === (savedData?.status || task.status))
-                      ?.color
+                    statusOptions.find(
+                      (opt) => opt.value === (savedData?.status || task.status)
+                    )?.color
                   }`}
                 >
                   {
-                    statusOptions.find((opt) => opt.value === (savedData?.status || task.status))
-                      ?.label
+                    statusOptions.find(
+                      (opt) => opt.value === (savedData?.status || task.status)
+                    )?.label
                   }
                 </span>
               </div>
@@ -354,13 +345,17 @@ function TaskEditor({
                 </label>
                 <span
                   className={`inline-block px-3 py-1 rounded-full text-sm ${
-                    priorityOptions.find((opt) => opt.value === (savedData?.priority || task.priority))
-                      ?.color
+                    priorityOptions.find(
+                      (opt) =>
+                        opt.value === (savedData?.priority || task.priority)
+                    )?.color
                   }`}
                 >
                   {
-                    priorityOptions.find((opt) => opt.value === (savedData?.priority || task.priority))
-                      ?.label
+                    priorityOptions.find(
+                      (opt) =>
+                        opt.value === (savedData?.priority || task.priority)
+                    )?.label
                   }
                 </span>
               </div>
@@ -370,8 +365,10 @@ function TaskEditor({
                   期限日
                 </label>
                 <span className="text-gray-700">
-                  {(savedData?.dueDate || task.dueDate)
-                    ? new Date((savedData?.dueDate || task.dueDate || 0) * 1000).toLocaleDateString("ja-JP")
+                  {savedData?.dueDate || task.dueDate
+                    ? new Date(
+                        (savedData?.dueDate || task.dueDate || 0) * 1000
+                      ).toLocaleDateString("ja-JP")
                     : "設定なし"}
                 </span>
               </div>
@@ -388,7 +385,21 @@ function TaskEditor({
           </>
         )}
       </BaseViewer>
-      <DeleteButton onDelete={handleDelete} />
+      <DeleteButton
+        className="fixed bottom-6 right-6"
+        onDelete={showDeleteConfirmation}
+      />
+      
+      {/* 削除確認モーダル */}
+      <SingleDeleteConfirmation
+        isOpen={showDeleteModal}
+        onClose={hideDeleteConfirmation}
+        onConfirm={handleDelete}
+        itemTitle={task.title}
+        itemType="task"
+        deleteType="normal"
+        isLoading={isDeleting}
+      />
     </>
   );
 }

@@ -109,3 +109,23 @@ export function usePermanentDeleteTask() {
     },
   })
 }
+
+// タスク復元hook
+export function useRestoreTask() {
+  const queryClient = useQueryClient()
+  const { getToken } = useAuth()
+  
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const token = await getToken()
+      const response = await tasksApi.restoreTask(id, token || undefined)
+      const result = await response.json()
+      return result
+    },
+    onSuccess: () => {
+      // タスク一覧と削除済み一覧を再取得
+      queryClient.invalidateQueries({ queryKey: ['tasks'] })
+      queryClient.invalidateQueries({ queryKey: ['deleted-tasks'] })
+    },
+  })
+}

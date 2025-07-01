@@ -2,9 +2,9 @@
 
 import CheckIcon from "@/components/icons/check-icon";
 import PhotoIcon from "@/components/icons/photo-icon";
-import TrashIcon from "@/components/icons/trash-icon";
 import DateInfo from "@/components/shared/date-info";
 import EditButton from "@/components/ui/buttons/edit-button";
+import DeleteButton from "@/components/ui/buttons/delete-button";
 import { useMemoForm } from "@/src/hooks/use-memo-form";
 import { useDeleteNote } from "@/src/hooks/use-notes";
 import type { Memo } from "@/src/types/memo";
@@ -135,17 +135,10 @@ function MemoCreator({ onClose, memo = null, onExitEdit }: MemoCreatorProps) {
         />
       </div>
 
-      <button
-        onClick={handleDelete}
-        className="
-          fixed bottom-6 right-6
-          bg-gray-500 hover:bg-gray-600 text-white
-          size-10 flex items-center justify-center
-          rounded-full shadow-lg transition-colors
-        "
-      >
-        <TrashIcon className="w-5 h-5" />
-      </button>
+      <DeleteButton
+        onDelete={handleDelete}
+        className="fixed bottom-6 right-6"
+      />
     </div>
   );
 }

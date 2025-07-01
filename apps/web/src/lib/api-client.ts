@@ -241,4 +241,23 @@ export const tasksApi = {
     }
     return response
   },
+
+  // POST /tasks/deleted/:id/restore (復元)
+  restoreTask: async (id: number, token?: string) => {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    if (token) {
+      headers.Authorization = `Bearer ${token}`
+    }
+    const response = await fetch(`${API_BASE_URL}/tasks/deleted/${id}/restore`, {
+      method: 'POST',
+      headers,
+    })
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    return response
+  },
 }

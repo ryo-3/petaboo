@@ -1,8 +1,7 @@
 "use client";
 
-import TrashIcon from "@/components/icons/trash-icon";
 import { useCreateTask } from "@/src/hooks/use-tasks";
-import { useCallback, useState, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface TaskCreatorProps {
   onClose: () => void;
@@ -95,7 +94,7 @@ function TaskCreator({ onClose }: TaskCreatorProps) {
   ];
 
   return (
-    <div className="flex flex-col h-full bg-white p-6">
+    <div className="flex flex-col h-full bg-white p-2">
       <div className="flex justify-end items-center mb-4">
         <div className="flex items-center gap-3">
           {error && <span className="text-sm text-red-500">エラー</span>}
@@ -111,13 +110,19 @@ function TaskCreator({ onClose }: TaskCreatorProps) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onKeyDown={(e) => {
-              console.log('Key pressed:', e.key);
-              if (e.key === 'Enter') {
+              console.log("Key pressed:", e.key);
+              if (e.key === "Enter") {
                 e.preventDefault();
-                console.log('Enter pressed, focusing description', descriptionTextareaRef.current);
+                console.log(
+                  "Enter pressed, focusing description",
+                  descriptionTextareaRef.current
+                );
                 if (descriptionTextareaRef.current) {
                   descriptionTextareaRef.current.focus();
-                  descriptionTextareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  descriptionTextareaRef.current.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center",
+                  });
                 }
               }
             }}

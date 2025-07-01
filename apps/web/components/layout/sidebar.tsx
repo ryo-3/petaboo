@@ -19,6 +19,7 @@ interface SidebarProps {
   onSelectTask?: (task: Task) => void;
   onEditTask?: (task: Task) => void;
   onShowFullList: () => void;
+  onShowTaskList?: () => void;
   onHome: () => void;
   onEditMemo: (memo: Memo) => void;
   onDeleteMemo?: (memo: Memo) => void;
@@ -37,6 +38,7 @@ function Sidebar({
   onSelectTask,
   onEditTask,
   onShowFullList,
+  onShowTaskList,
   onHome,
   onEditMemo,
   onDeleteMemo,
@@ -93,7 +95,7 @@ function Sidebar({
             <button
               onClick={() => {
                 onModeChange?.("task");
-                onShowFullList();
+                onShowTaskList?.();
               }}
               className={`p-2 rounded-lg transition-colors ${
                 currentMode === "task"
@@ -157,7 +159,7 @@ function Sidebar({
 
         <div className="ml-2 mr-2 mt-2 flex gap-2">
           <button
-            onClick={onShowFullList}
+            onClick={currentMode === "memo" ? onShowFullList : onShowTaskList}
             className="flex-1 bg-gray-100 hover:bg-gray-200 text-center rounded-lg py-2 transition-colors flex items-center justify-center gap-1"
           >
             {currentMode === "memo" ? (

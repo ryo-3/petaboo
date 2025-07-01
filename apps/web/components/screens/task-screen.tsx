@@ -1,0 +1,190 @@
+"use client";
+
+import TaskCreator from "@/components/features/task/task-creator";
+import TaskEditor from "@/components/features/task/task-editor";
+import DesktopUpper from "@/components/layout/desktop-upper";
+import DesktopLower from "@/components/layout/desktop-lower";
+import { useDeletedTasks, useTasks } from "@/src/hooks/use-tasks";
+import { useUserPreferences } from "@/src/hooks/use-user-preferences";
+import type { DeletedTask, Task } from "@/src/types/task";
+import { useEffect, useState } from "react";
+
+type TaskScreenMode = 'list' | 'view' | 'create' | 'edit';
+
+interface TaskScreenProps {
+  selectedTask?: Task | null;
+  selectedDeletedTask?: DeletedTask | null;
+  onSelectTask: (task: Task | null, fromFullList?: boolean) => void;
+  onSelectDeletedTask: (task: DeletedTask, fromFullList?: boolean) => void;
+  onClose: () => void;
+}
+
+function TaskScreen({
+  selectedTask,
+  selectedDeletedTask,
+  onSelectTask,
+  onSelectDeletedTask,
+  onClose,
+}: TaskScreenProps) {
+  const [taskScreenMode, setTaskScreenMode] = useState<TaskScreenMode>('list');
+  const [activeTab, setActiveTab] = useState<"todo" | "in_progress" | "completed" | "deleted">("todo");
+  const [viewMode, setViewMode] = useState<"card" | "list">("list");
+  const [columnCount, setColumnCount] = useState(2);
+  const [checkedTasks, setCheckedTasks] = useState<Set<number>>(new Set());
+  const [checkedDeletedTasks, setCheckedDeletedTasks] = useState<Set<number>>(new Set());
+
+  // データ取得
+  const { data: tasks, isLoading: taskLoading, error: taskError } = useTasks();
+  const { data: deletedTasks } = useDeletedTasks();
+  const { preferences } = useUserPreferences(1);
+
+  // 設定値が変更されたらローカル状態を更新
+  useEffect(() => {
+    if (preferences) {
+      const newViewMode = preferences.taskViewMode || "list";
+      const newColumnCount = preferences.taskColumnCount || 2;
+      setViewMode(newViewMode);
+      setColumnCount(newColumnCount);
+    }
+  }, [preferences]);
+
+  // タスクが選択されている場合は表示モードに
+  useEffect(() => {
+    if (selectedTask && taskScreenMode === 'list') {
+      setTaskScreenMode('view');
+    }
+    if (selectedDeletedTask && taskScreenMode === 'list') {
+      setTaskScreenMode('view');
+    }
+  }, [selectedTask, selectedDeletedTask, taskScreenMode]);
+
+  // 右側パネル表示時は列数を調整
+  const effectiveColumnCount =
+    taskScreenMode !== "list"
+      ? columnCount <= 2
+        ? columnCount
+        : 2
+      : columnCount;
+
+  return (
+    <div className="flex h-[calc(100vh-64px)] bg-white">
+      {/* 左側：一覧表示エリア */}
+      <div className={`${taskScreenMode === 'list' ? 'w-full' : 'w-1/2'} ${taskScreenMode !== 'list' ? 'border-r border-gray-300' : ''} pt-6 pl-6 pr-2 flex flex-col transition-all duration-300 relative`}>
+        
+        <DesktopUpper
+          currentMode="task"
+          activeTab={activeTab}
+          onTabChange={(tab) => setActiveTab(tab as "todo" | "in_progress" | "completed" | "deleted")}
+          onCreateNew={() => setTaskScreenMode('create')}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          columnCount={columnCount}
+          onColumnCountChange={setColumnCount}
+          rightPanelMode={taskScreenMode === 'list' ? 'hidden' : 'view'}
+          normalCount={0} // タスクでは使わない
+          deletedTasksCount={deletedTasks?.length || 0}
+          todoCount={tasks?.filter((task) => task.status === "todo").length || 0}
+          inProgressCount={tasks?.filter((task) => task.status === "in_progress").length || 0}
+          completedCount={tasks?.filter((task) => task.status === "completed").length || 0}
+        />
+
+        <DesktopLower
+          currentMode="task"
+          activeTab={activeTab}
+          viewMode={viewMode}
+          effectiveColumnCount={effectiveColumnCount}
+          isLoading={taskLoading}
+          error={taskError}
+          notes={[]} // 不要だがpropsで必要
+          localMemos={[]} // 不要だがpropsで必要
+          deletedNotes={[]} // 不要だがpropsで必要
+          tasks={tasks || []}
+          deletedTasks={deletedTasks || []}
+          selectedMemo={null}
+          selectedDeletedMemo={null}
+          selectedTask={selectedTask}
+          selectedDeletedTask={selectedDeletedTask}
+          checkedMemos={new Set()} // 不要だがpropsで必要
+          checkedDeletedMemos={new Set()} // 不要だがpropsで必要
+          checkedTasks={checkedTasks}
+          checkedDeletedTasks={checkedDeletedTasks}
+          onToggleCheckMemo={() => {}} // 不要だがpropsで必要
+          onToggleCheckDeletedMemo={() => {}} // 不要だがpropsで必要
+          onToggleCheckTask={(taskId) => {
+            const newChecked = new Set(checkedTasks);
+            if (checkedTasks.has(taskId)) {
+              newChecked.delete(taskId);
+            } else {
+              newChecked.add(taskId);
+            }
+            setCheckedTasks(newChecked);
+          }}
+          onToggleCheckDeletedTask={(taskId) => {
+            const newChecked = new Set(checkedDeletedTasks);
+            if (checkedDeletedTasks.has(taskId)) {
+              newChecked.delete(taskId);
+            } else {
+              newChecked.add(taskId);
+            }
+            setCheckedDeletedTasks(newChecked);
+          }}
+          onSelectMemo={() => {}} // 不要だがpropsで必要
+          onSelectDeletedMemo={() => {}} // 不要だがpropsで必要
+          onSelectTask={(task) => {
+            onSelectTask(task, true);
+            setTaskScreenMode('view');
+          }}
+          onSelectDeletedTask={(task) => {
+            onSelectDeletedTask(task, true);
+            setTaskScreenMode('view');
+          }}
+        />
+      </div>
+
+      {/* 右側：詳細表示エリア */}
+      {taskScreenMode !== 'list' && (
+        <div className="w-1/2 h-full overflow-y-auto animate-slide-in-right relative">
+          {/* 閉じるボタン */}
+          <button
+            onClick={() => {
+              setTaskScreenMode('list');
+              onClose();
+            }}
+            className="absolute -left-3 top-[40%] transform -translate-y-1/2 bg-white border border-gray-300 rounded-full p-1 text-gray-500 hover:text-gray-700 hover:border-gray-400 transition-colors z-10"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+
+          <div className="p-6">
+            {taskScreenMode === 'create' && (
+              <TaskCreator onClose={() => setTaskScreenMode('list')} />
+            )}
+            {taskScreenMode === 'view' && selectedTask && (
+              <TaskEditor
+                task={selectedTask}
+                onClose={() => setTaskScreenMode('list')}
+                onSelectTask={onSelectTask}
+                onClosePanel={() => setTaskScreenMode('list')}
+              />
+            )}
+            {taskScreenMode === 'view' && selectedDeletedTask && (
+              <div className="p-6">削除済みタスクビューアー（未実装）</div>
+            )}
+            {taskScreenMode === 'edit' && selectedTask && (
+              <TaskEditor
+                task={selectedTask}
+                onClose={() => setTaskScreenMode('view')}
+                onSelectTask={onSelectTask}
+                onClosePanel={() => setTaskScreenMode('list')}
+              />
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default TaskScreen;

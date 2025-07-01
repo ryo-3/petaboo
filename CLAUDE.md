@@ -36,7 +36,7 @@
 <TaskCard task={task} />  // タスク特有の表示
 ```
 
-## ディレクトリ構成（2025-07-01 リファクタリング完了）
+## ディレクトリ構成（2025-07-01 画面モード統一リファクタリング完了）
 
 ```
 apps/web/components/
@@ -59,13 +59,19 @@ apps/web/components/
 ├── layout/               # レイアウト関連
 │   ├── header.tsx
 │   ├── sidebar.tsx
-│   └── desktop-list-view.tsx
+│   ├── desktop-layout.tsx       # サイドバー+メインレイアウト
+│   ├── desktop-list-view.tsx    # 旧版（使用中、削除予定）
+│   ├── desktop-upper.tsx        # 上部コントロール（タイトル・タブ・設定）
+│   └── desktop-lower.tsx        # 下部アイテム一覧表示
 ├── mobile/               # モバイル専用
 │   ├── memo-list.tsx
 │   └── task-list.tsx
-├── screens/              # 画面レベル
-│   ├── welcome-screen.tsx
-│   └── settings-screen.tsx
+├── screens/              # 画面レベル（画面モード統一アーキテクチャ）
+│   ├── welcome-screen.tsx       # home モード
+│   ├── memo-screen.tsx          # memo モード
+│   ├── task-screen.tsx          # task モード
+│   ├── create-screen.tsx        # create モード（メモ・タスク統合作成）
+│   └── settings-screen.tsx      # settings モード
 ├── ui/                   # 再利用可能UIコンポーネント
 │   ├── buttons/          # ボタン系
 │   ├── layout/           # レイアウト系（base-card, item-grid等）
@@ -119,6 +125,28 @@ npm run check-types  # 型チェック（正しいコマンド）
 # ❌ npx tsc --noEmit は使わない！（Turborepo + Next.jsでは設定エラーになる）
 ```
 
+## 画面モード統一アーキテクチャ（2025-07-01 完了）
+
+### 新アーキテクチャ概要
+従来の複雑な条件分岐から、5つのシンプルな画面モードに統一：
+
+```tsx
+type ScreenMode = 'home' | 'memo' | 'task' | 'create' | 'settings';
+```
+
+### 画面モード仕様
+- **home**: ウェルカム画面（WelcomeScreen）
+- **memo**: メモ関連画面（MemoScreen - 一覧・表示・編集）
+- **task**: タスク関連画面（TaskScreen - 一覧・表示・編集）  
+- **create**: 新規作成画面（CreateScreen - メモ・タスク統合作成）
+- **settings**: 設定画面（SettingsScreen）
+
+### 技術的改善
+- **main.tsx**: 複雑な条件分岐から5つのシンプルな条件表示に変更
+- **画面コンポーネント**: 各モード専用の Screen コンポーネントで責務分離
+- **レイアウト再利用**: DesktopUpper/Lower を各画面で再利用
+- **CreateScreen**: メモ・タスク作成をタブ切り替えで統合
+
 ## 開発履歴
 - 2025-06-30: 共通化ファーストアプローチ設計原則確立
 - 2025-06-30: BaseViewer, LoadingState/ErrorState, ConfirmationModal共通化完了
@@ -131,3 +159,46 @@ npm run check-types  # 型チェック（正しいコマンド）
   - BaseViewerから削除ボタンを独立したDeleteButtonコンポーネントに分離
   - タスクエディターで削除時に右向き矢印と同じ動作でエディターを閉じる機能追加
   - 型安全性確保（handleSelectTaskでTask | nullに対応）
+- 2025-07-01: 画面モード統一アーキテクチャ実装完了
+  - 5つの画面モード（home/memo/task/create/settings）に統一
+  - DesktopLayout + DesktopUpper/Lower による再利用可能レイアウト設計
+  - CreateScreen: メモ・タスク統合作成画面でUX向上
+  - main.tsx の複雑な条件分岐を大幅簡素化
+
+## 次回開発仕様書
+
+### 優先度1: 型エラー修正とクリーンアップ
+```bash
+# 型エラー確認
+npm run check-types
+
+# 実際の型エラー箇所:
+✅ main.tsx(195,19): handleEditMemo で setScreenMode('edit') → 'memo' に修正必要
+✅ main.tsx(202,19): handleEditTask で setScreenMode('edit') → 'task' に修正必要
+（新しいScreenModeでは'edit'が存在しない）
+
+# その他チェック項目:
+- DesktopUpper/Lower の props型不一致
+- TaskScreen/MemoScreen での未使用props警告  
+- CreateScreen の型定義確認
+```
+
+### 優先度2: 旧コード削除とファイル整理
+- main.tsx の旧バージョンコメントアウト部分削除
+- desktop-list-view.tsx の使用状況確認・削除検討
+- 不要なimport文の整理
+
+### 優先度3: 機能的な細かい修正
+- 削除後のアイテム選択のずれ修正（標準日付並び順）
+- 各画面でのローディング・エラー状態の統一
+- タブ切り替え時の状態リセット動作確認
+
+### 優先度4: UX改善
+- CreateScreen のタブ切り替え時のフォーカス制御
+- 画面遷移アニメーションの統一
+- モバイル版での新アーキテクチャ対応検討
+
+### 技術的課題
+- 画面モード変更時の状態管理最適化
+- メモリリークの可能性（useEffect cleanup）
+- パフォーマンス改善（不要な再レンダリング防止）

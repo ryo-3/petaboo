@@ -353,19 +353,11 @@ function Main() {
                   <TaskCreator onClose={handleClose} />
                 )
               ) : selectedMemo ? (
-                (() => {
-                  console.log('=== Rendering MemoEditor ===');
-                  console.log('selectedMemo:', selectedMemo);
-                  console.log('handleDeleteAndSelectNext type:', typeof handleDeleteAndSelectNext);
-                  console.log('handleDeleteAndSelectNext value:', handleDeleteAndSelectNext);
-                  return (
-                    <MemoEditor 
-                      memo={selectedMemo} 
-                      onClose={handleClose} 
-                      onDeleteAndSelectNext={handleDeleteAndSelectNext} 
-                    />
-                  );
-                })()
+                <MemoEditor 
+                  memo={selectedMemo} 
+                  onClose={handleClose} 
+                  onDeleteAndSelectNext={handleDeleteAndSelectNext} 
+                />
               ) : selectedTask ? (
                 <TaskEditor task={selectedTask} onClose={handleClose} />
               ) : selectedDeletedMemo ? (

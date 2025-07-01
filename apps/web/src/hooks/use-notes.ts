@@ -67,7 +67,7 @@ export function useDeleteNote() {
     mutationFn: async (id: number) => {
       // 負のID（ローカルメモ）の場合はlocalStorageから削除
       if (id < 0) {
-        console.log("ローカルメモを削除:", id);
+        // console.log("ローカルメモを削除:", id);
 
         // ハッシュIDから元のtempIdを見つけて削除
         Object.keys(localStorage).forEach((key) => {
@@ -83,7 +83,7 @@ export function useDeleteNote() {
 
               if (hashId === id) {
                 localStorage.removeItem(key);
-                console.log("ローカルメモ削除完了:", key);
+                // console.log("ローカルメモ削除完了:", key);
               }
             } catch (error) {
               console.error("ローカルメモ削除エラー:", error);

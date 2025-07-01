@@ -5,8 +5,7 @@ import RestoreIcon from '@/components/icons/restore-icon'
 import DateInfo from '@/components/shared/date-info'
 import Tooltip from '@/components/ui/base/tooltip'
 import { ConfirmationModal } from '@/components/ui/modals'
-import { usePermanentDeleteNote, useRestoreNote } from '@/src/hooks/use-notes'
-import { useState } from 'react'
+import { useDeletedMemoActions } from './use-deleted-memo-actions'
 import type { DeletedMemo } from '@/src/types/memo'
 import { formatDate } from '@/src/utils/formatDate'
 
@@ -16,29 +15,15 @@ interface DeletedMemoViewerProps {
 }
 
 function DeletedMemoViewer({ memo, onClose }: DeletedMemoViewerProps) {
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const permanentDeleteNote = usePermanentDeleteNote()
-  const restoreNote = useRestoreNote()
-
-  const handlePermanentDelete = async () => {
-    try {
-      await permanentDeleteNote.mutateAsync(memo.id)
-      setShowDeleteModal(false)
-      onClose() // 完全削除後に閉じる
-    } catch (error) {
-      console.error('完全削除に失敗しました:', error)
-    }
-  }
-
-  const handleRestore = async () => {
-    try {
-      await restoreNote.mutateAsync(memo.id)
-      onClose() // 復元後に閉じる
-    } catch (error) {
-      console.error('復元に失敗しました:', error)
-      alert('復元に失敗しました。')
-    }
-  }
+  const {
+    handlePermanentDelete,
+    handleRestore,
+    showDeleteConfirmation,
+    hideDeleteConfirmation,
+    showDeleteModal,
+    isDeleting,
+    isRestoring
+  } = useDeletedMemoActions({ memo, onClose })
 
   return (
     <div className="flex flex-col h-full bg-white">
@@ -46,15 +31,21 @@ function DeletedMemoViewer({ memo, onClose }: DeletedMemoViewerProps) {
         <Tooltip text="メモを復元" position="bottom">
           <button
             onClick={handleRestore}
-            className="p-2 rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-800 transition-colors"
+            disabled={isRestoring}
+            className="p-2 rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-800 transition-colors disabled:opacity-50"
           >
-            <RestoreIcon className="w-4 h-4" />
+            {isRestoring ? (
+              <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <RestoreIcon className="w-4 h-4" />
+            )}
           </button>
         </Tooltip>
         <div className="flex-1" />
         <button
-          onClick={() => setShowDeleteModal(true)}
-          className="fixed bottom-6 right-6 bg-red-600 hover:bg-red-700 text-white p-3 rounded-full shadow-lg transition-colors"
+          onClick={showDeleteConfirmation}
+          disabled={isDeleting}
+          className="fixed bottom-6 right-6 bg-red-600 hover:bg-red-700 text-white p-3 rounded-full shadow-lg transition-colors disabled:opacity-50"
         >
           <TrashIcon />
         </button>
@@ -95,12 +86,12 @@ function DeletedMemoViewer({ memo, onClose }: DeletedMemoViewerProps) {
       {/* 削除確認モーダル */}
       <ConfirmationModal
         isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
+        onClose={hideDeleteConfirmation}
         onConfirm={handlePermanentDelete}
         title="完全削除の確認"
         message={`「${memo.title}」を完全に削除しますか？\nこの操作は取り消すことができません。`}
         confirmText="完全削除"
-        isLoading={permanentDeleteNote.isPending}
+        isLoading={isDeleting}
         variant="danger"
         icon="trash"
       />

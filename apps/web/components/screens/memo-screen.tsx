@@ -52,13 +52,11 @@ function MemoScreen({
     activeTab,
     checkedMemos,
     checkedDeletedMemos,
-    onClearSelection: (tab) => {
-      if (tab === 'normal') {
-        setCheckedMemos(new Set());
-      } else {
-        setCheckedDeletedMemos(new Set());
-      }
-    }
+    setCheckedMemos,
+    setCheckedDeletedMemos,
+    notes,
+    deletedNotes,
+    localMemos
   });
 
   // 設定値が変更されたらローカル状態を更新
@@ -80,6 +78,7 @@ function MemoScreen({
       setMemoScreenMode("view");
     }
   }, [selectedMemo, selectedDeletedMemo, memoScreenMode]);
+
 
   // ローカルストレージから新規作成メモを取得
   useEffect(() => {

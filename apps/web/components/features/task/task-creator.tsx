@@ -245,14 +245,6 @@ function TaskCreator({ onClose }: TaskCreatorProps) {
           </button>
         </div>
       </div>
-
-      {/* 右下の閉じるボタン */}
-      <button
-        onClick={onClose}
-        className="fixed bottom-6 right-6 bg-gray-500 hover:bg-gray-600 text-white p-3 rounded-full shadow-lg transition-colors"
-      >
-        <TrashIcon />
-      </button>
     </div>
   );
 }

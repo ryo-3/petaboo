@@ -11,9 +11,9 @@ interface TaskStatusDisplayProps {
   tasks: Task[] | undefined;
   viewMode: 'card' | 'list';
   effectiveColumnCount: number;
-  checkedTasks: Set<number>;
-  onToggleCheck: (taskId: number) => void;
-  onSelectTask: (task: Task) => void;
+  checkedTasks?: Set<number>;
+  onToggleCheck?: (taskId: number) => void;
+  onSelectTask?: (task: Task) => void;
   selectedTaskId?: number;
 }
 
@@ -65,9 +65,9 @@ function TaskStatusDisplay({
           <Component
             key={task.id}
             task={task}
-            isChecked={checkedTasks.has(task.id)}
-            onToggleCheck={() => onToggleCheck(task.id)}
-            onSelect={() => onSelectTask(task)}
+            isChecked={checkedTasks?.has(task.id) || false}
+            onToggleCheck={() => onToggleCheck?.(task.id)}
+            onSelect={() => onSelectTask?.(task)}
             variant="normal"
             isSelected={selectedTaskId === task.id}
           />

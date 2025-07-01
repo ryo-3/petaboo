@@ -20,7 +20,7 @@ interface DesktopLowerProps {
   
   // Data props
   notes?: Memo[];
-  localMemos: Memo[];
+  localMemos?: Memo[];
   deletedNotes?: DeletedMemo[];
   tasks?: Task[];
   deletedTasks?: DeletedTask[];
@@ -32,20 +32,20 @@ interface DesktopLowerProps {
   selectedDeletedTask?: DeletedTask | null;
   
   // Checked items
-  checkedMemos: Set<number>;
-  checkedDeletedMemos: Set<number>;
-  checkedTasks: Set<number>;
-  checkedDeletedTasks: Set<number>;
+  checkedMemos?: Set<number>;
+  checkedDeletedMemos?: Set<number>;
+  checkedTasks?: Set<number>;
+  checkedDeletedTasks?: Set<number>;
   
   // Event handlers
-  onToggleCheckMemo: (memoId: number) => void;
-  onToggleCheckDeletedMemo: (memoId: number) => void;
-  onToggleCheckTask: (taskId: number) => void;
-  onToggleCheckDeletedTask: (taskId: number) => void;
-  onSelectMemo: (memo: Memo) => void;
-  onSelectDeletedMemo: (memo: DeletedMemo) => void;
-  onSelectTask: (task: Task) => void;
-  onSelectDeletedTask: (task: DeletedTask) => void;
+  onToggleCheckMemo?: (memoId: number) => void;
+  onToggleCheckDeletedMemo?: (memoId: number) => void;
+  onToggleCheckTask?: (taskId: number) => void;
+  onToggleCheckDeletedTask?: (taskId: number) => void;
+  onSelectMemo?: (memo: Memo) => void;
+  onSelectDeletedMemo?: (memo: DeletedMemo) => void;
+  onSelectTask?: (task: Task) => void;
+  onSelectDeletedTask?: (task: DeletedTask) => void;
 }
 
 function DesktopLower({
@@ -100,12 +100,12 @@ function DesktopLower({
   if (activeTab === "normal" && currentMode === "memo") {
     return (
       <>
-        {(notes && notes.length > 0) || localMemos.length > 0 ? (
+        {(notes && notes.length > 0) || (localMemos && localMemos.length > 0) ? (
           <ItemGrid
             viewMode={viewMode}
             effectiveColumnCount={effectiveColumnCount}
           >
-            {[...(notes || []), ...localMemos]
+            {[...(notes || []), ...(localMemos || [])]
               .sort((a, b) => {
                 // 編集日と作成日を比較してソート（最新が上）
                 const getLatestTime = (memo: Memo) => {
@@ -147,9 +147,9 @@ function DesktopLower({
                   <Component
                     key={memo.id < 0 ? `local-new-${memo.id}` : memo.id}
                     memo={memo}
-                    isChecked={checkedMemos.has(memo.id)}
-                    onToggleCheck={() => onToggleCheckMemo(memo.id)}
-                    onSelect={() => onSelectMemo(memo)}
+                    isChecked={checkedMemos?.has(memo.id) || false}
+                    onToggleCheck={() => onToggleCheckMemo?.(memo.id)}
+                    onSelect={() => onSelectMemo?.(memo)}
                     variant="normal"
                     isSelected={selectedMemo?.id === memo.id}
                   />
@@ -201,9 +201,9 @@ function DesktopLower({
                     <Component
                       key={memo.id}
                       memo={memo}
-                      isChecked={checkedDeletedMemos.has(memo.id)}
-                      onToggleCheck={() => onToggleCheckDeletedMemo(memo.id)}
-                      onSelect={() => onSelectDeletedMemo(memo)}
+                      isChecked={checkedDeletedMemos?.has(memo.id) || false}
+                      onToggleCheck={() => onToggleCheckDeletedMemo?.(memo.id)}
+                      onSelect={() => onSelectDeletedMemo?.(memo)}
                       variant="deleted"
                       isSelected={selectedDeletedMemo?.id === memo.id}
                     />
@@ -225,9 +225,9 @@ function DesktopLower({
                 <Component
                   key={task.id}
                   task={task}
-                  isChecked={checkedDeletedTasks.has(task.id)}
-                  onToggleCheck={() => onToggleCheckDeletedTask(task.id)}
-                  onSelect={() => onSelectDeletedTask(task)}
+                  isChecked={checkedDeletedTasks?.has(task.id) || false}
+                  onToggleCheck={() => onToggleCheckDeletedTask?.(task.id)}
+                  onSelect={() => onSelectDeletedTask?.(task)}
                   variant="deleted"
                   isSelected={selectedDeletedTask?.id === task.id}
                 />

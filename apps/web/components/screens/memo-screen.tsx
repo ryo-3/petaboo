@@ -13,6 +13,7 @@ import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import { useEffect, useState } from "react";
 import { getMemoDisplayOrder, getNextItemAfterDeletion } from "@/src/utils/domUtils";
+import { createToggleHandler } from "@/src/utils/toggleUtils";
 
 type MemoScreenMode = "list" | "view" | "create" | "edit";
 
@@ -218,36 +219,12 @@ function MemoScreen({
           notes={notes || []}
           localMemos={localMemos}
           deletedNotes={deletedNotes || []}
-          tasks={[]} // 不要だがpropsで必要
-          deletedTasks={[]} // 不要だがpropsで必要
           selectedMemo={selectedMemo}
           selectedDeletedMemo={selectedDeletedMemo}
-          selectedTask={null}
-          selectedDeletedTask={null}
           checkedMemos={checkedMemos}
           checkedDeletedMemos={checkedDeletedMemos}
-          checkedTasks={new Set()} // 不要だがpropsで必要
-          checkedDeletedTasks={new Set()} // 不要だがpropsで必要
-          onToggleCheckMemo={(memoId) => {
-            const newChecked = new Set(checkedMemos);
-            if (checkedMemos.has(memoId)) {
-              newChecked.delete(memoId);
-            } else {
-              newChecked.add(memoId);
-            }
-            setCheckedMemos(newChecked);
-          }}
-          onToggleCheckDeletedMemo={(memoId) => {
-            const newChecked = new Set(checkedDeletedMemos);
-            if (checkedDeletedMemos.has(memoId)) {
-              newChecked.delete(memoId);
-            } else {
-              newChecked.add(memoId);
-            }
-            setCheckedDeletedMemos(newChecked);
-          }}
-          onToggleCheckTask={() => {}} // 不要だがpropsで必要
-          onToggleCheckDeletedTask={() => {}} // 不要だがpropsで必要
+          onToggleCheckMemo={createToggleHandler(checkedMemos, setCheckedMemos)}
+          onToggleCheckDeletedMemo={createToggleHandler(checkedDeletedMemos, setCheckedDeletedMemos)}
           onSelectMemo={(memo) => {
             onSelectMemo(memo);
             setMemoScreenMode("view");
@@ -256,8 +233,6 @@ function MemoScreen({
             onSelectDeletedMemo(memo);
             setMemoScreenMode("view");
           }}
-          onSelectTask={() => {}} // 不要だがpropsで必要
-          onSelectDeletedTask={() => {}} // 不要だがpropsで必要
         />
 
         {/* 一括削除ボタン */}

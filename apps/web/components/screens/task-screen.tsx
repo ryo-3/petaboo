@@ -13,6 +13,7 @@ import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import type { DeletedTask, Task } from "@/src/types/task";
 import { useEffect, useState } from "react";
 import { getTaskDisplayOrder, getNextItemAfterDeletion } from "@/src/utils/domUtils";
+import { createToggleHandler } from "@/src/utils/toggleUtils";
 
 type TaskScreenMode = 'list' | 'view' | 'create' | 'edit';
 
@@ -163,41 +164,14 @@ function TaskScreen({
           effectiveColumnCount={effectiveColumnCount}
           isLoading={taskLoading}
           error={taskError}
-          notes={[]} // 不要だがpropsで必要
-          localMemos={[]} // 不要だがpropsで必要
-          deletedNotes={[]} // 不要だがpropsで必要
           tasks={tasks || []}
           deletedTasks={deletedTasks || []}
-          selectedMemo={null}
-          selectedDeletedMemo={null}
           selectedTask={selectedTask}
           selectedDeletedTask={selectedDeletedTask}
-          checkedMemos={new Set()} // 不要だがpropsで必要
-          checkedDeletedMemos={new Set()} // 不要だがpropsで必要
           checkedTasks={checkedTasks}
           checkedDeletedTasks={checkedDeletedTasks}
-          onToggleCheckMemo={() => {}} // 不要だがpropsで必要
-          onToggleCheckDeletedMemo={() => {}} // 不要だがpropsで必要
-          onToggleCheckTask={(taskId) => {
-            const newChecked = new Set(checkedTasks);
-            if (checkedTasks.has(taskId)) {
-              newChecked.delete(taskId);
-            } else {
-              newChecked.add(taskId);
-            }
-            setCheckedTasks(newChecked);
-          }}
-          onToggleCheckDeletedTask={(taskId) => {
-            const newChecked = new Set(checkedDeletedTasks);
-            if (checkedDeletedTasks.has(taskId)) {
-              newChecked.delete(taskId);
-            } else {
-              newChecked.add(taskId);
-            }
-            setCheckedDeletedTasks(newChecked);
-          }}
-          onSelectMemo={() => {}} // 不要だがpropsで必要
-          onSelectDeletedMemo={() => {}} // 不要だがpropsで必要
+          onToggleCheckTask={createToggleHandler(checkedTasks, setCheckedTasks)}
+          onToggleCheckDeletedTask={createToggleHandler(checkedDeletedTasks, setCheckedDeletedTasks)}
           onSelectTask={(task) => {
             onSelectTask(task, true);
             setTaskScreenMode('view');

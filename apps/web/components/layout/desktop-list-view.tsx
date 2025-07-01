@@ -480,7 +480,7 @@ function DesktopListView({
     <div className="flex h-[calc(100vh-64px)] bg-white">
       {/* 左側：一覧表示 */}
       <div
-        className={`${rightPanelMode !== "hidden" ? "w-1/2" : "w-full"} ${rightPanelMode !== "hidden" ? "border-r border-gray-300 pb-10" : ""} pt-6 pl-6 pr-2 flex flex-col transition-all duration-300 relative`}
+        className={`${rightPanelMode !== "hidden" ? "w-1/2" : "w-full"} ${rightPanelMode !== "hidden" ? "border-r border-gray-300" : ""} pt-6 pl-6 pr-2 flex flex-col transition-all duration-300 relative`}
       >
         <div className="mb-3">
           <div className="flex justify-between items-center mb-3">

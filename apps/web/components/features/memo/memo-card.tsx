@@ -19,6 +19,7 @@ function MemoCard({ memo, isChecked, onToggleCheck, onSelect, variant = 'normal'
       onSelect={onSelect}
       variant={variant}
       isSelected={isSelected}
+      dataMemoId={memo.id}
     >
       <MemoCardContent memo={memo} variant={variant} isSelected={isSelected} />
     </BaseCard>

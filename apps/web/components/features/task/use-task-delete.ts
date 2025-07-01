@@ -7,20 +7,26 @@ interface UseTaskDeleteProps {
   onClose: () => void
   onSelectTask?: (task: Task | null, fromFullList?: boolean) => void
   onClosePanel?: () => void
+  onDeleteAndSelectNext?: (deletedTask: Task) => void
 }
 
-export function useTaskDelete({ task, onClose, onSelectTask, onClosePanel }: UseTaskDeleteProps) {
+export function useTaskDelete({ task, onClose, onSelectTask, onClosePanel, onDeleteAndSelectNext }: UseTaskDeleteProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const deleteTask = useDeleteTask()
 
   const handleDelete = async () => {
     try {
-      // 先にエディターを閉じる
-      if (onSelectTask && onClosePanel) {
-        onClosePanel()
-        onSelectTask(null, true)
+      // 次のタスク選択機能があれば使用、なければ通常のクローズ
+      if (onDeleteAndSelectNext) {
+        onDeleteAndSelectNext(task)
       } else {
-        onClose()
+        // 従来の動作：エディターを閉じる
+        if (onSelectTask && onClosePanel) {
+          onClosePanel()
+          onSelectTask(null, true)
+        } else {
+          onClose()
+        }
       }
 
       // モーダルを閉じる

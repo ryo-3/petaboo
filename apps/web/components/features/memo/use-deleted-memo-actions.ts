@@ -5,18 +5,29 @@ import type { DeletedMemo } from '@/src/types/memo'
 interface UseDeletedMemoActionsProps {
   memo: DeletedMemo
   onClose: () => void
+  onDeleteAndSelectNext?: (deletedMemo: DeletedMemo) => void
 }
 
-export function useDeletedMemoActions({ memo, onClose }: UseDeletedMemoActionsProps) {
+export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext }: UseDeletedMemoActionsProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const permanentDeleteNote = usePermanentDeleteNote()
   const restoreNote = useRestoreNote()
 
   const handlePermanentDelete = async () => {
     try {
-      await permanentDeleteNote.mutateAsync(memo.id)
+      // 次のメモ選択機能があれば使用、なければ通常のクローズ
+      if (onDeleteAndSelectNext) {
+        onDeleteAndSelectNext(memo)
+      } else {
+        onClose()
+      }
+
       setShowDeleteModal(false)
-      onClose() // 完全削除後に閉じる
+      
+      // 少し遅延してから削除API実行（UI更新を先に行う）
+      setTimeout(async () => {
+        await permanentDeleteNote.mutateAsync(memo.id)
+      }, 100)
     } catch (error) {
       console.error('完全削除に失敗しました:', error)
       alert('完全削除に失敗しました。')

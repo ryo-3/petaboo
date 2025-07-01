@@ -7,6 +7,8 @@ interface BaseCardProps {
   variant?: 'normal' | 'deleted'
   isSelected?: boolean
   children: ReactNode
+  dataTaskId?: number | string
+  dataMemoId?: number | string
 }
 
 function BaseCard({
@@ -15,12 +17,18 @@ function BaseCard({
   onSelect,
   variant = 'normal',
   isSelected = false,
-  children
+  children,
+  dataTaskId,
+  dataMemoId
 }: BaseCardProps) {
   const isDeleted = variant === 'deleted'
 
   return (
-    <div className="relative">
+    <div 
+      className="relative" 
+      data-task-id={dataTaskId}
+      data-memo-id={dataMemoId}
+    >
       <button
         onClick={(e) => {
           e.stopPropagation()

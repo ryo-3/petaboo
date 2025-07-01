@@ -7,7 +7,6 @@ import MemoEditor from "@/components/features/memo/memo-editor";
 import TaskCreator from "@/components/features/task/task-creator";
 import TaskEditor from "@/components/features/task/task-editor";
 import DesktopLayout from "@/components/layout/desktop-layout";
-import DesktopListView from "@/components/layout/desktop-list-view";
 import Header from "@/components/layout/header";
 import Sidebar from "@/components/layout/sidebar";
 import CreateScreen from "@/components/screens/create-screen";

@@ -46,6 +46,7 @@ function MemoListItem({
 
   return (
     <div
+      data-memo-id={memo.id}
       className={`${
         isSelected
           ? "bg-gray-100"

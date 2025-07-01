@@ -5,18 +5,29 @@ import type { DeletedTask } from '@/src/types/task'
 interface UseDeletedTaskActionsProps {
   task: DeletedTask
   onClose: () => void
+  onDeleteAndSelectNext?: (deletedTask: DeletedTask) => void
 }
 
-export function useDeletedTaskActions({ task, onClose }: UseDeletedTaskActionsProps) {
+export function useDeletedTaskActions({ task, onClose, onDeleteAndSelectNext }: UseDeletedTaskActionsProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const permanentDeleteTask = usePermanentDeleteTask()
   const restoreTask = useRestoreTask()
 
   const handlePermanentDelete = async () => {
     try {
-      await permanentDeleteTask.mutateAsync(task.id)
+      // 次のタスク選択機能があれば使用、なければ通常のクローズ
+      if (onDeleteAndSelectNext) {
+        onDeleteAndSelectNext(task)
+      } else {
+        onClose()
+      }
+
       setShowDeleteModal(false)
-      onClose() // 完全削除後に閉じる
+      
+      // 少し遅延してから削除API実行（UI更新を先に行う）
+      setTimeout(async () => {
+        await permanentDeleteTask.mutateAsync(task.id)
+      }, 100)
     } catch (error) {
       console.error('完全削除に失敗しました:', error)
       alert('完全削除に失敗しました。')

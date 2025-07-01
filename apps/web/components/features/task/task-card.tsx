@@ -19,6 +19,7 @@ function TaskCard({ task, isChecked, onToggleCheck, onSelect, variant = 'normal'
       onSelect={onSelect}
       variant={variant}
       isSelected={isSelected}
+      dataTaskId={task.id}
     >
       <TaskCardContent task={task} variant={variant} />
     </BaseCard>

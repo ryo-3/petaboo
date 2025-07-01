@@ -475,4 +475,93 @@ app.openapi(
   }
 );
 
+// POST /deleted/:id/restore（復元）
+app.openapi(
+  createRoute({
+    method: "post",
+    path: "/deleted/{id}/restore",
+    request: {
+      params: z.object({
+        id: z.string().regex(/^\d+$/).transform(Number),
+      }),
+    },
+    responses: {
+      200: {
+        description: "Task restored successfully",
+        content: {
+          "application/json": {
+            schema: z.object({ success: z.boolean() }),
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
+      404: {
+        description: "Deleted task not found",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
+      500: {
+        description: "Internal server error",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
+    },
+  }),
+  async (c) => {
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const { id } = c.req.valid("param");
+    
+    try {
+      // まず該当削除済みタスクを取得（ユーザー確認込み）
+      const deletedTask = await db.select().from(deletedTasks).where(
+        and(eq(deletedTasks.id, id), eq(deletedTasks.userId, auth.userId))
+      ).get();
+      
+      if (!deletedTask) {
+        return c.json({ error: "Deleted task not found" }, 404);
+      }
+
+      // トランザクションで復元処理
+      db.transaction((tx) => {
+        // 通常のタスクテーブルに復元
+        tx.insert(tasks).values({
+          userId: auth.userId,
+          title: deletedTask.title,
+          description: deletedTask.description,
+          status: deletedTask.status as "todo" | "in_progress" | "completed",
+          priority: deletedTask.priority as "low" | "medium" | "high",
+          dueDate: deletedTask.dueDate,
+          createdAt: deletedTask.createdAt,
+          updatedAt: Math.floor(Date.now() / 1000), // 復元時刻を更新
+        }).run();
+
+        // 削除済みテーブルから削除
+        tx.delete(deletedTasks).where(eq(deletedTasks.id, id)).run();
+      });
+
+      return c.json({ success: true }, 200);
+    } catch (error) {
+      console.error('復元エラー:', error);
+      return c.json({ error: 'Internal server error' }, 500);
+    }
+  }
+);
+
 export default app;

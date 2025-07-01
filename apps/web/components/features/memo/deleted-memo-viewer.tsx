@@ -12,9 +12,10 @@ import { formatDate } from '@/src/utils/formatDate'
 interface DeletedMemoViewerProps {
   memo: DeletedMemo
   onClose: () => void
+  onDeleteAndSelectNext?: (deletedMemo: DeletedMemo) => void
 }
 
-function DeletedMemoViewer({ memo, onClose }: DeletedMemoViewerProps) {
+function DeletedMemoViewer({ memo, onClose, onDeleteAndSelectNext }: DeletedMemoViewerProps) {
   const {
     handlePermanentDelete,
     handleRestore,
@@ -23,7 +24,7 @@ function DeletedMemoViewer({ memo, onClose }: DeletedMemoViewerProps) {
     showDeleteModal,
     isDeleting,
     isRestoring
-  } = useDeletedMemoActions({ memo, onClose })
+  } = useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext })
 
   return (
     <div className="flex flex-col h-full bg-white">

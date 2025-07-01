@@ -12,6 +12,7 @@ import { useMemosBulkDelete } from "@/components/features/memo/use-memo-bulk-del
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import { useEffect, useState } from "react";
+import { getMemoDisplayOrder, getNextItemAfterDeletion } from "@/src/utils/domUtils";
 
 type MemoScreenMode = "list" | "view" | "create" | "edit";
 
@@ -159,22 +160,14 @@ function MemoScreen({
     });
   };
 
-  // 表示順序での次のメモを選択するハンドラー
+  // 表示順序での次のメモを選択するハンドラー（実際の画面表示順序に基づく）
   const handleDeleteAndSelectNextInOrder = (deletedMemo: Memo) => {
-    const sortedMemos = getSortedMemos();
-    const deletedIndex = sortedMemos.findIndex((m) => m.id === deletedMemo.id);
-    let nextMemo: Memo | null = null;
-
-    if (deletedIndex !== -1) {
-      // 削除されたメモの次のメモを選択
-      if (deletedIndex < sortedMemos.length - 1) {
-        nextMemo = sortedMemos[deletedIndex + 1] || null;
-      }
-      // 最後のメモが削除された場合は前のメモを選択
-      else if (deletedIndex > 0) {
-        nextMemo = sortedMemos[deletedIndex - 1] || null;
-      }
-    }
+    // 全メモリスト（通常メモ + ローカル作成メモ）
+    const allMemos = [...(notes || []), ...localMemos];
+    
+    // DOM表示順序を取得して次のメモを決定
+    const displayOrder = getMemoDisplayOrder();
+    const nextMemo = getNextItemAfterDeletion(allMemos, deletedMemo, displayOrder);
 
     if (nextMemo) {
       // 次のメモを選択してビューモードに切り替え
@@ -187,6 +180,35 @@ function MemoScreen({
     }
   };
 
+  // 削除済みメモでの次のメモ選択ハンドラー
+  const handleDeletedMemoAndSelectNext = (deletedMemo: DeletedMemo) => {
+    if (!deletedNotes) return;
+    
+    const sortedDeletedMemos = [...deletedNotes].sort((a, b) => b.deletedAt - a.deletedAt);
+    const deletedIndex = sortedDeletedMemos.findIndex((m) => m.id === deletedMemo.id);
+    let nextMemo: DeletedMemo | null = null;
+
+    if (deletedIndex !== -1) {
+      // 削除されたメモの次のメモを選択
+      if (deletedIndex < sortedDeletedMemos.length - 1) {
+        nextMemo = sortedDeletedMemos[deletedIndex + 1] || null;
+      }
+      // 最後のメモが削除された場合は前のメモを選択
+      else if (deletedIndex > 0) {
+        nextMemo = sortedDeletedMemos[deletedIndex - 1] || null;
+      }
+    }
+
+    if (nextMemo) {
+      // 次のメモを選択してビューモードに切り替え
+      onSelectDeletedMemo(nextMemo, true);
+      setMemoScreenMode("view");
+    } else {
+      // 次のメモが見つからない - リストモードに戻る
+      setMemoScreenMode("list");
+      onClose();
+    }
+  };
 
   // 右側パネル表示時は列数を調整
   const effectiveColumnCount =
@@ -328,6 +350,7 @@ function MemoScreen({
               <DeletedMemoViewer
                 memo={selectedDeletedMemo}
                 onClose={() => setMemoScreenMode("list")}
+                onDeleteAndSelectNext={handleDeletedMemoAndSelectNext}
               />
             )}
             {memoScreenMode === "edit" && selectedMemo && (

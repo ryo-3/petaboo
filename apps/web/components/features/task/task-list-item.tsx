@@ -25,6 +25,7 @@ function TaskListItem({
 
   return (
     <div
+      data-task-id={task.id}
       className={`${
         isSelected
           ? "bg-gray-100"

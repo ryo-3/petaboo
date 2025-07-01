@@ -14,6 +14,7 @@ interface TaskEditorProps {
   onClose: () => void;
   onSelectTask?: (task: Task | null, fromFullList?: boolean) => void;
   onClosePanel?: () => void;
+  onDeleteAndSelectNext?: (deletedTask: Task) => void;
 }
 
 function TaskEditor({
@@ -21,6 +22,7 @@ function TaskEditor({
   onClose,
   onSelectTask,
   onClosePanel,
+  onDeleteAndSelectNext,
 }: TaskEditorProps) {
   const updateTask = useUpdateTask();
   const { 
@@ -29,7 +31,7 @@ function TaskEditor({
     hideDeleteConfirmation, 
     showDeleteModal, 
     isDeleting 
-  } = useTaskDelete({ task, onClose, onSelectTask, onClosePanel });
+  } = useTaskDelete({ task, onClose, onSelectTask, onClosePanel, onDeleteAndSelectNext });
 
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(task?.title || "");

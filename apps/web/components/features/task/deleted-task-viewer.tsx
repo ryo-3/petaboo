@@ -12,9 +12,10 @@ import { formatDate } from '@/src/utils/formatDate'
 interface DeletedTaskViewerProps {
   task: DeletedTask
   onClose: () => void
+  onDeleteAndSelectNext?: (deletedTask: DeletedTask) => void
 }
 
-function DeletedTaskViewer({ task, onClose }: DeletedTaskViewerProps) {
+function DeletedTaskViewer({ task, onClose, onDeleteAndSelectNext }: DeletedTaskViewerProps) {
   const {
     handlePermanentDelete,
     handleRestore,
@@ -23,7 +24,7 @@ function DeletedTaskViewer({ task, onClose }: DeletedTaskViewerProps) {
     showDeleteModal,
     isDeleting,
     isRestoring
-  } = useDeletedTaskActions({ task, onClose })
+  } = useDeletedTaskActions({ task, onClose, onDeleteAndSelectNext })
 
   const statusOptions = [
     { value: "todo", label: "未着手", color: "bg-gray-100 text-gray-800" },

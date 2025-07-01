@@ -2,6 +2,7 @@
 
 import BaseViewer from "@/components/shared/base-viewer";
 import EditButton from "@/components/ui/buttons/edit-button";
+import DeleteButton from "@/components/ui/buttons/delete-button";
 import { useDeleteTask, useUpdateTask } from "@/src/hooks/use-tasks";
 import type { Task } from "@/src/types/task";
 import { useCallback, useEffect, useState, useRef } from "react";
@@ -9,11 +10,15 @@ import { useCallback, useEffect, useState, useRef } from "react";
 interface TaskEditorProps {
   task: Task;
   onClose: () => void;
+  onSelectTask?: (task: Task | null, fromFullList?: boolean) => void;
+  onClosePanel?: () => void;
 }
 
 function TaskEditor({
   task,
   onClose,
+  onSelectTask,
+  onClosePanel,
 }: TaskEditorProps) {
   const deleteTask = useDeleteTask();
   const updateTask = useUpdateTask();
@@ -64,8 +69,18 @@ function TaskEditor({
 
   const handleDelete = async () => {
     try {
-      await deleteTask.mutateAsync(task.id);
-      onClose();
+      // 先にエディターを閉じる
+      if (onSelectTask && onClosePanel) {
+        onClosePanel();
+        onSelectTask(null, true);
+      } else {
+        onClose();
+      }
+      
+      // 少し遅延してから削除API実行
+      setTimeout(async () => {
+        await deleteTask.mutateAsync(task.id);
+      }, 500);
     } catch (error) {
       console.error("削除に失敗しました:", error);
     }
@@ -147,22 +162,22 @@ function TaskEditor({
   ];
 
   return (
-    <BaseViewer
-      item={task}
-      onClose={onClose}
-      onDelete={handleDelete}
-      error={error ? "エラー" : null}
-      headerActions={
-        <EditButton
-          isEditing={isEditing}
-          onEdit={() => setIsEditing(true)}
-          onExitEdit={() => {
-            setIsEditing(false);
-            // Edit mode exited
-          }}
-        />
-      }
-    >
+    <>
+      <BaseViewer
+        item={task}
+        onClose={onClose}
+        error={error ? "エラー" : null}
+        headerActions={
+          <EditButton
+            isEditing={isEditing}
+            onEdit={() => setIsEditing(true)}
+            onExitEdit={() => {
+              setIsEditing(false);
+              // Edit mode exited
+            }}
+          />
+        }
+      >
 
         <div className="flex items-center gap-3">
           {isEditing ? (
@@ -372,7 +387,9 @@ function TaskEditor({
             </div>
           </>
         )}
-    </BaseViewer>
+      </BaseViewer>
+      <DeleteButton onDelete={handleDelete} />
+    </>
   );
 }
 

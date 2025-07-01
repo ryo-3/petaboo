@@ -131,7 +131,7 @@ function Main() {
     }
   };
 
-  const handleSelectTask = (task: Task, fromFullList = false) => {
+  const handleSelectTask = (task: Task | null, fromFullList = false) => {
     setSelectedTask(task);
     setSelectedMemo(null);
     setSelectedDeletedMemo(null);
@@ -348,7 +348,11 @@ function Main() {
                 currentMode === "memo" ? (
                   <MemoCreator onClose={handleClose} memo={selectedMemo} />
                 ) : selectedTask ? (
-                  <TaskEditor task={selectedTask} onClose={handleClose} />
+                  <TaskEditor 
+                    task={selectedTask} 
+                    onClose={handleClose}
+                    onSelectTask={handleSelectTask}
+                  />
                 ) : (
                   <TaskCreator onClose={handleClose} />
                 )
@@ -359,7 +363,11 @@ function Main() {
                   onDeleteAndSelectNext={handleDeleteAndSelectNext} 
                 />
               ) : selectedTask ? (
-                <TaskEditor task={selectedTask} onClose={handleClose} />
+                <TaskEditor 
+                  task={selectedTask} 
+                  onClose={handleClose}
+                  onSelectTask={handleSelectTask}
+                />
               ) : selectedDeletedMemo ? (
                 <DeletedMemoViewer
                   memo={selectedDeletedMemo}

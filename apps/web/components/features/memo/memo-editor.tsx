@@ -2,6 +2,7 @@
 
 import BaseViewer from '@/components/shared/base-viewer'
 import PhotoIcon from '@/components/icons/photo-icon'
+import DeleteButton from '@/components/ui/buttons/delete-button'
 import { useDeleteNote } from '@/src/hooks/use-notes'
 import { useState, useEffect } from 'react'
 import type { Memo } from '@/src/types/memo'
@@ -92,10 +93,10 @@ function MemoEditor({ memo, onClose, onDeleteAndSelectNext }: MemoEditorProps) {
   }, [title, content, hasUserEdited, memo.id, currentMemoId])
 
   return (
-    <BaseViewer
-      item={memo}
-      onClose={onClose}
-      onDelete={handleDelete}
+    <>
+      <BaseViewer
+        item={memo}
+        onClose={onClose}
       error={error}
       isEditing={true}
       headerActions={
@@ -136,7 +137,9 @@ function MemoEditor({ memo, onClose, onDeleteAndSelectNext }: MemoEditorProps) {
           }}
           className="flex-1 resize-none outline-none text-gray-700 leading-relaxed"
         />
-    </BaseViewer>
+      </BaseViewer>
+      <DeleteButton onDelete={handleDelete} />
+    </>
   )
 }
 

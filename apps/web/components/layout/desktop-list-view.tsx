@@ -38,7 +38,7 @@ import ItemGrid from "@/components/ui/layout/item-grid";
 interface DesktopListViewProps {
   onSelectMemo: (memo: Memo, fromFullList?: boolean) => void;
   onSelectDeletedMemo: (memo: DeletedMemo, fromFullList?: boolean) => void;
-  onSelectTask?: (task: Task, fromFullList?: boolean) => void;
+  onSelectTask?: (task: Task | null, fromFullList?: boolean) => void;
   onSelectDeletedTask?: (task: DeletedTask, fromFullList?: boolean) => void;
   onDeleteAndSelectNext?: (deletedMemo: Memo) => void;
   currentMode?: "memo" | "task";
@@ -831,7 +831,7 @@ function DesktopListView({
               } else if (selectedDeletedMemo) {
                 onSelectDeletedMemo(null as unknown as DeletedMemo, true);
               } else if (selectedTask) {
-                onSelectTask!(null as unknown as Task, true);
+                onSelectTask!(null, true);
               } else if (selectedDeletedTask) {
                 onSelectDeletedTask!(null as unknown as DeletedTask, true);
               }
@@ -863,7 +863,12 @@ function DesktopListView({
               {selectedMemo ? (
                 <MemoEditor memo={selectedMemo} onClose={() => {}} onDeleteAndSelectNext={handleDeleteAndSelectNextInOrder} />
               ) : selectedTask ? (
-                <TaskEditor task={selectedTask} onClose={() => {}} />
+                <TaskEditor 
+                  task={selectedTask} 
+                  onClose={() => {}} 
+                  onSelectTask={onSelectTask}
+                  onClosePanel={() => setRightPanelMode("hidden")}
+                />
               ) : selectedDeletedMemo ? (
                 <DeletedMemoViewer memo={selectedDeletedMemo} onClose={() => {}} />
               ) : selectedDeletedTask ? (

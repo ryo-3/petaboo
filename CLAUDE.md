@@ -115,7 +115,8 @@ apps/web/components/
 
 ## ビルド・型チェックコマンド
 ```bash
-npx tsc --noEmit  # 型チェック
+npm run check-types  # 型チェック（正しいコマンド）
+# ❌ npx tsc --noEmit は使わない！（Turborepo + Next.jsでは設定エラーになる）
 ```
 
 ## 開発履歴
@@ -126,3 +127,7 @@ npx tsc --noEmit  # 型チェック
   - ui/配下をbuttons/layout/feedback/base/に細分化
   - mobile/フォルダー新設でモバイル専用コンポーネント分離
   - task-tab-content.tsx → task-status-display.tsxにリネーム（命名改善）
+- 2025-07-01: 削除ボタンの設計改善とタスク削除時エディター自動クローズ機能実装
+  - BaseViewerから削除ボタンを独立したDeleteButtonコンポーネントに分離
+  - タスクエディターで削除時に右向き矢印と同じ動作でエディターを閉じる機能追加
+  - 型安全性確保（handleSelectTaskでTask | nullに対応）

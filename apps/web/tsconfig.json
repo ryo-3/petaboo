@@ -6,7 +6,7 @@
         "name": "next"
       }
     ],
-    "jsx": "react-jsx",
+    "jsx": "preserve",
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "allowJs": true,

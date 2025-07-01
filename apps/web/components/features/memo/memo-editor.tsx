@@ -19,15 +19,13 @@ interface MemoEditorProps {
 function MemoEditor({ memo, onClose, onDeleteAndSelectNext }: MemoEditorProps) {
   const deleteNote = useDeleteNote();
   const {
-    title,
     setTitle,
     content,
     setContent,
     savedSuccessfully,
-    createdMemoId,
   } = useMemoForm({ memo });
 
-  const [error, setError] = useState<string | null>(null);
+  const [error] = useState<string | null>(null);
 
   const handleDelete = async () => {
     try {

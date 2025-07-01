@@ -40,7 +40,7 @@ function MemoCreator({ onClose, memo = null, onExitEdit }: MemoCreatorProps) {
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [memo]);
 
   const handleDelete = async () => {
     try {

@@ -16,7 +16,7 @@ interface BaseViewerProps {
 
 function BaseViewer({
   item,
-  onClose,
+  onClose: _onClose, // eslint-disable-line @typescript-eslint/no-unused-vars
   headerActions,
   children,
   error,

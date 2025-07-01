@@ -8,7 +8,7 @@ interface TaskCreatorProps {
   onClose: () => void;
 }
 
-function TaskCreator({ onClose }: TaskCreatorProps) {
+function TaskCreator({ onClose: _onClose }: TaskCreatorProps) { // eslint-disable-line @typescript-eslint/no-unused-vars
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<"todo" | "in_progress" | "completed">(

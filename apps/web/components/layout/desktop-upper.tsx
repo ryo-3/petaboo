@@ -7,8 +7,6 @@ import AddItemButton from "@/components/ui/buttons/add-item-button";
 import ColumnCountSelector from "@/components/ui/layout/column-count-selector";
 import ViewModeToggle from "@/components/ui/layout/view-mode-toggle";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
-import type { DeletedMemo } from "@/src/types/memo";
-import type { DeletedTask } from "@/src/types/task";
 
 interface DesktopUpperProps {
   currentMode: "memo" | "task";

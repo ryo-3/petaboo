@@ -1,11 +1,6 @@
 "use client";
 
 import DeletedMemoList from "@/components/features/memo/deleted-memo-list";
-import DeletedMemoViewer from "@/components/features/memo/deleted-memo-viewer";
-import MemoCreator from "@/components/features/memo/memo-creator";
-import MemoEditor from "@/components/features/memo/memo-editor";
-import TaskCreator from "@/components/features/task/task-creator";
-import TaskEditor from "@/components/features/task/task-editor";
 import DesktopLayout from "@/components/layout/desktop-layout";
 import Header from "@/components/layout/header";
 import Sidebar from "@/components/layout/sidebar";
@@ -14,7 +9,6 @@ import MemoScreen from "@/components/screens/memo-screen";
 import SettingsScreen from "@/components/screens/settings-screen";
 import TaskScreen from "@/components/screens/task-screen";
 import WelcomeScreen from "@/components/screens/welcome-screen";
-import { useNotes } from "@/src/hooks/use-notes";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
 import { useEffect, useState } from "react";
@@ -34,7 +28,6 @@ function Main() {
   const [currentMode, setCurrentMode] = useState<"memo" | "task">("memo");
   const [windowWidth, setWindowWidth] = useState(0);
 
-  const { data: notes } = useNotes();
 
   // API同期フック（一時的に無効化 - 挙動整理のため）
   // Removed unused imports: useApiSync, syncStatus
@@ -53,7 +46,7 @@ function Main() {
 
   const isMobile = windowWidth <= 768;
 
-  const handleSelectMemo = (memo: Memo, fromFullList = false) => {
+  const handleSelectMemo = (memo: Memo) => {
     setSelectedMemo(memo);
     setSelectedDeletedMemo(null);
     setSelectedTask(null);
@@ -70,74 +63,8 @@ function Main() {
     setScreenMode('memo');
   };
 
-  // エディターからメモ削除時に次のメモを選択するハンドラー
-  const handleDeleteAndSelectNext = (deletedMemo: Memo) => {
-    // ソート済み配列を取得（表示と同じ順序）
-    const getSortedMemos = () => {
-      const allMemos = [...(notes || [])];
-      
-      return allMemos.sort((a, b) => {
-        const getLatestTime = (memo: Memo) => {
-          if (memo.id < 0) {
-            return memo.updatedAt || memo.createdAt;
-          }
 
-          const localData = localStorage.getItem(`memo_draft_${memo.id}`);
-          let localEditTime = 0;
-          if (localData) {
-            try {
-              const parsed = JSON.parse(localData);
-              if (parsed.id === memo.id && parsed.lastEditedAt) {
-                localEditTime = parsed.lastEditedAt;
-              }
-            } catch {
-              // パースエラーは無視
-            }
-          }
-          
-          return Math.max(
-            localEditTime,
-            memo.updatedAt || 0,
-            memo.createdAt
-          );
-        };
-
-        return getLatestTime(b) - getLatestTime(a);
-      });
-    };
-
-    const sortedMemos = getSortedMemos();
-    
-    if (sortedMemos.length > 1) {
-      const deletedIndex = sortedMemos.findIndex((m) => m.id === deletedMemo.id);
-      let nextMemo: Memo | null = null;
-
-      if (deletedIndex !== -1) {
-        // 削除されたメモの次のメモを選択
-        if (deletedIndex < sortedMemos.length - 1) {
-          nextMemo = sortedMemos[deletedIndex + 1] || null;
-        }
-        // 最後のメモが削除された場合は前のメモを選択
-        else if (deletedIndex > 0) {
-          nextMemo = sortedMemos[deletedIndex - 1] || null;
-        }
-      }
-
-      if (nextMemo) {
-        setSelectedMemo(nextMemo);
-        setSelectedDeletedMemo(null);
-        setSelectedTask(null);
-        setSelectedDeletedTask(null);
-        setScreenMode('memo');
-      } else {
-        handleClose();
-      }
-    } else {
-      handleClose();
-    }
-  };
-
-  const handleSelectDeletedMemo = (memo: DeletedMemo, fromFullList = false) => {
+  const handleSelectDeletedMemo = (memo: DeletedMemo) => {
     setSelectedDeletedMemo(memo);
     setSelectedMemo(null);
     setSelectedTask(null);
@@ -145,7 +72,7 @@ function Main() {
     setScreenMode('memo');
   };
 
-  const handleSelectTask = (task: Task | null, fromFullList = false) => {
+  const handleSelectTask = (task: Task | null) => {
     setSelectedTask(task);
     setSelectedMemo(null);
     setSelectedDeletedMemo(null);
@@ -153,7 +80,7 @@ function Main() {
     setScreenMode('task');
   };
 
-  const handleSelectDeletedTask = (task: DeletedTask, fromFullList = false) => {
+  const handleSelectDeletedTask = (task: DeletedTask) => {
     setSelectedDeletedTask(task);
     setSelectedTask(null);
     setSelectedMemo(null);
@@ -246,8 +173,6 @@ function Main() {
     setScreenMode('settings');
   };
 
-  // Removed unused function: handleBackFromSettings
-
   return (
     <main>
       {/* API同期エラー表示 */}
@@ -326,64 +251,6 @@ function Main() {
               />
             }
           >
-            {/* 旧バージョン（コメントアウト） */}
-            {/*
-            {screenMode === 'settings' && (
-              <SettingsScreen />
-            )}
-            {screenMode === 'list' && (
-              <DesktopListView
-                onSelectMemo={handleSelectMemo}
-                onSelectDeletedMemo={handleSelectDeletedMemo}
-                onSelectTask={handleSelectTask}
-                onSelectDeletedTask={handleSelectDeletedTask}
-                onDeleteAndSelectNext={handleDeleteAndSelectNext}
-                currentMode={currentMode}
-                selectedMemo={selectedMemo}
-                selectedDeletedMemo={selectedDeletedMemo}
-                selectedTask={selectedTask}
-                selectedDeletedTask={selectedDeletedTask}
-              />
-            )}
-            {screenMode === 'edit' && (
-              currentMode === "memo" ? (
-                <MemoCreator onClose={handleClose} memo={selectedMemo} />
-              ) : selectedTask ? (
-                <TaskEditor
-                  task={selectedTask}
-                  onClose={handleClose}
-                  onSelectTask={handleSelectTask}
-                />
-              ) : (
-                <TaskCreator onClose={handleClose} />
-              )
-            )}
-            {screenMode === 'view' && (
-              selectedMemo ? (
-                <MemoEditor
-                  memo={selectedMemo}
-                  onClose={handleClose}
-                  onDeleteAndSelectNext={handleDeleteAndSelectNext}
-                />
-              ) : selectedTask ? (
-                <TaskEditor
-                  task={selectedTask}
-                  onClose={handleClose}
-                  onSelectTask={handleSelectTask}
-                />
-              ) : selectedDeletedMemo ? (
-                <DeletedMemoViewer
-                  memo={selectedDeletedMemo}
-                  onClose={handleClose}
-                />
-              ) : selectedDeletedTask ? (
-                <div className="p-6">削除済みタスクビューアー（未実装）</div>
-              ) : null
-            )}
-            {screenMode === 'home' && (
-              <WelcomeScreen />
-            )}
-            */}
 
             {/* 新バージョン（アイコンベース） */}
             {screenMode === 'settings' && (
@@ -398,7 +265,6 @@ function Main() {
                 selectedDeletedMemo={selectedDeletedMemo}
                 onSelectMemo={handleSelectMemo}
                 onSelectDeletedMemo={handleSelectDeletedMemo}
-                onDeleteAndSelectNext={handleDeleteAndSelectNext}
                 onClose={handleClose}
               />
             )}

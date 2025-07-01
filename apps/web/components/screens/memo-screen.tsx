@@ -19,9 +19,8 @@ type MemoScreenMode = "list" | "view" | "create" | "edit";
 interface MemoScreenProps {
   selectedMemo?: Memo | null;
   selectedDeletedMemo?: DeletedMemo | null;
-  onSelectMemo: (memo: Memo, fromFullList?: boolean) => void;
-  onSelectDeletedMemo: (memo: DeletedMemo, fromFullList?: boolean) => void;
-  onDeleteAndSelectNext?: (deletedMemo: Memo) => void;
+  onSelectMemo: (memo: Memo) => void;
+  onSelectDeletedMemo: (memo: DeletedMemo) => void;
   onClose: () => void;
 }
 
@@ -30,7 +29,6 @@ function MemoScreen({
   selectedDeletedMemo,
   onSelectMemo,
   onSelectDeletedMemo,
-  onDeleteAndSelectNext,
   onClose,
 }: MemoScreenProps) {
   const [memoScreenMode, setMemoScreenMode] = useState<MemoScreenMode>("list");
@@ -131,34 +129,6 @@ function MemoScreen({
     return () => clearInterval(interval);
   }, []);
 
-  // 表示順序でソートされたメモリストを取得する関数
-  const getSortedMemos = () => {
-    return [...(notes || []), ...localMemos].sort((a, b) => {
-      // ローカル編集時間も考慮してソート
-      const getLatestTime = (memo: Memo) => {
-        // 新規作成メモ（ID: -1）の場合
-        if (memo.id === -1) {
-          return memo.updatedAt || memo.createdAt;
-        }
-
-        const localData = localStorage.getItem(`memo_draft_${memo.id}`);
-        let localEditTime = 0;
-        if (localData) {
-          try {
-            const parsed = JSON.parse(localData);
-            if (parsed.id === memo.id && parsed.lastEditedAt) {
-              localEditTime = parsed.lastEditedAt;
-            }
-          } catch {
-            // パースエラーは無視
-          }
-        }
-        return Math.max(localEditTime, memo.updatedAt || 0, memo.createdAt);
-      };
-
-      return getLatestTime(b) - getLatestTime(a);
-    });
-  };
 
   // 表示順序での次のメモを選択するハンドラー（実際の画面表示順序に基づく）
   const handleDeleteAndSelectNextInOrder = (deletedMemo: Memo) => {
@@ -171,7 +141,7 @@ function MemoScreen({
 
     if (nextMemo) {
       // 次のメモを選択してビューモードに切り替え
-      onSelectMemo(nextMemo, true);
+      onSelectMemo(nextMemo);
       setMemoScreenMode("view");
     } else {
       // 次のメモが見つからない - リストモードに戻る
@@ -201,7 +171,7 @@ function MemoScreen({
 
     if (nextMemo) {
       // 次のメモを選択してビューモードに切り替え
-      onSelectDeletedMemo(nextMemo, true);
+      onSelectDeletedMemo(nextMemo);
       setMemoScreenMode("view");
     } else {
       // 次のメモが見つからない - リストモードに戻る
@@ -279,11 +249,11 @@ function MemoScreen({
           onToggleCheckTask={() => {}} // 不要だがpropsで必要
           onToggleCheckDeletedTask={() => {}} // 不要だがpropsで必要
           onSelectMemo={(memo) => {
-            onSelectMemo(memo, true);
+            onSelectMemo(memo);
             setMemoScreenMode("view");
           }}
           onSelectDeletedMemo={(memo) => {
-            onSelectDeletedMemo(memo, true);
+            onSelectDeletedMemo(memo);
             setMemoScreenMode("view");
           }}
           onSelectTask={() => {}} // 不要だがpropsで必要

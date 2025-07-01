@@ -16,7 +16,7 @@ interface DesktopLowerProps {
   viewMode: "card" | "list";
   effectiveColumnCount: number;
   isLoading: boolean;
-  error: any;
+  error: Error | null;
   
   // Data props
   notes?: Memo[];

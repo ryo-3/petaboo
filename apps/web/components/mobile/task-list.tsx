@@ -16,7 +16,6 @@ import {
 interface TaskListProps {
   onSelectTask: (task: Task) => void;
   onEditTask: (task: Task) => void;
-  onDeleteTask?: (task: Task) => void;
   selectedTaskId?: number;
 }
 
@@ -24,7 +23,6 @@ interface TaskListProps {
 function TaskList({
   onSelectTask,
   onEditTask,
-  onDeleteTask,
   selectedTaskId,
 }: TaskListProps) {
   const { data: tasks, isLoading, error } = useTasks();

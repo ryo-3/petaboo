@@ -141,6 +141,12 @@ function MemoScreen({
     console.log('🗑️ State側メモ削除:', id);
   }, [selectedMemo, onClose]);
 
+  // メモ復元（State側に追加）
+  const restoreMemo = useCallback((restoredMemo: Memo) => {
+    setDisplayMemos(prev => [restoredMemo, ...prev]);
+    console.log('🔄 State側メモ復元:', restoredMemo.title);
+  }, []);
+
   // 一括削除関連
   const { handleBulkDelete, bulkDeleteState } = useMemosBulkDelete({
     activeTab,
@@ -348,6 +354,7 @@ function MemoScreen({
             memo={selectedDeletedMemo}
             onClose={() => setMemoScreenMode("list")}
             onDeleteAndSelectNext={handleDeletedMemoAndSelectNext}
+            onMemoRestore={restoreMemo}
           />
         )}
         {memoScreenMode === "edit" && selectedMemo && (

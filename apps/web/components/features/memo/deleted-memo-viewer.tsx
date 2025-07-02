@@ -6,16 +6,17 @@ import DateInfo from '@/components/shared/date-info'
 import Tooltip from '@/components/ui/base/tooltip'
 import { ConfirmationModal } from '@/components/ui/modals'
 import { useDeletedMemoActions } from './use-deleted-memo-actions'
-import type { DeletedMemo } from '@/src/types/memo'
+import type { DeletedMemo, Memo } from '@/src/types/memo'
 import { formatDate } from '@/src/utils/formatDate'
 
 interface DeletedMemoViewerProps {
   memo: DeletedMemo
   onClose: () => void
   onDeleteAndSelectNext?: (deletedMemo: DeletedMemo) => void
+  onMemoRestore?: (memo: Memo) => void
 }
 
-function DeletedMemoViewer({ memo, onClose, onDeleteAndSelectNext }: DeletedMemoViewerProps) {
+function DeletedMemoViewer({ memo, onClose, onDeleteAndSelectNext, onMemoRestore }: DeletedMemoViewerProps) {
   const {
     handlePermanentDelete,
     handleRestore,
@@ -24,7 +25,7 @@ function DeletedMemoViewer({ memo, onClose, onDeleteAndSelectNext }: DeletedMemo
     showDeleteModal,
     isDeleting,
     isRestoring
-  } = useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext })
+  } = useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, onMemoRestore })
 
   return (
     <div className="flex flex-col h-full bg-white">

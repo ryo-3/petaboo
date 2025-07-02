@@ -1,14 +1,15 @@
 import { useState } from 'react'
 import { usePermanentDeleteNote, useRestoreNote } from '@/src/hooks/use-notes'
-import type { DeletedMemo } from '@/src/types/memo'
+import type { DeletedMemo, Memo } from '@/src/types/memo'
 
 interface UseDeletedMemoActionsProps {
   memo: DeletedMemo
   onClose: () => void
   onDeleteAndSelectNext?: (deletedMemo: DeletedMemo) => void
+  onMemoRestore?: (memo: Memo) => void
 }
 
-export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext }: UseDeletedMemoActionsProps) {
+export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, onMemoRestore }: UseDeletedMemoActionsProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const permanentDeleteNote = usePermanentDeleteNote()
   const restoreNote = useRestoreNote()
@@ -36,7 +37,13 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext }: 
 
   const handleRestore = async () => {
     try {
-      await restoreNote.mutateAsync(memo.id)
+      const restoredMemo = await restoreNote.mutateAsync(memo.id)
+      
+      // State側に復元されたメモを追加
+      if (onMemoRestore && restoredMemo) {
+        onMemoRestore(restoredMemo)
+      }
+      
       onClose() // 復元後に閉じる
     } catch (error) {
       console.error('復元に失敗しました:', error)

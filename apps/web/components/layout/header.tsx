@@ -255,7 +255,6 @@ function Header({
                 ? 'bg-green-100 text-green-600 hover:bg-green-200'
                 : 'bg-red-100 text-red-600 hover:bg-red-200'
             }`}
-            title={isOnline ? 'オフラインにする' : 'オンラインにする'}
           >
             {isOnline ? (
               // WiFiアイコン

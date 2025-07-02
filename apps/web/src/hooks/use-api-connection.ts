@@ -13,59 +13,38 @@ export function useApiConnection() {
     connectionError: null
   })
 
-  // API接続テスト
+  // API接続テスト（手動オフライン時は実行しない）
   const checkConnection = useCallback(async () => {
-
-    try {
-      const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8794'
-      const response = await fetch(`${API_BASE}/notes`, {
-        method: 'HEAD', // HEADリクエストで軽量チェック
-        headers: {
-          'Accept': 'application/json'
-        }
-      })
-      
-      const isConnected = response.ok
-      setState(prev => ({
-        ...prev,
-        isOnline: isConnected,
-        lastConnectionCheck: new Date(),
-        connectionError: isConnected ? null : `HTTP ${response.status}`
-      }))
-      
-      return isConnected
-    } catch (error) {
-      console.warn('API接続チェック失敗:', error)
-      setState(prev => ({
-        ...prev,
-        isOnline: false,
-        lastConnectionCheck: new Date(),
-        connectionError: error instanceof Error ? error.message : 'Connection failed'
-      }))
-      
+    // 手動オフラインモードの場合は何もしない
+    if (!state.isOnline && state.connectionError === 'Manual offline mode') {
       return false
     }
-  }, [])
+
+    // 実際の接続チェックは削除（認証が必要なため）
+    // 手動切り替えのみに対応
+    return state.isOnline
+  }, [state.isOnline, state.connectionError])
 
   // オンライン/オフライン強制切り替え
   const toggleOnlineMode = useCallback(() => {
-    setState(prev => ({
-      ...prev,
-      isOnline: !prev.isOnline,
-      connectionError: prev.isOnline ? 'Manual offline mode' : null
-    }))
+    setState(prev => {
+      const newOnlineState = !prev.isOnline
+      console.log(`🔄 接続モード変更: ${prev.isOnline ? 'オンライン' : 'オフライン'} → ${newOnlineState ? 'オンライン' : 'オフライン'}`)
+      
+      return {
+        ...prev,
+        isOnline: newOnlineState,
+        connectionError: newOnlineState ? null : 'Manual offline mode'
+      }
+    })
   }, [])
 
-  // 定期的な接続チェック
-  useEffect(() => {
-    // 初回チェック
-    checkConnection()
-
-    // 30秒ごとにチェック
-    const interval = setInterval(checkConnection, 30000)
-    
-    return () => clearInterval(interval)
-  }, [checkConnection])
+  // 定期チェックは無効化（手動切り替えのみ）
+  // useEffect(() => {
+  //   checkConnection()
+  //   const interval = setInterval(checkConnection, 30000)
+  //   return () => clearInterval(interval)
+  // }, [checkConnection])
 
   return {
     ...state,

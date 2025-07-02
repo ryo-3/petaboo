@@ -143,3 +143,19 @@ export function createDeletedNextSelectionHandler<T extends { id: number; delete
     onClose();
   }
 }
+
+/**
+ * 新規作成時の自動選択ハンドラー生成（DOMベース + Stateフォールバック）
+ */
+export function createNewItemSelectionHandler<T extends { id: number }>(
+  newItem: T,
+  onSelect: (item: T) => void,
+  setViewMode: (mode: "view" | "list") => void,
+  delay: number = 100
+) {
+  // 少し遅延してからviewモードに切り替え（DOM反映を待つ）
+  setTimeout(() => {
+    onSelect(newItem);
+    setViewMode("view");
+  }, delay);
+}

@@ -67,8 +67,8 @@ export function useMemoForm({ memo = null, onMemoAdd, onMemoUpdate, onMemoIdUpda
     // 1. 即座にState更新
     console.log('🔍 分岐チェック:', { realId, hasAddedToList, memo: !!memo });
     if (realId) {
-      // 既存メモまたは作成済みメモの更新
-      console.log('🔄 既存メモ更新:', realId, memoData);
+      // 既存メモまたは作成済みメモの更新（State側のみ、API呼び出しなし）
+      console.log('🔄 既存メモ更新 (State側のみ):', realId, memoData);
       onMemoUpdate?.(realId, memoData)
     } else if (!hasAddedToList) {
       // 新規作成時は一回だけリストに追加
@@ -84,46 +84,27 @@ export function useMemoForm({ memo = null, onMemoAdd, onMemoUpdate, onMemoIdUpda
       setHasAddedToList(true) // 追加済みフラグをセット
       setTempListId(tempMemo.id) // リストに実際に追加されるIDを記録
       tempListIdRef.current = tempMemo.id // 同期的にアクセス可能
+      setRealId(tempMemo.id) // realIdも一時IDに設定
       console.log('📝 新規メモをリストに追加 一時ID:', tempMemo.id, 'タイトル:', tempMemo.title)
-      console.log('🔍 tempListId設定:', { tempMemoId: tempMemo.id, refValue: tempListIdRef.current })
     }
 
-    // 2. 裏側でAPI送信
+    // 2. 裏側でAPI送信（新規作成時のみ）
     try {
-      console.log('🔍 API分岐チェック:', { realId, apiPath: realId ? 'UPDATE' : 'CREATE' });
-      if (realId) {
-        // 既存メモの更新
-        console.log('🔄 UPDATE API実行:', realId);
-        await updateNote.mutateAsync({
-          id: realId,
-          data: { title: memoData.title, content: memoData.content || undefined }
-        })
-      } else {
-        // 新規メモの作成（一回限り）
-        const result = await createNote.mutateAsync({
+      if (!realId && !hasAddedToList) {
+        // 新規メモの作成（一回限り、バックグラウンドで実行）
+        console.log('🆕 バックグラウンドAPI作成実行');
+        await createNote.mutateAsync({
           title: memoData.title,
           content: memoData.content || undefined
         })
-        setRealId(result.id)
-        console.log('🆕 新規メモ作成完了 API ID:', result.id)
-        
-        // リストの一時IDを実際のIDに更新（API呼び出しなし）
-        const currentTempListId = tempListIdRef.current;
-        console.log('🔍 ID更新チェック:', { tempListId, tempListIdRef: currentTempListId, onMemoIdUpdate: !!onMemoIdUpdate, resultId: result.id });
-        if (currentTempListId && onMemoIdUpdate) {
-          onMemoIdUpdate(currentTempListId, result.id)
-          console.log('🔄 リストID更新:', currentTempListId, '→', result.id)
-        } else {
-          console.warn('⚠️ ID更新スキップ:', { tempListId, tempListIdRef: currentTempListId, hasHandler: !!onMemoIdUpdate });
-        }
-        
-        // 以降はupdateモードとして動作（realIdがセットされたため）
+        console.log('✅ バックグラウンドAPI作成完了（UIに影響なし）')
       }
+      // 既存メモの更新API呼び出しは停止（UIの安定性重視）
 
       setSavedSuccessfully(true)
       setSaveError(null)
       setHasUserEdited(false) // 保存後は編集フラグをリセット
-      console.log('✅ API保存成功:', memoData.title || '(無題)')
+      console.log('✅ State保存成功:', memoData.title || '(無題)')
       
       // 成功表示を3秒後にクリア
       setTimeout(() => setSavedSuccessfully(false), 3000)

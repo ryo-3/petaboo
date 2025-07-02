@@ -18,7 +18,8 @@ import { useApiConnection } from "@/src/hooks/use-api-connection";
 import { 
   getMemoDisplayOrder, 
   createNextSelectionHandler, 
-  createDeletedNextSelectionHandler 
+  createDeletedNextSelectionHandler,
+  createNewItemSelectionHandler
 } from "@/src/utils/domUtils";
 import { createToggleHandler } from "@/src/utils/toggleUtils";
 import { shouldShowDeleteButton, getDeleteButtonCount } from "@/src/utils/screenUtils";
@@ -92,8 +93,8 @@ function MemoScreen({
   const addMemo = useCallback((memo: Memo) => {
     setDisplayMemos(prev => [memo, ...prev]);
     
-    // 新規作成時は作成したメモを自動選択
-    onSelectMemo(memo);
+    // 新規作成時は作成したメモを自動選択（DOMベース + 遅延実行）
+    createNewItemSelectionHandler(memo, onSelectMemo, setMemoScreenMode);
     console.log('📝 新規メモ作成&選択:', memo.title);
   }, [onSelectMemo]);
 

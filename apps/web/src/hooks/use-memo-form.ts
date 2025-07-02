@@ -28,6 +28,7 @@ export function useMemoForm({ memo = null, onMemoAdd, onMemoUpdate, onMemoIdUpda
   const [hasUserEdited, setHasUserEdited] = useState(false)
   const [lastEditedAt, setLastEditedAt] = useState<number>(Date.now())
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const stateUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   
   // オンライン/オフライン状態取得
   const { isOnline } = useApiConnection()
@@ -131,7 +132,7 @@ export function useMemoForm({ memo = null, onMemoAdd, onMemoUpdate, onMemoIdUpda
       console.error('❌ API保存失敗:', error)
       setSaveError('保存に失敗しました')
     }
-  }, [isOnline, isEditMode, realId, onMemoAdd, onMemoUpdate, onMemoIdUpdate, createNote, updateNote])
+  }, [isOnline, realId, hasAddedToList, memo, tempListId, onMemoAdd, onMemoUpdate, onMemoIdUpdate, createNote, updateNote])
 
   // オフライン時の保存処理
   const saveOffline = useCallback(() => {
@@ -171,19 +172,44 @@ export function useMemoForm({ memo = null, onMemoAdd, onMemoUpdate, onMemoIdUpda
     }
   }, [title, content, hasUserEdited, isSaving, isOnline, updateMemoState, saveOffline])
 
+  // 0.05秒デバウンスでState更新
+  const updateStateWithDebounce = useCallback((newTitle: string, newContent: string) => {
+    clearTimeout(stateUpdateTimeoutRef.current)
+    stateUpdateTimeoutRef.current = setTimeout(() => {
+      if (isOnline && realId && onMemoUpdate) {
+        onMemoUpdate(realId, {
+          title: newTitle.trim(),
+          content: newContent.trim(),
+          updatedAt: Math.floor(Date.now() / 1000)
+        })
+        // console.log('⚡ 0.05秒State更新:', realId, newTitle.trim())
+      }
+    }, 50)
+  }, [isOnline, realId, onMemoUpdate])
+
   // タイトル変更ハンドラー
   const handleTitleChange = useCallback((newTitle: string) => {
     setTitle(newTitle)
     setHasUserEdited(true)
     setLastEditedAt(Date.now())
-  }, [])
+    
+    // 0.05秒でState更新（編集時のみ）
+    if (realId) {
+      updateStateWithDebounce(newTitle, content)
+    }
+  }, [realId, content, updateStateWithDebounce])
 
   // コンテンツ変更ハンドラー
   const handleContentChange = useCallback((newContent: string) => {
     setContent(newContent)
     setHasUserEdited(true)
     setLastEditedAt(Date.now())
-  }, [])
+    
+    // 0.05秒でState更新（編集時のみ）
+    if (realId) {
+      updateStateWithDebounce(title, newContent)
+    }
+  }, [realId, title, updateStateWithDebounce])
 
   // 手動保存
   const handleSave = useCallback(async () => {
@@ -210,9 +236,13 @@ export function useMemoForm({ memo = null, onMemoAdd, onMemoUpdate, onMemoIdUpda
   // クリーンアップ
   useEffect(() => {
     const currentTimeout = timeoutRef.current
+    const currentStateTimeout = stateUpdateTimeoutRef.current
     return () => {
       if (currentTimeout) {
         clearTimeout(currentTimeout)
+      }
+      if (currentStateTimeout) {
+        clearTimeout(currentStateTimeout)
       }
     }
   }, [])

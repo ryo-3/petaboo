@@ -36,8 +36,6 @@ function MemoCreator({ onClose, memo = null, onExitEdit, onMemoAdd, onMemoUpdate
     savedSuccessfully,
     isSaving,
     saveError,
-    hasUserEdited,
-    isEditMode,
     realId,
     lastEditedAt,
     tempId,

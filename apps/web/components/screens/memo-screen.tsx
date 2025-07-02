@@ -109,19 +109,19 @@ function MemoScreen({
   }, [onSelectMemo]);
 
   const updateMemo = useCallback((id: number, updates: Partial<Memo>) => {
-    console.log('🔄 updateMemo呼び出し:', id, updates);
+    // console.log('🔄 updateMemo呼び出し:', id, updates);
     setDisplayMemos(prev => {
       const updated = prev.map(m => 
         m.id === id ? { ...m, ...updates } : m
       );
-      console.log('📋 リスト更新後:', updated.find(m => m.id === id));
+      // console.log('📋 リスト更新後:', updated.find(m => m.id === id));
       return updated;
     });
     
     // 選択中メモも同時に更新
     if (selectedMemo && selectedMemo.id === id) {
       const updatedMemo = { ...selectedMemo, ...updates };
-      console.log('✅ 選択中メモ更新:', updatedMemo);
+      // console.log('✅ 選択中メモ更新:', updatedMemo);
       onSelectMemo(updatedMemo);
     }
   }, [selectedMemo, onSelectMemo]);

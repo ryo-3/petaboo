@@ -21,7 +21,6 @@ interface MemoEditorProps {
 function MemoEditor({ memo, onClose, onMemoAdd, onMemoUpdate, onDeleteAndSelectNext }: MemoEditorProps) {
   const deleteNote = useDeleteNote();
   const {
-    title,
     content,
     savedSuccessfully,
     isSaving,
@@ -97,10 +96,10 @@ function MemoEditor({ memo, onClose, onMemoAdd, onMemoUpdate, onDeleteAndSelectN
             handleContentChange(newContent);
             handleTitleChange(firstLine);
 
-            console.log('memo-editor onChange:', {
-              title: firstLine,
-              content: newContent.substring(0, 50) + '...'
-            });
+            // console.log('memo-editor onChange:', {
+            //   title: firstLine,
+            //   content: newContent.substring(0, 50) + '...'
+            // });
           }}
           className="w-full h-[calc(100vh-280px)] resize-none outline-none text-gray-500 leading-relaxed font-medium"
         />

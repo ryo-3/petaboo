@@ -335,6 +335,7 @@ function MemoScreen({
             }}
             onMemoAdd={addMemo}
             onMemoUpdate={updateMemo}
+            onMemoIdUpdate={updateMemoId}
             onMemoDelete={deleteMemo}
             isNewlyCreated={true}
           />
@@ -346,6 +347,7 @@ function MemoScreen({
             onDeleteAndSelectNext={handleDeleteAndSelectNextInOrder}
             onMemoAdd={addMemo}
             onMemoUpdate={updateMemo}
+            onMemoIdUpdate={updateMemoId}
             onMemoDelete={deleteMemo}
             isNewlyCreated={newlyCreatedMemoIds.has(selectedMemo.id)}
           />
@@ -365,6 +367,7 @@ function MemoScreen({
             onDeleteAndSelectNext={handleDeleteAndSelectNextInOrder}
             onMemoAdd={addMemo}
             onMemoUpdate={updateMemo}
+            onMemoIdUpdate={updateMemoId}
             onMemoDelete={deleteMemo}
             isNewlyCreated={newlyCreatedMemoIds.has(selectedMemo.id)}
           />

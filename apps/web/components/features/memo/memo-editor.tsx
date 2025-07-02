@@ -14,12 +14,13 @@ interface MemoEditorProps {
   onEdit?: (memo: Memo) => void;
   onMemoAdd?: (memo: Memo) => void;
   onMemoUpdate?: (id: number, updates: Partial<Memo>) => void;
+  onMemoIdUpdate?: (oldId: number, newId: number) => void;
   onMemoDelete?: (id: number) => void;
   onDeleteAndSelectNext?: (deletedMemo: Memo) => void;
   isNewlyCreated?: boolean;
 }
 
-function MemoEditor({ memo, onClose, onMemoAdd, onMemoUpdate, onMemoDelete, onDeleteAndSelectNext, isNewlyCreated = false }: MemoEditorProps) {
+function MemoEditor({ memo, onClose, onMemoAdd, onMemoUpdate, onMemoIdUpdate, onMemoDelete, onDeleteAndSelectNext, isNewlyCreated = false }: MemoEditorProps) {
   const deleteNote = useDeleteNote();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const {
@@ -32,7 +33,7 @@ function MemoEditor({ memo, onClose, onMemoAdd, onMemoUpdate, onMemoDelete, onDe
     hasUserEdited,
     handleTitleChange,
     handleContentChange,
-  } = useMemoForm({ memo, onMemoAdd, onMemoUpdate, onMemoIdUpdate: undefined });
+  } = useMemoForm({ memo, onMemoAdd, onMemoUpdate, onMemoIdUpdate });
 
   const [error] = useState<string | null>(null);
 

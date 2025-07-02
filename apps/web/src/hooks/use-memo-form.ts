@@ -23,6 +23,7 @@ export function useMemoForm({ memo = null, onMemoAdd, onMemoUpdate, onMemoIdUpda
     return initialRealId;
   })
   const [hasAddedToList, setHasAddedToList] = useState(Boolean(memo)) // 既存メモまたはリストに追加済みか
+  const hasCreatedAPIRef = useRef(Boolean(memo && memo.id > 0)) // API作成済みか
   const [tempListId, setTempListId] = useState<number | null>(null) // リストに追加した一時ID
   const tempListIdRef = useRef<number | null>(null) // 同期的にアクセス可能な一時ID
   const [hasUserEdited, setHasUserEdited] = useState(false)
@@ -40,6 +41,7 @@ export function useMemoForm({ memo = null, onMemoAdd, onMemoUpdate, onMemoIdUpda
   // 保存状態管理
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [hasCreatedAPI, setHasCreatedAPI] = useState(Boolean(memo && memo.id > 0)) // API作成済みフラグ
   
   const isEditMode = Boolean(memo)
 
@@ -65,14 +67,14 @@ export function useMemoForm({ memo = null, onMemoAdd, onMemoUpdate, onMemoIdUpda
     }
 
     // 1. 即座にState更新
-    console.log('🔍 分岐チェック:', { realId, hasAddedToList, memo: !!memo });
-    if (realId) {
-      // 既存メモまたは作成済みメモの更新（State側のみ、API呼び出しなし）
+    console.log('🔍 分岐チェック:', { realId, hasAddedToList, hasCreatedAPI, memo: !!memo });
+    if (realId && hasAddedToList) {
+      // 既存メモまたは作成済みメモの更新（State側のみ）
       console.log('🔄 既存メモ更新 (State側のみ):', realId, memoData);
       onMemoUpdate?.(realId, memoData)
     } else if (!hasAddedToList) {
       // 新規作成時は一回だけリストに追加
-      const currentTempId = Date.now() // 一時ID
+      const currentTempId = -Date.now() // 負の一時ID
       const tempMemo: Memo = {
         id: currentTempId,
         title: memoData.title || "無題",
@@ -88,18 +90,37 @@ export function useMemoForm({ memo = null, onMemoAdd, onMemoUpdate, onMemoIdUpda
       console.log('📝 新規メモをリストに追加 一時ID:', tempMemo.id, 'タイトル:', tempMemo.title)
     }
 
-    // 2. 裏側でAPI送信（新規作成時のみ）
+    // 2. 裏側でAPI送信
     try {
-      if (!realId && !hasAddedToList) {
+      if (!hasCreatedAPI && hasAddedToList && realId && realId < 0) {
         // 新規メモの作成（一回限り、バックグラウンドで実行）
         console.log('🆕 バックグラウンドAPI作成実行');
-        await createNote.mutateAsync({
+        setHasCreatedAPI(true) // 即座にフラグを設定して重複を防ぐ
+        const createdMemo = await createNote.mutateAsync({
           title: memoData.title,
           content: memoData.content || undefined
         })
-        console.log('✅ バックグラウンドAPI作成完了（UIに影響なし）')
+        console.log('✅ バックグラウンドAPI作成完了:', createdMemo.id)
+        // 本当のIDに更新 + State側も更新
+        setRealId(createdMemo.id)
+        if (onMemoIdUpdate && realId) {
+          onMemoIdUpdate(realId, createdMemo.id)
+        }
+      } else if (hasCreatedAPI && realId && realId > 0) {
+        // 既存メモの更新API呼び出し（API作成済みかつ正の値のIDのみ）
+        console.log('🔄 既存メモAPI更新実行:', realId);
+        await updateNote.mutateAsync({
+          id: realId,
+          data: {
+            title: memoData.title,
+            content: memoData.content || undefined
+          }
+        })
+        console.log('✅ 既存メモAPI更新完了:', realId)
+      } else if (hasAddedToList && realId && realId < 0) {
+        // 負のIDの場合：まだAPI作成されていないため、作成待ち状態
+        console.log('⏳ 負のID、API作成待ち:', realId);
       }
-      // 既存メモの更新API呼び出しは停止（UIの安定性重視）
 
       setSavedSuccessfully(true)
       setSaveError(null)
@@ -113,7 +134,7 @@ export function useMemoForm({ memo = null, onMemoAdd, onMemoUpdate, onMemoIdUpda
       console.error('❌ API保存失敗:', error)
       setSaveError('保存に失敗しました')
     }
-  }, [isOnline, realId, hasAddedToList, memo, tempListId, onMemoAdd, onMemoUpdate, onMemoIdUpdate, createNote, updateNote])
+  }, [isOnline, realId, hasAddedToList, hasCreatedAPI, memo, tempListId, onMemoAdd, onMemoUpdate, onMemoIdUpdate, createNote, updateNote])
 
   // オフライン時の保存処理
   const saveOffline = useCallback(() => {

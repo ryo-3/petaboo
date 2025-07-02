@@ -125,7 +125,7 @@ function TaskScreen({
   return (
     <div className="flex h-[calc(100vh-64px)] bg-white">
       {/* 左側：一覧表示エリア */}
-      <div className={`${taskScreenMode === 'list' ? 'w-full' : 'w-1/2'} ${taskScreenMode !== 'list' ? 'border-r border-gray-300' : ''} pt-6 pl-6 pr-2 flex flex-col transition-all duration-300 relative`}>
+      <div className={`${taskScreenMode === 'list' ? 'w-full' : 'w-1/2'} ${taskScreenMode !== 'list' ? 'border-r border-gray-300' : ''} pt-6 pl-6 pr-2 flex flex-col transition-all duration-[400ms] relative`}>
         
         <DesktopUpper
           currentMode="task"

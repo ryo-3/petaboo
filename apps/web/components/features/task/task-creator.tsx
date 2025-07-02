@@ -29,7 +29,7 @@ function TaskCreator({ onClose: _onClose }: TaskCreatorProps) {
   useEffect(() => {
     const timer = setTimeout(() => {
       titleInputRef.current?.focus();
-    }, 300);
+    }, 400);
     return () => clearTimeout(timer);
   }, []);
 
@@ -69,7 +69,7 @@ function TaskCreator({ onClose: _onClose }: TaskCreatorProps) {
         setSavedSuccessfully(false);
         // タイトル入力にフォーカスを戻す
         titleInputRef.current?.focus();
-      }, 1500);
+      }, 400);
     } catch (error) {
       console.error("保存に失敗しました:", error);
       setError(

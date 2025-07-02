@@ -1,7 +1,7 @@
 "use client";
 
 import DeletedMemoViewer from "@/components/features/memo/deleted-memo-viewer";
-import MemoEditor from "@/components/features/memo/memo-editor";
+import SimpleMemoEditor from "@/components/features/memo/simple-memo-editor";
 import DesktopLower from "@/components/layout/desktop-lower";
 import DesktopUpper from "@/components/layout/desktop-upper";
 import DeleteButton from "@/components/ui/buttons/delete-button";
@@ -35,6 +35,9 @@ function MemoScreen({
   onClose,
   onDeselectAndStayOnMemoList,
 }: MemoScreenProps) {
+  // 新規作成エディターのキー管理
+  const [createEditorKey, setCreateEditorKey] = useState(0);
+  
   // データ取得
   const { data: notes, isLoading: memoLoading, error: memoError } = useNotes();
   const { data: deletedNotes } = useDeletedNotes();
@@ -67,48 +70,34 @@ function MemoScreen({
     preferences || undefined
   );
 
-  // 簡単なメモ操作ハンドラー
-  const addMemo = useCallback((memo: Memo) => {
-    console.log('🆕 addMemo実行:', memo.id, memo.title);
-    // 新規作成時は保存後も新規作成画面を開いたまま（連続作成）
-    // 先に選択解除してから新規作成画面に切り替え
-    console.log('🆕 選択解除を実行');
-    onDeselectAndStayOnMemoList?.(); // 選択解除
-    
-    // フォーカス処理が完了してから新規作成画面に切り替え
-    setTimeout(() => {
-      console.log('🆕 新規作成画面に切り替え');
-      setMemoScreenMode("create");
-      console.log('🆕 メモ作成完了、次の新規作成画面準備完了');
-    }, 150); // 150ms遅延でフォーカス処理を待つ
-  }, [setMemoScreenMode, onDeselectAndStayOnMemoList]);
-
-  const updateMemo = useCallback((id: number, updates: Partial<Memo>) => {
-    console.log('🔄 updateMemo実行:', { id, updates, selectedMemoId: selectedMemo?.id });
-    // 選択中メモも同時に更新
-    if (selectedMemo && selectedMemo.id === id) {
-      const updatedMemo = { ...selectedMemo, ...updates };
-      console.log('🔄 更新されたメモ:', updatedMemo);
-      onSelectMemo(updatedMemo);
-      console.log('🔄 onSelectMemo呼び出し完了');
+  // 保存完了後の処理（超シンプル）
+  const handleSaveComplete = useCallback((savedMemo: Memo, wasEmpty: boolean, isNewMemo: boolean) => {
+    if (wasEmpty) {
+      // 空メモは削除して閉じる
+      onDeselectAndStayOnMemoList?.();
+      setMemoScreenMode("list");
+    } else if (isNewMemo) {
+      // 新規作成は連続作成のため再マウント
+      onDeselectAndStayOnMemoList?.();
+      setTimeout(() => {
+        setCreateEditorKey(prev => prev + 1); // キーを変更して再マウント
+        setMemoScreenMode("create");
+      }, 700); // 保存中表示(600ms)より少し長く
     } else {
-      console.log('🔄 選択中メモではないのでスキップ');
+      // 既存メモ更新は選択状態更新
+      onSelectMemo(savedMemo);
     }
-  }, [selectedMemo, onSelectMemo]);
+  }, [onDeselectAndStayOnMemoList, setMemoScreenMode, onSelectMemo]);
 
-  // メモ削除
-  const deleteMemo = useCallback((id: number) => {
-    console.log('🗑️ deleteMemo実行:', { id, selectedMemoId: selectedMemo?.id });
-    // 削除したメモが選択中の場合は選択を解除
-    if (selectedMemo && selectedMemo.id === id) {
-      console.log('🗑️ 選択中のメモを削除したのでonClose実行');
-      onClose();
-    }
-  }, [selectedMemo, onClose]);
+  // 削除完了後の処理
+  const handleDeleteComplete = useCallback(() => {
+    onDeselectAndStayOnMemoList?.();
+    setMemoScreenMode("list");
+  }, [onDeselectAndStayOnMemoList, setMemoScreenMode]);
 
-  // メモ復元
+  // メモ復元（シンプル化）
   const restoreMemo = useCallback(() => {
-    // 復元は単純にAPI呼び出しのみ（画面更新はuseNotesで自動）
+    // 復元は単純にAPI呼び出しのみ
   }, []);
 
   // 一括削除関連
@@ -121,14 +110,10 @@ function MemoScreen({
     notes,
     deletedNotes,
     localMemos: notes || [],
-    onMemoDelete: deleteMemo
+    onMemoDelete: () => {} // シンプル化
   });
 
   // 次のメモ選択ハンドラー（簡略化）
-  const handleDeleteAndSelectNext = () => {
-    onClose();
-  };
-
   const handleDeletedMemoAndSelectNext = () => {
     onClose();
   };
@@ -199,31 +184,19 @@ function MemoScreen({
         }}
       >
         {memoScreenMode === "create" && (
-          <MemoEditor
+          <SimpleMemoEditor
+            key={`create-${createEditorKey}`} // 管理されたキーで再マウント
             memo={null}
-            onClose={() => {
-              setMemoScreenMode("list");
-            }}
-            onMemoAdd={addMemo}
-            onMemoUpdate={updateMemo}
-            onMemoDelete={deleteMemo}
+            onClose={() => setMemoScreenMode("list")}
+            onSaveComplete={handleSaveComplete}
           />
         )}
         {memoScreenMode === "view" && selectedMemo && (
-          <MemoEditor
+          <SimpleMemoEditor
             memo={selectedMemo}
             onClose={() => setMemoScreenMode("list")}
-            onCloseAndStayOnMemoList={() => {
-              // 空メモ削除時は右パネルだけ閉じる（ホームには戻らない）
-              console.log('🔧 onCloseAndStayOnMemoList実行: モードをlistに変更');
-              setMemoScreenMode("list");
-              onDeselectAndStayOnMemoList?.(); // 選択解除してメモ一覧に留まる
-              console.log('🔧 モード変更＆選択解除完了');
-            }}
-            onDeleteAndSelectNext={handleDeleteAndSelectNext}
-            onMemoAdd={addMemo}
-            onMemoUpdate={updateMemo}
-            onMemoDelete={deleteMemo}
+            onSaveComplete={handleSaveComplete}
+            onDeleteComplete={handleDeleteComplete}
           />
         )}
         {memoScreenMode === "view" && selectedDeletedMemo && (
@@ -235,13 +208,11 @@ function MemoScreen({
           />
         )}
         {memoScreenMode === "edit" && selectedMemo && (
-          <MemoEditor
+          <SimpleMemoEditor
             memo={selectedMemo}
             onClose={() => setMemoScreenMode("view")}
-            onDeleteAndSelectNext={handleDeleteAndSelectNext}
-            onMemoAdd={addMemo}
-            onMemoUpdate={updateMemo}
-            onMemoDelete={deleteMemo}
+            onSaveComplete={handleSaveComplete}
+            onDeleteComplete={handleDeleteComplete}
           />
         )}
       </RightPanel>

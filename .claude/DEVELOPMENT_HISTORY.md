@@ -121,3 +121,60 @@ updateMemoState(title, content)
 - 不要なオブジェクト作成削減
 - 条件チェック最適化
 - useCallback依存配列最適化
+
+### メモ機能保存ボタン方式への完全リファクタリング完了
+
+#### 🎯 問題意識と方針転換
+- **従来の課題**: 複雑な自動保存 + ID管理 + デバウンス → IME入力・フォーカス問題
+- **新方針**: 手動保存ボタン + シンプル状態管理 → ユーザビリティ優先
+
+#### 🔄 アーキテクチャ刷新
+- **SimpleMemoEditor**: 新規作成・編集統一コンポーネント（複雑さ排除）
+- **useSimpleMemoSave**: 保存専用hook（自動保存完全除去）
+- **空メモ自動削除**: 保存時に空の場合は削除 + 右パネル自動クローズ
+- **連続新規作成**: 保存後に新エディターを再マウント（UX向上）
+
+#### 💾 保存完了後の処理フロー統一
+```tsx
+const handleSaveComplete = (savedMemo: Memo, wasEmpty: boolean, isNewMemo: boolean) => {
+  if (wasEmpty) {
+    // 空メモは削除 + 右パネルクローズ
+    onDeselectAndStayOnMemoList?.();
+    setMemoScreenMode("list");
+  } else if (isNewMemo) {
+    // 新規作成は連続作成のため再マウント（700ms遅延）
+    setTimeout(() => {
+      setCreateEditorKey(prev => prev + 1);
+      setMemoScreenMode("create");
+    }, 700);
+  } else {
+    // 既存メモ更新は選択状態更新
+    onSelectMemo(savedMemo);
+  }
+};
+```
+
+#### ⌨️ フォーカス・レイアウト問題解決
+- **autoFocus除去**: レイアウト崩れの根本原因を除去
+- **useEffect管理**: 300ms遅延でtextareaにフォーカス（タスクと統一）
+- **保存中表示**: 600ms間「保存中...」でUX向上
+- **キー管理**: createEditorKeyで新規作成時の確実な再マウント
+
+#### 🗂️ ファイル整理状況
+```
+components/features/memo/
+├── simple-memo-editor.tsx    # 新しい統一エディター（推奨）
+├── memo-editor.tsx           # 旧エディター（複雑・段階的廃止予定）
+└── use-memo-bulk-delete.tsx
+
+hooks/
+├── use-simple-memo-save.ts   # 新しいシンプル保存hook（推奨）
+└── use-memo-form.ts         # 旧hook（複雑なID管理・段階的廃止予定）
+```
+
+#### 🎨 UX/UI改善効果
+- **IME入力問題解決**: 手動保存により日本語入力の確実な動作
+- **フォーカス問題解決**: autoFocus除去によるレイアウト安定性
+- **空メモ処理**: 自動削除により無駄なメモの蓄積防止
+- **連続作成**: 保存後即座に新規作成可能（作業効率向上）
+- **保存中表示**: 適切な視覚フィードバック（600ms）

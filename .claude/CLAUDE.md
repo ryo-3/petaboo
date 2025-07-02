@@ -61,29 +61,56 @@ const displayOrder = getTaskDisplayOrder();
 const nextTask = getNextItemAfterDeletion(filteredTasks, deletedTask, displayOrder);
 ```
 
-## オンライン・オフライン ハイブリッド戦略
+## メモ機能アーキテクチャ（リファクタリング後）
 
-### メモ管理アーキテクチャ
-- **オンライン時**: React state管理でリアルタイム表示 + 背景API同期
-- **オフライン時**: localStorage保存で継続利用
-- **初期化**: 一回のみAPI取得 → 以降pure state管理
-- **新規作成**: State-first表示 + 背景API保存
-- **編集**: 即座のstate更新 + デバウンス保存
+### 保存ボタン方針への移行
+- **従来**: 自動保存 + 複雑なID管理 + デバウンス
+- **現在**: 手動保存ボタン + シンプル状態管理
+- **目的**: IME入力問題とfocus問題の解決
 
-### デバウンス設計
-```tsx
-// 0.05秒 (50ms): リアルタイムlist表示更新
-// 1秒: API保存（確実な永続化）
-const updateStateWithDebounce = useCallback((newTitle, newContent) => {
-  // 50msで即座にリスト更新
-  setTimeout(() => onMemoUpdate(realId, memoData), 50)
-}, [])
+### 現在のメモ管理システム
+- **SimpleMemoEditor**: 新規作成・編集統一コンポーネント
+- **useSimpleMemoSave**: 保存専用hook（auto-save除去）
+- **空メモ削除**: 保存時に空の場合は削除 + 右パネル閉じる
+- **連続新規作成**: 保存後に新しいエディターを再マウント
+
+### ファイル構成
+```
+components/features/memo/
+├── simple-memo-editor.tsx    # 統一メモエディター
+├── memo-editor.tsx           # 旧エディター（複雑）
+└── use-memo-bulk-delete.tsx
+
+hooks/
+├── use-simple-memo-save.ts   # 新しいシンプル保存hook
+└── use-memo-form.ts         # 旧hook（複雑なID管理）
 ```
 
-### ID管理システム
-- **tempId**: 新規作成時の一時識別子
-- **realId**: API保存後の実際のID  
-- **tempListIdRef**: React async state回避用のRef
+### 保存完了後の処理フロー
+```tsx
+const handleSaveComplete = (savedMemo: Memo, wasEmpty: boolean, isNewMemo: boolean) => {
+  if (wasEmpty) {
+    // 空メモは削除して右パネル閉じる
+    onDeselectAndStayOnMemoList?.();
+    setMemoScreenMode("list");
+  } else if (isNewMemo) {
+    // 新規作成は連続作成のため再マウント（700ms遅延）
+    onDeselectAndStayOnMemoList?.();
+    setTimeout(() => {
+      setCreateEditorKey(prev => prev + 1);
+      setMemoScreenMode("create");
+    }, 700);
+  } else {
+    // 既存メモ更新は選択状態更新
+    onSelectMemo(savedMemo);
+  }
+};
+```
+
+### フォーカス管理
+- **新規作成時**: 300ms遅延でtextareaにフォーカス
+- **レイアウト崩れ対策**: autoFocus属性を除去、useEffectで管理
+- **保存中表示**: 600ms間保存中を表示してUX向上
 
 ## 開発制約・ルール
 - 新しいnpmパッケージの追加は基本的に行わない

@@ -124,7 +124,7 @@ function TaskEditor({
         setIsEditing(false);
         setSavedSuccessfully(false);
         // Edit mode exited
-      }, 1000);
+      }, 400);
     } catch (error) {
       console.error("保存に失敗しました:", error);
       setError(

@@ -54,6 +54,7 @@ function MemoScreen({
     content: string;
     tempId: string;
     lastEditedAt: number;
+    createdMemoId?: number | null;
   } | null>(null);
 
   // データ取得
@@ -95,31 +96,31 @@ function MemoScreen({
   }, [selectedMemo, selectedDeletedMemo, memoScreenMode]);
 
 
-  // ローカルメモの管理（オンライン/オフライン対応）
+  // オンライン時のstate管理
   useEffect(() => {
-    const updateLocalMemos = () => {
-      const localMemosList: Memo[] = [];
+    if (isOnline && currentEditingMemo && (currentEditingMemo.title.trim() || currentEditingMemo.content.trim())) {
+      const editingId = currentEditingMemo.createdMemoId;
       
-      if (isOnline) {
-        // オンライン時：編集中のメモをstateから取得
-        if (currentEditingMemo && (currentEditingMemo.title.trim() || currentEditingMemo.content.trim())) {
-          const hashId = -Math.abs(
-            currentEditingMemo.tempId.split("").reduce((a: number, b: string) => {
-              a = (a << 5) - a + b.charCodeAt(0);
-              return a & a;
-            }, 0)
-          );
-          localMemosList.push({
-            id: hashId,
-            title: currentEditingMemo.title || "無題",
-            content: currentEditingMemo.content || "",
-            createdAt: Math.floor(currentEditingMemo.lastEditedAt / 1000),
-            updatedAt: Math.floor(currentEditingMemo.lastEditedAt / 1000),
-            tempId: currentEditingMemo.tempId,
-          });
-        }
-      } else {
-        // オフライン時：ローカルストレージから取得（従来通り）
+      setLocalMemos([{
+        id: editingId || -1,
+        title: currentEditingMemo.title || "無題",
+        content: currentEditingMemo.content || "",
+        createdAt: Math.floor(currentEditingMemo.lastEditedAt / 1000),
+        updatedAt: Math.floor(currentEditingMemo.lastEditedAt / 1000),
+        tempId: currentEditingMemo.tempId,
+      }]);
+      console.log('📝 state完全管理表示:', currentEditingMemo.title);
+    } else if (isOnline) {
+      setLocalMemos([]);
+    }
+  }, [isOnline, currentEditingMemo]);
+
+  // オフライン時のローカルストレージ管理
+  useEffect(() => {
+    if (!isOnline) {
+      const updateLocalMemos = () => {
+        const localMemosList: Memo[] = [];
+        
         Object.keys(localStorage).forEach((key) => {
           if (key.startsWith("memo_draft_")) {
             try {
@@ -158,18 +159,15 @@ function MemoScreen({
             }
           }
         });
-      }
-      
-      setLocalMemos(localMemosList);
-    };
+        
+        setLocalMemos(localMemosList);
+      };
 
-    updateLocalMemos();
-    if (!isOnline) {
-      // オフライン時のみ定期更新
+      updateLocalMemos();
       const interval = setInterval(updateLocalMemos, 1000);
       return () => clearInterval(interval);
     }
-  }, [isOnline, currentEditingMemo]);
+  }, [isOnline]);
 
   // 編集状態変更のコールバック
   const handleEditingChange = useCallback((editingData: {
@@ -177,13 +175,14 @@ function MemoScreen({
     content: string;
     tempId: string;
     lastEditedAt: number;
+    createdMemoId?: number | null;
   } | null) => {
     setCurrentEditingMemo(editingData);
   }, []);
 
   // 表示順序での次のメモを選択するハンドラー（実際の画面表示順序に基づく）
   const handleDeleteAndSelectNextInOrder = (deletedMemo: Memo) => {
-    const allMemos = [...(notes || []), ...localMemos];
+    const allMemos = localMemos;
     const displayOrder = getMemoDisplayOrder();
     
     createNextSelectionHandler(
@@ -233,7 +232,7 @@ function MemoScreen({
           columnCount={columnCount}
           onColumnCountChange={setColumnCount}
           rightPanelMode={memoScreenMode === "list" ? "hidden" : "view"}
-          normalCount={(notes?.length || 0) + localMemos.length}
+          normalCount={localMemos.length}
           deletedNotesCount={deletedNotes?.length || 0}
         />
 

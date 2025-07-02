@@ -2,11 +2,8 @@
 
 import { useApiConnection } from "@/src/hooks/use-api-connection";
 
-interface HeaderProps {
-  currentMode: "memo" | "task";
-}
 
-function Header({ currentMode }: HeaderProps) {
+function Header() {
   // API接続状況管理
   const { isOnline, toggleOnlineMode } = useApiConnection();
 

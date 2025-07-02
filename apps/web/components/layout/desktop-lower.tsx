@@ -100,12 +100,12 @@ function DesktopLower({
   if (activeTab === "normal" && currentMode === "memo") {
     return (
       <>
-        {(notes && notes.length > 0) || (localMemos && localMemos.length > 0) ? (
+        {localMemos && localMemos.length > 0 ? (
           <ItemGrid
             viewMode={viewMode}
             effectiveColumnCount={effectiveColumnCount}
           >
-            {[...(notes || []), ...(localMemos || [])]
+            {localMemos
               .sort((a, b) => {
                 // 編集日と作成日を比較してソート（最新が上）
                 const getLatestTime = (memo: Memo) => {

@@ -246,13 +246,7 @@ function Main() {
            ========================================== */
         <div className="flex flex-col h-screen w-full">
           {/* ヘッダー */}
-          <Header 
-            currentMode={currentMode}
-            onSelectMemo={handleSelectMemo}
-            onSelectTask={handleSelectTask}
-            onSelectDeletedMemo={handleSelectDeletedMemo}
-            onSelectDeletedTask={handleSelectDeletedTask}
-          />
+          <Header />
           
           {/* メインレイアウト */}
           <DesktopLayout

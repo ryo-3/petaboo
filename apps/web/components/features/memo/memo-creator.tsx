@@ -1,6 +1,5 @@
 "use client";
 
-import CheckIcon from "@/components/icons/check-icon";
 import PhotoIcon from "@/components/icons/photo-icon";
 import DateInfo from "@/components/shared/date-info";
 import EditButton from "@/components/ui/buttons/edit-button";
@@ -19,6 +18,7 @@ interface MemoCreatorProps {
     content: string;
     tempId: string;
     lastEditedAt: number;
+    createdMemoId?: number | null;
   } | null) => void;
 }
 
@@ -32,7 +32,7 @@ function MemoCreator({ onClose, memo = null, onExitEdit, onEditingChange }: Memo
     setTitle,
     content,
     setContent,
-    savedSuccessfully,
+    // savedSuccessfully,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     isEditMode,
     createdMemoId,
@@ -58,13 +58,14 @@ function MemoCreator({ onClose, memo = null, onExitEdit, onEditingChange }: Memo
           title,
           content,
           tempId,
-          lastEditedAt
+          lastEditedAt,
+          createdMemoId
         });
       } else {
         onEditingChange(null);
       }
     }
-  }, [title, content, tempId, onEditingChange, memo]); // lastEditedAtを依存配列から除外
+  }, [title, content, tempId, lastEditedAt, createdMemoId, onEditingChange, memo]);
 
   const handleDelete = async () => {
     try {
@@ -139,11 +140,6 @@ function MemoCreator({ onClose, memo = null, onExitEdit, onEditingChange }: Memo
       <div className="flex flex-col gap-2 flex-1">
         {memo && <DateInfo item={memo} createdItemId={createdMemoId} lastEditedAt={lastEditedAt} />}
 
-        <div className="flex items-center gap-3 mb-2">
-          {savedSuccessfully && (
-            <CheckIcon className="w-5 h-5 text-green-600 flex-shrink-0" />
-          )}
-        </div>
 
         <textarea
           ref={titleInputRef}

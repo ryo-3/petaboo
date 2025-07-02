@@ -174,7 +174,9 @@ export function useMemoForm({ memo = null, onMemoAdd, onMemoUpdate, onMemoIdUpda
 
   // 0.05秒デバウンスでState更新
   const updateStateWithDebounce = useCallback((newTitle: string, newContent: string) => {
-    clearTimeout(stateUpdateTimeoutRef.current)
+    if (stateUpdateTimeoutRef.current) {
+      clearTimeout(stateUpdateTimeoutRef.current)
+    }
     stateUpdateTimeoutRef.current = setTimeout(() => {
       if (isOnline && realId && onMemoUpdate) {
         onMemoUpdate(realId, {

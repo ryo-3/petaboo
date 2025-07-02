@@ -65,8 +65,10 @@ export function useDeleteNote() {
 
   return useMutation({
     mutationFn: async (id: number) => {
-      // 負のID（ローカルメモ）の場合はlocalStorageから削除
-      if (id < 0) {
+      // 一時ID（13桁のタイムスタンプか負のID）の場合はローカル処理のみ
+      const isTemporaryId = id < 0 || (id > 1000000000000 && id < 9999999999999);
+      
+      if (isTemporaryId) {
         // console.log("ローカルメモを削除:", id);
 
         // ハッシュIDから元のtempIdを見つけて削除

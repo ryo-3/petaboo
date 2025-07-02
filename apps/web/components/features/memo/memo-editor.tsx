@@ -15,10 +15,11 @@ interface MemoEditorProps {
   onEdit?: (memo: Memo) => void;
   onMemoAdd?: (memo: Memo) => void;
   onMemoUpdate?: (id: number, updates: Partial<Memo>) => void;
+  onMemoDelete?: (id: number) => void;
   onDeleteAndSelectNext?: (deletedMemo: Memo) => void;
 }
 
-function MemoEditor({ memo, onClose, onMemoAdd, onMemoUpdate, onDeleteAndSelectNext }: MemoEditorProps) {
+function MemoEditor({ memo, onClose, onMemoAdd, onMemoUpdate, onMemoDelete, onDeleteAndSelectNext }: MemoEditorProps) {
   const deleteNote = useDeleteNote();
   const {
     content,
@@ -39,6 +40,11 @@ function MemoEditor({ memo, onClose, onMemoAdd, onMemoUpdate, onDeleteAndSelectN
 
       await deleteNote.mutateAsync(memo.id);
       // console.log('削除完了')
+
+      // State側からも削除
+      if (onMemoDelete) {
+        onMemoDelete(memo.id);
+      }
 
       // 削除後に次のメモを選択する処理があれば実行、なければエディターを閉じる
       if (onDeleteAndSelectNext) {

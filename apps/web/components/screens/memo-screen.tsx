@@ -141,6 +141,18 @@ function MemoScreen({
     console.log('🔄 UI側ID更新:', oldId, '→', newId);
   }, [selectedMemo, onSelectMemo]);
 
+  // メモ削除（State側から削除）
+  const deleteMemo = useCallback((id: number) => {
+    setDisplayMemos(prev => prev.filter(m => m.id !== id));
+    
+    // 削除したメモが選択中の場合は選択を解除
+    if (selectedMemo && selectedMemo.id === id) {
+      onClose();
+    }
+    
+    console.log('🗑️ State側メモ削除:', id);
+  }, [selectedMemo, onClose]);
+
   // オフライン時のローカルストレージ管理
   const [localMemos, setLocalMemos] = useState<Memo[]>([]);
   
@@ -317,6 +329,7 @@ function MemoScreen({
             onMemoAdd={addMemo}
             onMemoUpdate={updateMemo}
             onMemoIdUpdate={updateMemoId}
+            onMemoDelete={deleteMemo}
           />
         )}
         {memoScreenMode === "view" && selectedMemo && (
@@ -326,6 +339,7 @@ function MemoScreen({
             onDeleteAndSelectNext={handleDeleteAndSelectNextInOrder}
             onMemoAdd={addMemo}
             onMemoUpdate={updateMemo}
+            onMemoDelete={deleteMemo}
           />
         )}
         {memoScreenMode === "view" && selectedDeletedMemo && (
@@ -342,6 +356,7 @@ function MemoScreen({
             onDeleteAndSelectNext={handleDeleteAndSelectNextInOrder}
             onMemoAdd={addMemo}
             onMemoUpdate={updateMemo}
+            onMemoDelete={deleteMemo}
           />
         )}
       </RightPanel>

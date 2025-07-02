@@ -16,6 +16,7 @@ interface MemoCreatorProps {
   onMemoAdd?: (memo: Memo) => void;
   onMemoUpdate?: (id: number, updates: Partial<Memo>) => void;
   onMemoIdUpdate?: (oldId: number, newId: number) => void;
+  onMemoDelete?: (id: number) => void;
   onEditingChange?: (editingData: {
     title: string;
     content: string;
@@ -25,7 +26,7 @@ interface MemoCreatorProps {
   } | null) => void;
 }
 
-function MemoCreator({ onClose, memo = null, onExitEdit, onMemoAdd, onMemoUpdate, onMemoIdUpdate, onEditingChange }: MemoCreatorProps) {
+function MemoCreator({ onClose, memo = null, onExitEdit, onMemoAdd, onMemoUpdate, onMemoIdUpdate, onMemoDelete, onEditingChange }: MemoCreatorProps) {
   // 新規作成時は常に編集モード、既存メモの場合は表示モードから開始
   const [isEditing, setIsEditing] = useState(memo === null);
   const titleInputRef = useRef<HTMLTextAreaElement>(null);
@@ -72,14 +73,18 @@ function MemoCreator({ onClose, memo = null, onExitEdit, onMemoAdd, onMemoUpdate
 
   const handleDelete = async () => {
     try {
+      let deleteId: number | null = null;
+      
       // 既存メモの場合はそのIDで削除
       if (memo && memo.id) {
+        deleteId = memo.id;
         await deleteNote.mutateAsync(memo.id);
         // ローカルストレージからも削除
         localStorage.removeItem(`memo_draft_${memo.id}`);
       }
       // 新規作成時で自動保存されたメモがある場合はそのIDで削除
       else if (realId) {
+        deleteId = realId;
         await deleteNote.mutateAsync(realId);
         // ローカルストレージからも削除
         localStorage.removeItem(`memo_draft_${realId}`);
@@ -99,6 +104,11 @@ function MemoCreator({ onClose, memo = null, onExitEdit, onMemoAdd, onMemoUpdate
           }
         }
       });
+
+      // State側からも削除
+      if (deleteId && onMemoDelete) {
+        onMemoDelete(deleteId);
+      }
 
       onClose();
     } catch (error) {

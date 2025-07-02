@@ -11,6 +11,7 @@ import { BulkDeleteConfirmation } from "@/components/ui/modals";
 import { useDeletedNotes, useNotes } from "@/src/hooks/use-notes";
 import { useMemosBulkDelete } from "@/components/features/memo/use-memo-bulk-delete";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
+import { useScreenState } from "@/src/hooks/use-screen-state";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import { useEffect, useState, useCallback } from "react";
 import { useApiConnection } from "@/src/hooks/use-api-connection";
@@ -20,6 +21,7 @@ import {
   createDeletedNextSelectionHandler 
 } from "@/src/utils/domUtils";
 import { createToggleHandler } from "@/src/utils/toggleUtils";
+import { shouldShowDeleteButton, getDeleteButtonCount } from "@/src/utils/screenUtils";
 
 type MemoScreenMode = "list" | "view" | "create" | "edit";
 
@@ -40,14 +42,6 @@ function MemoScreen({
   onClose,
   onClearSelection,
 }: MemoScreenProps) {
-  const [memoScreenMode, setMemoScreenMode] = useState<MemoScreenMode>("list");
-  const [activeTab, setActiveTab] = useState<"normal" | "deleted">("normal");
-  const [viewMode, setViewMode] = useState<"card" | "list">("list");
-  const [columnCount, setColumnCount] = useState(4);
-  const [checkedMemos, setCheckedMemos] = useState<Set<number>>(new Set());
-  const [checkedDeletedMemos, setCheckedDeletedMemos] = useState<Set<number>>(
-    new Set()
-  );
   const [displayMemos, setDisplayMemos] = useState<Memo[]>([]);
   const [initialized, setInitialized] = useState(false);
 
@@ -57,25 +51,32 @@ function MemoScreen({
   const { preferences } = useUserPreferences(1);
   const { isOnline } = useApiConnection();
 
-  // 設定値が変更されたらローカル状態を更新
-  useEffect(() => {
-    if (preferences) {
-      const newViewMode = preferences.memoViewMode || "list";
-      const newColumnCount = preferences.memoColumnCount || 4;
-      setViewMode(newViewMode);
-      setColumnCount(newColumnCount);
-    }
-  }, [preferences]);
-
-  // メモが選択されている場合は表示モードに
-  useEffect(() => {
-    if (selectedMemo && memoScreenMode === "list") {
-      setMemoScreenMode("view");
-    }
-    if (selectedDeletedMemo && memoScreenMode === "list") {
-      setMemoScreenMode("view");
-    }
-  }, [selectedMemo, selectedDeletedMemo, memoScreenMode]);
+  // 共通screen状態管理
+  const {
+    screenMode: memoScreenMode,
+    setScreenMode: setMemoScreenMode,
+    activeTab,
+    setActiveTab,
+    viewMode,
+    setViewMode,
+    columnCount,
+    setColumnCount,
+    checkedItems: checkedMemos,
+    setCheckedItems: setCheckedMemos,
+    checkedDeletedItems: checkedDeletedMemos,
+    setCheckedDeletedItems: setCheckedDeletedMemos,
+    effectiveColumnCount
+  } = useScreenState(
+    {
+      type: 'memo',
+      defaultActiveTab: 'normal',
+      defaultColumnCount: 4
+    },
+    'list' as MemoScreenMode,
+    selectedMemo,
+    selectedDeletedMemo,
+    preferences || undefined
+  );
 
 
   // オンライン時の初期化（一回限り）
@@ -149,7 +150,7 @@ function MemoScreen({
 
   // 一括削除関連
   const { handleBulkDelete, bulkDeleteState } = useMemosBulkDelete({
-    activeTab,
+    activeTab: activeTab as "normal" | "deleted",
     checkedMemos,
     checkedDeletedMemos,
     setCheckedMemos,
@@ -247,13 +248,6 @@ function MemoScreen({
     );
   };
 
-  // 右側パネル表示時は列数を調整
-  const effectiveColumnCount =
-    memoScreenMode !== "list"
-      ? columnCount <= 2
-        ? columnCount
-        : 2
-      : columnCount;
 
   return (
     <div className="flex h-[calc(100vh-64px)] bg-white">
@@ -263,8 +257,8 @@ function MemoScreen({
       >
         <DesktopUpper
           currentMode="memo"
-          activeTab={activeTab}
-          onTabChange={(tab) => setActiveTab(tab as "normal" | "deleted")}
+          activeTab={activeTab as "normal" | "deleted"}
+          onTabChange={(tab) => setActiveTab(tab)}
           onCreateNew={() => setMemoScreenMode("create")}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
@@ -277,7 +271,7 @@ function MemoScreen({
 
         <DesktopLower
           currentMode="memo"
-          activeTab={activeTab}
+          activeTab={activeTab as "normal" | "deleted"}
           viewMode={viewMode}
           effectiveColumnCount={effectiveColumnCount}
           isLoading={memoLoading}
@@ -302,20 +296,11 @@ function MemoScreen({
         />
 
         {/* 一括削除ボタン */}
-        {(() => {
-          const shouldShow =
-            (activeTab === "normal" && checkedMemos.size > 0) ||
-            (activeTab === "deleted" && checkedDeletedMemos.size > 0);
-          return shouldShow;
-        })() && (
+        {shouldShowDeleteButton(activeTab, "deleted", checkedMemos, checkedDeletedMemos) && (
           <DeleteButton
             onDelete={handleBulkDelete}
             className="absolute bottom-6 right-6 z-10"
-            count={
-              activeTab === "deleted"
-                ? checkedDeletedMemos.size
-                : checkedMemos.size
-            }
+            count={getDeleteButtonCount(activeTab, "deleted", checkedMemos, checkedDeletedMemos)}
           />
         )}
       </div>

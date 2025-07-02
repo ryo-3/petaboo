@@ -11,14 +11,16 @@ import { BulkDeleteConfirmation } from "@/components/ui/modals";
 import { useTasksBulkDelete } from "@/components/features/task/use-task-bulk-delete";
 import { useDeletedTasks, useTasks } from "@/src/hooks/use-tasks";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
+import { useScreenState } from "@/src/hooks/use-screen-state";
 import type { DeletedTask, Task } from "@/src/types/task";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { 
   getTaskDisplayOrder, 
   createNextSelectionHandler, 
   createDeletedNextSelectionHandler 
 } from "@/src/utils/domUtils";
 import { createToggleHandler } from "@/src/utils/toggleUtils";
+import { shouldShowDeleteButton, getDeleteButtonCount } from "@/src/utils/screenUtils";
 
 type TaskScreenMode = 'list' | 'view' | 'create' | 'edit';
 
@@ -39,21 +41,41 @@ function TaskScreen({
   onClose,
   onClearSelection,
 }: TaskScreenProps) {
-  const [taskScreenMode, setTaskScreenMode] = useState<TaskScreenMode>('list');
-  const [activeTab, setActiveTab] = useState<"todo" | "in_progress" | "completed" | "deleted">("todo");
-  const [viewMode, setViewMode] = useState<"card" | "list">("list");
-  const [columnCount, setColumnCount] = useState(2);
-  const [checkedTasks, setCheckedTasks] = useState<Set<number>>(new Set());
-  const [checkedDeletedTasks, setCheckedDeletedTasks] = useState<Set<number>>(new Set());
-
   // データ取得
   const { data: tasks, isLoading: taskLoading, error: taskError } = useTasks();
   const { data: deletedTasks } = useDeletedTasks();
   const { preferences } = useUserPreferences(1);
 
+  // 共通screen状態管理
+  const {
+    screenMode: taskScreenMode,
+    setScreenMode: setTaskScreenMode,
+    activeTab,
+    setActiveTab,
+    viewMode,
+    setViewMode,
+    columnCount,
+    setColumnCount,
+    checkedItems: checkedTasks,
+    setCheckedItems: setCheckedTasks,
+    checkedDeletedItems: checkedDeletedTasks,
+    setCheckedDeletedItems: setCheckedDeletedTasks,
+    effectiveColumnCount
+  } = useScreenState(
+    {
+      type: 'task',
+      defaultActiveTab: 'todo',
+      defaultColumnCount: 2
+    },
+    'list' as TaskScreenMode,
+    selectedTask,
+    selectedDeletedTask,
+    preferences || undefined
+  );
+
   // 一括削除関連
   const { handleBulkDelete, bulkDeleteState } = useTasksBulkDelete({
-    activeTab,
+    activeTab: activeTab as "todo" | "in_progress" | "completed" | "deleted",
     checkedTasks,
     checkedDeletedTasks,
     setCheckedTasks,
@@ -61,26 +83,6 @@ function TaskScreen({
     tasks,
     deletedTasks
   });
-
-  // 設定値が変更されたらローカル状態を更新
-  useEffect(() => {
-    if (preferences) {
-      const newViewMode = preferences.taskViewMode || "list";
-      const newColumnCount = preferences.taskColumnCount || 2;
-      setViewMode(newViewMode);
-      setColumnCount(newColumnCount);
-    }
-  }, [preferences]);
-
-  // タスクが選択されている場合は表示モードに
-  useEffect(() => {
-    if (selectedTask && taskScreenMode === 'list') {
-      setTaskScreenMode('view');
-    }
-    if (selectedDeletedTask && taskScreenMode === 'list') {
-      setTaskScreenMode('view');
-    }
-  }, [selectedTask, selectedDeletedTask, taskScreenMode]);
 
   // 削除済みタスクでの次のタスク選択ハンドラー
   const handleDeletedTaskAndSelectNext = (deletedTask: DeletedTask) => {
@@ -119,13 +121,6 @@ function TaskScreen({
     );
   };
 
-  // 右側パネル表示時は列数を調整
-  const effectiveColumnCount =
-    taskScreenMode !== "list"
-      ? columnCount <= 2
-        ? columnCount
-        : 2
-      : columnCount;
 
   return (
     <div className="flex h-[calc(100vh-64px)] bg-white">
@@ -134,8 +129,8 @@ function TaskScreen({
         
         <DesktopUpper
           currentMode="task"
-          activeTab={activeTab}
-          onTabChange={(tab) => setActiveTab(tab as "todo" | "in_progress" | "completed" | "deleted")}
+          activeTab={activeTab as "todo" | "in_progress" | "completed" | "deleted"}
+          onTabChange={(tab) => setActiveTab(tab)}
           onCreateNew={() => setTaskScreenMode('create')}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
@@ -151,7 +146,7 @@ function TaskScreen({
 
         <DesktopLower
           currentMode="task"
-          activeTab={activeTab}
+          activeTab={activeTab as "todo" | "in_progress" | "completed" | "deleted"}
           viewMode={viewMode}
           effectiveColumnCount={effectiveColumnCount}
           isLoading={taskLoading}
@@ -175,20 +170,11 @@ function TaskScreen({
         />
 
         {/* 一括削除ボタン */}
-        {(() => {
-          const shouldShow = 
-            (activeTab !== "deleted" && checkedTasks.size > 0) ||
-            (activeTab === "deleted" && checkedDeletedTasks.size > 0);
-          return shouldShow;
-        })() && (
+        {shouldShowDeleteButton(activeTab, "deleted", checkedTasks, checkedDeletedTasks) && (
           <DeleteButton
             onDelete={handleBulkDelete}
             className="absolute bottom-6 right-6 z-10"
-            count={
-              activeTab === "deleted"
-                ? checkedDeletedTasks.size
-                : checkedTasks.size
-            }
+            count={getDeleteButtonCount(activeTab, "deleted", checkedTasks, checkedDeletedTasks)}
           />
         )}
       </div>

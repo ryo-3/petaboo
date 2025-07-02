@@ -44,15 +44,32 @@ function MemoCreator({ onClose, memo = null, onExitEdit, onMemoAdd, onMemoUpdate
     handleContentChange,
   } = useMemoForm({ memo, onMemoAdd, onMemoUpdate, onMemoIdUpdate });
 
-  // 新規作成時のフォーカス遅延
+  // フォーカス管理：新規作成時と編集開始時
   useEffect(() => {
-    if (memo === null && titleInputRef.current) {
-      const timer = setTimeout(() => {
-        titleInputRef.current?.focus();
-      }, 300);
-      return () => clearTimeout(timer);
+    if (titleInputRef.current) {
+      if (memo === null) {
+        // 新規作成時のフォーカス遅延
+        const timer = setTimeout(() => {
+          const textarea = titleInputRef.current;
+          if (textarea) {
+            textarea.focus();
+            textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+          }
+        }, 300);
+        return () => clearTimeout(timer);
+      } else if (isEditing) {
+        // 編集開始時のフォーカス（文字の最後に）
+        const timer = setTimeout(() => {
+          const textarea = titleInputRef.current;
+          if (textarea) {
+            textarea.focus();
+            textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+          }
+        }, 100);
+        return () => clearTimeout(timer);
+      }
     }
-  }, [memo]);
+  }, [memo, isEditing]);
 
   // 編集状態を親に通知
   useEffect(() => {
@@ -118,6 +135,18 @@ function MemoCreator({ onClose, memo = null, onExitEdit, onMemoAdd, onMemoUpdate
 
   return (
     <div className="flex flex-col h-full bg-white p-2">
+      <DateInfo 
+        item={memo || { 
+          id: realId || 0, 
+          title: '', 
+          content: '', 
+          createdAt: Math.floor(Date.now() / 1000), 
+          updatedAt: Math.floor(Date.now() / 1000) 
+        }} 
+        createdItemId={realId} 
+        lastEditedAt={lastEditedAt} 
+      />
+
       <div className="flex justify-start items-center mb-4">
         <div className="flex items-center gap-2">
           {/* 既存メモの場合のみ編集ボタンを表示 */}
@@ -146,13 +175,7 @@ function MemoCreator({ onClose, memo = null, onExitEdit, onMemoAdd, onMemoUpdate
         </div>
 
         <div className="flex items-center gap-3 ml-auto">
-          {/* 保存状態表示 */}
-          {isSaving && (
-            <span className="text-xs text-blue-500">保存中...</span>
-          )}
-          {savedSuccessfully && (
-            <span className="text-xs text-green-500">保存済み</span>
-          )}
+          {/* エラー表示のみ */}
           {saveError && (
             <span className="text-xs text-red-500">{saveError}</span>
           )}
@@ -160,9 +183,6 @@ function MemoCreator({ onClose, memo = null, onExitEdit, onMemoAdd, onMemoUpdate
       </div>
 
       <div className="flex flex-col gap-2 flex-1">
-        {memo && <DateInfo item={memo} createdItemId={realId} lastEditedAt={lastEditedAt} />}
-
-
         <textarea
           ref={titleInputRef}
           placeholder="メモを入力...&#10;&#10;最初の行がタイトルになります"

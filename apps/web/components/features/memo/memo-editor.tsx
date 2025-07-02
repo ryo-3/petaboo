@@ -1,57 +1,94 @@
 "use client";
 
-import CheckIcon from "@/components/icons/check-icon";
 import PhotoIcon from "@/components/icons/photo-icon";
 import BaseViewer from "@/components/shared/base-viewer";
 import DeleteButton from "@/components/ui/buttons/delete-button";
 import { useMemoForm } from "@/src/hooks/use-memo-form";
 import { useDeleteNote } from "@/src/hooks/use-notes";
 import type { Memo } from "@/src/types/memo";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 interface MemoEditorProps {
-  memo: Memo;
+  memo: Memo | null;
   onClose: () => void;
   onEdit?: (memo: Memo) => void;
   onMemoAdd?: (memo: Memo) => void;
   onMemoUpdate?: (id: number, updates: Partial<Memo>) => void;
   onMemoDelete?: (id: number) => void;
   onDeleteAndSelectNext?: (deletedMemo: Memo) => void;
+  isNewlyCreated?: boolean;
 }
 
-function MemoEditor({ memo, onClose, onMemoAdd, onMemoUpdate, onMemoDelete, onDeleteAndSelectNext }: MemoEditorProps) {
+function MemoEditor({ memo, onClose, onMemoAdd, onMemoUpdate, onMemoDelete, onDeleteAndSelectNext, isNewlyCreated = false }: MemoEditorProps) {
   const deleteNote = useDeleteNote();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const {
     content,
     savedSuccessfully,
     isSaving,
     saveError,
+    lastEditedAt,
+    realId,
+    hasUserEdited,
     handleTitleChange,
     handleContentChange,
-  } = useMemoForm({ memo, onMemoAdd, onMemoUpdate });
+  } = useMemoForm({ memo, onMemoAdd, onMemoUpdate, onMemoIdUpdate: undefined });
 
   const [error] = useState<string | null>(null);
 
+  // フォーカス管理：新規作成時と既存メモ表示時
+  useEffect(() => {
+    if (textareaRef.current) {
+      const timer = setTimeout(() => {
+        const textarea = textareaRef.current;
+        if (textarea) {
+          textarea.focus();
+          textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+        }
+      }, memo === null ? 300 : 100); // 新規作成時は少し長く遅延
+      return () => clearTimeout(timer);
+    }
+  }, [memo?.id, memo]);
+
   const handleDelete = async () => {
     try {
-      // console.log('=== MemoEditor: メモ削除処理開始 ===')
-      // console.log('削除対象メモ:', memo)
-      // console.log('onDeleteAndSelectNext関数存在:', !!onDeleteAndSelectNext)
-
-      await deleteNote.mutateAsync(memo.id);
-      // console.log('削除完了')
-
-      // State側からも削除
-      if (onMemoDelete) {
-        onMemoDelete(memo.id);
+      let deleteId: number | null = null;
+      
+      if (memo && memo.id) {
+        // 既存メモの場合
+        deleteId = memo.id;
+        await deleteNote.mutateAsync(memo.id);
+        localStorage.removeItem(`memo_draft_${memo.id}`);
+      } else if (realId) {
+        // 新規作成時で自動保存されたメモがある場合
+        deleteId = realId;
+        await deleteNote.mutateAsync(realId);
+        localStorage.removeItem(`memo_draft_${realId}`);
       }
 
-      // 削除後に次のメモを選択する処理があれば実行、なければエディターを閉じる
-      if (onDeleteAndSelectNext) {
-        // console.log('次のメモ選択処理を実行')
+      // 新規作成用のローカルストレージを削除
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith("memo_draft_new_")) {
+          try {
+            const data = JSON.parse(localStorage.getItem(key) || "{}");
+            if (data.title === content.split('\n')[0] && data.content === content) {
+              localStorage.removeItem(key);
+            }
+          } catch (error) {
+            console.error("ローカルストレージ解析エラー:", error);
+          }
+        }
+      });
+
+      // State側からも削除
+      if (deleteId && onMemoDelete) {
+        onMemoDelete(deleteId);
+      }
+
+      // 削除後の処理
+      if (memo && onDeleteAndSelectNext) {
         onDeleteAndSelectNext(memo);
       } else {
-        // console.log('エディターを閉じます')
         onClose();
       }
     } catch (error) {
@@ -62,18 +99,20 @@ function MemoEditor({ memo, onClose, onMemoAdd, onMemoUpdate, onMemoDelete, onDe
   return (
     <>
       <BaseViewer
-        item={memo}
+        item={memo || {
+          id: realId || 0,
+          title: '',
+          content: '',
+          createdAt: Math.floor(Date.now() / 1000),
+          updatedAt: Math.floor(Date.now() / 1000)
+        }}
         onClose={onClose}
         error={error}
         isEditing={true}
+        createdItemId={isNewlyCreated ? (memo?.id || realId) : null}
+        lastEditedAt={lastEditedAt}
         headerActions={
           <div className="flex items-center gap-2">
-            {isSaving && (
-              <span className="text-xs text-blue-500">保存中...</span>
-            )}
-            {savedSuccessfully && (
-              <CheckIcon className="w-5 h-5 text-green-600" />
-            )}
             {saveError && (
               <span className="text-xs text-red-500">{saveError}</span>
             )}
@@ -91,6 +130,7 @@ function MemoEditor({ memo, onClose, onMemoAdd, onMemoUpdate, onMemoDelete, onDe
         }
       >
         <textarea
+          ref={textareaRef}
           placeholder="メモを入力...&#10;&#10;最初の行がタイトルになります"
           value={content}
           onChange={(e) => {

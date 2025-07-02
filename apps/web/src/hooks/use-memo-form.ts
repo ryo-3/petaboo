@@ -26,7 +26,7 @@ export function useMemoForm({ memo = null, onMemoAdd, onMemoUpdate, onMemoIdUpda
   const [tempListId, setTempListId] = useState<number | null>(null) // リストに追加した一時ID
   const tempListIdRef = useRef<number | null>(null) // 同期的にアクセス可能な一時ID
   const [hasUserEdited, setHasUserEdited] = useState(false)
-  const [lastEditedAt, setLastEditedAt] = useState<number>(Date.now())
+  const [lastEditedAt, setLastEditedAt] = useState<number>(0)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   const stateUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   
@@ -174,7 +174,7 @@ export function useMemoForm({ memo = null, onMemoAdd, onMemoUpdate, onMemoIdUpda
   const handleTitleChange = useCallback((newTitle: string) => {
     setTitle(newTitle)
     setHasUserEdited(true)
-    setLastEditedAt(Date.now())
+    setLastEditedAt(Math.floor(Date.now() / 1000))
     
     // 0.05秒でState更新（編集時のみ）
     if (realId) {
@@ -186,7 +186,7 @@ export function useMemoForm({ memo = null, onMemoAdd, onMemoUpdate, onMemoIdUpda
   const handleContentChange = useCallback((newContent: string) => {
     setContent(newContent)
     setHasUserEdited(true)
-    setLastEditedAt(Date.now())
+    setLastEditedAt(Math.floor(Date.now() / 1000))
     
     // 0.05秒でState更新（編集時のみ）
     if (realId) {

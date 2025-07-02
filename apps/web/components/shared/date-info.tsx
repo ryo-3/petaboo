@@ -26,11 +26,14 @@ function DateInfo({ item, createdItemId, isEditing = false, lastEditedAt }: Date
     ? lastEditedAt 
     : item.updatedAt
 
+  // 新規作成時または実際に編集されていない場合は編集時間を表示しない
+  const showEditTime = !createdItemId && latestEditTime && latestEditTime !== item.createdAt && item.updatedAt !== item.createdAt
+
   return (
     <div className="text-sm text-gray-500 mb-4 pb-2 border-b border-gray-100">
       <div className="flex gap-4">
         <span>作成 {formatDate(item.createdAt)}</span>
-        {(latestEditTime && latestEditTime !== item.createdAt) && (
+        {showEditTime && (
           <span>
             編集 {formatDate(latestEditTime)}
           </span>

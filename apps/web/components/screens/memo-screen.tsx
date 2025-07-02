@@ -1,7 +1,6 @@
 "use client";
 
 import DeletedMemoViewer from "@/components/features/memo/deleted-memo-viewer";
-import MemoCreator from "@/components/features/memo/memo-creator";
 import MemoEditor from "@/components/features/memo/memo-editor";
 import DesktopLower from "@/components/layout/desktop-lower";
 import DesktopUpper from "@/components/layout/desktop-upper";
@@ -89,9 +88,15 @@ function MemoScreen({
     }
   }, [isOnline, initialized, notes]);
 
+  // 新規作成フラグ管理
+  const [newlyCreatedMemoIds, setNewlyCreatedMemoIds] = useState<Set<number>>(new Set());
+
   // メモ操作ハンドラー
   const addMemo = useCallback((memo: Memo) => {
     setDisplayMemos(prev => [memo, ...prev]);
+    
+    // 新規作成フラグを設定
+    setNewlyCreatedMemoIds(prev => new Set(prev).add(memo.id));
     
     // 新規作成時は作成したメモを自動選択（DOMベース + 遅延実行）
     createNewItemSelectionHandler(memo, onSelectMemo, setMemoScreenMode);
@@ -310,19 +315,28 @@ function MemoScreen({
       <RightPanel
         isOpen={memoScreenMode !== "list"}
         onClose={() => {
+          // 選択が外れた時に新規作成フラグを解除
+          if (selectedMemo) {
+            setNewlyCreatedMemoIds(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(selectedMemo.id);
+              return newSet;
+            });
+          }
           setMemoScreenMode("list");
           onClearSelection?.(); // 選択状態のみクリア（画面は変更しない）
         }}
       >
         {memoScreenMode === "create" && (
-          <MemoCreator 
+          <MemoEditor
+            memo={null}
             onClose={() => {
               setMemoScreenMode("list");
             }}
             onMemoAdd={addMemo}
             onMemoUpdate={updateMemo}
-            onMemoIdUpdate={updateMemoId}
             onMemoDelete={deleteMemo}
+            isNewlyCreated={true}
           />
         )}
         {memoScreenMode === "view" && selectedMemo && (
@@ -333,6 +347,7 @@ function MemoScreen({
             onMemoAdd={addMemo}
             onMemoUpdate={updateMemo}
             onMemoDelete={deleteMemo}
+            isNewlyCreated={newlyCreatedMemoIds.has(selectedMemo.id)}
           />
         )}
         {memoScreenMode === "view" && selectedDeletedMemo && (
@@ -351,6 +366,7 @@ function MemoScreen({
             onMemoAdd={addMemo}
             onMemoUpdate={updateMemo}
             onMemoDelete={deleteMemo}
+            isNewlyCreated={newlyCreatedMemoIds.has(selectedMemo.id)}
           />
         )}
       </RightPanel>

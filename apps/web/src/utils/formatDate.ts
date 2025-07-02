@@ -21,3 +21,13 @@ export function formatDateOnly(timestamp: number): string {
     day: '2-digit'
   }).replace(/\//g, '/')
 }
+
+/**
+ * UnixタイムスタンプをJST形式の時間のみに変換
+ */
+export function formatTimeOnly(timestamp: number): string {
+  return new Date(timestamp * 1000).toLocaleTimeString('ja-JP', {
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}

@@ -12,6 +12,8 @@ interface BaseViewerProps {
   children: ReactNode;
   error?: string | null;
   isEditing?: boolean;
+  createdItemId?: number | null;
+  lastEditedAt?: number | null;
 }
 
 function BaseViewer({
@@ -21,9 +23,13 @@ function BaseViewer({
   children,
   error,
   isEditing = false,
+  createdItemId,
+  lastEditedAt,
 }: BaseViewerProps) {
   return (
     <div className="flex flex-col h-full bg-white p-2">
+      <DateInfo item={item} isEditing={isEditing} createdItemId={createdItemId} lastEditedAt={lastEditedAt} />
+      
       <div className="flex justify-start items-center mb-4">
         {headerActions}
         
@@ -34,7 +40,6 @@ function BaseViewer({
       </div>
 
       <div className="flex flex-col gap-2 flex-1">
-        <DateInfo item={item} isEditing={isEditing} />
         {children}
       </div>
     </div>

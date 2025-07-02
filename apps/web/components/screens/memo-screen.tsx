@@ -57,18 +57,6 @@ function MemoScreen({
   const { preferences } = useUserPreferences(1);
   const { isOnline } = useApiConnection();
 
-  // 一括削除関連
-  const { handleBulkDelete, bulkDeleteState } = useMemosBulkDelete({
-    activeTab,
-    checkedMemos,
-    checkedDeletedMemos,
-    setCheckedMemos,
-    setCheckedDeletedMemos,
-    notes,
-    deletedNotes,
-    localMemos: displayMemos
-  });
-
   // 設定値が変更されたらローカル状態を更新
   useEffect(() => {
     if (preferences) {
@@ -152,6 +140,19 @@ function MemoScreen({
     
     console.log('🗑️ State側メモ削除:', id);
   }, [selectedMemo, onClose]);
+
+  // 一括削除関連
+  const { handleBulkDelete, bulkDeleteState } = useMemosBulkDelete({
+    activeTab,
+    checkedMemos,
+    checkedDeletedMemos,
+    setCheckedMemos,
+    setCheckedDeletedMemos,
+    notes,
+    deletedNotes,
+    localMemos: displayMemos,
+    onMemoDelete: deleteMemo
+  });
 
   // オフライン時のローカルストレージ管理
   const [localMemos, setLocalMemos] = useState<Memo[]>([]);

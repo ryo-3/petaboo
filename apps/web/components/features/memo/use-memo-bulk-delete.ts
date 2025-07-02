@@ -12,6 +12,7 @@ interface UseMemosBulkDeleteProps {
   notes?: Memo[]
   deletedNotes?: DeletedMemo[]
   localMemos: Memo[]
+  onMemoDelete?: (id: number) => void
 }
 
 export function useMemosBulkDelete({
@@ -22,7 +23,8 @@ export function useMemosBulkDelete({
   setCheckedDeletedMemos,
   notes,
   deletedNotes,
-  localMemos
+  localMemos,
+  onMemoDelete
 }: UseMemosBulkDeleteProps) {
   const deleteNoteMutation = useDeleteNote()
   const permanentDeleteNoteMutation = usePermanentDeleteNote()
@@ -62,6 +64,10 @@ export function useMemosBulkDelete({
       for (const id of ids) {
         if (activeTab === "normal") {
           await deleteNoteMutation.mutateAsync(id)
+          // State側からも削除
+          if (onMemoDelete) {
+            onMemoDelete(id)
+          }
         } else {
           await permanentDeleteNoteMutation.mutateAsync(id)
         }
@@ -90,6 +96,10 @@ export function useMemosBulkDelete({
           for (const id of ids) {
             if (activeTab === "normal") {
               await deleteNoteMutation.mutateAsync(id)
+              // State側からも削除
+              if (onMemoDelete) {
+                onMemoDelete(id)
+              }
             } else {
               await permanentDeleteNoteMutation.mutateAsync(id)
             }

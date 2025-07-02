@@ -80,6 +80,7 @@ function TaskEditor({
       setIsEditing(false); // 新しいタスクを選択した時は表示モードに戻る
       setSavedSuccessfully(false);
       setError(null);
+      setSavedData(null); // 新しいタスク選択時に保存済みデータをリセット
     }
   }, [task]);
 

@@ -73,7 +73,6 @@ function Main() {
   
   /** メモ選択 - メモ画面に遷移 */
   const handleSelectMemo = (memo: Memo) => {
-    clearAllSelections();
     setSelectedMemo(memo);
     setScreenMode('memo');
   };
@@ -87,9 +86,10 @@ function Main() {
 
   /** タスク選択 - タスク画面に遷移 */
   const handleSelectTask = (task: Task | null) => {
-    clearAllSelections();
     setSelectedTask(task);
-    setScreenMode('task');
+    if (task) {
+      setScreenMode('task');
+    }
   };
 
   /** 削除済みタスク選択 - タスク画面に遷移 */

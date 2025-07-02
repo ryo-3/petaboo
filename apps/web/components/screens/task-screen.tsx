@@ -99,6 +99,13 @@ function TaskScreen({
   const handleTaskDeleteAndSelectNext = (deletedTask: Task) => {
     if (!tasks) return;
     
+    // 削除されたタスクが現在のタブと異なるステータスの場合は右パネルを閉じるだけ
+    if (deletedTask.status !== activeTab) {
+      setTaskScreenMode('list');
+      onClearSelection?.(); // 選択状態のみクリア
+      return;
+    }
+    
     const filteredTasks = tasks.filter((t) => t.status === activeTab);
     const displayOrder = getTaskDisplayOrder();
     

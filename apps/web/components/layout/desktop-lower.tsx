@@ -177,7 +177,7 @@ function DesktopLower({
         checkedTasks={checkedTasks}
         onToggleCheck={onToggleCheckTask}
         onSelectTask={onSelectTask}
-        selectedTaskId={selectedTask?.id}
+        selectedTaskId={selectedTask?.status === activeTab ? selectedTask?.id : undefined}
       />
     );
   }

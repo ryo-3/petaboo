@@ -40,7 +40,7 @@ function Header({
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // API接続状況管理
-  const { isOnline, isAirplaneMode, lastConnectionCheck, connectionError, toggleAirplaneMode } = useApiConnection();
+  const { isOnline, lastConnectionCheck, connectionError, toggleOnlineMode } = useApiConnection();
 
   // 検索実行
   const { results, isSearching, hasQuery } = useGlobalSearch({
@@ -242,49 +242,30 @@ function Header({
           </div>
         </div>
 
-        {/* API接続状態とトグルボタン */}
+        {/* オンライン/オフライン状態表示と切り替え */}
         <div className="flex items-center gap-3 ml-4">
-          {/* 接続状態表示 */}
           <div className="flex items-center gap-2">
-            {/* 接続状況アイコン */}
-            <div className={`w-2 h-2 rounded-full ${
-              isAirplaneMode 
-                ? 'bg-orange-500' 
-                : isOnline 
-                  ? 'bg-green-500' 
-                  : 'bg-red-500'
-            }`} />
-            
-            {/* 状態テキスト */}
-            <span className="text-sm text-gray-600">
-              {isAirplaneMode 
-                ? '機内モード' 
-                : isOnline 
-                  ? 'オンライン' 
-                  : 'オフライン'
-              }
-            </span>
+            <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-red-500'}`}></div>
+            <span className="text-sm text-gray-600">{isOnline ? 'オンライン' : 'オフライン'}</span>
           </div>
-
-          {/* 機内モード切り替えボタン */}
           <button
-            onClick={toggleAirplaneMode}
+            onClick={toggleOnlineMode}
             className={`p-2 rounded-lg transition-colors ${
-              isAirplaneMode
-                ? 'bg-orange-100 text-orange-600 hover:bg-orange-200'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              isOnline
+                ? 'bg-green-100 text-green-600 hover:bg-green-200'
+                : 'bg-red-100 text-red-600 hover:bg-red-200'
             }`}
-            title={isAirplaneMode ? '機内モードを無効にする' : '機内モードを有効にする'}
+            title={isOnline ? 'オフラインにする' : 'オンラインにする'}
           >
-            {isAirplaneMode ? (
-              // 機内モードアイコン
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M20.36 18l1.64 1.64L24 17.64 6.36 0 4.72 1.64 8.11 5.03L2 12v2l5.5-1.5L10 16v2l2-1.5 2 1.5v-2l2.5-3.5L18.36 15l2 2z"/>
-              </svg>
-            ) : (
-              // 通常のWiFiアイコン
+            {isOnline ? (
+              // WiFiアイコン
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 20L8.4 16.2C9.8 15.1 11.8 15.1 13.2 16.2L12 20M6.8 14C9.2 12.2 11.8 12.2 14.2 14L15.6 12.4C12.8 10.2 9.2 10.2 6.4 12.4L6.8 14M4.4 11.6C8.4 8.4 13.6 8.4 17.6 11.6L19 10C13.8 6 8.2 6 3 10L4.4 11.6M2 8.2C8.8 3.4 15.2 3.4 22 8.2L20.6 9.8C14.8 5.8 9.2 5.8 3.4 9.8L2 8.2Z"/>
+              </svg>
+            ) : (
+              // WiFi無効アイコン
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M20.36 18l1.64 1.64L24 17.64 6.36 0 4.72 1.64 8.11 5.03L2 12v2l5.5-1.5L10 16v2l2-1.5 2 1.5v-2l2.5-3.5L18.36 15l2 2z"/>
               </svg>
             )}
           </button>

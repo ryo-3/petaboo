@@ -14,9 +14,15 @@ interface MemoCreatorProps {
   onClose: () => void;
   memo?: Memo | null;
   onExitEdit?: () => void;
+  onEditingChange?: (editingData: {
+    title: string;
+    content: string;
+    tempId: string;
+    lastEditedAt: number;
+  } | null) => void;
 }
 
-function MemoCreator({ onClose, memo = null, onExitEdit }: MemoCreatorProps) {
+function MemoCreator({ onClose, memo = null, onExitEdit, onEditingChange }: MemoCreatorProps) {
   // 新規作成時は常に編集モード、既存メモの場合は表示モードから開始
   const [isEditing, setIsEditing] = useState(memo === null);
   const titleInputRef = useRef<HTMLTextAreaElement>(null);
@@ -30,6 +36,8 @@ function MemoCreator({ onClose, memo = null, onExitEdit }: MemoCreatorProps) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     isEditMode,
     createdMemoId,
+    lastEditedAt,
+    tempId,
   } = useMemoForm({ memo });
 
   // 新規作成時のフォーカス遅延
@@ -41,6 +49,22 @@ function MemoCreator({ onClose, memo = null, onExitEdit }: MemoCreatorProps) {
       return () => clearTimeout(timer);
     }
   }, [memo]);
+
+  // 編集状態を親に通知
+  useEffect(() => {
+    if (onEditingChange && memo === null) { // 新規作成時のみ
+      if (title.trim() || content.trim()) {
+        onEditingChange({
+          title,
+          content,
+          tempId,
+          lastEditedAt
+        });
+      } else {
+        onEditingChange(null);
+      }
+    }
+  }, [title, content, tempId, onEditingChange, memo]); // lastEditedAtを依存配列から除外
 
   const handleDelete = async () => {
     try {
@@ -113,7 +137,7 @@ function MemoCreator({ onClose, memo = null, onExitEdit }: MemoCreatorProps) {
       </div>
 
       <div className="flex flex-col gap-2 flex-1">
-        {memo && <DateInfo item={memo} createdItemId={createdMemoId} />}
+        {memo && <DateInfo item={memo} createdItemId={createdMemoId} lastEditedAt={lastEditedAt} />}
 
         <div className="flex items-center gap-3 mb-2">
           {savedSuccessfully && (

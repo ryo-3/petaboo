@@ -3,56 +3,27 @@
 import type { Memo, DeletedMemo } from '@/src/types/memo'
 import type { Task, DeletedTask } from '@/src/types/task'
 import { formatDate } from '@/src/utils/formatDate'
-import { useState, useEffect } from 'react'
 
 interface DateInfoProps {
   item?: Memo | Task | DeletedMemo | DeletedTask | null
   createdItemId?: number | null
   isEditing?: boolean
+  lastEditedAt?: number | null
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function DateInfo({ item, createdItemId, isEditing = false }: DateInfoProps) {
-  const [localEditTime, setLocalEditTime] = useState<number | null>(null)
-  // Removed unused variable: isLocallyEdited
-
-  useEffect(() => {
-    if (!item) return
-
-    const updateLocalEditTime = () => {
-      const localData = localStorage.getItem(`memo_draft_${item.id}`)
-      if (localData) {
-        try {
-          const parsed = JSON.parse(localData)
-          if (parsed.id === item.id && parsed.lastEditedAt) {
-            setLocalEditTime(parsed.lastEditedAt)
-          } else {
-            setLocalEditTime(null)
-          }
-        } catch {
-          setLocalEditTime(null)
-        }
-      } else {
-        setLocalEditTime(null)
-      }
-    }
-
-    updateLocalEditTime()
-
-    // 編集中のメモのみリアルタイム更新
-    if (!isEditing) return
-
-    const interval = setInterval(updateLocalEditTime, 1000)
-    return () => clearInterval(interval)
-  }, [item, isEditing])
+function DateInfo({ item, createdItemId, isEditing = false, lastEditedAt }: DateInfoProps) {
+  // ローカルストレージの使用を停止し、propsから受け取った値を使用
+  // const [localEditTime, setLocalEditTime] = useState<number | null>(null)
+  // Removed localStorage-based edit time tracking
 
   if (!item) {
     return null
   }
 
-  // 最新の編集時間を決定（ローカル編集時間 vs API更新時間）
-  const latestEditTime = localEditTime && localEditTime > (item.updatedAt || 0) 
-    ? localEditTime 
+  // 最新の編集時間を決定（propsの編集時間 vs API更新時間）
+  const latestEditTime = lastEditedAt && lastEditedAt > (item.updatedAt || 0) 
+    ? lastEditedAt 
     : item.updatedAt
 
   return (

@@ -46,14 +46,14 @@ export function useApiSync() {
 
       if (typeof data.id === 'number' && data.id > 0) {
         // 既存メモの更新
-        console.log('既存メモを更新:', data.id)
+        console.log('🟢 既存メモを更新:', data.id)
         await updateNote.mutateAsync({
           id: data.id,
           data: memoData
         })
       } else {
         // 新規メモの作成（idが'new'や文字列の場合など）
-        console.log('新規メモを作成:', data.id)
+        console.log('🟢 新規メモを作成:', data.id)
         await createNote.mutateAsync(memoData)
       }
 
@@ -120,7 +120,7 @@ export function useApiSync() {
             if (data.lastEditedAt && (now - data.lastEditedAt) >= 1) {
               // 現在同期中でない場合のみ実行
               if (!syncStatus[key]?.isLoading) {
-                console.log('同期開始:', key, 'lastEditedAt:', data.lastEditedAt, 'now:', now)
+                console.log('🔄 同期開始:', key, 'lastEditedAt:', data.lastEditedAt, 'now:', now)
                 syncSingleMemo(key, data)
               } else {
                 console.log('同期中のためスキップ:', key)

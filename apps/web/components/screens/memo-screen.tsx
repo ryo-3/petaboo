@@ -12,7 +12,8 @@ import { useDeletedNotes, useNotes } from "@/src/hooks/use-notes";
 import { useMemosBulkDelete } from "@/components/features/memo/use-memo-bulk-delete";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { useApiConnection } from "@/src/hooks/use-api-connection";
 import { 
   getMemoDisplayOrder, 
   createNextSelectionHandler, 
@@ -48,11 +49,18 @@ function MemoScreen({
     new Set()
   );
   const [localMemos, setLocalMemos] = useState<Memo[]>([]);
+  const [currentEditingMemo, setCurrentEditingMemo] = useState<{
+    title: string;
+    content: string;
+    tempId: string;
+    lastEditedAt: number;
+  } | null>(null);
 
   // データ取得
   const { data: notes, isLoading: memoLoading, error: memoError } = useNotes();
   const { data: deletedNotes } = useDeletedNotes();
   const { preferences } = useUserPreferences(1);
+  const { isOnline } = useApiConnection();
 
   // 一括削除関連
   const { handleBulkDelete, bulkDeleteState } = useMemosBulkDelete({
@@ -87,56 +95,91 @@ function MemoScreen({
   }, [selectedMemo, selectedDeletedMemo, memoScreenMode]);
 
 
-  // ローカルストレージから新規作成メモを取得
+  // ローカルメモの管理（オンライン/オフライン対応）
   useEffect(() => {
     const updateLocalMemos = () => {
       const localMemosList: Memo[] = [];
-      Object.keys(localStorage).forEach((key) => {
-        if (key.startsWith("memo_draft_")) {
-          try {
-            const data = JSON.parse(localStorage.getItem(key) || "{}");
-            if (
-              typeof data.id === "string" &&
-              data.id.startsWith("new_") &&
-              (data.title?.trim() || data.content?.trim())
-            ) {
-              const now = Math.floor(Date.now() / 1000);
-              const normalizeTime = (timestamp: number) => {
-                if (!timestamp) return now;
-                return timestamp > 9999999999
-                  ? Math.floor(timestamp / 1000)
-                  : Math.floor(timestamp);
-              };
-              const hashId = -Math.abs(
-                data.id.split("").reduce((a: number, b: string) => {
-                  a = (a << 5) - a + b.charCodeAt(0);
-                  return a & a;
-                }, 0)
-              );
-              localMemosList.push({
-                id: hashId,
-                title: data.title || "無題",
-                content: data.content || "",
-                createdAt: normalizeTime(data.lastModified),
-                updatedAt: normalizeTime(
-                  data.lastEditedAt || data.lastModified
-                ),
-                tempId: data.id,
-              });
-            }
-          } catch (error) {
-            console.error("ローカルメモの解析エラー:", key, error);
-          }
+      
+      if (isOnline) {
+        // オンライン時：編集中のメモをstateから取得
+        if (currentEditingMemo && (currentEditingMemo.title.trim() || currentEditingMemo.content.trim())) {
+          const hashId = -Math.abs(
+            currentEditingMemo.tempId.split("").reduce((a: number, b: string) => {
+              a = (a << 5) - a + b.charCodeAt(0);
+              return a & a;
+            }, 0)
+          );
+          localMemosList.push({
+            id: hashId,
+            title: currentEditingMemo.title || "無題",
+            content: currentEditingMemo.content || "",
+            createdAt: Math.floor(currentEditingMemo.lastEditedAt / 1000),
+            updatedAt: Math.floor(currentEditingMemo.lastEditedAt / 1000),
+            tempId: currentEditingMemo.tempId,
+          });
         }
-      });
+      } else {
+        // オフライン時：ローカルストレージから取得（従来通り）
+        Object.keys(localStorage).forEach((key) => {
+          if (key.startsWith("memo_draft_")) {
+            try {
+              const data = JSON.parse(localStorage.getItem(key) || "{}");
+              if (
+                typeof data.id === "string" &&
+                data.id.startsWith("new_") &&
+                (data.title?.trim() || data.content?.trim())
+              ) {
+                const now = Math.floor(Date.now() / 1000);
+                const normalizeTime = (timestamp: number) => {
+                  if (!timestamp) return now;
+                  return timestamp > 9999999999
+                    ? Math.floor(timestamp / 1000)
+                    : Math.floor(timestamp);
+                };
+                const hashId = -Math.abs(
+                  data.id.split("").reduce((a: number, b: string) => {
+                    a = (a << 5) - a + b.charCodeAt(0);
+                    return a & a;
+                  }, 0)
+                );
+                localMemosList.push({
+                  id: hashId,
+                  title: data.title || "無題",
+                  content: data.content || "",
+                  createdAt: normalizeTime(data.lastModified),
+                  updatedAt: normalizeTime(
+                    data.lastEditedAt || data.lastModified
+                  ),
+                  tempId: data.id,
+                });
+              }
+            } catch (error) {
+              console.error("ローカルメモの解析エラー:", key, error);
+            }
+          }
+        });
+      }
+      
       setLocalMemos(localMemosList);
     };
 
     updateLocalMemos();
-    const interval = setInterval(updateLocalMemos, 1000);
-    return () => clearInterval(interval);
-  }, []);
+    if (!isOnline) {
+      // オフライン時のみ定期更新
+      const interval = setInterval(updateLocalMemos, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [isOnline, currentEditingMemo]);
 
+  // 編集状態変更のコールバック
+  const handleEditingChange = useCallback((editingData: {
+    title: string;
+    content: string;
+    tempId: string;
+    lastEditedAt: number;
+  } | null) => {
+    setCurrentEditingMemo(editingData);
+  }, []);
 
   // 表示順序での次のメモを選択するハンドラー（実際の画面表示順序に基づく）
   const handleDeleteAndSelectNextInOrder = (deletedMemo: Memo) => {
@@ -248,7 +291,13 @@ function MemoScreen({
         }}
       >
         {memoScreenMode === "create" && (
-          <MemoCreator onClose={() => setMemoScreenMode("list")} />
+          <MemoCreator 
+            onClose={() => {
+              setMemoScreenMode("list");
+              setCurrentEditingMemo(null); // 編集状態をクリア
+            }}
+            onEditingChange={handleEditingChange}
+          />
         )}
         {memoScreenMode === "view" && selectedMemo && (
           <MemoEditor

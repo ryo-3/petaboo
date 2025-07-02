@@ -61,6 +61,30 @@ const displayOrder = getTaskDisplayOrder();
 const nextTask = getNextItemAfterDeletion(filteredTasks, deletedTask, displayOrder);
 ```
 
+## オンライン・オフライン ハイブリッド戦略
+
+### メモ管理アーキテクチャ
+- **オンライン時**: React state管理でリアルタイム表示 + 背景API同期
+- **オフライン時**: localStorage保存で継続利用
+- **初期化**: 一回のみAPI取得 → 以降pure state管理
+- **新規作成**: State-first表示 + 背景API保存
+- **編集**: 即座のstate更新 + デバウンス保存
+
+### デバウンス設計
+```tsx
+// 0.05秒 (50ms): リアルタイムlist表示更新
+// 1秒: API保存（確実な永続化）
+const updateStateWithDebounce = useCallback((newTitle, newContent) => {
+  // 50msで即座にリスト更新
+  setTimeout(() => onMemoUpdate(realId, memoData), 50)
+}, [])
+```
+
+### ID管理システム
+- **tempId**: 新規作成時の一時識別子
+- **realId**: API保存後の実際のID  
+- **tempListIdRef**: React async state回避用のRef
+
 ## 開発制約・ルール
 - 新しいnpmパッケージの追加は基本的に行わない
 - セキュリティを重視し、悪意のあるコード作成は禁止

@@ -13,17 +13,22 @@ interface MemoEditorProps {
   memo: Memo;
   onClose: () => void;
   onEdit?: (memo: Memo) => void;
+  onMemoAdd?: (memo: Memo) => void;
+  onMemoUpdate?: (id: number, updates: Partial<Memo>) => void;
   onDeleteAndSelectNext?: (deletedMemo: Memo) => void;
 }
 
-function MemoEditor({ memo, onClose, onDeleteAndSelectNext }: MemoEditorProps) {
+function MemoEditor({ memo, onClose, onMemoAdd, onMemoUpdate, onDeleteAndSelectNext }: MemoEditorProps) {
   const deleteNote = useDeleteNote();
   const {
-    setTitle,
+    title,
     content,
-    setContent,
     savedSuccessfully,
-  } = useMemoForm({ memo });
+    isSaving,
+    saveError,
+    handleTitleChange,
+    handleContentChange,
+  } = useMemoForm({ memo, onMemoAdd, onMemoUpdate });
 
   const [error] = useState<string | null>(null);
 
@@ -58,8 +63,14 @@ function MemoEditor({ memo, onClose, onDeleteAndSelectNext }: MemoEditorProps) {
         isEditing={true}
         headerActions={
           <div className="flex items-center gap-2">
+            {isSaving && (
+              <span className="text-xs text-blue-500">保存中...</span>
+            )}
             {savedSuccessfully && (
               <CheckIcon className="w-5 h-5 text-green-600" />
+            )}
+            {saveError && (
+              <span className="text-xs text-red-500">{saveError}</span>
             )}
             <button
               className="p-2 rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-800 transition-colors"
@@ -82,14 +93,14 @@ function MemoEditor({ memo, onClose, onDeleteAndSelectNext }: MemoEditorProps) {
             // 最初の行をタイトルとして設定
             const firstLine = newContent.split("\n")[0] || "";
 
-            // バッチで状態更新
-            setContent(newContent);
-            setTitle(firstLine);
+            // 新しいハンドラーを使用
+            handleContentChange(newContent);
+            handleTitleChange(firstLine);
 
-            // console.log('memo-editor onChange:', {
-            //   title: firstLine,
-            //   content: newContent.substring(0, 50) + '...'
-            // });
+            console.log('memo-editor onChange:', {
+              title: firstLine,
+              content: newContent.substring(0, 50) + '...'
+            });
           }}
           className="w-full h-[calc(100vh-280px)] resize-none outline-none text-gray-500 leading-relaxed font-medium"
         />

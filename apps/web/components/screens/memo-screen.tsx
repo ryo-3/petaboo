@@ -48,14 +48,8 @@ function MemoScreen({
   const [checkedDeletedMemos, setCheckedDeletedMemos] = useState<Set<number>>(
     new Set()
   );
-  const [localMemos, setLocalMemos] = useState<Memo[]>([]);
-  const [currentEditingMemo, setCurrentEditingMemo] = useState<{
-    title: string;
-    content: string;
-    tempId: string;
-    lastEditedAt: number;
-    createdMemoId?: number | null;
-  } | null>(null);
+  const [displayMemos, setDisplayMemos] = useState<Memo[]>([]);
+  const [initialized, setInitialized] = useState(false);
 
   // データ取得
   const { data: notes, isLoading: memoLoading, error: memoError } = useNotes();
@@ -72,7 +66,7 @@ function MemoScreen({
     setCheckedDeletedMemos,
     notes,
     deletedNotes,
-    localMemos
+    localMemos: displayMemos
   });
 
   // 設定値が変更されたらローカル状態を更新
@@ -96,26 +90,60 @@ function MemoScreen({
   }, [selectedMemo, selectedDeletedMemo, memoScreenMode]);
 
 
-  // オンライン時のstate管理
+  // オンライン時の初期化（一回限り）
   useEffect(() => {
-    if (isOnline && currentEditingMemo && (currentEditingMemo.title.trim() || currentEditingMemo.content.trim())) {
-      const editingId = currentEditingMemo.createdMemoId;
-      
-      setLocalMemos([{
-        id: editingId || -1,
-        title: currentEditingMemo.title || "無題",
-        content: currentEditingMemo.content || "",
-        createdAt: Math.floor(currentEditingMemo.lastEditedAt / 1000),
-        updatedAt: Math.floor(currentEditingMemo.lastEditedAt / 1000),
-        tempId: currentEditingMemo.tempId,
-      }]);
-      console.log('📝 state完全管理表示:', currentEditingMemo.title);
-    } else if (isOnline) {
-      setLocalMemos([]);
+    if (isOnline && !initialized && notes) {
+      setDisplayMemos(notes);
+      setInitialized(true);
+      console.log('🟢 オンライン初期化完了:', notes.length, '件');
     }
-  }, [isOnline, currentEditingMemo]);
+  }, [isOnline, initialized, notes]);
+
+  // メモ操作ハンドラー
+  const addMemo = useCallback((memo: Memo) => {
+    setDisplayMemos(prev => [memo, ...prev]);
+    
+    // 新規作成時は作成したメモを自動選択
+    onSelectMemo(memo);
+    console.log('📝 新規メモ作成&選択:', memo.title);
+  }, [onSelectMemo]);
+
+  const updateMemo = useCallback((id: number, updates: Partial<Memo>) => {
+    console.log('🔄 updateMemo呼び出し:', id, updates);
+    setDisplayMemos(prev => {
+      const updated = prev.map(m => 
+        m.id === id ? { ...m, ...updates } : m
+      );
+      console.log('📋 リスト更新後:', updated.find(m => m.id === id));
+      return updated;
+    });
+    
+    // 選択中メモも同時に更新
+    if (selectedMemo && selectedMemo.id === id) {
+      const updatedMemo = { ...selectedMemo, ...updates };
+      console.log('✅ 選択中メモ更新:', updatedMemo);
+      onSelectMemo(updatedMemo);
+    }
+  }, [selectedMemo, onSelectMemo]);
+
+  // IDのみ更新（API呼び出しなし）
+  const updateMemoId = useCallback((oldId: number, newId: number) => {
+    setDisplayMemos(prev => prev.map(m => 
+      m.id === oldId ? { ...m, id: newId } : m
+    ));
+    
+    // 選択中メモのIDも更新
+    if (selectedMemo && selectedMemo.id === oldId) {
+      const updatedMemo = { ...selectedMemo, id: newId };
+      onSelectMemo(updatedMemo);
+    }
+    
+    console.log('🔄 UI側ID更新:', oldId, '→', newId);
+  }, [selectedMemo, onSelectMemo]);
 
   // オフライン時のローカルストレージ管理
+  const [localMemos, setLocalMemos] = useState<Memo[]>([]);
+  
   useEffect(() => {
     if (!isOnline) {
       const updateLocalMemos = () => {
@@ -169,20 +197,12 @@ function MemoScreen({
     }
   }, [isOnline]);
 
-  // 編集状態変更のコールバック
-  const handleEditingChange = useCallback((editingData: {
-    title: string;
-    content: string;
-    tempId: string;
-    lastEditedAt: number;
-    createdMemoId?: number | null;
-  } | null) => {
-    setCurrentEditingMemo(editingData);
-  }, []);
+  // 表示用メモリストの決定
+  const effectiveMemos = isOnline ? displayMemos : localMemos;
 
   // 表示順序での次のメモを選択するハンドラー（実際の画面表示順序に基づく）
   const handleDeleteAndSelectNextInOrder = (deletedMemo: Memo) => {
-    const allMemos = localMemos;
+    const allMemos = effectiveMemos;
     const displayOrder = getMemoDisplayOrder();
     
     createNextSelectionHandler(
@@ -232,7 +252,7 @@ function MemoScreen({
           columnCount={columnCount}
           onColumnCountChange={setColumnCount}
           rightPanelMode={memoScreenMode === "list" ? "hidden" : "view"}
-          normalCount={localMemos.length}
+          normalCount={effectiveMemos.length}
           deletedNotesCount={deletedNotes?.length || 0}
         />
 
@@ -244,7 +264,7 @@ function MemoScreen({
           isLoading={memoLoading}
           error={memoError}
           notes={notes || []}
-          localMemos={localMemos}
+          localMemos={effectiveMemos}
           deletedNotes={deletedNotes || []}
           selectedMemo={selectedMemo}
           selectedDeletedMemo={selectedDeletedMemo}
@@ -293,9 +313,10 @@ function MemoScreen({
           <MemoCreator 
             onClose={() => {
               setMemoScreenMode("list");
-              setCurrentEditingMemo(null); // 編集状態をクリア
             }}
-            onEditingChange={handleEditingChange}
+            onMemoAdd={addMemo}
+            onMemoUpdate={updateMemo}
+            onMemoIdUpdate={updateMemoId}
           />
         )}
         {memoScreenMode === "view" && selectedMemo && (
@@ -303,6 +324,8 @@ function MemoScreen({
             memo={selectedMemo}
             onClose={() => setMemoScreenMode("list")}
             onDeleteAndSelectNext={handleDeleteAndSelectNextInOrder}
+            onMemoAdd={addMemo}
+            onMemoUpdate={updateMemo}
           />
         )}
         {memoScreenMode === "view" && selectedDeletedMemo && (
@@ -317,6 +340,8 @@ function MemoScreen({
             memo={selectedMemo}
             onClose={() => setMemoScreenMode("view")}
             onDeleteAndSelectNext={handleDeleteAndSelectNextInOrder}
+            onMemoAdd={addMemo}
+            onMemoUpdate={updateMemo}
           />
         )}
       </RightPanel>

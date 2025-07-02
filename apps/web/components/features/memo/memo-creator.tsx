@@ -13,32 +13,37 @@ interface MemoCreatorProps {
   onClose: () => void;
   memo?: Memo | null;
   onExitEdit?: () => void;
+  onMemoAdd?: (memo: Memo) => void;
+  onMemoUpdate?: (id: number, updates: Partial<Memo>) => void;
+  onMemoIdUpdate?: (oldId: number, newId: number) => void;
   onEditingChange?: (editingData: {
     title: string;
     content: string;
     tempId: string;
     lastEditedAt: number;
-    createdMemoId?: number | null;
+    realId?: number | null;
   } | null) => void;
 }
 
-function MemoCreator({ onClose, memo = null, onExitEdit, onEditingChange }: MemoCreatorProps) {
+function MemoCreator({ onClose, memo = null, onExitEdit, onMemoAdd, onMemoUpdate, onMemoIdUpdate, onEditingChange }: MemoCreatorProps) {
   // 新規作成時は常に編集モード、既存メモの場合は表示モードから開始
   const [isEditing, setIsEditing] = useState(memo === null);
   const titleInputRef = useRef<HTMLTextAreaElement>(null);
   const deleteNote = useDeleteNote();
   const {
     title,
-    setTitle,
     content,
-    setContent,
-    // savedSuccessfully,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    savedSuccessfully,
+    isSaving,
+    saveError,
+    hasUserEdited,
     isEditMode,
-    createdMemoId,
+    realId,
     lastEditedAt,
     tempId,
-  } = useMemoForm({ memo });
+    handleTitleChange,
+    handleContentChange,
+  } = useMemoForm({ memo, onMemoAdd, onMemoUpdate, onMemoIdUpdate });
 
   // 新規作成時のフォーカス遅延
   useEffect(() => {
@@ -59,13 +64,13 @@ function MemoCreator({ onClose, memo = null, onExitEdit, onEditingChange }: Memo
           content,
           tempId,
           lastEditedAt,
-          createdMemoId
+          realId
         });
       } else {
         onEditingChange(null);
       }
     }
-  }, [title, content, tempId, lastEditedAt, createdMemoId, onEditingChange, memo]);
+  }, [title, content, tempId, lastEditedAt, realId, onEditingChange, memo]);
 
   const handleDelete = async () => {
     try {
@@ -76,10 +81,10 @@ function MemoCreator({ onClose, memo = null, onExitEdit, onEditingChange }: Memo
         localStorage.removeItem(`memo_draft_${memo.id}`);
       }
       // 新規作成時で自動保存されたメモがある場合はそのIDで削除
-      else if (createdMemoId) {
-        await deleteNote.mutateAsync(createdMemoId);
+      else if (realId) {
+        await deleteNote.mutateAsync(realId);
         // ローカルストレージからも削除
-        localStorage.removeItem(`memo_draft_${createdMemoId}`);
+        localStorage.removeItem(`memo_draft_${realId}`);
       }
 
       // 新規作成用のローカルストレージを削除（createdMemoIdがあるかないかに関わらず）
@@ -133,12 +138,21 @@ function MemoCreator({ onClose, memo = null, onExitEdit, onEditingChange }: Memo
         </div>
 
         <div className="flex items-center gap-3 ml-auto">
-          {/* Removed error display as error is no longer available */}
+          {/* 保存状態表示 */}
+          {isSaving && (
+            <span className="text-xs text-blue-500">保存中...</span>
+          )}
+          {savedSuccessfully && (
+            <span className="text-xs text-green-500">保存済み</span>
+          )}
+          {saveError && (
+            <span className="text-xs text-red-500">{saveError}</span>
+          )}
         </div>
       </div>
 
       <div className="flex flex-col gap-2 flex-1">
-        {memo && <DateInfo item={memo} createdItemId={createdMemoId} lastEditedAt={lastEditedAt} />}
+        {memo && <DateInfo item={memo} createdItemId={realId} lastEditedAt={lastEditedAt} />}
 
 
         <textarea
@@ -146,10 +160,10 @@ function MemoCreator({ onClose, memo = null, onExitEdit, onEditingChange }: Memo
           placeholder="メモを入力...&#10;&#10;最初の行がタイトルになります"
           value={content}
           onChange={(e) => {
-            setContent(e.target.value);
+            handleContentChange(e.target.value);
             // 最初の行をタイトルとして設定
             const firstLine = e.target.value.split("\n")[0] || "";
-            setTitle(firstLine);
+            handleTitleChange(firstLine);
           }}
           className="w-full h-[calc(100vh-280px)] resize-none outline-none text-gray-500 leading-relaxed font-medium"
         />

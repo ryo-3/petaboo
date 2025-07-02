@@ -6,6 +6,7 @@ import Header from "@/components/layout/header";
 import Sidebar from "@/components/layout/sidebar";
 import CreateScreen from "@/components/screens/create-screen";
 import MemoScreen from "@/components/screens/memo-screen";
+import SearchScreen from "@/components/screens/search-screen";
 import SettingsScreen from "@/components/screens/settings-screen";
 import TaskScreen from "@/components/screens/task-screen";
 import WelcomeScreen from "@/components/screens/welcome-screen";
@@ -13,8 +14,8 @@ import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
 import { useEffect, useState } from "react";
 
-// 画面モード定義（5つのシンプルな画面状態）
-type ScreenMode = 'home' | 'memo' | 'task' | 'create' | 'settings';
+// 画面モード定義（6つのシンプルな画面状態）
+type ScreenMode = 'home' | 'memo' | 'task' | 'create' | 'search' | 'settings';
 
 function Main() {
   // ==========================================
@@ -140,6 +141,12 @@ function Main() {
   const handleSettings = () => {
     clearAllSelections();
     setScreenMode('settings');
+  };
+
+  /** 検索画面に遷移 */
+  const handleSearch = () => {
+    clearAllSelections();
+    setScreenMode('search');
   };
 
   /** 新規作成画面に遷移 */
@@ -268,11 +275,12 @@ function Main() {
                 currentMode={currentMode}
                 onModeChange={setCurrentMode}
                 onSettings={handleSettings}
+                onSearch={handleSearch}
               />
             }
           >
             {/* ==========================================
-                メインコンテンツエリア（5つの画面モード）
+                メインコンテンツエリア（6つの画面モード）
                 ========================================== */}
             
             {/* ホーム画面 */}
@@ -318,6 +326,16 @@ function Main() {
                 onModeChange={setCurrentMode}
                 onShowMemoList={() => handleShowList('memo')}
                 onShowTaskList={() => handleShowList('task')}
+              />
+            )}
+            
+            {/* 検索画面 */}
+            {screenMode === 'search' && (
+              <SearchScreen
+                onSelectMemo={handleSelectMemo}
+                onSelectTask={handleSelectTask}
+                onSelectDeletedMemo={handleSelectDeletedMemo}
+                onSelectDeletedTask={handleSelectDeletedTask}
               />
             )}
             

@@ -12,6 +12,7 @@ import type { Memo } from "@/src/types/memo";
 import type { Task } from "@/src/types/task";
 import HomeIcon from "@/components/icons/home-icon";
 import SettingsIcon from "@/components/icons/settings-icon";
+import SearchIcon from "@/components/icons/search-icon";
 
 interface SidebarProps {
   onNewMemo: () => void;
@@ -30,6 +31,7 @@ interface SidebarProps {
   onModeChange?: (mode: "memo" | "task") => void;
   onNewTask?: () => void;
   onSettings?: () => void;
+  onSearch?: () => void;
 }
 
 function Sidebar({
@@ -49,6 +51,7 @@ function Sidebar({
   onModeChange,
   onNewTask,
   onSettings,
+  onSearch,
 }: SidebarProps) {
   const modeTabs = [
     {
@@ -111,6 +114,17 @@ function Sidebar({
             onClick={currentMode === "memo" ? onNewMemo : onNewTask!}
             position="right"
           />
+          {/* 検索ボタン（コンパクトモード） */}
+          <Tooltip text="詳細検索" position="right">
+            <button
+              onClick={() => {
+                onSearch?.();
+              }}
+              className="p-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-600 transition-colors"
+            >
+              <SearchIcon className="w-5 h-5" />
+            </button>
+          </Tooltip>
           {/* 設定ボタン（コンパクトモード） */}
           <Tooltip text="設定" position="right">
             <button

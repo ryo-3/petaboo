@@ -55,7 +55,6 @@ function DesktopLower({
   effectiveColumnCount,
   isLoading,
   error,
-  notes,
   localMemos,
   deletedNotes,
   tasks,

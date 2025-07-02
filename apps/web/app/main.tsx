@@ -290,7 +290,7 @@ function Main() {
                 onSelectMemo={handleSelectMemo}
                 onSelectDeletedMemo={handleSelectDeletedMemo}
                 onClose={handleClose}
-                onClearSelection={() => {
+                onDeselectAndStayOnMemoList={() => {
                   setSelectedMemo(null);
                   setSelectedDeletedMemo(null);
                 }}

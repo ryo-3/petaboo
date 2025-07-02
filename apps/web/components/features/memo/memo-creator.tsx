@@ -26,7 +26,7 @@ interface MemoCreatorProps {
   } | null) => void;
 }
 
-function MemoCreator({ onClose, memo = null, onExitEdit, onMemoAdd, onMemoUpdate, onMemoIdUpdate, onMemoDelete, onEditingChange }: MemoCreatorProps) {
+function MemoCreator({ onClose, memo = null, onExitEdit, onMemoAdd, onMemoUpdate, onMemoDelete, onEditingChange }: MemoCreatorProps) {
   // 新規作成時は常に編集モード、既存メモの場合は表示モードから開始
   const [isEditing, setIsEditing] = useState(memo === null);
   const titleInputRef = useRef<HTMLTextAreaElement>(null);
@@ -34,15 +34,10 @@ function MemoCreator({ onClose, memo = null, onExitEdit, onMemoAdd, onMemoUpdate
   const {
     title,
     content,
-    savedSuccessfully,
-    isSaving,
     saveError,
-    realId,
-    lastEditedAt,
-    tempId,
     handleTitleChange,
     handleContentChange,
-  } = useMemoForm({ memo, onMemoAdd, onMemoUpdate, onMemoIdUpdate });
+  } = useMemoForm({ memo, onMemoAdd, onMemoUpdate });
 
   // フォーカス管理：新規作成時と編集開始時
   useEffect(() => {
@@ -71,60 +66,29 @@ function MemoCreator({ onClose, memo = null, onExitEdit, onMemoAdd, onMemoUpdate
     }
   }, [memo, isEditing]);
 
-  // 編集状態を親に通知
+  // 編集状態を親に通知（簡略化）
   useEffect(() => {
     if (onEditingChange && memo === null) { // 新規作成時のみ
       if (title.trim() || content.trim()) {
         onEditingChange({
           title,
           content,
-          tempId,
-          lastEditedAt,
-          realId
+          tempId: `new_${Date.now()}`,
+          lastEditedAt: Date.now(),
+          realId: null
         });
       } else {
         onEditingChange(null);
       }
     }
-  }, [title, content, tempId, lastEditedAt, realId, onEditingChange, memo]);
+  }, [title, content, onEditingChange, memo]);
 
   const handleDelete = async () => {
     try {
-      let deleteId: number | null = null;
-      
       // 既存メモの場合はそのIDで削除
       if (memo && memo.id) {
-        deleteId = memo.id;
         await deleteNote.mutateAsync(memo.id);
-        // ローカルストレージからも削除
-        localStorage.removeItem(`memo_draft_${memo.id}`);
-      }
-      // 新規作成時で自動保存されたメモがある場合はそのIDで削除
-      else if (realId) {
-        deleteId = realId;
-        await deleteNote.mutateAsync(realId);
-        // ローカルストレージからも削除
-        localStorage.removeItem(`memo_draft_${realId}`);
-      }
-
-      // 新規作成用のローカルストレージを削除（createdMemoIdがあるかないかに関わらず）
-      Object.keys(localStorage).forEach((key) => {
-        if (key.startsWith("memo_draft_new_")) {
-          try {
-            const data = JSON.parse(localStorage.getItem(key) || "{}");
-            // このセッションで作成されたメモかどうかを判定（タイトルと内容が一致）
-            if (data.title === title && data.content === content) {
-              localStorage.removeItem(key);
-            }
-          } catch (error) {
-            console.error("ローカルストレージ解析エラー:", error);
-          }
-        }
-      });
-
-      // State側からも削除
-      if (deleteId && onMemoDelete) {
-        onMemoDelete(deleteId);
+        onMemoDelete?.(memo.id);
       }
 
       onClose();
@@ -137,14 +101,14 @@ function MemoCreator({ onClose, memo = null, onExitEdit, onMemoAdd, onMemoUpdate
     <div className="flex flex-col h-full bg-white p-2">
       <DateInfo 
         item={memo || { 
-          id: realId || 0, 
+          id: 0, 
           title: '', 
           content: '', 
           createdAt: Math.floor(Date.now() / 1000), 
           updatedAt: Math.floor(Date.now() / 1000) 
         }} 
-        createdItemId={realId} 
-        lastEditedAt={lastEditedAt} 
+        createdItemId={null} 
+        lastEditedAt={null} 
       />
 
       <div className="flex justify-start items-center mb-4">

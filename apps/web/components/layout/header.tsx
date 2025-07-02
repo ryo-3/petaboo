@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useGlobalSearch } from "@/src/hooks/use-global-search";
 import SearchResults from "@/components/shared/search-results";
+import SearchIcon from "@/components/icons/search-icon";
 import type { Memo, DeletedMemo } from '@/src/types/memo';
 import type { Task, DeletedTask } from '@/src/types/task';
 
@@ -79,6 +80,32 @@ function Header({
     }
   }, [hasQuery]);
 
+  // フィルター自動クローズ
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // フィルターボタンやフィルターパネル外をクリックした場合
+      const target = event.target as Element;
+      if (!target.closest('[data-filter-container]')) {
+        setShowFilters(false);
+      }
+    };
+
+    if (showFilters) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showFilters]);
+
+  // 検索クエリ変更時にフィルターを閉じる
+  useEffect(() => {
+    if (searchQuery) {
+      setShowFilters(false);
+    }
+  }, [searchQuery]);
+
   // 検索結果選択ハンドラー
   const handleSelectSearchResult = (result: SearchResult) => {
     switch (result.type) {
@@ -119,7 +146,7 @@ function Header({
         <div className="flex-1 max-w-xs relative">
           <div className="relative">
             {/* 検索バー */}
-            <div className="relative">
+            <div className="relative" data-filter-container>
               <input
                 ref={searchInputRef}
                 type="text"
@@ -134,19 +161,7 @@ function Header({
                 className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-Green focus:border-transparent"
               />
               {/* 検索アイコン */}
-              <svg
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
+              <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               {/* フィルターボタン */}
               <button
                 onClick={() => setShowFilters(!showFilters)}
@@ -167,7 +182,7 @@ function Header({
 
             {/* フィルターパネル */}
             {showFilters && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-20">
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-20" data-filter-container>
                 <div className="grid grid-cols-2 gap-4">
                   {/* 検索範囲 */}
                   <div>

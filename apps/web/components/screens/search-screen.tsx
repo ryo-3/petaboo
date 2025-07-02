@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useGlobalSearch } from "@/src/hooks/use-global-search";
 import SearchResults from "@/components/shared/search-results";
+import SearchIcon from "@/components/icons/search-icon";
 import type { Memo, DeletedMemo } from '@/src/types/memo';
 import type { Task, DeletedTask } from '@/src/types/task';
 
@@ -79,19 +80,7 @@ function SearchScreen({
       <div className="border-b border-gray-200 p-6">
         {/* タイトル */}
         <div className="flex items-center gap-3 mb-6">
-          <svg
-            className="w-6 h-6 text-gray-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
+          <SearchIcon className="w-6 h-6 text-gray-600" />
           <h1 className="text-2xl font-bold text-gray-900">詳細検索</h1>
         </div>
         
@@ -106,19 +95,7 @@ function SearchScreen({
               className="w-full pl-10 pr-4 py-2 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-Green focus:border-transparent"
               autoFocus
             />
-            <svg
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
+            <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
           </div>
         </div>
 

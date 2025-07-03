@@ -2,7 +2,7 @@ interface EyeIconProps {
   className?: string;
 }
 
-function EyeIcon({ className = "w-5 h-5" }: EyeIconProps) {
+function EyeIcon({ className = "size-4" }: EyeIconProps) {
   return (
     <svg
       className={className}

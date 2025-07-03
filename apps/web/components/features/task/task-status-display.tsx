@@ -16,6 +16,11 @@ interface TaskStatusDisplayProps {
   onToggleCheck?: (taskId: number) => void;
   onSelectTask?: (task: Task) => void;
   selectedTaskId?: number;
+  sortOptions?: Array<{
+    id: "createdAt" | "updatedAt" | "dueDate" | "priority";
+    label: string;
+    enabled: boolean;
+  }>;
 }
 
 function TaskStatusDisplay({
@@ -27,16 +32,63 @@ function TaskStatusDisplay({
   checkedTasks,
   onToggleCheck,
   onSelectTask,
-  selectedTaskId
+  selectedTaskId,
+  sortOptions = []
 }: TaskStatusDisplayProps) {
   const getFilteredTasks = () => {
     if (!tasks) return [];
     const filtered = tasks.filter(task => task.status === activeTab);
     
-    // 優先度順でソート（high > medium > low）
+    // 有効な並び替えオプションを取得
+    const enabledSorts = sortOptions.filter(opt => opt.enabled);
+    
+    if (enabledSorts.length === 0) {
+      // デフォルトは作成日順（新しい順）
+      return filtered.sort((a, b) => b.createdAt - a.createdAt);
+    }
+    
     return filtered.sort((a, b) => {
-      const priorityOrder = { high: 3, medium: 2, low: 1 };
-      return priorityOrder[b.priority] - priorityOrder[a.priority];
+      // 有効な並び替えを順番に適用
+      for (const sortOption of enabledSorts) {
+        let diff = 0;
+        
+        switch (sortOption.id) {
+          case "priority":
+            const priorityOrder = { high: 3, medium: 2, low: 1 };
+            diff = priorityOrder[b.priority] - priorityOrder[a.priority];
+            break;
+            
+          case "createdAt":
+            diff = b.createdAt - a.createdAt;
+            break;
+            
+          case "updatedAt":
+            // updatedAtがない場合はcreatedAtを使用
+            const aUpdated = a.updatedAt || a.createdAt;
+            const bUpdated = b.updatedAt || b.createdAt;
+            diff = bUpdated - aUpdated;
+            break;
+            
+          case "dueDate":
+            // dueDateがない場合は最後に配置
+            if (!a.dueDate && !b.dueDate) diff = 0;
+            else if (!a.dueDate) diff = 1;
+            else if (!b.dueDate) diff = -1;
+            else {
+              // 期限日が近い順（昇順）
+              const aDate = new Date(a.dueDate).getTime();
+              const bDate = new Date(b.dueDate).getTime();
+              diff = aDate - bDate;
+            }
+            break;
+        }
+        
+        // 差がある場合はその結果を返す
+        if (diff !== 0) return diff;
+      }
+      
+      // すべての条件で同じ場合は作成日順
+      return b.createdAt - a.createdAt;
     });
   };
 

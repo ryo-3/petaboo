@@ -3,6 +3,8 @@ interface ColumnCountSelectorProps {
   onColumnCountChange: (count: number) => void;
   isRightPanelShown?: boolean;
   disabled?: boolean;
+  containerHeight: string;
+  buttonSize: string;
 }
 
 function ColumnCountSelector({
@@ -10,10 +12,11 @@ function ColumnCountSelector({
   onColumnCountChange,
   isRightPanelShown = false,
   disabled = false,
+  containerHeight,
+  buttonSize,
 }: ColumnCountSelectorProps) {
   return (
-    <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-      <span className="text-xs font-medium text-gray-600 px-2">列数</span>
+    <div className={`flex items-center gap-1 bg-gray-100 rounded-lg ${containerHeight} p-1`}>
       {[1, 2, 3, 4].map((count) => {
         // 右側表示時: 3と4は非表示
         if (isRightPanelShown && (count === 3 || count === 4)) return null;
@@ -23,7 +26,7 @@ function ColumnCountSelector({
             key={count}
             onClick={() => onColumnCountChange(count)}
             disabled={disabled}
-            className={`px-2 py-1 font-medium text-xs rounded transition-colors ${
+            className={`${buttonSize} font-medium text-xs rounded-lg transition-colors ${
               (!isRightPanelShown && columnCount === count) || // 通常時
               (isRightPanelShown &&
                 columnCount <= 2 &&

@@ -21,6 +21,13 @@ interface DesktopLowerProps {
   // Selection mode (memo only)
   selectionMode?: "select" | "check";
   
+  // Sort options (task only)
+  sortOptions?: Array<{
+    id: "createdAt" | "updatedAt" | "dueDate" | "priority";
+    label: string;
+    enabled: boolean;
+  }>;
+  
   // Data props
   notes?: Memo[];
   localMemos?: Memo[];
@@ -59,6 +66,7 @@ function DesktopLower({
   isLoading,
   error,
   selectionMode = "select",
+  sortOptions = [],
   localMemos,
   deletedNotes,
   tasks,
@@ -188,6 +196,7 @@ function DesktopLower({
         onToggleCheck={onToggleCheckTask}
         onSelectTask={onSelectTask}
         selectedTaskId={selectedTask?.status === activeTab ? selectedTask?.id : undefined}
+        sortOptions={sortOptions}
       />
     );
   }

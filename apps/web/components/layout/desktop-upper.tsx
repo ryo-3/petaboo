@@ -3,8 +3,10 @@
 import MemoIcon from "@/components/icons/memo-icon";
 import TaskIcon from "@/components/icons/task-icon";
 import TrashIcon from "@/components/icons/trash-icon";
+import Tooltip from "@/components/ui/base/tooltip";
 import AddItemButton from "@/components/ui/buttons/add-item-button";
 import SelectionModeToggle from "@/components/ui/buttons/selection-mode-toggle";
+import TaskSortToggle from "@/components/ui/buttons/task-sort-toggle";
 import ColumnCountSelector from "@/components/ui/layout/column-count-selector";
 import ViewModeToggle from "@/components/ui/layout/view-mode-toggle";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
@@ -27,6 +29,19 @@ interface DesktopUpperProps {
   // Select all functionality
   onSelectAll?: () => void;
   isAllSelected?: boolean;
+  // Sort options (task only)
+  sortOptions?: Array<{
+    id: "createdAt" | "updatedAt" | "dueDate" | "priority";
+    label: string;
+    enabled: boolean;
+  }>;
+  onSortChange?: (
+    options: Array<{
+      id: "createdAt" | "updatedAt" | "dueDate" | "priority";
+      label: string;
+      enabled: boolean;
+    }>
+  ) => void;
   // Tab counts
   normalCount: number;
   deletedNotesCount?: number;
@@ -34,9 +49,6 @@ interface DesktopUpperProps {
   todoCount?: number;
   inProgressCount?: number;
   completedCount?: number;
-  // Bulk actions
-  checkedCount?: number;
-  onBulkDelete?: () => void;
 }
 
 function DesktopUpper({
@@ -53,14 +65,14 @@ function DesktopUpper({
   onSelectionModeChange,
   onSelectAll,
   isAllSelected = false,
+  sortOptions = [],
+  onSortChange,
   normalCount,
   deletedNotesCount = 0,
   deletedTasksCount = 0,
   todoCount = 0,
   inProgressCount = 0,
   completedCount = 0,
-  checkedCount = 0,
-  onBulkDelete,
 }: DesktopUpperProps) {
   const { preferences } = useUserPreferences(1);
 
@@ -160,23 +172,33 @@ function DesktopUpper({
                         | "completed"
                     )
                   }
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    activeTab === tab.id && tab.id !== "normal"
-                      ? tab.id === "todo" ? "bg-zinc-200 text-gray-600"
-                      : tab.id === "in_progress" ? "bg-blue-100 text-gray-600"
-                      : tab.id === "completed" ? "bg-Green/20 text-gray-600"
-                      : tab.id === "deleted" ? "bg-red-100 text-gray-600"
-                      : "bg-gray-100 text-gray-600"
-                      : tab.id === "todo" ? "bg-gray-100 text-gray-600 hover:bg-zinc-200"
-                      : tab.id === "in_progress" ? "bg-gray-100 text-gray-600 hover:bg-blue-100"
-                      : tab.id === "completed" ? "bg-gray-100 text-gray-600 hover:bg-Green/20"
-                      : tab.id === "deleted" ? "bg-gray-100 text-gray-600 hover:bg-red-100"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors text-gray-600 ${
+                    activeTab === tab.id
+                      ? tab.id === "todo"
+                        ? "bg-zinc-200"
+                        : tab.id === "in_progress"
+                          ? "bg-blue-100"
+                          : tab.id === "completed"
+                            ? "bg-Green/20"
+                            : tab.id === "deleted"
+                              ? "bg-red-100"
+                              : "bg-gray-100"
+                      : tab.id === "todo"
+                        ? "bg-gray-100 hover:bg-zinc-200"
+                        : tab.id === "in_progress"
+                          ? "bg-gray-100 hover:bg-blue-100"
+                          : tab.id === "completed"
+                            ? "bg-gray-100 hover:bg-Green/20"
+                            : tab.id === "deleted"
+                              ? "bg-gray-100 hover:bg-red-100"
+                              : "bg-gray-100 hover:bg-gray-200"
                   }`}
                 >
-                  <div className={`w-3 h-3 rounded-full ${
-                    activeTab === tab.id ? getTabColor() : getTabColor()
-                  }`}></div>
+                  <div
+                    className={`w-3 h-3 rounded-full ${
+                      activeTab === tab.id ? getTabColor() : getTabColor()
+                    }`}
+                  ></div>
                   <span>{tab.label}</span>
                   <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full">
                     {tab.count}
@@ -193,26 +215,19 @@ function DesktopUpper({
         (currentMode === "memo" && preferences?.memoHideControls) ||
         (currentMode === "task" && preferences?.taskHideControls)
       ) && (
-        <div className="flex items-center gap-2">
-          {/* 一括削除ボタン */}
-          {checkedCount > 0 && onBulkDelete && (
-            <button
-              onClick={onBulkDelete}
-              className="flex items-center gap-1 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg transition-colors"
-            >
-              <TrashIcon className="w-4 h-4" />
-              削除 ({checkedCount})
-            </button>
-          )}
-
+        <div className="flex items-center gap-2 h-7">
           <ViewModeToggle
             viewMode={viewMode}
             onViewModeChange={onViewModeChange}
+            buttonSize="size-7"
+            iconSize="size-5"
           />
           <ColumnCountSelector
             columnCount={columnCount}
             onColumnCountChange={onColumnCountChange}
             isRightPanelShown={rightPanelMode !== "hidden"}
+            containerHeight="h-7"
+            buttonSize="size-6"
           />
 
           {/* 選択モード切り替え */}
@@ -220,6 +235,8 @@ function DesktopUpper({
             <SelectionModeToggle
               mode={selectionMode}
               onModeChange={onSelectionModeChange}
+              buttonSize="size-7"
+              iconSize="size-5"
             />
           )}
 
@@ -227,10 +244,20 @@ function DesktopUpper({
           {selectionMode === "check" && onSelectAll && (
             <button
               onClick={onSelectAll}
-              className="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-medium rounded-lg transition-colors"
+              className="h-7 px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium rounded-lg transition-colors"
             >
               {isAllSelected ? "全解除" : "全選択"}
             </button>
+          )}
+
+          {/* 並び替えメニュー（タスクのみ） */}
+          {currentMode === "task" && onSortChange && sortOptions.length > 0 && (
+            <TaskSortToggle
+              sortOptions={sortOptions}
+              onSortChange={onSortChange}
+              buttonSize="size-7"
+              iconSize="size-4"
+            />
           )}
         </div>
       )}

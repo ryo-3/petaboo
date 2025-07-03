@@ -2,7 +2,7 @@ interface CheckCircleIconProps {
   className?: string;
 }
 
-function CheckCircleIcon({ className = "w-5 h-5" }: CheckCircleIconProps) {
+function CheckCircleIcon({ className = "size-4" }: CheckCircleIconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none">
       <circle cx="12" cy="12" r="10" fill="#129247" />

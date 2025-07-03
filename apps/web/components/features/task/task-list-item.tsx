@@ -9,6 +9,7 @@ interface TaskListItemProps {
   onSelect: () => void;
   variant?: "normal" | "deleted";
   isSelected?: boolean;
+  showEditDate?: boolean;
 }
 
 function TaskListItem({
@@ -18,6 +19,7 @@ function TaskListItem({
   onSelect,
   variant = "normal",
   isSelected = false,
+  showEditDate = false,
 }: TaskListItemProps) {
   const isDeleted = variant === "deleted";
   const deletedTask = task as DeletedTask;
@@ -104,6 +106,13 @@ function TaskListItem({
             >
               {isDeleted ? (
                 <div>削除: {formatDateOnly(deletedTask.deletedAt)}</div>
+              ) : showEditDate ? (
+                <div className="text-right flex gap-2">
+                  <div>作成: {formatDateOnly(task.createdAt)}</div>
+                  {task.updatedAt && task.updatedAt !== task.createdAt && (
+                    <div>更新: {formatDateOnly(task.updatedAt)}</div>
+                  )}
+                </div>
               ) : (
                 <div className="text-right">
                   {task.updatedAt && task.updatedAt !== task.createdAt

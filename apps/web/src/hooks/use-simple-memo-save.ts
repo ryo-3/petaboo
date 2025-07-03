@@ -102,7 +102,7 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete }: UseSimpleMemo
       // 保存中表示をしっかり見せる
       setTimeout(() => setIsSaving(false), 600)
     }
-  }, [memo, title, content, createNote, updateNote, onSaveComplete])
+  }, [memo, title, content, createNote, updateNote, deleteNote, onSaveComplete])
 
   const handleTitleChange = useCallback((newTitle: string) => {
     setTitle(newTitle)

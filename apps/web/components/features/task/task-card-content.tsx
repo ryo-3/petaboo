@@ -5,9 +5,10 @@ import type { Task, DeletedTask } from '@/src/types/task'
 interface TaskCardContentProps {
   task: Task | DeletedTask
   variant?: 'normal' | 'deleted'
+  showEditDate?: boolean
 }
 
-function TaskCardContent({ task, variant = 'normal' }: TaskCardContentProps) {
+function TaskCardContent({ task, variant = 'normal', showEditDate = false }: TaskCardContentProps) {
   const isDeleted = variant === 'deleted'
   const deletedTask = task as DeletedTask
 
@@ -50,6 +51,13 @@ function TaskCardContent({ task, variant = 'normal' }: TaskCardContentProps) {
       }`}>
         {isDeleted ? (
           <div>削除: {formatDateOnly(deletedTask.deletedAt)}</div>
+        ) : showEditDate ? (
+          <div className="flex gap-2">
+            <div>作成: {formatDateOnly(task.createdAt)}</div>
+            {task.updatedAt && task.updatedAt !== task.createdAt && (
+              <div>更新: {formatDateOnly(task.updatedAt)}</div>
+            )}
+          </div>
         ) : (
           <div>
             {task.updatedAt && task.updatedAt !== task.createdAt

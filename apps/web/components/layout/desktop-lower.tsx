@@ -26,7 +26,11 @@ interface DesktopLowerProps {
     id: "createdAt" | "updatedAt" | "dueDate" | "priority";
     label: string;
     enabled: boolean;
+    direction: "asc" | "desc";
   }>;
+  
+  // Date display toggle (task only)
+  showEditDate?: boolean;
   
   // Data props
   notes?: Memo[];
@@ -67,6 +71,7 @@ function DesktopLower({
   error,
   selectionMode = "select",
   sortOptions = [],
+  showEditDate = false,
   localMemos,
   deletedNotes,
   tasks,
@@ -169,6 +174,7 @@ function DesktopLower({
                     }}
                     variant="normal"
                     isSelected={selectedMemo?.id === memo.id}
+                    showEditDate={showEditDate}
                   />
                 );
               })}
@@ -197,6 +203,7 @@ function DesktopLower({
         onSelectTask={onSelectTask}
         selectedTaskId={selectedTask?.status === activeTab ? selectedTask?.id : undefined}
         sortOptions={sortOptions}
+        showEditDate={showEditDate}
       />
     );
   }
@@ -231,6 +238,7 @@ function DesktopLower({
                       }}
                       variant="deleted"
                       isSelected={selectedDeletedMemo?.id === memo.id}
+                      showEditDate={showEditDate}
                     />
                   );
                 })}
@@ -261,6 +269,7 @@ function DesktopLower({
                   }}
                   variant="deleted"
                   isSelected={selectedDeletedTask?.id === task.id}
+                  showEditDate={showEditDate}
                 />
               );
             })}

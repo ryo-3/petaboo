@@ -9,6 +9,7 @@ interface MemoListItemProps {
   onSelect: () => void;
   variant?: "normal" | "deleted";
   isSelected?: boolean;
+  showEditDate?: boolean;
 }
 
 function MemoListItem({
@@ -18,6 +19,7 @@ function MemoListItem({
   onSelect,
   variant = "normal",
   isSelected = false,
+  showEditDate = false,
 }: MemoListItemProps) {
   const isDeleted = variant === "deleted";
   const deletedMemo = memo as DeletedMemo;
@@ -97,12 +99,37 @@ function MemoListItem({
             </div>
 
             <div
-              className={`text-xs text-right ${
+              className={`text-xs ${
                 isDeleted ? "text-red-400" : "text-gray-400"
               }`}
             >
               {isDeleted ? (
                 <div>削除: {formatDateOnly(deletedMemo.deletedAt)}</div>
+              ) : showEditDate ? (
+                <div className="flex gap-2">
+                  <div>作成: {formatDateOnly(memo.createdAt)}</div>
+                  {(() => {
+                    // 新規作成メモの場合
+                    if (memo.id < 0) {
+                      const updateTime = memo.updatedAt || memo.createdAt;
+                      if (updateTime !== memo.createdAt) {
+                        return <div>更新: {formatDateOnly(updateTime)}</div>;
+                      }
+                      return null;
+                    }
+
+                    // ローカル編集時間またはAPI更新時間を表示
+                    const hasLocalEdit = lastEditTime && lastEditTime > (memo.updatedAt || 0);
+                    const hasApiUpdate = memo.updatedAt && memo.updatedAt !== memo.createdAt;
+                    
+                    if (hasLocalEdit) {
+                      return <div>更新: {formatDateOnly(lastEditTime)}</div>;
+                    } else if (hasApiUpdate) {
+                      return <div>更新: {formatDateOnly(memo.updatedAt)}</div>;
+                    }
+                    return null;
+                  })()}
+                </div>
               ) : (
                 <div>
                   {(() => {

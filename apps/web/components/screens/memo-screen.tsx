@@ -42,6 +42,9 @@ function MemoScreen({
   // 選択モード管理
   const [selectionMode, setSelectionMode] = useState<'select' | 'check'>('select');
   
+  // 編集日表示管理
+  const [showEditDate, setShowEditDate] = useState(true);
+  
   // データ取得
   const { data: notes, isLoading: memoLoading, error: memoError } = useNotes();
   const { data: deletedNotes } = useDeletedNotes();
@@ -252,6 +255,8 @@ function MemoScreen({
           onSelectionModeChange={setSelectionMode}
           onSelectAll={handleSelectAll}
           isAllSelected={isAllSelected}
+          showEditDate={showEditDate}
+          onShowEditDateChange={setShowEditDate}
           normalCount={notes?.length || 0}
           deletedNotesCount={deletedNotes?.length || 0}
         />
@@ -264,6 +269,7 @@ function MemoScreen({
           isLoading={memoLoading}
           error={memoError}
           selectionMode={selectionMode}
+          showEditDate={showEditDate}
           notes={notes || []}
           localMemos={notes || []}
           deletedNotes={deletedNotes || []}

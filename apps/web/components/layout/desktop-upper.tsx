@@ -1,5 +1,6 @@
 "use client";
 
+import DueDateIcon from "@/components/icons/due-date-icon";
 import MemoIcon from "@/components/icons/memo-icon";
 import TaskIcon from "@/components/icons/task-icon";
 import TrashIcon from "@/components/icons/trash-icon";
@@ -7,6 +8,7 @@ import Tooltip from "@/components/ui/base/tooltip";
 import AddItemButton from "@/components/ui/buttons/add-item-button";
 import SelectionModeToggle from "@/components/ui/buttons/selection-mode-toggle";
 import TaskSortToggle from "@/components/ui/buttons/task-sort-toggle";
+import EditDateToggle from "@/components/ui/buttons/edit-date-toggle";
 import ColumnCountSelector from "@/components/ui/layout/column-count-selector";
 import ViewModeToggle from "@/components/ui/layout/view-mode-toggle";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
@@ -31,17 +33,22 @@ interface DesktopUpperProps {
   isAllSelected?: boolean;
   // Sort options (task only)
   sortOptions?: Array<{
-    id: "createdAt" | "updatedAt" | "dueDate" | "priority";
+    id: "createdAt" | "updatedAt" | "priority";
     label: string;
     enabled: boolean;
+    direction: "asc" | "desc";
   }>;
   onSortChange?: (
     options: Array<{
-      id: "createdAt" | "updatedAt" | "dueDate" | "priority";
+      id: "createdAt" | "updatedAt" | "priority";
       label: string;
       enabled: boolean;
+      direction: "asc" | "desc";
     }>
   ) => void;
+  // Date display toggle
+  showEditDate?: boolean;
+  onShowEditDateChange?: (show: boolean) => void;
   // Tab counts
   normalCount: number;
   deletedNotesCount?: number;
@@ -67,6 +74,8 @@ function DesktopUpper({
   isAllSelected = false,
   sortOptions = [],
   onSortChange,
+  showEditDate = false,
+  onShowEditDateChange,
   normalCount,
   deletedNotesCount = 0,
   deletedTasksCount = 0,
@@ -255,6 +264,16 @@ function DesktopUpper({
             <TaskSortToggle
               sortOptions={sortOptions}
               onSortChange={onSortChange}
+              buttonSize="size-6"
+              iconSize="size-4"
+            />
+          )}
+
+          {/* 編集日表示切り替え */}
+          {onShowEditDateChange && (
+            <EditDateToggle
+              showEditDate={showEditDate}
+              onToggle={onShowEditDateChange}
               buttonSize="size-7"
               iconSize="size-4"
             />

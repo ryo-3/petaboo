@@ -101,10 +101,14 @@ function SettingsScreen() {
             <ViewModeToggle
               viewMode={memoViewMode}
               onViewModeChange={setMemoViewMode}
+              buttonSize="size-7"
+              iconSize="size-5"
             />
             <ColumnCountSelector
               columnCount={memoColumnCount}
               onColumnCountChange={setMemoColumnCount}
+              containerHeight="h-7"
+              buttonSize="size-6"
             />
           </div>
         </div>
@@ -130,10 +134,14 @@ function SettingsScreen() {
             <ViewModeToggle
               viewMode={taskViewMode}
               onViewModeChange={setTaskViewMode}
+              buttonSize="size-7"
+              iconSize="size-5"
             />
             <ColumnCountSelector
               columnCount={taskColumnCount}
               onColumnCountChange={setTaskColumnCount}
+              containerHeight="h-7"
+              buttonSize="size-6"
             />
           </div>
         </div>

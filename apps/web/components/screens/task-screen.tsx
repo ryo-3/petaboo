@@ -56,11 +56,13 @@ function TaskScreen({
   
   // 並び替え管理
   const [sortOptions, setSortOptions] = useState([
-    { id: "createdAt" as const, label: "作成日順", enabled: false },
-    { id: "updatedAt" as const, label: "更新日順", enabled: false },
-    { id: "dueDate" as const, label: "期限日順", enabled: false },
-    { id: "priority" as const, label: "優先度順", enabled: false },
+    { id: "priority" as const, label: "優先度順", enabled: false, direction: "desc" as const },
+    { id: "updatedAt" as const, label: "更新日順", enabled: false, direction: "desc" as const },
+    { id: "createdAt" as const, label: "作成日順", enabled: false, direction: "desc" as const },
   ]);
+
+  // 編集日表示管理
+  const [showEditDate, setShowEditDate] = useState(true);
 
   // 共通screen状態管理
   const {
@@ -216,6 +218,8 @@ function TaskScreen({
           isAllSelected={isAllSelected}
           sortOptions={sortOptions}
           onSortChange={setSortOptions}
+          showEditDate={showEditDate}
+          onShowEditDateChange={setShowEditDate}
           normalCount={0} // タスクでは使わない
           deletedTasksCount={deletedTasks?.length || 0}
           todoCount={
@@ -240,6 +244,7 @@ function TaskScreen({
           error={taskError}
           selectionMode={selectionMode}
           sortOptions={sortOptions}
+          showEditDate={showEditDate}
           tasks={tasks || []}
           deletedTasks={deletedTasks || []}
           selectedTask={selectedTask}

@@ -16,10 +16,12 @@ interface TaskStatusDisplayProps {
   onToggleCheck?: (taskId: number) => void;
   onSelectTask?: (task: Task) => void;
   selectedTaskId?: number;
+  showEditDate?: boolean;
   sortOptions?: Array<{
     id: "createdAt" | "updatedAt" | "dueDate" | "priority";
     label: string;
     enabled: boolean;
+    direction: "asc" | "desc";
   }>;
 }
 
@@ -33,6 +35,7 @@ function TaskStatusDisplay({
   onToggleCheck,
   onSelectTask,
   selectedTaskId,
+  showEditDate = false,
   sortOptions = []
 }: TaskStatusDisplayProps) {
   const getFilteredTasks = () => {
@@ -43,8 +46,44 @@ function TaskStatusDisplay({
     const enabledSorts = sortOptions.filter(opt => opt.enabled);
     
     if (enabledSorts.length === 0) {
-      // デフォルトは作成日順（新しい順）
-      return filtered.sort((a, b) => b.createdAt - a.createdAt);
+      // デフォルトは優先度 > 更新日 > 作成日順
+      const sorted = filtered.sort((a, b) => {
+        // 1. 優先度で比較（高>中>低）
+        const priorityOrder = { high: 3, medium: 2, low: 1 };
+        const priorityDiff = priorityOrder[b.priority] - priorityOrder[a.priority];
+        if (priorityDiff !== 0) return priorityDiff;
+        
+        // 2. 更新日で比較（新しい順）
+        const aUpdated = a.updatedAt || a.createdAt;
+        const bUpdated = b.updatedAt || b.createdAt;
+        const updatedDiff = bUpdated - aUpdated;
+        if (updatedDiff !== 0) return updatedDiff;
+        
+        // 3. 作成日で比較（新しい順）
+        return b.createdAt - a.createdAt;
+      });
+      
+      // デバッグ用ログ（DOMの最後から5つのアイテム）
+      const lastFiveTasks = sorted.slice(-5);
+      console.log('📅 Last 5 tasks in DOM order:', lastFiveTasks.map((task, index) => ({
+        position: sorted.length - 5 + index + 1,
+        id: task.id,
+        title: task.title.substring(0, 25) + (task.title.length > 25 ? '...' : ''),
+        priority: task.priority,
+        createdTimestamp: task.createdAt,
+        updatedTimestamp: task.updatedAt || 'none',
+        effectiveTimestamp: task.updatedAt || task.createdAt,
+        createdTime: new Date(task.createdAt * 1000).toLocaleString(),
+        updatedTime: task.updatedAt ? new Date(task.updatedAt * 1000).toLocaleString() : 'none'
+      })));
+      
+      // 選択されたタスクのハイライト
+      if (selectedTaskId) {
+        const selectedIndex = sorted.findIndex(task => task.id === selectedTaskId);
+        console.log(`🎯 Selected task is at position: ${selectedIndex + 1}`);
+      }
+      
+      return sorted;
     }
     
     return filtered.sort((a, b) => {
@@ -53,21 +92,29 @@ function TaskStatusDisplay({
         let diff = 0;
         
         switch (sortOption.id) {
-          case "priority":
+          case "priority": {
             const priorityOrder = { high: 3, medium: 2, low: 1 };
             diff = priorityOrder[b.priority] - priorityOrder[a.priority];
+            // 昇順の場合は逆にする
+            if (sortOption.direction === "asc") diff = -diff;
             break;
+          }
             
           case "createdAt":
             diff = b.createdAt - a.createdAt;
+            // 昇順の場合は逆にする
+            if (sortOption.direction === "asc") diff = -diff;
             break;
             
-          case "updatedAt":
+          case "updatedAt": {
             // updatedAtがない場合はcreatedAtを使用
             const aUpdated = a.updatedAt || a.createdAt;
             const bUpdated = b.updatedAt || b.createdAt;
             diff = bUpdated - aUpdated;
+            // 昇順の場合は逆にする
+            if (sortOption.direction === "asc") diff = -diff;
             break;
+          }
             
           case "dueDate":
             // dueDateがない場合は最後に配置
@@ -87,8 +134,8 @@ function TaskStatusDisplay({
         if (diff !== 0) return diff;
       }
       
-      // すべての条件で同じ場合は作成日順
-      return b.createdAt - a.createdAt;
+      // ユーザーが明示的に選択した並び替えでは、追加のフォールバックなし
+      return 0;
     });
   };
 
@@ -130,6 +177,7 @@ function TaskStatusDisplay({
             }}
             variant="normal"
             isSelected={selectedTaskId === task.id}
+            showEditDate={showEditDate}
           />
         );
       })}

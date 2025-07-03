@@ -1,8 +1,9 @@
 "use client";
 
-import PhotoIcon from "@/components/icons/photo-icon";
 import BaseViewer from "@/components/shared/base-viewer";
 import DeleteButton from "@/components/ui/buttons/delete-button";
+import SaveButton from "@/components/ui/buttons/save-button";
+import PhotoButton from "@/components/ui/buttons/photo-button";
 import { useMemoForm } from "@/src/hooks/use-memo-form";
 import { useDeleteNote } from "@/src/hooks/use-notes";
 import type { Memo } from "@/src/types/memo";
@@ -35,7 +36,7 @@ function MemoEditor({
     content,
     isSaving,
     saveError,
-    savedSuccessfully,
+    hasChanges,
     handleSave: originalHandleSave,
     handleTitleChange,
     handleContentChange,
@@ -86,7 +87,7 @@ function MemoEditor({
       console.log('⚪ 新規メモで空なので何もしません');
     }
     // Do nothing if empty and new memo (no save needed)
-  }, [title, content, memo, deleteNote, onMemoDelete, onCloseAndStayOnMemoList, onClose, originalHandleSave, resetForm]);
+  }, [title, content, memo, deleteNote, onCloseAndStayOnMemoList, onClose, originalHandleSave, resetForm]);
 
   // Focus management
   useEffect(() => {
@@ -153,27 +154,12 @@ function MemoEditor({
             {saveError && (
               <span className="text-xs text-red-500">{saveError}</span>
             )}
-            <button
+            <SaveButton
               onClick={handleSave}
-              disabled={isSaving}
-              className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                isSaving
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-Green text-white hover:bg-Green/90'
-              }`}
-              title="保存 (Ctrl+S)"
-            >
-              {isSaving ? '保存中...' : '保存'}
-            </button>
-            <button
-              className="p-2 rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-800 transition-colors"
-              title="画像を添付（今後対応予定）"
-              onClick={() => {
-                alert("画像添付機能は今後実装予定です");
-              }}
-            >
-              <PhotoIcon className="w-4 h-4" />
-            </button>
+              disabled={!hasChanges}
+              isSaving={isSaving}
+            />
+            <PhotoButton />
           </div>
         }
       >

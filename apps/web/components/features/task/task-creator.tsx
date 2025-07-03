@@ -1,6 +1,6 @@
 "use client";
 
-import PhotoIcon from "@/components/icons/photo-icon";
+import PhotoButton from "@/components/ui/buttons/photo-button";
 import { useCreateTask } from "@/src/hooks/use-tasks";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -8,7 +8,7 @@ interface TaskCreatorProps {
   onClose: () => void;
 }
 
-function TaskCreator({ onClose: _onClose }: TaskCreatorProps) {
+function TaskCreator({ onClose }: TaskCreatorProps) { // eslint-disable-line @typescript-eslint/no-unused-vars
    
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -206,7 +206,7 @@ function TaskCreator({ onClose: _onClose }: TaskCreatorProps) {
             className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors ${
               !title.trim() || isSaving || savedSuccessfully
                 ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                : "bg-Emerald hover:bg-Emerald-dark text-white"
+                : "bg-Green hover:bg-Green/90 text-white"
             }`}
           >
             {isSaving ? (
@@ -251,12 +251,7 @@ function TaskCreator({ onClose: _onClose }: TaskCreatorProps) {
             )}
           </button>
 
-          <button
-            className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
-            title="画像を追加"
-          >
-            <PhotoIcon className="w-5 h-5" />
-          </button>
+          <PhotoButton />
         </div>
       </div>
     </div>

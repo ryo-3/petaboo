@@ -41,8 +41,8 @@ interface ScreenStateReturn<T extends string> {
 export function useScreenState<T extends string>(
   config: UseScreenStateConfig,
   initialScreenMode: T,
-  selectedItem?: any,
-  selectedDeletedItem?: any,
+  selectedItem?: unknown,
+  selectedDeletedItem?: unknown,
   preferences?: UserPreferences
 ): ScreenStateReturn<T> {
   // Basic state

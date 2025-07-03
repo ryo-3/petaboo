@@ -2,8 +2,11 @@
 
 import BaseViewer from "@/components/shared/base-viewer";
 import DeleteButton from "@/components/ui/buttons/delete-button";
-import EditButton from "@/components/ui/buttons/edit-button";
+import SaveButton from "@/components/ui/buttons/save-button";
+import PhotoButton from "@/components/ui/buttons/photo-button";
+import DateInput from "@/components/ui/inputs/date-input";
 import { SingleDeleteConfirmation } from "@/components/ui/modals";
+import CustomSelector from "@/components/ui/selectors/custom-selector";
 import { useUpdateTask } from "@/src/hooks/use-tasks";
 import type { Task } from "@/src/types/task";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -39,7 +42,6 @@ function TaskEditor({
     onDeleteAndSelectNext,
   });
 
-  const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(task?.title || "");
   const [description, setDescription] = useState(task?.description || "");
   const [status, setStatus] = useState<"todo" | "in_progress" | "completed">(
@@ -48,39 +50,63 @@ function TaskEditor({
   const [priority, setPriority] = useState<"low" | "medium" | "high">(
     task?.priority || "medium"
   );
+  const [category, setCategory] = useState<string>(""); // カテゴリーを追加（未選択で開始）
   const [dueDate, setDueDate] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [savedSuccessfully, setSavedSuccessfully] = useState(false);
 
-  // 保存したデータを保持するためのstate
-  const [savedData, setSavedData] = useState<{
-    title: string;
-    description: string;
-    status: "todo" | "in_progress" | "completed";
-    priority: "low" | "medium" | "high";
-    dueDate?: number;
-  } | null>(null);
 
   // textareaのrefを追加
   const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // 変更検知用のstate
+  const [originalData, setOriginalData] = useState<{
+    title: string;
+    description: string;
+    status: "todo" | "in_progress" | "completed";
+    priority: "low" | "medium" | "high";
+    category: string;
+    dueDate: string;
+  } | null>(null);
+
+  // 変更があるかチェック
+  const hasChanges = originalData ? (
+    title !== originalData.title ||
+    description !== originalData.description ||
+    status !== originalData.status ||
+    priority !== originalData.priority ||
+    category !== originalData.category ||
+    dueDate !== originalData.dueDate
+  ) : true; // データがない場合は常に保存可能にする
+
+
   // taskプロパティが変更された時にstateを更新
   useEffect(() => {
     if (task) {
-      setTitle(task.title || "");
-      setDescription(task.description || "");
-      setStatus(task.status || "todo");
-      setPriority(task.priority || "medium");
-      setDueDate(
-        (task.dueDate
-          ? new Date(task.dueDate * 1000).toISOString().split("T")[0]
-          : "") as string
-      );
-      setIsEditing(false); // 新しいタスクを選択した時は表示モードに戻る
-      setSavedSuccessfully(false);
+      const taskTitle = task.title || "";
+      const taskDescription = task.description || "";
+      const taskStatus = task.status || "todo";
+      const taskPriority = task.priority || "medium";
+      const taskDueDate = task.dueDate
+        ? new Date(task.dueDate * 1000).toISOString().split("T")[0]
+        : "";
+      
+      setTitle(taskTitle);
+      setDescription(taskDescription);
+      setStatus(taskStatus);
+      setPriority(taskPriority);
+      setDueDate(taskDueDate || "");
       setError(null);
-      setSavedData(null); // 新しいタスク選択時に保存済みデータをリセット
+      
+      // 元データを保存
+      setOriginalData({
+        title: taskTitle,
+        description: taskDescription,
+        status: taskStatus,
+        priority: taskPriority,
+        category: "", // カテゴリーは常に空で開始
+        dueDate: taskDueDate || ""
+      });
     }
   }, [task]);
 
@@ -89,7 +115,7 @@ function TaskEditor({
 
     setIsSaving(true);
     setError(null);
-    setSavedSuccessfully(false);
+    // setSavedSuccessfully(false);
     try {
       const taskData = {
         title: title.trim(),
@@ -106,25 +132,18 @@ function TaskEditor({
         data: taskData,
       });
       setIsSaving(false);
-      setSavedSuccessfully(true);
 
-      // 保存したデータを保持
-      const savedTaskData = {
+
+      // 保存成功時にoriginalDataも更新
+      setOriginalData({
         title: taskData.title,
         description: taskData.description || "",
         status: taskData.status,
         priority: taskData.priority,
-        dueDate: taskData.dueDate,
-      };
-      console.log("Setting savedData:", savedTaskData);
-      setSavedData(savedTaskData);
+        category: category, // カテゴリーも現在の値で更新
+        dueDate: dueDate
+      });
 
-      setTimeout(() => {
-        console.log("Switching to view mode");
-        setIsEditing(false);
-        setSavedSuccessfully(false);
-        // Edit mode exited
-      }, 400);
     } catch (error) {
       console.error("保存に失敗しました:", error);
       setError(
@@ -138,25 +157,47 @@ function TaskEditor({
     status,
     priority,
     dueDate,
+    category,
     task,
     updateTask,
-    // Removed unused variable: onExitEdit
   ]);
 
+  // Ctrl+Sショートカット
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+        handleSave();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [handleSave]);
+
   const statusOptions = [
-    { value: "todo", label: "未着手", color: "bg-gray-100 text-gray-800" },
+    { value: "todo", label: "未着手", color: "bg-zinc-500" },
     {
       value: "in_progress",
       label: "進行中",
-      color: "bg-blue-100 text-blue-800",
+      color: "bg-blue-600",
     },
-    { value: "completed", label: "完了", color: "bg-green-100 text-green-800" },
+    { value: "completed", label: "完了", color: "bg-green-600" },
   ];
 
   const priorityOptions = [
-    { value: "low", label: "低", color: "bg-green-100 text-green-800" },
-    { value: "medium", label: "中", color: "bg-yellow-100 text-yellow-800" },
-    { value: "high", label: "高", color: "bg-red-100 text-red-800" },
+    { value: "low", label: "低", color: "bg-green-500" },
+    { value: "medium", label: "中", color: "bg-yellow-500" },
+    { value: "high", label: "高", color: "bg-red-500" },
+  ];
+
+  const categoryOptions = [
+    { value: "", label: "未選択", color: "bg-gray-400" },
+    { value: "work", label: "仕事", color: "bg-blue-500" },
+    { value: "personal", label: "個人", color: "bg-purple-500" },
+    { value: "study", label: "勉強", color: "bg-indigo-500" },
+    { value: "health", label: "健康", color: "bg-pink-500" },
+    { value: "hobby", label: "趣味", color: "bg-orange-500" },
   ];
 
   return (
@@ -165,233 +206,71 @@ function TaskEditor({
         item={task}
         onClose={onClose}
         error={error ? "エラー" : null}
-        headerActions={
-          <EditButton
-            isEditing={isEditing}
-            onEdit={() => setIsEditing(true)}
-            onExitEdit={() => {
-              setIsEditing(false);
-              // Edit mode exited
-            }}
-          />
-        }
+        headerActions={null}
       >
         <div className="flex items-center gap-3">
-          {isEditing ? (
-            <input
-              type="text"
-              placeholder="タスクタイトルを入力..."
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  descriptionTextareaRef.current?.focus();
-                }
-              }}
-              className="flex-1 text-lg font-medium border-b border-green-500 outline-none pb-2 focus:border-green-500"
-              autoFocus
-            />
-          ) : (
-            <h1 className="flex-1 text-lg font-medium text-gray-800 pb-2">
-              {(() => {
-                const displayTitle = savedData?.title || task.title;
-                // console.log("Displaying title:", { savedData: savedData?.title, task: task.title, display: displayTitle });
-                return displayTitle;
-              })()}
-            </h1>
-          )}
+          <input
+            type="text"
+            placeholder="タスクタイトルを入力..."
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="flex-1 text-lg font-medium border-b border-Yellow outline-none pb-2 focus:border-Yellow"
+          />
         </div>
 
-        {isEditing ? (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  ステータス
-                </label>
-                <select
-                  value={status}
-                  onChange={(e) =>
-                    setStatus(
-                      e.target.value as "todo" | "in_progress" | "completed"
-                    )
-                  }
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:border-Yellow outline-none"
-                >
-                  {statusOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+        {/* インライン編集式のUI */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <CustomSelector
+            label="ステータス"
+            options={statusOptions}
+            value={status}
+            onChange={(value) => setStatus(value as "todo" | "in_progress" | "completed")}
+            fullWidth
+          />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  優先度
-                </label>
-                <select
-                  value={priority}
-                  onChange={(e) =>
-                    setPriority(e.target.value as "low" | "medium" | "high")
-                  }
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:border-Yellow outline-none"
-                >
-                  {priorityOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+          <CustomSelector
+            label="優先度"
+            options={priorityOptions}
+            value={priority}
+            onChange={(value) => setPriority(value as "low" | "medium" | "high")}
+            fullWidth
+          />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  期限日
-                </label>
-                <input
-                  type="date"
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:border-Yellow outline-none"
-                />
-              </div>
-            </div>
+          <CustomSelector
+            label="カテゴリー"
+            options={categoryOptions}
+            value={category}
+            onChange={setCategory}
+            fullWidth
+          />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                説明
-              </label>
-              <textarea
-                ref={descriptionTextareaRef}
-                placeholder="タスクの詳細を入力..."
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full h-[calc(100vh-450px)] p-3 border border-gray-300 rounded-lg resize-none outline-none text-gray-700 leading-relaxed focus:border-Yellow"
-              />
-            </div>
+          <DateInput
+            label="期限日"
+            value={dueDate}
+            onChange={setDueDate}
+            fullWidth
+          />
+        </div>
 
-            <div className="flex justify-start">
-              <button
-                onClick={handleSave}
-                disabled={!title.trim() || isSaving || savedSuccessfully}
-                className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors ${
-                  !title.trim() || isSaving || savedSuccessfully
-                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                    : "bg-Emerald hover:bg-Emerald-dark text-white"
-                }`}
-              >
-                {isSaving ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                    保存中...
-                  </>
-                ) : savedSuccessfully ? (
-                  <>
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    保存完了
-                  </>
-                ) : (
-                  <>
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12"
-                      />
-                    </svg>
-                    保存
-                  </>
-                )}
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  ステータス
-                </label>
-                <span
-                  className={`inline-block px-3 py-1 rounded-full text-sm ${
-                    statusOptions.find(
-                      (opt) => opt.value === (savedData?.status || task.status)
-                    )?.color
-                  }`}
-                >
-                  {
-                    statusOptions.find(
-                      (opt) => opt.value === (savedData?.status || task.status)
-                    )?.label
-                  }
-                </span>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  優先度
-                </label>
-                <span
-                  className={`inline-block px-3 py-1 rounded-full text-sm ${
-                    priorityOptions.find(
-                      (opt) =>
-                        opt.value === (savedData?.priority || task.priority)
-                    )?.color
-                  }`}
-                >
-                  {
-                    priorityOptions.find(
-                      (opt) =>
-                        opt.value === (savedData?.priority || task.priority)
-                    )?.label
-                  }
-                </span>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  期限日
-                </label>
-                <span className="text-gray-700">
-                  {savedData?.dueDate || task.dueDate
-                    ? new Date(
-                        (savedData?.dueDate || task.dueDate || 0) * 1000
-                      ).toLocaleDateString("ja-JP")
-                    : "設定なし"}
-                </span>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                説明
-              </label>
-              <div className="w-full h-[calc(100vh-450px)] p-3 bg-gray-50 rounded-lg text-gray-700 leading-relaxed">
-                {savedData?.description || task.description || "説明なし"}
-              </div>
-            </div>
-          </>
-        )}
+        <div className="mt-2">
+          <textarea
+            ref={descriptionTextareaRef}
+            placeholder="入力..."
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="w-full h-[calc(100vh-400px)] p-3 border border-gray-400 rounded-lg resize-none outline-none text-gray-700 leading-relaxed focus:border-Yellow"
+          />
+        </div>
+        
+        {/* 入力欄の外側左下に保存ボタンと画像ボタンを配置 */}
+        <div className="mt-2 flex justify-start gap-2">
+          <SaveButton
+            onClick={handleSave}
+            disabled={!hasChanges}
+            isSaving={isSaving}
+          />
+          <PhotoButton />
+        </div>
       </BaseViewer>
       <DeleteButton
         className="fixed bottom-6 right-6"

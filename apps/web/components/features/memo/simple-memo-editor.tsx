@@ -3,6 +3,7 @@
 import PhotoIcon from "@/components/icons/photo-icon";
 import BaseViewer from "@/components/shared/base-viewer";
 import DeleteButton from "@/components/ui/buttons/delete-button";
+import SaveButton from "@/components/ui/buttons/save-button";
 import { useDeleteNote } from "@/src/hooks/use-notes";
 import { useSimpleMemoSave } from "@/src/hooks/use-simple-memo-save";
 import type { Memo } from "@/src/types/memo";
@@ -32,6 +33,7 @@ function SimpleMemoEditor({
     content,
     isSaving,
     saveError,
+    hasChanges,
     handleSave,
     handleTitleChange,
     handleContentChange,
@@ -100,18 +102,11 @@ function SimpleMemoEditor({
             {saveError && (
               <span className="text-xs text-red-500">{saveError}</span>
             )}
-            <button
+            <SaveButton
               onClick={handleSave}
-              disabled={isSaving}
-              className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                isSaving
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-Green text-white hover:bg-Green/90"
-              }`}
-              title="保存 (Ctrl+S)"
-            >
-              {isSaving ? "保存中..." : "保存"}
-            </button>
+              disabled={!hasChanges}
+              isSaving={isSaving}
+            />
             <button
               className="p-2 rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-800 transition-colors"
               title="画像を添付（今後対応予定）"

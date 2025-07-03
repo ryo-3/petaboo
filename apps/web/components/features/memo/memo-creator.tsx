@@ -1,9 +1,9 @@
 "use client";
 
-import PhotoIcon from "@/components/icons/photo-icon";
 import DateInfo from "@/components/shared/date-info";
 import EditButton from "@/components/ui/buttons/edit-button";
 import DeleteButton from "@/components/ui/buttons/delete-button";
+import PhotoButton from "@/components/ui/buttons/photo-button";
 import { useMemoForm } from "@/src/hooks/use-memo-form";
 import { useDeleteNote } from "@/src/hooks/use-notes";
 import type { Memo } from "@/src/types/memo";
@@ -126,16 +126,7 @@ function MemoCreator({ onClose, memo = null, onExitEdit, onMemoAdd, onMemoUpdate
           )}
 
           {/* 写真アイコン（今後の画像添付機能用） */}
-          <button
-            className="p-2 rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-800 transition-colors"
-            title="画像を添付（今後対応予定）"
-            onClick={() => {
-              // TODO: 画像添付機能の実装
-              alert("画像添付機能は今後実装予定です");
-            }}
-          >
-            <PhotoIcon className="w-4 h-4" />
-          </button>
+          <PhotoButton />
         </div>
 
         <div className="flex items-center gap-3 ml-auto">
@@ -149,7 +140,7 @@ function MemoCreator({ onClose, memo = null, onExitEdit, onMemoAdd, onMemoUpdate
       <div className="flex flex-col gap-2 flex-1">
         <textarea
           ref={titleInputRef}
-          placeholder="メモを入力...&#10;&#10;最初の行がタイトルになります"
+          placeholder="入力..."
           value={content}
           onChange={(e) => {
             handleContentChange(e.target.value);

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useGlobalSearch } from "@/src/hooks/use-global-search";
-import SearchResults from "@/components/shared/search-results";
 import SearchIcon from "@/components/icons/search-icon";
 import type { Memo, DeletedMemo } from '@/src/types/memo';
 import type { Task, DeletedTask } from '@/src/types/task';
@@ -192,7 +191,7 @@ function SearchScreen({
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {sortedResults.map((result, index) => (
+                  {sortedResults.map((result) => (
                     <DetailedSearchResultItem
                       key={`${result.type}-${result.item.id}`}
                       result={result}

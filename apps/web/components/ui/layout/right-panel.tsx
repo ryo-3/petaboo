@@ -23,7 +23,7 @@ function RightPanel({ isOpen, onClose, children, className }: RightPanelProps) {
       <ClosePanelButton onClose={onClose} />
       
       {/* コンテンツエリア */}
-      <div className="p-6">
+      <div className="pl-5 pr-5 pt-2">
         {children}
       </div>
     </div>

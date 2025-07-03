@@ -30,7 +30,7 @@ function BaseViewer({
     <div className="flex flex-col h-full bg-white p-2">
       <DateInfo item={item} isEditing={isEditing} createdItemId={createdItemId} lastEditedAt={lastEditedAt} />
       
-      <div className="flex justify-start items-center mb-4">
+      <div className="flex justify-start items-center">
         {headerActions}
         
         <div className="flex items-center gap-3 ml-auto">

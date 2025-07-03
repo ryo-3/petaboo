@@ -11,7 +11,9 @@ import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 interface DesktopUpperProps {
   currentMode: "memo" | "task";
   activeTab: "normal" | "deleted" | "todo" | "in_progress" | "completed";
-  onTabChange: (tab: "normal" | "deleted" | "todo" | "in_progress" | "completed") => void;
+  onTabChange: (
+    tab: "normal" | "deleted" | "todo" | "in_progress" | "completed"
+  ) => void;
   onCreateNew: () => void;
   viewMode: "card" | "list";
   onViewModeChange: (viewMode: "card" | "list") => void;
@@ -104,7 +106,7 @@ function DesktopUpper({
               {currentMode === "memo" ? "メモ一覧" : "タスク一覧"}
             </h1>
           </div>
-          
+
           {/* 新規追加ボタン */}
           <AddItemButton
             itemType={currentMode}
@@ -121,11 +123,11 @@ function DesktopUpper({
                 if (activeTab === tab.id) {
                   switch (tab.id) {
                     case "todo":
-                      return "bg-zinc-500 text-white";
+                      return "bg-zinc-300 text-zinc-700";
                     case "in_progress":
-                      return "bg-blue-600 text-white";
+                      return "bg-Blue text-white";
                     case "completed":
-                      return "bg-green-600 text-white";
+                      return "bg-Green text-white";
                     case "deleted":
                       return "bg-red-600 text-white";
                     case "normal":
@@ -140,7 +142,7 @@ function DesktopUpper({
                     case "in_progress":
                       return "bg-gray-100 text-gray-600 hover:bg-blue-200";
                     case "completed":
-                      return "bg-gray-100 text-gray-600 hover:bg-green-200";
+                      return "bg-gray-100 text-gray-600 hover:bg-Green/20";
                     case "deleted":
                       return "bg-gray-100 text-gray-600 hover:bg-red-200";
                     case "normal":
@@ -194,7 +196,7 @@ function DesktopUpper({
               削除 ({checkedCount})
             </button>
           )}
-          
+
           <ViewModeToggle
             viewMode={viewMode}
             onViewModeChange={onViewModeChange}

@@ -13,7 +13,6 @@ import { useDeletedTasks, useTasks } from "@/src/hooks/use-tasks";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useScreenState } from "@/src/hooks/use-screen-state";
 import type { DeletedTask, Task } from "@/src/types/task";
-import { useState } from "react";
 import { 
   getTaskDisplayOrder, 
   createNextSelectionHandler, 
@@ -28,7 +27,7 @@ interface TaskScreenProps {
   selectedTask?: Task | null;
   selectedDeletedTask?: DeletedTask | null;
   onSelectTask: (task: Task | null, fromFullList?: boolean) => void;
-  onSelectDeletedTask: (task: DeletedTask, fromFullList?: boolean) => void;
+  onSelectDeletedTask: (task: DeletedTask | null, fromFullList?: boolean) => void;
   onClose: () => void;
   onClearSelection?: () => void; // 選択状態だけクリアする関数
 }

@@ -12,6 +12,7 @@ const config = {
         Emerald: "#249a84",
         "Emerald-dark": "#3f8b7d",
         Yellow: "#7b9237",
+        Blue: "#426dd0",
       },
     },
   },

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import type { Memo } from '@/src/types/memo'
 import { useCreateNote, useUpdateNote } from '@/src/hooks/use-notes'
 
@@ -15,20 +15,37 @@ export function useMemoForm({ memo = null, onMemoAdd, onMemoUpdate, onMemoIdUpda
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [savedSuccessfully, setSavedSuccessfully] = useState(false)
+  
+  // 変更検知用の初期値
+  const [initialTitle, setInitialTitle] = useState(() => memo?.title || '')
+  const [initialContent, setInitialContent] = useState(() => memo?.content || '')
 
   const createNote = useCreateNote()
   const updateNote = useUpdateNote()
+
+  // 変更検知
+  const hasChanges = useMemo(() => {
+    const currentTitle = title.trim()
+    const currentContent = content.trim()
+    return currentTitle !== initialTitle.trim() || currentContent !== initialContent.trim()
+  }, [title, content, initialTitle, initialContent])
 
   // Update form when memo changes (switching to different memo)
   useEffect(() => {
     if (memo) {
       console.log('📝 メモフォームを既存メモに設定:', memo.title)
-      setTitle(memo.title || '')
-      setContent(memo.content || '')
+      const memoTitle = memo.title || ''
+      const memoContent = memo.content || ''
+      setTitle(memoTitle)
+      setContent(memoContent)
+      setInitialTitle(memoTitle)
+      setInitialContent(memoContent)
     } else {
       console.log('📝 メモフォームを空にリセット（新規作成）')
       setTitle('')
       setContent('')
+      setInitialTitle('')
+      setInitialContent('')
     }
   }, [memo])
 
@@ -81,6 +98,10 @@ export function useMemoForm({ memo = null, onMemoAdd, onMemoUpdate, onMemoIdUpda
         console.log('✅ Memo created successfully:', createdMemo.id)
       }
 
+      // 保存成功時に初期値を更新
+      setInitialTitle(title.trim() || '')
+      setInitialContent(content.trim() || '')
+
       setSavedSuccessfully(true)
       setTimeout(() => setSavedSuccessfully(false), 3000)
 
@@ -105,6 +126,8 @@ export function useMemoForm({ memo = null, onMemoAdd, onMemoUpdate, onMemoIdUpda
     console.log('🔄 フォームをリセット')
     setTitle('')
     setContent('')
+    setInitialTitle('')
+    setInitialContent('')
     setSaveError(null)
     setSavedSuccessfully(false)
   }, [])
@@ -115,6 +138,7 @@ export function useMemoForm({ memo = null, onMemoAdd, onMemoUpdate, onMemoIdUpda
     isSaving,
     saveError,
     savedSuccessfully,
+    hasChanges,
     handleSave,
     handleTitleChange,
     handleContentChange,

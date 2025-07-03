@@ -102,10 +102,14 @@ function Main() {
   };
 
   /** 削除済みタスク選択 - タスク画面に遷移 */
-  const handleSelectDeletedTask = (task: DeletedTask) => {
-    clearAllSelections();
-    setSelectedDeletedTask(task);
-    setScreenMode('task');
+  const handleSelectDeletedTask = (task: DeletedTask | null) => {
+    if (task) {
+      clearAllSelections();
+      setSelectedDeletedTask(task);
+      setScreenMode('task');
+    } else {
+      setSelectedDeletedTask(null);
+    }
   };
 
   // ==========================================

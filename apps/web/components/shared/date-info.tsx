@@ -30,7 +30,7 @@ function DateInfo({ item, createdItemId, isEditing = false, lastEditedAt }: Date
   const showEditTime = !createdItemId && latestEditTime && latestEditTime !== item.createdAt && item.updatedAt !== item.createdAt
 
   return (
-    <div className="text-sm text-gray-500 mb-4 pb-2 border-b border-gray-100">
+    <div className="text-[13px] text-gray-500 pb-2">
       <div className="flex gap-4">
         <span>作成 {formatDate(item.createdAt)}</span>
         {showEditTime && (

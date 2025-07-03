@@ -28,6 +28,10 @@ apps/web/components/
 - `domUtils.ts` - DOM順序取得とアイテム選択の共通ユーティリティ
 - `ConfirmationModal` - 確認ダイアログの統一（一括削除・単体削除対応）
 - `BaseCard`, `BaseViewer` - レイアウト系の共通化
+- `SaveButton` - メモ・タスク統一保存ボタン（変更検知対応）
+- `PhotoButton` - 画像ボタンの統一コンポーネント
+- `CustomSelector` - セレクター系UIの統一（ステータス・優先度等）
+- `DateInput` - 日付入力の統一コンポーネント
 
 ## 開発コマンド
 
@@ -61,50 +65,64 @@ const displayOrder = getTaskDisplayOrder();
 const nextTask = getNextItemAfterDeletion(filteredTasks, deletedTask, displayOrder);
 ```
 
-## メモ機能アーキテクチャ（リファクタリング後）
+## メモ・タスク統一アーキテクチャ（2025-07-03更新）
 
-### 保存ボタン方針への移行
-- **従来**: 自動保存 + 複雑なID管理 + デバウンス
-- **現在**: 手動保存ボタン + シンプル状態管理
-- **目的**: IME入力問題とfocus問題の解決
+### 変更検知システム実装
+- **hasChanges**: 元データと現在データの比較による変更検知
+- **保存ボタン制御**: 変更がない場合は自動でグレーアウト
+- **保存後更新**: 成功時に初期値を更新して状態をリセット
+
+### 統一保存システム
+```tsx
+// SaveButtonコンポーネント（統一）
+<SaveButton
+  onClick={handleSave}
+  disabled={!hasChanges}  // 変更検知
+  isSaving={isSaving}
+/>
+
+// 変更検知（useMemoForm/useSimpleMemoSave）
+const hasChanges = useMemo(() => {
+  return currentTitle !== initialTitle || currentContent !== initialContent;
+}, [title, content, initialTitle, initialContent]);
+```
+
+### タスクエディター改善アーキテクチャ
+- **常時編集可能**: editingFieldの削除でクリック不要に
+- **カテゴリー管理**: 仕事・個人・勉強・健康・趣味の分類
+- **4列グリッド**: ステータス・優先度・カテゴリー・期限日の統一レイアウト
+- **高さ統一**: CustomSelector/DateInputで入力フィールドの高さを統一
 
 ### 現在のメモ管理システム
-- **SimpleMemoEditor**: 新規作成・編集統一コンポーネント
-- **useSimpleMemoSave**: 保存専用hook（auto-save除去）
+- **SimpleMemoEditor**: 新規作成・編集統一コンポーネント（変更検知対応）
+- **useSimpleMemoSave**: 保存専用hook（変更検知機能追加）
 - **空メモ削除**: 保存時に空の場合は削除 + 右パネル閉じる
 - **連続新規作成**: 保存後に新しいエディターを再マウント
 
 ### ファイル構成
 ```
 components/features/memo/
-├── simple-memo-editor.tsx    # 統一メモエディター
-├── memo-editor.tsx           # 旧エディター（複雑）
+├── simple-memo-editor.tsx    # 統一メモエディター（変更検知対応）
+├── memo-editor.tsx           # 既存エディター（変更検知対応）
 └── use-memo-bulk-delete.tsx
 
-hooks/
-├── use-simple-memo-save.ts   # 新しいシンプル保存hook
-└── use-memo-form.ts         # 旧hook（複雑なID管理）
-```
+components/features/task/
+├── task-editor.tsx           # 常時編集対応・カテゴリー追加
+├── task-creator.tsx          # PhotoButton統一
+└── task-status-display.tsx
 
-### 保存完了後の処理フロー
-```tsx
-const handleSaveComplete = (savedMemo: Memo, wasEmpty: boolean, isNewMemo: boolean) => {
-  if (wasEmpty) {
-    // 空メモは削除して右パネル閉じる
-    onDeselectAndStayOnMemoList?.();
-    setMemoScreenMode("list");
-  } else if (isNewMemo) {
-    // 新規作成は連続作成のため再マウント（700ms遅延）
-    onDeselectAndStayOnMemoList?.();
-    setTimeout(() => {
-      setCreateEditorKey(prev => prev + 1);
-      setMemoScreenMode("create");
-    }, 700);
-  } else {
-    // 既存メモ更新は選択状態更新
-    onSelectMemo(savedMemo);
-  }
-};
+components/ui/
+├── buttons/
+│   ├── save-button.tsx       # 統一保存ボタン
+│   └── photo-button.tsx      # 統一画像ボタン
+├── selectors/
+│   └── custom-selector.tsx   # 統一セレクターUI
+└── inputs/
+    └── date-input.tsx        # 統一日付入力
+
+hooks/
+├── use-simple-memo-save.ts   # 変更検知機能追加
+└── use-memo-form.ts         # 変更検知機能追加
 ```
 
 ### フォーカス管理

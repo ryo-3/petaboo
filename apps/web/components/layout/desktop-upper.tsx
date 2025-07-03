@@ -133,7 +133,7 @@ function DesktopUpper({
               const getTabColor = () => {
                 switch (tab.id) {
                   case "todo":
-                    return "bg-zinc-500";
+                    return "bg-zinc-400";
                   case "in_progress":
                     return "bg-Blue";
                   case "completed":
@@ -161,11 +161,13 @@ function DesktopUpper({
                     )
                   }
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    activeTab === tab.id && tab.id !== "todo" && tab.id !== "normal"
-                      ? tab.id === "in_progress" ? "bg-blue-100 text-gray-600"
+                    activeTab === tab.id && tab.id !== "normal"
+                      ? tab.id === "todo" ? "bg-zinc-200 text-gray-600"
+                      : tab.id === "in_progress" ? "bg-blue-100 text-gray-600"
                       : tab.id === "completed" ? "bg-Green/20 text-gray-600"
                       : tab.id === "deleted" ? "bg-red-100 text-gray-600"
                       : "bg-gray-100 text-gray-600"
+                      : tab.id === "todo" ? "bg-gray-100 text-gray-600 hover:bg-zinc-200"
                       : tab.id === "in_progress" ? "bg-gray-100 text-gray-600 hover:bg-blue-100"
                       : tab.id === "completed" ? "bg-gray-100 text-gray-600 hover:bg-Green/20"
                       : tab.id === "deleted" ? "bg-gray-100 text-gray-600 hover:bg-red-100"

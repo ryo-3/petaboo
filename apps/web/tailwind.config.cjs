@@ -10,7 +10,7 @@ const config = {
       colors: {
         Green: "#00873f",
         Emerald: "#249a84",
-        DeepBlue: "#2C699",
+        DeepBlue: "#2C6994",
         "Emerald-dark": "#3f8b7d",
         Yellow: "#7b9237",
         Blue: "#426dd0",

@@ -1,7 +1,7 @@
 "use client";
 
-import SaveButton from "@/components/ui/buttons/save-button";
 import PhotoButton from "@/components/ui/buttons/photo-button";
+import SaveButton from "@/components/ui/buttons/save-button";
 import DateInput from "@/components/ui/inputs/date-input";
 import CustomSelector from "@/components/ui/selectors/custom-selector";
 import { useEffect, useRef } from "react";
@@ -108,7 +108,7 @@ function TaskForm({
               }
             }
           }}
-          className="flex-1 text-lg font-medium border-b border-Yellow outline-none pb-2 focus:border-Yellow"
+          className="flex-1 text-lg font-medium border-b border-DeepBlue outline-none pb-2 focus:border-DeepBlue"
         />
       </div>
 
@@ -117,7 +117,9 @@ function TaskForm({
           label="ステータス"
           options={statusOptions}
           value={status}
-          onChange={(value) => onStatusChange(value as "todo" | "in_progress" | "completed")}
+          onChange={(value) =>
+            onStatusChange(value as "todo" | "in_progress" | "completed")
+          }
           fullWidth
         />
 
@@ -125,7 +127,9 @@ function TaskForm({
           label="優先度"
           options={priorityOptions}
           value={priority}
-          onChange={(value) => onPriorityChange(value as "low" | "medium" | "high")}
+          onChange={(value) =>
+            onPriorityChange(value as "low" | "medium" | "high")
+          }
           fullWidth
         />
 
@@ -151,7 +155,7 @@ function TaskForm({
           placeholder={descriptionPlaceholder}
           value={description}
           onChange={(e) => onDescriptionChange(e.target.value)}
-          className="w-full h-[calc(100vh-400px)] p-3 border border-gray-400 rounded-lg resize-none outline-none text-gray-700 leading-relaxed focus:border-Yellow"
+          className="w-full h-[calc(100vh-400px)] p-3 border border-gray-400 rounded-lg resize-none outline-none text-gray-700 leading-relaxed focus:border-DeepBlue"
         />
       </div>
 

@@ -68,14 +68,14 @@ function CreateScreen({
           onClick={() => handleModeChange("task")}
           className={`flex-1 border-b-2 transition-all duration-200 ${
             createMode === "task"
-              ? "border-Yellow"
-              : "border-transparent hover:border-Yellow/30"
+              ? "border-DeepBlue"
+              : "border-transparent hover:border-DeepBlue/30"
           }`}
         >
           <div className="flex items-center gap-3 px-4 py-3">
             <div
               className={`flex items-center gap-2 font-medium transition-colors ${
-                createMode === "task" ? "text-Yellow" : "text-gray-600"
+                createMode === "task" ? "text-DeepBlue" : "text-gray-600"
               }`}
             >
               <TaskIcon className="w-5 h-5" />

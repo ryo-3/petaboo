@@ -9,7 +9,7 @@ function DateInput({
   label,
   value,
   onChange,
-  fullWidth = false
+  fullWidth = false,
 }: DateInputProps) {
   return (
     <div>
@@ -20,7 +20,7 @@ function DateInput({
         type="date"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={`px-1 py-1 border border-gray-400 rounded-lg focus:border-Yellow outline-none ${
+        className={`px-1 py-1 border border-gray-400 rounded-lg focus:border-DeepBlue outline-none ${
           fullWidth ? "w-full" : ""
         }`}
       />

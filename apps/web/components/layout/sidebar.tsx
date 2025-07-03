@@ -1,7 +1,10 @@
 "use client";
 
+import HomeIcon from "@/components/icons/home-icon";
 import MemoIcon from "@/components/icons/memo-icon";
 import PlusIcon from "@/components/icons/plus-icon";
+import SearchIcon from "@/components/icons/search-icon";
+import SettingsIcon from "@/components/icons/settings-icon";
 import TaskIcon from "@/components/icons/task-icon";
 import MemoList from "@/components/mobile/memo-list";
 import TaskList from "@/components/mobile/task-list";
@@ -10,9 +13,6 @@ import Tooltip from "@/components/ui/base/tooltip";
 import AddItemButton from "@/components/ui/buttons/add-item-button";
 import type { Memo } from "@/src/types/memo";
 import type { Task } from "@/src/types/task";
-import HomeIcon from "@/components/icons/home-icon";
-import SettingsIcon from "@/components/icons/settings-icon";
-import SearchIcon from "@/components/icons/search-icon";
 
 interface SidebarProps {
   onNewMemo: () => void;
@@ -102,7 +102,7 @@ function Sidebar({
               }}
               className={`p-2 rounded-lg transition-colors ${
                 currentMode === "task"
-                  ? "bg-Yellow text-white"
+                  ? "bg-DeepBlue text-white"
                   : "bg-gray-200 hover:bg-gray-300 text-gray-600"
               }`}
             >
@@ -190,7 +190,7 @@ function Sidebar({
             className={`flex-1 text-center rounded-lg py-2 transition-colors flex items-center justify-center gap-1 ${
               currentMode === "memo"
                 ? "bg-Green hover:bg-Green/85"
-                : "bg-Yellow hover:bg-Yellow/85"
+                : "bg-DeepBlue hover:bg-DeepBlue/85"
             }`}
           >
             <PlusIcon className="w-4 h-4 text-gray-100" />

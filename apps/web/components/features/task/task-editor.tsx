@@ -6,7 +6,7 @@ import { SingleDeleteConfirmation } from "@/components/ui/modals";
 import TaskForm from "./task-form";
 import { useUpdateTask, useCreateTask } from "@/src/hooks/use-tasks";
 import type { Task } from "@/src/types/task";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import { useTaskDelete } from "./use-task-delete";
 
 interface TaskEditorProps {
@@ -81,15 +81,17 @@ function TaskEditor({
     dueDate: string;
   } | null>(null);
 
-  // 変更があるかチェック
-  const hasChanges = originalData ? (
-    title !== originalData.title ||
-    description !== originalData.description ||
-    status !== originalData.status ||
-    priority !== originalData.priority ||
-    category !== originalData.category ||
-    dueDate !== originalData.dueDate
-  ) : true; // データがない場合は常に保存可能にする
+  // 変更があるかチェック（useMemoで最適化）
+  const hasChanges = useMemo(() => {
+    if (!originalData) return false; // originalDataがない間は保存ボタンを無効に
+    
+    return title !== originalData.title ||
+      description !== originalData.description ||
+      status !== originalData.status ||
+      priority !== originalData.priority ||
+      category !== originalData.category ||
+      dueDate !== originalData.dueDate;
+  }, [title, description, status, priority, category, dueDate, originalData]);
 
 
   // taskプロパティが変更された時にstateを更新
@@ -103,22 +105,42 @@ function TaskEditor({
         ? new Date(task.dueDate * 1000).toISOString().split("T")[0]
         : "";
       
-      setTitle(taskTitle);
-      setDescription(taskDescription);
-      setStatus(taskStatus);
-      setPriority(taskPriority);
-      setDueDate(taskDueDate || "");
-      setError(null);
-      
-      // 元データを保存
-      setOriginalData({
+      const newData = {
         title: taskTitle,
         description: taskDescription,
         status: taskStatus,
         priority: taskPriority,
         category: "", // カテゴリーは常に空で開始
         dueDate: taskDueDate || ""
-      });
+      };
+      
+      // stateと元データを同時に更新して変更検知のずれを防ぐ
+      setTitle(taskTitle);
+      setDescription(taskDescription);
+      setStatus(taskStatus);
+      setPriority(taskPriority);
+      setDueDate(taskDueDate || "");
+      setError(null);
+      setOriginalData(newData);
+    } else {
+      // 新規作成時の初期化
+      const newData = {
+        title: "",
+        description: "",
+        status: "todo" as const,
+        priority: "medium" as const,
+        category: "",
+        dueDate: ""
+      };
+      
+      // stateと元データを同時に更新
+      setTitle("");
+      setDescription("");
+      setStatus("todo");
+      setPriority("medium");
+      setDueDate("");
+      setError(null);
+      setOriginalData(newData);
     }
   }, [task]);
 

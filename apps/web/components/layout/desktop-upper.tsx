@@ -130,37 +130,20 @@ function DesktopUpper({
           {/* タブ */}
           <div className="flex items-center gap-2">
             {tabs.map((tab) => {
-              const getTabColors = () => {
-                if (activeTab === tab.id) {
-                  switch (tab.id) {
-                    case "todo":
-                      return "bg-zinc-300 text-zinc-700";
-                    case "in_progress":
-                      return "bg-Blue text-white";
-                    case "completed":
-                      return "bg-Green text-white";
-                    case "deleted":
-                      return "bg-red-600 text-white";
-                    case "normal":
-                      return "bg-zinc-500 text-white";
-                    default:
-                      return "bg-gray-500 text-white";
-                  }
-                } else {
-                  switch (tab.id) {
-                    case "todo":
-                      return "bg-gray-100 text-gray-600 hover:bg-gray-300";
-                    case "in_progress":
-                      return "bg-gray-100 text-gray-600 hover:bg-blue-200";
-                    case "completed":
-                      return "bg-gray-100 text-gray-600 hover:bg-Green/20";
-                    case "deleted":
-                      return "bg-gray-100 text-gray-600 hover:bg-red-200";
-                    case "normal":
-                      return "bg-gray-100 text-gray-600 hover:bg-gray-300";
-                    default:
-                      return "bg-gray-100 text-gray-600 hover:bg-gray-300";
-                  }
+              const getTabColor = () => {
+                switch (tab.id) {
+                  case "todo":
+                    return "bg-zinc-500";
+                  case "in_progress":
+                    return "bg-Blue";
+                  case "completed":
+                    return "bg-Green";
+                  case "deleted":
+                    return "bg-red-600";
+                  case "normal":
+                    return "bg-zinc-500";
+                  default:
+                    return "bg-gray-500";
                 }
               };
 
@@ -177,9 +160,21 @@ function DesktopUpper({
                         | "completed"
                     )
                   }
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${getTabColors()}`}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    activeTab === tab.id && tab.id !== "todo" && tab.id !== "normal"
+                      ? tab.id === "in_progress" ? "bg-blue-100 text-gray-600"
+                      : tab.id === "completed" ? "bg-Green/20 text-gray-600"
+                      : tab.id === "deleted" ? "bg-red-100 text-gray-600"
+                      : "bg-gray-100 text-gray-600"
+                      : tab.id === "in_progress" ? "bg-gray-100 text-gray-600 hover:bg-blue-100"
+                      : tab.id === "completed" ? "bg-gray-100 text-gray-600 hover:bg-Green/20"
+                      : tab.id === "deleted" ? "bg-gray-100 text-gray-600 hover:bg-red-100"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
                 >
-                  {tab.icon && tab.icon}
+                  <div className={`w-3 h-3 rounded-full ${
+                    activeTab === tab.id ? getTabColor() : getTabColor()
+                  }`}></div>
                   <span>{tab.label}</span>
                   <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full">
                     {tab.count}

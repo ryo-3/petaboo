@@ -32,10 +32,8 @@ export function useTaskDelete({ task, onClose, onSelectTask, onClosePanel, onDel
       // モーダルを閉じる
       setShowDeleteModal(false)
 
-      // 少し遅延してから削除API実行
-      setTimeout(async () => {
-        await deleteTask.mutateAsync(task.id)
-      }, 500)
+      // すぐに削除API実行
+      await deleteTask.mutateAsync(task.id)
     } catch (error) {
       console.error('削除に失敗しました:', error)
       alert('削除に失敗しました。')

@@ -203,7 +203,12 @@ function MemoScreen({
             
             setActiveTab(tab);
           }}
-          onCreateNew={() => setMemoScreenMode("create")}
+          onCreateNew={() => {
+            // 新規作成時に選択状態をクリア
+            onSelectMemo(null);
+            onSelectDeletedMemo(null);
+            setMemoScreenMode("create");
+          }}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
           columnCount={columnCount}

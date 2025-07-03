@@ -131,7 +131,12 @@ function TaskScreen({
           currentMode="task"
           activeTab={activeTab as "todo" | "in_progress" | "completed" | "deleted"}
           onTabChange={(tab) => setActiveTab(tab)}
-          onCreateNew={() => setTaskScreenMode('create')}
+          onCreateNew={() => {
+            // 新規作成時に選択状態をクリア
+            onSelectTask(null, true);
+            onSelectDeletedTask(null, true);
+            setTaskScreenMode('create');
+          }}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
           columnCount={columnCount}

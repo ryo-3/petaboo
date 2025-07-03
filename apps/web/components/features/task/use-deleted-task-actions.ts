@@ -24,10 +24,8 @@ export function useDeletedTaskActions({ task, onClose, onDeleteAndSelectNext }: 
 
       setShowDeleteModal(false)
       
-      // 少し遅延してから削除API実行（UI更新を先に行う）
-      setTimeout(async () => {
-        await permanentDeleteTask.mutateAsync(task.id)
-      }, 100)
+      // すぐに削除API実行
+      await permanentDeleteTask.mutateAsync(task.id)
     } catch (error) {
       console.error('完全削除に失敗しました:', error)
       alert('完全削除に失敗しました。')

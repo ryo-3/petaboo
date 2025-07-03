@@ -67,10 +67,12 @@ export function useScreenState<T extends string>(
     }
   }, [preferences, config.type, config.defaultColumnCount])
 
-  // アイテムが選択されている場合は表示モードに
+  // アイテムが選択されている場合は表示モードに、選択がクリアされた場合は一覧モードに
   useEffect(() => {
     if ((selectedItem || selectedDeletedItem) && screenMode === 'list' as T) {
       setScreenMode('view' as T)
+    } else if (!selectedItem && !selectedDeletedItem && screenMode === 'view' as T) {
+      setScreenMode('list' as T)
     }
   }, [selectedItem, selectedDeletedItem, screenMode])
 

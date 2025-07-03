@@ -100,7 +100,7 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete }: UseSimpleMemo
       setSaveError('保存に失敗しました')
     } finally {
       // 保存中表示をしっかり見せる
-      setTimeout(() => setIsSaving(false), 600)
+      setTimeout(() => setIsSaving(false), 400)
     }
   }, [memo, title, content, createNote, updateNote, deleteNote, onSaveComplete])
 

@@ -125,7 +125,7 @@ function MemoListItem({
                     if (hasLocalEdit) {
                       return <div>更新: {formatDateOnly(lastEditTime)}</div>;
                     } else if (hasApiUpdate) {
-                      return <div>更新: {formatDateOnly(memo.updatedAt)}</div>;
+                      return <div>更新: {formatDateOnly(memo.updatedAt!)}</div>;
                     }
                     return null;
                   })()}

@@ -55,7 +55,12 @@ function TaskScreen({
   const [selectionMode, setSelectionMode] = useState<'select' | 'check'>('select');
   
   // 並び替え管理
-  const [sortOptions, setSortOptions] = useState([
+  const [sortOptions, setSortOptions] = useState<Array<{
+    id: "createdAt" | "updatedAt" | "priority";
+    label: string;
+    enabled: boolean;
+    direction: "asc" | "desc";
+  }>>([
     { id: "priority" as const, label: "優先度順", enabled: false, direction: "desc" as const },
     { id: "updatedAt" as const, label: "更新日順", enabled: false, direction: "desc" as const },
     { id: "createdAt" as const, label: "作成日順", enabled: false, direction: "desc" as const },
@@ -129,6 +134,20 @@ function TaskScreen({
     setCheckedDeletedTasks,
     tasks,
     deletedTasks,
+    onTaskDelete: (id: number) => {
+      // 削除されたタスクが現在選択中の場合は選択解除
+      if (selectedTask?.id === id) {
+        onClearSelection?.();
+        setTaskScreenMode("list");
+      }
+    },
+    onDeletedTaskDelete: (id: number) => {
+      // 削除された削除済みタスクが現在選択中の場合は選択解除
+      if (selectedDeletedTask?.id === id) {
+        onClearSelection?.();
+        setTaskScreenMode("list");
+      }
+    }
   });
 
   // 削除済みタスクでの次のタスク選択ハンドラー

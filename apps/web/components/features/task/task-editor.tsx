@@ -85,13 +85,16 @@ function TaskEditor({
   const hasChanges = useMemo(() => {
     if (!originalData) return false; // originalDataがない間は保存ボタンを無効に
     
-    return title !== originalData.title ||
-      description !== originalData.description ||
+    return title.trim() !== originalData.title.trim() ||
+      description.trim() !== originalData.description.trim() ||
       status !== originalData.status ||
       priority !== originalData.priority ||
       category !== originalData.category ||
       dueDate !== originalData.dueDate;
   }, [title, description, status, priority, category, dueDate, originalData]);
+
+  // 新規作成時の保存可能性チェック
+  const canSave = isNewTask ? !!title.trim() : hasChanges;
 
 
   // taskプロパティが変更された時にstateを更新
@@ -106,8 +109,8 @@ function TaskEditor({
         : "";
       
       const newData = {
-        title: taskTitle,
-        description: taskDescription,
+        title: taskTitle.trim(),
+        description: taskDescription.trim(),
         status: taskStatus,
         priority: taskPriority,
         category: "", // カテゴリーは常に空で開始
@@ -119,6 +122,7 @@ function TaskEditor({
       setDescription(taskDescription);
       setStatus(taskStatus);
       setPriority(taskPriority);
+      setCategory(""); // カテゴリーも明示的にリセット
       setDueDate(taskDueDate || "");
       setError(null);
       setOriginalData(newData);
@@ -165,13 +169,21 @@ function TaskEditor({
       if (isNewTask) {
         // 新規作成
         const newTask = await createTask.mutateAsync(taskData);
-        setIsSaving(false);
         setSavedSuccessfully(true);
         
         onSaveComplete?.(newTask, true);
         
         // 新規作成後はフォームをリセット
         setTimeout(() => {
+          const resetData = {
+            title: "",
+            description: "",
+            status: "todo" as const,
+            priority: "medium" as const,
+            category: "",
+            dueDate: ""
+          };
+          
           setTitle("");
           setDescription("");
           setStatus("todo");
@@ -179,6 +191,9 @@ function TaskEditor({
           setCategory("");
           setDueDate("");
           setSavedSuccessfully(false);
+          
+          // originalDataもリセット
+          setOriginalData(resetData);
         }, 400);
       } else {
         // 編集
@@ -186,16 +201,15 @@ function TaskEditor({
           id: task!.id,
           data: taskData,
         });
-        setIsSaving(false);
         
         onSaveComplete?.(updatedTask, false);
         
-        // 保存成功時にoriginalDataも更新
+        // 保存成功時にoriginalDataも更新（現在のstateの値を使用）
         setOriginalData({
-          title: taskData.title,
-          description: taskData.description || "",
-          status: taskData.status,
-          priority: taskData.priority,
+          title: title.trim(),
+          description: description.trim(),
+          status: status,
+          priority: priority,
           category: category,
           dueDate: dueDate
         });
@@ -206,6 +220,9 @@ function TaskEditor({
         "保存に失敗しました。APIサーバーが起動していることを確認してください。"
       );
       setIsSaving(false);
+    } finally {
+      // 保存中表示をしっかり見せる
+      setTimeout(() => setIsSaving(false), 500);
     }
   }, [
     title,
@@ -221,18 +238,20 @@ function TaskEditor({
     onSaveComplete,
   ]);
 
-  // Ctrl+Sショートカット
+  // Ctrl+Sショートカット（変更がある場合のみ実行）
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
-        handleSave();
+        if (canSave) {
+          handleSave();
+        }
       }
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [handleSave]);
+  }, [handleSave, canSave]);
 
   return (
     <>
@@ -258,7 +277,7 @@ function TaskEditor({
           onDueDateChange={setDueDate}
           onSave={handleSave}
           isSaving={isSaving}
-          hasChanges={isNewTask ? !!title.trim() : hasChanges}
+          hasChanges={canSave}
           savedSuccessfully={savedSuccessfully}
           isNewTask={isNewTask}
         />

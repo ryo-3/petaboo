@@ -56,18 +56,20 @@ function MemoEditor({
     }
   }, [memo]);
 
-  // Ctrl+S ショートカット
+  // Ctrl+S ショートカット（変更がある場合のみ実行）
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
-        handleSave();
+        if (hasChanges) {
+          handleSave();
+        }
       }
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [handleSave]);
+  }, [handleSave, hasChanges]);
 
   const handleDelete = async () => {
     try {

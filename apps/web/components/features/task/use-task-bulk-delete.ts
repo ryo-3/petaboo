@@ -11,6 +11,8 @@ interface UseTasksBulkDeleteProps {
   setCheckedDeletedTasks: (tasks: Set<number>) => void
   tasks?: Task[]
   deletedTasks?: DeletedTask[]
+  onTaskDelete?: (id: number) => void
+  onDeletedTaskDelete?: (id: number) => void
 }
 
 export function useTasksBulkDelete({
@@ -20,7 +22,9 @@ export function useTasksBulkDelete({
   setCheckedTasks,
   setCheckedDeletedTasks,
   tasks,
-  deletedTasks
+  deletedTasks,
+  onTaskDelete,
+  onDeletedTaskDelete
 }: UseTasksBulkDeleteProps) {
   const deleteTaskMutation = useDeleteTask()
   const permanentDeleteTaskMutation = usePermanentDeleteTask()
@@ -60,8 +64,10 @@ export function useTasksBulkDelete({
       for (const id of ids) {
         if (activeTab === "deleted") {
           await permanentDeleteTaskMutation.mutateAsync(id)
+          onDeletedTaskDelete?.(id)
         } else {
           await deleteTaskMutation.mutateAsync(id)
+          onTaskDelete?.(id)
         }
       }
 
@@ -71,7 +77,7 @@ export function useTasksBulkDelete({
       } else {
         setCheckedTasks(new Set())
       }
-      console.log(`${ids.length}件のタスクを削除しました`)
+      // console.log(`${ids.length}件のタスクを削除しました`)
     })
   }
 
@@ -88,8 +94,10 @@ export function useTasksBulkDelete({
           for (const id of ids) {
             if (activeTab === "deleted") {
               await permanentDeleteTaskMutation.mutateAsync(id)
+              onDeletedTaskDelete?.(id)
             } else {
               await deleteTaskMutation.mutateAsync(id)
+              onTaskDelete?.(id)
             }
           }
 

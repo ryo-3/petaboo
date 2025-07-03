@@ -35,7 +35,7 @@ export function useDeletedTaskActions({ task, onClose, onDeleteAndSelectNext, on
 
   const handleRestore = async () => {
     try {
-      console.log('復元ボタンクリック:', { taskId: task.id, hasCallback: !!onRestoreAndSelectNext });
+      // console.log('復元ボタンクリック:', { taskId: task.id, hasCallback: !!onRestoreAndSelectNext });
       
       // UIを先に更新
       if (onRestoreAndSelectNext) {

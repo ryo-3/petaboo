@@ -180,7 +180,7 @@ function MemoScreen({
 
   // 削除済みメモの復元時の次選択処理
   const handleRestoreAndSelectNext = useCallback((deletedMemo: DeletedMemo) => {
-    console.log('復元処理開始:', { deletedMemo: deletedMemo.id, deletedNotesCount: deletedNotes?.length });
+    // console.log('復元処理開始:', { deletedMemo: deletedMemo.id, deletedNotesCount: deletedNotes?.length });
     
     // 復元後の削除済みメモ数を計算
     const remainingDeletedMemos = deletedNotes ? deletedNotes.filter(m => m.id !== deletedMemo.id) : [];
@@ -190,12 +190,12 @@ function MemoScreen({
       const nextItem = getNextDeletedItem(deletedNotes || [], deletedMemo);
       
       if (nextItem && nextItem.id !== deletedMemo.id) {
-        console.log('次の削除済みメモを選択:', nextItem.id);
+        // console.log('次の削除済みメモを選択:', nextItem.id);
         onSelectDeletedMemo(nextItem);
         setMemoScreenMode("view");
       } else {
         // これは通常起こらないが、念のため
-        console.log('次のメモが見つからない、通常タブに戻る');
+        // console.log('次のメモが見つからない、通常タブに戻る');
         onSelectDeletedMemo(null);
         setActiveTab("normal");
         setMemoScreenMode("list");
@@ -203,7 +203,7 @@ function MemoScreen({
       }
     } else {
       // 最後の削除済みメモを復元した場合、通常タブに戻る
-      console.log('最後の削除済みメモを復元、通常タブに戻る');
+      // console.log('最後の削除済みメモを復元、通常タブに戻る');
       onSelectDeletedMemo(null); // 削除済みメモの選択を解除
       setActiveTab("normal");
       // 少し遅延してからパネルを閉じる
@@ -225,15 +225,15 @@ function MemoScreen({
           currentMode="memo"
           activeTab={activeTab as "normal" | "deleted"}
           onTabChange={(tab) => {
-            console.log('タブ切り替え:', { from: activeTab, to: tab, selectedMemo: selectedMemo?.id, selectedDeletedMemo: selectedDeletedMemo?.id });
+            // console.log('タブ切り替え:', { from: activeTab, to: tab, selectedMemo: selectedMemo?.id, selectedDeletedMemo: selectedDeletedMemo?.id });
             
             // タブ切り替え時に選択をクリア
             if (tab === 'normal' && selectedDeletedMemo) {
-              console.log('通常タブに切り替え、削除済みメモの選択を解除');
+              // console.log('通常タブに切り替え、削除済みメモの選択を解除');
               onSelectDeletedMemo(null);
               setMemoScreenMode('list');
             } else if (tab === 'deleted' && selectedMemo) {
-              console.log('削除済みタブに切り替え、通常メモの選択を解除');
+              // console.log('削除済みタブに切り替え、通常メモの選択を解除');
               onSelectMemo(null);
               setMemoScreenMode('list');
             }
@@ -303,15 +303,15 @@ function MemoScreen({
       <RightPanel
         isOpen={memoScreenMode !== "list"}
         onClose={() => {
-          console.log('右パネルを閉じる');
+          // console.log('右パネルを閉じる');
           setMemoScreenMode("list");
           onDeselectAndStayOnMemoList?.(); // 選択解除してメモ一覧に留まる
         }}
       >
-        {(() => {
+        {/* {(() => {
           console.log('右パネルコンテンツレンダー:', { memoScreenMode, selectedMemo: selectedMemo?.id, selectedDeletedMemo: selectedDeletedMemo?.id });
           return null;
-        })()}
+        })()} */}
         {memoScreenMode === "create" && (
           <MemoEditor
             key={`create-${createEditorKey}`} // 管理されたキーで再マウント

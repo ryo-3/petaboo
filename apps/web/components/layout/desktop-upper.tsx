@@ -1,10 +1,8 @@
 "use client";
 
-import DueDateIcon from "@/components/icons/due-date-icon";
 import MemoIcon from "@/components/icons/memo-icon";
 import TaskIcon from "@/components/icons/task-icon";
 import TrashIcon from "@/components/icons/trash-icon";
-import Tooltip from "@/components/ui/base/tooltip";
 import AddItemButton from "@/components/ui/buttons/add-item-button";
 import SelectionModeToggle from "@/components/ui/buttons/selection-mode-toggle";
 import TaskSortToggle from "@/components/ui/buttons/task-sort-toggle";

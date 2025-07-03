@@ -64,24 +64,24 @@ function TaskStatusDisplay({
       });
       
       // デバッグ用ログ（DOMの最後から5つのアイテム）
-      const lastFiveTasks = sorted.slice(-5);
-      console.log('📅 Last 5 tasks in DOM order:', lastFiveTasks.map((task, index) => ({
-        position: sorted.length - 5 + index + 1,
-        id: task.id,
-        title: task.title.substring(0, 25) + (task.title.length > 25 ? '...' : ''),
-        priority: task.priority,
-        createdTimestamp: task.createdAt,
-        updatedTimestamp: task.updatedAt || 'none',
-        effectiveTimestamp: task.updatedAt || task.createdAt,
-        createdTime: new Date(task.createdAt * 1000).toLocaleString(),
-        updatedTime: task.updatedAt ? new Date(task.updatedAt * 1000).toLocaleString() : 'none'
-      })));
+      // const lastFiveTasks = sorted.slice(-5);
+      // console.log('📅 Last 5 tasks in DOM order:', lastFiveTasks.map((task, index) => ({
+      //   position: sorted.length - 5 + index + 1,
+      //   id: task.id,
+      //   title: task.title.substring(0, 25) + (task.title.length > 25 ? '...' : ''),
+      //   priority: task.priority,
+      //   createdTimestamp: task.createdAt,
+      //   updatedTimestamp: task.updatedAt || 'none',
+      //   effectiveTimestamp: task.updatedAt || task.createdAt,
+      //   createdTime: new Date(task.createdAt * 1000).toLocaleString(),
+      //   updatedTime: task.updatedAt ? new Date(task.updatedAt * 1000).toLocaleString() : 'none'
+      // })));
       
       // 選択されたタスクのハイライト
-      if (selectedTaskId) {
-        const selectedIndex = sorted.findIndex(task => task.id === selectedTaskId);
-        console.log(`🎯 Selected task is at position: ${selectedIndex + 1}`);
-      }
+      // if (selectedTaskId) {
+      //   const selectedIndex = sorted.findIndex(task => task.id === selectedTaskId);
+      //   console.log(`🎯 Selected task is at position: ${selectedIndex + 1}`);
+      // }
       
       return sorted;
     }

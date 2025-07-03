@@ -1,13 +1,11 @@
 "use client";
 
 import Tooltip from "@/components/ui/base/tooltip";
-import SortIcon from "@/components/icons/sort-icon";
 import CreatedAtIcon from "@/components/icons/created-at-icon";
 import UpdatedAtIcon from "@/components/icons/updated-at-icon";
 import PriorityIcon from "@/components/icons/priority-icon";
 import ArrowDownIcon from "@/components/icons/arrow-down-icon";
 import ArrowUpIcon from "@/components/icons/arrow-up-icon";
-import { useState } from "react";
 
 interface SortOption {
   id: "createdAt" | "updatedAt" | "priority";

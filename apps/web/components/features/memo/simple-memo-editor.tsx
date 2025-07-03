@@ -29,7 +29,6 @@ function SimpleMemoEditor({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const {
-    title,
     content,
     isSaving,
     saveError,
@@ -71,8 +70,9 @@ function SimpleMemoEditor({
   const handleDelete = async () => {
     try {
       if (memo?.id) {
-        await deleteNote.mutateAsync(memo.id);
+        // 削除前にコールバックを呼ぶ（削除前のメモ情報を渡せるように）
         onDeleteComplete?.();
+        await deleteNote.mutateAsync(memo.id);
       }
     } catch (error) {
       console.error("削除に失敗しました:", error);

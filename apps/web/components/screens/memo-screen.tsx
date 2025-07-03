@@ -15,14 +15,15 @@ import type { DeletedMemo, Memo } from "@/src/types/memo";
 import { useCallback, useState } from "react";
 import { createToggleHandler } from "@/src/utils/toggleUtils";
 import { shouldShowDeleteButton, getDeleteButtonCount } from "@/src/utils/screenUtils";
+import { getMemoDisplayOrder, getNextItemAfterDeletion, getNextDeletedItem } from "@/src/utils/domUtils";
 
-type MemoScreenMode = "list" | "view" | "create" | "edit";
+type MemoScreenMode = "list" | "view" | "create";
 
 interface MemoScreenProps {
   selectedMemo?: Memo | null;
   selectedDeletedMemo?: DeletedMemo | null;
-  onSelectMemo: (memo: Memo) => void;
-  onSelectDeletedMemo: (memo: DeletedMemo) => void;
+  onSelectMemo: (memo: Memo | null) => void;
+  onSelectDeletedMemo: (memo: DeletedMemo | null) => void;
   onClose: () => void;
   onDeselectAndStayOnMemoList?: () => void; // 選択解除してメモ一覧に留まる
 }
@@ -89,16 +90,26 @@ function MemoScreen({
     }
   }, [onDeselectAndStayOnMemoList, setMemoScreenMode, onSelectMemo]);
 
-  // 削除完了後の処理
+  // 削除完了後の処理（次のメモを自動選択）
   const handleDeleteComplete = useCallback(() => {
-    onDeselectAndStayOnMemoList?.();
-    setMemoScreenMode("list");
-  }, [onDeselectAndStayOnMemoList, setMemoScreenMode]);
+    if (selectedMemo && notes) {
+      const displayOrder = getMemoDisplayOrder();
+      // getNextItemAfterDeletionには削除前の全メモを渡す
+      const nextItem = getNextItemAfterDeletion(notes, selectedMemo, displayOrder);
+      
+      if (nextItem && nextItem.id !== selectedMemo.id) {
+        onSelectMemo(nextItem);
+        setMemoScreenMode("view");
+      } else {
+        setMemoScreenMode("list");
+        onDeselectAndStayOnMemoList?.();
+      }
+    } else {
+      onDeselectAndStayOnMemoList?.();
+      setMemoScreenMode("list");
+    }
+  }, [selectedMemo, notes, onSelectMemo, onDeselectAndStayOnMemoList, setMemoScreenMode]);
 
-  // メモ復元（シンプル化）
-  const restoreMemo = useCallback(() => {
-    // 復元は単純にAPI呼び出しのみ
-  }, []);
 
   // 一括削除関連
   const { handleBulkDelete, bulkDeleteState } = useMemosBulkDelete({
@@ -113,10 +124,58 @@ function MemoScreen({
     onMemoDelete: () => {} // シンプル化
   });
 
-  // 次のメモ選択ハンドラー（簡略化）
-  const handleDeletedMemoAndSelectNext = () => {
-    onClose();
-  };
+  // 削除済みメモの完全削除時の次選択処理
+  const handleDeletedMemoAndSelectNext = useCallback((deletedMemo: DeletedMemo) => {
+    if (deletedNotes) {
+      const nextItem = getNextDeletedItem(deletedNotes, deletedMemo);
+      
+      if (nextItem && nextItem.id !== deletedMemo.id) {
+        onSelectDeletedMemo(nextItem);
+        setMemoScreenMode("view");
+      } else {
+        setMemoScreenMode("list");
+        onClose();
+      }
+    } else {
+      onClose();
+    }
+  }, [deletedNotes, onSelectDeletedMemo, onClose, setMemoScreenMode]);
+
+  // 削除済みメモの復元時の次選択処理
+  const handleRestoreAndSelectNext = useCallback((deletedMemo: DeletedMemo) => {
+    console.log('復元処理開始:', { deletedMemo: deletedMemo.id, deletedNotesCount: deletedNotes?.length });
+    
+    // 復元後の削除済みメモ数を計算
+    const remainingDeletedMemos = deletedNotes ? deletedNotes.filter(m => m.id !== deletedMemo.id) : [];
+    
+    if (remainingDeletedMemos.length > 0) {
+      // 他に削除済みメモがある場合は次を選択
+      const nextItem = getNextDeletedItem(deletedNotes || [], deletedMemo);
+      
+      if (nextItem && nextItem.id !== deletedMemo.id) {
+        console.log('次の削除済みメモを選択:', nextItem.id);
+        onSelectDeletedMemo(nextItem);
+        setMemoScreenMode("view");
+      } else {
+        // これは通常起こらないが、念のため
+        console.log('次のメモが見つからない、通常タブに戻る');
+        onSelectDeletedMemo(null);
+        setActiveTab("normal");
+        setMemoScreenMode("list");
+        onDeselectAndStayOnMemoList?.();
+      }
+    } else {
+      // 最後の削除済みメモを復元した場合、通常タブに戻る
+      console.log('最後の削除済みメモを復元、通常タブに戻る');
+      onSelectDeletedMemo(null); // 削除済みメモの選択を解除
+      setActiveTab("normal");
+      // 少し遅延してからパネルを閉じる
+      setTimeout(() => {
+        setMemoScreenMode("list");
+        onDeselectAndStayOnMemoList?.();
+      }, 100);
+    }
+  }, [deletedNotes, onSelectDeletedMemo, setActiveTab, setMemoScreenMode, onDeselectAndStayOnMemoList]);
 
 
   return (
@@ -128,7 +187,22 @@ function MemoScreen({
         <DesktopUpper
           currentMode="memo"
           activeTab={activeTab as "normal" | "deleted"}
-          onTabChange={(tab) => setActiveTab(tab)}
+          onTabChange={(tab) => {
+            console.log('タブ切り替え:', { from: activeTab, to: tab, selectedMemo: selectedMemo?.id, selectedDeletedMemo: selectedDeletedMemo?.id });
+            
+            // タブ切り替え時に選択をクリア
+            if (tab === 'normal' && selectedDeletedMemo) {
+              console.log('通常タブに切り替え、削除済みメモの選択を解除');
+              onSelectDeletedMemo(null);
+              setMemoScreenMode('list');
+            } else if (tab === 'deleted' && selectedMemo) {
+              console.log('削除済みタブに切り替え、通常メモの選択を解除');
+              onSelectMemo(null);
+              setMemoScreenMode('list');
+            }
+            
+            setActiveTab(tab);
+          }}
           onCreateNew={() => setMemoScreenMode("create")}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
@@ -179,10 +253,15 @@ function MemoScreen({
       <RightPanel
         isOpen={memoScreenMode !== "list"}
         onClose={() => {
+          console.log('右パネルを閉じる');
           setMemoScreenMode("list");
           onDeselectAndStayOnMemoList?.(); // 選択解除してメモ一覧に留まる
         }}
       >
+        {(() => {
+          console.log('右パネルコンテンツレンダー:', { memoScreenMode, selectedMemo: selectedMemo?.id, selectedDeletedMemo: selectedDeletedMemo?.id });
+          return null;
+        })()}
         {memoScreenMode === "create" && (
           <SimpleMemoEditor
             key={`create-${createEditorKey}`} // 管理されたキーで再マウント
@@ -191,28 +270,28 @@ function MemoScreen({
             onSaveComplete={handleSaveComplete}
           />
         )}
-        {memoScreenMode === "view" && selectedMemo && (
+        {memoScreenMode === "view" && selectedMemo && !selectedDeletedMemo && (
           <SimpleMemoEditor
+            key={`memo-${selectedMemo.id}`}
             memo={selectedMemo}
             onClose={() => setMemoScreenMode("list")}
             onSaveComplete={handleSaveComplete}
             onDeleteComplete={handleDeleteComplete}
           />
         )}
-        {memoScreenMode === "view" && selectedDeletedMemo && (
+        {memoScreenMode === "view" && selectedDeletedMemo && !selectedMemo && (
           <DeletedMemoViewer
             memo={selectedDeletedMemo}
-            onClose={() => setMemoScreenMode("list")}
+            onClose={() => {
+              setMemoScreenMode("list");
+              // 削除済みタブからの閉じる時は通常タブに戻る
+              if (activeTab === "deleted") {
+                setActiveTab("normal");
+              }
+              onDeselectAndStayOnMemoList?.();
+            }}
             onDeleteAndSelectNext={handleDeletedMemoAndSelectNext}
-            onMemoRestore={restoreMemo}
-          />
-        )}
-        {memoScreenMode === "edit" && selectedMemo && (
-          <SimpleMemoEditor
-            memo={selectedMemo}
-            onClose={() => setMemoScreenMode("view")}
-            onSaveComplete={handleSaveComplete}
-            onDeleteComplete={handleDeleteComplete}
+            onRestoreAndSelectNext={handleRestoreAndSelectNext}
           />
         )}
       </RightPanel>

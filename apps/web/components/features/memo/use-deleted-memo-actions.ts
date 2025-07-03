@@ -1,15 +1,15 @@
 import { useState } from 'react'
 import { usePermanentDeleteNote, useRestoreNote } from '@/src/hooks/use-notes'
-import type { DeletedMemo, Memo } from '@/src/types/memo'
+import type { DeletedMemo } from '@/src/types/memo'
 
 interface UseDeletedMemoActionsProps {
   memo: DeletedMemo
   onClose: () => void
   onDeleteAndSelectNext?: (deletedMemo: DeletedMemo) => void
-  onMemoRestore?: (memo: Memo) => void
+  onRestoreAndSelectNext?: (deletedMemo: DeletedMemo) => void
 }
 
-export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, onMemoRestore }: UseDeletedMemoActionsProps) {
+export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, onRestoreAndSelectNext }: UseDeletedMemoActionsProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const permanentDeleteNote = usePermanentDeleteNote()
   const restoreNote = useRestoreNote()
@@ -37,14 +37,17 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
 
   const handleRestore = async () => {
     try {
-      const restoredMemo = await restoreNote.mutateAsync(memo.id)
+      console.log('復元ボタンクリック:', { memoId: memo.id, hasCallback: !!onRestoreAndSelectNext });
       
-      // State側に復元されたメモを追加
-      if (onMemoRestore && restoredMemo) {
-        onMemoRestore(restoredMemo)
+      // UIを先に更新
+      if (onRestoreAndSelectNext) {
+        onRestoreAndSelectNext(memo)
+      } else {
+        onClose()
       }
       
-      onClose() // 復元後に閉じる
+      // その後APIを実行
+      await restoreNote.mutateAsync(memo.id)
     } catch (error) {
       console.error('復元に失敗しました:', error)
       alert('復元に失敗しました。')

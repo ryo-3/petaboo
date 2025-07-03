@@ -73,16 +73,24 @@ function Main() {
   // ==========================================
   
   /** メモ選択 - メモ画面に遷移 */
-  const handleSelectMemo = (memo: Memo) => {
-    setSelectedMemo(memo);
-    setScreenMode('memo');
+  const handleSelectMemo = (memo: Memo | null) => {
+    if (memo) {
+      setSelectedMemo(memo);
+      setScreenMode('memo');
+    } else {
+      setSelectedMemo(null);
+    }
   };
 
   /** 削除済みメモ選択 - メモ画面に遷移 */
-  const handleSelectDeletedMemo = (memo: DeletedMemo) => {
-    clearAllSelections();
-    setSelectedDeletedMemo(memo);
-    setScreenMode('memo');
+  const handleSelectDeletedMemo = (memo: DeletedMemo | null) => {
+    if (memo) {
+      clearAllSelections();
+      setSelectedDeletedMemo(memo);
+      setScreenMode('memo');
+    } else {
+      setSelectedDeletedMemo(null);
+    }
   };
 
   /** タスク選択 - タスク画面に遷移 */

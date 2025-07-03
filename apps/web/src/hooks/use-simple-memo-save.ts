@@ -18,7 +18,6 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete }: UseSimpleMemo
 
   const handleSave = useCallback(async () => {
     const isEmpty = !title.trim() && !content.trim()
-    const isNewMemo = !memo?.id
     
     setIsSaving(true)
     setSaveError(null)

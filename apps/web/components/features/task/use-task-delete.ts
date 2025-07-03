@@ -3,7 +3,7 @@ import { useDeleteTask } from '@/src/hooks/use-tasks'
 import type { Task } from '@/src/types/task'
 
 interface UseTaskDeleteProps {
-  task: Task
+  task: Task | null
   onClose: () => void
   onSelectTask?: (task: Task | null, fromFullList?: boolean) => void
   onClosePanel?: () => void
@@ -15,6 +15,8 @@ export function useTaskDelete({ task, onClose, onSelectTask, onClosePanel, onDel
   const deleteTask = useDeleteTask()
 
   const handleDelete = async () => {
+    if (!task) return;
+    
     try {
       // 次のタスク選択機能があれば使用、なければ通常のクローズ
       if (onDeleteAndSelectNext) {

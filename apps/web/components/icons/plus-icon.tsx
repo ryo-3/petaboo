@@ -8,12 +8,11 @@ function PlusIcon({ className = "w-5 h-5" }: PlusIconProps) {
       xmlns="http://www.w3.org/2000/svg" 
       fill="none" 
       viewBox="0 0 24 24" 
-      strokeWidth={2} 
+      strokeWidth={2.5} 
       stroke="currentColor" 
       className={className}
     >
-      <circle cx="12" cy="12" r="10" />
-      <path d="M8 12h8m-4-4v8" />
+      <path d="M12 4v16m8-8H4" />
     </svg>
   )
 }

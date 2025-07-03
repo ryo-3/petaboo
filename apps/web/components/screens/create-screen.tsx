@@ -1,7 +1,7 @@
 "use client";
 
-import MemoCreator from "@/components/features/memo/memo-creator";
-import TaskCreator from "@/components/features/task/task-creator";
+import MemoEditor from "@/components/features/memo/memo-editor";
+import TaskEditor from "@/components/features/task/task-editor";
 import MemoIcon from "@/components/icons/memo-icon";
 import TaskIcon from "@/components/icons/task-icon";
 import { useState } from "react";
@@ -99,9 +99,9 @@ function CreateScreen({
       {/* メイン：作成エリア */}
       <div className="h-[calc(100%-65px)] p-5">
         {createMode === "memo" ? (
-          <MemoCreator onClose={onClose} />
+          <MemoEditor memo={null} onClose={onClose} />
         ) : (
-          <TaskCreator onClose={onClose} />
+          <TaskEditor task={null} onClose={onClose} />
         )}
       </div>
     </div>

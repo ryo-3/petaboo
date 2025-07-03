@@ -1,134 +1,80 @@
 "use client";
 
+import PhotoIcon from "@/components/icons/photo-icon";
 import BaseViewer from "@/components/shared/base-viewer";
 import DeleteButton from "@/components/ui/buttons/delete-button";
 import SaveButton from "@/components/ui/buttons/save-button";
-import PhotoButton from "@/components/ui/buttons/photo-button";
-import { useMemoForm } from "@/src/hooks/use-memo-form";
 import { useDeleteNote } from "@/src/hooks/use-notes";
+import { useSimpleMemoSave } from "@/src/hooks/use-simple-memo-save";
 import type { Memo } from "@/src/types/memo";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface MemoEditorProps {
   memo: Memo | null;
   onClose: () => void;
-  onMemoAdd?: (memo: Memo) => void;
-  onMemoUpdate?: (id: number, updates: Partial<Memo>) => void;
-  onMemoDelete?: (id: number) => void;
-  onDeleteAndSelectNext?: () => void;
-  onCloseAndStayOnMemoList?: () => void; // 閉じてメモ一覧に留まる（ホームに戻らない）
+  onSaveComplete?: (
+    savedMemo: Memo,
+    wasEmpty: boolean,
+    isNewMemo: boolean
+  ) => void;
+  onDeleteComplete?: () => void;
 }
 
-function MemoEditor({ 
-  memo, 
-  onClose, 
-  onMemoAdd, 
-  onMemoUpdate, 
-  onMemoDelete, 
-  onDeleteAndSelectNext,
-  onCloseAndStayOnMemoList
+function MemoEditor({
+  memo,
+  onClose,
+  onSaveComplete,
+  onDeleteComplete,
 }: MemoEditorProps) {
   const deleteNote = useDeleteNote();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  
+
   const {
-    title,
     content,
     isSaving,
     saveError,
     hasChanges,
-    handleSave: originalHandleSave,
+    handleSave,
     handleTitleChange,
     handleContentChange,
-    resetForm,
-  } = useMemoForm({ memo, onMemoAdd, onMemoUpdate });
+  } = useSimpleMemoSave({
+    memo,
+    onSaveComplete,
+  });
 
   const [error] = useState<string | null>(null);
 
-  // Enhanced save handler for empty memo deletion
-  const handleSave = useCallback(async () => {
-    const isEmpty = !title.trim() && !content.trim();
-    console.log('🔍 handleSave実行:', { isEmpty, memoId: memo?.id, title, content });
-    
-    if (isEmpty && memo?.id) {
-      console.log('🗑️ 空メモ削除処理開始');
-      // Delete existing memo if it becomes empty
-      try {
-        // 右パネルを閉じる（ホームには戻らない）
-        console.log('🚪 右パネルを閉じます');
-        if (onCloseAndStayOnMemoList) {
-          console.log('📱 onCloseAndStayOnMemoList呼び出し（メモ一覧に留まる）');
-          onCloseAndStayOnMemoList();
-        } else {
-          console.log('📱 onClose呼び出し');
-          onClose();
-        }
-        
-        // その後削除処理（onMemoDeleteは呼ばない＝onCloseを二重実行しない）
-        console.log('🗑️ API削除開始');
-        await deleteNote.mutateAsync(memo.id);
-        console.log('🗑️ API削除完了（onMemoDeleteは呼ばずに右パネルだけ閉じる）');
-      } catch (error) {
-        console.error("削除に失敗しました:", error);
-      }
-    } else if (!isEmpty) {
-      console.log('💾 通常保存処理');
-      // Save normally if content exists
-      await originalHandleSave();
-      
-      // 新規作成時は保存後にフォームをリセット
-      if (!memo) {
-        console.log('🔄 新規作成なので保存後にフォームリセット');
-        setTimeout(() => {
-          resetForm();
-        }, 600); // 保存中表示(500ms)が終わってからリセット
-      }
-    } else {
-      console.log('⚪ 新規メモで空なので何もしません');
-    }
-    // Do nothing if empty and new memo (no save needed)
-  }, [title, content, memo, deleteNote, onCloseAndStayOnMemoList, onClose, originalHandleSave, resetForm]);
-
-  // Focus management
+  // フォーカス管理（新規作成時に遅延）
   useEffect(() => {
-    if (textareaRef.current) {
-      // requestAnimationFrame を2回使って確実に次のフレームでフォーカス
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          const textarea = textareaRef.current;
-          if (textarea) {
-            textarea.focus();
-            textarea.setSelectionRange(textarea.value.length, textarea.value.length);
-          }
-        });
-      });
+    if (textareaRef.current && !memo) {
+      // 新規作成時のみ
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+        }
+      }, 300);
     }
   }, [memo]);
 
-  // Ctrl+S keyboard shortcut
+  // Ctrl+S ショートカット
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
         handleSave();
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [handleSave]);
 
   const handleDelete = async () => {
     try {
       if (memo?.id) {
+        // 削除前にコールバックを呼ぶ（削除前のメモ情報を渡せるように）
+        onDeleteComplete?.();
         await deleteNote.mutateAsync(memo.id);
-        onMemoDelete?.(memo.id);
-        
-        if (onDeleteAndSelectNext) {
-          onDeleteAndSelectNext();
-        } else {
-          onClose();
-        }
       }
     } catch (error) {
       console.error("削除に失敗しました:", error);
@@ -138,13 +84,15 @@ function MemoEditor({
   return (
     <>
       <BaseViewer
-        item={memo || {
-          id: 0,
-          title: '',
-          content: '',
-          createdAt: Math.floor(Date.now() / 1000),
-          updatedAt: Math.floor(Date.now() / 1000)
-        }}
+        item={
+          memo || {
+            id: 0,
+            title: "",
+            content: "",
+            createdAt: Math.floor(Date.now() / 1000),
+            updatedAt: Math.floor(Date.now() / 1000),
+          }
+        }
         onClose={onClose}
         error={error}
         isEditing={true}
@@ -159,26 +107,33 @@ function MemoEditor({
               disabled={!hasChanges}
               isSaving={isSaving}
             />
-            <PhotoButton />
+            <button
+              className="p-2 rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-800 transition-colors"
+              title="画像を添付（今後対応予定）"
+              onClick={() => {
+                alert("画像添付機能は今後実装予定です");
+              }}
+            >
+              <PhotoIcon className="w-4 h-4" />
+            </button>
           </div>
         }
       >
         <textarea
           ref={textareaRef}
-          autoFocus={memo === null} // 新規作成時のみ自動フォーカス
-          placeholder="メモを入力...&#10;&#10;最初の行がタイトルになります"
+          placeholder="入力..."
           value={content}
           onChange={(e) => {
             const newContent = e.target.value;
             const firstLine = newContent.split("\n")[0] || "";
-            
+
             handleTitleChange(firstLine);
             handleContentChange(newContent);
           }}
           className="w-full h-[calc(100vh-280px)] resize-none outline-none text-gray-500 leading-relaxed font-medium"
         />
       </BaseViewer>
-      
+
       {memo && (
         <DeleteButton
           className="absolute bottom-6 right-6 z-10"

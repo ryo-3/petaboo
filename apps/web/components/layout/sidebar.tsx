@@ -1,7 +1,7 @@
 "use client";
 
 import MemoIcon from "@/components/icons/memo-icon";
-import PlusSimpleIcon from "@/components/icons/plus-simple-icon";
+import PlusIcon from "@/components/icons/plus-icon";
 import TaskIcon from "@/components/icons/task-icon";
 import MemoList from "@/components/mobile/memo-list";
 import TaskList from "@/components/mobile/task-list";
@@ -193,7 +193,7 @@ function Sidebar({
                 : "bg-Yellow hover:bg-Yellow/85"
             }`}
           >
-            <PlusSimpleIcon className="w-4 h-4 text-gray-100" />
+            <PlusIcon className="w-4 h-4 text-gray-100" />
             <span className="font-medium text-sm text-gray-100">
               新規{currentMode === "memo" ? "メモ" : "タスク"}
             </span>

@@ -1,7 +1,6 @@
 'use client'
 
-import PlusSimpleIcon from '@/components/icons/plus-simple-icon'
-import Tooltip from '@/components/ui/base/tooltip'
+import CreateButton from '@/components/ui/buttons/create-button'
 
 type ItemType = 'memo' | 'task'
 
@@ -26,47 +25,29 @@ function AddItemButton({
 }: AddItemButtonProps) {
   const typeConfig = {
     memo: {
-      label: 'メモ',
-      bgColor: 'bg-Green hover:bg-Green/85',
+      label: '新規メモ作成',
+      color: 'green' as const,
     },
     task: {
-      label: 'タスク',
-      bgColor: 'bg-Yellow hover:bg-Yellow/85',
+      label: '新規タスク作成',
+      color: 'yellow' as const,
     }
   }
 
   const config = typeConfig[itemType]
-  
-  const sizeClasses = {
-    small: 'p-2',
-    normal: 'p-2'
-  }
-  
-  const iconSizeClasses = {
-    small: 'w-4 h-4',
-    normal: 'w-5 h-5'
-  }
 
-  const button = (
-    <button
+  return (
+    <CreateButton
       onClick={onClick}
-      disabled={disabled}
-      className={`${sizeClasses[size]} rounded-lg text-white transition-colors ${config.bgColor} ${
-        disabled ? 'opacity-50 cursor-not-allowed' : ''
-      } ${className}`}
-    >
-      <PlusSimpleIcon className={iconSizeClasses[size]} />
-    </button>
-  )
-
-  return showTooltip ? (
-    <Tooltip
-      text={`新規${config.label}作成`}
+      color={config.color}
+      label={config.label}
       position={position}
-    >
-      {button}
-    </Tooltip>
-  ) : button
+      className={className}
+      disabled={disabled}
+      size={size}
+      showTooltip={showTooltip}
+    />
+  )
 }
 
 export default AddItemButton

@@ -2,22 +2,20 @@
 
 import BaseViewer from "@/components/shared/base-viewer";
 import DeleteButton from "@/components/ui/buttons/delete-button";
-import SaveButton from "@/components/ui/buttons/save-button";
-import PhotoButton from "@/components/ui/buttons/photo-button";
-import DateInput from "@/components/ui/inputs/date-input";
 import { SingleDeleteConfirmation } from "@/components/ui/modals";
-import CustomSelector from "@/components/ui/selectors/custom-selector";
-import { useUpdateTask } from "@/src/hooks/use-tasks";
+import TaskForm from "./task-form";
+import { useUpdateTask, useCreateTask } from "@/src/hooks/use-tasks";
 import type { Task } from "@/src/types/task";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTaskDelete } from "./use-task-delete";
 
 interface TaskEditorProps {
-  task: Task;
+  task?: Task | null;
   onClose: () => void;
   onSelectTask?: (task: Task | null, fromFullList?: boolean) => void;
   onClosePanel?: () => void;
   onDeleteAndSelectNext?: (deletedTask: Task) => void;
+  onSaveComplete?: (savedTask: Task, isNewTask: boolean) => void;
 }
 
 function TaskEditor({
@@ -26,8 +24,13 @@ function TaskEditor({
   onSelectTask,
   onClosePanel,
   onDeleteAndSelectNext,
+  onSaveComplete,
 }: TaskEditorProps) {
   const updateTask = useUpdateTask();
+  const createTask = useCreateTask();
+  const isNewTask = !task;
+  
+  // 削除機能は編集時のみ
   const {
     handleDelete,
     showDeleteConfirmation,
@@ -35,7 +38,7 @@ function TaskEditor({
     showDeleteModal,
     isDeleting,
   } = useTaskDelete({
-    task,
+    task: task || null,
     onClose,
     onSelectTask,
     onClosePanel,
@@ -50,14 +53,23 @@ function TaskEditor({
   const [priority, setPriority] = useState<"low" | "medium" | "high">(
     task?.priority || "medium"
   );
-  const [category, setCategory] = useState<string>(""); // カテゴリーを追加（未選択で開始）
+  const [category, setCategory] = useState<string>("");
   const [dueDate, setDueDate] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-
-  // textareaのrefを追加
-  const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const [savedSuccessfully, setSavedSuccessfully] = useState(false);
+  
+  // 新規作成・編集両対応の仮タスクオブジェクト
+  const tempTask: Task = task || {
+    id: 0,
+    title: title || "新規タスク",
+    description: description,
+    status: status,
+    priority: priority,
+    createdAt: Math.floor(Date.now() / 1000),
+    updatedAt: Math.floor(Date.now() / 1000),
+    dueDate: dueDate ? Math.floor(new Date(dueDate).getTime() / 1000) : null,
+  };
 
   // 変更検知用のstate
   const [originalData, setOriginalData] = useState<{
@@ -111,11 +123,12 @@ function TaskEditor({
   }, [task]);
 
   const handleSave = useCallback(async () => {
-    if (!title.trim() || !task) return;
+    if (!title.trim()) return;
 
     setIsSaving(true);
     setError(null);
-    // setSavedSuccessfully(false);
+    setSavedSuccessfully(false);
+    
     try {
       const taskData = {
         title: title.trim(),
@@ -127,23 +140,44 @@ function TaskEditor({
           : undefined,
       };
 
-      await updateTask.mutateAsync({
-        id: task.id,
-        data: taskData,
-      });
-      setIsSaving(false);
-
-
-      // 保存成功時にoriginalDataも更新
-      setOriginalData({
-        title: taskData.title,
-        description: taskData.description || "",
-        status: taskData.status,
-        priority: taskData.priority,
-        category: category, // カテゴリーも現在の値で更新
-        dueDate: dueDate
-      });
-
+      if (isNewTask) {
+        // 新規作成
+        const newTask = await createTask.mutateAsync(taskData);
+        setIsSaving(false);
+        setSavedSuccessfully(true);
+        
+        onSaveComplete?.(newTask, true);
+        
+        // 新規作成後はフォームをリセット
+        setTimeout(() => {
+          setTitle("");
+          setDescription("");
+          setStatus("todo");
+          setPriority("medium");
+          setCategory("");
+          setDueDate("");
+          setSavedSuccessfully(false);
+        }, 400);
+      } else {
+        // 編集
+        const updatedTask = await updateTask.mutateAsync({
+          id: task!.id,
+          data: taskData,
+        });
+        setIsSaving(false);
+        
+        onSaveComplete?.(updatedTask, false);
+        
+        // 保存成功時にoriginalDataも更新
+        setOriginalData({
+          title: taskData.title,
+          description: taskData.description || "",
+          status: taskData.status,
+          priority: taskData.priority,
+          category: category,
+          dueDate: dueDate
+        });
+      }
     } catch (error) {
       console.error("保存に失敗しました:", error);
       setError(
@@ -159,7 +193,10 @@ function TaskEditor({
     dueDate,
     category,
     task,
+    isNewTask,
     updateTask,
+    createTask,
+    onSaveComplete,
   ]);
 
   // Ctrl+Sショートカット
@@ -175,118 +212,56 @@ function TaskEditor({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [handleSave]);
 
-  const statusOptions = [
-    { value: "todo", label: "未着手", color: "bg-zinc-500" },
-    {
-      value: "in_progress",
-      label: "進行中",
-      color: "bg-blue-600",
-    },
-    { value: "completed", label: "完了", color: "bg-green-600" },
-  ];
-
-  const priorityOptions = [
-    { value: "low", label: "低", color: "bg-green-500" },
-    { value: "medium", label: "中", color: "bg-yellow-500" },
-    { value: "high", label: "高", color: "bg-red-500" },
-  ];
-
-  const categoryOptions = [
-    { value: "", label: "未選択", color: "bg-gray-400" },
-    { value: "work", label: "仕事", color: "bg-blue-500" },
-    { value: "personal", label: "個人", color: "bg-purple-500" },
-    { value: "study", label: "勉強", color: "bg-indigo-500" },
-    { value: "health", label: "健康", color: "bg-pink-500" },
-    { value: "hobby", label: "趣味", color: "bg-orange-500" },
-  ];
-
   return (
     <>
       <BaseViewer
-        item={task}
+        item={tempTask}
         onClose={onClose}
         error={error ? "エラー" : null}
         headerActions={null}
+        isEditing={true}
       >
-        <div className="flex items-center gap-3">
-          <input
-            type="text"
-            placeholder="タスクタイトルを入力..."
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="flex-1 text-lg font-medium border-b border-Yellow outline-none pb-2 focus:border-Yellow"
-          />
-        </div>
-
-        {/* インライン編集式のUI */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <CustomSelector
-            label="ステータス"
-            options={statusOptions}
-            value={status}
-            onChange={(value) => setStatus(value as "todo" | "in_progress" | "completed")}
-            fullWidth
-          />
-
-          <CustomSelector
-            label="優先度"
-            options={priorityOptions}
-            value={priority}
-            onChange={(value) => setPriority(value as "low" | "medium" | "high")}
-            fullWidth
-          />
-
-          <CustomSelector
-            label="カテゴリー"
-            options={categoryOptions}
-            value={category}
-            onChange={setCategory}
-            fullWidth
-          />
-
-          <DateInput
-            label="期限日"
-            value={dueDate}
-            onChange={setDueDate}
-            fullWidth
-          />
-        </div>
-
-        <div className="mt-2">
-          <textarea
-            ref={descriptionTextareaRef}
-            placeholder="入力..."
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="w-full h-[calc(100vh-400px)] p-3 border border-gray-400 rounded-lg resize-none outline-none text-gray-700 leading-relaxed focus:border-Yellow"
-          />
-        </div>
-        
-        {/* 入力欄の外側左下に保存ボタンと画像ボタンを配置 */}
-        <div className="mt-2 flex justify-start gap-2">
-          <SaveButton
-            onClick={handleSave}
-            disabled={!hasChanges}
-            isSaving={isSaving}
-          />
-          <PhotoButton />
-        </div>
+        <TaskForm
+          title={title}
+          onTitleChange={setTitle}
+          description={description}
+          onDescriptionChange={setDescription}
+          status={status}
+          onStatusChange={setStatus}
+          priority={priority}
+          onPriorityChange={setPriority}
+          category={category}
+          onCategoryChange={setCategory}
+          dueDate={dueDate}
+          onDueDateChange={setDueDate}
+          onSave={handleSave}
+          isSaving={isSaving}
+          hasChanges={isNewTask ? !!title.trim() : hasChanges}
+          savedSuccessfully={savedSuccessfully}
+          isNewTask={isNewTask}
+        />
       </BaseViewer>
-      <DeleteButton
-        className="fixed bottom-6 right-6"
-        onDelete={showDeleteConfirmation}
-      />
+      
+      {/* 削除ボタンは編集時のみ表示 */}
+      {!isNewTask && (
+        <DeleteButton
+          className="fixed bottom-6 right-6"
+          onDelete={showDeleteConfirmation}
+        />
+      )}
 
-      {/* 削除確認モーダル */}
-      <SingleDeleteConfirmation
-        isOpen={showDeleteModal}
-        onClose={hideDeleteConfirmation}
-        onConfirm={handleDelete}
-        itemTitle={task.title}
-        itemType="task"
-        deleteType="normal"
-        isLoading={isDeleting}
-      />
+      {/* 削除確認モーダル（編集時のみ） */}
+      {!isNewTask && (
+        <SingleDeleteConfirmation
+          isOpen={showDeleteModal}
+          onClose={hideDeleteConfirmation}
+          onConfirm={handleDelete}
+          itemTitle={task?.title || ""}
+          itemType="task"
+          deleteType="normal"
+          isLoading={isDeleting}
+        />
+      )}
     </>
   );
 }

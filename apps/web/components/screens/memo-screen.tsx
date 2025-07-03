@@ -1,7 +1,7 @@
 "use client";
 
 import DeletedMemoViewer from "@/components/features/memo/deleted-memo-viewer";
-import SimpleMemoEditor from "@/components/features/memo/simple-memo-editor";
+import MemoEditor from "@/components/features/memo/memo-editor";
 import DesktopLower from "@/components/layout/desktop-lower";
 import DesktopUpper from "@/components/layout/desktop-upper";
 import DeleteButton from "@/components/ui/buttons/delete-button";
@@ -268,7 +268,7 @@ function MemoScreen({
           return null;
         })()}
         {memoScreenMode === "create" && (
-          <SimpleMemoEditor
+          <MemoEditor
             key={`create-${createEditorKey}`} // 管理されたキーで再マウント
             memo={null}
             onClose={() => setMemoScreenMode("list")}
@@ -276,7 +276,7 @@ function MemoScreen({
           />
         )}
         {memoScreenMode === "view" && selectedMemo && !selectedDeletedMemo && (
-          <SimpleMemoEditor
+          <MemoEditor
             key={`memo-${selectedMemo.id}`}
             memo={selectedMemo}
             onClose={() => setMemoScreenMode("list")}

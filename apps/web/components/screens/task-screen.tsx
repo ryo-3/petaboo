@@ -66,12 +66,8 @@ function TaskScreen({
     setCheckedDeletedItems: setCheckedDeletedTasks,
     effectiveColumnCount,
   } = useScreenState(
-    {
-      type: "task",
-      defaultActiveTab: "todo",
-      defaultColumnCount: 2,
-    },
-    "list" as TaskScreenMode,
+    { type: 'task', defaultActiveTab: 'todo', defaultColumnCount: 2 },
+    'list' as TaskScreenMode,
     selectedTask,
     selectedDeletedTask,
     preferences || undefined

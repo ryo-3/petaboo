@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from 'react'
 import type { Memo } from '@/src/types/memo'
-import { useCreateNote, useUpdateNote } from '@/src/hooks/use-notes'
+import { useCreateNote, useUpdateNote, useDeleteNote } from '@/src/hooks/use-notes'
 
 interface UseSimpleMemoSaveOptions {
   memo?: Memo | null
@@ -19,6 +19,7 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete }: UseSimpleMemo
 
   const createNote = useCreateNote()
   const updateNote = useUpdateNote()
+  const deleteNote = useDeleteNote()
 
   // 変更検知
   const hasChanges = useMemo(() => {
@@ -53,30 +54,41 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete }: UseSimpleMemo
     try {
       if (memo?.id) {
         // 既存メモ更新
-        await updateNote.mutateAsync({
-          id: memo.id,
-          data: {
+        if (isEmpty) {
+          // 空メモの場合は削除
+          await deleteNote.mutateAsync(memo.id)
+          onSaveComplete?.(memo, true, false)
+        } else {
+          await updateNote.mutateAsync({
+            id: memo.id,
+            data: {
+              title: title.trim() || "無題",
+              content: content.trim() || undefined
+            }
+          })
+          
+          const updatedMemo = {
+            ...memo,
+            title: title.trim() || "無題",
+            content: content.trim() || "",
+            updatedAt: Math.floor(Date.now() / 1000)
+          }
+          
+          onSaveComplete?.(updatedMemo, false, false)
+        }
+      } else {
+        // 新規メモ作成（空の場合は何もしない）
+        if (!isEmpty) {
+          const createdMemo = await createNote.mutateAsync({
             title: title.trim() || "無題",
             content: content.trim() || undefined
-          }
-        })
-        
-        const updatedMemo = {
-          ...memo,
-          title: title.trim() || "無題",
-          content: content.trim() || "",
-          updatedAt: Math.floor(Date.now() / 1000)
+          })
+          
+          onSaveComplete?.(createdMemo, false, true)
+        } else {
+          // 空の新規メモは単に閉じる
+          onSaveComplete?.(memo || { id: 0, title: '', content: '', createdAt: 0, updatedAt: 0 }, true, true)
         }
-        
-        onSaveComplete?.(updatedMemo, isEmpty, false)
-      } else {
-        // 新規メモ作成
-        const createdMemo = await createNote.mutateAsync({
-          title: title.trim() || "無題",
-          content: content.trim() || undefined
-        })
-        
-        onSaveComplete?.(createdMemo, isEmpty, true)
       }
 
       // 保存成功時に初期値を更新

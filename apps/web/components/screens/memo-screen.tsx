@@ -60,11 +60,7 @@ function MemoScreen({
     setCheckedDeletedItems: setCheckedDeletedMemos,
     effectiveColumnCount
   } = useScreenState(
-    {
-      type: 'memo',
-      defaultActiveTab: 'normal',
-      defaultColumnCount: 4
-    },
+    { type: 'memo', defaultActiveTab: 'normal', defaultColumnCount: 4 },
     'list' as MemoScreenMode,
     selectedMemo,
     selectedDeletedMemo,
@@ -121,7 +117,13 @@ function MemoScreen({
     notes,
     deletedNotes,
     localMemos: notes || [],
-    onMemoDelete: () => {} // シンプル化
+    onMemoDelete: (id: number) => {
+      // 削除されたメモが現在選択中の場合は選択解除
+      if (selectedMemo?.id === id) {
+        onDeselectAndStayOnMemoList?.();
+        setMemoScreenMode("list");
+      }
+    }
   });
 
   // 削除済みメモの完全削除時の次選択処理

@@ -4,6 +4,7 @@ import MemoIcon from "@/components/icons/memo-icon";
 import TaskIcon from "@/components/icons/task-icon";
 import TrashIcon from "@/components/icons/trash-icon";
 import AddItemButton from "@/components/ui/buttons/add-item-button";
+import SelectionModeToggle from "@/components/ui/buttons/selection-mode-toggle";
 import ColumnCountSelector from "@/components/ui/layout/column-count-selector";
 import ViewModeToggle from "@/components/ui/layout/view-mode-toggle";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
@@ -20,6 +21,12 @@ interface DesktopUpperProps {
   columnCount: number;
   onColumnCountChange: (count: number) => void;
   rightPanelMode: "hidden" | "view" | "create";
+  // Selection mode (memo only)
+  selectionMode?: "select" | "check";
+  onSelectionModeChange?: (mode: "select" | "check") => void;
+  // Select all functionality
+  onSelectAll?: () => void;
+  isAllSelected?: boolean;
   // Tab counts
   normalCount: number;
   deletedNotesCount?: number;
@@ -42,6 +49,10 @@ function DesktopUpper({
   columnCount,
   onColumnCountChange,
   rightPanelMode,
+  selectionMode = "select",
+  onSelectionModeChange,
+  onSelectAll,
+  isAllSelected = false,
   normalCount,
   deletedNotesCount = 0,
   deletedTasksCount = 0,
@@ -206,6 +217,24 @@ function DesktopUpper({
             onColumnCountChange={onColumnCountChange}
             isRightPanelShown={rightPanelMode !== "hidden"}
           />
+
+          {/* 選択モード切り替え */}
+          {onSelectionModeChange && (
+            <SelectionModeToggle
+              mode={selectionMode}
+              onModeChange={onSelectionModeChange}
+            />
+          )}
+
+          {/* 全選択/全解除ボタン（チェックモードのみ） */}
+          {selectionMode === "check" && onSelectAll && (
+            <button
+              onClick={onSelectAll}
+              className="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-medium rounded-lg transition-colors"
+            >
+              {isAllSelected ? "全解除" : "全選択"}
+            </button>
+          )}
         </div>
       )}
     </div>

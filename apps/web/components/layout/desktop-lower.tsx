@@ -18,6 +18,9 @@ interface DesktopLowerProps {
   isLoading: boolean;
   error: Error | null;
   
+  // Selection mode (memo only)
+  selectionMode?: "select" | "check";
+  
   // Data props
   notes?: Memo[];
   localMemos?: Memo[];
@@ -55,6 +58,7 @@ function DesktopLower({
   effectiveColumnCount,
   isLoading,
   error,
+  selectionMode = "select",
   localMemos,
   deletedNotes,
   tasks,
@@ -148,7 +152,13 @@ function DesktopLower({
                     memo={memo}
                     isChecked={checkedMemos?.has(memo.id) || false}
                     onToggleCheck={() => onToggleCheckMemo?.(memo.id)}
-                    onSelect={() => onSelectMemo?.(memo)}
+                    onSelect={() => {
+                      if (selectionMode === "check") {
+                        onToggleCheckMemo?.(memo.id);
+                      } else {
+                        onSelectMemo?.(memo);
+                      }
+                    }}
                     variant="normal"
                     isSelected={selectedMemo?.id === memo.id}
                   />
@@ -173,6 +183,7 @@ function DesktopLower({
         tasks={tasks}
         viewMode={viewMode}
         effectiveColumnCount={effectiveColumnCount}
+        selectionMode={selectionMode}
         checkedTasks={checkedTasks}
         onToggleCheck={onToggleCheckTask}
         onSelectTask={onSelectTask}
@@ -202,7 +213,13 @@ function DesktopLower({
                       memo={memo}
                       isChecked={checkedDeletedMemos?.has(memo.id) || false}
                       onToggleCheck={() => onToggleCheckDeletedMemo?.(memo.id)}
-                      onSelect={() => onSelectDeletedMemo?.(memo)}
+                      onSelect={() => {
+                        if (selectionMode === "check") {
+                          onToggleCheckDeletedMemo?.(memo.id);
+                        } else {
+                          onSelectDeletedMemo?.(memo);
+                        }
+                      }}
                       variant="deleted"
                       isSelected={selectedDeletedMemo?.id === memo.id}
                     />
@@ -226,7 +243,13 @@ function DesktopLower({
                   task={task}
                   isChecked={checkedDeletedTasks?.has(task.id) || false}
                   onToggleCheck={() => onToggleCheckDeletedTask?.(task.id)}
-                  onSelect={() => onSelectDeletedTask?.(task)}
+                  onSelect={() => {
+                    if (selectionMode === "check") {
+                      onToggleCheckDeletedTask?.(task.id);
+                    } else {
+                      onSelectDeletedTask?.(task);
+                    }
+                  }}
                   variant="deleted"
                   isSelected={selectedDeletedTask?.id === task.id}
                 />

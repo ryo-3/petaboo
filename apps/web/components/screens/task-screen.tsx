@@ -12,6 +12,7 @@ import { useScreenState } from "@/src/hooks/use-screen-state";
 import { useDeletedTasks, useTasks } from "@/src/hooks/use-tasks";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import type { DeletedTask, Task } from "@/src/types/task";
+import { useState, useCallback, useMemo } from "react";
 import {
   createDeletedNextSelectionHandler,
   createNextSelectionHandler,
@@ -49,6 +50,9 @@ function TaskScreen({
   const { data: tasks, isLoading: taskLoading, error: taskError } = useTasks();
   const { data: deletedTasks } = useDeletedTasks();
   const { preferences } = useUserPreferences(1);
+  
+  // 選択モード管理
+  const [selectionMode, setSelectionMode] = useState<'select' | 'check'>('select');
 
   // 共通screen状態管理
   const {
@@ -72,6 +76,39 @@ function TaskScreen({
     selectedDeletedTask,
     preferences || undefined
   );
+
+  // 全選択状態の判定
+  const isAllSelected = useMemo(() => {
+    if (activeTab === "deleted" && deletedTasks && deletedTasks.length > 0) {
+      return deletedTasks.every(task => checkedDeletedTasks.has(task.id));
+    } else if (tasks) {
+      const filteredTasks = tasks.filter(task => task.status === activeTab);
+      if (filteredTasks.length > 0) {
+        return filteredTasks.every(task => checkedTasks.has(task.id));
+      }
+    }
+    return false;
+  }, [activeTab, tasks, deletedTasks, checkedTasks, checkedDeletedTasks]);
+
+  // 全選択/全解除機能
+  const handleSelectAll = useCallback(() => {
+    if (activeTab === "deleted" && deletedTasks) {
+      if (isAllSelected) {
+        setCheckedDeletedTasks(new Set());
+      } else {
+        const allDeletedTaskIds = new Set(deletedTasks.map(task => task.id));
+        setCheckedDeletedTasks(allDeletedTaskIds);
+      }
+    } else if (tasks) {
+      const filteredTasks = tasks.filter(task => task.status === activeTab);
+      if (isAllSelected) {
+        setCheckedTasks(new Set());
+      } else {
+        const allTaskIds = new Set(filteredTasks.map(task => task.id));
+        setCheckedTasks(allTaskIds);
+      }
+    }
+  }, [activeTab, tasks, deletedTasks, isAllSelected, setCheckedTasks, setCheckedDeletedTasks]);
 
   // 一括削除関連
   const { handleBulkDelete, bulkDeleteState } = useTasksBulkDelete({
@@ -165,6 +202,10 @@ function TaskScreen({
           columnCount={columnCount}
           onColumnCountChange={setColumnCount}
           rightPanelMode={taskScreenMode === "list" ? "hidden" : "view"}
+          selectionMode={selectionMode}
+          onSelectionModeChange={setSelectionMode}
+          onSelectAll={handleSelectAll}
+          isAllSelected={isAllSelected}
           normalCount={0} // タスクでは使わない
           deletedTasksCount={deletedTasks?.length || 0}
           todoCount={
@@ -187,6 +228,7 @@ function TaskScreen({
           effectiveColumnCount={effectiveColumnCount}
           isLoading={taskLoading}
           error={taskError}
+          selectionMode={selectionMode}
           tasks={tasks || []}
           deletedTasks={deletedTasks || []}
           selectedTask={selectedTask}

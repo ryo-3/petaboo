@@ -12,7 +12,7 @@ import { useMemosBulkDelete } from "@/components/features/memo/use-memo-bulk-del
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useScreenState } from "@/src/hooks/use-screen-state";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useMemo } from "react";
 import { createToggleHandler } from "@/src/utils/toggleUtils";
 import { shouldShowDeleteButton, getDeleteButtonCount } from "@/src/utils/screenUtils";
 import { getMemoDisplayOrder, getNextItemAfterDeletion, getNextDeletedItem } from "@/src/utils/domUtils";
@@ -38,6 +38,9 @@ function MemoScreen({
 }: MemoScreenProps) {
   // 新規作成エディターのキー管理
   const [createEditorKey, setCreateEditorKey] = useState(0);
+  
+  // 選択モード管理
+  const [selectionMode, setSelectionMode] = useState<'select' | 'check'>('select');
   
   // データ取得
   const { data: notes, isLoading: memoLoading, error: memoError } = useNotes();
@@ -106,6 +109,35 @@ function MemoScreen({
     }
   }, [selectedMemo, notes, onSelectMemo, onDeselectAndStayOnMemoList, setMemoScreenMode]);
 
+
+  // 全選択状態の判定
+  const isAllSelected = useMemo(() => {
+    if (activeTab === "normal" && notes && notes.length > 0) {
+      return notes.every(memo => checkedMemos.has(memo.id));
+    } else if (activeTab === "deleted" && deletedNotes && deletedNotes.length > 0) {
+      return deletedNotes.every(memo => checkedDeletedMemos.has(memo.id));
+    }
+    return false;
+  }, [activeTab, notes, deletedNotes, checkedMemos, checkedDeletedMemos]);
+
+  // 全選択/全解除機能
+  const handleSelectAll = useCallback(() => {
+    if (activeTab === "normal" && notes) {
+      if (isAllSelected) {
+        setCheckedMemos(new Set());
+      } else {
+        const allMemoIds = new Set(notes.map(memo => memo.id));
+        setCheckedMemos(allMemoIds);
+      }
+    } else if (activeTab === "deleted" && deletedNotes) {
+      if (isAllSelected) {
+        setCheckedDeletedMemos(new Set());
+      } else {
+        const allDeletedMemoIds = new Set(deletedNotes.map(memo => memo.id));
+        setCheckedDeletedMemos(allDeletedMemoIds);
+      }
+    }
+  }, [activeTab, notes, deletedNotes, isAllSelected, setCheckedMemos, setCheckedDeletedMemos]);
 
   // 一括削除関連
   const { handleBulkDelete, bulkDeleteState } = useMemosBulkDelete({
@@ -216,6 +248,10 @@ function MemoScreen({
           columnCount={columnCount}
           onColumnCountChange={setColumnCount}
           rightPanelMode={memoScreenMode === "list" ? "hidden" : "view"}
+          selectionMode={selectionMode}
+          onSelectionModeChange={setSelectionMode}
+          onSelectAll={handleSelectAll}
+          isAllSelected={isAllSelected}
           normalCount={notes?.length || 0}
           deletedNotesCount={deletedNotes?.length || 0}
         />
@@ -227,6 +263,7 @@ function MemoScreen({
           effectiveColumnCount={effectiveColumnCount}
           isLoading={memoLoading}
           error={memoError}
+          selectionMode={selectionMode}
           notes={notes || []}
           localMemos={notes || []}
           deletedNotes={deletedNotes || []}

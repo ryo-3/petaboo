@@ -101,6 +101,22 @@ function TaskScreen({
     );
   };
 
+  // 削除済みタスクの復元時の次のタスク選択ハンドラー
+  const handleDeletedTaskRestoreAndSelectNext = (deletedTask: DeletedTask) => {
+    if (!deletedTasks) return;
+
+    createDeletedNextSelectionHandler(
+      deletedTasks,
+      deletedTask,
+      (task) => onSelectDeletedTask(task, true),
+      () => {
+        setTaskScreenMode("list");
+        onClearSelection?.();
+      },
+      setTaskScreenMode
+    );
+  };
+
   // 通常タスクでの次のタスク選択ハンドラー（実際の画面表示順序に基づく）
   const handleTaskDeleteAndSelectNext = (deletedTask: Task) => {
     if (!tasks) return;
@@ -136,7 +152,12 @@ function TaskScreen({
           activeTab={
             activeTab as "todo" | "in_progress" | "completed" | "deleted"
           }
-          onTabChange={(tab) => setActiveTab(tab)}
+          onTabChange={(tab) => {
+            setActiveTab(tab);
+            // タブ切り替え時に右パネルを閉じる
+            setTaskScreenMode("list");
+            onClearSelection?.();
+          }}
           onCreateNew={() => {
             // 新規作成時に選択状態をクリア
             onSelectTask(null, true);
@@ -236,6 +257,7 @@ function TaskScreen({
             task={selectedDeletedTask}
             onClose={() => setTaskScreenMode("list")}
             onDeleteAndSelectNext={handleDeletedTaskAndSelectNext}
+            onRestoreAndSelectNext={handleDeletedTaskRestoreAndSelectNext}
           />
         )}
         {taskScreenMode === "edit" && selectedTask && (

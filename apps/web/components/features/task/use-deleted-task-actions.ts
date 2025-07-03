@@ -6,9 +6,10 @@ interface UseDeletedTaskActionsProps {
   task: DeletedTask
   onClose: () => void
   onDeleteAndSelectNext?: (deletedTask: DeletedTask) => void
+  onRestoreAndSelectNext?: (deletedTask: DeletedTask) => void
 }
 
-export function useDeletedTaskActions({ task, onClose, onDeleteAndSelectNext }: UseDeletedTaskActionsProps) {
+export function useDeletedTaskActions({ task, onClose, onDeleteAndSelectNext, onRestoreAndSelectNext }: UseDeletedTaskActionsProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const permanentDeleteTask = usePermanentDeleteTask()
   const restoreTask = useRestoreTask()
@@ -34,8 +35,17 @@ export function useDeletedTaskActions({ task, onClose, onDeleteAndSelectNext }: 
 
   const handleRestore = async () => {
     try {
+      console.log('復元ボタンクリック:', { taskId: task.id, hasCallback: !!onRestoreAndSelectNext });
+      
+      // UIを先に更新
+      if (onRestoreAndSelectNext) {
+        onRestoreAndSelectNext(task)
+      } else {
+        onClose()
+      }
+      
+      // その後APIを実行
       await restoreTask.mutateAsync(task.id)
-      onClose() // 復元後に閉じる
     } catch (error) {
       console.error('復元に失敗しました:', error)
       alert('復元に失敗しました。')

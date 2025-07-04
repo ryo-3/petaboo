@@ -21,6 +21,7 @@ interface UseMemosBulkDeleteProps {
   deleteButtonRef?: React.RefObject<HTMLButtonElement | null>;
   setIsDeleting?: (isDeleting: boolean) => void;
   setIsLidOpen?: (isOpen: boolean) => void;
+  viewMode?: 'list' | 'card';
 }
 
 export function useMemosBulkDelete({
@@ -36,6 +37,7 @@ export function useMemosBulkDelete({
   deleteButtonRef,
   setIsDeleting,
   setIsLidOpen,
+  viewMode = 'list',
 }: UseMemosBulkDeleteProps) {
   const deleteNoteMutation = useDeleteNote();
   const permanentDeleteNoteMutation = usePermanentDeleteNote();
@@ -143,7 +145,7 @@ export function useMemosBulkDelete({
             console.error('❌ setIsDeletingが未定義');
           }
         }, 3000);
-      });
+      }, 100, viewMode);
     } else {
       // アニメーションなしの場合は即座に処理
       // 削除済みアイテムの完全削除は即座にState更新

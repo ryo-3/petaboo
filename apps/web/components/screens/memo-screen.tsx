@@ -9,7 +9,7 @@ import DesktopUpper from "@/components/layout/desktop-upper";
 import DeleteButton from "@/components/ui/buttons/delete-button";
 import RestoreButton from "@/components/ui/buttons/restore-button";
 import RightPanel from "@/components/ui/layout/right-panel";
-import { useDeletedNotes, useNotes } from "@/src/hooks/use-notes";
+import { useDeletedNotes, useNotes, useDeleteNote } from "@/src/hooks/use-notes";
 import { useScreenState } from "@/src/hooks/use-screen-state";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
@@ -58,15 +58,21 @@ function MemoScreen({
   // 削除ボタンの参照
   const deleteButtonRef = useRef<HTMLButtonElement>(null);
 
-  // アニメーション状態
-  const [isDeleting, setIsDeleting] = useState(false);
-  // 蓋の開閉状態（削除ボタンの表示とは別管理）
-  const [isLidOpen, setIsLidOpen] = useState(false);
+  // 左側一括削除のアニメーション状態
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  // 左側一括削除ボタンの蓋の開閉状態
+  const [isBulkDeleteLidOpen, setIsBulkDeleteLidOpen] = useState(false);
+  
+  // 右側エディター削除のアニメーション状態
+  const [isEditorDeleting, setIsEditorDeleting] = useState(false);
 
   // データ取得
   const { data: notes, isLoading: memoLoading, error: memoError } = useNotes();
   const { data: deletedNotes } = useDeletedNotes();
   const { preferences } = useUserPreferences(1);
+  
+  // 削除API
+  const deleteNote = useDeleteNote();
 
   // 共通screen状態管理
   const {
@@ -117,7 +123,8 @@ function MemoScreen({
   const handleDeleteComplete = useCallback(() => {
     console.log('🔄 削除完了処理開始:', { selectedMemo: selectedMemo?.id, notesCount: notes?.length });
     
-    setIsDeleting(false); // 削除状態をリセット
+    setIsBulkDeleting(false); // 一括削除状態をリセット
+    setIsEditorDeleting(false); // エディター削除状態をリセット
     
     if (selectedMemo && notes) {
       const displayOrder = getMemoDisplayOrder();
@@ -160,6 +167,7 @@ function MemoScreen({
     setMemoScreenMode,
   ]);
 
+
   // 全選択状態の判定
   const isAllSelected = useMemo(() => {
     if (activeTab === "normal" && notes && notes.length > 0) {
@@ -200,8 +208,8 @@ function MemoScreen({
     setCheckedDeletedMemos,
   ]);
 
-  // 一括削除関連
-  const { handleBulkDelete, DeleteModal } = useMemosBulkDelete({
+  // 左側一括削除関連（チェックボックスで選択したアイテムの一括削除）
+  const { handleBulkDelete: handleLeftBulkDelete, DeleteModal: BulkDeleteModal } = useMemosBulkDelete({
     activeTab: activeTab as "normal" | "deleted",
     checkedMemos,
     checkedDeletedMemos,
@@ -218,9 +226,47 @@ function MemoScreen({
       }
     },
     deleteButtonRef,
-    setIsDeleting,
-    setIsLidOpen,
+    setIsDeleting: setIsBulkDeleting,
+    setIsLidOpen: setIsBulkDeleteLidOpen,
+    viewMode,
   });
+
+  // 右側エディター削除処理（現在表示中のメモの単体削除）
+  const handleRightEditorDelete = useCallback(async (memo: Memo) => {
+    console.log('🗑️ 右側エディター削除:', memo.id);
+    
+    setIsEditorDeleting(true); // 右側削除アニメーション開始
+    
+    // 右側ゴミ箱とエディターエリアを取得
+    const rightTrashButton = document.querySelector('[data-right-panel-trash]') as HTMLElement;
+    const editorArea = document.querySelector('[data-memo-editor]') as HTMLElement;
+    
+    if (!rightTrashButton || !editorArea) {
+      console.log('⚠️ アニメーション要素が見つからない、直接削除実行');
+      // アニメーション要素がない場合は直接削除
+      try {
+        await deleteNote.mutateAsync(memo.id);
+        handleDeleteComplete();
+      } catch (error) {
+        console.error('❌ 右側削除APIエラー:', error);
+        setIsEditorDeleting(false);
+      }
+      return;
+    }
+    
+    // アニメーション実行後にAPI呼び出し
+    const { animateEditorContentToTrash } = await import('@/src/utils/deleteAnimation');
+    animateEditorContentToTrash(editorArea, rightTrashButton, async () => {
+      try {
+        await deleteNote.mutateAsync(memo.id);
+        console.log('🗑️ 右側削除API完了:', memo.id);
+        handleDeleteComplete();
+      } catch (error) {
+        console.error('❌ 右側削除APIエラー:', error);
+        setIsEditorDeleting(false);
+      }
+    });
+  }, [deleteNote, handleDeleteComplete]);
 
   // 一括復元関連
   const { handleBulkRestore, RestoreModal } = useMemosBulkRestore({
@@ -349,6 +395,34 @@ function MemoScreen({
           deletedNotesCount={deletedNotes?.length || 0}
         />
 
+        {/* データ比較ログ */}
+        {(() => {
+          if (selectedMemo && notes) {
+            const listMemo = notes.find(m => m.id === selectedMemo.id);
+            if (listMemo) {
+              console.log('📊 データ比較 - リスト側:', listMemo);
+              console.log('📊 データ比較 - エディター側:', selectedMemo);
+              console.log('📊 一致状況:', {
+                title: listMemo.title === selectedMemo.title ? '✅' : '❌',
+                content: listMemo.content === selectedMemo.content ? '✅' : '❌',
+                updatedAt: listMemo.updatedAt === selectedMemo.updatedAt ? '✅' : '❌'
+              });
+              if (listMemo.title !== selectedMemo.title) {
+                console.log('❌ タイトル不一致:', { リスト: listMemo.title, エディター: selectedMemo.title });
+              }
+              if (listMemo.content !== selectedMemo.content) {
+                console.log('❌ 内容不一致:', { 
+                  リスト: listMemo.content?.substring(0, 100) + '...', 
+                  エディター: selectedMemo.content?.substring(0, 100) + '...' 
+                });
+              }
+            } else {
+              console.log('❌ リスト側にエディターのメモが見つからない:', selectedMemo.id);
+            }
+          }
+          return null;
+        })()}
+
         <DesktopLower
           currentMode="memo"
           activeTab={activeTab as "normal" | "deleted"}
@@ -371,6 +445,7 @@ function MemoScreen({
             setCheckedDeletedMemos
           )}
           onSelectMemo={(memo) => {
+            console.log('🎯 リストからメモ選択:', { id: memo.id, title: memo.title });
             onSelectMemo(memo);
             setMemoScreenMode("view");
           }}
@@ -380,19 +455,19 @@ function MemoScreen({
           }}
         />
 
-        {/* 一括削除ボタン（選択削除用） */}
+        {/* 左側一括削除ボタン（チェックボックスで選択したアイテムの一括削除用） */}
         {(() => {
-          const shouldShow =
+          const shouldShowLeftBulkDelete =
             shouldShowDeleteButton(
               activeTab,
               "deleted",
               checkedMemos,
               checkedDeletedMemos
-            ) || isDeleting;
-          console.log("🔍 削除ボタン表示状態:", {
-            shouldShow,
+            ) || isBulkDeleting;
+          console.log("🔍 左側一括削除ボタン表示状態:", {
+            shouldShow: shouldShowLeftBulkDelete,
             checkedMemosSize: checkedMemos.size,
-            isDeleting,
+            isBulkDeleting,
             activeTab,
           });
           return null;
@@ -404,21 +479,21 @@ function MemoScreen({
               "deleted",
               checkedMemos,
               checkedDeletedMemos
-            ) || isDeleting
+            ) || isBulkDeleting
               ? "opacity-100"
               : "opacity-0 pointer-events-none"
           }`}
         >
           <DeleteButton
             ref={deleteButtonRef}
-            onDelete={handleBulkDelete}
+            onDelete={handleLeftBulkDelete}
             count={getDeleteButtonCount(
               activeTab,
               "deleted",
               checkedMemos,
               checkedDeletedMemos
             )}
-            isAnimating={isLidOpen}
+            isAnimating={isBulkDeleteLidOpen}
           />
         </div>
 
@@ -436,7 +511,7 @@ function MemoScreen({
       </div>
 
       {/* モーダル */}
-      <DeleteModal />
+      <BulkDeleteModal />
       <RestoreModal />
 
       {/* 右側：詳細表示エリア */}
@@ -448,19 +523,18 @@ function MemoScreen({
           onDeselectAndStayOnMemoList?.(); // 選択解除してメモ一覧に留まる
         }}
       >
-        {/* エディター用削除ボタン（右パネル内） */}
+        {/* 右側エディター削除ボタン（現在表示中のメモの単体削除用） */}
         {memoScreenMode === "view" && selectedMemo && activeTab === "normal" && (
           <div className="absolute bottom-6 right-6 z-10">
             <DeleteButton
               data-right-panel-trash
               onDelete={() => {
-                // エディター側の削除処理を呼び出す
-                const editorDeleteButton = document.querySelector('[data-editor-delete]') as HTMLButtonElement;
-                if (editorDeleteButton) {
-                  editorDeleteButton.click();
+                // 右側エディター削除処理を実行
+                if (selectedMemo) {
+                  handleRightEditorDelete(selectedMemo);
                 }
               }}
-              isAnimating={isDeleting}
+              isAnimating={isEditorDeleting}
             />
           </div>
         )}
@@ -483,7 +557,7 @@ function MemoScreen({
             onClose={() => setMemoScreenMode("list")}
             onSaveComplete={handleSaveComplete}
             onDeleteComplete={handleDeleteComplete}
-            onDeleteStart={() => setIsDeleting(true)}
+            onDeleteStart={() => setIsBulkDeleting(true)}
           />
         )}
         {memoScreenMode === "view" && selectedDeletedMemo && !selectedMemo && (

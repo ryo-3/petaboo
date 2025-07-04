@@ -1,4 +1,3 @@
-import { useLocalStorageSync } from "@/src/hooks/use-local-storage-sync";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import { formatDateOnly } from "@/src/utils/formatDate";
 
@@ -26,25 +25,12 @@ function MemoListItem({
   const isDeleted = variant === "deleted";
   const deletedMemo = memo as DeletedMemo;
 
-  // ローカルストレージから最新の内容を取得（リアルタイム同期）
-  // Always call the hook but conditionally use its results
-  const localSync = useLocalStorageSync(
-    memo.id,
-    memo.title,
-    memo.content || "",
-    isSelected
-  );
-
-  // 削除済みメモの場合のみlocalStorageを使用せず、元のデータを表示
-  // 新規作成メモ（ID: 負の値）の場合もlocalStorageSyncを使用する
-  const { displayTitle, displayContent, lastEditTime } =
-    isDeleted
-      ? {
-          displayTitle: memo.title,
-          displayContent: memo.content || "",
-          lastEditTime: null,
-        }
-      : localSync;
+  // ローカルストレージ使用禁止 - 直接APIデータを使用
+  const { displayTitle, displayContent, lastEditTime } = {
+    displayTitle: memo.title,
+    displayContent: memo.content || "",
+    lastEditTime: null,
+  };
 
   // Removed unused variable: isLocallyEdited
 

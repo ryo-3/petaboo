@@ -1,6 +1,5 @@
 import { formatDateOnly } from '@/src/utils/formatDate'
 import type { Memo, DeletedMemo } from '@/src/types/memo'
-import { useLocalStorageSync } from '@/src/hooks/use-local-storage-sync'
 
 interface MemoCardContentProps {
   memo: Memo | DeletedMemo
@@ -13,15 +12,12 @@ function MemoCardContent({ memo, variant = 'normal', isSelected = false, showEdi
   const isDeleted = variant === 'deleted'
   const deletedMemo = memo as DeletedMemo
   
-  // ローカルストレージから最新の内容を取得（リアルタイム同期）
-  // Always call the hook but conditionally use its results
-  const localSync = useLocalStorageSync(memo.id, memo.title, memo.content || '', isSelected)
-  
-  // 削除済みメモの場合のみlocalStorageを使用せず、元のデータを表示
-  // 新規作成メモ（ID: 負の値）の場合もlocalStorageSyncを使用する
-  const { displayTitle, displayContent, lastEditTime } = isDeleted
-    ? { displayTitle: memo.title, displayContent: memo.content || '', lastEditTime: null }
-    : localSync
+  // ローカルストレージ使用禁止 - 直接APIデータを使用
+  const { displayTitle, displayContent, lastEditTime } = {
+    displayTitle: memo.title,
+    displayContent: memo.content || '',
+    lastEditTime: null,
+  }
 
   return (
     <>

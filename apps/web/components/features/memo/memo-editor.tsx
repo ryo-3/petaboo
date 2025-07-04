@@ -116,7 +116,7 @@ function MemoEditor({
 
   return (
     <>
-      <div ref={baseViewerRef}>
+      <div ref={baseViewerRef} data-memo-editor>
         <BaseViewer
         item={
           memo || {
@@ -168,15 +168,6 @@ function MemoEditor({
         />
       </BaseViewer>
 
-      {/* 隠し削除ボタン（親から呼び出し用） */}
-      {memo && (
-        <button
-          ref={deleteButtonRef}
-          data-editor-delete
-          onClick={handleDelete}
-          style={{ display: 'none' }}
-        />
-      )}
       </div>
 
     </>

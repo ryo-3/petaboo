@@ -1,53 +1,100 @@
-// アイテムをゴミ箱に向かって飛ばすアニメーション
+// 仮想ゴミ箱要素作成ヘルパー
+function createVirtualTrash(trashRect: DOMRect): HTMLElement {
+  const virtualTrash = document.createElement('div');
+  virtualTrash.style.position = 'fixed';
+  virtualTrash.style.left = `${trashRect.left}px`;
+  virtualTrash.style.top = `${trashRect.top}px`;
+  virtualTrash.style.width = `${trashRect.width}px`;
+  virtualTrash.style.height = `${trashRect.height}px`;
+  document.body.appendChild(virtualTrash);
+  return virtualTrash;
+}
+
+// 共通アニメーションベース関数
+function createTrashAnimation(
+  itemElement: HTMLElement,
+  trashElement: HTMLElement,
+  options: {
+    duration: number; // ミリ秒
+    fixedSize?: { width: number; height: number }; // 固定サイズ
+    targetOffset: { x: number; y: number }; // ゴミ箱からのオフセット
+    scale: { x: number; y: number }; // 最終スケール
+    opacity: number; // 最終透明度
+    rotation: () => number; // 回転角度（関数）
+    transformOrigin: string; // 変形の基点
+    timingFunction: string; // イージング関数
+    onComplete?: () => void;
+  }
+) {
+  const itemRect = itemElement.getBoundingClientRect();
+  
+  // ゴミ箱の位置を取得
+  const targetElement = trashElement.offsetWidth > 0 && trashElement.offsetHeight > 0 
+    ? trashElement 
+    : trashElement.parentElement as HTMLElement;
+  const trashRect = targetElement.getBoundingClientRect();
+  
+  // 蓋を開く
+  const trashIcon = trashElement.querySelector('[data-trash-icon]') as HTMLElement;
+  if (trashIcon) {
+    trashIcon.style.setProperty('--lid-open', '1');
+  }
+  
+  // アニメーション用クローン作成
+  const clone = itemElement.cloneNode(true) as HTMLElement;
+  const width = options.fixedSize?.width || itemRect.width;
+  const height = options.fixedSize?.height || itemRect.height;
+  
+  clone.style.position = 'fixed';
+  clone.style.top = `${itemRect.top}px`;
+  clone.style.left = `${itemRect.left}px`;
+  clone.style.width = `${width}px`;
+  clone.style.height = `${height}px`;
+  clone.style.zIndex = '9999';
+  clone.style.pointerEvents = 'none';
+  clone.style.transition = `all ${options.duration}ms ${options.timingFunction}`;
+  clone.style.transformOrigin = options.transformOrigin;
+  
+  // 元要素を非表示
+  itemElement.style.visibility = 'hidden';
+  itemElement.style.pointerEvents = 'none';
+  
+  document.body.appendChild(clone);
+  
+  requestAnimationFrame(() => {
+    // ターゲット位置計算
+    const targetX = trashRect.left + trashRect.width / 2 - width / 2 + options.targetOffset.x;
+    const targetY = trashRect.top + trashRect.height / 2 - height / 2 + options.targetOffset.y;
+    
+    // アニメーション実行
+    clone.style.transform = `translate(${targetX - itemRect.left}px, ${targetY - itemRect.top}px) scaleX(${options.scale.x}) scaleY(${options.scale.y}) rotate(${options.rotation()}deg)`;
+    clone.style.opacity = options.opacity.toString();
+    
+    setTimeout(() => {
+      document.body.removeChild(clone);
+      if (trashIcon) {
+        trashIcon.style.setProperty('--lid-open', '0');
+      }
+      options.onComplete?.();
+    }, options.duration);
+  });
+}
+
+// リストアイテム用削除アニメーション
 export function animateItemToTrash(
   itemElement: HTMLElement,
   trashElement: HTMLElement,
   onComplete?: () => void
 ) {
-  // アイテムの初期位置を取得
-  const itemRect = itemElement.getBoundingClientRect();
-  
-  // ボタンが見えない場合は親要素（div）の位置を使用
-  const targetElement = trashElement.offsetWidth > 0 && trashElement.offsetHeight > 0 
-    ? trashElement 
-    : trashElement.parentElement as HTMLElement;
-  
-  const trashRect = targetElement.getBoundingClientRect();
-  
-  
-  // アニメーション用のクローンを作成
-  const clone = itemElement.cloneNode(true) as HTMLElement;
-  clone.style.position = 'fixed';
-  clone.style.top = `${itemRect.top}px`;
-  clone.style.left = `${itemRect.left}px`;
-  clone.style.width = `${itemRect.width}px`;
-  clone.style.height = `${itemRect.height}px`;
-  clone.style.zIndex = '9999';
-  clone.style.pointerEvents = 'none';
-  clone.style.transition = 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-  clone.style.transformOrigin = 'center';
-  
-  // 元のアイテムを非表示にする（高さは保持）
-  itemElement.style.visibility = 'hidden';
-  itemElement.style.pointerEvents = 'none';
-  
-  // クローンをDOMに追加
-  document.body.appendChild(clone);
-  
-  // アニメーション開始
-  requestAnimationFrame(() => {
-    // ゴミ箱の中央に向かって移動・縮小
-    const targetX = trashRect.left + trashRect.width / 2 - itemRect.width / 2;
-    const targetY = trashRect.top + trashRect.height / 2 - itemRect.height / 2;
-    
-    clone.style.transform = `translate(${targetX - itemRect.left}px, ${targetY - itemRect.top}px) scale(0.1) rotate(15deg)`;
-    clone.style.opacity = '0.3';
-    
-    // アニメーション完了後の処理
-    setTimeout(() => {
-      document.body.removeChild(clone);
-      onComplete?.();
-    }, 600);
+  createTrashAnimation(itemElement, trashElement, {
+    duration: 600,
+    targetOffset: { x: 0, y: 0 }, // ゴミ箱中央
+    scale: { x: 0.1, y: 0.1 },
+    opacity: 0.3,
+    rotation: () => 15,
+    transformOrigin: 'center',
+    timingFunction: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+    onComplete
   });
 }
 
@@ -56,7 +103,8 @@ export function animateMultipleItemsToTrashWithRect(
   itemIds: number[],
   trashRect: DOMRect,
   onComplete?: () => void,
-  delay: number = 100
+  delay: number = 100,
+  viewMode: 'list' | 'card' = 'list'
 ) {
   console.log('🎭 アニメーション関数開始:', { total: itemIds.length, itemIds });
   
@@ -159,16 +207,26 @@ export function animateMultipleItemsToTrashWithRect(
       const itemElement = document.querySelector(`[data-memo-id="${id}"], [data-task-id="${id}"]`) as HTMLElement;
       if (itemElement) {
         console.log('🗑️ ゴミ箱アイテム発見:', { id, element: itemElement });
-        animateItemToTrashWithRect(itemElement, trashRect, () => {
+        
+        // viewModeに応じてアニメーション実行
+        if (viewMode === 'card') {
+          const trashElement = createVirtualTrash(trashRect);
+          animateCardToTrash(itemElement, trashElement, () => {
+            document.body.removeChild(trashElement);
+            handleAnimationComplete();
+          });
+        } else {
+          animateItemToTrashWithRect(itemElement, trashRect, handleAnimationComplete);
+        }
+        
+        function handleAnimationComplete() {
           completedCount++;
-          console.log('🗑️ ゴミ箱アニメーション完了:', { id, completedCount, totalItems });
-          // 全てのアイテム（ゴミ箱アニメーション + フェードアウト）が完了したらコールバック実行
+          console.log('🗑️ アニメーション完了:', { id, completedCount, totalItems, viewMode });
           if (completedCount === totalItems) {
             setTimeout(() => {
               if (trashIcon) {
                 trashIcon.style.setProperty('--lid-open', '0');
               }
-              // スクロールバーを復元
               if (listContainer) {
                 listContainer.style.overflow = '';
                 console.log('📏 スクロールバー復元');
@@ -176,7 +234,7 @@ export function animateMultipleItemsToTrashWithRect(
               onComplete?.();
             }, 200);
           }
-        });
+        }
       } else {
         completedCount++;
         // 全てのアイテム（ゴミ箱アニメーション + フェードアウト）が完了したらコールバック実行
@@ -252,7 +310,8 @@ export function animateMultipleItemsToTrash(
   itemIds: number[],
   trashElement: HTMLElement,
   onComplete?: () => void,
-  delay: number = 100
+  delay: number = 100,
+  viewMode: 'list' | 'card' = 'list'
 ) {
   let completedCount = 0;
   
@@ -260,7 +319,9 @@ export function animateMultipleItemsToTrash(
     setTimeout(() => {
       const itemElement = document.querySelector(`[data-memo-id="${id}"], [data-task-id="${id}"]`) as HTMLElement;
       if (itemElement) {
-        animateItemToTrash(itemElement, trashElement, () => {
+        // カード表示の時はanimateCardToTrash、リスト表示の時はanimateItemToTrashを使用
+        const animateFunction = viewMode === 'card' ? animateCardToTrash : animateItemToTrash;
+        animateFunction(itemElement, trashElement, () => {
           completedCount++;
           if (completedCount === itemIds.length) {
             onComplete?.();
@@ -324,6 +385,48 @@ export function animateEditorToTrash(
       
       onComplete?.();
     }, 800);
+  });
+}
+
+// カード用削除アニメーション（中央から縮小）
+export function animateCardToTrash(
+  cardElement: HTMLElement,
+  trashElement: HTMLElement,
+  onComplete?: () => void
+) {
+  console.log('📄 カードゴミ箱アニメーション開始');
+  
+  createTrashAnimation(cardElement, trashElement, {
+    duration: 700, // カードは少しゆっくり
+    targetOffset: { x: 10, y: -5 }, // カードは大きいので少し上に
+    scale: { x: 0.02, y: 0.02 }, // カードはより小さく
+    opacity: 0.3,
+    rotation: () => Math.random() * 20 + 10, // 少し回転
+    transformOrigin: 'center',
+    timingFunction: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+    onComplete
+  });
+}
+
+
+// エディター用削除アニメーション（下から上へ吸い込まれる）
+export function animateEditorContentToTrash(
+  editorElement: HTMLElement,
+  trashElement: HTMLElement,
+  onComplete?: () => void
+) {
+  console.log('✏️ エディターコンテンツゴミ箱アニメーション開始');
+  
+  createTrashAnimation(editorElement, trashElement, {
+    duration: 600, // 速度統一
+    fixedSize: { width: 400, height: 300 }, // 固定サイズ
+    targetOffset: { x: 0, y: -30 }, // 中央寄り上
+    scale: { x: 0.03, y: 0.01 }, // 縦に縮む
+    opacity: 0.3,
+    rotation: () => Math.random() * 15 + 3,
+    transformOrigin: 'center bottom',
+    timingFunction: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)', // 速度統一
+    onComplete
   });
 }
 

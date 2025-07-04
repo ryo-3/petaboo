@@ -103,26 +103,38 @@ function TaskScreen({
     preferences || undefined
   );
 
-  // 削除ボタンの表示判定を更新
-  useEffect(() => {
-    const shouldShow = shouldShowDeleteButton(
+  // 削除ボタン表示判定の統一化
+  const shouldShowLeftBulkDelete = useMemo(() => {
+    return shouldShowDeleteButton(
       activeTab,
       "deleted",
       checkedTasks,
       checkedDeletedTasks
     );
-    
-    if (shouldShow && !showDeleteButton) {
+  }, [activeTab, checkedTasks, checkedDeletedTasks]);
+
+  const deleteButtonCount = useMemo(() => {
+    return getDeleteButtonCount(
+      activeTab,
+      "deleted",
+      checkedTasks,
+      checkedDeletedTasks
+    );
+  }, [activeTab, checkedTasks, checkedDeletedTasks]);
+
+  // 削除ボタンの表示判定を更新
+  useEffect(() => {
+    if (shouldShowLeftBulkDelete && !showDeleteButton) {
       // 表示する場合はすぐに表示
       setShowDeleteButton(true);
-    } else if (!shouldShow && showDeleteButton && !isDeleting) {
+    } else if (!shouldShowLeftBulkDelete && showDeleteButton && !isDeleting) {
       // 非表示にする場合は、アニメーション中でなければ1秒後に非表示
       const timer = setTimeout(() => {
         setShowDeleteButton(false);
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [activeTab, checkedTasks, checkedDeletedTasks, showDeleteButton, isDeleting]);
+  }, [shouldShowLeftBulkDelete, showDeleteButton, isDeleting]);
 
   // 全選択状態の判定
   const isAllSelected = useMemo(() => {
@@ -157,29 +169,28 @@ function TaskScreen({
     }
   }, [activeTab, tasks, deletedTasks, isAllSelected, setCheckedTasks, setCheckedDeletedTasks]);
 
+  // 選択解除処理の統一化
+  const handleItemDeselect = useCallback((id: number) => {
+    if (selectedTask?.id === id || selectedDeletedTask?.id === id) {
+      onClearSelection?.();
+      setTaskScreenMode("list");
+    }
+  }, [selectedTask, selectedDeletedTask, onClearSelection, setTaskScreenMode]);
+
+  // 型キャストの統一化
+  const activeTabTyped = activeTab as "todo" | "in_progress" | "completed" | "deleted";
+
   // 一括削除関連
   const { handleBulkDelete, bulkDeleteState } = useTasksBulkDelete({
-    activeTab: activeTab as "todo" | "in_progress" | "completed" | "deleted",
+    activeTab: activeTabTyped,
     checkedTasks,
     checkedDeletedTasks,
     setCheckedTasks,
     setCheckedDeletedTasks,
     tasks,
     deletedTasks,
-    onTaskDelete: (id: number) => {
-      // 削除されたタスクが現在選択中の場合は選択解除
-      if (selectedTask?.id === id) {
-        onClearSelection?.();
-        setTaskScreenMode("list");
-      }
-    },
-    onDeletedTaskDelete: (id: number) => {
-      // 削除された削除済みタスクが現在選択中の場合は選択解除
-      if (selectedDeletedTask?.id === id) {
-        onClearSelection?.();
-        setTaskScreenMode("list");
-      }
-    },
+    onTaskDelete: handleItemDeselect,
+    onDeletedTaskDelete: handleItemDeselect,
     deleteButtonRef,
     setIsDeleting
   });
@@ -189,13 +200,7 @@ function TaskScreen({
     checkedDeletedTasks,
     setCheckedDeletedTasks,
     deletedTasks,
-    onDeletedTaskRestore: (id: number) => {
-      // 復元された削除済みタスクが現在選択中の場合は選択解除
-      if (selectedDeletedTask?.id === id) {
-        onClearSelection?.();
-        setTaskScreenMode("list");
-      }
-    }
+    onDeletedTaskRestore: handleItemDeselect
   });
 
   // 削除済みタスクでの次のタスク選択ハンドラー
@@ -259,9 +264,7 @@ function TaskScreen({
       >
         <DesktopUpper
           currentMode="task"
-          activeTab={
-            activeTab as "todo" | "in_progress" | "completed" | "deleted"
-          }
+          activeTab={activeTabTyped}
           onTabChange={(tab) => {
             setActiveTab(tab);
             // タブ切り替え時に右パネルを閉じる
@@ -302,9 +305,7 @@ function TaskScreen({
 
         <DesktopLower
           currentMode="task"
-          activeTab={
-            activeTab as "todo" | "in_progress" | "completed" | "deleted"
-          }
+          activeTab={activeTabTyped}
           viewMode={viewMode}
           effectiveColumnCount={effectiveColumnCount}
           isLoading={taskLoading}
@@ -339,12 +340,7 @@ function TaskScreen({
             ref={deleteButtonRef}
             onDelete={handleBulkDelete}
             className="absolute bottom-6 right-6 z-10 transition-all duration-300"
-            count={getDeleteButtonCount(
-              activeTab,
-              "deleted",
-              checkedTasks,
-              checkedDeletedTasks
-            )}
+            count={deleteButtonCount}
             isAnimating={isDeleting}
           />
         )}

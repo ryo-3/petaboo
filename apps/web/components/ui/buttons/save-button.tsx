@@ -1,55 +1,56 @@
+import SaveIcon from "../../icons/save-icon";
+import CheckIcon from "../../icons/check-icon";
+import Tooltip from "../base/tooltip";
+
 interface SaveButtonProps {
   onClick: () => void;
   disabled?: boolean;
   isSaving: boolean;
   savedSuccessfully?: boolean;
   title?: string;
+  iconSize?: string;
+  className?: string;
 }
 
-function SaveButton({ 
-  onClick, 
-  disabled = false, 
-  isSaving, 
+function SaveButton({
+  onClick,
+  disabled = false,
+  isSaving,
   savedSuccessfully = false,
-  title = "保存 (Ctrl+S)" 
+  title = "保存 (Ctrl+S)",
+  iconSize = "w-4 h-4",
+  className = "",
 }: SaveButtonProps) {
+  const getTooltipText = () => {
+    if (isSaving) return "保存中...";
+    if (savedSuccessfully) return "保存完了";
+    return title;
+  };
+
   return (
-    <button
-      onClick={onClick}
-      disabled={disabled || isSaving || savedSuccessfully}
-      className={`px-3 py-1.5 text-sm rounded-md transition-colors flex items-center gap-2 ${
-        isSaving || disabled || savedSuccessfully
-          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-          : "bg-Green text-white hover:bg-Green/90"
-      }`}
-      title={title}
-    >
-      {isSaving ? (
-        <>
-          <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-          保存中...
-        </>
-      ) : savedSuccessfully ? (
-        <>
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-          保存完了
-        </>
-      ) : (
-        "保存"
-      )}
-    </button>
+    <Tooltip text={getTooltipText()} position="top">
+      <button
+        onClick={onClick}
+        disabled={disabled || isSaving || savedSuccessfully}
+        className={`p-2 rounded-md transition-colors flex items-center justify-center ${
+          isSaving
+            ? "bg-Green text-white cursor-not-allowed"
+            : disabled || savedSuccessfully
+              ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+              : "text-gray-100 bg-Green"
+        } ${className}`}
+      >
+        {isSaving ? (
+          <div
+            className={`${iconSize} border-4 border-gray-100 border-t-transparent rounded-full animate-spin`}
+          />
+        ) : savedSuccessfully ? (
+          <CheckIcon className={iconSize} />
+        ) : (
+          <SaveIcon className={iconSize} />
+        )}
+      </button>
+    </Tooltip>
   );
 }
 

@@ -96,19 +96,26 @@ export function useMemosBulkDelete({
     
     console.log('✅ 削除処理開始:', { ids: ids.length, activeTab, hasButtonRect: !!buttonRect });
     
-    // 通常メモの削除でアニメーションが必要な場合
-    if (activeTab === "normal" && buttonRect) {
+    // アニメーションが必要な場合（通常メモまたは削除済みメモ）
+    if (buttonRect) {
       console.log('🎬 アニメーション開始:', { ids: ids.length });
+      
+      // 蓋を開く
+      setIsLidOpen?.(true);
       
       // アニメーション実行（State更新は全アニメーション完了後）
       animateMultipleItemsToTrashWithRect(ids, buttonRect, async () => {
         console.log('🎬 アニメーション完了:', { ids: ids.length });
         
         // アニメーション完了後にAPI処理
-        console.log('🌐 API開始:', { ids: ids.length });
+        console.log('🌐 API開始:', { ids: ids.length, activeTab });
         for (const id of ids) {
           try {
-            await deleteNoteMutation.mutateAsync(id);
+            if (activeTab === "normal") {
+              await deleteNoteMutation.mutateAsync(id);
+            } else {
+              await permanentDeleteNoteMutation.mutateAsync(id);
+            }
           } catch (error: any) {
             // 404エラーは既に削除済みの可能性があるので無視
             if (!error?.message?.includes('404')) {
@@ -128,7 +135,11 @@ export function useMemosBulkDelete({
         console.log('🔄 State更新完了:', { ids: ids.length });
         
         // チェック状態をクリア
-        setCheckedMemos(new Set());
+        if (activeTab === "normal") {
+          setCheckedMemos(new Set());
+        } else {
+          setCheckedDeletedMemos(new Set());
+        }
         
         // 500ms後に蓋を閉じる
         setTimeout(() => {

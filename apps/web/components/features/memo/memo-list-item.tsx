@@ -10,6 +10,7 @@ interface MemoListItemProps {
   variant?: "normal" | "deleted";
   isSelected?: boolean;
   showEditDate?: boolean;
+  isDeleting?: boolean;
 }
 
 function MemoListItem({
@@ -20,6 +21,7 @@ function MemoListItem({
   variant = "normal",
   isSelected = false,
   showEditDate = false,
+  isDeleting = false,
 }: MemoListItemProps) {
   const isDeleted = variant === "deleted";
   const deletedMemo = memo as DeletedMemo;
@@ -55,7 +57,7 @@ function MemoListItem({
           : isDeleted
             ? "bg-red-50 border-red-200 hover:bg-red-100"
             : "bg-white hover:bg-gray-50"
-      } border-b border-gray-200 transition-colors`}
+      } border-b border-gray-200 transition-all duration-300 ${isDeleting ? 'opacity-0' : 'opacity-100'}`}
     >
       <div className="p-2 flex items-center gap-3">
         <button

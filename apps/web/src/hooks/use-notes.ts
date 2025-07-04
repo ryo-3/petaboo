@@ -102,8 +102,9 @@ export function useDeleteNote() {
       return response.json();
     },
     onSuccess: () => {
-      // 削除後にnotesリストを再取得
+      // 削除後に通常メモと削除済みメモの両方を再取得
       queryClient.invalidateQueries({ queryKey: ["notes"] });
+      queryClient.invalidateQueries({ queryKey: ["deleted-notes"] });
     },
   });
 }

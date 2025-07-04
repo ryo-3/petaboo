@@ -1,10 +1,9 @@
 'use client'
 
 import TrashIcon from '@/components/icons/trash-icon'
-import RestoreIcon from '@/components/icons/restore-icon'
 import DateInfo from '@/components/shared/date-info'
-import Tooltip from '@/components/ui/base/tooltip'
 import { SingleDeleteConfirmation } from '@/components/ui/modals'
+import RestoreButton from '@/components/ui/buttons/restore-button'
 import { useDeletedTaskActions } from './use-deleted-task-actions'
 import type { DeletedTask } from '@/src/types/task'
 import { formatDate } from '@/src/utils/formatDate'
@@ -42,19 +41,10 @@ function DeletedTaskViewer({ task, onClose, onDeleteAndSelectNext, onRestoreAndS
   return (
     <div className="flex flex-col h-full bg-white">
       <div className="flex justify-start items-center mb-4">
-        <Tooltip text="タスクを復元" position="bottom">
-          <button
-            onClick={handleRestore}
-            disabled={isRestoring}
-            className="p-2 rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-800 transition-colors disabled:opacity-50"
-          >
-            {isRestoring ? (
-              <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <RestoreIcon className="w-4 h-4" />
-            )}
-          </button>
-        </Tooltip>
+        <RestoreButton
+          onRestore={handleRestore}
+          isRestoring={isRestoring}
+        />
         <div className="flex-1" />
         <button
           onClick={showDeleteConfirmation}

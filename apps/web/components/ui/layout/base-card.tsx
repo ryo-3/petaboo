@@ -9,6 +9,7 @@ interface BaseCardProps {
   children: ReactNode
   dataTaskId?: number | string
   dataMemoId?: number | string
+  isDeleting?: boolean
 }
 
 function BaseCard({
@@ -19,13 +20,14 @@ function BaseCard({
   isSelected = false,
   children,
   dataTaskId,
-  dataMemoId
+  dataMemoId,
+  isDeleting = false
 }: BaseCardProps) {
   const isDeleted = variant === 'deleted'
 
   return (
     <div 
-      className="relative" 
+      className={`relative transition-opacity duration-300 ${isDeleting ? 'opacity-0' : 'opacity-100'}`}
       data-task-id={dataTaskId}
       data-memo-id={dataMemoId}
     >

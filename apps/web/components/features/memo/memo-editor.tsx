@@ -7,6 +7,7 @@ import SaveButton from "@/components/ui/buttons/save-button";
 import { useDeleteNote } from "@/src/hooks/use-notes";
 import { useSimpleMemoSave } from "@/src/hooks/use-simple-memo-save";
 import type { Memo } from "@/src/types/memo";
+import { animateEditorToTrash } from "@/src/utils/deleteAnimation";
 import { useEffect, useRef, useState } from "react";
 
 interface MemoEditorProps {
@@ -18,6 +19,7 @@ interface MemoEditorProps {
     isNewMemo: boolean
   ) => void;
   onDeleteComplete?: () => void;
+  onDeleteStart?: () => void;
 }
 
 function MemoEditor({
@@ -25,9 +27,13 @@ function MemoEditor({
   onClose,
   onSaveComplete,
   onDeleteComplete,
+  onDeleteStart,
 }: MemoEditorProps) {
   const deleteNote = useDeleteNote();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const baseViewerRef = useRef<HTMLDivElement>(null);
+  const deleteButtonRef = useRef<HTMLButtonElement>(null);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   const {
     content,
@@ -72,20 +78,46 @@ function MemoEditor({
   }, [handleSave, hasChanges]);
 
   const handleDelete = async () => {
+    if (!memo?.id || !baseViewerRef.current || isAnimating) return;
+    
+    // 右側パネル内のゴミ箱ボタンを取得
+    const rightPanelTrashButton = document.querySelector('[data-right-panel-trash]') as HTMLElement;
+    if (!rightPanelTrashButton) return;
+    
     try {
-      if (memo?.id) {
-        // 削除前にコールバックを呼ぶ（削除前のメモ情報を渡せるように）
-        onDeleteComplete?.();
-        await deleteNote.mutateAsync(memo.id);
-      }
+      console.log('🗑️ エディター削除開始:', { memoId: memo.id });
+      setIsAnimating(true);
+      onDeleteStart?.(); // 親に削除開始を通知
+      
+      // アニメーション実行（BaseViewerだけをアニメーション）
+      animateEditorToTrash(baseViewerRef.current, rightPanelTrashButton, async () => {
+        console.log('📝 アニメーション完了、API呼び出し開始');
+        
+        try {
+          // アニメーション完了後にAPI呼び出し
+          await deleteNote.mutateAsync(memo.id);
+          console.log('✅ 削除API完了');
+          
+          // API完了後に少し遅延してからコールバック（画面切り替えのちらつき防止）
+          setTimeout(() => {
+            setIsAnimating(false);
+            onDeleteComplete?.();
+          }, 100);
+        } catch (error) {
+          console.error('❌ 削除APIエラー:', error);
+          setIsAnimating(false);
+        }
+      });
     } catch (error) {
-      console.error("削除に失敗しました:", error);
+      console.error('❌ アニメーションエラー:', error);
+      setIsAnimating(false);
     }
   };
 
   return (
     <>
-      <BaseViewer
+      <div ref={baseViewerRef}>
+        <BaseViewer
         item={
           memo || {
             id: 0,
@@ -136,12 +168,17 @@ function MemoEditor({
         />
       </BaseViewer>
 
+      {/* 隠し削除ボタン（親から呼び出し用） */}
       {memo && (
-        <DeleteButton
-          className="absolute bottom-6 right-6 z-10"
-          onDelete={handleDelete}
+        <button
+          ref={deleteButtonRef}
+          data-editor-delete
+          onClick={handleDelete}
+          style={{ display: 'none' }}
         />
       )}
+      </div>
+
     </>
   );
 }

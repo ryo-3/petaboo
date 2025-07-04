@@ -3,16 +3,18 @@
 import DeletedTaskViewer from "@/components/features/task/deleted-task-viewer";
 import TaskEditor from "@/components/features/task/task-editor";
 import { useTasksBulkDelete } from "@/components/features/task/use-task-bulk-delete";
+import { useTasksBulkRestore } from "@/components/features/task/use-task-bulk-restore";
 import DesktopLower from "@/components/layout/desktop-lower";
 import DesktopUpper from "@/components/layout/desktop-upper";
 import DeleteButton from "@/components/ui/buttons/delete-button";
+import RestoreButton from "@/components/ui/buttons/restore-button";
 import RightPanel from "@/components/ui/layout/right-panel";
-import { BulkDeleteConfirmation } from "@/components/ui/modals";
+import { BulkDeleteConfirmation, BulkRestoreConfirmation } from "@/components/ui/modals";
 import { useScreenState } from "@/src/hooks/use-screen-state";
 import { useDeletedTasks, useTasks } from "@/src/hooks/use-tasks";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import type { DeletedTask, Task } from "@/src/types/task";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import {
   createDeletedNextSelectionHandler,
   createNextSelectionHandler,
@@ -68,6 +70,15 @@ function TaskScreen({
 
   // 編集日表示管理
   const [showEditDate, setShowEditDate] = useState(true);
+  
+  // 削除ボタンの参照
+  const deleteButtonRef = useRef<HTMLButtonElement>(null);
+  
+  // アニメーション状態
+  const [isDeleting, setIsDeleting] = useState(false);
+  // 削除ボタンの表示状態（アニメーション中も表示を維持）
+  const [showDeleteButton, setShowDeleteButton] = useState(false);
+  
 
   // 共通screen状態管理
   const {
@@ -91,6 +102,27 @@ function TaskScreen({
     selectedDeletedTask,
     preferences || undefined
   );
+
+  // 削除ボタンの表示判定を更新
+  useEffect(() => {
+    const shouldShow = shouldShowDeleteButton(
+      activeTab,
+      "deleted",
+      checkedTasks,
+      checkedDeletedTasks
+    );
+    
+    if (shouldShow && !showDeleteButton) {
+      // 表示する場合はすぐに表示
+      setShowDeleteButton(true);
+    } else if (!shouldShow && showDeleteButton && !isDeleting) {
+      // 非表示にする場合は、アニメーション中でなければ1秒後に非表示
+      const timer = setTimeout(() => {
+        setShowDeleteButton(false);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [activeTab, checkedTasks, checkedDeletedTasks, showDeleteButton, isDeleting]);
 
   // 全選択状態の判定
   const isAllSelected = useMemo(() => {
@@ -143,6 +175,22 @@ function TaskScreen({
     },
     onDeletedTaskDelete: (id: number) => {
       // 削除された削除済みタスクが現在選択中の場合は選択解除
+      if (selectedDeletedTask?.id === id) {
+        onClearSelection?.();
+        setTaskScreenMode("list");
+      }
+    },
+    deleteButtonRef,
+    setIsDeleting
+  });
+
+  // 一括復元関連
+  const { handleBulkRestore, bulkRestoreState } = useTasksBulkRestore({
+    checkedDeletedTasks,
+    setCheckedDeletedTasks,
+    deletedTasks,
+    onDeletedTaskRestore: (id: number) => {
+      // 復元された削除済みタスクが現在選択中の場合は選択解除
       if (selectedDeletedTask?.id === id) {
         onClearSelection?.();
         setTaskScreenMode("list");
@@ -286,21 +334,29 @@ function TaskScreen({
         />
 
         {/* 一括削除ボタン */}
-        {shouldShowDeleteButton(
-          activeTab,
-          "deleted",
-          checkedTasks,
-          checkedDeletedTasks
-        ) && (
+        {showDeleteButton && (
           <DeleteButton
+            ref={deleteButtonRef}
             onDelete={handleBulkDelete}
-            className="absolute bottom-6 right-6 z-10"
+            className="absolute bottom-6 right-6 z-10 transition-all duration-300"
             count={getDeleteButtonCount(
               activeTab,
               "deleted",
               checkedTasks,
               checkedDeletedTasks
             )}
+            isAnimating={isDeleting}
+          />
+        )}
+
+        {/* 一括復元ボタン */}
+        {activeTab === "deleted" && checkedDeletedTasks.size > 0 && (
+          <RestoreButton
+            onRestore={handleBulkRestore}
+            isRestoring={bulkRestoreState.isRestoring}
+            className="absolute bottom-6 left-6 z-10"
+            count={checkedDeletedTasks.size}
+            size="lg"
           />
         )}
       </div>
@@ -353,6 +409,16 @@ function TaskScreen({
         itemType="task"
         deleteType={activeTab === "deleted" ? "permanent" : "normal"}
         isLoading={bulkDeleteState.isDeleting}
+      />
+
+      {/* 一括復元確認モーダル */}
+      <BulkRestoreConfirmation
+        isOpen={bulkRestoreState.isModalOpen}
+        onClose={bulkRestoreState.handleCancel}
+        onConfirm={bulkRestoreState.handleConfirm}
+        count={bulkRestoreState.targetIds.length}
+        itemType="task"
+        isLoading={bulkRestoreState.isRestoring}
       />
     </div>
   );

@@ -15,7 +15,8 @@
       "Bash(tree:*)",
       "Bash(find:*)",
       "Bash(rg:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(npm run typecheck:*)"
     ],
     "deny": []
   }

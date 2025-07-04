@@ -78,13 +78,13 @@ function SearchScreen({
       {/* ヘッダー */}
       <div className="border-b border-gray-200 p-6">
         {/* タイトル */}
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center gap-3 mb-4">
           <SearchIcon className="w-6 h-6 text-gray-600" />
           <h1 className="text-2xl font-bold text-gray-900">詳細検索</h1>
         </div>
         
         {/* 検索バー */}
-        <div className="mb-6">
+        <div className="mb-4">
           <div className="relative">
             <input
               type="text"
@@ -164,7 +164,7 @@ function SearchScreen({
         ) : (
           <div className="h-full overflow-y-auto">
             {/* 検索結果ヘッダー */}
-            <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-3 z-10">
+            <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-3 z-1">
               <div className="flex justify-between items-center">
                 <div className="text-sm text-gray-600">
                   {isSearching ? (

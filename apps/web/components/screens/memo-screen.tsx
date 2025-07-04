@@ -152,6 +152,25 @@ function MemoScreen({
   ]);
 
 
+  // 削除ボタン表示判定の統一化
+  const shouldShowLeftBulkDelete = useMemo(() => {
+    return shouldShowDeleteButton(
+      activeTab,
+      "deleted",
+      checkedMemos,
+      checkedDeletedMemos
+    ) || isBulkDeleting;
+  }, [activeTab, checkedMemos, checkedDeletedMemos, isBulkDeleting]);
+
+  const deleteButtonCount = useMemo(() => {
+    return getDeleteButtonCount(
+      activeTab,
+      "deleted",
+      checkedMemos,
+      checkedDeletedMemos
+    );
+  }, [activeTab, checkedMemos, checkedDeletedMemos]);
+
   // 全選択状態の判定
   const isAllSelected = useMemo(() => {
     if (activeTab === "normal" && notes && notes.length > 0) {
@@ -192,6 +211,14 @@ function MemoScreen({
     setCheckedDeletedMemos,
   ]);
 
+  // 選択解除処理の統一化
+  const handleItemDeselect = useCallback((id: number) => {
+    if (selectedMemo?.id === id || selectedDeletedMemo?.id === id) {
+      onDeselectAndStayOnMemoList?.();
+      setMemoScreenMode("list");
+    }
+  }, [selectedMemo, selectedDeletedMemo, onDeselectAndStayOnMemoList, setMemoScreenMode]);
+
   // 左側一括削除関連（チェックボックスで選択したアイテムの一括削除）
   const { handleBulkDelete: handleLeftBulkDelete, DeleteModal: BulkDeleteModal } = useMemosBulkDelete({
     activeTab: activeTab as "normal" | "deleted",
@@ -202,13 +229,7 @@ function MemoScreen({
     notes,
     deletedNotes,
     localMemos: notes || [],
-    onMemoDelete: (id: number) => {
-      // 削除されたメモが現在選択中の場合は選択解除
-      if (selectedMemo?.id === id) {
-        onDeselectAndStayOnMemoList?.();
-        setMemoScreenMode("list");
-      }
-    },
+    onMemoDelete: handleItemDeselect,
     deleteButtonRef,
     setIsDeleting: setIsBulkDeleting,
     setIsLidOpen: setIsBulkDeleteLidOpen,
@@ -228,7 +249,7 @@ function MemoScreen({
       try {
         await deleteNote.mutateAsync(memo.id);
         handleDeleteComplete();
-      } catch (error) {
+      } catch {
         setIsEditorDeleting(false);
       }
       return;
@@ -240,7 +261,7 @@ function MemoScreen({
       try {
         await deleteNote.mutateAsync(memo.id);
         handleDeleteComplete();
-      } catch (error) {
+      } catch {
         setIsEditorDeleting(false);
       }
     });
@@ -251,13 +272,7 @@ function MemoScreen({
     checkedDeletedMemos,
     setCheckedDeletedMemos,
     deletedNotes,
-    onDeletedMemoRestore: (id: number) => {
-      // 復元された削除済みメモが現在選択中の場合は選択解除
-      if (selectedDeletedMemo?.id === id) {
-        onDeselectAndStayOnMemoList?.();
-        setMemoScreenMode("list");
-      }
-    },
+    onDeletedMemoRestore: handleItemDeselect,
   });
 
   // 削除済みメモの完全削除時の次選択処理
@@ -399,12 +414,7 @@ function MemoScreen({
         {/* 左側一括削除ボタン（チェックボックスで選択したアイテムの一括削除用） */}
         <div
           className={`absolute bottom-6 right-6 z-10 transition-opacity duration-300 ${
-            shouldShowDeleteButton(
-              activeTab,
-              "deleted",
-              checkedMemos,
-              checkedDeletedMemos
-            ) || isBulkDeleting
+            shouldShowLeftBulkDelete
               ? "opacity-100"
               : "opacity-0 pointer-events-none"
           }`}
@@ -412,12 +422,7 @@ function MemoScreen({
           <DeleteButton
             ref={deleteButtonRef}
             onDelete={handleLeftBulkDelete}
-            count={getDeleteButtonCount(
-              activeTab,
-              "deleted",
-              checkedMemos,
-              checkedDeletedMemos
-            )}
+            count={deleteButtonCount}
             isAnimating={isBulkDeleteLidOpen}
           />
         </div>

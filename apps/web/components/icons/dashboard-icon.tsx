@@ -36,32 +36,16 @@ function DashboardIcon({ className = "w-5 h-5" }: DashboardIconProps) {
       />
       <line 
         x1="2" 
-        y1="8.5" 
+        y1="12" 
         x2="22" 
-        y2="8.5" 
+        y2="12" 
         strokeWidth="1"
         strokeLinecap="round"
       />
       <line 
-        x1="2" 
-        y1="15.5" 
-        x2="22" 
-        y2="15.5" 
-        strokeWidth="1"
-        strokeLinecap="round"
-      />
-      <line 
-        x1="8.5" 
+        x1="12" 
         y1="2" 
-        x2="8.5" 
-        y2="22" 
-        strokeWidth="1"
-        strokeLinecap="round"
-      />
-      <line 
-        x1="15.5" 
-        y1="2" 
-        x2="15.5" 
+        x2="12" 
         y2="22" 
         strokeWidth="1"
         strokeLinecap="round"

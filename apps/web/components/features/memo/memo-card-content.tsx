@@ -8,7 +8,7 @@ interface MemoCardContentProps {
   showEditDate?: boolean
 }
 
-function MemoCardContent({ memo, variant = 'normal', isSelected = false, showEditDate = false }: MemoCardContentProps) {
+function MemoCardContent({ memo, variant = 'normal', showEditDate = false }: MemoCardContentProps) {
   const isDeleted = variant === 'deleted'
   const deletedMemo = memo as DeletedMemo
   

@@ -261,6 +261,7 @@ function TaskEditor({
         error={error ? "エラー" : null}
         headerActions={null}
         isEditing={true}
+        data-task-editor
       >
         <TaskForm
           title={title}
@@ -287,6 +288,7 @@ function TaskEditor({
       {!isNewTask && (
         <DeleteButton
           className="fixed bottom-6 right-6"
+          data-right-panel-trash
           onDelete={showDeleteConfirmation}
         />
       )}

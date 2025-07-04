@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useRestoreTask } from '@/src/hooks/use-tasks'
 import { useBulkDelete } from '@/components/ui/modals'
+import { animateItemsRestoreFadeOut } from '@/src/utils/deleteAnimation'
 import type { DeletedTask } from '@/src/types/task'
 
 interface UseTasksBulkRestoreProps {
@@ -30,32 +31,36 @@ export function useTasksBulkRestore({
     }
   }, [deletedTasks, checkedDeletedTasks, setCheckedDeletedTasks])
 
+  // 共通の復元処理関数
+  const executeRestoreWithAnimation = async (ids: number[]) => {
+    // フェードアウトアニメーション実行
+    animateItemsRestoreFadeOut(ids, async () => {
+      // アニメーション完了後にState更新（これでリストから削除）
+      for (const id of ids) {
+        onDeletedTaskRestore?.(id);
+      }
+      
+      // 選択状態をクリア
+      setCheckedDeletedTasks(new Set());
+      
+      // API処理を実行
+      for (const id of ids) {
+        try {
+          await restoreTaskMutation.mutateAsync(id);
+        } catch (error) {
+          console.error(`タスク復元エラー (ID: ${id}):`, error);
+        }
+      }
+    });
+  };
+
   const handleBulkRestore = async () => {
     const targetIds = Array.from(checkedDeletedTasks)
 
     // タスクの場合は1件からモーダル表示
     const threshold = 1
 
-    await bulkRestore.confirmBulkDelete(targetIds, threshold, async (ids) => {
-      // 選択状態をクリア (UI即座更新)
-      setCheckedDeletedTasks(new Set())
-      
-      // State側からも削除 (UI即座更新)
-      for (const id of ids) {
-        onDeletedTaskRestore?.(id)
-      }
-
-      // API処理を遅延実行
-      setTimeout(async () => {
-        for (const id of ids) {
-          try {
-            await restoreTaskMutation.mutateAsync(id)
-          } catch (error) {
-            console.error(`タスク復元エラー (ID: ${id}):`, error)
-          }
-        }
-      }, 100)
-    })
+    await bulkRestore.confirmBulkDelete(targetIds, threshold, executeRestoreWithAnimation)
   }
 
   return {
@@ -66,26 +71,7 @@ export function useTasksBulkRestore({
       isRestoring: bulkRestore.isDeleting, // 同じ状態を使用
       handleCancel: bulkRestore.handleCancel,
       handleConfirm: async () => {
-        await bulkRestore.handleConfirm(async (ids) => {
-          // 選択状態をクリア (UI即座更新)
-          setCheckedDeletedTasks(new Set())
-          
-          // State側からも削除 (UI即座更新)
-          for (const id of ids) {
-            onDeletedTaskRestore?.(id)
-          }
-
-          // API処理を遅延実行
-          setTimeout(async () => {
-            for (const id of ids) {
-              try {
-                await restoreTaskMutation.mutateAsync(id)
-              } catch (error) {
-                console.error(`タスク復元エラー (ID: ${id}):`, error)
-              }
-            }
-          }, 100)
-        })
+        await bulkRestore.handleConfirm(executeRestoreWithAnimation)
       }
     }
   }

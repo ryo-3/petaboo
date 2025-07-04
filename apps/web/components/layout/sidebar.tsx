@@ -1,5 +1,6 @@
 "use client";
 
+import DashboardIcon from "@/components/icons/dashboard-icon";
 import HomeIcon from "@/components/icons/home-icon";
 import MemoIcon from "@/components/icons/memo-icon";
 import PlusIcon from "@/components/icons/plus-icon";
@@ -32,6 +33,7 @@ interface SidebarProps {
   onNewTask?: () => void;
   onSettings?: () => void;
   onSearch?: () => void;
+  onDashboard?: () => void;
 }
 
 function Sidebar({
@@ -52,6 +54,7 @@ function Sidebar({
   onNewTask,
   onSettings,
   onSearch,
+  onDashboard,
 }: SidebarProps) {
   const modeTabs = [
     {
@@ -79,6 +82,7 @@ function Sidebar({
               <HomeIcon className="w-5 h-5 text-gray-600" />
             </button>
           </Tooltip>
+
           <Tooltip text="メモ一覧" position="right">
             <button
               onClick={() => {
@@ -114,6 +118,14 @@ function Sidebar({
             onClick={currentMode === "memo" ? onNewMemo : onNewTask!}
             position="right"
           />
+          <Tooltip text="ダッシュボード" position="right">
+            <button
+              onClick={onDashboard}
+              className="p-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
+            >
+              <DashboardIcon className="w-5 h-5 text-gray-600" />
+            </button>
+          </Tooltip>
           {/* 検索ボタン（コンパクトモード） */}
           <Tooltip text="詳細検索" position="right">
             <button
@@ -146,13 +158,19 @@ function Sidebar({
       <div className="flex-shrink-0">
         {/* ホームボタンとモード切り替えスイッチ */}
         <div className="flex justify-between items-center ml-2 mr-2 mt-2">
-          <div className="flex">
+          <div className="flex gap-2">
             {/* <HomeButton onClick={onHome} /> */}
             <button
               onClick={onHome}
               className="p-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
             >
               <HomeIcon className="w-5 h-5 text-gray-600" />
+            </button>
+            <button
+              onClick={onDashboard}
+              className="p-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
+            >
+              <DashboardIcon className="w-5 h-5 text-gray-600" />
             </button>
             {/* 設定ボタン */}
             <div className="flex-shrink-0 p-2 border-t border-gray-200">

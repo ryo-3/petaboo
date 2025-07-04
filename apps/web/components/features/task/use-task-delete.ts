@@ -14,7 +14,7 @@ export function useTaskDelete({ task, onClose, onSelectTask, onClosePanel, onDel
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const deleteTask = useDeleteTask()
 
-  const handleDelete = async () => {
+  const executeDelete = async () => {
     if (!task) return;
     
     try {
@@ -31,11 +31,36 @@ export function useTaskDelete({ task, onClose, onSelectTask, onClosePanel, onDel
         }
       }
 
+      // 削除API実行
+      await deleteTask.mutateAsync(task.id)
+    } catch (error) {
+      console.error('削除に失敗しました:', error)
+      throw error;
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!task) return;
+    
+    try {
       // モーダルを閉じる
       setShowDeleteModal(false)
 
-      // すぐに削除API実行
-      await deleteTask.mutateAsync(task.id)
+      // エディター削除アニメーションを実行
+      const rightTrashButton = document.querySelector('[data-right-panel-trash]') as HTMLElement;
+      const editorArea = document.querySelector('[data-task-editor]') as HTMLElement;
+      
+      if (!rightTrashButton || !editorArea) {
+        // アニメーション要素がない場合は直接削除
+        await executeDelete();
+        return;
+      }
+      
+      // アニメーション実行後にAPI呼び出し
+      const { animateEditorContentToTrash } = await import('@/src/utils/deleteAnimation');
+      animateEditorContentToTrash(editorArea, rightTrashButton, async () => {
+        await executeDelete();
+      });
     } catch (error) {
       console.error('削除に失敗しました:', error)
       alert('削除に失敗しました。')

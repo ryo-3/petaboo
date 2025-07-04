@@ -78,6 +78,8 @@ function TaskScreen({
   const [isDeleting, setIsDeleting] = useState(false);
   // 削除ボタンの表示状態（アニメーション中も表示を維持）
   const [showDeleteButton, setShowDeleteButton] = useState(false);
+  // 蓋アニメーション状態
+  const [isLidOpen, setIsLidOpen] = useState(false);
   
 
   // 共通screen状態管理
@@ -192,7 +194,9 @@ function TaskScreen({
     onTaskDelete: handleItemDeselect,
     onDeletedTaskDelete: handleItemDeselect,
     deleteButtonRef,
-    setIsDeleting
+    setIsDeleting,
+    setIsLidOpen,
+    viewMode
   });
 
   // 一括復元関連
@@ -341,7 +345,7 @@ function TaskScreen({
             onDelete={handleBulkDelete}
             className="absolute bottom-6 right-6 z-10 transition-all duration-300"
             count={deleteButtonCount}
-            isAnimating={isDeleting}
+            isAnimating={isLidOpen}
           />
         )}
 

@@ -2,7 +2,6 @@ import { useBulkDelete, BulkDeleteConfirmation } from "@/components/ui/modals";
 import { useDeleteNote, usePermanentDeleteNote } from "@/src/hooks/use-notes";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import {
-  animateMultipleItemsToTrash,
   animateMultipleItemsToTrashWithRect,
 } from "@/src/utils/deleteAnimation";
 import { useEffect, useRef } from "react";
@@ -116,9 +115,9 @@ export function useMemosBulkDelete({
             } else {
               await permanentDeleteNoteMutation.mutateAsync(id);
             }
-          } catch (error: any) {
+          } catch (error: unknown) {
             // 404エラーは既に削除済みの可能性があるので無視
-            if (!error?.message?.includes('404')) {
+            if (!(error instanceof Error && error.message?.includes('404'))) {
               console.error(`メモ削除エラー (ID: ${id}):`, error);
             }
           }

@@ -1,5 +1,5 @@
-import SaveIcon from "../../icons/save-icon";
 import CheckIcon from "../../icons/check-icon";
+import SaveIcon from "../../icons/save-icon";
 import Tooltip from "../base/tooltip";
 
 interface SaveButtonProps {
@@ -42,7 +42,7 @@ function SaveButton({
       >
         {isSaving ? (
           <div
-            className={`${iconSize} border-4 border-gray-100 border-t-transparent rounded-full animate-spin`}
+            className={`${iconSize} border-2 border-gray-100 border-t-transparent rounded-full animate-spin`}
           />
         ) : savedSuccessfully ? (
           <CheckIcon className={iconSize} />

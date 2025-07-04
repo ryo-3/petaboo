@@ -481,8 +481,6 @@ function MemoScreen({
             memo={selectedMemo}
             onClose={() => setMemoScreenMode("list")}
             onSaveComplete={handleSaveComplete}
-            onDeleteComplete={handleDeleteComplete}
-            onDeleteStart={() => setIsBulkDeleting(true)}
           />
         )}
         {memoScreenMode === "view" && selectedDeletedMemo && !selectedMemo && (

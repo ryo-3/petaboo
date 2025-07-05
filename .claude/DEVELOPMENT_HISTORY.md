@@ -332,3 +332,141 @@ arrowSize="w-2.5 h-3"  // 方向矢印: 10x12px
 ### 削除機能整理作業での課題
 - 変数名を変更したことで参照エラーが発生
 - エラーメッセージを正確に把握できていない状況
+
+## 2025-07-05
+### 大規模リファクタリングデー - 共通化＋CSS化＋UI改善の総合作業
+
+#### 🎯 一日の作業概要（25コミット）
+今日は複数の大きなテーマを並行して進めた集中作業日：
+1. **共通コンポーネント化の大幅推進**
+2. **deleteAnimation.ts CSS化プロジェクト開始**
+3. **UI/UX改善とバグ修正**
+4. **設定機能の拡張**
+
+##### 時系列での作業フロー
+```
+dc3ba89 保存ボタンと写真ボタン修正
+3b3c229 ゴミ箱アニメーションとサイズ修正
+a2b11c9 削除済ボタン表示位置やサイズ調整など
+1381564 Fix deleted memo next selection issue
+5cc1f57 削除動作やボタン位置　アニメーションなど修正
+d9d4cbc タスク一覧アイコン色修正　共通化
+ec10f0b memo task　共通化部品作成
+b3595c0-5be046b-5bf4cec 共通部分コンポーネント化1〜3
+b3951c6 lint　型エラーチェック
+a6c3cc1 復元処理を共通化
+8948f23 右に閉じるボタン位置調整
+8f20422-ab3a95a メモUI修正
+4833684 右側エディター削除処理の共通化
+b91e2d9-40b484f ヘッダー非表示機能
+1ba9a3f-4c0c16f 設定・削除ボタンUI
+00fd06f-f7a4a85 削除ボタン統一・選択ハンドラー共通化
+00d8e55-1af3e81-c5c26e5 CSS化（TrashIcon→DeleteButton→SaveButton）
+```
+
+#### 🧩 共通コンポーネント化の大幅推進
+
+##### memo/task共通部品の大量作成
+- **BaseCard, BaseViewer**: レイアウト共通化の基盤コンポーネント
+- **共通フック化**: 選択ハンドラーパターンの統一（useSelectionHandlers）
+- **復元処理の共通化**: メモ・タスク両方で統一された復元システム
+- **右側エディター削除処理の共通化**: use-right-editor-delete.tsで統一
+
+##### アイコン・ボタンの統一化
+- **タスク一覧アイコン色修正と共通化**: 統一されたアイコンデザイン
+- **右パネル削除ボタンと一括操作ボタンの統一**: DeleteButton共通コンポーネント
+- **保存ボタンと写真ボタンの修正**: UI一貫性向上
+
+#### ⚙️ 設定機能の拡張
+
+##### ヘッダー非表示機能実装
+- **ユーザー設定**: hideHeaderオプション追加
+- **レスポンシブ対応**: ヘッダー非表示時にエディターエリアが画面全体に拡張
+- **設定画面UI修正**: 新しいオプションの追加に伴うUI調整
+
+#### 🎨 UI/UX改善とバグ修正
+
+##### 削除機能の全般的改善
+- **ゴミ箱アニメーションとサイズ修正**: より自然なアニメーション
+- **削除済みボタン表示位置やサイズ調整**: UI配置の最適化
+- **削除動作やボタン位置の全般修正**: 一貫した削除UX
+
+##### メモ表示の改善
+- **削除済みメモ次選択バグ修正**: 削除後の自動選択機能の不具合解消
+- **メモタイトルと内容の重複表示修正**: レイアウト問題の解決
+- **メモ一覧表示UI修正**: より見やすい一覧表示
+
+##### 細かなUI調整
+- **右側閉じるボタン位置調整**: より直感的な配置
+- **右パネル削除ボタン**: 統一されたボタンデザイン
+
+#### 🎯 deleteAnimation.ts CSS化プロジェクト開始
+
+#### ✅ Phase 1完了 - エディター削除アニメーションのCSS化
+
+##### 技術的課題と解決
+1. **CSS transform順序の重要な発見**
+   ```css
+   /* ❌ 間違い: scaleが先だと移動距離が0.01倍になる */
+   transform: scale(0.01) translate(var(--move-x), var(--move-y));
+   
+   /* ✅ 正解: translateが先で正確な移動 */
+   transform: translate(var(--move-x), var(--move-y)) scale(0.01);
+   ```
+
+2. **位置計算の精密化**
+   ```typescript
+   // 画面右下16pxへの正確な移動距離算出
+   const trashX = screenWidth - 16 - 20; // ゴミ箱位置
+   const trashY = screenHeight - 16 - 20;
+   const moveX = trashX - (editorRect.left + fixedWidth / 2);
+   const moveY = trashY - (editorRect.top + fixedHeight / 2);
+   ```
+
+3. **3段階アニメーション設計**
+   ```css
+   @keyframes editor-to-trash {
+     0% { transform: translate(0, 0) scale(1); opacity: 1; }
+     20% { transform: translate(0, 0) scale(0.8); opacity: 1; }
+     100% { transform: translate(var(--move-x), var(--move-y)) scale(0.01); opacity: 0.3; }
+   }
+   ```
+
+##### 実装詳細
+- **新関数**: `animateEditorContentToTrashCSS` - JS版と同等機能をCSS実装
+- **アニメーション時間**: 1秒（ユーザー調整により決定）
+- **固定サイズ**: 400x200px クローン（JS版と同じ）
+- **CSS変数**: `--move-x`, `--move-y` で動的移動距離設定
+
+##### 適用状況
+- ✅ **メモ通常削除**: `use-right-editor-delete.ts` でCSS版適用完了
+- ✅ **タスク通常削除**: `use-right-editor-delete.ts` でCSS版適用完了  
+- ❌ **メモ削除済み完全削除**: `use-deleted-memo-actions.ts` 54行目（JS版残存）
+- ❌ **タスク削除済み完全削除**: `use-deleted-task-actions.ts` 54行目（JS版残存）
+
+##### 今日のコミット履歴分析
+```
+c5c26e5 保存ボタンcss化                    # SaveButton CSS移行
+1af3e81 DeleteButtonのアニメーション簡素化   # TrashIcon CSS調整  
+00d8e55 TrashIcon css化                   # TrashIcon JS→CSS移行
+f7a4a85 選択ハンドラーパターンを共通フック化   # 共通化作業
+00fd06f 共通化: 右パネル削除ボタンと一括操作   # 削除ボタン統一
+```
+
+#### 🔄 段階的共通化作業も並行実施
+- **右パネル削除ボタン共通化**: DeleteButton統一コンポーネント
+- **選択ハンドラーパターン共通化**: useSelectionHandlers hook
+- **TrashIcon CSS化**: MutationObserver → CSS class制御
+- **SaveButton CSS化**: JavaScript状態管理 → CSS animation
+
+#### 📋 次回作業計画
+1. **削除済み完全削除のCSS化** (即座実行可能)
+   - 2ファイルの54行目を `animateEditorContentToTrash` → `animateEditorContentToTrashCSS`
+2. **Phase 2**: 複数アイテム順次アニメーションのCSS化
+3. **Phase 3**: ゴミ箱蓋開閉のCSS化  
+4. **Phase 4**: DOM操作削減
+
+#### 🎨 技術的学習
+- **CSS animation設計**: transform順序とCSS変数の効果的活用
+- **パフォーマンス最適化**: JavaScript削減の具体的手法
+- **段階的リファクタリング**: 既存機能を壊さない移行戦略

@@ -1,6 +1,6 @@
 "use client";
 
-import DeletedTaskViewer from "@/components/features/task/deleted-task-viewer";
+import DeletedTaskViewer, { DeletedTaskViewerRef } from "@/components/features/task/deleted-task-viewer";
 import TaskEditor from "@/components/features/task/task-editor";
 import { useTasksBulkDelete } from "@/components/features/task/use-task-bulk-delete";
 import { useTasksBulkRestore } from "@/components/features/task/use-task-bulk-restore";
@@ -16,8 +16,9 @@ import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import type { DeletedTask, Task } from "@/src/types/task";
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import {
-  createDeletedNextSelectionHandler,
+  getNextDeletedItem,
   getTaskDisplayOrder,
+  createDeletedNextSelectionHandler,
 } from "@/src/utils/domUtils";
 import {
   getDeleteButtonCount,
@@ -74,12 +75,27 @@ function TaskScreen({
   // 削除ボタンの参照
   const deleteButtonRef = useRef<HTMLButtonElement>(null);
   
+  // 削除済みタスクビューアーの参照
+  const deletedTaskViewerRef = useRef<DeletedTaskViewerRef>(null);
+  
+  // 削除完了時に蓋を閉じる関数を設定
+  useEffect(() => {
+    (window as any).closeDeletingLid = () => {
+      setIsRightLidOpen(false);
+    };
+    
+    return () => {
+      delete (window as any).closeDeletingLid;
+    };
+  }, []);
+  
   // アニメーション状態
   const [isDeleting, setIsDeleting] = useState(false);
   // 削除ボタンの表示状態（アニメーション中も表示を維持）
   const [showDeleteButton, setShowDeleteButton] = useState(false);
   // 蓋アニメーション状態
   const [isLidOpen, setIsLidOpen] = useState(false);
+  const [isRightLidOpen, setIsRightLidOpen] = useState(false);
   
 
   // 共通screen状態管理
@@ -107,13 +123,17 @@ function TaskScreen({
 
   // 削除ボタン表示判定の統一化
   const shouldShowLeftBulkDelete = useMemo(() => {
+    // 削除中は強制的に表示を維持
+    if (isDeleting) {
+      return true;
+    }
     return shouldShowDeleteButton(
       activeTab,
       "deleted",
       checkedTasks,
       checkedDeletedTasks
     );
-  }, [activeTab, checkedTasks, checkedDeletedTasks]);
+  }, [activeTab, checkedTasks, checkedDeletedTasks, isDeleting]);
 
   const deleteButtonCount = useMemo(() => {
     return getDeleteButtonCount(
@@ -207,37 +227,34 @@ function TaskScreen({
     onDeletedTaskRestore: handleItemDeselect
   });
 
-  // 削除済みタスクでの次のタスク選択ハンドラー
-  const handleDeletedTaskAndSelectNext = (deletedTask: DeletedTask, preDeleteDisplayOrder?: number[]) => {
-    console.log('🎯 削除済みタスクの次選択開始:', { 
-      deletedTaskId: deletedTask.id, 
-      deletedTasksLength: deletedTasks?.length,
-      usePreDelete: !!preDeleteDisplayOrder
-    });
+  // 削除後の次選択処理 - メモ側と同じシンプル化
+  const selectNextDeletedTask = useCallback((deletedTask: DeletedTask) => {
+    if (!deletedTasks) {
+      onClose();
+      return;
+    }
+
+    const nextTask = getNextDeletedItem(deletedTasks, deletedTask);
     
-    if (!deletedTasks) return;
-
-    // 削除されたタスクを除外してフィルター
-    const filteredDeletedTasks = deletedTasks.filter(t => t.id !== deletedTask.id);
-    console.log('🎯 削除済みタスクフィルター後:', { 
-      filteredLength: filteredDeletedTasks.length,
-      filteredIds: filteredDeletedTasks.map(t => t.id),
-      deletedTaskId: deletedTask.id,
-      excludedDeletedTask: true
-    });
-
-    // 削除済みタスクは削除日時順なので、DOM順序ではなく createDeletedNextSelectionHandler を使用
-    createDeletedNextSelectionHandler(
-      filteredDeletedTasks,
-      deletedTask,
-      (task) => {
-        console.log('🎯 次の削除済みタスクを選択:', { nextTask: task });
-        onSelectDeletedTask(task, true);
-      },
-      onClose,
-      setTaskScreenMode
-    );
-  };
+    if (nextTask && nextTask.id !== deletedTask.id) {
+      // 次のタスクを選択
+      onSelectDeletedTask(nextTask, true);
+      setTaskScreenMode("view");
+      
+      // エディター表示復元
+      setTimeout(() => {
+        const editor = document.querySelector('[data-task-editor]') as HTMLElement;
+        if (editor) {
+          editor.style.visibility = 'visible';
+          editor.style.pointerEvents = 'auto';
+        }
+      }, 100);
+    } else {
+      // 次がない場合はリストに戻る
+      setTaskScreenMode("list");
+      onClose();
+    }
+  }, [deletedTasks, onSelectDeletedTask, onClose, setTaskScreenMode]);
 
   // 削除済みタスクの復元時の次のタスク選択ハンドラー
   const handleDeletedTaskRestoreAndSelectNext = (deletedTask: DeletedTask) => {
@@ -483,12 +500,30 @@ function TaskScreen({
           />
         )}
         {taskScreenMode === "view" && selectedDeletedTask && (
-          <DeletedTaskViewer
-            task={selectedDeletedTask}
-            onClose={() => setTaskScreenMode("list")}
-            onDeleteAndSelectNext={handleDeletedTaskAndSelectNext}
-            onRestoreAndSelectNext={handleDeletedTaskRestoreAndSelectNext}
-          />
+          <>
+            <DeletedTaskViewer
+              ref={deletedTaskViewerRef}
+              task={selectedDeletedTask}
+              onClose={() => setTaskScreenMode("list")}
+              onDeleteAndSelectNext={selectNextDeletedTask}
+              onRestoreAndSelectNext={handleDeletedTaskRestoreAndSelectNext}
+            />
+            {/* 削除済みタスク用の右下削除ボタン */}
+            <div className={`${DELETE_BUTTON_POSITION} z-10`}>
+              <DeleteButton
+                data-right-panel-trash
+                onDelete={() => {
+                  // ボタンクリック時に即座に蓋を開く
+                  setIsRightLidOpen(true);
+                  
+                  // 削除済みタスクビューアーの削除確認を呼び出す
+                  deletedTaskViewerRef.current?.showDeleteConfirmation();
+                }}
+                isAnimating={isRightLidOpen}
+                variant="danger"
+              />
+            </div>
+          </>
         )}
         {taskScreenMode === "edit" && selectedTask && (
           <TaskEditor

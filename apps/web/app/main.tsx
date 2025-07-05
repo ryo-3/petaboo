@@ -32,6 +32,14 @@ function Main() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [selectedDeletedTask, setSelectedDeletedTask] = useState<DeletedTask | null>(null);
   
+  // デバッグ用：削除済みメモの状態変更を追跡
+  useEffect(() => {
+    console.log('🔍 selectedDeletedMemo 状態変更:', {
+      id: selectedDeletedMemo?.id,
+      title: selectedDeletedMemo?.title
+    });
+  }, [selectedDeletedMemo]);
+  
   // UI状態管理
   const [showDeleted, setShowDeleted] = useState(false); // モバイル版削除済み表示フラグ
   const [windowWidth, setWindowWidth] = useState(0); // レスポンシブ制御用
@@ -84,11 +92,26 @@ function Main() {
 
   /** 削除済みメモ選択 - メモ画面に遷移 */
   const handleSelectDeletedMemo = (memo: DeletedMemo | null) => {
+    console.log('🔍 handleSelectDeletedMemo 呼び出し:', {
+      memoId: memo?.id,
+      memoTitle: memo?.title,
+      currentSelected: selectedDeletedMemo?.id
+    });
+    
     if (memo) {
-      clearAllSelections();
+      console.log('🔍 削除済みメモを設定:', memo.id);
+      // clearAllSelections()の代わりに手動で他の状態をクリア
+      setSelectedMemo(null);
+      setSelectedTask(null);
+      setSelectedDeletedTask(null);
+      setShowDeleted(false);
+      // 削除済みメモは最後に設定
       setSelectedDeletedMemo(memo);
       setScreenMode('memo');
+      
+      // 状態更新の確認は useEffect で行うため削除
     } else {
+      console.log('🔍 削除済みメモをクリア');
       setSelectedDeletedMemo(null);
     }
   };

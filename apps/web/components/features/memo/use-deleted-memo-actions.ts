@@ -28,12 +28,15 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
       // 完全削除後に削除済みメモリストを再取得
       await queryClient.invalidateQueries({ queryKey: ["deleted-notes"] })
       
-      // キャッシュ更新後に次のメモ選択機能を使用
-      if (onDeleteAndSelectNext) {
-        onDeleteAndSelectNext(memo)
-      } else {
-        onClose()
-      }
+      // 少し遅延してから次のメモ選択機能を使用（React Queryの状態更新を待つ）
+      setTimeout(() => {
+        console.log('🔍 削除後の次選択処理開始:', { memoId: memo.id });
+        if (onDeleteAndSelectNext) {
+          onDeleteAndSelectNext(memo)
+        } else {
+          onClose()
+        }
+      }, 100);
     },
   })
   

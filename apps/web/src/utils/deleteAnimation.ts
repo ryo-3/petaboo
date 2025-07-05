@@ -55,9 +55,16 @@ function createTrashAnimation(
   clone.style.transition = `all ${options.duration}ms ${options.timingFunction}`;
   clone.style.transformOrigin = options.transformOrigin;
   
-  // 元要素を非表示
+  // 元要素を非表示（ゴミ箱ボタンは除く）
   itemElement.style.visibility = 'hidden';
   itemElement.style.pointerEvents = 'none';
+  
+  // ゴミ箱ボタンは表示を維持
+  const trashButton = itemElement.querySelector('[data-right-panel-trash]') as HTMLElement;
+  if (trashButton) {
+    trashButton.style.visibility = 'visible';
+    trashButton.style.pointerEvents = 'auto';
+  }
   
   document.body.appendChild(clone);
   

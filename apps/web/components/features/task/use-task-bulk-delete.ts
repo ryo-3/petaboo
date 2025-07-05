@@ -50,15 +50,19 @@ export function useTasksBulkDelete({
     }
   }, [tasks, checkedTasks, setCheckedTasks])
 
+  // 削除中フラグを外部で管理
+  const isCurrentlyDeleting = deleteTaskMutation.isPending || permanentDeleteTaskMutation.isPending
+  
   useEffect(() => {
-    if (deletedTasks) {
+    // 削除中は自動クリーンアップを無効にする
+    if (deletedTasks && !isCurrentlyDeleting) {
       const deletedTaskIds = new Set(deletedTasks.map(t => t.id))
       const newCheckedDeletedTasks = new Set(Array.from(checkedDeletedTasks).filter(id => deletedTaskIds.has(id)))
       if (newCheckedDeletedTasks.size !== checkedDeletedTasks.size) {
         setCheckedDeletedTasks(newCheckedDeletedTasks)
       }
     }
-  }, [deletedTasks, checkedDeletedTasks, setCheckedDeletedTasks])
+  }, [deletedTasks, checkedDeletedTasks, setCheckedDeletedTasks, isCurrentlyDeleting])
 
   // 削除処理の共通コールバック
   const createDeleteCallback = (buttonRect: DOMRect | undefined) => async (ids: number[]) => {
@@ -68,8 +72,26 @@ export function useTasksBulkDelete({
     if (buttonRect) {
       console.log('🎯 アニメーション開始:', { ids, buttonRect, viewMode });
       // 保存された位置情報を使用
-      animateMultipleItemsToTrashWithRect(ids, buttonRect, () => {
-        // アニメーション完了後にState更新
+      animateMultipleItemsToTrashWithRect(ids, buttonRect, async () => {
+        console.log('🎬 アニメーション完了:', { ids: ids.length });
+        
+        // アニメーション完了後にAPI処理
+        console.log('🌐 API開始:', { ids: ids.length, activeTab });
+        for (const id of ids) {
+          try {
+            if (activeTab === "deleted") {
+              await permanentDeleteTaskMutation.mutateAsync(id)
+            } else {
+              await deleteTaskMutation.mutateAsync(id)
+            }
+          } catch (error) {
+            console.error(`タスク削除エラー (ID: ${id}):`, error)
+          }
+        }
+        console.log('🌐 API完了:', { ids: ids.length });
+        
+        // API完了後にState更新（これでリストから削除）
+        console.log('🔄 State更新開始:', { ids: ids.length });
         for (const id of ids) {
           if (activeTab === "deleted") {
             onDeletedTaskDelete?.(id)
@@ -77,16 +99,18 @@ export function useTasksBulkDelete({
             onTaskDelete?.(id)
           }
         }
-        // アニメーション完了後、選択状態をクリア
-        if (activeTab === "deleted") {
-          setCheckedDeletedTasks(new Set())
-        } else {
-          setCheckedTasks(new Set())
-        }
+        console.log('🔄 State更新完了:', { ids: ids.length });
         
         // 500ms後に蓋を閉じる
         setTimeout(() => {
           setIsLidOpen?.(false)
+          
+          // 蓋が閉じた後にチェック状態をクリア
+          if (activeTab === "deleted") {
+            setCheckedDeletedTasks(new Set())
+          } else {
+            setCheckedTasks(new Set())
+          }
         }, 500)
         
         // 3秒後に削除ボタンを非表示
@@ -111,20 +135,22 @@ export function useTasksBulkDelete({
       }
     }
 
-    // API処理を遅延実行
-    setTimeout(async () => {
-      for (const id of ids) {
-        try {
-          if (activeTab === "deleted") {
-            await permanentDeleteTaskMutation.mutateAsync(id)
-          } else {
-            await deleteTaskMutation.mutateAsync(id)
+    // アニメーションなしの場合のみAPI処理を遅延実行
+    if (!buttonRect) {
+      setTimeout(async () => {
+        for (const id of ids) {
+          try {
+            if (activeTab === "deleted") {
+              await permanentDeleteTaskMutation.mutateAsync(id)
+            } else {
+              await deleteTaskMutation.mutateAsync(id)
+            }
+          } catch (error) {
+            console.error(`タスク削除エラー (ID: ${id}):`, error)
           }
-        } catch (error) {
-          console.error(`タスク削除エラー (ID: ${id}):`, error)
         }
-      }
-    }, buttonRect ? 700 : 100) // アニメーション時間を考慮
+      }, 100)
+    }
   }
 
   const handleBulkDelete = async () => {
@@ -143,7 +169,7 @@ export function useTasksBulkDelete({
     const buttonRect = deleteButtonRef?.current?.getBoundingClientRect();
     console.log('🎯 ボタン位置:', { buttonRect, deleteButtonRef: deleteButtonRef?.current });
     
-    // 削除ボタンを押した瞬間に蓋を開く（通常・削除済み問わず）
+    // 削除ボタンを押した瞬間に蓋を開く（メモの通常時と同じ動作）
     setIsDeleting?.(true)
     setIsLidOpen?.(true)
     
@@ -159,6 +185,9 @@ export function useTasksBulkDelete({
       handleCancel: () => {
         // キャンセル時に蓋を閉じる
         setIsDeleting?.(false)
+        setTimeout(() => {
+          setIsLidOpen?.(false)
+        }, 300)
         bulkDelete.handleCancel()
       },
       handleConfirm: () => {

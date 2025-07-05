@@ -35,6 +35,16 @@ export function useGlobalSearch({
   const { data: deletedMemos } = useDeletedNotes();
   const { data: tasks } = useTasks();
   const { data: deletedTasks } = useDeletedTasks();
+  
+  // デバッグ用：データの確認
+  useEffect(() => {
+    console.log('🔍 検索用データ取得状況:', {
+      memos: memos?.length,
+      deletedMemos: deletedMemos?.length,
+      tasks: tasks?.length,
+      deletedTasks: deletedTasks?.length
+    });
+  }, [memos, deletedMemos, tasks, deletedTasks]);
 
   // デバウンス処理
   useEffect(() => {
@@ -103,8 +113,14 @@ export function useGlobalSearch({
       });
     }
 
-    // 削除済みメモ検索（削除済み検索時のみ）
-    if (searchType === 'deleted') {
+    // 削除済みメモ検索（削除済み検索時またはall検索時）
+    if (searchType === 'deleted' || searchType === 'all') {
+      console.log('🔍 削除済みメモ検索開始:', { 
+        searchType, 
+        deletedMemosCount: deletedMemos?.length,
+        searchTerm 
+      });
+      
       deletedMemos?.forEach((memo: DeletedMemo) => {
         let matched = false;
         let matchedField: 'title' | 'content' = 'title';
@@ -121,6 +137,12 @@ export function useGlobalSearch({
         }
 
         if (matched) {
+          console.log('🔍 削除済みメモがヒット:', { 
+            id: memo.id, 
+            title: memo.title, 
+            matchedField 
+          });
+          
           results.push({
             type: 'deleted-memo',
             item: memo,
@@ -160,8 +182,8 @@ export function useGlobalSearch({
       });
     }
 
-    // 削除済みタスク検索（削除済み検索時のみ）
-    if (searchType === 'deleted') {
+    // 削除済みタスク検索（削除済み検索時またはall検索時）
+    if (searchType === 'deleted' || searchType === 'all') {
       deletedTasks?.forEach((task) => {
         let matched = false;
         let matchedField: 'title' | 'content' = 'title';

@@ -1,6 +1,9 @@
 import { useState } from 'react'
-import { usePermanentDeleteTask, useRestoreTask } from '@/src/hooks/use-tasks'
+import { useRestoreTask } from '@/src/hooks/use-tasks'
 import type { DeletedTask } from '@/src/types/task'
+import { useQueryClient, useMutation } from '@tanstack/react-query'
+import { useAuth } from '@clerk/nextjs'
+import { tasksApi } from '@/src/lib/api-client'
 
 interface UseDeletedTaskActionsProps {
   task: DeletedTask
@@ -11,109 +14,74 @@ interface UseDeletedTaskActionsProps {
 
 export function useDeletedTaskActions({ task, onClose, onDeleteAndSelectNext, onRestoreAndSelectNext }: UseDeletedTaskActionsProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const permanentDeleteTask = usePermanentDeleteTask()
+  const queryClient = useQueryClient()
+  const { getToken } = useAuth()
+  
+  // 完全削除用のカスタムミューテーション（onSuccessで次選択を実行）
+  const permanentDeleteTask = useMutation({
+    mutationFn: async (id: number) => {
+      const token = await getToken()
+      const response = await tasksApi.permanentDeleteTask(id, token || undefined)
+      return response.json()
+    },
+    onSuccess: async () => {
+      // 完全削除後に削除済みタスクリストを再取得
+      await queryClient.invalidateQueries({ queryKey: ["deleted-tasks"] })
+      
+      // 少し遅延してから次のタスク選択機能を使用（React Queryの状態更新を待つ）
+      setTimeout(() => {
+        console.log('🔍 削除後の次選択処理開始:', { taskId: task.id });
+        if (onDeleteAndSelectNext) {
+          onDeleteAndSelectNext(task)
+        } else {
+          onClose()
+        }
+      }, 100);
+    },
+  })
+  
   const restoreTask = useRestoreTask()
 
   const handlePermanentDelete = async () => {
-    console.log('🎯 削除済みタスク削除開始:', { taskId: task.id, showDeleteModal, isDeleting });
-    
-    // 重複実行防止
-    if (!showDeleteModal || isDeleting) {
-      console.log('🎯 モーダルが既に閉じられているか削除中のため処理をスキップ');
-      return;
-    }
-    
     try {
-      // 削除中状態を設定
-      setIsDeleting(true);
+      setShowDeleteModal(false)
       
-      // モーダルを閉じる
-      console.log('🎯 モーダルを閉じる');
-      setShowDeleteModal(false);
-
-      // 削除前のDOM順序を保存
-      const { getTaskDisplayOrder } = await import('@/src/utils/domUtils');
-      const preDeleteDisplayOrder = getTaskDisplayOrder();
-      console.log('🎯 削除前のDOM順序:', { preDeleteDisplayOrder, deletedTaskId: task.id });
-
-      // エディター削除アニメーションを実行
-      const rightTrashButton = document.querySelector('[data-right-panel-trash]') as HTMLElement;
+      // エディターコンテンツをゴミ箱に吸い込むアニメーション
       const editorArea = document.querySelector('[data-task-editor]') as HTMLElement;
+      const rightTrashButton = document.querySelector('[data-right-panel-trash]') as HTMLElement;
       
-      console.log('🎯 削除済みタスク削除要素チェック:', { 
-        rightTrashButton, 
-        editorArea,
-        rightTrashFound: !!rightTrashButton,
-        editorAreaFound: !!editorArea
-      });
-      
-      if (!rightTrashButton || !editorArea) {
-        console.log('🎯 アニメーション要素が見つからない、直接削除実行');
-        // アニメーション要素がない場合は直接削除
-        await executeDelete();
-        return;
+      if (editorArea && rightTrashButton) {
+        const { animateEditorContentToTrash } = await import('@/src/utils/deleteAnimation');
+        animateEditorContentToTrash(editorArea, rightTrashButton, async () => {
+          // アニメーション完了後の処理
+          try {
+            // API実行（onSuccessで次選択とキャッシュ更新が実行される）
+            await permanentDeleteTask.mutateAsync(task.id)
+            
+            // 蓋を閉じる
+            setTimeout(() => {
+              (window as any).closeDeletingLid?.();
+            }, 500);
+          } catch (error) {
+            console.error('完全削除に失敗しました:', error)
+            alert('完全削除に失敗しました。')
+          }
+        });
+      } else {
+        // アニメーション要素がない場合は通常の処理
+        // API実行（onSuccessで次選択とキャッシュ更新が実行される）
+        await permanentDeleteTask.mutateAsync(task.id)
+        
+        setTimeout(() => {
+          (window as any).closeDeletingLid?.();
+        }, 500);
       }
-      
-      console.log('🎯 削除済みタスク削除アニメーション開始');
-      
-      // 先にAPI削除だけ実行（UI更新は後）
-      console.log('🎯 API削除のみ先行実行');
-      await permanentDeleteTask.mutateAsync(task.id);
-      console.log('🎯 API削除完了、アニメーション後にUI更新予定');
-      
-      const { animateEditorContentToTrash } = await import('@/src/utils/deleteAnimation');
-      animateEditorContentToTrash(editorArea, rightTrashButton, async () => {
-        console.log('🎯 アニメーション完了、UI更新実行');
-        
-        // エディター要素のvisibilityを復元
-        editorArea.style.visibility = 'visible';
-        editorArea.style.pointerEvents = 'auto';
-        console.log('🎯 エディター表示復元');
-        
-        // アニメーション完了後にUI更新のみ実行
-        if (onDeleteAndSelectNext) {
-          console.log('🎯 onDeleteAndSelectNext実行');
-          // 削除前のDOM順序を使用して次のタスクを選択
-          onDeleteAndSelectNext(task, preDeleteDisplayOrder)
-        } else {
-          console.log('🎯 通常のクローズ処理');
-          onClose()
-        }
-        
-        // 削除完了
-        setIsDeleting(false);
-      });
-      
     } catch (error) {
       console.error('完全削除に失敗しました:', error)
-      setIsDeleting(false);
       alert('完全削除に失敗しました。')
     }
   }
   
-  const executeDelete = async () => {
-    try {
-      console.log('🎯 executeDelete開始（削除済みタスク）:', { task: task.id });
-      
-      // 次のタスク選択機能があれば使用、なければ通常のクローズ
-      if (onDeleteAndSelectNext) {
-        console.log('🎯 onDeleteAndSelectNext実行');
-        onDeleteAndSelectNext(task)
-      } else {
-        console.log('🎯 onClose実行');
-        onClose()
-      }
-
-      console.log('🎯 削除API実行開始');
-      // 削除API実行
-      await permanentDeleteTask.mutateAsync(task.id)
-      console.log('🎯 削除API完了');
-    } catch (error) {
-      console.error('削除に失敗しました:', error)
-      throw error;
-    }
-  }
 
   const handleRestore = async () => {
     try {
@@ -140,6 +108,10 @@ export function useDeletedTaskActions({ task, onClose, onDeleteAndSelectNext, on
 
   const hideDeleteConfirmation = () => {
     setShowDeleteModal(false)
+    // キャンセル時も蓋を閉じる
+    setTimeout(() => {
+      (window as any).closeDeletingLid?.();
+    }, 100);
   }
 
   return {
@@ -153,7 +125,7 @@ export function useDeletedTaskActions({ task, onClose, onDeleteAndSelectNext, on
     showDeleteModal,
     
     // Loading states
-    isDeleting: isDeleting || permanentDeleteTask.isPending,
+    isDeleting: permanentDeleteTask.isPending,
     isRestoring: restoreTask.isPending
   }
 }

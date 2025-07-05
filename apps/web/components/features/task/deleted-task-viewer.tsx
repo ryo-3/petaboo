@@ -1,5 +1,6 @@
 'use client'
 
+import { useImperativeHandle, forwardRef } from 'react'
 import TrashIcon from '@/components/icons/trash-icon'
 import DateInfo from '@/components/shared/date-info'
 import { SingleDeleteConfirmation } from '@/components/ui/modals'
@@ -16,7 +17,14 @@ interface DeletedTaskViewerProps {
   onRestoreAndSelectNext?: (deletedTask: DeletedTask) => void
 }
 
-function DeletedTaskViewer({ task, onClose, onDeleteAndSelectNext, onRestoreAndSelectNext }: DeletedTaskViewerProps) {
+export interface DeletedTaskViewerRef {
+  showDeleteConfirmation: () => void
+  isDeleting: boolean
+  showDeleteModal: boolean
+}
+
+const DeletedTaskViewer = forwardRef<DeletedTaskViewerRef, DeletedTaskViewerProps>(
+  ({ task, onClose, onDeleteAndSelectNext, onRestoreAndSelectNext }, ref) => {
   const {
     handlePermanentDelete,
     handleRestore,
@@ -39,23 +47,23 @@ function DeletedTaskViewer({ task, onClose, onDeleteAndSelectNext, onRestoreAndS
     { value: "high", label: "高", color: "bg-red-100 text-red-800" },
   ]
 
+  // refで外部から呼び出せるようにする
+  useImperativeHandle(ref, () => ({
+    showDeleteConfirmation,
+    isDeleting,
+    showDeleteModal
+  }), [showDeleteConfirmation, isDeleting, showDeleteModal]);
+
   return (
-    <div data-task-editor className="flex flex-col h-full bg-white">
-      <div className="flex justify-start items-center mb-4">
-        <RestoreButton
-          onRestore={handleRestore}
-          isRestoring={isRestoring}
-        />
-        <div className="flex-1" />
-        <button
-          onClick={showDeleteConfirmation}
-          disabled={isDeleting}
-          className={`fixed ${DELETE_BUTTON_POSITION} bg-red-600 hover:bg-red-700 text-white p-2 rounded-full shadow-lg transition-colors disabled:opacity-50`}
-          data-right-panel-trash
-        >
-          <TrashIcon />
-        </button>
-      </div>
+    <>
+      <div data-task-editor className="flex flex-col h-full bg-white">
+        <div className="flex justify-start items-center mb-4">
+          <RestoreButton
+            onRestore={handleRestore}
+            isRestoring={isRestoring}
+          />
+          <div className="flex-1" />
+        </div>
 
       <div className="flex flex-col gap-4 flex-1">
         <DateInfo item={task} />
@@ -115,7 +123,7 @@ function DeletedTaskViewer({ task, onClose, onDeleteAndSelectNext, onRestoreAndS
           </div>
         </div>
 
-        <div className="text-center py-4 bg-red-50 rounded border border-red-200">
+        <div className="text-center py-4 bg-red-50 rounded border border-red-200 mb-6">
           <p className="text-red-600 text-sm font-medium">
             このタスクは削除済みです
           </p>
@@ -124,6 +132,8 @@ function DeletedTaskViewer({ task, onClose, onDeleteAndSelectNext, onRestoreAndS
           </p>
         </div>
       </div>
+      </div>
+
 
       {/* 削除確認モーダル */}
       <SingleDeleteConfirmation
@@ -135,8 +145,10 @@ function DeletedTaskViewer({ task, onClose, onDeleteAndSelectNext, onRestoreAndS
         deleteType="permanent"
         isLoading={isDeleting}
       />
-    </div>
+    </>
   )
-}
+});
+
+DeletedTaskViewer.displayName = 'DeletedTaskViewer';
 
 export default DeletedTaskViewer

@@ -1,8 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { useGlobalSearch } from "@/src/hooks/use-global-search";
 import SearchIcon from "@/components/icons/search-icon";
+import MemoIcon from "@/components/icons/memo-icon";
+import TaskIcon from "@/components/icons/task-icon";
+import TrashIcon from "@/components/icons/trash-icon";
 import type { Memo, DeletedMemo } from '@/src/types/memo';
 import type { Task, DeletedTask } from '@/src/types/task';
 
@@ -32,15 +35,23 @@ function SearchScreen({
   const [sortBy, setSortBy] = useState<"relevance" | "date" | "title">("relevance");
   const scrollRef = useRef<HTMLDivElement>(null);
   
-  // 検索実行
+  // 検索タイプ判定
+  const searchType = searchTypes.has("deleted") ? "all" : 
+                     searchTypes.has("memo") && searchTypes.has("task") ? "all" :
+                     searchTypes.has("memo") ? "memo" :
+                     searchTypes.has("task") ? "task" : "all";
+  
+  console.log('🔍 検索タイプ判定:', { 
+    searchTypes: Array.from(searchTypes), 
+    searchType,
+    query: searchQuery
+  });
+
+  // 検索実行 - 削除済みが含まれる場合は常に"all"で検索
   const { results, isSearching, hasQuery } = useGlobalSearch({
     query: searchQuery,
     searchScope,
-    searchType: searchTypes.size === 3 ? "all" : 
-                searchTypes.has("memo") && searchTypes.has("task") && !searchTypes.has("deleted") ? "all" :
-                searchTypes.has("deleted") && !searchTypes.has("memo") && !searchTypes.has("task") ? "deleted" :
-                searchTypes.has("memo") && !searchTypes.has("task") && !searchTypes.has("deleted") ? "memo" :
-                searchTypes.has("task") && !searchTypes.has("memo") && !searchTypes.has("deleted") ? "task" : "all",
+    searchType,
     debounceMs: 500 // 詳細検索では少し長めのデバウンス
   });
 
@@ -59,21 +70,29 @@ function SearchScreen({
     });
   };
 
-  // ソート処理
-  const sortedResults = [...results].sort((a, b) => {
-    switch (sortBy) {
-      case "date":
-        return b.item.createdAt - a.item.createdAt;
-      case "title":
-        return a.item.title.localeCompare(b.item.title, 'ja');
-      case "relevance":
-      default:
-        // タイトルマッチを優先、その後は日付順
-        if (a.matchedField === 'title' && b.matchedField === 'content') return -1;
-        if (a.matchedField === 'content' && b.matchedField === 'title') return 1;
-        return b.item.createdAt - a.item.createdAt;
-    }
-  });
+  // 検索タイプによる結果フィルタリング + ソート処理
+  const filteredAndSortedResults = [...results]
+    .filter(result => {
+      // 選択された検索タイプに応じてフィルタリング
+      if (result.type === 'memo' && !searchTypes.has("memo")) return false;
+      if (result.type === 'task' && !searchTypes.has("task")) return false;
+      if ((result.type === 'deleted-memo' || result.type === 'deleted-task') && !searchTypes.has("deleted")) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "date":
+          return b.item.createdAt - a.item.createdAt;
+        case "title":
+          return a.item.title.localeCompare(b.item.title, 'ja');
+        case "relevance":
+        default:
+          // タイトルマッチを優先、その後は日付順
+          if (a.matchedField === 'title' && b.matchedField === 'content') return -1;
+          if (a.matchedField === 'content' && b.matchedField === 'title') return 1;
+          return b.item.createdAt - a.item.createdAt;
+      }
+    });
 
   // 検索結果選択ハンドラー
   const handleSelectSearchResult = (result: SearchResult) => {
@@ -141,34 +160,43 @@ function SearchScreen({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               検索対象
             </label>
-            <div className="space-y-2">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={searchTypes.has("memo")}
-                  onChange={(e) => handleSearchTypeChange("memo", e.target.checked)}
-                  className="mr-2 rounded border-gray-300 text-Green focus:ring-Green"
-                />
-                <span className="text-sm">メモ</span>
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={searchTypes.has("task")}
-                  onChange={(e) => handleSearchTypeChange("task", e.target.checked)}
-                  className="mr-2 rounded border-gray-300 text-Green focus:ring-Green"
-                />
-                <span className="text-sm">タスク</span>
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={searchTypes.has("deleted")}
-                  onChange={(e) => handleSearchTypeChange("deleted", e.target.checked)}
-                  className="mr-2 rounded border-gray-300 text-Green focus:ring-Green"
-                />
-                <span className="text-sm">削除済み</span>
-              </label>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => handleSearchTypeChange("memo", !searchTypes.has("memo"))}
+                className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-md border transition-all ${
+                  searchTypes.has("memo")
+                    ? "bg-Green border-Green text-white"
+                    : "bg-gray-50 border-gray-300 text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                <MemoIcon className="w-4 h-4" />
+                メモ
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSearchTypeChange("task", !searchTypes.has("task"))}
+                className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-md border transition-all ${
+                  searchTypes.has("task")
+                    ? "bg-Blue border-Blue text-white"
+                    : "bg-gray-50 border-gray-300 text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                <TaskIcon className="w-4 h-4" />
+                タスク
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSearchTypeChange("deleted", !searchTypes.has("deleted"))}
+                className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-md border transition-all ${
+                  searchTypes.has("deleted")
+                    ? "bg-red-100 border-red-300 text-red-800"
+                    : "bg-gray-50 border-gray-300 text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                <TrashIcon className="w-4 h-4" />
+                削除済み
+              </button>
             </div>
           </div>
 
@@ -213,7 +241,7 @@ function SearchScreen({
                     </span>
                   ) : (
                     <span>
-                      「{searchQuery}」の検索結果: <strong>{sortedResults.length}</strong> 件
+                      「{searchQuery}」の検索結果: <strong>{filteredAndSortedResults.length}</strong> 件
                     </span>
                   )}
                 </div>
@@ -222,7 +250,7 @@ function SearchScreen({
 
             {/* 検索結果リスト */}
             <div className="p-6 pb-20">
-              {sortedResults.length === 0 && !isSearching ? (
+              {filteredAndSortedResults.length === 0 && !isSearching ? (
                 <div className="text-center py-12 text-gray-500">
                   <div className="text-4xl mb-4">📭</div>
                   <p>検索結果が見つかりませんでした</p>
@@ -230,7 +258,7 @@ function SearchScreen({
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {sortedResults.map((result) => (
+                  {filteredAndSortedResults.map((result) => (
                     <DetailedSearchResultItem
                       key={`${result.type}-${result.item.id}`}
                       result={result}

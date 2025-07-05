@@ -19,6 +19,7 @@ import { useDeletionLid } from "@/src/hooks/use-deletion-lid";
 import { useScreenState } from "@/src/hooks/use-screen-state";
 import { useDeletedTasks, useTasks } from "@/src/hooks/use-tasks";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
+import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
 import type { DeletedTask, Task } from "@/src/types/task";
 import {
   createDeletedNextSelectionHandler,
@@ -325,6 +326,20 @@ function TaskScreen({
     }
   };
 
+  // 選択ハンドラーパターン
+  const {
+    handleSelectItem: handleSelectTask,
+    handleSelectDeletedItem: handleSelectDeletedTask,
+    handleCreateNew,
+    handleRightPanelClose,
+    handleTabChange,
+  } = useSelectionHandlers<Task, DeletedTask>({
+    setScreenMode: (mode: string) => setTaskScreenMode(mode as TaskScreenMode),
+    onSelectItem: onSelectTask,
+    onSelectDeletedItem: onSelectDeletedTask,
+    onClearSelection,
+  });
+
   const screenHeight = preferences?.hideHeader ? 'h-screen' : 'h-[calc(100vh-64px)]';
 
   return (
@@ -336,19 +351,14 @@ function TaskScreen({
         <DesktopUpper
           currentMode="task"
           activeTab={activeTabTyped}
-          onTabChange={useTabChange({
+          onTabChange={handleTabChange(useTabChange({
             setActiveTab,
             setScreenMode: (mode: string) => {
               setTaskScreenMode(mode as TaskScreenMode);
               onClearSelection?.(); // 選択状態もクリア
             }
-          })}
-          onCreateNew={() => {
-            // 新規作成時に選択状態をクリア
-            onSelectTask(null, true);
-            onSelectDeletedTask(null, true);
-            setTaskScreenMode("create");
-          }}
+          }))}
+          onCreateNew={handleCreateNew}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
           columnCount={columnCount}
@@ -401,14 +411,8 @@ function TaskScreen({
             setCheckedDeletedTasks,
             [setCheckedTasks]
           )}
-          onSelectTask={(task) => {
-            onSelectTask(task, true);
-            setTaskScreenMode("view");
-          }}
-          onSelectDeletedTask={(task) => {
-            onSelectDeletedTask(task, true);
-            setTaskScreenMode("view");
-          }}
+          onSelectTask={handleSelectTask}
+          onSelectDeletedTask={handleSelectDeletedTask}
         />
 
         {/* 一括操作ボタン */}
@@ -429,10 +433,7 @@ function TaskScreen({
       {/* 右側：詳細表示エリア */}
       <RightPanel
         isOpen={taskScreenMode !== "list"}
-        onClose={() => {
-          setTaskScreenMode("list");
-          onClearSelection?.(); // 選択状態のみクリア（画面は変更しない）
-        }}
+        onClose={handleRightPanelClose}
       >
         {taskScreenMode === "create" && (
           <TaskEditor task={null} onClose={() => setTaskScreenMode("list")} />

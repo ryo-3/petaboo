@@ -27,6 +27,7 @@ import { useScreenState } from "@/src/hooks/use-screen-state";
 import { useSelectAll } from "@/src/hooks/use-select-all";
 import { useTabChange } from "@/src/hooks/use-tab-change";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
+import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import {
   createDeletedNextSelectionHandler,
@@ -252,6 +253,20 @@ function MemoScreen({
       () => onDeselectAndStayOnMemoList?.(), setMemoScreenMode);
   };
 
+  // 選択ハンドラーパターン
+  const {
+    handleSelectItem: handleSelectMemo,
+    handleSelectDeletedItem: handleSelectDeletedMemo,
+    handleCreateNew,
+    handleRightPanelClose,
+    handleTabChange,
+  } = useSelectionHandlers<Memo, DeletedMemo>({
+    setScreenMode: (mode: string) => setMemoScreenMode(mode as MemoScreenMode),
+    onSelectItem: onSelectMemo,
+    onSelectDeletedItem: onSelectDeletedMemo,
+    onDeselectAndStay: onDeselectAndStayOnMemoList,
+  });
+
   const screenHeight = preferences?.hideHeader ? 'h-screen' : 'h-[calc(100vh-64px)]';
 
   return (
@@ -263,7 +278,7 @@ function MemoScreen({
         <DesktopUpper
           currentMode="memo"
           activeTab={activeTab as "normal" | "deleted"}
-          onTabChange={useTabChange({
+          onTabChange={handleTabChange(useTabChange({
             setActiveTab,
             setScreenMode: (mode: string) =>
               setMemoScreenMode(mode as MemoScreenMode),
@@ -273,13 +288,8 @@ function MemoScreen({
             onSelectDeletedItem: onSelectDeletedMemo,
             normalTabName: "normal",
             deletedTabName: "deleted",
-          })}
-          onCreateNew={() => {
-            // 新規作成時に選択状態をクリア
-            onSelectMemo(null);
-            onSelectDeletedMemo(null);
-            setMemoScreenMode("create");
-          }}
+          }))}
+          onCreateNew={handleCreateNew}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
           columnCount={columnCount}
@@ -321,14 +331,8 @@ function MemoScreen({
             setCheckedDeletedMemos,
             [setCheckedMemos]
           )}
-          onSelectMemo={(memo) => {
-            onSelectMemo(memo);
-            setMemoScreenMode("view");
-          }}
-          onSelectDeletedMemo={(memo) => {
-            onSelectDeletedMemo(memo);
-            setMemoScreenMode("view");
-          }}
+          onSelectMemo={handleSelectMemo}
+          onSelectDeletedMemo={handleSelectDeletedMemo}
         />
 
         {/* 一括操作ボタン */}
@@ -353,10 +357,7 @@ function MemoScreen({
       {/* 右側：詳細表示エリア */}
       <RightPanel
         isOpen={memoScreenMode !== "list"}
-        onClose={() => {
-          setMemoScreenMode("list");
-          onDeselectAndStayOnMemoList?.(); // 選択解除してメモ一覧に留まる
-        }}
+        onClose={handleRightPanelClose}
       >
         {/* 右側エディター削除ボタン（現在表示中のメモの単体削除用） */}
         {memoScreenMode === "view" &&

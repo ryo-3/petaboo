@@ -78,6 +78,7 @@ export function useRightEditorDelete<T extends { id: number }>({
           
           // DOM順序も一緒に渡す（Task用）
           if (onDeleteComplete.length >= 2) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (onDeleteComplete as any)(targetItem, preDeleteDisplayOrder);
           } else {
             onDeleteComplete(targetItem);

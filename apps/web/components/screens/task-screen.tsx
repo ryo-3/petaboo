@@ -12,11 +12,11 @@ import DeleteButton from "@/components/ui/buttons/delete-button";
 import RestoreButton from "@/components/ui/buttons/restore-button";
 import { ButtonContainer } from "@/components/ui/layout/button-container";
 import RightPanel from "@/components/ui/layout/right-panel";
+import { RightPanelDeleteButton } from "@/components/ui/buttons/right-panel-delete-button";
 import {
   BulkDeleteConfirmation,
   BulkRestoreConfirmation,
 } from "@/components/ui/modals";
-import { DELETE_BUTTON_POSITION } from "@/src/constants/ui";
 import { useDeletionLid } from "@/src/hooks/use-deletion-lid";
 import { useScreenState } from "@/src/hooks/use-screen-state";
 import { useDeletedTasks, useTasks } from "@/src/hooks/use-tasks";
@@ -473,20 +473,11 @@ function TaskScreen({
               onRestoreAndSelectNext={handleDeletedTaskRestoreAndSelectNext}
             />
             {/* 削除済みタスク用の右下削除ボタン */}
-            <div className={`${DELETE_BUTTON_POSITION} z-10`}>
-              <DeleteButton
-                data-right-panel-trash
-                onDelete={() => {
-                  // ボタンクリック時に即座に蓋を開く
-                  setIsRightLidOpen(true);
-
-                  // 削除済みタスクビューアーの削除確認を呼び出す
-                  deletedTaskViewerRef.current?.showDeleteConfirmation();
-                }}
-                isAnimating={isRightLidOpen}
-                variant="danger"
-              />
-            </div>
+            <RightPanelDeleteButton
+              viewerRef={deletedTaskViewerRef}
+              setIsRightLidOpen={setIsRightLidOpen}
+              isRightLidOpen={isRightLidOpen}
+            />
           </>
         )}
         {taskScreenMode === "edit" && selectedTask && (

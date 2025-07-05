@@ -12,6 +12,7 @@ import DeleteButton from "@/components/ui/buttons/delete-button";
 import RestoreButton from "@/components/ui/buttons/restore-button";
 import { ButtonContainer } from "@/components/ui/layout/button-container";
 import RightPanel from "@/components/ui/layout/right-panel";
+import { RightPanelDeleteButton } from "@/components/ui/buttons/right-panel-delete-button";
 import { DELETE_BUTTON_POSITION } from "@/src/constants/ui";
 import { useBulkDeleteButton } from "@/src/hooks/use-bulk-delete-button";
 import { useDeletionLid } from "@/src/hooks/use-deletion-lid";
@@ -420,20 +421,11 @@ function MemoScreen({
               onRestoreAndSelectNext={handleRestoreAndSelectNext}
             />
             {/* 削除済みメモ用の右下削除ボタン */}
-            <div className={`${DELETE_BUTTON_POSITION} z-10`}>
-              <DeleteButton
-                data-right-panel-trash
-                onDelete={() => {
-                  // ボタンクリック時に即座に蓋を開く
-                  setIsRightLidOpen(true);
-
-                  // モーダルを表示
-                  deletedMemoViewerRef.current?.showDeleteConfirmation();
-                }}
-                isAnimating={isRightLidOpen}
-                variant="danger"
-              />
-            </div>
+            <RightPanelDeleteButton
+              viewerRef={deletedMemoViewerRef}
+              setIsRightLidOpen={setIsRightLidOpen}
+              isRightLidOpen={isRightLidOpen}
+            />
           </>
         )}
       </RightPanel>

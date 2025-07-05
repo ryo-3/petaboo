@@ -71,7 +71,7 @@ function DeletedMemoViewer({ memo, onClose, onDeleteAndSelectNext, onRestoreAndS
       <button
         onClick={showDeleteConfirmation}
         disabled={isDeleting}
-        className="absolute bottom-6 right-6 bg-red-600 hover:bg-red-700 text-white p-3 rounded-full shadow-lg transition-colors disabled:opacity-50 z-10"
+        className="absolute bottom-4 right-4 bg-red-600 hover:bg-red-700 text-white p-3 rounded-full shadow-lg transition-colors disabled:opacity-50 z-10"
       >
         <TrashIcon />
       </button>

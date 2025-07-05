@@ -289,7 +289,7 @@ function TaskEditor({
       {/* 削除ボタンは編集時のみ表示 */}
       {!isNewTask && (
         <DeleteButton
-          className="fixed bottom-6 right-6"
+          className="fixed bottom-4 right-4"
           data-right-panel-trash
           onDelete={showDeleteConfirmation}
           isAnimating={isLidOpen}

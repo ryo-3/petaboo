@@ -432,7 +432,7 @@ function TaskScreen({
           <DeleteButton
             ref={deleteButtonRef}
             onDelete={handleBulkDelete}
-            className="absolute bottom-6 right-6 z-10 transition-all duration-300"
+            className="absolute bottom-4 right-4 z-10 transition-all duration-300"
             count={deleteButtonCount}
             isAnimating={isLidOpen}
           />
@@ -443,7 +443,7 @@ function TaskScreen({
           <RestoreButton
             onRestore={handleBulkRestore}
             isRestoring={bulkRestoreState.isRestoring}
-            className="absolute bottom-6 left-6 z-10"
+            className="absolute bottom-4 left-4 z-10"
             count={checkedDeletedTasks.size}
             size="lg"
           />

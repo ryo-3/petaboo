@@ -18,7 +18,7 @@ const DeleteButton = forwardRef<HTMLButtonElement, DeleteButtonProps>(
         <button
           ref={ref}
           onClick={onDelete}
-          className="bg-gray-500 hover:bg-gray-600 text-white p-3 rounded-full shadow-lg transition-colors relative"
+          className="bg-gray-500 hover:bg-gray-600 text-white p-2 rounded-full shadow-lg transition-colors relative"
           {...props}
         >
           <TrashIcon isOpen={isAnimating} />

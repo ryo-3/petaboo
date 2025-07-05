@@ -413,7 +413,7 @@ function MemoScreen({
 
         {/* 左側一括削除ボタン（チェックボックスで選択したアイテムの一括削除用） */}
         <div
-          className={`absolute bottom-6 right-6 z-10 transition-opacity duration-300 ${
+          className={`absolute bottom-4 right-4 z-10 transition-opacity duration-300 ${
             shouldShowLeftBulkDelete
               ? "opacity-100"
               : "opacity-0 pointer-events-none"
@@ -433,7 +433,7 @@ function MemoScreen({
           <RestoreButton
             onRestore={handleBulkRestore}
             isRestoring={false}
-            className="absolute bottom-6 left-6 z-10"
+            className="absolute bottom-4 left-4 z-10"
             count={checkedDeletedMemos.size}
             size="lg"
           />
@@ -454,7 +454,7 @@ function MemoScreen({
       >
         {/* 右側エディター削除ボタン（現在表示中のメモの単体削除用） */}
         {memoScreenMode === "view" && selectedMemo && activeTab === "normal" && (
-          <div className="absolute bottom-6 right-6 z-10">
+          <div className="absolute bottom-4 right-4 z-10">
             <DeleteButton
               data-right-panel-trash
               onDelete={() => {

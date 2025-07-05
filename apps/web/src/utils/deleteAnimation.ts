@@ -61,14 +61,19 @@ function createTrashAnimation(
   
   document.body.appendChild(clone);
   
+  // ターゲット位置計算
+  const targetX = trashRect.left + trashRect.width / 2 - width / 2 + options.targetOffset.x;
+  const targetY = trashRect.top + trashRect.height / 2 - height / 2 + options.targetOffset.y;
+  
   requestAnimationFrame(() => {
-    // ターゲット位置計算
-    const targetX = trashRect.left + trashRect.width / 2 - width / 2 + options.targetOffset.x;
-    const targetY = trashRect.top + trashRect.height / 2 - height / 2 + options.targetOffset.y;
+    // アニメーション開始時に即座に少し縮小開始
+    clone.style.transform = `scale(0.5)`;
     
-    // アニメーション実行
-    clone.style.transform = `translate(${targetX - itemRect.left}px, ${targetY - itemRect.top}px) scaleX(${options.scale.x}) scaleY(${options.scale.y}) rotate(${options.rotation()}deg)`;
-    clone.style.opacity = options.opacity.toString();
+    // 次のフレームで本格的なアニメーション実行
+    requestAnimationFrame(() => {
+      clone.style.transform = `translate(${targetX - itemRect.left}px, ${targetY - itemRect.top}px) scaleX(${options.scale.x}) scaleY(${options.scale.y}) rotate(${options.rotation()}deg)`;
+      clone.style.opacity = options.opacity.toString();
+    });
     
     setTimeout(() => {
       document.body.removeChild(clone);
@@ -398,7 +403,7 @@ export function animateCardToTrash(
   
   createTrashAnimation(cardElement, trashElement, {
     duration: 700, // カードは少しゆっくり
-    targetOffset: { x: 10, y: -5 }, // カードは大きいので少し上に
+    targetOffset: { x: -30, y: -15 }, // カードは大きいので少し上に
     scale: { x: 0.02, y: 0.02 }, // カードはより小さく
     opacity: 0.3,
     rotation: () => Math.random() * 20 + 10, // 少し回転
@@ -409,7 +414,7 @@ export function animateCardToTrash(
 }
 
 
-// エディター用削除アニメーション（下から上へ吸い込まれる）
+// エディター用削除アニメーション（ゴミ箱に吸い込まれる）
 export function animateEditorContentToTrash(
   editorElement: HTMLElement,
   trashElement: HTMLElement,
@@ -418,14 +423,14 @@ export function animateEditorContentToTrash(
   console.log('✏️ エディターコンテンツゴミ箱アニメーション開始');
   
   createTrashAnimation(editorElement, trashElement, {
-    duration: 600, // 速度統一
-    fixedSize: { width: 400, height: 300 }, // 固定サイズ
-    targetOffset: { x: 0, y: -30 }, // 中央寄り上
-    scale: { x: 0.03, y: 0.01 }, // 縦に縮む
+    duration: 800,
+    fixedSize: { width: 400, height: 200 }, // 固定サイズ
+    targetOffset: { x: -10, y: -30 }, // 中央寄り上
+    scale: { x: 0.01, y: 0.01 }, // 均等に縮む
     opacity: 0.3,
-    rotation: () => Math.random() * 15 + 3,
-    transformOrigin: 'center bottom',
-    timingFunction: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)', // 速度統一
+    rotation: () => 0, // 回転なし
+    transformOrigin: 'center',
+    timingFunction: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
     onComplete
   });
 }

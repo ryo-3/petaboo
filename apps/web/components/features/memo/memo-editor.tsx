@@ -4,6 +4,7 @@ import BaseViewer from "@/components/shared/base-viewer";
 import PhotoButton from "@/components/ui/buttons/photo-button";
 import SaveButton from "@/components/ui/buttons/save-button";
 import { useSimpleMemoSave } from "@/src/hooks/use-simple-memo-save";
+import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import type { Memo } from "@/src/types/memo";
 import { useEffect, useRef, useState } from "react";
 
@@ -18,6 +19,7 @@ interface MemoEditorProps {
 }
 
 function MemoEditor({ memo, onClose, onSaveComplete }: MemoEditorProps) {
+  const { preferences } = useUserPreferences(1);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const baseViewerRef = useRef<HTMLDivElement>(null);
 
@@ -111,7 +113,7 @@ function MemoEditor({ memo, onClose, onSaveComplete }: MemoEditorProps) {
               handleTitleChange(firstLine);
               handleContentChange(newContent);
             }}
-            className="w-full h-[calc(100vh-164px)] resize-none outline-none text-gray-500 leading-relaxed font-medium pb-10 mt-3"
+            className={`w-full ${preferences?.hideHeader ? 'h-[calc(100vh-100px)]' : 'h-[calc(100vh-164px)]'} resize-none outline-none text-gray-500 leading-relaxed font-medium pb-10 mt-3`}
           />
         </BaseViewer>
       </div>

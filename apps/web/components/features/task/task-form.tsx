@@ -5,12 +5,13 @@ import SaveButton from "@/components/ui/buttons/save-button";
 import DateInput from "@/components/ui/inputs/date-input";
 import CustomSelector from "@/components/ui/selectors/custom-selector";
 import {
-  getStatusEditorColor,
-  getPriorityEditorColor,
   getCategoryEditorColor,
-  getStatusText,
+  getPriorityEditorColor,
   getPriorityText,
+  getStatusEditorColor,
+  getStatusText,
 } from "@/src/utils/taskUtils";
+import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useEffect, useRef } from "react";
 
 interface TaskFormProps {
@@ -56,6 +57,7 @@ function TaskForm({
   titlePlaceholder = "タスクタイトルを入力...",
   descriptionPlaceholder = "入力...",
 }: TaskFormProps) {
+  const { preferences } = useUserPreferences(1);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -71,21 +73,49 @@ function TaskForm({
 
   // オプションの定義（色はtaskUtilsから取得）
   const statusOptions = [
-    { value: "todo", label: getStatusText("todo"), color: getStatusEditorColor("todo") },
-    { value: "in_progress", label: getStatusText("in_progress"), color: getStatusEditorColor("in_progress") },
-    { value: "completed", label: getStatusText("completed"), color: getStatusEditorColor("completed") },
+    {
+      value: "todo",
+      label: getStatusText("todo"),
+      color: getStatusEditorColor("todo"),
+    },
+    {
+      value: "in_progress",
+      label: getStatusText("in_progress"),
+      color: getStatusEditorColor("in_progress"),
+    },
+    {
+      value: "completed",
+      label: getStatusText("completed"),
+      color: getStatusEditorColor("completed"),
+    },
   ];
 
   const priorityOptions = [
-    { value: "low", label: getPriorityText("low"), color: getPriorityEditorColor("low") },
-    { value: "medium", label: getPriorityText("medium"), color: getPriorityEditorColor("medium") },
-    { value: "high", label: getPriorityText("high"), color: getPriorityEditorColor("high") },
+    {
+      value: "low",
+      label: getPriorityText("low"),
+      color: getPriorityEditorColor("low"),
+    },
+    {
+      value: "medium",
+      label: getPriorityText("medium"),
+      color: getPriorityEditorColor("medium"),
+    },
+    {
+      value: "high",
+      label: getPriorityText("high"),
+      color: getPriorityEditorColor("high"),
+    },
   ];
 
   const categoryOptions = [
     { value: "", label: "未選択", color: getCategoryEditorColor("") },
     { value: "work", label: "仕事", color: getCategoryEditorColor("work") },
-    { value: "personal", label: "個人", color: getCategoryEditorColor("personal") },
+    {
+      value: "personal",
+      label: "個人",
+      color: getCategoryEditorColor("personal"),
+    },
     { value: "study", label: "勉強", color: getCategoryEditorColor("study") },
     { value: "health", label: "健康", color: getCategoryEditorColor("health") },
     { value: "hobby", label: "趣味", color: getCategoryEditorColor("hobby") },
@@ -159,7 +189,7 @@ function TaskForm({
           placeholder={descriptionPlaceholder}
           value={description}
           onChange={(e) => onDescriptionChange(e.target.value)}
-          className="w-full h-[calc(100vh-400px)] p-3 border border-gray-400 rounded-lg resize-none outline-none text-gray-700 leading-relaxed focus:border-DeepBlue"
+          className={`w-full ${preferences?.hideHeader ? 'h-[calc(100vh-246px)]' : 'h-[calc(100vh-310px)]'} p-3 border border-gray-400 rounded-lg resize-none outline-none text-gray-700 leading-relaxed focus:border-DeepBlue`}
         />
       </div>
 

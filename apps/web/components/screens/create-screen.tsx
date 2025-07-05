@@ -4,6 +4,7 @@ import MemoEditor from "@/components/features/memo/memo-editor";
 import TaskEditor from "@/components/features/task/task-editor";
 import MemoIcon from "@/components/icons/memo-icon";
 import TaskIcon from "@/components/icons/task-icon";
+import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useState } from "react";
 
 type CreateMode = "memo" | "task";
@@ -23,6 +24,7 @@ function CreateScreen({
   onShowMemoList,
   onShowTaskList,
 }: CreateScreenProps) {
+  const { preferences } = useUserPreferences(1);
   const [createMode, setCreateMode] = useState<CreateMode>(initialMode);
 
   const handleModeChange = (mode: CreateMode) => {
@@ -31,7 +33,7 @@ function CreateScreen({
   };
 
   return (
-    <div className="h-[calc(100vh-64px)] bg-white">
+    <div className={`${preferences?.hideHeader ? 'h-screen' : 'h-[calc(100vh-64px)]'} bg-white`}>
       {/* 上部：モード切り替えタブ */}
       <div className="flex border-b border-gray-200 bg-gray-50">
         <button

@@ -20,6 +20,7 @@ function SettingsScreen() {
   const [taskViewMode, setTaskViewMode] = useState<"card" | "list">("list");
   const [memoHideControls, setMemoHideControls] = useState(false);
   const [taskHideControls, setTaskHideControls] = useState(false);
+  const [hideHeader, setHideHeader] = useState(false);
 
   // 設定を読み込んだらローカル状態を更新
   useEffect(() => {
@@ -30,6 +31,7 @@ function SettingsScreen() {
       setTaskViewMode(preferences.taskViewMode);
       setMemoHideControls(preferences.memoHideControls);
       setTaskHideControls(preferences.taskHideControls);
+      setHideHeader(preferences.hideHeader);
     }
   }, [preferences]);
 
@@ -42,6 +44,7 @@ function SettingsScreen() {
         taskViewMode,
         memoHideControls,
         taskHideControls,
+        hideHeader,
       });
       alert("設定を保存しました！");
     } catch {
@@ -144,6 +147,22 @@ function SettingsScreen() {
               buttonSize="size-6"
             />
           </div>
+        </div>
+
+        {/* 全体設定 */}
+        <div className="mt-6">
+          <h2 className="text-lg font-semibold text-gray-800 mb-3">全体設定</h2>
+          <div className="flex items-center justify-between w-64 mb-2">
+            <span className="text-sm text-gray-700">ヘッダーを非表示</span>
+            <Switch
+              checked={hideHeader}
+              onCheckedChange={setHideHeader}
+              label=""
+            />
+          </div>
+          <p className="text-xs text-gray-500 mb-4">
+            ヘッダーを非表示にして、より広い作業領域を確保できます
+          </p>
         </div>
 
         {/* 保存ボタン */}

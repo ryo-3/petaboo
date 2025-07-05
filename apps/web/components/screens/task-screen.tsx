@@ -327,8 +327,10 @@ function TaskScreen({
     }
   };
 
+  const screenHeight = preferences?.hideHeader ? 'h-screen' : 'h-[calc(100vh-64px)]';
+
   return (
-    <div className="flex h-[calc(100vh-64px)] bg-white">
+    <div className={`flex ${screenHeight} bg-white`}>
       {/* 左側：一覧表示エリア */}
       <div
         className={`${taskScreenMode === "list" ? "w-full" : "w-1/2"} ${taskScreenMode !== "list" ? "border-r border-gray-300" : ""} pt-6 pl-6 pr-2 flex flex-col transition-all duration-[400ms] relative`}

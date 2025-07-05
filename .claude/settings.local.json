@@ -16,7 +16,11 @@
       "Bash(find:*)",
       "Bash(rg:*)",
       "Bash(git checkout:*)",
-      "Bash(npm run typecheck:*)"
+      "Bash(npm run typecheck:*)",
+      "Bash(npm run:*)",
+      "Bash(sqlite3:*)",
+      "Bash(sudo apt:*)",
+      "Bash(sudo apt install:*)"
     ],
     "deny": []
   }

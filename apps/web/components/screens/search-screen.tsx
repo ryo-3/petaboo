@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useGlobalSearch } from "@/src/hooks/use-global-search";
+import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import SearchIcon from "@/components/icons/search-icon";
 import MemoIcon from "@/components/icons/memo-icon";
 import TaskIcon from "@/components/icons/task-icon";
@@ -29,6 +30,7 @@ function SearchScreen({
   onSelectDeletedMemo,
   onSelectDeletedTask
 }: SearchScreenProps) {
+  const { preferences } = useUserPreferences(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchScope, setSearchScope] = useState<"all" | "title" | "content">("all");
   const [searchTypes, setSearchTypes] = useState<Set<"memo" | "task" | "deleted">>(new Set(["memo", "task"]));
@@ -113,7 +115,7 @@ function SearchScreen({
   };
 
   return (
-    <div ref={scrollRef} className="h-[calc(100vh-64px)] overflow-y-auto bg-white">
+    <div ref={scrollRef} className={`${preferences?.hideHeader ? 'h-screen' : 'h-[calc(100vh-64px)]'} overflow-y-auto bg-white`}>
       {/* ヘッダー */}
       <div className="bg-white border-b border-gray-200 p-6">
         {/* タイトル */}

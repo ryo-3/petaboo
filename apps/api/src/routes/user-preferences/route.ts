@@ -33,6 +33,7 @@ app.get('/:userId', async (c) => {
         taskViewMode: 'list',
         memoHideControls: false,
         taskHideControls: false,
+        hideHeader: false,
         createdAt: Date.now(),
         updatedAt: Date.now()
       });
@@ -55,7 +56,7 @@ app.put('/:userId', async (c) => {
       return c.json({ error: 'Invalid user ID' }, 400);
     }
 
-    const { memoColumnCount, taskColumnCount, memoViewMode, taskViewMode, memoHideControls, taskHideControls } = body;
+    const { memoColumnCount, taskColumnCount, memoViewMode, taskViewMode, memoHideControls, taskHideControls, hideHeader } = body;
     
     // デバッグログ
     console.log('Received request body:', body);
@@ -86,6 +87,10 @@ app.put('/:userId', async (c) => {
       return c.json({ error: 'Invalid task hide controls value' }, 400);
     }
 
+    if (hideHeader !== undefined && typeof hideHeader !== 'boolean') {
+      return c.json({ error: 'Invalid hide header value' }, 400);
+    }
+
     // 既存の設定があるかチェック
     const existing = await db
       .select()
@@ -100,6 +105,7 @@ app.put('/:userId', async (c) => {
     if (taskViewMode !== undefined) updateData.taskViewMode = taskViewMode;
     if (memoHideControls !== undefined) updateData.memoHideControls = memoHideControls;
     if (taskHideControls !== undefined) updateData.taskHideControls = taskHideControls;
+    if (hideHeader !== undefined) updateData.hideHeader = hideHeader;
     
     console.log('updateData being sent to database:', updateData);
 
@@ -125,6 +131,7 @@ app.put('/:userId', async (c) => {
           taskViewMode: taskViewMode || 'list',
           memoHideControls: memoHideControls || false,
           taskHideControls: taskHideControls || false,
+          hideHeader: hideHeader || false,
           createdAt: Date.now(),
           updatedAt: Date.now()
         })

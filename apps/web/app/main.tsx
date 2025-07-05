@@ -12,6 +12,7 @@ import TaskScreen from "@/components/screens/task-screen";
 import WelcomeScreen from "@/components/screens/welcome-screen";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
+import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useEffect, useState } from "react";
 
 // 画面モード定義（6つのシンプルな画面状態）
@@ -21,6 +22,9 @@ function Main() {
   // ==========================================
   // State管理
   // ==========================================
+  
+  // ユーザー設定取得
+  const { preferences } = useUserPreferences(1);
   
   // 画面状態管理
   const [screenMode, setScreenMode] = useState<ScreenMode>('home');
@@ -280,11 +284,12 @@ function Main() {
            デスクトップ版レイアウト：ヘッダー + サイドバー + メインコンテンツ
            ========================================== */
         <div className="flex flex-col h-screen w-full">
-          {/* ヘッダー */}
-          <Header />
+          {/* ヘッダー（設定で非表示可能） */}
+          {!preferences?.hideHeader && <Header />}
           
           {/* メインレイアウト */}
           <DesktopLayout
+            hideHeader={preferences?.hideHeader}
             sidebarContent={
               // コンパクトサイドバー（アイコンナビ）
               <Sidebar

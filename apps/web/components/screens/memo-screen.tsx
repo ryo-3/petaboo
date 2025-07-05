@@ -19,18 +19,15 @@ import {
   getNextDeletedItem,
   getNextItemAfterDeletion,
 } from "@/src/utils/domUtils";
-import {
-  getDeleteButtonCount,
-  shouldShowDeleteButton,
-} from "@/src/utils/screenUtils";
 import { createToggleHandlerWithTabClear } from "@/src/utils/toggleUtils";
 import { DELETE_BUTTON_POSITION } from "@/src/constants/ui";
 import { useDeletionLid } from "@/src/hooks/use-deletion-lid";
-import { useDelayedButtonVisibility } from "@/src/hooks/use-delayed-button-visibility";
 import { useItemDeselect } from "@/src/hooks/use-item-deselect";
 import { useSelectAll } from "@/src/hooks/use-select-all";
 import { useTabChange } from "@/src/hooks/use-tab-change";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useNextDeletedItemSelection } from "@/src/hooks/use-next-deleted-item-selection";
+import { useBulkDeleteButton } from "@/src/hooks/use-bulk-delete-button";
+import { useCallback, useRef, useState } from "react";
 
 type MemoScreenMode = "list" | "view" | "create";
 
@@ -165,34 +162,14 @@ function MemoScreen({
   ]);
 
 
-  // 削除ボタン表示判定の統一化
-  const shouldShowLeftBulkDelete = useMemo(() => {
-    // 削除中は強制的に表示を維持
-    if (isLeftDeleting) {
-      return true;
-    }
-    return shouldShowDeleteButton(
-      activeTab,
-      "deleted",
-      checkedMemos,
-      checkedDeletedMemos
-    );
-  }, [activeTab, checkedMemos, checkedDeletedMemos, isLeftDeleting]);
-
-  const deleteButtonCount = useMemo(() => {
-    return getDeleteButtonCount(
-      activeTab,
-      "deleted",
-      checkedMemos,
-      checkedDeletedMemos
-    );
-  }, [activeTab, checkedMemos, checkedDeletedMemos]);
-
-  // 削除ボタンの遅延非表示処理
-  const showDeleteButton = useDelayedButtonVisibility(
-    shouldShowLeftBulkDelete,
-    isLeftDeleting
-  );
+  // 一括削除ボタンの表示制御
+  const { showDeleteButton, deleteButtonCount } = useBulkDeleteButton({
+    activeTab,
+    deletedTabName: "deleted",
+    checkedItems: checkedMemos,
+    checkedDeletedItems: checkedDeletedMemos,
+    isDeleting: isLeftDeleting,
+  });
 
   // 全選択機能
   const { isAllSelected, handleSelectAll } = useSelectAll({
@@ -270,34 +247,14 @@ function MemoScreen({
     onDeletedMemoRestore: handleItemDeselect,
   });
 
-  // 削除後の次選択処理 - シンプル化
-  const selectNextDeletedMemo = useCallback((deletedMemo: DeletedMemo) => {
-    if (!deletedNotes) {
-      onClose();
-      return;
-    }
-
-    const nextMemo = getNextDeletedItem(deletedNotes, deletedMemo);
-    
-    if (nextMemo && nextMemo.id !== deletedMemo.id) {
-      // 次のメモを選択
-      onSelectDeletedMemo(nextMemo);
-      setMemoScreenMode("view");
-      
-      // エディター表示復元
-      setTimeout(() => {
-        const editor = document.querySelector('[data-memo-editor]') as HTMLElement;
-        if (editor) {
-          editor.style.visibility = 'visible';
-          editor.style.pointerEvents = 'auto';
-        }
-      }, 100);
-    } else {
-      // 次がない場合はリストに戻る
-      setMemoScreenMode("list");
-      onClose();
-    }
-  }, [deletedNotes, onSelectDeletedMemo, onClose, setMemoScreenMode]);
+  // 削除後の次選択処理
+  const selectNextDeletedMemo = useNextDeletedItemSelection({
+    deletedItems: deletedNotes || null,
+    onSelectDeletedItem: onSelectDeletedMemo,
+    onClose,
+    setScreenMode: (mode: string) => setMemoScreenMode(mode as MemoScreenMode),
+    editorSelector: '[data-memo-editor]',
+  });
 
   // 削除済みメモの復元時の次選択処理
   const handleRestoreAndSelectNext = useCallback(

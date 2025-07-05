@@ -91,11 +91,11 @@ function MemoEditor({ memo, onClose, onSaveComplete }: MemoEditorProps) {
                 disabled={!hasChanges}
                 isSaving={isSaving}
                 buttonSize="size-6"
-                iconSize="size-4"
+                iconSize="size-3.5"
               />
               <PhotoButton
                 buttonSize="size-6"
-                iconSize="size-5"
+                iconSize="size-4"
                 className="rounded-full"
               />
             </div>

@@ -24,6 +24,7 @@ import {
   shouldShowDeleteButton,
 } from "@/src/utils/screenUtils";
 import { createToggleHandler } from "@/src/utils/toggleUtils";
+import { DELETE_BUTTON_POSITION } from "@/src/constants/ui";
 
 type TaskScreenMode = "list" | "view" | "create" | "edit";
 
@@ -432,7 +433,7 @@ function TaskScreen({
           <DeleteButton
             ref={deleteButtonRef}
             onDelete={handleBulkDelete}
-            className="absolute bottom-4 right-4 z-10 transition-all duration-300"
+            className={`absolute ${DELETE_BUTTON_POSITION} z-10 transition-all duration-300`}
             count={deleteButtonCount}
             isAnimating={isLidOpen}
           />
@@ -445,7 +446,6 @@ function TaskScreen({
             isRestoring={bulkRestoreState.isRestoring}
             className="absolute bottom-4 left-4 z-10"
             count={checkedDeletedTasks.size}
-            size="lg"
           />
         )}
       </div>

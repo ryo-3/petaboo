@@ -23,6 +23,7 @@ import {
   shouldShowDeleteButton,
 } from "@/src/utils/screenUtils";
 import { createToggleHandler } from "@/src/utils/toggleUtils";
+import { DELETE_BUTTON_POSITION } from "@/src/constants/ui";
 import { useCallback, useMemo, useRef, useState } from "react";
 
 type MemoScreenMode = "list" | "view" | "create";
@@ -338,7 +339,7 @@ function MemoScreen({
   );
 
   return (
-    <div className="flex h-[calc(100vh-64px)] bg-white">
+    <div className="flex h-[calc(100vh-64px)] bg-white overflow-hidden">
       {/* 左側：一覧表示エリア */}
       <div
         className={`${memoScreenMode === "list" ? "w-full" : "w-1/2"} ${memoScreenMode !== "list" ? "border-r border-gray-300" : ""} pt-6 pl-6 pr-2 flex flex-col transition-all duration-300 relative`}
@@ -413,7 +414,7 @@ function MemoScreen({
 
         {/* 左側一括削除ボタン（チェックボックスで選択したアイテムの一括削除用） */}
         <div
-          className={`absolute bottom-4 right-4 z-10 transition-opacity duration-300 ${
+          className={`absolute bottom-4 right-6 z-10 transition-opacity duration-300 ${
             shouldShowLeftBulkDelete
               ? "opacity-100"
               : "opacity-0 pointer-events-none"
@@ -429,15 +430,20 @@ function MemoScreen({
 
 
         {/* 一括復元ボタン */}
-        {activeTab === "deleted" && checkedDeletedMemos.size > 0 && (
+        <div className={`absolute bottom-4 left-6 z-10 transition-opacity duration-300 ${
+          activeTab === "deleted" && checkedDeletedMemos.size > 0
+            ? "opacity-100"
+            : "opacity-0 pointer-events-none"
+        }`}>
           <RestoreButton
             onRestore={handleBulkRestore}
             isRestoring={false}
-            className="absolute bottom-4 left-4 z-10"
             count={checkedDeletedMemos.size}
-            size="lg"
+            buttonSize="size-9"
+            iconSize="size-5"
+            tooltipPosition="top"
           />
-        )}
+        </div>
       </div>
 
       {/* モーダル */}
@@ -454,7 +460,7 @@ function MemoScreen({
       >
         {/* 右側エディター削除ボタン（現在表示中のメモの単体削除用） */}
         {memoScreenMode === "view" && selectedMemo && activeTab === "normal" && (
-          <div className="absolute bottom-4 right-4 z-10">
+          <div className={`absolute ${DELETE_BUTTON_POSITION} z-10`}>
             <DeleteButton
               data-right-panel-trash
               onDelete={() => {

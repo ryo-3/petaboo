@@ -7,6 +7,7 @@ import RestoreButton from '@/components/ui/buttons/restore-button'
 import { useDeletedTaskActions } from './use-deleted-task-actions'
 import type { DeletedTask } from '@/src/types/task'
 import { formatDate } from '@/src/utils/formatDate'
+import { DELETE_BUTTON_POSITION } from '@/src/constants/ui'
 
 interface DeletedTaskViewerProps {
   task: DeletedTask
@@ -49,7 +50,7 @@ function DeletedTaskViewer({ task, onClose, onDeleteAndSelectNext, onRestoreAndS
         <button
           onClick={showDeleteConfirmation}
           disabled={isDeleting}
-          className="fixed bottom-4 right-4 bg-red-600 hover:bg-red-700 text-white p-3 rounded-full shadow-lg transition-colors disabled:opacity-50"
+          className={`fixed ${DELETE_BUTTON_POSITION} bg-red-600 hover:bg-red-700 text-white p-3 rounded-full shadow-lg transition-colors disabled:opacity-50`}
           data-right-panel-trash
         >
           <TrashIcon />

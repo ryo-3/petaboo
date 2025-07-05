@@ -7,6 +7,7 @@ import RestoreButton from '@/components/ui/buttons/restore-button'
 import { useDeletedMemoActions } from './use-deleted-memo-actions'
 import type { DeletedMemo } from '@/src/types/memo'
 import { formatDate } from '@/src/utils/formatDate'
+import { DELETE_BUTTON_POSITION } from '@/src/constants/ui'
 
 interface DeletedMemoViewerProps {
   memo: DeletedMemo
@@ -71,7 +72,7 @@ function DeletedMemoViewer({ memo, onClose, onDeleteAndSelectNext, onRestoreAndS
       <button
         onClick={showDeleteConfirmation}
         disabled={isDeleting}
-        className="absolute bottom-4 right-4 bg-red-600 hover:bg-red-700 text-white p-3 rounded-full shadow-lg transition-colors disabled:opacity-50 z-10"
+        className={`absolute ${DELETE_BUTTON_POSITION} bg-red-600 hover:bg-red-700 text-white p-3 rounded-full shadow-lg transition-colors disabled:opacity-50 z-10`}
       >
         <TrashIcon />
       </button>

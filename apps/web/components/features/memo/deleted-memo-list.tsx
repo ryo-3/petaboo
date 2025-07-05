@@ -18,7 +18,7 @@ function DeletedMemoList({ onBackToNotes, onSelectDeletedMemo }: DeletedMemoList
   const { data: deletedNotes, isLoading, error } = useDeletedNotes()
 
   return (
-    <div className="flex flex-col justify-between h-[97vh]">
+    <div className="flex flex-col justify-between">
       <div>
         {/* 戻るボタン */}
         <button

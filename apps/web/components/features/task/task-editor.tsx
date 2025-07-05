@@ -8,6 +8,7 @@ import { useUpdateTask, useCreateTask } from "@/src/hooks/use-tasks";
 import type { Task } from "@/src/types/task";
 import { useCallback, useEffect, useState, useMemo } from "react";
 import { useTaskDelete } from "./use-task-delete";
+import { DELETE_BUTTON_POSITION } from "@/src/constants/ui";
 
 interface TaskEditorProps {
   task?: Task | null;
@@ -289,7 +290,7 @@ function TaskEditor({
       {/* 削除ボタンは編集時のみ表示 */}
       {!isNewTask && (
         <DeleteButton
-          className="fixed bottom-4 right-4"
+          className={`fixed ${DELETE_BUTTON_POSITION}`}
           data-right-panel-trash
           onDelete={showDeleteConfirmation}
           isAnimating={isLidOpen}

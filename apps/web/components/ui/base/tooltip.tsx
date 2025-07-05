@@ -32,7 +32,7 @@ function Tooltip({
   return (
     <div className={`relative inline-block tooltip-wrapper ${className}`}>
       {children}
-      <div className={`absolute ${getPositionClasses()} px-2 py-1 ${bgColor} ${textColor} text-xs rounded whitespace-nowrap opacity-0 transition-opacity pointer-events-none z-[9999] tooltip-content`}>
+      <div className={`absolute ${getPositionClasses()} px-2 py-1 ${bgColor} ${textColor} text-xs rounded whitespace-nowrap opacity-0 transition-opacity pointer-events-none z-[999999] tooltip-content`}>
         {text}
         <div className={`absolute ${
           position === 'top' 

@@ -52,10 +52,10 @@ function SearchScreen({
       
       if (currentScrollY > lastScrollY && currentScrollY > 100) {
         // 下にスクロール && 100px以上スクロールした場合
-        setIsHeaderVisible(false);
+        // ヘッダー非表示処理は削除
       } else if (currentScrollY < lastScrollY - 10 || currentScrollY <= 50) {
         // 上に10px以上スクロール || 50px以下の場合
-        setIsHeaderVisible(true);
+        // ヘッダー表示処理は削除
       }
       
       lastScrollY = currentScrollY;

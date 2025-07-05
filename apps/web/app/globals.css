@@ -53,3 +53,12 @@ html, body {
 .trash-icon-lid.open {
   transform: rotate(42deg) translateX(5px) translateY(-2px);
 }
+
+/* 削除ボタンのアニメーション */
+.delete-button {
+  transition: opacity 300ms ease-in-out;
+}
+
+.delete-button.animating .trash-icon-lid {
+  transform: rotate(42deg) translateX(5px) translateY(-2px);
+}

@@ -15,14 +15,14 @@ interface DeleteButtonProps {
 const DeleteButton = forwardRef<HTMLButtonElement, DeleteButtonProps>(
   ({ onDelete, className = "", count, isAnimating = false, variant = "default", ...props }, ref) => {
     return (
-      <div className={`${className} transition-opacity duration-300 ease-in-out`}>
+      <div className={`delete-button ${isAnimating ? 'animating' : ''} ${className}`}>
         <button
           ref={ref}
           onClick={onDelete}
           className={`${variant === "danger" ? "bg-red-600 hover:bg-red-700" : "bg-gray-500 hover:bg-gray-600"} text-white p-2 rounded-full shadow-lg transition-colors relative`}
           {...props}
         >
-          <TrashIcon isOpen={isAnimating} />
+          <TrashIcon />
           {count !== undefined && count > 0 && (
             <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
               {count}

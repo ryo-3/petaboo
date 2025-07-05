@@ -1,9 +1,8 @@
 interface TrashIconProps {
   className?: string
-  isOpen?: boolean
 }
 
-function TrashIcon({ className = "w-5 h-5", isOpen = false }: TrashIconProps) {
+function TrashIcon({ className = "w-5 h-5" }: TrashIconProps) {
   return (
     <svg 
       xmlns="http://www.w3.org/2000/svg" 
@@ -32,7 +31,7 @@ function TrashIcon({ className = "w-5 h-5", isOpen = false }: TrashIconProps) {
       </g>
       
       {/* 蓋の部分（ハンドル含む） - 赤色 */}
-      <g className={`trash-icon-lid ${isOpen ? 'open' : ''}`}>
+      <g className="trash-icon-lid">
         {/* 蓋の横線 */}
         <path 
           strokeLinecap="round" 

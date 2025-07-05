@@ -8,6 +8,7 @@ interface SaveButtonProps {
   isSaving: boolean;
   savedSuccessfully?: boolean;
   title?: string;
+  buttonSize?: string;
   iconSize?: string;
   className?: string;
 }
@@ -18,7 +19,8 @@ function SaveButton({
   isSaving,
   savedSuccessfully = false,
   title = "保存 (Ctrl+S)",
-  iconSize = "w-4 h-4",
+  buttonSize = "size-7",
+  iconSize = "size-4",
   className = "",
 }: SaveButtonProps) {
   const getTooltipText = () => {
@@ -32,12 +34,12 @@ function SaveButton({
       <button
         onClick={onClick}
         disabled={disabled || isSaving || savedSuccessfully}
-        className={`p-2 rounded-md transition-colors flex items-center justify-center ${
+        className={`${buttonSize} rounded-md transition-colors flex items-center justify-center ${
           isSaving
             ? "bg-Green text-white cursor-not-allowed"
             : disabled || savedSuccessfully
               ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-              : "text-gray-100 bg-Green"
+              : "text-gray-200 bg-Green"
         } ${className}`}
       >
         {isSaving ? (

@@ -17,7 +17,6 @@ import type { DeletedTask, Task } from "@/src/types/task";
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import {
   createDeletedNextSelectionHandler,
-  createNextSelectionHandler,
   getTaskDisplayOrder,
 } from "@/src/utils/domUtils";
 import {
@@ -208,13 +207,32 @@ function TaskScreen({
   });
 
   // 削除済みタスクでの次のタスク選択ハンドラー
-  const handleDeletedTaskAndSelectNext = (deletedTask: DeletedTask) => {
+  const handleDeletedTaskAndSelectNext = (deletedTask: DeletedTask, preDeleteDisplayOrder?: number[]) => {
+    console.log('🎯 削除済みタスクの次選択開始:', { 
+      deletedTaskId: deletedTask.id, 
+      deletedTasksLength: deletedTasks?.length,
+      usePreDelete: !!preDeleteDisplayOrder
+    });
+    
     if (!deletedTasks) return;
 
+    // 削除されたタスクを除外してフィルター
+    const filteredDeletedTasks = deletedTasks.filter(t => t.id !== deletedTask.id);
+    console.log('🎯 削除済みタスクフィルター後:', { 
+      filteredLength: filteredDeletedTasks.length,
+      filteredIds: filteredDeletedTasks.map(t => t.id),
+      deletedTaskId: deletedTask.id,
+      excludedDeletedTask: true
+    });
+
+    // 削除済みタスクは削除日時順なので、DOM順序ではなく createDeletedNextSelectionHandler を使用
     createDeletedNextSelectionHandler(
-      deletedTasks,
+      filteredDeletedTasks,
       deletedTask,
-      (task) => onSelectDeletedTask(task, true),
+      (task) => {
+        console.log('🎯 次の削除済みタスクを選択:', { nextTask: task });
+        onSelectDeletedTask(task, true);
+      },
       onClose,
       setTaskScreenMode
     );
@@ -237,27 +255,98 @@ function TaskScreen({
   };
 
   // 通常タスクでの次のタスク選択ハンドラー（実際の画面表示順序に基づく）
-  const handleTaskDeleteAndSelectNext = (deletedTask: Task) => {
+  const handleTaskDeleteAndSelectNext = (deletedTask: Task, preDeleteDisplayOrder?: number[]) => {
+    console.log('🎯 handleTaskDeleteAndSelectNext開始:', { 
+      deletedTaskId: deletedTask.id, 
+      deletedTaskStatus: deletedTask.status,
+      activeTab,
+      tasksLength: tasks?.length
+    });
+    
     if (!tasks) return;
 
     // 削除されたタスクが現在のタブと異なるステータスの場合は右パネルを閉じるだけ
     if (deletedTask.status !== activeTab) {
+      console.log('🎯 ステータス不一致、パネルを閉じる');
       setTaskScreenMode("list");
       onClearSelection?.(); // 選択状態のみクリア
       return;
     }
 
-    const filteredTasks = tasks.filter((t) => t.status === activeTab);
-    const displayOrder = getTaskDisplayOrder();
+    // 削除されたタスクを除外してフィルター
+    const filteredTasks = tasks.filter((t) => t.status === activeTab && t.id !== deletedTask.id);
+    console.log('🎯 フィルター後のタスク:', { 
+      filteredTasksLength: filteredTasks.length,
+      filteredTaskIds: filteredTasks.map(t => t.id),
+      deletedTaskId: deletedTask.id,
+      excludedDeletedTask: true
+    });
+    
+    // 削除前のDOM順序を使用、なければ現在の順序
+    const displayOrder = preDeleteDisplayOrder || getTaskDisplayOrder();
+    console.log('🎯 DOM表示順序:', { displayOrder, deletedTaskId: deletedTask.id, usePreDelete: !!preDeleteDisplayOrder });
 
-    createNextSelectionHandler(
-      filteredTasks,
-      deletedTask,
-      displayOrder,
-      (task) => onSelectTask(task, true),
-      onClose,
-      setTaskScreenMode
-    );
+    // DOMベースで次のタスクを直接選択
+    const deletedTaskIndex = displayOrder.indexOf(deletedTask.id);
+    console.log('🎯 削除されたタスクのDOM位置:', { deletedTaskIndex, deletedTaskId: deletedTask.id });
+    
+    let nextTaskId = null;
+    
+    if (deletedTaskIndex !== -1) {
+      // DOM順序で削除されたタスクの次のタスクを探す
+      for (let i = deletedTaskIndex + 1; i < displayOrder.length; i++) {
+        const candidateId = displayOrder[i];
+        if (filteredTasks.some(t => t.id === candidateId)) {
+          nextTaskId = candidateId;
+          break;
+        }
+      }
+      
+      // 次がない場合は前のタスクを探す
+      if (!nextTaskId) {
+        for (let i = deletedTaskIndex - 1; i >= 0; i--) {
+          const candidateId = displayOrder[i];
+          if (filteredTasks.some(t => t.id === candidateId)) {
+            nextTaskId = candidateId;
+            break;
+          }
+        }
+      }
+    }
+    
+    console.log('🎯 次のタスクID:', { nextTaskId });
+    
+    if (nextTaskId) {
+      const nextTask = filteredTasks.find(t => t.id === nextTaskId);
+      console.log('🎯 次のタスクを選択:', { nextTask });
+      
+      if (nextTask) {
+        // DOM監視
+        setTimeout(() => {
+          const editorElement = document.querySelector('[data-task-editor]');
+          const titleInput = editorElement?.querySelector('input[placeholder="タスクタイトルを入力..."]') as HTMLInputElement;
+          const textarea = editorElement?.querySelector('textarea') as HTMLTextAreaElement;
+          
+          console.log('🎯 エディターDOM監視:', {
+            editorExists: !!editorElement,
+            titleValue: titleInput?.value || 'なし',
+            textareaValue: textarea?.value || 'なし',
+            editorVisibility: editorElement ? getComputedStyle(editorElement).visibility : 'なし'
+          });
+        }, 100);
+        
+        onSelectTask(nextTask, true);
+        setTaskScreenMode("view");
+      } else {
+        console.log('🎯 次のタスクが見つからない、リストモードに戻る');
+        setTaskScreenMode("list");
+        onClose();
+      }
+    } else {
+      console.log('🎯 次のタスクIDが見つからない、リストモードに戻る');
+      setTaskScreenMode("list");
+      onClose();
+    }
   };
 
   return (

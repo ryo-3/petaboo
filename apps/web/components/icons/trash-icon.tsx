@@ -13,6 +13,7 @@ function TrashIcon({ className = "w-5 h-5", isOpen = false }: TrashIconProps) {
       stroke="currentColor" 
       className={className}
       style={{ overflow: 'visible' }}
+      data-trash-icon
     >
       {/* ゴミ箱本体（蓋以外）- 青色 */}
       <g>

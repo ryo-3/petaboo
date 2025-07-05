@@ -11,7 +11,7 @@ import { formatDate } from '@/src/utils/formatDate'
 interface DeletedTaskViewerProps {
   task: DeletedTask
   onClose: () => void
-  onDeleteAndSelectNext?: (deletedTask: DeletedTask) => void
+  onDeleteAndSelectNext?: (deletedTask: DeletedTask, preDeleteDisplayOrder?: number[]) => void
   onRestoreAndSelectNext?: (deletedTask: DeletedTask) => void
 }
 
@@ -39,7 +39,7 @@ function DeletedTaskViewer({ task, onClose, onDeleteAndSelectNext, onRestoreAndS
   ]
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div data-task-editor className="flex flex-col h-full bg-white">
       <div className="flex justify-start items-center mb-4">
         <RestoreButton
           onRestore={handleRestore}
@@ -50,6 +50,7 @@ function DeletedTaskViewer({ task, onClose, onDeleteAndSelectNext, onRestoreAndS
           onClick={showDeleteConfirmation}
           disabled={isDeleting}
           className="fixed bottom-6 right-6 bg-red-600 hover:bg-red-700 text-white p-3 rounded-full shadow-lg transition-colors disabled:opacity-50"
+          data-right-panel-trash
         >
           <TrashIcon />
         </button>

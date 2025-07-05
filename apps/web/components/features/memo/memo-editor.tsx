@@ -17,11 +17,7 @@ interface MemoEditorProps {
   ) => void;
 }
 
-function MemoEditor({
-  memo,
-  onClose,
-  onSaveComplete,
-}: MemoEditorProps) {
+function MemoEditor({ memo, onClose, onSaveComplete }: MemoEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const baseViewerRef = useRef<HTMLDivElement>(null);
 
@@ -67,63 +63,62 @@ function MemoEditor({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [handleSave, hasChanges]);
 
-
   return (
     <>
       <div ref={baseViewerRef} data-memo-editor>
         <BaseViewer
-        item={
-          memo || {
-            id: 0,
-            title: "",
-            content: "",
-            createdAt: Math.floor(Date.now() / 1000),
-            updatedAt: Math.floor(Date.now() / 1000),
+          item={
+            memo || {
+              id: 0,
+              title: "",
+              content: "",
+              createdAt: Math.floor(Date.now() / 1000),
+              updatedAt: Math.floor(Date.now() / 1000),
+            }
           }
-        }
-        onClose={onClose}
-        error={error}
-        isEditing={true}
-        createdItemId={null}
-        headerActions={
-          <div className="flex items-center gap-2">
-            {saveError && (
-              <span className="text-xs text-red-500">{saveError}</span>
-            )}
-            <SaveButton
-              onClick={handleSave}
-              disabled={!hasChanges}
-              isSaving={isSaving}
-            />
-            <button
-              className="p-2 rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-800 transition-colors"
-              title="画像を添付（今後対応予定）"
-              onClick={() => {
-                alert("画像添付機能は今後実装予定です");
-              }}
-            >
-              <PhotoIcon className="w-4 h-4" />
-            </button>
-          </div>
-        }
-      >
-        <textarea
-          ref={textareaRef}
-          placeholder="入力..."
-          value={content}
-          onChange={(e) => {
-            const newContent = e.target.value;
-            const firstLine = newContent.split("\n")[0] || "";
+          onClose={onClose}
+          error={error}
+          isEditing={true}
+          createdItemId={null}
+          headerActions={
+            <div className="flex items-center gap-2">
+              {saveError && (
+                <span className="text-xs text-red-500">{saveError}</span>
+              )}
+              <SaveButton
+                onClick={handleSave}
+                disabled={!hasChanges}
+                isSaving={isSaving}
+                buttonSize="size-6"
+                iconSize="size-4"
+              />
+              <button
+                className="p-1.5 rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-800 transition-colors"
+                title="画像を添付（今後対応予定）"
+                onClick={() => {
+                  alert("画像添付機能は今後実装予定です");
+                }}
+              >
+                <PhotoIcon className="w-4 h-4" />
+              </button>
+            </div>
+          }
+        >
+          <textarea
+            ref={textareaRef}
+            placeholder="入力..."
+            value={content}
+            onChange={(e) => {
+              const newContent = e.target.value;
+              const firstLine = newContent.split("\n")[0] || "";
 
-            handleTitleChange(firstLine);
-            handleContentChange(newContent);
-          }}
-          className="w-full h-[calc(100vh-280px)] resize-none outline-none text-gray-500 leading-relaxed font-medium"
-        />
-      </BaseViewer>
-
+              handleTitleChange(firstLine);
+              handleContentChange(newContent);
+            }}
+            className="w-full h-[calc(100vh-164px)] resize-none outline-none text-gray-500 leading-relaxed font-medium pb-10"
+          />
+        </BaseViewer>
       </div>
-
     </>
   );
 }

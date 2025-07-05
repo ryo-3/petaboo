@@ -14,7 +14,7 @@ interface TaskEditorProps {
   onClose: () => void;
   onSelectTask?: (task: Task | null, fromFullList?: boolean) => void;
   onClosePanel?: () => void;
-  onDeleteAndSelectNext?: (deletedTask: Task) => void;
+  onDeleteAndSelectNext?: (deletedTask: Task, preDeleteDisplayOrder?: number[]) => void;
   onSaveComplete?: (savedTask: Task, isNewTask: boolean) => void;
 }
 
@@ -37,6 +37,7 @@ function TaskEditor({
     hideDeleteConfirmation,
     showDeleteModal,
     isDeleting,
+    isLidOpen,
   } = useTaskDelete({
     task: task || null,
     onClose,
@@ -255,14 +256,14 @@ function TaskEditor({
 
   return (
     <>
-      <BaseViewer
-        item={tempTask}
-        onClose={onClose}
-        error={error ? "エラー" : null}
-        headerActions={null}
-        isEditing={true}
-        data-task-editor
-      >
+      <div data-task-editor>
+        <BaseViewer
+          item={tempTask}
+          onClose={onClose}
+          error={error ? "エラー" : null}
+          headerActions={null}
+          isEditing={true}
+        >
         <TaskForm
           title={title}
           onTitleChange={setTitle}
@@ -282,7 +283,8 @@ function TaskEditor({
           savedSuccessfully={savedSuccessfully}
           isNewTask={isNewTask}
         />
-      </BaseViewer>
+        </BaseViewer>
+      </div>
       
       {/* 削除ボタンは編集時のみ表示 */}
       {!isNewTask && (
@@ -290,6 +292,7 @@ function TaskEditor({
           className="fixed bottom-6 right-6"
           data-right-panel-trash
           onDelete={showDeleteConfirmation}
+          isAnimating={isLidOpen}
         />
       )}
 

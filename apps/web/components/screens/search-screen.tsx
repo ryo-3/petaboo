@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useGlobalSearch } from "@/src/hooks/use-global-search";
 import SearchIcon from "@/components/icons/search-icon";
 import type { Memo, DeletedMemo } from '@/src/types/memo';
@@ -30,6 +30,7 @@ function SearchScreen({
   const [searchScope, setSearchScope] = useState<"all" | "title" | "content">("all");
   const [searchType, setSearchType] = useState<"all" | "memo" | "task" | "deleted">("all");
   const [sortBy, setSortBy] = useState<"relevance" | "date" | "title">("relevance");
+  const scrollRef = useRef<HTMLDivElement>(null);
   
   // 検索実行
   const { results, isSearching, hasQuery } = useGlobalSearch({
@@ -38,6 +39,31 @@ function SearchScreen({
     searchType,
     debounceMs: 500 // 詳細検索では少し長めのデバウンス
   });
+
+  // スクロール監視
+  useEffect(() => {
+    const scrollElement = scrollRef.current;
+    if (!scrollElement) return;
+
+    let lastScrollY = 0;
+    
+    const handleScroll = () => {
+      const currentScrollY = scrollElement.scrollTop;
+      
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        // 下にスクロール && 100px以上スクロールした場合
+        setIsHeaderVisible(false);
+      } else if (currentScrollY < lastScrollY - 10 || currentScrollY <= 50) {
+        // 上に10px以上スクロール || 50px以下の場合
+        setIsHeaderVisible(true);
+      }
+      
+      lastScrollY = currentScrollY;
+    };
+
+    scrollElement.addEventListener('scroll', handleScroll);
+    return () => scrollElement.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // ソート処理
   const sortedResults = [...results].sort((a, b) => {
@@ -74,9 +100,9 @@ function SearchScreen({
   };
 
   return (
-    <div className="h-full flex flex-col bg-white">
+    <div ref={scrollRef} className="h-[calc(100vh-64px)] overflow-y-auto bg-white">
       {/* ヘッダー */}
-      <div className="border-b border-gray-200 p-6">
+      <div className="bg-white border-b border-gray-200 p-6">
         {/* タイトル */}
         <div className="flex items-center gap-3 mb-4">
           <SearchIcon className="w-6 h-6 text-gray-600" />
@@ -152,9 +178,9 @@ function SearchScreen({
       </div>
 
       {/* 検索結果エリア */}
-      <div className="flex-1 overflow-hidden relative">
+      <div className="relative">
         {!hasQuery ? (
-          <div className="flex items-center justify-center h-full">
+          <div className="flex items-center justify-center min-h-96">
             <div className="text-center text-gray-500">
               <div className="text-6xl mb-4">🔍</div>
               <h2 className="text-xl font-medium mb-2">詳細検索</h2>
@@ -162,7 +188,7 @@ function SearchScreen({
             </div>
           </div>
         ) : (
-          <div className="h-full overflow-y-auto">
+          <div>
             {/* 検索結果ヘッダー */}
             <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-3 z-1">
               <div className="flex justify-between items-center">
@@ -182,7 +208,7 @@ function SearchScreen({
             </div>
 
             {/* 検索結果リスト */}
-            <div className="p-6">
+            <div className="p-6 pb-20">
               {sortedResults.length === 0 && !isSearching ? (
                 <div className="text-center py-12 text-gray-500">
                   <div className="text-4xl mb-4">📭</div>

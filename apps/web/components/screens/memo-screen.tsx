@@ -9,6 +9,7 @@ import DesktopUpper from "@/components/layout/desktop-upper";
 import DeleteButton from "@/components/ui/buttons/delete-button";
 import RestoreButton from "@/components/ui/buttons/restore-button";
 import RightPanel from "@/components/ui/layout/right-panel";
+import { ButtonContainer } from "@/components/ui/layout/button-container";
 import { useDeletedNotes, useNotes, useDeleteNote } from "@/src/hooks/use-notes";
 import { useScreenState } from "@/src/hooks/use-screen-state";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
@@ -24,7 +25,9 @@ import {
 } from "@/src/utils/screenUtils";
 import { createToggleHandler } from "@/src/utils/toggleUtils";
 import { DELETE_BUTTON_POSITION } from "@/src/constants/ui";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useDeletionLid } from "@/src/hooks/use-deletion-lid";
+import { useDelayedButtonVisibility } from "@/src/hooks/use-delayed-button-visibility";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 type MemoScreenMode = "list" | "view" | "create";
 
@@ -62,16 +65,8 @@ function MemoScreen({
   // 削除済みメモビューアーの参照
   const deletedMemoViewerRef = useRef<DeletedMemoViewerRef>(null);
   
-  // 削除完了時に蓋を閉じる関数を設定
-  useEffect(() => {
-    (window as any).closeDeletingLid = () => {
-      setIsRightLidOpen(false);
-    };
-    
-    return () => {
-      delete (window as any).closeDeletingLid;
-    };
-  }, []);
+  // 削除完了時に蓋を閉じる処理
+  useDeletionLid(() => setIsRightLidOpen(false));
 
   // 左側一括削除の状態
   const [isLeftDeleting, setIsLeftDeleting] = useState(false);
@@ -169,12 +164,16 @@ function MemoScreen({
 
   // 削除ボタン表示判定の統一化
   const shouldShowLeftBulkDelete = useMemo(() => {
+    // 削除中は強制的に表示を維持
+    if (isLeftDeleting) {
+      return true;
+    }
     return shouldShowDeleteButton(
       activeTab,
       "deleted",
       checkedMemos,
       checkedDeletedMemos
-    ) || isLeftDeleting;
+    );
   }, [activeTab, checkedMemos, checkedDeletedMemos, isLeftDeleting]);
 
   const deleteButtonCount = useMemo(() => {
@@ -185,6 +184,12 @@ function MemoScreen({
       checkedDeletedMemos
     );
   }, [activeTab, checkedMemos, checkedDeletedMemos]);
+
+  // 削除ボタンの遅延非表示処理
+  const showDeleteButton = useDelayedButtonVisibility(
+    shouldShowLeftBulkDelete,
+    isLeftDeleting
+  );
 
   // 全選択状態の判定
   const isAllSelected = useMemo(() => {
@@ -436,13 +441,7 @@ function MemoScreen({
         />
 
         {/* 左側一括削除ボタン（チェックボックスで選択したアイテムの一括削除用） */}
-        <div
-          className={`absolute bottom-4 right-6 z-10 transition-opacity duration-300 ${
-            shouldShowLeftBulkDelete
-              ? "opacity-100"
-              : "opacity-0 pointer-events-none"
-          }`}
-        >
+        <ButtonContainer show={showDeleteButton} position="bottom-right">
           <DeleteButton
             ref={deleteButtonRef}
             onDelete={handleLeftBulkDelete}
@@ -450,15 +449,14 @@ function MemoScreen({
             isAnimating={isLeftLidOpen}
             variant={activeTab === "deleted" ? "danger" : undefined}
           />
-        </div>
+        </ButtonContainer>
 
 
         {/* 一括復元ボタン */}
-        <div className={`absolute bottom-4 left-6 z-10 transition-opacity duration-300 ${
-          activeTab === "deleted" && checkedDeletedMemos.size > 0
-            ? "opacity-100"
-            : "opacity-0 pointer-events-none"
-        }`}>
+        <ButtonContainer 
+          show={activeTab === "deleted" && checkedDeletedMemos.size > 0} 
+          position="bottom-left"
+        >
           <RestoreButton
             onRestore={handleBulkRestore}
             isRestoring={false}
@@ -467,7 +465,7 @@ function MemoScreen({
             iconSize="size-5"
             tooltipPosition="top"
           />
-        </div>
+        </ButtonContainer>
       </div>
 
       {/* モーダル */}

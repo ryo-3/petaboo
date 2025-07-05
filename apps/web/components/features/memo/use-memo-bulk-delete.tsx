@@ -196,10 +196,8 @@ export function useMemosBulkDelete({
     const threshold = activeTab === "deleted" ? 1 : 10;
 
     // 削除ボタンを押した瞬間に蓋を開く
-    if (activeTab === "normal") {
-      setIsDeleting?.(true);
-      setIsLidOpen?.(true);
-    }
+    setIsDeleting?.(true);
+    setIsLidOpen?.(true);
 
     console.log('🗑️ 削除開始:', { targetIds: targetIds.length, activeTab });
     
@@ -213,7 +211,9 @@ export function useMemosBulkDelete({
         console.log('❌ キャンセル');
         // キャンセル時に蓋を閉じる
         setIsDeleting?.(false);
-        setIsLidOpen?.(false);
+        setTimeout(() => {
+          setIsLidOpen?.(false);
+        }, 300);
         bulkDelete.handleCancel();
       }}
       onConfirm={async () => {

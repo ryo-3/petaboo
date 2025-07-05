@@ -33,6 +33,9 @@ import {
   shouldShowDeleteButton,
 } from "@/src/utils/screenUtils";
 import { createToggleHandler } from "@/src/utils/toggleUtils";
+import { useItemDeselect } from "@/src/hooks/use-item-deselect";
+import { useSelectAll } from "@/src/hooks/use-select-all";
+import { useTabChange } from "@/src/hooks/use-tab-change";
 import { useCallback, useMemo, useRef, useState } from "react";
 
 type TaskScreenMode = "list" | "view" | "create" | "edit";
@@ -166,55 +169,25 @@ function TaskScreen({
     isDeleting
   );
 
-  // 全選択状態の判定
-  const isAllSelected = useMemo(() => {
-    if (activeTab === "deleted" && deletedTasks && deletedTasks.length > 0) {
-      return deletedTasks.every((task) => checkedDeletedTasks.has(task.id));
-    } else if (tasks) {
-      const filteredTasks = tasks.filter((task) => task.status === activeTab);
-      if (filteredTasks.length > 0) {
-        return filteredTasks.every((task) => checkedTasks.has(task.id));
-      }
-    }
-    return false;
-  }, [activeTab, tasks, deletedTasks, checkedTasks, checkedDeletedTasks]);
-
-  // 全選択/全解除機能
-  const handleSelectAll = useCallback(() => {
-    if (activeTab === "deleted" && deletedTasks) {
-      if (isAllSelected) {
-        setCheckedDeletedTasks(new Set());
-      } else {
-        const allDeletedTaskIds = new Set(deletedTasks.map((task) => task.id));
-        setCheckedDeletedTasks(allDeletedTaskIds);
-      }
-    } else if (tasks) {
-      const filteredTasks = tasks.filter((task) => task.status === activeTab);
-      if (isAllSelected) {
-        setCheckedTasks(new Set());
-      } else {
-        const allTaskIds = new Set(filteredTasks.map((task) => task.id));
-        setCheckedTasks(allTaskIds);
-      }
-    }
-  }, [
+  // 全選択機能
+  const { isAllSelected, handleSelectAll } = useSelectAll({
     activeTab,
-    tasks,
-    deletedTasks,
-    isAllSelected,
-    setCheckedTasks,
-    setCheckedDeletedTasks,
-  ]);
+    deletedTabName: "deleted",
+    items: tasks || null,
+    deletedItems: deletedTasks || null,
+    checkedItems: checkedTasks,
+    checkedDeletedItems: checkedDeletedTasks,
+    setCheckedItems: setCheckedTasks,
+    setCheckedDeletedItems: setCheckedDeletedTasks,
+    filterFn: (task, tab) => task.status === tab,
+  });
 
-  // 選択解除処理の統一化
-  const handleItemDeselect = useCallback(
-    (id: number) => {
-      if (selectedTask?.id === id || selectedDeletedTask?.id === id) {
-        onClearSelection?.();
-        setTaskScreenMode("list");
-      }
-    },
-    [selectedTask, selectedDeletedTask, onClearSelection, setTaskScreenMode]
+  // 選択解除処理
+  const handleItemDeselect = useItemDeselect(
+    selectedTask,
+    selectedDeletedTask,
+    () => onClearSelection?.(),
+    (mode: string) => setTaskScreenMode(mode as TaskScreenMode)
   );
 
   // 型キャストの統一化
@@ -421,12 +394,11 @@ function TaskScreen({
         <DesktopUpper
           currentMode="task"
           activeTab={activeTabTyped}
-          onTabChange={(tab) => {
-            setActiveTab(tab);
-            // タブ切り替え時に右パネルを閉じる
-            setTaskScreenMode("list");
-            onClearSelection?.();
-          }}
+          onTabChange={useTabChange({
+            setActiveTab,
+            setScreenMode: (mode: string) => setTaskScreenMode(mode as TaskScreenMode),
+            onClearSelection: () => onClearSelection?.()
+          })}
           onCreateNew={() => {
             // 新規作成時に選択状態をクリア
             onSelectTask(null, true);

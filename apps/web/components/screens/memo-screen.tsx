@@ -27,6 +27,9 @@ import { createToggleHandler } from "@/src/utils/toggleUtils";
 import { DELETE_BUTTON_POSITION } from "@/src/constants/ui";
 import { useDeletionLid } from "@/src/hooks/use-deletion-lid";
 import { useDelayedButtonVisibility } from "@/src/hooks/use-delayed-button-visibility";
+import { useItemDeselect } from "@/src/hooks/use-item-deselect";
+import { useSelectAll } from "@/src/hooks/use-select-all";
+import { useTabChange } from "@/src/hooks/use-tab-change";
 import { useCallback, useMemo, useRef, useState } from "react";
 
 type MemoScreenMode = "list" | "view" | "create";
@@ -191,53 +194,25 @@ function MemoScreen({
     isLeftDeleting
   );
 
-  // 全選択状態の判定
-  const isAllSelected = useMemo(() => {
-    if (activeTab === "normal" && notes && notes.length > 0) {
-      return notes.every((memo) => checkedMemos.has(memo.id));
-    } else if (
-      activeTab === "deleted" &&
-      deletedNotes &&
-      deletedNotes.length > 0
-    ) {
-      return deletedNotes.every((memo) => checkedDeletedMemos.has(memo.id));
-    }
-    return false;
-  }, [activeTab, notes, deletedNotes, checkedMemos, checkedDeletedMemos]);
-
-  // 全選択/全解除機能
-  const handleSelectAll = useCallback(() => {
-    if (activeTab === "normal" && notes) {
-      if (isAllSelected) {
-        setCheckedMemos(new Set());
-      } else {
-        const allMemoIds = new Set(notes.map((memo) => memo.id));
-        setCheckedMemos(allMemoIds);
-      }
-    } else if (activeTab === "deleted" && deletedNotes) {
-      if (isAllSelected) {
-        setCheckedDeletedMemos(new Set());
-      } else {
-        const allDeletedMemoIds = new Set(deletedNotes.map((memo) => memo.id));
-        setCheckedDeletedMemos(allDeletedMemoIds);
-      }
-    }
-  }, [
+  // 全選択機能
+  const { isAllSelected, handleSelectAll } = useSelectAll({
     activeTab,
-    notes,
-    deletedNotes,
-    isAllSelected,
-    setCheckedMemos,
-    setCheckedDeletedMemos,
-  ]);
+    deletedTabName: "deleted",
+    items: notes || null,
+    deletedItems: deletedNotes || null,
+    checkedItems: checkedMemos,
+    checkedDeletedItems: checkedDeletedMemos,
+    setCheckedItems: setCheckedMemos,
+    setCheckedDeletedItems: setCheckedDeletedMemos,
+  });
 
-  // 選択解除処理の統一化
-  const handleItemDeselect = useCallback((id: number) => {
-    if (selectedMemo?.id === id || selectedDeletedMemo?.id === id) {
-      onDeselectAndStayOnMemoList?.();
-      setMemoScreenMode("list");
-    }
-  }, [selectedMemo, selectedDeletedMemo, onDeselectAndStayOnMemoList, setMemoScreenMode]);
+  // 選択解除処理
+  const handleItemDeselect = useItemDeselect(
+    selectedMemo,
+    selectedDeletedMemo,
+    () => onDeselectAndStayOnMemoList?.(),
+    (mode: string) => setMemoScreenMode(mode as MemoScreenMode)
+  );
 
   // 左側一括削除関連（チェックボックスで選択したアイテムの一括削除）
   const { handleBulkDelete: handleLeftBulkDelete, DeleteModal: BulkDeleteModal } = useMemosBulkDelete({
@@ -375,18 +350,17 @@ function MemoScreen({
         <DesktopUpper
           currentMode="memo"
           activeTab={activeTab as "normal" | "deleted"}
-          onTabChange={(tab) => {
-            // タブ切り替え時に選択をクリア
-            if (tab === "normal" && selectedDeletedMemo) {
-              onSelectDeletedMemo(null);
-              setMemoScreenMode("list");
-            } else if (tab === "deleted" && selectedMemo) {
-              onSelectMemo(null);
-              setMemoScreenMode("list");
-            }
-
-            setActiveTab(tab);
-          }}
+          onTabChange={useTabChange({
+            setActiveTab,
+            setScreenMode: (mode: string) => setMemoScreenMode(mode as MemoScreenMode),
+            onClearSelection: () => onDeselectAndStayOnMemoList?.(),
+            selectedItem: selectedMemo,
+            selectedDeletedItem: selectedDeletedMemo,
+            onSelectItem: onSelectMemo,
+            onSelectDeletedItem: onSelectDeletedMemo,
+            normalTabName: "normal",
+            deletedTabName: "deleted"
+          })}
           onCreateNew={() => {
             // 新規作成時に選択状態をクリア
             onSelectMemo(null);

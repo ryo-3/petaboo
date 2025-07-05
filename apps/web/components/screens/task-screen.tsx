@@ -210,17 +210,8 @@ function TaskScreen({
   // 削除済みタスクの復元時の次のタスク選択ハンドラー
   const handleDeletedTaskRestoreAndSelectNext = (deletedTask: DeletedTask) => {
     if (!deletedTasks) return;
-
-    createDeletedNextSelectionHandler(
-      deletedTasks,
-      deletedTask,
-      (task) => onSelectDeletedTask(task, true),
-      () => {
-        setTaskScreenMode("list");
-        onClearSelection?.();
-      },
-      setTaskScreenMode
-    );
+    createDeletedNextSelectionHandler(deletedTasks, deletedTask, onSelectDeletedTask,
+      () => onClearSelection?.(), setTaskScreenMode, { isRestore: true, onSelectWithFromFlag: true });
   };
 
   // 通常タスクでの次のタスク選択ハンドラー（実際の画面表示順序に基づく）

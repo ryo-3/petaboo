@@ -1,6 +1,8 @@
 "use client";
 
-import DeletedMemoViewer, { type DeletedMemoViewerRef } from "@/components/features/memo/deleted-memo-viewer";
+import DeletedMemoViewer, {
+  type DeletedMemoViewerRef,
+} from "@/components/features/memo/deleted-memo-viewer";
 import MemoEditor from "@/components/features/memo/memo-editor";
 import { useMemosBulkDelete } from "@/components/features/memo/use-memo-bulk-delete";
 import { useMemosBulkRestore } from "@/components/features/memo/use-memo-bulk-restore";
@@ -8,25 +10,29 @@ import DesktopLower from "@/components/layout/desktop-lower";
 import DesktopUpper from "@/components/layout/desktop-upper";
 import DeleteButton from "@/components/ui/buttons/delete-button";
 import RestoreButton from "@/components/ui/buttons/restore-button";
-import RightPanel from "@/components/ui/layout/right-panel";
 import { ButtonContainer } from "@/components/ui/layout/button-container";
-import { useDeletedNotes, useNotes, useDeleteNote } from "@/src/hooks/use-notes";
+import RightPanel from "@/components/ui/layout/right-panel";
+import { DELETE_BUTTON_POSITION } from "@/src/constants/ui";
+import { useBulkDeleteButton } from "@/src/hooks/use-bulk-delete-button";
+import { useDeletionLid } from "@/src/hooks/use-deletion-lid";
+import { useItemDeselect } from "@/src/hooks/use-item-deselect";
+import { useNextDeletedItemSelection } from "@/src/hooks/use-next-deleted-item-selection";
+import {
+  useDeletedNotes,
+  useDeleteNote,
+  useNotes,
+} from "@/src/hooks/use-notes";
 import { useScreenState } from "@/src/hooks/use-screen-state";
+import { useSelectAll } from "@/src/hooks/use-select-all";
+import { useTabChange } from "@/src/hooks/use-tab-change";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import {
+  createDeletedNextSelectionHandler,
   getMemoDisplayOrder,
-  getNextDeletedItem,
   getNextItemAfterDeletion,
 } from "@/src/utils/domUtils";
 import { createToggleHandlerWithTabClear } from "@/src/utils/toggleUtils";
-import { DELETE_BUTTON_POSITION } from "@/src/constants/ui";
-import { useDeletionLid } from "@/src/hooks/use-deletion-lid";
-import { useItemDeselect } from "@/src/hooks/use-item-deselect";
-import { useSelectAll } from "@/src/hooks/use-select-all";
-import { useTabChange } from "@/src/hooks/use-tab-change";
-import { useNextDeletedItemSelection } from "@/src/hooks/use-next-deleted-item-selection";
-import { useBulkDeleteButton } from "@/src/hooks/use-bulk-delete-button";
 import { useCallback, useRef, useState } from "react";
 
 type MemoScreenMode = "list" | "view" | "create";
@@ -61,18 +67,18 @@ function MemoScreen({
 
   // 削除ボタンの参照
   const deleteButtonRef = useRef<HTMLButtonElement>(null);
-  
+
   // 削除済みメモビューアーの参照
   const deletedMemoViewerRef = useRef<DeletedMemoViewerRef>(null);
-  
+
   // 削除完了時に蓋を閉じる処理
   useDeletionLid(() => setIsRightLidOpen(false));
 
   // 左側一括削除の状態
   const [isLeftDeleting, setIsLeftDeleting] = useState(false);
   const [isLeftLidOpen, setIsLeftLidOpen] = useState(false);
-  
-  // 右側削除の状態  
+
+  // 右側削除の状態
   const [isRightDeleting, setIsRightDeleting] = useState(false);
   const [isRightLidOpen, setIsRightLidOpen] = useState(false);
 
@@ -80,7 +86,7 @@ function MemoScreen({
   const { data: notes, isLoading: memoLoading, error: memoError } = useNotes();
   const { data: deletedNotes } = useDeletedNotes();
   const { preferences } = useUserPreferences(1);
-  
+
   // 削除API
   const deleteNote = useDeleteNote();
 
@@ -133,7 +139,7 @@ function MemoScreen({
   const handleDeleteComplete = useCallback(() => {
     setIsLeftDeleting(false); // 左側削除状態をリセット
     setIsRightDeleting(false); // 右側削除状態をリセット
-    
+
     if (selectedMemo && notes) {
       const displayOrder = getMemoDisplayOrder();
       const nextItem = getNextItemAfterDeletion(
@@ -160,7 +166,6 @@ function MemoScreen({
     onDeselectAndStayOnMemoList,
     setMemoScreenMode,
   ]);
-
 
   // 一括削除ボタンの表示制御
   const { showDeleteButton, deleteButtonCount } = useBulkDeleteButton({
@@ -192,7 +197,10 @@ function MemoScreen({
   );
 
   // 左側一括削除関連（チェックボックスで選択したアイテムの一括削除）
-  const { handleBulkDelete: handleLeftBulkDelete, DeleteModal: BulkDeleteModal } = useMemosBulkDelete({
+  const {
+    handleBulkDelete: handleLeftBulkDelete,
+    DeleteModal: BulkDeleteModal,
+  } = useMemosBulkDelete({
     activeTab: activeTab as "normal" | "deleted",
     checkedMemos,
     checkedDeletedMemos,
@@ -209,35 +217,44 @@ function MemoScreen({
   });
 
   // 右側エディター削除処理（現在表示中のメモの単体削除）
-  const handleRightEditorDelete = useCallback(async (memo: Memo) => {
-    setIsRightDeleting(true); // 右側削除アニメーション開始
-    
-    // 右側ゴミ箱とエディターエリアを取得
-    const rightTrashButton = document.querySelector('[data-right-panel-trash]') as HTMLElement;
-    const editorArea = document.querySelector('[data-memo-editor]') as HTMLElement;
-    
-    if (!rightTrashButton || !editorArea) {
-      // アニメーション要素がない場合は直接削除
-      try {
-        await deleteNote.mutateAsync(memo.id);
-        handleDeleteComplete();
-      } catch {
-        setIsRightDeleting(false);
+  const handleRightEditorDelete = useCallback(
+    async (memo: Memo) => {
+      setIsRightDeleting(true); // 右側削除アニメーション開始
+
+      // 右側ゴミ箱とエディターエリアを取得
+      const rightTrashButton = document.querySelector(
+        "[data-right-panel-trash]"
+      ) as HTMLElement;
+      const editorArea = document.querySelector(
+        "[data-memo-editor]"
+      ) as HTMLElement;
+
+      if (!rightTrashButton || !editorArea) {
+        // アニメーション要素がない場合は直接削除
+        try {
+          await deleteNote.mutateAsync(memo.id);
+          handleDeleteComplete();
+        } catch {
+          setIsRightDeleting(false);
+        }
+        return;
       }
-      return;
-    }
-    
-    // アニメーション実行後にAPI呼び出し
-    const { animateEditorContentToTrash } = await import('@/src/utils/deleteAnimation');
-    animateEditorContentToTrash(editorArea, rightTrashButton, async () => {
-      try {
-        await deleteNote.mutateAsync(memo.id);
-        handleDeleteComplete();
-      } catch {
-        setIsRightDeleting(false);
-      }
-    });
-  }, [deleteNote, handleDeleteComplete]);
+
+      // アニメーション実行後にAPI呼び出し
+      const { animateEditorContentToTrash } = await import(
+        "@/src/utils/deleteAnimation"
+      );
+      animateEditorContentToTrash(editorArea, rightTrashButton, async () => {
+        try {
+          await deleteNote.mutateAsync(memo.id);
+          handleDeleteComplete();
+        } catch {
+          setIsRightDeleting(false);
+        }
+      });
+    },
+    [deleteNote, handleDeleteComplete]
+  );
 
   // 一括復元関連
   const { handleBulkRestore, RestoreModal } = useMemosBulkRestore({
@@ -253,50 +270,15 @@ function MemoScreen({
     onSelectDeletedItem: onSelectDeletedMemo,
     onClose,
     setScreenMode: (mode: string) => setMemoScreenMode(mode as MemoScreenMode),
-    editorSelector: '[data-memo-editor]',
+    editorSelector: "[data-memo-editor]",
   });
 
   // 削除済みメモの復元時の次選択処理
-  const handleRestoreAndSelectNext = useCallback(
-    (deletedMemo: DeletedMemo) => {
-      // 復元後の削除済みメモ数を計算
-      const remainingDeletedMemos = deletedNotes
-        ? deletedNotes.filter((m) => m.id !== deletedMemo.id)
-        : [];
-
-      if (remainingDeletedMemos.length > 0) {
-        // 他に削除済みメモがある場合は次を選択
-        const nextItem = getNextDeletedItem(deletedNotes || [], deletedMemo);
-
-        if (nextItem && nextItem.id !== deletedMemo.id) {
-          onSelectDeletedMemo(nextItem);
-          setMemoScreenMode("view");
-        } else {
-          // これは通常起こらないが、念のため
-          onSelectDeletedMemo(null);
-          setActiveTab("normal");
-          setMemoScreenMode("list");
-          onDeselectAndStayOnMemoList?.();
-        }
-      } else {
-        // 最後の削除済みメモを復元した場合、通常タブに戻る
-        onSelectDeletedMemo(null); // 削除済みメモの選択を解除
-        setActiveTab("normal");
-        // 少し遅延してからパネルを閉じる
-        setTimeout(() => {
-          setMemoScreenMode("list");
-          onDeselectAndStayOnMemoList?.();
-        }, 100);
-      }
-    },
-    [
-      deletedNotes,
-      onSelectDeletedMemo,
-      setActiveTab,
-      setMemoScreenMode,
-      onDeselectAndStayOnMemoList,
-    ]
-  );
+  const handleRestoreAndSelectNext = (deletedMemo: DeletedMemo) => {
+    if (!deletedNotes) return;
+    createDeletedNextSelectionHandler(deletedNotes, deletedMemo, onSelectDeletedMemo, 
+      () => onDeselectAndStayOnMemoList?.(), setMemoScreenMode);
+  };
 
   return (
     <div className="flex h-[calc(100vh-64px)] bg-white overflow-hidden">
@@ -309,13 +291,14 @@ function MemoScreen({
           activeTab={activeTab as "normal" | "deleted"}
           onTabChange={useTabChange({
             setActiveTab,
-            setScreenMode: (mode: string) => setMemoScreenMode(mode as MemoScreenMode),
+            setScreenMode: (mode: string) =>
+              setMemoScreenMode(mode as MemoScreenMode),
             selectedItem: selectedMemo,
             selectedDeletedItem: selectedDeletedMemo,
             onSelectItem: onSelectMemo,
             onSelectDeletedItem: onSelectDeletedMemo,
             normalTabName: "normal",
-            deletedTabName: "deleted"
+            deletedTabName: "deleted",
           })}
           onCreateNew={() => {
             // 新規作成時に選択状態をクリア
@@ -337,7 +320,6 @@ function MemoScreen({
           normalCount={notes?.length || 0}
           deletedNotesCount={deletedNotes?.length || 0}
         />
-
 
         <DesktopLower
           currentMode="memo"
@@ -386,10 +368,9 @@ function MemoScreen({
           />
         </ButtonContainer>
 
-
         {/* 一括復元ボタン */}
-        <ButtonContainer 
-          show={activeTab === "deleted" && checkedDeletedMemos.size > 0} 
+        <ButtonContainer
+          show={activeTab === "deleted" && checkedDeletedMemos.size > 0}
           position="bottom-left"
         >
           <RestoreButton
@@ -416,20 +397,22 @@ function MemoScreen({
         }}
       >
         {/* 右側エディター削除ボタン（現在表示中のメモの単体削除用） */}
-        {memoScreenMode === "view" && selectedMemo && activeTab === "normal" && (
-          <div className={`${DELETE_BUTTON_POSITION} z-10`}>
-            <DeleteButton
-              data-right-panel-trash
-              onDelete={() => {
-                // 右側エディター削除処理を実行
-                if (selectedMemo) {
-                  handleRightEditorDelete(selectedMemo);
-                }
-              }}
-              isAnimating={isRightDeleting}
-            />
-          </div>
-        )}
+        {memoScreenMode === "view" &&
+          selectedMemo &&
+          activeTab === "normal" && (
+            <div className={`${DELETE_BUTTON_POSITION} z-10`}>
+              <DeleteButton
+                data-right-panel-trash
+                onDelete={() => {
+                  // 右側エディター削除処理を実行
+                  if (selectedMemo) {
+                    handleRightEditorDelete(selectedMemo);
+                  }
+                }}
+                isAnimating={isRightDeleting}
+              />
+            </div>
+          )}
         {memoScreenMode === "create" && (
           <MemoEditor
             key={`create-${createEditorKey}`} // 管理されたキーで再マウント
@@ -469,7 +452,7 @@ function MemoScreen({
                 onDelete={() => {
                   // ボタンクリック時に即座に蓋を開く
                   setIsRightLidOpen(true);
-                  
+
                   // モーダルを表示
                   deletedMemoViewerRef.current?.showDeleteConfirmation();
                 }}

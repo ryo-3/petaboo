@@ -125,18 +125,28 @@ export function createNextSelectionHandler<T extends { id: number }>(
 
 /**
  * 削除済みアイテム削除後の次選択ハンドラー生成
+ * 復元処理にも対応
  */
 export function createDeletedNextSelectionHandler<T extends { id: number; deletedAt: number }>(
   deletedItems: T[],
   deletedItem: T,
-  onSelect: (item: T) => void,
+  onSelect: (item: T, fromFullList?: boolean) => void,
   onClose: () => void,
-  setViewMode: (mode: "view" | "list") => void
+  setViewMode: (mode: "view" | "list") => void,
+  options?: {
+    isRestore?: boolean;  // 復元処理かどうか
+    onSelectWithFromFlag?: boolean;  // onSelectにfromFullList=trueを渡すか
+  }
 ) {
   const nextItem = getNextDeletedItem(deletedItems, deletedItem);
   
   if (nextItem) {
-    onSelect(nextItem);
+    // 復元処理の場合はfromFullList=trueを渡す
+    if (options?.isRestore && options?.onSelectWithFromFlag) {
+      onSelect(nextItem, true);
+    } else {
+      onSelect(nextItem);
+    }
     setViewMode("view");
   } else {
     setViewMode("list");

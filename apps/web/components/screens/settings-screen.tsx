@@ -1,13 +1,13 @@
 "use client";
 
-import { useUserPreferences } from "@/src/hooks/use-user-preferences";
-import { useEffect, useState } from "react";
 import MemoIcon from "@/components/icons/memo-icon";
 import SettingsIcon from "@/components/icons/settings-icon";
 import TaskIcon from "@/components/icons/task-icon";
-import ColumnCountSelector from "@/components/ui/layout/column-count-selector";
 import Switch from "@/components/ui/base/switch";
+import ColumnCountSelector from "@/components/ui/layout/column-count-selector";
 import ViewModeToggle from "@/components/ui/layout/view-mode-toggle";
+import { useUserPreferences } from "@/src/hooks/use-user-preferences";
+import { useEffect, useState } from "react";
 
 // Removed empty interface - using empty props instead
 
@@ -63,106 +63,151 @@ function SettingsScreen() {
   return (
     <div className="h-screen bg-white p-6">
       {/* ヘッダー */}
-      <div className="flex items-center gap-4 mb-6 border-b border-gray-200 pb-4">
-        <div className="flex items-center gap-2">
+      <div className="mb-6 border-b border-gray-200 pb-4">
+        <div className="flex items-center gap-2 mb-2">
           <SettingsIcon className="w-6 h-6 text-gray-600" />
           <h1 className="text-2xl font-bold text-gray-800">設定</h1>
         </div>
+        <p className="text-sm text-gray-600 leading-relaxed">
+          ここではメモとタスクの表示設定を変更できます。設定は自動的に保存され、次回アクセス時にも適用されます。
+        </p>
       </div>
 
-      <div className="max-w-2xl">
-        {/* 説明文 */}
-        <div className="">
-          <p className="text-sm leading-relaxed mb-3">
-            ここではメモとタスクの表示設定を変更できます。設定は自動的に保存され、次回アクセス時にも適用されます。
-          </p>
-          <p className="text-sm leading-relaxed">
-            <strong>表示モード:</strong>{" "}
-            リスト表示は詳細情報が見やすく、カード表示は視覚的に分かりやすい表示です。
-            <br />
-            <strong>列数:</strong>{" "}
-            列数を調整することで、画面サイズに合わせた最適な表示が可能です。
-          </p>
-        </div>
-
+      <div className="max-w-lg">
         {/* メモ設定 */}
-        <div className="mt-4">
-          <div className="flex items-center justify-between mb-2 w-64">
-            <div className="flex items-center gap-2">
-              <MemoIcon className="w-5 h-5 mt-0.5" />
-              <h2 className="text-lg font-semibold text-gray-800">メモ設定</h2>
-            </div>
-            <Switch
-              checked={memoHideControls}
-              onCheckedChange={setMemoHideControls}
-              label="コントロール非表示"
-            />
+        <div className="mt-6">
+          <div className="flex items-center gap-2 mb-4">
+            <MemoIcon className="w-5 h-5 text-Green" />
+            <h2 className="text-lg font-semibold text-gray-800">メモ設定</h2>
           </div>
 
-          {/* メモのコントロール */}
-          <div className="flex items-center gap-2">
-            <ViewModeToggle
-              viewMode={memoViewMode}
-              onViewModeChange={setMemoViewMode}
-              buttonSize="size-7"
-              iconSize="size-5"
-            />
-            <ColumnCountSelector
-              columnCount={memoColumnCount}
-              onColumnCountChange={setMemoColumnCount}
-              containerHeight="h-7"
-              buttonSize="size-6"
-            />
+          <div className="space-y-4 pl-7">
+            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-gray-700 w-20">
+                  表示形式
+                </span>
+                <ViewModeToggle
+                  viewMode={memoViewMode}
+                  onViewModeChange={setMemoViewMode}
+                  buttonSize="size-7"
+                  iconSize="size-4"
+                />
+              </div>
+              <span className="text-sm text-gray-500">
+                {memoViewMode === "card" ? "カード表示" : "リスト表示"}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-gray-700 w-20">
+                  列数
+                </span>
+                <ColumnCountSelector
+                  columnCount={memoColumnCount}
+                  onColumnCountChange={setMemoColumnCount}
+                  containerHeight="h-7"
+                  buttonSize="size-6"
+                />
+              </div>
+              <span className="text-sm text-gray-500">
+                {memoColumnCount}列で表示
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between py-2">
+              <span className="text-sm font-medium text-gray-700">
+                コントロール表示
+              </span>
+              <Switch
+                checked={!memoHideControls}
+                onCheckedChange={(checked) => setMemoHideControls(!checked)}
+                label=""
+              />
+            </div>
           </div>
         </div>
 
         {/* タスク設定 */}
-        <div className="mt-4">
-          <div className="flex items-center justify-between mb-2 w-64">
-            <div className="flex items-center gap-2">
-              <TaskIcon className="w-5 h-5 mt-0.5" />
-              <h2 className="text-lg font-semibold text-gray-800">
-                タスク設定
-              </h2>
-            </div>
-            <Switch
-              checked={taskHideControls}
-              onCheckedChange={setTaskHideControls}
-              label="コントロール非表示"
-            />
+        <div className="mt-6">
+          <div className="flex items-center gap-2 mb-4">
+            <TaskIcon className="w-5 h-5 text-Blue" />
+            <h2 className="text-lg font-semibold text-gray-800">タスク設定</h2>
           </div>
 
-          {/* タスクのコントロール */}
-          <div className="flex items-center gap-2">
-            <ViewModeToggle
-              viewMode={taskViewMode}
-              onViewModeChange={setTaskViewMode}
-              buttonSize="size-7"
-              iconSize="size-5"
-            />
-            <ColumnCountSelector
-              columnCount={taskColumnCount}
-              onColumnCountChange={setTaskColumnCount}
-              containerHeight="h-7"
-              buttonSize="size-6"
-            />
+          <div className="space-y-4 pl-7">
+            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-gray-700 w-20">
+                  表示形式
+                </span>
+                <ViewModeToggle
+                  viewMode={taskViewMode}
+                  onViewModeChange={setTaskViewMode}
+                  buttonSize="size-7"
+                  iconSize="size-4"
+                />
+              </div>
+              <span className="text-sm text-gray-500">
+                {taskViewMode === "card" ? "カード表示" : "リスト表示"}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-gray-700 w-20">
+                  列数
+                </span>
+                <ColumnCountSelector
+                  columnCount={taskColumnCount}
+                  onColumnCountChange={setTaskColumnCount}
+                  containerHeight="h-7"
+                  buttonSize="size-6"
+                />
+              </div>
+              <span className="text-sm text-gray-500">
+                {taskColumnCount}列で表示
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between py-2">
+              <span className="text-sm font-medium text-gray-700">
+                コントロール表示
+              </span>
+              <Switch
+                checked={!taskHideControls}
+                onCheckedChange={(checked) => setTaskHideControls(!checked)}
+                label=""
+              />
+            </div>
           </div>
         </div>
 
         {/* 全体設定 */}
         <div className="mt-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-3">全体設定</h2>
-          <div className="flex items-center justify-between w-64 mb-2">
-            <span className="text-sm text-gray-700">ヘッダーを非表示</span>
-            <Switch
-              checked={hideHeader}
-              onCheckedChange={setHideHeader}
-              label=""
-            />
+          <div className="flex items-center gap-2 mb-4">
+            <SettingsIcon className="w-5 h-5 text-gray-600" />
+            <h2 className="text-lg font-semibold text-gray-800">全体設定</h2>
           </div>
-          <p className="text-xs text-gray-500 mb-4">
-            ヘッダーを非表示にして、より広い作業領域を確保できます
-          </p>
+
+          <div className="pl-7">
+            <div className="flex items-center justify-between py-2">
+              <div>
+                <span className="text-sm font-medium text-gray-700">
+                  ヘッダーを非表示
+                </span>
+                <p className="text-xs text-gray-500 mt-1">
+                  より広い作業領域を確保
+                </p>
+              </div>
+              <Switch
+                checked={hideHeader}
+                onCheckedChange={setHideHeader}
+                label=""
+              />
+            </div>
+          </div>
         </div>
 
         {/* 保存ボタン */}

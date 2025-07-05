@@ -68,7 +68,7 @@ const DeletedMemoViewer = forwardRef<DeletedMemoViewerRef, DeletedMemoViewerProp
               内容
             </label>
             <div className="w-full min-h-32 p-3 bg-gray-50 rounded-lg text-gray-700 leading-relaxed opacity-75">
-              {memo.content || "内容がありません"}
+              {memo.content ? memo.content.split('\n').slice(1).join('\n') : ""}
             </div>
           </div>
 

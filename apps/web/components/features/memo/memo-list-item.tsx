@@ -81,7 +81,7 @@ function MemoListItem({
               >
                 {displayTitle}
               </h3>
-              <p className="text-xs text-gray-600 line-clamp-2">
+              <p className="text-xs text-gray-600 line-clamp-2 min-h-[2rem]">
                 {displayContent ? displayContent.split('\n').slice(1).join('\n') : ""}
               </p>
             </div>

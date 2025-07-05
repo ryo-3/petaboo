@@ -1,52 +1,52 @@
-import { ReactNode } from 'react'
+import { ReactNode } from "react";
 
 interface BaseCardProps {
-  isChecked: boolean
-  onToggleCheck: () => void
-  onSelect: () => void
-  variant?: 'normal' | 'deleted'
-  isSelected?: boolean
-  children: ReactNode
-  dataTaskId?: number | string
-  dataMemoId?: number | string
-  isDeleting?: boolean
+  isChecked: boolean;
+  onToggleCheck: () => void;
+  onSelect: () => void;
+  variant?: "normal" | "deleted";
+  isSelected?: boolean;
+  children: ReactNode;
+  dataTaskId?: number | string;
+  dataMemoId?: number | string;
+  isDeleting?: boolean;
 }
 
 function BaseCard({
   isChecked,
   onToggleCheck,
   onSelect,
-  variant = 'normal',
+  variant = "normal",
   isSelected = false,
   children,
   dataTaskId,
   dataMemoId,
-  isDeleting = false
+  isDeleting = false,
 }: BaseCardProps) {
-  const isDeleted = variant === 'deleted'
+  const isDeleted = variant === "deleted";
 
   return (
-    <div 
-      className={`relative transition-opacity duration-300 ${isDeleting ? 'opacity-0' : 'opacity-100'}`}
+    <div
+      className={`relative transition-opacity duration-300 ${isDeleting ? "opacity-0" : "opacity-100"}`}
       data-task-id={dataTaskId}
       data-memo-id={dataMemoId}
     >
       <button
         onClick={(e) => {
-          e.stopPropagation()
-          onToggleCheck()
+          e.stopPropagation();
+          onToggleCheck();
         }}
         className={`absolute top-1.5 right-1.5 size-5 rounded-full border-2 flex items-center justify-center z-10 transition-colors ${
           isChecked
-            ? isDeleted 
-              ? 'bg-white border-gray-400'
-              : 'bg-Green border-Green'
-            : 'bg-white border-gray-300 hover:border-gray-400'
+            ? isDeleted
+              ? "bg-white border-gray-400"
+              : "bg-Green border-Green"
+            : "bg-white border-gray-300 hover:border-gray-400"
         }`}
       >
         {isChecked && (
           <svg
-            className={`w-3 h-3 ${isDeleted ? 'text-black' : 'text-white'}`}
+            className={`w-3 h-3 ${isDeleted ? "text-black" : "text-white"}`}
             fill="currentColor"
             viewBox="0 0 20 20"
           >
@@ -62,18 +62,16 @@ function BaseCard({
         onClick={onSelect}
         className={`${
           isSelected
-            ? 'bg-gray-100 border border-gray-400'
+            ? "bg-gray-100 border border-gray-400"
             : isDeleted
-            ? 'bg-red-50 border border-red-200 hover:shadow-md hover:border-red-300'
-            : 'bg-white border border-gray-200 hover:shadow-md hover:border-gray-300'
-        } pt-4 pl-4 pb-2 pr-6 rounded-lg transition-all text-left h-40 w-full`}
+              ? "bg-red-50 border border-red-200 hover:shadow-md hover:border-red-300"
+              : "bg-white border border-gray-200 hover:shadow-md hover:border-gray-300"
+        } pt-4 pl-4 pb-2 pr-6 rounded-lg transition-all text-left h-[140px] w-full`}
       >
-        <div className="flex flex-col h-full">
-          {children}
-        </div>
+        <div className="flex flex-col h-full">{children}</div>
       </button>
     </div>
-  )
+  );
 }
 
-export default BaseCard
+export default BaseCard;

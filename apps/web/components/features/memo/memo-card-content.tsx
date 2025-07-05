@@ -21,17 +21,17 @@ function MemoCardContent({ memo, variant = 'normal', showEditDate = false }: Mem
 
   return (
     <>
-      <div className={`font-semibold text-base mb-2 line-clamp-2 leading-tight ${
+      <div className={`font-semibold text-base mb-1 line-clamp-1 leading-tight ${
         isDeleted ? 'text-gray-700' : 'text-gray-800'
       }`}>
         {displayTitle}
       </div>
-      <div className="text-sm text-gray-600 flex-1 overflow-hidden mb-2 min-h-[4rem]">
-        <div className="line-clamp-3">
+      <div className="text-sm text-gray-600 flex-1 overflow-hidden">
+        <div className="line-clamp-3 break-words">
           {displayContent ? displayContent.split('\n').slice(1).join('\n') : ''}
         </div>
       </div>
-      <div className={`text-xs mt-2 pt-2 ${
+      <div className={`text-xs pt-2 ${
         isDeleted 
           ? 'text-red-400 border-t border-red-200' 
           : 'text-gray-400 border-t border-gray-100 flex gap-2'

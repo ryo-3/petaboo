@@ -59,6 +59,41 @@ html, body {
   transition: opacity 300ms ease-in-out;
 }
 
-.delete-button.animating .trash-icon-lid {
+/* 旧実装（Phase 3完了後に削除予定） */
+.delete-button.animating:not(.deleting) .trash-icon-lid {
   transform: rotate(42deg) translateX(5px) translateY(-2px);
+}
+
+/* 削除アニメーションシーケンス */
+@keyframes lid-open-close {
+  0% {
+    transform: rotate(0deg) translateX(0px) translateY(0px);
+  }
+  10%, 90% {
+    transform: rotate(42deg) translateX(5px) translateY(-2px);
+  }
+  100% {
+    transform: rotate(0deg) translateX(0px) translateY(0px);
+  }
+}
+
+.delete-button.deleting .trash-icon-lid {
+  animation: lid-open-close 1.5s ease-out;
+}
+
+/* 保存ボタンの成功アニメーション */
+@keyframes save-success {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.save-button.success {
+  animation: save-success 0.35s ease-out;
 }

@@ -9,10 +9,9 @@ import { useMemosBulkRestore } from "@/components/features/memo/use-memo-bulk-re
 import DesktopLower from "@/components/layout/desktop-lower";
 import DesktopUpper from "@/components/layout/desktop-upper";
 import DeleteButton from "@/components/ui/buttons/delete-button";
-import RestoreButton from "@/components/ui/buttons/restore-button";
-import { ButtonContainer } from "@/components/ui/layout/button-container";
 import RightPanel from "@/components/ui/layout/right-panel";
 import { RightPanelDeleteButton } from "@/components/ui/buttons/right-panel-delete-button";
+import { BulkActionButtons } from "@/components/ui/layout/bulk-action-buttons";
 import { DELETE_BUTTON_POSITION } from "@/src/constants/ui";
 import { useBulkDeleteButton } from "@/src/hooks/use-bulk-delete-button";
 import { useDeletionLid } from "@/src/hooks/use-deletion-lid";
@@ -332,31 +331,19 @@ function MemoScreen({
           }}
         />
 
-        {/* 左側一括削除ボタン（チェックボックスで選択したアイテムの一括削除用） */}
-        <ButtonContainer show={showDeleteButton} position="bottom-right">
-          <DeleteButton
-            ref={deleteButtonRef}
-            onDelete={handleLeftBulkDelete}
-            count={deleteButtonCount}
-            isAnimating={isLeftLidOpen}
-            variant={activeTab === "deleted" ? "danger" : undefined}
-          />
-        </ButtonContainer>
-
-        {/* 一括復元ボタン */}
-        <ButtonContainer
-          show={activeTab === "deleted" && checkedDeletedMemos.size > 0}
-          position="bottom-left"
-        >
-          <RestoreButton
-            onRestore={handleBulkRestore}
-            isRestoring={false}
-            count={checkedDeletedMemos.size}
-            buttonSize="size-9"
-            iconSize="size-5"
-            tooltipPosition="top"
-          />
-        </ButtonContainer>
+        {/* 一括操作ボタン */}
+        <BulkActionButtons
+          showDeleteButton={showDeleteButton}
+          deleteButtonCount={deleteButtonCount}
+          onDelete={handleLeftBulkDelete}
+          deleteButtonRef={deleteButtonRef}
+          isDeleting={isLeftLidOpen}
+          deleteVariant={activeTab === "deleted" ? "danger" : undefined}
+          showRestoreButton={activeTab === "deleted" && checkedDeletedMemos.size > 0}
+          restoreCount={checkedDeletedMemos.size}
+          onRestore={handleBulkRestore}
+          isRestoring={false}
+        />
       </div>
 
       {/* モーダル */}

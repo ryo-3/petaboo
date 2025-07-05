@@ -8,11 +8,9 @@ import { useTasksBulkDelete } from "@/components/features/task/use-task-bulk-del
 import { useTasksBulkRestore } from "@/components/features/task/use-task-bulk-restore";
 import DesktopLower from "@/components/layout/desktop-lower";
 import DesktopUpper from "@/components/layout/desktop-upper";
-import DeleteButton from "@/components/ui/buttons/delete-button";
-import RestoreButton from "@/components/ui/buttons/restore-button";
-import { ButtonContainer } from "@/components/ui/layout/button-container";
 import RightPanel from "@/components/ui/layout/right-panel";
 import { RightPanelDeleteButton } from "@/components/ui/buttons/right-panel-delete-button";
+import { BulkActionButtons } from "@/components/ui/layout/bulk-action-buttons";
 import {
   BulkDeleteConfirmation,
   BulkRestoreConfirmation,
@@ -413,34 +411,19 @@ function TaskScreen({
           }}
         />
 
-        {/* 一括削除ボタン */}
-        <ButtonContainer
-          show={showDeleteButton}
-          position="bottom-right"
-        >
-          <DeleteButton
-            ref={deleteButtonRef}
-            onDelete={handleBulkDelete}
-            count={deleteButtonCount}
-            isAnimating={isLidOpen}
-            variant={activeTab === "deleted" ? "danger" : undefined}
-          />
-        </ButtonContainer>
-
-        {/* 一括復元ボタン */}
-        <ButtonContainer
-          show={activeTab === "deleted" && checkedDeletedTasks.size > 0}
-          position="bottom-left"
-        >
-          <RestoreButton
-            onRestore={handleBulkRestore}
-            isRestoring={bulkRestoreState.isRestoring}
-            count={checkedDeletedTasks.size}
-            buttonSize="size-9"
-            iconSize="size-5"
-            tooltipPosition="top"
-          />
-        </ButtonContainer>
+        {/* 一括操作ボタン */}
+        <BulkActionButtons
+          showDeleteButton={showDeleteButton}
+          deleteButtonCount={deleteButtonCount}
+          onDelete={handleBulkDelete}
+          deleteButtonRef={deleteButtonRef}
+          isDeleting={isLidOpen}
+          deleteVariant={activeTab === "deleted" ? "danger" : undefined}
+          showRestoreButton={activeTab === "deleted" && checkedDeletedTasks.size > 0}
+          restoreCount={checkedDeletedTasks.size}
+          onRestore={handleBulkRestore}
+          isRestoring={bulkRestoreState.isRestoring}
+        />
       </div>
 
       {/* 右側：詳細表示エリア */}

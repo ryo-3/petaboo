@@ -1,6 +1,6 @@
 "use client";
 
-import DeletedMemoViewer from "@/components/features/memo/deleted-memo-viewer";
+import DeletedMemoViewer, { type DeletedMemoViewerRef } from "@/components/features/memo/deleted-memo-viewer";
 import MemoEditor from "@/components/features/memo/memo-editor";
 import { useMemosBulkDelete } from "@/components/features/memo/use-memo-bulk-delete";
 import { useMemosBulkRestore } from "@/components/features/memo/use-memo-bulk-restore";
@@ -24,7 +24,7 @@ import {
 } from "@/src/utils/screenUtils";
 import { createToggleHandler } from "@/src/utils/toggleUtils";
 import { DELETE_BUTTON_POSITION } from "@/src/constants/ui";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type MemoScreenMode = "list" | "view" | "create";
 
@@ -58,14 +58,34 @@ function MemoScreen({
 
   // 削除ボタンの参照
   const deleteButtonRef = useRef<HTMLButtonElement>(null);
+  
+  // 削除済みメモビューアーの参照
+  const deletedMemoViewerRef = useRef<DeletedMemoViewerRef>(null);
+  
+  // 削除完了時に蓋を閉じる関数を設定
+  useEffect(() => {
+    (window as any).closeDeletingLid = () => {
+      setIsRightDeleteLidOpen(false);
+    };
+    
+    return () => {
+      delete (window as any).closeDeletingLid;
+    };
+  }, []);
 
   // 左側一括削除のアニメーション状態
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   // 左側一括削除ボタンの蓋の開閉状態
-  const [isBulkDeleteLidOpen, setIsBulkDeleteLidOpen] = useState(false);
+  const [isLeftBulkDeleteLidOpen, setIsLeftBulkDeleteLidOpen] = useState(false);
   
   // 右側エディター削除のアニメーション状態
   const [isEditorDeleting, setIsEditorDeleting] = useState(false);
+  
+  // 削除済みメモ削除のアニメーション状態
+  const [isDeletedMemoDeleting, setIsDeletedMemoDeleting] = useState(false);
+  
+  // 右側削除ボタンの蓋開閉状態
+  const [isRightDeleteLidOpen, setIsRightDeleteLidOpen] = useState(false);
 
   // データ取得
   const { data: notes, isLoading: memoLoading, error: memoError } = useNotes();
@@ -233,7 +253,7 @@ function MemoScreen({
     onMemoDelete: handleItemDeselect,
     deleteButtonRef,
     setIsDeleting: setIsBulkDeleting,
-    setIsLidOpen: setIsBulkDeleteLidOpen,
+    setIsLidOpen: setIsLeftBulkDeleteLidOpen,
     viewMode,
   });
 
@@ -424,7 +444,8 @@ function MemoScreen({
             ref={deleteButtonRef}
             onDelete={handleLeftBulkDelete}
             count={deleteButtonCount}
-            isAnimating={isBulkDeleteLidOpen}
+            isAnimating={isLeftBulkDeleteLidOpen}
+            variant={activeTab === "deleted" ? "danger" : undefined}
           />
         </div>
 
@@ -490,19 +511,37 @@ function MemoScreen({
           />
         )}
         {memoScreenMode === "view" && selectedDeletedMemo && !selectedMemo && (
-          <DeletedMemoViewer
-            memo={selectedDeletedMemo}
-            onClose={() => {
-              setMemoScreenMode("list");
-              // 削除済みタブからの閉じる時は通常タブに戻る
-              if (activeTab === "deleted") {
-                setActiveTab("normal");
-              }
-              onDeselectAndStayOnMemoList?.();
-            }}
-            onDeleteAndSelectNext={handleDeletedMemoAndSelectNext}
-            onRestoreAndSelectNext={handleRestoreAndSelectNext}
-          />
+          <>
+            <DeletedMemoViewer
+              ref={deletedMemoViewerRef}
+              memo={selectedDeletedMemo}
+              onClose={() => {
+                setMemoScreenMode("list");
+                // 削除済みタブからの閉じる時は通常タブに戻る
+                if (activeTab === "deleted") {
+                  setActiveTab("normal");
+                }
+                onDeselectAndStayOnMemoList?.();
+              }}
+              onDeleteAndSelectNext={handleDeletedMemoAndSelectNext}
+              onRestoreAndSelectNext={handleRestoreAndSelectNext}
+            />
+            {/* 削除済みメモ用の右下削除ボタン */}
+            <div className={`absolute ${DELETE_BUTTON_POSITION} z-10`}>
+              <DeleteButton
+                data-right-panel-trash
+                onDelete={() => {
+                  // ボタンクリック時に即座に蓋を開く
+                  setIsRightDeleteLidOpen(true);
+                  
+                  // モーダルを表示
+                  deletedMemoViewerRef.current?.showDeleteConfirmation();
+                }}
+                isAnimating={isRightDeleteLidOpen}
+                variant="danger"
+              />
+            </div>
+          </>
         )}
       </RightPanel>
     </div>

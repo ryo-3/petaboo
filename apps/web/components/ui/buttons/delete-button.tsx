@@ -8,17 +8,18 @@ interface DeleteButtonProps {
   className?: string;
   count?: number;
   isAnimating?: boolean;
+  variant?: "default" | "danger";
   'data-right-panel-trash'?: boolean;
 }
 
 const DeleteButton = forwardRef<HTMLButtonElement, DeleteButtonProps>(
-  ({ onDelete, className = "", count, isAnimating = false, ...props }, ref) => {
+  ({ onDelete, className = "", count, isAnimating = false, variant = "default", ...props }, ref) => {
     return (
       <div className={`${className} transition-opacity duration-300 ease-in-out`}>
         <button
           ref={ref}
           onClick={onDelete}
-          className="bg-gray-500 hover:bg-gray-600 text-white p-2 rounded-full shadow-lg transition-colors relative"
+          className={`${variant === "danger" ? "bg-red-600 hover:bg-red-700" : "bg-gray-500 hover:bg-gray-600"} text-white p-2 rounded-full shadow-lg transition-colors relative`}
           {...props}
         >
           <TrashIcon isOpen={isAnimating} />

@@ -429,25 +429,37 @@ function TaskScreen({
         />
 
         {/* 一括削除ボタン */}
-        {showDeleteButton && (
+        <div
+          className={`absolute bottom-4 right-6 z-10 transition-opacity duration-300 ${
+            shouldShowLeftBulkDelete
+              ? "opacity-100"
+              : "opacity-0 pointer-events-none"
+          }`}
+        >
           <DeleteButton
             ref={deleteButtonRef}
             onDelete={handleBulkDelete}
-            className={`absolute ${DELETE_BUTTON_POSITION} z-10 transition-all duration-300`}
             count={deleteButtonCount}
             isAnimating={isLidOpen}
+            variant={activeTab === "deleted" ? "danger" : undefined}
           />
-        )}
+        </div>
 
         {/* 一括復元ボタン */}
-        {activeTab === "deleted" && checkedDeletedTasks.size > 0 && (
+        <div className={`absolute bottom-4 left-6 z-10 transition-opacity duration-300 ${
+          activeTab === "deleted" && checkedDeletedTasks.size > 0
+            ? "opacity-100"
+            : "opacity-0 pointer-events-none"
+        }`}>
           <RestoreButton
             onRestore={handleBulkRestore}
             isRestoring={bulkRestoreState.isRestoring}
-            className="absolute bottom-4 left-4 z-10"
             count={checkedDeletedTasks.size}
+            buttonSize="size-9"
+            iconSize="size-5"
+            tooltipPosition="top"
           />
-        )}
+        </div>
       </div>
 
       {/* 右側：詳細表示エリア */}

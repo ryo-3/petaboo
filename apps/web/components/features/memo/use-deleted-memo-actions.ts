@@ -1,6 +1,9 @@
 import { useState } from 'react'
-import { usePermanentDeleteNote, useRestoreNote } from '@/src/hooks/use-notes'
+import { useRestoreNote } from '@/src/hooks/use-notes'
 import type { DeletedMemo } from '@/src/types/memo'
+import { useQueryClient, useMutation } from '@tanstack/react-query'
+import { useAuth } from '@clerk/nextjs'
+import { notesApi } from '@/src/lib/api-client'
 
 interface UseDeletedMemoActionsProps {
   memo: DeletedMemo
@@ -11,24 +14,65 @@ interface UseDeletedMemoActionsProps {
 
 export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, onRestoreAndSelectNext }: UseDeletedMemoActionsProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const permanentDeleteNote = usePermanentDeleteNote()
-  const restoreNote = useRestoreNote()
-
-  const handlePermanentDelete = async () => {
-    try {
-      // 次のメモ選択機能があれば使用、なければ通常のクローズ
+  const queryClient = useQueryClient()
+  const { getToken } = useAuth()
+  
+  // 完全削除用のカスタムミューテーション（onSuccessで次選択を実行）
+  const permanentDeleteNote = useMutation({
+    mutationFn: async (id: number) => {
+      const token = await getToken()
+      const response = await notesApi.permanentDeleteNote(id, token || undefined)
+      return response.json()
+    },
+    onSuccess: async () => {
+      // 完全削除後に削除済みメモリストを再取得
+      await queryClient.invalidateQueries({ queryKey: ["deleted-notes"] })
+      
+      // キャッシュ更新後に次のメモ選択機能を使用
       if (onDeleteAndSelectNext) {
         onDeleteAndSelectNext(memo)
       } else {
         onClose()
       }
+    },
+  })
+  
+  const restoreNote = useRestoreNote()
 
+  const handlePermanentDelete = async () => {
+    try {
       setShowDeleteModal(false)
       
-      // 少し遅延してから削除API実行（UI更新を先に行う）
-      setTimeout(async () => {
+      // エディターコンテンツをゴミ箱に吸い込むアニメーション
+      const editorArea = document.querySelector('[data-memo-editor]') as HTMLElement;
+      const rightTrashButton = document.querySelector('[data-right-panel-trash]') as HTMLElement;
+      
+      if (editorArea && rightTrashButton) {
+        const { animateEditorContentToTrash } = await import('@/src/utils/deleteAnimation');
+        animateEditorContentToTrash(editorArea, rightTrashButton, async () => {
+          // アニメーション完了後の処理
+          try {
+            // API実行（onSuccessで次選択とキャッシュ更新が実行される）
+            await permanentDeleteNote.mutateAsync(memo.id)
+            
+            // 蓋を閉じる
+            setTimeout(() => {
+              (window as any).closeDeletingLid?.();
+            }, 500);
+          } catch (error) {
+            console.error('完全削除に失敗しました:', error)
+            alert('完全削除に失敗しました。')
+          }
+        });
+      } else {
+        // アニメーション要素がない場合は通常の処理
+        // API実行（onSuccessで次選択とキャッシュ更新が実行される）
         await permanentDeleteNote.mutateAsync(memo.id)
-      }, 100)
+        
+        setTimeout(() => {
+          (window as any).closeDeletingLid?.();
+        }, 500);
+      }
     } catch (error) {
       console.error('完全削除に失敗しました:', error)
       alert('完全削除に失敗しました。')
@@ -60,6 +104,10 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
 
   const hideDeleteConfirmation = () => {
     setShowDeleteModal(false)
+    // キャンセル時も蓋を閉じる
+    setTimeout(() => {
+      (window as any).closeDeletingLid?.();
+    }, 100);
   }
 
   return {

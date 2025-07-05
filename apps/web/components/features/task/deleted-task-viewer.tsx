@@ -50,7 +50,7 @@ function DeletedTaskViewer({ task, onClose, onDeleteAndSelectNext, onRestoreAndS
         <button
           onClick={showDeleteConfirmation}
           disabled={isDeleting}
-          className={`fixed ${DELETE_BUTTON_POSITION} bg-red-600 hover:bg-red-700 text-white p-3 rounded-full shadow-lg transition-colors disabled:opacity-50`}
+          className={`fixed ${DELETE_BUTTON_POSITION} bg-red-600 hover:bg-red-700 text-white p-2 rounded-full shadow-lg transition-colors disabled:opacity-50`}
           data-right-panel-trash
         >
           <TrashIcon />

@@ -28,7 +28,7 @@ function SearchScreen({
 }: SearchScreenProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchScope, setSearchScope] = useState<"all" | "title" | "content">("all");
-  const [searchType, setSearchType] = useState<"all" | "memo" | "task" | "deleted">("all");
+  const [searchTypes, setSearchTypes] = useState<Set<"memo" | "task" | "deleted">>(new Set(["memo", "task"]));
   const [sortBy, setSortBy] = useState<"relevance" | "date" | "title">("relevance");
   const scrollRef = useRef<HTMLDivElement>(null);
   
@@ -36,34 +36,28 @@ function SearchScreen({
   const { results, isSearching, hasQuery } = useGlobalSearch({
     query: searchQuery,
     searchScope,
-    searchType,
+    searchType: searchTypes.size === 3 ? "all" : 
+                searchTypes.has("memo") && searchTypes.has("task") && !searchTypes.has("deleted") ? "all" :
+                searchTypes.has("deleted") && !searchTypes.has("memo") && !searchTypes.has("task") ? "deleted" :
+                searchTypes.has("memo") && !searchTypes.has("task") && !searchTypes.has("deleted") ? "memo" :
+                searchTypes.has("task") && !searchTypes.has("memo") && !searchTypes.has("deleted") ? "task" : "all",
     debounceMs: 500 // 詳細検索では少し長めのデバウンス
   });
 
-  // スクロール監視
-  useEffect(() => {
-    const scrollElement = scrollRef.current;
-    if (!scrollElement) return;
 
-    let lastScrollY = 0;
-    
-    const handleScroll = () => {
-      const currentScrollY = scrollElement.scrollTop;
-      
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        // 下にスクロール && 100px以上スクロールした場合
-        // ヘッダー非表示処理は削除
-      } else if (currentScrollY < lastScrollY - 10 || currentScrollY <= 50) {
-        // 上に10px以上スクロール || 50px以下の場合
-        // ヘッダー表示処理は削除
+  // チェックボックス変更ハンドラー
+  const handleSearchTypeChange = (type: "memo" | "task" | "deleted", checked: boolean) => {
+    setSearchTypes(prev => {
+      const newSet = new Set(prev);
+      if (checked) {
+        newSet.add(type);
+      } else {
+        newSet.delete(type);
       }
-      
-      lastScrollY = currentScrollY;
-    };
-
-    scrollElement.addEventListener('scroll', handleScroll);
-    return () => scrollElement.removeEventListener('scroll', handleScroll);
-  }, []);
+      // 少なくとも1つは選択されている必要がある
+      return newSet.size > 0 ? newSet : new Set([type]);
+    });
+  };
 
   // ソート処理
   const sortedResults = [...results].sort((a, b) => {
@@ -147,16 +141,35 @@ function SearchScreen({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               検索対象
             </label>
-            <select
-              value={searchType}
-              onChange={(e) => setSearchType(e.target.value as "all" | "memo" | "task" | "deleted")}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-Green"
-            >
-              <option value="all">メモ + タスク</option>
-              <option value="memo">メモのみ</option>
-              <option value="task">タスクのみ</option>
-              <option value="deleted">削除済みのみ</option>
-            </select>
+            <div className="space-y-2">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={searchTypes.has("memo")}
+                  onChange={(e) => handleSearchTypeChange("memo", e.target.checked)}
+                  className="mr-2 rounded border-gray-300 text-Green focus:ring-Green"
+                />
+                <span className="text-sm">メモ</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={searchTypes.has("task")}
+                  onChange={(e) => handleSearchTypeChange("task", e.target.checked)}
+                  className="mr-2 rounded border-gray-300 text-Green focus:ring-Green"
+                />
+                <span className="text-sm">タスク</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={searchTypes.has("deleted")}
+                  onChange={(e) => handleSearchTypeChange("deleted", e.target.checked)}
+                  className="mr-2 rounded border-gray-300 text-Green focus:ring-Green"
+                />
+                <span className="text-sm">削除済み</span>
+              </label>
+            </div>
           </div>
 
           {/* ソート順 */}
@@ -190,7 +203,7 @@ function SearchScreen({
         ) : (
           <div>
             {/* 検索結果ヘッダー */}
-            <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-3 z-1">
+            <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-3 z-10">
               <div className="flex justify-between items-center">
                 <div className="text-sm text-gray-600">
                   {isSearching ? (

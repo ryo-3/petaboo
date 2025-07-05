@@ -112,7 +112,7 @@ function MemoEditor({ memo, onClose, onSaveComplete }: MemoEditorProps) {
               handleTitleChange(firstLine);
               handleContentChange(newContent);
             }}
-            className="w-full h-[calc(100vh-164px)] resize-none outline-none text-gray-500 leading-relaxed font-medium pb-10"
+            className="w-full h-[calc(100vh-164px)] resize-none outline-none text-gray-500 leading-relaxed font-medium pb-10 mt-3"
           />
         </BaseViewer>
       </div>

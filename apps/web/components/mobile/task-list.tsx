@@ -8,7 +8,7 @@ import { useDeleteTask, useTasks } from "@/src/hooks/use-tasks";
 import type { Task } from "@/src/types/task";
 import { formatDateOnly } from "@/src/utils/formatDate";
 import {
-  getPriorityIndicator,
+  getPriorityIndicatorClass,
   getStatusColorForText,
   getStatusText,
 } from "@/src/utils/taskUtils";
@@ -60,9 +60,7 @@ function TaskList({
               onDelete={() => handleDelete(task)}
             >
               <div className="font-medium text-sm text-gray-800 truncate mb-1 flex items-center gap-1">
-                <span className="text-xs">
-                  {getPriorityIndicator(task.priority)}
-                </span>
+                <span className={`w-2 h-2 rounded-full ${getPriorityIndicatorClass(task.priority)}`} />
                 {task.title}
               </div>
               <div className="text-xs text-gray-500 truncate mb-1">

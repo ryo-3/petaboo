@@ -4,6 +4,13 @@ import PhotoButton from "@/components/ui/buttons/photo-button";
 import SaveButton from "@/components/ui/buttons/save-button";
 import DateInput from "@/components/ui/inputs/date-input";
 import CustomSelector from "@/components/ui/selectors/custom-selector";
+import {
+  getStatusEditorColor,
+  getPriorityEditorColor,
+  getCategoryEditorColor,
+  getStatusText,
+  getPriorityText,
+} from "@/src/utils/taskUtils";
 import { useEffect, useRef } from "react";
 
 interface TaskFormProps {
@@ -62,29 +69,26 @@ function TaskForm({
     }
   }, [isNewTask]);
 
+  // オプションの定義（色はtaskUtilsから取得）
   const statusOptions = [
-    { value: "todo", label: "未着手", color: "bg-zinc-500" },
-    {
-      value: "in_progress",
-      label: "進行中",
-      color: "bg-blue-600",
-    },
-    { value: "completed", label: "完了", color: "bg-green-600" },
+    { value: "todo", label: getStatusText("todo"), color: getStatusEditorColor("todo") },
+    { value: "in_progress", label: getStatusText("in_progress"), color: getStatusEditorColor("in_progress") },
+    { value: "completed", label: getStatusText("completed"), color: getStatusEditorColor("completed") },
   ];
 
   const priorityOptions = [
-    { value: "low", label: "低", color: "bg-green-500" },
-    { value: "medium", label: "中", color: "bg-yellow-500" },
-    { value: "high", label: "高", color: "bg-red-500" },
+    { value: "low", label: getPriorityText("low"), color: getPriorityEditorColor("low") },
+    { value: "medium", label: getPriorityText("medium"), color: getPriorityEditorColor("medium") },
+    { value: "high", label: getPriorityText("high"), color: getPriorityEditorColor("high") },
   ];
 
   const categoryOptions = [
-    { value: "", label: "未選択", color: "bg-gray-400" },
-    { value: "work", label: "仕事", color: "bg-blue-500" },
-    { value: "personal", label: "個人", color: "bg-purple-500" },
-    { value: "study", label: "勉強", color: "bg-indigo-500" },
-    { value: "health", label: "健康", color: "bg-pink-500" },
-    { value: "hobby", label: "趣味", color: "bg-orange-500" },
+    { value: "", label: "未選択", color: getCategoryEditorColor("") },
+    { value: "work", label: "仕事", color: getCategoryEditorColor("work") },
+    { value: "personal", label: "個人", color: getCategoryEditorColor("personal") },
+    { value: "study", label: "勉強", color: getCategoryEditorColor("study") },
+    { value: "health", label: "健康", color: getCategoryEditorColor("health") },
+    { value: "hobby", label: "趣味", color: getCategoryEditorColor("hobby") },
   ];
 
   return (

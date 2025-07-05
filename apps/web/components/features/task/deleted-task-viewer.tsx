@@ -1,14 +1,12 @@
 'use client'
 
 import { useImperativeHandle, forwardRef } from 'react'
-import TrashIcon from '@/components/icons/trash-icon'
 import DateInfo from '@/components/shared/date-info'
 import { SingleDeleteConfirmation } from '@/components/ui/modals'
 import RestoreButton from '@/components/ui/buttons/restore-button'
 import { useDeletedTaskActions } from './use-deleted-task-actions'
 import type { DeletedTask } from '@/src/types/task'
 import { formatDate } from '@/src/utils/formatDate'
-import { DELETE_BUTTON_POSITION } from '@/src/constants/ui'
 
 interface DeletedTaskViewerProps {
   task: DeletedTask

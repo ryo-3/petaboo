@@ -4,12 +4,9 @@ import { useImperativeHandle, forwardRef } from 'react'
 import DateInfo from '@/components/shared/date-info'
 import { ConfirmationModal } from '@/components/ui/modals'
 import RestoreButton from '@/components/ui/buttons/restore-button'
-import DeleteButton from '@/components/ui/buttons/delete-button'
-import TrashIcon from '@/components/icons/trash-icon'
 import { useDeletedMemoActions } from './use-deleted-memo-actions'
 import type { DeletedMemo } from '@/src/types/memo'
 import { formatDate } from '@/src/utils/formatDate'
-import { DELETE_BUTTON_POSITION } from '@/src/constants/ui'
 
 interface DeletedMemoViewerProps {
   memo: DeletedMemo

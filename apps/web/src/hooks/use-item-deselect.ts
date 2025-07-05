@@ -5,8 +5,8 @@ import { useCallback } from 'react';
  * メモ・タスクの両方で共通使用
  */
 export function useItemDeselect(
-  selectedItem: any,
-  selectedDeletedItem: any,
+  selectedItem: { id: number } | null | undefined,
+  selectedDeletedItem: { id: number } | null | undefined,
   onClearSelection: () => void,
   setScreenMode: (mode: string) => void
 ) {

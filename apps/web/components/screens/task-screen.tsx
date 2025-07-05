@@ -17,7 +17,6 @@ import {
   BulkRestoreConfirmation,
 } from "@/components/ui/modals";
 import { DELETE_BUTTON_POSITION } from "@/src/constants/ui";
-import { useDelayedButtonVisibility } from "@/src/hooks/use-delayed-button-visibility";
 import { useDeletionLid } from "@/src/hooks/use-deletion-lid";
 import { useScreenState } from "@/src/hooks/use-screen-state";
 import { useDeletedTasks, useTasks } from "@/src/hooks/use-tasks";
@@ -32,7 +31,7 @@ import {
   getDeleteButtonCount,
   shouldShowDeleteButton,
 } from "@/src/utils/screenUtils";
-import { createToggleHandler } from "@/src/utils/toggleUtils";
+import { createToggleHandlerWithTabClear } from "@/src/utils/toggleUtils";
 import { useItemDeselect } from "@/src/hooks/use-item-deselect";
 import { useSelectAll } from "@/src/hooks/use-select-all";
 import { useTabChange } from "@/src/hooks/use-tab-change";
@@ -162,12 +161,6 @@ function TaskScreen({
       checkedDeletedTasks
     );
   }, [activeTab, checkedTasks, checkedDeletedTasks]);
-
-  // 削除ボタンの遅延非表示処理
-  const showDeleteButton = useDelayedButtonVisibility(
-    shouldShowLeftBulkDelete,
-    isDeleting
-  );
 
   // 全選択機能
   const { isAllSelected, handleSelectAll } = useSelectAll({
@@ -396,8 +389,7 @@ function TaskScreen({
           activeTab={activeTabTyped}
           onTabChange={useTabChange({
             setActiveTab,
-            setScreenMode: (mode: string) => setTaskScreenMode(mode as TaskScreenMode),
-            onClearSelection: () => onClearSelection?.()
+            setScreenMode: (mode: string) => setTaskScreenMode(mode as TaskScreenMode)
           })}
           onCreateNew={() => {
             // 新規作成時に選択状態をクリア
@@ -447,10 +439,15 @@ function TaskScreen({
           selectedDeletedTask={selectedDeletedTask}
           checkedTasks={checkedTasks}
           checkedDeletedTasks={checkedDeletedTasks}
-          onToggleCheckTask={createToggleHandler(checkedTasks, setCheckedTasks)}
-          onToggleCheckDeletedTask={createToggleHandler(
+          onToggleCheckTask={createToggleHandlerWithTabClear(
+            checkedTasks,
+            setCheckedTasks,
+            [setCheckedDeletedTasks]
+          )}
+          onToggleCheckDeletedTask={createToggleHandlerWithTabClear(
             checkedDeletedTasks,
-            setCheckedDeletedTasks
+            setCheckedDeletedTasks,
+            [setCheckedTasks]
           )}
           onSelectTask={(task) => {
             onSelectTask(task, true);

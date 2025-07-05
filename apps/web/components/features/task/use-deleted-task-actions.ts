@@ -60,7 +60,7 @@ export function useDeletedTaskActions({ task, onClose, onDeleteAndSelectNext, on
             
             // 蓋を閉じる
             setTimeout(() => {
-              (window as any).closeDeletingLid?.();
+              (window as Window & { closeDeletingLid?: () => void }).closeDeletingLid?.();
             }, 500);
           } catch (error) {
             console.error('完全削除に失敗しました:', error)
@@ -73,7 +73,7 @@ export function useDeletedTaskActions({ task, onClose, onDeleteAndSelectNext, on
         await permanentDeleteTask.mutateAsync(task.id)
         
         setTimeout(() => {
-          (window as any).closeDeletingLid?.();
+          (window as Window & { closeDeletingLid?: () => void }).closeDeletingLid?.();
         }, 500);
       }
     } catch (error) {
@@ -110,7 +110,7 @@ export function useDeletedTaskActions({ task, onClose, onDeleteAndSelectNext, on
     setShowDeleteModal(false)
     // キャンセル時も蓋を閉じる
     setTimeout(() => {
-      (window as any).closeDeletingLid?.();
+      (window as Window & { closeDeletingLid?: () => void }).closeDeletingLid?.();
     }, 100);
   }
 

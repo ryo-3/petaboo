@@ -71,8 +71,6 @@ export function useSelectAll<T extends { id: number }, D extends { id: number }>
     items,
     deletedItems,
     isAllSelected,
-    checkedItems,
-    checkedDeletedItems,
     setCheckedItems,
     setCheckedDeletedItems,
     filterFn

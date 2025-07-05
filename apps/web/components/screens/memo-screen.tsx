@@ -23,7 +23,7 @@ import {
   getDeleteButtonCount,
   shouldShowDeleteButton,
 } from "@/src/utils/screenUtils";
-import { createToggleHandler } from "@/src/utils/toggleUtils";
+import { createToggleHandlerWithTabClear } from "@/src/utils/toggleUtils";
 import { DELETE_BUTTON_POSITION } from "@/src/constants/ui";
 import { useDeletionLid } from "@/src/hooks/use-deletion-lid";
 import { useDelayedButtonVisibility } from "@/src/hooks/use-delayed-button-visibility";
@@ -353,7 +353,6 @@ function MemoScreen({
           onTabChange={useTabChange({
             setActiveTab,
             setScreenMode: (mode: string) => setMemoScreenMode(mode as MemoScreenMode),
-            onClearSelection: () => onDeselectAndStayOnMemoList?.(),
             selectedItem: selectedMemo,
             selectedDeletedItem: selectedDeletedMemo,
             onSelectItem: onSelectMemo,
@@ -399,10 +398,15 @@ function MemoScreen({
           selectedDeletedMemo={selectedDeletedMemo}
           checkedMemos={checkedMemos}
           checkedDeletedMemos={checkedDeletedMemos}
-          onToggleCheckMemo={createToggleHandler(checkedMemos, setCheckedMemos)}
-          onToggleCheckDeletedMemo={createToggleHandler(
+          onToggleCheckMemo={createToggleHandlerWithTabClear(
+            checkedMemos,
+            setCheckedMemos,
+            [setCheckedDeletedMemos]
+          )}
+          onToggleCheckDeletedMemo={createToggleHandlerWithTabClear(
             checkedDeletedMemos,
-            setCheckedDeletedMemos
+            setCheckedDeletedMemos,
+            [setCheckedMemos]
           )}
           onSelectMemo={(memo) => {
             onSelectMemo(memo);

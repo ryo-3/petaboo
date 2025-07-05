@@ -3,10 +3,9 @@ import { useCallback } from 'react';
 interface UseTabChangeConfig {
   setActiveTab: (tab: string) => void;
   setScreenMode: (mode: string) => void;
-  onClearSelection: () => void;
   // 個別選択クリア（メモ用のオプション）
-  selectedItem?: any;
-  selectedDeletedItem?: any;
+  selectedItem?: { id: number } | null;
+  selectedDeletedItem?: { id: number } | null;
   onSelectItem?: (item: any) => void;
   onSelectDeletedItem?: (item: any) => void;
   normalTabName?: string; // "normal" or "todo"
@@ -16,11 +15,11 @@ interface UseTabChangeConfig {
 /**
  * タブ切り替え時の選択状態クリア処理を管理するカスタムフック
  * メモ・タスクの両方で共通使用
+ * 注意：チェックボックス選択は保持される（元の仕様通り）
  */
 export function useTabChange({
   setActiveTab,
   setScreenMode,
-  onClearSelection,
   selectedItem,
   selectedDeletedItem,
   onSelectItem,
@@ -40,16 +39,14 @@ export function useTabChange({
         setScreenMode("list");
       }
     } else {
-      // 共通クリア処理（タスク形式）
+      // タスク形式：右パネルを閉じるのみ
       setScreenMode("list");
-      onClearSelection();
     }
 
     setActiveTab(tab);
   }, [
     setActiveTab,
     setScreenMode,
-    onClearSelection,
     selectedItem,
     selectedDeletedItem,
     onSelectItem,

@@ -72,6 +72,14 @@ function createTrashAnimation(
   const targetX = trashRect.left + trashRect.width / 2 - width / 2 + options.targetOffset.x;
   const targetY = trashRect.top + trashRect.height / 2 - height / 2 + options.targetOffset.y;
   
+  console.log('🔧 JS版位置計算:', {
+    trashRect: { left: trashRect.left, top: trashRect.top, width: trashRect.width, height: trashRect.height },
+    fixedSize: { width, height },
+    targetOffset: options.targetOffset,
+    計算結果: { targetX, targetY },
+    相対位置: { x: targetX - itemRect.left, y: targetY - itemRect.top }
+  });
+  
   requestAnimationFrame(() => {
     // アニメーション開始時に即座に少し縮小開始
     clone.style.transform = `scale(0.5)`;
@@ -422,6 +430,7 @@ export function animateCardToTrash(
 
 
 // エディター用削除アニメーション（ゴミ箱に吸い込まれる）
+// TODO: CSS版に移行完了後に削除予定
 export function animateEditorContentToTrash(
   editorElement: HTMLElement,
   trashElement: HTMLElement,
@@ -440,6 +449,116 @@ export function animateEditorContentToTrash(
     timingFunction: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
     onComplete
   });
+}
+
+// CSS版の削除アニメーション（Phase 1）
+export function animateItemToTrashCSS(
+  itemElement: HTMLElement,
+  trashElement: HTMLElement,
+  onComplete?: () => void
+) {
+  // ターゲット位置計算（簡略化）
+  const itemRect = itemElement.getBoundingClientRect();
+  const trashRect = trashElement.getBoundingClientRect();
+  
+  const targetX = trashRect.left + trashRect.width / 2 - itemRect.left - itemRect.width / 2;
+  const targetY = trashRect.top + trashRect.height / 2 - itemRect.top - itemRect.height / 2;
+  
+  // CSS変数でターゲット位置を設定
+  itemElement.style.setProperty('--target-x', `${targetX}px`);
+  itemElement.style.setProperty('--target-y', `${targetY}px`);
+  
+  // CSSアニメーション開始
+  itemElement.classList.add('item-delete-animation');
+  
+  // アニメーション完了後の処理
+  setTimeout(() => {
+    onComplete?.();
+  }, 600); // CSSのanimation-durationと同じ
+}
+
+// CSS版のフェードアウト（Phase 1）
+export function animateItemFadeOutCSS(
+  itemElement: HTMLElement,
+  onComplete?: () => void
+) {
+  itemElement.classList.add('item-fade-out');
+  
+  setTimeout(() => {
+    onComplete?.();
+  }, 300);
+}
+
+// CSS版エディター削除アニメーション（Phase 1）- シンプル版
+export function animateEditorContentToTrashCSS(
+  editorElement: HTMLElement,
+  trashElement: HTMLElement,
+  onComplete?: () => void
+) {
+  console.log('🎨 CSS版エディター削除アニメーション開始（シンプル版）');
+  
+  // JS版と同様にクローンを作成
+  const editorRect = editorElement.getBoundingClientRect();
+  
+  // 固定サイズ（JS版と同じ）
+  const fixedWidth = 400;
+  const fixedHeight = 200;
+  
+  // アニメーション用クローン作成
+  const clone = editorElement.cloneNode(true) as HTMLElement;
+  clone.style.position = 'fixed';
+  clone.style.top = `${editorRect.top}px`;
+  clone.style.left = `${editorRect.left}px`;
+  clone.style.width = `${fixedWidth}px`;
+  clone.style.height = `${fixedHeight}px`;
+  clone.style.zIndex = '9999';
+  clone.style.pointerEvents = 'none';
+  
+  // 元要素を非表示（ゴミ箱ボタンは除く）
+  editorElement.style.visibility = 'hidden';
+  editorElement.style.pointerEvents = 'none';
+  
+  // ゴミ箱ボタンは表示を維持
+  const trashButton = editorElement.querySelector('[data-right-panel-trash]') as HTMLElement;
+  if (trashButton) {
+    trashButton.style.visibility = 'visible';
+    trashButton.style.pointerEvents = 'auto';
+  }
+  
+  // 画面右下16pxまでの移動距離計算
+  const screenWidth = window.innerWidth;
+  const screenHeight = window.innerHeight;
+  
+  // ゴミ箱の位置（画面右下から16px）
+  const trashX = screenWidth - 16 - 20; // ゴミ箱アイコン幅の半分
+  const trashY = screenHeight - 16 - 20; // ゴミ箱アイコン高さの半分
+  
+  // 現在位置からゴミ箱までの移動距離
+  const moveX = trashX - (editorRect.left + fixedWidth / 2);
+  const moveY = trashY - (editorRect.top + fixedHeight / 2);
+  
+  clone.style.setProperty('--move-x', `${moveX}px`);
+  clone.style.setProperty('--move-y', `${moveY}px`);
+  
+  console.log('🎯 移動距離計算:', { 
+    画面サイズ: { screenWidth, screenHeight },
+    ゴミ箱位置: { trashX, trashY },
+    開始位置中心: { x: editorRect.left + fixedWidth / 2, y: editorRect.top + fixedHeight / 2 },
+    移動距離: { moveX, moveY }
+  });
+  
+  // クローンをDOMに追加
+  document.body.appendChild(clone);
+  
+  // CSSアニメーション開始
+  clone.classList.add('editor-delete-animation');
+  
+  // アニメーション完了後の処理
+  setTimeout(() => {
+    document.body.removeChild(clone);
+    console.log('🎨 CSS版エディター削除アニメーション完了');
+    onComplete?.();
+  }, 1000);
 }
 
 // 復元時のフェードアウトアニメーション

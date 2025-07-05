@@ -97,3 +97,59 @@ html, body {
 .save-button.success {
   animation: save-success 0.35s ease-out;
 }
+
+/* 削除アニメーション - Phase 1: シンプルなアニメーション */
+@keyframes item-to-trash {
+  0% {
+    transform: scale(1) translateX(0) translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.1) translateX(var(--target-x, 0)) translateY(var(--target-y, 0)) rotate(15deg);
+    opacity: 0.3;
+  }
+}
+
+.item-delete-animation {
+  animation: item-to-trash 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  transform-origin: center;
+}
+
+/* フェードアウトのみのシンプルアニメーション */
+@keyframes fade-out-scale {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+}
+
+.item-fade-out {
+  animation: fade-out-scale 0.3s ease-out forwards;
+}
+
+/* エディター削除アニメーション - シンプル */
+@keyframes editor-to-trash {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  20% {
+    transform: translate(0, 0) scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--move-x, 0px), var(--move-y, 0px)) scale(0.01);
+    opacity: 0.3;
+  }
+}
+
+.editor-delete-animation {
+  animation: editor-to-trash 1s ease-out forwards;
+  transform-origin: center;
+  position: fixed !important;
+  z-index: 9999;
+}

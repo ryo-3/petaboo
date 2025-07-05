@@ -60,8 +60,8 @@ export function useRightEditorDelete<T extends { id: number }>({
     }
 
     try {
-      // アニメーション実行
-      const { animateEditorContentToTrash } = await import(
+      // アニメーション実行（CSS版に変更）
+      const { animateEditorContentToTrashCSS } = await import(
         "@/src/utils/deleteAnimation"
       );
 
@@ -69,7 +69,7 @@ export function useRightEditorDelete<T extends { id: number }>({
         // Task方式：先にAPI削除実行
         await deleteMutation.mutateAsync(targetItem.id);
         
-        animateEditorContentToTrash(editorArea, rightTrashButton, async () => {
+        animateEditorContentToTrashCSS(editorArea, rightTrashButton, async () => {
           // エディター要素のvisibility復元（Task用）
           if (restoreEditorVisibility) {
             editorArea.style.visibility = 'visible';
@@ -86,7 +86,7 @@ export function useRightEditorDelete<T extends { id: number }>({
         });
       } else {
         // Memo方式：アニメーション内でAPI削除実行
-        animateEditorContentToTrash(editorArea, rightTrashButton, async () => {
+        animateEditorContentToTrashCSS(editorArea, rightTrashButton, async () => {
           try {
             await deleteMutation.mutateAsync(targetItem.id);
             onDeleteComplete(targetItem);

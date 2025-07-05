@@ -28,7 +28,7 @@ function MemoCardContent({ memo, variant = 'normal', showEditDate = false }: Mem
       </div>
       <div className="text-sm text-gray-600 flex-1 overflow-hidden mb-2 min-h-[4rem]">
         <div className="line-clamp-3">
-          {displayContent || '内容なし'}
+          {displayContent ? displayContent.split('\n').slice(1).join('\n') : ''}
         </div>
       </div>
       <div className={`text-xs mt-2 pt-2 ${

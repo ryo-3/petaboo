@@ -38,8 +38,8 @@ function SaveButton({
           isSaving
             ? "bg-Green text-white cursor-not-allowed"
             : disabled || savedSuccessfully
-              ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-              : "text-gray-200 bg-Green"
+              ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+              : "bg-Green text-gray-200 hover:text-white"
         } ${className}`}
       >
         {isSaving ? (

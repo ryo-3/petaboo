@@ -4,12 +4,16 @@ interface PhotoButtonProps {
   onClick?: () => void;
   className?: string;
   disabled?: boolean;
+  buttonSize?: string;
+  iconSize?: string;
 }
 
 function PhotoButton({ 
   onClick, 
   className = "",
-  disabled = false 
+  disabled = false,
+  buttonSize = "size-7",
+  iconSize = "size-4"
 }: PhotoButtonProps) {
   const handleClick = () => {
     if (onClick) {
@@ -22,14 +26,14 @@ function PhotoButton({
 
   return (
     <button
-      className={`p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors ${
+      className={`${buttonSize} rounded-lg bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors flex items-center justify-center ${
         disabled ? "opacity-50 cursor-not-allowed" : ""
       } ${className}`}
       title="画像を添付（今後対応予定）"
       onClick={handleClick}
       disabled={disabled}
     >
-      <PhotoIcon className="w-4 h-4" />
+      <PhotoIcon className={iconSize} />
     </button>
   );
 }

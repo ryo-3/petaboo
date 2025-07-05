@@ -2,6 +2,7 @@
 
 import PhotoIcon from "@/components/icons/photo-icon";
 import BaseViewer from "@/components/shared/base-viewer";
+import PhotoButton from "@/components/ui/buttons/photo-button";
 import SaveButton from "@/components/ui/buttons/save-button";
 import { useSimpleMemoSave } from "@/src/hooks/use-simple-memo-save";
 import type { Memo } from "@/src/types/memo";
@@ -92,15 +93,11 @@ function MemoEditor({ memo, onClose, onSaveComplete }: MemoEditorProps) {
                 buttonSize="size-6"
                 iconSize="size-4"
               />
-              <button
-                className="p-1.5 rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-800 transition-colors"
-                title="画像を添付（今後対応予定）"
-                onClick={() => {
-                  alert("画像添付機能は今後実装予定です");
-                }}
-              >
-                <PhotoIcon className="w-4 h-4" />
-              </button>
+              <PhotoButton
+                buttonSize="size-6"
+                iconSize="size-5"
+                className="rounded-full"
+              />
             </div>
           }
         >

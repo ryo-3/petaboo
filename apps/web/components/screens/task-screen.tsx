@@ -318,12 +318,12 @@ function TaskScreen({
       } else {
         console.log("🎯 次のタスクが見つからない、リストモードに戻る");
         setTaskScreenMode("list");
-        onClose();
+        onClearSelection?.(); // ホームに戻らずに選択状態だけクリア
       }
     } else {
       console.log("🎯 次のタスクIDが見つからない、リストモードに戻る");
       setTaskScreenMode("list");
-      onClose();
+      onClearSelection?.(); // ホームに戻らずに選択状態だけクリア
     }
   };
 
@@ -338,7 +338,10 @@ function TaskScreen({
           activeTab={activeTabTyped}
           onTabChange={useTabChange({
             setActiveTab,
-            setScreenMode: (mode: string) => setTaskScreenMode(mode as TaskScreenMode)
+            setScreenMode: (mode: string) => {
+              setTaskScreenMode(mode as TaskScreenMode);
+              onClearSelection?.(); // 選択状態もクリア
+            }
           })}
           onCreateNew={() => {
             // 新規作成時に選択状態をクリア

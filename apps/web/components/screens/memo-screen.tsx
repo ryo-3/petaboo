@@ -17,6 +17,7 @@ import { useBulkDeleteButton } from "@/src/hooks/use-bulk-delete-button";
 import { useDeletionLid } from "@/src/hooks/use-deletion-lid";
 import { useItemDeselect } from "@/src/hooks/use-item-deselect";
 import { useNextDeletedItemSelection } from "@/src/hooks/use-next-deleted-item-selection";
+import { useRightEditorDelete } from "@/src/hooks/use-right-editor-delete";
 import {
   useDeletedNotes,
   useDeleteNote,
@@ -217,44 +218,15 @@ function MemoScreen({
   });
 
   // 右側エディター削除処理（現在表示中のメモの単体削除）
-  const handleRightEditorDelete = useCallback(
-    async (memo: Memo) => {
-      setIsRightDeleting(true); // 右側削除アニメーション開始
-
-      // 右側ゴミ箱とエディターエリアを取得
-      const rightTrashButton = document.querySelector(
-        "[data-right-panel-trash]"
-      ) as HTMLElement;
-      const editorArea = document.querySelector(
-        "[data-memo-editor]"
-      ) as HTMLElement;
-
-      if (!rightTrashButton || !editorArea) {
-        // アニメーション要素がない場合は直接削除
-        try {
-          await deleteNote.mutateAsync(memo.id);
-          handleDeleteComplete();
-        } catch {
-          setIsRightDeleting(false);
-        }
-        return;
-      }
-
-      // アニメーション実行後にAPI呼び出し
-      const { animateEditorContentToTrash } = await import(
-        "@/src/utils/deleteAnimation"
-      );
-      animateEditorContentToTrash(editorArea, rightTrashButton, async () => {
-        try {
-          await deleteNote.mutateAsync(memo.id);
-          handleDeleteComplete();
-        } catch {
-          setIsRightDeleting(false);
-        }
-      });
-    },
-    [deleteNote, handleDeleteComplete]
-  );
+  const handleRightEditorDelete = useRightEditorDelete({
+    item: selectedMemo || null,
+    deleteMutation: deleteNote,
+    editorSelector: "[data-memo-editor]",
+    setIsDeleting: setIsRightDeleting,
+    onDeleteComplete: () => handleDeleteComplete(),
+    executeApiFirst: false, // Memo方式：アニメーション内でAPI削除
+    restoreEditorVisibility: false,
+  });
 
   // 一括復元関連
   const { handleBulkRestore, RestoreModal } = useMemosBulkRestore({

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useDeleteTask } from '@/src/hooks/use-tasks'
+import { useRightEditorDelete } from '@/src/hooks/use-right-editor-delete'
 import type { Task } from '@/src/types/task'
 
 interface UseTaskDeleteProps {
@@ -16,43 +17,46 @@ export function useTaskDelete({ task, onClose, onSelectTask, onClosePanel, onDel
   const [isLidOpen, setIsLidOpen] = useState(false)
   const deleteTask = useDeleteTask()
 
-  const executeDelete = async () => {
-    if (!task) return;
-    
-    try {
-      console.log('🎯 executeDelete開始:', { 
-        task: task.id, 
-        hasOnDeleteAndSelectNext: !!onDeleteAndSelectNext,
-        hasOnSelectTask: !!onSelectTask,
-        hasOnClosePanel: !!onClosePanel
-      });
-      
-      // 次のタスク選択機能があれば使用、なければ通常のクローズ
-      if (onDeleteAndSelectNext) {
-        console.log('🎯 onDeleteAndSelectNext実行');
-        onDeleteAndSelectNext(task)
-      } else {
-        console.log('🎯 通常のクローズ処理');
-        // 従来の動作：エディターを閉じる
-        if (onSelectTask && onClosePanel) {
-          console.log('🎯 onClosePanel & onSelectTask実行');
-          onClosePanel()
-          onSelectTask(null, true)
-        } else {
-          console.log('🎯 onClose実行');
-          onClose()
-        }
-      }
 
-      console.log('🎯 削除API実行開始');
-      // 削除API実行
-      await deleteTask.mutateAsync(task.id)
-      console.log('🎯 削除API完了');
-    } catch (error) {
-      console.error('削除に失敗しました:', error)
-      throw error;
+  // 削除完了時の処理
+  const handleDeleteComplete = (deletedTask: Task, preDeleteDisplayOrder?: number[]) => {
+    console.log('🎯 handleDeleteComplete開始:', { deletedTaskId: deletedTask.id });
+    
+    // UI更新処理
+    if (onDeleteAndSelectNext) {
+      console.log('🎯 onDeleteAndSelectNext実行');
+      onDeleteAndSelectNext(deletedTask, preDeleteDisplayOrder);
+    } else {
+      console.log('🎯 通常のクローズ処理');
+      if (onSelectTask && onClosePanel) {
+        console.log('🎯 onClosePanel & onSelectTask実行');
+        onClosePanel();
+        onSelectTask(null, true);
+      } else {
+        console.log('🎯 onClose実行');
+        onClose();
+      }
     }
-  }
+    
+    // アニメーション完了後に蓋を閉じる
+    setTimeout(() => {
+      setIsLidOpen(false);
+    }, 200);
+    
+    // 削除完了
+    setIsDeleting(false);
+  };
+  
+  // 共通削除処理
+  const handleRightEditorDelete = useRightEditorDelete({
+    item: task,
+    deleteMutation: deleteTask,
+    editorSelector: '[data-task-editor]',
+    setIsDeleting,
+    onDeleteComplete: handleDeleteComplete,
+    executeApiFirst: true, // Task方式：先にAPI削除実行
+    restoreEditorVisibility: true,
+  });
 
   const handleDelete = async () => {
     if (!task) return;
@@ -66,83 +70,16 @@ export function useTaskDelete({ task, onClose, onSelectTask, onClosePanel, onDel
     }
     
     try {
-      // 削除中状態を設定
-      setIsDeleting(true);
-      
       // モーダルを閉じる
       console.log('🎯 モーダルを閉じる');
-      setShowDeleteModal(false)
-
-      // 削除前のDOM順序を保存
-      const { getTaskDisplayOrder } = await import('@/src/utils/domUtils');
-      const preDeleteDisplayOrder = getTaskDisplayOrder();
-      console.log('🎯 削除前のDOM順序:', { preDeleteDisplayOrder, deletedTaskId: task.id });
-
-      // エディター削除アニメーションを実行
-      const rightTrashButton = document.querySelector('[data-right-panel-trash]') as HTMLElement;
-      const editorArea = document.querySelector('[data-task-editor]') as HTMLElement;
+      setShowDeleteModal(false);
       
-      console.log('🎯 個別削除要素チェック:', { 
-        rightTrashButton, 
-        editorArea,
-        rightTrashFound: !!rightTrashButton,
-        editorAreaFound: !!editorArea
-      });
-      
-      if (!rightTrashButton || !editorArea) {
-        console.log('🎯 アニメーション要素が見つからない、直接削除実行');
-        // アニメーション要素がない場合は直接削除
-        await executeDelete();
-        return;
-      }
-      
-      console.log('🎯 個別削除アニメーション開始');
-      
-      // アニメーション実行時にUI更新とAPI呼び出しを分離
-      const { animateEditorContentToTrash } = await import('@/src/utils/deleteAnimation');
-      
-      // 先にAPI削除だけ実行（UI更新は後）
-      console.log('🎯 API削除のみ先行実行');
-      await deleteTask.mutateAsync(task.id);
-      console.log('🎯 API削除完了、アニメーション後にUI更新予定');
-      
-      animateEditorContentToTrash(editorArea, rightTrashButton, async () => {
-        console.log('🎯 アニメーション完了、UI更新実行');
-        
-        // エディター要素のvisibilityを復元
-        editorArea.style.visibility = 'visible';
-        editorArea.style.pointerEvents = 'auto';
-        console.log('🎯 エディター表示復元');
-        
-        // アニメーション完了後にUI更新のみ実行
-        if (onDeleteAndSelectNext) {
-          console.log('🎯 onDeleteAndSelectNext実行');
-          // 削除前のDOM順序を使用して次のタスクを選択
-          onDeleteAndSelectNext(task, preDeleteDisplayOrder)
-        } else {
-          console.log('🎯 通常のクローズ処理');
-          if (onSelectTask && onClosePanel) {
-            console.log('🎯 onClosePanel & onSelectTask実行');
-            onClosePanel()
-            onSelectTask(null, true)
-          } else {
-            console.log('🎯 onClose実行');
-            onClose()
-          }
-        }
-        
-        // アニメーション完了後に蓋を閉じる
-        setTimeout(() => {
-          setIsLidOpen(false);
-        }, 200);
-        
-        // 削除完了
-        setIsDeleting(false);
-      });
+      // 共通削除処理を実行（DOM順序取得は共通フック内で行う）
+      await handleRightEditorDelete(task);
     } catch (error) {
-      console.error('削除に失敗しました:', error)
+      console.error('削除に失敗しました:', error);
       setIsDeleting(false);
-      alert('削除に失敗しました。')
+      alert('削除に失敗しました。');
     }
   }
 

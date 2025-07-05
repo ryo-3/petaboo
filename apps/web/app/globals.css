@@ -42,3 +42,14 @@ html, body {
 .animate-sidebar-transition {
   transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* 削除アニメーション関連 */
+/* ゴミ箱アイコンの蓋アニメーション */
+.trash-icon-lid {
+  transform-origin: 16px 9px;
+  transition: transform 0.3s ease-out;
+}
+
+.trash-icon-lid.open {
+  transform: rotate(42deg) translateX(5px) translateY(-2px);
+}

@@ -1,37 +1,11 @@
-import { useEffect, useState, useRef } from 'react'
-
 interface TrashIconProps {
   className?: string
   isOpen?: boolean
 }
 
 function TrashIcon({ className = "w-5 h-5", isOpen = false }: TrashIconProps) {
-  const [isAnimationOpen, setIsAnimationOpen] = useState(false)
-  const svgRef = useRef<SVGSVGElement>(null)
-  
-  useEffect(() => {
-    const svgElement = svgRef.current
-    if (!svgElement) return
-    
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-          const lidOpen = svgElement.style.getPropertyValue('--lid-open')
-          setIsAnimationOpen(lidOpen === '1')
-        }
-      })
-    })
-    
-    observer.observe(svgElement, {
-      attributes: true,
-      attributeFilter: ['style']
-    })
-    
-    return () => observer.disconnect()
-  }, [])
   return (
     <svg 
-      ref={svgRef}
       xmlns="http://www.w3.org/2000/svg" 
       fill="none" 
       viewBox="0 0 24 24" 
@@ -58,13 +32,7 @@ function TrashIcon({ className = "w-5 h-5", isOpen = false }: TrashIconProps) {
       </g>
       
       {/* 蓋の部分（ハンドル含む） - 赤色 */}
-      <g
-        style={{
-          transformOrigin: '16px 9px',
-          transform: isOpen || isAnimationOpen ? 'rotate(42deg) translateX(5px) translateY(-2px)' : 'rotate(0deg) translateY(0px)',
-          transition: 'transform 0.3s ease-out'
-        }}
-      >
+      <g className={`trash-icon-lid ${isOpen ? 'open' : ''}`}>
         {/* 蓋の横線 */}
         <path 
           strokeLinecap="round" 

@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useRestoreTask } from '@/src/hooks/use-tasks'
 import { useBulkDelete } from '@/components/ui/modals'
-import { animateItemsRestoreFadeOut } from '@/src/utils/deleteAnimation'
+import { animateItemsRestoreFadeOutCSS } from '@/src/utils/deleteAnimation'
 import type { DeletedTask } from '@/src/types/task'
 
 interface UseTasksBulkRestoreProps {
@@ -34,7 +34,7 @@ export function useTasksBulkRestore({
   // 共通の復元処理関数
   const executeRestoreWithAnimation = async (ids: number[]) => {
     // フェードアウトアニメーション実行
-    animateItemsRestoreFadeOut(ids, async () => {
+    animateItemsRestoreFadeOutCSS(ids, async () => {
       // アニメーション完了後にState更新（これでリストから削除）
       for (const id of ids) {
         onDeletedTaskRestore?.(id);

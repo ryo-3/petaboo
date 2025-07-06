@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
 import { useDeleteTask, usePermanentDeleteTask } from '@/src/hooks/use-tasks'
 import { useBulkDelete } from '@/components/ui/modals'
-import { animateMultipleItemsToTrashWithRect } from '@/src/utils/deleteAnimation'
 import type { Task, DeletedTask } from '@/src/types/task'
 
 interface UseTasksBulkDeleteProps {
@@ -71,8 +70,9 @@ export function useTasksBulkDelete({
     // ゴミ箱アニメーション実行（通常削除と削除済みの完全削除の両方）
     if (buttonRect) {
       console.log('🎯 アニメーション開始:', { ids, buttonRect, viewMode });
-      // 保存された位置情報を使用
-      animateMultipleItemsToTrashWithRect(ids, buttonRect, async () => {
+      // CSS版アニメーション実行（保存された位置情報を使用）
+      const { animateMultipleItemsToTrashCSS } = await import('@/src/utils/deleteAnimation');
+      animateMultipleItemsToTrashCSS(ids, buttonRect, async () => {
         console.log('🎬 アニメーション完了:', { ids: ids.length });
         
         // アニメーション完了後にAPI処理

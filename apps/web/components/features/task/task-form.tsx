@@ -34,6 +34,7 @@ interface TaskFormProps {
   isNewTask?: boolean;
   titlePlaceholder?: string;
   descriptionPlaceholder?: string;
+  customHeight?: string;
 }
 
 function TaskForm({
@@ -56,6 +57,7 @@ function TaskForm({
   isNewTask = false,
   titlePlaceholder = "タスクタイトルを入力...",
   descriptionPlaceholder = "入力...",
+  customHeight,
 }: TaskFormProps) {
   const { preferences } = useUserPreferences(1);
   const titleInputRef = useRef<HTMLInputElement>(null);
@@ -189,7 +191,7 @@ function TaskForm({
           placeholder={descriptionPlaceholder}
           value={description}
           onChange={(e) => onDescriptionChange(e.target.value)}
-          className={`w-full ${preferences?.hideHeader ? 'h-[calc(100vh-246px)]' : 'h-[calc(100vh-310px)]'} p-3 border border-gray-400 rounded-lg resize-none outline-none text-gray-700 leading-relaxed focus:border-DeepBlue`}
+          className={`w-full ${customHeight || (preferences?.hideHeader ? 'h-[calc(100vh-246px)]' : 'h-[calc(100vh-310px)]')} p-3 border border-gray-400 rounded-lg resize-none outline-none text-gray-700 leading-relaxed focus:border-DeepBlue`}
         />
       </div>
 

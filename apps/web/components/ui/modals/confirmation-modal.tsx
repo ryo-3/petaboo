@@ -26,17 +26,20 @@ export function useBulkDelete() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [targetIds, setTargetIds] = useState<number[]>([])
   const [isDeleting, setIsDeleting] = useState(false)
+  const [customMessage, setCustomMessage] = useState<string | undefined>(undefined)
 
   const confirmBulkDelete = async (
     ids: number[], 
     threshold: number = 10, 
-    deleteCallback: (ids: number[]) => Promise<void>
+    deleteCallback: (ids: number[]) => Promise<void>,
+    message?: string
   ) => {
     if (ids.length === 0) return
 
     // 閾値以上の場合のみモーダル表示
     if (ids.length >= threshold) {
       setTargetIds(ids)
+      setCustomMessage(message)
       setIsModalOpen(true)
       return
     }
@@ -63,12 +66,14 @@ export function useBulkDelete() {
   const handleCancel = () => {
     setIsModalOpen(false)
     setTargetIds([])
+    setCustomMessage(undefined)
   }
 
   return {
     isModalOpen,
     targetIds,
     isDeleting,
+    customMessage,
     confirmBulkDelete,
     handleConfirm,
     handleCancel
@@ -211,6 +216,7 @@ interface BulkDeleteConfirmationProps {
   itemType: 'memo' | 'task'
   deleteType: 'normal' | 'permanent'
   isLoading?: boolean
+  customMessage?: string
 }
 
 export function BulkDeleteConfirmation({
@@ -220,14 +226,15 @@ export function BulkDeleteConfirmation({
   count,
   itemType,
   deleteType,
-  isLoading = false
+  isLoading = false,
+  customMessage
 }: BulkDeleteConfirmationProps) {
   const itemTypeName = itemType === 'memo' ? 'メモ' : 'タスク'
   
   const title = '一括削除の確認'
-  const message = deleteType === 'normal'
+  const message = customMessage || (deleteType === 'normal'
     ? `${count}件の${itemTypeName}を削除しますか？\n（ゴミ箱に移動されます）`
-    : `${count}件の${itemTypeName}を完全に削除しますか？\n（復元できません）`
+    : `${count}件の${itemTypeName}を完全に削除しますか？\n（復元できません）`)
 
   return (
     <ConfirmationModal

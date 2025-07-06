@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useRestoreNote } from '@/src/hooks/use-notes'
 import { useBulkDelete, BulkRestoreConfirmation } from '@/components/ui/modals'
-import { animateItemsRestoreFadeOut } from '@/src/utils/deleteAnimation'
+import { animateItemsRestoreFadeOutCSS } from '@/src/utils/deleteAnimation'
 import type { DeletedMemo } from '@/src/types/memo'
 import React from 'react'
 
@@ -36,30 +36,79 @@ export function useMemosBulkRestore({
   const executeRestoreWithAnimation = async (ids: number[]) => {
     console.log('✅ 復元処理開始:', { ids: ids.length });
     
-    // フェードアウトアニメーション実行
-    animateItemsRestoreFadeOut(ids, async () => {
-      console.log('🌟 フェードアウト完了:', { ids: ids.length });
+    // 30件以上は最初の30個だけアニメーション、残りは一括復元
+    if (ids.length > 30) {
+      console.log('🎬➡️⚡ 混合復元モード:', { count: ids.length });
       
-      // アニメーション完了後にState更新（これでリストから削除）
-      console.log('🔄 State更新開始:', { ids: ids.length });
-      for (const id of ids) {
+      // 最初の30個をアニメーション
+      const animatedIds = ids.slice(0, 30);
+      const bulkIds = ids.slice(30);
+      
+      console.log('🎬 最初の30個のアニメーション:', { animated: animatedIds.length, bulk: bulkIds.length });
+      
+      const { animateBulkFadeOutCSS } = await import('@/src/utils/deleteAnimation');
+      animateBulkFadeOutCSS(animatedIds, async () => {
+        console.log('🎬 最初のアニメーション完了、一括復元開始:', { bulk: bulkIds.length });
+        
+        // 残りを一括でState更新
+        for (const id of bulkIds) {
+          onDeletedMemoRestore?.(id);
+        }
+        
+        // 選択状態をクリア（削除側と同じ分割処理）
+        const newCheckedDeletedMemos = new Set(checkedDeletedMemos);
+        ids.forEach(id => newCheckedDeletedMemos.delete(id));
+        setCheckedDeletedMemos(newCheckedDeletedMemos);
+        
+        console.log('⚡ 混合復元完了:', { animated: animatedIds.length, bulk: bulkIds.length });
+      }, 120, 'restore', async (id: number) => {
+        // 各アニメーションアイテムの個別処理（削除側と同じパターン）
+        console.log('🎯 個別復元アニメーション完了:', { id });
         onDeletedMemoRestore?.(id);
-      }
-      console.log('🔄 State更新完了:', { ids: ids.length });
+        
+        try {
+          await restoreNoteMutation.mutateAsync(id);
+          console.log('🌐 個別復元API完了:', { id });
+        } catch (error) {
+          console.error(`個別復元エラー (ID: ${id}):`, error);
+        }
+      });
+      
+      // 残りのAPI処理をバックグラウンドで実行
+      setTimeout(async () => {
+        console.log('🌐 残りのAPI処理開始:', { count: bulkIds.length });
+        for (const id of bulkIds) {
+          try {
+            await restoreNoteMutation.mutateAsync(id);
+          } catch (error) {
+            console.error(`一括復元エラー (ID: ${id}):`, error);
+          }
+        }
+        console.log('🌐 残りのAPI処理完了:', { count: bulkIds.length });
+      }, 1000);
+      
+      return;
+    }
+    
+    // 30件以下はアニメーション付き復元
+    console.log('🎬 アニメーション復元:', { count: ids.length });
+    const { animateBulkFadeOutCSS } = await import('@/src/utils/deleteAnimation');
+    animateBulkFadeOutCSS(ids, async () => {
+      console.log('🌟 全アニメーション完了:', { ids: ids.length });
       
       // 選択状態をクリア
       setCheckedDeletedMemos(new Set());
+    }, 120, 'restore', async (id: number) => {
+      // 各アイテムのアニメーション完了時に個別DOM操作 + API実行
+      console.log('🎯 個別復元アニメーション完了:', { id });
+      onDeletedMemoRestore?.(id);
       
-      // API処理を実行
-      console.log('🌐 API開始:', { ids: ids.length });
-      for (const id of ids) {
-        try {
-          await restoreNoteMutation.mutateAsync(id);
-        } catch (error) {
-          console.error(`メモ復元エラー (ID: ${id}):`, error);
-        }
+      try {
+        await restoreNoteMutation.mutateAsync(id);
+        console.log('🌐 個別復元API完了:', { id });
+      } catch (error) {
+        console.error(`復元エラー (ID: ${id}):`, error);
       }
-      console.log('🌐 API完了:', { ids: ids.length });
     });
   };
 

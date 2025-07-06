@@ -561,71 +561,122 @@ export function animateEditorContentToTrashCSS(
   }, 1000);
 }
 
-// 復元時のフェードアウトアニメーション
-export function animateItemsRestoreFadeOut(
+// 汎用CSS版フェードアウトアニメーション（即座DOM削除版）
+export function animateBulkFadeOutCSS(
   itemIds: number[],
   onComplete?: () => void,
-  delay: number = 50
+  delay: number = 120,
+  actionType: 'delete' | 'restore' = 'delete',
+  onItemComplete?: (id: number) => void
 ) {
-  console.log('🌟 復元アニメーション開始:', { total: itemIds.length, itemIds });
-  
-  const maxAnimatedItems = 20; // アニメーションする最大数
-  const animatedIds = itemIds.slice(0, maxAnimatedItems);
-  const remainingIds = itemIds.slice(maxAnimatedItems);
-  
-  console.log('🌟 復元アニメーション分割:', { 
-    animated: animatedIds.length, 
-    remaining: remainingIds.length, 
-    animatedIds, 
-    remainingIds 
-  });
+  console.log(`🎨 CSS版${actionType === 'delete' ? '削除' : '復元'}アニメーション開始:`, { total: itemIds.length, itemIds });
   
   let completedCount = 0;
   const totalItems = itemIds.length;
   
-  // 残りのアイテムを一斉にフェードアウト（20個以降は遅延なし）
-  if (remainingIds.length > 0) {
-    console.log('📦 残りのアイテム一斉フェードアウト:', { count: remainingIds.length });
-    
-    // 最初の20個のアニメーション後に実行
-    setTimeout(() => {
-      remainingIds.forEach((id) => {
-        const itemElement = document.querySelector(`[data-memo-id="${id}"], [data-task-id="${id}"]`) as HTMLElement;
-        
-        if (itemElement) {
-          // 元のアイテムを即座に非表示
-          itemElement.style.opacity = '0';
-          itemElement.style.transform = 'scale(0.95)';
-          itemElement.style.transition = 'all 0.1s ease-out';
-        }
-      });
-      
-      // 一斉にカウントアップ
-      completedCount += remainingIds.length;
-      console.log('✅ 一斉フェードアウト完了:', { count: remainingIds.length, completedCount, totalItems });
-      
-      // 全てのアイテムが完了したらコールバック実行
-      if (completedCount >= totalItems) {
-        setTimeout(() => {
-          console.log('🎊 全復元アニメーション完了!', { completedCount, totalItems });
-          onComplete?.();
-        }, 100);
-      }
-    }, maxAnimatedItems * delay);
+  // ゴミ箱の蓋を開く（削除の場合のみ）
+  const trashIcon = document.querySelector('[data-trash-icon]') as HTMLElement;
+  if (actionType === 'delete' && trashIcon) {
+    trashIcon.style.setProperty('--lid-open', '1');
   }
   
-  // 最初の20個だけ順次アニメーション
-  animatedIds.forEach((id, index) => {
+  // 全てのアイテムに順次フェードアウトアニメーション適用
+  itemIds.forEach((id, index) => {
     setTimeout(() => {
-      console.log('🌟 復元アニメーション実行:', { id, index });
+      console.log(`🎯 ${actionType === 'delete' ? '削除' : '復元'}フェードアウトアニメーション開始:`, { id, index, delay: index * delay });
       const itemElement = document.querySelector(`[data-memo-id="${id}"], [data-task-id="${id}"]`) as HTMLElement;
       
       if (itemElement) {
-        // アイテムの初期位置を取得
-        const itemRect = itemElement.getBoundingClientRect();
+        console.log(`🎯 CSS版${actionType === 'delete' ? '削除' : '復元'}フェードアウト:`, {
+          id,
+          index,
+          遅延: '0ms (即座開始)'
+        });
         
-        // アニメーション用のクローンを作成
+        // フェードアウトアニメーション開始
+        itemElement.classList.add('bulk-fade-out-animation');
+        
+        // アニメーション完了時に高さを0にして非表示
+        setTimeout(() => {
+          itemElement.style.height = '0';
+          itemElement.style.overflow = 'hidden';
+          itemElement.style.visibility = 'hidden';
+          console.log(`👻 高さ0設定:`, { id });
+          
+          // その後display: noneで完全に除外
+          setTimeout(() => {
+            itemElement.style.display = 'none';
+            console.log(`👻 完全除外:`, { id });
+          }, 10);
+        }, 350 + (index * delay)); // アニメーション完了から50ms後
+        
+        // その後DOM削除（State更新）を実行
+        if (onItemComplete) {
+          setTimeout(() => {
+            onItemComplete(id);
+            console.log(`🗑️ ${actionType === 'delete' ? '削除' : '復元'}DOM削除実行:`, { id });
+          }, 300 + (index * delay)); // アニメーション完了と同時
+        }
+      }
+      
+      // カウントアップ
+      completedCount++;
+      console.log(`✅ ${actionType === 'delete' ? '削除' : '復元'}処理完了:`, { id, completedCount, totalItems });
+      
+      // 全てのアイテムが完了したらコールバック実行
+      if (completedCount === totalItems) {
+        setTimeout(() => {
+          console.log(`🎊 全${actionType === 'delete' ? '削除' : '復元'}アニメーション完了!`, { completedCount, totalItems });
+          // ゴミ箱の蓋を閉じる（削除の場合のみ）
+          if (actionType === 'delete' && trashIcon) {
+            trashIcon.style.setProperty('--lid-open', '0');
+          }
+          onComplete?.();
+        }, 100);
+      }
+    }, index * delay);
+  });
+}
+
+// 復元用ラッパー関数
+export function animateItemsRestoreFadeOutCSS(
+  itemIds: number[],
+  onComplete?: () => void,
+  delay: number = 120
+) {
+  animateBulkFadeOutCSS(itemIds, onComplete, delay, 'restore');
+}
+
+// JS制御版シンプルフェードアウト（元のJS版トリック使用）
+export function animateBulkFadeOutJS(
+  itemIds: number[],
+  onComplete?: () => void,
+  delay: number = 120,
+  actionType: 'delete' | 'restore' = 'delete'
+) {
+  console.log(`🎨 JS制御版${actionType === 'delete' ? '削除' : '復元'}アニメーション開始:`, { total: itemIds.length, itemIds });
+  
+  let completedCount = 0;
+  const totalItems = itemIds.length;
+  const clones: HTMLElement[] = [];
+  
+  // ゴミ箱の蓋を開く（削除の場合のみ）
+  const trashIcon = document.querySelector('[data-trash-icon]') as HTMLElement;
+  if (actionType === 'delete' && trashIcon) {
+    trashIcon.style.setProperty('--lid-open', '1');
+  }
+  
+  // 全てのアイテムに順次フェードアウトアニメーション適用
+  itemIds.forEach((id, index) => {
+    setTimeout(() => {
+      console.log(`🎯 ${actionType === 'delete' ? '削除' : '復元'}フェードアウトアニメーション開始:`, { id, index, delay: index * delay });
+      const itemElement = document.querySelector(`[data-memo-id="${id}"], [data-task-id="${id}"]`) as HTMLElement;
+      
+      if (itemElement) {
+        // アニメーション用クローンを作成
+        const itemRect = itemElement.getBoundingClientRect();
         const clone = itemElement.cloneNode(true) as HTMLElement;
+        
         clone.style.position = 'fixed';
         clone.style.top = `${itemRect.top}px`;
         clone.style.left = `${itemRect.left}px`;
@@ -633,40 +684,83 @@ export function animateItemsRestoreFadeOut(
         clone.style.height = `${itemRect.height}px`;
         clone.style.zIndex = '9999';
         clone.style.pointerEvents = 'none';
-        clone.style.transition = 'all 0.4s ease-out';
-        clone.style.transformOrigin = 'center';
-        
-        // 元のアイテムを即座に非表示
-        itemElement.style.opacity = '0';
-        itemElement.style.transform = 'scale(0.95)';
-        itemElement.style.transition = 'all 0.1s ease-out';
+        clone.style.transition = 'all 300ms ease-out';
+        clone.style.visibility = 'visible';
+        clone.style.opacity = '1';
         
         // クローンをDOMに追加
         document.body.appendChild(clone);
+        clones.push(clone);
         
-        // フェードアウトアニメーション開始
+        // クローンが表示されてから元要素を隠す
         requestAnimationFrame(() => {
-          clone.style.opacity = '0';
-          clone.style.transform = 'scale(0.95) translateY(-10px)';
+          // 元要素を隠す（クローンが表示された後）
+          itemElement.style.visibility = 'hidden';
+          itemElement.style.pointerEvents = 'none';
           
-          setTimeout(() => {
-            document.body.removeChild(clone);
-            completedCount++;
-            console.log('🌟 復元アニメーション完了:', { id, completedCount, totalItems });
+          // 次のフレームでフェードアウトアニメーション開始
+          requestAnimationFrame(() => {
+            clone.style.opacity = '0';
+            clone.style.transform = 'scale(0.8)';
             
-            // 全てのアイテムが完了したらコールバック実行
+            // アニメーション完了後の処理
+            setTimeout(() => {
+              // 完了カウント
+            completedCount++;
+            console.log(`✅ ${actionType === 'delete' ? '削除' : '復元'}処理完了:`, { id, completedCount, totalItems });
+            
+            // 全てのアイテムが完了したらまとめて処理
             if (completedCount === totalItems) {
-              console.log('🎊 全復元アニメーション完了!');
+              console.log(`🎊 全${actionType === 'delete' ? '削除' : '復元'}アニメーション完了!`, { completedCount, totalItems });
+              
+              // 全てのクローンを削除
+              clones.forEach(clone => {
+                if (clone.parentNode) {
+                  document.body.removeChild(clone);
+                }
+              });
+              
+              // ゴミ箱の蓋を閉じる（削除の場合のみ）
+              if (actionType === 'delete' && trashIcon) {
+                trashIcon.style.setProperty('--lid-open', '0');
+              }
+              
+              // 最後に一気にDOM操作（コールバック実行）
               onComplete?.();
             }
-          }, 400);
+            }, 300); // フェードアウト完了まで待つ
+          });
         });
       } else {
+        // 要素が見つからない場合もカウント
         completedCount++;
         if (completedCount === totalItems) {
+          // 全てのクローンを削除
+          clones.forEach(clone => {
+            if (clone.parentNode) {
+              document.body.removeChild(clone);
+            }
+          });
+          
+          if (actionType === 'delete' && trashIcon) {
+            trashIcon.style.setProperty('--lid-open', '0');
+          }
           onComplete?.();
         }
       }
     }, index * delay);
   });
+}
+
+
+// CSS版複数アイテム削除アニメーション（Phase 2）- シンプルフェードアウト版
+export function animateMultipleItemsToTrashCSS(
+  itemIds: number[],
+  trashRect: DOMRect,
+  onComplete?: () => void,
+  delay: number = 120,
+  viewMode: 'list' | 'card' = 'list'
+) {
+  // 汎用フェードアウト関数を呼び出し
+  animateBulkFadeOutCSS(itemIds, onComplete, delay, 'delete');
 }

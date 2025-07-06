@@ -68,6 +68,21 @@ import { animateEditorContentToTrashCSS } from '@/src/utils/deleteAnimation';
   20% { transform: translate(0, 0) scale(0.8); }
   100% { transform: translate(var(--move-x), var(--move-y)) scale(0.01); }
 }
+
+// Phase 2: 一括削除・復元パフォーマンス最適化（メモ側完了）
+import { animateBulkFadeOutCSS } from '@/src/utils/deleteAnimation';
+
+// スマートアニメーション切り替え: 30件以下=全アニメーション、30件以上=混合モード
+if (ids.length > 30) {
+  const animatedIds = ids.slice(0, 30);
+  const bulkIds = ids.slice(30);
+  // 美しいアニメーション + 効率的バックグラウンド処理
+}
+
+// 個別タイミング同期: onItemCompleteコールバックで精密制御
+animateBulkFadeOutCSS(ids, onComplete, 120, 'delete', (id) => {
+  // 300ms + index*120ms でアニメーション完了と同時にDOM更新
+});
 ```
 
 ## 重要コンポーネント
@@ -93,8 +108,16 @@ import { animateEditorContentToTrashCSS } from '@/src/utils/deleteAnimation';
 ### アニメーション
 - `deleteAnimation.ts` - 削除アニメーション（段階的CSS化中）
   - ✅ `animateEditorContentToTrashCSS` - エディター削除（CSS版）
-  - ❌ `animateMultipleItemsToTrash` - 複数アイテム（JS版）
+  - ✅ `animateBulkFadeOutCSS` - 一括削除・復元（CSS版、メモ側完了）
+  - 🔄 `animateMultipleItemsToTrash` - 複数アイテム（JS版、タスク側で使用中）
   - ❌ その他の削除アニメーション（JS版）
+
+### パフォーマンス最適化
+- **一括操作最適化**（メモ側完了）:
+  - 30件以下: 全アニメーション（120ms間隔）
+  - 30件以上: 混合モード（最初30件アニメーション + 残り瞬時処理）
+  - 100件制限: カスタムモーダルメッセージ対応
+  - React Query競合回避: 自動更新なしmutation使用
 
 ## UIコントロール統一規則
 - **サイズ**: buttonSize="size-7", iconSize="size-5", arrowSize="w-2.5 h-3"
@@ -129,7 +152,9 @@ npm run check-types && npm run lint  # コミット前必須
 - **処理**: `handleLeftBulkDelete`
 - **表示条件**: `checkedMemos.size > 0` 時
 - **位置**: 左パネルの右下
-- **アニメーション**: `animateMultipleItemsToTrash` (JS版)
+- **アニメーション**: 
+  - ✅ **メモ**: `animateBulkFadeOutCSS` (CSS版、パフォーマンス最適化済み)
+  - 🔄 **タスク**: `animateMultipleItemsToTrash` (JS版、次回最適化予定)
 
 #### 右側エディター削除（現在表示中のメモ・タスク）
 - **状態**: `isEditorDeleting`
@@ -142,3 +167,7 @@ npm run check-types && npm run lint  # コミット前必須
 - **メモ**: `use-deleted-memo-actions.ts` でCSS版使用 ✅
 - **タスク**: `use-deleted-task-actions.ts` でCSS版使用 ✅
 - **完了**: `animateEditorContentToTrash` → `animateEditorContentToTrashCSS` への移行完了
+
+#### 一括復元（削除済みアイテムの復元）
+- **メモ**: `use-memo-bulk-restore.tsx` でパフォーマンス最適化済み ✅
+- **タスク**: `use-task-bulk-restore.tsx` 未実装 ❌

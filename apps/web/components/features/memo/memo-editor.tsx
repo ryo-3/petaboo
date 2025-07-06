@@ -16,9 +16,10 @@ interface MemoEditorProps {
     wasEmpty: boolean,
     isNewMemo: boolean
   ) => void;
+  customHeight?: string;
 }
 
-function MemoEditor({ memo, onClose, onSaveComplete }: MemoEditorProps) {
+function MemoEditor({ memo, onClose, onSaveComplete, customHeight }: MemoEditorProps) {
   const { preferences } = useUserPreferences(1);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const baseViewerRef = useRef<HTMLDivElement>(null);
@@ -113,7 +114,7 @@ function MemoEditor({ memo, onClose, onSaveComplete }: MemoEditorProps) {
               handleTitleChange(firstLine);
               handleContentChange(newContent);
             }}
-            className={`w-full ${preferences?.hideHeader ? 'h-[calc(100vh-100px)]' : 'h-[calc(100vh-164px)]'} resize-none outline-none text-gray-500 leading-relaxed font-medium pb-10 mt-3`}
+            className={`w-full ${customHeight || (preferences?.hideHeader ? 'h-[calc(100vh-100px)]' : 'h-[calc(100vh-164px)]')} resize-none outline-none text-gray-500 leading-relaxed font-medium pb-10 mt-3`}
           />
         </BaseViewer>
       </div>

@@ -17,6 +17,7 @@ interface TaskEditorProps {
   onClosePanel?: () => void;
   onDeleteAndSelectNext?: (deletedTask: Task, preDeleteDisplayOrder?: number[]) => void;
   onSaveComplete?: (savedTask: Task, isNewTask: boolean) => void;
+  customHeight?: string;
 }
 
 function TaskEditor({
@@ -26,6 +27,7 @@ function TaskEditor({
   onClosePanel,
   onDeleteAndSelectNext,
   onSaveComplete,
+  customHeight,
 }: TaskEditorProps) {
   const updateTask = useUpdateTask();
   const createTask = useCreateTask();
@@ -283,6 +285,7 @@ function TaskEditor({
           hasChanges={canSave}
           savedSuccessfully={savedSuccessfully}
           isNewTask={isNewTask}
+          customHeight={customHeight}
         />
         </BaseViewer>
       </div>

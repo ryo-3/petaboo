@@ -33,7 +33,9 @@ function CreateScreen({
   };
 
   return (
-    <div className={`${preferences?.hideHeader ? 'h-screen' : 'h-[calc(100vh-64px)]'} bg-white`}>
+    <div
+      className={`${preferences?.hideHeader ? "h-screen" : "h-[calc(100vh-64px)]"} bg-white`}
+    >
       {/* 上部：モード切り替えタブ */}
       <div className="flex border-b border-gray-200 bg-gray-50">
         <button
@@ -99,11 +101,19 @@ function CreateScreen({
       </div>
 
       {/* メイン：作成エリア */}
-      <div className="h-[calc(100%-65px)] p-5">
+      <div className="pl-3 pr-3">
         {createMode === "memo" ? (
-          <MemoEditor memo={null} onClose={onClose} />
+          <MemoEditor
+            memo={null}
+            onClose={onClose}
+            customHeight="h-[calc(100vh-200px)]"
+          />
         ) : (
-          <TaskEditor task={null} onClose={onClose} />
+          <TaskEditor
+            task={null}
+            onClose={onClose}
+            customHeight="h-[calc(100vh-360px)]"
+          />
         )}
       </div>
     </div>

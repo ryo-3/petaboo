@@ -6,6 +6,7 @@ interface UseSelectionHandlersConfig<T, D> {
   onSelectDeletedItem: (item: D | null, fromFullList?: boolean) => void;
   onClearSelection?: () => void;
   onDeselectAndStay?: () => void;
+  onClose?: () => void;
 }
 
 /**
@@ -18,6 +19,7 @@ export function useSelectionHandlers<T, D = T>({
   onSelectDeletedItem,
   onClearSelection,
   onDeselectAndStay,
+  onClose,
 }: UseSelectionHandlersConfig<T, D>) {
   
   // 通常アイテムの選択ハンドラー
@@ -46,8 +48,10 @@ export function useSelectionHandlers<T, D = T>({
       onClearSelection();
     } else if (onDeselectAndStay) {
       onDeselectAndStay();
+    } else if (onClose) {
+      onClose();
     }
-  }, [setScreenMode, onClearSelection, onDeselectAndStay]);
+  }, [setScreenMode, onClearSelection, onDeselectAndStay, onClose]);
 
   // タブ変更時のハンドラー
   const handleTabChange = useCallback((handler: (tab: string) => void) => (tab: string) => {

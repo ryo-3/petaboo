@@ -130,7 +130,7 @@ export function createNextSelectionHandler<T extends { id: number }>(
 export function createDeletedNextSelectionHandler<T extends { id: number; deletedAt: number }>(
   deletedItems: T[],
   deletedItem: T,
-  onSelect: (item: T, fromFullList?: boolean) => void,
+  onSelect: (item: T | null, fromFullList?: boolean) => void,
   onClose: () => void,
   setViewMode: (mode: "view" | "list") => void,
   options?: {
@@ -149,8 +149,8 @@ export function createDeletedNextSelectionHandler<T extends { id: number; delete
     }
     setViewMode("view");
   } else {
-    setViewMode("list");
-    onClose();
+    // 削除済みアイテムがなくなった場合は選択を解除（画面は削除済みリストのまま）
+    onSelect(null);
   }
 }
 

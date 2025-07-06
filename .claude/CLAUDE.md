@@ -139,6 +139,6 @@ npm run check-types && npm run lint  # コミット前必須
 - **アニメーション**: `animateEditorContentToTrashCSS` (CSS版) ✅
 
 #### 削除済み完全削除（削除済みアイテムの完全削除）
-- **メモ**: `use-deleted-memo-actions.ts` でJS版使用 ❌
-- **タスク**: `use-deleted-task-actions.ts` でJS版使用 ❌
-- **次回作業**: `animateEditorContentToTrash` → `animateEditorContentToTrashCSS`
+- **メモ**: `use-deleted-memo-actions.ts` でCSS版使用 ✅
+- **タスク**: `use-deleted-task-actions.ts` でCSS版使用 ✅
+- **完了**: `animateEditorContentToTrash` → `animateEditorContentToTrashCSS` への移行完了

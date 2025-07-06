@@ -4,7 +4,7 @@ import { getNextDeletedItem } from '@/src/utils/domUtils';
 interface UseNextDeletedItemSelectionConfig<T extends { id: number; deletedAt: number }> {
   deletedItems: T[] | undefined | null;
   onSelectDeletedItem: (item: T | null, fromFullList?: boolean) => void;
-  onClose: () => void;
+  onDeselectOnly?: () => void; // 選択解除のみ（画面遷移なし）
   setScreenMode: (mode: string) => void;
   editorSelector: string; // '[data-memo-editor]' or '[data-task-editor]'
 }
@@ -16,14 +16,18 @@ interface UseNextDeletedItemSelectionConfig<T extends { id: number; deletedAt: n
 export function useNextDeletedItemSelection<T extends { id: number; deletedAt: number }>({
   deletedItems,
   onSelectDeletedItem,
-  onClose,
+  onDeselectOnly,
   setScreenMode,
   editorSelector,
 }: UseNextDeletedItemSelectionConfig<T>) {
   
   return useCallback((deletedItem: T) => {
     if (!deletedItems) {
-      onClose();
+      if (onDeselectOnly) {
+        onDeselectOnly();
+      } else {
+        onSelectDeletedItem(null);
+      }
       return;
     }
 
@@ -43,9 +47,12 @@ export function useNextDeletedItemSelection<T extends { id: number; deletedAt: n
         }
       }, 100);
     } else {
-      // 次がない場合はリストに戻る
-      setScreenMode("list");
-      onClose();
+      // 次がない場合は選択を解除（エディターを閉じる）
+      if (onDeselectOnly) {
+        onDeselectOnly();
+      } else {
+        onSelectDeletedItem(null);
+      }
     }
-  }, [deletedItems, onSelectDeletedItem, onClose, setScreenMode, editorSelector]);
+  }, [deletedItems, onSelectDeletedItem, onDeselectOnly, setScreenMode, editorSelector]);
 }

@@ -241,7 +241,7 @@ function MemoScreen({
   const selectNextDeletedMemo = useNextDeletedItemSelection({
     deletedItems: deletedNotes || null,
     onSelectDeletedItem: onSelectDeletedMemo,
-    onClose,
+    onDeselectOnly: () => onSelectDeletedMemo(null),
     setScreenMode: (mode: string) => setMemoScreenMode(mode as MemoScreenMode),
     editorSelector: "[data-memo-editor]",
   });
@@ -250,7 +250,7 @@ function MemoScreen({
   const handleRestoreAndSelectNext = (deletedMemo: DeletedMemo) => {
     if (!deletedNotes) return;
     createDeletedNextSelectionHandler(deletedNotes, deletedMemo, onSelectDeletedMemo, 
-      () => onDeselectAndStayOnMemoList?.(), setMemoScreenMode);
+      () => onSelectDeletedMemo(null), setMemoScreenMode);
   };
 
   // 選択ハンドラーパターン
@@ -265,6 +265,7 @@ function MemoScreen({
     onSelectItem: onSelectMemo,
     onSelectDeletedItem: onSelectDeletedMemo,
     onDeselectAndStay: onDeselectAndStayOnMemoList,
+    onClose: onClose,
   });
 
   const screenHeight = preferences?.hideHeader ? 'h-screen' : 'h-[calc(100vh-64px)]';

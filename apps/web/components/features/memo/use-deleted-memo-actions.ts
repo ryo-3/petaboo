@@ -51,8 +51,8 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
       const rightTrashButton = document.querySelector('[data-right-panel-trash]') as HTMLElement;
       
       if (editorArea && rightTrashButton) {
-        const { animateEditorContentToTrash } = await import('@/src/utils/deleteAnimation');
-        animateEditorContentToTrash(editorArea, rightTrashButton, async () => {
+        const { animateEditorContentToTrashCSS } = await import('@/src/utils/deleteAnimation');
+        animateEditorContentToTrashCSS(editorArea, rightTrashButton, async () => {
           // アニメーション完了後の処理
           try {
             // API実行（onSuccessで次選択とキャッシュ更新が実行される）

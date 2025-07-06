@@ -20,23 +20,22 @@
 ### 現在の適用状況
 ✅ **メモ通常削除**: `use-right-editor-delete.ts` でCSS版使用  
 ✅ **タスク通常削除**: `use-right-editor-delete.ts` でCSS版使用  
-❌ **メモ削除済み完全削除**: `use-deleted-memo-actions.ts` でJS版使用  
-❌ **タスク削除済み完全削除**: `use-deleted-task-actions.ts` でJS版使用  
+✅ **メモ削除済み完全削除**: `use-deleted-memo-actions.ts` でCSS版使用  
+✅ **タスク削除済み完全削除**: `use-deleted-task-actions.ts` でCSS版使用  
 
 ### 技術的発見
 - **CSS transform順序**: `translate(...) scale(...)`でないと移動距離が正しくない
 - **位置計算**: 相対移動距離 = `ゴミ箱位置 - 開始位置中心` で正確
 - **固定サイズ**: 400x200pxのクローンで元JS版と同じ動作
 
+## ✅ 完了済み - 削除済み完全削除のCSS化
+- `use-deleted-memo-actions.ts` 54行目 → CSS版に変更完了
+- `use-deleted-task-actions.ts` 54行目 → CSS版に変更完了
+- 型チェック・lintチェック共にエラーなし
+
 ## 🔄 次回作業予定
 
-### 即座に実行可能
-1. **削除済み完全削除のCSS化** (2ファイル)
-   - `use-deleted-memo-actions.ts` 54行目
-   - `use-deleted-task-actions.ts` 54行目
-   - `animateEditorContentToTrash` → `animateEditorContentToTrashCSS`
-
-### Phase 2: 複数アイテムの順次アニメーション
+### Phase 2: 複数アイテムの順次アニメーション（次回最優先）
 **対象:** `animateMultipleItemsToTrash`系関数のCSS化
 - 左側一括削除で使用されている
 - `animation-delay`を使った順次実行
@@ -54,8 +53,8 @@
 
 ## 実装順序
 1. ✅ Phase 1（完了）
-2. 🔄 削除済み完全削除のCSS化（次回最初）
-3. Phase 2（複数アイテム順次）
+2. ✅ 削除済み完全削除のCSS化（完了）
+3. 🔄 Phase 2（複数アイテム順次）- 次回作業
 4. Phase 3（蓋開閉）
 5. Phase 4（DOM操作削減）
 

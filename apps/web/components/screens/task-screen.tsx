@@ -201,7 +201,7 @@ function TaskScreen({
   const selectNextDeletedTask = useNextDeletedItemSelection({
     deletedItems: deletedTasks || null,
     onSelectDeletedItem: onSelectDeletedTask,
-    onClose,
+    onDeselectOnly: () => onSelectDeletedTask(null),
     setScreenMode: (mode: string) => setTaskScreenMode(mode as TaskScreenMode),
     editorSelector: '[data-task-editor]',
   });
@@ -210,7 +210,7 @@ function TaskScreen({
   const handleDeletedTaskRestoreAndSelectNext = (deletedTask: DeletedTask) => {
     if (!deletedTasks) return;
     createDeletedNextSelectionHandler(deletedTasks, deletedTask, onSelectDeletedTask,
-      () => onClearSelection?.(), setTaskScreenMode, { isRestore: true, onSelectWithFromFlag: true });
+      () => onSelectDeletedTask(null), setTaskScreenMode, { isRestore: true, onSelectWithFromFlag: true });
   };
 
   // 通常タスクでの次のタスク選択ハンドラー（実際の画面表示順序に基づく）
@@ -338,6 +338,7 @@ function TaskScreen({
     onSelectItem: onSelectTask,
     onSelectDeletedItem: onSelectDeletedTask,
     onClearSelection,
+    onClose: onClose,
   });
 
   const screenHeight = preferences?.hideHeader ? 'h-screen' : 'h-[calc(100vh-64px)]';

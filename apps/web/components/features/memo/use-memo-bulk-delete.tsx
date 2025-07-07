@@ -1,7 +1,7 @@
 import { useBulkDelete, BulkDeleteConfirmation } from "@/components/ui/modals";
 import { useDeleteNote, usePermanentDeleteNote } from "@/src/hooks/use-notes";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import React from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
@@ -67,6 +67,9 @@ export function useMemosBulkDelete({
   
   // タイマーIDを保持
   const timerRef = useRef<{ isDeleting?: NodeJS.Timeout; clearChecked?: NodeJS.Timeout }>({});
+  
+  // 部分削除中フラグ（自動クリーンアップを無効にするため）
+  const [isPartialDeleting, setIsPartialDeleting] = useState(false);
 
   // チェック状態が変更されたらタイマーをクリア
   useEffect(() => {
@@ -83,9 +86,9 @@ export function useMemosBulkDelete({
     }
   }, [checkedMemos]);
 
-  // チェック状態のクリーンアップ - 削除されたメモのチェックを解除
+  // チェック状態のクリーンアップ - 削除されたメモのチェックを解除（部分削除中は無効）
   useEffect(() => {
-    if (notes) {
+    if (notes && !isPartialDeleting) {
       const allMemoIds = new Set([
         ...notes.map((m) => m.id),
         ...localMemos.map((m) => m.id),
@@ -97,10 +100,10 @@ export function useMemosBulkDelete({
         setCheckedMemos(newCheckedMemos);
       }
     }
-  }, [notes, localMemos, checkedMemos, setCheckedMemos]);
+  }, [notes, localMemos, checkedMemos, setCheckedMemos, isPartialDeleting]);
 
   useEffect(() => {
-    if (deletedNotes) {
+    if (deletedNotes && !isPartialDeleting) {
       const deletedMemoIds = new Set(deletedNotes.map((m) => m.id));
       const newCheckedDeletedMemos = new Set(
         Array.from(checkedDeletedMemos).filter((id) => deletedMemoIds.has(id))
@@ -109,10 +112,15 @@ export function useMemosBulkDelete({
         setCheckedDeletedMemos(newCheckedDeletedMemos);
       }
     }
-  }, [deletedNotes, checkedDeletedMemos, setCheckedDeletedMemos]);
+  }, [deletedNotes, checkedDeletedMemos, setCheckedDeletedMemos, isPartialDeleting]);
 
   // 共通の削除処理関数
   const executeDeleteWithAnimation = async (ids: number[], isPartialDelete = false) => {
+    // 部分削除の場合はフラグを設定
+    if (isPartialDelete) {
+      setIsPartialDeleting(true);
+    }
+    
     // 削除ボタンの位置を取得
     const buttonRect = deleteButtonRef?.current?.getBoundingClientRect();
     
@@ -137,7 +145,7 @@ export function useMemosBulkDelete({
         const { animateBulkFadeOutCSS } = await import('@/src/utils/deleteAnimation');
         
         animateBulkFadeOutCSS(animatedIds, async () => {
-          console.log('🎬 最初のアニメーション完了、一括削除開始:', { bulk: bulkIds.length });
+          console.log('🎬 最初のアニメーション完了、一括削除開始:', { bulk: bulkIds.length, isPartialDelete });
           
           // 残りを一括でState更新
           for (const id of bulkIds) {
@@ -148,16 +156,22 @@ export function useMemosBulkDelete({
           
           // チェック状態をクリア
           if (isPartialDelete) {
+            console.log('🔄 部分削除: 削除したIDのみ選択解除', { 削除ID数: ids.length, activeTab });
             if (activeTab === "normal") {
+              const beforeCount = checkedMemos.size;
               const newCheckedMemos = new Set(checkedMemos);
               ids.forEach(id => newCheckedMemos.delete(id));
               setCheckedMemos(newCheckedMemos);
+              console.log('🔄 通常メモ選択状態更新', { before: beforeCount, after: newCheckedMemos.size });
             } else {
+              const beforeCount = checkedDeletedMemos.size;
               const newCheckedDeletedMemos = new Set(checkedDeletedMemos);
               ids.forEach(id => newCheckedDeletedMemos.delete(id));
               setCheckedDeletedMemos(newCheckedDeletedMemos);
+              console.log('🔄 削除済みメモ選択状態更新', { before: beforeCount, after: newCheckedDeletedMemos.size });
             }
           } else {
+            console.log('🔄 全削除: 選択状態を全クリア', { activeTab });
             if (activeTab === "normal") {
               setCheckedMemos(new Set());
             } else {
@@ -178,6 +192,11 @@ export function useMemosBulkDelete({
           }, 1000);
           
           console.log('⚡ 混合削除完了:', { animated: animatedIds.length, bulk: bulkIds.length });
+          
+          // 部分削除フラグを解除
+          if (isPartialDelete) {
+            setTimeout(() => setIsPartialDeleting(false), 100);
+          }
         }, 120, 'delete', async (id: number) => {
           // アニメーション付きアイテムの個別処理
           if (activeTab === "normal" && onMemoDelete) {
@@ -299,11 +318,23 @@ export function useMemosBulkDelete({
           onMemoDelete(id);
         }
       }
-      // 選択状態をクリア (UI即座更新)
-      if (activeTab === "normal") {
-        setCheckedMemos(new Set());
+      // 選択状態をクリア (UI即座更新) - 部分削除の場合は削除したIDのみ除外
+      if (isPartialDelete) {
+        if (activeTab === "normal") {
+          const newCheckedMemos = new Set(checkedMemos);
+          ids.forEach(id => newCheckedMemos.delete(id));
+          setCheckedMemos(newCheckedMemos);
+        } else {
+          const newCheckedDeletedMemos = new Set(checkedDeletedMemos);
+          ids.forEach(id => newCheckedDeletedMemos.delete(id));
+          setCheckedDeletedMemos(newCheckedDeletedMemos);
+        }
       } else {
-        setCheckedDeletedMemos(new Set());
+        if (activeTab === "normal") {
+          setCheckedMemos(new Set());
+        } else {
+          setCheckedDeletedMemos(new Set());
+        }
       }
       
       // API処理を即座に実行
@@ -317,6 +348,11 @@ export function useMemosBulkDelete({
         } catch (error) {
           console.error(`メモ削除エラー (ID: ${id}):`, error);
         }
+      }
+      
+      // 部分削除フラグを解除
+      if (isPartialDelete) {
+        setTimeout(() => setIsPartialDeleting(false), 100);
       }
     }
   };
@@ -350,8 +386,9 @@ export function useMemosBulkDelete({
       await bulkDelete.confirmBulkDelete(
         actualTargetIds, 
         0, // 即座にモーダル表示
-        (ids) => executeDeleteWithAnimation(ids, true), // 選択状態を部分的にクリア
-        `${targetIds.length}件選択されています。\n一度に削除できる上限は100件です。`
+        executeDeleteWithAnimation, // 選択状態を部分的にクリア
+        `${targetIds.length}件選択されています。\n一度に削除できる上限は100件です。`,
+        true // isPartialDelete
       );
     } else {
       // 通常の確認モーダル

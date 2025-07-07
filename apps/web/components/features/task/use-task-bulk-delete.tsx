@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useDeleteTask, usePermanentDeleteTask } from '@/src/hooks/use-tasks'
 import { useBulkDelete, BulkDeleteConfirmation } from '@/components/ui/modals'
 import type { Task, DeletedTask } from '@/src/types/task'
@@ -301,11 +301,23 @@ export function useTasksBulkDelete({
         }
       }
       // 削除済みタスクはState更新なし
-      // 選択状態をクリア (UI即座更新)
-      if (activeTab === "deleted") {
-        setCheckedDeletedTasks(new Set())
+      // 選択状態をクリア (UI即座更新) - 部分削除の場合は削除したIDのみ除外
+      if (isPartialDelete) {
+        if (activeTab === "deleted") {
+          const newCheckedDeletedTasks = new Set(checkedDeletedTasks)
+          ids.forEach(id => newCheckedDeletedTasks.delete(id))
+          setCheckedDeletedTasks(newCheckedDeletedTasks)
+        } else {
+          const newCheckedTasks = new Set(checkedTasks)
+          ids.forEach(id => newCheckedTasks.delete(id))
+          setCheckedTasks(newCheckedTasks)
+        }
       } else {
-        setCheckedTasks(new Set())
+        if (activeTab === "deleted") {
+          setCheckedDeletedTasks(new Set())
+        } else {
+          setCheckedTasks(new Set())
+        }
       }
       
       // API処理を即座に実行
@@ -351,8 +363,9 @@ export function useTasksBulkDelete({
       await bulkDelete.confirmBulkDelete(
         actualTargetIds, 
         0, // 即座にモーダル表示
-        (ids) => executeDeleteWithAnimation(ids, true), // 選択状態を部分的にクリア
-        `${targetIds.length}件選択されています。\n一度に削除できる上限は100件です。`
+        executeDeleteWithAnimation, // 選択状態を部分的にクリア
+        `${targetIds.length}件選択されています。\n一度に削除できる上限は100件です。`,
+        true // isPartialDelete
       )
     } else {
       // 通常の確認モーダル

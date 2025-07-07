@@ -27,14 +27,19 @@ export function useBulkDelete() {
   const [targetIds, setTargetIds] = useState<number[]>([])
   const [isDeleting, setIsDeleting] = useState(false)
   const [customMessage, setCustomMessage] = useState<string | undefined>(undefined)
+  const [isPartialDelete, setIsPartialDelete] = useState(false)
 
   const confirmBulkDelete = async (
     ids: number[], 
     threshold: number = 10, 
-    deleteCallback: (ids: number[]) => Promise<void>,
-    message?: string
+    deleteCallback: (ids: number[], isPartialDelete?: boolean) => Promise<void>,
+    message?: string,
+    isPartialDeleteParam?: boolean
   ) => {
     if (ids.length === 0) return
+
+    // 部分削除フラグを設定
+    setIsPartialDelete(isPartialDeleteParam || false)
 
     // 閾値以上の場合のみモーダル表示
     if (ids.length >= threshold) {
@@ -45,28 +50,30 @@ export function useBulkDelete() {
     }
 
     // 閾値未満は即座に削除
-    await executeDelete(ids, deleteCallback)
+    await executeDelete(ids, deleteCallback, isPartialDeleteParam)
   }
 
-  const executeDelete = async (ids: number[], deleteCallback: (ids: number[]) => Promise<void>) => {
+  const executeDelete = async (ids: number[], deleteCallback: (ids: number[], isPartialDelete?: boolean) => Promise<void>, isPartialDeleteParam?: boolean) => {
     try {
       setIsDeleting(true)
-      await deleteCallback(ids)
+      await deleteCallback(ids, isPartialDeleteParam)
     } finally {
       setIsDeleting(false)
     }
   }
 
-  const handleConfirm = async (deleteCallback: (ids: number[]) => Promise<void>) => {
+  const handleConfirm = async (deleteCallback: (ids: number[], isPartialDelete?: boolean) => Promise<void>) => {
     setIsModalOpen(false)
-    await executeDelete(targetIds, deleteCallback)
+    await executeDelete(targetIds, deleteCallback, isPartialDelete)
     setTargetIds([])
+    setIsPartialDelete(false)
   }
 
   const handleCancel = () => {
     setIsModalOpen(false)
     setTargetIds([])
     setCustomMessage(undefined)
+    setIsPartialDelete(false)
   }
 
   return {
@@ -74,6 +81,7 @@ export function useBulkDelete() {
     targetIds,
     isDeleting,
     customMessage,
+    isPartialDelete,
     confirmBulkDelete,
     handleConfirm,
     handleCancel

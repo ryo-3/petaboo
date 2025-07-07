@@ -4,6 +4,13 @@
 
 @layer theme, base, clerk, components, utilities;
 
+/* アニメーション時間の一元管理 */
+/* ※重要: このCSS変数を変更したら、deleteAnimation.tsのJavaScriptタイマーも自動で追従します */
+:root {
+  --editor-animation-duration: 1000ms;  /* エディター削除アニメーション時間 */
+  --bulk-animation-duration: 300ms;     /* 一括削除アニメーション時間 */
+}
+
 /* 横スクロールバーを非表示 */
 html, body {
   overflow-x: hidden;
@@ -147,8 +154,10 @@ html, body {
   }
 }
 
+/* エディター削除アニメーション */
+/* ※重要: :rootの--editor-animation-durationとdeleteAnimation.tsのJavaScriptタイマーが連動しています */
 .editor-delete-animation {
-  animation: editor-to-trash 1s ease-out forwards;
+  animation: editor-to-trash var(--editor-animation-duration) ease-out forwards;
   transform-origin: center;
   position: fixed !important;
   z-index: 9999;
@@ -184,8 +193,10 @@ html, body {
   }
 }
 
+/* 一括削除アニメーション */
+/* ※重要: :rootの--bulk-animation-durationとdeleteAnimation.tsのJavaScriptタイマーが連動しています */
 .bulk-fade-out-animation {
-  animation: bulk-fade-out 300ms ease-out forwards;
+  animation: bulk-fade-out var(--bulk-animation-duration) ease-out forwards;
   animation-delay: var(--animation-delay, 0ms);
 }
 

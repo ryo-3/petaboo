@@ -8,6 +8,22 @@
 - memo・task両方で使える共通フック
 - 実際の削除完了タイミングに合わせた自然なアニメーション
 
+## 前提条件（2025年7月時点）
+### 削除アニメーション最適化の完成状況
+- ✅ **CSS変数同期システム**: globals.css ⇔ deleteAnimation.ts 自動連携
+- ✅ **エディター削除**: `animateEditorContentToTrashCSS` 完全CSS化
+- ✅ **一括削除・復元**: `animateBulkFadeOutCSS` パフォーマンス最適化済み
+  - 30件以下: 全アニメーション（120ms間隔）
+  - 30件以上: 混合モード（30件アニメーション + 残り瞬時処理）
+  - 100件制限: カスタムメッセージ対応
+- ✅ **メモ・タスク共通化**: 両方で同一ロジック適用済み
+- ✅ **DOM順序対応**: タスク並び替えに対応した全選択・アニメーション
+
+### 実測可能なアニメーション時間
+- **CSS変数**: `--editor-animation-duration: 1000ms`
+- **CSS変数**: `--bulk-animation-duration: 300ms`
+- **JavaScript同期**: `getAnimationDuration()` 関数で自動取得
+
 ## 技術仕様
 
 ### 1. 共通フック設計
@@ -30,52 +46,58 @@ interface UseAnimatedCounterReturn {
 }
 ```
 
-### 2. 削除処理時間の実測
+### 2. 削除処理時間の把握（既存システム活用）
 
-#### 測定対象
-1. **30件以下のアニメーション削除**
-   - 個別アニメーション完了時間
-   - DOM削除完了時間
-   
+#### 既知のアニメーション時間
+1. **CSS変数から自動取得可能**
+   ```typescript
+   import { getAnimationDuration } from '@/src/utils/deleteAnimation';
+   const editorDuration = getAnimationDuration('editor');  // 1000ms
+   const bulkDuration = getAnimationDuration('bulk');      // 300ms
+   ```
+
 2. **混合削除モード（30件以上）**
-   - 最初30件のアニメーション時間
-   - 一括削除処理時間
-   - 全体完了時間
+   - 最初30件: `bulkDuration * 30 + (30 * 120ms)` = 約3900ms
+   - 一括削除: バックグラウンド処理（UI影響なし）
+   - 全体完了: 約4-5秒
 
 3. **100件制限削除**
-   - 100件削除完了時間
-   - 残りアイテム数の確定時間
+   - 実行時間: 約4-5秒（混合モードと同等）
+   - 完了確認: React Queryキャッシュ更新タイミング
 
-#### 測定方法
+#### 時間計算ロジック
 ```typescript
-// 時間測定用ユーティリティ
-const performanceLogger = {
-  start: (label: string) => performance.mark(`${label}-start`),
-  end: (label: string) => {
-    performance.mark(`${label}-end`);
-    performance.measure(label, `${label}-start`, `${label}-end`);
-  },
-  getTime: (label: string) => performance.getEntriesByName(label)[0]?.duration
+// 削除時間の計算関数
+const calculateDeleteDuration = (itemCount: number): number => {
+  const bulkDuration = getAnimationDuration('bulk');
+  
+  if (itemCount <= 30) {
+    return bulkDuration + (itemCount * 120); // 300ms + 個別遅延
+  } else {
+    return bulkDuration + (30 * 120) + 1000; // 混合モード + バックグラウンド処理
+  }
 };
 ```
 
 ### 3. アニメーション戦略
 
-#### パターン別実装
+#### パターン別実装（実測値ベース）
 1. **30件以下**
-   - 期間: 3-4秒
-   - 更新間隔: 300ms
-   - カウント減少: 2-3個ずつ
+   - 期間: `calculateDeleteDuration(count)` を使用
+   - 更新間隔: 200ms（なめらかさ重視）
+   - カウント減少: 実際の削除タイミングに同期
 
-2. **混合削除モード**
-   - 期間: 5-6秒
-   - 更新間隔: 400ms
-   - カウント減少: 3-5個ずつ
+2. **混合削除モード（30件以上）**
+   - 期間: 約4-5秒（実測）
+   - 更新間隔: 250ms
+   - カウント減少パターン:
+     - 最初30個: アニメーション同期（120ms間隔）
+     - 残り: バックグラウンド処理を模倣
 
 3. **100件制限**
-   - 期間: 実測値+0.5秒
-   - 最終値: 残りアイテム数
-   - 完了時に正確な値に修正
+   - 期間: 混合モードと同等
+   - 最終値: `総数 - 削除数` で正確に計算
+   - 完了時にReact Queryの実際値で同期
 
 #### イージング関数
 ```typescript
@@ -91,43 +113,44 @@ const deleteEasing = {
 };
 ```
 
-## 実装手順
+## 実装手順（簡略化版）
 
-### Phase 1: 時間測定システム構築
-1. [ ] 削除処理時間測定ユーティリティ作成
-2. [ ] memo側削除処理に測定コード埋め込み
-3. [ ] 各パターンの実測値取得
-4. [ ] 測定結果の分析・最適値決定
-
-### Phase 2: 共通フック実装
+### Phase 1: 共通フック実装
 1. [ ] `useAnimatedCounter`フック作成
+   - 既存の`getAnimationDuration()`と`calculateDeleteDuration()`活用
+   - CSS変数連携で時間同期を自動化
 2. [ ] パフォーマンステスト実施
 3. [ ] イージング関数の調整
 4. [ ] エラーハンドリング追加
 
-### Phase 3: memo側統合
+### Phase 2: memo側統合
 1. [ ] `use-memo-bulk-delete.tsx`にフック統合
-2. [ ] 削除パターン別の設定適用
-3. [ ] 実際の削除完了時の値修正ロジック
-4. [ ] テスト・調整
+2. [ ] 既存の`animateBulkFadeOutCSS`との連携
+3. [ ] 削除パターン別の設定適用
+4. [ ] 実際の削除完了時の値修正ロジック
 
-### Phase 4: task側統合
+### Phase 3: task側統合
 1. [ ] `use-task-bulk-delete.tsx`にフック統合
 2. [ ] memo側との動作同期確認
-3. [ ] パフォーマンス最終調整
+3. [ ] DOM順序対応の確認
 
-### Phase 5: 復元機能拡張
+### Phase 4: 復元機能拡張
 1. [ ] 復元用のアニメーション追加
 2. [ ] 増加パターンのイージング調整
 3. [ ] 全機能統合テスト
 
-## 測定予定値（仮）
+## 実測値ベース設計値
 
-| 削除パターン | 予想時間 | 更新間隔 | 減少単位 |
+| 削除パターン | 実測時間 | 更新間隔 | 減少パターン |
 |-------------|----------|----------|----------|
-| 30件以下     | 3.5秒    | 300ms    | 2-3個    |
-| 30-100件    | 5.0秒    | 400ms    | 3-5個    |
-| 100件制限   | 実測+0.5秒| 500ms    | 5-8個    |
+| 30件以下     | `calculateDeleteDuration(count)` | 200ms | 実際削除と同期 |
+| 30-100件    | 4-5秒（実測） | 250ms | 30個アニメーション + 残りバッチ |
+| 100件制限   | 4-5秒 | 250ms | 正確な残数計算 |
+
+### CSS変数連携による自動同期
+- **基準時間**: `getAnimationDuration('bulk')` = 300ms
+- **個別遅延**: 120ms（実装済み）
+- **計算式**: 上記`calculateDeleteDuration()`を使用
 
 ## 成功指標
 - [ ] カウント変化が自然に見える
@@ -157,11 +180,16 @@ src/
         └── use-task-bulk-delete.tsx  # task側統合
 ```
 
-## 開発スケジュール
-- Phase 1: 1-2日（測定システム）
-- Phase 2: 2-3日（共通フック）
-- Phase 3: 1-2日（memo統合）
-- Phase 4: 1日（task統合）
-- Phase 5: 1-2日（復元拡張）
+## 開発スケジュール（簡略化）
+- Phase 1: 1-2日（共通フック実装）
+- Phase 2: 1日（memo統合）
+- Phase 3: 1日（task統合）
+- Phase 4: 1日（復元拡張）
 
-**合計: 6-10日**
+**合計: 4-5日**
+
+## 前提システムの活用
+- ✅ **アニメーション時間**: CSS変数で一元管理済み
+- ✅ **削除処理**: パフォーマンス最適化完了
+- ✅ **時間取得**: `getAnimationDuration()` 関数実装済み
+- ✅ **混合モード**: 30件境界の実装完了

@@ -1,9 +1,27 @@
+/**
+ * CSS変数からアニメーション時間を取得するヘルパー関数
+ * @param name アニメーションタイプ
+ * @returns アニメーション時間（ミリ秒）
+ */
+export const getAnimationDuration = (name: 'editor' | 'bulk'): number => {
+  const varName = `--${name}-animation-duration`;
+  const duration = parseInt(
+    getComputedStyle(document.documentElement).getPropertyValue(varName)
+  );
+  
+  // フォールバック値
+  return duration || (name === 'editor' ? 1000 : 300);
+};
+
 // CSS版エディター削除アニメーション（Phase 1）- シンプル版
+// ※重要: アニメーション時間はglobals.cssの:root --editor-animation-durationから自動取得します
 export function animateEditorContentToTrashCSS(
   editorElement: HTMLElement,
   trashElement: HTMLElement,
   onComplete?: () => void
 ) {
+  // CSS変数からアニメーション時間を取得（自動同期）
+  const editorAnimationDuration = getAnimationDuration('editor');
   console.log('🎨 CSS版エディター削除アニメーション開始（シンプル版）');
   
   // JS版と同様にクローンを作成
@@ -62,15 +80,16 @@ export function animateEditorContentToTrashCSS(
   // CSSアニメーション開始
   clone.classList.add('editor-delete-animation');
   
-  // アニメーション完了後の処理
+  // アニメーション完了後の処理（CSS変数から自動取得した時間を使用）
   setTimeout(() => {
     document.body.removeChild(clone);
     console.log('🎨 CSS版エディター削除アニメーション完了');
     onComplete?.();
-  }, 1000);
+  }, editorAnimationDuration);
 }
 
 // 汎用CSS版フェードアウトアニメーション（即座DOM削除版）
+// ※重要: アニメーション時間はglobals.cssの:root --bulk-animation-durationから自動取得します
 export function animateBulkFadeOutCSS(
   itemIds: number[],
   onComplete?: () => void,
@@ -78,6 +97,8 @@ export function animateBulkFadeOutCSS(
   actionType: 'delete' | 'restore' = 'delete',
   onItemComplete?: (id: number) => void
 ) {
+  // CSS変数からアニメーション時間を取得（自動同期）
+  const bulkAnimationDuration = getAnimationDuration('bulk');
   console.log(`🎨 CSS版${actionType === 'delete' ? '削除' : '復元'}アニメーション開始:`, { total: itemIds.length, itemIds });
   
   // DOM順序でアイテムをソートしてアニメーションの順序を正しくする
@@ -183,14 +204,14 @@ export function animateBulkFadeOutCSS(
             itemElement.style.display = 'none';
             console.log(`👻 完全除外:`, { id });
           }, 100);
-        }, 300 + (index * delay)); // CSSアニメーション時間と同じ
+        }, bulkAnimationDuration + (index * delay)); // CSS変数から自動取得した時間を使用
         
         // その後DOM削除（State更新）を実行
         if (onItemComplete) {
           setTimeout(() => {
             onItemComplete(id);
             console.log(`🗑️ ${actionType === 'delete' ? '削除' : '復元'}DOM削除実行:`, { id });
-          }, 370 + (index * delay)); // アニメーション完了後50ms遅らせる（350 + 20ms余裕）
+          }, bulkAnimationDuration + 70 + (index * delay)); // CSSアニメーション完了後70ms遅らせる
         }
       } else {
         // 復元時は要素が既に削除されている可能性があるため、エラーではなく警告レベルに

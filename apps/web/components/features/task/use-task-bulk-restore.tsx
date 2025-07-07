@@ -35,6 +35,11 @@ export function useTasksBulkRestore({
   const executeRestoreWithAnimation = async (ids: number[]) => {
     console.log('✅ 復元処理開始:', { ids: ids.length })
     
+    // 復元前にDOM順序を取得（復元後は要素が消えるため）
+    const { getTaskDisplayOrder } = await import('@/src/utils/domUtils')
+    const preRestoreDisplayOrder = getTaskDisplayOrder()
+    console.log('📋 復元前のDOM順序取得:', { order: preRestoreDisplayOrder, count: preRestoreDisplayOrder.length })
+    
     // 30件以上は最初の30個だけアニメーション、残りは一括復元
     if (ids.length > 30) {
       console.log('🎬➡️⚡ 混合復元モード:', { count: ids.length })
@@ -46,7 +51,11 @@ export function useTasksBulkRestore({
       console.log('🎬 最初の30個のアニメーション:', { animated: animatedIds.length, bulk: bulkIds.length })
       
       const { animateBulkFadeOutCSS } = await import('@/src/utils/deleteAnimation')
-      animateBulkFadeOutCSS(animatedIds, async () => {
+      
+      // DOM順序でソートされたIDを渡す
+      const sortedAnimatedIds = preRestoreDisplayOrder.filter(id => animatedIds.includes(id))
+      
+      animateBulkFadeOutCSS(sortedAnimatedIds, async () => {
         console.log('🎬 最初のアニメーション完了、一括復元開始:', { bulk: bulkIds.length })
         
         // 残りを一括でState更新
@@ -92,7 +101,11 @@ export function useTasksBulkRestore({
     // 30件以下はアニメーション付き復元
     console.log('🎬 アニメーション復元:', { count: ids.length })
     const { animateBulkFadeOutCSS } = await import('@/src/utils/deleteAnimation')
-    animateBulkFadeOutCSS(ids, async () => {
+    
+    // DOM順序でソートされたIDを渡す
+    const sortedIds = preRestoreDisplayOrder.filter(id => ids.includes(id))
+    
+    animateBulkFadeOutCSS(sortedIds, async () => {
       console.log('🌟 全アニメーション完了:', { ids: ids.length })
       
       // 選択状態をクリア

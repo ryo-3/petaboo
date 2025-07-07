@@ -20,7 +20,9 @@
       "Bash(npm run:*)",
       "Bash(sqlite3:*)",
       "Bash(sudo apt:*)",
-      "Bash(sudo apt install:*)"
+      "Bash(sudo apt install:*)",
+      "Bash(ls:*)",
+      "Bash(git add:*)"
     ],
     "deny": []
   }

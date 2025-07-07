@@ -63,30 +63,34 @@ function TaskStatusDisplay({
         return b.createdAt - a.createdAt;
       });
       
-      // デバッグ用ログ（DOMの最後から5つのアイテム）
-      // const lastFiveTasks = sorted.slice(-5);
-      // console.log('📅 Last 5 tasks in DOM order:', lastFiveTasks.map((task, index) => ({
-      //   position: sorted.length - 5 + index + 1,
-      //   id: task.id,
-      //   title: task.title.substring(0, 25) + (task.title.length > 25 ? '...' : ''),
-      //   priority: task.priority,
-      //   createdTimestamp: task.createdAt,
-      //   updatedTimestamp: task.updatedAt || 'none',
-      //   effectiveTimestamp: task.updatedAt || task.createdAt,
-      //   createdTime: new Date(task.createdAt * 1000).toLocaleString(),
-      //   updatedTime: task.updatedAt ? new Date(task.updatedAt * 1000).toLocaleString() : 'none'
-      // })));
+      // タスクのDOM表示順序ログ
+      console.log('📋 タスク表示順序 (デフォルトソート):', {
+        activeTab,
+        タスク数: sorted.length,
+        表示順序: sorted.map((task, index) => ({
+          DOM位置: index + 1,
+          id: task.id,
+          title: task.title.substring(0, 20) + (task.title.length > 20 ? '...' : ''),
+          priority: task.priority,
+          作成日: new Date(task.createdAt * 1000).toLocaleString(),
+          更新日: task.updatedAt ? new Date(task.updatedAt * 1000).toLocaleString() : 'なし'
+        }))
+      });
       
       // 選択されたタスクのハイライト
-      // if (selectedTaskId) {
-      //   const selectedIndex = sorted.findIndex(task => task.id === selectedTaskId);
-      //   console.log(`🎯 Selected task is at position: ${selectedIndex + 1}`);
-      // }
+      if (selectedTaskId) {
+        const selectedIndex = sorted.findIndex(task => task.id === selectedTaskId);
+        console.log(`🎯 選択中のタスク位置:`, { 
+          taskId: selectedTaskId, 
+          DOM位置: selectedIndex + 1,
+          全体数: sorted.length 
+        });
+      }
       
       return sorted;
     }
     
-    return filtered.sort((a, b) => {
+    const customSorted = filtered.sort((a, b) => {
       // 有効な並び替えを順番に適用
       for (const sortOption of enabledSorts) {
         let diff = 0;
@@ -137,6 +141,23 @@ function TaskStatusDisplay({
       // ユーザーが明示的に選択した並び替えでは、追加のフォールバックなし
       return 0;
     });
+    
+    // カスタムソートのログ
+    console.log('📋 タスク表示順序 (カスタムソート):', {
+      activeTab,
+      有効ソート: enabledSorts.map(s => `${s.label}(${s.direction})`),
+      タスク数: customSorted.length,
+      表示順序: customSorted.map((task, index) => ({
+        DOM位置: index + 1,
+        id: task.id,
+        title: task.title.substring(0, 20) + (task.title.length > 20 ? '...' : ''),
+        priority: task.priority,
+        作成日: new Date(task.createdAt * 1000).toLocaleString(),
+        更新日: task.updatedAt ? new Date(task.updatedAt * 1000).toLocaleString() : 'なし'
+      }))
+    });
+    
+    return customSorted;
   };
 
   const getEmptyMessage = () => {

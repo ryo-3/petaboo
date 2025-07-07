@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from 'react';
+import { getTaskDisplayOrder, getMemoDisplayOrder } from '@/src/utils/domUtils';
 
 interface UseSelectAllConfig<T extends { id: number }, D extends { id: number }> {
   activeTab: string;
@@ -10,6 +11,7 @@ interface UseSelectAllConfig<T extends { id: number }, D extends { id: number }>
   setCheckedItems: (items: Set<number>) => void;
   setCheckedDeletedItems: (items: Set<number>) => void;
   filterFn?: (item: T, activeTab: string) => boolean; // タスクのステータスフィルタ用
+  currentMode?: "memo" | "task"; // DOM順序取得用
 }
 
 /**
@@ -26,6 +28,7 @@ export function useSelectAll<T extends { id: number }, D extends { id: number }>
   setCheckedItems,
   setCheckedDeletedItems,
   filterFn,
+  currentMode,
 }: UseSelectAllConfig<T, D>) {
   
   // 全選択状態の判定
@@ -61,8 +64,29 @@ export function useSelectAll<T extends { id: number }, D extends { id: number }>
       if (isAllSelected) {
         setCheckedItems(new Set());
       } else {
-        const allItemIds = new Set(filteredItems.map(item => item.id));
-        setCheckedItems(allItemIds);
+        // DOM順序で選択するように修正
+        if (currentMode === "task") {
+          // タスクの場合：DOM順序を取得してフィルタ
+          const domOrder = getTaskDisplayOrder();
+          const filteredItemIds = domOrder.filter(id => 
+            filteredItems.some(item => item.id === id)
+          );
+          setCheckedItems(new Set(filteredItemIds));
+          console.log('📋 タスク全選択 DOM順序:', { domOrder: filteredItemIds });
+        } else if (currentMode === "memo") {
+          // メモの場合：DOM順序を取得してフィルタ
+          const domOrder = getMemoDisplayOrder();
+          const filteredItemIds = domOrder.filter(id => 
+            filteredItems.some(item => item.id === id)
+          );
+          setCheckedItems(new Set(filteredItemIds));
+          console.log('📋 メモ全選択 DOM順序:', { domOrder: filteredItemIds });
+        } else {
+          // フォールバック：従来の方法
+          const allItemIds = new Set(filteredItems.map(item => item.id));
+          setCheckedItems(allItemIds);
+          console.log('📋 全選択 データ順序（フォールバック）:', { dataOrder: Array.from(allItemIds) });
+        }
       }
     }
   }, [
@@ -73,7 +97,8 @@ export function useSelectAll<T extends { id: number }, D extends { id: number }>
     isAllSelected,
     setCheckedItems,
     setCheckedDeletedItems,
-    filterFn
+    filterFn,
+    currentMode
   ]);
 
   return { isAllSelected, handleSelectAll };

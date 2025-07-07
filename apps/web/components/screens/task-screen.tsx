@@ -155,6 +155,7 @@ function TaskScreen({
     setCheckedItems: setCheckedTasks,
     setCheckedDeletedItems: setCheckedDeletedTasks,
     filterFn: (task, tab) => task.status === tab,
+    currentMode: "task",
   });
 
   // 選択解除処理

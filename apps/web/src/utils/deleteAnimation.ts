@@ -571,8 +571,50 @@ export function animateBulkFadeOutCSS(
 ) {
   console.log(`🎨 CSS版${actionType === 'delete' ? '削除' : '復元'}アニメーション開始:`, { total: itemIds.length, itemIds });
   
+  // DOM順序でアイテムをソートしてアニメーションの順序を正しくする
+  // 実際DOMの順序でソート
+  console.log('🔍 DOM順序取得開始:', { 対象IDs: itemIds });
+  const allElements = document.querySelectorAll('[data-memo-id], [data-task-id]');
+  console.log('🔍 DOM内の全要素:', { 要素数: allElements.length });
+  
+  const domOrder: number[] = [];
+  allElements.forEach((el, index) => {
+    const memoId = el.getAttribute('data-memo-id');
+    const taskId = el.getAttribute('data-task-id');
+    const id = memoId || taskId;
+    const numId = id ? parseInt(id, 10) : null;
+    
+    console.log(`🔍 DOM要素${index}:`, {
+      要素: el.tagName,
+      class: el.className,
+      memoId,
+      taskId,
+      解析されたID: numId,
+      対象に含まれる: numId && itemIds.includes(numId)
+    });
+    
+    if (numId && itemIds.includes(numId)) {
+      domOrder.push(numId);
+      console.log(`✅ DOM順序に追加:`, { ID: numId, 現在のDOM順序: [...domOrder] });
+    }
+  });
+  
+  console.log('🔍 DOM順序取得完了:', { DOM順序: domOrder, 取得数: domOrder.length });
+  
+  // 寶のitemIdsからDOM順序に基づいてソート
+  const sortedItemIds = domOrder.filter(id => itemIds.includes(id));
+  
+  console.log(`🚨🚨🚨 重要: DOM順序でソート完了 🚨🚨🚨`, { 
+    元の順序: itemIds,
+    DOM順序: domOrder,
+    ソート後: sortedItemIds,
+    順序が変わった: JSON.stringify(itemIds) !== JSON.stringify(sortedItemIds),
+    元の順序詳細: itemIds.map((id, i) => ({ 元index: i, id })),
+    ソート後詳細: sortedItemIds.map((id, i) => ({ 新index: i, id }))
+  });
+  
   let completedCount = 0;
-  const totalItems = itemIds.length;
+  const totalItems = sortedItemIds.length;
   
   // ゴミ箱の蓋を開く（削除の場合のみ）
   const trashIcon = document.querySelector('[data-trash-icon]') as HTMLElement;
@@ -580,8 +622,8 @@ export function animateBulkFadeOutCSS(
     trashIcon.style.setProperty('--lid-open', '1');
   }
   
-  // 全てのアイテムに順次フェードアウトアニメーション適用
-  itemIds.forEach((id, index) => {
+  // DOM順序でソートされたアイテムに順次フェードアウトアニメーション適用
+  sortedItemIds.forEach((id, index) => {
     setTimeout(() => {
       console.log(`🎯 ${actionType === 'delete' ? '削除' : '復元'}フェードアウトアニメーション開始:`, { id, index, delay: index * delay });
       const itemElement = document.querySelector(`[data-memo-id="${id}"], [data-task-id="${id}"]`) as HTMLElement;
@@ -596,11 +638,24 @@ export function animateBulkFadeOutCSS(
           要素のdata属性: {
             'data-task-id': itemElement.getAttribute('data-task-id'),
             'data-memo-id': itemElement.getAttribute('data-memo-id')
-          }
+          },
+          要素のtagName: itemElement.tagName,
+          要素のid: itemElement.id,
+          親要素: itemElement.parentElement?.tagName,
+          CSSアニメーションクラス追加前: itemElement.classList.toString()
         });
+        
+        console.log('🎬 CSSアニメーションクラス追加:', { id, クラス名: 'bulk-fade-out-animation' });
         
         // フェードアウトアニメーション開始
         itemElement.classList.add('bulk-fade-out-animation');
+        
+        console.log('✨ CSSアニメーションクラス追加後:', {
+          id,
+          クラス一覧: itemElement.classList.toString(),
+          アニメーションクラス有無: itemElement.classList.contains('bulk-fade-out-animation'),
+          computedスタイル: window.getComputedStyle(itemElement).animation
+        });
         
         // アニメーション完了時の処理
         setTimeout(() => {
@@ -629,18 +684,32 @@ export function animateBulkFadeOutCSS(
           }, 370 + (index * delay)); // アニメーション完了後50ms遅らせる（350 + 20ms余裕）
         }
       } else {
-        console.error(`❌ 要素が見つかりません:`, {
-          id,
-          index,
-          セレクター: `[data-memo-id="${id}"], [data-task-id="${id}"]`,
-          actionType,
-          DOMに存在する全ての要素: Array.from(document.querySelectorAll('[data-memo-id], [data-task-id]')).map(el => ({
-            type: el.getAttribute('data-memo-id') ? 'memo' : 'task',
-            id: el.getAttribute('data-memo-id') || el.getAttribute('data-task-id'),
-            element: el.tagName,
-            class: el.className
-          }))
-        });
+        // 復元時は要素が既に削除されている可能性があるため、エラーではなく警告レベルに
+        if (actionType === 'restore') {
+          console.warn(`⚠️ 復元対象の要素が既に削除されています:`, {
+            id,
+            index,
+            セレクター: `[data-memo-id="${id}"], [data-task-id="${id}"]`,
+            注記: '復元処理により既にDOMから削除された可能性があります'
+          });
+          // 復元の場合はコールバックだけ実行
+          if (onItemComplete) {
+            onItemComplete(id);
+          }
+        } else {
+          console.error(`❌ 要素が見つかりません:`, {
+            id,
+            index,
+            セレクター: `[data-memo-id="${id}"], [data-task-id="${id}"]`,
+            actionType,
+            DOMに存在する全ての要素: Array.from(document.querySelectorAll('[data-memo-id], [data-task-id]')).map(el => ({
+              type: el.getAttribute('data-memo-id') ? 'memo' : 'task',
+              id: el.getAttribute('data-memo-id') || el.getAttribute('data-task-id'),
+              element: el.tagName,
+              class: el.className
+            }))
+          });
+        }
       }
       
       // カウントアップ
@@ -680,8 +749,22 @@ export function animateBulkFadeOutJS(
 ) {
   console.log(`🎨 JS制御版${actionType === 'delete' ? '削除' : '復元'}アニメーション開始:`, { total: itemIds.length, itemIds });
   
+  // DOM順序でアイテムをソートしてアニメーションの順序を正しくする
+  const allElements = document.querySelectorAll('[data-memo-id], [data-task-id]');
+  const domOrder: number[] = [];
+  allElements.forEach(el => {
+    const memoId = el.getAttribute('data-memo-id');
+    const taskId = el.getAttribute('data-task-id');
+    const id = memoId || taskId;
+    if (id && itemIds.includes(parseInt(id, 10))) {
+      domOrder.push(parseInt(id, 10));
+    }
+  });
+  
+  const sortedItemIds = domOrder.filter(id => itemIds.includes(id));
+  
   let completedCount = 0;
-  const totalItems = itemIds.length;
+  const totalItems = sortedItemIds.length;
   const clones: HTMLElement[] = [];
   
   // ゴミ箱の蓋を開く（削除の場合のみ）
@@ -690,8 +773,8 @@ export function animateBulkFadeOutJS(
     trashIcon.style.setProperty('--lid-open', '1');
   }
   
-  // 全てのアイテムに順次フェードアウトアニメーション適用
-  itemIds.forEach((id, index) => {
+  // DOM順序でソートされたアイテムに順次フェードアウトアニメーション適用
+  sortedItemIds.forEach((id, index) => {
     setTimeout(() => {
       console.log(`🎯 ${actionType === 'delete' ? '削除' : '復元'}フェードアウトアニメーション開始:`, { id, index, delay: index * delay });
       const itemElement = document.querySelector(`[data-memo-id="${id}"], [data-task-id="${id}"]`) as HTMLElement;

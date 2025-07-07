@@ -10,10 +10,26 @@ interface DeleteButtonProps {
   isAnimating?: boolean;
   variant?: "default" | "danger";
   'data-right-panel-trash'?: boolean;
+  // アニメーション付きカウンター用
+  animatedCount?: number;
+  useAnimatedCount?: boolean;
 }
 
 const DeleteButton = forwardRef<HTMLButtonElement, DeleteButtonProps>(
-  ({ onDelete, className = "", count, isAnimating = false, variant = "default", ...props }, ref) => {
+  ({ 
+    onDelete, 
+    className = "", 
+    count, 
+    isAnimating = false, 
+    variant = "default", 
+    animatedCount,
+    useAnimatedCount = false,
+    ...props 
+  }, ref) => {
+    // アニメーション付きカウンターを使用する場合はanimatedCountを優先
+    const displayCount = useAnimatedCount ? animatedCount : count;
+    
+    
     return (
       <div className={`delete-button ${isAnimating ? 'animating' : ''} ${className}`}>
         <button
@@ -23,9 +39,9 @@ const DeleteButton = forwardRef<HTMLButtonElement, DeleteButtonProps>(
           {...props}
         >
           <TrashIcon />
-          {count !== undefined && count > 0 && (
-            <span className={`absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium ${count > 99 ? 'w-7 h-6' : 'w-6 h-6'}`}>
-              {count > 99 ? '99+' : count}
+          {displayCount !== undefined && displayCount > 0 && (
+            <span className={`absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium ${displayCount > 99 ? 'w-7 h-6' : 'w-6 h-6'}`}>
+              {displayCount > 99 ? '99+' : displayCount}
             </span>
           )}
         </button>

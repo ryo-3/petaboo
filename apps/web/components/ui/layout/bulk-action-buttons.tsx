@@ -16,6 +16,12 @@ interface BulkActionButtonsProps {
   restoreCount: number;
   onRestore: () => void;
   isRestoring: boolean;
+  
+  // アニメーション付きカウンター用
+  animatedDeleteCount?: number;
+  useAnimatedDeleteCount?: boolean;
+  animatedRestoreCount?: number;
+  useAnimatedRestoreCount?: boolean;
 }
 
 /**
@@ -33,6 +39,10 @@ export function BulkActionButtons({
   restoreCount,
   onRestore,
   isRestoring,
+  animatedDeleteCount,
+  useAnimatedDeleteCount = false,
+  animatedRestoreCount,
+  useAnimatedRestoreCount = false,
 }: BulkActionButtonsProps) {
   return (
     <>
@@ -44,6 +54,8 @@ export function BulkActionButtons({
           count={deleteButtonCount}
           isAnimating={isDeleting}
           variant={deleteVariant}
+          animatedCount={animatedDeleteCount}
+          useAnimatedCount={useAnimatedDeleteCount}
         />
       </ButtonContainer>
 
@@ -56,6 +68,8 @@ export function BulkActionButtons({
           buttonSize="size-9"
           iconSize="size-5"
           tooltipPosition="top"
+          animatedCount={animatedRestoreCount}
+          useAnimatedCount={useAnimatedRestoreCount}
         />
       </ButtonContainer>
     </>

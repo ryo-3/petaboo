@@ -12,6 +12,9 @@ interface RestoreButtonProps {
   buttonSize?: string;
   iconSize?: string;
   tooltipPosition?: 'top' | 'bottom' | 'right';
+  // アニメーション付きカウンター用
+  animatedCount?: number;
+  useAnimatedCount?: boolean;
 }
 
 function RestoreButton({
@@ -22,12 +25,22 @@ function RestoreButton({
   count,
   buttonSize = "size-8",
   iconSize = "size-4",
-  tooltipPosition = "bottom"
+  tooltipPosition = "bottom",
+  animatedCount,
+  useAnimatedCount = false
 }: RestoreButtonProps) {
 
-  const tooltipText = count && count > 1 
-    ? `${count}件を復元` 
-    : count === 1 
+  // アニメーション付きカウンターを使用する場合はanimatedCountを優先
+  const displayCount = useAnimatedCount ? animatedCount : count;
+  
+  // デバッグログ（一時的）
+  // if (useAnimatedCount) {
+  //   console.log('🎯 RestoreButton animatedCount:', { animatedCount, count, displayCount, useAnimatedCount });
+  // }
+
+  const tooltipText = displayCount && displayCount > 1 
+    ? `${displayCount}件を復元` 
+    : displayCount === 1 
     ? "1件を復元"
     : "復元";
 
@@ -43,9 +56,9 @@ function RestoreButton({
         ) : (
           <>
             <RestoreIcon className={iconSize} />
-            {count && count > 0 && (
-              <span className={`absolute -top-2 -right-2 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center font-medium ${count > 99 ? 'w-7 h-6' : 'w-6 h-6'}`}>
-                {count > 99 ? '99+' : count}
+            {displayCount && displayCount > 0 && (
+              <span className={`absolute -top-2 -right-2 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center font-medium ${displayCount > 99 ? 'w-7 h-6' : 'w-6 h-6'}`}>
+                {displayCount > 99 ? '99+' : displayCount}
               </span>
             )}
           </>

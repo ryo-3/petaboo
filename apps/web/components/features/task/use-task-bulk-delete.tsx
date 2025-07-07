@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { useDeleteTask, usePermanentDeleteTask } from '@/src/hooks/use-tasks'
 import { useBulkDelete, BulkDeleteConfirmation } from '@/components/ui/modals'
 import type { Task, DeletedTask } from '@/src/types/task'
@@ -6,6 +6,8 @@ import React from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useAuth } from '@clerk/nextjs'
 import { tasksApi } from '@/src/lib/api-client'
+import { useAnimatedCounter } from '@/src/hooks/useAnimatedCounter'
+import { calculateDeleteDuration } from '@/src/utils/deleteAnimation'
 
 interface UseTasksBulkDeleteProps {
   activeTab: 'todo' | 'in_progress' | 'completed' | 'deleted'
@@ -363,13 +365,23 @@ export function useTasksBulkDelete({
       await bulkDelete.confirmBulkDelete(
         actualTargetIds, 
         0, // 即座にモーダル表示
-        executeDeleteWithAnimation, // 選択状態を部分的にクリア
+        async (ids: number[], isPartialDelete = false) => {
+          // カウンターアニメーション開始
+          console.log('🎯 カウンターアニメーション開始(100件制限):', { ids: ids.length, currentCount: currentDeleteCount });
+          animatedCounter.startAnimation();
+          await executeDeleteWithAnimation(ids, isPartialDelete);
+        },
         `${targetIds.length}件選択されています。\n一度に削除できる上限は100件です。`,
         true // isPartialDelete
       )
     } else {
       // 通常の確認モーダル
-      await bulkDelete.confirmBulkDelete(actualTargetIds, threshold, executeDeleteWithAnimation)
+      await bulkDelete.confirmBulkDelete(actualTargetIds, threshold, async (ids: number[]) => {
+        // カウンターアニメーション開始
+        console.log('🎯 タスクカウンターアニメーション開始(通常):', { ids: ids.length, currentCount: currentDeleteCount });
+        animatedCounter.startAnimation();
+        await executeDeleteWithAnimation(ids);
+      })
     }
   }
 
@@ -380,6 +392,9 @@ export function useTasksBulkDelete({
         console.log('Cancel')
         // キャンセル時に蓋を閉じる
         setIsDeleting?.(false)
+        // カウンターアニメーション停止
+        console.log('🎯 タスクカウンターアニメーション停止(キャンセル)');
+        animatedCounter.stopAnimation();
         setTimeout(() => {
           setIsLidOpen?.(false)
         }, 300)
@@ -397,8 +412,25 @@ export function useTasksBulkDelete({
     />
   )
 
+  // アニメーション付きカウンター
+  const currentDeleteCount = activeTab === "deleted" ? checkedDeletedTasks.size : checkedTasks.size;
+  const animatedCounter = useAnimatedCounter({
+    totalItems: currentDeleteCount,
+    remainingItems: 0, // 削除後は0になる
+    animationDuration: calculateDeleteDuration(currentDeleteCount),
+    updateInterval: 200,
+    onComplete: () => {
+      console.log('🎊 タスクカウンターアニメーション完了');
+    }
+  });
+
   return {
     handleBulkDelete,
     DeleteModal,
+    // アニメーション付きカウンター
+    animatedDeleteCount: animatedCounter.currentCount,
+    isCounterAnimating: animatedCounter.isAnimating,
+    startCounterAnimation: () => animatedCounter.startAnimation(),
+    stopCounterAnimation: () => animatedCounter.stopAnimation(),
   }
 }

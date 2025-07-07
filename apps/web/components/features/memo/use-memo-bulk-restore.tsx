@@ -4,6 +4,8 @@ import { useBulkDelete, BulkRestoreConfirmation } from '@/components/ui/modals'
 // import { animateItemsRestoreFadeOutCSS } from '@/src/utils/deleteAnimation'
 import type { DeletedMemo } from '@/src/types/memo'
 import React from 'react'
+import { useAnimatedCounter } from '@/src/hooks/useAnimatedCounter'
+import { calculateDeleteDuration } from '@/src/utils/deleteAnimation'
 
 interface UseMemosBulkRestoreProps {
   checkedDeletedMemos: Set<number>
@@ -120,13 +122,21 @@ export function useMemosBulkRestore({
 
     console.log('🔄 復元開始:', { targetIds: targetIds.length });
     
-    await bulkRestore.confirmBulkDelete(targetIds, threshold, executeRestoreWithAnimation)
+    await bulkRestore.confirmBulkDelete(targetIds, threshold, async (ids: number[]) => {
+      // カウンターアニメーション開始
+      animatedCounter.startAnimation();
+      await executeRestoreWithAnimation(ids);
+    })
   }
 
   const RestoreModal: React.FC = () => (
     <BulkRestoreConfirmation
       isOpen={bulkRestore.isModalOpen}
-      onClose={bulkRestore.handleCancel}
+      onClose={() => {
+        // カウンターアニメーション停止
+        animatedCounter.stopAnimation();
+        bulkRestore.handleCancel();
+      }}
       onConfirm={async () => {
         console.log('👍 モーダル復元確認ボタン押下');
         await bulkRestore.handleConfirm(executeRestoreWithAnimation);
@@ -137,8 +147,24 @@ export function useMemosBulkRestore({
     />
   );
 
+  // アニメーション付きカウンター（復元処理用）
+  const animatedCounter = useAnimatedCounter({
+    totalItems: checkedDeletedMemos.size,
+    remainingItems: 0, // 復元後は削除済み一覧から0になる
+    animationDuration: calculateDeleteDuration(checkedDeletedMemos.size),
+    updateInterval: 200,
+    onComplete: () => {
+      console.log('🎊 復元カウンターアニメーション完了');
+    }
+  });
+
   return {
     handleBulkRestore,
     RestoreModal,
+    // アニメーション付きカウンター
+    animatedRestoreCount: animatedCounter.currentCount,
+    isRestoreCounterAnimating: animatedCounter.isAnimating,
+    startRestoreCounterAnimation: animatedCounter.startAnimation,
+    stopRestoreCounterAnimation: animatedCounter.stopAnimation,
   }
 }

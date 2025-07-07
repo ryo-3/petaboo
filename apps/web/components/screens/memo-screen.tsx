@@ -202,6 +202,8 @@ function MemoScreen({
   const {
     handleBulkDelete: handleLeftBulkDelete,
     DeleteModal: BulkDeleteModal,
+    animatedDeleteCount,
+    isCounterAnimating,
   } = useMemosBulkDelete({
     activeTab: activeTab as "normal" | "deleted",
     checkedMemos,
@@ -230,7 +232,12 @@ function MemoScreen({
   });
 
   // 一括復元関連
-  const { handleBulkRestore, RestoreModal } = useMemosBulkRestore({
+  const { 
+    handleBulkRestore, 
+    RestoreModal,
+    animatedRestoreCount,
+    isRestoreCounterAnimating,
+  } = useMemosBulkRestore({
     checkedDeletedMemos,
     setCheckedDeletedMemos,
     deletedNotes,
@@ -348,6 +355,11 @@ function MemoScreen({
           restoreCount={checkedDeletedMemos.size}
           onRestore={handleBulkRestore}
           isRestoring={false}
+          // アニメーション付きカウンター
+          animatedDeleteCount={animatedDeleteCount}
+          useAnimatedDeleteCount={isCounterAnimating}
+          animatedRestoreCount={animatedRestoreCount}
+          useAnimatedRestoreCount={isRestoreCounterAnimating}
         />
       </div>
 

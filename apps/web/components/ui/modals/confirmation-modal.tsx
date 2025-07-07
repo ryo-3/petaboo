@@ -28,6 +28,7 @@ export function useBulkDelete() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [customMessage, setCustomMessage] = useState<string | undefined>(undefined)
   const [isPartialDelete, setIsPartialDelete] = useState(false)
+  const [deleteCallback, setDeleteCallback] = useState<((ids: number[], isPartialDelete?: boolean) => Promise<void>) | null>(null)
 
   const confirmBulkDelete = async (
     ids: number[], 
@@ -45,6 +46,7 @@ export function useBulkDelete() {
     if (ids.length >= threshold) {
       setTargetIds(ids)
       setCustomMessage(message)
+      setDeleteCallback(() => deleteCallback)
       setIsModalOpen(true)
       return
     }
@@ -62,11 +64,14 @@ export function useBulkDelete() {
     }
   }
 
-  const handleConfirm = async (deleteCallback: (ids: number[], isPartialDelete?: boolean) => Promise<void>) => {
+  const handleConfirm = async () => {
     setIsModalOpen(false)
-    await executeDelete(targetIds, deleteCallback, isPartialDelete)
+    if (deleteCallback) {
+      await executeDelete(targetIds, deleteCallback, isPartialDelete)
+    }
     setTargetIds([])
     setIsPartialDelete(false)
+    setDeleteCallback(null)
   }
 
   const handleCancel = () => {
@@ -74,6 +79,7 @@ export function useBulkDelete() {
     setTargetIds([])
     setCustomMessage(undefined)
     setIsPartialDelete(false)
+    setDeleteCallback(null)
   }
 
   return {

@@ -6,6 +6,8 @@ import React from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
 import { notesApi } from "@/src/lib/api-client";
+import { useAnimatedCounter } from "@/src/hooks/useAnimatedCounter";
+import { calculateDeleteDuration } from "@/src/utils/deleteAnimation";
 
 interface UseMemosBulkDeleteProps {
   activeTab: "normal" | "deleted";
@@ -124,28 +126,28 @@ export function useMemosBulkDelete({
     // 削除ボタンの位置を取得
     const buttonRect = deleteButtonRef?.current?.getBoundingClientRect();
     
-    console.log('✅ 削除処理開始:', { ids: ids.length, activeTab, hasButtonRect: !!buttonRect });
+    // console.log('✅ 削除処理開始:', { ids: ids.length, activeTab, hasButtonRect: !!buttonRect });
     
     // アニメーションが必要な場合（通常メモまたは削除済みメモ）
     if (buttonRect) {
-      console.log('🎬 処理開始:', { ids: ids.length });
+      // console.log('🎬 処理開始:', { ids: ids.length });
       
       // 蓋を開く
       setIsLidOpen?.(true);
       
       // 30件以上は最初の30個だけアニメーション、残りは一括削除
       if (ids.length > 30) {
-        console.log('🎬➡️⚡ 混合削除モード:', { count: ids.length });
+        // console.log('🎬➡️⚡ 混合削除モード:', { count: ids.length });
         
         // 最初の30個をアニメーション
         const animatedIds = ids.slice(0, 30);
         const bulkIds = ids.slice(30);
         
-        console.log('🎬 最初の30個のアニメーション:', { animated: animatedIds.length, bulk: bulkIds.length });
+        // console.log('🎬 最初の30個のアニメーション:', { animated: animatedIds.length, bulk: bulkIds.length });
         const { animateBulkFadeOutCSS } = await import('@/src/utils/deleteAnimation');
         
         animateBulkFadeOutCSS(animatedIds, async () => {
-          console.log('🎬 最初のアニメーション完了、一括削除開始:', { bulk: bulkIds.length, isPartialDelete });
+          // console.log('🎬 最初のアニメーション完了、一括削除開始:', { bulk: bulkIds.length, isPartialDelete });
           
           // 残りを一括でState更新
           for (const id of bulkIds) {
@@ -156,22 +158,16 @@ export function useMemosBulkDelete({
           
           // チェック状態をクリア
           if (isPartialDelete) {
-            console.log('🔄 部分削除: 削除したIDのみ選択解除', { 削除ID数: ids.length, activeTab });
             if (activeTab === "normal") {
-              const beforeCount = checkedMemos.size;
               const newCheckedMemos = new Set(checkedMemos);
               ids.forEach(id => newCheckedMemos.delete(id));
               setCheckedMemos(newCheckedMemos);
-              console.log('🔄 通常メモ選択状態更新', { before: beforeCount, after: newCheckedMemos.size });
             } else {
-              const beforeCount = checkedDeletedMemos.size;
               const newCheckedDeletedMemos = new Set(checkedDeletedMemos);
               ids.forEach(id => newCheckedDeletedMemos.delete(id));
               setCheckedDeletedMemos(newCheckedDeletedMemos);
-              console.log('🔄 削除済みメモ選択状態更新', { before: beforeCount, after: newCheckedDeletedMemos.size });
             }
           } else {
-            console.log('🔄 全削除: 選択状態を全クリア', { activeTab });
             if (activeTab === "normal") {
               setCheckedMemos(new Set());
             } else {
@@ -191,7 +187,7 @@ export function useMemosBulkDelete({
             }
           }, 1000);
           
-          console.log('⚡ 混合削除完了:', { animated: animatedIds.length, bulk: bulkIds.length });
+          // console.log('⚡ 混合削除完了:', { animated: animatedIds.length, bulk: bulkIds.length });
           
           // 部分削除フラグを解除
           if (isPartialDelete) {
@@ -218,7 +214,7 @@ export function useMemosBulkDelete({
         
         // 残りのAPI処理をバックグラウンドで実行
         setTimeout(async () => {
-          console.log('🌐 残りのAPI処理開始:', { count: bulkIds.length });
+          // console.log('🌐 残りのAPI処理開始:', { count: bulkIds.length });
           for (const id of bulkIds) {
             try {
               if (activeTab === "normal") {
@@ -232,17 +228,17 @@ export function useMemosBulkDelete({
               }
             }
           }
-          console.log('🌐 残りのAPI処理完了:', { count: bulkIds.length });
+          // console.log('🌐 残りのAPI処理完了:', { count: bulkIds.length });
         }, 1000); // アニメーション開始から1秒後
         
         return;
       }
       
       // 30件以下はアニメーション付き削除
-      console.log('🎬 アニメーション削除:', { count: ids.length });
+      // console.log('🎬 アニメーション削除:', { count: ids.length });
       const { animateBulkFadeOutCSS } = await import('@/src/utils/deleteAnimation');
       animateBulkFadeOutCSS(ids, async () => {
-        console.log('🎬 全アニメーション完了:', { ids: ids.length });
+        // console.log('🎬 全アニメーション完了:', { ids: ids.length });
         
         // チェック状態をクリア（部分削除の場合は削除されたIDのみクリア）
         if (isPartialDelete) {
@@ -270,9 +266,9 @@ export function useMemosBulkDelete({
         }, 500);
         
         // 削除ボタンを3秒後に非表示
-        console.log('⏰ タイマー設定:', { hasSetIsDeleting: !!setIsDeleting });
+        // console.log('⏰ タイマー設定:', { hasSetIsDeleting: !!setIsDeleting });
         timerRef.current.isDeleting = setTimeout(() => {
-          console.log('🚫 削除ボタン非表示 実行', { hasSetIsDeleting: !!setIsDeleting });
+          // console.log('🚫 削除ボタン非表示 実行', { hasSetIsDeleting: !!setIsDeleting });
           if (setIsDeleting) {
             setIsDeleting(false);
           } else {
@@ -281,18 +277,18 @@ export function useMemosBulkDelete({
         }, 3000);
         
         // 個別APIで実行済みのため、ここでの一括API処理は不要
-        console.log('🎊 全アニメーション・API処理完了:', { ids: ids.length });
+        // console.log('🎊 全アニメーション・API処理完了:', { ids: ids.length });
       }, 120, 'delete', async (id: number) => {
         // 各アイテムのアニメーション完了時に個別DOM操作 + API実行
-        console.log('🎯 個別アニメーション完了:', { id });
+        // console.log('🎯 個別アニメーション完了:', { id });
         if (activeTab === "normal" && onMemoDelete) {
           onMemoDelete(id);
-          console.log('🔄 個別State更新完了:', { id });
+          // console.log('🔄 個別State更新完了:', { id });
           
           // 個別API実行（自動更新あり）
           try {
             await deleteNoteMutation.mutateAsync(id);
-            console.log('🌐 個別API完了:', { id });
+            // console.log('🌐 個別API完了:', { id });
           } catch (error: unknown) {
             if (!(error instanceof Error && error.message?.includes('404'))) {
               console.error(`個別API削除エラー (ID: ${id}):`, error);
@@ -302,7 +298,7 @@ export function useMemosBulkDelete({
           // 削除済みアイテムの完全削除
           try {
             await permanentDeleteNoteMutation.mutateAsync(id);
-            console.log('🌐 個別完全削除API完了:', { id });
+            // console.log('🌐 個別完全削除API完了:', { id });
           } catch (error: unknown) {
             if (!(error instanceof Error && error.message?.includes('404'))) {
               console.error(`個別完全削除エラー (ID: ${id}):`, error);
@@ -374,25 +370,27 @@ export function useMemosBulkDelete({
     setIsDeleting?.(true);
     setIsLidOpen?.(true);
 
-    console.log('🗑️ 削除開始:', { 
-      selected: targetIds.length, 
-      actualDelete: actualTargetIds.length, 
-      activeTab,
-      isLimited: isLimitedDelete 
-    });
     
     if (isLimitedDelete) {
       // 100件制限のモーダル表示
       await bulkDelete.confirmBulkDelete(
         actualTargetIds, 
         0, // 即座にモーダル表示
-        executeDeleteWithAnimation, // 選択状態を部分的にクリア
+        async (ids: number[], isPartialDelete = false) => {
+          // カウンターアニメーション開始
+          animatedCounter.startAnimation();
+          await executeDeleteWithAnimation(ids, isPartialDelete);
+        },
         `${targetIds.length}件選択されています。\n一度に削除できる上限は100件です。`,
         true // isPartialDelete
       );
     } else {
       // 通常の確認モーダル
-      await bulkDelete.confirmBulkDelete(actualTargetIds, threshold, executeDeleteWithAnimation);
+      await bulkDelete.confirmBulkDelete(actualTargetIds, threshold, async (ids: number[]) => {
+        // カウンターアニメーション開始
+        animatedCounter.startAnimation();
+        await executeDeleteWithAnimation(ids);
+      });
     }
   };
 
@@ -400,17 +398,18 @@ export function useMemosBulkDelete({
     <BulkDeleteConfirmation
       isOpen={bulkDelete.isModalOpen}
       onClose={() => {
-        console.log('❌ キャンセル');
+        // console.log('❌ キャンセル');
         // キャンセル時に蓋を閉じる
         setIsDeleting?.(false);
+        // カウンターアニメーション停止
+        animatedCounter.stopAnimation();
         setTimeout(() => {
           setIsLidOpen?.(false);
         }, 300);
         bulkDelete.handleCancel();
       }}
       onConfirm={async () => {
-        console.log('👍 モーダル確認ボタン押下');
-        await bulkDelete.handleConfirm(executeDeleteWithAnimation);
+        await bulkDelete.handleConfirm();
       }}
       count={bulkDelete.targetIds.length}
       itemType="memo"
@@ -420,8 +419,30 @@ export function useMemosBulkDelete({
     />
   );
 
+  // アニメーション付きカウンター
+  const currentDeleteCount = activeTab === "normal" ? checkedMemos.size : checkedDeletedMemos.size;
+  
+  // 100件制限の場合の残りアイテム数を計算
+  const remainingAfterDelete = currentDeleteCount > 100 ? currentDeleteCount - 100 : 0;
+  
+  const animatedCounter = useAnimatedCounter({
+    totalItems: currentDeleteCount,
+    remainingItems: remainingAfterDelete, // 100件制限の場合は残り、それ以外は0
+    animationDuration: calculateDeleteDuration(Math.min(currentDeleteCount, 100)), // 実際に削除される数で計算
+    updateInterval: 50, // 50ms でより滑らか
+    onComplete: () => {
+      // アニメーション完了
+    }
+  });
+  
+
   return {
     handleBulkDelete,
     DeleteModal,
+    // アニメーション付きカウンター
+    animatedDeleteCount: animatedCounter.currentCount,
+    isCounterAnimating: animatedCounter.isAnimating,
+    startCounterAnimation: () => animatedCounter.startAnimation(),
+    stopCounterAnimation: () => animatedCounter.stopAnimation(),
   };
 }

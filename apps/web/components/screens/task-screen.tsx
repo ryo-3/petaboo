@@ -174,7 +174,12 @@ function TaskScreen({
     | "deleted";
 
   // 一括削除関連
-  const { handleBulkDelete, DeleteModal } = useTasksBulkDelete({
+  const { 
+    handleBulkDelete, 
+    DeleteModal,
+    animatedDeleteCount,
+    isCounterAnimating,
+  } = useTasksBulkDelete({
     activeTab: activeTabTyped,
     checkedTasks,
     checkedDeletedTasks,
@@ -429,6 +434,9 @@ function TaskScreen({
           restoreCount={checkedDeletedTasks.size}
           onRestore={handleBulkRestore}
           isRestoring={false}
+          // アニメーション付きカウンター
+          animatedDeleteCount={animatedDeleteCount}
+          useAnimatedDeleteCount={isCounterAnimating}
         />
       </div>
 

@@ -36,14 +36,15 @@ export function useMemosBulkDelete({
   deleteButtonRef,
   setIsDeleting,
   setIsLidOpen,
-  viewMode = 'list',
+  viewMode = 'list', // eslint-disable-line @typescript-eslint/no-unused-vars
 }: UseMemosBulkDeleteProps) {
   const deleteNoteMutation = useDeleteNote();
   const permanentDeleteNoteMutation = usePermanentDeleteNote();
   const bulkDelete = useBulkDelete();
   const { getToken } = useAuth();
   
-  // 自動更新なしの削除API
+  // 自動更新なしの削除API - 今後の最適化で使用予定
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const deleteNoteWithoutUpdate = useMutation({
     mutationFn: async (id: number) => {
       const token = await getToken();
@@ -53,7 +54,8 @@ export function useMemosBulkDelete({
     // onSuccessなし（自動更新しない）
   });
   
-  // 自動更新なしの完全削除API
+  // 自動更新なしの完全削除API - 今後の最適化で使用予定
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const permanentDeleteNoteWithoutUpdate = useMutation({
     mutationFn: async (id: number) => {
       const token = await getToken();

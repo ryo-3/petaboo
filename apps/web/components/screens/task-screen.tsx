@@ -11,10 +11,10 @@ import DesktopUpper from "@/components/layout/desktop-upper";
 import RightPanel from "@/components/ui/layout/right-panel";
 import { RightPanelDeleteButton } from "@/components/ui/buttons/right-panel-delete-button";
 import { BulkActionButtons } from "@/components/ui/layout/bulk-action-buttons";
-import {
-  BulkDeleteConfirmation,
-  BulkRestoreConfirmation,
-} from "@/components/ui/modals";
+// import {
+//   BulkDeleteConfirmation,
+//   BulkRestoreConfirmation,
+// } from "@/components/ui/modals";
 import { useDeletionLid } from "@/src/hooks/use-deletion-lid";
 import { useScreenState } from "@/src/hooks/use-screen-state";
 import { useDeletedTasks, useTasks } from "@/src/hooks/use-tasks";
@@ -173,7 +173,7 @@ function TaskScreen({
     | "deleted";
 
   // 一括削除関連
-  const { handleBulkDelete, bulkDeleteState } = useTasksBulkDelete({
+  const { handleBulkDelete, DeleteModal } = useTasksBulkDelete({
     activeTab: activeTabTyped,
     checkedTasks,
     checkedDeletedTasks,
@@ -182,7 +182,7 @@ function TaskScreen({
     tasks,
     deletedTasks,
     onTaskDelete: handleItemDeselect,
-    onDeletedTaskDelete: handleItemDeselect,
+    // onDeletedTaskDelete: handleItemDeselect, // 削除済みタスクはReact Query自動更新で処理
     deleteButtonRef,
     setIsDeleting,
     setIsLidOpen,
@@ -190,7 +190,7 @@ function TaskScreen({
   });
 
   // 一括復元関連
-  const { handleBulkRestore, bulkRestoreState } = useTasksBulkRestore({
+  const { handleBulkRestore, RestoreModal } = useTasksBulkRestore({
     checkedDeletedTasks,
     setCheckedDeletedTasks,
     deletedTasks,
@@ -427,7 +427,7 @@ function TaskScreen({
           showRestoreButton={activeTab === "deleted" && checkedDeletedTasks.size > 0}
           restoreCount={checkedDeletedTasks.size}
           onRestore={handleBulkRestore}
-          isRestoring={bulkRestoreState.isRestoring}
+          isRestoring={false}
         />
       </div>
 
@@ -477,25 +477,10 @@ function TaskScreen({
       </RightPanel>
 
       {/* 一括削除確認モーダル */}
-      <BulkDeleteConfirmation
-        isOpen={bulkDeleteState.isModalOpen}
-        onClose={bulkDeleteState.handleCancel}
-        onConfirm={bulkDeleteState.handleConfirm}
-        count={bulkDeleteState.targetIds.length}
-        itemType="task"
-        deleteType={activeTab === "deleted" ? "permanent" : "normal"}
-        isLoading={bulkDeleteState.isDeleting}
-      />
+      <DeleteModal />
 
       {/* 一括復元確認モーダル */}
-      <BulkRestoreConfirmation
-        isOpen={bulkRestoreState.isModalOpen}
-        onClose={bulkRestoreState.handleCancel}
-        onConfirm={bulkRestoreState.handleConfirm}
-        count={bulkRestoreState.targetIds.length}
-        itemType="task"
-        isLoading={bulkRestoreState.isRestoring}
-      />
+      <RestoreModal />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useRestoreNote } from '@/src/hooks/use-notes'
 import { useBulkDelete, BulkRestoreConfirmation } from '@/components/ui/modals'
-import { animateItemsRestoreFadeOutCSS } from '@/src/utils/deleteAnimation'
+// import { animateItemsRestoreFadeOutCSS } from '@/src/utils/deleteAnimation'
 import type { DeletedMemo } from '@/src/types/memo'
 import React from 'react'
 

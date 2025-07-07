@@ -590,33 +590,57 @@ export function animateBulkFadeOutCSS(
         console.log(`🎯 CSS版${actionType === 'delete' ? '削除' : '復元'}フェードアウト:`, {
           id,
           index,
-          遅延: '0ms (即座開始)'
+          遅延: '0ms (即座開始)',
+          要素取得成功: true,
+          要素のクラス: itemElement.className,
+          要素のdata属性: {
+            'data-task-id': itemElement.getAttribute('data-task-id'),
+            'data-memo-id': itemElement.getAttribute('data-memo-id')
+          }
         });
         
         // フェードアウトアニメーション開始
         itemElement.classList.add('bulk-fade-out-animation');
         
-        // アニメーション完了時に高さを0にして非表示
+        // アニメーション完了時の処理
         setTimeout(() => {
+          // アニメーションクラスを削除して要素を最小化
+          itemElement.classList.remove('bulk-fade-out-animation');
           itemElement.style.height = '0';
           itemElement.style.overflow = 'hidden';
-          itemElement.style.visibility = 'hidden';
-          console.log(`👻 高さ0設定:`, { id });
+          itemElement.style.opacity = '0';
+          itemElement.style.transform = 'scale(0.8)';
+          itemElement.style.transition = 'all 0.1s ease-out';
+          console.log(`👻 アニメーション完了処理:`, { id });
           
-          // その後display: noneで完全に除外
+          // 少し遅らせてから完全に非表示
           setTimeout(() => {
+            itemElement.style.visibility = 'hidden';
             itemElement.style.display = 'none';
             console.log(`👻 完全除外:`, { id });
-          }, 10);
-        }, 350 + (index * delay)); // アニメーション完了から50ms後
+          }, 100);
+        }, 300 + (index * delay)); // CSSアニメーション時間と同じ
         
         // その後DOM削除（State更新）を実行
         if (onItemComplete) {
           setTimeout(() => {
             onItemComplete(id);
             console.log(`🗑️ ${actionType === 'delete' ? '削除' : '復元'}DOM削除実行:`, { id });
-          }, 300 + (index * delay)); // アニメーション完了と同時
+          }, 370 + (index * delay)); // アニメーション完了後50ms遅らせる（350 + 20ms余裕）
         }
+      } else {
+        console.error(`❌ 要素が見つかりません:`, {
+          id,
+          index,
+          セレクター: `[data-memo-id="${id}"], [data-task-id="${id}"]`,
+          actionType,
+          DOMに存在する全ての要素: Array.from(document.querySelectorAll('[data-memo-id], [data-task-id]')).map(el => ({
+            type: el.getAttribute('data-memo-id') ? 'memo' : 'task',
+            id: el.getAttribute('data-memo-id') || el.getAttribute('data-task-id'),
+            element: el.tagName,
+            class: el.className
+          }))
+        });
       }
       
       // カウントアップ
@@ -759,7 +783,7 @@ export function animateMultipleItemsToTrashCSS(
   trashRect: DOMRect,
   onComplete?: () => void,
   delay: number = 120,
-  viewMode: 'list' | 'card' = 'list'
+  viewMode: 'list' | 'card' = 'list' // eslint-disable-line @typescript-eslint/no-unused-vars
 ) {
   // 汎用フェードアウト関数を呼び出し
   animateBulkFadeOutCSS(itemIds, onComplete, delay, 'delete');

@@ -35,9 +35,9 @@ function createTrashAnimation(
   const trashRect = targetElement.getBoundingClientRect();
   
   // 蓋を開く
-  const trashIcon = trashElement.querySelector('[data-trash-icon]') as HTMLElement;
-  if (trashIcon) {
-    trashIcon.style.setProperty('--lid-open', '1');
+  const trashLid = trashElement.querySelector('.trash-icon-lid') as HTMLElement;
+  if (trashLid) {
+    trashLid.classList.add('open');
   }
   
   // アニメーション用クローン作成
@@ -92,8 +92,8 @@ function createTrashAnimation(
     
     setTimeout(() => {
       document.body.removeChild(clone);
-      if (trashIcon) {
-        trashIcon.style.setProperty('--lid-open', '0');
+      if (trashLid) {
+        trashLid.classList.remove('open');
       }
       options.onComplete?.();
     }, options.duration);
@@ -150,9 +150,9 @@ export function animateMultipleItemsToTrashWithRect(
   }
   
   // ゴミ箱の蓋を開く
-  const trashIcon = document.querySelector('[data-trash-icon]') as HTMLElement;
-  if (trashIcon) {
-    trashIcon.style.setProperty('--lid-open', '1');
+  const trashLid = document.querySelector('.trash-icon-lid') as HTMLElement;
+  if (trashLid) {
+    trashLid.classList.add('open');
   }
   
   // 残りのアイテムを一斉にフェードアウト（20個以降は遅延なし）
@@ -206,8 +206,8 @@ export function animateMultipleItemsToTrashWithRect(
       if (completedCount >= totalItems) {
         setTimeout(() => {
           console.log('🎊 全アニメーション完了!', { completedCount, totalItems });
-          if (trashIcon) {
-            trashIcon.style.setProperty('--lid-open', '0');
+          if (trashLid) {
+            trashLid.classList.remove('open');
           }
           // スクロールバーを復元
           if (listContainer) {
@@ -244,8 +244,8 @@ export function animateMultipleItemsToTrashWithRect(
           console.log('🗑️ アニメーション完了:', { id, completedCount, totalItems, viewMode });
           if (completedCount === totalItems) {
             setTimeout(() => {
-              if (trashIcon) {
-                trashIcon.style.setProperty('--lid-open', '0');
+              if (trashLid) {
+                trashLid.classList.remove('open');
               }
               if (listContainer) {
                 listContainer.style.overflow = '';
@@ -260,8 +260,8 @@ export function animateMultipleItemsToTrashWithRect(
         // 全てのアイテム（ゴミ箱アニメーション + フェードアウト）が完了したらコールバック実行
         if (completedCount === totalItems) {
           setTimeout(() => {
-            if (trashIcon) {
-              trashIcon.style.setProperty('--lid-open', '0');
+            if (trashLid) {
+              trashLid.classList.remove('open');
             }
             onComplete?.();
           }, 200);
@@ -370,9 +370,9 @@ export function animateEditorToTrash(
   const trashRect = trashElement.getBoundingClientRect();
   
   // 蓋を開く
-  const trashIcon = trashElement.querySelector('[data-trash-icon]') as HTMLElement;
-  if (trashIcon) {
-    trashIcon.style.setProperty('--lid-open', '1');
+  const trashLid = trashElement.querySelector('.trash-icon-lid') as HTMLElement;
+  if (trashLid) {
+    trashLid.classList.add('open');
   }
   
   // エディター全体のアニメーション設定
@@ -399,8 +399,8 @@ export function animateEditorToTrash(
       console.log('📝 エディターゴミ箱アニメーション完了');
       
       // 蓋を閉じる
-      if (trashIcon) {
-        trashIcon.style.setProperty('--lid-open', '0');
+      if (trashLid) {
+        trashLid.classList.remove('open');
       }
       
       onComplete?.();
@@ -617,9 +617,9 @@ export function animateBulkFadeOutCSS(
   const totalItems = sortedItemIds.length;
   
   // ゴミ箱の蓋を開く（削除の場合のみ）
-  const trashIcon = document.querySelector('[data-trash-icon]') as HTMLElement;
-  if (actionType === 'delete' && trashIcon) {
-    trashIcon.style.setProperty('--lid-open', '1');
+  const trashLid = document.querySelector('.trash-icon-lid') as HTMLElement;
+  if (actionType === 'delete' && trashLid) {
+    trashLid.classList.add('open');
   }
   
   // DOM順序でソートされたアイテムに順次フェードアウトアニメーション適用
@@ -721,8 +721,8 @@ export function animateBulkFadeOutCSS(
         setTimeout(() => {
           console.log(`🎊 全${actionType === 'delete' ? '削除' : '復元'}アニメーション完了!`, { completedCount, totalItems });
           // ゴミ箱の蓋を閉じる（削除の場合のみ）
-          if (actionType === 'delete' && trashIcon) {
-            trashIcon.style.setProperty('--lid-open', '0');
+          if (actionType === 'delete' && trashLid) {
+            trashLid.classList.remove('open');
           }
           onComplete?.();
         }, 100);
@@ -768,9 +768,9 @@ export function animateBulkFadeOutJS(
   const clones: HTMLElement[] = [];
   
   // ゴミ箱の蓋を開く（削除の場合のみ）
-  const trashIcon = document.querySelector('[data-trash-icon]') as HTMLElement;
-  if (actionType === 'delete' && trashIcon) {
-    trashIcon.style.setProperty('--lid-open', '1');
+  const trashLid = document.querySelector('.trash-icon-lid') as HTMLElement;
+  if (actionType === 'delete' && trashLid) {
+    trashLid.classList.add('open');
   }
   
   // DOM順序でソートされたアイテムに順次フェードアウトアニメーション適用
@@ -828,8 +828,8 @@ export function animateBulkFadeOutJS(
               });
               
               // ゴミ箱の蓋を閉じる（削除の場合のみ）
-              if (actionType === 'delete' && trashIcon) {
-                trashIcon.style.setProperty('--lid-open', '0');
+              if (actionType === 'delete' && trashLid) {
+                trashLid.classList.remove('open');
               }
               
               // 最後に一気にDOM操作（コールバック実行）
@@ -849,8 +849,8 @@ export function animateBulkFadeOutJS(
             }
           });
           
-          if (actionType === 'delete' && trashIcon) {
-            trashIcon.style.setProperty('--lid-open', '0');
+          if (actionType === 'delete' && trashLid) {
+            trashLid.classList.remove('open');
           }
           onComplete?.();
         }

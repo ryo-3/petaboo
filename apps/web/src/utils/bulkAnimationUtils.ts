@@ -118,8 +118,19 @@ export async function executeWithAnimation({
         // キャンセル時の処理
         console.log('🚫 処理がキャンセルされました - 状態をリセットします')
         
+        // カウンターアニメーションも停止する必要がある場合
+        // finalizeAnimationを呼ぶ前に、アニメーションのキャンセルを行う
+        
         // 状態をリセット
         finalizeAnimation(setIsProcessing, setIsLidOpen, isPartial)
+        
+        // カウンターキャンセル通知を先に送信
+        window.dispatchEvent(new CustomEvent('bulkAnimationCancel', {
+          detail: { 
+            type: dataAttribute.includes('memo') ? 'memo' : 'task',
+            processType: 'delete'
+          }
+        }));
         
         // キャンセル通知を表示
         window.dispatchEvent(new CustomEvent('bulkProcessCancelled', {

@@ -19,7 +19,7 @@ export function useBulkProcessNotifications() {
         message += '（タブ切り替えまたはページ移動のため）';
       }
       
-      showToast(message, 'info', 5000);
+      showToast(message, 'info'); // durationを指定しないので手動でのみ閉じられる
       
       console.log(`📢 処理キャンセル通知を表示: ${itemTypeName}${processTypeName} (理由: ${reason})`);
     };

@@ -152,6 +152,8 @@ export function animateBulkFadeOutCSS(
   let completedCount = 0;
   const totalItems = sortedItemIds.length;
   const processedItems = new Set<number>(); // 処理済みアイテムを追跡
+  let isCancelled = false; // キャンセルフラグ
+  const timeoutIds: NodeJS.Timeout[] = []; // setTimeout IDを保持
   
   // ゴミ箱の蓋を開く（削除の場合のみ）
   const trashLid = document.querySelector('.trash-icon-lid') as HTMLElement;
@@ -159,9 +161,31 @@ export function animateBulkFadeOutCSS(
     trashLid.classList.add('open');
   }
   
+  // キャンセル処理関数
+  const cancelAllProcessing = () => {
+    if (isCancelled) return; // 既にキャンセル済み
+    
+    isCancelled = true;
+    console.log('🚫 一括処理をキャンセルします - 全てのタイマーをクリア');
+    
+    // 全てのsetTimeoutをクリア
+    timeoutIds.forEach(timeoutId => clearTimeout(timeoutId));
+    
+    // ゴミ箱の蓋を閉じる
+    if (actionType === 'delete' && trashLid) {
+      trashLid.classList.remove('open');
+    }
+    
+    // キャンセルコールバックを実行
+    onCancel?.();
+  };
+
   // DOM順序でソートされたアイテムに順次フェードアウトアニメーション適用
   sortedItemIds.forEach((id, index) => {
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
+      // キャンセル済みなら処理しない
+      if (isCancelled) return;
+      
       // 既に処理済みの場合はスキップ
       if (processedItems.has(id)) {
         console.log(`⚠️ 重複スキップ: ID ${id}`);
@@ -253,19 +277,14 @@ export function animateBulkFadeOutCSS(
             注記: 'タブ切り替えやページ移動により処理が中断されました'
           });
           
-          // 処理をキャンセル（残りの処理もスキップ）
-          console.log('🚫 一括処理をキャンセルします');
-          
-          // ゴミ箱の蓋を閉じる
-          if (actionType === 'delete' && trashLid) {
-            trashLid.classList.remove('open');
-          }
-          
-          // キャンセルコールバックを実行
-          onCancel?.();
-          return; // 処理を完全に停止
+          // 全体をキャンセル
+          cancelAllProcessing();
+          return;
         }
       }
     }, index * delay);
+    
+    // timeout IDを配列に保存
+    timeoutIds.push(timeoutId);
   });
 }

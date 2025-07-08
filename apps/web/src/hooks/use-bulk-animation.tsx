@@ -11,7 +11,12 @@ interface UseBulkAnimationProps {
  */
 export function useBulkAnimation({ checkedItems, checkedDeletedItems }: UseBulkAnimationProps) {
   // タイマーIDを保持
-  const timerRef = useRef<{ isProcessing?: NodeJS.Timeout; clearChecked?: NodeJS.Timeout }>({})
+  const timerRef = useRef<{ 
+    isProcessing?: NodeJS.Timeout; 
+    clearChecked?: NodeJS.Timeout;
+    countdownTimer?: NodeJS.Timeout;
+    counterInterval?: NodeJS.Timeout;
+  }>({})
   
   // 部分処理中フラグ（自動クリーンアップを無効にするため）
   const [isPartialProcessing, setIsPartialProcessing] = useState(false)
@@ -42,6 +47,14 @@ export function useBulkAnimation({ checkedItems, checkedDeletedItems }: UseBulkA
       clearTimeout(timerRef.current.isProcessing)
       timerRef.current.isProcessing = undefined
     }
+    if (timerRef.current.countdownTimer) {
+      clearTimeout(timerRef.current.countdownTimer)
+      timerRef.current.countdownTimer = undefined
+    }
+    if (timerRef.current.counterInterval) {
+      clearInterval(timerRef.current.counterInterval)
+      timerRef.current.counterInterval = undefined
+    }
   }
 
   /**
@@ -54,7 +67,7 @@ export function useBulkAnimation({ checkedItems, checkedDeletedItems }: UseBulkA
       const itemsUntilStart = totalCount - startCount
       const delayUntilStart = itemsUntilStart * DELETE_ANIMATION_INTERVAL
       
-      setTimeout(() => {
+      timerRef.current.countdownTimer = setTimeout(() => {
         console.log(`🎯 カウンター開始: 残り${startCount}個`)
         
         // カウンターを開始数値から段階的に減らす
@@ -75,6 +88,9 @@ export function useBulkAnimation({ checkedItems, checkedDeletedItems }: UseBulkA
             setDisplayCount(currentCount)
           }
         }, decrementInterval)
+        
+        // カウンターのsetIntervalを管理のためtimerRefに保存
+        timerRef.current.counterInterval = counterTimer
       }, delayUntilStart)
     }
   }
@@ -148,6 +164,28 @@ export function useBulkAnimation({ checkedItems, checkedDeletedItems }: UseBulkA
     }, 300)
   }
 
+  /**
+   * アニメーション強制キャンセル（タブ切り替え時など）
+   */
+  const cancelAnimation = (
+    setIsProcessing?: (value: boolean) => void,
+    setIsLidOpen?: (value: boolean) => void
+  ) => {
+    console.log('🚫 アニメーションをキャンセルします')
+    
+    // 全てのタイマーをクリア（カウンターのsetIntervalも含む）
+    clearTimers()
+    
+    // 状態をリセット
+    setIsCountingActive(false)
+    setIsPartialProcessing(false)
+    setDisplayCount(0)
+    
+    // 処理状態をリセット
+    setIsProcessing?.(false)
+    setIsLidOpen?.(false)
+  }
+
   return {
     // State
     displayCount,
@@ -161,6 +199,7 @@ export function useBulkAnimation({ checkedItems, checkedDeletedItems }: UseBulkA
     finalizeAnimation,
     setModalState,
     handleModalCancel,
+    cancelAnimation,
     clearTimers,
     
     // Refs

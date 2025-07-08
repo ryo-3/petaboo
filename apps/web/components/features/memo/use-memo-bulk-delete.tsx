@@ -73,6 +73,25 @@ export function useMemosBulkDelete({
     checkedDeletedItems: checkedDeletedMemos,
   });
 
+  // アニメーションキャンセルイベントを監視
+  useEffect(() => {
+    const handleAnimationCancel = (event: CustomEvent) => {
+      const { type, processType } = event.detail;
+      
+      // メモの削除処理のキャンセルの場合
+      if (type === 'memo' && processType === 'delete') {
+        console.log('🚫 メモ削除アニメーションキャンセル - カウンターを停止');
+        bulkAnimation.cancelAnimation(setIsDeleting, setIsLidOpen);
+      }
+    };
+
+    window.addEventListener('bulkAnimationCancel', handleAnimationCancel as EventListener);
+
+    return () => {
+      window.removeEventListener('bulkAnimationCancel', handleAnimationCancel as EventListener);
+    };
+  }, [bulkAnimation, setIsDeleting, setIsLidOpen]);
+
   // チェック状態のクリーンアップ - 削除されたメモのチェックを解除（部分削除中は無効）
   useEffect(() => {
     if (notes && !bulkAnimation.isPartialProcessing) {

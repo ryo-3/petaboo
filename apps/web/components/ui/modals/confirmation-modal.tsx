@@ -187,9 +187,17 @@ function ConfirmationModal({
         </h3>
         
         {/* メッセージ */}
-        <p className="text-sm text-gray-600 mb-6 whitespace-pre-line">
-          {message}
-        </p>
+        <div className="mb-6">
+          <p className="text-sm text-gray-600 whitespace-pre-line">
+            {message}
+          </p>
+          {/* 削除処理中のタブ切り替え注意書き */}
+          {(icon === 'trash' || variant === 'danger') && (
+            <p className="text-xs text-gray-500 mt-2">
+              ※削除中にタブを切り替えると処理が中断されます
+            </p>
+          )}
+        </div>
         
         {/* ボタン */}
         <div className="flex gap-3 justify-center">

@@ -109,7 +109,7 @@ export function useTasksBulkRestore({
         async (ids: number[], isPartialRestore = false) => {
           await executeRestoreWithAnimation(ids, isPartialRestore, targetIds.length)
         },
-        `${targetIds.length}件選択されています。\\n一度に復元できる上限は100件です。`,
+        `${targetIds.length}件選択されています。\n一度に復元できる上限は100件です。`,
         true // isPartialRestore
       )
     } else {
@@ -144,18 +144,20 @@ export function useTasksBulkRestore({
     : currentRestoreCount
 
   // デバッグログ
-  console.log('🔄 復元カウンター状態:', {
-    isCountingActive: bulkAnimation.isCountingActive,
-    displayCount: bulkAnimation.displayCount,
-    currentRestoreCount,
-    finalDisplayCount,
-    checkedDeletedTasksSize: checkedDeletedTasks.size
-  })
+  // console.log('🔄 復元カウンター状態:', {
+  //   isCountingActive: bulkAnimation.isCountingActive,
+  //   displayCount: bulkAnimation.displayCount,
+  //   currentRestoreCount,
+  //   finalDisplayCount,
+  //   checkedDeletedTasksSize: checkedDeletedTasks.size
+  // })
 
   return {
     handleBulkRestore,
     RestoreModal,
     // カウンターアクティブ時はdisplayCount、それ以外は実際のカウント
     currentDisplayCount: finalDisplayCount,
+    // 復元モーダルの状態
+    isRestoreModalOpen: bulkRestore.isModalOpen,
   }
 }

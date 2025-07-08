@@ -144,13 +144,13 @@ export function useMemosBulkRestore({
     : currentRestoreCount
 
   // デバッグログ
-  console.log('🔄 復元カウンター状態:', {
-    isCountingActive: bulkAnimation.isCountingActive,
-    displayCount: bulkAnimation.displayCount,
-    currentRestoreCount,
-    finalDisplayCount,
-    checkedDeletedMemosSize: checkedDeletedMemos.size
-  })
+  // console.log('🔄 復元カウンター状態:', {
+  //   isCountingActive: bulkAnimation.isCountingActive,
+  //   displayCount: bulkAnimation.displayCount,
+  //   currentRestoreCount,
+  //   finalDisplayCount,
+  //   checkedDeletedMemosSize: checkedDeletedMemos.size
+  // })
 
   return {
     handleBulkRestore,

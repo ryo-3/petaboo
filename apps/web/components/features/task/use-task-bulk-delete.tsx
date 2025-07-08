@@ -220,15 +220,15 @@ export function useTasksBulkDelete({
     : currentDeleteCount
 
   // デバッグログ
-  console.log('🔄 削除カウンター状態:', {
-    activeTab,
-    isCountingActive: bulkAnimation.isCountingActive,
-    displayCount: bulkAnimation.displayCount,
-    currentDeleteCount,
-    finalDisplayCount,
-    checkedTasksSize: checkedTasks.size,
-    checkedDeletedTasksSize: checkedDeletedTasks.size
-  })
+  // console.log('🔄 削除カウンター状態:', {
+  //   activeTab,
+  //   isCountingActive: bulkAnimation.isCountingActive,
+  //   displayCount: bulkAnimation.displayCount,
+  //   currentDeleteCount,
+  //   finalDisplayCount,
+  //   checkedTasksSize: checkedTasks.size,
+  //   checkedDeletedTasksSize: checkedDeletedTasks.size
+  // })
 
   return {
     handleBulkDelete,

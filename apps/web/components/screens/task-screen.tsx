@@ -26,6 +26,7 @@ import {
   getTaskDisplayOrder,
 } from "@/src/utils/domUtils";
 import { createToggleHandlerWithTabClear } from "@/src/utils/toggleUtils";
+import { getDeleteButtonVisibility } from "@/src/utils/bulkButtonUtils";
 import { useItemDeselect } from "@/src/hooks/use-item-deselect";
 import { useSelectAll } from "@/src/hooks/use-select-all";
 import { useTabChange } from "@/src/hooks/use-tab-change";
@@ -206,6 +207,7 @@ function TaskScreen({
     handleBulkRestore, 
     RestoreModal,
     currentDisplayCount: currentRestoreDisplayCount,
+    isRestoreModalOpen,
   } = useTasksBulkRestore({
     checkedDeletedTasks,
     setCheckedDeletedTasks,
@@ -437,7 +439,16 @@ function TaskScreen({
 
         {/* 一括操作ボタン */}
         <BulkActionButtons
-          showDeleteButton={showDeleteButton}
+          showDeleteButton={getDeleteButtonVisibility({
+            activeTab,
+            deletedTabName: "deleted",
+            checkedItems: checkedTasks,
+            checkedDeletedItems: checkedDeletedTasks,
+            isRestoreModalOpen,
+            isRestoreLidOpen,
+            isRestoring,
+            showDeleteButton,
+          })}
           deleteButtonCount={currentDisplayCount}
           onDelete={handleBulkDelete}
           deleteButtonRef={deleteButtonRef}

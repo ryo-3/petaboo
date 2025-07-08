@@ -34,6 +34,7 @@ import {
   getNextItemAfterDeletion,
 } from "@/src/utils/domUtils";
 import { createToggleHandlerWithTabClear } from "@/src/utils/toggleUtils";
+import { getDeleteButtonVisibility } from "@/src/utils/bulkButtonUtils";
 import { useCallback, useRef, useState } from "react";
 
 type MemoScreenMode = "list" | "view" | "create";
@@ -371,25 +372,16 @@ function MemoScreen({
 
         {/* 一括操作ボタン */}
         <BulkActionButtons
-          showDeleteButton={(() => {
-            // 削除済みタブでの特別ロジック
-            if (activeTab === "deleted") {
-              // 復元モーダル開いてる時は非表示
-              if (isRestoreModalOpen) return false;
-              // アニメーション中（蓋が開いている間）は非表示
-              if (isRestoreLidOpen) return false;
-              // 復元中で蓋が閉じていて選択項目がある場合は表示（部分復元完了後）
-              if (isRestoring && !isRestoreLidOpen && checkedDeletedMemos.size > 0) return true;
-              // 復元中で蓋が閉じていて選択項目がない場合は非表示
-              if (isRestoring) return false;
-              // 選択項目がある時は表示
-              return checkedDeletedMemos.size > 0;
-            }
-            // 通常タブの場合
-            const result = showDeleteButton && !isRestoreModalOpen;
-            console.log('🗑️ 削除ボタン表示判定:', { activeTab, showDeleteButton, isRestoreModalOpen, isRestoring, checkedDeletedCount: checkedDeletedMemos.size, result });
-            return result;
-          })()}
+          showDeleteButton={getDeleteButtonVisibility({
+            activeTab,
+            deletedTabName: "deleted",
+            checkedItems: checkedMemos,
+            checkedDeletedItems: checkedDeletedMemos,
+            isRestoreModalOpen,
+            isRestoreLidOpen,
+            isRestoring,
+            showDeleteButton,
+          })}
           deleteButtonCount={currentDisplayCount}
           onDelete={handleLeftBulkDelete}
           deleteButtonRef={deleteButtonRef}

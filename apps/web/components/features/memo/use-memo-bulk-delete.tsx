@@ -198,7 +198,7 @@ export function useMemosBulkDelete({
         async (ids: number[], isPartialDelete = false) => {
           await executeDeleteWithAnimation(ids, isPartialDelete, targetIds.length);
         },
-        `${targetIds.length}件選択されています。\\n一度に削除できる上限は100件です。`,
+        `${targetIds.length}件選択されています。\n一度に削除できる上限は100件です。`,
         true // isPartialDelete
       );
     } else {
@@ -240,15 +240,15 @@ export function useMemosBulkDelete({
     : currentDeleteCount;
 
   // デバッグログ
-  console.log("🔄 削除カウンター状態:", {
-    activeTab,
-    isCountingActive: bulkAnimation.isCountingActive,
-    displayCount: bulkAnimation.displayCount,
-    currentDeleteCount,
-    finalDisplayCount,
-    checkedMemosSize: checkedMemos.size,
-    checkedDeletedMemosSize: checkedDeletedMemos.size,
-  });
+  // console.log("🔄 削除カウンター状態:", {
+  //   activeTab,
+  //   isCountingActive: bulkAnimation.isCountingActive,
+  //   displayCount: bulkAnimation.displayCount,
+  //   currentDeleteCount,
+  //   finalDisplayCount,
+  //   checkedMemosSize: checkedMemos.size,
+  //   checkedDeletedMemosSize: checkedDeletedMemos.size,
+  // });
 
   return {
     handleBulkDelete,

@@ -110,12 +110,8 @@ export function useBulkAnimation({ checkedItems, checkedDeletedItems }: UseBulkA
     
     // 処理ボタンを3秒後に非表示
     timerRef.current.isProcessing = setTimeout(() => {
-      console.log('🔧 setIsProcessing(false)を実行します')
       if (setIsProcessing) {
         setIsProcessing(false)
-        console.log('✅ setIsProcessing(false)実行完了')
-      } else {
-        console.log('❌ setIsProcessingが未定義です')
       }
     }, 3000)
     

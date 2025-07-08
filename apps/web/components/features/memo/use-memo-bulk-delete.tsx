@@ -154,23 +154,26 @@ export function useMemosBulkDelete({
       const startTime = Date.now();
       console.log(`⏱️ アニメーション開始: ${startTime} (100件 = 予想8.2秒)`);
       
-      // 26個目が消えたタイミング(99になる時)でカウンター開始
+      // カウントダウン対象の判定と開始タイミング計算
       const remainingCountAfterLimit = displayTotalCount - ids.length;
-      if (remainingCountAfterLimit < 99) {
-        // 何個消えたら99になるか計算
-        const itemsUntil99 = displayTotalCount - 99;
-        const delayUntil99 = itemsUntil99 * DELETE_ANIMATION_INTERVAL;
+      
+      // カウントダウンが必要な場合（99以下になる場合）
+      if (remainingCountAfterLimit <= 99) {
+        // カウンター開始数値を決定（99以下の場合は実際の開始数値）
+        const startCount = Math.min(displayTotalCount, 99);
+        const itemsUntilStart = displayTotalCount - startCount;
+        const delayUntilStart = itemsUntilStart * DELETE_ANIMATION_INTERVAL;
         
         setTimeout(() => {
-          console.log(`🎯 カウンター開始: 残り99個`);
+          console.log(`🎯 カウンター開始: 残り${startCount}個`);
           
-          // カウンターを99から開始して段階的に減らす
-          let currentCount = 99;
+          // カウンターを開始数値から段階的に減らす
+          let currentCount = startCount;
           const targetCount = remainingCountAfterLimit;
           const decrementInterval = DELETE_ANIMATION_INTERVAL; // 80msごとに減少（アニメーションと同期）
           
-          // 最初に99を設定してからカウンター開始（ちらつき防止）
-          setDisplayCount(99);
+          // 最初の数値を設定してからカウンター開始（ちらつき防止）
+          setDisplayCount(startCount);
           setIsCountingActive(true);
           
           const counterTimer = setInterval(() => {
@@ -183,7 +186,7 @@ export function useMemosBulkDelete({
               setDisplayCount(currentCount);
             }
           }, decrementInterval);
-        }, delayUntil99);
+        }, delayUntilStart);
       }
       
       animateBulkFadeOutCSS(ids, async () => {

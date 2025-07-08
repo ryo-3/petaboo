@@ -27,6 +27,7 @@ import {
 } from "@/src/utils/domUtils";
 import { createToggleHandlerWithTabClear } from "@/src/utils/toggleUtils";
 import { getDeleteButtonVisibility } from "@/src/utils/bulkButtonUtils";
+import { useBulkProcessNotifications } from "@/src/hooks/use-bulk-process-notifications";
 import { useItemDeselect } from "@/src/hooks/use-item-deselect";
 import { useSelectAll } from "@/src/hooks/use-select-all";
 import { useTabChange } from "@/src/hooks/use-tab-change";
@@ -56,6 +57,9 @@ function TaskScreen({
   onClose,
   onClearSelection,
 }: TaskScreenProps) {
+  // 一括処理中断通知の監視
+  useBulkProcessNotifications();
+  
   // データ取得
   const { data: tasks, isLoading: taskLoading, error: taskError } = useTasks();
   const { data: deletedTasks } = useDeletedTasks();

@@ -80,37 +80,58 @@ export async function executeWithAnimation({
       })
     })
     
-    animateBulkFadeOutCSS(ids, async () => {
-      const endTime = Date.now()
-      const duration = (endTime - startTime) / 1000
-      console.log(`🏁 アニメーション完了: ${endTime} (実際: ${duration}秒)`)
-      
-      // 一括State更新（DOM削除）
-      ids.forEach(id => onStateUpdate(id))
-      
-      // チェック状態をクリア
-      onCheckStateUpdate(ids, isPartial)
-      
-      // アニメーション完了処理
-      finalizeAnimation(setIsProcessing, setIsLidOpen, isPartial)
-      
-      // アニメーション完了後にAPI実行（バックグラウンド処理）
-      setTimeout(async () => {
-        console.log('🔄 API実行開始（アニメーション完了後）')
-        const apiPromises = ids.map(async (id) => {
-          try {
-            await onApiCall(id)
-          } catch (error: unknown) {
-            if (!(error instanceof Error && error.message?.includes('404'))) {
-              console.error(`API処理エラー (ID: ${id}):`, error)
-            }
-          }
-        })
+    animateBulkFadeOutCSS(
+      ids, 
+      async () => {
+        // 正常完了時の処理
+        const endTime = Date.now()
+        const duration = (endTime - startTime) / 1000
+        console.log(`🏁 アニメーション完了: ${endTime} (実際: ${duration}秒)`)
         
-        await Promise.all(apiPromises)
-        console.log('🔄 API実行完了（アニメーション完了後）')
-      }, 100)
-    }, DELETE_ANIMATION_INTERVAL)
+        // 一括State更新（DOM削除）
+        ids.forEach(id => onStateUpdate(id))
+        
+        // チェック状態をクリア
+        onCheckStateUpdate(ids, isPartial)
+        
+        // アニメーション完了処理
+        finalizeAnimation(setIsProcessing, setIsLidOpen, isPartial)
+        
+        // アニメーション完了後にAPI実行（バックグラウンド処理）
+        setTimeout(async () => {
+          console.log('🔄 API実行開始（アニメーション完了後）')
+          const apiPromises = ids.map(async (id) => {
+            try {
+              await onApiCall(id)
+            } catch (error: unknown) {
+              if (!(error instanceof Error && error.message?.includes('404'))) {
+                console.error(`API処理エラー (ID: ${id}):`, error)
+              }
+            }
+          })
+          
+          await Promise.all(apiPromises)
+          console.log('🔄 API実行完了（アニメーション完了後）')
+        }, 100)
+      },
+      () => {
+        // キャンセル時の処理
+        console.log('🚫 処理がキャンセルされました - 状態をリセットします')
+        
+        // 状態をリセット
+        finalizeAnimation(setIsProcessing, setIsLidOpen, isPartial)
+        
+        // キャンセル通知を表示
+        window.dispatchEvent(new CustomEvent('bulkProcessCancelled', {
+          detail: { 
+            type: dataAttribute.includes('memo') ? 'memo' : 'task',
+            processType: 'delete',
+            reason: 'element_not_found'
+          }
+        }));
+      },
+      DELETE_ANIMATION_INTERVAL
+    )
   } else {
     // アニメーションなしの場合は即座に処理
     ids.forEach(id => onStateUpdate(id))

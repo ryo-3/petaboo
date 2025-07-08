@@ -35,6 +35,7 @@ import {
 } from "@/src/utils/domUtils";
 import { createToggleHandlerWithTabClear } from "@/src/utils/toggleUtils";
 import { getDeleteButtonVisibility } from "@/src/utils/bulkButtonUtils";
+import { useBulkProcessNotifications } from "@/src/hooks/use-bulk-process-notifications";
 import { useCallback, useRef, useState } from "react";
 
 type MemoScreenMode = "list" | "view" | "create";
@@ -56,6 +57,9 @@ function MemoScreen({
   onClose,
   onDeselectAndStayOnMemoList,
 }: MemoScreenProps) {
+  // 一括処理中断通知の監視
+  useBulkProcessNotifications();
+  
   // 新規作成エディターのキー管理
   const [createEditorKey, setCreateEditorKey] = useState(0);
 

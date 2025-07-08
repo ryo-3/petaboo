@@ -110,6 +110,7 @@ export function animateEditorContentToTrashCSS(
 export function animateBulkFadeOutCSS(
   itemIds: number[],
   onComplete?: () => void,
+  onCancel?: () => void,
   delay: number = 120,
   actionType: 'delete' | 'restore' = 'delete'
 ) {
@@ -244,18 +245,25 @@ export function animateBulkFadeOutCSS(
             onComplete?.();
           }
         } else {
-          console.error(`❌ 要素が見つかりません:`, {
+          console.warn(`⚠️ 要素が見つかりません - 処理をキャンセルします:`, {
             id,
             index,
             セレクター: `[data-memo-id="${id}"], [data-task-id="${id}"]`,
             actionType,
-            DOMに存在する全ての要素: Array.from(document.querySelectorAll('[data-memo-id], [data-task-id]')).map(el => ({
-              type: el.getAttribute('data-memo-id') ? 'memo' : 'task',
-              id: el.getAttribute('data-memo-id') || el.getAttribute('data-task-id'),
-              element: el.tagName,
-              class: el.className
-            }))
+            注記: 'タブ切り替えやページ移動により処理が中断されました'
           });
+          
+          // 処理をキャンセル（残りの処理もスキップ）
+          console.log('🚫 一括処理をキャンセルします');
+          
+          // ゴミ箱の蓋を閉じる
+          if (actionType === 'delete' && trashLid) {
+            trashLid.classList.remove('open');
+          }
+          
+          // キャンセルコールバックを実行
+          onCancel?.();
+          return; // 処理を完全に停止
         }
       }
     }, index * delay);

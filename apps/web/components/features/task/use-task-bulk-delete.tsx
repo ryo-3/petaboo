@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { useDeleteTask, usePermanentDeleteTask } from '@/src/hooks/use-tasks'
 import { useBulkDelete, BulkDeleteConfirmation } from '@/components/ui/modals'
 import type { Task, DeletedTask } from '@/src/types/task'
@@ -6,6 +6,8 @@ import React from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useAuth } from '@clerk/nextjs'
 import { tasksApi } from '@/src/lib/api-client'
+import { useBulkAnimation } from '@/src/hooks/use-bulk-animation'
+import { executeWithAnimation } from '@/src/utils/bulkAnimationUtils'
 
 interface UseTasksBulkDeleteProps {
   activeTab: 'todo' | 'in_progress' | 'completed' | 'deleted'
@@ -63,204 +65,58 @@ export function useTasksBulkDelete({
     // onSuccessなし（自動更新しない）
   })
   
-  // タイマーIDを保持
-  const timerRef = useRef<{ isDeleting?: NodeJS.Timeout; clearChecked?: NodeJS.Timeout }>({})
+  // 共通のアニメーション管理
+  const bulkAnimation = useBulkAnimation({
+    checkedItems: checkedTasks,
+    checkedDeletedItems: checkedDeletedTasks,
+  })
 
-  // チェック状態が変更されたらタイマーをクリア
+  // チェック状態のクリーンアップ - 削除されたタスクのチェックを解除（部分削除中は無効）
   useEffect(() => {
-    if (checkedTasks.size > 0) {
-      // 新しい選択があったらタイマーをクリア
-      if (timerRef.current.clearChecked) {
-        clearTimeout(timerRef.current.clearChecked)
-        timerRef.current.clearChecked = undefined
-      }
-      if (timerRef.current.isDeleting) {
-        clearTimeout(timerRef.current.isDeleting)
-        timerRef.current.isDeleting = undefined
-      }
-    }
-  }, [checkedTasks])
-
-  // チェック状態のクリーンアップ - 削除されたタスクのチェックを解除
-  useEffect(() => {
-    if (tasks) {
+    if (tasks && !bulkAnimation.isPartialProcessing) {
       const allTaskIds = new Set(tasks.map(t => t.id))
       const newCheckedTasks = new Set(Array.from(checkedTasks).filter(id => allTaskIds.has(id)))
       if (newCheckedTasks.size !== checkedTasks.size) {
         setCheckedTasks(newCheckedTasks)
       }
     }
-  }, [tasks, checkedTasks, setCheckedTasks])
+  }, [tasks, checkedTasks, setCheckedTasks, bulkAnimation.isPartialProcessing])
 
   // 削除中フラグを外部で管理
   const isCurrentlyDeleting = deleteTaskMutation.isPending || permanentDeleteTaskMutation.isPending
   
   useEffect(() => {
-    // 削除中は自動クリーンアップを無効にする
-    if (deletedTasks && !isCurrentlyDeleting) {
+    // 削除中は自動クリーンアップを無効にする（部分削除中も無効）
+    if (deletedTasks && !isCurrentlyDeleting && !bulkAnimation.isPartialProcessing) {
       const deletedTaskIds = new Set(deletedTasks.map(t => t.id))
       const newCheckedDeletedTasks = new Set(Array.from(checkedDeletedTasks).filter(id => deletedTaskIds.has(id)))
       if (newCheckedDeletedTasks.size !== checkedDeletedTasks.size) {
         setCheckedDeletedTasks(newCheckedDeletedTasks)
       }
     }
-  }, [deletedTasks, checkedDeletedTasks, setCheckedDeletedTasks, isCurrentlyDeleting])
+  }, [deletedTasks, checkedDeletedTasks, setCheckedDeletedTasks, isCurrentlyDeleting, bulkAnimation.isPartialProcessing])
 
-  // 共通の削除処理関数
-  const executeDeleteWithAnimation = async (ids: number[], isPartialDelete = false) => {
-    // 削除ボタンの位置を取得
-    const buttonRect = deleteButtonRef?.current?.getBoundingClientRect()
-    
-    console.log('✅ 削除処理開始:', { ids: ids.length, activeTab, hasButtonRect: !!buttonRect })
-    
-    // アニメーションが必要な場合（通常タスクまたは削除済みタスク）
-    if (buttonRect) {
-      console.log('🎬 処理開始:', { ids: ids.length })
-      
-      // 蓋を開く
-      setIsLidOpen?.(true)
-      
-      // 30件以上は最初の30個だけアニメーション、残りは一括削除
-      if (ids.length > 30) {
-        console.log('🎬➡️⚡ 混合削除モード:', { count: ids.length })
-        
-        // 最初の30個をアニメーション
-        const animatedIds = ids.slice(0, 30)
-        const bulkIds = ids.slice(30)
-        
-        console.log('🎬 最初の30個のアニメーション:', { animated: animatedIds.length, bulk: bulkIds.length })
-        const { animateBulkFadeOutCSS } = await import('@/src/utils/deleteAnimation')
-        
-        animateBulkFadeOutCSS(animatedIds, async () => {
-          console.log('🎬 最初のアニメーション完了、一括削除開始:', { bulk: bulkIds.length })
-          
-          // 残りを一括でState更新（通常タスクのみ）
-          for (const id of bulkIds) {
-            if (activeTab !== "deleted" && onTaskDelete) {
-              onTaskDelete(id)
-            }
-            // 削除済みタスクはState更新なし
-          }
-          
-          // チェック状態をクリア
-          if (isPartialDelete) {
-            if (activeTab === "deleted") {
-              const newCheckedDeletedTasks = new Set(checkedDeletedTasks)
-              ids.forEach(id => newCheckedDeletedTasks.delete(id))
-              setCheckedDeletedTasks(newCheckedDeletedTasks)
-            } else {
-              const newCheckedTasks = new Set(checkedTasks)
-              ids.forEach(id => newCheckedTasks.delete(id))
-              setCheckedTasks(newCheckedTasks)
-            }
-          } else {
-            if (activeTab === "deleted") {
-              setCheckedDeletedTasks(new Set())
-            } else {
-              setCheckedTasks(new Set())
-            }
-          }
-          
-          // 蓋を閉じる
-          setTimeout(() => {
-            setIsLidOpen?.(false)
-          }, 500)
-          
-          // 削除ボタンを非表示
-          setTimeout(() => {
-            if (setIsDeleting) {
-              setIsDeleting(false)
-            }
-          }, 1000)
-          
-          console.log('⚡ 混合削除完了:', { animated: animatedIds.length, bulk: bulkIds.length })
-        }, 120, 'delete')
-        
-        // 残りのAPI処理をバックグラウンドで実行
-        setTimeout(async () => {
-          console.log('🌐 残りのAPI処理開始:', { count: bulkIds.length })
-          for (const id of bulkIds) {
-            try {
-              if (activeTab === "deleted") {
-                await permanentDeleteTaskMutation.mutateAsync(id)
-              } else {
-                await deleteTaskMutation.mutateAsync(id)
-              }
-            } catch (error: unknown) {
-              if (!(error instanceof Error && error.message?.includes('404'))) {
-                console.error(`一括削除エラー (ID: ${id}):`, error)
-              }
-            }
-          }
-          console.log('🌐 残りのAPI処理完了:', { count: bulkIds.length })
-        }, 1000) // アニメーション開始から1秒後
-        
-        return
-      }
-      
-      // 30件以下はアニメーション付き削除
-      console.log('🎬 アニメーション削除:', { count: ids.length })
-      const { animateBulkFadeOutCSS } = await import('@/src/utils/deleteAnimation')
-      animateBulkFadeOutCSS(ids, async () => {
-        console.log('🎬 全アニメーション完了:', { ids: ids.length })
-        
-        // チェック状態をクリア（部分削除の場合は削除されたIDのみクリア）
-        if (isPartialDelete) {
-          if (activeTab === "deleted") {
-            const newCheckedDeletedTasks = new Set(checkedDeletedTasks)
-            ids.forEach(id => newCheckedDeletedTasks.delete(id))
-            setCheckedDeletedTasks(newCheckedDeletedTasks)
-          } else {
-            const newCheckedTasks = new Set(checkedTasks)
-            ids.forEach(id => newCheckedTasks.delete(id))
-            setCheckedTasks(newCheckedTasks)
-          }
-        } else {
-          // 通常削除の場合は全クリア
-          if (activeTab === "deleted") {
-            setCheckedDeletedTasks(new Set())
-          } else {
-            setCheckedTasks(new Set())
-          }
-        }
-        
-        // 500ms後に蓋を閉じる
-        setTimeout(() => {
-          setIsLidOpen?.(false)
-        }, 500)
-        
-        // 削除ボタンを3秒後に非表示
-        console.log('⏰ タイマー設定:', { hasSetIsDeleting: !!setIsDeleting })
-        timerRef.current.isDeleting = setTimeout(() => {
-          console.log('🚫 削除ボタン非表示 実行', { hasSetIsDeleting: !!setIsDeleting })
-          if (setIsDeleting) {
-            setIsDeleting(false)
-          } else {
-            console.error('❌ setIsDeletingが未定義')
-          }
-        }, 3000)
-        
-        // 個別APIで実行済みのため、ここでの一括API処理は不要
-        console.log('🎊 全アニメーション・API処理完了:', { ids: ids.length })
-      }, 120, 'delete')
-    } else {
-      // アニメーションなしの場合は即座に処理
-      // 通常タスクのみState更新
+  // 共通の削除処理関数（共通ロジック使用）
+  const executeDeleteWithAnimation = async (
+    ids: number[],
+    isPartialDelete = false,
+    originalTotalCount?: number
+  ) => {
+    const onStateUpdate = (id: number) => {
       if (activeTab !== "deleted" && onTaskDelete) {
-        for (const id of ids) {
-          onTaskDelete(id)
-        }
+        onTaskDelete(id)
       }
-      // 削除済みタスクはState更新なし
-      // 選択状態をクリア (UI即座更新) - 部分削除の場合は削除したIDのみ除外
-      if (isPartialDelete) {
+    }
+
+    const onCheckStateUpdate = (ids: number[], isPartial: boolean) => {
+      if (isPartial) {
         if (activeTab === "deleted") {
           const newCheckedDeletedTasks = new Set(checkedDeletedTasks)
-          ids.forEach(id => newCheckedDeletedTasks.delete(id))
+          ids.forEach((id) => newCheckedDeletedTasks.delete(id))
           setCheckedDeletedTasks(newCheckedDeletedTasks)
         } else {
           const newCheckedTasks = new Set(checkedTasks)
-          ids.forEach(id => newCheckedTasks.delete(id))
+          ids.forEach((id) => newCheckedTasks.delete(id))
           setCheckedTasks(newCheckedTasks)
         }
       } else {
@@ -270,20 +126,31 @@ export function useTasksBulkDelete({
           setCheckedTasks(new Set())
         }
       }
-      
-      // API処理を即座に実行
-      for (const id of ids) {
-        try {
-          if (activeTab === "deleted") {
-            await permanentDeleteTaskMutation.mutateAsync(id)
-          } else {
-            await deleteTaskMutation.mutateAsync(id)
-          }
-        } catch (error) {
-          console.error(`タスク削除エラー (ID: ${id}):`, error)
-        }
+    }
+
+    const onApiCall = async (id: number) => {
+      if (activeTab === "deleted") {
+        await permanentDeleteTaskMutation.mutateAsync(id)
+      } else {
+        await deleteTaskMutation.mutateAsync(id)
       }
     }
+
+    await executeWithAnimation({
+      ids,
+      isPartial: isPartialDelete,
+      originalTotalCount,
+      buttonRef: deleteButtonRef,
+      dataAttribute: "data-task-id",
+      onStateUpdate,
+      onCheckStateUpdate,
+      onApiCall,
+      initializeAnimation: bulkAnimation.initializeAnimation,
+      startCountdown: bulkAnimation.startCountdown,
+      finalizeAnimation: bulkAnimation.finalizeAnimation,
+      setIsProcessing: setIsDeleting,
+      setIsLidOpen,
+    })
   }
 
   const handleBulkDelete = async () => {
@@ -298,9 +165,8 @@ export function useTasksBulkDelete({
     const actualTargetIds = targetIds.length > 100 ? targetIds.slice(0, 100) : targetIds
     const isLimitedDelete = targetIds.length > 100
 
-    // 削除ボタンを押した瞬間に蓋を開く
-    setIsDeleting?.(true)
-    setIsLidOpen?.(true)
+    // 削除ボタンを押した瞬間の状態設定（カウンター維持）
+    bulkAnimation.setModalState(setIsDeleting, setIsLidOpen)
 
     console.log('🗑️ 削除開始:', { 
       selected: targetIds.length, 
@@ -315,7 +181,7 @@ export function useTasksBulkDelete({
         actualTargetIds, 
         0, // 即座にモーダル表示
         async (ids: number[], isPartialDelete = false) => {
-          await executeDeleteWithAnimation(ids, isPartialDelete);
+          await executeDeleteWithAnimation(ids, isPartialDelete, targetIds.length);
         },
         `${targetIds.length}件選択されています。\n一度に削除できる上限は100件です。`,
         true // isPartialDelete
@@ -332,12 +198,7 @@ export function useTasksBulkDelete({
     <BulkDeleteConfirmation
       isOpen={bulkDelete.isModalOpen}
       onClose={() => {
-        console.log('Cancel')
-        // キャンセル時に蓋を閉じる
-        setIsDeleting?.(false)
-        setTimeout(() => {
-          setIsLidOpen?.(false)
-        }, 300)
+        bulkAnimation.handleModalCancel(setIsDeleting, setIsLidOpen)
         bulkDelete.handleCancel()
       }}
       onConfirm={async () => {
@@ -352,8 +213,27 @@ export function useTasksBulkDelete({
     />
   )
 
+  // 現在の削除カウント（通常時は実際のサイズ、削除中はアニメーション用）
+  const currentDeleteCount = activeTab === "deleted" ? checkedDeletedTasks.size : checkedTasks.size
+  const finalDisplayCount = bulkAnimation.isCountingActive
+    ? bulkAnimation.displayCount
+    : currentDeleteCount
+
+  // デバッグログ
+  console.log('🔄 削除カウンター状態:', {
+    activeTab,
+    isCountingActive: bulkAnimation.isCountingActive,
+    displayCount: bulkAnimation.displayCount,
+    currentDeleteCount,
+    finalDisplayCount,
+    checkedTasksSize: checkedTasks.size,
+    checkedDeletedTasksSize: checkedDeletedTasks.size
+  })
+
   return {
     handleBulkDelete,
     DeleteModal,
+    // カウンターアクティブ時はdisplayCount、それ以外は実際のカウント
+    currentDisplayCount: finalDisplayCount,
   }
 }

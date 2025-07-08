@@ -3,149 +3,159 @@ import { useRestoreTask } from '@/src/hooks/use-tasks'
 import { useBulkDelete, BulkRestoreConfirmation } from '@/components/ui/modals'
 import type { DeletedTask } from '@/src/types/task'
 import React from 'react'
+import { useBulkAnimation } from '@/src/hooks/use-bulk-animation'
+import { executeWithAnimation } from '@/src/utils/bulkAnimationUtils'
 
 interface UseTasksBulkRestoreProps {
   checkedDeletedTasks: Set<number>
   setCheckedDeletedTasks: (tasks: Set<number>) => void
   deletedTasks?: DeletedTask[]
   onDeletedTaskRestore?: (id: number) => void
+  restoreButtonRef?: React.RefObject<HTMLButtonElement | null>
+  setIsRestoring?: (isRestoring: boolean) => void
+  setIsLidOpen?: (isOpen: boolean) => void
 }
 
 export function useTasksBulkRestore({
   checkedDeletedTasks,
   setCheckedDeletedTasks,
   deletedTasks,
-  onDeletedTaskRestore
+  onDeletedTaskRestore,
+  restoreButtonRef,
+  setIsRestoring,
+  setIsLidOpen
 }: UseTasksBulkRestoreProps) {
   const restoreTaskMutation = useRestoreTask()
   const bulkRestore = useBulkDelete() // 削除と同じモーダルロジックを使用
+  
+  // 共通のアニメーション管理
+  const bulkAnimation = useBulkAnimation({
+    checkedItems: new Set(),
+    checkedDeletedItems: checkedDeletedTasks,
+  })
 
-  // チェック状態のクリーンアップ - 復元されたタスクのチェックを解除
+  // チェック状態のクリーンアップ - 復元されたタスクのチェックを解除（部分復元中は無効）
   useEffect(() => {
-    if (deletedTasks) {
+    if (deletedTasks && !bulkAnimation.isPartialProcessing) {
       const deletedTaskIds = new Set(deletedTasks.map(t => t.id))
       const newCheckedDeletedTasks = new Set(Array.from(checkedDeletedTasks).filter(id => deletedTaskIds.has(id)))
       if (newCheckedDeletedTasks.size !== checkedDeletedTasks.size) {
         setCheckedDeletedTasks(newCheckedDeletedTasks)
       }
     }
-  }, [deletedTasks, checkedDeletedTasks, setCheckedDeletedTasks])
+  }, [deletedTasks, checkedDeletedTasks, setCheckedDeletedTasks, bulkAnimation.isPartialProcessing])
 
-  // 共通の復元処理関数
-  const executeRestoreWithAnimation = async (ids: number[]) => {
-    console.log('✅ 復元処理開始:', { ids: ids.length })
-    
-    // 復元前にDOM順序を取得（復元後は要素が消えるため）
-    const { getTaskDisplayOrder } = await import('@/src/utils/domUtils')
-    const preRestoreDisplayOrder = getTaskDisplayOrder()
-    console.log('📋 復元前のDOM順序取得:', { order: preRestoreDisplayOrder, count: preRestoreDisplayOrder.length })
-    
-    // 30件以上は最初の30個だけアニメーション、残りは一括復元
-    if (ids.length > 30) {
-      console.log('🎬➡️⚡ 混合復元モード:', { count: ids.length })
-      
-      // 最初の30個をアニメーション
-      const animatedIds = ids.slice(0, 30)
-      const bulkIds = ids.slice(30)
-      
-      console.log('🎬 最初の30個のアニメーション:', { animated: animatedIds.length, bulk: bulkIds.length })
-      
-      const { animateBulkFadeOutCSS } = await import('@/src/utils/deleteAnimation')
-      
-      // DOM順序でソートされたIDを渡す
-      const sortedAnimatedIds = preRestoreDisplayOrder.filter(id => animatedIds.includes(id))
-      
-      animateBulkFadeOutCSS(sortedAnimatedIds, async () => {
-        console.log('🎬 最初のアニメーション完了、一括復元開始:', { bulk: bulkIds.length })
-        
-        // 残りを一括でState更新
-        for (const id of bulkIds) {
-          onDeletedTaskRestore?.(id)
-        }
-        
-        // 選択状態をクリア（削除側と同じ分割処理）
-        const newCheckedDeletedTasks = new Set(checkedDeletedTasks)
-        ids.forEach(id => newCheckedDeletedTasks.delete(id))
-        setCheckedDeletedTasks(newCheckedDeletedTasks)
-        
-        // アニメーション分の一括State更新 + API実行
-        for (const id of animatedIds) {
-          onDeletedTaskRestore?.(id)
-          try {
-            await restoreTaskMutation.mutateAsync(id)
-          } catch (error) {
-            console.error(`アニメーション復元エラー (ID: ${id}):`, error)
-          }
-        }
-        
-        // 残りを一括でState更新 + API実行
-        for (const id of bulkIds) {
-          onDeletedTaskRestore?.(id)
-          try {
-            await restoreTaskMutation.mutateAsync(id)
-          } catch (error) {
-            console.error(`一括復元エラー (ID: ${id}):`, error)
-          }
-        }
-        
-        console.log('⚡ 混合復元完了:', { animated: animatedIds.length, bulk: bulkIds.length })
-      }, 120, 'restore')
-      
-      return
-    }
-    
-    // 30件以下はアニメーション付き復元
-    console.log('🎬 アニメーション復元:', { count: ids.length })
-    const { animateBulkFadeOutCSS } = await import('@/src/utils/deleteAnimation')
-    
-    // DOM順序でソートされたIDを渡す
-    const sortedIds = preRestoreDisplayOrder.filter(id => ids.includes(id))
-    
-    animateBulkFadeOutCSS(sortedIds, async () => {
-      console.log('🌟 全アニメーション完了:', { ids: ids.length })
-      
-      // 一括State更新 + API実行
-      for (const id of ids) {
-        onDeletedTaskRestore?.(id)
-        try {
-          await restoreTaskMutation.mutateAsync(id)
-        } catch (error) {
-          console.error(`復元エラー (ID: ${id}):`, error)
-        }
+  // 共通の復元処理関数（共通ロジック使用）
+  const executeRestoreWithAnimation = async (
+    ids: number[],
+    isPartialRestore = false,
+    originalTotalCount?: number
+  ) => {
+    const onStateUpdate = (id: number) => {
+      if (onDeletedTaskRestore) {
+        onDeletedTaskRestore(id)
       }
-      
-      // 選択状態をクリア
-      setCheckedDeletedTasks(new Set())
-    }, 120, 'restore')
+    }
+
+    const onCheckStateUpdate = (ids: number[], isPartial: boolean) => {
+      if (isPartial) {
+        const newCheckedDeletedTasks = new Set(checkedDeletedTasks)
+        ids.forEach((id) => newCheckedDeletedTasks.delete(id))
+        setCheckedDeletedTasks(newCheckedDeletedTasks)
+      } else {
+        setCheckedDeletedTasks(new Set())
+      }
+    }
+
+    const onApiCall = async (id: number) => {
+      await restoreTaskMutation.mutateAsync(id)
+    }
+
+    await executeWithAnimation({
+      ids,
+      isPartial: isPartialRestore,
+      originalTotalCount,
+      buttonRef: restoreButtonRef,
+      dataAttribute: "data-task-id",
+      onStateUpdate,
+      onCheckStateUpdate,
+      onApiCall,
+      initializeAnimation: bulkAnimation.initializeAnimation,
+      startCountdown: bulkAnimation.startCountdown,
+      finalizeAnimation: bulkAnimation.finalizeAnimation,
+      setIsProcessing: setIsRestoring,
+      setIsLidOpen,
+    })
   }
 
   const handleBulkRestore = async () => {
     const targetIds = Array.from(checkedDeletedTasks)
 
-    // タスクの場合は1件からモーダル表示
+    // 復元の場合は1件からモーダル表示
     const threshold = 1
-
-    console.log('🔄 復元開始:', { targetIds: targetIds.length })
     
-    await bulkRestore.confirmBulkDelete(targetIds, threshold, executeRestoreWithAnimation)
+    // 100件超えの場合は最初の100件のみ処理
+    const actualTargetIds = targetIds.length > 100 ? targetIds.slice(0, 100) : targetIds
+    const isLimitedRestore = targetIds.length > 100
+
+    // 復元ボタンを押した瞬間の状態設定（カウンター維持）
+    bulkAnimation.setModalState(setIsRestoring, setIsLidOpen)
+
+    if (isLimitedRestore) {
+      // 100件制限のモーダル表示
+      await bulkRestore.confirmBulkDelete(
+        actualTargetIds, 
+        0, // 即座にモーダル表示
+        async (ids: number[], isPartialRestore = false) => {
+          await executeRestoreWithAnimation(ids, isPartialRestore, targetIds.length)
+        },
+        `${targetIds.length}件選択されています。\\n一度に復元できる上限は100件です。`,
+        true // isPartialRestore
+      )
+    } else {
+      // 通常の確認モーダル
+      await bulkRestore.confirmBulkDelete(actualTargetIds, threshold, async (ids: number[]) => {
+        await executeRestoreWithAnimation(ids)
+      })
+    }
   }
 
-  const RestoreModal = () => (
+  const RestoreModal: React.FC = () => (
     <BulkRestoreConfirmation
       isOpen={bulkRestore.isModalOpen}
-      onClose={bulkRestore.handleCancel}
+      onClose={() => {
+        bulkAnimation.handleModalCancel(setIsRestoring, setIsLidOpen)
+        bulkRestore.handleCancel()
+      }}
       onConfirm={async () => {
-        console.log('Confirm restore modal')
         await bulkRestore.handleConfirm()
       }}
       count={bulkRestore.targetIds.length}
       itemType="task"
       isLoading={bulkRestore.isDeleting}
+      customMessage={bulkRestore.customMessage}
     />
   )
+
+  // 現在の復元カウント（通常時は実際のサイズ、復元中はアニメーション用）
+  const currentRestoreCount = checkedDeletedTasks.size
+  const finalDisplayCount = bulkAnimation.isCountingActive
+    ? bulkAnimation.displayCount
+    : currentRestoreCount
+
+  // デバッグログ
+  console.log('🔄 復元カウンター状態:', {
+    isCountingActive: bulkAnimation.isCountingActive,
+    displayCount: bulkAnimation.displayCount,
+    currentRestoreCount,
+    finalDisplayCount,
+    checkedDeletedTasksSize: checkedDeletedTasks.size
+  })
 
   return {
     handleBulkRestore,
     RestoreModal,
+    // カウンターアクティブ時はdisplayCount、それ以外は実際のカウント
+    currentDisplayCount: finalDisplayCount,
   }
 }

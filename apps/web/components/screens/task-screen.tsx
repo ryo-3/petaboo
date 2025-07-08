@@ -100,6 +100,9 @@ function TaskScreen({
   // 削除ボタンの参照
   const deleteButtonRef = useRef<HTMLButtonElement>(null);
 
+  // 復元ボタンの参照
+  const restoreButtonRef = useRef<HTMLButtonElement>(null);
+
   // 削除済みタスクビューアーの参照
   const deletedTaskViewerRef = useRef<DeletedTaskViewerRef>(null);
 
@@ -111,6 +114,10 @@ function TaskScreen({
   // 蓋アニメーション状態
   const [isLidOpen, setIsLidOpen] = useState(false);
   const [isRightLidOpen, setIsRightLidOpen] = useState(false);
+
+  // 復元の状態
+  const [isRestoring, setIsRestoring] = useState(false);
+  const [isRestoreLidOpen, setIsRestoreLidOpen] = useState(false);
 
   // 共通screen状態管理
   const {
@@ -136,7 +143,7 @@ function TaskScreen({
   );
 
   // 一括削除ボタンの表示制御
-  const { showDeleteButton, deleteButtonCount } = useBulkDeleteButton({
+  const { showDeleteButton, deleteButtonCount } = useBulkDeleteButton({ // eslint-disable-line @typescript-eslint/no-unused-vars
     activeTab,
     deletedTabName: "deleted",
     checkedItems: checkedTasks,
@@ -177,6 +184,7 @@ function TaskScreen({
   const { 
     handleBulkDelete, 
     DeleteModal,
+    currentDisplayCount,
   } = useTasksBulkDelete({
     activeTab: activeTabTyped,
     checkedTasks,
@@ -194,11 +202,18 @@ function TaskScreen({
   });
 
   // 一括復元関連
-  const { handleBulkRestore, RestoreModal } = useTasksBulkRestore({
+  const { 
+    handleBulkRestore, 
+    RestoreModal,
+    currentDisplayCount: currentRestoreDisplayCount,
+  } = useTasksBulkRestore({
     checkedDeletedTasks,
     setCheckedDeletedTasks,
     deletedTasks,
     onDeletedTaskRestore: handleItemDeselect,
+    restoreButtonRef,
+    setIsRestoring,
+    setIsLidOpen: setIsRestoreLidOpen,
   });
 
   // 削除後の次選択処理
@@ -423,18 +438,21 @@ function TaskScreen({
         {/* 一括操作ボタン */}
         <BulkActionButtons
           showDeleteButton={showDeleteButton}
-          deleteButtonCount={deleteButtonCount}
+          deleteButtonCount={currentDisplayCount}
           onDelete={handleBulkDelete}
           deleteButtonRef={deleteButtonRef}
           isDeleting={isLidOpen}
           deleteVariant={activeTab === "deleted" ? "danger" : undefined}
-          showRestoreButton={activeTab === "deleted" && checkedDeletedTasks.size > 0}
+          showRestoreButton={activeTab === "deleted" && (checkedDeletedTasks.size > 0 || (isRestoring && currentRestoreDisplayCount > 0))}
           restoreCount={checkedDeletedTasks.size}
           onRestore={handleBulkRestore}
-          isRestoring={false}
-          // アニメーション付きカウンター（タスク側では未実装）
-          animatedDeleteCount={checkedDeletedTasks.size}
-          useAnimatedDeleteCount={false}
+          restoreButtonRef={restoreButtonRef}
+          isRestoring={isRestoreLidOpen}
+          animatedRestoreCount={currentRestoreDisplayCount}
+          useAnimatedRestoreCount={true}
+          // アニメーション付きカウンター（タスク側で実装済み）
+          animatedDeleteCount={currentDisplayCount}
+          useAnimatedDeleteCount={true}
         />
       </div>
 

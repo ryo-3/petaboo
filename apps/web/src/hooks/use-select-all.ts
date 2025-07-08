@@ -50,6 +50,9 @@ export function useSelectAll<T extends { id: number }, D extends { id: number }>
   // 全選択/全解除処理
   const handleSelectAll = useCallback(() => {
     if (activeTab === deletedTabName && deletedItems) {
+      // 削除済みタブの操作時：通常タブの選択をクリア
+      setCheckedItems(new Set());
+      
       if (isAllSelected) {
         setCheckedDeletedItems(new Set());
       } else {
@@ -57,6 +60,8 @@ export function useSelectAll<T extends { id: number }, D extends { id: number }>
         setCheckedDeletedItems(allDeletedItemIds);
       }
     } else if (items) {
+      // 通常タブの操作時：削除済みタブの選択をクリア
+      setCheckedDeletedItems(new Set());
       const filteredItems = filterFn 
         ? items.filter(item => filterFn(item, activeTab))
         : items;

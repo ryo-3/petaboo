@@ -35,7 +35,7 @@ import {
   getNextItemAfterDeletion,
 } from "@/src/utils/domUtils";
 import { createToggleHandlerWithTabClear } from "@/src/utils/toggleUtils";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
 
 type MemoScreenMode = "list" | "view" | "create";
 
@@ -257,13 +257,40 @@ function MemoScreen({
       () => onSelectDeletedMemo(null), setMemoScreenMode);
   };
 
+
+  // タブ切り替え用の状態
+  const [displayTab, setDisplayTab] = useState(activeTab);
+
+  // カスタムタブ切り替えハンドラー - 直接状態を制御
+  const handleCustomTabChange = useCallback((newTab: string) => {
+    // 1. 先に内部状態を全て更新（画面には反映させない）
+    
+    // 個別選択のクリア
+    if (newTab === "normal" && selectedDeletedMemo) {
+      onSelectDeletedMemo(null);
+      setMemoScreenMode("list");
+    } else if (newTab === "deleted" && selectedMemo) {
+      onSelectMemo(null);
+      setMemoScreenMode("list");
+    }
+    
+    // activeTabを更新
+    setActiveTab(newTab);
+    
+    // 2. 状態更新完了後に表示を切り替え
+    Promise.resolve().then(() => {
+      setTimeout(() => {
+        setDisplayTab(newTab);
+      }, 0);
+    });
+  }, [selectedMemo, selectedDeletedMemo, onSelectMemo, onSelectDeletedMemo, setActiveTab, setMemoScreenMode]);
+
   // 選択ハンドラーパターン
   const {
     handleSelectItem: handleSelectMemo,
     handleSelectDeletedItem: handleSelectDeletedMemo,
     handleCreateNew,
     handleRightPanelClose,
-    handleTabChange,
   } = useSelectionHandlers<Memo, DeletedMemo>({
     setScreenMode: (mode: string) => setMemoScreenMode(mode as MemoScreenMode),
     onSelectItem: onSelectMemo,
@@ -271,6 +298,7 @@ function MemoScreen({
     onDeselectAndStay: onDeselectAndStayOnMemoList,
     onClose: onClose,
   });
+
 
   const screenHeight = preferences?.hideHeader ? 'h-screen' : 'h-[calc(100vh-64px)]';
 
@@ -282,18 +310,8 @@ function MemoScreen({
       >
         <DesktopUpper
           currentMode="memo"
-          activeTab={activeTab as "normal" | "deleted"}
-          onTabChange={handleTabChange(useTabChange({
-            setActiveTab,
-            setScreenMode: (mode: string) =>
-              setMemoScreenMode(mode as MemoScreenMode),
-            selectedItem: selectedMemo,
-            selectedDeletedItem: selectedDeletedMemo,
-            onSelectItem: onSelectMemo,
-            onSelectDeletedItem: onSelectDeletedMemo,
-            normalTabName: "normal",
-            deletedTabName: "deleted",
-          }))}
+          activeTab={displayTab as "normal" | "deleted"}
+          onTabChange={handleCustomTabChange}
           onCreateNew={handleCreateNew}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
@@ -312,7 +330,7 @@ function MemoScreen({
 
         <DesktopLower
           currentMode="memo"
-          activeTab={activeTab as "normal" | "deleted"}
+          activeTab={displayTab as "normal" | "deleted"}
           viewMode={viewMode}
           effectiveColumnCount={effectiveColumnCount}
           isLoading={memoLoading}

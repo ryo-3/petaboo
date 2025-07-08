@@ -77,9 +77,6 @@ export function useMemosBulkDelete({
   const [isCountingActive, setIsCountingActive] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [deletedCount, setDeletedCount] = useState(0); // 削除済み件数
-  const [counterStartTime, setCounterStartTime] = useState(0); // カウンター開始時刻
-  const callbackCountRef = useRef(0); // コールバック実行回数
-  const processedCallbackIds = useRef(new Set<number>()); // 処理済みコールバックID追跡
   
 
   // チェック状態が変更されたらタイマーをクリア

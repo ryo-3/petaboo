@@ -15,6 +15,7 @@ interface BulkActionButtonsProps {
   showRestoreButton: boolean;
   restoreCount: number;
   onRestore: () => void;
+  restoreButtonRef?: React.RefObject<HTMLButtonElement | null>;
   isRestoring: boolean;
   
   // アニメーション付きカウンター用
@@ -38,6 +39,7 @@ export function BulkActionButtons({
   showRestoreButton,
   restoreCount,
   onRestore,
+  restoreButtonRef,
   isRestoring,
   animatedDeleteCount,
   useAnimatedDeleteCount = false,
@@ -62,6 +64,7 @@ export function BulkActionButtons({
       {/* 一括復元ボタン */}
       <ButtonContainer show={showRestoreButton} position="bottom-left">
         <RestoreButton
+          buttonRef={restoreButtonRef}
           onRestore={onRestore}
           isRestoring={isRestoring}
           count={restoreCount}

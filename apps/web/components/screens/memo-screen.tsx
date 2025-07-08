@@ -25,7 +25,6 @@ import {
 } from "@/src/hooks/use-notes";
 import { useScreenState } from "@/src/hooks/use-screen-state";
 import { useSelectAll } from "@/src/hooks/use-select-all";
-import { useTabChange } from "@/src/hooks/use-tab-change";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
@@ -35,7 +34,7 @@ import {
   getNextItemAfterDeletion,
 } from "@/src/utils/domUtils";
 import { createToggleHandlerWithTabClear } from "@/src/utils/toggleUtils";
-import { useCallback, useRef, useState, useEffect } from "react";
+import { useCallback, useRef, useState } from "react";
 
 type MemoScreenMode = "list" | "view" | "create";
 
@@ -83,6 +82,10 @@ function MemoScreen({
   // 右側削除の状態
   const [isRightDeleting, setIsRightDeleting] = useState(false);
   const [isRightLidOpen, setIsRightLidOpen] = useState(false);
+
+  // 復元の状態
+  const [isRestoring, setIsRestoring] = useState(false);
+  const [isRestoreLidOpen, setIsRestoreLidOpen] = useState(false);
 
   // データ取得
   const { data: notes, isLoading: memoLoading, error: memoError } = useNotes();
@@ -230,15 +233,22 @@ function MemoScreen({
     restoreEditorVisibility: false,
   });
 
+  // 復元ボタンの参照
+  const restoreButtonRef = useRef<HTMLButtonElement>(null);
+
   // 一括復元関連
   const { 
     handleBulkRestore, 
     RestoreModal,
+    currentDisplayCount: currentRestoreDisplayCount,
   } = useMemosBulkRestore({
     checkedDeletedMemos,
     setCheckedDeletedMemos,
     deletedNotes,
     onDeletedMemoRestore: handleItemDeselect,
+    restoreButtonRef,
+    setIsRestoring,
+    setIsLidOpen: setIsRestoreLidOpen,
   });
 
   // 削除後の次選択処理
@@ -366,10 +376,13 @@ function MemoScreen({
           deleteButtonRef={deleteButtonRef}
           isDeleting={isLeftLidOpen}
           deleteVariant={activeTab === "deleted" ? "danger" : undefined}
-          showRestoreButton={activeTab === "deleted" && checkedDeletedMemos.size > 0}
+          showRestoreButton={activeTab === "deleted" && (checkedDeletedMemos.size > 0 || (isRestoring && currentRestoreDisplayCount > 0))}
           restoreCount={checkedDeletedMemos.size}
           onRestore={handleBulkRestore}
-          isRestoring={false}
+          restoreButtonRef={restoreButtonRef}
+          isRestoring={isRestoreLidOpen}
+          animatedRestoreCount={currentRestoreDisplayCount}
+          useAnimatedRestoreCount={true}
         />
       </div>
 

@@ -177,8 +177,6 @@ function TaskScreen({
   const { 
     handleBulkDelete, 
     DeleteModal,
-    animatedDeleteCount,
-    isCounterAnimating,
   } = useTasksBulkDelete({
     activeTab: activeTabTyped,
     checkedTasks,
@@ -434,9 +432,9 @@ function TaskScreen({
           restoreCount={checkedDeletedTasks.size}
           onRestore={handleBulkRestore}
           isRestoring={false}
-          // アニメーション付きカウンター
-          animatedDeleteCount={animatedDeleteCount}
-          useAnimatedDeleteCount={isCounterAnimating}
+          // アニメーション付きカウンター（タスク側では未実装）
+          animatedDeleteCount={checkedDeletedTasks.size}
+          useAnimatedDeleteCount={false}
         />
       </div>
 

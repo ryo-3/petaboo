@@ -9,6 +9,7 @@ interface BulkRestoreConfirmationProps {
   count: number;
   itemType: "memo" | "task";
   isLoading?: boolean;
+  customMessage?: string;
 }
 
 export function BulkRestoreConfirmation({
@@ -18,6 +19,7 @@ export function BulkRestoreConfirmation({
   count,
   itemType,
   isLoading = false,
+  customMessage,
 }: BulkRestoreConfirmationProps) {
   const itemTypeName = itemType === "memo" ? "メモ" : "タスク";
 
@@ -27,7 +29,7 @@ export function BulkRestoreConfirmation({
       onClose={onClose}
       onConfirm={onConfirm}
       title="復元の確認"
-      message={`選択した${count}件の${itemTypeName}を復元しますか？`}
+      message={customMessage || `選択した${count}件の${itemTypeName}を復元しますか？`}
       confirmText="復元する"
       cancelText="キャンセル"
       variant="primary"

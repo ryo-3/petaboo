@@ -2,6 +2,7 @@
 
 import RestoreIcon from "@/components/icons/restore-icon";
 import Tooltip from "@/components/ui/base/tooltip";
+import React from "react";
 
 interface RestoreButtonProps {
   onRestore: () => void;
@@ -15,6 +16,8 @@ interface RestoreButtonProps {
   // アニメーション付きカウンター用
   animatedCount?: number;
   useAnimatedCount?: boolean;
+  // ref用
+  buttonRef?: React.RefObject<HTMLButtonElement | null>;
 }
 
 function RestoreButton({
@@ -27,16 +30,21 @@ function RestoreButton({
   iconSize = "size-4",
   tooltipPosition = "bottom",
   animatedCount,
-  useAnimatedCount = false
+  useAnimatedCount = false,
+  buttonRef
 }: RestoreButtonProps) {
 
   // アニメーション付きカウンターを使用する場合はanimatedCountを優先
   const displayCount = useAnimatedCount ? animatedCount : count;
   
-  // デバッグログ（一時的）
-  // if (useAnimatedCount) {
-  //   console.log('🎯 RestoreButton animatedCount:', { animatedCount, count, displayCount, useAnimatedCount });
-  // }
+  // デバッグログ
+  console.log('🎯 RestoreButton 状態:', { 
+    animatedCount, 
+    count, 
+    displayCount, 
+    useAnimatedCount,
+    バッジ表示: displayCount && displayCount > 0 
+  })
 
   const tooltipText = displayCount && displayCount > 1 
     ? `${displayCount}件を復元` 
@@ -46,24 +54,21 @@ function RestoreButton({
 
   return (
     <Tooltip text={tooltipText} position={tooltipPosition}>
-      <button
-        onClick={onRestore}
-        disabled={disabled || isRestoring}
-        className={`${buttonSize} rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-800 transition-colors disabled:opacity-50 relative flex items-center justify-center ${className}`}
-      >
-        {isRestoring ? (
-          <div className={`${iconSize} border-2 border-gray-600 border-t-transparent rounded-full animate-spin`} />
-        ) : (
-          <>
-            <RestoreIcon className={iconSize} />
-            {displayCount && displayCount > 0 && (
-              <span className={`absolute -top-2 -right-2 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center font-medium ${displayCount > 99 ? 'w-7 h-6' : 'w-6 h-6'}`}>
-                {displayCount > 99 ? '99+' : displayCount}
-              </span>
-            )}
-          </>
+      <div className="relative">
+        <button
+          ref={buttonRef}
+          onClick={onRestore}
+          disabled={disabled || isRestoring}
+          className={`${buttonSize} rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-800 transition-colors relative flex items-center justify-center ${className}`}
+        >
+          <RestoreIcon className={`${iconSize} ${isRestoring ? 'animate-spin' : ''}`} />
+        </button>
+        {displayCount && displayCount > 0 && (
+          <span className={`absolute -top-2 -right-2 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center font-medium ${displayCount > 99 ? 'w-7 h-6' : 'w-6 h-6'}`}>
+            {displayCount > 99 ? '99+' : displayCount}
+          </span>
         )}
-      </button>
+      </div>
     </Tooltip>
   );
 }

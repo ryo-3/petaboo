@@ -6,7 +6,6 @@ import React from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useAuth } from '@clerk/nextjs'
 import { tasksApi } from '@/src/lib/api-client'
-import { DELETE_ANIMATION_INTERVAL } from '@/src/utils/deleteAnimation'
 
 interface UseTasksBulkDeleteProps {
   activeTab: 'todo' | 'in_progress' | 'completed' | 'deleted'

@@ -6,8 +6,7 @@ import React from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useAuth } from '@clerk/nextjs'
 import { tasksApi } from '@/src/lib/api-client'
-import { useAnimatedCounter } from '@/src/hooks/useAnimatedCounter'
-import { calculateDeleteDuration } from '@/src/utils/deleteAnimation'
+import { DELETE_ANIMATION_INTERVAL } from '@/src/utils/deleteAnimation'
 
 interface UseTasksBulkDeleteProps {
   activeTab: 'todo' | 'in_progress' | 'completed' | 'deleted'
@@ -176,29 +175,7 @@ export function useTasksBulkDelete({
           }, 1000)
           
           console.log('⚡ 混合削除完了:', { animated: animatedIds.length, bulk: bulkIds.length })
-        }, 120, 'delete', async (id: number) => {
-          // アニメーション付きアイテムの個別処理
-          if (activeTab !== "deleted" && onTaskDelete) {
-            onTaskDelete(id)
-            
-            try {
-              await deleteTaskMutation.mutateAsync(id)
-            } catch (error: unknown) {
-              if (!(error instanceof Error && error.message?.includes('404'))) {
-                console.error(`アニメーション削除エラー (ID: ${id}):`, error)
-              }
-            }
-          } else if (activeTab === "deleted") {
-            // 削除済みアイテムはAPI処理のみ（State更新はReact Query自動更新で行われる）
-            try {
-              await permanentDeleteTaskMutation.mutateAsync(id)
-            } catch (error: unknown) {
-              if (!(error instanceof Error && error.message?.includes('404'))) {
-                console.error(`アニメーション完全削除エラー (ID: ${id}):`, error)
-              }
-            }
-          }
-        })
+        }, 120, 'delete')
         
         // 残りのAPI処理をバックグラウンドで実行
         setTimeout(async () => {
@@ -266,34 +243,7 @@ export function useTasksBulkDelete({
         
         // 個別APIで実行済みのため、ここでの一括API処理は不要
         console.log('🎊 全アニメーション・API処理完了:', { ids: ids.length })
-      }, 120, 'delete', async (id: number) => {
-        // 各アイテムのアニメーション完了時に個別DOM操作 + API実行
-        console.log('🎯 個別アニメーション完了:', { id })
-        if (activeTab !== "deleted" && onTaskDelete) {
-          onTaskDelete(id)
-          console.log('🔄 個別State更新完了:', { id })
-          
-          // 個別API実行（自動更新あり）
-          try {
-            await deleteTaskMutation.mutateAsync(id)
-            console.log('🌐 個別API完了:', { id })
-          } catch (error: unknown) {
-            if (!(error instanceof Error && error.message?.includes('404'))) {
-              console.error(`個別API削除エラー (ID: ${id}):`, error)
-            }
-          }
-        } else if (activeTab === "deleted") {
-          // 削除済みアイテムの完全削除はState更新なし、API処理のみ
-          try {
-            await permanentDeleteTaskMutation.mutateAsync(id)
-            console.log('🌐 個別完全削除API完了:', { id })
-          } catch (error: unknown) {
-            if (!(error instanceof Error && error.message?.includes('404'))) {
-              console.error(`個別完全削除エラー (ID: ${id}):`, error)
-            }
-          }
-        }
-      })
+      }, 120, 'delete')
     } else {
       // アニメーションなしの場合は即座に処理
       // 通常タスクのみState更新
@@ -366,9 +316,6 @@ export function useTasksBulkDelete({
         actualTargetIds, 
         0, // 即座にモーダル表示
         async (ids: number[], isPartialDelete = false) => {
-          // カウンターアニメーション開始
-          console.log('🎯 カウンターアニメーション開始(100件制限):', { ids: ids.length, currentCount: currentDeleteCount });
-          animatedCounter.startAnimation();
           await executeDeleteWithAnimation(ids, isPartialDelete);
         },
         `${targetIds.length}件選択されています。\n一度に削除できる上限は100件です。`,
@@ -377,9 +324,6 @@ export function useTasksBulkDelete({
     } else {
       // 通常の確認モーダル
       await bulkDelete.confirmBulkDelete(actualTargetIds, threshold, async (ids: number[]) => {
-        // カウンターアニメーション開始
-        console.log('🎯 タスクカウンターアニメーション開始(通常):', { ids: ids.length, currentCount: currentDeleteCount });
-        animatedCounter.startAnimation();
         await executeDeleteWithAnimation(ids);
       })
     }
@@ -392,9 +336,6 @@ export function useTasksBulkDelete({
         console.log('Cancel')
         // キャンセル時に蓋を閉じる
         setIsDeleting?.(false)
-        // カウンターアニメーション停止
-        console.log('🎯 タスクカウンターアニメーション停止(キャンセル)');
-        animatedCounter.stopAnimation();
         setTimeout(() => {
           setIsLidOpen?.(false)
         }, 300)
@@ -402,7 +343,7 @@ export function useTasksBulkDelete({
       }}
       onConfirm={async () => {
         console.log('Confirm modal')
-        await bulkDelete.handleConfirm(executeDeleteWithAnimation)
+        await bulkDelete.handleConfirm()
       }}
       count={bulkDelete.targetIds.length}
       itemType="task"
@@ -412,25 +353,8 @@ export function useTasksBulkDelete({
     />
   )
 
-  // アニメーション付きカウンター
-  const currentDeleteCount = activeTab === "deleted" ? checkedDeletedTasks.size : checkedTasks.size;
-  const animatedCounter = useAnimatedCounter({
-    totalItems: currentDeleteCount,
-    remainingItems: 0, // 削除後は0になる
-    animationDuration: calculateDeleteDuration(currentDeleteCount),
-    updateInterval: 200,
-    onComplete: () => {
-      console.log('🎊 タスクカウンターアニメーション完了');
-    }
-  });
-
   return {
     handleBulkDelete,
     DeleteModal,
-    // アニメーション付きカウンター
-    animatedDeleteCount: animatedCounter.currentCount,
-    isCounterAnimating: animatedCounter.isAnimating,
-    startCounterAnimation: () => animatedCounter.startAnimation(),
-    stopCounterAnimation: () => animatedCounter.stopAnimation(),
   }
 }

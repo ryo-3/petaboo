@@ -4,8 +4,6 @@ import { useBulkDelete, BulkRestoreConfirmation } from '@/components/ui/modals'
 // import { animateItemsRestoreFadeOutCSS } from '@/src/utils/deleteAnimation'
 import type { DeletedMemo } from '@/src/types/memo'
 import React from 'react'
-import { useAnimatedCounter } from '@/src/hooks/useAnimatedCounter'
-import { calculateDeleteDuration } from '@/src/utils/deleteAnimation'
 
 interface UseMemosBulkRestoreProps {
   checkedDeletedMemos: Set<number>
@@ -52,9 +50,24 @@ export function useMemosBulkRestore({
       animateBulkFadeOutCSS(animatedIds, async () => {
         console.log('🎬 最初のアニメーション完了、一括復元開始:', { bulk: bulkIds.length });
         
-        // 残りを一括でState更新
+        // アニメーション分の一括State更新 + API実行
+        for (const id of animatedIds) {
+          onDeletedMemoRestore?.(id);
+          try {
+            await restoreNoteMutation.mutateAsync(id);
+          } catch (error) {
+            console.error(`アニメーション復元エラー (ID: ${id}):`, error);
+          }
+        }
+        
+        // 残りを一括でState更新 + API実行
         for (const id of bulkIds) {
           onDeletedMemoRestore?.(id);
+          try {
+            await restoreNoteMutation.mutateAsync(id);
+          } catch (error) {
+            console.error(`一括復元エラー (ID: ${id}):`, error);
+          }
         }
         
         // 選択状態をクリア（削除側と同じ分割処理）
@@ -63,31 +76,8 @@ export function useMemosBulkRestore({
         setCheckedDeletedMemos(newCheckedDeletedMemos);
         
         console.log('⚡ 混合復元完了:', { animated: animatedIds.length, bulk: bulkIds.length });
-      }, 120, 'restore', async (id: number) => {
-        // 各アニメーションアイテムの個別処理（削除側と同じパターン）
-        console.log('🎯 個別復元アニメーション完了:', { id });
-        onDeletedMemoRestore?.(id);
-        
-        try {
-          await restoreNoteMutation.mutateAsync(id);
-          console.log('🌐 個別復元API完了:', { id });
-        } catch (error) {
-          console.error(`個別復元エラー (ID: ${id}):`, error);
-        }
-      });
+      }, 120, 'restore');
       
-      // 残りのAPI処理をバックグラウンドで実行
-      setTimeout(async () => {
-        console.log('🌐 残りのAPI処理開始:', { count: bulkIds.length });
-        for (const id of bulkIds) {
-          try {
-            await restoreNoteMutation.mutateAsync(id);
-          } catch (error) {
-            console.error(`一括復元エラー (ID: ${id}):`, error);
-          }
-        }
-        console.log('🌐 残りのAPI処理完了:', { count: bulkIds.length });
-      }, 1000);
       
       return;
     }
@@ -98,20 +88,19 @@ export function useMemosBulkRestore({
     animateBulkFadeOutCSS(ids, async () => {
       console.log('🌟 全アニメーション完了:', { ids: ids.length });
       
+      // 一括State更新 + API実行
+      for (const id of ids) {
+        onDeletedMemoRestore?.(id);
+        try {
+          await restoreNoteMutation.mutateAsync(id);
+        } catch (error) {
+          console.error(`復元エラー (ID: ${id}):`, error);
+        }
+      }
+      
       // 選択状態をクリア
       setCheckedDeletedMemos(new Set());
-    }, 120, 'restore', async (id: number) => {
-      // 各アイテムのアニメーション完了時に個別DOM操作 + API実行
-      console.log('🎯 個別復元アニメーション完了:', { id });
-      onDeletedMemoRestore?.(id);
-      
-      try {
-        await restoreNoteMutation.mutateAsync(id);
-        console.log('🌐 個別復元API完了:', { id });
-      } catch (error) {
-        console.error(`復元エラー (ID: ${id}):`, error);
-      }
-    });
+    }, 120, 'restore');
   };
 
   const handleBulkRestore = async () => {
@@ -122,24 +111,16 @@ export function useMemosBulkRestore({
 
     console.log('🔄 復元開始:', { targetIds: targetIds.length });
     
-    await bulkRestore.confirmBulkDelete(targetIds, threshold, async (ids: number[]) => {
-      // カウンターアニメーション開始
-      animatedCounter.startAnimation();
-      await executeRestoreWithAnimation(ids);
-    })
+    await bulkRestore.confirmBulkDelete(targetIds, threshold, executeRestoreWithAnimation)
   }
 
   const RestoreModal: React.FC = () => (
     <BulkRestoreConfirmation
       isOpen={bulkRestore.isModalOpen}
-      onClose={() => {
-        // カウンターアニメーション停止
-        animatedCounter.stopAnimation();
-        bulkRestore.handleCancel();
-      }}
+      onClose={bulkRestore.handleCancel}
       onConfirm={async () => {
         console.log('👍 モーダル復元確認ボタン押下');
-        await bulkRestore.handleConfirm(executeRestoreWithAnimation);
+        await bulkRestore.handleConfirm();
       }}
       count={bulkRestore.targetIds.length}
       itemType="memo"
@@ -147,24 +128,8 @@ export function useMemosBulkRestore({
     />
   );
 
-  // アニメーション付きカウンター（復元処理用）
-  const animatedCounter = useAnimatedCounter({
-    totalItems: checkedDeletedMemos.size,
-    remainingItems: 0, // 復元後は削除済み一覧から0になる
-    animationDuration: calculateDeleteDuration(checkedDeletedMemos.size),
-    updateInterval: 200,
-    onComplete: () => {
-      console.log('🎊 復元カウンターアニメーション完了');
-    }
-  });
-
   return {
     handleBulkRestore,
     RestoreModal,
-    // アニメーション付きカウンター
-    animatedRestoreCount: animatedCounter.currentCount,
-    isRestoreCounterAnimating: animatedCounter.isAnimating,
-    startRestoreCounterAnimation: animatedCounter.startAnimation,
-    stopRestoreCounterAnimation: animatedCounter.stopAnimation,
   }
 }

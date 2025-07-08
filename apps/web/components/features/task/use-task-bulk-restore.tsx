@@ -68,32 +68,28 @@ export function useTasksBulkRestore({
         ids.forEach(id => newCheckedDeletedTasks.delete(id))
         setCheckedDeletedTasks(newCheckedDeletedTasks)
         
-        console.log('⚡ 混合復元完了:', { animated: animatedIds.length, bulk: bulkIds.length })
-      }, 120, 'restore', async (id: number) => {
-        // 各アニメーションアイテムの個別処理（削除側と同じパターン）
-        console.log('🎯 個別復元アニメーション完了:', { id })
-        onDeletedTaskRestore?.(id)
-        
-        try {
-          await restoreTaskMutation.mutateAsync(id)
-          console.log('🌐 個別復元API完了:', { id })
-        } catch (error) {
-          console.error(`個別復元エラー (ID: ${id}):`, error)
+        // アニメーション分の一括State更新 + API実行
+        for (const id of animatedIds) {
+          onDeletedTaskRestore?.(id)
+          try {
+            await restoreTaskMutation.mutateAsync(id)
+          } catch (error) {
+            console.error(`アニメーション復元エラー (ID: ${id}):`, error)
+          }
         }
-      })
-      
-      // 残りのAPI処理をバックグラウンドで実行
-      setTimeout(async () => {
-        console.log('🌐 残りのAPI処理開始:', { count: bulkIds.length })
+        
+        // 残りを一括でState更新 + API実行
         for (const id of bulkIds) {
+          onDeletedTaskRestore?.(id)
           try {
             await restoreTaskMutation.mutateAsync(id)
           } catch (error) {
             console.error(`一括復元エラー (ID: ${id}):`, error)
           }
         }
-        console.log('🌐 残りのAPI処理完了:', { count: bulkIds.length })
-      }, 1000)
+        
+        console.log('⚡ 混合復元完了:', { animated: animatedIds.length, bulk: bulkIds.length })
+      }, 120, 'restore')
       
       return
     }
@@ -108,20 +104,19 @@ export function useTasksBulkRestore({
     animateBulkFadeOutCSS(sortedIds, async () => {
       console.log('🌟 全アニメーション完了:', { ids: ids.length })
       
+      // 一括State更新 + API実行
+      for (const id of ids) {
+        onDeletedTaskRestore?.(id)
+        try {
+          await restoreTaskMutation.mutateAsync(id)
+        } catch (error) {
+          console.error(`復元エラー (ID: ${id}):`, error)
+        }
+      }
+      
       // 選択状態をクリア
       setCheckedDeletedTasks(new Set())
-    }, 120, 'restore', async (id: number) => {
-      // 各アイテムのアニメーション完了時に個別DOM操作 + API実行
-      console.log('🎯 個別復元アニメーション完了:', { id })
-      onDeletedTaskRestore?.(id)
-      
-      try {
-        await restoreTaskMutation.mutateAsync(id)
-        console.log('🌐 個別復元API完了:', { id })
-      } catch (error) {
-        console.error(`復元エラー (ID: ${id}):`, error)
-      }
-    })
+    }, 120, 'restore')
   }
 
   const handleBulkRestore = async () => {
@@ -141,7 +136,7 @@ export function useTasksBulkRestore({
       onClose={bulkRestore.handleCancel}
       onConfirm={async () => {
         console.log('Confirm restore modal')
-        await bulkRestore.handleConfirm(executeRestoreWithAnimation)
+        await bulkRestore.handleConfirm()
       }}
       count={bulkRestore.targetIds.length}
       itemType="task"

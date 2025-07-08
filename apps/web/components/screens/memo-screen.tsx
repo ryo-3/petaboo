@@ -170,7 +170,7 @@ function MemoScreen({
   ]);
 
   // 一括削除ボタンの表示制御
-  const { showDeleteButton, deleteButtonCount } = useBulkDeleteButton({
+  const { showDeleteButton, deleteButtonCount } = useBulkDeleteButton({ // eslint-disable-line @typescript-eslint/no-unused-vars
     activeTab,
     deletedTabName: "deleted",
     checkedItems: checkedMemos,
@@ -202,8 +202,7 @@ function MemoScreen({
   const {
     handleBulkDelete: handleLeftBulkDelete,
     DeleteModal: BulkDeleteModal,
-    animatedDeleteCount,
-    isCounterAnimating,
+    currentDisplayCount,
   } = useMemosBulkDelete({
     activeTab: activeTab as "normal" | "deleted",
     checkedMemos,
@@ -235,8 +234,6 @@ function MemoScreen({
   const { 
     handleBulkRestore, 
     RestoreModal,
-    animatedRestoreCount,
-    isRestoreCounterAnimating,
   } = useMemosBulkRestore({
     checkedDeletedMemos,
     setCheckedDeletedMemos,
@@ -346,7 +343,7 @@ function MemoScreen({
         {/* 一括操作ボタン */}
         <BulkActionButtons
           showDeleteButton={showDeleteButton}
-          deleteButtonCount={deleteButtonCount}
+          deleteButtonCount={currentDisplayCount}
           onDelete={handleLeftBulkDelete}
           deleteButtonRef={deleteButtonRef}
           isDeleting={isLeftLidOpen}
@@ -355,11 +352,6 @@ function MemoScreen({
           restoreCount={checkedDeletedMemos.size}
           onRestore={handleBulkRestore}
           isRestoring={false}
-          // アニメーション付きカウンター
-          animatedDeleteCount={animatedDeleteCount}
-          useAnimatedDeleteCount={isCounterAnimating}
-          animatedRestoreCount={animatedRestoreCount}
-          useAnimatedRestoreCount={isRestoreCounterAnimating}
         />
       </div>
 

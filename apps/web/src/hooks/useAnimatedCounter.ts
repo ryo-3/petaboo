@@ -42,9 +42,11 @@ export function useAnimatedCounter({
 }: UseAnimatedCounterOptions): UseAnimatedCounterReturn {
   const [currentCount, setCurrentCount] = useState(totalItems);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false); // 完了フラグ
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(0);
   const startCountRef = useRef<number>(totalItems);
+  const finalCountRef = useRef<number | null>(null); // 完了時の最終値を保持
 
   const stopAnimation = useCallback(() => {
     if (timerRef.current) {
@@ -59,8 +61,12 @@ export function useAnimatedCounter({
     stopAnimation();
     
     setIsAnimating(true);
+    setIsCompleted(false); // 完了フラグをリセット
+    finalCountRef.current = null; // 最終値もリセット
     startTimeRef.current = Date.now();
     startCountRef.current = currentCount;
+    
+    console.log(`🚀 カウンターアニメーション開始時刻:`, Date.now(), { currentCount, remainingItems, animationDuration });
     
     const targetChange = remainingItems - startCountRef.current;
 
@@ -71,9 +77,11 @@ export function useAnimatedCounter({
       if (progress >= 1) {
         // アニメーション完了
         setCurrentCount(remainingItems);
+        finalCountRef.current = remainingItems; // 最終値を保存
+        setIsCompleted(true); // 完了マーク
         stopAnimation();
         onComplete?.();
-        // console.log('✅ カウンターアニメーション完了:', { 最終値: remainingItems });
+        console.log('✅ カウンターアニメーション完了時刻:', Date.now(), { 最終値: remainingItems });
         return;
       }
       
@@ -107,17 +115,17 @@ export function useAnimatedCounter({
     };
   }, []);
 
-  // totalItemsが変更された場合、カウントを更新（アニメーション中でない場合のみ）
+  // totalItemsが変更された場合、カウントを更新（アニメーション中・完了後でない場合のみ）
   useEffect(() => {
-    if (!isAnimating) {
+    if (!isAnimating && !isCompleted) {
       setCurrentCount(totalItems);
     }
-  }, [totalItems, isAnimating]);
+  }, [totalItems, isAnimating, isCompleted]);
 
   return {
     currentCount,
     startAnimation,
     stopAnimation,
-    isAnimating
+    isAnimating: isAnimating || isCompleted // アニメーション中または完了後はtrue
   };
 }

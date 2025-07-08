@@ -64,27 +64,27 @@ function TaskStatusDisplay({
       });
       
       // タスクのDOM表示順序ログ
-      console.log('📋 タスク表示順序 (デフォルトソート):', {
-        activeTab,
-        タスク数: sorted.length,
-        表示順序: sorted.map((task, index) => ({
-          DOM位置: index + 1,
-          id: task.id,
-          title: task.title.substring(0, 20) + (task.title.length > 20 ? '...' : ''),
-          priority: task.priority,
-          作成日: new Date(task.createdAt * 1000).toLocaleString(),
-          更新日: task.updatedAt ? new Date(task.updatedAt * 1000).toLocaleString() : 'なし'
-        }))
-      });
+      // console.log('📋 タスク表示順序 (デフォルトソート):', {
+      //   activeTab,
+      //   タスク数: sorted.length,
+      //   表示順序: sorted.map((task, index) => ({
+      //     DOM位置: index + 1,
+      //     id: task.id,
+      //     title: task.title.substring(0, 20) + (task.title.length > 20 ? '...' : ''),
+      //     priority: task.priority,
+      //     作成日: new Date(task.createdAt * 1000).toLocaleString(),
+      //     更新日: task.updatedAt ? new Date(task.updatedAt * 1000).toLocaleString() : 'なし'
+      //   }))
+      // });
       
       // 選択されたタスクのハイライト
       if (selectedTaskId) {
         const selectedIndex = sorted.findIndex(task => task.id === selectedTaskId);
-        console.log(`🎯 選択中のタスク位置:`, { 
-          taskId: selectedTaskId, 
-          DOM位置: selectedIndex + 1,
-          全体数: sorted.length 
-        });
+        // console.log(`🎯 選択中のタスク位置:`, { 
+        //   taskId: selectedTaskId, 
+        //   DOM位置: selectedIndex + 1,
+        //   全体数: sorted.length 
+        // });
       }
       
       return sorted;
@@ -143,19 +143,19 @@ function TaskStatusDisplay({
     });
     
     // カスタムソートのログ
-    console.log('📋 タスク表示順序 (カスタムソート):', {
-      activeTab,
-      有効ソート: enabledSorts.map(s => `${s.label}(${s.direction})`),
-      タスク数: customSorted.length,
-      表示順序: customSorted.map((task, index) => ({
-        DOM位置: index + 1,
-        id: task.id,
-        title: task.title.substring(0, 20) + (task.title.length > 20 ? '...' : ''),
-        priority: task.priority,
-        作成日: new Date(task.createdAt * 1000).toLocaleString(),
-        更新日: task.updatedAt ? new Date(task.updatedAt * 1000).toLocaleString() : 'なし'
-      }))
-    });
+    // console.log('📋 タスク表示順序 (カスタムソート):', {
+    //   activeTab,
+    //   有効ソート: enabledSorts.map(s => `${s.label}(${s.direction})`),
+    //   タスク数: customSorted.length,
+    //   表示順序: customSorted.map((task, index) => ({
+    //     DOM位置: index + 1,
+    //     id: task.id,
+    //     title: task.title.substring(0, 20) + (task.title.length > 20 ? '...' : ''),
+    //     priority: task.priority,
+    //     作成日: new Date(task.createdAt * 1000).toLocaleString(),
+    //     更新日: task.updatedAt ? new Date(task.updatedAt * 1000).toLocaleString() : 'なし'
+    //   }))
+    // });
     
     return customSorted;
   };

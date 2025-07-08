@@ -68,7 +68,7 @@ export function useBulkAnimation({ checkedItems, checkedDeletedItems }: UseBulkA
       const delayUntilStart = itemsUntilStart * DELETE_ANIMATION_INTERVAL
       
       timerRef.current.countdownTimer = setTimeout(() => {
-        console.log(`🎯 カウンター開始: 残り${startCount}個`)
+        // console.log(`🎯 カウンター開始: 残り${startCount}個`)
         
         // カウンターを開始数値から段階的に減らす
         let currentCount = startCount
@@ -82,7 +82,7 @@ export function useBulkAnimation({ checkedItems, checkedDeletedItems }: UseBulkA
           if (currentCount <= targetCount) {
             clearInterval(counterTimer)
             setDisplayCount(targetCount)
-            console.log(`🏁 カウンター終了: 残り${targetCount}個`)
+            // console.log(`🏁 カウンター終了: 残り${targetCount}個`)
           } else {
             currentCount--
             setDisplayCount(currentCount)
@@ -171,7 +171,7 @@ export function useBulkAnimation({ checkedItems, checkedDeletedItems }: UseBulkA
     setIsProcessing?: (value: boolean) => void,
     setIsLidOpen?: (value: boolean) => void
   ) => {
-    console.log('🚫 アニメーションをキャンセルします')
+    // console.log('🚫 アニメーションをキャンセルします')
     
     // 全てのタイマーをクリア（カウンターのsetIntervalも含む）
     clearTimers()

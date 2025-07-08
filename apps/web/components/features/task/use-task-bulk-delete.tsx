@@ -154,26 +154,37 @@ export function useTasksBulkDelete({
   }
 
   const handleBulkDelete = async () => {
-    const targetIds = activeTab === "deleted" 
+    const rawTargetIds = activeTab === "deleted" 
       ? Array.from(checkedDeletedTasks)
       : Array.from(checkedTasks)
+
+    // DOM順序でソート（個別チェック変更でSet順序が崩れるため）
+    const { getTaskDisplayOrder } = await import('@/src/utils/domUtils');
+    const domOrder = getTaskDisplayOrder();
+    const targetIds = rawTargetIds.sort((a, b) => {
+      const aIndex = domOrder.indexOf(a);
+      const bIndex = domOrder.indexOf(b);
+      if (aIndex === -1) return 1;
+      if (bIndex === -1) return -1;
+      return aIndex - bIndex;
+    });
 
     // タスクの場合は1件からモーダル表示（削除済み・通常問わず）
     const threshold = 1
     
-    // 100件超えの場合は最初の100件のみ処理
+    // 100件超えの場合は最初の100件のみ処理（DOM順序での最初の100件）
     const actualTargetIds = targetIds.length > 100 ? targetIds.slice(0, 100) : targetIds
     const isLimitedDelete = targetIds.length > 100
 
     // 削除ボタンを押した瞬間の状態設定（カウンター維持）
     bulkAnimation.setModalState(setIsDeleting, setIsLidOpen)
 
-    console.log('🗑️ 削除開始:', { 
-      selected: targetIds.length, 
-      actualDelete: actualTargetIds.length, 
-      activeTab,
-      isLimited: isLimitedDelete 
-    })
+    // console.log('🗑️ 削除開始:', { 
+    //   selected: targetIds.length, 
+    //   actualDelete: actualTargetIds.length, 
+    //   activeTab,
+    //   isLimited: isLimitedDelete 
+    // })
     
     if (isLimitedDelete) {
       // 100件制限のモーダル表示
@@ -202,7 +213,7 @@ export function useTasksBulkDelete({
         bulkDelete.handleCancel()
       }}
       onConfirm={async () => {
-        console.log('Confirm modal')
+        // console.log('Confirm modal')
         await bulkDelete.handleConfirm()
       }}
       count={bulkDelete.targetIds.length}

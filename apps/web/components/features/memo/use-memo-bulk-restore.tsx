@@ -89,12 +89,23 @@ export function useMemosBulkRestore({
   }
 
   const handleBulkRestore = async () => {
-    const targetIds = Array.from(checkedDeletedMemos)
+    const rawTargetIds = Array.from(checkedDeletedMemos)
+
+    // DOM順序でソート（個別チェック変更でSet順序が崩れるため）
+    const { getMemoDisplayOrder } = await import('@/src/utils/domUtils');
+    const domOrder = getMemoDisplayOrder();
+    const targetIds = rawTargetIds.sort((a, b) => {
+      const aIndex = domOrder.indexOf(a);
+      const bIndex = domOrder.indexOf(b);
+      if (aIndex === -1) return 1;
+      if (bIndex === -1) return -1;
+      return aIndex - bIndex;
+    });
 
     // 復元の場合は1件からモーダル表示
     const threshold = 1
     
-    // 100件超えの場合は最初の100件のみ処理
+    // 100件超えの場合は最初の100件のみ処理（DOM順序での最初の100件）
     const actualTargetIds = targetIds.length > 100 ? targetIds.slice(0, 100) : targetIds
     const isLimitedRestore = targetIds.length > 100
 

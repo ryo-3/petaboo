@@ -188,11 +188,11 @@ export function animateBulkFadeOutCSS(
       
       // 既に処理済みの場合はスキップ
       if (processedItems.has(id)) {
-        console.log(`⚠️ 重複スキップ: ID ${id}`);
+        // console.log(`⚠️ 重複スキップ: ID ${id}`);
         return;
       }
       processedItems.add(id);
-      console.log(`✅ 処理開始: ID ${id}`);
+      // console.log(`✅ 処理開始: ID ${id}`);
       
       // console.log(`🎯 ${actionType === 'delete' ? '削除' : '復元'}フェードアウトアニメーション開始:`, { id, index, delay: index * delay });
       const itemElement = document.querySelector(`[data-memo-id="${id}"], [data-task-id="${id}"]`) as HTMLElement;
@@ -240,7 +240,7 @@ export function animateBulkFadeOutCSS(
           
           // 全てのアイテムが完了したらコールバック実行
           if (completedCount === totalItems) {
-            console.log(`🎊 実際のアニメーション完了時刻:`, Date.now(), { completedCount, totalItems });
+            // console.log(`🎊 実際のアニメーション完了時刻:`, Date.now(), { completedCount, totalItems });
             // ゴミ箱の蓋を閉じる（削除の場合のみ）
             if (actionType === 'delete' && trashLid) {
               trashLid.classList.remove('open');
@@ -264,7 +264,7 @@ export function animateBulkFadeOutCSS(
           
           // 全てのアイテムが完了したらコールバック実行
           if (completedCount === totalItems) {
-            console.log(`🎊 実際のアニメーション完了時刻:`, Date.now(), { completedCount, totalItems });
+            // console.log(`🎊 実際のアニメーション完了時刻:`, Date.now(), { completedCount, totalItems });
             // 復元の場合はゴミ箱の蓋を閉じる処理は不要
             onComplete?.();
           }

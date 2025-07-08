@@ -163,12 +163,15 @@ export function useMemosBulkDelete({
         
         setTimeout(() => {
           console.log(`🎯 カウンター開始: 残り99個`);
-          setIsCountingActive(true);
           
           // カウンターを99から開始して段階的に減らす
           let currentCount = 99;
           const targetCount = remainingCountAfterLimit;
           const decrementInterval = DELETE_ANIMATION_INTERVAL; // 80msごとに減少（アニメーションと同期）
+          
+          // 最初に99を設定してからカウンター開始（ちらつき防止）
+          setDisplayCount(99);
+          setIsCountingActive(true);
           
           const counterTimer = setInterval(() => {
             if (currentCount <= targetCount) {

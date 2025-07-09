@@ -83,44 +83,76 @@ function DesktopUpper({
 }: DesktopUpperProps) {
   const { preferences } = useUserPreferences(1);
 
-  const tabs =
-    currentMode === "task"
-      ? [
-          {
-            id: "todo",
-            label: "未着手",
-            count: todoCount,
-          },
-          {
-            id: "in_progress",
-            label: "進行中",
-            count: inProgressCount,
-          },
-          {
-            id: "completed",
-            label: "完了",
-            count: completedCount,
-          },
-          {
-            id: "deleted",
-            label: "削除済み",
-            icon: <TrashIcon className="w-3 h-3" />,
-            count: deletedTasksCount,
-          },
-        ]
-      : [
-          {
-            id: "normal",
-            label: "通常",
-            count: normalCount,
-          },
-          {
-            id: "deleted",
-            label: "削除済み",
-            icon: <TrashIcon className="w-3 h-3" />,
-            count: deletedNotesCount,
-          },
-        ];
+  // タブ設定
+  const getTabsConfig = () => {
+    if (currentMode === "task") {
+      return [
+        { id: "todo", label: "未着手", count: todoCount },
+        { id: "in_progress", label: "進行中", count: inProgressCount },
+        { id: "completed", label: "完了", count: completedCount },
+        { id: "deleted", label: "", icon: <TrashIcon className="w-4 h-4" />, count: deletedTasksCount },
+      ];
+    }
+    return [
+      { id: "normal", label: "通常", count: normalCount },
+      { id: "deleted", label: "", icon: <TrashIcon className="w-4 h-4" />, count: deletedNotesCount },
+    ];
+  };
+
+  // タブの色設定
+  const getTabColor = (tabId: string) => {
+    const colorMap = {
+      todo: "bg-zinc-400",
+      in_progress: "bg-Blue",
+      completed: "bg-Green",
+      deleted: "bg-red-600",
+      normal: "bg-zinc-500",
+    };
+    return colorMap[tabId as keyof typeof colorMap] || "bg-gray-500";
+  };
+
+  // タブの背景色設定
+  const getTabBackgroundClass = (tabId: string, isActive: boolean) => {
+    const baseClass = "bg-gray-100";
+    
+    if (isActive) {
+      const activeColors = {
+        todo: "bg-zinc-200",
+        in_progress: "bg-blue-100",
+        completed: "bg-Green/20",
+        deleted: "bg-red-100",
+        normal: "bg-gray-100",
+      };
+      return activeColors[tabId as keyof typeof activeColors] || "bg-gray-100";
+    }
+    
+    const hoverColors = {
+      todo: "hover:bg-zinc-200",
+      in_progress: "hover:bg-blue-100",
+      completed: "hover:bg-Green/20",
+      deleted: "hover:bg-red-100",
+      normal: "hover:bg-gray-200",
+    };
+    return `${baseClass} ${hoverColors[tabId as keyof typeof hoverColors] || "hover:bg-gray-200"}`;
+  };
+
+  // タブの内容をレンダリング
+  const renderTabContent = (tab: any) => {
+    if (tab.icon) {
+      return tab.icon;
+    }
+    return (
+      <>
+        <div className={`w-3 h-3 rounded-full ${getTabColor(tab.id)}`}></div>
+        <span>{tab.label}</span>
+        <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full">
+          {tab.count}
+        </span>
+      </>
+    );
+  };
+
+  const tabs = getTabsConfig();
 
   return (
     <div className="mb-3">
@@ -149,67 +181,18 @@ function DesktopUpper({
           {/* タブ */}
           <div className="flex items-center gap-2">
             {tabs.map((tab) => {
-              const getTabColor = () => {
-                switch (tab.id) {
-                  case "todo":
-                    return "bg-zinc-400";
-                  case "in_progress":
-                    return "bg-Blue";
-                  case "completed":
-                    return "bg-Green";
-                  case "deleted":
-                    return "bg-red-600";
-                  case "normal":
-                    return "bg-zinc-500";
-                  default:
-                    return "bg-gray-500";
-                }
-              };
-
+              const isActive = activeTab === tab.id;
+              const tabClass = tab.icon 
+                ? 'justify-center px-2 py-2' 
+                : 'gap-2 px-3 py-1.5';
+              
               return (
                 <button
                   key={tab.id}
-                  onClick={() =>
-                    onTabChange(
-                      tab.id as
-                        | "normal"
-                        | "deleted"
-                        | "todo"
-                        | "in_progress"
-                        | "completed"
-                    )
-                  }
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors text-gray-600 ${
-                    activeTab === tab.id
-                      ? tab.id === "todo"
-                        ? "bg-zinc-200"
-                        : tab.id === "in_progress"
-                          ? "bg-blue-100"
-                          : tab.id === "completed"
-                            ? "bg-Green/20"
-                            : tab.id === "deleted"
-                              ? "bg-red-100"
-                              : "bg-gray-100"
-                      : tab.id === "todo"
-                        ? "bg-gray-100 hover:bg-zinc-200"
-                        : tab.id === "in_progress"
-                          ? "bg-gray-100 hover:bg-blue-100"
-                          : tab.id === "completed"
-                            ? "bg-gray-100 hover:bg-Green/20"
-                            : tab.id === "deleted"
-                              ? "bg-gray-100 hover:bg-red-100"
-                              : "bg-gray-100 hover:bg-gray-200"
-                  }`}
+                  onClick={() => onTabChange(tab.id as any)}
+                  className={`flex items-center ${tabClass} rounded-lg text-sm font-medium transition-colors text-gray-600 ${getTabBackgroundClass(tab.id, isActive)}`}
                 >
-                  <div
-                    className={`w-3 h-3 rounded-full ${
-                      activeTab === tab.id ? getTabColor() : getTabColor()
-                    }`}
-                  ></div>
-                  <span>{tab.label}</span>
-                  <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full">
-                    {tab.count}
-                  </span>
+                  {renderTabContent(tab)}
                 </button>
               );
             })}
@@ -276,6 +259,7 @@ function DesktopUpper({
               iconSize="size-4"
             />
           )}
+
         </div>
       )}
     </div>

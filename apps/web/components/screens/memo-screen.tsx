@@ -72,6 +72,7 @@ function MemoScreen({
   // 編集日表示管理
   const [showEditDate, setShowEditDate] = useState(false);
 
+
   // 並び替え管理
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { sortOptions, setSortOptions, getVisibleSortOptions } = useSortOptions('memo');

@@ -11,7 +11,7 @@ export function useSortOptions(mode: 'memo' | 'task' = 'memo') {
   const getMemoSortOptions = (): SortOption[] => [
     {
       id: "updatedAt" as const,
-      label: "更新日順",
+      label: "編集日順",
       enabled: false,
       direction: "desc" as const,
     },
@@ -38,7 +38,7 @@ export function useSortOptions(mode: 'memo' | 'task' = 'memo') {
     },
     {
       id: "updatedAt" as const,
-      label: "更新日順",
+      label: "編集日順",
       enabled: false,
       direction: "desc" as const,
     },

@@ -37,7 +37,17 @@ function MemoCardContent({ memo, variant = 'normal', showEditDate = false }: Mem
           : 'text-gray-400 border-t border-gray-100 flex gap-2'
       }`}>
         {isDeleted ? (
-          <div>削除: {formatDateOnly(deletedMemo.deletedAt)}</div>
+          showEditDate ? (
+            <div className="flex gap-2">
+              <div>作成: {formatDateOnly(memo.createdAt)}</div>
+              {memo.updatedAt && memo.updatedAt !== memo.createdAt && (
+                <div>編集: {formatDateOnly(memo.updatedAt)}</div>
+              )}
+              <div>削除: {formatDateOnly(deletedMemo.deletedAt)}</div>
+            </div>
+          ) : (
+            <div>削除: {formatDateOnly(deletedMemo.deletedAt)}</div>
+          )
         ) : showEditDate ? (
           <div className="flex gap-2">
             <div>作成: {formatDateOnly(memo.createdAt)}</div>
@@ -46,7 +56,7 @@ function MemoCardContent({ memo, variant = 'normal', showEditDate = false }: Mem
               if (memo.id < 0) {
                 const updateTime = memo.updatedAt || memo.createdAt;
                 if (updateTime !== memo.createdAt) {
-                  return <div>更新: {formatDateOnly(updateTime)}</div>;
+                  return <div>編集: {formatDateOnly(updateTime)}</div>;
                 }
                 return null;
               }
@@ -56,9 +66,9 @@ function MemoCardContent({ memo, variant = 'normal', showEditDate = false }: Mem
               const hasApiUpdate = memo.updatedAt && memo.updatedAt !== memo.createdAt;
               
               if (hasLocalEdit) {
-                return <div>更新: {formatDateOnly(lastEditTime)}</div>;
+                return <div>編集: {formatDateOnly(lastEditTime)}</div>;
               } else if (hasApiUpdate) {
-                return <div>更新: {formatDateOnly(memo.updatedAt!)}</div>;
+                return <div>編集: {formatDateOnly(memo.updatedAt!)}</div>;
               }
               return null;
             })()}

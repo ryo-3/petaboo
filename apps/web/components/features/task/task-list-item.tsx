@@ -112,7 +112,7 @@ function TaskListItem({
                 <div className="text-right flex gap-2">
                   <div>作成: {formatDateOnly(task.createdAt)}</div>
                   {task.updatedAt && task.updatedAt !== task.createdAt && (
-                    <div>更新: {formatDateOnly(task.updatedAt)}</div>
+                    <div>編集: {formatDateOnly(task.updatedAt)}</div>
                   )}
                 </div>
               ) : (

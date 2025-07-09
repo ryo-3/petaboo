@@ -72,6 +72,7 @@ function TaskScreen({
   );
 
   // 並び替え管理
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { sortOptions, setSortOptions, getVisibleSortOptions } = useSortOptions('task');
 
   // 編集日表示管理

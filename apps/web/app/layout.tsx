@@ -5,6 +5,7 @@ import "./globals.css";
 import { QueryProvider } from "@/src/lib/query-client";
 import { ToastProvider } from "@/src/contexts/toast-context";
 import { ToastContainer } from "@/components/ui/toast/toast-container";
+import { UserPreferencesProvider } from "@/src/contexts/user-preferences-context";
 
 import { jaJP } from "@clerk/localizations";
 const geistSans = Geist({
@@ -34,10 +35,12 @@ export default function RootLayout({
           className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-gray-900 min-h-screen`}
         >
           <QueryProvider>
-            <ToastProvider>
-              {children}
-              <ToastContainer />
-            </ToastProvider>
+            <UserPreferencesProvider>
+              <ToastProvider>
+                {children}
+                <ToastContainer />
+              </ToastProvider>
+            </UserPreferencesProvider>
           </QueryProvider>
         </body>
       </html>

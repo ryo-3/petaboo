@@ -1,11 +1,5 @@
 import { useState, useEffect } from 'react'
-// UserPreferences型を直接定義（一時的）
-type UserPreferences = {
-  memoViewMode?: 'card' | 'list'
-  memoColumnCount?: number
-  taskViewMode?: 'card' | 'list'
-  taskColumnCount?: number
-}
+import type { UserPreferences } from '@/src/contexts/user-preferences-context'
 
 interface UseScreenStateConfig {
   type: 'memo' | 'task'
@@ -45,11 +39,28 @@ export function useScreenState<T extends string>(
   selectedDeletedItem?: unknown,
   preferences?: UserPreferences
 ): ScreenStateReturn<T> {
+  // 設定値から初期値を取得
+  const getInitialViewMode = (): 'card' | 'list' => {
+    if (preferences) {
+      const viewModeKey = `${config.type}ViewMode` as keyof UserPreferences
+      return (preferences[viewModeKey] as 'card' | 'list') || 'list'
+    }
+    return 'list'
+  }
+
+  const getInitialColumnCount = (): number => {
+    if (preferences) {
+      const columnCountKey = `${config.type}ColumnCount` as keyof UserPreferences
+      return (preferences[columnCountKey] as number) || config.defaultColumnCount
+    }
+    return config.defaultColumnCount
+  }
+
   // Basic state
   const [screenMode, setScreenMode] = useState<T>(initialScreenMode)
   const [activeTab, setActiveTab] = useState(config.defaultActiveTab)
-  const [viewMode, setViewMode] = useState<'card' | 'list'>('list')
-  const [columnCount, setColumnCount] = useState(config.defaultColumnCount)
+  const [viewMode, setViewMode] = useState<'card' | 'list'>(getInitialViewMode())
+  const [columnCount, setColumnCount] = useState(getInitialColumnCount())
   const [checkedItems, setCheckedItems] = useState<Set<number>>(new Set())
   const [checkedDeletedItems, setCheckedDeletedItems] = useState<Set<number>>(new Set())
 

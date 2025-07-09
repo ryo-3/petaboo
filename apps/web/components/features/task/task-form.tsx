@@ -4,15 +4,14 @@ import PhotoButton from "@/components/ui/buttons/photo-button";
 import SaveButton from "@/components/ui/buttons/save-button";
 import DateInput from "@/components/ui/inputs/date-input";
 import CustomSelector from "@/components/ui/selectors/custom-selector";
+import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import {
-  getCategoryEditorColor,
   getPriorityEditorColor,
   getPriorityText,
   getStatusEditorColor,
   getStatusText,
 } from "@/src/utils/taskUtils";
-import { useUserPreferences } from "@/src/hooks/use-user-preferences";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface TaskFormProps {
   title: string;
@@ -63,6 +62,14 @@ function TaskForm({
   const titleInputRef = useRef<HTMLInputElement>(null);
   const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // カテゴリー管理用state（後でAPIから取得）
+  const [categories, setCategories] = useState([
+    { value: "", label: "未選択" },
+    { value: "work", label: "仕事" },
+    { value: "personal", label: "個人" },
+    { value: "study", label: "勉強" },
+  ]);
+
   // 新規作成時のフォーカス遅延
   useEffect(() => {
     if (isNewTask) {
@@ -72,6 +79,16 @@ function TaskForm({
       return () => clearTimeout(timer);
     }
   }, [isNewTask]);
+
+  // カテゴリー追加ハンドラー
+  const handleCreateCategory = (newCategoryName: string) => {
+    const newCategory = {
+      value: newCategoryName.toLowerCase().replace(/\s+/g, "_"),
+      label: newCategoryName,
+    };
+    setCategories((prev) => [...prev, newCategory]);
+    onCategoryChange(newCategory.value);
+  };
 
   // オプションの定義（色はtaskUtilsから取得）
   const statusOptions = [
@@ -110,19 +127,6 @@ function TaskForm({
     },
   ];
 
-  const categoryOptions = [
-    { value: "", label: "未選択", color: getCategoryEditorColor("") },
-    { value: "work", label: "仕事", color: getCategoryEditorColor("work") },
-    {
-      value: "personal",
-      label: "個人",
-      color: getCategoryEditorColor("personal"),
-    },
-    { value: "study", label: "勉強", color: getCategoryEditorColor("study") },
-    { value: "health", label: "健康", color: getCategoryEditorColor("health") },
-    { value: "hobby", label: "趣味", color: getCategoryEditorColor("hobby") },
-  ];
-
   return (
     <>
       <div className="flex items-center gap-3">
@@ -148,7 +152,7 @@ function TaskForm({
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="flex gap-4">
         <CustomSelector
           label="ステータス"
           options={statusOptions}
@@ -169,20 +173,40 @@ function TaskForm({
           fullWidth
         />
 
-        <CustomSelector
-          label="カテゴリー"
-          options={categoryOptions}
-          value={category}
-          onChange={onCategoryChange}
-          fullWidth
-        />
+        <div className="flex-1 flex gap-4 items-center">
+          <div className="w-4/12">
+            <CustomSelector
+              label="カテゴリー"
+              options={categories}
+              value={category}
+              onChange={onCategoryChange}
+              fullWidth
+              allowCreate={true}
+              onCreateNew={handleCreateCategory}
+            />
+          </div>
+          <div className="w-4/12">
+          {/* ここはまだダミー あとでボード選択が入る*/}
+            <CustomSelector
+              label="ボード"
+              options={categories}
+              value={category}
+              onChange={onCategoryChange}
+              fullWidth
+              allowCreate={true}
+              onCreateNew={handleCreateCategory}
+            />
+          </div>
 
-        <DateInput
-          label="期限日"
-          value={dueDate}
-          onChange={onDueDateChange}
-          fullWidth
-        />
+          <div className="flex-1">
+            <DateInput
+              label="期限日"
+              value={dueDate}
+              onChange={onDueDateChange}
+              fullWidth
+            />
+          </div>
+        </div>
       </div>
 
       <div className="mt-2">
@@ -191,7 +215,7 @@ function TaskForm({
           placeholder={descriptionPlaceholder}
           value={description}
           onChange={(e) => onDescriptionChange(e.target.value)}
-          className={`w-full ${customHeight || (preferences?.hideHeader ? 'h-[calc(100vh-246px)]' : 'h-[calc(100vh-310px)]')} p-3 border border-gray-400 rounded-lg resize-none outline-none text-gray-700 leading-relaxed focus:border-DeepBlue`}
+          className={`w-full ${customHeight || (preferences?.hideHeader ? "h-[calc(100vh-246px)]" : "h-[calc(100vh-310px)]")} p-3 border border-gray-400 rounded-lg resize-none outline-none text-gray-700 leading-relaxed focus:border-DeepBlue`}
         />
       </div>
 

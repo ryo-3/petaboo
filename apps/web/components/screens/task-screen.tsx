@@ -73,7 +73,7 @@ function TaskScreen({
   // 並び替え管理
   const [sortOptions, setSortOptions] = useState<
     Array<{
-      id: "createdAt" | "updatedAt" | "priority";
+      id: "createdAt" | "updatedAt" | "priority" | "deletedAt";
       label: string;
       enabled: boolean;
       direction: "asc" | "desc";
@@ -97,10 +97,27 @@ function TaskScreen({
       enabled: false,
       direction: "desc" as const,
     },
+    {
+      id: "deletedAt" as const,
+      label: "削除日順",
+      enabled: false,
+      direction: "desc" as const,
+    },
   ]);
 
   // 編集日表示管理
   const [showEditDate, setShowEditDate] = useState(true);
+
+  // アクティブタブに応じた並び替えオプションを取得
+  const getVisibleSortOptions = () => {
+    if (activeTab === 'deleted') {
+      // 削除済みタブでは削除日順を追加
+      return sortOptions;
+    } else {
+      // 通常タブでは削除日順を除外
+      return sortOptions.filter(option => option.id !== 'deletedAt');
+    }
+  };
 
   // 削除ボタンの参照
   const deleteButtonRef = useRef<HTMLButtonElement>(null);
@@ -394,7 +411,7 @@ function TaskScreen({
           onSelectionModeChange={setSelectionMode}
           onSelectAll={handleSelectAll}
           isAllSelected={isAllSelected}
-          sortOptions={sortOptions}
+          sortOptions={getVisibleSortOptions()}
           onSortChange={setSortOptions}
           showEditDate={showEditDate}
           onShowEditDateChange={setShowEditDate}
@@ -419,7 +436,7 @@ function TaskScreen({
           isLoading={taskLoading}
           error={taskError}
           selectionMode={selectionMode}
-          sortOptions={sortOptions}
+          sortOptions={getVisibleSortOptions()}
           showEditDate={showEditDate}
           tasks={tasks || []}
           deletedTasks={deletedTasks || []}

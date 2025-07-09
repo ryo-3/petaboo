@@ -4,11 +4,12 @@ import Tooltip from "@/components/ui/base/tooltip";
 import CreatedAtIcon from "@/components/icons/created-at-icon";
 import UpdatedAtIcon from "@/components/icons/updated-at-icon";
 import PriorityIcon from "@/components/icons/priority-icon";
+import TrashIcon from "@/components/icons/trash-icon";
 import ArrowDownIcon from "@/components/icons/arrow-down-icon";
 import ArrowUpIcon from "@/components/icons/arrow-up-icon";
 
 interface SortOption {
-  id: "createdAt" | "updatedAt" | "priority";
+  id: "createdAt" | "updatedAt" | "priority" | "deletedAt";
   label: string;
   enabled: boolean;
   direction: "asc" | "desc";
@@ -31,6 +32,8 @@ function TaskSortToggle({ sortOptions, onSortChange, buttonSize, iconSize, arrow
         return <UpdatedAtIcon className={iconSize} />;
       case "priority":
         return <PriorityIcon className={iconSize} />;
+      case "deletedAt":
+        return <TrashIcon className={iconSize} />;
     }
   };
 

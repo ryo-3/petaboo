@@ -58,7 +58,7 @@ export async function executeWithAnimation({
     
     const { animateBulkFadeOutCSS } = await import('./deleteAnimation')
     
-    const startTime = Date.now()
+    // const startTime = Date.now()
     // console.log(`⏱️ アニメーション開始: ${startTime} (${ids.length}件)`)
     
     // カウントダウン対象の判定と開始タイミング計算
@@ -68,24 +68,24 @@ export async function executeWithAnimation({
     startCountdown(displayTotalCount, remainingCountAfterLimit)
     
     // 要素をチェック
-    ids.forEach(id => {
-      const element = document.querySelector(`[${dataAttribute}="${id}"]`)
-      // console.log(`📋 処理対象要素チェック: ID ${id}`, {
-      //   要素存在: !!element,
-      //   要素情報: element ? {
-      //     tagName: element.tagName,
-      //     className: element.className,
-      //     親要素: element.parentElement?.tagName
-      //   } : null
-      // })
-    })
+    // ids.forEach(id => {
+    //   const element = document.querySelector(`[${dataAttribute}="${id}"]`)
+    //   console.log(`📋 処理対象要素チェック: ID ${id}`, {
+    //     要素存在: !!element,
+    //     要素情報: element ? {
+    //       tagName: element.tagName,
+    //       className: element.className,
+    //       親要素: element.parentElement?.tagName
+    //     } : null
+    //   })
+    // })
     
     animateBulkFadeOutCSS(
       ids, 
       async () => {
         // 正常完了時の処理
-        const endTime = Date.now()
-        const duration = (endTime - startTime) / 1000
+        // const endTime = Date.now()
+        // const duration = (endTime - startTime) / 1000
         // console.log(`🏁 アニメーション完了: ${endTime} (実際: ${duration}秒)`)
         
         // 一括State更新（DOM削除）

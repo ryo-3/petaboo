@@ -2,9 +2,7 @@
 
 import MemoCard from "@/components/features/memo/memo-card";
 import MemoListItem from "@/components/features/memo/memo-list-item";
-import TaskCard from "@/components/features/task/task-card";
-import TaskListItem from "@/components/features/task/task-list-item";
-import TaskStatusDisplay from "@/components/features/task/task-status-display";
+import TaskStatusDisplay, { DeletedTaskDisplay } from "@/components/features/task/task-status-display";
 import EmptyState from "@/components/ui/feedback/empty-state";
 import ItemGrid from "@/components/ui/layout/item-grid";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
@@ -23,7 +21,7 @@ interface DesktopLowerProps {
   
   // Sort options (task only)
   sortOptions?: Array<{
-    id: "createdAt" | "updatedAt" | "dueDate" | "priority";
+    id: "createdAt" | "updatedAt" | "dueDate" | "priority" | "deletedAt";
     label: string;
     enabled: boolean;
     direction: "asc" | "desc";
@@ -246,36 +244,19 @@ function DesktopLower({
           ) : (
             <EmptyState message="削除済みメモはありません" />
           )
-        ) : deletedTasks && deletedTasks.length > 0 ? (
-          <ItemGrid
+        ) : (
+          <DeletedTaskDisplay
+            deletedTasks={deletedTasks}
             viewMode={viewMode}
             effectiveColumnCount={effectiveColumnCount}
-          >
-            {deletedTasks.map((task: DeletedTask) => {
-              const Component =
-                viewMode === "card" ? TaskCard : TaskListItem;
-              return (
-                <Component
-                  key={task.id}
-                  task={task}
-                  isChecked={checkedDeletedTasks?.has(task.id) || false}
-                  onToggleCheck={() => onToggleCheckDeletedTask?.(task.id)}
-                  onSelect={() => {
-                    if (selectionMode === "check") {
-                      onToggleCheckDeletedTask?.(task.id);
-                    } else {
-                      onSelectDeletedTask?.(task);
-                    }
-                  }}
-                  variant="deleted"
-                  isSelected={selectedDeletedTask?.id === task.id}
-                  showEditDate={showEditDate}
-                />
-              );
-            })}
-          </ItemGrid>
-        ) : (
-          <EmptyState message="削除済みタスクはありません" />
+            selectionMode={selectionMode}
+            checkedTasks={checkedDeletedTasks}
+            onToggleCheck={onToggleCheckDeletedTask}
+            onSelectTask={onSelectDeletedTask}
+            selectedTaskId={selectedDeletedTask?.id}
+            showEditDate={showEditDate}
+            sortOptions={sortOptions}
+          />
         )}
       </>
     );

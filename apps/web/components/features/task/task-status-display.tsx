@@ -4,7 +4,7 @@ import TaskCard from '@/components/features/task/task-card';
 import TaskListItem from '@/components/features/task/task-list-item';
 import ItemGrid from '@/components/ui/layout/item-grid';
 import EmptyState from '@/components/ui/feedback/empty-state';
-import type { Task } from '@/src/types/task';
+import type { Task, DeletedTask } from '@/src/types/task';
 
 interface TaskStatusDisplayProps {
   activeTab: 'todo' | 'in_progress' | 'completed';
@@ -18,7 +18,25 @@ interface TaskStatusDisplayProps {
   selectedTaskId?: number;
   showEditDate?: boolean;
   sortOptions?: Array<{
-    id: "createdAt" | "updatedAt" | "dueDate" | "priority";
+    id: "createdAt" | "updatedAt" | "dueDate" | "priority" | "deletedAt";
+    label: string;
+    enabled: boolean;
+    direction: "asc" | "desc";
+  }>;
+}
+
+interface DeletedTaskDisplayProps {
+  deletedTasks: DeletedTask[] | undefined;
+  viewMode: 'card' | 'list';
+  effectiveColumnCount: number;
+  selectionMode?: 'select' | 'check';
+  checkedTasks?: Set<number>;
+  onToggleCheck?: (taskId: number) => void;
+  onSelectTask?: (task: DeletedTask) => void;
+  selectedTaskId?: number;
+  showEditDate?: boolean;
+  sortOptions?: Array<{
+    id: "createdAt" | "updatedAt" | "dueDate" | "priority" | "deletedAt";
     label: string;
     enabled: boolean;
     direction: "asc" | "desc";
@@ -79,7 +97,7 @@ function TaskStatusDisplay({
       
       // 選択されたタスクのハイライト
       if (selectedTaskId) {
-        const selectedIndex = sorted.findIndex(task => task.id === selectedTaskId);
+        // const selectedIndex = sorted.findIndex(task => task.id === selectedTaskId);
         // console.log(`🎯 選択中のタスク位置:`, { 
         //   taskId: selectedTaskId, 
         //   DOM位置: selectedIndex + 1,
@@ -197,6 +215,108 @@ function TaskStatusDisplay({
               }
             }}
             variant="normal"
+            isSelected={selectedTaskId === task.id}
+            showEditDate={showEditDate}
+          />
+        );
+      })}
+    </ItemGrid>
+  );
+}
+
+/**
+ * 削除済みタスク表示コンポーネント
+ */
+export function DeletedTaskDisplay({
+  deletedTasks,
+  viewMode,
+  effectiveColumnCount,
+  selectionMode = 'select',
+  checkedTasks,
+  onToggleCheck,
+  onSelectTask,
+  selectedTaskId,
+  showEditDate = false,
+  sortOptions = []
+}: DeletedTaskDisplayProps) {
+  const getSortedTasks = () => {
+    if (!deletedTasks) return [];
+    
+    // 有効な並び替えオプションを取得
+    const enabledSorts = sortOptions.filter(opt => opt.enabled);
+    
+    if (enabledSorts.length === 0) {
+      // デフォルトは削除日順（新しい順）
+      return deletedTasks.sort((a, b) => b.deletedAt - a.deletedAt);
+    }
+    
+    const sorted = deletedTasks.sort((a, b) => {
+      // 有効な並び替えを順番に適用
+      for (const sortOption of enabledSorts) {
+        let diff = 0;
+        
+        switch (sortOption.id) {
+          case "priority": {
+            const priorityOrder: Record<string, number> = { high: 3, medium: 2, low: 1 };
+            diff = (priorityOrder[a.priority] || 0) - (priorityOrder[b.priority] || 0);
+            break;
+          }
+          case "createdAt":
+            diff = a.createdAt - b.createdAt;
+            break;
+          case "updatedAt": {
+            const aUpdated = a.updatedAt || a.createdAt;
+            const bUpdated = b.updatedAt || b.createdAt;
+            diff = aUpdated - bUpdated;
+            break;
+          }
+          case "deletedAt":
+            diff = a.deletedAt - b.deletedAt;
+            break;
+        }
+        
+        // 方向を考慮
+        if (sortOption.direction === "desc") {
+          diff = -diff;
+        }
+        
+        // 差がある場合はその結果を返す
+        if (diff !== 0) return diff;
+      }
+      
+      return 0;
+    });
+    
+    return sorted;
+  };
+
+  const sortedTasks = getSortedTasks();
+
+  if (sortedTasks.length === 0) {
+    return <EmptyState message="削除済みタスクはありません" />;
+  }
+
+  return (
+    <ItemGrid
+      viewMode={viewMode}
+      effectiveColumnCount={effectiveColumnCount}
+    >
+      {sortedTasks.map((task) => {
+        const Component = viewMode === 'card' ? TaskCard : TaskListItem;
+        return (
+          <Component
+            key={task.id}
+            task={task}
+            isChecked={checkedTasks?.has(task.id) || false}
+            onToggleCheck={() => onToggleCheck?.(task.id)}
+            onSelect={() => {
+              if (selectionMode === 'check') {
+                onToggleCheck?.(task.id);
+              } else {
+                onSelectTask?.(task);
+              }
+            }}
+            variant="deleted"
             isSelected={selectedTaskId === task.id}
             showEditDate={showEditDate}
           />

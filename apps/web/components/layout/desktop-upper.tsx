@@ -31,14 +31,14 @@ interface DesktopUpperProps {
   isAllSelected?: boolean;
   // Sort options (task only)
   sortOptions?: Array<{
-    id: "createdAt" | "updatedAt" | "priority";
+    id: "createdAt" | "updatedAt" | "priority" | "deletedAt";
     label: string;
     enabled: boolean;
     direction: "asc" | "desc";
   }>;
   onSortChange?: (
     options: Array<{
-      id: "createdAt" | "updatedAt" | "priority";
+      id: "createdAt" | "updatedAt" | "priority" | "deletedAt";
       label: string;
       enabled: boolean;
       direction: "asc" | "desc";

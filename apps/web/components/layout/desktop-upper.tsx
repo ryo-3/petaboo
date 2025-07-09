@@ -137,7 +137,7 @@ function DesktopUpper({
   };
 
   // タブの内容をレンダリング
-  const renderTabContent = (tab: any, isActive: boolean) => {
+  const renderTabContent = (tab: { id: string; label: string; count: number; icon?: React.ReactNode }, isActive: boolean) => {
     if (tab.icon) {
       return (
         <>
@@ -202,7 +202,7 @@ function DesktopUpper({
               return (
                 <button
                   key={tab.id}
-                  onClick={() => onTabChange(tab.id as any)}
+                  onClick={() => onTabChange(tab.id as "normal" | "deleted" | "todo" | "in_progress" | "completed")}
                   className={`flex items-center ${tabClass} rounded-lg text-sm font-medium transition-colors text-gray-600 ${getTabBackgroundClass(tab.id, isActive)}`}
                 >
                   {renderTabContent(tab, isActive)}

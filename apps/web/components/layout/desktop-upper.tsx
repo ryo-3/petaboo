@@ -137,15 +137,28 @@ function DesktopUpper({
   };
 
   // タブの内容をレンダリング
-  const renderTabContent = (tab: any) => {
+  const renderTabContent = (tab: any, isActive: boolean) => {
     if (tab.icon) {
-      return tab.icon;
+      return (
+        <>
+          {tab.icon}
+          <span 
+            className={`text-xs transition-all overflow-hidden ${
+              isActive 
+                ? 'opacity-100 w-9 translate-x-0 px-1.5 ml-1' 
+                : 'opacity-0 w-0 translate-x-2 px-0'
+            }`}
+          >
+            {tab.count}
+          </span>
+        </>
+      );
     }
     return (
       <>
         <div className={`w-3 h-3 rounded-full ${getTabColor(tab.id)}`}></div>
         <span>{tab.label}</span>
-        <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full">
+        <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full w-9">
           {tab.count}
         </span>
       </>
@@ -183,8 +196,8 @@ function DesktopUpper({
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id;
               const tabClass = tab.icon 
-                ? 'justify-center px-2 py-2' 
-                : 'gap-2 px-3 py-1.5';
+                ? 'pl-2 pr-2 py-2'
+                : 'gap-2 px-2.5 py-1.5';
               
               return (
                 <button
@@ -192,7 +205,7 @@ function DesktopUpper({
                   onClick={() => onTabChange(tab.id as any)}
                   className={`flex items-center ${tabClass} rounded-lg text-sm font-medium transition-colors text-gray-600 ${getTabBackgroundClass(tab.id, isActive)}`}
                 >
-                  {renderTabContent(tab)}
+                  {renderTabContent(tab, isActive)}
                 </button>
               );
             })}

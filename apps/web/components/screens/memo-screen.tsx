@@ -36,6 +36,7 @@ import {
 import { createToggleHandlerWithTabClear } from "@/src/utils/toggleUtils";
 import { getDeleteButtonVisibility } from "@/src/utils/bulkButtonUtils";
 import { useBulkProcessNotifications } from "@/src/hooks/use-bulk-process-notifications";
+import { useSortOptions } from "@/hooks/use-sort-options";
 import { useCallback, useRef, useState } from "react";
 
 type MemoScreenMode = "list" | "view" | "create";
@@ -70,6 +71,9 @@ function MemoScreen({
 
   // 編集日表示管理
   const [showEditDate, setShowEditDate] = useState(true);
+
+  // 並び替え管理
+  const { sortOptions, setSortOptions, getVisibleSortOptions } = useSortOptions('memo');
 
   // 削除ボタンの参照
   const deleteButtonRef = useRef<HTMLButtonElement>(null);
@@ -338,6 +342,8 @@ function MemoScreen({
           onSelectionModeChange={setSelectionMode}
           onSelectAll={handleSelectAll}
           isAllSelected={isAllSelected}
+          sortOptions={getVisibleSortOptions(activeTab)}
+          onSortChange={setSortOptions}
           showEditDate={showEditDate}
           onShowEditDateChange={setShowEditDate}
           normalCount={notes?.length || 0}
@@ -352,6 +358,7 @@ function MemoScreen({
           isLoading={memoLoading}
           error={memoError}
           selectionMode={selectionMode}
+          sortOptions={getVisibleSortOptions(activeTab)}
           showEditDate={showEditDate}
           notes={notes || []}
           localMemos={notes || []}

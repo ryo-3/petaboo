@@ -2,8 +2,7 @@
 
 import TaskCard from '@/components/features/task/task-card';
 import TaskListItem from '@/components/features/task/task-list-item';
-import ItemGrid from '@/components/ui/layout/item-grid';
-import EmptyState from '@/components/ui/feedback/empty-state';
+import ItemStatusDisplay from '@/components/ui/layout/item-status-display';
 import type { Task, DeletedTask } from '@/src/types/task';
 
 interface TaskStatusDisplayProps {
@@ -56,127 +55,7 @@ function TaskStatusDisplay({
   showEditDate = false,
   sortOptions = []
 }: TaskStatusDisplayProps) {
-  const getFilteredTasks = () => {
-    if (!tasks) return [];
-    const filtered = tasks.filter(task => task.status === activeTab);
-    
-    // 有効な並び替えオプションを取得
-    const enabledSorts = sortOptions.filter(opt => opt.enabled);
-    
-    if (enabledSorts.length === 0) {
-      // デフォルトは優先度 > 更新日 > 作成日順
-      const sorted = filtered.sort((a, b) => {
-        // 1. 優先度で比較（高>中>低）
-        const priorityOrder = { high: 3, medium: 2, low: 1 };
-        const priorityDiff = priorityOrder[b.priority] - priorityOrder[a.priority];
-        if (priorityDiff !== 0) return priorityDiff;
-        
-        // 2. 更新日で比較（新しい順）
-        const aUpdated = a.updatedAt || a.createdAt;
-        const bUpdated = b.updatedAt || b.createdAt;
-        const updatedDiff = bUpdated - aUpdated;
-        if (updatedDiff !== 0) return updatedDiff;
-        
-        // 3. 作成日で比較（新しい順）
-        return b.createdAt - a.createdAt;
-      });
-      
-      // タスクのDOM表示順序ログ
-      // console.log('📋 タスク表示順序 (デフォルトソート):', {
-      //   activeTab,
-      //   タスク数: sorted.length,
-      //   表示順序: sorted.map((task, index) => ({
-      //     DOM位置: index + 1,
-      //     id: task.id,
-      //     title: task.title.substring(0, 20) + (task.title.length > 20 ? '...' : ''),
-      //     priority: task.priority,
-      //     作成日: new Date(task.createdAt * 1000).toLocaleString(),
-      //     更新日: task.updatedAt ? new Date(task.updatedAt * 1000).toLocaleString() : 'なし'
-      //   }))
-      // });
-      
-      // 選択されたタスクのハイライト
-      if (selectedTaskId) {
-        // const selectedIndex = sorted.findIndex(task => task.id === selectedTaskId);
-        // console.log(`🎯 選択中のタスク位置:`, { 
-        //   taskId: selectedTaskId, 
-        //   DOM位置: selectedIndex + 1,
-        //   全体数: sorted.length 
-        // });
-      }
-      
-      return sorted;
-    }
-    
-    const customSorted = filtered.sort((a, b) => {
-      // 有効な並び替えを順番に適用
-      for (const sortOption of enabledSorts) {
-        let diff = 0;
-        
-        switch (sortOption.id) {
-          case "priority": {
-            const priorityOrder = { high: 3, medium: 2, low: 1 };
-            diff = priorityOrder[b.priority] - priorityOrder[a.priority];
-            // 昇順の場合は逆にする
-            if (sortOption.direction === "asc") diff = -diff;
-            break;
-          }
-            
-          case "createdAt":
-            diff = b.createdAt - a.createdAt;
-            // 昇順の場合は逆にする
-            if (sortOption.direction === "asc") diff = -diff;
-            break;
-            
-          case "updatedAt": {
-            // updatedAtがない場合はcreatedAtを使用
-            const aUpdated = a.updatedAt || a.createdAt;
-            const bUpdated = b.updatedAt || b.createdAt;
-            diff = bUpdated - aUpdated;
-            // 昇順の場合は逆にする
-            if (sortOption.direction === "asc") diff = -diff;
-            break;
-          }
-            
-          case "dueDate":
-            // dueDateがない場合は最後に配置
-            if (!a.dueDate && !b.dueDate) diff = 0;
-            else if (!a.dueDate) diff = 1;
-            else if (!b.dueDate) diff = -1;
-            else {
-              // 期限日が近い順（昇順）
-              const aDate = new Date(a.dueDate).getTime();
-              const bDate = new Date(b.dueDate).getTime();
-              diff = aDate - bDate;
-            }
-            break;
-        }
-        
-        // 差がある場合はその結果を返す
-        if (diff !== 0) return diff;
-      }
-      
-      // ユーザーが明示的に選択した並び替えでは、追加のフォールバックなし
-      return 0;
-    });
-    
-    // カスタムソートのログ
-    // console.log('📋 タスク表示順序 (カスタムソート):', {
-    //   activeTab,
-    //   有効ソート: enabledSorts.map(s => `${s.label}(${s.direction})`),
-    //   タスク数: customSorted.length,
-    //   表示順序: customSorted.map((task, index) => ({
-    //     DOM位置: index + 1,
-    //     id: task.id,
-    //     title: task.title.substring(0, 20) + (task.title.length > 20 ? '...' : ''),
-    //     priority: task.priority,
-    //     作成日: new Date(task.createdAt * 1000).toLocaleString(),
-    //     更新日: task.updatedAt ? new Date(task.updatedAt * 1000).toLocaleString() : 'なし'
-    //   }))
-    // });
-    
-    return customSorted;
-  };
+  const filteredTasks = tasks?.filter(task => task.status === activeTab);
 
   const getEmptyMessage = () => {
     switch (activeTab) {
@@ -191,36 +70,73 @@ function TaskStatusDisplay({
     }
   };
 
-  const filteredTasks = getFilteredTasks();
+  const getSortValue = (task: Task, sortId: string): number => {
+    switch (sortId) {
+      case "priority": {
+        const priorityOrder = { high: 3, medium: 2, low: 1 };
+        return priorityOrder[task.priority] || 0;
+      }
+      case "createdAt":
+        return task.createdAt;
+      case "updatedAt":
+        return task.updatedAt || task.createdAt;
+      case "dueDate":
+        return task.dueDate ? new Date(task.dueDate).getTime() : 0;
+      default:
+        return 0;
+    }
+  };
 
-  if (filteredTasks.length === 0) {
-    return <EmptyState message={getEmptyMessage()} />;
-  }
+  const getDefaultSortValue = (task: Task): number => {
+    // デフォルトは優先度 > 更新日 > 作成日順
+    const priorityOrder = { high: 3, medium: 2, low: 1 };
+    const priorityValue = priorityOrder[task.priority] * 1000000000; // 優先度を大きな重みで乗算
+    const timeValue = task.updatedAt || task.createdAt;
+    return priorityValue + timeValue;
+  };
+
+  const renderTask = (task: Task, props: {
+    isChecked: boolean;
+    onToggleCheck: () => void;
+    onSelect: () => void;
+    isSelected: boolean;
+    showEditDate: boolean;
+    variant?: 'normal' | 'deleted';
+  }) => {
+    const Component = viewMode === 'card' ? TaskCard : TaskListItem;
+    /* eslint-disable react/prop-types */
+    return (
+      <Component
+        key={task.id}
+        task={task}
+        isChecked={props.isChecked}
+        onToggleCheck={props.onToggleCheck}
+        onSelect={props.onSelect}
+        isSelected={props.isSelected}
+        showEditDate={props.showEditDate}
+        variant={props.variant}
+      />
+    );
+    /* eslint-enable react/prop-types */
+  };
 
   return (
-    <ItemGrid viewMode={viewMode} effectiveColumnCount={effectiveColumnCount}>
-      {filteredTasks.map((task: Task) => {
-        const Component = viewMode === 'card' ? TaskCard : TaskListItem;
-        return (
-          <Component
-            key={task.id}
-            task={task}
-            isChecked={checkedTasks?.has(task.id) || false}
-            onToggleCheck={() => onToggleCheck?.(task.id)}
-            onSelect={() => {
-              if (selectionMode === "check") {
-                onToggleCheck?.(task.id);
-              } else {
-                onSelectTask?.(task);
-              }
-            }}
-            variant="normal"
-            isSelected={selectedTaskId === task.id}
-            showEditDate={showEditDate}
-          />
-        );
-      })}
-    </ItemGrid>
+    <ItemStatusDisplay
+      items={filteredTasks}
+      viewMode={viewMode}
+      effectiveColumnCount={effectiveColumnCount}
+      selectionMode={selectionMode}
+      checkedItems={checkedTasks}
+      onToggleCheck={onToggleCheck}
+      onSelectItem={onSelectTask}
+      selectedItemId={selectedTaskId}
+      showEditDate={showEditDate}
+      sortOptions={sortOptions}
+      emptyMessage={getEmptyMessage()}
+      renderItem={renderTask}
+      getSortValue={getSortValue}
+      getDefaultSortValue={getDefaultSortValue}
+    />
   );
 }
 
@@ -239,90 +155,71 @@ export function DeletedTaskDisplay({
   showEditDate = false,
   sortOptions = []
 }: DeletedTaskDisplayProps) {
-  const getSortedTasks = () => {
-    if (!deletedTasks) return [];
-    
-    // 有効な並び替えオプションを取得
-    const enabledSorts = sortOptions.filter(opt => opt.enabled);
-    
-    if (enabledSorts.length === 0) {
-      // デフォルトは削除日順（新しい順）
-      return deletedTasks.sort((a, b) => b.deletedAt - a.deletedAt);
-    }
-    
-    const sorted = deletedTasks.sort((a, b) => {
-      // 有効な並び替えを順番に適用
-      for (const sortOption of enabledSorts) {
-        let diff = 0;
-        
-        switch (sortOption.id) {
-          case "priority": {
-            const priorityOrder: Record<string, number> = { high: 3, medium: 2, low: 1 };
-            diff = (priorityOrder[a.priority] || 0) - (priorityOrder[b.priority] || 0);
-            break;
-          }
-          case "createdAt":
-            diff = a.createdAt - b.createdAt;
-            break;
-          case "updatedAt": {
-            const aUpdated = a.updatedAt || a.createdAt;
-            const bUpdated = b.updatedAt || b.createdAt;
-            diff = aUpdated - bUpdated;
-            break;
-          }
-          case "deletedAt":
-            diff = a.deletedAt - b.deletedAt;
-            break;
-        }
-        
-        // 方向を考慮
-        if (sortOption.direction === "desc") {
-          diff = -diff;
-        }
-        
-        // 差がある場合はその結果を返す
-        if (diff !== 0) return diff;
+  const getSortValue = (task: DeletedTask, sortId: string): number => {
+    switch (sortId) {
+      case "priority": {
+        const priorityOrder: Record<string, number> = { high: 3, medium: 2, low: 1 };
+        return (priorityOrder[task.priority] || 0);
       }
-      
-      return 0;
-    });
-    
-    return sorted;
+      case "createdAt":
+        return task.createdAt;
+      case "updatedAt":
+        return task.updatedAt || task.createdAt;
+      case "deletedAt":
+        return task.deletedAt;
+      default:
+        return 0;
+    }
   };
 
-  const sortedTasks = getSortedTasks();
+  const getDefaultSortValue = (task: DeletedTask): number => {
+    // デフォルトは削除日順（新しい順）
+    return task.deletedAt;
+  };
 
-  if (sortedTasks.length === 0) {
-    return <EmptyState message="削除済みタスクはありません" />;
-  }
+  const renderTask = (task: DeletedTask, props: {
+    isChecked: boolean;
+    onToggleCheck: () => void;
+    onSelect: () => void;
+    isSelected: boolean;
+    showEditDate: boolean;
+    variant?: 'normal' | 'deleted';
+  }) => {
+    const Component = viewMode === 'card' ? TaskCard : TaskListItem;
+    /* eslint-disable react/prop-types */
+    return (
+      <Component
+        key={task.id}
+        task={task}
+        isChecked={props.isChecked}
+        onToggleCheck={props.onToggleCheck}
+        onSelect={props.onSelect}
+        variant="deleted"
+        isSelected={props.isSelected}
+        showEditDate={props.showEditDate}
+      />
+    );
+    /* eslint-enable react/prop-types */
+  };
 
   return (
-    <ItemGrid
+    <ItemStatusDisplay
+      items={deletedTasks}
       viewMode={viewMode}
       effectiveColumnCount={effectiveColumnCount}
-    >
-      {sortedTasks.map((task) => {
-        const Component = viewMode === 'card' ? TaskCard : TaskListItem;
-        return (
-          <Component
-            key={task.id}
-            task={task}
-            isChecked={checkedTasks?.has(task.id) || false}
-            onToggleCheck={() => onToggleCheck?.(task.id)}
-            onSelect={() => {
-              if (selectionMode === 'check') {
-                onToggleCheck?.(task.id);
-              } else {
-                onSelectTask?.(task);
-              }
-            }}
-            variant="deleted"
-            isSelected={selectedTaskId === task.id}
-            showEditDate={showEditDate}
-          />
-        );
-      })}
-    </ItemGrid>
+      selectionMode={selectionMode}
+      checkedItems={checkedTasks}
+      onToggleCheck={onToggleCheck}
+      onSelectItem={onSelectTask}
+      selectedItemId={selectedTaskId}
+      showEditDate={showEditDate}
+      sortOptions={sortOptions}
+      emptyMessage="削除済みタスクはありません"
+      renderItem={renderTask}
+      getSortValue={getSortValue}
+      getDefaultSortValue={getDefaultSortValue}
+      variant="deleted"
+    />
   );
 }
 

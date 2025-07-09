@@ -33,6 +33,7 @@ import { useSelectAll } from "@/src/hooks/use-select-all";
 import { useTabChange } from "@/src/hooks/use-tab-change";
 import { useNextDeletedItemSelection } from "@/src/hooks/use-next-deleted-item-selection";
 import { useBulkDeleteButton } from "@/src/hooks/use-bulk-delete-button";
+import { useSortOptions } from "@/hooks/use-sort-options";
 import { useRef, useState } from "react";
 
 type TaskScreenMode = "list" | "view" | "create" | "edit";
@@ -71,53 +72,10 @@ function TaskScreen({
   );
 
   // 並び替え管理
-  const [sortOptions, setSortOptions] = useState<
-    Array<{
-      id: "createdAt" | "updatedAt" | "priority" | "deletedAt";
-      label: string;
-      enabled: boolean;
-      direction: "asc" | "desc";
-    }>
-  >([
-    {
-      id: "priority" as const,
-      label: "優先度順",
-      enabled: false,
-      direction: "desc" as const,
-    },
-    {
-      id: "updatedAt" as const,
-      label: "更新日順",
-      enabled: false,
-      direction: "desc" as const,
-    },
-    {
-      id: "createdAt" as const,
-      label: "作成日順",
-      enabled: false,
-      direction: "desc" as const,
-    },
-    {
-      id: "deletedAt" as const,
-      label: "削除日順",
-      enabled: false,
-      direction: "desc" as const,
-    },
-  ]);
+  const { sortOptions, setSortOptions, getVisibleSortOptions } = useSortOptions('task');
 
   // 編集日表示管理
   const [showEditDate, setShowEditDate] = useState(true);
-
-  // アクティブタブに応じた並び替えオプションを取得
-  const getVisibleSortOptions = () => {
-    if (activeTab === 'deleted') {
-      // 削除済みタブでは削除日順を追加
-      return sortOptions;
-    } else {
-      // 通常タブでは削除日順を除外
-      return sortOptions.filter(option => option.id !== 'deletedAt');
-    }
-  };
 
   // 削除ボタンの参照
   const deleteButtonRef = useRef<HTMLButtonElement>(null);
@@ -411,7 +369,7 @@ function TaskScreen({
           onSelectionModeChange={setSelectionMode}
           onSelectAll={handleSelectAll}
           isAllSelected={isAllSelected}
-          sortOptions={getVisibleSortOptions()}
+          sortOptions={getVisibleSortOptions(activeTab)}
           onSortChange={setSortOptions}
           showEditDate={showEditDate}
           onShowEditDateChange={setShowEditDate}
@@ -436,7 +394,7 @@ function TaskScreen({
           isLoading={taskLoading}
           error={taskError}
           selectionMode={selectionMode}
-          sortOptions={getVisibleSortOptions()}
+          sortOptions={getVisibleSortOptions(activeTab)}
           showEditDate={showEditDate}
           tasks={tasks || []}
           deletedTasks={deletedTasks || []}

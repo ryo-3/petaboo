@@ -9,13 +9,13 @@ import ArrowDownIcon from "@/components/icons/arrow-down-icon";
 import ArrowUpIcon from "@/components/icons/arrow-up-icon";
 
 interface SortOption {
-  id: "createdAt" | "updatedAt" | "priority" | "deletedAt";
+  id: "createdAt" | "updatedAt" | "priority" | "deletedAt" | "dueDate";
   label: string;
   enabled: boolean;
   direction: "asc" | "desc";
 }
 
-interface TaskSortToggleProps {
+interface SortToggleProps {
   sortOptions: SortOption[];
   onSortChange: (options: SortOption[]) => void;
   buttonSize: string;
@@ -23,7 +23,7 @@ interface TaskSortToggleProps {
   arrowSize?: string;
 }
 
-function TaskSortToggle({ sortOptions, onSortChange, buttonSize, iconSize, arrowSize = "w-2.5 h-3" }: TaskSortToggleProps) {
+function SortToggle({ sortOptions, onSortChange, buttonSize, iconSize, arrowSize = "w-2.5 h-3" }: SortToggleProps) {
   const getSortIcon = (id: string) => {
     switch (id) {
       case "createdAt":
@@ -91,4 +91,6 @@ function TaskSortToggle({ sortOptions, onSortChange, buttonSize, iconSize, arrow
   );
 }
 
-export default TaskSortToggle;
+// 後方互換性のためのエクスポート
+export { SortToggle as TaskSortToggle };
+export default SortToggle;

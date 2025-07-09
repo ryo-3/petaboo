@@ -5,7 +5,7 @@ import TaskIcon from "@/components/icons/task-icon";
 import TrashIcon from "@/components/icons/trash-icon";
 import AddItemButton from "@/components/ui/buttons/add-item-button";
 import SelectionModeToggle from "@/components/ui/buttons/selection-mode-toggle";
-import TaskSortToggle from "@/components/ui/buttons/task-sort-toggle";
+import SortToggle from "@/components/ui/buttons/sort-toggle";
 import EditDateToggle from "@/components/ui/buttons/edit-date-toggle";
 import ColumnCountSelector from "@/components/ui/layout/column-count-selector";
 import ViewModeToggle from "@/components/ui/layout/view-mode-toggle";
@@ -29,16 +29,16 @@ interface DesktopUpperProps {
   // Select all functionality
   onSelectAll?: () => void;
   isAllSelected?: boolean;
-  // Sort options (task only)
+  // Sort options (task and memo)
   sortOptions?: Array<{
-    id: "createdAt" | "updatedAt" | "priority" | "deletedAt";
+    id: "createdAt" | "updatedAt" | "priority" | "deletedAt" | "dueDate";
     label: string;
     enabled: boolean;
     direction: "asc" | "desc";
   }>;
   onSortChange?: (
     options: Array<{
-      id: "createdAt" | "updatedAt" | "priority" | "deletedAt";
+      id: "createdAt" | "updatedAt" | "priority" | "deletedAt" | "dueDate";
       label: string;
       enabled: boolean;
       direction: "asc" | "desc";
@@ -257,9 +257,9 @@ function DesktopUpper({
             </button>
           )}
 
-          {/* 並び替えメニュー（タスクのみ） */}
-          {currentMode === "task" && onSortChange && sortOptions.length > 0 && (
-            <TaskSortToggle
+          {/* 並び替えメニュー */}
+          {onSortChange && sortOptions.length > 0 && (
+            <SortToggle
               sortOptions={sortOptions}
               onSortChange={onSortChange}
               buttonSize="size-6"

@@ -11,6 +11,10 @@ interface CreateButtonProps {
   className?: string;
   disabled?: boolean;
   size?: "small" | "normal";
+  customSize?: {
+    padding?: string;
+    iconSize?: string;
+  };
   showTooltip?: boolean;
 }
 
@@ -22,6 +26,7 @@ function CreateButton({
   className = "",
   disabled = false,
   size = "normal",
+  customSize,
   showTooltip = true,
 }: CreateButtonProps) {
   // プリセットカラーの定義
@@ -44,15 +49,19 @@ function CreateButton({
     normal: "w-5 h-5",
   };
 
+  // カスタムサイズまたはデフォルトサイズを使用
+  const paddingClass = customSize?.padding || sizeClasses[size];
+  const iconSizeClass = customSize?.iconSize || iconSizeClasses[size];
+
   const button = (
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`${sizeClasses[size]} rounded-lg text-white transition-colors ${bgColorClass} ${
+      className={`${paddingClass} rounded-lg text-white transition-colors ${bgColorClass} ${
         disabled ? "opacity-50 cursor-not-allowed" : ""
       } ${className}`}
     >
-      <PlusIcon className={iconSizeClasses[size]} />
+      <PlusIcon className={iconSizeClass} />
     </button>
   );
 

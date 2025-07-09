@@ -1,12 +1,10 @@
 "use client";
 
-import MemoIcon from "@/components/icons/memo-icon";
-import TaskIcon from "@/components/icons/task-icon";
 import TrashIcon from "@/components/icons/trash-icon";
 import AddItemButton from "@/components/ui/buttons/add-item-button";
+import EditDateToggle from "@/components/ui/buttons/edit-date-toggle";
 import SelectionModeToggle from "@/components/ui/buttons/selection-mode-toggle";
 import SortToggle from "@/components/ui/buttons/sort-toggle";
-import EditDateToggle from "@/components/ui/buttons/edit-date-toggle";
 import ColumnCountSelector from "@/components/ui/layout/column-count-selector";
 import ViewModeToggle from "@/components/ui/layout/view-mode-toggle";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
@@ -90,12 +88,22 @@ function DesktopUpper({
         { id: "todo", label: "未着手", count: todoCount },
         { id: "in_progress", label: "進行中", count: inProgressCount },
         { id: "completed", label: "完了", count: completedCount },
-        { id: "deleted", label: "", icon: <TrashIcon className="w-4 h-4" />, count: deletedTasksCount },
+        {
+          id: "deleted",
+          label: "",
+          icon: <TrashIcon className="w-4 h-4" />,
+          count: deletedTasksCount,
+        },
       ];
     }
     return [
       { id: "normal", label: "通常", count: normalCount },
-      { id: "deleted", label: "", icon: <TrashIcon className="w-4 h-4" />, count: deletedNotesCount },
+      {
+        id: "deleted",
+        label: "",
+        icon: <TrashIcon className="w-4 h-4" />,
+        count: deletedNotesCount,
+      },
     ];
   };
 
@@ -114,7 +122,7 @@ function DesktopUpper({
   // タブの背景色設定
   const getTabBackgroundClass = (tabId: string, isActive: boolean) => {
     const baseClass = "bg-gray-100";
-    
+
     if (isActive) {
       const activeColors = {
         todo: "bg-zinc-200",
@@ -125,7 +133,7 @@ function DesktopUpper({
       };
       return activeColors[tabId as keyof typeof activeColors] || "bg-gray-100";
     }
-    
+
     const hoverColors = {
       todo: "hover:bg-zinc-200",
       in_progress: "hover:bg-blue-100",
@@ -137,16 +145,19 @@ function DesktopUpper({
   };
 
   // タブの内容をレンダリング
-  const renderTabContent = (tab: { id: string; label: string; count: number; icon?: React.ReactNode }, isActive: boolean) => {
+  const renderTabContent = (
+    tab: { id: string; label: string; count: number; icon?: React.ReactNode },
+    isActive: boolean
+  ) => {
     if (tab.icon) {
       return (
         <>
           {tab.icon}
-          <span 
+          <span
             className={`text-xs transition-all overflow-hidden ${
-              isActive 
-                ? 'opacity-100 w-9 translate-x-0 px-1.5 ml-1' 
-                : 'opacity-0 w-0 translate-x-2 px-0'
+              isActive
+                ? "opacity-100 w-9 translate-x-0 px-1.5 ml-1"
+                : "opacity-0 w-0 translate-x-2 px-0"
             }`}
           >
             {tab.count}
@@ -156,7 +167,9 @@ function DesktopUpper({
     }
     return (
       <>
-        <div className={`w-3 h-3 rounded-full ${getTabColor(tab.id)}`}></div>
+        <div
+          className={`w-2.5 h-2.5 rounded-full ${getTabColor(tab.id)}`}
+        ></div>
         <span>{tab.label}</span>
         <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full w-9">
           {tab.count}
@@ -170,14 +183,9 @@ function DesktopUpper({
   return (
     <div className="mb-3">
       <div className="flex justify-between items-center mb-3">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">
-            {currentMode === "memo" ? (
-              <MemoIcon className="w-6 h-6 text-gray-600" />
-            ) : (
-              <TaskIcon className="w-6 h-6 text-gray-600" />
-            )}
-            <h1 className="text-2xl font-bold text-gray-800 w-[105px]">
+            <h1 className="font-bold text-gray-800 w-[105px] text-[22px]">
               {currentMode === "memo" ? "メモ一覧" : "タスク一覧"}
             </h1>
           </div>
@@ -189,21 +197,34 @@ function DesktopUpper({
             position="bottom"
             size="small"
             showTooltip={false}
+            customSize={{
+              padding: "p-2",
+              iconSize: "w-3.5 h-3.5"
+            }}
           />
 
           {/* タブ */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 ml-2">
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id;
-              const tabClass = tab.icon 
-                ? 'pl-2 pr-2 py-2'
-                : 'gap-2 px-2.5 py-1.5';
-              
+              const tabClass = tab.icon
+                ? "pl-2 pr-2 py-2"
+                : "gap-2 px-2 py-1.5";
+
               return (
                 <button
                   key={tab.id}
-                  onClick={() => onTabChange(tab.id as "normal" | "deleted" | "todo" | "in_progress" | "completed")}
-                  className={`flex items-center ${tabClass} rounded-lg text-sm font-medium transition-colors text-gray-600 ${getTabBackgroundClass(tab.id, isActive)}`}
+                  onClick={() =>
+                    onTabChange(
+                      tab.id as
+                        | "normal"
+                        | "deleted"
+                        | "todo"
+                        | "in_progress"
+                        | "completed"
+                    )
+                  }
+                  className={`flex items-center ${tabClass} rounded-lg font-medium transition-colors text-gray-600 text-[13px] ${getTabBackgroundClass(tab.id, isActive)}`}
                 >
                   {renderTabContent(tab, isActive)}
                 </button>
@@ -272,7 +293,6 @@ function DesktopUpper({
               iconSize="size-4"
             />
           )}
-
         </div>
       )}
     </div>

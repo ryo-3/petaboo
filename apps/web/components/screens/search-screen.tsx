@@ -120,8 +120,7 @@ function SearchScreen({
       <div className="bg-white border-b border-gray-200 p-6">
         {/* タイトル */}
         <div className="flex items-center gap-3 mb-4">
-          <SearchIcon className="w-6 h-6 text-gray-600" />
-          <h1 className="text-2xl font-bold text-gray-900">詳細検索</h1>
+          <h1 className="font-bold text-gray-900 text-[22px]">詳細検索</h1>
         </div>
         
         {/* 検索バー */}

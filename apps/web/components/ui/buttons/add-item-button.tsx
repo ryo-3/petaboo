@@ -12,6 +12,10 @@ interface AddItemButtonProps {
   disabled?: boolean
   size?: 'small' | 'normal'
   showTooltip?: boolean
+  customSize?: {
+    padding?: string;
+    iconSize?: string;
+  }
 }
 
 function AddItemButton({
@@ -21,7 +25,8 @@ function AddItemButton({
   className = '',
   disabled = false,
   size = 'normal',
-  showTooltip = true
+  showTooltip = true,
+  customSize
 }: AddItemButtonProps) {
   const typeConfig = {
     memo: {
@@ -46,6 +51,7 @@ function AddItemButton({
       disabled={disabled}
       size={size}
       showTooltip={showTooltip}
+      customSize={customSize}
     />
   )
 }

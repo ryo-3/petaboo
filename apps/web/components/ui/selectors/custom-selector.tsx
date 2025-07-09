@@ -71,7 +71,7 @@ function CustomSelector({
           onClick={() => setIsOpen(!isOpen)}
           title="クリックして変更"
         >
-          <div className="px-2 py-1 text-sm hover:opacity-80 transition-opacity flex items-center gap-2 flex-1">
+          <div className="px-1.5 py-1 text-sm hover:opacity-80 transition-opacity flex items-center gap-2 flex-1">
             {selectedOption?.color && (
               <div className={`w-3 h-3 rounded-full ${selectedOption.color}`}></div>
             )}

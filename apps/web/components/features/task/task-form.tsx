@@ -152,7 +152,7 @@ function TaskForm({
         />
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex gap-2.5">
         <CustomSelector
           label="ステータス"
           options={statusOptions}
@@ -173,7 +173,7 @@ function TaskForm({
           fullWidth
         />
 
-        <div className="flex-1 flex gap-4 items-center">
+        <div className="flex-1 flex gap-2.5 items-center">
           <div className="w-4/12">
             <CustomSelector
               label="カテゴリー"

@@ -4,8 +4,8 @@
 - **メモ帳アプリ**: メモとタスクの統合管理アプリ
 - **技術スタック**: 
   - **フロントエンド**: Next.js + TypeScript + Tailwind CSS
-  - **バックエンド**: Hono + SQLite
-  - **認証**: Clerk
+  - **バックエンド**: Hono + SQLite + Drizzle ORM
+  - **認証**: Clerk (JWT Bearer認証)
 - **アーキテクチャ**: Turborepo monorepo構成
 
 ## 基本設計原則
@@ -16,6 +16,13 @@
 - **段階的リファクタリング**: 既存機能を壊さず段階的に改善
 
 ## 主要システム
+
+### カテゴリーシステム
+- **スキーマ**: categories テーブル (id, name, userId, createdAt, updatedAt)
+- **API**: /categories (CRUD操作、Clerk Bearer認証)
+- **フック**: use-categories.ts (React Query)
+- **UI**: CategorySelector (CustomSelector利用)
+- **統合**: タスクに categoryId 追加
 
 ### 画面モード
 ```tsx
@@ -99,6 +106,7 @@ setCheckedItems(new Set(domOrder.filter(id => filteredItems.some(item => item.id
 - `DeleteButton` - 削除ボタン統一（TrashIcon CSS化済み）
 - `SaveButton` - 保存ボタン統一（変更検知対応、CSS化済み）
 - `CustomSelector` - セレクター統一
+- `CategorySelector` - カテゴリー選択コンポーネント
 
 ### UIコントロール
 - `TaskSortToggle` - 並び替えトグル
@@ -109,6 +117,7 @@ setCheckedItems(new Set(domOrder.filter(id => filteredItems.some(item => item.id
 - `useSelectionHandlers` - 選択ハンドラーパターン統一
 - `useRightEditorDelete` - 右側エディター削除処理統一
 - `use-bulk-restore` - 復元処理統一（メモ・タスク共通）
+- `use-categories` - カテゴリー操作フック（CRUD操作）
 
 ### アニメーション
 - `deleteAnimation.ts` - 削除アニメーション（段階的CSS化中）
@@ -127,6 +136,17 @@ setCheckedItems(new Set(domOrder.filter(id => filteredItems.some(item => item.id
 ## UIコントロール統一規則
 - **サイズ**: buttonSize="size-7", iconSize="size-5", arrowSize="w-2.5 h-3"
 - **色**: 背景=bg-gray-100, アクティブ=bg-white shadow-sm, 非アクティブ=text-gray-400
+
+## API認証パターン
+```typescript
+// Clerk Bearer認証（credentials: "include" 不要）
+const response = await fetch(`${API_BASE_URL}/categories`, {
+  headers: {
+    "Content-Type": "application/json",
+    ...(token && { Authorization: `Bearer ${token}` }),
+  },
+});
+```
 
 ## 開発コマンド
 ```bash
@@ -176,3 +196,18 @@ npm run check-types && npm run lint  # コミット前必須
 #### 一括復元（削除済みアイテムの復元）
 - **メモ**: `use-memo-bulk-restore.tsx` でパフォーマンス最適化済み ✅
 - **タスク**: `use-task-bulk-restore.tsx` でパフォーマンス最適化済み ✅
+
+### 動的高さシステム
+- **BaseCard**: タスクとメモで異なる高さを自動設定
+  - タスク: `h-[170px]`
+  - メモ: `h-[160px]`
+  - 判定: `dataTaskId` プロパティの有無で自動切り替え
+
+### テキストオーバーフロー対策
+- **問題**: グリッドレイアウト（2列表示）でテキストがはみ出す
+- **解決策**: `break-all` クラスを追加
+```tsx
+<p className="text-xs text-gray-600 line-clamp-1 break-all">
+  {task.description || ""}
+</p>
+```

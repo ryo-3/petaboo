@@ -23,6 +23,7 @@ const TaskSchema = z.object({
   status: z.enum(["todo", "in_progress", "completed"]),
   priority: z.enum(["low", "medium", "high"]),
   dueDate: z.number().nullable(),
+  categoryId: z.number().nullable(),
   createdAt: z.number(),
   updatedAt: z.number().nullable(),
 });
@@ -33,6 +34,7 @@ const TaskInputSchema = z.object({
   status: z.enum(["todo", "in_progress", "completed"]).default("todo"),
   priority: z.enum(["low", "medium", "high"]).default("medium"),
   dueDate: z.number().optional(),
+  categoryId: z.number().optional(),
 });
 
 const TaskUpdateSchema = z.object({
@@ -41,6 +43,7 @@ const TaskUpdateSchema = z.object({
   status: z.enum(["todo", "in_progress", "completed"]).optional(),
   priority: z.enum(["low", "medium", "high"]).optional(),
   dueDate: z.number().optional(),
+  categoryId: z.number().optional(),
 });
 
 // GET /tasks（OpenAPI付き）
@@ -81,6 +84,7 @@ app.openapi(
       status: tasks.status,
       priority: tasks.priority,
       dueDate: tasks.dueDate,
+      categoryId: tasks.categoryId,
       createdAt: tasks.createdAt,
       updatedAt: tasks.updatedAt,
     }).from(tasks).where(eq(tasks.userId, auth.userId));
@@ -152,7 +156,7 @@ app.openapi(
       );
     }
 
-    const { title, description, status, priority, dueDate } = parsed.data;
+    const { title, description, status, priority, dueDate, categoryId } = parsed.data;
     const result = await db.insert(tasks).values({
       userId: auth.userId,
       title,
@@ -160,6 +164,7 @@ app.openapi(
       status,
       priority,
       dueDate,
+      categoryId,
       createdAt: Math.floor(Date.now() / 1000),
     }).returning({ id: tasks.id });
 
@@ -319,6 +324,7 @@ app.openapi(
         status: task.status,
         priority: task.priority,
         dueDate: task.dueDate,
+        categoryId: task.categoryId,
         createdAt: task.createdAt,
         updatedAt: task.updatedAt,
         deletedAt: Math.floor(Date.now() / 1000),
@@ -391,6 +397,7 @@ app.openapi(
         status: deletedTasks.status,
         priority: deletedTasks.priority,
         dueDate: deletedTasks.dueDate,
+        categoryId: deletedTasks.categoryId,
         createdAt: deletedTasks.createdAt,
         updatedAt: deletedTasks.updatedAt,
         deletedAt: deletedTasks.deletedAt,
@@ -548,6 +555,7 @@ app.openapi(
           status: deletedTask.status as "todo" | "in_progress" | "completed",
           priority: deletedTask.priority as "low" | "medium" | "high",
           dueDate: deletedTask.dueDate,
+          categoryId: deletedTask.categoryId,
           createdAt: deletedTask.createdAt,
           updatedAt: Math.floor(Date.now() / 1000), // 復元時刻を更新
         }).run();

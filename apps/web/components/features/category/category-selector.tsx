@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React from "react";
 import { useCategories, useCreateCategory } from "@/src/hooks/use-categories";
 import CustomSelector from "@/components/ui/selectors/custom-selector";
 
@@ -16,9 +16,8 @@ export default function CategorySelector({
   allowCreate = true,
   className,
 }: CategorySelectorProps) {
-  const { data: categories = [], isLoading } = useCategories();
+  const { data: categories = [] } = useCategories();
   const createCategory = useCreateCategory();
-  const [isCreating, setIsCreating] = useState(false);
 
   // セレクター用のオプションを準備（string型に変換）
   const options = [
@@ -34,7 +33,6 @@ export default function CategorySelector({
 
   // 新しいカテゴリー作成ハンドラー
   const handleCreateCategory = async (newCategoryName: string) => {
-    setIsCreating(true);
     try {
       const newCategory = await createCategory.mutateAsync({ name: newCategoryName.trim() });
       onChange(newCategory.id);
@@ -42,7 +40,6 @@ export default function CategorySelector({
       console.error("カテゴリー作成エラー:", error);
       alert("カテゴリーの作成に失敗しました");
     }
-    setIsCreating(false);
   };
 
   // セレクターの変更ハンドラー

@@ -5,6 +5,7 @@ import DeleteButton from "@/components/ui/buttons/delete-button";
 import { SingleDeleteConfirmation } from "@/components/ui/modals";
 import TaskForm from "./task-form";
 import { useUpdateTask, useCreateTask } from "@/src/hooks/use-tasks";
+import { useAddItemToBoard } from "@/src/hooks/use-boards";
 import type { Task } from "@/src/types/task";
 import { useCallback, useEffect, useState, useMemo } from "react";
 import { useTaskDelete } from "./use-task-delete";
@@ -31,6 +32,7 @@ function TaskEditor({
 }: TaskEditorProps) {
   const updateTask = useUpdateTask();
   const createTask = useCreateTask();
+  const addItemToBoard = useAddItemToBoard();
   const isNewTask = !task;
   
   // 削除機能は編集時のみ
@@ -58,6 +60,7 @@ function TaskEditor({
     task?.priority || "medium"
   );
   const [categoryId, setCategoryId] = useState<number | null>(task?.categoryId ?? null);
+  const [boardId, setBoardId] = useState<number | null>(null);
   const [dueDate, setDueDate] = useState<string>(
     task?.dueDate ? new Date(task.dueDate * 1000).toISOString().split('T')[0] || "" : ""
   );
@@ -150,6 +153,7 @@ function TaskEditor({
       setStatus("todo");
       setPriority("medium");
       setCategoryId(null);
+      setBoardId(null);
       setDueDate("");
       setError(null);
       setOriginalData(newData);
@@ -180,6 +184,21 @@ function TaskEditor({
         const newTask = await createTask.mutateAsync(taskData);
         setSavedSuccessfully(true);
         
+        // ボード選択時はボードに追加
+        if (boardId && newTask.id) {
+          try {
+            await addItemToBoard.mutateAsync({
+              boardId,
+              data: {
+                itemType: 'task',
+                itemId: newTask.id,
+              },
+            });
+          } catch (error) {
+            console.error('Failed to add task to board:', error);
+          }
+        }
+        
         onSaveComplete?.(newTask, true);
         
         // 新規作成後はフォームをリセット
@@ -198,6 +217,7 @@ function TaskEditor({
           setStatus("todo");
           setPriority("medium");
           setCategoryId(null);
+          setBoardId(null);
           setDueDate("");
           setSavedSuccessfully(false);
           
@@ -283,6 +303,8 @@ function TaskEditor({
           onPriorityChange={setPriority}
           categoryId={categoryId}
           onCategoryChange={setCategoryId}
+          boardId={boardId}
+          onBoardChange={setBoardId}
           dueDate={dueDate}
           onDueDateChange={setDueDate}
           onSave={handleSave}

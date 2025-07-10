@@ -4,6 +4,7 @@ import DeletedMemoList from "@/components/features/memo/deleted-memo-list";
 import DesktopLayout from "@/components/layout/desktop-layout";
 import Header from "@/components/layout/header";
 import Sidebar from "@/components/layout/sidebar";
+import BoardScreen from "@/components/screens/board-screen";
 import CreateScreen from "@/components/screens/create-screen";
 import MemoScreen from "@/components/screens/memo-screen";
 import SearchScreen from "@/components/screens/search-screen";
@@ -15,8 +16,8 @@ import type { DeletedTask, Task } from "@/src/types/task";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useEffect, useState } from "react";
 
-// 画面モード定義（6つのシンプルな画面状態）
-type ScreenMode = 'home' | 'memo' | 'task' | 'create' | 'search' | 'settings';
+// 画面モード定義（7つのシンプルな画面状態）
+type ScreenMode = 'home' | 'memo' | 'task' | 'create' | 'search' | 'settings' | 'board';
 
 function Main() {
   // ==========================================
@@ -188,6 +189,12 @@ function Main() {
     setScreenMode('search');
   };
 
+  /** ボード画面に遷移 */
+  const handleDashboard = () => {
+    clearAllSelections();
+    setScreenMode('board');
+  };
+
   /** 新規作成画面に遷移 */
   const handleNewMemo = () => {
     clearAllSelections();
@@ -276,6 +283,7 @@ function Main() {
               currentMode={currentMode}
               onModeChange={setCurrentMode}
               onSettings={handleSettings}
+              onDashboard={handleDashboard}
             />
           )}
         </div>
@@ -310,11 +318,12 @@ function Main() {
                 onModeChange={setCurrentMode}
                 onSettings={handleSettings}
                 onSearch={handleSearch}
+                onDashboard={handleDashboard}
               />
             }
           >
             {/* ==========================================
-                メインコンテンツエリア（6つの画面モード）
+                メインコンテンツエリア（7つの画面モード）
                 ========================================== */}
             
             {/* ホーム画面 */}
@@ -376,6 +385,11 @@ function Main() {
             {/* 設定画面 */}
             {screenMode === 'settings' && (
               <SettingsScreen />
+            )}
+
+            {/* ボード画面 */}
+            {screenMode === 'board' && (
+              <BoardScreen />
             )}
           </DesktopLayout>
         </div>

@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react'
 import type { Memo } from '@/src/types/memo'
 import { useCreateNote, useUpdateNote, useDeleteNote } from '@/src/hooks/use-notes'
+import { useAddItemToBoard } from '@/src/hooks/use-boards'
 
 interface UseSimpleMemoSaveOptions {
   memo?: Memo | null
@@ -10,6 +11,7 @@ interface UseSimpleMemoSaveOptions {
 export function useSimpleMemoSave({ memo = null, onSaveComplete }: UseSimpleMemoSaveOptions = {}) {
   const [title, setTitle] = useState(() => memo?.title || '')
   const [content, setContent] = useState(() => memo?.content || '')
+  const [selectedBoardId, setSelectedBoardId] = useState<number | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
 
@@ -20,6 +22,7 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete }: UseSimpleMemo
   const createNote = useCreateNote()
   const updateNote = useUpdateNote()
   const deleteNote = useDeleteNote()
+  const addItemToBoard = useAddItemToBoard()
 
   // 変更検知
   const hasChanges = useMemo(() => {
@@ -84,6 +87,21 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete }: UseSimpleMemo
             content: content.trim() || undefined
           })
           
+          // ボード選択時はボードに追加
+          if (selectedBoardId && createdMemo.id) {
+            try {
+              await addItemToBoard.mutateAsync({
+                boardId: selectedBoardId,
+                data: {
+                  itemType: 'memo',
+                  itemId: createdMemo.id,
+                },
+              })
+            } catch (error) {
+              console.error('Failed to add memo to board:', error)
+            }
+          }
+          
           onSaveComplete?.(createdMemo, false, true)
         } else {
           // 空の新規メモは単に閉じる
@@ -112,14 +130,20 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete }: UseSimpleMemo
     setContent(newContent)
   }, [])
 
+  const handleBoardChange = useCallback((boardId: number | null) => {
+    setSelectedBoardId(boardId)
+  }, [])
+
   return {
     title,
     content,
+    selectedBoardId,
     isSaving,
     saveError,
     hasChanges,
     handleSave,
     handleTitleChange,
     handleContentChange,
+    handleBoardChange,
   }
 }

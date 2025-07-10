@@ -5,6 +5,7 @@ import SaveButton from "@/components/ui/buttons/save-button";
 import DateInput from "@/components/ui/inputs/date-input";
 import CustomSelector from "@/components/ui/selectors/custom-selector";
 import CategorySelector from "@/components/features/category/category-selector";
+import BoardSelector from "@/components/ui/selectors/board-selector";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import {
   getPriorityEditorColor,
@@ -25,6 +26,8 @@ interface TaskFormProps {
   onPriorityChange: (value: "low" | "medium" | "high") => void;
   categoryId: number | null;
   onCategoryChange: (value: number | null) => void;
+  boardId: number | null;
+  onBoardChange: (value: number | null) => void;
   dueDate: string;
   onDueDateChange: (value: string) => void;
   onSave: () => void;
@@ -48,6 +51,8 @@ function TaskForm({
   onPriorityChange,
   categoryId,
   onCategoryChange,
+  boardId,
+  onBoardChange,
   dueDate,
   onDueDateChange,
   onSave,
@@ -167,12 +172,13 @@ function TaskForm({
             />
           </div>
           <div className="w-4/12">
-          {/* ここはまだダミー あとでボード選択が入る*/}
-            <div className="space-y-1.5">
+          <div className="space-y-1.5">
               <label className="text-xs text-gray-600">ボード</label>
-              <div className="px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg text-gray-400">
-                未実装
-              </div>
+              <BoardSelector
+                selectedBoardId={boardId}
+                onBoardChange={onBoardChange}
+                placeholder="ボードを選択（任意）"
+              />
             </div>
           </div>
 

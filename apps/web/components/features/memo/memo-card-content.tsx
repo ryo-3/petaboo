@@ -27,7 +27,7 @@ function MemoCardContent({ memo, variant = 'normal', showEditDate = false }: Mem
         {displayTitle}
       </div>
       <div className="text-sm text-gray-600 flex-1 overflow-hidden">
-        <div className="line-clamp-3 break-words">
+        <div className="line-clamp-4 break-words">
           {displayContent ? displayContent.split('\n').slice(1).join('\n') : ''}
         </div>
       </div>

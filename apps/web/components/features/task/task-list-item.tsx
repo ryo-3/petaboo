@@ -1,6 +1,11 @@
 import type { DeletedTask, Task } from "@/src/types/task";
 import { formatDateOnly } from "@/src/utils/formatDate";
-import { getStatusColor, getPriorityColor, getStatusText, getPriorityText } from "@/src/utils/taskUtils";
+import {
+  getPriorityColor,
+  getPriorityText,
+  getStatusColor,
+  getStatusText,
+} from "@/src/utils/taskUtils";
 
 interface TaskListItemProps {
   task: Task | DeletedTask;
@@ -26,7 +31,6 @@ function TaskListItem({
   const isDeleted = variant === "deleted";
   const deletedTask = task as DeletedTask;
 
-
   return (
     <div
       data-task-id={task.id}
@@ -36,9 +40,9 @@ function TaskListItem({
           : isDeleted
             ? "bg-red-50 border-red-200 hover:bg-red-100"
             : "bg-white hover:bg-gray-50"
-      } border-b border-gray-200 transition-all duration-300 ${isDeleting ? 'opacity-0' : 'opacity-100'}`}
+      } border-b border-gray-200 transition-all duration-300 ${isDeleting ? "opacity-0" : "opacity-100"}`}
     >
-      <div className="p-2 flex items-center gap-3">
+      <div className="p-2 flex items-stretch gap-3 h-full">
         <button
           onClick={onToggleCheck}
           className={`size-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
@@ -64,19 +68,19 @@ function TaskListItem({
           )}
         </button>
 
-        <button onClick={onSelect} className="flex-1 min-w-0 text-left">
-          <div className="flex items-start justify-between gap-4 flex-col">
+        <button onClick={onSelect} className="flex-1 text-left">
+          <div className="flex flex-col items-start h-full">
             <div className="flex-1 min-w-0">
               <h3
-                className={`font-semibold text-sm mb-1 line-clamp-1 ${
+                className={`font-semibold text-sm mb-1 line-clamp-2 break-words leading-5 ${
                   isDeleted ? "text-gray-700" : "text-gray-800"
                 }`}
               >
-                {task.title}
+                {task.title.replace(/[\r\n]/g, " ").trim()}
               </h3>
 
               {/* ステータスと優先度 */}
-              <div className="flex gap-1 mb-1">
+              <div className="flex gap-1 mb-1 flex-wrap">
                 <span
                   className={`px-1.5 py-0.5 rounded text-xs ${getStatusColor(task.status)}`}
                 >
@@ -89,34 +93,34 @@ function TaskListItem({
                 </span>
               </div>
 
-              <p className="text-xs text-gray-600 line-clamp-1">
-                {task.description || "説明なし"}
+              <p className="text-xs text-gray-600 line-clamp-1 break-all">
+                {task.description || ""}
               </p>
 
-              {/* 期限表示 */}
-              {task.dueDate && !isDeleted && (
+              {/* 期限表示  一時的にコメントアウト*/}
+              {/* {task.dueDate && !isDeleted && (
                 <div className="text-xs text-gray-500 mt-1">
                   期限: {formatDateOnly(task.dueDate)}
                 </div>
-              )}
+              )} */}
             </div>
 
             <div
-              className={`text-xs flex-shrink-0 ${
+              className={`text-xs pt-2 ${
                 isDeleted ? "text-red-400" : "text-gray-400"
               }`}
             >
               {isDeleted ? (
                 <div>削除: {formatDateOnly(deletedTask.deletedAt)}</div>
               ) : showEditDate ? (
-                <div className="text-right flex gap-2">
+                <div className="flex gap-2">
                   <div>作成: {formatDateOnly(task.createdAt)}</div>
                   {task.updatedAt && task.updatedAt !== task.createdAt && (
                     <div>編集: {formatDateOnly(task.updatedAt)}</div>
                   )}
                 </div>
               ) : (
-                <div className="text-right">
+                <div className="">
                   {task.updatedAt && task.updatedAt !== task.createdAt
                     ? formatDateOnly(task.updatedAt)
                     : formatDateOnly(task.createdAt)}

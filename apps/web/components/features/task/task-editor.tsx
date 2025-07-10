@@ -57,8 +57,10 @@ function TaskEditor({
   const [priority, setPriority] = useState<"low" | "medium" | "high">(
     task?.priority || "medium"
   );
-  const [category, setCategory] = useState<string>("");
-  const [dueDate, setDueDate] = useState<string>("");
+  const [categoryId, setCategoryId] = useState<number | null>(task?.categoryId ?? null);
+  const [dueDate, setDueDate] = useState<string>(
+    task?.dueDate ? new Date(task.dueDate * 1000).toISOString().split('T')[0] || "" : ""
+  );
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedSuccessfully, setSavedSuccessfully] = useState(false);
@@ -70,6 +72,7 @@ function TaskEditor({
     description: description,
     status: status,
     priority: priority,
+    categoryId: categoryId,
     createdAt: Math.floor(Date.now() / 1000),
     updatedAt: Math.floor(Date.now() / 1000),
     dueDate: dueDate ? Math.floor(new Date(dueDate).getTime() / 1000) : null,
@@ -81,7 +84,7 @@ function TaskEditor({
     description: string;
     status: "todo" | "in_progress" | "completed";
     priority: "low" | "medium" | "high";
-    category: string;
+    categoryId: number | null;
     dueDate: string;
   } | null>(null);
 
@@ -93,9 +96,9 @@ function TaskEditor({
       description.trim() !== originalData.description.trim() ||
       status !== originalData.status ||
       priority !== originalData.priority ||
-      category !== originalData.category ||
+      categoryId !== originalData.categoryId ||
       dueDate !== originalData.dueDate;
-  }, [title, description, status, priority, category, dueDate, originalData]);
+  }, [title, description, status, priority, categoryId, dueDate, originalData]);
 
   // 新規作成時の保存可能性チェック
   const canSave = isNewTask ? !!title.trim() : hasChanges;
@@ -117,7 +120,7 @@ function TaskEditor({
         description: taskDescription.trim(),
         status: taskStatus,
         priority: taskPriority,
-        category: "", // カテゴリーは常に空で開始
+        categoryId: task.categoryId || null,
         dueDate: taskDueDate || ""
       };
       
@@ -126,7 +129,7 @@ function TaskEditor({
       setDescription(taskDescription);
       setStatus(taskStatus);
       setPriority(taskPriority);
-      setCategory(""); // カテゴリーも明示的にリセット
+      setCategoryId(task.categoryId || null);
       setDueDate(taskDueDate || "");
       setError(null);
       setOriginalData(newData);
@@ -137,7 +140,7 @@ function TaskEditor({
         description: "",
         status: "todo" as const,
         priority: "medium" as const,
-        category: "",
+        categoryId: null,
         dueDate: ""
       };
       
@@ -146,6 +149,7 @@ function TaskEditor({
       setDescription("");
       setStatus("todo");
       setPriority("medium");
+      setCategoryId(null);
       setDueDate("");
       setError(null);
       setOriginalData(newData);
@@ -165,6 +169,7 @@ function TaskEditor({
         description: description.trim() || undefined,
         status,
         priority,
+        categoryId: categoryId || undefined,
         dueDate: dueDate
           ? Math.floor(new Date(dueDate).getTime() / 1000)
           : undefined,
@@ -184,7 +189,7 @@ function TaskEditor({
             description: "",
             status: "todo" as const,
             priority: "medium" as const,
-            category: "",
+            categoryId: null,
             dueDate: ""
           };
           
@@ -192,7 +197,7 @@ function TaskEditor({
           setDescription("");
           setStatus("todo");
           setPriority("medium");
-          setCategory("");
+          setCategoryId(null);
           setDueDate("");
           setSavedSuccessfully(false);
           
@@ -214,7 +219,7 @@ function TaskEditor({
           description: description.trim(),
           status: status,
           priority: priority,
-          category: category,
+          categoryId: categoryId,
           dueDate: dueDate
         });
       }
@@ -234,7 +239,7 @@ function TaskEditor({
     status,
     priority,
     dueDate,
-    category,
+    categoryId,
     task,
     isNewTask,
     updateTask,
@@ -276,8 +281,8 @@ function TaskEditor({
           onStatusChange={setStatus}
           priority={priority}
           onPriorityChange={setPriority}
-          category={category}
-          onCategoryChange={setCategory}
+          categoryId={categoryId}
+          onCategoryChange={setCategoryId}
           dueDate={dueDate}
           onDueDateChange={setDueDate}
           onSave={handleSave}

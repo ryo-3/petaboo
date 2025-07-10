@@ -4,6 +4,7 @@ import PhotoButton from "@/components/ui/buttons/photo-button";
 import SaveButton from "@/components/ui/buttons/save-button";
 import DateInput from "@/components/ui/inputs/date-input";
 import CustomSelector from "@/components/ui/selectors/custom-selector";
+import CategorySelector from "@/components/features/category/category-selector";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import {
   getPriorityEditorColor,
@@ -11,7 +12,7 @@ import {
   getStatusEditorColor,
   getStatusText,
 } from "@/src/utils/taskUtils";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 interface TaskFormProps {
   title: string;
@@ -22,8 +23,8 @@ interface TaskFormProps {
   onStatusChange: (value: "todo" | "in_progress" | "completed") => void;
   priority: "low" | "medium" | "high";
   onPriorityChange: (value: "low" | "medium" | "high") => void;
-  category: string;
-  onCategoryChange: (value: string) => void;
+  categoryId: number | null;
+  onCategoryChange: (value: number | null) => void;
   dueDate: string;
   onDueDateChange: (value: string) => void;
   onSave: () => void;
@@ -45,7 +46,7 @@ function TaskForm({
   onStatusChange,
   priority,
   onPriorityChange,
-  category,
+  categoryId,
   onCategoryChange,
   dueDate,
   onDueDateChange,
@@ -62,13 +63,6 @@ function TaskForm({
   const titleInputRef = useRef<HTMLInputElement>(null);
   const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // カテゴリー管理用state（後でAPIから取得）
-  const [categories, setCategories] = useState([
-    { value: "", label: "未選択" },
-    { value: "work", label: "仕事" },
-    { value: "personal", label: "個人" },
-    { value: "study", label: "勉強" },
-  ]);
 
   // 新規作成時のフォーカス遅延
   useEffect(() => {
@@ -80,15 +74,6 @@ function TaskForm({
     }
   }, [isNewTask]);
 
-  // カテゴリー追加ハンドラー
-  const handleCreateCategory = (newCategoryName: string) => {
-    const newCategory = {
-      value: newCategoryName.toLowerCase().replace(/\s+/g, "_"),
-      label: newCategoryName,
-    };
-    setCategories((prev) => [...prev, newCategory]);
-    onCategoryChange(newCategory.value);
-  };
 
   // オプションの定義（色はtaskUtilsから取得）
   const statusOptions = [
@@ -175,27 +160,20 @@ function TaskForm({
 
         <div className="flex-1 flex gap-2.5 items-center">
           <div className="w-4/12">
-            <CustomSelector
-              label="カテゴリー"
-              options={categories}
-              value={category}
+            <CategorySelector
+              value={categoryId}
               onChange={onCategoryChange}
-              fullWidth
               allowCreate={true}
-              onCreateNew={handleCreateCategory}
             />
           </div>
           <div className="w-4/12">
           {/* ここはまだダミー あとでボード選択が入る*/}
-            <CustomSelector
-              label="ボード"
-              options={categories}
-              value={category}
-              onChange={onCategoryChange}
-              fullWidth
-              allowCreate={true}
-              onCreateNew={handleCreateCategory}
-            />
+            <div className="space-y-1.5">
+              <label className="text-xs text-gray-600">ボード</label>
+              <div className="px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg text-gray-400">
+                未実装
+              </div>
+            </div>
           </div>
 
           <div className="flex-1">

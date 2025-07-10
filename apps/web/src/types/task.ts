@@ -5,6 +5,7 @@ export interface Task {
   status: 'todo' | 'in_progress' | 'completed';
   priority: 'low' | 'medium' | 'high';
   dueDate: number | null; // Unix timestamp
+  categoryId: number | null;
   createdAt: number;
   updatedAt: number | null;
 }
@@ -17,6 +18,7 @@ export interface DeletedTask {
   status: string;
   priority: string;
   dueDate: number | null;
+  categoryId: number | null;
   createdAt: number;
   updatedAt: number | null;
   deletedAt: number;
@@ -28,6 +30,7 @@ export interface CreateTaskData {
   status?: 'todo' | 'in_progress' | 'completed';
   priority?: 'low' | 'medium' | 'high';
   dueDate?: number;
+  categoryId?: number | null;
 }
 
 export interface UpdateTaskData {
@@ -36,4 +39,5 @@ export interface UpdateTaskData {
   status?: 'todo' | 'in_progress' | 'completed';
   priority?: 'low' | 'medium' | 'high';
   dueDate?: number;
+  categoryId?: number | null;
 }

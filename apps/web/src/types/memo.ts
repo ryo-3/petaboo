@@ -2,6 +2,7 @@ export interface Memo {
   id: number
   title: string
   content: string | null
+  categoryId?: number | null
   createdAt: number
   updatedAt?: number
   tempId?: string
@@ -12,6 +13,7 @@ export interface DeletedMemo {
   originalId: number
   title: string
   content: string | null
+  categoryId?: number | null
   createdAt: number
   updatedAt?: number
   deletedAt: number
@@ -20,9 +22,11 @@ export interface DeletedMemo {
 export interface CreateMemoData {
   title: string
   content?: string
+  categoryId?: number | null
 }
 
 export interface UpdateMemoData {
   title: string
   content?: string
+  categoryId?: number | null
 }

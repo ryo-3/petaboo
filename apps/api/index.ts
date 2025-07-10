@@ -7,6 +7,7 @@ import notesRoute from "./src/routes/notes/route";
 import tasksRoute from "./src/routes/tasks/route";
 import userPreferencesRoute from "./src/routes/user-preferences/route";
 import categoriesRoute from "./src/routes/categories/route";
+import boardsRoute from "./src/routes/boards/route";
 
 // 環境変数確認（デバッグ用）
 console.log("CLERK_SECRET_KEY:", process.env.CLERK_SECRET_KEY ? "設定済み" : "未設定");
@@ -27,6 +28,7 @@ app.route("/notes", notesRoute);
 app.route("/tasks", tasksRoute);
 app.route("/user-preferences", userPreferencesRoute);
 app.route("/categories", categoriesRoute);
+app.route("/boards", boardsRoute);
 app.get("/openapi", (c) => {
   const openapiJson = openapiApp.getOpenAPIDocument({
     openapi: "3.1.0", // バージョンは "3.0.0" でもOK

@@ -33,7 +33,7 @@ function CreateButton({
   const colorClasses = {
     green: "bg-Green hover:bg-Green/85",
     yellow: "bg-DeepBlue hover:bg-DeepBlue/85",
-    blue: "bg-blue-600 hover:bg-blue-700",
+    blue: "bg-light-Blue hover:bg-light-Blue/85",
   };
 
   // カラークラスを決定（プリセットまたはカスタム）

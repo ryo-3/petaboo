@@ -294,7 +294,7 @@ function Main() {
               onSettings={handleSettings}
               onDashboard={handleDashboard}
               onNewBoard={handleNewBoard}
-              isBoardActive={screenMode === 'board'}
+              isBoardActive={screenMode === 'board' || (screenMode === 'create' && currentMode === 'board')}
             />
           )}
         </div>
@@ -331,7 +331,7 @@ function Main() {
                 onSearch={handleSearch}
                 onDashboard={handleDashboard}
                 onNewBoard={handleNewBoard}
-                isBoardActive={screenMode === 'board'}
+                isBoardActive={screenMode === 'board' || (screenMode === 'create' && currentMode === 'board')}
               />
             }
           >

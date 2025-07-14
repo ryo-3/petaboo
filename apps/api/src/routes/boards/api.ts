@@ -15,6 +15,11 @@ const BoardSchema = z.object({
   updatedAt: z.number(),
 });
 
+const BoardWithStatsSchema = BoardSchema.extend({
+  memoCount: z.number(),
+  taskCount: z.number(),
+});
+
 const CreateBoardSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().optional(),
@@ -49,10 +54,10 @@ export function createAPI(app: any) {
       200: {
         content: {
           "application/json": {
-            schema: z.array(BoardSchema),
+            schema: z.array(BoardWithStatsSchema),
           },
         },
-        description: "Get all boards",
+        description: "Get all boards with statistics",
       },
       401: {
         content: {
@@ -80,7 +85,78 @@ export function createAPI(app: any) {
       .where(and(eq(boards.userId, auth.userId), eq(boards.archived, false)))
       .orderBy(boards.position, boards.createdAt);
 
-    return c.json(userBoards);
+    // 各ボードのメモ・タスク数を計算
+    const boardsWithStats = await Promise.all(
+      userBoards.map(async (board) => {
+        // ボードアイテムを取得
+        const items = await db
+          .select()
+          .from(boardItems)
+          .where(eq(boardItems.boardId, board.id));
+
+        // メモとタスクの数をカウント & 最終アクティビティ日時を計算
+        let memoCount = 0;
+        let taskCount = 0;
+        let lastActivityAt = board.updatedAt;
+
+        for (const item of items) {
+          if (item.itemType === "memo") {
+            // メモが削除されていないか確認（notesテーブルに存在するかチェック）
+            const memo = await db
+              .select()
+              .from(notes)
+              .where(
+                and(
+                  eq(notes.id, item.itemId),
+                  eq(notes.userId, auth.userId)
+                )
+              )
+              .limit(1);
+            if (memo.length > 0) {
+              memoCount++;
+              // メモの更新日と比較して最新を保持
+              const memoUpdatedAt = typeof memo[0].updatedAt === 'string' 
+                ? Math.floor(new Date(memo[0].updatedAt).getTime() / 1000)
+                : memo[0].updatedAt;
+              if (memoUpdatedAt > lastActivityAt) {
+                lastActivityAt = memoUpdatedAt;
+              }
+            }
+          } else {
+            // タスクが削除されていないか確認（tasksテーブルに存在するかチェック）
+            const task = await db
+              .select()
+              .from(tasks)
+              .where(
+                and(
+                  eq(tasks.id, item.itemId),
+                  eq(tasks.userId, auth.userId)
+                )
+              )
+              .limit(1);
+            if (task.length > 0) {
+              taskCount++;
+              // タスクの更新日と比較して最新を保持
+              const taskUpdatedAt = typeof task[0].updatedAt === 'string' 
+                ? Math.floor(new Date(task[0].updatedAt).getTime() / 1000)
+                : task[0].updatedAt;
+              if (taskUpdatedAt > lastActivityAt) {
+                lastActivityAt = taskUpdatedAt;
+              }
+            }
+          }
+        }
+
+        return {
+          ...board,
+          memoCount,
+          taskCount,
+          updatedAt: lastActivityAt, // 最終アクティビティ日時を使用
+        };
+      })
+    );
+
+    return c.json(boardsWithStats);
   });
 
   // ボード作成
@@ -146,14 +222,15 @@ export function createAPI(app: any) {
       .orderBy(desc(boards.position))
       .limit(1);
 
+    const now = Math.floor(Date.now() / 1000);
     const newBoard: NewBoard = {
       name,
       description: description || null,
       userId: auth.userId,
       position: (maxPosition[0]?.maxPos || 0) + 1,
       archived: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: now,
+      updatedAt: now,
     };
 
     const result = await db.insert(boards).values(newBoard).returning();
@@ -247,7 +324,7 @@ export function createAPI(app: any) {
 
     const updated = await db
       .update(boards)
-      .set({ ...updateData, updatedAt: new Date() })
+      .set({ ...updateData, updatedAt: Math.floor(Date.now() / 1000) })
       .where(eq(boards.id, boardId))
       .returning();
 
@@ -587,10 +664,17 @@ export function createAPI(app: any) {
       itemType,
       itemId,
       position: (maxPosition[0]?.maxPos || 0) + 1,
-      createdAt: new Date(),
+      createdAt: Math.floor(Date.now() / 1000),
     };
 
     const result = await db.insert(boardItems).values(newItem).returning();
+    
+    // ボードのupdatedAtを更新
+    await db
+      .update(boards)
+      .set({ updatedAt: Math.floor(Date.now() / 1000) })
+      .where(eq(boards.id, boardId));
+    
     return c.json(result[0], 201);
   });
 
@@ -683,6 +767,12 @@ export function createAPI(app: any) {
     if (result.changes === 0) {
       return c.json({ error: "Item not found in board" }, 404);
     }
+
+    // ボードのupdatedAtを更新
+    await db
+      .update(boards)
+      .set({ updatedAt: Math.floor(Date.now() / 1000) })
+      .where(eq(boards.id, boardId));
 
     return c.json({ success: true });
   });

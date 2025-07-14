@@ -24,9 +24,26 @@
 - **UI**: CategorySelector (CustomSelector利用)
 - **統合**: タスクに categoryId 追加
 
+### ボードシステム（開発中）
+- **スキーマ**: boards テーブル (id, name, description, userId, createdAt, updatedAt)
+- **API**: /boards (CRUD操作、Clerk Bearer認証)
+- **フック**: use-boards.ts (React Query)
+- **UI設計方針**:
+  - 100個以上のボード管理を想定
+  - カード表示のみ（リスト表示不要）
+  - 列数固定（カラム調整不要）
+- **必要機能**:
+  - 検索・フィルター機能（必須）
+  - ボード情報表示: メモ/タスク数、最終更新日、説明文
+  - 並び替え機能（作成日、更新日、名前順など）
+- **将来的な検討事項**:
+  - 手動並び替え（ドラッグ&ドロップ）
+  - お気に入り機能
+  - アーカイブ機能
+
 ### 画面モード
 ```tsx
-type ScreenMode = 'home' | 'memo' | 'task' | 'create' | 'settings';
+type ScreenMode = 'home' | 'memo' | 'task' | 'create' | 'settings' | 'board';
 ```
 
 ### 削除後自動選択

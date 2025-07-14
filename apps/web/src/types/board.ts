@@ -8,8 +8,13 @@ export interface Board {
   userId: string;
   position: number;
   archived: boolean;
-  createdAt: number;
-  updatedAt: number;
+  createdAt: string | number;
+  updatedAt: string | number;
+}
+
+export interface BoardWithStats extends Board {
+  memoCount: number;
+  taskCount: number;
 }
 
 export interface BoardItem {

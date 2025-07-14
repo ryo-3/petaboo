@@ -1,13 +1,13 @@
 "use client";
 
+import BoardForm from "@/components/features/board/board-form";
 import MemoEditor from "@/components/features/memo/memo-editor";
 import TaskEditor from "@/components/features/task/task-editor";
-import BoardForm from "@/components/features/board/board-form";
+import DashboardIcon from "@/components/icons/dashboard-icon";
 import MemoIcon from "@/components/icons/memo-icon";
 import TaskIcon from "@/components/icons/task-icon";
-import DashboardIcon from "@/components/icons/dashboard-icon";
-import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useCreateBoard } from "@/src/hooks/use-boards";
+import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { CreateBoardData } from "@/src/types/board";
 import { useState } from "react";
 
@@ -62,7 +62,7 @@ function CreateScreen({
               : "border-transparent hover:border-Green/30"
           }`}
         >
-          <div className="flex items-center gap-3 px-4 py-3">
+          <div className="flex items-center justify-between px-4 py-3">
             <div
               className={`flex items-center gap-2 font-medium transition-colors ${
                 createMode === "memo" ? "text-Green" : "text-gray-600"
@@ -92,7 +92,7 @@ function CreateScreen({
               : "border-transparent hover:border-DeepBlue/30"
           }`}
         >
-          <div className="flex items-center gap-3 px-4 py-3">
+          <div className="flex items-center justify-between px-4 py-3">
             <div
               className={`flex items-center gap-2 font-medium transition-colors ${
                 createMode === "task" ? "text-DeepBlue" : "text-gray-600"
@@ -122,7 +122,7 @@ function CreateScreen({
               : "border-transparent hover:border-light-Blue/30"
           }`}
         >
-          <div className="flex items-center gap-3 px-4 py-3">
+          <div className="flex items-center justify-between px-4 py-3">
             <div
               className={`flex items-center gap-2 font-medium transition-colors ${
                 createMode === "board" ? "text-light-Blue" : "text-gray-600"

@@ -28,12 +28,14 @@ interface SidebarProps {
   selectedMemoId?: number;
   selectedTaskId?: number;
   isCompact?: boolean;
-  currentMode?: "memo" | "task";
-  onModeChange?: (mode: "memo" | "task") => void;
+  currentMode?: "memo" | "task" | "board";
+  onModeChange?: (mode: "memo" | "task" | "board") => void;
   onNewTask?: () => void;
   onSettings?: () => void;
   onSearch?: () => void;
   onDashboard?: () => void;
+  onNewBoard?: () => void;
+  isBoardActive?: boolean;
 }
 
 function Sidebar({
@@ -55,6 +57,8 @@ function Sidebar({
   onSettings,
   onSearch,
   onDashboard,
+  onNewBoard,
+  isBoardActive = false,
 }: SidebarProps) {
   const modeTabs = [
     {
@@ -90,7 +94,7 @@ function Sidebar({
                 onShowFullList();
               }}
               className={`p-2 rounded-lg transition-colors ${
-                currentMode === "memo"
+                currentMode === "memo" && !isBoardActive
                   ? "bg-Green text-white"
                   : "bg-gray-200 hover:bg-gray-300 text-gray-600"
               }`}
@@ -105,7 +109,7 @@ function Sidebar({
                 onShowTaskList?.();
               }}
               className={`p-2 rounded-lg transition-colors ${
-                currentMode === "task"
+                currentMode === "task" && !isBoardActive
                   ? "bg-DeepBlue text-white"
                   : "bg-gray-200 hover:bg-gray-300 text-gray-600"
               }`}
@@ -116,14 +120,18 @@ function Sidebar({
           <Tooltip text="ボード" position="right">
             <button
               onClick={onDashboard}
-              className="p-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
+              className={`p-2 rounded-lg transition-colors ${
+                isBoardActive
+                  ? "bg-light-Blue text-white"
+                  : "bg-gray-200 hover:bg-gray-300 text-gray-600"
+              }`}
             >
-              <DashboardIcon className="w-5 h-5 text-gray-600" />
+              <DashboardIcon className={`w-5 h-5 ${isBoardActive ? "" : "text-gray-600"}`} />
             </button>
           </Tooltip>
           <AddItemButton
-            itemType={currentMode}
-            onClick={currentMode === "memo" ? onNewMemo : onNewTask!}
+            itemType={isBoardActive ? "board" : currentMode}
+            onClick={isBoardActive ? onNewBoard! : (currentMode === "memo" ? onNewMemo : onNewTask!)}
             position="right"
           />
 
@@ -169,9 +177,13 @@ function Sidebar({
             </button>
             <button
               onClick={onDashboard}
-              className="p-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
+              className={`p-2 rounded-lg transition-colors ${
+                isBoardActive
+                  ? "bg-light-Blue text-white"
+                  : "bg-gray-200 hover:bg-gray-300 text-gray-600"
+              }`}
             >
-              <DashboardIcon className="w-5 h-5 text-gray-600" />
+              <DashboardIcon className={`w-5 h-5 ${isBoardActive ? "" : "text-gray-600"}`} />
             </button>
             {/* 設定ボタン */}
             <div className="flex-shrink-0 p-2 border-t border-gray-200">
@@ -186,7 +198,7 @@ function Sidebar({
           <SwitchTabs
             tabs={modeTabs}
             activeTab={currentMode}
-            onTabChange={(tabId) => onModeChange?.(tabId as "memo" | "task")}
+            onTabChange={(tabId) => onModeChange?.(tabId as "memo" | "task" | "board")}
           />
         </div>
 
@@ -205,16 +217,18 @@ function Sidebar({
             </span>
           </button>
           <button
-            onClick={currentMode === "memo" ? onNewMemo : onNewTask}
+            onClick={isBoardActive ? onNewBoard! : (currentMode === "memo" ? onNewMemo : onNewTask)}
             className={`flex-1 text-center rounded-lg py-2 transition-colors flex items-center justify-center gap-1 ${
-              currentMode === "memo"
+              isBoardActive
+                ? "bg-light-Blue hover:bg-light-Blue/85"
+                : currentMode === "memo"
                 ? "bg-Green hover:bg-Green/85"
                 : "bg-DeepBlue hover:bg-DeepBlue/85"
             }`}
           >
             <PlusIcon className="w-4 h-4 text-gray-100" />
             <span className="font-medium text-sm text-gray-100">
-              新規{currentMode === "memo" ? "メモ" : "タスク"}
+              新規{isBoardActive ? "ボード" : (currentMode === "memo" ? "メモ" : "タスク")}
             </span>
           </button>
         </div>

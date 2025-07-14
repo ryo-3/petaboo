@@ -4,7 +4,7 @@ import DeletedMemoList from "@/components/features/memo/deleted-memo-list";
 import DesktopLayout from "@/components/layout/desktop-layout";
 import Header from "@/components/layout/header";
 import Sidebar from "@/components/layout/sidebar";
-import BoardScreen from "@/components/screens/board-screen";
+import BoardScreen, { BoardScreenRef } from "@/components/screens/board-screen";
 import CreateScreen from "@/components/screens/create-screen";
 import MemoScreen from "@/components/screens/memo-screen";
 import SearchScreen from "@/components/screens/search-screen";
@@ -14,7 +14,7 @@ import WelcomeScreen from "@/components/screens/welcome-screen";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 // 画面モード定義（7つのシンプルな画面状態）
 type ScreenMode = 'home' | 'memo' | 'task' | 'create' | 'search' | 'settings' | 'board';
@@ -29,7 +29,10 @@ function Main() {
   
   // 画面状態管理
   const [screenMode, setScreenMode] = useState<ScreenMode>('home');
-  const [currentMode, setCurrentMode] = useState<"memo" | "task">("memo"); // サイドバータブ状態
+  const [currentMode, setCurrentMode] = useState<"memo" | "task" | "board">("memo"); // サイドバータブ状態
+  
+  // refs
+  const boardScreenRef = useRef<BoardScreenRef>(null);
   
   // 選択中アイテム管理
   const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null);
@@ -206,14 +209,20 @@ function Main() {
     setScreenMode('create');
   };
 
+  const handleNewBoard = () => {
+    clearAllSelections();
+    setCurrentMode('board');
+    setScreenMode('create');
+  };
+
   /** 詳細表示を閉じてホームに戻る */
   const handleClose = () => {
     clearAllSelections();
     setScreenMode('home');
   };
 
-  /** 一覧表示に遷移（memo/task画面） */
-  const handleShowList = (mode: 'memo' | 'task') => {
+  /** 一覧表示に遷移（memo/task/board画面） */
+  const handleShowList = (mode: 'memo' | 'task' | 'board') => {
     clearAllSelections();
     setScreenMode(mode);
   };
@@ -284,6 +293,8 @@ function Main() {
               onModeChange={setCurrentMode}
               onSettings={handleSettings}
               onDashboard={handleDashboard}
+              onNewBoard={handleNewBoard}
+              isBoardActive={screenMode === 'board'}
             />
           )}
         </div>
@@ -319,6 +330,8 @@ function Main() {
                 onSettings={handleSettings}
                 onSearch={handleSearch}
                 onDashboard={handleDashboard}
+                onNewBoard={handleNewBoard}
+                isBoardActive={screenMode === 'board'}
               />
             }
           >
@@ -361,7 +374,7 @@ function Main() {
               />
             )}
             
-            {/* 新規作成画面（メモ・タスク統合） */}
+            {/* 新規作成画面（メモ・タスク・ボード統合） */}
             {screenMode === 'create' && (
               <CreateScreen
                 initialMode={currentMode}
@@ -369,6 +382,7 @@ function Main() {
                 onModeChange={setCurrentMode}
                 onShowMemoList={() => handleShowList('memo')}
                 onShowTaskList={() => handleShowList('task')}
+                onShowBoardList={() => handleShowList('board')}
               />
             )}
             
@@ -389,7 +403,7 @@ function Main() {
 
             {/* ボード画面 */}
             {screenMode === 'board' && (
-              <BoardScreen />
+              <BoardScreen ref={boardScreenRef} />
             )}
           </DesktopLayout>
         </div>

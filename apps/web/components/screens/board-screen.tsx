@@ -1,11 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import BoardList from "@/components/features/board/board-list";
 import BoardDetail from "@/components/features/board/board-detail";
 import DesktopUpper from "@/components/layout/desktop-upper";
 
-export default function BoardScreen() {
+export interface BoardScreenRef {
+  triggerCreateNew: () => void;
+}
+
+const BoardScreen = forwardRef<BoardScreenRef>((props, ref) => {
   const [selectedBoardId, setSelectedBoardId] = useState<number | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
 
@@ -22,6 +26,10 @@ export default function BoardScreen() {
   const handleCreateNew = () => {
     setShowCreateForm(true);
   };
+
+  useImperativeHandle(ref, () => ({
+    triggerCreateNew: handleCreateNew,
+  }));
 
   return (
     <div className="h-full">
@@ -54,4 +62,8 @@ export default function BoardScreen() {
       )}
     </div>
   );
-}
+});
+
+BoardScreen.displayName = "BoardScreen";
+
+export default BoardScreen;

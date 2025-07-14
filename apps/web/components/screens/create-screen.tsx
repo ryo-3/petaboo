@@ -2,12 +2,16 @@
 
 import MemoEditor from "@/components/features/memo/memo-editor";
 import TaskEditor from "@/components/features/task/task-editor";
+import BoardForm from "@/components/features/board/board-form";
 import MemoIcon from "@/components/icons/memo-icon";
 import TaskIcon from "@/components/icons/task-icon";
+import DashboardIcon from "@/components/icons/dashboard-icon";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
+import { useCreateBoard } from "@/src/hooks/use-boards";
+import { CreateBoardData } from "@/src/types/board";
 import { useState } from "react";
 
-type CreateMode = "memo" | "task";
+type CreateMode = "memo" | "task" | "board";
 
 interface CreateScreenProps {
   initialMode?: CreateMode;
@@ -15,6 +19,7 @@ interface CreateScreenProps {
   onModeChange?: (mode: CreateMode) => void;
   onShowMemoList?: () => void;
   onShowTaskList?: () => void;
+  onShowBoardList?: () => void;
 }
 
 function CreateScreen({
@@ -23,13 +28,24 @@ function CreateScreen({
   onModeChange,
   onShowMemoList,
   onShowTaskList,
+  onShowBoardList,
 }: CreateScreenProps) {
   const { preferences } = useUserPreferences(1);
   const [createMode, setCreateMode] = useState<CreateMode>(initialMode);
+  const createBoard = useCreateBoard();
 
   const handleModeChange = (mode: CreateMode) => {
     setCreateMode(mode);
     onModeChange?.(mode);
+  };
+
+  const handleBoardCreate = async (data: CreateBoardData) => {
+    try {
+      await createBoard.mutateAsync(data);
+      onClose();
+    } catch (error) {
+      console.error("Failed to create board:", error);
+    }
   };
 
   return (
@@ -98,6 +114,36 @@ function CreateScreen({
             )}
           </div>
         </button>
+        <button
+          onClick={() => handleModeChange("board")}
+          className={`flex-1 border-b-2 transition-all duration-200 ${
+            createMode === "board"
+              ? "border-light-Blue"
+              : "border-transparent hover:border-light-Blue/30"
+          }`}
+        >
+          <div className="flex items-center gap-3 px-4 py-3">
+            <div
+              className={`flex items-center gap-2 font-medium transition-colors ${
+                createMode === "board" ? "text-light-Blue" : "text-gray-600"
+              }`}
+            >
+              <DashboardIcon className="w-5 h-5" />
+              新規ボード
+            </div>
+            {onShowBoardList && (
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onShowBoardList();
+                }}
+                className="text-xs text-gray-400 hover:text-gray-500 transition-colors px-2 pt-1.5 pb-1 rounded font-bold"
+              >
+                一覧へ
+              </div>
+            )}
+          </div>
+        </button>
       </div>
 
       {/* メイン：作成エリア */}
@@ -108,12 +154,22 @@ function CreateScreen({
             onClose={onClose}
             customHeight="h-[calc(100vh-200px)]"
           />
-        ) : (
+        ) : createMode === "task" ? (
           <TaskEditor
             task={null}
             onClose={onClose}
             customHeight="h-[calc(100vh-360px)]"
           />
+        ) : (
+          <div className="pt-6 pb-6 flex justify-center">
+            <div className="w-full max-w-2xl">
+              <BoardForm
+                onSubmit={handleBoardCreate}
+                onCancel={onClose}
+                isLoading={createBoard.isPending}
+              />
+            </div>
+          </div>
         )}
       </div>
     </div>

@@ -186,7 +186,7 @@ function DesktopUpper({
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">
             <h1 className="font-bold text-gray-800 w-[105px] text-[22px]">
-              {currentMode === "memo" ? "メモ一覧" : currentMode === "task" ? "タスク一覧" : "ボード"}
+              {currentMode === "memo" ? "メモ一覧" : currentMode === "task" ? "タスク一覧" : "ボード一覧"}
             </h1>
           </div>
 

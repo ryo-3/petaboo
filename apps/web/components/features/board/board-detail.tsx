@@ -1,9 +1,16 @@
-import { useState, useEffect } from "react";
-import { useBoardWithItems, useRemoveItemFromBoard } from "@/src/hooks/use-boards";
+import ArrowLeftIcon from "@/components/icons/arrow-left-icon";
+import MemoIcon from "@/components/icons/memo-icon";
+import TaskIcon from "@/components/icons/task-icon";
+import AddItemButton from "@/components/ui/buttons/add-item-button";
+import {
+  useBoardWithItems,
+  useRemoveItemFromBoard,
+} from "@/src/hooks/use-boards";
 import { BoardItemWithContent } from "@/src/types/board";
 import { Memo } from "@/src/types/memo";
 import { Task } from "@/src/types/task";
 import { getTimeAgo } from "@/src/utils/dateUtils";
+import { useEffect, useState } from "react";
 import AddItemModal from "./add-item-modal";
 
 interface BoardDetailProps {
@@ -56,21 +63,21 @@ export default function BoardDetail({ boardId, onBack }: BoardDetailProps) {
     );
   }
 
-  const memoItems = boardWithItems.items.filter(item => item.itemType === 'memo');
-  const taskItems = boardWithItems.items.filter(item => item.itemType === 'task');
+  const memoItems = boardWithItems.items.filter(
+    (item) => item.itemType === "memo"
+  );
+  const taskItems = boardWithItems.items.filter(
+    (item) => item.itemType === "task"
+  );
 
   return (
     <div className="p-6">
       {/* ヘッダー */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-start justify-between mb-6">
         <div>
-          <button
-            onClick={onBack}
-            className="text-blue-600 hover:text-blue-700 mb-2 flex items-center gap-1"
-          >
-            ← ボード一覧に戻る
-          </button>
-          <h1 className="text-2xl font-bold text-gray-900">{boardWithItems.name}</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {boardWithItems.name}
+          </h1>
           {boardWithItems.description && (
             <p className="text-gray-600 mt-1">{boardWithItems.description}</p>
           )}
@@ -80,10 +87,11 @@ export default function BoardDetail({ boardId, onBack }: BoardDetailProps) {
             {memoItems.length + taskItems.length} 個のアイテム
           </div>
           <button
-            onClick={() => setShowAddModal(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+            onClick={onBack}
+            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 rounded-lg transition-colors flex items-center gap-2"
           >
-            + アイテムを追加
+            <ArrowLeftIcon className="w-4 h-4" />
+            一覧へ
           </button>
         </div>
       </div>
@@ -92,11 +100,26 @@ export default function BoardDetail({ boardId, onBack }: BoardDetailProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* メモ列 */}
         <div className="bg-gray-50 rounded-lg p-4">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            📝 メモ
-            <span className="text-sm font-normal text-gray-500">({memoItems.length})</span>
-          </h2>
-          
+          <div className="flex items-center gap-4 mb-4">
+            <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-1">
+              <MemoIcon className="w-5 h-5 text-Green" />
+              メモ
+            </h2>
+            <span className="text-sm font-normal text-gray-500">
+              {memoItems.length}
+            </span>
+            <AddItemButton
+              itemType="memo"
+              onClick={() => setShowAddModal(true)}
+              size="small"
+              showTooltip={false}
+              customSize={{
+                padding: "p-1",
+                iconSize: "size-4",
+              }}
+            />
+          </div>
+
           <div className="space-y-3">
             {memoItems.length === 0 ? (
               <div className="text-gray-500 text-center py-8">
@@ -117,11 +140,26 @@ export default function BoardDetail({ boardId, onBack }: BoardDetailProps) {
 
         {/* タスク列 */}
         <div className="bg-gray-50 rounded-lg p-4">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            ✅ タスク
-            <span className="text-sm font-normal text-gray-500">({taskItems.length})</span>
-          </h2>
-          
+          <div className="flex items-center gap-4 mb-4">
+            <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-1">
+              <TaskIcon className="w-5 h-5 text-DeepBlue" />
+              タスク
+            </h2>
+            <span className="text-sm font-normal text-gray-500">
+              {taskItems.length}
+            </span>
+            <AddItemButton
+              itemType="task"
+              onClick={() => setShowAddModal(true)}
+              size="small"
+              showTooltip={false}
+              customSize={{
+                padding: "p-1",
+                iconSize: "size-4",
+              }}
+            />
+          </div>
+
           <div className="space-y-3">
             {taskItems.length === 0 ? (
               <div className="text-gray-500 text-center py-8">
@@ -158,7 +196,9 @@ interface MemoItemCardProps {
 }
 
 function MemoItemCard({ memo, onRemove }: MemoItemCardProps) {
-  const updatedAt = new Date(memo.updatedAt ? memo.updatedAt * 1000 : memo.createdAt * 1000);
+  const updatedAt = new Date(
+    memo.updatedAt ? memo.updatedAt * 1000 : memo.createdAt * 1000
+  );
   const timeAgo = getTimeAgo(updatedAt);
 
   return (
@@ -173,14 +213,14 @@ function MemoItemCard({ memo, onRemove }: MemoItemCardProps) {
           ×
         </button>
       </div>
-      
+
       {memo.content && (
-        <p className="text-gray-600 text-sm line-clamp-3 mb-3">{memo.content}</p>
+        <p className="text-gray-600 text-sm line-clamp-3 mb-3">
+          {memo.content}
+        </p>
       )}
-      
-      <div className="text-xs text-gray-500">
-        {timeAgo}
-      </div>
+
+      <div className="text-xs text-gray-500">{timeAgo}</div>
     </div>
   );
 }
@@ -192,28 +232,54 @@ interface TaskItemCardProps {
 }
 
 function TaskItemCard({ task, onRemove }: TaskItemCardProps) {
-  const updatedAt = new Date(task.updatedAt ? task.updatedAt * 1000 : task.createdAt * 1000);
+  const updatedAt = new Date(
+    task.updatedAt ? task.updatedAt * 1000 : task.createdAt * 1000
+  );
   const timeAgo = getTimeAgo(updatedAt);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'completed':
-        return <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">完了</span>;
-      case 'in_progress':
-        return <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">進行中</span>;
+      case "completed":
+        return (
+          <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+            完了
+          </span>
+        );
+      case "in_progress":
+        return (
+          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+            進行中
+          </span>
+        );
       default:
-        return <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">未着手</span>;
+        return (
+          <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+            未着手
+          </span>
+        );
     }
   };
 
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
-      case 'high':
-        return <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">高</span>;
-      case 'low':
-        return <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">低</span>;
+      case "high":
+        return (
+          <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">
+            高
+          </span>
+        );
+      case "low":
+        return (
+          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+            低
+          </span>
+        );
       default:
-        return <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded">中</span>;
+        return (
+          <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded">
+            中
+          </span>
+        );
     }
   };
 
@@ -229,19 +295,19 @@ function TaskItemCard({ task, onRemove }: TaskItemCardProps) {
           ×
         </button>
       </div>
-      
+
       {task.description && (
-        <p className="text-gray-600 text-sm line-clamp-2 mb-3">{task.description}</p>
+        <p className="text-gray-600 text-sm line-clamp-2 mb-3">
+          {task.description}
+        </p>
       )}
-      
+
       <div className="flex items-center gap-2 mb-2">
         {getStatusBadge(task.status)}
         {getPriorityBadge(task.priority)}
       </div>
-      
-      <div className="text-xs text-gray-500">
-        {timeAgo}
-      </div>
+
+      <div className="text-xs text-gray-500">{timeAgo}</div>
     </div>
   );
 }

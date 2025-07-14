@@ -117,7 +117,7 @@ function Sidebar({
               <TaskIcon className="w-5 h-5" />
             </button>
           </Tooltip>
-          <Tooltip text="ボード" position="right">
+          <Tooltip text="ボード一覧" position="right">
             <button
               onClick={onDashboard}
               className={`p-2 rounded-lg transition-colors ${

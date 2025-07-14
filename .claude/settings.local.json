@@ -23,7 +23,22 @@
       "Bash(sudo apt install:*)",
       "Bash(ls:*)",
       "Bash(git add:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm run:*)",
+      "Bash(pnpm update:*)",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm list:*)",
+      "Bash(pnpm check-types:*)",
+      "Bash(pnpm dev:*)",
+      "Bash(pnpm exec tsc:*)",
+      "Bash(node_modules/.bin/tsc:*)",
+      "Bash(pnpm build:*)",
+      "Bash(pnpm lint:*)",
+      "Bash(npx next:*)",
+      "Bash(echo $NODE_ENV)",
+      "Bash(unset NODE_ENV)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }

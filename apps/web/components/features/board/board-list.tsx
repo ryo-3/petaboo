@@ -3,6 +3,7 @@ import { useBoards, useCreateBoard, useDeleteBoard } from "@/src/hooks/use-board
 import BoardCard from "./board-card";
 import BoardForm from "./board-form";
 import { CreateBoardData } from "@/src/types/board";
+import AddItemButton from "@/components/ui/buttons/add-item-button";
 
 interface BoardListProps {
   onBoardSelect?: (boardId: number) => void;
@@ -59,12 +60,17 @@ export default function BoardList({ onBoardSelect }: BoardListProps) {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">ボード</h1>
-        <button
+        <AddItemButton
+          itemType="board"
           onClick={() => setShowCreateForm(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          + 新しいボード
-        </button>
+          position="bottom"
+          size="small"
+          showTooltip={false}
+          customSize={{
+            padding: "p-2",
+            iconSize: "w-3.5 h-3.5"
+          }}
+        />
       </div>
 
       {showCreateForm && (
@@ -80,12 +86,13 @@ export default function BoardList({ onBoardSelect }: BoardListProps) {
       {boards && boards.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-gray-500 mb-4">まだボードがありません</div>
-          <button
+          <AddItemButton
+            itemType="board"
             onClick={() => setShowCreateForm(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            最初のボードを作成
-          </button>
+            position="bottom"
+            size="normal"
+            showTooltip={false}
+          />
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

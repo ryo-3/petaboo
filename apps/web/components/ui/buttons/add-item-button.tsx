@@ -2,7 +2,7 @@
 
 import CreateButton from '@/components/ui/buttons/create-button'
 
-type ItemType = 'memo' | 'task'
+type ItemType = 'memo' | 'task' | 'board'
 
 interface AddItemButtonProps {
   itemType: ItemType
@@ -36,6 +36,10 @@ function AddItemButton({
     task: {
       label: '新規タスク作成',
       color: 'yellow' as const,
+    },
+    board: {
+      label: '新規ボード作成',
+      color: 'blue' as const,
     }
   }
 

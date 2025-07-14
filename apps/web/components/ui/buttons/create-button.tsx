@@ -5,7 +5,7 @@ import Tooltip from "@/components/ui/base/tooltip";
 
 interface CreateButtonProps {
   onClick: () => void;
-  color: "green" | "yellow" | string; // プリセットカラーまたはカスタムカラー
+  color: "green" | "yellow" | "blue" | string; // プリセットカラーまたはカスタムカラー
   label?: string;
   position?: "right" | "top" | "bottom";
   className?: string;
@@ -33,6 +33,7 @@ function CreateButton({
   const colorClasses = {
     green: "bg-Green hover:bg-Green/85",
     yellow: "bg-DeepBlue hover:bg-DeepBlue/85",
+    blue: "bg-blue-600 hover:bg-blue-700",
   };
 
   // カラークラスを決定（プリセットまたはカスタム）

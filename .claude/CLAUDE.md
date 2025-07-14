@@ -22,24 +22,27 @@
 - **API**: /categories (CRUD操作、Clerk Bearer認証)
 - **フック**: use-categories.ts (React Query)
 - **UI**: CategorySelector (CustomSelector利用)
-- **統合**: タスクに categoryId 追加
 
-### ボードシステム（開発中）
-- **スキーマ**: boards テーブル (id, name, description, userId, createdAt, updatedAt)
-- **API**: /boards (CRUD操作、Clerk Bearer認証)
-- **フック**: use-boards.ts (React Query)
-- **UI設計方針**:
-  - 100個以上のボード管理を想定
-  - カード表示のみ（リスト表示不要）
-  - 列数固定（カラム調整不要）
-- **必要機能**:
-  - 検索・フィルター機能（必須）
-  - ボード情報表示: メモ/タスク数、最終更新日、説明文
-  - 並び替え機能（作成日、更新日、名前順など）
-- **将来的な検討事項**:
-  - 手動並び替え（ドラッグ&ドロップ）
-  - お気に入り機能
-  - アーカイブ機能
+### ボードシステム ✅
+- **スキーマ**: boards テーブル (id, name, slug, description, userId, position, archived, createdAt, updatedAt)
+- **API**: 
+  - `/boards` - ボード一覧・作成・更新・削除
+  - `/boards/slug/{slug}` - slugからボード取得
+  - `/boards/{id}/items` - ボード内アイテム取得・追加・削除
+- **フック**: 
+  - `useBoards()` - ボード一覧取得
+  - `useBoardBySlug(slug)` - slugからボード取得
+  - `useBoardWithItems(id)` - ボード詳細とアイテム取得
+- **URL設計**: `/boards/{slug}` - SEOフレンドリーなslugベースURL
+- **Slug生成**: 
+  - 英数字: 名前をケバブケース変換
+  - 日本語/特殊文字: ランダム6文字 (例: `fnlncz`)
+  - 重複チェック: 自動で `-1`, `-2` 追加
+- **UI機能**:
+  - ✅ ボード一覧（カード表示）
+  - ✅ ボード作成・編集・削除
+  - ✅ ボード詳細画面（アイテム表示）
+  - ✅ メモ・タスクのボード追加・削除
 
 ### 画面モード
 ```tsx
@@ -82,36 +85,20 @@ const screenHeight = preferences?.hideHeader ? 'h-screen' : 'h-[calc(100vh-64px)
 
 ### CSS アニメーションシステム
 ```tsx
-// deleteAnimation.ts - 段階的CSS化
-// Phase 1: エディター削除アニメーション（完了）
-import { animateEditorContentToTrashCSS } from '@/src/utils/deleteAnimation';
+// deleteAnimation.ts - CSS版アニメーション
+import { animateEditorContentToTrashCSS, animateBulkFadeOutCSS } from '@/src/utils/deleteAnimation';
 
-// CSS keyframes with dynamic variables
+// エディター削除アニメーション
 @keyframes editor-to-trash {
   0% { transform: translate(0, 0) scale(1); }
   20% { transform: translate(0, 0) scale(0.8); }
   100% { transform: translate(var(--move-x), var(--move-y)) scale(0.01); }
 }
 
-// Phase 2: 一括削除・復元パフォーマンス最適化（メモ・タスク両側完了）
-import { animateBulkFadeOutCSS } from '@/src/utils/deleteAnimation';
-
-// スマートアニメーション切り替え: 30件以下=全アニメーション、30件以上=混合モード
-if (ids.length > 30) {
-  const animatedIds = ids.slice(0, 30);
-  const bulkIds = ids.slice(30);
-  // 美しいアニメーション + 効率的バックグラウンド処理
-}
-
-// 個別タイミング同期: onItemCompleteコールバックで精密制御
+// 一括削除最適化: 30件以下=全アニメーション、30件以上=混合モード
 animateBulkFadeOutCSS(ids, onComplete, 120, 'delete', (id) => {
   // 300ms + index*120ms でアニメーション完了と同時にDOM更新
 });
-
-// DOM順序による全選択（タスクの並び替え対応）
-import { getTaskDisplayOrder } from '@/src/utils/domUtils';
-const domOrder = getTaskDisplayOrder();
-setCheckedItems(new Set(domOrder.filter(id => filteredItems.some(item => item.id === id))));
 ```
 
 ## 重要コンポーネント
@@ -135,12 +122,12 @@ setCheckedItems(new Set(domOrder.filter(id => filteredItems.some(item => item.id
 - `useRightEditorDelete` - 右側エディター削除処理統一
 - `use-bulk-restore` - 復元処理統一（メモ・タスク共通）
 - `use-categories` - カテゴリー操作フック（CRUD操作）
+- `use-boards` - ボード操作フック（CRUD操作、slug対応）
 
 ### アニメーション
-- `deleteAnimation.ts` - 削除アニメーション（段階的CSS化中）
+- `deleteAnimation.ts` - 削除アニメーション（CSS版完了）
   - ✅ `animateEditorContentToTrashCSS` - エディター削除（CSS版）
   - ✅ `animateBulkFadeOutCSS` - 一括削除・復元（CSS版、メモ・タスク両側完了）
-  - ❌ その他の削除アニメーション（JS版）
 
 ### パフォーマンス最適化
 - **一括操作最適化**（メモ・タスク両側完了）:
@@ -170,49 +157,95 @@ const response = await fetch(`${API_BASE_URL}/categories`, {
 npm run check-types && npm run lint  # コミット前必須
 ```
 
-## 開発制約
-- 新npmパッケージ追加禁止
-- 型エラー・lintエラー0維持
-- セキュリティ重視（悪意コード禁止）
+# 🚨 重要：開発制約と作業原則
 
-## 開発作業の重要原則
+## 🚫 絶対禁止事項（monorepo破壊防止）
 
-### ❌ 絶対にやってはいけないこと
-1. **`npm run build`でエラーチェックしない** - 実際の結果が確認できていない
-2. **コードを確認せずに修正提案しない** - 毎回エラーを起こしている  
-3. **依存関係や変数の存在を確認せずに変更しない**
+### 1. パッケージ関連 - 絶対に触るな！
+- ❌ **npmパッケージの追加・インストール**
+- ❌ **package.jsonの変更**
+- ❌ **pnpm-lock.yamlの変更**
+- ❌ **依存関係の変更**
+- ❌ **npm install, pnpm install等の実行**
 
-### ✅ 必ずやること
-1. **必ずコードを読んでから修正する**
-2. **エラーが出たら、ユーザーからエラーメッセージを聞く**
-3. **変更前に影響範囲を確認する**
+**理由**: Turborepo monorepo構成が完全に壊れる
 
-### 削除機能の構造
+### 2. 確認不足による作業 - 毎回エラーの原因！
+- ❌ **コードを読まずに修正提案**
+- ❌ **変数・関数の存在確認をしない**
+- ❌ **既存実装を理解せずに変更**
+- ❌ **影響範囲を考えずに変更**
 
-#### 左側一括削除（チェックボックスで選択したアイテム）
+**理由**: 毎回型エラーやランタイムエラーが発生
+
+### 3. 品質破壊
+- ❌ **型エラーを残す**
+- ❌ **lintエラーを残す**
+- ❌ **テストを壊す**
+
+## ✅ 必須作業手順（この順番で！）
+
+### 1. 作業前の準備
+```bash
+# 1. 必ず既存コードを読む
+Read/Grep/Task tools で関連ファイルを確認
+
+# 2. 依存関係・変数の存在確認
+import文、型定義、関数の存在を確認
+
+# 3. 影響範囲の理解
+変更による他ファイルへの影響を確認
+```
+
+### 2. 作業中
+- **小さな変更から開始**
+- **1つずつ確認しながら進める**
+- **エラーが出たら即座に修正**
+
+### 3. 作業後（必須！）
+```bash
+# 型チェック + lint実行（コミット前必須）
+npm run check-types && npm run lint
+```
+
+## 🎯 作業時の心構え
+
+### Claude側のチェックリスト
+1. □ コードを読んだか？
+2. □ 変数・関数の存在を確認したか？
+3. □ 影響範囲を理解したか？
+4. □ パッケージを触っていないか？
+5. □ 型エラー・lintエラーはないか？
+
+### ユーザーとのコミュニケーション
+- **エラーが出たら**: 具体的なエラーメッセージを聞く
+- **分からないことがあれば**: 必ず確認する
+- **提案前に**: 既存コードの確認結果を伝える
+
+## 📋 開発制約まとめ
+- **新npmパッケージ追加禁止**
+- **型エラー・lintエラー0維持**
+- **セキュリティ重視（悪意コード禁止）**
+- **Turborepoの設定変更禁止**
+
+## 削除機能の構造
+
+### 左側一括削除（チェックボックスで選択したアイテム）
 - **状態**: `isBulkDeleting`, `isBulkDeleteLidOpen`
 - **処理**: `handleLeftBulkDelete`
 - **表示条件**: `checkedMemos.size > 0` 時
 - **位置**: 左パネルの右下
-- **アニメーション**: 
-  - ✅ **メモ**: `animateBulkFadeOutCSS` (CSS版、パフォーマンス最適化済み)
-  - ✅ **タスク**: `animateBulkFadeOutCSS` (CSS版、パフォーマンス最適化済み)
+- **アニメーション**: ✅ `animateBulkFadeOutCSS` (CSS版、パフォーマンス最適化済み)
 
-#### 右側エディター削除（現在表示中のメモ・タスク）
+### 右側エディター削除（現在表示中のメモ・タスク）
 - **状態**: `isEditorDeleting`
 - **処理**: `useRightEditorDelete` (共通フック)
 - **表示条件**: エディター表示中 かつ チェック無し時
 - **位置**: 右パネルの右下 (`DELETE_BUTTON_POSITION = "fixed bottom-4 right-4"`)
-- **アニメーション**: `animateEditorContentToTrashCSS` (CSS版) ✅
+- **アニメーション**: ✅ `animateEditorContentToTrashCSS` (CSS版)
 
-#### 削除済み完全削除（削除済みアイテムの完全削除）
-- **メモ**: `use-deleted-memo-actions.ts` でCSS版使用 ✅
-- **タスク**: `use-deleted-task-actions.ts` でCSS版使用 ✅
-- **完了**: `animateEditorContentToTrash` → `animateEditorContentToTrashCSS` への移行完了
-
-#### 一括復元（削除済みアイテムの復元）
-- **メモ**: `use-memo-bulk-restore.tsx` でパフォーマンス最適化済み ✅
-- **タスク**: `use-task-bulk-restore.tsx` でパフォーマンス最適化済み ✅
+### 削除済み完全削除・一括復元
+- **メモ・タスク**: CSS版アニメーション使用、パフォーマンス最適化済み ✅
 
 ### 動的高さシステム
 - **BaseCard**: タスクとメモで異なる高さを自動設定
@@ -221,8 +254,6 @@ npm run check-types && npm run lint  # コミット前必須
   - 判定: `dataTaskId` プロパティの有無で自動切り替え
 
 ### テキストオーバーフロー対策
-- **問題**: グリッドレイアウト（2列表示）でテキストがはみ出す
-- **解決策**: `break-all` クラスを追加
 ```tsx
 <p className="text-xs text-gray-600 line-clamp-1 break-all">
   {task.description || ""}

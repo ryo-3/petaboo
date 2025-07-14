@@ -36,6 +36,7 @@ interface SidebarProps {
   onDashboard?: () => void;
   onNewBoard?: () => void;
   isBoardActive?: boolean;
+  currentBoardName?: string;
 }
 
 function Sidebar({
@@ -59,6 +60,7 @@ function Sidebar({
   onDashboard,
   onNewBoard,
   isBoardActive = false,
+  currentBoardName,
 }: SidebarProps) {
   const modeTabs = [
     {
@@ -117,7 +119,7 @@ function Sidebar({
               <TaskIcon className="w-5 h-5" />
             </button>
           </Tooltip>
-          <Tooltip text="ボード一覧" position="right">
+          <Tooltip text={currentBoardName || "ボード一覧"} position="right">
             <button
               onClick={onDashboard}
               className={`p-2 rounded-lg transition-colors ${

@@ -15,6 +15,9 @@ import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useEffect, useState, useRef } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import BoardDetail from "@/components/features/board/board-detail";
+import { useBoardWithItems, useBoardBySlug } from "@/src/hooks/use-boards";
 
 // 画面モード定義（7つのシンプルな画面状態）
 type ScreenMode = 'home' | 'memo' | 'task' | 'create' | 'search' | 'settings' | 'board';
@@ -26,6 +29,7 @@ function Main() {
   
   // ユーザー設定取得
   const { preferences } = useUserPreferences(1);
+  const pathname = usePathname();
   
   // 画面状態管理
   const [screenMode, setScreenMode] = useState<ScreenMode>('home');
@@ -33,6 +37,21 @@ function Main() {
   
   // refs
   const boardScreenRef = useRef<BoardScreenRef>(null);
+  
+  // 現在のボードslug取得
+  const currentBoardSlug = pathname.startsWith('/boards/') ? pathname.split('/')[2] : null;
+  
+  // slugからボード情報取得
+  const { data: boardFromSlug, isLoading: isSlugLoading } = useBoardBySlug(currentBoardSlug || null);
+  const { data: currentBoard } = useBoardWithItems(boardFromSlug?.id || null);
+  
+  
+  // URLに基づいてscreenModeを設定
+  useEffect(() => {
+    if (pathname.startsWith('/boards/')) {
+      setScreenMode('board');
+    }
+  }, [pathname]);
   
   // 選択中アイテム管理
   const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null);
@@ -237,6 +256,38 @@ function Main() {
     setScreenMode('home');
   };
 
+  // BoardDetailWrapperコンポーネント
+  const BoardDetailWrapper = () => {
+    const router = useRouter();
+    
+    if (!boardFromSlug || !currentBoard) {
+      return (
+        <div className="flex items-center justify-center p-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              {isSlugLoading ? 'ボードを読み込み中...' : 'ボードが見つかりません'}
+            </h1>
+            {!isSlugLoading && (
+              <button
+                onClick={() => router.push("/")}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                ボード一覧に戻る
+              </button>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <BoardDetail 
+        boardId={boardFromSlug.id} 
+        onBack={() => router.push("/")} 
+      />
+    );
+  };
+
   return (
     <main>
       {/* ==========================================
@@ -295,6 +346,7 @@ function Main() {
               onDashboard={handleDashboard}
               onNewBoard={handleNewBoard}
               isBoardActive={screenMode === 'board' || (screenMode === 'create' && currentMode === 'board')}
+              currentBoardName={currentBoard?.name}
             />
           )}
         </div>
@@ -332,6 +384,7 @@ function Main() {
                 onDashboard={handleDashboard}
                 onNewBoard={handleNewBoard}
                 isBoardActive={screenMode === 'board' || (screenMode === 'create' && currentMode === 'board')}
+                currentBoardName={currentBoard?.name}
               />
             }
           >
@@ -403,7 +456,11 @@ function Main() {
 
             {/* ボード画面 */}
             {screenMode === 'board' && (
-              <BoardScreen ref={boardScreenRef} />
+              pathname.startsWith('/boards/') ? (
+                <BoardDetailWrapper />
+              ) : (
+                <BoardScreen ref={boardScreenRef} />
+              )
             )}
           </DesktopLayout>
         </div>

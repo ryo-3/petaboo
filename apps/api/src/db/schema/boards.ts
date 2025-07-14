@@ -4,6 +4,7 @@ import { sql } from "drizzle-orm";
 export const boards = sqliteTable("boards", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
   description: text("description"),
   userId: text("user_id").notNull(),
   position: integer("position").notNull().default(0),

@@ -59,6 +59,32 @@ export function useBoardWithItems(boardId: number | null) {
   });
 }
 
+// slugからボード情報を取得
+export function useBoardBySlug(slug: string | null) {
+  const { getToken } = useAuth();
+
+  return useQuery<Board>({
+    queryKey: ["boards", "slug", slug],
+    queryFn: async () => {
+      const token = await getToken();
+      
+      const response = await fetch(`${API_BASE_URL}/boards/slug/${slug}`, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch board by slug");
+      }
+      
+      return response.json();
+    },
+    enabled: !!slug,
+  });
+}
+
 // ボード作成
 export function useCreateBoard() {
   const queryClient = useQueryClient();

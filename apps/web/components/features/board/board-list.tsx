@@ -5,7 +5,7 @@ import BoardForm from "./board-form";
 import { CreateBoardData } from "@/src/types/board";
 
 interface BoardListProps {
-  onBoardSelect?: (boardId: number) => void;
+  onBoardSelect?: (board: { id: number; slug: string }) => void;
   showCreateForm?: boolean;
   onCreateFormClose?: () => void;
 }
@@ -98,7 +98,7 @@ export default function BoardList({
             <BoardCard
               key={board.id}
               board={board}
-              onSelect={() => onBoardSelect?.(board.id)}
+              onSelect={() => onBoardSelect?.(board)}
               onDelete={() => handleDeleteBoard(board.id)}
               isDeleting={deleteBoard.isPending}
             />

@@ -265,6 +265,8 @@ function TaskEditor({
     updateTask,
     createTask,
     onSaveComplete,
+    addItemToBoard,
+    boardId,
   ]);
 
   // Ctrl+Sショートカット（変更がある場合のみ実行）

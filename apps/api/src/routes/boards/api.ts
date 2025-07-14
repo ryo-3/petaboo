@@ -4,9 +4,51 @@ import { eq, and, desc } from "drizzle-orm";
 import { boards, boardItems, tasks, notes } from "../../db";
 import type { NewBoard, NewBoardItem } from "../../db/schema/boards";
 
+// スラッグ生成ユーティリティ
+function generateSlug(name: string): string {
+  // 日本語や特殊文字が含まれる場合は、ランダムな文字列を生成
+  const cleaned = name
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '') // 英数字、スペース、ハイフン以外を除去
+    .replace(/\s+/g, '-') // スペースをハイフンに変換
+    .replace(/-+/g, '-') // 連続するハイフンを1つに
+    .replace(/^-|-$/g, '') // 先頭と末尾のハイフンを除去
+    .substring(0, 50); // 最大50文字に制限
+  
+  // 空文字の場合はランダムな文字列を生成
+  if (cleaned.length === 0) {
+    return Math.random().toString(36).substring(2, 8);
+  }
+  
+  return cleaned;
+}
+
+// ユニークなスラッグを生成
+async function generateUniqueSlug(name: string, userId: string, db: any): Promise<string> {
+  const baseSlug = generateSlug(name);
+  let slug = baseSlug;
+  let counter = 0;
+  
+  while (true) {
+    const existing = await db
+      .select()
+      .from(boards)
+      .where(eq(boards.slug, slug))
+      .limit(1);
+    
+    if (existing.length === 0) {
+      return slug;
+    }
+    
+    counter++;
+    slug = `${baseSlug}-${counter}`;
+  }
+}
+
 const BoardSchema = z.object({
   id: z.number(),
   name: z.string(),
+  slug: z.string(),
   description: z.string().nullable(),
   userId: z.string(),
   position: z.number(),
@@ -222,9 +264,11 @@ export function createAPI(app: any) {
       .orderBy(desc(boards.position))
       .limit(1);
 
-    const now = Math.floor(Date.now() / 1000);
+    const now = new Date();
+    const slug = await generateUniqueSlug(name, auth.userId, db);
     const newBoard: NewBoard = {
       name,
+      slug,
       description: description || null,
       userId: auth.userId,
       position: (maxPosition[0]?.maxPos || 0) + 1,
@@ -404,6 +448,65 @@ export function createAPI(app: any) {
     await db.delete(boards).where(eq(boards.id, boardId));
 
     return c.json({ success: true });
+  });
+
+  // スラッグからボード取得
+  const getBoardBySlugRoute = createRoute({
+    method: "get",
+    path: "/slug/{slug}",
+    tags: ["boards"],
+    request: {
+      params: z.object({
+        slug: z.string(),
+      }),
+    },
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: BoardSchema,
+          },
+        },
+        description: "Board found",
+      },
+      404: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+            }),
+          },
+        },
+        description: "Board not found",
+      },
+    },
+  });
+
+  app.openapi(getBoardBySlugRoute, async (c) => {
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const { slug } = c.req.valid("param");
+    const db = c.env.db;
+
+    const board = await db
+      .select()
+      .from(boards)
+      .where(
+        and(
+          eq(boards.slug, slug),
+          eq(boards.userId, auth.userId)
+        )
+      )
+      .limit(1);
+
+    if (board.length === 0) {
+      return c.json({ error: "Board not found" }, 404);
+    }
+
+    return c.json(board[0]);
   });
 
   // ボード内アイテム取得

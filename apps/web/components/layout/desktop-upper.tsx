@@ -10,7 +10,7 @@ import ViewModeToggle from "@/components/ui/layout/view-mode-toggle";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 
 interface DesktopUpperProps {
-  currentMode: "memo" | "task";
+  currentMode: "memo" | "task" | "board";
   activeTab: "normal" | "deleted" | "todo" | "in_progress" | "completed";
   onTabChange: (
     tab: "normal" | "deleted" | "todo" | "in_progress" | "completed"
@@ -186,7 +186,7 @@ function DesktopUpper({
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">
             <h1 className="font-bold text-gray-800 w-[105px] text-[22px]">
-              {currentMode === "memo" ? "メモ一覧" : "タスク一覧"}
+              {currentMode === "memo" ? "メモ一覧" : currentMode === "task" ? "タスク一覧" : "ボード"}
             </h1>
           </div>
 
@@ -204,8 +204,9 @@ function DesktopUpper({
           />
 
           {/* タブ */}
-          <div className="flex items-center gap-2 ml-2">
-            {tabs.map((tab) => {
+          {currentMode !== "board" && (
+            <div className="flex items-center gap-2 ml-2">
+              {tabs.map((tab) => {
               const isActive = activeTab === tab.id;
               const tabClass = tab.icon
                 ? "pl-2 pr-2 py-2"
@@ -229,13 +230,14 @@ function DesktopUpper({
                   {renderTabContent(tab, isActive)}
                 </button>
               );
-            })}
-          </div>
+              })}
+            </div>
+          )}
         </div>
       </div>
 
       {/* コントロール */}
-      {!(
+      {currentMode !== "board" && !(
         (currentMode === "memo" && preferences?.memoHideControls) ||
         (currentMode === "task" && preferences?.taskHideControls)
       ) && (

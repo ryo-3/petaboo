@@ -3,9 +3,11 @@
 import { useState, useEffect } from "react";
 import BoardList from "@/components/features/board/board-list";
 import BoardDetail from "@/components/features/board/board-detail";
+import DesktopUpper from "@/components/layout/desktop-upper";
 
 export default function BoardScreen() {
   const [selectedBoardId, setSelectedBoardId] = useState<number | null>(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
   // ページタイトル設定（デフォルト）
   useEffect(() => {
@@ -17,6 +19,10 @@ export default function BoardScreen() {
     };
   }, [selectedBoardId]);
 
+  const handleCreateNew = () => {
+    setShowCreateForm(true);
+  };
+
   return (
     <div className="h-full">
       {selectedBoardId ? (
@@ -25,7 +31,26 @@ export default function BoardScreen() {
           onBack={() => setSelectedBoardId(null)}
         />
       ) : (
-        <BoardList onBoardSelect={setSelectedBoardId} />
+        <div className="pt-6 pl-6 pr-2 flex flex-col h-full">
+          <DesktopUpper
+            currentMode="board"
+            activeTab="normal"
+            onTabChange={() => {}}
+            onCreateNew={handleCreateNew}
+            viewMode="card"
+            onViewModeChange={() => {}}
+            columnCount={3}
+            onColumnCountChange={() => {}}
+            rightPanelMode="hidden"
+            normalCount={0}
+          />
+          
+          <BoardList 
+            onBoardSelect={setSelectedBoardId}
+            showCreateForm={showCreateForm}
+            onCreateFormClose={() => setShowCreateForm(false)}
+          />
+        </div>
       )}
     </div>
   );

@@ -3,14 +3,20 @@ import { useBoards, useCreateBoard, useDeleteBoard } from "@/src/hooks/use-board
 import BoardCard from "./board-card";
 import BoardForm from "./board-form";
 import { CreateBoardData } from "@/src/types/board";
-import AddItemButton from "@/components/ui/buttons/add-item-button";
 
 interface BoardListProps {
   onBoardSelect?: (boardId: number) => void;
+  showCreateForm?: boolean;
+  onCreateFormClose?: () => void;
 }
 
-export default function BoardList({ onBoardSelect }: BoardListProps) {
-  const [showCreateForm, setShowCreateForm] = useState(false);
+export default function BoardList({ 
+  onBoardSelect, 
+  showCreateForm: externalShowCreateForm, 
+  onCreateFormClose 
+}: BoardListProps) {
+  const [internalShowCreateForm, setInternalShowCreateForm] = useState(false);
+  const showCreateForm = externalShowCreateForm ?? internalShowCreateForm;
   
   const { data: boards, isLoading, error } = useBoards();
   const createBoard = useCreateBoard();
@@ -24,9 +30,21 @@ export default function BoardList({ onBoardSelect }: BoardListProps) {
   const handleCreateBoard = async (data: CreateBoardData) => {
     try {
       await createBoard.mutateAsync(data);
-      setShowCreateForm(false);
+      if (onCreateFormClose) {
+        onCreateFormClose();
+      } else {
+        setInternalShowCreateForm(false);
+      }
     } catch (error) {
       console.error("Failed to create board:", error);
+    }
+  };
+
+  const handleCloseCreateForm = () => {
+    if (onCreateFormClose) {
+      onCreateFormClose();
+    } else {
+      setInternalShowCreateForm(false);
     }
   };
 
@@ -57,27 +75,13 @@ export default function BoardList({ onBoardSelect }: BoardListProps) {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">ボード</h1>
-        <AddItemButton
-          itemType="board"
-          onClick={() => setShowCreateForm(true)}
-          position="bottom"
-          size="small"
-          showTooltip={false}
-          customSize={{
-            padding: "p-2",
-            iconSize: "w-3.5 h-3.5"
-          }}
-        />
-      </div>
+    <div className="p-6 pt-0">
 
       {showCreateForm && (
         <div className="mb-6">
           <BoardForm
             onSubmit={handleCreateBoard}
-            onCancel={() => setShowCreateForm(false)}
+            onCancel={handleCloseCreateForm}
             isLoading={createBoard.isPending}
           />
         </div>
@@ -86,13 +90,7 @@ export default function BoardList({ onBoardSelect }: BoardListProps) {
       {boards && boards.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-gray-500 mb-4">まだボードがありません</div>
-          <AddItemButton
-            itemType="board"
-            onClick={() => setShowCreateForm(true)}
-            position="bottom"
-            size="normal"
-            showTooltip={false}
-          />
+          <div className="text-sm text-gray-400">右上の + ボタンから新しいボードを作成できます</div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

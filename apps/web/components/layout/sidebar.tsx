@@ -113,12 +113,7 @@ function Sidebar({
               <TaskIcon className="w-5 h-5" />
             </button>
           </Tooltip>
-          <AddItemButton
-            itemType={currentMode}
-            onClick={currentMode === "memo" ? onNewMemo : onNewTask!}
-            position="right"
-          />
-          <Tooltip text="ダッシュボード" position="right">
+          <Tooltip text="ボード" position="right">
             <button
               onClick={onDashboard}
               className="p-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
@@ -126,6 +121,12 @@ function Sidebar({
               <DashboardIcon className="w-5 h-5 text-gray-600" />
             </button>
           </Tooltip>
+          <AddItemButton
+            itemType={currentMode}
+            onClick={currentMode === "memo" ? onNewMemo : onNewTask!}
+            position="right"
+          />
+
           {/* 検索ボタン（コンパクトモード） */}
           <Tooltip text="詳細検索" position="right">
             <button

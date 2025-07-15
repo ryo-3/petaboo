@@ -16,6 +16,8 @@ import AddItemModal from "./add-item-modal";
 interface BoardDetailProps {
   boardId: number;
   onBack: () => void;
+  onSelectMemo?: (memo: Memo) => void;
+  onSelectTask?: (task: Task) => void;
 }
 
 interface ExportData {
@@ -36,7 +38,7 @@ interface ExportData {
   }[];
 }
 
-export default function BoardDetail({ boardId, onBack }: BoardDetailProps) {
+export default function BoardDetail({ boardId, onBack, onSelectMemo, onSelectTask }: BoardDetailProps) {
   const [showAddModal, setShowAddModal] = useState(false);
   const { data: boardWithItems, isLoading, error } = useBoardWithItems(boardId);
   const removeItemFromBoard = useRemoveItemFromBoard();
@@ -237,6 +239,7 @@ export default function BoardDetail({ boardId, onBack }: BoardDetailProps) {
                   item={item}
                   memo={item.content as Memo}
                   onRemove={() => handleRemoveItem(item)}
+                  onClick={() => onSelectMemo?.(item.content as Memo)}
                 />
               ))
             )}
@@ -277,6 +280,7 @@ export default function BoardDetail({ boardId, onBack }: BoardDetailProps) {
                   item={item}
                   task={item.content as Task}
                   onRemove={() => handleRemoveItem(item)}
+                  onClick={() => onSelectTask?.(item.content as Task)}
                 />
               ))
             )}
@@ -298,20 +302,27 @@ interface MemoItemCardProps {
   item: BoardItemWithContent;
   memo: Memo;
   onRemove: () => void;
+  onClick?: () => void;
 }
 
-function MemoItemCard({ memo, onRemove }: MemoItemCardProps) {
+function MemoItemCard({ memo, onRemove, onClick }: MemoItemCardProps) {
   const updatedAt = new Date(
     memo.updatedAt ? memo.updatedAt * 1000 : memo.createdAt * 1000
   );
   const timeAgo = getTimeAgo(updatedAt);
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+    <div 
+      className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+      onClick={onClick}
+    >
       <div className="flex items-start justify-between mb-2">
         <h3 className="font-medium text-gray-900 line-clamp-1">{memo.title}</h3>
         <button
-          onClick={onRemove}
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
           className="text-gray-400 hover:text-red-500 text-sm"
           title="ボードから削除"
         >
@@ -334,9 +345,10 @@ interface TaskItemCardProps {
   item: BoardItemWithContent;
   task: Task;
   onRemove: () => void;
+  onClick?: () => void;
 }
 
-function TaskItemCard({ task, onRemove }: TaskItemCardProps) {
+function TaskItemCard({ task, onRemove, onClick }: TaskItemCardProps) {
   const updatedAt = new Date(
     task.updatedAt ? task.updatedAt * 1000 : task.createdAt * 1000
   );
@@ -389,11 +401,17 @@ function TaskItemCard({ task, onRemove }: TaskItemCardProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+    <div 
+      className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+      onClick={onClick}
+    >
       <div className="flex items-start justify-between mb-2">
         <h3 className="font-medium text-gray-900 line-clamp-1">{task.title}</h3>
         <button
-          onClick={onRemove}
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
           className="text-gray-400 hover:text-red-500 text-sm"
           title="ボードから削除"
         >

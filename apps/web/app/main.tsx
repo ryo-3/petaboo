@@ -32,7 +32,14 @@ function Main() {
   const pathname = usePathname();
   
   // 画面状態管理
-  const [screenMode, setScreenMode] = useState<ScreenMode>('home');
+  const getInitialScreenMode = (): ScreenMode => {
+    if (pathname.startsWith('/boards/')) {
+      return 'board';
+    }
+    return 'home';
+  };
+  
+  const [screenMode, setScreenMode] = useState<ScreenMode>(getInitialScreenMode());
   const [currentMode, setCurrentMode] = useState<"memo" | "task" | "board">("memo"); // サイドバータブ状態
   
   // refs
@@ -43,13 +50,15 @@ function Main() {
   
   // slugからボード情報取得
   const { data: boardFromSlug, isLoading: isSlugLoading } = useBoardBySlug(currentBoardSlug || null);
-  const { data: currentBoard } = useBoardWithItems(boardFromSlug?.id || null);
+  const { data: currentBoard, isLoading: isBoardWithItemsLoading } = useBoardWithItems(boardFromSlug?.id || null);
   
   
   // URLに基づいてscreenModeを設定
   useEffect(() => {
     if (pathname.startsWith('/boards/')) {
       setScreenMode('board');
+    } else {
+      setScreenMode('home');
     }
   }, [pathname]);
   
@@ -244,21 +253,34 @@ function Main() {
   const BoardDetailWrapper = () => {
     const router = useRouter();
     
+    if (isSlugLoading || isBoardWithItemsLoading) {
+      return (
+        <div className="flex items-center justify-center p-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              {isSlugLoading ? 'ボードを読み込み中...' : boardFromSlug?.name}
+            </h1>
+            {boardFromSlug && (
+              <p className="text-gray-600">アイテムを読み込み中...</p>
+            )}
+          </div>
+        </div>
+      );
+    }
+
     if (!boardFromSlug || !currentBoard) {
       return (
         <div className="flex items-center justify-center p-8">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              {isSlugLoading ? 'ボードを読み込み中...' : 'ボードが見つかりません'}
+              ボードが見つかりません
             </h1>
-            {!isSlugLoading && (
-              <button
-                onClick={() => router.push("/")}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                ボード一覧に戻る
-              </button>
-            )}
+            <button
+              onClick={() => router.push("/")}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              ボード一覧に戻る
+            </button>
           </div>
         </div>
       );
@@ -268,6 +290,8 @@ function Main() {
       <BoardDetail 
         boardId={boardFromSlug.id} 
         onBack={() => router.push("/")} 
+        onSelectMemo={handleSelectMemo}
+        onSelectTask={handleSelectTask}
       />
     );
   };
@@ -298,19 +322,54 @@ function Main() {
         </div>
       )}
 
-      <>
-        {/* ==========================================
-            モバイル版レイアウト：サイドバー全画面表示
-            ========================================== */}
-        <div className="h-screen w-full md:hidden">
-          {showDeleted ? (
-            // 削除済みメモ一覧表示
-            <DeletedMemoList
-              onBackToNotes={handleBackToNotes}
-              onSelectDeletedMemo={handleSelectDeletedMemo}
-            />
-          ) : (
-            // 通常のサイドバー表示（フルサイズ）
+      {/* ==========================================
+          モバイル版レイアウト：サイドバー全画面表示
+          ========================================== */}
+      <div className="h-screen w-full md:hidden">
+        {showDeleted ? (
+          // 削除済みメモ一覧表示
+          <DeletedMemoList
+            onBackToNotes={handleBackToNotes}
+            onSelectDeletedMemo={handleSelectDeletedMemo}
+          />
+        ) : (
+          // 通常のサイドバー表示（フルサイズ）
+          <Sidebar
+            onNewMemo={handleNewMemo}
+            onNewTask={handleNewTask}
+            onSelectMemo={handleSelectMemo}
+            onSelectTask={handleSelectTask}
+            onEditTask={handleEditTask}
+            onShowFullList={() => handleShowList('memo')}
+            onHome={handleHome}
+            onEditMemo={handleEditMemo}
+            onDeleteMemo={handleDeleteMemo}
+            selectedMemoId={selectedMemo?.id}
+            selectedTaskId={selectedTask?.id}
+            isCompact={false} // モバイルは常にフルサイズ
+            currentMode={currentMode}
+            onModeChange={setCurrentMode}
+            onSettings={handleSettings}
+            onDashboard={handleDashboard}
+            onNewBoard={handleNewBoard}
+            isBoardActive={screenMode === 'board' || (screenMode === 'create' && currentMode === 'board')}
+            currentBoardName={currentBoard?.name}
+          />
+        )}
+      </div>
+
+      {/* ==========================================
+          デスクトップ版レイアウト：ヘッダー + サイドバー + メインコンテンツ
+          ========================================== */}
+      <div className="hidden md:flex flex-col h-screen w-full">
+        {/* ヘッダー（設定で非表示可能） */}
+        {!preferences?.hideHeader && <Header />}
+        
+        {/* メインレイアウト */}
+        <DesktopLayout
+          hideHeader={preferences?.hideHeader}
+          sidebarContent={
+            // コンパクトサイドバー（アイコンナビ）
             <Sidebar
               onNewMemo={handleNewMemo}
               onNewTask={handleNewTask}
@@ -318,137 +377,100 @@ function Main() {
               onSelectTask={handleSelectTask}
               onEditTask={handleEditTask}
               onShowFullList={() => handleShowList('memo')}
+              onShowTaskList={() => handleShowList('task')}
               onHome={handleHome}
               onEditMemo={handleEditMemo}
               onDeleteMemo={handleDeleteMemo}
               selectedMemoId={selectedMemo?.id}
               selectedTaskId={selectedTask?.id}
-              isCompact={false} // モバイルは常にフルサイズ
+              isCompact={true} // デスクトップは常にコンパクト
               currentMode={currentMode}
               onModeChange={setCurrentMode}
               onSettings={handleSettings}
+              onSearch={handleSearch}
               onDashboard={handleDashboard}
               onNewBoard={handleNewBoard}
               isBoardActive={screenMode === 'board' || (screenMode === 'create' && currentMode === 'board')}
               currentBoardName={currentBoard?.name}
             />
-          )}
-        </div>
-
-        {/* ==========================================
-            デスクトップ版レイアウト：ヘッダー + サイドバー + メインコンテンツ
-            ========================================== */}
-        <div className="hidden md:flex flex-col h-screen w-full">
-          {/* ヘッダー（設定で非表示可能） */}
-          {!preferences?.hideHeader && <Header />}
+          }
+        >
+          {/* ==========================================
+              メインコンテンツエリア（7つの画面モード）
+              ========================================== */}
           
-          {/* メインレイアウト */}
-          <DesktopLayout
-            hideHeader={preferences?.hideHeader}
-            sidebarContent={
-              // コンパクトサイドバー（アイコンナビ）
-              <Sidebar
-                onNewMemo={handleNewMemo}
-                onNewTask={handleNewTask}
-                onSelectMemo={handleSelectMemo}
-                onSelectTask={handleSelectTask}
-                onEditTask={handleEditTask}
-                onShowFullList={() => handleShowList('memo')}
-                onShowTaskList={() => handleShowList('task')}
-                onHome={handleHome}
-                onEditMemo={handleEditMemo}
-                onDeleteMemo={handleDeleteMemo}
-                selectedMemoId={selectedMemo?.id}
-                selectedTaskId={selectedTask?.id}
-                isCompact={true} // デスクトップは常にコンパクト
-                currentMode={currentMode}
-                onModeChange={setCurrentMode}
-                onSettings={handleSettings}
-                onSearch={handleSearch}
-                onDashboard={handleDashboard}
-                onNewBoard={handleNewBoard}
-                isBoardActive={screenMode === 'board' || (screenMode === 'create' && currentMode === 'board')}
-                currentBoardName={currentBoard?.name}
-              />
-            }
-          >
-            {/* ==========================================
-                メインコンテンツエリア（7つの画面モード）
-                ========================================== */}
-            
-            {/* ホーム画面 */}
-            {screenMode === 'home' && (
-              <WelcomeScreen />
-            )}
-            
-            {/* メモ関連画面（一覧・表示・編集） */}
-            {screenMode === 'memo' && (
-              <MemoScreen
-                selectedMemo={selectedMemo}
-                selectedDeletedMemo={selectedDeletedMemo}
-                onSelectMemo={handleSelectMemo}
-                onSelectDeletedMemo={handleSelectDeletedMemo}
-                onClose={handleClose}
-                onDeselectAndStayOnMemoList={() => {
-                  setSelectedMemo(null);
-                  setSelectedDeletedMemo(null);
-                }}
-              />
-            )}
-            
-            {/* タスク関連画面（一覧・表示・編集） */}
-            {screenMode === 'task' && (
-              <TaskScreen
-                selectedTask={selectedTask}
-                selectedDeletedTask={selectedDeletedTask}
-                onSelectTask={handleSelectTask}
-                onSelectDeletedTask={handleSelectDeletedTask}
-                onClose={handleClose}
-                onClearSelection={() => {
-                  setSelectedTask(null);
-                  setSelectedDeletedTask(null);
-                }}
-              />
-            )}
-            
-            {/* 新規作成画面（メモ・タスク・ボード統合） */}
-            {screenMode === 'create' && (
-              <CreateScreen
-                initialMode={currentMode}
-                onClose={handleClose}
-                onModeChange={setCurrentMode}
-                onShowMemoList={() => handleShowList('memo')}
-                onShowTaskList={() => handleShowList('task')}
-                onShowBoardList={() => handleShowList('board')}
-              />
-            )}
-            
-            {/* 検索画面 */}
-            {screenMode === 'search' && (
-              <SearchScreen
-                onSelectMemo={handleSelectMemo}
-                onSelectTask={handleSelectTask}
-                onSelectDeletedMemo={handleSelectDeletedMemo}
-                onSelectDeletedTask={handleSelectDeletedTask}
-              />
-            )}
-            
-            {/* 設定画面 */}
-            {screenMode === 'settings' && (
-              <SettingsScreen />
-            )}
+          {/* ホーム画面 */}
+          {screenMode === 'home' && (
+            <WelcomeScreen />
+          )}
+          
+          {/* メモ関連画面（一覧・表示・編集） */}
+          {screenMode === 'memo' && (
+            <MemoScreen
+              selectedMemo={selectedMemo}
+              selectedDeletedMemo={selectedDeletedMemo}
+              onSelectMemo={handleSelectMemo}
+              onSelectDeletedMemo={handleSelectDeletedMemo}
+              onClose={handleClose}
+              onDeselectAndStayOnMemoList={() => {
+                setSelectedMemo(null);
+                setSelectedDeletedMemo(null);
+              }}
+            />
+          )}
+          
+          {/* タスク関連画面（一覧・表示・編集） */}
+          {screenMode === 'task' && (
+            <TaskScreen
+              selectedTask={selectedTask}
+              selectedDeletedTask={selectedDeletedTask}
+              onSelectTask={handleSelectTask}
+              onSelectDeletedTask={handleSelectDeletedTask}
+              onClose={handleClose}
+              onClearSelection={() => {
+                setSelectedTask(null);
+                setSelectedDeletedTask(null);
+              }}
+            />
+          )}
+          
+          {/* 新規作成画面（メモ・タスク・ボード統合） */}
+          {screenMode === 'create' && (
+            <CreateScreen
+              initialMode={currentMode}
+              onClose={handleClose}
+              onModeChange={setCurrentMode}
+              onShowMemoList={() => handleShowList('memo')}
+              onShowTaskList={() => handleShowList('task')}
+              onShowBoardList={() => handleShowList('board')}
+            />
+          )}
+          
+          {/* 検索画面 */}
+          {screenMode === 'search' && (
+            <SearchScreen
+              onSelectMemo={handleSelectMemo}
+              onSelectTask={handleSelectTask}
+              onSelectDeletedMemo={handleSelectDeletedMemo}
+              onSelectDeletedTask={handleSelectDeletedTask}
+            />
+          )}
+          
+          {/* 設定画面 */}
+          {screenMode === 'settings' && (
+            <SettingsScreen />
+          )}
 
-            {/* ボード画面 */}
-            {screenMode === 'board' && (
-              pathname.startsWith('/boards/') ? (
-                <BoardDetailWrapper />
-              ) : (
-                <BoardScreen ref={boardScreenRef} />
-              )
-            )}
-          </DesktopLayout>
-        </div>
-      </>
+          {/* ボード画面 */}
+          {screenMode === 'board' && (
+            pathname.startsWith('/boards/') ? (
+              <BoardDetailWrapper />
+            ) : (
+              <BoardScreen ref={boardScreenRef} />
+            )
+          )}
+        </DesktopLayout>
+      </div>
     </main>
   );
 }

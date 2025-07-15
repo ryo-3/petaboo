@@ -170,8 +170,8 @@ export default function BoardDetail({
     URL.revokeObjectURL(url);
   };
 
-  // アイテムの読み込み中のみローディング表示
-  if (isLoading) {
+  // エラー時のみエラー表示
+  if (error) {
     return (
       <div className={showBoardHeader ? "p-6" : ""}>
         {showBoardHeader && (
@@ -185,37 +185,19 @@ export default function BoardDetail({
           />
         )}
         <div className="text-center py-8">
-          <p className="text-gray-600">アイテムを読み込み中...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !boardWithItems) {
-    return (
-      <div className={showBoardHeader ? "p-6" : ""}>
-        {showBoardHeader && (
-          <BoardHeader
-            boardName={boardName}
-            boardDescription={boardDescription}
-            itemCount={0}
-            onBack={onBack}
-            onExport={() => {}}
-          />
-        )}
-        <div className="text-center py-8">
           <p className="text-red-500">アイテムの読み込みに失敗しました</p>
         </div>
       </div>
     );
   }
 
-  const memoItems = boardWithItems.items.filter(
+  // メモとタスクのアイテムを分離（読み込み中も空配列で処理）
+  const memoItems = boardWithItems?.items.filter(
     (item) => item.itemType === "memo"
-  );
-  const taskItems = boardWithItems.items.filter(
+  ) || [];
+  const taskItems = boardWithItems?.items.filter(
     (item) => item.itemType === "task"
-  );
+  ) || [];
 
   return (
     <div className={showBoardHeader ? "p-6" : ""}>
@@ -256,7 +238,11 @@ export default function BoardDetail({
           </div>
 
           <div className="space-y-3">
-            {memoItems.length === 0 ? (
+            {isLoading ? (
+              <div className="text-gray-500 text-center py-8">
+                メモを読み込み中...
+              </div>
+            ) : memoItems.length === 0 ? (
               <div className="text-gray-500 text-center py-8">
                 メモがありません
               </div>
@@ -297,7 +283,11 @@ export default function BoardDetail({
           </div>
 
           <div className="space-y-3">
-            {taskItems.length === 0 ? (
+            {isLoading ? (
+              <div className="text-gray-500 text-center py-8">
+                タスクを読み込み中...
+              </div>
+            ) : taskItems.length === 0 ? (
               <div className="text-gray-500 text-center py-8">
                 タスクがありません
               </div>

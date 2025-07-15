@@ -69,26 +69,10 @@ function Main() {
   
   // UI状態管理
   const [showDeleted, setShowDeleted] = useState(false); // モバイル版削除済み表示フラグ
-  const [windowWidth, setWindowWidth] = useState(0); // レスポンシブ制御用
 
   // エラー管理（将来的にAPI同期エラー表示用）
   const errors: string[] = [];
   const clearErrors = () => {};
-
-  // ==========================================
-  // 画面幅監視（レスポンシブ対応）
-  // ==========================================
-  useEffect(() => {
-    const updateWindowWidth = () => {
-      setWindowWidth(window.innerWidth);
-    };
-
-    updateWindowWidth();
-    window.addEventListener("resize", updateWindowWidth);
-    return () => window.removeEventListener("resize", updateWindowWidth);
-  }, []);
-
-  const isMobile = windowWidth <= 768;
 
   // ==========================================
   // 共通ユーティリティ関数
@@ -289,7 +273,7 @@ function Main() {
   };
 
   return (
-    <main>
+    <main className="relative">
       {/* ==========================================
           エラー表示領域（将来的なAPI同期エラー用）
           ========================================== */}
@@ -314,11 +298,11 @@ function Main() {
         </div>
       )}
 
-      {isMobile ? (
-        /* ==========================================
-           モバイル版レイアウト：サイドバー全画面表示
-           ========================================== */
-        <div className="h-screen w-full">
+      <>
+        {/* ==========================================
+            モバイル版レイアウト：サイドバー全画面表示
+            ========================================== */}
+        <div className="h-screen w-full md:hidden">
           {showDeleted ? (
             // 削除済みメモ一覧表示
             <DeletedMemoList
@@ -350,11 +334,11 @@ function Main() {
             />
           )}
         </div>
-      ) : (
-        /* ==========================================
-           デスクトップ版レイアウト：ヘッダー + サイドバー + メインコンテンツ
-           ========================================== */
-        <div className="flex flex-col h-screen w-full">
+
+        {/* ==========================================
+            デスクトップ版レイアウト：ヘッダー + サイドバー + メインコンテンツ
+            ========================================== */}
+        <div className="hidden md:flex flex-col h-screen w-full">
           {/* ヘッダー（設定で非表示可能） */}
           {!preferences?.hideHeader && <Header />}
           
@@ -464,7 +448,7 @@ function Main() {
             )}
           </DesktopLayout>
         </div>
-      )}
+      </>
     </main>
   );
 }

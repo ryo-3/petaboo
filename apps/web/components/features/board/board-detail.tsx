@@ -1,4 +1,3 @@
-import ArrowLeftIcon from "@/components/icons/arrow-left-icon";
 import MemoIcon from "@/components/icons/memo-icon";
 import TaskIcon from "@/components/icons/task-icon";
 import AddItemButton from "@/components/ui/buttons/add-item-button";
@@ -12,12 +11,17 @@ import { Task } from "@/src/types/task";
 import { getTimeAgo } from "@/src/utils/dateUtils";
 import { useEffect, useState } from "react";
 import AddItemModal from "./add-item-modal";
+import BoardHeader from "./board-header";
 
 interface BoardDetailProps {
   boardId: number;
   onBack: () => void;
   onSelectMemo?: (memo: Memo) => void;
   onSelectTask?: (task: Task) => void;
+  initialBoardName?: string;
+  initialBoardDescription?: string | null;
+  showBoardHeader?: boolean;
+  serverInitialTitle?: string;
 }
 
 interface ExportData {
@@ -38,20 +42,39 @@ interface ExportData {
   }[];
 }
 
-export default function BoardDetail({ boardId, onBack, onSelectMemo, onSelectTask }: BoardDetailProps) {
+export default function BoardDetail({ 
+  boardId, 
+  onBack, 
+  onSelectMemo, 
+  onSelectTask,
+  initialBoardName,
+  initialBoardDescription,
+  showBoardHeader = true,
+  serverInitialTitle
+}: BoardDetailProps) {
   const [showAddModal, setShowAddModal] = useState(false);
   const { data: boardWithItems, isLoading, error } = useBoardWithItems(boardId);
   const removeItemFromBoard = useRemoveItemFromBoard();
 
+  // ボード名は即座に表示
+  const boardName = initialBoardName || boardWithItems?.name || "ボード";
+  const boardDescription = initialBoardDescription || boardWithItems?.description;
+
+  console.log('🔍 BoardDetail状態:', {
+    initialBoardName,
+    boardWithItemsName: boardWithItems?.name,
+    boardName,
+    isLoading,
+    error: !!error
+  });
+
   // ページタイトル設定
   useEffect(() => {
-    if (boardWithItems) {
-      document.title = `${boardWithItems.name} - ボード`;
-    }
+    document.title = `${boardName} - ボード`;
     return () => {
       document.title = "メモ帳アプリ";
     };
-  }, [boardWithItems]);
+  }, [boardName]);
 
   const handleRemoveItem = async (item: BoardItemWithContent) => {
     if (confirm("このアイテムをボードから削除しますか？")) {
@@ -71,8 +94,8 @@ export default function BoardDetail({ boardId, onBack, onSelectMemo, onSelectTas
     if (!boardWithItems) return;
 
     const exportData = {
-      name: boardWithItems.name,
-      description: boardWithItems.description,
+      name: boardName,
+      description: boardDescription || null,
       createdAt: new Date((boardWithItems.createdAt as number) * 1000).toLocaleString('ja-JP'),
       memos: memoItems.map(item => {
         const memo = item.content as Memo;
@@ -95,7 +118,7 @@ export default function BoardDetail({ boardId, onBack, onSelectMemo, onSelectTas
     };
 
     const textContent = formatAsText(exportData);
-    downloadAsFile(textContent, `${boardWithItems.name}.txt`);
+    downloadAsFile(textContent, `${boardName}.txt`);
   };
 
   const formatAsText = (data: ExportData) => {
@@ -147,18 +170,42 @@ export default function BoardDetail({ boardId, onBack, onSelectMemo, onSelectTas
     URL.revokeObjectURL(url);
   };
 
+  // アイテムの読み込み中のみローディング表示
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-gray-500">ボードを読み込み中...</div>
+      <div className={showBoardHeader ? "p-6" : ""}>
+        {showBoardHeader && (
+          <BoardHeader
+            boardName={serverInitialTitle || boardName}
+            boardDescription={boardDescription}
+            itemCount={0}
+            onBack={onBack}
+            onExport={() => {}}
+            isExportDisabled={true}
+          />
+        )}
+        <div className="text-center py-8">
+          <p className="text-gray-600">アイテムを読み込み中...</p>
+        </div>
       </div>
     );
   }
 
   if (error || !boardWithItems) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-red-500">ボードの読み込みに失敗しました</div>
+      <div className={showBoardHeader ? "p-6" : ""}>
+        {showBoardHeader && (
+          <BoardHeader
+            boardName={boardName}
+            boardDescription={boardDescription}
+            itemCount={0}
+            onBack={onBack}
+            onExport={() => {}}
+          />
+        )}
+        <div className="text-center py-8">
+          <p className="text-red-500">アイテムの読み込みに失敗しました</p>
+        </div>
       </div>
     );
   }
@@ -171,37 +218,18 @@ export default function BoardDetail({ boardId, onBack, onSelectMemo, onSelectTas
   );
 
   return (
-    <div className="p-6">
+    <div className={showBoardHeader ? "p-6" : ""}>
       {/* ヘッダー */}
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            {boardWithItems.name}
-          </h1>
-          {boardWithItems.description && (
-            <p className="text-gray-600 mt-1">{boardWithItems.description}</p>
-          )}
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="text-sm text-gray-500">
-            {memoItems.length + taskItems.length} 個のアイテム
-          </div>
-          <button
-            onClick={handleExport}
-            className="px-4 py-2 bg-green-100 hover:bg-green-200 text-green-600 hover:text-green-700 rounded-lg transition-colors flex items-center gap-2"
-            title="テキストファイルとしてエクスポート"
-          >
-            📄 エクスポート
-          </button>
-          <button
-            onClick={onBack}
-            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 rounded-lg transition-colors flex items-center gap-2"
-          >
-            <ArrowLeftIcon className="w-4 h-4" />
-            一覧へ
-          </button>
-        </div>
-      </div>
+      {showBoardHeader && (
+        <BoardHeader
+          boardName={boardName}
+          boardDescription={boardDescription}
+          itemCount={memoItems.length + taskItems.length}
+          onBack={onBack}
+          onExport={handleExport}
+          isExportDisabled={false}
+        />
+      )}
 
       {/* カンバン風レイアウト */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

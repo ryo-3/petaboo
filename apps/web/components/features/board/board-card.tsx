@@ -31,8 +31,11 @@ export default function BoardCard({ board, onSelect, onDelete, isDeleting }: Boa
   const updatedDateString = formatDateTime(updatedAt);
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-pointer">
-      <div onClick={onSelect} className="flex-1">
+    <div 
+      onClick={onSelect}
+      className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-pointer"
+    >
+      <div className="flex-1">
         <h3 className="text-lg font-semibold text-gray-900 mb-2">{board.name}</h3>
         {board.description && (
           <p className="text-gray-600 text-sm mb-3 line-clamp-2">{board.description}</p>
@@ -57,13 +60,7 @@ export default function BoardCard({ board, onSelect, onDelete, isDeleting }: Boa
         </div>
       </div>
       
-      <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-        <button
-          onClick={onSelect}
-          className="px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
-        >
-          開く
-        </button>
+      <div className="flex items-center justify-end mt-4 pt-4 border-t border-gray-100">
         <button
           onClick={(e) => {
             e.stopPropagation();

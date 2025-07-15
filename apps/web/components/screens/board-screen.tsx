@@ -26,6 +26,7 @@ const BoardScreen = forwardRef<BoardScreenRef>((props, ref) => {
   };
 
   const handleBoardSelect = (board: { id: number; slug: string }) => {
+    // 遷移前にローディング状態を示す
     router.push(`/boards/${board.slug}`);
   };
 

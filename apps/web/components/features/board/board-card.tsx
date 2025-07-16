@@ -3,9 +3,10 @@ import { BoardWithStats } from "@/src/types/board";
 interface BoardCardProps {
   board: BoardWithStats;
   onSelect: () => void;
+  mode?: "normal" | "completed" | "deleted";
 }
 
-export default function BoardCard({ board, onSelect }: BoardCardProps) {
+export default function BoardCard({ board, onSelect, mode = "normal" }: BoardCardProps) {
   // ISO文字列またはUnix timestampを正しく処理
   const createdAt = typeof board.createdAt === 'string' 
     ? new Date(board.createdAt) 
@@ -27,6 +28,7 @@ export default function BoardCard({ board, onSelect }: BoardCardProps) {
   
   const createdDateString = formatDateTime(createdAt);
   const updatedDateString = formatDateTime(updatedAt);
+
 
   return (
     <div 

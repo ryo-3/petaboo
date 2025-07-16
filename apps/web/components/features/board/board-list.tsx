@@ -20,7 +20,7 @@ export default function BoardList({
   const [internalShowCreateForm, setInternalShowCreateForm] = useState(false);
   const showCreateForm = externalShowCreateForm ?? internalShowCreateForm;
   
-  const { data: boards, isLoading, error } = useBoards();
+  const { data: boards, isLoading, error } = useBoards(activeTab);
   const createBoard = useCreateBoard();
 
   // ページタイトル設定
@@ -67,31 +67,31 @@ export default function BoardList({
   }
 
   if (activeTab === "completed") {
-    return (
-      <div className="">
+    if (boards && boards.length === 0) {
+      return (
         <div className="text-center py-12">
-          <div className="text-gray-500 mb-4">完了したボード機能は未実装です</div>
-          <div className="text-sm text-gray-400">この機能は将来のバージョンで実装予定です</div>
+          <div className="text-gray-500 mb-4">完了したボードはありません</div>
+          <div className="text-sm text-gray-400">ボードを完了にするには、通常タブで完了ボタンを押してください</div>
         </div>
-      </div>
-    );
+      );
+    }
   }
 
   if (activeTab === "deleted") {
-    return (
-      <div className="">
+    if (boards && boards.length === 0) {
+      return (
         <div className="text-center py-12">
-          <div className="text-gray-500 mb-4">削除済みボード機能は未実装です</div>
-          <div className="text-sm text-gray-400">この機能は将来のバージョンで実装予定です</div>
+          <div className="text-gray-500 mb-4">削除済みボードはありません</div>
+          <div className="text-sm text-gray-400">削除されたボードがここに表示されます</div>
         </div>
-      </div>
-    );
+      );
+    }
   }
 
   return (
     <div className="">
 
-      {showCreateForm && (
+      {showCreateForm && activeTab === "normal" && (
         <div className="mb-6">
           <BoardForm
             onSubmit={handleCreateBoard}
@@ -103,8 +103,16 @@ export default function BoardList({
 
       {boards && boards.length === 0 ? (
         <div className="text-center py-12">
-          <div className="text-gray-500 mb-4">まだボードがありません</div>
-          <div className="text-sm text-gray-400">右上の + ボタンから新しいボードを作成できます</div>
+          <div className="text-gray-500 mb-4">
+            {activeTab === "normal" ? "まだボードがありません" : 
+             activeTab === "completed" ? "完了したボードはありません" : 
+             "削除済みボードはありません"}
+          </div>
+          <div className="text-sm text-gray-400">
+            {activeTab === "normal" ? "右上の + ボタンから新しいボードを作成できます" : 
+             activeTab === "completed" ? "ボードを完了にするには、通常タブで完了ボタンを押してください" : 
+             "削除されたボードがここに表示されます"}
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -113,6 +121,7 @@ export default function BoardList({
               key={board.id}
               board={board}
               onSelect={() => onBoardSelect?.(board)}
+              mode={activeTab}
             />
           ))}
         </div>

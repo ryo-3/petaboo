@@ -4,6 +4,7 @@ import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useRouter } from "next/navigation";
 import BoardList from "@/components/features/board/board-list";
 import DesktopUpper from "@/components/layout/desktop-upper";
+import { useBoards } from "@/src/hooks/use-boards";
 
 export interface BoardScreenRef {
   triggerCreateNew: () => void;
@@ -17,6 +18,11 @@ const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(({ onBoardSelec
   const router = useRouter();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [activeTab, setActiveTab] = useState<"normal" | "completed" | "deleted">("normal");
+  
+  // 各ステータスのボード数を取得
+  const { data: normalBoards } = useBoards("normal");
+  const { data: completedBoards } = useBoards("completed");
+  const { data: deletedBoards } = useBoards("deleted");
 
   // ページタイトル設定（デフォルト）
   useEffect(() => {
@@ -54,9 +60,9 @@ const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(({ onBoardSelec
           columnCount={3}
           onColumnCountChange={() => {}}
           rightPanelMode="hidden"
-          normalCount={0}
-          completedCount={0}
-          deletedCount={0}
+          normalCount={normalBoards?.length || 0}
+          completedCount={completedBoards?.length || 0}
+          deletedCount={deletedBoards?.length || 0}
         />
         
         <BoardList 

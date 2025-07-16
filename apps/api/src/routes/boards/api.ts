@@ -1,8 +1,8 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { getAuth } from "@hono/clerk-auth";
 import { eq, and, desc } from "drizzle-orm";
-import { boards, boardItems, tasks, notes } from "../../db";
-import type { NewBoard, NewBoardItem } from "../../db/schema/boards";
+import { boards, boardItems, tasks, notes, deletedBoards } from "../../db";
+import type { NewBoard, NewBoardItem, NewDeletedBoard } from "../../db/schema/boards";
 
 // スラッグ生成ユーティリティ
 function generateSlug(name: string): string {
@@ -53,6 +53,7 @@ const BoardSchema = z.object({
   userId: z.string(),
   position: z.number(),
   archived: z.boolean(),
+  completed: z.boolean(),
   createdAt: z.number(),
   updatedAt: z.number(),
 });
@@ -92,6 +93,11 @@ export function createAPI(app: any) {
     method: "get",
     path: "/",
     tags: ["boards"],
+    request: {
+      query: z.object({
+        status: z.enum(["normal", "completed", "deleted"]).optional().default("normal"),
+      }),
+    },
     responses: {
       200: {
         content: {
@@ -120,12 +126,37 @@ export function createAPI(app: any) {
       return c.json({ error: "Unauthorized" }, 401);
     }
 
+    const { status } = c.req.valid("query");
     const db = c.env.db;
-    const userBoards = await db
-      .select()
-      .from(boards)
-      .where(and(eq(boards.userId, auth.userId), eq(boards.archived, false)))
-      .orderBy(boards.position, boards.createdAt);
+    
+    let userBoards;
+    
+    if (status === "deleted") {
+      // 削除済みボードを取得
+      userBoards = await db
+        .select()
+        .from(deletedBoards)
+        .where(eq(deletedBoards.userId, auth.userId))
+        .orderBy(desc(deletedBoards.deletedAt));
+    } else {
+      // 通常または完了ボードを取得
+      const conditions = [
+        eq(boards.userId, auth.userId),
+        eq(boards.archived, false),
+      ];
+      
+      if (status === "completed") {
+        conditions.push(eq(boards.completed, true));
+      } else {
+        conditions.push(eq(boards.completed, false));
+      }
+      
+      userBoards = await db
+        .select()
+        .from(boards)
+        .where(and(...conditions))
+        .orderBy(boards.position, boards.createdAt);
+    }
 
     // 各ボードのメモ・タスク数を計算
     const boardsWithStats = await Promise.all(
@@ -273,6 +304,7 @@ export function createAPI(app: any) {
       userId: auth.userId,
       position: (maxPosition[0]?.maxPos || 0) + 1,
       archived: false,
+      completed: false,
       createdAt: now,
       updatedAt: now,
     };
@@ -375,6 +407,85 @@ export function createAPI(app: any) {
     return c.json(updated[0]);
   });
 
+  // ボード完了切り替え
+  const toggleBoardCompletionRoute = createRoute({
+    method: "patch",
+    path: "/{id}/toggle-completion",
+    tags: ["boards"],
+    request: {
+      params: z.object({
+        id: z.string(),
+      }),
+    },
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: BoardSchema,
+          },
+        },
+        description: "Board completion toggled",
+      },
+      401: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+            }),
+          },
+        },
+        description: "Unauthorized",
+      },
+      404: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+            }),
+          },
+        },
+        description: "Not found",
+      },
+    },
+  });
+
+  app.openapi(toggleBoardCompletionRoute, async (c) => {
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const boardId = parseInt(c.req.param("id"));
+    const db = c.env.db;
+
+    // ボードの所有権確認
+    const board = await db
+      .select()
+      .from(boards)
+      .where(
+        and(
+          eq(boards.id, boardId),
+          eq(boards.userId, auth.userId)
+        )
+      )
+      .limit(1);
+
+    if (board.length === 0) {
+      return c.json({ error: "Board not found" }, 404);
+    }
+
+    const updated = await db
+      .update(boards)
+      .set({ 
+        completed: !board[0].completed,
+        updatedAt: Math.floor(Date.now() / 1000) 
+      })
+      .where(eq(boards.id, boardId))
+      .returning();
+
+    return c.json(updated[0]);
+  });
+
   // ボード削除
   const deleteBoardRoute = createRoute({
     method: "delete",
@@ -444,10 +555,123 @@ export function createAPI(app: any) {
       return c.json({ error: "Board not found" }, 404);
     }
 
-    // ボードを削除（カスケードでboard_itemsも削除される）
+    // deleted_boardsテーブルに移動
+    const deletedBoard: NewDeletedBoard = {
+      id: board[0].id,
+      userId: board[0].userId,
+      originalId: board[0].id,
+      name: board[0].name,
+      slug: board[0].slug,
+      description: board[0].description,
+      position: board[0].position,
+      archived: board[0].archived,
+      createdAt: typeof board[0].createdAt === 'object' ? Math.floor(board[0].createdAt.getTime() / 1000) : board[0].createdAt,
+      updatedAt: typeof board[0].updatedAt === 'object' ? Math.floor(board[0].updatedAt.getTime() / 1000) : board[0].updatedAt,
+      deletedAt: Math.floor(Date.now() / 1000),
+    };
+
+    // トランザクションで削除済みテーブルに挿入し、元のテーブルから削除
+    await db.insert(deletedBoards).values(deletedBoard);
     await db.delete(boards).where(eq(boards.id, boardId));
 
     return c.json({ success: true });
+  });
+
+  // 削除済みボード復元
+  const restoreDeletedBoardRoute = createRoute({
+    method: "post",
+    path: "/restore/{id}",
+    tags: ["boards"],
+    request: {
+      params: z.object({
+        id: z.string(),
+      }),
+    },
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: BoardSchema,
+          },
+        },
+        description: "Board restored",
+      },
+      401: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+            }),
+          },
+        },
+        description: "Unauthorized",
+      },
+      404: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+            }),
+          },
+        },
+        description: "Not found",
+      },
+    },
+  });
+
+  app.openapi(restoreDeletedBoardRoute, async (c) => {
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const boardId = parseInt(c.req.param("id"));
+    const db = c.env.db;
+
+    // 削除済みボードの所有権確認
+    const deletedBoard = await db
+      .select()
+      .from(deletedBoards)
+      .where(
+        and(
+          eq(deletedBoards.originalId, boardId),
+          eq(deletedBoards.userId, auth.userId)
+        )
+      )
+      .limit(1);
+
+    if (deletedBoard.length === 0) {
+      return c.json({ error: "Deleted board not found" }, 404);
+    }
+
+    // 最大ポジション取得
+    const maxPosition = await db
+      .select({ maxPos: boards.position })
+      .from(boards)
+      .where(eq(boards.userId, auth.userId))
+      .orderBy(desc(boards.position))
+      .limit(1);
+
+    // 新しいスラッグを生成（重複を避けるため）
+    const newSlug = await generateUniqueSlug(deletedBoard[0].name, auth.userId, db);
+
+    // boardsテーブルに復元
+    const restoredBoard: NewBoard = {
+      name: deletedBoard[0].name,
+      slug: newSlug,
+      description: deletedBoard[0].description,
+      userId: deletedBoard[0].userId,
+      position: (maxPosition[0]?.maxPos || 0) + 1,
+      archived: deletedBoard[0].archived,
+      completed: false, // 復元時は未完了に設定
+      createdAt: new Date(deletedBoard[0].createdAt * 1000),
+      updatedAt: new Date(),
+    };
+
+    const result = await db.insert(boards).values(restoredBoard).returning();
+    await db.delete(deletedBoards).where(eq(deletedBoards.originalId, boardId));
+
+    return c.json(result[0]);
   });
 
   // スラッグからボード取得

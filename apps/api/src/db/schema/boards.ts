@@ -9,6 +9,7 @@ export const boards = sqliteTable("boards", {
   userId: text("user_id").notNull(),
   position: integer("position").notNull().default(0),
   archived: integer("archived", { mode: "boolean" }).notNull().default(false),
+  completed: integer("completed", { mode: "boolean" }).notNull().default(false),
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()
     .default(sql`(unixepoch())`),
@@ -29,7 +30,23 @@ export const boardItems = sqliteTable("board_items", {
     .default(sql`(unixepoch())`),
 });
 
+export const deletedBoards = sqliteTable("deleted_boards", {
+  id: integer("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  originalId: integer("original_id").notNull(), // 元のboardsテーブルのID
+  name: text("name").notNull(),
+  slug: text("slug").notNull(),
+  description: text("description"),
+  position: integer("position").notNull(),
+  archived: integer("archived", { mode: "boolean" }).notNull(),
+  createdAt: integer("created_at").notNull(),
+  updatedAt: integer("updated_at"),
+  deletedAt: integer("deleted_at").notNull(), // 削除日時
+});
+
 export type Board = typeof boards.$inferSelect;
 export type NewBoard = typeof boards.$inferInsert;
 export type BoardItem = typeof boardItems.$inferSelect;
 export type NewBoardItem = typeof boardItems.$inferInsert;
+export type DeletedBoard = typeof deletedBoards.$inferSelect;
+export type NewDeletedBoard = typeof deletedBoards.$inferInsert;

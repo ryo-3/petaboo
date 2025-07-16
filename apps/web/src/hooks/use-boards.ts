@@ -1,19 +1,19 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
-import { Board, BoardWithStats, BoardWithItems, CreateBoardData, UpdateBoardData, AddItemToBoardData, BoardItem } from "@/src/types/board";
+import { Board, BoardWithStats, BoardWithItems, CreateBoardData, UpdateBoardData, AddItemToBoardData, BoardItem, DeletedBoard } from "@/src/types/board";
 
 const API_BASE_URL = "http://localhost:8794";
 
 // ボード一覧取得
-export function useBoards() {
+export function useBoards(status: "normal" | "completed" | "deleted" = "normal") {
   const { getToken } = useAuth();
 
   return useQuery<BoardWithStats[]>({
-    queryKey: ["boards"],
+    queryKey: ["boards", status],
     queryFn: async () => {
       const token = await getToken();
       
-      const response = await fetch(`${API_BASE_URL}/boards`, {
+      const response = await fetch(`${API_BASE_URL}/boards?status=${status}`, {
         headers: {
           "Content-Type": "application/json",
           ...(token && { Authorization: `Bearer ${token}` }),
@@ -146,7 +146,36 @@ export function useUpdateBoard() {
   });
 }
 
-// ボード削除
+// ボード完了切り替え
+export function useToggleBoardCompletion() {
+  const queryClient = useQueryClient();
+  const { getToken } = useAuth();
+
+  return useMutation<Board, Error, number>({
+    mutationFn: async (id) => {
+      const token = await getToken();
+      const response = await fetch(`${API_BASE_URL}/boards/${id}/toggle-completion`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to toggle board completion");
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
+    },
+  });
+}
+
+// ボード削除（削除済みテーブルに移動）
 export function useDeleteBoard() {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
@@ -166,6 +195,35 @@ export function useDeleteBoard() {
         const error = await response.json();
         throw new Error(error.error || "Failed to delete board");
       }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
+    },
+  });
+}
+
+// 削除済みボード復元
+export function useRestoreDeletedBoard() {
+  const queryClient = useQueryClient();
+  const { getToken } = useAuth();
+
+  return useMutation<Board, Error, number>({
+    mutationFn: async (id) => {
+      const token = await getToken();
+      const response = await fetch(`${API_BASE_URL}/boards/restore/${id}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to restore deleted board");
+      }
+
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["boards"] });

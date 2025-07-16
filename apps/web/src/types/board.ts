@@ -9,8 +9,23 @@ export interface Board {
   userId: string;
   position: number;
   archived: boolean;
+  completed: boolean;
   createdAt: string | number;
   updatedAt: string | number;
+}
+
+export interface DeletedBoard {
+  id: number;
+  userId: string;
+  originalId: number;
+  name: string;
+  slug: string;
+  description: string | null;
+  position: number;
+  archived: boolean;
+  createdAt: number;
+  updatedAt: number;
+  deletedAt: number;
 }
 
 export interface BoardWithStats extends Board {

@@ -6,6 +6,7 @@ import { QueryProvider } from "@/src/lib/query-client";
 import { ToastProvider } from "@/src/contexts/toast-context";
 import { ToastContainer } from "@/components/ui/toast/toast-container";
 import { UserPreferencesProvider } from "@/src/contexts/user-preferences-context";
+import { SelectorProvider } from "@/src/contexts/selector-context";
 
 import { jaJP } from "@clerk/localizations";
 const geistSans = Geist({
@@ -37,8 +38,10 @@ export default function RootLayout({
           <QueryProvider>
             <UserPreferencesProvider>
               <ToastProvider>
-                {children}
-                <ToastContainer />
+                <SelectorProvider>
+                  {children}
+                  <ToastContainer />
+                </SelectorProvider>
               </ToastProvider>
             </UserPreferencesProvider>
           </QueryProvider>

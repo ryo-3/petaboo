@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useId, useContext, useCallback } from 'react';
 import ChevronDownIcon from "@/components/icons/chevron-down-icon";
 import PlusIcon from "@/components/icons/plus-icon";
 import CheckIcon from "@/components/icons/check-icon";
+import { SelectorContext } from "@/src/contexts/selector-context";
 
 interface SelectorOption {
   value: string;
@@ -33,12 +34,52 @@ function CustomSelector({
   const [isOpen, setIsOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
+  const selectorRef = useRef<HTMLDivElement>(null);
+  const selectorId = useId();
+  
+  // セレクターコンテキストの安全な使用
+  const selectorContext = useContext(SelectorContext);
+  const activeSelector = selectorContext?.activeSelector;
+  const setActiveSelector = useCallback((id: string | null) => {
+    if (selectorContext?.setActiveSelector) {
+      selectorContext.setActiveSelector(id);
+    }
+  }, [selectorContext]);
   
   const selectedOption = options.find(opt => opt.value === value);
+
+  // 他のセレクターが開いたら閉じる
+  useEffect(() => {
+    if (activeSelector && activeSelector !== selectorId) {
+      setIsOpen(false);
+      setIsCreating(false);
+      setNewCategoryName("");
+    }
+  }, [activeSelector, selectorId]);
+
+  // 外部クリックで閉じる
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (selectorRef.current && !selectorRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+        setIsCreating(false);
+        setNewCategoryName("");
+        setActiveSelector(null);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [isOpen, setActiveSelector]);
   
   const handleSelect = (optionValue: string) => {
     onChange(optionValue);
     setIsOpen(false);
+    setActiveSelector(null);
   };
 
   const handleCreateNew = () => {
@@ -56,7 +97,7 @@ function CustomSelector({
   };
 
   return (
-    <div className="relative">
+    <div className="relative" ref={selectorRef}>
       <div className="flex items-center justify-between mb-2 h-5">
         <label className="block text-sm font-medium text-gray-700">
           {label}
@@ -68,7 +109,11 @@ function CustomSelector({
             isOpen ? "rounded-t-lg" : "rounded-lg"
           } ${fullWidth ? "w-full" : ""}`}
           style={fullWidth ? {} : { width }}
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={() => {
+            const newOpenState = !isOpen;
+            setIsOpen(newOpenState);
+            setActiveSelector(newOpenState ? selectorId : null);
+          }}
           title="クリックして変更"
         >
           <div className="px-1.5 py-1 text-sm hover:opacity-80 transition-opacity flex items-center gap-2 flex-1">
@@ -88,7 +133,7 @@ function CustomSelector({
               fullWidth ? "w-full" : "w-full"
             }`}
           >
-            <div className="p-2 space-y-1">
+            <div className=" space-y-1">
               {allowCreate && (
                 <div className="border-b border-gray-200 pb-1 mb-1">
                   {isCreating ? (

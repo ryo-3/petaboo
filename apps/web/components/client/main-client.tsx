@@ -53,6 +53,7 @@ function MainClient({
   // ユーザー設定取得
   const { preferences } = useUserPreferences(1);
   const pathname = usePathname();
+  const router = useRouter();
 
 
   // コンテキストから状態を取得
@@ -255,6 +256,10 @@ function MainClient({
   const handleDashboard = () => {
     clearAllSelections();
     setScreenMode("board");
+    // ボード詳細からボード一覧に戻る場合はURLを変更
+    if (pathname.startsWith("/boards/") && pathname !== "/boards") {
+      router.push("/boards");
+    }
   };
 
   /** 新規作成画面に遷移 */

@@ -103,12 +103,18 @@ export default function BoardDetail({
   };
 
   const handleSelectMemo = useCallback((memo: Memo) => {
+    // デバッグ用ログ
+    // console.log('🔍 handleSelectMemo called:', memo.id, memo.title);
+    
     // 状態を同時に更新して競合を防ぐ
     setSelectedMemo(memo);
     setSelectedTask(null);
   }, []);
 
   const handleSelectTask = useCallback((task: Task) => {
+    // デバッグ用ログ
+    // console.log('🔍 handleSelectTask called:', task.id, task.title);
+    
     // 状態を同時に更新して競合を防ぐ
     setSelectedTask(task);
     setSelectedMemo(null);
@@ -434,7 +440,10 @@ function MemoItemCard({ memo, onRemove, onClick }: MemoItemCardProps) {
   return (
     <div 
       className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-      onClick={onClick}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick?.();
+      }}
     >
       <div className="flex items-start justify-between mb-2">
         <h3 className="font-medium text-gray-900 line-clamp-1">{memo.title}</h3>
@@ -523,7 +532,10 @@ function TaskItemCard({ task, onRemove, onClick }: TaskItemCardProps) {
   return (
     <div 
       className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-      onClick={onClick}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick?.();
+      }}
     >
       <div className="flex items-start justify-between mb-2">
         <h3 className="font-medium text-gray-900 line-clamp-1">{task.title}</h3>

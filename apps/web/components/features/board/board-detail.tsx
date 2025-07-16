@@ -265,7 +265,7 @@ export default function BoardDetail({
         {/* メモ・タスクコンテンツ */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 flex-1 overflow-y-auto">
             {/* メモ列 */}
-            <div className={`bg-gray-50 rounded-lg p-4 flex flex-col ${selectedMemo ? 'ring-2 ring-Green' : ''}`}>
+            <div className={`bg-gray-50 rounded-lg p-4 flex flex-col border-2 ${selectedMemo ? 'border-Green' : 'border-transparent'}`}>
           <div className="flex items-center gap-4 mb-4">
             <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-1">
               <MemoIcon className="w-5 h-5 text-Green" />
@@ -310,7 +310,7 @@ export default function BoardDetail({
             </div>
 
             {/* タスク列 */}
-            <div className={`bg-gray-50 rounded-lg p-4 flex flex-col ${selectedTask ? 'ring-2 ring-DeepBlue' : ''}`}>
+            <div className={`bg-gray-50 rounded-lg p-4 flex flex-col border-2 ${selectedTask ? 'border-DeepBlue' : 'border-transparent'}`}>
           <div className="flex items-center gap-4 mb-4">
             <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-1">
               <TaskIcon className="w-5 h-5 text-DeepBlue" />

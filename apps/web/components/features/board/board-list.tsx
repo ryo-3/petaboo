@@ -8,12 +8,14 @@ interface BoardListProps {
   onBoardSelect?: (board: { id: number; slug: string }) => void;
   showCreateForm?: boolean;
   onCreateFormClose?: () => void;
+  showDeleted?: boolean;
 }
 
 export default function BoardList({ 
   onBoardSelect, 
   showCreateForm: externalShowCreateForm, 
-  onCreateFormClose 
+  onCreateFormClose,
+  showDeleted = false
 }: BoardListProps) {
   const [internalShowCreateForm, setInternalShowCreateForm] = useState(false);
   const showCreateForm = externalShowCreateForm ?? internalShowCreateForm;
@@ -60,6 +62,17 @@ export default function BoardList({
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-red-500">ボードの読み込みに失敗しました</div>
+      </div>
+    );
+  }
+
+  if (showDeleted) {
+    return (
+      <div className="">
+        <div className="text-center py-12">
+          <div className="text-gray-500 mb-4">削除済みボード機能は未実装です</div>
+          <div className="text-sm text-gray-400">この機能は将来のバージョンで実装予定です</div>
+        </div>
       </div>
     );
   }

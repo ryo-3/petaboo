@@ -16,6 +16,7 @@ interface BoardScreenProps {
 const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(({ onBoardSelect }, ref) => {
   const router = useRouter();
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showDeleted, setShowDeleted] = useState(false);
 
   // ページタイトル設定（デフォルト）
   useEffect(() => {
@@ -45,8 +46,8 @@ const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(({ onBoardSelec
       <div className="pt-6 pl-6 pr-2 flex flex-col h-full">
         <DesktopUpper
           currentMode="board"
-          activeTab="normal"
-          onTabChange={() => {}}
+          activeTab={showDeleted ? "deleted" : "normal"}
+          onTabChange={(tab) => setShowDeleted(tab === "deleted")}
           onCreateNew={handleCreateNew}
           viewMode="card"
           onViewModeChange={() => {}}
@@ -54,12 +55,14 @@ const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(({ onBoardSelec
           onColumnCountChange={() => {}}
           rightPanelMode="hidden"
           normalCount={0}
+          deletedCount={0}
         />
         
         <BoardList 
           onBoardSelect={handleBoardSelect}
           showCreateForm={showCreateForm}
           onCreateFormClose={() => setShowCreateForm(false)}
+          showDeleted={showDeleted}
         />
       </div>
     </div>

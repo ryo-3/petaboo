@@ -49,6 +49,7 @@ interface DesktopUpperProps {
   normalCount: number;
   deletedNotesCount?: number;
   deletedTasksCount?: number;
+  deletedCount?: number;
   todoCount?: number;
   inProgressCount?: number;
   completedCount?: number;
@@ -75,6 +76,7 @@ function DesktopUpper({
   normalCount,
   deletedNotesCount = 0,
   deletedTasksCount = 0,
+  deletedCount = 0,
   todoCount = 0,
   inProgressCount = 0,
   completedCount = 0,
@@ -93,6 +95,17 @@ function DesktopUpper({
           label: "",
           icon: <TrashIcon className="w-4 h-4" />,
           count: deletedTasksCount,
+        },
+      ];
+    }
+    if (currentMode === "board") {
+      return [
+        { id: "normal", label: "通常", count: normalCount },
+        {
+          id: "deleted",
+          label: "",
+          icon: <TrashIcon className="w-4 h-4" />,
+          count: deletedCount || 0,
         },
       ];
     }
@@ -204,35 +217,33 @@ function DesktopUpper({
           />
 
           {/* タブ */}
-          {currentMode !== "board" && (
-            <div className="flex items-center gap-2 ml-2">
-              {tabs.map((tab) => {
-              const isActive = activeTab === tab.id;
-              const tabClass = tab.icon
-                ? "pl-2 pr-2 py-2"
-                : "gap-2 px-2 py-1.5";
+          <div className="flex items-center gap-2 ml-2">
+            {tabs.map((tab) => {
+            const isActive = activeTab === tab.id;
+            const tabClass = tab.icon
+              ? "pl-2 pr-2 py-2"
+              : "gap-2 px-2 py-1.5";
 
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() =>
-                    onTabChange(
-                      tab.id as
-                        | "normal"
-                        | "deleted"
-                        | "todo"
-                        | "in_progress"
-                        | "completed"
-                    )
-                  }
-                  className={`flex items-center ${tabClass} rounded-lg font-medium transition-colors text-gray-600 text-[13px] ${getTabBackgroundClass(tab.id, isActive)}`}
-                >
-                  {renderTabContent(tab, isActive)}
-                </button>
-              );
-              })}
-            </div>
-          )}
+            return (
+              <button
+                key={tab.id}
+                onClick={() =>
+                  onTabChange(
+                    tab.id as
+                      | "normal"
+                      | "deleted"
+                      | "todo"
+                      | "in_progress"
+                      | "completed"
+                  )
+                }
+                className={`flex items-center ${tabClass} rounded-lg font-medium transition-colors text-gray-600 text-[13px] ${getTabBackgroundClass(tab.id, isActive)}`}
+              >
+                {renderTabContent(tab, isActive)}
+              </button>
+            );
+            })}
+          </div>
         </div>
       </div>
 

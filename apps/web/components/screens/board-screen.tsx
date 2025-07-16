@@ -16,7 +16,7 @@ interface BoardScreenProps {
 const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(({ onBoardSelect }, ref) => {
   const router = useRouter();
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [showDeleted, setShowDeleted] = useState(false);
+  const [activeTab, setActiveTab] = useState<"normal" | "completed" | "deleted">("normal");
 
   // ページタイトル設定（デフォルト）
   useEffect(() => {
@@ -46,8 +46,8 @@ const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(({ onBoardSelec
       <div className="pt-6 pl-6 pr-2 flex flex-col h-full">
         <DesktopUpper
           currentMode="board"
-          activeTab={showDeleted ? "deleted" : "normal"}
-          onTabChange={(tab) => setShowDeleted(tab === "deleted")}
+          activeTab={activeTab}
+          onTabChange={(tab) => setActiveTab(tab as "normal" | "completed" | "deleted")}
           onCreateNew={handleCreateNew}
           viewMode="card"
           onViewModeChange={() => {}}
@@ -55,6 +55,7 @@ const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(({ onBoardSelec
           onColumnCountChange={() => {}}
           rightPanelMode="hidden"
           normalCount={0}
+          completedCount={0}
           deletedCount={0}
         />
         
@@ -62,7 +63,7 @@ const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(({ onBoardSelec
           onBoardSelect={handleBoardSelect}
           showCreateForm={showCreateForm}
           onCreateFormClose={() => setShowCreateForm(false)}
-          showDeleted={showDeleted}
+          activeTab={activeTab}
         />
       </div>
     </div>

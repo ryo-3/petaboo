@@ -8,14 +8,14 @@ interface BoardListProps {
   onBoardSelect?: (board: { id: number; slug: string }) => void;
   showCreateForm?: boolean;
   onCreateFormClose?: () => void;
-  showDeleted?: boolean;
+  activeTab?: "normal" | "completed" | "deleted";
 }
 
 export default function BoardList({ 
   onBoardSelect, 
   showCreateForm: externalShowCreateForm, 
   onCreateFormClose,
-  showDeleted = false
+  activeTab = "normal"
 }: BoardListProps) {
   const [internalShowCreateForm, setInternalShowCreateForm] = useState(false);
   const showCreateForm = externalShowCreateForm ?? internalShowCreateForm;
@@ -66,7 +66,18 @@ export default function BoardList({
     );
   }
 
-  if (showDeleted) {
+  if (activeTab === "completed") {
+    return (
+      <div className="">
+        <div className="text-center py-12">
+          <div className="text-gray-500 mb-4">完了したボード機能は未実装です</div>
+          <div className="text-sm text-gray-400">この機能は将来のバージョンで実装予定です</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (activeTab === "deleted") {
     return (
       <div className="">
         <div className="text-center py-12">

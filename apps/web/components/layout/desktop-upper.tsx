@@ -101,6 +101,7 @@ function DesktopUpper({
     if (currentMode === "board") {
       return [
         { id: "normal", label: "通常", count: normalCount },
+        { id: "completed", label: "完了", count: completedCount },
         {
           id: "deleted",
           label: "",
@@ -142,7 +143,7 @@ function DesktopUpper({
         in_progress: "bg-blue-100",
         completed: "bg-Green/20",
         deleted: "bg-red-100",
-        normal: "bg-gray-100",
+        normal: "bg-gray-200",
       };
       return activeColors[tabId as keyof typeof activeColors] || "bg-gray-100";
     }
@@ -167,7 +168,7 @@ function DesktopUpper({
         <>
           {tab.icon}
           <span
-            className={`text-xs transition-all overflow-hidden ${
+            className={`text-xs transition-all overflow-hidden text-right ${
               isActive
                 ? "opacity-100 w-9 translate-x-0 px-1.5 ml-1"
                 : "opacity-0 w-0 translate-x-2 px-0"
@@ -184,7 +185,7 @@ function DesktopUpper({
           className={`w-2.5 h-2.5 rounded-full ${getTabColor(tab.id)}`}
         ></div>
         <span>{tab.label}</span>
-        <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full w-9">
+        <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full w-9 text-right">
           {tab.count}
         </span>
       </>

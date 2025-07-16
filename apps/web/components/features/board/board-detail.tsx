@@ -18,8 +18,8 @@ import BoardHeader from "./board-header";
 interface BoardDetailProps {
   boardId: number;
   onBack: () => void;
-  onSelectMemo?: () => void;
-  onSelectTask?: () => void;
+  onSelectMemo?: (memo: Memo | null) => void;
+  onSelectTask?: (task: Task | null) => void;
   initialBoardName?: string;
   initialBoardDescription?: string | null;
   showBoardHeader?: boolean;

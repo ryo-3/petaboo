@@ -51,6 +51,7 @@ export default async function BoardsPage({ params }: BoardsPageProps) {
         serverBoardTitle={boardData.name}
         serverBoardDescription={boardData.description}
         initialCurrentMode="board"
+        initialScreenMode="board"
       />
     );
   }
@@ -60,6 +61,8 @@ export default async function BoardsPage({ params }: BoardsPageProps) {
   return (
     <Main 
       initialBoardName={undefined}
+      initialCurrentMode="board"
+      initialScreenMode="board"
     />
   );
 }

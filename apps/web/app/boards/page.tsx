@@ -6,6 +6,7 @@ export default async function BoardsPage() {
   return (
     <Main 
       initialCurrentMode="board"
+      initialScreenMode="board"
     />
   );
 }

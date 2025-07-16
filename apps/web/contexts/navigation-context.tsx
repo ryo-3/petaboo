@@ -19,10 +19,12 @@ const NavigationContext = createContext<NavigationContextType | undefined>(undef
 
 export function NavigationProvider({ 
   children, 
-  initialCurrentMode 
+  initialCurrentMode,
+  initialScreenMode
 }: { 
   children: ReactNode;
   initialCurrentMode?: "memo" | "task" | "board";
+  initialScreenMode?: ScreenMode;
 }) {
   // sessionStorageから初期値を取得
   const [isFromBoardDetail, setIsFromBoardDetail] = useState(() => {
@@ -65,6 +67,10 @@ export function NavigationProvider({
       console.log('🔍 NavigationContext Hydration完了: ボード詳細ページ');
       setScreenMode("board");
       setCurrentMode("board");
+    } else if (currentPath === "/boards") {
+      console.log('🔍 NavigationContext Hydration完了: ボード一覧ページ');
+      setScreenMode("board");
+      setCurrentMode("board");
     } else if (currentPath === "/" && fromBoardDetail) {
       console.log('🔍 NavigationContext Hydration完了: ボード詳細から戻った');
       setScreenMode("board");
@@ -72,7 +78,7 @@ export function NavigationProvider({
     }
   }, []);
 
-  const [screenMode, setScreenMode] = useState<ScreenMode>("home");
+  const [screenMode, setScreenMode] = useState<ScreenMode>(initialScreenMode || "home");
 
   // sessionStorageと状態を同期
   useEffect(() => {

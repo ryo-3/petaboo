@@ -18,7 +18,7 @@ import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
 import { useNavigation } from "@/contexts/navigation-context";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 // 画面モード定義（7つのシンプルな画面状態）
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -84,7 +84,7 @@ function MainClient({
   const [showDeleted, setShowDeleted] = useState(false); // モバイル版削除済み表示フラグ
 
   // URLに基づいてscreenModeを設定（手動設定時は上書きしない）
-  useEffect(() => {
+  useLayoutEffect(() => {
     console.log('🔍 useEffectトリガー:', { pathname, isFromBoardDetail, screenMode });
     
     if (pathname.startsWith("/boards/")) {

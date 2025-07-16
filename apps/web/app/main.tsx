@@ -8,6 +8,7 @@ interface MainProps {
   serverBoardTitle?: string;
   serverBoardDescription?: string | null;
   initialCurrentMode?: "memo" | "task" | "board";
+  initialScreenMode?: "home" | "memo" | "task" | "create" | "search" | "settings" | "board";
 }
 
 function Main({ 
@@ -16,10 +17,14 @@ function Main({
   showBoardHeader = true, 
   serverBoardTitle, 
   serverBoardDescription,
-  initialCurrentMode 
+  initialCurrentMode,
+  initialScreenMode
 }: MainProps = {}) {
   return (
-    <NavigationProvider initialCurrentMode={initialCurrentMode}>
+    <NavigationProvider 
+      initialCurrentMode={initialCurrentMode}
+      initialScreenMode={initialScreenMode}
+    >
       <MainClient 
         initialBoardName={initialBoardName}
         boardId={boardId}

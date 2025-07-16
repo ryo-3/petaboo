@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useBoards, useCreateBoard, useDeleteBoard } from "@/src/hooks/use-boards";
+import { useBoards, useCreateBoard } from "@/src/hooks/use-boards";
 import BoardCard from "./board-card";
 import BoardForm from "./board-form";
 import { CreateBoardData } from "@/src/types/board";
@@ -20,7 +20,6 @@ export default function BoardList({
   
   const { data: boards, isLoading, error } = useBoards();
   const createBoard = useCreateBoard();
-  const deleteBoard = useDeleteBoard();
 
   // ページタイトル設定
   useEffect(() => {
@@ -48,15 +47,6 @@ export default function BoardList({
     }
   };
 
-  const handleDeleteBoard = async (boardId: number) => {
-    if (confirm("このボードを削除しますか？関連するアイテムの紐づけも解除されます。")) {
-      try {
-        await deleteBoard.mutateAsync(boardId);
-      } catch (error) {
-        console.error("Failed to delete board:", error);
-      }
-    }
-  };
 
   if (isLoading) {
     return (
@@ -99,8 +89,6 @@ export default function BoardList({
               key={board.id}
               board={board}
               onSelect={() => onBoardSelect?.(board)}
-              onDelete={() => handleDeleteBoard(board.id)}
-              isDeleting={deleteBoard.isPending}
             />
           ))}
         </div>

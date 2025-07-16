@@ -3,11 +3,9 @@ import { BoardWithStats } from "@/src/types/board";
 interface BoardCardProps {
   board: BoardWithStats;
   onSelect: () => void;
-  onDelete: () => void;
-  isDeleting?: boolean;
 }
 
-export default function BoardCard({ board, onSelect, onDelete, isDeleting }: BoardCardProps) {
+export default function BoardCard({ board, onSelect }: BoardCardProps) {
   // ISO文字列またはUnix timestampを正しく処理
   const createdAt = typeof board.createdAt === 'string' 
     ? new Date(board.createdAt) 
@@ -58,19 +56,6 @@ export default function BoardCard({ board, onSelect, onDelete, isDeleting }: Boa
             <div>更新: {updatedDateString}</div>
           )}
         </div>
-      </div>
-      
-      <div className="flex items-center justify-end mt-4 pt-4 border-t border-gray-100">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-          disabled={isDeleting}
-          className="px-3 py-1 text-sm bg-red-50 text-red-600 rounded hover:bg-red-100 transition-colors disabled:opacity-50"
-        >
-          {isDeleting ? "削除中..." : "削除"}
-        </button>
       </div>
     </div>
   );

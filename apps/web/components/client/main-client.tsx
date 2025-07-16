@@ -56,7 +56,7 @@ function MainClient({
 
 
   // コンテキストから状態を取得
-  const { screenMode, currentMode, setScreenMode, setCurrentMode, isFromBoardDetail, setIsFromBoardDetail, isHydrated, navigateToBoard } = useNavigation();
+  const { screenMode, currentMode, setScreenMode, setCurrentMode, isFromBoardDetail, setIsFromBoardDetail } = useNavigation();
 
   // refs
   const boardScreenRef = useRef<BoardScreenRef>(null);

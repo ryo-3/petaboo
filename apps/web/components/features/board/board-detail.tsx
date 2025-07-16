@@ -105,23 +105,28 @@ export default function BoardDetail({
 
   const handleSelectMemo = useCallback((memo: Memo) => {
     // デバッグ用ログ
-    // console.log('🔍 handleSelectMemo called:', memo.id, memo.title);
+    console.log('🔍 handleSelectMemo called:', memo.id, memo.title);
     
-    // 状態を同時に更新して競合を防ぐ
-    setSelectedMemo(memo);
+    // タスクの選択を先にクリアしてから、メモを選択
     setSelectedTask(null);
+    setTimeout(() => {
+      setSelectedMemo(memo);
+    }, 0);
   }, []);
 
   const handleSelectTask = useCallback((task: Task) => {
     // デバッグ用ログ
-    // console.log('🔍 handleSelectTask called:', task.id, task.title);
+    console.log('🔍 handleSelectTask called:', task.id, task.title);
     
-    // 状態を同時に更新して競合を防ぐ
-    setSelectedTask(task);
+    // メモの選択を先にクリアしてから、タスクを選択
     setSelectedMemo(null);
+    setTimeout(() => {
+      setSelectedTask(task);
+    }, 0);
   }, []);
 
   const handleCloseDetail = useCallback(() => {
+    console.log('🔍 handleCloseDetail called');
     setSelectedMemo(null);
     setSelectedTask(null);
   }, []);
@@ -360,9 +365,13 @@ export default function BoardDetail({
           <MemoEditor
             key={`memo-${selectedMemo.id}`}
             memo={selectedMemo}
-            onClose={handleCloseDetail}
+            onClose={() => {
+              console.log('🔍 MemoEditor onClose called');
+              // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
+            }}
             onSaveComplete={(savedMemo) => {
               // 保存後に選択状態を更新
+              console.log('🔍 MemoEditor onSaveComplete:', savedMemo.id);
               setSelectedMemo(savedMemo);
             }}
           />
@@ -372,9 +381,13 @@ export default function BoardDetail({
           <TaskEditor
             key={`task-${selectedTask.id}`}
             task={selectedTask}
-            onClose={handleCloseDetail}
+            onClose={() => {
+              console.log('🔍 TaskEditor onClose called');
+              // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
+            }}
             onSaveComplete={(savedTask) => {
               // 保存後に選択状態を更新
+              console.log('🔍 TaskEditor onSaveComplete:', savedTask.id);
               setSelectedTask(savedTask);
             }}
           />

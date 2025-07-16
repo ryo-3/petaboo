@@ -11,7 +11,7 @@ import { BoardItemWithContent } from "@/src/types/board";
 import { Memo } from "@/src/types/memo";
 import { Task } from "@/src/types/task";
 import { getTimeAgo } from "@/src/utils/dateUtils";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import AddItemModal from "./add-item-modal";
 import BoardHeader from "./board-header";
 
@@ -102,22 +102,22 @@ export default function BoardDetail({
     }
   };
 
-  const handleSelectMemo = (memo: Memo) => {
+  const handleSelectMemo = useCallback((memo: Memo) => {
+    // 状態を同時に更新して競合を防ぐ
     setSelectedMemo(memo);
-    setSelectedTask(null); // タスクの選択を解除
-    // onSelectMemo?.(memo); // 画面遷移を防ぐためコメントアウト
-  };
+    setSelectedTask(null);
+  }, []);
 
-  const handleSelectTask = (task: Task) => {
+  const handleSelectTask = useCallback((task: Task) => {
+    // 状態を同時に更新して競合を防ぐ
     setSelectedTask(task);
-    setSelectedMemo(null); // メモの選択を解除
-    // onSelectTask?.(task); // 画面遷移を防ぐためコメントアウト
-  };
+    setSelectedMemo(null);
+  }, []);
 
-  const handleCloseDetail = () => {
+  const handleCloseDetail = useCallback(() => {
     setSelectedMemo(null);
     setSelectedTask(null);
-  };
+  }, []);
 
   const handleExport = () => {
     if (!boardWithItems) return;

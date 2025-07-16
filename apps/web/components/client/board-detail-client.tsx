@@ -24,11 +24,11 @@ export default function BoardDetailClient({
       onBack={() => router.push("/")}
       onSelectMemo={(memo) => {
         // TODO: ハンドラー実装
-        console.log("メモ選択:", memo);
+        // console.log("メモ選択:", memo);
       }}
       onSelectTask={(task) => {
         // TODO: ハンドラー実装
-        console.log("タスク選択:", task);
+        // console.log("タスク選択:", task);
       }}
       initialBoardName={initialBoardName}
       initialBoardDescription={initialBoardDescription}

@@ -64,15 +64,15 @@ export function NavigationProvider({
     const fromBoardDetail = sessionStorage.getItem('fromBoardDetail') === 'true';
     
     if (currentPath.startsWith('/boards/')) {
-      console.log('🔍 NavigationContext Hydration完了: ボード詳細ページ');
+      // console.log('🔍 NavigationContext Hydration完了: ボード詳細ページ');
       setScreenMode("board");
       setCurrentMode("board");
     } else if (currentPath === "/boards") {
-      console.log('🔍 NavigationContext Hydration完了: ボード一覧ページ');
+      // console.log('🔍 NavigationContext Hydration完了: ボード一覧ページ');
       setScreenMode("board");
       setCurrentMode("board");
     } else if (currentPath === "/" && fromBoardDetail) {
-      console.log('🔍 NavigationContext Hydration完了: ボード詳細から戻った');
+      // console.log('🔍 NavigationContext Hydration完了: ボード詳細から戻った');
       setScreenMode("board");
       setCurrentMode("board");
     }

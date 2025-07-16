@@ -9,14 +9,14 @@ export default async function BoardsPage({ params }: BoardsPageProps) {
   const { slug } = await params;
   const boardSlug = slug?.[0];
   
-  console.log('🔍 BoardsPage開始, slug:', boardSlug);
+  // console.log('🔍 BoardsPage開始, slug:', boardSlug);
   
   let boardData: { id: number; name: string; description?: string | null } | null = null;
   
   // サーバーサイドでボード名を取得（直接認証付きAPI呼び出し）
   if (boardSlug) {
     try {
-      console.log('🔍 サーバーサイドでボード情報取得開始:', boardSlug);
+      // console.log('🔍 サーバーサイドでボード情報取得開始:', boardSlug);
       const { userId, getToken } = await auth();
       
       if (userId) {
@@ -30,19 +30,19 @@ export default async function BoardsPage({ params }: BoardsPageProps) {
         
         if (response.ok) {
           boardData = await response.json();
-          console.log('🔍 サーバーサイドでボード情報取得成功:', boardData);
+          // console.log('🔍 サーバーサイドでボード情報取得成功:', boardData);
         } else {
-          console.log('🔍 サーバーサイドでボード情報取得失敗:', response.status);
+          // console.log('🔍 サーバーサイドでボード情報取得失敗:', response.status);
         }
       }
     } catch (error) {
-      console.log('🔍 サーバーサイドでボード情報取得エラー:', error);
+      // console.log('🔍 サーバーサイドでボード情報取得エラー:', error);
     }
   }
   
   // サーバーサイドでボード情報を取得できた場合
   if (boardData) {
-    console.log('🔍 サーバーサイドでボードデータ表示:', boardData);
+    // console.log('🔍 サーバーサイドでボードデータ表示:', boardData);
     return (
       <Main 
         initialBoardName={boardData.name}
@@ -57,7 +57,7 @@ export default async function BoardsPage({ params }: BoardsPageProps) {
   }
   
   // フォールバック：ボード情報が取得できない場合
-  console.log('🔍 フォールバック実行, boardData:', boardData);
+  // console.log('🔍 フォールバック実行, boardData:', boardData);
   return (
     <Main 
       initialBoardName={undefined}

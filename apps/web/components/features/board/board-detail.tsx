@@ -68,13 +68,13 @@ export default function BoardDetail({
   const boardName = initialBoardName || boardWithItems?.name || "ボード";
   const boardDescription = initialBoardDescription || boardWithItems?.description;
 
-  console.log('🔍 BoardDetail状態:', {
-    initialBoardName,
-    boardWithItemsName: boardWithItems?.name,
-    boardName,
-    isLoading,
-    error: !!error
-  });
+  // console.log('🔍 BoardDetail状態:', {
+  //   initialBoardName,
+  //   boardWithItemsName: boardWithItems?.name,
+  //   boardName,
+  //   isLoading,
+  //   error: !!error
+  // });
 
   // ページタイトル設定
   useEffect(() => {

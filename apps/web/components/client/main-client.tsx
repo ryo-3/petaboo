@@ -328,8 +328,8 @@ function MainClient({
         <BoardDetail
           boardId={boardId}
           onBack={() => { 
-            console.log('🔍 onBackクリック開始 - 現在の状態:', { screenMode, currentMode });
-            console.log('🔍 /boardsに遷移');
+            // console.log('🔍 onBackクリック開始 - 現在の状態:', { screenMode, currentMode });
+            // console.log('🔍 /boardsに遷移');
             router.push("/boards");
           }}
           onSelectMemo={handleSelectMemo}
@@ -396,8 +396,8 @@ function MainClient({
         <BoardDetail
           boardId={boardFromSlug.id}
           onBack={() => { 
-            console.log('🔍 onBackクリック開始 - 現在の状態:', { screenMode, currentMode });
-            console.log('🔍 /boardsに遷移');
+            // console.log('🔍 onBackクリック開始 - 現在の状態:', { screenMode, currentMode });
+            // console.log('🔍 /boardsに遷移');
             router.push("/boards");
           }}
           onSelectMemo={handleSelectMemo}

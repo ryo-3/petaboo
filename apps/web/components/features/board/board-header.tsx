@@ -18,8 +18,6 @@ export default function BoardHeader({
   boardId,
   boardName, 
   boardDescription, 
-  boardCompleted = false,
-  isDeleted = false,
   onBack, 
   onExport,
   isExportDisabled = false

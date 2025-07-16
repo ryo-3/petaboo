@@ -35,8 +35,8 @@ export default async function BoardsPage({ params }: BoardsPageProps) {
           // console.log('🔍 サーバーサイドでボード情報取得失敗:', response.status);
         }
       }
-    } catch (error) {
-      // console.log('🔍 サーバーサイドでボード情報取得エラー:', error);
+    } catch {
+      // console.log('🔍 サーバーサイドでボード情報取得エラー');
     }
   }
   

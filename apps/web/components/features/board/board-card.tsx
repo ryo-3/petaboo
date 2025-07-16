@@ -6,7 +6,7 @@ interface BoardCardProps {
   mode?: "normal" | "completed" | "deleted";
 }
 
-export default function BoardCard({ board, onSelect, mode = "normal" }: BoardCardProps) {
+export default function BoardCard({ board, onSelect }: BoardCardProps) {
   // ISO文字列またはUnix timestampを正しく処理
   const createdAt = typeof board.createdAt === 'string' 
     ? new Date(board.createdAt) 

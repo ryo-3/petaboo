@@ -18,8 +18,8 @@ import BoardHeader from "./board-header";
 interface BoardDetailProps {
   boardId: number;
   onBack: () => void;
-  onSelectMemo?: (memo: Memo) => void;
-  onSelectTask?: (task: Task) => void;
+  onSelectMemo?: () => void;
+  onSelectTask?: () => void;
   initialBoardName?: string;
   initialBoardDescription?: string | null;
   showBoardHeader?: boolean;
@@ -48,9 +48,7 @@ interface ExportData {
 
 export default function BoardDetail({ 
   boardId, 
-  onBack, 
-  onSelectMemo, 
-  onSelectTask,
+  onBack,
   initialBoardName,
   initialBoardDescription,
   showBoardHeader = true,
@@ -212,7 +210,6 @@ export default function BoardDetail({
             boardDescription={boardDescription}
             boardCompleted={boardCompleted}
             isDeleted={isDeleted}
-            itemCount={0}
             onBack={onBack}
             onExport={() => {}}
             isExportDisabled={true}
@@ -247,7 +244,6 @@ export default function BoardDetail({
             boardDescription={boardDescription}
             boardCompleted={boardCompleted}
             isDeleted={isDeleted}
-            itemCount={memoItems.length + taskItems.length}
             onBack={onBack}
             onExport={handleExport}
             isExportDisabled={false}

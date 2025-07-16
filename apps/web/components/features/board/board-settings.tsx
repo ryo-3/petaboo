@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import ArrowLeftIcon from "@/components/icons/arrow-left-icon";
-import { useToggleBoardCompletion, useDeleteBoard, useRestoreDeletedBoard } from "@/src/hooks/use-boards";
+import { useToggleBoardCompletion, useDeleteBoard, useUpdateBoard } from "@/src/hooks/use-boards";
 
 interface BoardSettingsProps {
   boardId: number;
@@ -23,7 +23,7 @@ export default function BoardSettings({
   const router = useRouter();
   const toggleCompletion = useToggleBoardCompletion();
   const deleteBoard = useDeleteBoard();
-  const restoreBoard = useRestoreDeletedBoard();
+  const updateBoard = useUpdateBoard();
 
   const [editName, setEditName] = useState(initialBoardName);
   const [editDescription, setEditDescription] = useState(initialBoardDescription || "");
@@ -31,18 +31,28 @@ export default function BoardSettings({
 
   const handleNameChange = (value: string) => {
     setEditName(value);
-    setHasChanges(value !== initialBoardName);
+    setHasChanges(value !== initialBoardName || editDescription !== (initialBoardDescription || ""));
   };
 
   const handleDescriptionChange = (value: string) => {
     setEditDescription(value);
-    setHasChanges(value !== (initialBoardDescription || ""));
+    setHasChanges(editName !== initialBoardName || value !== (initialBoardDescription || ""));
   };
 
   const handleSave = async () => {
-    // TODO: ボード名・説明の更新API実装
-    console.log("保存:", { editName, editDescription });
-    setHasChanges(false);
+    try {
+      await updateBoard.mutateAsync({
+        id: boardId,
+        data: {
+          name: editName,
+          description: editDescription || undefined,
+        },
+      });
+      setHasChanges(false);
+    } catch (error) {
+      console.error("Failed to update board:", error);
+      // TODO: エラーハンドリング（トースト通知など）
+    }
   };
 
   const handleToggleCompletion = async () => {
@@ -117,9 +127,10 @@ export default function BoardSettings({
               <div className="lg:col-span-2 flex gap-3">
                 <button
                   onClick={handleSave}
-                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
+                  disabled={updateBoard.isPending}
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium disabled:opacity-50"
                 >
-                  保存
+                  {updateBoard.isPending ? "保存中..." : "保存"}
                 </button>
                 <button
                   onClick={() => {
@@ -127,7 +138,8 @@ export default function BoardSettings({
                     setEditDescription(initialBoardDescription || "");
                     setHasChanges(false);
                   }}
-                  className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 rounded-lg transition-colors font-medium"
+                  disabled={updateBoard.isPending}
+                  className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 rounded-lg transition-colors font-medium disabled:opacity-50"
                 >
                   キャンセル
                 </button>

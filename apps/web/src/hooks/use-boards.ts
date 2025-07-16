@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
-import { Board, BoardWithStats, BoardWithItems, CreateBoardData, UpdateBoardData, AddItemToBoardData, BoardItem, DeletedBoard } from "@/src/types/board";
+import { Board, BoardWithStats, BoardWithItems, CreateBoardData, UpdateBoardData, AddItemToBoardData, BoardItem } from "@/src/types/board";
 
 const API_BASE_URL = "http://localhost:8794";
 

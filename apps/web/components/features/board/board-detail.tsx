@@ -22,6 +22,8 @@ interface BoardDetailProps {
   initialBoardDescription?: string | null;
   showBoardHeader?: boolean;
   serverInitialTitle?: string;
+  boardCompleted?: boolean;
+  isDeleted?: boolean;
 }
 
 interface ExportData {
@@ -50,7 +52,9 @@ export default function BoardDetail({
   initialBoardName,
   initialBoardDescription,
   showBoardHeader = true,
-  serverInitialTitle
+  serverInitialTitle,
+  boardCompleted = false,
+  isDeleted = false
 }: BoardDetailProps) {
   const [showAddModal, setShowAddModal] = useState(false);
   const { data: boardWithItems, isLoading, error } = useBoardWithItems(boardId);
@@ -176,8 +180,11 @@ export default function BoardDetail({
       <div className={showBoardHeader ? "p-6" : ""}>
         {showBoardHeader && (
           <BoardHeader
+            boardId={boardId}
             boardName={serverInitialTitle || boardName}
             boardDescription={boardDescription}
+            boardCompleted={boardCompleted}
+            isDeleted={isDeleted}
             itemCount={0}
             onBack={onBack}
             onExport={() => {}}
@@ -204,8 +211,11 @@ export default function BoardDetail({
       {/* ヘッダー */}
       {showBoardHeader && (
         <BoardHeader
+          boardId={boardId}
           boardName={boardName}
           boardDescription={boardDescription}
+          boardCompleted={boardCompleted}
+          isDeleted={isDeleted}
           itemCount={memoItems.length + taskItems.length}
           onBack={onBack}
           onExport={handleExport}

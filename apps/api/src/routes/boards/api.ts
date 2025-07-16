@@ -400,7 +400,7 @@ export function createAPI(app: any) {
 
     const updated = await db
       .update(boards)
-      .set({ ...updateData, updatedAt: Math.floor(Date.now() / 1000) })
+      .set({ ...updateData, updatedAt: new Date() })
       .where(eq(boards.id, boardId))
       .returning();
 
@@ -478,7 +478,7 @@ export function createAPI(app: any) {
       .update(boards)
       .set({ 
         completed: !board[0].completed,
-        updatedAt: Math.floor(Date.now() / 1000) 
+        updatedAt: new Date() 
       })
       .where(eq(boards.id, boardId))
       .returning();
@@ -991,7 +991,7 @@ export function createAPI(app: any) {
       itemType,
       itemId,
       position: (maxPosition[0]?.maxPos || 0) + 1,
-      createdAt: Math.floor(Date.now() / 1000),
+      createdAt: new Date(),
     };
 
     const result = await db.insert(boardItems).values(newItem).returning();
@@ -999,7 +999,7 @@ export function createAPI(app: any) {
     // ボードのupdatedAtを更新
     await db
       .update(boards)
-      .set({ updatedAt: Math.floor(Date.now() / 1000) })
+      .set({ updatedAt: new Date() })
       .where(eq(boards.id, boardId));
     
     return c.json(result[0], 201);
@@ -1098,7 +1098,7 @@ export function createAPI(app: any) {
     // ボードのupdatedAtを更新
     await db
       .update(boards)
-      .set({ updatedAt: Math.floor(Date.now() / 1000) })
+      .set({ updatedAt: new Date() })
       .where(eq(boards.id, boardId));
 
     return c.json({ success: true });

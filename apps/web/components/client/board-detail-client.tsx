@@ -2,6 +2,7 @@
 
 import BoardDetail from "@/components/features/board/board-detail";
 import { useRouter } from "next/navigation";
+import { useBoardWithItems } from "@/src/hooks/use-boards";
 
 interface BoardDetailClientProps {
   boardId: number;
@@ -15,6 +16,7 @@ export default function BoardDetailClient({
   initialBoardDescription 
 }: BoardDetailClientProps) {
   const router = useRouter();
+  const { data: boardWithItems } = useBoardWithItems(boardId);
 
   return (
     <BoardDetail
@@ -30,6 +32,8 @@ export default function BoardDetailClient({
       }}
       initialBoardName={initialBoardName}
       initialBoardDescription={initialBoardDescription}
+      boardCompleted={boardWithItems?.completed || false}
+      isDeleted={false}
       showBoardHeader={false}
     />
   );

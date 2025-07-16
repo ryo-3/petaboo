@@ -18,7 +18,7 @@ function RightPanel({ isOpen, onClose, children, className }: RightPanelProps) {
   if (!isOpen) return null;
 
   return (
-    <div className={`w-7/12 h-full overflow-y-auto animate-slide-in-right relative ${className || ''}`}>
+    <div className={`flex-1 h-full overflow-y-auto animate-slide-in-right relative ${className || ''}`}>
       {/* 閉じるボタン */}
       <ClosePanelButton onClose={onClose} />
       

@@ -328,7 +328,7 @@ function MemoScreen({
     <div className={`flex ${screenHeight} bg-white overflow-hidden`}>
       {/* 左側：一覧表示エリア */}
       <div
-        className={`${memoScreenMode === "list" ? "w-full" : "w-1/2"} ${memoScreenMode !== "list" ? "border-r border-gray-300" : ""} pt-6 pl-6 pr-2 flex flex-col transition-all duration-300 relative`}
+        className={`${memoScreenMode === "list" ? "w-full" : "w-[44%]"} ${memoScreenMode !== "list" ? "border-r border-gray-300" : ""} pt-6 pl-6 pr-2 flex flex-col transition-all duration-300 relative`}
       >
         <DesktopUpper
           currentMode="memo"

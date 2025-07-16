@@ -1,6 +1,8 @@
 import MemoIcon from "@/components/icons/memo-icon";
 import TaskIcon from "@/components/icons/task-icon";
 import AddItemButton from "@/components/ui/buttons/add-item-button";
+import MemoEditor from "@/components/features/memo/memo-editor";
+import RightPanel from "@/components/ui/layout/right-panel";
 import {
   useBoardWithItems,
   useRemoveItemFromBoard,
@@ -57,6 +59,8 @@ export default function BoardDetail({
   isDeleted = false
 }: BoardDetailProps) {
   const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const { data: boardWithItems, isLoading, error } = useBoardWithItems(boardId);
   const removeItemFromBoard = useRemoveItemFromBoard();
 
@@ -88,10 +92,33 @@ export default function BoardDetail({
           itemId: item.itemId,
           itemType: item.itemType,
         });
+        // 削除したアイテムが選択されていた場合、選択を解除
+        if (item.itemType === "memo" && selectedMemo && selectedMemo.id === item.itemId) {
+          setSelectedMemo(null);
+        } else if (item.itemType === "task" && selectedTask && selectedTask.id === item.itemId) {
+          setSelectedTask(null);
+        }
       } catch (error) {
         console.error("Failed to remove item:", error);
       }
     }
+  };
+
+  const handleSelectMemo = (memo: Memo) => {
+    setSelectedMemo(memo);
+    setSelectedTask(null); // タスクの選択を解除
+    // onSelectMemo?.(memo); // 画面遷移を防ぐためコメントアウト
+  };
+
+  const handleSelectTask = (task: Task) => {
+    setSelectedTask(task);
+    setSelectedMemo(null); // メモの選択を解除
+    // onSelectTask?.(task); // 画面遷移を防ぐためコメントアウト
+  };
+
+  const handleCloseDetail = () => {
+    setSelectedMemo(null);
+    setSelectedTask(null);
   };
 
   const handleExport = () => {
@@ -206,27 +233,31 @@ export default function BoardDetail({
     (item) => item.itemType === "task"
   ) || [];
 
-  return (
-    <div className={showBoardHeader ? "p-6" : ""}>
-      {/* ヘッダー */}
-      {showBoardHeader && (
-        <BoardHeader
-          boardId={boardId}
-          boardName={boardName}
-          boardDescription={boardDescription}
-          boardCompleted={boardCompleted}
-          isDeleted={isDeleted}
-          itemCount={memoItems.length + taskItems.length}
-          onBack={onBack}
-          onExport={handleExport}
-          isExportDisabled={false}
-        />
-      )}
+  const screenHeight = 'h-[calc(100vh-64px)]'; // 既存画面と同じ高さ設定
 
-      {/* カンバン風レイアウト */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* メモ列 */}
-        <div className="bg-gray-50 rounded-lg p-4">
+  return (
+    <div className={`flex ${screenHeight} bg-white overflow-hidden`}>
+      {/* 左側：メモ・タスク一覧 */}
+      <div className={`${selectedMemo || selectedTask ? 'w-[44%] border-r border-gray-300 pr-2' : 'w-full'} pt-6 pl-6 ${selectedMemo || selectedTask ? 'pr-2' : 'pr-6'} flex flex-col transition-all duration-300 relative`}>
+        {/* 左側のヘッダー */}
+        {showBoardHeader && (
+          <BoardHeader
+            boardId={boardId}
+            boardName={boardName}
+            boardDescription={boardDescription}
+            boardCompleted={boardCompleted}
+            isDeleted={isDeleted}
+            itemCount={memoItems.length + taskItems.length}
+            onBack={onBack}
+            onExport={handleExport}
+            isExportDisabled={false}
+          />
+        )}
+        
+        {/* メモ・タスクコンテンツ */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 flex-1 overflow-y-auto">
+            {/* メモ列 */}
+            <div className={`bg-gray-50 rounded-lg p-4 flex flex-col ${selectedMemo ? 'ring-2 ring-Green' : ''}`}>
           <div className="flex items-center gap-4 mb-4">
             <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-1">
               <MemoIcon className="w-5 h-5 text-Green" />
@@ -247,7 +278,7 @@ export default function BoardDetail({
             />
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-3 flex-1 overflow-y-auto">
             {isLoading ? (
               <div className="text-gray-500 text-center py-8">
                 メモを読み込み中...
@@ -263,15 +294,15 @@ export default function BoardDetail({
                   item={item}
                   memo={item.content as Memo}
                   onRemove={() => handleRemoveItem(item)}
-                  onClick={() => onSelectMemo?.(item.content as Memo)}
+                  onClick={() => handleSelectMemo(item.content as Memo)}
                 />
               ))
             )}
-          </div>
-        </div>
+            </div>
+            </div>
 
-        {/* タスク列 */}
-        <div className="bg-gray-50 rounded-lg p-4">
+            {/* タスク列 */}
+            <div className={`bg-gray-50 rounded-lg p-4 flex flex-col ${selectedTask ? 'ring-2 ring-DeepBlue' : ''}`}>
           <div className="flex items-center gap-4 mb-4">
             <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-1">
               <TaskIcon className="w-5 h-5 text-DeepBlue" />
@@ -292,7 +323,7 @@ export default function BoardDetail({
             />
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-3 flex-1 overflow-y-auto">
             {isLoading ? (
               <div className="text-gray-500 text-center py-8">
                 タスクを読み込み中...
@@ -308,14 +339,79 @@ export default function BoardDetail({
                   item={item}
                   task={item.content as Task}
                   onRemove={() => handleRemoveItem(item)}
-                  onClick={() => onSelectTask?.(item.content as Task)}
+                  onClick={() => handleSelectTask(item.content as Task)}
                 />
               ))
             )}
-          </div>
+            </div>
+            </div>
         </div>
       </div>
 
+      {/* 右側：詳細表示 */}
+      <RightPanel
+        isOpen={selectedMemo !== null || selectedTask !== null}
+        onClose={handleCloseDetail}
+      >
+        {selectedMemo && (
+          <MemoEditor
+            key={`memo-${selectedMemo.id}`}
+            memo={selectedMemo}
+            onClose={handleCloseDetail}
+            onSaveComplete={(savedMemo) => {
+              // 保存後に選択状態を更新
+              setSelectedMemo(savedMemo);
+            }}
+          />
+        )}
+        
+        {selectedTask && (
+          <div className="p-4">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">タスク詳細</h3>
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-medium text-gray-900 mb-2">{selectedTask.title}</h4>
+                {selectedTask.description && (
+                  <div className="bg-gray-50 rounded-lg p-4 whitespace-pre-wrap text-gray-700">
+                    {selectedTask.description}
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-4 mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500">ステータス:</span>
+                  <span className={`text-xs px-2 py-1 rounded ${
+                    selectedTask.status === 'completed' ? 'bg-green-100 text-green-700' :
+                    selectedTask.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
+                    'bg-gray-100 text-gray-700'
+                  }`}>
+                    {selectedTask.status === 'completed' ? '完了' :
+                     selectedTask.status === 'in_progress' ? '進行中' : '未着手'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500">優先度:</span>
+                  <span className={`text-xs px-2 py-1 rounded ${
+                    selectedTask.priority === 'high' ? 'bg-red-100 text-red-700' :
+                    selectedTask.priority === 'low' ? 'bg-gray-100 text-gray-600' :
+                    'bg-yellow-100 text-yellow-700'
+                  }`}>
+                    {selectedTask.priority === 'high' ? '高' :
+                     selectedTask.priority === 'low' ? '低' : '中'}
+                  </span>
+                </div>
+              </div>
+              <div className="text-sm text-gray-500">
+                作成日: {new Date(selectedTask.createdAt * 1000).toLocaleString('ja-JP')}
+                {selectedTask.updatedAt && selectedTask.updatedAt !== selectedTask.createdAt && (
+                  <div>更新日: {new Date(selectedTask.updatedAt * 1000).toLocaleString('ja-JP')}</div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </RightPanel>
+      
       {/* アイテム追加モーダル */}
       <AddItemModal
         boardId={boardId}

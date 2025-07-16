@@ -9,7 +9,11 @@ export interface BoardScreenRef {
   triggerCreateNew: () => void;
 }
 
-const BoardScreen = forwardRef<BoardScreenRef>((props, ref) => {
+interface BoardScreenProps {
+  onBoardSelect?: (board: { id: number; slug: string }) => void;
+}
+
+const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(({ onBoardSelect }, ref) => {
   const router = useRouter();
   const [showCreateForm, setShowCreateForm] = useState(false);
 
@@ -26,6 +30,8 @@ const BoardScreen = forwardRef<BoardScreenRef>((props, ref) => {
   };
 
   const handleBoardSelect = (board: { id: number; slug: string }) => {
+    // 親コンポーネントの処理を呼び出し
+    onBoardSelect?.(board);
     // 遷移前にローディング状態を示す
     router.push(`/boards/${board.slug}`);
   };

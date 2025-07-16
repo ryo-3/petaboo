@@ -12,6 +12,7 @@ interface NavigationContextType {
   isFromBoardDetail: boolean;
   setIsFromBoardDetail: (value: boolean) => void;
   isHydrated: boolean;
+  navigateToBoard: () => void;
 }
 
 const NavigationContext = createContext<NavigationContextType | undefined>(undefined);
@@ -82,6 +83,14 @@ export function NavigationProvider({
     }
   }, [isFromBoardDetail]);
 
+  // ボード一覧に遷移する関数
+  const navigateToBoard = () => {
+    console.log('🔍 navigateToBoard: 状態をboardに設定');
+    setScreenMode("board");
+    setCurrentMode("board");
+    setIsFromBoardDetail(true);
+  };
+
   return (
     <NavigationContext.Provider value={{
       screenMode,
@@ -90,7 +99,8 @@ export function NavigationProvider({
       setCurrentMode,
       isFromBoardDetail,
       setIsFromBoardDetail,
-      isHydrated
+      isHydrated,
+      navigateToBoard
     }}>
       {children}
     </NavigationContext.Provider>

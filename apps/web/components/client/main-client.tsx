@@ -56,7 +56,7 @@ function MainClient({
 
 
   // コンテキストから状態を取得
-  const { screenMode, currentMode, setScreenMode, setCurrentMode, isFromBoardDetail, setIsFromBoardDetail, isHydrated } = useNavigation();
+  const { screenMode, currentMode, setScreenMode, setCurrentMode, isFromBoardDetail, setIsFromBoardDetail, isHydrated, navigateToBoard } = useNavigation();
 
   // refs
   const boardScreenRef = useRef<BoardScreenRef>(null);
@@ -90,6 +90,12 @@ function MainClient({
     if (pathname.startsWith("/boards/")) {
       console.log('🔍 ボード詳細ページ');
       // 手動で設定された状態を上書きしない
+      if (screenMode !== "board") {
+        setScreenMode("board");
+        setCurrentMode("board");
+      }
+    } else if (pathname === "/boards") {
+      console.log('🔍 ボード一覧ページ');
       if (screenMode !== "board") {
         setScreenMode("board");
         setCurrentMode("board");
@@ -305,16 +311,8 @@ function MainClient({
             boardId={boardId}
             onBack={() => { 
               console.log('🔍 onBackクリック開始 - 現在の状態:', { screenMode, currentMode });
-              console.log('🔍 状態を先に変更');
-              setCurrentMode("board");
-              setScreenMode("board");
-              setIsFromBoardDetail(true);
-              console.log('🔍 状態変更完了 - 次のフレームで遷移');
-              // 次のフレームでページ遷移
-              requestAnimationFrame(() => {
-                console.log('🔍 ページ遷移実行');
-                router.push("/"); 
-              });
+              console.log('🔍 /boardsに遷移');
+              router.push("/boards");
             }}
             onSelectMemo={handleSelectMemo}
             onSelectTask={handleSelectTask}
@@ -331,16 +329,8 @@ function MainClient({
           boardId={boardId}
           onBack={() => { 
             console.log('🔍 onBackクリック開始 - 現在の状態:', { screenMode, currentMode });
-            console.log('🔍 状態を先に変更');
-            setCurrentMode("board");
-            setScreenMode("board");
-            setIsFromBoardDetail(true);
-            console.log('🔍 状態変更完了 - 次のフレームで遷移');
-            // 次のフレームでページ遷移
-            requestAnimationFrame(() => {
-              console.log('🔍 ページ遷移実行');
-              router.push("/"); 
-            });
+            console.log('🔍 /boardsに遷移');
+            router.push("/boards");
           }}
           onSelectMemo={handleSelectMemo}
           onSelectTask={handleSelectTask}
@@ -407,16 +397,8 @@ function MainClient({
           boardId={boardFromSlug.id}
           onBack={() => { 
             console.log('🔍 onBackクリック開始 - 現在の状態:', { screenMode, currentMode });
-            console.log('🔍 状態を先に変更');
-            setCurrentMode("board");
-            setScreenMode("board");
-            setIsFromBoardDetail(true);
-            console.log('🔍 状態変更完了 - 次のフレームで遷移');
-            // 次のフレームでページ遷移
-            requestAnimationFrame(() => {
-              console.log('🔍 ページ遷移実行');
-              router.push("/"); 
-            });
+            console.log('🔍 /boardsに遷移');
+            router.push("/boards");
           }}
           onSelectMemo={handleSelectMemo}
           onSelectTask={handleSelectTask}
@@ -608,10 +590,12 @@ function MainClient({
 
           {/* ボード画面 */}
           {screenMode === "board" &&
-            (pathname.startsWith("/boards/") ? (
+            (pathname.startsWith("/boards/") && pathname !== "/boards" ? (
               <BoardDetailWrapper />
             ) : (
-              <BoardScreen ref={boardScreenRef} />
+              <BoardScreen 
+                ref={boardScreenRef}
+              />
             ))}
         </DesktopLayout>
       </div>

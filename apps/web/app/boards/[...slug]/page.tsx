@@ -50,6 +50,7 @@ export default async function BoardsPage({ params }: BoardsPageProps) {
         showBoardHeader={true}
         serverBoardTitle={boardData.name}
         serverBoardDescription={boardData.description}
+        initialCurrentMode="board"
       />
     );
   }

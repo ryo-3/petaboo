@@ -200,7 +200,18 @@ function Sidebar({
           <SwitchTabs
             tabs={modeTabs}
             activeTab={currentMode}
-            onTabChange={(tabId) => onModeChange?.(tabId as "memo" | "task" | "board")}
+            onTabChange={(tabId) => {
+              const mode = tabId as "memo" | "task" | "board";
+              onModeChange?.(mode);
+              // タブ切り替え時にscreenModeも更新
+              if (mode === "memo") {
+                onShowFullList?.();
+              } else if (mode === "task") {
+                onShowTaskList?.();
+              } else if (mode === "board") {
+                onDashboard?.();
+              }
+            }}
           />
         </div>
 

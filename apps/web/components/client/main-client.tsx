@@ -16,10 +16,12 @@ import { useBoardBySlug, useBoardWithItems } from "@/src/hooks/use-boards";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
+import { useNavigation } from "@/contexts/navigation-context";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 // 画面モード定義（7つのシンプルな画面状態）
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type ScreenMode =
   | "home"
   | "memo"
@@ -52,20 +54,9 @@ function MainClient({
   const { preferences } = useUserPreferences(1);
   const pathname = usePathname();
 
-  // 画面状態管理
-  const getInitialScreenMode = (): ScreenMode => {
-    if (pathname.startsWith("/boards/")) {
-      return "board";
-    }
-    return "home";
-  };
 
-  const [screenMode, setScreenMode] = useState<ScreenMode>(
-    getInitialScreenMode()
-  );
-  const [currentMode, setCurrentMode] = useState<"memo" | "task" | "board">(
-    "memo"
-  ); // サイドバータブ状態
+  // コンテキストから状態を取得
+  const { screenMode, currentMode, setScreenMode, setCurrentMode, isFromBoardDetail, setIsFromBoardDetail, isHydrated } = useNavigation();
 
   // refs
   const boardScreenRef = useRef<BoardScreenRef>(null);
@@ -81,15 +72,6 @@ function MainClient({
   );
   const { data: currentBoard } = useBoardWithItems(boardFromSlug?.id || null);
 
-  // URLに基づいてscreenModeを設定
-  useEffect(() => {
-    if (pathname.startsWith("/boards/")) {
-      setScreenMode("board");
-    } else {
-      setScreenMode("home");
-    }
-  }, [pathname]);
-
   // 選択中アイテム管理
   const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null);
   const [selectedDeletedMemo, setSelectedDeletedMemo] =
@@ -97,6 +79,32 @@ function MainClient({
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [selectedDeletedTask, setSelectedDeletedTask] =
     useState<DeletedTask | null>(null);
+
+  // UI状態管理
+  const [showDeleted, setShowDeleted] = useState(false); // モバイル版削除済み表示フラグ
+
+  // URLに基づいてscreenModeを設定（手動設定時は上書きしない）
+  useEffect(() => {
+    console.log('🔍 useEffectトリガー:', { pathname, isFromBoardDetail, screenMode });
+    
+    if (pathname.startsWith("/boards/")) {
+      console.log('🔍 ボード詳細ページ');
+      // 手動で設定された状態を上書きしない
+      if (screenMode !== "board") {
+        setScreenMode("board");
+        setCurrentMode("board");
+      }
+    } else if (pathname === "/" && isFromBoardDetail) {
+      // ボード詳細から戻った場合はボード一覧を表示
+      console.log('🔍 ボード詳細から戻った - ボード一覧を表示');
+      // isFromBoardDetailがtrueの場合は、すでにscreenModeがboardに設定されているはず
+      // 上書きしない
+      console.log('🔍 isFromBoardDetailがtrueなので状態を保持');
+      setIsFromBoardDetail(false); // フラグをリセット
+    }
+    // ルートパス("/")でもユーザーが手動で切り替えた場合はホームに戻さない
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname, isFromBoardDetail, setScreenMode, setCurrentMode, setIsFromBoardDetail]);
 
   // デバッグ用：削除済みメモの状態変更を追跡
   useEffect(() => {
@@ -106,8 +114,11 @@ function MainClient({
     });
   }, [selectedDeletedMemo]);
 
-  // UI状態管理
-  const [showDeleted, setShowDeleted] = useState(false); // モバイル版削除済み表示フラグ
+  // Hydration完了前はサーバーと同じ状態を保持
+  // サイドバーが表示されない問題を避けるため、早期リターンを削除
+  // if (!isHydrated) {
+  //   return null; // またはローディングスピナーなど
+  // }
 
   // エラー管理（将来的にAPI同期エラー表示用）
   const errors: string[] = [];
@@ -292,7 +303,19 @@ function MainClient({
         return (
           <BoardDetail
             boardId={boardId}
-            onBack={() => router.push("/")}
+            onBack={() => { 
+              console.log('🔍 onBackクリック開始 - 現在の状態:', { screenMode, currentMode });
+              console.log('🔍 状態を先に変更');
+              setCurrentMode("board");
+              setScreenMode("board");
+              setIsFromBoardDetail(true);
+              console.log('🔍 状態変更完了 - 次のフレームで遷移');
+              // 次のフレームでページ遷移
+              requestAnimationFrame(() => {
+                console.log('🔍 ページ遷移実行');
+                router.push("/"); 
+              });
+            }}
             onSelectMemo={handleSelectMemo}
             onSelectTask={handleSelectTask}
             initialBoardName={initialBoardName}
@@ -306,7 +329,19 @@ function MainClient({
       return (
         <BoardDetail
           boardId={boardId}
-          onBack={() => router.push("/")}
+          onBack={() => { 
+            console.log('🔍 onBackクリック開始 - 現在の状態:', { screenMode, currentMode });
+            console.log('🔍 状態を先に変更');
+            setCurrentMode("board");
+            setScreenMode("board");
+            setIsFromBoardDetail(true);
+            console.log('🔍 状態変更完了 - 次のフレームで遷移');
+            // 次のフレームでページ遷移
+            requestAnimationFrame(() => {
+              console.log('🔍 ページ遷移実行');
+              router.push("/"); 
+            });
+          }}
           onSelectMemo={handleSelectMemo}
           onSelectTask={handleSelectTask}
           initialBoardName={initialBoardName}
@@ -370,7 +405,19 @@ function MainClient({
       return (
         <BoardDetail
           boardId={boardFromSlug.id}
-          onBack={() => router.push("/")}
+          onBack={() => { 
+            console.log('🔍 onBackクリック開始 - 現在の状態:', { screenMode, currentMode });
+            console.log('🔍 状態を先に変更');
+            setCurrentMode("board");
+            setScreenMode("board");
+            setIsFromBoardDetail(true);
+            console.log('🔍 状態変更完了 - 次のフレームで遷移');
+            // 次のフレームでページ遷移
+            requestAnimationFrame(() => {
+              console.log('🔍 ページ遷移実行');
+              router.push("/"); 
+            });
+          }}
           onSelectMemo={handleSelectMemo}
           onSelectTask={handleSelectTask}
           initialBoardName={boardFromSlug.name}

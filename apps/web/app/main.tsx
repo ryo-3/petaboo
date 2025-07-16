@@ -1,4 +1,5 @@
 import MainClient from "@/components/client/main-client";
+import { NavigationProvider } from "@/contexts/navigation-context";
 
 interface MainProps {
   initialBoardName?: string;
@@ -6,6 +7,7 @@ interface MainProps {
   showBoardHeader?: boolean;
   serverBoardTitle?: string;
   serverBoardDescription?: string | null;
+  initialCurrentMode?: "memo" | "task" | "board";
 }
 
 function Main({ 
@@ -13,16 +15,19 @@ function Main({
   boardId, 
   showBoardHeader = true, 
   serverBoardTitle, 
-  serverBoardDescription 
+  serverBoardDescription,
+  initialCurrentMode 
 }: MainProps = {}) {
   return (
-    <MainClient 
-      initialBoardName={initialBoardName}
-      boardId={boardId}
-      showBoardHeader={showBoardHeader}
-      serverBoardTitle={serverBoardTitle}
-      serverBoardDescription={serverBoardDescription}
-    />
+    <NavigationProvider initialCurrentMode={initialCurrentMode}>
+      <MainClient 
+        initialBoardName={initialBoardName}
+        boardId={boardId}
+        showBoardHeader={showBoardHeader}
+        serverBoardTitle={serverBoardTitle}
+        serverBoardDescription={serverBoardDescription}
+      />
+    </NavigationProvider>
   );
 }
 

@@ -55,26 +55,23 @@ export function NavigationProvider({
   
   useEffect(() => {
     setIsHydrated(true);
+    
+    // Hydration完了後に適切な初期状態を設定
+    const currentPath = window.location.pathname;
+    const fromBoardDetail = sessionStorage.getItem('fromBoardDetail') === 'true';
+    
+    if (currentPath.startsWith('/boards/')) {
+      console.log('🔍 NavigationContext Hydration完了: ボード詳細ページ');
+      setScreenMode("board");
+      setCurrentMode("board");
+    } else if (currentPath === "/" && fromBoardDetail) {
+      console.log('🔍 NavigationContext Hydration完了: ボード詳細から戻った');
+      setScreenMode("board");
+      setCurrentMode("board");
+    }
   }, []);
 
-  const [screenMode, setScreenMode] = useState<ScreenMode>(() => {
-    // 初期値をより適切に設定
-    if (typeof window !== 'undefined') {
-      const currentPath = window.location.pathname;
-      const fromBoardDetail = sessionStorage.getItem('fromBoardDetail') === 'true';
-      
-      if (currentPath.startsWith('/boards/')) {
-        console.log('🔍 NavigationContext初期化: ボード詳細ページ');
-        return "board";
-      } else if (currentPath === "/" && fromBoardDetail) {
-        console.log('🔍 NavigationContext初期化: ボード詳細から戻った');
-        return "board";
-      }
-    }
-    
-    console.log('🔍 NavigationContext初期化: デフォルト');
-    return "home";
-  });
+  const [screenMode, setScreenMode] = useState<ScreenMode>("home");
 
   // sessionStorageと状態を同期
   useEffect(() => {

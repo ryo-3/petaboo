@@ -2,6 +2,7 @@ import MemoIcon from "@/components/icons/memo-icon";
 import TaskIcon from "@/components/icons/task-icon";
 import AddItemButton from "@/components/ui/buttons/add-item-button";
 import MemoEditor from "@/components/features/memo/memo-editor";
+import TaskEditor from "@/components/features/task/task-editor";
 import RightPanel from "@/components/ui/layout/right-panel";
 import {
   useBoardWithItems,
@@ -368,49 +369,15 @@ export default function BoardDetail({
         )}
         
         {selectedTask && (
-          <div className="p-4">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">タスク詳細</h3>
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-medium text-gray-900 mb-2">{selectedTask.title}</h4>
-                {selectedTask.description && (
-                  <div className="bg-gray-50 rounded-lg p-4 whitespace-pre-wrap text-gray-700">
-                    {selectedTask.description}
-                  </div>
-                )}
-              </div>
-              <div className="flex gap-4 mb-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-500">ステータス:</span>
-                  <span className={`text-xs px-2 py-1 rounded ${
-                    selectedTask.status === 'completed' ? 'bg-green-100 text-green-700' :
-                    selectedTask.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
-                    'bg-gray-100 text-gray-700'
-                  }`}>
-                    {selectedTask.status === 'completed' ? '完了' :
-                     selectedTask.status === 'in_progress' ? '進行中' : '未着手'}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-500">優先度:</span>
-                  <span className={`text-xs px-2 py-1 rounded ${
-                    selectedTask.priority === 'high' ? 'bg-red-100 text-red-700' :
-                    selectedTask.priority === 'low' ? 'bg-gray-100 text-gray-600' :
-                    'bg-yellow-100 text-yellow-700'
-                  }`}>
-                    {selectedTask.priority === 'high' ? '高' :
-                     selectedTask.priority === 'low' ? '低' : '中'}
-                  </span>
-                </div>
-              </div>
-              <div className="text-sm text-gray-500">
-                作成日: {new Date(selectedTask.createdAt * 1000).toLocaleString('ja-JP')}
-                {selectedTask.updatedAt && selectedTask.updatedAt !== selectedTask.createdAt && (
-                  <div>更新日: {new Date(selectedTask.updatedAt * 1000).toLocaleString('ja-JP')}</div>
-                )}
-              </div>
-            </div>
-          </div>
+          <TaskEditor
+            key={`task-${selectedTask.id}`}
+            task={selectedTask}
+            onClose={handleCloseDetail}
+            onSaveComplete={(savedTask) => {
+              // 保存後に選択状態を更新
+              setSelectedTask(savedTask);
+            }}
+          />
         )}
       </RightPanel>
       

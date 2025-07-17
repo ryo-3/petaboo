@@ -1,5 +1,5 @@
 # Claude開発仕様書
-
+日本語で対応して　
 ## プロジェクト概要
 - **メモ帳アプリ**: メモとタスクの統合管理アプリ
 - **技術スタック**: 
@@ -43,63 +43,11 @@
   - ✅ ボード作成・編集・削除
   - ✅ ボード詳細画面（アイテム表示）
   - ✅ メモ・タスクのボード追加・削除
+  - ✅ **タブ機能**: メモ（通常・削除済み）、タスク（未着手・進行中・完了・削除済み）
+  - ✅ **右パネル編集**: アイテム選択で右パネルのエディター表示
+  - ✅ **新規作成**: +ボタンで右パネルエディターによる新規作成
+  - ✅ **レスポンシブ**: 右パネル開閉に応じたレイアウト調整
 
-### 画面モード
-```tsx
-type ScreenMode = 'home' | 'memo' | 'task' | 'create' | 'settings' | 'board';
-```
-
-### 削除後自動選択
-```tsx
-import { getMemoDisplayOrder, getTaskDisplayOrder, getNextItemAfterDeletion } from "@/src/utils/domUtils";
-const nextTask = getNextItemAfterDeletion(filteredTasks, deletedTask, getTaskDisplayOrder());
-```
-
-### 変更検知・保存システム
-```tsx
-<SaveButton onClick={handleSave} disabled={!hasChanges} isSaving={isSaving} />
-const hasChanges = useMemo(() => currentTitle !== initialTitle || currentContent !== initialContent, [title, content, initialTitle, initialContent]);
-```
-
-### 並び替えシステム
-```tsx
-// 3状態トグル: 無効 → 昇順 → 降順 → 無効
-<TaskSortToggle sortOptions={sortOptions} onSortChange={setSortOptions} buttonSize="size-6" iconSize="size-4" />
-```
-
-### 編集日表示システム
-```tsx
-<EditDateToggle showEditDate={showEditDate} onToggle={setShowEditDate} buttonSize="size-7" iconSize="size-4" />
-// 通常モード: 最新日付のみ / 詳細モード: 作成日と更新日を横並び表示
-```
-
-### 設定システム
-```tsx
-// ユーザー設定（データベース保存）
-interface UserPreferences {
-  hideHeader: boolean;  // ヘッダー表示/非表示
-}
-// 画面高さ自動調整
-const screenHeight = preferences?.hideHeader ? 'h-screen' : 'h-[calc(100vh-64px)]';
-```
-
-### CSS アニメーションシステム
-```tsx
-// deleteAnimation.ts - CSS版アニメーション
-import { animateEditorContentToTrashCSS, animateBulkFadeOutCSS } from '@/src/utils/deleteAnimation';
-
-// エディター削除アニメーション
-@keyframes editor-to-trash {
-  0% { transform: translate(0, 0) scale(1); }
-  20% { transform: translate(0, 0) scale(0.8); }
-  100% { transform: translate(var(--move-x), var(--move-y)) scale(0.01); }
-}
-
-// 一括削除最適化: 30件以下=全アニメーション、30件以上=混合モード
-animateBulkFadeOutCSS(ids, onComplete, 120, 'delete', (id) => {
-  // 300ms + index*120ms でアニメーション完了と同時にDOM更新
-});
-```
 
 ## 重要コンポーネント
 
@@ -111,35 +59,27 @@ animateBulkFadeOutCSS(ids, onComplete, 120, 'delete', (id) => {
 - `SaveButton` - 保存ボタン統一（変更検知対応、CSS化済み）
 - `CustomSelector` - セレクター統一
 - `CategorySelector` - カテゴリー選択コンポーネント
+- `AddItemButton` - アイテム追加ボタン統一（サイズ・ツールチップ対応）
+- `RightPanel` - 右パネル統一（エディター表示用）
 
 ### UIコントロール
-- `TaskSortToggle` - 並び替えトグル
-- `EditDateToggle` - 編集日表示切り替え
 - `TrashIcon` - ゴミ箱アイコン（CSS制御）
 
 ### 共通フック
-- `useSelectionHandlers` - 選択ハンドラーパターン統一
-- `useRightEditorDelete` - 右側エディター削除処理統一
-- `use-bulk-restore` - 復元処理統一（メモ・タスク共通）
 - `use-categories` - カテゴリー操作フック（CRUD操作）
 - `use-boards` - ボード操作フック（CRUD操作、slug対応）
+- `useBoardWithItems` - ボード詳細とアイテム取得（タブ機能対応）
+- `useRemoveItemFromBoard` - ボードからアイテム削除
 
-### アニメーション
-- `deleteAnimation.ts` - 削除アニメーション（CSS版完了）
-  - ✅ `animateEditorContentToTrashCSS` - エディター削除（CSS版）
-  - ✅ `animateBulkFadeOutCSS` - 一括削除・復元（CSS版、メモ・タスク両側完了）
 
-### パフォーマンス最適化
-- **一括操作最適化**（メモ・タスク両側完了）:
-  - 30件以下: 全アニメーション（120ms間隔）
-  - 30件以上: 混合モード（最初30件アニメーション + 残り瞬時処理）
-  - 100件制限: カスタムモーダルメッセージ対応
-  - React Query競合回避: 自動更新なしmutation使用
-  - DOM順序対応: タスクの並び替えに対応した全選択・アニメーション
-
-## UIコントロール統一規則
-- **サイズ**: buttonSize="size-7", iconSize="size-5", arrowSize="w-2.5 h-3"
-- **色**: 背景=bg-gray-100, アクティブ=bg-white shadow-sm, 非アクティブ=text-gray-400
+## UI統一規則
+- **タブ高さ**: すべてのタブは `h-7` (28px) で統一
+- **タブ色**: 
+  - メモ通常: `bg-gray-200` (アクティブ) / `bg-gray-500` (アイコン)
+  - タスク未着手: `bg-zinc-200` (アクティブ) / `bg-zinc-400` (アイコン)
+  - タスク進行中: `bg-blue-100` (アクティブ) / `bg-Blue` (アイコン)
+  - タスク完了: `bg-Green/20` (アクティブ) / `bg-Green` (アイコン)
+  - 削除済み: `bg-red-100` (アクティブ) / `TrashIcon` (アイコン)
 
 ## API認証パターン
 ```typescript
@@ -156,6 +96,30 @@ const response = await fetch(`${API_BASE_URL}/categories`, {
 ```bash
 npm run check-types && npm run lint  # コミット前必須
 ```
+
+## ボード詳細画面の最新仕様
+
+### タブシステム
+- **メモタブ**: 
+  - 通常タブ（灰色アイコン・bg-gray-200）
+  - 削除済みタブ（ゴミ箱アイコン・bg-red-100）
+- **タスクタブ**:
+  - 未着手タブ（灰色アイコン・bg-zinc-200）
+  - 進行中タブ（青アイコン・bg-blue-100）
+  - 完了タブ（緑アイコン・bg-Green/20）
+  - 削除済みタブ（ゴミ箱アイコン・bg-red-100）
+
+### 右パネル連動機能
+- **タブテキスト制御**: 右パネル開閉に応じてタブのテキスト表示/非表示（300ms遅延）
+- **×ボタン制御**: 右パネル閉じている時のみ×ボタン表示
+- **新規作成**: +ボタンで右パネルエディターによる新規作成（モーダル廃止）
+- **選択状態保持**: タブ切り替え時も選択状態を保持
+
+### レイアウト最適化
+- **UIスリム化**: パディング・マージン・フォントサイズの削減
+- **タブ高さ統一**: すべてのタブを28px（h-7）で統一
+- **背景色削除**: メモ・タスク列の背景色を削除してよりクリーンに
+- **ボーダー削除**: 選択時のボーダーを削除してスペース節約
 
 # 🚨 重要：開発制約と作業原則
 
@@ -228,34 +192,3 @@ npm run check-types && npm run lint
 - **セキュリティ重視（悪意コード禁止）**
 - **Turborepoの設定変更禁止**
 
-## 削除機能の構造
-
-### 左側一括削除（チェックボックスで選択したアイテム）
-- **状態**: `isBulkDeleting`, `isBulkDeleteLidOpen`
-- **処理**: `handleLeftBulkDelete`
-- **表示条件**: `checkedMemos.size > 0` 時
-- **位置**: 左パネルの右下
-- **アニメーション**: ✅ `animateBulkFadeOutCSS` (CSS版、パフォーマンス最適化済み)
-
-### 右側エディター削除（現在表示中のメモ・タスク）
-- **状態**: `isEditorDeleting`
-- **処理**: `useRightEditorDelete` (共通フック)
-- **表示条件**: エディター表示中 かつ チェック無し時
-- **位置**: 右パネルの右下 (`DELETE_BUTTON_POSITION = "fixed bottom-4 right-4"`)
-- **アニメーション**: ✅ `animateEditorContentToTrashCSS` (CSS版)
-
-### 削除済み完全削除・一括復元
-- **メモ・タスク**: CSS版アニメーション使用、パフォーマンス最適化済み ✅
-
-### 動的高さシステム
-- **BaseCard**: タスクとメモで異なる高さを自動設定
-  - タスク: `h-[170px]`
-  - メモ: `h-[160px]`
-  - 判定: `dataTaskId` プロパティの有無で自動切り替え
-
-### テキストオーバーフロー対策
-```tsx
-<p className="text-xs text-gray-600 line-clamp-1 break-all">
-  {task.description || ""}
-</p>
-```

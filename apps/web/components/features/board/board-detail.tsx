@@ -14,7 +14,6 @@ import { Memo } from "@/src/types/memo";
 import { Task } from "@/src/types/task";
 import { getTimeAgo } from "@/src/utils/dateUtils";
 import { memo, useCallback, useEffect, useState } from "react";
-import AddItemModal from "./add-item-modal";
 import BoardHeader from "./board-header";
 
 interface BoardDetailProps {
@@ -66,7 +65,6 @@ function BoardDetail({
   boardCompleted = false,
   isDeleted = false,
 }: BoardDetailProps) {
-  const [showAddModal, setShowAddModal] = useState(false);
   const [activeTaskTab, setActiveTaskTab] = useState<
     "todo" | "in_progress" | "completed" | "deleted"
   >("todo");
@@ -177,6 +175,34 @@ function BoardDetail({
     },
     []
   );
+
+  // 新規メモ作成
+  const handleCreateNewMemo = useCallback(() => {
+    const newMemo: Memo = {
+      id: 0, // 新規作成時は0
+      title: "",
+      content: "",
+      createdAt: Date.now() / 1000,
+      updatedAt: Date.now() / 1000,
+    };
+    onSelectMemo?.(newMemo);
+  }, [onSelectMemo]);
+
+  // 新規タスク作成
+  const handleCreateNewTask = useCallback(() => {
+    const newTask: Task = {
+      id: 0, // 新規作成時は0
+      title: "",
+      description: null,
+      status: activeTaskTab === "deleted" ? "todo" : activeTaskTab, // 削除済みタブの場合は未着手にする
+      priority: "medium",
+      dueDate: null,
+      categoryId: null,
+      createdAt: Date.now() / 1000,
+      updatedAt: Date.now() / 1000,
+    };
+    onSelectTask?.(newTask);
+  }, [onSelectTask, activeTaskTab]);
 
   const handleExport = () => {
     if (!boardWithItems) return;
@@ -302,7 +328,7 @@ function BoardDetail({
     boardWithItems?.items.filter((item) => item.itemType === "task") || [];
 
   // アクティブタブに応じてメモをフィルタリング
-  const memoItems = allMemoItems.filter((item) => {
+  const memoItems = allMemoItems.filter(() => {
     if (activeMemoTab === "deleted") {
       // 削除済みは将来的に別のAPIから取得予定、現在は空配列
       return false;
@@ -375,7 +401,7 @@ function BoardDetail({
                 </span>
                 <AddItemButton
                   itemType="memo"
-                  onClick={() => setShowAddModal(true)}
+                  onClick={handleCreateNewMemo}
                   size="small"
                   showTooltip={false}
                   customSize={{
@@ -440,6 +466,7 @@ function BoardDetail({
                     memo={item.content as Memo}
                     onRemove={() => handleRemoveItem(item)}
                     onClick={() => handleSelectMemo(item.content as Memo)}
+                    showRemoveButton={selectedMemo === null && selectedTask === null}
                   />
                 ))
               )}
@@ -461,7 +488,7 @@ function BoardDetail({
                 </span>
                 <AddItemButton
                   itemType="task"
-                  onClick={() => setShowAddModal(true)}
+                  onClick={handleCreateNewTask}
                   size="small"
                   showTooltip={false}
                   customSize={{
@@ -556,6 +583,7 @@ function BoardDetail({
                     task={item.content as Task}
                     onRemove={() => handleRemoveItem(item)}
                     onClick={() => handleSelectTask(item.content as Task)}
+                    showRemoveButton={selectedMemo === null && selectedTask === null}
                   />
                 ))
               )}
@@ -602,12 +630,6 @@ function BoardDetail({
         )}
       </RightPanel>
 
-      {/* アイテム追加モーダル */}
-      <AddItemModal
-        boardId={boardId}
-        isOpen={showAddModal}
-        onClose={() => setShowAddModal(false)}
-      />
     </div>
   );
 }
@@ -619,9 +641,10 @@ interface MemoItemCardProps {
   memo: Memo;
   onRemove: () => void;
   onClick?: () => void;
+  showRemoveButton?: boolean;
 }
 
-function MemoItemCard({ memo, onRemove, onClick }: MemoItemCardProps) {
+function MemoItemCard({ memo, onRemove, onClick, showRemoveButton = true }: MemoItemCardProps) {
   const updatedAt = new Date(
     memo.updatedAt ? memo.updatedAt * 1000 : memo.createdAt * 1000
   );
@@ -637,16 +660,18 @@ function MemoItemCard({ memo, onRemove, onClick }: MemoItemCardProps) {
     >
       <div className="flex items-start justify-between mb-2">
         <h3 className="font-medium text-gray-900 line-clamp-1">{memo.title}</h3>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onRemove();
-          }}
-          className="text-gray-400 hover:text-red-500 text-sm"
-          title="ボードから削除"
-        >
-          ×
-        </button>
+        {showRemoveButton && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove();
+            }}
+            className="text-gray-400 hover:text-red-500 text-sm"
+            title="ボードから削除"
+          >
+            ×
+          </button>
+        )}
       </div>
 
       {memo.content && (
@@ -665,9 +690,10 @@ interface TaskItemCardProps {
   task: Task;
   onRemove: () => void;
   onClick?: () => void;
+  showRemoveButton?: boolean;
 }
 
-function TaskItemCard({ task, onRemove, onClick }: TaskItemCardProps) {
+function TaskItemCard({ task, onRemove, onClick, showRemoveButton = true }: TaskItemCardProps) {
   const updatedAt = new Date(
     task.updatedAt ? task.updatedAt * 1000 : task.createdAt * 1000
   );
@@ -729,16 +755,18 @@ function TaskItemCard({ task, onRemove, onClick }: TaskItemCardProps) {
     >
       <div className="flex items-start justify-between mb-2">
         <h3 className="font-medium text-gray-900 line-clamp-1">{task.title}</h3>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onRemove();
-          }}
-          className="text-gray-400 hover:text-red-500 text-sm"
-          title="ボードから削除"
-        >
-          ×
-        </button>
+        {showRemoveButton && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove();
+            }}
+            className="text-gray-400 hover:text-red-500 text-sm"
+            title="ボードから削除"
+          >
+            ×
+          </button>
+        )}
       </div>
 
       {task.description && (

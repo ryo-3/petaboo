@@ -329,7 +329,7 @@ function TaskScreen({
 
   // 選択ハンドラーパターン
   const {
-    handleSelectItem: handleSelectTask,
+    handleSelectItem: handleSelectTaskBase,
     handleSelectDeletedItem: handleSelectDeletedTask,
     handleCreateNew,
     handleRightPanelClose,
@@ -341,6 +341,11 @@ function TaskScreen({
     onClearSelection,
     onClose: onClose,
   });
+
+  // タスク選択ハンドラー
+  const handleSelectTask = (task: Task) => {
+    handleSelectTaskBase(task);
+  };
 
   const screenHeight = preferences?.hideHeader ? 'h-screen' : 'h-[calc(100vh-64px)]';
 

@@ -18,7 +18,7 @@ import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
 import { useNavigation } from "@/contexts/navigation-context";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useMemo, useCallback } from "react";
 
 // 画面モード定義（7つのシンプルな画面状態）
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -67,7 +67,7 @@ function MainClient({
     : null;
 
   // slugからボード情報取得
-  const { data: boardFromSlug, isLoading: isSlugLoading } = useBoardBySlug(
+  const { data: boardFromSlug } = useBoardBySlug(
     currentBoardSlug || null
   );
   const { data: currentBoard } = useBoardWithItems(boardFromSlug?.id || null);
@@ -79,6 +79,9 @@ function MainClient({
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [selectedDeletedTask, setSelectedDeletedTask] =
     useState<DeletedTask | null>(null);
+
+  // ボード詳細用の選択状態（Fast Refresh対応）
+  const [boardSelectedItem, setBoardSelectedItem] = useState<{type: 'memo', item: Memo} | {type: 'task', item: Task} | null>(null);
 
   // UI状態管理
   const [showDeleted, setShowDeleted] = useState(false); // モバイル版削除済み表示フラグ
@@ -141,6 +144,9 @@ function MainClient({
     setSelectedTask(null);
     setSelectedDeletedTask(null);
     setShowDeleted(false);
+    
+    // ボード詳細の選択状態もクリア
+    setBoardSelectedItem(null);
   };
 
   // ==========================================
@@ -287,6 +293,45 @@ function MainClient({
   };
 
   // ==========================================
+  // ボード詳細専用ハンドラー
+  // ==========================================
+
+  /** ボード詳細でのメモ選択 */
+  const handleBoardSelectMemo = useCallback((memo: Memo | null) => {
+    if (!memo) {
+      setBoardSelectedItem(null);
+      return;
+    }
+    
+    // 同じメモが既に選択されている場合は何もしない
+    if (boardSelectedItem?.type === 'memo' && boardSelectedItem.item.id === memo.id) {
+      return;
+    }
+    
+    setBoardSelectedItem({type: 'memo', item: memo});
+  }, [boardSelectedItem]);
+
+  /** ボード詳細でのタスク選択 */
+  const handleBoardSelectTask = useCallback((task: Task | null) => {
+    if (!task) {
+      setBoardSelectedItem(null);
+      return;
+    }
+    
+    // 同じタスクが既に選択されている場合は何もしない
+    if (boardSelectedItem?.type === 'task' && boardSelectedItem.item.id === task.id) {
+      return;
+    }
+    
+    setBoardSelectedItem({type: 'task', item: task});
+  }, [boardSelectedItem]);
+
+  /** ボード詳細での選択クリア */
+  const handleBoardClearSelection = useCallback(() => {
+    setBoardSelectedItem(null);
+  }, []);
+
+  // ==========================================
   // モバイル専用ハンドラー
   // ==========================================
 
@@ -296,78 +341,17 @@ function MainClient({
     setScreenMode("home");
   };
 
-  // BoardDetailWrapperコンポーネント
-  const BoardDetailWrapper = () => {
-    const router = useRouter();
+  const router = useRouter();
+  
+  // BoardDetailWrapperコンポーネント（シンプル化）
+  const BoardDetailWrapper = useMemo(() => {
+    // サーバーサイドからのボード情報がある場合は優先使用
+    const currentBoardId = boardId || boardFromSlug?.id;
+    const currentBoardName = initialBoardName || boardFromSlug?.name;
+    const currentBoardDescription = serverBoardDescription || boardFromSlug?.description;
 
-    // サーバーサイドでboardIdが渡されている場合は直接表示
-    if (boardId) {
-      console.log('🔍 サーバーサイドボードID使用:', boardId);
-      
-      // サーバーサイドタイトルがある場合は、先にそれを表示
-      if (serverBoardTitle) {
-        return (
-          <BoardDetail
-            boardId={boardId}
-            onBack={() => { 
-              console.log('🔍 onBackクリック開始 - 現在の状態:', { screenMode, currentMode });
-              console.log('🔍 /boardsに遷移');
-              router.push("/boards");
-            }}
-            onSelectMemo={handleSelectMemo}
-            onSelectTask={handleSelectTask}
-            initialBoardName={initialBoardName}
-            initialBoardDescription={serverBoardDescription}
-            showBoardHeader={true}
-            serverInitialTitle={serverBoardTitle}
-          />
-        );
-      }
-      
-      return (
-        <BoardDetail
-          boardId={boardId}
-          onBack={() => { 
-            // console.log('🔍 onBackクリック開始 - 現在の状態:', { screenMode, currentMode });
-            // console.log('🔍 /boardsに遷移');
-            router.push("/boards");
-          }}
-          onSelectMemo={handleSelectMemo}
-          onSelectTask={handleSelectTask}
-          initialBoardName={initialBoardName}
-          initialBoardDescription={null}
-          showBoardHeader={showBoardHeader}
-        />
-      );
-    }
-
-    // 以下は従来のクライアントサイドでの処理
-    const displayName = initialBoardName || boardFromSlug?.name;
-
-    console.log('🔍 BoardDetailWrapper状態:', {
-      initialBoardName,
-      boardFromSlug: boardFromSlug?.name,
-      displayName,
-      isSlugLoading,
-      currentBoardSlug
-    });
-
-    // slug読み込み中でボード名がない場合のみ「読み込み中」表示
-    if (isSlugLoading && !displayName) {
-      console.log('🔍 ボード読み込み中表示');
-      return (
-        <div className="flex items-center justify-center p-8">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              ボードを読み込み中...
-            </h1>
-          </div>
-        </div>
-      );
-    }
-
-    // ボード情報が取得できない場合のエラー表示
-    if (!isSlugLoading && !boardFromSlug) {
+    // ボードIDがない場合はエラー
+    if (!currentBoardId) {
       return (
         <div className="flex items-center justify-center p-8">
           <div className="text-center">
@@ -375,7 +359,7 @@ function MainClient({
               ボードが見つかりません
             </h1>
             <button
-              onClick={() => router.push("/")}
+              onClick={() => router.push("/boards")}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               ボード一覧に戻る
@@ -385,41 +369,37 @@ function MainClient({
       );
     }
 
-    // ボード名がある場合は、アイテム読み込み中でもBoardDetailを表示
-    if (boardFromSlug) {
-      console.log('🔍 BoardDetailを表示:', {
-        boardId: boardFromSlug.id,
-        initialBoardName: boardFromSlug.name,
-        boardDescription: boardFromSlug.description
-      });
-      return (
-        <BoardDetail
-          boardId={boardFromSlug.id}
-          onBack={() => { 
-            // console.log('🔍 onBackクリック開始 - 現在の状態:', { screenMode, currentMode });
-            // console.log('🔍 /boardsに遷移');
-            router.push("/boards");
-          }}
-          onSelectMemo={handleSelectMemo}
-          onSelectTask={handleSelectTask}
-          initialBoardName={boardFromSlug.name}
-          initialBoardDescription={boardFromSlug.description}
-          showBoardHeader={showBoardHeader}
-        />
-      );
-    }
-
-    // フォールバック：ボード名表示
+    // シンプルにBoardDetailを表示（メモ・タスク一覧と同じパターン）
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            {displayName || "ボードを読み込み中..."}
-          </h1>
-        </div>
-      </div>
+      <BoardDetail
+        boardId={currentBoardId}
+        onBack={() => router.push("/boards")}
+        selectedMemo={boardSelectedItem?.type === 'memo' ? boardSelectedItem.item : null}
+        selectedTask={boardSelectedItem?.type === 'task' ? boardSelectedItem.item : null}
+        onSelectMemo={handleBoardSelectMemo}
+        onSelectTask={handleBoardSelectTask}
+        onClearSelection={handleBoardClearSelection}
+        initialBoardName={currentBoardName}
+        initialBoardDescription={currentBoardDescription}
+        showBoardHeader={showBoardHeader}
+        serverInitialTitle={serverBoardTitle}
+      />
     );
-  };
+  }, [
+    boardId,
+    boardFromSlug?.id,
+    boardFromSlug?.name,
+    boardFromSlug?.description,
+    initialBoardName,
+    serverBoardDescription,
+    serverBoardTitle,
+    showBoardHeader,
+    boardSelectedItem,
+    handleBoardSelectMemo,
+    handleBoardSelectTask,
+    handleBoardClearSelection,
+    router,
+  ]);
 
   return (
     <main className="relative">
@@ -591,7 +571,7 @@ function MainClient({
           {/* ボード画面 */}
           {screenMode === "board" &&
             (pathname.startsWith("/boards/") && pathname !== "/boards" ? (
-              <BoardDetailWrapper />
+              BoardDetailWrapper
             ) : (
               <BoardScreen 
                 ref={boardScreenRef}

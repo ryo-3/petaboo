@@ -7,7 +7,7 @@ import BoardSelector from "@/components/ui/selectors/board-selector";
 import { useSimpleMemoSave } from "@/src/hooks/use-simple-memo-save";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import type { Memo } from "@/src/types/memo";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, memo } from "react";
 
 interface MemoEditorProps {
   memo: Memo | null;
@@ -140,4 +140,4 @@ function MemoEditor({ memo, onClose, onSaveComplete, customHeight }: MemoEditorP
   );
 }
 
-export default MemoEditor;
+export default memo(MemoEditor);

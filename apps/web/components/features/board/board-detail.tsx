@@ -12,15 +12,18 @@ import { BoardItemWithContent } from "@/src/types/board";
 import { Memo } from "@/src/types/memo";
 import { Task } from "@/src/types/task";
 import { getTimeAgo } from "@/src/utils/dateUtils";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, memo } from "react";
 import AddItemModal from "./add-item-modal";
 import BoardHeader from "./board-header";
 
 interface BoardDetailProps {
   boardId: number;
   onBack: () => void;
+  selectedMemo?: Memo | null;
+  selectedTask?: Task | null;
   onSelectMemo?: (memo: Memo | null) => void;
   onSelectTask?: (task: Task | null) => void;
+  onClearSelection?: () => void;
   initialBoardName?: string;
   initialBoardDescription?: string | null;
   showBoardHeader?: boolean;
@@ -47,9 +50,14 @@ interface ExportData {
   }[];
 }
 
-export default function BoardDetail({ 
+function BoardDetail({ 
   boardId, 
   onBack,
+  selectedMemo: propSelectedMemo,
+  selectedTask: propSelectedTask,
+  onSelectMemo,
+  onSelectTask,
+  onClearSelection,
   initialBoardName,
   initialBoardDescription,
   showBoardHeader = true,
@@ -58,8 +66,10 @@ export default function BoardDetail({
   isDeleted = false
 }: BoardDetailProps) {
   const [showAddModal, setShowAddModal] = useState(false);
-  const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  
+  // propsから選択状態を使用（Fast Refresh対応）
+  const selectedMemo = propSelectedMemo;
+  const selectedTask = propSelectedTask;
   const { data: boardWithItems, isLoading, error } = useBoardWithItems(boardId);
   const removeItemFromBoard = useRemoveItemFromBoard();
 
@@ -93,9 +103,9 @@ export default function BoardDetail({
         });
         // 削除したアイテムが選択されていた場合、選択を解除
         if (item.itemType === "memo" && selectedMemo && selectedMemo.id === item.itemId) {
-          setSelectedMemo(null);
+          onClearSelection?.();
         } else if (item.itemType === "task" && selectedTask && selectedTask.id === item.itemId) {
-          setSelectedTask(null);
+          onClearSelection?.();
         }
       } catch (error) {
         console.error("Failed to remove item:", error);
@@ -104,32 +114,16 @@ export default function BoardDetail({
   };
 
   const handleSelectMemo = useCallback((memo: Memo) => {
-    // デバッグ用ログ
-    console.log('🔍 handleSelectMemo called:', memo.id, memo.title);
-    
-    // タスクの選択を先にクリアしてから、メモを選択
-    setSelectedTask(null);
-    setTimeout(() => {
-      setSelectedMemo(memo);
-    }, 0);
-  }, []);
+    onSelectMemo?.(memo);
+  }, [onSelectMemo]);
 
   const handleSelectTask = useCallback((task: Task) => {
-    // デバッグ用ログ
-    console.log('🔍 handleSelectTask called:', task.id, task.title);
-    
-    // メモの選択を先にクリアしてから、タスクを選択
-    setSelectedMemo(null);
-    setTimeout(() => {
-      setSelectedTask(task);
-    }, 0);
-  }, []);
+    onSelectTask?.(task);
+  }, [onSelectTask]);
 
   const handleCloseDetail = useCallback(() => {
-    console.log('🔍 handleCloseDetail called');
-    setSelectedMemo(null);
-    setSelectedTask(null);
-  }, []);
+    onClearSelection?.();
+  }, [onClearSelection]);
 
   const handleExport = () => {
     if (!boardWithItems) return;
@@ -361,7 +355,7 @@ export default function BoardDetail({
         isOpen={selectedMemo !== null || selectedTask !== null}
         onClose={handleCloseDetail}
       >
-        {selectedMemo && (
+        {selectedMemo && !selectedTask && (
           <MemoEditor
             key={`memo-${selectedMemo.id}`}
             memo={selectedMemo}
@@ -372,12 +366,12 @@ export default function BoardDetail({
             onSaveComplete={(savedMemo) => {
               // 保存後に選択状態を更新
               console.log('🔍 MemoEditor onSaveComplete:', savedMemo.id);
-              setSelectedMemo(savedMemo);
+              onSelectMemo?.(savedMemo);
             }}
           />
         )}
         
-        {selectedTask && (
+        {selectedTask && !selectedMemo && (
           <TaskEditor
             key={`task-${selectedTask.id}`}
             task={selectedTask}
@@ -388,7 +382,7 @@ export default function BoardDetail({
             onSaveComplete={(savedTask) => {
               // 保存後に選択状態を更新
               console.log('🔍 TaskEditor onSaveComplete:', savedTask.id);
-              setSelectedTask(savedTask);
+              onSelectTask?.(savedTask);
             }}
           />
         )}
@@ -403,6 +397,8 @@ export default function BoardDetail({
     </div>
   );
 }
+
+export default memo(BoardDetail);
 
 interface MemoItemCardProps {
   item: BoardItemWithContent;

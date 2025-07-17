@@ -7,7 +7,7 @@ import TaskForm from "./task-form";
 import { useUpdateTask, useCreateTask } from "@/src/hooks/use-tasks";
 import { useAddItemToBoard } from "@/src/hooks/use-boards";
 import type { Task } from "@/src/types/task";
-import { useCallback, useEffect, useState, useMemo } from "react";
+import { useCallback, useEffect, useState, useMemo, memo } from "react";
 import { useTaskDelete } from "./use-task-delete";
 import { DELETE_BUTTON_POSITION } from "@/src/constants/ui";
 
@@ -345,4 +345,4 @@ function TaskEditor({
   );
 }
 
-export default TaskEditor;
+export default memo(TaskEditor);

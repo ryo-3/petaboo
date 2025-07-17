@@ -3,11 +3,12 @@
 import BaseViewer from "@/components/shared/base-viewer";
 import PhotoButton from "@/components/ui/buttons/photo-button";
 import SaveButton from "@/components/ui/buttons/save-button";
-import BoardSelector from "@/components/ui/selectors/board-selector";
+import BoardIconSelector from "@/components/ui/selectors/board-icon-selector";
+import { useBoards } from "@/src/hooks/use-boards";
 import { useSimpleMemoSave } from "@/src/hooks/use-simple-memo-save";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import type { Memo } from "@/src/types/memo";
-import { useEffect, useRef, useState, memo } from "react";
+import { useEffect, useRef, useState, memo, useMemo } from "react";
 
 interface MemoEditorProps {
   memo: Memo | null;
@@ -24,6 +25,7 @@ function MemoEditor({ memo, onClose, onSaveComplete, customHeight }: MemoEditorP
   const { preferences } = useUserPreferences(1);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const baseViewerRef = useRef<HTMLDivElement>(null);
+  const { data: boards = [] } = useBoards();
 
   const {
     content,
@@ -41,6 +43,31 @@ function MemoEditor({ memo, onClose, onSaveComplete, customHeight }: MemoEditorP
   });
 
   const [error] = useState<string | null>(null);
+
+  // BoardIconSelector用のボードオプション
+  const boardOptions = useMemo(() => {
+    const options = [
+      { value: "", label: "なし" }
+    ];
+    
+    boards.forEach(board => {
+      options.push({
+        value: board.id.toString(),
+        label: board.name
+      });
+    });
+    
+    return options;
+  }, [boards]);
+
+  // 現在選択されているボードのvalue
+  const currentBoardValue = selectedBoardId ? selectedBoardId.toString() : "";
+
+  // ボード選択変更ハンドラー
+  const handleBoardSelectorChange = (value: string) => {
+    const boardId = value ? parseInt(value, 10) : null;
+    handleBoardChange(boardId);
+  };
 
   // フォーカス管理（新規作成時に遅延）
   useEffect(() => {
@@ -103,24 +130,14 @@ function MemoEditor({ memo, onClose, onSaveComplete, customHeight }: MemoEditorP
                 iconSize="size-4"
                 className="rounded-full"
               />
+              <BoardIconSelector
+                options={boardOptions}
+                value={currentBoardValue}
+                onChange={handleBoardSelectorChange}
+              />
             </div>
           }
         >
-          {/* ボード選択（新規作成時のみ表示） */}
-          {!memo && (
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                ボード選択
-              </label>
-              <BoardSelector
-                selectedBoardId={selectedBoardId}
-                onBoardChange={handleBoardChange}
-                placeholder="ボードを選択（任意）"
-                className="max-w-xs"
-              />
-            </div>
-          )}
-          
           <textarea
             ref={textareaRef}
             placeholder="入力..."

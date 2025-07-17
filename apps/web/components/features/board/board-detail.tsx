@@ -70,6 +70,7 @@ function BoardDetail({
   const [activeTaskTab, setActiveTaskTab] = useState<
     "todo" | "in_progress" | "completed" | "deleted"
   >("todo");
+  const [activeMemoTab, setActiveMemoTab] = useState<"normal" | "deleted">("normal");
   const [showTabText, setShowTabText] = useState(true);
 
   // propsから選択状態を使用（Fast Refresh対応）
@@ -163,12 +164,18 @@ function BoardDetail({
   const handleTaskTabChange = useCallback(
     (newTab: "todo" | "in_progress" | "completed" | "deleted") => {
       setActiveTaskTab(newTab);
-      // 選択中のタスクが新しいタブに属していない場合は選択解除
-      if (selectedTask && (selectedTask as Task).status !== newTab) {
-        onClearSelection?.();
-      }
+      // 選択解除は行わない（タブ切り替えで選択状態は保持）
     },
-    [selectedTask, onClearSelection]
+    []
+  );
+
+  // メモタブ切り替え時の処理
+  const handleMemoTabChange = useCallback(
+    (newTab: "normal" | "deleted") => {
+      setActiveMemoTab(newTab);
+      // 選択解除は行わない（タブ切り替えで選択状態は保持）
+    },
+    []
   );
 
   const handleExport = () => {
@@ -289,10 +296,19 @@ function BoardDetail({
   }
 
   // メモとタスクのアイテムを分離（読み込み中も空配列で処理）
-  const memoItems =
+  const allMemoItems =
     boardWithItems?.items.filter((item) => item.itemType === "memo") || [];
   const allTaskItems =
     boardWithItems?.items.filter((item) => item.itemType === "task") || [];
+
+  // アクティブタブに応じてメモをフィルタリング
+  const memoItems = allMemoItems.filter((item) => {
+    if (activeMemoTab === "deleted") {
+      // 削除済みは将来的に別のAPIから取得予定、現在は空配列
+      return false;
+    }
+    return true; // normal の場合はすべて表示
+  });
 
   // アクティブタブに応じてタスクをフィルタリング
   const taskItems = allTaskItems.filter((item) => {
@@ -315,6 +331,10 @@ function BoardDetail({
     (item) => (item.content as Task).status === "completed"
   ).length;
   const deletedCount = 0; // 削除済みタスクの件数（将来実装）
+  
+  // メモの件数を計算
+  const normalMemoCount = allMemoItems.length;
+  const deletedMemoCount = 0; // 削除済みメモの件数（将来実装）
 
   const screenHeight = "h-[calc(100vh-64px)]"; // 既存画面と同じ高さ設定
 
@@ -345,23 +365,62 @@ function BoardDetail({
             className="flex flex-col"
           >
             <div className="flex items-center gap-2 mb-2">
-              <h2 className="text-base font-semibold text-gray-800 flex items-center gap-1">
-                <MemoIcon className="w-4 h-4 text-Green" />
-                メモ
-              </h2>
-              <span className="text-sm font-normal text-gray-500">
-                {memoItems.length}
-              </span>
-              <AddItemButton
-                itemType="memo"
-                onClick={() => setShowAddModal(true)}
-                size="small"
-                showTooltip={false}
-                customSize={{
-                  padding: "p-1",
-                  iconSize: "size-4",
-                }}
-              />
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-semibold text-gray-800 flex items-center gap-1">
+                  <MemoIcon className="w-4 h-4 text-Green" />
+                  メモ
+                </h2>
+                <span className="text-sm font-normal text-gray-500">
+                  {allMemoItems.length}
+                </span>
+                <AddItemButton
+                  itemType="memo"
+                  onClick={() => setShowAddModal(true)}
+                  size="small"
+                  showTooltip={false}
+                  customSize={{
+                    padding: "p-1",
+                    iconSize: "size-4",
+                  }}
+                />
+              </div>
+
+              {/* メモステータスタブ */}
+              <div className="flex items-center gap-1 flex-wrap">
+                <button
+                  onClick={() => handleMemoTabChange("normal")}
+                  className={`flex items-center gap-1 px-1.5 rounded-lg font-medium transition-colors text-gray-600 text-[12px] h-7 ${
+                    activeMemoTab === "normal"
+                      ? "bg-gray-200"
+                      : "bg-gray-100 hover:bg-gray-200"
+                  }`}
+                >
+                  <div className="w-2.5 h-2.5 rounded-full bg-gray-500"></div>
+                  {showTabText && <span>通常</span>}
+                  <span className="bg-white/20 text-[11px] px-1 py-0.5 rounded-full min-w-[20px] text-center">
+                    {normalMemoCount}
+                  </span>
+                </button>
+                <button
+                  onClick={() => handleMemoTabChange("deleted")}
+                  className={`flex items-center px-1.5 rounded-lg font-medium transition-colors text-gray-600 text-[12px] h-7 ${
+                    activeMemoTab === "deleted"
+                      ? "bg-red-100"
+                      : "bg-gray-100 hover:bg-red-100"
+                  }`}
+                >
+                  <TrashIcon className="w-4 h-4" />
+                  <span
+                    className={`text-xs transition-all overflow-hidden text-right ${
+                      activeMemoTab === "deleted"
+                        ? "opacity-100 w-9 translate-x-0 px-1.5 ml-1"
+                        : "opacity-0 w-0 translate-x-2 px-0"
+                    }`}
+                  >
+                    {deletedMemoCount}
+                  </span>
+                </button>
+              </div>
             </div>
 
             <div className="space-y-3 flex-1 overflow-y-auto">
@@ -371,7 +430,7 @@ function BoardDetail({
                 </div>
               ) : memoItems.length === 0 ? (
                 <div className="text-gray-500 text-center py-8">
-                  メモがありません
+                  {activeMemoTab === "deleted" ? "削除済みメモがありません" : "メモがありません"}
                 </div>
               ) : (
                 memoItems.map((item) => (
@@ -416,7 +475,7 @@ function BoardDetail({
               <div className="flex items-center gap-1 flex-wrap">
                 <button
                   onClick={() => handleTaskTabChange("todo")}
-                  className={`flex items-center gap-1 px-1.5 py-1 rounded-lg font-medium transition-colors text-gray-600 text-[12px] ${
+                  className={`flex items-center gap-1 px-1.5 rounded-lg font-medium transition-colors text-gray-600 text-[12px] h-7 ${
                     activeTaskTab === "todo"
                       ? "bg-zinc-200"
                       : "bg-gray-100 hover:bg-zinc-200"
@@ -430,7 +489,7 @@ function BoardDetail({
                 </button>
                 <button
                   onClick={() => handleTaskTabChange("in_progress")}
-                  className={`flex items-center gap-1 px-1.5 py-1 rounded-lg font-medium transition-colors text-gray-600 text-[12px] ${
+                  className={`flex items-center gap-1 px-1.5 rounded-lg font-medium transition-colors text-gray-600 text-[12px] h-7 ${
                     activeTaskTab === "in_progress"
                       ? "bg-blue-100"
                       : "bg-gray-100 hover:bg-blue-100"
@@ -444,7 +503,7 @@ function BoardDetail({
                 </button>
                 <button
                   onClick={() => handleTaskTabChange("completed")}
-                  className={`flex items-center gap-1 px-1.5 py-1 rounded-lg font-medium transition-colors text-gray-600 text-[12px] ${
+                  className={`flex items-center gap-1 px-1.5 rounded-lg font-medium transition-colors text-gray-600 text-[12px] h-7 ${
                     activeTaskTab === "completed"
                       ? "bg-Green/20"
                       : "bg-gray-100 hover:bg-Green/20"
@@ -458,7 +517,7 @@ function BoardDetail({
                 </button>
                 <button
                   onClick={() => handleTaskTabChange("deleted")}
-                  className={`flex items-center pl-1.5 pr-1.5 py-1 rounded-lg font-medium transition-colors text-gray-600 text-[12px] ${
+                  className={`flex items-center px-1.5 rounded-lg font-medium transition-colors text-gray-600 text-[12px] h-7 ${
                     activeTaskTab === "deleted"
                       ? "bg-red-100"
                       : "bg-gray-100 hover:bg-red-100"

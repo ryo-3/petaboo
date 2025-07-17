@@ -1,5 +1,6 @@
 import MemoIcon from "@/components/icons/memo-icon";
 import TaskIcon from "@/components/icons/task-icon";
+import TrashIcon from "@/components/icons/trash-icon";
 import AddItemButton from "@/components/ui/buttons/add-item-button";
 import MemoEditor from "@/components/features/memo/memo-editor";
 import TaskEditor from "@/components/features/task/task-editor";
@@ -66,6 +67,7 @@ function BoardDetail({
   isDeleted = false
 }: BoardDetailProps) {
   const [showAddModal, setShowAddModal] = useState(false);
+  const [activeTaskTab, setActiveTaskTab] = useState<"todo" | "in_progress" | "completed" | "deleted">("todo");
   
   // propsから選択状態を使用（Fast Refresh対応）
   const selectedMemo = propSelectedMemo;
@@ -124,6 +126,15 @@ function BoardDetail({
   const handleCloseDetail = useCallback(() => {
     onClearSelection?.();
   }, [onClearSelection]);
+
+  // タスクタブ切り替え時の処理
+  const handleTaskTabChange = useCallback((newTab: "todo" | "in_progress" | "completed" | "deleted") => {
+    setActiveTaskTab(newTab);
+    // 選択中のタスクが新しいタブに属していない場合は選択解除
+    if (selectedTask && (selectedTask as Task).status !== newTab) {
+      onClearSelection?.();
+    }
+  }, [selectedTask, onClearSelection]);
 
   const handleExport = () => {
     if (!boardWithItems) return;
@@ -232,9 +243,25 @@ function BoardDetail({
   const memoItems = boardWithItems?.items.filter(
     (item) => item.itemType === "memo"
   ) || [];
-  const taskItems = boardWithItems?.items.filter(
+  const allTaskItems = boardWithItems?.items.filter(
     (item) => item.itemType === "task"
   ) || [];
+  
+  // アクティブタブに応じてタスクをフィルタリング
+  const taskItems = allTaskItems.filter((item) => {
+    const task = item.content as Task;
+    if (activeTaskTab === "deleted") {
+      // 削除済みは将来的に別のAPIから取得予定、現在は空配列
+      return false;
+    }
+    return task.status === activeTaskTab;
+  });
+  
+  // 各ステータスの件数を計算
+  const todoCount = allTaskItems.filter(item => (item.content as Task).status === "todo").length;
+  const inProgressCount = allTaskItems.filter(item => (item.content as Task).status === "in_progress").length;
+  const completedCount = allTaskItems.filter(item => (item.content as Task).status === "completed").length;
+  const deletedCount = 0; // 削除済みタスクの件数（将来実装）
 
   const screenHeight = 'h-[calc(100vh-64px)]'; // 既存画面と同じ高さ設定
 
@@ -305,24 +332,91 @@ function BoardDetail({
 
             {/* タスク列 */}
             <div className={`bg-gray-50 rounded-lg p-4 flex flex-col border-2 ${selectedTask ? 'border-DeepBlue' : 'border-transparent'}`}>
-          <div className="flex items-center gap-4 mb-4">
-            <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-1">
-              <TaskIcon className="w-5 h-5 text-DeepBlue" />
-              タスク
-            </h2>
-            <span className="text-sm font-normal text-gray-500">
-              {taskItems.length}
-            </span>
-            <AddItemButton
-              itemType="task"
-              onClick={() => setShowAddModal(true)}
-              size="small"
-              showTooltip={false}
-              customSize={{
-                padding: "p-1",
-                iconSize: "size-4",
-              }}
-            />
+          <div className="flex items-center gap-4 mb-3">
+            <div className="flex items-center gap-4">
+              <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-1">
+                <TaskIcon className="w-5 h-5 text-DeepBlue" />
+                タスク
+              </h2>
+              <span className="text-sm font-normal text-gray-500">
+                {allTaskItems.length}
+              </span>
+              <AddItemButton
+                itemType="task"
+                onClick={() => setShowAddModal(true)}
+                size="small"
+                showTooltip={false}
+                customSize={{
+                  padding: "p-1",
+                  iconSize: "size-4",
+                }}
+              />
+            </div>
+            
+            {/* タスクステータスタブ */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleTaskTabChange("todo")}
+                className={`flex items-center gap-2 px-2 py-1.5 rounded-lg font-medium transition-colors text-gray-600 text-[13px] ${
+                  activeTaskTab === "todo"
+                    ? "bg-zinc-200"
+                    : "bg-gray-100 hover:bg-zinc-200"
+                }`}
+              >
+                <div className="w-2.5 h-2.5 rounded-full bg-zinc-400"></div>
+                <span>未着手</span>
+                <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full w-9 text-right">
+                  {todoCount}
+                </span>
+              </button>
+              <button
+                onClick={() => handleTaskTabChange("in_progress")}
+                className={`flex items-center gap-2 px-2 py-1.5 rounded-lg font-medium transition-colors text-gray-600 text-[13px] ${
+                  activeTaskTab === "in_progress"
+                    ? "bg-blue-100"
+                    : "bg-gray-100 hover:bg-blue-100"
+                }`}
+              >
+                <div className="w-2.5 h-2.5 rounded-full bg-Blue"></div>
+                <span>進行中</span>
+                <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full w-9 text-right">
+                  {inProgressCount}
+                </span>
+              </button>
+              <button
+                onClick={() => handleTaskTabChange("completed")}
+                className={`flex items-center gap-2 px-2 py-1.5 rounded-lg font-medium transition-colors text-gray-600 text-[13px] ${
+                  activeTaskTab === "completed"
+                    ? "bg-Green/20"
+                    : "bg-gray-100 hover:bg-Green/20"
+                }`}
+              >
+                <div className="w-2.5 h-2.5 rounded-full bg-Green"></div>
+                <span>完了</span>
+                <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full w-9 text-right">
+                  {completedCount}
+                </span>
+              </button>
+              <button
+                onClick={() => handleTaskTabChange("deleted")}
+                className={`flex items-center pl-2 pr-2 py-2 rounded-lg font-medium transition-colors text-gray-600 text-[13px] ${
+                  activeTaskTab === "deleted"
+                    ? "bg-red-100"
+                    : "bg-gray-100 hover:bg-red-100"
+                }`}
+              >
+                <TrashIcon className="w-4 h-4" />
+                <span
+                  className={`text-xs transition-all overflow-hidden text-right ${
+                    activeTaskTab === "deleted"
+                      ? "opacity-100 w-9 translate-x-0 px-1.5 ml-1"
+                      : "opacity-0 w-0 translate-x-2 px-0"
+                  }`}
+                >
+                  {deletedCount}
+                </span>
+              </button>
+            </div>
           </div>
 
           <div className="space-y-3 flex-1 overflow-y-auto">
@@ -332,7 +426,7 @@ function BoardDetail({
               </div>
             ) : taskItems.length === 0 ? (
               <div className="text-gray-500 text-center py-8">
-                タスクがありません
+                {activeTaskTab === "deleted" ? "削除済みタスクがありません" : "タスクがありません"}
               </div>
             ) : (
               taskItems.map((item) => (

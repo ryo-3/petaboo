@@ -37,12 +37,12 @@ function RightPanel({ isOpen, onClose, children, className, disableAnimation = f
   const shouldAnimate = !disableAnimation && !hasAnimated;
 
   return (
-    <div className={`flex-1 h-full overflow-y-auto relative ${shouldAnimate ? 'animate-slide-in-right' : ''} ${className || ''}`}>
+    <div className={`flex-1 h-full flex flex-col relative ${shouldAnimate ? 'animate-slide-in-right' : ''} ${className || ''}`}>
       {/* 閉じるボタン */}
       <ClosePanelButton onClose={onClose} />
       
       {/* コンテンツエリア */}
-      <div className="pl-5 pr-5 pt-2">
+      <div className="pl-5 pr-2 pt-2 flex-1 flex flex-col overflow-y-auto">
         {children}
       </div>
     </div>

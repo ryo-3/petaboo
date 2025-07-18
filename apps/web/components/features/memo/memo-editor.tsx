@@ -9,7 +9,6 @@ import Tooltip from "@/components/ui/base/tooltip";
 import BoardChangeModal from "@/components/ui/modals/board-change-modal";
 import { useBoards, useItemBoards } from "@/src/hooks/use-boards";
 import { useSimpleMemoSave } from "@/src/hooks/use-simple-memo-save";
-import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import type { Memo } from "@/src/types/memo";
 import { useEffect, useRef, useState, memo, useMemo } from "react";
 
@@ -27,7 +26,6 @@ interface MemoEditorProps {
 }
 
 function MemoEditor({ memo, onClose, onSaveComplete, onDelete, isLidOpen = false, customHeight }: MemoEditorProps) {
-  const { preferences } = useUserPreferences(1);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const baseViewerRef = useRef<HTMLDivElement>(null);
   const { data: boards = [] } = useBoards();
@@ -135,7 +133,7 @@ function MemoEditor({ memo, onClose, onSaveComplete, onDelete, isLidOpen = false
 
   return (
     <>
-      <div ref={baseViewerRef} data-memo-editor>
+      <div ref={baseViewerRef} data-memo-editor className="flex flex-col h-full">
         <BaseViewer
           item={
             memo || {
@@ -204,7 +202,7 @@ function MemoEditor({ memo, onClose, onSaveComplete, onDelete, isLidOpen = false
               handleTitleChange(firstLine);
               handleContentChange(newContent);
             }}
-            className={`w-full ${customHeight || (preferences?.hideHeader ? 'h-[calc(100vh-140px)]' : 'h-[calc(100vh-204px)]')} resize-none outline-none text-gray-500 leading-relaxed font-medium pb-10 mt-3`}
+            className={`w-full ${customHeight || 'flex-1'} resize-none outline-none text-gray-500 leading-relaxed font-medium pb-10 mb-2 mt-3 pr-1`}
           />
         </BaseViewer>
       </div>

@@ -16,7 +16,7 @@ export default function BoardChangeModal({
   onConfirm,
   boardsToAdd,
   boardsToRemove,
-  parentElement
+  parentElement: _parentElement // eslint-disable-line @typescript-eslint/no-unused-vars
 }: BoardChangeModalProps) {
   const hasChanges = boardsToAdd.length > 0 || boardsToRemove.length > 0;
 

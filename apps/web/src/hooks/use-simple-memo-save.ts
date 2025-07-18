@@ -26,6 +26,7 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
   const currentBoardIdsStr = JSON.stringify([...currentBoardIds].sort())
   useEffect(() => {
     setSelectedBoardIds([...currentBoardIds])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [memo?.id, currentBoardIdsStr]) // 文字列で比較
 
   // 変更検知用の初期値

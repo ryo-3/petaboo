@@ -21,7 +21,7 @@ function MemoCardContent({ memo, variant = 'normal', showEditDate = false }: Mem
 
   return (
     <>
-      <div className={`font-semibold text-base mb-1 line-clamp-1 leading-tight ${
+      <div className={`font-semibold text-base mb-1 truncate leading-tight ${
         isDeleted ? 'text-gray-700' : 'text-gray-800'
       }`}>
         {displayTitle}

@@ -75,7 +75,7 @@ function MemoListItem({
           <div className="flex flex-col gap-2">
             <div className="flex-1 min-w-0">
               <h3
-                className={`font-semibold text-sm mb-[2px] line-clamp-1 ${
+                className={`font-semibold text-sm mb-[2px] truncate ${
                   isDeleted ? "text-gray-700" : "text-gray-800"
                 }`}
               >

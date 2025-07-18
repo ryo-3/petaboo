@@ -228,7 +228,7 @@ function TaskForm({
               }
             }
           }}
-          className="flex-1 mb-1 text-lg font-medium border-b border-DeepBlue/80 outline-none focus:border-DeepBlue"
+          className="flex-1 mb-1 mt-1 text-lg font-medium border-b border-DeepBlue/80 outline-none focus:border-DeepBlue"
         />
       </div>
 

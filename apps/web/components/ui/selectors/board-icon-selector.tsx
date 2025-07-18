@@ -21,7 +21,7 @@ export default function BoardIconSelector({
   value,
   onChange,
   className = "",
-  iconClassName = "size-4 text-gray-600", // eslint-disable-line @typescript-eslint/no-unused-vars
+  iconClassName = "size-4 text-gray-600",
   multiple = false
 }: BoardIconSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -32,10 +32,7 @@ export default function BoardIconSelector({
     ? value 
     : (value && value !== "" ? [value] : []);
 
-  // 選択されているオプションを取得
-  const selectedOptions = options.filter(opt => 
-    selectedValues.includes(opt.value)
-  );
+  
 
   // 外部クリックで閉じる
   useEffect(() => {

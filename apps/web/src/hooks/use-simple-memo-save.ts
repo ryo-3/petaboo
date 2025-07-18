@@ -16,6 +16,11 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
   const [selectedBoardIds, setSelectedBoardIds] = useState<number[]>([])
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [showBoardChangeModal, setShowBoardChangeModal] = useState(false)
+  const [pendingBoardChanges, setPendingBoardChanges] = useState<{
+    boardsToAdd: number[];
+    boardsToRemove: number[];
+  }>({ boardsToAdd: [], boardsToRemove: [] })
   
   // メモが変更されたらボード選択をリセット
   const currentBoardIdsStr = JSON.stringify([...currentBoardIds].sort())
@@ -66,7 +71,7 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
     }
   }, [memo])
 
-  const handleSave = useCallback(async () => {
+  const executeSave = useCallback(async () => {
     const isEmpty = !title.trim() && !content.trim()
     
     setIsSaving(true)
@@ -209,7 +214,24 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
       // 保存中表示をしっかり見せる
       setTimeout(() => setIsSaving(false), 400)
     }
-  }, [memo, title, content, createNote, updateNote, deleteNote, onSaveComplete, addItemToBoard, selectedBoardIds])
+  }, [memo, title, content, createNote, updateNote, deleteNote, onSaveComplete, addItemToBoard, selectedBoardIds, currentBoardIds, queryClient, removeItemFromBoard])
+
+  const handleSave = useCallback(async () => {
+    // ボード変更がある場合はモーダルを表示
+    if (memo?.id) {
+      const boardsToAdd = selectedBoardIds.filter(id => !currentBoardIds.includes(id))
+      const boardsToRemove = currentBoardIds.filter(id => !selectedBoardIds.includes(id))
+      
+      if (boardsToAdd.length > 0 || boardsToRemove.length > 0) {
+        setPendingBoardChanges({ boardsToAdd, boardsToRemove })
+        setShowBoardChangeModal(true)
+        return
+      }
+    }
+    
+    // モーダル表示なしで保存実行
+    await executeSave()
+  }, [memo, selectedBoardIds, currentBoardIds, executeSave])
 
   const handleTitleChange = useCallback((newTitle: string) => {
     setTitle(newTitle)
@@ -223,6 +245,16 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
     setSelectedBoardIds(boardIds)
   }, [])
 
+  const handleConfirmBoardChange = useCallback(async () => {
+    setShowBoardChangeModal(false)
+    await executeSave()
+  }, [executeSave])
+
+  const handleCancelBoardChange = useCallback(() => {
+    setShowBoardChangeModal(false)
+    setPendingBoardChanges({ boardsToAdd: [], boardsToRemove: [] })
+  }, [])
+
   return {
     title,
     content,
@@ -234,5 +266,9 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
     handleTitleChange,
     handleContentChange,
     handleBoardChange,
+    showBoardChangeModal,
+    pendingBoardChanges,
+    handleConfirmBoardChange,
+    handleCancelBoardChange,
   }
 }

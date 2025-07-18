@@ -6,6 +6,7 @@ import SaveButton from "@/components/ui/buttons/save-button";
 import TrashIcon from "@/components/icons/trash-icon";
 import BoardIconSelector from "@/components/ui/selectors/board-icon-selector";
 import Tooltip from "@/components/ui/base/tooltip";
+import BoardChangeModal from "@/components/ui/modals/board-change-modal";
 import { useBoards, useItemBoards } from "@/src/hooks/use-boards";
 import { useSimpleMemoSave } from "@/src/hooks/use-simple-memo-save";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
@@ -42,6 +43,10 @@ function MemoEditor({ memo, onClose, onSaveComplete, onDelete, isLidOpen = false
     handleTitleChange,
     handleContentChange,
     handleBoardChange,
+    showBoardChangeModal,
+    pendingBoardChanges,
+    handleConfirmBoardChange,
+    handleCancelBoardChange,
   } = useSimpleMemoSave({
     memo,
     onSaveComplete,
@@ -122,6 +127,12 @@ function MemoEditor({ memo, onClose, onSaveComplete, onDelete, isLidOpen = false
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [handleSave, hasChanges]);
 
+  // ボード名を取得するためのヘルパー関数
+  const getBoardName = (boardId: number) => {
+    const board = boards.find(b => b.id === boardId);
+    return board?.name || `ボード${boardId}`;
+  };
+
   return (
     <>
       <div ref={baseViewerRef} data-memo-editor>
@@ -197,6 +208,16 @@ function MemoEditor({ memo, onClose, onSaveComplete, onDelete, isLidOpen = false
           />
         </BaseViewer>
       </div>
+      {baseViewerRef.current && (
+        <BoardChangeModal
+          isOpen={showBoardChangeModal}
+          onClose={handleCancelBoardChange}
+          onConfirm={handleConfirmBoardChange}
+          boardsToAdd={pendingBoardChanges.boardsToAdd.map(getBoardName)}
+          boardsToRemove={pendingBoardChanges.boardsToRemove.map(getBoardName)}
+          parentElement={baseViewerRef.current}
+        />
+      )}
     </>
   );
 }

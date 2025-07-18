@@ -9,7 +9,6 @@ import { useTasksBulkRestore } from "@/components/features/task/use-task-bulk-re
 import DesktopLower from "@/components/layout/desktop-lower";
 import DesktopUpper from "@/components/layout/desktop-upper";
 import RightPanel from "@/components/ui/layout/right-panel";
-import { RightPanelDeleteButton } from "@/components/ui/buttons/right-panel-delete-button";
 import { BulkActionButtons } from "@/components/ui/layout/bulk-action-buttons";
 // import {
 //   BulkDeleteConfirmation,
@@ -94,7 +93,7 @@ function TaskScreen({
   const [isDeleting, setIsDeleting] = useState(false);
   // 蓋アニメーション状態
   const [isLidOpen, setIsLidOpen] = useState(false);
-  const [isRightLidOpen, setIsRightLidOpen] = useState(false);
+  const [, setIsRightLidOpen] = useState(false);
 
   // 復元の状態
   const [isRestoring, setIsRestoring] = useState(false);

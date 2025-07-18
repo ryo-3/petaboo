@@ -66,27 +66,6 @@ html, body {
   transition: opacity 300ms ease-in-out;
 }
 
-/* 旧実装（Phase 3完了後に削除予定） */
-.delete-button.animating:not(.deleting) .trash-icon-lid {
-  transform: rotate(42deg) translateX(5px) translateY(-2px);
-}
-
-/* 削除アニメーションシーケンス */
-@keyframes lid-open-close {
-  0% {
-    transform: rotate(0deg) translateX(0px) translateY(0px);
-  }
-  10%, 90% {
-    transform: rotate(42deg) translateX(5px) translateY(-2px);
-  }
-  100% {
-    transform: rotate(0deg) translateX(0px) translateY(0px);
-  }
-}
-
-.delete-button.deleting .trash-icon-lid {
-  animation: lid-open-close 1.5s ease-out;
-}
 
 /* 保存ボタンの成功アニメーション */
 @keyframes save-success {
@@ -163,23 +142,6 @@ html, body {
   z-index: 9999;
 }
 
-/* 複数アイテム削除アニメーション - Phase 2 (なめらか版) */
-@keyframes multiple-item-to-trash {
-  0% {
-    transform: translate(0, 0) scale(1) rotate(0deg);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(var(--target-x, 0px), var(--target-y, 0px)) scale(0.1) rotate(15deg);
-    opacity: 0.3;
-  }
-}
-
-.multiple-item-delete-animation {
-  animation: multiple-item-to-trash 1000ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  animation-delay: var(--animation-delay, 0ms);
-  transform-origin: center;
-}
 
 /* 一斉フェードアウトアニメーション（20個以降） */
 @keyframes bulk-fade-out {
@@ -200,24 +162,3 @@ html, body {
   animation-delay: var(--animation-delay, 0ms);
 }
 
-/* カード用削除アニメーション（より小さく、少し上に） */
-@keyframes multiple-card-to-trash {
-  0% {
-    transform: translate(0, 0) scale(1) rotate(0deg);
-    opacity: 1;
-  }
-  20% {
-    transform: translate(0, 0) scale(0.8) rotate(5deg);
-    opacity: 0.9;
-  }
-  100% {
-    transform: translate(var(--target-x, 0px), var(--target-y, 0px)) scale(0.02) rotate(15deg);
-    opacity: 0.3;
-  }
-}
-
-.multiple-card-delete-animation {
-  animation: multiple-card-to-trash 700ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-  animation-delay: var(--animation-delay, 0ms);
-  transform-origin: center;
-}

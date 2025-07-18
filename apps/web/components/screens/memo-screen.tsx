@@ -8,11 +8,8 @@ import { useMemosBulkDelete } from "@/components/features/memo/use-memo-bulk-del
 import { useMemosBulkRestore } from "@/components/features/memo/use-memo-bulk-restore";
 import DesktopLower from "@/components/layout/desktop-lower";
 import DesktopUpper from "@/components/layout/desktop-upper";
-import DeleteButton from "@/components/ui/buttons/delete-button";
 import RightPanel from "@/components/ui/layout/right-panel";
-import { RightPanelDeleteButton } from "@/components/ui/buttons/right-panel-delete-button";
 import { BulkActionButtons } from "@/components/ui/layout/bulk-action-buttons";
-import { DELETE_BUTTON_POSITION } from "@/src/constants/ui";
 import { useBulkDeleteButton } from "@/src/hooks/use-bulk-delete-button";
 import { useDeletionLid } from "@/src/hooks/use-deletion-lid";
 import { useItemDeselect } from "@/src/hooks/use-item-deselect";
@@ -91,7 +88,7 @@ function MemoScreen({
   const [isLeftLidOpen, setIsLeftLidOpen] = useState(false);
 
   // 右側削除の状態
-  const [isRightDeleting, setIsRightDeleting] = useState(false);
+  const [, setIsRightDeleting] = useState(false);
   const [isRightLidOpen, setIsRightLidOpen] = useState(false);
 
   // 復元の状態

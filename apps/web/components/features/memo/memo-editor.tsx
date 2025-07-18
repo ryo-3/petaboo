@@ -143,7 +143,7 @@ function MemoEditor({ memo, onClose, onSaveComplete, onDelete, isLidOpen = false
                 disabled={!hasChanges}
                 isSaving={isSaving}
                 buttonSize="size-7"
-                iconSize="size-[18px]"
+                iconSize="size-4"
               />
               <PhotoButton
                 buttonSize="size-7"

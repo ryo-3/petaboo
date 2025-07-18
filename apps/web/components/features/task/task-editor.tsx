@@ -1,7 +1,6 @@
 "use client";
 
 import BaseViewer from "@/components/shared/base-viewer";
-import DeleteButton from "@/components/ui/buttons/delete-button";
 import { SingleDeleteConfirmation } from "@/components/ui/modals";
 import TaskForm from "./task-form";
 import { useUpdateTask, useCreateTask } from "@/src/hooks/use-tasks";
@@ -9,7 +8,6 @@ import { useAddItemToBoard } from "@/src/hooks/use-boards";
 import type { Task } from "@/src/types/task";
 import { useCallback, useEffect, useState, useMemo, memo } from "react";
 import { useTaskDelete } from "./use-task-delete";
-import { DELETE_BUTTON_POSITION } from "@/src/constants/ui";
 
 interface TaskEditorProps {
   task?: Task | null;

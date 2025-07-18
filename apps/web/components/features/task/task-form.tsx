@@ -1,9 +1,9 @@
 "use client";
 
 import CategorySelector from "@/components/features/category/category-selector";
+import TrashIcon from "@/components/icons/trash-icon";
 import PhotoButton from "@/components/ui/buttons/photo-button";
 import SaveButton from "@/components/ui/buttons/save-button";
-import TrashIcon from "@/components/icons/trash-icon";
 import DateInput from "@/components/ui/inputs/date-input";
 import BoardIconSelector from "@/components/ui/selectors/board-icon-selector";
 import CustomSelector from "@/components/ui/selectors/custom-selector";
@@ -15,7 +15,7 @@ import {
   getStatusEditorColor,
   getStatusText,
 } from "@/src/utils/taskUtils";
-import { useEffect, useRef, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 interface TaskFormProps {
   title: string;
@@ -104,17 +104,15 @@ function TaskForm({
 
   // BoardIconSelector用のボードオプション
   const boardOptions = useMemo(() => {
-    const options = [
-      { value: "", label: "なし" }
-    ];
-    
-    boards.forEach(board => {
+    const options = [{ value: "", label: "なし" }];
+
+    boards.forEach((board) => {
       options.push({
         value: board.id.toString(),
-        label: board.name
+        label: board.name,
       });
     });
-    
+
     return options;
   }, [boards]);
 
@@ -173,9 +171,9 @@ function TaskForm({
           isSaving={isSaving}
           savedSuccessfully={savedSuccessfully}
           buttonSize="size-7"
-          iconSize="size-[18px]"
+          iconSize="size-4"
         />
-        <PhotoButton 
+        <PhotoButton
           buttonSize="size-7"
           iconSize="size-5"
           className="rounded-full"
@@ -192,7 +190,11 @@ function TaskForm({
             onMouseEnter={() => setIsTrashHovered(true)}
             onMouseLeave={() => setIsTrashHovered(false)}
             className={`flex items-center justify-center size-7 rounded-md transition-colors duration-200 ${
-              isAnimating ? 'bg-gray-200' : isTrashHovered ? 'bg-gray-200' : 'bg-gray-100'
+              isAnimating
+                ? "bg-gray-200"
+                : isTrashHovered
+                  ? "bg-gray-200"
+                  : "bg-gray-100"
             }`}
             title="削除"
           >

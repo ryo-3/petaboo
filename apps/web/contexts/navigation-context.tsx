@@ -9,20 +9,35 @@ interface NavigationContextType {
   currentMode: "memo" | "task" | "board";
   setScreenMode: (mode: ScreenMode) => void;
   setCurrentMode: (mode: "memo" | "task" | "board") => void;
+  isFromBoardDetail: boolean;
+  setIsFromBoardDetail: (value: boolean) => void;
 }
 
 const NavigationContext = createContext<NavigationContextType | undefined>(undefined);
 
-export function NavigationProvider({ children }: { children: ReactNode }) {
-  const [screenMode, setScreenMode] = useState<ScreenMode>("home");
-  const [currentMode, setCurrentMode] = useState<"memo" | "task" | "board">("memo");
+interface NavigationProviderProps {
+  children: ReactNode;
+  initialCurrentMode?: "memo" | "task" | "board";
+  initialScreenMode?: ScreenMode;
+}
+
+export function NavigationProvider({ 
+  children, 
+  initialCurrentMode = "memo",
+  initialScreenMode = "home"
+}: NavigationProviderProps) {
+  const [screenMode, setScreenMode] = useState<ScreenMode>(initialScreenMode);
+  const [currentMode, setCurrentMode] = useState<"memo" | "task" | "board">(initialCurrentMode);
+  const [isFromBoardDetail, setIsFromBoardDetail] = useState(false);
 
   return (
     <NavigationContext.Provider value={{
       screenMode,
       currentMode,
       setScreenMode,
-      setCurrentMode
+      setCurrentMode,
+      isFromBoardDetail,
+      setIsFromBoardDetail
     }}>
       {children}
     </NavigationContext.Provider>

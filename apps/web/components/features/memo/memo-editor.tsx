@@ -202,7 +202,7 @@ function MemoEditor({ memo, onClose, onSaveComplete, onDelete, isLidOpen = false
               handleTitleChange(firstLine);
               handleContentChange(newContent);
             }}
-            className={`w-full ${customHeight || 'flex-1'} resize-none outline-none text-gray-500 leading-relaxed font-medium pb-10 mb-2 mt-3 pr-1`}
+            className={`w-full ${customHeight || 'flex-1'} resize-none outline-none text-gray-500 leading-relaxed font-medium pb-10 mb-2 mt-4 pr-1`}
           />
         </BaseViewer>
       </div>

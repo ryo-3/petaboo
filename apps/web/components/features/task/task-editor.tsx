@@ -284,7 +284,7 @@ function TaskEditor({
 
   return (
     <>
-      <div data-task-editor className="relative">
+      <div data-task-editor className="flex flex-col h-full">
         <BaseViewer
           item={tempTask}
           onClose={onClose}

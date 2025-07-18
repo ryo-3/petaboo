@@ -9,7 +9,6 @@ import BoardIconSelector from "@/components/ui/selectors/board-icon-selector";
 import CustomSelector from "@/components/ui/selectors/custom-selector";
 import Tooltip from "@/components/ui/base/tooltip";
 import { useBoards } from "@/src/hooks/use-boards";
-import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import {
   getPriorityEditorColor,
   getPriorityText,
@@ -71,7 +70,6 @@ function TaskForm({
   descriptionPlaceholder = "入力...",
   customHeight,
 }: TaskFormProps) {
-  const { preferences } = useUserPreferences(1);
   const { data: boards = [] } = useBoards();
   const titleInputRef = useRef<HTMLInputElement>(null);
   const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -166,7 +164,7 @@ function TaskForm({
   ];
 
   return (
-    <>
+    <div className="flex flex-col flex-1">
       <div className="flex justify-start gap-2">
         <SaveButton
           onClick={onSave}
@@ -275,16 +273,16 @@ function TaskForm({
         </div>
       </div>
 
-      <div className="mt-2">
+      <div className="mt-4 flex-1 flex flex-col">
         <textarea
           ref={descriptionTextareaRef}
           placeholder={descriptionPlaceholder}
           value={description}
           onChange={(e) => onDescriptionChange(e.target.value)}
-          className={`w-full ${customHeight || (preferences?.hideHeader ? "h-[calc(100vh-246px)]" : "h-[calc(100vh-310px)]")} p-3 border border-gray-400 rounded-lg resize-none outline-none text-gray-700 leading-relaxed focus:border-DeepBlue`}
+          className={`w-full ${customHeight || 'flex-1'} resize-none outline-none text-gray-700 leading-relaxed pr-1 pb-10 mb-2`}
         />
       </div>
-    </>
+    </div>
   );
 }
 

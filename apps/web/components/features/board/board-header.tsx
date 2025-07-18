@@ -1,4 +1,3 @@
-import ArrowLeftIcon from "@/components/icons/arrow-left-icon";
 import SettingsIcon from "@/components/icons/settings-icon";
 import Tooltip from "@/components/ui/base/tooltip";
 import { usePathname, useRouter } from "next/navigation";
@@ -49,14 +48,6 @@ export default function BoardHeader({
         )}
       </div>
       <div className="flex items-center gap-4">
-        {/* 一覧へボタン */}
-        <button
-          onClick={onBack}
-          className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 rounded-lg transition-colors flex items-center gap-2"
-        >
-          <ArrowLeftIcon className="w-4 h-4" />
-          一覧へ
-        </button>
         
         {/* エクスポートボタン */}
         <button

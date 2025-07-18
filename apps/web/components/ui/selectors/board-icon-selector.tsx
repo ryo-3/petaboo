@@ -52,7 +52,6 @@ export default function BoardIconSelector({
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center justify-center size-7 bg-gray-100 hover:bg-gray-200 transition-colors rounded-md"
-        title={selectedOption ? `ボード: ${selectedOption.label}` : "ボード選択"}
       >
         <DashboardIcon className={iconClassName} />
       </button>

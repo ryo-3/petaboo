@@ -5,6 +5,7 @@ import PhotoButton from "@/components/ui/buttons/photo-button";
 import SaveButton from "@/components/ui/buttons/save-button";
 import TrashIcon from "@/components/icons/trash-icon";
 import BoardIconSelector from "@/components/ui/selectors/board-icon-selector";
+import Tooltip from "@/components/ui/base/tooltip";
 import { useBoards } from "@/src/hooks/use-boards";
 import { useSimpleMemoSave } from "@/src/hooks/use-simple-memo-save";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
@@ -145,29 +146,34 @@ function MemoEditor({ memo, onClose, onSaveComplete, onDelete, isLidOpen = false
                 buttonSize="size-7"
                 iconSize="size-4"
               />
-              <PhotoButton
-                buttonSize="size-7"
-                iconSize="size-5"
-                className="rounded-full"
-              />
-              <BoardIconSelector
-                options={boardOptions}
-                value={currentBoardValue}
-                onChange={handleBoardSelectorChange}
-                iconClassName="size-4 text-gray-600"
-              />
+              <Tooltip text="写真" position="top">
+                <PhotoButton
+                  buttonSize="size-7"
+                  iconSize="size-5"
+                  className="rounded-full"
+                />
+              </Tooltip>
+              <Tooltip text="ボード選択" position="top">
+                <BoardIconSelector
+                  options={boardOptions}
+                  value={currentBoardValue}
+                  onChange={handleBoardSelectorChange}
+                  iconClassName="size-4 text-gray-600"
+                />
+              </Tooltip>
               {memo && onDelete && (
-                <button
-                  onClick={onDelete}
-                  onMouseEnter={() => setIsTrashHovered(true)}
-                  onMouseLeave={() => setIsTrashHovered(false)}
-                  className={`flex items-center justify-center size-7 rounded-md transition-colors duration-200 ${
-                    isAnimating ? 'bg-gray-200' : isTrashHovered ? 'bg-gray-200' : 'bg-gray-100'
-                  }`}
-                  title="削除"
-                >
-                  <TrashIcon className="size-5" isLidOpen={isLidOpen} />
-                </button>
+                <Tooltip text="削除" position="top">
+                  <button
+                    onClick={onDelete}
+                    onMouseEnter={() => setIsTrashHovered(true)}
+                    onMouseLeave={() => setIsTrashHovered(false)}
+                    className={`flex items-center justify-center size-7 rounded-md transition-colors duration-200 ${
+                      isAnimating ? 'bg-gray-200' : isTrashHovered ? 'bg-gray-200' : 'bg-gray-100'
+                    }`}
+                  >
+                    <TrashIcon className="size-5" isLidOpen={isLidOpen} />
+                  </button>
+                </Tooltip>
               )}
             </div>
           }

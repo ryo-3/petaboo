@@ -7,6 +7,7 @@ import SaveButton from "@/components/ui/buttons/save-button";
 import DateInput from "@/components/ui/inputs/date-input";
 import BoardIconSelector from "@/components/ui/selectors/board-icon-selector";
 import CustomSelector from "@/components/ui/selectors/custom-selector";
+import Tooltip from "@/components/ui/base/tooltip";
 import { useBoards } from "@/src/hooks/use-boards";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import {
@@ -173,33 +174,38 @@ function TaskForm({
           buttonSize="size-7"
           iconSize="size-4"
         />
-        <PhotoButton
-          buttonSize="size-7"
-          iconSize="size-5"
-          className="rounded-full"
-        />
-        <BoardIconSelector
-          options={boardOptions}
-          value={currentBoardValue}
-          onChange={handleBoardSelectorChange}
-          iconClassName="size-4 text-gray-600"
-        />
+        <Tooltip text="写真" position="top">
+          <PhotoButton
+            buttonSize="size-7"
+            iconSize="size-5"
+            className="rounded-full"
+          />
+        </Tooltip>
+        <Tooltip text="ボード選択" position="top">
+          <BoardIconSelector
+            options={boardOptions}
+            value={currentBoardValue}
+            onChange={handleBoardSelectorChange}
+            iconClassName="size-4 text-gray-600"
+          />
+        </Tooltip>
         {!isNewTask && onDelete && (
-          <button
-            onClick={onDelete}
-            onMouseEnter={() => setIsTrashHovered(true)}
-            onMouseLeave={() => setIsTrashHovered(false)}
-            className={`flex items-center justify-center size-7 rounded-md transition-colors duration-200 ${
-              isAnimating
-                ? "bg-gray-200"
-                : isTrashHovered
+          <Tooltip text="削除" position="top">
+            <button
+              onClick={onDelete}
+              onMouseEnter={() => setIsTrashHovered(true)}
+              onMouseLeave={() => setIsTrashHovered(false)}
+              className={`flex items-center justify-center size-7 rounded-md transition-colors duration-200 ${
+                isAnimating
                   ? "bg-gray-200"
-                  : "bg-gray-100"
-            }`}
-            title="削除"
-          >
-            <TrashIcon className="size-5" isLidOpen={isLidOpen} />
-          </button>
+                  : isTrashHovered
+                    ? "bg-gray-200"
+                    : "bg-gray-100"
+              }`}
+            >
+              <TrashIcon className="size-5" isLidOpen={isLidOpen} />
+            </button>
+          </Tooltip>
         )}
       </div>
 

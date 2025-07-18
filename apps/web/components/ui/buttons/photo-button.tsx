@@ -29,7 +29,6 @@ function PhotoButton({
       className={`${buttonSize} rounded-lg bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors flex items-center justify-center ${
         disabled ? "opacity-50 cursor-not-allowed" : ""
       } ${className}`}
-      title="画像を添付（今後対応予定）"
       onClick={handleClick}
       disabled={disabled}
     >

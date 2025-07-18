@@ -1,11 +1,12 @@
 "use client";
 
+import CategorySelector from "@/components/features/category/category-selector";
 import PhotoButton from "@/components/ui/buttons/photo-button";
 import SaveButton from "@/components/ui/buttons/save-button";
 import DateInput from "@/components/ui/inputs/date-input";
+import BoardIconSelector from "@/components/ui/selectors/board-icon-selector";
 import CustomSelector from "@/components/ui/selectors/custom-selector";
-import CategorySelector from "@/components/features/category/category-selector";
-import BoardSelector from "@/components/ui/selectors/board-selector";
+import { useBoards } from "@/src/hooks/use-boards";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import {
   getPriorityEditorColor,
@@ -13,7 +14,7 @@ import {
   getStatusEditorColor,
   getStatusText,
 } from "@/src/utils/taskUtils";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useMemo } from "react";
 
 interface TaskFormProps {
   title: string;
@@ -65,9 +66,9 @@ function TaskForm({
   customHeight,
 }: TaskFormProps) {
   const { preferences } = useUserPreferences(1);
+  const { data: boards = [] } = useBoards();
   const titleInputRef = useRef<HTMLInputElement>(null);
   const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
-
 
   // 新規作成時のフォーカス遅延
   useEffect(() => {
@@ -79,6 +80,30 @@ function TaskForm({
     }
   }, [isNewTask]);
 
+  // BoardIconSelector用のボードオプション
+  const boardOptions = useMemo(() => {
+    const options = [
+      { value: "", label: "なし" }
+    ];
+    
+    boards.forEach(board => {
+      options.push({
+        value: board.id.toString(),
+        label: board.name
+      });
+    });
+    
+    return options;
+  }, [boards]);
+
+  // 現在選択されているボードのvalue
+  const currentBoardValue = boardId ? boardId.toString() : "";
+
+  // ボード選択変更ハンドラー
+  const handleBoardSelectorChange = (value: string) => {
+    const newBoardId = value ? parseInt(value, 10) : null;
+    onBoardChange(newBoardId);
+  };
 
   // オプションの定義（色はtaskUtilsから取得）
   const statusOptions = [
@@ -119,7 +144,29 @@ function TaskForm({
 
   return (
     <>
-      <div className="flex items-center gap-3">
+      <div className="flex justify-start gap-2">
+        <SaveButton
+          onClick={onSave}
+          disabled={!hasChanges || (!title.trim() && !isNewTask)}
+          isSaving={isSaving}
+          savedSuccessfully={savedSuccessfully}
+          buttonSize="size-7"
+          iconSize="size-[18px]"
+        />
+        <PhotoButton 
+          buttonSize="size-7"
+          iconSize="size-5"
+          className="rounded-full"
+        />
+        <BoardIconSelector
+          options={boardOptions}
+          value={currentBoardValue}
+          onChange={handleBoardSelectorChange}
+          iconClassName="size-4 text-gray-600"
+        />
+      </div>
+
+      <div className="flex items-center">
         <input
           ref={titleInputRef}
           type="text"
@@ -138,7 +185,7 @@ function TaskForm({
               }
             }
           }}
-          className="flex-1 text-lg font-medium border-b border-DeepBlue outline-none pb-2 focus:border-DeepBlue"
+          className="flex-1 mb-1 text-lg font-medium border-b border-DeepBlue/80 outline-none focus:border-DeepBlue"
         />
       </div>
 
@@ -164,22 +211,12 @@ function TaskForm({
         />
 
         <div className="flex-1 flex gap-2.5 items-center">
-          <div className="w-4/12">
+          <div className="w-6/12">
             <CategorySelector
               value={categoryId}
               onChange={onCategoryChange}
               allowCreate={true}
             />
-          </div>
-          <div className="w-4/12">
-          <div className="space-y-1.5">
-              <label className="text-xs text-gray-600">ボード</label>
-              <BoardSelector
-                selectedBoardId={boardId}
-                onBoardChange={onBoardChange}
-                placeholder="ボードを選択（任意）"
-              />
-            </div>
           </div>
 
           <div className="flex-1">
@@ -201,16 +238,6 @@ function TaskForm({
           onChange={(e) => onDescriptionChange(e.target.value)}
           className={`w-full ${customHeight || (preferences?.hideHeader ? "h-[calc(100vh-246px)]" : "h-[calc(100vh-310px)]")} p-3 border border-gray-400 rounded-lg resize-none outline-none text-gray-700 leading-relaxed focus:border-DeepBlue`}
         />
-      </div>
-
-      <div className="mt-2 flex justify-start gap-2">
-        <SaveButton
-          onClick={onSave}
-          disabled={!hasChanges || (!title.trim() && !isNewTask)}
-          isSaving={isSaving}
-          savedSuccessfully={savedSuccessfully}
-        />
-        <PhotoButton />
       </div>
     </>
   );

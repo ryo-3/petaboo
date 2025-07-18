@@ -1,3 +1,5 @@
+import { FORM_STYLES } from "@/src/styles/form-styles";
+
 interface DateInputProps {
   label: string;
   value: string;
@@ -13,14 +15,14 @@ function DateInput({
 }: DateInputProps) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">
+      <label className={FORM_STYLES.label}>
         {label}
       </label>
       <input
         type="date"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={`px-1 py-1 border border-gray-400 rounded-lg focus:border-DeepBlue outline-none ${
+        className={`${FORM_STYLES.input} ${
           fullWidth ? "w-full" : ""
         }`}
       />

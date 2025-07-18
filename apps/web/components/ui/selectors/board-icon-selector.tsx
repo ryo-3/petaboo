@@ -19,7 +19,7 @@ export default function BoardIconSelector({
   value,
   onChange,
   className = "",
-  iconClassName = "size-3.5 text-gray-600"
+  iconClassName = "size-4 text-gray-600"
 }: BoardIconSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const selectorRef = useRef<HTMLDivElement>(null);
@@ -51,7 +51,7 @@ export default function BoardIconSelector({
     <div className={`relative ${className}`} ref={selectorRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-center size-6 bg-gray-100 hover:bg-gray-200 transition-colors rounded-full"
+        className="flex items-center justify-center size-7 bg-gray-100 hover:bg-gray-200 transition-colors rounded-md"
         title={selectedOption ? `ボード: ${selectedOption.label}` : "ボード選択"}
       >
         <DashboardIcon className={iconClassName} />

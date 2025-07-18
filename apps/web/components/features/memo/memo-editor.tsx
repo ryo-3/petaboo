@@ -122,18 +122,19 @@ function MemoEditor({ memo, onClose, onSaveComplete, customHeight }: MemoEditorP
                 onClick={handleSave}
                 disabled={!hasChanges}
                 isSaving={isSaving}
-                buttonSize="size-6"
-                iconSize="size-3.5"
+                buttonSize="size-7"
+                iconSize="size-[18px]"
               />
               <PhotoButton
-                buttonSize="size-6"
-                iconSize="size-4"
+                buttonSize="size-7"
+                iconSize="size-5"
                 className="rounded-full"
               />
               <BoardIconSelector
                 options={boardOptions}
                 value={currentBoardValue}
                 onChange={handleBoardSelectorChange}
+                iconClassName="size-4 text-gray-600"
               />
             </div>
           }

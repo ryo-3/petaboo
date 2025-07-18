@@ -3,6 +3,7 @@ import ChevronDownIcon from "@/components/icons/chevron-down-icon";
 import PlusIcon from "@/components/icons/plus-icon";
 import CheckIcon from "@/components/icons/check-icon";
 import { SelectorContext } from "@/src/contexts/selector-context";
+import { FORM_STYLES } from "@/src/styles/form-styles";
 
 interface SelectorOption {
   value: string;
@@ -98,14 +99,14 @@ function CustomSelector({
 
   return (
     <div className="relative" ref={selectorRef}>
-      <div className="flex items-center justify-between mb-2 h-5">
-        <label className="block text-sm font-medium text-gray-700">
+      <div className="flex items-center justify-between">
+        <label className={FORM_STYLES.label}>
           {label}
         </label>
       </div>
       <div className="relative">
         <div
-          className={`flex items-center cursor-pointer bg-white px-1 py-1 border border-gray-400 ${
+          className={`${FORM_STYLES.selector} ${
             isOpen ? "rounded-t-lg" : "rounded-lg"
           } ${fullWidth ? "w-full" : ""}`}
           style={fullWidth ? {} : { width }}
@@ -116,14 +117,14 @@ function CustomSelector({
           }}
           title="クリックして変更"
         >
-          <div className="px-1.5 py-1 text-sm hover:opacity-80 transition-opacity flex items-center gap-2 flex-1">
+          <div className={FORM_STYLES.selectorText}>
             {selectedOption?.color && (
               <div className={`w-3 h-3 rounded-full ${selectedOption.color}`}></div>
             )}
             {selectedOption?.label}
           </div>
           <ChevronDownIcon 
-            className={`w-3 h-3 mr-1 transition-transform ${isOpen ? "rotate-180" : ""}`}
+            className={`${FORM_STYLES.chevron} ${isOpen ? "rotate-180" : ""}`}
           />
         </div>
 

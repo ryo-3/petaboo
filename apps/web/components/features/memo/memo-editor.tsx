@@ -6,7 +6,7 @@ import SaveButton from "@/components/ui/buttons/save-button";
 import TrashIcon from "@/components/icons/trash-icon";
 import BoardIconSelector from "@/components/ui/selectors/board-icon-selector";
 import Tooltip from "@/components/ui/base/tooltip";
-import { useBoards } from "@/src/hooks/use-boards";
+import { useBoards, useItemBoards } from "@/src/hooks/use-boards";
 import { useSimpleMemoSave } from "@/src/hooks/use-simple-memo-save";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import type { Memo } from "@/src/types/memo";
@@ -30,10 +30,11 @@ function MemoEditor({ memo, onClose, onSaveComplete, onDelete, isLidOpen = false
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const baseViewerRef = useRef<HTMLDivElement>(null);
   const { data: boards = [] } = useBoards();
+  const { data: itemBoards = [] } = useItemBoards('memo', memo?.id);
 
   const {
     content,
-    selectedBoardId,
+    selectedBoardIds,
     isSaving,
     saveError,
     hasChanges,
@@ -66,13 +67,23 @@ function MemoEditor({ memo, onClose, onSaveComplete, onDelete, isLidOpen = false
     return options;
   }, [boards]);
 
-  // 現在選択されているボードのvalue
-  const currentBoardValue = selectedBoardId ? selectedBoardId.toString() : "";
+  // 現在選択されているボードのvalue（複数選択対応）
+  // 新規選択 + 既存の紐づけを含める
+  const allSelectedBoardIds = useMemo(() => {
+    const existingBoardIds = itemBoards.map(board => board.id);
+    const newSelections = selectedBoardIds.filter(id => !existingBoardIds.includes(id));
+    return [...existingBoardIds, ...newSelections];
+  }, [itemBoards, selectedBoardIds]);
+  
+  const currentBoardValues = allSelectedBoardIds.map(id => id.toString());
 
   // ボード選択変更ハンドラー
-  const handleBoardSelectorChange = (value: string) => {
-    const boardId = value ? parseInt(value, 10) : null;
-    handleBoardChange(boardId);
+  const handleBoardSelectorChange = (value: string | string[]) => {
+    const values = Array.isArray(value) ? value : [value];
+    const boardIds = values
+      .filter(v => v !== "")
+      .map(v => parseInt(v, 10));
+    handleBoardChange(boardIds);
   };
 
   // フォーカス管理（新規作成時に遅延）
@@ -156,9 +167,10 @@ function MemoEditor({ memo, onClose, onSaveComplete, onDelete, isLidOpen = false
               <Tooltip text="ボード選択" position="top">
                 <BoardIconSelector
                   options={boardOptions}
-                  value={currentBoardValue}
+                  value={currentBoardValues}
                   onChange={handleBoardSelectorChange}
                   iconClassName="size-4 text-gray-600"
+                  multiple={true}
                 />
               </Tooltip>
               {memo && onDelete && (

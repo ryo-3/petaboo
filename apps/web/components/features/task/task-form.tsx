@@ -121,8 +121,10 @@ function TaskForm({
   const currentBoardValue = boardId ? boardId.toString() : "";
 
   // ボード選択変更ハンドラー
-  const handleBoardSelectorChange = (value: string) => {
-    const newBoardId = value ? parseInt(value, 10) : null;
+  const handleBoardSelectorChange = (value: string | string[]) => {
+    // タスクは単一選択のみなので、stringとして処理
+    const stringValue = Array.isArray(value) ? value[0] || "" : value;
+    const newBoardId = stringValue ? parseInt(stringValue, 10) : null;
     onBoardChange(newBoardId);
   };
 

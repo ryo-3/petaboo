@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useMemo } from 'react'
 import type { Memo } from '@/src/types/memo'
 import { useCreateNote, useUpdateNote, useDeleteNote } from '@/src/hooks/use-notes'
 import { useAddItemToBoard } from '@/src/hooks/use-boards'
+import { useQueryClient } from '@tanstack/react-query'
 
 interface UseSimpleMemoSaveOptions {
   memo?: Memo | null
@@ -11,7 +12,7 @@ interface UseSimpleMemoSaveOptions {
 export function useSimpleMemoSave({ memo = null, onSaveComplete }: UseSimpleMemoSaveOptions = {}) {
   const [title, setTitle] = useState(() => memo?.title || '')
   const [content, setContent] = useState(() => memo?.content || '')
-  const [selectedBoardId, setSelectedBoardId] = useState<number | null>(null)
+  const [selectedBoardIds, setSelectedBoardIds] = useState<number[]>([])
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
 
@@ -23,13 +24,15 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete }: UseSimpleMemo
   const updateNote = useUpdateNote()
   const deleteNote = useDeleteNote()
   const addItemToBoard = useAddItemToBoard()
+  const queryClient = useQueryClient()
 
-  // 変更検知
+  // 変更検知（ボード選択も含める）
   const hasChanges = useMemo(() => {
     const currentTitle = title.trim()
     const currentContent = content.trim()
-    return currentTitle !== initialTitle.trim() || currentContent !== initialContent.trim()
-  }, [title, content, initialTitle, initialContent])
+    const hasBoardSelection = selectedBoardIds.length > 0
+    return currentTitle !== initialTitle.trim() || currentContent !== initialContent.trim() || hasBoardSelection
+  }, [title, content, initialTitle, initialContent, selectedBoardIds])
 
   // メモが変更された時の初期値更新
   useEffect(() => {
@@ -77,6 +80,34 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete }: UseSimpleMemo
             updatedAt: Math.floor(Date.now() / 1000)
           }
           
+          // ボード選択時はボードに追加
+          if (selectedBoardIds.length > 0 && memo.id) {
+            // 各ボードに追加（エラーは個別にキャッチ）
+            const addPromises = selectedBoardIds.map(async (boardId) => {
+              try {
+                await addItemToBoard.mutateAsync({
+                  boardId,
+                  data: {
+                    itemType: 'memo',
+                    itemId: memo.id,
+                  },
+                })
+              } catch (error: unknown) {
+                // すでに存在する場合はエラーを無視
+                if (!(error instanceof Error) || !error.message.includes('already exists')) {
+                  console.error(`Failed to add memo to board ${boardId}:`, error)
+                }
+              }
+            })
+            
+            await Promise.all(addPromises)
+            
+            // ボード追加後にキャッシュを無効化
+            queryClient.invalidateQueries({ 
+              queryKey: ["item-boards", "memo", memo.id] 
+            })
+          }
+          
           onSaveComplete?.(updatedMemo, false, false)
         }
       } else {
@@ -88,18 +119,31 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete }: UseSimpleMemo
           })
           
           // ボード選択時はボードに追加
-          if (selectedBoardId && createdMemo.id) {
-            try {
-              await addItemToBoard.mutateAsync({
-                boardId: selectedBoardId,
-                data: {
-                  itemType: 'memo',
-                  itemId: createdMemo.id,
-                },
-              })
-            } catch (error) {
-              console.error('Failed to add memo to board:', error)
-            }
+          if (selectedBoardIds.length > 0 && createdMemo.id) {
+            // 各ボードに追加（エラーは個別にキャッチ）
+            const addPromises = selectedBoardIds.map(async (boardId) => {
+              try {
+                await addItemToBoard.mutateAsync({
+                  boardId,
+                  data: {
+                    itemType: 'memo',
+                    itemId: createdMemo.id,
+                  },
+                })
+              } catch (error: unknown) {
+                // すでに存在する場合はエラーを無視
+                if (!(error instanceof Error) || !error.message.includes('already exists')) {
+                  console.error(`Failed to add memo to board ${boardId}:`, error)
+                }
+              }
+            })
+            
+            await Promise.all(addPromises)
+            
+            // ボード追加後にキャッシュを無効化
+            queryClient.invalidateQueries({ 
+              queryKey: ["item-boards", "memo", createdMemo.id] 
+            })
           }
           
           onSaveComplete?.(createdMemo, false, true)
@@ -112,6 +156,9 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete }: UseSimpleMemo
       // 保存成功時に初期値を更新
       setInitialTitle(title.trim() || '')
       setInitialContent(content.trim() || '')
+      
+      // ボード選択をリセット
+      setSelectedBoardIds([])
 
     } catch (error) {
       console.error('保存に失敗:', error)
@@ -120,7 +167,7 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete }: UseSimpleMemo
       // 保存中表示をしっかり見せる
       setTimeout(() => setIsSaving(false), 400)
     }
-  }, [memo, title, content, createNote, updateNote, deleteNote, onSaveComplete, addItemToBoard, selectedBoardId])
+  }, [memo, title, content, createNote, updateNote, deleteNote, onSaveComplete, addItemToBoard, selectedBoardIds])
 
   const handleTitleChange = useCallback((newTitle: string) => {
     setTitle(newTitle)
@@ -130,14 +177,14 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete }: UseSimpleMemo
     setContent(newContent)
   }, [])
 
-  const handleBoardChange = useCallback((boardId: number | null) => {
-    setSelectedBoardId(boardId)
+  const handleBoardChange = useCallback((boardIds: number[]) => {
+    setSelectedBoardIds(boardIds)
   }, [])
 
   return {
     title,
     content,
-    selectedBoardId,
+    selectedBoardIds,
     isSaving,
     saveError,
     hasChanges,

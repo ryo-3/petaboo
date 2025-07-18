@@ -1104,5 +1104,99 @@ export function createAPI(app: any) {
     return c.json({ success: true });
   });
 
+  // アイテムが属するボード一覧を取得
+  const getItemBoardsRoute = createRoute({
+    method: "get",
+    path: "/items/{itemType}/{itemId}/boards",
+    request: {
+      params: z.object({
+        itemType: z.enum(["memo", "task"]),
+        itemId: z.string(),
+      }),
+    },
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: z.array(BoardSchema),
+          },
+        },
+        description: "Item boards retrieved successfully",
+      },
+      401: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+            }),
+          },
+        },
+        description: "Unauthorized",
+      },
+      404: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+            }),
+          },
+        },
+        description: "Item not found",
+      },
+    },
+  });
+
+  app.openapi(getItemBoardsRoute, async (c) => {
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const { itemType, itemId } = c.req.valid("param");
+    const itemIdNum = parseInt(itemId);
+    const db = c.env.db;
+
+    // アイテムの存在確認と所有権確認
+    if (itemType === "memo") {
+      const memo = await db
+        .select()
+        .from(notes)
+        .where(and(eq(notes.id, itemIdNum), eq(notes.userId, auth.userId)))
+        .limit(1);
+
+      if (memo.length === 0) {
+        return c.json({ error: "Memo not found" }, 404);
+      }
+    } else {
+      const task = await db
+        .select()
+        .from(tasks)
+        .where(and(eq(tasks.id, itemIdNum), eq(tasks.userId, auth.userId)))
+        .limit(1);
+
+      if (task.length === 0) {
+        return c.json({ error: "Task not found" }, 404);
+      }
+    }
+
+    // アイテムが属するボードを取得
+    const itemBoards = await db
+      .select()
+      .from(boards)
+      .innerJoin(boardItems, eq(boards.id, boardItems.boardId))
+      .where(
+        and(
+          eq(boardItems.itemType, itemType),
+          eq(boardItems.itemId, itemIdNum),
+          eq(boards.userId, auth.userId)
+        )
+      )
+      .orderBy(boards.name);
+
+    // レスポンスの形式を整える
+    const boardsOnly = itemBoards.map(row => row.boards);
+    return c.json(boardsOnly);
+  });
+
   return app;
 }

@@ -287,3 +287,29 @@ export function useRemoveItemFromBoard() {
     },
   });
 }
+
+// アイテムが所属しているボード一覧を取得
+export function useItemBoards(itemType: 'memo' | 'task', itemId: number | undefined) {
+  const { getToken } = useAuth();
+
+  return useQuery<Board[]>({
+    queryKey: ["item-boards", itemType, itemId],
+    queryFn: async () => {
+      const token = await getToken();
+      
+      const response = await fetch(`${API_BASE_URL}/boards/items/${itemType}/${itemId}/boards`, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch item boards");
+      }
+
+      return response.json();
+    },
+    enabled: !!itemId,
+  });
+}

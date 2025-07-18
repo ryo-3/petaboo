@@ -465,6 +465,18 @@ function MemoScreen({
               }}
               onDeleteAndSelectNext={selectNextDeletedMemo}
               onRestoreAndSelectNext={handleRestoreAndSelectNext}
+              isLidOpen={isRightLidOpen}
+              onDeleteClick={() => {
+                // 削除済メモの削除処理
+                if (selectedDeletedMemo) {
+                  // 1. 蓋を開く
+                  setIsRightLidOpen(true);
+                  setTimeout(() => {
+                    // 2. 削除確認モーダルを表示
+                    deletedMemoViewerRef.current?.showDeleteConfirmation();
+                  }, 200);
+                }
+              }}
             />
           </>
         )}

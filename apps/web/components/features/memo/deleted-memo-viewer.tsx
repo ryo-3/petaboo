@@ -1,9 +1,11 @@
 'use client'
 
-import { useImperativeHandle, forwardRef } from 'react'
+import { useImperativeHandle, forwardRef, useState, useEffect } from 'react'
 import DateInfo from '@/components/shared/date-info'
 import { ConfirmationModal } from '@/components/ui/modals'
 import RestoreButton from '@/components/ui/buttons/restore-button'
+import TrashIcon from '@/components/icons/trash-icon'
+import Tooltip from '@/components/ui/base/tooltip'
 import { useDeletedMemoActions } from './use-deleted-memo-actions'
 import type { DeletedMemo } from '@/src/types/memo'
 import { formatDate } from '@/src/utils/formatDate'
@@ -13,6 +15,8 @@ interface DeletedMemoViewerProps {
   onClose: () => void
   onDeleteAndSelectNext?: (deletedMemo: DeletedMemo) => void
   onRestoreAndSelectNext?: (deletedMemo: DeletedMemo) => void
+  isLidOpen?: boolean
+  onDeleteClick?: () => void
 }
 
 export interface DeletedMemoViewerRef {
@@ -22,7 +26,7 @@ export interface DeletedMemoViewerRef {
 }
 
 const DeletedMemoViewer = forwardRef<DeletedMemoViewerRef, DeletedMemoViewerProps>(
-  ({ memo, onClose, onDeleteAndSelectNext, onRestoreAndSelectNext }, ref) => {
+  ({ memo, onClose, onDeleteAndSelectNext, onRestoreAndSelectNext, isLidOpen = false, onDeleteClick }, ref) => {
   const {
     handlePermanentDelete,
     handleRestore,
@@ -33,6 +37,24 @@ const DeletedMemoViewer = forwardRef<DeletedMemoViewerRef, DeletedMemoViewerProp
     isRestoring
   } = useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, onRestoreAndSelectNext })
 
+  const [isTrashHovered, setIsTrashHovered] = useState(false)
+  const [isAnimating, setIsAnimating] = useState(false)
+
+  // 蓋の状態を監視してアニメーション状態を管理
+  useEffect(() => {
+    if (isLidOpen) {
+      setIsAnimating(true)
+    } else if (isAnimating) {
+      // 蓋が閉じた後、300ms待ってからアニメーション状態をリセット
+      const timer = setTimeout(() => {
+        setIsAnimating(false)
+        // アニメーション完了時にホバー状態もリセット
+        setIsTrashHovered(false)
+      }, 300)
+      return () => clearTimeout(timer)
+    }
+  }, [isLidOpen, isAnimating])
+
   // refで外部から呼び出せるようにする
   useImperativeHandle(ref, () => ({
     showDeleteConfirmation,
@@ -42,7 +64,7 @@ const DeletedMemoViewer = forwardRef<DeletedMemoViewerRef, DeletedMemoViewerProp
 
   return (
     <>
-      <div data-memo-editor className="flex flex-col h-full bg-white">
+      <div data-memo-editor className="flex flex-col h-full bg-white relative">
         <div className="flex justify-start items-center mb-4">
           <RestoreButton
             onRestore={handleRestore}
@@ -50,6 +72,28 @@ const DeletedMemoViewer = forwardRef<DeletedMemoViewerRef, DeletedMemoViewerProp
             buttonSize="size-6"
             iconSize="size-3.5"
           />
+          <Tooltip text="完全削除" position="top">
+            <button
+              onClick={() => {
+                if (onDeleteClick) {
+                  onDeleteClick();
+                } else {
+                  showDeleteConfirmation();
+                }
+              }}
+              onMouseEnter={() => setIsTrashHovered(true)}
+              onMouseLeave={() => setIsTrashHovered(false)}
+              className={`flex items-center justify-center size-6 ml-2 rounded-md transition-colors duration-200 ${
+                isAnimating
+                  ? "bg-red-200 text-red-600"
+                  : isTrashHovered
+                    ? "bg-red-200 text-red-600"
+                    : "bg-red-100 text-red-600"
+              }`}
+            >
+              <TrashIcon className="size-3.5" isLidOpen={isLidOpen} />
+            </button>
+          </Tooltip>
           <div className="flex-1" />
         </div>
 
@@ -77,7 +121,7 @@ const DeletedMemoViewer = forwardRef<DeletedMemoViewerRef, DeletedMemoViewerProp
               このメモは削除済みです
             </p>
             <p className="text-red-500 text-xs mt-1">
-              右下のゴミ箱ボタンで完全削除できます
+              復元ボタンで元に戻すか、ゴミ箱ボタンで完全削除できます
             </p>
           </div>
         </div>
@@ -95,6 +139,7 @@ const DeletedMemoViewer = forwardRef<DeletedMemoViewerRef, DeletedMemoViewerProp
         isLoading={isDeleting}
         variant="danger"
         icon="trash"
+        position="right-panel"
       />
     </>
   )

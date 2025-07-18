@@ -310,6 +310,8 @@ function TaskEditor({
           dueDate={dueDate}
           onDueDateChange={setDueDate}
           onSave={handleSave}
+          onDelete={showDeleteConfirmation}
+          isLidOpen={isLidOpen}
           isSaving={isSaving}
           hasChanges={canSave}
           savedSuccessfully={savedSuccessfully}
@@ -319,15 +321,6 @@ function TaskEditor({
         </BaseViewer>
       </div>
       
-      {/* 削除ボタンは編集時のみ表示 */}
-      {!isNewTask && (
-        <DeleteButton
-          className={`fixed ${DELETE_BUTTON_POSITION}`}
-          data-right-panel-trash
-          onDelete={showDeleteConfirmation}
-          isAnimating={isLidOpen}
-        />
-      )}
 
       {/* 削除確認モーダル（編集時のみ） */}
       {!isNewTask && (

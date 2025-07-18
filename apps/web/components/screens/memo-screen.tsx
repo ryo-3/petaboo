@@ -156,6 +156,12 @@ function MemoScreen({
     setIsLeftDeleting(false); // 左側削除状態をリセット
     setIsRightDeleting(false); // 右側削除状態をリセット
 
+    // 蓋を閉じる（バックグラウンドで実行）
+    setTimeout(() => {
+      setIsRightLidOpen(false);
+    }, 200);
+
+    // 次のメモを選択（削除完了と同時）
     if (selectedMemo && notes) {
       const displayOrder = getMemoDisplayOrder();
       const nextItem = getNextItemAfterDeletion(
@@ -419,23 +425,6 @@ function MemoScreen({
         isOpen={memoScreenMode !== "list"}
         onClose={handleRightPanelClose}
       >
-        {/* 右側エディター削除ボタン（現在表示中のメモの単体削除用） */}
-        {memoScreenMode === "view" &&
-          selectedMemo &&
-          activeTab === "normal" && (
-            <div className={`${DELETE_BUTTON_POSITION} z-10`}>
-              <DeleteButton
-                data-right-panel-trash
-                onDelete={() => {
-                  // 右側エディター削除処理を実行
-                  if (selectedMemo) {
-                    handleRightEditorDelete(selectedMemo);
-                  }
-                }}
-                isAnimating={isRightDeleting}
-              />
-            </div>
-          )}
         {memoScreenMode === "create" && (
           <MemoEditor
             key={`create-${createEditorKey}`} // 管理されたキーで再マウント
@@ -450,6 +439,18 @@ function MemoScreen({
             memo={selectedMemo}
             onClose={() => setMemoScreenMode("list")}
             onSaveComplete={handleSaveComplete}
+            onDelete={() => {
+              // メモエディターの削除処理
+              if (selectedMemo) {
+                // 1. 蓋を開く
+                setIsRightLidOpen(true);
+                setTimeout(() => {
+                  // 2. 削除実行
+                  handleRightEditorDelete(selectedMemo);
+                }, 200);
+              }
+            }}
+            isLidOpen={isRightLidOpen}
           />
         )}
         {memoScreenMode === "view" && selectedDeletedMemo && !selectedMemo && (
@@ -467,12 +468,6 @@ function MemoScreen({
               }}
               onDeleteAndSelectNext={selectNextDeletedMemo}
               onRestoreAndSelectNext={handleRestoreAndSelectNext}
-            />
-            {/* 削除済みメモ用の右下削除ボタン */}
-            <RightPanelDeleteButton
-              viewerRef={deletedMemoViewerRef}
-              setIsRightLidOpen={setIsRightLidOpen}
-              isRightLidOpen={isRightLidOpen}
             />
           </>
         )}

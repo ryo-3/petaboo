@@ -3,6 +3,7 @@
 import BaseViewer from "@/components/shared/base-viewer";
 import PhotoButton from "@/components/ui/buttons/photo-button";
 import SaveButton from "@/components/ui/buttons/save-button";
+import TrashIcon from "@/components/icons/trash-icon";
 import BoardIconSelector from "@/components/ui/selectors/board-icon-selector";
 import { useBoards } from "@/src/hooks/use-boards";
 import { useSimpleMemoSave } from "@/src/hooks/use-simple-memo-save";
@@ -18,10 +19,12 @@ interface MemoEditorProps {
     wasEmpty: boolean,
     isNewMemo: boolean
   ) => void;
+  onDelete?: () => void;
+  isLidOpen?: boolean;
   customHeight?: string;
 }
 
-function MemoEditor({ memo, onClose, onSaveComplete, customHeight }: MemoEditorProps) {
+function MemoEditor({ memo, onClose, onSaveComplete, onDelete, isLidOpen = false, customHeight }: MemoEditorProps) {
   const { preferences } = useUserPreferences(1);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const baseViewerRef = useRef<HTMLDivElement>(null);
@@ -43,6 +46,8 @@ function MemoEditor({ memo, onClose, onSaveComplete, customHeight }: MemoEditorP
   });
 
   const [error] = useState<string | null>(null);
+  const [isTrashHovered, setIsTrashHovered] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   // BoardIconSelector用のボードオプション
   const boardOptions = useMemo(() => {
@@ -80,6 +85,21 @@ function MemoEditor({ memo, onClose, onSaveComplete, customHeight }: MemoEditorP
       }, 300);
     }
   }, [memo]);
+
+  // 蓋の状態を監視してアニメーション状態を管理
+  useEffect(() => {
+    if (isLidOpen) {
+      setIsAnimating(true);
+    } else if (isAnimating) {
+      // 蓋が閉じた後、300ms待ってからアニメーション状態をリセット
+      const timer = setTimeout(() => {
+        setIsAnimating(false);
+        // アニメーション完了時にホバー状態もリセット
+        setIsTrashHovered(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isLidOpen, isAnimating]);
 
   // Ctrl+S ショートカット（変更がある場合のみ実行）
   useEffect(() => {
@@ -136,6 +156,19 @@ function MemoEditor({ memo, onClose, onSaveComplete, customHeight }: MemoEditorP
                 onChange={handleBoardSelectorChange}
                 iconClassName="size-4 text-gray-600"
               />
+              {memo && onDelete && (
+                <button
+                  onClick={onDelete}
+                  onMouseEnter={() => setIsTrashHovered(true)}
+                  onMouseLeave={() => setIsTrashHovered(false)}
+                  className={`flex items-center justify-center size-7 rounded-md transition-colors duration-200 ${
+                    isAnimating ? 'bg-gray-200' : isTrashHovered ? 'bg-gray-200' : 'bg-gray-100'
+                  }`}
+                  title="削除"
+                >
+                  <TrashIcon className="size-5" isLidOpen={isLidOpen} />
+                </button>
+              )}
             </div>
           }
         >

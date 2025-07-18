@@ -1,8 +1,9 @@
 interface TrashIconProps {
   className?: string
+  isLidOpen?: boolean
 }
 
-function TrashIcon({ className = "w-5 h-5" }: TrashIconProps) {
+function TrashIcon({ className = "w-5 h-5", isLidOpen = false }: TrashIconProps) {
   return (
     <svg 
       xmlns="http://www.w3.org/2000/svg" 
@@ -31,7 +32,7 @@ function TrashIcon({ className = "w-5 h-5" }: TrashIconProps) {
       </g>
       
       {/* 蓋の部分（ハンドル含む） - 赤色 */}
-      <g className="trash-icon-lid">
+      <g className={`trash-icon-lid transition-transform duration-300 ${isLidOpen ? 'rotate-45' : ''}`} style={{ transformOrigin: '16px 14px' }}>
         {/* 蓋の横線 */}
         <path 
           strokeLinecap="round" 

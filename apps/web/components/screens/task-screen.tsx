@@ -478,12 +478,6 @@ function TaskScreen({
               onDeleteAndSelectNext={selectNextDeletedTask}
               onRestoreAndSelectNext={handleDeletedTaskRestoreAndSelectNext}
             />
-            {/* 削除済みタスク用の右下削除ボタン */}
-            <RightPanelDeleteButton
-              viewerRef={deletedTaskViewerRef}
-              setIsRightLidOpen={setIsRightLidOpen}
-              isRightLidOpen={isRightLidOpen}
-            />
           </>
         )}
         {taskScreenMode === "edit" && selectedTask && (

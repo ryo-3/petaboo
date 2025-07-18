@@ -3,6 +3,7 @@
 import CategorySelector from "@/components/features/category/category-selector";
 import PhotoButton from "@/components/ui/buttons/photo-button";
 import SaveButton from "@/components/ui/buttons/save-button";
+import TrashIcon from "@/components/icons/trash-icon";
 import DateInput from "@/components/ui/inputs/date-input";
 import BoardIconSelector from "@/components/ui/selectors/board-icon-selector";
 import CustomSelector from "@/components/ui/selectors/custom-selector";
@@ -14,7 +15,7 @@ import {
   getStatusEditorColor,
   getStatusText,
 } from "@/src/utils/taskUtils";
-import { useEffect, useRef, useMemo } from "react";
+import { useEffect, useRef, useMemo, useState } from "react";
 
 interface TaskFormProps {
   title: string;
@@ -32,6 +33,8 @@ interface TaskFormProps {
   dueDate: string;
   onDueDateChange: (value: string) => void;
   onSave: () => void;
+  onDelete?: () => void;
+  isLidOpen?: boolean;
   isSaving: boolean;
   hasChanges?: boolean;
   savedSuccessfully?: boolean;
@@ -57,6 +60,8 @@ function TaskForm({
   dueDate,
   onDueDateChange,
   onSave,
+  onDelete,
+  isLidOpen = false,
   isSaving,
   hasChanges = true,
   savedSuccessfully = false,
@@ -69,6 +74,8 @@ function TaskForm({
   const { data: boards = [] } = useBoards();
   const titleInputRef = useRef<HTMLInputElement>(null);
   const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const [isTrashHovered, setIsTrashHovered] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   // 新規作成時のフォーカス遅延
   useEffect(() => {
@@ -79,6 +86,21 @@ function TaskForm({
       return () => clearTimeout(timer);
     }
   }, [isNewTask]);
+
+  // 蓋の状態を監視してアニメーション状態を管理
+  useEffect(() => {
+    if (isLidOpen) {
+      setIsAnimating(true);
+    } else if (isAnimating) {
+      // 蓋が閉じた後、300ms待ってからアニメーション状態をリセット
+      const timer = setTimeout(() => {
+        setIsAnimating(false);
+        // アニメーション完了時にホバー状態もリセット
+        setIsTrashHovered(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isLidOpen, isAnimating]);
 
   // BoardIconSelector用のボードオプション
   const boardOptions = useMemo(() => {
@@ -164,6 +186,19 @@ function TaskForm({
           onChange={handleBoardSelectorChange}
           iconClassName="size-4 text-gray-600"
         />
+        {!isNewTask && onDelete && (
+          <button
+            onClick={onDelete}
+            onMouseEnter={() => setIsTrashHovered(true)}
+            onMouseLeave={() => setIsTrashHovered(false)}
+            className={`flex items-center justify-center size-7 rounded-md transition-colors duration-200 ${
+              isAnimating ? 'bg-gray-200' : isTrashHovered ? 'bg-gray-200' : 'bg-gray-100'
+            }`}
+            title="削除"
+          >
+            <TrashIcon className="size-5" isLidOpen={isLidOpen} />
+          </button>
+        )}
       </div>
 
       <div className="flex items-center">

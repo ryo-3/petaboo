@@ -387,26 +387,24 @@ function BoardDetail({
           {/* メモ列 */}
           <div className="flex flex-col">
             <div className="flex items-center gap-2 mb-2">
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-1">
-                  {/* <MemoIcon className="size-5 text-Green" /> */}
-                  メモ
-                </h2>
-                <span className="font-normal text-gray-500">
-                  {allMemoItems.length}
-                </span>
-                <AddItemButton
-                  itemType="memo"
-                  onClick={handleCreateNewMemo}
-                  size="small"
-                  showTooltip={false}
-                  customSize={{
-                    padding: "p-1",
-                    iconSize: "size-5",
-                  }}
-                  className="size-7 flex items-center justify-center"
-                />
-              </div>
+              <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-1">
+                {/* <MemoIcon className="size-5 text-Green" /> */}
+                メモ
+              </h2>
+              <span className="font-normal text-gray-500">
+                {allMemoItems.length}
+              </span>
+              <AddItemButton
+                itemType="memo"
+                onClick={handleCreateNewMemo}
+                size="small"
+                showTooltip={false}
+                customSize={{
+                  padding: "p-1",
+                  iconSize: "size-5",
+                }}
+                className="size-7 flex items-center justify-center"
+              />
 
               {/* メモステータスタブ */}
               <div className="flex items-center gap-1 flex-wrap">
@@ -477,26 +475,24 @@ function BoardDetail({
           {/* タスク列 */}
           <div className="flex flex-col">
             <div className="flex items-center gap-2 mb-2">
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-1">
-                  {/* <TaskIcon className="size-5 text-DeepBlue" /> */}
-                  タスク
-                </h2>
-                <span className="font-normal text-gray-500">
-                  {allTaskItems.length}
-                </span>
-                <AddItemButton
-                  itemType="task"
-                  onClick={handleCreateNewTask}
-                  size="small"
-                  showTooltip={false}
-                  customSize={{
-                    padding: "p-1",
-                    iconSize: "size-5",
-                  }}
-                  className="size-7 flex items-center justify-center"
-                />
-              </div>
+              <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-1">
+                {/* <TaskIcon className="size-5 text-DeepBlue" /> */}
+                タスク
+              </h2>
+              <span className="font-normal text-gray-500">
+                {allTaskItems.length}
+              </span>
+              <AddItemButton
+                itemType="task"
+                onClick={handleCreateNewTask}
+                size="small"
+                showTooltip={false}
+                customSize={{
+                  padding: "p-1",
+                  iconSize: "size-5",
+                }}
+                className="size-7 flex items-center justify-center"
+              />
 
               {/* タスクステータスタブ */}
               <div className="flex items-center gap-1 flex-wrap">

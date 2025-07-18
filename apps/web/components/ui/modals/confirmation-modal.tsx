@@ -19,6 +19,7 @@ interface ConfirmationModalProps {
   variant?: Variant
   icon?: IconType
   customIcon?: ReactNode
+  position?: 'center' | 'right-panel'
 }
 
 // 一括削除用のカスタムhook
@@ -105,7 +106,8 @@ function ConfirmationModal({
   isLoading = false,
   variant = 'primary',
   icon = 'info',
-  customIcon
+  customIcon,
+  position = 'center'
 }: ConfirmationModalProps) {
   
   const variantStyles = {
@@ -174,7 +176,7 @@ function ConfirmationModal({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} maxWidth="sm">
+    <Modal isOpen={isOpen} onClose={onClose} maxWidth="sm" position={position}>
       <div className="text-center">
         {/* アイコン */}
         <div className={`mx-auto flex items-center justify-center h-12 w-12 rounded-full ${styles.iconBg} mb-4`}>
@@ -283,6 +285,7 @@ interface SingleDeleteConfirmationProps {
   itemType: 'memo' | 'task'
   deleteType: 'normal' | 'permanent'
   isLoading?: boolean
+  position?: 'center' | 'right-panel'
 }
 
 export function SingleDeleteConfirmation({
@@ -292,7 +295,8 @@ export function SingleDeleteConfirmation({
   itemTitle,
   itemType,
   deleteType,
-  isLoading = false
+  isLoading = false,
+  position = 'center'
 }: SingleDeleteConfirmationProps) {
   const itemTypeName = itemType === 'memo' ? 'メモ' : 'タスク'
   
@@ -313,6 +317,7 @@ export function SingleDeleteConfirmation({
       variant="danger"
       icon="trash"
       isLoading={isLoading}
+      position={position}
     />
   )
 }

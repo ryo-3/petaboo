@@ -8,9 +8,10 @@ interface ModalProps {
   title?: string
   children: React.ReactNode
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl'
+  position?: 'center' | 'right-panel'
 }
 
-function Modal({ isOpen, onClose, title, children, maxWidth = 'md' }: ModalProps) {
+function Modal({ isOpen, onClose, title, children, maxWidth = 'md', position = 'center' }: ModalProps) {
   // ESCキーでモーダルを閉じる
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -40,11 +41,19 @@ function Modal({ isOpen, onClose, title, children, maxWidth = 'md' }: ModalProps
     xl: 'max-w-xl',
   }
 
+  const containerClasses = position === 'right-panel' 
+    ? "absolute inset-0 z-50 flex items-center justify-center"
+    : "fixed inset-0 z-50 flex items-center justify-center";
+
+  const overlayClasses = position === 'right-panel'
+    ? "absolute inset-0 bg-black bg-opacity-20 transition-opacity"
+    : "absolute inset-0 bg-black bg-opacity-50 transition-opacity";
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className={containerClasses}>
       {/* オーバーレイ */}
       <div 
-        className="absolute inset-0 bg-black bg-opacity-50 transition-opacity"
+        className={overlayClasses}
         onClick={onClose}
       />
       

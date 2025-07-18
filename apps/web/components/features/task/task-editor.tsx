@@ -284,7 +284,7 @@ function TaskEditor({
 
   return (
     <>
-      <div data-task-editor>
+      <div data-task-editor className="relative">
         <BaseViewer
           item={tempTask}
           onClose={onClose}
@@ -330,6 +330,7 @@ function TaskEditor({
           itemType="task"
           deleteType="normal"
           isLoading={isDeleting}
+          position="right-panel"
         />
       )}
     </>

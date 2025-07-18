@@ -1,9 +1,9 @@
 import MemoEditor from "@/components/features/memo/memo-editor";
 import TaskEditor from "@/components/features/task/task-editor";
 import TrashIcon from "@/components/icons/trash-icon";
+import Tooltip from "@/components/ui/base/tooltip";
 import AddItemButton from "@/components/ui/buttons/add-item-button";
 import RightPanel from "@/components/ui/layout/right-panel";
-import Tooltip from "@/components/ui/base/tooltip";
 import {
   useBoardWithItems,
   useRemoveItemFromBoard,
@@ -392,7 +392,7 @@ function BoardDetail({
                   {/* <MemoIcon className="size-5 text-Green" /> */}
                   メモ
                 </h2>
-                <span className="text-sm font-normal text-gray-500">
+                <span className="font-normal text-gray-500">
                   {allMemoItems.length}
                 </span>
                 <AddItemButton
@@ -402,8 +402,9 @@ function BoardDetail({
                   showTooltip={false}
                   customSize={{
                     padding: "p-1",
-                    iconSize: "size-4",
+                    iconSize: "size-5",
                   }}
+                  className="size-7 flex items-center justify-center"
                 />
               </div>
 
@@ -481,7 +482,7 @@ function BoardDetail({
                   {/* <TaskIcon className="size-5 text-DeepBlue" /> */}
                   タスク
                 </h2>
-                <span className="text-sm font-normal text-gray-500">
+                <span className="font-normal text-gray-500">
                   {allTaskItems.length}
                 </span>
                 <AddItemButton
@@ -491,8 +492,9 @@ function BoardDetail({
                   showTooltip={false}
                   customSize={{
                     padding: "p-1",
-                    iconSize: "size-4",
+                    iconSize: "size-5",
                   }}
+                  className="size-7 flex items-center justify-center"
                 />
               </div>
 
@@ -590,7 +592,7 @@ function BoardDetail({
             </div>
           </div>
         </div>
-        
+
         {/* フローティング：一覧へ戻るボタン */}
         <div className="fixed bottom-3 left-20 z-10">
           <Tooltip text="一覧へ戻る" position="top">
@@ -598,8 +600,18 @@ function BoardDetail({
               onClick={onBack}
               className="p-1 bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800 rounded-lg border border-gray-200 transition-all flex items-center gap-2"
             >
-              <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <svg
+                className="size-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
               </svg>
             </button>
           </Tooltip>

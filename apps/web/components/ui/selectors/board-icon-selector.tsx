@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import DashboardIcon from "@/components/icons/dashboard-icon";
+import Tooltip from "@/components/ui/base/tooltip";
 
 interface BoardOption {
   value: string;
@@ -71,21 +72,24 @@ export default function BoardIconSelector({
   const hasSelectedBoard = selectedValues.length > 0;
 
   return (
-    <div className={`relative ${className}`} ref={selectorRef}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center justify-center size-7 transition-colors rounded-md ${
-          hasSelectedBoard 
-            ? "bg-light-Blue text-white hover:bg-light-Blue/90" 
-            : "bg-gray-100 hover:bg-gray-200"
-        }`}
-      >
-        <DashboardIcon className={`${iconClassName} ${hasSelectedBoard ? "text-white" : "text-gray-600"}`} />
-      </button>
-
-      {isOpen && (
-        <div className="absolute top-full left-0 mt-1 z-50 bg-white rounded-lg shadow-lg border border-gray-300 min-w-[180px]">
-          <div className="py-1">
+    <div className={`flex items-center gap-1.5 ${className}`} ref={selectorRef}>
+      <div className="relative">
+        <Tooltip text="ボード選択" position="top">
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className={`flex items-center justify-center size-7 transition-colors rounded-md ${
+              hasSelectedBoard 
+                ? "bg-light-Blue text-white hover:bg-light-Blue/90" 
+                : "bg-gray-100 hover:bg-gray-200"
+            }`}
+          >
+            <DashboardIcon className={`${iconClassName} ${hasSelectedBoard ? "text-white" : "text-gray-600"}`} />
+          </button>
+        </Tooltip>
+        
+        {isOpen && (
+          <div className="absolute top-full left-0 mt-1 z-50 bg-white rounded-lg shadow-lg border border-gray-300 min-w-[180px]">
+            <div className="py-1">
             {options.map((option) => {
               // 複数選択モードでは「なし」オプションをスキップ
               if (multiple && option.value === "") return null;
@@ -115,9 +119,11 @@ export default function BoardIconSelector({
                 </button>
               );
             })}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
+      
     </div>
   );
 }

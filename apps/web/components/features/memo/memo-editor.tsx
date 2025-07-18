@@ -45,6 +45,7 @@ function MemoEditor({ memo, onClose, onSaveComplete, onDelete, isLidOpen = false
   } = useSimpleMemoSave({
     memo,
     onSaveComplete,
+    currentBoardIds: itemBoards.map(board => board.id),
   });
 
   const [error] = useState<string | null>(null);
@@ -68,14 +69,7 @@ function MemoEditor({ memo, onClose, onSaveComplete, onDelete, isLidOpen = false
   }, [boards]);
 
   // 現在選択されているボードのvalue（複数選択対応）
-  // 新規選択 + 既存の紐づけを含める
-  const allSelectedBoardIds = useMemo(() => {
-    const existingBoardIds = itemBoards.map(board => board.id);
-    const newSelections = selectedBoardIds.filter(id => !existingBoardIds.includes(id));
-    return [...existingBoardIds, ...newSelections];
-  }, [itemBoards, selectedBoardIds]);
-  
-  const currentBoardValues = allSelectedBoardIds.map(id => id.toString());
+  const currentBoardValues = selectedBoardIds.map(id => id.toString());
 
   // ボード選択変更ハンドラー
   const handleBoardSelectorChange = (value: string | string[]) => {
@@ -164,15 +158,13 @@ function MemoEditor({ memo, onClose, onSaveComplete, onDelete, isLidOpen = false
                   className="rounded-full"
                 />
               </Tooltip>
-              <Tooltip text="ボード選択" position="top">
-                <BoardIconSelector
-                  options={boardOptions}
-                  value={currentBoardValues}
-                  onChange={handleBoardSelectorChange}
-                  iconClassName="size-4 text-gray-600"
-                  multiple={true}
-                />
-              </Tooltip>
+              <BoardIconSelector
+                options={boardOptions}
+                value={currentBoardValues}
+                onChange={handleBoardSelectorChange}
+                iconClassName="size-4 text-gray-600"
+                multiple={true}
+              />
               {memo && onDelete && (
                 <Tooltip text="削除" position="top">
                   <button

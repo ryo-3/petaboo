@@ -1,20 +1,27 @@
 import { useState, useCallback, useEffect, useMemo } from 'react'
 import type { Memo } from '@/src/types/memo'
 import { useCreateNote, useUpdateNote, useDeleteNote } from '@/src/hooks/use-notes'
-import { useAddItemToBoard } from '@/src/hooks/use-boards'
+import { useAddItemToBoard, useRemoveItemFromBoard } from '@/src/hooks/use-boards'
 import { useQueryClient } from '@tanstack/react-query'
 
 interface UseSimpleMemoSaveOptions {
   memo?: Memo | null
   onSaveComplete?: (savedMemo: Memo, wasEmpty: boolean, isNewMemo: boolean) => void
+  currentBoardIds?: number[]
 }
 
-export function useSimpleMemoSave({ memo = null, onSaveComplete }: UseSimpleMemoSaveOptions = {}) {
+export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds = [] }: UseSimpleMemoSaveOptions = {}) {
   const [title, setTitle] = useState(() => memo?.title || '')
   const [content, setContent] = useState(() => memo?.content || '')
   const [selectedBoardIds, setSelectedBoardIds] = useState<number[]>([])
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  
+  // メモが変更されたらボード選択をリセット
+  const currentBoardIdsStr = JSON.stringify([...currentBoardIds].sort())
+  useEffect(() => {
+    setSelectedBoardIds([...currentBoardIds])
+  }, [memo?.id, currentBoardIdsStr]) // 文字列で比較
 
   // 変更検知用の初期値
   const [initialTitle, setInitialTitle] = useState(() => memo?.title || '')
@@ -24,15 +31,23 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete }: UseSimpleMemo
   const updateNote = useUpdateNote()
   const deleteNote = useDeleteNote()
   const addItemToBoard = useAddItemToBoard()
+  const removeItemFromBoard = useRemoveItemFromBoard()
   const queryClient = useQueryClient()
 
   // 変更検知（ボード選択も含める）
   const hasChanges = useMemo(() => {
     const currentTitle = title.trim()
     const currentContent = content.trim()
-    const hasBoardSelection = selectedBoardIds.length > 0
-    return currentTitle !== initialTitle.trim() || currentContent !== initialContent.trim() || hasBoardSelection
-  }, [title, content, initialTitle, initialContent, selectedBoardIds])
+    const textChanged = currentTitle !== initialTitle.trim() || currentContent !== initialContent.trim()
+    
+    // selectedBoardIdsが空でcurrentBoardIdsに値がある場合（まだ同期中）はボード変更を無視
+    if (selectedBoardIds.length === 0 && currentBoardIds.length > 0 && memo?.id) {
+      return textChanged
+    }
+    
+    const hasBoardChanges = JSON.stringify([...selectedBoardIds].sort()) !== JSON.stringify([...currentBoardIds].sort())
+    return textChanged || hasBoardChanges
+  }, [title, content, initialTitle, initialContent, selectedBoardIds, currentBoardIds, memo?.id])
 
   // メモが変更された時の初期値更新
   useEffect(() => {
@@ -80,32 +95,60 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete }: UseSimpleMemo
             updatedAt: Math.floor(Date.now() / 1000)
           }
           
-          // ボード選択時はボードに追加
-          if (selectedBoardIds.length > 0 && memo.id) {
-            // 各ボードに追加（エラーは個別にキャッチ）
-            const addPromises = selectedBoardIds.map(async (boardId) => {
-              try {
-                await addItemToBoard.mutateAsync({
-                  boardId,
-                  data: {
-                    itemType: 'memo',
-                    itemId: memo.id,
-                  },
-                })
-              } catch (error: unknown) {
-                // すでに存在する場合はエラーを無視
-                if (!(error instanceof Error) || !error.message.includes('already exists')) {
-                  console.error(`Failed to add memo to board ${boardId}:`, error)
+          // ボード変更の差分を計算して処理
+          if (memo.id) {
+            // 追加するボード
+            const boardsToAdd = selectedBoardIds.filter(id => !currentBoardIds.includes(id))
+            // 削除するボード
+            const boardsToRemove = currentBoardIds.filter(id => !selectedBoardIds.includes(id))
+            
+            const promises = []
+            
+            // ボード追加
+            if (boardsToAdd.length > 0) {
+              const addPromises = boardsToAdd.map(async (boardId) => {
+                try {
+                  await addItemToBoard.mutateAsync({
+                    boardId,
+                    data: {
+                      itemType: 'memo',
+                      itemId: memo.id,
+                    },
+                  })
+                } catch (error: unknown) {
+                  // すでに存在する場合はエラーを無視
+                  if (!(error instanceof Error) || !error.message.includes('already exists')) {
+                    console.error(`Failed to add memo to board ${boardId}:`, error)
+                  }
                 }
-              }
-            })
+              })
+              promises.push(...addPromises)
+            }
             
-            await Promise.all(addPromises)
+            // ボード削除
+            if (boardsToRemove.length > 0) {
+              const removePromises = boardsToRemove.map(async (boardId) => {
+                try {
+                  await removeItemFromBoard.mutateAsync({
+                    boardId,
+                    itemId: memo.id,
+                    itemType: 'memo',
+                  })
+                } catch (error: unknown) {
+                  console.error(`Failed to remove memo from board ${boardId}:`, error)
+                }
+              })
+              promises.push(...removePromises)
+            }
             
-            // ボード追加後にキャッシュを無効化
-            queryClient.invalidateQueries({ 
-              queryKey: ["item-boards", "memo", memo.id] 
-            })
+            if (promises.length > 0) {
+              await Promise.all(promises)
+              
+              // ボード変更後にキャッシュを無効化
+              queryClient.invalidateQueries({ 
+                queryKey: ["item-boards", "memo", memo.id] 
+              })
+            }
           }
           
           onSaveComplete?.(updatedMemo, false, false)
@@ -157,8 +200,7 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete }: UseSimpleMemo
       setInitialTitle(title.trim() || '')
       setInitialContent(content.trim() || '')
       
-      // ボード選択をリセット
-      setSelectedBoardIds([])
+      // ボード選択はリセットしない（保存した状態を維持）
 
     } catch (error) {
       console.error('保存に失敗:', error)

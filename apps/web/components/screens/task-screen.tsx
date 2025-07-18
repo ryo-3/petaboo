@@ -476,6 +476,18 @@ function TaskScreen({
               onClose={() => setTaskScreenMode("list")}
               onDeleteAndSelectNext={selectNextDeletedTask}
               onRestoreAndSelectNext={handleDeletedTaskRestoreAndSelectNext}
+              isLidOpen={isLidOpen}
+              onDeleteClick={() => {
+                // 削除済タスクの削除処理
+                if (selectedDeletedTask) {
+                  // 1. 蓋を開く
+                  setIsLidOpen(true);
+                  setTimeout(() => {
+                    // 2. 削除確認モーダルを表示
+                    deletedTaskViewerRef.current?.showDeleteConfirmation();
+                  }, 200);
+                }
+              }}
             />
           </>
         )}

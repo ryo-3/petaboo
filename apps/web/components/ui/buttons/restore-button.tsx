@@ -28,7 +28,7 @@ function RestoreButton({
   count,
   buttonSize = "size-8",
   iconSize = "size-4",
-  tooltipPosition = "bottom",
+  tooltipPosition = "top",
   animatedCount,
   useAnimatedCount = false,
   buttonRef

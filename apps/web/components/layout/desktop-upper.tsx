@@ -223,7 +223,7 @@ function DesktopUpper({
           <div className="flex items-center gap-2">
             {currentMode === "board" ? (
               <div className="flex items-center gap-3">
-                <h1 className="font-bold text-gray-800 text-[22px]">
+                <h1 className="font-bold text-gray-800 text-xl">
                   {customTitle || "ボード一覧"}
                 </h1>
                 {/* 設定ボタン（ボード名の横） */}
@@ -295,7 +295,7 @@ function DesktopUpper({
             <button
               onClick={onBoardExport}
               disabled={isExportDisabled}
-              className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+              className={`px-3 py-1 rounded-lg transition-colors flex items-center gap-2 ${
                 isExportDisabled
                   ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                   : "bg-green-100 hover:bg-green-200 text-green-600 hover:text-green-700"

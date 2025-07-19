@@ -96,11 +96,24 @@ function BoardDetail({
   const [columnCount, setColumnCount] = useState(2);
   const [showEditDate, setShowEditDate] = useState(false);
   
-  // ボードレイアウト状態（横並び/縦並び）
+  // ボードレイアウト状態（横並び/縦並び + 反転）
   const [boardLayout, setBoardLayout] = useState<"horizontal" | "vertical">("horizontal");
+  const [isReversed, setIsReversed] = useState(false);
 
   // 計算されたカラム数
   const effectiveColumnCount = columnCount;
+
+  // ボードレイアウト変更ハンドラー（反転機能付き）
+  const handleBoardLayoutChange = useCallback((newLayout: "horizontal" | "vertical") => {
+    if (boardLayout === newLayout) {
+      // 同じレイアウトをクリックした場合は反転
+      setIsReversed(prev => !prev);
+    } else {
+      // 異なるレイアウトの場合は変更して反転状態をリセット
+      setBoardLayout(newLayout);
+      setIsReversed(false);
+    }
+  }, [boardLayout]);
 
   // 設定画面への遷移
   const handleSettings = useCallback(() => {
@@ -542,7 +555,7 @@ function BoardDetail({
             showEditDate={showEditDate}
             onShowEditDateChange={setShowEditDate}
             boardLayout={boardLayout}
-            onBoardLayoutChange={setBoardLayout}
+            onBoardLayoutChange={handleBoardLayoutChange}
             normalCount={allMemoItems.length + allTaskItems.length}
             completedCount={completedCount}
             deletedCount={deletedCount + deletedMemoCount}
@@ -555,8 +568,8 @@ function BoardDetail({
             rightPanelMode === "memo-list" || rightPanelMode === "task-list" 
               ? "flex flex-col" 
               : boardLayout === "vertical" 
-                ? "flex flex-col" 
-                : "grid grid-cols-1 lg:grid-cols-2"
+                ? isReversed ? "flex flex-col-reverse" : "flex flex-col"
+                : `grid grid-cols-1 lg:grid-cols-2${isReversed ? " [&>*:nth-child(1)]:order-2 [&>*:nth-child(2)]:order-1" : ""}`
           } gap-4 flex-1 min-h-0`}
         >
           {/* メモ列 */}

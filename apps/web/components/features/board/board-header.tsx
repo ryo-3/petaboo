@@ -8,7 +8,6 @@ interface BoardHeaderProps {
   boardDescription?: string | null;
   boardCompleted?: boolean;
   isDeleted?: boolean;
-  onBack: () => void;
   onExport: () => void;
   isExportDisabled?: boolean;
 }
@@ -17,7 +16,6 @@ export default function BoardHeader({
   boardId,
   boardName,
   boardDescription,
-  onBack,
   onExport,
   isExportDisabled = false,
 }: BoardHeaderProps) {

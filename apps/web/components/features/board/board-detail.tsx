@@ -307,7 +307,6 @@ function BoardDetail({
             boardDescription={boardDescription}
             boardCompleted={boardCompleted}
             isDeleted={isDeleted}
-            onBack={onBack}
             onExport={() => {}}
             isExportDisabled={true}
           />
@@ -376,7 +375,6 @@ function BoardDetail({
             boardDescription={boardDescription}
             boardCompleted={boardCompleted}
             isDeleted={isDeleted}
-            onBack={onBack}
             onExport={handleExport}
             isExportDisabled={false}
           />
@@ -405,43 +403,43 @@ function BoardDetail({
                 }}
                 className="size-7 flex items-center justify-center"
               />
+            </div>
 
-              {/* メモステータスタブ */}
-              <div className="flex items-center gap-1 flex-wrap">
-                <button
-                  onClick={() => handleMemoTabChange("normal")}
-                  className={`flex items-center gap-1 px-2 py-1 rounded-lg font-medium transition-colors text-gray-600 text-sm h-7 ${
-                    activeMemoTab === "normal"
-                      ? "bg-gray-200"
-                      : "bg-gray-100 hover:bg-gray-200"
-                  }`}
-                >
-                  <div className="w-2.5 h-2.5 rounded-full bg-gray-500"></div>
-                  {showTabText && <span>通常</span>}
-                  <span className="bg-white/20 text-[11px] px-1 py-0.5 rounded-full min-w-[20px] text-center">
-                    {normalMemoCount}
-                  </span>
-                </button>
-                <button
-                  onClick={() => handleMemoTabChange("deleted")}
-                  className={`flex items-center px-2 py-1 rounded-lg font-medium transition-colors text-gray-600 text-sm h-7 ${
+            {/* メモステータスタブ */}
+            <div className="flex items-center gap-1 flex-wrap mb-2">
+              <button
+                onClick={() => handleMemoTabChange("normal")}
+                className={`flex items-center gap-1 px-2 py-1 rounded-lg font-medium transition-colors text-gray-600 text-sm h-7 ${
+                  activeMemoTab === "normal"
+                    ? "bg-gray-200"
+                    : "bg-gray-100 hover:bg-gray-200"
+                }`}
+              >
+                <div className="w-2.5 h-2.5 rounded-full bg-gray-500"></div>
+                {showTabText && <span>通常</span>}
+                <span className="bg-white/20 text-[11px] px-1 py-0.5 rounded-full min-w-[20px] text-center">
+                  {normalMemoCount}
+                </span>
+              </button>
+              <button
+                onClick={() => handleMemoTabChange("deleted")}
+                className={`flex items-center px-2 py-1 rounded-lg font-medium transition-colors text-gray-600 text-sm h-7 ${
+                  activeMemoTab === "deleted"
+                    ? "bg-red-100"
+                    : "bg-gray-100 hover:bg-red-100"
+                }`}
+              >
+                <TrashIcon className="w-4 h-4" />
+                <span
+                  className={`text-xs transition-all overflow-hidden text-right ${
                     activeMemoTab === "deleted"
-                      ? "bg-red-100"
-                      : "bg-gray-100 hover:bg-red-100"
+                      ? "opacity-100 w-9 translate-x-0 px-2 ml-1"
+                      : "opacity-0 w-0 translate-x-2 px-0"
                   }`}
                 >
-                  <TrashIcon className="w-4 h-4" />
-                  <span
-                    className={`text-xs transition-all overflow-hidden text-right ${
-                      activeMemoTab === "deleted"
-                        ? "opacity-100 w-9 translate-x-0 px-2 ml-1"
-                        : "opacity-0 w-0 translate-x-2 px-0"
-                    }`}
-                  >
-                    {deletedMemoCount}
-                  </span>
-                </button>
-              </div>
+                  {deletedMemoCount}
+                </span>
+              </button>
             </div>
 
             <div className="space-y-3 flex-1 overflow-y-auto">
@@ -493,71 +491,71 @@ function BoardDetail({
                 }}
                 className="size-7 flex items-center justify-center"
               />
+            </div>
 
-              {/* タスクステータスタブ */}
-              <div className="flex items-center gap-1 flex-wrap">
-                <button
-                  onClick={() => handleTaskTabChange("todo")}
-                  className={`flex items-center gap-1 px-2 py-1 rounded-lg font-medium transition-colors text-gray-600 text-sm h-7 ${
-                    activeTaskTab === "todo"
-                      ? "bg-zinc-200"
-                      : "bg-gray-100 hover:bg-zinc-200"
-                  }`}
-                >
-                  <div className="w-2.5 h-2.5 rounded-full bg-zinc-400"></div>
-                  {showTabText && <span>未着手</span>}
-                  <span className="bg-white/20 text-[11px] px-1 py-0.5 rounded-full min-w-[20px] text-center">
-                    {todoCount}
-                  </span>
-                </button>
-                <button
-                  onClick={() => handleTaskTabChange("in_progress")}
-                  className={`flex items-center gap-1 px-2 py-1 rounded-lg font-medium transition-colors text-gray-600 text-sm h-7 ${
-                    activeTaskTab === "in_progress"
-                      ? "bg-blue-100"
-                      : "bg-gray-100 hover:bg-blue-100"
-                  }`}
-                >
-                  <div className="w-2.5 h-2.5 rounded-full bg-Blue"></div>
-                  {showTabText && <span>進行中</span>}
-                  <span className="bg-white/20 text-[11px] px-1 py-0.5 rounded-full min-w-[20px] text-center">
-                    {inProgressCount}
-                  </span>
-                </button>
-                <button
-                  onClick={() => handleTaskTabChange("completed")}
-                  className={`flex items-center gap-1 px-2 py-1 rounded-lg font-medium transition-colors text-gray-600 text-sm h-7 ${
-                    activeTaskTab === "completed"
-                      ? "bg-Green/20"
-                      : "bg-gray-100 hover:bg-Green/20"
-                  }`}
-                >
-                  <div className="w-2.5 h-2.5 rounded-full bg-Green"></div>
-                  {showTabText && <span>完了</span>}
-                  <span className="bg-white/20 text-[11px] px-1 py-0.5 rounded-full min-w-[20px] text-center">
-                    {completedCount}
-                  </span>
-                </button>
-                <button
-                  onClick={() => handleTaskTabChange("deleted")}
-                  className={`flex items-center px-2 py-1 rounded-lg font-medium transition-colors text-gray-600 text-sm h-7 ${
+            {/* タスクステータスタブ */}
+            <div className="flex items-center gap-1 flex-wrap mb-2">
+              <button
+                onClick={() => handleTaskTabChange("todo")}
+                className={`flex items-center gap-1 px-2 py-1 rounded-lg font-medium transition-colors text-gray-600 text-sm h-7 ${
+                  activeTaskTab === "todo"
+                    ? "bg-zinc-200"
+                    : "bg-gray-100 hover:bg-zinc-200"
+                }`}
+              >
+                <div className="w-2.5 h-2.5 rounded-full bg-zinc-400"></div>
+                {showTabText && <span>未着手</span>}
+                <span className="bg-white/20 text-[11px] px-1 py-0.5 rounded-full min-w-[20px] text-center">
+                  {todoCount}
+                </span>
+              </button>
+              <button
+                onClick={() => handleTaskTabChange("in_progress")}
+                className={`flex items-center gap-1 px-2 py-1 rounded-lg font-medium transition-colors text-gray-600 text-sm h-7 ${
+                  activeTaskTab === "in_progress"
+                    ? "bg-blue-100"
+                    : "bg-gray-100 hover:bg-blue-100"
+                }`}
+              >
+                <div className="w-2.5 h-2.5 rounded-full bg-Blue"></div>
+                {showTabText && <span>進行中</span>}
+                <span className="bg-white/20 text-[11px] px-1 py-0.5 rounded-full min-w-[20px] text-center">
+                  {inProgressCount}
+                </span>
+              </button>
+              <button
+                onClick={() => handleTaskTabChange("completed")}
+                className={`flex items-center gap-1 px-2 py-1 rounded-lg font-medium transition-colors text-gray-600 text-sm h-7 ${
+                  activeTaskTab === "completed"
+                    ? "bg-Green/20"
+                    : "bg-gray-100 hover:bg-Green/20"
+                }`}
+              >
+                <div className="w-2.5 h-2.5 rounded-full bg-Green"></div>
+                {showTabText && <span>完了</span>}
+                <span className="bg-white/20 text-[11px] px-1 py-0.5 rounded-full min-w-[20px] text-center">
+                  {completedCount}
+                </span>
+              </button>
+              <button
+                onClick={() => handleTaskTabChange("deleted")}
+                className={`flex items-center px-2 py-1 rounded-lg font-medium transition-colors text-gray-600 text-sm h-7 ${
+                  activeTaskTab === "deleted"
+                    ? "bg-red-100"
+                    : "bg-gray-100 hover:bg-red-100"
+                }`}
+              >
+                <TrashIcon className="w-4 h-4" />
+                <span
+                  className={`text-xs transition-all overflow-hidden text-right ${
                     activeTaskTab === "deleted"
-                      ? "bg-red-100"
-                      : "bg-gray-100 hover:bg-red-100"
+                      ? "opacity-100 w-9 translate-x-0 px-2 ml-1"
+                      : "opacity-0 w-0 translate-x-2 px-0"
                   }`}
                 >
-                  <TrashIcon className="w-4 h-4" />
-                  <span
-                    className={`text-xs transition-all overflow-hidden text-right ${
-                      activeTaskTab === "deleted"
-                        ? "opacity-100 w-9 translate-x-0 px-2 ml-1"
-                        : "opacity-0 w-0 translate-x-2 px-0"
-                    }`}
-                  >
-                    {deletedCount}
-                  </span>
-                </button>
-              </div>
+                  {deletedCount}
+                </span>
+              </button>
             </div>
 
             <div className="space-y-3 flex-1 overflow-y-auto">

@@ -1,6 +1,6 @@
 import MemoEditor from "@/components/features/memo/memo-editor";
-import TaskEditor from "@/components/features/task/task-editor";
 import MemoListItem from "@/components/features/memo/memo-list-item";
+import TaskEditor from "@/components/features/task/task-editor";
 import TaskListItem from "@/components/features/task/task-list-item";
 import MemoIcon from "@/components/icons/memo-icon";
 import TaskIcon from "@/components/icons/task-icon";
@@ -9,9 +9,9 @@ import Tooltip from "@/components/ui/base/tooltip";
 import AddItemButton from "@/components/ui/buttons/add-item-button";
 import RightPanel from "@/components/ui/layout/right-panel";
 import {
+  useAddItemToBoard,
   useBoardWithItems,
   useRemoveItemFromBoard,
-  useAddItemToBoard,
 } from "@/src/hooks/use-boards";
 import { useMemos } from "@/src/hooks/use-memos";
 import { useTasks } from "@/src/hooks/use-tasks";
@@ -453,7 +453,6 @@ function BoardDetail({
           <div className="flex flex-col">
             <div className="flex items-center gap-2 mb-2">
               <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-1">
-                {/* <MemoIcon className="size-5 text-Green" /> */}
                 メモ
               </h2>
               <span className="font-normal text-gray-500">
@@ -547,7 +546,6 @@ function BoardDetail({
           <div className="flex flex-col">
             <div className="flex items-center gap-2 mb-2">
               <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-1">
-                {/* <TaskIcon className="size-5 text-DeepBlue" /> */}
                 タスク
               </h2>
               <span className="font-normal text-gray-500">

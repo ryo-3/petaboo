@@ -28,10 +28,10 @@ export default function BoardHeader({
     router.push(`/boards/${boardSlug}/settings`);
   };
   return (
-    <div className="flex items-start justify-between mb-4">
+    <div className="flex items-start justify-between mb-1">
       <div>
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-gray-900">{boardName}</h1>
+          <h1 className="text-xl font-bold text-gray-900">{boardName}</h1>
           {/* 設定ボタン（ボード名の横） */}
           {boardId && (
             <Tooltip text="ボード設定" position="bottom">
@@ -42,7 +42,7 @@ export default function BoardHeader({
           )}
         </div>
         {boardDescription && (
-          <p className="text-gray-600 mt-1">{boardDescription}</p>
+          <p className="text-gray-600 text-[15px]">{boardDescription}</p>
         )}
       </div>
       <div className="flex items-center gap-4">

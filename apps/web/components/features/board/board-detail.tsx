@@ -493,7 +493,7 @@ function BoardDetail({
               ? "w-[30%] border-r border-gray-300" // リスト表示時は広め
               : "w-[47%] border-r border-gray-300" // エディター表示時
             : "w-full"
-        } pt-4 pl-6 pr-4 ${selectedMemo || selectedTask || rightPanelMode ? "pr-2" : "pr-4"} flex flex-col transition-all duration-300 relative`}
+        } pt-2 pl-5 pr-4 ${selectedMemo || selectedTask || rightPanelMode ? "pr-2" : "pr-4"} flex flex-col transition-all duration-300 relative`}
       >
         {/* 左側のヘッダー */}
         {showBoardHeader && (
@@ -515,9 +515,9 @@ function BoardDetail({
           {/* メモ列 */}
           {rightPanelMode !== "task-list" && (
             <div className="flex flex-col h-[calc(100vh-170px)]">
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-1">
+                  <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-1">
                     メモ
                   </h2>
                   <span className="font-normal text-gray-500">
@@ -532,11 +532,11 @@ function BoardDetail({
                       padding: "p-1",
                       iconSize: "size-5",
                     }}
-                    className="size-7 flex items-center justify-center"
+                    className="size-6 flex items-center justify-center"
                   />
                   <button
                     onClick={handleShowMemoList}
-                    className="size-7 flex items-center justify-center p-1 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+                    className="size-6 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
                   >
                     <MemoIcon className="size-5 text-Green" />
                   </button>
@@ -544,7 +544,7 @@ function BoardDetail({
                 {rightPanelMode === "memo-list" && (
                   <button
                     onClick={handleShowTaskList}
-                    className="size-7 flex items-center justify-center p-1 rounded-lg bg-DeepBlue hover:bg-DeepBlue/80 transition-colors"
+                    className="size-6 flex items-center justify-center p-1 rounded-lg bg-DeepBlue hover:bg-DeepBlue/80 transition-colors"
                   >
                     <TaskIcon className="size-5 text-white" />
                   </button>
@@ -552,7 +552,7 @@ function BoardDetail({
               </div>
 
               {/* メモステータスタブ */}
-              <div className="flex items-center gap-1 flex-wrap mb-2">
+              <div className="flex items-center gap-2 flex-wrap mb-2">
                 <button
                   onClick={() => handleMemoTabChange("normal")}
                   className={`flex items-center gap-1 px-2 py-1 rounded-lg font-medium transition-colors text-gray-600 text-sm h-7 ${
@@ -620,9 +620,9 @@ function BoardDetail({
           {/* タスク列 */}
           {rightPanelMode !== "memo-list" && (
             <div className="flex flex-col h-[calc(100vh-170px)]">
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-1">
+                  <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-1">
                     タスク
                   </h2>
                   <span className="font-normal text-gray-500">
@@ -637,11 +637,11 @@ function BoardDetail({
                       padding: "p-1",
                       iconSize: "size-5",
                     }}
-                    className="size-7 flex items-center justify-center"
+                    className="size-6 flex items-center justify-center"
                   />
                   <button
                     onClick={handleShowTaskList}
-                    className="size-7 flex items-center justify-center p-1 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+                    className="size-6 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
                   >
                     <TaskIcon className="size-5 text-DeepBlue" />
                   </button>
@@ -649,7 +649,7 @@ function BoardDetail({
                 {rightPanelMode === "task-list" && (
                   <button
                     onClick={handleShowMemoList}
-                    className="size-7 flex items-center justify-center p-1 rounded-lg bg-Green hover:bg-Green/80 transition-colors"
+                    className="size-6 flex items-center justify-center p-1 rounded-lg bg-Green hover:bg-Green/80 transition-colors"
                   >
                     <MemoIcon className="size-5 text-white" />
                   </button>
@@ -657,7 +657,7 @@ function BoardDetail({
               </div>
 
               {/* タスクステータスタブ */}
-              <div className="flex items-center gap-1 flex-wrap mb-2">
+              <div className="flex items-center gap-2 flex-wrap mb-2">
                 <button
                   onClick={() => handleTaskTabChange("todo")}
                   className={`flex items-center gap-1 px-2 py-1 rounded-lg font-medium transition-colors text-gray-600 text-sm h-7 ${

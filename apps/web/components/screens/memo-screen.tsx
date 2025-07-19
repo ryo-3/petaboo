@@ -13,9 +13,9 @@ import RightPanel from "@/components/ui/layout/right-panel";
 import { useSortOptions } from "@/hooks/use-sort-options";
 import { useBulkDeleteButton } from "@/src/hooks/use-bulk-delete-button";
 import { useBulkProcessNotifications } from "@/src/hooks/use-bulk-process-notifications";
+import { useDeletedItemOperations } from "@/src/hooks/use-deleted-item-operations";
 import { useDeletionLid } from "@/src/hooks/use-deletion-lid";
 import { useItemDeselect } from "@/src/hooks/use-item-deselect";
-import { useNextDeletedItemSelection } from "@/src/hooks/use-next-deleted-item-selection";
 import {
   useDeletedNotes,
   useDeleteNote,
@@ -29,7 +29,6 @@ import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import { getDeleteButtonVisibility } from "@/src/utils/bulkButtonUtils";
 import {
-  createDeletedNextSelectionHandler,
   getMemoDisplayOrder,
   getNextItemAfterDeletion,
 } from "@/src/utils/domUtils";
@@ -266,26 +265,14 @@ function MemoScreen({
     setIsLidOpen: setIsRestoreLidOpen,
   });
 
-  // 削除後の次選択処理
-  const selectNextDeletedMemo = useNextDeletedItemSelection({
-    deletedItems: deletedNotes || null,
-    onSelectDeletedItem: onSelectDeletedMemo,
-    onDeselectOnly: () => onSelectDeletedMemo(null),
-    setScreenMode: (mode: string) => setMemoScreenMode(mode as MemoScreenMode),
-    editorSelector: "[data-memo-editor]",
-  });
-
-  // 削除済みメモの復元時の次選択処理
-  const handleRestoreAndSelectNext = (deletedMemo: DeletedMemo) => {
-    if (!deletedNotes) return;
-    createDeletedNextSelectionHandler(
-      deletedNotes,
-      deletedMemo,
-      onSelectDeletedMemo,
-      () => onSelectDeletedMemo(null),
-      setMemoScreenMode
-    );
-  };
+  // 削除済みメモ操作の共通ロジック
+  const { selectNextDeletedItem: selectNextDeletedMemo, handleRestoreAndSelectNext } = 
+    useDeletedItemOperations({
+      deletedItems: deletedNotes || null,
+      onSelectDeletedItem: onSelectDeletedMemo,
+      setScreenMode: (mode: string) => setMemoScreenMode(mode as MemoScreenMode),
+      editorSelector: "[data-memo-editor]",
+    });
 
   // タブ切り替え用の状態
   const [displayTab, setDisplayTab] = useState(activeTab);

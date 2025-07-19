@@ -13,9 +13,9 @@ import RightPanel from "@/components/ui/layout/right-panel";
 import { useSortOptions } from "@/hooks/use-sort-options";
 import { useBulkDeleteButton } from "@/src/hooks/use-bulk-delete-button";
 import { useBulkProcessNotifications } from "@/src/hooks/use-bulk-process-notifications";
+import { useDeletedItemOperations } from "@/src/hooks/use-deleted-item-operations";
 import { useDeletionLid } from "@/src/hooks/use-deletion-lid";
 import { useItemDeselect } from "@/src/hooks/use-item-deselect";
-import { useNextDeletedItemSelection } from "@/src/hooks/use-next-deleted-item-selection";
 import { useScreenState } from "@/src/hooks/use-screen-state";
 import { useSelectAll } from "@/src/hooks/use-select-all";
 import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
@@ -25,7 +25,6 @@ import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import type { DeletedTask, Task } from "@/src/types/task";
 import { getDeleteButtonVisibility } from "@/src/utils/bulkButtonUtils";
 import {
-  createDeletedNextSelectionHandler,
   getTaskDisplayOrder,
 } from "@/src/utils/domUtils";
 import { createToggleHandlerWithTabClear } from "@/src/utils/toggleUtils";
@@ -191,27 +190,15 @@ function TaskScreen({
     setIsLidOpen: setIsRestoreLidOpen,
   });
 
-  // 削除後の次選択処理
-  const selectNextDeletedTask = useNextDeletedItemSelection({
-    deletedItems: deletedTasks || null,
-    onSelectDeletedItem: onSelectDeletedTask,
-    onDeselectOnly: () => onSelectDeletedTask(null),
-    setScreenMode: (mode: string) => setTaskScreenMode(mode as TaskScreenMode),
-    editorSelector: "[data-task-editor]",
-  });
-
-  // 削除済みタスクの復元時の次のタスク選択ハンドラー
-  const handleDeletedTaskRestoreAndSelectNext = (deletedTask: DeletedTask) => {
-    if (!deletedTasks) return;
-    createDeletedNextSelectionHandler(
-      deletedTasks,
-      deletedTask,
-      onSelectDeletedTask,
-      () => onSelectDeletedTask(null),
-      setTaskScreenMode,
-      { isRestore: true, onSelectWithFromFlag: true }
-    );
-  };
+  // 削除済みタスク操作の共通ロジック
+  const { selectNextDeletedItem: selectNextDeletedTask, handleRestoreAndSelectNext: handleDeletedTaskRestoreAndSelectNext } = 
+    useDeletedItemOperations({
+      deletedItems: deletedTasks || null,
+      onSelectDeletedItem: onSelectDeletedTask,
+      setScreenMode: (mode: string) => setTaskScreenMode(mode as TaskScreenMode),
+      editorSelector: "[data-task-editor]",
+      restoreOptions: { isRestore: true, onSelectWithFromFlag: true },
+    });
 
   // 通常タスクでの次のタスク選択ハンドラー（実際の画面表示順序に基づく）
   const handleTaskDeleteAndSelectNext = (

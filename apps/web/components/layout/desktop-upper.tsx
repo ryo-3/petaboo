@@ -9,6 +9,7 @@ import SelectionModeToggle from "@/components/ui/buttons/selection-mode-toggle";
 import SortToggle from "@/components/ui/buttons/sort-toggle";
 import ColumnCountSelector from "@/components/ui/layout/column-count-selector";
 import ViewModeToggle from "@/components/ui/layout/view-mode-toggle";
+import BoardLayoutToggle from "@/components/ui/controls/board-layout-toggle";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 
 interface DesktopUpperProps {
@@ -35,6 +36,9 @@ interface DesktopUpperProps {
   marginBottom?: string;
   // Custom margin bottom for internal header
   headerMarginBottom?: string;
+  // Board layout control
+  boardLayout?: "horizontal" | "vertical";
+  onBoardLayoutChange?: (layout: "horizontal" | "vertical") => void;
   // Selection mode (memo only)
   selectionMode?: "select" | "check";
   onSelectionModeChange?: (mode: "select" | "check") => void;
@@ -87,6 +91,8 @@ function DesktopUpper({
   isExportDisabled = false,
   marginBottom = "mb-3",
   headerMarginBottom = "mb-3",
+  boardLayout = "horizontal",
+  onBoardLayoutChange,
   selectionMode = "select",
   onSelectionModeChange,
   onSelectAll,
@@ -223,9 +229,13 @@ function DesktopUpper({
           <div className="flex items-center gap-2">
             {currentMode === "board" ? (
               <div className="flex items-center gap-3">
-                <h1 className="font-bold text-gray-800 text-xl">
+                <h1 className="font-bold text-gray-800 text-[22px]">
                   {customTitle || "ボード一覧"}
                 </h1>
+                {/* ボード説明（タイトルの横） */}
+                {boardDescription && (
+                  <p className="text-gray-600 text-sm">{boardDescription}</p>
+                )}
                 {/* 設定ボタン（ボード名の横） */}
                 {boardId && onBoardSettings && (
                   <Tooltip text="ボード設定" position="bottom">
@@ -308,12 +318,6 @@ function DesktopUpper({
         )}
       </div>
 
-      {/* ボード説明（boardモードのみ） */}
-      {currentMode === "board" && boardDescription && (
-        <div className="mb-3">
-          <p className="text-gray-600 text-sm">{boardDescription}</p>
-        </div>
-      )}
 
       {/* コントロール */}
       {!(
@@ -334,6 +338,16 @@ function DesktopUpper({
             containerHeight="h-7"
             buttonSize="size-6"
           />
+          
+          {/* ボードレイアウト切り替え（boardモードのみ） */}
+          {currentMode === "board" && onBoardLayoutChange && (
+            <BoardLayoutToggle
+              boardLayout={boardLayout}
+              onBoardLayoutChange={onBoardLayoutChange}
+              buttonSize="size-7"
+              iconSize="size-5"
+            />
+          )}
 
           {/* 選択モード切り替え */}
           {onSelectionModeChange && (

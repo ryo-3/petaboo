@@ -95,6 +95,9 @@ function BoardDetail({
   const [viewMode, setViewMode] = useState<"card" | "list">("card");
   const [columnCount, setColumnCount] = useState(2);
   const [showEditDate, setShowEditDate] = useState(false);
+  
+  // ボードレイアウト状態（横並び/縦並び）
+  const [boardLayout, setBoardLayout] = useState<"horizontal" | "vertical">("horizontal");
 
   // 計算されたカラム数
   const effectiveColumnCount = columnCount;
@@ -535,9 +538,11 @@ function BoardDetail({
             onBoardSettings={handleSettings}
             isExportDisabled={false}
             marginBottom="mb-3"
-            headerMarginBottom="mb-0"
+            headerMarginBottom="mb-1"
             showEditDate={showEditDate}
             onShowEditDateChange={setShowEditDate}
+            boardLayout={boardLayout}
+            onBoardLayoutChange={setBoardLayout}
             normalCount={allMemoItems.length + allTaskItems.length}
             completedCount={completedCount}
             deletedCount={deletedCount + deletedMemoCount}
@@ -546,7 +551,13 @@ function BoardDetail({
 
         {/* メモ・タスクコンテンツ */}
         <div
-          className={`${rightPanelMode === "memo-list" || rightPanelMode === "task-list" ? "flex flex-col" : "grid grid-cols-1 lg:grid-cols-2"} gap-4 flex-1 min-h-0`}
+          className={`${
+            rightPanelMode === "memo-list" || rightPanelMode === "task-list" 
+              ? "flex flex-col" 
+              : boardLayout === "vertical" 
+                ? "flex flex-col" 
+                : "grid grid-cols-1 lg:grid-cols-2"
+          } gap-4 flex-1 min-h-0`}
         >
           {/* メモ列 */}
           {rightPanelMode !== "task-list" && (

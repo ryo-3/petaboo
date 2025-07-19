@@ -1,5 +1,9 @@
 import MemoEditor from "@/components/features/memo/memo-editor";
 import TaskEditor from "@/components/features/task/task-editor";
+import MemoListItem from "@/components/features/memo/memo-list-item";
+import TaskListItem from "@/components/features/task/task-list-item";
+import MemoIcon from "@/components/icons/memo-icon";
+import TaskIcon from "@/components/icons/task-icon";
 import TrashIcon from "@/components/icons/trash-icon";
 import Tooltip from "@/components/ui/base/tooltip";
 import AddItemButton from "@/components/ui/buttons/add-item-button";
@@ -7,7 +11,10 @@ import RightPanel from "@/components/ui/layout/right-panel";
 import {
   useBoardWithItems,
   useRemoveItemFromBoard,
+  useAddItemToBoard,
 } from "@/src/hooks/use-boards";
+import { useMemos } from "@/src/hooks/use-memos";
+import { useTasks } from "@/src/hooks/use-tasks";
 import { BoardItemWithContent } from "@/src/types/board";
 import { Memo } from "@/src/types/memo";
 import { Task } from "@/src/types/task";
@@ -71,16 +78,21 @@ function BoardDetail({
     "normal"
   );
   const [showTabText, setShowTabText] = useState(true);
+  const [rightPanelMode, setRightPanelMode] = useState<'editor' | 'memo-list' | 'task-list' | null>(null);
+  const [selectedItemsFromList, setSelectedItemsFromList] = useState<Set<number>>(new Set());
 
   // propsから選択状態を使用（Fast Refresh対応）
   const selectedMemo = propSelectedMemo;
   const selectedTask = propSelectedTask;
   const { data: boardWithItems, isLoading, error } = useBoardWithItems(boardId);
   const removeItemFromBoard = useRemoveItemFromBoard();
+  const addItemToBoard = useAddItemToBoard();
+  const { data: allMemos } = useMemos();
+  const { data: allTasks } = useTasks();
 
   // 右パネルの開閉に応じてタブテキストの表示を制御
   useEffect(() => {
-    if (selectedMemo || selectedTask) {
+    if (selectedMemo || selectedTask || rightPanelMode) {
       // 右パネルが開いたらすぐにテキストを非表示
       setShowTabText(false);
     } else {
@@ -90,7 +102,7 @@ function BoardDetail({
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [selectedMemo, selectedTask]);
+  }, [selectedMemo, selectedTask, rightPanelMode]);
 
   // ボード名は即座に表示
   const boardName = initialBoardName || boardWithItems?.name || "ボード";
@@ -201,6 +213,61 @@ function BoardDetail({
     };
     onSelectTask?.(newTask);
   }, [onSelectTask, activeTaskTab]);
+
+  // メモ一覧表示ハンドラ
+  const handleShowMemoList = useCallback(() => {
+    setRightPanelMode('memo-list');
+    setSelectedItemsFromList(new Set());
+    onClearSelection?.();
+  }, [onClearSelection]);
+
+  // タスク一覧表示ハンドラ
+  const handleShowTaskList = useCallback(() => {
+    setRightPanelMode('task-list');
+    setSelectedItemsFromList(new Set());
+    onClearSelection?.();
+  }, [onClearSelection]);
+
+  // 一覧からボードに追加
+  const handleAddSelectedItems = useCallback(async () => {
+    if (selectedItemsFromList.size === 0) return;
+
+    try {
+      const promises = Array.from(selectedItemsFromList).map(itemId => {
+        const itemType = rightPanelMode === 'memo-list' ? 'memo' : 'task';
+        return addItemToBoard.mutateAsync({
+          boardId,
+          data: { itemType, itemId }
+        });
+      });
+
+      await Promise.all(promises);
+      setRightPanelMode(null);
+      setSelectedItemsFromList(new Set());
+    } catch (error) {
+      console.error('Failed to add items to board:', error);
+    }
+  }, [selectedItemsFromList, rightPanelMode, boardId, addItemToBoard]);
+
+  // 一覧でのアイテム選択切り替え
+  const handleToggleItemSelection = useCallback((itemId: number) => {
+    setSelectedItemsFromList(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId);
+      } else {
+        newSet.add(itemId);
+      }
+      return newSet;
+    });
+  }, []);
+
+  // 右パネルを閉じる
+  const handleCloseRightPanel = useCallback(() => {
+    setRightPanelMode(null);
+    setSelectedItemsFromList(new Set());
+    onClearSelection?.();
+  }, [onClearSelection]);
 
   const handleExport = () => {
     if (!boardWithItems) return;
@@ -365,7 +432,7 @@ function BoardDetail({
     <div className={`flex ${screenHeight} bg-white overflow-hidden`}>
       {/* 左側：メモ・タスク一覧 */}
       <div
-        className={`${selectedMemo || selectedTask ? "w-[47%] border-r border-gray-300" : "w-full"} pt-4 pl-4 pr-4 ${selectedMemo || selectedTask ? "pr-2" : "pr-4"} flex flex-col transition-all duration-300 relative`}
+        className={`${selectedMemo || selectedTask || rightPanelMode ? "w-[47%] border-r border-gray-300" : "w-full"} pt-4 pl-4 pr-4 ${selectedMemo || selectedTask || rightPanelMode ? "pr-2" : "pr-4"} flex flex-col transition-all duration-300 relative`}
       >
         {/* 左側のヘッダー */}
         {showBoardHeader && (
@@ -403,6 +470,12 @@ function BoardDetail({
                 }}
                 className="size-7 flex items-center justify-center"
               />
+              <button
+                onClick={handleShowMemoList}
+                className="size-7 flex items-center justify-center p-1 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+              >
+                <MemoIcon className="size-5 text-Green" />
+              </button>
             </div>
 
             {/* メモステータスタブ */}
@@ -491,6 +564,12 @@ function BoardDetail({
                 }}
                 className="size-7 flex items-center justify-center"
               />
+              <button
+                onClick={handleShowTaskList}
+                className="size-7 flex items-center justify-center p-1 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+              >
+                <TaskIcon className="size-5 text-DeepBlue" />
+              </button>
             </div>
 
             {/* タスクステータスタブ */}
@@ -614,10 +693,10 @@ function BoardDetail({
 
       {/* 右側：詳細表示 */}
       <RightPanel
-        isOpen={selectedMemo !== null || selectedTask !== null}
-        onClose={handleCloseDetail}
+        isOpen={selectedMemo !== null || selectedTask !== null || rightPanelMode !== null}
+        onClose={rightPanelMode ? handleCloseRightPanel : handleCloseDetail}
       >
-        {selectedMemo && !selectedTask && (
+        {selectedMemo && !selectedTask && !rightPanelMode && (
           <MemoEditor
             key={`memo-${selectedMemo.id}`}
             memo={selectedMemo}
@@ -633,7 +712,7 @@ function BoardDetail({
           />
         )}
 
-        {selectedTask && !selectedMemo && (
+        {selectedTask && !selectedMemo && !rightPanelMode && (
           <TaskEditor
             key={`task-${selectedTask.id}`}
             task={selectedTask}
@@ -647,6 +726,80 @@ function BoardDetail({
               onSelectTask?.(savedTask);
             }}
           />
+        )}
+
+        {/* メモ一覧表示 */}
+        {rightPanelMode === 'memo-list' && (
+          <div className="flex flex-col h-full bg-white pt-2 pl-2">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold">メモ一覧から追加</h3>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleAddSelectedItems}
+                  disabled={selectedItemsFromList.size === 0}
+                  className="px-3 py-1 bg-Green text-white rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  追加 ({selectedItemsFromList.size})
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto pr-2">
+              {allMemos?.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  メモがありません
+                </div>
+              ) : (
+                allMemos?.map((memo: Memo) => (
+                  <MemoListItem
+                    key={memo.id}
+                    memo={memo}
+                    isChecked={selectedItemsFromList.has(memo.id)}
+                    onToggleCheck={() => handleToggleItemSelection(memo.id)}
+                    onSelect={() => handleToggleItemSelection(memo.id)}
+                    variant="normal"
+                    isSelected={false}
+                  />
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* タスク一覧表示 */}
+        {rightPanelMode === 'task-list' && (
+          <div className="flex flex-col h-full bg-white pt-2 pl-2">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold">タスク一覧から追加</h3>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleAddSelectedItems}
+                  disabled={selectedItemsFromList.size === 0}
+                  className="px-3 py-1 bg-DeepBlue text-white rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  追加 ({selectedItemsFromList.size})
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto pr-2">
+              {allTasks?.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  タスクがありません
+                </div>
+              ) : (
+                allTasks?.map((task: Task) => (
+                  <TaskListItem
+                    key={task.id}
+                    task={task}
+                    isChecked={selectedItemsFromList.has(task.id)}
+                    onToggleCheck={() => handleToggleItemSelection(task.id)}
+                    onSelect={() => handleToggleItemSelection(task.id)}
+                    variant="normal"
+                    isSelected={false}
+                  />
+                ))
+              )}
+            </div>
+          </div>
         )}
       </RightPanel>
     </div>

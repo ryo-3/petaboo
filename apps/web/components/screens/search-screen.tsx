@@ -115,7 +115,7 @@ function SearchScreen({
   };
 
   return (
-    <div ref={scrollRef} className={`${preferences?.hideHeader ? 'h-screen' : 'h-[calc(100vh-64px)]'} overflow-y-auto bg-white`}>
+    <div ref={scrollRef} className="h-full overflow-y-auto bg-white">
       {/* ヘッダー */}
       <div className="bg-white border-b border-gray-200 p-6">
         {/* タイトル */}

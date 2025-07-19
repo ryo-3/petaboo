@@ -42,7 +42,7 @@ export default function BoardHeader({
           )}
         </div>
         {boardDescription && (
-          <p className="text-gray-600 text-[15px]">{boardDescription}</p>
+          <p className="text-gray-600 text-sm">{boardDescription}</p>
         )}
       </div>
       <div className="flex items-center gap-4">

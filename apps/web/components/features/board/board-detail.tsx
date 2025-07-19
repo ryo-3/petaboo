@@ -481,10 +481,8 @@ function BoardDetail({
   const normalMemoCount = allMemoItems.length;
   const deletedMemoCount = 0; // 削除済みメモの件数（将来実装）
 
-  const screenHeight = "h-[calc(100vh-64px)]"; // 既存画面と同じ高さ設定
-
   return (
-    <div className={`flex ${screenHeight} bg-white overflow-hidden`}>
+    <div className="flex h-full bg-white overflow-hidden">
       {/* 左側：メモ・タスク一覧 */}
       <div
         className={`${
@@ -493,7 +491,7 @@ function BoardDetail({
               ? "w-[30%] border-r border-gray-300" // リスト表示時は広め
               : "w-[47%] border-r border-gray-300" // エディター表示時
             : "w-full"
-        } pt-2 pl-5 pr-4 ${selectedMemo || selectedTask || rightPanelMode ? "pr-2" : "pr-4"} flex flex-col transition-all duration-300 relative`}
+        } pt-4 pl-5 pr-4 ${selectedMemo || selectedTask || rightPanelMode ? "pr-2" : "pr-4"} flex flex-col transition-all duration-300 relative`}
       >
         {/* 左側のヘッダー */}
         {showBoardHeader && (
@@ -510,11 +508,11 @@ function BoardDetail({
 
         {/* メモ・タスクコンテンツ */}
         <div
-          className={`${rightPanelMode === "memo-list" || rightPanelMode === "task-list" ? "grid grid-cols-1" : "grid grid-cols-1 lg:grid-cols-2"} gap-4 flex-1`}
+          className={`${rightPanelMode === "memo-list" || rightPanelMode === "task-list" ? "flex flex-col" : "grid grid-cols-1 lg:grid-cols-2"} gap-4 flex-1 min-h-0`}
         >
           {/* メモ列 */}
           {rightPanelMode !== "task-list" && (
-            <div className="flex flex-col h-[calc(100vh-135px)]">
+            <div className="flex flex-col flex-1 min-h-0">
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-1">
@@ -588,7 +586,7 @@ function BoardDetail({
                 </button>
               </div>
 
-              <div className="space-y-3 flex-1 overflow-y-auto pr-1 pb-10">
+              <div className="space-y-3 flex-1 overflow-y-auto pr-1 pb-10 mb-2">
                 {isLoading ? (
                   <div className="text-gray-500 text-center py-8">
                     メモを読み込み中...
@@ -619,7 +617,7 @@ function BoardDetail({
 
           {/* タスク列 */}
           {rightPanelMode !== "memo-list" && (
-            <div className="flex flex-col h-[calc(100vh-135px)]">
+            <div className="flex flex-col flex-1 min-h-0">
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-1">
@@ -721,7 +719,7 @@ function BoardDetail({
                 </button>
               </div>
 
-              <div className="space-y-3 flex-1 overflow-y-auto pr-1 pb-10">
+              <div className="space-y-3 flex-1 overflow-y-auto pr-1 pb-10 mb-2">
                 {isLoading ? (
                   <div className="text-gray-500 text-center py-8">
                     タスクを読み込み中...

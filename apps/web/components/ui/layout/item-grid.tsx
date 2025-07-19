@@ -26,8 +26,10 @@ function ItemGrid({ viewMode, effectiveColumnCount, children }: ItemGridProps) {
   };
 
   return (
-    <div className={`${getGridClassName()} w-full min-w-0`}>
-      {children}
+    <div className="flex-1 overflow-auto pr-2 pb-10 mb-2">
+      <div className={getGridClassName()}>
+        {children}
+      </div>
     </div>
   );
 }

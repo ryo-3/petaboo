@@ -1,16 +1,15 @@
 import MemoCard from "@/components/features/memo/memo-card";
 import MemoEditor from "@/components/features/memo/memo-editor";
 import MemoListItem from "@/components/features/memo/memo-list-item";
+import TaskCard from "@/components/features/task/task-card";
 import TaskEditor from "@/components/features/task/task-editor";
 import TaskListItem from "@/components/features/task/task-list-item";
-import TaskStatusDisplay from "@/components/features/task/task-status-display";
 import MemoIcon from "@/components/icons/memo-icon";
 import TaskIcon from "@/components/icons/task-icon";
 import TrashIcon from "@/components/icons/trash-icon";
 import DesktopUpper from "@/components/layout/desktop-upper";
 import Tooltip from "@/components/ui/base/tooltip";
 import AddItemButton from "@/components/ui/buttons/add-item-button";
-import ItemStatusDisplay from "@/components/ui/layout/item-status-display";
 import RightPanel from "@/components/ui/layout/right-panel";
 import {
   useAddItemToBoard,
@@ -625,57 +624,47 @@ function BoardDetail({
                 </button>
               </div>
 
-              <div className="space-y-3 flex-1 overflow-y-auto pr-1 pb-10 mb-2">
+              <div className="flex-1 overflow-y-auto pr-1 pb-10 mb-2">
                 {isLoading ? (
                   <div className="text-gray-500 text-center py-8">
                     メモを読み込み中...
                   </div>
+                ) : memoItems.length === 0 ? (
+                  <div className="text-gray-500 text-center py-8">
+                    {activeMemoTab === "deleted"
+                      ? "削除済みメモがありません"
+                      : "メモがありません"}
+                  </div>
                 ) : (
-                  <ItemStatusDisplay
-                    items={memoItems.map((item) => item.content as Memo)}
-                    viewMode={viewMode}
-                    effectiveColumnCount={effectiveColumnCount}
-                    selectionMode="select"
-                    onSelectItem={(memo) => handleSelectMemo(memo)}
-                    selectedItemId={selectedMemo?.id}
-                    showEditDate={showEditDate}
-                    emptyMessage={
-                      activeMemoTab === "deleted"
-                        ? "削除済みメモがありません"
-                        : "メモがありません"
+                  <div 
+                    className={
+                      viewMode === "card"
+                        ? `grid gap-4 ${
+                            effectiveColumnCount === 1 ? "grid-cols-1" :
+                            effectiveColumnCount === 2 ? "grid-cols-1 md:grid-cols-2" :
+                            effectiveColumnCount === 3 ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" :
+                            "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                          }`
+                        : effectiveColumnCount === 1 ? "space-y-0" : "space-y-1"
                     }
-                    renderItem={(memo, props) => {
-                      const Component =
-                        viewMode === "card" ? MemoCard : MemoListItem;
-                      /* eslint-disable react/prop-types */
+                  >
+                    {memoItems.map((item) => {
+                      const memo = item.content as Memo;
+                      const Component = viewMode === "card" ? MemoCard : MemoListItem;
                       return (
                         <Component
                           key={memo.id}
                           memo={memo}
                           isChecked={false}
                           onToggleCheck={() => {}}
-                          onSelect={props.onSelect}
-                          isSelected={props.isSelected}
+                          onSelect={() => handleSelectMemo(memo)}
+                          isSelected={selectedMemo?.id === memo.id}
                           showEditDate={showEditDate}
                           variant="normal"
                         />
                       );
-                      /* eslint-enable react/prop-types */
-                    }}
-                    getSortValue={(memo, sortId) => {
-                      switch (sortId) {
-                        case "createdAt":
-                          return memo.createdAt;
-                        case "updatedAt":
-                          return memo.updatedAt || memo.createdAt;
-                        default:
-                          return 0;
-                      }
-                    }}
-                    getDefaultSortValue={(memo) =>
-                      memo.updatedAt || memo.createdAt
-                    }
-                  />
+                    })}
+                  </div>
                 )}
               </div>
             </div>
@@ -785,25 +774,46 @@ function BoardDetail({
                 </button>
               </div>
 
-              <div className="space-y-3 flex-1 overflow-y-auto pr-1 pb-10 mb-2">
+              <div className="flex-1 overflow-y-auto pr-1 pb-10 mb-2">
                 {isLoading ? (
                   <div className="text-gray-500 text-center py-8">
                     タスクを読み込み中...
                   </div>
+                ) : taskItems.length === 0 ? (
+                  <div className="text-gray-500 text-center py-8">
+                    {activeTaskTab === "deleted"
+                      ? "削除済みタスクがありません"
+                      : "タスクがありません"}
+                  </div>
                 ) : (
-                  <div className="overflow-x-hidden">
-                    <TaskStatusDisplay
-                    activeTab={
-                      activeTaskTab as "todo" | "in_progress" | "completed"
+                  <div 
+                    className={
+                      viewMode === "card"
+                        ? `grid gap-4 ${
+                            effectiveColumnCount === 1 ? "grid-cols-1" :
+                            effectiveColumnCount === 2 ? "grid-cols-1 md:grid-cols-2" :
+                            effectiveColumnCount === 3 ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" :
+                            "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                          }`
+                        : effectiveColumnCount === 1 ? "space-y-0" : "space-y-1"
                     }
-                    tasks={taskItems.map((item) => item.content as Task)}
-                    viewMode={viewMode}
-                    effectiveColumnCount={effectiveColumnCount}
-                    selectionMode="select"
-                    onSelectTask={(task) => handleSelectTask(task)}
-                    selectedTaskId={selectedTask?.id}
-                    showEditDate={showEditDate}
-                  />
+                  >
+                    {taskItems.map((item) => {
+                      const task = item.content as Task;
+                      const Component = viewMode === "card" ? TaskCard : TaskListItem;
+                      return (
+                        <Component
+                          key={task.id}
+                          task={task}
+                          isChecked={false}
+                          onToggleCheck={() => {}}
+                          onSelect={() => handleSelectTask(task)}
+                          isSelected={selectedTask?.id === task.id}
+                          showEditDate={showEditDate}
+                          variant="normal"
+                        />
+                      );
+                    })}
                   </div>
                 )}
               </div>

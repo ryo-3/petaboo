@@ -78,8 +78,12 @@ function BoardDetail({
     "normal"
   );
   const [showTabText, setShowTabText] = useState(true);
-  const [rightPanelMode, setRightPanelMode] = useState<'editor' | 'memo-list' | 'task-list' | null>(null);
-  const [selectedItemsFromList, setSelectedItemsFromList] = useState<Set<number>>(new Set());
+  const [rightPanelMode, setRightPanelMode] = useState<
+    "editor" | "memo-list" | "task-list" | null
+  >(null);
+  const [selectedItemsFromList, setSelectedItemsFromList] = useState<
+    Set<number>
+  >(new Set());
 
   // propsから選択状態を使用（Fast Refresh対応）
   const selectedMemo = propSelectedMemo;
@@ -155,16 +159,30 @@ function BoardDetail({
 
   const handleSelectMemo = useCallback(
     (memo: Memo) => {
+      console.log(
+        "🟣 handleSelectMemo called with:",
+        memo.id,
+        "rightPanelMode:",
+        rightPanelMode
+      );
+      setRightPanelMode(null); // リストモードを解除
       onSelectMemo?.(memo);
     },
-    [onSelectMemo]
+    [onSelectMemo, rightPanelMode]
   );
 
   const handleSelectTask = useCallback(
     (task: Task) => {
+      console.log(
+        "🔷 handleSelectTask called with:",
+        task.id,
+        "rightPanelMode:",
+        rightPanelMode
+      );
+      setRightPanelMode(null); // リストモードを解除
       onSelectTask?.(task);
     },
-    [onSelectTask]
+    [onSelectTask, rightPanelMode]
   );
 
   const handleCloseDetail = useCallback(() => {
@@ -188,6 +206,11 @@ function BoardDetail({
 
   // 新規メモ作成
   const handleCreateNewMemo = useCallback(() => {
+    console.log(
+      "🟢 handleCreateNewMemo called, rightPanelMode:",
+      rightPanelMode
+    );
+    setRightPanelMode(null); // リストモードを解除
     const newMemo: Memo = {
       id: 0, // 新規作成時は0
       title: "",
@@ -195,11 +218,17 @@ function BoardDetail({
       createdAt: Date.now() / 1000,
       updatedAt: Date.now() / 1000,
     };
+    console.log("🟢 calling onSelectMemo with:", newMemo);
     onSelectMemo?.(newMemo);
-  }, [onSelectMemo]);
+  }, [onSelectMemo, rightPanelMode]);
 
   // 新規タスク作成
   const handleCreateNewTask = useCallback(() => {
+    console.log(
+      "🔵 handleCreateNewTask called, rightPanelMode:",
+      rightPanelMode
+    );
+    setRightPanelMode(null); // リストモードを解除
     const newTask: Task = {
       id: 0, // 新規作成時は0
       title: "",
@@ -211,33 +240,34 @@ function BoardDetail({
       createdAt: Date.now() / 1000,
       updatedAt: Date.now() / 1000,
     };
+    console.log("🔵 calling onSelectTask with:", newTask);
     onSelectTask?.(newTask);
-  }, [onSelectTask, activeTaskTab]);
+  }, [onSelectTask, activeTaskTab, rightPanelMode]);
 
   // メモ一覧表示ハンドラ
   const handleShowMemoList = useCallback(() => {
-    setRightPanelMode('memo-list');
+    console.log("🟡 handleShowMemoList called");
+    setRightPanelMode("memo-list");
     setSelectedItemsFromList(new Set());
-    onClearSelection?.();
-  }, [onClearSelection]);
+    console.log("🟡 rightPanelMode set to memo-list");
+  }, []);
 
   // タスク一覧表示ハンドラ
   const handleShowTaskList = useCallback(() => {
-    setRightPanelMode('task-list');
+    setRightPanelMode("task-list");
     setSelectedItemsFromList(new Set());
-    onClearSelection?.();
-  }, [onClearSelection]);
+  }, []);
 
   // 一覧からボードに追加
   const handleAddSelectedItems = useCallback(async () => {
     if (selectedItemsFromList.size === 0) return;
 
     try {
-      const promises = Array.from(selectedItemsFromList).map(itemId => {
-        const itemType = rightPanelMode === 'memo-list' ? 'memo' : 'task';
+      const promises = Array.from(selectedItemsFromList).map((itemId) => {
+        const itemType = rightPanelMode === "memo-list" ? "memo" : "task";
         return addItemToBoard.mutateAsync({
           boardId,
-          data: { itemType, itemId }
+          data: { itemType, itemId },
         });
       });
 
@@ -245,13 +275,13 @@ function BoardDetail({
       setRightPanelMode(null);
       setSelectedItemsFromList(new Set());
     } catch (error) {
-      console.error('Failed to add items to board:', error);
+      console.error("Failed to add items to board:", error);
     }
   }, [selectedItemsFromList, rightPanelMode, boardId, addItemToBoard]);
 
   // 一覧でのアイテム選択切り替え
   const handleToggleItemSelection = useCallback((itemId: number) => {
-    setSelectedItemsFromList(prev => {
+    setSelectedItemsFromList((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(itemId)) {
         newSet.delete(itemId);
@@ -432,7 +462,13 @@ function BoardDetail({
     <div className={`flex ${screenHeight} bg-white overflow-hidden`}>
       {/* 左側：メモ・タスク一覧 */}
       <div
-        className={`${selectedMemo || selectedTask || rightPanelMode ? "w-[47%] border-r border-gray-300" : "w-full"} pt-4 pl-4 pr-4 ${selectedMemo || selectedTask || rightPanelMode ? "pr-2" : "pr-4"} flex flex-col transition-all duration-300 relative`}
+        className={`${
+          selectedMemo || selectedTask || rightPanelMode
+            ? rightPanelMode
+              ? "w-[30%] border-r border-gray-300" // リスト表示時は広め
+              : "w-[47%] border-r border-gray-300" // エディター表示時
+            : "w-full"
+        } pt-4 pl-4 pr-4 ${selectedMemo || selectedTask || rightPanelMode ? "pr-2" : "pr-4"} flex flex-col transition-all duration-300 relative`}
       >
         {/* 左側のヘッダー */}
         {showBoardHeader && (
@@ -448,9 +484,10 @@ function BoardDetail({
         )}
 
         {/* メモ・タスクコンテンツ */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 overflow-y-auto">
+        <div className={`${rightPanelMode === 'memo-list' || rightPanelMode === 'task-list' ? 'grid grid-cols-1' : 'grid grid-cols-1 lg:grid-cols-2'} gap-4 flex-1 overflow-y-auto`}>
           {/* メモ列 */}
-          <div className="flex flex-col">
+          {rightPanelMode !== 'task-list' && (
+            <div className="flex flex-col">
             <div className="flex items-center gap-2 mb-2">
               <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-1">
                 メモ
@@ -541,9 +578,11 @@ function BoardDetail({
               )}
             </div>
           </div>
+          )}
 
           {/* タスク列 */}
-          <div className="flex flex-col">
+          {rightPanelMode !== 'memo-list' && (
+            <div className="flex flex-col">
             <div className="flex items-center gap-2 mb-2">
               <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-1">
                 タスク
@@ -662,6 +701,7 @@ function BoardDetail({
               )}
             </div>
           </div>
+          )}
         </div>
 
         {/* フローティング：一覧へ戻るボタン */}
@@ -691,26 +731,38 @@ function BoardDetail({
 
       {/* 右側：詳細表示 */}
       <RightPanel
-        isOpen={selectedMemo !== null || selectedTask !== null || rightPanelMode !== null}
+        isOpen={
+          selectedMemo !== null ||
+          selectedTask !== null ||
+          rightPanelMode !== null
+        }
         onClose={rightPanelMode ? handleCloseRightPanel : handleCloseDetail}
       >
-        {selectedMemo && !selectedTask && !rightPanelMode && (
-          <MemoEditor
-            key={`memo-${selectedMemo.id}`}
-            memo={selectedMemo}
-            onClose={() => {
-              console.log("🔍 MemoEditor onClose called");
-              // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
-            }}
-            onSaveComplete={(savedMemo) => {
-              // 保存後に選択状態を更新
-              console.log("🔍 MemoEditor onSaveComplete:", savedMemo.id);
-              onSelectMemo?.(savedMemo);
-            }}
-          />
+        {selectedMemo && !selectedTask && rightPanelMode === null && (
+          <>
+            {console.log(
+              "🎯 Rendering MemoEditor - selectedMemo:",
+              selectedMemo.id,
+              "rightPanelMode:",
+              rightPanelMode
+            )}
+            <MemoEditor
+              key={`memo-${selectedMemo.id}`}
+              memo={selectedMemo}
+              onClose={() => {
+                console.log("🔍 MemoEditor onClose called");
+                // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
+              }}
+              onSaveComplete={(savedMemo) => {
+                // 保存後に選択状態を更新
+                console.log("🔍 MemoEditor onSaveComplete:", savedMemo.id);
+                onSelectMemo?.(savedMemo);
+              }}
+            />
+          </>
         )}
 
-        {selectedTask && !selectedMemo && !rightPanelMode && (
+        {selectedTask && !selectedMemo && rightPanelMode === null && (
           <TaskEditor
             key={`task-${selectedTask.id}`}
             task={selectedTask}
@@ -727,7 +779,7 @@ function BoardDetail({
         )}
 
         {/* メモ一覧表示 */}
-        {rightPanelMode === 'memo-list' && (
+        {rightPanelMode === "memo-list" && (
           <div className="flex flex-col h-full bg-white pt-2 pl-2">
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
               <h3 className="text-lg font-semibold">メモ一覧から追加</h3>
@@ -764,7 +816,7 @@ function BoardDetail({
         )}
 
         {/* タスク一覧表示 */}
-        {rightPanelMode === 'task-list' && (
+        {rightPanelMode === "task-list" && (
           <div className="flex flex-col h-full bg-white pt-2 pl-2">
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
               <h3 className="text-lg font-semibold">タスク一覧から追加</h3>

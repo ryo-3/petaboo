@@ -97,7 +97,7 @@ function BoardDetail({
   const [showEditDate, setShowEditDate] = useState(false);
 
   // 計算されたカラム数
-  const effectiveColumnCount = viewMode === "list" ? 1 : columnCount;
+  const effectiveColumnCount = columnCount;
 
   // 設定画面への遷移
   const handleSettings = useCallback(() => {
@@ -637,16 +637,12 @@ function BoardDetail({
                   </div>
                 ) : (
                   <div 
-                    className={
-                      viewMode === "card"
-                        ? `grid gap-4 ${
-                            effectiveColumnCount === 1 ? "grid-cols-1" :
-                            effectiveColumnCount === 2 ? "grid-cols-1 md:grid-cols-2" :
-                            effectiveColumnCount === 3 ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" :
-                            "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-                          }`
-                        : effectiveColumnCount === 1 ? "space-y-0" : "space-y-1"
-                    }
+                    className={`grid gap-4 ${
+                      effectiveColumnCount === 1 ? "grid-cols-1" :
+                      effectiveColumnCount === 2 ? "grid-cols-1 md:grid-cols-2" :
+                      effectiveColumnCount === 3 ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" :
+                      "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                    }`}
                   >
                     {memoItems.map((item) => {
                       const memo = item.content as Memo;
@@ -787,16 +783,12 @@ function BoardDetail({
                   </div>
                 ) : (
                   <div 
-                    className={
-                      viewMode === "card"
-                        ? `grid gap-4 ${
-                            effectiveColumnCount === 1 ? "grid-cols-1" :
-                            effectiveColumnCount === 2 ? "grid-cols-1 md:grid-cols-2" :
-                            effectiveColumnCount === 3 ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" :
-                            "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-                          }`
-                        : effectiveColumnCount === 1 ? "space-y-0" : "space-y-1"
-                    }
+                    className={`grid gap-4 ${
+                      effectiveColumnCount === 1 ? "grid-cols-1" :
+                      effectiveColumnCount === 2 ? "grid-cols-1 md:grid-cols-2" :
+                      effectiveColumnCount === 3 ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" :
+                      "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                    }`}
                   >
                     {taskItems.map((item) => {
                       const task = item.content as Task;

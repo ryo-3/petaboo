@@ -514,7 +514,7 @@ function BoardDetail({
         >
           {/* メモ列 */}
           {rightPanelMode !== "task-list" && (
-            <div className="flex flex-col h-[calc(100vh-170px)]">
+            <div className="flex flex-col h-[calc(100vh-135px)]">
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-1">
@@ -619,7 +619,7 @@ function BoardDetail({
 
           {/* タスク列 */}
           {rightPanelMode !== "memo-list" && (
-            <div className="flex flex-col h-[calc(100vh-170px)]">
+            <div className="flex flex-col h-[calc(100vh-135px)]">
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-1">

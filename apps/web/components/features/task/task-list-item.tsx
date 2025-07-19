@@ -68,11 +68,11 @@ function TaskListItem({
           )}
         </button>
 
-        <button onClick={onSelect} className="flex-1 text-left">
-          <div className="flex flex-col items-start h-full">
-            <div className="flex-1 min-w-0">
+        <button onClick={onSelect} className="flex-1 text-left min-w-0">
+          <div className="flex flex-col items-start h-full min-w-0">
+            <div className="flex-1 min-w-0 w-full">
               <h3
-                className={`font-semibold text-sm mb-1 truncate ${
+                className={`font-semibold text-sm mb-1 truncate w-full ${
                   isDeleted ? "text-gray-700" : "text-gray-800"
                 }`}
               >

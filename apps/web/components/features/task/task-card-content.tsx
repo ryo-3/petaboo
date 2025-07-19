@@ -24,7 +24,7 @@ function TaskCardContent({
   return (
     <>
       <div
-        className={`font-semibold text-base mb-2 truncate leading-tight ${
+        className={`font-semibold text-base mb-2 truncate leading-tight min-w-0 ${
           isDeleted ? "text-gray-700" : "text-gray-800"
         }`}
       >

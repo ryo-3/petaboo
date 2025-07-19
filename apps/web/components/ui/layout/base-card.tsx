@@ -68,7 +68,7 @@ function BaseCard({
               : "bg-white border border-gray-200 hover:shadow-md hover:border-gray-300"
         } pt-4 pl-4 pb-2 pr-6 rounded-lg transition-all text-left ${
           dataTaskId ? "h-[170px]" : "h-[160px]"
-        } w-full`}
+        } w-full min-w-0`}
       >
         <div className="flex flex-col h-full">{children}</div>
       </button>

@@ -1,12 +1,16 @@
+import MemoCard from "@/components/features/memo/memo-card";
 import MemoEditor from "@/components/features/memo/memo-editor";
 import MemoListItem from "@/components/features/memo/memo-list-item";
 import TaskEditor from "@/components/features/task/task-editor";
 import TaskListItem from "@/components/features/task/task-list-item";
+import TaskStatusDisplay from "@/components/features/task/task-status-display";
 import MemoIcon from "@/components/icons/memo-icon";
 import TaskIcon from "@/components/icons/task-icon";
 import TrashIcon from "@/components/icons/trash-icon";
+import DesktopUpper from "@/components/layout/desktop-upper";
 import Tooltip from "@/components/ui/base/tooltip";
 import AddItemButton from "@/components/ui/buttons/add-item-button";
+import ItemStatusDisplay from "@/components/ui/layout/item-status-display";
 import RightPanel from "@/components/ui/layout/right-panel";
 import {
   useAddItemToBoard,
@@ -18,7 +22,7 @@ import { useTasks } from "@/src/hooks/use-tasks";
 import { BoardItemWithContent } from "@/src/types/board";
 import { Memo } from "@/src/types/memo";
 import { Task } from "@/src/types/task";
-import { getTimeAgo } from "@/src/utils/dateUtils";
+import { usePathname, useRouter } from "next/navigation";
 import { memo, useCallback, useEffect, useState } from "react";
 import BoardHeader from "./board-header";
 
@@ -71,6 +75,9 @@ function BoardDetail({
   boardCompleted = false,
   isDeleted = false,
 }: BoardDetailProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+
   const [activeTaskTab, setActiveTaskTab] = useState<
     "todo" | "in_progress" | "completed" | "deleted"
   >("todo");
@@ -84,6 +91,20 @@ function BoardDetail({
   const [selectedItemsFromList, setSelectedItemsFromList] = useState<
     Set<number>
   >(new Set());
+
+  // 表示モード状態（memo-screenと同様）
+  const [viewMode, setViewMode] = useState<"card" | "list">("card");
+  const [columnCount, setColumnCount] = useState(2);
+  const [showEditDate, setShowEditDate] = useState(false);
+
+  // 計算されたカラム数
+  const effectiveColumnCount = viewMode === "list" ? 1 : columnCount;
+
+  // 設定画面への遷移
+  const handleSettings = useCallback(() => {
+    const boardSlug = pathname.split("/")[2];
+    router.push(`/boards/${boardSlug}/settings`);
+  }, [pathname, router]);
 
   // propsから選択状態を使用（Fast Refresh対応）
   const selectedMemo = propSelectedMemo;
@@ -129,6 +150,7 @@ function BoardDetail({
     };
   }, [boardName]);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleRemoveItem = async (item: BoardItemWithContent) => {
     if (confirm("このアイテムをボードから削除しますか？")) {
       try {
@@ -493,18 +515,35 @@ function BoardDetail({
             : "w-full"
         } pt-4 pl-5 pr-4 ${selectedMemo || selectedTask || rightPanelMode ? "pr-2" : "pr-4"} flex flex-col transition-all duration-300 relative`}
       >
-        {/* 左側のヘッダー */}
-        {showBoardHeader && (
-          <BoardHeader
-            boardId={boardId}
-            boardName={boardName}
+        {/* DesktopUpper コントロール（BoardHeaderの代わり） */}
+        <div>
+          <DesktopUpper
+            currentMode="board"
+            activeTab="normal"
+            onTabChange={() => {}} // ボードではタブ切り替えは無効
+            onCreateNew={() => {}} // 既存のボタンを使用
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            columnCount={columnCount}
+            onColumnCountChange={setColumnCount}
+            rightPanelMode={
+              selectedMemo || selectedTask || rightPanelMode ? "view" : "hidden"
+            }
+            customTitle={boardName || "ボード詳細"}
             boardDescription={boardDescription}
-            boardCompleted={boardCompleted}
-            isDeleted={isDeleted}
-            onExport={handleExport}
+            boardId={boardId}
+            onBoardExport={handleExport}
+            onBoardSettings={handleSettings}
             isExportDisabled={false}
+            marginBottom="mb-3"
+            headerMarginBottom="mb-0"
+            showEditDate={showEditDate}
+            onShowEditDateChange={setShowEditDate}
+            normalCount={allMemoItems.length + allTaskItems.length}
+            completedCount={completedCount}
+            deletedCount={deletedCount + deletedMemoCount}
           />
-        )}
+        </div>
 
         {/* メモ・タスクコンテンツ */}
         <div
@@ -591,25 +630,52 @@ function BoardDetail({
                   <div className="text-gray-500 text-center py-8">
                     メモを読み込み中...
                   </div>
-                ) : memoItems.length === 0 ? (
-                  <div className="text-gray-500 text-center py-8">
-                    {activeMemoTab === "deleted"
-                      ? "削除済みメモがありません"
-                      : "メモがありません"}
-                  </div>
                 ) : (
-                  memoItems.map((item) => (
-                    <MemoItemCard
-                      key={`memo-${item.itemId}`}
-                      item={item}
-                      memo={item.content as Memo}
-                      onRemove={() => handleRemoveItem(item)}
-                      onClick={() => handleSelectMemo(item.content as Memo)}
-                      showRemoveButton={
-                        selectedMemo === null && selectedTask === null
+                  <ItemStatusDisplay
+                    items={memoItems.map((item) => item.content as Memo)}
+                    viewMode={viewMode}
+                    effectiveColumnCount={effectiveColumnCount}
+                    selectionMode="select"
+                    onSelectItem={(memo) => handleSelectMemo(memo)}
+                    selectedItemId={selectedMemo?.id}
+                    showEditDate={showEditDate}
+                    emptyMessage={
+                      activeMemoTab === "deleted"
+                        ? "削除済みメモがありません"
+                        : "メモがありません"
+                    }
+                    renderItem={(memo, props) => {
+                      const Component =
+                        viewMode === "card" ? MemoCard : MemoListItem;
+                      /* eslint-disable react/prop-types */
+                      return (
+                        <Component
+                          key={memo.id}
+                          memo={memo}
+                          isChecked={false}
+                          onToggleCheck={() => {}}
+                          onSelect={props.onSelect}
+                          isSelected={props.isSelected}
+                          showEditDate={showEditDate}
+                          variant="normal"
+                        />
+                      );
+                      /* eslint-enable react/prop-types */
+                    }}
+                    getSortValue={(memo, sortId) => {
+                      switch (sortId) {
+                        case "createdAt":
+                          return memo.createdAt;
+                        case "updatedAt":
+                          return memo.updatedAt || memo.createdAt;
+                        default:
+                          return 0;
                       }
-                    />
-                  ))
+                    }}
+                    getDefaultSortValue={(memo) =>
+                      memo.updatedAt || memo.createdAt
+                    }
+                  />
                 )}
               </div>
             </div>
@@ -724,25 +790,21 @@ function BoardDetail({
                   <div className="text-gray-500 text-center py-8">
                     タスクを読み込み中...
                   </div>
-                ) : taskItems.length === 0 ? (
-                  <div className="text-gray-500 text-center py-8">
-                    {activeTaskTab === "deleted"
-                      ? "削除済みタスクがありません"
-                      : "タスクがありません"}
-                  </div>
                 ) : (
-                  taskItems.map((item) => (
-                    <TaskItemCard
-                      key={`task-${item.itemId}`}
-                      item={item}
-                      task={item.content as Task}
-                      onRemove={() => handleRemoveItem(item)}
-                      onClick={() => handleSelectTask(item.content as Task)}
-                      showRemoveButton={
-                        selectedMemo === null && selectedTask === null
-                      }
-                    />
-                  ))
+                  <div className="overflow-x-hidden">
+                    <TaskStatusDisplay
+                    activeTab={
+                      activeTaskTab as "todo" | "in_progress" | "completed"
+                    }
+                    tasks={taskItems.map((item) => item.content as Task)}
+                    viewMode={viewMode}
+                    effectiveColumnCount={effectiveColumnCount}
+                    selectionMode="select"
+                    onSelectTask={(task) => handleSelectTask(task)}
+                    selectedTaskId={selectedTask?.id}
+                    showEditDate={showEditDate}
+                  />
+                  </div>
                 )}
               </div>
             </div>
@@ -902,162 +964,3 @@ function BoardDetail({
 }
 
 export default memo(BoardDetail);
-
-interface MemoItemCardProps {
-  item: BoardItemWithContent;
-  memo: Memo;
-  onRemove: () => void;
-  onClick?: () => void;
-  showRemoveButton?: boolean;
-}
-
-function MemoItemCard({
-  memo,
-  onRemove,
-  onClick,
-  showRemoveButton = true,
-}: MemoItemCardProps) {
-  const updatedAt = new Date(
-    memo.updatedAt ? memo.updatedAt * 1000 : memo.createdAt * 1000
-  );
-  const timeAgo = getTimeAgo(updatedAt);
-
-  return (
-    <div
-      className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick?.();
-      }}
-    >
-      <div className="flex items-start justify-between mb-2">
-        <h3 className="font-medium text-gray-900 line-clamp-1">{memo.title}</h3>
-        {showRemoveButton && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemove();
-            }}
-            className="text-gray-400 hover:text-red-500 text-sm"
-            title="ボードから削除"
-          >
-            ×
-          </button>
-        )}
-      </div>
-
-      {memo.content && (
-        <p className="text-gray-600 text-sm line-clamp-3 mb-3">
-          {memo.content}
-        </p>
-      )}
-
-      <div className="text-xs text-gray-500">{timeAgo}</div>
-    </div>
-  );
-}
-
-interface TaskItemCardProps {
-  item: BoardItemWithContent;
-  task: Task;
-  onRemove: () => void;
-  onClick?: () => void;
-  showRemoveButton?: boolean;
-}
-
-function TaskItemCard({
-  task,
-  onRemove,
-  onClick,
-  showRemoveButton = true,
-}: TaskItemCardProps) {
-  const updatedAt = new Date(
-    task.updatedAt ? task.updatedAt * 1000 : task.createdAt * 1000
-  );
-  const timeAgo = getTimeAgo(updatedAt);
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "completed":
-        return (
-          <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
-            完了
-          </span>
-        );
-      case "in_progress":
-        return (
-          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-            進行中
-          </span>
-        );
-      default:
-        return (
-          <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-            未着手
-          </span>
-        );
-    }
-  };
-
-  const getPriorityBadge = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return (
-          <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">
-            高
-          </span>
-        );
-      case "low":
-        return (
-          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-            低
-          </span>
-        );
-      default:
-        return (
-          <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded">
-            中
-          </span>
-        );
-    }
-  };
-
-  return (
-    <div
-      className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick?.();
-      }}
-    >
-      <div className="flex items-start justify-between mb-2">
-        <h3 className="font-medium text-gray-900 line-clamp-1">{task.title}</h3>
-        {showRemoveButton && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemove();
-            }}
-            className="text-gray-400 hover:text-red-500 text-sm"
-            title="ボードから削除"
-          >
-            ×
-          </button>
-        )}
-      </div>
-
-      {task.description && (
-        <p className="text-gray-600 text-sm line-clamp-2 mb-3">
-          {task.description}
-        </p>
-      )}
-
-      <div className="flex items-center gap-2 mb-2">
-        {getStatusBadge(task.status)}
-        {getPriorityBadge(task.priority)}
-      </div>
-
-      <div className="text-xs text-gray-500">{timeAgo}</div>
-    </div>
-  );
-}

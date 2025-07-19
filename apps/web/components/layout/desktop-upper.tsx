@@ -1,6 +1,8 @@
 "use client";
 
+import SettingsIcon from "@/components/icons/settings-icon";
 import TrashIcon from "@/components/icons/trash-icon";
+import Tooltip from "@/components/ui/base/tooltip";
 import AddItemButton from "@/components/ui/buttons/add-item-button";
 import EditDateToggle from "@/components/ui/buttons/edit-date-toggle";
 import SelectionModeToggle from "@/components/ui/buttons/selection-mode-toggle";
@@ -21,6 +23,18 @@ interface DesktopUpperProps {
   columnCount: number;
   onColumnCountChange: (count: number) => void;
   rightPanelMode: "hidden" | "view" | "create";
+  // Custom title override
+  customTitle?: string;
+  // Board specific props
+  boardDescription?: string | null;
+  boardId?: number;
+  onBoardExport?: () => void;
+  onBoardSettings?: () => void;
+  isExportDisabled?: boolean;
+  // Custom margin bottom
+  marginBottom?: string;
+  // Custom margin bottom for internal header
+  headerMarginBottom?: string;
   // Selection mode (memo only)
   selectionMode?: "select" | "check";
   onSelectionModeChange?: (mode: "select" | "check") => void;
@@ -65,6 +79,14 @@ function DesktopUpper({
   columnCount,
   onColumnCountChange,
   rightPanelMode,
+  customTitle,
+  boardDescription,
+  boardId,
+  onBoardExport,
+  onBoardSettings,
+  isExportDisabled = false,
+  marginBottom = "mb-3",
+  headerMarginBottom = "mb-3",
   selectionMode = "select",
   onSelectionModeChange,
   onSelectAll,
@@ -195,61 +217,106 @@ function DesktopUpper({
   const tabs = getTabsConfig();
 
   return (
-    <div className="mb-3">
-      <div className="flex justify-between items-center mb-3">
+    <div className={marginBottom}>
+      <div className={`flex justify-between items-center ${headerMarginBottom}`}>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">
-            <h1 className="font-bold text-gray-800 w-[105px] text-[22px]">
-              {currentMode === "memo" ? "メモ一覧" : currentMode === "task" ? "タスク一覧" : "ボード一覧"}
-            </h1>
+            {currentMode === "board" ? (
+              <div className="flex items-center gap-3">
+                <h1 className="font-bold text-gray-800 text-[22px]">
+                  {customTitle || "ボード一覧"}
+                </h1>
+                {/* 設定ボタン（ボード名の横） */}
+                {boardId && onBoardSettings && (
+                  <Tooltip text="ボード設定" position="bottom">
+                    <button onClick={onBoardSettings} className="p-1 text-gray-600">
+                      <SettingsIcon className="w-4 h-4" />
+                    </button>
+                  </Tooltip>
+                )}
+              </div>
+            ) : (
+              <h1 className="font-bold text-gray-800 w-[105px] text-[22px]">
+                {customTitle || (currentMode === "memo" ? "メモ一覧" : currentMode === "task" ? "タスク一覧" : "ボード一覧")}
+              </h1>
+            )}
           </div>
 
-          {/* 新規追加ボタン */}
-          <AddItemButton
-            itemType={currentMode}
-            onClick={onCreateNew}
-            position="bottom"
-            size="small"
-            showTooltip={false}
-            customSize={{
-              padding: "p-2",
-              iconSize: "w-3.5 h-3.5"
-            }}
-          />
+          {/* 新規追加ボタン（boardモード以外） */}
+          {currentMode !== "board" && (
+            <AddItemButton
+              itemType={currentMode}
+              onClick={onCreateNew}
+              position="bottom"
+              size="small"
+              showTooltip={false}
+              customSize={{
+                padding: "p-2",
+                iconSize: "w-3.5 h-3.5"
+              }}
+            />
+          )}
 
-          {/* タブ */}
-          <div className="flex items-center gap-2 ml-2">
-            {tabs.map((tab) => {
-            const isActive = activeTab === tab.id;
-            const tabClass = tab.icon
-              ? "pl-2 pr-2 py-2"
-              : "gap-2 px-2 py-1.5";
+          {/* タブ（boardモード以外） */}
+          {currentMode !== "board" && (
+            <div className="flex items-center gap-2 ml-2">
+              {tabs.map((tab) => {
+              const isActive = activeTab === tab.id;
+              const tabClass = tab.icon
+                ? "pl-2 pr-2 py-2"
+                : "gap-2 px-2 py-1.5";
 
-            return (
-              <button
-                key={tab.id}
-                onClick={() =>
-                  onTabChange(
-                    tab.id as
-                      | "normal"
-                      | "deleted"
-                      | "todo"
-                      | "in_progress"
-                      | "completed"
-                  )
-                }
-                className={`flex items-center ${tabClass} rounded-lg font-medium transition-colors text-gray-600 text-[13px] ${getTabBackgroundClass(tab.id, isActive)}`}
-              >
-                {renderTabContent(tab, isActive)}
-              </button>
-            );
-            })}
-          </div>
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() =>
+                    onTabChange(
+                      tab.id as
+                        | "normal"
+                        | "deleted"
+                        | "todo"
+                        | "in_progress"
+                        | "completed"
+                    )
+                  }
+                  className={`flex items-center ${tabClass} rounded-lg font-medium transition-colors text-gray-600 text-[13px] ${getTabBackgroundClass(tab.id, isActive)}`}
+                >
+                  {renderTabContent(tab, isActive)}
+                </button>
+              );
+              })}
+            </div>
+          )}
         </div>
+
+        {/* エクスポートボタン（boardモードのみ） */}
+        {currentMode === "board" && onBoardExport && (
+          <div className="flex items-center">
+            <button
+              onClick={onBoardExport}
+              disabled={isExportDisabled}
+              className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+                isExportDisabled
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-green-100 hover:bg-green-200 text-green-600 hover:text-green-700"
+              }`}
+              title="テキストファイルとしてエクスポート"
+            >
+              📄 エクスポート
+            </button>
+          </div>
+        )}
       </div>
 
+      {/* ボード説明（boardモードのみ） */}
+      {currentMode === "board" && boardDescription && (
+        <div className="mb-3">
+          <p className="text-gray-600 text-sm">{boardDescription}</p>
+        </div>
+      )}
+
       {/* コントロール */}
-      {currentMode !== "board" && !(
+      {!(
         (currentMode === "memo" && preferences?.memoHideControls) ||
         (currentMode === "task" && preferences?.taskHideControls)
       ) && (

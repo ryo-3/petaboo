@@ -488,30 +488,40 @@ function BoardDetail({
           {/* メモ列 */}
           {rightPanelMode !== 'task-list' && (
             <div className="flex flex-col">
-            <div className="flex items-center gap-2 mb-2">
-              <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-1">
-                メモ
-              </h2>
-              <span className="font-normal text-gray-500">
-                {allMemoItems.length}
-              </span>
-              <AddItemButton
-                itemType="memo"
-                onClick={handleCreateNewMemo}
-                size="small"
-                showTooltip={false}
-                customSize={{
-                  padding: "p-1",
-                  iconSize: "size-5",
-                }}
-                className="size-7 flex items-center justify-center"
-              />
-              <button
-                onClick={handleShowMemoList}
-                className="size-7 flex items-center justify-center p-1 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
-              >
-                <MemoIcon className="size-5 text-Green" />
-              </button>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-1">
+                  メモ
+                </h2>
+                <span className="font-normal text-gray-500">
+                  {allMemoItems.length}
+                </span>
+                <AddItemButton
+                  itemType="memo"
+                  onClick={handleCreateNewMemo}
+                  size="small"
+                  showTooltip={false}
+                  customSize={{
+                    padding: "p-1",
+                    iconSize: "size-5",
+                  }}
+                  className="size-7 flex items-center justify-center"
+                />
+                <button
+                  onClick={handleShowMemoList}
+                  className="size-7 flex items-center justify-center p-1 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+                >
+                  <MemoIcon className="size-5 text-Green" />
+                </button>
+              </div>
+              {rightPanelMode === 'memo-list' && (
+                <button
+                  onClick={handleShowTaskList}
+                  className="size-7 flex items-center justify-center p-1 rounded-lg bg-DeepBlue hover:bg-DeepBlue/80 transition-colors"
+                >
+                  <TaskIcon className="size-5 text-white" />
+                </button>
+              )}
             </div>
 
             {/* メモステータスタブ */}
@@ -583,30 +593,40 @@ function BoardDetail({
           {/* タスク列 */}
           {rightPanelMode !== 'memo-list' && (
             <div className="flex flex-col">
-            <div className="flex items-center gap-2 mb-2">
-              <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-1">
-                タスク
-              </h2>
-              <span className="font-normal text-gray-500">
-                {allTaskItems.length}
-              </span>
-              <AddItemButton
-                itemType="task"
-                onClick={handleCreateNewTask}
-                size="small"
-                showTooltip={false}
-                customSize={{
-                  padding: "p-1",
-                  iconSize: "size-5",
-                }}
-                className="size-7 flex items-center justify-center"
-              />
-              <button
-                onClick={handleShowTaskList}
-                className="size-7 flex items-center justify-center p-1 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
-              >
-                <TaskIcon className="size-5 text-DeepBlue" />
-              </button>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-1">
+                  タスク
+                </h2>
+                <span className="font-normal text-gray-500">
+                  {allTaskItems.length}
+                </span>
+                <AddItemButton
+                  itemType="task"
+                  onClick={handleCreateNewTask}
+                  size="small"
+                  showTooltip={false}
+                  customSize={{
+                    padding: "p-1",
+                    iconSize: "size-5",
+                  }}
+                  className="size-7 flex items-center justify-center"
+                />
+                <button
+                  onClick={handleShowTaskList}
+                  className="size-7 flex items-center justify-center p-1 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+                >
+                  <TaskIcon className="size-5 text-DeepBlue" />
+                </button>
+              </div>
+              {rightPanelMode === 'task-list' && (
+                <button
+                  onClick={handleShowMemoList}
+                  className="size-7 flex items-center justify-center p-1 rounded-lg bg-Green hover:bg-Green/80 transition-colors"
+                >
+                  <MemoIcon className="size-5 text-white" />
+                </button>
+              )}
             </div>
 
             {/* タスクステータスタブ */}

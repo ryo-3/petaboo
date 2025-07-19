@@ -8,32 +8,32 @@ import { useMemosBulkDelete } from "@/components/features/memo/use-memo-bulk-del
 import { useMemosBulkRestore } from "@/components/features/memo/use-memo-bulk-restore";
 import DesktopLower from "@/components/layout/desktop-lower";
 import DesktopUpper from "@/components/layout/desktop-upper";
-import RightPanel from "@/components/ui/layout/right-panel";
 import { BulkActionButtons } from "@/components/ui/layout/bulk-action-buttons";
+import RightPanel from "@/components/ui/layout/right-panel";
+import { useSortOptions } from "@/hooks/use-sort-options";
 import { useBulkDeleteButton } from "@/src/hooks/use-bulk-delete-button";
+import { useBulkProcessNotifications } from "@/src/hooks/use-bulk-process-notifications";
 import { useDeletionLid } from "@/src/hooks/use-deletion-lid";
 import { useItemDeselect } from "@/src/hooks/use-item-deselect";
 import { useNextDeletedItemSelection } from "@/src/hooks/use-next-deleted-item-selection";
-import { useRightEditorDelete } from "@/src/hooks/use-right-editor-delete";
 import {
   useDeletedNotes,
   useDeleteNote,
   useNotes,
 } from "@/src/hooks/use-notes";
+import { useRightEditorDelete } from "@/src/hooks/use-right-editor-delete";
 import { useScreenState } from "@/src/hooks/use-screen-state";
 import { useSelectAll } from "@/src/hooks/use-select-all";
-import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
+import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
+import { getDeleteButtonVisibility } from "@/src/utils/bulkButtonUtils";
 import {
   createDeletedNextSelectionHandler,
   getMemoDisplayOrder,
   getNextItemAfterDeletion,
 } from "@/src/utils/domUtils";
 import { createToggleHandlerWithTabClear } from "@/src/utils/toggleUtils";
-import { getDeleteButtonVisibility } from "@/src/utils/bulkButtonUtils";
-import { useBulkProcessNotifications } from "@/src/hooks/use-bulk-process-notifications";
-import { useSortOptions } from "@/hooks/use-sort-options";
 import { useCallback, useRef, useState } from "react";
 
 type MemoScreenMode = "list" | "view" | "create";
@@ -57,7 +57,7 @@ function MemoScreen({
 }: MemoScreenProps) {
   // 一括処理中断通知の監視
   useBulkProcessNotifications();
-  
+
   // 新規作成エディターのキー管理
   const [createEditorKey, setCreateEditorKey] = useState(0);
 
@@ -69,10 +69,10 @@ function MemoScreen({
   // 編集日表示管理
   const [showEditDate, setShowEditDate] = useState(false);
 
-
   // 並び替え管理
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { sortOptions, setSortOptions, getVisibleSortOptions } = useSortOptions('memo');
+  const { sortOptions, setSortOptions, getVisibleSortOptions } =
+    useSortOptions("memo");
 
   // 削除ボタンの参照
   const deleteButtonRef = useRef<HTMLButtonElement>(null);
@@ -187,7 +187,7 @@ function MemoScreen({
   ]);
 
   // 一括削除ボタンの表示制御
-  const { showDeleteButton, deleteButtonCount } = useBulkDeleteButton({ // eslint-disable-line @typescript-eslint/no-unused-vars
+  const { showDeleteButton } = useBulkDeleteButton({
     activeTab,
     deletedTabName: "deleted",
     checkedItems: checkedMemos,
@@ -251,8 +251,8 @@ function MemoScreen({
   const restoreButtonRef = useRef<HTMLButtonElement>(null);
 
   // 一括復元関連
-  const { 
-    handleBulkRestore, 
+  const {
+    handleBulkRestore,
     RestoreModal,
     currentDisplayCount: currentRestoreDisplayCount,
     isRestoreModalOpen,
@@ -278,37 +278,51 @@ function MemoScreen({
   // 削除済みメモの復元時の次選択処理
   const handleRestoreAndSelectNext = (deletedMemo: DeletedMemo) => {
     if (!deletedNotes) return;
-    createDeletedNextSelectionHandler(deletedNotes, deletedMemo, onSelectDeletedMemo, 
-      () => onSelectDeletedMemo(null), setMemoScreenMode);
+    createDeletedNextSelectionHandler(
+      deletedNotes,
+      deletedMemo,
+      onSelectDeletedMemo,
+      () => onSelectDeletedMemo(null),
+      setMemoScreenMode
+    );
   };
-
 
   // タブ切り替え用の状態
   const [displayTab, setDisplayTab] = useState(activeTab);
 
   // カスタムタブ切り替えハンドラー - 直接状態を制御
-  const handleCustomTabChange = useCallback((newTab: string) => {
-    // 1. 先に内部状態を全て更新（画面には反映させない）
-    
-    // 個別選択のクリア
-    if (newTab === "normal" && selectedDeletedMemo) {
-      onSelectDeletedMemo(null);
-      setMemoScreenMode("list");
-    } else if (newTab === "deleted" && selectedMemo) {
-      onSelectMemo(null);
-      setMemoScreenMode("list");
-    }
-    
-    // activeTabを更新
-    setActiveTab(newTab);
-    
-    // 2. 状態更新完了後に表示を切り替え
-    Promise.resolve().then(() => {
-      setTimeout(() => {
-        setDisplayTab(newTab);
-      }, 0);
-    });
-  }, [selectedMemo, selectedDeletedMemo, onSelectMemo, onSelectDeletedMemo, setActiveTab, setMemoScreenMode]);
+  const handleCustomTabChange = useCallback(
+    (newTab: string) => {
+      // 1. 先に内部状態を全て更新（画面には反映させない）
+
+      // 個別選択のクリア
+      if (newTab === "normal" && selectedDeletedMemo) {
+        onSelectDeletedMemo(null);
+        setMemoScreenMode("list");
+      } else if (newTab === "deleted" && selectedMemo) {
+        onSelectMemo(null);
+        setMemoScreenMode("list");
+      }
+
+      // activeTabを更新
+      setActiveTab(newTab);
+
+      // 2. 状態更新完了後に表示を切り替え
+      Promise.resolve().then(() => {
+        setTimeout(() => {
+          setDisplayTab(newTab);
+        }, 0);
+      });
+    },
+    [
+      selectedMemo,
+      selectedDeletedMemo,
+      onSelectMemo,
+      onSelectDeletedMemo,
+      setActiveTab,
+      setMemoScreenMode,
+    ]
+  );
 
   // 選択ハンドラーパターン
   const {
@@ -323,7 +337,6 @@ function MemoScreen({
     onDeselectAndStay: onDeselectAndStayOnMemoList,
     onClose: onClose,
   });
-
 
   return (
     <div className="flex h-full bg-white overflow-hidden">
@@ -401,7 +414,11 @@ function MemoScreen({
           deleteButtonRef={deleteButtonRef}
           isDeleting={isLeftLidOpen}
           deleteVariant={activeTab === "deleted" ? "danger" : undefined}
-          showRestoreButton={activeTab === "deleted" && (checkedDeletedMemos.size > 0 || (isRestoring && currentRestoreDisplayCount > 0))}
+          showRestoreButton={
+            activeTab === "deleted" &&
+            (checkedDeletedMemos.size > 0 ||
+              (isRestoring && currentRestoreDisplayCount > 0))
+          }
           restoreCount={checkedDeletedMemos.size}
           onRestore={handleBulkRestore}
           restoreButtonRef={restoreButtonRef}

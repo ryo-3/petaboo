@@ -7,7 +7,6 @@ import DashboardIcon from "@/components/icons/dashboard-icon";
 import MemoIcon from "@/components/icons/memo-icon";
 import TaskIcon from "@/components/icons/task-icon";
 import { useCreateBoard } from "@/src/hooks/use-boards";
-import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { CreateBoardData } from "@/src/types/board";
 import { useState } from "react";
 
@@ -30,7 +29,6 @@ function CreateScreen({
   onShowTaskList,
   onShowBoardList,
 }: CreateScreenProps) {
-  const { preferences } = useUserPreferences(1);
   const [createMode, setCreateMode] = useState<CreateMode>(initialMode);
   const createBoard = useCreateBoard();
 

@@ -2,7 +2,6 @@
 
 import { useState, useRef } from "react";
 import { useGlobalSearch } from "@/src/hooks/use-global-search";
-import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import SearchIcon from "@/components/icons/search-icon";
 import MemoIcon from "@/components/icons/memo-icon";
 import TaskIcon from "@/components/icons/task-icon";
@@ -30,7 +29,6 @@ function SearchScreen({
   onSelectDeletedMemo,
   onSelectDeletedTask
 }: SearchScreenProps) {
-  const { preferences } = useUserPreferences(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchScope, setSearchScope] = useState<"all" | "title" | "content">("all");
   const [searchTypes, setSearchTypes] = useState<Set<"memo" | "task" | "deleted">>(new Set(["memo", "task"]));

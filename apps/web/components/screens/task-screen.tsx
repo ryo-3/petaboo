@@ -8,31 +8,27 @@ import { useTasksBulkDelete } from "@/components/features/task/use-task-bulk-del
 import { useTasksBulkRestore } from "@/components/features/task/use-task-bulk-restore";
 import DesktopLower from "@/components/layout/desktop-lower";
 import DesktopUpper from "@/components/layout/desktop-upper";
-import RightPanel from "@/components/ui/layout/right-panel";
 import { BulkActionButtons } from "@/components/ui/layout/bulk-action-buttons";
-// import {
-//   BulkDeleteConfirmation,
-//   BulkRestoreConfirmation,
-// } from "@/components/ui/modals";
+import RightPanel from "@/components/ui/layout/right-panel";
+import { useSortOptions } from "@/hooks/use-sort-options";
+import { useBulkDeleteButton } from "@/src/hooks/use-bulk-delete-button";
+import { useBulkProcessNotifications } from "@/src/hooks/use-bulk-process-notifications";
 import { useDeletionLid } from "@/src/hooks/use-deletion-lid";
+import { useItemDeselect } from "@/src/hooks/use-item-deselect";
+import { useNextDeletedItemSelection } from "@/src/hooks/use-next-deleted-item-selection";
 import { useScreenState } from "@/src/hooks/use-screen-state";
+import { useSelectAll } from "@/src/hooks/use-select-all";
+import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
+import { useTabChange } from "@/src/hooks/use-tab-change";
 import { useDeletedTasks, useTasks } from "@/src/hooks/use-tasks";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
-import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
 import type { DeletedTask, Task } from "@/src/types/task";
+import { getDeleteButtonVisibility } from "@/src/utils/bulkButtonUtils";
 import {
   createDeletedNextSelectionHandler,
   getTaskDisplayOrder,
 } from "@/src/utils/domUtils";
 import { createToggleHandlerWithTabClear } from "@/src/utils/toggleUtils";
-import { getDeleteButtonVisibility } from "@/src/utils/bulkButtonUtils";
-import { useBulkProcessNotifications } from "@/src/hooks/use-bulk-process-notifications";
-import { useItemDeselect } from "@/src/hooks/use-item-deselect";
-import { useSelectAll } from "@/src/hooks/use-select-all";
-import { useTabChange } from "@/src/hooks/use-tab-change";
-import { useNextDeletedItemSelection } from "@/src/hooks/use-next-deleted-item-selection";
-import { useBulkDeleteButton } from "@/src/hooks/use-bulk-delete-button";
-import { useSortOptions } from "@/hooks/use-sort-options";
 import { useRef, useState } from "react";
 
 type TaskScreenMode = "list" | "view" | "create" | "edit";
@@ -59,7 +55,7 @@ function TaskScreen({
 }: TaskScreenProps) {
   // 一括処理中断通知の監視
   useBulkProcessNotifications();
-  
+
   // データ取得
   const { data: tasks, isLoading: taskLoading, error: taskError } = useTasks();
   const { data: deletedTasks } = useDeletedTasks();
@@ -72,7 +68,8 @@ function TaskScreen({
 
   // 並び替え管理
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { sortOptions, setSortOptions, getVisibleSortOptions } = useSortOptions('task');
+  const { sortOptions, setSortOptions, getVisibleSortOptions } =
+    useSortOptions("task");
 
   // 編集日表示管理
   const [showEditDate, setShowEditDate] = useState(false);
@@ -123,7 +120,7 @@ function TaskScreen({
   );
 
   // 一括削除ボタンの表示制御
-  const { showDeleteButton, deleteButtonCount } = useBulkDeleteButton({ // eslint-disable-line @typescript-eslint/no-unused-vars
+  const { showDeleteButton } = useBulkDeleteButton({
     activeTab,
     deletedTabName: "deleted",
     checkedItems: checkedTasks,
@@ -161,29 +158,26 @@ function TaskScreen({
     | "deleted";
 
   // 一括削除関連
-  const { 
-    handleBulkDelete, 
-    DeleteModal,
-    currentDisplayCount,
-  } = useTasksBulkDelete({
-    activeTab: activeTabTyped,
-    checkedTasks,
-    checkedDeletedTasks,
-    setCheckedTasks,
-    setCheckedDeletedTasks,
-    tasks,
-    deletedTasks,
-    onTaskDelete: handleItemDeselect,
-    // onDeletedTaskDelete: handleItemDeselect, // 削除済みタスクはReact Query自動更新で処理
-    deleteButtonRef,
-    setIsDeleting,
-    setIsLidOpen,
-    viewMode,
-  });
+  const { handleBulkDelete, DeleteModal, currentDisplayCount } =
+    useTasksBulkDelete({
+      activeTab: activeTabTyped,
+      checkedTasks,
+      checkedDeletedTasks,
+      setCheckedTasks,
+      setCheckedDeletedTasks,
+      tasks,
+      deletedTasks,
+      onTaskDelete: handleItemDeselect,
+      // onDeletedTaskDelete: handleItemDeselect, // 削除済みタスクはReact Query自動更新で処理
+      deleteButtonRef,
+      setIsDeleting,
+      setIsLidOpen,
+      viewMode,
+    });
 
   // 一括復元関連
-  const { 
-    handleBulkRestore, 
+  const {
+    handleBulkRestore,
     RestoreModal,
     currentDisplayCount: currentRestoreDisplayCount,
     isRestoreModalOpen,
@@ -203,14 +197,20 @@ function TaskScreen({
     onSelectDeletedItem: onSelectDeletedTask,
     onDeselectOnly: () => onSelectDeletedTask(null),
     setScreenMode: (mode: string) => setTaskScreenMode(mode as TaskScreenMode),
-    editorSelector: '[data-task-editor]',
+    editorSelector: "[data-task-editor]",
   });
 
   // 削除済みタスクの復元時の次のタスク選択ハンドラー
   const handleDeletedTaskRestoreAndSelectNext = (deletedTask: DeletedTask) => {
     if (!deletedTasks) return;
-    createDeletedNextSelectionHandler(deletedTasks, deletedTask, onSelectDeletedTask,
-      () => onSelectDeletedTask(null), setTaskScreenMode, { isRestore: true, onSelectWithFromFlag: true });
+    createDeletedNextSelectionHandler(
+      deletedTasks,
+      deletedTask,
+      onSelectDeletedTask,
+      () => onSelectDeletedTask(null),
+      setTaskScreenMode,
+      { isRestore: true, onSelectWithFromFlag: true }
+    );
   };
 
   // 通常タスクでの次のタスク選択ハンドラー（実際の画面表示順序に基づく）
@@ -355,13 +355,15 @@ function TaskScreen({
         <DesktopUpper
           currentMode="task"
           activeTab={activeTabTyped}
-          onTabChange={handleTabChange(useTabChange({
-            setActiveTab,
-            setScreenMode: (mode: string) => {
-              setTaskScreenMode(mode as TaskScreenMode);
-              onClearSelection?.(); // 選択状態もクリア
-            }
-          }))}
+          onTabChange={handleTabChange(
+            useTabChange({
+              setActiveTab,
+              setScreenMode: (mode: string) => {
+                setTaskScreenMode(mode as TaskScreenMode);
+                onClearSelection?.(); // 選択状態もクリア
+              },
+            })
+          )}
           onCreateNew={handleCreateNew}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
@@ -436,7 +438,11 @@ function TaskScreen({
           deleteButtonRef={deleteButtonRef}
           isDeleting={isLidOpen}
           deleteVariant={activeTab === "deleted" ? "danger" : undefined}
-          showRestoreButton={activeTab === "deleted" && (checkedDeletedTasks.size > 0 || (isRestoring && currentRestoreDisplayCount > 0))}
+          showRestoreButton={
+            activeTab === "deleted" &&
+            (checkedDeletedTasks.size > 0 ||
+              (isRestoring && currentRestoreDisplayCount > 0))
+          }
           restoreCount={checkedDeletedTasks.size}
           onRestore={handleBulkRestore}
           restoreButtonRef={restoreButtonRef}

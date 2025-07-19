@@ -30,14 +30,16 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8794';
 interface UserPreferencesProviderProps {
   children: ReactNode;
   userId?: number;
+  initialPreferences?: UserPreferences | null;
 }
 
 export const UserPreferencesProvider: React.FC<UserPreferencesProviderProps> = ({
   children,
   userId = 1, // デフォルトユーザーID
+  initialPreferences = null,
 }) => {
-  const [preferences, setPreferences] = useState<UserPreferences | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [preferences, setPreferences] = useState<UserPreferences | null>(initialPreferences);
+  const [loading, setLoading] = useState(!initialPreferences);
   const [error, setError] = useState<string | null>(null);
 
   // デフォルト設定値

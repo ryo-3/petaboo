@@ -6,6 +6,7 @@ import { QueryProvider } from "@/src/lib/query-client";
 import { ToastProvider } from "@/src/contexts/toast-context";
 import { ToastContainer } from "@/components/ui/toast/toast-container";
 import { UserPreferencesProvider } from "@/src/contexts/user-preferences-context";
+import { getServerUserPreferences } from "@/src/lib/server-preferences";
 import { SelectorProvider } from "@/src/contexts/selector-context";
 
 import { jaJP } from "@clerk/localizations";
@@ -24,11 +25,14 @@ export const metadata: Metadata = {
   description: "Clerk認証付きメモ帳アプリ",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // サーバーサイドで設定を事前取得
+  const initialPreferences = await getServerUserPreferences(1);
+
   return (
     <ClerkProvider localization={jaJP}>
       <html lang="ja">
@@ -36,7 +40,7 @@ export default function RootLayout({
           className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-gray-900 min-h-screen`}
         >
           <QueryProvider>
-            <UserPreferencesProvider>
+            <UserPreferencesProvider initialPreferences={initialPreferences}>
               <ToastProvider>
                 <SelectorProvider>
                   {children}

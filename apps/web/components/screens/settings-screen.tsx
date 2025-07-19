@@ -61,12 +61,12 @@ function SettingsScreen() {
   }
 
   return (
-    <div className="h-screen bg-white p-6">
+    <div className="h-screen bg-white pr-6 pt-3 pl-5">
       {/* ヘッダー */}
       <div className="mb-6 border-b border-gray-200 pb-4">
         <div className="flex items-center gap-2 mb-2">
           <SettingsIcon className="w-6 h-6 text-gray-600" />
-          <h1 className="text-2xl font-bold text-gray-800">設定</h1>
+          <h1 className="text-[22px] font-bold text-gray-800">設定</h1>
         </div>
         <p className="text-sm text-gray-600 leading-relaxed">
           ここではメモとタスクの表示設定を変更できます。設定は自動的に保存され、次回アクセス時にも適用されます。

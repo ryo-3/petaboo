@@ -96,7 +96,7 @@ function DesktopUpper({
   onBoardSettings,
   isExportDisabled = false,
   marginBottom = "mb-3",
-  headerMarginBottom = "mb-3",
+  headerMarginBottom = "mb-2",
   boardLayout = "horizontal",
   onBoardLayoutChange,
   showMemo = true,

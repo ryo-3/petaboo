@@ -1,3 +1,5 @@
+import Tooltip from "@/components/ui/base/tooltip";
+
 interface ColumnCountSelectorProps {
   columnCount: number;
   onColumnCountChange: (count: number) => void;
@@ -22,22 +24,27 @@ function ColumnCountSelector({
         if (isRightPanelShown && (count === 3 || count === 4)) return null;
 
         return (
-          <button
+          <Tooltip
             key={count}
-            onClick={() => onColumnCountChange(count)}
-            disabled={disabled}
-            className={`${buttonSize} font-medium text-xs rounded-lg transition-colors ${
-              (!isRightPanelShown && columnCount === count) || // 通常時
-              (isRightPanelShown &&
-                columnCount <= 2 &&
-                columnCount === count) || // 右側表示時の1-2列
-              (isRightPanelShown && columnCount >= 3 && count === 2) // 右側表示時の3-4列→2列表示
-                ? "bg-white text-gray-700 shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
-            } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+            text={`${count}列表示`}
+            position="bottom"
           >
-            {count}
-          </button>
+            <button
+              onClick={() => onColumnCountChange(count)}
+              disabled={disabled}
+              className={`${buttonSize} font-medium text-xs rounded-lg transition-colors ${
+                (!isRightPanelShown && columnCount === count) || // 通常時
+                (isRightPanelShown &&
+                  columnCount <= 2 &&
+                  columnCount === count) || // 右側表示時の1-2列
+                (isRightPanelShown && columnCount >= 3 && count === 2) // 右側表示時の3-4列→2列表示
+                  ? "bg-white text-gray-700 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+            >
+              {count}
+            </button>
+          </Tooltip>
         );
       })}
     </div>

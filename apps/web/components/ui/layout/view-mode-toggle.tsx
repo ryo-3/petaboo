@@ -1,5 +1,6 @@
 import CardViewIcon from "@/components/icons/card-view-icon";
 import ListViewIcon from "@/components/icons/list-view-icon";
+import Tooltip from "@/components/ui/base/tooltip";
 
 interface ViewModeToggleProps {
   viewMode: "card" | "list";
@@ -23,19 +24,24 @@ function ViewModeToggle({
   };
 
   return (
-    <button
-      onClick={handleToggle}
-      disabled={disabled}
-      className={`bg-gray-100 rounded-lg ${buttonSize} flex items-center justify-center transition-colors ${
-        disabled ? "opacity-50 cursor-not-allowed" : "text-gray-500 hover:text-gray-700"
-      }`}
+    <Tooltip 
+      text={viewMode === "card" ? "リスト表示" : "カード表示"} 
+      position="bottom"
     >
-      {viewMode === "card" ? (
-        <CardViewIcon className={iconSize} />
-      ) : (
-        <ListViewIcon className={iconSize} />
-      )}
-    </button>
+      <button
+        onClick={handleToggle}
+        disabled={disabled}
+        className={`bg-gray-100 rounded-lg ${buttonSize} flex items-center justify-center transition-colors ${
+          disabled ? "opacity-50 cursor-not-allowed" : "text-gray-500 hover:text-gray-700"
+        }`}
+      >
+        {viewMode === "card" ? (
+          <CardViewIcon className={iconSize} />
+        ) : (
+          <ListViewIcon className={iconSize} />
+        )}
+      </button>
+    </Tooltip>
   );
 }
 

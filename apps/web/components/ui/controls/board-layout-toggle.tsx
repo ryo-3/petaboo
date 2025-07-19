@@ -20,8 +20,8 @@ function BoardLayoutToggle({
         onClick={() => onBoardLayoutChange("horizontal")}
         className={`${buttonSize} rounded-md flex items-center justify-center transition-colors ${
           boardLayout === "horizontal"
-            ? "text-gray-600"
-            : "text-gray-400 hover:text-gray-600"
+            ? "text-gray-500"
+            : "text-gray-400 hover:text-gray-500"
         }`}
         title="横並び表示"
       >
@@ -36,8 +36,8 @@ function BoardLayoutToggle({
         onClick={() => onBoardLayoutChange("vertical")}
         className={`${buttonSize} rounded-md flex items-center justify-center transition-colors ${
           boardLayout === "vertical"
-            ? "text-gray-600"
-            : "text-gray-400 hover:text-gray-600"
+            ? "text-gray-500"
+            : "text-gray-400 hover:text-gray-500"
         }`}
         title="縦並び表示"
       >

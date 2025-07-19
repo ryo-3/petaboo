@@ -99,6 +99,10 @@ function BoardDetail({
   // ボードレイアウト状態（横並び/縦並び + 反転）
   const [boardLayout, setBoardLayout] = useState<"horizontal" | "vertical">("horizontal");
   const [isReversed, setIsReversed] = useState(false);
+  
+  // コンテンツフィルター状態
+  const [showMemo, setShowMemo] = useState(true);
+  const [showTask, setShowTask] = useState(true);
 
   // 計算されたカラム数
   const effectiveColumnCount = columnCount;
@@ -556,6 +560,10 @@ function BoardDetail({
             onShowEditDateChange={setShowEditDate}
             boardLayout={boardLayout}
             onBoardLayoutChange={handleBoardLayoutChange}
+            showMemo={showMemo}
+            showTask={showTask}
+            onMemoToggle={setShowMemo}
+            onTaskToggle={setShowTask}
             normalCount={allMemoItems.length + allTaskItems.length}
             completedCount={completedCount}
             deletedCount={deletedCount + deletedMemoCount}
@@ -567,13 +575,13 @@ function BoardDetail({
           className={`${
             rightPanelMode === "memo-list" || rightPanelMode === "task-list" 
               ? "flex flex-col" 
-              : boardLayout === "vertical" 
+              : (!showMemo || !showTask) || boardLayout === "vertical"
                 ? isReversed ? "flex flex-col-reverse" : "flex flex-col"
                 : `grid grid-cols-1 lg:grid-cols-2${isReversed ? " [&>*:nth-child(1)]:order-2 [&>*:nth-child(2)]:order-1" : ""}`
           } gap-4 flex-1 min-h-0`}
         >
           {/* メモ列 */}
-          {rightPanelMode !== "task-list" && (
+          {rightPanelMode !== "task-list" && showMemo && (
             <div className="flex flex-col flex-1 min-h-0">
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
@@ -691,7 +699,7 @@ function BoardDetail({
           )}
 
           {/* タスク列 */}
-          {rightPanelMode !== "memo-list" && (
+          {rightPanelMode !== "memo-list" && showTask && (
             <div className="flex flex-col flex-1 min-h-0">
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">

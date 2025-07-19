@@ -10,6 +10,7 @@ import SortToggle from "@/components/ui/buttons/sort-toggle";
 import ColumnCountSelector from "@/components/ui/layout/column-count-selector";
 import ViewModeToggle from "@/components/ui/layout/view-mode-toggle";
 import BoardLayoutToggle from "@/components/ui/controls/board-layout-toggle";
+import ContentFilter from "@/components/ui/controls/content-filter";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 
 interface DesktopUpperProps {
@@ -39,6 +40,11 @@ interface DesktopUpperProps {
   // Board layout control
   boardLayout?: "horizontal" | "vertical";
   onBoardLayoutChange?: (layout: "horizontal" | "vertical") => void;
+  // Content filter control (board mode only)
+  showMemo?: boolean;
+  showTask?: boolean;
+  onMemoToggle?: (show: boolean) => void;
+  onTaskToggle?: (show: boolean) => void;
   // Selection mode (memo only)
   selectionMode?: "select" | "check";
   onSelectionModeChange?: (mode: "select" | "check") => void;
@@ -93,6 +99,10 @@ function DesktopUpper({
   headerMarginBottom = "mb-3",
   boardLayout = "horizontal",
   onBoardLayoutChange,
+  showMemo = true,
+  showTask = true,
+  onMemoToggle,
+  onTaskToggle,
   selectionMode = "select",
   onSelectionModeChange,
   onSelectAll,
@@ -344,8 +354,18 @@ function DesktopUpper({
             <BoardLayoutToggle
               boardLayout={boardLayout}
               onBoardLayoutChange={onBoardLayoutChange}
-              buttonSize="size-7"
+              buttonSize="size-6"
               iconSize="size-5"
+            />
+          )}
+          
+          {/* コンテンツフィルター（boardモードのみ） */}
+          {currentMode === "board" && onMemoToggle && onTaskToggle && (
+            <ContentFilter
+              showMemo={showMemo}
+              showTask={showTask}
+              onMemoToggle={onMemoToggle}
+              onTaskToggle={onTaskToggle}
             />
           )}
 

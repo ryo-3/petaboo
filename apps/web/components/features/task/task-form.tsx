@@ -9,6 +9,7 @@ import BoardIconSelector from "@/components/ui/selectors/board-icon-selector";
 import CustomSelector from "@/components/ui/selectors/custom-selector";
 import Tooltip from "@/components/ui/base/tooltip";
 import { useBoards } from "@/src/hooks/use-boards";
+import type { Board } from "@/src/types/board";
 import {
   getPriorityEditorColor,
   getPriorityText,
@@ -42,7 +43,7 @@ interface TaskFormProps {
   titlePlaceholder?: string;
   descriptionPlaceholder?: string;
   customHeight?: string;
-  boards?: any[]; // ボードデータをpropsとして受け取る
+  boards?: Board[]; // ボードデータをpropsとして受け取る
 }
 
 function TaskForm({
@@ -118,7 +119,7 @@ function TaskForm({
 
 
     return options;
-  }, [boards, selectedBoardIds]);
+  }, [boards]);
 
   // 現在選択されているボードの値（複数選択対応）
   const currentBoardValue = selectedBoardIds;

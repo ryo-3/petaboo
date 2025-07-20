@@ -88,40 +88,27 @@ function MainClient({
 
   // URLに基づいてscreenModeを設定（手動設定時は上書きしない）
   useLayoutEffect(() => {
-    console.log('🔍 useEffectトリガー:', { pathname, isFromBoardDetail, screenMode });
-    
     if (pathname.startsWith("/boards/")) {
-      console.log('🔍 ボード詳細ページ');
       // 手動で設定された状態を上書きしない
       if (screenMode !== "board") {
         setScreenMode("board");
         setCurrentMode("board");
       }
     } else if (pathname === "/boards") {
-      console.log('🔍 ボード一覧ページ');
       if (screenMode !== "board") {
         setScreenMode("board");
         setCurrentMode("board");
       }
     } else if (pathname === "/" && isFromBoardDetail) {
       // ボード詳細から戻った場合はボード一覧を表示
-      console.log('🔍 ボード詳細から戻った - ボード一覧を表示');
       // isFromBoardDetailがtrueの場合は、すでにscreenModeがboardに設定されているはず
       // 上書きしない
-      console.log('🔍 isFromBoardDetailがtrueなので状態を保持');
       setIsFromBoardDetail(false); // フラグをリセット
     }
     // ルートパス("/")でもユーザーが手動で切り替えた場合はホームに戻さない
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname, isFromBoardDetail, setScreenMode, setCurrentMode, setIsFromBoardDetail]);
 
-  // デバッグ用：削除済みメモの状態変更を追跡
-  useEffect(() => {
-    console.log("🔍 selectedDeletedMemo 状態変更:", {
-      id: selectedDeletedMemo?.id,
-      title: selectedDeletedMemo?.title,
-    });
-  }, [selectedDeletedMemo]);
 
   // Hydration完了前はサーバーと同じ状態を保持
   // サイドバーが表示されない問題を避けるため、早期リターンを削除
@@ -165,14 +152,7 @@ function MainClient({
 
   /** 削除済みメモ選択 - メモ画面に遷移 */
   const handleSelectDeletedMemo = (memo: DeletedMemo | null) => {
-    console.log("🔍 handleSelectDeletedMemo 呼び出し:", {
-      memoId: memo?.id,
-      memoTitle: memo?.title,
-      currentSelected: selectedDeletedMemo?.id,
-    });
-
     if (memo) {
-      console.log("🔍 削除済みメモを設定:", memo.id);
       // clearAllSelections()の代わりに手動で他の状態をクリア
       setSelectedMemo(null);
       setSelectedTask(null);
@@ -181,10 +161,7 @@ function MainClient({
       // 削除済みメモは最後に設定
       setSelectedDeletedMemo(memo);
       setScreenMode("memo");
-
-      // 状態更新の確認は useEffect で行うため削除
     } else {
-      console.log("🔍 削除済みメモをクリア");
       setSelectedDeletedMemo(null);
     }
   };

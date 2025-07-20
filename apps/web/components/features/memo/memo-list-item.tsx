@@ -30,6 +30,17 @@ function MemoListItem({
 
   // ボード名を取得（showBoardNameがtrueの場合のみ）
   const { data: boards } = useItemBoards('memo', showBoardName ? memo.id : undefined);
+  
+  // ボード名がついているアイテムだけログ出力
+  if (boards && boards.length > 0) {
+    console.log('🔍 MemoListItem ボードあり:', {
+      memoId: memo.id,
+      memoTitle: memo.title,
+      showBoardName,
+      boardsData: boards,
+      boardsLength: boards.length
+    });
+  }
 
   // ローカルストレージ使用禁止 - 直接APIデータを使用
   const { displayTitle, displayContent, lastEditTime } = {

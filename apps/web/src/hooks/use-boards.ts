@@ -11,18 +11,15 @@ async function getCachedToken(getToken: () => Promise<string | null>): Promise<s
   
   // メモリキャッシュが有効な場合はそれを使用（1分間有効）
   if (cachedToken && now < tokenExpiry) {
-    console.log('🔄 メモリキャッシュされたトークンを使用');
     return cachedToken;
   }
   
   // 新しいトークンを取得
-  console.log('🔑 新しいトークンを取得中...');
   const token = await getToken();
   
   if (token) {
     cachedToken = token;
     tokenExpiry = now + (60 * 1000); // 1分後に期限切れ（短めに設定）
-    console.log('✅ メモリトークンキャッシュ更新');
   }
   
   return token;
@@ -37,7 +34,6 @@ export function useBoards(status: "normal" | "completed" | "deleted" = "normal")
   return useQuery<BoardWithStats[]>({
     queryKey: ["boards", status],
     queryFn: async () => {
-      console.log('🔍 useBoards API呼び出し開始:', status);
       const token = await getCachedToken(getToken);
       
       const response = await fetch(`${API_BASE_URL}/boards?status=${status}`, {
@@ -48,12 +44,10 @@ export function useBoards(status: "normal" | "completed" | "deleted" = "normal")
       });
       
       if (!response.ok) {
-        console.error('❌ useBoards API呼び出し失敗:', response.status, response.statusText);
         throw new Error("Failed to fetch boards");
       }
 
       const data = await response.json();
-      console.log('✅ useBoards API呼び出し成功:', data.length, '件');
       return data;
     },
   });
@@ -370,7 +364,8 @@ export function useItemBoards(itemType: 'memo' | 'task', itemId: number | undefi
         throw new Error("Failed to fetch item boards");
       }
 
-      return response.json();
+      const data = await response.json();
+      return data;
     },
     enabled: !!itemId,
   });

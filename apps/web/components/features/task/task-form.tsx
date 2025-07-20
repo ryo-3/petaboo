@@ -28,8 +28,8 @@ interface TaskFormProps {
   onPriorityChange: (value: "low" | "medium" | "high") => void;
   categoryId: number | null;
   onCategoryChange: (value: number | null) => void;
-  boardId: number | null;
-  onBoardChange: (value: number | null) => void;
+  selectedBoardIds: string[];
+  onBoardChange: (value: string | string[]) => void;
   dueDate: string;
   onDueDateChange: (value: string) => void;
   onSave: () => void;
@@ -42,6 +42,7 @@ interface TaskFormProps {
   titlePlaceholder?: string;
   descriptionPlaceholder?: string;
   customHeight?: string;
+  boards?: any[]; // ボードデータをpropsとして受け取る
 }
 
 function TaskForm({
@@ -55,7 +56,7 @@ function TaskForm({
   onPriorityChange,
   categoryId,
   onCategoryChange,
-  boardId,
+  selectedBoardIds,
   onBoardChange,
   dueDate,
   onDueDateChange,
@@ -69,8 +70,17 @@ function TaskForm({
   titlePlaceholder = "タスクタイトルを入力...",
   descriptionPlaceholder = "入力...",
   customHeight,
+  boards: boardsProp,
 }: TaskFormProps) {
-  const { data: boards = [] } = useBoards();
+  // propsからボードデータが渡された場合はそれを使用、なければuseBoards
+  const { data: boardsFromHook = [] } = useBoards();
+  const boards = boardsProp || boardsFromHook;
+  console.log('🔍 TaskForm ボードデータ状況:', {
+    boardsProp: boardsProp?.length || 0,
+    boardsFromHook: boardsFromHook.length,
+    finalBoards: boards.length,
+    hasBoardsProp: !!boardsProp
+  });
   const titleInputRef = useRef<HTMLInputElement>(null);
   const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
   const [isTrashHovered, setIsTrashHovered] = useState(false);
@@ -112,18 +122,27 @@ function TaskForm({
       });
     });
 
+    console.log('🔍 TaskForm ボードオプション生成:', {
+      boards: boards.length,
+      options: options.length,
+      selectedBoardIds: selectedBoardIds.length,
+      boardsList: boards.map(b => ({ id: b.id, name: b.name }))
+    });
+
     return options;
-  }, [boards]);
+  }, [boards, selectedBoardIds]);
 
-  // 現在選択されているボードのvalue
-  const currentBoardValue = boardId ? boardId.toString() : "";
+  // 現在選択されているボードの値（複数選択対応）
+  const currentBoardValue = selectedBoardIds;
 
-  // ボード選択変更ハンドラー
+  // ボード選択変更ハンドラー（複数選択対応）
   const handleBoardSelectorChange = (value: string | string[]) => {
-    // タスクは単一選択のみなので、stringとして処理
-    const stringValue = Array.isArray(value) ? value[0] || "" : value;
-    const newBoardId = stringValue ? parseInt(stringValue, 10) : null;
-    onBoardChange(newBoardId);
+    console.log('🔍 TaskForm ボード選択変更:', {
+      value,
+      type: Array.isArray(value) ? 'array' : 'string',
+      currentSelectedBoardIds: selectedBoardIds
+    });
+    onBoardChange(value);
   };
 
   // オプションの定義（色はtaskUtilsから取得）
@@ -187,6 +206,7 @@ function TaskForm({
             value={currentBoardValue}
             onChange={handleBoardSelectorChange}
             iconClassName="size-4 text-gray-600"
+            multiple={true}
           />
         </Tooltip>
         {!isNewTask && onDelete && (

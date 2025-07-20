@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { QueryClient } from "@tanstack/react-query";
 import { dehydrate } from "@tanstack/react-query";
 import { HydrationBoundary } from "@tanstack/react-query";
+import type { BoardWithItems } from "@/src/types/board";
 
 interface BoardPageProps {
   params: Promise<{ slug: string }>;
@@ -15,7 +16,7 @@ export default async function BoardPage({ params }: BoardPageProps) {
   console.log(`🚀 BoardPage サーバーサイド開始 slug:${slug}`);
   
   let boardData: { id: number; name: string; description?: string | null } | null = null;
-  let boardWithItems: any = null;
+  let boardWithItems: BoardWithItems | null = null;
   const queryClient = new QueryClient();
   
   // サーバーサイドでボード名を取得（直接認証付きAPI呼び出し）
@@ -61,7 +62,7 @@ export default async function BoardPage({ params }: BoardPageProps) {
             };
             // React Queryキャッシュに設定
             queryClient.setQueryData(["boards", boardData!.id, "items"], boardWithItems);
-            console.log(`✅ BoardPage サーバーサイド完了: 総時間${Date.now() - pageStartTime}ms, アイテム数:${boardWithItems.items?.length || 0}`);
+            console.log(`✅ BoardPage サーバーサイド完了: 総時間${Date.now() - pageStartTime}ms, アイテム数:${boardWithItems?.items?.length || 0}`);
           }
         } else {
           console.error(`❌ サーバーFetch失敗: ${response.status} ${response.statusText}`);

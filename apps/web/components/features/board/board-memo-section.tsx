@@ -136,10 +136,6 @@ export default function BoardMemoSection({
       </div>
 
       <div className="flex-1 overflow-y-auto pr-1 pb-10 mb-2">
-        {(() => {
-          console.log('📝 BoardMemoSection状態:', { isLoading, memoItemsLength: memoItems.length, allMemoItemsLength: allMemoItems.length });
-          return null;
-        })()}
         {isLoading || (allMemoItems.length === 0 && memoItems.length === 0) ? (
           <div className="text-gray-500 text-center py-8">
             メモを読み込み中...

@@ -168,10 +168,6 @@ export default function BoardTaskSection({
       </div>
 
       <div className="flex-1 overflow-y-auto pr-1 pb-10 mb-2">
-        {(() => {
-          console.log('📋 BoardTaskSection状態:', { isLoading, taskItemsLength: taskItems.length, allTaskItemsLength: allTaskItems.length });
-          return null;
-        })()}
         {isLoading || (allTaskItems.length === 0 && taskItems.length === 0) ? (
           <div className="text-gray-500 text-center py-8">
             タスクを読み込み中...

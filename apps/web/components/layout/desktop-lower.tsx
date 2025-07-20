@@ -157,6 +157,7 @@ function DesktopLower({
         selectedTaskId={selectedTask?.status === activeTab ? selectedTask?.id : undefined}
         sortOptions={sortOptions}
         showEditDate={showEditDate}
+        showBoardName={showBoardName}
       />
     );
   }
@@ -176,6 +177,7 @@ function DesktopLower({
             onSelectMemo={onSelectDeletedMemo}
             selectedMemoId={selectedDeletedMemo?.id}
             showEditDate={showEditDate}
+            showBoardName={showBoardName}
             sortOptions={sortOptions.filter(opt => 
             opt.id === "createdAt" || opt.id === "updatedAt" || opt.id === "deletedAt"
           ) as Array<{
@@ -196,6 +198,7 @@ function DesktopLower({
             onSelectTask={onSelectDeletedTask}
             selectedTaskId={selectedDeletedTask?.id}
             showEditDate={showEditDate}
+            showBoardName={showBoardName}
             sortOptions={sortOptions}
           />
         )}

@@ -36,6 +36,16 @@ function TaskListItem({
 
   // ボード名を取得（showBoardNameがtrueの場合のみ）
   const { data: boards } = useItemBoards('task', showBoardName ? task.id : undefined);
+  
+  // デバッグログ：ボード名表示条件をチェック
+  console.log('🔍 TaskListItem 表示条件:', {
+    taskId: task.id,
+    taskTitle: task.title.substring(0, 30),
+    showBoardName,
+    boardsData: boards,
+    boardsLength: boards?.length || 0,
+    willShowBoards: !!(showBoardName && boards && boards.length > 0)
+  });
 
   return (
     <div
@@ -85,20 +95,6 @@ function TaskListItem({
                 {task.title.replace(/[\r\n]/g, " ").trim()}
               </h3>
 
-              {/* ステータスと優先度 */}
-              <div className="flex gap-1 mb-1 flex-wrap">
-                <span
-                  className={`px-1.5 py-0.5 rounded text-xs ${getStatusColor(task.status)}`}
-                >
-                  {getStatusText(task.status)}
-                </span>
-                <span
-                  className={`px-1.5 py-0.5 rounded text-xs ${getPriorityColor(task.priority)}`}
-                >
-                  {getPriorityText(task.priority)}
-                </span>
-              </div>
-
               {/* ボード名表示 */}
               {showBoardName && boards && boards.length > 0 && (
                 <div className="mb-1">
@@ -114,6 +110,20 @@ function TaskListItem({
                   </div>
                 </div>
               )}
+
+              {/* ステータスと優先度 */}
+              <div className="flex gap-1 mb-1 flex-wrap">
+                <span
+                  className={`px-1.5 py-0.5 rounded text-xs ${getStatusColor(task.status)}`}
+                >
+                  {getStatusText(task.status)}
+                </span>
+                <span
+                  className={`px-1.5 py-0.5 rounded text-xs ${getPriorityColor(task.priority)}`}
+                >
+                  {getPriorityText(task.priority)}
+                </span>
+              </div>
 
               <p className="text-xs text-gray-600 line-clamp-1 break-all">
                 {task.description || ""}

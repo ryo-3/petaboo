@@ -5,6 +5,7 @@ import DateInfo from "@/components/shared/date-info";
 import Tooltip from "@/components/ui/base/tooltip";
 import RestoreButton from "@/components/ui/buttons/restore-button";
 import { SingleDeleteConfirmation } from "@/components/ui/modals";
+import { useItemBoards } from "@/src/hooks/use-boards";
 import type { DeletedTask } from "@/src/types/task";
 import { formatDate } from "@/src/utils/formatDate";
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
@@ -57,6 +58,9 @@ const DeletedTaskViewer = forwardRef<
       onDeleteAndSelectNext,
       onRestoreAndSelectNext,
     });
+
+    // ボード情報を取得
+    const { data: boards = [] } = useItemBoards('task', task.id);
 
     const [isTrashHovered, setIsTrashHovered] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);
@@ -200,6 +204,25 @@ const DeletedTaskViewer = forwardRef<
                 </span>
               </div>
             </div>
+
+            {/* ボード情報 */}
+            {boards.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  所属ボード
+                </label>
+                <div className="flex flex-wrap gap-1">
+                  {boards.map((board) => (
+                    <span
+                      key={board.id}
+                      className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-light-Blue text-white"
+                    >
+                      {board.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="w-full min-h-32 leading-relaxed whitespace-pre-wrap mb-8">
               {task.description || "説明なし"}

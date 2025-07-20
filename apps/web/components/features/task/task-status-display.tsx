@@ -58,6 +58,12 @@ function TaskStatusDisplay({
   showBoardName = false,
   sortOptions = []
 }: TaskStatusDisplayProps) {
+  // デバッグ: showBoardName の受け取り状況
+  console.log('🔍 TaskStatusDisplay props:', { 
+    activeTab, 
+    showBoardName,
+    tasksLength: tasks?.length 
+  });
   const filteredTasks = tasks?.filter(task => task.status === activeTab);
 
   const getEmptyMessage = () => {

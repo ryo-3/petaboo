@@ -1,6 +1,6 @@
-import BoardMemoSection from "./board-memo-section";
-import BoardRightPanel from "./board-right-panel";
-import BoardTaskSection from "./board-task-section";
+import BoardMemoSection from "@/components/features/board/board-memo-section";
+import BoardRightPanel from "@/components/features/board/board-right-panel";
+import BoardTaskSection from "@/components/features/board/board-task-section";
 import DesktopUpper from "@/components/layout/desktop-upper";
 import Tooltip from "@/components/ui/base/tooltip";
 import {
@@ -17,7 +17,7 @@ import { BoardItemWithContent } from "@/src/types/board";
 import { Memo } from "@/src/types/memo";
 import { Task } from "@/src/types/task";
 import { memo, useCallback, useEffect } from "react";
-import BoardHeader from "./board-header";
+import BoardHeader from "@/components/features/board/board-header";
 
 interface BoardDetailProps {
   boardId: number;
@@ -36,7 +36,7 @@ interface BoardDetailProps {
 }
 
 
-function BoardDetail({
+function BoardDetailScreen({
   boardId,
   onBack,
   selectedMemo: propSelectedMemo,
@@ -501,4 +501,4 @@ function BoardDetail({
   );
 }
 
-export default memo(BoardDetail);
+export default memo(BoardDetailScreen);

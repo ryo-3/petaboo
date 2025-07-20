@@ -1,6 +1,6 @@
 "use client";
 
-import BoardDetail from "@/components/features/board/board-detail";
+import BoardDetailScreen from "@/components/screens/board-detail-screen";
 import DeletedMemoList from "@/components/features/memo/deleted-memo-list";
 import DesktopLayout from "@/components/layout/desktop-layout";
 import Header from "@/components/layout/header";
@@ -371,7 +371,7 @@ function MainClient({
 
     // シンプルにBoardDetailを表示（メモ・タスク一覧と同じパターン）
     return (
-      <BoardDetail
+      <BoardDetailScreen
         boardId={currentBoardId}
         onBack={() => router.push("/")}
         selectedMemo={boardSelectedItem?.type === 'memo' ? boardSelectedItem.item : null}

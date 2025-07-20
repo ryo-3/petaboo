@@ -1,6 +1,6 @@
 "use client";
 
-import BoardDetail from "@/components/features/board/board-detail";
+import BoardDetailScreen from "@/components/screens/board-detail-screen";
 import { useRouter } from "next/navigation";
 import { useBoardWithItems } from "@/src/hooks/use-boards";
 
@@ -19,7 +19,7 @@ export default function BoardDetailClient({
   const { data: boardWithItems } = useBoardWithItems(boardId);
 
   return (
-    <BoardDetail
+    <BoardDetailScreen
       boardId={boardId}
       onBack={() => router.push("/")}
       onSelectMemo={() => {

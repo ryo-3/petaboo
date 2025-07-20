@@ -244,7 +244,7 @@ function DesktopUpper({
           <div className="flex items-center gap-2">
             {currentMode === "board" ? (
               <div className="flex items-center gap-3">
-                <h1 className="font-bold text-gray-800 text-[22px]">
+                <h1 className="font-bold text-gray-800 w-[105px] text-[22px]">
                   {customTitle || "ボード一覧"}
                 </h1>
                 {/* ボード説明（タイトルの横、一覧表示中は非表示） */}
@@ -267,12 +267,11 @@ function DesktopUpper({
             )}
           </div>
 
-          {/* 新規追加ボタン（boardモード以外） */}
-          {currentMode !== "board" && (
-            <AddItemButton
-              itemType={currentMode}
-              onClick={onCreateNew}
-              position="bottom"
+          {/* 新規追加ボタン */}
+          <AddItemButton
+            itemType={currentMode}
+            onClick={onCreateNew}
+            position="bottom"
               size="small"
               showTooltip={false}
               customSize={{
@@ -280,7 +279,6 @@ function DesktopUpper({
                 iconSize: "w-3.5 h-3.5"
               }}
             />
-          )}
 
           {/* タブ（boardモード以外） */}
           {currentMode !== "board" && (

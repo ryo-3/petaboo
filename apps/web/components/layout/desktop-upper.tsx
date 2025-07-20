@@ -250,7 +250,7 @@ function DesktopUpper({
           <div className="flex items-center gap-2">
             {currentMode === "board" ? (
               <div className="flex items-center gap-3">
-                <h1 className="font-bold text-gray-800 w-[105px] text-[22px]">
+                <h1 className={`font-bold text-gray-800 text-[22px] ${customTitle ? '' : 'w-[105px]'}`}>
                   {customTitle || "ボード一覧"}
                 </h1>
                 {/* ボード説明（タイトルの横、一覧表示中は非表示） */}
@@ -267,7 +267,7 @@ function DesktopUpper({
                 )}
               </div>
             ) : (
-              <h1 className="font-bold text-gray-800 w-[105px] text-[22px]">
+              <h1 className="font-bold text-gray-800 text-[22px]">
                 {customTitle || (currentMode === "memo" ? "メモ一覧" : currentMode === "task" ? "タスク一覧" : "ボード一覧")}
               </h1>
             )}

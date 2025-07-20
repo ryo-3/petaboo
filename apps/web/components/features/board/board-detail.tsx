@@ -1,9 +1,11 @@
 import MemoCard from "@/components/features/memo/memo-card";
 import MemoEditor from "@/components/features/memo/memo-editor";
 import MemoListItem from "@/components/features/memo/memo-list-item";
+import MemoStatusDisplay from "@/components/features/memo/memo-status-display";
 import TaskCard from "@/components/features/task/task-card";
 import TaskEditor from "@/components/features/task/task-editor";
 import TaskListItem from "@/components/features/task/task-list-item";
+import TaskStatusDisplay from "@/components/features/task/task-status-display";
 import MemoIcon from "@/components/icons/memo-icon";
 import TaskIcon from "@/components/icons/task-icon";
 import TrashIcon from "@/components/icons/trash-icon";
@@ -95,11 +97,13 @@ function BoardDetail({
   const [viewMode, setViewMode] = useState<"card" | "list">("card");
   const [columnCount, setColumnCount] = useState(2);
   const [showEditDate, setShowEditDate] = useState(false);
-  
+
   // ボードレイアウト状態（横並び/縦並び + 反転）
-  const [boardLayout, setBoardLayout] = useState<"horizontal" | "vertical">("horizontal");
+  const [boardLayout, setBoardLayout] = useState<"horizontal" | "vertical">(
+    "horizontal"
+  );
   const [isReversed, setIsReversed] = useState(false);
-  
+
   // コンテンツフィルター状態
   const [showMemo, setShowMemo] = useState(true);
   const [showTask, setShowTask] = useState(true);
@@ -109,24 +113,27 @@ function BoardDetail({
   const selectedTask = propSelectedTask;
 
   // 計算されたカラム数（右パネル表示時は最大2列に制限）
-  const effectiveColumnCount = 
-    (selectedMemo || selectedTask || rightPanelMode)
+  const effectiveColumnCount =
+    selectedMemo || selectedTask || rightPanelMode
       ? columnCount <= 2
         ? columnCount
         : 2
       : columnCount;
 
   // ボードレイアウト変更ハンドラー（反転機能付き）
-  const handleBoardLayoutChange = useCallback((newLayout: "horizontal" | "vertical") => {
-    if (boardLayout === newLayout) {
-      // 同じレイアウトをクリックした場合は反転
-      setIsReversed(prev => !prev);
-    } else {
-      // 異なるレイアウトの場合は変更して反転状態をリセット
-      setBoardLayout(newLayout);
-      setIsReversed(false);
-    }
-  }, [boardLayout]);
+  const handleBoardLayoutChange = useCallback(
+    (newLayout: "horizontal" | "vertical") => {
+      if (boardLayout === newLayout) {
+        // 同じレイアウトをクリックした場合は反転
+        setIsReversed((prev) => !prev);
+      } else {
+        // 異なるレイアウトの場合は変更して反転状態をリセット
+        setBoardLayout(newLayout);
+        setIsReversed(false);
+      }
+    },
+    [boardLayout]
+  );
 
   // 設定画面への遷移
   const handleSettings = useCallback(() => {
@@ -148,26 +155,32 @@ function BoardDetail({
   }, [rightPanelMode]);
 
   // メモボタンのハンドラー（一覧表示中は切り替え）
-  const handleMemoToggle = useCallback((show: boolean) => {
-    if (rightPanelMode === "task-list") {
-      // タスク一覧表示中にメモボタンを押したらメモ一覧に切り替え
-      setRightPanelMode("memo-list");
-    } else {
-      // 通常の表示/非表示切り替え
-      setShowMemo(show);
-    }
-  }, [rightPanelMode]);
+  const handleMemoToggle = useCallback(
+    (show: boolean) => {
+      if (rightPanelMode === "task-list") {
+        // タスク一覧表示中にメモボタンを押したらメモ一覧に切り替え
+        setRightPanelMode("memo-list");
+      } else {
+        // 通常の表示/非表示切り替え
+        setShowMemo(show);
+      }
+    },
+    [rightPanelMode]
+  );
 
   // タスクボタンのハンドラー（一覧表示中は切り替え）
-  const handleTaskToggle = useCallback((show: boolean) => {
-    if (rightPanelMode === "memo-list") {
-      // メモ一覧表示中にタスクボタンを押したらタスク一覧に切り替え
-      setRightPanelMode("task-list");
-    } else {
-      // 通常の表示/非表示切り替え
-      setShowTask(show);
-    }
-  }, [rightPanelMode]);
+  const handleTaskToggle = useCallback(
+    (show: boolean) => {
+      if (rightPanelMode === "memo-list") {
+        // メモ一覧表示中にタスクボタンを押したらタスク一覧に切り替え
+        setRightPanelMode("task-list");
+      } else {
+        // 通常の表示/非表示切り替え
+        setShowTask(show);
+      }
+    },
+    [rightPanelMode]
+  );
 
   // 右パネルの開閉に応じてタブテキストの表示を制御
   useEffect(() => {
@@ -319,7 +332,6 @@ function BoardDetail({
     console.log("🔵 calling onSelectTask with:", newTask);
     onSelectTask?.(newTask);
   }, [onSelectTask, activeTaskTab, rightPanelMode]);
-
 
   // 一覧からボードに追加
   const handleAddSelectedItems = useCallback(async () => {
@@ -596,10 +608,12 @@ function BoardDetail({
         {/* メモ・タスクコンテンツ */}
         <div
           className={`${
-            rightPanelMode === "memo-list" || rightPanelMode === "task-list" 
-              ? "flex flex-col" 
-              : (!showMemo || !showTask) || boardLayout === "vertical"
-                ? isReversed ? "flex flex-col-reverse" : "flex flex-col"
+            rightPanelMode === "memo-list" || rightPanelMode === "task-list"
+              ? "flex flex-col"
+              : !showMemo || !showTask || boardLayout === "vertical"
+                ? isReversed
+                  ? "flex flex-col-reverse"
+                  : "flex flex-col"
                 : `grid grid-cols-1 lg:grid-cols-2${isReversed ? " [&>*:nth-child(1)]:order-2 [&>*:nth-child(2)]:order-1" : ""}`
           } gap-4 flex-1 min-h-0`}
         >
@@ -687,17 +701,21 @@ function BoardDetail({
                       : "メモがありません"}
                   </div>
                 ) : (
-                  <div 
+                  <div
                     className={`grid gap-4 ${
-                      effectiveColumnCount === 1 ? "grid-cols-1" :
-                      effectiveColumnCount === 2 ? "grid-cols-1 md:grid-cols-2" :
-                      effectiveColumnCount === 3 ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" :
-                      "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                      effectiveColumnCount === 1
+                        ? "grid-cols-1"
+                        : effectiveColumnCount === 2
+                          ? "grid-cols-1 md:grid-cols-2"
+                          : effectiveColumnCount === 3
+                            ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                            : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
                     }`}
                   >
                     {memoItems.map((item) => {
                       const memo = item.content as Memo;
-                      const Component = viewMode === "card" ? MemoCard : MemoListItem;
+                      const Component =
+                        viewMode === "card" ? MemoCard : MemoListItem;
                       return (
                         <Component
                           key={memo.id}
@@ -829,17 +847,21 @@ function BoardDetail({
                       : "タスクがありません"}
                   </div>
                 ) : (
-                  <div 
+                  <div
                     className={`grid gap-4 ${
-                      effectiveColumnCount === 1 ? "grid-cols-1" :
-                      effectiveColumnCount === 2 ? "grid-cols-1 md:grid-cols-2" :
-                      effectiveColumnCount === 3 ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" :
-                      "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                      effectiveColumnCount === 1
+                        ? "grid-cols-1"
+                        : effectiveColumnCount === 2
+                          ? "grid-cols-1 md:grid-cols-2"
+                          : effectiveColumnCount === 3
+                            ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                            : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
                     }`}
                   >
                     {taskItems.map((item) => {
                       const task = item.content as Task;
-                      const Component = viewMode === "card" ? TaskCard : TaskListItem;
+                      const Component =
+                        viewMode === "card" ? TaskCard : TaskListItem;
                       return (
                         <Component
                           key={task.id}
@@ -936,8 +958,8 @@ function BoardDetail({
 
         {/* メモ一覧表示 */}
         {rightPanelMode === "memo-list" && (
-          <div className="flex flex-col h-full bg-white pt-2 pl-2">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          <div className="flex flex-col h-full bg-white">
+            <div className="flex items-center justify-between border-b border-gray-200 ml-2 mt-1 mb-1 pb-1">
               <h3 className="text-lg font-semibold">メモ一覧から追加</h3>
               <div className="flex items-center gap-2">
                 <button
@@ -950,31 +972,25 @@ function BoardDetail({
               </div>
             </div>
             <div className="flex-1 overflow-y-auto pr-2">
-              {allMemos?.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  メモがありません
-                </div>
-              ) : (
-                allMemos?.map((memo: Memo) => (
-                  <MemoListItem
-                    key={memo.id}
-                    memo={memo}
-                    isChecked={selectedItemsFromList.has(memo.id)}
-                    onToggleCheck={() => handleToggleItemSelection(memo.id)}
-                    onSelect={() => handleToggleItemSelection(memo.id)}
-                    variant="normal"
-                    isSelected={false}
-                  />
-                ))
-              )}
+              <MemoStatusDisplay
+                memos={allMemos}
+                viewMode="list"
+                effectiveColumnCount={1}
+                selectionMode="check"
+                checkedMemos={selectedItemsFromList}
+                onToggleCheck={handleToggleItemSelection}
+                onSelectMemo={(memo) => handleToggleItemSelection(memo.id)}
+                selectedMemoId={undefined}
+                showEditDate={false}
+              />
             </div>
           </div>
         )}
 
         {/* タスク一覧表示 */}
         {rightPanelMode === "task-list" && (
-          <div className="flex flex-col h-full bg-white pt-2 pl-2">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          <div className="flex flex-col h-full bg-white">
+            <div className="flex items-center justify-between border-b border-gray-200 ml-2 mt-1 mb-1 pb-1">
               <h3 className="text-lg font-semibold">タスク一覧から追加</h3>
               <div className="flex items-center gap-2">
                 <button
@@ -986,24 +1002,19 @@ function BoardDetail({
                 </button>
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto pr-2">
-              {allTasks?.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  タスクがありません
-                </div>
-              ) : (
-                allTasks?.map((task: Task) => (
-                  <TaskListItem
-                    key={task.id}
-                    task={task}
-                    isChecked={selectedItemsFromList.has(task.id)}
-                    onToggleCheck={() => handleToggleItemSelection(task.id)}
-                    onSelect={() => handleToggleItemSelection(task.id)}
-                    variant="normal"
-                    isSelected={false}
-                  />
-                ))
-              )}
+            <div className="flex-1 overflow-y-auto">
+              <TaskStatusDisplay
+                activeTab="todo"
+                tasks={allTasks}
+                viewMode="list"
+                effectiveColumnCount={1}
+                selectionMode="check"
+                checkedTasks={selectedItemsFromList}
+                onToggleCheck={handleToggleItemSelection}
+                onSelectTask={(task) => handleToggleItemSelection(task.id)}
+                selectedTaskId={undefined}
+                showEditDate={false}
+              />
             </div>
           </div>
         )}

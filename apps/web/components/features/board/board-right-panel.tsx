@@ -41,22 +41,14 @@ export default function BoardRightPanel({
     <RightPanel isOpen={isOpen} onClose={onClose}>
       {selectedMemo && !selectedTask && rightPanelMode === null && (
         <>
-          {console.log(
-            "🎯 Rendering MemoEditor - selectedMemo:",
-            selectedMemo.id,
-            "rightPanelMode:",
-            rightPanelMode
-          )}
           <MemoEditor
             key={`memo-${selectedMemo.id}`}
             memo={selectedMemo}
             onClose={() => {
-              console.log("🔍 MemoEditor onClose called");
               // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
             }}
             onSaveComplete={(savedMemo) => {
               // 保存後に選択状態を更新
-              console.log("🔍 MemoEditor onSaveComplete:", savedMemo.id);
               onSelectMemo?.(savedMemo);
             }}
           />
@@ -68,12 +60,10 @@ export default function BoardRightPanel({
           key={`task-${selectedTask.id}`}
           task={selectedTask}
           onClose={() => {
-            console.log("🔍 TaskEditor onClose called");
             // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
           }}
           onSaveComplete={(savedTask) => {
             // 保存後に選択状態を更新
-            console.log("🔍 TaskEditor onSaveComplete:", savedTask.id);
             onSelectTask?.(savedTask);
           }}
         />

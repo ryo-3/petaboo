@@ -76,8 +76,6 @@ function TaskScreen({
   // ボード名表示管理
   const [showBoardName, setShowBoardName] = useState(false);
   
-  // デバッグ: showBoardName の変更を監視
-  console.log('🔍 TaskScreen showBoardName:', showBoardName);
 
   // 削除ボタンの参照
   const deleteButtonRef = useRef<HTMLButtonElement>(null);

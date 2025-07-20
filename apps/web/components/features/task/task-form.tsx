@@ -75,12 +75,6 @@ function TaskForm({
   // propsからボードデータが渡された場合はそれを使用、なければuseBoards
   const { data: boardsFromHook = [] } = useBoards();
   const boards = boardsProp || boardsFromHook;
-  console.log('🔍 TaskForm ボードデータ状況:', {
-    boardsProp: boardsProp?.length || 0,
-    boardsFromHook: boardsFromHook.length,
-    finalBoards: boards.length,
-    hasBoardsProp: !!boardsProp
-  });
   const titleInputRef = useRef<HTMLInputElement>(null);
   const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
   const [isTrashHovered, setIsTrashHovered] = useState(false);
@@ -122,12 +116,6 @@ function TaskForm({
       });
     });
 
-    console.log('🔍 TaskForm ボードオプション生成:', {
-      boards: boards.length,
-      options: options.length,
-      selectedBoardIds: selectedBoardIds.length,
-      boardsList: boards.map(b => ({ id: b.id, name: b.name }))
-    });
 
     return options;
   }, [boards, selectedBoardIds]);
@@ -137,11 +125,6 @@ function TaskForm({
 
   // ボード選択変更ハンドラー（複数選択対応）
   const handleBoardSelectorChange = (value: string | string[]) => {
-    console.log('🔍 TaskForm ボード選択変更:', {
-      value,
-      type: Array.isArray(value) ? 'array' : 'string',
-      currentSelectedBoardIds: selectedBoardIds
-    });
     onBoardChange(value);
   };
 

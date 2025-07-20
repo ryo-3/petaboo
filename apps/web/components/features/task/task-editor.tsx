@@ -172,37 +172,16 @@ function TaskEditor({
   // ボード選択の初期化
   useEffect(() => {
     const currentBoardIds = itemBoards.map(board => board.id.toString());
-    console.log('🔍 TaskEditor ボード初期化:', {
-      taskId: task?.id,
-      itemBoards: itemBoards.length,
-      currentBoardIds,
-      selectedBoardIds: selectedBoardIds.length,
-      availableBoards: boards.length,
-      boardsData: boards.map(b => ({ id: b.id, name: b.name }))
-    });
     setSelectedBoardIds(currentBoardIds);
   }, [itemBoards, boards]);
 
   // ボード変更ハンドラー
   const handleBoardChange = (newBoardIds: string | string[]) => {
-    console.log('🔍 TaskEditor ボード変更開始:', {
-      newBoardIds,
-      type: Array.isArray(newBoardIds) ? 'array' : 'string',
-      currentSelectedBoardIds: selectedBoardIds
-    });
-    
     const newIds = Array.isArray(newBoardIds) ? newBoardIds : [newBoardIds];
     const currentIds = selectedBoardIds;
 
     const toAdd = newIds.filter(id => id !== "" && !currentIds.includes(id));
     const toRemove = currentIds.filter(id => !newIds.includes(id));
-
-    console.log('🔍 TaskEditor ボード変更計算:', {
-      newIds,
-      currentIds, 
-      toAdd,
-      toRemove
-    });
 
     if (toAdd.length > 0 || toRemove.length > 0) {
       setPendingBoardChanges({ toAdd, toRemove });

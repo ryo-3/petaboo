@@ -32,13 +32,6 @@ export default function BoardIconSelector({
     ? value 
     : (value && value !== "" ? [value] : []);
   
-  console.log('🔍 BoardIconSelector レンダー:', {
-    value,
-    selectedValues,
-    multiple,
-    optionsLength: options.length,
-    options: options.map(o => ({ value: o.value, label: o.label }))
-  });
 
   
 
@@ -59,24 +52,15 @@ export default function BoardIconSelector({
   }, [isOpen]);
 
   const handleSelect = (optionValue: string) => {
-    console.log('🔍 BoardIconSelector 選択処理:', {
-      optionValue,
-      multiple,
-      selectedValues,
-      isCurrentlySelected: selectedValues.includes(optionValue)
-    });
-    
     if (multiple) {
       // 複数選択モード
       const newValues = selectedValues.includes(optionValue)
         ? selectedValues.filter(v => v !== optionValue) // 選択解除
         : [...selectedValues, optionValue]; // 選択追加
       
-      console.log('🔍 BoardIconSelector 複数選択結果:', newValues);
       onChange(newValues);
     } else {
       // 単一選択モード
-      console.log('🔍 BoardIconSelector 単一選択結果:', optionValue);
       onChange(optionValue);
       setIsOpen(false);
     }
@@ -91,7 +75,6 @@ export default function BoardIconSelector({
         <Tooltip text="ボード選択" position="top">
           <button
             onClick={() => {
-              console.log('🔍 BoardIconSelector ボタンクリック:', { isOpen, hasSelectedBoard });
               setIsOpen(!isOpen);
             }}
             className={`flex items-center justify-center size-7 transition-colors rounded-md ${
@@ -113,19 +96,12 @@ export default function BoardIconSelector({
               
               const isSelected = selectedValues.includes(option.value);
               
-              console.log('🔍 BoardIconSelector オプションレンダー:', {
-                optionValue: option.value,
-                optionLabel: option.label,
-                isSelected,
-                selectedValues
-              });
               
               return (
                 <button
                   key={option.value}
                   className="w-full px-3 py-2 text-sm text-left transition-colors flex items-center gap-2 text-gray-700 hover:bg-gray-50"
                   onClick={() => {
-                    console.log('🔍 BoardIconSelector オプションクリック:', option.value);
                     handleSelect(option.value);
                   }}
                 >

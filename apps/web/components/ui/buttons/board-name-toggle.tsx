@@ -20,10 +20,6 @@ function BoardNameToggle({
     <Tooltip text={showBoardName ? "ボード名を非表示" : "ボード名を表示"} position="bottom">
       <button
         onClick={() => {
-          console.log('🔍 BoardNameToggle クリック:', { 
-            current: showBoardName, 
-            next: !showBoardName 
-          });
           onToggle(!showBoardName);
         }}
         className={`shadow-sm rounded-lg ${buttonSize} flex items-center justify-center transition-all ${

@@ -37,15 +37,6 @@ function TaskListItem({
   // ボード名を取得（showBoardNameがtrueの場合のみ）
   const { data: boards } = useItemBoards('task', showBoardName ? task.id : undefined);
   
-  // デバッグログ：ボード名表示条件をチェック
-  console.log('🔍 TaskListItem 表示条件:', {
-    taskId: task.id,
-    taskTitle: task.title.substring(0, 30),
-    showBoardName,
-    boardsData: boards,
-    boardsLength: boards?.length || 0,
-    willShowBoards: !!(showBoardName && boards && boards.length > 0)
-  });
 
   return (
     <div

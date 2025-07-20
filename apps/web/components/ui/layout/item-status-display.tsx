@@ -56,12 +56,6 @@ function ItemStatusDisplay<T extends { id: number }>({
   getDefaultSortValue,
   variant = 'normal'
 }: ItemStatusDisplayProps<T>) {
-  // デバッグ: showBoardName の受け取り状況
-  console.log('🔍 ItemStatusDisplay props:', { 
-    showBoardName,
-    itemsLength: items?.length,
-    variant 
-  });
   const getSortedItems = () => {
     if (!items) return [];
     

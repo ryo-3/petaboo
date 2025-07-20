@@ -2,6 +2,32 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
 import { Board, BoardWithStats, BoardWithItems, CreateBoardData, UpdateBoardData, AddItemToBoardData, BoardItem } from "@/src/types/board";
 
+// セキュアなメモリキャッシュ（localStorage使用せず）
+let cachedToken: string | null = null;
+let tokenExpiry: number = 0;
+
+async function getCachedToken(getToken: () => Promise<string | null>): Promise<string | null> {
+  const now = Date.now();
+  
+  // メモリキャッシュが有効な場合はそれを使用（1分間有効）
+  if (cachedToken && now < tokenExpiry) {
+    console.log('🔄 メモリキャッシュされたトークンを使用');
+    return cachedToken;
+  }
+  
+  // 新しいトークンを取得
+  console.log('🔑 新しいトークンを取得中...');
+  const token = await getToken();
+  
+  if (token) {
+    cachedToken = token;
+    tokenExpiry = now + (60 * 1000); // 1分後に期限切れ（短めに設定）
+    console.log('✅ メモリトークンキャッシュ更新');
+  }
+  
+  return token;
+}
+
 const API_BASE_URL = "http://localhost:8794";
 
 // ボード一覧取得
@@ -12,7 +38,7 @@ export function useBoards(status: "normal" | "completed" | "deleted" = "normal")
     queryKey: ["boards", status],
     queryFn: async () => {
       console.log('🔍 useBoards API呼び出し開始:', status);
-      const token = await getToken();
+      const token = await getCachedToken(getToken);
       
       const response = await fetch(`${API_BASE_URL}/boards?status=${status}`, {
         headers: {
@@ -34,8 +60,8 @@ export function useBoards(status: "normal" | "completed" | "deleted" = "normal")
 }
 
 // 特定ボード取得（アイテム付き）
-export function useBoardWithItems(boardId: number | null) {
-  const { getToken } = useAuth();
+export function useBoardWithItems(boardId: number | null, skip: boolean = false) {
+  const { getToken, isLoaded } = useAuth();
 
   return useQuery<BoardWithItems>({
     queryKey: ["boards", boardId, "items"],
@@ -43,7 +69,7 @@ export function useBoardWithItems(boardId: number | null) {
       const startTime = performance.now();
       console.log(`🔍 useBoardWithItems API開始 boardId:${boardId}`);
       
-      const token = await getToken();
+      const token = await getCachedToken(getToken);
       const tokenTime = performance.now();
       console.log(`🔑 Token取得完了: ${(tokenTime - startTime).toFixed(2)}ms`);
       
@@ -71,7 +97,7 @@ export function useBoardWithItems(boardId: number | null) {
         items: data.items,
       };
     },
-    enabled: boardId !== null,
+    enabled: boardId !== null && isLoaded && !skip,
     staleTime: 5 * 60 * 1000,    // 5分間は新鮮なデータとして扱う
     gcTime: 30 * 60 * 1000,      // 30分間キャッシュを保持
     refetchOnWindowFocus: false,  // ウィンドウフォーカス時の再取得を無効化
@@ -88,7 +114,7 @@ export function useBoardBySlug(slug: string | null) {
       const startTime = performance.now();
       console.log(`🔍 useBoardBySlug API開始 slug:${slug}`);
       
-      const token = await getToken();
+      const token = await getCachedToken(getToken);
       const tokenTime = performance.now();
       console.log(`🔑 Token取得完了: ${(tokenTime - startTime).toFixed(2)}ms`);
       
@@ -126,7 +152,7 @@ export function useCreateBoard() {
 
   return useMutation<Board, Error, CreateBoardData>({
     mutationFn: async (data) => {
-      const token = await getToken();
+      const token = await getCachedToken(getToken);
       const response = await fetch(`${API_BASE_URL}/boards`, {
         method: "POST",
         headers: {
@@ -156,7 +182,7 @@ export function useUpdateBoard() {
 
   return useMutation<Board, Error, { id: number; data: UpdateBoardData }>({
     mutationFn: async ({ id, data }) => {
-      const token = await getToken();
+      const token = await getCachedToken(getToken);
       const response = await fetch(`${API_BASE_URL}/boards/${id}`, {
         method: "PUT",
         headers: {
@@ -187,7 +213,7 @@ export function useToggleBoardCompletion() {
 
   return useMutation<Board, Error, number>({
     mutationFn: async (id) => {
-      const token = await getToken();
+      const token = await getCachedToken(getToken);
       const response = await fetch(`${API_BASE_URL}/boards/${id}/toggle-completion`, {
         method: "PATCH",
         headers: {
@@ -216,7 +242,7 @@ export function useDeleteBoard() {
 
   return useMutation<void, Error, number>({
     mutationFn: async (id) => {
-      const token = await getToken();
+      const token = await getCachedToken(getToken);
       const response = await fetch(`${API_BASE_URL}/boards/${id}`, {
         method: "DELETE",
         headers: {
@@ -243,7 +269,7 @@ export function useRestoreDeletedBoard() {
 
   return useMutation<Board, Error, number>({
     mutationFn: async (id) => {
-      const token = await getToken();
+      const token = await getCachedToken(getToken);
       const response = await fetch(`${API_BASE_URL}/boards/restore/${id}`, {
         method: "POST",
         headers: {
@@ -272,7 +298,7 @@ export function useAddItemToBoard() {
 
   return useMutation<BoardItem, Error, { boardId: number; data: AddItemToBoardData }>({
     mutationFn: async ({ boardId, data }) => {
-      const token = await getToken();
+      const token = await getCachedToken(getToken);
       const response = await fetch(`${API_BASE_URL}/boards/${boardId}/items`, {
         method: "POST",
         headers: {
@@ -302,7 +328,7 @@ export function useRemoveItemFromBoard() {
 
   return useMutation<void, Error, { boardId: number; itemId: number; itemType: 'memo' | 'task' }>({
     mutationFn: async ({ boardId, itemId, itemType }) => {
-      const token = await getToken();
+      const token = await getCachedToken(getToken);
       const response = await fetch(`${API_BASE_URL}/boards/${boardId}/items/${itemId}?itemType=${itemType}`, {
         method: "DELETE",
         headers: {
@@ -329,7 +355,7 @@ export function useItemBoards(itemType: 'memo' | 'task', itemId: number | undefi
   return useQuery<Board[]>({
     queryKey: ["item-boards", itemType, itemId],
     queryFn: async () => {
-      const token = await getToken();
+      const token = await getCachedToken(getToken);
       
       const response = await fetch(`${API_BASE_URL}/boards/items/${itemType}/${itemId}/boards`, {
         headers: {

@@ -6,20 +6,26 @@ import {
   getStatusColor,
   getStatusText,
 } from "@/src/utils/taskUtils";
+import { useItemBoards } from '@/src/hooks/use-boards';
 
 interface TaskCardContentProps {
   task: Task | DeletedTask;
   variant?: "normal" | "deleted";
   showEditDate?: boolean;
+  showBoardName?: boolean;
 }
 
 function TaskCardContent({
   task,
   variant = "normal",
   showEditDate = false,
+  showBoardName = false,
 }: TaskCardContentProps) {
   const isDeleted = variant === "deleted";
   const deletedTask = task as DeletedTask;
+
+  // ボード名を取得（showBoardNameがtrueの場合のみ）
+  const { data: boards } = useItemBoards('task', showBoardName ? task.id : undefined);
 
   return (
     <>
@@ -44,6 +50,22 @@ function TaskCardContent({
           {getPriorityText(task.priority)}
         </span>
       </div>
+
+      {/* ボード名表示 */}
+      {showBoardName && boards && boards.length > 0 && (
+        <div className="mb-2">
+          <div className="flex flex-wrap gap-1">
+            {boards.map((board) => (
+              <span
+                key={board.id}
+                className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-light-Blue text-white"
+              >
+                {board.name}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 期限表示 一時的にコメントアウト */}
       {/* {task.dueDate && !isDeleted && (

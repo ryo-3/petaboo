@@ -16,6 +16,7 @@ interface TaskStatusDisplayProps {
   onSelectTask?: (task: Task) => void;
   selectedTaskId?: number;
   showEditDate?: boolean;
+  showBoardName?: boolean;
   sortOptions?: Array<{
     id: "createdAt" | "updatedAt" | "dueDate" | "priority" | "deletedAt";
     label: string;
@@ -34,6 +35,7 @@ interface DeletedTaskDisplayProps {
   onSelectTask?: (task: DeletedTask) => void;
   selectedTaskId?: number;
   showEditDate?: boolean;
+  showBoardName?: boolean;
   sortOptions?: Array<{
     id: "createdAt" | "updatedAt" | "dueDate" | "priority" | "deletedAt";
     label: string;
@@ -53,6 +55,7 @@ function TaskStatusDisplay({
   onSelectTask,
   selectedTaskId,
   showEditDate = false,
+  showBoardName = false,
   sortOptions = []
 }: TaskStatusDisplayProps) {
   const filteredTasks = tasks?.filter(task => task.status === activeTab);
@@ -101,6 +104,7 @@ function TaskStatusDisplay({
     onSelect: () => void;
     isSelected: boolean;
     showEditDate: boolean;
+    showBoardName?: boolean;
     variant?: 'normal' | 'deleted';
   }) => {
     const Component = viewMode === 'card' ? TaskCard : TaskListItem;
@@ -114,6 +118,7 @@ function TaskStatusDisplay({
         onSelect={props.onSelect}
         isSelected={props.isSelected}
         showEditDate={props.showEditDate}
+        showBoardName={props.showBoardName}
         variant={props.variant}
       />
     );
@@ -131,6 +136,7 @@ function TaskStatusDisplay({
       onSelectItem={onSelectTask}
       selectedItemId={selectedTaskId}
       showEditDate={showEditDate}
+      showBoardName={showBoardName}
       sortOptions={sortOptions}
       emptyMessage={getEmptyMessage()}
       renderItem={renderTask}
@@ -153,6 +159,7 @@ export function DeletedTaskDisplay({
   onSelectTask,
   selectedTaskId,
   showEditDate = false,
+  showBoardName = false,
   sortOptions = []
 }: DeletedTaskDisplayProps) {
   const getSortValue = (task: DeletedTask, sortId: string): number => {
@@ -183,6 +190,7 @@ export function DeletedTaskDisplay({
     onSelect: () => void;
     isSelected: boolean;
     showEditDate: boolean;
+    showBoardName?: boolean;
     variant?: 'normal' | 'deleted';
   }) => {
     const Component = viewMode === 'card' ? TaskCard : TaskListItem;
@@ -197,6 +205,7 @@ export function DeletedTaskDisplay({
         variant="deleted"
         isSelected={props.isSelected}
         showEditDate={props.showEditDate}
+        showBoardName={props.showBoardName}
       />
     );
     /* eslint-enable react/prop-types */
@@ -213,6 +222,7 @@ export function DeletedTaskDisplay({
       onSelectItem={onSelectTask}
       selectedItemId={selectedTaskId}
       showEditDate={showEditDate}
+      showBoardName={showBoardName}
       sortOptions={sortOptions}
       emptyMessage="削除済みタスクはありません"
       renderItem={renderTask}

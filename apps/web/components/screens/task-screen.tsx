@@ -73,6 +73,9 @@ function TaskScreen({
   // 編集日表示管理
   const [showEditDate, setShowEditDate] = useState(false);
 
+  // ボード名表示管理
+  const [showBoardName, setShowBoardName] = useState(false);
+
   // 削除ボタンの参照
   const deleteButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -365,6 +368,8 @@ function TaskScreen({
           onSortChange={setSortOptions}
           showEditDate={showEditDate}
           onShowEditDateChange={setShowEditDate}
+          showBoardName={showBoardName}
+          onShowBoardNameChange={setShowBoardName}
           normalCount={0} // タスクでは使わない
           deletedTasksCount={deletedTasks?.length || 0}
           todoCount={
@@ -388,6 +393,7 @@ function TaskScreen({
           selectionMode={selectionMode}
           sortOptions={getVisibleSortOptions(activeTab)}
           showEditDate={showEditDate}
+          showBoardName={showBoardName}
           tasks={tasks || []}
           deletedTasks={deletedTasks || []}
           selectedTask={selectedTask}

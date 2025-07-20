@@ -6,6 +6,7 @@ import {
   getStatusColor,
   getStatusText,
 } from "@/src/utils/taskUtils";
+import { useItemBoards } from '@/src/hooks/use-boards';
 
 interface TaskListItemProps {
   task: Task | DeletedTask;
@@ -15,6 +16,7 @@ interface TaskListItemProps {
   variant?: "normal" | "deleted";
   isSelected?: boolean;
   showEditDate?: boolean;
+  showBoardName?: boolean;
   isDeleting?: boolean;
 }
 
@@ -26,10 +28,14 @@ function TaskListItem({
   variant = "normal",
   isSelected = false,
   showEditDate = false,
+  showBoardName = false,
   isDeleting = false,
 }: TaskListItemProps) {
   const isDeleted = variant === "deleted";
   const deletedTask = task as DeletedTask;
+
+  // ボード名を取得（showBoardNameがtrueの場合のみ）
+  const { data: boards } = useItemBoards('task', showBoardName ? task.id : undefined);
 
   return (
     <div
@@ -92,6 +98,22 @@ function TaskListItem({
                   {getPriorityText(task.priority)}
                 </span>
               </div>
+
+              {/* ボード名表示 */}
+              {showBoardName && boards && boards.length > 0 && (
+                <div className="mb-1">
+                  <div className="flex flex-wrap gap-1">
+                    {boards.map((board) => (
+                      <span
+                        key={board.id}
+                        className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-light-Blue text-white"
+                      >
+                        {board.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <p className="text-xs text-gray-600 line-clamp-1 break-all">
                 {task.description || ""}

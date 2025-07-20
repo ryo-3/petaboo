@@ -410,8 +410,8 @@ function DesktopUpper({
             />
           )}
 
-          {/* ボード名表示切り替え（メモのみ） */}
-          {currentMode === "memo" && onShowBoardNameChange && (
+          {/* ボード名表示切り替え（メモとタスク） */}
+          {(currentMode === "memo" || currentMode === "task") && onShowBoardNameChange && (
             <BoardNameToggle
               showBoardName={showBoardName}
               onToggle={onShowBoardNameChange}

@@ -42,7 +42,7 @@ function TaskListItem({
             : "bg-white hover:bg-gray-50"
       } border-b border-gray-200 transition-all duration-300 ${isDeleting ? "opacity-0" : "opacity-100"}`}
     >
-      <div className="p-2 flex items-stretch gap-3 h-full">
+      <div className="p-2 flex items-center gap-3 h-full">
         <button
           onClick={onToggleCheck}
           className={`size-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${

@@ -35,9 +35,11 @@ interface SidebarProps {
   onSettings?: () => void;
   onSearch?: () => void;
   onDashboard?: () => void;
+  onBoardDetail?: () => void;
   onNewBoard?: () => void;
   isBoardActive?: boolean;
   currentBoardName?: string;
+  showingBoardDetail?: boolean;
 }
 
 function Sidebar({
@@ -59,9 +61,11 @@ function Sidebar({
   onSettings,
   onSearch,
   onDashboard,
+  onBoardDetail,
   onNewBoard,
   isBoardActive = false,
   currentBoardName,
+  showingBoardDetail = false,
 }: SidebarProps) {
   const modeTabs = [
     {
@@ -124,22 +128,27 @@ function Sidebar({
             <button
               onClick={onDashboard}
               className={`p-2 rounded-lg transition-colors ${
-                currentMode === "board" && !currentBoardName
+                currentMode === "board" && !showingBoardDetail
                   ? "bg-light-Blue text-white"
                   : "bg-gray-200 hover:bg-gray-300 text-gray-600"
               }`}
             >
-              <DashboardIcon className={`w-5 h-5 ${currentMode === "board" && !currentBoardName ? "" : "text-gray-600"}`} />
+              <DashboardIcon className={`w-5 h-5 ${currentMode === "board" && !showingBoardDetail ? "" : "text-gray-600"}`} />
             </button>
           </Tooltip>
           
           {/* ボード詳細 (選択中のボードがある場合のみ表示) */}
           {currentBoardName && (
-            <Tooltip text={currentBoardName} position="right">
+            <Tooltip text={`${currentBoardName}詳細`} position="right">
               <button
-                className="p-2 rounded-lg transition-colors bg-light-Blue text-white"
+                onClick={onBoardDetail}
+                className={`p-2 rounded-lg transition-colors ${
+                  currentMode === "board" && showingBoardDetail
+                    ? "bg-light-Blue text-white"
+                    : "bg-gray-200 hover:bg-gray-300 text-gray-600"
+                }`}
               >
-                <DashboardEditIcon className="w-5 h-5" />
+                <DashboardEditIcon className={`w-5 h-5 ${currentMode === "board" && showingBoardDetail ? "" : "text-gray-600"}`} />
               </button>
             </Tooltip>
           )}
@@ -192,13 +201,26 @@ function Sidebar({
             <button
               onClick={onDashboard}
               className={`p-2 rounded-lg transition-colors ${
-                isBoardActive
+                isBoardActive && !showingBoardDetail
                   ? "bg-light-Blue text-white"
                   : "bg-gray-200 hover:bg-gray-300 text-gray-600"
               }`}
             >
-              <DashboardIcon className={`w-5 h-5 ${isBoardActive ? "" : "text-gray-600"}`} />
+              <DashboardIcon className={`w-5 h-5 ${isBoardActive && !showingBoardDetail ? "" : "text-gray-600"}`} />
             </button>
+            {/* ボード詳細ボタン (選択中のボードがある場合のみ表示) */}
+            {currentBoardName && (
+              <button
+                onClick={onBoardDetail}
+                className={`p-2 rounded-lg transition-colors ${
+                  isBoardActive && showingBoardDetail
+                    ? "bg-light-Blue text-white"
+                    : "bg-gray-200 hover:bg-gray-300 text-gray-600"
+                }`}
+              >
+                <DashboardEditIcon className={`w-5 h-5 ${isBoardActive && showingBoardDetail ? "" : "text-gray-600"}`} />
+              </button>
+            )}
             {/* 設定ボタン */}
             <div className="flex-shrink-0 p-2 border-t border-gray-200">
               <button

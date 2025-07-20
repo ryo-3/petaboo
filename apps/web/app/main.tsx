@@ -9,6 +9,7 @@ interface MainProps {
   serverBoardDescription?: string | null;
   initialCurrentMode?: "memo" | "task" | "board";
   initialScreenMode?: "home" | "memo" | "task" | "create" | "search" | "settings" | "board";
+  forceShowBoardDetail?: boolean;
 }
 
 function Main({ 
@@ -18,7 +19,8 @@ function Main({
   serverBoardTitle, 
   serverBoardDescription,
   initialCurrentMode,
-  initialScreenMode
+  initialScreenMode,
+  forceShowBoardDetail
 }: MainProps = {}) {
   return (
     <NavigationProvider 
@@ -31,6 +33,7 @@ function Main({
         showBoardHeader={showBoardHeader}
         serverBoardTitle={serverBoardTitle}
         serverBoardDescription={serverBoardDescription}
+        forceShowBoardDetail={forceShowBoardDetail}
       />
     </NavigationProvider>
   );

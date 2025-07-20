@@ -18,7 +18,7 @@ import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
 import { useNavigation } from "@/contexts/navigation-context";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useLayoutEffect, useRef, useState, useMemo, useCallback } from "react";
+import { useLayoutEffect, useRef, useState, useMemo, useCallback } from "react";
 
 // 画面モード定義（7つのシンプルな画面状態）
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -37,6 +37,7 @@ interface MainClientProps {
   showBoardHeader?: boolean;
   serverBoardTitle?: string;
   serverBoardDescription?: string | null;
+  forceShowBoardDetail?: boolean;
 }
 
 function MainClient({ 
@@ -44,7 +45,8 @@ function MainClient({
   boardId, 
   showBoardHeader = true, 
   serverBoardTitle, 
-  serverBoardDescription 
+  serverBoardDescription,
+  forceShowBoardDetail = false
 }: MainClientProps) {
   // ==========================================
   // State管理
@@ -85,6 +87,11 @@ function MainClient({
 
   // UI状態管理
   const [showDeleted, setShowDeleted] = useState(false); // モバイル版削除済み表示フラグ
+  const [showingBoardDetail, setShowingBoardDetail] = useState(() => {
+    // サーバーサイドから明示的に指示されている場合は詳細表示
+    // または、ボード情報が渡されている場合、URLがボード詳細の場合は詳細表示
+    return forceShowBoardDetail || Boolean(boardId || initialBoardName || pathname.startsWith("/boards/"));
+  }); // ボード詳細表示フラグ
 
   // URLに基づいてscreenModeを設定（手動設定時は上書きしない）
   useLayoutEffect(() => {
@@ -93,17 +100,20 @@ function MainClient({
       if (screenMode !== "board") {
         setScreenMode("board");
         setCurrentMode("board");
+        setShowingBoardDetail(true); // ボード詳細URLでは詳細表示
       }
-    } else if (pathname === "/boards") {
-      if (screenMode !== "board") {
-        setScreenMode("board");
-        setCurrentMode("board");
+    } else if (pathname === "/") {
+      // ルートページではボード一覧を表示
+      if (isFromBoardDetail) {
+        // ボード詳細から戻った場合はボード一覧を表示
+        // isFromBoardDetailがtrueの場合は、すでにscreenModeがboardに設定されているはず
+        // 上書きしない
+        setIsFromBoardDetail(false); // フラグをリセット
       }
-    } else if (pathname === "/" && isFromBoardDetail) {
-      // ボード詳細から戻った場合はボード一覧を表示
-      // isFromBoardDetailがtrueの場合は、すでにscreenModeがboardに設定されているはず
-      // 上書きしない
-      setIsFromBoardDetail(false); // フラグをリセット
+      // ルートページではボード一覧表示
+      if (screenMode === "board") {
+        setShowingBoardDetail(false);
+      }
     }
     // ルートパス("/")でもユーザーが手動で切り替えた場合はホームに戻さない
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -238,6 +248,16 @@ function MainClient({
   const handleDashboard = () => {
     clearAllSelections();
     setScreenMode("board");
+    setCurrentMode("board");
+    setShowingBoardDetail(false); // ボード一覧を表示
+  };
+
+  /** ボード詳細に戻る */
+  const handleBoardDetail = () => {
+    clearAllSelections();
+    setScreenMode("board");
+    setCurrentMode("board");
+    setShowingBoardDetail(true); // ボード詳細を表示
   };
 
   /** 新規作成画面に遷移 */
@@ -336,7 +356,7 @@ function MainClient({
               ボードが見つかりません
             </h1>
             <button
-              onClick={() => router.push("/boards")}
+              onClick={() => router.push("/")}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               ボード一覧に戻る
@@ -350,7 +370,7 @@ function MainClient({
     return (
       <BoardDetail
         boardId={currentBoardId}
-        onBack={() => router.push("/boards")}
+        onBack={() => router.push("/")}
         selectedMemo={boardSelectedItem?.type === 'memo' ? boardSelectedItem.item : null}
         selectedTask={boardSelectedItem?.type === 'task' ? boardSelectedItem.item : null}
         onSelectMemo={handleBoardSelectMemo}
@@ -433,12 +453,14 @@ function MainClient({
             onModeChange={setCurrentMode}
             onSettings={handleSettings}
             onDashboard={handleDashboard}
+            onBoardDetail={handleBoardDetail}
             onNewBoard={handleNewBoard}
             isBoardActive={
               screenMode === "board" ||
               (screenMode === "create" && currentMode === "board")
             }
-            currentBoardName={currentBoard?.name}
+            currentBoardName={initialBoardName || currentBoard?.name}
+            showingBoardDetail={showingBoardDetail}
           />
         )}
       </div>
@@ -474,12 +496,14 @@ function MainClient({
               onSettings={handleSettings}
               onSearch={handleSearch}
               onDashboard={handleDashboard}
+              onBoardDetail={handleBoardDetail}
               onNewBoard={handleNewBoard}
               isBoardActive={
                 screenMode === "board" ||
                 (screenMode === "create" && currentMode === "board")
               }
-              currentBoardName={currentBoard?.name}
+              currentBoardName={initialBoardName || currentBoard?.name}
+              showingBoardDetail={showingBoardDetail}
             />
           }
         >
@@ -547,8 +571,12 @@ function MainClient({
 
           {/* ボード画面 */}
           {screenMode === "board" &&
-            (pathname.startsWith("/boards/") && pathname !== "/boards" ? (
-              BoardDetailWrapper
+            ((pathname.startsWith("/boards/") || boardId || initialBoardName) ? (
+              showingBoardDetail ? BoardDetailWrapper : (
+                <BoardScreen 
+                  ref={boardScreenRef}
+                />
+              )
             ) : (
               <BoardScreen 
                 ref={boardScreenRef}

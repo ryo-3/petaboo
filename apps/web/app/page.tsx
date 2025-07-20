@@ -5,7 +5,7 @@ import Main from "./main";
 export default async function HomePage() {
   const { userId } = await auth(); // ✅ await を追加
 
-  // ログイン済みならメモ画面などにリダイレクト（または表示）
+  // ログイン済みならメイン画面を表示（ボード一覧も含む）
   if (userId) {
     return <Main />;
   }

@@ -44,6 +44,7 @@ export default async function BoardPage({ params }: BoardPageProps) {
         serverBoardDescription={boardData.description}
         initialCurrentMode="board"
         initialScreenMode="board"
+        forceShowBoardDetail={true}
       />
     );
   }

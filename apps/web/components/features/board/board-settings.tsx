@@ -67,7 +67,7 @@ export default function BoardSettings({
     if (confirm("このボードを削除しますか？")) {
       try {
         await deleteBoard.mutateAsync(boardId);
-        router.push("/boards"); // 削除後はボード一覧に戻る
+        router.push("/"); // 削除後はボード一覧に戻る
       } catch (error) {
         console.error("Failed to delete board:", error);
       }

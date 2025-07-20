@@ -15,9 +15,10 @@ export function useTasks() {
       const data = await response.json()
       return data as Task[]
     },
-    staleTime: 5 * 60 * 1000,    // 5分間は新鮮なデータとして扱う
-    gcTime: 30 * 60 * 1000,      // 30分間キャッシュを保持
-    refetchOnWindowFocus: false,  // ウィンドウフォーカス時の再取得を無効化
+    staleTime: 2 * 60 * 1000,    // 2分間は新鮮なデータとして扱う
+    gcTime: 10 * 60 * 1000,      // 10分間キャッシュを保持
+    refetchOnWindowFocus: false, // ウィンドウフォーカス時の再取得を無効化
+    refetchOnMount: false,       // マウント時の再取得を無効化
   })
 }
 
@@ -36,6 +37,8 @@ export function useCreateTask() {
     onSuccess: () => {
       // タスク一覧を再取得
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
+      // ボードキャッシュも無効化（タスクが含まれる可能性）
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
     },
   })
 }
@@ -55,6 +58,8 @@ export function useUpdateTask() {
     onSuccess: () => {
       // タスク一覧を再取得
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
+      // ボードキャッシュも無効化（タスクが含まれる可能性）
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
     },
   })
 }
@@ -75,6 +80,8 @@ export function useDeleteTask() {
       // タスク一覧と削除済み一覧を再取得
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
       queryClient.invalidateQueries({ queryKey: ['deleted-tasks'] })
+      // ボードキャッシュも無効化（タスクが含まれる可能性）
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
     },
   })
 }
@@ -91,9 +98,10 @@ export function useDeletedTasks() {
       const data = await response.json()
       return data as DeletedTask[]
     },
-    staleTime: 5 * 60 * 1000,    // 5分間は新鮮なデータとして扱う
-    gcTime: 30 * 60 * 1000,      // 30分間キャッシュを保持
-    refetchOnWindowFocus: false,  // ウィンドウフォーカス時の再取得を無効化
+    staleTime: 2 * 60 * 1000,    // 2分間は新鮮なデータとして扱う
+    gcTime: 10 * 60 * 1000,      // 10分間キャッシュを保持
+    refetchOnWindowFocus: false, // ウィンドウフォーカス時の再取得を無効化
+    refetchOnMount: false,       // マウント時の再取得を無効化
   })
 }
 
@@ -132,6 +140,8 @@ export function useRestoreTask() {
       // タスク一覧と削除済み一覧を再取得
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
       queryClient.invalidateQueries({ queryKey: ['deleted-tasks'] })
+      // ボードキャッシュも無効化（タスクが含まれる可能性）
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
     },
   })
 }

@@ -98,10 +98,10 @@ export function useBoardWithItems(boardId: number | null, skip: boolean = false)
       };
     },
     enabled: boardId !== null && isLoaded && !skip,
-    staleTime: 10 * 60 * 1000,   // 10分間は新鮮なデータとして扱う（延長）
-    gcTime: 60 * 60 * 1000,      // 60分間キャッシュを保持（延長）
+    staleTime: 2 * 60 * 1000,     // 2分間は新鮮なデータとして扱う
+    gcTime: 10 * 60 * 1000,       // 10分間キャッシュを保持
     refetchOnWindowFocus: false,  // ウィンドウフォーカス時の再取得を無効化
-    refetchOnMount: false,        // マウント時の再取得を無効化（積極的キャッシュ）
+    refetchOnMount: false,        // マウント時の再取得を無効化
   });
 }
 
@@ -140,10 +140,10 @@ export function useBoardBySlug(slug: string | null) {
       return data;
     },
     enabled: !!slug,
-    staleTime: 10 * 60 * 1000,   // 10分間は新鮮なデータとして扱う（延長）
-    gcTime: 60 * 60 * 1000,      // 60分間キャッシュを保持（延長）
+    staleTime: 2 * 60 * 1000,     // 2分間は新鮮なデータとして扱う
+    gcTime: 10 * 60 * 1000,       // 10分間キャッシュを保持
     refetchOnWindowFocus: false,  // ウィンドウフォーカス時の再取得を無効化
-    refetchOnMount: false,        // マウント時の再取得を無効化（積極的キャッシュ）
+    refetchOnMount: false,        // マウント時の再取得を無効化
   });
 }
 

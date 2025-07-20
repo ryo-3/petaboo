@@ -25,9 +25,10 @@ export function useNotes() {
       }
       return response.json();
     },
-    staleTime: 5 * 60 * 1000,    // 5分間は新鮮なデータとして扱う
-    gcTime: 30 * 60 * 1000,      // 30分間キャッシュを保持
-    refetchOnWindowFocus: false,  // ウィンドウフォーカス時の再取得を無効化
+    staleTime: 2 * 60 * 1000,    // 2分間は新鮮なデータとして扱う
+    gcTime: 10 * 60 * 1000,      // 10分間キャッシュを保持
+    refetchOnWindowFocus: false, // ウィンドウフォーカス時の再取得を無効化
+    refetchOnMount: false,       // マウント時の再取得を無効化
   });
 }
 
@@ -45,6 +46,8 @@ export function useCreateNote() {
     onSuccess: () => {
       // 作成後にnotesリストを再取得
       queryClient.invalidateQueries({ queryKey: ["notes"] });
+      // ボードキャッシュも無効化（メモが含まれる可能性）
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
     },
   });
 }
@@ -63,6 +66,8 @@ export function useUpdateNote() {
     onSuccess: () => {
       // 更新後にnotesリストを再取得
       queryClient.invalidateQueries({ queryKey: ["notes"] });
+      // ボードキャッシュも無効化（メモが含まれる可能性）
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
     },
   });
 }
@@ -114,6 +119,8 @@ export function useDeleteNote() {
       // 削除後に通常メモと削除済みメモの両方を再取得
       queryClient.invalidateQueries({ queryKey: ["notes"] });
       queryClient.invalidateQueries({ queryKey: ["deleted-notes"] });
+      // ボードキャッシュも無効化（メモが含まれる可能性）
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
     },
   });
 }
@@ -129,9 +136,10 @@ export function useDeletedNotes() {
       const response = await notesApi.getDeletedNotes(token || undefined);
       return response.json();
     },
-    staleTime: 5 * 60 * 1000,    // 5分間は新鮮なデータとして扱う
-    gcTime: 30 * 60 * 1000,      // 30分間キャッシュを保持
-    refetchOnWindowFocus: false,  // ウィンドウフォーカス時の再取得を無効化
+    staleTime: 2 * 60 * 1000,    // 2分間は新鮮なデータとして扱う
+    gcTime: 10 * 60 * 1000,      // 10分間キャッシュを保持
+    refetchOnWindowFocus: false, // ウィンドウフォーカス時の再取得を無効化
+    refetchOnMount: false,       // マウント時の再取得を無効化
   });
 }
 

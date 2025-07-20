@@ -31,36 +31,27 @@ function BoardLayoutToggle({
               : "text-gray-400 hover:text-gray-500"
           }`}
         >
-          <svg className={iconSize} fill="currentColor" viewBox="0 0 24 24">
-            {boardLayout === "horizontal" ? (
-              // 横並びが選択されている場合は色付き
-              <>
-                {/* 左側の棒 - 左側に表示されているアイテムの色 */}
-                <rect 
-                  x="5" 
-                  y="4" 
-                  width="5" 
-                  height="16" 
-                  rx="1" 
-                  fill={isReversed ? "#2E6B9A" : "#009645"} // 反転時はタスク（青）、通常時はメモ（緑）
-                />
-                {/* 右側の棒 - 右側に表示されているアイテムの色 */}
-                <rect 
-                  x="14" 
-                  y="4" 
-                  width="5" 
-                  height="16" 
-                  rx="1" 
-                  fill={isReversed ? "#009645" : "#2E6B9A"} // 反転時はメモ（緑）、通常時はタスク（青）
-                />
-              </>
-            ) : (
-              // 横並びが選択されていない場合は元のグレー
-              <>
-                <rect x="5" y="4" width="5" height="16" rx="1" />
-                <rect x="14" y="4" width="5" height="16" rx="1" />
-              </>
-            )}
+          <svg className={`${iconSize} transition-all duration-300`} fill="currentColor" viewBox="0 0 24 24">
+            {/* 左側の棒 */}
+            <rect 
+              x="5" 
+              y="4" 
+              width="5" 
+              height="16" 
+              rx="1" 
+              fill={boardLayout === "horizontal" ? (isReversed ? "#2E6B9A" : "#009645") : "currentColor"}
+              className="transition-all duration-300"
+            />
+            {/* 右側の棒 */}
+            <rect 
+              x="14" 
+              y="4" 
+              width="5" 
+              height="16" 
+              rx="1" 
+              fill={boardLayout === "horizontal" ? (isReversed ? "#009645" : "#2E6B9A") : "currentColor"}
+              className="transition-all duration-300"
+            />
           </svg>
         </button>
       </Tooltip>
@@ -78,36 +69,27 @@ function BoardLayoutToggle({
               : "text-gray-400 hover:text-gray-500"
           }`}
         >
-          <svg className={iconSize} fill="currentColor" viewBox="0 0 24 24">
-            {boardLayout === "vertical" ? (
-              // 縦並びが選択されている場合は色付き
-              <>
-                {/* 上側の棒 - 上側に表示されているアイテムの色 */}
-                <rect 
-                  x="4" 
-                  y="5" 
-                  width="16" 
-                  height="5" 
-                  rx="1" 
-                  fill={isReversed ? "#2E6B9A" : "#009645"} // 反転時はタスク（青）、通常時はメモ（緑）
-                />
-                {/* 下側の棒 - 下側に表示されているアイテムの色 */}
-                <rect 
-                  x="4" 
-                  y="14" 
-                  width="16" 
-                  height="5" 
-                  rx="1" 
-                  fill={isReversed ? "#009645" : "#2E6B9A"} // 反転時はメモ（緑）、通常時はタスク（青）
-                />
-              </>
-            ) : (
-              // 縦並びが選択されていない場合は元のグレー
-              <>
-                <rect x="4" y="5" width="16" height="5" rx="1" />
-                <rect x="4" y="14" width="16" height="5" rx="1" />
-              </>
-            )}
+          <svg className={`${iconSize} transition-all duration-300`} fill="currentColor" viewBox="0 0 24 24">
+            {/* 上側の棒 */}
+            <rect 
+              x="4" 
+              y="5" 
+              width="16" 
+              height="5" 
+              rx="1" 
+              fill={boardLayout === "vertical" ? (isReversed ? "#2E6B9A" : "#009645") : "currentColor"}
+              className="transition-all duration-300"
+            />
+            {/* 下側の棒 */}
+            <rect 
+              x="4" 
+              y="14" 
+              width="16" 
+              height="5" 
+              rx="1" 
+              fill={boardLayout === "vertical" ? (isReversed ? "#009645" : "#2E6B9A") : "currentColor"}
+              className="transition-all duration-300"
+            />
           </svg>
         </button>
       </Tooltip>

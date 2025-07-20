@@ -614,23 +614,27 @@ function BoardDetail({
                   <span className="font-normal text-gray-500">
                     {allMemoItems.length}
                   </span>
-                  <AddItemButton
-                    itemType="memo"
-                    onClick={handleCreateNewMemo}
-                    size="small"
-                    showTooltip={false}
-                    customSize={{
-                      padding: "p-1",
-                      iconSize: "size-5",
-                    }}
-                    className="size-6 flex items-center justify-center"
-                  />
-                  <button
-                    onClick={() => setRightPanelMode("memo-list")}
-                    className="size-6 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
-                  >
-                    <MemoIcon className="size-5 text-Green" />
-                  </button>
+                  <Tooltip text="新規追加" position="top">
+                    <AddItemButton
+                      itemType="memo"
+                      onClick={handleCreateNewMemo}
+                      size="small"
+                      showTooltip={false}
+                      customSize={{
+                        padding: "p-1",
+                        iconSize: "size-5",
+                      }}
+                      className="size-6 flex items-center justify-center"
+                    />
+                  </Tooltip>
+                  <Tooltip text="メモ一覧表示" position="top">
+                    <button
+                      onClick={() => setRightPanelMode("memo-list")}
+                      className="size-6 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+                    >
+                      <MemoIcon className="size-5 text-Green" />
+                    </button>
+                  </Tooltip>
                 </div>
               </div>
 
@@ -724,23 +728,27 @@ function BoardDetail({
                   <span className="font-normal text-gray-500">
                     {allTaskItems.length}
                   </span>
-                  <AddItemButton
-                    itemType="task"
-                    onClick={handleCreateNewTask}
-                    size="small"
-                    showTooltip={false}
-                    customSize={{
-                      padding: "p-1",
-                      iconSize: "size-5",
-                    }}
-                    className="size-6 flex items-center justify-center"
-                  />
-                  <button
-                    onClick={() => setRightPanelMode("task-list")}
-                    className="size-6 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
-                  >
-                    <TaskIcon className="size-5 text-DeepBlue" />
-                  </button>
+                  <Tooltip text="新規追加" position="top">
+                    <AddItemButton
+                      itemType="task"
+                      onClick={handleCreateNewTask}
+                      size="small"
+                      showTooltip={false}
+                      customSize={{
+                        padding: "p-1",
+                        iconSize: "size-5",
+                      }}
+                      className="size-6 flex items-center justify-center"
+                    />
+                  </Tooltip>
+                  <Tooltip text="タスク一覧表示" position="top">
+                    <button
+                      onClick={() => setRightPanelMode("task-list")}
+                      className="size-6 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+                    >
+                      <TaskIcon className="size-5 text-DeepBlue" />
+                    </button>
+                  </Tooltip>
                 </div>
               </div>
 

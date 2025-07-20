@@ -97,6 +97,8 @@ const response = await fetch(`${API_BASE_URL}/categories`, {
 npm run check-types && npm run lint  # コミット前必須
 ```
 
+**注意**: 小規模な変更（ツールチップ追加、UI調整、テキスト変更など）の場合は、型チェックとlintを実行せずに直接コミットして良い。大きな機能追加や構造変更の場合のみ上記コマンドを実行する。
+
 ## ボード詳細画面の最新仕様
 
 ### タブシステム

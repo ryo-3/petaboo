@@ -245,8 +245,8 @@ function DesktopUpper({
                 <h1 className="font-bold text-gray-800 text-[22px]">
                   {customTitle || "ボード一覧"}
                 </h1>
-                {/* ボード説明（タイトルの横） */}
-                {boardDescription && (
+                {/* ボード説明（タイトルの横、一覧表示中は非表示） */}
+                {boardDescription && contentFilterRightPanelMode !== "memo-list" && contentFilterRightPanelMode !== "task-list" && (
                   <p className="text-gray-600 text-sm">{boardDescription}</p>
                 )}
                 {/* 設定ボタン（ボード名の横） */}

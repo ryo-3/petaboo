@@ -45,6 +45,8 @@ interface DesktopUpperProps {
   showTask?: boolean;
   onMemoToggle?: (show: boolean) => void;
   onTaskToggle?: (show: boolean) => void;
+  // Right panel mode for tooltip context
+  contentFilterRightPanelMode?: "memo-list" | "task-list" | "editor" | null;
   // Selection mode (memo only)
   selectionMode?: "select" | "check";
   onSelectionModeChange?: (mode: "select" | "check") => void;
@@ -103,6 +105,7 @@ function DesktopUpper({
   showTask = true,
   onMemoToggle,
   onTaskToggle,
+  contentFilterRightPanelMode,
   selectionMode = "select",
   onSelectionModeChange,
   onSelectAll,
@@ -366,6 +369,7 @@ function DesktopUpper({
               showTask={showTask}
               onMemoToggle={onMemoToggle}
               onTaskToggle={onTaskToggle}
+              rightPanelMode={contentFilterRightPanelMode}
             />
           )}
 

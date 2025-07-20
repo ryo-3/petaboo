@@ -140,6 +140,35 @@ function BoardDetail({
   const { data: allMemos } = useMemos();
   const { data: allTasks } = useTasks();
 
+  // リストパネル表示時に選択状態をリセット
+  useEffect(() => {
+    if (rightPanelMode === "memo-list" || rightPanelMode === "task-list") {
+      setSelectedItemsFromList(new Set());
+    }
+  }, [rightPanelMode]);
+
+  // メモボタンのハンドラー（一覧表示中は切り替え）
+  const handleMemoToggle = useCallback((show: boolean) => {
+    if (rightPanelMode === "task-list") {
+      // タスク一覧表示中にメモボタンを押したらメモ一覧に切り替え
+      setRightPanelMode("memo-list");
+    } else {
+      // 通常の表示/非表示切り替え
+      setShowMemo(show);
+    }
+  }, [rightPanelMode]);
+
+  // タスクボタンのハンドラー（一覧表示中は切り替え）
+  const handleTaskToggle = useCallback((show: boolean) => {
+    if (rightPanelMode === "memo-list") {
+      // メモ一覧表示中にタスクボタンを押したらタスク一覧に切り替え
+      setRightPanelMode("task-list");
+    } else {
+      // 通常の表示/非表示切り替え
+      setShowTask(show);
+    }
+  }, [rightPanelMode]);
+
   // 右パネルの開閉に応じてタブテキストの表示を制御
   useEffect(() => {
     if (selectedMemo || selectedTask || rightPanelMode) {
@@ -291,19 +320,6 @@ function BoardDetail({
     onSelectTask?.(newTask);
   }, [onSelectTask, activeTaskTab, rightPanelMode]);
 
-  // メモ一覧表示ハンドラ
-  const handleShowMemoList = useCallback(() => {
-    console.log("🟡 handleShowMemoList called");
-    setRightPanelMode("memo-list");
-    setSelectedItemsFromList(new Set());
-    console.log("🟡 rightPanelMode set to memo-list");
-  }, []);
-
-  // タスク一覧表示ハンドラ
-  const handleShowTaskList = useCallback(() => {
-    setRightPanelMode("task-list");
-    setSelectedItemsFromList(new Set());
-  }, []);
 
   // 一覧からボードに追加
   const handleAddSelectedItems = useCallback(async () => {
@@ -566,10 +582,11 @@ function BoardDetail({
             onShowEditDateChange={setShowEditDate}
             boardLayout={boardLayout}
             onBoardLayoutChange={handleBoardLayoutChange}
-            showMemo={showMemo}
-            showTask={showTask}
-            onMemoToggle={setShowMemo}
-            onTaskToggle={setShowTask}
+            showMemo={rightPanelMode === "task-list" ? false : showMemo}
+            showTask={rightPanelMode === "memo-list" ? false : showTask}
+            onMemoToggle={handleMemoToggle}
+            onTaskToggle={handleTaskToggle}
+            contentFilterRightPanelMode={rightPanelMode}
             normalCount={allMemoItems.length + allTaskItems.length}
             completedCount={completedCount}
             deletedCount={deletedCount + deletedMemoCount}
@@ -609,20 +626,12 @@ function BoardDetail({
                     className="size-6 flex items-center justify-center"
                   />
                   <button
-                    onClick={handleShowMemoList}
+                    onClick={() => setRightPanelMode("memo-list")}
                     className="size-6 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
                   >
                     <MemoIcon className="size-5 text-Green" />
                   </button>
                 </div>
-                {rightPanelMode === "memo-list" && (
-                  <button
-                    onClick={handleShowTaskList}
-                    className="size-6 flex items-center justify-center p-1 rounded-lg bg-DeepBlue hover:bg-DeepBlue/80 transition-colors"
-                  >
-                    <TaskIcon className="size-5 text-white" />
-                  </button>
-                )}
               </div>
 
               {/* メモステータスタブ */}
@@ -727,20 +736,12 @@ function BoardDetail({
                     className="size-6 flex items-center justify-center"
                   />
                   <button
-                    onClick={handleShowTaskList}
+                    onClick={() => setRightPanelMode("task-list")}
                     className="size-6 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
                   >
                     <TaskIcon className="size-5 text-DeepBlue" />
                   </button>
                 </div>
-                {rightPanelMode === "task-list" && (
-                  <button
-                    onClick={handleShowMemoList}
-                    className="size-6 flex items-center justify-center p-1 rounded-lg bg-Green hover:bg-Green/80 transition-colors"
-                  >
-                    <MemoIcon className="size-5 text-white" />
-                  </button>
-                )}
               </div>
 
               {/* タスクステータスタブ */}

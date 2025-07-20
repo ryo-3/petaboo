@@ -95,7 +95,7 @@ function MemoListItem({
                     {boards.map((board) => (
                       <span
                         key={board.id}
-                        className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                        className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-light-Blue text-white"
                       >
                         {board.name}
                       </span>

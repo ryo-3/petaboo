@@ -8,14 +8,14 @@ import {
   useBoardWithItems,
   useRemoveItemFromBoard,
 } from "@/src/hooks/use-boards";
+import { useBoardState } from "@/src/hooks/use-board-state";
 import { useExport } from "@/src/hooks/use-export";
 import { useMemos } from "@/src/hooks/use-memos";
 import { useTasks } from "@/src/hooks/use-tasks";
 import { BoardItemWithContent } from "@/src/types/board";
 import { Memo } from "@/src/types/memo";
 import { Task } from "@/src/types/task";
-import { usePathname, useRouter } from "next/navigation";
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect } from "react";
 import BoardHeader from "./board-header";
 
 interface BoardDetailProps {
@@ -50,41 +50,46 @@ function BoardDetail({
   boardCompleted = false,
   isDeleted = false,
 }: BoardDetailProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-
-  const [activeTaskTab, setActiveTaskTab] = useState<
-    "todo" | "in_progress" | "completed" | "deleted"
-  >("todo");
-  const [activeMemoTab, setActiveMemoTab] = useState<"normal" | "deleted">(
-    "normal"
-  );
-  const [showTabText, setShowTabText] = useState(true);
-  const [rightPanelMode, setRightPanelMode] = useState<
-    "editor" | "memo-list" | "task-list" | null
-  >(null);
-  const [selectedItemsFromList, setSelectedItemsFromList] = useState<
-    Set<number>
-  >(new Set());
-
-  // 表示モード状態（memo-screenと同様）
-  const [viewMode, setViewMode] = useState<"card" | "list">("card");
-  const [columnCount, setColumnCount] = useState(2);
-  const [showEditDate, setShowEditDate] = useState(false);
-
-  // ボードレイアウト状態（横並び/縦並び + 反転）
-  const [boardLayout, setBoardLayout] = useState<"horizontal" | "vertical">(
-    "horizontal"
-  );
-  const [isReversed, setIsReversed] = useState(false);
-
-  // コンテンツフィルター状態
-  const [showMemo, setShowMemo] = useState(true);
-  const [showTask, setShowTask] = useState(true);
+  // 状態管理フック
+  const {
+    activeTaskTab,
+    activeMemoTab,
+    showTabText,
+    rightPanelMode,
+    selectedItemsFromList,
+    viewMode,
+    columnCount,
+    showEditDate,
+    boardLayout,
+    isReversed,
+    showMemo,
+    showTask,
+    setRightPanelMode,
+    setViewMode,
+    setColumnCount,
+    setShowEditDate,
+    handleBoardLayoutChange,
+    handleSettings,
+    handleMemoToggle,
+    handleTaskToggle,
+    handleTaskTabChange,
+    handleMemoTabChange,
+    handleToggleItemSelection,
+    handleCloseRightPanel,
+    createNewMemoHandler,
+    createNewTaskHandler,
+    updateShowTabText,
+  } = useBoardState();
 
   // propsから選択状態を使用（Fast Refresh対応）
   const selectedMemo = propSelectedMemo;
   const selectedTask = propSelectedTask;
+
+  // タブテキスト表示制御
+  useEffect(() => {
+    const cleanup = updateShowTabText(selectedMemo, selectedTask);
+    return cleanup;
+  }, [selectedMemo, selectedTask, updateShowTabText]);
 
   // 計算されたカラム数（右パネル表示時は最大2列に制限）
   const effectiveColumnCount =
@@ -94,26 +99,6 @@ function BoardDetail({
         : 2
       : columnCount;
 
-  // ボードレイアウト変更ハンドラー（反転機能付き）
-  const handleBoardLayoutChange = useCallback(
-    (newLayout: "horizontal" | "vertical") => {
-      if (boardLayout === newLayout) {
-        // 同じレイアウトをクリックした場合は反転
-        setIsReversed((prev) => !prev);
-      } else {
-        // 異なるレイアウトの場合は変更して反転状態をリセット
-        setBoardLayout(newLayout);
-        setIsReversed(false);
-      }
-    },
-    [boardLayout]
-  );
-
-  // 設定画面への遷移
-  const handleSettings = useCallback(() => {
-    const boardSlug = pathname.split("/")[2];
-    router.push(`/boards/${boardSlug}/settings`);
-  }, [pathname, router]);
 
   const { data: boardWithItems, isLoading, error } = useBoardWithItems(boardId);
   const removeItemFromBoard = useRemoveItemFromBoard();
@@ -122,54 +107,8 @@ function BoardDetail({
   const { data: allTasks } = useTasks();
   const { exportBoard } = useExport();
 
-  // リストパネル表示時に選択状態をリセット
-  useEffect(() => {
-    if (rightPanelMode === "memo-list" || rightPanelMode === "task-list") {
-      setSelectedItemsFromList(new Set());
-    }
-  }, [rightPanelMode]);
 
-  // メモボタンのハンドラー（一覧表示中は切り替え）
-  const handleMemoToggle = useCallback(
-    (show: boolean) => {
-      if (rightPanelMode === "task-list") {
-        // タスク一覧表示中にメモボタンを押したらメモ一覧に切り替え
-        setRightPanelMode("memo-list");
-      } else {
-        // 通常の表示/非表示切り替え
-        setShowMemo(show);
-      }
-    },
-    [rightPanelMode]
-  );
 
-  // タスクボタンのハンドラー（一覧表示中は切り替え）
-  const handleTaskToggle = useCallback(
-    (show: boolean) => {
-      if (rightPanelMode === "memo-list") {
-        // メモ一覧表示中にタスクボタンを押したらタスク一覧に切り替え
-        setRightPanelMode("task-list");
-      } else {
-        // 通常の表示/非表示切り替え
-        setShowTask(show);
-      }
-    },
-    [rightPanelMode]
-  );
-
-  // 右パネルの開閉に応じてタブテキストの表示を制御
-  useEffect(() => {
-    if (selectedMemo || selectedTask || rightPanelMode) {
-      // 右パネルが開いたらすぐにテキストを非表示
-      setShowTabText(false);
-    } else {
-      // 右パネルが閉じたら300ms後にテキストを表示
-      const timer = setTimeout(() => {
-        setShowTabText(true);
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [selectedMemo, selectedTask, rightPanelMode]);
 
   // ボード名は即座に表示
   const boardName = initialBoardName || boardWithItems?.name || "ボード";
@@ -232,7 +171,7 @@ function BoardDetail({
       setRightPanelMode(null); // リストモードを解除
       onSelectMemo?.(memo);
     },
-    [onSelectMemo, rightPanelMode]
+    [onSelectMemo, rightPanelMode, setRightPanelMode]
   );
 
   const handleSelectTask = useCallback(
@@ -246,67 +185,23 @@ function BoardDetail({
       setRightPanelMode(null); // リストモードを解除
       onSelectTask?.(task);
     },
-    [onSelectTask, rightPanelMode]
+    [onSelectTask, rightPanelMode, setRightPanelMode]
   );
 
   const handleCloseDetail = useCallback(() => {
     onClearSelection?.();
   }, [onClearSelection]);
 
-  // タスクタブ切り替え時の処理
-  const handleTaskTabChange = useCallback(
-    (newTab: "todo" | "in_progress" | "completed" | "deleted") => {
-      setActiveTaskTab(newTab);
-      // 選択解除は行わない（タブ切り替えで選択状態は保持）
-    },
-    []
-  );
 
-  // メモタブ切り替え時の処理
-  const handleMemoTabChange = useCallback((newTab: "normal" | "deleted") => {
-    setActiveMemoTab(newTab);
-    // 選択解除は行わない（タブ切り替えで選択状態は保持）
-  }, []);
 
-  // 新規メモ作成
+  // 新規作成ハンドラー
   const handleCreateNewMemo = useCallback(() => {
-    console.log(
-      "🟢 handleCreateNewMemo called, rightPanelMode:",
-      rightPanelMode
-    );
-    setRightPanelMode(null); // リストモードを解除
-    const newMemo: Memo = {
-      id: 0, // 新規作成時は0
-      title: "",
-      content: "",
-      createdAt: Date.now() / 1000,
-      updatedAt: Date.now() / 1000,
-    };
-    console.log("🟢 calling onSelectMemo with:", newMemo);
-    onSelectMemo?.(newMemo);
-  }, [onSelectMemo, rightPanelMode]);
+    createNewMemoHandler(onSelectMemo);
+  }, [createNewMemoHandler, onSelectMemo]);
 
-  // 新規タスク作成
   const handleCreateNewTask = useCallback(() => {
-    console.log(
-      "🔵 handleCreateNewTask called, rightPanelMode:",
-      rightPanelMode
-    );
-    setRightPanelMode(null); // リストモードを解除
-    const newTask: Task = {
-      id: 0, // 新規作成時は0
-      title: "",
-      description: null,
-      status: activeTaskTab === "deleted" ? "todo" : activeTaskTab, // 削除済みタブの場合は未着手にする
-      priority: "medium",
-      dueDate: null,
-      categoryId: null,
-      createdAt: Date.now() / 1000,
-      updatedAt: Date.now() / 1000,
-    };
-    console.log("🔵 calling onSelectTask with:", newTask);
-    onSelectTask?.(newTask);
-  }, [onSelectTask, activeTaskTab, rightPanelMode]);
+    createNewTaskHandler(onSelectTask);
+  }, [createNewTaskHandler, onSelectTask]);
 
   // 一覧からボードに追加
   const handleAddSelectedItems = useCallback(async () => {
@@ -338,7 +233,6 @@ function BoardDetail({
 
       await Promise.all(promises);
       setRightPanelMode(null);
-      setSelectedItemsFromList(new Set());
 
       if (itemsToAdd.length < selectedItemsFromList.size) {
         alert(`${itemsToAdd.length}件のアイテムを追加しました（重複分は除外）`);
@@ -352,50 +246,8 @@ function BoardDetail({
     boardId,
     addItemToBoard,
     boardWithItems,
+    setRightPanelMode,
   ]);
-
-  // 一覧でのアイテム選択切り替え
-  const handleToggleItemSelection = useCallback((itemId: number) => {
-    setSelectedItemsFromList((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(itemId)) {
-        newSet.delete(itemId);
-      } else {
-        newSet.add(itemId);
-      }
-      return newSet;
-    });
-  }, []);
-
-  // 右パネルを閉じる
-  const handleCloseRightPanel = useCallback(() => {
-    setRightPanelMode(null);
-    setSelectedItemsFromList(new Set());
-    onClearSelection?.();
-  }, [onClearSelection]);
-
-
-  // エラー時のみエラー表示
-  if (error) {
-    return (
-      <div className={showBoardHeader ? "p-6" : ""}>
-        {showBoardHeader && (
-          <BoardHeader
-            boardId={boardId}
-            boardName={serverInitialTitle || boardName}
-            boardDescription={boardDescription}
-            boardCompleted={boardCompleted}
-            isDeleted={isDeleted}
-            onExport={() => {}}
-            isExportDisabled={true}
-          />
-        )}
-        <div className="text-center py-8">
-          <p className="text-red-500">アイテムの読み込みに失敗しました</p>
-        </div>
-      </div>
-    );
-  }
 
   // メモとタスクのアイテムを分離（読み込み中も空配列で処理）
   const allMemoItems =
@@ -450,6 +302,28 @@ function BoardDetail({
       taskItems
     );
   }, [boardWithItems, boardName, boardDescription, memoItems, taskItems, exportBoard]);
+
+  // エラー時のみエラー表示
+  if (error) {
+    return (
+      <div className={showBoardHeader ? "p-6" : ""}>
+        {showBoardHeader && (
+          <BoardHeader
+            boardId={boardId}
+            boardName={serverInitialTitle || boardName}
+            boardDescription={boardDescription}
+            boardCompleted={boardCompleted}
+            isDeleted={isDeleted}
+            onExport={() => {}}
+            isExportDisabled={true}
+          />
+        )}
+        <div className="text-center py-8">
+          <p className="text-red-500">アイテムの読み込みに失敗しました</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full bg-white overflow-hidden">
@@ -595,7 +469,7 @@ function BoardDetail({
         selectedItemsFromList={selectedItemsFromList}
         allMemos={allMemos}
         allTasks={allTasks}
-        onClose={rightPanelMode ? handleCloseRightPanel : handleCloseDetail}
+        onClose={rightPanelMode ? () => handleCloseRightPanel(onClearSelection) : handleCloseDetail}
         onSelectMemo={onSelectMemo}
         onSelectTask={onSelectTask}
         onAddSelectedItems={handleAddSelectedItems}

@@ -1,13 +1,14 @@
 'use client';
 
-import TaskCard from "@/components/features/task/task-card";
-import TaskListItem from "@/components/features/task/task-list-item";
-import TaskIcon from "@/components/icons/task-icon";
+import TaskStatusDisplay from "@/components/features/task/task-status-display";
+import ListViewIcon from "@/components/icons/list-view-icon";
 import TrashIcon from "@/components/icons/trash-icon";
 import Tooltip from "@/components/ui/base/tooltip";
 import AddItemButton from "@/components/ui/buttons/add-item-button";
+import SortToggle from "@/components/ui/buttons/sort-toggle";
 import { BoardItemWithContent } from "@/src/types/board";
 import { Task } from "@/src/types/task";
+import { useSortOptions } from "@/hooks/use-sort-options";
 
 interface BoardTaskSectionProps {
   rightPanelMode: "editor" | "memo-list" | "task-list" | null;
@@ -52,6 +53,9 @@ export default function BoardTaskSection({
   onTaskTabChange,
   onSelectTask,
 }: BoardTaskSectionProps) {
+  // ソートオプションの管理
+  const { setSortOptions, getVisibleSortOptions } = useSortOptions("task");
+
   if (rightPanelMode === "memo-list" || !showTask) {
     return null;
   }
@@ -84,9 +88,17 @@ export default function BoardTaskSection({
               onClick={() => onSetRightPanelMode("task-list")}
               className="size-6 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
             >
-              <TaskIcon className="size-5 text-DeepBlue" />
+              <ListViewIcon className="size-5 text-DeepBlue" />
             </button>
           </Tooltip>
+          
+          {/* ソートトグル */}
+          <SortToggle
+            sortOptions={getVisibleSortOptions(activeTaskTab)}
+            onSortChange={setSortOptions}
+            buttonSize="size-6"
+            iconSize="size-4"
+          />
         </div>
       </div>
 
@@ -166,36 +178,23 @@ export default function BoardTaskSection({
               ? "削除済みタスクがありません"
               : "タスクがありません"}
           </div>
-        ) : (
-          <div
-            className={`grid gap-4 ${
-              effectiveColumnCount === 1
-                ? "grid-cols-1"
-                : effectiveColumnCount === 2
-                  ? "grid-cols-1 md:grid-cols-2"
-                  : effectiveColumnCount === 3
-                    ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-                    : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-            }`}
-          >
-            {taskItems.map((item) => {
-              const task = item.content as Task;
-              const Component =
-                viewMode === "card" ? TaskCard : TaskListItem;
-              return (
-                <Component
-                  key={task.id}
-                  task={task}
-                  isChecked={false}
-                  onToggleCheck={() => {}}
-                  onSelect={() => onSelectTask(task)}
-                  isSelected={selectedTask?.id === task.id}
-                  showEditDate={showEditDate}
-                  variant="normal"
-                />
-              );
-            })}
+        ) : activeTaskTab === "deleted" ? (
+          // 削除済みタスク用の表示（将来実装予定）
+          <div className="text-gray-500 text-center py-8">
+            削除済みタスクがありません
           </div>
+        ) : (
+          <TaskStatusDisplay
+            activeTab={activeTaskTab as "todo" | "in_progress" | "completed"}
+            tasks={taskItems.map(item => item.content as Task)}
+            viewMode={viewMode}
+            effectiveColumnCount={effectiveColumnCount}
+            selectionMode="select"
+            onSelectTask={onSelectTask}
+            selectedTaskId={selectedTask?.id}
+            showEditDate={showEditDate}
+            sortOptions={getVisibleSortOptions(activeTaskTab)}
+          />
         )}
       </div>
     </div>

@@ -1,13 +1,14 @@
 'use client';
 
-import MemoCard from "@/components/features/memo/memo-card";
-import MemoListItem from "@/components/features/memo/memo-list-item";
-import MemoIcon from "@/components/icons/memo-icon";
+import MemoStatusDisplay from "@/components/features/memo/memo-status-display";
+import ListViewIcon from "@/components/icons/list-view-icon";
 import TrashIcon from "@/components/icons/trash-icon";
 import Tooltip from "@/components/ui/base/tooltip";
 import AddItemButton from "@/components/ui/buttons/add-item-button";
+import SortToggle from "@/components/ui/buttons/sort-toggle";
 import { BoardItemWithContent } from "@/src/types/board";
 import { Memo } from "@/src/types/memo";
+import { useSortOptions } from "@/hooks/use-sort-options";
 
 interface BoardMemoSectionProps {
   rightPanelMode: "editor" | "memo-list" | "task-list" | null;
@@ -48,6 +49,9 @@ export default function BoardMemoSection({
   onMemoTabChange,
   onSelectMemo,
 }: BoardMemoSectionProps) {
+  // ソートオプションの管理
+  const { setSortOptions, getVisibleSortOptions } = useSortOptions("memo");
+
   if (rightPanelMode === "task-list" || !showMemo) {
     return null;
   }
@@ -80,9 +84,17 @@ export default function BoardMemoSection({
               onClick={() => onSetRightPanelMode("memo-list")}
               className="size-6 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
             >
-              <MemoIcon className="size-5 text-Green" />
+              <ListViewIcon className="size-5 text-Green" />
             </button>
           </Tooltip>
+          
+          {/* ソートトグル */}
+          <SortToggle
+            sortOptions={getVisibleSortOptions(activeMemoTab)}
+            onSortChange={setSortOptions}
+            buttonSize="size-6"
+            iconSize="size-4"
+          />
         </div>
       </div>
 
@@ -135,35 +147,23 @@ export default function BoardMemoSection({
               : "メモがありません"}
           </div>
         ) : (
-          <div
-            className={`grid gap-4 ${
-              effectiveColumnCount === 1
-                ? "grid-cols-1"
-                : effectiveColumnCount === 2
-                  ? "grid-cols-1 md:grid-cols-2"
-                  : effectiveColumnCount === 3
-                    ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-                    : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-            }`}
-          >
-            {memoItems.map((item) => {
-              const memo = item.content as Memo;
-              const Component =
-                viewMode === "card" ? MemoCard : MemoListItem;
-              return (
-                <Component
-                  key={memo.id}
-                  memo={memo}
-                  isChecked={false}
-                  onToggleCheck={() => {}}
-                  onSelect={() => onSelectMemo(memo)}
-                  isSelected={selectedMemo?.id === memo.id}
-                  showEditDate={showEditDate}
-                  variant="normal"
-                />
-              );
-            })}
-          </div>
+          <MemoStatusDisplay
+            memos={memoItems.map(item => item.content as Memo)}
+            viewMode={viewMode}
+            effectiveColumnCount={effectiveColumnCount}
+            selectionMode="select"
+            onSelectMemo={onSelectMemo}
+            selectedMemoId={selectedMemo?.id}
+            showEditDate={showEditDate}
+            sortOptions={getVisibleSortOptions(activeMemoTab).filter(
+              opt => opt.id === "createdAt" || opt.id === "updatedAt" || opt.id === "deletedAt"
+            ) as Array<{
+              id: "createdAt" | "updatedAt" | "deletedAt";
+              label: string;
+              enabled: boolean;
+              direction: "asc" | "desc";
+            }>}
+          />
         )}
       </div>
     </div>

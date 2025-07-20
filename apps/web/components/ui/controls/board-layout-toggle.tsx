@@ -28,7 +28,7 @@ function BoardLayoutToggle({
           className={`${buttonSize} rounded-md flex items-center justify-center transition-colors relative ${
             boardLayout === "horizontal"
               ? "text-gray-700 bg-white"
-              : "text-gray-400 hover:text-gray-500"
+              : "text-gray-300 hover:text-gray-400"
           }`}
         >
           <svg className={`${iconSize} transition-all duration-300`} fill="currentColor" viewBox="0 0 24 24">
@@ -66,7 +66,7 @@ function BoardLayoutToggle({
           className={`${buttonSize} rounded-md flex items-center justify-center transition-colors relative ${
             boardLayout === "vertical"
               ? "text-gray-700 bg-white"
-              : "text-gray-400 hover:text-gray-500"
+              : "text-gray-300 hover:text-gray-400"
           }`}
         >
           <svg className={`${iconSize} transition-all duration-300`} fill="currentColor" viewBox="0 0 24 24">

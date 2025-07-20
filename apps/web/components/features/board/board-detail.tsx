@@ -102,6 +102,16 @@ function BoardDetail({
 
 
   const { data: boardWithItems, isLoading, error } = useBoardWithItems(boardId);
+  
+  // SSRキャッシュ確認
+  useEffect(() => {
+    console.log('📊 BoardDetail マウント:', {
+      boardId,
+      hasCachedData: !!boardWithItems,
+      isLoading,
+      itemCount: boardWithItems?.items?.length
+    });
+  }, [boardId, boardWithItems, isLoading]);
   const removeItemFromBoard = useRemoveItemFromBoard();
   const addItemToBoard = useAddItemToBoard();
   // 不要なAPI呼び出しを削除: boardWithItemsから必要なデータを抽出

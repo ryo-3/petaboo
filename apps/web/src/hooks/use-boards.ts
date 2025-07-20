@@ -67,7 +67,7 @@ export function useBoardWithItems(boardId: number | null, skip: boolean = false)
     queryKey: ["boards", boardId, "items"],
     queryFn: async () => {
       const startTime = performance.now();
-      console.log(`🔍 useBoardWithItems API開始 boardId:${boardId}`);
+      console.log(`🔍 useBoardWithItems API開始 boardId:${boardId} (キャッシュがない場合のみ実行)`);
       
       const token = await getCachedToken(getToken);
       const tokenTime = performance.now();

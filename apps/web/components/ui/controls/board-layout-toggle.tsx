@@ -17,7 +17,7 @@ function BoardLayoutToggle({
   iconSize = "size-5",
 }: BoardLayoutToggleProps) {
   return (
-    <div className="flex bg-gray-100 rounded-lg p-0.5">
+    <div className="flex rounded-lg p-0.5">
       {/* 横並びボタン */}
       <Tooltip 
         text={boardLayout === "horizontal" && isReversed ? "メモとタスクを反転" : boardLayout === "horizontal" ? "メモとタスクを反転" : "横並び表示"} 
@@ -42,16 +42,16 @@ function BoardLayoutToggle({
                   width="5" 
                   height="16" 
                   rx="1" 
-                  fill={isReversed ? "#2C6994" : "#00873f"} // 反転時はタスク（青）、通常時はメモ（緑）
+                  fill={isReversed ? "#2E6B9A" : "#009645"} // 反転時はタスク（青）、通常時はメモ（緑）
                 />
-                {/* 右側の棒 - グレー */}
+                {/* 右側の棒 - 右側に表示されているアイテムの色 */}
                 <rect 
                   x="14" 
                   y="4" 
                   width="5" 
                   height="16" 
                   rx="1" 
-                  fill="#9ca3af" // グレー
+                  fill={isReversed ? "#009645" : "#2E6B9A"} // 反転時はメモ（緑）、通常時はタスク（青）
                 />
               </>
             ) : (
@@ -89,16 +89,16 @@ function BoardLayoutToggle({
                   width="16" 
                   height="5" 
                   rx="1" 
-                  fill={isReversed ? "#2C6994" : "#00873f"} // 反転時はタスク（青）、通常時はメモ（緑）
+                  fill={isReversed ? "#2E6B9A" : "#009645"} // 反転時はタスク（青）、通常時はメモ（緑）
                 />
-                {/* 下側の棒 - グレー */}
+                {/* 下側の棒 - 下側に表示されているアイテムの色 */}
                 <rect 
                   x="4" 
                   y="14" 
                   width="16" 
                   height="5" 
                   rx="1" 
-                  fill="#9ca3af" // グレー
+                  fill={isReversed ? "#009645" : "#2E6B9A"} // 反転時はメモ（緑）、通常時はタスク（青）
                 />
               </>
             ) : (

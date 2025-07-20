@@ -360,8 +360,8 @@ function DesktopUpper({
               boardLayout={boardLayout}
               isReversed={isReversed}
               onBoardLayoutChange={onBoardLayoutChange}
-              buttonSize="size-6"
-              iconSize="size-5"
+              buttonSize="size-7"
+              iconSize="size-8"
             />
           )}
           

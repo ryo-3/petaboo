@@ -104,8 +104,17 @@ function BoardDetail({
   const [showMemo, setShowMemo] = useState(true);
   const [showTask, setShowTask] = useState(true);
 
-  // 計算されたカラム数
-  const effectiveColumnCount = columnCount;
+  // propsから選択状態を使用（Fast Refresh対応）
+  const selectedMemo = propSelectedMemo;
+  const selectedTask = propSelectedTask;
+
+  // 計算されたカラム数（右パネル表示時は最大2列に制限）
+  const effectiveColumnCount = 
+    (selectedMemo || selectedTask || rightPanelMode)
+      ? columnCount <= 2
+        ? columnCount
+        : 2
+      : columnCount;
 
   // ボードレイアウト変更ハンドラー（反転機能付き）
   const handleBoardLayoutChange = useCallback((newLayout: "horizontal" | "vertical") => {
@@ -125,9 +134,6 @@ function BoardDetail({
     router.push(`/boards/${boardSlug}/settings`);
   }, [pathname, router]);
 
-  // propsから選択状態を使用（Fast Refresh対応）
-  const selectedMemo = propSelectedMemo;
-  const selectedTask = propSelectedTask;
   const { data: boardWithItems, isLoading, error } = useBoardWithItems(boardId);
   const removeItemFromBoard = useRemoveItemFromBoard();
   const addItemToBoard = useAddItemToBoard();

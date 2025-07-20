@@ -15,6 +15,7 @@ interface MemoStatusDisplayProps {
   onSelectMemo?: (memo: Memo) => void;
   selectedMemoId?: number;
   showEditDate?: boolean;
+  showBoardName?: boolean;
   sortOptions?: Array<{
     id: "createdAt" | "updatedAt" | "deletedAt";
     label: string;
@@ -33,6 +34,7 @@ interface DeletedMemoDisplayProps {
   onSelectMemo?: (memo: DeletedMemo) => void;
   selectedMemoId?: number;
   showEditDate?: boolean;
+  showBoardName?: boolean;
   sortOptions?: Array<{
     id: "createdAt" | "updatedAt" | "deletedAt";
     label: string;
@@ -51,6 +53,7 @@ function MemoStatusDisplay({
   onSelectMemo,
   selectedMemoId,
   showEditDate = false,
+  showBoardName = false,
   sortOptions = []
 }: MemoStatusDisplayProps) {
   const getSortValue = (memo: Memo, sortId: string): number => {
@@ -75,6 +78,7 @@ function MemoStatusDisplay({
     onSelect: () => void;
     isSelected: boolean;
     showEditDate: boolean;
+    showBoardName?: boolean;
     variant?: 'normal' | 'deleted';
   }) => {
     const Component = viewMode === 'card' ? MemoCard : MemoListItem;
@@ -88,6 +92,7 @@ function MemoStatusDisplay({
         onSelect={props.onSelect}
         isSelected={props.isSelected}
         showEditDate={props.showEditDate}
+        showBoardName={props.showBoardName}
         variant={props.variant}
       />
     );
@@ -105,6 +110,7 @@ function MemoStatusDisplay({
       onSelectItem={onSelectMemo}
       selectedItemId={selectedMemoId}
       showEditDate={showEditDate}
+      showBoardName={showBoardName}
       sortOptions={sortOptions}
       emptyMessage="メモがありません"
       renderItem={renderMemo}
@@ -127,6 +133,7 @@ export function DeletedMemoDisplay({
   onSelectMemo,
   selectedMemoId,
   showEditDate = false,
+  showBoardName = false,
   sortOptions = []
 }: DeletedMemoDisplayProps) {
   const getSortValue = (memo: DeletedMemo, sortId: string): number => {
@@ -153,6 +160,7 @@ export function DeletedMemoDisplay({
     onSelect: () => void;
     isSelected: boolean;
     showEditDate: boolean;
+    showBoardName?: boolean;
     variant?: 'normal' | 'deleted';
   }) => {
     const Component = viewMode === 'card' ? MemoCard : MemoListItem;
@@ -167,6 +175,7 @@ export function DeletedMemoDisplay({
         variant="deleted"
         isSelected={props.isSelected}
         showEditDate={props.showEditDate}
+        showBoardName={props.showBoardName}
       />
     );
     /* eslint-enable react/prop-types */
@@ -183,6 +192,7 @@ export function DeletedMemoDisplay({
       onSelectItem={onSelectMemo}
       selectedItemId={selectedMemoId}
       showEditDate={showEditDate}
+      showBoardName={showBoardName}
       sortOptions={sortOptions}
       emptyMessage="削除済みメモはありません"
       renderItem={renderMemo}

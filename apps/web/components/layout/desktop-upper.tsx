@@ -5,6 +5,7 @@ import TrashIcon from "@/components/icons/trash-icon";
 import Tooltip from "@/components/ui/base/tooltip";
 import AddItemButton from "@/components/ui/buttons/add-item-button";
 import EditDateToggle from "@/components/ui/buttons/edit-date-toggle";
+import BoardNameToggle from "@/components/ui/buttons/board-name-toggle";
 import SelectionModeToggle from "@/components/ui/buttons/selection-mode-toggle";
 import SortToggle from "@/components/ui/buttons/sort-toggle";
 import ColumnCountSelector from "@/components/ui/layout/column-count-selector";
@@ -72,6 +73,9 @@ interface DesktopUpperProps {
   // Date display toggle
   showEditDate?: boolean;
   onShowEditDateChange?: (show: boolean) => void;
+  // Board name display toggle (memo only)
+  showBoardName?: boolean;
+  onShowBoardNameChange?: (show: boolean) => void;
   // Tab counts
   normalCount: number;
   deletedNotesCount?: number;
@@ -116,6 +120,8 @@ function DesktopUpper({
   onSortChange,
   showEditDate = false,
   onShowEditDateChange,
+  showBoardName = false,
+  onShowBoardNameChange,
   normalCount,
   deletedNotesCount = 0,
   deletedTasksCount = 0,
@@ -400,6 +406,16 @@ function DesktopUpper({
               sortOptions={sortOptions}
               onSortChange={onSortChange}
               buttonSize="size-6"
+              iconSize="size-4"
+            />
+          )}
+
+          {/* ボード名表示切り替え（メモのみ） */}
+          {currentMode === "memo" && onShowBoardNameChange && (
+            <BoardNameToggle
+              showBoardName={showBoardName}
+              onToggle={onShowBoardNameChange}
+              buttonSize="size-7"
               iconSize="size-4"
             />
           )}

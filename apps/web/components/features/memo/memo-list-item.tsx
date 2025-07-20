@@ -1,5 +1,6 @@
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import { formatDateOnly } from "@/src/utils/formatDate";
+import { useItemBoards } from '@/src/hooks/use-boards';
 
 interface MemoListItemProps {
   memo: Memo | DeletedMemo;
@@ -9,6 +10,7 @@ interface MemoListItemProps {
   variant?: "normal" | "deleted";
   isSelected?: boolean;
   showEditDate?: boolean;
+  showBoardName?: boolean;
   isDeleting?: boolean;
 }
 
@@ -20,10 +22,14 @@ function MemoListItem({
   variant = "normal",
   isSelected = false,
   showEditDate = false,
+  showBoardName = false,
   isDeleting = false,
 }: MemoListItemProps) {
   const isDeleted = variant === "deleted";
   const deletedMemo = memo as DeletedMemo;
+
+  // ボード名を取得（showBoardNameがtrueの場合のみ）
+  const { data: boards } = useItemBoards('memo', showBoardName ? memo.id : undefined);
 
   // ローカルストレージ使用禁止 - 直接APIデータを使用
   const { displayTitle, displayContent, lastEditTime } = {
@@ -81,6 +87,23 @@ function MemoListItem({
               >
                 {displayTitle}
               </h3>
+              
+              {/* ボード名表示 */}
+              {showBoardName && boards && boards.length > 0 && (
+                <div className="mb-1">
+                  <div className="flex flex-wrap gap-1">
+                    {boards.map((board) => (
+                      <span
+                        key={board.id}
+                        className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                      >
+                        {board.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
               <p className="text-xs text-gray-600 line-clamp-3 min-h-[2rem]">
                 {displayContent ? displayContent.split('\n').slice(1).join('\n') : ""}
               </p>

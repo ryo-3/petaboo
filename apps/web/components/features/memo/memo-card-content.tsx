@@ -1,16 +1,21 @@
 import { formatDateOnly } from '@/src/utils/formatDate'
 import type { Memo, DeletedMemo } from '@/src/types/memo'
+import { useItemBoards } from '@/src/hooks/use-boards'
 
 interface MemoCardContentProps {
   memo: Memo | DeletedMemo
   variant?: 'normal' | 'deleted'
   isSelected?: boolean
   showEditDate?: boolean
+  showBoardName?: boolean
 }
 
-function MemoCardContent({ memo, variant = 'normal', showEditDate = false }: MemoCardContentProps) {
+function MemoCardContent({ memo, variant = 'normal', showEditDate = false, showBoardName = false }: MemoCardContentProps) {
   const isDeleted = variant === 'deleted'
   const deletedMemo = memo as DeletedMemo
+  
+  // ボード名を取得（showBoardNameがtrueの場合のみ）
+  const { data: boards } = useItemBoards('memo', showBoardName ? memo.id : undefined)
   
   // ローカルストレージ使用禁止 - 直接APIデータを使用
   const { displayTitle, displayContent, lastEditTime } = {
@@ -26,6 +31,22 @@ function MemoCardContent({ memo, variant = 'normal', showEditDate = false }: Mem
       }`}>
         {displayTitle}
       </div>
+      
+      {/* ボード名表示 */}
+      {showBoardName && boards && boards.length > 0 && (
+        <div className="mb-2">
+          <div className="flex flex-wrap gap-1">
+            {boards.map((board) => (
+              <span
+                key={board.id}
+                className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+              >
+                {board.name}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="text-sm text-gray-600 flex-1 overflow-hidden">
         <div className="line-clamp-4 break-words">
           {displayContent ? displayContent.split('\n').slice(1).join('\n') : ''}

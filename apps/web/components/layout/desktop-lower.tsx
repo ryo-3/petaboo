@@ -27,6 +27,9 @@ interface DesktopLowerProps {
   // Date display toggle (task and memo)
   showEditDate?: boolean;
   
+  // Board name display toggle (memo only)
+  showBoardName?: boolean;
+  
   // Data props
   notes?: Memo[];
   localMemos?: Memo[];
@@ -67,6 +70,7 @@ function DesktopLower({
   selectionMode = "select",
   sortOptions = [],
   showEditDate = false,
+  showBoardName = false,
   localMemos,
   deletedNotes,
   tasks,
@@ -121,6 +125,7 @@ function DesktopLower({
           onSelectMemo={onSelectMemo}
           selectedMemoId={selectedMemo?.id}
           showEditDate={showEditDate}
+          showBoardName={showBoardName}
           sortOptions={sortOptions.filter(opt => 
             opt.id === "createdAt" || opt.id === "updatedAt" || opt.id === "deletedAt"
           ) as Array<{

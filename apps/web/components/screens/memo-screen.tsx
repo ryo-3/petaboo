@@ -68,6 +68,9 @@ function MemoScreen({
   // 編集日表示管理
   const [showEditDate, setShowEditDate] = useState(false);
 
+  // ボード名表示管理
+  const [showBoardName, setShowBoardName] = useState(false);
+
   // 並び替え管理
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { sortOptions, setSortOptions, getVisibleSortOptions } =
@@ -349,6 +352,8 @@ function MemoScreen({
           onSortChange={setSortOptions}
           showEditDate={showEditDate}
           onShowEditDateChange={setShowEditDate}
+          showBoardName={showBoardName}
+          onShowBoardNameChange={setShowBoardName}
           normalCount={notes?.length || 0}
           deletedNotesCount={deletedNotes?.length || 0}
         />
@@ -363,6 +368,7 @@ function MemoScreen({
           selectionMode={selectionMode}
           sortOptions={getVisibleSortOptions(activeTab)}
           showEditDate={showEditDate}
+          showBoardName={showBoardName}
           notes={notes || []}
           localMemos={notes || []}
           deletedNotes={deletedNotes || []}

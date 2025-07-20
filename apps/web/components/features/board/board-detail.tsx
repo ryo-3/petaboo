@@ -362,6 +362,7 @@ function BoardDetail({
             showEditDate={showEditDate}
             onShowEditDateChange={setShowEditDate}
             boardLayout={boardLayout}
+            isReversed={isReversed}
             onBoardLayoutChange={handleBoardLayoutChange}
             showMemo={rightPanelMode === "task-list" ? false : showMemo}
             showTask={rightPanelMode === "memo-list" ? false : showTask}

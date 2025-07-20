@@ -39,6 +39,7 @@ interface DesktopUpperProps {
   headerMarginBottom?: string;
   // Board layout control
   boardLayout?: "horizontal" | "vertical";
+  isReversed?: boolean;
   onBoardLayoutChange?: (layout: "horizontal" | "vertical") => void;
   // Content filter control (board mode only)
   showMemo?: boolean;
@@ -100,6 +101,7 @@ function DesktopUpper({
   marginBottom = "mb-3",
   headerMarginBottom = "mb-2",
   boardLayout = "horizontal",
+  isReversed = false,
   onBoardLayoutChange,
   showMemo = true,
   showTask = true,
@@ -356,6 +358,7 @@ function DesktopUpper({
           {currentMode === "board" && onBoardLayoutChange && (
             <BoardLayoutToggle
               boardLayout={boardLayout}
+              isReversed={isReversed}
               onBoardLayoutChange={onBoardLayoutChange}
               buttonSize="size-6"
               iconSize="size-5"

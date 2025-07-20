@@ -1,23 +1,14 @@
-import MemoCard from "@/components/features/memo/memo-card";
-import MemoEditor from "@/components/features/memo/memo-editor";
-import MemoListItem from "@/components/features/memo/memo-list-item";
-import MemoStatusDisplay from "@/components/features/memo/memo-status-display";
-import TaskCard from "@/components/features/task/task-card";
-import TaskEditor from "@/components/features/task/task-editor";
-import TaskListItem from "@/components/features/task/task-list-item";
-import TaskStatusDisplay from "@/components/features/task/task-status-display";
-import MemoIcon from "@/components/icons/memo-icon";
-import TaskIcon from "@/components/icons/task-icon";
-import TrashIcon from "@/components/icons/trash-icon";
+import BoardMemoSection from "./board-memo-section";
+import BoardRightPanel from "./board-right-panel";
+import BoardTaskSection from "./board-task-section";
 import DesktopUpper from "@/components/layout/desktop-upper";
 import Tooltip from "@/components/ui/base/tooltip";
-import AddItemButton from "@/components/ui/buttons/add-item-button";
-import RightPanel from "@/components/ui/layout/right-panel";
 import {
   useAddItemToBoard,
   useBoardWithItems,
   useRemoveItemFromBoard,
 } from "@/src/hooks/use-boards";
+import { useExport } from "@/src/hooks/use-export";
 import { useMemos } from "@/src/hooks/use-memos";
 import { useTasks } from "@/src/hooks/use-tasks";
 import { BoardItemWithContent } from "@/src/types/board";
@@ -43,23 +34,6 @@ interface BoardDetailProps {
   isDeleted?: boolean;
 }
 
-interface ExportData {
-  name: string;
-  description: string | null;
-  createdAt: string;
-  memos: {
-    title: string;
-    content: string | null;
-    createdAt: string;
-  }[];
-  tasks: {
-    title: string;
-    description: string | null;
-    status: string;
-    priority: string;
-    createdAt: string;
-  }[];
-}
 
 function BoardDetail({
   boardId,
@@ -146,6 +120,7 @@ function BoardDetail({
   const addItemToBoard = useAddItemToBoard();
   const { data: allMemos } = useMemos();
   const { data: allTasks } = useTasks();
+  const { exportBoard } = useExport();
 
   // リストパネル表示時に選択状態をリセット
   useEffect(() => {
@@ -399,99 +374,6 @@ function BoardDetail({
     onClearSelection?.();
   }, [onClearSelection]);
 
-  const handleExport = () => {
-    if (!boardWithItems) return;
-
-    const exportData = {
-      name: boardName,
-      description: boardDescription || null,
-      createdAt: new Date(
-        (boardWithItems.createdAt as number) * 1000
-      ).toLocaleString("ja-JP"),
-      memos: memoItems.map((item) => {
-        const memo = item.content as Memo;
-        return {
-          title: memo.title,
-          content: memo.content,
-          createdAt: new Date((memo.createdAt as number) * 1000).toLocaleString(
-            "ja-JP"
-          ),
-        };
-      }),
-      tasks: taskItems.map((item) => {
-        const task = item.content as Task;
-        return {
-          title: task.title,
-          description: task.description,
-          status: task.status,
-          priority: task.priority,
-          createdAt: new Date((task.createdAt as number) * 1000).toLocaleString(
-            "ja-JP"
-          ),
-        };
-      }),
-    };
-
-    const textContent = formatAsText(exportData);
-    downloadAsFile(textContent, `${boardName}.txt`);
-  };
-
-  const formatAsText = (data: ExportData) => {
-    let text = `ボード名: ${data.name}\n`;
-    if (data.description) {
-      text += `説明: ${data.description}\n`;
-    }
-    text += `作成日: ${data.createdAt}\n\n`;
-
-    if (data.memos.length > 0) {
-      text += "## メモ\n";
-      data.memos.forEach((memo, index: number) => {
-        text += `${index + 1}. ${memo.title}\n`;
-        if (memo.content) {
-          text += `   ${memo.content.replace(/\n/g, "\n   ")}\n`;
-        }
-        text += `   作成日: ${memo.createdAt}\n\n`;
-      });
-    }
-
-    if (data.tasks.length > 0) {
-      text += "## タスク\n";
-      data.tasks.forEach((task, index: number) => {
-        const statusText =
-          task.status === "completed"
-            ? "完了"
-            : task.status === "in_progress"
-              ? "進行中"
-              : "未着手";
-        const priorityText =
-          task.priority === "high"
-            ? "高"
-            : task.priority === "low"
-              ? "低"
-              : "中";
-
-        text += `${index + 1}. [${statusText}] ${task.title} (優先度: ${priorityText})\n`;
-        if (task.description) {
-          text += `   ${task.description.replace(/\n/g, "\n   ")}\n`;
-        }
-        text += `   作成日: ${task.createdAt}\n\n`;
-      });
-    }
-
-    return text;
-  };
-
-  const downloadAsFile = (content: string, filename: string) => {
-    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
 
   // エラー時のみエラー表示
   if (error) {
@@ -556,6 +438,19 @@ function BoardDetail({
   const normalMemoCount = allMemoItems.length;
   const deletedMemoCount = 0; // 削除済みメモの件数（将来実装）
 
+  // エクスポート処理
+  const handleExport = useCallback(() => {
+    if (!boardWithItems) return;
+    
+    exportBoard(
+      boardName,
+      boardDescription || null,
+      boardWithItems.createdAt as number,
+      memoItems,
+      taskItems
+    );
+  }, [boardWithItems, boardName, boardDescription, memoItems, taskItems, exportBoard]);
+
   return (
     <div className="flex h-full bg-white overflow-hidden">
       {/* 左側：メモ・タスク一覧 */}
@@ -564,7 +459,7 @@ function BoardDetail({
           selectedMemo || selectedTask || rightPanelMode
             ? rightPanelMode
               ? "w-[30%] border-r border-gray-300" // リスト表示時は広め
-              : "w-[47%] border-r border-gray-300" // エディター表示時
+              : "w-[44%] border-r border-gray-300" // エディター表示時
             : "w-full"
         } pt-3 pl-5 pr-4 ${selectedMemo || selectedTask || rightPanelMode ? "pr-2" : "pr-4"} flex flex-col transition-all duration-300 relative`}
       >
@@ -588,7 +483,7 @@ function BoardDetail({
             onBoardExport={handleExport}
             onBoardSettings={handleSettings}
             isExportDisabled={false}
-            marginBottom="mb-3"
+            marginBottom="mb-2"
             headerMarginBottom="mb-1"
             showEditDate={showEditDate}
             onShowEditDateChange={setShowEditDate}
@@ -618,268 +513,48 @@ function BoardDetail({
           } gap-4 flex-1 min-h-0`}
         >
           {/* メモ列 */}
-          {rightPanelMode !== "task-list" && showMemo && (
-            <div className="flex flex-col flex-1 min-h-0">
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-1">
-                    メモ
-                  </h2>
-                  <span className="font-normal text-gray-500">
-                    {allMemoItems.length}
-                  </span>
-                  <Tooltip text="新規追加" position="top">
-                    <AddItemButton
-                      itemType="memo"
-                      onClick={handleCreateNewMemo}
-                      size="small"
-                      showTooltip={false}
-                      customSize={{
-                        padding: "p-1",
-                        iconSize: "size-5",
-                      }}
-                      className="size-6 flex items-center justify-center"
-                    />
-                  </Tooltip>
-                  <Tooltip text="メモ一覧表示" position="top">
-                    <button
-                      onClick={() => setRightPanelMode("memo-list")}
-                      className="size-6 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
-                    >
-                      <MemoIcon className="size-5 text-Green" />
-                    </button>
-                  </Tooltip>
-                </div>
-              </div>
-
-              {/* メモステータスタブ */}
-              <div className="flex items-center gap-2 flex-wrap mb-2">
-                <button
-                  onClick={() => handleMemoTabChange("normal")}
-                  className={`flex items-center gap-1 px-2 py-1 rounded-lg font-medium transition-colors text-gray-600 text-sm h-7 ${
-                    activeMemoTab === "normal"
-                      ? "bg-gray-200"
-                      : "bg-gray-100 hover:bg-gray-200"
-                  }`}
-                >
-                  <div className="w-2.5 h-2.5 rounded-full bg-gray-500"></div>
-                  {showTabText && <span>通常</span>}
-                  <span className="bg-white/20 text-[11px] px-1 py-0.5 rounded-full min-w-[20px] text-center">
-                    {normalMemoCount}
-                  </span>
-                </button>
-                <button
-                  onClick={() => handleMemoTabChange("deleted")}
-                  className={`flex items-center px-2 py-1 rounded-lg font-medium transition-colors text-gray-600 text-sm h-7 ${
-                    activeMemoTab === "deleted"
-                      ? "bg-red-100"
-                      : "bg-gray-100 hover:bg-red-100"
-                  }`}
-                >
-                  <TrashIcon className="w-4 h-4" />
-                  <span
-                    className={`text-xs transition-all overflow-hidden text-right ${
-                      activeMemoTab === "deleted"
-                        ? "opacity-100 w-9 translate-x-0 px-2 ml-1"
-                        : "opacity-0 w-0 translate-x-2 px-0"
-                    }`}
-                  >
-                    {deletedMemoCount}
-                  </span>
-                </button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto pr-1 pb-10 mb-2">
-                {isLoading ? (
-                  <div className="text-gray-500 text-center py-8">
-                    メモを読み込み中...
-                  </div>
-                ) : memoItems.length === 0 ? (
-                  <div className="text-gray-500 text-center py-8">
-                    {activeMemoTab === "deleted"
-                      ? "削除済みメモがありません"
-                      : "メモがありません"}
-                  </div>
-                ) : (
-                  <div
-                    className={`grid gap-4 ${
-                      effectiveColumnCount === 1
-                        ? "grid-cols-1"
-                        : effectiveColumnCount === 2
-                          ? "grid-cols-1 md:grid-cols-2"
-                          : effectiveColumnCount === 3
-                            ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-                            : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-                    }`}
-                  >
-                    {memoItems.map((item) => {
-                      const memo = item.content as Memo;
-                      const Component =
-                        viewMode === "card" ? MemoCard : MemoListItem;
-                      return (
-                        <Component
-                          key={memo.id}
-                          memo={memo}
-                          isChecked={false}
-                          onToggleCheck={() => {}}
-                          onSelect={() => handleSelectMemo(memo)}
-                          isSelected={selectedMemo?.id === memo.id}
-                          showEditDate={showEditDate}
-                          variant="normal"
-                        />
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+          <BoardMemoSection
+            rightPanelMode={rightPanelMode}
+            showMemo={showMemo}
+            allMemoItems={allMemoItems}
+            memoItems={memoItems}
+            activeMemoTab={activeMemoTab}
+            normalMemoCount={normalMemoCount}
+            deletedMemoCount={deletedMemoCount}
+            showTabText={showTabText}
+            isLoading={isLoading}
+            effectiveColumnCount={effectiveColumnCount}
+            viewMode={viewMode}
+            showEditDate={showEditDate}
+            selectedMemo={selectedMemo}
+            onCreateNewMemo={handleCreateNewMemo}
+            onSetRightPanelMode={setRightPanelMode}
+            onMemoTabChange={handleMemoTabChange}
+            onSelectMemo={handleSelectMemo}
+          />
 
           {/* タスク列 */}
-          {rightPanelMode !== "memo-list" && showTask && (
-            <div className="flex flex-col flex-1 min-h-0">
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-1">
-                    タスク
-                  </h2>
-                  <span className="font-normal text-gray-500">
-                    {allTaskItems.length}
-                  </span>
-                  <Tooltip text="新規追加" position="top">
-                    <AddItemButton
-                      itemType="task"
-                      onClick={handleCreateNewTask}
-                      size="small"
-                      showTooltip={false}
-                      customSize={{
-                        padding: "p-1",
-                        iconSize: "size-5",
-                      }}
-                      className="size-6 flex items-center justify-center"
-                    />
-                  </Tooltip>
-                  <Tooltip text="タスク一覧表示" position="top">
-                    <button
-                      onClick={() => setRightPanelMode("task-list")}
-                      className="size-6 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
-                    >
-                      <TaskIcon className="size-5 text-DeepBlue" />
-                    </button>
-                  </Tooltip>
-                </div>
-              </div>
-
-              {/* タスクステータスタブ */}
-              <div className="flex items-center gap-2 flex-wrap mb-2">
-                <button
-                  onClick={() => handleTaskTabChange("todo")}
-                  className={`flex items-center gap-1 px-2 py-1 rounded-lg font-medium transition-colors text-gray-600 text-sm h-7 ${
-                    activeTaskTab === "todo"
-                      ? "bg-zinc-200"
-                      : "bg-gray-100 hover:bg-zinc-200"
-                  }`}
-                >
-                  <div className="w-2.5 h-2.5 rounded-full bg-zinc-400"></div>
-                  {showTabText && <span>未着手</span>}
-                  <span className="bg-white/20 text-[11px] px-1 py-0.5 rounded-full min-w-[20px] text-center">
-                    {todoCount}
-                  </span>
-                </button>
-                <button
-                  onClick={() => handleTaskTabChange("in_progress")}
-                  className={`flex items-center gap-1 px-2 py-1 rounded-lg font-medium transition-colors text-gray-600 text-sm h-7 ${
-                    activeTaskTab === "in_progress"
-                      ? "bg-blue-100"
-                      : "bg-gray-100 hover:bg-blue-100"
-                  }`}
-                >
-                  <div className="w-2.5 h-2.5 rounded-full bg-Blue"></div>
-                  {showTabText && <span>進行中</span>}
-                  <span className="bg-white/20 text-[11px] px-1 py-0.5 rounded-full min-w-[20px] text-center">
-                    {inProgressCount}
-                  </span>
-                </button>
-                <button
-                  onClick={() => handleTaskTabChange("completed")}
-                  className={`flex items-center gap-1 px-2 py-1 rounded-lg font-medium transition-colors text-gray-600 text-sm h-7 ${
-                    activeTaskTab === "completed"
-                      ? "bg-Green/20"
-                      : "bg-gray-100 hover:bg-Green/20"
-                  }`}
-                >
-                  <div className="w-2.5 h-2.5 rounded-full bg-Green"></div>
-                  {showTabText && <span>完了</span>}
-                  <span className="bg-white/20 text-[11px] px-1 py-0.5 rounded-full min-w-[20px] text-center">
-                    {completedCount}
-                  </span>
-                </button>
-                <button
-                  onClick={() => handleTaskTabChange("deleted")}
-                  className={`flex items-center px-2 py-1 rounded-lg font-medium transition-colors text-gray-600 text-sm h-7 ${
-                    activeTaskTab === "deleted"
-                      ? "bg-red-100"
-                      : "bg-gray-100 hover:bg-red-100"
-                  }`}
-                >
-                  <TrashIcon className="w-4 h-4" />
-                  <span
-                    className={`text-xs transition-all overflow-hidden text-right ${
-                      activeTaskTab === "deleted"
-                        ? "opacity-100 w-9 translate-x-0 px-2 ml-1"
-                        : "opacity-0 w-0 translate-x-2 px-0"
-                    }`}
-                  >
-                    {deletedCount}
-                  </span>
-                </button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto pr-1 pb-10 mb-2">
-                {isLoading ? (
-                  <div className="text-gray-500 text-center py-8">
-                    タスクを読み込み中...
-                  </div>
-                ) : taskItems.length === 0 ? (
-                  <div className="text-gray-500 text-center py-8">
-                    {activeTaskTab === "deleted"
-                      ? "削除済みタスクがありません"
-                      : "タスクがありません"}
-                  </div>
-                ) : (
-                  <div
-                    className={`grid gap-4 ${
-                      effectiveColumnCount === 1
-                        ? "grid-cols-1"
-                        : effectiveColumnCount === 2
-                          ? "grid-cols-1 md:grid-cols-2"
-                          : effectiveColumnCount === 3
-                            ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-                            : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-                    }`}
-                  >
-                    {taskItems.map((item) => {
-                      const task = item.content as Task;
-                      const Component =
-                        viewMode === "card" ? TaskCard : TaskListItem;
-                      return (
-                        <Component
-                          key={task.id}
-                          task={task}
-                          isChecked={false}
-                          onToggleCheck={() => {}}
-                          onSelect={() => handleSelectTask(task)}
-                          isSelected={selectedTask?.id === task.id}
-                          showEditDate={showEditDate}
-                          variant="normal"
-                        />
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+          <BoardTaskSection
+            rightPanelMode={rightPanelMode}
+            showTask={showTask}
+            allTaskItems={allTaskItems}
+            taskItems={taskItems}
+            activeTaskTab={activeTaskTab}
+            todoCount={todoCount}
+            inProgressCount={inProgressCount}
+            completedCount={completedCount}
+            deletedCount={deletedCount}
+            showTabText={showTabText}
+            isLoading={isLoading}
+            effectiveColumnCount={effectiveColumnCount}
+            viewMode={viewMode}
+            showEditDate={showEditDate}
+            selectedTask={selectedTask}
+            onCreateNewTask={handleCreateNewTask}
+            onSetRightPanelMode={setRightPanelMode}
+            onTaskTabChange={handleTaskTabChange}
+            onSelectTask={handleSelectTask}
+          />
         </div>
 
         {/* フローティング：一覧へ戻るボタン */}
@@ -908,117 +583,24 @@ function BoardDetail({
       </div>
 
       {/* 右側：詳細表示 */}
-      <RightPanel
+      <BoardRightPanel
         isOpen={
           selectedMemo !== null ||
           selectedTask !== null ||
           rightPanelMode !== null
         }
+        selectedMemo={selectedMemo}
+        selectedTask={selectedTask}
+        rightPanelMode={rightPanelMode}
+        selectedItemsFromList={selectedItemsFromList}
+        allMemos={allMemos}
+        allTasks={allTasks}
         onClose={rightPanelMode ? handleCloseRightPanel : handleCloseDetail}
-      >
-        {selectedMemo && !selectedTask && rightPanelMode === null && (
-          <>
-            {console.log(
-              "🎯 Rendering MemoEditor - selectedMemo:",
-              selectedMemo.id,
-              "rightPanelMode:",
-              rightPanelMode
-            )}
-            <MemoEditor
-              key={`memo-${selectedMemo.id}`}
-              memo={selectedMemo}
-              onClose={() => {
-                console.log("🔍 MemoEditor onClose called");
-                // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
-              }}
-              onSaveComplete={(savedMemo) => {
-                // 保存後に選択状態を更新
-                console.log("🔍 MemoEditor onSaveComplete:", savedMemo.id);
-                onSelectMemo?.(savedMemo);
-              }}
-            />
-          </>
-        )}
-
-        {selectedTask && !selectedMemo && rightPanelMode === null && (
-          <TaskEditor
-            key={`task-${selectedTask.id}`}
-            task={selectedTask}
-            onClose={() => {
-              console.log("🔍 TaskEditor onClose called");
-              // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
-            }}
-            onSaveComplete={(savedTask) => {
-              // 保存後に選択状態を更新
-              console.log("🔍 TaskEditor onSaveComplete:", savedTask.id);
-              onSelectTask?.(savedTask);
-            }}
-          />
-        )}
-
-        {/* メモ一覧表示 */}
-        {rightPanelMode === "memo-list" && (
-          <div className="flex flex-col h-full bg-white">
-            <div className="flex items-center justify-between border-b border-gray-200 ml-2 mt-1 mb-1 pb-1">
-              <h3 className="text-lg font-semibold">メモ一覧から追加</h3>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleAddSelectedItems}
-                  disabled={selectedItemsFromList.size === 0}
-                  className="px-3 py-1 bg-Green text-white rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  追加 ({selectedItemsFromList.size})
-                </button>
-              </div>
-            </div>
-            <div className="flex-1 overflow-y-auto pr-2">
-              <MemoStatusDisplay
-                memos={allMemos}
-                viewMode="list"
-                effectiveColumnCount={1}
-                selectionMode="check"
-                checkedMemos={selectedItemsFromList}
-                onToggleCheck={handleToggleItemSelection}
-                onSelectMemo={(memo) => handleToggleItemSelection(memo.id)}
-                selectedMemoId={undefined}
-                showEditDate={false}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* タスク一覧表示 */}
-        {rightPanelMode === "task-list" && (
-          <div className="flex flex-col h-full bg-white">
-            <div className="flex items-center justify-between border-b border-gray-200 ml-2 mt-1 mb-1 pb-1">
-              <h3 className="text-lg font-semibold">タスク一覧から追加</h3>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleAddSelectedItems}
-                  disabled={selectedItemsFromList.size === 0}
-                  className="px-3 py-1 bg-DeepBlue text-white rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  追加 ({selectedItemsFromList.size})
-                </button>
-              </div>
-            </div>
-            <div className="flex-1 overflow-y-auto">
-              <TaskStatusDisplay
-                activeTab="todo"
-                tasks={allTasks}
-                viewMode="list"
-                effectiveColumnCount={1}
-                selectionMode="check"
-                checkedTasks={selectedItemsFromList}
-                onToggleCheck={handleToggleItemSelection}
-                onSelectTask={(task) => handleToggleItemSelection(task.id)}
-                selectedTaskId={undefined}
-                showEditDate={false}
-              />
-            </div>
-          </div>
-        )}
-      </RightPanel>
+        onSelectMemo={onSelectMemo}
+        onSelectTask={onSelectTask}
+        onAddSelectedItems={handleAddSelectedItems}
+        onToggleItemSelection={handleToggleItemSelection}
+      />
     </div>
   );
 }

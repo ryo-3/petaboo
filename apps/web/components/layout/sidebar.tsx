@@ -1,6 +1,7 @@
 "use client";
 
 import DashboardIcon from "@/components/icons/dashboard-icon";
+import DashboardEditIcon from "@/components/icons/dashboard-edit-icon";
 import HomeIcon from "@/components/icons/home-icon";
 import MemoIcon from "@/components/icons/memo-icon";
 import PlusIcon from "@/components/icons/plus-icon";
@@ -119,18 +120,29 @@ function Sidebar({
               <TaskIcon className="w-5 h-5" />
             </button>
           </Tooltip>
-          <Tooltip text={currentBoardName || "ボード一覧"} position="right">
+          <Tooltip text="ボード一覧" position="right">
             <button
               onClick={onDashboard}
               className={`p-2 rounded-lg transition-colors ${
-                isBoardActive
+                currentMode === "board" && !currentBoardName
                   ? "bg-light-Blue text-white"
                   : "bg-gray-200 hover:bg-gray-300 text-gray-600"
               }`}
             >
-              <DashboardIcon className={`w-5 h-5 ${isBoardActive ? "" : "text-gray-600"}`} />
+              <DashboardIcon className={`w-5 h-5 ${currentMode === "board" && !currentBoardName ? "" : "text-gray-600"}`} />
             </button>
           </Tooltip>
+          
+          {/* ボード詳細 (選択中のボードがある場合のみ表示) */}
+          {currentBoardName && (
+            <Tooltip text={currentBoardName} position="right">
+              <button
+                className="p-2 rounded-lg transition-colors bg-light-Blue text-white"
+              >
+                <DashboardEditIcon className="w-5 h-5" />
+              </button>
+            </Tooltip>
+          )}
           <AddItemButton
             itemType={isBoardActive ? "board" : currentMode}
             onClick={isBoardActive ? onNewBoard! : (currentMode === "memo" ? onNewMemo : onNewTask!)}

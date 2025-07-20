@@ -15,8 +15,14 @@ export function useNotes() {
   return useQuery<Memo[]>({
     queryKey: ["notes"],
     queryFn: async () => {
+      console.log('📝 useNotes API呼び出し開始');
       const token = await getToken();
       const response = await notesApi.getNotes(token || undefined);
+      if (!response.ok) {
+        console.error('❌ useNotes API呼び出し失敗:', response.status, response.statusText);
+      } else {
+        console.log('✅ useNotes API呼び出し成功');
+      }
       return response.json();
     },
     staleTime: 5 * 60 * 1000,    // 5分間は新鮮なデータとして扱う

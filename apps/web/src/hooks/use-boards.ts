@@ -11,6 +11,7 @@ export function useBoards(status: "normal" | "completed" | "deleted" = "normal")
   return useQuery<BoardWithStats[]>({
     queryKey: ["boards", status],
     queryFn: async () => {
+      console.log('🔍 useBoards API呼び出し開始:', status);
       const token = await getToken();
       
       const response = await fetch(`${API_BASE_URL}/boards?status=${status}`, {
@@ -21,10 +22,13 @@ export function useBoards(status: "normal" | "completed" | "deleted" = "normal")
       });
       
       if (!response.ok) {
+        console.error('❌ useBoards API呼び出し失敗:', response.status, response.statusText);
         throw new Error("Failed to fetch boards");
       }
 
-      return response.json();
+      const data = await response.json();
+      console.log('✅ useBoards API呼び出し成功:', data.length, '件');
+      return data;
     },
   });
 }
@@ -36,7 +40,12 @@ export function useBoardWithItems(boardId: number | null) {
   return useQuery<BoardWithItems>({
     queryKey: ["boards", boardId, "items"],
     queryFn: async () => {
+      const startTime = performance.now();
+      console.log(`🔍 useBoardWithItems API開始 boardId:${boardId}`);
+      
       const token = await getToken();
+      const tokenTime = performance.now();
+      console.log(`🔑 Token取得完了: ${(tokenTime - startTime).toFixed(2)}ms`);
       
       const response = await fetch(`${API_BASE_URL}/boards/${boardId}/items`, {
         headers: {
@@ -45,11 +54,18 @@ export function useBoardWithItems(boardId: number | null) {
         },
       });
       
+      const fetchTime = performance.now();
+      console.log(`📡 Fetch完了: ${(fetchTime - tokenTime).toFixed(2)}ms`);
+      
       if (!response.ok) {
+        console.error(`❌ useBoardWithItems失敗: ${response.status} ${response.statusText}`);
         throw new Error("Failed to fetch board with items");
       }
 
       const data = await response.json();
+      const endTime = performance.now();
+      console.log(`✅ useBoardWithItems完了: 総時間${(endTime - startTime).toFixed(2)}ms, アイテム数:${data.items?.length || 0}`);
+      
       return {
         ...data.board,
         items: data.items,
@@ -69,7 +85,12 @@ export function useBoardBySlug(slug: string | null) {
   return useQuery<Board>({
     queryKey: ["boards", "slug", slug],
     queryFn: async () => {
+      const startTime = performance.now();
+      console.log(`🔍 useBoardBySlug API開始 slug:${slug}`);
+      
       const token = await getToken();
+      const tokenTime = performance.now();
+      console.log(`🔑 Token取得完了: ${(tokenTime - startTime).toFixed(2)}ms`);
       
       const response = await fetch(`${API_BASE_URL}/boards/slug/${slug}`, {
         headers: {
@@ -78,11 +99,18 @@ export function useBoardBySlug(slug: string | null) {
         },
       });
       
+      const fetchTime = performance.now();
+      console.log(`📡 Fetch完了: ${(fetchTime - tokenTime).toFixed(2)}ms`);
+      
       if (!response.ok) {
+        console.error(`❌ useBoardBySlug失敗: ${response.status} ${response.statusText}`);
         throw new Error("Failed to fetch board by slug");
       }
       
-      return response.json();
+      const data = await response.json();
+      const endTime = performance.now();
+      console.log(`✅ useBoardBySlug完了: 総時間${(endTime - startTime).toFixed(2)}ms`);
+      return data;
     },
     enabled: !!slug,
     staleTime: 5 * 60 * 1000,    // 5分間は新鮮なデータとして扱う

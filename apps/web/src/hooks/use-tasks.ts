@@ -15,6 +15,9 @@ export function useTasks() {
       const data = await response.json()
       return data as Task[]
     },
+    staleTime: 5 * 60 * 1000,    // 5分間は新鮮なデータとして扱う
+    gcTime: 30 * 60 * 1000,      // 30分間キャッシュを保持
+    refetchOnWindowFocus: false,  // ウィンドウフォーカス時の再取得を無効化
   })
 }
 
@@ -88,6 +91,9 @@ export function useDeletedTasks() {
       const data = await response.json()
       return data as DeletedTask[]
     },
+    staleTime: 5 * 60 * 1000,    // 5分間は新鮮なデータとして扱う
+    gcTime: 30 * 60 * 1000,      // 30分間キャッシュを保持
+    refetchOnWindowFocus: false,  // ウィンドウフォーカス時の再取得を無効化
   })
 }
 

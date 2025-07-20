@@ -68,11 +68,14 @@ function MainClient({
     ? pathname.split("/")[2]
     : null;
 
-  // slugからボード情報取得
+  // サーバーサイドでボード情報が取得済みの場合は不要なAPI呼び出しを回避
+  const shouldFetchBoardFromSlug = !boardId && currentBoardSlug;
   const { data: boardFromSlug } = useBoardBySlug(
-    currentBoardSlug || null
+    shouldFetchBoardFromSlug ? currentBoardSlug : null
   );
-  const { data: currentBoard } = useBoardWithItems(boardFromSlug?.id || null);
+  const { data: currentBoard } = useBoardWithItems(
+    boardId || boardFromSlug?.id || null
+  );
 
   // 選択中アイテム管理
   const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null);

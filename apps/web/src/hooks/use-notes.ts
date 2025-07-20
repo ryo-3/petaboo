@@ -19,6 +19,9 @@ export function useNotes() {
       const response = await notesApi.getNotes(token || undefined);
       return response.json();
     },
+    staleTime: 5 * 60 * 1000,    // 5分間は新鮮なデータとして扱う
+    gcTime: 30 * 60 * 1000,      // 30分間キャッシュを保持
+    refetchOnWindowFocus: false,  // ウィンドウフォーカス時の再取得を無効化
   });
 }
 
@@ -120,6 +123,9 @@ export function useDeletedNotes() {
       const response = await notesApi.getDeletedNotes(token || undefined);
       return response.json();
     },
+    staleTime: 5 * 60 * 1000,    // 5分間は新鮮なデータとして扱う
+    gcTime: 30 * 60 * 1000,      // 30分間キャッシュを保持
+    refetchOnWindowFocus: false,  // ウィンドウフォーカス時の再取得を無効化
   });
 }
 

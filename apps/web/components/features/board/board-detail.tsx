@@ -10,8 +10,9 @@ import {
 } from "@/src/hooks/use-boards";
 import { useBoardState } from "@/src/hooks/use-board-state";
 import { useExport } from "@/src/hooks/use-export";
-import { useMemos } from "@/src/hooks/use-memos";
-import { useTasks } from "@/src/hooks/use-tasks";
+// 不要なAPI呼び出しを削除: useBoardWithItemsだけで十分
+// import { useMemos } from "@/src/hooks/use-memos";
+// import { useTasks } from "@/src/hooks/use-tasks";
 import { BoardItemWithContent } from "@/src/types/board";
 import { Memo } from "@/src/types/memo";
 import { Task } from "@/src/types/task";
@@ -103,9 +104,19 @@ function BoardDetail({
   const { data: boardWithItems, isLoading, error } = useBoardWithItems(boardId);
   const removeItemFromBoard = useRemoveItemFromBoard();
   const addItemToBoard = useAddItemToBoard();
-  const { data: allMemos } = useMemos();
-  const { data: allTasks } = useTasks();
+  // 不要なAPI呼び出しを削除: boardWithItemsから必要なデータを抽出
+  // const { data: allMemos } = useMemos();
+  // const { data: allTasks } = useTasks();
   const { exportBoard } = useExport();
+
+  // boardWithItemsからメモとタスクを抽出（APIコール削減）
+  const boardMemos = boardWithItems?.items
+    ?.filter(item => item.itemType === 'memo')
+    ?.map(item => item.content as Memo) || [];
+  
+  const boardTasks = boardWithItems?.items
+    ?.filter(item => item.itemType === 'task')
+    ?.map(item => item.content as Task) || [];
 
 
 
@@ -468,8 +479,8 @@ function BoardDetail({
         selectedTask={selectedTask}
         rightPanelMode={rightPanelMode}
         selectedItemsFromList={selectedItemsFromList}
-        allMemos={allMemos}
-        allTasks={allTasks}
+        allMemos={boardMemos}
+        allTasks={boardTasks}
         onClose={rightPanelMode ? () => handleCloseRightPanel(onClearSelection) : handleCloseDetail}
         onSelectMemo={onSelectMemo}
         onSelectTask={onSelectTask}

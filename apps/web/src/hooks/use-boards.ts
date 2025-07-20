@@ -56,6 +56,9 @@ export function useBoardWithItems(boardId: number | null) {
       };
     },
     enabled: boardId !== null,
+    staleTime: 5 * 60 * 1000,    // 5分間は新鮮なデータとして扱う
+    gcTime: 30 * 60 * 1000,      // 30分間キャッシュを保持
+    refetchOnWindowFocus: false,  // ウィンドウフォーカス時の再取得を無効化
   });
 }
 
@@ -82,6 +85,9 @@ export function useBoardBySlug(slug: string | null) {
       return response.json();
     },
     enabled: !!slug,
+    staleTime: 5 * 60 * 1000,    // 5分間は新鮮なデータとして扱う
+    gcTime: 30 * 60 * 1000,      // 30分間キャッシュを保持
+    refetchOnWindowFocus: false,  // ウィンドウフォーカス時の再取得を無効化
   });
 }
 

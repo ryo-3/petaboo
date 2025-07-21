@@ -2,6 +2,7 @@
 
 import TaskStatusDisplay from "@/components/features/task/task-status-display";
 import { FilterIconCheckList } from "@/components/icons/filter-icon-variants";
+import SelectionModeToggle from "@/components/ui/buttons/selection-mode-toggle";
 import TrashIcon from "@/components/icons/trash-icon";
 import Tooltip from "@/components/ui/base/tooltip";
 import AddItemButton from "@/components/ui/buttons/add-item-button";
@@ -27,13 +28,13 @@ interface BoardTaskSectionProps {
   showEditDate: boolean;
   selectedTask?: Task | null;
   // 複数選択関連
-  selectionMode: "none" | "memo" | "task";
-  selectedTaskIds: Set<number>;
+  taskSelectionMode: "select" | "check";
+  checkedTasks: Set<number>;
   onCreateNewTask: () => void;
   onSetRightPanelMode: (mode: "task-list" | null) => void;
   onTaskTabChange: (tab: "todo" | "in_progress" | "completed" | "deleted") => void;
   onSelectTask: (task: Task) => void;
-  onToggleSelectionMode: () => void;
+  onTaskSelectionModeChange: (mode: "select" | "check") => void;
   onTaskSelectionToggle: (taskId: number) => void;
 }
 
@@ -53,13 +54,13 @@ export default function BoardTaskSection({
   viewMode,
   showEditDate,
   selectedTask,
-  selectionMode,
-  selectedTaskIds,
+  taskSelectionMode,
+  checkedTasks,
   onCreateNewTask,
   onSetRightPanelMode,
   onTaskTabChange,
   onSelectTask,
-  onToggleSelectionMode,
+  onTaskSelectionModeChange,
   onTaskSelectionToggle,
 }: BoardTaskSectionProps) {
   // ソートオプションの管理
@@ -108,21 +109,12 @@ export default function BoardTaskSection({
           </Tooltip>
 
           {/* 選択モード切り替えボタン */}
-          <Tooltip text={selectionMode === "task" ? "選択モード終了" : "選択モード"} position="top">
-            <button
-              onClick={onToggleSelectionMode}
-              className={`size-6 flex items-center justify-center rounded-lg transition-colors ${
-                selectionMode === "task"
-                  ? "bg-blue-100 hover:bg-blue-200 text-blue-600"
-                  : "bg-gray-100 hover:bg-gray-200 text-gray-600"
-              }`}
-            >
-              <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </button>
-          </Tooltip>
+          <SelectionModeToggle
+            mode={taskSelectionMode}
+            onModeChange={onTaskSelectionModeChange}
+            buttonSize="size-6"
+            iconSize="size-4"
+          />
           
           {/* ソートトグル */}
           <SortToggle
@@ -221,11 +213,11 @@ export default function BoardTaskSection({
             tasks={taskItems.map(item => item.content as Task)}
             viewMode={viewMode}
             effectiveColumnCount={effectiveColumnCount}
-            selectionMode={selectionMode === "task" ? "check" : "select"}
-            checkedTasks={selectionMode === "task" ? selectedTaskIds : undefined}
-            onToggleCheck={selectionMode === "task" ? onTaskSelectionToggle : undefined}
-            onSelectTask={selectionMode === "task" ? undefined : onSelectTask}
-            selectedTaskId={selectionMode === "task" ? undefined : selectedTask?.id}
+            selectionMode={taskSelectionMode}
+            checkedTasks={taskSelectionMode === "check" ? checkedTasks : undefined}
+            onToggleCheck={taskSelectionMode === "check" ? onTaskSelectionToggle : undefined}
+            onSelectTask={taskSelectionMode === "check" ? undefined : onSelectTask}
+            selectedTaskId={taskSelectionMode === "check" ? undefined : selectedTask?.id}
             showEditDate={showEditDate}
             sortOptions={getVisibleSortOptions(activeTaskTab)}
           />

@@ -2,6 +2,7 @@
 
 import MemoStatusDisplay from "@/components/features/memo/memo-status-display";
 import { FilterIconCheckList } from "@/components/icons/filter-icon-variants";
+import SelectionModeToggle from "@/components/ui/buttons/selection-mode-toggle";
 import TrashIcon from "@/components/icons/trash-icon";
 import Tooltip from "@/components/ui/base/tooltip";
 import AddItemButton from "@/components/ui/buttons/add-item-button";
@@ -25,13 +26,13 @@ interface BoardMemoSectionProps {
   showEditDate: boolean;
   selectedMemo?: Memo | null;
   // 複数選択関連
-  selectionMode: "none" | "memo" | "task";
-  selectedMemoIds: Set<number>;
+  memoSelectionMode: "select" | "check";
+  checkedMemos: Set<number>;
   onCreateNewMemo: () => void;
   onSetRightPanelMode: (mode: "memo-list" | null) => void;
   onMemoTabChange: (tab: "normal" | "deleted") => void;
   onSelectMemo: (memo: Memo) => void;
-  onToggleSelectionMode: () => void;
+  onMemoSelectionModeChange: (mode: "select" | "check") => void;
   onMemoSelectionToggle: (memoId: number) => void;
 }
 
@@ -49,13 +50,13 @@ export default function BoardMemoSection({
   viewMode,
   showEditDate,
   selectedMemo,
-  selectionMode,
-  selectedMemoIds,
+  memoSelectionMode,
+  checkedMemos,
   onCreateNewMemo,
   onSetRightPanelMode,
   onMemoTabChange,
   onSelectMemo,
-  onToggleSelectionMode,
+  onMemoSelectionModeChange,
   onMemoSelectionToggle,
 }: BoardMemoSectionProps) {
   // ソートオプションの管理
@@ -104,21 +105,12 @@ export default function BoardMemoSection({
           </Tooltip>
 
           {/* 選択モード切り替えボタン */}
-          <Tooltip text={selectionMode === "memo" ? "選択モード終了" : "選択モード"} position="top">
-            <button
-              onClick={onToggleSelectionMode}
-              className={`size-6 flex items-center justify-center rounded-lg transition-colors ${
-                selectionMode === "memo"
-                  ? "bg-blue-100 hover:bg-blue-200 text-blue-600"
-                  : "bg-gray-100 hover:bg-gray-200 text-gray-600"
-              }`}
-            >
-              <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </button>
-          </Tooltip>
+          <SelectionModeToggle
+            mode={memoSelectionMode}
+            onModeChange={onMemoSelectionModeChange}
+            buttonSize="size-6"
+            iconSize="size-4"
+          />
           
           {/* ソートトグル */}
           <SortToggle
@@ -183,11 +175,11 @@ export default function BoardMemoSection({
             memos={memoItems.map(item => item.content as Memo)}
             viewMode={viewMode}
             effectiveColumnCount={effectiveColumnCount}
-            selectionMode={selectionMode === "memo" ? "check" : "select"}
-            checkedMemos={selectionMode === "memo" ? selectedMemoIds : undefined}
-            onToggleCheck={selectionMode === "memo" ? onMemoSelectionToggle : undefined}
-            onSelectMemo={selectionMode === "memo" ? undefined : onSelectMemo}
-            selectedMemoId={selectionMode === "memo" ? undefined : selectedMemo?.id}
+            selectionMode={memoSelectionMode}
+            checkedMemos={memoSelectionMode === "check" ? checkedMemos : undefined}
+            onToggleCheck={memoSelectionMode === "check" ? onMemoSelectionToggle : undefined}
+            onSelectMemo={memoSelectionMode === "check" ? undefined : onSelectMemo}
+            selectedMemoId={memoSelectionMode === "check" ? undefined : selectedMemo?.id}
             showEditDate={showEditDate}
             sortOptions={getVisibleSortOptions(activeMemoTab).filter(
               opt => opt.id === "createdAt" || opt.id === "updatedAt" || opt.id === "deletedAt"

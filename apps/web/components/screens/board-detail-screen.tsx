@@ -13,8 +13,9 @@ import { useExport } from "@/src/hooks/use-export";
 import { BoardItemWithContent } from "@/src/types/board";
 import { Memo } from "@/src/types/memo";
 import { Task } from "@/src/types/task";
-import { memo, useCallback, useEffect } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import BoardHeader from "@/components/features/board/board-header";
+import { BulkActionButtons } from "@/components/ui/layout/bulk-action-buttons";
 
 interface BoardDetailProps {
   boardId: number;
@@ -83,6 +84,54 @@ function BoardDetailScreen({
   // propsから選択状態を使用（Fast Refresh対応）
   const selectedMemo = propSelectedMemo;
   const selectedTask = propSelectedTask;
+
+  // 複数選択状態管理
+  const [memoSelectionMode, setMemoSelectionMode] = useState<"select" | "check">("select");
+  const [taskSelectionMode, setTaskSelectionMode] = useState<"select" | "check">("select");
+  const [checkedMemos, setCheckedMemos] = useState<Set<number>>(new Set());
+  const [checkedTasks, setCheckedTasks] = useState<Set<number>>(new Set());
+
+  // 選択ハンドラー
+  const handleMemoSelectionToggle = useCallback((memoId: number) => {
+    setCheckedMemos(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(memoId)) {
+        newSet.delete(memoId);
+      } else {
+        newSet.add(memoId);
+      }
+      return newSet;
+    });
+  }, []);
+
+  const handleTaskSelectionToggle = useCallback((taskId: number) => {
+    setCheckedTasks(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(taskId)) {
+        newSet.delete(taskId);
+      } else {
+        newSet.add(taskId);
+      }
+      return newSet;
+    });
+  }, []);
+
+  // 選択モード切り替え
+  const handleMemoSelectionModeChange = useCallback((mode: "select" | "check") => {
+    setMemoSelectionMode(mode);
+    if (mode === "select") {
+      setCheckedMemos(new Set());
+    }
+  }, []);
+
+  const handleTaskSelectionModeChange = useCallback((mode: "select" | "check") => {
+    setTaskSelectionMode(mode);
+    if (mode === "select") {
+      setCheckedTasks(new Set());
+    }
+  }, []);
+
+
 
   // タブテキスト表示制御
   useEffect(() => {
@@ -186,7 +235,7 @@ function BoardDetailScreen({
       setRightPanelMode(null); // リストモードを解除
       onSelectMemo?.(memo);
     },
-    [onSelectMemo, rightPanelMode] // setRightPanelModeを削除
+    [onSelectMemo, rightPanelMode, setRightPanelMode]
   );
 
   const handleSelectTask = useCallback(
@@ -200,7 +249,7 @@ function BoardDetailScreen({
       setRightPanelMode(null); // リストモードを解除
       onSelectTask?.(task);
     },
-    [onSelectTask, rightPanelMode] // setRightPanelModeを削除
+    [onSelectTask, rightPanelMode, setRightPanelMode]
   );
 
   const handleCloseDetail = useCallback(() => {
@@ -304,6 +353,29 @@ function BoardDetailScreen({
   // メモの件数を計算
   const normalMemoCount = allMemoItems.length;
   const deletedMemoCount = 0; // 削除済みメモの件数（将来実装）
+
+  // 全選択/全解除機能
+  const handleMemoSelectAll = useCallback(() => {
+    const currentMemoIds = memoItems.map(item => (item.content as Memo).id);
+    if (checkedMemos.size === currentMemoIds.length) {
+      setCheckedMemos(new Set());
+    } else {
+      setCheckedMemos(new Set(currentMemoIds));
+    }
+  }, [memoItems, checkedMemos.size]);
+
+  const handleTaskSelectAll = useCallback(() => {
+    const currentTaskIds = taskItems.map(item => (item.content as Task).id);
+    if (checkedTasks.size === currentTaskIds.length) {
+      setCheckedTasks(new Set());
+    } else {
+      setCheckedTasks(new Set(currentTaskIds));
+    }
+  }, [taskItems, checkedTasks.size]);
+
+  // 全選択状態の計算
+  const isMemoAllSelected = memoItems.length > 0 && checkedMemos.size === memoItems.length;
+  const isTaskAllSelected = taskItems.length > 0 && checkedTasks.size === taskItems.length;
 
   // エクスポート処理
   const handleExport = useCallback(() => {
@@ -421,6 +493,12 @@ function BoardDetailScreen({
             onSetRightPanelMode={setRightPanelMode}
             onMemoTabChange={handleMemoTabChange}
             onSelectMemo={handleSelectMemo}
+            memoSelectionMode={memoSelectionMode}
+            checkedMemos={checkedMemos}
+            onMemoSelectionModeChange={handleMemoSelectionModeChange}
+            onMemoSelectionToggle={handleMemoSelectionToggle}
+            onSelectAll={handleMemoSelectAll}
+            isAllSelected={isMemoAllSelected}
           />
 
           {/* タスク列 */}
@@ -444,6 +522,12 @@ function BoardDetailScreen({
             onSetRightPanelMode={setRightPanelMode}
             onTaskTabChange={handleTaskTabChange}
             onSelectTask={handleSelectTask}
+            taskSelectionMode={taskSelectionMode}
+            checkedTasks={checkedTasks}
+            onTaskSelectionModeChange={handleTaskSelectionModeChange}
+            onTaskSelectionToggle={handleTaskSelectionToggle}
+            onSelectAll={handleTaskSelectAll}
+            isAllSelected={isTaskAllSelected}
           />
         </div>
 
@@ -471,6 +555,37 @@ function BoardDetailScreen({
           </Tooltip>
         </div>
       </div>
+
+      {/* 一括操作ボタン */}
+      <BulkActionButtons
+        showDeleteButton={memoSelectionMode === "check" && checkedMemos.size > 0}
+        deleteButtonCount={checkedMemos.size}
+        onDelete={() => {
+          // TODO: 一括削除の実装
+          console.log("一括削除: メモ", Array.from(checkedMemos));
+        }}
+        deleteButtonRef={{current: null}}
+        isDeleting={false}
+        showRestoreButton={false}
+        restoreCount={0}
+        onRestore={() => {}}
+        isRestoring={false}
+      />
+      
+      <BulkActionButtons
+        showDeleteButton={taskSelectionMode === "check" && checkedTasks.size > 0}
+        deleteButtonCount={checkedTasks.size}
+        onDelete={() => {
+          // TODO: 一括削除の実装
+          console.log("一括削除: タスク", Array.from(checkedTasks));
+        }}
+        deleteButtonRef={{current: null}}
+        isDeleting={false}
+        showRestoreButton={false}
+        restoreCount={0}
+        onRestore={() => {}}
+        isRestoring={false}
+      />
 
       {/* 右側：詳細表示 */}
       <BoardRightPanel

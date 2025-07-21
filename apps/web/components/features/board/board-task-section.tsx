@@ -36,6 +36,8 @@ interface BoardTaskSectionProps {
   onSelectTask: (task: Task) => void;
   onTaskSelectionModeChange: (mode: "select" | "check") => void;
   onTaskSelectionToggle: (taskId: number) => void;
+  onSelectAll?: () => void;
+  isAllSelected?: boolean;
 }
 
 export default function BoardTaskSection({
@@ -62,6 +64,8 @@ export default function BoardTaskSection({
   onSelectTask,
   onTaskSelectionModeChange,
   onTaskSelectionToggle,
+  onSelectAll,
+  isAllSelected,
 }: BoardTaskSectionProps) {
   // ソートオプションの管理
   const { setSortOptions, getVisibleSortOptions } = useSortOptions("task");
@@ -112,9 +116,19 @@ export default function BoardTaskSection({
           <SelectionModeToggle
             mode={taskSelectionMode}
             onModeChange={onTaskSelectionModeChange}
-            buttonSize="size-6"
-            iconSize="size-4"
+            buttonSize="size-7"
+            iconSize="size-5"
           />
+
+          {/* 全選択/全解除ボタン（チェックモード時のみ表示） */}
+          {taskSelectionMode === "check" && onSelectAll && (
+            <button
+              onClick={onSelectAll}
+              className="h-7 px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium rounded-lg transition-colors"
+            >
+              {isAllSelected ? "全解除" : "全選択"}
+            </button>
+          )}
           
           {/* ソートトグル */}
           <SortToggle

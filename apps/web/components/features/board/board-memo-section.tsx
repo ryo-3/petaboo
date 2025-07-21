@@ -34,6 +34,8 @@ interface BoardMemoSectionProps {
   onSelectMemo: (memo: Memo) => void;
   onMemoSelectionModeChange: (mode: "select" | "check") => void;
   onMemoSelectionToggle: (memoId: number) => void;
+  onSelectAll?: () => void;
+  isAllSelected?: boolean;
 }
 
 export default function BoardMemoSection({
@@ -58,6 +60,8 @@ export default function BoardMemoSection({
   onSelectMemo,
   onMemoSelectionModeChange,
   onMemoSelectionToggle,
+  onSelectAll,
+  isAllSelected,
 }: BoardMemoSectionProps) {
   // ソートオプションの管理
   const { setSortOptions, getVisibleSortOptions } = useSortOptions("memo");
@@ -108,9 +112,19 @@ export default function BoardMemoSection({
           <SelectionModeToggle
             mode={memoSelectionMode}
             onModeChange={onMemoSelectionModeChange}
-            buttonSize="size-6"
-            iconSize="size-4"
+            buttonSize="size-7"
+            iconSize="size-5"
           />
+
+          {/* 全選択/全解除ボタン（チェックモード時のみ表示） */}
+          {memoSelectionMode === "check" && onSelectAll && (
+            <button
+              onClick={onSelectAll}
+              className="h-7 px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium rounded-lg transition-colors"
+            >
+              {isAllSelected ? "全解除" : "全選択"}
+            </button>
+          )}
           
           {/* ソートトグル */}
           <SortToggle

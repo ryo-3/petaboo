@@ -73,7 +73,7 @@ export function useBoardState() {
   const handleSettings = useCallback(() => {
     const boardSlug = pathname.split("/")[2];
     router.push(`/boards/${boardSlug}/settings`);
-  }, []); // 依存配列を空にして安定化
+  }, [pathname, router]); // 依存配列に追加
 
   // メモボタンのハンドラー（一覧表示中は切り替え）
   const handleMemoToggle = useCallback(

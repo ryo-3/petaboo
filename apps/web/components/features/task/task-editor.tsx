@@ -181,7 +181,8 @@ function TaskEditor({
       const initialBoards = initialBoardId ? [initialBoardId.toString()] : [];
       setSelectedBoardIds(initialBoards);
     }
-  }, [task?.id, itemBoards.length]); // itemBoards自体ではなくlengthを依存に
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [task?.id, itemBoards.length, initialBoardId]); // itemBoards自体ではなくlengthを依存に
 
   // ボード変更ハンドラー
   const handleBoardChange = (newBoardIds: string | string[]) => {
@@ -354,6 +355,7 @@ function TaskEditor({
     addItemToBoard,
     removeItemFromBoard,
     selectedBoardIds,
+    itemBoards,
   ]);
 
   // Ctrl+Sショートカット（変更がある場合のみ実行）

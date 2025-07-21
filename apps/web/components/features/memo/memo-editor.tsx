@@ -14,6 +14,7 @@ import { useEffect, useRef, useState, memo, useMemo } from "react";
 
 interface MemoEditorProps {
   memo: Memo | null;
+  initialBoardId?: number;
   onClose: () => void;
   onSaveComplete?: (
     savedMemo: Memo,
@@ -25,7 +26,7 @@ interface MemoEditorProps {
   customHeight?: string;
 }
 
-function MemoEditor({ memo, onClose, onSaveComplete, onDelete, isLidOpen = false, customHeight }: MemoEditorProps) {
+function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, isLidOpen = false, customHeight }: MemoEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const baseViewerRef = useRef<HTMLDivElement>(null);
   const { data: boards = [] } = useBoards();
@@ -48,7 +49,9 @@ function MemoEditor({ memo, onClose, onSaveComplete, onDelete, isLidOpen = false
   } = useSimpleMemoSave({
     memo,
     onSaveComplete,
-    currentBoardIds: itemBoards.map(board => board.id),
+    currentBoardIds: memo && memo.id !== 0 
+      ? itemBoards.map(board => board.id)
+      : (initialBoardId ? [initialBoardId] : []),
   });
 
   const [error] = useState<string | null>(null);

@@ -46,6 +46,7 @@ export default function BoardRightPanel({
           <MemoEditor
             key={`memo-${selectedMemo.id}`}
             memo={selectedMemo}
+            initialBoardId={selectedMemo.id === 0 ? boardId : undefined}
             onClose={() => {
               // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
             }}

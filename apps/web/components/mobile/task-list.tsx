@@ -64,7 +64,7 @@ function TaskList({
                 {task.title}
               </div>
               <div className="text-xs text-gray-500 truncate mb-1">
-                {task.description || "説明なし"}
+                {task.description || ""}
               </div>
               <div className="flex items-center gap-2 text-xs">
                 <span className={getStatusColorForText(task.status)}>

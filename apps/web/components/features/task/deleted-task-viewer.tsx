@@ -225,7 +225,7 @@ const DeletedTaskViewer = forwardRef<
             )}
 
             <div className="w-full min-h-32 leading-relaxed whitespace-pre-wrap mb-8">
-              {task.description || "説明なし"}
+              {task.description || ""}
             </div>
           </div>
         </div>

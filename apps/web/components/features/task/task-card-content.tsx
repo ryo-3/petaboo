@@ -76,7 +76,7 @@ function TaskCardContent({
 
       <div className="text-sm text-gray-600 flex-1 overflow-hidden mb-2">
         <div className="line-clamp-3 break-words">
-          {(task.description || "説明なし").replace(/[\r\n]/g, " ").trim()}
+          {(task.description || "").replace(/[\r\n]/g, " ").trim()}
         </div>
       </div>
 

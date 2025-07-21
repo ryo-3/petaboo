@@ -260,8 +260,8 @@ function DesktopUpper({
                 <h1 className={`font-bold text-gray-800 text-[22px] ${customTitle ? '' : 'w-[105px]'}`}>
                   {customTitle || "ボード一覧"}
                 </h1>
-                {/* ボード説明（タイトルの横、一覧表示中は非表示） */}
-                {boardDescription && contentFilterRightPanelMode !== "memo-list" && contentFilterRightPanelMode !== "task-list" && (
+                {/* ボード説明（タイトルの横、一覧表示中とエディター開いている時は非表示） */}
+                {boardDescription && contentFilterRightPanelMode !== "memo-list" && contentFilterRightPanelMode !== "task-list" && rightPanelMode === "hidden" && (
                   <p className="text-gray-600 text-sm">{boardDescription}</p>
                 )}
                 {/* 設定ボタン（ボード名の横） */}
@@ -280,11 +280,12 @@ function DesktopUpper({
             )}
           </div>
 
-          {/* 新規追加ボタン */}
-          <AddItemButton
-            itemType={currentMode}
-            onClick={onCreateNew}
-            position="bottom"
+          {/* 新規追加ボタン（ボード詳細ページでは非表示） */}
+          {!customTitle && (
+            <AddItemButton
+              itemType={currentMode}
+              onClick={onCreateNew}
+              position="bottom"
               size="small"
               showTooltip={false}
               customSize={{
@@ -292,6 +293,7 @@ function DesktopUpper({
                 iconSize: "w-3.5 h-3.5"
               }}
             />
+          )}
 
           {/* タブ（boardモード以外） */}
           {currentMode !== "board" && (

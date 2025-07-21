@@ -277,7 +277,7 @@ function TaskForm({
         </div>
       </div>
 
-      <div className="mt-4 flex-1 flex flex-col">
+      <div className="mt-2 flex-1 flex flex-col">
         <textarea
           ref={descriptionTextareaRef}
           placeholder={descriptionPlaceholder}

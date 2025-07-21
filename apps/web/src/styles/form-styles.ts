@@ -5,7 +5,7 @@ export const FORM_STYLES = {
 
   // セレクター（ボタン部分）
   selector:
-    "flex items-center cursor-pointer bg-white px-1 border border-gray-400 rounded-lg h-9",
+    "flex items-center cursor-pointer bg-white border border-gray-400 rounded-lg h-8",
 
   // セレクター内のテキスト
   selectorText:
@@ -13,7 +13,7 @@ export const FORM_STYLES = {
 
   // インプット（date, text等）
   input:
-    "px-1.5 border border-gray-400 rounded-lg focus:border-DeepBlue outline-none h-9",
+    "px-1.5 border border-gray-400 rounded-lg focus:border-DeepBlue outline-none h-8",
 
   // チェブロンアイコン
   chevron: "w-3 h-3 mr-1 transition-transform",

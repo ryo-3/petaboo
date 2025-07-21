@@ -1,7 +1,7 @@
 'use client';
 
 import MemoStatusDisplay from "@/components/features/memo/memo-status-display";
-import ListViewIcon from "@/components/icons/list-view-icon";
+import { FilterIconCheckList } from "@/components/icons/filter-icon-variants";
 import TrashIcon from "@/components/icons/trash-icon";
 import Tooltip from "@/components/ui/base/tooltip";
 import AddItemButton from "@/components/ui/buttons/add-item-button";
@@ -24,10 +24,15 @@ interface BoardMemoSectionProps {
   viewMode: "card" | "list";
   showEditDate: boolean;
   selectedMemo?: Memo | null;
+  // 複数選択関連
+  selectionMode: "none" | "memo" | "task";
+  selectedMemoIds: Set<number>;
   onCreateNewMemo: () => void;
-  onSetRightPanelMode: (mode: "memo-list") => void;
+  onSetRightPanelMode: (mode: "memo-list" | null) => void;
   onMemoTabChange: (tab: "normal" | "deleted") => void;
   onSelectMemo: (memo: Memo) => void;
+  onToggleSelectionMode: () => void;
+  onMemoSelectionToggle: (memoId: number) => void;
 }
 
 export default function BoardMemoSection({
@@ -44,10 +49,14 @@ export default function BoardMemoSection({
   viewMode,
   showEditDate,
   selectedMemo,
+  selectionMode,
+  selectedMemoIds,
   onCreateNewMemo,
   onSetRightPanelMode,
   onMemoTabChange,
   onSelectMemo,
+  onToggleSelectionMode,
+  onMemoSelectionToggle,
 }: BoardMemoSectionProps) {
   // ソートオプションの管理
   const { setSortOptions, getVisibleSortOptions } = useSortOptions("memo");
@@ -79,12 +88,35 @@ export default function BoardMemoSection({
               className="size-6 flex items-center justify-center"
             />
           </Tooltip>
-          <Tooltip text="メモ一覧表示" position="top">
+          <Tooltip text={rightPanelMode === "memo-list" ? "メモ一覧非表示" : "メモ一覧表示"} position="top">
             <button
-              onClick={() => onSetRightPanelMode("memo-list")}
-              className="size-6 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+              onClick={() => onSetRightPanelMode(rightPanelMode === "memo-list" ? null : "memo-list")}
+              className={`size-6 flex items-center justify-center rounded-lg transition-colors ${
+                rightPanelMode === "memo-list" 
+                  ? "bg-gray-100 hover:bg-gray-200" 
+                  : "bg-gray-100 hover:bg-gray-200"
+              }`}
             >
-              <ListViewIcon className="size-5 text-Green" />
+              <FilterIconCheckList className={`size-5 ${
+                rightPanelMode === "memo-list" ? "text-Green" : "text-gray-600"
+              }`} />
+            </button>
+          </Tooltip>
+
+          {/* 選択モード切り替えボタン */}
+          <Tooltip text={selectionMode === "memo" ? "選択モード終了" : "選択モード"} position="top">
+            <button
+              onClick={onToggleSelectionMode}
+              className={`size-6 flex items-center justify-center rounded-lg transition-colors ${
+                selectionMode === "memo"
+                  ? "bg-blue-100 hover:bg-blue-200 text-blue-600"
+                  : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+              }`}
+            >
+              <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
             </button>
           </Tooltip>
           
@@ -151,9 +183,11 @@ export default function BoardMemoSection({
             memos={memoItems.map(item => item.content as Memo)}
             viewMode={viewMode}
             effectiveColumnCount={effectiveColumnCount}
-            selectionMode="select"
-            onSelectMemo={onSelectMemo}
-            selectedMemoId={selectedMemo?.id}
+            selectionMode={selectionMode === "memo" ? "check" : "select"}
+            checkedMemos={selectionMode === "memo" ? selectedMemoIds : undefined}
+            onToggleCheck={selectionMode === "memo" ? onMemoSelectionToggle : undefined}
+            onSelectMemo={selectionMode === "memo" ? undefined : onSelectMemo}
+            selectedMemoId={selectionMode === "memo" ? undefined : selectedMemo?.id}
             showEditDate={showEditDate}
             sortOptions={getVisibleSortOptions(activeMemoTab).filter(
               opt => opt.id === "createdAt" || opt.id === "updatedAt" || opt.id === "deletedAt"

@@ -76,6 +76,10 @@ interface DesktopUpperProps {
   // Board name display toggle (memo only)
   showBoardName?: boolean;
   onShowBoardNameChange?: (show: boolean) => void;
+  // Board filter props
+  boards?: Array<{ id: number; name: string }>;
+  selectedBoardIds?: number[];
+  onBoardFilterChange?: (boardIds: number[]) => void;
   // Tab counts
   normalCount: number;
   deletedNotesCount?: number;
@@ -122,6 +126,9 @@ function DesktopUpper({
   onShowEditDateChange,
   showBoardName = false,
   onShowBoardNameChange,
+  boards = [],
+  selectedBoardIds = [],
+  onBoardFilterChange,
   normalCount,
   deletedNotesCount = 0,
   deletedTasksCount = 0,
@@ -417,6 +424,9 @@ function DesktopUpper({
               onToggle={onShowBoardNameChange}
               buttonSize="size-7"
               iconSize="size-4"
+              boards={boards}
+              selectedBoardIds={selectedBoardIds}
+              onBoardFilterChange={onBoardFilterChange}
             />
           )}
 

@@ -22,6 +22,7 @@ import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
 import { useTabChange } from "@/src/hooks/use-tab-change";
 import { useDeletedTasks, useTasks } from "@/src/hooks/use-tasks";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
+import { useBoards } from "@/src/hooks/use-boards";
 import type { DeletedTask, Task } from "@/src/types/task";
 import { getDeleteButtonVisibility } from "@/src/utils/bulkButtonUtils";
 import {
@@ -59,6 +60,7 @@ function TaskScreen({
   const { data: tasks, isLoading: taskLoading, error: taskError } = useTasks();
   const { data: deletedTasks } = useDeletedTasks();
   const { preferences } = useUserPreferences(1);
+  const { data: boards } = useBoards();
 
   // 選択モード管理
   const [selectionMode, setSelectionMode] = useState<"select" | "check">(
@@ -75,6 +77,9 @@ function TaskScreen({
 
   // ボード名表示管理
   const [showBoardName, setShowBoardName] = useState(false);
+
+  // ボードフィルター管理
+  const [selectedBoardIds, setSelectedBoardIds] = useState<number[]>([]);
   
 
   // 削除ボタンの参照
@@ -371,6 +376,9 @@ function TaskScreen({
           onShowEditDateChange={setShowEditDate}
           showBoardName={showBoardName}
           onShowBoardNameChange={setShowBoardName}
+          boards={boards || []}
+          selectedBoardIds={selectedBoardIds}
+          onBoardFilterChange={setSelectedBoardIds}
           normalCount={0} // タスクでは使わない
           deletedTasksCount={deletedTasks?.length || 0}
           todoCount={
@@ -395,6 +403,7 @@ function TaskScreen({
           sortOptions={getVisibleSortOptions(activeTab)}
           showEditDate={showEditDate}
           showBoardName={showBoardName}
+          selectedBoardIds={selectedBoardIds}
           tasks={tasks || []}
           deletedTasks={deletedTasks || []}
           selectedTask={selectedTask}

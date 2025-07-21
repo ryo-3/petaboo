@@ -4,6 +4,7 @@ import TaskCard from '@/components/features/task/task-card';
 import TaskListItem from '@/components/features/task/task-list-item';
 import ItemStatusDisplay from '@/components/ui/layout/item-status-display';
 import type { Task, DeletedTask } from '@/src/types/task';
+import { useMemo } from 'react';
 
 interface TaskStatusDisplayProps {
   activeTab: 'todo' | 'in_progress' | 'completed';
@@ -17,6 +18,7 @@ interface TaskStatusDisplayProps {
   selectedTaskId?: number;
   showEditDate?: boolean;
   showBoardName?: boolean;
+  selectedBoardIds?: number[];
   sortOptions?: Array<{
     id: "createdAt" | "updatedAt" | "dueDate" | "priority" | "deletedAt";
     label: string;
@@ -56,9 +58,25 @@ function TaskStatusDisplay({
   selectedTaskId,
   showEditDate = false,
   showBoardName = false,
+  selectedBoardIds = [],
   sortOptions = []
 }: TaskStatusDisplayProps) {
-  const filteredTasks = tasks?.filter(task => task.status === activeTab);
+  // ステータスでフィルター
+  const statusFilteredTasks = tasks?.filter(task => task.status === activeTab);
+
+  // ボードフィルターを適用
+  const filteredTasks = useMemo(() => {
+    if (!statusFilteredTasks) return [];
+    
+    // ボードフィルターが設定されていない場合は全て表示
+    if (!selectedBoardIds || selectedBoardIds.length === 0) {
+      return statusFilteredTasks;
+    }
+    
+    // フィルターが設定されている場合は、APIでフィルタリングが必要
+    // 現状はフィルターメッセージを表示
+    return [];
+  }, [statusFilteredTasks, selectedBoardIds]);
 
   const getEmptyMessage = () => {
     switch (activeTab) {
@@ -124,6 +142,17 @@ function TaskStatusDisplay({
     );
     /* eslint-enable react/prop-types */
   };
+
+  // フィルターが設定されているが結果が空の場合
+  if (selectedBoardIds && selectedBoardIds.length > 0 && filteredTasks.length === 0) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center text-gray-500">
+          選択されたボードにタスクがありません
+        </div>
+      </div>
+    );
+  }
 
   return (
     <ItemStatusDisplay

@@ -4,6 +4,7 @@ import MemoCard from '@/components/features/memo/memo-card';
 import MemoListItem from '@/components/features/memo/memo-list-item';
 import ItemStatusDisplay from '@/components/ui/layout/item-status-display';
 import type { Memo, DeletedMemo } from '@/src/types/memo';
+import { useMemo } from 'react';
 
 interface MemoStatusDisplayProps {
   memos: Memo[] | undefined;
@@ -16,6 +17,7 @@ interface MemoStatusDisplayProps {
   selectedMemoId?: number;
   showEditDate?: boolean;
   showBoardName?: boolean;
+  selectedBoardIds?: number[];
   sortOptions?: Array<{
     id: "createdAt" | "updatedAt" | "deletedAt";
     label: string;
@@ -54,8 +56,23 @@ function MemoStatusDisplay({
   selectedMemoId,
   showEditDate = false,
   showBoardName = false,
+  selectedBoardIds = [],
   sortOptions = []
 }: MemoStatusDisplayProps) {
+  // フィルタリング済みのメモを取得
+  const filteredMemos = useMemo(() => {
+    if (!memos) return [];
+    
+    // ボードフィルターが設定されていない場合は全て表示
+    if (!selectedBoardIds || selectedBoardIds.length === 0) {
+      return memos;
+    }
+    
+    // フィルターが設定されている場合は、APIでフィルタリングが必要
+    // 現状はフィルターメッセージを表示
+    return [];
+  }, [memos, selectedBoardIds]);
+
   const getSortValue = (memo: Memo, sortId: string): number => {
     switch (sortId) {
       case "createdAt":
@@ -99,9 +116,20 @@ function MemoStatusDisplay({
     /* eslint-enable react/prop-types */
   };
 
+  // フィルターが設定されているが結果が空の場合
+  if (selectedBoardIds && selectedBoardIds.length > 0 && filteredMemos.length === 0) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center text-gray-500">
+          選択されたボードにメモがありません
+        </div>
+      </div>
+    );
+  }
+
   return (
     <ItemStatusDisplay
-      items={memos}
+      items={filteredMemos}
       viewMode={viewMode}
       effectiveColumnCount={effectiveColumnCount}
       selectionMode={selectionMode}

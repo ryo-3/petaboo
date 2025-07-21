@@ -26,6 +26,7 @@ import { useScreenState } from "@/src/hooks/use-screen-state";
 import { useSelectAll } from "@/src/hooks/use-select-all";
 import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
+import { useBoards } from "@/src/hooks/use-boards";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import { getDeleteButtonVisibility } from "@/src/utils/bulkButtonUtils";
 import {
@@ -71,6 +72,9 @@ function MemoScreen({
   // ボード名表示管理
   const [showBoardName, setShowBoardName] = useState(false);
 
+  // ボードフィルター管理
+  const [selectedBoardIds, setSelectedBoardIds] = useState<number[]>([]);
+
   // 並び替え管理
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { sortOptions, setSortOptions, getVisibleSortOptions } =
@@ -101,6 +105,7 @@ function MemoScreen({
   const { data: notes, isLoading: memoLoading, error: memoError } = useNotes();
   const { data: deletedNotes } = useDeletedNotes();
   const { preferences } = useUserPreferences(1);
+  const { data: boards } = useBoards();
 
   // 削除API
   const deleteNote = useDeleteNote();
@@ -354,6 +359,9 @@ function MemoScreen({
           onShowEditDateChange={setShowEditDate}
           showBoardName={showBoardName}
           onShowBoardNameChange={setShowBoardName}
+          boards={boards || []}
+          selectedBoardIds={selectedBoardIds}
+          onBoardFilterChange={setSelectedBoardIds}
           normalCount={notes?.length || 0}
           deletedNotesCount={deletedNotes?.length || 0}
         />
@@ -369,6 +377,7 @@ function MemoScreen({
           sortOptions={getVisibleSortOptions(activeTab)}
           showEditDate={showEditDate}
           showBoardName={showBoardName}
+          selectedBoardIds={selectedBoardIds}
           notes={notes || []}
           localMemos={notes || []}
           deletedNotes={deletedNotes || []}

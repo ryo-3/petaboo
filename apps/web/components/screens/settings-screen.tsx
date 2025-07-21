@@ -70,20 +70,17 @@ function SettingsScreen() {
   return (
     <div className="h-screen bg-white">
       {/* ヘッダー */}
-      <div className="border-b border-gray-200 px-5 pt-3 pb-4">
-        <div className="flex items-center gap-2 mb-2">
+      <div className="border-b border-gray-200 px-5 py-3">
+        <div className="flex items-center gap-2">
           <SettingsIcon className="w-6 h-6 text-gray-600" />
           <h1 className="text-[22px] font-bold text-gray-800">設定</h1>
         </div>
-        <p className="text-sm text-gray-600 leading-relaxed">
-          ここではメモとタスクの表示設定を変更できます。設定は自動的に保存され、次回アクセス時にも適用されます。
-        </p>
       </div>
 
       {/* サイドバーとメインコンテンツ */}
-      <div className="flex h-[calc(100vh-120px)]">
+      <div className="flex h-[calc(100vh-80px)]">
         {/* サイドバー */}
-        <div className="w-64 border-r border-gray-200 pt-6 pl-5">
+        <div className="w-48 border-r border-gray-200 pt-6 pl-5">
           {/* メニュー */}
           <nav className="space-y-1">
             {tabItems.map((item) => (
@@ -104,7 +101,7 @@ function SettingsScreen() {
         </div>
 
         {/* メインコンテンツ */}
-        <div className="flex-1 pr-6 pt-6 pl-6">
+        <div className="flex-1 px-6 pt-6">
           <div className="max-w-lg">
           {activeTab === "memo" && (
             <div>

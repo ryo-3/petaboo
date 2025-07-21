@@ -30,6 +30,9 @@ interface DesktopLowerProps {
   // Board name display toggle (memo only)
   showBoardName?: boolean;
   
+  // Board filter
+  selectedBoardIds?: number[];
+  
   // Data props
   notes?: Memo[];
   localMemos?: Memo[];
@@ -71,6 +74,7 @@ function DesktopLower({
   sortOptions = [],
   showEditDate = false,
   showBoardName = false,
+  selectedBoardIds = [],
   localMemos,
   deletedNotes,
   tasks,
@@ -126,6 +130,7 @@ function DesktopLower({
           selectedMemoId={selectedMemo?.id}
           showEditDate={showEditDate}
           showBoardName={showBoardName}
+          selectedBoardIds={selectedBoardIds}
           sortOptions={sortOptions.filter(opt => 
             opt.id === "createdAt" || opt.id === "updatedAt" || opt.id === "deletedAt"
           ) as Array<{
@@ -158,6 +163,7 @@ function DesktopLower({
         sortOptions={sortOptions}
         showEditDate={showEditDate}
         showBoardName={showBoardName}
+        selectedBoardIds={selectedBoardIds}
       />
     );
   }

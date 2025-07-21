@@ -171,7 +171,7 @@ function TaskForm({
       <div className="flex justify-start gap-2">
         <SaveButton
           onClick={onSave}
-          disabled={!hasChanges || (!title.trim() && !isNewTask)}
+          disabled={!hasChanges}
           isSaving={isSaving}
           savedSuccessfully={savedSuccessfully}
           buttonSize="size-7"

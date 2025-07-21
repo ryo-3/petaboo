@@ -10,9 +10,6 @@ import {
 } from "@/src/hooks/use-boards";
 import { useBoardState } from "@/src/hooks/use-board-state";
 import { useExport } from "@/src/hooks/use-export";
-// 不要なAPI呼び出しを削除: useBoardWithItemsだけで十分
-// import { useMemos } from "@/src/hooks/use-memos";
-// import { useTasks } from "@/src/hooks/use-tasks";
 import { BoardItemWithContent } from "@/src/types/board";
 import { Memo } from "@/src/types/memo";
 import { Task } from "@/src/types/task";
@@ -51,6 +48,7 @@ function BoardDetailScreen({
   boardCompleted = false,
   isDeleted = false,
 }: BoardDetailProps) {
+  // console.log('🔄 BoardDetailScreen render');
   // 状態管理フック
   const {
     activeTaskTab,
@@ -79,7 +77,7 @@ function BoardDetailScreen({
     handleCloseRightPanel,
     createNewMemoHandler,
     createNewTaskHandler,
-    updateShowTabText,
+    setShowTabText,
   } = useBoardState();
 
   // propsから選択状態を使用（Fast Refresh対応）
@@ -88,9 +86,17 @@ function BoardDetailScreen({
 
   // タブテキスト表示制御
   useEffect(() => {
-    const cleanup = updateShowTabText(selectedMemo, selectedTask);
-    return cleanup;
-  }, [selectedMemo, selectedTask, updateShowTabText]);
+    if (selectedMemo || selectedTask || rightPanelMode) {
+      // 右パネルが開いたらすぐにテキストを非表示
+      setShowTabText(false);
+    } else {
+      // 右パネルが閉じたら300ms後にテキストを表示
+      const timer = setTimeout(() => {
+        setShowTabText(true);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedMemo, selectedTask, rightPanelMode, setShowTabText]);
 
   // 計算されたカラム数（右パネル表示時は最大2列に制限）
   const effectiveColumnCount =
@@ -105,9 +111,6 @@ function BoardDetailScreen({
   
   const removeItemFromBoard = useRemoveItemFromBoard();
   const addItemToBoard = useAddItemToBoard();
-  // 不要なAPI呼び出しを削除: boardWithItemsから必要なデータを抽出
-  // const { data: allMemos } = useMemos();
-  // const { data: allTasks } = useTasks();
   const { exportBoard } = useExport();
 
   // boardWithItemsからメモとタスクを抽出（APIコール削減）
@@ -183,7 +186,7 @@ function BoardDetailScreen({
       setRightPanelMode(null); // リストモードを解除
       onSelectMemo?.(memo);
     },
-    [onSelectMemo, rightPanelMode, setRightPanelMode]
+    [onSelectMemo, rightPanelMode] // setRightPanelModeを削除
   );
 
   const handleSelectTask = useCallback(
@@ -197,7 +200,7 @@ function BoardDetailScreen({
       setRightPanelMode(null); // リストモードを解除
       onSelectTask?.(task);
     },
-    [onSelectTask, rightPanelMode, setRightPanelMode]
+    [onSelectTask, rightPanelMode] // setRightPanelModeを削除
   );
 
   const handleCloseDetail = useCallback(() => {
@@ -476,6 +479,7 @@ function BoardDetailScreen({
           selectedTask !== null ||
           rightPanelMode !== null
         }
+        boardId={boardId}
         selectedMemo={selectedMemo}
         selectedTask={selectedTask}
         rightPanelMode={rightPanelMode}

@@ -12,6 +12,7 @@ import { useTaskDelete } from "./use-task-delete";
 
 interface TaskEditorProps {
   task?: Task | null;
+  initialBoardId?: number;
   onClose: () => void;
   onSelectTask?: (task: Task | null, fromFullList?: boolean) => void;
   onClosePanel?: () => void;
@@ -22,6 +23,7 @@ interface TaskEditorProps {
 
 function TaskEditor({
   task,
+  initialBoardId,
   onClose,
   onSelectTask,
   onClosePanel,
@@ -35,7 +37,7 @@ function TaskEditor({
   const removeItemFromBoard = useRemoveItemFromBoard();
   const { data: boards = [] } = useBoards();
   const { data: itemBoards = [] } = useItemBoards('task', task?.id);
-  const isNewTask = !task;
+  const isNewTask = !task || task.id === 0;
   
   // 削除機能は編集時のみ
   const {
@@ -171,9 +173,15 @@ function TaskEditor({
 
   // ボード選択の初期化
   useEffect(() => {
-    const currentBoardIds = itemBoards.map(board => board.id.toString());
-    setSelectedBoardIds(currentBoardIds);
-  }, [itemBoards, boards]);
+    if (task && task.id !== 0) { // 新規作成時（id: 0）は実行しない
+      const currentBoardIds = itemBoards.map(board => board.id.toString());
+      setSelectedBoardIds(currentBoardIds);
+    } else if (!task || task.id === 0) {
+      // 新規作成時は初期ボードIDがあればそれを設定、なければ空
+      const initialBoards = initialBoardId ? [initialBoardId.toString()] : [];
+      setSelectedBoardIds(initialBoards);
+    }
+  }, [task?.id, itemBoards.length]); // itemBoards自体ではなくlengthを依存に
 
   // ボード変更ハンドラー
   const handleBoardChange = (newBoardIds: string | string[]) => {
@@ -346,7 +354,6 @@ function TaskEditor({
     addItemToBoard,
     removeItemFromBoard,
     selectedBoardIds,
-    itemBoards,
   ]);
 
   // Ctrl+Sショートカット（変更がある場合のみ実行）

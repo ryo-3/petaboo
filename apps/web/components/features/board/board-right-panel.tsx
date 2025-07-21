@@ -10,6 +10,7 @@ import { Task } from "@/src/types/task";
 
 interface BoardRightPanelProps {
   isOpen: boolean;
+  boardId: number;
   selectedMemo?: Memo | null;
   selectedTask?: Task | null;
   rightPanelMode: "editor" | "memo-list" | "task-list" | null;
@@ -25,6 +26,7 @@ interface BoardRightPanelProps {
 
 export default function BoardRightPanel({
   isOpen,
+  boardId,
   selectedMemo,
   selectedTask,
   rightPanelMode,
@@ -59,6 +61,7 @@ export default function BoardRightPanel({
         <TaskEditor
           key={`task-${selectedTask.id}`}
           task={selectedTask}
+          initialBoardId={selectedTask.id === 0 ? boardId : undefined}
           onClose={() => {
             // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
           }}

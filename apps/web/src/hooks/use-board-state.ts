@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Memo } from "@/src/types/memo";
 import { Task } from "@/src/types/task";
 
 export function useBoardState() {
+  // console.log('🔄 useBoardState called');
   const router = useRouter();
   const pathname = usePathname();
 
@@ -39,6 +40,12 @@ export function useBoardState() {
   const [showMemo, setShowMemo] = useState(true);
   const [showTask, setShowTask] = useState(true);
 
+  // 最新値を保持するref
+  const rightPanelModeRef = useRef(rightPanelMode);
+  rightPanelModeRef.current = rightPanelMode;
+  const activeTaskTabRef = useRef(activeTaskTab);
+  activeTaskTabRef.current = activeTaskTab;
+
   // リストパネル表示時に選択状態をリセット
   useEffect(() => {
     if (rightPanelMode === "memo-list" || rightPanelMode === "task-list") {
@@ -46,19 +53,6 @@ export function useBoardState() {
     }
   }, [rightPanelMode]);
 
-  // 右パネルの開閉に応じてタブテキストの表示を制御
-  const updateShowTabText = useCallback((selectedMemo: unknown, selectedTask: unknown) => {
-    if (selectedMemo || selectedTask || rightPanelMode) {
-      // 右パネルが開いたらすぐにテキストを非表示
-      setShowTabText(false);
-    } else {
-      // 右パネルが閉じたら300ms後にテキストを表示
-      const timer = setTimeout(() => {
-        setShowTabText(true);
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [rightPanelMode]);
 
   // ボードレイアウト変更ハンドラー（反転機能付き）
   const handleBoardLayoutChange = useCallback(
@@ -79,7 +73,7 @@ export function useBoardState() {
   const handleSettings = useCallback(() => {
     const boardSlug = pathname.split("/")[2];
     router.push(`/boards/${boardSlug}/settings`);
-  }, [pathname, router]);
+  }, []); // 依存配列を空にして安定化
 
   // メモボタンのハンドラー（一覧表示中は切り替え）
   const handleMemoToggle = useCallback(
@@ -147,7 +141,7 @@ export function useBoardState() {
   // 新規作成用ハンドラー（外部から提供されるcallbackを使用）
   const createNewMemoHandler = useCallback(
     (onSelectMemo?: (memo: Memo | null) => void) => {
-      console.log("🟢 handleCreateNewMemo called, rightPanelMode:", rightPanelMode);
+      console.log("🟢 handleCreateNewMemo called, rightPanelMode:", rightPanelModeRef.current);
       setRightPanelMode(null); // リストモードを解除
       const newMemo: Memo = {
         id: 0, // 新規作成時は0
@@ -159,18 +153,18 @@ export function useBoardState() {
       console.log("🟢 calling onSelectMemo with:", newMemo);
       onSelectMemo?.(newMemo);
     },
-    [rightPanelMode]
+    [] // 依存配列を空にして安定化
   );
 
   const createNewTaskHandler = useCallback(
     (onSelectTask?: (task: Task | null) => void) => {
-      console.log("🔵 handleCreateNewTask called, rightPanelMode:", rightPanelMode);
+      console.log("🔵 handleCreateNewTask called, rightPanelMode:", rightPanelModeRef.current);
       setRightPanelMode(null); // リストモードを解除
       const newTask: Task = {
         id: 0, // 新規作成時は0
         title: "",
         description: null,
-        status: activeTaskTab === "deleted" ? "todo" : activeTaskTab, // 削除済みタブの場合は未着手にする
+        status: activeTaskTabRef.current === "deleted" ? "todo" : activeTaskTabRef.current, // 削除済みタブの場合は未着手にする
         priority: "medium",
         dueDate: null,
         categoryId: null,
@@ -180,7 +174,7 @@ export function useBoardState() {
       console.log("🔵 calling onSelectTask with:", newTask);
       onSelectTask?.(newTask);
     },
-    [rightPanelMode, activeTaskTab]
+    [] // 依存配列を空にして安定化
   );
 
   return {
@@ -223,6 +217,5 @@ export function useBoardState() {
     handleCloseRightPanel,
     createNewMemoHandler,
     createNewTaskHandler,
-    updateShowTabText,
   };
 }

@@ -267,7 +267,7 @@ function DesktopUpper({
                 )}
               </div>
             ) : (
-              <h1 className="font-bold text-gray-800 text-[22px]">
+              <h1 className="font-bold text-gray-800 text-[22px] w-[105px]">
                 {customTitle || (currentMode === "memo" ? "メモ一覧" : currentMode === "task" ? "タスク一覧" : "ボード一覧")}
               </h1>
             )}

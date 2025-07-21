@@ -104,12 +104,12 @@ function SettingsScreen() {
         </div>
 
         {/* メインコンテンツ */}
-        <div className="flex-1 px-6 pt-6 overflow-hidden">
+        <div className="flex-1 px-6 pt-4 overflow-hidden">
           <div className="max-w-lg">
           {activeTab === "memo" && (
             <div>
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">メモ設定</h2>
-              <div className="space-y-4">
+              <h2 className="text-lg font-semibold text-gray-800 mb-3">メモ設定</h2>
+              <div className="space-y-2">
                 <div className="flex items-center justify-between py-2 border-b border-gray-100">
                   <div className="flex items-center gap-3">
                     <span className="text-sm font-medium text-gray-700 w-20">
@@ -160,8 +160,8 @@ function SettingsScreen() {
 
           {activeTab === "task" && (
             <div>
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">タスク設定</h2>
-              <div className="space-y-4">
+              <h2 className="text-lg font-semibold text-gray-800 mb-3">タスク設定</h2>
+              <div className="space-y-2">
                 <div className="flex items-center justify-between py-2 border-b border-gray-100">
                   <div className="flex items-center gap-3">
                     <span className="text-sm font-medium text-gray-700 w-20">
@@ -212,8 +212,8 @@ function SettingsScreen() {
 
           {activeTab === "general" && (
             <div>
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">全体設定</h2>
-              <div className="space-y-4">
+              <h2 className="text-lg font-semibold text-gray-800 mb-3">全体設定</h2>
+              <div className="space-y-2">
                 <div className="flex items-center justify-between py-2">
                   <div>
                     <span className="text-sm font-medium text-gray-700">
@@ -234,7 +234,7 @@ function SettingsScreen() {
           )}
 
           {/* 保存ボタン */}
-          <div className="mt-8">
+          <div className="mt-6">
             <button
               onClick={handleSave}
               className="px-6 py-3 bg-Emerald hover:bg-Emerald-dark text-white rounded-lg transition-colors font-medium"

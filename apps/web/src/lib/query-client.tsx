@@ -2,8 +2,13 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState } from 'react'
+import { useAuth } from '@clerk/nextjs'
+import { useRouter } from 'next/navigation'
 
 export function QueryProvider({ children }: { children: React.ReactNode }) {
+  const { signOut } = useAuth()
+  const router = useRouter()
+
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -14,7 +19,31 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
             refetchOnWindowFocus: false,  // ウィンドウフォーカス時の再取得を無効化
             refetchOnMount: true,         // マウント時の再取得（必要時のみ）
             refetchOnReconnect: true,     // 再接続時の再取得（必要時のみ）
-            retry: 2,                     // 失敗時のリトライ回数を制限
+            retry: (failureCount, error) => {
+              // エラーの詳細をログ出力
+              console.log('🚨 Query Error:', { 
+                message: error?.message, 
+                status: (error as any)?.status, 
+                error: error 
+              })
+              
+              // 401エラーの場合はリトライしない
+              const is401Error = 
+                error?.message?.includes('401') || 
+                error?.message?.includes('Unauthorized') ||
+                (error as any)?.status === 401
+              
+              if (is401Error) {
+                console.log('🔐 認証エラーを検知 - ログアウトしてログイン画面へリダイレクトします')
+                // 非同期でログアウトとリダイレクトを実行
+                setTimeout(async () => {
+                  await signOut()
+                  router.push('/')
+                }, 100)
+                return false
+              }
+              return failureCount < 2
+            },
             retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000), // 指数バックオフ
           },
         },

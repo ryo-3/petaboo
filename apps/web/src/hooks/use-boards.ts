@@ -44,7 +44,10 @@ export function useBoards(status: "normal" | "completed" | "deleted" = "normal")
       });
       
       if (!response.ok) {
-        throw new Error("Failed to fetch boards");
+        console.error(`❌ useBoards失敗: ${response.status} ${response.statusText}`);
+        const error = new Error(`Failed to fetch boards: ${response.status} ${response.statusText}`);
+        (error as any).status = response.status;
+        throw error;
       }
 
       const data = await response.json();
@@ -79,7 +82,9 @@ export function useBoardWithItems(boardId: number | null, skip: boolean = false)
       
       if (!response.ok) {
         console.error(`❌ useBoardWithItems失敗: ${response.status} ${response.statusText}`);
-        throw new Error("Failed to fetch board with items");
+        const error = new Error(`Failed to fetch board with items: ${response.status} ${response.statusText}`);
+        (error as any).status = response.status;
+        throw error;
       }
 
       const data = await response.json();
@@ -125,7 +130,9 @@ export function useBoardBySlug(slug: string | null) {
       
       if (!response.ok) {
         console.error(`❌ useBoardBySlug失敗: ${response.status} ${response.statusText}`);
-        throw new Error("Failed to fetch board by slug");
+        const error = new Error(`Failed to fetch board by slug: ${response.status} ${response.statusText}`);
+        (error as any).status = response.status;
+        throw error;
       }
       
       const data = await response.json();

@@ -80,7 +80,7 @@ function SettingsScreen() {
       {/* サイドバーとメインコンテンツ */}
       <div className="flex h-[calc(100vh-80px)]">
         {/* サイドバー */}
-        <div className="w-48 border-r border-gray-200 pt-6 pl-5">
+        <div className="w-40 border-r border-gray-200 pt-3 px-3">
           {/* メニュー */}
           <nav className="space-y-1">
             {tabItems.map((item) => (

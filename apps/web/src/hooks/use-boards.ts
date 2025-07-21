@@ -2,6 +2,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
 import { Board, BoardWithStats, BoardWithItems, CreateBoardData, UpdateBoardData, AddItemToBoardData, BoardItem } from "@/src/types/board";
 
+interface ApiError extends Error {
+  status?: number;
+}
+
 // セキュアなメモリキャッシュ（localStorage使用せず）
 let cachedToken: string | null = null;
 let tokenExpiry: number = 0;
@@ -45,8 +49,8 @@ export function useBoards(status: "normal" | "completed" | "deleted" = "normal")
       
       if (!response.ok) {
         console.error(`❌ useBoards失敗: ${response.status} ${response.statusText}`);
-        const error = new Error(`Failed to fetch boards: ${response.status} ${response.statusText}`);
-        (error as any).status = response.status;
+        const error: ApiError = new Error(`Failed to fetch boards: ${response.status} ${response.statusText}`);
+        error.status = response.status;
         throw error;
       }
 
@@ -82,8 +86,8 @@ export function useBoardWithItems(boardId: number | null, skip: boolean = false)
       
       if (!response.ok) {
         console.error(`❌ useBoardWithItems失敗: ${response.status} ${response.statusText}`);
-        const error = new Error(`Failed to fetch board with items: ${response.status} ${response.statusText}`);
-        (error as any).status = response.status;
+        const error: ApiError = new Error(`Failed to fetch board with items: ${response.status} ${response.statusText}`);
+        error.status = response.status;
         throw error;
       }
 
@@ -130,8 +134,8 @@ export function useBoardBySlug(slug: string | null) {
       
       if (!response.ok) {
         console.error(`❌ useBoardBySlug失敗: ${response.status} ${response.statusText}`);
-        const error = new Error(`Failed to fetch board by slug: ${response.status} ${response.statusText}`);
-        (error as any).status = response.status;
+        const error: ApiError = new Error(`Failed to fetch board by slug: ${response.status} ${response.statusText}`);
+        error.status = response.status;
         throw error;
       }
       

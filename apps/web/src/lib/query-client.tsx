@@ -5,6 +5,10 @@ import { useState } from 'react'
 import { useAuth } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 
+interface QueryError extends Error {
+  status?: number;
+}
+
 export function QueryProvider({ children }: { children: React.ReactNode }) {
   const { signOut } = useAuth()
   const router = useRouter()
@@ -20,18 +24,19 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
             refetchOnMount: true,         // マウント時の再取得（必要時のみ）
             refetchOnReconnect: true,     // 再接続時の再取得（必要時のみ）
             retry: (failureCount, error) => {
+              const queryError = error as QueryError;
               // エラーの詳細をログ出力
               console.log('🚨 Query Error:', { 
-                message: error?.message, 
-                status: (error as any)?.status, 
-                error: error 
+                message: queryError?.message, 
+                status: queryError?.status, 
+                error: queryError 
               })
               
               // 401エラーの場合はリトライしない
               const is401Error = 
-                error?.message?.includes('401') || 
-                error?.message?.includes('Unauthorized') ||
-                (error as any)?.status === 401
+                queryError?.message?.includes('401') || 
+                queryError?.message?.includes('Unauthorized') ||
+                queryError?.status === 401
               
               if (is401Error) {
                 console.log('🔐 認証エラーを検知 - ログアウトしてログイン画面へリダイレクトします')

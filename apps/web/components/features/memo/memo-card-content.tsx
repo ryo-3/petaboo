@@ -8,6 +8,7 @@ interface MemoCardContentProps {
   isSelected?: boolean
   showEditDate?: boolean
   showBoardName?: boolean
+  selectedBoardIds?: number[]
 }
 
 function MemoCardContent({ memo, variant = 'normal', showEditDate = false, showBoardName = false }: MemoCardContentProps) {

@@ -3,6 +3,7 @@
 import MemoCard from '@/components/features/memo/memo-card';
 import MemoListItem from '@/components/features/memo/memo-list-item';
 import ItemStatusDisplay from '@/components/ui/layout/item-status-display';
+import MemoFilterWrapper from '@/components/features/memo/memo-filter-wrapper';
 import type { Memo, DeletedMemo } from '@/src/types/memo';
 import { useMemo } from 'react';
 
@@ -59,19 +60,13 @@ function MemoStatusDisplay({
   selectedBoardIds = [],
   sortOptions = []
 }: MemoStatusDisplayProps) {
-  // フィルタリング済みのメモを取得
+  // フィルタリング済みのメモを取得（常に全てのメモを返す）
   const filteredMemos = useMemo(() => {
-    if (!memos) return [];
-    
-    // ボードフィルターが設定されていない場合は全て表示
-    if (!selectedBoardIds || selectedBoardIds.length === 0) {
-      return memos;
-    }
-    
-    // フィルターが設定されている場合は、APIでフィルタリングが必要
-    // 現状はフィルターメッセージを表示
-    return [];
-  }, [memos, selectedBoardIds]);
+    return memos || [];
+  }, [memos]);
+
+  // フィルタリングが必要かどうか
+  const needsFiltering = selectedBoardIds && selectedBoardIds.length > 0;
 
   const getSortValue = (memo: Memo, sortId: string): number => {
     switch (sortId) {
@@ -100,7 +95,7 @@ function MemoStatusDisplay({
   }) => {
     const Component = viewMode === 'card' ? MemoCard : MemoListItem;
     /* eslint-disable react/prop-types */
-    return (
+    const memoComponent = (
       <Component
         key={memo.id}
         memo={memo}
@@ -113,19 +108,25 @@ function MemoStatusDisplay({
         variant={props.variant}
       />
     );
+    
+    // フィルタリングが必要な場合はMemoFilterWrapperで包む
+    if (needsFiltering) {
+      return (
+        <MemoFilterWrapper
+          key={memo.id}
+          memo={memo}
+          selectedBoardIds={selectedBoardIds}
+        >
+          {memoComponent}
+        </MemoFilterWrapper>
+      );
+    }
+    
+    return memoComponent;
     /* eslint-enable react/prop-types */
   };
 
-  // フィルターが設定されているが結果が空の場合
-  if (selectedBoardIds && selectedBoardIds.length > 0 && filteredMemos.length === 0) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center text-gray-500">
-          選択されたボードにメモがありません
-        </div>
-      </div>
-    );
-  }
+  // フィルター適用時は個別コンポーネントで判定するため、空メッセージは表示しない
 
   return (
     <ItemStatusDisplay

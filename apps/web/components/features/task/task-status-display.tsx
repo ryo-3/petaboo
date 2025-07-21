@@ -3,6 +3,7 @@
 import TaskCard from '@/components/features/task/task-card';
 import TaskListItem from '@/components/features/task/task-list-item';
 import ItemStatusDisplay from '@/components/ui/layout/item-status-display';
+import TaskFilterWrapper from '@/components/features/task/task-filter-wrapper';
 import type { Task, DeletedTask } from '@/src/types/task';
 import { useMemo } from 'react';
 
@@ -73,10 +74,12 @@ function TaskStatusDisplay({
       return statusFilteredTasks;
     }
     
-    // フィルターが設定されている場合は、APIでフィルタリングが必要
-    // 現状はフィルターメッセージを表示
-    return [];
+    // フィルタリングはTaskFilterWrapperで個別に行うため、全て返す
+    return statusFilteredTasks;
   }, [statusFilteredTasks, selectedBoardIds]);
+
+  // フィルタリングが必要かどうか
+  const needsFiltering = selectedBoardIds && selectedBoardIds.length > 0;
 
   const getEmptyMessage = () => {
     switch (activeTab) {
@@ -127,7 +130,7 @@ function TaskStatusDisplay({
   }) => {
     const Component = viewMode === 'card' ? TaskCard : TaskListItem;
     /* eslint-disable react/prop-types */
-    return (
+    const taskComponent = (
       <Component
         key={task.id}
         task={task}
@@ -140,19 +143,25 @@ function TaskStatusDisplay({
         variant={props.variant}
       />
     );
+    
+    // フィルタリングが必要な場合はTaskFilterWrapperで包む
+    if (needsFiltering) {
+      return (
+        <TaskFilterWrapper
+          key={task.id}
+          task={task}
+          selectedBoardIds={selectedBoardIds}
+        >
+          {taskComponent}
+        </TaskFilterWrapper>
+      );
+    }
+    
+    return taskComponent;
     /* eslint-enable react/prop-types */
   };
 
-  // フィルターが設定されているが結果が空の場合
-  if (selectedBoardIds && selectedBoardIds.length > 0 && filteredTasks.length === 0) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center text-gray-500">
-          選択されたボードにタスクがありません
-        </div>
-      </div>
-    );
-  }
+  // フィルター適用時は個別コンポーネントで判定するため、空メッセージは表示しない
 
   return (
     <ItemStatusDisplay

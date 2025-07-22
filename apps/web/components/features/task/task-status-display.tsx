@@ -26,6 +26,7 @@ interface TaskStatusDisplayProps {
     enabled: boolean;
     direction: "asc" | "desc";
   }>;
+  isBoard?: boolean; // ボード詳細画面での使用かどうか
 }
 
 interface DeletedTaskDisplayProps {
@@ -45,6 +46,7 @@ interface DeletedTaskDisplayProps {
     enabled: boolean;
     direction: "asc" | "desc";
   }>;
+  isBoard?: boolean; // ボード詳細画面での使用かどうか
 }
 
 function TaskStatusDisplay({
@@ -60,7 +62,8 @@ function TaskStatusDisplay({
   showEditDate = false,
   showBoardName = false,
   selectedBoardIds = [],
-  sortOptions = []
+  sortOptions = [],
+  isBoard = false
 }: TaskStatusDisplayProps) {
   // ステータスでフィルター
   const statusFilteredTasks = tasks?.filter(task => task.status === activeTab);
@@ -168,6 +171,7 @@ function TaskStatusDisplay({
       items={filteredTasks}
       viewMode={viewMode}
       effectiveColumnCount={effectiveColumnCount}
+      isBoard={isBoard}
       selectionMode={selectionMode}
       checkedItems={checkedTasks}
       onToggleCheck={onToggleCheck}
@@ -198,7 +202,8 @@ export function DeletedTaskDisplay({
   selectedTaskId,
   showEditDate = false,
   showBoardName = false,
-  sortOptions = []
+  sortOptions = [],
+  isBoard = false
 }: DeletedTaskDisplayProps) {
   const getSortValue = (task: DeletedTask, sortId: string): number => {
     switch (sortId) {
@@ -254,6 +259,7 @@ export function DeletedTaskDisplay({
       items={deletedTasks}
       viewMode={viewMode}
       effectiveColumnCount={effectiveColumnCount}
+      isBoard={isBoard}
       selectionMode={selectionMode}
       checkedItems={checkedTasks}
       onToggleCheck={onToggleCheck}

@@ -199,6 +199,7 @@ export default function BoardMemoSection({
             memos={memoItems.map(item => item.content as Memo)}
             viewMode={viewMode}
             effectiveColumnCount={effectiveColumnCount}
+            isBoard={true}
             selectionMode={memoSelectionMode}
             checkedMemos={checkedMemos}
             onToggleCheck={onMemoSelectionToggle}

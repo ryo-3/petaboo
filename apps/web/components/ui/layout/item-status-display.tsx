@@ -36,6 +36,7 @@ interface ItemStatusDisplayProps<T extends { id: number }> {
   getSortValue: (item: T, sortId: string) => number;
   getDefaultSortValue: (item: T) => number;
   variant?: 'normal' | 'deleted';
+  isBoard?: boolean; // ボード詳細画面での使用かどうか
 }
 
 function ItemStatusDisplay<T extends { id: number }>({
@@ -54,7 +55,8 @@ function ItemStatusDisplay<T extends { id: number }>({
   renderItem,
   getSortValue,
   getDefaultSortValue,
-  variant = 'normal'
+  variant = 'normal',
+  isBoard = false
 }: ItemStatusDisplayProps<T>) {
   const getSortedItems = () => {
     if (!items) return [];
@@ -104,6 +106,7 @@ function ItemStatusDisplay<T extends { id: number }>({
     <ItemGrid
       viewMode={viewMode}
       effectiveColumnCount={effectiveColumnCount}
+      isBoard={isBoard}
     >
       {sortedItems.map((item) => {
         return renderItem(item, {

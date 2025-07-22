@@ -25,6 +25,7 @@ interface MemoStatusDisplayProps {
     enabled: boolean;
     direction: "asc" | "desc";
   }>;
+  isBoard?: boolean; // ボード詳細画面での使用かどうか
 }
 
 interface DeletedMemoDisplayProps {
@@ -44,6 +45,7 @@ interface DeletedMemoDisplayProps {
     enabled: boolean;
     direction: "asc" | "desc";
   }>;
+  isBoard?: boolean; // ボード詳細画面での使用かどうか
 }
 
 function MemoStatusDisplay({
@@ -58,7 +60,8 @@ function MemoStatusDisplay({
   showEditDate = false,
   showBoardName = false,
   selectedBoardIds = [],
-  sortOptions = []
+  sortOptions = [],
+  isBoard = false
 }: MemoStatusDisplayProps) {
   // フィルタリング済みのメモを取得（常に全てのメモを返す）
   const filteredMemos = useMemo(() => {
@@ -135,6 +138,7 @@ function MemoStatusDisplay({
       effectiveColumnCount={effectiveColumnCount}
       selectionMode={selectionMode}
       checkedItems={checkedMemos}
+      isBoard={isBoard}
       onToggleCheck={onToggleCheck}
       onSelectItem={onSelectMemo}
       selectedItemId={selectedMemoId}
@@ -163,7 +167,8 @@ export function DeletedMemoDisplay({
   selectedMemoId,
   showEditDate = false,
   showBoardName = false,
-  sortOptions = []
+  sortOptions = [],
+  isBoard = false
 }: DeletedMemoDisplayProps) {
   const getSortValue = (memo: DeletedMemo, sortId: string): number => {
     switch (sortId) {
@@ -217,6 +222,7 @@ export function DeletedMemoDisplay({
       effectiveColumnCount={effectiveColumnCount}
       selectionMode={selectionMode}
       checkedItems={checkedMemos}
+      isBoard={isBoard}
       onToggleCheck={onToggleCheck}
       onSelectItem={onSelectMemo}
       selectedItemId={selectedMemoId}

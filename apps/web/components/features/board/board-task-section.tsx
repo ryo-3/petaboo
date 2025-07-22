@@ -237,6 +237,7 @@ export default function BoardTaskSection({
             tasks={taskItems.map(item => item.content as Task)}
             viewMode={viewMode}
             effectiveColumnCount={effectiveColumnCount}
+            isBoard={true}
             selectionMode={taskSelectionMode}
             checkedTasks={checkedTasks}
             onToggleCheck={onTaskSelectionToggle}

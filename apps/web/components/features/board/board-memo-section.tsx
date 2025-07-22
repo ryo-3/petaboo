@@ -190,8 +190,8 @@ export default function BoardMemoSection({
             viewMode={viewMode}
             effectiveColumnCount={effectiveColumnCount}
             selectionMode={memoSelectionMode}
-            checkedMemos={memoSelectionMode === "check" ? checkedMemos : undefined}
-            onToggleCheck={memoSelectionMode === "check" ? onMemoSelectionToggle : undefined}
+            checkedMemos={checkedMemos}
+            onToggleCheck={onMemoSelectionToggle}
             onSelectMemo={memoSelectionMode === "check" ? undefined : onSelectMemo}
             selectedMemoId={memoSelectionMode === "check" ? undefined : selectedMemo?.id}
             showEditDate={showEditDate}

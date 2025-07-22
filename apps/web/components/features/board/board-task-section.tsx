@@ -228,8 +228,8 @@ export default function BoardTaskSection({
             viewMode={viewMode}
             effectiveColumnCount={effectiveColumnCount}
             selectionMode={taskSelectionMode}
-            checkedTasks={taskSelectionMode === "check" ? checkedTasks : undefined}
-            onToggleCheck={taskSelectionMode === "check" ? onTaskSelectionToggle : undefined}
+            checkedTasks={checkedTasks}
+            onToggleCheck={onTaskSelectionToggle}
             onSelectTask={taskSelectionMode === "check" ? undefined : onSelectTask}
             selectedTaskId={taskSelectionMode === "check" ? undefined : selectedTask?.id}
             showEditDate={showEditDate}

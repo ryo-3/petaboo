@@ -33,7 +33,7 @@ import {
   getMemoDisplayOrder,
   getNextItemAfterDeletion,
 } from "@/src/utils/domUtils";
-import { createToggleHandlerWithTabClear } from "@/src/utils/toggleUtils";
+import { createToggleHandler } from "@/src/utils/toggleUtils";
 import { useCallback, useRef, useState } from "react";
 
 type MemoScreenMode = "list" | "view" | "create";
@@ -385,15 +385,13 @@ function MemoScreen({
           selectedDeletedMemo={selectedDeletedMemo}
           checkedMemos={checkedMemos}
           checkedDeletedMemos={checkedDeletedMemos}
-          onToggleCheckMemo={createToggleHandlerWithTabClear(
+          onToggleCheckMemo={createToggleHandler(
             checkedMemos,
-            setCheckedMemos,
-            [setCheckedDeletedMemos]
+            setCheckedMemos
           )}
-          onToggleCheckDeletedMemo={createToggleHandlerWithTabClear(
+          onToggleCheckDeletedMemo={createToggleHandler(
             checkedDeletedMemos,
-            setCheckedDeletedMemos,
-            [setCheckedMemos]
+            setCheckedDeletedMemos
           )}
           onSelectMemo={handleSelectMemo}
           onSelectDeletedMemo={handleSelectDeletedMemo}

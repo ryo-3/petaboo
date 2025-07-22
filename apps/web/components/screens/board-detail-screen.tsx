@@ -348,7 +348,27 @@ function BoardDetailScreen({
   const normalMemoCount = allMemoItems.length;
   const deletedMemoCount = 0; // 削除済みメモの件数（将来実装）
 
-  // 全選択/全解除機能
+  // 全選択/全解除機能（統合）
+  const handleSelectAll = useCallback(() => {
+    const currentMemoIds = memoItems.map(item => (item.content as Memo).id);
+    const currentTaskIds = taskItems.map(item => (item.content as Task).id);
+    
+    // すべて選択されているかチェック
+    const allMemosSelected = currentMemoIds.length > 0 && checkedMemos.size === currentMemoIds.length;
+    const allTasksSelected = currentTaskIds.length > 0 && checkedTasks.size === currentTaskIds.length;
+    const allSelected = allMemosSelected && allTasksSelected;
+    
+    if (allSelected) {
+      // 全解除
+      setCheckedMemos(new Set());
+      setCheckedTasks(new Set());
+    } else {
+      // 全選択
+      setCheckedMemos(new Set(currentMemoIds));
+      setCheckedTasks(new Set(currentTaskIds));
+    }
+  }, [memoItems, taskItems, checkedMemos.size, checkedTasks.size]);
+
   const handleMemoSelectAll = useCallback(() => {
     const currentMemoIds = memoItems.map(item => (item.content as Memo).id);
     if (checkedMemos.size === currentMemoIds.length) {
@@ -370,6 +390,7 @@ function BoardDetailScreen({
   // 全選択状態の計算
   const isMemoAllSelected = memoItems.length > 0 && checkedMemos.size === memoItems.length;
   const isTaskAllSelected = taskItems.length > 0 && checkedTasks.size === taskItems.length;
+  const isAllSelected = (!showMemo || isMemoAllSelected) && (!showTask || isTaskAllSelected);
 
   // エクスポート処理
   const handleExport = useCallback(() => {

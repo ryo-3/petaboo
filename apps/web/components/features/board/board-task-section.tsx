@@ -3,6 +3,8 @@
 import TaskStatusDisplay from "@/components/features/task/task-status-display";
 import { FilterIconCheckList } from "@/components/icons/filter-icon-variants";
 import TrashIcon from "@/components/icons/trash-icon";
+import CheckSquareIcon from "@/components/icons/check-square-icon";
+import SquareIcon from "@/components/icons/square-icon";
 import Tooltip from "@/components/ui/base/tooltip";
 import AddItemButton from "@/components/ui/buttons/add-item-button";
 import SortToggle from "@/components/ui/buttons/sort-toggle";
@@ -112,15 +114,6 @@ export default function BoardTaskSection({
           </Tooltip>
 
 
-          {/* 全選択/全解除ボタン（チェックモード時のみ表示） */}
-          {taskSelectionMode === "check" && onSelectAll && (
-            <button
-              onClick={onSelectAll}
-              className="h-7 px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium rounded-lg transition-colors"
-            >
-              {isAllSelected ? "全解除" : "全選択"}
-            </button>
-          )}
           
           {/* ソートトグル */}
           <SortToggle
@@ -134,6 +127,25 @@ export default function BoardTaskSection({
 
       {/* タスクステータスタブ */}
       <div className="flex items-center gap-2 flex-wrap mb-2">
+        {/* 全選択/全解除ボタン（チェックモード時のみ表示） */}
+        {taskSelectionMode === "check" && onSelectAll && (
+          <Tooltip
+            text={isAllSelected ? "全解除" : "全選択"}
+            position="bottom"
+          >
+            <button
+              onClick={onSelectAll}
+              className="bg-gray-100 rounded-lg size-7 flex items-center justify-center transition-colors text-gray-500 hover:text-gray-700"
+            >
+              {isAllSelected ? (
+                <SquareIcon className="size-5" />
+              ) : (
+                <CheckSquareIcon className="size-5" />
+              )}
+            </button>
+          </Tooltip>
+        )}
+        
         <button
           onClick={() => onTaskTabChange("todo")}
           className={`flex items-center gap-1 px-2 py-1 rounded-lg font-medium transition-colors text-gray-600 text-sm h-7 ${

@@ -39,6 +39,7 @@ interface BoardTaskSectionProps {
   onTaskSelectionToggle: (taskId: number) => void;
   onSelectAll?: () => void;
   isAllSelected?: boolean;
+  onBulkDelete?: (itemType: 'task') => void;
 }
 
 import { useRef } from 'react';
@@ -70,6 +71,7 @@ export default function BoardTaskSection({
   onTaskSelectionToggle,
   onSelectAll,
   isAllSelected,
+  onBulkDelete,
 }: BoardTaskSectionProps) {
   // ソートオプションの管理
   const { setSortOptions, getVisibleSortOptions } = useSortOptions("task");
@@ -252,8 +254,7 @@ export default function BoardTaskSection({
           showDeleteButton={true}
           deleteButtonCount={checkedTasks.size}
           onDelete={() => {
-            // TODO: 一括削除の実装
-            console.log("一括削除: タスク", Array.from(checkedTasks));
+            onBulkDelete?.('task');
           }}
           deleteButtonRef={deleteButtonRef}
           isDeleting={false}

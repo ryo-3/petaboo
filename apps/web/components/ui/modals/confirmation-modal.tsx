@@ -244,7 +244,9 @@ interface BulkDeleteConfirmationProps {
   itemType: 'memo' | 'task'
   deleteType: 'normal' | 'permanent'
   isLoading?: boolean
-  customMessage?: string
+  customMessage?: string | ReactNode
+  position?: 'center' | 'right-panel' | 'left-panel'
+  customTitle?: string
 }
 
 export function BulkDeleteConfirmation({
@@ -255,11 +257,13 @@ export function BulkDeleteConfirmation({
   itemType,
   deleteType,
   isLoading = false,
-  customMessage
+  customMessage,
+  position = 'center',
+  customTitle
 }: BulkDeleteConfirmationProps) {
   const itemTypeName = itemType === 'memo' ? 'メモ' : 'タスク'
   
-  const title = '一括削除の確認'
+  const title = customTitle || `${itemTypeName}削除の確認`
   const message = customMessage || (deleteType === 'normal'
     ? `${count}件の${itemTypeName}を削除しますか？\n（ゴミ箱に移動されます）`
     : `${count}件の${itemTypeName}を完全に削除しますか？\n（復元できません）`)
@@ -276,6 +280,7 @@ export function BulkDeleteConfirmation({
       variant="danger"
       icon="trash"
       isLoading={isLoading}
+      position={position}
     />
   )
 }

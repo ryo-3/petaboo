@@ -16,6 +16,8 @@ import { Task } from "@/src/types/task";
 import { memo, useCallback, useEffect, useState } from "react";
 import BoardHeader from "@/components/features/board/board-header";
 import { BulkActionButtons } from "@/components/ui/layout/bulk-action-buttons";
+import { useBulkDelete, BulkDeleteConfirmation } from "@/components/ui/modals";
+import { DeletionWarningMessage } from "@/components/ui/modals/deletion-warning-message";
 
 interface BoardDetailProps {
   boardId: number;
@@ -119,6 +121,10 @@ function BoardDetailScreen({
   const handleSelectionModeChange = useCallback((mode: "select" | "check") => {
     setSelectionMode(mode);
   }, []);
+
+  // 一括削除機能
+  const bulkDelete = useBulkDelete();
+  const [deletingItemType, setDeletingItemType] = useState<'memo' | 'task' | null>(null);
 
 
 
@@ -387,6 +393,107 @@ function BoardDetailScreen({
   const isTaskAllSelected = taskItems.length > 0 && checkedTasks.size === taskItems.length;
   const isAllSelected = (!showMemo || isMemoAllSelected) && (!showTask || isTaskAllSelected);
 
+  // ステータス別カウントを取得する関数（ボード版）
+  const getBoardItemStatusBreakdown = (itemIds: number[], itemType: 'memo' | 'task') => {
+    if (itemType === 'memo') {
+      return [{ status: 'normal', label: '通常', count: itemIds.length, color: 'bg-gray-400' }];
+    } else {
+      const allTasks = boardTasks;
+      const selectedTasks = allTasks.filter(task => itemIds.includes(task.id));
+      
+      const todoCount = selectedTasks.filter(task => task.status === 'todo').length;
+      const inProgressCount = selectedTasks.filter(task => task.status === 'in_progress').length;
+      const completedCount = selectedTasks.filter(task => task.status === 'completed').length;
+      
+      const breakdown = [];
+      if (todoCount > 0) breakdown.push({ status: 'todo', label: '未着手', count: todoCount, color: 'bg-zinc-400' });
+      if (inProgressCount > 0) breakdown.push({ status: 'in_progress', label: '進行中', count: inProgressCount, color: 'bg-blue-500' });
+      if (completedCount > 0) breakdown.push({ status: 'completed', label: '完了', count: completedCount, color: 'bg-green-500' });
+      
+      return breakdown;
+    }
+  };
+
+  // 削除メッセージコンポーネント
+  const BoardDeleteMessage = ({ itemIds, itemType }: { itemIds: number[]; itemType: 'memo' | 'task' }) => {
+    const statusBreakdown = getBoardItemStatusBreakdown(itemIds, itemType);
+    const isLimited = itemIds.length > 100;
+    
+    return (
+      <DeletionWarningMessage
+        hasOtherTabItems={false}
+        isLimited={isLimited}
+        statusBreakdown={statusBreakdown}
+        showStatusBreakdown={true}
+      />
+    );
+  };
+
+  // 一括削除ハンドラー
+  const handleBulkDelete = useCallback(async (itemType: 'memo' | 'task') => {
+    const targetIds = itemType === 'memo' ? Array.from(checkedMemos) : Array.from(checkedTasks);
+    
+    if (targetIds.length === 0) return;
+
+    // 削除対象のアイテムタイプを設定
+    setDeletingItemType(itemType);
+
+    await bulkDelete.confirmBulkDelete(
+      targetIds,
+      1, // 1件からモーダル表示
+      async (ids: number[]) => {
+        try {
+          // ボードからアイテムを削除
+          for (const id of ids) {
+            await removeItemFromBoard.mutateAsync({
+              boardId,
+              itemId: id,
+              itemType,
+            });
+          }
+          
+          // 削除完了後に選択をクリア
+          if (itemType === 'memo') {
+            setCheckedMemos(new Set());
+          } else {
+            setCheckedTasks(new Set());
+          }
+        } catch (error) {
+          console.error("Failed to remove items from board:", error);
+        } finally {
+          // 削除完了後にアイテムタイプをクリア
+          setDeletingItemType(null);
+        }
+      },
+      <BoardDeleteMessage itemIds={targetIds} itemType={itemType} />
+    );
+  }, [checkedMemos, checkedTasks, bulkDelete, removeItemFromBoard, boardId]);
+
+  // 削除モーダル（タイトルをカスタマイズ）
+  const DeleteModal = () => {
+    // タイトルのカスタマイズ
+    const itemTypeName = deletingItemType === 'memo' ? 'メモ' : 'タスク';
+    const customTitle = `${itemTypeName}削除の確認`;
+    
+    return (
+      <BulkDeleteConfirmation
+        isOpen={bulkDelete.isModalOpen}
+        onClose={() => {
+          setDeletingItemType(null);
+          bulkDelete.handleCancel();
+        }}
+        onConfirm={bulkDelete.handleConfirm}
+        count={bulkDelete.targetIds.length}
+        itemType={deletingItemType || "memo"}
+        deleteType="normal"
+        isLoading={bulkDelete.isDeleting}
+        customMessage={bulkDelete.customMessage}
+        position="center"
+        customTitle={customTitle}
+      />
+    );
+  };
+
   // エクスポート処理
   const handleExport = useCallback(() => {
     if (!boardWithItems) return;
@@ -513,6 +620,7 @@ function BoardDetailScreen({
             onMemoSelectionToggle={handleMemoSelectionToggle}
             onSelectAll={handleMemoSelectAll}
             isAllSelected={isMemoAllSelected}
+            onBulkDelete={handleBulkDelete}
           />
 
           {/* タスク列 */}
@@ -542,6 +650,7 @@ function BoardDetailScreen({
             onTaskSelectionToggle={handleTaskSelectionToggle}
             onSelectAll={handleTaskSelectAll}
             isAllSelected={isTaskAllSelected}
+            onBulkDelete={handleBulkDelete}
           />
         </div>
 
@@ -570,6 +679,8 @@ function BoardDetailScreen({
         </div>
       </div>
 
+      {/* 削除モーダル */}
+      <DeleteModal />
 
       {/* 右側：詳細表示 */}
       <BoardRightPanel

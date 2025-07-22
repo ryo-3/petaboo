@@ -37,6 +37,7 @@ interface BoardMemoSectionProps {
   onMemoSelectionToggle: (memoId: number) => void;
   onSelectAll?: () => void;
   isAllSelected?: boolean;
+  onBulkDelete?: (itemType: 'memo') => void;
 }
 
 import { useRef } from 'react';
@@ -66,6 +67,7 @@ export default function BoardMemoSection({
   onMemoSelectionToggle,
   onSelectAll,
   isAllSelected,
+  onBulkDelete,
 }: BoardMemoSectionProps) {
   // ソートオプションの管理
   const { setSortOptions, getVisibleSortOptions } = useSortOptions("memo");
@@ -221,8 +223,7 @@ export default function BoardMemoSection({
           showDeleteButton={true}
           deleteButtonCount={checkedMemos.size}
           onDelete={() => {
-            // TODO: 一括削除の実装
-            console.log("一括削除: メモ", Array.from(checkedMemos));
+            onBulkDelete?.('memo');
           }}
           deleteButtonRef={deleteButtonRef}
           isDeleting={false}

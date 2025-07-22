@@ -8,7 +8,7 @@ interface ModalProps {
   title?: string
   children: React.ReactNode
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl'
-  position?: 'center' | 'right-panel'
+  position?: 'center' | 'right-panel' | 'left-panel'
 }
 
 function Modal({ isOpen, onClose, title, children, maxWidth = 'md', position = 'center' }: ModalProps) {
@@ -41,13 +41,15 @@ function Modal({ isOpen, onClose, title, children, maxWidth = 'md', position = '
     xl: 'max-w-xl',
   }
 
-  const containerClasses = position === 'right-panel' 
-    ? "absolute inset-0 z-50 flex items-center justify-center"
-    : "fixed inset-0 z-50 flex items-center justify-center";
+  const containerClasses = position === 'center'
+    ? "fixed inset-0 z-50 flex items-center justify-center"
+    : position === 'left-panel'
+    ? "absolute inset-0 z-50 flex items-center justify-start pl-8"
+    : "absolute inset-0 z-50 flex items-center justify-end pr-8"; // right-panel
 
-  const overlayClasses = position === 'right-panel'
-    ? "absolute inset-0 bg-black bg-opacity-20 transition-opacity"
-    : "absolute inset-0 bg-black bg-opacity-50 transition-opacity";
+  const overlayClasses = position === 'center'
+    ? "absolute inset-0 bg-black bg-opacity-50 transition-opacity"
+    : "absolute inset-0 bg-black bg-opacity-20 transition-opacity";
 
   return (
     <div className={containerClasses}>

@@ -85,9 +85,8 @@ function BoardDetailScreen({
   const selectedMemo = propSelectedMemo;
   const selectedTask = propSelectedTask;
 
-  // 複数選択状態管理
-  const [memoSelectionMode, setMemoSelectionMode] = useState<"select" | "check">("select");
-  const [taskSelectionMode, setTaskSelectionMode] = useState<"select" | "check">("select");
+  // 複数選択状態管理（統合）
+  const [selectionMode, setSelectionMode] = useState<"select" | "check">("select");
   const [checkedMemos, setCheckedMemos] = useState<Set<number>>(new Set());
   const [checkedTasks, setCheckedTasks] = useState<Set<number>>(new Set());
 
@@ -116,19 +115,12 @@ function BoardDetailScreen({
     });
   }, []);
 
-  // 選択モード切り替え
-  const handleMemoSelectionModeChange = useCallback((mode: "select" | "check") => {
-    setMemoSelectionMode(mode);
-    // 既存と同じく、selectモードに戻る時のみクリア
+  // 選択モード切り替え（統合）
+  const handleSelectionModeChange = useCallback((mode: "select" | "check") => {
+    setSelectionMode(mode);
+    // selectモードに戻る時のみクリア
     if (mode === "select") {
       setCheckedMemos(new Set());
-    }
-  }, []);
-
-  const handleTaskSelectionModeChange = useCallback((mode: "select" | "check") => {
-    setTaskSelectionMode(mode);
-    // 既存と同じく、selectモードに戻る時のみクリア
-    if (mode === "select") {
       setCheckedTasks(new Set());
     }
   }, []);
@@ -461,6 +453,10 @@ function BoardDetailScreen({
             normalCount={allMemoItems.length + allTaskItems.length}
             completedCount={completedCount}
             deletedCount={deletedCount + deletedMemoCount}
+            selectionMode={selectionMode}
+            onSelectionModeChange={handleSelectionModeChange}
+            onSelectAll={undefined}
+            isAllSelected={false}
           />
         </div>
 
@@ -495,9 +491,9 @@ function BoardDetailScreen({
             onSetRightPanelMode={setRightPanelMode}
             onMemoTabChange={handleMemoTabChange}
             onSelectMemo={handleSelectMemo}
-            memoSelectionMode={memoSelectionMode}
+            memoSelectionMode={selectionMode}
             checkedMemos={checkedMemos}
-            onMemoSelectionModeChange={handleMemoSelectionModeChange}
+            onMemoSelectionModeChange={handleSelectionModeChange}
             onMemoSelectionToggle={handleMemoSelectionToggle}
             onSelectAll={handleMemoSelectAll}
             isAllSelected={isMemoAllSelected}
@@ -524,9 +520,9 @@ function BoardDetailScreen({
             onSetRightPanelMode={setRightPanelMode}
             onTaskTabChange={handleTaskTabChange}
             onSelectTask={handleSelectTask}
-            taskSelectionMode={taskSelectionMode}
+            taskSelectionMode={selectionMode}
             checkedTasks={checkedTasks}
-            onTaskSelectionModeChange={handleTaskSelectionModeChange}
+            onTaskSelectionModeChange={handleSelectionModeChange}
             onTaskSelectionToggle={handleTaskSelectionToggle}
             onSelectAll={handleTaskSelectAll}
             isAllSelected={isTaskAllSelected}

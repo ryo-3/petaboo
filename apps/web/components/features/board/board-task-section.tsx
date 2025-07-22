@@ -2,7 +2,6 @@
 
 import TaskStatusDisplay from "@/components/features/task/task-status-display";
 import { FilterIconCheckList } from "@/components/icons/filter-icon-variants";
-import SelectionModeToggle from "@/components/ui/buttons/selection-mode-toggle";
 import TrashIcon from "@/components/icons/trash-icon";
 import Tooltip from "@/components/ui/base/tooltip";
 import AddItemButton from "@/components/ui/buttons/add-item-button";
@@ -112,13 +111,6 @@ export default function BoardTaskSection({
             </button>
           </Tooltip>
 
-          {/* 選択モード切り替えボタン */}
-          <SelectionModeToggle
-            mode={taskSelectionMode}
-            onModeChange={onTaskSelectionModeChange}
-            buttonSize="size-7"
-            iconSize="size-5"
-          />
 
           {/* 全選択/全解除ボタン（チェックモード時のみ表示） */}
           {taskSelectionMode === "check" && onSelectAll && (

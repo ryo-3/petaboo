@@ -366,6 +366,16 @@ function DesktopUpper({
             containerHeight="h-7"
             buttonSize="size-6"
           />
+
+          {/* 選択モード切り替え */}
+          {onSelectionModeChange && (
+            <SelectionModeToggle
+              mode={selectionMode}
+              onModeChange={onSelectionModeChange}
+              buttonSize="size-7"
+              iconSize="size-5"
+            />
+          )}
           
           {/* ボードレイアウト切り替え（boardモードのみ） */}
           {currentMode === "board" && onBoardLayoutChange && (
@@ -386,16 +396,6 @@ function DesktopUpper({
               onMemoToggle={onMemoToggle}
               onTaskToggle={onTaskToggle}
               rightPanelMode={contentFilterRightPanelMode}
-            />
-          )}
-
-          {/* 選択モード切り替え */}
-          {onSelectionModeChange && (
-            <SelectionModeToggle
-              mode={selectionMode}
-              onModeChange={onSelectionModeChange}
-              buttonSize="size-7"
-              iconSize="size-5"
             />
           )}
 

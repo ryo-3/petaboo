@@ -179,7 +179,11 @@ export function useTasksBulkDelete({
     const allStatusBreakdown = getStatusBreakdown(taskIds);
     const currentTabStatusBreakdown = getStatusBreakdown(currentTabTaskIds);
     const isLimited = currentTabTaskIds.length > 100;
-    const hasOtherTabItems = taskIds.length > currentTabTaskIds.length;
+    
+    // 他のタブにも選択アイテムがあるかチェック（削除済みタブの場合は通常タブをチェック）
+    const hasOtherTabItems = activeTab === "deleted" 
+      ? checkedTasks.size > 0 
+      : taskIds.length > currentTabTaskIds.length;
     
     const getTabLabel = (tab: string) => {
       switch (tab) {
@@ -196,7 +200,7 @@ export function useTasksBulkDelete({
         {hasOtherTabItems && (
           <>
             <p className="text-sm text-amber-600 mb-3 font-medium">
-              削除されるのは現在のタブのアイテムのみです
+              削除されるのは現在のタブアイテムのみです
             </p>
             
             <div className="w-32 mx-auto space-y-2 mb-4">

@@ -119,8 +119,6 @@ export function useDeleteNote() {
       // 削除後に通常メモと削除済みメモの両方を再取得
       queryClient.invalidateQueries({ queryKey: ["notes"] });
       queryClient.invalidateQueries({ queryKey: ["deleted-notes"] });
-      // ボードキャッシュも無効化（メモが含まれる可能性）
-      queryClient.invalidateQueries({ queryKey: ["boards"] });
     },
   });
 }

@@ -250,6 +250,8 @@ interface BulkDeleteConfirmationProps {
   customMessage?: string | ReactNode
   position?: 'center' | 'right-panel'
   customTitle?: string
+  onRemoveFromBoard?: () => void
+  showRemoveFromBoard?: boolean
 }
 
 export function BulkDeleteConfirmation({
@@ -262,7 +264,9 @@ export function BulkDeleteConfirmation({
   isLoading = false,
   customMessage,
   position = 'center',
-  customTitle
+  customTitle,
+  onRemoveFromBoard,
+  showRemoveFromBoard = false
 }: BulkDeleteConfirmationProps) {
   const itemTypeName = itemType === 'memo' ? 'メモ' : 'タスク'
   
@@ -271,6 +275,74 @@ export function BulkDeleteConfirmation({
     ? `${count}件の${itemTypeName}を削除しますか？\n（ゴミ箱に移動されます）`
     : `${count}件の${itemTypeName}を完全に削除しますか？\n（復元できません）`)
   
+
+  // ボードから外すボタンがある場合は、カスタムのモーダルを表示
+  if (showRemoveFromBoard && onRemoveFromBoard) {
+    return (
+      <Modal isOpen={isOpen} onClose={onClose} maxWidth="sm" position={position}>
+        <div className="text-center">
+          {/* アイコン */}
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+            <TrashIcon className="h-6 w-6 text-red-600" />
+          </div>
+          
+          {/* タイトル */}
+          <h3 className="text-lg font-medium text-red-900 mb-2">
+            {title}
+          </h3>
+          
+          {/* メッセージ */}
+          <div className="mb-6">
+            {typeof message === 'string' ? (
+              <p className="text-sm text-gray-600 whitespace-pre-line">
+                {message}
+              </p>
+            ) : (
+              <div>{message}</div>
+            )}
+            {/* 削除処理中のタブ切り替え注意書き */}
+            <p className="text-xs text-gray-500 mt-2">
+              ※削除中にタブを切り替えると処理が中断されます
+            </p>
+          </div>
+          
+          {/* ボタン */}
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={onClose}
+              disabled={isLoading}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 transition-colors"
+            >
+              キャンセル
+            </button>
+            
+            <button
+              onClick={onRemoveFromBoard}
+              disabled={isLoading}
+              className="px-4 py-2 text-sm font-medium text-white bg-gray-500 hover:bg-gray-600 disabled:bg-gray-300 rounded-md transition-colors"
+            >
+              ボードから外す
+            </button>
+            
+            <button
+              onClick={onConfirm}
+              disabled={isLoading}
+              className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:bg-red-300 rounded-md transition-colors flex items-center gap-2"
+            >
+              {isLoading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  処理中...
+                </>
+              ) : (
+                '削除'
+              )}
+            </button>
+          </div>
+        </div>
+      </Modal>
+    )
+  }
 
   return (
     <ConfirmationModal

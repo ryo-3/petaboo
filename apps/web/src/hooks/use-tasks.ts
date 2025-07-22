@@ -80,8 +80,6 @@ export function useDeleteTask() {
       // タスク一覧と削除済み一覧を再取得
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
       queryClient.invalidateQueries({ queryKey: ['deleted-tasks'] })
-      // ボードキャッシュも無効化（タスクが含まれる可能性）
-      queryClient.invalidateQueries({ queryKey: ["boards"] });
     },
   })
 }

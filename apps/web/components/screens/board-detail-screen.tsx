@@ -18,6 +18,8 @@ import { memo, useCallback, useEffect, useState } from "react";
 import BoardHeader from "@/components/features/board/board-header";
 import { useBulkDelete, BulkDeleteConfirmation } from "@/components/ui/modals";
 import { DeletionWarningMessage } from "@/components/ui/modals/deletion-warning-message";
+import { useDeleteNote } from "@/src/hooks/use-notes";
+import { useDeleteTask } from "@/src/hooks/use-tasks";
 
 interface BoardDetailProps {
   boardId: number;
@@ -125,6 +127,8 @@ function BoardDetailScreen({
   // 一括削除機能
   const bulkDelete = useBulkDelete();
   const [deletingItemType, setDeletingItemType] = useState<'memo' | 'task' | null>(null);
+  const deleteNoteMutation = useDeleteNote();
+  const deleteTaskMutation = useDeleteTask();
 
 
 
@@ -444,13 +448,13 @@ function BoardDetailScreen({
       1, // 1件からモーダル表示
       async (ids: number[]) => {
         try {
-          // ボードからアイテムを削除
+          // 実際の削除処理
           for (const id of ids) {
-            await removeItemFromBoard.mutateAsync({
-              boardId,
-              itemId: id,
-              itemType,
-            });
+            if (itemType === 'memo') {
+              await deleteNoteMutation.mutateAsync(id);
+            } else {
+              await deleteTaskMutation.mutateAsync(id);
+            }
           }
           
           // 削除完了後に選択をクリア
@@ -460,7 +464,7 @@ function BoardDetailScreen({
             setCheckedTasks(new Set());
           }
         } catch (error) {
-          console.error("Failed to remove items from board:", error);
+          console.error("Failed to delete items:", error);
         } finally {
           // 削除完了後にアイテムタイプをクリア
           setDeletingItemType(null);
@@ -468,13 +472,44 @@ function BoardDetailScreen({
       },
       <BoardDeleteMessage itemIds={targetIds} itemType={itemType} />
     );
-  }, [checkedMemos, checkedTasks, bulkDelete, removeItemFromBoard, boardId]);
+  }, [checkedMemos, checkedTasks, bulkDelete, deleteNoteMutation, deleteTaskMutation]);
+
+  // ボードから外す処理
+  const handleRemoveFromBoard = useCallback(async () => {
+    const targetIds = deletingItemType === 'memo' ? Array.from(checkedMemos) : Array.from(checkedTasks);
+    
+    try {
+      // ボードからアイテムを削除
+      for (const id of targetIds) {
+        await removeItemFromBoard.mutateAsync({
+          boardId,
+          itemId: id,
+          itemType: deletingItemType!,
+        });
+      }
+      
+      // 削除完了後に選択をクリア
+      if (deletingItemType === 'memo') {
+        setCheckedMemos(new Set());
+      } else {
+        setCheckedTasks(new Set());
+      }
+      
+      // モーダルを閉じる
+      bulkDelete.handleCancel();
+    } catch (error) {
+      console.error("Failed to remove items from board:", error);
+    } finally {
+      // 削除完了後にアイテムタイプをクリア
+      setDeletingItemType(null);
+    }
+  }, [deletingItemType, checkedMemos, checkedTasks, removeItemFromBoard, boardId, bulkDelete]);
 
   // 削除モーダル（タイトルをカスタマイズ）
   const DeleteModal = () => {
     // タイトルのカスタマイズ
     const itemTypeName = deletingItemType === 'memo' ? 'メモ' : 'タスク';
-    const customTitle = `ボードから${itemTypeName}を削除`;
+    const customTitle = `${itemTypeName}の操作を選択`;
     
     return (
       <BulkDeleteConfirmation
@@ -491,6 +526,8 @@ function BoardDetailScreen({
         customMessage={bulkDelete.customMessage}
         position="center"
         customTitle={customTitle}
+        showRemoveFromBoard={true}
+        onRemoveFromBoard={handleRemoveFromBoard}
       />
     );
   };

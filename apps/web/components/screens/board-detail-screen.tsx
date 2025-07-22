@@ -118,11 +118,6 @@ function BoardDetailScreen({
   // 選択モード切り替え（統合）
   const handleSelectionModeChange = useCallback((mode: "select" | "check") => {
     setSelectionMode(mode);
-    // selectモードに戻る時のみクリア
-    if (mode === "select") {
-      setCheckedMemos(new Set());
-      setCheckedTasks(new Set());
-    }
   }, []);
 
 

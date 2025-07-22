@@ -76,7 +76,12 @@ export function useSelectAll<T extends { id: number }, D extends { id: number }>
           const filteredItemIds = domOrder.filter(id => 
             filteredItems.some(item => item.id === id)
           );
-          setCheckedItems(new Set(filteredItemIds));
+          // 既存の選択状態を保持して追加
+          setCheckedItems(prev => {
+            const newSet = new Set(prev);
+            filteredItemIds.forEach(id => newSet.add(id));
+            return newSet;
+          });
           // console.log('📋 タスク全選択 DOM順序:', { domOrder: filteredItemIds });
         } else if (currentMode === "memo") {
           // メモの場合：DOM順序を取得してフィルタ
@@ -84,13 +89,23 @@ export function useSelectAll<T extends { id: number }, D extends { id: number }>
           const filteredItemIds = domOrder.filter(id => 
             filteredItems.some(item => item.id === id)
           );
-          setCheckedItems(new Set(filteredItemIds));
+          // 既存の選択状態を保持して追加
+          setCheckedItems(prev => {
+            const newSet = new Set(prev);
+            filteredItemIds.forEach(id => newSet.add(id));
+            return newSet;
+          });
           // console.log('📋 メモ全選択 DOM順序:', { domOrder: filteredItemIds });
         } else {
           // フォールバック：従来の方法
-          const allItemIds = new Set(filteredItems.map(item => item.id));
-          setCheckedItems(allItemIds);
-          // console.log('📋 全選択 データ順序（フォールバック）:', { dataOrder: Array.from(allItemIds) });
+          const allItemIds = filteredItems.map(item => item.id);
+          // 既存の選択状態を保持して追加
+          setCheckedItems(prev => {
+            const newSet = new Set(prev);
+            allItemIds.forEach(id => newSet.add(id));
+            return newSet;
+          });
+          // console.log('📋 全選択 データ順序（フォールバック）:', { dataOrder: allItemIds });
         }
       }
     }

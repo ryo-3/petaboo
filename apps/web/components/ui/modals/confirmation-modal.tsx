@@ -12,7 +12,7 @@ interface ConfirmationModalProps {
   onClose: () => void
   onConfirm: () => void
   title: string
-  message: string
+  message: string | ReactNode
   confirmText?: string
   cancelText?: string
   isLoading?: boolean
@@ -27,7 +27,7 @@ export function useBulkDelete() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [targetIds, setTargetIds] = useState<number[]>([])
   const [isDeleting, setIsDeleting] = useState(false)
-  const [customMessage, setCustomMessage] = useState<string | undefined>(undefined)
+  const [customMessage, setCustomMessage] = useState<string | ReactNode | undefined>(undefined)
   const [isPartialDelete, setIsPartialDelete] = useState(false)
   const [deleteCallback, setDeleteCallback] = useState<((ids: number[], isPartialDelete?: boolean) => Promise<void>) | null>(null)
 
@@ -35,7 +35,7 @@ export function useBulkDelete() {
     ids: number[], 
     threshold: number = 10, 
     deleteCallback: (ids: number[], isPartialDelete?: boolean) => Promise<void>,
-    message?: string,
+    message?: string | ReactNode,
     isPartialDeleteParam?: boolean
   ) => {
     if (ids.length === 0) return
@@ -190,9 +190,13 @@ function ConfirmationModal({
         
         {/* メッセージ */}
         <div className="mb-6">
-          <p className="text-sm text-gray-600 whitespace-pre-line">
-            {message}
-          </p>
+          {typeof message === 'string' ? (
+            <p className="text-sm text-gray-600 whitespace-pre-line">
+              {message}
+            </p>
+          ) : (
+            <div>{message}</div>
+          )}
           {/* 削除処理中のタブ切り替え注意書き */}
           {(icon === 'trash' || variant === 'danger') && (
             <p className="text-xs text-gray-500 mt-2">

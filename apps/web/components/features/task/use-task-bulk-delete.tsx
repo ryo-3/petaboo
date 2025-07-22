@@ -153,15 +153,101 @@ export function useTasksBulkDelete({
     })
   }
 
+  // ステータス別カウントを取得する関数
+  const getStatusBreakdown = (taskIds: number[]) => {
+    if (activeTab === "deleted") {
+      return [{ status: 'deleted', label: '削除済み', count: taskIds.length, color: 'bg-red-600' }];
+    }
+    
+    const allTasks = tasks || [];
+    const selectedTasks = allTasks.filter(task => taskIds.includes(task.id));
+    
+    const todoCount = selectedTasks.filter(task => task.status === 'todo').length;
+    const inProgressCount = selectedTasks.filter(task => task.status === 'in_progress').length;
+    const completedCount = selectedTasks.filter(task => task.status === 'completed').length;
+    
+    const breakdown = [];
+    if (todoCount > 0) breakdown.push({ status: 'todo', label: '未着手', count: todoCount, color: 'bg-zinc-400' });
+    if (inProgressCount > 0) breakdown.push({ status: 'in_progress', label: '進行中', count: inProgressCount, color: 'bg-Blue' });
+    if (completedCount > 0) breakdown.push({ status: 'completed', label: '完了', count: completedCount, color: 'bg-Green' });
+    
+    return breakdown;
+  };
+
+  // カスタムメッセージコンポーネント
+  const TaskDeleteMessage = ({ taskIds, currentTabTaskIds }: { taskIds: number[]; currentTabTaskIds: number[] }) => {
+    const allStatusBreakdown = getStatusBreakdown(taskIds);
+    const currentTabStatusBreakdown = getStatusBreakdown(currentTabTaskIds);
+    const isLimited = currentTabTaskIds.length > 100;
+    const hasOtherTabItems = taskIds.length > currentTabTaskIds.length;
+    
+    const getTabLabel = (tab: string) => {
+      switch (tab) {
+        case 'todo': return '未着手';
+        case 'in_progress': return '進行中';
+        case 'completed': return '完了';
+        case 'deleted': return '削除済み';
+        default: return tab;
+      }
+    };
+    
+    return (
+      <div className="text-center">
+        {hasOtherTabItems && (
+          <>
+            <p className="text-sm text-amber-600 mb-3 font-medium">
+              削除されるのは現在のタブのアイテムのみです
+            </p>
+            
+            <div className="w-32 mx-auto space-y-2 mb-4">
+              {currentTabStatusBreakdown.map((item) => (
+                <div key={item.status} className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2.5 h-2.5 rounded-full ${item.color}`}></div>
+                    <span className="text-sm text-gray-700">{item.label}</span>
+                  </div>
+                  <span className="text-sm text-gray-700">{item.count}件</span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+        
+        {!hasOtherTabItems && (
+          <div className="w-32 mx-auto space-y-2 mb-4 pt-1">
+            {allStatusBreakdown.map((item) => (
+              <div key={item.status} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className={`w-2.5 h-2.5 rounded-full ${item.color}`}></div>
+                  <span className="text-sm text-gray-700">{item.label}</span>
+                </div>
+                <span className="text-sm text-gray-700">{item.count}件</span>
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {isLimited && (
+          <p className="text-sm text-gray-600">
+            一度に削除できる上限は100件です。
+          </p>
+        )}
+      </div>
+    );
+  };
+
   const handleBulkDelete = async () => {
     const rawTargetIds = activeTab === "deleted" 
       ? Array.from(checkedDeletedTasks)
       : Array.from(checkedTasks)
 
-    // DOM順序でソート（個別チェック変更でSet順序が崩れるため）
+    // 現在のタブに表示されているタスクのIDのみを抽出
     const { getTaskDisplayOrder } = await import('@/src/utils/domUtils');
     const domOrder = getTaskDisplayOrder();
-    const targetIds = rawTargetIds.sort((a, b) => {
+    const currentTabTaskIds = rawTargetIds.filter(id => domOrder.includes(id));
+    
+    // DOM順序でソート
+    const targetIds = currentTabTaskIds.sort((a, b) => {
       const aIndex = domOrder.indexOf(a);
       const bIndex = domOrder.indexOf(b);
       if (aIndex === -1) return 1;
@@ -194,14 +280,19 @@ export function useTasksBulkDelete({
         async (ids: number[], isPartialDelete = false) => {
           await executeDeleteWithAnimation(ids, isPartialDelete, targetIds.length);
         },
-        `${targetIds.length}件選択されています。\n一度に削除できる上限は100件です。`,
+        <TaskDeleteMessage taskIds={rawTargetIds} currentTabTaskIds={targetIds} />,
         true // isPartialDelete
       )
     } else {
       // 通常の確認モーダル
-      await bulkDelete.confirmBulkDelete(actualTargetIds, threshold, async (ids: number[]) => {
-        await executeDeleteWithAnimation(ids);
-      })
+      await bulkDelete.confirmBulkDelete(
+        actualTargetIds, 
+        threshold, 
+        async (ids: number[]) => {
+          await executeDeleteWithAnimation(ids);
+        },
+        <TaskDeleteMessage taskIds={rawTargetIds} currentTabTaskIds={targetIds} />
+      )
     }
   }
 
@@ -224,8 +315,23 @@ export function useTasksBulkDelete({
     />
   )
 
-  // 現在の削除カウント（通常時は実際のサイズ、削除中はアニメーション用）
-  const currentDeleteCount = activeTab === "deleted" ? checkedDeletedTasks.size : checkedTasks.size
+  // 現在のタブで削除対象となるタスクの数を計算
+  const getCurrentTabDeleteCount = () => {
+    if (activeTab === "deleted") {
+      return checkedDeletedTasks.size;
+    }
+    
+    // 通常タブの場合、現在表示されているタスクのうち選択されているもののみカウント
+    const allTasks = tasks || [];
+    const currentTabTasks = allTasks.filter(task => task.status === activeTab);
+    const currentTabTaskIds = currentTabTasks.map(task => task.id);
+    const selectedCurrentTabTasks = Array.from(checkedTasks).filter(id => currentTabTaskIds.includes(id));
+    
+    return selectedCurrentTabTasks.length;
+  };
+
+  // 現在の削除カウント（通常時は現在のタブの件数、削除中はアニメーション用）
+  const currentDeleteCount = getCurrentTabDeleteCount();
   const finalDisplayCount = bulkAnimation.isCountingActive
     ? bulkAnimation.displayCount
     : currentDeleteCount

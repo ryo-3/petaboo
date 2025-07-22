@@ -23,7 +23,7 @@ async function getCachedToken(getToken: () => Promise<string | null>): Promise<s
   
   if (token) {
     cachedToken = token;
-    tokenExpiry = now + (60 * 1000); // 1分後に期限切れ（短めに設定）
+    tokenExpiry = now + (30 * 60 * 1000); // 30分後に期限切れ
   }
   
   return token;
@@ -38,24 +38,37 @@ export function useBoards(status: "normal" | "completed" | "deleted" = "normal")
   return useQuery<BoardWithStats[]>({
     queryKey: ["boards", status],
     queryFn: async () => {
-      const token = await getCachedToken(getToken);
-      
-      const response = await fetch(`${API_BASE_URL}/boards?status=${status}`, {
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
-      
-      if (!response.ok) {
-        console.error(`❌ useBoards失敗: ${response.status} ${response.statusText}`);
-        const error: ApiError = new Error(`Failed to fetch boards: ${response.status} ${response.statusText}`);
-        error.status = response.status;
-        throw error;
-      }
+      // 最大2回リトライ
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const token = await getCachedToken(getToken);
+        
+        const response = await fetch(`${API_BASE_URL}/boards?status=${status}`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        });
+        
+        // 401エラーの場合はキャッシュをクリアしてリトライ
+        if (response.status === 401 && attempt === 0) {
+          console.log('🔄 Token expired, clearing cache and retrying...');
+          cachedToken = null;
+          tokenExpiry = 0;
+          continue;
+        }
+        
+        if (!response.ok) {
+          console.error(`❌ useBoards失敗: ${response.status} ${response.statusText}`);
+          const error: ApiError = new Error(`Failed to fetch boards: ${response.status} ${response.statusText}`);
+          error.status = response.status;
+          throw error;
+        }
 
-      const data = await response.json();
-      return data;
+        const data = await response.json();
+        return data;
+      }
+      
+      throw new Error('Failed after retry');
     },
   });
 }

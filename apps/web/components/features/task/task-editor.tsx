@@ -55,6 +55,17 @@ function TaskEditor({
     onDeleteAndSelectNext,
   });
 
+  // 削除ボタンのハンドラー（ボード紐づきチェック付き）
+  const handleDeleteClick = () => {
+    if (itemBoards && itemBoards.length > 0) {
+      // ボードに紐づいている場合はモーダル表示
+      showDeleteConfirmation();
+    } else {
+      // ボードに紐づいていない場合も同様にモーダル表示
+      showDeleteConfirmation();
+    }
+  };
+
   const [title, setTitle] = useState(task?.title || "");
   const [description, setDescription] = useState(task?.description || "");
   const [status, setStatus] = useState<"todo" | "in_progress" | "completed">(
@@ -399,7 +410,7 @@ function TaskEditor({
           dueDate={dueDate}
           onDueDateChange={setDueDate}
           onSave={handleSave}
-          onDelete={showDeleteConfirmation}
+          onDelete={handleDeleteClick}
           isLidOpen={isLidOpen}
           isSaving={isSaving}
           hasChanges={canSave}
@@ -418,11 +429,27 @@ function TaskEditor({
           isOpen={showDeleteModal}
           onClose={hideDeleteConfirmation}
           onConfirm={handleDelete}
-          itemTitle={task?.title || ""}
           itemType="task"
           deleteType="normal"
           isLoading={isDeleting}
-          position="right-panel"
+          position="center"
+          customMessage={
+            itemBoards && itemBoards.length > 0 ? (
+              <div className="text-gray-700">
+                このタスクは以下のボードに紐づいています
+                <ul className="mt-2 space-y-1">
+                  {itemBoards.map(board => (
+                    <li key={board.id} className="text-gray-700">
+                      • {board.name}
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-3 text-sm text-gray-600">
+                  削除するとボードからも削除されます
+                </div>
+              </div>
+            ) : undefined
+          }
         />
       )}
 

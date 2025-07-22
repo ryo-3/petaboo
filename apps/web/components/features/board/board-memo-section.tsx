@@ -184,7 +184,7 @@ export default function BoardMemoSection({
       </div>
 
       <div className="flex-1 overflow-y-auto pr-1 pb-10 mb-2">
-        {isLoading || (allMemoItems.length === 0 && memoItems.length === 0) ? (
+        {isLoading ? (
           <div className="text-gray-500 text-center py-8">
             メモを読み込み中...
           </div>

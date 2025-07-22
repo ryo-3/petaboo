@@ -7,6 +7,7 @@ import TrashIcon from "@/components/icons/trash-icon";
 import BoardIconSelector from "@/components/ui/selectors/board-icon-selector";
 import Tooltip from "@/components/ui/base/tooltip";
 import BoardChangeModal from "@/components/ui/modals/board-change-modal";
+import { SingleDeleteConfirmation } from "@/components/ui/modals/confirmation-modal";
 import { useBoards, useItemBoards } from "@/src/hooks/use-boards";
 import { useSimpleMemoSave } from "@/src/hooks/use-simple-memo-save";
 import type { Memo } from "@/src/types/memo";
@@ -57,6 +58,7 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, i
   const [error] = useState<string | null>(null);
   const [isTrashHovered, setIsTrashHovered] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   // BoardIconSelector用のボードオプション
   const boardOptions = useMemo(() => {
@@ -134,6 +136,23 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, i
     return board?.name || `ボード${boardId}`;
   };
 
+  // 削除ボタンのハンドラー（ボード紐づきチェック付き）
+  const handleDeleteClick = () => {
+    if (itemBoards && itemBoards.length > 0) {
+      // ボードに紐づいている場合はモーダル表示
+      setShowDeleteModal(true);
+    } else {
+      // ボードに紐づいていない場合は直接削除
+      onDelete?.();
+    }
+  };
+
+  // モーダルでの削除確定
+  const handleConfirmDelete = () => {
+    setShowDeleteModal(false);
+    onDelete?.();
+  };
+
   return (
     <>
       <div ref={baseViewerRef} data-memo-editor className="flex flex-col h-full">
@@ -180,7 +199,7 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, i
               {memo && onDelete && (
                 <Tooltip text="削除" position="top">
                   <button
-                    onClick={onDelete}
+                    onClick={handleDeleteClick}
                     onMouseEnter={() => setIsTrashHovered(true)}
                     onMouseLeave={() => setIsTrashHovered(false)}
                     className={`flex items-center justify-center size-7 rounded-md transition-colors duration-200 ${
@@ -216,6 +235,30 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, i
           onConfirm={handleConfirmBoardChange}
           boardsToAdd={pendingBoardChanges.boardsToAdd.map(getBoardName)}
           boardsToRemove={pendingBoardChanges.boardsToRemove.map(getBoardName)}
+          parentElement={baseViewerRef.current}
+        />
+      )}
+      {baseViewerRef.current && (
+        <SingleDeleteConfirmation
+          isOpen={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={handleConfirmDelete}
+          itemType="memo"
+          customMessage={
+            <div className="text-gray-700">
+              このメモは以下のボードに紐づいています
+              <ul className="mt-2 space-y-1">
+                {itemBoards.map(board => (
+                  <li key={board.id} className="text-gray-700">
+                    • {board.name}
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-3 text-sm text-gray-600">
+                削除するとボードからも削除されます
+              </div>
+            </div>
+          }
           parentElement={baseViewerRef.current}
         />
       )}

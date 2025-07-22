@@ -20,6 +20,7 @@ interface ConfirmationModalProps {
   icon?: IconType
   customIcon?: ReactNode
   position?: 'center' | 'right-panel'
+  parentElement?: HTMLElement
 }
 
 // 一括削除用のカスタムhook
@@ -107,7 +108,8 @@ function ConfirmationModal({
   variant = 'primary',
   icon = 'info',
   customIcon,
-  position = 'center'
+  position = 'center',
+  parentElement
 }: ConfirmationModalProps) {
   
   const variantStyles = {
@@ -176,7 +178,7 @@ function ConfirmationModal({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} maxWidth="sm" position={position}>
+    <Modal isOpen={isOpen} onClose={onClose} maxWidth="sm" position={position} parentElement={parentElement}>
       <div className="text-center">
         {/* アイコン */}
         <div className={`mx-auto flex items-center justify-center h-12 w-12 rounded-full ${styles.iconBg} mb-4`}>
@@ -197,8 +199,8 @@ function ConfirmationModal({
           ) : (
             <div>{message}</div>
           )}
-          {/* 削除処理中のタブ切り替え注意書き */}
-          {(icon === 'trash' || variant === 'danger') && (
+          {/* 削除処理中のタブ切り替え注意書き（customMessageが含まれていない場合のみ表示） */}
+          {(icon === 'trash' || variant === 'danger') && typeof message === 'string' && (
             <p className="text-xs text-gray-500 mt-2">
               ※削除中にタブを切り替えると処理が中断されます
             </p>
@@ -290,11 +292,13 @@ interface SingleDeleteConfirmationProps {
   isOpen: boolean
   onClose: () => void
   onConfirm: () => void
-  itemTitle: string
+  itemTitle?: string
   itemType: 'memo' | 'task'
-  deleteType: 'normal' | 'permanent'
+  deleteType?: 'normal' | 'permanent'
   isLoading?: boolean
   position?: 'center' | 'right-panel'
+  customMessage?: string | ReactNode
+  parentElement?: HTMLElement
 }
 
 export function SingleDeleteConfirmation({
@@ -303,16 +307,28 @@ export function SingleDeleteConfirmation({
   onConfirm,
   itemTitle,
   itemType,
-  deleteType,
+  deleteType = 'normal',
   isLoading = false,
-  position = 'center'
+  position = 'center',
+  customMessage,
+  parentElement
 }: SingleDeleteConfirmationProps) {
   const itemTypeName = itemType === 'memo' ? 'メモ' : 'タスク'
   
   const title = `${itemTypeName}削除の確認`
-  const message = deleteType === 'normal'
-    ? `「${itemTitle}」を削除しますか？\n（ゴミ箱に移動されます）`
-    : `「${itemTitle}」を完全に削除しますか？\n（復元できません）`
+  let message: string | ReactNode
+  
+  if (customMessage) {
+    message = customMessage
+  } else if (itemTitle) {
+    message = deleteType === 'normal'
+      ? `「${itemTitle}」を削除しますか？\n（ゴミ箱に移動されます）`
+      : `「${itemTitle}」を完全に削除しますか？\n（復元できません）`
+  } else {
+    message = deleteType === 'normal'
+      ? `${itemTypeName}を削除しますか？\n（ゴミ箱に移動されます）`
+      : `${itemTypeName}を完全に削除しますか？\n（復元できません）`
+  }
 
   return (
     <ConfirmationModal
@@ -327,6 +343,7 @@ export function SingleDeleteConfirmation({
       icon="trash"
       isLoading={isLoading}
       position={position}
+      parentElement={parentElement}
     />
   )
 }

@@ -9,9 +9,10 @@ interface ModalProps {
   children: React.ReactNode
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl'
   position?: 'center' | 'right-panel' | 'left-panel'
+  parentElement?: HTMLElement
 }
 
-function Modal({ isOpen, onClose, title, children, maxWidth = 'md', position = 'center' }: ModalProps) {
+function Modal({ isOpen, onClose, title, children, maxWidth = 'md', position = 'center', parentElement }: ModalProps) {
   // ESCキーでモーダルを閉じる
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {

@@ -8,6 +8,7 @@ import { useAuth } from "@clerk/nextjs";
 import { notesApi } from "@/src/lib/api-client";
 import { useBulkAnimation } from "@/src/hooks/use-bulk-animation";
 import { executeWithAnimation } from "@/src/utils/bulkAnimationUtils";
+import { DeletionWarningMessage } from "@/components/ui/modals/deletion-warning-message";
 
 interface UseMemosBulkDeleteProps {
   activeTab: "normal" | "deleted";
@@ -185,16 +186,50 @@ export function useMemosBulkDelete({
     });
   };
 
+  // ステータス別カウントを取得する関数（メモ版）
+  const getStatusBreakdown = (memoIds: number[]) => {
+    if (activeTab === "deleted") {
+      return [{ status: 'deleted', label: '削除済み', count: memoIds.length, color: 'bg-red-600' }];
+    }
+    
+    // メモは全て通常メモとして扱う
+    return [{ status: 'normal', label: '通常', count: memoIds.length, color: 'bg-gray-400' }];
+  };
+
+  // カスタムメッセージコンポーネント（メモ版）
+  const MemoDeleteMessage = ({ memoIds, currentTabMemoIds }: { memoIds: number[]; currentTabMemoIds: number[] }) => {
+    const allStatusBreakdown = getStatusBreakdown(memoIds);
+    const currentTabStatusBreakdown = getStatusBreakdown(currentTabMemoIds);
+    const isLimited = currentTabMemoIds.length > 100;
+    
+    // 他のタブにも選択アイテムがあるかチェック（削除済みタブの場合は通常タブをチェック）
+    const hasOtherTabItems = activeTab === "deleted" 
+      ? checkedMemos.size > 0 
+      : memoIds.length > currentTabMemoIds.length;
+    
+    return (
+      <DeletionWarningMessage
+        hasOtherTabItems={hasOtherTabItems}
+        isLimited={isLimited}
+        statusBreakdown={hasOtherTabItems ? currentTabStatusBreakdown : allStatusBreakdown}
+        showStatusBreakdown={true}
+      />
+    );
+  };
+
   const handleBulkDelete = async () => {
     const rawTargetIds =
       activeTab === "deleted"
         ? Array.from(checkedDeletedMemos)
         : Array.from(checkedMemos);
 
-    // DOM順序でソート（個別チェック変更でSet順序が崩れるため）
+    // 現在のタブに表示されているメモのIDのみを抽出
     const { getMemoDisplayOrder } = await import('@/src/utils/domUtils');
     const domOrder = getMemoDisplayOrder();
-    const targetIds = rawTargetIds.sort((a, b) => {
+    const currentTabMemoIds = rawTargetIds.filter(id => domOrder.includes(id));
+    
+    // DOM順序でソート
+    const targetIds = currentTabMemoIds.sort((a, b) => {
       const aIndex = domOrder.indexOf(a);
       const bIndex = domOrder.indexOf(b);
       if (aIndex === -1) return 1;
@@ -228,7 +263,7 @@ export function useMemosBulkDelete({
         async (ids: number[], isPartialDelete = false) => {
           await executeDeleteWithAnimation(ids, isPartialDelete, targetIds.length);
         },
-        `${targetIds.length}件選択されています。\n一度に削除できる上限は100件です。`,
+        <MemoDeleteMessage memoIds={rawTargetIds} currentTabMemoIds={targetIds} />,
         true // isPartialDelete
       );
     } else {
@@ -238,7 +273,8 @@ export function useMemosBulkDelete({
         threshold,
         async (ids: number[]) => {
           await executeDeleteWithAnimation(ids);
-        }
+        },
+        <MemoDeleteMessage memoIds={rawTargetIds} currentTabMemoIds={targetIds} />
       );
     }
   };

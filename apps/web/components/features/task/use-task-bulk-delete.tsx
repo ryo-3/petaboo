@@ -8,6 +8,7 @@ import { useAuth } from '@clerk/nextjs'
 import { tasksApi } from '@/src/lib/api-client'
 import { useBulkAnimation } from '@/src/hooks/use-bulk-animation'
 import { executeWithAnimation } from '@/src/utils/bulkAnimationUtils'
+import { DeletionWarningMessage } from '@/components/ui/modals/deletion-warning-message'
 
 interface UseTasksBulkDeleteProps {
   activeTab: 'todo' | 'in_progress' | 'completed' | 'deleted'
@@ -185,58 +186,13 @@ export function useTasksBulkDelete({
       ? checkedTasks.size > 0 
       : taskIds.length > currentTabTaskIds.length;
     
-    const getTabLabel = (tab: string) => {
-      switch (tab) {
-        case 'todo': return '未着手';
-        case 'in_progress': return '進行中';
-        case 'completed': return '完了';
-        case 'deleted': return '削除済み';
-        default: return tab;
-      }
-    };
-    
     return (
-      <div className="text-center">
-        {hasOtherTabItems && (
-          <>
-            <p className="text-sm text-amber-600 mb-3 font-medium">
-              削除されるのは現在のタブアイテムのみです
-            </p>
-            
-            <div className="w-32 mx-auto space-y-2 mb-4">
-              {currentTabStatusBreakdown.map((item) => (
-                <div key={item.status} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-2.5 h-2.5 rounded-full ${item.color}`}></div>
-                    <span className="text-sm text-gray-700">{item.label}</span>
-                  </div>
-                  <span className="text-sm text-gray-700">{item.count}件</span>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-        
-        {!hasOtherTabItems && (
-          <div className="w-32 mx-auto space-y-2 mb-4 pt-1">
-            {allStatusBreakdown.map((item) => (
-              <div key={item.status} className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className={`w-2.5 h-2.5 rounded-full ${item.color}`}></div>
-                  <span className="text-sm text-gray-700">{item.label}</span>
-                </div>
-                <span className="text-sm text-gray-700">{item.count}件</span>
-              </div>
-            ))}
-          </div>
-        )}
-        
-        {isLimited && (
-          <p className="text-sm text-gray-600">
-            一度に削除できる上限は100件です。
-          </p>
-        )}
-      </div>
+      <DeletionWarningMessage
+        hasOtherTabItems={hasOtherTabItems}
+        isLimited={isLimited}
+        statusBreakdown={hasOtherTabItems ? currentTabStatusBreakdown : allStatusBreakdown}
+        showStatusBreakdown={true}
+      />
     );
   };
 

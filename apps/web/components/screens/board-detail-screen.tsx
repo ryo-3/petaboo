@@ -575,45 +575,6 @@ function BoardDetailScreen({
         </div>
       </div>
 
-      {/* 一括操作ボタン - メモ用 */}
-      {checkedMemos.size > 0 && (
-        <div className="fixed bottom-4 right-6 z-50">
-          <BulkActionButtons
-            showDeleteButton={true}
-            deleteButtonCount={checkedMemos.size}
-            onDelete={() => {
-              // TODO: 一括削除の実装
-              console.log("一括削除: メモ", Array.from(checkedMemos));
-            }}
-            deleteButtonRef={{current: null}}
-            isDeleting={false}
-            showRestoreButton={false}
-            restoreCount={0}
-            onRestore={() => {}}
-            isRestoring={false}
-          />
-        </div>
-      )}
-      
-      {/* 一括操作ボタン - タスク用 */}
-      {checkedTasks.size > 0 && (
-        <div className="fixed bottom-4 right-20 z-50">
-          <BulkActionButtons
-            showDeleteButton={true}
-            deleteButtonCount={checkedTasks.size}
-            onDelete={() => {
-              // TODO: 一括削除の実装
-              console.log("一括削除: タスク", Array.from(checkedTasks));
-            }}
-            deleteButtonRef={{current: null}}
-            isDeleting={false}
-            showRestoreButton={false}
-            restoreCount={0}
-            onRestore={() => {}}
-            isRestoring={false}
-          />
-        </div>
-      )}
 
       {/* 右側：詳細表示 */}
       <BoardRightPanel

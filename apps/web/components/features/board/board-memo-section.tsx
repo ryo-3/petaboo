@@ -39,6 +39,9 @@ interface BoardMemoSectionProps {
   isAllSelected?: boolean;
 }
 
+import { useRef } from 'react';
+import { BulkActionButtons } from "@/components/ui/layout/bulk-action-buttons";
+
 export default function BoardMemoSection({
   rightPanelMode,
   showMemo,
@@ -66,13 +69,14 @@ export default function BoardMemoSection({
 }: BoardMemoSectionProps) {
   // ソートオプションの管理
   const { setSortOptions, getVisibleSortOptions } = useSortOptions("memo");
+  const deleteButtonRef = useRef<HTMLButtonElement | null>(null);
 
   if (rightPanelMode === "task-list" || !showMemo) {
     return null;
   }
 
   return (
-    <div className="flex flex-col flex-1 min-h-0">
+    <div className="flex flex-col flex-1 min-h-0 relative">
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-1">
@@ -210,6 +214,24 @@ export default function BoardMemoSection({
           />
         )}
       </div>
+
+      {/* 一括削除ボタン - メモ用 */}
+      {checkedMemos.size > 0 && (
+        <BulkActionButtons
+          showDeleteButton={true}
+          deleteButtonCount={checkedMemos.size}
+          onDelete={() => {
+            // TODO: 一括削除の実装
+            console.log("一括削除: メモ", Array.from(checkedMemos));
+          }}
+          deleteButtonRef={deleteButtonRef}
+          isDeleting={false}
+          showRestoreButton={false}
+          restoreCount={0}
+          onRestore={() => {}}
+          isRestoring={false}
+        />
+      )}
     </div>
   );
 }

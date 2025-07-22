@@ -311,6 +311,33 @@ export function useRestoreDeletedBoard() {
   });
 }
 
+// ボード完全削除
+export function usePermanentDeleteBoard() {
+  const queryClient = useQueryClient();
+  const { getToken } = useAuth();
+
+  return useMutation<void, Error, number>({
+    mutationFn: async (id) => {
+      const token = await getCachedToken(getToken);
+      const response = await fetch(`${API_BASE_URL}/boards/${id}/permanent`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to permanently delete board");
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
+    },
+  });
+}
+
 // ボードにアイテム追加
 export function useAddItemToBoard() {
   const queryClient = useQueryClient();

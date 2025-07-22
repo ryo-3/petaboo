@@ -9,6 +9,7 @@ interface BoardListProps {
   showCreateForm?: boolean;
   onCreateFormClose?: () => void;
   activeTab?: "normal" | "completed" | "deleted";
+  onPermanentDeleteBoard?: (boardId: number) => void;
 }
 
 export default function BoardList({
@@ -16,6 +17,7 @@ export default function BoardList({
   showCreateForm: externalShowCreateForm,
   onCreateFormClose,
   activeTab = "normal",
+  onPermanentDeleteBoard,
 }: BoardListProps) {
   const [internalShowCreateForm, setInternalShowCreateForm] = useState(false);
   const showCreateForm = externalShowCreateForm ?? internalShowCreateForm;
@@ -128,6 +130,7 @@ export default function BoardList({
               board={board}
               onSelect={() => onBoardSelect?.(board)}
               mode={activeTab}
+              onPermanentDelete={activeTab === "deleted" ? onPermanentDeleteBoard : undefined}
             />
           ))}
         </div>

@@ -256,24 +256,32 @@ export function useTasksBulkDelete({
     }
   }
 
-  const DeleteModal = () => (
-    <BulkDeleteConfirmation
-      isOpen={bulkDelete.isModalOpen}
-      onClose={() => {
-        bulkAnimation.handleModalCancel(setIsDeleting, setIsLidOpen)
-        bulkDelete.handleCancel()
-      }}
-      onConfirm={async () => {
-        // console.log('Confirm modal')
-        await bulkDelete.handleConfirm()
-      }}
-      count={bulkDelete.targetIds.length}
-      itemType="task"
-      deleteType={activeTab === "deleted" ? "permanent" : "normal"}
-      isLoading={bulkDelete.isDeleting}
-      customMessage={bulkDelete.customMessage}
-    />
-  )
+  const DeleteModal = () => {
+    const customTitle = activeTab === "deleted" 
+      ? "タスクの完全削除" 
+      : "タスクを削除";
+    
+    
+    return (
+      <BulkDeleteConfirmation
+        isOpen={bulkDelete.isModalOpen}
+        onClose={() => {
+          bulkAnimation.handleModalCancel(setIsDeleting, setIsLidOpen)
+          bulkDelete.handleCancel()
+        }}
+        onConfirm={async () => {
+          // console.log('Confirm modal')
+          await bulkDelete.handleConfirm()
+        }}
+        count={bulkDelete.targetIds.length}
+        itemType="task"
+        deleteType={activeTab === "deleted" ? "permanent" : "normal"}
+        isLoading={bulkDelete.isDeleting}
+        customMessage={bulkDelete.customMessage}
+        customTitle={customTitle}
+      />
+    );
+  };
 
   // 現在のタブで削除対象となるタスクの数を計算
   const getCurrentTabDeleteCount = () => {

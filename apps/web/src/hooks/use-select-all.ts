@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { getTaskDisplayOrder, getMemoDisplayOrder } from '@/src/utils/domUtils';
 
 interface UseSelectAllConfig<T extends { id: number }, D extends { id: number }> {
@@ -8,8 +8,8 @@ interface UseSelectAllConfig<T extends { id: number }, D extends { id: number }>
   deletedItems: D[] | null;
   checkedItems: Set<number>;
   checkedDeletedItems: Set<number>;
-  setCheckedItems: (items: Set<number>) => void;
-  setCheckedDeletedItems: (items: Set<number>) => void;
+  setCheckedItems: React.Dispatch<React.SetStateAction<Set<number>>>;
+  setCheckedDeletedItems: React.Dispatch<React.SetStateAction<Set<number>>>;
   filterFn?: (item: T, activeTab: string) => boolean; // タスクのステータスフィルタ用
   currentMode?: "memo" | "task"; // DOM順序取得用
 }

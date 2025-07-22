@@ -144,7 +144,7 @@ export function useTasksBulkRestore({
       count={bulkRestore.targetIds.length}
       itemType="task"
       isLoading={bulkRestore.isDeleting}
-      customMessage={bulkRestore.customMessage}
+      customMessage={bulkRestore.customMessage as string}
     />
   )
 

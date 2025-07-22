@@ -4,7 +4,7 @@ import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useRouter } from "next/navigation";
 import BoardList from "@/components/features/board/board-list";
 import DesktopUpper from "@/components/layout/desktop-upper";
-import { useBoards } from "@/src/hooks/use-boards";
+import { useBoards, usePermanentDeleteBoard } from "@/src/hooks/use-boards";
 
 export interface BoardScreenRef {
   triggerCreateNew: () => void;
@@ -23,6 +23,9 @@ const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(({ onBoardSelec
   const { data: normalBoards } = useBoards("normal");
   const { data: completedBoards } = useBoards("completed");
   const { data: deletedBoards } = useBoards("deleted");
+  
+  // 完全削除フック
+  const permanentDeleteBoard = usePermanentDeleteBoard();
 
   // ページタイトル設定（デフォルト）
   useEffect(() => {
@@ -41,6 +44,14 @@ const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(({ onBoardSelec
     onBoardSelect?.(board);
     // 遷移前にローディング状態を示す
     router.push(`/boards/${board.slug}`);
+  };
+
+  const handlePermanentDeleteBoard = async (boardId: number) => {
+    try {
+      await permanentDeleteBoard.mutateAsync(boardId);
+    } catch (error) {
+      console.error('Failed to permanently delete board:', error);
+    }
   };
 
   useImperativeHandle(ref, () => ({
@@ -70,6 +81,7 @@ const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(({ onBoardSelec
           showCreateForm={showCreateForm}
           onCreateFormClose={() => setShowCreateForm(false)}
           activeTab={activeTab}
+          onPermanentDeleteBoard={handlePermanentDeleteBoard}
         />
       </div>
     </div>

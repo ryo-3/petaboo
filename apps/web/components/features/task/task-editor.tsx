@@ -368,6 +368,7 @@ function TaskEditor({
     removeItemFromBoard,
     selectedBoardIds,
     itemBoards,
+    isSaving,
   ]);
 
   // Ctrl+Sショートカット（変更がある場合のみ実行）

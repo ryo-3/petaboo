@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import type { UserPreferences } from '@/src/contexts/user-preferences-context'
 
 interface UseScreenStateConfig {
@@ -24,9 +24,9 @@ interface ScreenStateReturn<T extends string> {
   
   // Selection state
   checkedItems: Set<number>
-  setCheckedItems: (items: Set<number>) => void
+  setCheckedItems: React.Dispatch<React.SetStateAction<Set<number>>>
   checkedDeletedItems: Set<number>
-  setCheckedDeletedItems: (items: Set<number>) => void
+  setCheckedDeletedItems: React.Dispatch<React.SetStateAction<Set<number>>>
   
   // Computed values
   effectiveColumnCount: number

@@ -16,7 +16,6 @@ import { Memo } from "@/src/types/memo";
 import { Task } from "@/src/types/task";
 import { memo, useCallback, useEffect, useState } from "react";
 import BoardHeader from "@/components/features/board/board-header";
-import { BulkActionButtons } from "@/components/ui/layout/bulk-action-buttons";
 import { useBulkDelete, BulkDeleteConfirmation } from "@/components/ui/modals";
 import { DeletionWarningMessage } from "@/components/ui/modals/deletion-warning-message";
 
@@ -363,29 +362,9 @@ function BoardDetailScreen({
   const normalMemoCount = allMemoItems.length;
   const deletedMemoCount = boardDeletedItems?.memos?.length || 0; // 削除済みメモの件数
 
-  // 全選択/全解除機能（統合）
-  const handleSelectAll = useCallback(() => {
-    const currentMemoIds = memoItems.map(item => (item.content as Memo).id);
-    const currentTaskIds = taskItems.map(item => (item.content as Task).id);
-    
-    // すべて選択されているかチェック
-    const allMemosSelected = currentMemoIds.length > 0 && checkedMemos.size === currentMemoIds.length;
-    const allTasksSelected = currentTaskIds.length > 0 && checkedTasks.size === currentTaskIds.length;
-    const allSelected = allMemosSelected && allTasksSelected;
-    
-    if (allSelected) {
-      // 全解除
-      setCheckedMemos(new Set());
-      setCheckedTasks(new Set());
-    } else {
-      // 全選択
-      setCheckedMemos(new Set(currentMemoIds));
-      setCheckedTasks(new Set(currentTaskIds));
-    }
-  }, [memoItems, taskItems, checkedMemos.size, checkedTasks.size]);
 
   const handleMemoSelectAll = useCallback(() => {
-    const currentMemoIds = memoItems.map(item => (item.content as Memo).id);
+    const currentMemoIds = memoItems.map((item: any) => (item.content as Memo).id);
     if (checkedMemos.size === currentMemoIds.length) {
       setCheckedMemos(new Set());
     } else {
@@ -394,7 +373,7 @@ function BoardDetailScreen({
   }, [memoItems, checkedMemos.size]);
 
   const handleTaskSelectAll = useCallback(() => {
-    const currentTaskIds = taskItems.map(item => (item.content as Task).id);
+    const currentTaskIds = taskItems.map((item: any) => (item.content as Task).id);
     if (checkedTasks.size === currentTaskIds.length) {
       setCheckedTasks(new Set());
     } else {
@@ -405,7 +384,6 @@ function BoardDetailScreen({
   // 全選択状態の計算
   const isMemoAllSelected = memoItems.length > 0 && checkedMemos.size === memoItems.length;
   const isTaskAllSelected = taskItems.length > 0 && checkedTasks.size === taskItems.length;
-  const isAllSelected = (!showMemo || isMemoAllSelected) && (!showTask || isTaskAllSelected);
 
   // ステータス別カウントを取得する関数（ボード版）
   const getBoardItemStatusBreakdown = (itemIds: number[], itemType: 'memo' | 'task') => {
@@ -432,14 +410,23 @@ function BoardDetailScreen({
   const BoardDeleteMessage = ({ itemIds, itemType }: { itemIds: number[]; itemType: 'memo' | 'task' }) => {
     const statusBreakdown = getBoardItemStatusBreakdown(itemIds, itemType);
     const isLimited = itemIds.length > 100;
+    const itemTypeName = itemType === 'memo' ? 'メモ' : 'タスク';
     
     return (
-      <DeletionWarningMessage
-        hasOtherTabItems={false}
-        isLimited={isLimited}
-        statusBreakdown={statusBreakdown}
-        showStatusBreakdown={true}
-      />
+      <div>
+        <div className="text-sm text-gray-700 mb-3">
+          選択した{itemTypeName}をボードから削除しますか？
+        </div>
+        <DeletionWarningMessage
+          hasOtherTabItems={false}
+          isLimited={isLimited}
+          statusBreakdown={statusBreakdown}
+          showStatusBreakdown={true}
+        />
+        <div className="text-xs text-gray-600 mt-2">
+          ※{itemTypeName}自体は削除されず、このボードからのみ除外されます
+        </div>
+      </div>
     );
   };
 
@@ -487,7 +474,7 @@ function BoardDetailScreen({
   const DeleteModal = () => {
     // タイトルのカスタマイズ
     const itemTypeName = deletingItemType === 'memo' ? 'メモ' : 'タスク';
-    const customTitle = `${itemTypeName}削除の確認`;
+    const customTitle = `ボードから${itemTypeName}を削除`;
     
     return (
       <BulkDeleteConfirmation

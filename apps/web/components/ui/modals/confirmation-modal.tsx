@@ -112,6 +112,7 @@ function ConfirmationModal({
   parentElement
 }: ConfirmationModalProps) {
   
+  
   const variantStyles = {
     danger: {
       iconBg: 'bg-red-100',
@@ -199,8 +200,8 @@ function ConfirmationModal({
           ) : (
             <div>{message}</div>
           )}
-          {/* 削除処理中のタブ切り替え注意書き（customMessageが含まれていない場合のみ表示） */}
-          {(icon === 'trash' || variant === 'danger') && typeof message === 'string' && (
+          {/* 削除処理中のタブ切り替え注意書き */}
+          {(icon === 'trash' || variant === 'danger') && (
             <p className="text-xs text-gray-500 mt-2">
               ※削除中にタブを切り替えると処理が中断されます
             </p>
@@ -269,6 +270,7 @@ export function BulkDeleteConfirmation({
   const message = customMessage || (deleteType === 'normal'
     ? `${count}件の${itemTypeName}を削除しますか？\n（ゴミ箱に移動されます）`
     : `${count}件の${itemTypeName}を完全に削除しますか？\n（復元できません）`)
+  
 
   return (
     <ConfirmationModal

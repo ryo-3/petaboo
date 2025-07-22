@@ -217,7 +217,7 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
       // 保存中表示をしっかり見せる
       setTimeout(() => setIsSaving(false), 400)
     }
-  }, [memo, title, content, createNote, updateNote, deleteNote, onSaveComplete, addItemToBoard, selectedBoardIds, currentBoardIds, queryClient, removeItemFromBoard])
+  }, [memo, title, content, createNote, updateNote, deleteNote, onSaveComplete, addItemToBoard, selectedBoardIds, currentBoardIds, queryClient, removeItemFromBoard, isSaving])
 
   const handleSave = useCallback(async () => {
     // ボード変更がある場合はモーダルを表示

@@ -144,7 +144,7 @@ export function useMemosBulkRestore({
       count={bulkRestore.targetIds.length}
       itemType="memo"
       isLoading={bulkRestore.isDeleting}
-      customMessage={bulkRestore.customMessage}
+      customMessage={bulkRestore.customMessage as string}
     />
   )
 

@@ -205,7 +205,7 @@ export function useMemosBulkDelete({
     // 他のタブにも選択アイテムがあるかチェック（削除済みタブの場合は通常タブをチェック）
     const hasOtherTabItems = activeTab === "deleted" 
       ? checkedMemos.size > 0 
-      : memoIds.length > currentTabMemoIds.length;
+      : checkedDeletedMemos.size > 0;
     
     return (
       <DeletionWarningMessage
@@ -213,6 +213,7 @@ export function useMemosBulkDelete({
         isLimited={isLimited}
         statusBreakdown={hasOtherTabItems ? currentTabStatusBreakdown : allStatusBreakdown}
         showStatusBreakdown={true}
+        isPermanentDelete={activeTab === "deleted"}
       />
     );
   };

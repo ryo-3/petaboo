@@ -75,6 +75,8 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
   const executeSave = useCallback(async () => {
     const isEmpty = !title.trim() && !content.trim()
     
+    if (isSaving) return
+    
     setIsSaving(true)
     setSaveError(null)
 

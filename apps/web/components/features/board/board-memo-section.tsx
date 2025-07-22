@@ -1,6 +1,6 @@
 'use client';
 
-import MemoStatusDisplay from "@/components/features/memo/memo-status-display";
+import MemoStatusDisplay, { DeletedMemoDisplay } from "@/components/features/memo/memo-status-display";
 import { FilterIconCheckList } from "@/components/icons/filter-icon-variants";
 import TrashIcon from "@/components/icons/trash-icon";
 import CheckSquareIcon from "@/components/icons/check-square-icon";
@@ -194,6 +194,27 @@ export default function BoardMemoSection({
               ? "削除済みメモがありません"
               : "メモがありません"}
           </div>
+        ) : activeMemoTab === "deleted" ? (
+          <DeletedMemoDisplay
+            deletedMemos={memoItems.map(item => item.content as any)} // DeletedMemo型に変換
+            viewMode={viewMode}
+            effectiveColumnCount={effectiveColumnCount}
+            isBoard={true}
+            selectionMode={memoSelectionMode}
+            checkedMemos={checkedMemos}
+            onToggleCheck={onMemoSelectionToggle}
+            onSelectMemo={memoSelectionMode === "check" ? undefined : onSelectMemo}
+            selectedMemoId={memoSelectionMode === "check" ? undefined : selectedMemo?.id}
+            showEditDate={showEditDate}
+            sortOptions={getVisibleSortOptions(activeMemoTab).filter(
+              opt => opt.id === "createdAt" || opt.id === "updatedAt" || opt.id === "deletedAt"
+            ) as Array<{
+              id: "createdAt" | "updatedAt" | "deletedAt";
+              label: string;
+              enabled: boolean;
+              direction: "asc" | "desc";
+            }>}
+          />
         ) : (
           <MemoStatusDisplay
             memos={memoItems.map(item => item.content as Memo)}

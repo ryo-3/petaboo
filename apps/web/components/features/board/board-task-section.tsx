@@ -1,6 +1,6 @@
 'use client';
 
-import TaskStatusDisplay from "@/components/features/task/task-status-display";
+import TaskStatusDisplay, { DeletedTaskDisplay } from "@/components/features/task/task-status-display";
 import { FilterIconCheckList } from "@/components/icons/filter-icon-variants";
 import TrashIcon from "@/components/icons/trash-icon";
 import CheckSquareIcon from "@/components/icons/check-square-icon";
@@ -227,10 +227,20 @@ export default function BoardTaskSection({
               : "タスクがありません"}
           </div>
         ) : activeTaskTab === "deleted" ? (
-          // 削除済みタスク用の表示（将来実装予定）
-          <div className="text-gray-500 text-center py-8">
-            削除済みタスクがありません
-          </div>
+          // 削除済みタスク用の表示
+          <DeletedTaskDisplay
+            deletedTasks={taskItems.map(item => item.content as any)} // DeletedTask型に変換
+            viewMode={viewMode}
+            effectiveColumnCount={effectiveColumnCount}
+            isBoard={true}
+            selectionMode={taskSelectionMode}
+            checkedTasks={checkedTasks}
+            onToggleCheck={onTaskSelectionToggle}
+            onSelectTask={taskSelectionMode === "check" ? undefined : onSelectTask as any}
+            selectedTaskId={taskSelectionMode === "check" ? undefined : selectedTask?.id}
+            showEditDate={showEditDate}
+            sortOptions={getVisibleSortOptions(activeTaskTab)}
+          />
         ) : (
           <TaskStatusDisplay
             activeTab={activeTaskTab as "todo" | "in_progress" | "completed"}

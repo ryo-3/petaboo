@@ -247,7 +247,7 @@ interface BulkDeleteConfirmationProps {
   deleteType: 'normal' | 'permanent'
   isLoading?: boolean
   customMessage?: string | ReactNode
-  position?: 'center' | 'right-panel' | 'left-panel'
+  position?: 'center' | 'right-panel'
   customTitle?: string
 }
 

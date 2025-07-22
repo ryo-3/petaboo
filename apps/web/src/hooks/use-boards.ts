@@ -381,3 +381,51 @@ export function useItemBoards(itemType: 'memo' | 'task', itemId: number | undefi
     enabled: !!itemId,
   });
 }
+
+// ボード固有の削除済みアイテムを取得
+export function useBoardDeletedItems(boardId: number) {
+  const { getToken } = useAuth();
+
+  return useQuery<{memos: any[], tasks: any[]}>({
+    queryKey: ["board-deleted-items", boardId],
+    queryFn: async () => {
+      const token = await getCachedToken(getToken);
+      
+      // 削除済みメモを取得
+      const memosResponse = await fetch(`${API_BASE_URL}/notes/deleted`, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+      
+      if (!memosResponse.ok) {
+        throw new Error("Failed to fetch deleted memos");
+      }
+      
+      // 削除済みタスクを取得
+      const tasksResponse = await fetch(`${API_BASE_URL}/tasks/deleted`, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+      
+      if (!tasksResponse.ok) {
+        throw new Error("Failed to fetch deleted tasks");
+      }
+
+      const deletedMemos = await memosResponse.json();
+      const deletedTasks = await tasksResponse.json();
+
+      // 現在はボードとの過去の関連情報が保存されていないため、
+      // 一時的にすべての削除済みアイテムを表示
+      // TODO: 実際にはボード関連を保持するAPIが必要
+      return {
+        memos: deletedMemos,
+        tasks: deletedTasks
+      };
+    },
+    enabled: !!boardId,
+  });
+}

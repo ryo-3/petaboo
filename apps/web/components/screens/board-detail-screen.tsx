@@ -7,6 +7,7 @@ import {
   useAddItemToBoard,
   useBoardWithItems,
   useRemoveItemFromBoard,
+  useBoardDeletedItems,
 } from "@/src/hooks/use-boards";
 import { useBoardState } from "@/src/hooks/use-board-state";
 import { useExport } from "@/src/hooks/use-export";
@@ -152,6 +153,7 @@ function BoardDetailScreen({
 
 
   const { data: boardWithItems, isLoading, error } = useBoardWithItems(boardId);
+  const { data: boardDeletedItems } = useBoardDeletedItems(boardId);
   
   const removeItemFromBoard = useRemoveItemFromBoard();
   const addItemToBoard = useAddItemToBoard();
@@ -315,23 +317,35 @@ function BoardDetailScreen({
     boardWithItems?.items.filter((item) => item.itemType === "task") || [];
 
   // アクティブタブに応じてメモをフィルタリング
-  const memoItems = allMemoItems.filter(() => {
-    if (activeMemoTab === "deleted") {
-      // 削除済みは将来的に別のAPIから取得予定、現在は空配列
-      return false;
-    }
-    return true; // normal の場合はすべて表示
-  });
+  const memoItems = activeMemoTab === "deleted" 
+    ? (boardDeletedItems?.memos || []).map((memo, index) => ({
+        id: memo.id,
+        boardId: boardId,
+        itemId: memo.originalId,
+        itemType: 'memo' as const,
+        content: memo,
+        createdAt: memo.createdAt,
+        updatedAt: memo.updatedAt,
+        position: index
+      })) as any
+    : allMemoItems;
 
   // アクティブタブに応じてタスクをフィルタリング
-  const taskItems = allTaskItems.filter((item) => {
-    const task = item.content as Task;
-    if (activeTaskTab === "deleted") {
-      // 削除済みは将来的に別のAPIから取得予定、現在は空配列
-      return false;
-    }
-    return task.status === activeTaskTab;
-  });
+  const taskItems = activeTaskTab === "deleted"
+    ? (boardDeletedItems?.tasks || []).map((task, index) => ({
+        id: task.id,
+        boardId: boardId,
+        itemId: task.originalId,
+        itemType: 'task' as const,
+        content: task,
+        createdAt: task.createdAt,
+        updatedAt: task.updatedAt,
+        position: index
+      })) as any
+    : allTaskItems.filter((item) => {
+        const task = item.content as Task;
+        return task.status === activeTaskTab;
+      });
 
   // 各ステータスの件数を計算
   const todoCount = allTaskItems.filter(
@@ -343,11 +357,11 @@ function BoardDetailScreen({
   const completedCount = allTaskItems.filter(
     (item) => (item.content as Task).status === "completed"
   ).length;
-  const deletedCount = 0; // 削除済みタスクの件数（将来実装）
+  const deletedCount = boardDeletedItems?.tasks?.length || 0; // 削除済みタスクの件数
 
   // メモの件数を計算
   const normalMemoCount = allMemoItems.length;
-  const deletedMemoCount = 0; // 削除済みメモの件数（将来実装）
+  const deletedMemoCount = boardDeletedItems?.memos?.length || 0; // 削除済みメモの件数
 
   // 全選択/全解除機能（統合）
   const handleSelectAll = useCallback(() => {

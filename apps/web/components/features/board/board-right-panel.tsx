@@ -1,18 +1,20 @@
 'use client';
 
 import MemoEditor from "@/components/features/memo/memo-editor";
+import DeletedMemoViewer from "@/components/features/memo/deleted-memo-viewer";
 import MemoStatusDisplay from "@/components/features/memo/memo-status-display";
 import TaskEditor from "@/components/features/task/task-editor";
+import DeletedTaskViewer from "@/components/features/task/deleted-task-viewer";
 import TaskStatusDisplay from "@/components/features/task/task-status-display";
 import RightPanel from "@/components/ui/layout/right-panel";
-import { Memo } from "@/src/types/memo";
-import { Task } from "@/src/types/task";
+import { Memo, DeletedMemo } from "@/src/types/memo";
+import { Task, DeletedTask } from "@/src/types/task";
 
 interface BoardRightPanelProps {
   isOpen: boolean;
   boardId: number;
-  selectedMemo?: Memo | null;
-  selectedTask?: Task | null;
+  selectedMemo?: Memo | DeletedMemo | null;
+  selectedTask?: Task | DeletedTask | null;
   rightPanelMode: "editor" | "memo-list" | "task-list" | null;
   selectedItemsFromList: Set<number>;
   allMemos?: Memo[];
@@ -39,38 +41,68 @@ export default function BoardRightPanel({
   onAddSelectedItems,
   onToggleItemSelection,
 }: BoardRightPanelProps) {
+  // 削除済みアイテムかどうかを判定するヘルパー関数
+  const isDeletedMemo = (memo: Memo | DeletedMemo): memo is DeletedMemo => {
+    return 'deletedAt' in memo && memo.deletedAt !== undefined;
+  };
+  
+  const isDeletedTask = (task: Task | DeletedTask): task is DeletedTask => {
+    return 'deletedAt' in task && task.deletedAt !== undefined;
+  };
   return (
     <RightPanel isOpen={isOpen} onClose={onClose}>
       {selectedMemo && !selectedTask && rightPanelMode === null && (
         <>
-          <MemoEditor
-            key={`memo-${selectedMemo.id}`}
-            memo={selectedMemo}
-            initialBoardId={selectedMemo.id === 0 ? boardId : undefined}
-            onClose={() => {
-              // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
-            }}
-            onSaveComplete={(savedMemo) => {
-              // 保存後に選択状態を更新
-              onSelectMemo?.(savedMemo);
-            }}
-          />
+          {isDeletedMemo(selectedMemo) ? (
+            <DeletedMemoViewer
+              key={`deleted-memo-${selectedMemo.id}`}
+              memo={selectedMemo}
+              onClose={() => {
+                // ビューア内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
+              }}
+            />
+          ) : (
+            <MemoEditor
+              key={`memo-${selectedMemo.id}`}
+              memo={selectedMemo}
+              initialBoardId={selectedMemo.id === 0 ? boardId : undefined}
+              onClose={() => {
+                // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
+              }}
+              onSaveComplete={(savedMemo) => {
+                // 保存後に選択状態を更新
+                onSelectMemo?.(savedMemo);
+              }}
+            />
+          )}
         </>
       )}
 
       {selectedTask && !selectedMemo && rightPanelMode === null && (
-        <TaskEditor
-          key={`task-${selectedTask.id}`}
-          task={selectedTask}
-          initialBoardId={selectedTask.id === 0 ? boardId : undefined}
-          onClose={() => {
-            // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
-          }}
-          onSaveComplete={(savedTask) => {
-            // 保存後に選択状態を更新
-            onSelectTask?.(savedTask);
-          }}
-        />
+        <>
+          {isDeletedTask(selectedTask) ? (
+            <DeletedTaskViewer
+              key={`deleted-task-${selectedTask.id}`}
+              task={selectedTask}
+              onClose={() => {
+                // ビューア内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
+              }}
+            />
+          ) : (
+            <TaskEditor
+              key={`task-${selectedTask.id}`}
+              task={selectedTask}
+              initialBoardId={selectedTask.id === 0 ? boardId : undefined}
+              onClose={() => {
+                // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
+              }}
+              onSaveComplete={(savedTask) => {
+                // 保存後に選択状態を更新
+                onSelectTask?.(savedTask);
+              }}
+            />
+          )}
+        </>
       )}
 
       {/* メモ一覧表示 */}

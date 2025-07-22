@@ -224,7 +224,7 @@ function TaskEditor({
   };
 
   const handleSave = useCallback(async () => {
-    if (!title.trim()) return;
+    if (!title.trim() || isSaving) return;
 
     setIsSaving(true);
     setError(null);
@@ -264,6 +264,7 @@ function TaskEditor({
           }
         }
         
+        // ボード追加が完了してからonSaveCompleteを呼び出し
         onSaveComplete?.(newTask, true);
         
         // 新規作成後はフォームをリセット

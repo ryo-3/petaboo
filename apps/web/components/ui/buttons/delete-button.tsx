@@ -29,7 +29,6 @@ const DeleteButton = forwardRef<HTMLButtonElement, DeleteButtonProps>(
     // アニメーション付きカウンターを使用する場合はanimatedCountを優先
     const displayCount = useAnimatedCount ? animatedCount : count;
     
-    
     return (
       <div className={`delete-button ${isAnimating ? 'animating' : ''} ${className}`}>
         <button

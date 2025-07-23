@@ -260,11 +260,11 @@ export function animateBulkFadeOutCSS(
           
           // カウントアップ
           completedCount++;
-          // console.log(`✅ ${actionType === 'delete' ? '削除' : '復元'}処理完了:`, { id, completedCount, totalItems });
+          // console.log(`✅ ${actionType === 'delete' ? '削除' : '復元'}処理完了(要素なし):`, { id, completedCount, totalItems });
           
           // 全てのアイテムが完了したらコールバック実行
           if (completedCount === totalItems) {
-            // console.log(`🎊 実際のアニメーション完了時刻:`, Date.now(), { completedCount, totalItems });
+            // console.log(`🎊 実際のアニメーション完了時刻(要素なし):`, Date.now(), { completedCount, totalItems });
             // 復元の場合はゴミ箱の蓋を閉じる処理は不要
             onComplete?.();
           }

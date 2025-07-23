@@ -94,15 +94,15 @@ export const memosApi = {
     return response
   },
 
-  // DELETE /memos/deleted/:id (完全削除)
-  permanentDeleteNote: async (id: number, token?: string) => {
+  // DELETE /memos/deleted/:originalId (完全削除)
+  permanentDeleteNote: async (originalId: string, token?: string) => {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     }
     if (token) {
       headers.Authorization = `Bearer ${token}`
     }
-    const response = await fetch(`${API_BASE_URL}/memos/deleted/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/memos/deleted/${originalId}`, {
       method: 'DELETE',
       headers,
     })
@@ -113,15 +113,15 @@ export const memosApi = {
     return response
   },
 
-  // POST /memos/deleted/:id/restore (復元)
-  restoreNote: async (id: number, token?: string) => {
+  // POST /memos/deleted/:originalId/restore (復元)
+  restoreNote: async (originalId: string, token?: string) => {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     }
     if (token) {
       headers.Authorization = `Bearer ${token}`
     }
-    const response = await fetch(`${API_BASE_URL}/memos/deleted/${id}/restore`, {
+    const response = await fetch(`${API_BASE_URL}/memos/deleted/${originalId}/restore`, {
       method: 'POST',
       headers,
     })
@@ -223,15 +223,15 @@ export const tasksApi = {
     return response
   },
 
-  // DELETE /tasks/deleted/:id (完全削除)
-  permanentDeleteTask: async (id: number, token?: string) => {
+  // DELETE /tasks/deleted/:originalId (完全削除)
+  permanentDeleteTask: async (originalId: string, token?: string) => {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     }
     if (token) {
       headers.Authorization = `Bearer ${token}`
     }
-    const response = await fetch(`${API_BASE_URL}/tasks/deleted/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/tasks/deleted/${originalId}`, {
       method: 'DELETE',
       headers,
     })
@@ -242,15 +242,15 @@ export const tasksApi = {
     return response
   },
 
-  // POST /tasks/deleted/:id/restore (復元)
-  restoreTask: async (id: number, token?: string) => {
+  // POST /tasks/deleted/:originalId/restore (復元)
+  restoreTask: async (originalId: string, token?: string) => {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     }
     if (token) {
       headers.Authorization = `Bearer ${token}`
     }
-    const response = await fetch(`${API_BASE_URL}/tasks/deleted/${id}/restore`, {
+    const response = await fetch(`${API_BASE_URL}/tasks/deleted/${originalId}/restore`, {
       method: 'POST',
       headers,
     })

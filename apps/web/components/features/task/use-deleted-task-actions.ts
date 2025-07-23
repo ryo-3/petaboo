@@ -19,9 +19,9 @@ export function useDeletedTaskActions({ task, onClose, onDeleteAndSelectNext, on
   
   // 完全削除用のカスタムミューテーション（onSuccessで次選択を実行）
   const permanentDeleteTask = useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (originalId: string) => {
       const token = await getToken()
-      const response = await tasksApi.permanentDeleteTask(id, token || undefined)
+      const response = await tasksApi.permanentDeleteTask(originalId, token || undefined)
       return response.json()
     },
     onSuccess: async () => {
@@ -56,7 +56,7 @@ export function useDeletedTaskActions({ task, onClose, onDeleteAndSelectNext, on
           // アニメーション完了後の処理
           try {
             // API実行（onSuccessで次選択とキャッシュ更新が実行される）
-            await permanentDeleteTask.mutateAsync(task.id)
+            await permanentDeleteTask.mutateAsync(task.originalId)
             
             // 蓋を閉じる
             setTimeout(() => {
@@ -70,7 +70,7 @@ export function useDeletedTaskActions({ task, onClose, onDeleteAndSelectNext, on
       } else {
         // アニメーション要素がない場合は通常の処理
         // API実行（onSuccessで次選択とキャッシュ更新が実行される）
-        await permanentDeleteTask.mutateAsync(task.id)
+        await permanentDeleteTask.mutateAsync(task.originalId)
         
         setTimeout(() => {
           (window as Window & { closeDeletingLid?: () => void }).closeDeletingLid?.();
@@ -87,15 +87,15 @@ export function useDeletedTaskActions({ task, onClose, onDeleteAndSelectNext, on
     try {
       // console.log('復元ボタンクリック:', { taskId: task.id, hasCallback: !!onRestoreAndSelectNext });
       
-      // UIを先に更新
+      // API実行
+      await restoreTask.mutateAsync(task.originalId)
+      
+      // API成功後にUIを更新
       if (onRestoreAndSelectNext) {
         onRestoreAndSelectNext(task)
       } else {
         onClose()
       }
-      
-      // その後APIを実行
-      await restoreTask.mutateAsync(task.id)
     } catch (error) {
       console.error('復元に失敗しました:', error)
       alert('復元に失敗しました。')

@@ -29,6 +29,8 @@ interface BoardRightPanelProps {
   onToggleItemSelection: (itemId: number) => void;
   onMemoDeleteAndSelectNext?: (deletedMemo: Memo) => void;
   onTaskDeleteAndSelectNext?: (deletedTask: Task) => void;
+  onMemoRestoreAndSelectNext?: (deletedMemo: DeletedMemo) => void;
+  onTaskRestoreAndSelectNext?: (deletedTask: DeletedTask) => void;
   onAddMemoToBoard?: (memo: Memo) => void;
   onAddTaskToBoard?: (task: Task) => void;
 }
@@ -44,6 +46,8 @@ export default function BoardRightPanel({
   onSelectTask,
   onMemoDeleteAndSelectNext,
   onTaskDeleteAndSelectNext,
+  onMemoRestoreAndSelectNext,
+  onTaskRestoreAndSelectNext,
   onAddMemoToBoard,
   onAddTaskToBoard,
 }: BoardRightPanelProps) {
@@ -98,6 +102,7 @@ export default function BoardRightPanel({
               onClose={() => {
                 // ビューア内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
               }}
+              onRestoreAndSelectNext={onMemoRestoreAndSelectNext}
             />
           ) : (
             <MemoEditor
@@ -128,6 +133,7 @@ export default function BoardRightPanel({
               onClose={() => {
                 // ビューア内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
               }}
+              onRestoreAndSelectNext={onTaskRestoreAndSelectNext}
             />
           ) : (
             <TaskEditor

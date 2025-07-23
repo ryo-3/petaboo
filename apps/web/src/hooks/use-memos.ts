@@ -92,9 +92,9 @@ export function usePermanentDeleteMemo() {
   const { getToken } = useAuth()
   
   return useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (originalId: string) => {
       const token = await getToken()
-      await memosApi.permanentDeleteNote(id, token || undefined)
+      await memosApi.permanentDeleteNote(originalId, token || undefined)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deletedMemos'] })
@@ -108,13 +108,17 @@ export function useRestoreMemo() {
   const { getToken } = useAuth()
   
   return useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (originalId: string) => {
       const token = await getToken()
-      await memosApi.restoreNote(id, token || undefined)
+      await memosApi.restoreNote(originalId, token || undefined)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['memos'] })
       queryClient.invalidateQueries({ queryKey: ['deletedMemos'] })
+      // ボード関連のキャッシュも無効化
+      queryClient.invalidateQueries({ queryKey: ['boards'] })
+      queryClient.invalidateQueries({ queryKey: ['board-with-items'] })
+      queryClient.invalidateQueries({ queryKey: ['board-deleted-items'] })
     },
   })
 }

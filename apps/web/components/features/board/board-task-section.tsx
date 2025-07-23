@@ -31,16 +31,18 @@ interface BoardTaskSectionProps {
   selectedTask?: Task | DeletedTask | null;
   // 複数選択関連
   taskSelectionMode: "select" | "check";
-  checkedTasks: Set<number>;
+  checkedTasks: Set<string | number>;
   onCreateNewTask: () => void;
   onSetRightPanelMode: (mode: "task-list" | null) => void;
   onTaskTabChange: (tab: "todo" | "in_progress" | "completed" | "deleted") => void;
   onSelectTask: (task: Task | DeletedTask) => void;
-  onTaskSelectionToggle: (taskId: number) => void;
+  onTaskSelectionToggle: (taskId: string | number) => void;
   onSelectAll?: () => void;
   isAllSelected?: boolean;
   onBulkDelete?: (itemType: 'task') => void;
   isDeleting?: boolean;
+  isLidOpen?: boolean;
+  currentDisplayCount?: number;
 }
 
 import { useRef } from 'react';
@@ -72,11 +74,16 @@ export default function BoardTaskSection({
   onSelectAll,
   isAllSelected,
   onBulkDelete,
-  isDeleting = false,
+  isDeleting: _isDeleting = false, // eslint-disable-line @typescript-eslint/no-unused-vars
+  isLidOpen = false,
+  currentDisplayCount,
 }: BoardTaskSectionProps) {
   // ソートオプションの管理
   const { setSortOptions, getVisibleSortOptions } = useSortOptions("task");
   const deleteButtonRef = useRef<HTMLButtonElement | null>(null);
+  
+  // 数値のみのSet（型安全のため）
+  const checkedTasksNumbers = new Set(Array.from(checkedTasks).filter(id => typeof id === 'number') as number[]);
 
   if (rightPanelMode === "memo-list" || !showTask) {
     return null;
@@ -235,7 +242,7 @@ export default function BoardTaskSection({
             effectiveColumnCount={effectiveColumnCount}
             isBoard={true}
             selectionMode={taskSelectionMode}
-            checkedTasks={checkedTasks}
+            checkedTasks={checkedTasksNumbers}
             onToggleCheck={onTaskSelectionToggle}
             onSelectTask={taskSelectionMode === "check" ? undefined : onSelectTask}
             selectedTaskId={taskSelectionMode === "check" ? undefined : selectedTask?.id}
@@ -250,7 +257,7 @@ export default function BoardTaskSection({
             effectiveColumnCount={effectiveColumnCount}
             isBoard={true}
             selectionMode={taskSelectionMode}
-            checkedTasks={checkedTasks}
+            checkedTasks={checkedTasksNumbers}
             onToggleCheck={onTaskSelectionToggle}
             onSelectTask={taskSelectionMode === "check" ? undefined : onSelectTask}
             selectedTaskId={taskSelectionMode === "check" ? undefined : selectedTask?.id}
@@ -269,11 +276,13 @@ export default function BoardTaskSection({
             onBulkDelete?.('task');
           }}
           deleteButtonRef={deleteButtonRef}
-          isDeleting={isDeleting}
+          isDeleting={isLidOpen}
           showRestoreButton={false}
           restoreCount={0}
           onRestore={() => {}}
           isRestoring={false}
+          animatedDeleteCount={currentDisplayCount || checkedTasks.size}
+          useAnimatedDeleteCount={true}
         />
       )}
     </div>

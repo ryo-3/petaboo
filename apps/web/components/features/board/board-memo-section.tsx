@@ -29,16 +29,18 @@ interface BoardMemoSectionProps {
   selectedMemo?: Memo | DeletedMemo | null;
   // 複数選択関連
   memoSelectionMode: "select" | "check";
-  checkedMemos: Set<number>;
+  checkedMemos: Set<string | number>;
   onCreateNewMemo: () => void;
   onSetRightPanelMode: (mode: "memo-list" | null) => void;
   onMemoTabChange: (tab: "normal" | "deleted") => void;
   onSelectMemo: (memo: Memo | DeletedMemo) => void;
-  onMemoSelectionToggle: (memoId: number) => void;
+  onMemoSelectionToggle: (memoId: string | number) => void;
   onSelectAll?: () => void;
   isAllSelected?: boolean;
   onBulkDelete?: (itemType: 'memo') => void;
   isDeleting?: boolean;
+  isLidOpen?: boolean;
+  currentDisplayCount?: number;
 }
 
 import { useRef } from 'react';
@@ -68,11 +70,16 @@ export default function BoardMemoSection({
   onSelectAll,
   isAllSelected,
   onBulkDelete,
-  isDeleting = false,
+  isDeleting: _isDeleting = false, // eslint-disable-line @typescript-eslint/no-unused-vars
+  isLidOpen = false,
+  currentDisplayCount,
 }: BoardMemoSectionProps) {
   // ソートオプションの管理
   const { setSortOptions, getVisibleSortOptions } = useSortOptions("memo");
   const deleteButtonRef = useRef<HTMLButtonElement | null>(null);
+  
+  // 数値のみのSet（型安全のため）
+  const checkedMemosNumbers = new Set(Array.from(checkedMemos).filter(id => typeof id === 'number') as number[]);
 
   if (rightPanelMode === "task-list" || !showMemo) {
     return null;
@@ -202,7 +209,7 @@ export default function BoardMemoSection({
             effectiveColumnCount={effectiveColumnCount}
             isBoard={true}
             selectionMode={memoSelectionMode}
-            checkedMemos={checkedMemos}
+            checkedMemos={checkedMemosNumbers}
             onToggleCheck={onMemoSelectionToggle}
             onSelectMemo={memoSelectionMode === "check" ? undefined : onSelectMemo}
             selectedMemoId={memoSelectionMode === "check" ? undefined : selectedMemo?.id}
@@ -223,7 +230,7 @@ export default function BoardMemoSection({
             effectiveColumnCount={effectiveColumnCount}
             isBoard={true}
             selectionMode={memoSelectionMode}
-            checkedMemos={checkedMemos}
+            checkedMemos={checkedMemosNumbers}
             onToggleCheck={onMemoSelectionToggle}
             onSelectMemo={memoSelectionMode === "check" ? undefined : onSelectMemo}
             selectedMemoId={memoSelectionMode === "check" ? undefined : selectedMemo?.id}
@@ -246,14 +253,17 @@ export default function BoardMemoSection({
           showDeleteButton={true}
           deleteButtonCount={checkedMemos.size}
           onDelete={() => {
+            console.log('🎯 BoardMemoSection onDelete called, checkedMemos:', Array.from(checkedMemos));
             onBulkDelete?.('memo');
           }}
           deleteButtonRef={deleteButtonRef}
-          isDeleting={isDeleting}
+          isDeleting={isLidOpen}
           showRestoreButton={false}
           restoreCount={0}
           onRestore={() => {}}
           isRestoring={false}
+          animatedDeleteCount={currentDisplayCount || checkedMemos.size}
+          useAnimatedDeleteCount={true}
         />
       )}
     </div>

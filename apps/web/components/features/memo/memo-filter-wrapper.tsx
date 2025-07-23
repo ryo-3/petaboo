@@ -20,7 +20,7 @@ function MemoFilterWrapper({ memo, selectedBoardIds, filterMode = 'include', chi
   const itemId = isDeleted ? (memo as DeletedMemo).originalId : memo.id;
   const { data: boards, isLoading } = useItemBoards(
     'memo', 
-    (selectedBoardIds && selectedBoardIds.length > 0) ? itemId : undefined
+    (selectedBoardIds && selectedBoardIds.length > 0) ? Number(itemId) : undefined
   );
 
   // フィルターが設定されていない場合は常に表示

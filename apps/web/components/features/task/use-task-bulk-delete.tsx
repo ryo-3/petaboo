@@ -60,7 +60,7 @@ export function useTasksBulkDelete({
   const permanentDeleteTaskWithoutUpdate = useMutation({
     mutationFn: async (id: number) => {
       const token = await getToken()
-      const response = await tasksApi.permanentDeleteTask(id, token || undefined)
+      const response = await tasksApi.permanentDeleteTask(String(id), token || undefined)
       return response.json()
     },
     // onSuccessなし（自動更新しない）
@@ -131,7 +131,7 @@ export function useTasksBulkDelete({
 
     const onApiCall = async (id: number) => {
       if (activeTab === "deleted") {
-        await permanentDeleteTaskMutation.mutateAsync(id)
+        await permanentDeleteTaskMutation.mutateAsync(String(id))
       } else {
         await deleteTaskMutation.mutateAsync(id)
       }

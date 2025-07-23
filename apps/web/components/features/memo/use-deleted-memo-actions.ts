@@ -19,9 +19,9 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
   
   // 完全削除用のカスタムミューテーション（onSuccessで次選択を実行）
   const permanentDeleteNote = useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (originalId: string) => {
       const token = await getToken()
-      const response = await memosApi.permanentDeleteNote(id, token || undefined)
+      const response = await memosApi.permanentDeleteNote(originalId, token || undefined)
       return response.json()
     },
     onSuccess: async () => {
@@ -56,7 +56,7 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
           // アニメーション完了後の処理
           try {
             // API実行（onSuccessで次選択とキャッシュ更新が実行される）
-            await permanentDeleteNote.mutateAsync(memo.id)
+            await permanentDeleteNote.mutateAsync(memo.originalId)
             
             // 蓋を閉じる
             setTimeout(() => {
@@ -70,7 +70,7 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
       } else {
         // アニメーション要素がない場合は通常の処理
         // API実行（onSuccessで次選択とキャッシュ更新が実行される）
-        await permanentDeleteNote.mutateAsync(memo.id)
+        await permanentDeleteNote.mutateAsync(memo.originalId)
         
         setTimeout(() => {
           (window as Window & { closeDeletingLid?: () => void }).closeDeletingLid?.();
@@ -84,17 +84,22 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
 
   const handleRestore = async () => {
     try {
-      console.log('復元ボタンクリック:', { memoId: memo.id, hasCallback: !!onRestoreAndSelectNext });
+      console.log('復元ボタンクリック:', { 
+        memoId: memo.id, 
+        originalId: memo.originalId,
+        title: memo.title.substring(0, 20),
+        hasCallback: !!onRestoreAndSelectNext 
+      });
       
-      // UIを先に更新
+      // API実行
+      await restoreNote.mutateAsync(memo.originalId)
+      
+      // API成功後にUIを更新
       if (onRestoreAndSelectNext) {
         onRestoreAndSelectNext(memo)
       } else {
         onClose()
       }
-      
-      // その後APIを実行
-      await restoreNote.mutateAsync(memo.id)
     } catch (error) {
       console.error('復元に失敗しました:', error)
       alert('復元に失敗しました。')

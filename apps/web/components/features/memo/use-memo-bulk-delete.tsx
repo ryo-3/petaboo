@@ -62,7 +62,7 @@ export function useMemosBulkDelete({
   const permanentDeleteNoteWithoutUpdate = useMutation({
     mutationFn: async (id: number) => {
       const token = await getToken();
-      const response = await memosApi.permanentDeleteNote(id, token || undefined);
+      const response = await memosApi.permanentDeleteNote(String(id), token || undefined);
       return response.json();
     },
     // onSuccessなし（自動更新しない）
@@ -163,7 +163,7 @@ export function useMemosBulkDelete({
 
     const onApiCall = async (id: number) => {
       if (activeTab === "deleted") {
-        await permanentDeleteNoteMutation.mutateAsync(id);
+        await permanentDeleteNoteMutation.mutateAsync(String(id));
       } else {
         await deleteNoteMutation.mutateAsync(id);
       }
@@ -330,5 +330,6 @@ export function useMemosBulkDelete({
     DeleteModal,
     // カウンターアクティブ時はdisplayCount、それ以外は実際のカウント
     currentDisplayCount: finalDisplayCount,
+    bulkAnimation,
   };
 }

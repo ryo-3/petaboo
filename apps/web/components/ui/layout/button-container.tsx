@@ -16,7 +16,7 @@ export function ButtonContainer({ show, position, children }: ButtonContainerPro
     : 'absolute bottom-4 left-6';
     
   return (
-    <div className={`${positionClass} z-10 transition-opacity duration-300 ${
+    <div className={`${positionClass} z-20 transition-opacity duration-300 ${
       show ? "opacity-100" : "opacity-0 pointer-events-none"
     }`}>
       {children}

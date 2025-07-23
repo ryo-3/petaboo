@@ -117,9 +117,9 @@ export function usePermanentDeleteTask() {
   const { getToken } = useAuth()
   
   return useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (originalId: string) => {
       const token = await getToken()
-      const response = await tasksApi.permanentDeleteTask(id, token || undefined)
+      const response = await tasksApi.permanentDeleteTask(originalId, token || undefined)
       const result = await response.json()
       return result
     },
@@ -136,9 +136,9 @@ export function useRestoreTask() {
   const { getToken } = useAuth()
   
   return useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (originalId: string) => {
       const token = await getToken()
-      const response = await tasksApi.restoreTask(id, token || undefined)
+      const response = await tasksApi.restoreTask(originalId, token || undefined)
       const result = await response.json()
       return result
     },
@@ -146,8 +146,10 @@ export function useRestoreTask() {
       // タスク一覧と削除済み一覧を再取得
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
       queryClient.invalidateQueries({ queryKey: ['deleted-tasks'] })
-      // ボードキャッシュも無効化（タスクが含まれる可能性）
-      queryClient.invalidateQueries({ queryKey: ["boards"] });
+      // ボード関連のキャッシュも無効化
+      queryClient.invalidateQueries({ queryKey: ['boards'] })
+      queryClient.invalidateQueries({ queryKey: ['board-with-items'] })
+      queryClient.invalidateQueries({ queryKey: ['board-deleted-items'] })
     },
   })
 }

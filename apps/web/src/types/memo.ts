@@ -10,7 +10,7 @@ export interface Memo {
 
 export interface DeletedMemo {
   id: number
-  originalId: number
+  originalId: string
   title: string
   content: string | null
   categoryId?: number | null

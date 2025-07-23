@@ -68,7 +68,12 @@ export function useTasksBulkRestore({
     }
 
     const onApiCall = async (id: number) => {
-      await restoreTaskMutation.mutateAsync(id)
+      // idからoriginalIdに変換
+      const deletedTask = deletedTasks?.find(task => task.id === id)
+      if (!deletedTask) {
+        throw new Error(`削除済みタスクが見つかりません: ID ${id}`)
+      }
+      await restoreTaskMutation.mutateAsync(deletedTask.originalId)
     }
 
     await executeWithAnimation({

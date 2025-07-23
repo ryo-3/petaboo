@@ -68,7 +68,12 @@ export function useMemosBulkRestore({
     }
 
     const onApiCall = async (id: number) => {
-      await restoreNoteMutation.mutateAsync(id)
+      // idからoriginalIdに変換
+      const deletedMemo = deletedMemos?.find(memo => memo.id === id)
+      if (!deletedMemo) {
+        throw new Error(`削除済みメモが見つかりません: ID ${id}`)
+      }
+      await restoreNoteMutation.mutateAsync(deletedMemo.originalId)
     }
 
     await executeWithAnimation({

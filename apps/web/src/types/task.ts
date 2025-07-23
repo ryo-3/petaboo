@@ -12,7 +12,7 @@ export interface Task {
 
 export interface DeletedTask {
   id: number;
-  originalId: number;
+  originalId: string;
   title: string;
   description: string | null;
   status: string;

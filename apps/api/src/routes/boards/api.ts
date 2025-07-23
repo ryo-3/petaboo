@@ -5,9 +5,9 @@ import { boards, boardItems, tasks, memos, deletedBoards, deletedMemos, deletedT
 import type { NewBoard, NewBoardItem, NewDeletedBoard } from "../../db/schema/boards";
 
 // ID→originalId変換ユーティリティ
-async function getOriginalId(itemId: string, itemType: 'memo' | 'task', userId: string, db: any): Promise<string | null> {
-  // itemIdはIDの文字列版として受け取り、originalIdに変換する
-  const numericId = parseInt(itemId);
+async function getOriginalId(itemId: string | number, itemType: 'memo' | 'task', userId: string, db: any): Promise<string | null> {
+  // itemIdはIDの文字列版または数値版として受け取り、originalIdに変換する
+  const numericId = typeof itemId === 'string' ? parseInt(itemId) : itemId;
   if (isNaN(numericId)) {
     return null;
   }

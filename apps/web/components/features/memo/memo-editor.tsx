@@ -258,7 +258,7 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
                 ))}
               </ul>
               <div className="mt-3 text-sm text-gray-600">
-                削除するとボードからも削除されます
+                削除すると各ボードの「削除済み」タブに移動します
               </div>
             </div>
           }

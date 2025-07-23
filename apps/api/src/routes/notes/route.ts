@@ -67,7 +67,9 @@ app.openapi(
       content: notes.content,
       createdAt: notes.createdAt,
       updatedAt: notes.updatedAt,
-    }).from(notes).where(eq(notes.userId, auth.userId));
+    }).from(notes)
+      .where(eq(notes.userId, auth.userId))
+      .orderBy(desc(notes.updatedAt), desc(notes.createdAt));
     
     return c.json(result, 200);
   }

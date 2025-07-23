@@ -363,16 +363,16 @@ function BoardDetailScreen({
   const deletedMemoCount = boardDeletedItems?.memos?.length || 0; // 削除済みメモの件数
   
   // デバッグ用ログ
-  console.log('🔍 ボード削除済みアイテム状態:', {
-    boardId,
-    deletedMemos: deletedMemoCount,
-    deletedTasks: deletedCount,
-    boardDeletedItems,
-    memoItems: memoItems.length,
-    taskItems: taskItems.length,
-    activeMemoTab,
-    activeTaskTab
-  });
+  // console.log('🔍 ボード削除済みアイテム状態:', {
+  //   boardId,
+  //   deletedMemos: deletedMemoCount,
+  //   deletedTasks: deletedCount,
+  //   boardDeletedItems,
+  //   memoItems: memoItems.length,
+  //   taskItems: taskItems.length,
+  //   activeMemoTab,
+  //   activeTaskTab
+  // });
 
   // メモ削除後の次アイテム選択ハンドラー
   const handleMemoDeleteAndSelectNext = useCallback((deletedMemo: Memo) => {

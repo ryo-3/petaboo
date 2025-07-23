@@ -509,28 +509,12 @@ export function useBoardDeletedItems(boardId: number) {
         }
 
         const data = await response.json();
-        console.log(`🔍 ボード削除済みアイテムAPIレスポンス (boardId:${boardId}):`, data);
-        console.log(`🔍 deletedItems詳細:`, data.deletedItems);
-        
-        // 各削除済みアイテムの詳細をログ出力
-        data.deletedItems.forEach((item: { itemType: string; itemId: number; deletedAt: number; content: { id: number; title: string; [key: string]: unknown } }, index: number) => {
-          console.log(`🔍 削除済みアイテム${index}:`, {
-            itemType: item.itemType,
-            itemId: item.itemId,
-            deletedAt: item.deletedAt,
-            content: item.content
-          });
-        });
-        
         // APIレスポンスの形式を変換
         const memos: DeletedMemo[] = [];
         const tasks: DeletedTask[] = [];
         
         for (const item of data.deletedItems) {
-          console.log(`🔍 処理中のアイテム:`, item.itemType, 'コンテンツあり:', !!item.content);
-          
           if (item.itemType === "memo" && item.content) {
-            console.log('📝 メモをmemos配列に追加:', item.content.title);
             memos.push({
               id: item.content.id,
               originalId: item.content.originalId || item.content.id,
@@ -542,7 +526,6 @@ export function useBoardDeletedItems(boardId: number) {
               deletedAt: item.deletedAt,
             });
           } else if (item.itemType === "task" && item.content) {
-            console.log('✓ タスクをtasks配列に追加:', item.content.title);
             tasks.push({
               id: item.content.id,
               originalId: item.content.originalId || item.content.id,
@@ -556,12 +539,9 @@ export function useBoardDeletedItems(boardId: number) {
               updatedAt: item.content.updatedAt,
               deletedAt: item.deletedAt,
             });
-          } else {
-            console.warn('⚠️ アイテムがスキップされました:', { itemType: item.itemType, hasContent: !!item.content });
           }
         }
         
-        console.log(`🔍 変換後の削除済みアイテム:`, { memos: memos.length, tasks: tasks.length, memosData: memos, tasksData: tasks });
         return { memos, tasks };
       }
       

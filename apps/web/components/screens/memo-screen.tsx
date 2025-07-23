@@ -17,10 +17,10 @@ import { useDeletedItemOperations } from "@/src/hooks/use-deleted-item-operation
 import { useDeletionLid } from "@/src/hooks/use-deletion-lid";
 import { useItemDeselect } from "@/src/hooks/use-item-deselect";
 import {
-  useDeletedNotes,
-  useDeleteNote,
-  useNotes,
-} from "@/src/hooks/use-notes";
+  useDeletedMemos,
+  useDeleteMemo,
+  useMemos,
+} from "@/src/hooks/use-memos";
 import { useRightEditorDelete } from "@/src/hooks/use-right-editor-delete";
 import { useScreenState } from "@/src/hooks/use-screen-state";
 import { useSelectAll } from "@/src/hooks/use-select-all";
@@ -108,13 +108,13 @@ function MemoScreen({
   const [isRestoreLidOpen, setIsRestoreLidOpen] = useState(false);
 
   // データ取得
-  const { data: notes, isLoading: memoLoading, error: memoError } = useNotes();
-  const { data: deletedNotes } = useDeletedNotes();
+  const { data: memos, isLoading: memoLoading, error: memoError } = useMemos();
+  const { data: deletedMemos } = useDeletedMemos();
   const { preferences } = useUserPreferences(1);
   const { data: boards } = useBoards();
 
   // 削除API
-  const deleteNote = useDeleteNote();
+  const deleteNote = useDeleteMemo();
 
   // 共通screen状態管理
   const {
@@ -172,10 +172,10 @@ function MemoScreen({
     }, 200);
 
     // 次のメモを選択（削除完了と同時）
-    if (selectedMemo && notes) {
+    if (selectedMemo && memos) {
       const displayOrder = getMemoDisplayOrder();
       const nextItem = getNextItemAfterDeletion(
-        notes, // 削除前の全メモを渡す
+        memos, // 削除前の全メモを渡す
         selectedMemo,
         displayOrder
       );
@@ -193,7 +193,7 @@ function MemoScreen({
     }
   }, [
     selectedMemo,
-    notes,
+    memos,
     onSelectMemo,
     onDeselectAndStayOnMemoList,
     setMemoScreenMode,
@@ -212,8 +212,8 @@ function MemoScreen({
   const { isAllSelected, handleSelectAll } = useSelectAll({
     activeTab,
     deletedTabName: "deleted",
-    items: notes || null,
-    deletedItems: deletedNotes || null,
+    items: memos || null,
+    deletedItems: deletedMemos || null,
     checkedItems: checkedMemos,
     checkedDeletedItems: checkedDeletedMemos,
     setCheckedItems: setCheckedMemos,
@@ -239,9 +239,9 @@ function MemoScreen({
     checkedDeletedMemos,
     setCheckedMemos,
     setCheckedDeletedMemos,
-    notes,
-    deletedNotes,
-    localMemos: notes || [],
+    memos,
+    deletedMemos,
+    localMemos: memos || [],
     onMemoDelete: handleItemDeselect,
     deleteButtonRef,
     setIsDeleting: setIsLeftDeleting,
@@ -272,7 +272,7 @@ function MemoScreen({
   } = useMemosBulkRestore({
     checkedDeletedMemos,
     setCheckedDeletedMemos,
-    deletedNotes,
+    deletedMemos,
     onDeletedMemoRestore: handleItemDeselect,
     restoreButtonRef,
     setIsRestoring,
@@ -282,7 +282,7 @@ function MemoScreen({
   // 削除済みメモ操作の共通ロジック
   const { selectNextDeletedItem: selectNextDeletedMemo, handleRestoreAndSelectNext } = 
     useDeletedItemOperations({
-      deletedItems: deletedNotes || null,
+      deletedItems: deletedMemos || null,
       onSelectDeletedItem: onSelectDeletedMemo,
       setScreenMode: (mode: string) => setMemoScreenMode(mode as MemoScreenMode),
       editorSelector: "[data-memo-editor]",
@@ -370,8 +370,8 @@ function MemoScreen({
           onBoardFilterChange={setSelectedBoardIds}
           filterMode={boardFilterMode}
           onFilterModeChange={setBoardFilterMode}
-          normalCount={notes?.length || 0}
-          deletedNotesCount={deletedNotes?.length || 0}
+          normalCount={memos?.length || 0}
+          deletedMemosCount={deletedMemos?.length || 0}
           hideAddButton={hideHeaderButtons}
         />
 
@@ -388,9 +388,9 @@ function MemoScreen({
           showBoardName={showBoardName}
           selectedBoardIds={selectedBoardIds}
           boardFilterMode={boardFilterMode}
-          notes={notes || []}
-          localMemos={notes || []}
-          deletedNotes={deletedNotes || []}
+          memos={memos || []}
+          localMemos={memos || []}
+          deletedMemos={deletedMemos || []}
           selectedMemo={selectedMemo}
           selectedDeletedMemo={selectedDeletedMemo}
           checkedMemos={checkedMemos}

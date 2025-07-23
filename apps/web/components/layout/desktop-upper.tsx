@@ -87,7 +87,7 @@ interface DesktopUpperProps {
   onFilterModeChange?: (mode: 'include' | 'exclude') => void;
   // Tab counts
   normalCount: number;
-  deletedNotesCount?: number;
+  deletedMemosCount?: number;
   deletedTasksCount?: number;
   deletedCount?: number;
   todoCount?: number;
@@ -139,7 +139,7 @@ function DesktopUpper({
   filterMode = 'include',
   onFilterModeChange,
   normalCount,
-  deletedNotesCount = 0,
+  deletedMemosCount = 0,
   deletedTasksCount = 0,
   deletedCount = 0,
   todoCount = 0,
@@ -182,7 +182,7 @@ function DesktopUpper({
         id: "deleted",
         label: "",
         icon: <TrashIcon className="w-4 h-4" />,
-        count: deletedNotesCount,
+        count: deletedMemosCount,
       },
     ];
   };
@@ -409,23 +409,42 @@ function DesktopUpper({
             />
           )}
 
-          {/* 全選択/全解除ボタン（チェックモードのみ、メモ・タスク画面のみ） */}
+          {/* 全選択/全解除ボタン（チェックモードのみ、メモ・タスク画面のみ、対象アイテムがある場合のみ） */}
           {(currentMode === "memo" || currentMode === "task") && selectionMode === "check" && onSelectAll && (
-            <Tooltip
-              text={isAllSelected ? "全解除" : "全選択"}
-              position="bottom"
-            >
-              <button
-                onClick={onSelectAll}
-                className="bg-gray-100 rounded-lg size-7 flex items-center justify-center transition-colors text-gray-500 hover:text-gray-700"
-              >
-                {isAllSelected ? (
-                  <SquareIcon className="size-5" />
-                ) : (
-                  <CheckSquareIcon className="size-5" />
-                )}
-              </button>
-            </Tooltip>
+            (() => {
+              // 対象アイテム数の確認
+              let hasTargetItems = false;
+              if (currentMode === "memo") {
+                hasTargetItems = activeTab === "deleted" ? deletedMemosCount > 0 : normalCount > 0;
+              } else if (currentMode === "task") {
+                if (activeTab === "deleted") {
+                  hasTargetItems = deletedTasksCount > 0;
+                } else {
+                  const statusCount = activeTab === "todo" ? todoCount : 
+                                    activeTab === "in_progress" ? inProgressCount : 
+                                    activeTab === "completed" ? completedCount : 0;
+                  hasTargetItems = statusCount > 0;
+                }
+              }
+              
+              return hasTargetItems ? (
+                <Tooltip
+                  text={isAllSelected ? "全解除" : "全選択"}
+                  position="bottom"
+                >
+                  <button
+                    onClick={onSelectAll}
+                    className="bg-gray-100 rounded-lg size-7 flex items-center justify-center transition-colors text-gray-500 hover:text-gray-700"
+                  >
+                    {isAllSelected ? (
+                      <SquareIcon className="size-5" />
+                    ) : (
+                      <CheckSquareIcon className="size-5" />
+                    )}
+                  </button>
+                </Tooltip>
+              ) : null;
+            })()
           )}
 
           {/* 並び替えメニュー */}

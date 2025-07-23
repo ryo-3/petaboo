@@ -12,6 +12,8 @@ import RightPanel from "@/components/ui/layout/right-panel";
 import { Memo, DeletedMemo } from "@/src/types/memo";
 import { Task, DeletedTask } from "@/src/types/task";
 import { useState } from "react";
+import { useDeleteNote } from "@/src/hooks/use-notes";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface BoardRightPanelProps {
   isOpen: boolean;
@@ -67,15 +69,33 @@ export default function BoardRightPanel({
 
   // 削除処理用のstate
   const [isRightMemoLidOpen, setIsRightMemoLidOpen] = useState(false);
+  const deleteNote = useDeleteNote();
+  const queryClient = useQueryClient();
 
-  // メモ削除ハンドラー
-  const handleMemoDelete = () => {
+  // メモ削除ハンドラー（メモエディターの削除確認後に呼ばれる）
+  const handleMemoDelete = async () => {
     if (selectedMemo && !isDeletedMemo(selectedMemo)) {
       setIsRightMemoLidOpen(true);
-      setTimeout(() => {
-        onMemoDeleteAndSelectNext?.(selectedMemo as Memo);
+      try {
+        
+        await deleteNote.mutateAsync(selectedMemo.id);
+        
+        // キャッシュを無効化して最新データを取得
+        queryClient.invalidateQueries({ queryKey: ["boards"] });
+        queryClient.invalidateQueries({ queryKey: ["board-with-items", boardId] });
+        queryClient.invalidateQueries({ queryKey: ["board-deleted-items", boardId] });
+        queryClient.invalidateQueries({ queryKey: ["notes"] });
+        queryClient.invalidateQueries({ queryKey: ["deleted-notes"] });
+        
+        // 削除成功後に次のアイテムを選択
+        setTimeout(() => {
+          onMemoDeleteAndSelectNext?.(selectedMemo as Memo);
+          setIsRightMemoLidOpen(false);
+        }, 200);
+      } catch (error) {
+        console.error('メモの削除に失敗しました:', error);
         setIsRightMemoLidOpen(false);
-      }, 200);
+      }
     }
   };
   return (
@@ -140,42 +160,32 @@ export default function BoardRightPanel({
 
       {/* メモ一覧表示 */}
       {rightPanelMode === "memo-list" && (
-        <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between border-b border-gray-200 ml-2 mt-1 mb-1 pb-1">
-            <h3 className="text-lg font-semibold">メモ一覧から追加</h3>
-          </div>
-          <div className="flex-1">
-            <MemoScreen
-              onSelectMemo={(memo) => {
-                if (onAddMemoToBoard) {
-                  onAddMemoToBoard(memo);
-                  onClose(); // 追加後に右パネルを閉じる
-                }
-              }}
-              rightPanelDisabled={true}
-            />
-          </div>
-        </div>
+        <MemoScreen
+          onSelectMemo={(memo) => {
+            if (onAddMemoToBoard) {
+              onAddMemoToBoard(memo);
+              onClose(); // 追加後に右パネルを閉じる
+            }
+          }}
+          rightPanelDisabled={true}
+          hideHeaderButtons={true}
+          forceShowBoardName={true}
+        />
       )}
 
       {/* タスク一覧表示 */}
       {rightPanelMode === "task-list" && (
-        <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between border-b border-gray-200 ml-2 mt-1 mb-1 pb-1">
-            <h3 className="text-lg font-semibold">タスク一覧から追加</h3>
-          </div>
-          <div className="flex-1">
-            <TaskScreen
-              onSelectTask={(task) => {
-                if (onAddTaskToBoard) {
-                  onAddTaskToBoard(task);
-                  onClose(); // 追加後に右パネルを閉じる
-                }
-              }}
-              rightPanelDisabled={true}
-            />
-          </div>
-        </div>
+        <TaskScreen
+          onSelectTask={(task) => {
+            if (onAddTaskToBoard) {
+              onAddTaskToBoard(task);
+              onClose(); // 追加後に右パネルを閉じる
+            }
+          }}
+          rightPanelDisabled={true}
+          hideHeaderButtons={true}
+          forceShowBoardName={true}
+        />
       )}
     </RightPanel>
   );

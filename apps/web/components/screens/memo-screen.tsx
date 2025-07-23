@@ -45,6 +45,9 @@ interface MemoScreenProps {
   onSelectDeletedMemo: (memo: DeletedMemo | null) => void;
   onClose: () => void;
   onDeselectAndStayOnMemoList?: () => void; // 選択解除してメモ一覧に留まる
+  rightPanelDisabled?: boolean; // 右パネル無効化（ボードから呼び出される場合）
+  hideHeaderButtons?: boolean; // ヘッダーボタンを非表示（ボードから呼び出される場合）
+  forceShowBoardName?: boolean; // ボード名表示を強制的に有効化（ボードから呼び出される場合）
 }
 
 function MemoScreen({
@@ -54,6 +57,9 @@ function MemoScreen({
   onSelectDeletedMemo,
   onClose,
   onDeselectAndStayOnMemoList,
+  rightPanelDisabled = false,
+  hideHeaderButtons = false,
+  forceShowBoardName = false,
 }: MemoScreenProps) {
   // 一括処理中断通知の監視
   useBulkProcessNotifications();
@@ -70,7 +76,7 @@ function MemoScreen({
   const [showEditDate, setShowEditDate] = useState(false);
 
   // ボード名表示管理
-  const [showBoardName, setShowBoardName] = useState(false);
+  const [showBoardName, setShowBoardName] = useState(forceShowBoardName);
 
   // ボードフィルター管理
   const [selectedBoardIds, setSelectedBoardIds] = useState<number[]>([]);
@@ -364,6 +370,7 @@ function MemoScreen({
           onBoardFilterChange={setSelectedBoardIds}
           normalCount={notes?.length || 0}
           deletedNotesCount={deletedNotes?.length || 0}
+          hideAddButton={hideHeaderButtons}
         />
 
         <DesktopLower

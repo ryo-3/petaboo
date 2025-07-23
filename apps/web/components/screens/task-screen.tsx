@@ -43,6 +43,9 @@ interface TaskScreenProps {
   ) => void;
   onClose: () => void;
   onClearSelection?: () => void; // 選択状態だけクリアする関数
+  rightPanelDisabled?: boolean; // 右パネル無効化（ボードから呼び出される場合）
+  hideHeaderButtons?: boolean; // ヘッダーボタンを非表示（ボードから呼び出される場合）
+  forceShowBoardName?: boolean; // ボード名表示を強制的に有効化（ボードから呼び出される場合）
 }
 
 function TaskScreen({
@@ -52,6 +55,9 @@ function TaskScreen({
   onSelectDeletedTask,
   onClose,
   onClearSelection,
+  rightPanelDisabled = false,
+  hideHeaderButtons = false,
+  forceShowBoardName = false,
 }: TaskScreenProps) {
   // 一括処理中断通知の監視
   useBulkProcessNotifications();
@@ -76,7 +82,7 @@ function TaskScreen({
   const [showEditDate, setShowEditDate] = useState(false);
 
   // ボード名表示管理
-  const [showBoardName, setShowBoardName] = useState(false);
+  const [showBoardName, setShowBoardName] = useState(forceShowBoardName);
 
   // ボードフィルター管理
   const [selectedBoardIds, setSelectedBoardIds] = useState<number[]>([]);
@@ -390,6 +396,7 @@ function TaskScreen({
           completedCount={
             tasks?.filter((task) => task.status === "completed").length || 0
           }
+          hideAddButton={hideHeaderButtons}
         />
 
         <DesktopLower

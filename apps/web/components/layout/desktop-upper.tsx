@@ -90,6 +90,8 @@ interface DesktopUpperProps {
   todoCount?: number;
   inProgressCount?: number;
   completedCount?: number;
+  // Hide add button (for board right panel usage)
+  hideAddButton?: boolean;
 }
 
 function DesktopUpper({
@@ -138,6 +140,7 @@ function DesktopUpper({
   todoCount = 0,
   inProgressCount = 0,
   completedCount = 0,
+  hideAddButton = false,
 }: DesktopUpperProps) {
   const { preferences } = useUserPreferences(1);
 
@@ -283,7 +286,7 @@ function DesktopUpper({
           </div>
 
           {/* 新規追加ボタン（ボード詳細ページでは非表示） */}
-          {!customTitle && (
+          {!customTitle && !hideAddButton && (
             <AddItemButton
               itemType={currentMode}
               onClick={onCreateNew}

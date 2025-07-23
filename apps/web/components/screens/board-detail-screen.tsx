@@ -423,6 +423,13 @@ function BoardDetailScreen({
 
   // ボードにメモを追加
   const handleAddMemoToBoard = useCallback(async (memo: Memo) => {
+    // 既にボードに存在するかチェック
+    const existingMemoIds = boardMemos.map(m => m.id);
+    if (existingMemoIds.includes(memo.id)) {
+      alert('このメモは既にボードに追加されています');
+      return;
+    }
+
     try {
       await addItemToBoard.mutateAsync({
         boardId,
@@ -435,10 +442,17 @@ function BoardDetailScreen({
     } catch (error) {
       console.error('❌ メモの追加に失敗:', error);
     }
-  }, [boardId, addItemToBoard]);
+  }, [boardId, addItemToBoard, boardMemos]);
 
   // ボードにタスクを追加
   const handleAddTaskToBoard = useCallback(async (task: Task) => {
+    // 既にボードに存在するかチェック
+    const existingTaskIds = boardTasks.map(t => t.id);
+    if (existingTaskIds.includes(task.id)) {
+      alert('このタスクは既にボードに追加されています');
+      return;
+    }
+
     try {
       await addItemToBoard.mutateAsync({
         boardId,
@@ -451,7 +465,7 @@ function BoardDetailScreen({
     } catch (error) {
       console.error('❌ タスクの追加に失敗:', error);
     }
-  }, [boardId, addItemToBoard]);
+  }, [boardId, addItemToBoard, boardTasks]);
 
   const handleMemoSelectAll = useCallback(() => {
     const currentMemoIds = memoItems.map((item) => (item.content as Memo).id);
@@ -543,6 +557,7 @@ function BoardDetailScreen({
         try {
           // 実際の削除処理
           for (const id of ids) {
+            
             if (itemType === 'memo') {
               await deleteNoteMutation.mutateAsync(id);
             } else {

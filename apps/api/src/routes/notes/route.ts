@@ -6,6 +6,7 @@ import Database from "better-sqlite3";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { notes, deletedNotes } from "../../db/schema/notes";
 import { boardItems } from "../../db/schema/boards";
+import { generateOriginalId } from "../../utils/originalId";
 
 // SQLite & drizzle セットアップ
 const sqlite = new Database("sqlite.db");
@@ -19,6 +20,7 @@ app.use('*', clerkMiddleware());
 // 共通スキーマ定義
 const NoteSchema = z.object({
   id: z.number(),
+  originalId: z.string(),
   title: z.string(),
   content: z.string().nullable(),
   createdAt: z.number(),
@@ -63,6 +65,7 @@ app.openapi(
     
     const result = await db.select({
       id: notes.id,
+      originalId: notes.originalId,
       title: notes.title,
       content: notes.content,
       createdAt: notes.createdAt,
@@ -141,10 +144,17 @@ app.openapi(
     const { title, content } = parsed.data;
     const result = await db.insert(notes).values({
       userId: auth.userId,
+      originalId: "", // 後で更新
       title,
       content,
       createdAt: Math.floor(Date.now() / 1000),
     }).returning({ id: notes.id });
+
+    // originalIdを生成して更新
+    const originalId = generateOriginalId(result[0].id);
+    await db.update(notes)
+      .set({ originalId })
+      .where(eq(notes.id, result[0].id));
 
     return c.json({ success: true, id: result[0].id as number }, 200);
   }
@@ -296,7 +306,7 @@ app.openapi(
       // 削除済みテーブルに挿入
       tx.insert(deletedNotes).values({
         userId: auth.userId,
-        originalId: note.id,
+        originalId: note.originalId, // originalIdをそのままコピー
         title: note.title,
         content: note.content,
         createdAt: note.createdAt,
@@ -525,10 +535,11 @@ app.openapi(
         // 通常メモテーブルに復元
         const result = tx.insert(notes).values({
           userId: auth.userId,
+          originalId: deletedNote.originalId, // originalIdをそのまま復元
           title: deletedNote.title,
           content: deletedNote.content,
           createdAt: deletedNote.createdAt,
-          updatedAt: deletedNote.updatedAt,
+          updatedAt: Math.floor(Date.now() / 1000), // 復元時刻を更新
         }).returning({ id: notes.id }).get();
 
         // 関連するboard_itemsのdeletedAtをNULLに戻す

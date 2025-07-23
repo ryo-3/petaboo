@@ -3,6 +3,7 @@ import { sqliteTable, integer, text } from "drizzle-orm/sqlite-core";
 export const tasks = sqliteTable("tasks", {
   id: integer("id").primaryKey(),
   userId: text("user_id").notNull(),
+  originalId: text("original_id").notNull(),
   title: text("title").notNull(),
   description: text("description"),
   status: text("status").notNull().default("todo"), // "todo", "in_progress", "completed"
@@ -16,7 +17,7 @@ export const tasks = sqliteTable("tasks", {
 export const deletedTasks = sqliteTable("deleted_tasks", {
   id: integer("id").primaryKey(),
   userId: text("user_id").notNull(),
-  originalId: integer("original_id").notNull(), // 元のtasksテーブルのID
+  originalId: text("original_id").notNull(), // 元のtasksテーブルのoriginalId
   title: text("title").notNull(),
   description: text("description"),
   status: text("status").notNull(),

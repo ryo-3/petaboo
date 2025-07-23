@@ -975,7 +975,7 @@ export function createAPI(app: any) {
         return {
           id: item.id,
           itemType: item.itemType,
-          itemId: content?.id || 0, // フロントエンド互換性のため通常のIDを返す
+          itemId: content?.id || item.id, // content が null の場合は board_item の id を使用
           originalId: item.originalId,
           deletedAt: typeof item.deletedAt === 'object' ? Math.floor(item.deletedAt.getTime() / 1000) : item.deletedAt,
           content,

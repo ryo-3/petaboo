@@ -12,6 +12,7 @@ interface MemoListItemProps {
   showEditDate?: boolean;
   showBoardName?: boolean;
   isDeleting?: boolean;
+  selectionMode?: "select" | "check";
 }
 
 function MemoListItem({
@@ -24,6 +25,7 @@ function MemoListItem({
   showEditDate = false,
   showBoardName = false,
   isDeleting = false,
+  selectionMode = "select",
 }: MemoListItemProps) {
   const isDeleted = variant === "deleted";
   const deletedMemo = memo as DeletedMemo;
@@ -55,30 +57,32 @@ function MemoListItem({
       } border-b border-gray-200 transition-all duration-300 ${isDeleting ? 'opacity-0' : 'opacity-100'}`}
     >
       <div className="p-2 flex items-center gap-3">
-        <button
-          onClick={onToggleCheck}
-          className={`size-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-            isChecked
-              ? isDeleted
-                ? "bg-white border-gray-400"
-                : "bg-Green border-Green"
-              : "bg-white border-gray-300 hover:border-gray-400"
-          }`}
-        >
-          {isChecked && (
-            <svg
-              className={`w-2.5 h-2.5 ${isDeleted ? "text-black" : "text-white"}`}
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
-          )}
-        </button>
+        {selectionMode === "check" && (
+          <button
+            onClick={onToggleCheck}
+            className={`size-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+              isChecked
+                ? isDeleted
+                  ? "bg-white border-gray-400"
+                  : "bg-Green border-Green"
+                : "bg-white border-gray-300 hover:border-gray-400"
+            }`}
+          >
+            {isChecked && (
+              <svg
+                className={`w-2.5 h-2.5 ${isDeleted ? "text-black" : "text-white"}`}
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            )}
+          </button>
+        )}
 
         <button onClick={onSelect} className="flex-1 min-w-0 text-left">
           <div className="flex flex-col gap-2">

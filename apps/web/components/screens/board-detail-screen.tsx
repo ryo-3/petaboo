@@ -320,7 +320,7 @@ function BoardDetailScreen({
     ? (boardDeletedItems?.memos || []).map((memo, index) => ({
         id: memo.id,
         boardId: boardId,
-        itemId: memo.originalId,
+        itemId: memo.id, // 削除済みアイテムの通常IDを使用
         itemType: 'memo' as const,
         content: memo,
         createdAt: memo.createdAt,
@@ -334,7 +334,7 @@ function BoardDetailScreen({
     ? (boardDeletedItems?.tasks || []).map((task, index) => ({
         id: task.id,
         boardId: boardId,
-        itemId: task.originalId,
+        itemId: task.id, // 削除済みアイテムの通常IDを使用
         itemType: 'task' as const,
         content: task,
         createdAt: task.createdAt,

@@ -113,6 +113,7 @@ function MemoStatusDisplay({
         showEditDate={props.showEditDate}
         showBoardName={props.showBoardName}
         variant={props.variant}
+        selectionMode={selectionMode}
       />
     );
     
@@ -215,6 +216,7 @@ export function DeletedMemoDisplay({
         isSelected={props.isSelected}
         showEditDate={props.showEditDate}
         showBoardName={props.showBoardName}
+        selectionMode={selectionMode}
       />
     );
     /* eslint-enable react/prop-types */

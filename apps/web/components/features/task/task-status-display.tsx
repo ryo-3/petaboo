@@ -148,6 +148,7 @@ function TaskStatusDisplay({
         showEditDate={props.showEditDate}
         showBoardName={props.showBoardName}
         variant={props.variant}
+        selectionMode={selectionMode}
       />
     );
     
@@ -254,6 +255,7 @@ export function DeletedTaskDisplay({
         isSelected={props.isSelected}
         showEditDate={props.showEditDate}
         showBoardName={props.showBoardName}
+        selectionMode={selectionMode}
       />
     );
     /* eslint-enable react/prop-types */

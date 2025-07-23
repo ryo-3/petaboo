@@ -4,6 +4,7 @@ import DeletedMemoViewer, {
   type DeletedMemoViewerRef,
 } from "@/components/features/memo/deleted-memo-viewer";
 import MemoEditor from "@/components/features/memo/memo-editor";
+import { CSVImportModal } from "@/components/features/memo/csv-import-modal";
 import { useMemosBulkDelete } from "@/components/features/memo/use-memo-bulk-delete";
 import { useMemosBulkRestore } from "@/components/features/memo/use-memo-bulk-restore";
 import DesktopLower from "@/components/layout/desktop-lower";
@@ -106,6 +107,9 @@ function MemoScreen({
   // 復元の状態
   const [isRestoring, setIsRestoring] = useState(false);
   const [isRestoreLidOpen, setIsRestoreLidOpen] = useState(false);
+
+  // CSVインポートモーダルの状態
+  const [isCsvImportModalOpen, setIsCsvImportModalOpen] = useState(false);
 
   // データ取得
   const { data: memos, isLoading: memoLoading, error: memoError } = useMemos();
@@ -380,6 +384,7 @@ function MemoScreen({
           normalCount={memos?.length || 0}
           deletedMemosCount={deletedMemos?.length || 0}
           hideAddButton={hideHeaderButtons}
+          onCsvImport={() => setIsCsvImportModalOpen(true)}
         />
 
         <DesktopLower
@@ -448,6 +453,10 @@ function MemoScreen({
       {/* モーダル */}
       <BulkDeleteModal />
       <RestoreModal />
+      <CSVImportModal
+        isOpen={isCsvImportModalOpen}
+        onClose={() => setIsCsvImportModalOpen(false)}
+      />
 
       {/* 右側：詳細表示エリア */}
       <RightPanel

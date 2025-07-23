@@ -32,6 +32,40 @@ const MemoInputSchema = z.object({
   content: z.string().optional(),
 });
 
+const ImportResultSchema = z.object({
+  success: z.boolean(),
+  imported: z.number(),
+  errors: z.array(z.string()),
+});
+
+// CSVパース関数
+function parseCSV(csvText: string): { title: string; content?: string }[] {
+  const lines = csvText.trim().split('\n');
+  if (lines.length < 2) return [];
+  
+  const header = lines[0].toLowerCase();
+  if (!header.includes('title')) return [];
+  
+  const results: { title: string; content?: string }[] = [];
+  
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    
+    // 簡単なCSVパース（カンマ区切り、ダブルクォート対応）
+    const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+    
+    if (values.length >= 1 && values[0]) {
+      results.push({
+        title: values[0],
+        content: values[1] || undefined,
+      });
+    }
+  }
+  
+  return results;
+}
+
 // GET /memos（OpenAPI付き）
 app.openapi(
   createRoute({
@@ -576,6 +610,135 @@ app.openapi(
       return c.json({ success: true, id: restoredNote.id as number }, 200);
     } catch (error) {
       console.error('復元エラー:', error);
+      return c.json({ error: 'Internal server error' }, 500);
+    }
+  }
+);
+
+// POST /import（CSVインポート）
+app.openapi(
+  createRoute({
+    method: "post",
+    path: "/import",
+    request: {
+      body: {
+        content: {
+          "multipart/form-data": {
+            schema: z.object({
+              file: z.any().describe("CSV file to import"),
+            }),
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: "CSV import completed",
+        content: {
+          "application/json": {
+            schema: ImportResultSchema,
+          },
+        },
+      },
+      400: {
+        description: "Invalid file or format",
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+              details: z.string().optional(),
+            }),
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
+      500: {
+        description: "Internal server error",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
+    },
+  }),
+  async (c) => {
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    try {
+      const body = await c.req.parseBody();
+      const file = body['file'] as File;
+
+      if (!file) {
+        return c.json({ error: "No file provided" }, 400);
+      }
+
+      if (!file.name.endsWith('.csv')) {
+        return c.json({ error: "Only CSV files are supported" }, 400);
+      }
+
+      const csvText = await file.text();
+      const memoData = parseCSV(csvText);
+
+      if (memoData.length === 0) {
+        return c.json({ 
+          error: "No valid data found",
+          details: "CSV must have 'title' column and at least one data row"
+        }, 400);
+      }
+
+      const errors: string[] = [];
+      let imported = 0;
+
+      // 各メモを作成
+      for (const [index, memo] of memoData.entries()) {
+        try {
+          const parsed = MemoInputSchema.safeParse(memo);
+          if (!parsed.success) {
+            errors.push(`Row ${index + 2}: ${parsed.error.issues[0].message}`);
+            continue;
+          }
+
+          const { title, content } = parsed.data;
+          const result = await db.insert(memos).values({
+            userId: auth.userId,
+            originalId: "", // 後で更新
+            uuid: generateUuid(),
+            title,
+            content,
+            createdAt: Math.floor(Date.now() / 1000),
+          }).returning({ id: memos.id });
+
+          // originalIdを生成して更新
+          const originalId = generateOriginalId(result[0].id);
+          await db.update(memos)
+            .set({ originalId })
+            .where(eq(memos.id, result[0].id));
+
+          imported++;
+        } catch (error) {
+          errors.push(`Row ${index + 2}: Failed to create memo`);
+        }
+      }
+
+      return c.json({ 
+        success: true, 
+        imported, 
+        errors 
+      }, 200);
+
+    } catch (error) {
+      console.error('CSV Import Error:', error);
       return c.json({ error: 'Internal server error' }, 500);
     }
   }

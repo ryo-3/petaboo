@@ -131,6 +131,28 @@ export const memosApi = {
     }
     return response
   },
+
+  // POST /memos/import (CSVインポート)
+  importMemos: async (file: File, token?: string) => {
+    const headers: Record<string, string> = {}
+    if (token) {
+      headers.Authorization = `Bearer ${token}`
+    }
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await fetch(`${API_BASE_URL}/memos/import`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    })
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    return response
+  },
 }
 
 export const tasksApi = {

@@ -95,6 +95,8 @@ interface DesktopUpperProps {
   completedCount?: number;
   // Hide add button (for board right panel usage)
   hideAddButton?: boolean;
+  // CSV import callback (memo mode only)
+  onCsvImport?: () => void;
 }
 
 function DesktopUpper({
@@ -146,6 +148,7 @@ function DesktopUpper({
   inProgressCount = 0,
   completedCount = 0,
   hideAddButton = false,
+  onCsvImport,
 }: DesktopUpperProps) {
   const { preferences } = useUserPreferences(1);
 
@@ -303,6 +306,18 @@ function DesktopUpper({
                 iconSize: "w-3.5 h-3.5"
               }}
             />
+          )}
+
+          {/* CSVインポートボタン（メモモードのみ） */}
+          {!customTitle && !hideAddButton && currentMode === "memo" && onCsvImport && (
+            <Tooltip text="CSVインポート" position="bottom">
+              <button
+                onClick={onCsvImport}
+                className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                📁
+              </button>
+            </Tooltip>
           )}
 
           {/* タブ（boardモード以外） */}

@@ -122,3 +122,21 @@ export function useRestoreMemo() {
     },
   })
 }
+
+// CSVインポートhook
+export function useImportMemos() {
+  const queryClient = useQueryClient()
+  const { getToken } = useAuth()
+  
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const token = await getToken()
+      const response = await memosApi.importMemos(file, token || undefined)
+      const data = await response.json()
+      return data as { success: boolean; imported: number; errors: string[] }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['memos'] })
+    },
+  })
+}

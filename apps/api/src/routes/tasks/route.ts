@@ -360,7 +360,7 @@ app.openapi(
         .set({ deletedAt: new Date() })
         .where(and(
           eq(boardItems.itemType, 'task'),
-          eq(boardItems.itemId, id)
+          eq(boardItems.originalId, task.originalId)
         )).run();
 
       // 元テーブルから削除
@@ -599,7 +599,7 @@ app.openapi(
           .set({ deletedAt: null })
           .where(and(
             eq(boardItems.itemType, 'task'),
-            eq(boardItems.itemId, deletedTask.originalId)
+            eq(boardItems.originalId, deletedTask.originalId)
           )).run();
 
         // 削除済みテーブルから削除

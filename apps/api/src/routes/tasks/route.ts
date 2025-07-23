@@ -6,6 +6,7 @@ import Database from "better-sqlite3";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { tasks, deletedTasks } from "../../db/schema/tasks";
 import { boardItems } from "../../db/schema/boards";
+import { generateOriginalId } from "../../utils/originalId";
 
 // SQLite & drizzle セットアップ
 const sqlite = new Database("sqlite.db");
@@ -19,6 +20,7 @@ app.use('*', clerkMiddleware());
 // 共通スキーマ定義
 const TaskSchema = z.object({
   id: z.number(),
+  originalId: z.string(),
   title: z.string(),
   description: z.string().nullable(),
   status: z.enum(["todo", "in_progress", "completed"]),
@@ -80,6 +82,7 @@ app.openapi(
     
     const result = await db.select({
       id: tasks.id,
+      originalId: tasks.originalId,
       title: tasks.title,
       description: tasks.description,
       status: tasks.status,
@@ -174,6 +177,7 @@ app.openapi(
     const { title, description, status, priority, dueDate, categoryId } = parsed.data;
     const result = await db.insert(tasks).values({
       userId: auth.userId,
+      originalId: "", // 後で更新
       title,
       description,
       status,
@@ -182,6 +186,12 @@ app.openapi(
       categoryId,
       createdAt: Math.floor(Date.now() / 1000),
     }).returning({ id: tasks.id });
+
+    // originalIdを生成して更新
+    const originalId = generateOriginalId(result[0].id);
+    await db.update(tasks)
+      .set({ originalId })
+      .where(eq(tasks.id, result[0].id));
 
     return c.json({ success: true, id: result[0].id as number }, 200);
   }
@@ -333,7 +343,7 @@ app.openapi(
       // 削除済みテーブルに挿入
       tx.insert(deletedTasks).values({
         userId: auth.userId,
-        originalId: task.id,
+        originalId: task.originalId, // originalIdをそのままコピー
         title: task.title,
         description: task.description,
         status: task.status,
@@ -573,6 +583,7 @@ app.openapi(
         // 通常のタスクテーブルに復元
         tx.insert(tasks).values({
           userId: auth.userId,
+          originalId: deletedTask.originalId, // originalIdをそのまま復元
           title: deletedTask.title,
           description: deletedTask.description,
           status: deletedTask.status as "todo" | "in_progress" | "completed",

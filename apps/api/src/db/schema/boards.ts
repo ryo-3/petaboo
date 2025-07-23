@@ -30,7 +30,7 @@ export const boardItems = sqliteTable("board_items", {
 });
 
 export const deletedBoards = sqliteTable("deleted_boards", {
-  id: integer("id").primaryKey(),
+  id: integer("id").primaryKey({ autoIncrement: true }),
   userId: text("user_id").notNull(),
   originalId: integer("original_id").notNull(), // 元のboardsテーブルのID
   name: text("name").notNull(),

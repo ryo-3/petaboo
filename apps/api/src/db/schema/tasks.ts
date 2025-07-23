@@ -1,7 +1,7 @@
 import { sqliteTable, integer, text } from "drizzle-orm/sqlite-core";
 
 export const tasks = sqliteTable("tasks", {
-  id: integer("id").primaryKey(),
+  id: integer("id").primaryKey({ autoIncrement: true }),
   userId: text("user_id").notNull(),
   originalId: text("original_id").notNull(),
   title: text("title").notNull(),
@@ -15,7 +15,7 @@ export const tasks = sqliteTable("tasks", {
 });
 
 export const deletedTasks = sqliteTable("deleted_tasks", {
-  id: integer("id").primaryKey(),
+  id: integer("id").primaryKey({ autoIncrement: true }),
   userId: text("user_id").notNull(),
   originalId: text("original_id").notNull(), // 元のtasksテーブルのoriginalId
   title: text("title").notNull(),

@@ -127,6 +127,8 @@ function BoardDetailScreen({
   // 一括削除機能
   const bulkDelete = useBulkDelete();
   const [deletingItemType, setDeletingItemType] = useState<'memo' | 'task' | null>(null);
+  const [isMemoDeleting, setIsMemoDeleting] = useState(false);
+  const [isTaskDeleting, setIsTaskDeleting] = useState(false);
   const deleteNoteMutation = useDeleteNote();
   const deleteTaskMutation = useDeleteTask();
 
@@ -442,6 +444,13 @@ function BoardDetailScreen({
 
     // 削除対象のアイテムタイプを設定
     setDeletingItemType(itemType);
+    
+    // アニメーション開始（モーダル表示前）
+    if (itemType === 'memo') {
+      setIsMemoDeleting(true);
+    } else {
+      setIsTaskDeleting(true);
+    }
 
     await bulkDelete.confirmBulkDelete(
       targetIds,
@@ -466,6 +475,12 @@ function BoardDetailScreen({
         } catch (error) {
           console.error("Failed to delete items:", error);
         } finally {
+          // 削除状態をfalseに設定（アニメーション終了）
+          if (itemType === 'memo') {
+            setIsMemoDeleting(false);
+          } else {
+            setIsTaskDeleting(false);
+          }
           // 削除完了後にアイテムタイプをクリア
           setDeletingItemType(null);
         }
@@ -659,6 +674,7 @@ function BoardDetailScreen({
             onSelectAll={handleMemoSelectAll}
             isAllSelected={isMemoAllSelected}
             onBulkDelete={handleBulkDelete}
+            isDeleting={isMemoDeleting}
           />
 
           {/* タスク列 */}
@@ -689,6 +705,7 @@ function BoardDetailScreen({
             onSelectAll={handleTaskSelectAll}
             isAllSelected={isTaskAllSelected}
             onBulkDelete={handleBulkDelete}
+            isDeleting={isTaskDeleting}
           />
         </div>
 

@@ -83,35 +83,48 @@ export function useBoardWithItems(boardId: number | null, skip: boolean = false)
       const startTime = performance.now();
       console.log(`🔍 useBoardWithItems API開始 boardId:${boardId} (キャッシュがない場合のみ実行)`);
       
-      const token = await getCachedToken(getToken);
-      const tokenTime = performance.now();
-      console.log(`🔑 Token取得完了: ${(tokenTime - startTime).toFixed(2)}ms`);
-      
-      const response = await fetch(`${API_BASE_URL}/boards/${boardId}/items`, {
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
-      
-      const fetchTime = performance.now();
-      console.log(`📡 Fetch完了: ${(fetchTime - tokenTime).toFixed(2)}ms`);
-      
-      if (!response.ok) {
-        console.error(`❌ useBoardWithItems失敗: ${response.status} ${response.statusText}`);
-        const error: ApiError = new Error(`Failed to fetch board with items: ${response.status} ${response.statusText}`);
-        error.status = response.status;
-        throw error;
-      }
+      // 最大2回リトライ
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const token = await getCachedToken(getToken);
+        const tokenTime = performance.now();
+        console.log(`🔑 Token取得完了: ${(tokenTime - startTime).toFixed(2)}ms (試行${attempt + 1})`);
+        
+        const response = await fetch(`${API_BASE_URL}/boards/${boardId}/items`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        });
+        
+        const fetchTime = performance.now();
+        console.log(`📡 Fetch完了: ${(fetchTime - tokenTime).toFixed(2)}ms`);
+        
+        // 401エラーの場合はキャッシュをクリアしてリトライ
+        if (response.status === 401 && attempt === 0) {
+          console.log('🔄 Token expired, clearing cache and retrying...');
+          cachedToken = null;
+          tokenExpiry = 0;
+          continue;
+        }
+        
+        if (!response.ok) {
+          console.error(`❌ useBoardWithItems失敗: ${response.status} ${response.statusText}`);
+          const error: ApiError = new Error(`Failed to fetch board with items: ${response.status} ${response.statusText}`);
+          error.status = response.status;
+          throw error;
+        }
 
-      const data = await response.json();
-      const endTime = performance.now();
-      console.log(`✅ useBoardWithItems完了: 総時間${(endTime - startTime).toFixed(2)}ms, アイテム数:${data.items?.length || 0}`);
+        const data = await response.json();
+        const endTime = performance.now();
+        console.log(`✅ useBoardWithItems完了: 総時間${(endTime - startTime).toFixed(2)}ms, アイテム数:${data.items?.length || 0}`);
+        
+        return {
+          ...data.board,
+          items: data.items,
+        };
+      }
       
-      return {
-        ...data.board,
-        items: data.items,
-      };
+      throw new Error('Failed after retry');
     },
     enabled: boardId !== null && isLoaded && !skip,
     staleTime: 2 * 60 * 1000,     // 2分間は新鮮なデータとして扱う
@@ -345,22 +358,35 @@ export function useAddItemToBoard() {
 
   return useMutation<BoardItem, Error, { boardId: number; data: AddItemToBoardData }>({
     mutationFn: async ({ boardId, data }) => {
-      const token = await getCachedToken(getToken);
-      const response = await fetch(`${API_BASE_URL}/boards/${boardId}/items`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-        body: JSON.stringify(data),
-      });
+      // 最大2回リトライ
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const token = await getCachedToken(getToken);
+        const response = await fetch(`${API_BASE_URL}/boards/${boardId}/items`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+          body: JSON.stringify(data),
+        });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to add item to board");
+        // 401エラーの場合はキャッシュをクリアしてリトライ
+        if (response.status === 401 && attempt === 0) {
+          console.log('🔄 Token expired, clearing cache and retrying...');
+          cachedToken = null;
+          tokenExpiry = 0;
+          continue;
+        }
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || "Failed to add item to board");
+        }
+
+        return response.json();
       }
-
-      return response.json();
+      
+      throw new Error('Failed after retry');
     },
     onSuccess: (_, { boardId }) => {
       queryClient.invalidateQueries({ queryKey: ["boards", boardId, "items"] });

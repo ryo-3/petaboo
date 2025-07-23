@@ -22,7 +22,7 @@ export const boardItems = sqliteTable("board_items", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   boardId: integer("board_id").notNull().references(() => boards.id, { onDelete: "cascade" }),
   itemType: text("item_type").notNull(), // 'memo' | 'task'
-  itemId: integer("item_id").notNull(),
+  originalId: text("original_id").notNull(), // メモ/タスクのoriginalId
   deletedAt: integer("deleted_at", { mode: "timestamp" }),
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()

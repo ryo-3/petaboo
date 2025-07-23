@@ -408,19 +408,34 @@ export function useRemoveItemFromBoard() {
 
   return useMutation<void, Error, { boardId: number; itemId: number; itemType: 'memo' | 'task' }>({
     mutationFn: async ({ boardId, itemId, itemType }) => {
-      const token = await getCachedToken(getToken);
-      const response = await fetch(`${API_BASE_URL}/boards/${boardId}/items/${itemId}?itemType=${itemType}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
+      // 最大2回リトライ
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const token = await getCachedToken(getToken);
+        const response = await fetch(`${API_BASE_URL}/boards/${boardId}/items/${itemId}?itemType=${itemType}`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to remove item from board");
+        // 401エラーの場合はキャッシュをクリアしてリトライ
+        if (response.status === 401 && attempt === 0) {
+          console.log('🔄 Token expired, clearing cache and retrying...');
+          cachedToken = null;
+          tokenExpiry = 0;
+          continue;
+        }
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || "Failed to remove item from board");
+        }
+
+        return;
       }
+      
+      throw new Error('Failed after retry');
     },
     onSuccess: (_, { boardId, itemId, itemType }) => {
       // 特定のボードのアイテムを無効化

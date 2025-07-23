@@ -9,6 +9,7 @@ import TaskStatusDisplay from "@/components/features/task/task-status-display";
 import RightPanel from "@/components/ui/layout/right-panel";
 import { Memo, DeletedMemo } from "@/src/types/memo";
 import { Task, DeletedTask } from "@/src/types/task";
+import { useState } from "react";
 
 interface BoardRightPanelProps {
   isOpen: boolean;
@@ -24,6 +25,8 @@ interface BoardRightPanelProps {
   onSelectTask?: (task: Task) => void;
   onAddSelectedItems: () => void;
   onToggleItemSelection: (itemId: number) => void;
+  onMemoDeleteAndSelectNext?: (deletedMemo: Memo) => void;
+  onTaskDeleteAndSelectNext?: (deletedTask: Task) => void;
 }
 
 export default function BoardRightPanel({
@@ -40,6 +43,8 @@ export default function BoardRightPanel({
   onSelectTask,
   onAddSelectedItems,
   onToggleItemSelection,
+  onMemoDeleteAndSelectNext,
+  onTaskDeleteAndSelectNext,
 }: BoardRightPanelProps) {
   // 削除済みアイテムかどうかを判定するヘルパー関数
   const isDeletedMemo = (memo: Memo | DeletedMemo): memo is DeletedMemo => {
@@ -48,6 +53,20 @@ export default function BoardRightPanel({
   
   const isDeletedTask = (task: Task | DeletedTask): task is DeletedTask => {
     return 'deletedAt' in task && task.deletedAt !== undefined;
+  };
+
+  // 削除処理用のstate
+  const [isRightMemoLidOpen, setIsRightMemoLidOpen] = useState(false);
+
+  // メモ削除ハンドラー
+  const handleMemoDelete = () => {
+    if (selectedMemo && !isDeletedMemo(selectedMemo)) {
+      setIsRightMemoLidOpen(true);
+      setTimeout(() => {
+        onMemoDeleteAndSelectNext?.(selectedMemo as Memo);
+        setIsRightMemoLidOpen(false);
+      }, 200);
+    }
   };
   return (
     <RightPanel isOpen={isOpen} onClose={onClose}>
@@ -65,7 +84,7 @@ export default function BoardRightPanel({
             <MemoEditor
               key={`memo-${selectedMemo.id}`}
               memo={selectedMemo}
-              initialBoardId={selectedMemo.id === 0 ? boardId : undefined}
+              initialBoardId={boardId}
               onClose={() => {
                 // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
               }}
@@ -73,6 +92,9 @@ export default function BoardRightPanel({
                 // 保存後に選択状態を更新
                 onSelectMemo?.(savedMemo);
               }}
+              onDelete={handleMemoDelete}
+              onDeleteAndSelectNext={onMemoDeleteAndSelectNext}
+              isLidOpen={isRightMemoLidOpen}
             />
           )}
         </>
@@ -92,7 +114,7 @@ export default function BoardRightPanel({
             <TaskEditor
               key={`task-${selectedTask.id}`}
               task={selectedTask}
-              initialBoardId={selectedTask.id === 0 ? boardId : undefined}
+              initialBoardId={boardId}
               onClose={() => {
                 // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
               }}
@@ -100,6 +122,7 @@ export default function BoardRightPanel({
                 // 保存後に選択状態を更新
                 onSelectTask?.(savedTask);
               }}
+              onDeleteAndSelectNext={onTaskDeleteAndSelectNext}
             />
           )}
         </>

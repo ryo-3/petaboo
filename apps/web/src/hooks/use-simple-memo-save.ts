@@ -8,9 +8,11 @@ interface UseSimpleMemoSaveOptions {
   memo?: Memo | null
   onSaveComplete?: (savedMemo: Memo, wasEmpty: boolean, isNewMemo: boolean) => void
   currentBoardIds?: number[]
+  initialBoardId?: number
+  onDeleteAndSelectNext?: (deletedMemo: Memo) => void
 }
 
-export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds = [] }: UseSimpleMemoSaveOptions = {}) {
+export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds = [], initialBoardId, onDeleteAndSelectNext }: UseSimpleMemoSaveOptions = {}) {
   const [title, setTitle] = useState(() => memo?.title || '')
   const [content, setContent] = useState(() => memo?.content || '')
   const [selectedBoardIds, setSelectedBoardIds] = useState<number[]>([])
@@ -178,6 +180,13 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
               queryClient.invalidateQueries({ 
                 queryKey: ["item-boards", "memo", memo.id] 
               })
+            }
+            
+            // 現在のボードから外された場合は次のアイテムを選択
+            if (initialBoardId && boardsToRemove.includes(initialBoardId) && onDeleteAndSelectNext) {
+              console.log('🎯 MemoEditor: 現在のボードから外されたため次選択実行', { initialBoardId, boardsToRemove, memoId: updatedMemo.id });
+              onDeleteAndSelectNext(updatedMemo);
+              return;
             }
           }
           

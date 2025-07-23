@@ -75,9 +75,13 @@ function TaskEditor({
     task?.priority || "medium"
   );
   const [categoryId, setCategoryId] = useState<number | null>(task?.categoryId ?? null);
-  const [dueDate, setDueDate] = useState<string>(
-    task?.dueDate ? new Date(task.dueDate * 1000).toISOString().split('T')[0] || "" : ""
-  );
+  const [dueDate, setDueDate] = useState<string>(() => {
+    try {
+      return (task?.dueDate ? new Date(task.dueDate * 1000).toISOString().split('T')[0] : "") as string;
+    } catch {
+      return "";
+    }
+  });
   
   // ボード選択関連の状態
   const [selectedBoardIds, setSelectedBoardIds] = useState<string[]>([]);
@@ -142,9 +146,13 @@ function TaskEditor({
       const taskDescription = task.description || "";
       const taskStatus = task.status || "todo";
       const taskPriority = task.priority || "medium";
-      const taskDueDate = task.dueDate
-        ? new Date(task.dueDate * 1000).toISOString().split("T")[0]
-        : "";
+      const taskDueDate = (() => {
+        try {
+          return (task.dueDate ? new Date(task.dueDate * 1000).toISOString().split("T")[0] : "") as string;
+        } catch {
+          return "";
+        }
+      })();
       
       const newData = {
         title: taskTitle.trim(),
@@ -152,7 +160,7 @@ function TaskEditor({
         status: taskStatus,
         priority: taskPriority,
         categoryId: task.categoryId || null,
-        dueDate: taskDueDate || "",
+        dueDate: taskDueDate,
         boardIds: []  // 後でuseEffectで設定される
       };
       
@@ -162,7 +170,7 @@ function TaskEditor({
       setStatus(taskStatus);
       setPriority(taskPriority);
       setCategoryId(task.categoryId || null);
-      setDueDate(taskDueDate || "");
+      setDueDate(taskDueDate);
       setError(null);
       setOriginalData(newData);
     } else {
@@ -242,6 +250,13 @@ function TaskEditor({
         } catch (error) {
           console.error('Failed to add task to board:', error);
         }
+      }
+      
+      // 現在のボードから外された場合は次のアイテムを選択
+      if (initialBoardId && toRemove.includes(initialBoardId.toString()) && onDeleteAndSelectNext) {
+        console.log('🎯 TaskEditor: 現在のボードから外されたため次選択実行', { initialBoardId, toRemove, taskId: task!.id });
+        onDeleteAndSelectNext(task!);
+        return;
       }
       
       onSaveComplete?.(task!, false);

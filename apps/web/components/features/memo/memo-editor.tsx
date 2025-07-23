@@ -23,11 +23,12 @@ interface MemoEditorProps {
     isNewMemo: boolean
   ) => void;
   onDelete?: () => void;
+  onDeleteAndSelectNext?: (deletedMemo: Memo) => void;
   isLidOpen?: boolean;
   customHeight?: string;
 }
 
-function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, isLidOpen = false, customHeight }: MemoEditorProps) {
+function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, onDeleteAndSelectNext, isLidOpen = false, customHeight }: MemoEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const baseViewerRef = useRef<HTMLDivElement>(null);
   const { data: boards = [] } = useBoards();
@@ -53,6 +54,8 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, i
     currentBoardIds: memo && memo.id !== 0 
       ? itemBoards.map(board => board.id)
       : (initialBoardId ? [initialBoardId] : []),
+    initialBoardId,
+    onDeleteAndSelectNext,
   });
 
   const [error] = useState<string | null>(null);

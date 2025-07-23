@@ -20,6 +20,7 @@ import { useBulkDelete, BulkDeleteConfirmation } from "@/components/ui/modals";
 import { DeletionWarningMessage } from "@/components/ui/modals/deletion-warning-message";
 import { useDeleteNote } from "@/src/hooks/use-notes";
 import { useDeleteTask } from "@/src/hooks/use-tasks";
+import { getNextItemAfterDeletion, getMemoDisplayOrder, getTaskDisplayOrder } from "@/src/utils/domUtils";
 
 interface BoardDetailProps {
   boardId: number;
@@ -315,6 +316,7 @@ function BoardDetailScreen({
     setRightPanelMode,
   ]);
 
+
   // メモとタスクのアイテムを分離（読み込み中も空配列で処理）
   const allMemoItems =
     boardWithItems?.items.filter((item) => item.itemType === "memo") || [];
@@ -367,6 +369,51 @@ function BoardDetailScreen({
   // メモの件数を計算
   const normalMemoCount = allMemoItems.length;
   const deletedMemoCount = boardDeletedItems?.memos?.length || 0; // 削除済みメモの件数
+
+  // メモ削除後の次アイテム選択ハンドラー
+  const handleMemoDeleteAndSelectNext = useCallback((deletedMemo: Memo) => {
+    if (!onSelectMemo) return;
+    
+    const displayOrder = getMemoDisplayOrder();
+    const nextMemo = getNextItemAfterDeletion(
+      memoItems.map(item => item.content as Memo),
+      deletedMemo,
+      displayOrder
+    );
+    
+    if (nextMemo) {
+      onSelectMemo(nextMemo);
+    } else {
+      onClearSelection?.();
+    }
+  }, [memoItems, onSelectMemo, onClearSelection]);
+
+  // タスク削除後の次アイテム選択ハンドラー
+  const handleTaskDeleteAndSelectNext = useCallback((deletedTask: Task) => {
+    console.log('🎯 handleTaskDeleteAndSelectNext 開始', { deletedTaskId: deletedTask.id, taskItemsCount: taskItems.length });
+    if (!onSelectTask) return;
+    
+    const displayOrder = getTaskDisplayOrder();
+    const allTasks = taskItems.map(item => item.content as Task);
+    console.log('🎯 displayOrder:', displayOrder);
+    console.log('🎯 allTasks:', allTasks.map(t => ({ id: t.id, title: t.title })));
+    
+    const nextTask = getNextItemAfterDeletion(
+      allTasks,
+      deletedTask,
+      displayOrder
+    );
+    
+    console.log('🎯 nextTask found:', nextTask ? { id: nextTask.id, title: nextTask.title } : null);
+    
+    if (nextTask) {
+      console.log('🎯 selecting nextTask:', nextTask.id);
+      onSelectTask(nextTask);
+    } else {
+      console.log('🎯 no nextTask, clearing selection');
+      onClearSelection?.();
+    }
+  }, [taskItems, onSelectTask, onClearSelection]);
 
 
   const handleMemoSelectAll = useCallback(() => {
@@ -762,6 +809,8 @@ function BoardDetailScreen({
         onSelectTask={onSelectTask}
         onAddSelectedItems={handleAddSelectedItems}
         onToggleItemSelection={handleToggleItemSelection}
+        onMemoDeleteAndSelectNext={handleMemoDeleteAndSelectNext}
+        onTaskDeleteAndSelectNext={handleTaskDeleteAndSelectNext}
       />
     </div>
   );

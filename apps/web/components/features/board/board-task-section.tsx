@@ -35,7 +35,6 @@ interface BoardTaskSectionProps {
   onSetRightPanelMode: (mode: "task-list" | null) => void;
   onTaskTabChange: (tab: "todo" | "in_progress" | "completed" | "deleted") => void;
   onSelectTask: (task: Task) => void;
-  onTaskSelectionModeChange: (mode: "select" | "check") => void;
   onTaskSelectionToggle: (taskId: number) => void;
   onSelectAll?: () => void;
   isAllSelected?: boolean;
@@ -68,7 +67,6 @@ export default function BoardTaskSection({
   onSetRightPanelMode,
   onTaskTabChange,
   onSelectTask,
-  onTaskSelectionModeChange,
   onTaskSelectionToggle,
   onSelectAll,
   isAllSelected,
@@ -231,14 +229,14 @@ export default function BoardTaskSection({
         ) : activeTaskTab === "deleted" ? (
           // 削除済みタスク用の表示
           <DeletedTaskDisplay
-            deletedTasks={taskItems.map(item => item.content as any)} // DeletedTask型に変換
+            deletedTasks={taskItems.map(item => item.content) as DeletedTask[]} // DeletedTask型に変換
             viewMode={viewMode}
             effectiveColumnCount={effectiveColumnCount}
             isBoard={true}
             selectionMode={taskSelectionMode}
             checkedTasks={checkedTasks}
             onToggleCheck={onTaskSelectionToggle}
-            onSelectTask={taskSelectionMode === "check" ? undefined : onSelectTask as any}
+            onSelectTask={taskSelectionMode === "check" ? undefined : onSelectTask}
             selectedTaskId={taskSelectionMode === "check" ? undefined : selectedTask?.id}
             showEditDate={showEditDate}
             sortOptions={getVisibleSortOptions(activeTaskTab)}

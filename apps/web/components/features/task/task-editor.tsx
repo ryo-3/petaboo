@@ -112,19 +112,24 @@ function TaskEditor({
     priority: "low" | "medium" | "high";
     categoryId: number | null;
     dueDate: string;
+    boardIds: string[];
   } | null>(null);
 
   // 変更があるかチェック（useMemoで最適化）
   const hasChanges = useMemo(() => {
     if (!originalData) return false; // originalDataがない間は保存ボタンを無効に
     
+    // ボードの変更をチェック
+    const boardsChanged = JSON.stringify(selectedBoardIds.sort()) !== JSON.stringify(originalData.boardIds.sort());
+    
     return title.trim() !== originalData.title.trim() ||
       description.trim() !== originalData.description.trim() ||
       status !== originalData.status ||
       priority !== originalData.priority ||
       categoryId !== originalData.categoryId ||
-      dueDate !== originalData.dueDate;
-  }, [title, description, status, priority, categoryId, dueDate, originalData]);
+      dueDate !== originalData.dueDate ||
+      boardsChanged;
+  }, [title, description, status, priority, categoryId, dueDate, selectedBoardIds, originalData]);
 
   // 新規作成時の保存可能性チェック
   const canSave = isNewTask ? !!title.trim() : hasChanges;
@@ -147,7 +152,8 @@ function TaskEditor({
         status: taskStatus,
         priority: taskPriority,
         categoryId: task.categoryId || null,
-        dueDate: taskDueDate || ""
+        dueDate: taskDueDate || "",
+        boardIds: []  // 後でuseEffectで設定される
       };
       
       // stateと元データを同時に更新して変更検知のずれを防ぐ
@@ -167,7 +173,8 @@ function TaskEditor({
         status: "todo" as const,
         priority: "medium" as const,
         categoryId: null,
-        dueDate: ""
+        dueDate: "",
+        boardIds: initialBoardId ? [initialBoardId.toString()] : []
       };
       
       // stateと元データを同時に更新
@@ -180,13 +187,15 @@ function TaskEditor({
       setError(null);
       setOriginalData(newData);
     }
-  }, [task]);
+  }, [task, initialBoardId]);
 
   // ボード選択の初期化
   useEffect(() => {
     if (task && task.id !== 0) { // 新規作成時（id: 0）は実行しない
       const currentBoardIds = itemBoards.map(board => board.id.toString());
       setSelectedBoardIds(currentBoardIds);
+      // originalDataのboardIdsも更新
+      setOriginalData(prev => prev ? { ...prev, boardIds: currentBoardIds } : prev);
     } else if (!task || task.id === 0) {
       // 新規作成時は初期ボードIDがあればそれを設定、なければ空
       const initialBoards = initialBoardId ? [initialBoardId.toString()] : [];
@@ -195,25 +204,15 @@ function TaskEditor({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task?.id, itemBoards.length, initialBoardId]); // itemBoards自体ではなくlengthを依存に
 
-  // ボード変更ハンドラー
+  // ボード変更ハンドラー（保存前はモーダルを表示しない）
   const handleBoardChange = (newBoardIds: string | string[]) => {
     const newIds = Array.isArray(newBoardIds) ? newBoardIds : [newBoardIds];
-    const currentIds = selectedBoardIds;
-
-    const toAdd = newIds.filter(id => id !== "" && !currentIds.includes(id));
-    const toRemove = currentIds.filter(id => !newIds.includes(id));
-
-    if (toAdd.length > 0 || toRemove.length > 0) {
-      setPendingBoardChanges({ toAdd, toRemove });
-      setShowBoardChangeModal(true);
-    }
+    // 選択状態のみ更新（モーダルは表示しない）
+    setSelectedBoardIds(newIds);
   };
 
+  // 現在は使用しないが、将来の拡張のために残す
   const handleConfirmBoardChange = () => {
-    setSelectedBoardIds(prev => {
-      const filtered = prev.filter(id => !pendingBoardChanges.toRemove.includes(id));
-      return [...filtered, ...pendingBoardChanges.toAdd];
-    });
     setShowBoardChangeModal(false);
     setPendingBoardChanges({ toAdd: [], toRemove: [] });
   };
@@ -275,7 +274,8 @@ function TaskEditor({
             status: "todo" as const,
             priority: "medium" as const,
             categoryId: null,
-            dueDate: ""
+            dueDate: "",
+            boardIds: []
           };
           
           setTitle("");
@@ -339,7 +339,8 @@ function TaskEditor({
           status: status,
           priority: priority,
           categoryId: categoryId,
-          dueDate: dueDate
+          dueDate: dueDate,
+          boardIds: selectedBoardIds
         });
       }
     } catch (error) {

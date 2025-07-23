@@ -39,6 +39,8 @@ export function useCreateTask() {
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
       // ボードキャッシュも無効化（タスクが含まれる可能性）
       queryClient.invalidateQueries({ queryKey: ["boards"] });
+      // アイテムボード情報も無効化
+      queryClient.invalidateQueries({ queryKey: ["item-boards"] });
     },
   })
 }
@@ -60,6 +62,8 @@ export function useUpdateTask() {
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
       // ボードキャッシュも無効化（タスクが含まれる可能性）
       queryClient.invalidateQueries({ queryKey: ["boards"] });
+      // アイテムボード情報も無効化
+      queryClient.invalidateQueries({ queryKey: ["item-boards"] });
     },
   })
 }

@@ -332,7 +332,7 @@ function BoardDetailScreen({
         createdAt: memo.createdAt,
         updatedAt: memo.updatedAt,
         position: index
-      })) as any
+      })) as BoardItemWithContent[]
     : allMemoItems;
 
   // アクティブタブに応じてタスクをフィルタリング
@@ -346,7 +346,7 @@ function BoardDetailScreen({
         createdAt: task.createdAt,
         updatedAt: task.updatedAt,
         position: index
-      })) as any
+      })) as BoardItemWithContent[]
     : allTaskItems.filter((item) => {
         const task = item.content as Task;
         return task.status === activeTaskTab;
@@ -370,7 +370,7 @@ function BoardDetailScreen({
 
 
   const handleMemoSelectAll = useCallback(() => {
-    const currentMemoIds = memoItems.map((item: any) => (item.content as Memo).id);
+    const currentMemoIds = memoItems.map((item) => (item.content as Memo).id);
     if (checkedMemos.size === currentMemoIds.length) {
       setCheckedMemos(new Set());
     } else {
@@ -379,7 +379,7 @@ function BoardDetailScreen({
   }, [memoItems, checkedMemos.size]);
 
   const handleTaskSelectAll = useCallback(() => {
-    const currentTaskIds = taskItems.map((item: any) => (item.content as Task).id);
+    const currentTaskIds = taskItems.map((item) => (item.content as Task).id);
     if (checkedTasks.size === currentTaskIds.length) {
       setCheckedTasks(new Set());
     } else {
@@ -487,6 +487,7 @@ function BoardDetailScreen({
       },
       <BoardDeleteMessage itemIds={targetIds} itemType={itemType} />
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checkedMemos, checkedTasks, bulkDelete, deleteNoteMutation, deleteTaskMutation]);
 
   // ボードから外す処理
@@ -501,6 +502,13 @@ function BoardDetailScreen({
           itemId: id,
           itemType: deletingItemType!,
         });
+        
+        // 削除したアイテムが現在選択されていた場合、エディターを閉じる
+        if (deletingItemType === 'memo' && selectedMemo && selectedMemo.id === id) {
+          onClearSelection?.();
+        } else if (deletingItemType === 'task' && selectedTask && selectedTask.id === id) {
+          onClearSelection?.();
+        }
       }
       
       // 削除完了後に選択をクリア
@@ -518,7 +526,7 @@ function BoardDetailScreen({
       // 削除完了後にアイテムタイプをクリア
       setDeletingItemType(null);
     }
-  }, [deletingItemType, checkedMemos, checkedTasks, removeItemFromBoard, boardId, bulkDelete]);
+  }, [deletingItemType, checkedMemos, checkedTasks, removeItemFromBoard, boardId, bulkDelete, selectedMemo, selectedTask, onClearSelection]);
 
   // 削除モーダル（タイトルをカスタマイズ）
   const DeleteModal = () => {

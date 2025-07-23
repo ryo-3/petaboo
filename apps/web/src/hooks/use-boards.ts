@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
 import { Board, BoardWithStats, BoardWithItems, CreateBoardData, UpdateBoardData, AddItemToBoardData, BoardItem } from "@/src/types/board";
+import { DeletedMemo } from "@/src/types/memo";
+import { DeletedTask } from "@/src/types/task";
 
 interface ApiError extends Error {
   status?: number;
@@ -388,8 +390,13 @@ export function useAddItemToBoard() {
       
       throw new Error('Failed after retry');
     },
-    onSuccess: (_, { boardId }) => {
+    onSuccess: (newItem, { boardId }) => {
+      // 特定のボードのアイテムを無効化
       queryClient.invalidateQueries({ queryKey: ["boards", boardId, "items"] });
+      // アイテムのボード情報も無効化
+      queryClient.invalidateQueries({ queryKey: ["item-boards", newItem.itemType, newItem.itemId] });
+      // ボード一覧も無効化（統計情報が変わるため）
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
     },
   });
 }
@@ -415,8 +422,13 @@ export function useRemoveItemFromBoard() {
         throw new Error(error.error || "Failed to remove item from board");
       }
     },
-    onSuccess: (_, { boardId }) => {
+    onSuccess: (_, { boardId, itemId, itemType }) => {
+      // 特定のボードのアイテムを無効化
       queryClient.invalidateQueries({ queryKey: ["boards", boardId, "items"] });
+      // アイテムのボード情報も無効化
+      queryClient.invalidateQueries({ queryKey: ["item-boards", itemType, itemId] });
+      // ボード一覧も無効化（統計情報が変わるため）
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
     },
   });
 }
@@ -452,7 +464,7 @@ export function useItemBoards(itemType: 'memo' | 'task', itemId: number | undefi
 export function useBoardDeletedItems(boardId: number) {
   const { getToken } = useAuth();
 
-  return useQuery<{memos: any[], tasks: any[]}>({
+  return useQuery<{memos: DeletedMemo[], tasks: DeletedTask[]}>({
     queryKey: ["board-deleted-items", boardId],
     queryFn: async () => {
       const token = await getCachedToken(getToken);
@@ -481,8 +493,8 @@ export function useBoardDeletedItems(boardId: number) {
         throw new Error("Failed to fetch deleted tasks");
       }
 
-      const deletedMemos = await memosResponse.json();
-      const deletedTasks = await tasksResponse.json();
+      const deletedMemos: DeletedMemo[] = await memosResponse.json();
+      const deletedTasks: DeletedTask[] = await tasksResponse.json();
 
       // 現在はボードとの過去の関連情報が保存されていないため、
       // 一時的にすべての削除済みアイテムを表示

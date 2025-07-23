@@ -12,7 +12,7 @@ interface ModalProps {
   parentElement?: HTMLElement
 }
 
-function Modal({ isOpen, onClose, title, children, maxWidth = 'md', position = 'center', parentElement }: ModalProps) {
+function Modal({ isOpen, onClose, title, children, maxWidth = 'md', position = 'center' }: ModalProps) {
   // ESCキーでモーダルを閉じる
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {

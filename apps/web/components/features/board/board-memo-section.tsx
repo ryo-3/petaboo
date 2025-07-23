@@ -33,7 +33,6 @@ interface BoardMemoSectionProps {
   onSetRightPanelMode: (mode: "memo-list" | null) => void;
   onMemoTabChange: (tab: "normal" | "deleted") => void;
   onSelectMemo: (memo: Memo) => void;
-  onMemoSelectionModeChange: (mode: "select" | "check") => void;
   onMemoSelectionToggle: (memoId: number) => void;
   onSelectAll?: () => void;
   isAllSelected?: boolean;
@@ -64,7 +63,6 @@ export default function BoardMemoSection({
   onSetRightPanelMode,
   onMemoTabChange,
   onSelectMemo,
-  onMemoSelectionModeChange,
   onMemoSelectionToggle,
   onSelectAll,
   isAllSelected,
@@ -198,7 +196,7 @@ export default function BoardMemoSection({
           </div>
         ) : activeMemoTab === "deleted" ? (
           <DeletedMemoDisplay
-            deletedMemos={memoItems.map(item => item.content as any)} // DeletedMemo型に変換
+            deletedMemos={memoItems.map(item => item.content) as DeletedMemo[]} // DeletedMemo型に変換
             viewMode={viewMode}
             effectiveColumnCount={effectiveColumnCount}
             isBoard={true}

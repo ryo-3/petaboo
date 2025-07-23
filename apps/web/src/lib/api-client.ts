@@ -282,4 +282,26 @@ export const tasksApi = {
     }
     return response
   },
+
+  // POST /tasks/import (CSVインポート)
+  importTasks: async (file: File, token?: string) => {
+    const headers: Record<string, string> = {}
+    if (token) {
+      headers.Authorization = `Bearer ${token}`
+    }
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await fetch(`${API_BASE_URL}/tasks/import`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    })
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    return response
+  },
 }

@@ -153,3 +153,21 @@ export function useRestoreTask() {
     },
   })
 }
+
+// CSVインポートhook
+export function useImportTasks() {
+  const queryClient = useQueryClient()
+  const { getToken } = useAuth()
+  
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const token = await getToken()
+      const response = await tasksApi.importTasks(file, token || undefined)
+      const data = await response.json()
+      return data as { success: boolean; imported: number; errors: string[] }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] })
+    },
+  })
+}

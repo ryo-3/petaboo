@@ -49,6 +49,56 @@ const TaskUpdateSchema = z.object({
   categoryId: z.number().optional(),
 });
 
+const ImportResultSchema = z.object({
+  success: z.boolean(),
+  imported: z.number(),
+  errors: z.array(z.string()),
+});
+
+// CSVパース関数
+function parseCSV(csvText: string): { title: string; description?: string; status?: "todo" | "in_progress" | "completed"; priority?: "low" | "medium" | "high" }[] {
+  const lines = csvText.trim().split('\n');
+  if (lines.length < 2) return [];
+  
+  const header = lines[0].toLowerCase();
+  if (!header.includes('title')) return [];
+  
+  const results: { title: string; description?: string; status?: "todo" | "in_progress" | "completed"; priority?: "low" | "medium" | "high" }[] = [];
+  
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    
+    // 簡単なCSVパース（カンマ区切り、ダブルクォート対応）
+    const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+    
+    if (values.length >= 1 && values[0]) {
+      const taskData: { title: string; description?: string; status?: "todo" | "in_progress" | "completed"; priority?: "low" | "medium" | "high" } = {
+        title: values[0],
+      };
+      
+      // description (2列目)
+      if (values[1]) taskData.description = values[1];
+      
+      // status (3列目)
+      const status = values[2]?.toLowerCase();
+      if (status === 'todo' || status === 'in_progress' || status === 'completed') {
+        taskData.status = status;
+      }
+      
+      // priority (4列目)
+      const priority = values[3]?.toLowerCase();
+      if (priority === 'low' || priority === 'medium' || priority === 'high') {
+        taskData.priority = priority;
+      }
+      
+      results.push(taskData);
+    }
+  }
+  
+  return results;
+}
+
 // GET /tasks（OpenAPI付き）
 app.openapi(
   createRoute({
@@ -614,6 +664,140 @@ app.openapi(
       return c.json({ success: true, id: restoredTask.id as number }, 200);
     } catch (error) {
       console.error('復元エラー:', error);
+      return c.json({ error: 'Internal server error' }, 500);
+    }
+  }
+);
+
+// POST /import（CSVインポート）
+app.openapi(
+  createRoute({
+    method: "post",
+    path: "/import",
+    request: {
+      body: {
+        content: {
+          "multipart/form-data": {
+            schema: z.object({
+              file: z.any().describe("CSV file to import"),
+            }),
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: "CSV import completed",
+        content: {
+          "application/json": {
+            schema: ImportResultSchema,
+          },
+        },
+      },
+      400: {
+        description: "Invalid file or format",
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+              details: z.string().optional(),
+            }),
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
+      500: {
+        description: "Internal server error",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
+    },
+  }),
+  async (c) => {
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    try {
+      const body = await c.req.parseBody();
+      const file = body['file'] as File;
+
+      if (!file) {
+        return c.json({ error: "No file provided" }, 400);
+      }
+
+      if (!file.name.endsWith('.csv')) {
+        return c.json({ error: "Only CSV files are supported" }, 400);
+      }
+
+      const csvText = await file.text();
+      const taskData = parseCSV(csvText);
+
+      if (taskData.length === 0) {
+        return c.json({ 
+          error: "No valid data found",
+          details: "CSV must have 'title' column and at least one data row"
+        }, 400);
+      }
+
+      const errors: string[] = [];
+      let imported = 0;
+
+      // 各タスクを作成
+      for (const [index, task] of taskData.entries()) {
+        try {
+          const parsed = TaskInputSchema.safeParse(task);
+          if (!parsed.success) {
+            errors.push(`Row ${index + 2}: ${parsed.error.issues[0].message}`);
+            continue;
+          }
+
+          const { title, description, status, priority, dueDate, categoryId } = parsed.data;
+          const result = await db.insert(tasks).values({
+            userId: auth.userId,
+            originalId: "", // 後で更新
+            uuid: generateUuid(),
+            title,
+            description: description || null,
+            status: status || "todo",
+            priority: priority || "medium",
+            dueDate: dueDate || null,
+            categoryId: categoryId || null,
+            createdAt: Math.floor(Date.now() / 1000),
+            updatedAt: null,
+          }).returning({ id: tasks.id });
+
+          // originalIdを生成して更新
+          const originalId = generateOriginalId(result[0].id);
+          await db.update(tasks)
+            .set({ originalId })
+            .where(eq(tasks.id, result[0].id));
+
+          imported++;
+        } catch (error) {
+          errors.push(`Row ${index + 2}: Failed to create task`);
+        }
+      }
+
+      return c.json({ 
+        success: true, 
+        imported, 
+        errors 
+      }, 200);
+
+    } catch (error) {
+      console.error('CSV Import Error:', error);
       return c.json({ error: 'Internal server error' }, 500);
     }
   }

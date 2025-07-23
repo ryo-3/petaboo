@@ -4,6 +4,7 @@ import DeletedTaskViewer, {
   DeletedTaskViewerRef,
 } from "@/components/features/task/deleted-task-viewer";
 import TaskEditor from "@/components/features/task/task-editor";
+import { CSVImportModal } from "@/components/features/task/csv-import-modal";
 import { useTasksBulkDelete } from "@/components/features/task/use-task-bulk-delete";
 import { useTasksBulkRestore } from "@/components/features/task/use-task-bulk-restore";
 import DesktopLower from "@/components/layout/desktop-lower";
@@ -108,6 +109,9 @@ function TaskScreen({
   // 復元の状態
   const [isRestoring, setIsRestoring] = useState(false);
   const [isRestoreLidOpen, setIsRestoreLidOpen] = useState(false);
+
+  // CSVインポートモーダルの状態
+  const [isCsvImportModalOpen, setIsCsvImportModalOpen] = useState(false);
 
   // 共通screen状態管理
   const {
@@ -404,6 +408,7 @@ function TaskScreen({
             tasks?.filter((task) => task.status === "completed").length || 0
           }
           hideAddButton={hideHeaderButtons}
+          onCsvImport={() => setIsCsvImportModalOpen(true)}
         />
 
         <DesktopLower
@@ -520,6 +525,12 @@ function TaskScreen({
 
       {/* 一括復元確認モーダル */}
       <RestoreModal />
+      
+      {/* CSVインポートモーダル */}
+      <CSVImportModal
+        isOpen={isCsvImportModalOpen}
+        onClose={() => setIsCsvImportModalOpen(false)}
+      />
     </div>
   );
 }

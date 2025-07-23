@@ -1,0 +1,16 @@
+title,description,status,priority
+プロジェクト企画書作成,新しいアプリケーションの企画書を作成する,todo,high
+データベース設計,アプリケーションで使用するデータベースの設計を行う,in_progress,high
+UI/UXデザイン,ユーザーインターフェースとユーザーエクスペリエンスの設計,todo,medium
+フロントエンド開発,React/Next.jsを使ったフロントエンドの実装,todo,medium
+バックエンドAPI開発,REST APIの設計と実装,in_progress,medium
+テスト作成,単体テストと統合テストの作成,todo,low
+ドキュメント作成,技術仕様書とユーザーマニュアルの作成,todo,low
+コードレビュー,開発したコードのレビューと改善,in_progress,medium
+デプロイ準備,本番環境へのデプロイメント準備,todo,high
+リリース後監視,アプリケーションの監視と保守,todo,medium
+会議資料準備,週次定例会議の資料準備,completed,low
+クライアント打ち合わせ,要件確認のためのクライアント打ち合わせ,completed,medium
+技術調査,新しい技術スタックの調査と評価,completed,high
+プロトタイプ作成,アプリケーションのプロトタイプ作成,completed,medium
+セキュリティ監査,アプリケーションのセキュリティチェック,todo,high

@@ -7,7 +7,6 @@ export const boards = sqliteTable("boards", {
   slug: text("slug").notNull().unique(),
   description: text("description"),
   userId: text("user_id").notNull(),
-  position: integer("position").notNull().default(0),
   archived: integer("archived", { mode: "boolean" }).notNull().default(false),
   completed: integer("completed", { mode: "boolean" }).notNull().default(false),
   createdAt: integer("created_at", { mode: "timestamp" })
@@ -24,7 +23,6 @@ export const boardItems = sqliteTable("board_items", {
   boardId: integer("board_id").notNull().references(() => boards.id, { onDelete: "cascade" }),
   itemType: text("item_type").notNull(), // 'memo' | 'task'
   itemId: integer("item_id").notNull(),
-  position: integer("position").notNull().default(0),
   deletedAt: integer("deleted_at", { mode: "timestamp" }),
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()
@@ -38,7 +36,6 @@ export const deletedBoards = sqliteTable("deleted_boards", {
   name: text("name").notNull(),
   slug: text("slug").notNull(),
   description: text("description"),
-  position: integer("position").notNull(),
   archived: integer("archived", { mode: "boolean" }).notNull(),
   createdAt: integer("created_at").notNull(),
   updatedAt: integer("updated_at"),

@@ -51,7 +51,6 @@ const BoardSchema = z.object({
   slug: z.string(),
   description: z.string().nullable(),
   userId: z.string(),
-  position: z.number(),
   archived: z.boolean(),
   completed: z.boolean(),
   createdAt: z.number(),
@@ -78,7 +77,6 @@ const BoardItemSchema = z.object({
   boardId: z.number(),
   itemType: z.enum(["memo", "task"]),
   itemId: z.number(),
-  position: z.number(),
   createdAt: z.number(),
 });
 
@@ -155,7 +153,7 @@ export function createAPI(app: any) {
         .select()
         .from(boards)
         .where(and(...conditions))
-        .orderBy(boards.position, boards.createdAt);
+        .orderBy(desc(boards.updatedAt), desc(boards.createdAt));
     }
 
     // 各ボードのメモ・タスク数を計算
@@ -292,14 +290,6 @@ export function createAPI(app: any) {
     const { name, description } = c.req.valid("json");
     const db = c.env.db;
 
-    // 最大ポジション取得
-    const maxPosition = await db
-      .select({ maxPos: boards.position })
-      .from(boards)
-      .where(eq(boards.userId, auth.userId))
-      .orderBy(desc(boards.position))
-      .limit(1);
-
     const now = new Date();
     const slug = await generateUniqueSlug(name, auth.userId, db);
     const newBoard: NewBoard = {
@@ -307,7 +297,6 @@ export function createAPI(app: any) {
       slug,
       description: description || null,
       userId: auth.userId,
-      position: (maxPosition[0]?.maxPos || 0) + 1,
       archived: false,
       completed: false,
       createdAt: now,
@@ -568,7 +557,6 @@ export function createAPI(app: any) {
       name: board[0].name,
       slug: board[0].slug,
       description: board[0].description,
-      position: board[0].position,
       archived: board[0].archived,
       createdAt: typeof board[0].createdAt === 'object' ? Math.floor(board[0].createdAt.getTime() / 1000) : board[0].createdAt,
       updatedAt: typeof board[0].updatedAt === 'object' ? Math.floor(board[0].updatedAt.getTime() / 1000) : board[0].updatedAt,
@@ -649,14 +637,6 @@ export function createAPI(app: any) {
       return c.json({ error: "Deleted board not found" }, 404);
     }
 
-    // 最大ポジション取得
-    const maxPosition = await db
-      .select({ maxPos: boards.position })
-      .from(boards)
-      .where(eq(boards.userId, auth.userId))
-      .orderBy(desc(boards.position))
-      .limit(1);
-
     // 新しいスラッグを生成（重複を避けるため）
     const newSlug = await generateUniqueSlug(deletedBoard[0].name, auth.userId, db);
 
@@ -666,7 +646,6 @@ export function createAPI(app: any) {
       slug: newSlug,
       description: deletedBoard[0].description,
       userId: deletedBoard[0].userId,
-      position: (maxPosition[0]?.maxPos || 0) + 1,
       archived: deletedBoard[0].archived,
       completed: false, // 復元時は未完了に設定
       createdAt: new Date(deletedBoard[0].createdAt * 1000),
@@ -758,8 +737,7 @@ export function createAPI(app: any) {
                 id: z.number(),
                 itemType: z.enum(["memo", "task"]),
                 itemId: z.number(),
-                position: z.number(),
-                content: z.any(), // メモまたはタスクの内容
+                              content: z.any(), // メモまたはタスクの内容
               })),
             }),
           },
@@ -809,8 +787,7 @@ export function createAPI(app: any) {
                 id: z.number(),
                 itemType: z.enum(["memo", "task"]),
                 itemId: z.number(),
-                position: z.number(),
-                deletedAt: z.number(),
+                              deletedAt: z.number(),
                 content: z.any(), // メモまたはタスクの内容
               })),
             }),
@@ -876,7 +853,7 @@ export function createAPI(app: any) {
           isNull(boardItems.deletedAt)
         )
       )
-      .orderBy(boardItems.position);
+      .orderBy(boardItems.createdAt);
 
     // アイテムの内容を取得
     const itemsWithContent = await Promise.all(
@@ -902,7 +879,6 @@ export function createAPI(app: any) {
           id: item.id,
           itemType: item.itemType,
           itemId: item.itemId,
-          position: item.position,
           content,
         };
       })
@@ -952,7 +928,7 @@ export function createAPI(app: any) {
           isNotNull(boardItems.deletedAt)
         )
       )
-      .orderBy(boardItems.position);
+      .orderBy(boardItems.createdAt);
 
     // アイテムの内容を削除済みテーブルから取得
     const deletedItemsWithContent = await Promise.all(
@@ -980,7 +956,6 @@ export function createAPI(app: any) {
           id: item.id,
           itemType: item.itemType,
           itemId: item.itemId,
-          position: item.position,
           deletedAt: typeof item.deletedAt === 'object' ? Math.floor(item.deletedAt.getTime() / 1000) : item.deletedAt,
           content,
         };
@@ -1120,24 +1095,10 @@ export function createAPI(app: any) {
       return c.json({ error: "Item already exists in board" }, 400);
     }
 
-    // 最大ポジション取得（削除されていないアイテムのみ）
-    const maxPosition = await db
-      .select({ maxPos: boardItems.position })
-      .from(boardItems)
-      .where(
-        and(
-          eq(boardItems.boardId, boardId),
-          isNull(boardItems.deletedAt)
-        )
-      )
-      .orderBy(desc(boardItems.position))
-      .limit(1);
-
     const newItem: NewBoardItem = {
       boardId,
       itemType,
       itemId,
-      position: (maxPosition[0]?.maxPos || 0) + 1,
       createdAt: new Date(),
     };
 

@@ -1,7 +1,7 @@
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
 import { drizzle } from "drizzle-orm/better-sqlite3";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, sql } from "drizzle-orm";
 import Database from "better-sqlite3";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { tasks, deletedTasks } from "../../db/schema/tasks";
@@ -88,7 +88,21 @@ app.openapi(
       categoryId: tasks.categoryId,
       createdAt: tasks.createdAt,
       updatedAt: tasks.updatedAt,
-    }).from(tasks).where(eq(tasks.userId, auth.userId));
+    }).from(tasks)
+      .where(eq(tasks.userId, auth.userId))
+      .orderBy(
+        // 優先度順: high(3) > medium(2) > low(1)
+        desc(
+          sql`CASE 
+            WHEN ${tasks.priority} = 'high' THEN 3
+            WHEN ${tasks.priority} = 'medium' THEN 2  
+            WHEN ${tasks.priority} = 'low' THEN 1
+            ELSE 0
+          END`
+        ),
+        desc(tasks.updatedAt), 
+        desc(tasks.createdAt)
+      );
     
     return c.json(result, 200);
   }

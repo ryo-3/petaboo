@@ -193,7 +193,7 @@ export function useMemosBulkDelete({
     }
     
     // メモは全て通常メモとして扱う
-    return [{ status: 'normal', label: '通常', count: memoIds.length, color: 'bg-gray-400' }];
+    return [{ status: 'normal', label: '通常', count: memoIds.length, color: 'bg-zinc-500' }];
   };
 
   // カスタムメッセージコンポーネント（メモ版）

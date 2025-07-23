@@ -3,6 +3,7 @@
 import { ReactNode, useState } from 'react'
 import TrashIcon from '@/components/icons/trash-icon'
 import Modal from './modal'
+import { DeletionWarningMessage } from './deletion-warning-message'
 
 type IconType = 'trash' | 'logout' | 'save' | 'warning' | 'info' | 'custom'
 type Variant = 'danger' | 'warning' | 'primary' | 'secondary'
@@ -252,6 +253,9 @@ interface BulkDeleteConfirmationProps {
   customTitle?: string
   onRemoveFromBoard?: () => void
   showRemoveFromBoard?: boolean
+  statusBreakdown?: Array<{ status: string; label: string; count: number; color: string }>
+  hasOtherTabItems?: boolean
+  isLimited?: boolean
 }
 
 export function BulkDeleteConfirmation({
@@ -266,7 +270,10 @@ export function BulkDeleteConfirmation({
   position = 'center',
   customTitle,
   onRemoveFromBoard,
-  showRemoveFromBoard = false
+  showRemoveFromBoard = false,
+  statusBreakdown,
+  hasOtherTabItems = false,
+  isLimited = false
 }: BulkDeleteConfirmationProps) {
   const itemTypeName = itemType === 'memo' ? 'メモ' : 'タスク'
   
@@ -291,15 +298,15 @@ export function BulkDeleteConfirmation({
             {title}
           </h3>
           
-          {/* メッセージ */}
+          {/* 統一された警告表示 */}
           <div className="mb-6">
-            {typeof message === 'string' ? (
-              <p className="text-sm text-gray-600 whitespace-pre-line">
-                {message}
-              </p>
-            ) : (
-              <div>{message}</div>
-            )}
+            <DeletionWarningMessage
+              hasOtherTabItems={hasOtherTabItems}
+              isLimited={isLimited}
+              statusBreakdown={statusBreakdown || [{ status: 'normal', label: '通常', count: count, color: 'bg-zinc-500' }]}
+              showStatusBreakdown={true}
+              isPermanentDelete={deleteType === 'permanent'}
+            />
             {/* 削除処理中のタブ切り替え注意書き */}
             <p className="text-xs text-gray-500 mt-2">
               ※削除中にタブを切り替えると処理が中断されます

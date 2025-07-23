@@ -127,7 +127,7 @@ function BoardDetailScreen({
       console.log('📝 New checkedMemos:', Array.from(newSet));
       return newSet;
     });
-  }, []);
+  }, [setCheckedMemos]);
 
   const handleTaskSelectionToggle = useCallback((taskId: string | number) => {
     setCheckedTasks(prev => {
@@ -199,7 +199,7 @@ function BoardDetailScreen({
         選択した{itemType === 'memo' ? 'メモ' : 'タスク'}の操作を選択してください
       </div>
     );
-  }, [checkedMemos, checkedTasks, bulkDelete, deleteMemoMutation, deleteTaskMutation]);
+  }, [checkedMemos, checkedTasks, bulkDelete, deleteMemoMutation, deleteTaskMutation, setCheckedMemos]);
 
   // ボードから削除の処理
   const handleRemoveFromBoard = useCallback(async () => {
@@ -227,7 +227,8 @@ function BoardDetailScreen({
     } finally {
       setDeletingItemType(null);
     }
-  }, [deletingItemType, checkedMemos, checkedTasks, boardId, bulkDelete]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deletingItemType, checkedMemos, checkedTasks, boardId, bulkDelete, setCheckedMemos]);
   
   
 
@@ -408,8 +409,8 @@ function BoardDetailScreen({
 
 
   // メモとタスクのアイテムを分離（読み込み中も空配列で処理）
-  const allMemoItems =
-    boardWithItems?.items.filter((item) => item.itemType === "memo") || [];
+  const allMemoItems = useMemo(() =>
+    boardWithItems?.items.filter((item) => item.itemType === "memo") || [], [boardWithItems]);
   const allTaskItems =
     boardWithItems?.items.filter((item) => item.itemType === "task") || [];
 
@@ -632,7 +633,7 @@ function BoardDetailScreen({
     } else {
       setCheckedMemos(new Set(currentMemoIds));
     }
-  }, [memoItems, checkedMemos.size]);
+  }, [memoItems, checkedMemos.size, setCheckedMemos]);
 
   const handleTaskSelectAll = useCallback(() => {
     const currentTaskIds = taskItems.map((item) => item.itemId); // originalIdを使用
@@ -647,28 +648,6 @@ function BoardDetailScreen({
   const isMemoAllSelected = memoItems.length > 0 && checkedMemos.size === memoItems.length;
   const isTaskAllSelected = taskItems.length > 0 && checkedTasks.size === taskItems.length;
 
-  // ステータス別カウントを取得する関数（ボード版）
-  const getBoardItemStatusBreakdown = (itemIds: (string | number)[], itemType: 'memo' | 'task') => {
-    if (itemType === 'memo') {
-      return [{ status: 'normal', label: '通常', count: itemIds.length, color: 'bg-gray-400' }];
-    } else {
-      // IDから対応するタスクを取得
-      const selectedTasks = taskItems
-        .filter(item => itemIds.includes(item.itemId))
-        .map(item => item.content as Task);
-      
-      const todoCount = selectedTasks.filter(task => task.status === 'todo').length;
-      const inProgressCount = selectedTasks.filter(task => task.status === 'in_progress').length;
-      const completedCount = selectedTasks.filter(task => task.status === 'completed').length;
-      
-      const breakdown = [];
-      if (todoCount > 0) breakdown.push({ status: 'todo', label: '未着手', count: todoCount, color: 'bg-zinc-400' });
-      if (inProgressCount > 0) breakdown.push({ status: 'in_progress', label: '進行中', count: inProgressCount, color: 'bg-blue-500' });
-      if (completedCount > 0) breakdown.push({ status: 'completed', label: '完了', count: completedCount, color: 'bg-green-500' });
-      
-      return breakdown;
-    }
-  };
 
 
 
@@ -831,7 +810,7 @@ function BoardDetailScreen({
             onTaskSelectionToggle={handleTaskSelectionToggle}
             onSelectAll={handleTaskSelectAll}
             isAllSelected={isTaskAllSelected}
-            onBulkDelete={() => {}}
+            onBulkDelete={() => handleBulkDelete('task')}
             isDeleting={false}
             isLidOpen={false}
             currentDisplayCount={0}

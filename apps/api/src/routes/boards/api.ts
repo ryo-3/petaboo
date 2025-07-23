@@ -1,7 +1,7 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { getAuth } from "@hono/clerk-auth";
 import { eq, and, desc, isNull, isNotNull } from "drizzle-orm";
-import { boards, boardItems, tasks, notes, deletedBoards, deletedNotes, deletedTasks } from "../../db";
+import { boards, boardItems, tasks, memos, deletedBoards, deletedMemos, deletedTasks } from "../../db";
 import type { NewBoard, NewBoardItem, NewDeletedBoard } from "../../db/schema/boards";
 
 // スラッグ生成ユーティリティ
@@ -177,14 +177,14 @@ export function createAPI(app: any) {
 
         for (const item of items) {
           if (item.itemType === "memo") {
-            // メモが削除されていないか確認（notesテーブルに存在するかチェック）
+            // メモが削除されていないか確認（memosテーブルに存在するかチェック）
             const memo = await db
               .select()
-              .from(notes)
+              .from(memos)
               .where(
                 and(
-                  eq(notes.id, item.itemId),
-                  eq(notes.userId, auth.userId)
+                  eq(memos.id, item.itemId),
+                  eq(memos.userId, auth.userId)
                 )
               )
               .limit(1);
@@ -862,8 +862,8 @@ export function createAPI(app: any) {
         if (item.itemType === "memo") {
           const memo = await db
             .select()
-            .from(notes)
-            .where(and(eq(notes.id, item.itemId), eq(notes.userId, auth.userId)))
+            .from(memos)
+            .where(and(eq(memos.id, item.itemId), eq(memos.userId, auth.userId)))
             .limit(1);
           content = memo[0] || null;
         } else {
@@ -938,8 +938,8 @@ export function createAPI(app: any) {
           // 削除済みメモテーブルから取得
           const deletedMemo = await db
             .select()
-            .from(deletedNotes)
-            .where(and(eq(deletedNotes.originalId, item.itemId), eq(deletedNotes.userId, auth.userId)))
+            .from(deletedMemos)
+            .where(and(eq(deletedMemos.originalId, item.itemId), eq(deletedMemos.userId, auth.userId)))
             .limit(1);
           content = deletedMemo[0] || null;
         } else {
@@ -1060,8 +1060,8 @@ export function createAPI(app: any) {
     if (itemType === "memo") {
       const memo = await db
         .select()
-        .from(notes)
-        .where(and(eq(notes.id, itemId), eq(notes.userId, auth.userId)))
+        .from(memos)
+        .where(and(eq(memos.id, itemId), eq(memos.userId, auth.userId)))
         .limit(1);
       if (memo.length === 0) {
         return c.json({ error: "Memo not found" }, 404);
@@ -1270,8 +1270,8 @@ export function createAPI(app: any) {
     if (itemType === "memo") {
       const memo = await db
         .select()
-        .from(notes)
-        .where(and(eq(notes.id, itemIdNum), eq(notes.userId, auth.userId)))
+        .from(memos)
+        .where(and(eq(memos.id, itemIdNum), eq(memos.userId, auth.userId)))
         .limit(1);
 
       if (memo.length === 0) {

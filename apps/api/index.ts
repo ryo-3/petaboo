@@ -3,7 +3,7 @@ import { swaggerUI } from "@hono/swagger-ui";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import openapiApp from "./src/openapi";
-import notesRoute from "./src/routes/notes/route";
+import memosRoute from "./src/routes/memos/route";
 import tasksRoute from "./src/routes/tasks/route";
 import userPreferencesRoute from "./src/routes/user-preferences/route";
 import categoriesRoute from "./src/routes/categories/route";
@@ -24,7 +24,7 @@ app.use("*", cors({
 
 console.log("サーバー起動！");
 
-app.route("/notes", notesRoute);
+app.route("/memos", memosRoute);
 app.route("/tasks", tasksRoute);
 app.route("/user-preferences", userPreferencesRoute);
 app.route("/categories", categoriesRoute);
@@ -33,9 +33,9 @@ app.get("/openapi", (c) => {
   const openapiJson = openapiApp.getOpenAPIDocument({
     openapi: "3.1.0", // バージョンは "3.0.0" でもOK
     info: {
-      title: "Notes API", // 好きなタイトル
+      title: "memo API", // 好きなタイトル
       version: "1.0.0", // バージョン
-      description: "Notes API docs", // 説明
+      description: "API docs", // 説明
     },
   });
   return c.json(openapiJson);

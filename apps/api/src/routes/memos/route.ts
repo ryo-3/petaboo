@@ -4,7 +4,7 @@ import { drizzle } from "drizzle-orm/better-sqlite3";
 import { eq, desc, and } from "drizzle-orm";
 import Database from "better-sqlite3";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
-import { notes, deletedNotes } from "../../db/schema/notes";
+import { memos, deletedMemos } from "../../db/schema/memos";
 import { boardItems } from "../../db/schema/boards";
 import { generateOriginalId } from "../../utils/originalId";
 
@@ -18,7 +18,7 @@ const app = new OpenAPIHono();
 app.use('*', clerkMiddleware());
 
 // 共通スキーマ定義
-const NoteSchema = z.object({
+const MemoSchema = z.object({
   id: z.number(),
   originalId: z.string(),
   title: z.string(),
@@ -27,22 +27,22 @@ const NoteSchema = z.object({
   updatedAt: z.number().nullable(),
 });
 
-const NoteInputSchema = z.object({
+const MemoInputSchema = z.object({
   title: z.string().min(1),
   content: z.string().optional(),
 });
 
-// GET /notes（OpenAPI付き）
+// GET /memos（OpenAPI付き）
 app.openapi(
   createRoute({
     method: "get",
     path: "/",
     responses: {
       200: {
-        description: "List of notes",
+        description: "List of memos",
         content: {
           "application/json": {
-            schema: z.array(NoteSchema),
+            schema: z.array(MemoSchema),
           },
         },
       },
@@ -64,21 +64,21 @@ app.openapi(
     }
     
     const result = await db.select({
-      id: notes.id,
-      originalId: notes.originalId,
-      title: notes.title,
-      content: notes.content,
-      createdAt: notes.createdAt,
-      updatedAt: notes.updatedAt,
-    }).from(notes)
-      .where(eq(notes.userId, auth.userId))
-      .orderBy(desc(notes.updatedAt), desc(notes.createdAt));
+      id: memos.id,
+      originalId: memos.originalId,
+      title: memos.title,
+      content: memos.content,
+      createdAt: memos.createdAt,
+      updatedAt: memos.updatedAt,
+    }).from(memos)
+      .where(eq(memos.userId, auth.userId))
+      .orderBy(desc(memos.updatedAt), desc(memos.createdAt));
     
     return c.json(result, 200);
   }
 );
 
-// POST /notes（OpenAPI付き）
+// POST /memos（OpenAPI付き）
 app.openapi(
   createRoute({
     method: "post",
@@ -87,7 +87,7 @@ app.openapi(
       body: {
         content: {
           "application/json": {
-            schema: NoteInputSchema,
+            schema: MemoInputSchema,
           },
         },
       },
@@ -132,7 +132,7 @@ app.openapi(
     }
 
     const body = await c.req.json();
-    const parsed = NoteInputSchema.safeParse(body);
+    const parsed = MemoInputSchema.safeParse(body);
 
     if (!parsed.success) {
       return c.json(
@@ -142,25 +142,25 @@ app.openapi(
     }
 
     const { title, content } = parsed.data;
-    const result = await db.insert(notes).values({
+    const result = await db.insert(memos).values({
       userId: auth.userId,
       originalId: "", // 後で更新
       title,
       content,
       createdAt: Math.floor(Date.now() / 1000),
-    }).returning({ id: notes.id });
+    }).returning({ id: memos.id });
 
     // originalIdを生成して更新
     const originalId = generateOriginalId(result[0].id);
-    await db.update(notes)
+    await db.update(memos)
       .set({ originalId })
-      .where(eq(notes.id, result[0].id));
+      .where(eq(memos.id, result[0].id));
 
     return c.json({ success: true, id: result[0].id as number }, 200);
   }
 );
 
-// PUT /notes/:id（メモ更新）
+// PUT /memos/:id（メモ更新）
 app.openapi(
   createRoute({
     method: "put",
@@ -172,7 +172,7 @@ app.openapi(
       body: {
         content: {
           "application/json": {
-            schema: NoteInputSchema,
+            schema: MemoInputSchema,
           },
         },
       },
@@ -223,7 +223,7 @@ app.openapi(
 
     const { id } = c.req.valid("param");
     const body = await c.req.json();
-    const parsed = NoteInputSchema.safeParse(body);
+    const parsed = MemoInputSchema.safeParse(body);
 
     if (!parsed.success) {
       return c.json(
@@ -233,13 +233,13 @@ app.openapi(
     }
 
     const { title, content } = parsed.data;
-    const result = await db.update(notes)
+    const result = await db.update(memos)
       .set({ 
         title, 
         content,
         updatedAt: Math.floor(Date.now() / 1000)
       })
-      .where(and(eq(notes.id, id), eq(notes.userId, auth.userId)));
+      .where(and(eq(memos.id, id), eq(memos.userId, auth.userId)));
 
     if (result.changes === 0) {
       return c.json({ error: "Note not found" }, 404);
@@ -249,7 +249,7 @@ app.openapi(
   }
 );
 
-// DELETE /notes/:id（OpenAPI付き）
+// DELETE /memos/:id（OpenAPI付き）
 app.openapi(
   createRoute({
     method: "delete",
@@ -295,7 +295,7 @@ app.openapi(
     const { id } = c.req.valid("param");
     
     // まず該当メモを取得（ユーザー確認込み）
-    const note = await db.select().from(notes).where(and(eq(notes.id, id), eq(notes.userId, auth.userId))).get();
+    const note = await db.select().from(memos).where(and(eq(memos.id, id), eq(memos.userId, auth.userId))).get();
     
     if (!note) {
       return c.json({ error: "Note not found" }, 404);
@@ -304,7 +304,7 @@ app.openapi(
     // トランザクションで削除済みテーブルに移動してから元テーブルから削除
     db.transaction((tx) => {
       // 削除済みテーブルに挿入
-      tx.insert(deletedNotes).values({
+      tx.insert(deletedMemos).values({
         userId: auth.userId,
         originalId: note.originalId, // originalIdをそのままコピー
         title: note.title,
@@ -323,7 +323,7 @@ app.openapi(
         )).run();
 
       // 元テーブルから削除
-      tx.delete(notes).where(eq(notes.id, id)).run();
+      tx.delete(memos).where(eq(memos.id, id)).run();
     });
 
     return c.json({ success: true }, 200);
@@ -337,7 +337,7 @@ app.openapi(
     path: "/deleted",
     responses: {
       200: {
-        description: "List of deleted notes",
+        description: "List of deleted memos",
         content: {
           "application/json": {
             schema: z.array(z.object({
@@ -379,16 +379,16 @@ app.openapi(
 
     try {
       const result = await db.select({
-        id: deletedNotes.id,
-        originalId: deletedNotes.originalId,
-        title: deletedNotes.title,
-        content: deletedNotes.content,
-        createdAt: deletedNotes.createdAt,
-        updatedAt: deletedNotes.updatedAt,
-        deletedAt: deletedNotes.deletedAt,
-      }).from(deletedNotes)
-        .where(eq(deletedNotes.userId, auth.userId))
-        .orderBy(desc(deletedNotes.deletedAt));
+        id: deletedMemos.id,
+        originalId: deletedMemos.originalId,
+        title: deletedMemos.title,
+        content: deletedMemos.content,
+        createdAt: deletedMemos.createdAt,
+        updatedAt: deletedMemos.updatedAt,
+        deletedAt: deletedMemos.deletedAt,
+      }).from(deletedMemos)
+        .where(eq(deletedMemos.userId, auth.userId))
+        .orderBy(desc(deletedMemos.deletedAt));
       return c.json(result);
     } catch (error) {
       console.error('削除済みメモ取得エラー:', error);
@@ -451,8 +451,8 @@ app.openapi(
     const { id } = c.req.valid("param");
     
     try {
-      const result = await db.delete(deletedNotes).where(
-        and(eq(deletedNotes.id, id), eq(deletedNotes.userId, auth.userId))
+      const result = await db.delete(deletedMemos).where(
+        and(eq(deletedMemos.id, id), eq(deletedMemos.userId, auth.userId))
       );
       
       if (result.changes === 0) {
@@ -522,8 +522,8 @@ app.openapi(
     
     try {
       // まず削除済みメモを取得
-      const deletedNote = await db.select().from(deletedNotes).where(
-        and(eq(deletedNotes.id, id), eq(deletedNotes.userId, auth.userId))
+      const deletedNote = await db.select().from(deletedMemos).where(
+        and(eq(deletedMemos.id, id), eq(deletedMemos.userId, auth.userId))
       ).get();
       
       if (!deletedNote) {
@@ -533,14 +533,14 @@ app.openapi(
       // トランザクションで復元処理
       const restoredNote = db.transaction((tx) => {
         // 通常メモテーブルに復元
-        const result = tx.insert(notes).values({
+        const result = tx.insert(memos).values({
           userId: auth.userId,
           originalId: deletedNote.originalId, // originalIdをそのまま復元
           title: deletedNote.title,
           content: deletedNote.content,
           createdAt: deletedNote.createdAt,
           updatedAt: Math.floor(Date.now() / 1000), // 復元時刻を更新
-        }).returning({ id: notes.id }).get();
+        }).returning({ id: memos.id }).get();
 
         // 関連するboard_itemsのdeletedAtをNULLに戻す
         tx.update(boardItems)
@@ -551,7 +551,7 @@ app.openapi(
           )).run();
 
         // 削除済みテーブルから削除
-        tx.delete(deletedNotes).where(eq(deletedNotes.id, id)).run();
+        tx.delete(deletedMemos).where(eq(deletedMemos.id, id)).run();
 
         return result;
       });

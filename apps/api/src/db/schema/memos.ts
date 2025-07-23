@@ -1,6 +1,6 @@
 import { sqliteTable, integer, text } from "drizzle-orm/sqlite-core";
 
-export const notes = sqliteTable("notes", {
+export const memos = sqliteTable("memos", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   userId: text("user_id").notNull(),
   originalId: text("original_id").notNull(),
@@ -11,10 +11,10 @@ export const notes = sqliteTable("notes", {
   updatedAt: integer("updated_at"),
 });
 
-export const deletedNotes = sqliteTable("deleted_notes", {
+export const deletedMemos = sqliteTable("deleted_memos", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   userId: text("user_id").notNull(),
-  originalId: text("original_id").notNull(), // 元のnotesテーブルのoriginalId
+  originalId: text("original_id").notNull(), // 元のmemosテーブルのoriginalId
   title: text("title").notNull(),
   content: text("content"),
   categoryId: integer("category_id"),

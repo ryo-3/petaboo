@@ -1,7 +1,7 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { getAuth } from "@hono/clerk-auth";
 import { eq, and, sql } from "drizzle-orm";
-import { categories, tasks, notes } from "../../db";
+import { categories, tasks, memos } from "../../db";
 import type { NewCategory } from "../../db/schema/categories";
 
 const CategorySchema = z.object({
@@ -416,11 +416,11 @@ export function createAPI(app: any) {
     // メモの使用数をカウント
     const memoCount = await db
       .select({ count: sql<number>`count(*)` })
-      .from(notes)
+      .from(memos)
       .where(
         and(
-          eq(notes.userId, auth.userId),
-          eq(notes.categoryId, categoryId)
+          eq(memos.userId, auth.userId),
+          eq(memos.categoryId, categoryId)
         )
       );
 

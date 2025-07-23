@@ -19,6 +19,12 @@
 - **フック**: `use-categories.ts` (React Query)
 - **UI**: `CategorySelector` (CustomSelector利用)
 
+### メモシステム
+- **API**: `/memos` (CRUD操作、Clerk Bearer認証)
+- **フック**: `use-memos.ts` (React Query)
+- **テーブル**: `memos`, `deleted_memos`
+- **originalId システム**: `${id}_${timestamp}_${random}` 形式で削除・復元時の一意性保証
+
 ### ボードシステム
 - **API**: `/boards` `/boards/{id}/items`
 - **フック**: `useBoards()` `useBoardWithItems(id)`

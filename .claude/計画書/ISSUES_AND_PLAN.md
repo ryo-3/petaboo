@@ -125,8 +125,16 @@ interface Memo {
   - [x] タスク一覧: 優先度降順(high>medium>low) > 更新日降順 > 作成日降順
   - [x] ボード一覧: 更新日降順 > 作成日降順
   - [x] ボード内アイテム: 作成日昇順（挿入順）
+- [x] テーブル名の統一（`notes` → `memos`）
+  - [x] データベーススキーマ変更（notes → memos, deleted_notes → deleted_memos）
+  - [x] API エンドポイント変更（/notes → /memos）
+  - [x] フロントエンドAPI クライアント更新（notesApi → memosApi）
+  - [x] React フック名変更（useNotes → useMemos 等）
+  - [x] 変数・関数名の統一（deletedNotes → deletedMemos 等）
+  - [x] UI テキストの更新（Notes → Memos）
+  - [x] originalId システムの実装
+  - [x] autoIncrement による ID 重複回避対応
 - [ ] データベース構造シンプル化の詳細設計
-- [ ] テーブル名の統一（`notes` → `memos`）
 
 ### Phase 3: 今後の改善検討 **[検討段階]**
 - [ ] データベーススキーマの変更（ソフトデリートへの移行）

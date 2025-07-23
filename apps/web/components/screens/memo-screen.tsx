@@ -34,8 +34,7 @@ import {
   getNextItemAfterDeletion,
 } from "@/src/utils/domUtils";
 import { createToggleHandler } from "@/src/utils/toggleUtils";
-import { useCallback, useRef, useState, useEffect } from "react";
-import { useTrashIconVisibility } from "@/src/hooks/use-trash-icon-visibility";
+import { useCallback, useRef, useState } from "react";
 
 type MemoScreenMode = "list" | "view" | "create";
 
@@ -98,29 +97,6 @@ function MemoScreen({
 
   // 左側一括削除の状態
   const [isLeftDeleting, setIsLeftDeleting] = useState(false);
-  
-  // デバッグ用: isLeftDeletingの状態変化を監視
-  useEffect(() => {
-    console.log('📊 isLeftDeleting状態変化:', isLeftDeleting);
-  }, [isLeftDeleting]);
-
-  // ゴミ箱アイコンの表示状態を監視
-  const { checkTrashIconStatus } = useTrashIconVisibility();
-
-  // デバッグ用: 定期的にゴミ箱アイコンの状態をチェック
-  useEffect(() => {
-    if (isLeftDeleting) {
-      console.log('🗑️🔍 削除開始 - ゴミ箱アイコン状態チェック');
-      checkTrashIconStatus();
-      
-      // 削除中は定期的にチェック
-      const interval = setInterval(() => {
-        checkTrashIconStatus();
-      }, 500);
-      
-      return () => clearInterval(interval);
-    }
-  }, [isLeftDeleting, checkTrashIconStatus]);
   const [isLeftLidOpen, setIsLeftLidOpen] = useState(false);
 
   // 右側削除の状態

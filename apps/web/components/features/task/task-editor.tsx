@@ -292,10 +292,23 @@ function TaskEditor({
         }, 400);
       } else {
         // 編集
-        const updatedTask = await updateTask.mutateAsync({
-          id: task!.id,
-          data: taskData,
-        });
+        // タスク内容の変更があるかチェック（ボード変更は除く）
+        const hasContentChanges = title.trim() !== originalData.title.trim() ||
+          description.trim() !== originalData.description.trim() ||
+          status !== originalData.status ||
+          priority !== originalData.priority ||
+          categoryId !== originalData.categoryId ||
+          dueDate !== originalData.dueDate;
+        
+        let updatedTask = task!;
+        
+        // タスク内容に変更がある場合のみ更新
+        if (hasContentChanges) {
+          updatedTask = await updateTask.mutateAsync({
+            id: task!.id,
+            data: taskData,
+          });
+        }
         
         // ボード変更処理
         const currentBoardIds = itemBoards.map(board => board.id.toString());

@@ -18,40 +18,28 @@ export default function BoardChangeModal({
   boardsToRemove,
   parentElement: _parentElement // eslint-disable-line @typescript-eslint/no-unused-vars
 }: BoardChangeModalProps) {
-  const hasChanges = boardsToAdd.length > 0 || boardsToRemove.length > 0;
-
-  if (!hasChanges) return null;
+  // 削除するボードがない場合は表示しない
+  if (boardsToRemove.length === 0) return null;
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="ボード変更の確認"
+      title="ボードから外す確認"
       maxWidth="sm"
-      position="right-panel"
+      position="center"
     >
       <div className="space-y-4">
-        {boardsToAdd.length > 0 && (
-          <div>
-            <h4 className="font-medium text-gray-900 mb-2">追加するボード:</h4>
-            <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
-              {boardsToAdd.map((boardName, index) => (
-                <li key={index}>{boardName}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-        
-        {boardsToRemove.length > 0 && (
-          <div>
-            <h4 className="font-medium text-gray-900 mb-2">削除するボード:</h4>
-            <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+        <div>
+          <p className="text-gray-700 mb-3">以下のボードからこのメモを外しますか？</p>
+          <div className="bg-red-50 p-3 rounded-md">
+            <ul className="list-disc list-inside text-sm text-red-800 space-y-1">
               {boardsToRemove.map((boardName, index) => (
                 <li key={index}>{boardName}</li>
               ))}
             </ul>
           </div>
-        )}
+        </div>
         
         <div className="flex justify-end gap-2 pt-4">
           <button
@@ -62,9 +50,9 @@ export default function BoardChangeModal({
           </button>
           <button
             onClick={onConfirm}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors"
           >
-            保存
+            外す
           </button>
         </div>
       </div>

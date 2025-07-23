@@ -21,11 +21,16 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
     boardsToAdd: number[];
     boardsToRemove: number[];
   }>({ boardsToAdd: [], boardsToRemove: [] })
+  const [isInitialSync, setIsInitialSync] = useState(true)
   
   // メモが変更されたらボード選択をリセット
   const currentBoardIdsStr = JSON.stringify([...currentBoardIds].sort())
   useEffect(() => {
     setSelectedBoardIds([...currentBoardIds])
+    setIsInitialSync(true) // 初期同期開始
+    // 少し遅延させて初期同期完了をマーク
+    const timer = setTimeout(() => setIsInitialSync(false), 100)
+    return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [memo?.id, currentBoardIdsStr]) // 文字列で比較
 
@@ -46,14 +51,14 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
     const currentContent = content.trim()
     const textChanged = currentTitle !== initialTitle.trim() || currentContent !== initialContent.trim()
     
-    // selectedBoardIdsが空でcurrentBoardIdsに値がある場合（まだ同期中）はボード変更を無視
-    if (selectedBoardIds.length === 0 && currentBoardIds.length > 0 && memo?.id) {
+    // 初期同期中はボード変更を無視
+    if (isInitialSync) {
       return textChanged
     }
     
     const hasBoardChanges = JSON.stringify([...selectedBoardIds].sort()) !== JSON.stringify([...currentBoardIds].sort())
     return textChanged || hasBoardChanges
-  }, [title, content, initialTitle, initialContent, selectedBoardIds, currentBoardIds, memo?.id])
+  }, [title, content, initialTitle, initialContent, selectedBoardIds, currentBoardIds, isInitialSync])
 
   // メモが変更された時の初期値更新
   useEffect(() => {
@@ -88,19 +93,36 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
           await deleteNote.mutateAsync(memo.id)
           onSaveComplete?.(memo, true, false)
         } else {
-          await updateNote.mutateAsync({
-            id: memo.id,
-            data: {
-              title: title.trim() || "無題",
-              content: content.trim() || undefined
-            }
-          })
+          // メモ内容の変更があるかチェック（ボード変更は除く）
+          const hasContentChanges = 
+            (title.trim() || "無題") !== initialTitle.trim() ||
+            content.trim() !== initialContent.trim();
           
-          const updatedMemo = {
-            ...memo,
-            title: title.trim() || "無題",
-            content: content.trim() || "",
-            updatedAt: Math.floor(Date.now() / 1000)
+          let updatedMemo = memo;
+          
+          // メモ内容に変更がある場合のみ更新
+          if (hasContentChanges) {
+            await updateNote.mutateAsync({
+              id: memo.id,
+              data: {
+                title: title.trim() || "無題",
+                content: content.trim() || undefined
+              }
+            })
+            
+            updatedMemo = {
+              ...memo,
+              title: title.trim() || "無題",
+              content: content.trim() || "",
+              updatedAt: Math.floor(Date.now() / 1000)
+            }
+          } else {
+            // 内容に変更がない場合は現在の値を維持
+            updatedMemo = {
+              ...memo,
+              title: title.trim() || "無題",
+              content: content.trim() || ""
+            }
           }
           
           // ボード変更の差分を計算して処理
@@ -220,12 +242,12 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
   }, [memo, title, content, createNote, updateNote, deleteNote, onSaveComplete, addItemToBoard, selectedBoardIds, currentBoardIds, queryClient, removeItemFromBoard, isSaving])
 
   const handleSave = useCallback(async () => {
-    // ボード変更がある場合はモーダルを表示
+    // ボードを外す場合のみモーダルを表示
     if (memo?.id) {
       const boardsToAdd = selectedBoardIds.filter(id => !currentBoardIds.includes(id))
       const boardsToRemove = currentBoardIds.filter(id => !selectedBoardIds.includes(id))
       
-      if (boardsToAdd.length > 0 || boardsToRemove.length > 0) {
+      if (boardsToRemove.length > 0) {
         setPendingBoardChanges({ boardsToAdd, boardsToRemove })
         setShowBoardChangeModal(true)
         return

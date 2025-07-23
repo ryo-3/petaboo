@@ -5,19 +5,25 @@ import { boards, boardItems, tasks, memos, deletedBoards, deletedMemos, deletedT
 import type { NewBoard, NewBoardItem, NewDeletedBoard } from "../../db/schema/boards";
 
 // ID→originalId変換ユーティリティ
-async function getOriginalId(itemId: number, itemType: 'memo' | 'task', userId: string, db: any): Promise<string | null> {
+async function getOriginalId(itemId: string, itemType: 'memo' | 'task', userId: string, db: any): Promise<string | null> {
+  // itemIdはIDの文字列版として受け取り、originalIdに変換する
+  const numericId = parseInt(itemId);
+  if (isNaN(numericId)) {
+    return null;
+  }
+  
   if (itemType === 'memo') {
     const memo = await db
       .select({ originalId: memos.originalId })
       .from(memos)
-      .where(and(eq(memos.id, itemId), eq(memos.userId, userId)))
+      .where(and(eq(memos.id, numericId), eq(memos.userId, userId)))
       .limit(1);
     return memo.length > 0 ? memo[0].originalId : null;
   } else {
     const task = await db
       .select({ originalId: tasks.originalId })
       .from(tasks)
-      .where(and(eq(tasks.id, itemId), eq(tasks.userId, userId)))
+      .where(and(eq(tasks.id, numericId), eq(tasks.userId, userId)))
       .limit(1);
     return task.length > 0 ? task[0].originalId : null;
   }
@@ -101,7 +107,7 @@ const BoardItemSchema = z.object({
 
 const AddItemToBoardSchema = z.object({
   itemType: z.enum(["memo", "task"]),
-  itemId: z.number(), // フロントエンドからは通常のIDを受け取る
+  itemId: z.string(), // originalIdを文字列として受け取る
 });
 
 export function createAPI(app: any) {
@@ -1052,14 +1058,26 @@ export function createAPI(app: any) {
   });
 
   app.openapi(addItemToBoardRoute, async (c) => {
-    const auth = getAuth(c);
-    if (!auth?.userId) {
-      return c.json({ error: "Unauthorized" }, 401);
-    }
+    try {
+      const auth = getAuth(c);
+      if (!auth?.userId) {
+        return c.json({ error: "Unauthorized" }, 401);
+      }
 
-    const boardId = parseInt(c.req.param("id"));
-    const { itemType, itemId } = c.req.valid("json");
-    const db = c.env.db;
+      const boardId = parseInt(c.req.param("id"));
+      const body = await c.req.json();
+      
+      // Zodバリデーション
+      const validationResult = AddItemToBoardSchema.safeParse(body);
+      if (!validationResult.success) {
+        return c.json({ 
+          success: false, 
+          error: validationResult.error 
+        }, 400);
+      }
+      
+      const { itemType, itemId } = validationResult.data;
+      const db = c.env.db;
 
     // ボードの所有権確認
     const board = await db
@@ -1117,6 +1135,9 @@ export function createAPI(app: any) {
       .where(eq(boards.id, boardId));
     
     return c.json(result[0], 201);
+    } catch (error) {
+      return c.json({ error: error instanceof Error ? error.message : 'Internal server error' }, 500);
+    }
   });
 
   // ボードからアイテム削除

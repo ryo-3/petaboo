@@ -137,7 +137,7 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
             const promises = []
             
             // ボード追加
-            if (boardsToAdd.length > 0) {
+            if (boardsToAdd.length > 0 && memo.id > 0) {
               const addPromises = boardsToAdd.map(async (boardId) => {
                 try {
                   await addItemToBoard.mutateAsync({
@@ -148,9 +148,10 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
                     },
                   })
                 } catch (error: unknown) {
+                  const errorMessage = error instanceof Error ? error.message : String(error);
                   // すでに存在する場合はエラーを無視
-                  if (!(error instanceof Error) || !error.message.includes('already exists')) {
-                    console.error(`Failed to add memo to board ${boardId}:`, error)
+                  if (!errorMessage.includes('already exists')) {
+                    // エラーは既に上位でハンドリングされる
                   }
                 }
               })
@@ -213,9 +214,10 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
                   },
                 })
               } catch (error: unknown) {
+                const errorMessage = error instanceof Error ? error.message : String(error);
                 // すでに存在する場合はエラーを無視
-                if (!(error instanceof Error) || !error.message.includes('already exists')) {
-                  console.error(`Failed to add memo to board ${boardId}:`, error)
+                if (!errorMessage.includes('already exists')) {
+                  // エラーは既に上位でハンドリングされる
                 }
               }
             })

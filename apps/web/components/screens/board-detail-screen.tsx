@@ -54,7 +54,6 @@ function BoardDetailScreen({
   boardCompleted = false,
   isDeleted = false,
 }: BoardDetailProps) {
-  // console.log('🔄 BoardDetailScreen render');
   // 状態管理フック
   const {
     activeTaskTab,
@@ -104,11 +103,9 @@ function BoardDetailScreen({
     if (typeof newValue === 'function') {
       targetSetter(prev => {
         const result = newValue(prev);
-        console.log(`🔄 setCheckedMemos (${activeMemoTab}) function:`, { before: Array.from(prev), after: Array.from(result) });
         return result;
       });
     } else {
-      console.log(`🔄 setCheckedMemos (${activeMemoTab}) direct:`, Array.from(newValue));
       targetSetter(newValue);
     }
   }, [activeMemoTab]);
@@ -116,7 +113,6 @@ function BoardDetailScreen({
 
   // 選択ハンドラー
   const handleMemoSelectionToggle = useCallback((memoId: string | number) => {
-    console.log('📝 handleMemoSelectionToggle:', memoId);
     setCheckedMemos(prev => {
       const newSet = new Set(prev);
       if (newSet.has(memoId)) {
@@ -124,7 +120,6 @@ function BoardDetailScreen({
       } else {
         newSet.add(memoId);
       }
-      console.log('📝 New checkedMemos:', Array.from(newSet));
       return newSet;
     });
   }, [setCheckedMemos]);
@@ -179,7 +174,6 @@ function BoardDetailScreen({
       targetIds as number[],
       1,
       async (ids: (string | number)[]) => {
-        console.log('完全削除:', ids);
         // 完全削除の処理
         for (const id of ids) {
           if (itemType === 'memo') {
@@ -222,8 +216,8 @@ function BoardDetailScreen({
       }
       
       bulkDelete.handleCancel();
-    } catch (error) {
-      console.error("Failed to remove items from board:", error);
+    } catch {
+      // エラーは上位でハンドリング
     } finally {
       setDeletingItemType(null);
     }
@@ -285,7 +279,6 @@ function BoardDetailScreen({
   const boardDescription =
     initialBoardDescription || boardWithItems?.description;
 
-  // console.log('🔍 BoardDetail状態:', {
   //   initialBoardName,
   //   boardWithItemsName: boardWithItems?.name,
   //   boardName,
@@ -324,8 +317,8 @@ function BoardDetailScreen({
         ) {
           onClearSelection?.();
         }
-      } catch (error) {
-        console.error("Failed to remove item:", error);
+      } catch {
+        // エラーは上位でハンドリング
       }
     }
   };
@@ -395,8 +388,8 @@ function BoardDetailScreen({
       if (itemsToAdd.length < selectedItemsFromList.size) {
         alert(`${itemsToAdd.length}件のアイテムを追加しました（重複分は除外）`);
       }
-    } catch (error) {
-      console.error("Failed to add items to board:", error);
+    } catch {
+      // エラーは上位でハンドリング
     }
   }, [
     selectedItemsFromList,
@@ -517,7 +510,6 @@ function BoardDetailScreen({
   const deletedMemoCount = boardDeletedItems?.memos?.length || 0; // 削除済みメモの件数
   
   // デバッグ用ログ
-  // console.log('🔍 ボード削除済みアイテム状態:', {
   //   boardId,
   //   deletedMemos: deletedMemoCount,
   //   deletedTasks: deletedCount,
@@ -599,8 +591,8 @@ function BoardDetailScreen({
           itemId: memo.id.toString(),
         },
       });
-    } catch (error) {
-      console.error('❌ メモの追加に失敗:', error);
+    } catch {
+      // エラーは上位でハンドリング
     }
   }, [boardId, addItemToBoard, boardMemos]);
 
@@ -621,8 +613,8 @@ function BoardDetailScreen({
           itemId: task.id.toString(),
         },
       });
-    } catch (error) {
-      console.error('❌ タスクの追加に失敗:', error);
+    } catch {
+      // エラーは上位でハンドリング
     }
   }, [boardId, addItemToBoard, boardTasks]);
 

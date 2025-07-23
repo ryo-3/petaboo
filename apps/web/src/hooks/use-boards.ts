@@ -53,7 +53,6 @@ export function useBoards(status: "normal" | "completed" | "deleted" = "normal")
         
         // 401エラーの場合はキャッシュをクリアしてリトライ
         if (response.status === 401 && attempt === 0) {
-          console.log('🔄 Token expired, clearing cache and retrying...');
           cachedToken = null;
           tokenExpiry = 0;
           continue;
@@ -103,7 +102,6 @@ export function useBoardWithItems(boardId: number | null, skip: boolean = false)
         
         // 401エラーの場合はキャッシュをクリアしてリトライ
         if (response.status === 401 && attempt === 0) {
-          console.log('🔄 Token expired, clearing cache and retrying...');
           cachedToken = null;
           tokenExpiry = 0;
           continue;
@@ -374,15 +372,21 @@ export function useAddItemToBoard() {
 
         // 401エラーの場合はキャッシュをクリアしてリトライ
         if (response.status === 401 && attempt === 0) {
-          console.log('🔄 Token expired, clearing cache and retrying...');
           cachedToken = null;
           tokenExpiry = 0;
           continue;
         }
 
         if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error || "Failed to add item to board");
+          let errorMessage = "Failed to add item to board";
+          let errorDetail = null;
+          try {
+            errorDetail = await response.json();
+            errorMessage = errorDetail.error || errorMessage;
+          } catch {
+            errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+          }
+          throw new Error(errorMessage);
         }
 
         return response.json();
@@ -421,7 +425,6 @@ export function useRemoveItemFromBoard() {
 
         // 401エラーの場合はキャッシュをクリアしてリトライ
         if (response.status === 401 && attempt === 0) {
-          console.log('🔄 Token expired, clearing cache and retrying...');
           cachedToken = null;
           tokenExpiry = 0;
           continue;
@@ -495,7 +498,6 @@ export function useBoardDeletedItems(boardId: number) {
         
         // 401エラーの場合はキャッシュをクリアしてリトライ
         if (response.status === 401 && attempt === 0) {
-          console.log('🔄 Token expired, clearing cache and retrying...');
           cachedToken = null;
           tokenExpiry = 0;
           continue;

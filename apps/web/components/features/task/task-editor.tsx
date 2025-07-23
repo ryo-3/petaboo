@@ -233,29 +233,30 @@ function TaskEditor({
             itemId: task!.id,
             itemType: 'task'
           });
-        } catch (error) {
-          console.error('Failed to remove task from board:', error);
+        } catch {
+          // エラーは上位でハンドリング
         }
       }
 
-      // ボードに追加
-      for (const boardId of toAdd) {
-        try {
-          await addItemToBoard.mutateAsync({
-            boardId: parseInt(boardId),
-            data: {
-              itemType: 'task',
-              itemId: task!.id.toString(),
-            },
-          });
-        } catch (error) {
-          console.error('Failed to add task to board:', error);
+      // ボードに追加（ID=0の新規タスクはスキップ）
+      if (task && task.id > 0) {
+        for (const boardId of toAdd) {
+          try {
+            await addItemToBoard.mutateAsync({
+              boardId: parseInt(boardId),
+              data: {
+                itemType: 'task',
+                itemId: task.id.toString(),
+              },
+            });
+          } catch {
+            // エラーは上位でハンドリング
+          }
         }
       }
       
       // 現在のボードから外された場合は次のアイテムを選択
       if (initialBoardId && toRemove.includes(initialBoardId.toString()) && onDeleteAndSelectNext) {
-        console.log('🎯 TaskEditor: 現在のボードから外されたため次選択実行', { initialBoardId, toRemove, taskId: task!.id });
         onDeleteAndSelectNext(task!);
         return;
       }
@@ -333,12 +334,12 @@ function TaskEditor({
                 boardId: parseInt(boardId),
                 data: {
                   itemType: 'task',
-                  itemId: newTask.id,
+                  itemId: newTask.id.toString(),
                 },
               });
             }
-          } catch (error) {
-            console.error('Failed to add task to boards:', error);
+          } catch {
+            // エラーは上位でハンドリング
           }
         }
         
@@ -414,23 +415,25 @@ function TaskEditor({
               itemId: task!.id,
               itemType: 'task'
             });
-          } catch (error) {
-            console.error('Failed to remove task from board:', error);
+          } catch {
+            // エラーは上位でハンドリング
           }
         }
 
-        // ボードに追加
-        for (const boardId of toAdd) {
-          try {
-            await addItemToBoard.mutateAsync({
-              boardId: parseInt(boardId),
-              data: {
-                itemType: 'task',
-                itemId: task!.id.toString(),
-              },
-            });
-          } catch (error) {
-            console.error('Failed to add task to board:', error);
+        // ボードに追加（既存タスクの場合のみ）
+        if (task && task.id > 0) {
+          for (const boardId of toAdd) {
+            try {
+              await addItemToBoard.mutateAsync({
+                boardId: parseInt(boardId),
+                data: {
+                  itemType: 'task',
+                  itemId: task.id.toString(),
+                },
+              });
+            } catch {
+              // エラーは上位でハンドリング
+            }
           }
         }
         

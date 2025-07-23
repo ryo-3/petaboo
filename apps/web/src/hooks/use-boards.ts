@@ -510,6 +510,7 @@ export function useBoardDeletedItems(boardId: number) {
 
         const data = await response.json();
         console.log(`🔍 ボード削除済みアイテムAPIレスポンス (boardId:${boardId}):`, data);
+        console.log(`🔍 deletedItems詳細:`, data.deletedItems);
         
         // APIレスポンスの形式を変換
         const memos: DeletedMemo[] = [];

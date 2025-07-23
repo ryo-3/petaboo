@@ -278,7 +278,7 @@ function TaskEditor({
         "ボード変更に失敗しました。APIサーバーが起動していることを確認してください。"
       );
     }
-  }, [pendingBoardChanges, removeItemFromBoard, addItemToBoard, task, onSaveComplete, title, description, status, priority, categoryId, dueDate, selectedBoardIds]);
+  }, [pendingBoardChanges, removeItemFromBoard, addItemToBoard, task, onSaveComplete, title, description, status, priority, categoryId, dueDate, selectedBoardIds, initialBoardId, onDeleteAndSelectNext]);
 
   const handleConfirmBoardChange = useCallback(async () => {
     setShowBoardChangeModal(false);

@@ -28,14 +28,14 @@ interface BoardTaskSectionProps {
   effectiveColumnCount: number;
   viewMode: "card" | "list";
   showEditDate: boolean;
-  selectedTask?: Task | null;
+  selectedTask?: Task | DeletedTask | null;
   // 複数選択関連
   taskSelectionMode: "select" | "check";
   checkedTasks: Set<number>;
   onCreateNewTask: () => void;
   onSetRightPanelMode: (mode: "task-list" | null) => void;
   onTaskTabChange: (tab: "todo" | "in_progress" | "completed" | "deleted") => void;
-  onSelectTask: (task: Task) => void;
+  onSelectTask: (task: Task | DeletedTask) => void;
   onTaskSelectionToggle: (taskId: number) => void;
   onSelectAll?: () => void;
   isAllSelected?: boolean;
@@ -237,7 +237,7 @@ export default function BoardTaskSection({
             selectionMode={taskSelectionMode}
             checkedTasks={checkedTasks}
             onToggleCheck={onTaskSelectionToggle}
-            onSelectTask={undefined} // 削除済みタスクは選択不可
+            onSelectTask={taskSelectionMode === "check" ? undefined : onSelectTask}
             selectedTaskId={taskSelectionMode === "check" ? undefined : selectedTask?.id}
             showEditDate={showEditDate}
             sortOptions={getVisibleSortOptions(activeTaskTab)}

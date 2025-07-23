@@ -6,6 +6,8 @@ import MemoStatusDisplay from "@/components/features/memo/memo-status-display";
 import TaskEditor from "@/components/features/task/task-editor";
 import DeletedTaskViewer from "@/components/features/task/deleted-task-viewer";
 import TaskStatusDisplay from "@/components/features/task/task-status-display";
+import MemoScreen from "@/components/screens/memo-screen";
+import TaskScreen from "@/components/screens/task-screen";
 import RightPanel from "@/components/ui/layout/right-panel";
 import { Memo, DeletedMemo } from "@/src/types/memo";
 import { Task, DeletedTask } from "@/src/types/task";
@@ -27,6 +29,8 @@ interface BoardRightPanelProps {
   onToggleItemSelection: (itemId: number) => void;
   onMemoDeleteAndSelectNext?: (deletedMemo: Memo) => void;
   onTaskDeleteAndSelectNext?: (deletedTask: Task) => void;
+  onAddMemoToBoard?: (memo: Memo) => void;
+  onAddTaskToBoard?: (task: Task) => void;
 }
 
 export default function BoardRightPanel({
@@ -45,14 +49,20 @@ export default function BoardRightPanel({
   onToggleItemSelection,
   onMemoDeleteAndSelectNext,
   onTaskDeleteAndSelectNext,
+  onAddMemoToBoard,
+  onAddTaskToBoard,
 }: BoardRightPanelProps) {
   // 削除済みアイテムかどうかを判定するヘルパー関数
   const isDeletedMemo = (memo: Memo | DeletedMemo): memo is DeletedMemo => {
-    return 'deletedAt' in memo && memo.deletedAt !== undefined;
+    const result = 'deletedAt' in memo && memo.deletedAt !== undefined;
+    console.log('🗑️ isDeletedMemo check:', { memoId: memo.id, hasDeletedAt: 'deletedAt' in memo, deletedAt: 'deletedAt' in memo ? memo.deletedAt : undefined, result });
+    return result;
   };
   
   const isDeletedTask = (task: Task | DeletedTask): task is DeletedTask => {
-    return 'deletedAt' in task && task.deletedAt !== undefined;
+    const result = 'deletedAt' in task && task.deletedAt !== undefined;
+    console.log('🗑️ isDeletedTask check:', { taskId: task.id, hasDeletedAt: 'deletedAt' in task, deletedAt: 'deletedAt' in task ? task.deletedAt : undefined, result });
+    return result;
   };
 
   // 削除処理用のstate
@@ -130,30 +140,19 @@ export default function BoardRightPanel({
 
       {/* メモ一覧表示 */}
       {rightPanelMode === "memo-list" && (
-        <div className="flex flex-col h-full bg-white">
+        <div className="flex flex-col h-full">
           <div className="flex items-center justify-between border-b border-gray-200 ml-2 mt-1 mb-1 pb-1">
             <h3 className="text-lg font-semibold">メモ一覧から追加</h3>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={onAddSelectedItems}
-                disabled={selectedItemsFromList.size === 0}
-                className="px-3 py-1 bg-Green text-white rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                追加 ({selectedItemsFromList.size})
-              </button>
-            </div>
           </div>
-          <div className="flex-1 overflow-y-auto pr-2">
-            <MemoStatusDisplay
-              memos={allMemos}
-              viewMode="list"
-              effectiveColumnCount={1}
-              selectionMode="check"
-              checkedMemos={selectedItemsFromList}
-              onToggleCheck={onToggleItemSelection}
-              onSelectMemo={(memo) => onToggleItemSelection(memo.id)}
-              selectedMemoId={undefined}
-              showEditDate={false}
+          <div className="flex-1">
+            <MemoScreen
+              onSelectMemo={(memo) => {
+                if (onAddMemoToBoard) {
+                  onAddMemoToBoard(memo);
+                  onClose(); // 追加後に右パネルを閉じる
+                }
+              }}
+              rightPanelDisabled={true}
             />
           </div>
         </div>
@@ -161,31 +160,19 @@ export default function BoardRightPanel({
 
       {/* タスク一覧表示 */}
       {rightPanelMode === "task-list" && (
-        <div className="flex flex-col h-full bg-white">
+        <div className="flex flex-col h-full">
           <div className="flex items-center justify-between border-b border-gray-200 ml-2 mt-1 mb-1 pb-1">
             <h3 className="text-lg font-semibold">タスク一覧から追加</h3>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={onAddSelectedItems}
-                disabled={selectedItemsFromList.size === 0}
-                className="px-3 py-1 bg-DeepBlue text-white rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                追加 ({selectedItemsFromList.size})
-              </button>
-            </div>
           </div>
-          <div className="flex-1 overflow-y-auto">
-            <TaskStatusDisplay
-              activeTab="todo"
-              tasks={allTasks}
-              viewMode="list"
-              effectiveColumnCount={1}
-              selectionMode="check"
-              checkedTasks={selectedItemsFromList}
-              onToggleCheck={onToggleItemSelection}
-              onSelectTask={(task) => onToggleItemSelection(task.id)}
-              selectedTaskId={undefined}
-              showEditDate={false}
+          <div className="flex-1">
+            <TaskScreen
+              onSelectTask={(task) => {
+                if (onAddTaskToBoard) {
+                  onAddTaskToBoard(task);
+                  onClose(); // 追加後に右パネルを閉じる
+                }
+              }}
+              rightPanelDisabled={true}
             />
           </div>
         </div>

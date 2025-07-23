@@ -26,14 +26,14 @@ interface BoardMemoSectionProps {
   effectiveColumnCount: number;
   viewMode: "card" | "list";
   showEditDate: boolean;
-  selectedMemo?: Memo | null;
+  selectedMemo?: Memo | DeletedMemo | null;
   // 複数選択関連
   memoSelectionMode: "select" | "check";
   checkedMemos: Set<number>;
   onCreateNewMemo: () => void;
   onSetRightPanelMode: (mode: "memo-list" | null) => void;
   onMemoTabChange: (tab: "normal" | "deleted") => void;
-  onSelectMemo: (memo: Memo) => void;
+  onSelectMemo: (memo: Memo | DeletedMemo) => void;
   onMemoSelectionToggle: (memoId: number) => void;
   onSelectAll?: () => void;
   isAllSelected?: boolean;

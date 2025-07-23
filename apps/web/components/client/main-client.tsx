@@ -86,7 +86,7 @@ function MainClient({
     useState<DeletedTask | null>(null);
 
   // ボード詳細用の選択状態（Fast Refresh対応）
-  const [boardSelectedItem, setBoardSelectedItem] = useState<{type: 'memo', item: Memo} | {type: 'task', item: Task} | null>(null);
+  const [boardSelectedItem, setBoardSelectedItem] = useState<{type: 'memo', item: Memo | DeletedMemo} | {type: 'task', item: Task | DeletedTask} | null>(null);
 
   // UI状態管理
   const [showDeleted, setShowDeleted] = useState(false); // モバイル版削除済み表示フラグ
@@ -312,7 +312,7 @@ function MainClient({
   }, [boardSelectedItem]);
 
   /** ボード詳細でのタスク選択 */
-  const handleBoardSelectTask = useCallback((task: Task | null) => {
+  const handleBoardSelectTask = useCallback((task: Task | DeletedTask | null) => {
     if (!task) {
       setBoardSelectedItem(null);
       return;

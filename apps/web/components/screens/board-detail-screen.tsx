@@ -12,8 +12,8 @@ import {
 import { useBoardState } from "@/src/hooks/use-board-state";
 import { useExport } from "@/src/hooks/use-export";
 import { BoardItemWithContent } from "@/src/types/board";
-import { Memo } from "@/src/types/memo";
-import { Task } from "@/src/types/task";
+import { Memo, DeletedMemo } from "@/src/types/memo";
+import { Task, DeletedTask } from "@/src/types/task";
 import { memo, useCallback, useEffect, useState } from "react";
 import BoardHeader from "@/components/features/board/board-header";
 import { useBulkDelete, BulkDeleteConfirmation } from "@/components/ui/modals";
@@ -25,10 +25,10 @@ import { getNextItemAfterDeletion, getMemoDisplayOrder, getTaskDisplayOrder } fr
 interface BoardDetailProps {
   boardId: number;
   onBack: () => void;
-  selectedMemo?: Memo | null;
-  selectedTask?: Task | null;
-  onSelectMemo?: (memo: Memo | null) => void;
-  onSelectTask?: (task: Task | null) => void;
+  selectedMemo?: Memo | DeletedMemo | null;
+  selectedTask?: Task | DeletedTask | null;
+  onSelectMemo?: (memo: Memo | DeletedMemo | null) => void;
+  onSelectTask?: (task: Task | DeletedTask | null) => void;
   onClearSelection?: () => void;
   initialBoardName?: string;
   initialBoardDescription?: string | null;
@@ -228,10 +228,13 @@ function BoardDetailScreen({
   };
 
   const handleSelectMemo = useCallback(
-    (memo: Memo) => {
+    (memo: Memo | DeletedMemo) => {
+      const isDeleted = 'deletedAt' in memo;
       console.log(
         "🟣 handleSelectMemo called with:",
         memo.id,
+        "isDeleted:",
+        isDeleted,
         "rightPanelMode:",
         rightPanelMode
       );
@@ -242,10 +245,13 @@ function BoardDetailScreen({
   );
 
   const handleSelectTask = useCallback(
-    (task: Task) => {
+    (task: Task | DeletedTask) => {
+      const isDeleted = 'deletedAt' in task;
       console.log(
         "🔷 handleSelectTask called with:",
         task.id,
+        "isDeleted:",
+        isDeleted,
         "rightPanelMode:",
         rightPanelMode
       );
@@ -415,6 +421,37 @@ function BoardDetailScreen({
     }
   }, [taskItems, onSelectTask, onClearSelection]);
 
+  // ボードにメモを追加
+  const handleAddMemoToBoard = useCallback(async (memo: Memo) => {
+    try {
+      await addItemToBoard.mutateAsync({
+        boardId,
+        data: {
+          itemType: 'memo',
+          itemId: memo.id,
+        },
+      });
+      console.log('✅ メモをボードに追加しました:', memo.title);
+    } catch (error) {
+      console.error('❌ メモの追加に失敗:', error);
+    }
+  }, [boardId, addItemToBoard]);
+
+  // ボードにタスクを追加
+  const handleAddTaskToBoard = useCallback(async (task: Task) => {
+    try {
+      await addItemToBoard.mutateAsync({
+        boardId,
+        data: {
+          itemType: 'task',
+          itemId: task.id,
+        },
+      });
+      console.log('✅ タスクをボードに追加しました:', task.title);
+    } catch (error) {
+      console.error('❌ タスクの追加に失敗:', error);
+    }
+  }, [boardId, addItemToBoard]);
 
   const handleMemoSelectAll = useCallback(() => {
     const currentMemoIds = memoItems.map((item) => (item.content as Memo).id);
@@ -811,6 +848,8 @@ function BoardDetailScreen({
         onToggleItemSelection={handleToggleItemSelection}
         onMemoDeleteAndSelectNext={handleMemoDeleteAndSelectNext}
         onTaskDeleteAndSelectNext={handleTaskDeleteAndSelectNext}
+        onAddMemoToBoard={handleAddMemoToBoard}
+        onAddTaskToBoard={handleAddTaskToBoard}
       />
     </div>
   );

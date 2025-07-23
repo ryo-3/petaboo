@@ -245,7 +245,7 @@ function TaskEditor({
             boardId: parseInt(boardId),
             data: {
               itemType: 'task',
-              itemId: task!.id,
+              itemId: task!.id.toString(),
             },
           });
         } catch (error) {
@@ -426,7 +426,7 @@ function TaskEditor({
               boardId: parseInt(boardId),
               data: {
                 itemType: 'task',
-                itemId: task!.id,
+                itemId: task!.id.toString(),
               },
             });
           } catch (error) {

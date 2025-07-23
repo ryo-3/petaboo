@@ -6,7 +6,7 @@ import Database from "better-sqlite3";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { tasks, deletedTasks } from "../../db/schema/tasks";
 import { boardItems } from "../../db/schema/boards";
-import { generateOriginalId } from "../../utils/originalId";
+import { generateOriginalId, generateUuid } from "../../utils/originalId";
 
 // SQLite & drizzle セットアップ
 const sqlite = new Database("sqlite.db");
@@ -178,6 +178,7 @@ app.openapi(
     const result = await db.insert(tasks).values({
       userId: auth.userId,
       originalId: "", // 後で更新
+      uuid: generateUuid(), // UUID生成
       title,
       description,
       status,
@@ -344,6 +345,7 @@ app.openapi(
       tx.insert(deletedTasks).values({
         userId: auth.userId,
         originalId: task.originalId, // originalIdをそのままコピー
+        uuid: task.uuid, // UUIDもコピー
         title: task.title,
         description: task.description,
         status: task.status,
@@ -584,6 +586,7 @@ app.openapi(
         const result = tx.insert(tasks).values({
           userId: auth.userId,
           originalId: deletedTask.originalId, // originalIdをそのまま復元
+          uuid: deletedTask.uuid, // UUIDも復元
           title: deletedTask.title,
           description: deletedTask.description,
           status: deletedTask.status as "todo" | "in_progress" | "completed",

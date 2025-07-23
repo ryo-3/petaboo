@@ -6,7 +6,7 @@ import Database from "better-sqlite3";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { memos, deletedMemos } from "../../db/schema/memos";
 import { boardItems } from "../../db/schema/boards";
-import { generateOriginalId, migrateOriginalId } from "../../utils/originalId";
+import { generateOriginalId, generateUuid, migrateOriginalId } from "../../utils/originalId";
 
 // SQLite & drizzle セットアップ
 const sqlite = new Database("sqlite.db");
@@ -145,6 +145,7 @@ app.openapi(
     const result = await db.insert(memos).values({
       userId: auth.userId,
       originalId: "", // 後で更新
+      uuid: generateUuid(), // UUID生成
       title,
       content,
       createdAt: Math.floor(Date.now() / 1000),
@@ -307,6 +308,7 @@ app.openapi(
       tx.insert(deletedMemos).values({
         userId: auth.userId,
         originalId: note.originalId, // originalIdをそのままコピー
+        uuid: note.uuid, // UUIDもコピー
         title: note.title,
         content: note.content,
         createdAt: note.createdAt,
@@ -550,6 +552,7 @@ app.openapi(
         const result = tx.insert(memos).values({
           userId: auth.userId,
           originalId: deletedNote.originalId, // originalIdをそのまま復元
+          uuid: deletedNote.uuid, // UUIDも復元
           title: deletedNote.title,
           content: deletedNote.content,
           createdAt: deletedNote.createdAt,

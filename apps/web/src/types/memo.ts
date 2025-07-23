@@ -1,5 +1,9 @@
+import { OriginalId, Uuid } from './common';
+
 export interface Memo {
   id: number
+  originalId?: OriginalId
+  uuid?: Uuid
   title: string
   content: string | null
   categoryId?: number | null
@@ -10,7 +14,8 @@ export interface Memo {
 
 export interface DeletedMemo {
   id: number
-  originalId: string
+  originalId: OriginalId
+  uuid?: Uuid
   title: string
   content: string | null
   categoryId?: number | null

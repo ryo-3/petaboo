@@ -1,5 +1,6 @@
 import { Memo } from "./memo";
 import { Task } from "./task";
+import { OriginalId } from "./common";
 
 export interface Board {
   id: number;
@@ -17,7 +18,7 @@ export interface Board {
 export interface DeletedBoard {
   id: number;
   userId: string;
-  originalId: number;
+  originalId: OriginalId;
   name: string;
   slug: string;
   description: string | null;
@@ -37,7 +38,7 @@ export interface BoardItem {
   id: number;
   boardId: number;
   itemType: 'memo' | 'task';
-  itemId: number;
+  itemId: OriginalId;
   position: number;
   createdAt: number;
 }
@@ -62,5 +63,5 @@ export interface UpdateBoardData {
 
 export interface AddItemToBoardData {
   itemType: 'memo' | 'task';
-  itemId: number;
+  itemId: OriginalId;
 }

@@ -307,20 +307,20 @@ function BoardDetailScreen({
       try {
         await removeItemFromBoard.mutateAsync({
           boardId,
-          itemId: item.itemId,
+          itemId: parseInt(item.itemId),
           itemType: item.itemType,
         });
         // 削除したアイテムが選択されていた場合、選択を解除
         if (
           item.itemType === "memo" &&
           selectedMemo &&
-          selectedMemo.id === item.itemId
+          selectedMemo.id.toString() === item.itemId
         ) {
           onClearSelection?.();
         } else if (
           item.itemType === "task" &&
           selectedTask &&
-          selectedTask.id === item.itemId
+          selectedTask.id.toString() === item.itemId
         ) {
           onClearSelection?.();
         }
@@ -374,7 +374,7 @@ function BoardDetailScreen({
 
       // 重複していないアイテムのみを追加
       const itemsToAdd = Array.from(selectedItemsFromList).filter(
-        (itemId) => !existingItemIds.includes(itemId)
+        (itemId) => !existingItemIds.includes(itemId.toString())
       );
 
       if (itemsToAdd.length === 0) {
@@ -385,7 +385,7 @@ function BoardDetailScreen({
       const promises = itemsToAdd.map((itemId) => {
         return addItemToBoard.mutateAsync({
           boardId,
-          data: { itemType, itemId },
+          data: { itemType, itemId: itemId.toString() },
         });
       });
 
@@ -419,7 +419,7 @@ function BoardDetailScreen({
     ? (boardDeletedItems?.memos || []).map((memo, index) => ({
         id: memo.id,
         boardId: boardId,
-        itemId: memo.originalId as unknown as number, // originalIdを使用
+        itemId: memo.originalId, // originalIdを使用
         itemType: 'memo' as const,
         content: memo,
         createdAt: memo.createdAt,
@@ -433,7 +433,7 @@ function BoardDetailScreen({
     ? (boardDeletedItems?.tasks || []).map((task, index) => ({
         id: task.id,
         boardId: boardId,
-        itemId: task.originalId as unknown as number, // originalIdを使用
+        itemId: task.originalId, // originalIdを使用
         itemType: 'task' as const,
         content: task,
         createdAt: task.createdAt,
@@ -596,7 +596,7 @@ function BoardDetailScreen({
         boardId,
         data: {
           itemType: 'memo',
-          itemId: memo.id,
+          itemId: memo.id.toString(),
         },
       });
     } catch (error) {
@@ -618,7 +618,7 @@ function BoardDetailScreen({
         boardId,
         data: {
           itemType: 'task',
-          itemId: task.id,
+          itemId: task.id.toString(),
         },
       });
     } catch (error) {

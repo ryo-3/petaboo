@@ -11,6 +11,7 @@
 - **共通化ファースト**: 2回以上使われる可能性があるなら即座に共通化
 - **Props設計**: variant, size, color等のオプションで拡張性重視
 - **親からサイズ指定**: デフォルト値は定義せず、明示的にサイズを渡す
+- **型安全性**: 共通型定義で一元管理、危険な型キャストは禁止
 
 ## 主要システム
 
@@ -23,13 +24,44 @@
 - **API**: `/memos` (CRUD操作、Clerk Bearer認証)
 - **フック**: `use-memos.ts` (React Query)
 - **テーブル**: `memos`, `deleted_memos`
-- **originalId システム**: `${id}_${timestamp}_${random}` 形式で削除・復元時の一意性保証
+- **originalId システム**: `id.toString()` 形式でシンプルかつ安全な一意性保証
 
 ### ボードシステム
 - **API**: `/boards` `/boards/{id}/items`
 - **フック**: `useBoards()` `useBoardWithItems(id)`
 - **URL設計**: `/boards/{slug}` (SEOフレンドリー)
 - **Slug生成**: 英数字=ケバブケース、日本語=ランダム6文字
+- **itemId**: `OriginalId`型でoriginalIdと統一
+
+### タスクシステム
+- **API**: `/tasks` (CRUD操作、Clerk Bearer認証)
+- **フック**: `use-tasks.ts` (React Query)
+- **テーブル**: `tasks`, `deleted_tasks`
+- **originalId システム**: メモと同じ`id.toString()`形式
+
+## 型システム
+
+### 共通型定義 (`apps/web/src/types/common.ts`)
+```typescript
+/**
+ * originalId型 - AUTO_INCREMENTのIDを文字列化したもの
+ * 例: id=5 → originalId="5"
+ * 用途: 削除・復元時の一意性追跡、ボードアイテムの識別
+ */
+export type OriginalId = string;
+```
+
+### originalId設計思想
+- **生成方法**: `generateOriginalId(id) = id.toString()`
+- **一意性**: AUTO_INCREMENTベースで100%保証
+- **用途**: 削除・復元追跡、ボードアイテム識別
+- **将来対応**: UUID拡張準備済み（基本は使わない）
+- **型安全**: `OriginalId`型で統一、`as unknown as`禁止
+
+### ID種別
+- **id**: `number` - データベース主キー（AUTO_INCREMENT）
+- **originalId**: `OriginalId` - 削除・復元追跡用（メイン識別子）
+- **uuid**: `string` - 将来のエクスポート用（基本使わない）
 
 ## API認証パターン
 ```typescript
@@ -79,3 +111,5 @@ git commit --no-verify               # WSL環境でpre-commitフックをスキ�
 - ❌ **コードを読まずに修正提案**
 - ❌ **変数・関数の存在確認をしない**
 - ❌ **型エラー・lintエラーを残す**
+- ❌ **`as unknown as`等の危険な型キャスト**
+- ❌ **共通型を使わずにstring/numberを直接記述**

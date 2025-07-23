@@ -1,5 +1,9 @@
+import { OriginalId, Uuid } from './common';
+
 export interface Task {
   id: number;
+  originalId?: OriginalId;
+  uuid?: Uuid;
   title: string;
   description: string | null;
   status: 'todo' | 'in_progress' | 'completed';
@@ -12,7 +16,8 @@ export interface Task {
 
 export interface DeletedTask {
   id: number;
-  originalId: string;
+  originalId: OriginalId;
+  uuid?: Uuid;
   title: string;
   description: string | null;
   status: string;

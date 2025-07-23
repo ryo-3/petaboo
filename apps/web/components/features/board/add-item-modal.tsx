@@ -36,7 +36,7 @@ export default function AddItemModal({ boardId, isOpen, onClose }: AddItemModalP
           boardId,
           data: {
             itemType: activeTab,
-            itemId,
+            itemId: itemId.toString(),
           },
         });
       }

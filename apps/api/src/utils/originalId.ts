@@ -1,12 +1,19 @@
 /**
  * originalId生成ユーティリティ
- * 形式: ${id}${timestamp}${random5桁} (アンダースコアなし)
- * 例: "5169012345678912345"
+ * 形式: IDをそのまま文字列化（AUTO_INCREMENTで一意性保証）
+ * 例: id=5 → "5"
  */
 export function generateOriginalId(id: number): string {
-  const timestamp = Date.now();
-  const random = Math.floor(Math.random() * 100000); // 0-99999の5桁
-  return `${id}${timestamp}${random.toString().padStart(5, '0')}`;
+  return id.toString();
+}
+
+/**
+ * UUID生成ユーティリティ
+ * 将来のエクスポート・インポート用（基本は使わない）
+ * 例: "123e4567-e89b-12d3-a456-426614174000"
+ */
+export function generateUuid(): string {
+  return crypto.randomUUID();
 }
 
 /**

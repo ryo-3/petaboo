@@ -229,15 +229,6 @@ function BoardDetailScreen({
 
   const handleSelectMemo = useCallback(
     (memo: Memo | DeletedMemo) => {
-      const isDeleted = 'deletedAt' in memo;
-      console.log(
-        "🟣 handleSelectMemo called with:",
-        memo.id,
-        "isDeleted:",
-        isDeleted,
-        "rightPanelMode:",
-        rightPanelMode
-      );
       setRightPanelMode(null); // リストモードを解除
       onSelectMemo?.(memo);
     },
@@ -246,15 +237,6 @@ function BoardDetailScreen({
 
   const handleSelectTask = useCallback(
     (task: Task | DeletedTask) => {
-      const isDeleted = 'deletedAt' in task;
-      console.log(
-        "🔷 handleSelectTask called with:",
-        task.id,
-        "isDeleted:",
-        isDeleted,
-        "rightPanelMode:",
-        rightPanelMode
-      );
       setRightPanelMode(null); // リストモードを解除
       onSelectTask?.(task);
     },

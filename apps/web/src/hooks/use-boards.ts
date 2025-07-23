@@ -482,43 +482,80 @@ export function useBoardDeletedItems(boardId: number) {
   return useQuery<{memos: DeletedMemo[], tasks: DeletedTask[]}>({
     queryKey: ["board-deleted-items", boardId],
     queryFn: async () => {
-      const token = await getCachedToken(getToken);
-      
-      // 削除済みメモを取得
-      const memosResponse = await fetch(`${API_BASE_URL}/notes/deleted`, {
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
-      
-      if (!memosResponse.ok) {
-        throw new Error("Failed to fetch deleted memos");
+      // 最大2回リトライ
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const token = await getCachedToken(getToken);
+        
+        const response = await fetch(`${API_BASE_URL}/boards/${boardId}/deleted-items`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        });
+        
+        // 401エラーの場合はキャッシュをクリアしてリトライ
+        if (response.status === 401 && attempt === 0) {
+          console.log('🔄 Token expired, clearing cache and retrying...');
+          cachedToken = null;
+          tokenExpiry = 0;
+          continue;
+        }
+        
+        if (!response.ok) {
+          console.error(`❌ useBoardDeletedItems失敗: ${response.status} ${response.statusText}`);
+          const error: ApiError = new Error(`Failed to fetch board deleted items: ${response.status} ${response.statusText}`);
+          error.status = response.status;
+          throw error;
+        }
+
+        const data = await response.json();
+        console.log(`🔍 ボード削除済みアイテムAPIレスポンス (boardId:${boardId}):`, data);
+        
+        // APIレスポンスの形式を変換
+        const memos: DeletedMemo[] = [];
+        const tasks: DeletedTask[] = [];
+        
+        for (const item of data.deletedItems) {
+          if (item.itemType === "memo" && item.content) {
+            memos.push({
+              id: item.content.id,
+              userId: item.content.userId,
+              originalId: item.content.originalId || item.content.id,
+              title: item.content.title,
+              content: item.content.content,
+              categoryId: item.content.categoryId,
+              createdAt: item.content.createdAt,
+              updatedAt: item.content.updatedAt,
+              deletedAt: item.deletedAt,
+            });
+          } else if (item.itemType === "task" && item.content) {
+            tasks.push({
+              id: item.content.id,
+              userId: item.content.userId,
+              originalId: item.content.originalId || item.content.id,
+              title: item.content.title,
+              description: item.content.description,
+              status: item.content.status,
+              priority: item.content.priority,
+              dueDate: item.content.dueDate,
+              categoryId: item.content.categoryId,
+              createdAt: item.content.createdAt,
+              updatedAt: item.content.updatedAt,
+              deletedAt: item.deletedAt,
+            });
+          }
+        }
+        
+        console.log(`🔍 変換後の削除済みアイテム:`, { memos: memos.length, tasks: tasks.length, memosData: memos, tasksData: tasks });
+        return { memos, tasks };
       }
       
-      // 削除済みタスクを取得
-      const tasksResponse = await fetch(`${API_BASE_URL}/tasks/deleted`, {
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
-      
-      if (!tasksResponse.ok) {
-        throw new Error("Failed to fetch deleted tasks");
-      }
-
-      const deletedMemos: DeletedMemo[] = await memosResponse.json();
-      const deletedTasks: DeletedTask[] = await tasksResponse.json();
-
-      // 現在はボードとの過去の関連情報が保存されていないため、
-      // 一時的にすべての削除済みアイテムを表示
-      // TODO: 実際にはボード関連を保持するAPIが必要
-      return {
-        memos: deletedMemos,
-        tasks: deletedTasks
-      };
+      throw new Error('Failed after retry');
     },
     enabled: !!boardId,
+    staleTime: 2 * 60 * 1000,     // 2分間は新鮮なデータとして扱う
+    gcTime: 10 * 60 * 1000,       // 10分間キャッシュを保持
+    refetchOnWindowFocus: false,  // ウィンドウフォーカス時の再取得を無効化
+    refetchOnMount: false,        // マウント時の再取得を無効化
   });
 }

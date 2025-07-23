@@ -5,6 +5,7 @@ import { eq, desc, and } from "drizzle-orm";
 import Database from "better-sqlite3";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { notes, deletedNotes } from "../../db/schema/notes";
+import { boardItems } from "../../db/schema/boards";
 
 // SQLite & drizzle セットアップ
 const sqlite = new Database("sqlite.db");
@@ -301,6 +302,14 @@ app.openapi(
         deletedAt: Math.floor(Date.now() / 1000),
       }).run();
 
+      // 関連するboard_itemsのdeletedAtを設定
+      tx.update(boardItems)
+        .set({ deletedAt: new Date() })
+        .where(and(
+          eq(boardItems.itemType, 'memo'),
+          eq(boardItems.itemId, id)
+        )).run();
+
       // 元テーブルから削除
       tx.delete(notes).where(eq(notes.id, id)).run();
     });
@@ -519,6 +528,14 @@ app.openapi(
           createdAt: deletedNote.createdAt,
           updatedAt: deletedNote.updatedAt,
         }).returning({ id: notes.id }).get();
+
+        // 関連するboard_itemsのdeletedAtをNULLに戻す
+        tx.update(boardItems)
+          .set({ deletedAt: null })
+          .where(and(
+            eq(boardItems.itemType, 'memo'),
+            eq(boardItems.itemId, deletedNote.originalId)
+          )).run();
 
         // 削除済みテーブルから削除
         tx.delete(deletedNotes).where(eq(deletedNotes.id, id)).run();

@@ -56,15 +56,11 @@ export default function BoardRightPanel({
 }: BoardRightPanelProps) {
   // 削除済みアイテムかどうかを判定するヘルパー関数
   const isDeletedMemo = (memo: Memo | DeletedMemo): memo is DeletedMemo => {
-    const result = 'deletedAt' in memo && memo.deletedAt !== undefined;
-    console.log('🗑️ isDeletedMemo check:', { memoId: memo.id, hasDeletedAt: 'deletedAt' in memo, deletedAt: 'deletedAt' in memo ? memo.deletedAt : undefined, result });
-    return result;
+    return 'deletedAt' in memo && memo.deletedAt !== undefined;
   };
   
   const isDeletedTask = (task: Task | DeletedTask): task is DeletedTask => {
-    const result = 'deletedAt' in task && task.deletedAt !== undefined;
-    console.log('🗑️ isDeletedTask check:', { taskId: task.id, hasDeletedAt: 'deletedAt' in task, deletedAt: 'deletedAt' in task ? task.deletedAt : undefined, result });
-    return result;
+    return 'deletedAt' in task && task.deletedAt !== undefined;
   };
 
   // 削除処理用のstate

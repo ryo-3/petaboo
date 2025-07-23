@@ -1,7 +1,7 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { getAuth } from "@hono/clerk-auth";
-import { eq, and, desc } from "drizzle-orm";
-import { boards, boardItems, tasks, notes, deletedBoards } from "../../db";
+import { eq, and, desc, isNull, isNotNull } from "drizzle-orm";
+import { boards, boardItems, tasks, notes, deletedBoards, deletedNotes, deletedTasks } from "../../db";
 import type { NewBoard, NewBoardItem, NewDeletedBoard } from "../../db/schema/boards";
 
 // スラッグ生成ユーティリティ
@@ -161,11 +161,16 @@ export function createAPI(app: any) {
     // 各ボードのメモ・タスク数を計算
     const boardsWithStats = await Promise.all(
       userBoards.map(async (board) => {
-        // ボードアイテムを取得
+        // ボードアイテムを取得（削除されていないもののみ）
         const items = await db
           .select()
           .from(boardItems)
-          .where(eq(boardItems.boardId, board.id));
+          .where(
+            and(
+              eq(boardItems.boardId, board.id),
+              isNull(boardItems.deletedAt)
+            )
+          );
 
         // メモとタスクの数をカウント & 最終アクティビティ日時を計算
         let memoCount = 0;
@@ -784,6 +789,58 @@ export function createAPI(app: any) {
     },
   });
 
+  // ボード内削除済みアイテム取得
+  const getBoardDeletedItemsRoute = createRoute({
+    method: "get",
+    path: "/{id}/deleted-items",
+    tags: ["boards"],
+    request: {
+      params: z.object({
+        id: z.string(),
+      }),
+    },
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              board: BoardSchema,
+              deletedItems: z.array(z.object({
+                id: z.number(),
+                itemType: z.enum(["memo", "task"]),
+                itemId: z.number(),
+                position: z.number(),
+                deletedAt: z.number(),
+                content: z.any(), // メモまたはタスクの内容
+              })),
+            }),
+          },
+        },
+        description: "Get board with deleted items",
+      },
+      401: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+            }),
+          },
+        },
+        description: "Unauthorized",
+      },
+      404: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+            }),
+          },
+        },
+        description: "Not found",
+      },
+    },
+  });
+
   app.openapi(getBoardItemsRoute, async (c) => {
     const auth = getAuth(c);
     if (!auth?.userId) {
@@ -809,11 +866,16 @@ export function createAPI(app: any) {
       return c.json({ error: "Board not found" }, 404);
     }
 
-    // ボードアイテムの取得
+    // ボードアイテムの取得（削除されていないもののみ）
     const items = await db
       .select()
       .from(boardItems)
-      .where(eq(boardItems.boardId, boardId))
+      .where(
+        and(
+          eq(boardItems.boardId, boardId),
+          isNull(boardItems.deletedAt)
+        )
+      )
       .orderBy(boardItems.position);
 
     // アイテムの内容を取得
@@ -852,6 +914,85 @@ export function createAPI(app: any) {
     return c.json({
       board: board[0],
       items: validItems,
+    });
+  });
+
+  app.openapi(getBoardDeletedItemsRoute, async (c) => {
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const boardId = parseInt(c.req.param("id"));
+    const db = c.env.db;
+
+    // ボードの取得と所有権確認
+    const board = await db
+      .select()
+      .from(boards)
+      .where(
+        and(
+          eq(boards.id, boardId),
+          eq(boards.userId, auth.userId)
+        )
+      )
+      .limit(1);
+
+    if (board.length === 0) {
+      return c.json({ error: "Board not found" }, 404);
+    }
+
+    // 削除済みボードアイテムの取得
+    const deletedItems = await db
+      .select()
+      .from(boardItems)
+      .where(
+        and(
+          eq(boardItems.boardId, boardId),
+          isNotNull(boardItems.deletedAt)
+        )
+      )
+      .orderBy(boardItems.position);
+
+    // アイテムの内容を削除済みテーブルから取得
+    const deletedItemsWithContent = await Promise.all(
+      deletedItems.map(async (item) => {
+        let content;
+        if (item.itemType === "memo") {
+          // 削除済みメモテーブルから取得
+          const deletedMemo = await db
+            .select()
+            .from(deletedNotes)
+            .where(and(eq(deletedNotes.originalId, item.itemId), eq(deletedNotes.userId, auth.userId)))
+            .limit(1);
+          content = deletedMemo[0] || null;
+        } else {
+          // 削除済みタスクテーブルから取得
+          const deletedTask = await db
+            .select()
+            .from(deletedTasks)
+            .where(and(eq(deletedTasks.originalId, item.itemId), eq(deletedTasks.userId, auth.userId)))
+            .limit(1);
+          content = deletedTask[0] || null;
+        }
+
+        return {
+          id: item.id,
+          itemType: item.itemType,
+          itemId: item.itemId,
+          position: item.position,
+          deletedAt: typeof item.deletedAt === 'object' ? Math.floor(item.deletedAt.getTime() / 1000) : item.deletedAt,
+          content,
+        };
+      })
+    );
+
+    // 削除されたアイテムを除外（削除済みテーブルに存在しない場合）
+    const validDeletedItems = deletedItemsWithContent.filter(item => item.content !== null);
+
+    return c.json({
+      board: board[0],
+      deletedItems: validDeletedItems,
     });
   });
 
@@ -961,7 +1102,7 @@ export function createAPI(app: any) {
       }
     }
 
-    // 重複チェック
+    // 重複チェック（削除されていないアイテムのみ）
     const existing = await db
       .select()
       .from(boardItems)
@@ -969,7 +1110,8 @@ export function createAPI(app: any) {
         and(
           eq(boardItems.boardId, boardId),
           eq(boardItems.itemType, itemType),
-          eq(boardItems.itemId, itemId)
+          eq(boardItems.itemId, itemId),
+          isNull(boardItems.deletedAt)
         )
       )
       .limit(1);
@@ -978,11 +1120,16 @@ export function createAPI(app: any) {
       return c.json({ error: "Item already exists in board" }, 400);
     }
 
-    // 最大ポジション取得
+    // 最大ポジション取得（削除されていないアイテムのみ）
     const maxPosition = await db
       .select({ maxPos: boardItems.position })
       .from(boardItems)
-      .where(eq(boardItems.boardId, boardId))
+      .where(
+        and(
+          eq(boardItems.boardId, boardId),
+          isNull(boardItems.deletedAt)
+        )
+      )
       .orderBy(desc(boardItems.position))
       .limit(1);
 
@@ -1080,14 +1227,16 @@ export function createAPI(app: any) {
       return c.json({ error: "Board not found" }, 404);
     }
 
-    // アイテムを削除
+    // アイテムをソフト削除（deletedAtを設定）
     const result = await db
-      .delete(boardItems)
+      .update(boardItems)
+      .set({ deletedAt: new Date() })
       .where(
         and(
           eq(boardItems.boardId, boardId),
           eq(boardItems.itemType, itemType),
-          eq(boardItems.itemId, itemId)
+          eq(boardItems.itemId, itemId),
+          isNull(boardItems.deletedAt) // 削除されていないアイテムのみ
         )
       );
 
@@ -1179,7 +1328,7 @@ export function createAPI(app: any) {
       }
     }
 
-    // アイテムが属するボードを取得
+    // アイテムが属するボードを取得（削除されていないもののみ）
     const itemBoards = await db
       .select()
       .from(boards)
@@ -1188,7 +1337,8 @@ export function createAPI(app: any) {
         and(
           eq(boardItems.itemType, itemType),
           eq(boardItems.itemId, itemIdNum),
-          eq(boards.userId, auth.userId)
+          eq(boards.userId, auth.userId),
+          isNull(boardItems.deletedAt)
         )
       )
       .orderBy(boards.name);
@@ -1196,6 +1346,107 @@ export function createAPI(app: any) {
     // レスポンスの形式を整える
     const boardsOnly = itemBoards.map(row => row.boards);
     return c.json(boardsOnly);
+  });
+
+  // ボード内削除済みアイテム復元
+  const restoreBoardItemRoute = createRoute({
+    method: "post",
+    path: "/{id}/restore-item/{itemId}",
+    tags: ["boards"],
+    request: {
+      params: z.object({
+        id: z.string(),
+        itemId: z.string(),
+      }),
+      query: z.object({
+        itemType: z.enum(["memo", "task"]),
+      }),
+    },
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              success: z.boolean(),
+            }),
+          },
+        },
+        description: "Item restored in board",
+      },
+      401: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+            }),
+          },
+        },
+        description: "Unauthorized",
+      },
+      404: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+            }),
+          },
+        },
+        description: "Not found",
+      },
+    },
+  });
+
+  app.openapi(restoreBoardItemRoute, async (c) => {
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const boardId = parseInt(c.req.param("id"));
+    const itemId = parseInt(c.req.param("itemId"));
+    const { itemType } = c.req.valid("query");
+    const db = c.env.db;
+
+    // ボードの所有権確認
+    const board = await db
+      .select()
+      .from(boards)
+      .where(
+        and(
+          eq(boards.id, boardId),
+          eq(boards.userId, auth.userId)
+        )
+      )
+      .limit(1);
+
+    if (board.length === 0) {
+      return c.json({ error: "Board not found" }, 404);
+    }
+
+    // 削除済みアイテムを復元（deletedAtをnullに設定）
+    const result = await db
+      .update(boardItems)
+      .set({ deletedAt: null })
+      .where(
+        and(
+          eq(boardItems.boardId, boardId),
+          eq(boardItems.itemType, itemType),
+          eq(boardItems.itemId, itemId),
+          isNotNull(boardItems.deletedAt) // 削除済みアイテムのみ
+        )
+      );
+
+    if (result.changes === 0) {
+      return c.json({ error: "Deleted item not found in board" }, 404);
+    }
+
+    // ボードのupdatedAtを更新
+    await db
+      .update(boards)
+      .set({ updatedAt: new Date() })
+      .where(eq(boards.id, boardId));
+
+    return c.json({ success: true });
   });
 
   return app;

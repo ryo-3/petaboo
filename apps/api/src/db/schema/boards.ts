@@ -25,6 +25,7 @@ export const boardItems = sqliteTable("board_items", {
   itemType: text("item_type").notNull(), // 'memo' | 'task'
   itemId: integer("item_id").notNull(),
   position: integer("position").notNull().default(0),
+  deletedAt: integer("deleted_at", { mode: "timestamp" }),
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()
     .default(sql`(unixepoch())`),

@@ -319,7 +319,7 @@ app.openapi(
         .set({ deletedAt: new Date() })
         .where(and(
           eq(boardItems.itemType, 'memo'),
-          eq(boardItems.originalId, memo.originalId)
+          eq(boardItems.originalId, note.originalId)
         )).run();
 
       // 元テーブルから削除

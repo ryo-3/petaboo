@@ -82,6 +82,9 @@ interface DesktopUpperProps {
   boards?: Array<{ id: number; name: string }>;
   selectedBoardIds?: number[];
   onBoardFilterChange?: (boardIds: number[]) => void;
+  // Board filter mode
+  filterMode?: 'include' | 'exclude';
+  onFilterModeChange?: (mode: 'include' | 'exclude') => void;
   // Tab counts
   normalCount: number;
   deletedNotesCount?: number;
@@ -133,6 +136,8 @@ function DesktopUpper({
   boards = [],
   selectedBoardIds = [],
   onBoardFilterChange,
+  filterMode = 'include',
+  onFilterModeChange,
   normalCount,
   deletedNotesCount = 0,
   deletedTasksCount = 0,
@@ -443,6 +448,8 @@ function DesktopUpper({
               boards={boards}
               selectedBoardIds={selectedBoardIds}
               onBoardFilterChange={onBoardFilterChange}
+              filterMode={filterMode}
+              onFilterModeChange={onFilterModeChange}
             />
           )}
 

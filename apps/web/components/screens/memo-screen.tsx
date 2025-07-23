@@ -80,6 +80,7 @@ function MemoScreen({
 
   // ボードフィルター管理
   const [selectedBoardIds, setSelectedBoardIds] = useState<number[]>([]);
+  const [boardFilterMode, setBoardFilterMode] = useState<'include' | 'exclude'>('include');
 
   // 並び替え管理
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -368,6 +369,8 @@ function MemoScreen({
           boards={boards || []}
           selectedBoardIds={selectedBoardIds}
           onBoardFilterChange={setSelectedBoardIds}
+          filterMode={boardFilterMode}
+          onFilterModeChange={setBoardFilterMode}
           normalCount={notes?.length || 0}
           deletedNotesCount={deletedNotes?.length || 0}
           hideAddButton={hideHeaderButtons}
@@ -385,6 +388,7 @@ function MemoScreen({
           showEditDate={showEditDate}
           showBoardName={showBoardName}
           selectedBoardIds={selectedBoardIds}
+          boardFilterMode={boardFilterMode}
           notes={notes || []}
           localMemos={notes || []}
           deletedNotes={deletedNotes || []}

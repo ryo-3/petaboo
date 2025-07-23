@@ -19,6 +19,7 @@ interface MemoStatusDisplayProps {
   showEditDate?: boolean;
   showBoardName?: boolean;
   selectedBoardIds?: number[];
+  boardFilterMode?: 'include' | 'exclude';
   sortOptions?: Array<{
     id: "createdAt" | "updatedAt" | "deletedAt";
     label: string;
@@ -39,6 +40,8 @@ interface DeletedMemoDisplayProps {
   selectedMemoId?: number;
   showEditDate?: boolean;
   showBoardName?: boolean;
+  selectedBoardIds?: number[];
+  boardFilterMode?: 'include' | 'exclude';
   sortOptions?: Array<{
     id: "createdAt" | "updatedAt" | "deletedAt";
     label: string;
@@ -60,6 +63,7 @@ function MemoStatusDisplay({
   showEditDate = false,
   showBoardName = false,
   selectedBoardIds = [],
+  boardFilterMode = 'include',
   sortOptions = [],
   isBoard = false
 }: MemoStatusDisplayProps) {
@@ -119,6 +123,7 @@ function MemoStatusDisplay({
           key={memo.id}
           memo={memo}
           selectedBoardIds={selectedBoardIds}
+          filterMode={boardFilterMode}
         >
           {memoComponent}
         </MemoFilterWrapper>
@@ -167,6 +172,8 @@ export function DeletedMemoDisplay({
   selectedMemoId,
   showEditDate = false,
   showBoardName = false,
+  selectedBoardIds = [],
+  boardFilterMode = 'include',
   sortOptions = [],
   isBoard = false
 }: DeletedMemoDisplayProps) {

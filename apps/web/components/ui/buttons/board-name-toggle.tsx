@@ -13,6 +13,9 @@ interface BoardNameToggleProps {
   boards?: Array<{ id: number; name: string }>;
   selectedBoardIds?: number[];
   onBoardFilterChange?: (boardIds: number[]) => void;
+  // フィルターモード関連
+  filterMode?: 'include' | 'exclude';
+  onFilterModeChange?: (mode: 'include' | 'exclude') => void;
 }
 
 function BoardNameToggle({ 
@@ -22,7 +25,9 @@ function BoardNameToggle({
   iconSize = "size-4",
   boards = [],
   selectedBoardIds = [],
-  onBoardFilterChange
+  onBoardFilterChange,
+  filterMode = 'include',
+  onFilterModeChange
 }: BoardNameToggleProps) {
   const [showFilter, setShowFilter] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
@@ -100,6 +105,34 @@ function BoardNameToggle({
           {/* フィルターポップオーバー */}
           {showFilter && (
             <div className="absolute top-9 left-0 bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-50 min-w-[200px] max-h-[300px] overflow-y-auto">
+              {/* フィルターモード切り替え */}
+              {onFilterModeChange && (
+                <div className="mb-3 pb-2 border-b border-gray-100">
+                  <div className="flex rounded-md bg-gray-100 p-0.5">
+                    <button
+                      onClick={() => onFilterModeChange('include')}
+                      className={`flex-1 px-2 py-1 text-xs font-medium rounded transition-all ${
+                        filterMode === 'include'
+                          ? 'bg-white text-gray-900 shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      含む
+                    </button>
+                    <button
+                      onClick={() => onFilterModeChange('exclude')}
+                      className={`flex-1 px-2 py-1 text-xs font-medium rounded transition-all ${
+                        filterMode === 'exclude'
+                          ? 'bg-white text-gray-900 shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      除く
+                    </button>
+                  </div>
+                </div>
+              )}
+              
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-medium text-gray-700">ボード一覧</span>
                 <label className="flex items-center gap-2 cursor-pointer">

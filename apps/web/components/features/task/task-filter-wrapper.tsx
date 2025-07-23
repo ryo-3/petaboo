@@ -5,13 +5,14 @@ import { ReactElement } from 'react';
 interface TaskFilterWrapperProps {
   task: Task;
   selectedBoardIds: number[];
+  filterMode?: 'include' | 'exclude';
   children: ReactElement;
 }
 
 /**
  * タスクのボードフィルタリングを行うラッパーコンポーネント
  */
-function TaskFilterWrapper({ task, selectedBoardIds, children }: TaskFilterWrapperProps) {
+function TaskFilterWrapper({ task, selectedBoardIds, filterMode = 'include', children }: TaskFilterWrapperProps) {
   // タスクが所属するボード一覧を取得（フィルター無効時はundefinedを渡してクエリを無効化）
   const { data: boards, isLoading } = useItemBoards(
     'task', 
@@ -28,14 +29,19 @@ function TaskFilterWrapper({ task, selectedBoardIds, children }: TaskFilterWrapp
     return null;
   }
 
-  // ボード情報がない場合は非表示
-  if (!boards || boards.length === 0) {
-    return null;
-  }
+  // タスクが所属するボードのID一覧を取得
+  const taskBoardIds = boards ? boards.map(b => b.id) : [];
 
-  // タスクが所属するボードのいずれかが選択されている場合のみ表示
-  const taskBoardIds = boards.map(b => b.id);
-  const shouldShow = selectedBoardIds.some(selectedId => taskBoardIds.includes(selectedId));
+  // フィルターモードに応じて表示判定
+  let shouldShow: boolean;
+  
+  if (filterMode === 'exclude') {
+    // 除外モード：選択されたボードのいずれにも所属していない場合に表示
+    shouldShow = !selectedBoardIds.some(selectedId => taskBoardIds.includes(selectedId));
+  } else {
+    // 含むモード（デフォルト）：選択されたボードのいずれかに所属している場合に表示
+    shouldShow = selectedBoardIds.some(selectedId => taskBoardIds.includes(selectedId));
+  }
 
   return shouldShow ? children : null;
 }

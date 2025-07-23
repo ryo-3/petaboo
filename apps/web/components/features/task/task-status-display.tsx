@@ -20,6 +20,7 @@ interface TaskStatusDisplayProps {
   showEditDate?: boolean;
   showBoardName?: boolean;
   selectedBoardIds?: number[];
+  boardFilterMode?: 'include' | 'exclude';
   sortOptions?: Array<{
     id: "createdAt" | "updatedAt" | "dueDate" | "priority" | "deletedAt";
     label: string;
@@ -40,6 +41,8 @@ interface DeletedTaskDisplayProps {
   selectedTaskId?: number;
   showEditDate?: boolean;
   showBoardName?: boolean;
+  selectedBoardIds?: number[];
+  boardFilterMode?: 'include' | 'exclude';
   sortOptions?: Array<{
     id: "createdAt" | "updatedAt" | "dueDate" | "priority" | "deletedAt";
     label: string;
@@ -62,6 +65,7 @@ function TaskStatusDisplay({
   showEditDate = false,
   showBoardName = false,
   selectedBoardIds = [],
+  boardFilterMode = 'include',
   sortOptions = [],
   isBoard = false
 }: TaskStatusDisplayProps) {
@@ -154,6 +158,7 @@ function TaskStatusDisplay({
           key={task.id}
           task={task}
           selectedBoardIds={selectedBoardIds}
+          filterMode={boardFilterMode}
         >
           {taskComponent}
         </TaskFilterWrapper>
@@ -202,6 +207,8 @@ export function DeletedTaskDisplay({
   selectedTaskId,
   showEditDate = false,
   showBoardName = false,
+  selectedBoardIds = [],
+  boardFilterMode = 'include',
   sortOptions = [],
   isBoard = false
 }: DeletedTaskDisplayProps) {

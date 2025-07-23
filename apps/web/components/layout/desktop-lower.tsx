@@ -32,6 +32,7 @@ interface DesktopLowerProps {
   
   // Board filter
   selectedBoardIds?: number[];
+  boardFilterMode?: 'include' | 'exclude';
   
   // Data props
   notes?: Memo[];
@@ -75,6 +76,7 @@ function DesktopLower({
   showEditDate = false,
   showBoardName = false,
   selectedBoardIds = [],
+  boardFilterMode = 'include',
   localMemos,
   deletedNotes,
   tasks,
@@ -131,6 +133,7 @@ function DesktopLower({
           showEditDate={showEditDate}
           showBoardName={showBoardName}
           selectedBoardIds={selectedBoardIds}
+          boardFilterMode={boardFilterMode}
           sortOptions={sortOptions.filter(opt => 
             opt.id === "createdAt" || opt.id === "updatedAt" || opt.id === "deletedAt"
           ) as Array<{
@@ -164,6 +167,7 @@ function DesktopLower({
         showEditDate={showEditDate}
         showBoardName={showBoardName}
         selectedBoardIds={selectedBoardIds}
+        boardFilterMode={boardFilterMode}
       />
     );
   }
@@ -184,6 +188,8 @@ function DesktopLower({
             selectedMemoId={selectedDeletedMemo?.id}
             showEditDate={showEditDate}
             showBoardName={showBoardName}
+            selectedBoardIds={selectedBoardIds}
+            boardFilterMode={boardFilterMode}
             sortOptions={sortOptions.filter(opt => 
             opt.id === "createdAt" || opt.id === "updatedAt" || opt.id === "deletedAt"
           ) as Array<{
@@ -205,6 +211,8 @@ function DesktopLower({
             selectedTaskId={selectedDeletedTask?.id}
             showEditDate={showEditDate}
             showBoardName={showBoardName}
+            selectedBoardIds={selectedBoardIds}
+            boardFilterMode={boardFilterMode}
             sortOptions={sortOptions}
           />
         )}

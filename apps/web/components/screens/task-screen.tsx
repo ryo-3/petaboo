@@ -86,6 +86,7 @@ function TaskScreen({
 
   // ボードフィルター管理
   const [selectedBoardIds, setSelectedBoardIds] = useState<number[]>([]);
+  const [boardFilterMode, setBoardFilterMode] = useState<'include' | 'exclude'>('include');
   
 
   // 削除ボタンの参照
@@ -385,6 +386,8 @@ function TaskScreen({
           boards={boards || []}
           selectedBoardIds={selectedBoardIds}
           onBoardFilterChange={setSelectedBoardIds}
+          filterMode={boardFilterMode}
+          onFilterModeChange={setBoardFilterMode}
           normalCount={0} // タスクでは使わない
           deletedTasksCount={deletedTasks?.length || 0}
           todoCount={
@@ -411,6 +414,7 @@ function TaskScreen({
           showEditDate={showEditDate}
           showBoardName={showBoardName}
           selectedBoardIds={selectedBoardIds}
+          boardFilterMode={boardFilterMode}
           tasks={tasks || []}
           deletedTasks={deletedTasks || []}
           selectedTask={selectedTask}

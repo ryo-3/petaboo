@@ -1,8 +1,6 @@
 "use client";
 
 import Tooltip from "@/components/ui/base/tooltip";
-import EyeIcon from "@/components/icons/eye-icon";
-import CheckCircleIcon from "@/components/icons/check-circle-icon";
 
 interface SelectionModeToggleProps {
   mode: "select" | "check";
@@ -19,19 +17,35 @@ function SelectionModeToggle({ mode, onModeChange, buttonSize, iconSize }: Selec
   return (
     <Tooltip
       text={
-        mode === "select" ? "チェックモードに切り替え" : "選択モードに切り替え"
+        mode === "select" ? "チェックモード" : "チェックモード解除"
       }
       position="bottom"
     >
       <button
         onClick={handleToggle}
-        className={`bg-gray-100 rounded-lg ${buttonSize} flex items-center justify-center transition-colors text-gray-500 hover:text-gray-700`}
+        className={`bg-gray-100 rounded-lg ${buttonSize} flex items-center justify-center transition-colors ${
+          mode === "check" 
+            ? "text-Green hover:text-Green/90" 
+            : "text-gray-400 hover:text-gray-500"
+        }`}
       >
-        {mode === "select" ? (
-          <EyeIcon className={iconSize} />
-        ) : (
-          <CheckCircleIcon className={iconSize} />
-        )}
+        <svg className={iconSize} viewBox="0 0 24 24" fill="none">
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="2"
+            fill={mode === "check" ? "currentColor" : "none"}
+          />
+          <path
+            d="M9 12l2 2 4-4"
+            stroke={mode === "check" ? "#fff" : "currentColor"}
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
       </button>
     </Tooltip>
   );

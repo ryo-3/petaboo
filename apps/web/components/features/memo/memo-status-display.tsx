@@ -172,8 +172,6 @@ export function DeletedMemoDisplay({
   selectedMemoId,
   showEditDate = false,
   showBoardName = false,
-  selectedBoardIds = [],
-  boardFilterMode = 'include',
   sortOptions = [],
   isBoard = false
 }: DeletedMemoDisplayProps) {

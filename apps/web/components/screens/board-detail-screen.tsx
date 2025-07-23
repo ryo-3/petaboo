@@ -14,7 +14,7 @@ import { useExport } from "@/src/hooks/use-export";
 import { BoardItemWithContent } from "@/src/types/board";
 import { Memo, DeletedMemo } from "@/src/types/memo";
 import { Task, DeletedTask } from "@/src/types/task";
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState, useMemo } from "react";
 import BoardHeader from "@/components/features/board/board-header";
 import { useBulkDelete, BulkDeleteConfirmation } from "@/components/ui/modals";
 import { DeletionWarningMessage } from "@/components/ui/modals/deletion-warning-message";
@@ -166,13 +166,17 @@ function BoardDetailScreen({
   const { exportBoard } = useExport();
 
   // boardWithItemsからメモとタスクを抽出（APIコール削減）
-  const boardMemos = boardWithItems?.items
-    ?.filter(item => item.itemType === 'memo')
-    ?.map(item => item.content as Memo) || [];
+  const boardMemos = useMemo(() => 
+    boardWithItems?.items
+      ?.filter(item => item.itemType === 'memo')
+      ?.map(item => item.content as Memo) || []
+  , [boardWithItems?.items]);
   
-  const boardTasks = boardWithItems?.items
-    ?.filter(item => item.itemType === 'task')
-    ?.map(item => item.content as Task) || [];
+  const boardTasks = useMemo(() => 
+    boardWithItems?.items
+      ?.filter(item => item.itemType === 'task')
+      ?.map(item => item.content as Task) || []
+  , [boardWithItems?.items]);
 
 
 
@@ -232,7 +236,7 @@ function BoardDetailScreen({
       setRightPanelMode(null); // リストモードを解除
       onSelectMemo?.(memo);
     },
-    [onSelectMemo, rightPanelMode, setRightPanelMode]
+    [onSelectMemo, setRightPanelMode]
   );
 
   const handleSelectTask = useCallback(
@@ -240,7 +244,7 @@ function BoardDetailScreen({
       setRightPanelMode(null); // リストモードを解除
       onSelectTask?.(task);
     },
-    [onSelectTask, rightPanelMode, setRightPanelMode]
+    [onSelectTask, setRightPanelMode]
   );
 
   const handleCloseDetail = useCallback(() => {

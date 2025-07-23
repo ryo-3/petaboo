@@ -1,22 +1,26 @@
 import { useItemBoards } from '@/src/hooks/use-boards';
-import type { Memo } from '@/src/types/memo';
+import type { Memo, DeletedMemo } from '@/src/types/memo';
 import { ReactElement } from 'react';
 
 interface MemoFilterWrapperProps {
-  memo: Memo;
+  memo: Memo | DeletedMemo;
   selectedBoardIds: number[];
   filterMode?: 'include' | 'exclude';
   children: ReactElement;
+  variant?: 'normal' | 'deleted';
 }
 
 /**
  * メモのボードフィルタリングを行うラッパーコンポーネント
  */
-function MemoFilterWrapper({ memo, selectedBoardIds, filterMode = 'include', children }: MemoFilterWrapperProps) {
+function MemoFilterWrapper({ memo, selectedBoardIds, filterMode = 'include', children, variant = 'normal' }: MemoFilterWrapperProps) {
   // メモが所属するボード一覧を取得（フィルター無効時はundefinedを渡してクエリを無効化）
+  // 削除済みメモの場合はoriginalIdを使用
+  const isDeleted = variant === 'deleted';
+  const itemId = isDeleted ? (memo as DeletedMemo).originalId : memo.id;
   const { data: boards, isLoading } = useItemBoards(
     'memo', 
-    (selectedBoardIds && selectedBoardIds.length > 0) ? memo.id : undefined
+    (selectedBoardIds && selectedBoardIds.length > 0) ? itemId : undefined
   );
 
   // フィルターが設定されていない場合は常に表示

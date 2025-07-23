@@ -2,10 +2,8 @@
 
 import MemoEditor from "@/components/features/memo/memo-editor";
 import DeletedMemoViewer from "@/components/features/memo/deleted-memo-viewer";
-import MemoStatusDisplay from "@/components/features/memo/memo-status-display";
 import TaskEditor from "@/components/features/task/task-editor";
 import DeletedTaskViewer from "@/components/features/task/deleted-task-viewer";
-import TaskStatusDisplay from "@/components/features/task/task-status-display";
 import MemoScreen from "@/components/screens/memo-screen";
 import TaskScreen from "@/components/screens/task-screen";
 import RightPanel from "@/components/ui/layout/right-panel";
@@ -41,14 +39,9 @@ export default function BoardRightPanel({
   selectedMemo,
   selectedTask,
   rightPanelMode,
-  selectedItemsFromList,
-  allMemos,
-  allTasks,
   onClose,
   onSelectMemo,
   onSelectTask,
-  onAddSelectedItems,
-  onToggleItemSelection,
   onMemoDeleteAndSelectNext,
   onTaskDeleteAndSelectNext,
   onAddMemoToBoard,
@@ -158,11 +151,13 @@ export default function BoardRightPanel({
       {rightPanelMode === "memo-list" && (
         <MemoScreen
           onSelectMemo={(memo) => {
-            if (onAddMemoToBoard) {
+            if (onAddMemoToBoard && memo) {
               onAddMemoToBoard(memo);
               onClose(); // 追加後に右パネルを閉じる
             }
           }}
+          onSelectDeletedMemo={() => {}}
+          onClose={onClose}
           rightPanelDisabled={true}
           hideHeaderButtons={true}
           forceShowBoardName={true}
@@ -173,11 +168,13 @@ export default function BoardRightPanel({
       {rightPanelMode === "task-list" && (
         <TaskScreen
           onSelectTask={(task) => {
-            if (onAddTaskToBoard) {
+            if (onAddTaskToBoard && task) {
               onAddTaskToBoard(task);
               onClose(); // 追加後に右パネルを閉じる
             }
           }}
+          onSelectDeletedTask={() => {}}
+          onClose={onClose}
           rightPanelDisabled={true}
           hideHeaderButtons={true}
           forceShowBoardName={true}

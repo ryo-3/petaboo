@@ -57,7 +57,6 @@ function MemoScreen({
   onSelectDeletedMemo,
   onClose,
   onDeselectAndStayOnMemoList,
-  rightPanelDisabled = false,
   hideHeaderButtons = false,
   forceShowBoardName = false,
 }: MemoScreenProps) {

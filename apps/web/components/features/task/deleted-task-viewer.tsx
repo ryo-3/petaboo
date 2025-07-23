@@ -60,7 +60,7 @@ const DeletedTaskViewer = forwardRef<
     });
 
     // ボード情報を取得
-    const { data: boards = [] } = useItemBoards('task', task.id);
+    const { data: boards = [] } = useItemBoards('task', task.originalId);
 
     const [isTrashHovered, setIsTrashHovered] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);

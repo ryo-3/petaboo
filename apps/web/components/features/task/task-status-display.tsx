@@ -207,8 +207,6 @@ export function DeletedTaskDisplay({
   selectedTaskId,
   showEditDate = false,
   showBoardName = false,
-  selectedBoardIds = [],
-  boardFilterMode = 'include',
   sortOptions = [],
   isBoard = false
 }: DeletedTaskDisplayProps) {

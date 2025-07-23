@@ -29,7 +29,9 @@ function MemoListItem({
   const deletedMemo = memo as DeletedMemo;
 
   // ボード名を取得（showBoardNameがtrueの場合のみ）
-  const { data: boards } = useItemBoards('memo', showBoardName ? memo.id : undefined);
+  // 削除済みメモの場合はoriginalIdを使用
+  const itemId = isDeleted ? (memo as DeletedMemo).originalId : memo.id;
+  const { data: boards } = useItemBoards('memo', showBoardName && !isDeleted ? itemId : undefined);
   
 
   // ローカルストレージ使用禁止 - 直接APIデータを使用

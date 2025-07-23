@@ -55,7 +55,6 @@ function TaskScreen({
   onSelectDeletedTask,
   onClose,
   onClearSelection,
-  rightPanelDisabled = false,
   hideHeaderButtons = false,
   forceShowBoardName = false,
 }: TaskScreenProps) {

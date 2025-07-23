@@ -1,6 +1,7 @@
 'use client';
 
 import MemoStatusDisplay, { DeletedMemoDisplay } from "@/components/features/memo/memo-status-display";
+import { DeletedMemo } from "@/src/types/memo";
 import { FilterIconCheckList } from "@/components/icons/filter-icon-variants";
 import TrashIcon from "@/components/icons/trash-icon";
 import CheckSquareIcon from "@/components/icons/check-square-icon";

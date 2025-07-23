@@ -677,7 +677,6 @@ function BoardDetailScreen({
             onSelectMemo={handleSelectMemo}
             memoSelectionMode={selectionMode}
             checkedMemos={checkedMemos}
-            onMemoSelectionModeChange={handleSelectionModeChange}
             onMemoSelectionToggle={handleMemoSelectionToggle}
             onSelectAll={handleMemoSelectAll}
             isAllSelected={isMemoAllSelected}
@@ -708,7 +707,6 @@ function BoardDetailScreen({
             onSelectTask={handleSelectTask}
             taskSelectionMode={selectionMode}
             checkedTasks={checkedTasks}
-            onTaskSelectionModeChange={handleSelectionModeChange}
             onTaskSelectionToggle={handleTaskSelectionToggle}
             onSelectAll={handleTaskSelectAll}
             isAllSelected={isTaskAllSelected}

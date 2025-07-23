@@ -1,6 +1,7 @@
 'use client';
 
 import TaskStatusDisplay, { DeletedTaskDisplay } from "@/components/features/task/task-status-display";
+import { DeletedTask } from "@/src/types/task";
 import { FilterIconCheckList } from "@/components/icons/filter-icon-variants";
 import TrashIcon from "@/components/icons/trash-icon";
 import CheckSquareIcon from "@/components/icons/check-square-icon";
@@ -236,7 +237,7 @@ export default function BoardTaskSection({
             selectionMode={taskSelectionMode}
             checkedTasks={checkedTasks}
             onToggleCheck={onTaskSelectionToggle}
-            onSelectTask={taskSelectionMode === "check" ? undefined : onSelectTask}
+            onSelectTask={undefined} // 削除済みタスクは選択不可
             selectedTaskId={taskSelectionMode === "check" ? undefined : selectedTask?.id}
             showEditDate={showEditDate}
             sortOptions={getVisibleSortOptions(activeTaskTab)}

@@ -383,7 +383,7 @@ app.openapi(
           "application/json": {
             schema: z.array(z.object({
               id: z.number(),
-              originalId: z.number(),
+              originalId: z.string(),
               title: z.string(),
               description: z.string().nullable(),
               status: z.string(),
@@ -449,10 +449,10 @@ app.openapi(
 app.openapi(
   createRoute({
     method: "delete",
-    path: "/deleted/{id}",
+    path: "/deleted/{originalId}",
     request: {
       params: z.object({
-        id: z.string().regex(/^\d+$/).transform(Number),
+        originalId: z.string(),
       }),
     },
     responses: {
@@ -496,11 +496,11 @@ app.openapi(
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const { id } = c.req.valid("param");
+    const { originalId } = c.req.valid("param");
     
     try {
       const result = await db.delete(deletedTasks).where(
-        and(eq(deletedTasks.id, id), eq(deletedTasks.userId, auth.userId))
+        and(eq(deletedTasks.originalId, originalId), eq(deletedTasks.userId, auth.userId))
       );
       
       if (result.changes === 0) {
@@ -515,14 +515,14 @@ app.openapi(
   }
 );
 
-// POST /deleted/:id/restore（復元）
+// POST /deleted/:originalId/restore（復元）
 app.openapi(
   createRoute({
     method: "post",
-    path: "/deleted/{id}/restore",
+    path: "/deleted/{originalId}/restore",
     request: {
       params: z.object({
-        id: z.string().regex(/^\d+$/).transform(Number),
+        originalId: z.string(),
       }),
     },
     responses: {
@@ -530,7 +530,7 @@ app.openapi(
         description: "Task restored successfully",
         content: {
           "application/json": {
-            schema: z.object({ success: z.boolean() }),
+            schema: z.object({ success: z.boolean(), id: z.number() }),
           },
         },
       },
@@ -566,12 +566,12 @@ app.openapi(
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const { id } = c.req.valid("param");
+    const { originalId } = c.req.valid("param");
     
     try {
-      // まず該当削除済みタスクを取得（ユーザー確認込み）
+      // まず削除済みタスクを取得
       const deletedTask = await db.select().from(deletedTasks).where(
-        and(eq(deletedTasks.id, id), eq(deletedTasks.userId, auth.userId))
+        and(eq(deletedTasks.originalId, originalId), eq(deletedTasks.userId, auth.userId))
       ).get();
       
       if (!deletedTask) {
@@ -579,9 +579,9 @@ app.openapi(
       }
 
       // トランザクションで復元処理
-      db.transaction((tx) => {
+      const restoredTask = db.transaction((tx) => {
         // 通常のタスクテーブルに復元
-        tx.insert(tasks).values({
+        const result = tx.insert(tasks).values({
           userId: auth.userId,
           originalId: deletedTask.originalId, // originalIdをそのまま復元
           title: deletedTask.title,
@@ -592,7 +592,7 @@ app.openapi(
           categoryId: deletedTask.categoryId,
           createdAt: deletedTask.createdAt,
           updatedAt: Math.floor(Date.now() / 1000), // 復元時刻を更新
-        }).run();
+        }).returning({ id: tasks.id }).get();
 
         // 関連するboard_itemsのdeletedAtをNULLに戻す
         tx.update(boardItems)
@@ -603,10 +603,12 @@ app.openapi(
           )).run();
 
         // 削除済みテーブルから削除
-        tx.delete(deletedTasks).where(eq(deletedTasks.id, id)).run();
+        tx.delete(deletedTasks).where(eq(deletedTasks.originalId, originalId)).run();
+
+        return result;
       });
 
-      return c.json({ success: true }, 200);
+      return c.json({ success: true, id: restoredTask.id as number }, 200);
     } catch (error) {
       console.error('復元エラー:', error);
       return c.json({ error: 'Internal server error' }, 500);

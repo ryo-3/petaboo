@@ -342,7 +342,7 @@ app.openapi(
           "application/json": {
             schema: z.array(z.object({
               id: z.number(),
-              originalId: z.number(),
+              originalId: z.string(),
               title: z.string(),
               content: z.string().nullable(),
               createdAt: z.number(),
@@ -397,14 +397,14 @@ app.openapi(
   }
 );
 
-// DELETE /deleted/:id（完全削除）
+// DELETE /deleted/:originalId（完全削除）
 app.openapi(
   createRoute({
     method: "delete",
-    path: "/deleted/{id}",
+    path: "/deleted/{originalId}",
     request: {
       params: z.object({
-        id: z.string().regex(/^\d+$/).transform(Number),
+        originalId: z.string(),
       }),
     },
     responses: {
@@ -448,11 +448,11 @@ app.openapi(
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const { id } = c.req.valid("param");
+    const { originalId } = c.req.valid("param");
     
     try {
       const result = await db.delete(deletedMemos).where(
-        and(eq(deletedMemos.id, id), eq(deletedMemos.userId, auth.userId))
+        and(eq(deletedMemos.originalId, originalId), eq(deletedMemos.userId, auth.userId))
       );
       
       if (result.changes === 0) {
@@ -467,14 +467,14 @@ app.openapi(
   }
 );
 
-// POST /deleted/:id/restore（復元）
+// POST /deleted/:originalId/restore（復元）
 app.openapi(
   createRoute({
     method: "post",
-    path: "/deleted/{id}/restore",
+    path: "/deleted/{originalId}/restore",
     request: {
       params: z.object({
-        id: z.string().regex(/^\d+$/).transform(Number),
+        originalId: z.string(),
       }),
     },
     responses: {
@@ -518,13 +518,27 @@ app.openapi(
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const { id } = c.req.valid("param");
+    const { originalId } = c.req.valid("param");
+    
+    console.log('🔍 復元リクエスト:', { originalId, userId: auth.userId });
     
     try {
+      // デバッグ: 削除済みメモ一覧を確認
+      const allDeletedMemos = await db.select().from(deletedMemos).where(
+        eq(deletedMemos.userId, auth.userId)
+      );
+      console.log('🔍 削除済みメモ一覧:', allDeletedMemos.map(memo => ({ 
+        id: memo.id, 
+        originalId: memo.originalId, 
+        title: memo.title.substring(0, 20) 
+      })));
+      
       // まず削除済みメモを取得
       const deletedNote = await db.select().from(deletedMemos).where(
-        and(eq(deletedMemos.id, id), eq(deletedMemos.userId, auth.userId))
+        and(eq(deletedMemos.originalId, originalId), eq(deletedMemos.userId, auth.userId))
       ).get();
+      
+      console.log('🔍 検索結果:', { found: !!deletedNote, originalId });
       
       if (!deletedNote) {
         return c.json({ error: "Deleted note not found" }, 404);
@@ -551,7 +565,7 @@ app.openapi(
           )).run();
 
         // 削除済みテーブルから削除
-        tx.delete(deletedMemos).where(eq(deletedMemos.id, id)).run();
+        tx.delete(deletedMemos).where(eq(deletedMemos.originalId, originalId)).run();
 
         return result;
       });

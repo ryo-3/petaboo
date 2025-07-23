@@ -11,7 +11,7 @@ function Header() {
           </div>
 
           {/* タイトル */}
-          <h1 className="text-xl font-semibold text-gray-800">Notes</h1>
+          <h1 className="text-xl font-semibold text-gray-800">Memos</h1>
         </div>
 
 

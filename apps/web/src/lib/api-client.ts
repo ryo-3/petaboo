@@ -4,23 +4,23 @@ import type { CreateTaskData, UpdateTaskData } from '@/src/types/task'
 
 const API_BASE_URL = 'http://localhost:8794'
 
-export const notesApi = {
-  // GET /notes
-  getNotes: async (token?: string) => {
+export const memosApi = {
+  // GET /memos
+  getMemos: async (token?: string) => {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     }
     if (token) {
       headers.Authorization = `Bearer ${token}`
     }
-    const response = await fetch(`${API_BASE_URL}/notes`, { headers })
+    const response = await fetch(`${API_BASE_URL}/memos`, { headers })
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
     return response
   },
   
-  // POST /notes
+  // POST /memos
   createNote: async (data: CreateMemoData, token?: string) => {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -28,7 +28,7 @@ export const notesApi = {
     if (token) {
       headers.Authorization = `Bearer ${token}`
     }
-    const response = await fetch(`${API_BASE_URL}/notes`, {
+    const response = await fetch(`${API_BASE_URL}/memos`, {
       method: 'POST',
       headers,
       body: JSON.stringify(data),
@@ -40,7 +40,7 @@ export const notesApi = {
     return response
   },
 
-  // PUT /notes/:id
+  // PUT /memos/:id
   updateNote: async (id: number, data: UpdateMemoData, token?: string) => {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -48,7 +48,7 @@ export const notesApi = {
     if (token) {
       headers.Authorization = `Bearer ${token}`
     }
-    const response = await fetch(`${API_BASE_URL}/notes/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/memos/${id}`, {
       method: 'PUT',
       headers,
       body: JSON.stringify(data),
@@ -60,7 +60,7 @@ export const notesApi = {
     return response
   },
 
-  // DELETE /notes/:id
+  // DELETE /memos/:id
   deleteNote: async (id: number, token?: string) => {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -68,7 +68,7 @@ export const notesApi = {
     if (token) {
       headers.Authorization = `Bearer ${token}`
     }
-    const response = await fetch(`${API_BASE_URL}/notes/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/memos/${id}`, {
       method: 'DELETE',
       headers,
     })
@@ -79,22 +79,22 @@ export const notesApi = {
     return response
   },
 
-  // GET /notes/deleted
-  getDeletedNotes: async (token?: string) => {
+  // GET /memos/deleted
+  getDeletedMemos: async (token?: string) => {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     }
     if (token) {
       headers.Authorization = `Bearer ${token}`
     }
-    const response = await fetch(`${API_BASE_URL}/notes/deleted`, { headers })
+    const response = await fetch(`${API_BASE_URL}/memos/deleted`, { headers })
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
     return response
   },
 
-  // DELETE /notes/deleted/:id (完全削除)
+  // DELETE /memos/deleted/:id (完全削除)
   permanentDeleteNote: async (id: number, token?: string) => {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -102,7 +102,7 @@ export const notesApi = {
     if (token) {
       headers.Authorization = `Bearer ${token}`
     }
-    const response = await fetch(`${API_BASE_URL}/notes/deleted/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/memos/deleted/${id}`, {
       method: 'DELETE',
       headers,
     })
@@ -113,7 +113,7 @@ export const notesApi = {
     return response
   },
 
-  // POST /notes/deleted/:id/restore (復元)
+  // POST /memos/deleted/:id/restore (復元)
   restoreNote: async (id: number, token?: string) => {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -121,7 +121,7 @@ export const notesApi = {
     if (token) {
       headers.Authorization = `Bearer ${token}`
     }
-    const response = await fetch(`${API_BASE_URL}/notes/deleted/${id}/restore`, {
+    const response = await fetch(`${API_BASE_URL}/memos/deleted/${id}/restore`, {
       method: 'POST',
       headers,
     })

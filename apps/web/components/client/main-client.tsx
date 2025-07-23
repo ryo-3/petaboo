@@ -336,7 +336,7 @@ function MainClient({
   // ==========================================
 
   /** モバイル版：削除済み一覧から通常表示に戻る */
-  const handleBackToNotes = () => {
+  const handleBackToMemos = () => {
     clearAllSelections();
     setScreenMode("home");
   };
@@ -434,7 +434,7 @@ function MainClient({
         {showDeleted ? (
           // 削除済みメモ一覧表示
           <DeletedMemoList
-            onBackToNotes={handleBackToNotes}
+            onBackToMemos={handleBackToMemos}
             onSelectDeletedMemo={handleSelectDeletedMemo}
           />
         ) : (

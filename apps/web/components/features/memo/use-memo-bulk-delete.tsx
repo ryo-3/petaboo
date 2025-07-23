@@ -1,11 +1,11 @@
 import { useBulkDelete, BulkDeleteConfirmation } from "@/components/ui/modals";
-import { useDeleteNote, usePermanentDeleteNote } from "@/src/hooks/use-notes";
+import { useDeleteMemo, usePermanentDeleteMemo } from "@/src/hooks/use-memos";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import { useEffect } from "react";
 import React from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
-import { notesApi } from "@/src/lib/api-client";
+import { memosApi } from "@/src/lib/api-client";
 import { useBulkAnimation } from "@/src/hooks/use-bulk-animation";
 import { executeWithAnimation } from "@/src/utils/bulkAnimationUtils";
 import { DeletionWarningMessage } from "@/components/ui/modals/deletion-warning-message";
@@ -16,8 +16,8 @@ interface UseMemosBulkDeleteProps {
   checkedDeletedMemos: Set<number>;
   setCheckedMemos: (memos: Set<number>) => void;
   setCheckedDeletedMemos: (memos: Set<number>) => void;
-  notes?: Memo[];
-  deletedNotes?: DeletedMemo[];
+  memos?: Memo[];
+  deletedMemos?: DeletedMemo[];
   localMemos: Memo[];
   onMemoDelete?: (id: number) => void;
   deleteButtonRef?: React.RefObject<HTMLButtonElement | null>;
@@ -32,8 +32,8 @@ export function useMemosBulkDelete({
   checkedDeletedMemos,
   setCheckedMemos,
   setCheckedDeletedMemos,
-  notes,
-  deletedNotes,
+  memos,
+  deletedMemos,
   localMemos, // eslint-disable-line @typescript-eslint/no-unused-vars
   onMemoDelete,
   deleteButtonRef,
@@ -41,8 +41,8 @@ export function useMemosBulkDelete({
   setIsLidOpen,
   viewMode = 'list', // eslint-disable-line @typescript-eslint/no-unused-vars
 }: UseMemosBulkDeleteProps) {
-  const deleteNoteMutation = useDeleteNote();
-  const permanentDeleteNoteMutation = usePermanentDeleteNote();
+  const deleteNoteMutation = useDeleteMemo();
+  const permanentDeleteNoteMutation = usePermanentDeleteMemo();
   const bulkDelete = useBulkDelete();
   const { getToken } = useAuth();
   
@@ -51,7 +51,7 @@ export function useMemosBulkDelete({
   const deleteNoteWithoutUpdate = useMutation({
     mutationFn: async (id: number) => {
       const token = await getToken();
-      const response = await notesApi.deleteNote(id, token || undefined);
+      const response = await memosApi.deleteNote(id, token || undefined);
       return response.json();
     },
     // onSuccessなし（自動更新しない）
@@ -62,7 +62,7 @@ export function useMemosBulkDelete({
   const permanentDeleteNoteWithoutUpdate = useMutation({
     mutationFn: async (id: number) => {
       const token = await getToken();
-      const response = await notesApi.permanentDeleteNote(id, token || undefined);
+      const response = await memosApi.permanentDeleteNote(id, token || undefined);
       return response.json();
     },
     // onSuccessなし（自動更新しない）
@@ -95,8 +95,8 @@ export function useMemosBulkDelete({
 
   // チェック状態のクリーンアップ - 削除されたメモのチェックを解除（部分削除中は無効）
   useEffect(() => {
-    if (notes && !bulkAnimation.isPartialProcessing) {
-      const allMemoIds = new Set(notes.map((m) => m.id));
+    if (memos && !bulkAnimation.isPartialProcessing) {
+      const allMemoIds = new Set(memos.map((m) => m.id));
       const newCheckedMemos = new Set(
         Array.from(checkedMemos).filter((id) => allMemoIds.has(id))
       );
@@ -104,7 +104,7 @@ export function useMemosBulkDelete({
         setCheckedMemos(newCheckedMemos);
       }
     }
-  }, [notes, checkedMemos, setCheckedMemos, bulkAnimation.isPartialProcessing]);
+  }, [memos, checkedMemos, setCheckedMemos, bulkAnimation.isPartialProcessing]);
 
   // 削除中フラグを外部で管理
   const isCurrentlyDeleting =
@@ -112,8 +112,8 @@ export function useMemosBulkDelete({
 
   useEffect(() => {
     // 削除中は自動クリーンアップを無効にする（部分削除中も無効）
-    if (deletedNotes && !isCurrentlyDeleting && !bulkAnimation.isPartialProcessing) {
-      const deletedMemoIds = new Set(deletedNotes.map((m) => m.id));
+    if (deletedMemos && !isCurrentlyDeleting && !bulkAnimation.isPartialProcessing) {
+      const deletedMemoIds = new Set(deletedMemos.map((m) => m.id));
       const newCheckedDeletedMemos = new Set(
         Array.from(checkedDeletedMemos).filter((id) => deletedMemoIds.has(id))
       );
@@ -122,7 +122,7 @@ export function useMemosBulkDelete({
       }
     }
   }, [
-    deletedNotes,
+    deletedMemos,
     checkedDeletedMemos,
     setCheckedDeletedMemos,
     isCurrentlyDeleting,

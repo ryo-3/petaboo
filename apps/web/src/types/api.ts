@@ -4,7 +4,7 @@
  */
 
 export interface paths {
-    "/notes": {
+    "/memos": {
         parameters: {
             query?: never;
             header?: never;
@@ -20,7 +20,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description List of notes */
+                /** @description List of memos */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -86,7 +86,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/notes/{id}": {
+    "/memos/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -189,7 +189,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/notes/deleted": {
+    "/memos/deleted": {
         parameters: {
             query?: never;
             header?: never;
@@ -205,7 +205,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description List of deleted notes */
+                /** @description List of deleted memos */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -231,7 +231,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/notes/deleted/{id}": {
+    "/memos/deleted/{id}": {
         parameters: {
             query?: never;
             header?: never;

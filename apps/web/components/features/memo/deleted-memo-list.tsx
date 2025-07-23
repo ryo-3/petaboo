@@ -4,25 +4,25 @@ import TrashIcon from "@/components/icons/trash-icon";
 import LoadingState from '@/components/ui/feedback/loading-state';
 import ErrorState from '@/components/ui/feedback/error-state';
 import EmptyState from '@/components/ui/feedback/empty-state';
-import { useDeletedNotes } from '@/src/hooks/use-notes';
+import { useDeletedMemos } from '@/src/hooks/use-memos';
 import LogoutButton from "@/components/ui/buttons/logout-button";
 import type { DeletedMemo } from "@/src/types/memo";
 import { formatDateOnly } from "@/src/utils/formatDate";
 
 interface DeletedMemoListProps {
-  onBackToNotes: () => void;
+  onBackToMemos: () => void;
   onSelectDeletedMemo: (memo: DeletedMemo) => void;
 }
 
-function DeletedMemoList({ onBackToNotes, onSelectDeletedMemo }: DeletedMemoListProps) {
-  const { data: deletedNotes, isLoading, error } = useDeletedNotes()
+function DeletedMemoList({ onBackToMemos, onSelectDeletedMemo }: DeletedMemoListProps) {
+  const { data: deletedMemos, isLoading, error } = useDeletedMemos()
 
   return (
     <div className="flex flex-col justify-between">
       <div>
         {/* 戻るボタン */}
         <button
-          onClick={onBackToNotes}
+          onClick={onBackToMemos}
           className="bg-blue-200 hover:bg-blue-300 text-center mx-2 rounded-lg mt-4 w-[calc(100%-16px)] py-2 transition-colors"
         >
           <span className="text-slate-600 font-medium text-lg">← 通常メモに戻る</span>
@@ -38,13 +38,13 @@ function DeletedMemoList({ onBackToNotes, onSelectDeletedMemo }: DeletedMemoList
           
           {error && <ErrorState />}
           
-          {deletedNotes && deletedNotes.length === 0 && (
+          {deletedMemos && deletedMemos.length === 0 && (
             <EmptyState message="削除済みメモはありません" variant="simple" />
           )}
           
-          {deletedNotes && deletedNotes.length > 0 && (
+          {deletedMemos && deletedMemos.length > 0 && (
             <ul className="space-y-1">
-              {deletedNotes.map((memo: DeletedMemo) => (
+              {deletedMemos.map((memo: DeletedMemo) => (
                 <li key={memo.id}>
                   <button
                     onClick={() => onSelectDeletedMemo(memo)}

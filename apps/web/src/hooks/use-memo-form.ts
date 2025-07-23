@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from 'react'
 import type { Memo } from '@/src/types/memo'
-import { useCreateNote, useUpdateNote } from '@/src/hooks/use-notes'
+import { useCreateMemo, useUpdateMemo } from '@/src/hooks/use-memos'
 
 interface UseMemoFormOptions {
   memo?: Memo | null
@@ -20,8 +20,8 @@ export function useMemoForm({ memo = null, onMemoAdd, onMemoUpdate, onMemoIdUpda
   const [initialTitle, setInitialTitle] = useState(() => memo?.title || '')
   const [initialContent, setInitialContent] = useState(() => memo?.content || '')
 
-  const createNote = useCreateNote()
-  const updateNote = useUpdateNote()
+  const createNote = useCreateMemo()
+  const updateNote = useUpdateMemo()
 
   // 変更検知
   const hasChanges = useMemo(() => {

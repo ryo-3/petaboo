@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@clerk/nextjs'
-import { notesApi } from '@/src/lib/api-client'
+import { memosApi } from '@/src/lib/api-client'
 import type { Memo, DeletedMemo, CreateMemoData, UpdateMemoData } from '@/src/types/memo'
 
 // メモ一覧を取得するhook
@@ -11,7 +11,7 @@ export function useMemos() {
     queryKey: ['memos'],
     queryFn: async () => {
       const token = await getToken()
-      const response = await notesApi.getNotes(token || undefined)
+      const response = await memosApi.getMemos(token || undefined)
       const data = await response.json()
       return data as Memo[]
     },
@@ -26,7 +26,7 @@ export function useDeletedMemos() {
     queryKey: ['deletedMemos'],
     queryFn: async () => {
       const token = await getToken()
-      const response = await notesApi.getDeletedNotes(token || undefined)
+      const response = await memosApi.getDeletedMemos(token || undefined)
       const data = await response.json()
       return data as DeletedMemo[]
     },
@@ -41,7 +41,7 @@ export function useCreateMemo() {
   return useMutation({
     mutationFn: async (memoData: CreateMemoData) => {
       const token = await getToken()
-      const response = await notesApi.createNote(memoData, token || undefined)
+      const response = await memosApi.createNote(memoData, token || undefined)
       const data = await response.json()
       return data as Memo
     },
@@ -59,7 +59,7 @@ export function useUpdateMemo() {
   return useMutation({
     mutationFn: async ({ id, data }: { id: number; data: UpdateMemoData }) => {
       const token = await getToken()
-      const response = await notesApi.updateNote(id, data, token || undefined)
+      const response = await memosApi.updateNote(id, data, token || undefined)
       const responseData = await response.json()
       return responseData as Memo
     },
@@ -77,7 +77,7 @@ export function useDeleteMemo() {
   return useMutation({
     mutationFn: async (id: number) => {
       const token = await getToken()
-      await notesApi.deleteNote(id, token || undefined)
+      await memosApi.deleteNote(id, token || undefined)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['memos'] })
@@ -94,7 +94,7 @@ export function usePermanentDeleteMemo() {
   return useMutation({
     mutationFn: async (id: number) => {
       const token = await getToken()
-      await notesApi.permanentDeleteNote(id, token || undefined)
+      await memosApi.permanentDeleteNote(id, token || undefined)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deletedMemos'] })
@@ -110,7 +110,7 @@ export function useRestoreMemo() {
   return useMutation({
     mutationFn: async (id: number) => {
       const token = await getToken()
-      await notesApi.restoreNote(id, token || undefined)
+      await memosApi.restoreNote(id, token || undefined)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['memos'] })

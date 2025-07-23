@@ -35,9 +35,9 @@ interface DesktopLowerProps {
   boardFilterMode?: 'include' | 'exclude';
   
   // Data props
-  notes?: Memo[];
+  memos?: Memo[];
   localMemos?: Memo[];
-  deletedNotes?: DeletedMemo[];
+  deletedMemos?: DeletedMemo[];
   tasks?: Task[];
   deletedTasks?: DeletedTask[];
   
@@ -78,7 +78,7 @@ function DesktopLower({
   selectedBoardIds = [],
   boardFilterMode = 'include',
   localMemos,
-  deletedNotes,
+  deletedMemos,
   tasks,
   deletedTasks,
   selectedMemo,
@@ -178,7 +178,7 @@ function DesktopLower({
       <>
         {currentMode === "memo" ? (
           <DeletedMemoDisplay
-            deletedMemos={deletedNotes}
+            deletedMemos={deletedMemos}
             viewMode={viewMode}
             effectiveColumnCount={effectiveColumnCount}
             selectionMode={selectionMode}

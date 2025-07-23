@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
-import { useNotes, useDeletedNotes } from './use-notes';
+import { useMemos, useDeletedMemos } from './use-memos';
 import { useTasks, useDeletedTasks } from './use-tasks';
 import type { Memo, DeletedMemo } from '@/src/types/memo';
 import type { Task, DeletedTask } from '@/src/types/task';
@@ -31,8 +31,8 @@ export function useGlobalSearch({
   const [isSearching, setIsSearching] = useState(false);
 
   // データ取得
-  const { data: memos } = useNotes();
-  const { data: deletedMemos } = useDeletedNotes();
+  const { data: memos } = useMemos();
+  const { data: deletedMemos } = useDeletedMemos();
   const { data: tasks } = useTasks();
   const { data: deletedTasks } = useDeletedTasks();
   

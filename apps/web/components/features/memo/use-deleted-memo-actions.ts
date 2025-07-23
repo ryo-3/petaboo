@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { useRestoreNote } from '@/src/hooks/use-notes'
+import { useRestoreMemo } from '@/src/hooks/use-memos'
 import type { DeletedMemo } from '@/src/types/memo'
 import { useQueryClient, useMutation } from '@tanstack/react-query'
 import { useAuth } from '@clerk/nextjs'
-import { notesApi } from '@/src/lib/api-client'
+import { memosApi } from '@/src/lib/api-client'
 
 interface UseDeletedMemoActionsProps {
   memo: DeletedMemo
@@ -21,12 +21,12 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
   const permanentDeleteNote = useMutation({
     mutationFn: async (id: number) => {
       const token = await getToken()
-      const response = await notesApi.permanentDeleteNote(id, token || undefined)
+      const response = await memosApi.permanentDeleteNote(id, token || undefined)
       return response.json()
     },
     onSuccess: async () => {
       // 完全削除後に削除済みメモリストを再取得
-      await queryClient.invalidateQueries({ queryKey: ["deleted-notes"] })
+      await queryClient.invalidateQueries({ queryKey: ["deleted-memos"] })
       
       // 少し遅延してから次のメモ選択機能を使用（React Queryの状態更新を待つ）
       setTimeout(() => {
@@ -40,7 +40,7 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
     },
   })
   
-  const restoreNote = useRestoreNote()
+  const restoreNote = useRestoreMemo()
 
   const handlePermanentDelete = async () => {
     try {

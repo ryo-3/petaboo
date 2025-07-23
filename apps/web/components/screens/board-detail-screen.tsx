@@ -18,7 +18,7 @@ import { memo, useCallback, useEffect, useState, useMemo } from "react";
 import BoardHeader from "@/components/features/board/board-header";
 import { useBulkDelete, BulkDeleteConfirmation } from "@/components/ui/modals";
 import { DeletionWarningMessage } from "@/components/ui/modals/deletion-warning-message";
-import { useDeleteNote } from "@/src/hooks/use-notes";
+import { useDeleteMemo } from "@/src/hooks/use-memos";
 import { useDeleteTask } from "@/src/hooks/use-tasks";
 import { getNextItemAfterDeletion, getMemoDisplayOrder, getTaskDisplayOrder } from "@/src/utils/domUtils";
 
@@ -130,7 +130,7 @@ function BoardDetailScreen({
   const [deletingItemType, setDeletingItemType] = useState<'memo' | 'task' | null>(null);
   const [isMemoDeleting, setIsMemoDeleting] = useState(false);
   const [isTaskDeleting, setIsTaskDeleting] = useState(false);
-  const deleteNoteMutation = useDeleteNote();
+  const deleteMemoMutation = useDeleteMemo();
   const deleteTaskMutation = useDeleteTask();
 
 
@@ -548,7 +548,7 @@ function BoardDetailScreen({
           for (const id of ids) {
             
             if (itemType === 'memo') {
-              await deleteNoteMutation.mutateAsync(id);
+              await deleteMemoMutation.mutateAsync(id);
             } else {
               await deleteTaskMutation.mutateAsync(id);
             }
@@ -576,7 +576,7 @@ function BoardDetailScreen({
       <BoardDeleteMessage itemIds={targetIds} itemType={itemType} />
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [checkedMemos, checkedTasks, bulkDelete, deleteNoteMutation, deleteTaskMutation]);
+  }, [checkedMemos, checkedTasks, bulkDelete, deleteMemoMutation, deleteTaskMutation]);
 
   // ボードから外す処理
   const handleRemoveFromBoard = useCallback(async () => {

@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from 'react'
 import type { Memo } from '@/src/types/memo'
-import { useCreateNote, useUpdateNote, useDeleteNote } from '@/src/hooks/use-notes'
+import { useCreateMemo, useUpdateMemo, useDeleteMemo } from '@/src/hooks/use-memos'
 import { useAddItemToBoard, useRemoveItemFromBoard } from '@/src/hooks/use-boards'
 import { useQueryClient } from '@tanstack/react-query'
 
@@ -40,9 +40,9 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
   const [initialTitle, setInitialTitle] = useState(() => memo?.title || '')
   const [initialContent, setInitialContent] = useState(() => memo?.content || '')
 
-  const createNote = useCreateNote()
-  const updateNote = useUpdateNote()
-  const deleteNote = useDeleteNote()
+  const createNote = useCreateMemo()
+  const updateNote = useUpdateMemo()
+  const deleteNote = useDeleteMemo()
   const addItemToBoard = useAddItemToBoard()
   const removeItemFromBoard = useRemoveItemFromBoard()
   const queryClient = useQueryClient()

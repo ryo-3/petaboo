@@ -4,7 +4,7 @@ import SidebarItem from '@/components/shared/sidebar-item';
 import LoadingState from '@/components/ui/feedback/loading-state';
 import ErrorState from '@/components/ui/feedback/error-state';
 import EmptyState from '@/components/ui/feedback/empty-state';
-import { useNotes, useDeleteNote } from '@/src/hooks/use-notes';
+import { useMemos, useDeleteMemo } from '@/src/hooks/use-memos';
 import { useLocalStorageSync } from '@/src/hooks/use-local-storage-sync';
 import type { Memo } from "@/src/types/memo";
 import { formatDateOnly } from "@/src/utils/formatDate";
@@ -55,33 +55,33 @@ function SidebarMemoItem({ memo, onSelect, onEdit, onDelete, isSelected }: {
 
  
 function SidebarMemoList({ onSelectMemo, onEditMemo, onDeleteMemo, selectedMemoId }: SidebarMemoListProps) {
-  const { data: notes, isLoading, error } = useNotes()
-  const deleteNote = useDeleteNote()
+  const { data: memos, isLoading, error } = useMemos()
+  const deleteNote = useDeleteMemo()
 
   const handleDelete = async (memo: Memo) => {
     try {
       // console.log('=== メモ削除処理開始 ===')
       // console.log('削除対象メモ:', memo)
       // console.log('現在選択中のメモID:', selectedMemoId)
-      // console.log('全メモ数:', notes?.length)
-      // console.log('全メモ一覧:', notes?.map(m => ({ id: m.id, title: m.title })))
+      // console.log('全メモ数:', memos?.length)
+      // console.log('全メモ一覧:', memos?.map(m => ({ id: m.id, title: m.title })))
       
       // 削除前に次のメモを決定
       let nextMemo: Memo | null = null
       
-      if (notes && notes.length > 1) {
-        const deletedIndex = notes.findIndex(m => m.id === memo.id)
+      if (memos && memos.length > 1) {
+        const deletedIndex = memos.findIndex(m => m.id === memo.id)
         // console.log('削除対象のインデックス:', deletedIndex)
         
         if (deletedIndex !== -1) {
           // 削除されたメモの次のメモを選択（削除されたメモより後にあるメモ）
-          if (deletedIndex < notes.length - 1) {
-            nextMemo = notes[deletedIndex + 1] || null
+          if (deletedIndex < memos.length - 1) {
+            nextMemo = memos[deletedIndex + 1] || null
             // console.log('次のメモを選択:', nextMemo)
           }
           // 最後のメモが削除された場合は前のメモを選択
           else if (deletedIndex > 0) {
-            nextMemo = notes[deletedIndex - 1] || null
+            nextMemo = memos[deletedIndex - 1] || null
             // console.log('前のメモを選択:', nextMemo)
           }
         }
@@ -117,14 +117,14 @@ function SidebarMemoList({ onSelectMemo, onEditMemo, onDeleteMemo, selectedMemoI
     return <ErrorState />;
   }
 
-  if (!notes || notes.length === 0) {
+  if (!memos || memos.length === 0) {
     return <EmptyState message="メモがありません" variant="simple" />;
   }
 
   return (
     <div className="h-full overflow-y-auto overflow-x-hidden">
       <ul className="space-y-1 pb-8">
-        {notes.map((memo: Memo) => (
+        {memos.map((memo: Memo) => (
           <li key={memo.id}>
             <SidebarMemoItem
               memo={memo}

@@ -10,7 +10,7 @@ import RightPanel from "@/components/ui/layout/right-panel";
 import { Memo, DeletedMemo } from "@/src/types/memo";
 import { Task, DeletedTask } from "@/src/types/task";
 import { useState } from "react";
-import { useDeleteNote } from "@/src/hooks/use-notes";
+import { useDeleteMemo } from "@/src/hooks/use-memos";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface BoardRightPanelProps {
@@ -58,7 +58,7 @@ export default function BoardRightPanel({
 
   // 削除処理用のstate
   const [isRightMemoLidOpen, setIsRightMemoLidOpen] = useState(false);
-  const deleteNote = useDeleteNote();
+  const deleteNote = useDeleteMemo();
   const queryClient = useQueryClient();
 
   // メモ削除ハンドラー（メモエディターの削除確認後に呼ばれる）
@@ -73,8 +73,8 @@ export default function BoardRightPanel({
         queryClient.invalidateQueries({ queryKey: ["boards"] });
         queryClient.invalidateQueries({ queryKey: ["board-with-items", boardId] });
         queryClient.invalidateQueries({ queryKey: ["board-deleted-items", boardId] });
-        queryClient.invalidateQueries({ queryKey: ["notes"] });
-        queryClient.invalidateQueries({ queryKey: ["deleted-notes"] });
+        queryClient.invalidateQueries({ queryKey: ["memos"] });
+        queryClient.invalidateQueries({ queryKey: ["deleted-memos"] });
         
         // 削除成功後に次のアイテムを選択
         setTimeout(() => {

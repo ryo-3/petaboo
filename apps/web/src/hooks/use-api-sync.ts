@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { useUpdateNote, useCreateNote } from './use-notes'
+import { useUpdateMemo, useCreateMemo } from './use-memos'
 
 interface LocalMemoData {
   id: number | string
@@ -20,8 +20,8 @@ interface SyncStatus {
 export function useApiSync() {
   const [syncStatus, setSyncStatus] = useState<SyncStatus>({})
   const [errors, setErrors] = useState<string[]>([])
-  const updateNote = useUpdateNote()
-  const createNote = useCreateNote()
+  const updateNote = useUpdateMemo()
+  const createNote = useCreateMemo()
 
   const syncSingleMemo = useCallback(async (storageKey: string, data: LocalMemoData) => {
     const currentRetry = syncStatus[storageKey]?.retryCount || 0

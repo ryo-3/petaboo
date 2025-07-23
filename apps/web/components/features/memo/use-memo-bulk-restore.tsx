@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useRestoreNote } from '@/src/hooks/use-notes'
+import { useRestoreMemo } from '@/src/hooks/use-memos'
 import { useBulkDelete, BulkRestoreConfirmation } from '@/components/ui/modals'
 import type { DeletedMemo } from '@/src/types/memo'
 import React from 'react'
@@ -9,7 +9,7 @@ import { executeWithAnimation } from '@/src/utils/bulkAnimationUtils'
 interface UseMemosBulkRestoreProps {
   checkedDeletedMemos: Set<number>
   setCheckedDeletedMemos: (memos: Set<number>) => void
-  deletedNotes?: DeletedMemo[]
+  deletedMemos?: DeletedMemo[]
   onDeletedMemoRestore?: (id: number) => void
   restoreButtonRef?: React.RefObject<HTMLButtonElement | null>
   setIsRestoring?: (isRestoring: boolean) => void
@@ -19,13 +19,13 @@ interface UseMemosBulkRestoreProps {
 export function useMemosBulkRestore({
   checkedDeletedMemos,
   setCheckedDeletedMemos,
-  deletedNotes,
+  deletedMemos,
   onDeletedMemoRestore,
   restoreButtonRef,
   setIsRestoring,
   setIsLidOpen
 }: UseMemosBulkRestoreProps) {
-  const restoreNoteMutation = useRestoreNote()
+  const restoreNoteMutation = useRestoreMemo()
   const bulkRestore = useBulkDelete() // 削除と同じモーダルロジックを使用
   
   // 共通のアニメーション管理
@@ -36,14 +36,14 @@ export function useMemosBulkRestore({
 
   // チェック状態のクリーンアップ - 復元されたメモのチェックを解除（部分復元中は無効）
   useEffect(() => {
-    if (deletedNotes && !bulkAnimation.isPartialProcessing) {
-      const deletedMemoIds = new Set(deletedNotes.map(m => m.id))
+    if (deletedMemos && !bulkAnimation.isPartialProcessing) {
+      const deletedMemoIds = new Set(deletedMemos.map(m => m.id))
       const newCheckedDeletedMemos = new Set(Array.from(checkedDeletedMemos).filter(id => deletedMemoIds.has(id)))
       if (newCheckedDeletedMemos.size !== checkedDeletedMemos.size) {
         setCheckedDeletedMemos(newCheckedDeletedMemos)
       }
     }
-  }, [deletedNotes, checkedDeletedMemos, setCheckedDeletedMemos, bulkAnimation.isPartialProcessing])
+  }, [deletedMemos, checkedDeletedMemos, setCheckedDeletedMemos, bulkAnimation.isPartialProcessing])
 
   // 共通の復元処理関数（共通ロジック使用）
   const executeRestoreWithAnimation = async (

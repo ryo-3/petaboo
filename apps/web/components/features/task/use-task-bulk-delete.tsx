@@ -131,7 +131,14 @@ export function useTasksBulkDelete({
 
     const onApiCall = async (id: number) => {
       if (activeTab === "deleted") {
-        await permanentDeleteTaskMutation.mutateAsync(String(id))
+        // 削除済みタスクの場合はoriginalIdを使用
+        const deletedTask = deletedTasks?.find(task => task.id === id);
+        if (deletedTask) {
+          await permanentDeleteTaskMutation.mutateAsync(deletedTask.originalId);
+        } else {
+          // 対象が見つからない場合もアニメーションの一貫性のため処理を継続
+          console.warn(`削除対象のタスクが見つかりません: ID ${id}`);
+        }
       } else {
         await deleteTaskMutation.mutateAsync(id)
       }

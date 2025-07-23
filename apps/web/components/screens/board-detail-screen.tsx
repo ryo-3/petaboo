@@ -92,11 +92,11 @@ function BoardDetailScreen({
 
   // 複数選択状態管理（統合）
   const [selectionMode, setSelectionMode] = useState<"select" | "check">("select");
-  const [checkedMemos, setCheckedMemos] = useState<Set<number>>(new Set());
-  const [checkedTasks, setCheckedTasks] = useState<Set<number>>(new Set());
+  const [checkedMemos, setCheckedMemos] = useState<Set<string | number>>(new Set());
+  const [checkedTasks, setCheckedTasks] = useState<Set<string | number>>(new Set());
 
   // 選択ハンドラー
-  const handleMemoSelectionToggle = useCallback((memoId: number) => {
+  const handleMemoSelectionToggle = useCallback((memoId: string | number) => {
     setCheckedMemos(prev => {
       const newSet = new Set(prev);
       if (newSet.has(memoId)) {
@@ -108,7 +108,7 @@ function BoardDetailScreen({
     });
   }, []);
 
-  const handleTaskSelectionToggle = useCallback((taskId: number) => {
+  const handleTaskSelectionToggle = useCallback((taskId: string | number) => {
     setCheckedTasks(prev => {
       const newSet = new Set(prev);
       if (newSet.has(taskId)) {
@@ -462,7 +462,7 @@ function BoardDetailScreen({
   }, [boardId, addItemToBoard, boardTasks]);
 
   const handleMemoSelectAll = useCallback(() => {
-    const currentMemoIds = memoItems.map((item) => (item.content as Memo).id);
+    const currentMemoIds = memoItems.map((item) => item.itemId); // originalIdを使用
     if (checkedMemos.size === currentMemoIds.length) {
       setCheckedMemos(new Set());
     } else {
@@ -471,7 +471,7 @@ function BoardDetailScreen({
   }, [memoItems, checkedMemos.size]);
 
   const handleTaskSelectAll = useCallback(() => {
-    const currentTaskIds = taskItems.map((item) => (item.content as Task).id);
+    const currentTaskIds = taskItems.map((item) => item.itemId); // originalIdを使用
     if (checkedTasks.size === currentTaskIds.length) {
       setCheckedTasks(new Set());
     } else {
@@ -484,12 +484,14 @@ function BoardDetailScreen({
   const isTaskAllSelected = taskItems.length > 0 && checkedTasks.size === taskItems.length;
 
   // ステータス別カウントを取得する関数（ボード版）
-  const getBoardItemStatusBreakdown = (itemIds: number[], itemType: 'memo' | 'task') => {
+  const getBoardItemStatusBreakdown = (itemIds: (string | number)[], itemType: 'memo' | 'task') => {
     if (itemType === 'memo') {
       return [{ status: 'normal', label: '通常', count: itemIds.length, color: 'bg-gray-400' }];
     } else {
-      const allTasks = boardTasks;
-      const selectedTasks = allTasks.filter(task => itemIds.includes(task.id));
+      // IDから対応するタスクを取得
+      const selectedTasks = taskItems
+        .filter(item => itemIds.includes(item.itemId))
+        .map(item => item.content as Task);
       
       const todoCount = selectedTasks.filter(task => task.status === 'todo').length;
       const inProgressCount = selectedTasks.filter(task => task.status === 'in_progress').length;
@@ -505,7 +507,7 @@ function BoardDetailScreen({
   };
 
   // 削除メッセージコンポーネント
-  const BoardDeleteMessage = ({ itemIds, itemType }: { itemIds: number[]; itemType: 'memo' | 'task' }) => {
+  const BoardDeleteMessage = ({ itemIds, itemType }: { itemIds: (string | number)[]; itemType: 'memo' | 'task' }) => {
     const statusBreakdown = getBoardItemStatusBreakdown(itemIds, itemType);
     const isLimited = itemIds.length > 100;
     const itemTypeName = itemType === 'memo' ? 'メモ' : 'タスク';
@@ -547,15 +549,38 @@ function BoardDetailScreen({
     await bulkDelete.confirmBulkDelete(
       targetIds,
       1, // 1件からモーダル表示
-      async (ids: number[]) => {
+      async (ids: (string | number)[]) => {
         try {
           // 実際の削除処理
           for (const id of ids) {
-            
             if (itemType === 'memo') {
-              await deleteMemoMutation.mutateAsync(id);
+              if (activeMemoTab === 'deleted') {
+                // 削除済みタブの場合：originalIdから削除済みテーブルでのIDを取得
+                const memo = boardDeletedItems?.memos.find(m => m.originalId === id);
+                const actualId = memo?.id || 0;
+                if (actualId > 0) {
+                  await deleteMemoMutation.mutateAsync(actualId);
+                }
+              } else {
+                // 通常タブの場合：数値IDをそのまま使用
+                if (typeof id === 'number') {
+                  await deleteMemoMutation.mutateAsync(id);
+                }
+              }
             } else {
-              await deleteTaskMutation.mutateAsync(id);
+              if (activeTaskTab === 'deleted') {
+                // 削除済みタブの場合：originalIdから削除済みテーブルでのIDを取得
+                const task = boardDeletedItems?.tasks.find(t => t.originalId === id);
+                const actualId = task?.id || 0;
+                if (actualId > 0) {
+                  await deleteTaskMutation.mutateAsync(actualId);
+                }
+              } else {
+                // 通常タブの場合：数値IDをそのまま使用
+                if (typeof id === 'number') {
+                  await deleteTaskMutation.mutateAsync(id);
+                }
+              }
             }
           }
           

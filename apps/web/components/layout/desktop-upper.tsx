@@ -383,7 +383,7 @@ function DesktopUpper({
               mode={selectionMode}
               onModeChange={onSelectionModeChange}
               buttonSize="size-7"
-              iconSize="size-5"
+              iconSize="size-4"
             />
           )}
           

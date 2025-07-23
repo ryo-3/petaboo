@@ -14,7 +14,7 @@ export default function BoardChangeModal({
   isOpen,
   onClose,
   onConfirm,
-  boardsToAdd,
+  boardsToAdd: _boardsToAdd, // eslint-disable-line @typescript-eslint/no-unused-vars
   boardsToRemove,
   parentElement: _parentElement // eslint-disable-line @typescript-eslint/no-unused-vars
 }: BoardChangeModalProps) {

@@ -204,22 +204,85 @@ function TaskEditor({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task?.id, itemBoards.length, initialBoardId]); // itemBoards自体ではなくlengthを依存に
 
-  // ボード変更ハンドラー（保存前はモーダルを表示しない）
+  // ボード変更ハンドラー（保存時にモーダル表示）
   const handleBoardChange = (newBoardIds: string | string[]) => {
     const newIds = Array.isArray(newBoardIds) ? newBoardIds : [newBoardIds];
-    // 選択状態のみ更新（モーダルは表示しない）
+    // 選択状態のみ更新（モーダルは保存時に表示）
     setSelectedBoardIds(newIds);
   };
 
-  // 現在は使用しないが、将来の拡張のために残す
-  const handleConfirmBoardChange = () => {
+  // ボード変更と保存を実行する関数
+  const executeBoardChangesAndSave = useCallback(async () => {
+    const { toAdd, toRemove } = pendingBoardChanges;
+    
+    try {
+      // ボードから削除
+      for (const boardId of toRemove) {
+        try {
+          await removeItemFromBoard.mutateAsync({
+            boardId: parseInt(boardId),
+            itemId: task!.id,
+            itemType: 'task'
+          });
+        } catch (error) {
+          console.error('Failed to remove task from board:', error);
+        }
+      }
+
+      // ボードに追加
+      for (const boardId of toAdd) {
+        try {
+          await addItemToBoard.mutateAsync({
+            boardId: parseInt(boardId),
+            data: {
+              itemType: 'task',
+              itemId: task!.id,
+            },
+          });
+        } catch (error) {
+          console.error('Failed to add task to board:', error);
+        }
+      }
+      
+      onSaveComplete?.(task!, false);
+      
+      // 保存成功時にoriginalDataも更新（現在のstateの値を使用）
+      setOriginalData({
+        title: title.trim(),
+        description: description.trim(),
+        status: status,
+        priority: priority,
+        categoryId: categoryId,
+        dueDate: dueDate,
+        boardIds: selectedBoardIds
+      });
+    } catch (error) {
+      console.error("ボード変更に失敗しました:", error);
+      setError(
+        "ボード変更に失敗しました。APIサーバーが起動していることを確認してください。"
+      );
+    }
+  }, [pendingBoardChanges, removeItemFromBoard, addItemToBoard, task, onSaveComplete, title, description, status, priority, categoryId, dueDate, selectedBoardIds]);
+
+  const handleConfirmBoardChange = useCallback(async () => {
+    setShowBoardChangeModal(false);
+    
+    // モーダル確認後に実際の保存処理を実行
+    await executeBoardChangesAndSave();
+    
+    setPendingBoardChanges({ toAdd: [], toRemove: [] });
+  }, [executeBoardChangesAndSave]);
+
+  const handleCancelBoardChange = () => {
+    // モーダルをキャンセル（変更を元に戻す必要はない、選択状態はそのまま）
     setShowBoardChangeModal(false);
     setPendingBoardChanges({ toAdd: [], toRemove: [] });
   };
 
-  const handleCancelBoardChange = () => {
-    setShowBoardChangeModal(false);
-    setPendingBoardChanges({ toAdd: [], toRemove: [] });
+  // ボードIDを名前に変換する関数
+  const getBoardName = (boardId: string) => {
+    const board = boards.find(b => b.id.toString() === boardId);
+    return board ? board.name : `ボード${boardId}`;
   };
 
   const handleSave = useCallback(async () => {
@@ -293,12 +356,12 @@ function TaskEditor({
       } else {
         // 編集
         // タスク内容の変更があるかチェック（ボード変更は除く）
-        const hasContentChanges = title.trim() !== originalData.title.trim() ||
-          description.trim() !== originalData.description.trim() ||
-          status !== originalData.status ||
-          priority !== originalData.priority ||
-          categoryId !== originalData.categoryId ||
-          dueDate !== originalData.dueDate;
+        const hasContentChanges = title.trim() !== originalData!.title.trim() ||
+          description.trim() !== originalData!.description.trim() ||
+          status !== originalData!.status ||
+          priority !== originalData!.priority ||
+          categoryId !== originalData!.categoryId ||
+          dueDate !== originalData!.dueDate;
         
         let updatedTask = task!;
         
@@ -314,6 +377,13 @@ function TaskEditor({
         const currentBoardIds = itemBoards.map(board => board.id.toString());
         const toAdd = selectedBoardIds.filter(id => !currentBoardIds.includes(id));
         const toRemove = currentBoardIds.filter(id => !selectedBoardIds.includes(id));
+
+        // ボードを外す場合はモーダル表示
+        if (toRemove.length > 0) {
+          setPendingBoardChanges({ toAdd, toRemove });
+          setShowBoardChangeModal(true);
+          return;
+        }
 
         // ボードから削除
         for (const boardId of toRemove) {
@@ -383,6 +453,7 @@ function TaskEditor({
     selectedBoardIds,
     itemBoards,
     isSaving,
+    originalData,
   ]);
 
   // Ctrl+Sショートカット（変更がある場合のみ実行）
@@ -474,8 +545,8 @@ function TaskEditor({
         isOpen={showBoardChangeModal}
         onClose={handleCancelBoardChange}
         onConfirm={handleConfirmBoardChange}
-        boardsToAdd={pendingBoardChanges.toAdd}
-        boardsToRemove={pendingBoardChanges.toRemove}
+        boardsToAdd={pendingBoardChanges.toAdd.map(getBoardName)}
+        boardsToRemove={pendingBoardChanges.toRemove.map(getBoardName)}
       />
     </>
   );

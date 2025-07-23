@@ -123,6 +123,11 @@ function BoardDetailScreen({
   // 選択モード切り替え（統合）
   const handleSelectionModeChange = useCallback((mode: "select" | "check") => {
     setSelectionMode(mode);
+    // checkモードからselectモードに切り替える時、選択状態をクリア
+    if (mode === "select") {
+      setCheckedMemos(new Set());
+      setCheckedTasks(new Set());
+    }
   }, []);
 
   // 一括削除機能
@@ -320,7 +325,7 @@ function BoardDetailScreen({
     ? (boardDeletedItems?.memos || []).map((memo, index) => ({
         id: memo.id,
         boardId: boardId,
-        itemId: memo.id, // 削除済みアイテムの通常IDを使用
+        itemId: memo.originalId, // originalIdを使用
         itemType: 'memo' as const,
         content: memo,
         createdAt: memo.createdAt,
@@ -334,7 +339,7 @@ function BoardDetailScreen({
     ? (boardDeletedItems?.tasks || []).map((task, index) => ({
         id: task.id,
         boardId: boardId,
-        itemId: task.id, // 削除済みアイテムの通常IDを使用
+        itemId: task.originalId, // originalIdを使用
         itemType: 'task' as const,
         content: task,
         createdAt: task.createdAt,

@@ -356,7 +356,14 @@ function MemoScreen({
           onColumnCountChange={setColumnCount}
           rightPanelMode={memoScreenMode === "list" ? "hidden" : "view"}
           selectionMode={selectionMode}
-          onSelectionModeChange={setSelectionMode}
+          onSelectionModeChange={(mode) => {
+            setSelectionMode(mode);
+            // checkモードからselectモードに切り替える時、選択状態をクリア
+            if (mode === "select") {
+              setCheckedMemos(new Set());
+              setCheckedDeletedMemos(new Set());
+            }
+          }}
           onSelectAll={handleSelectAll}
           isAllSelected={isAllSelected}
           sortOptions={getVisibleSortOptions(activeTab)}

@@ -2,13 +2,31 @@
  * UnixタイムスタンプをJST形式の文字列に変換
  */
 export function formatDate(timestamp: number): string {
-  return new Date(timestamp * 1000).toLocaleString('ja-JP', {
+  console.log('🕒 formatDate called with timestamp:', timestamp, 'type:', typeof timestamp);
+  
+  if (!timestamp || typeof timestamp !== 'number') {
+    console.error('❌ formatDate: invalid timestamp:', timestamp);
+    return '不明な日付';
+  }
+  
+  const date = new Date(timestamp * 1000);
+  console.log('🕒 converted to Date:', date, 'isValid:', !isNaN(date.getTime()));
+  
+  if (isNaN(date.getTime())) {
+    console.error('❌ formatDate: Invalid Date created from timestamp:', timestamp);
+    return '不正な日付';
+  }
+  
+  const formatted = date.toLocaleString('ja-JP', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit'
-  }).replace(/\//g, '/')
+  }).replace(/\//g, '/');
+  
+  console.log('🕒 formatted result:', formatted);
+  return formatted;
 }
 
 /**

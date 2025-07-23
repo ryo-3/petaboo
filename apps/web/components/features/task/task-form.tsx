@@ -16,7 +16,7 @@ import {
   getStatusEditorColor,
   getStatusText,
 } from "@/src/utils/taskUtils";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, forwardRef, useImperativeHandle } from "react";
 
 interface TaskFormProps {
   title: string;
@@ -46,33 +46,38 @@ interface TaskFormProps {
   boards?: Board[]; // ボードデータをpropsとして受け取る
 }
 
-function TaskForm({
-  title,
-  onTitleChange,
-  description,
-  onDescriptionChange,
-  status,
-  onStatusChange,
-  priority,
-  onPriorityChange,
-  categoryId,
-  onCategoryChange,
-  selectedBoardIds,
-  onBoardChange,
-  dueDate,
-  onDueDateChange,
-  onSave,
-  onDelete,
-  isLidOpen = false,
-  isSaving,
-  hasChanges = true,
-  savedSuccessfully = false,
-  isNewTask = false,
-  titlePlaceholder = "タスクタイトルを入力...",
-  descriptionPlaceholder = "入力...",
-  customHeight,
-  boards: boardsProp,
-}: TaskFormProps) {
+export interface TaskFormHandle {
+  focusTitle: () => void;
+}
+
+const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
+  const {
+    title,
+    onTitleChange,
+    description,
+    onDescriptionChange,
+    status,
+    onStatusChange,
+    priority,
+    onPriorityChange,
+    categoryId,
+    onCategoryChange,
+    selectedBoardIds,
+    onBoardChange,
+    dueDate,
+    onDueDateChange,
+    onSave,
+    onDelete,
+    isLidOpen = false,
+    isSaving,
+    hasChanges = true,
+    savedSuccessfully = false,
+    isNewTask = false,
+    titlePlaceholder = "タスクタイトルを入力...",
+    descriptionPlaceholder = "入力...",
+    customHeight,
+    boards: boardsProp,
+  } = props;
   // propsからボードデータが渡された場合はそれを使用、なければuseBoards
   const { data: boardsFromHook = [] } = useBoards();
   const boards = boardsProp || boardsFromHook;
@@ -90,6 +95,13 @@ function TaskForm({
       return () => clearTimeout(timer);
     }
   }, [isNewTask]);
+
+  // 外部からタイトルにフォーカスを当てるメソッドを公開
+  useImperativeHandle(ref, () => ({
+    focusTitle: () => {
+      titleInputRef.current?.focus();
+    }
+  }), []);
 
   // 蓋の状態を監視してアニメーション状態を管理
   useEffect(() => {
@@ -288,6 +300,8 @@ function TaskForm({
       </div>
     </div>
   );
-}
+});
+
+TaskForm.displayName = 'TaskForm';
 
 export default TaskForm;

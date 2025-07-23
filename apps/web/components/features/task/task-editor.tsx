@@ -2,12 +2,12 @@
 
 import BaseViewer from "@/components/shared/base-viewer";
 import { SingleDeleteConfirmation } from "@/components/ui/modals";
-import TaskForm from "./task-form";
+import TaskForm, { TaskFormHandle } from "./task-form";
 import { useUpdateTask, useCreateTask } from "@/src/hooks/use-tasks";
 import { useAddItemToBoard, useBoards, useItemBoards, useRemoveItemFromBoard } from "@/src/hooks/use-boards";
 import BoardChangeModal from "@/components/ui/modals/board-change-modal";
 import type { Task } from "@/src/types/task";
-import { useCallback, useEffect, useState, useMemo, memo } from "react";
+import { useCallback, useEffect, useState, useMemo, memo, useRef } from "react";
 import { useTaskDelete } from "./use-task-delete";
 
 interface TaskEditorProps {
@@ -38,6 +38,7 @@ function TaskEditor({
   const { data: boards = [] } = useBoards();
   const { data: itemBoards = [] } = useItemBoards('task', task?.id);
   const isNewTask = !task || task.id === 0;
+  const taskFormRef = useRef<TaskFormHandle>(null);
   
   // 削除機能は編集時のみ
   const {
@@ -341,8 +342,8 @@ function TaskEditor({
           }
         }
         
-        // ボード追加が完了してからonSaveCompleteを呼び出し
-        onSaveComplete?.(newTask, true);
+        // 新規作成時は連続作成のため onSaveComplete を呼ばない
+        // ボード詳細画面のタスク一覧はReact Queryのキャッシュ無効化で自動更新される
         
         // 新規作成後はフォームをリセット
         setTimeout(() => {
@@ -367,6 +368,11 @@ function TaskEditor({
           
           // originalDataもリセット
           setOriginalData(resetData);
+          
+          // 少し遅延してタイトル入力欄にフォーカス
+          setTimeout(() => {
+            taskFormRef.current?.focusTitle();
+          }, 100);
         }, 400);
       } else {
         // 編集
@@ -497,6 +503,7 @@ function TaskEditor({
           isEditing={true}
         >
         <TaskForm
+          ref={taskFormRef}
           title={title}
           onTitleChange={setTitle}
           description={description}

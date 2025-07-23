@@ -147,8 +147,8 @@ export function useBoardState() {
         id: 0, // 新規作成時は0
         title: "",
         content: "",
-        createdAt: Date.now() / 1000,
-        updatedAt: Date.now() / 1000,
+        createdAt: Math.floor(Date.now() / 1000),
+        updatedAt: Math.floor(Date.now() / 1000),
       };
       console.log("🟢 calling onSelectMemo with:", newMemo);
       onSelectMemo?.(newMemo);
@@ -168,8 +168,8 @@ export function useBoardState() {
         priority: "medium",
         dueDate: null,
         categoryId: null,
-        createdAt: Date.now() / 1000,
-        updatedAt: Date.now() / 1000,
+        createdAt: Math.floor(Date.now() / 1000),
+        updatedAt: Math.floor(Date.now() / 1000),
       };
       console.log("🔵 calling onSelectTask with:", newTask);
       onSelectTask?.(newTask);

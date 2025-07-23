@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import DeleteButton from "../buttons/delete-button";
 import RestoreButton from "../buttons/restore-button";
 import { ButtonContainer } from "./button-container";
@@ -46,6 +47,15 @@ export function BulkActionButtons({
   animatedRestoreCount,
   useAnimatedRestoreCount = false,
 }: BulkActionButtonsProps) {
+  
+  // デバッグ用: showDeleteButtonの変化を監視
+  useEffect(() => {
+    console.log('🔘 BulkActionButtons showDeleteButton変化:', { 
+      showDeleteButton, 
+      isDeleting,
+      timestamp: new Date().toISOString()
+    });
+  }, [showDeleteButton, isDeleting]);
   return (
     <>
       {/* 一括削除ボタン */}

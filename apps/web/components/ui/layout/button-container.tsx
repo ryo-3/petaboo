@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 interface ButtonContainerProps {
   show: boolean;
@@ -11,6 +11,15 @@ interface ButtonContainerProps {
  * 位置とアニメーションを統一的に管理
  */
 export function ButtonContainer({ show, position, children }: ButtonContainerProps) {
+  // デバッグ用: showの変化を監視
+  useEffect(() => {
+    console.log(`📦 ButtonContainer[${position}] show変化:`, { 
+      show, 
+      position,
+      timestamp: new Date().toISOString()
+    });
+  }, [show, position]);
+
   const positionClass = position === 'bottom-right' 
     ? 'absolute bottom-4 right-6' 
     : 'absolute bottom-4 left-6';

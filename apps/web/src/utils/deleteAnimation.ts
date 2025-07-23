@@ -171,10 +171,7 @@ export function animateBulkFadeOutCSS(
     // 全てのsetTimeoutをクリア
     timeoutIds.forEach(timeoutId => clearTimeout(timeoutId));
     
-    // ゴミ箱の蓋を閉じる
-    if (actionType === 'delete' && trashLid) {
-      trashLid.classList.remove('open');
-    }
+    // ゴミ箱の蓋はfinalizeAnimationで統一的に処理される
     
     // キャンセルコールバックを実行
     onCancel?.();
@@ -241,10 +238,7 @@ export function animateBulkFadeOutCSS(
           // 全てのアイテムが完了したらコールバック実行
           if (completedCount === totalItems) {
             // console.log(`🎊 実際のアニメーション完了時刻:`, Date.now(), { completedCount, totalItems });
-            // ゴミ箱の蓋を閉じる（削除の場合のみ）
-            if (actionType === 'delete' && trashLid) {
-              trashLid.classList.remove('open');
-            }
+            // ゴミ箱の蓋はfinalizeAnimationで統一的に閉じる（500ms後）
             onComplete?.();
           }
         }, bulkAnimationDuration); // アニメーション開始から300ms後に完了

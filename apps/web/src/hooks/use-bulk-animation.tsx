@@ -116,16 +116,20 @@ export function useBulkAnimation({ checkedItems, checkedDeletedItems }: UseBulkA
     setIsLidOpen?: (value: boolean) => void,
     isPartial = false
   ) => {
+    console.log('🎯 finalizeAnimation開始:', { setIsProcessing: !!setIsProcessing, isPartial })
+    
     // カウンター停止
     setIsCountingActive(false)
     
     // 500ms後に蓋を閉じる
     setTimeout(() => {
+      console.log('🗑️ 蓋を閉じる (500ms後)')
       setIsLidOpen?.(false)
     }, 500)
     
     // 処理ボタンを3秒後に非表示
     timerRef.current.isProcessing = setTimeout(() => {
+      console.log('🔄 setIsProcessing(false) 実行 (3秒後)')
       if (setIsProcessing) {
         setIsProcessing(false)
       }

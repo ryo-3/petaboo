@@ -163,7 +163,14 @@ export function useMemosBulkDelete({
 
     const onApiCall = async (id: number) => {
       if (activeTab === "deleted") {
-        await permanentDeleteNoteMutation.mutateAsync(String(id));
+        // 削除済みメモの場合はoriginalIdを使用
+        const deletedMemo = deletedMemos?.find(memo => memo.id === id);
+        if (deletedMemo) {
+          await permanentDeleteNoteMutation.mutateAsync(deletedMemo.originalId);
+        } else {
+          // 対象が見つからない場合もアニメーションの一貫性のため処理を継続
+          console.warn(`削除対象のメモが見つかりません: ID ${id}`);
+        }
       } else {
         await deleteNoteMutation.mutateAsync(id);
       }

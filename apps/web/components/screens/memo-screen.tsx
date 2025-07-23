@@ -29,13 +29,13 @@ import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useBoards } from "@/src/hooks/use-boards";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
-import { getDeleteButtonVisibility } from "@/src/utils/bulkButtonUtils";
 import {
   getMemoDisplayOrder,
   getNextItemAfterDeletion,
 } from "@/src/utils/domUtils";
 import { createToggleHandler } from "@/src/utils/toggleUtils";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
+import { useTrashIconVisibility } from "@/src/hooks/use-trash-icon-visibility";
 
 type MemoScreenMode = "list" | "view" | "create";
 
@@ -98,6 +98,29 @@ function MemoScreen({
 
   // 左側一括削除の状態
   const [isLeftDeleting, setIsLeftDeleting] = useState(false);
+  
+  // デバッグ用: isLeftDeletingの状態変化を監視
+  useEffect(() => {
+    console.log('📊 isLeftDeleting状態変化:', isLeftDeleting);
+  }, [isLeftDeleting]);
+
+  // ゴミ箱アイコンの表示状態を監視
+  const { checkTrashIconStatus } = useTrashIconVisibility();
+
+  // デバッグ用: 定期的にゴミ箱アイコンの状態をチェック
+  useEffect(() => {
+    if (isLeftDeleting) {
+      console.log('🗑️🔍 削除開始 - ゴミ箱アイコン状態チェック');
+      checkTrashIconStatus();
+      
+      // 削除中は定期的にチェック
+      const interval = setInterval(() => {
+        checkTrashIconStatus();
+      }, 500);
+      
+      return () => clearInterval(interval);
+    }
+  }, [isLeftDeleting, checkTrashIconStatus]);
   const [isLeftLidOpen, setIsLeftLidOpen] = useState(false);
 
   // 右側削除の状態
@@ -272,7 +295,6 @@ function MemoScreen({
     handleBulkRestore,
     RestoreModal,
     currentDisplayCount: currentRestoreDisplayCount,
-    isRestoreModalOpen,
   } = useMemosBulkRestore({
     checkedDeletedMemos,
     setCheckedDeletedMemos,
@@ -421,16 +443,7 @@ function MemoScreen({
 
         {/* 一括操作ボタン */}
         <BulkActionButtons
-          showDeleteButton={getDeleteButtonVisibility({
-            activeTab,
-            deletedTabName: "deleted",
-            checkedItems: checkedMemos,
-            checkedDeletedItems: checkedDeletedMemos,
-            isRestoreModalOpen,
-            isRestoreLidOpen,
-            isRestoring,
-            showDeleteButton,
-          })}
+          showDeleteButton={showDeleteButton}
           deleteButtonCount={currentDisplayCount}
           onDelete={handleLeftBulkDelete}
           deleteButtonRef={deleteButtonRef}

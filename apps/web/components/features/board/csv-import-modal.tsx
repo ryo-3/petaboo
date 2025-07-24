@@ -53,10 +53,12 @@ export function CSVImportModal({ isOpen, onClose, boardId }: CSVImportModalProps
             priority: values[3] || undefined,
           });
         } else {
+          // 2番目以降のすべての値をcontentとして結合
+          const content = values.slice(1).filter(v => v).join('、');
           results.push({
             itemType: 'memo',
             title: values[0],
-            content: values[1] || undefined,
+            content: content || undefined,
           });
         }
       }
@@ -150,10 +152,12 @@ export function CSVImportModal({ isOpen, onClose, boardId }: CSVImportModalProps
           console.log('Parsed as task:', taskItem);
           results.push(taskItem);
         } else {
+          // 2番目以降のすべての値をcontentとして結合
+          const content = values.slice(1).filter(v => v).join('、');
           const memoItem = {
             itemType: 'memo' as const,
             title: values[0],
-            content: values[1] || undefined,
+            content: content || undefined,
           };
           console.log('Parsed as memo:', memoItem);
           results.push(memoItem);
@@ -200,7 +204,7 @@ export function CSVImportModal({ isOpen, onClose, boardId }: CSVImportModalProps
               },
               body: JSON.stringify({
                 title: item.title,
-                content: item.content || '',
+                content: item.title + (item.content ? '\n' + item.content : ''),
               }),
             });
 

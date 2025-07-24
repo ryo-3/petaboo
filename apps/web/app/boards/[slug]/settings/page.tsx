@@ -17,7 +17,7 @@ export default async function BoardSettingsPage({ params }: BoardSettingsPagePro
     
     if (userId) {
       const token = await getToken();
-      const response = await fetch(`http://localhost:8794/boards/slug/${slug}`, {
+      const response = await fetch(`${process.env.API_URL || 'http://localhost:8794'}/boards/slug/${slug}`, {
         headers: {
           "Content-Type": "application/json",
           ...(token && { Authorization: `Bearer ${token}` }),

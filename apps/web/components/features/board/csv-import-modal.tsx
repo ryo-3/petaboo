@@ -4,6 +4,8 @@ import { useState, useRef } from "react";
 import { useAddItemToBoard } from "@/src/hooks/use-boards";
 import { useAuth } from "@clerk/nextjs";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8794';
+
 interface CSVImportModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -182,7 +184,7 @@ export function CSVImportModal({ isOpen, onClose, boardId }: CSVImportModalProps
           if (item.itemType === 'memo') {
             
             // まずメモAPIで作成してからボードに追加
-            const memoResponse = await fetch('http://localhost:8794/memos', {
+            const memoResponse = await fetch(`${API_BASE_URL}/memos`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -212,7 +214,7 @@ export function CSVImportModal({ isOpen, onClose, boardId }: CSVImportModalProps
           } else if (item.itemType === 'task') {
             
             // まずタスクAPIで作成してからボードに追加
-            const taskResponse = await fetch('http://localhost:8794/tasks', {
+            const taskResponse = await fetch(`${API_BASE_URL}/tasks`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',

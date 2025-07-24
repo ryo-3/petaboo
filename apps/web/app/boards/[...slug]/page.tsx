@@ -19,7 +19,7 @@ export default async function BoardsPage({ params }: BoardsPageProps) {
       
       if (userId) {
         const token = await getToken();
-        const response = await fetch(`http://localhost:8794/boards/slug/${boardSlug}`, {
+        const response = await fetch(`${process.env.API_URL || 'http://localhost:8794'}/boards/slug/${boardSlug}`, {
           headers: {
             "Content-Type": "application/json",
             ...(token && { Authorization: `Bearer ${token}` }),

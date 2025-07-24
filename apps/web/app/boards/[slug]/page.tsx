@@ -32,7 +32,7 @@ export default async function BoardPage({ params }: BoardPageProps) {
         console.log(`🎫 Token取得完了: ${Date.now() - tokenStartTime}ms`);
         
         const fetchStartTime = Date.now();
-        const response = await fetch(`http://localhost:8794/boards/slug/${slug}`, {
+        const response = await fetch(`${process.env.API_URL || 'http://localhost:8794'}/boards/slug/${slug}`, {
           headers: {
             "Content-Type": "application/json",
             ...(token && { Authorization: `Bearer ${token}` }),
@@ -46,7 +46,7 @@ export default async function BoardPage({ params }: BoardPageProps) {
           
           // ボード詳細データも取得してキャッシュに設定
           const itemsFetchStartTime = Date.now();
-          const itemsResponse = await fetch(`http://localhost:8794/boards/${boardData!.id}/items`, {
+          const itemsResponse = await fetch(`${process.env.API_URL || 'http://localhost:8794'}/boards/${boardData!.id}/items`, {
             headers: {
               "Content-Type": "application/json",
               ...(token && { Authorization: `Bearer ${token}` }),

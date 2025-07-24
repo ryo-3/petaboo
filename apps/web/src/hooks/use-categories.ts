@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
 import { Category, CreateCategoryData, UpdateCategoryData, CategoryUsage } from "@/src/types/category";
 
-const API_BASE_URL = "http://localhost:8794";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8794";
 
 // カテゴリー一覧取得
 export function useCategories() {

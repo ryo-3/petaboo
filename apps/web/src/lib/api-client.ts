@@ -2,7 +2,7 @@
 import type { CreateMemoData, UpdateMemoData } from '@/src/types/memo'
 import type { CreateTaskData, UpdateTaskData } from '@/src/types/task'
 
-const API_BASE_URL = 'http://localhost:8794'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8794'
 
 // 共通ヘッダー生成関数
 const createHeaders = (token?: string, includeContentType = true): Record<string, string> => {

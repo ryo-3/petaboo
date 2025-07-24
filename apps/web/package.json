@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "next lint --max-warnings 0",
     "check-types": "tsc --noEmit",
-    "generate-api-types": "openapi-typescript http://localhost:8794/openapi -o ./src/types/api.ts"
+    "generate-api-types": "openapi-typescript ${API_URL:-http://localhost:8794}/openapi -o ./src/types/api.ts"
   },
   "dependencies": {
     "@clerk/localizations": "^3.17.0",

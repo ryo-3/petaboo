@@ -1,6 +1,6 @@
 import { UserPreferences } from '@/src/contexts/user-preferences-context';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8794';
+const API_BASE = process.env.API_URL || 'http://localhost:8794';
 
 export async function getServerUserPreferences(userId: number): Promise<UserPreferences | null> {
   try {

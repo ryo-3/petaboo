@@ -112,11 +112,17 @@ function BoardDetailScreen({
   const {
     isMemoDeleting,
     isMemoLidOpen,
+    isTaskDeleting,
+    isTaskLidOpen,
     deletingItemType,
     bulkDelete,
     handleBulkDelete,
     handleRemoveFromBoard,
     setDeletingItemType,
+    setIsMemoDeleting,
+    setIsMemoLidOpen,
+    setIsTaskDeleting,
+    setIsTaskLidOpen,
     bulkAnimation,
   } = useBulkDeleteOperations({
     boardId,
@@ -396,8 +402,8 @@ function BoardDetailScreen({
             onSelectAll={handleTaskSelectAll}
             isAllSelected={isTaskAllSelected}
             onBulkDelete={() => handleBulkDelete('task', <div className="text-sm text-gray-700 mb-3">選択したタスクの操作を選択してください</div>)}
-            isDeleting={isMemoDeleting}
-            isLidOpen={isMemoLidOpen}
+            isDeleting={isTaskDeleting}
+            isLidOpen={isTaskLidOpen}
             currentDisplayCount={bulkAnimation.isCountingActive ? bulkAnimation.displayCount : checkedTasks.size}
             deleteButtonRef={deleteButtonRef}
           />
@@ -433,6 +439,11 @@ function BoardDetailScreen({
         isOpen={bulkDelete.isModalOpen}
         onClose={() => {
           setDeletingItemType(null);
+          if (deletingItemType === 'memo') {
+            bulkAnimation.handleModalCancel(setIsMemoDeleting, setIsMemoLidOpen);
+          } else if (deletingItemType === 'task') {
+            bulkAnimation.handleModalCancel(setIsTaskDeleting, setIsTaskLidOpen);
+          }
           bulkDelete.handleCancel();
         }}
         onConfirm={bulkDelete.handleConfirm}

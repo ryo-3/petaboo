@@ -18,11 +18,17 @@ interface UseBulkDeleteOperationsProps {
 interface UseBulkDeleteOperationsReturn {
   isMemoDeleting: boolean;
   isMemoLidOpen: boolean;
+  isTaskDeleting: boolean;
+  isTaskLidOpen: boolean;
   deletingItemType: 'memo' | 'task' | null;
   bulkDelete: ReturnType<typeof useBulkDelete>;
   handleBulkDelete: (itemType: 'memo' | 'task', customMessage?: ReactNode) => Promise<void>;
   handleRemoveFromBoard: () => Promise<void>;
   setDeletingItemType: (type: 'memo' | 'task' | null) => void;
+  setIsMemoDeleting: (value: boolean) => void;
+  setIsMemoLidOpen: (value: boolean) => void;
+  setIsTaskDeleting: (value: boolean) => void;
+  setIsTaskLidOpen: (value: boolean) => void;
   bulkAnimation: ReturnType<typeof useBulkAnimation>;
 }
 
@@ -40,6 +46,8 @@ export function useBulkDeleteOperations({
 }: UseBulkDeleteOperationsProps): UseBulkDeleteOperationsReturn {
   const [isMemoDeleting, setIsMemoDeleting] = useState(false);
   const [isMemoLidOpen, setIsMemoLidOpen] = useState(false);
+  const [isTaskDeleting, setIsTaskDeleting] = useState(false);
+  const [isTaskLidOpen, setIsTaskLidOpen] = useState(false);
   const [deletingItemType, setDeletingItemType] = useState<'memo' | 'task' | null>(null);
   
   // アニメーション管理
@@ -91,8 +99,8 @@ export function useBulkDeleteOperations({
       initializeAnimation: bulkAnimation.initializeAnimation,
       startCountdown: bulkAnimation.startCountdown,
       finalizeAnimation: bulkAnimation.finalizeAnimation,
-      setIsProcessing: setIsMemoDeleting,
-      setIsLidOpen: setIsMemoLidOpen,
+      setIsProcessing: itemType === 'memo' ? setIsMemoDeleting : setIsTaskDeleting,
+      setIsLidOpen: itemType === 'memo' ? setIsMemoLidOpen : setIsTaskLidOpen,
     });
   }, [checkedMemos, checkedTasks, setCheckedMemos, setCheckedTasks, deleteMemoMutation, deleteTaskMutation, deleteButtonRef, bulkAnimation]);
   
@@ -102,8 +110,13 @@ export function useBulkDeleteOperations({
     if (targetIds.length === 0) return;
 
     setDeletingItemType(itemType);
-    setIsMemoDeleting(true);
-    setIsMemoLidOpen(true);
+    if (itemType === 'memo') {
+      setIsMemoDeleting(true);
+      setIsMemoLidOpen(true);
+    } else {
+      setIsTaskDeleting(true);
+      setIsTaskLidOpen(true);
+    }
 
     await bulkDelete.confirmBulkDelete(
       targetIds as number[],
@@ -147,11 +160,17 @@ export function useBulkDeleteOperations({
   return {
     isMemoDeleting,
     isMemoLidOpen,
+    isTaskDeleting,
+    isTaskLidOpen,
     deletingItemType,
     bulkDelete,
     handleBulkDelete,
     handleRemoveFromBoard,
     setDeletingItemType,
+    setIsMemoDeleting,
+    setIsMemoLidOpen,
+    setIsTaskDeleting,
+    setIsTaskLidOpen,
     bulkAnimation,
   };
 }

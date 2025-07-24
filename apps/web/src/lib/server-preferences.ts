@@ -15,7 +15,6 @@ export async function getServerUserPreferences(userId: number): Promise<UserPref
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('サーバーサイド設定取得エラー:', error);
     return null;
   }
 }

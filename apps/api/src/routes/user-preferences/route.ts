@@ -58,10 +58,6 @@ app.put('/:userId', async (c) => {
 
     const { memoColumnCount, taskColumnCount, memoViewMode, taskViewMode, memoHideControls, taskHideControls, hideHeader } = body;
     
-    // デバッグログ
-    console.log('Received request body:', body);
-    console.log('memoHideControls type:', typeof memoHideControls, 'value:', memoHideControls);
-    console.log('taskHideControls type:', typeof taskHideControls, 'value:', taskHideControls);
 
     if (memoColumnCount !== undefined && (typeof memoColumnCount !== 'number' || memoColumnCount < 1 || memoColumnCount > 4)) {
       return c.json({ error: 'Invalid memo column count' }, 400);
@@ -106,8 +102,6 @@ app.put('/:userId', async (c) => {
     if (memoHideControls !== undefined) updateData.memoHideControls = memoHideControls;
     if (taskHideControls !== undefined) updateData.taskHideControls = taskHideControls;
     if (hideHeader !== undefined) updateData.hideHeader = hideHeader;
-    
-    console.log('updateData being sent to database:', updateData);
 
     if (existing) {
       // 更新

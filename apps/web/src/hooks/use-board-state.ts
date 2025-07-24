@@ -140,7 +140,6 @@ export function useBoardState() {
   // 新規作成用ハンドラー（外部から提供されるcallbackを使用）
   const createNewMemoHandler = useCallback(
     (onSelectMemo?: (memo: Memo | null) => void) => {
-      console.log("🟢 handleCreateNewMemo called, rightPanelMode:", rightPanelModeRef.current);
       setRightPanelMode(null); // リストモードを解除
       const newMemo: Memo = {
         id: 0, // 新規作成時は0
@@ -149,7 +148,6 @@ export function useBoardState() {
         createdAt: Math.floor(Date.now() / 1000),
         updatedAt: Math.floor(Date.now() / 1000),
       };
-      console.log("🟢 calling onSelectMemo with:", newMemo);
       onSelectMemo?.(newMemo);
     },
     [] // 依存配列を空にして安定化
@@ -157,7 +155,6 @@ export function useBoardState() {
 
   const createNewTaskHandler = useCallback(
     (onSelectTask?: (task: Task | null) => void) => {
-      console.log("🔵 handleCreateNewTask called, rightPanelMode:", rightPanelModeRef.current);
       setRightPanelMode(null); // リストモードを解除
       const newTask: Task = {
         id: 0, // 新規作成時は0
@@ -170,7 +167,6 @@ export function useBoardState() {
         createdAt: Math.floor(Date.now() / 1000),
         updatedAt: Math.floor(Date.now() / 1000),
       };
-      console.log("🔵 calling onSelectTask with:", newTask);
       onSelectTask?.(newTask);
     },
     [] // 依存配列を空にして安定化

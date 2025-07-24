@@ -46,14 +46,12 @@ export function useApiSync() {
 
       if (typeof data.id === 'number' && data.id > 0) {
         // 既存メモの更新
-        console.log('🟢 既存メモを更新:', data.id)
         await updateNote.mutateAsync({
           id: data.id,
           data: memoData
         })
       } else {
         // 新規メモの作成（idが'new'や文字列の場合など）
-        console.log('🟢 新規メモを作成:', data.id)
         await createNote.mutateAsync(memoData)
       }
 
@@ -65,15 +63,12 @@ export function useApiSync() {
         return newStatus
       })
       
-      console.log('API保存成功、ローカルデータ削除:', data.title || '無題', storageKey)
     } catch (error: unknown) {
-      console.error('API保存失敗:', error)
       
       // 404エラーの場合は新規作成として再試行
       if (error && typeof error === 'object' && 'message' in error && 
           typeof error.message === 'string' && error.message.includes('404') && 
           typeof data.id === 'number' && data.id > 0) {
-        console.log('404エラーのため新規作成として再試行:', data.id)
         try {
           await createNote.mutateAsync(data)
           // 成功：ローカルデータ削除
@@ -83,10 +78,8 @@ export function useApiSync() {
             delete newStatus[storageKey]
             return newStatus
           })
-          console.log('新規作成として保存成功:', data.title || '無題')
           return
         } catch (createError) {
-          console.error('新規作成も失敗:', createError)
           // 新規作成も失敗した場合はローディングフラグをリセット
           setSyncStatus(prev => ({
             ...prev,
@@ -96,8 +89,6 @@ export function useApiSync() {
         }
       }
       
-      console.error('メモデータ:', data)
-      console.error('メモID:', data.id, 'typeof:', typeof data.id)
       
       // リトライカウント増加
       setSyncStatus(prev => ({
@@ -120,14 +111,10 @@ export function useApiSync() {
             if (data.lastEditedAt && (now - data.lastEditedAt) >= 1) {
               // 現在同期中でない場合のみ実行
               if (!syncStatus[key]?.isLoading) {
-                console.log('🔄 同期開始:', key, 'lastEditedAt:', data.lastEditedAt, 'now:', now)
                 syncSingleMemo(key, data)
-              } else {
-                console.log('同期中のためスキップ:', key)
               }
             }
           } catch (error) {
-            console.error('ローカルデータの解析に失敗:', key, error)
             // 破損したデータは削除
             localStorage.removeItem(key)
           }

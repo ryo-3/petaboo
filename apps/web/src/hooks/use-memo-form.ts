@@ -33,7 +33,6 @@ export function useMemoForm({ memo = null, onMemoAdd, onMemoUpdate, onMemoIdUpda
   // Update form when memo changes (switching to different memo)
   useEffect(() => {
     if (memo) {
-      console.log('📝 メモフォームを既存メモに設定:', memo.title)
       const memoTitle = memo.title || ''
       const memoContent = memo.content || ''
       setTitle(memoTitle)
@@ -41,7 +40,6 @@ export function useMemoForm({ memo = null, onMemoAdd, onMemoUpdate, onMemoIdUpda
       setInitialTitle(memoTitle)
       setInitialContent(memoContent)
     } else {
-      console.log('📝 メモフォームを空にリセット（新規作成）')
       setTitle('')
       setContent('')
       setInitialTitle('')
@@ -61,7 +59,6 @@ export function useMemoForm({ memo = null, onMemoAdd, onMemoUpdate, onMemoIdUpda
     try {
       if (memo?.id) {
         // Update existing memo
-        console.log('🔄 Updating existing memo:', memo.id)
         const updatedMemo = await updateNote.mutateAsync({
           id: memo.id,
           data: {
@@ -70,7 +67,6 @@ export function useMemoForm({ memo = null, onMemoAdd, onMemoUpdate, onMemoIdUpda
           }
         })
         
-        console.log('🔍 API戻り値:', updatedMemo)
         // APIが更新データを返さないので、フォームの値を使用
         onMemoUpdate?.(memo.id, {
           title: title.trim() || "無題",
@@ -78,10 +74,8 @@ export function useMemoForm({ memo = null, onMemoAdd, onMemoUpdate, onMemoIdUpda
           updatedAt: Math.floor(Date.now() / 1000) // 現在時刻
         })
         
-        console.log('✅ Memo updated successfully')
       } else {
         // Create new memo
-        console.log('🆕 Creating new memo')
         const createdMemo = await createNote.mutateAsync({
           title: title.trim() || "無題",
           content: content.trim() || undefined
@@ -95,7 +89,6 @@ export function useMemoForm({ memo = null, onMemoAdd, onMemoUpdate, onMemoIdUpda
           // This callback might not be needed for the simplified flow
         }
         
-        console.log('✅ Memo created successfully:', createdMemo.id)
       }
 
       // 保存成功時に初期値を更新
@@ -106,7 +99,6 @@ export function useMemoForm({ memo = null, onMemoAdd, onMemoUpdate, onMemoIdUpda
       setTimeout(() => setSavedSuccessfully(false), 3000)
 
     } catch (error) {
-      console.error('❌ Save failed:', error)
       setSaveError('保存に失敗しました')
     } finally {
       // 保存中表示を少し長く見せる
@@ -123,7 +115,6 @@ export function useMemoForm({ memo = null, onMemoAdd, onMemoUpdate, onMemoIdUpda
   }, [])
 
   const resetForm = useCallback(() => {
-    console.log('🔄 フォームをリセット')
     setTitle('')
     setContent('')
     setInitialTitle('')

@@ -21,7 +21,6 @@ export function useBulkProcessNotifications() {
       
       showToast(message, 'info'); // durationを指定しないので手動でのみ閉じられる
       
-      console.log(`📢 処理キャンセル通知を表示: ${itemTypeName}${processTypeName} (理由: ${reason})`);
     };
 
     // グローバルイベントリスナーを登録

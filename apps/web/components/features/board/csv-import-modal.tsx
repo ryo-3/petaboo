@@ -108,18 +108,14 @@ export function CSVImportModal({ isOpen, onClose, boardId }: CSVImportModalProps
 
   const parseFullCSV = (csvText: string) => {
     const lines = csvText.trim().split('\n');
-    console.log('CSV lines:', lines.length);
     
     if (lines.length < 2) {
-      console.warn('CSV has fewer than 2 lines');
       return [];
     }
     
     const header = lines[0]?.toLowerCase() || '';
-    console.log('CSV header:', header);
     
     if (!header.includes('title')) {
-      console.warn('CSV header does not contain "title"');
       return [];
     }
     
@@ -128,13 +124,11 @@ export function CSVImportModal({ isOpen, onClose, boardId }: CSVImportModalProps
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i]?.trim() || '';
       if (!line) {
-        console.log(`Skipping empty line ${i}`);
         continue;
       }
       
       // より厳密なCSVパース（カンマが値の中にある場合も考慮）
       const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
-      console.log(`Line ${i} values:`, values);
       
       if (values.length >= 1 && values[0]) {
         // メモかタスクかを判定（3列目または4列目に値があればタスク）
@@ -148,7 +142,6 @@ export function CSVImportModal({ isOpen, onClose, boardId }: CSVImportModalProps
             status: values[2] || undefined,
             priority: values[3] || undefined,
           };
-          console.log('Parsed as task:', taskItem);
           results.push(taskItem);
         } else {
           // 2番目以降のすべての値をcontentとして結合
@@ -158,15 +151,11 @@ export function CSVImportModal({ isOpen, onClose, boardId }: CSVImportModalProps
             title: values[0],
             content: content || undefined,
           };
-          console.log('Parsed as memo:', memoItem);
           results.push(memoItem);
         }
-      } else {
-        console.warn(`Line ${i} has no title, skipping:`, values);
       }
     }
     
-    console.log('Total parsed items:', results.length);
     return results;
   };
 
@@ -184,7 +173,6 @@ export function CSVImportModal({ isOpen, onClose, boardId }: CSVImportModalProps
 
       for (const item of items) {
         try {
-          console.log('Processing item:', item);
           
           if (!item.title || item.title.trim() === '') {
             errors.push('タイトルが空のアイテムをスキップしました');
@@ -192,7 +180,6 @@ export function CSVImportModal({ isOpen, onClose, boardId }: CSVImportModalProps
           }
 
           if (item.itemType === 'memo') {
-            console.log('Creating memo:', { title: item.title, content: item.content });
             
             // まずメモAPIで作成してからボードに追加
             const memoResponse = await fetch('http://localhost:8794/memos', {
@@ -209,7 +196,6 @@ export function CSVImportModal({ isOpen, onClose, boardId }: CSVImportModalProps
 
             if (memoResponse.ok) {
               const newMemo = await memoResponse.json();
-              console.log('Created memo:', newMemo);
               
               await addItemToBoard.mutateAsync({
                 boardId,
@@ -221,11 +207,9 @@ export function CSVImportModal({ isOpen, onClose, boardId }: CSVImportModalProps
               imported++;
             } else {
               const errorText = await memoResponse.text();
-              console.error('Memo creation failed:', errorText);
               errors.push(`メモ「${item.title}」の作成に失敗しました: ${errorText}`);
             }
           } else if (item.itemType === 'task') {
-            console.log('Creating task:', { title: item.title, description: item.description, status: item.status, priority: item.priority });
             
             // まずタスクAPIで作成してからボードに追加
             const taskResponse = await fetch('http://localhost:8794/tasks', {
@@ -244,7 +228,6 @@ export function CSVImportModal({ isOpen, onClose, boardId }: CSVImportModalProps
 
             if (taskResponse.ok) {
               const newTask = await taskResponse.json();
-              console.log('Created task:', newTask);
               
               await addItemToBoard.mutateAsync({
                 boardId,
@@ -256,15 +239,12 @@ export function CSVImportModal({ isOpen, onClose, boardId }: CSVImportModalProps
               imported++;
             } else {
               const errorText = await taskResponse.text();
-              console.error('Task creation failed:', errorText);
               errors.push(`タスク「${item.title}」の作成に失敗しました: ${errorText}`);
             }
           } else {
-            console.warn('Unknown item type:', item);
             errors.push(`「${item.title}」の種別が不明です`);
           }
         } catch (error) {
-          console.error('Import error for item:', JSON.stringify(item), 'Error:', error);
           const errorMessage = error instanceof Error ? error.message : String(error);
           errors.push(`「${item.title || '不明'}」のインポートに失敗しました: ${errorMessage}`);
         }
@@ -276,7 +256,6 @@ export function CSVImportModal({ isOpen, onClose, boardId }: CSVImportModalProps
         errors,
       });
     } catch (error) {
-      console.error('Import error:', error);
       setImportResult({
         success: false,
         imported: 0,

@@ -20,20 +20,15 @@ export function useTaskDelete({ task, onClose, onSelectTask, onClosePanel, onDel
 
   // 削除完了時の処理
   const handleDeleteComplete = (deletedTask: Task, preDeleteDisplayOrder?: number[]) => {
-    console.log('🎯 handleDeleteComplete開始:', { deletedTaskId: deletedTask.id });
     
     // UI更新処理
     if (onDeleteAndSelectNext) {
-      console.log('🎯 onDeleteAndSelectNext実行');
       onDeleteAndSelectNext(deletedTask, preDeleteDisplayOrder);
     } else {
-      console.log('🎯 通常のクローズ処理');
       if (onSelectTask && onClosePanel) {
-        console.log('🎯 onClosePanel & onSelectTask実行');
         onClosePanel();
         onSelectTask(null, true);
       } else {
-        console.log('🎯 onClose実行');
         onClose();
       }
     }
@@ -61,17 +56,14 @@ export function useTaskDelete({ task, onClose, onSelectTask, onClosePanel, onDel
   const handleDelete = async () => {
     if (!task) return;
     
-    console.log('🎯 handleDelete呼び出し開始', { taskId: task.id, showDeleteModal, isDeleting });
     
     // 重複実行防止
     if (!showDeleteModal || isDeleting) {
-      console.log('🎯 モーダルが既に閉じられているか削除中のため処理をスキップ');
       return;
     }
     
     try {
       // モーダルを閉じる
-      console.log('🎯 モーダルを閉じる');
       setShowDeleteModal(false);
       
       // 共通削除処理を実行（DOM順序取得は共通フック内で行う）

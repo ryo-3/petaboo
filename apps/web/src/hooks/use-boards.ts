@@ -59,7 +59,6 @@ export function useBoards(status: "normal" | "completed" | "deleted" = "normal")
         }
         
         if (!response.ok) {
-          console.error(`❌ useBoards失敗: ${response.status} ${response.statusText}`);
           const error: ApiError = new Error(`Failed to fetch boards: ${response.status} ${response.statusText}`);
           error.status = response.status;
           throw error;
@@ -81,14 +80,9 @@ export function useBoardWithItems(boardId: number | null, skip: boolean = false)
   return useQuery<BoardWithItems>({
     queryKey: ["boards", boardId, "items"],
     queryFn: async () => {
-      const startTime = performance.now();
-      console.log(`🔍 useBoardWithItems API開始 boardId:${boardId} (キャッシュがない場合のみ実行)`);
-      
       // 最大2回リトライ
       for (let attempt = 0; attempt < 2; attempt++) {
         const token = await getCachedToken(getToken);
-        const tokenTime = performance.now();
-        console.log(`🔑 Token取得完了: ${(tokenTime - startTime).toFixed(2)}ms (試行${attempt + 1})`);
         
         const response = await fetch(`${API_BASE_URL}/boards/${boardId}/items`, {
           headers: {
@@ -96,9 +90,6 @@ export function useBoardWithItems(boardId: number | null, skip: boolean = false)
             ...(token && { Authorization: `Bearer ${token}` }),
           },
         });
-        
-        const fetchTime = performance.now();
-        console.log(`📡 Fetch完了: ${(fetchTime - tokenTime).toFixed(2)}ms`);
         
         // 401エラーの場合はキャッシュをクリアしてリトライ
         if (response.status === 401 && attempt === 0) {
@@ -108,15 +99,12 @@ export function useBoardWithItems(boardId: number | null, skip: boolean = false)
         }
         
         if (!response.ok) {
-          console.error(`❌ useBoardWithItems失敗: ${response.status} ${response.statusText}`);
           const error: ApiError = new Error(`Failed to fetch board with items: ${response.status} ${response.statusText}`);
           error.status = response.status;
           throw error;
         }
 
         const data = await response.json();
-        const endTime = performance.now();
-        console.log(`✅ useBoardWithItems完了: 総時間${(endTime - startTime).toFixed(2)}ms, アイテム数:${data.items?.length || 0}`);
         
         return {
           ...data.board,
@@ -141,12 +129,7 @@ export function useBoardBySlug(slug: string | null) {
   return useQuery<Board>({
     queryKey: ["boards", "slug", slug],
     queryFn: async () => {
-      const startTime = performance.now();
-      console.log(`🔍 useBoardBySlug API開始 slug:${slug}`);
-      
       const token = await getCachedToken(getToken);
-      const tokenTime = performance.now();
-      console.log(`🔑 Token取得完了: ${(tokenTime - startTime).toFixed(2)}ms`);
       
       const response = await fetch(`${API_BASE_URL}/boards/slug/${slug}`, {
         headers: {
@@ -155,19 +138,13 @@ export function useBoardBySlug(slug: string | null) {
         },
       });
       
-      const fetchTime = performance.now();
-      console.log(`📡 Fetch完了: ${(fetchTime - tokenTime).toFixed(2)}ms`);
-      
       if (!response.ok) {
-        console.error(`❌ useBoardBySlug失敗: ${response.status} ${response.statusText}`);
         const error: ApiError = new Error(`Failed to fetch board by slug: ${response.status} ${response.statusText}`);
         error.status = response.status;
         throw error;
       }
       
       const data = await response.json();
-      const endTime = performance.now();
-      console.log(`✅ useBoardBySlug完了: 総時間${(endTime - startTime).toFixed(2)}ms`);
       return data;
     },
     enabled: !!slug,
@@ -504,7 +481,6 @@ export function useBoardDeletedItems(boardId: number) {
         }
         
         if (!response.ok) {
-          console.error(`❌ useBoardDeletedItems失敗: ${response.status} ${response.statusText}`);
           const error: ApiError = new Error(`Failed to fetch board deleted items: ${response.status} ${response.statusText}`);
           error.status = response.status;
           throw error;

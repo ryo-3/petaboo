@@ -222,18 +222,11 @@ function TaskScreen({
     deletedTask: Task,
     preDeleteDisplayOrder?: number[]
   ) => {
-    console.log("🎯 handleTaskDeleteAndSelectNext開始:", {
-      deletedTaskId: deletedTask.id,
-      deletedTaskStatus: deletedTask.status,
-      activeTab,
-      tasksLength: tasks?.length,
-    });
 
     if (!tasks) return;
 
     // 削除されたタスクが現在のタブと異なるステータスの場合は右パネルを閉じるだけ
     if (deletedTask.status !== activeTab) {
-      console.log("🎯 ステータス不一致、パネルを閉じる");
       setTaskScreenMode("list");
       onClearSelection?.(); // 選択状態のみクリア
       return;
@@ -243,27 +236,12 @@ function TaskScreen({
     const filteredTasks = tasks.filter(
       (t) => t.status === activeTab && t.id !== deletedTask.id
     );
-    console.log("🎯 フィルター後のタスク:", {
-      filteredTasksLength: filteredTasks.length,
-      filteredTaskIds: filteredTasks.map((t) => t.id),
-      deletedTaskId: deletedTask.id,
-      excludedDeletedTask: true,
-    });
 
     // 削除前のDOM順序を使用、なければ現在の順序
     const displayOrder = preDeleteDisplayOrder || getTaskDisplayOrder();
-    console.log("🎯 DOM表示順序:", {
-      displayOrder,
-      deletedTaskId: deletedTask.id,
-      usePreDelete: !!preDeleteDisplayOrder,
-    });
 
     // DOMベースで次のタスクを直接選択
     const deletedTaskIndex = displayOrder.indexOf(deletedTask.id);
-    console.log("🎯 削除されたタスクのDOM位置:", {
-      deletedTaskIndex,
-      deletedTaskId: deletedTask.id,
-    });
 
     let nextTaskId = null;
 
@@ -289,11 +267,9 @@ function TaskScreen({
       }
     }
 
-    console.log("🎯 次のタスクID:", { nextTaskId });
 
     if (nextTaskId) {
       const nextTask = filteredTasks.find((t) => t.id === nextTaskId);
-      console.log("🎯 次のタスクを選択:", { nextTask });
 
       if (nextTask) {
         // DOM監視
@@ -306,25 +282,15 @@ function TaskScreen({
             "textarea"
           ) as HTMLTextAreaElement;
 
-          console.log("🎯 エディターDOM監視:", {
-            editorExists: !!editorElement,
-            titleValue: titleInput?.value || "なし",
-            textareaValue: textarea?.value || "なし",
-            editorVisibility: editorElement
-              ? getComputedStyle(editorElement).visibility
-              : "なし",
-          });
         }, 100);
 
         onSelectTask(nextTask, true);
         setTaskScreenMode("view");
       } else {
-        console.log("🎯 次のタスクが見つからない、リストモードに戻る");
         setTaskScreenMode("list");
         onClearSelection?.(); // ホームに戻らずに選択状態だけクリア
       }
     } else {
-      console.log("🎯 次のタスクIDが見つからない、リストモードに戻る");
       setTaskScreenMode("list");
       onClearSelection?.(); // ホームに戻らずに選択状態だけクリア
     }

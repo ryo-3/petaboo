@@ -246,7 +246,7 @@ function TaskEditor({
               boardId: parseInt(boardId),
               data: {
                 itemType: 'task',
-                itemId: task.id.toString(),
+                itemId: task.originalId || task.id.toString(),
               },
             });
           } catch {
@@ -334,7 +334,7 @@ function TaskEditor({
                 boardId: parseInt(boardId),
                 data: {
                   itemType: 'task',
-                  itemId: newTask.id.toString(),
+                  itemId: newTask.originalId || newTask.id.toString(),
                 },
               });
             }
@@ -428,7 +428,7 @@ function TaskEditor({
                 boardId: parseInt(boardId),
                 data: {
                   itemType: 'task',
-                  itemId: task.id.toString(),
+                  itemId: task.originalId || task.id.toString(),
                 },
               });
             } catch {

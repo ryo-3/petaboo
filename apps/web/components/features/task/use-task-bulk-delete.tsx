@@ -232,12 +232,6 @@ export function useTasksBulkDelete({
     // 削除ボタンを押した瞬間の状態設定（カウンター維持）
     bulkAnimation.setModalState(setIsDeleting, setIsLidOpen)
 
-    // console.log('🗑️ 削除開始:', { 
-    //   selected: targetIds.length, 
-    //   actualDelete: actualTargetIds.length, 
-    //   activeTab,
-    //   isLimited: isLimitedDelete 
-    // })
     
     if (isLimitedDelete) {
       // 100件制限のモーダル表示
@@ -277,7 +271,6 @@ export function useTasksBulkDelete({
           bulkDelete.handleCancel()
         }}
         onConfirm={async () => {
-          // console.log('Confirm modal')
           await bulkDelete.handleConfirm()
         }}
         count={bulkDelete.targetIds.length}
@@ -312,15 +305,6 @@ export function useTasksBulkDelete({
     : currentDeleteCount
 
   // デバッグログ
-  // console.log('🔄 削除カウンター状態:', {
-  //   activeTab,
-  //   isCountingActive: bulkAnimation.isCountingActive,
-  //   displayCount: bulkAnimation.displayCount,
-  //   currentDeleteCount,
-  //   finalDisplayCount,
-  //   checkedTasksSize: checkedTasks.size,
-  //   checkedDeletedTasksSize: checkedDeletedTasks.size
-  // })
 
   return {
     handleBulkDelete,

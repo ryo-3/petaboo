@@ -38,13 +38,6 @@ function RestoreButton({
   const displayCount = useAnimatedCount ? animatedCount : count;
   
   // デバッグログ
-  // console.log('🎯 RestoreButton 状態:', { 
-  //   animatedCount, 
-  //   count, 
-  //   displayCount, 
-  //   useAnimatedCount,
-  //   バッジ表示: displayCount && displayCount > 0 
-  // })
 
   const tooltipText = displayCount && displayCount > 1 
     ? `${displayCount}件を復元` 

@@ -39,7 +39,6 @@ export function animateEditorContentToTrashCSS(
 ) {
   // CSS変数からアニメーション時間を取得（自動同期）
   const editorAnimationDuration = getAnimationDuration('editor');
-  // console.log('🎨 CSS版エディター削除アニメーション開始（シンプル版）');
   
   // JS版と同様にクローンを作成
   const editorRect = editorElement.getBoundingClientRect();
@@ -84,12 +83,6 @@ export function animateEditorContentToTrashCSS(
   clone.style.setProperty('--move-x', `${moveX}px`);
   clone.style.setProperty('--move-y', `${moveY}px`);
   
-  // console.log('🎯 移動距離計算:', { 
-  //   画面サイズ: { screenWidth, screenHeight },
-  //   ゴミ箱位置: { trashX, trashY },
-  //   開始位置中心: { x: editorRect.left + fixedWidth / 2, y: editorRect.top + fixedHeight / 2 },
-  //   移動距離: { moveX, moveY }
-  // });
   
   // クローンをDOMに追加
   document.body.appendChild(clone);
@@ -100,7 +93,6 @@ export function animateEditorContentToTrashCSS(
   // アニメーション完了後の処理（CSS変数から自動取得した時間を使用）
   setTimeout(() => {
     document.body.removeChild(clone);
-    // console.log('🎨 CSS版エディター削除アニメーション完了');
     onComplete?.();
   }, editorAnimationDuration);
 }
@@ -140,14 +132,6 @@ export function animateBulkFadeOutCSS(
   // DOM順序でソートされた対象IDのみ（重複なし）
   const sortedItemIds = domOrder;
   
-  // console.log(`🚨🚨🚨 重要: DOM順序でソート完了 🚨🚨🚨`, { 
-  //   元の順序: itemIds,
-  //   DOM順序: domOrder,
-  //   ソート後: sortedItemIds,
-  //   順序が変わった: JSON.stringify(itemIds) !== JSON.stringify(sortedItemIds),
-  //   元の順序詳細: itemIds.map((id, i) => ({ 元index: i, id })),
-  //   ソート後詳細: sortedItemIds.map((id, i) => ({ 新index: i, id }))
-  // });
   
   let completedCount = 0;
   const totalItems = sortedItemIds.length;
@@ -185,43 +169,18 @@ export function animateBulkFadeOutCSS(
       
       // 既に処理済みの場合はスキップ
       if (processedItems.has(id)) {
-        // console.log(`⚠️ 重複スキップ: ID ${id}`);
         return;
       }
       processedItems.add(id);
-      // console.log(`✅ 処理開始: ID ${id}`);
       
-      // console.log(`🎯 ${actionType === 'delete' ? '削除' : '復元'}フェードアウトアニメーション開始:`, { id, index, delay: index * delay });
       const itemElement = document.querySelector(`[data-memo-id="${id}"], [data-task-id="${id}"]`) as HTMLElement;
       
       if (itemElement) {
-        // console.log(`🎯 CSS版${actionType === 'delete' ? '削除' : '復元'}フェードアウト:`, {
-        //   id,
-        //   index,
-        //   遅延: '0ms (即座開始)',
-        //   要素取得成功: true,
-        //   要素のクラス: itemElement.className,
-        //   要素のdata属性: {
-        //     'data-task-id': itemElement.getAttribute('data-task-id'),
-        //     'data-memo-id': itemElement.getAttribute('data-memo-id')
-        //   },
-        //   要素のtagName: itemElement.tagName,
-        //   要素のid: itemElement.id,
-        //   親要素: itemElement.parentElement?.tagName,
-        //   CSSアニメーションクラス追加前: itemElement.classList.toString()
-        // });
         
-        // console.log('🎬 CSSアニメーションクラス追加:', { id, クラス名: 'bulk-fade-out-animation' });
         
         // フェードアウトアニメーション開始
         itemElement.classList.add('bulk-fade-out-animation');
         
-        // console.log('✨ CSSアニメーションクラス追加後:', {
-        //   id,
-        //   クラス一覧: itemElement.classList.toString(),
-        //   アニメーションクラス有無: itemElement.classList.contains('bulk-fade-out-animation'),
-        //   computedスタイル: window.getComputedStyle(itemElement).animation
-        // });
         
         // アニメーション完了時の処理（空間維持・透明のみ）
         setTimeout(() => {
@@ -229,15 +188,12 @@ export function animateBulkFadeOutCSS(
           itemElement.classList.remove('bulk-fade-out-animation');
           itemElement.style.opacity = '0';
           itemElement.style.pointerEvents = 'none'; // クリック無効化
-          // console.log(`👻 アニメーション完了処理（空間維持・透明のみ）:`, { id });
           
           // カウントアップ
           completedCount++;
-          // console.log(`✅ ${actionType === 'delete' ? '削除' : '復元'}処理完了:`, { id, completedCount, totalItems });
           
           // 全てのアイテムが完了したらコールバック実行
           if (completedCount === totalItems) {
-            // console.log(`🎊 実際のアニメーション完了時刻:`, Date.now(), { completedCount, totalItems });
             // ゴミ箱の蓋はfinalizeAnimationで統一的に閉じる（500ms後）
             onComplete?.();
           }
@@ -254,11 +210,9 @@ export function animateBulkFadeOutCSS(
           
           // カウントアップ
           completedCount++;
-          // console.log(`✅ ${actionType === 'delete' ? '削除' : '復元'}処理完了(要素なし):`, { id, completedCount, totalItems });
           
           // 全てのアイテムが完了したらコールバック実行
           if (completedCount === totalItems) {
-            // console.log(`🎊 実際のアニメーション完了時刻(要素なし):`, Date.now(), { completedCount, totalItems });
             // 復元の場合はゴミ箱の蓋を閉じる処理は不要
             onComplete?.();
           }

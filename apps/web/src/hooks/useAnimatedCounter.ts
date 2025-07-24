@@ -96,13 +96,6 @@ export function useAnimatedCounter({
       setCurrentCount(newCount);
       
       // デバッグログ（動作確認のため一時的に有効化）
-      // console.log('🔄 カウンター更新:', {
-      //   progress: Math.round(progress * 100) + '%',
-      //   easedProgress: Math.round(easedProgress * 100) + '%',
-      //   currentCount: newCount,
-      //   elapsed: `${elapsed}ms`,
-      //   targetChange
-      // });
     }, updateInterval);
   }, [currentCount, remainingItems, animationDuration, updateInterval, easing, onComplete, stopAnimation]);
 

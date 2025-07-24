@@ -160,13 +160,6 @@ export function useTasksBulkRestore({
     : currentRestoreCount
 
   // デバッグログ
-  // console.log('🔄 復元カウンター状態:', {
-  //   isCountingActive: bulkAnimation.isCountingActive,
-  //   displayCount: bulkAnimation.displayCount,
-  //   currentRestoreCount,
-  //   finalDisplayCount,
-  //   checkedDeletedTasksSize: checkedDeletedTasks.size
-  // })
 
   return {
     handleBulkRestore,

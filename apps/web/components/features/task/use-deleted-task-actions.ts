@@ -30,7 +30,6 @@ export function useDeletedTaskActions({ task, onClose, onDeleteAndSelectNext, on
       
       // 少し遅延してから次のタスク選択機能を使用（React Queryの状態更新を待つ）
       setTimeout(() => {
-        // console.log('🔍 削除後の次選択処理開始:', { taskId: task.id });
         if (onDeleteAndSelectNext) {
           onDeleteAndSelectNext(task)
         } else {
@@ -85,7 +84,6 @@ export function useDeletedTaskActions({ task, onClose, onDeleteAndSelectNext, on
 
   const handleRestore = async () => {
     try {
-      // console.log('復元ボタンクリック:', { taskId: task.id, hasCallback: !!onRestoreAndSelectNext });
       
       // API実行
       await restoreTask.mutateAsync(task.originalId)

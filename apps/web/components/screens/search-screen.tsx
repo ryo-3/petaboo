@@ -41,11 +41,6 @@ function SearchScreen({
                      searchTypes.has("memo") ? "memo" :
                      searchTypes.has("task") ? "task" : "all";
   
-  // console.log('🔍 検索タイプ判定:', { 
-  //   searchTypes: Array.from(searchTypes), 
-  //   searchType,
-  //   query: searchQuery
-  // });
 
   // 検索実行 - 削除済みが含まれる場合は常に"all"で検索
   const { results, isSearching, hasQuery } = useGlobalSearch({

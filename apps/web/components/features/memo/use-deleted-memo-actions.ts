@@ -30,7 +30,6 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
       
       // 少し遅延してから次のメモ選択機能を使用（React Queryの状態更新を待つ）
       setTimeout(() => {
-        // console.log('🔍 削除後の次選択処理開始:', { memoId: memo.id });
         if (onDeleteAndSelectNext) {
           onDeleteAndSelectNext(memo)
         } else {

@@ -81,7 +81,6 @@ export function useMemosBulkDelete({
       
       // メモの削除処理のキャンセルの場合
       if (type === 'memo' && processType === 'delete') {
-        // console.log('🚫 メモ削除アニメーションキャンセル - カウンターを停止');
         bulkAnimation.cancelAnimation(setIsDeleting, setIsLidOpen);
       }
     };
@@ -256,12 +255,6 @@ export function useMemosBulkDelete({
     // 削除ボタンを押した瞬間の状態設定（カウンター維持）
     bulkAnimation.setModalState(setIsDeleting, setIsLidOpen);
 
-    // console.log("🗑️ 削除開始:", {
-    //   selected: targetIds.length,
-    //   actualDelete: actualTargetIds.length,
-    //   activeTab,
-    //   isLimited: isLimitedDelete,
-    // });
 
     if (isLimitedDelete) {
       // 100件制限のモーダル表示
@@ -301,7 +294,6 @@ export function useMemosBulkDelete({
           bulkDelete.handleCancel();
         }}
         onConfirm={async () => {
-          // console.log("Confirm modal");
           await bulkDelete.handleConfirm();
         }}
         count={bulkDelete.targetIds.length}
@@ -322,15 +314,6 @@ export function useMemosBulkDelete({
     : currentDeleteCount;
 
   // デバッグログ
-  // console.log("🔄 削除カウンター状態:", {
-  //   activeTab,
-  //   isCountingActive: bulkAnimation.isCountingActive,
-  //   displayCount: bulkAnimation.displayCount,
-  //   currentDeleteCount,
-  //   finalDisplayCount,
-  //   checkedMemosSize: checkedMemos.size,
-  //   checkedDeletedMemosSize: checkedDeletedMemos.size,
-  // });
 
   return {
     handleBulkDelete,

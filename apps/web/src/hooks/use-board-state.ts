@@ -4,7 +4,6 @@ import { Memo } from "@/src/types/memo";
 import { Task } from "@/src/types/task";
 
 export function useBoardState() {
-  // console.log('🔄 useBoardState called');
   const router = useRouter();
   const pathname = usePathname();
 

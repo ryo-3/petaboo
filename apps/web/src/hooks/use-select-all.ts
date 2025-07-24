@@ -86,7 +86,6 @@ export function useSelectAll<T extends { id: number }, D extends { id: number }>
             filteredItemIds.forEach(id => newSet.add(id));
             return newSet;
           });
-          // console.log('📋 タスク全選択 DOM順序:', { domOrder: filteredItemIds });
         } else if (currentMode === "memo") {
           // メモの場合：DOM順序を取得してフィルタ
           const domOrder = getMemoDisplayOrder();
@@ -99,7 +98,6 @@ export function useSelectAll<T extends { id: number }, D extends { id: number }>
             filteredItemIds.forEach(id => newSet.add(id));
             return newSet;
           });
-          // console.log('📋 メモ全選択 DOM順序:', { domOrder: filteredItemIds });
         } else {
           // フォールバック：従来の方法
           const allItemIds = filteredItems.map(item => item.id);
@@ -109,7 +107,6 @@ export function useSelectAll<T extends { id: number }, D extends { id: number }>
             allItemIds.forEach(id => newSet.add(id));
             return newSet;
           });
-          // console.log('📋 全選択 データ順序（フォールバック）:', { dataOrder: allItemIds });
         }
       }
     }

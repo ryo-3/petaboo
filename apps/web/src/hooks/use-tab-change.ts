@@ -6,10 +6,8 @@ interface UseTabChangeConfig {
   // 個別選択クリア（メモ用のオプション）
   selectedItem?: { id: number } | null;
   selectedDeletedItem?: { id: number } | null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onSelectItem?: (item: any) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onSelectDeletedItem?: (item: any) => void;
+  onSelectItem?: (item: { id: number } | null) => void;
+  onSelectDeletedItem?: (item: { id: number } | null) => void;
   normalTabName?: string; // "normal" or "todo"
   deletedTabName?: string; // "deleted"
 }

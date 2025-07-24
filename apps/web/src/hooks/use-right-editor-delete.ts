@@ -7,7 +7,7 @@ interface UseRightEditorDeleteConfig<T extends { id: number }> {
   };
   editorSelector: string; // '[data-memo-editor]' or '[data-task-editor]'
   setIsDeleting: (isDeleting: boolean) => void;
-  onDeleteComplete: (deletedItem: T) => void;
+  onDeleteComplete: ((deletedItem: T) => void) | ((deletedItem: T, preDeleteDisplayOrder?: number[]) => void);
   executeApiFirst?: boolean; // Task=true, Memo=false
   restoreEditorVisibility?: boolean; // Task=true, Memo=false
 }
@@ -78,10 +78,9 @@ export function useRightEditorDelete<T extends { id: number }>({
           
           // DOM順序も一緒に渡す（Task用）
           if (onDeleteComplete.length >= 2) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (onDeleteComplete as any)(targetItem, preDeleteDisplayOrder);
+            (onDeleteComplete as (deletedItem: T, preDeleteDisplayOrder?: number[]) => void)(targetItem, preDeleteDisplayOrder);
           } else {
-            onDeleteComplete(targetItem);
+            (onDeleteComplete as (deletedItem: T) => void)(targetItem);
           }
         });
       } else {

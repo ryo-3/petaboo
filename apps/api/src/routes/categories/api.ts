@@ -23,7 +23,9 @@ const CategoryUsageSchema = z.object({
   boardCount: z.number(),
 });
 
-export function createAPI(app: any) {
+import type { Hono } from 'hono';
+
+export function createAPI(app: Hono) {
   // カテゴリー一覧取得
   const getCategoriesRoute = createRoute({
     method: "get",

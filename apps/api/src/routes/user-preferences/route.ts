@@ -98,7 +98,7 @@ app.put('/:userId', async (c) => {
       .where(eq(userPreferences.userId, userId))
       .get();
 
-    const updateData: any = { updatedAt: Date.now() };
+    const updateData: Partial<typeof userPreferences.$inferInsert> = { updatedAt: Date.now() };
     if (memoColumnCount !== undefined) updateData.memoColumnCount = memoColumnCount;
     if (taskColumnCount !== undefined) updateData.taskColumnCount = taskColumnCount;
     if (memoViewMode !== undefined) updateData.memoViewMode = memoViewMode;

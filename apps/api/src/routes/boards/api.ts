@@ -1,11 +1,15 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { getAuth } from "@hono/clerk-auth";
 import { eq, and, desc, isNull, isNotNull } from "drizzle-orm";
+import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import { boards, boardItems, tasks, memos, deletedBoards, deletedMemos, deletedTasks } from "../../db";
 import type { NewBoard, NewBoardItem, NewDeletedBoard } from "../../db/schema/boards";
+import * as schema from "../../db";
+
+type DatabaseType = BetterSQLite3Database<typeof schema>;
 
 // ID→originalId変換ユーティリティ
-async function getOriginalId(itemId: string | number, itemType: 'memo' | 'task', userId: string, db: any): Promise<string | null> {
+async function getOriginalId(itemId: string | number, itemType: 'memo' | 'task', userId: string, db: DatabaseType): Promise<string | null> {
   // itemIdはIDの文字列版または数値版として受け取り、originalIdに変換する
   const numericId = typeof itemId === 'string' ? parseInt(itemId) : itemId;
   if (isNaN(numericId)) {
@@ -57,7 +61,7 @@ function generateSlug(name: string): string {
 }
 
 // ユニークなスラッグを生成
-async function generateUniqueSlug(name: string, userId: string, db: any): Promise<string> {
+async function generateUniqueSlug(name: string, userId: string, db: DatabaseType): Promise<string> {
   const baseSlug = generateSlug(name);
   let slug = baseSlug;
   let counter = 0;
@@ -118,7 +122,9 @@ const AddItemToBoardSchema = z.object({
   itemId: z.string(), // originalIdを文字列として受け取る
 });
 
-export function createAPI(app: any) {
+import type { Hono } from 'hono';
+
+export function createAPI(app: Hono) {
   // ボード一覧取得
   const getBoardsRoute = createRoute({
     method: "get",

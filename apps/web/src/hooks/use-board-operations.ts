@@ -1,0 +1,353 @@
+import { useCallback, useMemo, useEffect } from 'react';
+import { useAddItemToBoard, useRemoveItemFromBoard, useBoardWithItems, useBoardDeletedItems } from '@/src/hooks/use-boards';
+import { useExport } from '@/src/hooks/use-export';
+import { getNextItemAfterDeletion, getMemoDisplayOrder, getTaskDisplayOrder } from '@/src/utils/domUtils';
+import { useDeletedItemOperations } from '@/src/hooks/use-deleted-item-operations';
+import { BoardItemWithContent } from '@/src/types/board';
+import { Memo, DeletedMemo } from '@/src/types/memo';
+import { Task, DeletedTask } from '@/src/types/task';
+
+interface UseBoardOperationsProps {
+  boardId: number;
+  initialBoardName?: string;
+  initialBoardDescription?: string | null;
+  onSelectMemo?: (memo: Memo | DeletedMemo | null) => void;
+  onSelectTask?: (task: Task | DeletedTask | null) => void;
+  onClearSelection?: () => void;
+  setRightPanelMode: (mode: "editor" | "memo-list" | "task-list" | null) => void;
+  createNewMemoHandler: (callback: ((memo: Memo | DeletedMemo | null) => void) | undefined) => void;
+  createNewTaskHandler: (callback: ((task: Task | DeletedTask | null) => void) | undefined) => void;
+  rightPanelMode: "editor" | "memo-list" | "task-list" | null;
+  selectedItemsFromList: Set<number>;
+  memoItems: BoardItemWithContent[];
+  taskItems: BoardItemWithContent[];
+}
+
+interface UseBoardOperationsReturn {
+  // データ
+  boardWithItems: { items: BoardItemWithContent[] } | undefined;
+  boardDeletedItems: { memos?: DeletedMemo[]; tasks?: DeletedTask[] } | undefined;
+  isLoading: boolean;
+  error: Error | null;
+  boardName: string;
+  boardDescription: string | null;
+  boardMemos: Memo[];
+  boardTasks: Task[];
+  
+  // ハンドラー
+  handleExport: () => void;
+  handleRemoveItem: (item: BoardItemWithContent) => Promise<void>;
+  handleSelectMemo: (memo: Memo | DeletedMemo) => void;
+  handleSelectTask: (task: Task | DeletedTask) => void;
+  handleCloseDetail: () => void;
+  handleCreateNewMemo: () => void;
+  handleCreateNewTask: () => void;
+  handleAddSelectedItems: () => Promise<void>;
+  handleMemoDeleteAndSelectNext: (deletedMemo: Memo) => void;
+  handleTaskDeleteAndSelectNext: (deletedTask: Task) => void;
+  handleMemoRestoreAndSelectNext: (deletedItem: DeletedMemo) => void;
+  handleTaskRestoreAndSelectNext: (deletedItem: DeletedTask) => void;
+  handleAddMemoToBoard: (memo: Memo) => Promise<void>;
+  handleAddTaskToBoard: (task: Task) => Promise<void>;
+  
+  // エフェクト
+  pageTitle: string;
+}
+
+/**
+ * ボード操作を管理するカスタムフック
+ */
+export function useBoardOperations({
+  boardId,
+  initialBoardName,
+  initialBoardDescription,
+  onSelectMemo,
+  onSelectTask,
+  onClearSelection,
+  setRightPanelMode,
+  createNewMemoHandler,
+  createNewTaskHandler,
+  rightPanelMode,
+  selectedItemsFromList,
+  memoItems,
+  taskItems,
+}: UseBoardOperationsProps): UseBoardOperationsReturn {
+  
+  // データ取得
+  const { data: boardWithItems, isLoading, error } = useBoardWithItems(boardId);
+  const { data: boardDeletedItems } = useBoardDeletedItems(boardId);
+  
+  const removeItemFromBoard = useRemoveItemFromBoard();
+  const addItemToBoard = useAddItemToBoard();
+  const { exportBoard } = useExport();
+
+  // ボード情報
+  const boardName = initialBoardName || boardWithItems?.name || "ボード";
+  const boardDescription = initialBoardDescription || boardWithItems?.description;
+
+  // boardWithItemsからメモとタスクを抽出（APIコール削減）
+  const boardMemos = useMemo(() => 
+    boardWithItems?.items
+      ?.filter((item: BoardItemWithContent) => item.itemType === 'memo')
+      ?.map((item: BoardItemWithContent) => item.content as Memo) || []
+  , [boardWithItems?.items]);
+  
+  const boardTasks = useMemo(() => 
+    boardWithItems?.items
+      ?.filter((item: BoardItemWithContent) => item.itemType === 'task')
+      ?.map((item: BoardItemWithContent) => item.content as Task) || []
+  , [boardWithItems?.items]);
+
+  // ページタイトル設定
+  const pageTitle = `${boardName} - ボード`;
+  useEffect(() => {
+    document.title = pageTitle;
+    return () => {
+      document.title = "メモ帳アプリ";
+    };
+  }, [pageTitle]);
+
+  // エクスポート処理
+  const handleExport = useCallback(() => {
+    if (!boardWithItems) return;
+    
+    exportBoard(
+      boardName,
+      boardDescription || null,
+      boardWithItems.createdAt as number,
+      memoItems,
+      taskItems
+    );
+  }, [boardWithItems, boardName, boardDescription, memoItems, taskItems, exportBoard]);
+
+  // アイテム削除
+  const handleRemoveItem = useCallback(async (item: BoardItemWithContent) => {
+    if (confirm("このアイテムをボードから削除しますか？")) {
+      try {
+        await removeItemFromBoard.mutateAsync({
+          boardId,
+          itemId: parseInt(item.itemId),
+          itemType: item.itemType,
+        });
+        // 削除したアイテムが選択されていた場合、選択を解除
+        if (
+          item.itemType === "memo" &&
+          onSelectMemo &&
+          item.itemId
+        ) {
+          onClearSelection?.();
+        } else if (
+          item.itemType === "task" &&
+          onSelectTask &&
+          item.itemId
+        ) {
+          onClearSelection?.();
+        }
+      } catch {
+        // エラーは上位でハンドリング
+      }
+    }
+  }, [boardId, removeItemFromBoard, onSelectMemo, onSelectTask, onClearSelection]);
+
+  // 選択ハンドラー
+  const handleSelectMemo = useCallback(
+    (memo: Memo | DeletedMemo) => {
+      setRightPanelMode(null); // リストモードを解除
+      onSelectMemo?.(memo);
+    },
+    [onSelectMemo, setRightPanelMode]
+  );
+
+  const handleSelectTask = useCallback(
+    (task: Task | DeletedTask) => {
+      setRightPanelMode(null); // リストモードを解除
+      onSelectTask?.(task);
+    },
+    [onSelectTask, setRightPanelMode]
+  );
+
+  const handleCloseDetail = useCallback(() => {
+    onClearSelection?.();
+  }, [onClearSelection]);
+
+  // 新規作成ハンドラー
+  const handleCreateNewMemo = useCallback(() => {
+    createNewMemoHandler(onSelectMemo);
+  }, [createNewMemoHandler, onSelectMemo]);
+
+  const handleCreateNewTask = useCallback(() => {
+    createNewTaskHandler(onSelectTask);
+  }, [createNewTaskHandler, onSelectTask]);
+
+  // 一覧からボードに追加
+  const handleAddSelectedItems = useCallback(async () => {
+    if (selectedItemsFromList.size === 0) return;
+
+    try {
+      const itemType = rightPanelMode === "memo-list" ? "memo" : "task";
+      const existingItemIds =
+        boardWithItems?.items
+          .filter((item: BoardItemWithContent) => item.itemType === itemType)
+          .map((item: BoardItemWithContent) => item.itemId) || [];
+
+      // 重複していないアイテムのみを追加
+      const itemsToAdd = Array.from(selectedItemsFromList).filter(
+        (itemId) => !existingItemIds.includes(itemId.toString())
+      );
+
+      if (itemsToAdd.length === 0) {
+        alert("選択されたアイテムは既にボードに追加されています");
+        return;
+      }
+
+      const promises = itemsToAdd.map((itemId) => {
+        return addItemToBoard.mutateAsync({
+          boardId,
+          data: { itemType, itemId: itemId.toString() },
+        });
+      });
+
+      await Promise.all(promises);
+      setRightPanelMode(null);
+
+      if (itemsToAdd.length < selectedItemsFromList.size) {
+        alert(`${itemsToAdd.length}件のアイテムを追加しました（重複分は除外）`);
+      }
+    } catch {
+      // エラーは上位でハンドリング
+    }
+  }, [
+    selectedItemsFromList,
+    rightPanelMode,
+    boardId,
+    addItemToBoard,
+    boardWithItems,
+    setRightPanelMode,
+  ]);
+
+  // 削除後の次アイテム選択ハンドラー
+  const handleMemoDeleteAndSelectNext = useCallback((deletedMemo: Memo) => {
+    if (!onSelectMemo) return;
+    
+    const displayOrder = getMemoDisplayOrder();
+    const nextMemo = getNextItemAfterDeletion(
+      memoItems.map(item => item.content as Memo),
+      deletedMemo,
+      displayOrder
+    );
+    
+    if (nextMemo) {
+      onSelectMemo(nextMemo);
+    } else {
+      onClearSelection?.();
+    }
+  }, [memoItems, onSelectMemo, onClearSelection]);
+
+  const handleTaskDeleteAndSelectNext = useCallback((deletedTask: Task) => {
+    if (!onSelectTask) return;
+    
+    const displayOrder = getTaskDisplayOrder();
+    const allTasks = taskItems.map(item => item.content as Task);
+    
+    const nextTask = getNextItemAfterDeletion(
+      allTasks,
+      deletedTask,
+      displayOrder
+    );
+    
+    if (nextTask) {
+      onSelectTask(nextTask);
+    } else {
+      onClearSelection?.();
+    }
+  }, [taskItems, onSelectTask, onClearSelection]);
+
+  // 削除済みアイテムの復元ハンドラー
+  const { handleRestoreAndSelectNext: handleMemoRestoreAndSelectNext } = useDeletedItemOperations({
+    deletedItems: boardDeletedItems?.memos || null,
+    onSelectDeletedItem: (memo: DeletedMemo | null) => onSelectMemo?.(memo),
+    setScreenMode: () => {}, // ボードでは画面モード変更なし
+    editorSelector: "[data-memo-editor]",
+  });
+
+  const { handleRestoreAndSelectNext: handleTaskRestoreAndSelectNext } = useDeletedItemOperations({
+    deletedItems: boardDeletedItems?.tasks || null,
+    onSelectDeletedItem: (task: DeletedTask | null) => onSelectTask?.(task),
+    setScreenMode: () => {}, // ボードでは画面モード変更なし
+    editorSelector: "[data-task-editor]",
+  });
+
+  // ボードにアイテムを追加
+  const handleAddMemoToBoard = useCallback(async (memo: Memo) => {
+    // 既にボードに存在するかチェック
+    const existingMemoIds = boardMemos.map(m => m.id);
+    if (existingMemoIds.includes(memo.id)) {
+      alert('このメモは既にボードに追加されています');
+      return;
+    }
+
+    try {
+      await addItemToBoard.mutateAsync({
+        boardId,
+        data: {
+          itemType: 'memo',
+          itemId: memo.id.toString(),
+        },
+      });
+    } catch {
+      // エラーは上位でハンドリング
+    }
+  }, [boardId, addItemToBoard, boardMemos]);
+
+  const handleAddTaskToBoard = useCallback(async (task: Task) => {
+    // 既にボードに存在するかチェック
+    const existingTaskIds = boardTasks.map(t => t.id);
+    if (existingTaskIds.includes(task.id)) {
+      alert('このタスクは既にボードに追加されています');
+      return;
+    }
+
+    try {
+      await addItemToBoard.mutateAsync({
+        boardId,
+        data: {
+          itemType: 'task',
+          itemId: task.id.toString(),
+        },
+      });
+    } catch {
+      // エラーは上位でハンドリング
+    }
+  }, [boardId, addItemToBoard, boardTasks]);
+
+  return {
+    // データ
+    boardWithItems,
+    boardDeletedItems,
+    isLoading,
+    error,
+    boardName,
+    boardDescription: boardDescription || null,
+    boardMemos,
+    boardTasks,
+    
+    // ハンドラー
+    handleExport,
+    handleRemoveItem,
+    handleSelectMemo,
+    handleSelectTask,
+    handleCloseDetail,
+    handleCreateNewMemo,
+    handleCreateNewTask,
+    handleAddSelectedItems,
+    handleMemoDeleteAndSelectNext,
+    handleTaskDeleteAndSelectNext,
+    handleMemoRestoreAndSelectNext,
+    handleTaskRestoreAndSelectNext,
+    handleAddMemoToBoard,
+    handleAddTaskToBoard,
+    
+    // エフェクト
+    pageTitle,
+  };
+}

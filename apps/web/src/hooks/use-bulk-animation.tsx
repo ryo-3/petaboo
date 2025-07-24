@@ -124,12 +124,10 @@ export function useBulkAnimation({ checkedItems, checkedDeletedItems }: UseBulkA
       setIsLidOpen?.(false)
     }, 500)
     
-    // 処理ボタンを3秒後に非表示
-    timerRef.current.isProcessing = setTimeout(() => {
-      if (setIsProcessing) {
-        setIsProcessing(false)
-      }
-    }, 3000)
+    // 処理状態をすぐに終了（useBulkDeleteButtonのタイマーに任せる）
+    if (setIsProcessing) {
+      setIsProcessing(false)
+    }
     
     // 部分処理フラグを解除
     if (isPartial) {

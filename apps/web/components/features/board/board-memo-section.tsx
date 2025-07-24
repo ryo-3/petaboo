@@ -41,10 +41,12 @@ interface BoardMemoSectionProps {
   isDeleting?: boolean;
   isLidOpen?: boolean;
   currentDisplayCount?: number;
+  deleteButtonRef?: React.RefObject<HTMLButtonElement | null>;
 }
 
 import { useRef } from 'react';
 import { BulkActionButtons } from "@/components/ui/layout/bulk-action-buttons";
+import { useBulkDeleteButton } from "@/src/hooks/use-bulk-delete-button";
 
 export default function BoardMemoSection({
   rightPanelMode,
@@ -70,13 +72,24 @@ export default function BoardMemoSection({
   onSelectAll,
   isAllSelected,
   onBulkDelete,
-  isDeleting: _isDeleting = false, // eslint-disable-line @typescript-eslint/no-unused-vars
+  isDeleting = false,
   isLidOpen = false,
   currentDisplayCount,
+  deleteButtonRef: propDeleteButtonRef,
 }: BoardMemoSectionProps) {
   // ソートオプションの管理
   const { setSortOptions, getVisibleSortOptions } = useSortOptions("memo");
-  const deleteButtonRef = useRef<HTMLButtonElement | null>(null);
+  const localDeleteButtonRef = useRef<HTMLButtonElement | null>(null);
+  const deleteButtonRef = propDeleteButtonRef || localDeleteButtonRef;
+  
+  // 削除ボタンのタイマー制御
+  const { showDeleteButton } = useBulkDeleteButton({
+    activeTab: activeMemoTab,
+    deletedTabName: "deleted",
+    checkedItems: new Set(Array.from(checkedMemos).filter(id => typeof id === 'number') as number[]),
+    checkedDeletedItems: new Set(), // ボード詳細では削除済みタブはない
+    isDeleting: isDeleting || false,
+  });
   
   // 数値のみのSet（型安全のため）
   const checkedMemosNumbers = new Set(Array.from(checkedMemos).filter(id => typeof id === 'number') as number[]);
@@ -248,9 +261,8 @@ export default function BoardMemoSection({
       </div>
 
       {/* 一括削除ボタン - メモ用 */}
-      {checkedMemos.size > 0 && (
-        <BulkActionButtons
-          showDeleteButton={true}
+      <BulkActionButtons
+          showDeleteButton={showDeleteButton}
           deleteButtonCount={checkedMemos.size}
           onDelete={() => {
             console.log('🎯 BoardMemoSection onDelete called, checkedMemos:', Array.from(checkedMemos));
@@ -265,7 +277,6 @@ export default function BoardMemoSection({
           animatedDeleteCount={currentDisplayCount || checkedMemos.size}
           useAnimatedDeleteCount={true}
         />
-      )}
     </div>
   );
 }

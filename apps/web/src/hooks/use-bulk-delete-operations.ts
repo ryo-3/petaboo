@@ -3,6 +3,8 @@ import { useBulkDelete } from '@/components/ui/modals';
 import { useDeleteMemo } from '@/src/hooks/use-memos';
 import { useDeleteTask } from '@/src/hooks/use-tasks';
 import { useRemoveItemFromBoard } from '@/src/hooks/use-boards';
+import { useBulkAnimation } from '@/src/hooks/use-bulk-animation';
+import { executeWithAnimation } from '@/src/utils/bulkAnimationUtils';
 
 interface UseBulkDeleteOperationsProps {
   boardId: number;
@@ -10,6 +12,7 @@ interface UseBulkDeleteOperationsProps {
   checkedTasks: Set<string | number>;
   setCheckedMemos: (value: Set<string | number>) => void;
   setCheckedTasks: (value: Set<string | number>) => void;
+  deleteButtonRef?: React.RefObject<HTMLButtonElement | null>;
 }
 
 interface UseBulkDeleteOperationsReturn {
@@ -20,6 +23,7 @@ interface UseBulkDeleteOperationsReturn {
   handleBulkDelete: (itemType: 'memo' | 'task', customMessage?: ReactNode) => Promise<void>;
   handleRemoveFromBoard: () => Promise<void>;
   setDeletingItemType: (type: 'memo' | 'task' | null) => void;
+  bulkAnimation: ReturnType<typeof useBulkAnimation>;
 }
 
 /**
@@ -32,16 +36,65 @@ export function useBulkDeleteOperations({
   checkedTasks,
   setCheckedMemos,
   setCheckedTasks,
+  deleteButtonRef,
 }: UseBulkDeleteOperationsProps): UseBulkDeleteOperationsReturn {
   const [isMemoDeleting, setIsMemoDeleting] = useState(false);
   const [isMemoLidOpen, setIsMemoLidOpen] = useState(false);
   const [deletingItemType, setDeletingItemType] = useState<'memo' | 'task' | null>(null);
+  
+  // アニメーション管理
+  const bulkAnimation = useBulkAnimation({
+    checkedItems: new Set(Array.from(checkedMemos).filter(id => typeof id === 'number') as number[]),
+    checkedDeletedItems: new Set(Array.from(checkedTasks).filter(id => typeof id === 'number') as number[]),
+  });
   
   // 削除関連のフック
   const bulkDelete = useBulkDelete();
   const deleteMemoMutation = useDeleteMemo();
   const deleteTaskMutation = useDeleteTask();
   const removeItemFromBoard = useRemoveItemFromBoard();
+  
+  // アニメーション付き削除実行関数
+  const executeDeleteWithAnimation = useCallback(async (ids: number[], itemType: 'memo' | 'task') => {
+    const onStateUpdate = () => {
+      // ボード詳細では特別な状態更新は不要
+    };
+
+    const onCheckStateUpdate = (processedIds: number[]) => {
+      if (itemType === 'memo') {
+        const newCheckedMemos = new Set(checkedMemos);
+        processedIds.forEach((id) => newCheckedMemos.delete(id));
+        setCheckedMemos(newCheckedMemos);
+      } else {
+        const newCheckedTasks = new Set(checkedTasks);
+        processedIds.forEach((id) => newCheckedTasks.delete(id));
+        setCheckedTasks(newCheckedTasks);
+      }
+    };
+
+    const onApiCall = async (id: number) => {
+      if (itemType === 'memo') {
+        await deleteMemoMutation.mutateAsync(id);
+      } else {
+        await deleteTaskMutation.mutateAsync(id);
+      }
+    };
+
+    await executeWithAnimation({
+      ids,
+      isPartial: false,
+      buttonRef: deleteButtonRef,
+      dataAttribute: itemType === 'memo' ? 'data-memo-id' : 'data-task-id',
+      onStateUpdate,
+      onCheckStateUpdate,
+      onApiCall,
+      initializeAnimation: bulkAnimation.initializeAnimation,
+      startCountdown: bulkAnimation.startCountdown,
+      finalizeAnimation: bulkAnimation.finalizeAnimation,
+      setIsProcessing: setIsMemoDeleting,
+      setIsLidOpen: setIsMemoLidOpen,
+    });
+  }, [checkedMemos, checkedTasks, setCheckedMemos, setCheckedTasks, deleteMemoMutation, deleteTaskMutation, deleteButtonRef, bulkAnimation]);
   
   // 一括削除ハンドラー
   const handleBulkDelete = useCallback(async (itemType: 'memo' | 'task', customMessage?: ReactNode) => {
@@ -56,24 +109,12 @@ export function useBulkDeleteOperations({
       targetIds as number[],
       1,
       async (ids: (string | number)[]) => {
-        // 完全削除の処理
-        for (const id of ids) {
-          if (itemType === 'memo') {
-            await deleteMemoMutation.mutateAsync(id as number);
-          } else {
-            await deleteTaskMutation.mutateAsync(id as number);
-          }
-        }
-        // 選択をクリア
-        if (itemType === 'memo') {
-          setCheckedMemos(new Set());
-        } else {
-          setCheckedTasks(new Set());
-        }
+        // アニメーション付き削除処理
+        await executeDeleteWithAnimation(ids as number[], itemType);
       },
       customMessage
     );
-  }, [checkedMemos, checkedTasks, bulkDelete, deleteMemoMutation, deleteTaskMutation, setCheckedMemos, setCheckedTasks]);
+  }, [checkedMemos, checkedTasks, bulkDelete, executeDeleteWithAnimation]);
 
   // ボードから削除の処理
   const handleRemoveFromBoard = useCallback(async () => {
@@ -111,5 +152,6 @@ export function useBulkDeleteOperations({
     handleBulkDelete,
     handleRemoveFromBoard,
     setDeletingItemType,
+    bulkAnimation,
   };
 }

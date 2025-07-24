@@ -6,7 +6,7 @@ import Tooltip from "@/components/ui/base/tooltip";
 import { useBoardState } from "@/src/hooks/use-board-state";
 import { Memo, DeletedMemo } from "@/src/types/memo";
 import { Task, DeletedTask } from "@/src/types/task";
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState, useRef } from "react";
 import BoardHeader from "@/components/features/board/board-header";
 import { BulkDeleteConfirmation } from "@/components/ui/modals";
 import { useBoardSelectAll } from "@/src/hooks/use-board-select-all";
@@ -50,6 +50,9 @@ function BoardDetailScreen({
 }: BoardDetailProps) {
   // CSVインポートモーダル状態
   const [isCSVImportModalOpen, setIsCSVImportModalOpen] = useState(false);
+  
+  // 削除ボタンのref
+  const deleteButtonRef = useRef<HTMLButtonElement | null>(null);
 
   // 状態管理フック
   const {
@@ -114,12 +117,14 @@ function BoardDetailScreen({
     handleBulkDelete,
     handleRemoveFromBoard,
     setDeletingItemType,
+    bulkAnimation,
   } = useBulkDeleteOperations({
     boardId,
     checkedMemos,
     checkedTasks,
     setCheckedMemos: (value) => setCheckedMemos(activeMemoTab, value),
     setCheckedTasks,
+    deleteButtonRef,
   });
   
   // アニメーション管理（checkedItemsを数値のみに変換）
@@ -360,7 +365,8 @@ function BoardDetailScreen({
             onBulkDelete={() => handleBulkDelete('memo', <div className="text-sm text-gray-700 mb-3">選択したメモの操作を選択してください</div>)}
             isDeleting={isMemoDeleting}
             isLidOpen={isMemoLidOpen}
-            currentDisplayCount={memoIdsAsNumbers.size}
+            currentDisplayCount={bulkAnimation.isCountingActive ? bulkAnimation.displayCount : memoIdsAsNumbers.size}
+            deleteButtonRef={deleteButtonRef}
           />
 
           {/* タスク列 */}
@@ -390,9 +396,10 @@ function BoardDetailScreen({
             onSelectAll={handleTaskSelectAll}
             isAllSelected={isTaskAllSelected}
             onBulkDelete={() => handleBulkDelete('task', <div className="text-sm text-gray-700 mb-3">選択したタスクの操作を選択してください</div>)}
-            isDeleting={false}
-            isLidOpen={false}
-            currentDisplayCount={0}
+            isDeleting={isMemoDeleting}
+            isLidOpen={isMemoLidOpen}
+            currentDisplayCount={bulkAnimation.isCountingActive ? bulkAnimation.displayCount : checkedTasks.size}
+            deleteButtonRef={deleteButtonRef}
           />
         </div>
 

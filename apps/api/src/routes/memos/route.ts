@@ -56,9 +56,11 @@ function parseCSV(csvText: string): { title: string; content?: string }[] {
     const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
     
     if (values.length >= 1 && values[0]) {
+      // 2番目以降のすべての値をcontentとして結合
+      const content = values.slice(1).filter(v => v).join('、');
       results.push({
         title: values[0],
-        content: values[1] || undefined,
+        content: content || undefined,
       });
     }
   }
@@ -710,12 +712,15 @@ app.openapi(
           }
 
           const { title, content } = parsed.data;
+          // メモエディター形式に合わせて保存：title + '\n' + content
+          const combinedContent = title + (content ? '\n' + content : '');
+          
           const result = await db.insert(memos).values({
             userId: auth.userId,
             originalId: "", // 後で更新
             uuid: generateUuid(),
             title,
-            content,
+            content: combinedContent,
             createdAt: Math.floor(Date.now() / 1000),
           }).returning({ id: memos.id });
 

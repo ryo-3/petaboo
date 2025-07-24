@@ -37,9 +37,11 @@ export function CSVImportModal({ isOpen, onClose }: CSVImportModalProps) {
       const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
       
       if (values.length >= 1 && values[0]) {
+        // 2番目以降のすべての値をcontentとして結合
+        const content = values.slice(1).filter(v => v).join('、');
         results.push({
           title: values[0],
-          content: values[1] || undefined,
+          content: content || undefined,
         });
       }
     }

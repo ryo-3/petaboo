@@ -11,7 +11,6 @@ import { Memo, DeletedMemo } from "@/src/types/memo";
 import { Task, DeletedTask } from "@/src/types/task";
 import { useState } from "react";
 import { useDeleteMemo } from "@/src/hooks/use-memos";
-import { useQueryClient } from "@tanstack/react-query";
 
 interface BoardRightPanelProps {
   isOpen: boolean;
@@ -61,14 +60,13 @@ export default function BoardRightPanel({
   };
 
   // 削除処理用のstate
-  const [isRightMemoLidOpen, setIsRightMemoLidOpen] = useState(false);
+  const [isRightMemoLidOpen] = useState(false);
   const deleteNote = useDeleteMemo();
-  const queryClient = useQueryClient();
 
   // メモ削除ハンドラー（メモエディターの削除確認後に呼ばれる）
   const handleMemoDelete = async () => {
     if (selectedMemo && !isDeletedMemo(selectedMemo)) {
-      setIsRightMemoLidOpen(true);
+      // 削除処理中はエディターを開いたままにする
       try {
         
         const memoId = typeof selectedMemo.id === 'number' ? selectedMemo.id : parseInt(selectedMemo.id, 10);
@@ -78,24 +76,17 @@ export default function BoardRightPanel({
         }
         await deleteNote.mutateAsync(memoId);
         
-        // キャッシュを無効化して最新データを取得
-        queryClient.invalidateQueries({ queryKey: ["boards"] });
-        queryClient.invalidateQueries({ queryKey: ["board-with-items", boardId] });
-        queryClient.invalidateQueries({ queryKey: ["board-deleted-items", boardId] });
-        queryClient.invalidateQueries({ queryKey: ["memos"] });
-        queryClient.invalidateQueries({ queryKey: ["deleted-memos"] });
+        // 削除成功後に次のアイテムを選択（削除前のデータで次のアイテムを決定）
+        onMemoDeleteAndSelectNext?.(selectedMemo as Memo);
         
-        // 削除成功後に次のアイテムを選択
-        setTimeout(() => {
-          onMemoDeleteAndSelectNext?.(selectedMemo as Memo);
-          setIsRightMemoLidOpen(false);
-        }, 200);
+        // useDeleteMemoのonSuccessで自動的にキャッシュが無効化されるため、手動での無効化は不要
       } catch (error) {
         console.error('メモの削除に失敗しました:', error);
-        setIsRightMemoLidOpen(false);
+        // エラー時もエディターは開いたままにする
       }
     }
   };
+  
   return (
     <RightPanel isOpen={isOpen} onClose={onClose}>
       {selectedMemo && !selectedTask && rightPanelMode === null && (

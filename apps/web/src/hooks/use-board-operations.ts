@@ -225,42 +225,54 @@ export function useBoardOperations({
     setRightPanelMode,
   ]);
 
-  // 削除後の次アイテム選択ハンドラー
+  // 削除後の次アイテム選択ハンドラー（メモ一覧と同じロジックを使用）
   const handleMemoDeleteAndSelectNext = useCallback((deletedMemo: Memo) => {
     if (!onSelectMemo) return;
     
-    const displayOrder = getMemoDisplayOrder();
-    const nextMemo = getNextItemAfterDeletion(
-      memoItems.map(item => item.content as Memo),
-      deletedMemo,
-      displayOrder
-    );
+    // 削除前のメモ一覧を取得（boardMemosは削除前のデータ）
+    const allMemos = boardMemos;
     
-    if (nextMemo) {
+    if (allMemos.length === 0) {
+      onClearSelection?.();
+      return;
+    }
+    
+    // DOM表示順序を取得
+    const displayOrder = getMemoDisplayOrder();
+    
+    // メモ一覧と同じロジックを使用
+    const nextMemo = getNextItemAfterDeletion(allMemos, deletedMemo, displayOrder);
+    
+    if (nextMemo && nextMemo.id !== deletedMemo.id) {
       onSelectMemo(nextMemo);
     } else {
       onClearSelection?.();
     }
-  }, [memoItems, onSelectMemo, onClearSelection]);
+  }, [boardMemos, onSelectMemo, onClearSelection]);
 
   const handleTaskDeleteAndSelectNext = useCallback((deletedTask: Task) => {
     if (!onSelectTask) return;
     
+    // 削除前のタスク一覧を取得（boardTasksは削除前のデータ）
+    const allTasks = boardTasks;
+    
+    if (allTasks.length === 0) {
+      onClearSelection?.();
+      return;
+    }
+    
+    // DOM表示順序を取得
     const displayOrder = getTaskDisplayOrder();
-    const allTasks = taskItems.map(item => item.content as Task);
     
-    const nextTask = getNextItemAfterDeletion(
-      allTasks,
-      deletedTask,
-      displayOrder
-    );
+    // メモと同じロジックを使用
+    const nextTask = getNextItemAfterDeletion(allTasks, deletedTask, displayOrder);
     
-    if (nextTask) {
+    if (nextTask && nextTask.id !== deletedTask.id) {
       onSelectTask(nextTask);
     } else {
       onClearSelection?.();
     }
-  }, [taskItems, onSelectTask, onClearSelection]);
+  }, [boardTasks, onSelectTask, onClearSelection]);
 
   // 削除済みアイテムの復元ハンドラー
   const { handleRestoreAndSelectNext: handleMemoRestoreAndSelectNext } = useDeletedItemOperations({

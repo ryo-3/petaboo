@@ -82,6 +82,10 @@ export function useDeleteMemo() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['memos'] })
       queryClient.invalidateQueries({ queryKey: ['deletedMemos'] })
+      // ボード関連のキャッシュも無効化（復元処理と同様）
+      queryClient.invalidateQueries({ queryKey: ['boards'] })
+      queryClient.invalidateQueries({ queryKey: ['board-with-items'] })
+      queryClient.invalidateQueries({ queryKey: ['board-deleted-items'] })
     },
   })
 }

@@ -308,8 +308,8 @@ function DesktopUpper({
             />
           )}
 
-          {/* CSVインポートボタン（メモ・タスクモード） */}
-          {!customTitle && !hideAddButton && (currentMode === "memo" || currentMode === "task") && onCsvImport && (
+          {/* CSVインポートボタン（メモ・タスクモード、またはボードモードでonCsvImportがある場合） */}
+          {(((!customTitle && !hideAddButton && (currentMode === "memo" || currentMode === "task")) || (currentMode === "board" && customTitle)) && onCsvImport) && (
             <Tooltip text="CSVインポート" position="bottom">
               <button
                 onClick={onCsvImport}

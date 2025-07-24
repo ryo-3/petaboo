@@ -6,7 +6,7 @@ import Tooltip from "@/components/ui/base/tooltip";
 import { useBoardState } from "@/src/hooks/use-board-state";
 import { Memo, DeletedMemo } from "@/src/types/memo";
 import { Task, DeletedTask } from "@/src/types/task";
-import { memo, useEffect, useMemo } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import BoardHeader from "@/components/features/board/board-header";
 import { BulkDeleteConfirmation } from "@/components/ui/modals";
 import { useBoardSelectAll } from "@/src/hooks/use-board-select-all";
@@ -14,6 +14,7 @@ import { useMultiSelection } from "@/src/hooks/use-multi-selection";
 import { useBulkDeleteOperations } from "@/src/hooks/use-bulk-delete-operations";
 import { useBoardItems } from "@/src/hooks/use-board-items";
 import { useBoardOperations } from "@/src/hooks/use-board-operations";
+import { CSVImportModal } from "@/components/features/board/csv-import-modal";
 
 interface BoardDetailProps {
   boardId: number;
@@ -47,6 +48,9 @@ function BoardDetailScreen({
   boardCompleted = false,
   isDeleted = false,
 }: BoardDetailProps) {
+  // CSVインポートモーダル状態
+  const [isCSVImportModalOpen, setIsCSVImportModalOpen] = useState(false);
+
   // 状態管理フック
   const {
     activeTaskTab,
@@ -313,6 +317,7 @@ function BoardDetailScreen({
             onSelectionModeChange={handleSelectionModeChange}
             onSelectAll={undefined}
             isAllSelected={false}
+            onCsvImport={() => setIsCSVImportModalOpen(true)}
           />
         </div>
 
@@ -459,6 +464,13 @@ function BoardDetailScreen({
         onTaskRestoreAndSelectNext={handleTaskRestoreAndSelectNext}
         onAddMemoToBoard={handleAddMemoToBoard}
         onAddTaskToBoard={handleAddTaskToBoard}
+      />
+
+      {/* CSVインポートモーダル */}
+      <CSVImportModal
+        isOpen={isCSVImportModalOpen}
+        onClose={() => setIsCSVImportModalOpen(false)}
+        boardId={boardId}
       />
     </div>
   );

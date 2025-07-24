@@ -71,7 +71,12 @@ export default function BoardRightPanel({
       setIsRightMemoLidOpen(true);
       try {
         
-        await deleteNote.mutateAsync(selectedMemo.id);
+        const memoId = typeof selectedMemo.id === 'number' ? selectedMemo.id : parseInt(selectedMemo.id, 10);
+        if (isNaN(memoId)) {
+          console.error('Invalid memo ID:', selectedMemo.id);
+          return;
+        }
+        await deleteNote.mutateAsync(memoId);
         
         // キャッシュを無効化して最新データを取得
         queryClient.invalidateQueries({ queryKey: ["boards"] });

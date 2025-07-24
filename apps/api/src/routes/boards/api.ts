@@ -14,18 +14,26 @@ async function getOriginalId(itemId: string | number, itemType: 'memo' | 'task',
   
   if (itemType === 'memo') {
     const memo = await db
-      .select({ originalId: memos.originalId })
+      .select({ id: memos.id, originalId: memos.originalId })
       .from(memos)
       .where(and(eq(memos.id, numericId), eq(memos.userId, userId)))
       .limit(1);
-    return memo.length > 0 ? memo[0].originalId : null;
+    if (memo.length > 0) {
+      // originalIdがあればそれを返し、なければIDから生成
+      return memo[0].originalId || memo[0].id.toString();
+    }
+    return null;
   } else {
     const task = await db
-      .select({ originalId: tasks.originalId })
+      .select({ id: tasks.id, originalId: tasks.originalId })
       .from(tasks)
       .where(and(eq(tasks.id, numericId), eq(tasks.userId, userId)))
       .limit(1);
-    return task.length > 0 ? task[0].originalId : null;
+    if (task.length > 0) {
+      // originalIdがあればそれを返し、なければIDから生成
+      return task[0].originalId || task[0].id.toString();
+    }
+    return null;
   }
 }
 

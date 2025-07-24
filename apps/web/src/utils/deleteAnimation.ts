@@ -6,7 +6,7 @@ export const DELETE_ANIMATION_INTERVAL = 80; // ms
  * @param name アニメーションタイプ
  * @returns アニメーション時間（ミリ秒）
  */
-export const getAnimationDuration = (name: 'editor' | 'bulk'): number => {
+const getAnimationDuration = (name: 'editor' | 'bulk'): number => {
   const varName = `--${name}-animation-duration`;
   const duration = parseInt(
     getComputedStyle(document.documentElement).getPropertyValue(varName)
@@ -16,22 +16,11 @@ export const getAnimationDuration = (name: 'editor' | 'bulk'): number => {
   return duration || (name === 'editor' ? 1000 : 300);
 };
 
-/**
- * 削除アイテム数に基づいてアニメーション完了時間を計算
- * @param itemCount 削除するアイテム数
- * @returns 予想される削除完了時間（ミリ秒）
- */
-export const calculateDeleteDuration = (itemCount: number): number => {
-  const bulkDuration = getAnimationDuration('bulk');
-  
-  // 実際の削除時間: 最後のアイテムのアニメーション開始時刻 + そのアニメーション時間
-  // ただし100件制限があるので、最大100件で計算
-  const actualItemCount = Math.min(itemCount, 100);
-  return (actualItemCount - 1) * DELETE_ANIMATION_INTERVAL + bulkDuration;
-};
 
-// CSS版エディター削除アニメーション（Phase 1）- シンプル版
-// ※重要: アニメーション時間はglobals.cssの:root --editor-animation-durationから自動取得します
+/**
+ * エディター削除アニメーション
+ * エディター要素をゴミ箱まで移動させるアニメーション
+ */
 export function animateEditorContentToTrashCSS(
   editorElement: HTMLElement,
   trashElement: HTMLElement,
@@ -40,10 +29,9 @@ export function animateEditorContentToTrashCSS(
   // CSS変数からアニメーション時間を取得（自動同期）
   const editorAnimationDuration = getAnimationDuration('editor');
   
-  // JS版と同様にクローンを作成
   const editorRect = editorElement.getBoundingClientRect();
   
-  // 固定サイズ（JS版と同じ）
+  // 固定サイズ
   const fixedWidth = 400;
   const fixedHeight = 200;
   
@@ -97,8 +85,10 @@ export function animateEditorContentToTrashCSS(
   }, editorAnimationDuration);
 }
 
-// 汎用CSS版フェードアウトアニメーション（即座DOM削除版）
-// ※重要: アニメーション時間はglobals.cssの:root --bulk-animation-durationから自動取得します
+/**
+ * 一括フェードアウトアニメーション
+ * 複数アイテムを順次フェードアウトさせる
+ */
 export function animateBulkFadeOutCSS(
   itemIds: number[],
   onComplete?: () => void,
@@ -147,17 +137,10 @@ export function animateBulkFadeOutCSS(
   
   // キャンセル処理関数
   const cancelAllProcessing = () => {
-    if (isCancelled) return; // 既にキャンセル済み
+    if (isCancelled) return;
     
     isCancelled = true;
-    console.log('🚫 一括処理をキャンセルします - 全てのタイマーをクリア');
-    
-    // 全てのsetTimeoutをクリア
     timeoutIds.forEach(timeoutId => clearTimeout(timeoutId));
-    
-    // ゴミ箱の蓋はfinalizeAnimationで統一的に処理される
-    
-    // キャンセルコールバックを実行
     onCancel?.();
   };
 
@@ -199,14 +182,9 @@ export function animateBulkFadeOutCSS(
           }
         }, bulkAnimationDuration); // アニメーション開始から300ms後に完了
       } else {
-        // 復元時は要素が既に削除されている可能性があるため、エラーではなく警告レベルに
+        // 復元時は要素が既に削除されている可能性がある
         if (actionType === 'restore') {
-          console.warn(`⚠️ 復元対象の要素が既に削除されています:`, {
-            id,
-            index,
-            セレクター: `[data-memo-id="${id}"], [data-task-id="${id}"]`,
-            注記: '復元処理により既にDOMから削除された可能性があります'
-          });
+          console.warn(`復元対象の要素が見つかりません: ID ${id}`);
           
           // カウントアップ
           completedCount++;
@@ -217,13 +195,7 @@ export function animateBulkFadeOutCSS(
             onComplete?.();
           }
         } else {
-          console.warn(`⚠️ 要素が見つかりません - 処理をキャンセルします:`, {
-            id,
-            index,
-            セレクター: `[data-memo-id="${id}"], [data-task-id="${id}"]`,
-            actionType,
-            注記: 'タブ切り替えやページ移動により処理が中断されました'
-          });
+          console.warn(`要素が見つかりません - 処理をキャンセルします: ID ${id}`);
           
           // 全体をキャンセル
           cancelAllProcessing();

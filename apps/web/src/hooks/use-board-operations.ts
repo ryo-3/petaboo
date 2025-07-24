@@ -303,7 +303,7 @@ export function useBoardOperations({
         boardId,
         data: {
           itemType: 'memo',
-          itemId: memo.id.toString(),
+          itemId: memo.originalId || memo.id.toString(),
         },
       });
     } catch {
@@ -324,7 +324,7 @@ export function useBoardOperations({
         boardId,
         data: {
           itemType: 'task',
-          itemId: task.id.toString(),
+          itemId: task.originalId || task.id.toString(),
         },
       });
     } catch {

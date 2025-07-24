@@ -244,7 +244,7 @@ app.openapi(
       .set({ originalId })
       .where(eq(tasks.id, result[0].id));
 
-    return c.json({ success: true, id: result[0].id as number }, 200);
+    return c.json({ success: true, id: result[0].id as number, originalId }, 200);
   }
 );
 

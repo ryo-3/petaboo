@@ -144,7 +144,7 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
                     boardId,
                     data: {
                       itemType: 'memo',
-                      itemId: memo.id.toString(),
+                      itemId: memo.originalId || memo.id.toString(),
                     },
                   })
                 } catch (error: unknown) {
@@ -210,7 +210,7 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
                   boardId,
                   data: {
                     itemType: 'memo',
-                    itemId: createdMemo.id.toString(),
+                    itemId: createdMemo.originalId || createdMemo.id.toString(),
                   },
                 })
               } catch (error: unknown) {

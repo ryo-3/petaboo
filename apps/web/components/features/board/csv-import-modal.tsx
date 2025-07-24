@@ -3,7 +3,6 @@
 import { useState, useRef } from "react";
 import { useAddItemToBoard } from "@/src/hooks/use-boards";
 import { useAuth } from "@clerk/nextjs";
-import { OriginalId } from "@/src/types/common";
 
 interface CSVImportModalProps {
   isOpen: boolean;
@@ -216,7 +215,7 @@ export function CSVImportModal({ isOpen, onClose, boardId }: CSVImportModalProps
                 boardId,
                 data: {
                   itemType: 'memo',
-                  itemId: newMemo.id.toString() as OriginalId,
+                  itemId: newMemo.originalId,
                 },
               });
               imported++;
@@ -251,7 +250,7 @@ export function CSVImportModal({ isOpen, onClose, boardId }: CSVImportModalProps
                 boardId,
                 data: {
                   itemType: 'task',
-                  itemId: newTask.id.toString() as OriginalId,
+                  itemId: newTask.originalId,
                 },
               });
               imported++;

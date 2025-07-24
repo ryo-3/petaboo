@@ -184,8 +184,6 @@ export function animateBulkFadeOutCSS(
       } else {
         // 復元時は要素が既に削除されている可能性がある
         if (actionType === 'restore') {
-          console.warn(`復元対象の要素が見つかりません: ID ${id}`);
-          
           // カウントアップ
           completedCount++;
           
@@ -195,8 +193,6 @@ export function animateBulkFadeOutCSS(
             onComplete?.();
           }
         } else {
-          console.warn(`要素が見つかりません - 処理をキャンセルします: ID ${id}`);
-          
           // 全体をキャンセル
           cancelAllProcessing();
           return;

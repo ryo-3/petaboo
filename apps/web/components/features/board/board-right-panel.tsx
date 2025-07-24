@@ -71,7 +71,6 @@ export default function BoardRightPanel({
         
         const memoId = typeof selectedMemo.id === 'number' ? selectedMemo.id : parseInt(selectedMemo.id, 10);
         if (isNaN(memoId)) {
-          console.error('Invalid memo ID:', selectedMemo.id);
           return;
         }
         await deleteNote.mutateAsync(memoId);
@@ -81,7 +80,6 @@ export default function BoardRightPanel({
         
         // useDeleteMemoのonSuccessで自動的にキャッシュが無効化されるため、手動での無効化は不要
       } catch (error) {
-        console.error('メモの削除に失敗しました:', error);
         // エラー時もエディターは開いたままにする
       }
     }

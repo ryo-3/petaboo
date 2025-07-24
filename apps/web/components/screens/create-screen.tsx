@@ -42,7 +42,7 @@ function CreateScreen({
       await createBoard.mutateAsync(data);
       onClose();
     } catch (error) {
-      console.error("Failed to create board:", error);
+      // エラーはミューテーションのエラーハンドリングで処理される
     }
   };
 

@@ -62,7 +62,6 @@ export function useDeletedTaskActions({ task, onClose, onDeleteAndSelectNext, on
               (window as Window & { closeDeletingLid?: () => void }).closeDeletingLid?.();
             }, 500);
           } catch (error) {
-            console.error('完全削除に失敗しました:', error)
             alert('完全削除に失敗しました。')
           }
         });
@@ -76,7 +75,6 @@ export function useDeletedTaskActions({ task, onClose, onDeleteAndSelectNext, on
         }, 500);
       }
     } catch (error) {
-      console.error('完全削除に失敗しました:', error)
       alert('完全削除に失敗しました。')
     }
   }
@@ -95,7 +93,6 @@ export function useDeletedTaskActions({ task, onClose, onDeleteAndSelectNext, on
         onClose()
       }
     } catch (error) {
-      console.error('復元に失敗しました:', error)
       alert('復元に失敗しました。')
     }
   }

@@ -69,7 +69,6 @@ export function useTaskDelete({ task, onClose, onSelectTask, onClosePanel, onDel
       // 共通削除処理を実行（DOM順序取得は共通フック内で行う）
       await handleRightEditorDelete(task);
     } catch (error) {
-      console.error('削除に失敗しました:', error);
       setIsDeleting(false);
       alert('削除に失敗しました。');
     }

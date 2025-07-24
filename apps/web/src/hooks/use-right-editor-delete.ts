@@ -36,9 +36,8 @@ export function useRightEditorDelete<T extends { id: number }>({
       try {
         const { getTaskDisplayOrder } = await import('@/src/utils/domUtils');
         preDeleteDisplayOrder = getTaskDisplayOrder();
-        console.log('🎯 削除前のDOM順序:', { preDeleteDisplayOrder, deletedTaskId: targetItem.id });
       } catch (error) {
-        console.warn('DOM順序取得に失敗:', error);
+        // DOM順序取得に失敗した場合は無視
       }
     }
 

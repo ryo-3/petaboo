@@ -32,7 +32,7 @@ function TaskList({
     try {
       await deleteTask.mutateAsync(task.id);
     } catch (error) {
-      console.error("削除に失敗しました:", error);
+      // エラーはミューテーションのエラーハンドリングで処理される
     }
   };
 

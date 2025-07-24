@@ -90,9 +90,7 @@ export async function executeWithAnimation({
             try {
               await onApiCall(id)
             } catch (error: unknown) {
-              if (!(error instanceof Error && error.message?.includes('404'))) {
-                console.error(`API処理エラー (ID: ${id}):`, error)
-              }
+              // APIエラーはミューテーションのエラーハンドリングで処理される
             }
           })
           
@@ -139,7 +137,7 @@ export async function executeWithAnimation({
       try {
         await onApiCall(id)
       } catch (error) {
-        console.error(`処理エラー (ID: ${id}):`, error)
+        // 処理エラーはミューテーションのエラーハンドリングで処理される
       }
     }
   }

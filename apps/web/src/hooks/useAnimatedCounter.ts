@@ -66,8 +66,6 @@ export function useAnimatedCounter({
     startTimeRef.current = Date.now();
     startCountRef.current = currentCount;
     
-    console.log(`🚀 カウンターアニメーション開始時刻:`, Date.now(), { currentCount, remainingItems, animationDuration });
-    
     const targetChange = remainingItems - startCountRef.current;
 
     timerRef.current = setInterval(() => {
@@ -81,7 +79,6 @@ export function useAnimatedCounter({
         setIsCompleted(true); // 完了マーク
         stopAnimation();
         onComplete?.();
-        console.log('✅ カウンターアニメーション完了時刻:', Date.now(), { 最終値: remainingItems });
         return;
       }
       

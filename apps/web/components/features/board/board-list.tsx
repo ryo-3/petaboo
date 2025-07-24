@@ -39,7 +39,7 @@ export default function BoardList({
         setInternalShowCreateForm(false);
       }
     } catch (error) {
-      console.error("Failed to create board:", error);
+      // エラーはミューテーションのエラーハンドリングで処理される
     }
   };
 

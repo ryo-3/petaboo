@@ -96,7 +96,6 @@ export function CSVImportModal({ isOpen, onClose }: CSVImportModalProps) {
       const result = await importTasks.mutateAsync(selectedFile);
       setImportResult(result);
     } catch (error) {
-      console.error('Import error:', error);
       setImportResult({
         success: false,
         imported: 0,

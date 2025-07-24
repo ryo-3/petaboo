@@ -62,7 +62,6 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
               (window as Window & { closeDeletingLid?: () => void }).closeDeletingLid?.();
             }, 500);
           } catch (error) {
-            console.error('完全削除に失敗しました:', error)
             alert('完全削除に失敗しました。')
           }
         });
@@ -76,20 +75,12 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
         }, 500);
       }
     } catch (error) {
-      console.error('完全削除に失敗しました:', error)
       alert('完全削除に失敗しました。')
     }
   }
 
   const handleRestore = async () => {
     try {
-      console.log('復元ボタンクリック:', { 
-        memoId: memo.id, 
-        originalId: memo.originalId,
-        title: memo.title.substring(0, 20),
-        hasCallback: !!onRestoreAndSelectNext 
-      });
-      
       // API実行
       await restoreNote.mutateAsync(memo.originalId)
       
@@ -100,7 +91,6 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
         onClose()
       }
     } catch (error) {
-      console.error('復元に失敗しました:', error)
       alert('復元に失敗しました。')
     }
   }

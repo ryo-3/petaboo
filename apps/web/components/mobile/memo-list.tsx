@@ -89,7 +89,7 @@ function SidebarMemoList({ onSelectMemo, onEditMemo, onDeleteMemo, selectedMemoI
       }
       
     } catch (error) {
-      console.error('削除に失敗しました:', error)
+      // エラーはミューテーションのエラーハンドリングで処理される
     }
   }
 

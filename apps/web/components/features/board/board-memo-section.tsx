@@ -265,7 +265,6 @@ export default function BoardMemoSection({
           showDeleteButton={showDeleteButton}
           deleteButtonCount={checkedMemos.size}
           onDelete={() => {
-            console.log('🎯 BoardMemoSection onDelete called, checkedMemos:', Array.from(checkedMemos));
             onBulkDelete?.('memo');
           }}
           deleteButtonRef={deleteButtonRef}

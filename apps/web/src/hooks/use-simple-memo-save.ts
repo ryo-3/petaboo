@@ -185,7 +185,6 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
             
             // 現在のボードから外された場合は次のアイテムを選択
             if (initialBoardId && boardsToRemove.includes(initialBoardId) && onDeleteAndSelectNext) {
-              console.log('🎯 MemoEditor: 現在のボードから外されたため次選択実行', { initialBoardId, boardsToRemove, memoId: updatedMemo.id });
               onDeleteAndSelectNext(updatedMemo);
               return;
             }

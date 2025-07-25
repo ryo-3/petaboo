@@ -310,7 +310,7 @@ function BoardDetailScreen({
             onBoardSettings={handleSettings}
             isExportDisabled={false}
             marginBottom="mb-2"
-            headerMarginBottom="mb-1"
+            headerMarginBottom="mb-1.5"
             showEditDate={showEditDate}
             onShowEditDateChange={setShowEditDate}
             boardLayout={boardLayout}

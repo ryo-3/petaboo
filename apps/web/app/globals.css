@@ -58,7 +58,7 @@ html, body {
 }
 
 .trash-icon-lid.open {
-  transform: rotate(42deg) translateX(5px) translateY(-2px);
+  transform: rotate(47deg) translateX(5px) translateY(-2px);
 }
 
 /* 削除ボタンのアニメーション */

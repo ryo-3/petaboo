@@ -5,6 +5,7 @@ import TrashIcon from "@/components/icons/trash-icon";
 import CheckSquareIcon from "@/components/icons/check-square-icon";
 import SquareIcon from "@/components/icons/square-icon";
 import Tooltip from "@/components/ui/base/tooltip";
+import CsvImportIcon from "@/components/icons/csv-import-icon";
 import AddItemButton from "@/components/ui/buttons/add-item-button";
 import EditDateToggle from "@/components/ui/buttons/edit-date-toggle";
 import BoardNameToggle from "@/components/ui/buttons/board-name-toggle";
@@ -308,17 +309,6 @@ function DesktopUpper({
             />
           )}
 
-          {/* CSVインポートボタン（メモ・タスクモード、またはボードモードでonCsvImportがある場合） */}
-          {(((!customTitle && !hideAddButton && (currentMode === "memo" || currentMode === "task")) || (currentMode === "board" && customTitle)) && onCsvImport) && (
-            <Tooltip text="CSVインポート" position="bottom">
-              <button
-                onClick={onCsvImport}
-                className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                📁
-              </button>
-            </Tooltip>
-          )}
 
           {/* タブ（boardモード以外） */}
           {currentMode !== "board" && (
@@ -495,6 +485,18 @@ function DesktopUpper({
               buttonSize="size-7"
               iconSize="size-4"
             />
+          )}
+
+          {/* CSVインポートボタン（メモ・タスクモード、またはボードモードでonCsvImportがある場合） */}
+          {(((!customTitle && !hideAddButton && (currentMode === "memo" || currentMode === "task")) || (currentMode === "board" && customTitle)) && onCsvImport) && (
+            <Tooltip text="CSVインポート" position="bottom">
+              <button
+                onClick={onCsvImport}
+                className="bg-gray-100 shadow-sm rounded-lg size-7 flex items-center justify-center transition-all text-gray-500 opacity-65 hover:opacity-85"
+              >
+                <CsvImportIcon className="size-[18px]" />
+              </button>
+            </Tooltip>
           )}
         </div>
       )}

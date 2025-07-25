@@ -6,6 +6,7 @@ import CheckSquareIcon from "@/components/icons/check-square-icon";
 import SquareIcon from "@/components/icons/square-icon";
 import Tooltip from "@/components/ui/base/tooltip";
 import CsvImportIcon from "@/components/icons/csv-import-icon";
+import CsvExportIcon from "@/components/icons/csv-export-icon";
 import AddItemButton from "@/components/ui/buttons/add-item-button";
 import EditDateToggle from "@/components/ui/buttons/edit-date-toggle";
 import BoardNameToggle from "@/components/ui/buttons/board-name-toggle";
@@ -342,23 +343,6 @@ function DesktopUpper({
           )}
         </div>
 
-        {/* エクスポートボタン（boardモードのみ） */}
-        {currentMode === "board" && onBoardExport && (
-          <div className="flex items-center">
-            <button
-              onClick={onBoardExport}
-              disabled={isExportDisabled}
-              className={`px-3 py-1 rounded-lg transition-colors flex items-center gap-2 ${
-                isExportDisabled
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-green-100 hover:bg-green-200 text-green-600 hover:text-green-700"
-              }`}
-              title="テキストファイルとしてエクスポート"
-            >
-              📄 エクスポート
-            </button>
-          </div>
-        )}
       </div>
 
 
@@ -495,6 +479,23 @@ function DesktopUpper({
                 className="bg-gray-100 shadow-sm rounded-lg size-7 flex items-center justify-center transition-all text-gray-500 opacity-65 hover:opacity-85"
               >
                 <CsvImportIcon className="size-[18px]" />
+              </button>
+            </Tooltip>
+          )}
+
+          {/* エクスポートボタン（boardモードのみ） */}
+          {currentMode === "board" && onBoardExport && (
+            <Tooltip text="エクスポート" position="bottom">
+              <button
+                onClick={onBoardExport}
+                disabled={isExportDisabled}
+                className={`bg-gray-100 shadow-sm rounded-lg size-7 flex items-center justify-center transition-all ${
+                  isExportDisabled
+                    ? "text-gray-400 cursor-not-allowed opacity-40"
+                    : "text-gray-500 opacity-65 hover:opacity-85"
+                }`}
+              >
+                <CsvExportIcon className="size-[18px]" />
               </button>
             </Tooltip>
           )}

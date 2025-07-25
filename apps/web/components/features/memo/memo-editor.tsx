@@ -200,7 +200,6 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
                 multiple={true}
               />
               {memo && onDelete && (
-                <Tooltip text="削除" position="top">
                   <button
                     onClick={handleDeleteClick}
                     onMouseEnter={() => setIsTrashHovered(true)}
@@ -211,7 +210,6 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
                   >
                     <TrashIcon className="size-5" isLidOpen={isLidOpen} />
                   </button>
-                </Tooltip>
               )}
             </div>
           }

@@ -206,7 +206,6 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
           />
         </Tooltip>
         {!isNewTask && onDelete && (
-          <Tooltip text="削除" position="top">
             <button
               onClick={onDelete}
               onMouseEnter={() => setIsTrashHovered(true)}
@@ -221,7 +220,6 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
             >
               <TrashIcon className="size-5" isLidOpen={isLidOpen} />
             </button>
-          </Tooltip>
         )}
       </div>
 

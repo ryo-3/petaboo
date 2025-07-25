@@ -59,7 +59,6 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
   });
 
   const [error] = useState<string | null>(null);
-  const [isTrashHovered, setIsTrashHovered] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
@@ -111,8 +110,6 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
       // 蓋が閉じた後、300ms待ってからアニメーション状態をリセット
       const timer = setTimeout(() => {
         setIsAnimating(false);
-        // アニメーション完了時にホバー状態もリセット
-        setIsTrashHovered(false);
       }, 300);
       return () => clearTimeout(timer);
     }
@@ -202,10 +199,8 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
               {memo && onDelete && (
                   <button
                     onClick={handleDeleteClick}
-                    onMouseEnter={() => setIsTrashHovered(true)}
-                    onMouseLeave={() => setIsTrashHovered(false)}
                     className={`flex items-center justify-center size-7 rounded-md transition-colors duration-200 ${
-                      isAnimating ? 'bg-gray-200' : isTrashHovered ? 'bg-gray-200' : 'bg-gray-100'
+                      isAnimating ? 'bg-gray-200' : 'bg-gray-100 hover:bg-gray-200'
                     }`}
                   >
                     <TrashIcon className="size-5" isLidOpen={isLidOpen} />

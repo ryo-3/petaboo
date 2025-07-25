@@ -49,7 +49,7 @@ export function useBulkDeleteButton({
   const showDeleteButton = useDelayedButtonVisibility(
     shouldShowLeftBulkDelete,
     isDeleting,
-    1000  // 1秒に変更
+    2500  // 2.5秒に変更
   );
 
   return {

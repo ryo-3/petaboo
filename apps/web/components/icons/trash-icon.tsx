@@ -32,7 +32,7 @@ function TrashIcon({ className = "w-5 h-5", isLidOpen = false }: TrashIconProps)
       </g>
       
       {/* 蓋の部分（ハンドル含む） - 赤色 */}
-      <g className={`trash-icon-lid transition-transform duration-300 ${isLidOpen ? 'rotate-45' : ''}`} style={{ transformOrigin: '16px 14px' }}>
+      <g className={`trash-icon-lid transition-transform duration-300 ${isLidOpen ? 'open' : ''}`} style={{ transformOrigin: '16px 14px' }}>
         {/* 蓋の横線 */}
         <path 
           strokeLinecap="round" 

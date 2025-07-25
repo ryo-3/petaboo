@@ -129,11 +129,7 @@ export function animateBulkFadeOutCSS(
   let isCancelled = false; // キャンセルフラグ
   const timeoutIds: NodeJS.Timeout[] = []; // setTimeout IDを保持
   
-  // ゴミ箱の蓋を開く（削除の場合のみ）
-  const trashLid = document.querySelector('.trash-icon-lid') as HTMLElement;
-  if (actionType === 'delete' && trashLid) {
-    trashLid.classList.add('open');
-  }
+  // 削除の場合は何もしない（isLidOpenプロパティで制御されるため）
   
   // キャンセル処理関数
   const cancelAllProcessing = () => {

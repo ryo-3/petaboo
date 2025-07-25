@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import BoardList from "@/components/features/board/board-list";
 import DesktopUpper from "@/components/layout/desktop-upper";
 import { useBoards, usePermanentDeleteBoard } from "@/src/hooks/use-boards";
+import { useToast } from "@/src/contexts/toast-context";
 
 export interface BoardScreenRef {
   triggerCreateNew: () => void;
@@ -18,6 +19,7 @@ const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(({ onBoardSelec
   const router = useRouter();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [activeTab, setActiveTab] = useState<"normal" | "completed" | "deleted">("normal");
+  const { showToast } = useToast();
   
   // 各ステータスのボード数を取得
   const { data: normalBoards } = useBoards("normal");
@@ -50,7 +52,8 @@ const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(({ onBoardSelec
     try {
       await permanentDeleteBoard.mutateAsync(boardId);
     } catch (error) {
-      console.error('Failed to permanently delete board:', error);
+      console.error('ボードの完全削除に失敗しました:', error);
+      showToast('ボードの完全削除に失敗しました。しばらく待ってから再試行してください。', 'error');
     }
   };
 

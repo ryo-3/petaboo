@@ -61,7 +61,7 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
             setTimeout(() => {
               (window as Window & { closeDeletingLid?: () => void }).closeDeletingLid?.();
             }, 500);
-          } catch (error) {
+          } catch {
             alert('完全削除に失敗しました。')
           }
         });
@@ -74,7 +74,7 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
           (window as Window & { closeDeletingLid?: () => void }).closeDeletingLid?.();
         }, 500);
       }
-    } catch (error) {
+    } catch {
       alert('完全削除に失敗しました。')
     }
   }
@@ -90,7 +90,7 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
       } else {
         onClose()
       }
-    } catch (error) {
+    } catch {
       alert('復元に失敗しました。')
     }
   }

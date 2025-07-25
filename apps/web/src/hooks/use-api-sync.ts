@@ -79,7 +79,7 @@ export function useApiSync() {
             return newStatus
           })
           return
-        } catch (createError) {
+        } catch {
           // 新規作成も失敗した場合はローディングフラグをリセット
           setSyncStatus(prev => ({
             ...prev,
@@ -114,7 +114,7 @@ export function useApiSync() {
                 syncSingleMemo(key, data)
               }
             }
-          } catch (error) {
+          } catch {
             // 破損したデータは削除
             localStorage.removeItem(key)
           }

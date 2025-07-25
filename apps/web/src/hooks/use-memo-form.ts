@@ -59,7 +59,7 @@ export function useMemoForm({ memo = null, onMemoAdd, onMemoUpdate, onMemoIdUpda
     try {
       if (memo?.id) {
         // Update existing memo
-        const updatedMemo = await updateNote.mutateAsync({
+        await updateNote.mutateAsync({
           id: memo.id,
           data: {
             title: title.trim() || "無題",
@@ -98,7 +98,7 @@ export function useMemoForm({ memo = null, onMemoAdd, onMemoUpdate, onMemoIdUpda
       setSavedSuccessfully(true)
       setTimeout(() => setSavedSuccessfully(false), 3000)
 
-    } catch (error) {
+    } catch {
       setSaveError('保存に失敗しました')
     } finally {
       // 保存中表示を少し長く見せる

@@ -45,7 +45,8 @@ export default function BoardCard({ board, onSelect, mode = "normal", onPermanen
       await onPermanentDelete(board.id);
       setShowDeleteModal(false);
     } catch (error) {
-      console.error('Failed to delete board permanently:', error);
+      console.error('ボードの完全削除に失敗しました:', error);
+      // エラー表示は親コンポーネント（board-screen.tsx）で処理
     } finally {
       setIsDeleting(false);
     }

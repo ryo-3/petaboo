@@ -38,7 +38,7 @@ export default function BoardList({
       } else {
         setInternalShowCreateForm(false);
       }
-    } catch (error) {
+    } catch {
       // エラーはミューテーションのエラーハンドリングで処理される
     }
   };

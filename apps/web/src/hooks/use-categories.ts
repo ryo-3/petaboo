@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
 import { Category, CreateCategoryData, UpdateCategoryData, CategoryUsage } from "@/src/types/category";
+import { useToast } from "@/src/contexts/toast-context";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8794";
 
@@ -33,6 +34,7 @@ export function useCategories() {
 export function useCreateCategory() {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
+  const { showToast } = useToast();
 
   return useMutation<Category, Error, CreateCategoryData>({
     mutationFn: async (data) => {
@@ -56,6 +58,10 @@ export function useCreateCategory() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
     },
+    onError: (error) => {
+      console.error("カテゴリー作成に失敗しました:", error);
+      showToast("カテゴリー作成に失敗しました", "error");
+    },
   });
 }
 
@@ -63,6 +69,7 @@ export function useCreateCategory() {
 export function useUpdateCategory() {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
+  const { showToast } = useToast();
 
   return useMutation<Category, Error, { id: number; data: UpdateCategoryData }>({
     mutationFn: async ({ id, data }) => {
@@ -86,6 +93,10 @@ export function useUpdateCategory() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
     },
+    onError: (error) => {
+      console.error("カテゴリー更新に失敗しました:", error);
+      showToast("カテゴリー更新に失敗しました", "error");
+    },
   });
 }
 
@@ -93,6 +104,7 @@ export function useUpdateCategory() {
 export function useDeleteCategory() {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
+  const { showToast } = useToast();
 
   return useMutation<void, Error, number>({
     mutationFn: async (id) => {
@@ -112,6 +124,10 @@ export function useDeleteCategory() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
+    },
+    onError: (error) => {
+      console.error("カテゴリー削除に失敗しました:", error);
+      showToast("カテゴリー削除に失敗しました", "error");
     },
   });
 }

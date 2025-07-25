@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@clerk/nextjs'
 import { tasksApi } from '@/src/lib/api-client'
 import type { Task, DeletedTask, CreateTaskData, UpdateTaskData } from '@/src/types/task'
+import { useToast } from '@/src/contexts/toast-context'
 
 // タスク一覧を取得するhook
 export function useTasks() {
@@ -26,6 +27,7 @@ export function useTasks() {
 export function useCreateTask() {
   const queryClient = useQueryClient()
   const { getToken } = useAuth()
+  const { showToast } = useToast()
   
   return useMutation({
     mutationFn: async (data: CreateTaskData) => {
@@ -42,6 +44,10 @@ export function useCreateTask() {
       // アイテムボード情報も無効化
       queryClient.invalidateQueries({ queryKey: ["item-boards"] });
     },
+    onError: (error) => {
+      console.error("タスク作成に失敗しました:", error);
+      showToast("タスク作成に失敗しました", "error");
+    },
   })
 }
 
@@ -49,6 +55,7 @@ export function useCreateTask() {
 export function useUpdateTask() {
   const queryClient = useQueryClient()
   const { getToken } = useAuth()
+  const { showToast } = useToast()
   
   return useMutation({
     mutationFn: async ({ id, data }: { id: number; data: UpdateTaskData }) => {
@@ -65,6 +72,10 @@ export function useUpdateTask() {
       // アイテムボード情報も無効化
       queryClient.invalidateQueries({ queryKey: ["item-boards"] });
     },
+    onError: (error) => {
+      console.error("タスク更新に失敗しました:", error);
+      showToast("タスク更新に失敗しました", "error");
+    },
   })
 }
 
@@ -72,6 +83,7 @@ export function useUpdateTask() {
 export function useDeleteTask() {
   const queryClient = useQueryClient()
   const { getToken } = useAuth()
+  const { showToast } = useToast()
   
   return useMutation({
     mutationFn: async (id: number) => {
@@ -90,6 +102,10 @@ export function useDeleteTask() {
       queryClient.invalidateQueries({ queryKey: ['board-deleted-items'] })
       // アイテムボード情報も無効化
       queryClient.invalidateQueries({ queryKey: ["item-boards"] });
+    },
+    onError: (error) => {
+      console.error("タスク削除に失敗しました:", error);
+      showToast("タスク削除に失敗しました", "error");
     },
   })
 }
@@ -117,6 +133,7 @@ export function useDeletedTasks() {
 export function usePermanentDeleteTask() {
   const queryClient = useQueryClient()
   const { getToken } = useAuth()
+  const { showToast } = useToast()
   
   return useMutation({
     mutationFn: async (originalId: string) => {
@@ -129,6 +146,10 @@ export function usePermanentDeleteTask() {
       // 削除済みタスク一覧を再取得
       queryClient.invalidateQueries({ queryKey: ['deleted-tasks'] })
     },
+    onError: (error) => {
+      console.error("タスクの完全削除に失敗しました:", error);
+      showToast("タスクの完全削除に失敗しました", "error");
+    },
   })
 }
 
@@ -136,6 +157,7 @@ export function usePermanentDeleteTask() {
 export function useRestoreTask() {
   const queryClient = useQueryClient()
   const { getToken } = useAuth()
+  const { showToast } = useToast()
   
   return useMutation({
     mutationFn: async (originalId: string) => {
@@ -153,6 +175,10 @@ export function useRestoreTask() {
       queryClient.invalidateQueries({ queryKey: ['board-with-items'] })
       queryClient.invalidateQueries({ queryKey: ['board-deleted-items'] })
     },
+    onError: (error) => {
+      console.error("タスク復元に失敗しました:", error);
+      showToast("タスク復元に失敗しました", "error");
+    },
   })
 }
 
@@ -160,6 +186,7 @@ export function useRestoreTask() {
 export function useImportTasks() {
   const queryClient = useQueryClient()
   const { getToken } = useAuth()
+  const { showToast } = useToast()
   
   return useMutation({
     mutationFn: async (file: File) => {
@@ -170,6 +197,10 @@ export function useImportTasks() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
+    },
+    onError: (error) => {
+      console.error("タスクのCSVインポートに失敗しました:", error);
+      showToast("タスクのCSVインポートに失敗しました", "error");
     },
   })
 }

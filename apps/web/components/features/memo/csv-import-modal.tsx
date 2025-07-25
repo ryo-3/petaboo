@@ -95,7 +95,7 @@ export function CSVImportModal({ isOpen, onClose }: CSVImportModalProps) {
     try {
       const result = await importMemos.mutateAsync(selectedFile);
       setImportResult(result);
-    } catch (error) {
+    } catch {
       setImportResult({
         success: false,
         imported: 0,

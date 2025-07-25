@@ -79,7 +79,7 @@ export default function BoardRightPanel({
         onMemoDeleteAndSelectNext?.(selectedMemo as Memo);
         
         // useDeleteMemoのonSuccessで自動的にキャッシュが無効化されるため、手動での無効化は不要
-      } catch (error) {
+      } catch {
         // エラー時もエディターは開いたままにする
       }
     }

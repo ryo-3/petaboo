@@ -31,7 +31,7 @@ function TaskList({
   const handleDelete = async (task: Task) => {
     try {
       await deleteTask.mutateAsync(task.id);
-    } catch (error) {
+    } catch {
       // エラーはミューテーションのエラーハンドリングで処理される
     }
   };

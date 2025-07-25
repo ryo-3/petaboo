@@ -257,7 +257,7 @@ export function CSVImportModal({ isOpen, onClose, boardId }: CSVImportModalProps
         imported,
         errors,
       });
-    } catch (error) {
+    } catch {
       setImportResult({
         success: false,
         imported: 0,

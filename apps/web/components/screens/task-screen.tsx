@@ -274,13 +274,7 @@ function TaskScreen({
       if (nextTask) {
         // DOM監視
         setTimeout(() => {
-          const editorElement = document.querySelector("[data-task-editor]");
-          const titleInput = editorElement?.querySelector(
-            'input[placeholder="タスクタイトルを入力..."]'
-          ) as HTMLInputElement;
-          const textarea = editorElement?.querySelector(
-            "textarea"
-          ) as HTMLTextAreaElement;
+          document.querySelector("[data-task-editor]");
 
         }, 100);
 

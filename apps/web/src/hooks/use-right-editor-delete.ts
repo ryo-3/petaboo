@@ -36,7 +36,7 @@ export function useRightEditorDelete<T extends { id: number }>({
       try {
         const { getTaskDisplayOrder } = await import('@/src/utils/domUtils');
         preDeleteDisplayOrder = getTaskDisplayOrder();
-      } catch (error) {
+      } catch {
         // DOM順序取得に失敗した場合は無視
       }
     }

@@ -88,7 +88,7 @@ function SidebarMemoList({ onSelectMemo, onEditMemo, onDeleteMemo, selectedMemoI
         onDeleteMemo(nextMemo)
       }
       
-    } catch (error) {
+    } catch {
       // エラーはミューテーションのエラーハンドリングで処理される
     }
   }

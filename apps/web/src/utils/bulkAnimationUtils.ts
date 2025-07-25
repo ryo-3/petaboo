@@ -89,7 +89,7 @@ export async function executeWithAnimation({
           const apiPromises = ids.map(async (id) => {
             try {
               await onApiCall(id)
-            } catch (error: unknown) {
+            } catch {
               // APIエラーはミューテーションのエラーハンドリングで処理される
             }
           })
@@ -136,7 +136,7 @@ export async function executeWithAnimation({
     for (const id of ids) {
       try {
         await onApiCall(id)
-      } catch (error) {
+      } catch {
         // 処理エラーはミューテーションのエラーハンドリングで処理される
       }
     }

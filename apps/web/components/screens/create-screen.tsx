@@ -41,7 +41,7 @@ function CreateScreen({
     try {
       await createBoard.mutateAsync(data);
       onClose();
-    } catch (error) {
+    } catch {
       // エラーはミューテーションのエラーハンドリングで処理される
     }
   };

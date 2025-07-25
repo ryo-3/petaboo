@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import ArrowLeftIcon from "@/components/icons/arrow-left-icon";
 import { useToggleBoardCompletion, useDeleteBoard, useUpdateBoard } from "@/src/hooks/use-boards";
+import { useToast } from "@/src/contexts/toast-context";
 
 interface BoardSettingsProps {
   boardId: number;
@@ -24,6 +25,7 @@ export default function BoardSettings({
   const toggleCompletion = useToggleBoardCompletion();
   const deleteBoard = useDeleteBoard();
   const updateBoard = useUpdateBoard();
+  const { showToast } = useToast();
 
   const [editName, setEditName] = useState(initialBoardName);
   const [editDescription, setEditDescription] = useState(initialBoardDescription || "");
@@ -50,8 +52,8 @@ export default function BoardSettings({
       });
       setHasChanges(false);
     } catch (error) {
-      console.error("Failed to update board:", error);
-      // TODO: エラーハンドリング（トースト通知など）
+      console.error("ボード更新に失敗しました:", error);
+      showToast("ボード更新に失敗しました。しばらく待ってから再試行してください。", "error");
     }
   };
 
@@ -59,7 +61,8 @@ export default function BoardSettings({
     try {
       await toggleCompletion.mutateAsync(boardId);
     } catch (error) {
-      console.error("Failed to toggle board completion:", error);
+      console.error("ボード完了状態の変更に失敗しました:", error);
+      showToast("ボード完了状態の変更に失敗しました。しばらく待ってから再試行してください。", "error");
     }
   };
 
@@ -69,7 +72,8 @@ export default function BoardSettings({
         await deleteBoard.mutateAsync(boardId);
         router.push("/"); // 削除後はボード一覧に戻る
       } catch (error) {
-        console.error("Failed to delete board:", error);
+        console.error("ボード削除に失敗しました:", error);
+        showToast("ボード削除に失敗しました。しばらく待ってから再試行してください。", "error");
       }
     }
   };

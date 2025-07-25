@@ -3,6 +3,7 @@ import { useAuth } from "@clerk/nextjs";
 import { Board, BoardWithStats, BoardWithItems, CreateBoardData, UpdateBoardData, AddItemToBoardData, BoardItem } from "@/src/types/board";
 import { DeletedMemo } from "@/src/types/memo";
 import { DeletedTask } from "@/src/types/task";
+import { useToast } from "@/src/contexts/toast-context";
 
 interface ApiError extends Error {
   status?: number;
@@ -159,6 +160,7 @@ export function useBoardBySlug(slug: string | null) {
 export function useCreateBoard() {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
+  const { showToast } = useToast();
 
   return useMutation<Board, Error, CreateBoardData>({
     mutationFn: async (data) => {
@@ -182,6 +184,10 @@ export function useCreateBoard() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["boards"] });
     },
+    onError: (error) => {
+      console.error("ボード作成に失敗しました:", error);
+      showToast("ボード作成に失敗しました", "error");
+    },
   });
 }
 
@@ -189,6 +195,7 @@ export function useCreateBoard() {
 export function useUpdateBoard() {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
+  const { showToast } = useToast();
 
   return useMutation<Board, Error, { id: number; data: UpdateBoardData }>({
     mutationFn: async ({ id, data }) => {
@@ -212,6 +219,10 @@ export function useUpdateBoard() {
     onSuccess: (updatedBoard) => {
       queryClient.invalidateQueries({ queryKey: ["boards"] });
       queryClient.invalidateQueries({ queryKey: ["boards", updatedBoard.id] });
+    },
+    onError: (error) => {
+      console.error("ボード更新に失敗しました:", error);
+      showToast("ボード更新に失敗しました", "error");
     },
   });
 }
@@ -332,6 +343,7 @@ export function usePermanentDeleteBoard() {
 export function useAddItemToBoard() {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
+  const { showToast } = useToast();
 
   return useMutation<BoardItem, Error, { boardId: number; data: AddItemToBoardData }>({
     mutationFn: async ({ boardId, data }) => {
@@ -379,6 +391,10 @@ export function useAddItemToBoard() {
       // ボード一覧も無効化（統計情報が変わるため）
       queryClient.invalidateQueries({ queryKey: ["boards"] });
     },
+    onError: (error) => {
+      console.error("ボードへのアイテム追加に失敗しました:", error);
+      showToast("ボードへのアイテム追加に失敗しました", "error");
+    },
   });
 }
 
@@ -386,6 +402,7 @@ export function useAddItemToBoard() {
 export function useRemoveItemFromBoard() {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
+  const { showToast } = useToast();
 
   return useMutation<void, Error, { boardId: number; itemId: number; itemType: 'memo' | 'task' }>({
     mutationFn: async ({ boardId, itemId, itemType }) => {
@@ -424,6 +441,10 @@ export function useRemoveItemFromBoard() {
       queryClient.invalidateQueries({ queryKey: ["item-boards", itemType, itemId] });
       // ボード一覧も無効化（統計情報が変わるため）
       queryClient.invalidateQueries({ queryKey: ["boards"] });
+    },
+    onError: (error) => {
+      console.error("ボードからアイテムの削除に失敗しました:", error);
+      showToast("ボードからアイテムの削除に失敗しました", "error");
     },
   });
 }

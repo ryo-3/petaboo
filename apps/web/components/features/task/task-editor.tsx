@@ -5,6 +5,7 @@ import { SingleDeleteConfirmation } from "@/components/ui/modals";
 import TaskForm, { TaskFormHandle } from "./task-form";
 import { useUpdateTask, useCreateTask } from "@/src/hooks/use-tasks";
 import { useAddItemToBoard, useBoards, useItemBoards, useRemoveItemFromBoard } from "@/src/hooks/use-boards";
+import { useBoardChangeModal } from "@/src/hooks/use-board-change-modal";
 import BoardChangeModal from "@/components/ui/modals/board-change-modal";
 import type { Task } from "@/src/types/task";
 import { useCallback, useEffect, useState, useMemo, memo, useRef } from "react";
@@ -84,13 +85,17 @@ function TaskEditor({
     }
   });
   
-  // ボード選択関連の状態
-  const [selectedBoardIds, setSelectedBoardIds] = useState<string[]>([]);
-  const [showBoardChangeModal, setShowBoardChangeModal] = useState(false);
-  const [pendingBoardChanges, setPendingBoardChanges] = useState<{
-    toAdd: string[];
-    toRemove: string[];
-  }>({ toAdd: [], toRemove: [] });
+  // ボード選択関連の状態（共通フック使用）
+  const {
+    selectedBoardIds,
+    showBoardChangeModal,
+    pendingBoardChanges,
+    handleBoardChange,
+    showModal,
+    handleConfirmBoardChange: confirmBoardChange,
+    handleCancelBoardChange,
+    initializeBoardIds,
+  } = useBoardChangeModal();
   
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -202,23 +207,16 @@ function TaskEditor({
   useEffect(() => {
     if (task && task.id !== 0) { // 新規作成時（id: 0）は実行しない
       const currentBoardIds = itemBoards.map(board => board.id.toString());
-      setSelectedBoardIds(currentBoardIds);
+      initializeBoardIds(currentBoardIds);
       // originalDataのboardIdsも更新
       setOriginalData(prev => prev ? { ...prev, boardIds: currentBoardIds } : prev);
     } else if (!task || task.id === 0) {
       // 新規作成時は初期ボードIDがあればそれを設定、なければ空
       const initialBoards = initialBoardId ? [initialBoardId.toString()] : [];
-      setSelectedBoardIds(initialBoards);
+      initializeBoardIds(initialBoards);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [task?.id, itemBoards.length, initialBoardId]); // itemBoards自体ではなくlengthを依存に
-
-  // ボード変更ハンドラー（保存時にモーダル表示）
-  const handleBoardChange = (newBoardIds: string | string[]) => {
-    const newIds = Array.isArray(newBoardIds) ? newBoardIds : [newBoardIds];
-    // 選択状態のみ更新（モーダルは保存時に表示）
-    setSelectedBoardIds(newIds);
-  };
+  }, [task?.id, itemBoards.length, initialBoardId, initializeBoardIds]); // itemBoards自体ではなくlengthを依存に
 
   // ボード変更と保存を実行する関数
   const executeBoardChangesAndSave = useCallback(async () => {
@@ -281,20 +279,12 @@ function TaskEditor({
     }
   }, [pendingBoardChanges, removeItemFromBoard, addItemToBoard, task, onSaveComplete, title, description, status, priority, categoryId, dueDate, selectedBoardIds, initialBoardId, onDeleteAndSelectNext]);
 
+  // モーダル確認時の処理
   const handleConfirmBoardChange = useCallback(async () => {
-    setShowBoardChangeModal(false);
-    
+    confirmBoardChange();
     // モーダル確認後に実際の保存処理を実行
     await executeBoardChangesAndSave();
-    
-    setPendingBoardChanges({ toAdd: [], toRemove: [] });
-  }, [executeBoardChangesAndSave]);
-
-  const handleCancelBoardChange = () => {
-    // モーダルをキャンセル（変更を元に戻す必要はない、選択状態はそのまま）
-    setShowBoardChangeModal(false);
-    setPendingBoardChanges({ toAdd: [], toRemove: [] });
-  };
+  }, [confirmBoardChange, executeBoardChangesAndSave]);
 
   // ボードIDを名前に変換する関数
   const getBoardName = (boardId: string) => {
@@ -363,7 +353,7 @@ function TaskEditor({
           setStatus("todo");
           setPriority("medium");
           setCategoryId(null);
-          setSelectedBoardIds([]);
+          initializeBoardIds([]);
           setDueDate("");
           setSavedSuccessfully(false);
           
@@ -402,8 +392,7 @@ function TaskEditor({
 
         // ボードを外す場合はモーダル表示
         if (toRemove.length > 0) {
-          setPendingBoardChanges({ toAdd, toRemove });
-          setShowBoardChangeModal(true);
+          showModal({ toAdd, toRemove });
           return;
         }
 
@@ -478,6 +467,8 @@ function TaskEditor({
     itemBoards,
     isSaving,
     originalData,
+    initializeBoardIds,
+    showModal,
   ]);
 
   // Ctrl+Sショートカット（変更がある場合のみ実行）

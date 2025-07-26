@@ -558,7 +558,7 @@ export function useBoardDeletedItems(boardId: number) {
 
 // アイテム一覧のボード情報を一括プリフェッチ
 export function usePrefetchItemBoards(itemType: 'memo' | 'task', items: { id: number }[] | undefined) {
-  const { getToken } = useAuth();
+  const { getToken, isLoaded } = useAuth();
 
   return useQueries({
     queries: (items || []).map(item => ({
@@ -580,7 +580,7 @@ export function usePrefetchItemBoards(itemType: 'memo' | 'task', items: { id: nu
         const data = await response.json();
         return data;
       },
-      enabled: !!items && items.length > 0,
+      enabled: !!items && items.length > 0 && isLoaded, // 認証完了まで待機
       staleTime: 5 * 60 * 1000,  // 5分間キャッシュ
       refetchOnMount: false,     // マウント時の再取得を無効化
       refetchOnWindowFocus: false, // ウィンドウフォーカス時の再取得を無効化

@@ -141,7 +141,8 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
   // 削除ボタンのハンドラー（ボード紐づきチェック付き）
   const handleDeleteClick = () => {
     if (itemBoards && itemBoards.length > 0) {
-      // ボードに紐づいている場合はモーダル表示
+      // ボードに紐づいている場合はモーダル表示と同時に蓋を開く
+      setIsAnimating(true);
       setShowDeleteModal(true);
     } else {
       // ボードに紐づいていない場合は直接削除
@@ -153,6 +154,12 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
   const handleConfirmDelete = () => {
     setShowDeleteModal(false);
     onDelete?.();
+  };
+
+  // モーダルキャンセル時の処理
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setIsAnimating(false); // 蓋を閉じる
   };
 
   return (
@@ -203,7 +210,7 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
                     onClick={handleDeleteClick}
                     className="flex items-center justify-center size-7 rounded-md bg-gray-100"
                   >
-                    <TrashIcon className="size-5" isLidOpen={isLidOpen} />
+                    <TrashIcon className="size-5" isLidOpen={isLidOpen || isAnimating || showDeleteModal} />
                   </button>
               )}
             </div>
@@ -237,7 +244,7 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
       {baseViewerRef.current && (
         <SingleDeleteConfirmation
           isOpen={showDeleteModal}
-          onClose={() => setShowDeleteModal(false)}
+          onClose={handleCancelDelete}
           onConfirm={handleConfirmDelete}
           itemType="memo"
           customMessage={

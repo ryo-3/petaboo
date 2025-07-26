@@ -12,24 +12,36 @@ interface ApiError extends Error {
 // セキュアなメモリキャッシュ（localStorage使用せず）
 let cachedToken: string | null = null;
 let tokenExpiry: number = 0;
+let tokenPromise: Promise<string | null> | null = null; // 同期化用
 
 async function getCachedToken(getToken: () => Promise<string | null>): Promise<string | null> {
-  const now = Date.now();
-  
-  // メモリキャッシュが有効な場合はそれを使用（1分間有効）
-  if (cachedToken && now < tokenExpiry) {
-    return cachedToken;
+  // 既に取得中の場合は同じPromiseを返す（同期化）
+  if (tokenPromise) {
+    return tokenPromise;
   }
   
-  // 新しいトークンを取得
-  const token = await getToken();
+  // 新しいトークン取得を開始
+  tokenPromise = (async () => {
+    const token = await getToken();
+    
+    // トークンの変化をログで確認（変化した時のみ）
+    const hasChanged = cachedToken !== token;
+    if (hasChanged) {
+      const tokenStart = token?.substring(0, 20) + '...';
+      console.log(`🔑 Token Updated: ${tokenStart}, Time: ${new Date().toLocaleTimeString()}`);
+    }
+    
+    if (token) {
+      cachedToken = token;
+      tokenExpiry = Date.now() + (1 * 60 * 1000); // 1分のみキャッシュ
+    }
+    
+    // 取得完了後、Promiseをクリア
+    tokenPromise = null;
+    return token;
+  })();
   
-  if (token) {
-    cachedToken = token;
-    tokenExpiry = now + (30 * 60 * 1000); // 30分後に期限切れ
-  }
-  
-  return token;
+  return tokenPromise;
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8794";
@@ -476,6 +488,10 @@ export function useItemBoards(itemType: 'memo' | 'task', itemId: number | undefi
         }
         
         if (!response.ok) {
+          // 404エラーは空配列を返す（削除済みアイテムなど）
+          if (response.status === 404) {
+            return [];
+          }
           throw new Error("Failed to fetch item boards");
         }
 
@@ -595,6 +611,10 @@ export function usePrefetchItemBoards(itemType: 'memo' | 'task', items: { id: nu
           }
           
           if (!response.ok) {
+            // 404エラーは空配列を返す（削除済みアイテムなど）
+            if (response.status === 404) {
+              return [];
+            }
             throw new Error("Failed to fetch item boards");
           }
 

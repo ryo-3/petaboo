@@ -77,7 +77,7 @@ export default function BoardIconSelector({
             onClick={() => {
               setIsOpen(!isOpen);
             }}
-            className={`flex items-center justify-center size-7 transition-colors rounded-md ${
+            className={`flex items-center justify-center size-7 rounded-md ${
               hasSelectedBoard 
                 ? "bg-light-Blue text-white hover:bg-light-Blue/90" 
                 : "bg-gray-100 hover:bg-gray-200"

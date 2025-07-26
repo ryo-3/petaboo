@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient, useQueries } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useQueries, keepPreviousData } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
 import { Board, BoardWithStats, BoardWithItems, CreateBoardData, UpdateBoardData, AddItemToBoardData, BoardItem } from "@/src/types/board";
 import { DeletedMemo } from "@/src/types/memo";
@@ -473,6 +473,7 @@ export function useItemBoards(itemType: 'memo' | 'task', itemId: number | undefi
       return data;
     },
     enabled: !!itemId,
+    placeholderData: keepPreviousData, // 前のデータを保持してちらつき防止
   });
 }
 
@@ -580,6 +581,8 @@ export function usePrefetchItemBoards(itemType: 'memo' | 'task', items: { id: nu
       },
       enabled: !!items && items.length > 0,
       staleTime: 5 * 60 * 1000,  // 5分間キャッシュ
+      refetchOnMount: false,     // マウント時の再取得を無効化
+      refetchOnWindowFocus: false, // ウィンドウフォーカス時の再取得を無効化
     }))
   });
 }

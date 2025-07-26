@@ -15,7 +15,7 @@ interface UseSimpleMemoSaveOptions {
 export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds = [], initialBoardId, onDeleteAndSelectNext }: UseSimpleMemoSaveOptions = {}) {
   const [title, setTitle] = useState(() => memo?.title || '')
   const [content, setContent] = useState(() => memo?.content || '')
-  const [selectedBoardIds, setSelectedBoardIds] = useState<number[]>([])
+  const [selectedBoardIds, setSelectedBoardIds] = useState<number[]>(currentBoardIds)
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [showBoardChangeModal, setShowBoardChangeModal] = useState(false)

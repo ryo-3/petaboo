@@ -113,8 +113,8 @@ function BoardNameToggle({
                       onClick={() => onFilterModeChange('include')}
                       className={`flex-1 px-2 py-1 text-xs font-medium rounded transition-all ${
                         filterMode === 'include'
-                          ? 'bg-white text-gray-900 shadow-sm'
-                          : 'text-gray-600 hover:text-gray-900'
+                          ? 'bg-light-Blue text-white shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                       }`}
                     >
                       含む
@@ -123,8 +123,8 @@ function BoardNameToggle({
                       onClick={() => onFilterModeChange('exclude')}
                       className={`flex-1 px-2 py-1 text-xs font-medium rounded transition-all ${
                         filterMode === 'exclude'
-                          ? 'bg-white text-gray-900 shadow-sm'
-                          : 'text-gray-600 hover:text-gray-900'
+                          ? 'bg-red-500 text-white shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                       }`}
                     >
                       除く

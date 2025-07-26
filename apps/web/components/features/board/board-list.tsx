@@ -129,16 +129,23 @@ export default function BoardList({
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {boards?.map((board) => (
-            <BoardCard
-              key={board.id}
-              board={board}
-              onSelect={() => onBoardSelect?.(board)}
-              mode={activeTab}
-              onPermanentDelete={activeTab === "deleted" ? onPermanentDeleteBoard : undefined}
-              isSelected={currentBoardSlug === board.slug}
-            />
-          ))}
+          {boards
+            ?.sort((a, b) => {
+              // 選択中のボードを最初に表示
+              if (currentBoardSlug === a.slug) return -1;
+              if (currentBoardSlug === b.slug) return 1;
+              return 0; // その他は元の順序を保持
+            })
+            .map((board) => (
+              <BoardCard
+                key={board.id}
+                board={board}
+                onSelect={() => onBoardSelect?.(board)}
+                mode={activeTab}
+                onPermanentDelete={activeTab === "deleted" ? onPermanentDeleteBoard : undefined}
+                isSelected={currentBoardSlug === board.slug}
+              />
+            ))}
         </div>
       )}
     </div>

@@ -104,9 +104,7 @@ export default function BoardCard({ board, onSelect, mode = "normal", onPermanen
         <h3 className={`text-lg font-semibold mb-2 ${
           mode === "deleted" 
             ? "text-red-900" 
-            : isSelected
-              ? "text-blue-900"
-              : "text-gray-900"
+            : "text-gray-900"
         }`}>
           {board.name}
         </h3>

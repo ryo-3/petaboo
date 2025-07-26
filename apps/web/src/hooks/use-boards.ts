@@ -81,6 +81,7 @@ export function useBoardWithItems(boardId: number | null, skip: boolean = false)
 
   return useQuery<BoardWithItems>({
     queryKey: ["boards", boardId, "items"],
+    enabled: boardId !== null && isLoaded && !skip, // 認証完了まで待機
     queryFn: async () => {
       // 最大2回リトライ
       for (let attempt = 0; attempt < 2; attempt++) {
@@ -116,7 +117,6 @@ export function useBoardWithItems(boardId: number | null, skip: boolean = false)
       
       throw new Error('Failed after retry');
     },
-    enabled: boardId !== null && isLoaded && !skip,
     staleTime: 2 * 60 * 1000,     // 2分間は新鮮なデータとして扱う
     gcTime: 10 * 60 * 1000,       // 10分間キャッシュを保持
     refetchOnWindowFocus: false,  // ウィンドウフォーカス時の再取得を無効化
@@ -480,10 +480,11 @@ export function useItemBoards(itemType: 'memo' | 'task', itemId: number | undefi
 
 // ボード固有の削除済みアイテムを取得
 export function useBoardDeletedItems(boardId: number) {
-  const { getToken } = useAuth();
+  const { getToken, isLoaded } = useAuth();
 
   return useQuery<{memos: DeletedMemo[], tasks: DeletedTask[]}>({
     queryKey: ["board-deleted-items", boardId],
+    enabled: isLoaded, // 認証完了まで待機
     queryFn: async () => {
       // 最大2回リトライ
       for (let attempt = 0; attempt < 2; attempt++) {

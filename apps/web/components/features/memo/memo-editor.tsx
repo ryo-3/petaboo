@@ -145,8 +145,11 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
       setIsAnimating(true);
       setShowDeleteModal(true);
     } else {
-      // ボードに紐づいていない場合は直接削除
-      onDelete?.();
+      // ボードに紐づいていない場合は蓋を開いてから直接削除
+      setIsAnimating(true);
+      setTimeout(() => {
+        onDelete?.();
+      }, 200);
     }
   };
 

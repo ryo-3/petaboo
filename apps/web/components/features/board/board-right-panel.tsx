@@ -161,6 +161,7 @@ export default function BoardRightPanel({
           rightPanelDisabled={true}
           hideHeaderButtons={true}
           forceShowBoardName={true}
+          excludeBoardId={boardId}
         />
       )}
 
@@ -178,6 +179,7 @@ export default function BoardRightPanel({
           rightPanelDisabled={true}
           hideHeaderButtons={true}
           forceShowBoardName={true}
+          excludeBoardId={boardId}
         />
       )}
     </RightPanel>

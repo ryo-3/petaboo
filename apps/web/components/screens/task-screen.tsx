@@ -46,6 +46,7 @@ interface TaskScreenProps {
   rightPanelDisabled?: boolean; // 右パネル無効化（ボードから呼び出される場合）
   hideHeaderButtons?: boolean; // ヘッダーボタンを非表示（ボードから呼び出される場合）
   forceShowBoardName?: boolean; // ボード名表示を強制的に有効化（ボードから呼び出される場合）
+  excludeBoardId?: number; // 指定されたボードに登録済みのタスクを除外（ボードから呼び出される場合）
 }
 
 function TaskScreen({
@@ -57,6 +58,7 @@ function TaskScreen({
   onClearSelection,
   hideHeaderButtons = false,
   forceShowBoardName = false,
+  excludeBoardId,
 }: TaskScreenProps) {
   // 一括処理中断通知の監視
   useBulkProcessNotifications();
@@ -84,8 +86,12 @@ function TaskScreen({
   const [showBoardName, setShowBoardName] = useState(forceShowBoardName);
 
   // ボードフィルター管理
-  const [selectedBoardIds, setSelectedBoardIds] = useState<number[]>([]);
-  const [boardFilterMode, setBoardFilterMode] = useState<'include' | 'exclude'>('include');
+  const [selectedBoardIds, setSelectedBoardIds] = useState<number[]>(
+    excludeBoardId ? [excludeBoardId] : []
+  );
+  const [boardFilterMode, setBoardFilterMode] = useState<'include' | 'exclude'>(
+    excludeBoardId ? 'exclude' : 'include'
+  );
   
 
   // 削除ボタンの参照

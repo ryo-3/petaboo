@@ -153,7 +153,9 @@ function BoardNameToggle({
                       </svg>
                     )}
                   </div>
-                  <span className="text-xs text-gray-600">全選択</span>
+                  <span className="text-xs text-gray-600">
+                    {selectedBoardIds.length === boards.length && boards.length > 0 ? "全解除" : "全選択"}
+                  </span>
                 </label>
               </div>
               <div className="space-y-1">

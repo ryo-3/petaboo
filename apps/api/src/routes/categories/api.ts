@@ -3,6 +3,7 @@ import { getAuth } from "@hono/clerk-auth";
 import { eq, and, sql } from "drizzle-orm";
 import { categories, tasks, memos } from "../../db";
 import type { NewCategory } from "../../db/schema/categories";
+import type { DatabaseType, Env, AppType } from "../../types/common";
 
 const CategorySchema = z.object({
   id: z.number(),
@@ -23,9 +24,7 @@ const CategoryUsageSchema = z.object({
   boardCount: z.number(),
 });
 
-import type { Hono } from 'hono';
-
-export function createAPI(app: Hono) {
+export function createAPI(app: AppType) {
   // カテゴリー一覧取得
   const getCategoriesRoute = createRoute({
     method: "get",

@@ -37,7 +37,7 @@ function TaskEditor({
   const addItemToBoard = useAddItemToBoard();
   const removeItemFromBoard = useRemoveItemFromBoard();
   const { data: boards = [] } = useBoards();
-  const { data: itemBoards = [], isLoading: itemBoardsLoading, isFetching: itemBoardsFetching } = useItemBoards('task', task?.id);
+  const { data: itemBoards = [] } = useItemBoards('task', task?.id);
   const isNewTask = !task || task.id === 0;
   const taskFormRef = useRef<TaskFormHandle>(null);
   
@@ -93,7 +93,7 @@ function TaskEditor({
       return [initialBoardId.toString()];
     }
     return [];
-  }, [task?.id, itemBoards, initialBoardId]);
+  }, [task, itemBoards, initialBoardId]);
 
   // ボード選択関連の状態（共通フック使用）
   const {

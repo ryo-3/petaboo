@@ -18,7 +18,7 @@ function MemoFilterWrapper({ memo, selectedBoardIds, filterMode = 'include', chi
   // 削除済みメモの場合はoriginalIdを使用
   const isDeleted = variant === 'deleted';
   const itemId = isDeleted ? (memo as DeletedMemo).originalId : memo.id;
-  const { data: boards, isLoading, isFetching } = useItemBoards(
+  const { data: boards } = useItemBoards(
     'memo', 
     (selectedBoardIds && selectedBoardIds.length > 0) ? Number(itemId) : undefined
   );
@@ -28,8 +28,8 @@ function MemoFilterWrapper({ memo, selectedBoardIds, filterMode = 'include', chi
     return children;
   }
 
-  // ローディング中かつデータがない場合のみ非表示（プリフェッチキャッシュがある場合は表示）
-  if (isLoading && !boards) {
+  // データがない場合のみ非表示（プリフェッチキャッシュがある場合は表示）
+  if (!boards) {
     return null;
   }
 

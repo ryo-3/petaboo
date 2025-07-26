@@ -32,7 +32,7 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const baseViewerRef = useRef<HTMLDivElement>(null);
   const { data: boards = [] } = useBoards();
-  const { data: itemBoards = [], isLoading: itemBoardsLoading, isFetching: itemBoardsFetching } = useItemBoards('memo', memo?.id);
+  const { data: itemBoards = [] } = useItemBoards('memo', memo?.id);
   
   const currentBoardIds = memo && memo.id !== 0 
     ? itemBoards.map(board => board.id)

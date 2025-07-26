@@ -33,7 +33,7 @@ function MemoListItem({
   // ボード名を取得（常にキャッシュから取得、表示は条件で制御）
   // 削除済みメモの場合はoriginalIdを使用
   const itemId = isDeleted ? (memo as DeletedMemo).originalId : memo.id;
-  const { data: boards, isLoading, isFetching } = useItemBoards('memo', !isDeleted ? Number(itemId) : undefined);
+  const { data: boards } = useItemBoards('memo', !isDeleted ? Number(itemId) : undefined);
   
   
 

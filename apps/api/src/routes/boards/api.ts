@@ -1,12 +1,9 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { getAuth } from "@hono/clerk-auth";
 import { eq, and, desc, isNull, isNotNull } from "drizzle-orm";
-import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import { boards, boardItems, tasks, memos, deletedBoards, deletedMemos, deletedTasks } from "../../db";
 import type { NewBoard, NewBoardItem, NewDeletedBoard } from "../../db/schema/boards";
-import * as schema from "../../db";
-
-type DatabaseType = BetterSQLite3Database<typeof schema>;
+import type { DatabaseType, Env, AppType } from "../../types/common";
 
 // ID→originalId変換ユーティリティ
 async function getOriginalId(itemId: string | number, itemType: 'memo' | 'task', userId: string, db: DatabaseType): Promise<string | null> {
@@ -122,9 +119,7 @@ const AddItemToBoardSchema = z.object({
   itemId: z.string(), // originalIdを文字列として受け取る
 });
 
-import type { Hono } from 'hono';
-
-export function createAPI(app: Hono) {
+export function createAPI(app: AppType) {
   // ボード一覧取得
   const getBoardsRoute = createRoute({
     method: "get",

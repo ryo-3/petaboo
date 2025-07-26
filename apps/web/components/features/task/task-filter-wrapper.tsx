@@ -14,7 +14,7 @@ interface TaskFilterWrapperProps {
  */
 function TaskFilterWrapper({ task, selectedBoardIds, filterMode = 'include', children }: TaskFilterWrapperProps) {
   // タスクが所属するボード一覧を取得（フィルター無効時はundefinedを渡してクエリを無効化）
-  const { data: boards, isLoading, isFetching } = useItemBoards(
+  const { data: boards, isLoading } = useItemBoards(
     'task', 
     (selectedBoardIds && selectedBoardIds.length > 0) ? task.id : undefined
   );

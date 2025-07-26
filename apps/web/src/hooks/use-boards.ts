@@ -549,7 +549,6 @@ export function useBoardDeletedItems(boardId: number) {
       
       throw new Error('Failed after retry');
     },
-    enabled: !!boardId,
     staleTime: 2 * 60 * 1000,     // 2分間は新鮮なデータとして扱う
     gcTime: 10 * 60 * 1000,       // 10分間キャッシュを保持
     refetchOnWindowFocus: false,  // ウィンドウフォーカス時の再取得を無効化

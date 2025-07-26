@@ -36,10 +36,11 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8794";
 
 // ボード一覧取得
 export function useBoards(status: "normal" | "completed" | "deleted" = "normal") {
-  const { getToken } = useAuth();
+  const { getToken, isLoaded } = useAuth();
 
   return useQuery<BoardWithStats[]>({
     queryKey: ["boards", status],
+    enabled: isLoaded, // 認証完了まで待機
     queryFn: async () => {
       // 最大2回リトライ
       for (let attempt = 0; attempt < 2; attempt++) {

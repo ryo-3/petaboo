@@ -79,8 +79,8 @@ export default function BoardIconSelector({
             }}
             className={`flex items-center justify-center size-7 rounded-md ${
               hasSelectedBoard 
-                ? "bg-light-Blue text-white hover:bg-light-Blue/90" 
-                : "bg-gray-100 hover:bg-gray-200"
+                ? "bg-light-Blue text-white" 
+                : "bg-gray-100"
             }`}
           >
             <DashboardIcon className={`${iconClassName} ${hasSelectedBoard ? "text-white" : "text-gray-600"}`} />
@@ -100,7 +100,7 @@ export default function BoardIconSelector({
               return (
                 <button
                   key={option.value}
-                  className="w-full px-3 py-2 text-sm text-left transition-colors flex items-center gap-2 text-gray-700 hover:bg-gray-50"
+                  className="w-full px-3 py-2 text-sm text-left flex items-center gap-2 text-gray-700 hover:bg-gray-50"
                   onClick={() => {
                     handleSelect(option.value);
                   }}

@@ -26,7 +26,7 @@ function PhotoButton({
 
   return (
     <button
-      className={`${buttonSize} rounded-lg bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors flex items-center justify-center ${
+      className={`${buttonSize} rounded-lg bg-gray-100 text-gray-500 flex items-center justify-center ${
         disabled ? "opacity-50 cursor-not-allowed" : ""
       } ${className}`}
       onClick={handleClick}

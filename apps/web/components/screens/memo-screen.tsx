@@ -182,7 +182,7 @@ function MemoScreen({
       setIsRightLidOpen(false);
     }, 200);
 
-    // 次のメモを選択（削除完了と同時）
+    // 次のメモを選択（React Queryキャッシュ更新を待つ）
     if (selectedMemo && memos) {
       const displayOrder = getMemoDisplayOrder();
       const nextItem = getNextItemAfterDeletion(
@@ -191,13 +191,16 @@ function MemoScreen({
         displayOrder
       );
 
-      if (nextItem && nextItem.id !== selectedMemo.id) {
-        onSelectMemo(nextItem);
-        setMemoScreenMode("view");
-      } else {
-        setMemoScreenMode("list");
-        onDeselectAndStayOnMemoList?.();
-      }
+      // React Queryのキャッシュ更新を待つ
+      setTimeout(() => {
+        if (nextItem && nextItem.id !== selectedMemo.id) {
+          onSelectMemo(nextItem);
+          setMemoScreenMode("view");
+        } else {
+          setMemoScreenMode("list");
+          onDeselectAndStayOnMemoList?.();
+        }
+      }, 100); // キャッシュ更新完了を待つ
     } else {
       onDeselectAndStayOnMemoList?.();
       setMemoScreenMode("list");

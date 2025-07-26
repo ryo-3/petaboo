@@ -201,9 +201,7 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
               {memo && onDelete && (
                   <button
                     onClick={handleDeleteClick}
-                    className={`flex items-center justify-center size-7 rounded-md transition-colors duration-200 ${
-                      isAnimating ? 'bg-gray-200' : 'bg-gray-100 hover:bg-gray-200'
-                    }`}
+                    className="flex items-center justify-center size-7 rounded-md bg-gray-100"
                   >
                     <TrashIcon className="size-5" isLidOpen={isLidOpen} />
                   </button>

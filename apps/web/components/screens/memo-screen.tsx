@@ -123,23 +123,7 @@ function MemoScreen({
   const { data: boards } = useBoards();
 
   // メモ一覧のボード情報をプリフェッチ（ちらつき防止）
-  const prefetchResults = usePrefetchItemBoards('memo', memos);
-  const loggedRef = useRef(false);
-  
-  // デバッグログ: プリフェッチの最終統計のみ（1回だけ）
-  if (memos && memos.length > 0 && !loggedRef.current) {
-    const successCount = prefetchResults.filter(result => result.isSuccess).length;
-    const loadingCount = prefetchResults.filter(result => result.isLoading).length;
-    const totalBoards = prefetchResults.reduce((sum, result) => {
-      return sum + (result.data?.length || 0);
-    }, 0);
-    
-    // 完了時のみログ（1回だけ）
-    if (loadingCount === 0) {
-      console.log(`[Prefetch] Memos:${memos.length} | Loaded:${successCount} | Boards:${totalBoards}`);
-      loggedRef.current = true;
-    }
-  }
+  usePrefetchItemBoards('memo', memos);
 
   // 削除API
   const deleteNote = useDeleteMemo();

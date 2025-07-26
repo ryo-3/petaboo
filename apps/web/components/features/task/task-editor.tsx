@@ -37,7 +37,7 @@ function TaskEditor({
   const addItemToBoard = useAddItemToBoard();
   const removeItemFromBoard = useRemoveItemFromBoard();
   const { data: boards = [] } = useBoards();
-  const { data: itemBoards = [] } = useItemBoards('task', task?.id);
+  const { data: itemBoards = [], isLoading: itemBoardsLoading, isFetching: itemBoardsFetching } = useItemBoards('task', task?.id);
   const isNewTask = !task || task.id === 0;
   const taskFormRef = useRef<TaskFormHandle>(null);
   
@@ -85,6 +85,16 @@ function TaskEditor({
     }
   });
   
+  // 初期ボードIDs（ちらつき防止）
+  const initialBoardIds = useMemo(() => {
+    if (task && task.id !== 0) {
+      return itemBoards.map(board => board.id.toString());
+    } else if (initialBoardId) {
+      return [initialBoardId.toString()];
+    }
+    return [];
+  }, [task?.id, itemBoards, initialBoardId]);
+
   // ボード選択関連の状態（共通フック使用）
   const {
     selectedBoardIds,
@@ -95,7 +105,7 @@ function TaskEditor({
     handleConfirmBoardChange: confirmBoardChange,
     handleCancelBoardChange,
     initializeBoardIds,
-  } = useBoardChangeModal();
+  } = useBoardChangeModal(initialBoardIds);
   
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -206,10 +216,13 @@ function TaskEditor({
   // ボード選択の初期化
   useEffect(() => {
     if (task && task.id !== 0) { // 新規作成時（id: 0）は実行しない
-      const currentBoardIds = itemBoards.map(board => board.id.toString());
-      initializeBoardIds(currentBoardIds);
-      // originalDataのboardIdsも更新
-      setOriginalData(prev => prev ? { ...prev, boardIds: currentBoardIds } : prev);
+      // itemBoardsが存在し、データがある場合のみ更新
+      if (itemBoards && itemBoards.length >= 0) {
+        const currentBoardIds = itemBoards.map(board => board.id.toString());
+        initializeBoardIds(currentBoardIds);
+        // originalDataのboardIdsも更新
+        setOriginalData(prev => prev ? { ...prev, boardIds: currentBoardIds } : prev);
+      }
     } else if (!task || task.id === 0) {
       // 新規作成時は初期ボードIDがあればそれを設定、なければ空
       const initialBoards = initialBoardId ? [initialBoardId.toString()] : [];

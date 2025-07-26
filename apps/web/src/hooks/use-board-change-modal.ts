@@ -9,8 +9,8 @@ interface BoardChanges {
  * ボード変更モーダルの状態管理フック
  * memo-editor と task-editor で共通利用
  */
-export function useBoardChangeModal() {
-  const [selectedBoardIds, setSelectedBoardIds] = useState<string[]>([]);
+export function useBoardChangeModal(initialBoardIds: string[] = []) {
+  const [selectedBoardIds, setSelectedBoardIds] = useState<string[]>(initialBoardIds);
   const [showBoardChangeModal, setShowBoardChangeModal] = useState(false);
   const [pendingBoardChanges, setPendingBoardChanges] = useState<BoardChanges>({
     toAdd: [],

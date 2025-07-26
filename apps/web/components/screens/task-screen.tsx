@@ -23,7 +23,7 @@ import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
 import { useTabChange } from "@/src/hooks/use-tab-change";
 import { useDeletedTasks, useTasks } from "@/src/hooks/use-tasks";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
-import { useBoards } from "@/src/hooks/use-boards";
+import { useBoards, usePrefetchItemBoards } from "@/src/hooks/use-boards";
 import type { DeletedTask, Task } from "@/src/types/task";
 import {
   getTaskDisplayOrder,
@@ -68,6 +68,9 @@ function TaskScreen({
   const { data: deletedTasks } = useDeletedTasks();
   const { preferences } = useUserPreferences(1);
   const { data: boards } = useBoards();
+
+  // タスク一覧のボード情報をプリフェッチ（ちらつき防止）
+  usePrefetchItemBoards('task', tasks);
 
   // 選択モード管理
   const [selectionMode, setSelectionMode] = useState<"select" | "check">(

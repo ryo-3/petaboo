@@ -4,6 +4,7 @@ import BoardTaskSection from "@/components/features/board/board-task-section";
 import DesktopUpper from "@/components/layout/desktop-upper";
 import Tooltip from "@/components/ui/base/tooltip";
 import { useBoardState } from "@/src/hooks/use-board-state";
+import { usePrefetchItemBoards } from "@/src/hooks/use-boards";
 import { Memo, DeletedMemo } from "@/src/types/memo";
 import { Task, DeletedTask } from "@/src/types/task";
 import { memo, useEffect, useMemo, useState, useRef } from "react";
@@ -232,6 +233,17 @@ function BoardDetailScreen({
     isMemoDeleting,
   });
 
+  // ボード内アイテムのボード情報をプリフェッチ（ちらつき防止）
+  const memoItemsForPrefetch = useMemo(() => {
+    return allMemoItems.map(item => ({ id: item.content.id }));
+  }, [allMemoItems]);
+  
+  const taskItemsForPrefetch = useMemo(() => {
+    return allTaskItems.map(item => ({ id: item.content.id }));
+  }, [allTaskItems]);
+  
+  usePrefetchItemBoards('memo', memoItemsForPrefetch);
+  usePrefetchItemBoards('task', taskItemsForPrefetch);
 
   // メモの全選択フック
   const { isAllSelected: isMemoAllSelected, handleSelectAll: handleMemoSelectAll } = useBoardSelectAll({

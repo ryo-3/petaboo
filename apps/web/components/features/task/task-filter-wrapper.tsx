@@ -14,7 +14,7 @@ interface TaskFilterWrapperProps {
  */
 function TaskFilterWrapper({ task, selectedBoardIds, filterMode = 'include', children }: TaskFilterWrapperProps) {
   // タスクが所属するボード一覧を取得（フィルター無効時はundefinedを渡してクエリを無効化）
-  const { data: boards, isLoading } = useItemBoards(
+  const { data: boards, isLoading, isFetching } = useItemBoards(
     'task', 
     (selectedBoardIds && selectedBoardIds.length > 0) ? task.id : undefined
   );
@@ -24,8 +24,8 @@ function TaskFilterWrapper({ task, selectedBoardIds, filterMode = 'include', chi
     return children;
   }
 
-  // ローディング中は非表示（ちらつき防止）
-  if (isLoading) {
+  // ローディング中かつデータがない場合のみ非表示（プリフェッチキャッシュがある場合は表示）
+  if (isLoading && !boards) {
     return null;
   }
 

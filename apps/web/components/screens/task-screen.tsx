@@ -23,7 +23,8 @@ import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
 import { useTabChange } from "@/src/hooks/use-tab-change";
 import { useDeletedTasks, useTasks } from "@/src/hooks/use-tasks";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
-import { useBoards, usePrefetchItemBoards } from "@/src/hooks/use-boards";
+import { useBoards } from "@/src/hooks/use-boards";
+import ItemBoardsPrefetcher from "@/components/shared/item-boards-prefetcher";
 import type { DeletedTask, Task } from "@/src/types/task";
 import {
   getTaskDisplayOrder,
@@ -69,8 +70,6 @@ function TaskScreen({
   const { preferences } = useUserPreferences(1);
   const { data: boards } = useBoards();
 
-  // タスク一覧のボード情報をプリフェッチ（ちらつき防止）
-  usePrefetchItemBoards('task', tasks);
 
   // 選択モード管理
   const [selectionMode, setSelectionMode] = useState<"select" | "check">(
@@ -321,6 +320,9 @@ function TaskScreen({
 
   return (
     <div className="flex h-full bg-white">
+      {/* タスク一覧のボード情報をプリフェッチ（ちらつき防止） */}
+      <ItemBoardsPrefetcher type="task" items={tasks} />
+      
       {/* 左側：一覧表示エリア */}
       <div
         className={`${taskScreenMode === "list" ? "w-full" : "w-[44%]"} ${taskScreenMode !== "list" ? "border-r border-gray-300" : ""} pt-3 pl-5 pr-2 flex flex-col transition-all duration-300 relative`}

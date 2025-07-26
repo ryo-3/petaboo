@@ -1,6 +1,7 @@
 import { useBoards, useCreateBoard } from "@/src/hooks/use-boards";
 import { CreateBoardData } from "@/src/types/board";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import BoardCard from "./board-card";
 import BoardForm from "./board-form";
 
@@ -21,9 +22,13 @@ export default function BoardList({
 }: BoardListProps) {
   const [internalShowCreateForm, setInternalShowCreateForm] = useState(false);
   const showCreateForm = externalShowCreateForm ?? internalShowCreateForm;
+  const pathname = usePathname();
 
   const { data: boards, isLoading, error } = useBoards(activeTab);
   const createBoard = useCreateBoard();
+
+  // 現在のURLから選択されているボードのslugを取得
+  const currentBoardSlug = pathname.startsWith("/boards/") ? pathname.split("/")[2] : null;
 
   // ページタイトル設定
   useEffect(() => {
@@ -131,6 +136,7 @@ export default function BoardList({
               onSelect={() => onBoardSelect?.(board)}
               mode={activeTab}
               onPermanentDelete={activeTab === "deleted" ? onPermanentDeleteBoard : undefined}
+              isSelected={currentBoardSlug === board.slug}
             />
           ))}
         </div>

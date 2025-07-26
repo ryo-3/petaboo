@@ -44,8 +44,16 @@ const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(({ onBoardSelec
   const handleBoardSelect = (board: { id: number; slug: string }) => {
     // 親コンポーネントの処理を呼び出し
     onBoardSelect?.(board);
-    // 遷移前にローディング状態を示す
-    router.push(`/boards/${board.slug}`);
+    
+    // 現在のURLと同じ場合はリロード
+    const currentPath = window.location.pathname;
+    if (currentPath === `/boards/${board.slug}`) {
+      // 同じボードの場合はページをリロード
+      window.location.reload();
+    } else {
+      // 違うボードの場合は通常の遷移
+      router.push(`/boards/${board.slug}`);
+    }
   };
 
   const handlePermanentDeleteBoard = async (boardId: number) => {

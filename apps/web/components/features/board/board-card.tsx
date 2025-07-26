@@ -1,6 +1,7 @@
 import { BoardWithStats } from "@/src/types/board";
 import { useState } from "react";
 import TrashIcon from "@/components/icons/trash-icon";
+import PenIcon from "@/components/icons/pen-icon";
 import Tooltip from "@/components/ui/base/tooltip";
 import ConfirmationModal from "@/components/ui/modals/confirmation-modal";
 
@@ -9,9 +10,10 @@ interface BoardCardProps {
   onSelect: () => void;
   mode?: "normal" | "completed" | "deleted";
   onPermanentDelete?: (boardId: number) => void;
+  isSelected?: boolean;
 }
 
-export default function BoardCard({ board, onSelect, mode = "normal", onPermanentDelete }: BoardCardProps) {
+export default function BoardCard({ board, onSelect, mode = "normal", onPermanentDelete, isSelected = false }: BoardCardProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isTrashHovered, setIsTrashHovered] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -61,12 +63,23 @@ export default function BoardCard({ board, onSelect, mode = "normal", onPermanen
     <>
     <div 
       onClick={onSelect}
-      className={`bg-white rounded-lg border p-6 hover:shadow-md transition-shadow cursor-pointer relative ${
+      className={`bg-white rounded-lg border p-6 hover:shadow-md transition-all cursor-pointer relative ${
         mode === "deleted" 
           ? "border-red-200 bg-red-50" 
-          : "border-gray-200"
+          : isSelected
+            ? "border-blue-300 bg-blue-50 shadow-md"
+            : "border-gray-200"
       }`}
     >
+      {/* 選択状態の場合はペンアイコンを表示 */}
+      {isSelected && mode !== "deleted" && (
+        <div className="absolute top-3 right-3">
+          <div className="flex items-center justify-center size-6 rounded-full bg-light-Blue text-white">
+            <PenIcon className="size-3" />
+          </div>
+        </div>
+      )}
+
       {/* 削除済みボードの場合は削除ボタンを表示 */}
       {mode === "deleted" && onPermanentDelete && (
         <div className="absolute top-3 right-3">
@@ -89,7 +102,11 @@ export default function BoardCard({ board, onSelect, mode = "normal", onPermanen
       
       <div className="flex-1">
         <h3 className={`text-lg font-semibold mb-2 ${
-          mode === "deleted" ? "text-red-900" : "text-gray-900"
+          mode === "deleted" 
+            ? "text-red-900" 
+            : isSelected
+              ? "text-blue-900"
+              : "text-gray-900"
         }`}>
           {board.name}
         </h3>

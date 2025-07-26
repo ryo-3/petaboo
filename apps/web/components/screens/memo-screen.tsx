@@ -27,7 +27,7 @@ import { useScreenState } from "@/src/hooks/use-screen-state";
 import { useSelectAll } from "@/src/hooks/use-select-all";
 import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
-import { useBoards } from "@/src/hooks/use-boards";
+import { useBoards, usePrefetchItemBoards } from "@/src/hooks/use-boards";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import {
   getMemoDisplayOrder,
@@ -121,6 +121,9 @@ function MemoScreen({
   const { data: deletedMemos } = useDeletedMemos();
   const { preferences } = useUserPreferences(1);
   const { data: boards } = useBoards();
+
+  // メモ一覧のボード情報をプリフェッチ（ちらつき防止）
+  usePrefetchItemBoards('memo', memos);
 
   // 削除API
   const deleteNote = useDeleteMemo();

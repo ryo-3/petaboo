@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useQueries } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
 import { Board, BoardWithStats, BoardWithItems, CreateBoardData, UpdateBoardData, AddItemToBoardData, BoardItem } from "@/src/types/board";
 import { DeletedMemo } from "@/src/types/memo";
@@ -551,5 +551,35 @@ export function useBoardDeletedItems(boardId: number) {
     gcTime: 10 * 60 * 1000,       // 10分間キャッシュを保持
     refetchOnWindowFocus: false,  // ウィンドウフォーカス時の再取得を無効化
     refetchOnMount: false,        // マウント時の再取得を無効化
+  });
+}
+
+// アイテム一覧のボード情報を一括プリフェッチ
+export function usePrefetchItemBoards(itemType: 'memo' | 'task', items: { id: number }[] | undefined) {
+  const { getToken } = useAuth();
+
+  return useQueries({
+    queries: (items || []).map(item => ({
+      queryKey: ["item-boards", itemType, item.id],
+      queryFn: async () => {
+        const token = await getCachedToken(getToken);
+        
+        const response = await fetch(`${API_BASE_URL}/boards/items/${itemType}/${item.id}/boards`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        });
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch item boards");
+        }
+
+        const data = await response.json();
+        return data;
+      },
+      enabled: !!items && items.length > 0,
+      staleTime: 5 * 60 * 1000,  // 5分間キャッシュ
+    }))
   });
 }

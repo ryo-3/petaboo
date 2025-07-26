@@ -457,21 +457,33 @@ export function useItemBoards(itemType: 'memo' | 'task', itemId: number | undefi
   return useQuery<Board[]>({
     queryKey: ["item-boards", itemType, itemId],
     queryFn: async () => {
-      const token = await getCachedToken(getToken);
-      
-      const response = await fetch(`${API_BASE_URL}/boards/items/${itemType}/${itemId}/boards`, {
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error("Failed to fetch item boards");
-      }
+      // 最大2回リトライ
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const token = await getCachedToken(getToken);
+        
+        const response = await fetch(`${API_BASE_URL}/boards/items/${itemType}/${itemId}/boards`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        });
+        
+        // 401エラーの場合はキャッシュをクリアしてリトライ
+        if (response.status === 401 && attempt === 0) {
+          cachedToken = null;
+          tokenExpiry = 0;
+          continue;
+        }
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch item boards");
+        }
 
-      const data = await response.json();
-      return data;
+        const data = await response.json();
+        return data;
+      }
+      
+      throw new Error('Failed after retry');
     },
     enabled: !!itemId,
     placeholderData: keepPreviousData, // 前のデータを保持してちらつき防止
@@ -564,21 +576,33 @@ export function usePrefetchItemBoards(itemType: 'memo' | 'task', items: { id: nu
     queries: (items || []).map(item => ({
       queryKey: ["item-boards", itemType, item.id],
       queryFn: async () => {
-        const token = await getCachedToken(getToken);
-        
-        const response = await fetch(`${API_BASE_URL}/boards/items/${itemType}/${item.id}/boards`, {
-          headers: {
-            "Content-Type": "application/json",
-            ...(token && { Authorization: `Bearer ${token}` }),
-          },
-        });
-        
-        if (!response.ok) {
-          throw new Error("Failed to fetch item boards");
-        }
+        // 最大2回リトライ
+        for (let attempt = 0; attempt < 2; attempt++) {
+          const token = await getCachedToken(getToken);
+          
+          const response = await fetch(`${API_BASE_URL}/boards/items/${itemType}/${item.id}/boards`, {
+            headers: {
+              "Content-Type": "application/json",
+              ...(token && { Authorization: `Bearer ${token}` }),
+            },
+          });
+          
+          // 401エラーの場合はキャッシュをクリアしてリトライ
+          if (response.status === 401 && attempt === 0) {
+            cachedToken = null;
+            tokenExpiry = 0;
+            continue;
+          }
+          
+          if (!response.ok) {
+            throw new Error("Failed to fetch item boards");
+          }
 
-        const data = await response.json();
-        return data;
+          const data = await response.json();
+          return data;
+        }
+        
+        throw new Error('Failed after retry');
       },
       enabled: !!items && items.length > 0 && isLoaded, // 認証完了まで待機
       staleTime: 5 * 60 * 1000,  // 5分間キャッシュ

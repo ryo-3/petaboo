@@ -15,7 +15,10 @@ const db = drizzle(sqlite);
 const app = new OpenAPIHono();
 
 // Clerk認証ミドルウェアを追加
-app.use('*', clerkMiddleware());
+app.use('*', clerkMiddleware({ 
+  secretKey: process.env.CLERK_SECRET_KEY,
+  publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
+}));
 
 // 共通スキーマ定義
 const MemoSchema = z.object({

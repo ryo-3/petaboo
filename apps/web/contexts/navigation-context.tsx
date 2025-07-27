@@ -1,6 +1,8 @@
 "use client";
 
 import { createContext, useContext, ReactNode, useState } from "react";
+import type { Memo, DeletedMemo } from "@/src/types/memo";
+import type { Task, DeletedTask } from "@/src/types/task";
 
 type ScreenMode = "home" | "memo" | "task" | "create" | "search" | "settings" | "board";
 
@@ -11,6 +13,11 @@ interface NavigationContextType {
   setCurrentMode: (mode: "memo" | "task" | "board") => void;
   isFromBoardDetail: boolean;
   setIsFromBoardDetail: (value: boolean) => void;
+  // メイン画面のアイテム選択ハンドラー
+  handleMainSelectMemo?: (memo: Memo | null) => void;
+  handleMainSelectTask?: (task: Task | null) => void;
+  setHandleMainSelectMemo?: (handler: ((memo: Memo | null) => void) | undefined) => void;
+  setHandleMainSelectTask?: (handler: ((task: Task | null) => void) | undefined) => void;
 }
 
 const NavigationContext = createContext<NavigationContextType | undefined>(undefined);
@@ -29,6 +36,8 @@ export function NavigationProvider({
   const [screenMode, setScreenMode] = useState<ScreenMode>(initialScreenMode);
   const [currentMode, setCurrentMode] = useState<"memo" | "task" | "board">(initialCurrentMode);
   const [isFromBoardDetail, setIsFromBoardDetail] = useState(false);
+  const [handleMainSelectMemo, setHandleMainSelectMemo] = useState<((memo: Memo | null) => void) | undefined>();
+  const [handleMainSelectTask, setHandleMainSelectTask] = useState<((task: Task | null) => void) | undefined>();
 
   return (
     <NavigationContext.Provider value={{
@@ -37,7 +46,11 @@ export function NavigationProvider({
       setScreenMode,
       setCurrentMode,
       isFromBoardDetail,
-      setIsFromBoardDetail
+      setIsFromBoardDetail,
+      handleMainSelectMemo,
+      handleMainSelectTask,
+      setHandleMainSelectMemo,
+      setHandleMainSelectTask
     }}>
       {children}
     </NavigationContext.Provider>

@@ -10,6 +10,7 @@ import RightPanel from "@/components/ui/layout/right-panel";
 import { Memo, DeletedMemo } from "@/src/types/memo";
 import { Task, DeletedTask } from "@/src/types/task";
 import { useState } from "react";
+import { useNavigation } from "@/contexts/navigation-context";
 import { useDeleteMemo } from "@/src/hooks/use-memos";
 
 interface BoardRightPanelProps {
@@ -50,6 +51,8 @@ export default function BoardRightPanel({
   onAddMemoToBoard,
   onAddTaskToBoard,
 }: BoardRightPanelProps) {
+  const { setScreenMode, setCurrentMode, handleMainSelectMemo, handleMainSelectTask } = useNavigation();
+  
   // 削除済みアイテムかどうかを判定するヘルパー関数
   const isDeletedMemo = (memo: Memo | DeletedMemo): memo is DeletedMemo => {
     return 'deletedAt' in memo && memo.deletedAt !== undefined;
@@ -168,9 +171,9 @@ export default function BoardRightPanel({
       {rightPanelMode === "memo-list" && (
         <MemoScreen
           onSelectMemo={(memo) => {
-            if (onAddMemoToBoard && memo) {
-              onAddMemoToBoard(memo);
-              onClose(); // 追加後に右パネルを閉じる
+            if (memo && handleMainSelectMemo) {
+              // 選択解除されてアイテムが選択された場合は、メモ画面に移動
+              handleMainSelectMemo(memo);
             }
           }}
           onSelectDeletedMemo={() => {}}
@@ -187,9 +190,9 @@ export default function BoardRightPanel({
       {rightPanelMode === "task-list" && (
         <TaskScreen
           onSelectTask={(task) => {
-            if (onAddTaskToBoard && task) {
-              onAddTaskToBoard(task);
-              onClose(); // 追加後に右パネルを閉じる
+            if (task && handleMainSelectTask) {
+              // 選択解除されてアイテムが選択された場合は、タスク画面に移動
+              handleMainSelectTask(task);
             }
           }}
           onSelectDeletedTask={() => {}}
@@ -198,6 +201,7 @@ export default function BoardRightPanel({
           hideHeaderButtons={true}
           forceShowBoardName={true}
           excludeBoardId={boardId}
+          initialSelectionMode="check"
         />
       )}
     </RightPanel>

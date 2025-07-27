@@ -12,7 +12,7 @@ import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
 import { useNavigation } from "@/contexts/navigation-context";
 import { usePathname } from "next/navigation";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState, useEffect } from "react";
 
 interface MainClientProps {
   initialBoardName?: string;
@@ -41,7 +41,7 @@ function MainClient({
 
 
   // コンテキストから状態を取得
-  const { screenMode, currentMode, setScreenMode, setCurrentMode, isFromBoardDetail, setIsFromBoardDetail } = useNavigation();
+  const { screenMode, currentMode, setScreenMode, setCurrentMode, isFromBoardDetail, setIsFromBoardDetail, setHandleMainSelectMemo, setHandleMainSelectTask } = useNavigation();
 
   // refs
   const boardScreenRef = useRef<BoardScreenRef>(null);
@@ -149,6 +149,14 @@ function MainClient({
     setShowingBoardDetail,
     boardSelectedItem,
   });
+
+  // ハンドラーをNavigationContextに設定
+  useEffect(() => {
+    if (setHandleMainSelectMemo && setHandleMainSelectTask) {
+      setHandleMainSelectMemo(() => handleSelectMemo);
+      setHandleMainSelectTask(() => handleSelectTask);
+    }
+  }, [handleSelectMemo, handleSelectTask, setHandleMainSelectMemo, setHandleMainSelectTask]);
 
   return (
     <main className="relative">

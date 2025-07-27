@@ -81,8 +81,10 @@ export async function executeWithAnimation({
         // チェック状態をクリア
         onCheckStateUpdate(ids, isPartial)
         
-        // アニメーション完了処理
-        finalizeAnimation(setIsProcessing, setIsLidOpen, isPartial)
+        // アニメーション完了処理（蓋を早めに閉じる）
+        setTimeout(() => {
+          finalizeAnimation(setIsProcessing, setIsLidOpen, isPartial)
+        }, 800) // アニメーション完了後すぐに蓋を閉じる
         
         // アニメーション完了後にAPI実行（バックグラウンド処理）
         setTimeout(async () => {

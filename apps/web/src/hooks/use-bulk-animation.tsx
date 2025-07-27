@@ -68,7 +68,7 @@ export function useBulkAnimation({ checkedItems, checkedDeletedItems }: UseBulkA
       const delayUntilStart = itemsUntilStart * DELETE_ANIMATION_INTERVAL
       
       timerRef.current.countdownTimer = setTimeout(() => {
-        // カウンターを開始数値から段階的に減らす
+        // カウンターを開始数値から0まで段階的に減らす
         let currentCount = startCount
         const decrementInterval = DELETE_ANIMATION_INTERVAL
         
@@ -77,13 +77,21 @@ export function useBulkAnimation({ checkedItems, checkedDeletedItems }: UseBulkA
         setIsCountingActive(true)
         
         const counterTimer = setInterval(() => {
-          if (currentCount <= targetCount) {
+          console.log('🔢 Countdown step:', currentCount)
+          setDisplayCount(currentCount)
+          
+          if (currentCount <= 0) {
+            console.log('🎯 Reached 0! Clearing interval and keeping 0 visible for 1 second')
             clearInterval(counterTimer)
-            setDisplayCount(targetCount)
-          } else {
-            currentCount--
-            setDisplayCount(currentCount)
+            // 0を1秒表示してからカウンター無効化
+            setTimeout(() => {
+              console.log('⏰ 1 second passed, deactivating counter')
+              setIsCountingActive(false)
+            }, 1000)
+            return
           }
+          
+          currentCount--
         }, decrementInterval)
         
         // カウンターのsetIntervalを管理のためtimerRefに保存
@@ -113,13 +121,11 @@ export function useBulkAnimation({ checkedItems, checkedDeletedItems }: UseBulkA
     setIsLidOpen?: (value: boolean) => void,
     isPartial = false
   ) => {
-    // カウンター停止
-    setIsCountingActive(false)
+    console.log('🏁 Finalizing animation');
+    // カウンター制御はstartCountdown側に任せる
     
-    // 500ms後に蓋を閉じる
-    setTimeout(() => {
-      setIsLidOpen?.(false)
-    }, 500)
+    // すぐに蓋を閉じる（カウンターの0表示と分離）
+    setIsLidOpen?.(false)
     
     // 処理状態をすぐに終了（useBulkDeleteButtonのタイマーに任せる）
     if (setIsProcessing) {

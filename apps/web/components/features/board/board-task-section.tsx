@@ -44,11 +44,14 @@ interface BoardTaskSectionProps {
   isLidOpen?: boolean;
   currentDisplayCount?: number;
   deleteButtonRef?: React.RefObject<HTMLButtonElement | null>;
+  // 復元関連
+  onCheckedTasksChange?: (tasks: Set<string | number>) => void;
 }
 
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useState } from 'react';
 import { BulkActionButtons } from "@/components/ui/layout/bulk-action-buttons";
 import { useBulkDeleteButton } from "@/src/hooks/use-bulk-delete-button";
+import { useBoardBulkRestore } from "@/src/hooks/use-board-bulk-restore";
 
 export default function BoardTaskSection({
   rightPanelMode,
@@ -80,11 +83,16 @@ export default function BoardTaskSection({
   isLidOpen = false,
   currentDisplayCount,
   deleteButtonRef: propDeleteButtonRef,
+  onCheckedTasksChange,
 }: BoardTaskSectionProps) {
   // ソートオプションの管理
   const { setSortOptions, getVisibleSortOptions } = useSortOptions("task");
   const localDeleteButtonRef = useRef<HTMLButtonElement | null>(null);
   const deleteButtonRef = propDeleteButtonRef || localDeleteButtonRef;
+  
+  // 復元状態管理
+  const [, setIsRestoring] = useState(false);
+  const [isRestoreLidOpen, setIsRestoreLidOpen] = useState(false);
   
   // 削除ボタン用のチェック済みアイテムSet（ID変換処理）
   const checkedItemsForDeleteButton = useMemo(() => {
@@ -133,6 +141,22 @@ export default function BoardTaskSection({
       return new Set(Array.from(checkedTasks).filter(id => typeof id === 'number') as number[]);
     }
   }, [checkedTasks, activeTaskTab, taskItems]);
+  
+  // 復元機能フック（削除済みタブでのみ使用）
+  const {
+    handleBulkRestore,
+    RestoreModal,
+    restoreButtonRef,
+    currentDisplayCount: currentRestoreDisplayCount,
+  } = useBoardBulkRestore({
+    itemType: 'task',
+    checkedItems: checkedTasks,
+    setCheckedItems: onCheckedTasksChange || (() => {}),
+    boardItems: taskItems,
+    deletedTasks: activeTaskTab === "deleted" ? taskItems.map(item => item.content as DeletedTask) : undefined,
+    setIsRestoring,
+    setIsLidOpen: setIsRestoreLidOpen,
+  });
 
   if (rightPanelMode === "memo-list" || !showTask) {
     return null;
@@ -331,13 +355,22 @@ export default function BoardTaskSection({
           }}
           deleteButtonRef={deleteButtonRef}
           isDeleting={isLidOpen}
-          showRestoreButton={false}
-          restoreCount={0}
-          onRestore={() => {}}
-          isRestoring={false}
+          showRestoreButton={
+            activeTaskTab === "deleted" &&
+            checkedTasks.size > 0
+          }
+          restoreCount={checkedTasks.size}
+          onRestore={handleBulkRestore}
+          restoreButtonRef={restoreButtonRef}
+          isRestoring={isRestoreLidOpen}
+          animatedRestoreCount={currentRestoreDisplayCount}
+          useAnimatedRestoreCount={true}
           animatedDeleteCount={currentDisplayCount || checkedTasks.size}
           useAnimatedDeleteCount={true}
         />
+        
+        {/* 復元モーダル */}
+        <RestoreModal />
     </div>
   );
 }

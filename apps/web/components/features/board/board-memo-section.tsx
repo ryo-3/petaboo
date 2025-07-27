@@ -42,11 +42,14 @@ interface BoardMemoSectionProps {
   isLidOpen?: boolean;
   currentDisplayCount?: number;
   deleteButtonRef?: React.RefObject<HTMLButtonElement | null>;
+  // 復元関連
+  onCheckedMemosChange?: (memos: Set<string | number>) => void;
 }
 
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useState } from 'react';
 import { BulkActionButtons } from "@/components/ui/layout/bulk-action-buttons";
 import { useBulkDeleteButton } from "@/src/hooks/use-bulk-delete-button";
+import { useBoardBulkRestore } from "@/src/hooks/use-board-bulk-restore";
 
 export default function BoardMemoSection({
   rightPanelMode,
@@ -76,11 +79,16 @@ export default function BoardMemoSection({
   isLidOpen = false,
   currentDisplayCount,
   deleteButtonRef: propDeleteButtonRef,
+  onCheckedMemosChange,
 }: BoardMemoSectionProps) {
   // ソートオプションの管理
   const { setSortOptions, getVisibleSortOptions } = useSortOptions("memo");
   const localDeleteButtonRef = useRef<HTMLButtonElement | null>(null);
   const deleteButtonRef = propDeleteButtonRef || localDeleteButtonRef;
+  
+  // 復元状態管理
+  const [, setIsRestoring] = useState(false);
+  const [isRestoreLidOpen, setIsRestoreLidOpen] = useState(false);
   
   // 削除ボタン用のチェック済みアイテムSet（ID変換処理）
   const checkedItemsForDeleteButton = useMemo(() => {
@@ -129,6 +137,22 @@ export default function BoardMemoSection({
       return new Set(Array.from(checkedMemos).filter(id => typeof id === 'number') as number[]);
     }
   }, [checkedMemos, activeMemoTab, memoItems]);
+  
+  // 復元機能フック（削除済みタブでのみ使用）
+  const {
+    handleBulkRestore,
+    RestoreModal,
+    restoreButtonRef,
+    currentDisplayCount: currentRestoreDisplayCount,
+  } = useBoardBulkRestore({
+    itemType: 'memo',
+    checkedItems: checkedMemos,
+    setCheckedItems: onCheckedMemosChange || (() => {}),
+    boardItems: memoItems,
+    deletedMemos: activeMemoTab === "deleted" ? memoItems.map(item => item.content as DeletedMemo) : undefined,
+    setIsRestoring,
+    setIsLidOpen: setIsRestoreLidOpen,
+  });
 
   if (rightPanelMode === "task-list" || !showMemo) {
     return null;
@@ -311,13 +335,22 @@ export default function BoardMemoSection({
           }}
           deleteButtonRef={deleteButtonRef}
           isDeleting={isLidOpen}
-          showRestoreButton={false}
-          restoreCount={0}
-          onRestore={() => {}}
-          isRestoring={false}
+          showRestoreButton={
+            activeMemoTab === "deleted" &&
+            checkedMemos.size > 0
+          }
+          restoreCount={checkedMemos.size}
+          onRestore={handleBulkRestore}
+          restoreButtonRef={restoreButtonRef}
+          isRestoring={isRestoreLidOpen}
+          animatedRestoreCount={currentRestoreDisplayCount}
+          useAnimatedRestoreCount={true}
           animatedDeleteCount={currentDisplayCount || checkedMemos.size}
           useAnimatedDeleteCount={true}
         />
+        
+        {/* 復元モーダル */}
+        <RestoreModal />
     </div>
   );
 }

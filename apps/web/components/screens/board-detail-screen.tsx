@@ -397,6 +397,7 @@ function BoardDetailScreen({
             isLidOpen={isMemoLidOpen}
             currentDisplayCount={currentMemoDisplayCount}
             deleteButtonRef={deleteButtonRef}
+            onCheckedMemosChange={(memos) => setCheckedMemos(activeMemoTab, memos)}
           />
 
           {/* タスク列 */}
@@ -430,6 +431,7 @@ function BoardDetailScreen({
             isLidOpen={isTaskLidOpen}
             currentDisplayCount={currentTaskDisplayCount}
             deleteButtonRef={deleteButtonRef}
+            onCheckedTasksChange={(tasks) => setCheckedTasks(activeTaskTab, tasks)}
           />
         </div>
 

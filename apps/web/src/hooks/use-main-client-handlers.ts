@@ -42,6 +42,24 @@ export function useMainClientHandlers({
     setBoardSelectedItem(null);
   }, [setSelectedMemo, setSelectedDeletedMemo, setSelectedTask, setSelectedDeletedTask, setShowDeleted, setBoardSelectedItem]);
 
+  /** 選択されたアイテムまでスクロール */
+  const scrollToSelectedItem = useCallback((itemId: number, itemType: 'memo' | 'task') => {
+    // 少し遅延させてDOM更新を待つ
+    setTimeout(() => {
+      const selector = itemType === 'memo' 
+        ? `[data-memo-id="${itemId}"]` 
+        : `[data-task-id="${itemId}"]`;
+      const element = document.querySelector(selector);
+      if (element) {
+        element.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center',
+          inline: 'nearest'
+        });
+      }
+    }, 100);
+  }, []);
+
   // ==========================================
   // アイテム選択ハンドラー（デスクトップ・モバイル共通）
   // ==========================================
@@ -51,10 +69,12 @@ export function useMainClientHandlers({
     if (memo) {
       setSelectedMemo(memo);
       setScreenMode("memo");
+      // 選択されたメモまでスクロール
+      scrollToSelectedItem(memo.id, 'memo');
     } else {
       setSelectedMemo(null);
     }
-  }, [setSelectedMemo, setScreenMode]);
+  }, [setSelectedMemo, setScreenMode, scrollToSelectedItem]);
 
   /** 削除済みメモ選択 - メモ画面に遷移 */
   const handleSelectDeletedMemo = useCallback((memo: DeletedMemo | null) => {
@@ -77,8 +97,10 @@ export function useMainClientHandlers({
     setSelectedTask(task);
     if (task) {
       setScreenMode("task");
+      // 選択されたタスクまでスクロール
+      scrollToSelectedItem(task.id, 'task');
     }
-  }, [setSelectedTask, setScreenMode]);
+  }, [setSelectedTask, setScreenMode, scrollToSelectedItem]);
 
   /** 削除済みタスク選択 - タスク画面に遷移 */
   const handleSelectDeletedTask = useCallback((task: DeletedTask | null) => {

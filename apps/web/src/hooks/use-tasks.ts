@@ -100,8 +100,6 @@ export function useDeleteTask() {
       queryClient.invalidateQueries({ queryKey: ["boards"] });
       queryClient.invalidateQueries({ queryKey: ['board-with-items'] })
       queryClient.invalidateQueries({ queryKey: ['board-deleted-items'] })
-      // アイテムボード情報も無効化
-      queryClient.invalidateQueries({ queryKey: ["item-boards"] });
     },
     onError: (error) => {
       console.error("タスク削除に失敗しました:", error);

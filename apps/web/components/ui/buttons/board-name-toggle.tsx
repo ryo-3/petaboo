@@ -105,35 +105,7 @@ function BoardNameToggle({
           {/* フィルターポップオーバー */}
           {showFilter && (
             <div className="absolute top-9 left-0 bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-50 min-w-[200px] max-h-[300px] overflow-y-auto">
-              {/* フィルターモード切り替え */}
-              {onFilterModeChange && (
-                <div className="mb-3 pb-2 border-b border-gray-100">
-                  <div className="flex rounded-md bg-gray-100 p-0.5">
-                    <button
-                      onClick={() => onFilterModeChange('include')}
-                      className={`flex-1 px-2 py-1 text-xs font-medium rounded transition-all ${
-                        filterMode === 'include'
-                          ? 'bg-light-Blue text-white shadow-sm'
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                      }`}
-                    >
-                      含む
-                    </button>
-                    <button
-                      onClick={() => onFilterModeChange('exclude')}
-                      className={`flex-1 px-2 py-1 text-xs font-medium rounded transition-all ${
-                        filterMode === 'exclude'
-                          ? 'bg-red-500 text-white shadow-sm'
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                      }`}
-                    >
-                      除く
-                    </button>
-                  </div>
-                </div>
-              )}
-              
-              <div className="flex justify-between items-center mb-2">
+              <div className="flex justify-between items-center mb-3">
                 <span className="text-sm font-medium text-gray-700">ボード一覧</span>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -158,6 +130,44 @@ function BoardNameToggle({
                   </span>
                 </label>
               </div>
+
+              {/* フィルターモード切り替え */}
+              {onFilterModeChange && (
+                <div className="mb-2 pb-2 border-b border-gray-100">
+                  <div className="flex rounded-md bg-gray-100 p-0.5">
+                    <button
+                      onClick={() => onFilterModeChange('include')}
+                      className={`flex-1 px-2 py-1 text-xs font-medium rounded transition-all relative flex items-center justify-center ${
+                        filterMode === 'include'
+                          ? 'bg-light-Blue text-white shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      }`}
+                    >
+                      {filterMode === 'include' && (
+                        <svg className="w-3 h-3 absolute left-2 text-white transition-opacity duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                      含む
+                    </button>
+                    <button
+                      onClick={() => onFilterModeChange('exclude')}
+                      className={`flex-1 px-2 py-1 text-xs font-medium rounded transition-all relative flex items-center justify-center ${
+                        filterMode === 'exclude'
+                          ? 'bg-red-500 text-white shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      }`}
+                    >
+                      {filterMode === 'exclude' && (
+                        <svg className="w-3 h-3 absolute left-2 text-white transition-opacity duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                      除く
+                    </button>
+                  </div>
+                </div>
+              )}
               <div className="space-y-1">
                 {boards.length === 0 ? (
                   <p className="text-xs text-gray-500 py-2">ボードがありません</p>

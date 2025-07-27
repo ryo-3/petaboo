@@ -46,7 +46,7 @@ interface BoardTaskSectionProps {
   deleteButtonRef?: React.RefObject<HTMLButtonElement | null>;
 }
 
-import { useRef } from 'react';
+import { useRef, useMemo } from 'react';
 import { BulkActionButtons } from "@/components/ui/layout/bulk-action-buttons";
 import { useBulkDeleteButton } from "@/src/hooks/use-bulk-delete-button";
 
@@ -95,8 +95,25 @@ export default function BoardTaskSection({
     isDeleting: isDeleting || false,
   });
   
-  // 数値のみのSet（型安全のため）
-  const checkedTasksNumbers = new Set(Array.from(checkedTasks).filter(id => typeof id === 'number') as number[]);
+  // 表示用のチェック済みアイテムSet（型変換処理）
+  const checkedTasksForDisplay = useMemo(() => {
+    if (activeTaskTab === "deleted") {
+      // 削除済みタブ: originalId（string）からデータベースID（number）に変換
+      const numberSet = new Set<number>();
+      checkedTasks.forEach(originalId => {
+        // taskItemsからoriginalIdに対応するデータベースIDを探す
+        const taskItem = taskItems.find(item => item.itemId === originalId);
+        if (taskItem) {
+          const dbId = (taskItem.content as DeletedTask).id;
+          numberSet.add(dbId);
+        }
+      });
+      return numberSet;
+    } else {
+      // 通常タブ: 数値のみをフィルタ
+      return new Set(Array.from(checkedTasks).filter(id => typeof id === 'number') as number[]);
+    }
+  }, [checkedTasks, activeTaskTab, taskItems]);
 
   if (rightPanelMode === "memo-list" || !showTask) {
     return null;
@@ -255,8 +272,14 @@ export default function BoardTaskSection({
             effectiveColumnCount={effectiveColumnCount}
             isBoard={true}
             selectionMode={taskSelectionMode}
-            checkedTasks={checkedTasksNumbers}
-            onToggleCheck={onTaskSelectionToggle}
+            checkedTasks={checkedTasksForDisplay}
+            onToggleCheck={(taskId) => {
+              // 削除済みタスクの場合、originalIdで管理しているので変換が必要
+              const taskItem = taskItems.find(item => (item.content as DeletedTask).id === taskId);
+              if (taskItem?.itemId) {
+                onTaskSelectionToggle(taskItem.itemId);
+              }
+            }}
             onSelectTask={taskSelectionMode === "check" ? undefined : onSelectTask}
             selectedTaskId={taskSelectionMode === "check" ? undefined : selectedTask?.id}
             showEditDate={showEditDate}
@@ -270,7 +293,7 @@ export default function BoardTaskSection({
             effectiveColumnCount={effectiveColumnCount}
             isBoard={true}
             selectionMode={taskSelectionMode}
-            checkedTasks={checkedTasksNumbers}
+            checkedTasks={checkedTasksForDisplay}
             onToggleCheck={onTaskSelectionToggle}
             onSelectTask={taskSelectionMode === "check" ? undefined : onSelectTask}
             selectedTaskId={taskSelectionMode === "check" ? undefined : selectedTask?.id}

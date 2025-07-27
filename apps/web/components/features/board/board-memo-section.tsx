@@ -44,7 +44,7 @@ interface BoardMemoSectionProps {
   deleteButtonRef?: React.RefObject<HTMLButtonElement | null>;
 }
 
-import { useRef } from 'react';
+import { useRef, useMemo } from 'react';
 import { BulkActionButtons } from "@/components/ui/layout/bulk-action-buttons";
 import { useBulkDeleteButton } from "@/src/hooks/use-bulk-delete-button";
 
@@ -91,8 +91,25 @@ export default function BoardMemoSection({
     isDeleting: isDeleting || false,
   });
   
-  // 数値のみのSet（型安全のため）
-  const checkedMemosNumbers = new Set(Array.from(checkedMemos).filter(id => typeof id === 'number') as number[]);
+  // 表示用のチェック済みアイテムSet（型変換処理）
+  const checkedMemosForDisplay = useMemo(() => {
+    if (activeMemoTab === "deleted") {
+      // 削除済みタブ: originalId（string）からデータベースID（number）に変換
+      const numberSet = new Set<number>();
+      checkedMemos.forEach(originalId => {
+        // memoItemsからoriginalIdに対応するデータベースIDを探す
+        const memoItem = memoItems.find(item => item.itemId === originalId);
+        if (memoItem) {
+          const dbId = (memoItem.content as DeletedMemo).id;
+          numberSet.add(dbId);
+        }
+      });
+      return numberSet;
+    } else {
+      // 通常タブ: 数値のみをフィルタ
+      return new Set(Array.from(checkedMemos).filter(id => typeof id === 'number') as number[]);
+    }
+  }, [checkedMemos, activeMemoTab, memoItems]);
 
   if (rightPanelMode === "task-list" || !showMemo) {
     return null;
@@ -222,8 +239,14 @@ export default function BoardMemoSection({
             effectiveColumnCount={effectiveColumnCount}
             isBoard={true}
             selectionMode={memoSelectionMode}
-            checkedMemos={checkedMemosNumbers}
-            onToggleCheck={onMemoSelectionToggle}
+            checkedMemos={checkedMemosForDisplay}
+            onToggleCheck={(memoId) => {
+              // 削除済みメモの場合、originalIdで管理しているので変換が必要
+              const memoItem = memoItems.find(item => (item.content as DeletedMemo).id === memoId);
+              if (memoItem?.itemId) {
+                onMemoSelectionToggle(memoItem.itemId);
+              }
+            }}
             onSelectMemo={memoSelectionMode === "check" ? undefined : onSelectMemo}
             selectedMemoId={memoSelectionMode === "check" ? undefined : selectedMemo?.id}
             showEditDate={showEditDate}
@@ -243,7 +266,7 @@ export default function BoardMemoSection({
             effectiveColumnCount={effectiveColumnCount}
             isBoard={true}
             selectionMode={memoSelectionMode}
-            checkedMemos={checkedMemosNumbers}
+            checkedMemos={checkedMemosForDisplay}
             onToggleCheck={onMemoSelectionToggle}
             onSelectMemo={memoSelectionMode === "check" ? undefined : onSelectMemo}
             selectedMemoId={memoSelectionMode === "check" ? undefined : selectedMemo?.id}

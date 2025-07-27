@@ -11,6 +11,7 @@ import { memo, useEffect, useMemo, useState, useRef } from "react";
 import BoardHeader from "@/components/features/board/board-header";
 import { BulkDeleteConfirmation } from "@/components/ui/modals";
 import { useBoardSelectAll } from "@/src/hooks/use-board-select-all";
+import { useSelectAll } from "@/src/hooks/use-select-all";
 import { useMultiSelection } from "@/src/hooks/use-multi-selection";
 import { useBulkDeleteOperations } from "@/src/hooks/use-bulk-delete-operations";
 import { useBoardItems } from "@/src/hooks/use-board-items";
@@ -98,16 +99,25 @@ function BoardDetailScreen({
     setCheckedNormalMemos,
     checkedDeletedMemos,
     setCheckedDeletedMemos,
-    checkedTasks,
-    setCheckedTasks,
+    checkedTodoTasks,
+    setCheckedTodoTasks,
+    checkedInProgressTasks,
+    setCheckedInProgressTasks,
+    checkedCompletedTasks,
+    setCheckedCompletedTasks,
+    checkedDeletedTasks,
+    setCheckedDeletedTasks,
     getCheckedMemos,
     setCheckedMemos,
+    getCheckedTasks,
+    setCheckedTasks,
     handleMemoSelectionToggle,
     handleTaskSelectionToggle,
-  } = useMultiSelection(activeMemoTab);
+  } = useMultiSelection(activeMemoTab, activeTaskTab);
   
   // 現在のタブに応じた選択状態
   const checkedMemos = getCheckedMemos(activeMemoTab);
+  const checkedTasks = getCheckedTasks(activeTaskTab);
 
   // 一括削除操作フック
   const {
@@ -132,7 +142,7 @@ function BoardDetailScreen({
     checkedMemos,
     checkedTasks,
     setCheckedMemos: (value) => setCheckedMemos(activeMemoTab, value),
-    setCheckedTasks,
+    setCheckedTasks: (value) => setCheckedTasks(activeTaskTab, value),
     deleteButtonRef,
   });
   
@@ -224,10 +234,16 @@ function BoardDetailScreen({
     activeTaskTab,
     checkedNormalMemos,
     checkedDeletedMemos,
-    checkedTasks,
+    checkedTodoTasks,
+    checkedInProgressTasks,
+    checkedCompletedTasks,
+    checkedDeletedTasks,
     setCheckedNormalMemos,
     setCheckedDeletedMemos,
-    setCheckedTasks,
+    setCheckedTodoTasks,
+    setCheckedInProgressTasks,
+    setCheckedCompletedTasks,
+    setCheckedDeletedTasks,
     isMemoDeleting,
   });
 
@@ -248,11 +264,11 @@ function BoardDetailScreen({
     getItemId: (item) => item.itemId,
   });
 
-  // タスクの全選択フック
+  // タスクの全選択フック（メモと同じ方式）
   const { isAllSelected: isTaskAllSelected, handleSelectAll: handleTaskSelectAll } = useBoardSelectAll({
     items: taskItems,
     checkedItems: checkedTasks,
-    setCheckedItems: setCheckedTasks,
+    setCheckedItems: (value) => setCheckedTasks(activeTaskTab, value),
     getItemId: (item) => item.itemId,
   });
 

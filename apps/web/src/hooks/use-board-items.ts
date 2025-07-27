@@ -11,10 +11,16 @@ interface UseBoardItemsProps {
   activeTaskTab: string;
   checkedNormalMemos: Set<string | number>;
   checkedDeletedMemos: Set<string | number>;
-  checkedTasks: Set<string | number>;
+  checkedTodoTasks: Set<string | number>;
+  checkedInProgressTasks: Set<string | number>;
+  checkedCompletedTasks: Set<string | number>;
+  checkedDeletedTasks: Set<string | number>;
   setCheckedNormalMemos: React.Dispatch<React.SetStateAction<Set<string | number>>>;
   setCheckedDeletedMemos: React.Dispatch<React.SetStateAction<Set<string | number>>>;
-  setCheckedTasks: React.Dispatch<React.SetStateAction<Set<string | number>>>;
+  setCheckedTodoTasks: React.Dispatch<React.SetStateAction<Set<string | number>>>;
+  setCheckedInProgressTasks: React.Dispatch<React.SetStateAction<Set<string | number>>>;
+  setCheckedCompletedTasks: React.Dispatch<React.SetStateAction<Set<string | number>>>;
+  setCheckedDeletedTasks: React.Dispatch<React.SetStateAction<Set<string | number>>>;
   isMemoDeleting: boolean;
 }
 
@@ -42,10 +48,16 @@ export function useBoardItems({
   activeTaskTab,
   checkedNormalMemos,
   checkedDeletedMemos,
-  checkedTasks,
+  checkedTodoTasks,
+  checkedInProgressTasks,
+  checkedCompletedTasks,
+  checkedDeletedTasks,
   setCheckedNormalMemos,
   setCheckedDeletedMemos,
-  setCheckedTasks,
+  setCheckedTodoTasks,
+  setCheckedInProgressTasks,
+  setCheckedCompletedTasks,
+  setCheckedDeletedTasks,
   isMemoDeleting,
 }: UseBoardItemsProps): UseBoardItemsReturn {
   
@@ -134,23 +146,6 @@ export function useBoardItems({
     }
   }, [boardDeletedItems?.memos, activeMemoTab, checkedDeletedMemos, isMemoDeleting, setCheckedDeletedMemos]);
 
-  // タスクのクリーンアップ
-  useEffect(() => {
-    if (taskItems) {
-      const allTaskIds = new Set(taskItems.map((item: BoardItemWithContent) => item.itemId));
-      const newCheckedTasks = new Set(
-        Array.from(checkedTasks).filter((id) => {
-          for (const taskId of allTaskIds) {
-            if (taskId === id) return true;
-          }
-          return false;
-        })
-      );
-      if (newCheckedTasks.size !== checkedTasks.size) {
-        setCheckedTasks(newCheckedTasks);
-      }
-    }
-  }, [taskItems, checkedTasks, setCheckedTasks]);
 
   // 各ステータスの件数を計算
   const todoCount = useMemo(() => 

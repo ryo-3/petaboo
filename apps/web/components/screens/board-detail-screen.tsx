@@ -308,7 +308,7 @@ function BoardDetailScreen({
         className={`${
           selectedMemo || selectedTask || rightPanelMode
             ? rightPanelMode
-              ? "w-[30%] border-r border-gray-300" // リスト表示時は広め
+              ? "w-[44%] border-r border-gray-300" // リスト表示時
               : "w-[44%] border-r border-gray-300" // エディター表示時
             : "w-full"
         } pt-3 pl-5 pr-4 ${selectedMemo || selectedTask || rightPanelMode ? "pr-2" : "pr-4"} flex flex-col transition-all duration-300 relative`}

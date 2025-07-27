@@ -13,7 +13,7 @@ interface ButtonContainerProps {
 export function ButtonContainer({ show, position, children }: ButtonContainerProps) {
   const positionClass = position === 'bottom-right' 
     ? 'absolute bottom-4 right-6' 
-    : 'absolute bottom-4 left-6';
+    : 'absolute bottom-4 left-0';
     
   return (
     <div className={`${positionClass} z-20 transition-opacity duration-300 ${

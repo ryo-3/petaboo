@@ -435,29 +435,6 @@ function BoardDetailScreen({
           />
         </div>
 
-        {/* フローティング：一覧へ戻るボタン */}
-        <div className="fixed bottom-3 left-3 z-10">
-          <Tooltip text="一覧へ戻る" position="right">
-            <button
-              onClick={onBack}
-              className="p-1 size-9 bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800 rounded-lg border border-gray-200 transition-all flex items-center gap-2"
-            >
-              <svg
-                className="size-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </button>
-          </Tooltip>
-        </div>
       </div>
 
       {/* 削除モーダル */}

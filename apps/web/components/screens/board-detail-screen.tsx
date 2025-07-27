@@ -125,6 +125,8 @@ function BoardDetailScreen({
     setIsTaskDeleting,
     setIsTaskLidOpen,
     bulkAnimation,
+    currentMemoDisplayCount,
+    currentTaskDisplayCount,
   } = useBulkDeleteOperations({
     boardId,
     checkedMemos,
@@ -134,10 +136,6 @@ function BoardDetailScreen({
     deleteButtonRef,
   });
   
-  // アニメーション管理（checkedItemsを数値のみに変換）
-  const memoIdsAsNumbers = useMemo(() => {
-    return new Set(Array.from(checkedMemos).filter(id => typeof id === 'number') as number[]);
-  }, [checkedMemos]);
   
   
 
@@ -384,7 +382,7 @@ function BoardDetailScreen({
             onBulkDelete={() => handleBulkDelete('memo', <div className="text-sm text-gray-700 mb-3">選択したメモの操作を選択してください</div>)}
             isDeleting={isMemoDeleting}
             isLidOpen={isMemoLidOpen}
-            currentDisplayCount={bulkAnimation.isCountingActive ? bulkAnimation.displayCount : memoIdsAsNumbers.size}
+            currentDisplayCount={currentMemoDisplayCount}
             deleteButtonRef={deleteButtonRef}
           />
 
@@ -417,7 +415,7 @@ function BoardDetailScreen({
             onBulkDelete={() => handleBulkDelete('task', <div className="text-sm text-gray-700 mb-3">選択したタスクの操作を選択してください</div>)}
             isDeleting={isTaskDeleting}
             isLidOpen={isTaskLidOpen}
-            currentDisplayCount={bulkAnimation.isCountingActive ? bulkAnimation.displayCount : checkedTasks.size}
+            currentDisplayCount={currentTaskDisplayCount}
             deleteButtonRef={deleteButtonRef}
           />
         </div>

@@ -312,7 +312,6 @@ export function useMemosBulkDelete({
     ? bulkAnimation.displayCount
     : currentDeleteCount;
 
-  // デバッグログ
 
   return {
     handleBulkDelete,

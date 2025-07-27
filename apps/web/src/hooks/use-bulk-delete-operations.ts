@@ -30,6 +30,8 @@ interface UseBulkDeleteOperationsReturn {
   setIsTaskDeleting: (value: boolean) => void;
   setIsTaskLidOpen: (value: boolean) => void;
   bulkAnimation: ReturnType<typeof useBulkAnimation>;
+  currentMemoDisplayCount: number;
+  currentTaskDisplayCount: number;
 }
 
 /**
@@ -55,6 +57,7 @@ export function useBulkDeleteOperations({
     checkedItems: new Set(Array.from(checkedMemos).filter(id => typeof id === 'number') as number[]),
     checkedDeletedItems: new Set(Array.from(checkedTasks).filter(id => typeof id === 'number') as number[]),
   });
+  
   
   // 削除関連のフック
   const bulkDelete = useBulkDelete();
@@ -157,6 +160,15 @@ export function useBulkDeleteOperations({
     }
   }, [deletingItemType, checkedMemos, checkedTasks, boardId, bulkDelete, setCheckedMemos, setCheckedTasks, removeItemFromBoard]);
   
+  // ディスプレイカウントの計算（メモ一覧と同じロジック）
+  const currentMemoDisplayCount = bulkAnimation.isCountingActive
+    ? bulkAnimation.displayCount
+    : checkedMemos.size;
+
+  const currentTaskDisplayCount = bulkAnimation.isCountingActive
+    ? bulkAnimation.displayCount
+    : checkedTasks.size;
+  
   return {
     isMemoDeleting,
     isMemoLidOpen,
@@ -172,5 +184,7 @@ export function useBulkDeleteOperations({
     setIsTaskDeleting,
     setIsTaskLidOpen,
     bulkAnimation,
+    currentMemoDisplayCount,
+    currentTaskDisplayCount,
   };
 }

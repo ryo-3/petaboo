@@ -25,18 +25,18 @@ export function useBulkAnimation({ checkedItems, checkedDeletedItems }: UseBulkA
   const [displayCount, setDisplayCount] = useState(0)
   const [isCountingActive, setIsCountingActive] = useState(false)
 
-  // チェック状態が変更されたらタイマーをクリア
+  // チェック状態が変更されたらタイマーをクリア（ただし、アニメーション実行中は除く）
   useEffect(() => {
-    if (checkedItems.size > 0) {
+    if (checkedItems.size > 0 && !isCountingActive) {
       clearTimers()
     }
-  }, [checkedItems])
+  }, [checkedItems, isCountingActive])
 
   useEffect(() => {
-    if (checkedDeletedItems && checkedDeletedItems.size > 0) {
+    if (checkedDeletedItems && checkedDeletedItems.size > 0 && !isCountingActive) {
       clearTimers()
     }
-  }, [checkedDeletedItems])
+  }, [checkedDeletedItems, isCountingActive])
 
   const clearTimers = () => {
     if (timerRef.current.clearChecked) {
@@ -68,7 +68,6 @@ export function useBulkAnimation({ checkedItems, checkedDeletedItems }: UseBulkA
       const delayUntilStart = itemsUntilStart * DELETE_ANIMATION_INTERVAL
       
       timerRef.current.countdownTimer = setTimeout(() => {
-        
         // カウンターを開始数値から段階的に減らす
         let currentCount = startCount
         const decrementInterval = DELETE_ANIMATION_INTERVAL

@@ -99,10 +99,6 @@ export async function executeWithAnimation({
       },
       () => {
         // キャンセル時の処理
-        
-        // カウンターアニメーションも停止する必要がある場合
-        // finalizeAnimationを呼ぶ前に、アニメーションのキャンセルを行う
-        
         // 状態をリセット
         finalizeAnimation(setIsProcessing, setIsLidOpen, isPartial)
         

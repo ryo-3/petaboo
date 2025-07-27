@@ -11,6 +11,7 @@ interface ApiError extends Error {
 
 // セキュアなメモリキャッシュ（localStorage使用せず）
 let cachedToken: string | null = null;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 let tokenExpiry: number = 0;
 let tokenPromise: Promise<string | null> | null = null; // 同期化用
 

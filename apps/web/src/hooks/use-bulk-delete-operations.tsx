@@ -5,6 +5,8 @@ import { useDeleteTask } from '@/src/hooks/use-tasks';
 import { useRemoveItemFromBoard } from '@/src/hooks/use-boards';
 import { useBulkAnimation } from '@/src/hooks/use-bulk-animation';
 import { executeWithAnimation } from '@/src/utils/bulkAnimationUtils';
+import { DeletionWarningMessage } from '@/components/ui/modals/deletion-warning-message';
+import React from 'react';
 
 interface UseBulkDeleteOperationsProps {
   boardId: number;
@@ -13,6 +15,14 @@ interface UseBulkDeleteOperationsProps {
   setCheckedMemos: (value: Set<string | number>) => void;
   setCheckedTasks: (value: Set<string | number>) => void;
   deleteButtonRef?: React.RefObject<HTMLButtonElement | null>;
+  activeMemoTab: "normal" | "deleted";
+  activeTaskTab: "todo" | "in_progress" | "completed" | "deleted";
+  checkedNormalMemos: Set<string | number>;
+  checkedDeletedMemos: Set<string | number>;
+  checkedTodoTasks: Set<string | number>;
+  checkedInProgressTasks: Set<string | number>;
+  checkedCompletedTasks: Set<string | number>;
+  checkedDeletedTasks: Set<string | number>;
 }
 
 interface UseBulkDeleteOperationsReturn {
@@ -32,6 +42,8 @@ interface UseBulkDeleteOperationsReturn {
   bulkAnimation: ReturnType<typeof useBulkAnimation>;
   currentMemoDisplayCount: number;
   currentTaskDisplayCount: number;
+  getModalStatusBreakdown: () => Array<{ status: string; label: string; count: number; color: string; }>;
+  getHasOtherTabItems: () => boolean;
 }
 
 /**
@@ -45,6 +57,14 @@ export function useBulkDeleteOperations({
   setCheckedMemos,
   setCheckedTasks,
   deleteButtonRef,
+  activeMemoTab,
+  activeTaskTab,
+  checkedNormalMemos,
+  checkedDeletedMemos,
+  checkedTodoTasks,
+  checkedInProgressTasks,
+  checkedCompletedTasks,
+  checkedDeletedTasks,
 }: UseBulkDeleteOperationsProps): UseBulkDeleteOperationsReturn {
   const [isMemoDeleting, setIsMemoDeleting] = useState(false);
   const [isMemoLidOpen, setIsMemoLidOpen] = useState(false);
@@ -64,6 +84,63 @@ export function useBulkDeleteOperations({
   const deleteMemoMutation = useDeleteMemo();
   const deleteTaskMutation = useDeleteTask();
   const removeItemFromBoard = useRemoveItemFromBoard();
+
+  // メモの削除確認メッセージ生成
+  const createMemoDeleteMessage = useCallback(() => {
+    const currentTabCount = checkedMemos.size;
+    
+    // 他のタブにも選択アイテムがあるかチェック
+    const hasOtherTabItems = activeMemoTab === "deleted" 
+      ? checkedNormalMemos.size > 0
+      : checkedDeletedMemos.size > 0;
+    
+    
+    const statusBreakdown = activeMemoTab === "deleted"
+      ? [{ status: 'deleted', label: '削除済み', count: currentTabCount, color: 'bg-red-600' }]
+      : [{ status: 'normal', label: '通常', count: currentTabCount, color: 'bg-gray-500' }];
+    
+    return (
+      <DeletionWarningMessage
+        hasOtherTabItems={hasOtherTabItems}
+        isLimited={false}
+        statusBreakdown={statusBreakdown}
+        showStatusBreakdown={true}
+        isPermanentDelete={activeMemoTab === "deleted"}
+      />
+    );
+  }, [checkedMemos.size, activeMemoTab, checkedNormalMemos.size, checkedDeletedMemos.size]);
+
+  // タスクの削除確認メッセージ生成
+  const createTaskDeleteMessage = useCallback(() => {
+    const currentTabCount = checkedTasks.size;
+    
+    // 他のタブにも選択アイテムがあるかチェック
+    const hasOtherTabItems = activeTaskTab === "deleted"
+      ? checkedTodoTasks.size > 0 || checkedInProgressTasks.size > 0 || checkedCompletedTasks.size > 0
+      : checkedDeletedTasks.size > 0 || 
+        (activeTaskTab !== "todo" && checkedTodoTasks.size > 0) ||
+        (activeTaskTab !== "in_progress" && checkedInProgressTasks.size > 0) ||
+        (activeTaskTab !== "completed" && checkedCompletedTasks.size > 0);
+    
+    
+    const statusBreakdown = activeTaskTab === "deleted"
+      ? [{ status: 'deleted', label: '削除済み', count: currentTabCount, color: 'bg-red-600' }]
+      : activeTaskTab === "todo"
+        ? [{ status: 'todo', label: '未着手', count: currentTabCount, color: 'bg-zinc-400' }]
+        : activeTaskTab === "in_progress"
+          ? [{ status: 'in_progress', label: '進行中', count: currentTabCount, color: 'bg-Blue' }]
+          : [{ status: 'completed', label: '完了', count: currentTabCount, color: 'bg-Green' }];
+    
+    return (
+      <DeletionWarningMessage
+        hasOtherTabItems={hasOtherTabItems}
+        isLimited={false}
+        statusBreakdown={statusBreakdown}
+        showStatusBreakdown={true}
+        isPermanentDelete={activeTaskTab === "deleted"}
+      />
+    );
+  }, [checkedTasks.size, activeTaskTab, checkedTodoTasks.size, checkedInProgressTasks.size, checkedCompletedTasks.size, checkedDeletedTasks.size]);
   
   // アニメーション付き削除実行関数
   const executeDeleteWithAnimation = useCallback(async (ids: number[], itemType: 'memo' | 'task') => {
@@ -121,6 +198,9 @@ export function useBulkDeleteOperations({
       setIsTaskLidOpen(true);
     }
 
+    // カスタムメッセージが提供されていない場合は、自動生成されたメッセージを使用
+    const message = customMessage || (itemType === 'memo' ? createMemoDeleteMessage() : createTaskDeleteMessage());
+
     await bulkDelete.confirmBulkDelete(
       targetIds as number[],
       1,
@@ -128,9 +208,9 @@ export function useBulkDeleteOperations({
         // アニメーション付き削除処理
         await executeDeleteWithAnimation(ids as number[], itemType);
       },
-      customMessage
+      message
     );
-  }, [checkedMemos, checkedTasks, bulkDelete, executeDeleteWithAnimation]);
+  }, [checkedMemos, checkedTasks, bulkDelete, executeDeleteWithAnimation, createMemoDeleteMessage, createTaskDeleteMessage]);
 
   // ボードから削除の処理
   const handleRemoveFromBoard = useCallback(async () => {
@@ -168,6 +248,45 @@ export function useBulkDeleteOperations({
   const currentTaskDisplayCount = bulkAnimation.isCountingActive
     ? bulkAnimation.displayCount
     : checkedTasks.size;
+
+  // モーダル表示用のステータス内訳を取得
+  const getModalStatusBreakdown = useCallback(() => {
+    if (!deletingItemType) return [];
+    
+    if (deletingItemType === 'memo') {
+      const currentTabCount = checkedMemos.size;
+      return activeMemoTab === "deleted"
+        ? [{ status: 'deleted', label: '削除済み', count: currentTabCount, color: 'bg-red-600' }]
+        : [{ status: 'normal', label: '通常', count: currentTabCount, color: 'bg-gray-500' }];
+    } else {
+      const currentTabCount = checkedTasks.size;
+      return activeTaskTab === "deleted"
+        ? [{ status: 'deleted', label: '削除済み', count: currentTabCount, color: 'bg-red-600' }]
+        : activeTaskTab === "todo"
+          ? [{ status: 'todo', label: '未着手', count: currentTabCount, color: 'bg-zinc-400' }]
+          : activeTaskTab === "in_progress"
+            ? [{ status: 'in_progress', label: '進行中', count: currentTabCount, color: 'bg-Blue' }]
+            : [{ status: 'completed', label: '完了', count: currentTabCount, color: 'bg-Green' }];
+    }
+  }, [deletingItemType, checkedMemos.size, checkedTasks.size, activeMemoTab, activeTaskTab]);
+
+  // 他のタブに選択アイテムがあるかチェック
+  const getHasOtherTabItems = useCallback(() => {
+    if (!deletingItemType) return false;
+    
+    if (deletingItemType === 'memo') {
+      return activeMemoTab === "deleted" 
+        ? checkedNormalMemos.size > 0
+        : checkedDeletedMemos.size > 0;
+    } else {
+      return activeTaskTab === "deleted"
+        ? checkedTodoTasks.size > 0 || checkedInProgressTasks.size > 0 || checkedCompletedTasks.size > 0
+        : checkedDeletedTasks.size > 0 || 
+          (activeTaskTab !== "todo" && checkedTodoTasks.size > 0) ||
+          (activeTaskTab !== "in_progress" && checkedInProgressTasks.size > 0) ||
+          (activeTaskTab !== "completed" && checkedCompletedTasks.size > 0);
+    }
+  }, [deletingItemType, activeMemoTab, activeTaskTab, checkedNormalMemos.size, checkedDeletedMemos.size, checkedTodoTasks.size, checkedInProgressTasks.size, checkedCompletedTasks.size, checkedDeletedTasks.size]);
   
   return {
     isMemoDeleting,
@@ -186,5 +305,7 @@ export function useBulkDeleteOperations({
     bulkAnimation,
     currentMemoDisplayCount,
     currentTaskDisplayCount,
+    getModalStatusBreakdown,
+    getHasOtherTabItems,
   };
 }

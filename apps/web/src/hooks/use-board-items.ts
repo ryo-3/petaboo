@@ -11,16 +11,8 @@ interface UseBoardItemsProps {
   activeTaskTab: string;
   checkedNormalMemos: Set<string | number>;
   checkedDeletedMemos: Set<string | number>;
-  checkedTodoTasks: Set<string | number>;
-  checkedInProgressTasks: Set<string | number>;
-  checkedCompletedTasks: Set<string | number>;
-  checkedDeletedTasks: Set<string | number>;
   setCheckedNormalMemos: React.Dispatch<React.SetStateAction<Set<string | number>>>;
   setCheckedDeletedMemos: React.Dispatch<React.SetStateAction<Set<string | number>>>;
-  setCheckedTodoTasks: React.Dispatch<React.SetStateAction<Set<string | number>>>;
-  setCheckedInProgressTasks: React.Dispatch<React.SetStateAction<Set<string | number>>>;
-  setCheckedCompletedTasks: React.Dispatch<React.SetStateAction<Set<string | number>>>;
-  setCheckedDeletedTasks: React.Dispatch<React.SetStateAction<Set<string | number>>>;
   isMemoDeleting: boolean;
 }
 
@@ -48,16 +40,8 @@ export function useBoardItems({
   activeTaskTab,
   checkedNormalMemos,
   checkedDeletedMemos,
-  checkedTodoTasks,
-  checkedInProgressTasks,
-  checkedCompletedTasks,
-  checkedDeletedTasks,
   setCheckedNormalMemos,
   setCheckedDeletedMemos,
-  setCheckedTodoTasks,
-  setCheckedInProgressTasks,
-  setCheckedCompletedTasks,
-  setCheckedDeletedTasks,
   isMemoDeleting,
 }: UseBoardItemsProps): UseBoardItemsReturn {
   

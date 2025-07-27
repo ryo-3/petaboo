@@ -82,12 +82,31 @@ export default function BoardMemoSection({
   const localDeleteButtonRef = useRef<HTMLButtonElement | null>(null);
   const deleteButtonRef = propDeleteButtonRef || localDeleteButtonRef;
   
+  // 削除ボタン用のチェック済みアイテムSet（ID変換処理）
+  const checkedItemsForDeleteButton = useMemo(() => {
+    if (activeMemoTab === "deleted") {
+      // 削除済みタブ: originalId（string）からデータベースID（number）に変換
+      const numberSet = new Set<number>();
+      checkedMemos.forEach(originalId => {
+        const memoItem = memoItems.find(item => item.itemId === originalId);
+        if (memoItem) {
+          const dbId = (memoItem.content as DeletedMemo).id;
+          numberSet.add(dbId);
+        }
+      });
+      return numberSet;
+    } else {
+      // 通常タブ: 数値のみをフィルタ
+      return new Set(Array.from(checkedMemos).filter(id => typeof id === 'number') as number[]);
+    }
+  }, [checkedMemos, activeMemoTab, memoItems]);
+
   // 削除ボタンのタイマー制御
   const { showDeleteButton } = useBulkDeleteButton({
     activeTab: activeMemoTab,
     deletedTabName: "deleted",
-    checkedItems: new Set(Array.from(checkedMemos).filter(id => typeof id === 'number') as number[]),
-    checkedDeletedItems: new Set(), // ボード詳細では削除済みタブはない
+    checkedItems: activeMemoTab === "deleted" ? new Set() : checkedItemsForDeleteButton,
+    checkedDeletedItems: activeMemoTab === "deleted" ? checkedItemsForDeleteButton : new Set(),
     isDeleting: isDeleting || false,
   });
   

@@ -11,7 +11,6 @@ import { memo, useEffect, useMemo, useState, useRef } from "react";
 import BoardHeader from "@/components/features/board/board-header";
 import { BulkDeleteConfirmation } from "@/components/ui/modals";
 import { useBoardSelectAll } from "@/src/hooks/use-board-select-all";
-import { useSelectAll } from "@/src/hooks/use-select-all";
 import { useMultiSelection } from "@/src/hooks/use-multi-selection";
 import { useBulkDeleteOperations } from "@/src/hooks/use-bulk-delete-operations";
 import { useBoardItems } from "@/src/hooks/use-board-items";
@@ -100,13 +99,9 @@ function BoardDetailScreen({
     checkedDeletedMemos,
     setCheckedDeletedMemos,
     checkedTodoTasks,
-    setCheckedTodoTasks,
     checkedInProgressTasks,
-    setCheckedInProgressTasks,
     checkedCompletedTasks,
-    setCheckedCompletedTasks,
     checkedDeletedTasks,
-    setCheckedDeletedTasks,
     getCheckedMemos,
     setCheckedMemos,
     getCheckedTasks,
@@ -137,6 +132,8 @@ function BoardDetailScreen({
     bulkAnimation,
     currentMemoDisplayCount,
     currentTaskDisplayCount,
+    getModalStatusBreakdown,
+    getHasOtherTabItems,
   } = useBulkDeleteOperations({
     boardId,
     checkedMemos,
@@ -144,6 +141,14 @@ function BoardDetailScreen({
     setCheckedMemos: (value) => setCheckedMemos(activeMemoTab, value),
     setCheckedTasks: (value) => setCheckedTasks(activeTaskTab, value),
     deleteButtonRef,
+    activeMemoTab,
+    activeTaskTab,
+    checkedNormalMemos,
+    checkedDeletedMemos,
+    checkedTodoTasks,
+    checkedInProgressTasks,
+    checkedCompletedTasks,
+    checkedDeletedTasks,
   });
   
   
@@ -234,16 +239,8 @@ function BoardDetailScreen({
     activeTaskTab,
     checkedNormalMemos,
     checkedDeletedMemos,
-    checkedTodoTasks,
-    checkedInProgressTasks,
-    checkedCompletedTasks,
-    checkedDeletedTasks,
     setCheckedNormalMemos,
     setCheckedDeletedMemos,
-    setCheckedTodoTasks,
-    setCheckedInProgressTasks,
-    setCheckedCompletedTasks,
-    setCheckedDeletedTasks,
     isMemoDeleting,
   });
 
@@ -395,7 +392,7 @@ function BoardDetailScreen({
             onMemoSelectionToggle={handleMemoSelectionToggle}
             onSelectAll={handleMemoSelectAll}
             isAllSelected={isMemoAllSelected}
-            onBulkDelete={() => handleBulkDelete('memo', <div className="text-sm text-gray-700 mb-3">選択したメモの操作を選択してください</div>)}
+            onBulkDelete={() => handleBulkDelete('memo')}
             isDeleting={isMemoDeleting}
             isLidOpen={isMemoLidOpen}
             currentDisplayCount={currentMemoDisplayCount}
@@ -428,7 +425,7 @@ function BoardDetailScreen({
             onTaskSelectionToggle={handleTaskSelectionToggle}
             onSelectAll={handleTaskSelectAll}
             isAllSelected={isTaskAllSelected}
-            onBulkDelete={() => handleBulkDelete('task', <div className="text-sm text-gray-700 mb-3">選択したタスクの操作を選択してください</div>)}
+            onBulkDelete={() => handleBulkDelete('task')}
             isDeleting={isTaskDeleting}
             isLidOpen={isTaskLidOpen}
             currentDisplayCount={currentTaskDisplayCount}
@@ -482,6 +479,8 @@ function BoardDetailScreen({
         customTitle={`${deletingItemType === 'memo' ? 'メモ' : 'タスク'}の操作を選択`}
         showRemoveFromBoard={true}
         onRemoveFromBoard={handleRemoveFromBoard}
+        statusBreakdown={getModalStatusBreakdown()}
+        hasOtherTabItems={getHasOtherTabItems()}
       />
 
       {/* 右側：詳細表示 */}

@@ -22,6 +22,7 @@ export function DeletionWarningMessage({
   showStatusBreakdown = true,
   isPermanentDelete = false
 }: DeletionWarningMessageProps) {
+
   return (
     <div className="text-center">
       {hasOtherTabItems && (

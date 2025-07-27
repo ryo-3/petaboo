@@ -179,6 +179,7 @@ export default function BoardRightPanel({
           hideHeaderButtons={true}
           forceShowBoardName={true}
           excludeBoardId={boardId}
+          initialSelectionMode="check"
         />
       )}
 

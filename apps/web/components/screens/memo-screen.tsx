@@ -50,6 +50,7 @@ interface MemoScreenProps {
   hideHeaderButtons?: boolean; // ヘッダーボタンを非表示（ボードから呼び出される場合）
   forceShowBoardName?: boolean; // ボード名表示を強制的に有効化（ボードから呼び出される場合）
   excludeBoardId?: number; // 指定されたボードに登録済みのメモを除外（ボードから呼び出される場合）
+  initialSelectionMode?: "select" | "check"; // 初期選択モード
 }
 
 function MemoScreen({
@@ -62,6 +63,7 @@ function MemoScreen({
   hideHeaderButtons = false,
   forceShowBoardName = false,
   excludeBoardId,
+  initialSelectionMode = "select",
 }: MemoScreenProps) {
   // 一括処理中断通知の監視
   useBulkProcessNotifications();
@@ -71,7 +73,7 @@ function MemoScreen({
 
   // 選択モード管理
   const [selectionMode, setSelectionMode] = useState<"select" | "check">(
-    "select"
+    initialSelectionMode
   );
 
   // 編集日表示管理

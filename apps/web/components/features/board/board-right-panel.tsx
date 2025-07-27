@@ -48,10 +48,10 @@ export default function BoardRightPanel({
   onTaskDeleteAndSelectNext,
   onMemoRestoreAndSelectNext,
   onTaskRestoreAndSelectNext,
-  onAddMemoToBoard,
-  onAddTaskToBoard,
+  onAddMemoToBoard, // eslint-disable-line @typescript-eslint/no-unused-vars
+  onAddTaskToBoard, // eslint-disable-line @typescript-eslint/no-unused-vars
 }: BoardRightPanelProps) {
-  const { setScreenMode, setCurrentMode, handleMainSelectMemo, handleMainSelectTask } = useNavigation();
+  const { handleMainSelectMemo, handleMainSelectTask } = useNavigation();
   
   // 削除済みアイテムかどうかを判定するヘルパー関数
   const isDeletedMemo = (memo: Memo | DeletedMemo): memo is DeletedMemo => {

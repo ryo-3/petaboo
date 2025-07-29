@@ -1,5 +1,6 @@
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 import { sql } from "drizzle-orm";
+import { boardCategories } from "./board-categories";
 
 export const boards = sqliteTable("boards", {
   id: integer("id").primaryKey({ autoIncrement: true }),
@@ -7,6 +8,7 @@ export const boards = sqliteTable("boards", {
   slug: text("slug").notNull().unique(),
   description: text("description"),
   userId: text("user_id").notNull(),
+  boardCategoryId: integer("board_category_id").references(() => boardCategories.id, { onDelete: "set null" }),
   archived: integer("archived", { mode: "boolean" }).notNull().default(false),
   completed: integer("completed", { mode: "boolean" }).notNull().default(false),
   createdAt: integer("created_at", { mode: "timestamp" })
@@ -36,6 +38,7 @@ export const deletedBoards = sqliteTable("deleted_boards", {
   name: text("name").notNull(),
   slug: text("slug").notNull(),
   description: text("description"),
+  boardCategoryId: integer("board_category_id"), // 削除時にカテゴリー情報も保存
   archived: integer("archived", { mode: "boolean" }).notNull(),
   createdAt: integer("created_at").notNull(),
   updatedAt: integer("updated_at"),

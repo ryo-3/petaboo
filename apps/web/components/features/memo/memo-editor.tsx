@@ -9,10 +9,13 @@ import BoardIconSelector from "@/components/ui/selectors/board-icon-selector";
 import Tooltip from "@/components/ui/base/tooltip";
 import BoardChangeModal from "@/components/ui/modals/board-change-modal";
 import { SingleDeleteConfirmation } from "@/components/ui/modals/confirmation-modal";
+import TagSelector from "@/components/features/tags/tag-selector";
 import { useBoards, useItemBoards } from "@/src/hooks/use-boards";
 import { useSimpleMemoSave } from "@/src/hooks/use-simple-memo-save";
+import { useItemTags, useCreateTagging, useDeleteTagging, useTaggings } from "@/src/hooks/use-taggings";
 import type { Memo } from "@/src/types/memo";
-import { useEffect, useRef, useState, memo, useMemo } from "react";
+import type { Tag, Tagging } from "@/src/types/tag";
+import { useEffect, useRef, useState, memo, useMemo, useCallback } from "react";
 
 interface MemoEditorProps {
   memo: Memo | null;
@@ -64,6 +67,99 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
   const [error] = useState<string | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [localTags, setLocalTags] = useState<Tag[]>([]);
+  const tagSelectorRef = useRef<HTMLDivElement>(null);
+  
+  // 現在のメモに紐づいているタグを取得
+  const { tags: currentTags } = useItemTags('memo', memo?.id.toString() || '');
+  const { data: currentTaggings = [] } = useTaggings({
+    targetType: 'memo',
+    targetOriginalId: memo?.id.toString() || '',
+  });
+  
+  // タグ操作用のmutation
+  const createTaggingMutation = useCreateTagging();
+  const deleteTaggingMutation = useDeleteTagging();
+
+  // localTagsを初期化・同期
+  const [lastMemoId, setLastMemoId] = useState(memo?.id);
+  const [hasManualChanges, setHasManualChanges] = useState(false);
+  const [lastSyncedTags, setLastSyncedTags] = useState<string>('');
+  
+  // メモが変更されたとき、またはcurrentTagsが実際に変更されたとき
+  useEffect(() => {
+    const memoChanged = memo?.id !== lastMemoId;
+    const currentTagsStr = JSON.stringify(currentTags.map(t => ({ id: t.id, name: t.name })));
+    const tagsActuallyChanged = currentTagsStr !== lastSyncedTags;
+    
+    if (memoChanged) {
+      setLocalTags(currentTags);
+      setLastMemoId(memo?.id);
+      setHasManualChanges(false);
+      setLastSyncedTags(currentTagsStr);
+    } else if (!hasManualChanges && tagsActuallyChanged) {
+      // 同じメモで、手動変更がなく、タグが実際に変更された場合（保存後の更新）
+      setLocalTags(currentTags);
+      setLastSyncedTags(currentTagsStr);
+    }
+  }, [memo?.id, currentTags, lastMemoId, hasManualChanges, lastSyncedTags]);
+
+  // タグに変更があるかチェック
+  const hasTagChanges = useMemo(() => {
+    if (!memo || memo.id === 0) return false;
+    
+    const currentTagIds = currentTags.map(tag => tag.id).sort();
+    const localTagIds = localTags.map(tag => tag.id).sort();
+    
+    return JSON.stringify(currentTagIds) !== JSON.stringify(localTagIds);
+  }, [currentTags, localTags, memo]);
+
+  // タグの差分を計算して一括更新する関数
+  const updateTaggings = useCallback(async (memoId: string) => {
+    if (!memo || memo.id === 0) return;
+
+    const currentTagIds = currentTags.map(tag => tag.id);
+    const localTagIds = localTags.map(tag => tag.id);
+    
+    // 削除するタグ（currentにあってlocalにない）
+    const tagsToRemove = currentTagIds.filter(id => !localTagIds.includes(id));
+    // 追加するタグ（localにあってcurrentにない）
+    const tagsToAdd = localTagIds.filter(id => !currentTagIds.includes(id));
+
+    // 削除処理
+    for (const tagId of tagsToRemove) {
+      const taggingToDelete = currentTaggings.find((t: Tagging) => t.tagId === tagId);
+      if (taggingToDelete) {
+        await deleteTaggingMutation.mutateAsync(taggingToDelete.id);
+      }
+    }
+
+    // 追加処理
+    for (const tagId of tagsToAdd) {
+      await createTaggingMutation.mutateAsync({
+        tagId,
+        targetType: 'memo',
+        targetOriginalId: memoId
+      });
+    }
+  }, [memo, currentTags, localTags, currentTaggings, deleteTaggingMutation, createTaggingMutation]);
+
+  // 拡張された保存処理
+  const handleSaveWithTags = useCallback(async () => {
+    try {
+      // まずメモを保存
+      await handleSave();
+      
+      // 保存後、タグも更新（既存メモの場合のみ）
+      if (memo && memo.id > 0) {
+        await updateTaggings(memo.id.toString());
+        // 手動変更フラグをリセット
+        setHasManualChanges(false);
+      }
+    } catch (error) {
+      console.error('保存に失敗しました:', error);
+    }
+  }, [handleSave, memo, updateTaggings]);
 
   // BoardIconSelector用のボードオプション
   const boardOptions = useMemo(() => {
@@ -123,15 +219,16 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
-        if (hasChanges) {
-          handleSave();
+        if (hasChanges || hasTagChanges) {
+          handleSaveWithTags();
         }
       }
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [handleSave, hasChanges]);
+  }, [handleSaveWithTags, hasChanges, hasTagChanges]);
+
 
   // ボード名を取得するためのヘルパー関数
   const getBoardName = (boardId: number) => {
@@ -189,9 +286,9 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
                 <span className="text-xs text-red-500">{saveError}</span>
               )}
               <SaveButton
-                onClick={handleSave}
-                disabled={!hasChanges}
-                isSaving={isSaving}
+                onClick={handleSaveWithTags}
+                disabled={!hasChanges && !hasTagChanges}
+                isSaving={isSaving || createTaggingMutation.isPending || deleteTaggingMutation.isPending}
                 buttonSize="size-7"
                 iconSize="size-4"
               />
@@ -202,16 +299,6 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
                   className="rounded-full"
                 />
               </Tooltip>
-              <Tooltip text="タグ" position="top">
-                <button
-                  onClick={() => {
-                    console.log('タグ編集をクリック');
-                  }}
-                  className="flex items-center justify-center size-7 rounded-md bg-gray-100 hover:bg-gray-200 transition-colors"
-                >
-                  <TagIcon className="size-5 text-gray-600" />
-                </button>
-              </Tooltip>
               <BoardIconSelector
                 options={boardOptions}
                 value={currentBoardValues}
@@ -219,6 +306,27 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
                 iconClassName="size-4 text-gray-600"
                 multiple={true}
               />
+              <div className="relative" ref={tagSelectorRef}>
+                <TagSelector
+                  selectedTags={localTags}
+                  onTagsChange={(tags) => {
+                    setLocalTags(tags);
+                    setHasManualChanges(true);
+                  }}
+                  placeholder="タグ..."
+                  className="w-7 h-7"
+                  renderTrigger={(onClick) => (
+                    <Tooltip text="タグ" position="top">
+                      <button
+                        onClick={onClick}
+                        className="flex items-center justify-center size-7 rounded-md bg-gray-100 hover:bg-gray-200 transition-colors"
+                      >
+                        <TagIcon className="size-5 text-gray-600" />
+                      </button>
+                    </Tooltip>
+                  )}
+                />
+              </div>
               {memo && onDelete && (
                   <button
                     onClick={handleDeleteClick}
@@ -230,6 +338,20 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
             </div>
           }
         >
+          {/* 現在のメモに紐づいているタグ一覧 */}
+          {memo && memo.id !== 0 && localTags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-3 mt-2">
+              {localTags.map((tag) => (
+                <div
+                  key={tag.id}
+                  className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs"
+                >
+                  <span>{tag.name}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          
           <textarea
             ref={textareaRef}
             placeholder="入力..."
@@ -241,7 +363,7 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
               handleTitleChange(firstLine);
               handleContentChange(newContent);
             }}
-            className={`w-full ${customHeight || 'flex-1'} resize-none outline-none text-gray-500 leading-relaxed font-medium pb-10 mb-2 mt-2 pr-1`}
+            className={`w-full ${customHeight || 'flex-1'} resize-none outline-none text-gray-500 leading-relaxed font-medium pb-10 mb-2 ${memo && memo.id !== 0 && localTags.length > 0 ? 'mt-0' : 'mt-2'} pr-1`}
           />
         </BaseViewer>
       </div>

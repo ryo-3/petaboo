@@ -8,6 +8,8 @@ import tasksRoute from "./src/routes/tasks/route";
 import userPreferencesRoute from "./src/routes/user-preferences/route";
 import categoriesRoute from "./src/routes/categories/route";
 import boardsRoute from "./src/routes/boards/route";
+import tagsRoute from "./src/routes/tags/route";
+import taggingsRoute from "./src/routes/taggings/route";
 
 // 環境変数確認（デバッグ用）
 console.log("=== API Server Environment ===");
@@ -33,6 +35,8 @@ app.route("/tasks", tasksRoute);
 app.route("/user-preferences", userPreferencesRoute);
 app.route("/categories", categoriesRoute);
 app.route("/boards", boardsRoute);
+app.route("/tags", tagsRoute);
+app.route("/taggings", taggingsRoute);
 app.get("/openapi", (c) => {
   const openapiJson = openapiApp.getOpenAPIDocument({
     openapi: "3.1.0", // バージョンは "3.0.0" でもOK

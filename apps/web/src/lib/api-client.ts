@@ -1,6 +1,7 @@
 // 直接fetchを使用したAPIクライアント
 import type { CreateMemoData, UpdateMemoData } from '@/src/types/memo'
 import type { CreateTaskData, UpdateTaskData } from '@/src/types/task'
+import type { CreateTagData, UpdateTagData, CreateTaggingData } from '@/src/types/tag'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8794'
 
@@ -226,6 +227,142 @@ export const tasksApi = {
       method: 'POST',
       headers: createHeaders(token, false), // Content-Typeを含めない
       body: formData,
+    })
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    return response
+  },
+}
+
+export const tagsApi = {
+  // GET /tags
+  getTags: async (token?: string, search?: string, sort?: 'name' | 'usage' | 'recent', limit?: number) => {
+    const params = new URLSearchParams()
+    if (search) params.append('search', search)
+    if (sort) params.append('sort', sort)
+    if (limit) params.append('limit', limit.toString())
+    
+    const url = `${API_BASE_URL}/tags${params.toString() ? `?${params.toString()}` : ''}`
+    const response = await fetch(url, { 
+      headers: createHeaders(token) 
+    })
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    return response
+  },
+  
+  // POST /tags
+  createTag: async (data: CreateTagData, token?: string) => {
+    const response = await fetch(`${API_BASE_URL}/tags`, {
+      method: 'POST',
+      headers: createHeaders(token),
+      body: JSON.stringify(data),
+    })
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    return response
+  },
+
+  // PUT /tags/:id
+  updateTag: async (id: number, data: UpdateTagData, token?: string) => {
+    const response = await fetch(`${API_BASE_URL}/tags/${id}`, {
+      method: 'PUT',
+      headers: createHeaders(token),
+      body: JSON.stringify(data),
+    })
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    return response
+  },
+
+  // DELETE /tags/:id
+  deleteTag: async (id: number, token?: string) => {
+    const response = await fetch(`${API_BASE_URL}/tags/${id}`, {
+      method: 'DELETE',
+      headers: createHeaders(token),
+    })
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    return response
+  },
+
+  // GET /tags/:id/stats
+  getTagStats: async (id: number, token?: string) => {
+    const response = await fetch(`${API_BASE_URL}/tags/${id}/stats`, { 
+      headers: createHeaders(token) 
+    })
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    return response
+  },
+}
+
+export const taggingsApi = {
+  // GET /taggings
+  getTaggings: async (token?: string, targetType?: string, targetOriginalId?: string, tagId?: number) => {
+    const params = new URLSearchParams()
+    if (targetType) params.append('targetType', targetType)
+    if (targetOriginalId) params.append('targetOriginalId', targetOriginalId)
+    if (tagId) params.append('tagId', tagId.toString())
+    params.append('includeTag', 'true') // タグ情報を含める
+    
+    const url = `${API_BASE_URL}/taggings${params.toString() ? `?${params.toString()}` : ''}`
+    const response = await fetch(url, { 
+      headers: createHeaders(token) 
+    })
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    return response
+  },
+
+  // POST /taggings
+  createTagging: async (data: CreateTaggingData, token?: string) => {
+    const response = await fetch(`${API_BASE_URL}/taggings`, {
+      method: 'POST',
+      headers: createHeaders(token),
+      body: JSON.stringify(data),
+    })
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    return response
+  },
+
+  // DELETE /taggings/:id
+  deleteTagging: async (id: number, token?: string) => {
+    const response = await fetch(`${API_BASE_URL}/taggings/${id}`, {
+      method: 'DELETE',
+      headers: createHeaders(token),
+    })
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    return response
+  },
+
+  // DELETE /taggings/by-tag
+  deleteTaggingsByTag: async (tagId: number, targetType?: string, targetOriginalId?: string, token?: string) => {
+    const params = new URLSearchParams()
+    params.append('tagId', tagId.toString())
+    if (targetType) params.append('targetType', targetType)
+    if (targetOriginalId) params.append('targetOriginalId', targetOriginalId)
+    
+    const response = await fetch(`${API_BASE_URL}/taggings/by-tag?${params.toString()}`, {
+      method: 'DELETE',
+      headers: createHeaders(token),
     })
     
     if (!response.ok) {

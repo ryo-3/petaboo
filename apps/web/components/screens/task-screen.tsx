@@ -10,6 +10,7 @@ import { useTasksBulkRestore } from "@/components/features/task/use-task-bulk-re
 import DesktopLower from "@/components/layout/desktop-lower";
 import DesktopUpper from "@/components/layout/desktop-upper";
 import { BulkActionButtons } from "@/components/ui/layout/bulk-action-buttons";
+import SelectionMenuButton from "@/components/ui/buttons/selection-menu-button";
 import RightPanel from "@/components/ui/layout/right-panel";
 import { useSortOptions } from "@/hooks/use-sort-options";
 import { useBulkDeleteButton } from "@/src/hooks/use-bulk-delete-button";
@@ -439,6 +440,30 @@ function TaskScreen({
           // アニメーション付きカウンター（タスク側で実装済み）
           animatedDeleteCount={currentDisplayCount}
           useAnimatedDeleteCount={true}
+        />
+        
+        {/* 選択メニューボタン（通常タブでアイテム選択時） */}
+        <SelectionMenuButton
+          count={checkedTasks.size}
+          onBoardLink={() => {
+            console.log('ボードに追加（タスク）:', checkedTasks);
+          }}
+          onExport={() => {
+            console.log('エクスポート（タスク）:', checkedTasks);
+          }}
+          onPin={() => {
+            console.log('ピン止め（タスク）:', checkedTasks);
+          }}
+          onTagging={() => {
+            console.log('タグ付け（タスク）:', checkedTasks);
+          }}
+          onTabMove={() => {
+            console.log('タブ移動（タスク）:', checkedTasks);
+          }}
+          isVisible={
+            activeTab !== "deleted" &&
+            checkedTasks.size > 0
+          }
         />
       </div>
 

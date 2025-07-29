@@ -4,6 +4,7 @@ import BaseViewer from "@/components/shared/base-viewer";
 import PhotoButton from "@/components/ui/buttons/photo-button";
 import SaveButton from "@/components/ui/buttons/save-button";
 import TrashIcon from "@/components/icons/trash-icon";
+import TagIcon from "@/components/icons/tag-icon";
 import BoardIconSelector from "@/components/ui/selectors/board-icon-selector";
 import Tooltip from "@/components/ui/base/tooltip";
 import BoardChangeModal from "@/components/ui/modals/board-change-modal";
@@ -200,6 +201,16 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
                   iconSize="size-5"
                   className="rounded-full"
                 />
+              </Tooltip>
+              <Tooltip text="タグ" position="top">
+                <button
+                  onClick={() => {
+                    console.log('タグ編集をクリック');
+                  }}
+                  className="flex items-center justify-center size-7 rounded-md bg-gray-100 hover:bg-gray-200 transition-colors"
+                >
+                  <TagIcon className="size-5 text-gray-600" />
+                </button>
               </Tooltip>
               <BoardIconSelector
                 options={boardOptions}

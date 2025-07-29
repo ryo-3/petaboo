@@ -2,6 +2,7 @@
 
 import CategorySelector from "@/components/features/category/category-selector";
 import TrashIcon from "@/components/icons/trash-icon";
+import TagIcon from "@/components/icons/tag-icon";
 import PhotoButton from "@/components/ui/buttons/photo-button";
 import SaveButton from "@/components/ui/buttons/save-button";
 import DateInput from "@/components/ui/inputs/date-input";
@@ -195,6 +196,16 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
             iconSize="size-5"
             className="rounded-full"
           />
+        </Tooltip>
+        <Tooltip text="タグ" position="top">
+          <button
+            onClick={() => {
+              console.log('タグ編集をクリック（タスク）');
+            }}
+            className="flex items-center justify-center size-7 rounded-md bg-gray-100 hover:bg-gray-200 transition-colors"
+          >
+            <TagIcon className="size-5 text-gray-600" />
+          </button>
         </Tooltip>
         <Tooltip text="ボード選択" position="top">
           <BoardIconSelector

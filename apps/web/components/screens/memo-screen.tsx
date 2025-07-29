@@ -10,6 +10,7 @@ import { useMemosBulkRestore } from "@/components/features/memo/use-memo-bulk-re
 import DesktopLower from "@/components/layout/desktop-lower";
 import DesktopUpper from "@/components/layout/desktop-upper";
 import { BulkActionButtons } from "@/components/ui/layout/bulk-action-buttons";
+import SelectionMenuButton from "@/components/ui/buttons/selection-menu-button";
 import RightPanel from "@/components/ui/layout/right-panel";
 import { useSortOptions } from "@/hooks/use-sort-options";
 import { useBulkDeleteButton } from "@/src/hooks/use-bulk-delete-button";
@@ -361,7 +362,7 @@ function MemoScreen({
       
       {/* 左側：一覧表示エリア */}
       <div
-        className={`${memoScreenMode === "list" ? "w-full" : "w-[44%]"} ${memoScreenMode !== "list" ? "border-r border-gray-300" : ""} pt-3 pl-5 pr-2 flex flex-col transition-all duration-300 relative`}
+        className={`${memoScreenMode === "list" ? "w-full" : "w-[44%]"} ${memoScreenMode !== "list" ? "border-r border-gray-300" : ""} ${hideHeaderButtons ? "pt-3" : "pt-3 pl-5 pr-2"} flex flex-col transition-all duration-300 relative`}
       >
         <DesktopUpper
           currentMode="memo"
@@ -452,6 +453,19 @@ function MemoScreen({
           isRestoring={isRestoreLidOpen}
           animatedRestoreCount={currentRestoreDisplayCount}
           useAnimatedRestoreCount={true}
+        />
+        
+        {/* 選択メニューボタン（通常タブでアイテム選択時） */}
+        <SelectionMenuButton
+          count={checkedMemos.size}
+          onMenuClick={() => {
+            // TODO: メニュー処理を実装
+            console.log('メニューボタンがクリックされました');
+          }}
+          isVisible={
+            activeTab === "normal" &&
+            checkedMemos.size > 0
+          }
         />
       </div>
 

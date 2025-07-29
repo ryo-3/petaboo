@@ -2,7 +2,6 @@ import BoardMemoSection from "@/components/features/board/board-memo-section";
 import BoardRightPanel from "@/components/features/board/board-right-panel";
 import BoardTaskSection from "@/components/features/board/board-task-section";
 import DesktopUpper from "@/components/layout/desktop-upper";
-import Tooltip from "@/components/ui/base/tooltip";
 import { useBoardState } from "@/src/hooks/use-board-state";
 import ItemBoardsPrefetcher from "@/components/shared/item-boards-prefetcher";
 import { Memo, DeletedMemo } from "@/src/types/memo";
@@ -19,12 +18,12 @@ import { CSVImportModal } from "@/components/features/board/csv-import-modal";
 
 interface BoardDetailProps {
   boardId: number;
-  onBack: () => void;
   selectedMemo?: Memo | DeletedMemo | null;
   selectedTask?: Task | DeletedTask | null;
   onSelectMemo?: (memo: Memo | DeletedMemo | null) => void;
   onSelectTask?: (task: Task | DeletedTask | null) => void;
   onClearSelection?: () => void;
+  onBack?: () => void;
   initialBoardName?: string;
   initialBoardDescription?: string | null;
   showBoardHeader?: boolean;
@@ -36,12 +35,12 @@ interface BoardDetailProps {
 
 function BoardDetailScreen({
   boardId,
-  onBack,
   selectedMemo: propSelectedMemo,
   selectedTask: propSelectedTask,
   onSelectMemo,
   onSelectTask,
   onClearSelection,
+  onBack, // eslint-disable-line @typescript-eslint/no-unused-vars
   initialBoardName,
   initialBoardDescription,
   showBoardHeader = true,

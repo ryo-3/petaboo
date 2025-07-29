@@ -46,7 +46,7 @@ function RightPanel({ isOpen, onClose, children, className, disableAnimation = f
       <ClosePanelButton onClose={onClose} />
       
       {/* コンテンツエリア */}
-      <div className={`pl-5 pr-2 pt-2 flex-1 flex flex-col ${shouldAnimate ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+      <div className={`pl-5 pr-2 flex-1 flex flex-col ${shouldAnimate ? 'overflow-hidden' : 'overflow-y-auto'}`}>
         {children}
       </div>
     </div>

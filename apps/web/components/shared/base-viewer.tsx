@@ -27,7 +27,7 @@ function BaseViewer({
   lastEditedAt,
 }: BaseViewerProps) {
   return (
-    <div className="flex flex-col h-full bg-white pt-2 pl-2">
+    <div className="flex flex-col h-full bg-white pt-2">
       <DateInfo
         item={item}
         isEditing={isEditing}

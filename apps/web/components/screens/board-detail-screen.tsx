@@ -365,7 +365,7 @@ function BoardDetailScreen({
                   ? "flex flex-col-reverse"
                   : "flex flex-col"
                 : `grid grid-cols-1 lg:grid-cols-2${isReversed ? " [&>*:nth-child(1)]:order-2 [&>*:nth-child(2)]:order-1" : ""}`
-          } gap-4 flex-1 min-h-0`}
+          } gap-2 flex-1 min-h-0`}
         >
           {/* メモ列 */}
           <BoardMemoSection

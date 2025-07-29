@@ -458,9 +458,20 @@ function MemoScreen({
         {/* 選択メニューボタン（通常タブでアイテム選択時） */}
         <SelectionMenuButton
           count={checkedMemos.size}
-          onMenuClick={() => {
-            // TODO: メニュー処理を実装
-            console.log('メニューボタンがクリックされました');
+          onBoardLink={() => {
+            console.log('ボードに追加:', checkedMemos);
+          }}
+          onExport={() => {
+            console.log('エクスポート:', checkedMemos);
+          }}
+          onPin={() => {
+            console.log('ピン止め:', checkedMemos);
+          }}
+          onTagging={() => {
+            console.log('タグ付け:', checkedMemos);
+          }}
+          onTabMove={() => {
+            console.log('タブ移動:', checkedMemos);
           }}
           isVisible={
             activeTab === "normal" &&

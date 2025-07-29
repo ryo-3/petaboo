@@ -1,10 +1,19 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { ButtonContainer } from "@/components/ui/layout/button-container";
+import SelectionMenu from "@/components/ui/menus/selection-menu";
+import DashboardIcon from "@/components/icons/dashboard-icon";
+import CsvExportIcon from "@/components/icons/csv-export-icon";
+import PinIcon from "@/components/icons/pin-icon";
 
 interface SelectionMenuButtonProps {
   count: number;
-  onMenuClick: () => void;
+  onMenuClick?: () => void;
   isVisible: boolean;
+  onBoardLink?: () => void;
+  onExport?: () => void;
+  onTagging?: () => void;
+  onPin?: () => void;
+  onTabMove?: () => void;
 }
 
 /**
@@ -14,13 +23,67 @@ interface SelectionMenuButtonProps {
 export default function SelectionMenuButton({
   count,
   onMenuClick,
-  isVisible
+  isVisible,
+  onBoardLink,
+  onExport,
+  onTagging,
+  onPin,
+  onTabMove
 }: SelectionMenuButtonProps) {
+  const buttonRef = useRef<HTMLElement>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const menuItems = [
+    {
+      id: 'pin',
+      label: 'ピン止め',
+      icon: <PinIcon className="w-4 h-4" />,
+      onClick: () => onPin?.()
+    },
+    {
+      id: 'board-link',
+      label: 'ボードに追加',
+      icon: <DashboardIcon className="w-4 h-4" />,
+      onClick: () => onBoardLink?.()
+    },
+    {
+      id: 'tag',
+      label: 'タグを付ける',
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+        </svg>
+      ),
+      onClick: () => onTagging?.()
+    },
+    {
+      id: 'export',
+      label: 'エクスポート',
+      icon: <CsvExportIcon className="w-4 h-4" />,
+      onClick: () => onExport?.()
+    },
+    {
+      id: 'tab-move',
+      label: 'タブ移動',
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+        </svg>
+      ),
+      onClick: () => onTabMove?.()
+    }
+  ];
+
+  const handleButtonClick = () => {
+    setIsMenuOpen(!isMenuOpen);
+    onMenuClick?.();
+  };
+
   return (
     <ButtonContainer show={isVisible} position="bottom-left">
-      <div className="relative">
+      <div ref={buttonRef as React.RefObject<HTMLDivElement>} className="relative">
         <button
-          onClick={onMenuClick}
+          onClick={handleButtonClick}
           className="bg-gray-400 hover:bg-gray-500 text-white p-2 rounded-full shadow-lg transition-colors flex items-center justify-center"
         >
           <svg
@@ -41,6 +104,14 @@ export default function SelectionMenuButton({
         <div className="absolute -top-2 -right-2 bg-Green text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-md">
           {count}
         </div>
+        
+        {/* メニュー */}
+        <SelectionMenu
+          isOpen={isMenuOpen}
+          onClose={() => setIsMenuOpen(false)}
+          items={menuItems}
+          anchorRef={buttonRef}
+        />
       </div>
     </ButtonContainer>
   );

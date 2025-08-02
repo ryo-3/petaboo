@@ -73,11 +73,11 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
   // 現在のメモに紐づいているタグを取得（メモが存在する場合のみ）
   const { tags: currentTags, isLoading: tagsLoading } = useItemTags(
     'memo', 
-    memo && memo.id > 0 ? memo.id.toString() : '__no_memo__'
+    memo && memo.id > 0 ? (memo.originalId || memo.id.toString()) : '__no_memo__'
   );
   const { data: currentTaggings = [] } = useTaggings({
     targetType: 'memo',
-    targetOriginalId: memo && memo.id > 0 ? memo.id.toString() : '__no_memo__',
+    targetOriginalId: memo && memo.id > 0 ? (memo.originalId || memo.id.toString()) : '__no_memo__',
   });
   
   // タグ操作用のmutation
@@ -207,7 +207,7 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
       
       // 保存後、タグも更新（既存メモの場合のみ）
       if (memo && memo.id > 0) {
-        await updateTaggings(memo.id.toString());
+        await updateTaggings(memo.originalId || memo.id.toString());
         // 手動変更フラグをリセット
         setHasManualChanges(false);
       }

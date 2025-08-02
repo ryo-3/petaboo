@@ -6,6 +6,7 @@ import Database from "better-sqlite3";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { memos, deletedMemos } from "../../db/schema/memos";
 import { boardItems } from "../../db/schema/boards";
+import { taggings } from "../../db/schema/tags";
 import { generateOriginalId, generateUuid, migrateOriginalId } from "../../utils/originalId";
 
 // SQLite & drizzle セットアップ
@@ -492,9 +493,22 @@ app.openapi(
     const { originalId } = c.req.valid("param");
     
     try {
-      const result = await db.delete(deletedMemos).where(
-        and(eq(deletedMemos.originalId, originalId), eq(deletedMemos.userId, auth.userId))
-      );
+      const result = await db.transaction(async (tx) => {
+        // 1. タグ付けを削除（タグ本体は保持）
+        await tx.delete(taggings).where(
+          and(
+            eq(taggings.targetType, 'memo'),
+            eq(taggings.targetOriginalId, originalId)
+          )
+        );
+        
+        // 2. メモを削除
+        const deleteResult = await tx.delete(deletedMemos).where(
+          and(eq(deletedMemos.originalId, originalId), eq(deletedMemos.userId, auth.userId))
+        );
+        
+        return deleteResult;
+      });
       
       if (result.changes === 0) {
         return c.json({ error: "Deleted note not found" }, 404);

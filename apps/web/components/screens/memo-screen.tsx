@@ -30,6 +30,7 @@ import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useBoards } from "@/src/hooks/use-boards";
 import ItemBoardsPrefetcher from "@/components/shared/item-boards-prefetcher";
+import ItemTagsPrefetcher from "@/components/shared/item-tags-prefetcher";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import {
   getMemoDisplayOrder,
@@ -119,6 +120,9 @@ function MemoScreen({
 
   // CSVインポートモーダルの状態
   const [isCsvImportModalOpen, setIsCsvImportModalOpen] = useState(false);
+
+  // 一括タグ付けモーダルの状態
+  const [isBulkTaggingModalOpen, setIsBulkTaggingModalOpen] = useState(false);
 
   // データ取得
   const { data: memos, isLoading: memoLoading, error: memoError } = useMemos();
@@ -360,6 +364,9 @@ function MemoScreen({
       {/* メモ一覧のボード情報をプリフェッチ（ちらつき防止） */}
       <ItemBoardsPrefetcher type="memo" items={memos} />
       
+      {/* メモ一覧のタグ情報をプリフェッチ（ちらつき防止） */}
+      <ItemTagsPrefetcher type="memo" items={memos} />
+      
       {/* 左側：一覧表示エリア */}
       <div
         className={`${memoScreenMode === "list" ? "w-full" : "w-[44%]"} ${memoScreenMode !== "list" ? "border-r border-gray-300" : ""} ${hideHeaderButtons ? "pt-3" : "pt-3 pl-5 pr-2"} flex flex-col transition-all duration-300 relative`}
@@ -468,7 +475,7 @@ function MemoScreen({
             console.log('ピン止め:', checkedMemos);
           }}
           onTagging={() => {
-            console.log('タグ付け:', checkedMemos);
+            setIsBulkTaggingModalOpen(true);
           }}
           onTabMove={() => {
             console.log('タブ移動:', checkedMemos);
@@ -488,6 +495,55 @@ function MemoScreen({
         onClose={() => setIsCsvImportModalOpen(false)}
       />
 
+      {/* 一括タグ付けモーダル */}
+      {isBulkTaggingModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 max-w-[90vw] max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium">一括タグ付け</h3>
+              <button
+                onClick={() => setIsBulkTaggingModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <span className="sr-only">閉じる</span>
+                ×
+              </button>
+            </div>
+            
+            <div className="mb-4 text-sm text-gray-600">
+              {checkedMemos.size}件のメモにタグを付けます
+            </div>
+            
+            {/* 選択されたメモごとにTagSelectorを表示 */}
+            <div className="space-y-4 max-h-64 overflow-y-auto">
+              {Array.from(checkedMemos).map(memoId => {
+                const memo = memos?.find(m => m.id === memoId);
+                if (!memo) return null;
+                
+                return (
+                  <div key={memoId} className="border rounded-lg p-3">
+                    <div className="text-sm font-medium mb-2 truncate">
+                      {memo.title || 'タイトルなし'}
+                    </div>
+                    {/* TODO: 一括タグ付け機能の実装 */}
+                    <div className="text-sm text-gray-500">タグ選択機能（実装予定）</div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            <div className="flex justify-end mt-4 gap-2">
+              <button
+                onClick={() => setIsBulkTaggingModalOpen(false)}
+                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+              >
+                閉じる
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 右側：詳細表示エリア */}
       <RightPanel
         isOpen={memoScreenMode !== "list"}
@@ -503,7 +559,6 @@ function MemoScreen({
         )}
         {memoScreenMode === "view" && selectedMemo && !selectedDeletedMemo && (
           <MemoEditor
-            key={`memo-${selectedMemo.id}`}
             memo={selectedMemo}
             onClose={() => setMemoScreenMode("list")}
             onSaveComplete={handleSaveComplete}

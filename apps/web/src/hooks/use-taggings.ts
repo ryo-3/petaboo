@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, useQueries } from '@tanstack/react-query'
 import { useAuth } from '@clerk/nextjs'
 import { taggingsApi } from '@/src/lib/api-client'
 import type { Tagging, CreateTaggingData, Tag } from '@/src/types/tag'
@@ -107,5 +107,34 @@ export function useDeleteTaggingsByTag() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['taggings'] })
     },
+  })
+}
+
+// アイテム一覧のタグ情報を一括プリフェッチ
+export function usePrefetchItemTags(itemType: 'memo' | 'task' | 'board', items: { id: number }[] | undefined) {
+  const { getToken, isLoaded } = useAuth()
+
+  return useQueries({
+    queries: (items || []).map(item => ({
+      queryKey: ['taggings', { targetType: itemType, targetOriginalId: item.id.toString() }],
+      queryFn: async () => {
+        const token = await getToken()
+        const response = await taggingsApi.getTaggings(
+          token || undefined,
+          itemType,
+          item.id.toString()
+        )
+        if (!response.ok) {
+          throw new Error(`Failed to fetch item tags: ${response.status}`)
+        }
+        const data = await response.json()
+        return data as Tagging[]
+      },
+      enabled: isLoaded && !!items,
+      staleTime: 2 * 60 * 1000,     // 2分間は新鮮なデータとして扱う
+      gcTime: 10 * 60 * 1000,       // 10分間キャッシュを保持
+      refetchOnWindowFocus: false,  // ウィンドウフォーカス時の再取得を無効化
+      refetchOnMount: false,        // マウント時の再取得を無効化
+    }))
   })
 }

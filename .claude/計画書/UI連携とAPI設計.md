@@ -1,6 +1,6 @@
 # UI連携とAPI設計
 
-## 現状：スキーマ実装完了
+## ✅ 実装完了：スキーマ + API
 
 ### 実装済みデータベース構造
 ```typescript
@@ -13,46 +13,41 @@ board_categories: { id, name, description, color, icon, sortOrder, userId, creat
 boards: { ..., boardCategoryId, ... } // 拡張済み
 ```
 
-## 次のステップ：UIとの連携
-
-### 1. API実装が必要なエンドポイント
+### ✅ 実装済みAPIエンドポイント
 
 #### タグ管理API
 ```typescript
-// apps/api/src/routes/tags.ts
-GET    /api/tags                    // タグ一覧取得
-POST   /api/tags                    // タグ作成
+// ✅ 実装済み: apps/api/src/routes/tags/
+GET    /api/tags                    // タグ一覧取得（検索・ソート対応）
+POST   /api/tags                    // タグ作成（制限300個）
 PUT    /api/tags/{id}               // タグ更新
 DELETE /api/tags/{id}               // タグ削除
-
-// クエリパラメータ
-GET /api/tags?q=keyword             // 検索
-GET /api/tags?sort=usage            // 使用頻度順
-GET /api/tags?recent=true           // 最近使用
+GET    /api/tags/{id}/stats         // タグ統計情報
 ```
 
 #### タグ付けAPI
 ```typescript
-// apps/api/src/routes/taggings.ts
-GET    /api/taggings                // タグ付け一覧
+// ✅ 実装済み: apps/api/src/routes/taggings/
+GET    /api/taggings                // タグ付け一覧（フィルタリング対応）
 POST   /api/taggings                // タグ付け追加
 DELETE /api/taggings/{id}           // タグ付け削除
-
-// 特定アイテムのタグ取得
-GET /api/taggings?targetType=memo&targetOriginalId=123
+DELETE /api/taggings/by-tag         // 特定タグの削除
 ```
 
 #### ボードカテゴリーAPI
 ```typescript
-// apps/api/src/routes/board-categories.ts
+// ✅ 実装済み: apps/api/src/routes/board-categories/
 GET    /api/board-categories        // カテゴリー一覧取得
-POST   /api/board-categories        // カテゴリー作成
+POST   /api/board-categories        // カテゴリー作成（制限30個）
 PUT    /api/board-categories/{id}   // カテゴリー更新
 DELETE /api/board-categories/{id}   // カテゴリー削除
 PUT    /api/board-categories/reorder // 並び順変更
+GET    /api/board-categories/{id}/stats // 統計情報
 ```
 
-#### 既存API拡張
+## 次のステップ：UIとの連携
+
+### 🔶 既存API拡張（未実装）
 ```typescript
 // 既存APIにタグ・カテゴリー対応を追加
 GET /api/memos?tags=tag1,tag2       // タグでフィルタリング

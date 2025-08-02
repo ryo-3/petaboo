@@ -70,11 +70,14 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
   const [localTags, setLocalTags] = useState<Tag[]>([]);
   const tagSelectorRef = useRef<HTMLDivElement>(null);
   
-  // 現在のメモに紐づいているタグを取得
-  const { tags: currentTags } = useItemTags('memo', memo?.id.toString() || '');
+  // 現在のメモに紐づいているタグを取得（メモが存在する場合のみ）
+  const { tags: currentTags, isLoading: tagsLoading } = useItemTags(
+    'memo', 
+    memo && memo.id > 0 ? memo.id.toString() : '__no_memo__'
+  );
   const { data: currentTaggings = [] } = useTaggings({
     targetType: 'memo',
-    targetOriginalId: memo?.id.toString() || '',
+    targetOriginalId: memo && memo.id > 0 ? memo.id.toString() : '__no_memo__',
   });
   
   // タグ操作用のmutation
@@ -82,37 +85,89 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
   const deleteTaggingMutation = useDeleteTagging();
 
   // localTagsを初期化・同期
-  const [lastMemoId, setLastMemoId] = useState(memo?.id);
+  const lastMemoIdRef = useRef<number | undefined>(undefined);
   const [hasManualChanges, setHasManualChanges] = useState(false);
   const [lastSyncedTags, setLastSyncedTags] = useState<string>('');
+  const [isInitialized, setIsInitialized] = useState(false);
   
-  // メモが変更されたとき、またはcurrentTagsが実際に変更されたとき
+  // メモ切り替え時の初期化処理
   useEffect(() => {
-    const memoChanged = memo?.id !== lastMemoId;
+    const memoId = memo?.id;
+    const lastMemoId = lastMemoIdRef.current;
+    
+    
+    // メモIDが変更されたか、初回レンダリングの場合のみ実行
+    if (memoId !== lastMemoId) {
+      lastMemoIdRef.current = memoId;
+      setHasManualChanges(false);
+      setIsInitialized(false);
+      setLastSyncedTags('');
+      
+      // 新規メモの場合は即座に空配列で初期化
+      if (!memo || memo.id === 0) {
+        setLocalTags([]);
+        setLastSyncedTags('[]');
+        setIsInitialized(true);
+      } else {
+        // 既存メモの場合は一旦空にしてデータ取得を待つ
+        setLocalTags([]);
+      }
+    }
+  }, [memo?.id, isInitialized]); // isInitializedも依存配列に追加（ログ用）
+  
+  // データ取得完了時の初期化処理
+  useEffect(() => {
+    const memoId = memo?.id;
+    
+    // 新規メモまたはデータロード中は何もしない
+    if (!memo || memo.id === 0 || tagsLoading) return;
+    
+    // まだ初期化されていない場合のみ実行
+    if (!isInitialized) {
+      // データが確実に取得されるまで少し待機
+      const timer = setTimeout(() => {
+        const currentTagsStr = JSON.stringify(currentTags.map(t => ({ id: t.id, name: t.name })));
+        setLocalTags(currentTags);
+        setLastSyncedTags(currentTagsStr);
+        setIsInitialized(true);
+      }, 50); // 50ms待機してキャッシュの更新を待つ
+      
+      return () => clearTimeout(timer);
+    }
+  }, [memo?.id, currentTags, tagsLoading, isInitialized]); // 依存配列を最小限に
+  
+  // 保存後のタグ同期処理（手動変更がない場合のみ）
+  useEffect(() => {
+    const memoId = memo?.id;
+    
+    // 新規メモ、データロード中、初期化前、手動変更ありの場合は何もしない
+    if (!memo || memo.id === 0 || tagsLoading || !isInitialized || hasManualChanges) return;
+    
     const currentTagsStr = JSON.stringify(currentTags.map(t => ({ id: t.id, name: t.name })));
     const tagsActuallyChanged = currentTagsStr !== lastSyncedTags;
     
-    if (memoChanged) {
-      setLocalTags(currentTags);
-      setLastMemoId(memo?.id);
-      setHasManualChanges(false);
-      setLastSyncedTags(currentTagsStr);
-    } else if (!hasManualChanges && tagsActuallyChanged) {
-      // 同じメモで、手動変更がなく、タグが実際に変更された場合（保存後の更新）
+    if (tagsActuallyChanged) {
       setLocalTags(currentTags);
       setLastSyncedTags(currentTagsStr);
     }
-  }, [memo?.id, currentTags, lastMemoId, hasManualChanges, lastSyncedTags]);
+  }, [memo?.id, currentTags, tagsLoading, isInitialized, hasManualChanges, lastSyncedTags]); // memoではなくmemo?.idに
 
   // タグに変更があるかチェック
   const hasTagChanges = useMemo(() => {
     if (!memo || memo.id === 0) return false;
+    // データがまだロード中の場合は変更なしとして扱う
+    if (tagsLoading) return false;
+    // 初期化が完了していない場合も変更なしとして扱う
+    if (!isInitialized) return false;
     
     const currentTagIds = currentTags.map(tag => tag.id).sort();
     const localTagIds = localTags.map(tag => tag.id).sort();
     
-    return JSON.stringify(currentTagIds) !== JSON.stringify(localTagIds);
-  }, [currentTags, localTags, memo]);
+    const hasChanges = JSON.stringify(currentTagIds) !== JSON.stringify(localTagIds);
+    
+    
+    return hasChanges;
+  }, [currentTags, localTags, memo, tagsLoading, isInitialized]);
 
   // タグの差分を計算して一括更新する関数
   const updateTaggings = useCallback(async (memoId: string) => {
@@ -308,7 +363,7 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
               />
               <div className="relative" ref={tagSelectorRef}>
                 <TagSelector
-                  selectedTags={localTags}
+                  selectedTags={isInitialized && !tagsLoading ? localTags : []}
                   onTagsChange={(tags) => {
                     setLocalTags(tags);
                     setHasManualChanges(true);

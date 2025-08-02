@@ -173,6 +173,12 @@ export function useBulkAnimation({ checkedItems, checkedDeletedItems }: UseBulkA
     setIsProcessing?: (value: boolean) => void,
     setIsLidOpen?: (value: boolean) => void
   ) => {
+    console.log('🛑 アニメーションキャンセル実行中...', { 
+      isCountingActive, 
+      isPartialProcessing, 
+      displayCount,
+      hasCounterInterval: !!timerRef.current.counterInterval
+    });
     
     // 全てのタイマーをクリア（カウンターのsetIntervalも含む）
     clearTimers()
@@ -185,6 +191,8 @@ export function useBulkAnimation({ checkedItems, checkedDeletedItems }: UseBulkA
     // 処理状態をリセット
     setIsProcessing?.(false)
     setIsLidOpen?.(false)
+    
+    console.log('✅ アニメーションキャンセル完了');
   }
 
   return {

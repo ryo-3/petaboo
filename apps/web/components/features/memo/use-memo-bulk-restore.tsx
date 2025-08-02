@@ -40,8 +40,10 @@ export function useMemosBulkRestore({
   const previousTabRef = useRef(activeTab);
   
   useEffect(() => {
+    console.log('🔍 復元タブ切り替え監視:', { previousTab: previousTabRef.current, currentTab: activeTab });
     // 前回と異なるタブに切り替わった場合のみキャンセル
     if (previousTabRef.current !== activeTab) {
+      console.log('🔄 タブ切り替えで復元アニメーションキャンセル:', { from: previousTabRef.current, to: activeTab });
       bulkAnimation.cancelAnimation(setIsRestoring, setIsLidOpen);
     }
     // 現在のタブを保存

@@ -227,6 +227,7 @@ function MemoScreen({
     checkedItems: checkedMemos,
     checkedDeletedItems: checkedDeletedMemos,
     isDeleting: isLeftDeleting,
+    isRestoring: isRestoreLidOpen,
   });
 
   // 全選択機能
@@ -290,6 +291,7 @@ function MemoScreen({
     RestoreModal,
     currentDisplayCount: currentRestoreDisplayCount,
   } = useMemosBulkRestore({
+    activeTab: activeTab as "normal" | "deleted",
     checkedDeletedMemos,
     setCheckedDeletedMemos,
     deletedMemos,
@@ -445,17 +447,28 @@ function MemoScreen({
         <BulkActionButtons
           showDeleteButton={showDeleteButton}
           deleteButtonCount={currentDisplayCount}
-          onDelete={handleLeftBulkDelete}
+          onDelete={() => {
+            console.log('🗑️ 削除ボタンが押されました')
+            console.log('🚫 復元ボタンを非表示にします')
+            handleLeftBulkDelete()
+          }}
           deleteButtonRef={deleteButtonRef}
           isDeleting={isLeftLidOpen}
           deleteVariant={activeTab === "deleted" ? "danger" : undefined}
           showRestoreButton={
             activeTab === "deleted" &&
+            !isLeftDeleting &&
             (checkedDeletedMemos.size > 0 ||
               (isRestoring && currentRestoreDisplayCount > 0))
           }
           restoreCount={checkedDeletedMemos.size}
-          onRestore={handleBulkRestore}
+          onRestore={() => {
+            console.log('🔄 復元ボタンが押されました')
+            // 復元ボタンを押した瞬間に削除ボタンを非表示にする
+            console.log('🚫 削除ボタンを非表示にします')
+            setIsRestoreLidOpen(true)
+            handleBulkRestore()
+          }}
           restoreButtonRef={restoreButtonRef}
           isRestoring={isRestoreLidOpen}
           animatedRestoreCount={currentRestoreDisplayCount}
@@ -482,7 +495,8 @@ function MemoScreen({
           }}
           isVisible={
             activeTab === "normal" &&
-            checkedMemos.size > 0
+            checkedMemos.size > 0 &&
+            !isLeftDeleting
           }
         />
       </div>

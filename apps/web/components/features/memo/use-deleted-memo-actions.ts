@@ -14,6 +14,7 @@ interface UseDeletedMemoActionsProps {
 
 export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, onRestoreAndSelectNext }: UseDeletedMemoActionsProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [isLocalRestoring, setIsLocalRestoring] = useState(false)
   const queryClient = useQueryClient()
   const { getToken } = useAuth()
   
@@ -89,11 +90,13 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
   const handleRestore = async () => {
     try {
       console.log('🔄 復元処理開始', { isPending: restoreNote.isPending })
+      setIsLocalRestoring(true)
       // API実行
       await restoreNote.mutateAsync(memo.originalId)
       console.log('✅ 復元処理完了')
       
-      // API成功後にUIを更新
+      // 復元完了後、すぐにUIを更新
+      setIsLocalRestoring(false)
       if (onRestoreAndSelectNext) {
         onRestoreAndSelectNext(memo)
       } else {
@@ -101,6 +104,7 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
       }
     } catch {
       console.log('❌ 復元処理失敗')
+      setIsLocalRestoring(false)
       alert('復元に失敗しました。')
     }
   }
@@ -129,6 +133,6 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
     
     // Loading states
     isDeleting: permanentDeleteNote.isPending,
-    isRestoring: restoreNote.isPending
+    isRestoring: restoreNote.isPending || isLocalRestoring
   }
 }

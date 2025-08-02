@@ -38,7 +38,7 @@ export interface TaskFormHandle {
 
 const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
   const {
-    task,
+    task, // eslint-disable-line @typescript-eslint/no-unused-vars
     title,
     onTitleChange,
     description,

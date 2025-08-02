@@ -73,6 +73,11 @@ const DeletedMemoViewer = forwardRef<
       }
     }, [isLidOpen, isAnimating]);
 
+    // デバッグ用ログ
+    useEffect(() => {
+      console.log('🔍 DeletedMemoViewer状態:', { isRestoring, isDeleting });
+    }, [isRestoring, isDeleting]);
+
     // refで外部から呼び出せるようにする
     useImperativeHandle(
       ref,

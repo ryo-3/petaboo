@@ -8,6 +8,7 @@ interface UseBulkDeleteButtonConfig {
   checkedItems: Set<number>;
   checkedDeletedItems: Set<number>;
   isDeleting: boolean;
+  isRestoring?: boolean;
 }
 
 /**
@@ -20,10 +21,15 @@ export function useBulkDeleteButton({
   checkedItems,
   checkedDeletedItems,
   isDeleting,
+  isRestoring = false,
 }: UseBulkDeleteButtonConfig) {
   
   // 削除ボタン表示判定の統一化
   const shouldShowLeftBulkDelete = useMemo(() => {
+    // 復元中は削除ボタンを非表示
+    if (isRestoring) {
+      return false;
+    }
     // 削除中は強制的に表示を維持
     if (isDeleting) {
       return true;
@@ -34,7 +40,7 @@ export function useBulkDeleteButton({
       checkedItems,
       checkedDeletedItems
     );
-  }, [activeTab, deletedTabName, checkedItems, checkedDeletedItems, isDeleting]);
+  }, [activeTab, deletedTabName, checkedItems, checkedDeletedItems, isDeleting, isRestoring]);
 
   const deleteButtonCount = useMemo(() => {
     return getDeleteButtonCount(
@@ -45,12 +51,20 @@ export function useBulkDeleteButton({
     );
   }, [activeTab, deletedTabName, checkedItems, checkedDeletedItems]);
 
-  // 削除ボタンの遅延非表示処理
+  // 削除ボタンの遅延非表示処理（復元中は即座に非表示）
   const showDeleteButton = useDelayedButtonVisibility(
     shouldShowLeftBulkDelete,
-    isDeleting,
-    2500  // 2.5秒に変更
+    isDeleting || isRestoring,  // 復元中も即座に反応するように
+    isRestoring ? 0 : 2500  // 復元中は遅延なし、削除中は2.5秒
   );
+
+  // デバッグログ
+  console.log('🔍 削除ボタン状態:', { 
+    shouldShowLeftBulkDelete, 
+    isDeleting, 
+    isRestoring, 
+    showDeleteButton 
+  });
 
   return {
     showDeleteButton,

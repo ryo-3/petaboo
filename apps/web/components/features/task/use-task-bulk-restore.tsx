@@ -7,6 +7,7 @@ import { useBulkAnimation } from '@/src/hooks/use-bulk-animation'
 import { executeWithAnimation } from '@/src/utils/bulkAnimationUtils'
 
 interface UseTasksBulkRestoreProps {
+  activeTab: "normal" | "deleted";
   checkedDeletedTasks: Set<number>
   setCheckedDeletedTasks: (tasks: Set<number>) => void
   deletedTasks?: DeletedTask[]
@@ -17,6 +18,7 @@ interface UseTasksBulkRestoreProps {
 }
 
 export function useTasksBulkRestore({
+  activeTab, // eslint-disable-line @typescript-eslint/no-unused-vars
   checkedDeletedTasks,
   setCheckedDeletedTasks,
   deletedTasks,

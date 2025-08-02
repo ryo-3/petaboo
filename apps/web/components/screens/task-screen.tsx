@@ -154,6 +154,7 @@ function TaskScreen({
     checkedItems: checkedTasks,
     checkedDeletedItems: checkedDeletedTasks,
     isDeleting,
+    isRestoring: isRestoreLidOpen,
   });
 
   // 全選択機能
@@ -209,6 +210,7 @@ function TaskScreen({
     RestoreModal,
     currentDisplayCount: currentRestoreDisplayCount,
   } = useTasksBulkRestore({
+    activeTab: activeTab as "normal" | "deleted",
     checkedDeletedTasks,
     setCheckedDeletedTasks,
     deletedTasks,
@@ -422,17 +424,28 @@ function TaskScreen({
         <BulkActionButtons
           showDeleteButton={showDeleteButton}
           deleteButtonCount={currentDisplayCount}
-          onDelete={handleBulkDelete}
+          onDelete={() => {
+            console.log('🗑️ 削除ボタンが押されました（タスク）')
+            console.log('🚫 復元ボタンを非表示にします（タスク）')
+            handleBulkDelete()
+          }}
           deleteButtonRef={deleteButtonRef}
           isDeleting={isLidOpen}
           deleteVariant={activeTab === "deleted" ? "danger" : undefined}
           showRestoreButton={
             activeTab === "deleted" &&
+            !isDeleting &&
             (checkedDeletedTasks.size > 0 ||
               (isRestoring && currentRestoreDisplayCount > 0))
           }
           restoreCount={checkedDeletedTasks.size}
-          onRestore={handleBulkRestore}
+          onRestore={() => {
+            console.log('🔄 復元ボタンが押されました（タスク）')
+            // 復元ボタンを押した瞬間に削除ボタンを非表示にする
+            console.log('🚫 削除ボタンを非表示にします（タスク）')
+            setIsRestoreLidOpen(true)
+            handleBulkRestore()
+          }}
           restoreButtonRef={restoreButtonRef}
           isRestoring={isRestoreLidOpen}
           animatedRestoreCount={currentRestoreDisplayCount}
@@ -462,7 +475,8 @@ function TaskScreen({
           }}
           isVisible={
             activeTab !== "deleted" &&
-            checkedTasks.size > 0
+            checkedTasks.size > 0 &&
+            !isDeleting
           }
         />
       </div>

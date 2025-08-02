@@ -82,16 +82,19 @@ export function useDeletedTaskActions({ task, onClose, onDeleteAndSelectNext, on
 
   const handleRestore = async () => {
     try {
-      
+      console.log('🔄 タスク復元処理開始', { isPending: restoreTask.isPending })
       // API実行
       await restoreTask.mutateAsync(task.originalId)
+      console.log('✅ タスク復元処理完了')
       
-      // API成功後にUIを更新
-      if (onRestoreAndSelectNext) {
-        onRestoreAndSelectNext(task)
-      } else {
-        onClose()
-      }
+      // 復元完了後、少し遅延してからUIを更新（アニメーションと状態更新を空ける）
+      setTimeout(() => {
+        if (onRestoreAndSelectNext) {
+          onRestoreAndSelectNext(task)
+        } else {
+          onClose()
+        }
+      }, 500) // 500ms待機
     } catch {
       alert('復元に失敗しました。')
     }

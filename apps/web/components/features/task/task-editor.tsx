@@ -460,7 +460,7 @@ function TaskEditor({
     const boardIds = values
       .filter(v => v !== "")
       .map(v => parseInt(v, 10));
-    handleBoardChange(boardIds);
+    handleBoardChange(boardIds.map(String));
   };
 
 
@@ -469,7 +469,6 @@ function TaskEditor({
 
     setIsSaving(true);
     setError(null);
-    setSavedSuccessfully(false);
     
     try {
       const taskData = {
@@ -486,7 +485,6 @@ function TaskEditor({
       if (isNewTask) {
         // 新規作成
         const newTask = await createTask.mutateAsync(taskData);
-        setSavedSuccessfully(true);
         
         // 選択されたボードに追加
         if (selectedBoardIds.length > 0 && newTask.id) {
@@ -527,7 +525,6 @@ function TaskEditor({
           setCategoryId(null);
           initializeBoardIds([]);
           setDueDate("");
-          setSavedSuccessfully(false);
           
           // originalDataもリセット
           setOriginalData(resetData);

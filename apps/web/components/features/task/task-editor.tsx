@@ -2,12 +2,21 @@
 
 import BaseViewer from "@/components/shared/base-viewer";
 import { SingleDeleteConfirmation } from "@/components/ui/modals";
+import SaveButton from "@/components/ui/buttons/save-button";
+import PhotoButton from "@/components/ui/buttons/photo-button";
+import TrashIcon from "@/components/icons/trash-icon";
+import TagIcon from "@/components/icons/tag-icon";
+import BoardIconSelector from "@/components/ui/selectors/board-icon-selector";
+import Tooltip from "@/components/ui/base/tooltip";
+import TagSelector from "@/components/features/tags/tag-selector";
 import TaskForm, { TaskFormHandle } from "./task-form";
 import { useUpdateTask, useCreateTask } from "@/src/hooks/use-tasks";
 import { useAddItemToBoard, useBoards, useItemBoards, useRemoveItemFromBoard } from "@/src/hooks/use-boards";
+import { useItemTags, useCreateTagging, useDeleteTagging, useTaggings } from "@/src/hooks/use-taggings";
 import { useBoardChangeModal } from "@/src/hooks/use-board-change-modal";
 import BoardChangeModal from "@/components/ui/modals/board-change-modal";
 import type { Task } from "@/src/types/task";
+import type { Tag, Tagging } from "@/src/types/tag";
 import { useCallback, useEffect, useState, useMemo, memo, useRef } from "react";
 import { useTaskDelete } from "./use-task-delete";
 
@@ -40,6 +49,27 @@ function TaskEditor({
   const { data: itemBoards = [] } = useItemBoards('task', task?.id);
   const isNewTask = !task || task.id === 0;
   const taskFormRef = useRef<TaskFormHandle>(null);
+  
+  // 現在のタスクに紐づいているタグを取得（タスクが存在する場合のみ）
+  const { tags: currentTags, isLoading: tagsLoading } = useItemTags(
+    'task', 
+    task && task.id > 0 ? (task.originalId || task.id.toString()) : '__no_task__'
+  );
+  const { data: currentTaggings = [] } = useTaggings({
+    targetType: 'task',
+    targetOriginalId: task && task.id > 0 ? (task.originalId || task.id.toString()) : '__no_task__',
+  });
+  
+  // タグ操作用のmutation
+  const createTaggingMutation = useCreateTagging();
+  const deleteTaggingMutation = useDeleteTagging();
+  
+  // ローカルタグ状態
+  const [localTags, setLocalTags] = useState<Tag[]>([]);
+  const lastTaskIdRef = useRef<number | undefined>(undefined);
+  const [hasManualTagChanges, setHasManualTagChanges] = useState(false);
+  const [lastSyncedTags, setLastSyncedTags] = useState<string>('');
+  const [isTagsInitialized, setIsTagsInitialized] = useState(false);
   
   // 削除機能は編集時のみ
   const {
@@ -109,7 +139,63 @@ function TaskEditor({
   
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [savedSuccessfully, setSavedSuccessfully] = useState(false);
+  
+  // タスク切り替え時のタグ初期化処理
+  useEffect(() => {
+    const taskId = task?.id;
+    const lastTaskId = lastTaskIdRef.current;
+    
+    // タスクIDが変更されたか、初回レンダリングの場合のみ実行
+    if (taskId !== lastTaskId) {
+      lastTaskIdRef.current = taskId;
+      setHasManualTagChanges(false);
+      setIsTagsInitialized(false);
+      setLastSyncedTags('');
+      
+      // 新規タスクの場合は即座に空配列で初期化
+      if (!task || task.id === 0) {
+        setLocalTags([]);
+        setLastSyncedTags('[]');
+        setIsTagsInitialized(true);
+      } else {
+        // 既存タスクの場合は一旦空にしてデータ取得を待つ
+        setLocalTags([]);
+      }
+    }
+  }, [task, isTagsInitialized]);
+  
+  // データ取得完了時のタグ初期化処理
+  useEffect(() => {
+    // 新規タスクまたはデータロード中は何もしない
+    if (!task || task.id === 0 || tagsLoading) return;
+    
+    // まだ初期化されていない場合のみ実行
+    if (!isTagsInitialized) {
+      // データが確実に取得されるまで少し待機
+      const timer = setTimeout(() => {
+        const currentTagsStr = JSON.stringify(currentTags.map(t => ({ id: t.id, name: t.name })));
+        setLocalTags(currentTags);
+        setLastSyncedTags(currentTagsStr);
+        setIsTagsInitialized(true);
+      }, 50);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [task, currentTags, tagsLoading, isTagsInitialized]);
+  
+  // 保存後のタグ同期処理（手動変更がない場合のみ）
+  useEffect(() => {
+    // 新規タスク、データロード中、初期化前、手動変更ありの場合は何もしない
+    if (!task || task.id === 0 || tagsLoading || !isTagsInitialized || hasManualTagChanges) return;
+    
+    const currentTagsStr = JSON.stringify(currentTags.map(t => ({ id: t.id, name: t.name })));
+    const tagsActuallyChanged = currentTagsStr !== lastSyncedTags;
+    
+    if (tagsActuallyChanged) {
+      setLocalTags(currentTags);
+      setLastSyncedTags(currentTagsStr);
+    }
+  }, [task, currentTags, tagsLoading, isTagsInitialized, hasManualTagChanges, lastSyncedTags]);
   
   // 新規作成・編集両対応の仮タスクオブジェクト
   const tempTask: Task = task || {
@@ -123,6 +209,50 @@ function TaskEditor({
     updatedAt: Math.floor(Date.now() / 1000),
     dueDate: dueDate ? Math.floor(new Date(dueDate).getTime() / 1000) : null,
   };
+
+  // タグに変更があるかチェック
+  const hasTagChanges = useMemo(() => {
+    if (!task || task.id === 0) return false;
+    // データがまだロード中の場合は変更なしとして扱う
+    if (tagsLoading) return false;
+    // 初期化が完了していない場合も変更なしとして扱う
+    if (!isTagsInitialized) return false;
+    
+    const currentTagIds = currentTags.map(tag => tag.id).sort();
+    const localTagIds = localTags.map(tag => tag.id).sort();
+    
+    return JSON.stringify(currentTagIds) !== JSON.stringify(localTagIds);
+  }, [currentTags, localTags, task, tagsLoading, isTagsInitialized]);
+
+  // タグの差分を計算して一括更新する関数
+  const updateTaggings = useCallback(async (taskId: string) => {
+    if (!task || task.id === 0) return;
+
+    const currentTagIds = currentTags.map(tag => tag.id);
+    const localTagIds = localTags.map(tag => tag.id);
+    
+    // 削除するタグ（currentにあってlocalにない）
+    const tagsToRemove = currentTagIds.filter(id => !localTagIds.includes(id));
+    // 追加するタグ（localにあってcurrentにない）
+    const tagsToAdd = localTagIds.filter(id => !currentTagIds.includes(id));
+
+    // 削除処理
+    for (const tagId of tagsToRemove) {
+      const taggingToDelete = currentTaggings.find((t: Tagging) => t.tagId === tagId);
+      if (taggingToDelete) {
+        await deleteTaggingMutation.mutateAsync(taggingToDelete.id);
+      }
+    }
+
+    // 追加処理
+    for (const tagId of tagsToAdd) {
+      await createTaggingMutation.mutateAsync({
+        tagId,
+        targetType: 'task',
+        targetOriginalId: taskId
+      });
+    }
+  }, [task, currentTags, localTags, currentTaggings, deleteTaggingMutation, createTaggingMutation]);
 
   // 変更検知用のstate
   const [originalData, setOriginalData] = useState<{
@@ -152,7 +282,7 @@ function TaskEditor({
   }, [title, description, status, priority, categoryId, dueDate, selectedBoardIds, originalData]);
 
   // 新規作成時の保存可能性チェック
-  const canSave = isNewTask ? !!title.trim() : hasChanges;
+  const canSave = isNewTask ? !!title.trim() : (hasChanges || hasTagChanges);
 
 
   // taskプロパティが変更された時にstateを更新
@@ -305,6 +435,35 @@ function TaskEditor({
     return board ? board.name : `ボード${boardId}`;
   };
 
+  // BoardIconSelector用のボードオプション
+  const boardOptions = useMemo(() => {
+    const options = [
+      { value: "", label: "なし" }
+    ];
+    
+    boards.forEach(board => {
+      options.push({
+        value: board.id.toString(),
+        label: board.name
+      });
+    });
+    
+    return options;
+  }, [boards]);
+
+  // 現在選択されているボードのvalue（複数選択対応）
+  const currentBoardValues = selectedBoardIds.map(id => id.toString());
+
+  // ボード選択変更ハンドラー
+  const handleBoardSelectorChange = (value: string | string[]) => {
+    const values = Array.isArray(value) ? value : [value];
+    const boardIds = values
+      .filter(v => v !== "")
+      .map(v => parseInt(v, 10));
+    handleBoardChange(boardIds);
+  };
+
+
   const handleSave = useCallback(async () => {
     if (!title.trim() || isSaving) return;
 
@@ -398,6 +557,12 @@ function TaskEditor({
           });
         }
         
+        // タグ更新処理
+        if (hasTagChanges) {
+          await updateTaggings(task!.originalId || task!.id.toString());
+          setHasManualTagChanges(false);
+        }
+        
         // ボード変更処理
         const currentBoardIds = itemBoards.map(board => board.id.toString());
         const toAdd = selectedBoardIds.filter(id => !currentBoardIds.includes(id));
@@ -482,6 +647,8 @@ function TaskEditor({
     originalData,
     initializeBoardIds,
     showModal,
+    hasTagChanges,
+    updateTaggings,
   ]);
 
   // Ctrl+Sショートカット（変更がある場合のみ実行）
@@ -506,11 +673,80 @@ function TaskEditor({
           item={tempTask}
           onClose={onClose}
           error={error ? "エラー" : null}
-          headerActions={null}
+          headerActions={
+            <div className="flex items-center gap-2">
+              {error && (
+                <span className="text-xs text-red-500">{error}</span>
+              )}
+              <SaveButton
+                onClick={handleSave}
+                disabled={!canSave}
+                isSaving={isSaving || createTaggingMutation.isPending || deleteTaggingMutation.isPending}
+                buttonSize="size-7"
+                iconSize="size-4"
+              />
+              <Tooltip text="写真" position="top">
+                <PhotoButton
+                  buttonSize="size-7"
+                  iconSize="size-5"
+                  className="rounded-full"
+                />
+              </Tooltip>
+              <BoardIconSelector
+                options={boardOptions}
+                value={currentBoardValues}
+                onChange={handleBoardSelectorChange}
+                iconClassName="size-4 text-gray-600"
+                multiple={true}
+              />
+              <TagSelector
+                selectedTags={isTagsInitialized && !tagsLoading ? localTags : []}
+                onTagsChange={(tags) => {
+                  setLocalTags(tags);
+                  setHasManualTagChanges(true);
+                }}
+                placeholder="タグ..."
+                className="w-7 h-7"
+                renderTrigger={(onClick) => (
+                  <Tooltip text="タグ" position="top">
+                    <button
+                      onClick={onClick}
+                      className="flex items-center justify-center size-7 rounded-md bg-gray-100 hover:bg-gray-200 transition-colors"
+                    >
+                      <TagIcon className="size-5 text-gray-600" />
+                    </button>
+                  </Tooltip>
+                )}
+              />
+              {!isNewTask && (
+                  <button
+                    onClick={handleDeleteClick}
+                    className="flex items-center justify-center size-7 rounded-md bg-gray-100"
+                  >
+                    <TrashIcon className="size-5" isLidOpen={isLidOpen} />
+                  </button>
+              )}
+            </div>
+          }
           isEditing={true}
         >
+          {/* 現在のタスクに紐づいているタグ一覧 */}
+          {task && task.id !== 0 && localTags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-3 mt-2">
+              {localTags.map((tag) => (
+                <div
+                  key={tag.id}
+                  className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs"
+                >
+                  <span>{tag.name}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          
         <TaskForm
           ref={taskFormRef}
+          task={task}
           title={title}
           onTitleChange={setTitle}
           description={description}
@@ -521,19 +757,10 @@ function TaskEditor({
           onPriorityChange={setPriority}
           categoryId={categoryId}
           onCategoryChange={setCategoryId}
-          selectedBoardIds={selectedBoardIds}
-          onBoardChange={handleBoardChange}
           dueDate={dueDate}
           onDueDateChange={setDueDate}
-          onSave={handleSave}
-          onDelete={handleDeleteClick}
-          isLidOpen={isLidOpen}
-          isSaving={isSaving}
-          hasChanges={canSave}
-          savedSuccessfully={savedSuccessfully}
           isNewTask={isNewTask}
           customHeight={customHeight}
-          boards={boards}
         />
         </BaseViewer>
       </div>

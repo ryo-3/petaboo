@@ -1,7 +1,7 @@
 import { useBulkDelete, BulkDeleteConfirmation } from "@/components/ui/modals";
 import { useDeleteMemo, usePermanentDeleteMemo } from "@/src/hooks/use-memos";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import React from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
@@ -73,6 +73,18 @@ export function useMemosBulkDelete({
     checkedItems: checkedMemos,
     checkedDeletedItems: checkedDeletedMemos,
   });
+
+  // タブ切り替え時のアニメーションキャンセル
+  const previousTabRef = useRef(activeTab);
+  
+  useEffect(() => {
+    // 前回と異なるタブに切り替わった場合のみキャンセル
+    if (previousTabRef.current !== activeTab) {
+      bulkAnimation.cancelAnimation(setIsDeleting, setIsLidOpen);
+    }
+    // 現在のタブを保存
+    previousTabRef.current = activeTab;
+  }, [activeTab, bulkAnimation, setIsDeleting, setIsLidOpen]);
 
   // アニメーションキャンセルイベントを監視
   useEffect(() => {

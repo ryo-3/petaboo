@@ -119,34 +119,40 @@ const DeletedTaskViewer = forwardRef<
         >
           <DateInfo item={task} />
           <div className="flex justify-start items-center">
-            <RestoreButton
-              onRestore={handleRestore}
-              isRestoring={isRestoring}
-              buttonSize="size-7"
-              iconSize="size-4"
-            />
-            <Tooltip text="完全削除" position="top">
-              <button
-                onClick={() => {
-                  if (onDeleteClick) {
-                    onDeleteClick();
-                  } else {
-                    showDeleteConfirmation();
-                  }
-                }}
-                onMouseEnter={() => setIsTrashHovered(true)}
-                onMouseLeave={() => setIsTrashHovered(false)}
-                className={`flex items-center justify-center size-7 ml-2 rounded-md transition-colors duration-200 ${
-                  isAnimating
-                    ? "bg-red-200 text-red-600"
-                    : isTrashHovered
+            {/* 削除中は復元ボタンを非表示 */}
+            {!isDeleting && (
+              <RestoreButton
+                onRestore={handleRestore}
+                isRestoring={isRestoring}
+                buttonSize="size-7"
+                iconSize="size-4"
+              />
+            )}
+            {/* 復元中は削除ボタンを非表示 */}
+            {!isRestoring && (
+              <Tooltip text="完全削除" position="top">
+                <button
+                  onClick={() => {
+                    if (onDeleteClick) {
+                      onDeleteClick();
+                    } else {
+                      showDeleteConfirmation();
+                    }
+                  }}
+                  onMouseEnter={() => setIsTrashHovered(true)}
+                  onMouseLeave={() => setIsTrashHovered(false)}
+                  className={`flex items-center justify-center size-7 ml-2 rounded-md transition-colors duration-200 ${
+                    isAnimating
                       ? "bg-red-200 text-red-600"
-                      : "bg-red-100 text-red-600"
-                }`}
-              >
-                <TrashIcon className="size-5" isLidOpen={isLidOpen} />
-              </button>
-            </Tooltip>
+                      : isTrashHovered
+                        ? "bg-red-200 text-red-600"
+                        : "bg-red-100 text-red-600"
+                  }`}
+                >
+                  <TrashIcon className="size-5" isLidOpen={isLidOpen} />
+                </button>
+              </Tooltip>
+            )}
             <div className="flex-1" />
           </div>
 

@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useDeleteTask, usePermanentDeleteTask } from '@/src/hooks/use-tasks'
 import { useBulkDelete, BulkDeleteConfirmation } from '@/components/ui/modals'
 import type { Task, DeletedTask } from '@/src/types/task'
@@ -71,6 +71,18 @@ export function useTasksBulkDelete({
     checkedItems: checkedTasks,
     checkedDeletedItems: checkedDeletedTasks,
   })
+
+  // タブ切り替え時のアニメーションキャンセル
+  const previousTabRef = useRef(activeTab);
+  
+  useEffect(() => {
+    // 前回と異なるタブに切り替わった場合のみキャンセル
+    if (previousTabRef.current !== activeTab) {
+      bulkAnimation.cancelAnimation(setIsDeleting, setIsLidOpen);
+    }
+    // 現在のタブを保存
+    previousTabRef.current = activeTab;
+  }, [activeTab, bulkAnimation, setIsDeleting, setIsLidOpen]);
 
   // チェック状態のクリーンアップ - 削除されたタスクのチェックを解除（部分削除中は無効）
   useEffect(() => {

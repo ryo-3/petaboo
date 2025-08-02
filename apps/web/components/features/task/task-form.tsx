@@ -1,25 +1,19 @@
 "use client";
 
 import CategorySelector from "@/components/features/category/category-selector";
-import TrashIcon from "@/components/icons/trash-icon";
-import TagIcon from "@/components/icons/tag-icon";
-import PhotoButton from "@/components/ui/buttons/photo-button";
-import SaveButton from "@/components/ui/buttons/save-button";
 import DateInput from "@/components/ui/inputs/date-input";
-import BoardIconSelector from "@/components/ui/selectors/board-icon-selector";
 import CustomSelector from "@/components/ui/selectors/custom-selector";
-import Tooltip from "@/components/ui/base/tooltip";
-import { useBoards } from "@/src/hooks/use-boards";
-import type { Board } from "@/src/types/board";
+import type { Task } from "@/src/types/task";
 import {
   getPriorityEditorColor,
   getPriorityText,
   getStatusEditorColor,
   getStatusText,
 } from "@/src/utils/taskUtils";
-import { useEffect, useMemo, useRef, useState, forwardRef, useImperativeHandle } from "react";
+import { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 
 interface TaskFormProps {
+  task?: Task | null;
   title: string;
   onTitleChange: (value: string) => void;
   description: string;
@@ -30,21 +24,12 @@ interface TaskFormProps {
   onPriorityChange: (value: "low" | "medium" | "high") => void;
   categoryId: number | null;
   onCategoryChange: (value: number | null) => void;
-  selectedBoardIds: string[];
-  onBoardChange: (value: string | string[]) => void;
   dueDate: string;
   onDueDateChange: (value: string) => void;
-  onSave: () => void;
-  onDelete?: () => void;
-  isLidOpen?: boolean;
-  isSaving: boolean;
-  hasChanges?: boolean;
-  savedSuccessfully?: boolean;
   isNewTask?: boolean;
   titlePlaceholder?: string;
   descriptionPlaceholder?: string;
   customHeight?: string;
-  boards?: Board[]; // ボードデータをpropsとして受け取る
 }
 
 export interface TaskFormHandle {
@@ -53,6 +38,7 @@ export interface TaskFormHandle {
 
 const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
   const {
+    task,
     title,
     onTitleChange,
     description,
@@ -63,29 +49,15 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
     onPriorityChange,
     categoryId,
     onCategoryChange,
-    selectedBoardIds,
-    onBoardChange,
     dueDate,
     onDueDateChange,
-    onSave,
-    onDelete,
-    isLidOpen = false,
-    isSaving,
-    hasChanges = true,
-    savedSuccessfully = false,
     isNewTask = false,
     titlePlaceholder = "タスクタイトルを入力...",
     descriptionPlaceholder = "入力...",
     customHeight,
-    boards: boardsProp,
   } = props;
-  // propsからボードデータが渡された場合はそれを使用、なければuseBoards
-  const { data: boardsFromHook = [] } = useBoards();
-  const boards = boardsProp || boardsFromHook;
   const titleInputRef = useRef<HTMLInputElement>(null);
   const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
-  const [isTrashHovered, setIsTrashHovered] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
 
   // 新規作成時のフォーカス遅延
   useEffect(() => {
@@ -104,43 +76,6 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
     }
   }), []);
 
-  // 蓋の状態を監視してアニメーション状態を管理
-  useEffect(() => {
-    if (isLidOpen) {
-      setIsAnimating(true);
-    } else if (isAnimating) {
-      // 蓋が閉じた後、300ms待ってからアニメーション状態をリセット
-      const timer = setTimeout(() => {
-        setIsAnimating(false);
-        // アニメーション完了時にホバー状態もリセット
-        setIsTrashHovered(false);
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [isLidOpen, isAnimating]);
-
-  // BoardIconSelector用のボードオプション
-  const boardOptions = useMemo(() => {
-    const options = [{ value: "", label: "なし" }];
-
-    boards.forEach((board) => {
-      options.push({
-        value: board.id.toString(),
-        label: board.name,
-      });
-    });
-
-
-    return options;
-  }, [boards]);
-
-  // 現在選択されているボードの値（複数選択対応）
-  const currentBoardValue = selectedBoardIds;
-
-  // ボード選択変更ハンドラー（複数選択対応）
-  const handleBoardSelectorChange = (value: string | string[]) => {
-    onBoardChange(value);
-  };
 
   // オプションの定義（色はtaskUtilsから取得）
   const statusOptions = [
@@ -181,58 +116,6 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
 
   return (
     <div className="flex flex-col flex-1">
-      <div className="flex justify-start gap-2">
-        <SaveButton
-          onClick={onSave}
-          disabled={!hasChanges}
-          isSaving={isSaving}
-          savedSuccessfully={savedSuccessfully}
-          buttonSize="size-7"
-          iconSize="size-4"
-        />
-        <Tooltip text="写真" position="top">
-          <PhotoButton
-            buttonSize="size-7"
-            iconSize="size-5"
-            className="rounded-full"
-          />
-        </Tooltip>
-        <Tooltip text="タグ" position="top">
-          <button
-            onClick={() => {
-              console.log('タグ編集をクリック（タスク）');
-            }}
-            className="flex items-center justify-center size-7 rounded-md bg-gray-100 hover:bg-gray-200 transition-colors"
-          >
-            <TagIcon className="size-5 text-gray-600" />
-          </button>
-        </Tooltip>
-        <Tooltip text="ボード選択" position="top">
-          <BoardIconSelector
-            options={boardOptions}
-            value={currentBoardValue}
-            onChange={handleBoardSelectorChange}
-            iconClassName="size-4 text-gray-600"
-            multiple={true}
-          />
-        </Tooltip>
-        {!isNewTask && onDelete && (
-            <button
-              onClick={onDelete}
-              onMouseEnter={() => setIsTrashHovered(true)}
-              onMouseLeave={() => setIsTrashHovered(false)}
-              className={`flex items-center justify-center size-7 rounded-md transition-colors duration-200 ${
-                isAnimating
-                  ? "bg-gray-200"
-                  : isTrashHovered
-                    ? "bg-gray-200"
-                    : "bg-gray-100"
-              }`}
-            >
-              <TrashIcon className="size-5" isLidOpen={isLidOpen} />
-            </button>
-        )}
-      </div>
 
       <div className="flex items-center">
         <input
@@ -297,6 +180,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
           </div>
         </div>
       </div>
+
 
       <div className="mt-2 flex-1 flex flex-col">
         <textarea

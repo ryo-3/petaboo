@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useRestoreMemo } from '@/src/hooks/use-memos'
 import { useBulkDelete, BulkRestoreConfirmation } from '@/components/ui/modals'
 import type { DeletedMemo } from '@/src/types/memo'
@@ -7,6 +7,7 @@ import { useBulkAnimation } from '@/src/hooks/use-bulk-animation'
 import { executeWithAnimation } from '@/src/utils/bulkAnimationUtils'
 
 interface UseMemosBulkRestoreProps {
+  activeTab: "normal" | "deleted";
   checkedDeletedMemos: Set<number>
   setCheckedDeletedMemos: (memos: Set<number>) => void
   deletedMemos?: DeletedMemo[]
@@ -17,6 +18,7 @@ interface UseMemosBulkRestoreProps {
 }
 
 export function useMemosBulkRestore({
+  activeTab,
   checkedDeletedMemos,
   setCheckedDeletedMemos,
   deletedMemos,
@@ -33,6 +35,18 @@ export function useMemosBulkRestore({
     checkedItems: new Set(),
     checkedDeletedItems: checkedDeletedMemos,
   })
+
+  // タブ切り替え時のアニメーションキャンセル
+  const previousTabRef = useRef(activeTab);
+  
+  useEffect(() => {
+    // 前回と異なるタブに切り替わった場合のみキャンセル
+    if (previousTabRef.current !== activeTab) {
+      bulkAnimation.cancelAnimation(setIsRestoring, setIsLidOpen);
+    }
+    // 現在のタブを保存
+    previousTabRef.current = activeTab;
+  }, [activeTab, bulkAnimation, setIsRestoring, setIsLidOpen]);
 
   // チェック状態のクリーンアップ - 復元されたメモのチェックを解除（部分復元中は無効）
   useEffect(() => {

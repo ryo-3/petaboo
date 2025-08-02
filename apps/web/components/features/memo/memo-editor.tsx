@@ -113,11 +113,10 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
         setLocalTags([]);
       }
     }
-  }, [memo?.id, isInitialized]); // isInitializedも依存配列に追加（ログ用）
+  }, [memo, isInitialized]); // memoオブジェクト全体を監視
   
   // データ取得完了時の初期化処理
   useEffect(() => {
-    const memoId = memo?.id;
     
     // 新規メモまたはデータロード中は何もしない
     if (!memo || memo.id === 0 || tagsLoading) return;
@@ -134,11 +133,10 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
       
       return () => clearTimeout(timer);
     }
-  }, [memo?.id, currentTags, tagsLoading, isInitialized]); // 依存配列を最小限に
+  }, [memo, currentTags, tagsLoading, isInitialized]); // memoオブジェクト全体を監視
   
   // 保存後のタグ同期処理（手動変更がない場合のみ）
   useEffect(() => {
-    const memoId = memo?.id;
     
     // 新規メモ、データロード中、初期化前、手動変更ありの場合は何もしない
     if (!memo || memo.id === 0 || tagsLoading || !isInitialized || hasManualChanges) return;
@@ -150,7 +148,7 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
       setLocalTags(currentTags);
       setLastSyncedTags(currentTagsStr);
     }
-  }, [memo?.id, currentTags, tagsLoading, isInitialized, hasManualChanges, lastSyncedTags]); // memoではなくmemo?.idに
+  }, [memo, currentTags, tagsLoading, isInitialized, hasManualChanges, lastSyncedTags]); // memoオブジェクト全体を監視
 
   // タグに変更があるかチェック
   const hasTagChanges = useMemo(() => {

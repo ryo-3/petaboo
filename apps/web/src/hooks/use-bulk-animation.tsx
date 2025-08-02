@@ -63,12 +63,13 @@ export function useBulkAnimation({ checkedItems, checkedDeletedItems }: UseBulkA
   const startCountdown = (totalCount: number, targetCount: number) => {
     // カウントダウンが必要な場合（99以下になる場合）
     if (targetCount <= 99) {
-      const startCount = Math.min(totalCount, 99)
-      const itemsUntilStart = totalCount - startCount
+      // 削除アイテム数からカウントダウンを開始
+      const startCount = targetCount
+      const itemsUntilStart = totalCount - targetCount
       const delayUntilStart = itemsUntilStart * DELETE_ANIMATION_INTERVAL
       
       timerRef.current.countdownTimer = setTimeout(() => {
-        // カウンターを開始数値から0まで段階的に減らす
+        // カウンターを削除アイテム数から0まで段階的に減らす
         let currentCount = startCount
         const decrementInterval = DELETE_ANIMATION_INTERVAL
         

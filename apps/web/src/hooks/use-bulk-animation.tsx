@@ -61,15 +61,14 @@ export function useBulkAnimation({ checkedItems, checkedDeletedItems }: UseBulkA
    * カウントダウンアニメーションを開始
    */
   const startCountdown = (totalCount: number, targetCount: number) => {
-    // カウントダウンが必要な場合（99以下になる場合）
-    if (targetCount <= 99) {
-      // 削除アイテム数からカウントダウンを開始
-      const startCount = targetCount
-      const itemsUntilStart = totalCount - targetCount
+    // カウントダウンが必要な場合（999以下になる場合）
+    if (targetCount <= 999) {
+      const startCount = Math.min(totalCount, 999)
+      const itemsUntilStart = totalCount - startCount
       const delayUntilStart = itemsUntilStart * DELETE_ANIMATION_INTERVAL
       
       timerRef.current.countdownTimer = setTimeout(() => {
-        // カウンターを削除アイテム数から0まで段階的に減らす
+        // カウンターを開始数値から目標値まで段階的に減らす
         let currentCount = startCount
         const decrementInterval = DELETE_ANIMATION_INTERVAL
         
@@ -81,10 +80,11 @@ export function useBulkAnimation({ checkedItems, checkedDeletedItems }: UseBulkA
           console.log('🔢 Countdown step:', currentCount)
           setDisplayCount(currentCount)
           
-          if (currentCount <= 0) {
-            console.log('🎯 Reached 0! Clearing interval and keeping 0 visible for 1 second')
+          // 目標値（削除後の残り数）に到達したら停止
+          if (currentCount <= targetCount) {
+            console.log('🎯 Reached target! Clearing interval and keeping final value visible for 1 second')
             clearInterval(counterTimer)
-            // 0を1秒表示してからカウンター無効化
+            // 最終値を1秒表示してからカウンター無効化
             setTimeout(() => {
               console.log('⏰ 1 second passed, deactivating counter')
               setIsCountingActive(false)
@@ -109,7 +109,7 @@ export function useBulkAnimation({ checkedItems, checkedDeletedItems }: UseBulkA
       setIsPartialProcessing(true)
     }
     
-    // 開始時は実際の数値を保持（100以上の場合は99+として表示される）
+    // 開始時は実際の数値を保持（1000以上の場合は999+として表示される）
     setDisplayCount(totalCount)
     setIsCountingActive(true)
   }

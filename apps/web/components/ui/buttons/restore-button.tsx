@@ -57,8 +57,8 @@ function RestoreButton({
           <RestoreIcon className={`${iconSize} ${isRestoring ? 'animate-spin' : ''}`} />
         </button>
         {displayCount !== undefined && displayCount > 0 && (
-          <span className={`absolute -top-2 -right-2 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center font-medium ${displayCount > 99 ? 'w-7 h-6' : 'w-6 h-6'}`}>
-            {displayCount > 99 ? '99+' : displayCount}
+          <span className={`absolute -top-2 -right-2 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center font-medium ${displayCount > 999 ? 'w-8 h-6' : displayCount > 99 ? 'w-7 h-6' : 'w-6 h-6'}`}>
+            {displayCount > 999 ? '999+' : displayCount}
           </span>
         )}
       </div>

@@ -60,11 +60,11 @@ export async function executeWithAnimation({
     
     // const startTime = Date.now()
     
-    // カウントダウンは実際に削除されるアイテム数で実行
-    const itemsToDelete = ids.length
+    // カウントダウン対象の判定と開始タイミング計算
+    const remainingCountAfterLimit = displayTotalCount - ids.length
     
-    // カウントダウン開始（削除アイテム数から0まで）
-    startCountdown(displayTotalCount, itemsToDelete)
+    // カウントダウン開始
+    startCountdown(displayTotalCount, remainingCountAfterLimit)
     
     // 要素をチェック
     

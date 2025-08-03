@@ -11,12 +11,14 @@ import boardsRoute from "./src/routes/boards/route";
 import tagsRoute from "./src/routes/tags/route";
 import taggingsRoute from "./src/routes/taggings/route";
 
-// 環境変数確認（デバッグ用）
-console.log("=== API Server Environment ===");
-console.log("CLERK_SECRET_KEY:", process.env.CLERK_SECRET_KEY ? `${process.env.CLERK_SECRET_KEY.substring(0, 20)}...` : "未設定");
-console.log("CLERK_PUBLISHABLE_KEY:", process.env.CLERK_PUBLISHABLE_KEY ? `${process.env.CLERK_PUBLISHABLE_KEY.substring(0, 20)}...` : "未設定");
-console.log("NODE_ENV:", process.env.NODE_ENV);
-console.log("==============================");
+// 環境変数確認（開発環境のみ）
+if (process.env.NODE_ENV === "development") {
+  console.log("=== API Server Environment ===");
+  console.log("CLERK_SECRET_KEY:", process.env.CLERK_SECRET_KEY ? `${process.env.CLERK_SECRET_KEY.substring(0, 20)}...` : "未設定");
+  console.log("CLERK_PUBLISHABLE_KEY:", process.env.CLERK_PUBLISHABLE_KEY ? `${process.env.CLERK_PUBLISHABLE_KEY.substring(0, 20)}...` : "未設定");
+  console.log("NODE_ENV:", process.env.NODE_ENV);
+  console.log("==============================");
+}
 
 const app = new Hono();
 

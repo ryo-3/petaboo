@@ -155,12 +155,6 @@ export function createAPI(app: AppType) {
   app.openapi(getBoardsRoute, async (c) => {
     const auth = getAuth(c);
     
-    // デバッグログ
-    console.log("=== Boards API Debug ===");
-    console.log("Headers:", c.req.header());
-    console.log("Auth object:", auth);
-    console.log("userId:", auth?.userId);
-    console.log("========================");
     
     if (!auth?.userId) {
       return c.json({ error: "Unauthorized" }, 401);

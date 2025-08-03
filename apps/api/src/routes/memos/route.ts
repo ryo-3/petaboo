@@ -575,25 +575,14 @@ app.openapi(
 
     const { originalId } = c.req.valid("param");
     
-    console.log('🔍 復元リクエスト:', { originalId, userId: auth.userId });
     
     try {
-      // デバッグ: 削除済みメモ一覧を確認
-      const allDeletedMemos = await db.select().from(deletedMemos).where(
-        eq(deletedMemos.userId, auth.userId)
-      );
-      console.log('🔍 削除済みメモ一覧:', allDeletedMemos.map(memo => ({ 
-        id: memo.id, 
-        originalId: memo.originalId, 
-        title: memo.title.substring(0, 20) 
-      })));
       
       // まず削除済みメモを取得
       const deletedNote = await db.select().from(deletedMemos).where(
         and(eq(deletedMemos.originalId, originalId), eq(deletedMemos.userId, auth.userId))
       ).get();
       
-      console.log('🔍 検索結果:', { found: !!deletedNote, originalId });
       
       if (!deletedNote) {
         return c.json({ error: "Deleted note not found" }, 404);

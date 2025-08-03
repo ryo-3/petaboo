@@ -349,7 +349,7 @@ export default function BoardTaskSection({
       {/* 一括削除ボタン - タスク用 */}
       <BulkActionButtons
           showDeleteButton={showDeleteButton}
-          deleteButtonCount={checkedTasks.size}
+          deleteButtonCount={currentDisplayCount || checkedTasks.size}
           onDelete={() => {
             onBulkDelete?.('task');
           }}
@@ -365,7 +365,7 @@ export default function BoardTaskSection({
           isRestoring={isRestoreLidOpen}
           animatedRestoreCount={currentRestoreDisplayCount}
           useAnimatedRestoreCount={true}
-          animatedDeleteCount={currentDisplayCount || checkedTasks.size}
+          animatedDeleteCount={currentDisplayCount}
           useAnimatedDeleteCount={true}
         />
         

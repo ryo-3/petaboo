@@ -329,7 +329,7 @@ export default function BoardMemoSection({
       {/* 一括削除ボタン - メモ用 */}
       <BulkActionButtons
           showDeleteButton={showDeleteButton}
-          deleteButtonCount={checkedMemos.size}
+          deleteButtonCount={currentDisplayCount || checkedMemos.size}
           onDelete={() => {
             onBulkDelete?.('memo');
           }}
@@ -345,7 +345,7 @@ export default function BoardMemoSection({
           isRestoring={isRestoreLidOpen}
           animatedRestoreCount={currentRestoreDisplayCount}
           useAnimatedRestoreCount={true}
-          animatedDeleteCount={currentDisplayCount || checkedMemos.size}
+          animatedDeleteCount={currentDisplayCount}
           useAnimatedDeleteCount={true}
         />
         

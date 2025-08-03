@@ -80,7 +80,6 @@ export function useMemosBulkDelete({
   useEffect(() => {
     // 前回と異なるタブに切り替わった場合のみキャンセル
     if (previousTabRef.current !== activeTab) {
-      console.log('🔄 タブ切り替えでアニメーションキャンセル:', { from: previousTabRef.current, to: activeTab });
       bulkAnimation.cancelAnimation(setIsDeleting, setIsLidOpen);
     }
     // 現在のタブを保存

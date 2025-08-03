@@ -100,10 +100,6 @@ const DeletedTaskViewer = forwardRef<
       { value: "high", label: "高", color: "bg-red-100 text-red-800" },
     ];
 
-    // デバッグ用ログ
-    useEffect(() => {
-      console.log('🔍 DeletedTaskViewer状態:', { isRestoring, isDeleting });
-    }, [isRestoring, isDeleting]);
 
     // refで外部から呼び出せるようにする
     useImperativeHandle(

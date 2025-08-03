@@ -58,13 +58,6 @@ export function useBulkDeleteButton({
     isRestoring ? 0 : 2500  // 復元中は遅延なし、削除中は2.5秒
   );
 
-  // デバッグログ
-  console.log('🔍 削除ボタン状態:', { 
-    shouldShowLeftBulkDelete, 
-    isDeleting, 
-    isRestoring, 
-    showDeleteButton 
-  });
 
   return {
     showDeleteButton,

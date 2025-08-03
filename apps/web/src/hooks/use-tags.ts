@@ -15,7 +15,6 @@ export function useTags(options: UseTagsOptions = {}) {
   return useQuery({
     queryKey: ['tags', options],
     queryFn: async () => {
-      console.log('🏷️ Fetching tags with options:', options);
       const token = await getToken()
       const response = await tagsApi.getTags(
         token || undefined,
@@ -23,12 +22,10 @@ export function useTags(options: UseTagsOptions = {}) {
         options.sort,
         options.limit
       )
-      console.log('🏷️ Tags API response status:', response.status);
       if (!response.ok) {
         console.error('🏷️ Tags API error:', response.statusText);
       }
       const data = await response.json()
-      console.log('🏷️ Tags API data:', data);
       return data as Tag[]
     },
   })

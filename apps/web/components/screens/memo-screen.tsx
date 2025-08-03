@@ -448,8 +448,6 @@ function MemoScreen({
           showDeleteButton={showDeleteButton}
           deleteButtonCount={currentDisplayCount}
           onDelete={() => {
-            console.log('🗑️ 削除ボタンが押されました')
-            console.log('🚫 復元ボタンを非表示にします')
             handleLeftBulkDelete()
           }}
           deleteButtonRef={deleteButtonRef}
@@ -463,9 +461,7 @@ function MemoScreen({
           }
           restoreCount={checkedDeletedMemos.size}
           onRestore={() => {
-            console.log('🔄 復元ボタンが押されました')
             // 復元ボタンを押した瞬間に削除ボタンを非表示にする
-            console.log('🚫 削除ボタンを非表示にします')
             setIsRestoreLidOpen(true)
             handleBulkRestore()
           }}
@@ -479,19 +475,19 @@ function MemoScreen({
         <SelectionMenuButton
           count={checkedMemos.size}
           onBoardLink={() => {
-            console.log('ボードに追加:', checkedMemos);
+            // TODO: ボードに追加処理
           }}
           onExport={() => {
-            console.log('エクスポート:', checkedMemos);
+            // TODO: エクスポート処理
           }}
           onPin={() => {
-            console.log('ピン止め:', checkedMemos);
+            // TODO: ピン止め処理
           }}
           onTagging={() => {
             setIsBulkTaggingModalOpen(true);
           }}
           onTabMove={() => {
-            console.log('タブ移動:', checkedMemos);
+            // TODO: タブ移動処理
           }}
           isVisible={
             activeTab === "normal" &&

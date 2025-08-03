@@ -15,7 +15,6 @@ export function useTaggings(options: UseTaggingsOptions = {}) {
   return useQuery({
     queryKey: ['taggings', options],
     queryFn: async () => {
-      console.log('🔗 Fetching taggings with options:', options);
       const token = await getToken()
       const response = await taggingsApi.getTaggings(
         token || undefined,
@@ -23,12 +22,10 @@ export function useTaggings(options: UseTaggingsOptions = {}) {
         options.targetOriginalId,
         options.tagId
       )
-      console.log('🔗 Taggings API response status:', response.status);
       if (!response.ok) {
         console.error('🔗 Taggings API error:', response.statusText);
       }
       const data = await response.json()
-      console.log('🔗 Taggings API data:', data);
       return data as Tagging[]
     },
   })

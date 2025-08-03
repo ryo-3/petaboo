@@ -12,21 +12,16 @@ export function useDelayedButtonVisibility(
   const [showButton, setShowButton] = useState(false);
 
   useEffect(() => {
-    console.log('🔧 useDelayedButtonVisibility:', { shouldShow, showButton, isAnimating, delayMs });
-    
     if (shouldShow && !showButton) {
       // 表示する場合はすぐに表示
-      console.log('📤 ボタンを表示');
       setShowButton(true);
     } else if (!shouldShow && showButton) {
       // 非表示にする場合
       if (delayMs === 0 || !isAnimating) {
         // 遅延なしまたはアニメーション中でなければ即座に非表示
-        console.log('📤 ボタンを即座に非表示');
         setShowButton(false);
       } else if (isAnimating) {
         // アニメーション中は指定時間後に非表示
-        console.log('📤 ボタンを遅延非表示:', delayMs);
         const timer = setTimeout(() => {
           setShowButton(false);
         }, delayMs);

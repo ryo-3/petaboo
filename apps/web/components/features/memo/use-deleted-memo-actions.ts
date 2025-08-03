@@ -44,7 +44,6 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
 
   const handlePermanentDelete = async () => {
     try {
-      console.log('🗑️ 削除処理開始', { isPending: permanentDeleteNote.isPending })
       setShowDeleteModal(false)
       
       // エディターコンテンツをゴミ箱に吸い込むアニメーション
@@ -56,26 +55,21 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
         animateEditorContentToTrashCSS(editorArea, rightTrashButton, async () => {
           // アニメーション完了後の処理
           try {
-            console.log('🗑️ API実行開始')
             // API実行（onSuccessで次選択とキャッシュ更新が実行される）
             await permanentDeleteNote.mutateAsync(memo.originalId)
-            console.log('✅ 削除処理完了')
             
             // 蓋を閉じる
             setTimeout(() => {
               (window as Window & { closeDeletingLid?: () => void }).closeDeletingLid?.();
             }, 500);
           } catch {
-            console.log('❌ 削除処理失敗')
             alert('完全削除に失敗しました。')
           }
         });
       } else {
         // アニメーション要素がない場合は通常の処理
-        console.log('🗑️ API実行開始（アニメーションなし）')
         // API実行（onSuccessで次選択とキャッシュ更新が実行される）
         await permanentDeleteNote.mutateAsync(memo.originalId)
-        console.log('✅ 削除処理完了（アニメーションなし）')
         
         setTimeout(() => {
           (window as Window & { closeDeletingLid?: () => void }).closeDeletingLid?.();
@@ -89,11 +83,9 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
 
   const handleRestore = async () => {
     try {
-      console.log('🔄 復元処理開始', { isPending: restoreNote.isPending })
       setIsLocalRestoring(true)
       // API実行
       await restoreNote.mutateAsync(memo.originalId)
-      console.log('✅ 復元処理完了')
       
       // 復元完了後、すぐにUIを更新
       setIsLocalRestoring(false)
@@ -103,7 +95,6 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
         onClose()
       }
     } catch {
-      console.log('❌ 復元処理失敗')
       setIsLocalRestoring(false)
       alert('復元に失敗しました。')
     }

@@ -10,6 +10,7 @@ interface ApiError extends Error {
 }
 
 // セキュアなメモリキャッシュ（localStorage使用せず）
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 let cachedToken: string | null = null;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let tokenExpiry: number = 0;
@@ -24,13 +25,6 @@ async function getCachedToken(getToken: () => Promise<string | null>): Promise<s
   // 新しいトークン取得を開始
   tokenPromise = (async () => {
     const token = await getToken();
-    
-    // トークンの変化をログで確認（変化した時のみ）
-    const hasChanged = cachedToken !== token;
-    if (hasChanged) {
-      const tokenStart = token?.substring(0, 20) + '...';
-      console.log(`🔑 Token Updated: ${tokenStart}, Time: ${new Date().toLocaleTimeString()}`);
-    }
     
     if (token) {
       cachedToken = token;

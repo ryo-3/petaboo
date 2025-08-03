@@ -77,16 +77,13 @@ export function useBulkAnimation({ checkedItems, checkedDeletedItems }: UseBulkA
         setIsCountingActive(true)
         
         const counterTimer = setInterval(() => {
-          console.log('🔢 Countdown step:', currentCount)
           setDisplayCount(currentCount)
           
           // 目標値（削除後の残り数）に到達したら停止
           if (currentCount <= targetCount) {
-            console.log('🎯 Reached target! Clearing interval and keeping final value visible for 1 second')
             clearInterval(counterTimer)
             // 最終値を1秒表示してからカウンター無効化
             setTimeout(() => {
-              console.log('⏰ 1 second passed, deactivating counter')
               setIsCountingActive(false)
             }, 1000)
             return
@@ -122,7 +119,6 @@ export function useBulkAnimation({ checkedItems, checkedDeletedItems }: UseBulkA
     setIsLidOpen?: (value: boolean) => void,
     isPartial = false
   ) => {
-    console.log('🏁 Finalizing animation');
     // カウンター制御はstartCountdown側に任せる
     
     // すぐに蓋を閉じる（カウンターの0表示と分離）
@@ -173,12 +169,6 @@ export function useBulkAnimation({ checkedItems, checkedDeletedItems }: UseBulkA
     setIsProcessing?: (value: boolean) => void,
     setIsLidOpen?: (value: boolean) => void
   ) => {
-    console.log('🛑 アニメーションキャンセル実行中...', { 
-      isCountingActive, 
-      isPartialProcessing, 
-      displayCount,
-      hasCounterInterval: !!timerRef.current.counterInterval
-    });
     
     // 全てのタイマーをクリア（カウンターのsetIntervalも含む）
     clearTimers()
@@ -192,7 +182,6 @@ export function useBulkAnimation({ checkedItems, checkedDeletedItems }: UseBulkA
     setIsProcessing?.(false)
     setIsLidOpen?.(false)
     
-    console.log('✅ アニメーションキャンセル完了');
   }
 
   return {

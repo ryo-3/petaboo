@@ -425,8 +425,6 @@ function TaskScreen({
           showDeleteButton={showDeleteButton}
           deleteButtonCount={currentDisplayCount}
           onDelete={() => {
-            console.log('🗑️ 削除ボタンが押されました（タスク）')
-            console.log('🚫 復元ボタンを非表示にします（タスク）')
             handleBulkDelete()
           }}
           deleteButtonRef={deleteButtonRef}
@@ -440,9 +438,7 @@ function TaskScreen({
           }
           restoreCount={checkedDeletedTasks.size}
           onRestore={() => {
-            console.log('🔄 復元ボタンが押されました（タスク）')
             // 復元ボタンを押した瞬間に削除ボタンを非表示にする
-            console.log('🚫 削除ボタンを非表示にします（タスク）')
             setIsRestoreLidOpen(true)
             handleBulkRestore()
           }}
@@ -459,19 +455,19 @@ function TaskScreen({
         <SelectionMenuButton
           count={checkedTasks.size}
           onBoardLink={() => {
-            console.log('ボードに追加（タスク）:', checkedTasks);
+            // TODO: ボードに追加処理
           }}
           onExport={() => {
-            console.log('エクスポート（タスク）:', checkedTasks);
+            // TODO: エクスポート処理
           }}
           onPin={() => {
-            console.log('ピン止め（タスク）:', checkedTasks);
+            // TODO: ピン止め処理
           }}
           onTagging={() => {
-            console.log('タグ付け（タスク）:', checkedTasks);
+            // TODO: タグ付け処理
           }}
           onTabMove={() => {
-            console.log('タブ移動（タスク）:', checkedTasks);
+            // TODO: タブ移動処理
           }}
           isVisible={
             activeTab !== "deleted" &&

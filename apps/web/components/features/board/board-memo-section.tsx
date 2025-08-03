@@ -116,6 +116,7 @@ export default function BoardMemoSection({
     checkedItems: activeMemoTab === "deleted" ? new Set() : checkedItemsForDeleteButton,
     checkedDeletedItems: activeMemoTab === "deleted" ? checkedItemsForDeleteButton : new Set(),
     isDeleting: isDeleting || false,
+    isRestoring: isRestoreLidOpen,
   });
   
   // 表示用のチェック済みアイテムSet（型変換処理）
@@ -337,7 +338,9 @@ export default function BoardMemoSection({
           isDeleting={isLidOpen}
           showRestoreButton={
             activeMemoTab === "deleted" &&
-            checkedMemos.size > 0
+            !isDeleting &&
+            (checkedMemos.size > 0 ||
+              (isRestoreLidOpen && currentRestoreDisplayCount > 0))
           }
           restoreCount={checkedMemos.size}
           onRestore={handleBulkRestore}

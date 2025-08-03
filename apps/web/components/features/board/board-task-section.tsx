@@ -120,6 +120,7 @@ export default function BoardTaskSection({
     checkedItems: activeTaskTab === "deleted" ? new Set() : checkedItemsForDeleteButton,
     checkedDeletedItems: activeTaskTab === "deleted" ? checkedItemsForDeleteButton : new Set(),
     isDeleting: isDeleting || false,
+    isRestoring: isRestoreLidOpen,
   });
   
   // 表示用のチェック済みアイテムSet（型変換処理）
@@ -357,7 +358,9 @@ export default function BoardTaskSection({
           isDeleting={isLidOpen}
           showRestoreButton={
             activeTaskTab === "deleted" &&
-            checkedTasks.size > 0
+            !isDeleting &&
+            (checkedTasks.size > 0 ||
+              (isRestoreLidOpen && currentRestoreDisplayCount > 0))
           }
           restoreCount={checkedTasks.size}
           onRestore={handleBulkRestore}

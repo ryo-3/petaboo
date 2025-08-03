@@ -356,6 +356,7 @@ export default function BoardTaskSection({
           }}
           deleteButtonRef={deleteButtonRef}
           isDeleting={isLidOpen}
+          deleteVariant={activeTaskTab === "deleted" ? "danger" : undefined}
           showRestoreButton={
             activeTaskTab === "deleted" &&
             !isDeleting &&

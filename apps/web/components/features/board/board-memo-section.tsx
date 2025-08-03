@@ -336,6 +336,7 @@ export default function BoardMemoSection({
           }}
           deleteButtonRef={deleteButtonRef}
           isDeleting={isLidOpen}
+          deleteVariant={activeMemoTab === "deleted" ? "danger" : undefined}
           showRestoreButton={
             activeMemoTab === "deleted" &&
             !isDeleting &&

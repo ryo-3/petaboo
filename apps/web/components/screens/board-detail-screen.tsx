@@ -451,7 +451,11 @@ function BoardDetailScreen({
         onConfirm={bulkDelete.handleConfirm}
         count={bulkDelete.targetIds.length}
         itemType={deletingItemType || "memo"}
-        deleteType="normal"
+        deleteType={
+          deletingItemType === 'memo' 
+            ? (activeMemoTab === "deleted" ? "permanent" : "normal")
+            : (activeTaskTab === "deleted" ? "permanent" : "normal")
+        }
         isLoading={bulkDelete.isDeleting}
         customMessage={bulkDelete.customMessage}
         customTitle={`${deletingItemType === 'memo' ? 'メモ' : 'タスク'}の操作を選択`}

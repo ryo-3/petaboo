@@ -564,7 +564,9 @@ app.openapi(
           )
         );
         
-        // 2. タスクを削除
+        // 2. 関連するボードアイテムは削除しない（削除済みタブで表示するため保持）
+        
+        // 3. タスクを削除
         const deleteResult = await tx.delete(deletedTasks).where(
           and(eq(deletedTasks.originalId, originalId), eq(deletedTasks.userId, auth.userId))
         );

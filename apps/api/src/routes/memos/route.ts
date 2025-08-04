@@ -502,7 +502,9 @@ app.openapi(
           )
         );
         
-        // 2. メモを削除
+        // 2. 関連するボードアイテムは削除しない（削除済みタブで表示するため保持）
+        
+        // 3. メモを削除
         const deleteResult = await tx.delete(deletedMemos).where(
           and(eq(deletedMemos.originalId, originalId), eq(deletedMemos.userId, auth.userId))
         );

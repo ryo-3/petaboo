@@ -96,10 +96,8 @@ export function useDeleteTask() {
       // タスク一覧と削除済み一覧を再取得
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
       queryClient.invalidateQueries({ queryKey: ['deleted-tasks'] })
-      // ボード関連のキャッシュも無効化（メモ削除と同様）
-      queryClient.invalidateQueries({ queryKey: ["boards"] });
-      queryClient.invalidateQueries({ queryKey: ['board-with-items'] })
-      queryClient.invalidateQueries({ queryKey: ['board-deleted-items'] })
+      // ボード関連のキャッシュを強制再取得（一覧と詳細両方）
+      queryClient.refetchQueries({ queryKey: ["boards"] })
     },
     onError: (error) => {
       console.error("タスク削除に失敗しました:", error);
@@ -168,10 +166,8 @@ export function useRestoreTask() {
       // タスク一覧と削除済み一覧を再取得
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
       queryClient.invalidateQueries({ queryKey: ['deleted-tasks'] })
-      // ボード関連のキャッシュも無効化
-      queryClient.invalidateQueries({ queryKey: ['boards'] })
-      queryClient.invalidateQueries({ queryKey: ['board-with-items'] })
-      queryClient.invalidateQueries({ queryKey: ['board-deleted-items'] })
+      // ボード関連のキャッシュを強制再取得（一覧と詳細両方）
+      queryClient.refetchQueries({ queryKey: ["boards"] })
     },
     onError: (error) => {
       console.error("タスク復元に失敗しました:", error);

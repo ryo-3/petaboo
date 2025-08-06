@@ -1,11 +1,13 @@
 interface TagIconProps {
   className?: string;
+  style?: React.CSSProperties;
 }
 
-function TagIcon({ className = "w-4 h-4" }: TagIconProps) {
+function TagIcon({ className = "w-4 h-4", style }: TagIconProps) {
   return (
     <svg 
       className={className}
+      style={style}
       fill="none" 
       stroke="currentColor" 
       viewBox="0 0 24 24"

@@ -201,6 +201,7 @@ function BoardDetailScreen({
     handleTaskRestoreAndSelectNext,
     handleAddMemoToBoard,
     handleAddTaskToBoard,
+    refetchDeletedItems,
   } = useBoardOperations({
     boardId,
     initialBoardName,
@@ -268,11 +269,20 @@ function BoardDetailScreen({
     getItemId: (item) => item.itemId,
   });
 
+  // 拡張されたタブ変更ハンドラー（削除済タブでキャッシュ更新）
+  const handleMemoTabChangeWithRefresh = async (tab: "normal" | "deleted") => {
+    if (tab === "deleted") {
+      await refetchDeletedItems();
+    }
+    handleMemoTabChange(tab);
+  };
 
-
-
-
-
+  const handleTaskTabChangeWithRefresh = async (tab: "todo" | "in_progress" | "completed" | "deleted") => {
+    if (tab === "deleted") {
+      await refetchDeletedItems();
+    }
+    handleTaskTabChange(tab);
+  };
 
   // エラー時のみエラー表示
   if (error) {
@@ -384,7 +394,7 @@ function BoardDetailScreen({
             selectedMemo={selectedMemo}
             onCreateNewMemo={handleCreateNewMemo}
             onSetRightPanelMode={setRightPanelMode}
-            onMemoTabChange={handleMemoTabChange}
+            onMemoTabChange={handleMemoTabChangeWithRefresh}
             onSelectMemo={handleSelectMemo}
             memoSelectionMode={selectionMode}
             checkedMemos={checkedMemos}
@@ -418,7 +428,7 @@ function BoardDetailScreen({
             selectedTask={selectedTask}
             onCreateNewTask={handleCreateNewTask}
             onSetRightPanelMode={setRightPanelMode}
-            onTaskTabChange={handleTaskTabChange}
+            onTaskTabChange={handleTaskTabChangeWithRefresh}
             onSelectTask={handleSelectTask}
             taskSelectionMode={selectionMode}
             checkedTasks={checkedTasks}

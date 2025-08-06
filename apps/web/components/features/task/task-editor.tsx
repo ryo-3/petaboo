@@ -5,7 +5,6 @@ import { SingleDeleteConfirmation } from "@/components/ui/modals";
 import SaveButton from "@/components/ui/buttons/save-button";
 import PhotoButton from "@/components/ui/buttons/photo-button";
 import TrashIcon from "@/components/icons/trash-icon";
-import TagIcon from "@/components/icons/tag-icon";
 import BoardIconSelector from "@/components/ui/selectors/board-icon-selector";
 import Tooltip from "@/components/ui/base/tooltip";
 import TagSelector from "@/components/features/tags/tag-selector";

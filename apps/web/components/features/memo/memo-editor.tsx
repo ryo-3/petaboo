@@ -4,7 +4,6 @@ import BaseViewer from "@/components/shared/base-viewer";
 import PhotoButton from "@/components/ui/buttons/photo-button";
 import SaveButton from "@/components/ui/buttons/save-button";
 import TrashIcon from "@/components/icons/trash-icon";
-import TagIcon from "@/components/icons/tag-icon";
 import BoardIconSelector from "@/components/ui/selectors/board-icon-selector";
 import Tooltip from "@/components/ui/base/tooltip";
 import BoardChangeModal from "@/components/ui/modals/board-change-modal";

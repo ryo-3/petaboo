@@ -49,6 +49,7 @@ interface UseBoardOperationsReturn {
   handleTaskRestoreAndSelectNext: (deletedItem: DeletedTask) => void;
   handleAddMemoToBoard: (memo: Memo) => Promise<void>;
   handleAddTaskToBoard: (task: Task) => Promise<void>;
+  refetchDeletedItems: () => Promise<unknown>;
   
   // エフェクト
   pageTitle: string;
@@ -75,7 +76,7 @@ export function useBoardOperations({
   
   // データ取得
   const { data: boardWithItems, isLoading, error } = useBoardWithItems(boardId);
-  const { data: boardDeletedItems } = useBoardDeletedItems(boardId);
+  const { data: boardDeletedItems, refetch: refetchDeletedItems } = useBoardDeletedItems(boardId);
   
   const removeItemFromBoard = useRemoveItemFromBoard();
   const addItemToBoard = useAddItemToBoard();
@@ -358,6 +359,7 @@ export function useBoardOperations({
     handleTaskRestoreAndSelectNext,
     handleAddMemoToBoard,
     handleAddTaskToBoard,
+    refetchDeletedItems,
     
     // エフェクト
     pageTitle,

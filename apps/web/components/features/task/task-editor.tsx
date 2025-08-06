@@ -9,6 +9,7 @@ import TagIcon from "@/components/icons/tag-icon";
 import BoardIconSelector from "@/components/ui/selectors/board-icon-selector";
 import Tooltip from "@/components/ui/base/tooltip";
 import TagSelector from "@/components/features/tags/tag-selector";
+import TagTriggerButton from "@/components/features/tags/tag-trigger-button";
 import TaskForm, { TaskFormHandle } from "./task-form";
 import { useUpdateTask, useCreateTask } from "@/src/hooks/use-tasks";
 import { useAddItemToBoard, useBoards, useItemBoards, useRemoveItemFromBoard } from "@/src/hooks/use-boards";
@@ -671,75 +672,57 @@ function TaskEditor({
           onClose={onClose}
           error={error ? "エラー" : null}
           headerActions={
-            <div className="flex items-center gap-2">
-              {error && (
-                <span className="text-xs text-red-500">{error}</span>
-              )}
-              <SaveButton
-                onClick={handleSave}
-                disabled={!canSave}
-                isSaving={isSaving || createTaggingMutation.isPending || deleteTaggingMutation.isPending}
-                buttonSize="size-7"
-                iconSize="size-4"
-              />
-              <Tooltip text="写真" position="top">
-                <PhotoButton
-                  buttonSize="size-7"
-                  iconSize="size-5"
-                  className="rounded-full"
-                />
-              </Tooltip>
-              <BoardIconSelector
-                options={boardOptions}
-                value={currentBoardValues}
-                onChange={handleBoardSelectorChange}
-                iconClassName="size-4 text-gray-600"
-                multiple={true}
-              />
-              <TagSelector
-                selectedTags={isTagsInitialized && !tagsLoading ? localTags : []}
-                onTagsChange={(tags) => {
-                  setLocalTags(tags);
-                  setHasManualTagChanges(true);
-                }}
-                placeholder="タグ..."
-                className="w-7 h-7"
-                renderTrigger={(onClick) => (
-                  <Tooltip text="タグ" position="top">
-                    <button
-                      onClick={onClick}
-                      className="flex items-center justify-center size-7 rounded-md bg-gray-100 hover:bg-gray-200 transition-colors"
-                    >
-                      <TagIcon className="size-5 text-gray-600" />
-                    </button>
-                  </Tooltip>
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center gap-2">
+                {error && (
+                  <span className="text-xs text-red-500">{error}</span>
                 )}
-              />
+                <SaveButton
+                  onClick={handleSave}
+                  disabled={!canSave}
+                  isSaving={isSaving || createTaggingMutation.isPending || deleteTaggingMutation.isPending}
+                  buttonSize="size-7"
+                  iconSize="size-4"
+                />
+                <Tooltip text="写真" position="top">
+                  <PhotoButton
+                    buttonSize="size-7"
+                    iconSize="size-5"
+                    className="rounded-full"
+                  />
+                </Tooltip>
+                <BoardIconSelector
+                  options={boardOptions}
+                  value={currentBoardValues}
+                  onChange={handleBoardSelectorChange}
+                  iconClassName="size-4 text-gray-600"
+                  multiple={true}
+                />
+                <TagSelector
+                  selectedTags={isTagsInitialized && !tagsLoading ? localTags : []}
+                  onTagsChange={(tags) => {
+                    setLocalTags(tags);
+                    setHasManualTagChanges(true);
+                  }}
+                  placeholder="タグ..."
+                  className="w-7 h-7"
+                  renderTrigger={(onClick) => (
+                    <TagTriggerButton onClick={onClick} tags={localTags} />
+                  )}
+                />
+              </div>
               {!isNewTask && (
-                  <button
-                    onClick={handleDeleteClick}
-                    className="flex items-center justify-center size-7 rounded-md bg-gray-100"
-                  >
-                    <TrashIcon className="size-5" isLidOpen={isLidOpen} />
-                  </button>
+                <button
+                  onClick={handleDeleteClick}
+                  className="flex items-center justify-center size-7 rounded-md bg-gray-100 mr-2"
+                >
+                  <TrashIcon className="size-5" isLidOpen={isLidOpen} />
+                </button>
               )}
             </div>
           }
           isEditing={true}
         >
-          {/* 現在のタスクに紐づいているタグ一覧 */}
-          {task && task.id !== 0 && localTags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-3 mt-2">
-              {localTags.map((tag) => (
-                <div
-                  key={tag.id}
-                  className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs"
-                >
-                  <span>{tag.name}</span>
-                </div>
-              ))}
-            </div>
-          )}
           
         <TaskForm
           ref={taskFormRef}
@@ -758,6 +741,7 @@ function TaskEditor({
           onDueDateChange={setDueDate}
           isNewTask={isNewTask}
           customHeight={customHeight}
+          tags={task && task.id !== 0 ? localTags : []}
         />
         </BaseViewer>
       </div>

@@ -10,6 +10,8 @@ import Tooltip from "@/components/ui/base/tooltip";
 import BoardChangeModal from "@/components/ui/modals/board-change-modal";
 import { SingleDeleteConfirmation } from "@/components/ui/modals/confirmation-modal";
 import TagSelector from "@/components/features/tags/tag-selector";
+import TagTriggerButton from "@/components/features/tags/tag-trigger-button";
+import { TAG_COLORS } from "@/src/constants/colors";
 import { useBoards, useItemBoards } from "@/src/hooks/use-boards";
 import { useSimpleMemoSave } from "@/src/hooks/use-simple-memo-save";
 import { useItemTags, useCreateTagging, useDeleteTagging, useTaggings } from "@/src/hooks/use-taggings";
@@ -334,59 +336,54 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
           isEditing={true}
           createdItemId={null}
           headerActions={
-            <div className="flex items-center gap-2">
-              {saveError && (
-                <span className="text-xs text-red-500">{saveError}</span>
-              )}
-              <SaveButton
-                onClick={handleSaveWithTags}
-                disabled={!hasChanges && !hasTagChanges}
-                isSaving={isSaving || createTaggingMutation.isPending || deleteTaggingMutation.isPending}
-                buttonSize="size-7"
-                iconSize="size-4"
-              />
-              <Tooltip text="写真" position="top">
-                <PhotoButton
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center gap-2">
+                {saveError && (
+                  <span className="text-xs text-red-500">{saveError}</span>
+                )}
+                <SaveButton
+                  onClick={handleSaveWithTags}
+                  disabled={!hasChanges && !hasTagChanges}
+                  isSaving={isSaving || createTaggingMutation.isPending || deleteTaggingMutation.isPending}
                   buttonSize="size-7"
-                  iconSize="size-5"
-                  className="rounded-full"
+                  iconSize="size-4"
                 />
-              </Tooltip>
-              <BoardIconSelector
-                options={boardOptions}
-                value={currentBoardValues}
-                onChange={handleBoardSelectorChange}
-                iconClassName="size-4 text-gray-600"
-                multiple={true}
-              />
-              <div className="relative" ref={tagSelectorRef}>
-                <TagSelector
-                  selectedTags={isInitialized && !tagsLoading ? localTags : []}
-                  onTagsChange={(tags) => {
-                    setLocalTags(tags);
-                    setHasManualChanges(true);
-                  }}
-                  placeholder="タグ..."
-                  className="w-7 h-7"
-                  renderTrigger={(onClick) => (
-                    <Tooltip text="タグ" position="top">
-                      <button
-                        onClick={onClick}
-                        className="flex items-center justify-center size-7 rounded-md bg-gray-100 hover:bg-gray-200 transition-colors"
-                      >
-                        <TagIcon className="size-5 text-gray-600" />
-                      </button>
-                    </Tooltip>
-                  )}
+                <Tooltip text="写真" position="top">
+                  <PhotoButton
+                    buttonSize="size-7"
+                    iconSize="size-5"
+                    className="rounded-full"
+                  />
+                </Tooltip>
+                <BoardIconSelector
+                  options={boardOptions}
+                  value={currentBoardValues}
+                  onChange={handleBoardSelectorChange}
+                  iconClassName="size-4 text-gray-600"
+                  multiple={true}
                 />
+                <div className="relative" ref={tagSelectorRef}>
+                  <TagSelector
+                    selectedTags={isInitialized && !tagsLoading ? localTags : []}
+                    onTagsChange={(tags) => {
+                      setLocalTags(tags);
+                      setHasManualChanges(true);
+                    }}
+                    placeholder="タグ..."
+                    className="w-7 h-7"
+                    renderTrigger={(onClick) => (
+                      <TagTriggerButton onClick={onClick} tags={localTags} />
+                    )}
+                  />
+                </div>
               </div>
               {memo && onDelete && (
-                  <button
-                    onClick={handleDeleteClick}
-                    className="flex items-center justify-center size-7 rounded-md bg-gray-100"
-                  >
-                    <TrashIcon className="size-5" isLidOpen={isLidOpen || isAnimating || showDeleteModal} />
-                  </button>
+                <button
+                  onClick={handleDeleteClick}
+                  className="flex items-center justify-center size-7 rounded-md bg-gray-100 mr-2"
+                >
+                  <TrashIcon className="size-5" isLidOpen={isLidOpen || isAnimating || showDeleteModal} />
+                </button>
               )}
             </div>
           }
@@ -397,7 +394,11 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
               {localTags.map((tag) => (
                 <div
                   key={tag.id}
-                  className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs"
+                  className="inline-flex items-center px-2 py-1 rounded-md text-xs border border-stone-800 overflow-hidden"
+                  style={{ 
+                    backgroundColor: TAG_COLORS.background, 
+                    color: TAG_COLORS.text
+                  }}
                 >
                   <span>{tag.name}</span>
                 </div>

@@ -4,6 +4,8 @@ import CategorySelector from "@/components/features/category/category-selector";
 import DateInput from "@/components/ui/inputs/date-input";
 import CustomSelector from "@/components/ui/selectors/custom-selector";
 import type { Task } from "@/src/types/task";
+import type { Tag } from "@/src/types/tag";
+import { TAG_COLORS } from "@/src/constants/colors";
 import {
   getPriorityEditorColor,
   getPriorityText,
@@ -30,6 +32,7 @@ interface TaskFormProps {
   titlePlaceholder?: string;
   descriptionPlaceholder?: string;
   customHeight?: string;
+  tags?: Tag[];
 }
 
 export interface TaskFormHandle {
@@ -55,6 +58,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
     titlePlaceholder = "タスクタイトルを入力...",
     descriptionPlaceholder = "入力...",
     customHeight,
+    tags = [],
   } = props;
   const titleInputRef = useRef<HTMLInputElement>(null);
   const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -181,6 +185,23 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
         </div>
       </div>
 
+      {/* タグ表示 */}
+      {tags.length > 0 && (
+        <div className="flex flex-wrap gap-2 mt-2">
+          {tags.map((tag) => (
+            <div
+              key={tag.id}
+              className="inline-flex items-center px-2 py-1 rounded-md text-xs border border-stone-800 overflow-hidden"
+              style={{ 
+                backgroundColor: TAG_COLORS.background, 
+                color: TAG_COLORS.text
+              }}
+            >
+              <span>{tag.name}</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="mt-2 flex-1 flex flex-col">
         <textarea

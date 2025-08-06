@@ -1,6 +1,8 @@
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import { formatDateOnly } from "@/src/utils/formatDate";
 import { useItemBoards } from '@/src/hooks/use-boards';
+import { useItemTags } from "@/src/hooks/use-taggings";
+import { TAG_COLORS } from "@/src/constants/colors";
 
 interface MemoListItemProps {
   memo: Memo | DeletedMemo;
@@ -13,6 +15,7 @@ interface MemoListItemProps {
   showBoardName?: boolean;
   isDeleting?: boolean;
   selectionMode?: "select" | "check";
+  showTags?: boolean;
 }
 
 function MemoListItem({
@@ -26,6 +29,7 @@ function MemoListItem({
   showBoardName = false,
   isDeleting = false,
   selectionMode = "select",
+  showTags = false,
 }: MemoListItemProps) {
   const isDeleted = variant === "deleted";
   const deletedMemo = memo as DeletedMemo;
@@ -34,6 +38,12 @@ function MemoListItem({
   // 削除済みメモの場合はoriginalIdを使用
   const itemId = isDeleted ? (memo as DeletedMemo).originalId : memo.id;
   const { data: boards } = useItemBoards('memo', !isDeleted ? Number(itemId) : undefined);
+  
+  // タグを取得（削除済みメモでない場合のみ）
+  const targetOriginalId = !isDeleted && memo.id > 0 
+    ? ((memo as Memo).originalId || memo.id.toString())
+    : '';
+  const { tags } = useItemTags('memo', targetOriginalId);
   
   
 
@@ -95,10 +105,13 @@ function MemoListItem({
               >
                 {displayTitle}
               </h3>
+            </div>
               
-              {/* ボード名表示 */}
-              {showBoardName && boards && boards.length > 0 && (
-                <div className="mb-1">
+            {/* ボード名・タグ表示 */}
+            {((showBoardName && boards && boards.length > 0) || (showTags && !isDeleted)) && (
+              <div className="mb-1 flex items-center gap-2">
+                {/* ボード名 */}
+                {showBoardName && boards && boards.length > 0 && (
                   <div className="flex flex-wrap gap-1">
                     {boards.map((board) => (
                       <span
@@ -109,13 +122,35 @@ function MemoListItem({
                       </span>
                     ))}
                   </div>
-                </div>
-              )}
-              
-              <p className="text-xs text-gray-600 line-clamp-3 min-h-[2rem]">
-                {displayContent ? displayContent.split('\n').slice(1).join('\n') : ""}
-              </p>
-            </div>
+                )}
+                
+                {/* タグ表示 */}
+                {showTags && !isDeleted && (
+                  <div className="flex flex-wrap gap-1">
+                    {tags && tags.length > 0 ? (
+                      tags.map((tag) => (
+                        <span
+                          key={tag.id}
+                          className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium"
+                          style={{
+                            backgroundColor: TAG_COLORS.background,
+                            color: TAG_COLORS.text
+                          }}
+                        >
+                          {tag.name}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-xs text-gray-400">タグなし</span>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+            
+            <p className="text-xs text-gray-600 line-clamp-3 min-h-[2rem]">
+              {displayContent ? displayContent.split('\n').slice(1).join('\n') : ""}
+            </p>
 
             <div
               className={`text-xs ${

@@ -83,6 +83,9 @@ function MemoScreen({
 
   // ボード名表示管理
   const [showBoardName, setShowBoardName] = useState(forceShowBoardName);
+  
+  // タグ表示管理
+  const [showTagDisplay, setShowTagDisplay] = useState(false);
 
   // ボードフィルター管理
   const [selectedBoardIds, setSelectedBoardIds] = useState<number[]>(
@@ -123,6 +126,9 @@ function MemoScreen({
 
   // 一括タグ付けモーダルの状態
   const [isBulkTaggingModalOpen, setIsBulkTaggingModalOpen] = useState(false);
+
+  // タグ表示・編集モーダルの状態
+  const [selectedMemoForTag, setSelectedMemoForTag] = useState<Memo | null>(null);
 
   // データ取得
   const { data: memos, isLoading: memoLoading, error: memoError } = useMemos();
@@ -400,6 +406,8 @@ function MemoScreen({
           onShowEditDateChange={setShowEditDate}
           showBoardName={showBoardName}
           onShowBoardNameChange={setShowBoardName}
+          showTagDisplay={showTagDisplay}
+          onShowTagDisplayChange={setShowTagDisplay}
           boards={boards || []}
           selectedBoardIds={selectedBoardIds}
           onBoardFilterChange={setSelectedBoardIds}
@@ -422,6 +430,7 @@ function MemoScreen({
           sortOptions={getVisibleSortOptions(activeTab)}
           showEditDate={showEditDate}
           showBoardName={showBoardName}
+          showTags={showTagDisplay && viewMode === 'list'}
           selectedBoardIds={selectedBoardIds}
           boardFilterMode={boardFilterMode}
           memos={memos || []}
@@ -545,6 +554,43 @@ function MemoScreen({
             <div className="flex justify-end mt-4 gap-2">
               <button
                 onClick={() => setIsBulkTaggingModalOpen(false)}
+                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+              >
+                閉じる
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 個別タグ編集モーダル */}
+      {selectedMemoForTag && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 max-w-[90vw] max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium">タグ編集</h3>
+              <button
+                onClick={() => setSelectedMemoForTag(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <span className="sr-only">閉じる</span>
+                ×
+              </button>
+            </div>
+            
+            <div className="mb-4">
+              <div className="text-sm font-medium mb-2 truncate">
+                {selectedMemoForTag.title || 'タイトルなし'}
+              </div>
+              <div className="text-sm text-gray-500">
+                {/* TODO: TagSelector コンポーネントの実装 */}
+                タグ選択・編集機能（実装予定）
+              </div>
+            </div>
+            
+            <div className="flex justify-end mt-4 gap-2">
+              <button
+                onClick={() => setSelectedMemoForTag(null)}
                 className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
               >
                 閉じる

@@ -27,6 +27,7 @@ interface MemoStatusDisplayProps {
     direction: "asc" | "desc";
   }>;
   isBoard?: boolean; // ボード詳細画面での使用かどうか
+  showTags?: boolean;
 }
 
 interface DeletedMemoDisplayProps {
@@ -65,7 +66,8 @@ function MemoStatusDisplay({
   selectedBoardIds = [],
   boardFilterMode = 'include',
   sortOptions = [],
-  isBoard = false
+  isBoard = false,
+  showTags = false,
 }: MemoStatusDisplayProps) {
   // フィルタリング済みのメモを取得（常に全てのメモを返す）
   const filteredMemos = useMemo(() => {
@@ -114,6 +116,7 @@ function MemoStatusDisplay({
         showBoardName={props.showBoardName}
         variant={props.variant}
         selectionMode={selectionMode}
+        showTags={showTags && viewMode === 'list'}
       />
     );
     

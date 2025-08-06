@@ -30,6 +30,9 @@ interface DesktopLowerProps {
   // Board name display toggle (memo only)
   showBoardName?: boolean;
   
+  // Tag display toggle (memo only)
+  showTags?: boolean;
+  
   // Board filter
   selectedBoardIds?: number[];
   boardFilterMode?: 'include' | 'exclude';
@@ -75,6 +78,7 @@ function DesktopLower({
   sortOptions = [],
   showEditDate = false,
   showBoardName = false,
+  showTags = false,
   selectedBoardIds = [],
   boardFilterMode = 'include',
   localMemos,
@@ -132,6 +136,7 @@ function DesktopLower({
           selectedMemoId={selectedMemo?.id}
           showEditDate={showEditDate}
           showBoardName={showBoardName}
+          showTags={showTags}
           selectedBoardIds={selectedBoardIds}
           boardFilterMode={boardFilterMode}
           sortOptions={sortOptions.filter(opt => 

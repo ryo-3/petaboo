@@ -11,6 +11,7 @@ import AddItemButton from "@/components/ui/buttons/add-item-button";
 import EditDateToggle from "@/components/ui/buttons/edit-date-toggle";
 import BoardNameToggle from "@/components/ui/buttons/board-name-toggle";
 import SelectionModeToggle from "@/components/ui/buttons/selection-mode-toggle";
+import TagDisplayToggle from "@/components/ui/buttons/tag-display-toggle";
 import SortToggle from "@/components/ui/buttons/sort-toggle";
 import ColumnCountSelector from "@/components/ui/layout/column-count-selector";
 import ViewModeToggle from "@/components/ui/layout/view-mode-toggle";
@@ -80,6 +81,9 @@ interface DesktopUpperProps {
   // Board name display toggle (memo only)
   showBoardName?: boolean;
   onShowBoardNameChange?: (show: boolean) => void;
+  // Tag display toggle (memo only)
+  showTagDisplay?: boolean;
+  onShowTagDisplayChange?: (show: boolean) => void;
   // Board filter props
   boards?: Array<{ id: number; name: string }>;
   selectedBoardIds?: number[];
@@ -137,6 +141,8 @@ function DesktopUpper({
   onShowEditDateChange,
   showBoardName = false,
   onShowBoardNameChange,
+  showTagDisplay = false,
+  onShowTagDisplayChange,
   boards = [],
   selectedBoardIds = [],
   onBoardFilterChange,
@@ -458,6 +464,16 @@ function DesktopUpper({
               onBoardFilterChange={onBoardFilterChange}
               filterMode={filterMode}
               onFilterModeChange={onFilterModeChange}
+            />
+          )}
+
+          {/* タグ表示切り替え（メモモードのみ） */}
+          {currentMode === "memo" && onShowTagDisplayChange && (
+            <TagDisplayToggle
+              showTags={showTagDisplay}
+              onToggle={onShowTagDisplayChange}
+              buttonSize="size-7"
+              iconSize="size-4"
             />
           )}
 

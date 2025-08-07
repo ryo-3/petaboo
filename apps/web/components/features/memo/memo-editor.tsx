@@ -387,9 +387,19 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
             </div>
           }
         >
-          {/* 現在のメモに紐づいているタグ一覧 */}
-          {memo && memo.id !== 0 && localTags.length > 0 && (
+          {/* 現在のメモに紐づいているボード名・タグ一覧 */}
+          {memo && memo.id !== 0 && (itemBoards.length > 0 || localTags.length > 0) && (
             <div className="flex flex-wrap gap-2 mb-3 mt-2">
+              {/* ボード名 */}
+              {itemBoards.map((board) => (
+                <div
+                  key={board.id}
+                  className="inline-flex items-center px-2 py-1 rounded-md text-xs overflow-hidden bg-light-Blue text-white"
+                >
+                  <span>{board.name}</span>
+                </div>
+              ))}
+              {/* タグ */}
               {localTags.map((tag) => (
                 <div
                   key={tag.id}

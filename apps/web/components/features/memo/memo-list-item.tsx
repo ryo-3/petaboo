@@ -125,24 +125,20 @@ function MemoListItem({
                 )}
                 
                 {/* タグ表示 */}
-                {showTags && !isDeleted && (
+                {showTags && !isDeleted && tags && tags.length > 0 && (
                   <div className="flex flex-wrap gap-1">
-                    {tags && tags.length > 0 ? (
-                      tags.map((tag) => (
-                        <span
-                          key={tag.id}
-                          className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium"
-                          style={{
-                            backgroundColor: TAG_COLORS.background,
-                            color: TAG_COLORS.text
-                          }}
-                        >
-                          {tag.name}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-xs text-gray-400">タグなし</span>
-                    )}
+                    {tags.map((tag) => (
+                      <span
+                        key={tag.id}
+                        className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium"
+                        style={{
+                          backgroundColor: TAG_COLORS.background,
+                          color: TAG_COLORS.text
+                        }}
+                      >
+                        {tag.name}
+                      </span>
+                    ))}
                   </div>
                 )}
               </div>

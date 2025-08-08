@@ -7,6 +7,8 @@ import {
   getStatusText,
 } from "@/src/utils/taskUtils";
 import { useItemBoards } from '@/src/hooks/use-boards';
+import { useItemTags } from "@/src/hooks/use-taggings";
+import { TAG_COLORS } from "@/src/constants/colors";
 
 interface TaskListItemProps {
   task: Task | DeletedTask;
@@ -17,6 +19,7 @@ interface TaskListItemProps {
   isSelected?: boolean;
   showEditDate?: boolean;
   showBoardName?: boolean;
+  showTags?: boolean;
   isDeleting?: boolean;
   selectionMode?: "select" | "check";
 }
@@ -30,14 +33,25 @@ function TaskListItem({
   isSelected = false,
   showEditDate = false,
   showBoardName = false,
+  showTags = false,
   isDeleting = false,
   selectionMode = "select",
 }: TaskListItemProps) {
   const isDeleted = variant === "deleted";
   const deletedTask = task as DeletedTask;
 
-  // ボード名を取得（showBoardNameがtrueの場合のみ）
-  const { data: boards } = useItemBoards('task', showBoardName ? task.id : undefined);
+  // ボード名を取得（キャッシュ更新のため常に取得、表示は条件で制御）
+  const boardItemId = !isDeleted && task.id > 0 
+    ? ((task as Task).originalId || task.id.toString())
+    : '';
+  const numericItemId = boardItemId ? parseInt(boardItemId) : undefined;
+  const { data: boards } = useItemBoards('task', numericItemId);
+  
+  // タグを取得（削除済みタスクでない場合のみ）
+  const targetOriginalId = !isDeleted && task.id > 0 
+    ? ((task as Task).originalId || task.id.toString())
+    : '';
+  const { tags } = useItemTags('task', targetOriginalId);
   
 
   return (
@@ -90,19 +104,40 @@ function TaskListItem({
                 {task.title.replace(/[\r\n]/g, " ").trim()}
               </h3>
 
-              {/* ボード名表示 */}
-              {showBoardName && boards && boards.length > 0 && (
-                <div className="mb-1">
-                  <div className="flex flex-wrap gap-1">
-                    {boards.map((board) => (
-                      <span
-                        key={board.id}
-                        className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-light-Blue text-white"
-                      >
-                        {board.name}
-                      </span>
-                    ))}
-                  </div>
+              {/* ボード名・タグ表示 */}
+              {((showBoardName && boards && boards.length > 0) || (showTags && !isDeleted && tags && tags.length > 0)) && (
+                <div className="mb-1 flex items-center gap-2">
+                  {/* ボード名 */}
+                  {showBoardName && boards && boards.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {boards.map((board) => (
+                        <span
+                          key={board.id}
+                          className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-light-Blue text-white"
+                        >
+                          {board.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* タグ表示 */}
+                  {showTags && !isDeleted && tags && tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {tags.map((tag) => (
+                        <span
+                          key={tag.id}
+                          className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium"
+                          style={{
+                            backgroundColor: TAG_COLORS.background,
+                            color: TAG_COLORS.text
+                          }}
+                        >
+                          {tag.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 

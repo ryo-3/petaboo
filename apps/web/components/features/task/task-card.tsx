@@ -11,11 +11,12 @@ interface TaskCardProps {
   isSelected?: boolean
   showEditDate?: boolean
   showBoardName?: boolean
+  showTags?: boolean
   isDeleting?: boolean
   selectionMode?: 'select' | 'check'
 }
 
-function TaskCard({ task, isChecked, onToggleCheck, onSelect, variant = 'normal', isSelected = false, showEditDate = false, showBoardName = false, isDeleting = false, selectionMode = 'select' }: TaskCardProps) {
+function TaskCard({ task, isChecked, onToggleCheck, onSelect, variant = 'normal', isSelected = false, showEditDate = false, showBoardName = false, showTags = false, isDeleting = false, selectionMode = 'select' }: TaskCardProps) {
   return (
     <BaseCard
       isChecked={isChecked}
@@ -27,7 +28,7 @@ function TaskCard({ task, isChecked, onToggleCheck, onSelect, variant = 'normal'
       isDeleting={isDeleting}
       selectionMode={selectionMode}
     >
-      <TaskCardContent task={task} variant={variant} showEditDate={showEditDate} showBoardName={showBoardName} />
+      <TaskCardContent task={task} variant={variant} showEditDate={showEditDate} showBoardName={showBoardName} showTags={showTags} />
     </BaseCard>
   )
 }

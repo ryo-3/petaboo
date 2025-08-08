@@ -391,11 +391,15 @@ export function useAddItemToBoard() {
       
       throw new Error('Failed after retry');
     },
-    onSuccess: (newItem, { boardId }) => {
+    onSuccess: (newItem, { boardId, data }) => {
+      // newItem.itemIdがundefinedの場合は、元のdataから取得
+      const itemId = newItem.itemId || data.itemId;
+      const itemType = newItem.itemType || data.itemType;
+      
       // 特定のボードのアイテムを無効化
       queryClient.invalidateQueries({ queryKey: ["boards", boardId, "items"] });
-      // アイテムのボード情報も無効化
-      queryClient.invalidateQueries({ queryKey: ["item-boards", newItem.itemType, newItem.itemId] });
+      // アイテムのボード情報も無効化（string → number変換）
+      queryClient.invalidateQueries({ queryKey: ["item-boards", itemType, parseInt(itemId)] });
       // ボード一覧も無効化（統計情報が変わるため）
       queryClient.invalidateQueries({ queryKey: ["boards"] });
     },

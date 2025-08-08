@@ -30,7 +30,7 @@ interface DesktopLowerProps {
   // Board name display toggle (memo only)
   showBoardName?: boolean;
   
-  // Tag display toggle (memo only)
+  // Tag display toggle (memo and task)
   showTags?: boolean;
   
   // Board filter
@@ -171,6 +171,7 @@ function DesktopLower({
         sortOptions={sortOptions}
         showEditDate={showEditDate}
         showBoardName={showBoardName}
+        showTags={showTags}
         selectedBoardIds={selectedBoardIds}
         boardFilterMode={boardFilterMode}
       />
@@ -216,6 +217,7 @@ function DesktopLower({
             selectedTaskId={selectedDeletedTask?.id}
             showEditDate={showEditDate}
             showBoardName={showBoardName}
+            showTags={showTags}
             selectedBoardIds={selectedBoardIds}
             boardFilterMode={boardFilterMode}
             sortOptions={sortOptions}

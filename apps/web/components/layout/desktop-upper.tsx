@@ -81,7 +81,7 @@ interface DesktopUpperProps {
   // Board name display toggle (memo only)
   showBoardName?: boolean;
   onShowBoardNameChange?: (show: boolean) => void;
-  // Tag display toggle (memo only)
+  // Tag display toggle (memo and task)
   showTagDisplay?: boolean;
   onShowTagDisplayChange?: (show: boolean) => void;
   // Board filter props
@@ -467,8 +467,8 @@ function DesktopUpper({
             />
           )}
 
-          {/* タグ表示切り替え（メモモードのみ） */}
-          {currentMode === "memo" && onShowTagDisplayChange && (
+          {/* タグ表示切り替え（メモ・タスクモード） */}
+          {(currentMode === "memo" || currentMode === "task") && onShowTagDisplayChange && (
             <TagDisplayToggle
               showTags={showTagDisplay}
               onToggle={onShowTagDisplayChange}

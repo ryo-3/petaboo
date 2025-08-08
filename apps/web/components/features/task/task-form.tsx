@@ -5,6 +5,7 @@ import DateInput from "@/components/ui/inputs/date-input";
 import CustomSelector from "@/components/ui/selectors/custom-selector";
 import type { Task } from "@/src/types/task";
 import type { Tag } from "@/src/types/tag";
+import type { Board } from "@/src/types/board";
 import { TAG_COLORS } from "@/src/constants/colors";
 import {
   getPriorityEditorColor,
@@ -33,6 +34,7 @@ interface TaskFormProps {
   descriptionPlaceholder?: string;
   customHeight?: string;
   tags?: Tag[];
+  boards?: Board[];
 }
 
 export interface TaskFormHandle {
@@ -59,6 +61,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
     descriptionPlaceholder = "入力...",
     customHeight,
     tags = [],
+    boards = [],
   } = props;
   const titleInputRef = useRef<HTMLInputElement>(null);
   const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -185,9 +188,19 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
         </div>
       </div>
 
-      {/* タグ表示 */}
-      {tags.length > 0 && (
+      {/* ボード名・タグ表示 */}
+      {(boards.length > 0 || tags.length > 0) && (
         <div className="flex flex-wrap gap-2 mt-2">
+          {/* ボード名 */}
+          {boards.map((board) => (
+            <div
+              key={board.id}
+              className="inline-flex items-center px-2 py-1 rounded-md text-xs overflow-hidden bg-light-Blue text-white"
+            >
+              <span>{board.name}</span>
+            </div>
+          ))}
+          {/* タグ */}
           {tags.map((tag) => (
             <div
               key={tag.id}

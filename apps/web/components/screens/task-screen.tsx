@@ -88,7 +88,10 @@ function TaskScreen({
   const [showEditDate, setShowEditDate] = useState(false);
 
   // ボード名表示管理
-  const [showBoardName, setShowBoardName] = useState(forceShowBoardName);
+  const [showBoardName, setShowBoardName] = useState(true); // デフォルトで表示
+  
+  // タグ表示管理
+  const [showTagDisplay, setShowTagDisplay] = useState(false);
 
   // ボードフィルター管理
   const [selectedBoardIds, setSelectedBoardIds] = useState<number[]>(
@@ -367,6 +370,8 @@ function TaskScreen({
           onShowEditDateChange={setShowEditDate}
           showBoardName={showBoardName}
           onShowBoardNameChange={setShowBoardName}
+          showTagDisplay={showTagDisplay}
+          onShowTagDisplayChange={setShowTagDisplay}
           boards={boards || []}
           selectedBoardIds={selectedBoardIds}
           onBoardFilterChange={setSelectedBoardIds}
@@ -398,6 +403,7 @@ function TaskScreen({
           sortOptions={getVisibleSortOptions(activeTab)}
           showEditDate={showEditDate}
           showBoardName={showBoardName}
+          showTags={showTagDisplay && viewMode === 'list'}
           selectedBoardIds={selectedBoardIds}
           boardFilterMode={boardFilterMode}
           tasks={tasks || []}

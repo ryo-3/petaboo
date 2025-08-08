@@ -7,12 +7,15 @@ import {
   getStatusText,
 } from "@/src/utils/taskUtils";
 import { useItemBoards } from '@/src/hooks/use-boards';
+import { useItemTags } from "@/src/hooks/use-taggings";
+import { TAG_COLORS } from "@/src/constants/colors";
 
 interface TaskCardContentProps {
   task: Task | DeletedTask;
   variant?: "normal" | "deleted";
   showEditDate?: boolean;
   showBoardName?: boolean;
+  showTags?: boolean;
 }
 
 function TaskCardContent({
@@ -20,12 +23,22 @@ function TaskCardContent({
   variant = "normal",
   showEditDate = false,
   showBoardName = false,
+  showTags = false,
 }: TaskCardContentProps) {
   const isDeleted = variant === "deleted";
   const deletedTask = task as DeletedTask;
 
-  // ボード名を取得（showBoardNameがtrueの場合のみ）
-  const { data: boards } = useItemBoards('task', showBoardName ? task.id : undefined);
+  // ボード名を取得（キャッシュ更新のため常に取得、表示は条件で制御）
+  const boardItemId = !isDeleted && task.id > 0 
+    ? ((task as Task).originalId || task.id.toString())
+    : '';
+  const { data: boards } = useItemBoards('task', boardItemId ? parseInt(boardItemId) : undefined);
+  
+  // タグを取得（削除済みタスクでない場合のみ）
+  const targetOriginalId = !isDeleted && task.id > 0 
+    ? ((task as Task).originalId || task.id.toString())
+    : '';
+  const { tags } = useItemTags('task', targetOriginalId);
 
   return (
     <>
@@ -51,19 +64,40 @@ function TaskCardContent({
         </span>
       </div>
 
-      {/* ボード名表示 */}
-      {showBoardName && boards && boards.length > 0 && (
-        <div className="mb-2">
-          <div className="flex flex-wrap gap-1">
-            {boards.map((board) => (
-              <span
-                key={board.id}
-                className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-light-Blue text-white"
-              >
-                {board.name}
-              </span>
-            ))}
-          </div>
+      {/* ボード名・タグ表示 */}
+      {((showBoardName && boards && boards.length > 0) || (showTags && !isDeleted && tags && tags.length > 0)) && (
+        <div className="mb-2 flex flex-wrap gap-1">
+          {/* ボード名 */}
+          {showBoardName && boards && boards.length > 0 && (
+            <>
+              {boards.map((board) => (
+                <span
+                  key={board.id}
+                  className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-light-Blue text-white"
+                >
+                  {board.name}
+                </span>
+              ))}
+            </>
+          )}
+          
+          {/* タグ */}
+          {showTags && !isDeleted && tags && tags.length > 0 && (
+            <>
+              {tags.map((tag) => (
+                <span
+                  key={tag.id}
+                  className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                  style={{
+                    backgroundColor: TAG_COLORS.background,
+                    color: TAG_COLORS.text
+                  }}
+                >
+                  {tag.name}
+                </span>
+              ))}
+            </>
+          )}
         </div>
       )}
 

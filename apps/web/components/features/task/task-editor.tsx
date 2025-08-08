@@ -371,7 +371,7 @@ function TaskEditor({
         try {
           await removeItemFromBoard.mutateAsync({
             boardId: parseInt(boardId),
-            itemId: task!.id,
+            itemId: parseInt(task!.originalId || task!.id.toString()),
             itemType: 'task'
           });
         } catch {
@@ -576,7 +576,7 @@ function TaskEditor({
           try {
             await removeItemFromBoard.mutateAsync({
               boardId: parseInt(boardId),
-              itemId: task!.id,
+              itemId: parseInt(task!.originalId || task!.id.toString()),
               itemType: 'task'
             });
           } catch {
@@ -588,14 +588,23 @@ function TaskEditor({
         if (task && task.id > 0) {
           for (const boardId of toAdd) {
             try {
+              const itemIdToAdd = task.originalId || task.id.toString();
+              console.log('TaskEditor: Adding to board', {
+                taskId: task.id,
+                originalId: task.originalId,
+                itemIdToAdd,
+                boardId: parseInt(boardId)
+              });
+              
               await addItemToBoard.mutateAsync({
                 boardId: parseInt(boardId),
                 data: {
                   itemType: 'task',
-                  itemId: task.originalId || task.id.toString(),
+                  itemId: itemIdToAdd,
                 },
               });
-            } catch {
+            } catch (error) {
+              console.error('Failed to add to board:', error);
               // エラーは上位でハンドリング
             }
           }
@@ -741,6 +750,7 @@ function TaskEditor({
           isNewTask={isNewTask}
           customHeight={customHeight}
           tags={task && task.id !== 0 ? localTags : []}
+          boards={task && task.id !== 0 ? itemBoards : []}
         />
         </BaseViewer>
       </div>

@@ -467,8 +467,8 @@ function DesktopUpper({
             />
           )}
 
-          {/* タグ表示切り替え（メモ・タスクモード） */}
-          {(currentMode === "memo" || currentMode === "task") && onShowTagDisplayChange && (
+          {/* タグ表示切り替え（メモ・タスク・ボードモード） */}
+          {(currentMode === "memo" || currentMode === "task" || currentMode === "board") && onShowTagDisplayChange && (
             <TagDisplayToggle
               showTags={showTagDisplay}
               onToggle={onShowTagDisplayChange}

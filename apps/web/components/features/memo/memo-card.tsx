@@ -11,11 +11,12 @@ interface MemoCardProps {
   isSelected?: boolean
   showEditDate?: boolean
   showBoardName?: boolean
+  showTags?: boolean
   isDeleting?: boolean
   selectionMode?: 'select' | 'check'
 }
 
-function MemoCard({ memo, isChecked, onToggleCheck, onSelect, variant = 'normal', isSelected = false, showEditDate = false, showBoardName = false, isDeleting = false, selectionMode = 'select' }: MemoCardProps) {
+function MemoCard({ memo, isChecked, onToggleCheck, onSelect, variant = 'normal', isSelected = false, showEditDate = false, showBoardName = false, showTags = false, isDeleting = false, selectionMode = 'select' }: MemoCardProps) {
   return (
     <BaseCard
       isChecked={isChecked}
@@ -27,7 +28,7 @@ function MemoCard({ memo, isChecked, onToggleCheck, onSelect, variant = 'normal'
       isDeleting={isDeleting}
       selectionMode={selectionMode}
     >
-      <MemoCardContent memo={memo} variant={variant} isSelected={isSelected} showEditDate={showEditDate} showBoardName={showBoardName} />
+      <MemoCardContent memo={memo} variant={variant} isSelected={isSelected} showEditDate={showEditDate} showBoardName={showBoardName} showTags={showTags} />
     </BaseCard>
   )
 }

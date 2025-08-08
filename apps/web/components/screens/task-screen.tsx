@@ -403,7 +403,7 @@ function TaskScreen({
           sortOptions={getVisibleSortOptions(activeTab)}
           showEditDate={showEditDate}
           showBoardName={showBoardName}
-          showTags={showTagDisplay && viewMode === 'list'}
+          showTags={showTagDisplay}
           selectedBoardIds={selectedBoardIds}
           boardFilterMode={boardFilterMode}
           tasks={tasks || []}

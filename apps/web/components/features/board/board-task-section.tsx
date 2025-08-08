@@ -28,6 +28,7 @@ interface BoardTaskSectionProps {
   effectiveColumnCount: number;
   viewMode: "card" | "list";
   showEditDate: boolean;
+  showTags?: boolean;
   selectedTask?: Task | DeletedTask | null;
   // 複数選択関連
   taskSelectionMode: "select" | "check";
@@ -68,6 +69,7 @@ export default function BoardTaskSection({
   effectiveColumnCount,
   viewMode,
   showEditDate,
+  showTags = false,
   selectedTask,
   taskSelectionMode,
   checkedTasks,
@@ -332,7 +334,10 @@ export default function BoardTaskSection({
         ) : (
           <TaskStatusDisplay
             activeTab={activeTaskTab as "todo" | "in_progress" | "completed"}
-            tasks={taskItems.map(item => item.content as Task)}
+            tasks={taskItems.map(item => ({
+              ...item.content as Task,
+              originalId: item.itemId.toString() // ボードのitemIdを文字列として使用
+            }))}
             viewMode={viewMode}
             effectiveColumnCount={effectiveColumnCount}
             isBoard={true}
@@ -342,6 +347,7 @@ export default function BoardTaskSection({
             onSelectTask={taskSelectionMode === "check" ? undefined : onSelectTask}
             selectedTaskId={taskSelectionMode === "check" ? undefined : selectedTask?.id}
             showEditDate={showEditDate}
+            showTags={showTags}
             sortOptions={getVisibleSortOptions(activeTaskTab)}
           />
         )}

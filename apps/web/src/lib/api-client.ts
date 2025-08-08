@@ -328,6 +328,7 @@ export const taggingsApi = {
 
   // POST /taggings
   createTagging: async (data: CreateTaggingData, token?: string) => {
+    console.log('createTagging data:', data);
     const response = await fetch(`${API_BASE_URL}/taggings`, {
       method: 'POST',
       headers: createHeaders(token),
@@ -335,6 +336,8 @@ export const taggingsApi = {
     })
     
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('createTagging error:', response.status, errorText);
       throw new Error(`HTTP error! status: ${response.status}`)
     }
     return response

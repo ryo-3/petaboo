@@ -100,6 +100,7 @@ function MemoStatusDisplay({
     isSelected: boolean;
     showEditDate: boolean;
     showBoardName?: boolean;
+    showTags?: boolean;
     variant?: 'normal' | 'deleted';
   }) => {
     const Component = viewMode === 'card' ? MemoCard : MemoListItem;
@@ -116,7 +117,7 @@ function MemoStatusDisplay({
         showBoardName={props.showBoardName}
         variant={props.variant}
         selectionMode={selectionMode}
-        showTags={showTags && viewMode === 'list'}
+        showTags={props.showTags}
       />
     );
     
@@ -153,6 +154,7 @@ function MemoStatusDisplay({
       selectedItemId={selectedMemoId}
       showEditDate={showEditDate}
       showBoardName={showBoardName}
+      showTags={showTags}
       sortOptions={sortOptions}
       emptyMessage="メモがありません"
       renderItem={renderMemo}
@@ -238,6 +240,7 @@ export function DeletedMemoDisplay({
       selectedItemId={selectedMemoId}
       showEditDate={showEditDate}
       showBoardName={showBoardName}
+      showTags={showTags}
       sortOptions={sortOptions}
       emptyMessage="削除済みメモはありません"
       renderItem={renderMemo}

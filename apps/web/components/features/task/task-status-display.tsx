@@ -150,7 +150,7 @@ function TaskStatusDisplay({
         isSelected={props.isSelected}
         showEditDate={props.showEditDate}
         showBoardName={props.showBoardName}
-        showTags={showTags}
+        showTags={props.showTags}
         variant={props.variant}
         selectionMode={selectionMode}
       />
@@ -189,6 +189,7 @@ function TaskStatusDisplay({
       selectedItemId={selectedTaskId}
       showEditDate={showEditDate}
       showBoardName={showBoardName}
+      showTags={showTags}
       sortOptions={sortOptions}
       emptyMessage={getEmptyMessage()}
       renderItem={renderTask}
@@ -260,7 +261,7 @@ export function DeletedTaskDisplay({
         isSelected={props.isSelected}
         showEditDate={props.showEditDate}
         showBoardName={props.showBoardName}
-        showTags={showTags}
+        showTags={props.showTags}
         selectionMode={selectionMode}
       />
     );
@@ -280,6 +281,7 @@ export function DeletedTaskDisplay({
       selectedItemId={selectedTaskId}
       showEditDate={showEditDate}
       showBoardName={showBoardName}
+      showTags={showTags}
       sortOptions={sortOptions}
       emptyMessage="削除済みタスクはありません"
       renderItem={renderTask}

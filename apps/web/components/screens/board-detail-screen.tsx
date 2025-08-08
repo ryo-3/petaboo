@@ -85,6 +85,13 @@ function BoardDetailScreen({
     setShowTabText,
   } = useBoardState();
 
+  // タグ表示管理
+  const [showTags, setShowTags] = useState(false);
+
+  const handleTagDisplayChange = (show: boolean) => {
+    setShowTags(show);
+  };
+
   // propsから選択状態を使用（Fast Refresh対応）
   const selectedMemo = propSelectedMemo;
   const selectedTask = propSelectedTask;
@@ -346,6 +353,8 @@ function BoardDetailScreen({
             headerMarginBottom="mb-1.5"
             showEditDate={showEditDate}
             onShowEditDateChange={setShowEditDate}
+            showTagDisplay={showTags}
+            onShowTagDisplayChange={handleTagDisplayChange}
             boardLayout={boardLayout}
             isReversed={isReversed}
             onBoardLayoutChange={handleBoardLayoutChange}
@@ -391,6 +400,7 @@ function BoardDetailScreen({
             effectiveColumnCount={effectiveColumnCount}
             viewMode={viewMode}
             showEditDate={showEditDate}
+            showTags={showTags}
             selectedMemo={selectedMemo}
             onCreateNewMemo={handleCreateNewMemo}
             onSetRightPanelMode={setRightPanelMode}
@@ -425,6 +435,7 @@ function BoardDetailScreen({
             effectiveColumnCount={effectiveColumnCount}
             viewMode={viewMode}
             showEditDate={showEditDate}
+            showTags={showTags}
             selectedTask={selectedTask}
             onCreateNewTask={handleCreateNewTask}
             onSetRightPanelMode={setRightPanelMode}

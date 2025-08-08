@@ -26,6 +26,7 @@ interface BoardMemoSectionProps {
   effectiveColumnCount: number;
   viewMode: "card" | "list";
   showEditDate: boolean;
+  showTags?: boolean;
   selectedMemo?: Memo | DeletedMemo | null;
   // 複数選択関連
   memoSelectionMode: "select" | "check";
@@ -64,6 +65,7 @@ export default function BoardMemoSection({
   effectiveColumnCount,
   viewMode,
   showEditDate,
+  showTags = false,
   selectedMemo,
   memoSelectionMode,
   checkedMemos,
@@ -305,7 +307,10 @@ export default function BoardMemoSection({
           />
         ) : (
           <MemoStatusDisplay
-            memos={memoItems.map(item => item.content as Memo)}
+            memos={memoItems.map(item => ({
+              ...item.content as Memo,
+              originalId: item.itemId.toString() // ボードのitemIdを文字列として使用
+            }))}
             viewMode={viewMode}
             effectiveColumnCount={effectiveColumnCount}
             isBoard={true}
@@ -315,6 +320,7 @@ export default function BoardMemoSection({
             onSelectMemo={memoSelectionMode === "check" ? undefined : onSelectMemo}
             selectedMemoId={memoSelectionMode === "check" ? undefined : selectedMemo?.id}
             showEditDate={showEditDate}
+            showTags={showTags}
             sortOptions={getVisibleSortOptions(activeMemoTab).filter(
               opt => opt.id === "createdAt" || opt.id === "updatedAt" || opt.id === "deletedAt"
             ) as Array<{

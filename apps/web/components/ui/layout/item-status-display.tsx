@@ -22,6 +22,7 @@ interface ItemStatusDisplayProps<T extends { id: number }> {
   selectedItemId?: number;
   showEditDate?: boolean;
   showBoardName?: boolean;
+  showTags?: boolean;
   sortOptions?: SortOption[];
   emptyMessage?: string;
   renderItem: (item: T, props: {
@@ -31,6 +32,7 @@ interface ItemStatusDisplayProps<T extends { id: number }> {
     isSelected: boolean;
     showEditDate: boolean;
     showBoardName?: boolean;
+    showTags?: boolean;
     variant?: 'normal' | 'deleted';
   }) => ReactNode;
   getSortValue: (item: T, sortId: string) => number;
@@ -50,6 +52,7 @@ function ItemStatusDisplay<T extends { id: number }>({
   selectedItemId,
   showEditDate = false,
   showBoardName = false,
+  showTags = false,
   sortOptions = [],
   emptyMessage = 'アイテムがありません',
   renderItem,
@@ -122,6 +125,7 @@ function ItemStatusDisplay<T extends { id: number }>({
           isSelected: selectedItemId === item.id,
           showEditDate,
           showBoardName,
+          showTags,
           variant
         });
       })}

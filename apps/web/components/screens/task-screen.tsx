@@ -88,7 +88,7 @@ function TaskScreen({
   const [showEditDate, setShowEditDate] = useState(false);
 
   // ボード名表示管理
-  const [showBoardName, setShowBoardName] = useState(true); // デフォルトで表示
+  const [showBoardName, setShowBoardName] = useState(false); // デフォルトで非表示
   
   // タグ表示管理
   const [showTagDisplay, setShowTagDisplay] = useState(false);

@@ -1391,7 +1391,7 @@ export function createAPI(app: AppType) {
 
       const db = c.env.db;
 
-      // 全ボードのアイテムを一括取得（削除されていないもののみ）
+      // 全ボードのアイテムを一括取得（削除済みメモ表示のため、削除されたアイテムも含める）
       const allBoardItems = await db
         .select({
           boardId: boardItems.boardId,
@@ -1405,8 +1405,8 @@ export function createAPI(app: AppType) {
         .innerJoin(boards, eq(boardItems.boardId, boards.id))
         .where(
           and(
-            eq(boards.userId, auth.userId),
-            isNull(boardItems.deletedAt)
+            eq(boards.userId, auth.userId)
+            // deletedAtの条件を削除 - 削除済みメモの表示のためすべてのボードアイテムを含める
           )
         )
         .orderBy(boards.name, boardItems.createdAt);

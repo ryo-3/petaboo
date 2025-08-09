@@ -14,6 +14,7 @@ interface BoardIconSelectorProps {
   className?: string;
   iconClassName?: string;
   multiple?: boolean; // 複数選択モードのフラグ
+  disabled?: boolean; // 無効化フラグ
 }
 
 export default function BoardIconSelector({
@@ -22,7 +23,8 @@ export default function BoardIconSelector({
   onChange,
   className = "",
   iconClassName = "size-4 text-gray-600",
-  multiple = false
+  multiple = false,
+  disabled = false
 }: BoardIconSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const selectorRef = useRef<HTMLDivElement>(null);
@@ -72,22 +74,31 @@ export default function BoardIconSelector({
   return (
     <div className={`flex items-center gap-1.5 ${className}`} ref={selectorRef}>
       <div className="relative">
-        <Tooltip text="ボード選択" position="top">
+        <Tooltip text={disabled ? "ボード表示（読み取り専用）" : "ボード選択"} position="top">
           <button
-            onClick={() => {
+            onClick={disabled ? undefined : () => {
               setIsOpen(!isOpen);
             }}
+            disabled={disabled}
             className={`flex items-center justify-center size-7 rounded-md ${
-              hasSelectedBoard 
-                ? "bg-light-Blue text-white" 
-                : "bg-gray-100"
+              disabled 
+                ? "bg-gray-50 cursor-not-allowed" 
+                : hasSelectedBoard 
+                  ? "bg-light-Blue text-white" 
+                  : "bg-gray-100"
             }`}
           >
-            <DashboardIcon className={`${iconClassName} ${hasSelectedBoard ? "text-white" : "text-gray-600"}`} />
+            <DashboardIcon className={`${iconClassName} ${
+              disabled 
+                ? "text-gray-400" 
+                : hasSelectedBoard 
+                  ? "text-white" 
+                  : "text-gray-600"
+            }`} />
           </button>
         </Tooltip>
         
-        {isOpen && (
+        {isOpen && !disabled && (
           <div className="absolute top-full left-0 mt-1 z-50 bg-white rounded-lg shadow-lg border border-gray-300 min-w-[180px]">
             <div className="py-1">
             {options.map((option) => {

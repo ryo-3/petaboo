@@ -31,6 +31,7 @@ interface BoardTaskSectionProps {
   viewMode: "card" | "list";
   showEditDate: boolean;
   showTags?: boolean;
+  showBoardName?: boolean;
   selectedTask?: Task | DeletedTask | null;
   // 複数選択関連
   taskSelectionMode: "select" | "check";
@@ -85,6 +86,7 @@ export default function BoardTaskSection({
   viewMode,
   showEditDate,
   showTags = false,
+  showBoardName = false,
   selectedTask,
   taskSelectionMode,
   checkedTasks,
@@ -348,8 +350,8 @@ export default function BoardTaskSection({
             onSelectTask={taskSelectionMode === "check" ? undefined : onSelectTask}
             selectedTaskId={taskSelectionMode === "check" ? undefined : selectedTask?.id}
             showEditDate={showEditDate}
-            showBoardName={true}
-            showTags={true}
+            showBoardName={showBoardName}
+            showTags={showTags}
             sortOptions={getVisibleSortOptions(activeTaskTab)}
             allTags={allTags}
             allBoards={allBoards}
@@ -372,6 +374,7 @@ export default function BoardTaskSection({
             onSelectTask={taskSelectionMode === "check" ? undefined : onSelectTask}
             selectedTaskId={taskSelectionMode === "check" ? undefined : selectedTask?.id}
             showEditDate={showEditDate}
+            showBoardName={showBoardName}
             showTags={showTags}
             sortOptions={getVisibleSortOptions(activeTaskTab)}
             allTags={allTags}

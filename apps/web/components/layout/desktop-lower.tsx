@@ -210,7 +210,18 @@ function DesktopLower({
     return (
       <>
         {currentMode === "memo" ? (
-          <DeletedMemoDisplay
+          <>
+            {/* 削除済みメモ表示のデータ渡し調査 */}
+            {console.log('🚀 Desktop-Lower - DeletedMemoDisplayへのデータ渡し調査:', {
+              showBoardName: true,
+              showTags: true,
+              allTagsLength: allTags?.length || 0,
+              allBoardsLength: allBoards?.length || 0,
+              allTaggingsLength: allTaggings?.length || 0,
+              allBoardItemsLength: allBoardItems?.length || 0,
+              deletedMemosLength: deletedMemos?.length || 0
+            })}
+            <DeletedMemoDisplay
             deletedMemos={deletedMemos}
             viewMode={viewMode}
             effectiveColumnCount={effectiveColumnCount}
@@ -237,6 +248,7 @@ function DesktopLower({
             allTaggings={allTaggings}
             allBoardItems={allBoardItems}
           />
+          </>
         ) : (
           <DeletedTaskDisplay
             deletedTasks={deletedTasks}

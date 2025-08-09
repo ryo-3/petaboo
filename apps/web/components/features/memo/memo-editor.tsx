@@ -240,7 +240,7 @@ function MemoEditor({
     } catch (error) {
       console.error('保存に失敗しました:', error);
     }
-  }, [handleSave, memo, updateTaggings]);
+  }, [handleSave, memo, updateTaggings, isDeleted]);
 
   // BoardIconSelector用のボードオプション
   const boardOptions = useMemo(() => {
@@ -261,8 +261,10 @@ function MemoEditor({
   // 現在選択されているボードのvalue（複数選択対応）
   const currentBoardValues = selectedBoardIds.map(id => id.toString());
 
-  // ボード選択変更ハンドラー
+  // ボード選択変更ハンドラー（削除済みの場合は無効）
   const handleBoardSelectorChange = (value: string | string[]) => {
+    if (isDeleted) return; // 削除済みの場合は変更不可
+    
     const values = Array.isArray(value) ? value : [value];
     const boardIds = values
       .filter(v => v !== "")
@@ -401,38 +403,44 @@ function MemoEditor({
                 {saveError && (
                   <span className="text-xs text-red-500">{saveError}</span>
                 )}
-                <SaveButton
-                  onClick={handleSaveWithTags}
-                  disabled={!hasChanges && !hasTagChanges}
-                  isSaving={isSaving || createTaggingMutation.isPending || deleteTaggingMutation.isPending}
-                  buttonSize="size-7"
-                  iconSize="size-4"
-                />
-                <Tooltip text="写真" position="top">
-                  <PhotoButton
-                    buttonSize="size-7"
-                    iconSize="size-5"
-                    className="rounded-full"
-                  />
-                </Tooltip>
+                {!isDeleted && (
+                  <>
+                    <SaveButton
+                      onClick={handleSaveWithTags}
+                      disabled={!hasChanges && !hasTagChanges}
+                      isSaving={isSaving || createTaggingMutation.isPending || deleteTaggingMutation.isPending}
+                      buttonSize="size-7"
+                      iconSize="size-4"
+                    />
+                    <Tooltip text="写真" position="top">
+                      <PhotoButton
+                        buttonSize="size-7"
+                        iconSize="size-5"
+                        className="rounded-full"
+                      />
+                    </Tooltip>
+                  </>
+                )}
                 <BoardIconSelector
                   options={boardOptions}
                   value={currentBoardValues}
                   onChange={handleBoardSelectorChange}
                   iconClassName="size-4 text-gray-600"
                   multiple={true}
+                  disabled={isDeleted}
                 />
                 <div className="relative" ref={tagSelectorRef}>
                   <TagSelector
                     selectedTags={localTags}
-                    onTagsChange={(tags) => {
+                    onTagsChange={isDeleted ? undefined : (tags) => {
                       setLocalTags(tags);
                       setHasManualChanges(true);
                     }}
-                    placeholder="タグ..."
+                    placeholder={isDeleted ? "タグ（読み取り専用）" : "タグ..."}
                     className="w-7 h-7"
+                    disabled={isDeleted}
                     renderTrigger={(onClick) => (
-                      <TagTriggerButton onClick={onClick} tags={localTags} />
+                      <TagTriggerButton onClick={isDeleted ? undefined : onClick} tags={localTags} disabled={isDeleted} />
                     )}
                   />
                 </div>

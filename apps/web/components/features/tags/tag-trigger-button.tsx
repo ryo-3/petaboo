@@ -7,11 +7,12 @@ import { useItemTags } from "@/src/hooks/use-taggings";
 import type { Tag } from "@/src/types/tag";
 
 interface TagTriggerButtonProps {
-  onClick: () => void;
+  onClick?: () => void;
   tags?: Tag[];
   targetType?: 'memo' | 'task' | 'board';
   targetOriginalId?: string;
   size?: 'sm' | 'md';
+  disabled?: boolean;
 }
 
 export default function TagTriggerButton({
@@ -20,6 +21,7 @@ export default function TagTriggerButton({
   targetType,
   targetOriginalId,
   size = 'md',
+  disabled = false,
 }: TagTriggerButtonProps) {
   const shouldFetchTags = !providedTags && targetType && targetOriginalId;
   const { tags: fetchedTags } = useItemTags(
@@ -50,25 +52,45 @@ export default function TagTriggerButton({
     );
   }
 
-  const tooltipText = tags.length > 0 
-    ? `タグ (${tags.length}個): ${tags.map(t => t.name).join(', ')}`
-    : 'タグ';
+  const tooltipText = disabled
+    ? (tags.length > 0 
+        ? `タグ (${tags.length}個・読み取り専用): ${tags.map(t => t.name).join(', ')}`
+        : 'タグ（読み取り専用）')
+    : (tags.length > 0 
+        ? `タグ (${tags.length}個): ${tags.map(t => t.name).join(', ')}`
+        : 'タグ');
 
   return (
     <Tooltip text={tooltipText} position="top">
       <div
-        onClick={onClick}
-        className={`flex items-center justify-center ${sizeClasses[size]} rounded-md transition-colors cursor-pointer ${
-          tags.length > 0 ? "hover:opacity-80" : "bg-gray-100 hover:bg-gray-200"
+        onClick={disabled ? undefined : onClick}
+        className={`flex items-center justify-center ${sizeClasses[size]} rounded-md transition-colors ${
+          disabled 
+            ? "cursor-not-allowed" 
+            : "cursor-pointer"
+        } ${
+          disabled
+            ? "bg-gray-50"
+            : tags.length > 0 
+              ? "hover:opacity-80" 
+              : "bg-gray-100 hover:bg-gray-200"
         }`}
         style={
-          tags.length > 0 ? { backgroundColor: TAG_COLORS.background } : {}
+          disabled 
+            ? {}
+            : tags.length > 0 
+              ? { backgroundColor: TAG_COLORS.background } 
+              : {}
         }
       >
         <TagIcon
           className={iconSizeClasses[size]}
           style={{
-            color: tags.length > 0 ? TAG_COLORS.text : TAG_COLORS.iconDefault,
+            color: disabled
+              ? '#9ca3af' // gray-400
+              : tags.length > 0 
+                ? TAG_COLORS.text 
+                : TAG_COLORS.iconDefault,
           }}
         />
       </div>

@@ -258,20 +258,6 @@ export function DeletedMemoDisplay({
   allTaggings = [],
   allBoardItems = []
 }: DeletedMemoDisplayProps) {
-  // 削除済み表示の初期データをログ出力
-  console.log('DeletedMemoDisplay初期化:', {
-    showTags,
-    showBoardName,
-    allTagsLength: allTags.length,
-    allBoardsLength: allBoards.length,
-    allTaggingsLength: allTaggings.length,
-    allBoardItemsLength: allBoardItems.length,
-    allTags,
-    allBoards,
-    allTaggings,
-    allBoardItems,
-    deletedMemosLength: deletedMemos?.length || 0
-  });
   const getSortValue = (memo: DeletedMemo, sortId: string): number => {
     switch (sortId) {
       case "createdAt":
@@ -301,6 +287,7 @@ export function DeletedMemoDisplay({
     variant?: 'normal' | 'deleted';
   }) => {
     // 削除済みメモのタグ・ボード情報を取得
+    // 削除済みメモの場合、originalIdは削除前の元のメモIDを文字列化したもの
     const originalId = memo.originalId || memo.id.toString();
     
     // このメモのタグを抽出
@@ -320,32 +307,34 @@ export function DeletedMemoDisplay({
       .map(boardId => allBoards.find(board => board.id === boardId))
       .filter((board): board is NonNullable<typeof board> => board !== undefined);
 
-    // デバッグ用ログ（最初の1つだけ出力）
+    // 削除済みメモのボード表示調査ログ
     if (deletedMemos && deletedMemos.indexOf(memo) === 0) {
-      console.log('削除済みメモ表示デバッグ（最初のアイテム）:');
-      console.log('- メモ情報:', { memoId: memo.id, originalId });
-      console.log('- 表示設定:', { showTags: props.showTags, showBoardName: props.showBoardName });
-      console.log('- 全データ状況:', { 
-        allTaggingsLength: allTaggings.length, 
-        allBoardItemsLength: allBoardItems.length,
-        allBoardsLength: allBoards.length 
+      console.log('🔍 削除済みメモのボード表示調査:');
+      console.log('メモ情報:', { 
+        id: memo.id, 
+        originalId: memo.originalId, 
+        計算されたoriginalId: originalId 
       });
-      console.log('- タグ抽出結果:', {
-        memoTaggingsFound: memoTaggings,
-        memoTagsLength: memoTags.length,
-        memoTags
-      });
-      console.log('- ボード抽出結果:', {
-        memoBoardItemsFound: memoBoardItems,
-        memoBoardsLength: memoBoards.length,
-        memoBoards
-      });
+      console.log('showBoardName:', props.showBoardName);
+      console.log('allBoardItems件数:', allBoardItems.length);
+      console.log('このメモに一致するboardItem:', memoBoardItems);
+      console.log('抽出されたボード:', memoBoards);
       
-      // originalIdでのマッチング状況を詳しく調べる
-      console.log('- originalIdマッチング調査:');
-      console.log('  - 探しているoriginalId:', originalId);
-      console.log('  - allBoardItemsサンプル:', allBoardItems.slice(0, 3));
-      console.log('  - memo用のBoardItemsをフィルタ:', allBoardItems.filter(item => item.itemType === 'memo'));
+      // originalIdマッチング詳細調査
+      console.log('❌ originalIdマッチング詳細:');
+      console.log('- 探しているoriginalId:', originalId);
+      console.log('- memo.originalId:', memo.originalId);
+      console.log('- memo.id.toString():', memo.id.toString());
+      
+      const nearbyIds = allBoardItems
+        .filter(item => item.itemType === 'memo')
+        .map(item => item.originalId)
+        .filter(id => Math.abs(parseInt(id) - parseInt(originalId)) <= 20);
+      console.log('- 近似ID(±20):', nearbyIds);
+      
+      if (memoBoardItems.length === 0) {
+        console.log('- itemType=memoのアイテム数:', allBoardItems.filter(item => item.itemType === 'memo').length);
+      }
     }
 
     const Component = viewMode === 'card' ? MemoCard : MemoListItem;

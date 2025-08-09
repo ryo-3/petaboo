@@ -34,18 +34,12 @@ function MemoCardContent({
   const boards = preloadedBoards;
   const tags = preloadedTags;
   
-  // デバッグログ（削除済みのメモ全て）
-  if (isDeleted) {
-    console.log('MemoCardContent デバッグ:', {
-      memoId: memo.id,
-      isDeleted,
-      showTags,
-      showBoardName,
-      tagsLength: tags?.length || 0,
-      boardsLength: boards?.length || 0,
-      tags,
-      boards
-    });
+  // 削除済みメモのボード表示調査（最初の1つのみ）
+  if (isDeleted && memo.id <= 100) {
+    console.log('📋 MemoCardContent - 削除済みメモのボード表示調査:');
+    console.log('メモID:', memo.id, 'showBoardName:', showBoardName);
+    console.log('preloadedBoards:', boards);
+    console.log('ボード表示判定:', showBoardName && boards && boards.length > 0);
   }
   const { displayTitle, displayContent, lastEditTime } = {
     displayTitle: memo.title,

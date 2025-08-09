@@ -10,12 +10,13 @@ import type { Tag } from '@/src/types/tag';
 
 interface TagSelectorProps {
   selectedTags: Tag[];
-  onTagsChange: (tags: Tag[]) => void;
+  onTagsChange?: (tags: Tag[]) => void;
   className?: string;
   placeholder?: string;
   forceOpen?: boolean;
   onOpenChange?: (isOpen: boolean) => void;
-  renderTrigger?: (onClick: () => void) => React.ReactNode;
+  renderTrigger?: (onClick?: () => void) => React.ReactNode;
+  disabled?: boolean;
 }
 
 function TagSelector({
@@ -25,7 +26,8 @@ function TagSelector({
   placeholder = "タグを選択...",
   forceOpen = false,
   onOpenChange,
-  renderTrigger
+  renderTrigger,
+  disabled = false
 }: TagSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -89,6 +91,8 @@ function TagSelector({
 
   // タグ選択/選択解除
   const handleToggleTag = (tag: Tag) => {
+    if (disabled || !onTagsChange) return;
+    
     const isSelected = selectedTags.some(selectedTag => selectedTag.id === tag.id);
     const newTags = isSelected 
       ? selectedTags.filter(t => t.id !== tag.id)
@@ -99,6 +103,8 @@ function TagSelector({
 
   // タグ削除
   const handleRemoveTag = (tag: Tag) => {
+    if (disabled || !onTagsChange) return;
+    
     const newTags = selectedTags.filter(t => t.id !== tag.id);
     onTagsChange(newTags);
   };
@@ -113,7 +119,7 @@ function TagSelector({
       });
 
       const newTags = [...selectedTags, newTag];
-      onTagsChange(newTags);
+      onTagsChange?.(newTags);
 
       setNewTagName("");
       setIsCreating(false);
@@ -128,6 +134,8 @@ function TagSelector({
   };
 
   const handleToggleOpen = () => {
+    if (disabled) return;
+    
     const newOpenState = !isOpen;
     setIsOpen(newOpenState);
     setActiveSelector(newOpenState ? selectorId : null);
@@ -157,7 +165,7 @@ function TagSelector({
     <div className={`relative ${className}`} ref={selectorRef}>
       {renderTrigger ? (
         <div>
-          {renderTrigger(handleToggleOpen)}
+          {renderTrigger(disabled ? undefined : handleToggleOpen)}
         </div>
       ) : (
         <div
@@ -196,7 +204,7 @@ function TagSelector({
         </div>
       )}
 
-      {isOpen && (
+      {isOpen && !disabled && (
         <div className="absolute top-full left-0 z-50 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-y-auto w-72 mt-1">
           <div className="p-2 border-b border-gray-200">
             <input

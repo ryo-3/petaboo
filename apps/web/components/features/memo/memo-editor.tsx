@@ -54,15 +54,21 @@ function MemoEditor({
   onClose, 
   onSaveComplete, 
   onDelete, 
-  onDeleteAndSelectNext, 
+  onDeleteAndSelectNext,
+  onRestore,
   isLidOpen = false, 
   customHeight,
+  preloadedTags = [],
   preloadedBoards = [],
   preloadedTaggings = [],
   preloadedBoardItems = []
 }: MemoEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const baseViewerRef = useRef<HTMLDivElement>(null);
+  
+  // 削除済みメモかどうかを判定
+  const isDeleted = memo ? 'deletedAt' in memo : false;
+  const deletedMemo = isDeleted ? (memo as DeletedMemo) : null;
   
   // 事前取得されたデータを使用（APIコール不要）
   const boards = preloadedBoards;
@@ -217,8 +223,10 @@ function MemoEditor({
     }
   }, [memo, currentTags, localTags, preloadedTaggings, deleteTaggingMutation, createTaggingMutation]);
 
-  // 拡張された保存処理
+  // 拡張された保存処理（削除済みの場合は実行しない）
   const handleSaveWithTags = useCallback(async () => {
+    if (isDeleted) return; // 削除済みの場合は保存しない
+    
     try {
       // まずメモを保存
       await handleSave();
@@ -434,9 +442,24 @@ function MemoEditor({
                   <div className="text-[13px] text-gray-400">
                     <DateInfo
                       item={memo}
-                      isEditing={true}
+                      isEditing={!isDeleted}
                     />
                   </div>
+                )}
+                {isDeleted && deletedMemo && (
+                  <span className="text-xs text-red-500 mr-2">
+                    削除日時: {new Date(deletedMemo.deletedAt * 1000).toLocaleDateString('ja-JP')}
+                  </span>
+                )}
+                {isDeleted && onRestore && (
+                  <button
+                    onClick={onRestore}
+                    className="flex items-center justify-center size-7 rounded-md bg-blue-100 text-blue-600 hover:bg-blue-200 ml-2"
+                  >
+                    <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  </button>
                 )}
                 {memo && onDelete && (
                   <button
@@ -453,16 +476,21 @@ function MemoEditor({
           
           <textarea
             ref={textareaRef}
-            placeholder="入力..."
+            placeholder={isDeleted ? "削除済みのメモです" : "入力..."}
             value={content}
-            onChange={(e) => {
+            onChange={isDeleted ? undefined : (e) => {
               const newContent = e.target.value;
               const firstLine = newContent.split("\n")[0] || "";
 
               handleTitleChange(firstLine);
               handleContentChange(newContent);
             }}
-            className={`w-full ${customHeight || 'flex-1'} resize-none outline-none text-gray-500 leading-relaxed font-medium pb-10 mb-2 ${memo && memo.id !== 0 && (itemBoards.length > 0 || localTags.length > 0) ? 'mt-0' : 'mt-2'} pr-1`}
+            readOnly={isDeleted}
+            className={`w-full ${customHeight || 'flex-1'} resize-none outline-none leading-relaxed font-medium pb-10 mb-2 ${memo && memo.id !== 0 && (itemBoards.length > 0 || localTags.length > 0) ? 'mt-0' : 'mt-2'} pr-1 ${
+              isDeleted 
+                ? 'text-red-500 bg-red-50 cursor-not-allowed' 
+                : 'text-gray-500'
+            }`}
           />
         </BaseViewer>
       </div>

@@ -150,7 +150,9 @@ function MemoScreen({
     tagsLength: tags?.length || 0,
     boardsLength: boards?.length || 0,
     allTaggingsLength: safeAllTaggings?.length || 0,
-    allBoardItemsLength: safeAllBoardItems?.length || 0
+    allBoardItemsLength: safeAllBoardItems?.length || 0,
+    // 削除済みメモで使うboard items sample（デバッグ用）
+    sampleBoardItems: safeAllBoardItems?.slice(0, 3)
   });
   
 
@@ -652,40 +654,46 @@ function MemoScreen({
             }}
             isLidOpen={isRightLidOpen}
             // 全データ事前取得（ちらつき解消）
-            preloadedBoards={boards}
-            preloadedTaggings={safeAllTaggings}
-            preloadedBoardItems={safeAllBoardItems}
+            preloadedTags={tags || []}
+            preloadedBoards={boards || []}
+            preloadedTaggings={safeAllTaggings || []}
+            preloadedBoardItems={safeAllBoardItems || []}
           />
         )}
         {memoScreenMode === "view" && selectedDeletedMemo && !selectedMemo && (
-          <>
-            <DeletedMemoViewer
-              ref={deletedMemoViewerRef}
-              memo={selectedDeletedMemo}
-              onClose={() => {
-                setMemoScreenMode("list");
-                // 削除済みタブからの閉じる時は通常タブに戻る
-                if (activeTab === "deleted") {
-                  setActiveTab("normal");
-                }
-                onDeselectAndStayOnMemoList?.();
-              }}
-              onDeleteAndSelectNext={selectNextDeletedMemo}
-              onRestoreAndSelectNext={handleRestoreAndSelectNext}
-              isLidOpen={isRightLidOpen}
-              onDeleteClick={() => {
-                // 削除済メモの削除処理
-                if (selectedDeletedMemo) {
-                  // 1. 蓋を開く
-                  setIsRightLidOpen(true);
-                  setTimeout(() => {
-                    // 2. 削除確認モーダルを表示
-                    deletedMemoViewerRef.current?.showDeleteConfirmation();
-                  }, 200);
-                }
-              }}
-            />
-          </>
+          <MemoEditor
+            memo={selectedDeletedMemo}
+            onClose={() => {
+              setMemoScreenMode("list");
+              // 削除済みタブからの閉じる時は通常タブに戻る
+              if (activeTab === "deleted") {
+                setActiveTab("normal");
+              }
+              onDeselectAndStayOnMemoList?.();
+            }}
+            onRestore={() => {
+              if (selectedDeletedMemo) {
+                handleRestoreAndSelectNext(selectedDeletedMemo);
+              }
+            }}
+            onDelete={() => {
+              // 削除済メモの削除処理
+              if (selectedDeletedMemo) {
+                // 1. 蓋を開く
+                setIsRightLidOpen(true);
+                setTimeout(() => {
+                  // 2. 削除実行
+                  handleRightEditorDelete(selectedDeletedMemo);
+                }, 200);
+              }
+            }}
+            isLidOpen={isRightLidOpen}
+            // 全データ事前取得（ちらつき解消）
+            preloadedTags={tags || []}
+            preloadedBoards={boards || []}
+            preloadedTaggings={safeAllTaggings || []}
+            preloadedBoardItems={safeAllBoardItems || []}
+          />
         )}
       </RightPanel>
     </div>

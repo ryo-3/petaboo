@@ -128,12 +128,13 @@ function MemoStatusDisplay({
         .map(t => allTags.find(tag => tag.id === t.tagId))
         .filter((tag): tag is NonNullable<typeof tag> => tag !== undefined);
 
-      // メモのボードを抽出
+      // メモのボードを抽出（重複除去）
       const memoBoardItems = allBoardItems.filter(
         item => item.itemType === 'memo' && item.originalId === originalId
       );
-      const memoBoards = memoBoardItems
-        .map(item => allBoards.find(board => board.id === item.boardId))
+      const uniqueBoardIds = new Set(memoBoardItems.map(item => item.boardId));
+      const memoBoards = Array.from(uniqueBoardIds)
+        .map(boardId => allBoards.find(board => board.id === boardId))
         .filter((board): board is NonNullable<typeof board> => board !== undefined);
 
 
@@ -310,34 +311,41 @@ export function DeletedMemoDisplay({
       .map(t => allTags.find(tag => tag.id === t.tagId))
       .filter((tag): tag is NonNullable<typeof tag> => tag !== undefined);
 
-    // このメモのボードを抽出
+    // このメモのボードを抽出（重複除去）
     const memoBoardItems = allBoardItems.filter(
       item => item.itemType === 'memo' && item.originalId === originalId
     );
-    const memoBoards = memoBoardItems
-      .map(item => allBoards.find(board => board.id === item.boardId))
+    const uniqueBoardIds = new Set(memoBoardItems.map(item => item.boardId));
+    const memoBoards = Array.from(uniqueBoardIds)
+      .map(boardId => allBoards.find(board => board.id === boardId))
       .filter((board): board is NonNullable<typeof board> => board !== undefined);
 
     // デバッグ用ログ（最初の1つだけ出力）
     if (deletedMemos && deletedMemos.indexOf(memo) === 0) {
-      console.log('削除済みメモ表示デバッグ（最初のアイテム）:', {
-        memoId: memo.id,
-        originalId,
-        showTags: props.showTags,
-        showBoardName: props.showBoardName,
-        memoTagsLength: memoTags.length,
-        memoBoardsLength: memoBoards.length,
-        allTaggingsLength: allTaggings.length,
+      console.log('削除済みメモ表示デバッグ（最初のアイテム）:');
+      console.log('- メモ情報:', { memoId: memo.id, originalId });
+      console.log('- 表示設定:', { showTags: props.showTags, showBoardName: props.showBoardName });
+      console.log('- 全データ状況:', { 
+        allTaggingsLength: allTaggings.length, 
         allBoardItemsLength: allBoardItems.length,
-        
-        // タグ抽出の詳細
-        memoTaggingsFound: memoTaggings,
-        memoTagsExtracted: memoTags,
-        
-        // ボード抽出の詳細
-        memoBoardItemsFound: memoBoardItems,
-        memoBoardsExtracted: memoBoards
+        allBoardsLength: allBoards.length 
       });
+      console.log('- タグ抽出結果:', {
+        memoTaggingsFound: memoTaggings,
+        memoTagsLength: memoTags.length,
+        memoTags
+      });
+      console.log('- ボード抽出結果:', {
+        memoBoardItemsFound: memoBoardItems,
+        memoBoardsLength: memoBoards.length,
+        memoBoards
+      });
+      
+      // originalIdでのマッチング状況を詳しく調べる
+      console.log('- originalIdマッチング調査:');
+      console.log('  - 探しているoriginalId:', originalId);
+      console.log('  - allBoardItemsサンプル:', allBoardItems.slice(0, 3));
+      console.log('  - memo用のBoardItemsをフィルタ:', allBoardItems.filter(item => item.itemType === 'memo'));
     }
 
     const Component = viewMode === 'card' ? MemoCard : MemoListItem;

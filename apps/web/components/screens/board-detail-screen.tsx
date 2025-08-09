@@ -3,10 +3,13 @@ import BoardRightPanel from "@/components/features/board/board-right-panel";
 import BoardTaskSection from "@/components/features/board/board-task-section";
 import DesktopUpper from "@/components/layout/desktop-upper";
 import { useBoardState } from "@/src/hooks/use-board-state";
-import ItemBoardsPrefetcher from "@/components/shared/item-boards-prefetcher";
+import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
+import { useTags } from "@/src/hooks/use-tags";
+import { useBoards } from "@/src/hooks/use-boards";
 import { Memo, DeletedMemo } from "@/src/types/memo";
 import { Task, DeletedTask } from "@/src/types/task";
-import { memo, useEffect, useMemo, useState, useRef } from "react";
+import type { Tagging } from "@/src/types/tag";
+import { memo, useEffect, useState, useRef } from "react";
 import BoardHeader from "@/components/features/board/board-header";
 import { BulkDeleteConfirmation } from "@/components/ui/modals";
 import { useBoardSelectAll } from "@/src/hooks/use-board-select-all";
@@ -251,14 +254,18 @@ function BoardDetailScreen({
     isMemoDeleting,
   });
 
-  // プリフェッチ用のアイテムリスト作成
-  const memoItemsForPrefetch = useMemo(() => {
-    return allMemoItems.map(item => ({ id: item.content.id }));
-  }, [allMemoItems]);
+  // 全データ事前取得（ちらつき解消）
+  const { data: allTaggings } = useAllTaggings();
+  const { data: allBoardItems } = useAllBoardItems();
+  const { data: allTags } = useTags();
+  const { data: allBoards } = useBoards();
   
-  const taskItemsForPrefetch = useMemo(() => {
-    return allTaskItems.map(item => ({ id: item.content.id }));
-  }, [allTaskItems]);
+  // 安全なデータ配布用
+  const safeAllTaggings = allTaggings || [];
+  const safeAllBoardItems = allBoardItems || [];
+  const safeAllTags = allTags || [];
+  const safeAllBoards = allBoards || [];
+
 
   // メモの全選択フック
   const { isAllSelected: isMemoAllSelected, handleSelectAll: handleMemoSelectAll } = useBoardSelectAll({
@@ -314,11 +321,7 @@ function BoardDetailScreen({
   }
 
   return (
-    <div className="flex h-full bg-white overflow-hidden">
-      {/* ボード内アイテムのボード情報をプリフェッチ（ちらつき防止） */}
-      <ItemBoardsPrefetcher type="memo" items={memoItemsForPrefetch} />
-      <ItemBoardsPrefetcher type="task" items={taskItemsForPrefetch} />
-      
+    <div className="flex h-full bg-white overflow-hidden">      
       {/* 左側：メモ・タスク一覧 */}
       <div
         className={`${
@@ -399,6 +402,10 @@ function BoardDetailScreen({
             isLoading={isLoading}
             effectiveColumnCount={effectiveColumnCount}
             viewMode={viewMode}
+            allTags={safeAllTags}
+            allBoards={safeAllBoards}
+            allTaggings={safeAllTaggings as Tagging[]}
+            allBoardItems={safeAllBoardItems}
             showEditDate={showEditDate}
             showTags={showTags}
             selectedMemo={selectedMemo}
@@ -436,6 +443,11 @@ function BoardDetailScreen({
             viewMode={viewMode}
             showEditDate={showEditDate}
             showTags={showTags}
+            showBoardName={showTags}
+            allTags={safeAllTags}
+            allBoards={safeAllBoards}
+            allTaggings={safeAllTaggings as Tagging[]}
+            allBoardItems={safeAllBoardItems}
             selectedTask={selectedTask}
             onCreateNewTask={handleCreateNewTask}
             onSetRightPanelMode={setRightPanelMode}
@@ -500,6 +512,8 @@ function BoardDetailScreen({
         selectedItemsFromList={selectedItemsFromList}
         allMemos={boardMemos}
         allTasks={boardTasks}
+        allTaggings={safeAllTaggings as Tagging[]}
+        allBoardItems={safeAllBoardItems}
         onClose={rightPanelMode ? () => handleCloseRightPanel(onClearSelection) : handleCloseDetail}
         onSelectMemo={onSelectMemo}
         onSelectTask={onSelectTask}

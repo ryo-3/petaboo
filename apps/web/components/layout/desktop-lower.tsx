@@ -4,6 +4,8 @@ import MemoStatusDisplay, { DeletedMemoDisplay } from "@/components/features/mem
 import TaskStatusDisplay, { DeletedTaskDisplay } from "@/components/features/task/task-status-display";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
+import type { Tag, Tagging } from "@/src/types/tag";
+import type { Board } from "@/src/types/board";
 
 interface DesktopLowerProps {
   currentMode: "memo" | "task";
@@ -65,6 +67,19 @@ interface DesktopLowerProps {
   onSelectDeletedMemo?: (memo: DeletedMemo) => void;
   onSelectTask?: (task: Task) => void;
   onSelectDeletedTask?: (task: DeletedTask) => void;
+  
+  // 全データ事前取得（ちらつき解消）
+  allTags?: Tag[];
+  allBoards?: Board[];
+  allTaggings?: Tagging[];
+  allBoardItems?: Array<{
+    boardId: number;
+    boardName: string;
+    itemType: 'memo' | 'task';
+    itemId: string;
+    originalId: string;
+    addedAt: number;
+  }>;
 }
 
 function DesktopLower({
@@ -101,6 +116,10 @@ function DesktopLower({
   onSelectDeletedMemo,
   onSelectTask,
   onSelectDeletedTask,
+  allTags,
+  allBoards,
+  allTaggings,
+  allBoardItems,
 }: DesktopLowerProps) {
   
   // Loading state
@@ -147,6 +166,11 @@ function DesktopLower({
             enabled: boolean;
             direction: "asc" | "desc";
           }>}
+          // 全データ事前取得（ちらつき解消）
+          allTags={allTags}
+          allBoards={allBoards}
+          allTaggings={allTaggings}
+          allBoardItems={allBoardItems}
         />
       </>
     );
@@ -174,6 +198,9 @@ function DesktopLower({
         showTags={showTags}
         selectedBoardIds={selectedBoardIds}
         boardFilterMode={boardFilterMode}
+        allTags={allTags}
+        allTaggings={allTaggings}
+        allBoardItems={allBoardItems}
       />
     );
   }
@@ -193,7 +220,8 @@ function DesktopLower({
             onSelectMemo={onSelectDeletedMemo}
             selectedMemoId={selectedDeletedMemo?.id}
             showEditDate={showEditDate}
-            showBoardName={showBoardName}
+            showBoardName={true}
+            showTags={true}
             selectedBoardIds={selectedBoardIds}
             boardFilterMode={boardFilterMode}
             sortOptions={sortOptions.filter(opt => 
@@ -204,6 +232,10 @@ function DesktopLower({
             enabled: boolean;
             direction: "asc" | "desc";
           }>}
+            allTags={allTags}
+            allBoards={allBoards}
+            allTaggings={allTaggings}
+            allBoardItems={allBoardItems}
           />
         ) : (
           <DeletedTaskDisplay
@@ -216,11 +248,15 @@ function DesktopLower({
             onSelectTask={onSelectDeletedTask}
             selectedTaskId={selectedDeletedTask?.id}
             showEditDate={showEditDate}
-            showBoardName={showBoardName}
-            showTags={showTags}
+            showBoardName={true}
+            showTags={true}
             selectedBoardIds={selectedBoardIds}
             boardFilterMode={boardFilterMode}
             sortOptions={sortOptions}
+            allTags={allTags}
+            allBoards={allBoards}
+            allTaggings={allTaggings}
+            allBoardItems={allBoardItems}
           />
         )}
       </>

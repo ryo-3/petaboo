@@ -16,6 +16,10 @@ interface TaskCardContentProps {
   showEditDate?: boolean;
   showBoardName?: boolean;
   showTags?: boolean;
+  
+  // 削除済み表示用の事前取得データ
+  preloadedTags?: Array<{id: number; name: string; color?: string}>
+  preloadedBoards?: Array<{id: number; name: string}>
 }
 
 function TaskCardContent({
@@ -24,21 +28,26 @@ function TaskCardContent({
   showEditDate = false,
   showBoardName = false,
   showTags = false,
+  preloadedTags,
+  preloadedBoards,
 }: TaskCardContentProps) {
   const isDeleted = variant === "deleted";
   const deletedTask = task as DeletedTask;
 
-  // ボード名を取得（キャッシュ更新のため常に取得、表示は条件で制御）
+  // データを取得（削除済み表示の場合はpreloadedデータを優先）
   const boardItemId = !isDeleted && task.id > 0 
     ? ((task as Task).originalId || task.id.toString())
     : '';
   const { data: boards } = useItemBoards('task', boardItemId ? parseInt(boardItemId) : undefined);
   
-  // タグを取得（削除済みタスクでない場合のみ）
   const targetOriginalId = !isDeleted && task.id > 0 
     ? ((task as Task).originalId || task.id.toString())
     : '';
   const { tags } = useItemTags('task', targetOriginalId);
+
+  // 削除済み表示の場合はpreloadedデータを使用
+  const displayTags = isDeleted ? preloadedTags : tags;
+  const displayBoards = isDeleted ? preloadedBoards : boards;
 
   return (
     <>
@@ -65,12 +74,12 @@ function TaskCardContent({
       </div>
 
       {/* ボード名・タグ表示 */}
-      {((showBoardName && boards && boards.length > 0) || (showTags && !isDeleted && tags && tags.length > 0)) && (
+      {((showBoardName && displayBoards && displayBoards.length > 0) || (showTags && displayTags && displayTags.length > 0)) && (
         <div className="mb-2 flex flex-wrap gap-1">
           {/* ボード名 */}
-          {showBoardName && boards && boards.length > 0 && (
+          {showBoardName && displayBoards && displayBoards.length > 0 && (
             <>
-              {boards.map((board) => (
+              {displayBoards.map((board) => (
                 <span
                   key={board.id}
                   className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-light-Blue text-white"
@@ -82,9 +91,9 @@ function TaskCardContent({
           )}
           
           {/* タグ */}
-          {showTags && !isDeleted && tags && tags.length > 0 && (
+          {showTags && displayTags && displayTags.length > 0 && (
             <>
-              {tags.map((tag) => (
+              {displayTags.map((tag) => (
                 <span
                   key={tag.id}
                   className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"

@@ -29,8 +29,8 @@ import { useSelectAll } from "@/src/hooks/use-select-all";
 import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useBoards } from "@/src/hooks/use-boards";
-import ItemBoardsPrefetcher from "@/components/shared/item-boards-prefetcher";
-import ItemTagsPrefetcher from "@/components/shared/item-tags-prefetcher";
+import { useTags } from "@/src/hooks/use-tags";
+import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import {
   getMemoDisplayOrder,
@@ -134,7 +134,25 @@ function MemoScreen({
   const { data: memos, isLoading: memoLoading, error: memoError } = useMemos();
   const { data: deletedMemos } = useDeletedMemos();
   const { preferences } = useUserPreferences(1);
+  
+  // 全データ一括取得（ちらつき解消）
   const { data: boards } = useBoards();
+  const { data: tags } = useTags();
+  const { data: allTaggings, error: taggingsError } = useAllTaggings();
+  const { data: allBoardItems, error: boardItemsError } = useAllBoardItems();
+  
+  // APIエラー時のフォールバック
+  const safeAllTaggings = taggingsError ? [] : allTaggings || [];
+  const safeAllBoardItems = boardItemsError ? [] : allBoardItems || [];
+  
+  // デバッグ：データ取得状況を確認
+  console.log('MemoScreen データ取得状況:', {
+    tagsLength: tags?.length || 0,
+    boardsLength: boards?.length || 0,
+    allTaggingsLength: safeAllTaggings?.length || 0,
+    allBoardItemsLength: safeAllBoardItems?.length || 0
+  });
+  
 
 
   // 削除API
@@ -369,12 +387,6 @@ function MemoScreen({
 
   return (
     <div className="flex h-full bg-white overflow-hidden">
-      {/* メモ一覧のボード情報をプリフェッチ（ちらつき防止） */}
-      <ItemBoardsPrefetcher type="memo" items={memos} />
-      
-      {/* メモ一覧のタグ情報をプリフェッチ（ちらつき防止） */}
-      <ItemTagsPrefetcher type="memo" items={memos} />
-      
       {/* 左側：一覧表示エリア */}
       <div
         className={`${memoScreenMode === "list" ? "w-full" : "w-[44%]"} ${memoScreenMode !== "list" ? "border-r border-gray-300" : ""} ${hideHeaderButtons ? "pt-3" : "pt-3 pl-5 pr-2"} flex flex-col transition-all duration-300 relative`}
@@ -450,6 +462,11 @@ function MemoScreen({
           )}
           onSelectMemo={handleSelectMemo}
           onSelectDeletedMemo={handleSelectDeletedMemo}
+          // 全データ事前取得（ちらつき解消）
+          allTags={tags || []}
+          allBoards={boards || []}
+          allTaggings={safeAllTaggings || []}
+          allBoardItems={safeAllBoardItems || []}
         />
 
         {/* 一括操作ボタン */}
@@ -611,6 +628,10 @@ function MemoScreen({
             memo={null}
             onClose={() => setMemoScreenMode("list")}
             onSaveComplete={handleSaveComplete}
+            // 全データ事前取得（ちらつき解消）
+            preloadedBoards={boards}
+            preloadedTaggings={safeAllTaggings}
+            preloadedBoardItems={safeAllBoardItems}
           />
         )}
         {memoScreenMode === "view" && selectedMemo && !selectedDeletedMemo && (
@@ -630,6 +651,10 @@ function MemoScreen({
               }
             }}
             isLidOpen={isRightLidOpen}
+            // 全データ事前取得（ちらつき解消）
+            preloadedBoards={boards}
+            preloadedTaggings={safeAllTaggings}
+            preloadedBoardItems={safeAllBoardItems}
           />
         )}
         {memoScreenMode === "view" && selectedDeletedMemo && !selectedMemo && (

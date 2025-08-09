@@ -328,7 +328,6 @@ export const taggingsApi = {
 
   // POST /taggings
   createTagging: async (data: CreateTaggingData, token?: string) => {
-    console.log('createTagging data:', data);
     const response = await fetch(`${API_BASE_URL}/taggings`, {
       method: 'POST',
       headers: createHeaders(token),
@@ -337,7 +336,20 @@ export const taggingsApi = {
     
     if (!response.ok) {
       const errorText = await response.text();
+      
+      // 400エラー（重複）の場合はデバッグログのみ
+      if (response.status === 400 && errorText.includes('Tag already attached')) {
+        console.debug('Tag already attached (expected):', response.status, errorText);
+        throw new Error(`HTTP error 400: ${errorText}`)
+      }
+      
+      // その他のエラーは通常通りログ出力
       console.error('createTagging error:', response.status, errorText);
+      
+      if (response.status === 400) {
+        throw new Error(`HTTP error 400: ${errorText}`)
+      }
+      
       throw new Error(`HTTP error! status: ${response.status}`)
     }
     return response

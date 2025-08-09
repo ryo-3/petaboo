@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient, useQueries, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
 import { Board, BoardWithStats, BoardWithItems, CreateBoardData, UpdateBoardData, AddItemToBoardData, BoardItem } from "@/src/types/board";
 import { DeletedMemo } from "@/src/types/memo";
@@ -402,6 +402,8 @@ export function useAddItemToBoard() {
       queryClient.invalidateQueries({ queryKey: ["item-boards", itemType, parseInt(itemId)] });
       // ボード一覧も無効化（統計情報が変わるため）
       queryClient.invalidateQueries({ queryKey: ["boards"] });
+      // 全ボードアイテム情報も無効化（新しいAPI用）
+      queryClient.invalidateQueries({ queryKey: ["boards", "all-items"] });
     },
     onError: (error) => {
       console.error("ボードへのアイテム追加に失敗しました:", error);
@@ -453,6 +455,8 @@ export function useRemoveItemFromBoard() {
       queryClient.invalidateQueries({ queryKey: ["item-boards", itemType, itemId] });
       // ボード一覧も無効化（統計情報が変わるため）
       queryClient.invalidateQueries({ queryKey: ["boards"] });
+      // 全ボードアイテム情報も無効化（新しいAPI用）
+      queryClient.invalidateQueries({ queryKey: ["boards", "all-items"] });
     },
     onError: (error) => {
       console.error("ボードからアイテムの削除に失敗しました:", error);
@@ -583,50 +587,3 @@ export function useBoardDeletedItems(boardId: number) {
   });
 }
 
-// アイテム一覧のボード情報を一括プリフェッチ
-export function usePrefetchItemBoards(itemType: 'memo' | 'task', items: { id: number }[] | undefined) {
-  const { getToken, isLoaded } = useAuth();
-
-  return useQueries({
-    queries: (items || []).map(item => ({
-      queryKey: ["item-boards", itemType, item.id],
-      queryFn: async () => {
-        // 最大2回リトライ
-        for (let attempt = 0; attempt < 2; attempt++) {
-          const token = await getCachedToken(getToken);
-          
-          const response = await fetch(`${API_BASE_URL}/boards/items/${itemType}/${item.id}/boards`, {
-            headers: {
-              "Content-Type": "application/json",
-              ...(token && { Authorization: `Bearer ${token}` }),
-            },
-          });
-          
-          // 401エラーの場合はキャッシュをクリアしてリトライ
-          if (response.status === 401 && attempt === 0) {
-            cachedToken = null;
-            tokenExpiry = 0;
-            continue;
-          }
-          
-          if (!response.ok) {
-            // 404エラーは空配列を返す（削除済みアイテムなど）
-            if (response.status === 404) {
-              return [];
-            }
-            throw new Error("Failed to fetch item boards");
-          }
-
-          const data = await response.json();
-          return data;
-        }
-        
-        throw new Error('Failed after retry');
-      },
-      enabled: !!items && items.length > 0 && isLoaded, // 認証完了まで待機
-      staleTime: 5 * 60 * 1000,  // 5分間キャッシュ
-      refetchOnMount: false,     // マウント時の再取得を無効化
-      refetchOnWindowFocus: false, // ウィンドウフォーカス時の再取得を無効化
-    }))
-  });
-}

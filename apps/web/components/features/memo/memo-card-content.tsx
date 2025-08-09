@@ -1,7 +1,7 @@
 import { formatDateOnly } from '@/src/utils/formatDate'
 import type { Memo, DeletedMemo } from '@/src/types/memo'
-import { useItemBoards } from '@/src/hooks/use-boards'
-import { useItemTags } from '@/src/hooks/use-taggings'
+import type { Tag } from '@/src/types/tag'
+import type { Board } from '@/src/types/board'
 import { TAG_COLORS } from '@/src/constants/colors'
 
 interface MemoCardContentProps {
@@ -12,25 +12,41 @@ interface MemoCardContentProps {
   showBoardName?: boolean
   showTags?: boolean
   selectedBoardIds?: number[]
+  
+  // 全データ事前取得（ちらつき解消）
+  preloadedTags?: Tag[]
+  preloadedBoards?: Board[]
 }
 
-function MemoCardContent({ memo, variant = 'normal', showEditDate = false, showBoardName = false, showTags = false }: MemoCardContentProps) {
+function MemoCardContent({ 
+  memo, 
+  variant = 'normal', 
+  showEditDate = false, 
+  showBoardName = false, 
+  showTags = false,
+  preloadedTags = [],
+  preloadedBoards = []
+}: MemoCardContentProps) {
   const isDeleted = variant === 'deleted'
   const deletedMemo = memo as DeletedMemo
   
-  // ボード名を取得（常にキャッシュから取得、表示は条件で制御）
-  // 削除済みメモの場合はoriginalIdを使用
-  const itemId = isDeleted ? (memo as DeletedMemo).originalId : memo.id;
-  const { data: boards } = useItemBoards('memo', !isDeleted ? Number(itemId) : undefined)
+  // 事前取得されたデータを使用（APIコール不要）
+  const boards = preloadedBoards;
+  const tags = preloadedTags;
   
-  // タグを取得（削除済みメモでない場合のみ）
-  const targetOriginalId = !isDeleted && memo.id > 0 
-    ? ((memo as Memo).originalId || memo.id.toString())
-    : '';
-  const { tags } = useItemTags('memo', targetOriginalId);
-  
-  
-  // ローカルストレージ使用禁止 - 直接APIデータを使用
+  // デバッグログ（削除済みのメモ全て）
+  if (isDeleted) {
+    console.log('MemoCardContent デバッグ:', {
+      memoId: memo.id,
+      isDeleted,
+      showTags,
+      showBoardName,
+      tagsLength: tags?.length || 0,
+      boardsLength: boards?.length || 0,
+      tags,
+      boards
+    });
+  }
   const { displayTitle, displayContent, lastEditTime } = {
     displayTitle: memo.title,
     displayContent: memo.content || '',
@@ -62,7 +78,18 @@ function MemoCardContent({ memo, variant = 'normal', showEditDate = false, showB
       )}
       
       {/* タグ表示 */}
-      {showTags && !isDeleted && tags && tags.length > 0 && (
+      {(() => {
+        if (isDeleted && showTags) {
+          console.log('タグ表示条件チェック:', {
+            showTags,
+            tags,
+            tagsLength: tags?.length || 0,
+            condition: showTags && tags && tags.length > 0
+          });
+        }
+        return null;
+      })()}
+      {showTags && tags && tags.length > 0 && (
         <div className="mb-2">
           <div className="flex flex-wrap gap-1">
             {tags.map((tag) => (

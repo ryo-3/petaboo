@@ -5,6 +5,8 @@ import TaskListItem from '@/components/features/task/task-list-item';
 import ItemStatusDisplay from '@/components/ui/layout/item-status-display';
 import TaskFilterWrapper from '@/components/features/task/task-filter-wrapper';
 import type { Task, DeletedTask } from '@/src/types/task';
+import type { Tag, Tagging } from '@/src/types/tag';
+import type { Board } from '@/src/types/board';
 import { useMemo } from 'react';
 
 interface TaskStatusDisplayProps {
@@ -29,6 +31,18 @@ interface TaskStatusDisplayProps {
     direction: "asc" | "desc";
   }>;
   isBoard?: boolean; // ボード詳細画面での使用かどうか
+  
+  // 全データ事前取得（ちらつき解消）
+  allTags?: Tag[];
+  allTaggings?: Tagging[];
+  allBoardItems?: Array<{
+    boardId: number;
+    boardName: string;
+    itemType: 'memo' | 'task';
+    itemId: string;
+    originalId: string;
+    addedAt: number;
+  }>;
 }
 
 interface DeletedTaskDisplayProps {
@@ -52,6 +66,19 @@ interface DeletedTaskDisplayProps {
     direction: "asc" | "desc";
   }>;
   isBoard?: boolean; // ボード詳細画面での使用かどうか
+  
+  // 全データ事前取得（ちらつき解消）
+  allTags?: Tag[];
+  allBoards?: Board[];
+  allTaggings?: Tagging[];
+  allBoardItems?: Array<{
+    boardId: number;
+    boardName: string;
+    itemType: 'memo' | 'task';
+    itemId: string;
+    originalId: string;
+    addedAt: number;
+  }>;
 }
 
 function TaskStatusDisplay({
@@ -70,23 +97,66 @@ function TaskStatusDisplay({
   selectedBoardIds = [],
   boardFilterMode = 'include',
   sortOptions = [],
-  isBoard = false
+  isBoard = false,
+  allTaggings = [],
+  allBoardItems = []
 }: TaskStatusDisplayProps) {
   // ステータスでフィルター
   const statusFilteredTasks = tasks?.filter(task => task.status === activeTab);
-
-  // ボードフィルターを適用
-  const filteredTasks = useMemo(() => {
+  
+  // 各タスクのタグとボードを抽出（事前取得データから）
+  const tasksWithData = useMemo(() => {
     if (!statusFilteredTasks) return [];
+    
+    return statusFilteredTasks.map(task => {
+      const originalId = task.originalId || task.id.toString();
+      
+      // このタスクのタグを抽出
+      const taskTaggings = allTaggings.filter(
+        (t: Tagging) => t.targetType === 'task' && t.targetOriginalId === originalId
+      );
+      const taskTags = taskTaggings.map((t: Tagging) => t.tag).filter((tag): tag is NonNullable<typeof tag> => tag !== undefined);
+      
+      // このタスクのボードを抽出
+      const taskBoardItems = allBoardItems.filter(
+        (item: {itemType: 'memo' | 'task'; originalId: string}) => item.itemType === 'task' && item.originalId === originalId
+      );
+      const taskBoards = taskBoardItems
+        .map(item => ({
+          id: item.boardId,
+          name: item.boardName,
+          slug: `board-${item.boardId}`,
+          description: '',
+          userId: '',
+          position: 0,
+          color: null,
+          archived: false,
+          completed: false,
+          createdAt: Date.now() / 1000,
+          updatedAt: Date.now() / 1000
+        }))
+        .filter(Boolean);
+      
+      return {
+        task,
+        tags: taskTags,
+        boards: taskBoards
+      };
+    });
+  }, [statusFilteredTasks, allTaggings, allBoardItems]);
+
+  // ボードフィルターを適用（tasksWithDataベース）
+  const filteredTasksWithData = useMemo(() => {
+    if (!tasksWithData) return [];
     
     // ボードフィルターが設定されていない場合は全て表示
     if (!selectedBoardIds || selectedBoardIds.length === 0) {
-      return statusFilteredTasks;
+      return tasksWithData;
     }
     
     // フィルタリングはTaskFilterWrapperで個別に行うため、全て返す
-    return statusFilteredTasks;
-  }, [statusFilteredTasks, selectedBoardIds]);
+    return tasksWithData;
+  }, [tasksWithData, selectedBoardIds]);
 
   // フィルタリングが必要かどうか
   const needsFiltering = selectedBoardIds && selectedBoardIds.length > 0;
@@ -136,8 +206,14 @@ function TaskStatusDisplay({
     isSelected: boolean;
     showEditDate: boolean;
     showBoardName?: boolean;
+    showTags?: boolean;
     variant?: 'normal' | 'deleted';
   }) => {
+    // 事前取得されたデータからこのタスクのタグとボードを取得
+    const taskWithData = filteredTasksWithData.find(t => t.task.id === task.id);
+    const taskTags = taskWithData?.tags || [];
+    const taskBoards = taskWithData?.boards || [];
+    
     const Component = viewMode === 'card' ? TaskCard : TaskListItem;
     /* eslint-disable react/prop-types */
     const taskComponent = (
@@ -153,6 +229,8 @@ function TaskStatusDisplay({
         showTags={props.showTags}
         variant={props.variant}
         selectionMode={selectionMode}
+        tags={taskTags}
+        boards={taskBoards}
       />
     );
     
@@ -178,7 +256,7 @@ function TaskStatusDisplay({
 
   return (
     <ItemStatusDisplay
-      items={filteredTasks}
+      items={filteredTasksWithData.map(t => t.task)}
       viewMode={viewMode}
       effectiveColumnCount={effectiveColumnCount}
       isBoard={isBoard}
@@ -215,8 +293,21 @@ export function DeletedTaskDisplay({
   showBoardName = false,
   showTags = false,
   sortOptions = [],
-  isBoard = false
+  isBoard = false,
+  allTags = [],
+  allBoards = [],
+  allTaggings = [],
+  allBoardItems = []
 }: DeletedTaskDisplayProps) {
+  // 削除済み表示の初期データをログ出力
+  console.log('DeletedTaskDisplay初期化:', {
+    showTags,
+    showBoardName,
+    allTagsLength: allTags.length,
+    allBoardsLength: allBoards.length,
+    allTaggingsLength: allTaggings.length,
+    allBoardItemsLength: allBoardItems.length
+  });
   const getSortValue = (task: DeletedTask, sortId: string): number => {
     switch (sortId) {
       case "priority": {
@@ -246,8 +337,40 @@ export function DeletedTaskDisplay({
     isSelected: boolean;
     showEditDate: boolean;
     showBoardName?: boolean;
+    showTags?: boolean;
     variant?: 'normal' | 'deleted';
   }) => {
+    // 削除済みタスクのタグ・ボード情報を取得
+    const originalId = task.originalId || task.id.toString();
+    
+    // このタスクのタグを抽出
+    const taskTaggings = allTaggings.filter(
+      (t: Tagging) => t.targetType === 'task' && t.targetOriginalId === originalId
+    );
+    const taskTags = taskTaggings.map((t: Tagging) => t.tag).filter((tag): tag is NonNullable<typeof tag> => tag !== undefined);
+    
+    // このタスクのボードを抽出
+    const taskBoardItems = allBoardItems.filter(
+      (item: {itemType: 'memo' | 'task'; originalId: string}) => item.itemType === 'task' && item.originalId === originalId
+    );
+    const taskBoards = taskBoardItems
+      .map(item => allBoards.find(board => board.id === (item as {boardId: number}).boardId))
+      .filter((board): board is NonNullable<typeof board> => board !== undefined);
+
+    // デバッグ用ログ（ランダムに1%の確率で出力）
+    if (Math.random() < 0.01) {
+      console.log('削除済みタスク表示デバッグ:', {
+        taskId: task.id,
+        originalId,
+        showTags: props.showTags,
+        showBoardName: props.showBoardName,
+        taskTagsLength: taskTags.length,
+        taskBoardsLength: taskBoards.length,
+        allTaggingsLength: allTaggings.length,
+        allBoardItemsLength: allBoardItems.length
+      });
+    }
+
     const Component = viewMode === 'card' ? TaskCard : TaskListItem;
     /* eslint-disable react/prop-types */
     return (
@@ -262,6 +385,8 @@ export function DeletedTaskDisplay({
         showEditDate={props.showEditDate}
         showBoardName={props.showBoardName}
         showTags={props.showTags}
+        preloadedTags={taskTags}
+        preloadedBoards={taskBoards}
         selectionMode={selectionMode}
       />
     );

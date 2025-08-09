@@ -25,7 +25,8 @@ import { useTabChange } from "@/src/hooks/use-tab-change";
 import { useDeletedTasks, useTasks } from "@/src/hooks/use-tasks";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useBoards } from "@/src/hooks/use-boards";
-import ItemBoardsPrefetcher from "@/components/shared/item-boards-prefetcher";
+import { useTags } from "@/src/hooks/use-tags";
+import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
 import type { DeletedTask, Task } from "@/src/types/task";
 import {
   getTaskDisplayOrder,
@@ -60,7 +61,8 @@ function TaskScreen({
   onClose,
   onClearSelection,
   hideHeaderButtons = false,
-  forceShowBoardName = false,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  forceShowBoardName: _ = false,
   excludeBoardId,
   initialSelectionMode = "select",
 }: TaskScreenProps) {
@@ -72,6 +74,11 @@ function TaskScreen({
   const { data: deletedTasks } = useDeletedTasks();
   const { preferences } = useUserPreferences(1);
   const { data: boards } = useBoards();
+  const { data: tags } = useTags();
+  
+  // 全データ事前取得（ちらつき解消）
+  const { data: allTaggings } = useAllTaggings();
+  const { data: allBoardItems } = useAllBoardItems();
 
 
   // 選択モード管理
@@ -326,11 +333,12 @@ function TaskScreen({
     handleSelectTaskBase(task);
   };
 
+  // 安全なデータ配布用
+  const safeAllTaggings = allTaggings || [];
+  const safeAllBoardItems = allBoardItems || [];
+
   return (
-    <div className="flex h-full bg-white">
-      {/* タスク一覧のボード情報をプリフェッチ（ちらつき防止） */}
-      <ItemBoardsPrefetcher type="task" items={tasks} />
-      
+    <div className="flex h-full bg-white">      
       {/* 左側：一覧表示エリア */}
       <div
         className={`${taskScreenMode === "list" ? "w-full" : "w-[44%]"} ${taskScreenMode !== "list" ? "border-r border-gray-300" : ""} pt-3 pl-5 pr-2 flex flex-col transition-all duration-300 relative`}
@@ -424,6 +432,10 @@ function TaskScreen({
           )}
           onSelectTask={handleSelectTask}
           onSelectDeletedTask={handleSelectDeletedTask}
+          allTags={tags || []}
+          allBoards={boards || []}
+          allTaggings={safeAllTaggings}
+          allBoardItems={safeAllBoardItems}
         />
 
         {/* 一括操作ボタン */}
@@ -489,7 +501,13 @@ function TaskScreen({
         onClose={handleRightPanelClose}
       >
         {taskScreenMode === "create" && (
-          <TaskEditor task={null} onClose={() => setTaskScreenMode("list")} />
+          <TaskEditor 
+            task={null} 
+            onClose={() => setTaskScreenMode("list")}
+            preloadedBoards={boards || []}
+            preloadedTaggings={safeAllTaggings}
+            preloadedBoardItems={safeAllBoardItems}
+          />
         )}
         {taskScreenMode === "view" && selectedTask && (
           <TaskEditor
@@ -498,6 +516,9 @@ function TaskScreen({
             onSelectTask={onSelectTask}
             onClosePanel={() => setTaskScreenMode("list")}
             onDeleteAndSelectNext={handleTaskDeleteAndSelectNext}
+            preloadedBoards={boards || []}
+            preloadedTaggings={safeAllTaggings}
+            preloadedBoardItems={safeAllBoardItems}
           />
         )}
         {taskScreenMode === "view" && selectedDeletedTask && (
@@ -530,6 +551,9 @@ function TaskScreen({
             onSelectTask={onSelectTask}
             onClosePanel={() => setTaskScreenMode("list")}
             onDeleteAndSelectNext={handleTaskDeleteAndSelectNext}
+            preloadedBoards={boards || []}
+            preloadedTaggings={safeAllTaggings}
+            preloadedBoardItems={safeAllBoardItems}
           />
         )}
       </RightPanel>

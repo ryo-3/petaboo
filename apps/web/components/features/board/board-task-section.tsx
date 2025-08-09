@@ -12,6 +12,8 @@ import SortToggle from "@/components/ui/buttons/sort-toggle";
 import { BoardItemWithContent } from "@/src/types/board";
 import { Task } from "@/src/types/task";
 import { useSortOptions } from "@/hooks/use-sort-options";
+import type { Tag, Tagging } from "@/src/types/tag";
+import type { Board } from "@/src/types/board";
 
 interface BoardTaskSectionProps {
   rightPanelMode: "editor" | "memo-list" | "task-list" | null;
@@ -47,6 +49,19 @@ interface BoardTaskSectionProps {
   deleteButtonRef?: React.RefObject<HTMLButtonElement | null>;
   // 復元関連
   onCheckedTasksChange?: (tasks: Set<string | number>) => void;
+  
+  // 全データ事前取得（ちらつき解消）
+  allTags?: Tag[];
+  allBoards?: Board[];
+  allTaggings?: Tagging[];
+  allBoardItems?: Array<{
+    boardId: number;
+    boardName: string;
+    itemType: 'memo' | 'task';
+    itemId: string;
+    originalId: string;
+    addedAt: number;
+  }>;
 }
 
 import { useRef, useMemo, useState } from 'react';
@@ -86,6 +101,10 @@ export default function BoardTaskSection({
   currentDisplayCount,
   deleteButtonRef: propDeleteButtonRef,
   onCheckedTasksChange,
+  allTags = [],
+  allBoards = [],
+  allTaggings = [],
+  allBoardItems = []
 }: BoardTaskSectionProps) {
   // ソートオプションの管理
   const { setSortOptions, getVisibleSortOptions } = useSortOptions("task");
@@ -329,7 +348,13 @@ export default function BoardTaskSection({
             onSelectTask={taskSelectionMode === "check" ? undefined : onSelectTask}
             selectedTaskId={taskSelectionMode === "check" ? undefined : selectedTask?.id}
             showEditDate={showEditDate}
+            showBoardName={true}
+            showTags={true}
             sortOptions={getVisibleSortOptions(activeTaskTab)}
+            allTags={allTags}
+            allBoards={allBoards}
+            allTaggings={allTaggings}
+            allBoardItems={allBoardItems}
           />
         ) : (
           <TaskStatusDisplay
@@ -349,6 +374,9 @@ export default function BoardTaskSection({
             showEditDate={showEditDate}
             showTags={showTags}
             sortOptions={getVisibleSortOptions(activeTaskTab)}
+            allTags={allTags}
+            allTaggings={allTaggings}
+            allBoardItems={allBoardItems}
           />
         )}
       </div>

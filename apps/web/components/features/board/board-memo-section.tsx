@@ -12,6 +12,8 @@ import SortToggle from "@/components/ui/buttons/sort-toggle";
 import { BoardItemWithContent } from "@/src/types/board";
 import { Memo } from "@/src/types/memo";
 import { useSortOptions } from "@/hooks/use-sort-options";
+import type { Tag, Tagging } from "@/src/types/tag";
+import type { Board } from "@/src/types/board";
 
 interface BoardMemoSectionProps {
   rightPanelMode: "editor" | "memo-list" | "task-list" | null;
@@ -45,6 +47,19 @@ interface BoardMemoSectionProps {
   deleteButtonRef?: React.RefObject<HTMLButtonElement | null>;
   // 復元関連
   onCheckedMemosChange?: (memos: Set<string | number>) => void;
+  
+  // 全データ事前取得（ちらつき解消）
+  allTags?: Tag[];
+  allBoards?: Board[];
+  allTaggings?: Tagging[];
+  allBoardItems?: Array<{
+    boardId: number;
+    boardName: string;
+    itemType: 'memo' | 'task';
+    itemId: string;
+    originalId: string;
+    addedAt: number;
+  }>;
 }
 
 import { useRef, useMemo, useState } from 'react';
@@ -82,6 +97,10 @@ export default function BoardMemoSection({
   currentDisplayCount,
   deleteButtonRef: propDeleteButtonRef,
   onCheckedMemosChange,
+  allTags = [],
+  allBoards = [],
+  allTaggings = [],
+  allBoardItems = []
 }: BoardMemoSectionProps) {
   // ソートオプションの管理
   const { setSortOptions, getVisibleSortOptions } = useSortOptions("memo");
@@ -296,6 +315,8 @@ export default function BoardMemoSection({
             onSelectMemo={memoSelectionMode === "check" ? undefined : onSelectMemo}
             selectedMemoId={memoSelectionMode === "check" ? undefined : selectedMemo?.id}
             showEditDate={showEditDate}
+            showBoardName={true}
+            showTags={true}
             sortOptions={getVisibleSortOptions(activeMemoTab).filter(
               opt => opt.id === "createdAt" || opt.id === "updatedAt" || opt.id === "deletedAt"
             ) as Array<{
@@ -304,6 +325,10 @@ export default function BoardMemoSection({
               enabled: boolean;
               direction: "asc" | "desc";
             }>}
+            allTags={allTags}
+            allBoards={allBoards}
+            allTaggings={allTaggings}
+            allBoardItems={allBoardItems}
           />
         ) : (
           <MemoStatusDisplay
@@ -329,6 +354,10 @@ export default function BoardMemoSection({
               enabled: boolean;
               direction: "asc" | "desc";
             }>}
+            allTags={allTags}
+            allBoards={allBoards}
+            allTaggings={allTaggings}
+            allBoardItems={allBoardItems}
           />
         )}
       </div>

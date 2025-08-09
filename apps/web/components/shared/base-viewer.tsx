@@ -14,6 +14,8 @@ interface BaseViewerProps {
   isEditing?: boolean;
   createdItemId?: number | null;
   lastEditedAt?: number | null;
+  hideDateInfo?: boolean; // 日付情報を非表示にするオプション
+  topContent?: ReactNode; // 日付情報の上に表示するコンテンツ
 }
 
 function BaseViewer({
@@ -25,15 +27,20 @@ function BaseViewer({
   isEditing = false,
   createdItemId,
   lastEditedAt,
+  hideDateInfo = false,
+  topContent,
 }: BaseViewerProps) {
   return (
     <div className="flex flex-col h-full bg-white pt-2">
-      <DateInfo
-        item={item}
-        isEditing={isEditing}
-        createdItemId={createdItemId}
-        lastEditedAt={lastEditedAt}
-      />
+      {topContent}
+      {!hideDateInfo && (
+        <DateInfo
+          item={item}
+          isEditing={isEditing}
+          createdItemId={createdItemId}
+          lastEditedAt={lastEditedAt}
+        />
+      )}
 
       <div className="flex justify-start items-center">
         {headerActions}

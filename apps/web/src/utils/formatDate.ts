@@ -13,7 +13,7 @@ export function formatDate(timestamp: number): string {
   }
   
   const formatted = date.toLocaleString('ja-JP', {
-    year: 'numeric',
+    year: '2-digit',
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
@@ -28,7 +28,7 @@ export function formatDate(timestamp: number): string {
  */
 export function formatDateOnly(timestamp: number): string {
   return new Date(timestamp * 1000).toLocaleDateString('ja-JP', {
-    year: 'numeric',
+    year: '2-digit',
     month: '2-digit',
     day: '2-digit'
   }).replace(/\//g, '/')

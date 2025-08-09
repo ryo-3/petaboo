@@ -11,15 +11,16 @@ import { SingleDeleteConfirmation } from "@/components/ui/modals/confirmation-mo
 import TagSelector from "@/components/features/tags/tag-selector";
 import TagTriggerButton from "@/components/features/tags/tag-trigger-button";
 import { TAG_COLORS } from "@/src/constants/colors";
-import { useBoards, useItemBoards } from "@/src/hooks/use-boards";
 import { useSimpleMemoSave } from "@/src/hooks/use-simple-memo-save";
-import { useItemTags, useCreateTagging, useDeleteTagging, useTaggings } from "@/src/hooks/use-taggings";
-import type { Memo } from "@/src/types/memo";
+import { useCreateTagging, useDeleteTagging } from "@/src/hooks/use-taggings";
+import DateInfo from "@/components/shared/date-info";
+import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Tag, Tagging } from "@/src/types/tag";
+import type { Board } from "@/src/types/board";
 import { useEffect, useRef, useState, memo, useMemo, useCallback } from "react";
 
 interface MemoEditorProps {
-  memo: Memo | null;
+  memo: Memo | DeletedMemo | null;
   initialBoardId?: number;
   onClose: () => void;
   onSaveComplete?: (
@@ -29,15 +30,61 @@ interface MemoEditorProps {
   ) => void;
   onDelete?: () => void;
   onDeleteAndSelectNext?: (deletedMemo: Memo) => void;
+  onRestore?: () => void;  // 削除済み復元用
   isLidOpen?: boolean;
   customHeight?: string;
+  
+  // 全データ事前取得（ちらつき解消）
+  preloadedTags?: Tag[];
+  preloadedBoards?: Board[];
+  preloadedTaggings?: Tagging[];
+  preloadedBoardItems?: Array<{
+    boardId: number;
+    boardName: string;
+    itemType: 'memo' | 'task';
+    itemId: string;
+    originalId: string;
+    addedAt: number;
+  }>;
 }
 
-function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, onDeleteAndSelectNext, isLidOpen = false, customHeight }: MemoEditorProps) {
+function MemoEditor({ 
+  memo, 
+  initialBoardId, 
+  onClose, 
+  onSaveComplete, 
+  onDelete, 
+  onDeleteAndSelectNext, 
+  isLidOpen = false, 
+  customHeight,
+  preloadedBoards = [],
+  preloadedTaggings = [],
+  preloadedBoardItems = []
+}: MemoEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const baseViewerRef = useRef<HTMLDivElement>(null);
-  const { data: boards = [] } = useBoards();
-  const { data: itemBoards = [] } = useItemBoards('memo', memo?.id);
+  
+  // 事前取得されたデータを使用（APIコール不要）
+  const boards = preloadedBoards;
+  
+  // このメモに実際に紐づいているボードのみを抽出
+  const itemBoards = useMemo(() => {
+    if (!memo || memo.id === 0) return [];
+    
+    const originalId = memo.originalId || memo.id.toString();
+    
+    // このメモに紐づいているボードアイテムを抽出
+    const memoBoardItems = preloadedBoardItems.filter(
+      item => item.itemType === 'memo' && item.originalId === originalId
+    );
+    
+    // ボードアイテムからボード情報を取得
+    const boards = memoBoardItems
+      .map(item => preloadedBoards.find(board => board.id === item.boardId))
+      .filter((board): board is NonNullable<typeof board> => board !== undefined);
+    
+    return boards;
+  }, [memo, preloadedBoardItems, preloadedBoards]);
   
   const currentBoardIds = memo && memo.id !== 0 
     ? itemBoards.map(board => board.id)
@@ -69,104 +116,49 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
   const [isAnimating, setIsAnimating] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [localTags, setLocalTags] = useState<Tag[]>([]);
+  const [prevMemoId, setPrevMemoId] = useState<number | null>(null);
   const tagSelectorRef = useRef<HTMLDivElement>(null);
   
-  // 現在のメモに紐づいているタグを取得（メモが存在する場合のみ）
-  const { tags: currentTags, isLoading: tagsLoading } = useItemTags(
-    'memo', 
-    memo && memo.id > 0 ? (memo.originalId || memo.id.toString()) : '__no_memo__'
-  );
-  const { data: currentTaggings = [] } = useTaggings({
-    targetType: 'memo',
-    targetOriginalId: memo && memo.id > 0 ? (memo.originalId || memo.id.toString()) : '__no_memo__',
-  });
+  // 事前取得されたデータからメモのタグを抽出（シンプル）
+  const currentTags = useMemo(() => {
+    if (!memo || memo.id === 0) return [];
+    const originalId = memo.originalId || memo.id.toString();
+    
+    const memoTaggings = preloadedTaggings.filter(
+      t => t.targetType === 'memo' && t.targetOriginalId === originalId
+    );
+    
+    const tags = memoTaggings.map(t => t.tag).filter(Boolean) as Tag[];
+    
+    return tags;
+  }, [memo, preloadedTaggings]);
   
-  // タグ操作用のmutation
+  // タグ操作用のmutation（既存API使用）
   const createTaggingMutation = useCreateTagging();
   const deleteTaggingMutation = useDeleteTagging();
 
-  // localTagsを初期化・同期
-  const lastMemoIdRef = useRef<number | undefined>(undefined);
-  const [hasManualChanges, setHasManualChanges] = useState(false);
-  const [lastSyncedTags, setLastSyncedTags] = useState<string>('');
-  const [isInitialized, setIsInitialized] = useState(false);
-  
-  // メモ切り替え時の初期化処理
+  // タグ初期化（メモが変わった時のみ実行）
   useEffect(() => {
-    const memoId = memo?.id;
-    const lastMemoId = lastMemoIdRef.current;
+    const currentMemoId = memo?.id || 0;
     
-    
-    // メモIDが変更されたか、初回レンダリングの場合のみ実行
-    if (memoId !== lastMemoId) {
-      lastMemoIdRef.current = memoId;
-      setHasManualChanges(false);
-      setIsInitialized(false);
-      setLastSyncedTags('');
-      
-      // 新規メモの場合は即座に空配列で初期化
-      if (!memo || memo.id === 0) {
-        setLocalTags([]);
-        setLastSyncedTags('[]');
-        setIsInitialized(true);
-      } else {
-        // 既存メモの場合は一旦空にしてデータ取得を待つ
-        setLocalTags([]);
-      }
-    }
-  }, [memo, isInitialized]); // memoオブジェクト全体を監視
-  
-  // データ取得完了時の初期化処理
-  useEffect(() => {
-    
-    // 新規メモまたはデータロード中は何もしない
-    if (!memo || memo.id === 0 || tagsLoading) return;
-    
-    // まだ初期化されていない場合のみ実行
-    if (!isInitialized) {
-      // データが確実に取得されるまで少し待機
-      const timer = setTimeout(() => {
-        const currentTagsStr = JSON.stringify(currentTags.map(t => ({ id: t.id, name: t.name })));
-        setLocalTags(currentTags);
-        setLastSyncedTags(currentTagsStr);
-        setIsInitialized(true);
-      }, 50); // 50ms待機してキャッシュの更新を待つ
-      
-      return () => clearTimeout(timer);
-    }
-  }, [memo, currentTags, tagsLoading, isInitialized]); // memoオブジェクト全体を監視
-  
-  // 保存後のタグ同期処理（手動変更がない場合のみ）
-  useEffect(() => {
-    
-    // 新規メモ、データロード中、初期化前、手動変更ありの場合は何もしない
-    if (!memo || memo.id === 0 || tagsLoading || !isInitialized || hasManualChanges) return;
-    
-    const currentTagsStr = JSON.stringify(currentTags.map(t => ({ id: t.id, name: t.name })));
-    const tagsActuallyChanged = currentTagsStr !== lastSyncedTags;
-    
-    if (tagsActuallyChanged) {
+    // メモが変わった場合のみ即座に更新
+    if (currentMemoId !== prevMemoId) {
       setLocalTags(currentTags);
-      setLastSyncedTags(currentTagsStr);
+      setPrevMemoId(currentMemoId);
     }
-  }, [memo, currentTags, tagsLoading, isInitialized, hasManualChanges, lastSyncedTags]); // memoオブジェクト全体を監視
+  }, [memo?.id, currentTags, prevMemoId]);
+  
+  const [, setHasManualChanges] = useState(false);
 
-  // タグに変更があるかチェック
+  // タグに変更があるかチェック（シンプル版）
   const hasTagChanges = useMemo(() => {
     if (!memo || memo.id === 0) return false;
-    // データがまだロード中の場合は変更なしとして扱う
-    if (tagsLoading) return false;
-    // 初期化が完了していない場合も変更なしとして扱う
-    if (!isInitialized) return false;
     
     const currentTagIds = currentTags.map(tag => tag.id).sort();
     const localTagIds = localTags.map(tag => tag.id).sort();
     
-    const hasChanges = JSON.stringify(currentTagIds) !== JSON.stringify(localTagIds);
-    
-    
-    return hasChanges;
-  }, [currentTags, localTags, memo, tagsLoading, isInitialized]);
+    return JSON.stringify(currentTagIds) !== JSON.stringify(localTagIds);
+  }, [currentTags, localTags, memo]);
 
   // タグの差分を計算して一括更新する関数
   const updateTaggings = useCallback(async (memoId: string) => {
@@ -180,9 +172,9 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
     // 追加するタグ（localにあってcurrentにない）
     const tagsToAdd = localTagIds.filter(id => !currentTagIds.includes(id));
 
-    // 削除処理
+    // 削除処理（preloadedTaggingsからタギングIDを見つける）
     for (const tagId of tagsToRemove) {
-      const taggingToDelete = currentTaggings.find((t: Tagging) => t.tagId === tagId);
+      const taggingToDelete = preloadedTaggings.find((t) => t.tagId === tagId);
       if (taggingToDelete) {
         await deleteTaggingMutation.mutateAsync(taggingToDelete.id);
       }
@@ -190,13 +182,40 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
 
     // 追加処理
     for (const tagId of tagsToAdd) {
-      await createTaggingMutation.mutateAsync({
-        tagId,
-        targetType: 'memo',
-        targetOriginalId: memoId
-      });
+      // 既に存在するかどうかを再度チェック（リアルタイムデータで）
+      const existingTagging = preloadedTaggings.find(
+        t => t.tagId === tagId && t.targetType === 'memo' && t.targetOriginalId === memoId
+      );
+      
+      if (!existingTagging) {
+        try {
+          await createTaggingMutation.mutateAsync({
+            tagId,
+            targetType: 'memo',
+            targetOriginalId: memoId
+          });
+        } catch (error: unknown) {
+          // 400エラー（重複）は無視し、他のエラーは再スロー
+          const errorMessage = (error as Error).message || '';
+          
+          const isDuplicateError = (
+            errorMessage.includes('HTTP error 400') && 
+            errorMessage.includes('Tag already attached to this item')
+          ) || (
+            errorMessage.includes('400') && 
+            errorMessage.includes('already attached')
+          );
+          
+          if (isDuplicateError) {
+            console.debug(`Tag ${tagId} is already attached to memo ${memoId}, skipping...`);
+            continue;
+          }
+          console.error(`Failed to create tagging for tag ${tagId} on memo ${memoId}:`, error);
+          throw error;
+        }
+      }
     }
-  }, [memo, currentTags, localTags, currentTaggings, deleteTaggingMutation, createTaggingMutation]);
+  }, [memo, currentTags, localTags, preloadedTaggings, deleteTaggingMutation, createTaggingMutation]);
 
   // 拡張された保存処理
   const handleSaveWithTags = useCallback(async () => {
@@ -334,6 +353,40 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
           error={error}
           isEditing={true}
           createdItemId={null}
+          hideDateInfo={true}
+          topContent={
+            <div className="flex justify-start items-start mb-3 mt-2 min-h-[24px]">
+              {/* ボード名・タグ一覧（常に領域確保） */}
+              <div className="flex flex-wrap gap-2">
+                {memo && memo.id !== 0 && (
+                  <>
+                    {/* ボード名 */}
+                    {itemBoards.map((board) => (
+                      <div
+                        key={board.id}
+                        className="inline-flex items-center px-2 py-1 rounded-md text-xs overflow-hidden bg-light-Blue text-white"
+                      >
+                        <span>{board.name}</span>
+                      </div>
+                    ))}
+                    {/* タグ */}
+                    {localTags.map((tag) => (
+                      <div
+                        key={tag.id}
+                        className="inline-flex items-center px-2 py-1 rounded-md text-xs overflow-hidden"
+                        style={{ 
+                          backgroundColor: TAG_COLORS.background, 
+                          color: TAG_COLORS.text
+                        }}
+                      >
+                        <span>{tag.name}</span>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
+            </div>
+          }
           headerActions={
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-2">
@@ -363,7 +416,7 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
                 />
                 <div className="relative" ref={tagSelectorRef}>
                   <TagSelector
-                    selectedTags={isInitialized && !tagsLoading ? localTags : []}
+                    selectedTags={localTags}
                     onTagsChange={(tags) => {
                       setLocalTags(tags);
                       setHasManualChanges(true);
@@ -376,44 +429,27 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
                   />
                 </div>
               </div>
-              {memo && onDelete && (
-                <button
-                  onClick={handleDeleteClick}
-                  className="flex items-center justify-center size-7 rounded-md bg-gray-100 mr-2"
-                >
-                  <TrashIcon className="size-5" isLidOpen={isLidOpen || isAnimating || showDeleteModal} />
-                </button>
-              )}
+              <div className="flex items-center gap-2">
+                {memo && memo.id !== 0 && (
+                  <div className="text-[13px] text-gray-400">
+                    <DateInfo
+                      item={memo}
+                      isEditing={true}
+                    />
+                  </div>
+                )}
+                {memo && onDelete && (
+                  <button
+                    onClick={handleDeleteClick}
+                    className="flex items-center justify-center size-7 rounded-md bg-gray-100 ml-2"
+                  >
+                    <TrashIcon className="size-5" isLidOpen={isLidOpen || isAnimating || showDeleteModal} />
+                  </button>
+                )}
+              </div>
             </div>
           }
         >
-          {/* 現在のメモに紐づいているボード名・タグ一覧 */}
-          {memo && memo.id !== 0 && (itemBoards.length > 0 || localTags.length > 0) && (
-            <div className="flex flex-wrap gap-2 mb-3 mt-2">
-              {/* ボード名 */}
-              {itemBoards.map((board) => (
-                <div
-                  key={board.id}
-                  className="inline-flex items-center px-2 py-1 rounded-md text-xs overflow-hidden bg-light-Blue text-white"
-                >
-                  <span>{board.name}</span>
-                </div>
-              ))}
-              {/* タグ */}
-              {localTags.map((tag) => (
-                <div
-                  key={tag.id}
-                  className="inline-flex items-center px-2 py-1 rounded-md text-xs overflow-hidden"
-                  style={{ 
-                    backgroundColor: TAG_COLORS.background, 
-                    color: TAG_COLORS.text
-                  }}
-                >
-                  <span>{tag.name}</span>
-                </div>
-              ))}
-            </div>
-          )}
           
           <textarea
             ref={textareaRef}
@@ -426,7 +462,7 @@ function MemoEditor({ memo, initialBoardId, onClose, onSaveComplete, onDelete, o
               handleTitleChange(firstLine);
               handleContentChange(newContent);
             }}
-            className={`w-full ${customHeight || 'flex-1'} resize-none outline-none text-gray-500 leading-relaxed font-medium pb-10 mb-2 ${memo && memo.id !== 0 && localTags.length > 0 ? 'mt-0' : 'mt-2'} pr-1`}
+            className={`w-full ${customHeight || 'flex-1'} resize-none outline-none text-gray-500 leading-relaxed font-medium pb-10 mb-2 ${memo && memo.id !== 0 && (itemBoards.length > 0 || localTags.length > 0) ? 'mt-0' : 'mt-2'} pr-1`}
           />
         </BaseViewer>
       </div>

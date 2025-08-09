@@ -14,9 +14,13 @@ interface TaskCardProps {
   showTags?: boolean
   isDeleting?: boolean
   selectionMode?: 'select' | 'check'
+  
+  // 事前取得データ（削除済み表示用）
+  preloadedTags?: Array<{id: number; name: string; color?: string}>
+  preloadedBoards?: Array<{id: number; name: string}>
 }
 
-function TaskCard({ task, isChecked, onToggleCheck, onSelect, variant = 'normal', isSelected = false, showEditDate = false, showBoardName = false, showTags = false, isDeleting = false, selectionMode = 'select' }: TaskCardProps) {
+function TaskCard({ task, isChecked, onToggleCheck, onSelect, variant = 'normal', isSelected = false, showEditDate = false, showBoardName = false, showTags = false, isDeleting = false, selectionMode = 'select', preloadedTags, preloadedBoards }: TaskCardProps) {
   return (
     <BaseCard
       isChecked={isChecked}
@@ -28,7 +32,7 @@ function TaskCard({ task, isChecked, onToggleCheck, onSelect, variant = 'normal'
       isDeleting={isDeleting}
       selectionMode={selectionMode}
     >
-      <TaskCardContent task={task} variant={variant} showEditDate={showEditDate} showBoardName={showBoardName} showTags={showTags} />
+      <TaskCardContent task={task} variant={variant} showEditDate={showEditDate} showBoardName={showBoardName} showTags={showTags} preloadedTags={preloadedTags} preloadedBoards={preloadedBoards} />
     </BaseCard>
   )
 }

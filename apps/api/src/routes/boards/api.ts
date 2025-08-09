@@ -120,6 +120,8 @@ const AddItemToBoardSchema = z.object({
 });
 
 export function createAPI(app: AppType) {
+  console.log('=== BOARDS API LOADED WITH removeItemFromBoardRoute ===');
+  
   // ボード一覧取得
   const getBoardsRoute = createRoute({
     method: "get",
@@ -1200,8 +1202,16 @@ export function createAPI(app: AppType) {
   });
 
   app.openapi(removeItemFromBoardRoute, async (c) => {
+    console.log('removeItemFromBoardRoute called:', {
+      method: c.req.method,
+      url: c.req.url,
+      params: c.req.param(),
+      query: c.req.query()
+    });
+    
     const auth = getAuth(c);
     if (!auth?.userId) {
+      console.log('Unauthorized - no userId');
       return c.json({ error: "Unauthorized" }, 401);
     }
 
@@ -1209,6 +1219,8 @@ export function createAPI(app: AppType) {
     const itemId = parseInt(c.req.param("itemId"));
     const { itemType } = c.req.valid("query");
     const db = c.env.db;
+    
+    console.log('Parsed params:', { boardId, itemId, itemType, userId: auth.userId });
 
     // ボードの所有権確認
     const board = await db
@@ -1334,6 +1346,76 @@ export function createAPI(app: AppType) {
     // レスポンスの形式を整える
     const boardsOnly = itemBoards.map(row => row.boards);
     return c.json(boardsOnly);
+  });
+
+  // 全ボードのアイテム情報を一括取得
+  const getAllBoardItemsRoute = createRoute({
+    method: "get",
+    path: "/all-items",
+    tags: ["boards"],
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: z.array(z.object({
+              boardId: z.number(),
+              boardName: z.string(),
+              itemType: z.enum(["memo", "task"]),
+              itemId: z.string(), // originalId
+              originalId: z.string(),
+              addedAt: z.number(),
+            })),
+          },
+        },
+        description: "Get all board items across all boards",
+      },
+      401: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+            }),
+          },
+        },
+        description: "Unauthorized",
+      },
+    },
+  });
+
+  app.openapi(getAllBoardItemsRoute, async (c) => {
+    try {
+      const auth = getAuth(c);
+      if (!auth?.userId) {
+        return c.json({ error: "Unauthorized" }, 401);
+      }
+
+      const db = c.env.db;
+
+      // 全ボードのアイテムを一括取得（削除されていないもののみ）
+      const allBoardItems = await db
+        .select({
+          boardId: boardItems.boardId,
+          boardName: boards.name,
+          itemType: boardItems.itemType,
+          itemId: boardItems.originalId, // itemIdの代わりにoriginalIdを使用
+          originalId: boardItems.originalId,
+          addedAt: boardItems.createdAt,
+        })
+        .from(boardItems)
+        .innerJoin(boards, eq(boardItems.boardId, boards.id))
+        .where(
+          and(
+            eq(boards.userId, auth.userId),
+            isNull(boardItems.deletedAt)
+          )
+        )
+        .orderBy(boards.name, boardItems.createdAt);
+
+      return c.json(allBoardItems);
+    } catch (error) {
+      console.error('Error in getAllBoardItems:', error);
+      return c.json({ error: "Internal server error", details: error.message }, 500);
+    }
   });
 
   // ボード内削除済みアイテム復元

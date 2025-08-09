@@ -1,4 +1,6 @@
 import type { DeletedTask, Task } from "@/src/types/task";
+import type { Tag } from "@/src/types/tag";
+import type { Board } from "@/src/types/board";
 import { formatDateOnly } from "@/src/utils/formatDate";
 import {
   getPriorityColor,
@@ -6,8 +8,6 @@ import {
   getStatusColor,
   getStatusText,
 } from "@/src/utils/taskUtils";
-import { useItemBoards } from '@/src/hooks/use-boards';
-import { useItemTags } from "@/src/hooks/use-taggings";
 import { TAG_COLORS } from "@/src/constants/colors";
 
 interface TaskListItemProps {
@@ -22,6 +22,14 @@ interface TaskListItemProps {
   showTags?: boolean;
   isDeleting?: boolean;
   selectionMode?: "select" | "check";
+  
+  // 事前取得されたデータ（APIコール不要）
+  tags?: Tag[];
+  boards?: Board[];
+  
+  // 削除済み表示用の事前取得データ
+  preloadedTags?: Array<{id: number; name: string; color?: string}>
+  preloadedBoards?: Array<{id: number; name: string}>
 }
 
 function TaskListItem({
@@ -36,22 +44,11 @@ function TaskListItem({
   showTags = false,
   isDeleting = false,
   selectionMode = "select",
+  tags = [],
+  boards = []
 }: TaskListItemProps) {
   const isDeleted = variant === "deleted";
   const deletedTask = task as DeletedTask;
-
-  // ボード名を取得（キャッシュ更新のため常に取得、表示は条件で制御）
-  const boardItemId = !isDeleted && task.id > 0 
-    ? ((task as Task).originalId || task.id.toString())
-    : '';
-  const numericItemId = boardItemId ? parseInt(boardItemId) : undefined;
-  const { data: boards } = useItemBoards('task', numericItemId);
-  
-  // タグを取得（削除済みタスクでない場合のみ）
-  const targetOriginalId = !isDeleted && task.id > 0 
-    ? ((task as Task).originalId || task.id.toString())
-    : '';
-  const { tags } = useItemTags('task', targetOriginalId);
   
 
   return (

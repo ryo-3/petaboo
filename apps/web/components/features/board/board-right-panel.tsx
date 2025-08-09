@@ -9,6 +9,7 @@ import TaskScreen from "@/components/screens/task-screen";
 import RightPanel from "@/components/ui/layout/right-panel";
 import { Memo, DeletedMemo } from "@/src/types/memo";
 import { Task, DeletedTask } from "@/src/types/task";
+import type { Tagging } from "@/src/types/tag";
 import { useState } from "react";
 import { useNavigation } from "@/contexts/navigation-context";
 import { useDeleteMemo } from "@/src/hooks/use-memos";
@@ -22,6 +23,8 @@ interface BoardRightPanelProps {
   selectedItemsFromList: Set<number>;
   allMemos?: Memo[];
   allTasks?: Task[];
+  allTaggings?: Tagging[];  // 全タグ情報
+  allBoardItems?: Array<{boardId: number; boardName: string; itemType: 'memo' | 'task'; itemId: string; originalId: string; addedAt: number}>;  // 全ボードアイテム情報
   onClose: () => void;
   onSelectMemo?: (memo: Memo) => void;
   onSelectTask?: (task: Task) => void;
@@ -41,6 +44,8 @@ export default function BoardRightPanel({
   selectedMemo,
   selectedTask,
   rightPanelMode,
+  allTaggings,
+  allBoardItems,
   onClose,
   onSelectMemo,
   onSelectTask,
@@ -113,6 +118,8 @@ export default function BoardRightPanel({
               key={`memo-${selectedMemo.id}`}
               memo={selectedMemo}
               initialBoardId={boardId}
+              preloadedTaggings={allTaggings}
+              preloadedBoardItems={allBoardItems}
               onClose={() => {
                 // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
               }}
@@ -154,6 +161,8 @@ export default function BoardRightPanel({
               key={`task-${selectedTask.id}`}
               task={selectedTask}
               initialBoardId={boardId}
+              preloadedTaggings={allTaggings}
+              preloadedBoardItems={allBoardItems}
               onClose={() => {
                 // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
               }}

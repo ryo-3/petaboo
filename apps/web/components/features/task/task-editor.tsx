@@ -11,12 +11,13 @@ import TagSelector from "@/components/features/tags/tag-selector";
 import TagTriggerButton from "@/components/features/tags/tag-trigger-button";
 import TaskForm, { TaskFormHandle } from "./task-form";
 import { useUpdateTask, useCreateTask } from "@/src/hooks/use-tasks";
-import { useAddItemToBoard, useBoards, useItemBoards, useRemoveItemFromBoard } from "@/src/hooks/use-boards";
-import { useItemTags, useCreateTagging, useDeleteTagging, useTaggings } from "@/src/hooks/use-taggings";
+import { useAddItemToBoard, useRemoveItemFromBoard } from "@/src/hooks/use-boards";
+import { useCreateTagging, useDeleteTagging } from "@/src/hooks/use-taggings";
 import { useBoardChangeModal } from "@/src/hooks/use-board-change-modal";
 import BoardChangeModal from "@/components/ui/modals/board-change-modal";
 import type { Task } from "@/src/types/task";
 import type { Tag, Tagging } from "@/src/types/tag";
+import type { Board } from "@/src/types/board";
 import { useCallback, useEffect, useState, useMemo, memo, useRef } from "react";
 import { useTaskDelete } from "./use-task-delete";
 
@@ -29,6 +30,19 @@ interface TaskEditorProps {
   onDeleteAndSelectNext?: (deletedTask: Task, preDeleteDisplayOrder?: number[]) => void;
   onSaveComplete?: (savedTask: Task, isNewTask: boolean) => void;
   customHeight?: string;
+  
+  // 全データ事前取得（ちらつき解消）
+  preloadedTags?: Tag[];
+  preloadedBoards?: Board[];
+  preloadedTaggings?: Tagging[];
+  preloadedBoardItems?: Array<{
+    boardId: number;
+    boardName: string;
+    itemType: 'memo' | 'task';
+    itemId: string;
+    originalId: string;
+    addedAt: number;
+  }>;
 }
 
 function TaskEditor({
@@ -40,25 +54,52 @@ function TaskEditor({
   onDeleteAndSelectNext,
   onSaveComplete,
   customHeight,
+  preloadedBoards = [],
+  preloadedTaggings = [],
+  preloadedBoardItems = []
 }: TaskEditorProps) {
   const updateTask = useUpdateTask();
   const createTask = useCreateTask();
   const addItemToBoard = useAddItemToBoard();
   const removeItemFromBoard = useRemoveItemFromBoard();
-  const { data: boards = [] } = useBoards();
-  const { data: itemBoards = [] } = useItemBoards('task', task?.id);
+  
+  // 事前取得されたデータを使用（APIコール不要）
+  const boards = preloadedBoards;
   const isNewTask = !task || task.id === 0;
   const taskFormRef = useRef<TaskFormHandle>(null);
   
-  // 現在のタスクに紐づいているタグを取得（タスクが存在する場合のみ）
-  const { tags: currentTags, isLoading: tagsLoading } = useItemTags(
-    'task', 
-    task && task.id > 0 ? (task.originalId || task.id.toString()) : '__no_task__'
-  );
-  const { data: currentTaggings = [] } = useTaggings({
-    targetType: 'task',
-    targetOriginalId: task && task.id > 0 ? (task.originalId || task.id.toString()) : '__no_task__',
-  });
+  // このタスクに実際に紐づいているボードのみを抽出
+  const itemBoards = useMemo(() => {
+    if (!task || task.id === 0) return [];
+    
+    const originalId = task.originalId || task.id.toString();
+    
+    // このタスクに紐づいているボードアイテムを抽出
+    const taskBoardItems = preloadedBoardItems.filter(
+      item => item.itemType === 'task' && item.originalId === originalId
+    );
+    
+    // ボードアイテムからボード情報を取得
+    const boards = taskBoardItems
+      .map(item => preloadedBoards.find(board => board.id === item.boardId))
+      .filter((board): board is NonNullable<typeof board> => board !== undefined);
+    
+    return boards;
+  }, [task, preloadedBoardItems, preloadedBoards]);
+  
+  // 事前取得されたデータからタスクのタグを抽出（シンプル）
+  const currentTags = useMemo(() => {
+    if (!task || task.id === 0) return [];
+    const originalId = task.originalId || task.id.toString();
+    
+    const taskTaggings = preloadedTaggings.filter(
+      t => t.targetType === 'task' && t.targetOriginalId === originalId
+    );
+    
+    const tags = taskTaggings.map(t => t.tag).filter(Boolean) as Tag[];
+    
+    return tags;
+  }, [task, preloadedTaggings]);
   
   // タグ操作用のmutation
   const createTaggingMutation = useCreateTagging();
@@ -166,8 +207,8 @@ function TaskEditor({
   
   // データ取得完了時のタグ初期化処理
   useEffect(() => {
-    // 新規タスクまたはデータロード中は何もしない
-    if (!task || task.id === 0 || tagsLoading) return;
+    // 新規タスクは何もしない
+    if (!task || task.id === 0) return;
     
     // まだ初期化されていない場合のみ実行
     if (!isTagsInitialized) {
@@ -181,12 +222,12 @@ function TaskEditor({
       
       return () => clearTimeout(timer);
     }
-  }, [task, currentTags, tagsLoading, isTagsInitialized]);
+  }, [task, currentTags, isTagsInitialized]);
   
   // 保存後のタグ同期処理（手動変更がない場合のみ）
   useEffect(() => {
-    // 新規タスク、データロード中、初期化前、手動変更ありの場合は何もしない
-    if (!task || task.id === 0 || tagsLoading || !isTagsInitialized || hasManualTagChanges) return;
+    // 新規タスク、初期化前、手動変更ありの場合は何もしない
+    if (!task || task.id === 0 || !isTagsInitialized || hasManualTagChanges) return;
     
     const currentTagsStr = JSON.stringify(currentTags.map(t => ({ id: t.id, name: t.name })));
     const tagsActuallyChanged = currentTagsStr !== lastSyncedTags;
@@ -195,7 +236,7 @@ function TaskEditor({
       setLocalTags(currentTags);
       setLastSyncedTags(currentTagsStr);
     }
-  }, [task, currentTags, tagsLoading, isTagsInitialized, hasManualTagChanges, lastSyncedTags]);
+  }, [task, currentTags, isTagsInitialized, hasManualTagChanges, lastSyncedTags]);
   
   // 新規作成・編集両対応の仮タスクオブジェクト
   const tempTask: Task = task || {
@@ -213,16 +254,14 @@ function TaskEditor({
   // タグに変更があるかチェック
   const hasTagChanges = useMemo(() => {
     if (!task || task.id === 0) return false;
-    // データがまだロード中の場合は変更なしとして扱う
-    if (tagsLoading) return false;
-    // 初期化が完了していない場合も変更なしとして扱う
+    // 初期化が完了していない場合は変更なしとして扱う
     if (!isTagsInitialized) return false;
     
     const currentTagIds = currentTags.map(tag => tag.id).sort();
     const localTagIds = localTags.map(tag => tag.id).sort();
     
     return JSON.stringify(currentTagIds) !== JSON.stringify(localTagIds);
-  }, [currentTags, localTags, task, tagsLoading, isTagsInitialized]);
+  }, [currentTags, localTags, task, isTagsInitialized]);
 
   // タグの差分を計算して一括更新する関数
   const updateTaggings = useCallback(async (taskId: string) => {
@@ -236,9 +275,9 @@ function TaskEditor({
     // 追加するタグ（localにあってcurrentにない）
     const tagsToAdd = localTagIds.filter(id => !currentTagIds.includes(id));
 
-    // 削除処理
+    // 削除処理（preloadedTaggingsからタギングIDを見つける）
     for (const tagId of tagsToRemove) {
-      const taggingToDelete = currentTaggings.find((t: Tagging) => t.tagId === tagId);
+      const taggingToDelete = preloadedTaggings.find((t) => t.tagId === tagId);
       if (taggingToDelete) {
         await deleteTaggingMutation.mutateAsync(taggingToDelete.id);
       }
@@ -246,13 +285,40 @@ function TaskEditor({
 
     // 追加処理
     for (const tagId of tagsToAdd) {
-      await createTaggingMutation.mutateAsync({
-        tagId,
-        targetType: 'task',
-        targetOriginalId: taskId
-      });
+      // 既に存在するかどうかを再度チェック（リアルタイムデータで）
+      const existingTagging = preloadedTaggings.find(
+        t => t.tagId === tagId && t.targetType === 'task' && t.targetOriginalId === taskId
+      );
+      
+      if (!existingTagging) {
+        try {
+          await createTaggingMutation.mutateAsync({
+            tagId,
+            targetType: 'task',
+            targetOriginalId: taskId
+          });
+        } catch (error: unknown) {
+          // 400エラー（重複）は無視し、他のエラーは再スロー
+          const errorMessage = (error as Error).message || '';
+          
+          const isDuplicateError = (
+            errorMessage.includes('HTTP error 400') && 
+            errorMessage.includes('Tag already attached to this item')
+          ) || (
+            errorMessage.includes('400') && 
+            errorMessage.includes('already attached')
+          );
+          
+          if (isDuplicateError) {
+            console.debug(`Tag ${tagId} is already attached to task ${taskId}, skipping...`);
+            continue;
+          }
+          console.error(`Failed to create tagging for tag ${tagId} on task ${taskId}:`, error);
+          throw error;
+        }
+      }
     }
-  }, [task, currentTags, localTags, currentTaggings, deleteTaggingMutation, createTaggingMutation]);
+  }, [task, currentTags, localTags, preloadedTaggings, deleteTaggingMutation, createTaggingMutation]);
 
   // 変更検知用のstate
   const [originalData, setOriginalData] = useState<{
@@ -707,7 +773,7 @@ function TaskEditor({
                   multiple={true}
                 />
                 <TagSelector
-                  selectedTags={isTagsInitialized && !tagsLoading ? localTags : []}
+                  selectedTags={isTagsInitialized ? localTags : []}
                   onTagsChange={(tags) => {
                     setLocalTags(tags);
                     setHasManualTagChanges(true);

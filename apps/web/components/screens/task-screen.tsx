@@ -1,8 +1,5 @@
 "use client";
 
-import DeletedTaskViewer, {
-  DeletedTaskViewerRef,
-} from "@/components/features/task/deleted-task-viewer";
 import TaskEditor from "@/components/features/task/task-editor";
 import { CSVImportModal } from "@/components/features/task/csv-import-modal";
 import { useTasksBulkDelete } from "@/components/features/task/use-task-bulk-delete";
@@ -115,8 +112,6 @@ function TaskScreen({
   // 復元ボタンの参照
   const restoreButtonRef = useRef<HTMLButtonElement>(null);
 
-  // 削除済みタスクビューアーの参照
-  const deletedTaskViewerRef = useRef<DeletedTaskViewerRef>(null);
 
   // 削除完了時に蓋を閉じる処理
   useDeletionLid(() => setIsRightLidOpen(false));
@@ -523,24 +518,11 @@ function TaskScreen({
         )}
         {taskScreenMode === "view" && selectedDeletedTask && (
           <>
-            <DeletedTaskViewer
-              ref={deletedTaskViewerRef}
+            <TaskEditor
               task={selectedDeletedTask}
               onClose={() => setTaskScreenMode("list")}
-              onDeleteAndSelectNext={selectNextDeletedTask}
-              onRestoreAndSelectNext={handleDeletedTaskRestoreAndSelectNext}
-              isLidOpen={isLidOpen}
-              onDeleteClick={() => {
-                // 削除済タスクの削除処理
-                if (selectedDeletedTask) {
-                  // 1. 蓋を開く
-                  setIsLidOpen(true);
-                  setTimeout(() => {
-                    // 2. 削除確認モーダルを表示
-                    deletedTaskViewerRef.current?.showDeleteConfirmation();
-                  }, 200);
-                }
-              }}
+              onDelete={() => selectNextDeletedTask(selectedDeletedTask)}
+              onRestore={() => handleDeletedTaskRestoreAndSelectNext(selectedDeletedTask)}
             />
           </>
         )}

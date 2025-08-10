@@ -163,14 +163,25 @@ export default function BoardRightPanel({
       {selectedTask && !selectedMemo && rightPanelMode === null && (
         <>
           {isDeletedTask(selectedTask) ? (
-            <DeletedTaskViewer
+            <TaskEditor
               key={`deleted-task-${selectedTask.id}`}
               task={selectedTask}
+              initialBoardId={boardId}
+              preloadedTaggings={allTaggings}
+              preloadedBoardItems={allBoardItems}
               onClose={() => {
-                // ビューア内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
+                // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
               }}
-              onDeleteAndSelectNext={onDeletedTaskDeleteAndSelectNext}
-              onRestoreAndSelectNext={onTaskRestoreAndSelectNext}
+              onRestore={() => {
+                if (onTaskRestoreAndSelectNext) {
+                  onTaskRestoreAndSelectNext(selectedTask);
+                }
+              }}
+              onDelete={() => {
+                if (onDeletedTaskDeleteAndSelectNext) {
+                  onDeletedTaskDeleteAndSelectNext(selectedTask);
+                }
+              }}
             />
           ) : (
             <TaskEditor

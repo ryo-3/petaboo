@@ -220,7 +220,7 @@ export function useBulkDeleteOperations({
       for (const id of targetIds) {
         await removeItemFromBoard.mutateAsync({
           boardId,
-          itemId: id as number,
+          itemId: id.toString(),
           itemType: deletingItemType!,
         });
       }

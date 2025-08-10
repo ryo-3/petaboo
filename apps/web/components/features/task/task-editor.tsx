@@ -437,7 +437,7 @@ function TaskEditor({
         try {
           await removeItemFromBoard.mutateAsync({
             boardId: parseInt(boardId),
-            itemId: parseInt(task!.originalId || task!.id.toString()),
+            itemId: task!.originalId || task!.id.toString(),
             itemType: 'task'
           });
         } catch {
@@ -642,7 +642,7 @@ function TaskEditor({
           try {
             await removeItemFromBoard.mutateAsync({
               boardId: parseInt(boardId),
-              itemId: parseInt(task!.originalId || task!.id.toString()),
+              itemId: task!.originalId || task!.id.toString(),
               itemType: 'task'
             });
           } catch {

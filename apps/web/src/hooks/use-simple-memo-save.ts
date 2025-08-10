@@ -164,7 +164,7 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
                 try {
                   await removeItemFromBoard.mutateAsync({
                     boardId,
-                    itemId: memo.id,
+                    itemId: memo.originalId || memo.id.toString(),
                     itemType: 'memo',
                   })
                 } catch (error: unknown) {
@@ -179,7 +179,7 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
               
               // ボード変更後にキャッシュを無効化
               queryClient.invalidateQueries({ 
-                queryKey: ["item-boards", "memo", memo.id] 
+                queryKey: ["item-boards", "memo", memo.originalId] 
               })
             }
             
@@ -225,7 +225,7 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
             
             // ボード追加後にキャッシュを無効化
             queryClient.invalidateQueries({ 
-              queryKey: ["item-boards", "memo", createdMemo.id] 
+              queryKey: ["item-boards", "memo", createdMemo.originalId] 
             })
           }
           

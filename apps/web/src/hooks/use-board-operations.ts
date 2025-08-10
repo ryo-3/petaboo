@@ -127,7 +127,7 @@ export function useBoardOperations({
       try {
         await removeItemFromBoard.mutateAsync({
           boardId,
-          itemId: parseInt(item.itemId),
+          itemId: item.itemId,
           itemType: item.itemType,
         });
         // 削除したアイテムが選択されていた場合、選択を解除

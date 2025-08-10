@@ -453,8 +453,8 @@ export function useAddItemToBoard() {
       
       // 特定のボードのアイテムキャッシュを無効化（新しいアイテムが追加されるため）
       queryClient.invalidateQueries({ queryKey: ["boards", boardId, "items"] });
-      // アイテムのボード情報も無効化（string → number変換）
-      queryClient.invalidateQueries({ queryKey: ["item-boards", itemType, parseInt(itemId)] });
+      // アイテムのボード情報も無効化（originalIdベース）
+      queryClient.invalidateQueries({ queryKey: ["item-boards", itemType, itemId] });
       // ボード一覧の統計情報を更新（より細かい制御は困難なため無効化）
       queryClient.invalidateQueries({ queryKey: ["boards"] });
       // 全ボードアイテム情報も無効化（全データ事前取得で使用）
@@ -473,7 +473,7 @@ export function useRemoveItemFromBoard() {
   const { getToken } = useAuth();
   const { showToast } = useToast();
 
-  return useMutation<void, Error, { boardId: number; itemId: number; itemType: 'memo' | 'task' }>({
+  return useMutation<void, Error, { boardId: number; itemId: string; itemType: 'memo' | 'task' }>({
     mutationFn: async ({ boardId, itemId, itemType }) => {
       // 最大2回リトライ
       for (let attempt = 0; attempt < 2; attempt++) {
@@ -521,7 +521,7 @@ export function useRemoveItemFromBoard() {
 }
 
 // アイテムが所属しているボード一覧を取得
-export function useItemBoards(itemType: 'memo' | 'task', itemId: number | undefined) {
+export function useItemBoards(itemType: 'memo' | 'task', itemId: string | undefined) {
   const { getToken } = useAuth();
 
   return useQuery<Board[]>({

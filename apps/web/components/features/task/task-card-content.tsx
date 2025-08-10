@@ -38,7 +38,7 @@ function TaskCardContent({
   const boardItemId = !isDeleted && task.id > 0 
     ? ((task as Task).originalId || task.id.toString())
     : '';
-  const { data: boards } = useItemBoards('task', boardItemId ? parseInt(boardItemId) : undefined);
+  const { data: boards } = useItemBoards('task', boardItemId || undefined);
   
   const targetOriginalId = !isDeleted && task.id > 0 
     ? ((task as Task).originalId || task.id.toString())

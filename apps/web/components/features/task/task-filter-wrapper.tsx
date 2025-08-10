@@ -16,7 +16,7 @@ function TaskFilterWrapper({ task, selectedBoardIds, filterMode = 'include', chi
   // タスクが所属するボード一覧を取得（フィルター無効時はundefinedを渡してクエリを無効化）
   const { data: boards, isLoading } = useItemBoards(
     'task', 
-    (selectedBoardIds && selectedBoardIds.length > 0) ? task.id : undefined
+    (selectedBoardIds && selectedBoardIds.length > 0) ? (task.originalId || task.id.toString()) : undefined
   );
 
   // フィルターが設定されていない場合は常に表示

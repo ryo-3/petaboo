@@ -17,10 +17,10 @@ function MemoFilterWrapper({ memo, selectedBoardIds, filterMode = 'include', chi
   // メモが所属するボード一覧を取得（フィルター無効時はundefinedを渡してクエリを無効化）
   // 削除済みメモの場合はoriginalIdを使用
   const isDeleted = variant === 'deleted';
-  const itemId = isDeleted ? (memo as DeletedMemo).originalId : memo.id;
+  const itemId = isDeleted ? (memo as DeletedMemo).originalId : (memo.originalId || memo.id.toString());
   const { data: boards } = useItemBoards(
     'memo', 
-    (selectedBoardIds && selectedBoardIds.length > 0) ? Number(itemId) : undefined
+    (selectedBoardIds && selectedBoardIds.length > 0) ? itemId : undefined
   );
 
   // フィルターが設定されていない場合は常に表示

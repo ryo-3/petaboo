@@ -189,8 +189,15 @@ export function useCreateBoard() {
 
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["boards"] });
+    onSuccess: (newBoard) => {
+      // 新しいボードは通常状態で作成されるため、normal状態のボード一覧に追加
+      queryClient.setQueryData<BoardWithStats[]>(["boards", "normal"], (oldBoards) => {
+        if (!oldBoards) return [newBoard as BoardWithStats]
+        return [...oldBoards, newBoard as BoardWithStats]
+      })
+      // 他のステータスのキャッシュも無効化（統計情報の整合性のため）
+      queryClient.invalidateQueries({ queryKey: ["boards", "completed"] });
+      queryClient.invalidateQueries({ queryKey: ["boards", "deleted"] });
     },
     onError: (error) => {
       console.error("ボード作成に失敗しました:", error);
@@ -225,7 +232,14 @@ export function useUpdateBoard() {
       return response.json();
     },
     onSuccess: (updatedBoard) => {
-      queryClient.invalidateQueries({ queryKey: ["boards"] });
+      // ボード一覧の特定ボードを更新（全ステータス）
+      ["normal", "completed", "deleted"].forEach(status => {
+        queryClient.setQueryData<BoardWithStats[]>(["boards", status], (oldBoards) => {
+          if (!oldBoards) return oldBoards
+          return oldBoards.map(board => board.id === updatedBoard.id ? { ...board, ...updatedBoard } : board)
+        })
+      })
+      // 特定ボードの詳細キャッシュを無効化
       queryClient.invalidateQueries({ queryKey: ["boards", updatedBoard.id] });
     },
     onError: (error) => {
@@ -258,8 +272,23 @@ export function useToggleBoardCompletion() {
 
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["boards"] });
+    onSuccess: (updatedBoard, id) => {
+      // 元のボードを削除して新しいステータスに移動
+      ["normal", "completed", "deleted"].forEach(status => {
+        queryClient.setQueryData<BoardWithStats[]>(["boards", status], (oldBoards) => {
+          if (!oldBoards) return oldBoards
+          // 元のボードを削除
+          const filtered = oldBoards.filter(board => board.id !== id)
+          // 新しいステータスが現在のステータスと一致する場合は追加
+          if ((status === "completed" && updatedBoard.isCompleted) || 
+              (status === "normal" && !updatedBoard.isCompleted && !updatedBoard.deletedAt)) {
+            return [...filtered, updatedBoard as BoardWithStats]
+          }
+          return filtered
+        })
+      })
+      // 特定ボードの詳細キャッシュも無効化
+      queryClient.invalidateQueries({ queryKey: ["boards", id] });
     },
   });
 }
@@ -285,8 +314,18 @@ export function useDeleteBoard() {
         throw new Error(error.error || "Failed to delete board");
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["boards"] });
+    onSuccess: (_, id) => {
+      // 通常・完了済みボード一覧から削除されたボードを除去
+      ["normal", "completed"].forEach(status => {
+        queryClient.setQueryData<BoardWithStats[]>(["boards", status], (oldBoards) => {
+          if (!oldBoards) return oldBoards
+          return oldBoards.filter(board => board.id !== id)
+        })
+      })
+      // 削除済みボード一覧は無効化（削除済みボードが追加されるため）
+      queryClient.invalidateQueries({ queryKey: ["boards", "deleted"] });
+      // 特定ボードの詳細キャッシュも無効化
+      queryClient.invalidateQueries({ queryKey: ["boards", id] });
     },
   });
 }
@@ -314,8 +353,20 @@ export function useRestoreDeletedBoard() {
 
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["boards"] });
+    onSuccess: (restoredBoard, id) => {
+      // 削除済み一覧から復元されたボードを除去
+      queryClient.setQueryData<BoardWithStats[]>(["boards", "deleted"], (oldBoards) => {
+        if (!oldBoards) return oldBoards
+        return oldBoards.filter(board => board.id !== id)
+      })
+      // 復元されたボードを適切なステータス一覧に追加
+      const targetStatus = restoredBoard.isCompleted ? "completed" : "normal"
+      queryClient.setQueryData<BoardWithStats[]>(["boards", targetStatus], (oldBoards) => {
+        if (!oldBoards) return [restoredBoard as BoardWithStats]
+        return [...oldBoards, restoredBoard as BoardWithStats]
+      })
+      // 特定ボードの詳細キャッシュも無効化
+      queryClient.invalidateQueries({ queryKey: ["boards", id] });
     },
   });
 }
@@ -341,8 +392,12 @@ export function usePermanentDeleteBoard() {
         throw new Error(error.error || "Failed to permanently delete board");
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["boards"] });
+    onSuccess: (_, id) => {
+      // 削除済みボード一覧から完全削除されたボードを除去
+      queryClient.setQueryData<BoardWithStats[]>(["boards", "deleted"], (oldBoards) => {
+        if (!oldBoards) return oldBoards
+        return oldBoards.filter(board => board.id !== id)
+      })
     },
   });
 }
@@ -396,13 +451,13 @@ export function useAddItemToBoard() {
       const itemId = newItem.itemId || data.itemId;
       const itemType = newItem.itemType || data.itemType;
       
-      // 特定のボードのアイテムを無効化
+      // 特定のボードのアイテムキャッシュを無効化（新しいアイテムが追加されるため）
       queryClient.invalidateQueries({ queryKey: ["boards", boardId, "items"] });
       // アイテムのボード情報も無効化（string → number変換）
       queryClient.invalidateQueries({ queryKey: ["item-boards", itemType, parseInt(itemId)] });
-      // ボード一覧も無効化（統計情報が変わるため）
+      // ボード一覧の統計情報を更新（より細かい制御は困難なため無効化）
       queryClient.invalidateQueries({ queryKey: ["boards"] });
-      // 全ボードアイテム情報も無効化（新しいAPI用）
+      // 全ボードアイテム情報も無効化（全データ事前取得で使用）
       queryClient.invalidateQueries({ queryKey: ["boards", "all-items"] });
     },
     onError: (error) => {
@@ -449,13 +504,13 @@ export function useRemoveItemFromBoard() {
       throw new Error('Failed after retry');
     },
     onSuccess: (_, { boardId, itemId, itemType }) => {
-      // 特定のボードのアイテムを無効化
+      // 特定のボードのアイテムキャッシュを無効化（アイテムが削除されるため）
       queryClient.invalidateQueries({ queryKey: ["boards", boardId, "items"] });
       // アイテムのボード情報も無効化
       queryClient.invalidateQueries({ queryKey: ["item-boards", itemType, itemId] });
-      // ボード一覧も無効化（統計情報が変わるため）
+      // ボード一覧の統計情報を更新（より細かい制御は困難なため無効化）
       queryClient.invalidateQueries({ queryKey: ["boards"] });
-      // 全ボードアイテム情報も無効化（新しいAPI用）
+      // 全ボードアイテム情報も無効化（全データ事前取得で使用）
       queryClient.invalidateQueries({ queryKey: ["boards", "all-items"] });
     },
     onError: (error) => {

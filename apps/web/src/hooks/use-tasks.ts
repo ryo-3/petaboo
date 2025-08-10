@@ -91,8 +91,14 @@ export function useUpdateTask() {
       })
       // ボード統計の再計算のためボード一覧を無効化
       queryClient.invalidateQueries({ queryKey: ["boards"] });
-      // ボードアイテムのキャッシュを無効化（ボード詳細のリスト表示内容更新のため）
-      queryClient.invalidateQueries({ queryKey: ["boards", undefined, "items"] });
+      // 全ボードアイテムのキャッシュを強制再取得（ボード詳細のリスト表示内容更新のため）
+      queryClient.refetchQueries({ 
+        predicate: (query) => {
+          return query.queryKey.length === 3 && 
+                 query.queryKey[0] === "boards" && 
+                 query.queryKey[2] === "items"
+        }
+      });
     },
     onError: (error) => {
       console.error("タスク更新に失敗しました:", error);

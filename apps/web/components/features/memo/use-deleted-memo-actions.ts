@@ -26,19 +26,28 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
       return response.json()
     },
     onSuccess: async () => {
-      // 完全削除後に削除済みメモリストを再取得
-      await queryClient.invalidateQueries({ queryKey: ["deleted-memos"] })
-      // ボード固有の削除済みアイテムキャッシュも無効化
-      await queryClient.invalidateQueries({ queryKey: ["board-deleted-items"] })
+      // キャッシュを手動更新（削除されたアイテムをすぐに除去）
+      queryClient.setQueryData(['deleted-memos'], (oldDeletedMemos: DeletedMemo[] | undefined) => {
+        if (!oldDeletedMemos) return []
+        return oldDeletedMemos.filter(m => m.originalId !== memo.originalId)
+      })
       
-      // 少し遅延してから次のメモ選択機能を使用（React Queryの状態更新を待つ）
-      setTimeout(() => {
-        if (onDeleteAndSelectNext) {
-          onDeleteAndSelectNext(memo)
-        } else {
-          onClose()
-        }
-      }, 100);
+      // ボード固有の削除済みアイテムキャッシュも手動更新
+      queryClient.setQueryData(['board-deleted-items'], (oldItems: any[] | undefined) => {
+        if (!oldItems) return []
+        return oldItems.filter((item: any) => item.originalId !== memo.originalId)
+      })
+      
+      // 即座に次のメモ選択機能を使用（手動更新済みなのでタイミング問題なし）
+      if (onDeleteAndSelectNext) {
+        onDeleteAndSelectNext(memo)
+      } else {
+        onClose()
+      }
+      
+      // 最後にキャッシュを無効化して最新データを取得
+      queryClient.invalidateQueries({ queryKey: ["deleted-memos"] })
+      queryClient.invalidateQueries({ queryKey: ["board-deleted-items"] })
     },
   })
   

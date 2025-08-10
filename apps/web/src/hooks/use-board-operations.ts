@@ -45,6 +45,8 @@ interface UseBoardOperationsReturn {
   handleAddSelectedItems: () => Promise<void>;
   handleMemoDeleteAndSelectNext: (deletedMemo: Memo) => void;
   handleTaskDeleteAndSelectNext: (deletedTask: Task) => void;
+  handleDeletedMemoDeleteAndSelectNext: (deletedItem: DeletedMemo) => void;
+  handleDeletedTaskDeleteAndSelectNext: (deletedItem: DeletedTask) => void;
   handleMemoRestoreAndSelectNext: (deletedItem: DeletedMemo) => void;
   handleTaskRestoreAndSelectNext: (deletedItem: DeletedTask) => void;
   handleAddMemoToBoard: (memo: Memo) => Promise<void>;
@@ -290,6 +292,21 @@ export function useBoardOperations({
     editorSelector: "[data-task-editor]",
   });
 
+  // 削除済みアイテムの完全削除ハンドラー
+  const { selectNextDeletedItem: handleDeletedMemoDeleteAndSelectNext } = useDeletedItemOperations({
+    deletedItems: boardDeletedItems?.memos || null,
+    onSelectDeletedItem: (memo: DeletedMemo | null) => onSelectMemo?.(memo),
+    setScreenMode: () => {}, // ボードでは画面モード変更なし
+    editorSelector: "[data-memo-editor]",
+  });
+
+  const { selectNextDeletedItem: handleDeletedTaskDeleteAndSelectNext } = useDeletedItemOperations({
+    deletedItems: boardDeletedItems?.tasks || null,
+    onSelectDeletedItem: (task: DeletedTask | null) => onSelectTask?.(task),
+    setScreenMode: () => {}, // ボードでは画面モード変更なし
+    editorSelector: "[data-task-editor]",
+  });
+
   // ボードにアイテムを追加
   const handleAddMemoToBoard = useCallback(async (memo: Memo) => {
     // 既にボードに存在するかチェック
@@ -355,6 +372,8 @@ export function useBoardOperations({
     handleAddSelectedItems,
     handleMemoDeleteAndSelectNext,
     handleTaskDeleteAndSelectNext,
+    handleDeletedMemoDeleteAndSelectNext,
+    handleDeletedTaskDeleteAndSelectNext,
     handleMemoRestoreAndSelectNext,
     handleTaskRestoreAndSelectNext,
     handleAddMemoToBoard,

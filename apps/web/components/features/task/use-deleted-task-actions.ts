@@ -25,19 +25,28 @@ export function useDeletedTaskActions({ task, onClose, onDeleteAndSelectNext, on
       return response.json()
     },
     onSuccess: async () => {
-      // 完全削除後に削除済みタスクリストを再取得
-      await queryClient.invalidateQueries({ queryKey: ["deleted-tasks"] })
-      // ボード固有の削除済みアイテムキャッシュも無効化
-      await queryClient.invalidateQueries({ queryKey: ["board-deleted-items"] })
+      // キャッシュを手動更新（削除されたアイテムをすぐに除去）
+      queryClient.setQueryData(['deleted-tasks'], (oldDeletedTasks: DeletedTask[] | undefined) => {
+        if (!oldDeletedTasks) return []
+        return oldDeletedTasks.filter(t => t.originalId !== task.originalId)
+      })
       
-      // 少し遅延してから次のタスク選択機能を使用（React Queryの状態更新を待つ）
-      setTimeout(() => {
-        if (onDeleteAndSelectNext) {
-          onDeleteAndSelectNext(task)
-        } else {
-          onClose()
-        }
-      }, 100);
+      // ボード固有の削除済みアイテムキャッシュも手動更新
+      queryClient.setQueryData(['board-deleted-items'], (oldItems: any[] | undefined) => {
+        if (!oldItems) return []
+        return oldItems.filter((item: any) => item.originalId !== task.originalId)
+      })
+      
+      // 即座に次のタスク選択機能を使用（手動更新済みなのでタイミング問題なし）
+      if (onDeleteAndSelectNext) {
+        onDeleteAndSelectNext(task)
+      } else {
+        onClose()
+      }
+      
+      // 最後にキャッシュを無効化して最新データを取得
+      queryClient.invalidateQueries({ queryKey: ["deleted-tasks"] })
+      queryClient.invalidateQueries({ queryKey: ["board-deleted-items"] })
     },
   })
   

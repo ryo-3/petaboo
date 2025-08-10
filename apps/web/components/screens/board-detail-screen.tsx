@@ -207,6 +207,8 @@ function BoardDetailScreen({
     handleAddSelectedItems,
     handleMemoDeleteAndSelectNext,
     handleTaskDeleteAndSelectNext,
+    handleDeletedMemoDeleteAndSelectNext,
+    handleDeletedTaskDeleteAndSelectNext,
     handleMemoRestoreAndSelectNext,
     handleTaskRestoreAndSelectNext,
     handleAddMemoToBoard,
@@ -521,6 +523,8 @@ function BoardDetailScreen({
         onToggleItemSelection={handleToggleItemSelection}
         onMemoDeleteAndSelectNext={handleMemoDeleteAndSelectNext}
         onTaskDeleteAndSelectNext={handleTaskDeleteAndSelectNext}
+        onDeletedMemoDeleteAndSelectNext={handleDeletedMemoDeleteAndSelectNext}
+        onDeletedTaskDeleteAndSelectNext={handleDeletedTaskDeleteAndSelectNext}
         onMemoRestoreAndSelectNext={handleMemoRestoreAndSelectNext}
         onTaskRestoreAndSelectNext={handleTaskRestoreAndSelectNext}
         onAddMemoToBoard={handleAddMemoToBoard}

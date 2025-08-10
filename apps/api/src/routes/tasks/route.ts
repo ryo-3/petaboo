@@ -555,21 +555,21 @@ app.openapi(
     const { originalId } = c.req.valid("param");
     
     try {
-      const result = await db.transaction(async (tx) => {
+      const result = db.transaction((tx) => {
         // 1. タグ付けを削除（タグ本体は保持）
-        await tx.delete(taggings).where(
+        tx.delete(taggings).where(
           and(
             eq(taggings.targetType, 'task'),
             eq(taggings.targetOriginalId, originalId)
           )
-        );
+        ).run();
         
         // 2. 関連するボードアイテムは削除しない（削除済みタブで表示するため保持）
         
         // 3. タスクを削除
-        const deleteResult = await tx.delete(deletedTasks).where(
+        const deleteResult = tx.delete(deletedTasks).where(
           and(eq(deletedTasks.originalId, originalId), eq(deletedTasks.userId, auth.userId))
-        );
+        ).run();
         
         return deleteResult;
       });

@@ -32,6 +32,8 @@ interface BoardRightPanelProps {
   onToggleItemSelection: (itemId: number) => void;
   onMemoDeleteAndSelectNext?: (deletedMemo: Memo) => void;
   onTaskDeleteAndSelectNext?: (deletedTask: Task) => void;
+  onDeletedMemoDeleteAndSelectNext?: (deletedMemo: DeletedMemo) => void;
+  onDeletedTaskDeleteAndSelectNext?: (deletedTask: DeletedTask) => void;
   onMemoRestoreAndSelectNext?: (deletedMemo: DeletedMemo) => void;
   onTaskRestoreAndSelectNext?: (deletedTask: DeletedTask) => void;
   onAddMemoToBoard?: (memo: Memo) => void;
@@ -51,6 +53,8 @@ export default function BoardRightPanel({
   onSelectTask,
   onMemoDeleteAndSelectNext,
   onTaskDeleteAndSelectNext,
+  onDeletedMemoDeleteAndSelectNext,
+  onDeletedTaskDeleteAndSelectNext,
   onMemoRestoreAndSelectNext,
   onTaskRestoreAndSelectNext,
   onAddMemoToBoard, // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -111,6 +115,7 @@ export default function BoardRightPanel({
               onClose={() => {
                 // ビューア内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
               }}
+              onDeleteAndSelectNext={onDeletedMemoDeleteAndSelectNext}
               onRestoreAndSelectNext={onMemoRestoreAndSelectNext}
             />
           ) : (
@@ -154,6 +159,7 @@ export default function BoardRightPanel({
               onClose={() => {
                 // ビューア内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
               }}
+              onDeleteAndSelectNext={onDeletedTaskDeleteAndSelectNext}
               onRestoreAndSelectNext={onTaskRestoreAndSelectNext}
             />
           ) : (

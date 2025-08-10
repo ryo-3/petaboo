@@ -493,21 +493,21 @@ app.openapi(
     const { originalId } = c.req.valid("param");
     
     try {
-      const result = await db.transaction(async (tx) => {
+      const result = db.transaction((tx) => {
         // 1. タグ付けを削除（タグ本体は保持）
-        await tx.delete(taggings).where(
+        tx.delete(taggings).where(
           and(
             eq(taggings.targetType, 'memo'),
             eq(taggings.targetOriginalId, originalId)
           )
-        );
+        ).run();
         
         // 2. 関連するボードアイテムは削除しない（削除済みタブで表示するため保持）
         
         // 3. メモを削除
-        const deleteResult = await tx.delete(deletedMemos).where(
+        const deleteResult = tx.delete(deletedMemos).where(
           and(eq(deletedMemos.originalId, originalId), eq(deletedMemos.userId, auth.userId))
-        );
+        ).run();
         
         return deleteResult;
       });

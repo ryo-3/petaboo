@@ -108,7 +108,6 @@ export default function BoardRightPanel({
         <>
           {isDeletedMemo(selectedMemo) ? (
             <MemoEditor
-              key={`deleted-memo-${selectedMemo.id}`}
               memo={selectedMemo}
               onClose={() => {
                 // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
@@ -124,15 +123,14 @@ export default function BoardRightPanel({
                 }
               }}
               initialBoardId={boardId}
-              preloadedTaggings={allTaggings}
+              preloadedTaggings={allTaggings || []}
               preloadedBoardItems={allBoardItems}
             />
           ) : (
             <MemoEditor
-              key={`memo-${selectedMemo.id}`}
               memo={selectedMemo}
               initialBoardId={boardId}
-              preloadedTaggings={allTaggings}
+              preloadedTaggings={allTaggings || []}
               preloadedBoardItems={allBoardItems}
               onClose={() => {
                 // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
@@ -163,10 +161,9 @@ export default function BoardRightPanel({
         <>
           {isDeletedTask(selectedTask) ? (
             <TaskEditor
-              key={`deleted-task-${selectedTask.id}`}
               task={selectedTask}
               initialBoardId={boardId}
-              preloadedTaggings={allTaggings}
+              preloadedTaggings={allTaggings || []}
               preloadedBoardItems={allBoardItems}
               onClose={() => {
                 // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
@@ -184,10 +181,9 @@ export default function BoardRightPanel({
             />
           ) : (
             <TaskEditor
-              key={`task-${selectedTask.id}`}
               task={selectedTask}
               initialBoardId={boardId}
-              preloadedTaggings={allTaggings}
+              preloadedTaggings={allTaggings || []}
               preloadedBoardItems={allBoardItems}
               onClose={() => {
                 // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）

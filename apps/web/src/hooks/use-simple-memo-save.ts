@@ -24,6 +24,7 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
     boardsToRemove: number[];
   }>({ boardsToAdd: [], boardsToRemove: [] })
   const [isInitialSync, setIsInitialSync] = useState(true)
+  const [isMemoSwitching, setIsMemoSwitching] = useState(false)
   
   // メモが変更されたらボード選択をリセット
   const currentBoardIdsStr = JSON.stringify([...currentBoardIds].sort())
@@ -49,6 +50,9 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
 
   // 変更検知（ボード選択も含める）
   const hasChanges = useMemo(() => {
+    // メモ切り替え中は変更なしとして扱う
+    if (isMemoSwitching) return false
+    
     const currentTitle = title.trim()
     const currentContent = content.trim()
     const textChanged = currentTitle !== initialTitle.trim() || currentContent !== initialContent.trim()
@@ -60,15 +64,13 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
     
     const hasBoardChanges = JSON.stringify([...selectedBoardIds].sort()) !== JSON.stringify([...currentBoardIds].sort())
     return textChanged || hasBoardChanges
-  }, [title, content, initialTitle, initialContent, selectedBoardIds, currentBoardIds, isInitialSync])
+  }, [title, content, initialTitle, initialContent, selectedBoardIds, currentBoardIds, isInitialSync, isMemoSwitching])
 
   // メモが変更された時の初期値更新
   useEffect(() => {
-    console.log('[useSimpleMemoSave] memo changed, updating content:', {
-      newMemo: memo,
-      newContent: memo?.content,
-      currentContent: content
-    });
+    // メモ切り替えフラグをセット
+    setIsMemoSwitching(true)
+    
     if (memo) {
       const memoTitle = memo.title || ''
       const memoContent = memo.content || ''
@@ -82,6 +84,11 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
       setInitialTitle('')
       setInitialContent('')
     }
+    
+    // 短い遅延後に切り替えフラグをリセット
+    setTimeout(() => {
+      setIsMemoSwitching(false)
+    }, 50)
   }, [memo]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const executeSave = useCallback(async () => {

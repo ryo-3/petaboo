@@ -151,6 +151,7 @@ function MemoEditor({
     onClose,
     onDeleteAndSelectNext,
     onRestoreAndSelectNext: onDeleteAndSelectNext,
+    onAnimationChange: setIsAnimating,
   });
 
   // タグ初期化（メモが変わった時のみ実行）
@@ -331,7 +332,7 @@ function MemoEditor({
   // 削除ボタンのハンドラー（ボード紐づきチェック付き）
   const handleDeleteClick = () => {
     if (isDeleted && deletedMemoActions) {
-      // 削除済みメモの場合は完全削除
+      // 削除済みメモの場合は完全削除（蓋を開く）
       setIsAnimating(true);
       deletedMemoActions.showDeleteConfirmation();
     } else if (itemBoards && itemBoards.length > 0) {
@@ -481,7 +482,7 @@ function MemoEditor({
                     onClick={handleDeleteClick}
                     className="flex items-center justify-center size-7 rounded-md bg-gray-100 ml-2"
                   >
-                    <TrashIcon className="size-5" isLidOpen={isLidOpen || isAnimating || showDeleteModal} />
+                    <TrashIcon className="size-5" isLidOpen={isLidOpen || isAnimating || showDeleteModal || (isDeleted && deletedMemoActions?.showDeleteModal)} />
                   </button>
                 )}
               </div>

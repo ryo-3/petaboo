@@ -10,9 +10,10 @@ interface UseDeletedMemoActionsProps {
   onClose: () => void
   onDeleteAndSelectNext?: (deletedMemo: DeletedMemo) => void
   onRestoreAndSelectNext?: (deletedMemo: DeletedMemo) => void
+  onAnimationChange?: (isAnimating: boolean) => void
 }
 
-export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, onRestoreAndSelectNext }: UseDeletedMemoActionsProps) {
+export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, onRestoreAndSelectNext, onAnimationChange }: UseDeletedMemoActionsProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [isLocalRestoring, setIsLocalRestoring] = useState(false)
   const queryClient = useQueryClient()
@@ -71,11 +72,13 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
               await permanentDeleteNote.mutateAsync(memo.originalId)
             }
             
-            // 蓋を閉じる
+            // アニメーション状態をリセットしてから蓋を閉じる
+            onAnimationChange?.(false)
             setTimeout(() => {
               (window as Window & { closeDeletingLid?: () => void }).closeDeletingLid?.();
             }, 500);
           } catch {
+            onAnimationChange?.(false)
             alert('完全削除に失敗しました。')
           }
         });
@@ -86,11 +89,14 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
           await permanentDeleteNote.mutateAsync(memo.originalId)
         }
         
+        // アニメーション状態をリセットしてから蓋を閉じる
+        onAnimationChange?.(false)
         setTimeout(() => {
           (window as Window & { closeDeletingLid?: () => void }).closeDeletingLid?.();
         }, 500);
       }
     } catch {
+      onAnimationChange?.(false)
       alert('完全削除に失敗しました。')
     }
   }
@@ -122,6 +128,8 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
 
   const hideDeleteConfirmation = () => {
     setShowDeleteModal(false)
+    // アニメーション状態をリセット
+    onAnimationChange?.(false)
     // キャンセル時も蓋を閉じる
     setTimeout(() => {
       (window as Window & { closeDeletingLid?: () => void }).closeDeletingLid?.();

@@ -21,6 +21,7 @@ import type { Tag, Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
 import { useCallback, useEffect, useState, useMemo, memo, useRef } from "react";
 import { useTaskDelete } from "./use-task-delete";
+import { useDeletedTaskActions } from "./use-deleted-task-actions";
 
 interface TaskEditorProps {
   task?: Task | DeletedTask | null;
@@ -135,6 +136,18 @@ function TaskEditor({
     onClosePanel,
     onDeleteAndSelectNext,
   });
+
+  // 削除済みタスクの操作用
+  const deletedTaskActions = isDeleted && task ? useDeletedTaskActions({
+    task: task as DeletedTask,
+    onClose,
+    onDeleteAndSelectNext: (deletedTask) => {
+      if (onDelete) onDelete();
+    },
+    onRestoreAndSelectNext: () => {
+      if (onRestore) onRestore();
+    }
+  }) : null;
 
   // 削除ボタンのハンドラー（ボード紐づきチェック付き）
   const handleDeleteClick = () => {
@@ -818,7 +831,11 @@ function TaskEditor({
                   </button>
                   <button
                     onClick={() => {
-                      if (onDelete) onDelete();
+                      if (deletedTaskActions) {
+                        deletedTaskActions.showDeleteConfirmation();
+                      } else if (onDelete) {
+                        onDelete();
+                      }
                     }}
                     className="flex items-center justify-center size-7 rounded-md bg-red-100 hover:bg-red-200"
                     title="完全削除"
@@ -895,6 +912,30 @@ function TaskEditor({
         boardsToAdd={pendingBoardChanges.toAdd.map(getBoardName)}
         boardsToRemove={pendingBoardChanges.toRemove.map(getBoardName)}
       />
+
+      {/* 削除済みタスクの永久削除確認モーダル */}
+      {isDeleted && deletedTaskActions && (
+        <BulkDeleteConfirmation
+          isOpen={deletedTaskActions.showDeleteModal}
+          onClose={deletedTaskActions.hideDeleteConfirmation}
+          onConfirm={deletedTaskActions.handlePermanentDelete}
+          count={1}
+          itemType="task"
+          deleteType="permanent"
+          isLoading={deletedTaskActions.isDeleting}
+          position="center"
+          customTitle={`「${task?.title || 'タイトルなし'}」の完全削除`}
+          customMessage={
+            <div className="text-center">
+              <div className="mt-3 p-3 bg-red-50 rounded-md">
+                <p className="text-sm text-red-800 font-medium">この操作は取り消せません</p>
+                <p className="text-xs text-red-700 mt-1">データは永久に失われます</p>
+                <p className="text-xs text-red-700 mt-1">ボードからも完全に削除されます</p>
+              </div>
+            </div>
+          }
+        />
+      )}
     </>
   );
 }

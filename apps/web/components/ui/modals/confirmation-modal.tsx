@@ -301,12 +301,6 @@ export function BulkDeleteConfirmation({
               showStatusBreakdown={true}
               isPermanentDelete={deleteType === 'permanent'}
             />
-            {/* 削除処理中のタブ切り替え注意書き（複数削除時のみ） */}
-            {count > 1 && (
-              <p className="text-xs text-gray-500 mt-2">
-                ※削除中にタブを切り替えると処理が中断されます
-              </p>
-            )}
           </div>
           
           {/* ボタン */}

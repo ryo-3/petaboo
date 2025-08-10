@@ -25,12 +25,6 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
             refetchOnReconnect: true,     // 再接続時の再取得（必要時のみ）
             retry: (failureCount, error) => {
               const queryError = error as QueryError;
-              // エラーの詳細をログ出力
-              console.log('🚨 Query Error:', { 
-                message: queryError?.message, 
-                status: queryError?.status, 
-                error: queryError 
-              })
               
               // 401エラーの場合はリトライしない
               const is401Error = 
@@ -39,7 +33,6 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
                 queryError?.status === 401
               
               if (is401Error) {
-                console.log('🔐 認証エラーを検知 - ログアウトしてログイン画面へリダイレクトします')
                 // 非同期でログアウトとリダイレクトを実行
                 setTimeout(async () => {
                   await signOut()

@@ -213,7 +213,6 @@ function MemoEditor({
           );
           
           if (isDuplicateError) {
-            console.debug(`Tag ${tagId} is already attached to memo ${memoId}, skipping...`);
             continue;
           }
           console.error(`Failed to create tagging for tag ${tagId} on memo ${memoId}:`, error);

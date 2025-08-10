@@ -339,7 +339,6 @@ export const taggingsApi = {
       
       // 400エラー（重複）の場合はデバッグログのみ
       if (response.status === 400 && errorText.includes('Tag already attached')) {
-        console.debug('Tag already attached (expected):', response.status, errorText);
         throw new Error(`HTTP error 400: ${errorText}`)
       }
       

@@ -34,13 +34,6 @@ function MemoCardContent({
   const boards = preloadedBoards;
   const tags = preloadedTags;
   
-  // 削除済みメモのボード表示調査（最初の1つのみ）
-  if (isDeleted && memo.id <= 100) {
-    console.log('📋 MemoCardContent - 削除済みメモのボード表示調査:');
-    console.log('メモID:', memo.id, 'showBoardName:', showBoardName);
-    console.log('preloadedBoards:', boards);
-    console.log('ボード表示判定:', showBoardName && boards && boards.length > 0);
-  }
   const { displayTitle, displayContent, lastEditTime } = {
     displayTitle: memo.title,
     displayContent: memo.content || '',
@@ -74,12 +67,6 @@ function MemoCardContent({
       {/* タグ表示 */}
       {(() => {
         if (isDeleted && showTags) {
-          console.log('タグ表示条件チェック:', {
-            showTags,
-            tags,
-            tagsLength: tags?.length || 0,
-            condition: showTags && tags && tags.length > 0
-          });
         }
         return null;
       })()}

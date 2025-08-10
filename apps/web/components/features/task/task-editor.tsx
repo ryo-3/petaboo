@@ -310,7 +310,6 @@ function TaskEditor({
           );
           
           if (isDuplicateError) {
-            console.debug(`Tag ${tagId} is already attached to task ${taskId}, skipping...`);
             continue;
           }
           console.error(`Failed to create tagging for tag ${tagId} on task ${taskId}:`, error);
@@ -655,12 +654,6 @@ function TaskEditor({
           for (const boardId of toAdd) {
             try {
               const itemIdToAdd = task.originalId || task.id.toString();
-              console.log('TaskEditor: Adding to board', {
-                taskId: task.id,
-                originalId: task.originalId,
-                itemIdToAdd,
-                boardId: parseInt(boardId)
-              });
               
               await addItemToBoard.mutateAsync({
                 boardId: parseInt(boardId),

@@ -299,15 +299,6 @@ export function DeletedTaskDisplay({
   allTaggings = [],
   allBoardItems = []
 }: DeletedTaskDisplayProps) {
-  // 削除済み表示の初期データをログ出力
-  console.log('DeletedTaskDisplay初期化:', {
-    showTags,
-    showBoardName,
-    allTagsLength: allTags.length,
-    allBoardsLength: allBoards.length,
-    allTaggingsLength: allTaggings.length,
-    allBoardItemsLength: allBoardItems.length
-  });
   const getSortValue = (task: DeletedTask, sortId: string): number => {
     switch (sortId) {
       case "priority": {
@@ -357,19 +348,6 @@ export function DeletedTaskDisplay({
       .map(item => allBoards.find(board => board.id === (item as {boardId: number}).boardId))
       .filter((board): board is NonNullable<typeof board> => board !== undefined);
 
-    // デバッグ用ログ（ランダムに1%の確率で出力）
-    if (Math.random() < 0.01) {
-      console.log('削除済みタスク表示デバッグ:', {
-        taskId: task.id,
-        originalId,
-        showTags: props.showTags,
-        showBoardName: props.showBoardName,
-        taskTagsLength: taskTags.length,
-        taskBoardsLength: taskBoards.length,
-        allTaggingsLength: allTaggings.length,
-        allBoardItemsLength: allBoardItems.length
-      });
-    }
 
     const Component = viewMode === 'card' ? TaskCard : TaskListItem;
     /* eslint-disable react/prop-types */

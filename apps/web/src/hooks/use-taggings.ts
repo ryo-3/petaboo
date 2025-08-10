@@ -76,7 +76,6 @@ export function useCreateTagging() {
     },
     onError: (error: unknown) => {
       // サイレントに処理する場合は上位でキャッチするため、ここではログのみ
-      console.debug('createTagging error in hook:', (error as Error).message);
     }
   })
 }

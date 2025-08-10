@@ -309,31 +309,15 @@ export function DeletedMemoDisplay({
 
     // 削除済みメモのボード表示調査ログ
     if (deletedMemos && deletedMemos.indexOf(memo) === 0) {
-      console.log('🔍 削除済みメモのボード表示調査:');
-      console.log('メモ情報:', { 
-        id: memo.id, 
-        originalId: memo.originalId, 
-        計算されたoriginalId: originalId 
-      });
-      console.log('showBoardName:', props.showBoardName);
-      console.log('allBoardItems件数:', allBoardItems.length);
-      console.log('このメモに一致するboardItem:', memoBoardItems);
-      console.log('抽出されたボード:', memoBoards);
       
       // originalIdマッチング詳細調査
-      console.log('❌ originalIdマッチング詳細:');
-      console.log('- 探しているoriginalId:', originalId);
-      console.log('- memo.originalId:', memo.originalId);
-      console.log('- memo.id.toString():', memo.id.toString());
       
       const nearbyIds = allBoardItems
         .filter(item => item.itemType === 'memo')
         .map(item => item.originalId)
         .filter(id => Math.abs(parseInt(id) - parseInt(originalId)) <= 20);
-      console.log('- 近似ID(±20):', nearbyIds);
       
       if (memoBoardItems.length === 0) {
-        console.log('- itemType=memoのアイテム数:', allBoardItems.filter(item => item.itemType === 'memo').length);
       }
     }
 

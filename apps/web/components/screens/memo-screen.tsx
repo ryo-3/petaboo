@@ -145,15 +145,6 @@ function MemoScreen({
   const safeAllTaggings = taggingsError ? [] : allTaggings || [];
   const safeAllBoardItems = boardItemsError ? [] : allBoardItems || [];
   
-  // デバッグ：データ取得状況を確認
-  console.log('MemoScreen データ取得状況:', {
-    tagsLength: tags?.length || 0,
-    boardsLength: boards?.length || 0,
-    allTaggingsLength: safeAllTaggings?.length || 0,
-    allBoardItemsLength: safeAllBoardItems?.length || 0,
-    // 削除済みメモで使うboard items sample（デバッグ用）
-    sampleBoardItems: safeAllBoardItems?.slice(0, 3)
-  });
   
 
 

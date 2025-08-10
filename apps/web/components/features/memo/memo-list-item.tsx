@@ -44,13 +44,6 @@ function MemoListItem({
   const boards = preloadedBoards;
   const tags = preloadedTags;
 
-  // 削除済みメモのボード表示調査（最初の1つのみ）
-  if (isDeleted && memo.id <= 100) {
-    console.log('📝 MemoListItem - 削除済みメモのボード表示調査:');
-    console.log('メモID:', memo.id, 'showBoardName:', showBoardName);
-    console.log('preloadedBoards:', boards);
-    console.log('ボード表示判定:', showBoardName && boards && boards.length > 0);
-  }
   const { displayTitle, displayContent, lastEditTime } = {
     displayTitle: memo.title,
     displayContent: memo.content || "",

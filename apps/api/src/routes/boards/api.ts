@@ -120,7 +120,6 @@ const AddItemToBoardSchema = z.object({
 });
 
 export function createAPI(app: AppType) {
-  console.log('=== BOARDS API LOADED WITH removeItemFromBoardRoute ===');
   
   // ボード一覧取得
   const getBoardsRoute = createRoute({
@@ -1202,16 +1201,9 @@ export function createAPI(app: AppType) {
   });
 
   app.openapi(removeItemFromBoardRoute, async (c) => {
-    console.log('removeItemFromBoardRoute called:', {
-      method: c.req.method,
-      url: c.req.url,
-      params: c.req.param(),
-      query: c.req.query()
-    });
     
     const auth = getAuth(c);
     if (!auth?.userId) {
-      console.log('Unauthorized - no userId');
       return c.json({ error: "Unauthorized" }, 401);
     }
 
@@ -1220,7 +1212,6 @@ export function createAPI(app: AppType) {
     const { itemType } = c.req.valid("query");
     const db = c.env.db;
     
-    console.log('Parsed params:', { boardId, itemId, itemType, userId: auth.userId });
 
     // ボードの所有権確認
     const board = await db
@@ -1253,13 +1244,6 @@ export function createAPI(app: AppType) {
         )
       );
     
-    console.log('Debug - board_items search result:', {
-      boardId,
-      itemType,
-      originalId,
-      foundItems: existingItems,
-      activeItems: existingItems.filter(item => !item.deletedAt)
-    });
 
     // アイテムをソフト削除（deletedAtを設定）
     const result = await db
@@ -1278,7 +1262,6 @@ export function createAPI(app: AppType) {
       // レコードが見つからない場合、既に削除済みかもしれないので確認
       const alreadyDeletedItems = existingItems.filter(item => item.deletedAt);
       if (alreadyDeletedItems.length > 0) {
-        console.log('Item already deleted, treating as success');
         // 既に削除済みの場合は成功として扱う
       } else {
         // 本当にレコードが存在しない場合のみエラー

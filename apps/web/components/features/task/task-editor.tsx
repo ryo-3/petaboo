@@ -138,6 +138,9 @@ function TaskEditor({
     onDeleteAndSelectNext,
   });
 
+  // アニメーション状態管理
+  const [isAnimating, setIsAnimating] = useState(false);
+
   // 削除済みタスクの操作用（React Hooks違反を避けるため常に呼び出し、nullを許可）
   const deletedTaskActions = useDeletedTaskActions({
     task: isDeleted ? (task as DeletedTask) : null,
@@ -147,7 +150,8 @@ function TaskEditor({
     },
     onRestoreAndSelectNext: () => {
       if (onRestore) onRestore();
-    }
+    },
+    onAnimationChange: setIsAnimating,
   });
 
   // 削除ボタンのハンドラー（ボード紐づきチェック付き）
@@ -834,6 +838,8 @@ function TaskEditor({
                   <button
                     onClick={() => {
                       if (isDeleted && deletedTaskActions) {
+                        // 削除済みタスクの場合は完全削除（蓋を開く）
+                        setIsAnimating(true);
                         deletedTaskActions.showDeleteConfirmation();
                       } else if (onDelete) {
                         onDelete();
@@ -842,7 +848,7 @@ function TaskEditor({
                     className="flex items-center justify-center size-7 rounded-md bg-red-100 hover:bg-red-200"
                     title="完全削除"
                   >
-                    <TrashIcon className="size-4" />
+                    <TrashIcon className="size-4" isLidOpen={isAnimating || (isDeleted && deletedTaskActions?.showDeleteModal)} />
                   </button>
                 </div>
               )}

@@ -1238,11 +1238,28 @@ export function createAPI(app: AppType) {
       return c.json({ error: "Board not found" }, 404);
     }
 
-    // itemIdからoriginalIdを取得
-    const originalId = await getOriginalId(itemId, itemType, auth.userId, db);
-    if (!originalId) {
-      return c.json({ error: "Item not found" }, 404);
-    }
+    // itemIdをoriginalIdとして直接使用（board_itemsテーブルはoriginalIdで管理）
+    const originalId = itemId.toString();
+
+    // デバッグ: board_itemsテーブルの該当レコードを確認
+    const existingItems = await db
+      .select()
+      .from(boardItems)
+      .where(
+        and(
+          eq(boardItems.boardId, boardId),
+          eq(boardItems.itemType, itemType),
+          eq(boardItems.originalId, originalId)
+        )
+      );
+    
+    console.log('Debug - board_items search result:', {
+      boardId,
+      itemType,
+      originalId,
+      foundItems: existingItems,
+      activeItems: existingItems.filter(item => !item.deletedAt)
+    });
 
     // アイテムをソフト削除（deletedAtを設定）
     const result = await db
@@ -1258,7 +1275,15 @@ export function createAPI(app: AppType) {
       );
 
     if (result.changes === 0) {
-      return c.json({ error: "Item not found in board" }, 404);
+      // レコードが見つからない場合、既に削除済みかもしれないので確認
+      const alreadyDeletedItems = existingItems.filter(item => item.deletedAt);
+      if (alreadyDeletedItems.length > 0) {
+        console.log('Item already deleted, treating as success');
+        // 既に削除済みの場合は成功として扱う
+      } else {
+        // 本当にレコードが存在しない場合のみエラー
+        return c.json({ error: "Item not found in board" }, 404);
+      }
     }
 
     // ボードのupdatedAtを更新

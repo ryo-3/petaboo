@@ -114,6 +114,9 @@ npm run check-types && npm run lint  # コミット前必須
 npm run check:wsl                     # コミット前必須（WSL用）
 
 git commit --no-verify               # WSL環境でpre-commitフックをスキップ
+
+# データベースリセット（API側で実行）
+cd apps/api && npm run db:reset      # ローカルデータベースを完全削除
 ```
 
 ### WSL環境の制限事項

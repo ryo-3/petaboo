@@ -10,7 +10,8 @@
   "scripts": {
     "db:studio": "drizzle-kit studio --port 8795",
     "db:push": "drizzle-kit push",
-    "dev": "tsx --env-file=.env index.ts"
+    "dev": "tsx --env-file=.env index.ts",
+    "db:reset": "node reset-db.js"
   },
   "dependencies": {
     "@hono/auth-js": "^1.0.15",

@@ -64,16 +64,20 @@ export const UserPreferencesProvider: React.FC<UserPreferencesProviderProps> = (
       const response = await fetch(`${API_BASE}/user-preferences/${userId}`);
       
       if (!response.ok) {
-        throw new Error('Failed to fetch user preferences');
+        // サーバーエラーやAPIが見つからない場合はデフォルト値を使用
+        console.warn('Failed to fetch user preferences, using defaults');
+        setPreferences(getDefaultPreferences());
+        setLoading(false);
+        return;
       }
       
       const data = await response.json();
       setPreferences(data);
     } catch (err) {
-      console.error('Error fetching user preferences:', err);
-      setError(err instanceof Error ? err.message : 'Unknown error');
-      // エラー時はデフォルト値を設定
+      console.warn('Error fetching user preferences, using defaults:', err);
+      // エラー時はデフォルト設定を使用してアプリが動作するようにする
       setPreferences(getDefaultPreferences());
+      setError(null); // エラー状態をリセット
     } finally {
       setLoading(false);
     }

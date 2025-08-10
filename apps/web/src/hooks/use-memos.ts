@@ -67,11 +67,26 @@ export function useUpdateMemo() {
       const responseData = await response.json()
       return responseData as Memo
     },
-    onSuccess: (updatedMemo, { id }) => {
-      // 特定のメモのキャッシュを更新
+    onSuccess: (updatedMemo, { id, data }) => {
+      // APIが不完全なレスポンスを返す場合があるので、キャッシュから既存メモを取得して更新
       queryClient.setQueryData<Memo[]>(['memos'], (oldMemos) => {
         if (!oldMemos) return [updatedMemo]
-        return oldMemos.map(memo => memo.id === id ? updatedMemo : memo)
+        return oldMemos.map(memo => {
+          if (memo.id === id) {
+            // APIが完全なメモオブジェクトを返した場合はそれを使用
+            if (updatedMemo.title !== undefined && updatedMemo.content !== undefined) {
+              return updatedMemo
+            }
+            // APIが不完全な場合は既存メモを更新データでマージ
+            return {
+              ...memo,
+              title: data.title ?? memo.title,
+              content: data.content ?? memo.content,
+              updatedAt: Math.floor(Date.now() / 1000)
+            }
+          }
+          return memo
+        })
       })
     },
   })

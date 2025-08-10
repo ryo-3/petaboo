@@ -65,6 +65,7 @@ function MemoEditor({
   preloadedTaggings = [],
   preloadedBoardItems = []
 }: MemoEditorProps) {
+  // ログを一度だけ出力（useEffectで管理）
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const baseViewerRef = useRef<HTMLDivElement>(null);
   
@@ -77,7 +78,7 @@ function MemoEditor({
   
   // このメモに実際に紐づいているボードのみを抽出
   const itemBoards = useMemo(() => {
-    if (!memo || memo.id === 0) return [];
+    if (!memo || memo.id === undefined || memo.id === 0) return [];
     
     const originalId = memo.originalId || memo.id.toString();
     
@@ -129,7 +130,7 @@ function MemoEditor({
   
   // 事前取得されたデータからメモのタグを抽出（シンプル）
   const currentTags = useMemo(() => {
-    if (!memo || memo.id === 0) return [];
+    if (!memo || memo.id === undefined || memo.id === 0) return [];
     const originalId = memo.originalId || memo.id.toString();
     
     const memoTaggings = preloadedTaggings.filter(
@@ -169,7 +170,7 @@ function MemoEditor({
 
   // タグに変更があるかチェック（シンプル版）
   const hasTagChanges = useMemo(() => {
-    if (!memo || memo.id === 0) return false;
+    if (!memo || memo.id === undefined || memo.id === 0) return false;
     
     const currentTagIds = currentTags.map(tag => tag.id).sort();
     const localTagIds = localTags.map(tag => tag.id).sort();
@@ -179,7 +180,7 @@ function MemoEditor({
 
   // タグの差分を計算して一括更新する関数
   const updateTaggings = useCallback(async (memoId: string) => {
-    if (!memo || memo.id === 0) return;
+    if (!memo || memo.id === undefined || memo.id === 0) return;
 
     const currentTagIds = currentTags.map(tag => tag.id);
     const localTagIds = localTags.map(tag => tag.id);
@@ -502,7 +503,7 @@ function MemoEditor({
               handleContentChange(newContent);
             }}
             readOnly={isDeleted}
-            className={`w-full ${customHeight || 'flex-1'} resize-none outline-none leading-relaxed font-medium pb-10 mb-2 ${memo && memo.id !== 0 && (itemBoards.length > 0 || localTags.length > 0) ? 'mt-0' : 'mt-2'} pr-1 ${
+            className={`w-full ${customHeight || 'flex-1'} resize-none outline-none leading-relaxed font-medium pb-10 mb-2 mt-2 pr-1 ${
               isDeleted 
                 ? 'text-red-500 bg-red-50 cursor-not-allowed' 
                 : 'text-gray-500'

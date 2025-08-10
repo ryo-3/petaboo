@@ -65,11 +65,29 @@ export function useUpdateTask() {
       const result = await response.json()
       return result
     },
-    onSuccess: (updatedTask, { id }) => {
-      // タスク一覧の特定タスクを更新
+    onSuccess: (updatedTask, { id, data }) => {
+      // APIが不完全なレスポンスを返す場合があるので、キャッシュから既存タスクを取得して更新
       queryClient.setQueryData<Task[]>(['tasks'], (oldTasks) => {
         if (!oldTasks) return [updatedTask]
-        return oldTasks.map(task => task.id === id ? updatedTask : task)
+        return oldTasks.map(task => {
+          if (task.id === id) {
+            // APIが完全なタスクオブジェクトを返した場合はそれを使用
+            if (updatedTask.title !== undefined && updatedTask.description !== undefined) {
+              return updatedTask
+            }
+            // APIが不完全な場合は既存タスクを更新データでマージ
+            return {
+              ...task,
+              title: data.title ?? task.title,
+              description: data.description ?? task.description,
+              status: data.status ?? task.status,
+              priority: data.priority ?? task.priority,
+              dueDate: data.dueDate ?? task.dueDate,
+              updatedAt: Math.floor(Date.now() / 1000)
+            }
+          }
+          return task
+        })
       })
       // ボード統計の再計算のためボード一覧を無効化
       queryClient.invalidateQueries({ queryKey: ["boards"] });

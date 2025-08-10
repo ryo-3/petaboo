@@ -177,12 +177,9 @@ function MemoScreen({
         onDeselectAndStayOnMemoList?.();
         setMemoScreenMode("list");
       } else if (isNewMemo) {
-        // 新規作成は連続作成のため再マウント
-        onDeselectAndStayOnMemoList?.();
-        setTimeout(() => {
-          setCreateEditorKey((prev) => prev + 1); // キーを変更して再マウント
-          setMemoScreenMode("create");
-        }, 700); // 保存中表示(600ms)より少し長く
+        // 新規作成後は、作成されたメモを選択して表示モードに切り替え
+        onSelectMemo(savedMemo);
+        setMemoScreenMode("view");
       } else {
         // 既存メモ更新は選択状態更新
         onSelectMemo(savedMemo);
@@ -564,20 +561,18 @@ function MemoScreen({
             
             {/* 選択されたメモごとにTagSelectorを表示 */}
             <div className="space-y-4 max-h-64 overflow-y-auto">
-              {Array.from(checkedMemos).map(memoId => {
-                const memo = memos?.find(m => m.id === memoId);
-                if (!memo) return null;
-                
-                return (
-                  <div key={memoId} className="border rounded-lg p-3">
+              {Array.from(checkedMemos)
+                .map(memoId => memos?.find(m => m.id === memoId))
+                .filter((memo): memo is NonNullable<typeof memo> => memo !== undefined)
+                .map(memo => (
+                  <div key={memo.id} className="border rounded-lg p-3">
                     <div className="text-sm font-medium mb-2 truncate">
                       {memo.title || 'タイトルなし'}
                     </div>
                     {/* TODO: 一括タグ付け機能の実装 */}
                     <div className="text-sm text-gray-500">タグ選択機能（実装予定）</div>
                   </div>
-                );
-              })}
+                ))}
             </div>
             
             <div className="flex justify-end mt-4 gap-2">

@@ -108,17 +108,20 @@ function SidebarMemoList({ onSelectMemo, onEditMemo, onDeleteMemo, selectedMemoI
   return (
     <div className="h-full overflow-y-auto overflow-x-hidden">
       <ul className="space-y-1 pb-8">
-        {memos.map((memo: Memo) => (
-          <li key={memo.id}>
-            <SidebarMemoItem
-              memo={memo}
-              onSelect={() => onSelectMemo(memo)}
-              onEdit={() => onEditMemo(memo)}
-              onDelete={() => handleDelete(memo)}
-              isSelected={selectedMemoId === memo.id}
-            />
-          </li>
-        ))}
+        {memos.map((memo: Memo) => {
+          if (!memo || memo.id === undefined) return null;
+          return (
+            <li key={`memo-${memo.id}`}>
+              <SidebarMemoItem
+                memo={memo}
+                onSelect={() => onSelectMemo(memo)}
+                onEdit={() => onEditMemo(memo)}
+                onDelete={() => handleDelete(memo)}
+                isSelected={selectedMemoId === memo.id}
+              />
+            </li>
+          );
+        })}
       </ul>
     </div>
   )

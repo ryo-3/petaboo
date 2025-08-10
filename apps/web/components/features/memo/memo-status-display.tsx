@@ -118,6 +118,7 @@ function MemoStatusDisplay({
 
     const map = new Map();
     filteredMemos.forEach(memo => {
+      if (!memo || memo.id === undefined) return;
       const originalId = memo.originalId || memo.id.toString();
       
       // メモのタグを抽出

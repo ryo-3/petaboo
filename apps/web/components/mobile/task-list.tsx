@@ -51,14 +51,16 @@ function TaskList({
   return (
     <div className="h-full overflow-y-auto overflow-x-hidden">
       <ul className="space-y-1 pb-8">
-        {tasks.map((task: Task) => (
-          <li key={task.id}>
-            <SidebarItem
-              isSelected={selectedTaskId === task.id}
-              onSelect={() => onSelectTask(task)}
-              onEdit={() => onEditTask(task)}
-              onDelete={() => handleDelete(task)}
-            >
+        {tasks.map((task: Task) => {
+          if (!task || task.id === undefined) return null;
+          return (
+            <li key={`task-${task.id}`}>
+              <SidebarItem
+                isSelected={selectedTaskId === task.id}
+                onSelect={() => onSelectTask(task)}
+                onEdit={() => onEditTask(task)}
+                onDelete={() => handleDelete(task)}
+              >
               <div className="font-medium text-sm text-gray-800 truncate mb-1 flex items-center gap-1">
                 <span className={`w-2 h-2 rounded-full ${getPriorityIndicatorClass(task.priority)}`} />
                 {task.title}
@@ -81,9 +83,10 @@ function TaskList({
                   期限: {formatDateOnly(task.dueDate)}
                 </div>
               )}
-            </SidebarItem>
-          </li>
-        ))}
+              </SidebarItem>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

@@ -137,10 +137,7 @@ app.openapi(
         description: "Created note",
         content: {
           "application/json": {
-            schema: z.object({ 
-              success: z.boolean(),
-              id: z.number()
-            }),
+            schema: MemoSchema,
           },
         },
       },
@@ -182,22 +179,33 @@ app.openapi(
     }
 
     const { title, content } = parsed.data;
+    const createdAt = Math.floor(Date.now() / 1000);
     const result = await db.insert(memos).values({
       userId: auth.userId,
       originalId: "", // 後で更新
       uuid: generateUuid(), // UUID生成
       title,
       content,
-      createdAt: Math.floor(Date.now() / 1000),
+      createdAt,
     }).returning({ id: memos.id });
 
     // originalIdを生成して更新
     const originalId = generateOriginalId(result[0].id);
     await db.update(memos)
-      .set({ originalId })
+      .set({ originalId, updatedAt: createdAt })
       .where(eq(memos.id, result[0].id));
 
-    return c.json({ success: true, id: result[0].id as number, originalId }, 200);
+    // 作成されたメモの完全なオブジェクトを返す
+    const newMemo = {
+      id: result[0].id,
+      originalId,
+      title,
+      content: content || "",
+      createdAt,
+      updatedAt: createdAt
+    };
+
+    return c.json(newMemo, 200);
   }
 );
 

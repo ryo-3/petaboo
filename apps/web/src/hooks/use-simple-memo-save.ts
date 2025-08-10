@@ -64,6 +64,11 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
 
   // メモが変更された時の初期値更新
   useEffect(() => {
+    console.log('[useSimpleMemoSave] memo changed, updating content:', {
+      newMemo: memo,
+      newContent: memo?.content,
+      currentContent: content
+    });
     if (memo) {
       const memoTitle = memo.title || ''
       const memoContent = memo.content || ''
@@ -77,7 +82,7 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
       setInitialTitle('')
       setInitialContent('')
     }
-  }, [memo])
+  }, [memo]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const executeSave = useCallback(async () => {
     const isEmpty = !title.trim() && !content.trim()

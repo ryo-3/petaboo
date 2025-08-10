@@ -13,6 +13,7 @@ import TagTriggerButton from "@/components/features/tags/tag-trigger-button";
 import { TAG_COLORS } from "@/src/constants/colors";
 import { useSimpleMemoSave } from "@/src/hooks/use-simple-memo-save";
 import { useCreateTagging, useDeleteTagging } from "@/src/hooks/use-taggings";
+import { useDeletedMemoActions } from "./use-deleted-memo-actions";
 import DateInfo from "@/components/shared/date-info";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Tag, Tagging } from "@/src/types/tag";
@@ -29,7 +30,7 @@ interface MemoEditorProps {
     isNewMemo: boolean
   ) => void;
   onDelete?: () => void;
-  onDeleteAndSelectNext?: (deletedMemo: Memo) => void;
+  onDeleteAndSelectNext?: (deletedMemo: Memo | DeletedMemo) => void;
   onRestore?: () => void;  // 削除済み復元用
   isLidOpen?: boolean;
   customHeight?: string;
@@ -142,6 +143,14 @@ function MemoEditor({
   // タグ操作用のmutation（既存API使用）
   const createTaggingMutation = useCreateTagging();
   const deleteTaggingMutation = useDeleteTagging();
+
+  // 削除済みメモの削除処理（条件付きでフック使用）
+  const deletedMemoActions = isDeleted && deletedMemo ? useDeletedMemoActions({
+    memo: deletedMemo,
+    onClose,
+    onDeleteAndSelectNext,
+    onRestoreAndSelectNext: onDeleteAndSelectNext,
+  }) : null;
 
   // タグ初期化（メモが変わった時のみ実行）
   useEffect(() => {
@@ -320,7 +329,11 @@ function MemoEditor({
 
   // 削除ボタンのハンドラー（ボード紐づきチェック付き）
   const handleDeleteClick = () => {
-    if (itemBoards && itemBoards.length > 0) {
+    if (isDeleted && deletedMemoActions) {
+      // 削除済みメモの場合は完全削除
+      setIsAnimating(true);
+      deletedMemoActions.showDeleteConfirmation();
+    } else if (itemBoards && itemBoards.length > 0) {
       // ボードに紐づいている場合はモーダル表示と同時に蓋を開く
       setIsAnimating(true);
       setShowDeleteModal(true);
@@ -458,10 +471,11 @@ function MemoEditor({
                     削除日時: {new Date(deletedMemo.deletedAt * 1000).toLocaleDateString('ja-JP')}
                   </span>
                 )}
-                {isDeleted && onRestore && (
+                {isDeleted && deletedMemoActions && (
                   <button
-                    onClick={onRestore}
-                    className="flex items-center justify-center size-7 rounded-md bg-blue-100 text-blue-600 hover:bg-blue-200 ml-2"
+                    onClick={deletedMemoActions.handleRestore}
+                    disabled={deletedMemoActions.isRestoring}
+                    className="flex items-center justify-center size-7 rounded-md bg-blue-100 text-blue-600 hover:bg-blue-200 ml-2 disabled:opacity-50"
                   >
                     <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -532,6 +546,21 @@ function MemoEditor({
               </div>
             </div>
           }
+          parentElement={baseViewerRef.current}
+        />
+      )}
+      
+      {/* 削除済みメモの削除確認モーダル */}
+      {isDeleted && deletedMemoActions && baseViewerRef.current && (
+        <SingleDeleteConfirmation
+          isOpen={deletedMemoActions.showDeleteModal}
+          onClose={deletedMemoActions.hideDeleteConfirmation}
+          onConfirm={deletedMemoActions.handlePermanentDelete}
+          itemTitle={memo?.title}
+          itemType="memo"
+          deleteType="permanent"
+          isLoading={deletedMemoActions.isDeleting}
+          position="right-panel"
           parentElement={baseViewerRef.current}
         />
       )}

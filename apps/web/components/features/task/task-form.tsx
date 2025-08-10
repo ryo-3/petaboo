@@ -35,6 +35,7 @@ interface TaskFormProps {
   customHeight?: string;
   tags?: Tag[];
   boards?: Board[];
+  isDeleted?: boolean;
 }
 
 export interface TaskFormHandle {
@@ -62,6 +63,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
     customHeight,
     tags = [],
     boards = [],
+    isDeleted = false,
   } = props;
   const titleInputRef = useRef<HTMLInputElement>(null);
   const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -156,6 +158,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
             onStatusChange(value as "todo" | "in_progress" | "completed")
           }
           fullWidth
+          disabled={isDeleted}
         />
 
         <CustomSelector
@@ -166,6 +169,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
             onPriorityChange(value as "low" | "medium" | "high")
           }
           fullWidth
+          disabled={isDeleted}
         />
 
         <div className="flex-1 flex gap-2.5 items-center">
@@ -174,6 +178,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
               value={categoryId}
               onChange={onCategoryChange}
               allowCreate={true}
+              disabled={isDeleted}
             />
           </div>
 
@@ -183,6 +188,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
               value={dueDate}
               onChange={onDueDateChange}
               fullWidth
+              disabled={isDeleted}
             />
           </div>
         </div>

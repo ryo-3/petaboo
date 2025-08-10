@@ -851,6 +851,7 @@ function TaskEditor({
           customHeight={customHeight}
           tags={task && task.id !== 0 ? localTags : []}
           boards={task && task.id !== 0 ? itemBoards : []}
+          isDeleted={isDeleted}
         />
         </BaseViewer>
       </div>

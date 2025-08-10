@@ -20,6 +20,7 @@ interface CustomSelectorProps {
   width?: string;
   allowCreate?: boolean;
   onCreateNew?: (newValue: string) => void;
+  disabled?: boolean;
 }
 
 function CustomSelector({
@@ -30,7 +31,8 @@ function CustomSelector({
   fullWidth = false,
   width = "82px",
   allowCreate = false,
-  onCreateNew
+  onCreateNew,
+  disabled = false
 }: CustomSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -108,14 +110,15 @@ function CustomSelector({
         <div
           className={`${FORM_STYLES.selector} ${
             isOpen ? "rounded-t-lg" : "rounded-lg"
-          } ${fullWidth ? "w-full" : ""}`}
+          } ${fullWidth ? "w-full" : ""} ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
           style={fullWidth ? {} : { width }}
           onClick={() => {
+            if (disabled) return;
             const newOpenState = !isOpen;
             setIsOpen(newOpenState);
             setActiveSelector(newOpenState ? selectorId : null);
           }}
-          title="クリックして変更"
+          title={disabled ? "" : "クリックして変更"}
         >
           <div className={FORM_STYLES.selectorText}>
             {selectedOption?.color && (
@@ -124,7 +127,7 @@ function CustomSelector({
             {selectedOption?.label}
           </div>
           <ChevronDownIcon 
-            className={`${FORM_STYLES.chevron} ${isOpen ? "rotate-180" : ""}`}
+            className={`${FORM_STYLES.chevron} ${isOpen ? "rotate-180" : ""} ${disabled ? "opacity-50" : ""}`}
           />
         </div>
 

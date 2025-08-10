@@ -8,6 +8,7 @@ interface CategorySelectorProps {
   allowCreate?: boolean;
   placeholder?: string;
   className?: string;
+  disabled?: boolean;
 }
 
 export default function CategorySelector({
@@ -15,6 +16,7 @@ export default function CategorySelector({
   onChange,
   allowCreate = true,
   className,
+  disabled = false,
 }: CategorySelectorProps) {
   const { data: categories = [] } = useCategories();
   const createCategory = useCreateCategory();
@@ -61,6 +63,7 @@ export default function CategorySelector({
         fullWidth
         allowCreate={allowCreate}
         onCreateNew={handleCreateCategory}
+        disabled={disabled}
       />
     </div>
   );

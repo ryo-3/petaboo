@@ -5,6 +5,7 @@ interface DateInputProps {
   value: string;
   onChange: (value: string) => void;
   fullWidth?: boolean;
+  disabled?: boolean;
 }
 
 function DateInput({
@@ -12,6 +13,7 @@ function DateInput({
   value,
   onChange,
   fullWidth = false,
+  disabled = false,
 }: DateInputProps) {
   return (
     <div>
@@ -22,9 +24,10 @@ function DateInput({
         type="date"
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
         className={`${FORM_STYLES.input} ${
           fullWidth ? "w-full" : ""
-        }`}
+        } ${disabled ? "cursor-not-allowed opacity-60" : ""}`}
       />
     </div>
   );

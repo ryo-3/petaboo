@@ -264,6 +264,29 @@ function MemoScreen({
     (mode: string) => setMemoScreenMode(mode as MemoScreenMode)
   );
 
+  // 削除済みメモの削除完了後の処理（左側リスト用）
+  const handleDeletedMemoDeleteComplete = useCallback((deletedMemoId: number) => {
+    // 削除されたメモが現在選択されている場合、次のメモを選択
+    if (selectedDeletedMemo && selectedDeletedMemo.id === deletedMemoId && deletedMemos) {
+      const displayOrder = getMemoDisplayOrder();
+      const nextItem = getNextItemAfterDeletion(
+        deletedMemos,
+        selectedDeletedMemo,
+        displayOrder
+      );
+
+      setTimeout(() => {
+        if (nextItem && nextItem.id !== selectedDeletedMemo.id) {
+          onSelectDeletedMemo(nextItem);
+          setMemoScreenMode("view");
+        } else {
+          setMemoScreenMode("list");
+          onDeselectAndStayOnMemoList?.();
+        }
+      }, 100);
+    }
+  }, [selectedDeletedMemo, deletedMemos, onSelectDeletedMemo, onDeselectAndStayOnMemoList, setMemoScreenMode]);
+
   // 左側一括削除関連（チェックボックスで選択したアイテムの一括削除）
   const {
     handleBulkDelete: handleLeftBulkDelete,
@@ -279,6 +302,7 @@ function MemoScreen({
     deletedMemos,
     localMemos: memos || [],
     onMemoDelete: handleItemDeselect,
+    onDeletedMemoDelete: handleDeletedMemoDeleteComplete, // 削除済みメモ用コールバック
     deleteButtonRef,
     setIsDeleting: setIsLeftDeleting,
     setIsLidOpen: setIsLeftLidOpen,

@@ -20,6 +20,7 @@ interface UseMemosBulkDeleteProps {
   deletedMemos?: DeletedMemo[];
   localMemos: Memo[];
   onMemoDelete?: (id: number) => void;
+  onDeletedMemoDelete?: (id: number) => void; // 削除済みメモ用コールバック
   deleteButtonRef?: React.RefObject<HTMLButtonElement | null>;
   setIsDeleting?: (isDeleting: boolean) => void;
   setIsLidOpen?: (isOpen: boolean) => void;
@@ -36,6 +37,7 @@ export function useMemosBulkDelete({
   deletedMemos,
   localMemos, // eslint-disable-line @typescript-eslint/no-unused-vars
   onMemoDelete,
+  onDeletedMemoDelete,
   deleteButtonRef,
   setIsDeleting,
   setIsLidOpen,
@@ -147,7 +149,9 @@ export function useMemosBulkDelete({
     originalTotalCount?: number
   ) => {
     const onStateUpdate = (id: number) => {
-      if (activeTab !== "deleted" && onMemoDelete) {
+      if (activeTab === "deleted" && onDeletedMemoDelete) {
+        onDeletedMemoDelete(id);
+      } else if (activeTab !== "deleted" && onMemoDelete) {
         onMemoDelete(id);
       }
     };

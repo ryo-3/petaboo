@@ -27,7 +27,7 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
     },
     onSuccess: async () => {
       // キャッシュを手動更新（削除されたアイテムをすぐに除去）
-      queryClient.setQueryData(['deleted-memos'], (oldDeletedMemos: DeletedMemo[] | undefined) => {
+      queryClient.setQueryData(['deletedMemos'], (oldDeletedMemos: DeletedMemo[] | undefined) => {
         if (!oldDeletedMemos) return []
         return oldDeletedMemos.filter(m => m.originalId !== memo.originalId)
       })
@@ -46,7 +46,7 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
       }
       
       // 最後にキャッシュを無効化して最新データを取得
-      queryClient.invalidateQueries({ queryKey: ["deleted-memos"] })
+      queryClient.invalidateQueries({ queryKey: ["deletedMemos"] })
       queryClient.invalidateQueries({ queryKey: ["board-deleted-items"] })
     },
   })

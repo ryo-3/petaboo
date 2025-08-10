@@ -558,6 +558,31 @@ function MemoEditor({
           isLoading={deletedMemoActions.isDeleting}
           position="center"
           customTitle={`「${memo?.title || 'タイトルなし'}」の完全削除`}
+          customMessage={
+            itemBoards.length > 0 ? (
+              <div className="text-center">
+                <p className="text-sm text-gray-700 mb-3">
+                  このメモは以下のボードに紐づいています
+                </p>
+                <div className="mb-3 flex justify-center">
+                  <BoardChips boards={itemBoards} variant="compact" />
+                </div>
+                <div className="mt-3 p-3 bg-red-50 rounded-md">
+                  <p className="text-sm text-red-800 font-medium">この操作は取り消せません</p>
+                  <p className="text-xs text-red-700 mt-1">データは永久に失われます</p>
+                  <p className="text-xs text-red-700 mt-1">ボードからも完全に削除されます</p>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center">
+                <div className="mt-3 p-3 bg-red-50 rounded-md">
+                  <p className="text-sm text-red-800 font-medium">この操作は取り消せません</p>
+                  <p className="text-xs text-red-700 mt-1">データは永久に失われます</p>
+                  <p className="text-xs text-red-700 mt-1">ボードからも完全に削除されます</p>
+                </div>
+              </div>
+            )
+          }
         />
       )}
     </>

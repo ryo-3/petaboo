@@ -63,10 +63,16 @@ export function DeletionWarningMessage({
       )}
       
       {isPermanentDelete && (
-        <div className="mt-3 p-3 bg-red-50 rounded-md">
-          <p className="text-sm text-red-800 font-medium">この操作は取り消せません</p>
-          <p className="text-xs text-red-700 mt-1">データは永久に失われます</p>
-        </div>
+        <>
+          <div className="mt-3 p-3 bg-red-50 rounded-md">
+            <p className="text-sm text-red-800 font-medium">この操作は取り消せません</p>
+            <p className="text-xs text-red-700 mt-1">データは永久に失われます</p>
+            <p className="text-xs text-red-700 mt-1">ボードからも完全に削除されます</p>
+          </div>
+          <p className="text-xs text-gray-500 mt-2">
+            ※削除中にタブを切り替えると処理が中断されます
+          </p>
+        </>
       )}
       
       {isLimited && (
@@ -76,9 +82,17 @@ export function DeletionWarningMessage({
       )}
       
       {!isPermanentDelete && (
-        <p className="text-xs text-gray-500 mt-2">
-          ※削除したアイテムは削除済アイテムに移動します
-        </p>
+        <>
+          <p className="text-xs text-gray-500 mt-2">
+            ※削除したアイテムは削除済アイテムに移動します
+          </p>
+          <p className="text-xs text-gray-500 mt-1">
+            ※ボードに紐づいている場合、各ボードの削除済みタブに移動します
+          </p>
+          <p className="text-xs text-gray-500 mt-1">
+            ※削除中にタブを切り替えると処理が中断されます
+          </p>
+        </>
       )}
     </div>
   );

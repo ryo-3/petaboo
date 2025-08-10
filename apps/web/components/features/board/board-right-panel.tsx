@@ -2,7 +2,6 @@
 
 import MemoEditor from "@/components/features/memo/memo-editor";
 import TaskEditor from "@/components/features/task/task-editor";
-import DeletedTaskViewer from "@/components/features/task/deleted-task-viewer";
 import MemoScreen from "@/components/screens/memo-screen";
 import TaskScreen from "@/components/screens/task-screen";
 import RightPanel from "@/components/ui/layout/right-panel";

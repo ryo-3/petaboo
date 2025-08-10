@@ -6,7 +6,7 @@ import { useAuth } from '@clerk/nextjs'
 import { tasksApi } from '@/src/lib/api-client'
 
 interface UseDeletedTaskActionsProps {
-  task: DeletedTask
+  task: DeletedTask | null
   onClose: () => void
   onDeleteAndSelectNext?: (deletedTask: DeletedTask, preDeleteDisplayOrder?: number[]) => void
   onRestoreAndSelectNext?: (deletedTask: DeletedTask) => void
@@ -28,17 +28,17 @@ export function useDeletedTaskActions({ task, onClose, onDeleteAndSelectNext, on
       // キャッシュを手動更新（削除されたアイテムをすぐに除去）
       queryClient.setQueryData(['deleted-tasks'], (oldDeletedTasks: DeletedTask[] | undefined) => {
         if (!oldDeletedTasks) return []
-        return oldDeletedTasks.filter(t => t.originalId !== task.originalId)
+        return oldDeletedTasks.filter(t => task && t.originalId !== task.originalId)
       })
       
       // ボード固有の削除済みアイテムキャッシュも手動更新
       queryClient.setQueryData(['board-deleted-items'], (oldItems: any[] | undefined) => {
         if (!oldItems) return []
-        return oldItems.filter((item: any) => item.originalId !== task.originalId)
+        return oldItems.filter((item: any) => task && item.originalId !== task.originalId)
       })
       
       // 即座に次のタスク選択機能を使用（手動更新済みなのでタイミング問題なし）
-      if (onDeleteAndSelectNext) {
+      if (onDeleteAndSelectNext && task) {
         onDeleteAndSelectNext(task)
       } else {
         onClose()
@@ -66,7 +66,9 @@ export function useDeletedTaskActions({ task, onClose, onDeleteAndSelectNext, on
           // アニメーション完了後の処理
           try {
             // API実行（onSuccessで次選択とキャッシュ更新が実行される）
-            await permanentDeleteTask.mutateAsync(task.originalId)
+            if (task) {
+              await permanentDeleteTask.mutateAsync(task.originalId)
+            }
             
             // 蓋を閉じる
             setTimeout(() => {
@@ -79,7 +81,9 @@ export function useDeletedTaskActions({ task, onClose, onDeleteAndSelectNext, on
       } else {
         // アニメーション要素がない場合は通常の処理
         // API実行（onSuccessで次選択とキャッシュ更新が実行される）
-        await permanentDeleteTask.mutateAsync(task.originalId)
+        if (task) {
+          await permanentDeleteTask.mutateAsync(task.originalId)
+        }
         
         setTimeout(() => {
           (window as Window & { closeDeletingLid?: () => void }).closeDeletingLid?.();
@@ -94,11 +98,13 @@ export function useDeletedTaskActions({ task, onClose, onDeleteAndSelectNext, on
   const handleRestore = async () => {
     try {
       // API実行
-      await restoreTask.mutateAsync(task.originalId)
+      if (task) {
+        await restoreTask.mutateAsync(task.originalId)
+      }
       
       // 復元完了後、少し遅延してからUIを更新（アニメーションと状態更新を空ける）
       setTimeout(() => {
-        if (onRestoreAndSelectNext) {
+        if (onRestoreAndSelectNext && task) {
           onRestoreAndSelectNext(task)
         } else {
           onClose()

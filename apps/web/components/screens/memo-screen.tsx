@@ -100,8 +100,6 @@ function MemoScreen({
   // 削除ボタンの参照
   const deleteButtonRef = useRef<HTMLButtonElement>(null);
 
-  // // 削除済みメモビューアーの参照
-  // const deletedMemoViewerRef = useRef<DeletedMemoViewerRef>(null);
 
   // 削除完了時に蓋を閉じる処理
   useDeletionLid(() => setIsRightLidOpen(false));

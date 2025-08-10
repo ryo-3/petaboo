@@ -145,13 +145,13 @@ function MemoEditor({
   const createTaggingMutation = useCreateTagging();
   const deleteTaggingMutation = useDeleteTagging();
 
-  // 削除済みメモの削除処理（条件付きでフック使用）
-  const deletedMemoActions = isDeleted && deletedMemo ? useDeletedMemoActions({
-    memo: deletedMemo,
+  // 削除済みメモの操作用（React Hooks違反を避けるため常に呼び出し、nullを許可）
+  const deletedMemoActions = useDeletedMemoActions({
+    memo: isDeleted ? deletedMemo : null,
     onClose,
     onDeleteAndSelectNext,
     onRestoreAndSelectNext: onDeleteAndSelectNext,
-  }) : null;
+  });
 
   // タグ初期化（メモが変わった時のみ実行）
   useEffect(() => {

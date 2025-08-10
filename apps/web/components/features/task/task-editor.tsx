@@ -137,17 +137,17 @@ function TaskEditor({
     onDeleteAndSelectNext,
   });
 
-  // 削除済みタスクの操作用
-  const deletedTaskActions = isDeleted && task ? useDeletedTaskActions({
-    task: task as DeletedTask,
+  // 削除済みタスクの操作用（React Hooks違反を避けるため常に呼び出し、nullを許可）
+  const deletedTaskActions = useDeletedTaskActions({
+    task: isDeleted ? (task as DeletedTask) : null,
     onClose,
-    onDeleteAndSelectNext: (deletedTask) => {
+    onDeleteAndSelectNext: () => {
       if (onDelete) onDelete();
     },
     onRestoreAndSelectNext: () => {
       if (onRestore) onRestore();
     }
-  }) : null;
+  });
 
   // 削除ボタンのハンドラー（ボード紐づきチェック付き）
   const handleDeleteClick = () => {
@@ -831,7 +831,7 @@ function TaskEditor({
                   </button>
                   <button
                     onClick={() => {
-                      if (deletedTaskActions) {
+                      if (isDeleted && deletedTaskActions) {
                         deletedTaskActions.showDeleteConfirmation();
                       } else if (onDelete) {
                         onDelete();

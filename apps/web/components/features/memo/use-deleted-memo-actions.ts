@@ -6,7 +6,7 @@ import { useAuth } from '@clerk/nextjs'
 import { memosApi } from '@/src/lib/api-client'
 
 interface UseDeletedMemoActionsProps {
-  memo: DeletedMemo
+  memo: DeletedMemo | null
   onClose: () => void
   onDeleteAndSelectNext?: (deletedMemo: DeletedMemo) => void
   onRestoreAndSelectNext?: (deletedMemo: DeletedMemo) => void
@@ -29,17 +29,17 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
       // キャッシュを手動更新（削除されたアイテムをすぐに除去）
       queryClient.setQueryData(['deletedMemos'], (oldDeletedMemos: DeletedMemo[] | undefined) => {
         if (!oldDeletedMemos) return []
-        return oldDeletedMemos.filter(m => m.originalId !== memo.originalId)
+        return oldDeletedMemos.filter(m => memo && m.originalId !== memo.originalId)
       })
       
       // ボード固有の削除済みアイテムキャッシュも手動更新
       queryClient.setQueryData(['board-deleted-items'], (oldItems: any[] | undefined) => {
         if (!oldItems) return []
-        return oldItems.filter((item: any) => item.originalId !== memo.originalId)
+        return oldItems.filter((item: any) => memo && item.originalId !== memo.originalId)
       })
       
       // 即座に次のメモ選択機能を使用（手動更新済みなのでタイミング問題なし）
-      if (onDeleteAndSelectNext) {
+      if (onDeleteAndSelectNext && memo) {
         onDeleteAndSelectNext(memo)
       } else {
         onClose()
@@ -67,7 +67,9 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
           // アニメーション完了後の処理
           try {
             // API実行（onSuccessで次選択とキャッシュ更新が実行される）
-            await permanentDeleteNote.mutateAsync(memo.originalId)
+            if (memo) {
+              await permanentDeleteNote.mutateAsync(memo.originalId)
+            }
             
             // 蓋を閉じる
             setTimeout(() => {
@@ -80,7 +82,9 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
       } else {
         // アニメーション要素がない場合は通常の処理
         // API実行（onSuccessで次選択とキャッシュ更新が実行される）
-        await permanentDeleteNote.mutateAsync(memo.originalId)
+        if (memo) {
+          await permanentDeleteNote.mutateAsync(memo.originalId)
+        }
         
         setTimeout(() => {
           (window as Window & { closeDeletingLid?: () => void }).closeDeletingLid?.();
@@ -95,11 +99,13 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
     try {
       setIsLocalRestoring(true)
       // API実行
-      await restoreNote.mutateAsync(memo.originalId)
+      if (memo) {
+        await restoreNote.mutateAsync(memo.originalId)
+      }
       
       // 復元完了後、すぐにUIを更新
       setIsLocalRestoring(false)
-      if (onRestoreAndSelectNext) {
+      if (onRestoreAndSelectNext && memo) {
         onRestoreAndSelectNext(memo)
       } else {
         onClose()

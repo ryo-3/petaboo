@@ -28,6 +28,8 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
     onSuccess: async () => {
       // 完全削除後に削除済みメモリストを再取得
       await queryClient.invalidateQueries({ queryKey: ["deleted-memos"] })
+      // ボード固有の削除済みアイテムキャッシュも無効化
+      await queryClient.invalidateQueries({ queryKey: ["board-deleted-items"] })
       
       // 少し遅延してから次のメモ選択機能を使用（React Queryの状態更新を待つ）
       setTimeout(() => {
@@ -76,7 +78,6 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
         }, 500);
       }
     } catch {
-      console.log('❌ 削除処理失敗')
       alert('完全削除に失敗しました。')
     }
   }

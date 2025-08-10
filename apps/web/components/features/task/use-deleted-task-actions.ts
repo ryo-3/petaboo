@@ -27,6 +27,8 @@ export function useDeletedTaskActions({ task, onClose, onDeleteAndSelectNext, on
     onSuccess: async () => {
       // 完全削除後に削除済みタスクリストを再取得
       await queryClient.invalidateQueries({ queryKey: ["deleted-tasks"] })
+      // ボード固有の削除済みアイテムキャッシュも無効化
+      await queryClient.invalidateQueries({ queryKey: ["board-deleted-items"] })
       
       // 少し遅延してから次のタスク選択機能を使用（React Queryの状態更新を待つ）
       setTimeout(() => {

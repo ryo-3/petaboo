@@ -7,13 +7,14 @@ import TrashIcon from "@/components/icons/trash-icon";
 import BoardIconSelector from "@/components/ui/selectors/board-icon-selector";
 import Tooltip from "@/components/ui/base/tooltip";
 import BoardChangeModal from "@/components/ui/modals/board-change-modal";
-import { SingleDeleteConfirmation } from "@/components/ui/modals/confirmation-modal";
+import { BulkDeleteConfirmation } from "@/components/ui/modals/confirmation-modal";
 import TagSelector from "@/components/features/tags/tag-selector";
 import TagTriggerButton from "@/components/features/tags/tag-trigger-button";
 import { TAG_COLORS } from "@/src/constants/colors";
 import { useSimpleMemoSave } from "@/src/hooks/use-simple-memo-save";
 import { useCreateTagging, useDeleteTagging } from "@/src/hooks/use-taggings";
 import { useDeletedMemoActions } from "./use-deleted-memo-actions";
+import BoardChips from "@/components/ui/chips/board-chips";
 import DateInfo from "@/components/shared/date-info";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Tag, Tagging } from "@/src/types/tag";
@@ -383,14 +384,7 @@ function MemoEditor({
                 {memo && memo.id !== 0 && (
                   <>
                     {/* ボード名 */}
-                    {itemBoards.map((board) => (
-                      <div
-                        key={board.id}
-                        className="inline-flex items-center px-2 py-1 rounded-md text-xs overflow-hidden bg-light-Blue text-white"
-                      >
-                        <span>{board.name}</span>
-                      </div>
-                    ))}
+                    <BoardChips boards={itemBoards} variant="compact" />
                     {/* タグ */}
                     {localTags.map((tag) => (
                       <div
@@ -525,43 +519,45 @@ function MemoEditor({
           parentElement={baseViewerRef.current}
         />
       )}
-      {baseViewerRef.current && (
-        <SingleDeleteConfirmation
-          isOpen={showDeleteModal}
-          onClose={handleCancelDelete}
-          onConfirm={handleConfirmDelete}
-          itemType="memo"
-          customMessage={
-            <div className="text-gray-700">
-              このメモは以下のボードに紐づいています
-              <ul className="mt-2 space-y-1">
-                {itemBoards.map(board => (
-                  <li key={board.id} className="text-gray-700">
-                    • {board.name}
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-3 text-sm text-gray-600">
-                削除すると各ボードの「削除済み」タブに移動します
+      <BulkDeleteConfirmation
+        isOpen={showDeleteModal}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        count={1}
+        itemType="memo"
+        deleteType="normal"
+        isLoading={false}
+        position="center"
+        customTitle={`「${memo?.title || 'タイトルなし'}」の削除`}
+        customMessage={
+          itemBoards.length > 0 ? (
+            <div className="text-center">
+              <p className="text-sm text-gray-700 mb-3">
+                このメモは以下のボードに紐づいています
+              </p>
+              <div className="mb-3 flex justify-center">
+                <BoardChips boards={itemBoards} variant="compact" />
               </div>
+              <p className="text-xs text-gray-500">
+                削除すると各ボードの「削除済み」タブに移動します
+              </p>
             </div>
-          }
-          parentElement={baseViewerRef.current}
-        />
-      )}
+          ) : undefined
+        }
+      />
       
       {/* 削除済みメモの削除確認モーダル */}
-      {isDeleted && deletedMemoActions && baseViewerRef.current && (
-        <SingleDeleteConfirmation
+      {isDeleted && deletedMemoActions && (
+        <BulkDeleteConfirmation
           isOpen={deletedMemoActions.showDeleteModal}
           onClose={deletedMemoActions.hideDeleteConfirmation}
           onConfirm={deletedMemoActions.handlePermanentDelete}
-          itemTitle={memo?.title}
+          count={1}
           itemType="memo"
           deleteType="permanent"
           isLoading={deletedMemoActions.isDeleting}
-          position="right-panel"
-          parentElement={baseViewerRef.current}
+          position="center"
+          customTitle={`「${memo?.title || 'タイトルなし'}」の完全削除`}
         />
       )}
     </>

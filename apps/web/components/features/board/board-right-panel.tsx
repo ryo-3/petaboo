@@ -1,7 +1,6 @@
 'use client';
 
 import MemoEditor from "@/components/features/memo/memo-editor";
-import DeletedMemoViewer from "@/components/features/memo/deleted-memo-viewer";
 import TaskEditor from "@/components/features/task/task-editor";
 import DeletedTaskViewer from "@/components/features/task/deleted-task-viewer";
 import MemoScreen from "@/components/screens/memo-screen";
@@ -109,14 +108,25 @@ export default function BoardRightPanel({
       {selectedMemo && !selectedTask && rightPanelMode === null && (
         <>
           {isDeletedMemo(selectedMemo) ? (
-            <DeletedMemoViewer
+            <MemoEditor
               key={`deleted-memo-${selectedMemo.id}`}
               memo={selectedMemo}
               onClose={() => {
-                // ビューア内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
+                // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
               }}
-              onDeleteAndSelectNext={onDeletedMemoDeleteAndSelectNext}
-              onRestoreAndSelectNext={onMemoRestoreAndSelectNext}
+              onRestore={() => {
+                if (onMemoRestoreAndSelectNext) {
+                  onMemoRestoreAndSelectNext(selectedMemo);
+                }
+              }}
+              onDelete={() => {
+                if (onDeletedMemoDeleteAndSelectNext) {
+                  onDeletedMemoDeleteAndSelectNext(selectedMemo);
+                }
+              }}
+              initialBoardId={boardId}
+              preloadedTaggings={allTaggings}
+              preloadedBoardItems={allBoardItems}
             />
           ) : (
             <MemoEditor

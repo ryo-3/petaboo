@@ -45,8 +45,12 @@ export function useCreateMemo() {
       const data = await response.json()
       return data as Memo
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['memos'] })
+    onSuccess: (newMemo) => {
+      // 新規作成されたメモのキャッシュを更新
+      queryClient.setQueryData<Memo[]>(['memos'], (oldMemos) => {
+        if (!oldMemos) return [newMemo]
+        return [...oldMemos, newMemo]
+      })
     },
   })
 }
@@ -63,8 +67,12 @@ export function useUpdateMemo() {
       const responseData = await response.json()
       return responseData as Memo
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['memos'] })
+    onSuccess: (updatedMemo, { id }) => {
+      // 特定のメモのキャッシュを更新
+      queryClient.setQueryData<Memo[]>(['memos'], (oldMemos) => {
+        if (!oldMemos) return [updatedMemo]
+        return oldMemos.map(memo => memo.id === id ? updatedMemo : memo)
+      })
     },
   })
 }
@@ -79,11 +87,18 @@ export function useDeleteMemo() {
       const token = await getToken()
       await memosApi.deleteNote(id, token || undefined)
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['memos'] })
+    onSuccess: (_, id) => {
+      // メモ一覧から削除されたメモを除去
+      queryClient.setQueryData<Memo[]>(['memos'], (oldMemos) => {
+        if (!oldMemos) return []
+        return oldMemos.filter(memo => memo.id !== id)
+      })
+      // 削除済み一覧は無効化（削除済みメモが追加されるため）
       queryClient.invalidateQueries({ queryKey: ['deletedMemos'] })
-      // ボード関連のキャッシュを強制再取得（一覧と詳細両方）
+      // ボード関連のキャッシュを強制再取得（統計が変わるため）
       queryClient.refetchQueries({ queryKey: ['boards'] })
+      // 全タグ付け情報を無効化（削除されたメモに関連するタグ情報が変わる可能性があるため）
+      queryClient.invalidateQueries({ queryKey: ['taggings', 'all'] })
     },
   })
 }
@@ -98,8 +113,12 @@ export function usePermanentDeleteMemo() {
       const token = await getToken()
       await memosApi.permanentDeleteNote(originalId, token || undefined)
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['deletedMemos'] })
+    onSuccess: (_, originalId) => {
+      // 削除済み一覧から完全削除されたメモを除去
+      queryClient.setQueryData<DeletedMemo[]>(['deletedMemos'], (oldDeletedMemos) => {
+        if (!oldDeletedMemos) return []
+        return oldDeletedMemos.filter(memo => memo.originalId !== originalId)
+      })
     },
   })
 }
@@ -114,11 +133,14 @@ export function useRestoreMemo() {
       const token = await getToken()
       await memosApi.restoreNote(originalId, token || undefined)
     },
-    onSuccess: () => {
+    onSuccess: (_, originalId) => {
+      // メモと削除済みメモの両方を無効化（復元されたメモの新しいIDが分からないため）
       queryClient.invalidateQueries({ queryKey: ['memos'] })
       queryClient.invalidateQueries({ queryKey: ['deletedMemos'] })
-      // ボード関連のキャッシュを強制再取得（一覧と詳細両方）
+      // ボード関連のキャッシュを強制再取得（復元されたメモがボードに含まれる可能性があるため）
       queryClient.refetchQueries({ queryKey: ['boards'] })
+      // 全タグ付け情報を無効化（復元されたメモのタグ情報が変わる可能性があるため）
+      queryClient.invalidateQueries({ queryKey: ['taggings', 'all'] })
     },
   })
 }
@@ -136,6 +158,7 @@ export function useImportMemos() {
       return data as { success: boolean; imported: number; errors: string[] }
     },
     onSuccess: () => {
+      // CSVインポートは大量データの可能性があるため一覧を無効化
       queryClient.invalidateQueries({ queryKey: ['memos'] })
     },
   })

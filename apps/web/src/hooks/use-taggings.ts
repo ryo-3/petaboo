@@ -58,8 +58,21 @@ export function useCreateTagging() {
       const data = await response.json()
       return data as Tagging
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['taggings'] })
+    onSuccess: (newTagging, taggingData) => {
+      // 特定のアイテムタイプ・IDのタグ付け情報を無効化
+      queryClient.invalidateQueries({ 
+        queryKey: ['taggings', { 
+          targetType: taggingData.targetType, 
+          targetOriginalId: taggingData.targetOriginalId 
+        }] 
+      })
+      // 全タグ付け情報に新しいタグ付けを追加
+      queryClient.setQueryData(['taggings', 'all'], (oldTaggings: Tagging[]) => {
+        if (!oldTaggings) return [newTagging]
+        return [...oldTaggings, newTagging]
+      })
+      // 汎用タグ付けクエリも無効化
+      queryClient.invalidateQueries({ queryKey: ['taggings'], exact: false })
     },
     onError: (error: unknown) => {
       // サイレントに処理する場合は上位でキャッチするため、ここではログのみ
@@ -77,8 +90,14 @@ export function useDeleteTagging() {
       const token = await getToken()
       await taggingsApi.deleteTagging(id, token || undefined)
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['taggings'] })
+    onSuccess: (_, id) => {
+      // 全タグ付け情報から削除されたタグ付けを除去
+      queryClient.setQueryData(['taggings', 'all'], (oldTaggings: Tagging[]) => {
+        if (!oldTaggings) return []
+        return oldTaggings.filter(tagging => tagging.id !== id)
+      })
+      // 汎用タグ付けクエリを無効化
+      queryClient.invalidateQueries({ queryKey: ['taggings'], exact: false })
     },
   })
 }
@@ -105,8 +124,25 @@ export function useDeleteTaggingsByTag() {
         token || undefined
       )
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['taggings'] })
+    onSuccess: (_, { tagId, targetType, targetOriginalId }) => {
+      // 全タグ付け情報から条件に一致するタグ付けを除去
+      queryClient.setQueryData(['taggings', 'all'], (oldTaggings: Tagging[]) => {
+        if (!oldTaggings) return []
+        return oldTaggings.filter(tagging => {
+          if (tagging.tagId !== tagId) return true
+          if (targetType && tagging.targetType !== targetType) return true
+          if (targetOriginalId && tagging.targetOriginalId !== targetOriginalId) return true
+          return false
+        })
+      })
+      // 特定条件のタグ付けクエリを無効化
+      if (targetType && targetOriginalId) {
+        queryClient.invalidateQueries({ 
+          queryKey: ['taggings', { targetType, targetOriginalId }] 
+        })
+      }
+      // 汎用タグ付けクエリを無効化
+      queryClient.invalidateQueries({ queryKey: ['taggings'], exact: false })
     },
   })
 }

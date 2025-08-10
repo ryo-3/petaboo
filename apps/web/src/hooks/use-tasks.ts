@@ -36,13 +36,14 @@ export function useCreateTask() {
       const result = await response.json()
       return result
     },
-    onSuccess: () => {
-      // タスク一覧を再取得
-      queryClient.invalidateQueries({ queryKey: ['tasks'] })
-      // ボードキャッシュも無効化（タスクが含まれる可能性）
+    onSuccess: (newTask) => {
+      // タスク一覧に新しいタスクを追加
+      queryClient.setQueryData<Task[]>(['tasks'], (oldTasks) => {
+        if (!oldTasks) return [newTask]
+        return [...oldTasks, newTask]
+      })
+      // ボード統計の再計算のためボード一覧を無効化
       queryClient.invalidateQueries({ queryKey: ["boards"] });
-      // アイテムボード情報も無効化
-      queryClient.invalidateQueries({ queryKey: ["item-boards"] });
     },
     onError: (error) => {
       console.error("タスク作成に失敗しました:", error);
@@ -64,13 +65,14 @@ export function useUpdateTask() {
       const result = await response.json()
       return result
     },
-    onSuccess: () => {
-      // タスク一覧を再取得
-      queryClient.invalidateQueries({ queryKey: ['tasks'] })
-      // ボードキャッシュも無効化（タスクが含まれる可能性）
+    onSuccess: (updatedTask, { id }) => {
+      // タスク一覧の特定タスクを更新
+      queryClient.setQueryData<Task[]>(['tasks'], (oldTasks) => {
+        if (!oldTasks) return [updatedTask]
+        return oldTasks.map(task => task.id === id ? updatedTask : task)
+      })
+      // ボード統計の再計算のためボード一覧を無効化
       queryClient.invalidateQueries({ queryKey: ["boards"] });
-      // アイテムボード情報も無効化
-      queryClient.invalidateQueries({ queryKey: ["item-boards"] });
     },
     onError: (error) => {
       console.error("タスク更新に失敗しました:", error);
@@ -92,12 +94,18 @@ export function useDeleteTask() {
       const result = await response.json()
       return result
     },
-    onSuccess: () => {
-      // タスク一覧と削除済み一覧を再取得
-      queryClient.invalidateQueries({ queryKey: ['tasks'] })
+    onSuccess: (_, id) => {
+      // タスク一覧から削除されたタスクを除去
+      queryClient.setQueryData<Task[]>(['tasks'], (oldTasks) => {
+        if (!oldTasks) return []
+        return oldTasks.filter(task => task.id !== id)
+      })
+      // 削除済み一覧は無効化（削除済みタスクが追加されるため）
       queryClient.invalidateQueries({ queryKey: ['deleted-tasks'] })
-      // ボード関連のキャッシュを強制再取得（一覧と詳細両方）
+      // ボード関連のキャッシュを強制再取得（統計が変わるため）
       queryClient.refetchQueries({ queryKey: ["boards"] })
+      // 全タグ付け情報を無効化（削除されたタスクに関連するタグ情報が変わる可能性があるため）
+      queryClient.invalidateQueries({ queryKey: ['taggings', 'all'] })
     },
     onError: (error) => {
       console.error("タスク削除に失敗しました:", error);
@@ -138,9 +146,12 @@ export function usePermanentDeleteTask() {
       const result = await response.json()
       return result
     },
-    onSuccess: () => {
-      // 削除済みタスク一覧を再取得
-      queryClient.invalidateQueries({ queryKey: ['deleted-tasks'] })
+    onSuccess: (_, originalId) => {
+      // 削除済み一覧から完全削除されたタスクを除去
+      queryClient.setQueryData<DeletedTask[]>(['deleted-tasks'], (oldDeletedTasks) => {
+        if (!oldDeletedTasks) return []
+        return oldDeletedTasks.filter(task => task.originalId !== originalId)
+      })
     },
     onError: (error) => {
       console.error("タスクの完全削除に失敗しました:", error);
@@ -162,12 +173,14 @@ export function useRestoreTask() {
       const result = await response.json()
       return result
     },
-    onSuccess: () => {
-      // タスク一覧と削除済み一覧を再取得
+    onSuccess: (_, originalId) => {
+      // タスクと削除済みタスクの両方を無効化（復元されたタスクの新しいIDが分からないため）
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
       queryClient.invalidateQueries({ queryKey: ['deleted-tasks'] })
-      // ボード関連のキャッシュを強制再取得（一覧と詳細両方）
+      // ボード関連のキャッシュを強制再取得（復元されたタスクがボードに含まれる可能性があるため）
       queryClient.refetchQueries({ queryKey: ["boards"] })
+      // 全タグ付け情報を無効化（復元されたタスクのタグ情報が変わる可能性があるため）
+      queryClient.invalidateQueries({ queryKey: ['taggings', 'all'] })
     },
     onError: (error) => {
       console.error("タスク復元に失敗しました:", error);
@@ -190,6 +203,7 @@ export function useImportTasks() {
       return data as { success: boolean; imported: number; errors: string[] }
     },
     onSuccess: () => {
+      // CSVインポートは大量データの可能性があるため一覧を無効化
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
     },
     onError: (error) => {

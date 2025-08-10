@@ -280,8 +280,8 @@ export function useToggleBoardCompletion() {
           // 元のボードを削除
           const filtered = oldBoards.filter(board => board.id !== id)
           // 新しいステータスが現在のステータスと一致する場合は追加
-          if ((status === "completed" && updatedBoard.isCompleted) || 
-              (status === "normal" && !updatedBoard.isCompleted && !updatedBoard.deletedAt)) {
+          if ((status === "completed" && updatedBoard.completed) || 
+              (status === "normal" && !updatedBoard.completed)) {
             return [...filtered, updatedBoard as BoardWithStats]
           }
           return filtered
@@ -360,7 +360,7 @@ export function useRestoreDeletedBoard() {
         return oldBoards.filter(board => board.id !== id)
       })
       // 復元されたボードを適切なステータス一覧に追加
-      const targetStatus = restoredBoard.isCompleted ? "completed" : "normal"
+      const targetStatus = restoredBoard.completed ? "completed" : "normal"
       queryClient.setQueryData<BoardWithStats[]>(["boards", targetStatus], (oldBoards) => {
         if (!oldBoards) return [restoredBoard as BoardWithStats]
         return [...oldBoards, restoredBoard as BoardWithStats]

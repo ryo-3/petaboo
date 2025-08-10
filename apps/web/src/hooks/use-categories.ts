@@ -55,8 +55,12 @@ export function useCreateCategory() {
 
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categories"] });
+    onSuccess: (newCategory) => {
+      // カテゴリー一覧に新しいカテゴリーを追加
+      queryClient.setQueryData<Category[]>(["categories"], (oldCategories) => {
+        if (!oldCategories) return [newCategory]
+        return [...oldCategories, newCategory]
+      })
     },
     onError: (error) => {
       console.error("カテゴリー作成に失敗しました:", error);
@@ -90,8 +94,14 @@ export function useUpdateCategory() {
 
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categories"] });
+    onSuccess: (updatedCategory, { id }) => {
+      // カテゴリー一覧の特定カテゴリーを更新
+      queryClient.setQueryData<Category[]>(["categories"], (oldCategories) => {
+        if (!oldCategories) return [updatedCategory]
+        return oldCategories.map(category => category.id === id ? updatedCategory : category)
+      })
+      // カテゴリー使用状況キャッシュを無効化（名前が変わった場合）
+      queryClient.invalidateQueries({ queryKey: ["category-usage", id] });
     },
     onError: (error) => {
       console.error("カテゴリー更新に失敗しました:", error);
@@ -122,8 +132,17 @@ export function useDeleteCategory() {
         throw new Error(error.error || "Failed to delete category");
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categories"] });
+    onSuccess: (_, id) => {
+      // カテゴリー一覧から削除されたカテゴリーを除去
+      queryClient.setQueryData<Category[]>(["categories"], (oldCategories) => {
+        if (!oldCategories) return []
+        return oldCategories.filter(category => category.id !== id)
+      })
+      // 削除されたカテゴリーの使用状況キャッシュを無効化
+      queryClient.removeQueries({ queryKey: ["category-usage", id] });
+      // メモ・タスクのキャッシュを無効化（削除されたカテゴリーが使われていた可能性があるため）
+      queryClient.invalidateQueries({ queryKey: ['memos'] })
+      queryClient.invalidateQueries({ queryKey: ['tasks'] })
     },
     onError: (error) => {
       console.error("カテゴリー削除に失敗しました:", error);

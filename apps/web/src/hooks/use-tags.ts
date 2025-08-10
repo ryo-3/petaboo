@@ -42,8 +42,20 @@ export function useCreateTag() {
       const data = await response.json()
       return data as Tag
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tags'] })
+    onSuccess: (newTag) => {
+      // タグ一覧に新しいタグを追加
+      queryClient.setQueryData<Tag[]>(['tags'], (oldTags) => {
+        if (!oldTags) return [newTag]
+        return [...oldTags, newTag]
+      })
+      // オプション付きのタグクエリは無効化（検索やソートの結果が変わるため）
+      queryClient.invalidateQueries({ 
+        queryKey: ['tags'], 
+        predicate: (query) => {
+          const queryKey = query.queryKey as [string, object?]
+          return !!(queryKey[0] === 'tags' && queryKey[1] && Object.keys(queryKey[1]).length > 0)
+        }
+      })
     },
   })
 }
@@ -59,8 +71,27 @@ export function useUpdateTag() {
       const responseData = await response.json()
       return responseData as Tag
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tags'] })
+    onSuccess: (updatedTag, { id }) => {
+      // タグ一覧の特定タグを更新
+      queryClient.setQueryData<Tag[]>(['tags'], (oldTags) => {
+        if (!oldTags) return [updatedTag]
+        return oldTags.map(tag => tag.id === id ? updatedTag : tag)
+      })
+      // オプション付きのタグクエリは無効化
+      queryClient.invalidateQueries({ 
+        queryKey: ['tags'], 
+        predicate: (query) => {
+          const queryKey = query.queryKey as [string, object?]
+          return !!(queryKey[0] === 'tags' && queryKey[1] && Object.keys(queryKey[1]).length > 0)
+        }
+      })
+      // 全タグ付け情報を部分的に更新（タグ名が変わった場合）
+      queryClient.setQueryData(['taggings', 'all'], (oldTaggings: any) => {
+        if (!oldTaggings) return oldTaggings
+        return oldTaggings.map((tagging: any) => 
+          tagging.tagId === id ? { ...tagging, tag: updatedTag } : tagging
+        )
+      })
     },
   })
 }
@@ -74,9 +105,23 @@ export function useDeleteTag() {
       const token = await getToken()
       await tagsApi.deleteTag(id, token || undefined)
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tags'] })
+    onSuccess: (_, id) => {
+      // タグ一覧から削除されたタグを除去
+      queryClient.setQueryData<Tag[]>(['tags'], (oldTags) => {
+        if (!oldTags) return []
+        return oldTags.filter(tag => tag.id !== id)
+      })
+      // オプション付きのタグクエリは無効化
+      queryClient.invalidateQueries({ 
+        queryKey: ['tags'], 
+        predicate: (query) => {
+          const queryKey = query.queryKey as [string, object?]
+          return !!(queryKey[0] === 'tags' && queryKey[1] && Object.keys(queryKey[1]).length > 0)
+        }
+      })
+      // タグ付け情報を無効化（削除されたタグに関連する情報が変わるため）
       queryClient.invalidateQueries({ queryKey: ['taggings'] })
+      queryClient.invalidateQueries({ queryKey: ['taggings', 'all'] })
     },
   })
 }

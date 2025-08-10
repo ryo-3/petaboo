@@ -9,7 +9,10 @@
     "lint:root": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "check-types:wsl": "cd apps/web && npx tsc --noEmit",
+    "lint:wsl": "cd apps/web && npx eslint src --ext .ts,.tsx",
+    "check:wsl": "npm run check-types:wsl && npm run lint:wsl"
   },
   "devDependencies": {
     "husky": "^8.0.0",

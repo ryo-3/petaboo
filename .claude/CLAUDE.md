@@ -107,9 +107,20 @@ const response = await fetch(`${API_BASE_URL}/categories`, {
 ## 開発コマンド
 
 ```bash
+# 通常（Windows）
 npm run check-types && npm run lint  # コミット前必須
+
+# WSL環境用（Turborepoバイナリ問題回避）
+npm run check:wsl                     # コミット前必須（WSL用）
+
 git commit --no-verify               # WSL環境でpre-commitフックをスキップ
 ```
+
+### WSL環境の制限事項
+
+- **Turborepoバイナリ問題**: WSL環境ではWindows用バイナリが動作しない
+- **対象範囲**: WSL用スクリプトは`apps/web/src`のみ対象（ビルド成果物除外）
+- **API側型エラー**: 最適化タスクで生成されたファイルの型定義未完成（要修正）
 
 # 🚨 絶対禁止事項
 

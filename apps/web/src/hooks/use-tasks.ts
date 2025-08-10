@@ -173,7 +173,7 @@ export function useRestoreTask() {
       const result = await response.json()
       return result
     },
-    onSuccess: (_, originalId) => {
+    onSuccess: () => {
       // タスクと削除済みタスクの両方を無効化（復元されたタスクの新しいIDが分からないため）
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
       queryClient.invalidateQueries({ queryKey: ['deleted-tasks'] })

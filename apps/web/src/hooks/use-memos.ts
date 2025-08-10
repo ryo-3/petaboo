@@ -133,7 +133,7 @@ export function useRestoreMemo() {
       const token = await getToken()
       await memosApi.restoreNote(originalId, token || undefined)
     },
-    onSuccess: (_, originalId) => {
+    onSuccess: () => {
       // メモと削除済みメモの両方を無効化（復元されたメモの新しいIDが分からないため）
       queryClient.invalidateQueries({ queryKey: ['memos'] })
       queryClient.invalidateQueries({ queryKey: ['deletedMemos'] })

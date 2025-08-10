@@ -1,7 +1,8 @@
 "use client";
 
 import BaseViewer from "@/components/shared/base-viewer";
-import { SingleDeleteConfirmation } from "@/components/ui/modals";
+import { BulkDeleteConfirmation } from "@/components/ui/modals";
+import BoardChips from "@/components/ui/chips/board-chips";
 import SaveButton from "@/components/ui/buttons/save-button";
 import PhotoButton from "@/components/ui/buttons/photo-button";
 import TrashIcon from "@/components/icons/trash-icon";
@@ -15,20 +16,22 @@ import { useAddItemToBoard, useRemoveItemFromBoard } from "@/src/hooks/use-board
 import { useCreateTagging, useDeleteTagging } from "@/src/hooks/use-taggings";
 import { useBoardChangeModal } from "@/src/hooks/use-board-change-modal";
 import BoardChangeModal from "@/components/ui/modals/board-change-modal";
-import type { Task } from "@/src/types/task";
+import type { Task, DeletedTask } from "@/src/types/task";
 import type { Tag, Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
 import { useCallback, useEffect, useState, useMemo, memo, useRef } from "react";
 import { useTaskDelete } from "./use-task-delete";
 
 interface TaskEditorProps {
-  task?: Task | null;
+  task?: Task | DeletedTask | null;
   initialBoardId?: number;
   onClose: () => void;
   onSelectTask?: (task: Task | null, fromFullList?: boolean) => void;
   onClosePanel?: () => void;
   onDeleteAndSelectNext?: (deletedTask: Task, preDeleteDisplayOrder?: number[]) => void;
   onSaveComplete?: (savedTask: Task, isNewTask: boolean) => void;
+  onRestore?: () => void;
+  onDelete?: () => void;
   customHeight?: string;
   
   // 全データ事前取得（ちらつき解消）
@@ -53,6 +56,8 @@ function TaskEditor({
   onClosePanel,
   onDeleteAndSelectNext,
   onSaveComplete,
+  onRestore,
+  onDelete,
   customHeight,
   preloadedBoards = [],
   preloadedTaggings = [],
@@ -62,6 +67,9 @@ function TaskEditor({
   const createTask = useCreateTask();
   const addItemToBoard = useAddItemToBoard();
   const removeItemFromBoard = useRemoveItemFromBoard();
+  
+  // 削除済みタスクかどうかを判定
+  const isDeleted = task ? 'deletedAt' in task : false;
   
   // 事前取得されたデータを使用（APIコール不要）
   const boards = preloadedBoards;
@@ -121,7 +129,7 @@ function TaskEditor({
     isDeleting,
     isLidOpen,
   } = useTaskDelete({
-    task: task || null,
+    task: isDeleted ? null : (task as Task | null),
     onClose,
     onSelectTask,
     onClosePanel,
@@ -142,10 +150,10 @@ function TaskEditor({
   const [title, setTitle] = useState(task?.title || "");
   const [description, setDescription] = useState(task?.description || "");
   const [status, setStatus] = useState<"todo" | "in_progress" | "completed">(
-    task?.status || "todo"
+    (task?.status as "todo" | "in_progress" | "completed") || "todo"
   );
   const [priority, setPriority] = useState<"low" | "medium" | "high">(
-    task?.priority || "medium"
+    (task?.priority as "low" | "medium" | "high") || "medium"
   );
   const [categoryId, setCategoryId] = useState<number | null>(task?.categoryId ?? null);
   const [dueDate, setDueDate] = useState<string>(() => {
@@ -239,7 +247,15 @@ function TaskEditor({
   }, [task, currentTags, isTagsInitialized, hasManualTagChanges, lastSyncedTags]);
   
   // 新規作成・編集両対応の仮タスクオブジェクト
-  const tempTask: Task = task || {
+  const tempTask: Task = task ? {
+    ...(task as Task),
+    title: title || task.title,
+    description: description,
+    status: status,
+    priority: priority,
+    categoryId: categoryId,
+    dueDate: dueDate ? Math.floor(new Date(dueDate).getTime() / 1000) : null,
+  } : {
     id: 0,
     title: title || "新規タスク",
     description: description,
@@ -347,7 +363,7 @@ function TaskEditor({
   }, [title, description, status, priority, categoryId, dueDate, selectedBoardIds, originalData]);
 
   // 新規作成時の保存可能性チェック
-  const canSave = isNewTask ? !!title.trim() : (hasChanges || hasTagChanges);
+  const canSave = isDeleted ? false : (isNewTask ? !!title.trim() : (hasChanges || hasTagChanges));
 
 
   // taskプロパティが変更された時にstateを更新
@@ -368,18 +384,18 @@ function TaskEditor({
       const newData = {
         title: taskTitle.trim(),
         description: taskDescription.trim(),
-        status: taskStatus,
-        priority: taskPriority,
+        status: taskStatus as "todo" | "in_progress" | "completed",
+        priority: taskPriority as "low" | "medium" | "high",
         categoryId: task.categoryId || null,
         dueDate: taskDueDate,
-        boardIds: []  // 後でuseEffectで設定される
+        boardIds: [] as string[]  // 後でuseEffectで設定される
       };
       
       // stateと元データを同時に更新して変更検知のずれを防ぐ
       setTitle(taskTitle);
       setDescription(taskDescription);
-      setStatus(taskStatus);
-      setPriority(taskPriority);
+      setStatus(taskStatus as "todo" | "in_progress" | "completed");
+      setPriority(taskPriority as "low" | "medium" | "high");
       setCategoryId(task.categoryId || null);
       setDueDate(taskDueDate);
       setError(null);
@@ -463,11 +479,11 @@ function TaskEditor({
       
       // 現在のボードから外された場合は次のアイテムを選択
       if (initialBoardId && toRemove.includes(initialBoardId.toString()) && onDeleteAndSelectNext) {
-        onDeleteAndSelectNext(task!);
+        onDeleteAndSelectNext(task as Task);
         return;
       }
       
-      onSaveComplete?.(task!, false);
+      onSaveComplete?.(task as Task, false);
       
       // 保存成功時にoriginalDataも更新（現在のstateの値を使用）
       setOriginalData({
@@ -530,7 +546,7 @@ function TaskEditor({
 
 
   const handleSave = useCallback(async () => {
-    if (!title.trim() || isSaving) return;
+    if (!title.trim() || isSaving || isDeleted) return;
 
     setIsSaving(true);
     setError(null);
@@ -609,19 +625,19 @@ function TaskEditor({
           categoryId !== originalData!.categoryId ||
           dueDate !== originalData!.dueDate;
         
-        let updatedTask = task!;
+        let updatedTask = task as Task;
         
         // タスク内容に変更がある場合のみ更新
         if (hasContentChanges) {
           updatedTask = await updateTask.mutateAsync({
-            id: task!.id,
+            id: (task as Task).id,
             data: taskData,
           });
         }
         
         // タグ更新処理
         if (hasTagChanges) {
-          await updateTaggings(task!.originalId || task!.id.toString());
+          await updateTaggings((task as Task).originalId || (task as Task).id.toString());
           setHasManualTagChanges(false);
         }
         
@@ -641,7 +657,7 @@ function TaskEditor({
           try {
             await removeItemFromBoard.mutateAsync({
               boardId: parseInt(boardId),
-              itemId: task!.originalId || task!.id.toString(),
+              itemId: (task as Task).originalId || (task as Task).id.toString(),
               itemType: 'task'
             });
           } catch {
@@ -714,6 +730,7 @@ function TaskEditor({
     showModal,
     hasTagChanges,
     updateTaggings,
+    isDeleted,
   ]);
 
   // Ctrl+Sショートカット（変更がある場合のみ実行）
@@ -778,13 +795,37 @@ function TaskEditor({
                   )}
                 />
               </div>
-              {!isNewTask && (
+              {!isNewTask && !isDeleted && (
                 <button
                   onClick={handleDeleteClick}
                   className="flex items-center justify-center size-7 rounded-md bg-gray-100 mr-2"
                 >
                   <TrashIcon className="size-5" isLidOpen={isLidOpen} />
                 </button>
+              )}
+              {isDeleted && (
+                <div className="flex gap-2 mr-2">
+                  <button
+                    onClick={() => {
+                      if (onRestore) onRestore();
+                    }}
+                    className="flex items-center justify-center size-7 rounded-md bg-green-100 hover:bg-green-200"
+                    title="復元"
+                  >
+                    <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 10l2 2 4-4M3 12c0 4.97 4.03 9 9 9s9-4.03 9-9-4.03-9-9-9c-3.31 0-6.2 1.8-7.75 4.5" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (onDelete) onDelete();
+                    }}
+                    className="flex items-center justify-center size-7 rounded-md bg-red-100 hover:bg-red-200"
+                    title="完全削除"
+                  >
+                    <TrashIcon className="size-4" />
+                  </button>
+                </div>
               )}
             </div>
           }
@@ -793,19 +834,19 @@ function TaskEditor({
           
         <TaskForm
           ref={taskFormRef}
-          task={task}
+          task={task as Task}
           title={title}
-          onTitleChange={setTitle}
+          onTitleChange={isDeleted ? () => {} : setTitle}
           description={description}
-          onDescriptionChange={setDescription}
+          onDescriptionChange={isDeleted ? () => {} : setDescription}
           status={status}
-          onStatusChange={setStatus}
+          onStatusChange={isDeleted ? () => {} : setStatus}
           priority={priority}
-          onPriorityChange={setPriority}
+          onPriorityChange={isDeleted ? () => {} : setPriority}
           categoryId={categoryId}
-          onCategoryChange={setCategoryId}
+          onCategoryChange={isDeleted ? () => {} : setCategoryId}
           dueDate={dueDate}
-          onDueDateChange={setDueDate}
+          onDueDateChange={isDeleted ? () => {} : setDueDate}
           isNewTask={isNewTask}
           customHeight={customHeight}
           tags={task && task.id !== 0 ? localTags : []}
@@ -815,30 +856,30 @@ function TaskEditor({
       </div>
       
 
-      {/* 削除確認モーダル（編集時のみ） */}
-      {!isNewTask && (
-        <SingleDeleteConfirmation
+      {/* 削除確認モーダル（編集時のみ・削除済みタスクは除外） */}
+      {!isNewTask && !isDeleted && (
+        <BulkDeleteConfirmation
           isOpen={showDeleteModal}
           onClose={hideDeleteConfirmation}
           onConfirm={handleDelete}
+          count={1}
           itemType="task"
           deleteType="normal"
           isLoading={isDeleting}
           position="center"
+          customTitle={`「${task?.title || 'タイトルなし'}」の削除`}
           customMessage={
             itemBoards && itemBoards.length > 0 ? (
-              <div className="text-gray-700">
-                このタスクは以下のボードに紐づいています
-                <ul className="mt-2 space-y-1">
-                  {itemBoards.map(board => (
-                    <li key={board.id} className="text-gray-700">
-                      • {board.name}
-                    </li>
-                  ))}
-                </ul>
-                <div className="mt-3 text-sm text-gray-600">
-                  削除すると各ボードの「削除済み」タブに移動します
+              <div className="text-center">
+                <p className="text-sm text-gray-700 mb-3">
+                  このタスクは以下のボードに紐づいています
+                </p>
+                <div className="mb-3 flex justify-center">
+                  <BoardChips boards={itemBoards} variant="compact" />
                 </div>
+                <p className="text-xs text-gray-500">
+                  削除すると各ボードの「削除済み」タブに移動します
+                </p>
               </div>
             ) : undefined
           }

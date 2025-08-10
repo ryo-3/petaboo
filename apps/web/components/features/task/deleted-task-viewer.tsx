@@ -4,7 +4,8 @@ import TrashIcon from "@/components/icons/trash-icon";
 import DateInfo from "@/components/shared/date-info";
 import Tooltip from "@/components/ui/base/tooltip";
 import RestoreButton from "@/components/ui/buttons/restore-button";
-import { SingleDeleteConfirmation } from "@/components/ui/modals";
+import { BulkDeleteConfirmation } from "@/components/ui/modals";
+import BoardChips from "@/components/ui/chips/board-chips";
 import { useItemBoards } from "@/src/hooks/use-boards";
 import type { DeletedTask } from "@/src/types/task";
 import { formatDate } from "@/src/utils/formatDate";
@@ -238,15 +239,41 @@ const DeletedTaskViewer = forwardRef<
         </div>
 
         {/* 削除確認モーダル */}
-        <SingleDeleteConfirmation
+        <BulkDeleteConfirmation
           isOpen={showDeleteModal}
           onClose={hideDeleteConfirmation}
           onConfirm={handlePermanentDelete}
-          itemTitle={task.title}
+          count={1}
           itemType="task"
           deleteType="permanent"
           isLoading={isDeleting}
-          position="right-panel"
+          position="center"
+          customTitle={`「${task.title || 'タイトルなし'}」の完全削除`}
+          customMessage={
+            boards.length > 0 ? (
+              <div className="text-center">
+                <p className="text-sm text-gray-700 mb-3">
+                  このタスクは以下のボードに紐づいています
+                </p>
+                <div className="mb-3 flex justify-center">
+                  <BoardChips boards={boards} variant="compact" />
+                </div>
+                <div className="mt-3 p-3 bg-red-50 rounded-md">
+                  <p className="text-sm text-red-800 font-medium">この操作は取り消せません</p>
+                  <p className="text-xs text-red-700 mt-1">データは永久に失われます</p>
+                  <p className="text-xs text-red-700 mt-1">ボードからも完全に削除されます</p>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center">
+                <div className="mt-3 p-3 bg-red-50 rounded-md">
+                  <p className="text-sm text-red-800 font-medium">この操作は取り消せません</p>
+                  <p className="text-xs text-red-700 mt-1">データは永久に失われます</p>
+                  <p className="text-xs text-red-700 mt-1">ボードからも完全に削除されます</p>
+                </div>
+              </div>
+            )
+          }
         />
       </>
     );

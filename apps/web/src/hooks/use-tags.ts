@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@clerk/nextjs'
 import { tagsApi } from '@/src/lib/api-client'
-import type { Tag, CreateTagData, UpdateTagData } from '@/src/types/tag'
+import type { Tag, CreateTagData, UpdateTagData, Tagging } from '@/src/types/tag'
 
 interface UseTagsOptions {
   search?: string;
@@ -86,9 +86,9 @@ export function useUpdateTag() {
         }
       })
       // 全タグ付け情報を部分的に更新（タグ名が変わった場合）
-      queryClient.setQueryData(['taggings', 'all'], (oldTaggings: any) => {
+      queryClient.setQueryData(['taggings', 'all'], (oldTaggings: Tagging[]) => {
         if (!oldTaggings) return oldTaggings
-        return oldTaggings.map((tagging: any) => 
+        return oldTaggings.map((tagging: Tagging) => 
           tagging.tagId === id ? { ...tagging, tag: updatedTag } : tagging
         )
       })

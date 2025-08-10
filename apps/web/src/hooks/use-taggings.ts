@@ -74,7 +74,7 @@ export function useCreateTagging() {
       // 汎用タグ付けクエリも無効化
       queryClient.invalidateQueries({ queryKey: ['taggings'], exact: false })
     },
-    onError: (error: unknown) => {
+    onError: () => {
       // サイレントに処理する場合は上位でキャッチするため、ここではログのみ
     }
   })

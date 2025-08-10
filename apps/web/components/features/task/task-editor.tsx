@@ -647,10 +647,26 @@ function TaskEditor({
         
         // タスク内容に変更がある場合のみ更新
         if (hasContentChanges) {
-          updatedTask = await updateTask.mutateAsync({
+          const apiResponse = await updateTask.mutateAsync({
             id: (task as Task).id,
             data: taskData,
           });
+          
+          // APIが不完全なレスポンスを返した場合は既存データをマージ
+          if (apiResponse.title !== undefined && apiResponse.description !== undefined) {
+            updatedTask = apiResponse;
+          } else {
+            updatedTask = {
+              ...(task as Task),
+              title: taskData.title,
+              description: taskData.description || "",
+              status: taskData.status,
+              priority: taskData.priority,
+              categoryId: taskData.categoryId || null,
+              dueDate: taskData.dueDate || null,
+              updatedAt: Math.floor(Date.now() / 1000)
+            };
+          }
         }
         
         // タグ更新処理

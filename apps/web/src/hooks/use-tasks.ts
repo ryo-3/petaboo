@@ -91,6 +91,8 @@ export function useUpdateTask() {
       })
       // ボード統計の再計算のためボード一覧を無効化
       queryClient.invalidateQueries({ queryKey: ["boards"] });
+      // ボードアイテムのキャッシュを無効化（ボード詳細のリスト表示内容更新のため）
+      queryClient.invalidateQueries({ queryKey: ["boards", undefined, "items"] });
     },
     onError: (error) => {
       console.error("タスク更新に失敗しました:", error);

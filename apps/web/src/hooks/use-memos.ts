@@ -88,6 +88,8 @@ export function useUpdateMemo() {
           return memo
         })
       })
+      // ボードアイテムのキャッシュを無効化（ボード詳細のリスト表示内容更新のため）
+      queryClient.invalidateQueries({ queryKey: ["boards", undefined, "items"] });
     },
   })
 }

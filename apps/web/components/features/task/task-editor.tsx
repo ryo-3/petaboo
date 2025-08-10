@@ -6,6 +6,7 @@ import BoardChips from "@/components/ui/chips/board-chips";
 import SaveButton from "@/components/ui/buttons/save-button";
 import PhotoButton from "@/components/ui/buttons/photo-button";
 import TrashIcon from "@/components/icons/trash-icon";
+import RestoreIcon from "@/components/icons/restore-icon";
 import BoardIconSelector from "@/components/ui/selectors/board-icon-selector";
 import Tooltip from "@/components/ui/base/tooltip";
 import TagSelector from "@/components/features/tags/tag-selector";
@@ -818,17 +819,18 @@ function TaskEditor({
               )}
               {isDeleted && (
                 <div className="flex gap-2 mr-2">
-                  <button
-                    onClick={() => {
-                      if (onRestore) onRestore();
-                    }}
-                    className="flex items-center justify-center size-7 rounded-md bg-green-100 hover:bg-green-200"
-                    title="復元"
-                  >
-                    <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 10l2 2 4-4M3 12c0 4.97 4.03 9 9 9s9-4.03 9-9-4.03-9-9-9c-3.31 0-6.2 1.8-7.75 4.5" />
-                    </svg>
-                  </button>
+                  <Tooltip text="復元" position="bottom">
+                    <button
+                      onClick={() => {
+                        if (isDeleted && deletedTaskActions) {
+                          deletedTaskActions.handleRestore();
+                        }
+                      }}
+                      className="flex items-center justify-center size-7 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800 transition-colors"
+                    >
+                      <RestoreIcon className="size-4" />
+                    </button>
+                  </Tooltip>
                   <button
                     onClick={() => {
                       if (isDeleted && deletedTaskActions) {

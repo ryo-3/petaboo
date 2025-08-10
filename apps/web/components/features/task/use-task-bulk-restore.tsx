@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useRestoreTask } from '@/src/hooks/use-tasks'
 import { useBulkDelete, BulkRestoreConfirmation } from '@/components/ui/modals'
 import type { DeletedTask } from '@/src/types/task'
@@ -18,7 +18,7 @@ interface UseTasksBulkRestoreProps {
 }
 
 export function useTasksBulkRestore({
-  activeTab, // eslint-disable-line @typescript-eslint/no-unused-vars
+  activeTab,
   checkedDeletedTasks,
   setCheckedDeletedTasks,
   deletedTasks,
@@ -35,6 +35,18 @@ export function useTasksBulkRestore({
     checkedItems: new Set(),
     checkedDeletedItems: checkedDeletedTasks,
   })
+
+  // タブ切り替え時のアニメーションキャンセル
+  const previousTabRef = useRef(activeTab);
+  
+  useEffect(() => {
+    // 前回と異なるタブに切り替わった場合のみキャンセル
+    if (previousTabRef.current !== activeTab) {
+      bulkAnimation.cancelAnimation(setIsRestoring, setIsLidOpen);
+    }
+    // 現在のタブを保存
+    previousTabRef.current = activeTab;
+  }, [activeTab, bulkAnimation, setIsRestoring, setIsLidOpen]);
 
   // チェック状態のクリーンアップ - 復元されたタスクのチェックを解除（部分復元中は無効）
   useEffect(() => {

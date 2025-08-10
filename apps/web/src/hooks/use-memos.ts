@@ -88,13 +88,10 @@ export function useUpdateMemo() {
           return memo
         })
       })
-      // 全ボードアイテムのキャッシュを強制再取得（ボード詳細のリスト表示内容更新のため）
-      queryClient.refetchQueries({ 
-        predicate: (query) => {
-          return query.queryKey.length === 3 && 
-                 query.queryKey[0] === "boards" && 
-                 query.queryKey[2] === "items"
-        }
+      // ボード関連キャッシュを無効化（一覧・統計・アイテムを含む）
+      queryClient.invalidateQueries({ 
+        queryKey: ["boards"],
+        exact: false
       });
     },
   })

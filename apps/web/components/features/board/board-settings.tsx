@@ -6,6 +6,7 @@ import ArrowLeftIcon from "@/components/icons/arrow-left-icon";
 import { useToggleBoardCompletion, useDeleteBoard, useUpdateBoard } from "@/src/hooks/use-boards";
 import { useToast } from "@/src/contexts/toast-context";
 import TextInputWithCounter from "@/components/ui/inputs/text-input-with-counter";
+import TextareaWithCounter from "@/components/ui/inputs/textarea-with-counter";
 
 interface BoardSettingsProps {
   boardId: number;
@@ -48,8 +49,13 @@ export default function BoardSettings({
       return;
     }
     
-    if (editName.trim().length > 30) {
-      showToast("ボード名は30文字以内で入力してください。", "error");
+    if (editName.trim().length > 35) {
+      showToast("ボード名は35文字以内で入力してください。", "error");
+      return;
+    }
+    
+    if (editDescription.trim().length > 200) {
+      showToast("説明は200文字以内で入力してください。", "error");
       return;
     }
     
@@ -115,30 +121,27 @@ export default function BoardSettings({
             <TextInputWithCounter
               value={editName}
               onChange={(value) => handleNameChange(value)}
-              placeholder="ボード名を入力（30文字以内）"
-              maxLength={30}
+              placeholder="ボード名を入力（35文字以内）"
+              maxLength={35}
               label="ボード名"
               className="px-4 py-3"
             />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                説明
-              </label>
-              <textarea
-                value={editDescription}
-                onChange={(e) => handleDescriptionChange(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                rows={4}
-                placeholder="ボードの説明を入力"
-              />
-            </div>
+            <TextareaWithCounter
+              value={editDescription}
+              onChange={(value) => handleDescriptionChange(value)}
+              placeholder="ボードの説明を入力（200文字以内）"
+              maxLength={200}
+              label="説明"
+              className="px-4 py-3"
+              rows={4}
+            />
 
             {hasChanges && (
               <div className="flex gap-3">
                 <button
                   onClick={handleSave}
-                  disabled={updateBoard.isPending || !editName.trim() || editName.trim().length > 30}
+                  disabled={updateBoard.isPending || !editName.trim() || editName.trim().length > 35 || editDescription.trim().length > 200}
                   className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium disabled:opacity-50"
                 >
                   {updateBoard.isPending ? "保存中..." : "保存"}

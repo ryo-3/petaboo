@@ -6,13 +6,15 @@ interface BoardChipsProps {
   variant?: "default" | "compact";
   maxWidth?: string; // 最大幅（例: "100px", "8rem"）
   maxDisplay?: number; // 表示する最大ボード数
+  interactive?: boolean; // クリック可能かどうか（デフォルト: true）
 }
 
 export default function BoardChips({ 
   boards, 
   variant = "default",
   maxWidth = "120px", // デフォルトは120px
-  maxDisplay = 3 // デフォルトは3つまで表示
+  maxDisplay = 3, // デフォルトは3つまで表示
+  interactive = true // デフォルトはクリック可能
 }: BoardChipsProps) {
   const [expandedBoards, setExpandedBoards] = useState<Set<number>>(new Set());
   const [showAll, setShowAll] = useState(false);
@@ -57,26 +59,27 @@ export default function BoardChips({
     <div className="flex flex-wrap items-center gap-2">
       {displayBoards.map((board) => {
         const isExpanded = expandedBoards.has(board.id);
+        const Component = interactive ? 'button' : 'div';
         return (
-          <button
+          <Component
             key={board.id}
-            onClick={() => toggleBoard(board.id)}
-            className={`inline-flex items-center rounded-md bg-light-Blue text-white cursor-pointer ${sizeClasses}`}
+            onClick={interactive ? () => toggleBoard(board.id) : undefined}
+            className={`inline-flex items-center rounded-md bg-light-Blue text-white ${interactive ? 'cursor-pointer' : 'cursor-default'} ${sizeClasses}`}
             style={!isExpanded ? { maxWidth } : undefined}
           >
             <span className={!isExpanded ? "truncate" : ""}>
               {board.name}
             </span>
-          </button>
+          </Component>
         );
       })}
       {boards.length > maxDisplay && !showAll && (
-        <button
-          onClick={toggleShowAll}
-          className={`inline-flex items-center rounded-md bg-light-Blue text-white cursor-pointer ${sizeClasses}`}
+        <div
+          onClick={interactive ? toggleShowAll : undefined}
+          className={`inline-flex items-center rounded-md bg-light-Blue text-white ${interactive ? 'cursor-pointer' : 'cursor-default'} ${sizeClasses}`}
         >
           <span>+{remainingCount}</span>
-        </button>
+        </div>
       )}
     </div>
   );

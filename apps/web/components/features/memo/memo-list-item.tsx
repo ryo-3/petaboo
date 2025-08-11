@@ -3,6 +3,7 @@ import type { Tag } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
 import { formatDateOnly } from "@/src/utils/formatDate";
 import { TAG_COLORS } from "@/src/constants/colors";
+import BoardChips from "@/components/ui/chips/board-chips";
 
 interface MemoListItemProps {
   memo: Memo | DeletedMemo;
@@ -108,16 +109,7 @@ function MemoListItem({
               <div className="mb-1 flex items-center gap-2">
                 {/* ボード名 */}
                 {showBoardName && boards && boards.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {boards.map((board) => (
-                      <span
-                        key={board.id}
-                        className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-light-Blue text-white"
-                      >
-                        {board.name}
-                      </span>
-                    ))}
-                  </div>
+                  <BoardChips boards={boards} variant="compact" maxWidth="100px" interactive={false} maxDisplay={2} />
                 )}
                 
                 {/* タグ表示 */}

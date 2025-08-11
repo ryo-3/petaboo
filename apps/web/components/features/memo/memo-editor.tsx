@@ -380,9 +380,18 @@ function MemoEditor({
           createdItemId={null}
           hideDateInfo={true}
           topContent={
-            <div className="flex justify-between items-start mb-3 mt-2 min-h-[24px]">
-              {/* ボード名・タグ一覧（常に領域確保） */}
-              <div className="flex flex-wrap gap-2">
+            <div className="relative mb-3 mt-2 min-h-[24px]">
+              {/* 日付情報表示（右上に絶対配置） */}
+              {memo && memo.id !== 0 && (
+                <div className="absolute top-0 right-0 text-[13px] text-gray-400">
+                  <DateInfo
+                    item={memo}
+                    isEditing={!isDeleted}
+                  />
+                </div>
+              )}
+              {/* ボード名・タグ一覧（日付分の右マージンを確保） */}
+              <div className="flex flex-wrap gap-2 pr-32">
                 {memo && memo.id !== 0 && (
                   <>
                     {/* ボード名 */}
@@ -403,15 +412,6 @@ function MemoEditor({
                   </>
                 )}
               </div>
-              {/* 日付情報表示 */}
-              {memo && memo.id !== 0 && (
-                <div className="text-[13px] text-gray-400 flex-shrink-0">
-                  <DateInfo
-                    item={memo}
-                    isEditing={!isDeleted}
-                  />
-                </div>
-              )}
             </div>
           }
           headerActions={

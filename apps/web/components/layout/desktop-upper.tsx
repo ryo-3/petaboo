@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import SettingsIcon from "@/components/icons/settings-icon";
 import TrashIcon from "@/components/icons/trash-icon";
@@ -162,6 +162,21 @@ function DesktopUpper({
 }: DesktopUpperProps) {
   const { preferences } = useUserPreferences(1);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [shouldShowSettingsIcon, setShouldShowSettingsIcon] = useState(rightPanelMode === "hidden");
+
+  // 右パネルの状態変化に応じて設定アイコンの表示を制御
+  useEffect(() => {
+    if (rightPanelMode === "hidden") {
+      // パネルが閉じる時はアニメーション完了後に表示（300ms待機）
+      const timer = setTimeout(() => {
+        setShouldShowSettingsIcon(true);
+      }, 300);
+      return () => clearTimeout(timer);
+    } else {
+      // パネルが開く時は即座に隠す
+      setShouldShowSettingsIcon(false);
+    }
+  }, [rightPanelMode]);
 
   // タブ設定
   const getTabsConfig = () => {
@@ -280,13 +295,13 @@ function DesktopUpper({
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">
             {currentMode === "board" ? (
-              <div className="flex flex-col">
+              <div className="flex flex-col w-full">
                 <div className="flex items-end gap-3">
-                  <h1 className={`font-bold text-gray-800 text-[22px] whitespace-nowrap`}>
+                  <h1 className={`font-bold text-gray-800 text-[22px]`}>
                     {customTitle || "ボード一覧"}
                   </h1>
                   {/* 説明表示切り替えボタン */}
-                  {boardDescription && contentFilterRightPanelMode !== "memo-list" && contentFilterRightPanelMode !== "task-list" && rightPanelMode === "hidden" && (
+                  {boardDescription && shouldShowSettingsIcon && (
                     <Tooltip text={isDescriptionExpanded ? "説明を隠す" : "説明を表示"} position="bottom">
                       <button
                         onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
@@ -296,17 +311,9 @@ function DesktopUpper({
                       </button>
                     </Tooltip>
                   )}
-                  {/* 設定ボタン（ボード名の横） */}
-                  {boardId && onBoardSettings && (
-                    <Tooltip text="ボード設定" position="bottom">
-                      <button onClick={onBoardSettings} className="p-1 text-gray-600">
-                        <SettingsIcon className="w-4 h-4" />
-                      </button>
-                    </Tooltip>
-                  )}
                 </div>
                 {/* ボード説明（アコーディオン） */}
-                {boardDescription && contentFilterRightPanelMode !== "memo-list" && contentFilterRightPanelMode !== "task-list" && rightPanelMode === "hidden" && isDescriptionExpanded && (
+                {boardDescription && shouldShowSettingsIcon && isDescriptionExpanded && (
                   <p className="text-gray-600 text-sm mt-1">{boardDescription}</p>
                 )}
               </div>
@@ -365,6 +372,14 @@ function DesktopUpper({
           )}
         </div>
 
+        {/* 設定ボタン（ボードモードのみ右端に表示、アニメーション完了後に表示） */}
+        {currentMode === "board" && boardId && onBoardSettings && shouldShowSettingsIcon && (
+          <Tooltip text="ボード設定" position="bottom">
+            <button onClick={onBoardSettings} className="p-1 text-gray-600">
+              <SettingsIcon className="w-4 h-4" />
+            </button>
+          </Tooltip>
+        )}
       </div>
 
 

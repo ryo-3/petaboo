@@ -101,33 +101,33 @@ function BoardNameToggle({
                   <div className="flex rounded-md bg-gray-100 p-0.5">
                     <button
                       onClick={() => onFilterModeChange('include')}
-                      className={`flex-1 px-3 py-1 text-sm font-medium rounded transition-all relative flex items-center justify-center ${
+                      className={`flex-1 px-3 py-1 text-sm font-medium rounded transition-all flex items-center justify-center gap-1 ${
                         filterMode === 'include'
                           ? 'bg-light-Blue text-white shadow-sm'
                           : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                       }`}
                     >
-                      {filterMode === 'include' && (
-                        <svg className="w-4 h-4 absolute left-3 text-white transition-opacity duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                      <span className={filterMode === 'include' ? 'ml-6' : ''}>含む</span>
+                      <svg className={`w-4 h-4 text-white transition-opacity duration-300 ${
+                        filterMode === 'include' ? 'opacity-100' : 'opacity-0'
+                      }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>含む</span>
                     </button>
                     <button
                       onClick={() => onFilterModeChange('exclude')}
-                      className={`flex-1 px-3 py-1 text-sm font-medium rounded transition-all relative flex items-center justify-center ${
+                      className={`flex-1 px-3 py-1 text-sm font-medium rounded transition-all flex items-center justify-center gap-1 ${
                         filterMode === 'exclude'
                           ? 'bg-red-500 text-white shadow-sm'
                           : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                       }`}
                     >
-                      {filterMode === 'exclude' && (
-                        <svg className="w-4 h-4 absolute left-3 text-white transition-opacity duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                      <span className={filterMode === 'exclude' ? 'ml-6' : ''}>除く</span>
+                      <svg className={`w-4 h-4 text-white transition-opacity duration-300 ${
+                        filterMode === 'exclude' ? 'opacity-100' : 'opacity-0'
+                      }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>除く</span>
                     </button>
                   </div>
                 </div>

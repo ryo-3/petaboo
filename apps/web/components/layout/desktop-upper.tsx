@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import SettingsIcon from "@/components/icons/settings-icon";
 import TrashIcon from "@/components/icons/trash-icon";
 import CheckSquareIcon from "@/components/icons/check-square-icon";
@@ -159,6 +161,7 @@ function DesktopUpper({
   onCsvImport,
 }: DesktopUpperProps) {
   const { preferences } = useUserPreferences(1);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   // タブ設定
   const getTabsConfig = () => {
@@ -277,21 +280,34 @@ function DesktopUpper({
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">
             {currentMode === "board" ? (
-              <div className="flex items-center gap-3">
-                <h1 className={`font-bold text-gray-800 text-[22px] ${customTitle ? '' : 'w-[105px]'}`}>
-                  {customTitle || "ボード一覧"}
-                </h1>
-                {/* ボード説明（タイトルの横、一覧表示中とエディター開いている時は非表示） */}
-                {boardDescription && contentFilterRightPanelMode !== "memo-list" && contentFilterRightPanelMode !== "task-list" && rightPanelMode === "hidden" && (
-                  <p className="text-gray-600 text-sm">{boardDescription}</p>
-                )}
-                {/* 設定ボタン（ボード名の横） */}
-                {boardId && onBoardSettings && (
-                  <Tooltip text="ボード設定" position="bottom">
-                    <button onClick={onBoardSettings} className="p-1 text-gray-600">
-                      <SettingsIcon className="w-4 h-4" />
-                    </button>
-                  </Tooltip>
+              <div className="flex flex-col">
+                <div className="flex items-end gap-3">
+                  <h1 className={`font-bold text-gray-800 text-[22px] whitespace-nowrap`}>
+                    {customTitle || "ボード一覧"}
+                  </h1>
+                  {/* 説明表示切り替えボタン */}
+                  {boardDescription && contentFilterRightPanelMode !== "memo-list" && contentFilterRightPanelMode !== "task-list" && rightPanelMode === "hidden" && (
+                    <Tooltip text={isDescriptionExpanded ? "説明を隠す" : "説明を表示"} position="bottom">
+                      <button
+                        onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                        className="text-gray-500 hover:text-gray-700 flex items-end"
+                      >
+                        <span className="text-gray-400 text-lg font-bold">...</span>
+                      </button>
+                    </Tooltip>
+                  )}
+                  {/* 設定ボタン（ボード名の横） */}
+                  {boardId && onBoardSettings && (
+                    <Tooltip text="ボード設定" position="bottom">
+                      <button onClick={onBoardSettings} className="p-1 text-gray-600">
+                        <SettingsIcon className="w-4 h-4" />
+                      </button>
+                    </Tooltip>
+                  )}
+                </div>
+                {/* ボード説明（アコーディオン） */}
+                {boardDescription && contentFilterRightPanelMode !== "memo-list" && contentFilterRightPanelMode !== "task-list" && rightPanelMode === "hidden" && isDescriptionExpanded && (
+                  <p className="text-gray-600 text-sm mt-1">{boardDescription}</p>
                 )}
               </div>
             ) : (

@@ -3,7 +3,6 @@
 import TaskCard from '@/components/features/task/task-card';
 import TaskListItem from '@/components/features/task/task-list-item';
 import ItemStatusDisplay from '@/components/ui/layout/item-status-display';
-import TaskFilterWrapper from '@/components/features/task/task-filter-wrapper';
 import type { Task, DeletedTask } from '@/src/types/task';
 import type { Tag, Tagging } from '@/src/types/tag';
 import type { Board } from '@/src/types/board';
@@ -154,12 +153,21 @@ function TaskStatusDisplay({
       return tasksWithData;
     }
     
-    // フィルタリングはTaskFilterWrapperで個別に行うため、全て返す
-    return tasksWithData;
-  }, [tasksWithData, selectedBoardIds]);
+    // ボードフィルタリングを事前に適用
+    return tasksWithData.filter(({ task, boards }) => {
+      const taskBoardIds = boards.map(b => b.id);
+      
+      // フィルターモードに応じて表示判定
+      if (boardFilterMode === 'exclude') {
+        // 除外モード：選択されたボードのいずれにも所属していない場合に表示
+        return !selectedBoardIds.some(selectedId => taskBoardIds.includes(selectedId));
+      } else {
+        // 含むモード（デフォルト）：選択されたボードのいずれかに所属している場合に表示
+        return selectedBoardIds.some(selectedId => taskBoardIds.includes(selectedId));
+      }
+    });
+  }, [tasksWithData, selectedBoardIds, boardFilterMode]);
 
-  // フィルタリングが必要かどうか
-  const needsFiltering = selectedBoardIds && selectedBoardIds.length > 0;
 
   const getEmptyMessage = () => {
     switch (activeTab) {
@@ -233,20 +241,6 @@ function TaskStatusDisplay({
         boards={taskBoards}
       />
     );
-    
-    // フィルタリングが必要な場合はTaskFilterWrapperで包む
-    if (needsFiltering) {
-      return (
-        <TaskFilterWrapper
-          key={task.id}
-          task={task}
-          selectedBoardIds={selectedBoardIds}
-          filterMode={boardFilterMode}
-        >
-          {taskComponent}
-        </TaskFilterWrapper>
-      );
-    }
     
     return taskComponent;
     /* eslint-enable react/prop-types */

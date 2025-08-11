@@ -31,7 +31,7 @@ function BaseViewer({
   topContent,
 }: BaseViewerProps) {
   return (
-    <div className="flex flex-col h-full bg-white pt-2">
+    <div className="flex flex-col h-full bg-white pt-4">
       {topContent}
       {!hideDateInfo && (
         <DateInfo

@@ -14,12 +14,12 @@ export default function BoardChips({
   maxWidth = "120px", // デフォルトは120px
   maxDisplay = 3 // デフォルトは3つまで表示
 }: BoardChipsProps) {
-  const [isAllExpanded, setIsAllExpanded] = useState(false);
+  const [expandedBoards, setExpandedBoards] = useState<Set<number>>(new Set());
   const [showAll, setShowAll] = useState(false);
   
   // ボードが変わったら展開状態をリセット
   useEffect(() => {
-    setIsAllExpanded(false);
+    setExpandedBoards(new Set());
     setShowAll(false);
   }, [boards]);
   
@@ -29,9 +29,17 @@ export default function BoardChips({
     ? "px-2 py-1 text-xs" 
     : "px-3 py-1 text-sm";
 
-  // 全体の展開状態を切り替え（どれかクリックしたら全部展開/折りたたみ）
-  const toggleExpand = () => {
-    setIsAllExpanded(!isAllExpanded);
+  // 個別のボードの展開状態を切り替え
+  const toggleBoard = (boardId: number) => {
+    setExpandedBoards(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(boardId)) {
+        newSet.delete(boardId);
+      } else {
+        newSet.add(boardId);
+      }
+      return newSet;
+    });
   };
 
   // 全ボード表示/制限表示を切り替え
@@ -48,14 +56,15 @@ export default function BoardChips({
   return (
     <div className="flex flex-wrap items-center gap-2">
       {displayBoards.map((board) => {
+        const isExpanded = expandedBoards.has(board.id);
         return (
           <button
             key={board.id}
-            onClick={toggleExpand}
+            onClick={() => toggleBoard(board.id)}
             className={`inline-flex items-center rounded-md bg-light-Blue text-white cursor-pointer ${sizeClasses}`}
-            style={!isAllExpanded ? { maxWidth } : undefined}
+            style={!isExpanded ? { maxWidth } : undefined}
           >
-            <span className={!isAllExpanded ? "truncate" : ""}>
+            <span className={!isExpanded ? "truncate" : ""}>
               {board.name}
             </span>
           </button>

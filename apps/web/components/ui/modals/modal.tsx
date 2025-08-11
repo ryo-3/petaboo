@@ -64,7 +64,7 @@ function Modal({ isOpen, onClose, title, children, maxWidth = 'md', position = '
       <div className={`relative bg-white rounded-lg shadow-xl ${maxWidthClasses[maxWidth]} w-full mx-4 transform transition-transform`}>
         {/* ヘッダー */}
         {title && (
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          <div className="flex items-center justify-between p-4 border-b border-gray-200 modal-header">
             <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
             <button
               onClick={onClose}
@@ -78,7 +78,7 @@ function Modal({ isOpen, onClose, title, children, maxWidth = 'md', position = '
         )}
         
         {/* コンテンツ */}
-        <div className="p-4">
+        <div className="p-4 modal-content">
           {children}
         </div>
       </div>

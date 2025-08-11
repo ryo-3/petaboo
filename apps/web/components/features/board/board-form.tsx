@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { CreateBoardData, UpdateBoardData } from "@/src/types/board";
+import TextInputWithCounter from "@/components/ui/inputs/text-input-with-counter";
 
 interface BoardFormProps {
   initialData?: UpdateBoardData;
@@ -19,7 +20,7 @@ export default function BoardForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (name.trim()) {
+    if (name.trim() && name.trim().length <= 30) {
       onSubmit({
         name: name.trim(),
         description: description.trim() || undefined,
@@ -34,21 +35,15 @@ export default function BoardForm({
       </h3>
       
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-            ボード名 *
-          </label>
-          <input
-            type="text"
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="例: プロジェクト名、学習テーマなど"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            required
-            maxLength={100}
-          />
-        </div>
+        <TextInputWithCounter
+          id="name"
+          value={name}
+          onChange={setName}
+          placeholder="例: プロジェクト名、学習テーマなど（30文字以内）"
+          maxLength={30}
+          label="ボード名"
+          required
+        />
 
         <div>
           <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
@@ -67,7 +62,7 @@ export default function BoardForm({
         <div className="flex items-center gap-3 pt-2">
           <button
             type="submit"
-            disabled={!name.trim() || isLoading}
+            disabled={!name.trim() || name.trim().length > 30 || isLoading}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isLoading ? "保存中..." : initialData ? "更新" : "作成"}

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import ArrowLeftIcon from "@/components/icons/arrow-left-icon";
 import { useToggleBoardCompletion, useDeleteBoard, useUpdateBoard } from "@/src/hooks/use-boards";
 import { useToast } from "@/src/contexts/toast-context";
+import TextInputWithCounter from "@/components/ui/inputs/text-input-with-counter";
 
 interface BoardSettingsProps {
   boardId: number;
@@ -42,11 +43,21 @@ export default function BoardSettings({
   };
 
   const handleSave = async () => {
+    if (editName.trim().length === 0) {
+      showToast("ボード名を入力してください。", "error");
+      return;
+    }
+    
+    if (editName.trim().length > 30) {
+      showToast("ボード名は30文字以内で入力してください。", "error");
+      return;
+    }
+    
     try {
       await updateBoard.mutateAsync({
         id: boardId,
         data: {
-          name: editName,
+          name: editName.trim(),
           description: editDescription || undefined,
         },
       });
@@ -100,21 +111,17 @@ export default function BoardSettings({
         <div className="bg-white border border-gray-200 rounded-lg p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">基本情報</h2>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                ボード名
-              </label>
-              <input
-                type="text"
-                value={editName}
-                onChange={(e) => handleNameChange(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="ボード名を入力"
-              />
-            </div>
+          <div className="grid grid-cols-1 gap-6">
+            <TextInputWithCounter
+              value={editName}
+              onChange={(value) => handleNameChange(value)}
+              placeholder="ボード名を入力（30文字以内）"
+              maxLength={30}
+              label="ボード名"
+              className="px-4 py-3"
+            />
 
-            <div className="lg:col-span-2">
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 説明
               </label>
@@ -128,10 +135,10 @@ export default function BoardSettings({
             </div>
 
             {hasChanges && (
-              <div className="lg:col-span-2 flex gap-3">
+              <div className="flex gap-3">
                 <button
                   onClick={handleSave}
-                  disabled={updateBoard.isPending}
+                  disabled={updateBoard.isPending || !editName.trim() || editName.trim().length > 30}
                   className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium disabled:opacity-50"
                 >
                   {updateBoard.isPending ? "保存中..." : "保存"}

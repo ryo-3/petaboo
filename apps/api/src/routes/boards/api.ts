@@ -1108,7 +1108,35 @@ export function createAPI(app: AppType) {
     }
 
     // アイテムの存在確認と所有権確認、originalIdを取得
-    const originalId = await getOriginalId(itemId, itemType, auth.userId, db);
+    // itemIdが既にoriginalId形式（文字列）の場合はそのまま使い、数値の場合は変換
+    let originalId: string | null = null;
+    
+    // まずitemIdをoriginalIdとして扱ってみる
+    if (itemType === 'memo') {
+      const memoByOriginalId = await db
+        .select({ originalId: memos.originalId })
+        .from(memos)
+        .where(and(eq(memos.originalId, itemId.toString()), eq(memos.userId, auth.userId)))
+        .limit(1);
+      if (memoByOriginalId.length > 0) {
+        originalId = memoByOriginalId[0].originalId;
+      }
+    } else {
+      const taskByOriginalId = await db
+        .select({ originalId: tasks.originalId })
+        .from(tasks)
+        .where(and(eq(tasks.originalId, itemId.toString()), eq(tasks.userId, auth.userId)))
+        .limit(1);
+      if (taskByOriginalId.length > 0) {
+        originalId = taskByOriginalId[0].originalId;
+      }
+    }
+    
+    // originalIdとして見つからなかった場合は、数値IDとして処理
+    if (!originalId) {
+      originalId = await getOriginalId(itemId, itemType, auth.userId, db);
+    }
+    
     if (!originalId) {
       return c.json({ error: `${itemType === 'memo' ? 'Memo' : 'Task'} not found` }, 404);
     }

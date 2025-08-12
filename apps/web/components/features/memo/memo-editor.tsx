@@ -271,6 +271,16 @@ function MemoEditor({
 
   // 現在選択されているボードのvalue（複数選択対応）
   const currentBoardValues = selectedBoardIds.map(id => id.toString());
+  
+  // 表示用のボード（現在の選択状態を反映）
+  const displayBoards = useMemo(() => {
+    // 選択中のボードIDから、実際のボード情報を取得
+    const selectedBoards = selectedBoardIds
+      .map(id => preloadedBoards.find(board => board.id === id))
+      .filter((board): board is NonNullable<typeof board> => board !== undefined);
+    
+    return selectedBoards;
+  }, [selectedBoardIds, preloadedBoards]);
 
   // ボード選択変更ハンドラー（削除済みの場合は無効）
   const handleBoardSelectorChange = (value: string | string[]) => {
@@ -469,8 +479,8 @@ function MemoEditor({
           {memo && memo.id !== 0 && (
             <div className="mb-1 mt-2 min-h-[28px]">
               <div className="flex flex-wrap gap-2">
-                {/* ボード名 */}
-                <BoardChips boards={itemBoards} variant="compact" />
+                {/* ボード名（選択中の状態を表示） */}
+                <BoardChips boards={displayBoards} variant="compact" />
                 {/* タグ */}
                 {localTags.map((tag) => (
                   <div

@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import DashboardIcon from "@/components/icons/dashboard-icon";
 import Tooltip from "@/components/ui/base/tooltip";
+import BoardSelectionModal from "@/components/ui/modals/board-selection-modal";
 
 interface BoardOption {
   value: string;
@@ -27,117 +28,71 @@ export default function BoardIconSelector({
   disabled = false
 }: BoardIconSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const selectorRef = useRef<HTMLDivElement>(null);
 
   // 値を配列として扱う（単一選択の場合も配列に変換）
   const selectedValues = Array.isArray(value) 
     ? value 
     : (value && value !== "" ? [value] : []);
-  
 
-  
+  // BoardSelectionModal用のデータ変換
+  const boards = options
+    .filter(opt => opt.value !== "") // "なし"オプションを除外
+    .map(opt => ({
+      id: parseInt(opt.value, 10),
+      name: opt.label
+    }));
 
-  // 外部クリックで閉じる
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (selectorRef.current && !selectorRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
+  const selectedBoardIds = selectedValues
+    .filter(v => v !== "")
+    .map(v => parseInt(v, 10));
 
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
-    }
-  }, [isOpen]);
-
-  const handleSelect = (optionValue: string) => {
-    if (multiple) {
-      // 複数選択モード
-      const newValues = selectedValues.includes(optionValue)
-        ? selectedValues.filter(v => v !== optionValue) // 選択解除
-        : [...selectedValues, optionValue]; // 選択追加
-      
-      onChange(newValues);
-    } else {
-      // 単一選択モード
-      onChange(optionValue);
-      setIsOpen(false);
-    }
+  const handleSelectionChange = (boardIds: number[]) => {
+    const stringValues = boardIds.map(id => id.toString());
+    onChange(multiple ? stringValues : stringValues[0] || "");
   };
 
   // ボードが選択されているかどうか
   const hasSelectedBoard = selectedValues.length > 0;
 
   return (
-    <div className={`flex items-center gap-1.5 ${className}`} ref={selectorRef}>
-      <div className="relative">
-        <Tooltip text={disabled ? "ボード表示（読み取り専用）" : "ボード選択"} position="bottom">
-          <button
-            onClick={disabled ? undefined : () => {
-              setIsOpen(!isOpen);
-            }}
-            disabled={disabled}
-            className={`flex items-center justify-center size-7 rounded-md ${
-              disabled 
-                ? "bg-gray-50 cursor-not-allowed" 
-                : hasSelectedBoard 
-                  ? "bg-light-Blue text-white" 
-                  : "bg-gray-100"
-            }`}
-          >
-            <DashboardIcon className={`${iconClassName} ${
-              disabled 
-                ? "text-gray-400" 
-                : hasSelectedBoard 
-                  ? "text-white" 
-                  : "text-gray-600"
-            }`} />
-          </button>
-        </Tooltip>
-        
-        {isOpen && !disabled && (
-          <div className="absolute top-full left-0 mt-1 z-50 bg-white rounded-lg shadow-lg border border-gray-300 min-w-[180px]">
-            <div className="py-1">
-            {options.map((option) => {
-              // 複数選択モードでは「なし」オプションをスキップ
-              if (multiple && option.value === "") return null;
-              
-              const isSelected = selectedValues.includes(option.value);
-              
-              
-              return (
-                <button
-                  key={option.value}
-                  className="w-full px-3 py-2 text-sm text-left flex items-center gap-2 text-gray-700 hover:bg-gray-50"
-                  onClick={() => {
-                    handleSelect(option.value);
-                  }}
-                >
-                  {multiple && (
-                    <div className={`w-4 h-4 border-2 rounded flex items-center justify-center ${
-                      isSelected 
-                        ? "bg-light-Blue border-light-Blue" 
-                        : "border-gray-300"
-                    }`}>
-                      {isSelected && (
-                        <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      )}
-                    </div>
-                  )}
-                  {option.label}
-                </button>
-              );
-            })}
-            </div>
-          </div>
-        )}
+    <>
+      <div className={`flex items-center gap-1.5 ${className}`}>
+        <div className="relative">
+          <Tooltip text={disabled ? "ボード表示（読み取り専用）" : "ボード選択"} position="bottom">
+            <button
+              onClick={disabled ? undefined : () => setIsOpen(true)}
+              disabled={disabled}
+              className={`flex items-center justify-center size-7 rounded-md ${
+                disabled 
+                  ? "bg-gray-50 cursor-not-allowed" 
+                  : hasSelectedBoard 
+                    ? "bg-light-Blue text-white" 
+                    : "bg-gray-100"
+              }`}
+            >
+              <DashboardIcon className={`${iconClassName} ${
+                disabled 
+                  ? "text-gray-400" 
+                  : hasSelectedBoard 
+                    ? "text-white" 
+                    : "text-gray-600"
+              }`} />
+            </button>
+          </Tooltip>
+        </div>
       </div>
-      
-    </div>
+
+      {/* ボード選択モーダル */}
+      <BoardSelectionModal
+        isOpen={isOpen && !disabled}
+        onClose={() => setIsOpen(false)}
+        boards={boards}
+        selectedBoardIds={selectedBoardIds}
+        onSelectionChange={handleSelectionChange}
+        mode="selection"
+        multiple={multiple}
+        title="ボード選択"
+      />
+    </>
   );
 }

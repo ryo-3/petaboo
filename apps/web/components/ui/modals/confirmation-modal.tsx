@@ -180,7 +180,7 @@ function ConfirmationModal({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} maxWidth="sm" position={position} parentElement={parentElement}>
+    <Modal isOpen={isOpen} onClose={onClose} maxWidth="md" position={position} parentElement={parentElement}>
       <div className="text-center">
         {/* アイコン */}
         <div className={`mx-auto flex items-center justify-center h-12 w-12 rounded-full ${styles.iconBg} mb-4`}>
@@ -280,7 +280,7 @@ export function BulkDeleteConfirmation({
   // ボードから外すボタンがある場合は、カスタムのモーダルを表示
   if (showRemoveFromBoard && onRemoveFromBoard) {
     return (
-      <Modal isOpen={isOpen} onClose={onClose} maxWidth="sm" position={position}>
+      <Modal isOpen={isOpen} onClose={onClose} maxWidth="md" position={position}>
         <div className="text-center">
           {/* アイコン */}
           <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">

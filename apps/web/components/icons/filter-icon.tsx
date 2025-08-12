@@ -1,11 +1,13 @@
 interface FilterIconProps {
   className?: string;
+  style?: React.CSSProperties;
 }
 
-function FilterIcon({ className = "w-5 h-5" }: FilterIconProps) {
+function FilterIcon({ className = "w-5 h-5", style }: FilterIconProps) {
   return (
     <svg
       className={className}
+      style={style}
       fill="none"
       stroke="currentColor"
       viewBox="0 0 24 24"

@@ -7,12 +7,13 @@ interface ModalProps {
   onClose: () => void
   title?: string
   children: React.ReactNode
-  maxWidth?: 'sm' | 'md' | 'lg' | 'xl'
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | '7xl'
   position?: 'center' | 'right-panel' | 'left-panel'
   parentElement?: HTMLElement
+  maxHeight?: string
 }
 
-function Modal({ isOpen, onClose, title, children, maxWidth = 'md', position = 'center' }: ModalProps) {
+function Modal({ isOpen, onClose, title, children, maxWidth = 'md', position = 'center', maxHeight }: ModalProps) {
   // ESCキーでモーダルを閉じる
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -40,6 +41,12 @@ function Modal({ isOpen, onClose, title, children, maxWidth = 'md', position = '
     md: 'max-w-md',
     lg: 'max-w-lg',
     xl: 'max-w-xl',
+    '2xl': 'max-w-2xl',
+    '3xl': 'max-w-3xl',
+    '4xl': 'max-w-4xl',
+    '5xl': 'max-w-5xl',
+    '6xl': 'max-w-6xl',
+    '7xl': 'max-w-7xl',
   }
 
   const containerClasses = position === 'center'
@@ -61,7 +68,10 @@ function Modal({ isOpen, onClose, title, children, maxWidth = 'md', position = '
       />
       
       {/* モーダル本体 */}
-      <div className={`relative bg-white rounded-lg shadow-xl ${maxWidthClasses[maxWidth]} w-full mx-4 transform transition-transform`}>
+      <div 
+        className={`relative bg-white rounded-lg shadow-xl ${maxWidthClasses[maxWidth]} w-full mx-4 transform transition-transform`}
+        style={maxHeight ? { maxHeight } : {}}
+      >
         {/* ヘッダー */}
         {title && (
           <div className="flex items-center justify-between p-4 border-b border-gray-200 modal-header">

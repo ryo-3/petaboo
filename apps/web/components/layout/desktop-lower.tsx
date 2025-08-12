@@ -39,6 +39,10 @@ interface DesktopLowerProps {
   selectedBoardIds?: number[];
   boardFilterMode?: 'include' | 'exclude';
   
+  // Tag filter
+  selectedTagIds?: number[];
+  tagFilterMode?: 'include' | 'exclude';
+  
   // Data props
   memos?: Memo[];
   localMemos?: Memo[];
@@ -96,6 +100,8 @@ function DesktopLower({
   showTags = false,
   selectedBoardIds = [],
   boardFilterMode = 'include',
+  selectedTagIds = [],
+  tagFilterMode = 'include',
   localMemos,
   deletedMemos,
   tasks,
@@ -158,6 +164,8 @@ function DesktopLower({
           showTags={showTags}
           selectedBoardIds={selectedBoardIds}
           boardFilterMode={boardFilterMode}
+          selectedTagIds={selectedTagIds}
+          tagFilterMode={tagFilterMode}
           sortOptions={sortOptions.filter(opt => 
             opt.id === "createdAt" || opt.id === "updatedAt" || opt.id === "deletedAt"
           ) as Array<{

@@ -16,6 +16,8 @@ const config = {
         Yellow: "#7b9237",
         Blue: "#426dd0",
         "light-Blue": "#2caaf3",
+        "tag-bg": "#e8dcc0",
+        "tag-text": "#4a3018",
       },
     },
   },

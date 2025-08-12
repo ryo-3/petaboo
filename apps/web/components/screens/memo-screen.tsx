@@ -92,6 +92,10 @@ function MemoScreen({
     excludeBoardId ? 'exclude' : 'include'
   );
 
+  // タグフィルター管理
+  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
+  const [tagFilterMode, setTagFilterMode] = useState<'include' | 'exclude'>('include');
+
   // 並び替え管理
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { sortOptions, setSortOptions, getVisibleSortOptions } =
@@ -434,6 +438,11 @@ function MemoScreen({
           onBoardFilterChange={setSelectedBoardIds}
           filterMode={boardFilterMode}
           onFilterModeChange={setBoardFilterMode}
+          tags={tags || []}
+          selectedTagIds={selectedTagIds}
+          onTagFilterChange={setSelectedTagIds}
+          tagFilterMode={tagFilterMode}
+          onTagFilterModeChange={setTagFilterMode}
           normalCount={memos?.length || 0}
           deletedMemosCount={deletedMemos?.length || 0}
           hideAddButton={hideHeaderButtons}
@@ -454,6 +463,8 @@ function MemoScreen({
           showTags={showTagDisplay}
           selectedBoardIds={selectedBoardIds}
           boardFilterMode={boardFilterMode}
+          selectedTagIds={selectedTagIds}
+          tagFilterMode={tagFilterMode}
           memos={memos || []}
           localMemos={memos || []}
           deletedMemos={deletedMemos || []}

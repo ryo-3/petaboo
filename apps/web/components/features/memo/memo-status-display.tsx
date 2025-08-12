@@ -21,6 +21,8 @@ interface MemoStatusDisplayProps {
   showBoardName?: boolean;
   selectedBoardIds?: number[];
   boardFilterMode?: 'include' | 'exclude';
+  selectedTagIds?: number[];
+  tagFilterMode?: 'include' | 'exclude';
   sortOptions?: Array<{
     id: "createdAt" | "updatedAt" | "deletedAt";
     label: string;
@@ -58,6 +60,8 @@ interface DeletedMemoDisplayProps {
   showTags?: boolean;
   selectedBoardIds?: number[];
   boardFilterMode?: 'include' | 'exclude';
+  selectedTagIds?: number[];
+  tagFilterMode?: 'include' | 'exclude';
   sortOptions?: Array<{
     id: "createdAt" | "updatedAt" | "deletedAt";
     label: string;
@@ -93,6 +97,8 @@ function MemoStatusDisplay({
   showBoardName = false,
   selectedBoardIds = [],
   boardFilterMode = 'include',
+  selectedTagIds = [],
+  tagFilterMode = 'include',
   sortOptions = [],
   isBoard = false,
   showTags = false,
@@ -103,40 +109,60 @@ function MemoStatusDisplay({
 }: MemoStatusDisplayProps) {
   // フィルタリング済みのメモを取得
   const filteredMemos = useMemo(() => {
-    const baseMemos = memos || [];
+    let baseMemos = memos || [];
     
-    // ボードフィルタリングが設定されていない場合は全てのメモを返す
-    if (!selectedBoardIds || selectedBoardIds.length === 0) {
-      return baseMemos;
+    // ボードフィルタリング
+    if (selectedBoardIds && selectedBoardIds.length > 0 && allBoardItems) {
+      baseMemos = baseMemos.filter(memo => {
+        if (!memo || memo.id === undefined) return false;
+        
+        const originalId = memo.originalId || memo.id.toString();
+        
+        // メモが所属するボードのID一覧を取得
+        const memoBoardItems = allBoardItems.filter(
+          item => item.itemType === 'memo' && item.originalId === originalId
+        );
+        const memoBoardIds = memoBoardItems.map(item => item.boardId);
+
+        // フィルターモードに応じて表示判定
+        if (boardFilterMode === 'exclude') {
+          // 除外モード：選択されたボードのいずれにも所属していない場合に表示
+          return !selectedBoardIds.some(selectedId => memoBoardIds.includes(selectedId));
+        } else {
+          // 含むモード（デフォルト）：選択されたボードのいずれかに所属している場合に表示
+          return selectedBoardIds.some(selectedId => memoBoardIds.includes(selectedId));
+        }
+      });
     }
 
-    // ボードフィルタリングが設定されている場合
-    if (!allBoardItems) {
-      // データが読み込まれていない場合は全てのメモを表示（ちらつき防止）
-      return baseMemos;
+    // タグフィルタリング
+    if (selectedTagIds && selectedTagIds.length > 0 && allTaggings) {
+      baseMemos = baseMemos.filter(memo => {
+        if (!memo || memo.id === undefined) return false;
+        
+        const memoOriginalId = memo.originalId || memo.id.toString();
+        
+        // メモに付けられたタグのID一覧を取得
+        const memoTagIds = allTaggings
+          .filter(tagging => 
+            tagging.targetType === 'memo' && 
+            tagging.targetOriginalId === memoOriginalId
+          )
+          .map(tagging => tagging.tagId);
+
+        // フィルターモードに応じて表示判定
+        if (tagFilterMode === 'exclude') {
+          // 除外モード：選択されたタグのいずれも付いていない場合に表示
+          return !selectedTagIds.some(selectedId => memoTagIds.includes(selectedId));
+        } else {
+          // 含むモード（デフォルト）：選択されたタグのいずれかが付いている場合に表示
+          return selectedTagIds.some(selectedId => memoTagIds.includes(selectedId));
+        }
+      });
     }
 
-    return baseMemos.filter(memo => {
-      if (!memo || memo.id === undefined) return false;
-      
-      const originalId = memo.originalId || memo.id.toString();
-      
-      // メモが所属するボードのID一覧を取得
-      const memoBoardItems = allBoardItems.filter(
-        item => item.itemType === 'memo' && item.originalId === originalId
-      );
-      const memoBoardIds = memoBoardItems.map(item => item.boardId);
-
-      // フィルターモードに応じて表示判定
-      if (boardFilterMode === 'exclude') {
-        // 除外モード：選択されたボードのいずれにも所属していない場合に表示
-        return !selectedBoardIds.some(selectedId => memoBoardIds.includes(selectedId));
-      } else {
-        // 含むモード（デフォルト）：選択されたボードのいずれかに所属している場合に表示
-        return selectedBoardIds.some(selectedId => memoBoardIds.includes(selectedId));
-      }
-    });
-  }, [memos, selectedBoardIds, boardFilterMode, allBoardItems]);
+    return baseMemos;
+  }, [memos, selectedBoardIds, boardFilterMode, allBoardItems, selectedTagIds, tagFilterMode, allTaggings]);
 
 
   // 各メモのタグ・ボード情報を事前計算（ちらつき解消）
@@ -267,6 +293,10 @@ export function DeletedMemoDisplay({
   showEditDate = false,
   showBoardName = false,
   showTags = false,
+  selectedBoardIds = [],
+  boardFilterMode = 'include',
+  selectedTagIds = [],
+  tagFilterMode = 'include',
   sortOptions = [],
   isBoard = false,
   allTags = [],

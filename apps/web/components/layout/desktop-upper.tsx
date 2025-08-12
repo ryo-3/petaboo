@@ -93,6 +93,13 @@ interface DesktopUpperProps {
   // Board filter mode
   filterMode?: 'include' | 'exclude';
   onFilterModeChange?: (mode: 'include' | 'exclude') => void;
+  // Tag filter props
+  tags?: Array<{ id: number; name: string; color?: string }>;
+  selectedTagIds?: number[];
+  onTagFilterChange?: (tagIds: number[]) => void;
+  // Tag filter mode
+  tagFilterMode?: 'include' | 'exclude';
+  onTagFilterModeChange?: (mode: 'include' | 'exclude') => void;
   // Tab counts
   normalCount: number;
   deletedMemosCount?: number;
@@ -150,6 +157,11 @@ function DesktopUpper({
   onBoardFilterChange,
   filterMode = 'include',
   onFilterModeChange,
+  tags = [],
+  selectedTagIds = [],
+  onTagFilterChange,
+  tagFilterMode = 'include',
+  onTagFilterModeChange,
   normalCount,
   deletedMemosCount = 0,
   deletedTasksCount = 0,
@@ -505,6 +517,11 @@ function DesktopUpper({
               onToggle={onShowTagDisplayChange}
               buttonSize="size-7"
               iconSize="size-4"
+              tags={tags}
+              selectedTagIds={selectedTagIds}
+              onTagFilterChange={onTagFilterChange}
+              filterMode={tagFilterMode}
+              onFilterModeChange={onTagFilterModeChange}
             />
           )}
 

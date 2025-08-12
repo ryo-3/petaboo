@@ -190,7 +190,7 @@ export default function BoardMemoSection({
           <span className="font-normal text-gray-500">
             {allMemoItems.length}
           </span>
-          <Tooltip text="新規追加" position="top">
+          <Tooltip text="新規追加" position="bottom">
             <AddItemButton
               itemType="memo"
               onClick={onCreateNewMemo}
@@ -203,7 +203,7 @@ export default function BoardMemoSection({
               className="size-6 flex items-center justify-center"
             />
           </Tooltip>
-          <Tooltip text={rightPanelMode === "memo-list" ? "メモ一覧非表示" : "メモ一覧表示"} position="top">
+          <Tooltip text={rightPanelMode === "memo-list" ? "メモ一覧非表示" : "メモ一覧表示"} position="bottom">
             <button
               onClick={() => onSetRightPanelMode(rightPanelMode === "memo-list" ? null : "memo-list")}
               className={`size-6 flex items-center justify-center rounded-lg transition-colors ${

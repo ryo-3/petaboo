@@ -30,7 +30,7 @@ function SaveButton({
   };
 
   return (
-    <Tooltip text={getTooltipText()} position="top">
+    <Tooltip text={getTooltipText()} position="bottom-right">
       <button
         onClick={onClick}
         disabled={disabled || isSaving || savedSuccessfully}

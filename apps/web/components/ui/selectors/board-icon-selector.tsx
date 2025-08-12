@@ -74,7 +74,7 @@ export default function BoardIconSelector({
   return (
     <div className={`flex items-center gap-1.5 ${className}`} ref={selectorRef}>
       <div className="relative">
-        <Tooltip text={disabled ? "ボード表示（読み取り専用）" : "ボード選択"} position="top">
+        <Tooltip text={disabled ? "ボード表示（読み取り専用）" : "ボード選択"} position="bottom">
           <button
             onClick={disabled ? undefined : () => {
               setIsOpen(!isOpen);

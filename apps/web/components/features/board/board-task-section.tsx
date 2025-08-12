@@ -196,7 +196,7 @@ export default function BoardTaskSection({
           <span className="font-normal text-gray-500">
             {allTaskItems.length}
           </span>
-          <Tooltip text="新規追加" position="top">
+          <Tooltip text="新規追加" position="bottom">
             <AddItemButton
               itemType="task"
               onClick={onCreateNewTask}
@@ -209,7 +209,7 @@ export default function BoardTaskSection({
               className="size-6 flex items-center justify-center"
             />
           </Tooltip>
-          <Tooltip text={rightPanelMode === "task-list" ? "タスク一覧非表示" : "タスク一覧表示"} position="top">
+          <Tooltip text={rightPanelMode === "task-list" ? "タスク一覧非表示" : "タスク一覧表示"} position="bottom">
             <button
               onClick={() => onSetRightPanelMode(rightPanelMode === "task-list" ? null : "task-list")}
               className={`size-6 flex items-center justify-center rounded-lg transition-colors ${

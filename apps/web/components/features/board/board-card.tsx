@@ -83,7 +83,7 @@ export default function BoardCard({ board, onSelect, mode = "normal", onPermanen
       {/* 削除済みボードの場合は削除ボタンを表示 */}
       {mode === "deleted" && onPermanentDelete && (
         <div className="absolute top-3 right-3">
-          <Tooltip text="完全削除" position="top">
+          <Tooltip text="完全削除" position="bottom">
             <button
               onClick={handleDeleteClick}
               onMouseEnter={() => setIsTrashHovered(true)}

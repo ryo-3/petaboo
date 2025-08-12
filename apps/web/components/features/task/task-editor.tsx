@@ -802,7 +802,7 @@ function TaskEditor({
                   buttonSize="size-7"
                   iconSize="size-4"
                 />
-                <Tooltip text="写真" position="top">
+                <Tooltip text="写真" position="bottom">
                   <PhotoButton
                     buttonSize="size-7"
                     iconSize="size-5"

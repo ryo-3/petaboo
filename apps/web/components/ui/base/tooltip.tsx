@@ -3,7 +3,7 @@ import { ReactNode } from 'react'
 interface TooltipProps {
   children: ReactNode
   text: string
-  position?: 'top' | 'bottom' | 'right'
+  position?: 'top' | 'bottom' | 'right' | 'bottom-right'
   bgColor?: string
   textColor?: string
   className?: string
@@ -23,6 +23,8 @@ function Tooltip({
         return 'bottom-full left-1/2 transform -translate-x-1/2 mb-2'
       case 'right':
         return 'left-full top-1/2 transform -translate-y-1/2 ml-2'
+      case 'bottom-right':
+        return 'top-full left-0 mt-2'
       case 'bottom':
       default:
         return 'top-full left-1/2 transform -translate-x-1/2 mt-2'
@@ -39,6 +41,8 @@ function Tooltip({
             ? 'top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent'
             : position === 'right'
             ? 'right-full top-1/2 transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-r-4 border-transparent'
+            : position === 'bottom-right'
+            ? 'bottom-full left-4 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent'
             : 'bottom-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent'
         } ${bgColor === 'bg-gray-800' ? 
              position === 'right' ? 'border-r-gray-800' : 'border-t-gray-800 border-b-gray-800'

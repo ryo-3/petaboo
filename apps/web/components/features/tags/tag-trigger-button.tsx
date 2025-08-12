@@ -61,7 +61,7 @@ export default function TagTriggerButton({
         : 'タグ');
 
   return (
-    <Tooltip text={tooltipText} position="top">
+    <Tooltip text={tooltipText} position="bottom">
       <div
         onClick={disabled ? undefined : onClick}
         className={`flex items-center justify-center ${sizeClasses[size]} rounded-md transition-colors ${

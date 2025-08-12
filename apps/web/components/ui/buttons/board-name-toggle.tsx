@@ -44,12 +44,12 @@ function BoardNameToggle({
 
   const handleSelectAll = () => {
     if (!onBoardFilterChange) return;
-    // 全選択状態なら全解除、そうでなければ全選択
-    if (selectedBoardIds.length === boards.length) {
-      onBoardFilterChange([]);
-    } else {
-      onBoardFilterChange(boards.map(board => board.id));
-    }
+    onBoardFilterChange(boards.map(board => board.id));
+  };
+
+  const handleClearAll = () => {
+    if (!onBoardFilterChange) return;
+    onBoardFilterChange([]);
   };
 
   return (
@@ -137,28 +137,20 @@ function BoardNameToggle({
               <div>
                 <div className="mb-2 flex justify-between items-center">
                   <span className="text-sm font-medium text-gray-700">ボード一覧</span>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={selectedBoardIds.length === boards.length && boards.length > 0}
-                      onChange={handleSelectAll}
-                      className="sr-only"
-                    />
-                    <div className={`w-4 h-4 border rounded flex items-center justify-center ${
-                      selectedBoardIds.length === boards.length && boards.length > 0
-                        ? 'bg-light-Blue border-light-Blue'
-                        : 'border-gray-300 bg-white'
-                    }`}>
-                      {selectedBoardIds.length === boards.length && boards.length > 0 && (
-                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </div>
-                    <span className="text-sm text-gray-600">
-                      {selectedBoardIds.length === boards.length && boards.length > 0 ? "全解除" : "全選択"}
-                    </span>
-                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSelectAll}
+                      className="px-3 py-1 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded transition-colors"
+                    >
+                      全選択
+                    </button>
+                    <button
+                      onClick={handleClearAll}
+                      className="px-3 py-1 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded transition-colors"
+                    >
+                      全解除
+                    </button>
+                  </div>
                 </div>
                 <div className="max-h-64 overflow-y-auto border border-gray-200 rounded-md">
                   {boards.length === 0 ? (

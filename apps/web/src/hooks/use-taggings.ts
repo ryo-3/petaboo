@@ -69,7 +69,7 @@ export function useCreateTagging() {
       // 全タグ付け情報に新しいタグ付けを追加
       queryClient.setQueryData(['taggings', 'all'], (oldTaggings: Tagging[]) => {
         if (!oldTaggings) return [newTagging]
-        return [...oldTaggings, newTagging]
+        return [...oldTaggings, newTagging];
       })
       // 汎用タグ付けクエリも無効化
       queryClient.invalidateQueries({ queryKey: ['taggings'], exact: false })
@@ -93,7 +93,7 @@ export function useDeleteTagging() {
       // 全タグ付け情報から削除されたタグ付けを除去
       queryClient.setQueryData(['taggings', 'all'], (oldTaggings: Tagging[]) => {
         if (!oldTaggings) return []
-        return oldTaggings.filter(tagging => tagging.id !== id)
+        return oldTaggings.filter(tagging => tagging.id !== id);
       })
       // 汎用タグ付けクエリを無効化
       queryClient.invalidateQueries({ queryKey: ['taggings'], exact: false })

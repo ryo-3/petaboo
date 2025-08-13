@@ -14,6 +14,7 @@ import { TAG_COLORS } from "@/src/constants/colors";
 import { useSimpleMemoSave } from "@/src/hooks/use-simple-memo-save";
 import { useCreateTagging, useDeleteTagging } from "@/src/hooks/use-taggings";
 import { useDeletedMemoActions } from "./use-deleted-memo-actions";
+import { useQueryClient } from "@tanstack/react-query";
 import BoardChips from "@/components/ui/chips/board-chips";
 import DateInfo from "@/components/shared/date-info";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
@@ -145,6 +146,7 @@ function MemoEditor({
   // タグ操作用のmutation（既存API使用）
   const createTaggingMutation = useCreateTagging();
   const deleteTaggingMutation = useDeleteTagging();
+  const queryClient = useQueryClient();
 
   // 削除済みメモの操作用（React Hooks違反を避けるため常に呼び出し、nullを許可）
   const deletedMemoActions = useDeletedMemoActions({
@@ -180,7 +182,9 @@ function MemoEditor({
 
   // タグの差分を計算して一括更新する関数
   const updateTaggings = useCallback(async (memoId: string) => {
-    if (!memo || memo.id === undefined || memo.id === 0) return;
+    if (!memo || memo.id === undefined || memo.id === 0) {
+      return;
+    }
 
     const currentTagIds = currentTags.map(tag => tag.id);
     const localTagIds = localTags.map(tag => tag.id);
@@ -242,16 +246,39 @@ function MemoEditor({
       // まずメモを保存
       await handleSave();
       
-      // 保存後、タグも更新（既存メモの場合のみ）
+      // 保存後、タグも更新
+      // onSaveCompleteで最新のメモを取得できるが、同期の問題があるため
+      // 既存メモの場合は現在のmemo、新規作成の場合は少し待ってから処理
       if (memo && memo.id > 0) {
+        // 既存メモの場合
         await updateTaggings(memo.originalId || memo.id.toString());
-        // 手動変更フラグをリセット
         setHasManualChanges(false);
+      } else if (localTags.length > 0) {
+        // 新規作成でタグがある場合は、少し遅延させて最新のメモリストから取得
+        setTimeout(async () => {
+          try {
+            // React QueryのキャッシュからmemosQueryを取得して、最新の作成メモを特定
+            const memosQuery = queryClient.getQueryData<Memo[]>(['memos']);
+            
+            if (memosQuery && memosQuery.length > 0) {
+              // 最新のメモ（作成時刻順で最後）を取得
+              const latestMemo = [...memosQuery].sort((a, b) => b.createdAt - a.createdAt)[0];
+              
+              if (latestMemo) {
+                const targetId = latestMemo.originalId || latestMemo.id.toString();
+                await updateTaggings(targetId);
+                setHasManualChanges(false);
+              }
+            }
+          } catch (error) {
+            console.error('❌ 新規メモのタグ保存に失敗しました:', error);
+          }
+        }, 100); // 100ms遅延
       }
     } catch (error) {
-      console.error('保存に失敗しました:', error);
+      console.error('❌ 保存に失敗しました:', error);
     }
-  }, [handleSave, memo, updateTaggings, isDeleted]);
+  }, [handleSave, memo, updateTaggings, isDeleted, localTags, queryClient]);
 
   // BoardIconSelector用のボードオプション
   const boardOptions = useMemo(() => {

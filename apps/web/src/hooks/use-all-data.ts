@@ -11,7 +11,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8794";
 export function useAllTaggings() {
   const { getToken, isLoaded } = useAuth();
 
-  return useQuery<Tagging[]>({
+  const result = useQuery<Tagging[]>({
     queryKey: ['taggings', 'all'],
     enabled: isLoaded,
     queryFn: async () => {
@@ -28,7 +28,8 @@ export function useAllTaggings() {
         throw new Error(`Failed to fetch all taggings: ${response.status}`);
       }
 
-      return response.json();
+      const data = await response.json();
+      return data;
     },
     staleTime: 5 * 60 * 1000,     // 5分間キャッシュ
     gcTime: 30 * 60 * 1000,        // 30分間保持
@@ -37,6 +38,8 @@ export function useAllTaggings() {
     retry: 3,                      // 最大3回リトライ
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // 指数バックオフ
   });
+
+  return result;
 }
 
 interface BoardItem {

@@ -51,6 +51,16 @@ export function useCreateMemo() {
         if (!oldMemos) return [newMemo]
         return [...oldMemos, newMemo]
       })
+      // ボード関連キャッシュを無効化
+      queryClient.invalidateQueries({ 
+        queryKey: ["boards"],
+        exact: false
+      });
+      // タグ付け関連キャッシュを無効化（タグ表示更新のため）
+      queryClient.invalidateQueries({
+        queryKey: ["taggings"],
+        exact: false
+      });
     },
   })
 }
@@ -91,6 +101,11 @@ export function useUpdateMemo() {
       // ボード関連キャッシュを無効化（一覧・統計・アイテムを含む）
       queryClient.invalidateQueries({ 
         queryKey: ["boards"],
+        exact: false
+      });
+      // タグ付け関連キャッシュを無効化（タグ表示更新のため）
+      queryClient.invalidateQueries({
+        queryKey: ["taggings"],
         exact: false
       });
     },

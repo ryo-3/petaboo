@@ -602,8 +602,8 @@ function TaskEditor({
           }
         }
         
-        // 新規作成時は連続作成のため onSaveComplete を呼ばない
-        // ボード詳細画面のタスク一覧はReact Queryのキャッシュ無効化で自動更新される
+        // 新規作成完了を通知
+        onSaveComplete?.(newTask, true);
         
         // 新規作成後はフォームをリセット
         setTimeout(() => {

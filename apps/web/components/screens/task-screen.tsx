@@ -499,6 +499,12 @@ function TaskScreen({
           <TaskEditor 
             task={null} 
             onClose={() => setTaskScreenMode("list")}
+            onSaveComplete={(savedTask, isNewTask) => {
+              if (isNewTask) {
+                // 連続作成のため、新規作成モードを維持
+                // タスク一覧は invalidateQueries により自動更新される
+              }
+            }}
             preloadedBoards={boards || []}
             preloadedTaggings={safeAllTaggings}
             preloadedBoardItems={safeAllBoardItems}

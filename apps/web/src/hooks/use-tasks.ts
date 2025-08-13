@@ -37,11 +37,9 @@ export function useCreateTask() {
       return result
     },
     onSuccess: (newTask) => {
-      // タスク一覧に新しいタスクを追加
-      queryClient.setQueryData<Task[]>(['tasks'], (oldTasks) => {
-        if (!oldTasks) return [newTask]
-        return [...oldTasks, newTask]
-      })
+      // APIが不完全なデータしか返さないため、タスク一覧を無効化して再取得
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      
       // ボード統計の再計算のためボード一覧を無効化
       queryClient.invalidateQueries({ queryKey: ["boards"] });
     },

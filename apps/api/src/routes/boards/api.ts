@@ -1236,10 +1236,9 @@ export function createAPI(app: AppType) {
     }
 
     const boardId = parseInt(c.req.param("id"));
-    const itemId = parseInt(c.req.param("itemId"));
+    const rawItemId = c.req.param("itemId"); // 文字列として取得
     const { itemType } = c.req.valid("query");
     const db = c.env.db;
-    
 
     // ボードの所有権確認
     const board = await db
@@ -1257,13 +1256,12 @@ export function createAPI(app: AppType) {
       return c.json({ error: "Board not found" }, 404);
     }
 
-    // itemIdをoriginalIdとして直接使用（board_itemsテーブルはoriginalIdで管理）
-    const originalId = itemId.toString();
+    // itemIdをoriginalIdとして直接使用（文字列のまま）
+    const originalId = rawItemId;
 
-    // デバッグ: board_itemsテーブルの該当レコードを確認
-    const existingItems = await db
-      .select()
-      .from(boardItems)
+    // アイテムを物理削除（レコード自体を削除）
+    const result = await db
+      .delete(boardItems)
       .where(
         and(
           eq(boardItems.boardId, boardId),
@@ -1271,30 +1269,9 @@ export function createAPI(app: AppType) {
           eq(boardItems.originalId, originalId)
         )
       );
-    
-
-    // アイテムをソフト削除（deletedAtを設定）
-    const result = await db
-      .update(boardItems)
-      .set({ deletedAt: new Date() })
-      .where(
-        and(
-          eq(boardItems.boardId, boardId),
-          eq(boardItems.itemType, itemType),
-          eq(boardItems.originalId, originalId),
-          isNull(boardItems.deletedAt) // 削除されていないアイテムのみ
-        )
-      );
 
     if (result.changes === 0) {
-      // レコードが見つからない場合、既に削除済みかもしれないので確認
-      const alreadyDeletedItems = existingItems.filter(item => item.deletedAt);
-      if (alreadyDeletedItems.length > 0) {
-        // 既に削除済みの場合は成功として扱う
-      } else {
-        // 本当にレコードが存在しない場合のみエラー
-        return c.json({ error: "Item not found in board" }, 404);
-      }
+      return c.json({ error: "Item not found in board" }, 404);
     }
 
     // ボードのupdatedAtを更新
@@ -1427,7 +1404,7 @@ export function createAPI(app: AppType) {
 
       const db = c.env.db;
 
-      // 全ボードのアイテムを一括取得（削除済みメモ表示のため、削除されたアイテムも含める）
+      // 全ボードのアイテムを一括取得（物理削除なのでレコードが存在するものはすべて有効）
       const allBoardItems = await db
         .select({
           boardId: boardItems.boardId,
@@ -1439,14 +1416,9 @@ export function createAPI(app: AppType) {
         })
         .from(boardItems)
         .innerJoin(boards, eq(boardItems.boardId, boards.id))
-        .where(
-          and(
-            eq(boards.userId, auth.userId)
-            // deletedAtの条件を削除 - 削除済みメモの表示のためすべてのボードアイテムを含める
-          )
-        )
+        .where(eq(boards.userId, auth.userId))
         .orderBy(boards.name, boardItems.createdAt);
-
+      
       return c.json(allBoardItems);
     } catch (error) {
       console.error('Error in getAllBoardItems:', error);

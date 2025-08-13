@@ -300,7 +300,9 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
   const handleCancelBoardChange = useCallback(() => {
     setShowBoardChangeModal(false)
     setPendingBoardChanges({ boardsToAdd: [], boardsToRemove: [] })
-  }, [])
+    // ボード選択状態を元に戻す
+    setSelectedBoardIds([...currentBoardIds])
+  }, [currentBoardIds])
 
   return {
     title,

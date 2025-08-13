@@ -81,9 +81,8 @@ export function useAllBoardItems() {
 
       const data = await response.json();
       
-      // 削除済みボードアイテムは除外（deletedAtがnullまたは存在しないもののみ）
-      // API側では削除済みメモ表示のため全データを返しているが、フロント側では通常時は除外
-      return data.filter((item: { deletedAt?: string | null }) => !item.deletedAt);
+      // 物理削除になったので、返されるデータはすべて有効
+      return data;
     },
     staleTime: 5 * 60 * 1000,     // 5分間キャッシュ
     gcTime: 30 * 60 * 1000,        // 30分間保持

@@ -118,6 +118,8 @@ function TagSelector({
         name: newTagName.trim()
       });
 
+      // console.log('🏷️ 新規タグ作成成功:', { id: newTag.id, name: newTag.name });
+
       const newTags = [...selectedTags, newTag];
       onTagsChange?.(newTags);
 

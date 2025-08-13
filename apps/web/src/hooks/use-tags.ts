@@ -42,20 +42,14 @@ export function useCreateTag() {
       const data = await response.json()
       return data as Tag
     },
-    onSuccess: (newTag) => {
-      // タグ一覧に新しいタグを追加
-      queryClient.setQueryData<Tag[]>(['tags'], (oldTags) => {
-        if (!oldTags) return [newTag]
-        return [...oldTags, newTag]
-      })
-      // オプション付きのタグクエリは無効化（検索やソートの結果が変わるため）
-      queryClient.invalidateQueries({ 
-        queryKey: ['tags'], 
-        predicate: (query) => {
-          const queryKey = query.queryKey as [string, object?]
-          return !!(queryKey[0] === 'tags' && queryKey[1] && Object.keys(queryKey[1]).length > 0)
-        }
-      })
+    onSuccess: () => {
+      // console.log('🔄 新規タグ作成成功、全キャッシュ無効化:', { id: newTag.id, name: newTag.name });
+      
+      // 新規タグ作成時は複数のキャッシュキーに影響するため、全て無効化して再取得を促す
+      queryClient.invalidateQueries({ queryKey: ['tags'] })
+      queryClient.invalidateQueries({ queryKey: ['taggings', 'all'] })
+      
+      // console.log('✅ 全タグキャッシュとタグ付けキャッシュを無効化完了');
     },
   })
 }

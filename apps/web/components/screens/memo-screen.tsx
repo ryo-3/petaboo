@@ -140,6 +140,12 @@ function MemoScreen({
   const { data: allTaggings, error: taggingsError } = useAllTaggings();
   const { data: allBoardItems, error: boardItemsError } = useAllBoardItems();
   
+  // デバッグ用：全タグ・タグ付け情報をログ出力
+  // console.log('📋 メモ一覧側データ:', {
+  //   tags: tags?.map(t => ({ id: t.id, name: t.name })),
+  //   allTaggings: allTaggings?.map(tg => ({ id: tg.id, tagId: tg.tagId, tagName: tg.tag?.name, targetType: tg.targetType, targetOriginalId: tg.targetOriginalId }))
+  // });
+  
   // APIエラー時のフォールバック
   const safeAllTaggings = taggingsError ? [] : allTaggings || [];
   const safeAllBoardItems = boardItemsError ? [] : allBoardItems || [];

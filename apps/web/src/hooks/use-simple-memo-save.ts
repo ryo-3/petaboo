@@ -89,7 +89,7 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
     setTimeout(() => {
       setIsMemoSwitching(false)
     }, 50)
-  }, [memo]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [memo])
 
   const executeSave = useCallback(async () => {
     const isEmpty = !title.trim() && !content.trim()

@@ -127,7 +127,6 @@ function MemoEditor({
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [localTags, setLocalTags] = useState<Tag[]>([]);
   const [prevMemoId, setPrevMemoId] = useState<number | null>(null);
-  const tagSelectorRef = useRef<HTMLDivElement>(null);
   
   // 事前取得されたデータからメモのタグを抽出（シンプル）
   const currentTags = useMemo(() => {
@@ -449,21 +448,18 @@ function MemoEditor({
                   multiple={true}
                   disabled={isDeleted}
                 />
-                <div className="relative" ref={tagSelectorRef}>
-                  <TagSelector
-                    selectedTags={localTags}
-                    onTagsChange={isDeleted ? undefined : (tags) => {
-                      setLocalTags(tags);
-                      setHasManualChanges(true);
-                    }}
-                    placeholder={isDeleted ? "タグ（読み取り専用）" : "タグ..."}
-                    className="w-7 h-7"
-                    disabled={isDeleted}
-                    renderTrigger={(onClick) => (
-                      <TagTriggerButton onClick={isDeleted ? undefined : onClick} tags={localTags} disabled={isDeleted} />
-                    )}
-                  />
-                </div>
+                <TagSelector
+                  selectedTags={localTags}
+                  onTagsChange={isDeleted ? undefined : (tags) => {
+                    setLocalTags(tags);
+                    setHasManualChanges(true);
+                  }}
+                  placeholder={isDeleted ? "タグ（読み取り専用）" : "タグ..."}
+                  disabled={isDeleted}
+                  renderTrigger={(onClick) => (
+                    <TagTriggerButton onClick={isDeleted ? undefined : onClick} tags={localTags} disabled={isDeleted} />
+                  )}
+                />
               </div>
               <div className="flex items-center gap-1">
                 {isDeleted && deletedMemo && (

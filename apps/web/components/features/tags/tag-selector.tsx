@@ -166,9 +166,7 @@ function TagSelector({
   return (
     <div className={`relative ${className}`} ref={selectorRef}>
       {renderTrigger ? (
-        <div>
-          {renderTrigger(disabled ? undefined : handleToggleOpen)}
-        </div>
+        renderTrigger(disabled ? undefined : handleToggleOpen)
       ) : (
         <div
           className={`flex flex-wrap gap-1 p-2 border border-gray-300 rounded-lg bg-white cursor-pointer hover:border-gray-400 transition-colors min-h-[2rem] ${

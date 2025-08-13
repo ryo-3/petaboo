@@ -58,14 +58,14 @@ export default function BoardSelectionModal({
   };
 
   return (
-    <div className="[&_.modal-header]:!border-b-0 [&_.modal-header]:!pb-0">
-      <Modal
-        isOpen={isOpen}
-        onClose={onClose}
-        title={modalTitle}
-        maxWidth="3xl"
-        maxHeight="80vh"
-      >
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={modalTitle}
+      maxWidth="3xl"
+      maxHeight="80vh"
+      className="[&_.modal-header]:!border-b-0 [&_.modal-header]:!pb-0"
+    >
         <div className="h-[70vh] flex flex-col">
         <div className="space-y-4">
         {/* フィルターモード切り替え（filter時のみ） */}
@@ -163,7 +163,6 @@ export default function BoardSelectionModal({
         </div>
         </div>
         </div>
-      </Modal>
-    </div>
+    </Modal>
   );
 }

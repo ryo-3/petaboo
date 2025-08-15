@@ -505,6 +505,7 @@ function TaskScreen({
                 // タスク一覧は invalidateQueries により自動更新される
               }
             }}
+            preloadedTags={tags || []}
             preloadedBoards={boards || []}
             preloadedTaggings={safeAllTaggings}
             preloadedBoardItems={safeAllBoardItems}
@@ -517,6 +518,7 @@ function TaskScreen({
             onSelectTask={onSelectTask}
             onClosePanel={() => setTaskScreenMode("list")}
             onDeleteAndSelectNext={handleTaskDeleteAndSelectNext}
+            preloadedTags={tags || []}
             preloadedBoards={boards || []}
             preloadedTaggings={safeAllTaggings}
             preloadedBoardItems={safeAllBoardItems}
@@ -529,6 +531,10 @@ function TaskScreen({
               onClose={() => setTaskScreenMode("list")}
               onDelete={() => selectNextDeletedTask(selectedDeletedTask)}
               onRestore={() => handleDeletedTaskRestoreAndSelectNext(selectedDeletedTask)}
+              preloadedTags={tags || []}
+              preloadedBoards={boards || []}
+              preloadedTaggings={safeAllTaggings}
+              preloadedBoardItems={safeAllBoardItems}
             />
           </>
         )}
@@ -539,6 +545,10 @@ function TaskScreen({
             onSelectTask={onSelectTask}
             onClosePanel={() => setTaskScreenMode("list")}
             onDeleteAndSelectNext={handleTaskDeleteAndSelectNext}
+            preloadedTags={tags || []}
+            preloadedBoards={boards || []}
+            preloadedTaggings={safeAllTaggings}
+            preloadedBoardItems={safeAllBoardItems}
             preloadedBoards={boards || []}
             preloadedTaggings={safeAllTaggings}
             preloadedBoardItems={safeAllBoardItems}

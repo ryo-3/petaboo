@@ -9,8 +9,8 @@ import TrashIcon from "@/components/icons/trash-icon";
 import RestoreIcon from "@/components/icons/restore-icon";
 import BoardIconSelector from "@/components/ui/selectors/board-icon-selector";
 import Tooltip from "@/components/ui/base/tooltip";
-import TagSelector from "@/components/features/tags/tag-selector";
 import TagTriggerButton from "@/components/features/tags/tag-trigger-button";
+import TagSelectionModal from "@/components/ui/modals/tag-selection-modal";
 import TaskForm, { TaskFormHandle } from "./task-form";
 import { useUpdateTask, useCreateTask } from "@/src/hooks/use-tasks";
 import { useAddItemToBoard, useRemoveItemFromBoard } from "@/src/hooks/use-boards";
@@ -61,6 +61,7 @@ function TaskEditor({
   onRestore,
   onDelete,
   customHeight,
+  preloadedTags = [],
   preloadedBoards = [],
   preloadedTaggings = [],
   preloadedBoardItems = []
@@ -121,6 +122,7 @@ function TaskEditor({
   const [hasManualTagChanges, setHasManualTagChanges] = useState(false);
   const [lastSyncedTags, setLastSyncedTags] = useState<string>('');
   const [isTagsInitialized, setIsTagsInitialized] = useState(false);
+  const [isTagModalOpen, setIsTagModalOpen] = useState(false);
   
   // 削除機能は編集時のみ
   const {
@@ -816,17 +818,9 @@ function TaskEditor({
                   iconClassName="size-4 text-gray-600"
                   multiple={true}
                 />
-                <TagSelector
-                  selectedTags={isTagsInitialized ? localTags : []}
-                  onTagsChange={(tags) => {
-                    setLocalTags(tags);
-                    setHasManualTagChanges(true);
-                  }}
-                  placeholder="タグ..."
-                  className="w-7 h-7"
-                  renderTrigger={(onClick) => (
-                    <TagTriggerButton onClick={onClick} tags={localTags} />
-                  )}
+                <TagTriggerButton 
+                  onClick={() => setIsTagModalOpen(true)} 
+                  tags={localTags} 
                 />
               </div>
               {!isNewTask && !isDeleted && (
@@ -935,6 +929,22 @@ function TaskEditor({
         onConfirm={handleConfirmBoardChange}
         boardsToAdd={pendingBoardChanges.toAdd.map(getBoardName)}
         boardsToRemove={pendingBoardChanges.toRemove.map(getBoardName)}
+      />
+      
+      {/* タグ選択モーダル */}
+      <TagSelectionModal
+        isOpen={isTagModalOpen}
+        onClose={() => setIsTagModalOpen(false)}
+        tags={preloadedTags}
+        selectedTagIds={localTags.map(tag => tag.id)}
+        onSelectionChange={(tagIds) => {
+          const selectedTags = preloadedTags.filter(tag => tagIds.includes(tag.id));
+          setLocalTags(selectedTags);
+          setHasManualTagChanges(true);
+        }}
+        mode="selection"
+        multiple={true}
+        title="タグ選択"
       />
 
       {/* 削除済みタスクの永久削除確認モーダル */}

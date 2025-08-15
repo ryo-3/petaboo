@@ -7,7 +7,8 @@ import TaskScreen from "@/components/screens/task-screen";
 import RightPanel from "@/components/ui/layout/right-panel";
 import { Memo, DeletedMemo } from "@/src/types/memo";
 import { Task, DeletedTask } from "@/src/types/task";
-import type { Tagging } from "@/src/types/tag";
+import type { Tagging, Tag } from "@/src/types/tag";
+import { useTags } from "@/src/hooks/use-tags";
 import { useState } from "react";
 import { useNavigation } from "@/contexts/navigation-context";
 import { useDeleteMemo } from "@/src/hooks/use-memos";
@@ -59,6 +60,7 @@ export default function BoardRightPanel({
   onAddTaskToBoard, // eslint-disable-line @typescript-eslint/no-unused-vars
 }: BoardRightPanelProps) {
   const { handleMainSelectMemo, handleMainSelectTask } = useNavigation();
+  const { data: tags } = useTags();
   
   // 削除済みアイテムかどうかを判定するヘルパー関数
   const isDeletedMemo = (memo: Memo | DeletedMemo): memo is DeletedMemo => {
@@ -163,6 +165,7 @@ export default function BoardRightPanel({
             <TaskEditor
               task={selectedTask}
               initialBoardId={boardId}
+              preloadedTags={tags || []}
               preloadedTaggings={allTaggings || []}
               preloadedBoardItems={allBoardItems}
               onClose={() => {
@@ -183,6 +186,7 @@ export default function BoardRightPanel({
             <TaskEditor
               task={selectedTask}
               initialBoardId={boardId}
+              preloadedTags={tags || []}
               preloadedTaggings={allTaggings || []}
               preloadedBoardItems={allBoardItems}
               onClose={() => {

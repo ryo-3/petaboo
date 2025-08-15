@@ -34,7 +34,7 @@ import {
   getNextItemAfterDeletion,
 } from "@/src/utils/domUtils";
 import { createToggleHandler } from "@/src/utils/toggleUtils";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type MemoScreenMode = "list" | "view" | "create";
 
@@ -355,6 +355,16 @@ function MemoScreen({
 
   // タブ切り替え用の状態
   const [displayTab, setDisplayTab] = useState(activeTab);
+
+  // 削除済タブでの表示状態初期化
+  useEffect(() => {
+    if (activeTab === "deleted") {
+      setShowBoardName(false);
+      setShowTagDisplay(false);
+    } else if (activeTab === "normal") {
+      setShowBoardName(forceShowBoardName);
+    }
+  }, [activeTab, forceShowBoardName]);
 
   // カスタムタブ切り替えハンドラー - 直接状態を制御
   const handleCustomTabChange = useCallback(

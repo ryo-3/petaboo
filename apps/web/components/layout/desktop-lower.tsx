@@ -229,8 +229,8 @@ function DesktopLower({
             onSelectMemo={onSelectDeletedMemo}
             selectedMemoId={selectedDeletedMemo?.id}
             showEditDate={showEditDate}
-            showBoardName={true}
-            showTags={true}
+            showBoardName={showBoardName}
+            showTags={showTags}
             selectedBoardIds={selectedBoardIds}
             boardFilterMode={boardFilterMode}
             sortOptions={sortOptions.filter(opt => 

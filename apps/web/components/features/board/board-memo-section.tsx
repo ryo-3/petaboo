@@ -334,10 +334,7 @@ export default function BoardMemoSection({
           />
         ) : (
           <MemoStatusDisplay
-            memos={memoItems.map(item => ({
-              ...item.content as Memo,
-              originalId: item.itemId.toString() // ボードのitemIdを文字列として使用
-            }))}
+            memos={memoItems.map(item => item.content as Memo)}
             viewMode={viewMode}
             effectiveColumnCount={effectiveColumnCount}
             isBoard={true}

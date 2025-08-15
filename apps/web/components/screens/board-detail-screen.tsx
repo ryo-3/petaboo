@@ -445,7 +445,7 @@ function BoardDetailScreen({
             viewMode={viewMode}
             showEditDate={showEditDate}
             showTags={showTags}
-            showBoardName={showTags}
+            showBoardName={false}
             allTags={safeAllTags}
             allBoards={safeAllBoards}
             allTaggings={safeAllTaggings as Tagging[]}

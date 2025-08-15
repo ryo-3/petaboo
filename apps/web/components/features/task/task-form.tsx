@@ -36,6 +36,7 @@ interface TaskFormProps {
   tags?: Tag[];
   boards?: Board[];
   isDeleted?: boolean;
+  initialBoardId?: number;
 }
 
 export interface TaskFormHandle {
@@ -64,6 +65,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
     tags = [],
     boards = [],
     isDeleted = false,
+    initialBoardId,
   } = props;
   const titleInputRef = useRef<HTMLInputElement>(null);
   const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -195,10 +197,10 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
       </div>
 
       {/* ボード名・タグ表示 */}
-      {(boards.length > 0 || tags.length > 0) && (
+      {(boards.filter(board => !initialBoardId || board.id !== initialBoardId).length > 0 || tags.length > 0) && (
         <div className="flex flex-wrap gap-2 mt-2">
-          {/* ボード名 */}
-          {boards.map((board) => (
+          {/* ボード名（現在のボードを除外） */}
+          {boards.filter(board => !initialBoardId || board.id !== initialBoardId).map((board) => (
             <div
               key={board.id}
               className="inline-flex items-center px-2 py-1 rounded-md text-xs overflow-hidden bg-light-Blue text-white"

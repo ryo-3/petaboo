@@ -887,6 +887,7 @@ function TaskEditor({
           tags={task && task.id !== 0 ? localTags : []}
           boards={task && task.id !== 0 ? itemBoards : []}
           isDeleted={isDeleted}
+          initialBoardId={initialBoardId}
         />
         </BaseViewer>
       </div>
@@ -905,13 +906,13 @@ function TaskEditor({
           position="center"
           customTitle={`「${task?.title || 'タイトルなし'}」の削除`}
           customMessage={
-            itemBoards && itemBoards.length > 0 ? (
+            itemBoards && itemBoards.filter(board => !initialBoardId || board.id !== initialBoardId).length > 0 ? (
               <div className="text-center">
                 <p className="text-sm text-gray-700 mb-3">
                   このタスクは以下のボードに紐づいています
                 </p>
                 <div className="mb-3 flex justify-center">
-                  <BoardChips boards={itemBoards} variant="compact" />
+                  <BoardChips boards={itemBoards.filter(board => !initialBoardId || board.id !== initialBoardId)} variant="compact" />
                 </div>
                 <p className="text-xs text-gray-500">
                   削除すると各ボードの「削除済み」タブに移動します

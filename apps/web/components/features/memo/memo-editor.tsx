@@ -299,15 +299,17 @@ function MemoEditor({
   // 現在選択されているボードのvalue（複数選択対応）
   const currentBoardValues = selectedBoardIds.map(id => id.toString());
   
-  // 表示用のボード（現在の選択状態を反映）
+  // 表示用のボード（現在の選択状態を反映、initialBoardIdは除外）
   const displayBoards = useMemo(() => {
     // 選択中のボードIDから、実際のボード情報を取得
     const selectedBoards = selectedBoardIds
       .map(id => preloadedBoards.find(board => board.id === id))
-      .filter((board): board is NonNullable<typeof board> => board !== undefined);
+      .filter((board): board is NonNullable<typeof board> => board !== undefined)
+      // initialBoardIdが指定されている場合（ボード詳細から呼ばれた場合）は、そのボードを除外
+      .filter(board => !initialBoardId || board.id !== initialBoardId);
     
     return selectedBoards;
-  }, [selectedBoardIds, preloadedBoards]);
+  }, [selectedBoardIds, preloadedBoards, initialBoardId]);
 
   // ボード選択変更ハンドラー（削除済みの場合は無効）
   const handleBoardSelectorChange = (value: string | string[]) => {
@@ -572,13 +574,13 @@ function MemoEditor({
         position="center"
         customTitle={`「${memo?.title || 'タイトルなし'}」の削除`}
         customMessage={
-          itemBoards.length > 0 ? (
+          itemBoards.filter(board => !initialBoardId || board.id !== initialBoardId).length > 0 ? (
             <div className="text-center">
               <p className="text-sm text-gray-700 mb-3">
                 このメモは以下のボードに紐づいています
               </p>
               <div className="mb-3 flex justify-center">
-                <BoardChips boards={itemBoards} variant="compact" />
+                <BoardChips boards={itemBoards.filter(board => !initialBoardId || board.id !== initialBoardId)} variant="compact" />
               </div>
               <p className="text-xs text-gray-500">
                 削除すると各ボードの「削除済み」タブに移動します
@@ -601,13 +603,13 @@ function MemoEditor({
           position="center"
           customTitle={`「${memo?.title || 'タイトルなし'}」の完全削除`}
           customMessage={
-            itemBoards.length > 0 ? (
+            itemBoards.filter(board => !initialBoardId || board.id !== initialBoardId).length > 0 ? (
               <div className="text-center">
                 <p className="text-sm text-gray-700 mb-3">
                   このメモは以下のボードに紐づいています
                 </p>
                 <div className="mb-3 flex justify-center">
-                  <BoardChips boards={itemBoards} variant="compact" />
+                  <BoardChips boards={itemBoards.filter(board => !initialBoardId || board.id !== initialBoardId)} variant="compact" />
                 </div>
                 <div className="mt-3 p-3 bg-red-50 rounded-md">
                   <p className="text-sm text-red-800 font-medium">この操作は取り消せません</p>

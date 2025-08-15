@@ -125,14 +125,12 @@ export default function BoardRightPanel({
               onClose={() => {
                 // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
               }}
-              onRestore={() => {
-                if (onMemoRestoreAndSelectNext && isDeletedMemo(selectedMemo)) {
-                  onMemoRestoreAndSelectNext(selectedMemo);
-                }
-              }}
+              onRestore={onMemoRestoreAndSelectNext ? () => {
+                onMemoRestoreAndSelectNext(selectedMemo as DeletedMemo);
+              } : undefined}
               onDelete={() => {
-                if (onDeletedMemoDeleteAndSelectNext && isDeletedMemo(selectedMemo)) {
-                  onDeletedMemoDeleteAndSelectNext(selectedMemo);
+                if (onDeletedMemoDeleteAndSelectNext) {
+                  onDeletedMemoDeleteAndSelectNext(selectedMemo as DeletedMemo);
                 }
               }}
               initialBoardId={boardId}

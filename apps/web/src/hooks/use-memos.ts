@@ -174,6 +174,9 @@ export function useRestoreMemo() {
       queryClient.invalidateQueries({ queryKey: ['deletedMemos'] })
       // ボード関連のキャッシュを強制再取得（復元されたメモがボードに含まれる可能性があるため）
       queryClient.refetchQueries({ queryKey: ['boards'] })
+      // ボード詳細とボード削除済みアイテムのキャッシュも無効化
+      queryClient.invalidateQueries({ queryKey: ['boards'], exact: false })
+      queryClient.invalidateQueries({ queryKey: ['board-deleted-items'] })
       // 全タグ付け情報を無効化（復元されたメモのタグ情報が変わる可能性があるため）
       queryClient.invalidateQueries({ queryKey: ['taggings', 'all'] })
     },

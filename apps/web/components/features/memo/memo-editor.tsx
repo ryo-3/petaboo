@@ -153,7 +153,7 @@ function MemoEditor({
     memo: isDeleted ? deletedMemo : null,
     onClose,
     onDeleteAndSelectNext,
-    onRestoreAndSelectNext: onDeleteAndSelectNext,
+    onRestoreAndSelectNext: onRestore,
     onAnimationChange: setIsAnimating,
   });
 

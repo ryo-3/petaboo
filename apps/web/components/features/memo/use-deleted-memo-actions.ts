@@ -116,7 +116,8 @@ export function useDeletedMemoActions({ memo, onClose, onDeleteAndSelectNext, on
       } else {
         onClose()
       }
-    } catch {
+    } catch (error) {
+      console.error('メモ復元エラー:', error);
       setIsLocalRestoring(false)
       alert('復元に失敗しました。')
     }

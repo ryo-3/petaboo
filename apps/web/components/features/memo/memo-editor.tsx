@@ -485,7 +485,7 @@ function MemoEditor({
                 {memo && onDelete && (
                   <button
                     onClick={handleDeleteClick}
-                    className="flex items-center justify-center size-7 rounded-md bg-gray-100 ml-2 mr-2"
+                    className="flex items-center justify-center size-7 rounded-md bg-gray-100 mr-2"
                   >
                     <TrashIcon className="size-5" isLidOpen={isLidOpen || isAnimating || showDeleteModal || (isDeleted && deletedMemoActions?.showDeleteModal)} />
                   </button>

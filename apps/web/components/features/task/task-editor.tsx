@@ -11,6 +11,7 @@ import BoardIconSelector from "@/components/ui/selectors/board-icon-selector";
 import Tooltip from "@/components/ui/base/tooltip";
 import TagTriggerButton from "@/components/features/tags/tag-trigger-button";
 import TagSelectionModal from "@/components/ui/modals/tag-selection-modal";
+import DateInfo from "@/components/shared/date-info";
 import TaskForm, { TaskFormHandle } from "./task-form";
 import { useUpdateTask, useCreateTask } from "@/src/hooks/use-tasks";
 import { useAddItemToBoard, useRemoveItemFromBoard } from "@/src/hooks/use-boards";
@@ -791,6 +792,7 @@ function TaskEditor({
           item={tempTask}
           onClose={onClose}
           error={error ? "エラー" : null}
+          hideDateInfo={true}
           headerActions={
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-2">
@@ -823,45 +825,60 @@ function TaskEditor({
                   tags={localTags} 
                 />
               </div>
-              {!isNewTask && !isDeleted && (
-                <button
-                  onClick={handleDeleteClick}
-                  className="flex items-center justify-center size-7 rounded-md bg-gray-100 mr-2"
-                >
-                  <TrashIcon className="size-5" isLidOpen={isLidOpen} />
-                </button>
-              )}
-              {isDeleted && (
-                <div className="flex gap-2 mr-2">
-                  <Tooltip text="復元" position="bottom">
+              <div className="flex items-center gap-1">
+                {isDeleted && task && (
+                  <span className="text-xs text-red-500 mr-2">
+                    削除日時: {new Date((task as DeletedTask).deletedAt * 1000).toLocaleDateString('ja-JP')}
+                  </span>
+                )}
+                {task && task.id !== 0 && (
+                  <div className="text-[13px] text-gray-400 mr-2">
+                    <DateInfo
+                      item={task}
+                      isEditing={!isDeleted}
+                    />
+                  </div>
+                )}
+                {!isNewTask && !isDeleted && (
+                  <button
+                    onClick={handleDeleteClick}
+                    className="flex items-center justify-center size-7 rounded-md bg-gray-100 mr-2"
+                  >
+                    <TrashIcon className="size-5" isLidOpen={isLidOpen} />
+                  </button>
+                )}
+                {isDeleted && (
+                    <div className="flex gap-2 mr-2">
+                    <Tooltip text="復元" position="bottom">
+                      <button
+                        onClick={() => {
+                          if (isDeleted && deletedTaskActions) {
+                            deletedTaskActions.handleRestore();
+                          }
+                        }}
+                        className="flex items-center justify-center size-7 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800 transition-colors"
+                      >
+                        <RestoreIcon className="size-4" />
+                      </button>
+                    </Tooltip>
                     <button
                       onClick={() => {
                         if (isDeleted && deletedTaskActions) {
-                          deletedTaskActions.handleRestore();
+                          // 削除済みタスクの場合は完全削除（蓋を開く）
+                          setIsAnimating(true);
+                          deletedTaskActions.showDeleteConfirmation();
+                        } else if (onDelete) {
+                          onDelete();
                         }
                       }}
-                      className="flex items-center justify-center size-7 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800 transition-colors"
+                      className="flex items-center justify-center size-7 rounded-md bg-red-100 hover:bg-red-200"
+                      title="完全削除"
                     >
-                      <RestoreIcon className="size-4" />
+                      <TrashIcon className="size-4" isLidOpen={isAnimating || (isDeleted && deletedTaskActions?.showDeleteModal)} />
                     </button>
-                  </Tooltip>
-                  <button
-                    onClick={() => {
-                      if (isDeleted && deletedTaskActions) {
-                        // 削除済みタスクの場合は完全削除（蓋を開く）
-                        setIsAnimating(true);
-                        deletedTaskActions.showDeleteConfirmation();
-                      } else if (onDelete) {
-                        onDelete();
-                      }
-                    }}
-                    className="flex items-center justify-center size-7 rounded-md bg-red-100 hover:bg-red-200"
-                    title="完全削除"
-                  >
-                    <TrashIcon className="size-4" isLidOpen={isAnimating || (isDeleted && deletedTaskActions?.showDeleteModal)} />
-                  </button>
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
             </div>
           }
           isEditing={true}

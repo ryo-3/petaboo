@@ -20,6 +20,7 @@ interface BoardRightPanelProps {
   selectedMemo?: Memo | DeletedMemo | null;
   selectedTask?: Task | DeletedTask | null;
   rightPanelMode: "editor" | "memo-list" | "task-list" | null;
+  activeMemoTab?: "normal" | "deleted";  // 現在のメモタブ
   selectedItemsFromList: Set<number>;
   allMemos?: Memo[];
   allTasks?: Task[];
@@ -47,6 +48,7 @@ export default function BoardRightPanel({
   selectedMemo,
   selectedTask,
   rightPanelMode,
+  activeMemoTab = "normal",
   allBoards,
   allTaggings,
   allBoardItems,
@@ -67,7 +69,12 @@ export default function BoardRightPanel({
   
   // 削除済みアイテムかどうかを判定するヘルパー関数
   const isDeletedMemo = (memo: Memo | DeletedMemo): memo is DeletedMemo => {
-    return 'deletedAt' in memo && memo.deletedAt !== undefined;
+    // より確実な判定：deletedAtプロパティが存在し、値があるかチェック
+    return 'deletedAt' in memo && 
+           memo.deletedAt !== undefined && 
+           memo.deletedAt !== null && 
+           typeof memo.deletedAt === 'number' && 
+           memo.deletedAt > 0;
   };
   
   const isDeletedTask = (task: Task | DeletedTask): task is DeletedTask => {
@@ -111,19 +118,20 @@ export default function BoardRightPanel({
     <RightPanel isOpen={isOpen} onClose={onClose}>
       {selectedMemo && !selectedTask && rightPanelMode === null && (
         <>
-          {isDeletedMemo(selectedMemo) ? (
+          {activeMemoTab === "deleted" ? (
             <MemoEditor
+              key={`deleted-${selectedMemo.id}-${activeMemoTab}`}
               memo={selectedMemo}
               onClose={() => {
                 // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
               }}
               onRestore={() => {
-                if (onMemoRestoreAndSelectNext) {
+                if (onMemoRestoreAndSelectNext && isDeletedMemo(selectedMemo)) {
                   onMemoRestoreAndSelectNext(selectedMemo);
                 }
               }}
               onDelete={() => {
-                if (onDeletedMemoDeleteAndSelectNext) {
+                if (onDeletedMemoDeleteAndSelectNext && isDeletedMemo(selectedMemo)) {
                   onDeletedMemoDeleteAndSelectNext(selectedMemo);
                 }
               }}
@@ -135,6 +143,7 @@ export default function BoardRightPanel({
             />
           ) : (
             <MemoEditor
+              key={`normal-${selectedMemo.id}-${activeMemoTab}`}
               memo={selectedMemo}
               initialBoardId={boardId}
               preloadedTags={tags || []}

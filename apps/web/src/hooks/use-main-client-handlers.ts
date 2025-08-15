@@ -212,14 +212,18 @@ export function useMainClientHandlers({
   // ==========================================
 
   /** ボード詳細でのメモ選択 */
-  const handleBoardSelectMemo = useCallback((memo: Memo | null) => {
+  const handleBoardSelectMemo = useCallback((memo: Memo | DeletedMemo | null) => {
     if (!memo) {
       setBoardSelectedItem(null);
       return;
     }
     
-    // 同じメモが既に選択されている場合は何もしない
-    if (boardSelectedItem?.type === 'memo' && boardSelectedItem.item.id === memo.id) {
+    // 同じメモIDかつ同じ削除状態（通常/削除済み）が既に選択されている場合は何もしない
+    const isCurrentlySelectedSameMemo = boardSelectedItem?.type === 'memo' && 
+      boardSelectedItem.item.id === memo.id &&
+      ('deletedAt' in boardSelectedItem.item) === ('deletedAt' in memo);
+    
+    if (isCurrentlySelectedSameMemo) {
       return;
     }
     

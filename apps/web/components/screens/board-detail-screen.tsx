@@ -511,6 +511,7 @@ function BoardDetailScreen({
         selectedMemo={selectedMemo}
         selectedTask={selectedTask}
         rightPanelMode={rightPanelMode}
+        activeMemoTab={activeMemoTab}
         selectedItemsFromList={selectedItemsFromList}
         allMemos={boardMemos}
         allTasks={boardTasks}

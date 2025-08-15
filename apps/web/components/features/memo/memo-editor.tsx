@@ -8,8 +8,8 @@ import BoardIconSelector from "@/components/ui/selectors/board-icon-selector";
 import Tooltip from "@/components/ui/base/tooltip";
 import BoardChangeModal from "@/components/ui/modals/board-change-modal";
 import { BulkDeleteConfirmation } from "@/components/ui/modals/confirmation-modal";
-import TagSelector from "@/components/features/tags/tag-selector";
 import TagTriggerButton from "@/components/features/tags/tag-trigger-button";
+import TagSelectionModal from "@/components/ui/modals/tag-selection-modal";
 import { TAG_COLORS } from "@/src/constants/colors";
 import { useSimpleMemoSave } from "@/src/hooks/use-simple-memo-save";
 import { useCreateTagging, useDeleteTagging } from "@/src/hooks/use-taggings";
@@ -127,6 +127,7 @@ function MemoEditor({
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [localTags, setLocalTags] = useState<Tag[]>([]);
   const [prevMemoId, setPrevMemoId] = useState<number | null>(null);
+  const [isTagModalOpen, setIsTagModalOpen] = useState(false);
   
   // 事前取得されたデータからメモのタグを抽出（シンプル）
   const currentTags = useMemo(() => {
@@ -448,17 +449,10 @@ function MemoEditor({
                   multiple={true}
                   disabled={isDeleted}
                 />
-                <TagSelector
-                  selectedTags={localTags}
-                  onTagsChange={isDeleted ? undefined : (tags) => {
-                    setLocalTags(tags);
-                    setHasManualChanges(true);
-                  }}
-                  placeholder={isDeleted ? "タグ（読み取り専用）" : "タグ..."}
-                  disabled={isDeleted}
-                  renderTrigger={(onClick) => (
-                    <TagTriggerButton onClick={isDeleted ? undefined : onClick} tags={localTags} disabled={isDeleted} />
-                  )}
+                <TagTriggerButton 
+                  onClick={isDeleted ? undefined : () => setIsTagModalOpen(true)} 
+                  tags={localTags} 
+                  disabled={isDeleted} 
                 />
               </div>
               <div className="flex items-center gap-1">
@@ -551,6 +545,22 @@ function MemoEditor({
           parentElement={baseViewerRef.current}
         />
       )}
+      
+      {/* タグ選択モーダル */}
+      <TagSelectionModal
+        isOpen={isTagModalOpen}
+        onClose={() => setIsTagModalOpen(false)}
+        tags={preloadedTags}
+        selectedTagIds={localTags.map(tag => tag.id)}
+        onSelectionChange={(tagIds) => {
+          const selectedTags = preloadedTags.filter(tag => tagIds.includes(tag.id));
+          setLocalTags(selectedTags);
+          setHasManualChanges(true);
+        }}
+        mode="selection"
+        multiple={true}
+        title="タグ選択"
+      />
       <BulkDeleteConfirmation
         isOpen={showDeleteModal}
         onClose={handleCancelDelete}

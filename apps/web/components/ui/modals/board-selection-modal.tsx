@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Modal from "@/components/ui/modals/modal";
 
 interface BoardOption {
@@ -35,6 +35,13 @@ export default function BoardSelectionModal({
   onFilterModeChange
 }: BoardSelectionModalProps) {
   const modalTitle = title || (mode === 'filter' ? 'ボード絞り込み' : 'ボード選択');
+  
+  // 選択済みボードを上部に表示
+  const sortedBoards = useMemo(() => {
+    const selectedBoards = boards.filter(board => selectedBoardIds.includes(board.id));
+    const unselectedBoards = boards.filter(board => !selectedBoardIds.includes(board.id));
+    return [...selectedBoards, ...unselectedBoards];
+  }, [boards, selectedBoardIds]);
 
   const handleBoardToggle = (boardId: number) => {
     if (selectedBoardIds.includes(boardId)) {
@@ -129,15 +136,24 @@ export default function BoardSelectionModal({
 
         {/* ボード一覧 */}
         <div className="flex-1 overflow-y-auto border border-gray-200 rounded-md">
-          {boards.length === 0 ? (
+          {sortedBoards.length === 0 ? (
             <p className="text-sm text-gray-500 p-4 text-center">ボードがありません</p>
           ) : (
             <div className="p-2 space-y-1">
-              {boards.map(board => (
-                <label
-                  key={board.id}
-                  className="flex items-center gap-3 py-1 px-2 hover:bg-gray-50 rounded cursor-pointer"
-                >
+              {sortedBoards.map((board, index) => {
+                const isSelected = selectedBoardIds.includes(board.id);
+                const prevBoard = sortedBoards[index - 1];
+                const isPrevSelected = prevBoard ? selectedBoardIds.includes(prevBoard.id) : false;
+                const showDivider = index > 0 && isPrevSelected && !isSelected;
+                
+                return (
+                  <div key={board.id}>
+                    {showDivider && (
+                      <div className="my-2 border-t border-gray-200" />
+                    )}
+                    <label
+                      className="flex items-center gap-3 py-1 px-2 hover:bg-gray-50 rounded cursor-pointer"
+                    >
                   <input
                     type="checkbox"
                     checked={selectedBoardIds.includes(board.id)}
@@ -155,9 +171,11 @@ export default function BoardSelectionModal({
                       </svg>
                     )}
                   </div>
-                  <span className="text-sm text-gray-700 flex-1 break-words">{board.name}</span>
-                </label>
-              ))}
+                      <span className="text-sm text-gray-700 flex-1 break-words">{board.name}</span>
+                    </label>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

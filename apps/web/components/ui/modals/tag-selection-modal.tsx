@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Modal from "@/components/ui/modals/modal";
 import { TAG_COLORS } from "@/src/constants/colors";
+import { useCreateTag } from "@/src/hooks/use-tags";
+import PlusIcon from "@/components/icons/plus-icon";
+import SearchIcon from "@/components/icons/search-icon";
 
 interface TagOption {
   id: number;
@@ -37,6 +40,29 @@ export default function TagSelectionModal({
   onFilterModeChange
 }: TagSelectionModalProps) {
   const modalTitle = title || (mode === 'filter' ? 'タグ絞り込み' : 'タグ選択');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [newTagName, setNewTagName] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
+  const createTagMutation = useCreateTag();
+
+  // 検索でフィルタリング + 選択済みタグを上部に表示
+  const filteredTags = useMemo(() => {
+    let filtered = tags;
+    
+    // 検索フィルタ
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = tags.filter(tag => 
+        tag.name.toLowerCase().includes(query)
+      );
+    }
+    
+    // 選択済みタグを上部に、未選択タグを下部に配置
+    const selectedTags = filtered.filter(tag => selectedTagIds.includes(tag.id));
+    const unselectedTags = filtered.filter(tag => !selectedTagIds.includes(tag.id));
+    
+    return [...selectedTags, ...unselectedTags];
+  }, [tags, searchQuery, selectedTagIds]);
 
   const handleTagToggle = (tagId: number) => {
     if (selectedTagIds.includes(tagId)) {
@@ -59,6 +85,33 @@ export default function TagSelectionModal({
     onSelectionChange([]);
   };
 
+  // 新規タグ作成
+  const handleCreateTag = async () => {
+    if (!newTagName.trim()) return;
+    
+    try {
+      setIsCreating(true);
+      const newTag = await createTagMutation.mutateAsync({
+        name: newTagName.trim(),
+        color: TAG_COLORS.background
+      });
+      
+      // 作成したタグを自動選択
+      if (multiple) {
+        onSelectionChange([...selectedTagIds, newTag.id]);
+      } else {
+        onSelectionChange([newTag.id]);
+      }
+      
+      setNewTagName("");
+      setSearchQuery(""); // 検索もクリア
+    } catch (error) {
+      console.error('タグ作成エラー:', error);
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -70,6 +123,53 @@ export default function TagSelectionModal({
     >
         <div className="h-[70vh] flex flex-col">
         <div className="space-y-4">
+        
+        {/* 検索ボックス */}
+        <div className="relative">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="タグを検索..."
+            className="w-full px-9 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+          <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 size-4 text-gray-400" />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
+
+        {/* 新規タグ作成 */}
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={newTagName}
+            onChange={(e) => setNewTagName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !isCreating) {
+                e.preventDefault();
+                handleCreateTag();
+              }
+            }}
+            placeholder="新しいタグ名を入力..."
+            className="flex-1 px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+          <button
+            onClick={handleCreateTag}
+            disabled={!newTagName.trim() || isCreating}
+            className="px-4 py-2 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            <PlusIcon className="size-4" />
+            {isCreating ? '作成中...' : '作成'}
+          </button>
+        </div>
         {/* フィルターモード切り替え（filter時のみ） */}
         {mode === 'filter' && onFilterModeChange && (
           <div>
@@ -131,15 +231,26 @@ export default function TagSelectionModal({
 
         {/* タグ一覧 */}
         <div className="flex-1 overflow-y-auto border border-gray-200 rounded-md">
-          {tags.length === 0 ? (
-            <p className="text-sm text-gray-500 p-4 text-center">タグがありません</p>
+          {filteredTags.length === 0 ? (
+            <p className="text-sm text-gray-500 p-4 text-center">
+              {searchQuery ? `「${searchQuery}」に一致するタグがありません` : 'タグがありません'}
+            </p>
           ) : (
             <div className="p-2 space-y-1">
-              {tags.map(tag => (
-                <label
-                  key={tag.id}
-                  className="flex items-center gap-3 py-1 px-2 hover:bg-gray-50 rounded cursor-pointer"
-                >
+              {filteredTags.map((tag, index) => {
+                const isSelected = selectedTagIds.includes(tag.id);
+                const prevTag = filteredTags[index - 1];
+                const isPrevSelected = prevTag ? selectedTagIds.includes(prevTag.id) : false;
+                const showDivider = index > 0 && isPrevSelected && !isSelected && !searchQuery;
+                
+                return (
+                  <div key={tag.id}>
+                    {showDivider && (
+                      <div className="my-2 border-t border-gray-200" />
+                    )}
+                    <label
+                      className="flex items-center gap-3 py-1 px-2 hover:bg-gray-50 rounded cursor-pointer"
+                    >
                   <input
                     type="checkbox"
                     checked={selectedTagIds.includes(tag.id)}
@@ -161,9 +272,11 @@ export default function TagSelectionModal({
                       </svg>
                     )}
                   </div>
-                  <span className="text-sm text-gray-700 flex-1 break-words">{tag.name}</span>
-                </label>
-              ))}
+                      <span className="text-sm text-gray-700 flex-1 break-words">{tag.name}</span>
+                    </label>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

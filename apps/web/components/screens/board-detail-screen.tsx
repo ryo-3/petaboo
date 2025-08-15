@@ -514,6 +514,7 @@ function BoardDetailScreen({
         selectedItemsFromList={selectedItemsFromList}
         allMemos={boardMemos}
         allTasks={boardTasks}
+        allBoards={allBoards || []}
         allTaggings={safeAllTaggings as Tagging[]}
         allBoardItems={safeAllBoardItems}
         onClose={rightPanelMode ? () => handleCloseRightPanel(onClearSelection) : handleCloseDetail}

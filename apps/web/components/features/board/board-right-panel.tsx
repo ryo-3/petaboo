@@ -22,6 +22,7 @@ interface BoardRightPanelProps {
   selectedItemsFromList: Set<number>;
   allMemos?: Memo[];
   allTasks?: Task[];
+  allBoards?: Array<{id: number; name: string;}>;  // 全ボード情報
   allTaggings?: Tagging[];  // 全タグ情報
   allBoardItems?: Array<{boardId: number; boardName: string; itemType: 'memo' | 'task'; itemId: string; originalId: string; addedAt: number}>;  // 全ボードアイテム情報
   onClose: () => void;
@@ -45,6 +46,7 @@ export default function BoardRightPanel({
   selectedMemo,
   selectedTask,
   rightPanelMode,
+  allBoards,
   allTaggings,
   allBoardItems,
   onClose,
@@ -125,6 +127,8 @@ export default function BoardRightPanel({
                 }
               }}
               initialBoardId={boardId}
+              preloadedTags={tags || []}
+              preloadedBoards={allBoards || []}
               preloadedTaggings={allTaggings || []}
               preloadedBoardItems={allBoardItems}
             />
@@ -132,6 +136,8 @@ export default function BoardRightPanel({
             <MemoEditor
               memo={selectedMemo}
               initialBoardId={boardId}
+              preloadedTags={tags || []}
+              preloadedBoards={allBoards || []}
               preloadedTaggings={allTaggings || []}
               preloadedBoardItems={allBoardItems}
               onClose={() => {
@@ -166,6 +172,7 @@ export default function BoardRightPanel({
               task={selectedTask}
               initialBoardId={boardId}
               preloadedTags={tags || []}
+              preloadedBoards={allBoards || []}
               preloadedTaggings={allTaggings || []}
               preloadedBoardItems={allBoardItems}
               onClose={() => {
@@ -187,6 +194,7 @@ export default function BoardRightPanel({
               task={selectedTask}
               initialBoardId={boardId}
               preloadedTags={tags || []}
+              preloadedBoards={allBoards || []}
               preloadedTaggings={allTaggings || []}
               preloadedBoardItems={allBoardItems}
               onClose={() => {

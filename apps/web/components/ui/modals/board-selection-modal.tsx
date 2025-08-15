@@ -71,7 +71,6 @@ export default function BoardSelectionModal({
       title={modalTitle}
       maxWidth="3xl"
       maxHeight="80vh"
-      className="[&_.modal-header]:!border-b-0 [&_.modal-header]:!pb-0"
     >
         <div className="h-[70vh] flex flex-col">
         <div className="space-y-4">

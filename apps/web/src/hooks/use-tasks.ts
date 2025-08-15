@@ -36,7 +36,7 @@ export function useCreateTask() {
       const result = await response.json()
       return result
     },
-    onSuccess: (newTask) => {
+    onSuccess: () => {
       // APIが不完全なデータしか返さないため、タスク一覧を無効化して再取得
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       

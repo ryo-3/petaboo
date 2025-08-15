@@ -549,9 +549,6 @@ function TaskScreen({
             preloadedBoards={boards || []}
             preloadedTaggings={safeAllTaggings}
             preloadedBoardItems={safeAllBoardItems}
-            preloadedBoards={boards || []}
-            preloadedTaggings={safeAllTaggings}
-            preloadedBoardItems={safeAllBoardItems}
           />
         )}
       </RightPanel>

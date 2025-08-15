@@ -8,6 +8,7 @@ import RightPanel from "@/components/ui/layout/right-panel";
 import { Memo, DeletedMemo } from "@/src/types/memo";
 import { Task, DeletedTask } from "@/src/types/task";
 import type { Tagging, Tag } from "@/src/types/tag";
+import type { Board } from "@/src/types/board";
 import { useTags } from "@/src/hooks/use-tags";
 import { useState } from "react";
 import { useNavigation } from "@/contexts/navigation-context";
@@ -22,7 +23,7 @@ interface BoardRightPanelProps {
   selectedItemsFromList: Set<number>;
   allMemos?: Memo[];
   allTasks?: Task[];
-  allBoards?: Array<{id: number; name: string;}>;  // 全ボード情報
+  allBoards?: Board[];  // 全ボード情報
   allTaggings?: Tagging[];  // 全タグ情報
   allBoardItems?: Array<{boardId: number; boardName: string; itemType: 'memo' | 'task'; itemId: string; originalId: string; addedAt: number}>;  // 全ボードアイテム情報
   onClose: () => void;

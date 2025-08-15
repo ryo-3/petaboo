@@ -28,6 +28,7 @@ interface BoardMemoSectionProps {
   effectiveColumnCount: number;
   viewMode: "card" | "list";
   showEditDate: boolean;
+  showBoardName?: boolean;
   showTags?: boolean;
   selectedMemo?: Memo | DeletedMemo | null;
   // 複数選択関連
@@ -80,6 +81,7 @@ export default function BoardMemoSection({
   effectiveColumnCount,
   viewMode,
   showEditDate,
+  showBoardName = false,
   showTags = false,
   selectedMemo,
   memoSelectionMode,
@@ -315,8 +317,8 @@ export default function BoardMemoSection({
             onSelectMemo={memoSelectionMode === "check" ? undefined : onSelectMemo}
             selectedMemoId={memoSelectionMode === "check" ? undefined : selectedMemo?.id}
             showEditDate={showEditDate}
-            showBoardName={true}
-            showTags={true}
+            showBoardName={showBoardName}
+            showTags={showTags}
             sortOptions={getVisibleSortOptions(activeMemoTab).filter(
               opt => opt.id === "createdAt" || opt.id === "updatedAt" || opt.id === "deletedAt"
             ) as Array<{

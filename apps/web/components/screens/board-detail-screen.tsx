@@ -89,7 +89,7 @@ function BoardDetailScreen({
   } = useBoardState();
 
   // タグ表示管理
-  const [showTags, setShowTags] = useState(false);
+  const [showTags, setShowTags] = useState(true);
 
   const handleTagDisplayChange = (show: boolean) => {
     setShowTags(show);

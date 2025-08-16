@@ -3,7 +3,7 @@ import { useAddItemToBoard, useRemoveItemFromBoard, useBoardWithItems, useBoardD
 import { useExport } from '@/src/hooks/use-export';
 import { getNextItemAfterDeletion, getMemoDisplayOrder, getTaskDisplayOrder } from '@/src/utils/domUtils';
 import { useDeletedItemOperations } from '@/src/hooks/use-deleted-item-operations';
-import { BoardItemWithContent } from '@/src/types/board';
+import { BoardItemWithContent, BoardWithItems } from '@/src/types/board';
 import { Memo, DeletedMemo } from '@/src/types/memo';
 import { Task, DeletedTask } from '@/src/types/task';
 
@@ -25,7 +25,7 @@ interface UseBoardOperationsProps {
 
 interface UseBoardOperationsReturn {
   // データ
-  boardWithItems: { items: BoardItemWithContent[] } | undefined;
+  boardWithItems: BoardWithItems | undefined;
   boardDeletedItems: { memos?: DeletedMemo[]; tasks?: DeletedTask[] } | undefined;
   isLoading: boolean;
   error: Error | null;

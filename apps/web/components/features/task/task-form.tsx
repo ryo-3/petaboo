@@ -4,9 +4,11 @@ import CategorySelector from "@/components/features/category/category-selector";
 import DateInput from "@/components/ui/inputs/date-input";
 import CustomSelector from "@/components/ui/selectors/custom-selector";
 import BoardChips from "@/components/ui/chips/board-chips";
+import BoardCategorySelector from "@/components/features/board-categories/board-category-selector";
 import type { Task } from "@/src/types/task";
 import type { Tag } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
+import type { BoardCategory } from "@/src/types/board-categories";
 import { TAG_COLORS } from "@/src/constants/colors";
 import {
   getPriorityEditorColor,
@@ -36,8 +38,10 @@ interface TaskFormProps {
   customHeight?: string;
   tags?: Tag[];
   boards?: Board[];
+  boardCategories?: BoardCategory[];
   isDeleted?: boolean;
   initialBoardId?: number;
+  showBoardCategory?: boolean; // ボード詳細でのみtrue
 }
 
 export interface TaskFormHandle {
@@ -65,8 +69,10 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
     customHeight,
     tags = [],
     boards = [],
+    boardCategories = [],
     isDeleted = false,
     initialBoardId,
+    showBoardCategory = false,
   } = props;
   const titleInputRef = useRef<HTMLInputElement>(null);
   const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -180,15 +186,38 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
           disabled={isDeleted}
         />
 
-        <div className="w-32">
-          <DateInput
-            label="期限日"
-            value={dueDate}
-            onChange={onDueDateChange}
-            fullWidth
-            disabled={isDeleted}
-          />
-        </div>
+        {showBoardCategory ? (
+          <div className="flex-1 flex gap-2.5 items-center">
+            <div className="w-44">
+              <BoardCategorySelector
+                value={null}
+                onChange={() => {}}
+                categories={boardCategories}
+                disabled={isDeleted}
+              />
+            </div>
+
+            <div className="w-32">
+              <DateInput
+                label="期限日"
+                value={dueDate}
+                onChange={onDueDateChange}
+                fullWidth
+                disabled={isDeleted}
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="w-32">
+            <DateInput
+              label="期限日"
+              value={dueDate}
+              onChange={onDueDateChange}
+              fullWidth
+              disabled={isDeleted}
+            />
+          </div>
+        )}
       </div>
 
       {/* ボード名・タグ表示（メモエディターと同じ実装） */}

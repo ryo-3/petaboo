@@ -179,6 +179,7 @@ export default function BoardRightPanel({
             <TaskEditor
               task={selectedTask}
               initialBoardId={boardId}
+              isFromBoardDetail={true}
               preloadedTags={tags || []}
               preloadedBoards={allBoards || []}
               preloadedTaggings={allTaggings || []}
@@ -201,6 +202,7 @@ export default function BoardRightPanel({
             <TaskEditor
               task={selectedTask}
               initialBoardId={boardId}
+              isFromBoardDetail={true}
               preloadedTags={tags || []}
               preloadedBoards={allBoards || []}
               preloadedTaggings={allTaggings || []}

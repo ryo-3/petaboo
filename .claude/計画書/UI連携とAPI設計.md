@@ -56,11 +56,11 @@ GET /api/boards?tags=tag1,tag2      // タグでフィルタリング
 GET /api/boards?boardCategoryId=123 // カテゴリーでフィルタリング
 ```
 
-### 2. フロントエンド型定義
+### 2. フロントエンド型定義 ✅ **完了済み**
 
-#### 共通型定義ファイル
+#### 共通型定義ファイル ✅ **実装済み**
 ```typescript
-// apps/web/src/types/tags.ts
+// apps/web/src/types/tags.ts ✅ 完了
 export interface Tag {
   id: number;
   name: string;
@@ -80,7 +80,7 @@ export interface Tagging {
   tag?: Tag; // JOIN時の関連データ
 }
 
-// apps/web/src/types/board-categories.ts
+// apps/web/src/types/board-categories.ts ✅ **完了済み**
 export interface BoardCategory {
   id: number;
   name: string;
@@ -99,11 +99,11 @@ export interface BoardWithCategory extends Board {
 }
 ```
 
-### 3. React Hooks実装
+### 3. React Hooks実装 ✅ **完了済み**
 
-#### タグ関連フック
+#### タグ関連フック ✅ **実装済み**
 ```typescript
-// apps/web/src/hooks/use-tags.ts
+// apps/web/src/hooks/use-tags.ts ✅ 完了
 export function useTags(options?: {
   search?: string;
   sort?: 'name' | 'usage' | 'recent';
@@ -144,9 +144,9 @@ export function useItemTags(targetType: string, targetOriginalId: string) {
 }
 ```
 
-#### ボードカテゴリー関連フック
+#### ボードカテゴリー関連フック ✅ **実装済み**
 ```typescript
-// apps/web/src/hooks/use-board-categories.ts
+// apps/web/src/hooks/use-board-categories.ts ✅ **完了済み**
 export function useBoardCategories() {
   return {
     categories: BoardCategory[],
@@ -168,39 +168,39 @@ export function useBoards(options?: {
 }
 ```
 
-### 4. UIコンポーネント設計
+### 4. UIコンポーネント設計 🔶 **部分完了**
 
-#### タグ関連コンポーネント
+#### タグ関連コンポーネント ✅ **実装済み**
 ```typescript
-// apps/web/src/components/features/tags/
-TagSelector.tsx      // タグ選択・追加コンポーネント
+// apps/web/src/components/features/tags/ ✅ 完了
+TagSelector.tsx      // タグ選択・追加コンポーネント ✅ 完了
 TagInput.tsx         // 新規タグ入力（オートコンプリート付き）
 TagChip.tsx          // タグチップ表示
 TagFilter.tsx        // タグによるフィルタリング
 TagManager.tsx       // タグ管理画面
 ```
 
-#### ボードカテゴリー関連コンポーネント
+#### ボードカテゴリー関連コンポーネント ✅ **基本実装完了**
 ```typescript
-// apps/web/src/components/features/board-categories/
-BoardCategorySelector.tsx  // カテゴリー選択
-BoardCategoryManager.tsx   // カテゴリー管理画面
-BoardCategoryChip.tsx      // カテゴリー表示チップ
-BoardCategoryFilter.tsx    // カテゴリーフィルター
+// apps/web/src/components/features/board-categories/ ✅ 基本完了
+BoardCategorySelector.tsx  // カテゴリー選択 ✅ 完了
+BoardCategoryManager.tsx   // カテゴリー管理画面（未実装）
+BoardCategoryChip.tsx      // カテゴリー表示チップ ✅ 完了
+BoardCategoryFilter.tsx    // カテゴリーフィルター（未実装）
 ```
 
-### 5. 具体的なUI統合ポイント
+### 5. 具体的なUI統合ポイント 🔶 **部分完了**
 
-#### メモ・タスク画面での統合
+#### メモ・タスク画面での統合 ✅ **実装済み**
 ```typescript
-// メモ編集画面に追加
+// メモ編集画面に追加 ✅ 完了
 <TagSelector 
   targetType="memo" 
   targetOriginalId={memo.originalId}
   onTagsChange={handleTagsChange}
 />
 
-// タスク編集画面に追加
+// タスク編集画面に追加 ✅ 完了
 <TagSelector 
   targetType="task" 
   targetOriginalId={task.originalId}
@@ -208,14 +208,15 @@ BoardCategoryFilter.tsx    // カテゴリーフィルター
 />
 ```
 
-#### ボード画面での統合
+#### ボード画面での統合 🔶 **部分完了**
 ```typescript
-// ボード作成・編集フォームに追加
+// ボード詳細のタスクエディターに追加 ✅ 完了
 <BoardCategorySelector
   value={board.boardCategoryId}
   onChange={handleCategoryChange}
 />
 
+// ボード作成・編集フォームに追加（未実装）
 <TagSelector 
   targetType="board" 
   targetOriginalId={board.id.toString()}
@@ -294,7 +295,25 @@ GET /api/search?q=keyword&tags=tag1,tag2&types=memo,task,board
 - 操作フィードバック（成功・エラー表示）
 
 ## 次のアクション
-1. APIエンドポイントの実装
-2. React Hooks の実装
-3. 基本UIコンポーネントの実装
-4. 既存画面への段階的統合
+1. ✅ APIエンドポイントの実装（完了済み）
+2. ✅ React Hooks の実装（完了済み）
+3. ✅ 基本UIコンポーネントの実装（完了済み）
+4. 🔶 既存画面への段階的統合（部分完了）
+
+## ✅ 2024/08/16 実装完了分
+
+### ボードカテゴリー機能実装
+- **型定義完全実装**: BoardCategory、NewBoardCategory、UpdateBoardCategory
+- **useBoardCategoriesフック**: CRUD操作、並び替え、エラーハンドリング完全実装
+- **UIコンポーネント実装**: BoardCategorySelector、BoardCategoryChip作成
+- **TaskForm統合**: ボード詳細時のみカテゴリーセレクター表示（isFromBoardDetail条件分岐）
+- **UI調整・統一**: 
+  - タスク一覧からカテゴリー機能除外（ボード経由分類に変更）
+  - 期限日フィールド幅統一（w-32）
+  - ボードカテゴリーセレクター幅調整（w-44）
+
+### 残りの実装項目
+- ボード作成・編集フォームでのカテゴリー選択
+- ボード一覧でのカテゴリーフィルタリング
+- カテゴリー管理画面
+- 統計・分析機能

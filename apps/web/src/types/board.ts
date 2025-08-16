@@ -1,18 +1,24 @@
 import { Memo } from "./memo";
 import { Task } from "./task";
 import { OriginalId } from "./common";
+import type { BoardCategory } from "./board-categories";
 
 export interface Board {
   id: number;
   name: string;
   slug: string;
   description: string | null;
+  boardCategoryId?: number;
   userId: string;
   position: number;
   archived: boolean;
   completed: boolean;
   createdAt: string | number;
   updatedAt: string | number;
+}
+
+export interface BoardWithCategory extends Board {
+  boardCategory?: BoardCategory;
 }
 
 export interface DeletedBoard {

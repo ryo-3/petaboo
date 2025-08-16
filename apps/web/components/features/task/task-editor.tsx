@@ -17,6 +17,7 @@ import { useUpdateTask, useCreateTask } from "@/src/hooks/use-tasks";
 import { useAddItemToBoard, useRemoveItemFromBoard } from "@/src/hooks/use-boards";
 import { useCreateTagging, useDeleteTagging } from "@/src/hooks/use-taggings";
 import { useBoardChangeModal } from "@/src/hooks/use-board-change-modal";
+import { useBoardCategories } from "@/src/hooks/use-board-categories";
 import BoardChangeModal from "@/components/ui/modals/board-change-modal";
 import type { Task, DeletedTask } from "@/src/types/task";
 import type { Tag, Tagging } from "@/src/types/tag";
@@ -28,6 +29,7 @@ import { useDeletedTaskActions } from "./use-deleted-task-actions";
 interface TaskEditorProps {
   task?: Task | DeletedTask | null;
   initialBoardId?: number;
+  isFromBoardDetail?: boolean; // ボード詳細からの呼び出しかどうか
   onClose: () => void;
   onSelectTask?: (task: Task | null, fromFullList?: boolean) => void;
   onClosePanel?: () => void;
@@ -54,6 +56,7 @@ interface TaskEditorProps {
 function TaskEditor({
   task,
   initialBoardId,
+  isFromBoardDetail = false,
   onClose,
   onSelectTask,
   onClosePanel,
@@ -71,6 +74,7 @@ function TaskEditor({
   const createTask = useCreateTask();
   const addItemToBoard = useAddItemToBoard();
   const removeItemFromBoard = useRemoveItemFromBoard();
+  const { categories } = useBoardCategories();
   
   // 削除済みタスクかどうかを判定
   const isDeleted = task ? 'deletedAt' in task : false;
@@ -917,6 +921,8 @@ function TaskEditor({
           customHeight={customHeight}
           tags={task && task.id !== 0 ? localTags : []}
           boards={task && task.id !== 0 ? itemBoards : []}
+          boardCategories={categories}
+          showBoardCategory={isFromBoardDetail}
           isDeleted={isDeleted}
           initialBoardId={initialBoardId}
         />

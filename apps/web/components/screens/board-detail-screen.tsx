@@ -18,6 +18,8 @@ import { useBulkDeleteOperations } from "@/src/hooks/use-bulk-delete-operations"
 import { useBoardItems } from "@/src/hooks/use-board-items";
 import { useBoardOperations } from "@/src/hooks/use-board-operations";
 import { CSVImportModal } from "@/components/features/board/csv-import-modal";
+import { useBoardCategories } from "@/src/hooks/use-board-categories";
+import BoardCategoryChip from "@/components/features/board-categories/board-category-chip";
 
 interface BoardDetailProps {
   boardId: number;
@@ -261,12 +263,18 @@ function BoardDetailScreen({
   const { data: allBoardItems } = useAllBoardItems();
   const { data: allTags } = useTags();
   const { data: allBoards } = useBoards();
+  const { categories } = useBoardCategories();
   
   // 安全なデータ配布用
   const safeAllTaggings = allTaggings || [];
   const safeAllBoardItems = allBoardItems || [];
   const safeAllTags = allTags || [];
   const safeAllBoards = allBoards || [];
+
+  // ボードのカテゴリーを取得
+  const boardCategory = boardWithItems?.boardCategoryId 
+    ? categories.find(cat => cat.id === boardWithItems.boardCategoryId)
+    : null;
 
 
   // メモの全選択フック
@@ -377,6 +385,7 @@ function BoardDetailScreen({
             isAllSelected={false}
             onCsvImport={() => setIsCSVImportModalOpen(true)}
           />
+
         </div>
 
         {/* メモ・タスクコンテンツ */}

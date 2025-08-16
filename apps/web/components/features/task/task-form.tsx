@@ -225,7 +225,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
         </div>
       )}
 
-      <div className="mt-2 flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col">
         <textarea
           ref={descriptionTextareaRef}
           placeholder={descriptionPlaceholder}

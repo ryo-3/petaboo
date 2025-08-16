@@ -108,14 +108,12 @@ export function useDeletedTaskActions({ task, onClose, onDeleteAndSelectNext, on
         await restoreTask.mutateAsync(task.originalId)
       }
       
-      // 復元完了後、少し遅延してからUIを更新（アニメーションと状態更新を空ける）
-      setTimeout(() => {
-        if (onRestoreAndSelectNext && task) {
-          onRestoreAndSelectNext(task)
-        } else {
-          onClose()
-        }
-      }, 500) // 500ms待機
+      // 復元完了後、すぐにUIを更新（メモと同じタイミング）
+      if (onRestoreAndSelectNext && task) {
+        onRestoreAndSelectNext(task)
+      } else {
+        onClose()
+      }
     } catch {
       alert('復元に失敗しました。')
     }

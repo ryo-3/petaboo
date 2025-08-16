@@ -180,25 +180,14 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
           disabled={isDeleted}
         />
 
-        <div className="flex-1 flex gap-2.5 items-center">
-          <div className="w-6/12">
-            <CategorySelector
-              value={categoryId}
-              onChange={onCategoryChange}
-              allowCreate={true}
-              disabled={isDeleted}
-            />
-          </div>
-
-          <div className="flex-1">
-            <DateInput
-              label="期限日"
-              value={dueDate}
-              onChange={onDueDateChange}
-              fullWidth
-              disabled={isDeleted}
-            />
-          </div>
+        <div className="w-32">
+          <DateInput
+            label="期限日"
+            value={dueDate}
+            onChange={onDueDateChange}
+            fullWidth
+            disabled={isDeleted}
+          />
         </div>
       </div>
 

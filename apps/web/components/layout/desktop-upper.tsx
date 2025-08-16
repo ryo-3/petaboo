@@ -495,8 +495,8 @@ function DesktopUpper({
             />
           )}
 
-          {/* ボード名表示切り替え（メモとタスク） */}
-          {(currentMode === "memo" || currentMode === "task") && onShowBoardNameChange && (
+          {/* ボード名表示切り替え（メモのみ） */}
+          {(currentMode === "memo") && onShowBoardNameChange && (
             <BoardNameToggle
               showBoardName={showBoardName}
               onToggle={onShowBoardNameChange}
@@ -510,8 +510,8 @@ function DesktopUpper({
             />
           )}
 
-          {/* タグ表示切り替え（メモ・タスク・ボードモード） */}
-          {(currentMode === "memo" || currentMode === "task" || currentMode === "board") && onShowTagDisplayChange && (
+          {/* タグ表示切り替え（メモ・ボードモード） */}
+          {(currentMode === "memo" || currentMode === "board") && onShowTagDisplayChange && (
             <TagDisplayToggle
               showTags={showTagDisplay}
               onToggle={onShowTagDisplayChange}

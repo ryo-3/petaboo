@@ -70,9 +70,9 @@ export default function BoardSelectionModal({
       onClose={onClose}
       title={modalTitle}
       maxWidth="3xl"
-      maxHeight="80vh"
+      maxHeight="85vh"
     >
-        <div className="h-[70vh] flex flex-col">
+        <div className="h-[75vh] flex flex-col">
         <div className="space-y-4">
         {/* フィルターモード切り替え（filter時のみ） */}
         {mode === 'filter' && onFilterModeChange && (

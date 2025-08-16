@@ -19,10 +19,15 @@ interface TagEditModalProps {
 }
 
 interface TagStats {
-  memoCount: number;
-  taskCount: number;
-  boardCount: number;
-  totalCount: number;
+  id: number;
+  name: string;
+  usageCount: number;
+  lastUsed: number | null;
+  itemTypes: {
+    memo: number;
+    task: number;
+    board: number;
+  };
 }
 
 export default function TagEditModal({
@@ -147,22 +152,24 @@ export default function TagEditModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg w-96 max-h-[80vh] overflow-y-auto">
-        <div className="p-6">
+      <div className="bg-white rounded-lg shadow-lg w-96 max-h-[80vh] overflow-y-auto relative">
+        {/* 右上の×ボタン */}
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 p-2 hover:bg-gray-100 rounded-lg transition-colors z-10"
+        >
+          <svg className="size-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        
+        <div className="p-4">
           {/* ヘッダー */}
-          <div className="flex items-center justify-between mb-6">
+          <div className="mb-6">
             <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
               <PenIcon className="size-5" />
               タグを編集
             </h2>
-            <button
-              onClick={onClose}
-              className="p-1 hover:bg-gray-100 rounded"
-            >
-              <svg className="size-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
           </div>
 
           {/* 現在のタグ表示 */}
@@ -247,17 +254,19 @@ export default function TagEditModal({
           </div>
 
           {/* 使用統計 */}
-          {tagStats && (
-            <div className="mb-6 p-3 bg-gray-50 rounded-lg">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">使用状況</h3>
-              <div className="text-sm text-gray-600 space-y-1">
-                <div>メモ: {tagStats.memoCount}件</div>
-                <div>タスク: {tagStats.taskCount}件</div>
-                <div>ボード: {tagStats.boardCount}件</div>
-                <div className="font-medium">合計: {tagStats.totalCount}件</div>
+          <div className="mb-6 p-3 bg-gray-50 rounded-lg">
+            <h3 className="text-sm font-medium text-gray-700 mb-2">使用状況</h3>
+            <div className="text-sm text-gray-600 space-y-1">
+              <div className="flex justify-between">
+                <span>メモ</span>
+                <span className="font-medium text-gray-900">{tagStats?.itemTypes?.memo || 0}件</span>
+              </div>
+              <div className="flex justify-between">
+                <span>タスク</span>
+                <span className="font-medium text-gray-900">{tagStats?.itemTypes?.task || 0}件</span>
               </div>
             </div>
-          )}
+          </div>
 
           {/* 削除確認 */}
           {showDeleteConfirm && (
@@ -267,8 +276,8 @@ export default function TagEditModal({
               </h3>
               <p className="text-sm text-red-700 mb-3">
                 このタグを削除すると、関連付けられた全てのメモ・タスク・ボードからタグが削除されます。
-                {tagStats && tagStats.totalCount > 0 && (
-                  <span className="font-medium"> ({tagStats.totalCount}件に影響)</span>
+                {tagStats && tagStats.usageCount > 0 && (
+                  <span className="font-medium"> ({tagStats.usageCount}件に影響)</span>
                 )}
               </p>
               <div className="flex gap-2">

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@clerk/nextjs'
 import { tagsApi } from '@/src/lib/api-client'
-import type { Tag, CreateTagData, UpdateTagData, Tagging } from '@/src/types/tag'
+import type { Tag, CreateTagData, UpdateTagData } from '@/src/types/tag'
 
 interface UseTagsOptions {
   search?: string;
@@ -65,27 +65,13 @@ export function useUpdateTag() {
       const responseData = await response.json()
       return responseData as Tag
     },
-    onSuccess: (updatedTag, { id }) => {
-      // タグ一覧の特定タグを更新
-      queryClient.setQueryData<Tag[]>(['tags'], (oldTags) => {
-        if (!oldTags) return [updatedTag]
-        return oldTags.map(tag => tag.id === id ? updatedTag : tag)
-      })
-      // オプション付きのタグクエリは無効化
-      queryClient.invalidateQueries({ 
-        queryKey: ['tags'], 
-        predicate: (query) => {
-          const queryKey = query.queryKey as [string, object?]
-          return !!(queryKey[0] === 'tags' && queryKey[1] && Object.keys(queryKey[1]).length > 0)
-        }
-      })
-      // 全タグ付け情報を部分的に更新（タグ名が変わった場合）
-      queryClient.setQueryData(['taggings', 'all'], (oldTaggings: Tagging[]) => {
-        if (!oldTaggings) return oldTaggings
-        return oldTaggings.map((tagging: Tagging) => 
-          tagging.tagId === id ? { ...tagging, tag: updatedTag } : tagging
-        )
-      })
+    onSuccess: () => {
+      // 全てのタグ関連クエリを無効化して再取得（確実にキャッシュ更新）
+      queryClient.invalidateQueries({ queryKey: ['tags'] })
+      
+      // 全タグ付け情報も無効化（タグ名・色が変わった場合に確実に更新）
+      queryClient.invalidateQueries({ queryKey: ['taggings'] })
+      queryClient.invalidateQueries({ queryKey: ['taggings', 'all'] })
     },
   })
 }

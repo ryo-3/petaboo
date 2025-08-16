@@ -120,7 +120,7 @@ function MemoListItem({
                         key={tag.id}
                         className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium"
                         style={{
-                          backgroundColor: TAG_COLORS.background,
+                          backgroundColor: tag.color || TAG_COLORS.background,
                           color: TAG_COLORS.text
                         }}
                       >

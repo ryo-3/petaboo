@@ -238,7 +238,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
                 key={tag.id}
                 className="inline-flex items-center px-2 py-1 rounded-md text-xs overflow-hidden"
                 style={{ 
-                  backgroundColor: TAG_COLORS.background, 
+                  backgroundColor: tag.color || TAG_COLORS.background, 
                   color: TAG_COLORS.text
                 }}
               >

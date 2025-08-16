@@ -6,6 +6,9 @@ import { TAG_COLORS } from "@/src/constants/colors";
 import { useCreateTag } from "@/src/hooks/use-tags";
 import PlusIcon from "@/components/icons/plus-icon";
 import SearchIcon from "@/components/icons/search-icon";
+import PenIcon from "@/components/icons/pen-icon";
+import TagEditModal from "@/components/ui/modals/tag-edit-modal";
+import type { Tag } from '@/src/types/tag';
 
 interface TagOption {
   id: number;
@@ -41,28 +44,40 @@ export default function TagSelectionModal({
 }: TagSelectionModalProps) {
   const modalTitle = title || (mode === 'filter' ? 'タグ絞り込み' : 'タグ選択');
   const [searchQuery, setSearchQuery] = useState("");
+  const [colorFilter, setColorFilter] = useState<string | null>(null);
   const [newTagName, setNewTagName] = useState("");
+  const [newTagColor, setNewTagColor] = useState<string>(TAG_COLORS.background);
   const [isCreating, setIsCreating] = useState(false);
+  const [editingTag, setEditingTag] = useState<Tag | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const createTagMutation = useCreateTag();
 
-  // 検索でフィルタリング + 選択済みタグを上部に表示
+  // 検索と色でフィルタリング（並び順は変更しない）
   const filteredTags = useMemo(() => {
     let filtered = tags;
     
     // 検索フィルタ
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = tags.filter(tag => 
+      filtered = filtered.filter(tag => 
         tag.name.toLowerCase().includes(query)
       );
     }
     
-    // 選択済みタグを上部に、未選択タグを下部に配置
-    const selectedTags = filtered.filter(tag => selectedTagIds.includes(tag.id));
-    const unselectedTags = filtered.filter(tag => !selectedTagIds.includes(tag.id));
+    // 色フィルタ
+    if (colorFilter) {
+      filtered = filtered.filter(tag => 
+        (tag.color || TAG_COLORS.background) === colorFilter
+      );
+    }
     
-    return [...selectedTags, ...unselectedTags];
-  }, [tags, searchQuery, selectedTagIds]);
+    return filtered;
+  }, [tags, searchQuery, colorFilter]);
+
+  // 選択済みタグ一覧（上部に表示用）
+  const selectedTags = useMemo(() => {
+    return tags.filter(tag => selectedTagIds.includes(tag.id));
+  }, [tags, selectedTagIds]);
 
   const handleTagToggle = (tagId: number) => {
     if (selectedTagIds.includes(tagId)) {
@@ -77,13 +92,7 @@ export default function TagSelectionModal({
     }
   };
 
-  const handleSelectAll = () => {
-    onSelectionChange(tags.map(tag => tag.id));
-  };
 
-  const handleClearAll = () => {
-    onSelectionChange([]);
-  };
 
   // 新規タグ名のバリデーション
   const isDuplicateTagName = newTagName.trim() !== '' && tags.some(tag => 
@@ -109,7 +118,7 @@ export default function TagSelectionModal({
       setIsCreating(true);
       const newTag = await createTagMutation.mutateAsync({
         name: trimmedName,
-        color: TAG_COLORS.background
+        color: newTagColor
       });
       
       // 作成したタグを自動選択
@@ -120,6 +129,7 @@ export default function TagSelectionModal({
       }
       
       setNewTagName("");
+      setNewTagColor(TAG_COLORS.background); // 色もリセット
       setSearchQuery(""); // 検索もクリア
     } catch (error) {
       console.error('タグ作成エラー:', error);
@@ -128,7 +138,47 @@ export default function TagSelectionModal({
     }
   };
 
+  // タグ編集ボタンクリック
+  const handleEditTag = (tag: TagOption, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // TagOptionをTagに変換（不足プロパティを仮値で設定）
+    const fullTag: Tag = {
+      ...tag,
+      color: tag.color || TAG_COLORS.background,
+      userId: '', // 実際の実装では適切なユーザーIDを設定
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    setEditingTag(fullTag);
+    setIsEditModalOpen(true);
+  };
+
+  // タグ編集モーダルを閉じる
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setEditingTag(null);
+  };
+
+  // タグが更新された時の処理
+  const handleTagUpdated = (updatedTag: Tag) => {
+    // 親コンポーネントでタグ一覧が更新されるので、特に何もしない
+    // React Queryのキャッシュ更新により自動的に反映される
+  };
+
+  // タグが削除された時の処理
+  const handleTagDeleted = (tagId: number) => {
+    // 削除されたタグが選択されていた場合は選択を解除
+    if (selectedTagIds.includes(tagId)) {
+      const updatedSelection = selectedTagIds.filter(id => id !== tagId);
+      onSelectionChange(updatedSelection);
+    }
+  };
+
   return (
+    <>
     <Modal
       isOpen={isOpen}
       onClose={onClose}
@@ -146,7 +196,7 @@ export default function TagSelectionModal({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="タグを検索..."
-            className="w-full px-9 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-9 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
           />
           <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 size-4 text-gray-400" />
           {searchQuery && (
@@ -161,29 +211,73 @@ export default function TagSelectionModal({
           )}
         </div>
 
+
         {/* 新規タグ作成 */}
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={newTagName}
-            onChange={(e) => setNewTagName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !isCreating) {
-                e.preventDefault();
-                handleCreateTag();
-              }
-            }}
-            placeholder="新しいタグ名を入力..."
-            className="flex-1 px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-          <button
-            onClick={handleCreateTag}
-            disabled={!newTagName.trim() || isCreating || isDuplicateTagName}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-          >
-            <PlusIcon className="size-4" />
-            {isCreating ? '作成中...' : '作成'}
-          </button>
+        <div className="space-y-3">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newTagName}
+              onChange={(e) => setNewTagName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !isCreating) {
+                  e.preventDefault();
+                  handleCreateTag();
+                }
+              }}
+              placeholder="新しいタグ名を入力..."
+              className="flex-1 px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+            />
+            <button
+              onClick={handleCreateTag}
+              disabled={!newTagName.trim() || isCreating || isDuplicateTagName}
+              className="px-4 py-2 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              <PlusIcon className="size-4" />
+              {isCreating ? '作成中...' : '作成'}
+            </button>
+          </div>
+          
+          {/* カラー選択 */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">カラー</span>
+            <div className="flex gap-1.5">
+              {[
+                { name: 'デフォルト', color: TAG_COLORS.background },
+                { name: 'ブルー', color: '#dbeafe' },
+                { name: 'グリーン', color: '#dcfce7' },
+                { name: 'イエロー', color: '#fef3c7' },
+                { name: 'レッド', color: '#fee2e2' },
+                { name: 'パープル', color: '#f3e8ff' },
+                { name: 'ピンク', color: '#fce7f3' },
+                { name: 'グレー', color: '#f3f4f6' }
+              ].map(({ name, color }) => (
+                <button
+                  key={name}
+                  onClick={() => setNewTagColor(color)}
+                  className={`w-6 h-6 rounded-full border-2 ${
+                    newTagColor === color ? 'border-gray-900' : 'border-gray-300'
+                  }`}
+                  style={{ backgroundColor: color }}
+                  title={name}
+                />
+              ))}
+            </div>
+            {/* プレビュー */}
+            {newTagName.trim() && (
+              <div className="ml-2">
+                <span 
+                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                  style={{
+                    backgroundColor: newTagColor,
+                    color: TAG_COLORS.text
+                  }}
+                >
+                  {newTagName.trim()}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
         {isDuplicateTagName && (
           <div className="mt-2 text-xs text-red-500">
@@ -228,23 +322,75 @@ export default function TagSelectionModal({
           </div>
         )}
 
-        {/* 全選択・全解除ボタン（複数選択時のみ） */}
+        {/* 選択済みタグ表示エリア */}
+        {selectedTags.length > 0 && (
+          <div className="mb-2">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-700">選択中のタグ</span>
+              <span className="text-xs text-gray-500">{selectedTags.length}件</span>
+            </div>
+            <div className="flex flex-wrap gap-1 p-2 bg-gray-50 rounded-md border border-gray-200">
+              {selectedTags.map((tag) => (
+                <div
+                  key={tag.id}
+                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium cursor-pointer hover:opacity-80"
+                  style={{
+                    backgroundColor: tag.color || TAG_COLORS.background,
+                    color: TAG_COLORS.text
+                  }}
+                  onClick={() => handleTagToggle(tag.id)}
+                  title="クリックで選択解除"
+                >
+                  <span>{tag.name}</span>
+                  <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* タグ一覧ヘッダー（複数選択時のみ） */}
         {multiple && (
           <div className="mb-2 flex justify-between items-center">
             <span className="text-sm font-medium text-gray-700">タグ一覧</span>
-            <div className="flex gap-2">
-              <button
-                onClick={handleSelectAll}
-                className="px-3 py-1 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded transition-colors"
-              >
-                全選択
-              </button>
-              <button
-                onClick={handleClearAll}
-                className="px-3 py-1 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded transition-colors"
-              >
-                全解除
-              </button>
+            <div className="flex items-center gap-3">
+              {/* カラーフィルター */}
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-gray-600">カラーフィルター</span>
+                <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setColorFilter(null)}
+                  className={`px-2 py-1 text-xs rounded ${
+                    colorFilter === null ? 'bg-gray-200 text-gray-800' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  全色
+                </button>
+                {[
+                  { name: 'デフォルト', color: TAG_COLORS.background },
+                  { name: 'ブルー', color: '#dbeafe' },
+                  { name: 'グリーン', color: '#dcfce7' },
+                  { name: 'イエロー', color: '#fef3c7' },
+                  { name: 'レッド', color: '#fee2e2' },
+                  { name: 'パープル', color: '#f3e8ff' },
+                  { name: 'ピンク', color: '#fce7f3' },
+                  { name: 'グレー', color: '#f3f4f6' }
+                ].map(({ name, color }) => (
+                  <button
+                    key={name}
+                    onClick={() => setColorFilter(color)}
+                    className={`w-6 h-6 rounded-full border-2 ${
+                      colorFilter === color ? 'border-gray-900' : 'border-gray-300'
+                    }`}
+                    style={{ backgroundColor: color }}
+                    title={`${name}でフィルター`}
+                  />
+                ))}
+                </div>
+              </div>
+              
             </div>
           </div>
         )}
@@ -257,43 +403,49 @@ export default function TagSelectionModal({
             </p>
           ) : (
             <div className="p-2 space-y-1">
-              {filteredTags.map((tag, index) => {
-                const isSelected = selectedTagIds.includes(tag.id);
-                const prevTag = filteredTags[index - 1];
-                const isPrevSelected = prevTag ? selectedTagIds.includes(prevTag.id) : false;
-                const showDivider = index > 0 && isPrevSelected && !isSelected && !searchQuery;
-                
+              {filteredTags.map((tag) => {
                 return (
                   <div key={tag.id}>
-                    {showDivider && (
-                      <div className="my-2 border-t border-gray-200" />
-                    )}
-                    <label
-                      className="flex items-center gap-3 py-1 px-2 hover:bg-gray-50 rounded cursor-pointer"
-                    >
-                  <input
-                    type="checkbox"
-                    checked={selectedTagIds.includes(tag.id)}
-                    onChange={() => handleTagToggle(tag.id)}
-                    className="sr-only"
-                  />
-                  <div className={`w-4 h-4 border rounded flex items-center justify-center flex-shrink-0 ${
-                    selectedTagIds.includes(tag.id)
-                      ? 'border-transparent'
-                      : 'border-gray-300 bg-white'
-                  }`}
-                  style={selectedTagIds.includes(tag.id) ? { backgroundColor: TAG_COLORS.background } : {}}
-                  >
-                    {selectedTagIds.includes(tag.id) && (
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                        style={{ color: TAG_COLORS.text }}
+                    <div className="flex items-center gap-2 py-1 px-2 hover:bg-gray-50 rounded group">
+                      <label className="flex items-center gap-2 flex-1 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedTagIds.includes(tag.id)}
+                          onChange={() => handleTagToggle(tag.id)}
+                          className="sr-only"
+                        />
+                        <div className={`w-4 h-4 border rounded flex items-center justify-center flex-shrink-0 ${
+                          selectedTagIds.includes(tag.id)
+                            ? 'border-gray-400 bg-gray-200'
+                            : 'border-gray-300 bg-white'
+                        }`}>
+                          {selectedTagIds.includes(tag.id) && (
+                            <svg className="w-3 h-3 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                        <span 
+                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                          style={{
+                            backgroundColor: tag.color || TAG_COLORS.background,
+                            color: TAG_COLORS.text
+                          }}
+                        >
+                          {tag.name}
+                        </span>
+                        <div className="flex-1"></div>
+                      </label>
+                      
+                      {/* 編集ボタン */}
+                      <button
+                        onClick={(e) => handleEditTag(tag, e)}
+                        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded transition-opacity"
+                        title="タグを編集"
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </div>
-                      <span className="text-sm text-gray-700 flex-1 break-words">{tag.name}</span>
-                    </label>
+                        <PenIcon className="size-3 text-gray-500" />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -303,5 +455,17 @@ export default function TagSelectionModal({
         </div>
         </div>
     </Modal>
+    
+    {/* タグ編集モーダル */}
+    {editingTag && (
+      <TagEditModal
+        tag={editingTag}
+        isOpen={isEditModalOpen}
+        onClose={handleCloseEditModal}
+        onTagUpdated={handleTagUpdated}
+        onTagDeleted={handleTagDeleted}
+      />
+    )}
+    </>
   );
 }

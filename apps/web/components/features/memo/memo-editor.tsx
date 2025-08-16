@@ -167,6 +167,25 @@ function MemoEditor({
       setPrevMemoId(currentMemoId);
     }
   }, [memo?.id, currentTags, prevMemoId]);
+
+  // preloadedTagsが更新された時にlocalTagsの最新情報を反映
+  useEffect(() => {
+    if (localTags.length > 0 && preloadedTags.length > 0) {
+      const updatedLocalTags = localTags.map(localTag => {
+        const updatedTag = preloadedTags.find(tag => tag.id === localTag.id);
+        return updatedTag || localTag;
+      });
+      
+      // 実際に変更があった場合のみ更新
+      const hasChanges = updatedLocalTags.some((tag, index) => 
+        tag.name !== localTags[index]?.name || tag.color !== localTags[index]?.color
+      );
+      
+      if (hasChanges) {
+        setLocalTags(updatedLocalTags);
+      }
+    }
+  }, [preloadedTags, localTags]);
   
   const [, setHasManualChanges] = useState(false);
 
@@ -506,7 +525,7 @@ function MemoEditor({
                     key={tag.id}
                     className="inline-flex items-center px-2 py-1 rounded-md text-xs overflow-hidden"
                     style={{ 
-                      backgroundColor: TAG_COLORS.background, 
+                      backgroundColor: tag.color || TAG_COLORS.background, 
                       color: TAG_COLORS.text
                     }}
                   >

@@ -52,13 +52,7 @@ export default function TagTriggerButton({
     );
   }
 
-  const tooltipText = disabled
-    ? (tags.length > 0 
-        ? `タグ (${tags.length}個・読み取り専用): ${tags.map(t => t.name).join(', ')}`
-        : 'タグ（読み取り専用）')
-    : (tags.length > 0 
-        ? `タグ (${tags.length}個): ${tags.map(t => t.name).join(', ')}`
-        : 'タグ');
+  const tooltipText = 'タグ';
 
   return (
     <Tooltip text={tooltipText} position="bottom">

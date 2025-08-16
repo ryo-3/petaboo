@@ -8,9 +8,9 @@
 tags: { id, name, color, userId, createdAt, updatedAt }
 taggings: { id, tagId, targetType, targetOriginalId, userId, createdAt }
 
-// ボードカテゴリーシステム
-board_categories: { id, name, description, color, icon, sortOrder, userId, createdAt, updatedAt }
-boards: { ..., boardCategoryId, ... } // 拡張済み
+// ボードカテゴリーシステム（ボード専用カテゴリー）
+board_categories: { id, name, boardId, icon, sortOrder, userId, createdAt, updatedAt }
+tasks: { ..., boardCategoryId, ... } // 拡張済み（タスクをボードカテゴリーで分類）
 ```
 
 ### ✅ 実装済みAPIエンドポイント
@@ -37,12 +37,11 @@ DELETE /api/taggings/by-tag         // 特定タグの削除
 #### ボードカテゴリーAPI
 ```typescript
 // ✅ 実装済み: apps/api/src/routes/board-categories/
-GET    /api/board-categories        // カテゴリー一覧取得
-POST   /api/board-categories        // カテゴリー作成（制限30個）
+GET    /api/board-categories?boardId={boardId} // ボード専用カテゴリー一覧取得
+POST   /api/board-categories        // カテゴリー作成（制限30個、boardId必須）
 PUT    /api/board-categories/{id}   // カテゴリー更新
 DELETE /api/board-categories/{id}   // カテゴリー削除
 PUT    /api/board-categories/reorder // 並び順変更
-GET    /api/board-categories/{id}/stats // 統計情報
 ```
 
 ## 次のステップ：UIとの連携
@@ -50,10 +49,10 @@ GET    /api/board-categories/{id}/stats // 統計情報
 ### 🔶 既存API拡張（未実装）
 ```typescript
 // 既存APIにタグ・カテゴリー対応を追加
-GET /api/memos?tags=tag1,tag2       // タグでフィルタリング
-GET /api/tasks?tags=tag1,tag2       // タグでフィルタリング
-GET /api/boards?tags=tag1,tag2      // タグでフィルタリング
-GET /api/boards?boardCategoryId=123 // カテゴリーでフィルタリング
+GET /api/memos?tags=tag1,tag2         // タグでフィルタリング
+GET /api/tasks?tags=tag1,tag2         // タグでフィルタリング
+GET /api/tasks?boardCategoryId=123    // ボードカテゴリーでタスクフィルタリング
+GET /api/boards?tags=tag1,tag2        // タグでフィルタリング
 ```
 
 ### 2. フロントエンド型定義 ✅ **完了済み**
@@ -84,8 +83,7 @@ export interface Tagging {
 export interface BoardCategory {
   id: number;
   name: string;
-  description?: string;
-  color?: string;
+  boardId: number;      // ★ボード専用カテゴリー
   icon?: string;
   sortOrder: number;
   userId: string;
@@ -93,9 +91,10 @@ export interface BoardCategory {
   updatedAt: Date;
 }
 
-// 既存のBoard型に追加
-export interface BoardWithCategory extends Board {
-  boardCategory?: BoardCategory;
+// 既存のTask型に追加 ✅ **完了済み**
+export interface Task {
+  // ... 既存フィールド
+  boardCategoryId: number | null;  // ★追加
 }
 ```
 
@@ -147,7 +146,7 @@ export function useItemTags(targetType: string, targetOriginalId: string) {
 #### ボードカテゴリー関連フック ✅ **実装済み**
 ```typescript
 // apps/web/src/hooks/use-board-categories.ts ✅ **完了済み**
-export function useBoardCategories() {
+export function useBoardCategories(boardId: number) {
   return {
     categories: BoardCategory[],
     createCategory: (data: CreateCategoryData) => Promise<BoardCategory>,
@@ -159,12 +158,12 @@ export function useBoardCategories() {
   };
 }
 
-// 既存のuseBoards.tsに拡張
-export function useBoards(options?: {
-  categoryId?: number;
+// タスクフィルタリング（未実装）
+export function useTasks(options?: {
+  boardCategoryId?: number;
   tags?: string[];
 }) {
-  // カテゴリー・タグによるフィルタリング対応
+  // ボードカテゴリー・タグによるフィルタリング対応
 }
 ```
 
@@ -208,20 +207,18 @@ BoardCategoryFilter.tsx    // カテゴリーフィルター（未実装）
 />
 ```
 
-#### ボード画面での統合 🔶 **部分完了**
+#### ボード画面での統合 ✅ **実装完了**
 ```typescript
 // ボード詳細のタスクエディターに追加 ✅ 完了
 <BoardCategorySelector
-  value={board.boardCategoryId}
+  boardId={board.id}
+  value={task.boardCategoryId}
   onChange={handleCategoryChange}
 />
 
-// ボード作成・編集フォームに追加（未実装）
-<TagSelector 
-  targetType="board" 
-  targetOriginalId={board.id.toString()}
-  onTagsChange={handleTagsChange}
-/>
+// タスクAPIでのboardCategoryId処理 ✅ 完了
+POST   /tasks { boardCategoryId: number | null }
+PUT    /tasks/{id} { boardCategoryId: number | null }
 ```
 
 #### 一覧画面でのフィルタリング
@@ -300,20 +297,30 @@ GET /api/search?q=keyword&tags=tag1,tag2&types=memo,task,board
 3. ✅ 基本UIコンポーネントの実装（完了済み）
 4. 🔶 既存画面への段階的統合（部分完了）
 
-## ✅ 2024/08/16 実装完了分
+## ✅ 2025/08/16 実装完了分
 
-### ボードカテゴリー機能実装
-- **型定義完全実装**: BoardCategory、NewBoardCategory、UpdateBoardCategory
-- **useBoardCategoriesフック**: CRUD操作、並び替え、エラーハンドリング完全実装
-- **UIコンポーネント実装**: BoardCategorySelector、BoardCategoryChip作成
-- **TaskForm統合**: ボード詳細時のみカテゴリーセレクター表示（isFromBoardDetail条件分岐）
-- **UI調整・統一**: 
-  - タスク一覧からカテゴリー機能除外（ボード経由分類に変更）
-  - 期限日フィールド幅統一（w-32）
-  - ボードカテゴリーセレクター幅調整（w-44）
+### ボードカテゴリー機能実装完了
+- **データベース設計変更**: 
+  - ボード専用カテゴリー → ボードごとのカテゴリー体系に変更
+  - `board_categories.boardId` 必須、colorとdescriptionを削除
+  - `tasks.boardCategoryId` 追加でタスクをカテゴリー分類
 
-### 残りの実装項目
-- ボード作成・編集フォームでのカテゴリー選択
-- ボード一覧でのカテゴリーフィルタリング
-- カテゴリー管理画面
-- 統計・分析機能
+- **API実装完了**:
+  - GET `/board-categories?boardId={boardId}` ボード専用カテゴリー取得
+  - POST `/board-categories` boardId必須でカテゴリー作成
+  - タスクAPI boardCategoryId対応（POST/PUT）
+
+- **フロントエンド完全実装**:
+  - useBoardCategories(boardId) フック実装
+  - BoardCategorySelector、BoardCategoryChip、BoardCategoryManager実装
+  - TaskEditor統合（ボード詳細でのカテゴリー選択）
+  - 変更検知改善（カテゴリー変更のみでも保存可能）
+
+- **技術課題解決**:
+  - WSL環境でのDB更新問題 → Windows側実行で解決
+  - カテゴリー変更時の保存問題 → hasContentChanges修正で解決
+
+### 今後の拡張可能性
+- カテゴリー別タスクフィルタリング機能
+- カテゴリーごとの進捗統計表示
+- タスク移動・一括操作機能

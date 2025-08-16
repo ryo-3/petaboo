@@ -9,6 +9,7 @@ interface SelectorOption {
   value: string;
   label: string;
   color?: string;
+  icon?: React.ReactNode;
 }
 
 interface CustomSelectorProps {
@@ -180,13 +181,16 @@ function CustomSelector({
               {options.map((option) => (
                 <div key={option.value}>
                   <button
-                    className={`w-full px-3 py-2 text-sm transition-all text-left flex items-center gap-2 rounded-md ${
+                    className={`w-full px-3 py-2 text-sm transition-all text-left flex items-center gap-1 rounded-md ${
                       option.value === value 
                         ? `bg-gray-100` 
                         : `hover:bg-gray-50`
                     }`}
                     onClick={() => handleSelect(option.value)}
                   >
+                    {option.icon && (
+                      <span>{option.icon}</span>
+                    )}
                     {option.color && (
                       <div className={`w-3 h-3 rounded-full ${option.color}`}></div>
                     )}

@@ -4,7 +4,7 @@ import type { BoardCategory, NewBoardCategory, UpdateBoardCategory } from "@/src
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8787";
 
-export function useBoardCategories() {
+export function useBoardCategories(boardId?: number) {
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
 
@@ -14,10 +14,13 @@ export function useBoardCategories() {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["boardCategories"],
+    queryKey: ["boardCategories", boardId],
     queryFn: async (): Promise<BoardCategory[]> => {
       const token = await getToken();
-      const response = await fetch(`${API_BASE_URL}/board-categories`, {
+      const url = boardId 
+        ? `${API_BASE_URL}/board-categories?boardId=${boardId}`
+        : `${API_BASE_URL}/board-categories`;
+      const response = await fetch(url, {
         headers: {
           "Content-Type": "application/json",
           ...(token && { Authorization: `Bearer ${token}` }),
@@ -29,7 +32,7 @@ export function useBoardCategories() {
       }
 
       const data = await response.json();
-      return data.map((category: any) => ({
+      return data.map((category: BoardCategory & { createdAt: number; updatedAt?: number }) => ({
         ...category,
         createdAt: new Date(category.createdAt * 1000),
         updatedAt: category.updatedAt ? new Date(category.updatedAt * 1000) : undefined,

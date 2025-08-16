@@ -3,13 +3,15 @@
 import MemoIcon from "@/components/icons/memo-icon";
 import SettingsIcon from "@/components/icons/settings-icon";
 import TaskIcon from "@/components/icons/task-icon";
+import BoardCategoryManager from "@/components/features/board-categories/board-category-manager";
 import Switch from "@/components/ui/base/switch";
 import ColumnCountSelector from "@/components/ui/layout/column-count-selector";
 import ViewModeToggle from "@/components/ui/layout/view-mode-toggle";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useEffect, useState } from "react";
+import { Folder } from "lucide-react";
 
-type SettingsTab = "memo" | "task" | "general";
+type SettingsTab = "memo" | "task" | "general" | "board-categories";
 
 function SettingsScreen() {
   const { preferences, updatePreferences, isLoading } = useUserPreferences(1);
@@ -64,6 +66,7 @@ function SettingsScreen() {
   const tabItems = [
     { id: "memo" as const, label: "メモ", icon: <MemoIcon className="w-4 h-4 text-Green" /> },
     { id: "task" as const, label: "タスク", icon: <TaskIcon className="w-4 h-4 text-Blue" /> },
+    { id: "board-categories" as const, label: "ボードカテゴリー", icon: <Folder className="w-4 h-4 text-purple-600" /> },
     { id: "general" as const, label: "全体", icon: <SettingsIcon className="w-4 h-4 text-gray-600" /> },
   ];
 
@@ -105,7 +108,10 @@ function SettingsScreen() {
 
         {/* メインコンテンツ */}
         <div className="flex-1 px-6 pt-4 overflow-hidden">
-          <div className="max-w-lg">
+          {activeTab === "board-categories" ? (
+            <BoardCategoryManager />
+          ) : (
+            <div className="max-w-lg">
           {activeTab === "memo" && (
             <div>
               <h2 className="text-lg font-semibold text-gray-800 mb-3">メモ設定</h2>
@@ -243,6 +249,7 @@ function SettingsScreen() {
             </button>
             </div>
           </div>
+          )}
         </div>
       </div>
     </div>

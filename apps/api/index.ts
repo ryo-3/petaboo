@@ -10,6 +10,7 @@ import categoriesRoute from "./src/routes/categories/route";
 import boardsRoute from "./src/routes/boards/route";
 import tagsRoute from "./src/routes/tags/route";
 import taggingsRoute from "./src/routes/taggings/route";
+import boardCategoriesRoute from "./src/routes/board-categories/route";
 
 // 環境変数確認（開発環境のみ）
 if (process.env.NODE_ENV === "development") {
@@ -39,6 +40,7 @@ app.route("/categories", categoriesRoute);
 app.route("/boards", boardsRoute);
 app.route("/tags", tagsRoute);
 app.route("/taggings", taggingsRoute);
+app.route("/board-categories", boardCategoriesRoute);
 app.get("/openapi", (c) => {
   const openapiJson = openapiApp.getOpenAPIDocument({
     openapi: "3.1.0", // バージョンは "3.0.0" でもOK

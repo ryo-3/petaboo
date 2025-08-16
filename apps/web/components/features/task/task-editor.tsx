@@ -74,7 +74,7 @@ function TaskEditor({
   const createTask = useCreateTask();
   const addItemToBoard = useAddItemToBoard();
   const removeItemFromBoard = useRemoveItemFromBoard();
-  const { categories } = useBoardCategories();
+  const { categories } = useBoardCategories(initialBoardId);
   
   // 削除済みタスクかどうかを判定
   const isDeleted = task ? 'deletedAt' in task : false;

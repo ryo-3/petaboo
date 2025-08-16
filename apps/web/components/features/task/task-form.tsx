@@ -193,7 +193,9 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
                 value={null}
                 onChange={() => {}}
                 categories={boardCategories}
+                boardId={initialBoardId!}
                 disabled={isDeleted}
+                allowCreate={true}
               />
             </div>
 
@@ -243,7 +245,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
         </div>
       )}
 
-      <div className="flex-1 flex flex-col">
+      <div className={`flex-1 flex flex-col ${(displayBoards.length === 0 && tags.length === 0) ? 'mt-2' : ''}`}>
         <textarea
           ref={descriptionTextareaRef}
           placeholder={descriptionPlaceholder}

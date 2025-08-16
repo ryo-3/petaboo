@@ -16,11 +16,7 @@ export default function BoardCategoryChip({
 
   return (
     <div
-      className={`inline-flex items-center rounded-md font-medium ${sizeClasses[size]}`}
-      style={{
-        backgroundColor: category.color || "#f3f4f6",
-        color: category.color ? "#ffffff" : "#374151",
-      }}
+      className={`inline-flex items-center rounded-md font-medium bg-gray-100 text-gray-700 ${sizeClasses[size]}`}
     >
       {category.icon && (
         <span className="mr-1">{category.icon}</span>

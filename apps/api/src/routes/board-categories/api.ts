@@ -19,6 +19,7 @@ const BoardCategorySchema = z.object({
 
 const CreateBoardCategorySchema = z.object({
   name: z.string().min(1).max(50),
+  boardId: z.number(),
   description: z.string().optional(),
   color: z.string().optional(),
   icon: z.string().optional(),
@@ -45,6 +46,7 @@ export function createAPI(app: AppType) {
     tags: ["board-categories"],
     request: {
       query: z.object({
+        boardId: z.string().optional(),
         q: z.string().optional(),
         sort: z.enum(["name", "usage", "order"]).optional().default("order"),
         limit: z.string().optional(),
@@ -78,13 +80,23 @@ export function createAPI(app: AppType) {
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const { q, sort, limit } = c.req.valid("query");
+    const { boardId, q, sort, limit } = c.req.valid("query");
     const db = c.env.db;
 
     let query = db
       .select()
       .from(boardCategories)
       .where(eq(boardCategories.userId, auth.userId));
+
+    // ボードIDでフィルタリング
+    if (boardId) {
+      query = query.where(
+        and(
+          eq(boardCategories.userId, auth.userId),
+          eq(boardCategories.boardId, parseInt(boardId))
+        )
+      );
+    }
 
     // 検索フィルター
     if (q) {
@@ -200,7 +212,7 @@ export function createAPI(app: AppType) {
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const { name, description, color, icon, sortOrder } = c.req.valid("json");
+    const { name, boardId, description, color, icon, sortOrder } = c.req.valid("json");
     const db = c.env.db;
 
     // カテゴリー数制限チェック（30個）
@@ -242,6 +254,7 @@ export function createAPI(app: AppType) {
 
     const newCategory: NewBoardCategory = {
       name,
+      boardId,
       description: description || null,
       color: color || null,
       icon: icon || null,

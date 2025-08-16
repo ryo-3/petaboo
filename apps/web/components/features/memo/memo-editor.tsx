@@ -161,7 +161,6 @@ function MemoEditor({
   useEffect(() => {
     const currentMemoId = memo?.id || 0;
     
-    // メモが変わった場合のみ即座に更新
     if (currentMemoId !== prevMemoId) {
       setLocalTags(currentTags);
       setPrevMemoId(currentMemoId);
@@ -418,6 +417,7 @@ function MemoEditor({
     setShowDeleteModal(false);
     setIsAnimating(false); // 蓋を閉じる
   };
+
 
   return (
     <>

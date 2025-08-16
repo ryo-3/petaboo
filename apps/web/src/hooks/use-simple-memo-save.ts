@@ -24,15 +24,20 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
     boardsToRemove: number[];
   }>({ boardsToAdd: [], boardsToRemove: [] })
   const [isInitialSync, setIsInitialSync] = useState(true)
-  const [isMemoSwitching, setIsMemoSwitching] = useState(false)
+  const [isChangingMemo, setIsChangingMemo] = useState(false)
+  const [isMemoTransition, setIsMemoTransition] = useState(false)
   
   // メモが変更されたらボード選択をリセット
   const currentBoardIdsStr = JSON.stringify([...currentBoardIds].sort())
   useEffect(() => {
+    setIsMemoTransition(true) // メモ切り替え開始
     setSelectedBoardIds([...currentBoardIds])
     setIsInitialSync(true) // 初期同期開始
     // 少し遅延させて初期同期完了をマーク
-    const timer = setTimeout(() => setIsInitialSync(false), 100)
+    const timer = setTimeout(() => {
+      setIsInitialSync(false)
+      setIsMemoTransition(false) // メモ切り替え完了
+    }, 100)
     return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [memo?.id, currentBoardIdsStr]) // 文字列で比較
@@ -50,8 +55,10 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
 
   // 変更検知（ボード選択も含める）
   const hasChanges = useMemo(() => {
-    // メモ切り替え中は変更なしとして扱う
-    if (isMemoSwitching) return false
+    // メモ切り替え中は変更検知を無効化
+    if (isMemoTransition) {
+      return false
+    }
     
     const currentTitle = title.trim()
     const currentContent = content.trim()
@@ -64,12 +71,11 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
     
     const hasBoardChanges = JSON.stringify([...selectedBoardIds].sort()) !== JSON.stringify([...currentBoardIds].sort())
     return textChanged || hasBoardChanges
-  }, [title, content, initialTitle, initialContent, selectedBoardIds, currentBoardIds, isInitialSync, isMemoSwitching])
+  }, [title, content, initialTitle, initialContent, selectedBoardIds, currentBoardIds, isInitialSync, isMemoTransition])
 
   // メモが変更された時の初期値更新
   useEffect(() => {
-    // メモ切り替えフラグをセット
-    setIsMemoSwitching(true)
+    setIsMemoTransition(true) // データ更新開始
     
     if (memo) {
       const memoTitle = memo.title || ''
@@ -85,10 +91,12 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
       setInitialContent('')
     }
     
-    // 短い遅延後に切り替えフラグをリセット
-    setTimeout(() => {
-      setIsMemoSwitching(false)
+    // データ更新完了を少し遅延させてマーク
+    const timer = setTimeout(() => {
+      setIsMemoTransition(false)
     }, 50)
+    
+    return () => clearTimeout(timer)
   }, [memo])
 
   const executeSave = useCallback(async () => {

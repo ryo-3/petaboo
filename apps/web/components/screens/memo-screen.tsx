@@ -67,9 +67,6 @@ function MemoScreen({
   // 一括処理中断通知の監視
   useBulkProcessNotifications();
 
-  // 新規作成エディターのキー管理
-  const [createEditorKey, setCreateEditorKey] = useState(0);
-
   // 選択モード管理
   const [selectionMode, setSelectionMode] = useState<"select" | "check">(
     initialSelectionMode
@@ -658,7 +655,6 @@ function MemoScreen({
       >
         {memoScreenMode === "create" && (
           <MemoEditor
-            key={`create-${createEditorKey}`} // 管理されたキーで再マウント
             memo={null}
             onClose={() => setMemoScreenMode("list")}
             onSaveComplete={handleSaveComplete}

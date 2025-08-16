@@ -3,6 +3,7 @@
 import CategorySelector from "@/components/features/category/category-selector";
 import DateInput from "@/components/ui/inputs/date-input";
 import CustomSelector from "@/components/ui/selectors/custom-selector";
+import BoardChips from "@/components/ui/chips/board-chips";
 import type { Task } from "@/src/types/task";
 import type { Tag } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
@@ -13,7 +14,7 @@ import {
   getStatusEditorColor,
   getStatusText,
 } from "@/src/utils/taskUtils";
-import { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import { useEffect, useRef, forwardRef, useImperativeHandle, useMemo } from "react";
 
 interface TaskFormProps {
   task?: Task | null;
@@ -69,6 +70,11 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
   } = props;
   const titleInputRef = useRef<HTMLInputElement>(null);
   const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
+  
+  // 表示用のボード（initialBoardIdは除外）
+  const displayBoards = useMemo(() => {
+    return boards.filter(board => !initialBoardId || board.id !== initialBoardId);
+  }, [boards, initialBoardId]);
 
   // 新規作成時のフォーカス遅延
   useEffect(() => {
@@ -196,31 +202,26 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
         </div>
       </div>
 
-      {/* ボード名・タグ表示 */}
-      {(boards.filter(board => !initialBoardId || board.id !== initialBoardId).length > 0 || tags.length > 0) && (
-        <div className="flex flex-wrap gap-2 mt-2">
-          {/* ボード名（現在のボードを除外） */}
-          {boards.filter(board => !initialBoardId || board.id !== initialBoardId).map((board) => (
-            <div
-              key={board.id}
-              className="inline-flex items-center px-2 py-1 rounded-md text-xs overflow-hidden bg-light-Blue text-white"
-            >
-              <span>{board.name}</span>
-            </div>
-          ))}
-          {/* タグ */}
-          {tags.map((tag) => (
-            <div
-              key={tag.id}
-              className="inline-flex items-center px-2 py-1 rounded-md text-xs overflow-hidden"
-              style={{ 
-                backgroundColor: TAG_COLORS.background, 
-                color: TAG_COLORS.text
-              }}
-            >
-              <span>{tag.name}</span>
-            </div>
-          ))}
+      {/* ボード名・タグ表示（メモエディターと同じ実装） */}
+      {(displayBoards.length > 0 || tags.length > 0) && (
+        <div className="mb-1 mt-2 min-h-[28px]">
+          <div className="flex flex-wrap gap-2">
+            {/* ボード名（選択中の状態を表示） */}
+            <BoardChips boards={displayBoards} variant="compact" />
+            {/* タグ */}
+            {tags.map((tag) => (
+              <div
+                key={tag.id}
+                className="inline-flex items-center px-2 py-1 rounded-md text-xs overflow-hidden"
+                style={{ 
+                  backgroundColor: TAG_COLORS.background, 
+                  color: TAG_COLORS.text
+                }}
+              >
+                <span>{tag.name}</span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

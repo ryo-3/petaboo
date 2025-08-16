@@ -96,8 +96,16 @@ function TaskEditor({
       .map(item => preloadedBoards.find(board => board.id === item.boardId))
       .filter((board): board is NonNullable<typeof board> => board !== undefined);
     
+    // initialBoardIdがある場合は、そのボードも含める（重複は自動的に除外される）
+    if (initialBoardId) {
+      const initialBoard = preloadedBoards.find(board => board.id === initialBoardId);
+      if (initialBoard && !boards.some(b => b.id === initialBoardId)) {
+        boards.push(initialBoard);
+      }
+    }
+    
     return boards;
-  }, [task, preloadedBoardItems, preloadedBoards]);
+  }, [task, preloadedBoardItems, preloadedBoards, initialBoardId]);
   
   // 事前取得されたデータからタスクのタグを抽出（シンプル）
   const currentTags = useMemo(() => {
@@ -188,7 +196,13 @@ function TaskEditor({
   // 初期ボードIDs（ちらつき防止）
   const initialBoardIds = useMemo(() => {
     if (task && task.id !== 0) {
-      return itemBoards.map(board => board.id.toString());
+      // 既存タスクの場合は、itemBoardsとinitialBoardIdの両方を含める
+      const boardIds = itemBoards.map(board => board.id.toString());
+      // initialBoardIdが指定されていて、まだ含まれていない場合は追加
+      if (initialBoardId && !boardIds.includes(initialBoardId.toString())) {
+        boardIds.push(initialBoardId.toString());
+      }
+      return boardIds;
     } else if (initialBoardId) {
       return [initialBoardId.toString()];
     }

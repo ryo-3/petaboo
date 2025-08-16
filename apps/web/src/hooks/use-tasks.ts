@@ -201,6 +201,8 @@ export function useRestoreTask() {
       // ボード詳細とボード削除済みアイテムのキャッシュも無効化
       queryClient.invalidateQueries({ queryKey: ['boards'], exact: false })
       queryClient.invalidateQueries({ queryKey: ['board-deleted-items'] })
+      // ボードアイテムのキャッシュを無効化（復元時にボード紐づきも復元されるため）
+      queryClient.invalidateQueries({ queryKey: ['board-items'] })
       // 全タグ付け情報を無効化（復元されたタスクのタグ情報が変わる可能性があるため）
       queryClient.invalidateQueries({ queryKey: ['taggings', 'all'] })
     },

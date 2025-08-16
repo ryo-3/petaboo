@@ -30,6 +30,8 @@ interface TaskFormProps {
   onPriorityChange: (value: "low" | "medium" | "high") => void;
   categoryId: number | null;
   onCategoryChange: (value: number | null) => void;
+  boardCategoryId: number | null;
+  onBoardCategoryChange: (value: number | null) => void;
   dueDate: string;
   onDueDateChange: (value: string) => void;
   isNewTask?: boolean;
@@ -61,6 +63,8 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
     onPriorityChange,
     categoryId,
     onCategoryChange,
+    boardCategoryId,
+    onBoardCategoryChange,
     dueDate,
     onDueDateChange,
     isNewTask = false,
@@ -190,8 +194,8 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
           <div className="flex-1 flex gap-2.5 items-center">
             <div className="w-44">
               <BoardCategorySelector
-                value={null}
-                onChange={() => {}}
+                value={boardCategoryId}
+                onChange={onBoardCategoryChange}
                 categories={boardCategories}
                 boardId={initialBoardId!}
                 disabled={isDeleted}

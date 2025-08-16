@@ -623,6 +623,7 @@ export function useBoardDeletedItems(boardId: number) {
               priority: item.content.priority,
               dueDate: item.content.dueDate,
               categoryId: item.content.categoryId,
+              boardCategoryId: item.content.boardCategoryId,
               createdAt: item.content.createdAt,
               updatedAt: item.content.updatedAt,
               deletedAt: item.deletedAt,

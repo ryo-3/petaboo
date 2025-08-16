@@ -10,6 +10,7 @@ export interface Task {
   priority: 'low' | 'medium' | 'high';
   dueDate: number | null; // Unix timestamp
   categoryId: number | null;
+  boardCategoryId: number | null; // ボードカテゴリーID
   createdAt: number;
   updatedAt: number | null;
 }
@@ -24,6 +25,7 @@ export interface DeletedTask {
   priority: string;
   dueDate: number | null;
   categoryId: number | null;
+  boardCategoryId: number | null; // ボードカテゴリーID
   createdAt: number;
   updatedAt: number | null;
   deletedAt: number;
@@ -36,6 +38,7 @@ export interface CreateTaskData {
   priority?: 'low' | 'medium' | 'high';
   dueDate?: number;
   categoryId?: number | null;
+  boardCategoryId?: number | null; // ボードカテゴリーID
 }
 
 export interface UpdateTaskData {
@@ -45,4 +48,5 @@ export interface UpdateTaskData {
   priority?: 'low' | 'medium' | 'high';
   dueDate?: number;
   categoryId?: number | null;
+  boardCategoryId?: number | null; // ボードカテゴリーID
 }

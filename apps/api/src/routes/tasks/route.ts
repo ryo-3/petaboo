@@ -31,6 +31,7 @@ const TaskSchema = z.object({
   priority: z.enum(["low", "medium", "high"]),
   dueDate: z.number().nullable(),
   categoryId: z.number().nullable(),
+  boardCategoryId: z.number().nullable(),
   createdAt: z.number(),
   updatedAt: z.number().nullable(),
 });
@@ -42,6 +43,7 @@ const TaskInputSchema = z.object({
   priority: z.enum(["low", "medium", "high"]).default("medium"),
   dueDate: z.number().optional(),
   categoryId: z.number().optional(),
+  boardCategoryId: z.number().optional(),
 });
 
 const TaskUpdateSchema = z.object({
@@ -51,6 +53,7 @@ const TaskUpdateSchema = z.object({
   priority: z.enum(["low", "medium", "high"]).optional(),
   dueDate: z.number().optional(),
   categoryId: z.number().optional(),
+  boardCategoryId: z.number().optional(),
 });
 
 const ImportResultSchema = z.object({
@@ -143,6 +146,7 @@ app.openapi(
       priority: tasks.priority,
       dueDate: tasks.dueDate,
       categoryId: tasks.categoryId,
+      boardCategoryId: tasks.boardCategoryId,
       createdAt: tasks.createdAt,
       updatedAt: tasks.updatedAt,
     }).from(tasks)
@@ -228,8 +232,13 @@ app.openapi(
       );
     }
 
-    const { title, description, status, priority, dueDate, categoryId } = parsed.data;
-    const result = await db.insert(tasks).values({
+    const { title, description, status, priority, dueDate, categoryId, boardCategoryId } = parsed.data;
+    
+    // デバッグログ
+    console.log("受信したデータ:", parsed.data);
+    console.log("boardCategoryId:", boardCategoryId);
+    
+    const insertData = {
       userId: auth.userId,
       originalId: "", // 後で更新
       uuid: generateUuid(), // UUID生成
@@ -239,8 +248,13 @@ app.openapi(
       priority,
       dueDate,
       categoryId,
+      boardCategoryId,
       createdAt: Math.floor(Date.now() / 1000),
-    }).returning({ id: tasks.id });
+    };
+    
+    console.log("DBに挿入するデータ:", insertData);
+    
+    const result = await db.insert(tasks).values(insertData).returning({ id: tasks.id });
 
     // originalIdを生成して更新
     const originalId = generateOriginalId(result[0].id);
@@ -248,7 +262,13 @@ app.openapi(
       .set({ originalId })
       .where(eq(tasks.id, result[0].id));
 
-    return c.json({ success: true, id: result[0].id as number, originalId }, 200);
+    // 作成されたタスクを取得して返す
+    const newTask = await db.select().from(tasks).where(eq(tasks.id, result[0].id)).get();
+    
+    console.log("DBから取得した新規タスク:", newTask);
+    console.log("保存されたboardCategoryId:", newTask?.boardCategoryId);
+    
+    return c.json(newTask, 200);
   }
 );
 
@@ -324,10 +344,15 @@ app.openapi(
       );
     }
 
+    console.log("更新リクエストのデータ:", parsed.data);
+    console.log("更新するboardCategoryId:", parsed.data.boardCategoryId);
+    
     const updateData = {
       ...parsed.data,
       updatedAt: Math.floor(Date.now() / 1000)
     };
+    
+    console.log("DBに更新するデータ:", updateData);
 
     const result = await db.update(tasks)
       .set(updateData)

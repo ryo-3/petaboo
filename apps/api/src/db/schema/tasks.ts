@@ -11,6 +11,7 @@ export const tasks = sqliteTable("tasks", {
   priority: text("priority").notNull().default("medium"), // "low", "medium", "high"
   dueDate: integer("due_date"), // Unix timestamp
   categoryId: integer("category_id"),
+  boardCategoryId: integer("board_category_id"), // ボードカテゴリーID
   createdAt: integer("created_at").notNull(),
   updatedAt: integer("updated_at"),
 });
@@ -26,6 +27,7 @@ export const deletedTasks = sqliteTable("deleted_tasks", {
   priority: text("priority").notNull(),
   dueDate: integer("due_date"),
   categoryId: integer("category_id"),
+  boardCategoryId: integer("board_category_id"), // ボードカテゴリーID
   createdAt: integer("created_at").notNull(),
   updatedAt: integer("updated_at"),
   deletedAt: integer("deleted_at").notNull(), // 削除日時

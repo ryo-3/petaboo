@@ -164,6 +164,7 @@ export function useBoardState() {
         priority: "medium",
         dueDate: null,
         categoryId: null,
+        boardCategoryId: null,
         createdAt: Math.floor(Date.now() / 1000),
         updatedAt: Math.floor(Date.now() / 1000),
       };

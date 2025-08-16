@@ -189,6 +189,7 @@ function TaskEditor({
     (task?.priority as "low" | "medium" | "high") || "medium"
   );
   const [categoryId, setCategoryId] = useState<number | null>(task?.categoryId ?? null);
+  const [boardCategoryId, setBoardCategoryId] = useState<number | null>(task?.boardCategoryId ?? null);
   const [dueDate, setDueDate] = useState<string>(() => {
     try {
       return (task?.dueDate ? new Date(task.dueDate * 1000).toISOString().split('T')[0] : "") as string;
@@ -293,6 +294,7 @@ function TaskEditor({
     status: status,
     priority: priority,
     categoryId: categoryId,
+    boardCategoryId: boardCategoryId,
     dueDate: dueDate ? Math.floor(new Date(dueDate).getTime() / 1000) : null,
   } : {
     id: 0,
@@ -301,6 +303,7 @@ function TaskEditor({
     status: status,
     priority: priority,
     categoryId: categoryId,
+    boardCategoryId: boardCategoryId,
     createdAt: Math.floor(Date.now() / 1000),
     updatedAt: Math.floor(Date.now() / 1000),
     dueDate: dueDate ? Math.floor(new Date(dueDate).getTime() / 1000) : null,
@@ -381,6 +384,7 @@ function TaskEditor({
     status: "todo" | "in_progress" | "completed";
     priority: "low" | "medium" | "high";
     categoryId: number | null;
+    boardCategoryId: number | null;
     dueDate: string;
     boardIds: string[];
   } | null>(null);
@@ -397,9 +401,10 @@ function TaskEditor({
       status !== originalData.status ||
       priority !== originalData.priority ||
       categoryId !== originalData.categoryId ||
+      boardCategoryId !== originalData.boardCategoryId ||
       dueDate !== originalData.dueDate ||
       boardsChanged;
-  }, [title, description, status, priority, categoryId, dueDate, selectedBoardIds, originalData]);
+  }, [title, description, status, priority, categoryId, boardCategoryId, dueDate, selectedBoardIds, originalData]);
 
   // 新規作成時の保存可能性チェック
   const canSave = isDeleted ? false : (isNewTask ? !!title.trim() : (hasChanges || hasTagChanges));
@@ -426,6 +431,7 @@ function TaskEditor({
         status: taskStatus as "todo" | "in_progress" | "completed",
         priority: taskPriority as "low" | "medium" | "high",
         categoryId: task.categoryId || null,
+        boardCategoryId: task.boardCategoryId || null,
         dueDate: taskDueDate,
         boardIds: [] as string[]  // 後でuseEffectで設定される
       };
@@ -436,6 +442,7 @@ function TaskEditor({
       setStatus(taskStatus as "todo" | "in_progress" | "completed");
       setPriority(taskPriority as "low" | "medium" | "high");
       setCategoryId(task.categoryId || null);
+      setBoardCategoryId(task.boardCategoryId || null);
       setDueDate(taskDueDate);
       setError(null);
       setOriginalData(newData);
@@ -447,6 +454,7 @@ function TaskEditor({
         status: "todo" as const,
         priority: "medium" as const,
         categoryId: null,
+        boardCategoryId: null,
         dueDate: "",
         boardIds: initialBoardId ? [initialBoardId.toString()] : []
       };
@@ -457,6 +465,7 @@ function TaskEditor({
       setStatus("todo");
       setPriority("medium");
       setCategoryId(null);
+      setBoardCategoryId(null);
       setDueDate("");
       setError(null);
       setOriginalData(newData);
@@ -531,6 +540,7 @@ function TaskEditor({
         status: status,
         priority: priority,
         categoryId: categoryId,
+        boardCategoryId: boardCategoryId,
         dueDate: dueDate,
         boardIds: selectedBoardIds
       });
@@ -597,10 +607,15 @@ function TaskEditor({
         status,
         priority,
         categoryId: categoryId || undefined,
+        boardCategoryId: boardCategoryId || undefined,
         dueDate: dueDate
           ? Math.floor(new Date(dueDate).getTime() / 1000)
           : undefined,
       };
+      
+      // デバッグ用ログ
+      console.log("保存するタスクデータ:", taskData);
+      console.log("boardCategoryId:", boardCategoryId);
 
       if (isNewTask) {
         // 新規作成
@@ -634,6 +649,7 @@ function TaskEditor({
             status: "todo" as const,
             priority: "medium" as const,
             categoryId: null,
+            boardCategoryId: null,
             dueDate: "",
             boardIds: []
           };
@@ -643,6 +659,7 @@ function TaskEditor({
           setStatus("todo");
           setPriority("medium");
           setCategoryId(null);
+          setBoardCategoryId(null);
           initializeBoardIds([]);
           setDueDate("");
           
@@ -662,6 +679,7 @@ function TaskEditor({
           status !== originalData!.status ||
           priority !== originalData!.priority ||
           categoryId !== originalData!.categoryId ||
+          boardCategoryId !== originalData!.boardCategoryId ||
           dueDate !== originalData!.dueDate;
         
         let updatedTask = task as Task;
@@ -749,6 +767,7 @@ function TaskEditor({
           status: status,
           priority: priority,
           categoryId: categoryId,
+          boardCategoryId: boardCategoryId,
           dueDate: dueDate,
           boardIds: selectedBoardIds
         });
@@ -915,6 +934,8 @@ function TaskEditor({
           onPriorityChange={isDeleted ? () => {} : setPriority}
           categoryId={categoryId}
           onCategoryChange={isDeleted ? () => {} : setCategoryId}
+          boardCategoryId={boardCategoryId}
+          onBoardCategoryChange={isDeleted ? () => {} : setBoardCategoryId}
           dueDate={dueDate}
           onDueDateChange={isDeleted ? () => {} : setDueDate}
           isNewTask={isNewTask}

@@ -85,14 +85,30 @@ export default function TagSelectionModal({
     onSelectionChange([]);
   };
 
+  // 新規タグ名のバリデーション
+  const isDuplicateTagName = newTagName.trim() !== '' && tags.some(tag => 
+    tag.name.toLowerCase() === newTagName.trim().toLowerCase()
+  );
+
   // 新規タグ作成
   const handleCreateTag = async () => {
     if (!newTagName.trim()) return;
     
+    const trimmedName = newTagName.trim();
+    
+    // 事前バリデーション：重複チェック
+    const isDuplicate = tags.some(tag => 
+      tag.name.toLowerCase() === trimmedName.toLowerCase()
+    );
+    
+    if (isDuplicate) {
+      return; // UIで既に表示済みなのでalertは不要
+    }
+    
     try {
       setIsCreating(true);
       const newTag = await createTagMutation.mutateAsync({
-        name: newTagName.trim(),
+        name: trimmedName,
         color: TAG_COLORS.background
       });
       
@@ -162,13 +178,18 @@ export default function TagSelectionModal({
           />
           <button
             onClick={handleCreateTag}
-            disabled={!newTagName.trim() || isCreating}
+            disabled={!newTagName.trim() || isCreating || isDuplicateTagName}
             className="px-4 py-2 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             <PlusIcon className="size-4" />
             {isCreating ? '作成中...' : '作成'}
           </button>
         </div>
+        {isDuplicateTagName && (
+          <div className="mt-2 text-xs text-red-500">
+            同じ名前のタグが既に存在します
+          </div>
+        )}
         {/* フィルターモード切り替え（filter時のみ） */}
         {mode === 'filter' && onFilterModeChange && (
           <div>

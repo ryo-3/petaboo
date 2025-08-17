@@ -186,7 +186,7 @@ export default function TagSelectionModal({
         maxWidth="3xl"
         maxHeight="85vh"
       >
-        <div className="h-[75vh] flex flex-col">
+        <div className="min-h-[75vh] max-h-[75vh] flex flex-col">
           {/* カスタムヘッダー：タイトルと検索ボックス */}
           <div className="flex items-center justify-between gap-4 mb-2">
             <h2 className="text-lg font-semibold text-gray-900">

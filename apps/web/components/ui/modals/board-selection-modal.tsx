@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Modal from "@/components/ui/modals/modal";
+import SearchIcon from "@/components/icons/search-icon";
 
 interface BoardOption {
   id: number;
@@ -35,13 +36,20 @@ export default function BoardSelectionModal({
   onFilterModeChange
 }: BoardSelectionModalProps) {
   const modalTitle = title || (mode === 'filter' ? 'ボード絞り込み' : 'ボード選択');
+  const [searchQuery, setSearchQuery] = useState("");
   
-  // 選択済みボードを上部に表示
-  const sortedBoards = useMemo(() => {
-    const selectedBoards = boards.filter(board => selectedBoardIds.includes(board.id));
-    const unselectedBoards = boards.filter(board => !selectedBoardIds.includes(board.id));
-    return [...selectedBoards, ...unselectedBoards];
-  }, [boards, selectedBoardIds]);
+  // 検索でフィルタリング
+  const filteredBoards = useMemo(() => {
+    if (!searchQuery) return boards;
+    
+    const query = searchQuery.toLowerCase();
+    return boards.filter(board => 
+      board.name.toLowerCase().includes(query)
+    );
+  }, [boards, searchQuery]);
+  
+  // フィルタリングされたボードをそのまま使用（並び順は変更しない）
+  const displayBoards = filteredBoards;
 
   const handleBoardToggle = (boardId: number) => {
     if (selectedBoardIds.includes(boardId)) {
@@ -64,19 +72,60 @@ export default function BoardSelectionModal({
     onSelectionChange([]);
   };
 
+  // 選択済みボード一覧（上部に表示用）
+  const selectedBoards = useMemo(() => {
+    return boards.filter(board => selectedBoardIds.includes(board.id));
+  }, [boards, selectedBoardIds]);
+
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={modalTitle}
+      title=""
       maxWidth="3xl"
       maxHeight="85vh"
     >
-        <div className="h-[75vh] flex flex-col">
-        <div className="space-y-4">
+        <div className="min-h-[75vh] max-h-[75vh] flex flex-col">
+          {/* カスタムヘッダー：タイトルと検索ボックス */}
+          <div className="flex items-center justify-between gap-4 mb-2">
+            <h2 className="text-lg font-semibold text-gray-900">
+              {modalTitle}
+            </h2>
+            <div className="relative flex-1 max-w-sm">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="ボードを検索..."
+                className="w-full px-9 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+              />
+              <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 size-4 text-gray-400" />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <svg
+                    className="size-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
+        
         {/* フィルターモード切り替え（filter時のみ） */}
         {mode === 'filter' && onFilterModeChange && (
-          <div>
+          <div className="mb-4">
             <div className="flex rounded-md bg-gray-100 p-0.5">
               <button
                 onClick={() => onFilterModeChange('include')}
@@ -112,8 +161,47 @@ export default function BoardSelectionModal({
           </div>
         )}
 
-        {/* 全選択・全解除ボタン（複数選択時のみ） */}
-        {multiple && (
+        {/* 選択済みボード表示エリア */}
+        {selectedBoards.length > 0 && (
+          <div className="mt-3 mb-2">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-700">
+                選択中のボード
+              </span>
+              <span className="text-xs text-gray-500">
+                {selectedBoards.length}件
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-1 p-2 bg-gray-50 rounded-md border border-gray-200">
+              {selectedBoards.map((board) => (
+                <div
+                  key={board.id}
+                  className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium cursor-pointer hover:opacity-80 bg-light-Blue text-white"
+                  onClick={() => handleBoardToggle(board.id)}
+                  title="クリックで選択解除"
+                >
+                  <span>{board.name}</span>
+                  <svg
+                    className="w-3 h-3 ml-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 全選択・全解除ボタン（フィルターモード時のみ） */}
+        {multiple && mode === 'filter' && (
           <div className="mb-2 flex justify-between items-center">
             <span className="text-sm font-medium text-gray-700">ボード一覧</span>
             <div className="flex gap-2">
@@ -133,23 +221,27 @@ export default function BoardSelectionModal({
           </div>
         )}
 
+        {/* ボード一覧ヘッダー（通常の選択時） */}
+        {multiple && mode !== 'filter' && (
+          <div className="mt-2 mb-2 flex justify-between items-center">
+            <span className="text-sm font-medium text-gray-700">
+              ボード一覧
+            </span>
+          </div>
+        )}
+
         {/* ボード一覧 */}
-        <div className="flex-1 overflow-y-auto border border-gray-200 rounded-md">
-          {sortedBoards.length === 0 ? (
-            <p className="text-sm text-gray-500 p-4 text-center">ボードがありません</p>
+        <div className="flex-1 min-h-0 overflow-y-auto border border-gray-200 rounded-md">
+          {displayBoards.length === 0 ? (
+            <p className="text-sm text-gray-500 p-4 text-center">
+              {searchQuery
+                ? `「${searchQuery}」に一致するボードがありません`
+                : "ボードがありません"}
+            </p>
           ) : (
             <div className="p-2 space-y-1">
-              {sortedBoards.map((board, index) => {
-                const isSelected = selectedBoardIds.includes(board.id);
-                const prevBoard = sortedBoards[index - 1];
-                const isPrevSelected = prevBoard ? selectedBoardIds.includes(prevBoard.id) : false;
-                const showDivider = index > 0 && isPrevSelected && !isSelected;
-                
-                return (
+              {displayBoards.map((board) => (
                   <div key={board.id}>
-                    {showDivider && (
-                      <div className="my-2 border-t border-gray-200" />
-                    )}
                     <label
                       className="flex items-center gap-3 py-1 px-2 hover:bg-gray-50 rounded cursor-pointer"
                     >
@@ -173,11 +265,9 @@ export default function BoardSelectionModal({
                       <span className="text-sm text-gray-700 flex-1 break-words">{board.name}</span>
                     </label>
                   </div>
-                );
-              })}
+                ))}
             </div>
           )}
-        </div>
         </div>
         </div>
     </Modal>

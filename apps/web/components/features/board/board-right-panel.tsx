@@ -120,7 +120,6 @@ export default function BoardRightPanel({
         <>
           {activeMemoTab === "deleted" ? (
             <MemoEditor
-              key={`deleted-${selectedMemo.id}-${activeMemoTab}`}
               memo={selectedMemo}
               onClose={() => {
                 // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
@@ -141,7 +140,6 @@ export default function BoardRightPanel({
             />
           ) : (
             <MemoEditor
-              key={`normal-${selectedMemo.id}-${activeMemoTab}`}
               memo={selectedMemo}
               initialBoardId={boardId}
               preloadedTags={tags || []}

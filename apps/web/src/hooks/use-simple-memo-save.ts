@@ -24,7 +24,6 @@ export function useSimpleMemoSave({ memo = null, onSaveComplete, currentBoardIds
     boardsToRemove: number[];
   }>({ boardsToAdd: [], boardsToRemove: [] })
   const [isInitialSync, setIsInitialSync] = useState(true)
-  const [isChangingMemo, setIsChangingMemo] = useState(false)
   const [isMemoTransition, setIsMemoTransition] = useState(false)
   
   // メモが変更されたらボード選択をリセット

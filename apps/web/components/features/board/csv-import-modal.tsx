@@ -6,6 +6,29 @@ import { useAuth } from "@clerk/nextjs";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8794';
 
+// セキュリティ設定
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_ROWS = 100; // 最大行数
+
+// 入力値のサニタイゼーション
+const sanitizeInput = (input: string, isTitle: boolean = false): string => {
+  if (!input) return '';
+  const maxLength = isTitle ? 200 : 10000;
+  return input
+    .replace(/[<>'"&]/g, (match) => {
+      const map: { [key: string]: string } = {
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+        '&': '&amp;'
+      };
+      return map[match] || match;
+    })
+    .trim()
+    .slice(0, maxLength);
+};
+
 interface CSVImportModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -48,17 +71,17 @@ export function CSVImportModal({ isOpen, onClose, boardId }: CSVImportModalProps
         if (hasTaskFields) {
           results.push({
             itemType: 'task',
-            title: values[0],
-            description: values[1] || undefined,
-            status: values[2] || undefined,
-            priority: values[3] || undefined,
+            title: sanitizeInput(values[0], true),
+            description: sanitizeInput(values[1] || ''),
+            status: sanitizeInput(values[2] || ''),
+            priority: sanitizeInput(values[3] || ''),
           });
         } else {
           // 2番目以降のすべての値をcontentとして結合
-          const content = values.slice(1).filter(v => v).join('、');
+          const content = values.slice(1).filter(v => v).map(v => sanitizeInput(v)).join('、');
           results.push({
             itemType: 'memo',
-            title: values[0],
+            title: sanitizeInput(values[0], true),
             content: content || undefined,
           });
         }
@@ -69,16 +92,35 @@ export function CSVImportModal({ isOpen, onClose, boardId }: CSVImportModalProps
   };
 
   const handleFileSelect = async (file: File) => {
+    // ファイル形式チェック
     if (!file.name.endsWith('.csv')) {
       alert('CSVファイルを選択してください');
       return;
     }
 
-    setSelectedFile(file);
-    const csvText = await file.text();
-    const preview = parseCSVPreview(csvText);
-    setPreviewData(preview);
-    setImportResult(null);
+    // ファイルサイズチェック
+    if (file.size > MAX_FILE_SIZE) {
+      alert(`ファイルサイズは${MAX_FILE_SIZE / 1024 / 1024}MB以下にしてください`);
+      return;
+    }
+
+    try {
+      setSelectedFile(file);
+      const csvText = await file.text();
+      
+      // ファイル内容の基本検証
+      if (csvText.length > MAX_FILE_SIZE) {
+        alert('ファイル内容が大きすぎます');
+        return;
+      }
+
+      const preview = parseCSVPreview(csvText);
+      setPreviewData(preview);
+      setImportResult(null);
+    } catch (error) {
+      alert('ファイルの読み込みに失敗しました');
+      console.error('File read error:', error);
+    }
   };
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -114,6 +156,12 @@ export function CSVImportModal({ isOpen, onClose, boardId }: CSVImportModalProps
     if (lines.length < 2) {
       return [];
     }
+
+    // 行数制限
+    if (lines.length > MAX_ROWS + 1) { // +1 for header
+      alert(`CSVファイルの行数は${MAX_ROWS}行以下にしてください`);
+      return [];
+    }
     
     const header = lines[0]?.toLowerCase() || '';
     
@@ -139,18 +187,18 @@ export function CSVImportModal({ isOpen, onClose, boardId }: CSVImportModalProps
         if (hasTaskFields) {
           const taskItem = {
             itemType: 'task' as const,
-            title: values[0],
-            description: values[1] || undefined,
-            status: values[2] || undefined,
-            priority: values[3] || undefined,
+            title: sanitizeInput(values[0], true),
+            description: sanitizeInput(values[1] || ''),
+            status: sanitizeInput(values[2] || ''),
+            priority: sanitizeInput(values[3] || ''),
           };
           results.push(taskItem);
         } else {
           // 2番目以降のすべての値をcontentとして結合
-          const content = values.slice(1).filter(v => v).join('、');
+          const content = values.slice(1).filter(v => v).map(v => sanitizeInput(v)).join('、');
           const memoItem = {
             itemType: 'memo' as const,
-            title: values[0],
+            title: sanitizeInput(values[0], true),
             content: content || undefined,
           };
           results.push(memoItem);

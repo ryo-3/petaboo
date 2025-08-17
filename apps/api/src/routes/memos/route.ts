@@ -32,8 +32,8 @@ const MemoSchema = z.object({
 });
 
 const MemoInputSchema = z.object({
-  title: z.string().min(1),
-  content: z.string().optional(),
+  title: z.string().min(1).max(200, "タイトルは200文字以内で入力してください"),
+  content: z.string().max(10000, "内容は10,000文字以内で入力してください").optional(),
 });
 
 const ImportResultSchema = z.object({

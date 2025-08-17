@@ -37,8 +37,8 @@ const TaskSchema = z.object({
 });
 
 const TaskInputSchema = z.object({
-  title: z.string().min(1),
-  description: z.string().optional(),
+  title: z.string().min(1).max(200, "タイトルは200文字以内で入力してください"),
+  description: z.string().max(10000, "説明は10,000文字以内で入力してください").optional(),
   status: z.enum(["todo", "in_progress", "completed"]).default("todo"),
   priority: z.enum(["low", "medium", "high"]).default("medium"),
   dueDate: z.number().optional(),
@@ -47,8 +47,8 @@ const TaskInputSchema = z.object({
 });
 
 const TaskUpdateSchema = z.object({
-  title: z.string().min(1).optional(),
-  description: z.string().optional(),
+  title: z.string().min(1).max(200, "タイトルは200文字以内で入力してください").optional(),
+  description: z.string().max(10000, "説明は10,000文字以内で入力してください").optional(),
   status: z.enum(["todo", "in_progress", "completed"]).optional(),
   priority: z.enum(["low", "medium", "high"]).optional(),
   dueDate: z.number().optional(),

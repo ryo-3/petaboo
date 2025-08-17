@@ -131,10 +131,7 @@ function TaskEditor({
   
   // ローカルタグ状態
   const [localTags, setLocalTags] = useState<Tag[]>([]);
-  const lastTaskIdRef = useRef<number | undefined>(undefined);
-  const [hasManualTagChanges, setHasManualTagChanges] = useState(false);
-  const [lastSyncedTags, setLastSyncedTags] = useState<string>('');
-  const [isTagsInitialized, setIsTagsInitialized] = useState(false);
+  const [prevTaskId, setPrevTaskId] = useState<number | null>(null);
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
   
   // 削除機能は編集時のみ
@@ -229,62 +226,72 @@ function TaskEditor({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // タスク切り替え時のタグ初期化処理
+  // タスク初期化（メモエディターと同じシンプルパターン）
   useEffect(() => {
-    const taskId = task?.id;
-    const lastTaskId = lastTaskIdRef.current;
+    const currentTaskId = task?.id || 0;
     
-    // タスクIDが変更されたか、初回レンダリングの場合のみ実行
-    if (taskId !== lastTaskId) {
-      lastTaskIdRef.current = taskId;
-      setHasManualTagChanges(false);
-      setIsTagsInitialized(false);
-      setLastSyncedTags('');
+    if (currentTaskId !== prevTaskId) {
+      setLocalTags(currentTags);
+      setPrevTaskId(currentTaskId);
       
-      // 新規タスクの場合は即座に空配列で初期化
-      if (!task || task.id === 0) {
-        setLocalTags([]);
-        setLastSyncedTags('[]');
-        setIsTagsInitialized(true);
+      // originalDataも同時に設定（変更検知のため）
+      if (task) {
+        const taskTitle = task.title || "";
+        const taskDescription = task.description || "";
+        const taskStatus = task.status || "todo";
+        const taskPriority = task.priority || "medium";
+        const taskDueDate = (() => {
+          try {
+            return (task.dueDate ? new Date(task.dueDate * 1000).toISOString().split("T")[0] : "") as string;
+          } catch {
+            return "";
+          }
+        })();
+        
+        setTitle(taskTitle);
+        setDescription(taskDescription);
+        setStatus(taskStatus as "todo" | "in_progress" | "completed");
+        setPriority(taskPriority as "low" | "medium" | "high");
+        setCategoryId(task.categoryId || null);
+        setBoardCategoryId(task.boardCategoryId || null);
+        setDueDate(taskDueDate);
+        setError(null);
+        
+        setOriginalData({
+          title: taskTitle.trim(),
+          description: taskDescription.trim(),
+          status: taskStatus as "todo" | "in_progress" | "completed",
+          priority: taskPriority as "low" | "medium" | "high",
+          categoryId: task.categoryId || null,
+          boardCategoryId: task.boardCategoryId || null,
+          dueDate: taskDueDate,
+          boardIds: itemBoards.map(board => board.id.toString())
+        });
       } else {
-        // 既存タスクの場合は一旦空にしてデータ取得を待つ
-        setLocalTags([]);
+        // 新規作成時の初期化
+        setTitle("");
+        setDescription("");
+        setStatus("todo");
+        setPriority("medium");
+        setCategoryId(null);
+        setBoardCategoryId(null);
+        setDueDate("");
+        setError(null);
+        
+        setOriginalData({
+          title: "",
+          description: "",
+          status: "todo" as const,
+          priority: "medium" as const,
+          categoryId: null,
+          boardCategoryId: null,
+          dueDate: "",
+          boardIds: initialBoardId ? [initialBoardId.toString()] : []
+        });
       }
     }
-  }, [task, isTagsInitialized]);
+  }, [task?.id, currentTags, prevTaskId, task, itemBoards, initialBoardId]);
   
-  // データ取得完了時のタグ初期化処理
-  useEffect(() => {
-    // 新規タスクは何もしない
-    if (!task || task.id === 0) return;
-    
-    // まだ初期化されていない場合のみ実行
-    if (!isTagsInitialized) {
-      // データが確実に取得されるまで少し待機
-      const timer = setTimeout(() => {
-        const currentTagsStr = JSON.stringify(currentTags.map(t => ({ id: t.id, name: t.name })));
-        setLocalTags(currentTags);
-        setLastSyncedTags(currentTagsStr);
-        setIsTagsInitialized(true);
-      }, 50);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [task, currentTags, isTagsInitialized]);
-  
-  // 保存後のタグ同期処理（手動変更がない場合のみ）
-  useEffect(() => {
-    // 新規タスク、初期化前、手動変更ありの場合は何もしない
-    if (!task || task.id === 0 || !isTagsInitialized || hasManualTagChanges) return;
-    
-    const currentTagsStr = JSON.stringify(currentTags.map(t => ({ id: t.id, name: t.name })));
-    const tagsActuallyChanged = currentTagsStr !== lastSyncedTags;
-    
-    if (tagsActuallyChanged) {
-      setLocalTags(currentTags);
-      setLastSyncedTags(currentTagsStr);
-    }
-  }, [task, currentTags, isTagsInitialized, hasManualTagChanges, lastSyncedTags]);
   
   // 新規作成・編集両対応の仮タスクオブジェクト
   const tempTask: Task = task ? {
@@ -309,17 +316,15 @@ function TaskEditor({
     dueDate: dueDate ? Math.floor(new Date(dueDate).getTime() / 1000) : null,
   };
 
-  // タグに変更があるかチェック
+  // タグに変更があるかチェック（シンプル版）
   const hasTagChanges = useMemo(() => {
     if (!task || task.id === 0) return false;
-    // 初期化が完了していない場合は変更なしとして扱う
-    if (!isTagsInitialized) return false;
     
     const currentTagIds = currentTags.map(tag => tag.id).sort();
     const localTagIds = localTags.map(tag => tag.id).sort();
     
     return JSON.stringify(currentTagIds) !== JSON.stringify(localTagIds);
-  }, [currentTags, localTags, task, isTagsInitialized]);
+  }, [currentTags, localTags, task]);
 
   // タグの差分を計算して一括更新する関数
   const updateTaggings = useCallback(async (taskId: string) => {
@@ -411,85 +416,8 @@ function TaskEditor({
   const canSave = isDeleted ? false : (isNewTask ? !!title.trim() : (hasChanges || hasTagChanges));
 
 
-  // taskプロパティが変更された時にstateを更新
-  useEffect(() => {
-    if (task) {
-      const taskTitle = task.title || "";
-      const taskDescription = task.description || "";
-      const taskStatus = task.status || "todo";
-      const taskPriority = task.priority || "medium";
-      const taskDueDate = (() => {
-        try {
-          return (task.dueDate ? new Date(task.dueDate * 1000).toISOString().split("T")[0] : "") as string;
-        } catch {
-          return "";
-        }
-      })();
-      
-      const newData = {
-        title: taskTitle.trim(),
-        description: taskDescription.trim(),
-        status: taskStatus as "todo" | "in_progress" | "completed",
-        priority: taskPriority as "low" | "medium" | "high",
-        categoryId: task.categoryId || null,
-        boardCategoryId: task.boardCategoryId || null,
-        dueDate: taskDueDate,
-        boardIds: [] as string[]  // 後でuseEffectで設定される
-      };
-      
-      // stateと元データを同時に更新して変更検知のずれを防ぐ
-      setTitle(taskTitle);
-      setDescription(taskDescription);
-      setStatus(taskStatus as "todo" | "in_progress" | "completed");
-      setPriority(taskPriority as "low" | "medium" | "high");
-      setCategoryId(task.categoryId || null);
-      setBoardCategoryId(task.boardCategoryId || null);
-      setDueDate(taskDueDate);
-      setError(null);
-      setOriginalData(newData);
-    } else {
-      // 新規作成時の初期化
-      const newData = {
-        title: "",
-        description: "",
-        status: "todo" as const,
-        priority: "medium" as const,
-        categoryId: null,
-        boardCategoryId: null,
-        dueDate: "",
-        boardIds: initialBoardId ? [initialBoardId.toString()] : []
-      };
-      
-      // stateと元データを同時に更新
-      setTitle("");
-      setDescription("");
-      setStatus("todo");
-      setPriority("medium");
-      setCategoryId(null);
-      setBoardCategoryId(null);
-      setDueDate("");
-      setError(null);
-      setOriginalData(newData);
-    }
-  }, [task, initialBoardId]);
 
-  // ボード選択の初期化
-  useEffect(() => {
-    if (task && task.id !== 0) { // 新規作成時（id: 0）は実行しない
-      // itemBoardsが存在し、データがある場合のみ更新
-      if (itemBoards && itemBoards.length >= 0) {
-        const currentBoardIds = itemBoards.map(board => board.id.toString());
-        initializeBoardIds(currentBoardIds);
-        // originalDataのboardIdsも更新
-        setOriginalData(prev => prev ? { ...prev, boardIds: currentBoardIds } : prev);
-      }
-    } else if (!task || task.id === 0) {
-      // 新規作成時は初期ボードIDがあればそれを設定、なければ空
-      const initialBoards = initialBoardId ? [initialBoardId.toString()] : [];
-      initializeBoardIds(initialBoards);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [task?.id, itemBoards.length, initialBoardId, initializeBoardIds]); // itemBoards自体ではなくlengthを依存に
+  // ボード選択の初期化（メインの初期化useEffectに統合）
 
   // ボード変更と保存を実行する関数
   const executeBoardChangesAndSave = useCallback(async () => {
@@ -712,7 +640,6 @@ function TaskEditor({
         // タグ更新処理
         if (hasTagChanges) {
           await updateTaggings((task as Task).originalId || (task as Task).id.toString());
-          setHasManualTagChanges(false);
         }
         
         // ボード変更処理
@@ -1000,7 +927,6 @@ function TaskEditor({
         onSelectionChange={(tagIds) => {
           const selectedTags = preloadedTags.filter(tag => tagIds.includes(tag.id));
           setLocalTags(selectedTags);
-          setHasManualTagChanges(true);
         }}
         mode="selection"
         multiple={true}

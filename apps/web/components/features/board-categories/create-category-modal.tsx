@@ -13,6 +13,7 @@ interface CreateCategoryModalProps {
   existingCategories?: BoardCategory[];
   boardId: number;
   currentCategoryId?: number | null;
+  onCategorySelect?: (categoryId: number | null) => void;
 }
 
 export default function CreateCategoryModal({
@@ -22,6 +23,7 @@ export default function CreateCategoryModal({
   existingCategories = [],
   boardId,
   currentCategoryId,
+  onCategorySelect,
 }: CreateCategoryModalProps) {
   const { createCategory } = useBoardCategories();
   const [formData, setFormData] = useState<NewBoardCategory>({
@@ -79,9 +81,16 @@ export default function CreateCategoryModal({
     onClose();
   };
 
-  const handleEditClick = (category: BoardCategory) => {
+  const handleEditClick = (category: BoardCategory, event: React.MouseEvent) => {
+    event.stopPropagation();
     setEditingCategory(category);
     setIsEditModalOpen(true);
+  };
+
+  const handleCategoryClick = (category: BoardCategory) => {
+    if (onCategorySelect) {
+      onCategorySelect(category.id);
+    }
   };
 
   if (!isOpen) return null;
@@ -168,14 +177,19 @@ export default function CreateCategoryModal({
                             ? "bg-gray-100 text-gray-800 font-medium" 
                             : "text-gray-700 hover:bg-gray-50"
                         }`}
-                        onClick={() => handleEditClick(category)}
+                        onClick={() => handleCategoryClick(category)}
                       >
-                        <span>{category.name}</span>
-                        <Pencil className={`w-3 h-3 transition-opacity ${
-                          isSelected 
-                            ? "text-gray-600 opacity-100" 
-                            : "text-gray-400 opacity-0 group-hover:opacity-100"
-                        }`} />
+                        <span className="flex-1">{category.name}</span>
+                        <button
+                          onClick={(e) => handleEditClick(category, e)}
+                          className="flex-shrink-0 w-6 h-6 ml-2 flex items-center justify-center rounded hover:bg-gray-200 transition-colors"
+                        >
+                          <Pencil className={`w-3 h-3 transition-opacity ${
+                            isSelected 
+                              ? "text-gray-600 opacity-100" 
+                              : "text-gray-400 opacity-0 group-hover:opacity-100"
+                          }`} />
+                        </button>
                       </div>
                     );
                   })}

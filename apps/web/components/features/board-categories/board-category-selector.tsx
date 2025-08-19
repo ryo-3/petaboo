@@ -90,6 +90,7 @@ export default function BoardCategorySelector({
         existingCategories={categories}
         boardId={boardId}
         currentCategoryId={value}
+        onCategorySelect={onChange}
       />
     </>
   );

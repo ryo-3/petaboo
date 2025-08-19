@@ -154,8 +154,8 @@ export default function TagEditModal({
         <div className="p-4">
           {/* ヘッダー */}
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <PenIcon className="size-5" />
+            <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+              <PenIcon className="size-4" />
               タグを編集
             </h2>
           </div>

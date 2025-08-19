@@ -85,7 +85,7 @@ export default function CreateCategoryModal({
       onClick={handleClose}
     >
       <div 
-        className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4"
+        className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 h-[31rem]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ヘッダー */}
@@ -96,21 +96,34 @@ export default function CreateCategoryModal({
         </div>
 
         {/* フォーム */}
-        <form onSubmit={handleSubmit} className="px-4 pb-4 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              カテゴリー名 *
-            </label>
+        <div className="flex-1 flex flex-col px-4 pb-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* 新規カテゴリー作成 */}
+          <div className="flex gap-2">
             <input
               type="text"
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:outline-none focus:border-2 focus:border-gray-900"
-              placeholder={isAtLimit ? "上限に達しました" : "カテゴリー名を入力..."}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !isSubmitting) {
+                  e.preventDefault();
+                  handleSubmit(e);
+                }
+              }}
+              className="flex-1 px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+              placeholder={isAtLimit ? "上限に達しました" : "新しいカテゴリー名を入力..."}
               autoFocus
               required
               disabled={isAtLimit}
             />
+            <button
+              type="submit"
+              disabled={!formData.name.trim() || isSubmitting || isAtLimit}
+              className="px-4 py-2 bg-Green text-white rounded-md text-sm font-medium hover:bg-Green/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              <Save size={16} />
+              {isSubmitting ? "作成中..." : "作成"}
+            </button>
           </div>
 
           {/* 既存カテゴリー一覧 */}
@@ -134,25 +147,8 @@ export default function CreateCategoryModal({
             </div>
           )}
 
-          {/* アクションボタン */}
-          <div className="flex gap-3 pt-2">
-            <button
-              type="submit"
-              disabled={!formData.name.trim() || isSubmitting || isAtLimit}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-            >
-              <Save size={16} />
-              {isAtLimit ? "上限に達しました" : isSubmitting ? "作成中..." : "作成"}
-            </button>
-            <button
-              type="button"
-              onClick={handleClose}
-              className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-            >
-              キャンセル
-            </button>
-          </div>
         </form>
+        </div>
       </div>
       
       {/* 編集モーダル */}

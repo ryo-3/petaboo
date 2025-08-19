@@ -6,6 +6,8 @@ import { BoardCategory } from "@/src/types/board-categories";
 import { Save, Trash2 } from "lucide-react";
 import DeleteCategoryModal from "./delete-category-modal";
 import CloseButton from "@/components/ui/buttons/close-button";
+import PenIcon from "@/components/icons/pen-icon";
+import TrashIcon from "@/components/icons/trash-icon";
 
 interface EditCategoryModalProps {
   isOpen: boolean;
@@ -49,7 +51,6 @@ export default function EditCategoryModal({
       handleClose();
     } catch (error) {
       console.error("カテゴリー更新エラー:", error);
-      alert(`更新に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -83,7 +84,8 @@ export default function EditCategoryModal({
       >
         {/* ヘッダー */}
         <div className="relative p-4 pb-3">
-          <h2 className="text-lg font-semibold text-gray-900 pr-8">
+          <h2 className="text-base font-semibold text-gray-900 pr-8 flex items-center gap-2">
+            <PenIcon className="size-4" />
             カテゴリーを編集
           </h2>
           <CloseButton onClick={handleClose} />
@@ -99,7 +101,7 @@ export default function EditCategoryModal({
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:outline-none focus:border-gray-900"
+              className="w-full px-3 py-2 border-2 border-gray-300 rounded-md text-sm focus:outline-none focus:border-gray-900"
               placeholder="カテゴリー名を入力..."
               autoFocus
               required
@@ -107,32 +109,35 @@ export default function EditCategoryModal({
           </div>
 
           {/* アクションボタン */}
-          <div className="flex gap-3 pt-2">
-            <button
-              type="submit"
-              disabled={!name.trim() || isSubmitting || name.trim() === category.name}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-            >
-              <Save size={16} />
-              {isSubmitting ? "更新中..." : "更新"}
-            </button>
-            
+          <div className="flex justify-between">
             <button
               type="button"
               onClick={handleDeleteClick}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+              disabled={isSubmitting}
+              className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-md text-sm font-medium disabled:opacity-50"
             >
-              <Trash2 size={16} />
+              <TrashIcon className="size-4" />
               削除
             </button>
             
-            <button
-              type="button"
-              onClick={handleClose}
-              className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-            >
-              キャンセル
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleClose}
+                disabled={isSubmitting}
+                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md text-sm font-medium"
+              >
+                キャンセル
+              </button>
+              <button
+                type="submit"
+                disabled={!name.trim() || isSubmitting || name.trim() === category?.name}
+                className="flex items-center gap-2 px-4 py-2 bg-Green text-white rounded-md text-sm font-medium hover:bg-Green/90 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Save size={16} />
+                {isSubmitting ? "更新中..." : "更新"}
+              </button>
+            </div>
           </div>
         </form>
       </div>

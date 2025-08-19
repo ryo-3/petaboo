@@ -21,7 +21,7 @@ export default function BoardForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (name.trim() && name.trim().length <= 35 && description.trim().length <= 200) {
+    if (name.trim() && name.trim().length <= 50 && description.trim().length <= 200) {
       onSubmit({
         name: name.trim(),
         description: description.trim() || undefined,
@@ -40,8 +40,8 @@ export default function BoardForm({
           id="name"
           value={name}
           onChange={setName}
-          placeholder="例: プロジェクト名、学習テーマなど（35文字以内）"
-          maxLength={35}
+          placeholder="例: プロジェクト名、学習テーマなど（50文字以内）"
+          maxLength={50}
           label="ボード名"
           required
         />
@@ -59,7 +59,7 @@ export default function BoardForm({
         <div className="flex items-center gap-3 pt-2">
           <button
             type="submit"
-            disabled={!name.trim() || name.trim().length > 35 || description.trim().length > 200 || isLoading}
+            disabled={!name.trim() || name.trim().length > 50 || description.trim().length > 200 || isLoading}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isLoading ? "保存中..." : initialData ? "更新" : "作成"}

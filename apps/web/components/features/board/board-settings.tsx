@@ -49,8 +49,8 @@ export default function BoardSettings({
       return;
     }
     
-    if (editName.trim().length > 35) {
-      showToast("ボード名は35文字以内で入力してください。", "error");
+    if (editName.trim().length > 50) {
+      showToast("ボード名は50文字以内で入力してください。", "error");
       return;
     }
     
@@ -121,8 +121,8 @@ export default function BoardSettings({
             <TextInputWithCounter
               value={editName}
               onChange={(value) => handleNameChange(value)}
-              placeholder="ボード名を入力（35文字以内）"
-              maxLength={35}
+              placeholder="ボード名を入力（50文字以内）"
+              maxLength={50}
               label="ボード名"
               className="px-4 py-3"
             />
@@ -141,7 +141,7 @@ export default function BoardSettings({
               <div className="flex gap-3">
                 <button
                   onClick={handleSave}
-                  disabled={updateBoard.isPending || !editName.trim() || editName.trim().length > 35 || editDescription.trim().length > 200}
+                  disabled={updateBoard.isPending || !editName.trim() || editName.trim().length > 50 || editDescription.trim().length > 200}
                   className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium disabled:opacity-50"
                 >
                   {updateBoard.isPending ? "保存中..." : "保存"}

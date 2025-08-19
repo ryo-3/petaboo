@@ -111,10 +111,10 @@ export default function EditCategoryModal({
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className={`w-full px-3 py-2 pr-12 border rounded-md text-sm focus:outline-none focus:ring-1 ${
+                className={`w-full px-3 py-2 pr-12 border rounded-md text-sm focus:outline-none ${
                   name.length > 50 || isDuplicate
-                    ? "border-red-400 focus:ring-red-400 focus:border-red-400"
-                    : "border-gray-200 focus:ring-gray-400 focus:border-gray-400"
+                    ? "border-red-400 ring-1 ring-red-400 focus:ring-red-400 focus:border-red-400"
+                    : "border-gray-200 focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                 }`}
                 placeholder="カテゴリー名を入力..."
                 autoFocus

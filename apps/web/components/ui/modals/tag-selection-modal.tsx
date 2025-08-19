@@ -131,6 +131,9 @@ export default function TagSelectionModal({
       setNewTagName("");
       setNewTagColor(TAG_COLORS.background); // 色もリセット
       setSearchQuery(""); // 検索もクリア
+      
+      // 0.5秒遅延
+      await new Promise(resolve => setTimeout(resolve, 500));
     } catch (error) {
       console.error("タグ作成エラー:", error);
     } finally {
@@ -226,27 +229,36 @@ export default function TagSelectionModal({
           {/* 新規タグ作成 */}
           <div className="mt-1 space-y-3">
             <div className="flex gap-2">
-              <input
-                type="text"
-                value={newTagName}
-                onChange={(e) => setNewTagName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !isCreating) {
-                    e.preventDefault();
-                    handleCreateTag();
-                  }
-                }}
-                placeholder="新しいタグ名を入力..."
-                className="flex-1 px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
-              />
+              <div className="flex-1 relative">
+                <input
+                  type="text"
+                  value={newTagName}
+                  onChange={(e) => setNewTagName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !isCreating) {
+                      e.preventDefault();
+                      handleCreateTag();
+                    }
+                  }}
+                  placeholder="新しいタグ名を入力..."
+                  className={`w-full px-3 py-2 pr-12 border rounded-md text-sm focus:outline-none ${
+                    newTagName.length > 50 || isDuplicateTagName
+                      ? "border-red-400 ring-1 ring-red-400 focus:ring-red-400 focus:border-red-400"
+                      : "border-gray-200 focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                  }`}
+                />
+                <div className={`absolute right-3 top-1/2 transform -translate-y-1/2 text-xs ${newTagName.length > 50 || isDuplicateTagName ? "text-red-500" : "text-gray-500"}`}>
+                  {isDuplicateTagName ? "重複" : `${newTagName.length}/50`}
+                </div>
+              </div>
               <button
                 onClick={handleCreateTag}
                 disabled={
-                  !newTagName.trim() || isCreating || isDuplicateTagName
+                  !newTagName.trim() || isCreating || isDuplicateTagName || newTagName.length > 50
                 }
-                className="px-4 py-2 bg-Green text-white rounded-md text-sm font-medium hover:bg-Green/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="w-20 py-2 bg-Green text-white rounded-md text-sm font-medium hover:bg-Green/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
               >
-                <PlusIcon className="size-4" />
+                {!isCreating && <PlusIcon className="size-4" />}
                 {isCreating ? "作成中..." : "作成"}
               </button>
             </div>
@@ -289,11 +301,6 @@ export default function TagSelectionModal({
                     }}
                   >
                     {newTagName.trim()}
-                  </span>
-                )}
-                {isDuplicateTagName && (
-                  <span className="text-xs text-red-500">
-                    同じ名前のタグが既に存在します
                   </span>
                 )}
               </div>

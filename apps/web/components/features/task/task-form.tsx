@@ -190,30 +190,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
           disabled={isDeleted}
         />
 
-        {showBoardCategory ? (
-          <div className="flex-1 flex gap-2.5 items-center">
-            <div className="w-44">
-              <BoardCategorySelector
-                value={boardCategoryId}
-                onChange={onBoardCategoryChange}
-                categories={boardCategories}
-                boardId={initialBoardId!}
-                disabled={isDeleted}
-                allowCreate={true}
-              />
-            </div>
-
-            <div className="w-32">
-              <DateInput
-                label="期限日"
-                value={dueDate}
-                onChange={onDueDateChange}
-                fullWidth
-                disabled={isDeleted}
-              />
-            </div>
-          </div>
-        ) : (
+        <div className="flex-1 flex gap-2.5 items-center">
           <div className="w-32">
             <DateInput
               label="期限日"
@@ -223,7 +200,20 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
               disabled={isDeleted}
             />
           </div>
-        )}
+          
+          {showBoardCategory && (
+            <div className="w-60">
+              <BoardCategorySelector
+                value={boardCategoryId}
+                onChange={onBoardCategoryChange}
+                categories={boardCategories}
+                boardId={initialBoardId!}
+                disabled={isDeleted}
+                allowCreate={true}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ボード名・タグ表示（メモエディターと同じ実装） */}

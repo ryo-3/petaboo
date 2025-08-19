@@ -138,7 +138,7 @@ function CustomSelector({
               fullWidth ? "w-full" : "w-full"
             }`}
           >
-            <div className=" space-y-1">
+            <div className="space-y-1 max-h-60 overflow-y-auto">
               {allowCreate && (
                 <div className="border-b border-gray-200 pb-1 mb-1">
                   {isCreating ? (

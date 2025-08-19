@@ -28,11 +28,17 @@ export default function BoardCategorySelector({
     label: category.name,
   }));
 
-  // 新規作成オプションを一番上に追加
+  // 「未選択」オプションを一番上に追加
+  options.unshift({
+    value: "",
+    label: "未選択"
+  });
+
+  // 新規作成オプションを追加
   if (allowCreate) {
-    options.unshift({
+    options.push({
       value: "create_new",
-      label: "新規作成"
+      label: "新規作成・編集"
     });
   }
 

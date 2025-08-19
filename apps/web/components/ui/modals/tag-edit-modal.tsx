@@ -9,6 +9,8 @@ import { TAG_COLORS } from '@/src/constants/colors';
 import PenIcon from '@/components/icons/pen-icon';
 import TrashIcon from '@/components/icons/trash-icon';
 import CheckIcon from '@/components/icons/check-icon';
+import { Save } from 'lucide-react';
+import DeleteTagModal from './delete-tag-modal';
 
 interface TagEditModalProps {
   tag: Tag;
@@ -40,7 +42,7 @@ export default function TagEditModal({
   const [editedName, setEditedName] = useState(tag.name);
   const [editedColor, setEditedColor] = useState(tag.color || TAG_COLORS.background);
   const [isLoading, setIsLoading] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [tagStats, setTagStats] = useState<TagStats | null>(null);
   const [allTags, setAllTags] = useState<Tag[]>([]);
   
@@ -61,7 +63,6 @@ export default function TagEditModal({
     if (isOpen) {
       setEditedName(tag.name);
       setEditedColor(tag.color || TAG_COLORS.background);
-      setShowDeleteConfirm(false);
     }
   }, [isOpen, tag]);
 
@@ -75,6 +76,8 @@ export default function TagEditModal({
       }
     } catch (error) {
       console.error('タグ統計の取得に失敗:', error);
+      // 統計情報が取得できない場合はnullのまま（統計なしで削除確認可能）
+      setTagStats(null);
     }
   };
 
@@ -124,21 +127,6 @@ export default function TagEditModal({
     }
   };
 
-  const handleDelete = async () => {
-    if (isLoading) return;
-
-    try {
-      setIsLoading(true);
-      await deleteTagMutation.mutateAsync(tag.id);
-      
-      onTagDeleted?.(tag.id);
-      onClose();
-    } catch (error) {
-      console.error('タグの削除に失敗:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && canSave) {
@@ -268,41 +256,12 @@ export default function TagEditModal({
             </div>
           </div>
 
-          {/* 削除確認 */}
-          {showDeleteConfirm && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <h3 className="text-sm font-medium text-red-800 mb-2">
-                本当に削除しますか？
-              </h3>
-              <p className="text-sm text-red-700 mb-3">
-                このタグを削除すると、関連付けられた全てのメモ・タスク・ボードからタグが削除されます。
-                {tagStats && tagStats.usageCount > 0 && (
-                  <span className="font-medium"> ({tagStats.usageCount}件に影響)</span>
-                )}
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleDelete}
-                  disabled={isLoading}
-                  className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 disabled:opacity-50"
-                >
-                  {isLoading ? '削除中...' : '削除する'}
-                </button>
-                <button
-                  onClick={() => setShowDeleteConfirm(false)}
-                  className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400"
-                >
-                  キャンセル
-                </button>
-              </div>
-            </div>
-          )}
 
           {/* アクションボタン */}
           <div className="flex justify-between">
             <button
-              onClick={() => setShowDeleteConfirm(true)}
-              disabled={isLoading || showDeleteConfirm}
+              onClick={() => setIsDeleteModalOpen(true)}
+              disabled={isLoading}
               className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-md text-sm font-medium disabled:opacity-50"
             >
               <TrashIcon className="size-4" />
@@ -320,15 +279,33 @@ export default function TagEditModal({
               <button
                 onClick={handleSave}
                 disabled={!canSave || isLoading}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-4 py-2 bg-Green text-white rounded-md text-sm font-medium hover:bg-Green/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <CheckIcon className="size-4" />
+                <Save size={16} />
                 {isLoading ? '保存中...' : '保存'}
               </button>
             </div>
           </div>
         </div>
       </div>
+      
+      {/* 削除確認モーダル */}
+      <DeleteTagModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        tag={tag}
+        tagStats={tagStats ? {
+          usageCount: tagStats.usageCount,
+          memoCount: tagStats.itemTypes.memo,
+          taskCount: tagStats.itemTypes.task,
+          boardCount: tagStats.itemTypes.board
+        } : null}
+        onSuccess={() => {
+          setIsDeleteModalOpen(false);
+          onTagDeleted?.(tag.id);
+          onClose();
+        }}
+      />
     </div>
   );
 }

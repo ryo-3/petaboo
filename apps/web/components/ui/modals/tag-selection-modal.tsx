@@ -245,7 +245,7 @@ export default function TagSelectionModal({
                 disabled={
                   !newTagName.trim() || isCreating || isDuplicateTagName
                 }
-                className="px-4 py-2 bg-blue-500 text-white rounded-md text-sm font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-4 py-2 bg-Green text-white rounded-md text-sm font-medium hover:bg-Green/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 <PlusIcon className="size-4" />
                 {isCreating ? "作成中..." : "作成"}
@@ -279,9 +279,9 @@ export default function TagSelectionModal({
                   />
                 ))}
               </div>
-              {/* プレビュー */}
-              {newTagName.trim() && (
-                <div className="ml-2">
+              {/* プレビュー・エラー表示エリア */}
+              <div className="ml-2 h-6 flex items-center">
+                {newTagName.trim() && !isDuplicateTagName && (
                   <span
                     className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
                     style={{
@@ -291,15 +291,15 @@ export default function TagSelectionModal({
                   >
                     {newTagName.trim()}
                   </span>
-                </div>
-              )}
+                )}
+                {isDuplicateTagName && (
+                  <span className="text-xs text-red-500">
+                    同じ名前のタグが既に存在します
+                  </span>
+                )}
+              </div>
             </div>
           </div>
-          {isDuplicateTagName && (
-            <div className="mt-2 text-xs text-red-500">
-              同じ名前のタグが既に存在します
-            </div>
-          )}
           {/* フィルターモード切り替え（filter時のみ） */}
           {mode === "filter" && onFilterModeChange && (
             <div className="mt-3">
@@ -369,7 +369,7 @@ export default function TagSelectionModal({
                   {selectedTags.length}件
                 </span>
               </div>
-              <div className="flex flex-wrap gap-1 p-2 bg-gray-50 rounded-md border border-gray-200">
+              <div className="flex flex-wrap gap-1">
                 {selectedTags.map((tag) => (
                   <div
                     key={tag.id}

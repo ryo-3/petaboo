@@ -86,19 +86,15 @@ export function useDeleteTag() {
       await tagsApi.deleteTag(id, token || undefined)
     },
     onSuccess: (_, id) => {
-      // タグ一覧から削除されたタグを除去
-      queryClient.setQueryData<Tag[]>(['tags'], (oldTags) => {
-        if (!oldTags) return []
-        return oldTags.filter(tag => tag.id !== id)
-      })
-      // オプション付きのタグクエリは無効化
-      queryClient.invalidateQueries({ 
-        queryKey: ['tags'], 
-        predicate: (query) => {
-          const queryKey = query.queryKey as [string, object?]
-          return !!(queryKey[0] === 'tags' && queryKey[1] && Object.keys(queryKey[1]).length > 0)
+      // すべてのタグクエリキャッシュから削除されたタグを即座に除去
+      queryClient.setQueriesData<Tag[]>(
+        { queryKey: ['tags'] },
+        (oldTags) => {
+          if (!oldTags) return []
+          return oldTags.filter(tag => tag.id !== id)
         }
-      })
+      )
+      
       // タグ付け情報を無効化（削除されたタグに関連する情報が変わるため）
       queryClient.invalidateQueries({ queryKey: ['taggings'] })
       queryClient.invalidateQueries({ queryKey: ['taggings', 'all'] })

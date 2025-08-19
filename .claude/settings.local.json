@@ -39,7 +39,8 @@
       "Bash(echo $NODE_ENV)",
       "Bash(unset NODE_ENV)",
       "Bash(git commit:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(curl:*)"
     ],
     "deny": []
   }

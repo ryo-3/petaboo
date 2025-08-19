@@ -386,7 +386,7 @@ function DesktopUpper({
 
         {/* 設定ボタン（ボードモードのみ右端に表示、アニメーション完了後に表示） */}
         {currentMode === "board" && boardId && onBoardSettings && shouldShowSettingsIcon && (
-          <Tooltip text="ボード設定" position="bottom">
+          <Tooltip text="ボード設定" position="bottom-left">
             <button onClick={onBoardSettings} className="p-1 text-gray-600">
               <SettingsIcon className="w-4 h-4" />
             </button>

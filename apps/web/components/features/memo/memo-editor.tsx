@@ -580,7 +580,6 @@ function MemoEditor({
         }}
         mode="selection"
         multiple={true}
-        title="タグ選択"
       />
       <BulkDeleteConfirmation
         isOpen={showDeleteModal}

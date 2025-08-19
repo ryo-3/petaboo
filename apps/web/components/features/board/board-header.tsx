@@ -34,7 +34,7 @@ export default function BoardHeader({
           <h1 className="text-xl font-bold text-gray-900 leading-tight max-w-[400px] line-clamp-2">{boardName}</h1>
           {/* 設定ボタン（ボード名の横） */}
           {boardId && (
-            <Tooltip text="ボード設定" position="bottom">
+            <Tooltip text="ボード設定" position="bottom-left">
               <button onClick={handleSettings} className="p-1 text-gray-600 flex-shrink-0">
                 <SettingsIcon className="w-4 h-4" />
               </button>
@@ -56,7 +56,6 @@ export default function BoardHeader({
               ? "bg-gray-100 text-gray-400 cursor-not-allowed"
               : "bg-green-100 hover:bg-green-200 text-green-600 hover:text-green-700"
           }`}
-          title="テキストファイルとしてエクスポート"
         >
           📄 エクスポート
         </button>

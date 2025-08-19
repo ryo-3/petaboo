@@ -21,7 +21,6 @@ export default function LogoutButton() {
       <button
         onClick={() => setShowModal(true)}
         className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-all duration-200 hover:scale-110"
-        title="ログアウト"
       >
         <DoorIcon className="w-4 h-4" />
       </button>

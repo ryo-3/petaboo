@@ -160,7 +160,6 @@ function CustomSelector({
                       <button
                         onClick={handleCreateNew}
                         className="px-2 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 flex-shrink-0"
-                        title="追加"
                       >
                         <CheckIcon className="w-3 h-3" />
                       </button>

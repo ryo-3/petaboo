@@ -81,7 +81,6 @@ export default function BoardSelectionModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title=""
       maxWidth="3xl"
       maxHeight="85vh"
     >
@@ -178,7 +177,6 @@ export default function BoardSelectionModal({
                   key={board.id}
                   className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium cursor-pointer hover:opacity-80 bg-light-Blue text-white"
                   onClick={() => handleBoardToggle(board.id)}
-                  title="クリックで選択解除"
                 >
                   <span>{board.name}</span>
                   <svg

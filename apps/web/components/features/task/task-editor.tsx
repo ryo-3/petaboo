@@ -837,7 +837,6 @@ function TaskEditor({
                         }
                       }}
                       className="flex items-center justify-center size-7 rounded-md bg-red-100 hover:bg-red-200"
-                      title="完全削除"
                     >
                       <TrashIcon className="size-4" isLidOpen={isAnimating || (isDeleted && deletedTaskActions?.showDeleteModal)} />
                     </button>
@@ -930,7 +929,6 @@ function TaskEditor({
         }}
         mode="selection"
         multiple={true}
-        title="タグ選択"
       />
 
       {/* 削除済みタスクの永久削除確認モーダル */}

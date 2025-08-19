@@ -5,7 +5,7 @@ export const FORM_STYLES = {
 
   // セレクター（ボタン部分）
   selector:
-    "flex items-center cursor-pointer bg-white border border-gray-400 rounded-lg h-8",
+    "flex items-center cursor-pointer bg-white border border-gray-400 h-8",
 
   // セレクター内のテキスト
   selectorText:

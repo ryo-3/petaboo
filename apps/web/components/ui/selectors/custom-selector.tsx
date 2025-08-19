@@ -134,11 +134,11 @@ function CustomSelector({
 
         {isOpen && (
           <div
-            className={`absolute top-full left-0 z-10 bg-white rounded-lg shadow-lg border border-gray-400 border-t-0 rounded-t-none ${
+            className={`absolute top-full left-0 z-10 bg-white rounded-b-lg shadow-lg border border-gray-400 border-t-0 ${
               fullWidth ? "w-full" : "w-full"
             }`}
           >
-            <div className="space-y-1 max-h-60 overflow-y-auto">
+            <div className="space-y-1 max-h-60 overflow-y-auto mb-2">
               {allowCreate && (
                 <div className="border-b border-gray-200 pb-1 mb-1">
                   {isCreating ? (

@@ -53,6 +53,9 @@ export default function EditCategoryModal({
         }
       });
       
+      // 0.5秒遅延
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       onSuccess?.();
       handleClose();
     } catch (error) {
@@ -147,9 +150,9 @@ export default function EditCategoryModal({
               <button
                 type="submit"
                 disabled={!name.trim() || isSubmitting || name.trim() === category?.name || name.length > 50 || isDuplicate}
-                className="flex items-center gap-2 px-4 py-2 bg-Green text-white rounded-md text-sm font-medium hover:bg-Green/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center justify-center gap-1 w-20 py-2 bg-Green text-white rounded-md text-sm font-medium hover:bg-Green/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Save size={16} />
+                {!isSubmitting && <Save size={16} />}
                 {isSubmitting ? "更新中..." : "更新"}
               </button>
             </div>

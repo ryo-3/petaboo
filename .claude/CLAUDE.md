@@ -145,6 +145,10 @@ cd apps/api && npm run db:reset      # ローカルデータベースを完全�
 - ❌ **`as unknown as`等の危険な型キャスト**
 - ❌ **共通型を使わずにstring/numberを直接記述**
 
+## UI・UX関連
+
+- ❌ **標準HTMLのtitle属性の使用** (カスタムTooltipコンポーネントを使用すること)
+
 ## 修正履歴
 
 ### 2025-08-10: originalIdベース統一完了

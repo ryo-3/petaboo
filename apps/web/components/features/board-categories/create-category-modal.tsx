@@ -64,7 +64,8 @@ export default function CreateCategoryModal({
         icon: ""
       });
       
-      onClose();
+      // 0.5秒遅延
+      await new Promise(resolve => setTimeout(resolve, 500));
     } catch (error) {
       console.error("カテゴリー作成エラー:", error);
     } finally {
@@ -115,7 +116,7 @@ export default function CreateCategoryModal({
         <div className="flex-1 px-4 pb-4 overflow-hidden">
         <form onSubmit={handleSubmit} className="h-full flex flex-col">
           {/* 新規カテゴリー作成 */}
-          <div className="flex-shrink-0 mb-4">
+          <div className="flex-shrink-0 mb-4 pt-1">
             <div className="flex gap-2">
               <div className="flex-1 relative">
                 <input
@@ -135,7 +136,6 @@ export default function CreateCategoryModal({
                   }`}
                   placeholder={isAtLimit ? "上限に達しました" : "新しいカテゴリー名を入力..."}
                   autoFocus
-                  required
                   disabled={isAtLimit}
                 />
                 <div className={`absolute right-3 top-1/2 transform -translate-y-1/2 text-xs ${formData.name.length > 50 || isDuplicate ? "text-red-500" : "text-gray-500"}`}>
@@ -145,9 +145,9 @@ export default function CreateCategoryModal({
               <button
                 type="submit"
                 disabled={!formData.name.trim() || isSubmitting || isAtLimit || formData.name.length > 50 || isDuplicate}
-                className="px-4 py-2 bg-Green text-white rounded-md text-sm font-medium hover:bg-Green/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="w-20 py-2 bg-Green text-white rounded-md text-sm font-medium hover:bg-Green/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
               >
-                <Save size={16} />
+                {!isSubmitting && <Save size={16} />}
                 {isSubmitting ? "作成中..." : "作成"}
               </button>
             </div>
@@ -181,6 +181,7 @@ export default function CreateCategoryModal({
                       >
                         <span className="flex-1">{category.name}</span>
                         <button
+                          type="button"
                           onClick={(e) => handleEditClick(category, e)}
                           className="flex-shrink-0 w-6 h-6 ml-2 flex items-center justify-center rounded hover:bg-gray-200 transition-colors"
                         >

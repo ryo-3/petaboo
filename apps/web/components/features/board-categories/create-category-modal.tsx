@@ -12,6 +12,7 @@ interface CreateCategoryModalProps {
   onSuccess: (categoryId: number) => void;
   existingCategories?: BoardCategory[];
   boardId: number;
+  currentCategoryId?: number | null;
 }
 
 export default function CreateCategoryModal({
@@ -20,6 +21,7 @@ export default function CreateCategoryModal({
   onSuccess,
   existingCategories = [],
   boardId,
+  currentCategoryId,
 }: CreateCategoryModalProps) {
   const { createCategory } = useBoardCategories();
   const [formData, setFormData] = useState<NewBoardCategory>({
@@ -90,7 +92,7 @@ export default function CreateCategoryModal({
       onClick={handleClose}
     >
       <div 
-        className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 h-[31rem]"
+        className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 min-h-[75vh] max-h-[75vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ヘッダー */}
@@ -101,10 +103,10 @@ export default function CreateCategoryModal({
         </div>
 
         {/* フォーム */}
-        <div className="flex-1 flex flex-col px-4 pb-4">
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="flex-1 px-4 pb-4 overflow-hidden">
+        <form onSubmit={handleSubmit} className="h-full flex flex-col">
           {/* 新規カテゴリー作成 */}
-          <div>
+          <div className="flex-shrink-0 mb-4">
             <div className="flex gap-2">
               <div className="flex-1 relative">
                 <input
@@ -144,22 +146,39 @@ export default function CreateCategoryModal({
 
           {/* 既存カテゴリー一覧 */}
           {existingCategories.length > 0 && (
-            <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="flex-1 min-h-0">
               <h4 className="text-sm font-medium text-gray-700 mb-2">
                 既存のカテゴリー ({existingCategories.length}/10)
               </h4>
-              <div className="max-h-80 overflow-y-auto">
+              <div className="h-[27rem] overflow-y-auto">
                 <div className="flex flex-col gap-1 pr-2">
-                  {existingCategories.map((category) => (
-                    <div
-                      key={category.id}
-                      className="text-sm text-gray-700 py-1 px-2 -mx-2 rounded flex items-center justify-between group hover:bg-gray-50 cursor-pointer"
-                      onClick={() => handleEditClick(category)}
-                    >
-                      <span>{category.name}</span>
-                      <Pencil className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                  ))}
+                  {existingCategories
+                    .sort((a, b) => {
+                      if (a.id === currentCategoryId) return -1;
+                      if (b.id === currentCategoryId) return 1;
+                      return 0;
+                    })
+                    .map((category) => {
+                    const isSelected = currentCategoryId === category.id;
+                    return (
+                      <div
+                        key={category.id}
+                        className={`text-sm py-1 px-2 -mx-2 rounded flex items-center justify-between group cursor-pointer transition-colors ${
+                          isSelected 
+                            ? "bg-gray-100 text-gray-800 font-medium" 
+                            : "text-gray-700 hover:bg-gray-50"
+                        }`}
+                        onClick={() => handleEditClick(category)}
+                      >
+                        <span>{category.name}</span>
+                        <Pencil className={`w-3 h-3 transition-opacity ${
+                          isSelected 
+                            ? "text-gray-600 opacity-100" 
+                            : "text-gray-400 opacity-0 group-hover:opacity-100"
+                        }`} />
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>

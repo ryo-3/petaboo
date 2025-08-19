@@ -89,6 +89,7 @@ export default function BoardCategorySelector({
         onSuccess={handleCategoryCreated}
         existingCategories={categories}
         boardId={boardId}
+        currentCategoryId={value}
       />
     </>
   );

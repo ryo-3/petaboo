@@ -34,6 +34,11 @@ export default function CreateCategoryModal({
   // カテゴリー数が上限に達しているかチェック
   const isAtLimit = existingCategories.length >= 10;
 
+  // カテゴリー名の重複チェック
+  const isDuplicate = existingCategories.some(
+    category => category.name.trim().toLowerCase() === formData.name.trim().toLowerCase()
+  );
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim() || isAtLimit) return;
@@ -91,7 +96,7 @@ export default function CreateCategoryModal({
         {/* ヘッダー */}
         <div className="flex items-center justify-between p-4 pb-3">
           <h2 className="text-lg font-semibold text-gray-900">
-            新しいボードカテゴリーを作成
+            ボードカテゴリー
           </h2>
         </div>
 
@@ -113,7 +118,7 @@ export default function CreateCategoryModal({
                     }
                   }}
                   className={`w-full px-3 py-2 pr-12 border rounded-md text-sm focus:outline-none focus:ring-1 ${
-                    formData.name.length > 20
+                    formData.name.length > 50 || isDuplicate
                       ? "border-red-400 focus:ring-red-400 focus:border-red-400"
                       : "border-gray-200 focus:ring-gray-400 focus:border-gray-400"
                   }`}
@@ -122,13 +127,13 @@ export default function CreateCategoryModal({
                   required
                   disabled={isAtLimit}
                 />
-                <div className={`absolute right-3 top-1/2 transform -translate-y-1/2 text-xs ${formData.name.length > 20 ? "text-red-500" : "text-gray-500"}`}>
-                  {formData.name.length}/20
+                <div className={`absolute right-3 top-1/2 transform -translate-y-1/2 text-xs ${formData.name.length > 50 || isDuplicate ? "text-red-500" : "text-gray-500"}`}>
+                  {isDuplicate ? "重複" : `${formData.name.length}/50`}
                 </div>
               </div>
               <button
                 type="submit"
-                disabled={!formData.name.trim() || isSubmitting || isAtLimit || formData.name.length > 20}
+                disabled={!formData.name.trim() || isSubmitting || isAtLimit || formData.name.length > 50 || isDuplicate}
                 className="px-4 py-2 bg-Green text-white rounded-md text-sm font-medium hover:bg-Green/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 <Save size={16} />

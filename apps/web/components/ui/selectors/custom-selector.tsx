@@ -119,13 +119,12 @@ function CustomSelector({
             setIsOpen(newOpenState);
             setActiveSelector(newOpenState ? selectorId : null);
           }}
-          title={disabled ? "" : "クリックして変更"}
         >
           <div className={FORM_STYLES.selectorText}>
             {selectedOption?.color && (
               <div className={`w-3 h-3 rounded-full ${selectedOption.color}`}></div>
             )}
-            {selectedOption?.label}
+            <span className="truncate">{selectedOption?.label}</span>
           </div>
           <ChevronDownIcon 
             className={`${FORM_STYLES.chevron} ${isOpen ? "rotate-180" : ""} ${disabled ? "opacity-50" : ""}`}

@@ -55,8 +55,15 @@ export function useBoardCategories(boardId?: number) {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "ボードカテゴリーの作成に失敗しました");
+        let errorMessage = "ボードカテゴリーの作成に失敗しました";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (jsonError) {
+          console.error("Failed to parse error response:", jsonError);
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
@@ -85,8 +92,31 @@ export function useBoardCategories(boardId?: number) {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "ボードカテゴリーの更新に失敗しました");
+        let errorMessage = "ボードカテゴリーの更新に失敗しました";
+        try {
+          const responseText = await response.text();
+          if (responseText) {
+            try {
+              const errorData = JSON.parse(responseText);
+              if (errorData.error && errorData.error.name === 'ZodError' && errorData.error.issues) {
+                // Zodバリデーションエラーの場合、具体的なメッセージを構築
+                const issues = errorData.error.issues.map((issue: { path: string[]; message: string }) => 
+                  `${issue.path.join('.')}: ${issue.message}`
+                ).join(', ');
+                errorMessage = `バリデーションエラー: ${issues}`;
+              } else {
+                errorMessage = errorData.error || errorMessage;
+              }
+            } catch {
+              errorMessage = `HTTP ${response.status}: ${responseText || response.statusText}`;
+            }
+          } else {
+            errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+          }
+        } catch {
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
 
       const responseData = await response.json();
@@ -114,8 +144,15 @@ export function useBoardCategories(boardId?: number) {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "ボードカテゴリーの削除に失敗しました");
+        let errorMessage = "ボードカテゴリーの削除に失敗しました";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (jsonError) {
+          console.error("Failed to parse error response:", jsonError);
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
     },
     onSuccess: () => {

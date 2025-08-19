@@ -9,7 +9,7 @@ export const FORM_STYLES = {
 
   // セレクター内のテキスト
   selectorText:
-    "px-1.5 text-sm hover:opacity-80 transition-opacity flex items-center gap-2 flex-1",
+    "px-1.5 text-sm hover:opacity-80 transition-opacity flex items-center gap-2 flex-1 truncate min-w-0",
 
   // インプット（date, text等）
   input:

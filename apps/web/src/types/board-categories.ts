@@ -18,6 +18,7 @@ export interface NewBoardCategory {
 
 export interface UpdateBoardCategory {
   name?: string;
+  boardId?: number;
   icon?: string;
   sortOrder?: number;
 }

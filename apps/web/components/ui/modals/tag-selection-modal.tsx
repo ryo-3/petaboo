@@ -182,7 +182,6 @@ export default function TagSelectionModal({
       <Modal
         isOpen={isOpen}
         onClose={onClose}
-        title=""
         maxWidth="3xl"
         maxHeight="85vh"
       >
@@ -379,7 +378,6 @@ export default function TagSelectionModal({
                       color: TAG_COLORS.text,
                     }}
                     onClick={() => handleTagToggle(tag.id)}
-                    title="クリックで選択解除"
                   >
                     <span>{tag.name}</span>
                     <svg
@@ -513,7 +511,6 @@ export default function TagSelectionModal({
                         <button
                           onClick={(e) => handleEditTag(tag, e)}
                           className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded transition-opacity"
-                          title="タグを編集"
                         >
                           <PenIcon className="size-3 text-gray-500" />
                         </button>

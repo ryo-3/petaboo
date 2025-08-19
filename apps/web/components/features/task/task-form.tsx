@@ -202,7 +202,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
           </div>
           
           {showBoardCategory && (
-            <div className="w-72">
+            <div className="w-80">
               <BoardCategorySelector
                 value={boardCategoryId}
                 onChange={onBoardCategoryChange}

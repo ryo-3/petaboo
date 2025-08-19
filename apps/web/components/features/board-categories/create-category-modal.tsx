@@ -99,31 +99,42 @@ export default function CreateCategoryModal({
         <div className="flex-1 flex flex-col px-4 pb-4">
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* 新規カテゴリー作成 */}
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !isSubmitting) {
-                  e.preventDefault();
-                  handleSubmit(e);
-                }
-              }}
-              className="flex-1 px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
-              placeholder={isAtLimit ? "上限に達しました" : "新しいカテゴリー名を入力..."}
-              autoFocus
-              required
-              disabled={isAtLimit}
-            />
-            <button
-              type="submit"
-              disabled={!formData.name.trim() || isSubmitting || isAtLimit}
-              className="px-4 py-2 bg-Green text-white rounded-md text-sm font-medium hover:bg-Green/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              <Save size={16} />
-              {isSubmitting ? "作成中..." : "作成"}
-            </button>
+          <div>
+            <div className="flex gap-2">
+              <div className="flex-1 relative">
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !isSubmitting) {
+                      e.preventDefault();
+                      handleSubmit(e);
+                    }
+                  }}
+                  className={`w-full px-3 py-2 pr-12 border rounded-md text-sm focus:outline-none focus:ring-1 ${
+                    formData.name.length > 20
+                      ? "border-red-400 focus:ring-red-400 focus:border-red-400"
+                      : "border-gray-200 focus:ring-gray-400 focus:border-gray-400"
+                  }`}
+                  placeholder={isAtLimit ? "上限に達しました" : "新しいカテゴリー名を入力..."}
+                  autoFocus
+                  required
+                  disabled={isAtLimit}
+                />
+                <div className={`absolute right-3 top-1/2 transform -translate-y-1/2 text-xs ${formData.name.length > 20 ? "text-red-500" : "text-gray-500"}`}>
+                  {formData.name.length}/20
+                </div>
+              </div>
+              <button
+                type="submit"
+                disabled={!formData.name.trim() || isSubmitting || isAtLimit || formData.name.length > 20}
+                className="px-4 py-2 bg-Green text-white rounded-md text-sm font-medium hover:bg-Green/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                <Save size={16} />
+                {isSubmitting ? "作成中..." : "作成"}
+              </button>
+            </div>
           </div>
 
           {/* 既存カテゴリー一覧 */}

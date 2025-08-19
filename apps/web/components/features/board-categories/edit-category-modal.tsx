@@ -97,15 +97,24 @@ export default function EditCategoryModal({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               カテゴリー名 *
             </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 border-2 border-gray-300 rounded-md text-sm focus:outline-none focus:border-gray-900"
-              placeholder="カテゴリー名を入力..."
-              autoFocus
-              required
-            />
+            <div className="relative">
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className={`w-full px-3 py-2 pr-12 border-2 rounded-md text-sm focus:outline-none ${
+                  name.length > 20
+                    ? "border-red-400 focus:border-red-500"
+                    : "border-gray-300 focus:border-gray-900"
+                }`}
+                placeholder="カテゴリー名を入力..."
+                autoFocus
+                required
+              />
+              <div className={`absolute right-3 top-1/2 transform -translate-y-1/2 text-xs ${name.length > 20 ? "text-red-500" : "text-gray-500"}`}>
+                {name.length}/20
+              </div>
+            </div>
           </div>
 
           {/* アクションボタン */}
@@ -131,7 +140,7 @@ export default function EditCategoryModal({
               </button>
               <button
                 type="submit"
-                disabled={!name.trim() || isSubmitting || name.trim() === category?.name}
+                disabled={!name.trim() || isSubmitting || name.trim() === category?.name || name.length > 20}
                 className="flex items-center gap-2 px-4 py-2 bg-Green text-white rounded-md text-sm font-medium hover:bg-Green/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Save size={16} />

@@ -28,15 +28,35 @@ export default function BoardCategorySelector({
     label: category.name,
   }));
 
-  // 「未選択」オプションを一番上に追加
-  options.unshift({
+  // 現在選択されているカテゴリーを取得
+  const selectedCategory = value ? categories.find(cat => cat.id === value) : null;
+
+  // オプションを再構築：未選択、現在の選択、その他の順番で並べる
+  const reorderedOptions = [];
+
+  // 1. 未選択を最初に追加
+  reorderedOptions.push({
     value: "",
     label: "未選択"
   });
 
+  // 2. 現在選択されているカテゴリーがあれば次に追加
+  if (selectedCategory) {
+    reorderedOptions.push({
+      value: selectedCategory.id.toString(),
+      label: selectedCategory.name,
+    });
+  }
+
+  // 3. その他のカテゴリーを追加（選択中のものは除く）
+  const otherOptions = options.filter(option => 
+    option.value !== "" && option.value !== value?.toString()
+  );
+  reorderedOptions.push(...otherOptions);
+
   // 新規作成オプションを追加
   if (allowCreate) {
-    options.push({
+    reorderedOptions.push({
       value: "create_new",
       label: "新規作成・編集"
     });
@@ -50,7 +70,7 @@ export default function BoardCategorySelector({
     <>
       <CustomSelector
         label="ボードカテゴリー"
-        options={options}
+        options={reorderedOptions}
         value={value?.toString() || ""}
         onChange={(selectedValue) => {
           if (selectedValue === "create_new") {

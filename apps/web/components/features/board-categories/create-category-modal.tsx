@@ -148,17 +148,19 @@ export default function CreateCategoryModal({
               <h4 className="text-sm font-medium text-gray-700 mb-2">
                 既存のカテゴリー ({existingCategories.length}/10)
               </h4>
-              <div className="flex flex-col gap-1">
-                {existingCategories.map((category) => (
-                  <div
-                    key={category.id}
-                    className="text-sm text-gray-700 py-1 px-2 -mx-2 rounded flex items-center justify-between group hover:bg-gray-50 cursor-pointer"
-                    onClick={() => handleEditClick(category)}
-                  >
-                    <span>{category.name}</span>
-                    <Pencil className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </div>
-                ))}
+              <div className="max-h-80 overflow-y-auto">
+                <div className="flex flex-col gap-1 pr-2">
+                  {existingCategories.map((category) => (
+                    <div
+                      key={category.id}
+                      className="text-sm text-gray-700 py-1 px-2 -mx-2 rounded flex items-center justify-between group hover:bg-gray-50 cursor-pointer"
+                      onClick={() => handleEditClick(category)}
+                    >
+                      <span>{category.name}</span>
+                      <Pencil className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}

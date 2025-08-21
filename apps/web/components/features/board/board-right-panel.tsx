@@ -208,9 +208,14 @@ export default function BoardRightPanel({
               onClose={() => {
                 // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
               }}
-              onSaveComplete={(savedTask) => {
-                // 保存後に選択状態を更新
-                onSelectTask?.(savedTask);
+              onSaveComplete={(savedTask, isNewTask) => {
+                console.log("🔥 BoardRightPanel onSaveComplete:", savedTask, "isNewTask:", isNewTask);
+                if (!isNewTask) {
+                  // 編集の場合は保存後に選択状態を更新
+                  console.log("🔥 編集なので保存されたタスクを選択");
+                  onSelectTask?.(savedTask);
+                }
+                // 新規作成の場合はTaskEditor内でのフォームリセットに任せる
               }}
               onDeleteAndSelectNext={onTaskDeleteAndSelectNext}
             />

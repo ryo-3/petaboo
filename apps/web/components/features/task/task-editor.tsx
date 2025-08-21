@@ -70,6 +70,7 @@ function TaskEditor({
   preloadedTaggings = [],
   preloadedBoardItems = []
 }: TaskEditorProps) {
+  console.log("🔥 TaskEditor レンダリング - task:", task, "isFromBoardDetail:", isFromBoardDetail);
   const updateTask = useUpdateTask();
   const createTask = useCreateTask();
   const addItemToBoard = useAddItemToBoard();
@@ -229,6 +230,7 @@ function TaskEditor({
   // タスク初期化（メモエディターと同じシンプルパターン）
   useEffect(() => {
     const currentTaskId = task?.id || 0;
+    console.log("🔥 TaskEditor useEffect - task変更:", task, "currentTaskId:", currentTaskId, "prevTaskId:", prevTaskId);
     
     if (currentTaskId !== prevTaskId) {
       setLocalTags(currentTags);
@@ -568,35 +570,78 @@ function TaskEditor({
         }
         
         // 新規作成完了を通知
+        console.log("🔥 新規タスク作成完了:", newTask);
         onSaveComplete?.(newTask, true);
+        console.log("🔥 onSaveComplete呼び出し完了");
         
         // 新規作成後はフォームをリセット
         setTimeout(() => {
-          const resetData = {
-            title: "",
-            description: "",
-            status: "todo" as const,
-            priority: "medium" as const,
-            categoryId: null,
-            boardCategoryId: null,
-            dueDate: "",
-            boardIds: []
-          };
+          console.log("🔥 フォームリセット開始 - 400ms後");
+          console.log("🔥 現在選択中のタスク:", task);
+          console.log("🔥 isFromBoardDetail:", isFromBoardDetail);
           
-          setTitle("");
-          setDescription("");
-          setStatus("todo");
-          setPriority("medium");
-          setCategoryId(null);
-          setBoardCategoryId(null);
-          initializeBoardIds([]);
-          setDueDate("");
+          if (isFromBoardDetail) {
+            // ボード詳細での新規作成時は、ボード情報を保持
+            const currentBoardIds = selectedBoardIds;
+            console.log("🔥 ボード詳細なので保持するボードID:", currentBoardIds);
+            
+            const resetData = {
+              title: "",
+              description: "",
+              status: "todo" as const,
+              priority: "medium" as const,
+              categoryId: null,
+              boardCategoryId: boardCategoryId, // ボードカテゴリーも保持
+              dueDate: "",
+              boardIds: currentBoardIds // ボード選択を保持
+            };
+            
+            console.log("🔥 ローカルstate全部リセット実行（ボード情報保持）");
+            setTitle("");
+            setDescription("");
+            setStatus("todo");
+            setPriority("medium");
+            setCategoryId(null);
+            // setBoardCategoryId(null); // ボードカテゴリーを保持
+            // initializeBoardIds([]); // ボード選択を保持
+            setDueDate("");
+            
+            // originalDataもリセット
+            setOriginalData(resetData);
+          } else {
+            // 通常のタスク画面での新規作成時は、完全リセット
+            console.log("🔥 通常のタスク画面なので完全リセット");
+            
+            const resetData = {
+              title: "",
+              description: "",
+              status: "todo" as const,
+              priority: "medium" as const,
+              categoryId: null,
+              boardCategoryId: null,
+              dueDate: "",
+              boardIds: []
+            };
+            
+            console.log("🔥 ローカルstate全部リセット実行（完全リセット）");
+            setTitle("");
+            setDescription("");
+            setStatus("todo");
+            setPriority("medium");
+            setCategoryId(null);
+            setBoardCategoryId(null);
+            initializeBoardIds([]);
+            setDueDate("");
+            
+            // originalDataもリセット
+            setOriginalData(resetData);
+          }
           
-          // originalDataもリセット
-          setOriginalData(resetData);
+          console.log("🔥 originalDataもリセット完了");
           
           // 少し遅延してタイトル入力欄にフォーカス
           setTimeout(() => {
+            console.log("🔥 タイトル入力欄フォーカス実行");
             taskFormRef.current?.focusTitle();
           }, 100);
         }, 400);

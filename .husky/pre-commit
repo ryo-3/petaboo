@@ -5,4 +5,8 @@
 echo "🧹 コミット前にログをクリアしています..."
 pnpm run log:clear
 
+# TypeScriptとLintのエラーチェック
+echo "🔍 TypeScriptエラーをチェックしています..."
+pnpm run check:wsl
+
 pnpm lint-staged

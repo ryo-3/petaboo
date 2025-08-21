@@ -11,6 +11,7 @@
     "db:studio": "drizzle-kit studio --port 8795",
     "db:push": "drizzle-kit push",
     "dev": "tsx --env-file=.env index.ts",
+    "dev:log": "tsx --env-file=.env index.ts 2>&1 | tee -a ../../api.log",
     "db:reset": "node reset-db.js"
   },
   "dependencies": {

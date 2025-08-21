@@ -40,7 +40,10 @@
       "Bash(unset NODE_ENV)",
       "Bash(git commit:*)",
       "Bash(git restore:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(git config:*)",
+      "Bash(kill:*)",
+      "Bash(chmod:*)"
     ],
     "deny": []
   }

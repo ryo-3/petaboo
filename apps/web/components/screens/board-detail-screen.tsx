@@ -439,6 +439,7 @@ function BoardDetailScreen({
 
           {/* タスク列 */}
           <BoardTaskSection
+            boardId={boardId}
             rightPanelMode={rightPanelMode}
             showTask={showTask}
             allTaskItems={allTaskItems}

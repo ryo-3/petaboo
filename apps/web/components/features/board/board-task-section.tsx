@@ -16,6 +16,7 @@ import type { Tag, Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
 
 interface BoardTaskSectionProps {
+  boardId: number;
   rightPanelMode: "editor" | "memo-list" | "task-list" | null;
   showTask: boolean;
   allTaskItems: BoardItemWithContent[];
@@ -69,8 +70,11 @@ import { useRef, useMemo, useState } from 'react';
 import { BulkActionButtons } from "@/components/ui/layout/bulk-action-buttons";
 import { useBulkDeleteButton } from "@/src/hooks/use-bulk-delete-button";
 import { useBoardBulkRestore } from "@/src/hooks/use-board-bulk-restore";
+import BoardCategoryFilterToggle from "@/components/features/board-categories/board-category-filter-toggle";
+import { useBoardCategoryFilter } from "@/src/hooks/use-board-category-filter";
 
 export default function BoardTaskSection({
+  boardId,
   rightPanelMode,
   showTask,
   allTaskItems,
@@ -108,6 +112,16 @@ export default function BoardTaskSection({
   allTaggings = [],
   allBoardItems = []
 }: BoardTaskSectionProps) {
+  // ボードカテゴリーフィルター機能
+  const {
+    selectedCategoryIds,
+    setSelectedCategoryIds,
+    filteredTaskItems,
+  } = useBoardCategoryFilter({ taskItems });
+
+  // フィルタリングされたタスクアイテムを使用
+  const displayTaskItems = filteredTaskItems;
+
   // ソートオプションの管理
   const { setSortOptions, getVisibleSortOptions } = useSortOptions("task");
   const localDeleteButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -233,6 +247,15 @@ export default function BoardTaskSection({
             buttonSize="size-6"
             iconSize="size-4"
           />
+
+          {/* ボードカテゴリー絞り込み */}
+          <BoardCategoryFilterToggle
+            boardId={boardId}
+            selectedCategoryIds={selectedCategoryIds}
+            onFilterChange={setSelectedCategoryIds}
+            buttonSize="size-6"
+            iconSize="size-4"
+          />
         </div>
       </div>
 
@@ -320,12 +343,13 @@ export default function BoardTaskSection({
         </button>
       </div>
 
+
       <div className="flex-1 overflow-y-auto pr-1 pb-10 mb-2">
         {isLoading ? (
           <div className="text-gray-500 text-center py-8">
             タスクを読み込み中...
           </div>
-        ) : taskItems.length === 0 ? (
+        ) : displayTaskItems.length === 0 ? (
           <div className="text-gray-500 text-center py-8">
             {activeTaskTab === "deleted"
               ? "削除済みタスクがありません"
@@ -334,7 +358,7 @@ export default function BoardTaskSection({
         ) : activeTaskTab === "deleted" ? (
           // 削除済みタスク用の表示
           <DeletedTaskDisplay
-            deletedTasks={taskItems.map(item => item.content) as DeletedTask[]} // DeletedTask型に変換
+            deletedTasks={displayTaskItems.map(item => item.content) as DeletedTask[]} // DeletedTask型に変換
             viewMode={viewMode}
             effectiveColumnCount={effectiveColumnCount}
             isBoard={true}
@@ -342,7 +366,7 @@ export default function BoardTaskSection({
             checkedTasks={checkedTasksForDisplay}
             onToggleCheck={(taskId) => {
               // 削除済みタスクの場合、originalIdで管理しているので変換が必要
-              const taskItem = taskItems.find(item => (item.content as DeletedTask).id === taskId);
+              const taskItem = displayTaskItems.find(item => (item.content as DeletedTask).id === taskId);
               if (taskItem?.itemId) {
                 onTaskSelectionToggle(taskItem.itemId);
               }
@@ -361,7 +385,7 @@ export default function BoardTaskSection({
         ) : (
           <TaskStatusDisplay
             activeTab={activeTaskTab as "todo" | "in_progress" | "completed"}
-            tasks={taskItems.map(item => ({
+            tasks={displayTaskItems.map(item => ({
               ...item.content as Task,
               originalId: item.itemId.toString() // ボードのitemIdを文字列として使用
             }))}

@@ -4,10 +4,12 @@
 
 ## 技術スタック
 
-- **フロントエンド**: Next.js + TypeScript + Tailwind CSS
-- **バックエンド**: Hono + SQLite + Drizzle ORM
-- **認証**: Clerk (JWT Bearer認証)
-- **アーキテクチャ**: Turborepo monorepo構成
+- **フロントエンド**: Next.js 15.3.0 + TypeScript 5.8.2 + Tailwind CSS 3.4.0
+- **バックエンド**: Hono 4.8.3 + SQLite + Drizzle ORM 0.44.2
+- **認証**: Clerk 6.23.0 (JWT Bearer認証)
+- **状態管理**: React Query 5.56.2
+- **アーキテクチャ**: Turborepo 2.5.4 monorepo構成
+- **パッケージ管理**: pnpm 9.0.0
 
 ## 基本設計原則
 
@@ -23,6 +25,14 @@
 - **API**: `/categories` (CRUD操作、Clerk Bearer認証)
 - **フック**: `use-categories.ts` (React Query)
 - **UI**: `CategorySelector` (CustomSelector利用)
+
+### ボードカテゴリーシステム
+
+- **API**: `/board-categories` (ボード専用カテゴリー、CRUD操作)
+- **テーブル**: `board_categories` (boardId, sortOrder対応)
+- **フック**: `use-board-categories.ts` (React Query)
+- **UI**: `BoardCategorySelector`, `BoardCategoryManager`
+- **特徴**: ボード内でのカテゴリー管理、ソート順序対応
 
 ### メモシステム
 
@@ -45,6 +55,19 @@
 - **フック**: `use-tasks.ts` (React Query)
 - **テーブル**: `tasks`, `deleted_tasks`
 - **originalId システム**: メモと同じ`id.toString()`形式
+
+### データインポート機能
+
+- **CSVインポート**: メモ、タスク、ボードアイテム対応
+- **UI**: `csv-import-modal.tsx` (各機能別)
+- **フォーマット**: CSV形式での一括データ取り込み
+
+### バルク操作機能
+
+- **一括削除**: メモ・タスクの複数選択削除
+- **一括復元**: 削除済みアイテムの複数選択復元  
+- **フック**: `use-memo-bulk-delete.tsx`, `use-task-bulk-delete.tsx`
+- **UI**: 選択モード切り替え、一括操作ボタン
 
 ## 型システム
 
@@ -99,43 +122,29 @@ const response = await fetch(`${API_BASE_URL}/categories`, {
 ## 重要コンポーネント
 
 - `CustomSelector` - セレクター統一
-- `CategorySelector` - カテゴリー選択
+- `CategorySelector` - 通常カテゴリー選択
+- `BoardCategorySelector` - ボードカテゴリー選択
+- `BoardCategoryManager` - ボードカテゴリー管理（CRUD操作）
 - `SaveButton` - 保存ボタン統一（変更検知対応）
 - `DeleteButton` - 削除ボタン統一（TrashIcon CSS化）
 - `RightPanel` - 右パネル統一
+- `CsvImportModal` - CSVインポート統一（各機能別）
+- `BulkActionButtons` - 一括操作ボタン
 
 ## 開発コマンド
 
 ```bash
-# 通常（Windows）
-npm run check-types && npm run lint  # コミット前必須
-
-# WSL環境用（Turborepoバイナリ問題回避）
-npm run check:wsl                     # コミット前必須（WSL用）
-
-git commit --no-verify               # WSL環境でpre-commitフックをスキップ
+# 型チェックとLint（コミット前必須）
+npm run check-types && npm run lint
 
 # データベースリセット（API側で実行）
 cd apps/api && npm run db:reset      # ローカルデータベースを完全削除
+
+# 開発サーバー起動
+npm run dev
 ```
 
-### WSL環境の制限事項
-
-- **Turborepoバイナリ問題**: WSL環境ではWindows用バイナリが動作しない
-- **対象範囲**: WSL用スクリプトは`apps/web/src`のみ対象（ビルド成果物除外）
-- **API側型エラー**: 最適化タスクで生成されたファイルの型定義未完成（要修正）
-
 # 🚨 絶対禁止事項
-
-## パッケージ関連
-
-- ❌ **npmパッケージの追加・インストール**
-- ❌ **package.jsonの変更**
-- ❌ **依存関係の変更**
-
-## 開発環境
-
-- ❌ **`npm run dev`の実行** (WSL環境で問題発生)
 
 ## 作業方法
 
@@ -150,6 +159,23 @@ cd apps/api && npm run db:reset      # ローカルデータベースを完全�
 - ❌ **標準HTMLのtitle属性の使用** (カスタムTooltipコンポーネントを使用すること)
 
 ## 修正履歴
+
+### 2025-08-21: WSL環境移行・制限事項削除
+
+**環境変更**:
+- WSL環境への完全移行完了
+- Windows環境での制限事項を削除
+- 開発コマンドを標準化
+
+**追加機能**:
+- ボードカテゴリーシステム（board-categories API）
+- CSVインポート機能（メモ・タスク・ボード）
+- バルク操作機能（一括削除・復元）
+
+**技術アップデート**:
+- Next.js 15.3.0, React 19.1.0, Clerk 6.23.0
+- Hono 4.8.3, Drizzle ORM 0.44.2
+- Turborepo 2.5.4, pnpm 9.0.0
 
 ### 2025-08-10: originalIdベース統一完了
 

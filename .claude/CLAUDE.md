@@ -140,13 +140,14 @@ npm run check:wsl                    # TypeScript + Lint（WSL最適化）
 npm run check:full                   # 全パッケージ完全チェック
 
 # 開発サーバー起動（ログ記録付き）
-npm run dev                          # dev.logとbrowser.logに記録
+npm run dev                          # api.logとweb.logに記録（ユーザーが手動実行）
 
-# ログ管理
+# ログ管理（ユーザーが手動実行）
 npm run log:clear                    # 全ログクリア
 npm run log:cleanup                  # サイズベースでログローテーション
-npm run log:watch                    # リアルタイムログ監視
-npm run log:errors                   # エラーログのみ表示
+npm run log:watch                    # api.logのリアルタイム監視
+npm run log:watch:web                # web.logのリアルタイム監視
+npm run log:errors                   # api.logのエラーログのみ表示
 
 # データベースリセット（API側で実行）
 cd apps/api && npm run db:reset      # ローカルデータベースを完全削除
@@ -158,7 +159,7 @@ cd apps/api && npm run db:reset      # ローカルデータベースを完全�
   2. TypeScript + Lintエラーチェック
   3. 変更ファイルの品質チェック（lint-staged）
 - **エラー時**: コミットを自動停止し、修正箇所を表示
-- **ログ管理**: dev.log, browser.log, api.log, web.logは.gitignore済み
+- **ログ管理**: api.log, web.logは.gitignore済み（ユーザーが手動でnpm run dev実行）
 
 # 🚨 絶対禁止事項
 
@@ -184,13 +185,13 @@ cd apps/api && npm run db:reset      # ローカルデータベースを完全�
 - TypeScriptパスエイリアス修正（@/* → ./*)
 
 **新機能**:
-- ログ共有システム（dev.log, browser.log対応）
+- ログ共有システム（api.log, web.log対応）
 - コミット時自動品質チェック（TypeScript + Lint）
 - ログ自動管理（クリア・ローテーション）
 - エラー発生時のコミット自動停止
 
 **開発効率化**:
-- `pnpm run dev` 1コマンドでログ記録付き開発
+- `npm run dev` 1コマンドでログ記録付き開発（ユーザーが手動実行）
 - エラーチェックコマンド3段階（quick/wsl/full）
 - pre-commitフックによる品質保証
 - Claude Codeとのログリアルタイム共有

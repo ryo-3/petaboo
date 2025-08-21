@@ -36,6 +36,11 @@ export default async function RootLayout({
   return (
     <ClerkProvider localization={jaJP}>
       <html lang="ja">
+        <head>
+          {process.env.NODE_ENV === 'development' && (
+            <script src="/console-logger.js" />
+          )}
+        </head>
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-gray-900 min-h-screen`}
         >

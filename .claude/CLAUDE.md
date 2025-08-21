@@ -134,8 +134,10 @@ const response = await fetch(`${API_BASE_URL}/categories`, {
 ## 開発コマンド
 
 ```bash
-# 型チェックとLint（コミット前必須）
-npm run check-types && npm run lint
+# エラーチェック（開発中）
+npm run check:quick                  # TypeScriptのみ高速チェック
+npm run check:wsl                    # TypeScript + Lint（WSL最適化）
+npm run check:full                   # 全パッケージ完全チェック
 
 # 開発サーバー起動（ログ記録付き）
 npm run dev                          # dev.logとbrowser.logに記録
@@ -150,10 +152,13 @@ npm run log:errors                   # エラーログのみ表示
 cd apps/api && npm run db:reset      # ローカルデータベースを完全削除
 ```
 
-### ログ自動管理
-- **コミット時**: pre-commitフックで自動ログクリア
-- **定期**: Claude Codeが2000行/10MB超過時に自動ローテーション
-- **除外**: dev.log, browser.log, api.log, web.logは.gitignore済み
+### 自動品質管理システム
+- **コミット時自動実行**: 
+  1. ログファイル自動クリア
+  2. TypeScript + Lintエラーチェック
+  3. 変更ファイルの品質チェック（lint-staged）
+- **エラー時**: コミットを自動停止し、修正箇所を表示
+- **ログ管理**: dev.log, browser.log, api.log, web.logは.gitignore済み
 
 # 🚨 絶対禁止事項
 
@@ -171,17 +176,24 @@ cd apps/api && npm run db:reset      # ローカルデータベースを完全�
 
 ## 修正履歴
 
-### 2025-08-21: WSL環境移行・制限事項削除
+### 2025-08-21: WSL環境での開発品質管理システム完成
 
 **環境変更**:
-- WSL環境への完全移行完了
-- Windows環境での制限事項を削除
-- 開発コマンドを標準化
+- WSL環境への完全移行とHusky正常セットアップ
+- 自動品質管理システム構築
+- TypeScriptパスエイリアス修正（@/* → ./*)
 
-**追加機能**:
-- ボードカテゴリーシステム（board-categories API）
-- CSVインポート機能（メモ・タスク・ボード）
-- バルク操作機能（一括削除・復元）
+**新機能**:
+- ログ共有システム（dev.log, browser.log対応）
+- コミット時自動品質チェック（TypeScript + Lint）
+- ログ自動管理（クリア・ローテーション）
+- エラー発生時のコミット自動停止
+
+**開発効率化**:
+- `pnpm run dev` 1コマンドでログ記録付き開発
+- エラーチェックコマンド3段階（quick/wsl/full）
+- pre-commitフックによる品質保証
+- Claude Codeとのログリアルタイム共有
 
 **技術アップデート**:
 - Next.js 15.3.0, React 19.1.0, Clerk 6.23.0

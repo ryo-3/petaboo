@@ -43,7 +43,8 @@
       "Bash(curl:*)",
       "Bash(git config:*)",
       "Bash(kill:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(npx husky:*)"
     ],
     "deny": []
   }

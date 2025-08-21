@@ -329,6 +329,7 @@ function MemoEditor({
     return selectedBoards;
   }, [selectedBoardIds, preloadedBoards, initialBoardId]);
 
+
   // ボード選択変更ハンドラー（削除済みの場合は無効）
   const handleBoardSelectorChange = (value: string | string[]) => {
     if (isDeleted) return; // 削除済みの場合は変更不可
@@ -514,27 +515,27 @@ function MemoEditor({
           }
         >
           {/* ボード名・タグ一覧をテキストエリアの上に配置（常に固定高さでちらつき防止） */}
-          {memo && memo.id !== 0 && (
-            <div className="mb-1 mt-2 min-h-[28px]">
-              <div className="flex flex-wrap gap-2">
-                {/* ボード名（選択中の状態を表示） */}
+          <div className="mb-1 mt-2 min-h-[28px]">
+            <div className="flex flex-wrap gap-2">
+              {/* ボード名（既存メモの場合のみ表示） */}
+              {memo && memo.id !== 0 && (
                 <BoardChips boards={displayBoards} variant="compact" />
-                {/* タグ */}
-                {localTags.map((tag) => (
-                  <div
-                    key={tag.id}
-                    className="inline-flex items-center px-2 py-1 rounded-md text-xs overflow-hidden"
-                    style={{ 
-                      backgroundColor: tag.color || TAG_COLORS.background, 
-                      color: TAG_COLORS.text
-                    }}
-                  >
-                    <span>{tag.name}</span>
-                  </div>
-                ))}
-              </div>
+              )}
+              {/* タグ */}
+              {localTags.map((tag) => (
+                <div
+                  key={tag.id}
+                  className="inline-flex items-center px-2 py-1 rounded-md text-xs overflow-hidden"
+                  style={{ 
+                    backgroundColor: tag.color || TAG_COLORS.background, 
+                    color: TAG_COLORS.text
+                  }}
+                >
+                  <span>{tag.name}</span>
+                </div>
+              ))}
             </div>
-          )}
+          </div>
           
           <textarea
             ref={textareaRef}

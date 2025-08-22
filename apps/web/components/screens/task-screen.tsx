@@ -105,6 +105,10 @@ function TaskScreen({
     excludeBoardId ? 'exclude' : 'include'
   );
   
+  // タグフィルター管理
+  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
+  const [tagFilterMode, setTagFilterMode] = useState<'include' | 'exclude'>('include');
+  
 
   // 削除ボタンの参照
   const deleteButtonRef = useRef<HTMLButtonElement>(null);
@@ -380,6 +384,11 @@ function TaskScreen({
           onBoardFilterChange={setSelectedBoardIds}
           filterMode={boardFilterMode}
           onFilterModeChange={setBoardFilterMode}
+          tags={tags || []}
+          selectedTagIds={selectedTagIds}
+          onTagFilterChange={setSelectedTagIds}
+          tagFilterMode={tagFilterMode}
+          onTagFilterModeChange={setTagFilterMode}
           normalCount={0} // タスクでは使わない
           deletedTasksCount={deletedTasks?.length || 0}
           todoCount={
@@ -409,6 +418,8 @@ function TaskScreen({
           showTags={showTagDisplay}
           selectedBoardIds={selectedBoardIds}
           boardFilterMode={boardFilterMode}
+          selectedTagIds={selectedTagIds}
+          tagFilterMode={tagFilterMode}
           tasks={tasks || []}
           deletedTasks={deletedTasks || []}
           selectedTask={selectedTask}

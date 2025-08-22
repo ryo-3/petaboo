@@ -23,6 +23,8 @@ interface TaskStatusDisplayProps {
   showTags?: boolean;
   selectedBoardIds?: number[];
   boardFilterMode?: 'include' | 'exclude';
+  selectedTagIds?: number[];
+  tagFilterMode?: 'include' | 'exclude';
   sortOptions?: Array<{
     id: "createdAt" | "updatedAt" | "dueDate" | "priority" | "deletedAt";
     label: string;
@@ -58,6 +60,8 @@ interface DeletedTaskDisplayProps {
   showTags?: boolean;
   selectedBoardIds?: number[];
   boardFilterMode?: 'include' | 'exclude';
+  selectedTagIds?: number[];
+  tagFilterMode?: 'include' | 'exclude';
   sortOptions?: Array<{
     id: "createdAt" | "updatedAt" | "dueDate" | "priority" | "deletedAt";
     label: string;
@@ -95,6 +99,8 @@ function TaskStatusDisplay({
   showTags = false,
   selectedBoardIds = [],
   boardFilterMode = 'include',
+  selectedTagIds = [],
+  tagFilterMode = 'include',
   sortOptions = [],
   isBoard = false,
   allTaggings = [],
@@ -144,29 +150,46 @@ function TaskStatusDisplay({
     });
   }, [statusFilteredTasks, allTaggings, allBoardItems]);
 
-  // ボードフィルターを適用（tasksWithDataベース）
+  // ボードフィルターとタグフィルターを適用（tasksWithDataベース）
   const filteredTasksWithData = useMemo(() => {
     if (!tasksWithData) return [];
     
-    // ボードフィルターが設定されていない場合は全て表示
-    if (!selectedBoardIds || selectedBoardIds.length === 0) {
-      return tasksWithData;
+    let result = tasksWithData;
+    
+    // ボードフィルターを適用
+    if (selectedBoardIds && selectedBoardIds.length > 0) {
+      result = result.filter(({ task, boards }) => {
+        const taskBoardIds = boards.map(b => b.id);
+        
+        // フィルターモードに応じて表示判定
+        if (boardFilterMode === 'exclude') {
+          // 除外モード：選択されたボードのいずれにも所属していない場合に表示
+          return !selectedBoardIds.some(selectedId => taskBoardIds.includes(selectedId));
+        } else {
+          // 含むモード（デフォルト）：選択されたボードのいずれかに所属している場合に表示
+          return selectedBoardIds.some(selectedId => taskBoardIds.includes(selectedId));
+        }
+      });
     }
     
-    // ボードフィルタリングを事前に適用
-    return tasksWithData.filter(({ task, boards }) => {
-      const taskBoardIds = boards.map(b => b.id);
-      
-      // フィルターモードに応じて表示判定
-      if (boardFilterMode === 'exclude') {
-        // 除外モード：選択されたボードのいずれにも所属していない場合に表示
-        return !selectedBoardIds.some(selectedId => taskBoardIds.includes(selectedId));
-      } else {
-        // 含むモード（デフォルト）：選択されたボードのいずれかに所属している場合に表示
-        return selectedBoardIds.some(selectedId => taskBoardIds.includes(selectedId));
-      }
-    });
-  }, [tasksWithData, selectedBoardIds, boardFilterMode]);
+    // タグフィルターを適用
+    if (selectedTagIds && selectedTagIds.length > 0) {
+      result = result.filter(({ task, tags }) => {
+        const taskTagIds = tags.map(t => t.id);
+        
+        // フィルターモードに応じて表示判定
+        if (tagFilterMode === 'exclude') {
+          // 除外モード：選択されたタグのいずれにも所属していない場合に表示
+          return !selectedTagIds.some(selectedId => taskTagIds.includes(selectedId));
+        } else {
+          // 含むモード（デフォルト）：選択されたタグのいずれかに所属している場合に表示
+          return selectedTagIds.some(selectedId => taskTagIds.includes(selectedId));
+        }
+      });
+    }
+    
+    return result;
+  }, [tasksWithData, selectedBoardIds, boardFilterMode, selectedTagIds, tagFilterMode]);
 
 
   const getEmptyMessage = () => {
@@ -286,6 +309,10 @@ export function DeletedTaskDisplay({
   showEditDate = false,
   showBoardName = false,
   showTags = false,
+  selectedBoardIds = [],
+  boardFilterMode = 'include',
+  selectedTagIds = [],
+  tagFilterMode = 'include',
   sortOptions = [],
   isBoard = false,
   allTags = [],

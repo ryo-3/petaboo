@@ -206,6 +206,8 @@ function DesktopLower({
         showTags={showTags}
         selectedBoardIds={selectedBoardIds}
         boardFilterMode={boardFilterMode}
+        selectedTagIds={selectedTagIds}
+        tagFilterMode={tagFilterMode}
         allTags={allTags}
         allTaggings={allTaggings}
         allBoardItems={allBoardItems}
@@ -262,6 +264,8 @@ function DesktopLower({
             showTags={true}
             selectedBoardIds={selectedBoardIds}
             boardFilterMode={boardFilterMode}
+            selectedTagIds={selectedTagIds}
+            tagFilterMode={tagFilterMode}
             sortOptions={sortOptions}
             allTags={allTags}
             allBoards={allBoards}

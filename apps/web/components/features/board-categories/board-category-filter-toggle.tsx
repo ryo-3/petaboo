@@ -129,7 +129,7 @@ export default function BoardCategoryFilterToggle({
             onClick={handleIconClick}
             className={`shadow-sm rounded-lg ${buttonSize} flex items-center justify-center transition-all ${
               hasActiveFilter
-                ? "bg-blue-100 text-blue-600 opacity-100"
+                ? "bg-gray-200 text-gray-600 opacity-100"
                 : "bg-gray-100 text-gray-500 opacity-65 hover:opacity-85"
             }`}
           >
@@ -143,7 +143,7 @@ export default function BoardCategoryFilterToggle({
           onClick={handleIconClick}
           className={`shadow-sm rounded-lg ${buttonSize} flex items-center justify-center transition-all ${
             hasActiveFilter
-              ? "bg-blue-100 text-blue-600 opacity-100"
+              ? "bg-gray-200 text-gray-600 opacity-100"
               : "bg-gray-100 text-gray-500 opacity-65 hover:opacity-85"
           }`}
         >
@@ -167,7 +167,7 @@ export default function BoardCategoryFilterToggle({
                   (selectedCategoryIds.includes("all") && option.value === "all") ||
                   (selectedCategoryIds.includes("uncategorized") && option.value === "uncategorized") ||
                   (selectedCategoryIds.includes(parseInt(option.value)) && option.value !== "all" && option.value !== "uncategorized")
-                    ? "bg-blue-100 text-blue-700"
+                    ? "bg-gray-200 text-gray-700"
                     : "hover:bg-gray-100"
                 }`}
               >

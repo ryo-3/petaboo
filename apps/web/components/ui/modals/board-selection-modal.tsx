@@ -124,7 +124,7 @@ export default function BoardSelectionModal({
         
         {/* フィルターモード切り替え（filter時のみ） */}
         {mode === 'filter' && onFilterModeChange && (
-          <div className="mb-4">
+          <div className="mb-3">
             <div className="flex rounded-md bg-gray-100 p-0.5">
               <button
                 onClick={() => onFilterModeChange('include')}

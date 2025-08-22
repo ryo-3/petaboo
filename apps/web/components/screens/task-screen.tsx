@@ -48,6 +48,10 @@ interface TaskScreenProps {
   forceShowBoardName?: boolean; // ボード名表示を強制的に有効化（ボードから呼び出される場合）
   excludeBoardId?: number; // 指定されたボードに登録済みのタスクを除外（ボードから呼び出される場合）
   initialSelectionMode?: "select" | "check"; // 初期選択モード
+  // ボード詳細から呼び出された場合の除外アイテムリスト
+  excludeItemIds?: number[];
+  // ボードフィルターの選択肢から除外するボードID
+  excludeBoardIdFromFilter?: number;
 }
 
 function TaskScreen({
@@ -62,6 +66,8 @@ function TaskScreen({
   forceShowBoardName: _ = false,
   excludeBoardId,
   initialSelectionMode = "select",
+  excludeItemIds = [],
+  excludeBoardIdFromFilter,
 }: TaskScreenProps) {
   // 一括処理中断通知の監視
   useBulkProcessNotifications();
@@ -336,6 +342,12 @@ function TaskScreen({
   const safeAllTaggings = allTaggings || [];
   const safeAllBoardItems = allBoardItems || [];
 
+  // 除外アイテムIDでフィルタリングされたタスク
+  const filteredTasks = tasks?.filter(task => !excludeItemIds.includes(task.id)) || [];
+
+  // ボードフィルターから除外するボードをフィルタリング
+  const filteredBoards = boards?.filter(board => board.id !== excludeBoardIdFromFilter) || [];
+
   return (
     <div className="flex h-full bg-white">      
       {/* 左側：一覧表示エリア */}
@@ -379,7 +391,7 @@ function TaskScreen({
           onShowBoardNameChange={setShowBoardName}
           showTagDisplay={showTagDisplay}
           onShowTagDisplayChange={setShowTagDisplay}
-          boards={boards || []}
+          boards={filteredBoards}
           selectedBoardIds={selectedBoardIds}
           onBoardFilterChange={setSelectedBoardIds}
           filterMode={boardFilterMode}
@@ -420,7 +432,7 @@ function TaskScreen({
           boardFilterMode={boardFilterMode}
           selectedTagIds={selectedTagIds}
           tagFilterMode={tagFilterMode}
-          tasks={tasks || []}
+          tasks={filteredTasks}
           deletedTasks={deletedTasks || []}
           selectedTask={selectedTask}
           selectedDeletedTask={selectedDeletedTask}

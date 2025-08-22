@@ -50,6 +50,10 @@ interface MemoScreenProps {
   forceShowBoardName?: boolean; // ボード名表示を強制的に有効化（ボードから呼び出される場合）
   excludeBoardId?: number; // 指定されたボードに登録済みのメモを除外（ボードから呼び出される場合）
   initialSelectionMode?: "select" | "check"; // 初期選択モード
+  // ボード詳細から呼び出された場合の除外アイテムリスト
+  excludeItemIds?: number[];
+  // ボードフィルターの選択肢から除外するボードID
+  excludeBoardIdFromFilter?: number;
 }
 
 function MemoScreen({
@@ -63,6 +67,8 @@ function MemoScreen({
   forceShowBoardName = false,
   excludeBoardId,
   initialSelectionMode = "select",
+  excludeItemIds = [],
+  excludeBoardIdFromFilter,
 }: MemoScreenProps) {
   // 一括処理中断通知の監視
   useBulkProcessNotifications();
@@ -411,6 +417,12 @@ function MemoScreen({
     onClose: onClose,
   });
 
+  // 除外アイテムIDでフィルタリングされたメモ
+  const filteredMemos = memos?.filter(memo => !excludeItemIds.includes(memo.id)) || [];
+
+  // ボードフィルターから除外するボードをフィルタリング
+  const filteredBoards = boards?.filter(board => board.id !== excludeBoardIdFromFilter) || [];
+
   return (
     <div className="flex h-full bg-white overflow-hidden">
       {/* 左側：一覧表示エリア */}
@@ -446,7 +458,7 @@ function MemoScreen({
           onShowBoardNameChange={setShowBoardName}
           showTagDisplay={showTagDisplay}
           onShowTagDisplayChange={setShowTagDisplay}
-          boards={boards || []}
+          boards={filteredBoards}
           selectedBoardIds={selectedBoardIds}
           onBoardFilterChange={setSelectedBoardIds}
           filterMode={boardFilterMode}
@@ -478,8 +490,8 @@ function MemoScreen({
           boardFilterMode={boardFilterMode}
           selectedTagIds={selectedTagIds}
           tagFilterMode={tagFilterMode}
-          memos={memos || []}
-          localMemos={memos || []}
+          memos={filteredMemos}
+          localMemos={filteredMemos}
           deletedMemos={deletedMemos || []}
           selectedMemo={selectedMemo}
           selectedDeletedMemo={selectedDeletedMemo}

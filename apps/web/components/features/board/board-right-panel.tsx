@@ -67,6 +67,15 @@ export default function BoardRightPanel({
   const { handleMainSelectMemo, handleMainSelectTask } = useNavigation();
   const { data: tags } = useTags();
   
+  // 現在のボードに既に追加されているアイテムIDのリストを作成
+  const currentBoardMemoIds = allBoardItems?.filter(item => 
+    item.boardId === boardId && item.itemType === 'memo'
+  ).map(item => parseInt(item.itemId, 10)) || [];
+  
+  const currentBoardTaskIds = allBoardItems?.filter(item => 
+    item.boardId === boardId && item.itemType === 'task'
+  ).map(item => parseInt(item.itemId, 10)) || [];
+  
   // 削除済みアイテムかどうかを判定するヘルパー関数
   const isDeletedMemo = (memo: Memo | DeletedMemo): memo is DeletedMemo => {
     // より確実な判定：deletedAtプロパティが存在し、値があるかチェック
@@ -234,8 +243,8 @@ export default function BoardRightPanel({
           onClose={onClose}
           rightPanelDisabled={true}
           hideHeaderButtons={true}
-          forceShowBoardName={true}
-          excludeBoardId={boardId}
+          excludeItemIds={currentBoardMemoIds}
+          excludeBoardIdFromFilter={boardId}
           initialSelectionMode="check"
         />
       )}
@@ -253,8 +262,8 @@ export default function BoardRightPanel({
           onClose={onClose}
           rightPanelDisabled={true}
           hideHeaderButtons={true}
-          forceShowBoardName={true}
-          excludeBoardId={boardId}
+          excludeItemIds={currentBoardTaskIds}
+          excludeBoardIdFromFilter={boardId}
           initialSelectionMode="check"
         />
       )}

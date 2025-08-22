@@ -146,12 +146,18 @@ npm run dev                          # api.logとweb.logに記録（ユーザー
 npm run log:clear                    # 全ログクリア
 npm run log:cleanup                  # サイズベースでログローテーション
 npm run log:watch                    # api.logのリアルタイム監視
-npm run log:watch:web                # web.logのリアルタイム監視
+npm run log:watch:web                # web.logのリアルタイム監視（5秒間重複フィルター付き）
 npm run log:errors                   # api.logのエラーログのみ表示
 
 # データベースリセット（API側で実行）
 cd apps/api && npm run db:reset      # ローカルデータベースを完全削除
 ```
+
+### webログフィルタリング
+- **場所**: `apps/web/public/console-logger.js`
+- **機能**: ブラウザコンソールログの重複排除（5秒間同一メッセージ除外）
+- **対象**: console.log/error/warn/info → web.logファイル
+- **メモ**: undefinedフィールドはJSON.stringifyで自動省略される
 
 ### 自動品質管理システム
 - **コミット時自動実行**: 

@@ -371,9 +371,19 @@ export default function TagSelectionModal({
                 <span className="text-sm font-medium text-gray-700">
                   選択中のタグ
                 </span>
-                <span className="text-xs text-gray-500">
-                  {selectedTags.length}件
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500">
+                    {selectedTags.length}件
+                  </span>
+                  {mode === 'filter' && (
+                    <button
+                      onClick={() => onSelectionChange([])}
+                      className="px-2 py-0.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded transition-colors"
+                    >
+                      全解除
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="flex flex-wrap gap-1">
                 {selectedTags.map((tag) => (

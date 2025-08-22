@@ -162,14 +162,24 @@ export default function BoardSelectionModal({
 
         {/* 選択済みボード表示エリア */}
         {selectedBoards.length > 0 && (
-          <div className="mb-2">
+          <div className="mb-3">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-gray-700">
                 選択中のボード
               </span>
-              <span className="text-xs text-gray-500">
-                {selectedBoards.length}件
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-500">
+                  {selectedBoards.length}件
+                </span>
+                {mode === 'filter' && (
+                  <button
+                    onClick={handleClearAll}
+                    className="px-2 py-0.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded transition-colors"
+                  >
+                    全解除
+                  </button>
+                )}
+              </div>
             </div>
             <div className="flex flex-wrap gap-1">
               {selectedBoards.map((board) => (
@@ -198,30 +208,9 @@ export default function BoardSelectionModal({
           </div>
         )}
 
-        {/* 全選択・全解除ボタン（フィルターモード時のみ） */}
-        {multiple && mode === 'filter' && (
+        {/* ボード一覧ヘッダー */}
+        {multiple && (
           <div className="mb-2 flex justify-between items-center">
-            <span className="text-sm font-medium text-gray-700">ボード一覧</span>
-            <div className="flex gap-2">
-              <button
-                onClick={handleSelectAll}
-                className="px-3 py-1 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded transition-colors"
-              >
-                全選択
-              </button>
-              <button
-                onClick={handleClearAll}
-                className="px-3 py-1 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded transition-colors"
-              >
-                全解除
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ボード一覧ヘッダー（通常の選択時） */}
-        {multiple && mode !== 'filter' && (
-          <div className="mt-2 mb-2 flex justify-between items-center">
             <span className="text-sm font-medium text-gray-700">
               ボード一覧
             </span>

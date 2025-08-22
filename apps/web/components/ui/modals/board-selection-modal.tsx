@@ -171,11 +171,11 @@ export default function BoardSelectionModal({
                 {selectedBoards.length}件
               </span>
             </div>
-            <div className="flex flex-wrap gap-1 p-2 bg-gray-50 rounded-md border border-gray-200">
+            <div className="flex flex-wrap gap-1">
               {selectedBoards.map((board) => (
                 <div
                   key={board.id}
-                  className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium cursor-pointer hover:opacity-80 bg-light-Blue text-white"
+                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium cursor-pointer hover:opacity-80 bg-light-Blue text-white"
                   onClick={() => handleBoardToggle(board.id)}
                 >
                   <span>{board.name}</span>

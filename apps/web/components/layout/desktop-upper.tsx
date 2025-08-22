@@ -1,24 +1,24 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
-import SettingsIcon from "@/components/icons/settings-icon";
-import TrashIcon from "@/components/icons/trash-icon";
 import CheckSquareIcon from "@/components/icons/check-square-icon";
-import SquareIcon from "@/components/icons/square-icon";
-import Tooltip from "@/components/ui/base/tooltip";
-import CsvImportIcon from "@/components/icons/csv-import-icon";
 import CsvExportIcon from "@/components/icons/csv-export-icon";
+import CsvImportIcon from "@/components/icons/csv-import-icon";
+import SettingsIcon from "@/components/icons/settings-icon";
+import SquareIcon from "@/components/icons/square-icon";
+import TrashIcon from "@/components/icons/trash-icon";
+import Tooltip from "@/components/ui/base/tooltip";
 import AddItemButton from "@/components/ui/buttons/add-item-button";
-import EditDateToggle from "@/components/ui/buttons/edit-date-toggle";
 import BoardNameToggle from "@/components/ui/buttons/board-name-toggle";
+import EditDateToggle from "@/components/ui/buttons/edit-date-toggle";
 import SelectionModeToggle from "@/components/ui/buttons/selection-mode-toggle";
-import TagDisplayToggle from "@/components/ui/buttons/tag-display-toggle";
 import SortToggle from "@/components/ui/buttons/sort-toggle";
-import ColumnCountSelector from "@/components/ui/layout/column-count-selector";
-import ViewModeToggle from "@/components/ui/layout/view-mode-toggle";
+import TagDisplayToggle from "@/components/ui/buttons/tag-display-toggle";
 import BoardLayoutToggle from "@/components/ui/controls/board-layout-toggle";
 import ContentFilter from "@/components/ui/controls/content-filter";
+import ColumnCountSelector from "@/components/ui/layout/column-count-selector";
+import ViewModeToggle from "@/components/ui/layout/view-mode-toggle";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 
 interface DesktopUpperProps {
@@ -309,7 +309,7 @@ function DesktopUpper({
             {currentMode === "board" ? (
               <div className="flex flex-col w-full">
                 <div className="flex items-end gap-3">
-                  <h1 className={`font-bold text-gray-800 text-[22px]`}>
+                  <h1 className={`font-bold text-gray-800 text-[22px] ${rightPanelMode !== "hidden" ? "truncate min-w-0 max-w-[max(550px,38vw)]" : ""}`}>
                     {customTitle || "ボード一覧"}
                   </h1>
                   {/* 説明表示切り替えボタン */}
@@ -330,7 +330,7 @@ function DesktopUpper({
                 )}
               </div>
             ) : (
-              <h1 className="font-bold text-gray-800 text-[22px] w-[105px]">
+              <h1 className="font-bold text-gray-800 text-[22px] w-[105px] truncate">
                 {customTitle || (currentMode === "memo" ? "メモ一覧" : currentMode === "task" ? "タスク一覧" : "ボード一覧")}
               </h1>
             )}

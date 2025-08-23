@@ -17,11 +17,11 @@ export function useDelayedButtonVisibility(
       setShowButton(true);
     } else if (!shouldShow && showButton) {
       // 非表示にする場合
-      if (delayMs === 0 || !isAnimating) {
-        // 遅延なしまたはアニメーション中でなければ即座に非表示
+      if (delayMs === 0) {
+        // 遅延なしの場合のみ即座に非表示
         setShowButton(false);
-      } else if (isAnimating) {
-        // アニメーション中は指定時間後に非表示
+      } else {
+        // 遅延ありの場合は指定時間後に非表示（アニメーション状態に関係なく）
         const timer = setTimeout(() => {
           setShowButton(false);
         }, delayMs);

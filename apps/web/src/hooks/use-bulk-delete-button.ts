@@ -55,7 +55,7 @@ export function useBulkDeleteButton({
   const showDeleteButton = useDelayedButtonVisibility(
     shouldShowLeftBulkDelete,
     isDeleting || isRestoring,  // 復元中も即座に反応するように
-    isRestoring ? 0 : 2500  // 復元中は遅延なし、削除中は2.5秒
+    isRestoring ? 0 : 1500  // 復元中は遅延なし、削除中は1.5秒
   );
 
 

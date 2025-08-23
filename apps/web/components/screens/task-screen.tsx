@@ -45,6 +45,8 @@ interface TaskScreenProps {
   onClearSelection?: () => void; // 選択状態だけクリアする関数
   rightPanelDisabled?: boolean; // 右パネル無効化（ボードから呼び出される場合）
   hideHeaderButtons?: boolean; // ヘッダーボタンを非表示（ボードから呼び出される場合）
+  hideBulkActionButtons?: boolean; // 一括操作ボタンを非表示（ボードから呼び出される場合）
+  onAddToBoard?: (taskIds: number[]) => void; // ボードに追加（ボードから呼び出される場合のみ）
   forceShowBoardName?: boolean; // ボード名表示を強制的に有効化（ボードから呼び出される場合）
   excludeBoardId?: number; // 指定されたボードに登録済みのタスクを除外（ボードから呼び出される場合）
   initialSelectionMode?: "select" | "check"; // 初期選択モード
@@ -62,6 +64,8 @@ function TaskScreen({
   onClose,
   onClearSelection,
   hideHeaderButtons = false,
+  hideBulkActionButtons = false,
+  onAddToBoard,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   forceShowBoardName: _ = false,
   excludeBoardId,
@@ -457,6 +461,7 @@ function TaskScreen({
         />
 
         {/* 一括操作ボタン */}
+        {!hideBulkActionButtons && (
         <BulkActionButtons
           showDeleteButton={showDeleteButton}
           deleteButtonCount={currentDisplayCount}
@@ -486,8 +491,10 @@ function TaskScreen({
           animatedDeleteCount={currentDisplayCount}
           useAnimatedDeleteCount={true}
         />
+        )}
         
         {/* 選択メニューボタン（通常タブでアイテム選択時） */}
+        {!hideBulkActionButtons && (
         <SelectionMenuButton
           count={checkedTasks.size}
           onBoardLink={() => {
@@ -511,6 +518,32 @@ function TaskScreen({
             !isDeleting
           }
         />
+        )}
+
+        {/* ボード追加ボタン（ボードから呼び出された場合のみ） */}
+        {onAddToBoard && checkedTasks.size > 0 && activeTab !== "deleted" && (
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20">
+            <button
+              onClick={() => onAddToBoard(Array.from(checkedTasks))}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 transition-colors"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              選択したタスクをボードに追加 ({checkedTasks.size})
+            </button>
+          </div>
+        )}
       </div>
 
       {/* 右側：詳細表示エリア */}

@@ -13,6 +13,7 @@ import { useTags } from "@/src/hooks/use-tags";
 import { useState } from "react";
 import { useNavigation } from "@/contexts/navigation-context";
 import { useDeleteMemo } from "@/src/hooks/use-memos";
+import { useAuth } from "@clerk/nextjs";
 
 interface BoardRightPanelProps {
   isOpen: boolean;
@@ -66,6 +67,7 @@ export default function BoardRightPanel({
 }: BoardRightPanelProps) {
   const { handleMainSelectMemo, handleMainSelectTask } = useNavigation();
   const { data: tags } = useTags();
+  const { getToken } = useAuth();
   
   // 現在のボードに既に追加されているアイテムIDのリストを作成
   const currentBoardMemoIds = allBoardItems?.filter(item => 
@@ -93,6 +95,56 @@ export default function BoardRightPanel({
   // 削除処理用のstate
   const [isRightMemoLidOpen, setIsRightMemoLidOpen] = useState(false);
   const deleteNote = useDeleteMemo();
+
+  // メモをボードに追加
+  const handleAddMemosToBoard = async (memoIds: number[]) => {
+    try {
+      const token = await getToken();
+      const promises = memoIds.map((memoId) => {
+        return fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8794'}/boards/${boardId}/items`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+          body: JSON.stringify({
+            itemType: 'memo',
+            itemId: memoId.toString(),
+          }),
+        });
+      });
+      
+      await Promise.all(promises);
+      onClose(); // 追加後にパネルを閉じる
+    } catch (error) {
+      console.error('メモの追加に失敗しました:', error);
+    }
+  };
+
+  // タスクをボードに追加
+  const handleAddTasksToBoard = async (taskIds: number[]) => {
+    try {
+      const token = await getToken();
+      const promises = taskIds.map((taskId) => {
+        return fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8794'}/boards/${boardId}/items`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+          body: JSON.stringify({
+            itemType: 'task',
+            itemId: taskId.toString(),
+          }),
+        });
+      });
+      
+      await Promise.all(promises);
+      onClose(); // 追加後にパネルを閉じる
+    } catch (error) {
+      console.error('タスクの追加に失敗しました:', error);
+    }
+  };
 
   // メモ削除ハンドラー（メモエディターの削除確認後に呼ばれる）
   const handleMemoDelete = async () => {
@@ -243,6 +295,8 @@ export default function BoardRightPanel({
           onClose={onClose}
           rightPanelDisabled={true}
           hideHeaderButtons={true}
+          hideBulkActionButtons={true}
+          onAddToBoard={handleAddMemosToBoard}
           excludeItemIds={currentBoardMemoIds}
           excludeBoardIdFromFilter={boardId}
           initialSelectionMode="check"
@@ -262,6 +316,8 @@ export default function BoardRightPanel({
           onClose={onClose}
           rightPanelDisabled={true}
           hideHeaderButtons={true}
+          hideBulkActionButtons={true}
+          onAddToBoard={handleAddTasksToBoard}
           excludeItemIds={currentBoardTaskIds}
           excludeBoardIdFromFilter={boardId}
           initialSelectionMode="check"

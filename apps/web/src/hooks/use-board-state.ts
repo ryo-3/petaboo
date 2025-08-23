@@ -38,13 +38,6 @@ export function useBoardState() {
   // コンテンツフィルター状態
   const [showMemo, setShowMemo] = useState(true);
   const [showTask, setShowTask] = useState(true);
-  
-  // 右パネルアニメーション中の一時的な表示状態
-  const [tempShowMemo, setTempShowMemo] = useState<boolean | null>(null);
-  const [tempShowTask, setTempShowTask] = useState<boolean | null>(null);
-  
-  // 右パネル閉じる時の幅固定状態
-  const [isClosingPanel, setIsClosingPanel] = useState(false);
 
   // 最新値を保持するref
   const rightPanelModeRef = useRef(rightPanelMode);
@@ -189,10 +182,6 @@ export function useBoardState() {
     [] // 依存配列を空にして安定化
   );
 
-  // 実際の表示状態を計算（一時状態がある場合はそれを優先）
-  const effectiveShowMemo = tempShowMemo !== null ? tempShowMemo : showMemo;
-  const effectiveShowTask = tempShowTask !== null ? tempShowTask : showTask;
-
   return {
     // 状態
     activeTaskTab,
@@ -205,9 +194,8 @@ export function useBoardState() {
     showEditDate,
     boardLayout,
     isReversed,
-    showMemo: effectiveShowMemo,
-    showTask: effectiveShowTask,
-    isClosingPanel,
+    showMemo,
+    showTask,
 
     // セッター
     setActiveTaskTab,

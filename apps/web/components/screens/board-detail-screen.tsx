@@ -73,7 +73,6 @@ function BoardDetailScreen({
     isReversed,
     showMemo,
     showTask,
-    isClosingPanel,
     setRightPanelMode,
     setViewMode,
     setColumnCount,
@@ -336,12 +335,12 @@ function BoardDetailScreen({
       {/* 左側：メモ・タスク一覧 */}
       <div
         className={`${
-          selectedMemo || selectedTask || rightPanelMode || isClosingPanel
+          selectedMemo || selectedTask || rightPanelMode
             ? rightPanelMode
               ? "w-[44%] min-w-[600px] border-r border-gray-300" // リスト表示時
               : "w-[44%] min-w-[600px] border-r border-gray-300" // エディター表示時
             : "w-full"
-        } pt-3 pl-5 pr-4 ${selectedMemo || selectedTask || rightPanelMode || isClosingPanel ? "pr-2" : "pr-4"} flex flex-col ${!isClosingPanel ? "transition-all duration-300" : ""} relative`}
+        } pt-3 pl-5 pr-4 ${selectedMemo || selectedTask || rightPanelMode ? "pr-2" : "pr-4"} flex flex-col transition-all duration-300 relative`}
       >
         {/* DesktopUpper コントロール（BoardHeaderの代わり） */}
         <div>
@@ -355,7 +354,7 @@ function BoardDetailScreen({
             columnCount={columnCount}
             onColumnCountChange={setColumnCount}
             rightPanelMode={
-              selectedMemo || selectedTask || rightPanelMode || isClosingPanel ? "view" : "hidden"
+              selectedMemo || selectedTask || rightPanelMode ? "view" : "hidden"
             }
             customTitle={boardName || "ボード詳細"}
             boardDescription={boardDescription}

@@ -181,13 +181,15 @@ function BoardDetailScreen({
     }
   }, [selectedMemo, selectedTask, rightPanelMode, setShowTabText]);
 
-  // 計算されたカラム数（右パネル表示時は最大2列に制限）
+  // 計算されたカラム数（エディター表示時にメモ・タスク両方表示なら1列、その他は最大2列に制限）
   const effectiveColumnCount =
-    selectedMemo || selectedTask || rightPanelMode
-      ? columnCount <= 2
-        ? columnCount
-        : 2
-      : columnCount;
+    (selectedMemo || selectedTask) && showMemo && showTask
+      ? 1
+      : selectedMemo || selectedTask || rightPanelMode
+        ? columnCount <= 2
+          ? columnCount
+          : 2
+        : columnCount;
 
 
   // ボード操作フック

@@ -174,6 +174,7 @@ function DesktopUpper({
 }: DesktopUpperProps) {
   const { preferences } = useUserPreferences(1);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  
   const [shouldShowSettingsIcon, setShouldShowSettingsIcon] = useState(rightPanelMode === "hidden");
 
   // 右パネルの状態変化に応じて設定アイコンの表示を制御
@@ -309,7 +310,7 @@ function DesktopUpper({
             {currentMode === "board" ? (
               <div className="flex flex-col w-full">
                 <div className="flex items-end gap-3">
-                  <h1 className={`font-bold text-gray-800 text-[22px] ${rightPanelMode !== "hidden" ? "truncate min-w-0 max-w-[max(550px,38vw)]" : ""}`}>
+                  <h1 className="font-bold text-gray-800 text-[22px] whitespace-nowrap overflow-hidden truncate min-w-0 max-w-[max(550px,38vw)]">
                     {customTitle || "ボード一覧"}
                   </h1>
                   {/* 説明表示切り替えボタン */}

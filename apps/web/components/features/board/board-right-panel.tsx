@@ -121,8 +121,6 @@ export default function BoardRightPanel({
       // キャッシュを無効化してボード一覧を再取得
       queryClient.invalidateQueries({ queryKey: ["boards", boardId, "items"] });
       queryClient.invalidateQueries({ queryKey: ["boards", "all-items"] });
-      
-      onClose(); // 追加後にパネルを閉じる
     } catch (error) {
       console.error('メモの追加に失敗しました:', error);
     }
@@ -151,8 +149,6 @@ export default function BoardRightPanel({
       // キャッシュを無効化してボード一覧を再取得
       queryClient.invalidateQueries({ queryKey: ["boards", boardId, "items"] });
       queryClient.invalidateQueries({ queryKey: ["boards", "all-items"] });
-      
-      onClose(); // 追加後にパネルを閉じる
     } catch (error) {
       console.error('タスクの追加に失敗しました:', error);
     }

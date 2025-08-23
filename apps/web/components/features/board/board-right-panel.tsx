@@ -14,6 +14,7 @@ import { useState } from "react";
 import { useNavigation } from "@/contexts/navigation-context";
 import { useDeleteMemo } from "@/src/hooks/use-memos";
 import { useAuth } from "@clerk/nextjs";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface BoardRightPanelProps {
   isOpen: boolean;
@@ -68,6 +69,7 @@ export default function BoardRightPanel({
   const { handleMainSelectMemo, handleMainSelectTask } = useNavigation();
   const { data: tags } = useTags();
   const { getToken } = useAuth();
+  const queryClient = useQueryClient();
   
   // 現在のボードに既に追加されているアイテムIDのリストを作成
   const currentBoardMemoIds = allBoardItems?.filter(item => 
@@ -115,6 +117,11 @@ export default function BoardRightPanel({
       });
       
       await Promise.all(promises);
+      
+      // キャッシュを無効化してボード一覧を再取得
+      queryClient.invalidateQueries({ queryKey: ["boards", boardId, "items"] });
+      queryClient.invalidateQueries({ queryKey: ["boards", "all-items"] });
+      
       onClose(); // 追加後にパネルを閉じる
     } catch (error) {
       console.error('メモの追加に失敗しました:', error);
@@ -140,6 +147,11 @@ export default function BoardRightPanel({
       });
       
       await Promise.all(promises);
+      
+      // キャッシュを無効化してボード一覧を再取得
+      queryClient.invalidateQueries({ queryKey: ["boards", boardId, "items"] });
+      queryClient.invalidateQueries({ queryKey: ["boards", "all-items"] });
+      
       onClose(); // 追加後にパネルを閉じる
     } catch (error) {
       console.error('タスクの追加に失敗しました:', error);

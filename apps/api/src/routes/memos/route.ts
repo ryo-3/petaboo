@@ -603,7 +603,7 @@ app.openapi(
         // 通常メモテーブルに復元
         const result = tx.insert(memos).values({
           userId: auth.userId,
-          originalId: deletedNote.originalId, // originalIdをそのまま復元
+          originalId: deletedNote.originalId, // 一旦削除前のoriginalIdで復元
           uuid: deletedNote.uuid, // UUIDも復元
           title: deletedNote.title,
           content: deletedNote.content,
@@ -611,9 +611,18 @@ app.openapi(
           updatedAt: Math.floor(Date.now() / 1000), // 復元時刻を更新
         }).returning({ id: memos.id }).get();
 
-        // 関連するboard_itemsのdeletedAtをNULLに戻す
+        // 復元されたメモのoriginalIdを新しいIDに更新
+        tx.update(memos)
+          .set({ originalId: result.id.toString() })
+          .where(eq(memos.id, result.id))
+          .run();
+
+        // 関連するboard_itemsのdeletedAtをNULLに戻し、originalIdを新しいIDに更新
         tx.update(boardItems)
-          .set({ deletedAt: null })
+          .set({ 
+            deletedAt: null,
+            originalId: result.id.toString() // 新しいメモIDをoriginalIdに設定
+          })
           .where(and(
             eq(boardItems.itemType, 'memo'),
             eq(boardItems.originalId, deletedNote.originalId)

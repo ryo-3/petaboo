@@ -27,7 +27,7 @@ import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useBoards, useAddItemToBoard } from "@/src/hooks/use-boards";
 import { useTags } from "@/src/hooks/use-tags";
-import BoardSelectionModal from "@/components/ui/modals/board-selection-modal";
+import BoardAddModal from "@/components/ui/board-add/board-add-modal";
 import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import {
@@ -139,7 +139,7 @@ function MemoScreen({
 
   // ボード選択モーダルの状態
   const [isBoardSelectionModalOpen, setIsBoardSelectionModalOpen] = useState(false);
-  const [selectedBoardIdsForAdd, setSelectedBoardIdsForAdd] = useState<number[]>([]);
+  
 
   // データ取得
   const { data: memos, isLoading: memoLoading, error: memoError } = useMemos();
@@ -429,52 +429,6 @@ function MemoScreen({
     onClose: onClose,
   });
 
-  // ボードに追加処理
-  const handleAddToBoard = useCallback(async () => {
-    const selectedMemoIds = Array.from(checkedMemos);
-    if (selectedMemoIds.length === 0 || selectedBoardIdsForAdd.length === 0) return;
-
-    try {
-      // 各メモを各ボードに追加
-      const promises: Promise<unknown>[] = [];
-      
-      for (const boardId of selectedBoardIdsForAdd) {
-        for (const memoId of selectedMemoIds) {
-          const memo = memos?.find(m => m.id === memoId);
-          if (memo) {
-            promises.push(
-              addItemToBoard.mutateAsync({
-                boardId,
-                data: {
-                  itemType: 'memo',
-                  itemId: memo.originalId || memo.id.toString(),
-                },
-              })
-            );
-          }
-        }
-      }
-
-      await Promise.all(promises);
-      
-      // モーダルを閉じて選択をクリア
-      setIsBoardSelectionModalOpen(false);
-      setSelectedBoardIdsForAdd([]);
-      setCheckedMemos(new Set());
-      
-      // 成功通知（簡易版）
-      const boardNames = selectedBoardIdsForAdd
-        .map(id => boards?.find(b => b.id === id)?.name)
-        .filter(name => name)
-        .join('、');
-      
-      alert(`${selectedMemoIds.length}件のメモを${selectedBoardIdsForAdd.length}個のボード（${boardNames}）に追加しました`);
-      
-    } catch (error) {
-      console.error('ボードに追加中にエラーが発生しました:', error);
-      alert('ボードへの追加に失敗しました。しばらくしてから再度お試しください。');
-    }
-  }, [checkedMemos, selectedBoardIdsForAdd, memos, boards, addItemToBoard, setCheckedMemos]);
 
   // 除外アイテムIDでフィルタリングされたメモ
   const filteredMemos = memos?.filter(memo => !excludeItemIds.includes(memo.id)) || [];
@@ -664,45 +618,19 @@ function MemoScreen({
         onClose={() => setIsCsvImportModalOpen(false)}
       />
       
-      {/* ボード選択モーダル */}
-      <BoardSelectionModal
+      {/* ボード追加モーダル */}
+      <BoardAddModal
         isOpen={isBoardSelectionModalOpen}
-        onClose={() => {
-          setIsBoardSelectionModalOpen(false);
-          setSelectedBoardIdsForAdd([]);
-        }}
+        onClose={() => setIsBoardSelectionModalOpen(false)}
         boards={boards?.map(board => ({ id: board.id, name: board.name })) || []}
-        selectedBoardIds={selectedBoardIdsForAdd}
-        onSelectionChange={setSelectedBoardIdsForAdd}
-        title={`選択したメモ（${checkedMemos.size}件）をボードに追加`}
-        mode="selection"
-        multiple={true}
+        selectedItemCount={checkedMemos.size}
+        itemType="memo"
+        selectedItems={Array.from(checkedMemos).map(id => id.toString())}
+        allItems={memos || []}
+        onSuccess={() => {
+          setCheckedMemos(new Set());
+        }}
       />
-      
-      {/* ボード追加確認とボタン */}
-      {isBoardSelectionModalOpen && selectedBoardIdsForAdd.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[60]">
-          <button
-            onClick={handleAddToBoard}
-            disabled={addItemToBoard.isPending}
-            className="bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 transition-colors"
-          >
-            {addItemToBoard.isPending ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                追加中...
-              </>
-            ) : (
-              <>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                {selectedBoardIdsForAdd.length}個のボードに追加
-              </>
-            )}
-          </button>
-        </div>
-      )}
 
       {/* 一括タグ付けモーダル */}
       {isBulkTaggingModalOpen && (

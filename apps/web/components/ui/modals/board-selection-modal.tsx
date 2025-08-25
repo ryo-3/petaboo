@@ -21,6 +21,8 @@ interface BoardSelectionModalProps {
   // フィルターモード関連（filter時のみ使用）
   filterMode?: 'include' | 'exclude';
   onFilterModeChange?: (mode: 'include' | 'exclude') => void;
+  // カスタムフッター
+  footer?: React.ReactNode;
 }
 
 export default function BoardSelectionModal({
@@ -33,7 +35,8 @@ export default function BoardSelectionModal({
   multiple = true,
   title,
   filterMode = 'include',
-  onFilterModeChange
+  onFilterModeChange,
+  footer
 }: BoardSelectionModalProps) {
   const modalTitle = title || (mode === 'filter' ? 'ボード絞り込み' : 'ボード選択');
   const [searchQuery, setSearchQuery] = useState("");
@@ -256,6 +259,13 @@ export default function BoardSelectionModal({
             </div>
           )}
         </div>
+        
+        {/* カスタムフッター */}
+        {footer && (
+          <div className="pt-4">
+            {footer}
+          </div>
+        )}
         </div>
     </Modal>
   );

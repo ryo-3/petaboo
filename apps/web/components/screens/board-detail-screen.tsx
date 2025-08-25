@@ -5,11 +5,12 @@ import DesktopUpper from "@/components/layout/desktop-upper";
 import { useBoardState } from "@/src/hooks/use-board-state";
 import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
 import { useTags } from "@/src/hooks/use-tags";
-import { useBoards } from "@/src/hooks/use-boards";
+import { useBoards, useAddItemToBoard } from "@/src/hooks/use-boards";
 import { Memo, DeletedMemo } from "@/src/types/memo";
 import { Task, DeletedTask } from "@/src/types/task";
 import type { Tagging } from "@/src/types/tag";
-import { memo, useEffect, useState, useRef } from "react";
+import { memo, useEffect, useState, useRef, useCallback } from "react";
+import BoardAddModal from "@/components/ui/board-add/board-add-modal";
 import BoardHeader from "@/components/features/board/board-header";
 import { BulkDeleteConfirmation } from "@/components/ui/modals";
 import { useBoardSelectAll } from "@/src/hooks/use-board-select-all";
@@ -55,6 +56,14 @@ function BoardDetailScreen({
 }: BoardDetailProps) {
   // CSVインポートモーダル状態
   const [isCSVImportModalOpen, setIsCSVImportModalOpen] = useState(false);
+  
+  // ボード選択モーダル状態
+  const [isBoardSelectionModalOpen, setIsBoardSelectionModalOpen] = useState(false);
+  const [selectionMenuType, setSelectionMenuType] = useState<'memo' | 'task'>('memo');
+  
+  
+  // ボードに追加のAPI
+  const addItemToBoard = useAddItemToBoard();
   
   // 削除ボタンのref
   const deleteButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -295,6 +304,18 @@ function BoardDetailScreen({
     getItemId: (item) => item.itemId,
   });
 
+  // 選択メニュー関連のハンドラー
+  const handleBoardLinkMemo = useCallback(() => {
+    setSelectionMenuType('memo');
+    setIsBoardSelectionModalOpen(true);
+  }, []);
+
+  const handleBoardLinkTask = useCallback(() => {
+    setSelectionMenuType('task');
+    setIsBoardSelectionModalOpen(true);
+  }, []);
+
+
   // 拡張されたタブ変更ハンドラー（削除済タブでキャッシュ更新）
   const handleMemoTabChangeWithRefresh = async (tab: "normal" | "deleted") => {
     if (tab === "deleted") {
@@ -437,6 +458,7 @@ function BoardDetailScreen({
             currentDisplayCount={currentMemoDisplayCount}
             deleteButtonRef={deleteButtonRef}
             onCheckedMemosChange={(memos) => setCheckedMemos(activeMemoTab, memos)}
+            onBoardLink={handleBoardLinkMemo}
           />
 
           {/* タスク列 */}
@@ -478,6 +500,7 @@ function BoardDetailScreen({
             currentDisplayCount={currentTaskDisplayCount}
             deleteButtonRef={deleteButtonRef}
             onCheckedTasksChange={(tasks) => setCheckedTasks(activeTaskTab, tasks)}
+            onBoardLink={handleBoardLinkTask}
           />
         </div>
 
@@ -550,6 +573,27 @@ function BoardDetailScreen({
         isOpen={isCSVImportModalOpen}
         onClose={() => setIsCSVImportModalOpen(false)}
         boardId={boardId}
+      />
+      
+      {/* ボード追加モーダル */}
+      <BoardAddModal
+        isOpen={isBoardSelectionModalOpen}
+        onClose={() => setIsBoardSelectionModalOpen(false)}
+        boards={safeAllBoards.map(board => ({ id: board.id, name: board.name }))}
+        selectedItemCount={selectionMenuType === 'memo' ? checkedMemos.size : checkedTasks.size}
+        itemType={selectionMenuType}
+        selectedItems={selectionMenuType === 'memo' 
+          ? Array.from(checkedMemos).map(id => id.toString())
+          : Array.from(checkedTasks).map(id => id.toString())
+        }
+        allItems={selectionMenuType === 'memo' ? allMemoItems : allTaskItems}
+        onSuccess={() => {
+          if (selectionMenuType === 'memo') {
+            setCheckedMemos(activeMemoTab, new Set());
+          } else {
+            setCheckedTasks(activeTaskTab, new Set());
+          }
+        }}
       />
     </div>
   );

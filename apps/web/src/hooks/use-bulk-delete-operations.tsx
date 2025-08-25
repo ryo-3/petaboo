@@ -212,33 +212,58 @@ export function useBulkDeleteOperations({
     );
   }, [checkedMemos, checkedTasks, bulkDelete, executeDeleteWithAnimation, createMemoDeleteMessage, createTaskDeleteMessage]);
 
-  // ボードから削除の処理
+  // ボードから削除の処理（アニメーション付き）
   const handleRemoveFromBoard = useCallback(async () => {
     const targetIds = deletingItemType === 'memo' ? Array.from(checkedMemos) : Array.from(checkedTasks);
+    const ids = targetIds.map(id => Number(id)).filter(id => !isNaN(id));
     
-    try {
-      for (const id of targetIds) {
-        await removeItemFromBoard.mutateAsync({
-          boardId,
-          itemId: id.toString(),
-          itemType: deletingItemType!,
-        });
-      }
-      
-      // 選択をクリア
-      if (deletingItemType === 'memo') {
-        setCheckedMemos(new Set());
-      } else {
-        setCheckedTasks(new Set());
-      }
-      
+    if (ids.length === 0) {
       bulkDelete.handleCancel();
-    } catch {
-      // エラーは上位でハンドリング
-    } finally {
       setDeletingItemType(null);
+      return;
     }
-  }, [deletingItemType, checkedMemos, checkedTasks, boardId, bulkDelete, setCheckedMemos, setCheckedTasks, removeItemFromBoard]);
+
+    const onStateUpdate = () => {
+      // ボード詳細では特別な状態更新は不要
+    };
+
+    const onCheckStateUpdate = (processedIds: number[]) => {
+      if (deletingItemType === 'memo') {
+        const newCheckedMemos = new Set(checkedMemos);
+        processedIds.forEach((id) => newCheckedMemos.delete(id));
+        setCheckedMemos(newCheckedMemos);
+      } else {
+        const newCheckedTasks = new Set(checkedTasks);
+        processedIds.forEach((id) => newCheckedTasks.delete(id));
+        setCheckedTasks(newCheckedTasks);
+      }
+    };
+
+    const onApiCall = async (id: number) => {
+      await removeItemFromBoard.mutateAsync({
+        boardId,
+        itemId: id.toString(),
+        itemType: deletingItemType!,
+      });
+    };
+
+    await executeWithAnimation({
+      ids,
+      isPartial: false,
+      buttonRef: deleteButtonRef,
+      dataAttribute: deletingItemType === 'memo' ? 'data-memo-id' : 'data-task-id',
+      onStateUpdate,
+      onCheckStateUpdate,
+      onApiCall,
+      initializeAnimation: bulkAnimation.initializeAnimation,
+      startCountdown: bulkAnimation.startCountdown,
+      finalizeAnimation: bulkAnimation.finalizeAnimation,
+    });
+
+    // アニメーション完了後にモーダルを閉じる
+    bulkDelete.handleCancel();
+    setDeletingItemType(null);
+  }, [deletingItemType, checkedMemos, checkedTasks, boardId, bulkDelete, setCheckedMemos, setCheckedTasks, removeItemFromBoard, deleteButtonRef, setIsMemoDeleting, setIsMemoLidOpen, setIsTaskDeleting, setIsTaskLidOpen, bulkAnimation]);
   
   // ディスプレイカウントの計算（メモ一覧と同じロジック）
   const currentMemoDisplayCount = bulkAnimation.isCountingActive

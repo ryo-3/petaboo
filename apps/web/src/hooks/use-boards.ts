@@ -475,10 +475,15 @@ export function useRemoveItemFromBoard() {
 
   return useMutation<void, Error, { boardId: number; itemId: string; itemType: 'memo' | 'task' }>({
     mutationFn: async ({ boardId, itemId, itemType }) => {
+      console.log('🔍 ボードからアイテム削除開始:', { boardId, itemId, itemType });
+      
       // 最大2回リトライ
       for (let attempt = 0; attempt < 2; attempt++) {
         const token = await getCachedToken(getToken);
-        const response = await fetch(`${API_BASE_URL}/boards/${boardId}/items/${itemId}?itemType=${itemType}`, {
+        const url = `${API_BASE_URL}/boards/${boardId}/items/${itemId}?itemType=${itemType}`;
+        console.log('🔍 削除API呼び出し:', { url, attempt });
+        
+        const response = await fetch(url, {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
@@ -486,18 +491,35 @@ export function useRemoveItemFromBoard() {
           },
         });
 
+        console.log('🔍 削除APIレスポンス:', { 
+          status: response.status, 
+          statusText: response.statusText,
+          ok: response.ok 
+        });
+
         // 401エラーの場合はキャッシュをクリアしてリトライ
         if (response.status === 401 && attempt === 0) {
           cachedToken = null;
           tokenExpiry = 0;
+          console.log('🔍 401エラー、リトライします');
           continue;
         }
 
         if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error || "Failed to remove item from board");
+          let errorText;
+          try {
+            const errorJson = await response.json();
+            errorText = JSON.stringify(errorJson);
+            console.log('🔍 削除APIエラーレスポンス:', errorJson);
+            throw new Error(errorJson.error || `Failed to remove item from board: ${response.status} ${response.statusText}`);
+          } catch (parseError) {
+            const rawText = await response.text();
+            console.log('🔍 削除APIエラー(JSON解析失敗):', { rawText, parseError });
+            throw new Error(`Failed to remove item from board: ${response.status} ${response.statusText} - ${rawText}`);
+          }
         }
 
+        console.log('🔍 ボードからアイテム削除成功');
         return;
       }
       
@@ -513,8 +535,12 @@ export function useRemoveItemFromBoard() {
       // 全ボードアイテム情報も無効化（全データ事前取得で使用）
       queryClient.invalidateQueries({ queryKey: ["boards", "all-items"] });
     },
-    onError: (error) => {
-      console.error("ボードからアイテムの削除に失敗しました:", error);
+    onError: (error, variables) => {
+      console.error("ボードからアイテムの削除に失敗しました:", {
+        error: error.message,
+        variables,
+        errorObject: error
+      });
       showToast("ボードからアイテムの削除に失敗しました", "error");
     },
   });

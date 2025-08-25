@@ -7,6 +7,7 @@ import SearchIcon from "@/components/icons/search-icon";
 interface BoardOption {
   id: number;
   name: string;
+  isCurrentBoard?: boolean; // 現在のボード（グレーアウト用）
 }
 
 interface BoardSelectionModalProps {
@@ -55,6 +56,12 @@ export default function BoardSelectionModal({
   const displayBoards = filteredBoards;
 
   const handleBoardToggle = (boardId: number) => {
+    // 現在のボード（グレーアウト）は選択不可
+    const board = boards.find(b => b.id === boardId);
+    if (board?.isCurrentBoard) {
+      return;
+    }
+
     if (selectedBoardIds.includes(boardId)) {
       onSelectionChange(selectedBoardIds.filter(id => id !== boardId));
     } else {
@@ -230,32 +237,49 @@ export default function BoardSelectionModal({
             </p>
           ) : (
             <div className="p-2 space-y-1">
-              {displayBoards.map((board) => (
+              {displayBoards.map((board) => {
+                const isSelected = selectedBoardIds.includes(board.id);
+                const isDisabled = board.isCurrentBoard;
+                
+                return (
                   <div key={board.id}>
                     <label
-                      className="flex items-center gap-3 py-1 px-2 hover:bg-gray-50 rounded cursor-pointer"
+                      className={`flex items-center gap-3 py-1 px-2 rounded ${
+                        isDisabled 
+                          ? 'cursor-not-allowed opacity-70' 
+                          : 'cursor-pointer hover:bg-gray-50'
+                      }`}
                     >
-                  <input
-                    type="checkbox"
-                    checked={selectedBoardIds.includes(board.id)}
-                    onChange={() => handleBoardToggle(board.id)}
-                    className="sr-only"
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => handleBoardToggle(board.id)}
+                        disabled={isDisabled}
+                        className="sr-only"
                   />
                   <div className={`w-4 h-4 border rounded flex items-center justify-center flex-shrink-0 ${
-                    selectedBoardIds.includes(board.id)
+                    isSelected
                       ? 'bg-light-Blue border-light-Blue'
                       : 'border-gray-300 bg-white'
                   }`}>
-                    {selectedBoardIds.includes(board.id) && (
+                    {isSelected && (
                       <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                       </svg>
                     )}
                   </div>
-                      <span className="text-sm text-gray-700 flex-1 break-words">{board.name}</span>
+                      <span className={`text-sm flex-1 break-words ${
+                        isDisabled ? 'text-gray-400' : 'text-gray-700'
+                      }`}>
+                        {board.name}
+                        {isDisabled && (
+                          <span className="ml-2 text-xs text-gray-400">(現在のボード)</span>
+                        )}
+                      </span>
                     </label>
                   </div>
-                ))}
+                );
+              })}
             </div>
           )}
         </div>

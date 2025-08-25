@@ -587,6 +587,7 @@ function BoardDetailScreen({
           : Array.from(checkedTasks).map(id => id.toString())
         }
         allItems={selectionMenuType === 'memo' ? allMemoItems : allTaskItems}
+        excludeBoardId={boardId}
         onSuccess={() => {
           if (selectionMenuType === 'memo') {
             setCheckedMemos(activeMemoTab, new Set());

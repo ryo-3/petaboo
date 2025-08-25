@@ -16,6 +16,7 @@ interface BoardAddModalProps {
   selectedItems: string[];
   allItems: any[]; // メモまたはタスクの配列
   onSuccess: () => void; // 選択をクリアするコールバック
+  excludeBoardId?: number; // 除外するボードID（通常は現在のボード）
 }
 
 export default function BoardAddModal({
@@ -26,12 +27,24 @@ export default function BoardAddModal({
   itemType,
   selectedItems,
   allItems,
-  onSuccess
+  onSuccess,
+  excludeBoardId
 }: BoardAddModalProps) {
   const [selectedBoardIdsForAdd, setSelectedBoardIdsForAdd] = useState<number[]>([]);
   const [isAddingToBoard, setIsAddingToBoard] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const addItemToBoard = useAddItemToBoard();
+
+  // 現在のボードを一番上に移動し、グレーアウト表示用のフラグを追加
+  const processedBoards = excludeBoardId 
+    ? (() => {
+        const currentBoard = boards.find(board => board.id === excludeBoardId);
+        const otherBoards = boards.filter(board => board.id !== excludeBoardId);
+        return currentBoard 
+          ? [{ ...currentBoard, isCurrentBoard: true }, ...otherBoards.map(board => ({ ...board, isCurrentBoard: false }))]
+          : boards.map(board => ({ ...board, isCurrentBoard: false }));
+      })()
+    : boards.map(board => ({ ...board, isCurrentBoard: false }));
 
   const handleAddToBoard = useCallback(async () => {
     if (selectedItems.length === 0 || selectedBoardIdsForAdd.length === 0) return;
@@ -53,6 +66,19 @@ export default function BoardAddModal({
                   itemType,
                   itemId: item.originalId || item.id.toString(),
                 },
+              }).catch((error) => {
+                // エラーメッセージから重複エラーかどうかを判定
+                const errorMessage = error?.message || error?.toString() || '';
+                if (errorMessage.includes('already exists') || 
+                    errorMessage.includes('duplicate') || 
+                    errorMessage.includes('重複') ||
+                    errorMessage.includes('既に存在')) {
+                  // 既に追加済みの場合はスルー（成功扱い）
+                  return Promise.resolve();
+                } else {
+                  // その他のエラーは再スロー
+                  throw error;
+                }
               })
             );
           }
@@ -96,7 +122,7 @@ export default function BoardAddModal({
     <BoardSelectionModal
       isOpen={isOpen}
       onClose={handleClose}
-      boards={boards}
+      boards={processedBoards}
       selectedBoardIds={selectedBoardIdsForAdd}
       onSelectionChange={setSelectedBoardIdsForAdd}
       title="ボードに追加"

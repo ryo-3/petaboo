@@ -21,15 +21,16 @@ import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
 import { useTabChange } from "@/src/hooks/use-tab-change";
 import { useDeletedTasks, useTasks } from "@/src/hooks/use-tasks";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
-import { useBoards } from "@/src/hooks/use-boards";
+import { useBoards, useAddItemToBoard } from "@/src/hooks/use-boards";
 import { useTags } from "@/src/hooks/use-tags";
+import BoardSelectionModal from "@/components/ui/modals/board-selection-modal";
 import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
 import type { DeletedTask, Task } from "@/src/types/task";
 import {
   getTaskDisplayOrder,
 } from "@/src/utils/domUtils";
 import { createToggleHandlerWithTabClear } from "@/src/utils/toggleUtils";
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 type TaskScreenMode = "list" | "view" | "create" | "edit";
 
@@ -87,6 +88,8 @@ function TaskScreen({
   const { data: allTaggings } = useAllTaggings();
   const { data: allBoardItems } = useAllBoardItems();
 
+  // ボードに追加のAPI
+  const addItemToBoard = useAddItemToBoard();
 
   // 選択モード管理
   const [selectionMode, setSelectionMode] = useState<"select" | "check">(
@@ -114,6 +117,10 @@ function TaskScreen({
   const [boardFilterMode, setBoardFilterMode] = useState<'include' | 'exclude'>(
     excludeBoardId ? 'exclude' : 'include'
   );
+
+  // ボード選択モーダルの状態
+  const [isBoardSelectionModalOpen, setIsBoardSelectionModalOpen] = useState(false);
+  const [selectedBoardIdsForAdd, setSelectedBoardIdsForAdd] = useState<number[]>([]);
   
   // タグフィルター管理
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
@@ -165,6 +172,53 @@ function TaskScreen({
     selectedDeletedTask,
     preferences || undefined
   );
+
+  // ボードに追加処理
+  const handleAddToBoard = useCallback(async () => {
+    const selectedTaskIds = Array.from(checkedTasks);
+    if (selectedTaskIds.length === 0 || selectedBoardIdsForAdd.length === 0) return;
+
+    try {
+      // 各タスクを各ボードに追加
+      const promises: Promise<unknown>[] = [];
+      
+      for (const boardId of selectedBoardIdsForAdd) {
+        for (const taskId of selectedTaskIds) {
+          const task = tasks?.find(t => t.id === taskId);
+          if (task) {
+            promises.push(
+              addItemToBoard.mutateAsync({
+                boardId,
+                data: {
+                  itemType: 'task',
+                  itemId: task.originalId || task.id.toString(),
+                },
+              })
+            );
+          }
+        }
+      }
+
+      await Promise.all(promises);
+      
+      // モーダルを閉じて選択をクリア
+      setIsBoardSelectionModalOpen(false);
+      setSelectedBoardIdsForAdd([]);
+      setCheckedTasks(new Set());
+      
+      // 成功通知（簡易版）
+      const boardNames = selectedBoardIdsForAdd
+        .map(id => boards?.find(b => b.id === id)?.name)
+        .filter(name => name)
+        .join('、');
+      
+      alert(`${selectedTaskIds.length}件のタスクを${selectedBoardIdsForAdd.length}個のボード（${boardNames}）に追加しました`);
+      
+    } catch (error) {
+      console.error('ボードに追加中にエラーが発生しました:', error);
+      alert('ボードへの追加に失敗しました。しばらくしてから再度お試しください。');
+    }
+  }, [checkedTasks, selectedBoardIdsForAdd, tasks, boards, addItemToBoard, setCheckedTasks]);
 
   // 一括削除ボタンの表示制御
   const { showDeleteButton } = useBulkDeleteButton({
@@ -498,7 +552,7 @@ function TaskScreen({
         <SelectionMenuButton
           count={checkedTasks.size}
           onBoardLink={() => {
-            // TODO: ボードに追加処理
+            setIsBoardSelectionModalOpen(true);
           }}
           onExport={() => {
             // TODO: エクスポート処理
@@ -620,6 +674,46 @@ function TaskScreen({
         isOpen={isCsvImportModalOpen}
         onClose={() => setIsCsvImportModalOpen(false)}
       />
+      
+      {/* ボード選択モーダル */}
+      <BoardSelectionModal
+        isOpen={isBoardSelectionModalOpen}
+        onClose={() => {
+          setIsBoardSelectionModalOpen(false);
+          setSelectedBoardIdsForAdd([]);
+        }}
+        boards={boards?.map(board => ({ id: board.id, name: board.name })) || []}
+        selectedBoardIds={selectedBoardIdsForAdd}
+        onSelectionChange={setSelectedBoardIdsForAdd}
+        title={`選択したタスク（${checkedTasks.size}件）をボードに追加`}
+        mode="selection"
+        multiple={true}
+      />
+      
+      {/* ボード追加確認とボタン */}
+      {isBoardSelectionModalOpen && selectedBoardIdsForAdd.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[60]">
+          <button
+            onClick={handleAddToBoard}
+            disabled={addItemToBoard.isPending}
+            className="bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 transition-colors"
+          >
+            {addItemToBoard.isPending ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                追加中...
+              </>
+            ) : (
+              <>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                {selectedBoardIdsForAdd.length}個のボードに追加
+              </>
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

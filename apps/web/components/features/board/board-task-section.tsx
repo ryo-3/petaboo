@@ -8,6 +8,7 @@ import CheckSquareIcon from "@/components/icons/check-square-icon";
 import SquareIcon from "@/components/icons/square-icon";
 import Tooltip from "@/components/ui/base/tooltip";
 import AddItemButton from "@/components/ui/buttons/add-item-button";
+import SelectionMenuButton from "@/components/ui/buttons/selection-menu-button";
 import SortToggle from "@/components/ui/buttons/sort-toggle";
 import { BoardItemWithContent } from "@/src/types/board";
 import { Task } from "@/src/types/task";
@@ -51,6 +52,13 @@ interface BoardTaskSectionProps {
   deleteButtonRef?: React.RefObject<HTMLButtonElement | null>;
   // 復元関連
   onCheckedTasksChange?: (tasks: Set<string | number>) => void;
+  
+  // 選択メニュー関連
+  onBoardLink?: () => void;
+  onExport?: () => void;
+  onPin?: () => void;
+  onTagging?: () => void;
+  onTabMove?: () => void;
   
   // 全データ事前取得（ちらつき解消）
   allTags?: Tag[];
@@ -107,6 +115,11 @@ export default function BoardTaskSection({
   currentDisplayCount,
   deleteButtonRef: propDeleteButtonRef,
   onCheckedTasksChange,
+  onBoardLink,
+  onExport,
+  onPin,
+  onTagging,
+  onTabMove,
   allTags = [],
   allBoards = [],
   allTaggings = [],
@@ -436,6 +449,21 @@ export default function BoardTaskSection({
         
         {/* 復元モーダル */}
         <RestoreModal />
+        
+        {/* 選択メニューボタン（通常タブでアイテム選択時） */}
+        <SelectionMenuButton
+          count={checkedTasks.size}
+          onBoardLink={onBoardLink}
+          onExport={onExport}
+          onPin={onPin}
+          onTagging={onTagging}
+          onTabMove={onTabMove}
+          isVisible={
+            activeTaskTab !== "deleted" &&
+            checkedTasks.size > 0 &&
+            !isDeleting
+          }
+        />
     </div>
   );
 }

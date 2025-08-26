@@ -643,7 +643,7 @@ function TaskScreen({
         selectedItems={Array.from(checkedTasks).map(id => id.toString())}
         allItems={tasks || []}
         onSuccess={() => {
-          setCheckedTasks(new Set());
+          // 選択状態は保持する（複数のボードに続けて追加できるように）
         }}
       />
       

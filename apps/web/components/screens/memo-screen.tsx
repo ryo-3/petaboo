@@ -629,7 +629,7 @@ function MemoScreen({
         selectedItems={Array.from(checkedMemos).map(id => id.toString())}
         allItems={memos || []}
         onSuccess={() => {
-          setCheckedMemos(new Set());
+          // 選択状態は保持する（複数のボードに続けて追加できるように）
         }}
       />
 

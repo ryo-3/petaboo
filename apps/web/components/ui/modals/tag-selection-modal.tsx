@@ -28,6 +28,8 @@ interface TagSelectionModalProps {
   // フィルターモード関連（filter時のみ使用）
   filterMode?: "include" | "exclude";
   onFilterModeChange?: (mode: "include" | "exclude") => void;
+  // カスタムフッター
+  footer?: React.ReactNode;
 }
 
 export default function TagSelectionModal({
@@ -41,6 +43,7 @@ export default function TagSelectionModal({
   title,
   filterMode = "include",
   onFilterModeChange,
+  footer,
 }: TagSelectionModalProps) {
   const modalTitle = title || (mode === "filter" ? "タグ絞り込み" : "タグ選択");
   const [searchQuery, setSearchQuery] = useState("");
@@ -538,6 +541,13 @@ export default function TagSelectionModal({
               </div>
             )}
           </div>
+          
+          {/* カスタムフッター */}
+          {footer && (
+            <div className="pt-4">
+              {footer}
+            </div>
+          )}
         </div>
       </Modal>
 

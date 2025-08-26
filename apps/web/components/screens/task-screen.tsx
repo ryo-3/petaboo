@@ -24,6 +24,7 @@ import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useBoards, useAddItemToBoard } from "@/src/hooks/use-boards";
 import { useTags } from "@/src/hooks/use-tags";
 import BoardAddModal from "@/components/ui/board-add/board-add-modal";
+import TagAddModal from "@/components/ui/tag-add/tag-add-modal";
 import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
 import type { DeletedTask, Task } from "@/src/types/task";
 import {
@@ -120,6 +121,9 @@ function TaskScreen({
 
   // ボード選択モーダルの状態
   const [isBoardSelectionModalOpen, setIsBoardSelectionModalOpen] = useState(false);
+  
+  // タグ追加モーダルの状態
+  const [isTagAddModalOpen, setIsTagAddModalOpen] = useState(false);
   
   
   // タグフィルター管理
@@ -515,7 +519,7 @@ function TaskScreen({
             // TODO: ピン止め処理
           }}
           onTagging={() => {
-            // TODO: タグ付け処理
+            setIsTagAddModalOpen(true);
           }}
           onTabMove={() => {
             // TODO: タブ移動処理
@@ -634,6 +638,20 @@ function TaskScreen({
         isOpen={isBoardSelectionModalOpen}
         onClose={() => setIsBoardSelectionModalOpen(false)}
         boards={boards?.map(board => ({ id: board.id, name: board.name })) || []}
+        selectedItemCount={checkedTasks.size}
+        itemType="task"
+        selectedItems={Array.from(checkedTasks).map(id => id.toString())}
+        allItems={tasks || []}
+        onSuccess={() => {
+          setCheckedTasks(new Set());
+        }}
+      />
+      
+      {/* タグ追加モーダル */}
+      <TagAddModal
+        isOpen={isTagAddModalOpen}
+        onClose={() => setIsTagAddModalOpen(false)}
+        tags={tags?.map(tag => ({ id: tag.id, name: tag.name, color: tag.color })) || []}
         selectedItemCount={checkedTasks.size}
         itemType="task"
         selectedItems={Array.from(checkedTasks).map(id => id.toString())}

@@ -11,6 +11,7 @@ import { Task, DeletedTask } from "@/src/types/task";
 import type { Tagging } from "@/src/types/tag";
 import { memo, useEffect, useState, useRef, useCallback } from "react";
 import BoardAddModal from "@/components/ui/board-add/board-add-modal";
+import TagAddModal from "@/components/ui/tag-add/tag-add-modal";
 import BoardHeader from "@/components/features/board/board-header";
 import { BulkDeleteConfirmation } from "@/components/ui/modals";
 import { useBoardSelectAll } from "@/src/hooks/use-board-select-all";
@@ -60,6 +61,10 @@ function BoardDetailScreen({
   // ボード選択モーダル状態
   const [isBoardSelectionModalOpen, setIsBoardSelectionModalOpen] = useState(false);
   const [selectionMenuType, setSelectionMenuType] = useState<'memo' | 'task'>('memo');
+  
+  // タグ追加モーダル状態
+  const [isTagAddModalOpen, setIsTagAddModalOpen] = useState(false);
+  const [tagSelectionMenuType, setTagSelectionMenuType] = useState<'memo' | 'task'>('memo');
   
   
   // ボードに追加のAPI
@@ -315,6 +320,17 @@ function BoardDetailScreen({
     setIsBoardSelectionModalOpen(true);
   }, []);
 
+  // タグ追加関連のハンドラー
+  const handleTaggingMemo = useCallback(() => {
+    setTagSelectionMenuType('memo');
+    setIsTagAddModalOpen(true);
+  }, []);
+
+  const handleTaggingTask = useCallback(() => {
+    setTagSelectionMenuType('task');
+    setIsTagAddModalOpen(true);
+  }, []);
+
 
   // 拡張されたタブ変更ハンドラー（削除済タブでキャッシュ更新）
   const handleMemoTabChangeWithRefresh = async (tab: "normal" | "deleted") => {
@@ -459,6 +475,7 @@ function BoardDetailScreen({
             deleteButtonRef={deleteButtonRef}
             onCheckedMemosChange={(memos) => setCheckedMemos(activeMemoTab, memos)}
             onBoardLink={handleBoardLinkMemo}
+            onTagging={handleTaggingMemo}
           />
 
           {/* タスク列 */}
@@ -501,6 +518,7 @@ function BoardDetailScreen({
             deleteButtonRef={deleteButtonRef}
             onCheckedTasksChange={(tasks) => setCheckedTasks(activeTaskTab, tasks)}
             onBoardLink={handleBoardLinkTask}
+            onTagging={handleTaggingTask}
           />
         </div>
 
@@ -590,6 +608,27 @@ function BoardDetailScreen({
         excludeBoardId={boardId}
         onSuccess={() => {
           if (selectionMenuType === 'memo') {
+            setCheckedMemos(activeMemoTab, new Set());
+          } else {
+            setCheckedTasks(activeTaskTab, new Set());
+          }
+        }}
+      />
+      
+      {/* タグ追加モーダル */}
+      <TagAddModal
+        isOpen={isTagAddModalOpen}
+        onClose={() => setIsTagAddModalOpen(false)}
+        tags={safeAllTags.map(tag => ({ id: tag.id, name: tag.name, color: tag.color }))}
+        selectedItemCount={tagSelectionMenuType === 'memo' ? checkedMemos.size : checkedTasks.size}
+        itemType={tagSelectionMenuType}
+        selectedItems={tagSelectionMenuType === 'memo' 
+          ? Array.from(checkedMemos).map(id => id.toString())
+          : Array.from(checkedTasks).map(id => id.toString())
+        }
+        allItems={tagSelectionMenuType === 'memo' ? allMemoItems : allTaskItems}
+        onSuccess={() => {
+          if (tagSelectionMenuType === 'memo') {
             setCheckedMemos(activeMemoTab, new Set());
           } else {
             setCheckedTasks(activeTaskTab, new Set());

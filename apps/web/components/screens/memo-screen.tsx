@@ -28,6 +28,7 @@ import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useBoards, useAddItemToBoard } from "@/src/hooks/use-boards";
 import { useTags } from "@/src/hooks/use-tags";
 import BoardAddModal from "@/components/ui/board-add/board-add-modal";
+import TagAddModal from "@/components/ui/tag-add/tag-add-modal";
 import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import {
@@ -131,8 +132,8 @@ function MemoScreen({
   // CSVインポートモーダルの状態
   const [isCsvImportModalOpen, setIsCsvImportModalOpen] = useState(false);
 
-  // 一括タグ付けモーダルの状態
-  const [isBulkTaggingModalOpen, setIsBulkTaggingModalOpen] = useState(false);
+  // タグ追加モーダルの状態
+  const [isTagAddModalOpen, setIsTagAddModalOpen] = useState(false);
 
   // タグ表示・編集モーダルの状態
   const [selectedMemoForTag, setSelectedMemoForTag] = useState<Memo | null>(null);
@@ -571,7 +572,7 @@ function MemoScreen({
             // TODO: ピン止め処理
           }}
           onTagging={() => {
-            setIsBulkTaggingModalOpen(true);
+            setIsTagAddModalOpen(true);
           }}
           onTabMove={() => {
             // TODO: タブ移動処理
@@ -632,52 +633,19 @@ function MemoScreen({
         }}
       />
 
-      {/* 一括タグ付けモーダル */}
-      {isBulkTaggingModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96 max-w-[90vw] max-h-[80vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium">一括タグ付け</h3>
-              <button
-                onClick={() => setIsBulkTaggingModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <span className="sr-only">閉じる</span>
-                ×
-              </button>
-            </div>
-            
-            <div className="mb-4 text-sm text-gray-600">
-              {checkedMemos.size}件のメモにタグを付けます
-            </div>
-            
-            {/* 選択されたメモごとにTagSelectorを表示 */}
-            <div className="space-y-4 max-h-64 overflow-y-auto">
-              {Array.from(checkedMemos)
-                .map(memoId => memos?.find(m => m.id === memoId))
-                .filter((memo): memo is NonNullable<typeof memo> => memo !== undefined)
-                .map(memo => (
-                  <div key={memo.id} className="border rounded-lg p-3">
-                    <div className="text-sm font-medium mb-2 truncate">
-                      {memo.title || 'タイトルなし'}
-                    </div>
-                    {/* TODO: 一括タグ付け機能の実装 */}
-                    <div className="text-sm text-gray-500">タグ選択機能（実装予定）</div>
-                  </div>
-                ))}
-            </div>
-            
-            <div className="flex justify-end mt-4 gap-2">
-              <button
-                onClick={() => setIsBulkTaggingModalOpen(false)}
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-              >
-                閉じる
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* タグ追加モーダル */}
+      <TagAddModal
+        isOpen={isTagAddModalOpen}
+        onClose={() => setIsTagAddModalOpen(false)}
+        tags={tags?.map(tag => ({ id: tag.id, name: tag.name, color: tag.color })) || []}
+        selectedItemCount={checkedMemos.size}
+        itemType="memo"
+        selectedItems={Array.from(checkedMemos).map(id => id.toString())}
+        allItems={memos || []}
+        onSuccess={() => {
+          setCheckedMemos(new Set());
+        }}
+      />
 
       {/* 個別タグ編集モーダル */}
       {selectedMemoForTag && (

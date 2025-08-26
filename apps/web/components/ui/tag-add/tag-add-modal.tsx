@@ -31,6 +31,7 @@ export default function TagAddModal({
   const [selectedTagIdsForAdd, setSelectedTagIdsForAdd] = useState<number[]>([]);
   const [isAddingTags, setIsAddingTags] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [processedCount, setProcessedCount] = useState(0);
   const addTagging = useCreateTagging();
 
   // タグ選択が変更された時に追加済状態をリセット
@@ -38,98 +39,67 @@ export default function TagAddModal({
     if (isCompleted) {
       setIsCompleted(false);
     }
+    setProcessedCount(0);
   }, [selectedTagIdsForAdd]); // selectedTagIdsForAddが変更された時のみ
 
   const handleAddTags = useCallback(async () => {
     if (selectedItems.length === 0 || selectedTagIdsForAdd.length === 0) return;
 
-    const startTime = Date.now();
     setIsAddingTags(true);
 
     try {
+      // 未処理のアイテムを取得
+      const remainingItems = selectedItems.slice(processedCount);
+      // 最大100件まで処理
+      const itemsToProcess = remainingItems.slice(0, 100);
       const promises: Promise<unknown>[] = [];
       
       for (const tagId of selectedTagIdsForAdd) {
-        for (const itemId of selectedItems) {
+        for (const itemId of itemsToProcess) {
           const item = allItems.find(i => i.id.toString() === itemId || i.id === parseInt(itemId));
           if (item) {
-            // console.log('🏷️ タグ付け試行:', {
-            //   tagId,
-            //   itemId,
-            //   itemTitle: item.title || item.name || 'タイトルなし',
-            //   targetType: itemType,
-            //   targetOriginalId: item.originalId || item.id.toString(),
-            // });
             promises.push(
               addTagging.mutateAsync({
                 tagId,
                 targetType: itemType,
                 targetOriginalId: item.originalId || item.id.toString(),
-              }).catch((error) => {
-                // エラーメッセージから重複エラーかどうかを判定
-                const errorMessage = error?.message || error?.toString() || '';
-                // console.log('🚨 タグ付けエラー:', {
-                //   tagId,
-                //   itemId,
-                //   itemTitle: item.title || item.name || 'タイトルなし',
-                //   errorMessage,
-                //   fullError: error
-                // });
-                if (errorMessage.includes('already exists') || 
-                    errorMessage.includes('duplicate') || 
-                    errorMessage.includes('重複') ||
-                    errorMessage.includes('既に存在') ||
-                    errorMessage.includes('already attached')) {
-                  // 既に追加済みの場合はスルー（成功扱い）
-                  // console.log('✅ 重複エラーをスルー:', { tagId, itemId });
-                  return Promise.resolve();
-                } else {
-                  // その他のエラーは再スロー
-                  console.error('❌ 予期しないエラー:', error);
-                  throw error;
-                }
+              }).catch(() => {
+                // エラーをサイレントに処理
+                return null;
               })
             );
-          } else {
-            // console.warn('⚠️ アイテムが見つかりません:', { 
-            //   itemId, 
-            //   allItemsCount: allItems.length,
-            //   allItemIds: allItems.map(i => i.id.toString())
-            // });
           }
         }
       }
 
       await Promise.allSettled(promises);
       
-      // 最低表示時間を確保
-      const elapsedTime = Date.now() - startTime;
-      const remainingTime = Math.max(0, MINIMUM_LOADING_TIME - elapsedTime);
+      // 処理済み件数を更新
+      const newProcessedCount = processedCount + itemsToProcess.length;
+      setProcessedCount(newProcessedCount);
       
-      setTimeout(() => {
-        // 追加完了状態に変更
+      // 完了処理
+      setIsAddingTags(false);
+      
+      if (newProcessedCount >= selectedItems.length) {
+        // 全て完了した場合
         setIsCompleted(true);
-        setIsAddingTags(false);
-        
-        // 選択クリアはモーダルが閉じられる時に実行するため、ここでは呼ばない
-        // onSuccess();
-        
-        // タグ選択はリセットしない（ユーザーが手動で閉じるまで保持）
-      }, remainingTime);
+        onSuccess();
+      }
       
     } catch (error) {
       console.error('タグ追加中にエラーが発生しました:', error);
-      alert('タグの追加に失敗しました。しばらくしてから再度お試しください。');
       setIsAddingTags(false);
       setIsCompleted(false);
     }
-  }, [selectedItems, selectedTagIdsForAdd, allItems, itemType, addTagging, onSuccess]);
+  }, [selectedItems, selectedTagIdsForAdd, allItems, itemType, addTagging, onSuccess, processedCount]);
 
   const handleClose = useCallback(() => {
     // モーダルを閉じる時に状態をリセット
     setSelectedTagIdsForAdd([]);
     setIsAddingTags(false);
     setIsCompleted(false);
+    setProcessedCount(0);
     
     // アイテムの選択はクリアしない（ユーザーが明示的に解除するまで保持）
     // onSuccess();
@@ -149,13 +119,24 @@ export default function TagAddModal({
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-600">
             選択中の{itemType === 'memo' ? 'メモ' : 'タスク'}: {selectedItemCount}件
+            {processedCount > 0 && (
+              <span className="text-xs text-gray-500 ml-2">
+                {processedCount}件処理済み
+              </span>
+            )}
           </span>
           <button
             onClick={handleAddTags}
             className="px-4 py-1.5 bg-Green text-white rounded disabled:opacity-50"
             disabled={selectedTagIdsForAdd.length === 0 || isAddingTags || isCompleted}
           >
-            {isCompleted ? '追加済' : isAddingTags ? '追加中...' : '追加する'}
+            {isCompleted ? '追加完了' : isAddingTags 
+              ? '追加中...'
+              : (selectedItemCount - processedCount > 100 
+                  ? `100件追加`
+                  : `${selectedItemCount - processedCount}件追加`
+                )
+            }
           </button>
         </div>
       }

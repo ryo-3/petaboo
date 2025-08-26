@@ -21,9 +21,8 @@ import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
 import { useTabChange } from "@/src/hooks/use-tab-change";
 import { useDeletedTasks, useTasks } from "@/src/hooks/use-tasks";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
-import { useBoards, useAddItemToBoard } from "@/src/hooks/use-boards";
+import { useBoards } from "@/src/hooks/use-boards";
 import { useTags } from "@/src/hooks/use-tags";
-import BoardAddModal from "@/components/ui/board-add/board-add-modal";
 import TagAddModal from "@/components/ui/tag-add/tag-add-modal";
 import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
 import type { DeletedTask, Task } from "@/src/types/task";
@@ -89,8 +88,6 @@ function TaskScreen({
   const { data: allTaggings } = useAllTaggings();
   const { data: allBoardItems } = useAllBoardItems();
 
-  // ボードに追加のAPI
-  const addItemToBoard = useAddItemToBoard();
 
   // 選択モード管理
   const [selectionMode, setSelectionMode] = useState<"select" | "check">(
@@ -119,8 +116,6 @@ function TaskScreen({
     excludeBoardId ? 'exclude' : 'include'
   );
 
-  // ボード選択モーダルの状態
-  const [isBoardSelectionModalOpen, setIsBoardSelectionModalOpen] = useState(false);
   
   // タグ追加モーダルの状態
   const [isTagAddModalOpen, setIsTagAddModalOpen] = useState(false);
@@ -509,9 +504,6 @@ function TaskScreen({
         {!hideBulkActionButtons && (
         <SelectionMenuButton
           count={checkedTasks.size}
-          onBoardLink={() => {
-            setIsBoardSelectionModalOpen(true);
-          }}
           onExport={() => {
             // TODO: エクスポート処理
           }}
@@ -633,19 +625,6 @@ function TaskScreen({
         onClose={() => setIsCsvImportModalOpen(false)}
       />
       
-      {/* ボード追加モーダル */}
-      <BoardAddModal
-        isOpen={isBoardSelectionModalOpen}
-        onClose={() => setIsBoardSelectionModalOpen(false)}
-        boards={boards?.map(board => ({ id: board.id, name: board.name })) || []}
-        selectedItemCount={checkedTasks.size}
-        itemType="task"
-        selectedItems={Array.from(checkedTasks).map(id => id.toString())}
-        allItems={tasks || []}
-        onSuccess={() => {
-          // 選択状態は保持する（複数のボードに続けて追加できるように）
-        }}
-      />
       
       {/* タグ追加モーダル */}
       <TagAddModal

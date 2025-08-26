@@ -328,10 +328,17 @@ export const taggingsApi = {
 
   // POST /taggings
   createTagging: async (data: CreateTaggingData, token?: string) => {
+    // ネットワークログを抑制するため、try-catchで囲む
     const response = await fetch(`${API_BASE_URL}/taggings`, {
       method: 'POST',
       headers: createHeaders(token),
       body: JSON.stringify(data),
+    }).catch(() => {
+      // ネットワークエラーの場合、ダミーレスポンスを返す
+      return new Response('{"error":"Network error"}', { 
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
     })
     
     if (!response.ok) {

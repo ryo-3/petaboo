@@ -1,7 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { ButtonContainer } from "@/components/ui/layout/button-container";
 import SelectionMenu from "@/components/ui/menus/selection-menu";
-import DashboardIcon from "@/components/icons/dashboard-icon";
 import CsvExportIcon from "@/components/icons/csv-export-icon";
 import PinIcon from "@/components/icons/pin-icon";
 import TagIcon from "@/components/icons/tag-icon";
@@ -10,7 +9,6 @@ interface SelectionMenuButtonProps {
   count: number;
   onMenuClick?: () => void;
   isVisible: boolean;
-  onBoardLink?: () => void;
   onExport?: () => void;
   onTagging?: () => void;
   onPin?: () => void;
@@ -25,7 +23,6 @@ export default function SelectionMenuButton({
   count,
   onMenuClick,
   isVisible,
-  onBoardLink,
   onExport,
   onTagging,
   onPin,
@@ -40,12 +37,6 @@ export default function SelectionMenuButton({
       label: 'ピン止め',
       icon: <PinIcon className="w-4 h-4" />,
       onClick: () => onPin?.()
-    },
-    {
-      id: 'board-link',
-      label: 'ボードに追加',
-      icon: <DashboardIcon className="w-4 h-4" />,
-      onClick: () => onBoardLink?.()
     },
     {
       id: 'tag',

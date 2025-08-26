@@ -51,7 +51,6 @@ interface BoardMemoSectionProps {
   onCheckedMemosChange?: (memos: Set<string | number>) => void;
   
   // 選択メニュー関連
-  onBoardLink?: () => void;
   onExport?: () => void;
   onPin?: () => void;
   onTagging?: () => void;
@@ -107,7 +106,6 @@ export default function BoardMemoSection({
   currentDisplayCount,
   deleteButtonRef: propDeleteButtonRef,
   onCheckedMemosChange,
-  onBoardLink,
   onExport,
   onPin,
   onTagging,
@@ -406,7 +404,6 @@ export default function BoardMemoSection({
         {/* 選択メニューボタン（通常タブでアイテム選択時） */}
         <SelectionMenuButton
           count={checkedMemos.size}
-          onBoardLink={onBoardLink}
           onExport={onExport}
           onPin={onPin}
           onTagging={onTagging}

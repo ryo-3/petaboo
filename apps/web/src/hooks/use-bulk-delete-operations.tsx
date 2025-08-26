@@ -263,7 +263,7 @@ export function useBulkDeleteOperations({
     // アニメーション完了後にモーダルを閉じる
     bulkDelete.handleCancel();
     setDeletingItemType(null);
-  }, [deletingItemType, checkedMemos, checkedTasks, boardId, bulkDelete, setCheckedMemos, setCheckedTasks, removeItemFromBoard, deleteButtonRef, setIsMemoDeleting, setIsMemoLidOpen, setIsTaskDeleting, setIsTaskLidOpen, bulkAnimation]);
+  }, [deletingItemType, checkedMemos, checkedTasks, boardId, bulkDelete, setCheckedMemos, setCheckedTasks, removeItemFromBoard, deleteButtonRef, bulkAnimation]);
   
   // ディスプレイカウントの計算（メモ一覧と同じロジック）
   const currentMemoDisplayCount = bulkAnimation.isCountingActive

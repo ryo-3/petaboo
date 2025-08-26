@@ -10,7 +10,6 @@ import { Memo, DeletedMemo } from "@/src/types/memo";
 import { Task, DeletedTask } from "@/src/types/task";
 import type { Tagging } from "@/src/types/tag";
 import { memo, useEffect, useState, useRef, useCallback } from "react";
-import BoardAddModal from "@/components/ui/board-add/board-add-modal";
 import TagAddModal from "@/components/ui/tag-add/tag-add-modal";
 import BoardHeader from "@/components/features/board/board-header";
 import { BulkDeleteConfirmation } from "@/components/ui/modals";
@@ -59,7 +58,6 @@ function BoardDetailScreen({
   const [isCSVImportModalOpen, setIsCSVImportModalOpen] = useState(false);
   
   // ボード選択モーダル状態
-  const [isBoardSelectionModalOpen, setIsBoardSelectionModalOpen] = useState(false);
   const [selectionMenuType, setSelectionMenuType] = useState<'memo' | 'task'>('memo');
   
   // タグ追加モーダル状態
@@ -310,15 +308,6 @@ function BoardDetailScreen({
   });
 
   // 選択メニュー関連のハンドラー
-  const handleBoardLinkMemo = useCallback(() => {
-    setSelectionMenuType('memo');
-    setIsBoardSelectionModalOpen(true);
-  }, []);
-
-  const handleBoardLinkTask = useCallback(() => {
-    setSelectionMenuType('task');
-    setIsBoardSelectionModalOpen(true);
-  }, []);
 
   // タグ追加関連のハンドラー
   const handleTaggingMemo = useCallback(() => {
@@ -474,7 +463,6 @@ function BoardDetailScreen({
             currentDisplayCount={currentMemoDisplayCount}
             deleteButtonRef={deleteButtonRef}
             onCheckedMemosChange={(memos) => setCheckedMemos(activeMemoTab, memos)}
-            onBoardLink={handleBoardLinkMemo}
             onTagging={handleTaggingMemo}
           />
 
@@ -517,7 +505,6 @@ function BoardDetailScreen({
             currentDisplayCount={currentTaskDisplayCount}
             deleteButtonRef={deleteButtonRef}
             onCheckedTasksChange={(tasks) => setCheckedTasks(activeTaskTab, tasks)}
-            onBoardLink={handleBoardLinkTask}
             onTagging={handleTaggingTask}
           />
         </div>
@@ -591,28 +578,6 @@ function BoardDetailScreen({
         isOpen={isCSVImportModalOpen}
         onClose={() => setIsCSVImportModalOpen(false)}
         boardId={boardId}
-      />
-      
-      {/* ボード追加モーダル */}
-      <BoardAddModal
-        isOpen={isBoardSelectionModalOpen}
-        onClose={() => setIsBoardSelectionModalOpen(false)}
-        boards={safeAllBoards.map(board => ({ id: board.id, name: board.name }))}
-        selectedItemCount={selectionMenuType === 'memo' ? checkedMemos.size : checkedTasks.size}
-        itemType={selectionMenuType}
-        selectedItems={selectionMenuType === 'memo' 
-          ? Array.from(checkedMemos).map(id => id.toString())
-          : Array.from(checkedTasks).map(id => id.toString())
-        }
-        allItems={selectionMenuType === 'memo' ? allMemoItems : allTaskItems}
-        excludeBoardId={boardId}
-        onSuccess={() => {
-          if (selectionMenuType === 'memo') {
-            setCheckedMemos(activeMemoTab, new Set());
-          } else {
-            setCheckedTasks(activeTaskTab, new Set());
-          }
-        }}
       />
       
       {/* タグ追加モーダル */}

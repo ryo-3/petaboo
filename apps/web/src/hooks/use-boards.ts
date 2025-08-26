@@ -453,12 +453,16 @@ export function useAddItemToBoard() {
       
       // 特定のボードのアイテムキャッシュを無効化（新しいアイテムが追加されるため）
       queryClient.invalidateQueries({ queryKey: ["boards", boardId, "items"] });
-      // アイテムのボード情報も無効化（originalIdベース）
+      // アイテムのボード情報も無効化（originalIdベース） - 確実に更新
       queryClient.invalidateQueries({ queryKey: ["item-boards", itemType, itemId] });
+      // 完全にキャッシュをクリア（"item-boards"で始まる全てのキャッシュをクリア）
+      queryClient.invalidateQueries({ queryKey: ["item-boards"] });
       // ボード一覧の統計情報を更新（より細かい制御は困難なため無効化）
       queryClient.invalidateQueries({ queryKey: ["boards"] });
       // 全ボードアイテム情報も無効化（全データ事前取得で使用）
       queryClient.invalidateQueries({ queryKey: ["boards", "all-items"] });
+      // 完全なキャッシュリフレッシュ（ボードアイテムすべて）
+      queryClient.refetchQueries({ queryKey: ["boards", "all-items"] });
     },
     onError: (error) => {
       console.error("ボードへのアイテム追加に失敗しました:", error);
@@ -506,10 +510,8 @@ export function useRemoveItemFromBoard() {
         }
 
         if (!response.ok) {
-          let errorText;
           try {
             const errorJson = await response.json();
-            errorText = JSON.stringify(errorJson);
             console.log('🔍 削除APIエラーレスポンス:', errorJson);
             throw new Error(errorJson.error || `Failed to remove item from board: ${response.status} ${response.statusText}`);
           } catch (parseError) {
@@ -528,12 +530,16 @@ export function useRemoveItemFromBoard() {
     onSuccess: (_, { boardId, itemId, itemType }) => {
       // 特定のボードのアイテムキャッシュを無効化（アイテムが削除されるため）
       queryClient.invalidateQueries({ queryKey: ["boards", boardId, "items"] });
-      // アイテムのボード情報も無効化
+      // アイテムのボード情報も無効化 - 確実に更新
       queryClient.invalidateQueries({ queryKey: ["item-boards", itemType, itemId] });
+      // 完全にキャッシュをクリア（"item-boards"で始まる全てのキャッシュをクリア）
+      queryClient.invalidateQueries({ queryKey: ["item-boards"] });
       // ボード一覧の統計情報を更新（より細かい制御は困難なため無効化）
       queryClient.invalidateQueries({ queryKey: ["boards"] });
       // 全ボードアイテム情報も無効化（全データ事前取得で使用）
       queryClient.invalidateQueries({ queryKey: ["boards", "all-items"] });
+      // 完全なキャッシュリフレッシュ（ボードアイテムすべて）
+      queryClient.refetchQueries({ queryKey: ["boards", "all-items"] });
     },
     onError: (error, variables) => {
       console.error("ボードからアイテムの削除に失敗しました:", {

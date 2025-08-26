@@ -53,12 +53,30 @@ export function useCreateTagging() {
   
   return useMutation({
     mutationFn: async (taggingData: CreateTaggingData) => {
-      const token = await getToken()
-      const response = await taggingsApi.createTagging(taggingData, token || undefined)
-      const data = await response.json()
-      return data as Tagging
+      try {
+        const token = await getToken()
+        const response = await taggingsApi.createTagging(taggingData, token || undefined)
+        
+        if (!response.ok) {
+          // 400エラー（重複など）をサイレントに処理
+          return { success: false };
+        }
+        
+        const data = await response.json()
+        return data as Tagging
+      } catch (error) {
+        // すべてのエラーをサイレントに処理
+        return { success: false };
+      }
     },
-    onSuccess: (newTagging, taggingData) => {
+    onSuccess: (result, taggingData) => {
+      // エラーケース（{ success: false }）の場合は何もしない
+      if (!result || typeof result === 'object' && 'success' in result && result.success === false) {
+        return;
+      }
+
+      const newTagging = result as Tagging;
+      
       // 特定のアイテムタイプ・IDのタグ付け情報を無効化
       queryClient.invalidateQueries({ 
         queryKey: ['taggings', { 
@@ -74,8 +92,9 @@ export function useCreateTagging() {
       // 汎用タグ付けクエリも無効化
       queryClient.invalidateQueries({ queryKey: ['taggings'], exact: false })
     },
-    onError: () => {
-      // サイレントに処理する場合は上位でキャッチするため、ここではログのみ
+    onError: (error) => {
+      // エラーをサイレントに処理（ログ出力を抑制）
+      // console.error('タグ付けエラー:', error);
     }
   })
 }

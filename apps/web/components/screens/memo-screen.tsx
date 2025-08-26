@@ -25,9 +25,8 @@ import { useScreenState } from "@/src/hooks/use-screen-state";
 import { useSelectAll } from "@/src/hooks/use-select-all";
 import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
-import { useBoards, useAddItemToBoard } from "@/src/hooks/use-boards";
+import { useBoards } from "@/src/hooks/use-boards";
 import { useTags } from "@/src/hooks/use-tags";
-import BoardAddModal from "@/components/ui/board-add/board-add-modal";
 import TagAddModal from "@/components/ui/tag-add/tag-add-modal";
 import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
@@ -138,8 +137,6 @@ function MemoScreen({
   // タグ表示・編集モーダルの状態
   const [selectedMemoForTag, setSelectedMemoForTag] = useState<Memo | null>(null);
 
-  // ボード選択モーダルの状態
-  const [isBoardSelectionModalOpen, setIsBoardSelectionModalOpen] = useState(false);
   
 
   // データ取得
@@ -147,8 +144,6 @@ function MemoScreen({
   const { data: deletedMemos } = useDeletedMemos();
   const { preferences } = useUserPreferences(1);
   
-  // ボードに追加のAPI
-  const addItemToBoard = useAddItemToBoard();
   
   // 全データ一括取得（ちらつき解消）
   const { data: boards } = useBoards();
@@ -562,9 +557,6 @@ function MemoScreen({
         {!hideBulkActionButtons && (
         <SelectionMenuButton
           count={checkedMemos.size}
-          onBoardLink={() => {
-            setIsBoardSelectionModalOpen(true);
-          }}
           onExport={() => {
             // TODO: エクスポート処理
           }}
@@ -619,19 +611,6 @@ function MemoScreen({
         onClose={() => setIsCsvImportModalOpen(false)}
       />
       
-      {/* ボード追加モーダル */}
-      <BoardAddModal
-        isOpen={isBoardSelectionModalOpen}
-        onClose={() => setIsBoardSelectionModalOpen(false)}
-        boards={boards?.map(board => ({ id: board.id, name: board.name })) || []}
-        selectedItemCount={checkedMemos.size}
-        itemType="memo"
-        selectedItems={Array.from(checkedMemos).map(id => id.toString())}
-        allItems={memos || []}
-        onSuccess={() => {
-          // 選択状態は保持する（複数のボードに続けて追加できるように）
-        }}
-      />
 
       {/* タグ追加モーダル */}
       <TagAddModal

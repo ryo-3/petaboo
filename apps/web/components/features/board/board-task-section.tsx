@@ -54,7 +54,6 @@ interface BoardTaskSectionProps {
   onCheckedTasksChange?: (tasks: Set<string | number>) => void;
   
   // 選択メニュー関連
-  onBoardLink?: () => void;
   onExport?: () => void;
   onPin?: () => void;
   onTagging?: () => void;
@@ -115,7 +114,6 @@ export default function BoardTaskSection({
   currentDisplayCount,
   deleteButtonRef: propDeleteButtonRef,
   onCheckedTasksChange,
-  onBoardLink,
   onExport,
   onPin,
   onTagging,
@@ -453,7 +451,6 @@ export default function BoardTaskSection({
         {/* 選択メニューボタン（通常タブでアイテム選択時） */}
         <SelectionMenuButton
           count={checkedTasks.size}
-          onBoardLink={onBoardLink}
           onExport={onExport}
           onPin={onPin}
           onTagging={onTagging}

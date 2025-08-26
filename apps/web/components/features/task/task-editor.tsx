@@ -15,7 +15,7 @@ import DateInfo from "@/components/shared/date-info";
 import TaskForm, { TaskFormHandle } from "./task-form";
 import { useUpdateTask, useCreateTask } from "@/src/hooks/use-tasks";
 import { useAddItemToBoard, useRemoveItemFromBoard } from "@/src/hooks/use-boards";
-import { useCreateTagging, useDeleteTagging } from "@/src/hooks/use-taggings";
+import { useCreateTagging, useDeleteTagging, useTaggings } from "@/src/hooks/use-taggings";
 import { useBoardChangeModal } from "@/src/hooks/use-board-change-modal";
 import { useBoardCategories } from "@/src/hooks/use-board-categories";
 import BoardChangeModal from "@/components/ui/modals/board-change-modal";
@@ -111,19 +111,37 @@ function TaskEditor({
     return boards;
   }, [task, preloadedBoardItems, preloadedBoards, initialBoardId]);
   
-  // 事前取得されたデータからタスクのタグを抽出（シンプル）
+  // ライブタグデータ取得（メモエディターと同様）
+  const originalId = task && task.id !== 0 ? task.originalId || task.id.toString() : null;
+  const { data: liveTaggings } = useTaggings({
+    targetType: 'task',
+    targetOriginalId: originalId || undefined,
+  });
+  
+  // 事前取得されたデータとライブデータを組み合わせて現在のタグを取得
   const currentTags = useMemo(() => {
     if (!task || task.id === 0) return [];
-    const originalId = task.originalId || task.id.toString();
+    const targetOriginalId = task.originalId || task.id.toString();
     
-    const taskTaggings = preloadedTaggings.filter(
-      t => t.targetType === 'task' && t.targetOriginalId === originalId
+    // ライブデータがある場合は優先的に使用、なければ事前取得データを使用
+    const taggingsToUse = liveTaggings || preloadedTaggings.filter(
+      t => t.targetType === 'task' && t.targetOriginalId === targetOriginalId
     );
     
-    const tags = taskTaggings.map(t => t.tag).filter(Boolean) as Tag[];
+    const tags = taggingsToUse.map(t => t.tag).filter(Boolean) as Tag[];
+    
+    console.log('🔍 エディター currentTags 更新:', {
+      taskId: task.id,
+      targetOriginalId,
+      hasLiveTaggings: !!liveTaggings,
+      liveTaggingsCount: liveTaggings?.length || 0,
+      preloadedTaggingsCount: preloadedTaggings.length,
+      tagsToUseCount: taggingsToUse.length,
+      finalTags: tags
+    });
     
     return tags;
-  }, [task, preloadedTaggings]);
+  }, [task, liveTaggings, preloadedTaggings]);
   
   // タグ操作用のmutation
   const createTaggingMutation = useCreateTagging();
@@ -291,6 +309,20 @@ function TaskEditor({
       }
     }
   }, [task?.id, currentTags, prevTaskId, task, itemBoards, initialBoardId]);
+  
+  // currentTagsが変更されたときに自動でlocalTagsを同期（メモエディターと同様）
+  useEffect(() => {
+    if (task?.id === prevTaskId && 
+        JSON.stringify(currentTags.map(t => t.id).sort()) !== 
+        JSON.stringify(localTags.map(t => t.id).sort())) {
+      setLocalTags(currentTags);
+      console.log('🔄 タスクエディター localTags 自動同期:', {
+        taskId: task?.id,
+        from: localTags.map(t => ({ id: t.id, name: t.name })),
+        to: currentTags.map(t => ({ id: t.id, name: t.name }))
+      });
+    }
+  }, [task?.id, prevTaskId, currentTags, localTags]);
   
   
   // 新規作成・編集両対応の仮タスクオブジェクト

@@ -18,6 +18,8 @@ taggingsRoute.use('*', clerkMiddleware({
 
 // データベースをコンテキストに注入
 taggingsRoute.use('*', async (c, next) => {
+  console.log('🔥 taggings ルート通過:', c.req.method, c.req.url);
+  console.log('🔥 パス:', c.req.path);
   c.env = { db };
   await next();
 });

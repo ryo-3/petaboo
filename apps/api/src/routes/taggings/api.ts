@@ -241,81 +241,7 @@ export function createAPI(app: AppType) {
     return c.json(result[0], 201);
   });
 
-  // タグ付け削除
-  const deleteTaggingRoute = createRoute({
-    method: "delete",
-    path: "/{id}",
-    tags: ["taggings"],
-    request: {
-      params: z.object({
-        id: z.string(),
-      }),
-    },
-    responses: {
-      200: {
-        content: {
-          "application/json": {
-            schema: z.object({
-              success: z.boolean(),
-            }),
-          },
-        },
-        description: "Tagging deleted",
-      },
-      401: {
-        content: {
-          "application/json": {
-            schema: z.object({
-              error: z.string(),
-            }),
-          },
-        },
-        description: "Unauthorized",
-      },
-      404: {
-        content: {
-          "application/json": {
-            schema: z.object({
-              error: z.string(),
-            }),
-          },
-        },
-        description: "Not found",
-      },
-    },
-  });
-
-  app.openapi(deleteTaggingRoute, async (c) => {
-    const auth = getAuth(c);
-    if (!auth?.userId) {
-      return c.json({ error: "Unauthorized" }, 401);
-    }
-
-    const taggingId = parseInt(c.req.param("id"));
-    const db = c.env.db;
-
-    // タグ付けの所有権確認
-    const tagging = await db
-      .select()
-      .from(taggings)
-      .where(
-        and(
-          eq(taggings.id, taggingId),
-          eq(taggings.userId, auth.userId)
-        )
-      )
-      .limit(1);
-
-    if (tagging.length === 0) {
-      return c.json({ error: "Tagging not found" }, 404);
-    }
-
-    await db.delete(taggings).where(eq(taggings.id, taggingId));
-
-    return c.json({ success: true });
-  });
-
-  // 特定のタグとアイテムの組み合わせでタグ付け削除
+  // 特定のタグとアイテムの組み合わせでタグ付け削除（先に定義）
   const deleteTaggingByTagRoute = createRoute({
     method: "delete",
     path: "/by-tag",
@@ -367,14 +293,71 @@ export function createAPI(app: AppType) {
     },
   });
 
+  // タグ付け削除（ID指定）
+  const deleteTaggingRoute = createRoute({
+    method: "delete",
+    path: "/{id}",
+    tags: ["taggings"],
+    request: {
+      params: z.object({
+        id: z.string(),
+      }),
+    },
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              success: z.boolean(),
+            }),
+          },
+        },
+        description: "Tagging deleted",
+      },
+      401: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+            }),
+          },
+        },
+        description: "Unauthorized",
+      },
+      404: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+            }),
+          },
+        },
+        description: "Not found",
+      },
+    },
+  });
+
+  // 特定のタグとアイテムの組み合わせでタグ付け削除（より具体的なので先に定義）
   app.openapi(deleteTaggingByTagRoute, async (c) => {
+    console.log('🔥 DELETE /taggings/by-tag ハンドラー開始');
+    
     const auth = getAuth(c);
+    console.log('🔥 認証結果:', { userId: auth?.userId, hasAuth: !!auth });
+    
     if (!auth?.userId) {
+      console.log('🔥 認証失敗 - Unauthorized返却');
       return c.json({ error: "Unauthorized" }, 401);
     }
 
     const { tagId, targetType, targetOriginalId } = c.req.valid("json");
     const db = c.env.db;
+
+    console.log('🔥 API削除リクエスト受信:', {
+      tagId,
+      targetType,
+      targetOriginalId,
+      userId: auth.userId
+    });
 
     // タグ付けの存在確認と所有権確認
     const tagging = await db
@@ -390,11 +373,17 @@ export function createAPI(app: AppType) {
       )
       .limit(1);
 
+    console.log('🔍 DB検索結果:', {
+      found: tagging.length,
+      tagging: tagging[0] || null
+    });
+
     if (tagging.length === 0) {
+      console.log('❌ タグ付けが見つからない');
       return c.json({ error: "Tagging not found" }, 404);
     }
 
-    await db.delete(taggings).where(
+    const result = await db.delete(taggings).where(
       and(
         eq(taggings.tagId, tagId),
         eq(taggings.targetType, targetType),
@@ -402,6 +391,39 @@ export function createAPI(app: AppType) {
         eq(taggings.userId, auth.userId)
       )
     );
+
+    console.log('✅ 削除完了:', result);
+
+    return c.json({ success: true });
+  });
+
+  // タグ付け削除（ID指定）
+  app.openapi(deleteTaggingRoute, async (c) => {
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const taggingId = parseInt(c.req.param("id"));
+    const db = c.env.db;
+
+    // タグ付けの所有権確認
+    const tagging = await db
+      .select()
+      .from(taggings)
+      .where(
+        and(
+          eq(taggings.id, taggingId),
+          eq(taggings.userId, auth.userId)
+        )
+      )
+      .limit(1);
+
+    if (tagging.length === 0) {
+      return c.json({ error: "Tagging not found" }, 404);
+    }
+
+    await db.delete(taggings).where(eq(taggings.id, taggingId));
 
     return c.json({ success: true });
   });

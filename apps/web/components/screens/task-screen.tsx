@@ -23,7 +23,7 @@ import { useDeletedTasks, useTasks } from "@/src/hooks/use-tasks";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useBoards } from "@/src/hooks/use-boards";
 import { useTags } from "@/src/hooks/use-tags";
-import TagAddModal from "@/components/ui/tag-add/tag-add-modal";
+import TagManagementModal from "@/components/ui/tag-management/tag-management-modal";
 import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
 import type { DeletedTask, Task } from "@/src/types/task";
 import {
@@ -117,8 +117,8 @@ function TaskScreen({
   );
 
   
-  // タグ追加モーダルの状態
-  const [isTagAddModalOpen, setIsTagAddModalOpen] = useState(false);
+  // タグ管理モーダルの状態
+  const [isTagManagementModalOpen, setIsTagManagementModalOpen] = useState(false);
   
   
   // タグフィルター管理
@@ -511,7 +511,7 @@ function TaskScreen({
             // TODO: ピン止め処理
           }}
           onTagging={() => {
-            setIsTagAddModalOpen(true);
+            setIsTagManagementModalOpen(true);
           }}
           onTabMove={() => {
             // TODO: タブ移動処理
@@ -626,15 +626,16 @@ function TaskScreen({
       />
       
       
-      {/* タグ追加モーダル */}
-      <TagAddModal
-        isOpen={isTagAddModalOpen}
-        onClose={() => setIsTagAddModalOpen(false)}
+      {/* タグ管理モーダル */}
+      <TagManagementModal
+        isOpen={isTagManagementModalOpen}
+        onClose={() => setIsTagManagementModalOpen(false)}
         tags={tags?.map(tag => ({ id: tag.id, name: tag.name, color: tag.color })) || []}
         selectedItemCount={checkedTasks.size}
         itemType="task"
         selectedItems={Array.from(checkedTasks).map(id => id.toString())}
         allItems={tasks || []}
+        allTaggings={safeAllTaggings || []}
         onSuccess={() => {
           setCheckedTasks(new Set());
         }}

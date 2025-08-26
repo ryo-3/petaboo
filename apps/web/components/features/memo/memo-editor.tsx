@@ -12,7 +12,7 @@ import TagTriggerButton from "@/components/features/tags/tag-trigger-button";
 import TagSelectionModal from "@/components/ui/modals/tag-selection-modal";
 import { TAG_COLORS } from "@/src/constants/colors";
 import { useSimpleMemoSave } from "@/src/hooks/use-simple-memo-save";
-import { useCreateTagging, useDeleteTagging } from "@/src/hooks/use-taggings";
+import { useCreateTagging, useDeleteTagging, useTaggings } from "@/src/hooks/use-taggings";
 import { useDeletedMemoActions } from "./use-deleted-memo-actions";
 import { useQueryClient } from "@tanstack/react-query";
 import BoardChips from "@/components/ui/chips/board-chips";
@@ -129,19 +129,41 @@ function MemoEditor({
   const [prevMemoId, setPrevMemoId] = useState<number | null>(null);
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
   
-  // 事前取得されたデータからメモのタグを抽出（シンプル）
+  // 個別のタグ情報も取得（キャッシュ無効化後の最新データ取得用）
+  const originalId = memo?.originalId || memo?.id?.toString();
+  const { data: liveTaggings } = useTaggings({
+    targetType: 'memo',
+    targetOriginalId: originalId,
+  });
+
+  // プリロードデータとライブデータを組み合わせてタグを抽出
   const currentTags = useMemo(() => {
     if (!memo || memo.id === undefined || memo.id === 0) return [];
-    const originalId = memo.originalId || memo.id.toString();
+    const targetOriginalId = memo.originalId || memo.id.toString();
     
-    const memoTaggings = preloadedTaggings.filter(
-      t => t.targetType === 'memo' && t.targetOriginalId === originalId
+    // ライブデータが利用可能な場合はそれを優先、なければプリロードデータを使用
+    const taggingsToUse = liveTaggings || preloadedTaggings.filter(
+      t => t.targetType === 'memo' && t.targetOriginalId === targetOriginalId
     );
     
-    const tags = memoTaggings.map(t => t.tag).filter(Boolean) as Tag[];
+    const tags = taggingsToUse
+      .filter(t => t.targetType === 'memo' && t.targetOriginalId === targetOriginalId)
+      .map(t => t.tag)
+      .filter(Boolean) as Tag[];
+    
+    // デバッグログ
+    console.log('🔍 エディター currentTags 更新:', {
+      memoId: memo.id,
+      targetOriginalId,
+      hasLiveTaggings: !!liveTaggings,
+      liveTaggingsCount: liveTaggings?.length || 0,
+      preloadedTaggingsCount: preloadedTaggings.length,
+      tagsToUseCount: taggingsToUse.length,
+      finalTags: tags.map(t => ({ id: t.id, name: t.name }))
+    });
     
     return tags;
-  }, [memo, preloadedTaggings]);
+  }, [memo, preloadedTaggings, liveTaggings]);
   
   // タグ操作用のmutation（既存API使用）
   const createTaggingMutation = useCreateTagging();
@@ -166,6 +188,21 @@ function MemoEditor({
       setPrevMemoId(currentMemoId);
     }
   }, [memo?.id, currentTags, prevMemoId]);
+
+  // currentTagsが変更されたときにlocalTagsも同期（外部からのタグ変更を反映）
+  useEffect(() => {
+    // メモが同じで、currentTagsが変更された場合のみ同期
+    if (memo?.id === prevMemoId && JSON.stringify(currentTags.map(t => t.id).sort()) !== JSON.stringify(localTags.map(t => t.id).sort())) {
+      console.log('🔄 localTags同期:', {
+        memoId: memo?.id,
+        currentTagsCount: currentTags.length,
+        localTagsCount: localTags.length,
+        currentTags: currentTags.map(t => ({ id: t.id, name: t.name })),
+        localTags: localTags.map(t => ({ id: t.id, name: t.name }))
+      });
+      setLocalTags(currentTags);
+    }
+  }, [memo?.id, prevMemoId, currentTags, localTags]);
 
   // preloadedTagsが更新された時にlocalTagsの最新情報を反映
   useEffect(() => {

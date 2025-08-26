@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import TagSelectionModal from '@/components/ui/modals/tag-selection-modal';
 import { useCreateTagging } from '@/src/hooks/use-taggings';
 
@@ -32,6 +33,8 @@ export default function TagAddModal({
   const [isAddingTags, setIsAddingTags] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [processedCount, setProcessedCount] = useState(0);
+  
+  const queryClient = useQueryClient();
   const addTagging = useCreateTagging();
 
   // タグ選択が変更された時に追加済状態をリセット
@@ -84,6 +87,25 @@ export default function TagAddModal({
       if (newProcessedCount >= selectedItems.length) {
         // 全て完了した場合
         setIsCompleted(true);
+        
+        // 個別エディターのキャッシュを無効化
+        selectedItems.forEach(itemId => {
+          const item = allItems.find(i => i.id.toString() === itemId || i.id === parseInt(itemId));
+          if (item) {
+            const originalId = item.originalId || item.id.toString();
+            queryClient.invalidateQueries({ 
+              queryKey: [itemType, originalId] 
+            });
+            console.log('🔄 キャッシュ無効化 (追加):', { itemType, originalId });
+          }
+        });
+        
+        // 全タグ付け情報のキャッシュも無効化（エディターが事前取得データを使用するため）
+        queryClient.invalidateQueries({ 
+          queryKey: ['taggings', 'all'] 
+        });
+        console.log('🔄 全タグ付けキャッシュ無効化 (追加): [taggings, all]');
+        
         onSuccess();
       }
       
@@ -92,7 +114,7 @@ export default function TagAddModal({
       setIsAddingTags(false);
       setIsCompleted(false);
     }
-  }, [selectedItems, selectedTagIdsForAdd, allItems, itemType, addTagging, onSuccess, processedCount]);
+  }, [selectedItems, selectedTagIdsForAdd, allItems, itemType, addTagging, onSuccess, processedCount, queryClient]);
 
   const handleClose = useCallback(() => {
     // モーダルを閉じる時に状態をリセット

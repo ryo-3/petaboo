@@ -40,7 +40,7 @@ export default function SelectionMenuButton({
     },
     {
       id: 'tag',
-      label: 'タグを付ける',
+      label: 'タグ',
       icon: <TagIcon className="w-5 h-5" />,
       onClick: () => onTagging?.()
     },

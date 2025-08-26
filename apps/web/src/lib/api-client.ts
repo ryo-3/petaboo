@@ -376,17 +376,34 @@ export const taggingsApi = {
 
   // DELETE /taggings/by-tag
   deleteTaggingsByTag: async (tagId: number, targetType?: string, targetOriginalId?: string, token?: string) => {
-    const params = new URLSearchParams()
-    params.append('tagId', tagId.toString())
-    if (targetType) params.append('targetType', targetType)
-    if (targetOriginalId) params.append('targetOriginalId', targetOriginalId)
+    const requestBody = {
+      tagId,
+      targetType,
+      targetOriginalId,
+    };
     
-    const response = await fetch(`${API_BASE_URL}/taggings/by-tag?${params.toString()}`, {
+    console.log('🌐 API削除リクエスト:', {
+      url: `${API_BASE_URL}/taggings/by-tag`,
+      method: 'DELETE',
+      body: requestBody,
+      headers: createHeaders(token)
+    });
+    
+    const response = await fetch(`${API_BASE_URL}/taggings/by-tag`, {
       method: 'DELETE',
       headers: createHeaders(token),
+      body: JSON.stringify(requestBody),
     })
     
+    console.log('🌐 API削除レスポンス:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok
+    });
+    
     if (!response.ok) {
+      const errorText = await response.text();
+      console.log('🌐 API削除エラー詳細:', errorText);
       throw new Error(`HTTP error! status: ${response.status}`)
     }
     return response

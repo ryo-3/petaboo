@@ -64,7 +64,7 @@ export function useCreateTagging() {
         
         const data = await response.json()
         return data as Tagging
-      } catch (error) {
+      } catch {
         // すべてのエラーをサイレントに処理
         return { success: false };
       }
@@ -92,7 +92,7 @@ export function useCreateTagging() {
       // 汎用タグ付けクエリも無効化
       queryClient.invalidateQueries({ queryKey: ['taggings'], exact: false })
     },
-    onError: (error) => {
+    onError: () => {
       // エラーをサイレントに処理（ログ出力を抑制）
       // console.error('タグ付けエラー:', error);
     }

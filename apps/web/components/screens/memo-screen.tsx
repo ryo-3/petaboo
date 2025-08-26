@@ -27,7 +27,7 @@ import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useBoards } from "@/src/hooks/use-boards";
 import { useTags } from "@/src/hooks/use-tags";
-import TagAddModal from "@/components/ui/tag-add/tag-add-modal";
+import TagManagementModal from "@/components/ui/tag-management/tag-management-modal";
 import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import {
@@ -131,8 +131,8 @@ function MemoScreen({
   // CSVインポートモーダルの状態
   const [isCsvImportModalOpen, setIsCsvImportModalOpen] = useState(false);
 
-  // タグ追加モーダルの状態
-  const [isTagAddModalOpen, setIsTagAddModalOpen] = useState(false);
+  // タグ管理モーダルの状態
+  const [isTagManagementModalOpen, setIsTagManagementModalOpen] = useState(false);
 
   // タグ表示・編集モーダルの状態
   const [selectedMemoForTag, setSelectedMemoForTag] = useState<Memo | null>(null);
@@ -564,7 +564,7 @@ function MemoScreen({
             // TODO: ピン止め処理
           }}
           onTagging={() => {
-            setIsTagAddModalOpen(true);
+            setIsTagManagementModalOpen(true);
           }}
           onTabMove={() => {
             // TODO: タブ移動処理
@@ -612,15 +612,16 @@ function MemoScreen({
       />
       
 
-      {/* タグ追加モーダル */}
-      <TagAddModal
-        isOpen={isTagAddModalOpen}
-        onClose={() => setIsTagAddModalOpen(false)}
+      {/* タグ管理モーダル */}
+      <TagManagementModal
+        isOpen={isTagManagementModalOpen}
+        onClose={() => setIsTagManagementModalOpen(false)}
         tags={tags?.map(tag => ({ id: tag.id, name: tag.name, color: tag.color })) || []}
         selectedItemCount={checkedMemos.size}
         itemType="memo"
         selectedItems={Array.from(checkedMemos).map(id => id.toString())}
         allItems={memos || []}
+        allTaggings={safeAllTaggings || []}
         onSuccess={() => {
           setCheckedMemos(new Set());
         }}

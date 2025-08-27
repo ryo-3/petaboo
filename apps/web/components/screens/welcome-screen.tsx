@@ -22,7 +22,7 @@ function WelcomeScreen({ teamMode = false, teamName = "開発チーム" }: Welco
     name: teamName,
     description: "メインプロダクト開発チーム",
     members: [
-      { id: 1, name: "田中太郎", email: "tanaka@example.com", role: "owner", joinedAt: "2024-01-01" },
+      { id: 1, name: "田中太郎", email: "tanaka@example.com", role: "admin", joinedAt: "2024-01-01" },
       { id: 2, name: "佐藤花子", email: "sato@example.com", role: "admin", joinedAt: "2024-01-15" },
       { id: 3, name: "鈴木次郎", email: "suzuki@example.com", role: "member", joinedAt: "2024-02-01" }
     ],
@@ -116,17 +116,16 @@ function WelcomeScreen({ teamMode = false, teamName = "開発チーム" }: Welco
 
         {teamMode && currentView === "invite" && (
           <div className="space-y-4">
-            {/* 戻るボタン */}
-            <button 
-              onClick={() => setCurrentView("home")}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-800 text-sm"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              戻る
-            </button>
-
             <div className="bg-white rounded-lg p-4 border">
-              <h1 className="text-[22px] font-bold text-gray-800 mb-4">メンバー招待</h1>
+              <div className="flex items-center gap-3 mb-4">
+                <button 
+                  onClick={() => setCurrentView("home")}
+                  className="flex items-center text-gray-600 hover:text-gray-800"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+                <h1 className="text-[22px] font-bold text-gray-800">メンバー招待</h1>
+              </div>
               
               {/* 招待フォーム */}
               <div className="space-y-4">
@@ -185,19 +184,16 @@ function WelcomeScreen({ teamMode = false, teamName = "開発チーム" }: Welco
 
         {teamMode && currentView === "settings" && (
           <div className="space-y-4">
-            {/* 戻るボタン */}
-            <button 
-              onClick={() => setCurrentView("home")}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-800 text-sm"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              戻る
-            </button>
-
             <div className="bg-white rounded-lg border">
               {/* ヘッダー */}
               <div className="border-b border-gray-200 px-4 py-3">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => setCurrentView("home")}
+                    className="flex items-center text-gray-600 hover:text-gray-800"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                  </button>
                   <Settings className="w-5 h-5 text-gray-600" />
                   <h1 className="text-[22px] font-bold text-gray-800">チーム設定</h1>
                 </div>
@@ -241,12 +237,10 @@ function WelcomeScreen({ teamMode = false, teamName = "開発チーム" }: Welco
                             <div className="text-sm text-gray-600">{member.email}</div>
                           </div>
                           <span className={`px-2 py-1 text-xs rounded-full ${
-                            member.role === "owner" ? "bg-purple-100 text-purple-800" :
                             member.role === "admin" ? "bg-blue-100 text-blue-800" :
                             "bg-gray-100 text-gray-800"
                           }`}>
-                            {member.role === "owner" ? "オーナー" :
-                             member.role === "admin" ? "管理者" : "メンバー"}
+                            {member.role === "admin" ? "管理者" : "メンバー"}
                           </span>
                         </div>
                       ))}
@@ -282,16 +276,12 @@ function WelcomeScreen({ teamMode = false, teamName = "開発チーム" }: Welco
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">権限設定</h3>
                     <div className="space-y-4">
                       <div className="p-3 border rounded">
-                        <h4 className="font-medium text-gray-900">オーナー</h4>
-                        <p className="text-sm text-gray-600">チームの完全な管理権限</p>
-                      </div>
-                      <div className="p-3 border rounded">
                         <h4 className="font-medium text-gray-900">管理者</h4>
-                        <p className="text-sm text-gray-600">メンバー招待、コンテンツ管理</p>
+                        <p className="text-sm text-gray-600">メンバー招待、チーム設定変更、コンテンツ管理</p>
                       </div>
                       <div className="p-3 border rounded">
                         <h4 className="font-medium text-gray-900">メンバー</h4>
-                        <p className="text-sm text-gray-600">メモ・タスクの閲覧・編集</p>
+                        <p className="text-sm text-gray-600">メモ・タスクの作成・編集・削除</p>
                       </div>
                     </div>
                   </div>

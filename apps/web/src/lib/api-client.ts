@@ -31,6 +31,28 @@ export const memosApi = {
     }
     return response
   },
+
+  // GET /teams/:teamId/memos
+  getTeamMemos: async (teamId: number, token?: string) => {
+    const response = await fetch(`${API_BASE_URL}/teams/${teamId}/memos`, { 
+      headers: createHeaders(token) 
+    })
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    return response
+  },
+
+  // GET /teams/:teamId/deleted-memos  
+  getDeletedTeamMemos: async (teamId: number, token?: string) => {
+    const response = await fetch(`${API_BASE_URL}/teams/${teamId}/deleted-memos`, { 
+      headers: createHeaders(token) 
+    })
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    return response
+  },
   
   // POST /memos
   createNote: async (data: CreateMemoData, token?: string) => {

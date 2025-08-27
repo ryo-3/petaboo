@@ -57,6 +57,9 @@ interface MemoScreenProps {
   excludeItemIds?: number[];
   // ボードフィルターの選択肢から除外するボードID
   excludeBoardIdFromFilter?: number;
+  // チーム機能
+  teamMode?: boolean;
+  teamId?: number;
 }
 
 function MemoScreen({
@@ -74,6 +77,8 @@ function MemoScreen({
   initialSelectionMode = "select",
   excludeItemIds = [],
   excludeBoardIdFromFilter,
+  teamMode = false,
+  teamId,
 }: MemoScreenProps) {
   // 一括処理中断通知の監視
   useBulkProcessNotifications();
@@ -140,8 +145,8 @@ function MemoScreen({
   
 
   // データ取得
-  const { data: memos, isLoading: memoLoading, error: memoError } = useMemos();
-  const { data: deletedMemos } = useDeletedMemos();
+  const { data: memos, isLoading: memoLoading, error: memoError } = useMemos({ teamMode, teamId });
+  const { data: deletedMemos } = useDeletedMemos({ teamMode, teamId });
   const { preferences } = useUserPreferences(1);
   
   

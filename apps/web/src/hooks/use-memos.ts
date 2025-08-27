@@ -4,32 +4,50 @@ import { memosApi } from '@/src/lib/api-client'
 import type { Memo, DeletedMemo, CreateMemoData, UpdateMemoData } from '@/src/types/memo'
 
 // メモ一覧を取得するhook
-export function useMemos() {
+export function useMemos(options?: { teamMode?: boolean; teamId?: number }) {
   const { getToken } = useAuth()
+  const { teamMode = false, teamId } = options || {}
   
   return useQuery({
-    queryKey: ['memos'],
+    queryKey: teamMode ? ['team-memos', teamId] : ['memos'],
     queryFn: async () => {
       const token = await getToken()
-      const response = await memosApi.getMemos(token || undefined)
-      const data = await response.json()
-      return data as Memo[]
+      if (teamMode && teamId) {
+        // チーム用のAPIエンドポイント（まだ未実装）
+        const response = await memosApi.getTeamMemos(teamId, token || undefined)
+        const data = await response.json()
+        return data as Memo[]
+      } else {
+        const response = await memosApi.getMemos(token || undefined)
+        const data = await response.json()
+        return data as Memo[]
+      }
     },
+    enabled: teamMode ? Boolean(teamId) : true,
   })
 }
 
 // 削除済みメモ一覧を取得するhook
-export function useDeletedMemos() {
+export function useDeletedMemos(options?: { teamMode?: boolean; teamId?: number }) {
   const { getToken } = useAuth()
+  const { teamMode = false, teamId } = options || {}
   
   return useQuery({
-    queryKey: ['deletedMemos'],
+    queryKey: teamMode ? ['team-deleted-memos', teamId] : ['deletedMemos'],
     queryFn: async () => {
       const token = await getToken()
-      const response = await memosApi.getDeletedMemos(token || undefined)
-      const data = await response.json()
-      return data as DeletedMemo[]
+      if (teamMode && teamId) {
+        // チーム用のAPIエンドポイント（まだ未実装）
+        const response = await memosApi.getDeletedTeamMemos(teamId, token || undefined)
+        const data = await response.json()
+        return data as DeletedMemo[]
+      } else {
+        const response = await memosApi.getDeletedMemos(token || undefined)
+        const data = await response.json()
+        return data as DeletedMemo[]
+      }
     },
+    enabled: teamMode ? Boolean(teamId) : true,
   })
 }
 

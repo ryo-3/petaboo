@@ -10,6 +10,8 @@ interface MainProps {
   initialCurrentMode?: "memo" | "task" | "board";
   initialScreenMode?: "home" | "memo" | "task" | "create" | "search" | "settings" | "board";
   forceShowBoardDetail?: boolean;
+  teamMode?: boolean;
+  teamId?: number;
 }
 
 function Main({ 
@@ -20,7 +22,9 @@ function Main({
   serverBoardDescription,
   initialCurrentMode,
   initialScreenMode,
-  forceShowBoardDetail
+  forceShowBoardDetail,
+  teamMode,
+  teamId
 }: MainProps = {}) {
   return (
     <NavigationProvider 
@@ -34,6 +38,8 @@ function Main({
         serverBoardTitle={serverBoardTitle}
         serverBoardDescription={serverBoardDescription}
         forceShowBoardDetail={forceShowBoardDetail}
+        teamMode={teamMode}
+        teamId={teamId}
       />
     </NavigationProvider>
   );

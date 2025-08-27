@@ -40,6 +40,10 @@ interface MainContentAreaProps {
   showingBoardDetail: boolean;
   boardScreenRef: RefObject<BoardScreenRef | null>;
   
+  // チーム機能
+  teamMode?: boolean;
+  teamId?: number;
+  
   // ハンドラー
   handleSelectMemo: (memo: Memo | null) => void;
   handleSelectDeletedMemo: (memo: DeletedMemo | null) => void;
@@ -83,6 +87,8 @@ export function MainContentArea({
   handleBoardSelectMemo,
   handleBoardSelectTask,
   handleBoardClearSelection,
+  teamMode = false,
+  teamId,
 }: MainContentAreaProps) {
   return (
     <>
@@ -101,6 +107,8 @@ export function MainContentArea({
             setSelectedMemo(null);
             setSelectedDeletedMemo(null);
           }}
+          teamMode={teamMode}
+          teamId={teamId}
         />
       )}
 

@@ -21,6 +21,8 @@ interface MainClientProps {
   serverBoardTitle?: string;
   serverBoardDescription?: string | null;
   forceShowBoardDetail?: boolean;
+  teamMode?: boolean;
+  teamId?: number;
 }
 
 function MainClient({ 
@@ -29,7 +31,9 @@ function MainClient({
   showBoardHeader = true, 
   serverBoardTitle, 
   serverBoardDescription,
-  forceShowBoardDetail = false
+  forceShowBoardDetail = false,
+  teamMode = false,
+  teamId
 }: MainClientProps) {
   // ==========================================
   // State管理
@@ -248,6 +252,8 @@ function MainClient({
           handleBoardSelectMemo={handleBoardSelectMemo}
           handleBoardSelectTask={handleBoardSelectTask}
           handleBoardClearSelection={handleBoardClearSelection}
+          teamMode={teamMode}
+          teamId={teamId}
         />
       </MainClientDesktop>
     </main>

@@ -93,7 +93,7 @@ export function MainContentArea({
   return (
     <>
       {/* ホーム画面 */}
-      {screenMode === "home" && <WelcomeScreen />}
+      {screenMode === "home" && <WelcomeScreen teamMode={teamMode} />}
 
       {/* メモ関連画面（一覧・表示・編集） */}
       {screenMode === "memo" && (

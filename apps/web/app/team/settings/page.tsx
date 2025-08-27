@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
-import Main from "../main";
+import TeamSettingsScreen from "@/components/screens/team-settings-screen";
 
-export default async function TeamPage() {
+export default async function TeamSettingsPage() {
   const { userId } = await auth();
 
   if (!userId) {
@@ -12,6 +12,6 @@ export default async function TeamPage() {
     );
   }
 
-  // チームモードでMainコンポーネントを使用（個人用と全く同じUI）
-  return <Main teamMode={true} teamId={1} />;
+  // TODO: 実際のteamIdはURLパラメータやユーザー設定から取得
+  return <TeamSettingsScreen teamId={1} />;
 }

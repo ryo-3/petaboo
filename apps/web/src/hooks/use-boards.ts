@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
 import { Board, BoardWithStats, BoardWithItems, CreateBoardData, UpdateBoardData, AddItemToBoardData, BoardItem } from "@/src/types/board";
 import { DeletedMemo } from "@/src/types/memo";
@@ -592,7 +592,7 @@ export function useItemBoards(itemType: 'memo' | 'task', itemId: string | undefi
       throw new Error('Failed after retry');
     },
     enabled: !!itemId,
-    placeholderData: keepPreviousData, // 前のデータを保持してちらつき防止
+    keepPreviousData: true, // 前のデータを保持してちらつき防止
   });
 }
 

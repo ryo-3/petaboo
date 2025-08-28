@@ -17,7 +17,7 @@
     "@clerk/nextjs": "^6.23.0",
     "@clerk/types": "^4.61.0",
     "@repo/ui": "workspace:*",
-    "@tanstack/react-query": "^5.56.2",
+    "@tanstack/react-query": "^4.36.1",
     "@hono/zod-openapi": "^0.18.4",
     "hono": "^4.6.15",
     "clsx": "^2.1.1",
@@ -26,7 +26,13 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-resizable-panels": "^3.0.3",
-    "tailwind-merge": "^3.3.1"
+    "tailwind-merge": "^3.3.1",
+    "@refinedev/core": "^4.47.0",
+    "@refinedev/nextjs-router": "^6.0.4",
+    "@refinedev/simple-rest": "^4.5.3",
+    "@refinedev/antd": "^5.37.0",
+    "@refinedev/kbar": "^1.2.0",
+    "antd": "^5.22.4"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

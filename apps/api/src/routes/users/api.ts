@@ -1,6 +1,6 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { getAuth } from "@hono/clerk-auth";
-import { eq } from "drizzle-orm";
+import { eq, desc, asc } from "drizzle-orm";
 import { users } from "../../db";
 import type { DatabaseType } from "../../types/common";
 

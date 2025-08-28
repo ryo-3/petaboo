@@ -45,10 +45,9 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8794";
 export function useBoards(status: "normal" | "completed" | "deleted" = "normal") {
   const { getToken, isLoaded } = useAuth();
 
-  return useQuery<BoardWithStats[]>({
-    queryKey: ["boards", status],
-    enabled: isLoaded, // 認証完了まで待機
-    queryFn: async () => {
+  return useQuery<BoardWithStats[]>(
+    ["boards", status],
+    async () => {
       // 最大2回リトライ
       for (let attempt = 0; attempt < 2; attempt++) {
         const token = await getCachedToken(getToken);
@@ -79,17 +78,19 @@ export function useBoards(status: "normal" | "completed" | "deleted" = "normal")
       
       throw new Error('Failed after retry');
     },
-  });
+    {
+      enabled: isLoaded,
+    }
+  );
 }
 
 // 特定ボード取得（アイテム付き）
 export function useBoardWithItems(boardId: number | null, skip: boolean = false) {
   const { getToken, isLoaded } = useAuth();
 
-  return useQuery<BoardWithItems>({
-    queryKey: ["boards", boardId, "items"],
-    enabled: boardId !== null && isLoaded && !skip, // 認証完了まで待機
-    queryFn: async () => {
+  return useQuery<BoardWithItems>(
+    ["boards", boardId, "items"],
+    async () => {
       // 最大2回リトライ
       for (let attempt = 0; attempt < 2; attempt++) {
         const token = await getCachedToken(getToken);
@@ -124,20 +125,23 @@ export function useBoardWithItems(boardId: number | null, skip: boolean = false)
       
       throw new Error('Failed after retry');
     },
-    staleTime: 2 * 60 * 1000,     // 2分間は新鮮なデータとして扱う
-    gcTime: 10 * 60 * 1000,       // 10分間キャッシュを保持
-    refetchOnWindowFocus: false,  // ウィンドウフォーカス時の再取得を無効化
-    refetchOnMount: false,        // マウント時の再取得を無効化
-  });
+    {
+      enabled: boardId !== null && isLoaded && !skip,
+      staleTime: 2 * 60 * 1000,
+      cacheTime: 10 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+    }
+  );
 }
 
 // slugからボード情報を取得
 export function useBoardBySlug(slug: string | null) {
   const { getToken } = useAuth();
 
-  return useQuery<Board>({
-    queryKey: ["boards", "slug", slug],
-    queryFn: async () => {
+  return useQuery<Board>(
+    ["boards", "slug", slug],
+    async () => {
       const token = await getCachedToken(getToken);
       
       const response = await fetch(`${API_BASE_URL}/boards/slug/${slug}`, {
@@ -156,12 +160,14 @@ export function useBoardBySlug(slug: string | null) {
       const data = await response.json();
       return data;
     },
-    enabled: !!slug,
-    staleTime: 2 * 60 * 1000,     // 2分間は新鮮なデータとして扱う
-    gcTime: 10 * 60 * 1000,       // 10分間キャッシュを保持
-    refetchOnWindowFocus: false,  // ウィンドウフォーカス時の再取得を無効化
-    refetchOnMount: false,        // マウント時の再取得を無効化
-  });
+    {
+      enabled: !!slug,
+      staleTime: 2 * 60 * 1000,
+      cacheTime: 10 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+    }
+  );
 }
 
 // ボード作成
@@ -600,10 +606,9 @@ export function useItemBoards(itemType: 'memo' | 'task', itemId: string | undefi
 export function useBoardDeletedItems(boardId: number) {
   const { getToken, isLoaded } = useAuth();
 
-  return useQuery<{memos: DeletedMemo[], tasks: DeletedTask[]}>({
-    queryKey: ["board-deleted-items", boardId],
-    enabled: isLoaded, // 認証完了まで待機
-    queryFn: async () => {
+  return useQuery<{memos: DeletedMemo[], tasks: DeletedTask[]}>(
+    ["board-deleted-items", boardId],
+    async () => {
       // 最大2回リトライ
       for (let attempt = 0; attempt < 2; attempt++) {
         const token = await getCachedToken(getToken);
@@ -668,10 +673,13 @@ export function useBoardDeletedItems(boardId: number) {
       
       throw new Error('Failed after retry');
     },
-    staleTime: 2 * 60 * 1000,     // 2分間は新鮮なデータとして扱う
-    gcTime: 10 * 60 * 1000,       // 10分間キャッシュを保持
-    refetchOnWindowFocus: false,  // ウィンドウフォーカス時の再取得を無効化
-    refetchOnMount: false,        // マウント時の再取得を無効化
-  });
+    {
+      enabled: isLoaded,
+      staleTime: 2 * 60 * 1000,
+      cacheTime: 10 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+    }
+  );
 }
 

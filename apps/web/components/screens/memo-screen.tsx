@@ -145,7 +145,11 @@ function MemoScreen({
   
 
   // データ取得
-  const { data: memos, isLoading: memoLoading, error: memoError } = useMemos({ teamMode, teamId });
+  const { data: memos, isLoading: memoLoading, error: memoError } = useMemos({ teamMode, teamId }) as {
+    data: Memo[] | undefined;
+    isLoading: boolean;
+    error: Error | null;
+  };
   const { data: deletedMemos } = useDeletedMemos({ teamMode, teamId });
   const { preferences } = useUserPreferences(1);
   

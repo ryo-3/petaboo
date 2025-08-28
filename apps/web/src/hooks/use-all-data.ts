@@ -11,10 +11,9 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8794";
 export function useAllTaggings() {
   const { getToken, isLoaded } = useAuth();
 
-  const result = useQuery<Tagging[]>({
-    queryKey: ['taggings', 'all'],
-    enabled: isLoaded,
-    queryFn: async () => {
+  const result = useQuery<Tagging[]>(
+    ['taggings', 'all'],
+    async () => {
       const token = await getToken();
       
       const response = await fetch(`${API_BASE_URL}/taggings`, {
@@ -31,13 +30,16 @@ export function useAllTaggings() {
       const data = await response.json();
       return data;
     },
-    staleTime: 5 * 60 * 1000,     // 5分間キャッシュ
-    gcTime: 30 * 60 * 1000,        // 30分間保持
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    retry: 3,                      // 最大3回リトライ
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // 指数バックオフ
-  });
+    {
+      enabled: isLoaded,
+      staleTime: 5 * 60 * 1000,
+      cacheTime: 30 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      retry: 3,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    }
+  );
 
   return result;
 }
@@ -58,10 +60,9 @@ interface BoardItem {
 export function useAllBoardItems() {
   const { getToken, isLoaded } = useAuth();
 
-  return useQuery<BoardItem[]>({
-    queryKey: ['boards', 'all-items'],
-    enabled: isLoaded,
-    queryFn: async () => {
+  return useQuery<BoardItem[]>(
+    ['boards', 'all-items'],
+    async () => {
       const token = await getToken();
       
       const response = await fetch(`${API_BASE_URL}/boards/all-items`, {
@@ -84,11 +85,14 @@ export function useAllBoardItems() {
       // 物理削除になったので、返されるデータはすべて有効
       return data;
     },
-    staleTime: 5 * 60 * 1000,     // 5分間キャッシュ
-    gcTime: 30 * 60 * 1000,        // 30分間保持
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    retry: 3,                      // 最大3回リトライ
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // 指数バックオフ
-  });
+    {
+      enabled: isLoaded,
+      staleTime: 5 * 60 * 1000,
+      cacheTime: 30 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      retry: 3,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    }
+  );
 }

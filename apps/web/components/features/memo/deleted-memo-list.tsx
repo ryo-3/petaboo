@@ -15,7 +15,11 @@ interface DeletedMemoListProps {
 }
 
 function DeletedMemoList({ onBackToMemos, onSelectDeletedMemo }: DeletedMemoListProps) {
-  const { data: deletedMemos, isLoading, error } = useDeletedMemos()
+  const { data: deletedMemos, isLoading, error } = useDeletedMemos() as {
+    data: DeletedMemo[] | undefined;
+    isLoading: boolean;
+    error: Error | null;
+  }
 
   return (
     <div className="flex flex-col justify-between">

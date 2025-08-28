@@ -2,7 +2,7 @@ import Main from "@/app/main";
 import { auth } from "@clerk/nextjs/server";
 import { QueryClient } from "@tanstack/react-query";
 import { dehydrate } from "@tanstack/react-query";
-import { HydrationBoundary } from "@tanstack/react-query";
+import { Hydrate } from "@tanstack/react-query";
 import type { BoardWithItems } from "@/src/types/board";
 
 interface BoardPageProps {
@@ -60,7 +60,7 @@ export default async function BoardPage({ params }: BoardPageProps) {
   // サーバーサイドでボード情報を取得できた場合
   if (boardData) {
     return (
-      <HydrationBoundary state={dehydrate(queryClient)}>
+      <Hydrate state={dehydrate(queryClient)}>
         <Main 
           initialBoardName={boardData.name}
           boardId={boardData.id}
@@ -71,7 +71,7 @@ export default async function BoardPage({ params }: BoardPageProps) {
           initialScreenMode="board"
           forceShowBoardDetail={true}
         />
-      </HydrationBoundary>
+      </Hydrate>
     );
   }
   

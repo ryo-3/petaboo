@@ -1,31 +1,14 @@
 "use client";
 
 import React from "react";
-import { useList, useUpdate } from "@refinedev/core";
-import { List, useTable, EditButton, ShowButton, DeleteButton } from "@refinedev/antd";
-import { Table, Space, Tag, Button } from "antd";
+import { useList } from "@refinedev/core";
+import { List, ShowButton, EditButton } from "@refinedev/antd";
+import { Table, Tag, Space } from "antd";
 
 export default function UsersList() {
-  const { tableProps } = useTable({
+  const { data: userData, isLoading } = useList({
     resource: "users",
-    meta: {
-      endpoint: "/users", // カスタムエンドポイント
-    },
   });
-
-  const { mutate: updateUser } = useUpdate();
-
-  const changePlan = (userId: string, planType: "free" | "premium") => {
-    updateUser({
-      resource: "users",
-      id: userId,
-      values: { planType },
-      meta: {
-        method: "PATCH",
-        endpoint: `/users/plan`,
-      },
-    });
-  };
 
   const columns = [
     {
@@ -59,23 +42,8 @@ export default function UsersList() {
       key: "action",
       render: (_: any, record: any) => (
         <Space size="middle">
-          <Button
-            type="primary"
-            size="small"
-            onClick={() => changePlan(record.userId, "premium")}
-            disabled={record.planType === "premium"}
-          >
-            Premium化
-          </Button>
-          <Button
-            size="small"
-            onClick={() => changePlan(record.userId, "free")}
-            disabled={record.planType === "free"}
-          >
-            Free化
-          </Button>
           <ShowButton hideText size="small" recordItemId={record.userId} />
-          <DeleteButton hideText size="small" recordItemId={record.userId} />
+          <EditButton hideText size="small" recordItemId={record.userId} />
         </Space>
       ),
     },
@@ -83,7 +51,12 @@ export default function UsersList() {
 
   return (
     <List>
-      <Table {...tableProps} columns={columns} rowKey="userId" />
+      <Table 
+        dataSource={userData?.data || []} 
+        columns={columns} 
+        rowKey="userId"
+        loading={isLoading}
+      />
     </List>
   );
 }

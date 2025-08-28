@@ -77,7 +77,11 @@ export function useBoardOperations({
 }: UseBoardOperationsProps): UseBoardOperationsReturn {
   
   // データ取得
-  const { data: boardWithItems, isLoading, error } = useBoardWithItems(boardId);
+  const { data: boardWithItems, isLoading, error } = useBoardWithItems(boardId) as {
+    data: BoardWithItems | undefined;
+    isLoading: boolean;
+    error: Error | null;
+  };
   const { data: boardDeletedItems, refetch: refetchDeletedItems } = useBoardDeletedItems(boardId);
   
   const removeItemFromBoard = useRemoveItemFromBoard();

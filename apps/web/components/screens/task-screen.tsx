@@ -78,7 +78,11 @@ function TaskScreen({
   useBulkProcessNotifications();
 
   // データ取得
-  const { data: tasks, isLoading: taskLoading, error: taskError } = useTasks();
+  const { data: tasks, isLoading: taskLoading, error: taskError } = useTasks() as {
+    data: Task[] | undefined;
+    isLoading: boolean;
+    error: Error | null;
+  };
   const { data: deletedTasks } = useDeletedTasks();
   const { preferences } = useUserPreferences(1);
   const { data: boards } = useBoards();

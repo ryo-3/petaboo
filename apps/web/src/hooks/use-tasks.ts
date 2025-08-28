@@ -8,19 +8,21 @@ import { useToast } from '@/src/contexts/toast-context'
 export function useTasks() {
   const { getToken } = useAuth()
   
-  return useQuery({
-    queryKey: ['tasks'],
-    queryFn: async () => {
+  return useQuery<Task[]>(
+    ['tasks'],
+    async () => {
       const token = await getToken()
       const response = await tasksApi.getTasks(token || undefined)
       const data = await response.json()
       return data as Task[]
     },
-    staleTime: 2 * 60 * 1000,    // 2分間は新鮮なデータとして扱う
-    gcTime: 10 * 60 * 1000,      // 10分間キャッシュを保持
-    refetchOnWindowFocus: false, // ウィンドウフォーカス時の再取得を無効化
-    refetchOnMount: false,       // マウント時の再取得を無効化
-  })
+    {
+      staleTime: 2 * 60 * 1000,
+      cacheTime: 10 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+    }
+  )
 }
 
 // タスク作成hook
@@ -137,19 +139,21 @@ export function useDeleteTask() {
 export function useDeletedTasks() {
   const { getToken } = useAuth()
   
-  return useQuery({
-    queryKey: ['deleted-tasks'],
-    queryFn: async () => {
+  return useQuery<DeletedTask[]>(
+    ['deleted-tasks'],
+    async () => {
       const token = await getToken()
       const response = await tasksApi.getDeletedTasks(token || undefined)
       const data = await response.json()
       return data as DeletedTask[]
     },
-    staleTime: 2 * 60 * 1000,    // 2分間は新鮮なデータとして扱う
-    gcTime: 10 * 60 * 1000,      // 10分間キャッシュを保持
-    refetchOnWindowFocus: false, // ウィンドウフォーカス時の再取得を無効化
-    refetchOnMount: false,       // マウント時の再取得を無効化
-  })
+    {
+      staleTime: 2 * 60 * 1000,
+      cacheTime: 10 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+    }
+  )
 }
 
 // タスク完全削除hook

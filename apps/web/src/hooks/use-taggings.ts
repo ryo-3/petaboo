@@ -85,7 +85,7 @@ export function useCreateTagging() {
         }] 
       })
       // 全タグ付け情報に新しいタグ付けを追加
-      queryClient.setQueryData(['taggings', 'all'], (oldTaggings: Tagging[]) => {
+      queryClient.setQueryData(['taggings', 'all'], (oldTaggings: Tagging[] | undefined) => {
         if (!oldTaggings) return [newTagging]
         return [...oldTaggings, newTagging];
       })
@@ -110,7 +110,7 @@ export function useDeleteTagging() {
     },
     onSuccess: (_, id) => {
       // 全タグ付け情報から削除されたタグ付けを除去
-      queryClient.setQueryData(['taggings', 'all'], (oldTaggings: Tagging[]) => {
+      queryClient.setQueryData(['taggings', 'all'], (oldTaggings: Tagging[] | undefined) => {
         if (!oldTaggings) return []
         return oldTaggings.filter(tagging => tagging.id !== id);
       })
@@ -144,7 +144,7 @@ export function useDeleteTaggingsByTag() {
     },
     onSuccess: (_, { tagId, targetType, targetOriginalId }) => {
       // 全タグ付け情報から条件に一致するタグ付けを除去
-      queryClient.setQueryData(['taggings', 'all'], (oldTaggings: Tagging[]) => {
+      queryClient.setQueryData(['taggings', 'all'], (oldTaggings: Tagging[] | undefined) => {
         if (!oldTaggings) return []
         return oldTaggings.filter(tagging => {
           if (tagging.tagId !== tagId) return true

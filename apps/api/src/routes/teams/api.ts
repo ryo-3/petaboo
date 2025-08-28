@@ -14,7 +14,7 @@ const createTeamSchema = z.object({
 // チーム作成ルート定義
 export const createTeamRoute = createRoute({
   method: "post",
-  path: "/teams",
+  path: "/",
   request: {
     body: {
       content: {
@@ -74,10 +74,39 @@ export const getMyTeamRoute = createRoute({
   tags: ["Teams"],
 });
 
+// 管理者用チーム一覧取得ルート定義
+export const getTeamsRoute = createRoute({
+  method: "get",
+  path: "/",
+  responses: {
+    200: {
+      description: "チーム一覧取得成功",
+      content: {
+        "application/json": {
+          schema: z.object({
+            teams: z.array(z.object({
+              id: z.number(),
+              name: z.string(),
+              description: z.string().nullable(),
+              memberCount: z.number(),
+              createdAt: z.number(),
+            })),
+            total: z.number(),
+          }),
+        },
+      },
+    },
+    401: {
+      description: "認証が必要です",
+    },
+  },
+  tags: ["Teams"],
+});
+
 // チーム参加ルート定義
 export const joinTeamRoute = createRoute({
   method: "post",
-  path: "/teams/{teamId}/join",
+  path: "/{teamId}/join",
   request: {
     params: z.object({
       teamId: z.string().transform(Number),
@@ -232,6 +261,40 @@ export async function getMyTeam(c: any) {
   } catch (error) {
     console.error("チーム情報取得エラー:", error);
     return c.json({ error: "チーム情報の取得に失敗しました" }, 500);
+  }
+}
+
+// 管理者用チーム一覧取得の実装
+export async function getTeams(c: any) {
+  const auth = getAuth(c);
+  if (!auth?.userId) {
+    return c.json({ error: "認証が必要です" }, 401);
+  }
+
+  const db: DatabaseType = c.env.db;
+
+  try {
+    // 全チーム一覧とメンバー数を取得
+    const teamsWithCount = await db
+      .select({
+        id: teams.id,
+        name: teams.name,
+        description: teams.description,
+        createdAt: teams.createdAt,
+        memberCount: count(teamMembers.userId),
+      })
+      .from(teams)
+      .leftJoin(teamMembers, eq(teams.id, teamMembers.teamId))
+      .groupBy(teams.id, teams.name, teams.description, teams.createdAt);
+
+    return c.json({
+      teams: teamsWithCount,
+      total: teamsWithCount.length,
+    }, 200);
+
+  } catch (error) {
+    console.error("チーム一覧取得エラー:", error);
+    return c.json({ error: "チーム一覧の取得に失敗しました" }, 500);
   }
 }
 

@@ -8,6 +8,7 @@ import { ToastContainer } from "@/components/ui/toast/toast-container";
 import { UserPreferencesProvider } from "@/src/contexts/user-preferences-context";
 import { getServerUserPreferences } from "@/src/lib/server-preferences";
 import { SelectorProvider } from "@/src/contexts/selector-context";
+import { UserInitializer } from "@/components/auth/user-initializer";
 
 import { jaJP } from "@clerk/localizations";
 const geistSans = Geist({
@@ -48,6 +49,7 @@ export default async function RootLayout({
             <UserPreferencesProvider initialPreferences={initialPreferences}>
               <ToastProvider>
                 <SelectorProvider>
+                  <UserInitializer />
                   {children}
                   <ToastContainer />
                 </SelectorProvider>

@@ -47,7 +47,8 @@
       "Bash(npx husky:*)",
       "Bash(pkill:*)",
       "Bash(ss:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(pnpm db:push:*)"
     ],
     "deny": []
   }

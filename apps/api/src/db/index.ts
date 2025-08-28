@@ -1,3 +1,4 @@
+export * from "./schema/users";
 export * from "./schema/memos";
 export * from "./schema/tasks";
 export * from "./schema/user-preferences";

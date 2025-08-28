@@ -11,6 +11,9 @@ import boardsRoute from "./src/routes/boards/route";
 import tagsRoute from "./src/routes/tags/route";
 import taggingsRoute from "./src/routes/taggings/route";
 import boardCategoriesRoute from "./src/routes/board-categories/route";
+import teamsRoute from "./src/routes/teams/route";
+import clerkWebhook from "./src/routes/webhooks/clerk";
+import usersRoute from "./src/routes/users/route";
 
 // 環境変数確認（開発環境のみ）
 if (process.env.NODE_ENV === "development") {
@@ -41,6 +44,9 @@ app.route("/boards", boardsRoute);
 app.route("/tags", tagsRoute);
 app.route("/taggings", taggingsRoute);
 app.route("/board-categories", boardCategoriesRoute);
+app.route("/teams", teamsRoute);
+app.route("/webhooks/clerk", clerkWebhook);
+app.route("/users", usersRoute);
 app.get("/openapi", (c) => {
   const openapiJson = openapiApp.getOpenAPIDocument({
     openapi: "3.1.0", // バージョンは "3.0.0" でもOK

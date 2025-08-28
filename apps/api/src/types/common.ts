@@ -9,3 +9,6 @@ export interface AppEnv {
     db: DatabaseType;
   };
 }
+
+export type AppType = Hono<AppEnv>;
+export type Env = AppEnv;

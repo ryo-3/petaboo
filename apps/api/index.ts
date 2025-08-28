@@ -29,7 +29,7 @@ const app = new Hono();
 // CORS設定
 app.use("*", cors({
   origin: "http://localhost:7593",
-  allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 }));

@@ -2,7 +2,7 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { clerkMiddleware } from "@hono/clerk-auth";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import Database from "better-sqlite3";
-import { getUserInfoRoute, getUserInfo } from "./api";
+import { getUserInfoRoute, getUserInfo, updateUserPlanRoute, updateUserPlan } from "./api";
 
 // SQLite & drizzle セットアップ
 const sqlite = new Database("sqlite.db");
@@ -21,5 +21,6 @@ usersRoute.use("*", clerkMiddleware());
 
 // ルート定義を登録
 usersRoute.openapi(getUserInfoRoute, getUserInfo);
+usersRoute.openapi(updateUserPlanRoute, updateUserPlan);
 
 export default usersRoute;

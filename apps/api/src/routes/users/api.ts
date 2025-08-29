@@ -15,6 +15,7 @@ export const getUserInfoRoute = createRoute({
         "application/json": {
           schema: z.object({
             userId: z.string(),
+            displayName: z.string().nullable(),
             planType: z.enum(["free", "premium"]),
             createdAt: z.number(),
           }),
@@ -256,6 +257,7 @@ export async function getUserInfo(c: any) {
       return c.json(
         {
           userId: auth.userId,
+          displayName: null,
           planType: "free",
           createdAt: now,
         },
@@ -267,6 +269,7 @@ export async function getUserInfo(c: any) {
     return c.json(
       {
         userId: user.userId,
+        displayName: user.displayName,
         planType: user.planType,
         createdAt: user.createdAt,
       },

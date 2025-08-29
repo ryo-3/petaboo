@@ -1,15 +1,15 @@
 interface EmptyStateProps {
   message: string;
   className?: string;
-  variant?: 'centered' | 'simple';
+  variant?: "centered" | "simple";
 }
 
-function EmptyState({ 
-  message, 
+function EmptyState({
+  message,
   className,
-  variant = 'centered'
+  variant = "centered",
 }: EmptyStateProps) {
-  if (variant === 'simple') {
+  if (variant === "simple") {
     return (
       <div className={className || "text-center py-4 text-gray-400 text-sm"}>
         {message}

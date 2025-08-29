@@ -9,23 +9,26 @@ interface SelectionModeToggleProps {
   iconSize: string;
 }
 
-function SelectionModeToggle({ mode, onModeChange, buttonSize, iconSize }: SelectionModeToggleProps) {
+function SelectionModeToggle({
+  mode,
+  onModeChange,
+  buttonSize,
+  iconSize,
+}: SelectionModeToggleProps) {
   const handleToggle = () => {
     onModeChange(mode === "select" ? "check" : "select");
   };
 
   return (
     <Tooltip
-      text={
-        mode === "select" ? "チェックモード" : "チェックモード解除"
-      }
+      text={mode === "select" ? "チェックモード" : "チェックモード解除"}
       position="bottom"
     >
       <button
         onClick={handleToggle}
         className={`bg-gray-100 rounded-lg ${buttonSize} flex items-center justify-center transition-colors ${
-          mode === "check" 
-            ? "text-Green hover:text-Green/90" 
+          mode === "check"
+            ? "text-Green hover:text-Green/90"
             : "text-gray-400 hover:text-gray-500"
         }`}
       >

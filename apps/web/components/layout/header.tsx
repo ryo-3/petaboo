@@ -13,8 +13,6 @@ function Header() {
           {/* タイトル */}
           <h1 className="text-xl font-semibold text-gray-800">Memos</h1>
         </div>
-
-
       </div>
     </header>
   );

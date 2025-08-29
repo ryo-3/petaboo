@@ -12,7 +12,7 @@ export function useBoardState() {
     "todo" | "in_progress" | "completed" | "deleted"
   >("todo");
   const [activeMemoTab, setActiveMemoTab] = useState<"normal" | "deleted">(
-    "normal"
+    "normal",
   );
   const [showTabText, setShowTabText] = useState(true);
 
@@ -31,7 +31,7 @@ export function useBoardState() {
 
   // ボードレイアウト状態
   const [boardLayout, setBoardLayout] = useState<"horizontal" | "vertical">(
-    "horizontal"
+    "horizontal",
   );
   const [isReversed, setIsReversed] = useState(false);
 
@@ -52,7 +52,6 @@ export function useBoardState() {
     }
   }, [rightPanelMode]);
 
-
   // ボードレイアウト変更ハンドラー（反転機能付き）
   const handleBoardLayoutChange = useCallback(
     (newLayout: "horizontal" | "vertical") => {
@@ -65,7 +64,7 @@ export function useBoardState() {
         setIsReversed(false);
       }
     },
-    [boardLayout]
+    [boardLayout],
   );
 
   // 設定画面への遷移
@@ -85,7 +84,7 @@ export function useBoardState() {
         setShowMemo(show);
       }
     },
-    [rightPanelMode]
+    [rightPanelMode],
   );
 
   // タスクボタンのハンドラー（一覧表示中は切り替え）
@@ -99,7 +98,7 @@ export function useBoardState() {
         setShowTask(show);
       }
     },
-    [rightPanelMode]
+    [rightPanelMode],
   );
 
   // タスクタブ切り替え時の処理
@@ -108,7 +107,7 @@ export function useBoardState() {
       setActiveTaskTab(newTab);
       // 選択解除は行わない（タブ切り替えで選択状態は保持）
     },
-    []
+    [],
   );
 
   // メモタブ切り替え時の処理
@@ -133,11 +132,11 @@ export function useBoardState() {
   // 右パネルを閉じる
   const handleCloseRightPanel = useCallback((onClearSelection?: () => void) => {
     const currentMode = rightPanelModeRef.current;
-    
+
     setRightPanelMode(null);
     setSelectedItemsFromList(new Set());
     onClearSelection?.();
-    
+
     // メモ一覧・タスク一覧を閉じる場合は、通常の表示に戻す
     if (currentMode === "memo-list" || currentMode === "task-list") {
       // 即座に両方表示に戻す
@@ -159,7 +158,7 @@ export function useBoardState() {
       };
       onSelectMemo?.(newMemo);
     },
-    [] // 依存配列を空にして安定化
+    [], // 依存配列を空にして安定化
   );
 
   const createNewTaskHandler = useCallback(
@@ -169,7 +168,10 @@ export function useBoardState() {
         id: 0, // 新規作成時は0
         title: "",
         description: null,
-        status: activeTaskTabRef.current === "deleted" ? "todo" : activeTaskTabRef.current, // 削除済みタブの場合は未着手にする
+        status:
+          activeTaskTabRef.current === "deleted"
+            ? "todo"
+            : activeTaskTabRef.current, // 削除済みタブの場合は未着手にする
         priority: "medium",
         dueDate: null,
         categoryId: null,
@@ -179,7 +181,7 @@ export function useBoardState() {
       };
       onSelectTask?.(newTask);
     },
-    [] // 依存配列を空にして安定化
+    [], // 依存配列を空にして安定化
   );
 
   return {

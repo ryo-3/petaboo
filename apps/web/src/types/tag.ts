@@ -14,7 +14,7 @@ export interface Tag {
 export interface Tagging {
   id: number;
   tagId: number;
-  targetType: 'memo' | 'task' | 'board';
+  targetType: "memo" | "task" | "board";
   targetOriginalId: string;
   userId: string;
   createdAt: Date;
@@ -33,7 +33,7 @@ export interface UpdateTagData {
 
 export interface CreateTaggingData {
   tagId: number;
-  targetType: 'memo' | 'task' | 'board';
+  targetType: "memo" | "task" | "board";
   targetOriginalId: string;
 }
 

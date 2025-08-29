@@ -7,7 +7,11 @@ import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { memos, deletedMemos } from "../../db/schema/memos";
 import { boardItems } from "../../db/schema/boards";
 import { taggings } from "../../db/schema/tags";
-import { generateOriginalId, generateUuid, migrateOriginalId } from "../../utils/originalId";
+import {
+  generateOriginalId,
+  generateUuid,
+  migrateOriginalId,
+} from "../../utils/originalId";
 
 // SQLite & drizzle セットアップ
 const sqlite = new Database("sqlite.db");
@@ -16,10 +20,13 @@ const db = drizzle(sqlite);
 const app = new OpenAPIHono();
 
 // Clerk認証ミドルウェアを追加
-app.use('*', clerkMiddleware({ 
-  secretKey: process.env.CLERK_SECRET_KEY,
-  publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
-}));
+app.use(
+  "*",
+  clerkMiddleware({
+    secretKey: process.env.CLERK_SECRET_KEY,
+    publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
+  }),
+);
 
 // 共通スキーマ定義
 const MemoSchema = z.object({
@@ -33,7 +40,10 @@ const MemoSchema = z.object({
 
 const MemoInputSchema = z.object({
   title: z.string().min(1).max(200, "タイトルは200文字以内で入力してください"),
-  content: z.string().max(10000, "内容は10,000文字以内で入力してください").optional(),
+  content: z
+    .string()
+    .max(10000, "内容は10,000文字以内で入力してください")
+    .optional(),
 });
 
 const ImportResultSchema = z.object({
@@ -44,31 +54,34 @@ const ImportResultSchema = z.object({
 
 // CSVパース関数
 function parseCSV(csvText: string): { title: string; content?: string }[] {
-  const lines = csvText.trim().split('\n');
+  const lines = csvText.trim().split("\n");
   if (lines.length < 2) return [];
-  
+
   const header = lines[0].toLowerCase();
-  if (!header.includes('title')) return [];
-  
+  if (!header.includes("title")) return [];
+
   const results: { title: string; content?: string }[] = [];
-  
+
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line) continue;
-    
+
     // 簡単なCSVパース（カンマ区切り、ダブルクォート対応）
-    const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
-    
+    const values = line.split(",").map((v) => v.trim().replace(/^"|"$/g, ""));
+
     if (values.length >= 1 && values[0]) {
       // 2番目以降のすべての値をcontentとして結合
-      const content = values.slice(1).filter(v => v).join('、');
+      const content = values
+        .slice(1)
+        .filter((v) => v)
+        .join("、");
       results.push({
         title: values[0],
         content: content || undefined,
       });
     }
   }
-  
+
   return results;
 }
 
@@ -102,20 +115,22 @@ app.openapi(
     if (!auth?.userId) {
       return c.json({ error: "Unauthorized" }, 401);
     }
-    
-    const result = await db.select({
-      id: memos.id,
-      originalId: memos.originalId,
-      title: memos.title,
-      content: memos.content,
-      createdAt: memos.createdAt,
-      updatedAt: memos.updatedAt,
-    }).from(memos)
+
+    const result = await db
+      .select({
+        id: memos.id,
+        originalId: memos.originalId,
+        title: memos.title,
+        content: memos.content,
+        createdAt: memos.createdAt,
+        updatedAt: memos.updatedAt,
+      })
+      .from(memos)
       .where(eq(memos.userId, auth.userId))
       .orderBy(desc(memos.updatedAt), desc(memos.createdAt));
-    
+
     return c.json(result, 200);
-  }
+  },
 );
 
 // POST /memos（OpenAPI付き）
@@ -174,24 +189,28 @@ app.openapi(
     if (!parsed.success) {
       return c.json(
         { error: "Invalid input", issues: parsed.error.issues },
-        400
+        400,
       );
     }
 
     const { title, content } = parsed.data;
     const createdAt = Math.floor(Date.now() / 1000);
-    const result = await db.insert(memos).values({
-      userId: auth.userId,
-      originalId: "", // 後で更新
-      uuid: generateUuid(), // UUID生成
-      title,
-      content,
-      createdAt,
-    }).returning({ id: memos.id });
+    const result = await db
+      .insert(memos)
+      .values({
+        userId: auth.userId,
+        originalId: "", // 後で更新
+        uuid: generateUuid(), // UUID生成
+        title,
+        content,
+        createdAt,
+      })
+      .returning({ id: memos.id });
 
     // originalIdを生成して更新
     const originalId = generateOriginalId(result[0].id);
-    await db.update(memos)
+    await db
+      .update(memos)
       .set({ originalId, updatedAt: createdAt })
       .where(eq(memos.id, result[0].id));
 
@@ -202,11 +221,11 @@ app.openapi(
       title,
       content: content || "",
       createdAt,
-      updatedAt: createdAt
+      updatedAt: createdAt,
     };
 
     return c.json(newMemo, 200);
-  }
+  },
 );
 
 // PUT /memos/:id（メモ更新）
@@ -277,16 +296,17 @@ app.openapi(
     if (!parsed.success) {
       return c.json(
         { error: "Invalid input", issues: parsed.error.issues },
-        400
+        400,
       );
     }
 
     const { title, content } = parsed.data;
-    const result = await db.update(memos)
-      .set({ 
-        title, 
+    const result = await db
+      .update(memos)
+      .set({
+        title,
         content,
-        updatedAt: Math.floor(Date.now() / 1000)
+        updatedAt: Math.floor(Date.now() / 1000),
       })
       .where(and(eq(memos.id, id), eq(memos.userId, auth.userId)));
 
@@ -295,7 +315,7 @@ app.openapi(
     }
 
     return c.json({ success: true }, 200);
-  }
+  },
 );
 
 // DELETE /memos/:id（OpenAPI付き）
@@ -342,10 +362,14 @@ app.openapi(
     }
 
     const { id } = c.req.valid("param");
-    
+
     // まず該当メモを取得（ユーザー確認込み）
-    const note = await db.select().from(memos).where(and(eq(memos.id, id), eq(memos.userId, auth.userId))).get();
-    
+    const note = await db
+      .select()
+      .from(memos)
+      .where(and(eq(memos.id, id), eq(memos.userId, auth.userId)))
+      .get();
+
     if (!note) {
       return c.json({ error: "Note not found" }, 404);
     }
@@ -353,31 +377,36 @@ app.openapi(
     // トランザクションで削除済みテーブルに移動してから元テーブルから削除
     db.transaction((tx) => {
       // 削除済みテーブルに挿入
-      tx.insert(deletedMemos).values({
-        userId: auth.userId,
-        originalId: note.originalId, // originalIdをそのままコピー
-        uuid: note.uuid, // UUIDもコピー
-        title: note.title,
-        content: note.content,
-        createdAt: note.createdAt,
-        updatedAt: note.updatedAt,
-        deletedAt: Math.floor(Date.now() / 1000),
-      }).run();
+      tx.insert(deletedMemos)
+        .values({
+          userId: auth.userId,
+          originalId: note.originalId, // originalIdをそのままコピー
+          uuid: note.uuid, // UUIDもコピー
+          title: note.title,
+          content: note.content,
+          createdAt: note.createdAt,
+          updatedAt: note.updatedAt,
+          deletedAt: Math.floor(Date.now() / 1000),
+        })
+        .run();
 
       // 関連するboard_itemsのdeletedAtを設定
       tx.update(boardItems)
         .set({ deletedAt: new Date() })
-        .where(and(
-          eq(boardItems.itemType, 'memo'),
-          eq(boardItems.originalId, note.originalId)
-        )).run();
+        .where(
+          and(
+            eq(boardItems.itemType, "memo"),
+            eq(boardItems.originalId, note.originalId),
+          ),
+        )
+        .run();
 
       // 元テーブルから削除
       tx.delete(memos).where(eq(memos.id, id)).run();
     });
 
     return c.json({ success: true }, 200);
-  }
+  },
 );
 
 // GET /deleted（削除済みメモ一覧）
@@ -390,15 +419,17 @@ app.openapi(
         description: "List of deleted memos",
         content: {
           "application/json": {
-            schema: z.array(z.object({
-              id: z.number(),
-              originalId: z.string(),
-              title: z.string(),
-              content: z.string().nullable(),
-              createdAt: z.number(),
-              updatedAt: z.number().nullable(),
-              deletedAt: z.number(),
-            })),
+            schema: z.array(
+              z.object({
+                id: z.number(),
+                originalId: z.string(),
+                title: z.string(),
+                content: z.string().nullable(),
+                createdAt: z.number(),
+                updatedAt: z.number().nullable(),
+                deletedAt: z.number(),
+              }),
+            ),
           },
         },
       },
@@ -428,23 +459,25 @@ app.openapi(
     }
 
     try {
-      const result = await db.select({
-        id: deletedMemos.id,
-        originalId: deletedMemos.originalId,
-        title: deletedMemos.title,
-        content: deletedMemos.content,
-        createdAt: deletedMemos.createdAt,
-        updatedAt: deletedMemos.updatedAt,
-        deletedAt: deletedMemos.deletedAt,
-      }).from(deletedMemos)
+      const result = await db
+        .select({
+          id: deletedMemos.id,
+          originalId: deletedMemos.originalId,
+          title: deletedMemos.title,
+          content: deletedMemos.content,
+          createdAt: deletedMemos.createdAt,
+          updatedAt: deletedMemos.updatedAt,
+          deletedAt: deletedMemos.deletedAt,
+        })
+        .from(deletedMemos)
         .where(eq(deletedMemos.userId, auth.userId))
         .orderBy(desc(deletedMemos.deletedAt));
       return c.json(result);
     } catch (error) {
-      console.error('削除済みメモ取得エラー:', error);
-      return c.json({ error: 'Internal server error' }, 500);
+      console.error("削除済みメモ取得エラー:", error);
+      return c.json({ error: "Internal server error" }, 500);
     }
-  }
+  },
 );
 
 // DELETE /deleted/:originalId（完全削除）
@@ -499,37 +532,45 @@ app.openapi(
     }
 
     const { originalId } = c.req.valid("param");
-    
+
     try {
       const result = db.transaction((tx) => {
         // 1. タグ付けを削除（タグ本体は保持）
-        tx.delete(taggings).where(
-          and(
-            eq(taggings.targetType, 'memo'),
-            eq(taggings.targetOriginalId, originalId)
+        tx.delete(taggings)
+          .where(
+            and(
+              eq(taggings.targetType, "memo"),
+              eq(taggings.targetOriginalId, originalId),
+            ),
           )
-        ).run();
-        
+          .run();
+
         // 2. 関連するボードアイテムは削除しない（削除済みタブで表示するため保持）
-        
+
         // 3. メモを削除
-        const deleteResult = tx.delete(deletedMemos).where(
-          and(eq(deletedMemos.originalId, originalId), eq(deletedMemos.userId, auth.userId))
-        ).run();
-        
+        const deleteResult = tx
+          .delete(deletedMemos)
+          .where(
+            and(
+              eq(deletedMemos.originalId, originalId),
+              eq(deletedMemos.userId, auth.userId),
+            ),
+          )
+          .run();
+
         return deleteResult;
       });
-      
+
       if (result.changes === 0) {
         return c.json({ error: "Deleted note not found" }, 404);
       }
 
       return c.json({ success: true }, 200);
     } catch (error) {
-      console.error('完全削除エラー:', error);
-      return c.json({ error: 'Internal server error' }, 500);
+      console.error("完全削除エラー:", error);
+      return c.json({ error: "Internal server error" }, 500);
     }
-  }
+  },
 );
 
 // POST /deleted/:originalId/restore（復元）
@@ -584,16 +625,20 @@ app.openapi(
     }
 
     const { originalId } = c.req.valid("param");
-    
-    
+
     try {
-      
       // まず削除済みメモを取得
-      const deletedNote = await db.select().from(deletedMemos).where(
-        and(eq(deletedMemos.originalId, originalId), eq(deletedMemos.userId, auth.userId))
-      ).get();
-      
-      
+      const deletedNote = await db
+        .select()
+        .from(deletedMemos)
+        .where(
+          and(
+            eq(deletedMemos.originalId, originalId),
+            eq(deletedMemos.userId, auth.userId),
+          ),
+        )
+        .get();
+
       if (!deletedNote) {
         return c.json({ error: "Deleted note not found" }, 404);
       }
@@ -601,15 +646,19 @@ app.openapi(
       // トランザクションで復元処理
       const restoredNote = db.transaction((tx) => {
         // 通常メモテーブルに復元
-        const result = tx.insert(memos).values({
-          userId: auth.userId,
-          originalId: deletedNote.originalId, // 一旦削除前のoriginalIdで復元
-          uuid: deletedNote.uuid, // UUIDも復元
-          title: deletedNote.title,
-          content: deletedNote.content,
-          createdAt: deletedNote.createdAt,
-          updatedAt: Math.floor(Date.now() / 1000), // 復元時刻を更新
-        }).returning({ id: memos.id }).get();
+        const result = tx
+          .insert(memos)
+          .values({
+            userId: auth.userId,
+            originalId: deletedNote.originalId, // 一旦削除前のoriginalIdで復元
+            uuid: deletedNote.uuid, // UUIDも復元
+            title: deletedNote.title,
+            content: deletedNote.content,
+            createdAt: deletedNote.createdAt,
+            updatedAt: Math.floor(Date.now() / 1000), // 復元時刻を更新
+          })
+          .returning({ id: memos.id })
+          .get();
 
         // 復元されたメモのoriginalIdを新しいIDに更新
         tx.update(memos)
@@ -619,27 +668,32 @@ app.openapi(
 
         // 関連するboard_itemsのdeletedAtをNULLに戻し、originalIdを新しいIDに更新
         tx.update(boardItems)
-          .set({ 
+          .set({
             deletedAt: null,
-            originalId: result.id.toString() // 新しいメモIDをoriginalIdに設定
+            originalId: result.id.toString(), // 新しいメモIDをoriginalIdに設定
           })
-          .where(and(
-            eq(boardItems.itemType, 'memo'),
-            eq(boardItems.originalId, deletedNote.originalId)
-          )).run();
+          .where(
+            and(
+              eq(boardItems.itemType, "memo"),
+              eq(boardItems.originalId, deletedNote.originalId),
+            ),
+          )
+          .run();
 
         // 削除済みテーブルから削除
-        tx.delete(deletedMemos).where(eq(deletedMemos.originalId, originalId)).run();
+        tx.delete(deletedMemos)
+          .where(eq(deletedMemos.originalId, originalId))
+          .run();
 
         return result;
       });
 
       return c.json({ success: true, id: restoredNote.id as number }, 200);
     } catch (error) {
-      console.error('復元エラー:', error);
-      return c.json({ error: 'Internal server error' }, 500);
+      console.error("復元エラー:", error);
+      return c.json({ error: "Internal server error" }, 500);
     }
-  }
+  },
 );
 
 // POST /import（CSVインポート）
@@ -704,13 +758,13 @@ app.openapi(
 
     try {
       const body = await c.req.parseBody();
-      const file = body['file'] as File;
+      const file = body["file"] as File;
 
       if (!file) {
         return c.json({ error: "No file provided" }, 400);
       }
 
-      if (!file.name.endsWith('.csv')) {
+      if (!file.name.endsWith(".csv")) {
         return c.json({ error: "Only CSV files are supported" }, 400);
       }
 
@@ -718,10 +772,13 @@ app.openapi(
       const memoData = parseCSV(csvText);
 
       if (memoData.length === 0) {
-        return c.json({ 
-          error: "No valid data found",
-          details: "CSV must have 'title' column and at least one data row"
-        }, 400);
+        return c.json(
+          {
+            error: "No valid data found",
+            details: "CSV must have 'title' column and at least one data row",
+          },
+          400,
+        );
       }
 
       const errors: string[] = [];
@@ -738,20 +795,24 @@ app.openapi(
 
           const { title, content } = parsed.data;
           // メモエディター形式に合わせて保存：title + '\n' + content
-          const combinedContent = title + (content ? '\n' + content : '');
-          
-          const result = await db.insert(memos).values({
-            userId: auth.userId,
-            originalId: "", // 後で更新
-            uuid: generateUuid(),
-            title,
-            content: combinedContent,
-            createdAt: Math.floor(Date.now() / 1000),
-          }).returning({ id: memos.id });
+          const combinedContent = title + (content ? "\n" + content : "");
+
+          const result = await db
+            .insert(memos)
+            .values({
+              userId: auth.userId,
+              originalId: "", // 後で更新
+              uuid: generateUuid(),
+              title,
+              content: combinedContent,
+              createdAt: Math.floor(Date.now() / 1000),
+            })
+            .returning({ id: memos.id });
 
           // originalIdを生成して更新
           const originalId = generateOriginalId(result[0].id);
-          await db.update(memos)
+          await db
+            .update(memos)
             .set({ originalId })
             .where(eq(memos.id, result[0].id));
 
@@ -761,17 +822,19 @@ app.openapi(
         }
       }
 
-      return c.json({ 
-        success: true, 
-        imported, 
-        errors 
-      }, 200);
-
+      return c.json(
+        {
+          success: true,
+          imported,
+          errors,
+        },
+        200,
+      );
     } catch (error) {
-      console.error('CSV Import Error:', error);
-      return c.json({ error: 'Internal server error' }, 500);
+      console.error("CSV Import Error:", error);
+      return c.json({ error: "Internal server error" }, 500);
     }
-  }
+  },
 );
 
 export default app;

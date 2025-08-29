@@ -1,9 +1,11 @@
 # ボードカテゴリー設計メモ
 
 ## 基本方針
+
 ボード用カテゴリーはメモ/タスクのカテゴリーと**完全分離**する
 
 ## 理由
+
 1. **用途の違い**
    - メモ/タスクカテゴリー: 個別アイテムの分類（「仕事」「個人」「勉強」など）
    - ボードカテゴリー: 作業領域の分類（「プロジェクト種別」「チーム」「期間」など）
@@ -19,6 +21,7 @@
 ## 実装案
 
 ### データベーススキーマ
+
 ```sql
 -- 既存（メモ/タスク用）
 categories (id, name, userId, createdAt, updatedAt)
@@ -28,27 +31,32 @@ boardCategories (id, name, userId, createdAt, updatedAt)
 ```
 
 ### API設計
+
 ```typescript
 // 既存
-/categories - メモ/タスク用カテゴリーCRUD
-
-// 新規
-/board-categories - ボード用カテゴリーCRUD
+/categories - メモ/CDRUカクゴスタテリー用 /
+  // 新規
+  board -
+  categories -
+  ボード用カテゴリーCRUD;
 ```
 
 ### ボードカテゴリー例
+
 - 「個人プロジェクト」
-- 「チーム作業」  
+- 「チーム作業」
 - 「学習・研究」
 - 「アーカイブ」
 - 「一時作業」
 
 ## メリット
+
 - **独立性**: ボード削除時にメモ/タスクカテゴリーに影響なし
 - **柔軟性**: 将来ボード固有の属性追加が容易
 - **明確性**: 用途が明確で混乱が少ない
 
 ## 実装順序
+
 1. boardCategories テーブル作成
 2. /board-categories API実装
 3. BoardCategorySelector コンポーネント作成

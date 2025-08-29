@@ -1,4 +1,4 @@
-import { OriginalId, Uuid } from './common';
+import { OriginalId, Uuid } from "./common";
 
 export interface Task {
   id: number;
@@ -6,8 +6,8 @@ export interface Task {
   uuid?: Uuid;
   title: string;
   description: string | null;
-  status: 'todo' | 'in_progress' | 'completed';
-  priority: 'low' | 'medium' | 'high';
+  status: "todo" | "in_progress" | "completed";
+  priority: "low" | "medium" | "high";
   dueDate: number | null; // Unix timestamp
   categoryId: number | null;
   boardCategoryId: number | null; // ボードカテゴリーID
@@ -34,8 +34,8 @@ export interface DeletedTask {
 export interface CreateTaskData {
   title: string;
   description?: string;
-  status?: 'todo' | 'in_progress' | 'completed';
-  priority?: 'low' | 'medium' | 'high';
+  status?: "todo" | "in_progress" | "completed";
+  priority?: "low" | "medium" | "high";
   dueDate?: number;
   categoryId?: number | null;
   boardCategoryId?: number | null; // ボードカテゴリーID
@@ -44,8 +44,8 @@ export interface CreateTaskData {
 export interface UpdateTaskData {
   title?: string;
   description?: string;
-  status?: 'todo' | 'in_progress' | 'completed';
-  priority?: 'low' | 'medium' | 'high';
+  status?: "todo" | "in_progress" | "completed";
+  priority?: "low" | "medium" | "high";
   dueDate?: number;
   categoryId?: number | null;
   boardCategoryId?: number | null; // ボードカテゴリーID

@@ -12,7 +12,10 @@ interface BoardDetailWrapperProps {
   serverBoardDescription?: string | null;
   serverBoardTitle?: string;
   showBoardHeader: boolean;
-  boardSelectedItem: {type: 'memo', item: Memo | DeletedMemo} | {type: 'task', item: Task | DeletedTask} | null;
+  boardSelectedItem:
+    | { type: "memo"; item: Memo | DeletedMemo }
+    | { type: "task"; item: Task | DeletedTask }
+    | null;
   handleBoardSelectMemo: (memo: Memo | null) => void;
   handleBoardSelectTask: (task: Task | DeletedTask | null) => void;
   handleBoardClearSelection: () => void;
@@ -36,7 +39,8 @@ export function BoardDetailWrapper({
     // サーバーサイドからのボード情報がある場合は優先使用
     const currentBoardId = boardId || boardFromSlug?.id;
     const currentBoardName = initialBoardName || boardFromSlug?.name;
-    const currentBoardDescription = serverBoardDescription || boardFromSlug?.description;
+    const currentBoardDescription =
+      serverBoardDescription || boardFromSlug?.description;
 
     // ボードIDがない場合はエラー
     if (!currentBoardId) {
@@ -62,8 +66,12 @@ export function BoardDetailWrapper({
       <BoardDetailScreen
         boardId={currentBoardId}
         onBack={() => router.push("/")}
-        selectedMemo={boardSelectedItem?.type === 'memo' ? boardSelectedItem.item : null}
-        selectedTask={boardSelectedItem?.type === 'task' ? boardSelectedItem.item : null}
+        selectedMemo={
+          boardSelectedItem?.type === "memo" ? boardSelectedItem.item : null
+        }
+        selectedTask={
+          boardSelectedItem?.type === "task" ? boardSelectedItem.item : null
+        }
         onSelectMemo={handleBoardSelectMemo}
         onSelectTask={handleBoardSelectTask}
         onClearSelection={handleBoardClearSelection}

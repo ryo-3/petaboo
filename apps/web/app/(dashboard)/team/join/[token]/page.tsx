@@ -19,7 +19,7 @@ export default function JoinTeamPage() {
   const router = useRouter();
   const params = useParams();
   const token = params.token as string;
-  
+
   const [invitation, setInvitation] = useState<InvitationData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isJoining, setIsJoining] = useState(false);
@@ -30,16 +30,18 @@ export default function JoinTeamPage() {
     const fetchInvitation = async () => {
       try {
         const response = await fetch(`/api/teams/invite/${token}`);
-        
+
         if (!response.ok) {
           const error = await response.json();
           throw new Error(error.message || "招待情報を取得できませんでした");
         }
-        
+
         const data = await response.json();
         setInvitation(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "招待情報を取得できませんでした");
+        setError(
+          err instanceof Error ? err.message : "招待情報を取得できませんでした",
+        );
       } finally {
         setIsLoading(false);
       }
@@ -52,7 +54,7 @@ export default function JoinTeamPage() {
 
   const handleJoinTeam = async () => {
     if (!invitation) return;
-    
+
     setIsJoining(true);
     try {
       const response = await fetch(`/api/teams/invite/${token}/accept`, {
@@ -61,19 +63,20 @@ export default function JoinTeamPage() {
           "Content-Type": "application/json",
         },
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || "チームへの参加に失敗しました");
       }
-      
+
       setSuccess(true);
       setTimeout(() => {
         router.push(`/team/${invitation.id}`);
       }, 2000);
-      
     } catch (err) {
-      setError(err instanceof Error ? err.message : "チームへの参加に失敗しました");
+      setError(
+        err instanceof Error ? err.message : "チームへの参加に失敗しました",
+      );
     } finally {
       setIsJoining(false);
     }
@@ -149,9 +152,7 @@ export default function JoinTeamPage() {
         {isExpired ? (
           <div className="text-center">
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-              <p className="text-red-800 text-sm">
-                この招待は期限切れです
-              </p>
+              <p className="text-red-800 text-sm">この招待は期限切れです</p>
             </div>
             <Button onClick={() => router.push("/team")} variant="outline">
               チーム一覧に戻る
@@ -166,16 +167,22 @@ export default function JoinTeamPage() {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">役割:</span>
-                <span className={`font-medium ${
-                  invitation.role === "admin" ? "text-blue-600" : "text-gray-700"
-                }`}>
+                <span
+                  className={`font-medium ${
+                    invitation.role === "admin"
+                      ? "text-blue-600"
+                      : "text-gray-700"
+                  }`}
+                >
                   {invitation.role === "admin" ? "管理者" : "メンバー"}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">有効期限:</span>
                 <span className="font-medium">
-                  {new Date(invitation.expiresAt * 1000).toLocaleDateString('ja-JP')}
+                  {new Date(invitation.expiresAt * 1000).toLocaleDateString(
+                    "ja-JP",
+                  )}
                 </span>
               </div>
             </div>

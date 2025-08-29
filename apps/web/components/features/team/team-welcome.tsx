@@ -48,7 +48,9 @@ export function TeamWelcome() {
         {/* ヘッダー */}
         <div className="mb-4">
           <div className="flex items-center gap-3">
-            <h1 className="text-[22px] font-bold text-gray-800 w-[105px] truncate">チーム管理</h1>
+            <h1 className="text-[22px] font-bold text-gray-800 w-[105px] truncate">
+              チーム管理
+            </h1>
             <button
               onClick={() => canCreateTeam && router.push("/team/create")}
               disabled={!canCreateTeam}
@@ -57,7 +59,9 @@ export function TeamWelcome() {
                   ? "bg-slate-500 text-white hover:bg-slate-600"
                   : "bg-gray-300 text-gray-500 cursor-not-allowed"
               }`}
-              title={canCreateTeam ? "新しいチームを作成" : "作成上限に達しています"}
+              title={
+                canCreateTeam ? "新しいチームを作成" : "作成上限に達しています"
+              }
             >
               <PlusIcon className="w-3.5 h-3.5" />
             </button>
@@ -105,18 +109,20 @@ export function TeamWelcome() {
                 <span className="text-xl font-bold text-blue-600">
                   {teamStats.ownedTeams}
                 </span>
-                <span className="text-gray-500 text-sm">/ {teamStats.maxOwnedTeams}</span>
+                <span className="text-gray-500 text-sm">
+                  / {teamStats.maxOwnedTeams}
+                </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-1.5 mb-3">
-                <div 
+                <div
                   className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
-                  style={{ 
-                    width: `${(teamStats.ownedTeams / teamStats.maxOwnedTeams) * 100}%` 
+                  style={{
+                    width: `${(teamStats.ownedTeams / teamStats.maxOwnedTeams) * 100}%`,
                   }}
                 ></div>
               </div>
-              <Button 
-                className="w-full text-xs h-8" 
+              <Button
+                className="w-full text-xs h-8"
                 disabled={!canCreateTeam}
                 variant={canCreateTeam ? "default" : "secondary"}
                 onClick={() => canCreateTeam && router.push("/team/create")}
@@ -131,18 +137,20 @@ export function TeamWelcome() {
                 <span className="text-xl font-bold text-green-600">
                   {teamStats.memberTeams}
                 </span>
-                <span className="text-gray-500 text-sm">/ {teamStats.maxMemberTeams}</span>
+                <span className="text-gray-500 text-sm">
+                  / {teamStats.maxMemberTeams}
+                </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-1.5 mb-3">
-                <div 
+                <div
                   className="bg-green-600 h-1.5 rounded-full transition-all duration-300"
-                  style={{ 
-                    width: `${(teamStats.memberTeams / teamStats.maxMemberTeams) * 100}%` 
+                  style={{
+                    width: `${(teamStats.memberTeams / teamStats.maxMemberTeams) * 100}%`,
                   }}
                 ></div>
               </div>
-              <Button 
-                className="w-full text-xs h-8" 
+              <Button
+                className="w-full text-xs h-8"
                 disabled={!canJoinTeam}
                 variant={canJoinTeam ? "default" : "secondary"}
               >
@@ -152,19 +160,21 @@ export function TeamWelcome() {
           </div>
 
           {/* チーム一覧（空の場合の表示） */}
-          {(!teams || !Array.isArray(teams) || teams.length === 0) ? (
+          {!teams || !Array.isArray(teams) || teams.length === 0 ? (
             <Card className="p-6 text-center">
               <div className="mb-4">
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <TeamIcon className="w-8 h-8 text-gray-400" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">チームを始めましょう！</h3>
+                <h3 className="text-xl font-semibold mb-2">
+                  チームを始めましょう！
+                </h3>
                 <p className="text-gray-600 mb-6">
                   新しいチームを作成するか、招待コードで既存のチームに参加できます。
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Button 
-                    size="lg" 
+                  <Button
+                    size="lg"
                     className="px-8"
                     onClick={() => router.push("/team/create")}
                   >
@@ -180,44 +190,57 @@ export function TeamWelcome() {
             <div>
               <h2 className="text-lg font-semibold mb-4">あなたのチーム</h2>
               <div className="grid gap-3">
-                {Array.isArray(teams) && teams.map((team) => (
-                  <Card key={team.id} className="p-4 hover:shadow-md transition-shadow">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="font-semibold text-gray-900">{team.name}</h3>
-                          <span 
-                            className={`px-2 py-1 text-xs rounded-full font-medium ${
-                              team.role === "admin" 
-                                ? "bg-blue-100 text-blue-800" 
-                                : "bg-gray-100 text-gray-600"
-                            }`}
-                          >
-                            {team.role === "admin" ? "管理者" : "メンバー"}
-                          </span>
-                        </div>
-                        {team.description && (
-                          <p className="text-gray-600 text-sm mb-2">{team.description}</p>
-                        )}
-                        <div className="flex items-center gap-4 text-xs text-gray-500">
-                          <span>作成日: {new Date(team.createdAt).toLocaleDateString()}</span>
-                          {team.memberCount && (
-                            <span>メンバー: {team.memberCount}人</span>
+                {Array.isArray(teams) &&
+                  teams.map((team) => (
+                    <Card
+                      key={team.id}
+                      className="p-4 hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="font-semibold text-gray-900">
+                              {team.name}
+                            </h3>
+                            <span
+                              className={`px-2 py-1 text-xs rounded-full font-medium ${
+                                team.role === "admin"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : "bg-gray-100 text-gray-600"
+                              }`}
+                            >
+                              {team.role === "admin" ? "管理者" : "メンバー"}
+                            </span>
+                          </div>
+                          {team.description && (
+                            <p className="text-gray-600 text-sm mb-2">
+                              {team.description}
+                            </p>
                           )}
+                          <div className="flex items-center gap-4 text-xs text-gray-500">
+                            <span>
+                              作成日:{" "}
+                              {new Date(team.createdAt).toLocaleDateString()}
+                            </span>
+                            {team.memberCount && (
+                              <span>メンバー: {team.memberCount}人</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() =>
+                              router.push(`/team/${team.customUrl}`)
+                            }
+                          >
+                            管理画面
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex gap-2">
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => router.push(`/team/${team.customUrl}`)}
-                        >
-                          管理画面
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
+                    </Card>
+                  ))}
               </div>
             </div>
           )}

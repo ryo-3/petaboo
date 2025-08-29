@@ -18,26 +18,30 @@ export function TeamCreate() {
   const { data: teamStats } = useTeamStats();
   const createTeamMutation = useCreateTeam();
 
-  const canCreateTeam = teamStats ? teamStats.ownedTeams < teamStats.maxOwnedTeams : false;
+  const canCreateTeam = teamStats
+    ? teamStats.ownedTeams < teamStats.maxOwnedTeams
+    : false;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canCreateTeam || !name.trim() || !customUrl.trim()) return;
 
     setError(null);
-    
+
     try {
       const team = await createTeamMutation.mutateAsync({
         name: name.trim(),
         description: description.trim() || undefined,
         customUrl: customUrl.trim(),
       });
-      
+
       // 成功後は作成したチームの詳細ページに移動
       router.push(`/team/${team.customUrl}`);
     } catch (error) {
       console.error("チーム作成エラー:", error);
-      setError(error instanceof Error ? error.message : "チーム作成に失敗しました");
+      setError(
+        error instanceof Error ? error.message : "チーム作成に失敗しました",
+      );
     }
   };
 
@@ -53,7 +57,9 @@ export function TeamCreate() {
             >
               <ArrowLeftIcon className="w-5 h-5" />
             </button>
-            <h1 className="text-[22px] font-bold text-gray-800">新しいチームを作成</h1>
+            <h1 className="text-[22px] font-bold text-gray-800">
+              新しいチームを作成
+            </h1>
             <TeamIcon className="w-6 h-6 text-gray-600" />
           </div>
         </div>
@@ -64,7 +70,10 @@ export function TeamCreate() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* チーム名 */}
               <div>
-                <label htmlFor="teamName" className="block text-sm font-semibold text-gray-700 mb-2">
+                <label
+                  htmlFor="teamName"
+                  className="block text-sm font-semibold text-gray-700 mb-2"
+                >
                   チーム名 <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -90,7 +99,10 @@ export function TeamCreate() {
 
               {/* チームURL */}
               <div>
-                <label htmlFor="teamUrl" className="block text-sm font-semibold text-gray-700 mb-2">
+                <label
+                  htmlFor="teamUrl"
+                  className="block text-sm font-semibold text-gray-700 mb-2"
+                >
                   チームURL <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -101,7 +113,11 @@ export function TeamCreate() {
                     id="teamUrl"
                     type="text"
                     value={customUrl}
-                    onChange={(e) => setCustomUrl(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                    onChange={(e) =>
+                      setCustomUrl(
+                        e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""),
+                      )
+                    }
                     placeholder="my-team"
                     className="w-full pl-14 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     maxLength={30}
@@ -121,7 +137,10 @@ export function TeamCreate() {
 
               {/* チーム説明 */}
               <div>
-                <label htmlFor="teamDescription" className="block text-sm font-semibold text-gray-700 mb-2">
+                <label
+                  htmlFor="teamDescription"
+                  className="block text-sm font-semibold text-gray-700 mb-2"
+                >
                   チーム説明（任意）
                 </label>
                 <textarea
@@ -156,10 +175,13 @@ export function TeamCreate() {
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span className="text-sm font-semibold text-blue-800">プレミアムプラン特典</span>
+                    <span className="text-sm font-semibold text-blue-800">
+                      プレミアムプラン特典
+                    </span>
                   </div>
                   <div className="text-sm text-blue-700">
-                    作成可能なチーム: {teamStats.ownedTeams}/{teamStats.maxOwnedTeams}
+                    作成可能なチーム: {teamStats.ownedTeams}/
+                    {teamStats.maxOwnedTeams}
                   </div>
                   {!canCreateTeam && (
                     <div className="text-sm text-red-600 mt-1">
@@ -182,7 +204,12 @@ export function TeamCreate() {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={!canCreateTeam || !name.trim() || !customUrl.trim() || createTeamMutation.isPending}
+                  disabled={
+                    !canCreateTeam ||
+                    !name.trim() ||
+                    !customUrl.trim() ||
+                    createTeamMutation.isPending
+                  }
                   className="px-8"
                 >
                   {createTeamMutation.isPending ? (
@@ -200,18 +227,26 @@ export function TeamCreate() {
 
           {/* チーム作成後の流れ */}
           <Card className="max-w-xl mt-4 p-3 bg-gray-50">
-            <h3 className="font-semibold text-gray-800 mb-2 text-sm">チーム作成後の流れ</h3>
+            <h3 className="font-semibold text-gray-800 mb-2 text-sm">
+              チーム作成後の流れ
+            </h3>
             <div className="space-y-1.5 text-xs text-gray-600">
               <div className="flex items-center gap-2">
-                <span className="w-4 h-4 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs">1</span>
+                <span className="w-4 h-4 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs">
+                  1
+                </span>
                 <span>チームが作成され、あなたが管理者になります</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-4 h-4 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs">2</span>
+                <span className="w-4 h-4 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs">
+                  2
+                </span>
                 <span>招待コードが生成され、メンバーを招待できます</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-4 h-4 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs">3</span>
+                <span className="w-4 h-4 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs">
+                  3
+                </span>
                 <span>チーム専用のメモ・タスクを共有できます</span>
               </div>
             </div>

@@ -1,17 +1,17 @@
-'use client'
+"use client";
 
-import { ReactNode } from 'react'
-import PenIcon from '@/components/icons/pen-icon'
-import TrashIcon from '@/components/icons/trash-icon'
-import Tooltip from '@/components/ui/base/tooltip'
+import { ReactNode } from "react";
+import PenIcon from "@/components/icons/pen-icon";
+import TrashIcon from "@/components/icons/trash-icon";
+import Tooltip from "@/components/ui/base/tooltip";
 
 interface SidebarItemProps {
-  isSelected?: boolean
-  onSelect: () => void
-  onEdit: () => void
-  onDelete: () => void
-  children: ReactNode
-  className?: string
+  isSelected?: boolean;
+  onSelect: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  children: ReactNode;
+  className?: string;
 }
 
 function SidebarItem({
@@ -20,14 +20,14 @@ function SidebarItem({
   onEdit,
   onDelete,
   children,
-  className = ''
+  className = "",
 }: SidebarItemProps) {
   return (
-    <div className={`relative flex p-2 rounded transition-colors group ${
-      isSelected 
-        ? 'bg-Green/10 hover:bg-Green/20' 
-        : 'hover:bg-gray-100'
-    } ${className}`}>
+    <div
+      className={`relative flex p-2 rounded transition-colors group ${
+        isSelected ? "bg-Green/10 hover:bg-Green/20" : "hover:bg-gray-100"
+      } ${className}`}
+    >
       <div className="flex-1 min-w-0 cursor-pointer" onClick={onSelect}>
         {children}
       </div>
@@ -56,7 +56,7 @@ function SidebarItem({
         </Tooltip>
       </div>
     </div>
-  )
+  );
 }
 
-export default SidebarItem
+export default SidebarItem;

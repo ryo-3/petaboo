@@ -50,7 +50,8 @@
       "Bash(cat:*)",
       "Bash(pnpm db:push:*)",
       "Bash(npx drizzle-kit studio:*)",
-      "Bash(npx drizzle-kit:*)"
+      "Bash(npx drizzle-kit:*)",
+      "Bash(truncate:*)"
     ],
     "deny": []
   }

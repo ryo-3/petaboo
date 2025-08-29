@@ -1,13 +1,20 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  ReactNode,
+} from "react";
 
 export interface UserPreferences {
   userId: number;
   memoColumnCount: number;
   taskColumnCount: number;
-  memoViewMode: 'card' | 'list';
-  taskViewMode: 'card' | 'list';
+  memoViewMode: "card" | "list";
+  taskViewMode: "card" | "list";
   memoHideControls: boolean;
   taskHideControls: boolean;
   hideHeader: boolean;
@@ -19,13 +26,28 @@ interface UserPreferencesContextType {
   preferences: UserPreferences | null;
   loading: boolean;
   error: string | null;
-  updatePreferences: (updates: Partial<Pick<UserPreferences, 'memoColumnCount' | 'taskColumnCount' | 'memoViewMode' | 'taskViewMode' | 'memoHideControls' | 'taskHideControls' | 'hideHeader'>>) => Promise<UserPreferences>;
+  updatePreferences: (
+    updates: Partial<
+      Pick<
+        UserPreferences,
+        | "memoColumnCount"
+        | "taskColumnCount"
+        | "memoViewMode"
+        | "taskViewMode"
+        | "memoHideControls"
+        | "taskHideControls"
+        | "hideHeader"
+      >
+    >,
+  ) => Promise<UserPreferences>;
   refreshPreferences: () => Promise<void>;
 }
 
-const UserPreferencesContext = createContext<UserPreferencesContextType | null>(null);
+const UserPreferencesContext = createContext<UserPreferencesContextType | null>(
+  null,
+);
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8794';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8794";
 
 interface UserPreferencesProviderProps {
   children: ReactNode;
@@ -33,28 +55,35 @@ interface UserPreferencesProviderProps {
   initialPreferences?: UserPreferences | null;
 }
 
-export const UserPreferencesProvider: React.FC<UserPreferencesProviderProps> = ({
+export const UserPreferencesProvider: React.FC<
+  UserPreferencesProviderProps
+> = ({
   children,
   userId = 1, // デフォルトユーザーID
   initialPreferences = null,
 }) => {
-  const [preferences, setPreferences] = useState<UserPreferences | null>(initialPreferences);
+  const [preferences, setPreferences] = useState<UserPreferences | null>(
+    initialPreferences,
+  );
   const [loading, setLoading] = useState(!initialPreferences);
   const [error, setError] = useState<string | null>(null);
 
   // デフォルト設定値
-  const getDefaultPreferences = useCallback((): UserPreferences => ({
-    userId,
-    memoColumnCount: 4,
-    taskColumnCount: 2,
-    memoViewMode: 'list',
-    taskViewMode: 'list',
-    memoHideControls: false,
-    taskHideControls: false,
-    hideHeader: false,
-    createdAt: Date.now(),
-    updatedAt: Date.now()
-  }), [userId]);
+  const getDefaultPreferences = useCallback(
+    (): UserPreferences => ({
+      userId,
+      memoColumnCount: 4,
+      taskColumnCount: 2,
+      memoViewMode: "list",
+      taskViewMode: "list",
+      memoHideControls: false,
+      taskHideControls: false,
+      hideHeader: false,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    }),
+    [userId],
+  );
 
   // ユーザー設定を取得
   const fetchPreferences = useCallback(async () => {
@@ -62,19 +91,19 @@ export const UserPreferencesProvider: React.FC<UserPreferencesProviderProps> = (
       setLoading(true);
       setError(null);
       const response = await fetch(`${API_BASE}/user-preferences/${userId}`);
-      
+
       if (!response.ok) {
         // サーバーエラーやAPIが見つからない場合はデフォルト値を使用
-        console.warn('Failed to fetch user preferences, using defaults');
+        console.warn("Failed to fetch user preferences, using defaults");
         setPreferences(getDefaultPreferences());
         setLoading(false);
         return;
       }
-      
+
       const data = await response.json();
       setPreferences(data);
     } catch (err) {
-      console.warn('Error fetching user preferences, using defaults:', err);
+      console.warn("Error fetching user preferences, using defaults:", err);
       // エラー時はデフォルト設定を使用してアプリが動作するようにする
       setPreferences(getDefaultPreferences());
       setError(null); // エラー状態をリセット
@@ -84,30 +113,46 @@ export const UserPreferencesProvider: React.FC<UserPreferencesProviderProps> = (
   }, [userId, getDefaultPreferences]);
 
   // ユーザー設定を更新
-  const updatePreferences = useCallback(async (updates: Partial<Pick<UserPreferences, 'memoColumnCount' | 'taskColumnCount' | 'memoViewMode' | 'taskViewMode' | 'memoHideControls' | 'taskHideControls' | 'hideHeader'>>): Promise<UserPreferences> => {
-    try {
-      setError(null);
-      const response = await fetch(`${API_BASE}/user-preferences/${userId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updates),
-      });
+  const updatePreferences = useCallback(
+    async (
+      updates: Partial<
+        Pick<
+          UserPreferences,
+          | "memoColumnCount"
+          | "taskColumnCount"
+          | "memoViewMode"
+          | "taskViewMode"
+          | "memoHideControls"
+          | "taskHideControls"
+          | "hideHeader"
+        >
+      >,
+    ): Promise<UserPreferences> => {
+      try {
+        setError(null);
+        const response = await fetch(`${API_BASE}/user-preferences/${userId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updates),
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to update user preferences');
+        if (!response.ok) {
+          throw new Error("Failed to update user preferences");
+        }
+
+        const updatedData = await response.json();
+        setPreferences(updatedData);
+        return updatedData;
+      } catch (err) {
+        console.error("Error updating user preferences:", err);
+        setError(err instanceof Error ? err.message : "Unknown error");
+        throw err;
       }
-
-      const updatedData = await response.json();
-      setPreferences(updatedData);
-      return updatedData;
-    } catch (err) {
-      console.error('Error updating user preferences:', err);
-      setError(err instanceof Error ? err.message : 'Unknown error');
-      throw err;
-    }
-  }, [userId]);
+    },
+    [userId],
+  );
 
   // 設定を再取得
   const refreshPreferences = useCallback(async () => {
@@ -138,7 +183,9 @@ export const UserPreferencesProvider: React.FC<UserPreferencesProviderProps> = (
 export const useUserPreferencesContext = (): UserPreferencesContextType => {
   const context = useContext(UserPreferencesContext);
   if (!context) {
-    throw new Error('useUserPreferencesContext must be used within UserPreferencesProvider');
+    throw new Error(
+      "useUserPreferencesContext must be used within UserPreferencesProvider",
+    );
   }
   return context;
 };

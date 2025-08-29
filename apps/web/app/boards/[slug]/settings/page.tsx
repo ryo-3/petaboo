@@ -6,24 +6,34 @@ interface BoardSettingsPageProps {
   params: Promise<{ slug: string }>;
 }
 
-export default async function BoardSettingsPage({ params }: BoardSettingsPageProps) {
+export default async function BoardSettingsPage({
+  params,
+}: BoardSettingsPageProps) {
   const { slug } = await params;
-  
-  let boardData: { id: number; name: string; description?: string | null; completed: boolean } | null = null;
-  
+
+  let boardData: {
+    id: number;
+    name: string;
+    description?: string | null;
+    completed: boolean;
+  } | null = null;
+
   // サーバーサイドでボード情報を取得
   try {
     const { userId, getToken } = await auth();
-    
+
     if (userId) {
       const token = await getToken();
-      const response = await fetch(`${process.env.API_URL || 'http://localhost:8794'}/boards/slug/${slug}`, {
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
+      const response = await fetch(
+        `${process.env.API_URL || "http://localhost:8794"}/boards/slug/${slug}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
         },
-      });
-      
+      );
+
       if (response.ok) {
         boardData = await response.json();
       }
@@ -31,16 +41,13 @@ export default async function BoardSettingsPage({ params }: BoardSettingsPagePro
   } catch (error) {
     console.error("Failed to fetch board:", error);
   }
-  
+
   if (!boardData) {
     return <div>Board not found</div>;
   }
-  
+
   return (
-    <NavigationProvider 
-      initialCurrentMode="board" 
-      initialScreenMode="board"
-    >
+    <NavigationProvider initialCurrentMode="board" initialScreenMode="board">
       <BoardSettingsScreen
         boardId={boardData.id}
         boardSlug={slug}

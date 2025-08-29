@@ -16,7 +16,7 @@ export function toggleSetItem<T>(currentSet: Set<T>, item: T): Set<T> {
  */
 export function createToggleHandler<T>(
   currentSet: Set<T>,
-  setFunction: (newSet: Set<T>) => void
+  setFunction: (newSet: Set<T>) => void,
 ) {
   return (item: T) => {
     const newSet = toggleSetItem(currentSet, item);
@@ -31,16 +31,17 @@ export function createToggleHandler<T>(
 export function createToggleHandlerWithTabClear<T>(
   currentSet: Set<T>,
   setCurrentFunction: (newSet: Set<T>) => void,
-  otherTabsSetters: Array<(newSet: Set<number>) => void>
+  otherTabsSetters: Array<(newSet: Set<number>) => void>,
 ) {
   return (item: T) => {
     // 現在のタブの選択を更新
     const newSet = toggleSetItem(currentSet, item);
     setCurrentFunction(newSet);
-    
+
     // 他のタブの選択をクリア（選択が追加された場合のみ）
-    if (!currentSet.has(item)) { // アイテムが新しく選択された場合
-      otherTabsSetters.forEach(setter => setter(new Set()));
+    if (!currentSet.has(item)) {
+      // アイテムが新しく選択された場合
+      otherTabsSetters.forEach((setter) => setter(new Set()));
     }
   };
 }

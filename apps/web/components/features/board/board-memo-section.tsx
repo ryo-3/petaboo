@@ -1,6 +1,8 @@
-'use client';
+"use client";
 
-import MemoStatusDisplay, { DeletedMemoDisplay } from "@/components/features/memo/memo-status-display";
+import MemoStatusDisplay, {
+  DeletedMemoDisplay,
+} from "@/components/features/memo/memo-status-display";
 import { DeletedMemo } from "@/src/types/memo";
 import { FilterIconCheckList } from "@/components/icons/filter-icon-variants";
 import TrashIcon from "@/components/icons/trash-icon";
@@ -42,20 +44,20 @@ interface BoardMemoSectionProps {
   onMemoSelectionToggle: (memoId: string | number) => void;
   onSelectAll?: () => void;
   isAllSelected?: boolean;
-  onBulkDelete?: (itemType: 'memo') => void;
+  onBulkDelete?: (itemType: "memo") => void;
   isDeleting?: boolean;
   isLidOpen?: boolean;
   currentDisplayCount?: number;
   deleteButtonRef?: React.RefObject<HTMLButtonElement | null>;
   // 復元関連
   onCheckedMemosChange?: (memos: Set<string | number>) => void;
-  
+
   // 選択メニュー関連
   onExport?: () => void;
   onPin?: () => void;
   onTagging?: () => void;
   onTabMove?: () => void;
-  
+
   // 全データ事前取得（ちらつき解消）
   allTags?: Tag[];
   allBoards?: Board[];
@@ -63,14 +65,14 @@ interface BoardMemoSectionProps {
   allBoardItems?: Array<{
     boardId: number;
     boardName: string;
-    itemType: 'memo' | 'task';
+    itemType: "memo" | "task";
     itemId: string;
     originalId: string;
     addedAt: number;
   }>;
 }
 
-import { useRef, useMemo, useState } from 'react';
+import { useRef, useMemo, useState } from "react";
 import { BulkActionButtons } from "@/components/ui/layout/bulk-action-buttons";
 import { useBulkDeleteButton } from "@/src/hooks/use-bulk-delete-button";
 import { useBoardBulkRestore } from "@/src/hooks/use-board-bulk-restore";
@@ -113,24 +115,24 @@ export default function BoardMemoSection({
   allTags = [],
   allBoards = [],
   allTaggings = [],
-  allBoardItems = []
+  allBoardItems = [],
 }: BoardMemoSectionProps) {
   // ソートオプションの管理
   const { setSortOptions, getVisibleSortOptions } = useSortOptions("memo");
   const localDeleteButtonRef = useRef<HTMLButtonElement | null>(null);
   const deleteButtonRef = propDeleteButtonRef || localDeleteButtonRef;
-  
+
   // 復元状態管理
   const [, setIsRestoring] = useState(false);
   const [isRestoreLidOpen, setIsRestoreLidOpen] = useState(false);
-  
+
   // 削除ボタン用のチェック済みアイテムSet（ID変換処理）
   const checkedItemsForDeleteButton = useMemo(() => {
     if (activeMemoTab === "deleted") {
       // 削除済みタブ: originalId（string）からデータベースID（number）に変換
       const numberSet = new Set<number>();
-      checkedMemos.forEach(originalId => {
-        const memoItem = memoItems.find(item => item.itemId === originalId);
+      checkedMemos.forEach((originalId) => {
+        const memoItem = memoItems.find((item) => item.itemId === originalId);
         if (memoItem) {
           const dbId = (memoItem.content as DeletedMemo).id;
           numberSet.add(dbId);
@@ -139,7 +141,11 @@ export default function BoardMemoSection({
       return numberSet;
     } else {
       // 通常タブ: 数値のみをフィルタ
-      return new Set(Array.from(checkedMemos).filter(id => typeof id === 'number') as number[]);
+      return new Set(
+        Array.from(checkedMemos).filter(
+          (id) => typeof id === "number",
+        ) as number[],
+      );
     }
   }, [checkedMemos, activeMemoTab, memoItems]);
 
@@ -147,20 +153,22 @@ export default function BoardMemoSection({
   const { showDeleteButton } = useBulkDeleteButton({
     activeTab: activeMemoTab,
     deletedTabName: "deleted",
-    checkedItems: activeMemoTab === "deleted" ? new Set() : checkedItemsForDeleteButton,
-    checkedDeletedItems: activeMemoTab === "deleted" ? checkedItemsForDeleteButton : new Set(),
+    checkedItems:
+      activeMemoTab === "deleted" ? new Set() : checkedItemsForDeleteButton,
+    checkedDeletedItems:
+      activeMemoTab === "deleted" ? checkedItemsForDeleteButton : new Set(),
     isDeleting: isDeleting || false,
     isRestoring: isRestoreLidOpen,
   });
-  
+
   // 表示用のチェック済みアイテムSet（型変換処理）
   const checkedMemosForDisplay = useMemo(() => {
     if (activeMemoTab === "deleted") {
       // 削除済みタブ: originalId（string）からデータベースID（number）に変換
       const numberSet = new Set<number>();
-      checkedMemos.forEach(originalId => {
+      checkedMemos.forEach((originalId) => {
         // memoItemsからoriginalIdに対応するデータベースIDを探す
-        const memoItem = memoItems.find(item => item.itemId === originalId);
+        const memoItem = memoItems.find((item) => item.itemId === originalId);
         if (memoItem) {
           const dbId = (memoItem.content as DeletedMemo).id;
           numberSet.add(dbId);
@@ -169,10 +177,14 @@ export default function BoardMemoSection({
       return numberSet;
     } else {
       // 通常タブ: 数値のみをフィルタ
-      return new Set(Array.from(checkedMemos).filter(id => typeof id === 'number') as number[]);
+      return new Set(
+        Array.from(checkedMemos).filter(
+          (id) => typeof id === "number",
+        ) as number[],
+      );
     }
   }, [checkedMemos, activeMemoTab, memoItems]);
-  
+
   // 復元機能フック（削除済みタブでのみ使用）
   const {
     handleBulkRestore,
@@ -180,11 +192,14 @@ export default function BoardMemoSection({
     restoreButtonRef,
     currentDisplayCount: currentRestoreDisplayCount,
   } = useBoardBulkRestore({
-    itemType: 'memo',
+    itemType: "memo",
     checkedItems: checkedMemos,
     setCheckedItems: onCheckedMemosChange || (() => {}),
     boardItems: memoItems,
-    deletedMemos: activeMemoTab === "deleted" ? memoItems.map(item => item.content as DeletedMemo) : undefined,
+    deletedMemos:
+      activeMemoTab === "deleted"
+        ? memoItems.map((item) => item.content as DeletedMemo)
+        : undefined,
     setIsRestoring,
     setIsLidOpen: setIsRestoreLidOpen,
   });
@@ -216,23 +231,34 @@ export default function BoardMemoSection({
               className="size-6 flex items-center justify-center"
             />
           </Tooltip>
-          <Tooltip text={rightPanelMode === "memo-list" ? "メモ一覧非表示" : "メモ一覧表示"} position="bottom">
+          <Tooltip
+            text={
+              rightPanelMode === "memo-list" ? "メモ一覧非表示" : "メモ一覧表示"
+            }
+            position="bottom"
+          >
             <button
-              onClick={() => onSetRightPanelMode(rightPanelMode === "memo-list" ? null : "memo-list")}
+              onClick={() =>
+                onSetRightPanelMode(
+                  rightPanelMode === "memo-list" ? null : "memo-list",
+                )
+              }
               className={`size-6 flex items-center justify-center rounded-lg transition-colors ${
-                rightPanelMode === "memo-list" 
-                  ? "bg-gray-100 hover:bg-gray-200" 
+                rightPanelMode === "memo-list"
+                  ? "bg-gray-100 hover:bg-gray-200"
                   : "bg-gray-100 hover:bg-gray-200"
               }`}
             >
-              <FilterIconCheckList className={`size-5 ${
-                rightPanelMode === "memo-list" ? "text-Green" : "text-gray-600"
-              }`} />
+              <FilterIconCheckList
+                className={`size-5 ${
+                  rightPanelMode === "memo-list"
+                    ? "text-Green"
+                    : "text-gray-600"
+                }`}
+              />
             </button>
           </Tooltip>
 
-
-          
           {/* ソートトグル */}
           <SortToggle
             sortOptions={getVisibleSortOptions(activeMemoTab)}
@@ -247,10 +273,7 @@ export default function BoardMemoSection({
       <div className="flex items-center gap-2 flex-wrap mb-2">
         {/* 全選択/全解除ボタン（チェックモード時のみ表示） */}
         {memoSelectionMode === "check" && onSelectAll && (
-          <Tooltip
-            text={isAllSelected ? "全解除" : "全選択"}
-            position="bottom"
-          >
+          <Tooltip text={isAllSelected ? "全解除" : "全選択"} position="bottom">
             <button
               onClick={onSelectAll}
               className="bg-gray-100 rounded-lg size-7 flex items-center justify-center transition-colors text-gray-500 hover:text-gray-700"
@@ -263,7 +286,7 @@ export default function BoardMemoSection({
             </button>
           </Tooltip>
         )}
-        
+
         <button
           onClick={() => onMemoTabChange("normal")}
           className={`flex items-center gap-1 px-2 py-1 rounded-lg font-medium transition-colors text-gray-600 text-sm h-7 ${
@@ -312,7 +335,9 @@ export default function BoardMemoSection({
           </div>
         ) : activeMemoTab === "deleted" ? (
           <DeletedMemoDisplay
-            deletedMemos={memoItems.map(item => item.content) as DeletedMemo[]} // DeletedMemo型に変換
+            deletedMemos={
+              memoItems.map((item) => item.content) as DeletedMemo[]
+            } // DeletedMemo型に変換
             viewMode={viewMode}
             effectiveColumnCount={effectiveColumnCount}
             isBoard={true}
@@ -320,24 +345,35 @@ export default function BoardMemoSection({
             checkedMemos={checkedMemosForDisplay}
             onToggleCheck={(memoId) => {
               // 削除済みメモの場合、originalIdで管理しているので変換が必要
-              const memoItem = memoItems.find(item => (item.content as DeletedMemo).id === memoId);
+              const memoItem = memoItems.find(
+                (item) => (item.content as DeletedMemo).id === memoId,
+              );
               if (memoItem?.itemId) {
                 onMemoSelectionToggle(memoItem.itemId);
               }
             }}
-            onSelectMemo={memoSelectionMode === "check" ? undefined : onSelectMemo}
-            selectedMemoId={memoSelectionMode === "check" ? undefined : selectedMemo?.id}
+            onSelectMemo={
+              memoSelectionMode === "check" ? undefined : onSelectMemo
+            }
+            selectedMemoId={
+              memoSelectionMode === "check" ? undefined : selectedMemo?.id
+            }
             showEditDate={showEditDate}
             showBoardName={showBoardName}
             showTags={showTags}
-            sortOptions={getVisibleSortOptions(activeMemoTab).filter(
-              opt => opt.id === "createdAt" || opt.id === "updatedAt" || opt.id === "deletedAt"
-            ) as Array<{
-              id: "createdAt" | "updatedAt" | "deletedAt";
-              label: string;
-              enabled: boolean;
-              direction: "asc" | "desc";
-            }>}
+            sortOptions={
+              getVisibleSortOptions(activeMemoTab).filter(
+                (opt) =>
+                  opt.id === "createdAt" ||
+                  opt.id === "updatedAt" ||
+                  opt.id === "deletedAt",
+              ) as Array<{
+                id: "createdAt" | "updatedAt" | "deletedAt";
+                label: string;
+                enabled: boolean;
+                direction: "asc" | "desc";
+              }>
+            }
             allTags={allTags}
             allBoards={allBoards}
             allTaggings={allTaggings}
@@ -345,25 +381,34 @@ export default function BoardMemoSection({
           />
         ) : (
           <MemoStatusDisplay
-            memos={memoItems.map(item => item.content as Memo)}
+            memos={memoItems.map((item) => item.content as Memo)}
             viewMode={viewMode}
             effectiveColumnCount={effectiveColumnCount}
             isBoard={true}
             selectionMode={memoSelectionMode}
             checkedMemos={checkedMemosForDisplay}
             onToggleCheck={onMemoSelectionToggle}
-            onSelectMemo={memoSelectionMode === "check" ? undefined : onSelectMemo}
-            selectedMemoId={memoSelectionMode === "check" ? undefined : selectedMemo?.id}
+            onSelectMemo={
+              memoSelectionMode === "check" ? undefined : onSelectMemo
+            }
+            selectedMemoId={
+              memoSelectionMode === "check" ? undefined : selectedMemo?.id
+            }
             showEditDate={showEditDate}
             showTags={showTags}
-            sortOptions={getVisibleSortOptions(activeMemoTab).filter(
-              opt => opt.id === "createdAt" || opt.id === "updatedAt" || opt.id === "deletedAt"
-            ) as Array<{
-              id: "createdAt" | "updatedAt" | "deletedAt";
-              label: string;
-              enabled: boolean;
-              direction: "asc" | "desc";
-            }>}
+            sortOptions={
+              getVisibleSortOptions(activeMemoTab).filter(
+                (opt) =>
+                  opt.id === "createdAt" ||
+                  opt.id === "updatedAt" ||
+                  opt.id === "deletedAt",
+              ) as Array<{
+                id: "createdAt" | "updatedAt" | "deletedAt";
+                label: string;
+                enabled: boolean;
+                direction: "asc" | "desc";
+              }>
+            }
             allTags={allTags}
             allBoards={allBoards}
             allTaggings={allTaggings}
@@ -374,46 +419,44 @@ export default function BoardMemoSection({
 
       {/* 一括削除ボタン - メモ用 */}
       <BulkActionButtons
-          showDeleteButton={showDeleteButton}
-          deleteButtonCount={currentDisplayCount || checkedMemos.size}
-          onDelete={() => {
-            onBulkDelete?.('memo');
-          }}
-          deleteButtonRef={deleteButtonRef}
-          isDeleting={isLidOpen}
-          deleteVariant={activeMemoTab === "deleted" ? "danger" : undefined}
-          showRestoreButton={
-            activeMemoTab === "deleted" &&
-            !isDeleting &&
-            (checkedMemos.size > 0 ||
-              (isRestoreLidOpen && currentRestoreDisplayCount > 0))
-          }
-          restoreCount={checkedMemos.size}
-          onRestore={handleBulkRestore}
-          restoreButtonRef={restoreButtonRef}
-          isRestoring={isRestoreLidOpen}
-          animatedRestoreCount={currentRestoreDisplayCount}
-          useAnimatedRestoreCount={true}
-          animatedDeleteCount={currentDisplayCount}
-          useAnimatedDeleteCount={true}
-        />
-        
-        {/* 復元モーダル */}
-        <RestoreModal />
-        
-        {/* 選択メニューボタン（通常タブでアイテム選択時） */}
-        <SelectionMenuButton
-          count={checkedMemos.size}
-          onExport={onExport}
-          onPin={onPin}
-          onTagging={onTagging}
-          onTabMove={onTabMove}
-          isVisible={
-            activeMemoTab === "normal" &&
-            checkedMemos.size > 0 &&
-            !isDeleting
-          }
-        />
+        showDeleteButton={showDeleteButton}
+        deleteButtonCount={currentDisplayCount || checkedMemos.size}
+        onDelete={() => {
+          onBulkDelete?.("memo");
+        }}
+        deleteButtonRef={deleteButtonRef}
+        isDeleting={isLidOpen}
+        deleteVariant={activeMemoTab === "deleted" ? "danger" : undefined}
+        showRestoreButton={
+          activeMemoTab === "deleted" &&
+          !isDeleting &&
+          (checkedMemos.size > 0 ||
+            (isRestoreLidOpen && currentRestoreDisplayCount > 0))
+        }
+        restoreCount={checkedMemos.size}
+        onRestore={handleBulkRestore}
+        restoreButtonRef={restoreButtonRef}
+        isRestoring={isRestoreLidOpen}
+        animatedRestoreCount={currentRestoreDisplayCount}
+        useAnimatedRestoreCount={true}
+        animatedDeleteCount={currentDisplayCount}
+        useAnimatedDeleteCount={true}
+      />
+
+      {/* 復元モーダル */}
+      <RestoreModal />
+
+      {/* 選択メニューボタン（通常タブでアイテム選択時） */}
+      <SelectionMenuButton
+        count={checkedMemos.size}
+        onExport={onExport}
+        onPin={onPin}
+        onTagging={onTagging}
+        onTabMove={onTabMove}
+        isVisible={
+          activeMemoTab === "normal" && checkedMemos.size > 0 && !isDeleting
+        }
+      />
     </div>
   );
 }

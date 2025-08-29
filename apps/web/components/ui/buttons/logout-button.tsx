@@ -24,7 +24,7 @@ export default function LogoutButton() {
       >
         <DoorIcon className="w-4 h-4" />
       </button>
-      
+
       <ConfirmationModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}

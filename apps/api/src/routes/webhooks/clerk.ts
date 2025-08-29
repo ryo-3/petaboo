@@ -8,25 +8,25 @@ const clerkWebhook = new Hono();
 clerkWebhook.post("/user-created", async (c) => {
   try {
     const body = await c.req.json();
-    
+
     // Clerkのuser.created イベント
     if (body.type === "user.created") {
       const userId = body.data.id;
       const now = Math.floor(Date.now() / 1000);
-      
+
       const db: DatabaseType = c.env.db;
-      
+
       // usersテーブルに追加
       await db.insert(users).values({
         userId,
-        planType: 'free', // デフォルトは無料プラン
+        planType: "free", // デフォルトは無料プラン
         createdAt: now,
         updatedAt: now,
       });
-      
+
       console.log(`ユーザー作成完了: ${userId}`);
     }
-    
+
     return c.json({ success: true });
   } catch (error) {
     console.error("Webhook処理エラー:", error);

@@ -2,17 +2,21 @@
 
 import { useState } from "react";
 import { useBoardCategories } from "@/src/hooks/use-board-categories";
-import { BoardCategory, NewBoardCategory, UpdateBoardCategory } from "@/src/types/board-categories";
+import {
+  BoardCategory,
+  NewBoardCategory,
+  UpdateBoardCategory,
+} from "@/src/types/board-categories";
 import { Plus, Edit2, Trash2, GripVertical, Save, X } from "lucide-react";
 
 export default function BoardCategoryManager() {
-  const { 
-    categories, 
-    createCategory, 
-    updateCategory, 
-    deleteCategory, 
+  const {
+    categories,
+    createCategory,
+    updateCategory,
+    deleteCategory,
     reorderCategories,
-    isLoading 
+    isLoading,
   } = useBoardCategories();
 
   const [isCreating, setIsCreating] = useState(false);
@@ -20,20 +24,20 @@ export default function BoardCategoryManager() {
   const [newCategory, setNewCategory] = useState<NewBoardCategory>({
     name: "",
     boardId: 1, // デフォルト値（実際の使用時は動的に設定）
-    icon: ""
+    icon: "",
   });
   const [editingCategory, setEditingCategory] = useState<UpdateBoardCategory>({
     name: "",
-    icon: ""
+    icon: "",
   });
 
   const handleCreateCategory = async () => {
     if (!newCategory.name.trim()) return;
-    
+
     try {
       await createCategory({
         ...newCategory,
-        name: newCategory.name.trim()
+        name: newCategory.name.trim(),
       });
       setNewCategory({ name: "", boardId: 1, icon: "" });
       setIsCreating(false);
@@ -46,10 +50,13 @@ export default function BoardCategoryManager() {
     if (!editingCategory.name?.trim()) return;
 
     try {
-      await updateCategory({ id, data: {
-        ...editingCategory,
-        name: editingCategory.name.trim()
-      }});
+      await updateCategory({
+        id,
+        data: {
+          ...editingCategory,
+          name: editingCategory.name.trim(),
+        },
+      });
       setEditingId(null);
       setEditingCategory({ name: "", icon: "" });
     } catch (error) {
@@ -71,7 +78,7 @@ export default function BoardCategoryManager() {
     setEditingId(category.id);
     setEditingCategory({
       name: category.name,
-      icon: category.icon || ""
+      icon: category.icon || "",
     });
   };
 
@@ -92,7 +99,9 @@ export default function BoardCategoryManager() {
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">ボードカテゴリー管理</h1>
+        <h1 className="text-2xl font-bold text-gray-800">
+          ボードカテゴリー管理
+        </h1>
         <button
           onClick={() => setIsCreating(true)}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -105,7 +114,9 @@ export default function BoardCategoryManager() {
       {/* 新規作成フォーム */}
       {isCreating && (
         <div className="mb-6 p-4 border-2 border-blue-200 rounded-lg bg-blue-50">
-          <h3 className="text-lg font-semibold mb-4 text-blue-800">新しいカテゴリーを作成</h3>
+          <h3 className="text-lg font-semibold mb-4 text-blue-800">
+            新しいカテゴリーを作成
+          </h3>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -114,7 +125,9 @@ export default function BoardCategoryManager() {
               <input
                 type="text"
                 value={newCategory.name}
-                onChange={(e) => setNewCategory(prev => ({ ...prev, name: e.target.value }))}
+                onChange={(e) =>
+                  setNewCategory((prev) => ({ ...prev, name: e.target.value }))
+                }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="カテゴリー名を入力"
                 autoFocus
@@ -157,20 +170,26 @@ export default function BoardCategoryManager() {
                 <GripVertical size={16} />
               </div>
 
-
               {editingId === category.id ? (
                 <div className="flex-1">
                   <input
                     type="text"
                     value={editingCategory.name}
-                    onChange={(e) => setEditingCategory(prev => ({ ...prev, name: e.target.value }))}
+                    onChange={(e) =>
+                      setEditingCategory((prev) => ({
+                        ...prev,
+                        name: e.target.value,
+                      }))
+                    }
                     className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                     autoFocus
                   />
                 </div>
               ) : (
                 <div className="flex-1">
-                  <div className="font-medium text-gray-900">{category.name}</div>
+                  <div className="font-medium text-gray-900">
+                    {category.name}
+                  </div>
                 </div>
               )}
 
@@ -216,7 +235,10 @@ export default function BoardCategoryManager() {
       {categories && categories.length > 0 && (
         <div className="mt-6 text-sm text-gray-500">
           <p>• ドラッグして並び順を変更できます</p>
-          <p>• カテゴリーを削除すると、そのカテゴリーに属するボードは「未分類」になります</p>
+          <p>
+            •
+            カテゴリーを削除すると、そのカテゴリーに属するボードは「未分類」になります
+          </p>
         </div>
       )}
     </div>

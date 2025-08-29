@@ -10,7 +10,9 @@ interface CSVImportModalProps {
 
 export function CSVImportModal({ isOpen, onClose }: CSVImportModalProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewData, setPreviewData] = useState<{ title: string; content?: string }[]>([]);
+  const [previewData, setPreviewData] = useState<
+    { title: string; content?: string }[]
+  >([]);
   const [importResult, setImportResult] = useState<{
     success: boolean;
     imported: number;
@@ -18,40 +20,44 @@ export function CSVImportModal({ isOpen, onClose }: CSVImportModalProps) {
   } | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const importMemos = useImportMemos();
 
   const parseCSVPreview = (csvText: string) => {
-    const lines = csvText.trim().split('\n');
+    const lines = csvText.trim().split("\n");
     if (lines.length < 2) return [];
-    
-    const header = lines[0]?.toLowerCase() || '';
-    if (!header.includes('title')) return [];
-    
+
+    const header = lines[0]?.toLowerCase() || "";
+    if (!header.includes("title")) return [];
+
     const results: { title: string; content?: string }[] = [];
-    
-    for (let i = 1; i < Math.min(lines.length, 6); i++) { // 最初の5行のみプレビュー
-      const line = lines[i]?.trim() || '';
+
+    for (let i = 1; i < Math.min(lines.length, 6); i++) {
+      // 最初の5行のみプレビュー
+      const line = lines[i]?.trim() || "";
       if (!line) continue;
-      
-      const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
-      
+
+      const values = line.split(",").map((v) => v.trim().replace(/^"|"$/g, ""));
+
       if (values.length >= 1 && values[0]) {
         // 2番目以降のすべての値をcontentとして結合
-        const content = values.slice(1).filter(v => v).join('、');
+        const content = values
+          .slice(1)
+          .filter((v) => v)
+          .join("、");
         results.push({
           title: values[0],
           content: content || undefined,
         });
       }
     }
-    
+
     return results;
   };
 
   const handleFileSelect = async (file: File) => {
-    if (!file.name.endsWith('.csv')) {
-      alert('CSVファイルを選択してください');
+    if (!file.name.endsWith(".csv")) {
+      alert("CSVファイルを選択してください");
       return;
     }
 
@@ -82,7 +88,7 @@ export function CSVImportModal({ isOpen, onClose }: CSVImportModalProps) {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
-    
+
     const file = e.dataTransfer.files[0];
     if (file) {
       handleFileSelect(file);
@@ -99,7 +105,7 @@ export function CSVImportModal({ isOpen, onClose }: CSVImportModalProps) {
       setImportResult({
         success: false,
         imported: 0,
-        errors: ['インポート中にエラーが発生しました']
+        errors: ["インポート中にエラーが発生しました"],
       });
     }
   };
@@ -133,8 +139,8 @@ export function CSVImportModal({ isOpen, onClose }: CSVImportModalProps) {
             <div
               className={`border-2 border-dashed rounded-lg p-8 text-center mb-4 transition-colors ${
                 isDragOver
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-300 hover:border-gray-400'
+                  ? "border-blue-500 bg-blue-50"
+                  : "border-gray-300 hover:border-gray-400"
               }`}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
@@ -143,11 +149,10 @@ export function CSVImportModal({ isOpen, onClose }: CSVImportModalProps) {
             >
               <div className="text-4xl mb-2">📁</div>
               <p className="text-gray-600 mb-2">
-                {selectedFile?.name || 'CSVファイルをドラッグ&ドロップまたはクリックして選択'}
+                {selectedFile?.name ||
+                  "CSVファイルをドラッグ&ドロップまたはクリックして選択"}
               </p>
-              <p className="text-sm text-gray-500">
-                形式: title,content
-              </p>
+              <p className="text-sm text-gray-500">形式: title,content</p>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -166,12 +171,18 @@ export function CSVImportModal({ isOpen, onClose }: CSVImportModalProps) {
                     Title | Content
                   </div>
                   {previewData.map((item, index) => (
-                    <div key={index} className="px-3 py-2 border-b last:border-b-0 text-sm">
+                    <div
+                      key={index}
+                      className="px-3 py-2 border-b last:border-b-0 text-sm"
+                    >
                       <span className="font-medium">{item.title}</span>
                       {item.content && (
                         <>
                           <span className="text-gray-400 mx-2">|</span>
-                          <span className="text-gray-600">{item.content.substring(0, 50)}{item.content.length > 50 ? '...' : ''}</span>
+                          <span className="text-gray-600">
+                            {item.content.substring(0, 50)}
+                            {item.content.length > 50 ? "..." : ""}
+                          </span>
                         </>
                       )}
                     </div>
@@ -193,18 +204,24 @@ export function CSVImportModal({ isOpen, onClose }: CSVImportModalProps) {
                 disabled={!selectedFile || importMemos.isPending}
                 className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {importMemos.isPending ? 'インポート中...' : 'インポート'}
+                {importMemos.isPending ? "インポート中..." : "インポート"}
               </button>
             </div>
           </>
         ) : (
           /* 結果表示 */
           <div>
-            <div className={`p-4 rounded-lg mb-4 ${
-              importResult.success ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
-            }`}>
+            <div
+              className={`p-4 rounded-lg mb-4 ${
+                importResult.success
+                  ? "bg-green-50 text-green-800"
+                  : "bg-red-50 text-red-800"
+              }`}
+            >
               <div className="font-semibold mb-2">
-                {importResult.success ? '✓ インポート完了' : '✗ インポートエラー'}
+                {importResult.success
+                  ? "✓ インポート完了"
+                  : "✗ インポートエラー"}
               </div>
               <p>{importResult.imported}件のメモがインポートされました</p>
             </div>

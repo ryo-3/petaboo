@@ -43,7 +43,7 @@ export interface BoardWithStats extends Board {
 export interface BoardItem {
   id: number;
   boardId: number;
-  itemType: 'memo' | 'task';
+  itemType: "memo" | "task";
   itemId: OriginalId;
   position: number;
   createdAt: number;
@@ -68,6 +68,6 @@ export interface UpdateBoardData {
 }
 
 export interface AddItemToBoardData {
-  itemType: 'memo' | 'task';
+  itemType: "memo" | "task";
   itemId: OriginalId;
 }

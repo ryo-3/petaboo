@@ -1,16 +1,16 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import type { Tag } from '@/src/types/tag';
-import { useUpdateTag, useDeleteTag } from '@/src/hooks/use-tags';
-import { tagsApi } from '@/src/lib/api-client';
-import { useAuth } from '@clerk/nextjs';
-import { TAG_COLORS } from '@/src/constants/colors';
-import PenIcon from '@/components/icons/pen-icon';
-import TrashIcon from '@/components/icons/trash-icon';
-import CheckIcon from '@/components/icons/check-icon';
-import { Save } from 'lucide-react';
-import DeleteTagModal from './delete-tag-modal';
+import React, { useState, useEffect } from "react";
+import type { Tag } from "@/src/types/tag";
+import { useUpdateTag, useDeleteTag } from "@/src/hooks/use-tags";
+import { tagsApi } from "@/src/lib/api-client";
+import { useAuth } from "@clerk/nextjs";
+import { TAG_COLORS } from "@/src/constants/colors";
+import PenIcon from "@/components/icons/pen-icon";
+import TrashIcon from "@/components/icons/trash-icon";
+import CheckIcon from "@/components/icons/check-icon";
+import { Save } from "lucide-react";
+import DeleteTagModal from "./delete-tag-modal";
 
 interface TagEditModalProps {
   tag: Tag;
@@ -37,15 +37,17 @@ export default function TagEditModal({
   isOpen,
   onClose,
   onTagDeleted,
-  onTagUpdated
+  onTagUpdated,
 }: TagEditModalProps) {
   const [editedName, setEditedName] = useState(tag.name);
-  const [editedColor, setEditedColor] = useState(tag.color || TAG_COLORS.background);
+  const [editedColor, setEditedColor] = useState(
+    tag.color || TAG_COLORS.background,
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [tagStats, setTagStats] = useState<TagStats | null>(null);
   const [allTags, setAllTags] = useState<Tag[]>([]);
-  
+
   const { getToken } = useAuth();
   const updateTagMutation = useUpdateTag();
   const deleteTagMutation = useDeleteTag();
@@ -75,7 +77,7 @@ export default function TagEditModal({
         setTagStats(stats);
       }
     } catch (error) {
-      console.error('タグ統計の取得に失敗:', error);
+      console.error("タグ統計の取得に失敗:", error);
       // 統計情報が取得できない場合はnullのまま（統計なしで削除確認可能）
       setTagStats(null);
     }
@@ -90,20 +92,31 @@ export default function TagEditModal({
         setAllTags(tags);
       }
     } catch (error) {
-      console.error('タグ一覧の取得に失敗:', error);
+      console.error("タグ一覧の取得に失敗:", error);
     }
   };
 
   // 重複チェック
-  const isDuplicateName = editedName.trim() !== '' && 
+  const isDuplicateName =
+    editedName.trim() !== "" &&
     editedName.toLowerCase() !== tag.name.toLowerCase() &&
-    allTags.some(t => t.id !== tag.id && t.name.toLowerCase() === editedName.trim().toLowerCase());
+    allTags.some(
+      (t) =>
+        t.id !== tag.id &&
+        t.name.toLowerCase() === editedName.trim().toLowerCase(),
+    );
 
   // 変更があるかチェック
-  const hasChanges = editedName.trim() !== tag.name || editedColor !== (tag.color || TAG_COLORS.background);
-  
+  const hasChanges =
+    editedName.trim() !== tag.name ||
+    editedColor !== (tag.color || TAG_COLORS.background);
+
   // 保存可能かチェック
-  const canSave = editedName.trim() !== '' && !isDuplicateName && hasChanges && editedName.length <= 50;
+  const canSave =
+    editedName.trim() !== "" &&
+    !isDuplicateName &&
+    hasChanges &&
+    editedName.length <= 50;
 
   const handleSave = async () => {
     if (!canSave || isLoading) return;
@@ -114,28 +127,27 @@ export default function TagEditModal({
         id: tag.id,
         data: {
           name: editedName.trim(),
-          color: editedColor
-        }
+          color: editedColor,
+        },
       });
-      
+
       onTagUpdated?.(updatedTag);
-      
+
       // 0.5秒遅延
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       onClose();
     } catch (error) {
-      console.error('タグの更新に失敗:', error);
+      console.error("タグの更新に失敗:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && canSave) {
+    if (e.key === "Enter" && canSave) {
       handleSave();
-    } else if (e.key === 'Escape') {
+    } else if (e.key === "Escape") {
       onClose();
     }
   };
@@ -150,11 +162,21 @@ export default function TagEditModal({
           onClick={onClose}
           className="absolute top-2 right-2 p-2 hover:bg-gray-100 rounded-lg transition-colors z-10"
         >
-          <svg className="size-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <svg
+            className="size-5 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
-        
+
         <div className="p-4">
           {/* ヘッダー */}
           <div className="mb-6">
@@ -169,11 +191,11 @@ export default function TagEditModal({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               現在のタグ
             </label>
-            <div 
+            <div
               className="inline-flex items-center px-3 py-1 rounded-full text-sm"
-              style={{ 
+              style={{
                 backgroundColor: tag.color || TAG_COLORS.background,
-                color: TAG_COLORS.text 
+                color: TAG_COLORS.text,
               }}
             >
               {tag.name}
@@ -182,7 +204,10 @@ export default function TagEditModal({
 
           {/* タグ名編集 */}
           <div className="mb-4">
-            <label htmlFor="tag-name" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="tag-name"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               タグ名
             </label>
             <div className="relative">
@@ -200,7 +225,9 @@ export default function TagEditModal({
                 placeholder="タグ名を入力"
                 autoFocus
               />
-              <div className={`absolute right-3 top-1/2 transform -translate-y-1/2 text-xs ${editedName.length > 50 || isDuplicateName ? "text-red-500" : "text-gray-500"}`}>
+              <div
+                className={`absolute right-3 top-1/2 transform -translate-y-1/2 text-xs ${editedName.length > 50 || isDuplicateName ? "text-red-500" : "text-gray-500"}`}
+              >
                 {isDuplicateName ? "重複" : `${editedName.length}/50`}
               </div>
             </div>
@@ -213,38 +240,40 @@ export default function TagEditModal({
             </label>
             <div className="flex flex-wrap gap-2">
               {[
-                { name: 'デフォルト', color: TAG_COLORS.background },
-                { name: 'ブルー', color: '#dbeafe' },
-                { name: 'グリーン', color: '#dcfce7' },
-                { name: 'イエロー', color: '#fef3c7' },
-                { name: 'レッド', color: '#fee2e2' },
-                { name: 'パープル', color: '#f3e8ff' },
-                { name: 'ピンク', color: '#fce7f3' },
-                { name: 'グレー', color: '#f3f4f6' }
+                { name: "デフォルト", color: TAG_COLORS.background },
+                { name: "ブルー", color: "#dbeafe" },
+                { name: "グリーン", color: "#dcfce7" },
+                { name: "イエロー", color: "#fef3c7" },
+                { name: "レッド", color: "#fee2e2" },
+                { name: "パープル", color: "#f3e8ff" },
+                { name: "ピンク", color: "#fce7f3" },
+                { name: "グレー", color: "#f3f4f6" },
               ].map(({ name, color }) => (
                 <button
                   key={name}
                   onClick={() => setEditedColor(color)}
                   className={`w-8 h-8 rounded-full border-2 ${
-                    editedColor === color ? 'border-gray-900' : 'border-gray-300'
+                    editedColor === color
+                      ? "border-gray-900"
+                      : "border-gray-300"
                   }`}
                   style={{ backgroundColor: color }}
                   title={name}
                 />
               ))}
             </div>
-            
+
             {/* プレビュー */}
             <div className="mt-3">
               <span className="text-sm text-gray-600">プレビュー: </span>
-              <div 
+              <div
                 className="inline-flex items-center px-3 py-1 rounded-full text-sm"
-                style={{ 
+                style={{
                   backgroundColor: editedColor,
-                  color: TAG_COLORS.text 
+                  color: TAG_COLORS.text,
                 }}
               >
-                {editedName.trim() || 'タグ名'}
+                {editedName.trim() || "タグ名"}
               </div>
             </div>
           </div>
@@ -255,15 +284,18 @@ export default function TagEditModal({
             <div className="text-sm text-gray-600 space-y-1">
               <div className="flex justify-between">
                 <span>メモ</span>
-                <span className="font-medium text-gray-900">{tagStats?.itemTypes?.memo || 0}件</span>
+                <span className="font-medium text-gray-900">
+                  {tagStats?.itemTypes?.memo || 0}件
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>タスク</span>
-                <span className="font-medium text-gray-900">{tagStats?.itemTypes?.task || 0}件</span>
+                <span className="font-medium text-gray-900">
+                  {tagStats?.itemTypes?.task || 0}件
+                </span>
               </div>
             </div>
           </div>
-
 
           {/* アクションボタン */}
           <div className="flex justify-between">
@@ -275,7 +307,7 @@ export default function TagEditModal({
               <TrashIcon className="size-4" />
               削除
             </button>
-            
+
             <div className="flex gap-2">
               <button
                 onClick={onClose}
@@ -290,24 +322,28 @@ export default function TagEditModal({
                 className="flex items-center justify-center gap-1 w-20 py-2 bg-Green text-white rounded-md text-sm font-medium hover:bg-Green/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {!isLoading && <Save size={16} />}
-                {isLoading ? '保存中...' : '保存'}
+                {isLoading ? "保存中..." : "保存"}
               </button>
             </div>
           </div>
         </div>
       </div>
-      
+
       {/* 削除確認モーダル */}
       <DeleteTagModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         tag={tag}
-        tagStats={tagStats ? {
-          usageCount: tagStats.usageCount,
-          memoCount: tagStats.itemTypes.memo,
-          taskCount: tagStats.itemTypes.task,
-          boardCount: tagStats.itemTypes.board
-        } : null}
+        tagStats={
+          tagStats
+            ? {
+                usageCount: tagStats.usageCount,
+                memoCount: tagStats.itemTypes.memo,
+                taskCount: tagStats.itemTypes.task,
+                boardCount: tagStats.itemTypes.board,
+              }
+            : null
+        }
         onSuccess={() => {
           setIsDeleteModalOpen(false);
           onTagDeleted?.(tag.id);

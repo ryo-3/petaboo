@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface SelectionMenuItem {
   id: string;
@@ -23,7 +23,7 @@ export default function SelectionMenu({
   isOpen,
   onClose,
   items,
-  anchorRef
+  anchorRef,
 }: SelectionMenuProps) {
   const menuRef = React.useRef<HTMLDivElement>(null);
 
@@ -42,8 +42,8 @@ export default function SelectionMenu({
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen, onClose, anchorRef]);
 
   // ESCキーで閉じる
@@ -51,13 +51,13 @@ export default function SelectionMenu({
     if (!isOpen) return;
 
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         onClose();
       }
     };
 
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -77,9 +77,10 @@ export default function SelectionMenu({
           disabled={item.disabled}
           className={`
             w-full px-3 py-2 text-left flex items-center gap-3 
-            ${item.disabled 
-              ? 'text-gray-400 cursor-not-allowed' 
-              : 'text-gray-700 hover:bg-gray-100'
+            ${
+              item.disabled
+                ? "text-gray-400 cursor-not-allowed"
+                : "text-gray-700 hover:bg-gray-100"
             }
             transition-colors
           `}

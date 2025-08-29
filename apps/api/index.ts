@@ -18,8 +18,18 @@ import usersRoute from "./src/routes/users/route";
 // 環境変数確認（開発環境のみ）
 if (process.env.NODE_ENV === "development") {
   console.log("=== API Server Environment ===");
-  console.log("CLERK_SECRET_KEY:", process.env.CLERK_SECRET_KEY ? `${process.env.CLERK_SECRET_KEY.substring(0, 20)}...` : "未設定");
-  console.log("CLERK_PUBLISHABLE_KEY:", process.env.CLERK_PUBLISHABLE_KEY ? `${process.env.CLERK_PUBLISHABLE_KEY.substring(0, 20)}...` : "未設定");
+  console.log(
+    "CLERK_SECRET_KEY:",
+    process.env.CLERK_SECRET_KEY
+      ? `${process.env.CLERK_SECRET_KEY.substring(0, 20)}...`
+      : "未設定",
+  );
+  console.log(
+    "CLERK_PUBLISHABLE_KEY:",
+    process.env.CLERK_PUBLISHABLE_KEY
+      ? `${process.env.CLERK_PUBLISHABLE_KEY.substring(0, 20)}...`
+      : "未設定",
+  );
   console.log("NODE_ENV:", process.env.NODE_ENV);
   console.log("==============================");
 }
@@ -27,12 +37,15 @@ if (process.env.NODE_ENV === "development") {
 const app = new Hono();
 
 // CORS設定
-app.use("*", cors({
-  origin: "http://localhost:7593",
-  allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowHeaders: ["Content-Type", "Authorization"],
-  credentials: true,
-}));
+app.use(
+  "*",
+  cors({
+    origin: "http://localhost:7593",
+    allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  }),
+);
 
 console.log("サーバー起動！");
 
@@ -41,13 +54,15 @@ app.use("*", async (c, next) => {
   const start = Date.now();
   const method = c.req.method;
   const url = c.req.url;
-  
+
   console.log(`[${new Date().toISOString()}] ${method} ${url}`);
-  
+
   await next();
-  
+
   const duration = Date.now() - start;
-  console.log(`[${new Date().toISOString()}] ${method} ${url} - ${c.res.status} (${duration}ms)`);
+  console.log(
+    `[${new Date().toISOString()}] ${method} ${url} - ${c.res.status} (${duration}ms)`,
+  );
 });
 
 app.route("/memos", memosRoute);

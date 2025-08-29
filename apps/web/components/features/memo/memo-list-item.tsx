@@ -17,7 +17,7 @@ interface MemoListItemProps {
   isDeleting?: boolean;
   selectionMode?: "select" | "check";
   showTags?: boolean;
-  
+
   // 全データ事前取得（ちらつき解消）
   preloadedTags?: Tag[];
   preloadedBoards?: Board[];
@@ -62,7 +62,7 @@ function MemoListItem({
           : isDeleted
             ? "bg-red-50 border-red-200 hover:bg-red-100"
             : "bg-white hover:bg-gray-50"
-      } border-b border-gray-200 transition-all duration-300 ${isDeleting ? 'opacity-0' : 'opacity-100'}`}
+      } border-b border-gray-200 transition-all duration-300 ${isDeleting ? "opacity-0" : "opacity-100"}`}
     >
       <div className="p-2 flex items-center gap-3">
         {selectionMode === "check" && (
@@ -103,15 +103,21 @@ function MemoListItem({
                 {displayTitle}
               </h3>
             </div>
-              
+
             {/* ボード名・タグ表示 */}
             {((showBoardName && boards && boards.length > 0) || showTags) && (
               <div className="mb-1 flex items-center gap-2">
                 {/* ボード名 */}
                 {showBoardName && boards && boards.length > 0 && (
-                  <BoardChips boards={boards} variant="compact" maxWidth="100px" interactive={false} maxDisplay={2} />
+                  <BoardChips
+                    boards={boards}
+                    variant="compact"
+                    maxWidth="100px"
+                    interactive={false}
+                    maxDisplay={2}
+                  />
                 )}
-                
+
                 {/* タグ表示 */}
                 {showTags && tags && tags.length > 0 && (
                   <div className="flex flex-wrap gap-1">
@@ -121,7 +127,7 @@ function MemoListItem({
                         className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium"
                         style={{
                           backgroundColor: tag.color || TAG_COLORS.background,
-                          color: TAG_COLORS.text
+                          color: TAG_COLORS.text,
                         }}
                       >
                         {tag.name}
@@ -131,9 +137,11 @@ function MemoListItem({
                 )}
               </div>
             )}
-            
+
             <p className="text-xs text-gray-600 line-clamp-3 min-h-[2rem]">
-              {displayContent ? displayContent.split('\n').slice(1).join('\n') : ""}
+              {displayContent
+                ? displayContent.split("\n").slice(1).join("\n")
+                : ""}
             </p>
 
             <div
@@ -167,9 +175,11 @@ function MemoListItem({
                     }
 
                     // ローカル編集時間またはAPI更新時間を表示
-                    const hasLocalEdit = lastEditTime && lastEditTime > (memo.updatedAt || 0);
-                    const hasApiUpdate = memo.updatedAt && memo.updatedAt !== memo.createdAt;
-                    
+                    const hasLocalEdit =
+                      lastEditTime && lastEditTime > (memo.updatedAt || 0);
+                    const hasApiUpdate =
+                      memo.updatedAt && memo.updatedAt !== memo.createdAt;
+
                     if (hasLocalEdit) {
                       return <div>編集: {formatDateOnly(lastEditTime)}</div>;
                     } else if (hasApiUpdate) {

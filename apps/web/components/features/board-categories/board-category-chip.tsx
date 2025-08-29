@@ -5,9 +5,9 @@ interface BoardCategoryChipProps {
   size?: "small" | "medium";
 }
 
-export default function BoardCategoryChip({ 
-  category, 
-  size = "small" 
+export default function BoardCategoryChip({
+  category,
+  size = "small",
 }: BoardCategoryChipProps) {
   const sizeClasses = {
     small: "px-2 py-1 text-xs",
@@ -18,9 +18,7 @@ export default function BoardCategoryChip({
     <div
       className={`inline-flex items-center rounded-md font-medium bg-gray-100 text-gray-700 ${sizeClasses[size]}`}
     >
-      {category.icon && (
-        <span className="mr-1">{category.icon}</span>
-      )}
+      {category.icon && <span className="mr-1">{category.icon}</span>}
       <span>{category.name}</span>
     </div>
   );

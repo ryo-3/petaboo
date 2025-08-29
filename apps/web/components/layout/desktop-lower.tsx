@@ -1,7 +1,11 @@
 "use client";
 
-import MemoStatusDisplay, { DeletedMemoDisplay } from "@/components/features/memo/memo-status-display";
-import TaskStatusDisplay, { DeletedTaskDisplay } from "@/components/features/task/task-status-display";
+import MemoStatusDisplay, {
+  DeletedMemoDisplay,
+} from "@/components/features/memo/memo-status-display";
+import TaskStatusDisplay, {
+  DeletedTaskDisplay,
+} from "@/components/features/task/task-status-display";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
 import type { Tag, Tagging } from "@/src/types/tag";
@@ -14,10 +18,10 @@ interface DesktopLowerProps {
   effectiveColumnCount: number;
   isLoading: boolean;
   error: Error | null;
-  
+
   // Selection mode (memo only)
   selectionMode?: "select" | "check";
-  
+
   // Sort options (task and memo)
   sortOptions?: Array<{
     id: "createdAt" | "updatedAt" | "dueDate" | "priority" | "deletedAt";
@@ -25,43 +29,43 @@ interface DesktopLowerProps {
     enabled: boolean;
     direction: "asc" | "desc";
   }>;
-  
+
   // Date display toggle (task and memo)
   showEditDate?: boolean;
-  
+
   // Board name display toggle (memo only)
   showBoardName?: boolean;
-  
+
   // Tag display toggle (memo and task)
   showTags?: boolean;
-  
+
   // Board filter
   selectedBoardIds?: number[];
-  boardFilterMode?: 'include' | 'exclude';
-  
+  boardFilterMode?: "include" | "exclude";
+
   // Tag filter
   selectedTagIds?: number[];
-  tagFilterMode?: 'include' | 'exclude';
-  
+  tagFilterMode?: "include" | "exclude";
+
   // Data props
   memos?: Memo[];
   localMemos?: Memo[];
   deletedMemos?: DeletedMemo[];
   tasks?: Task[];
   deletedTasks?: DeletedTask[];
-  
+
   // Selection props
   selectedMemo?: Memo | null;
   selectedDeletedMemo?: DeletedMemo | null;
   selectedTask?: Task | null;
   selectedDeletedTask?: DeletedTask | null;
-  
+
   // Checked items
   checkedMemos?: Set<number>;
   checkedDeletedMemos?: Set<number>;
   checkedTasks?: Set<number>;
   checkedDeletedTasks?: Set<number>;
-  
+
   // Event handlers
   onToggleCheckMemo?: (memoId: number) => void;
   onToggleCheckDeletedMemo?: (memoId: number) => void;
@@ -71,7 +75,7 @@ interface DesktopLowerProps {
   onSelectDeletedMemo?: (memo: DeletedMemo) => void;
   onSelectTask?: (task: Task) => void;
   onSelectDeletedTask?: (task: DeletedTask) => void;
-  
+
   // 全データ事前取得（ちらつき解消）
   allTags?: Tag[];
   allBoards?: Board[];
@@ -79,7 +83,7 @@ interface DesktopLowerProps {
   allBoardItems?: Array<{
     boardId: number;
     boardName: string;
-    itemType: 'memo' | 'task';
+    itemType: "memo" | "task";
     itemId: string;
     originalId: string;
     addedAt: number;
@@ -99,9 +103,9 @@ function DesktopLower({
   showBoardName = false,
   showTags = false,
   selectedBoardIds = [],
-  boardFilterMode = 'include',
+  boardFilterMode = "include",
   selectedTagIds = [],
-  tagFilterMode = 'include',
+  tagFilterMode = "include",
   localMemos,
   deletedMemos,
   tasks,
@@ -127,9 +131,8 @@ function DesktopLower({
   allTaggings,
   allBoardItems,
 }: DesktopLowerProps) {
-  
   // Loading state
-  if ((currentMode === "memo" ? isLoading : isLoading)) {
+  if (currentMode === "memo" ? isLoading : isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center text-gray-500">読み込み中...</div>
@@ -138,7 +141,7 @@ function DesktopLower({
   }
 
   // Error state
-  if ((currentMode === "memo" ? error : error)) {
+  if (currentMode === "memo" ? error : error) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center text-red-500">エラーが発生しました</div>
@@ -166,14 +169,19 @@ function DesktopLower({
           boardFilterMode={boardFilterMode}
           selectedTagIds={selectedTagIds}
           tagFilterMode={tagFilterMode}
-          sortOptions={sortOptions.filter(opt => 
-            opt.id === "createdAt" || opt.id === "updatedAt" || opt.id === "deletedAt"
-          ) as Array<{
-            id: "createdAt" | "updatedAt" | "deletedAt";
-            label: string;
-            enabled: boolean;
-            direction: "asc" | "desc";
-          }>}
+          sortOptions={
+            sortOptions.filter(
+              (opt) =>
+                opt.id === "createdAt" ||
+                opt.id === "updatedAt" ||
+                opt.id === "deletedAt",
+            ) as Array<{
+              id: "createdAt" | "updatedAt" | "deletedAt";
+              label: string;
+              enabled: boolean;
+              direction: "asc" | "desc";
+            }>
+          }
           // 全データ事前取得（ちらつき解消）
           allTags={allTags}
           allBoards={allBoards}
@@ -185,10 +193,12 @@ function DesktopLower({
   }
 
   // タスクタブ（未着手、進行中、完了）
-  if ((activeTab === "todo" ||
-    activeTab === "in_progress" ||
-    activeTab === "completed") &&
-    currentMode === "task") {
+  if (
+    (activeTab === "todo" ||
+      activeTab === "in_progress" ||
+      activeTab === "completed") &&
+    currentMode === "task"
+  ) {
     return (
       <TaskStatusDisplay
         activeTab={activeTab}
@@ -199,7 +209,9 @@ function DesktopLower({
         checkedTasks={checkedTasks}
         onToggleCheck={onToggleCheckTask}
         onSelectTask={onSelectTask}
-        selectedTaskId={selectedTask?.status === activeTab ? selectedTask?.id : undefined}
+        selectedTaskId={
+          selectedTask?.status === activeTab ? selectedTask?.id : undefined
+        }
         sortOptions={sortOptions}
         showEditDate={showEditDate}
         showBoardName={showBoardName}
@@ -222,32 +234,37 @@ function DesktopLower({
         {currentMode === "memo" ? (
           <>
             <DeletedMemoDisplay
-            deletedMemos={deletedMemos}
-            viewMode={viewMode}
-            effectiveColumnCount={effectiveColumnCount}
-            selectionMode={selectionMode}
-            checkedMemos={checkedDeletedMemos}
-            onToggleCheck={onToggleCheckDeletedMemo}
-            onSelectMemo={onSelectDeletedMemo}
-            selectedMemoId={selectedDeletedMemo?.id}
-            showEditDate={showEditDate}
-            showBoardName={showBoardName}
-            showTags={showTags}
-            selectedBoardIds={selectedBoardIds}
-            boardFilterMode={boardFilterMode}
-            sortOptions={sortOptions.filter(opt => 
-            opt.id === "createdAt" || opt.id === "updatedAt" || opt.id === "deletedAt"
-          ) as Array<{
-            id: "createdAt" | "updatedAt" | "deletedAt";
-            label: string;
-            enabled: boolean;
-            direction: "asc" | "desc";
-          }>}
-            allTags={allTags}
-            allBoards={allBoards}
-            allTaggings={allTaggings}
-            allBoardItems={allBoardItems}
-          />
+              deletedMemos={deletedMemos}
+              viewMode={viewMode}
+              effectiveColumnCount={effectiveColumnCount}
+              selectionMode={selectionMode}
+              checkedMemos={checkedDeletedMemos}
+              onToggleCheck={onToggleCheckDeletedMemo}
+              onSelectMemo={onSelectDeletedMemo}
+              selectedMemoId={selectedDeletedMemo?.id}
+              showEditDate={showEditDate}
+              showBoardName={showBoardName}
+              showTags={showTags}
+              selectedBoardIds={selectedBoardIds}
+              boardFilterMode={boardFilterMode}
+              sortOptions={
+                sortOptions.filter(
+                  (opt) =>
+                    opt.id === "createdAt" ||
+                    opt.id === "updatedAt" ||
+                    opt.id === "deletedAt",
+                ) as Array<{
+                  id: "createdAt" | "updatedAt" | "deletedAt";
+                  label: string;
+                  enabled: boolean;
+                  direction: "asc" | "desc";
+                }>
+              }
+              allTags={allTags}
+              allBoards={allBoards}
+              allTaggings={allTaggings}
+              allBoardItems={allBoardItems}
+            />
           </>
         ) : (
           <DeletedTaskDisplay

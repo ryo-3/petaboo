@@ -16,10 +16,13 @@ const db = drizzle(sqlite);
 const app = new OpenAPIHono();
 
 // Clerk認証ミドルウェアを追加
-app.use('*', clerkMiddleware({ 
-  secretKey: process.env.CLERK_SECRET_KEY,
-  publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
-}));
+app.use(
+  "*",
+  clerkMiddleware({
+    secretKey: process.env.CLERK_SECRET_KEY,
+    publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
+  }),
+);
 
 // 共通スキーマ定義
 const TaskSchema = z.object({
@@ -38,7 +41,10 @@ const TaskSchema = z.object({
 
 const TaskInputSchema = z.object({
   title: z.string().min(1).max(200, "タイトルは200文字以内で入力してください"),
-  description: z.string().max(10000, "説明は10,000文字以内で入力してください").optional(),
+  description: z
+    .string()
+    .max(10000, "説明は10,000文字以内で入力してください")
+    .optional(),
   status: z.enum(["todo", "in_progress", "completed"]).default("todo"),
   priority: z.enum(["low", "medium", "high"]).default("medium"),
   dueDate: z.number().optional(),
@@ -47,8 +53,15 @@ const TaskInputSchema = z.object({
 });
 
 const TaskUpdateSchema = z.object({
-  title: z.string().min(1).max(200, "タイトルは200文字以内で入力してください").optional(),
-  description: z.string().max(10000, "説明は10,000文字以内で入力してください").optional(),
+  title: z
+    .string()
+    .min(1)
+    .max(200, "タイトルは200文字以内で入力してください")
+    .optional(),
+  description: z
+    .string()
+    .max(10000, "説明は10,000文字以内で入力してください")
+    .optional(),
   status: z.enum(["todo", "in_progress", "completed"]).optional(),
   priority: z.enum(["low", "medium", "high"]).optional(),
   dueDate: z.number().optional(),
@@ -63,46 +76,65 @@ const ImportResultSchema = z.object({
 });
 
 // CSVパース関数
-function parseCSV(csvText: string): { title: string; description?: string; status?: "todo" | "in_progress" | "completed"; priority?: "low" | "medium" | "high" }[] {
-  const lines = csvText.trim().split('\n');
+function parseCSV(csvText: string): {
+  title: string;
+  description?: string;
+  status?: "todo" | "in_progress" | "completed";
+  priority?: "low" | "medium" | "high";
+}[] {
+  const lines = csvText.trim().split("\n");
   if (lines.length < 2) return [];
-  
+
   const header = lines[0].toLowerCase();
-  if (!header.includes('title')) return [];
-  
-  const results: { title: string; description?: string; status?: "todo" | "in_progress" | "completed"; priority?: "low" | "medium" | "high" }[] = [];
-  
+  if (!header.includes("title")) return [];
+
+  const results: {
+    title: string;
+    description?: string;
+    status?: "todo" | "in_progress" | "completed";
+    priority?: "low" | "medium" | "high";
+  }[] = [];
+
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line) continue;
-    
+
     // 簡単なCSVパース（カンマ区切り、ダブルクォート対応）
-    const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
-    
+    const values = line.split(",").map((v) => v.trim().replace(/^"|"$/g, ""));
+
     if (values.length >= 1 && values[0]) {
-      const taskData: { title: string; description?: string; status?: "todo" | "in_progress" | "completed"; priority?: "low" | "medium" | "high" } = {
+      const taskData: {
+        title: string;
+        description?: string;
+        status?: "todo" | "in_progress" | "completed";
+        priority?: "low" | "medium" | "high";
+      } = {
         title: values[0],
       };
-      
+
       // description (2列目)
       if (values[1]) taskData.description = values[1];
-      
+
       // status (3列目)
       const status = values[2]?.toLowerCase();
-      if (status === 'todo' || status === 'in_progress' || status === 'completed') {
+      if (
+        status === "todo" ||
+        status === "in_progress" ||
+        status === "completed"
+      ) {
         taskData.status = status;
       }
-      
+
       // priority (4列目)
       const priority = values[3]?.toLowerCase();
-      if (priority === 'low' || priority === 'medium' || priority === 'high') {
+      if (priority === "low" || priority === "medium" || priority === "high") {
         taskData.priority = priority;
       }
-      
+
       results.push(taskData);
     }
   }
-  
+
   return results;
 }
 
@@ -136,20 +168,22 @@ app.openapi(
     if (!auth?.userId) {
       return c.json({ error: "Unauthorized" }, 401);
     }
-    
-    const result = await db.select({
-      id: tasks.id,
-      originalId: tasks.originalId,
-      title: tasks.title,
-      description: tasks.description,
-      status: tasks.status,
-      priority: tasks.priority,
-      dueDate: tasks.dueDate,
-      categoryId: tasks.categoryId,
-      boardCategoryId: tasks.boardCategoryId,
-      createdAt: tasks.createdAt,
-      updatedAt: tasks.updatedAt,
-    }).from(tasks)
+
+    const result = await db
+      .select({
+        id: tasks.id,
+        originalId: tasks.originalId,
+        title: tasks.title,
+        description: tasks.description,
+        status: tasks.status,
+        priority: tasks.priority,
+        dueDate: tasks.dueDate,
+        categoryId: tasks.categoryId,
+        boardCategoryId: tasks.boardCategoryId,
+        createdAt: tasks.createdAt,
+        updatedAt: tasks.updatedAt,
+      })
+      .from(tasks)
       .where(eq(tasks.userId, auth.userId))
       .orderBy(
         // 優先度順: high(3) > medium(2) > low(1)
@@ -159,14 +193,14 @@ app.openapi(
             WHEN ${tasks.priority} = 'medium' THEN 2  
             WHEN ${tasks.priority} = 'low' THEN 1
             ELSE 0
-          END`
+          END`,
         ),
-        desc(tasks.updatedAt), 
-        desc(tasks.createdAt)
+        desc(tasks.updatedAt),
+        desc(tasks.createdAt),
       );
-    
+
     return c.json(result, 200);
-  }
+  },
 );
 
 // POST /tasks（OpenAPI付き）
@@ -188,9 +222,9 @@ app.openapi(
         description: "Created task",
         content: {
           "application/json": {
-            schema: z.object({ 
+            schema: z.object({
               success: z.boolean(),
-              id: z.number()
+              id: z.number(),
             }),
           },
         },
@@ -228,16 +262,24 @@ app.openapi(
     if (!parsed.success) {
       return c.json(
         { error: "Invalid input", issues: parsed.error.issues },
-        400
+        400,
       );
     }
 
-    const { title, description, status, priority, dueDate, categoryId, boardCategoryId } = parsed.data;
-    
+    const {
+      title,
+      description,
+      status,
+      priority,
+      dueDate,
+      categoryId,
+      boardCategoryId,
+    } = parsed.data;
+
     // デバッグログ
     console.log("受信したデータ:", parsed.data);
     console.log("boardCategoryId:", boardCategoryId);
-    
+
     const insertData = {
       userId: auth.userId,
       originalId: "", // 後で更新
@@ -251,25 +293,33 @@ app.openapi(
       boardCategoryId,
       createdAt: Math.floor(Date.now() / 1000),
     };
-    
+
     console.log("DBに挿入するデータ:", insertData);
-    
-    const result = await db.insert(tasks).values(insertData).returning({ id: tasks.id });
+
+    const result = await db
+      .insert(tasks)
+      .values(insertData)
+      .returning({ id: tasks.id });
 
     // originalIdを生成して更新
     const originalId = generateOriginalId(result[0].id);
-    await db.update(tasks)
+    await db
+      .update(tasks)
       .set({ originalId })
       .where(eq(tasks.id, result[0].id));
 
     // 作成されたタスクを取得して返す
-    const newTask = await db.select().from(tasks).where(eq(tasks.id, result[0].id)).get();
-    
+    const newTask = await db
+      .select()
+      .from(tasks)
+      .where(eq(tasks.id, result[0].id))
+      .get();
+
     console.log("DBから取得した新規タスク:", newTask);
     console.log("保存されたboardCategoryId:", newTask?.boardCategoryId);
-    
+
     return c.json(newTask, 200);
-  }
+  },
 );
 
 // PUT /tasks/:id（タスク更新）
@@ -340,21 +390,22 @@ app.openapi(
     if (!parsed.success) {
       return c.json(
         { error: "Invalid input", issues: parsed.error.issues },
-        400
+        400,
       );
     }
 
     console.log("更新リクエストのデータ:", parsed.data);
     console.log("更新するboardCategoryId:", parsed.data.boardCategoryId);
-    
+
     const updateData = {
       ...parsed.data,
-      updatedAt: Math.floor(Date.now() / 1000)
+      updatedAt: Math.floor(Date.now() / 1000),
     };
-    
+
     console.log("DBに更新するデータ:", updateData);
 
-    const result = await db.update(tasks)
+    const result = await db
+      .update(tasks)
       .set(updateData)
       .where(and(eq(tasks.id, id), eq(tasks.userId, auth.userId)));
 
@@ -363,7 +414,7 @@ app.openapi(
     }
 
     return c.json({ success: true }, 200);
-  }
+  },
 );
 
 // DELETE /tasks/:id（OpenAPI付き）
@@ -410,10 +461,14 @@ app.openapi(
     }
 
     const { id } = c.req.valid("param");
-    
+
     // まず該当タスクを取得（ユーザー確認込み）
-    const task = await db.select().from(tasks).where(and(eq(tasks.id, id), eq(tasks.userId, auth.userId))).get();
-    
+    const task = await db
+      .select()
+      .from(tasks)
+      .where(and(eq(tasks.id, id), eq(tasks.userId, auth.userId)))
+      .get();
+
     if (!task) {
       return c.json({ error: "Task not found" }, 404);
     }
@@ -421,35 +476,40 @@ app.openapi(
     // トランザクションで削除済みテーブルに移動してから元テーブルから削除
     db.transaction((tx) => {
       // 削除済みテーブルに挿入
-      tx.insert(deletedTasks).values({
-        userId: auth.userId,
-        originalId: task.originalId, // originalIdをそのままコピー
-        uuid: task.uuid, // UUIDもコピー
-        title: task.title,
-        description: task.description,
-        status: task.status,
-        priority: task.priority,
-        dueDate: task.dueDate,
-        categoryId: task.categoryId,
-        createdAt: task.createdAt,
-        updatedAt: task.updatedAt,
-        deletedAt: Math.floor(Date.now() / 1000),
-      }).run();
+      tx.insert(deletedTasks)
+        .values({
+          userId: auth.userId,
+          originalId: task.originalId, // originalIdをそのままコピー
+          uuid: task.uuid, // UUIDもコピー
+          title: task.title,
+          description: task.description,
+          status: task.status,
+          priority: task.priority,
+          dueDate: task.dueDate,
+          categoryId: task.categoryId,
+          createdAt: task.createdAt,
+          updatedAt: task.updatedAt,
+          deletedAt: Math.floor(Date.now() / 1000),
+        })
+        .run();
 
       // 関連するboard_itemsのdeletedAtを設定
       tx.update(boardItems)
         .set({ deletedAt: new Date() })
-        .where(and(
-          eq(boardItems.itemType, 'task'),
-          eq(boardItems.originalId, task.originalId)
-        )).run();
+        .where(
+          and(
+            eq(boardItems.itemType, "task"),
+            eq(boardItems.originalId, task.originalId),
+          ),
+        )
+        .run();
 
       // 元テーブルから削除
       tx.delete(tasks).where(eq(tasks.id, id)).run();
     });
 
     return c.json({ success: true }, 200);
-  }
+  },
 );
 
 // GET /deleted（削除済みタスク一覧）
@@ -462,18 +522,20 @@ app.openapi(
         description: "List of deleted tasks",
         content: {
           "application/json": {
-            schema: z.array(z.object({
-              id: z.number(),
-              originalId: z.string(),
-              title: z.string(),
-              description: z.string().nullable(),
-              status: z.string(),
-              priority: z.string(),
-              dueDate: z.number().nullable(),
-              createdAt: z.number(),
-              updatedAt: z.number().nullable(),
-              deletedAt: z.number(),
-            })),
+            schema: z.array(
+              z.object({
+                id: z.number(),
+                originalId: z.string(),
+                title: z.string(),
+                description: z.string().nullable(),
+                status: z.string(),
+                priority: z.string(),
+                dueDate: z.number().nullable(),
+                createdAt: z.number(),
+                updatedAt: z.number().nullable(),
+                deletedAt: z.number(),
+              }),
+            ),
           },
         },
       },
@@ -503,27 +565,29 @@ app.openapi(
     }
 
     try {
-      const result = await db.select({
-        id: deletedTasks.id,
-        originalId: deletedTasks.originalId,
-        title: deletedTasks.title,
-        description: deletedTasks.description,
-        status: deletedTasks.status,
-        priority: deletedTasks.priority,
-        dueDate: deletedTasks.dueDate,
-        categoryId: deletedTasks.categoryId,
-        createdAt: deletedTasks.createdAt,
-        updatedAt: deletedTasks.updatedAt,
-        deletedAt: deletedTasks.deletedAt,
-      }).from(deletedTasks)
+      const result = await db
+        .select({
+          id: deletedTasks.id,
+          originalId: deletedTasks.originalId,
+          title: deletedTasks.title,
+          description: deletedTasks.description,
+          status: deletedTasks.status,
+          priority: deletedTasks.priority,
+          dueDate: deletedTasks.dueDate,
+          categoryId: deletedTasks.categoryId,
+          createdAt: deletedTasks.createdAt,
+          updatedAt: deletedTasks.updatedAt,
+          deletedAt: deletedTasks.deletedAt,
+        })
+        .from(deletedTasks)
         .where(eq(deletedTasks.userId, auth.userId))
         .orderBy(desc(deletedTasks.deletedAt));
       return c.json(result);
     } catch (error) {
-      console.error('削除済みタスク取得エラー:', error);
-      return c.json({ error: 'Internal server error' }, 500);
+      console.error("削除済みタスク取得エラー:", error);
+      return c.json({ error: "Internal server error" }, 500);
     }
-  }
+  },
 );
 
 // DELETE /deleted/:id（完全削除）
@@ -578,37 +642,45 @@ app.openapi(
     }
 
     const { originalId } = c.req.valid("param");
-    
+
     try {
       const result = db.transaction((tx) => {
         // 1. タグ付けを削除（タグ本体は保持）
-        tx.delete(taggings).where(
-          and(
-            eq(taggings.targetType, 'task'),
-            eq(taggings.targetOriginalId, originalId)
+        tx.delete(taggings)
+          .where(
+            and(
+              eq(taggings.targetType, "task"),
+              eq(taggings.targetOriginalId, originalId),
+            ),
           )
-        ).run();
-        
+          .run();
+
         // 2. 関連するボードアイテムは削除しない（削除済みタブで表示するため保持）
-        
+
         // 3. タスクを削除
-        const deleteResult = tx.delete(deletedTasks).where(
-          and(eq(deletedTasks.originalId, originalId), eq(deletedTasks.userId, auth.userId))
-        ).run();
-        
+        const deleteResult = tx
+          .delete(deletedTasks)
+          .where(
+            and(
+              eq(deletedTasks.originalId, originalId),
+              eq(deletedTasks.userId, auth.userId),
+            ),
+          )
+          .run();
+
         return deleteResult;
       });
-      
+
       if (result.changes === 0) {
         return c.json({ error: "Deleted task not found" }, 404);
       }
 
       return c.json({ success: true }, 200);
     } catch (error) {
-      console.error('完全削除エラー:', error);
-      return c.json({ error: 'Internal server error' }, 500);
+      console.error("完全削除エラー:", error);
+      return c.json({ error: "Internal server error" }, 500);
     }
-  }
+  },
 );
 
 // POST /deleted/:originalId/restore（復元）
@@ -663,13 +735,20 @@ app.openapi(
     }
 
     const { originalId } = c.req.valid("param");
-    
+
     try {
       // まず削除済みタスクを取得
-      const deletedTask = await db.select().from(deletedTasks).where(
-        and(eq(deletedTasks.originalId, originalId), eq(deletedTasks.userId, auth.userId))
-      ).get();
-      
+      const deletedTask = await db
+        .select()
+        .from(deletedTasks)
+        .where(
+          and(
+            eq(deletedTasks.originalId, originalId),
+            eq(deletedTasks.userId, auth.userId),
+          ),
+        )
+        .get();
+
       if (!deletedTask) {
         return c.json({ error: "Deleted task not found" }, 404);
       }
@@ -677,19 +756,23 @@ app.openapi(
       // トランザクションで復元処理
       const restoredTask = db.transaction((tx) => {
         // 通常のタスクテーブルに復元
-        const result = tx.insert(tasks).values({
-          userId: auth.userId,
-          originalId: deletedTask.originalId, // 一旦削除前のoriginalIdで復元
-          uuid: deletedTask.uuid, // UUIDも復元
-          title: deletedTask.title,
-          description: deletedTask.description,
-          status: deletedTask.status as "todo" | "in_progress" | "completed",
-          priority: deletedTask.priority as "low" | "medium" | "high",
-          dueDate: deletedTask.dueDate,
-          categoryId: deletedTask.categoryId,
-          createdAt: deletedTask.createdAt,
-          updatedAt: Math.floor(Date.now() / 1000), // 復元時刻を更新
-        }).returning({ id: tasks.id }).get();
+        const result = tx
+          .insert(tasks)
+          .values({
+            userId: auth.userId,
+            originalId: deletedTask.originalId, // 一旦削除前のoriginalIdで復元
+            uuid: deletedTask.uuid, // UUIDも復元
+            title: deletedTask.title,
+            description: deletedTask.description,
+            status: deletedTask.status as "todo" | "in_progress" | "completed",
+            priority: deletedTask.priority as "low" | "medium" | "high",
+            dueDate: deletedTask.dueDate,
+            categoryId: deletedTask.categoryId,
+            createdAt: deletedTask.createdAt,
+            updatedAt: Math.floor(Date.now() / 1000), // 復元時刻を更新
+          })
+          .returning({ id: tasks.id })
+          .get();
 
         // 復元されたタスクのoriginalIdを新しいIDに更新
         tx.update(tasks)
@@ -699,27 +782,32 @@ app.openapi(
 
         // 関連するboard_itemsのdeletedAtをNULLに戻し、originalIdを新しいIDに更新
         tx.update(boardItems)
-          .set({ 
+          .set({
             deletedAt: null,
-            originalId: result.id.toString() // 新しいタスクIDをoriginalIdに設定
+            originalId: result.id.toString(), // 新しいタスクIDをoriginalIdに設定
           })
-          .where(and(
-            eq(boardItems.itemType, 'task'),
-            eq(boardItems.originalId, deletedTask.originalId)
-          )).run();
+          .where(
+            and(
+              eq(boardItems.itemType, "task"),
+              eq(boardItems.originalId, deletedTask.originalId),
+            ),
+          )
+          .run();
 
         // 削除済みテーブルから削除
-        tx.delete(deletedTasks).where(eq(deletedTasks.originalId, originalId)).run();
+        tx.delete(deletedTasks)
+          .where(eq(deletedTasks.originalId, originalId))
+          .run();
 
         return result;
       });
 
       return c.json({ success: true, id: restoredTask.id as number }, 200);
     } catch (error) {
-      console.error('復元エラー:', error);
-      return c.json({ error: 'Internal server error' }, 500);
+      console.error("復元エラー:", error);
+      return c.json({ error: "Internal server error" }, 500);
     }
-  }
+  },
 );
 
 // POST /import（CSVインポート）
@@ -784,13 +872,13 @@ app.openapi(
 
     try {
       const body = await c.req.parseBody();
-      const file = body['file'] as File;
+      const file = body["file"] as File;
 
       if (!file) {
         return c.json({ error: "No file provided" }, 400);
       }
 
-      if (!file.name.endsWith('.csv')) {
+      if (!file.name.endsWith(".csv")) {
         return c.json({ error: "Only CSV files are supported" }, 400);
       }
 
@@ -798,10 +886,13 @@ app.openapi(
       const taskData = parseCSV(csvText);
 
       if (taskData.length === 0) {
-        return c.json({ 
-          error: "No valid data found",
-          details: "CSV must have 'title' column and at least one data row"
-        }, 400);
+        return c.json(
+          {
+            error: "No valid data found",
+            details: "CSV must have 'title' column and at least one data row",
+          },
+          400,
+        );
       }
 
       const errors: string[] = [];
@@ -816,24 +907,29 @@ app.openapi(
             continue;
           }
 
-          const { title, description, status, priority, dueDate, categoryId } = parsed.data;
-          const result = await db.insert(tasks).values({
-            userId: auth.userId,
-            originalId: "", // 後で更新
-            uuid: generateUuid(),
-            title,
-            description: description || null,
-            status: status || "todo",
-            priority: priority || "medium",
-            dueDate: dueDate || null,
-            categoryId: categoryId || null,
-            createdAt: Math.floor(Date.now() / 1000),
-            updatedAt: null,
-          }).returning({ id: tasks.id });
+          const { title, description, status, priority, dueDate, categoryId } =
+            parsed.data;
+          const result = await db
+            .insert(tasks)
+            .values({
+              userId: auth.userId,
+              originalId: "", // 後で更新
+              uuid: generateUuid(),
+              title,
+              description: description || null,
+              status: status || "todo",
+              priority: priority || "medium",
+              dueDate: dueDate || null,
+              categoryId: categoryId || null,
+              createdAt: Math.floor(Date.now() / 1000),
+              updatedAt: null,
+            })
+            .returning({ id: tasks.id });
 
           // originalIdを生成して更新
           const originalId = generateOriginalId(result[0].id);
-          await db.update(tasks)
+          await db
+            .update(tasks)
             .set({ originalId })
             .where(eq(tasks.id, result[0].id));
 
@@ -843,17 +939,19 @@ app.openapi(
         }
       }
 
-      return c.json({ 
-        success: true, 
-        imported, 
-        errors 
-      }, 200);
-
+      return c.json(
+        {
+          success: true,
+          imported,
+          errors,
+        },
+        200,
+      );
     } catch (error) {
-      console.error('CSV Import Error:', error);
-      return c.json({ error: 'Internal server error' }, 500);
+      console.error("CSV Import Error:", error);
+      return c.json({ error: "Internal server error" }, 500);
     }
-  }
+  },
 );
 
 export default app;

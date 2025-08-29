@@ -11,36 +11,46 @@ interface BoardPageProps {
 
 export default async function BoardPage({ params }: BoardPageProps) {
   const { slug } = await params;
-  
-  let boardData: { id: number; name: string; description?: string | null } | null = null;
+
+  let boardData: {
+    id: number;
+    name: string;
+    description?: string | null;
+  } | null = null;
   let boardWithItems: BoardWithItems | null = null;
   const queryClient = new QueryClient();
-  
+
   // サーバーサイドでボード名を取得（直接認証付きAPI呼び出し）
   if (slug) {
     try {
       const { userId, getToken } = await auth();
-      
+
       if (userId) {
         const token = await getToken();
-        const response = await fetch(`${process.env.API_URL || 'http://localhost:8794'}/boards/slug/${slug}`, {
-          headers: {
-            "Content-Type": "application/json",
-            ...(token && { Authorization: `Bearer ${token}` }),
-          },
-        });
-        
-        if (response.ok) {
-          boardData = await response.json();
-          
-          // ボード詳細データも取得してキャッシュに設定
-          const itemsResponse = await fetch(`${process.env.API_URL || 'http://localhost:8794'}/boards/${boardData!.id}/items`, {
+        const response = await fetch(
+          `${process.env.API_URL || "http://localhost:8794"}/boards/slug/${slug}`,
+          {
             headers: {
               "Content-Type": "application/json",
               ...(token && { Authorization: `Bearer ${token}` }),
             },
-          });
-          
+          },
+        );
+
+        if (response.ok) {
+          boardData = await response.json();
+
+          // ボード詳細データも取得してキャッシュに設定
+          const itemsResponse = await fetch(
+            `${process.env.API_URL || "http://localhost:8794"}/boards/${boardData!.id}/items`,
+            {
+              headers: {
+                "Content-Type": "application/json",
+                ...(token && { Authorization: `Bearer ${token}` }),
+              },
+            },
+          );
+
           if (itemsResponse.ok) {
             const itemsData = await itemsResponse.json();
             boardWithItems = {
@@ -48,7 +58,10 @@ export default async function BoardPage({ params }: BoardPageProps) {
               items: itemsData.items,
             };
             // React Queryキャッシュに設定
-            queryClient.setQueryData(["boards", boardData!.id, "items"], boardWithItems);
+            queryClient.setQueryData(
+              ["boards", boardData!.id, "items"],
+              boardWithItems,
+            );
           }
         }
       }
@@ -56,12 +69,12 @@ export default async function BoardPage({ params }: BoardPageProps) {
       console.error("Failed to fetch board:", error);
     }
   }
-  
+
   // サーバーサイドでボード情報を取得できた場合
   if (boardData) {
     return (
       <Hydrate state={dehydrate(queryClient)}>
-        <Main 
+        <Main
           initialBoardName={boardData.name}
           boardId={boardData.id}
           showBoardHeader={true}
@@ -74,10 +87,10 @@ export default async function BoardPage({ params }: BoardPageProps) {
       </Hydrate>
     );
   }
-  
+
   // フォールバック：ボード情報が取得できない場合
   return (
-    <Main 
+    <Main
       initialBoardName={undefined}
       initialCurrentMode="board"
       initialScreenMode="board"

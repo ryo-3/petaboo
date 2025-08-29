@@ -38,7 +38,7 @@ export default async function RootLayout({
     <ClerkProvider localization={jaJP}>
       <html lang="ja">
         <head>
-          {process.env.NODE_ENV === 'development' && (
+          {process.env.NODE_ENV === "development" && (
             <script src="/console-logger.js" />
           )}
         </head>

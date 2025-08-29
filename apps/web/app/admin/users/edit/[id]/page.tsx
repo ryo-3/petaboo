@@ -20,7 +20,7 @@ export default function UserEdit() {
         >
           <Input disabled />
         </Form.Item>
-        
+
         <Form.Item
           label="プランタイプ"
           name="planType"

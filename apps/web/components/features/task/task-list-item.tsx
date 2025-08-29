@@ -23,14 +23,14 @@ interface TaskListItemProps {
   showTags?: boolean;
   isDeleting?: boolean;
   selectionMode?: "select" | "check";
-  
+
   // 事前取得されたデータ（APIコール不要）
   tags?: Tag[];
   boards?: Board[];
-  
+
   // 削除済み表示用の事前取得データ
-  preloadedTags?: Array<{id: number; name: string; color?: string}>
-  preloadedBoards?: Array<{id: number; name: string}>
+  preloadedTags?: Array<{ id: number; name: string; color?: string }>;
+  preloadedBoards?: Array<{ id: number; name: string }>;
 }
 
 function TaskListItem({
@@ -46,11 +46,10 @@ function TaskListItem({
   isDeleting = false,
   selectionMode = "select",
   tags = [],
-  boards = []
+  boards = [],
 }: TaskListItemProps) {
   const isDeleted = variant === "deleted";
   const deletedTask = task as DeletedTask;
-  
 
   return (
     <div
@@ -103,13 +102,20 @@ function TaskListItem({
               </h3>
 
               {/* ボード名・タグ表示 */}
-              {((showBoardName && boards && boards.length > 0) || (showTags && !isDeleted && tags && tags.length > 0)) && (
+              {((showBoardName && boards && boards.length > 0) ||
+                (showTags && !isDeleted && tags && tags.length > 0)) && (
                 <div className="mb-1 flex items-center gap-2">
                   {/* ボード名 */}
                   {showBoardName && boards && boards.length > 0 && (
-                    <BoardChips boards={boards} variant="compact" maxWidth="100px" interactive={false} maxDisplay={2} />
+                    <BoardChips
+                      boards={boards}
+                      variant="compact"
+                      maxWidth="100px"
+                      interactive={false}
+                      maxDisplay={2}
+                    />
                   )}
-                  
+
                   {/* タグ表示 */}
                   {showTags && !isDeleted && tags && tags.length > 0 && (
                     <div className="flex flex-wrap gap-1">
@@ -119,7 +125,7 @@ function TaskListItem({
                           className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium"
                           style={{
                             backgroundColor: tag.color || TAG_COLORS.background,
-                            color: TAG_COLORS.text
+                            color: TAG_COLORS.text,
                           }}
                         >
                           {tag.name}

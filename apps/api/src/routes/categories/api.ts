@@ -127,12 +127,7 @@ export function createAPI(app: AppType) {
     const existing = await db
       .select()
       .from(categories)
-      .where(
-        and(
-          eq(categories.userId, auth.userId),
-          eq(categories.name, name)
-        )
-      )
+      .where(and(eq(categories.userId, auth.userId), eq(categories.name, name)))
       .limit(1);
 
     if (existing.length > 0) {
@@ -224,10 +219,7 @@ export function createAPI(app: AppType) {
       .select()
       .from(categories)
       .where(
-        and(
-          eq(categories.id, categoryId),
-          eq(categories.userId, auth.userId)
-        )
+        and(eq(categories.id, categoryId), eq(categories.userId, auth.userId)),
       )
       .limit(1);
 
@@ -243,8 +235,8 @@ export function createAPI(app: AppType) {
         and(
           eq(categories.userId, auth.userId),
           eq(categories.name, name),
-          sql`${categories.id} != ${categoryId}`
-        )
+          sql`${categories.id} != ${categoryId}`,
+        ),
       )
       .limit(1);
 
@@ -319,10 +311,7 @@ export function createAPI(app: AppType) {
       .select()
       .from(categories)
       .where(
-        and(
-          eq(categories.id, categoryId),
-          eq(categories.userId, auth.userId)
-        )
+        and(eq(categories.id, categoryId), eq(categories.userId, auth.userId)),
       )
       .limit(1);
 
@@ -392,10 +381,7 @@ export function createAPI(app: AppType) {
       .select()
       .from(categories)
       .where(
-        and(
-          eq(categories.id, categoryId),
-          eq(categories.userId, auth.userId)
-        )
+        and(eq(categories.id, categoryId), eq(categories.userId, auth.userId)),
       )
       .limit(1);
 
@@ -408,10 +394,7 @@ export function createAPI(app: AppType) {
       .select({ count: sql<number>`count(*)` })
       .from(tasks)
       .where(
-        and(
-          eq(tasks.userId, auth.userId),
-          eq(tasks.categoryId, categoryId)
-        )
+        and(eq(tasks.userId, auth.userId), eq(tasks.categoryId, categoryId)),
       );
 
     // メモの使用数をカウント
@@ -419,10 +402,7 @@ export function createAPI(app: AppType) {
       .select({ count: sql<number>`count(*)` })
       .from(memos)
       .where(
-        and(
-          eq(memos.userId, auth.userId),
-          eq(memos.categoryId, categoryId)
-        )
+        and(eq(memos.userId, auth.userId), eq(memos.categoryId, categoryId)),
       );
 
     return c.json({

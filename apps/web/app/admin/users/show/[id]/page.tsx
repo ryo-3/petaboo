@@ -17,22 +17,26 @@ export default function UserShow() {
     <Show isLoading={isLoading}>
       <Card>
         <Title level={4}>ユーザー詳細</Title>
-        
+
         <div style={{ marginBottom: 16 }}>
           <Text strong>ユーザーID: </Text>
           <Text code>{record?.userId}</Text>
         </div>
-        
+
         <div style={{ marginBottom: 16 }}>
           <Text strong>プランタイプ: </Text>
           <Tag color={record?.planType === "premium" ? "green" : "default"}>
             {record?.planType?.toUpperCase()}
           </Tag>
         </div>
-        
+
         <div style={{ marginBottom: 16 }}>
           <Text strong>作成日: </Text>
-          <Text>{record?.createdAt ? new Date(record.createdAt * 1000).toLocaleDateString() : 'N/A'}</Text>
+          <Text>
+            {record?.createdAt
+              ? new Date(record.createdAt * 1000).toLocaleDateString()
+              : "N/A"}
+          </Text>
         </div>
       </Card>
     </Show>

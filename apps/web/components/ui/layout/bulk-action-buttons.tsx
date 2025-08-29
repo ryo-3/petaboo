@@ -10,14 +10,14 @@ interface BulkActionButtonsProps {
   deleteButtonRef: React.RefObject<HTMLButtonElement | null>;
   isDeleting: boolean;
   deleteVariant?: "default" | "danger";
-  
+
   // 復元ボタン
   showRestoreButton: boolean;
   restoreCount: number;
   onRestore: () => void;
   restoreButtonRef?: React.RefObject<HTMLButtonElement | null>;
   isRestoring: boolean;
-  
+
   // アニメーション付きカウンター用
   animatedDeleteCount?: number;
   useAnimatedDeleteCount?: boolean;

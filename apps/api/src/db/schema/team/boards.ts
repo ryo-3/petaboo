@@ -9,7 +9,10 @@ export const teamBoards = sqliteTable("team_boards", {
   description: text("description"),
   teamId: integer("team_id").notNull(),
   userId: text("user_id").notNull(), // 作成者
-  boardCategoryId: integer("board_category_id").references(() => teamBoardCategories.id, { onDelete: "set null" }),
+  boardCategoryId: integer("board_category_id").references(
+    () => teamBoardCategories.id,
+    { onDelete: "set null" },
+  ),
   archived: integer("archived", { mode: "boolean" }).notNull().default(false),
   completed: integer("completed", { mode: "boolean" }).notNull().default(false),
   createdAt: integer("created_at", { mode: "timestamp" })
@@ -23,7 +26,9 @@ export const teamBoards = sqliteTable("team_boards", {
 
 export const teamBoardItems = sqliteTable("team_board_items", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  boardId: integer("board_id").notNull().references(() => teamBoards.id, { onDelete: "cascade" }),
+  boardId: integer("board_id")
+    .notNull()
+    .references(() => teamBoards.id, { onDelete: "cascade" }),
   itemType: text("item_type").notNull(), // 'memo' | 'task'
   originalId: text("original_id").notNull(), // チームメモ/タスクのoriginalId
   deletedAt: integer("deleted_at", { mode: "timestamp" }),

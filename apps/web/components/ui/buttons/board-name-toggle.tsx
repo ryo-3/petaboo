@@ -15,20 +15,20 @@ interface BoardNameToggleProps {
   selectedBoardIds?: number[];
   onBoardFilterChange?: (boardIds: number[]) => void;
   // フィルターモード関連
-  filterMode?: 'include' | 'exclude';
-  onFilterModeChange?: (mode: 'include' | 'exclude') => void;
+  filterMode?: "include" | "exclude";
+  onFilterModeChange?: (mode: "include" | "exclude") => void;
 }
 
-function BoardNameToggle({ 
-  showBoardName, 
-  onToggle, 
-  buttonSize = "size-7", 
+function BoardNameToggle({
+  showBoardName,
+  onToggle,
+  buttonSize = "size-7",
   iconSize = "size-4",
   boards = [],
   selectedBoardIds = [],
   onBoardFilterChange,
-  filterMode = 'include',
-  onFilterModeChange
+  filterMode = "include",
+  onFilterModeChange,
 }: BoardNameToggleProps) {
   const [showFilterModal, setShowFilterModal] = useState(false);
 
@@ -40,7 +40,10 @@ function BoardNameToggle({
 
   return (
     <div className="flex items-center gap-1">
-      <Tooltip text={showBoardName ? "ボード名を非表示" : "ボード名を表示"} position="bottom">
+      <Tooltip
+        text={showBoardName ? "ボード名を非表示" : "ボード名を表示"}
+        position="bottom"
+      >
         <button
           onClick={() => {
             onToggle(!showBoardName);

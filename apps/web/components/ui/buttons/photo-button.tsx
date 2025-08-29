@@ -8,12 +8,12 @@ interface PhotoButtonProps {
   iconSize?: string;
 }
 
-function PhotoButton({ 
-  onClick, 
+function PhotoButton({
+  onClick,
   className = "",
   disabled = false,
   buttonSize = "size-7",
-  iconSize = "size-4"
+  iconSize = "size-4",
 }: PhotoButtonProps) {
   const handleClick = () => {
     if (onClick) {

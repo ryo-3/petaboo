@@ -1,18 +1,18 @@
-'use client'
+"use client";
 
-import { ReactNode } from 'react'
+import { ReactNode } from "react";
 
 interface SwitchTab {
-  id: string
-  label: string
-  icon?: ReactNode
-  count?: number
+  id: string;
+  label: string;
+  icon?: ReactNode;
+  count?: number;
 }
 
 interface SwitchTabsProps {
-  tabs: SwitchTab[]
-  activeTab: string
-  onTabChange: (tabId: string) => void
+  tabs: SwitchTab[];
+  activeTab: string;
+  onTabChange: (tabId: string) => void;
 }
 
 function SwitchTabs({ tabs, activeTab, onTabChange }: SwitchTabsProps) {
@@ -25,15 +25,15 @@ function SwitchTabs({ tabs, activeTab, onTabChange }: SwitchTabsProps) {
             onClick={() => onTabChange(tab.id)}
             className={`relative inline-flex items-center justify-center whitespace-nowrap px-3 py-1.5 text-sm font-medium ${
               activeTab === tab.id
-                ? 'text-slate-950'
-                : 'text-slate-500 hover:text-slate-900'
+                ? "text-slate-950"
+                : "text-slate-500 hover:text-slate-900"
             }`}
           >
             {/* アニメーション背景 */}
             {activeTab === tab.id && (
               <div className="absolute inset-0 bg-white rounded-lg shadow-sm" />
             )}
-            
+
             <div className="relative flex items-center gap-1">
               {tab.icon && tab.icon}
               <span>
@@ -44,7 +44,7 @@ function SwitchTabs({ tabs, activeTab, onTabChange }: SwitchTabsProps) {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
-export default SwitchTabs
+export default SwitchTabs;

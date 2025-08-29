@@ -22,14 +22,18 @@ export default function EditCategoryModal({
   category,
   onSuccess,
 }: EditCategoryModalProps) {
-  const { updateCategory, deleteCategory, categories } = useBoardCategories(category?.boardId);
+  const { updateCategory, deleteCategory, categories } = useBoardCategories(
+    category?.boardId,
+  );
   const [name, setName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  
+
   // 他のカテゴリーとの重複チェック（自分自身は除外）
   const isDuplicate = categories.some(
-    cat => cat.id !== category?.id && cat.name.trim().toLowerCase() === name.trim().toLowerCase()
+    (cat) =>
+      cat.id !== category?.id &&
+      cat.name.trim().toLowerCase() === name.trim().toLowerCase(),
   );
 
   // カテゴリーが変更されたら名前を更新
@@ -47,15 +51,15 @@ export default function EditCategoryModal({
     try {
       await updateCategory({
         id: category.id,
-        data: { 
+        data: {
           name: name.trim(),
-          boardId: category.boardId
-        }
+          boardId: category.boardId,
+        },
       });
-      
+
       // 0.5秒遅延
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       onSuccess?.();
       handleClose();
     } catch (error) {
@@ -83,11 +87,11 @@ export default function EditCategoryModal({
   if (!isOpen || !category) return null;
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
       onClick={(e) => e.stopPropagation()}
     >
-      <div 
+      <div
         className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4"
         onClick={(e) => e.stopPropagation()}
       >
@@ -120,7 +124,9 @@ export default function EditCategoryModal({
                 autoFocus
                 required
               />
-              <div className={`absolute right-3 top-1/2 transform -translate-y-1/2 text-xs ${name.length > 50 || isDuplicate ? "text-red-500" : "text-gray-500"}`}>
+              <div
+                className={`absolute right-3 top-1/2 transform -translate-y-1/2 text-xs ${name.length > 50 || isDuplicate ? "text-red-500" : "text-gray-500"}`}
+              >
                 {isDuplicate ? "重複" : `${name.length}/50`}
               </div>
             </div>
@@ -137,7 +143,7 @@ export default function EditCategoryModal({
               <TrashIcon className="size-4" />
               削除
             </button>
-            
+
             <div className="flex gap-2">
               <button
                 type="button"
@@ -149,7 +155,13 @@ export default function EditCategoryModal({
               </button>
               <button
                 type="submit"
-                disabled={!name.trim() || isSubmitting || name.trim() === category?.name || name.length > 50 || isDuplicate}
+                disabled={
+                  !name.trim() ||
+                  isSubmitting ||
+                  name.trim() === category?.name ||
+                  name.length > 50 ||
+                  isDuplicate
+                }
                 className="flex items-center justify-center gap-1 w-20 py-2 bg-Green text-white rounded-md text-sm font-medium hover:bg-Green/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {!isSubmitting && <Save size={16} />}
@@ -159,7 +171,7 @@ export default function EditCategoryModal({
           </div>
         </form>
       </div>
-      
+
       {/* 削除確認モーダル */}
       <DeleteCategoryModal
         isOpen={isDeleteModalOpen}

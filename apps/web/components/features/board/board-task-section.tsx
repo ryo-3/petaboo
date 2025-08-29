@@ -1,6 +1,8 @@
-'use client';
+"use client";
 
-import TaskStatusDisplay, { DeletedTaskDisplay } from "@/components/features/task/task-status-display";
+import TaskStatusDisplay, {
+  DeletedTaskDisplay,
+} from "@/components/features/task/task-status-display";
 import { DeletedTask } from "@/src/types/task";
 import { FilterIconCheckList } from "@/components/icons/filter-icon-variants";
 import TrashIcon from "@/components/icons/trash-icon";
@@ -40,25 +42,27 @@ interface BoardTaskSectionProps {
   checkedTasks: Set<string | number>;
   onCreateNewTask: () => void;
   onSetRightPanelMode: (mode: "task-list" | null) => void;
-  onTaskTabChange: (tab: "todo" | "in_progress" | "completed" | "deleted") => void;
+  onTaskTabChange: (
+    tab: "todo" | "in_progress" | "completed" | "deleted",
+  ) => void;
   onSelectTask: (task: Task | DeletedTask) => void;
   onTaskSelectionToggle: (taskId: string | number) => void;
   onSelectAll?: () => void;
   isAllSelected?: boolean;
-  onBulkDelete?: (itemType: 'task') => void;
+  onBulkDelete?: (itemType: "task") => void;
   isDeleting?: boolean;
   isLidOpen?: boolean;
   currentDisplayCount?: number;
   deleteButtonRef?: React.RefObject<HTMLButtonElement | null>;
   // 復元関連
   onCheckedTasksChange?: (tasks: Set<string | number>) => void;
-  
+
   // 選択メニュー関連
   onExport?: () => void;
   onPin?: () => void;
   onTagging?: () => void;
   onTabMove?: () => void;
-  
+
   // 全データ事前取得（ちらつき解消）
   allTags?: Tag[];
   allBoards?: Board[];
@@ -66,14 +70,14 @@ interface BoardTaskSectionProps {
   allBoardItems?: Array<{
     boardId: number;
     boardName: string;
-    itemType: 'memo' | 'task';
+    itemType: "memo" | "task";
     itemId: string;
     originalId: string;
     addedAt: number;
   }>;
 }
 
-import { useRef, useMemo, useState } from 'react';
+import { useRef, useMemo, useState } from "react";
 import { BulkActionButtons } from "@/components/ui/layout/bulk-action-buttons";
 import { useBulkDeleteButton } from "@/src/hooks/use-bulk-delete-button";
 import { useBoardBulkRestore } from "@/src/hooks/use-board-bulk-restore";
@@ -121,14 +125,11 @@ export default function BoardTaskSection({
   allTags = [],
   allBoards = [],
   allTaggings = [],
-  allBoardItems = []
+  allBoardItems = [],
 }: BoardTaskSectionProps) {
   // ボードカテゴリーフィルター機能
-  const {
-    selectedCategoryIds,
-    setSelectedCategoryIds,
-    filteredTaskItems,
-  } = useBoardCategoryFilter({ taskItems });
+  const { selectedCategoryIds, setSelectedCategoryIds, filteredTaskItems } =
+    useBoardCategoryFilter({ taskItems });
 
   // フィルタリングされたタスクアイテムを使用
   const displayTaskItems = filteredTaskItems;
@@ -137,18 +138,18 @@ export default function BoardTaskSection({
   const { setSortOptions, getVisibleSortOptions } = useSortOptions("task");
   const localDeleteButtonRef = useRef<HTMLButtonElement | null>(null);
   const deleteButtonRef = propDeleteButtonRef || localDeleteButtonRef;
-  
+
   // 復元状態管理
   const [, setIsRestoring] = useState(false);
   const [isRestoreLidOpen, setIsRestoreLidOpen] = useState(false);
-  
+
   // 削除ボタン用のチェック済みアイテムSet（ID変換処理）
   const checkedItemsForDeleteButton = useMemo(() => {
     if (activeTaskTab === "deleted") {
       // 削除済みタブ: originalId（string）からデータベースID（number）に変換
       const numberSet = new Set<number>();
-      checkedTasks.forEach(originalId => {
-        const taskItem = taskItems.find(item => item.itemId === originalId);
+      checkedTasks.forEach((originalId) => {
+        const taskItem = taskItems.find((item) => item.itemId === originalId);
         if (taskItem) {
           const dbId = (taskItem.content as DeletedTask).id;
           numberSet.add(dbId);
@@ -157,7 +158,11 @@ export default function BoardTaskSection({
       return numberSet;
     } else {
       // 通常タブ: 数値のみをフィルタ
-      return new Set(Array.from(checkedTasks).filter(id => typeof id === 'number') as number[]);
+      return new Set(
+        Array.from(checkedTasks).filter(
+          (id) => typeof id === "number",
+        ) as number[],
+      );
     }
   }, [checkedTasks, activeTaskTab, taskItems]);
 
@@ -165,20 +170,22 @@ export default function BoardTaskSection({
   const { showDeleteButton } = useBulkDeleteButton({
     activeTab: activeTaskTab,
     deletedTabName: "deleted",
-    checkedItems: activeTaskTab === "deleted" ? new Set() : checkedItemsForDeleteButton,
-    checkedDeletedItems: activeTaskTab === "deleted" ? checkedItemsForDeleteButton : new Set(),
+    checkedItems:
+      activeTaskTab === "deleted" ? new Set() : checkedItemsForDeleteButton,
+    checkedDeletedItems:
+      activeTaskTab === "deleted" ? checkedItemsForDeleteButton : new Set(),
     isDeleting: isDeleting || false,
     isRestoring: isRestoreLidOpen,
   });
-  
+
   // 表示用のチェック済みアイテムSet（型変換処理）
   const checkedTasksForDisplay = useMemo(() => {
     if (activeTaskTab === "deleted") {
       // 削除済みタブ: originalId（string）からデータベースID（number）に変換
       const numberSet = new Set<number>();
-      checkedTasks.forEach(originalId => {
+      checkedTasks.forEach((originalId) => {
         // taskItemsからoriginalIdに対応するデータベースIDを探す
-        const taskItem = taskItems.find(item => item.itemId === originalId);
+        const taskItem = taskItems.find((item) => item.itemId === originalId);
         if (taskItem) {
           const dbId = (taskItem.content as DeletedTask).id;
           numberSet.add(dbId);
@@ -187,10 +194,14 @@ export default function BoardTaskSection({
       return numberSet;
     } else {
       // 通常タブ: 数値のみをフィルタ
-      return new Set(Array.from(checkedTasks).filter(id => typeof id === 'number') as number[]);
+      return new Set(
+        Array.from(checkedTasks).filter(
+          (id) => typeof id === "number",
+        ) as number[],
+      );
     }
   }, [checkedTasks, activeTaskTab, taskItems]);
-  
+
   // 復元機能フック（削除済みタブでのみ使用）
   const {
     handleBulkRestore,
@@ -198,11 +209,14 @@ export default function BoardTaskSection({
     restoreButtonRef,
     currentDisplayCount: currentRestoreDisplayCount,
   } = useBoardBulkRestore({
-    itemType: 'task',
+    itemType: "task",
     checkedItems: checkedTasks,
     setCheckedItems: onCheckedTasksChange || (() => {}),
     boardItems: taskItems,
-    deletedTasks: activeTaskTab === "deleted" ? taskItems.map(item => item.content as DeletedTask) : undefined,
+    deletedTasks:
+      activeTaskTab === "deleted"
+        ? taskItems.map((item) => item.content as DeletedTask)
+        : undefined,
     setIsRestoring,
     setIsLidOpen: setIsRestoreLidOpen,
   });
@@ -234,23 +248,36 @@ export default function BoardTaskSection({
               className="size-6 flex items-center justify-center"
             />
           </Tooltip>
-          <Tooltip text={rightPanelMode === "task-list" ? "タスク一覧非表示" : "タスク一覧表示"} position="bottom">
+          <Tooltip
+            text={
+              rightPanelMode === "task-list"
+                ? "タスク一覧非表示"
+                : "タスク一覧表示"
+            }
+            position="bottom"
+          >
             <button
-              onClick={() => onSetRightPanelMode(rightPanelMode === "task-list" ? null : "task-list")}
+              onClick={() =>
+                onSetRightPanelMode(
+                  rightPanelMode === "task-list" ? null : "task-list",
+                )
+              }
               className={`size-6 flex items-center justify-center rounded-lg transition-colors ${
-                rightPanelMode === "task-list" 
-                  ? "bg-gray-100 hover:bg-gray-200" 
+                rightPanelMode === "task-list"
+                  ? "bg-gray-100 hover:bg-gray-200"
                   : "bg-gray-100 hover:bg-gray-200"
               }`}
             >
-              <FilterIconCheckList className={`size-5 ${
-                rightPanelMode === "task-list" ? "text-DeepBlue" : "text-gray-600"
-              }`} />
+              <FilterIconCheckList
+                className={`size-5 ${
+                  rightPanelMode === "task-list"
+                    ? "text-DeepBlue"
+                    : "text-gray-600"
+                }`}
+              />
             </button>
           </Tooltip>
 
-
-          
           {/* ソートトグル */}
           <SortToggle
             sortOptions={getVisibleSortOptions(activeTaskTab)}
@@ -274,10 +301,7 @@ export default function BoardTaskSection({
       <div className="flex items-center gap-2 flex-wrap mb-2">
         {/* 全選択/全解除ボタン（チェックモード時のみ表示） */}
         {taskSelectionMode === "check" && onSelectAll && (
-          <Tooltip
-            text={isAllSelected ? "全解除" : "全選択"}
-            position="bottom"
-          >
+          <Tooltip text={isAllSelected ? "全解除" : "全選択"} position="bottom">
             <button
               onClick={onSelectAll}
               className="bg-gray-100 rounded-lg size-7 flex items-center justify-center transition-colors text-gray-500 hover:text-gray-700"
@@ -290,7 +314,7 @@ export default function BoardTaskSection({
             </button>
           </Tooltip>
         )}
-        
+
         <button
           onClick={() => onTaskTabChange("todo")}
           className={`flex items-center gap-1 px-2 py-1 rounded-lg font-medium transition-colors text-gray-600 text-sm h-7 ${
@@ -354,7 +378,6 @@ export default function BoardTaskSection({
         </button>
       </div>
 
-
       <div className="flex-1 overflow-y-auto pr-1 pb-10 mb-2">
         {isLoading ? (
           <div className="text-gray-500 text-center py-8">
@@ -369,7 +392,9 @@ export default function BoardTaskSection({
         ) : activeTaskTab === "deleted" ? (
           // 削除済みタスク用の表示
           <DeletedTaskDisplay
-            deletedTasks={displayTaskItems.map(item => item.content) as DeletedTask[]} // DeletedTask型に変換
+            deletedTasks={
+              displayTaskItems.map((item) => item.content) as DeletedTask[]
+            } // DeletedTask型に変換
             viewMode={viewMode}
             effectiveColumnCount={effectiveColumnCount}
             isBoard={true}
@@ -377,13 +402,19 @@ export default function BoardTaskSection({
             checkedTasks={checkedTasksForDisplay}
             onToggleCheck={(taskId) => {
               // 削除済みタスクの場合、originalIdで管理しているので変換が必要
-              const taskItem = displayTaskItems.find(item => (item.content as DeletedTask).id === taskId);
+              const taskItem = displayTaskItems.find(
+                (item) => (item.content as DeletedTask).id === taskId,
+              );
               if (taskItem?.itemId) {
                 onTaskSelectionToggle(taskItem.itemId);
               }
             }}
-            onSelectTask={taskSelectionMode === "check" ? undefined : onSelectTask}
-            selectedTaskId={taskSelectionMode === "check" ? undefined : selectedTask?.id}
+            onSelectTask={
+              taskSelectionMode === "check" ? undefined : onSelectTask
+            }
+            selectedTaskId={
+              taskSelectionMode === "check" ? undefined : selectedTask?.id
+            }
             showEditDate={showEditDate}
             showBoardName={showBoardName}
             showTags={showTags}
@@ -396,9 +427,9 @@ export default function BoardTaskSection({
         ) : (
           <TaskStatusDisplay
             activeTab={activeTaskTab as "todo" | "in_progress" | "completed"}
-            tasks={displayTaskItems.map(item => ({
-              ...item.content as Task,
-              originalId: item.itemId.toString() // ボードのitemIdを文字列として使用
+            tasks={displayTaskItems.map((item) => ({
+              ...(item.content as Task),
+              originalId: item.itemId.toString(), // ボードのitemIdを文字列として使用
             }))}
             viewMode={viewMode}
             effectiveColumnCount={effectiveColumnCount}
@@ -406,8 +437,12 @@ export default function BoardTaskSection({
             selectionMode={taskSelectionMode}
             checkedTasks={checkedTasksForDisplay}
             onToggleCheck={onTaskSelectionToggle}
-            onSelectTask={taskSelectionMode === "check" ? undefined : onSelectTask}
-            selectedTaskId={taskSelectionMode === "check" ? undefined : selectedTask?.id}
+            onSelectTask={
+              taskSelectionMode === "check" ? undefined : onSelectTask
+            }
+            selectedTaskId={
+              taskSelectionMode === "check" ? undefined : selectedTask?.id
+            }
             showEditDate={showEditDate}
             showBoardName={showBoardName}
             showTags={showTags}
@@ -421,46 +456,44 @@ export default function BoardTaskSection({
 
       {/* 一括削除ボタン - タスク用 */}
       <BulkActionButtons
-          showDeleteButton={showDeleteButton}
-          deleteButtonCount={currentDisplayCount || checkedTasks.size}
-          onDelete={() => {
-            onBulkDelete?.('task');
-          }}
-          deleteButtonRef={deleteButtonRef}
-          isDeleting={isLidOpen}
-          deleteVariant={activeTaskTab === "deleted" ? "danger" : undefined}
-          showRestoreButton={
-            activeTaskTab === "deleted" &&
-            !isDeleting &&
-            (checkedTasks.size > 0 ||
-              (isRestoreLidOpen && currentRestoreDisplayCount > 0))
-          }
-          restoreCount={checkedTasks.size}
-          onRestore={handleBulkRestore}
-          restoreButtonRef={restoreButtonRef}
-          isRestoring={isRestoreLidOpen}
-          animatedRestoreCount={currentRestoreDisplayCount}
-          useAnimatedRestoreCount={true}
-          animatedDeleteCount={currentDisplayCount}
-          useAnimatedDeleteCount={true}
-        />
-        
-        {/* 復元モーダル */}
-        <RestoreModal />
-        
-        {/* 選択メニューボタン（通常タブでアイテム選択時） */}
-        <SelectionMenuButton
-          count={checkedTasks.size}
-          onExport={onExport}
-          onPin={onPin}
-          onTagging={onTagging}
-          onTabMove={onTabMove}
-          isVisible={
-            activeTaskTab !== "deleted" &&
-            checkedTasks.size > 0 &&
-            !isDeleting
-          }
-        />
+        showDeleteButton={showDeleteButton}
+        deleteButtonCount={currentDisplayCount || checkedTasks.size}
+        onDelete={() => {
+          onBulkDelete?.("task");
+        }}
+        deleteButtonRef={deleteButtonRef}
+        isDeleting={isLidOpen}
+        deleteVariant={activeTaskTab === "deleted" ? "danger" : undefined}
+        showRestoreButton={
+          activeTaskTab === "deleted" &&
+          !isDeleting &&
+          (checkedTasks.size > 0 ||
+            (isRestoreLidOpen && currentRestoreDisplayCount > 0))
+        }
+        restoreCount={checkedTasks.size}
+        onRestore={handleBulkRestore}
+        restoreButtonRef={restoreButtonRef}
+        isRestoring={isRestoreLidOpen}
+        animatedRestoreCount={currentRestoreDisplayCount}
+        useAnimatedRestoreCount={true}
+        animatedDeleteCount={currentDisplayCount}
+        useAnimatedDeleteCount={true}
+      />
+
+      {/* 復元モーダル */}
+      <RestoreModal />
+
+      {/* 選択メニューボタン（通常タブでアイテム選択時） */}
+      <SelectionMenuButton
+        count={checkedTasks.size}
+        onExport={onExport}
+        onPin={onPin}
+        onTagging={onTagging}
+        onTabMove={onTabMove}
+        isVisible={
+          activeTaskTab !== "deleted" && checkedTasks.size > 0 && !isDeleting
+        }
+      />
     </div>
   );
 }

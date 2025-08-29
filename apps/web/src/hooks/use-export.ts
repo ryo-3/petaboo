@@ -83,7 +83,7 @@ export function useExport() {
     boardDescription: string | null,
     boardCreatedAt: number,
     memoItems: BoardItemWithContent[],
-    taskItems: BoardItemWithContent[]
+    taskItems: BoardItemWithContent[],
   ): void => {
     const exportData: ExportData = {
       name: boardName,
@@ -95,7 +95,7 @@ export function useExport() {
           title: memo.title,
           content: memo.content,
           createdAt: new Date((memo.createdAt as number) * 1000).toLocaleString(
-            "ja-JP"
+            "ja-JP",
           ),
         };
       }),
@@ -107,7 +107,7 @@ export function useExport() {
           status: task.status,
           priority: task.priority,
           createdAt: new Date((task.createdAt as number) * 1000).toLocaleString(
-            "ja-JP"
+            "ja-JP",
           ),
         };
       }),

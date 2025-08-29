@@ -28,7 +28,9 @@ export default function BoardList({
   const createBoard = useCreateBoard();
 
   // 現在のURLから選択されているボードのslugを取得
-  const currentBoardSlug = pathname.startsWith("/boards/") ? pathname.split("/")[2] : null;
+  const currentBoardSlug = pathname.startsWith("/boards/")
+    ? pathname.split("/")[2]
+    : null;
 
   // ページタイトル設定
   useEffect(() => {
@@ -142,7 +144,9 @@ export default function BoardList({
                 board={board}
                 onSelect={() => onBoardSelect?.(board)}
                 mode={activeTab}
-                onPermanentDelete={activeTab === "deleted" ? onPermanentDeleteBoard : undefined}
+                onPermanentDelete={
+                  activeTab === "deleted" ? onPermanentDeleteBoard : undefined
+                }
                 isSelected={currentBoardSlug === board.slug}
               />
             ))}

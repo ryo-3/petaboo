@@ -85,7 +85,7 @@ function MemoScreen({
 
   // 選択モード管理
   const [selectionMode, setSelectionMode] = useState<"select" | "check">(
-    initialSelectionMode
+    initialSelectionMode,
   );
 
   // 編集日表示管理
@@ -93,21 +93,23 @@ function MemoScreen({
 
   // ボード名表示管理
   const [showBoardName, setShowBoardName] = useState(forceShowBoardName);
-  
+
   // タグ表示管理
   const [showTagDisplay, setShowTagDisplay] = useState(false);
 
   // ボードフィルター管理
   const [selectedBoardIds, setSelectedBoardIds] = useState<number[]>(
-    excludeBoardId ? [excludeBoardId] : []
+    excludeBoardId ? [excludeBoardId] : [],
   );
-  const [boardFilterMode, setBoardFilterMode] = useState<'include' | 'exclude'>(
-    excludeBoardId ? 'exclude' : 'include'
+  const [boardFilterMode, setBoardFilterMode] = useState<"include" | "exclude">(
+    excludeBoardId ? "exclude" : "include",
   );
 
   // タグフィルター管理
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
-  const [tagFilterMode, setTagFilterMode] = useState<'include' | 'exclude'>('include');
+  const [tagFilterMode, setTagFilterMode] = useState<"include" | "exclude">(
+    "include",
+  );
 
   // 並び替え管理
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -116,7 +118,6 @@ function MemoScreen({
 
   // 削除ボタンの参照
   const deleteButtonRef = useRef<HTMLButtonElement>(null);
-
 
   // 削除完了時に蓋を閉じる処理
   useDeletionLid(() => setIsRightLidOpen(false));
@@ -137,41 +138,42 @@ function MemoScreen({
   const [isCsvImportModalOpen, setIsCsvImportModalOpen] = useState(false);
 
   // タグ管理モーダルの状態
-  const [isTagManagementModalOpen, setIsTagManagementModalOpen] = useState(false);
+  const [isTagManagementModalOpen, setIsTagManagementModalOpen] =
+    useState(false);
 
   // タグ表示・編集モーダルの状態
-  const [selectedMemoForTag, setSelectedMemoForTag] = useState<Memo | null>(null);
-
-  
+  const [selectedMemoForTag, setSelectedMemoForTag] = useState<Memo | null>(
+    null,
+  );
 
   // データ取得
-  const { data: memos, isLoading: memoLoading, error: memoError } = useMemos({ teamMode, teamId }) as {
+  const {
+    data: memos,
+    isLoading: memoLoading,
+    error: memoError,
+  } = useMemos({ teamMode, teamId }) as {
     data: Memo[] | undefined;
     isLoading: boolean;
     error: Error | null;
   };
   const { data: deletedMemos } = useDeletedMemos({ teamMode, teamId });
   const { preferences } = useUserPreferences(1);
-  
-  
+
   // 全データ一括取得（ちらつき解消）
   const { data: boards } = useBoards();
   const { data: tags } = useTags();
   const { data: allTaggings, error: taggingsError } = useAllTaggings();
   const { data: allBoardItems, error: boardItemsError } = useAllBoardItems();
-  
+
   // デバッグ用：全タグ・タグ付け情報をログ出力
   // console.log('📋 メモ一覧側データ:', {
   //   tags: tags?.map(t => ({ id: t.id, name: t.name })),
   //   allTaggings: allTaggings?.map(tg => ({ id: tg.id, tagId: tg.tagId, tagName: tg.tag?.name, targetType: tg.targetType, targetOriginalId: tg.targetOriginalId }))
   // });
-  
+
   // APIエラー時のフォールバック
   const safeAllTaggings = taggingsError ? [] : allTaggings || [];
   const safeAllBoardItems = boardItemsError ? [] : allBoardItems || [];
-  
-  
-
 
   // 削除API
   const deleteNote = useDeleteMemo();
@@ -196,7 +198,7 @@ function MemoScreen({
     "list" as MemoScreenMode,
     selectedMemo,
     selectedDeletedMemo,
-    preferences || undefined
+    preferences || undefined,
   );
 
   // 保存完了後の処理（超シンプル）
@@ -215,7 +217,7 @@ function MemoScreen({
         onSelectMemo(savedMemo);
       }
     },
-    [onDeselectAndStayOnMemoList, setMemoScreenMode, onSelectMemo]
+    [onDeselectAndStayOnMemoList, setMemoScreenMode, onSelectMemo],
   );
 
   // 削除完了後の処理（次のメモを自動選択）
@@ -234,7 +236,7 @@ function MemoScreen({
       const nextItem = getNextItemAfterDeletion(
         memos, // 削除前の全メモを渡す
         selectedMemo,
-        displayOrder
+        displayOrder,
       );
 
       // React Queryのキャッシュ更新を待つ
@@ -286,31 +288,44 @@ function MemoScreen({
     selectedMemo,
     selectedDeletedMemo,
     () => onDeselectAndStayOnMemoList?.(),
-    (mode: string) => setMemoScreenMode(mode as MemoScreenMode)
+    (mode: string) => setMemoScreenMode(mode as MemoScreenMode),
   );
 
   // 削除済みメモの削除完了後の処理（左側リスト用）
-  const handleDeletedMemoDeleteComplete = useCallback((deletedMemoId: number) => {
-    // 削除されたメモが現在選択されている場合、次のメモを選択
-    if (selectedDeletedMemo && selectedDeletedMemo.id === deletedMemoId && deletedMemos) {
-      const displayOrder = getMemoDisplayOrder();
-      const nextItem = getNextItemAfterDeletion(
-        deletedMemos,
-        selectedDeletedMemo,
-        displayOrder
-      );
+  const handleDeletedMemoDeleteComplete = useCallback(
+    (deletedMemoId: number) => {
+      // 削除されたメモが現在選択されている場合、次のメモを選択
+      if (
+        selectedDeletedMemo &&
+        selectedDeletedMemo.id === deletedMemoId &&
+        deletedMemos
+      ) {
+        const displayOrder = getMemoDisplayOrder();
+        const nextItem = getNextItemAfterDeletion(
+          deletedMemos,
+          selectedDeletedMemo,
+          displayOrder,
+        );
 
-      setTimeout(() => {
-        if (nextItem && nextItem.id !== selectedDeletedMemo.id) {
-          onSelectDeletedMemo(nextItem);
-          setMemoScreenMode("view");
-        } else {
-          setMemoScreenMode("list");
-          onDeselectAndStayOnMemoList?.();
-        }
-      }, 100);
-    }
-  }, [selectedDeletedMemo, deletedMemos, onSelectDeletedMemo, onDeselectAndStayOnMemoList, setMemoScreenMode]);
+        setTimeout(() => {
+          if (nextItem && nextItem.id !== selectedDeletedMemo.id) {
+            onSelectDeletedMemo(nextItem);
+            setMemoScreenMode("view");
+          } else {
+            setMemoScreenMode("list");
+            onDeselectAndStayOnMemoList?.();
+          }
+        }, 100);
+      }
+    },
+    [
+      selectedDeletedMemo,
+      deletedMemos,
+      onSelectDeletedMemo,
+      onDeselectAndStayOnMemoList,
+      setMemoScreenMode,
+    ],
+  );
 
   // 左側一括削除関連（チェックボックスで選択したアイテムの一括削除）
   const {
@@ -365,13 +380,12 @@ function MemoScreen({
   });
 
   // 削除済みメモ操作の共通ロジック
-  const { handleRestoreAndSelectNext } = 
-    useDeletedItemOperations({
-      deletedItems: deletedMemos || null,
-      onSelectDeletedItem: onSelectDeletedMemo,
-      setScreenMode: (mode: string) => setMemoScreenMode(mode as MemoScreenMode),
-      editorSelector: "[data-memo-editor]",
-    });
+  const { handleRestoreAndSelectNext } = useDeletedItemOperations({
+    deletedItems: deletedMemos || null,
+    onSelectDeletedItem: onSelectDeletedMemo,
+    setScreenMode: (mode: string) => setMemoScreenMode(mode as MemoScreenMode),
+    editorSelector: "[data-memo-editor]",
+  });
 
   // タブ切り替え用の状態
   const [displayTab, setDisplayTab] = useState(activeTab);
@@ -417,7 +431,7 @@ function MemoScreen({
       onSelectDeletedMemo,
       setActiveTab,
       setMemoScreenMode,
-    ]
+    ],
   );
 
   // 選択ハンドラーパターン
@@ -434,12 +448,13 @@ function MemoScreen({
     onClose: onClose,
   });
 
-
   // 除外アイテムIDでフィルタリングされたメモ
-  const filteredMemos = memos?.filter(memo => !excludeItemIds.includes(memo.id)) || [];
+  const filteredMemos =
+    memos?.filter((memo) => !excludeItemIds.includes(memo.id)) || [];
 
   // ボードフィルターから除外するボードをフィルタリング
-  const filteredBoards = boards?.filter(board => board.id !== excludeBoardIdFromFilter) || [];
+  const filteredBoards =
+    boards?.filter((board) => board.id !== excludeBoardIdFromFilter) || [];
 
   return (
     <div className="flex h-full bg-white overflow-hidden">
@@ -515,13 +530,10 @@ function MemoScreen({
           selectedDeletedMemo={selectedDeletedMemo}
           checkedMemos={checkedMemos}
           checkedDeletedMemos={checkedDeletedMemos}
-          onToggleCheckMemo={createToggleHandler(
-            checkedMemos,
-            setCheckedMemos
-          )}
+          onToggleCheckMemo={createToggleHandler(checkedMemos, setCheckedMemos)}
           onToggleCheckDeletedMemo={createToggleHandler(
             checkedDeletedMemos,
-            setCheckedDeletedMemos
+            setCheckedDeletedMemos,
           )}
           onSelectMemo={handleSelectMemo}
           onSelectDeletedMemo={handleSelectDeletedMemo}
@@ -534,56 +546,54 @@ function MemoScreen({
 
         {/* 一括操作ボタン */}
         {!hideBulkActionButtons && (
-        <BulkActionButtons
-          showDeleteButton={showDeleteButton}
-          deleteButtonCount={currentDisplayCount}
-          onDelete={() => {
-            handleLeftBulkDelete()
-          }}
-          deleteButtonRef={deleteButtonRef}
-          isDeleting={isLeftLidOpen}
-          deleteVariant={activeTab === "deleted" ? "danger" : undefined}
-          showRestoreButton={
-            activeTab === "deleted" &&
-            !isLeftDeleting &&
-            (checkedDeletedMemos.size > 0 ||
-              (isRestoring && currentRestoreDisplayCount > 0))
-          }
-          restoreCount={checkedDeletedMemos.size}
-          onRestore={() => {
-            // 復元ボタンを押した瞬間に削除ボタンを非表示にする
-            setIsRestoreLidOpen(true)
-            handleBulkRestore()
-          }}
-          restoreButtonRef={restoreButtonRef}
-          isRestoring={isRestoreLidOpen}
-          animatedRestoreCount={currentRestoreDisplayCount}
-          useAnimatedRestoreCount={true}
-        />
+          <BulkActionButtons
+            showDeleteButton={showDeleteButton}
+            deleteButtonCount={currentDisplayCount}
+            onDelete={() => {
+              handleLeftBulkDelete();
+            }}
+            deleteButtonRef={deleteButtonRef}
+            isDeleting={isLeftLidOpen}
+            deleteVariant={activeTab === "deleted" ? "danger" : undefined}
+            showRestoreButton={
+              activeTab === "deleted" &&
+              !isLeftDeleting &&
+              (checkedDeletedMemos.size > 0 ||
+                (isRestoring && currentRestoreDisplayCount > 0))
+            }
+            restoreCount={checkedDeletedMemos.size}
+            onRestore={() => {
+              // 復元ボタンを押した瞬間に削除ボタンを非表示にする
+              setIsRestoreLidOpen(true);
+              handleBulkRestore();
+            }}
+            restoreButtonRef={restoreButtonRef}
+            isRestoring={isRestoreLidOpen}
+            animatedRestoreCount={currentRestoreDisplayCount}
+            useAnimatedRestoreCount={true}
+          />
         )}
-        
+
         {/* 選択メニューボタン（通常タブでアイテム選択時） */}
         {!hideBulkActionButtons && (
-        <SelectionMenuButton
-          count={checkedMemos.size}
-          onExport={() => {
-            // TODO: エクスポート処理
-          }}
-          onPin={() => {
-            // TODO: ピン止め処理
-          }}
-          onTagging={() => {
-            setIsTagManagementModalOpen(true);
-          }}
-          onTabMove={() => {
-            // TODO: タブ移動処理
-          }}
-          isVisible={
-            activeTab === "normal" &&
-            checkedMemos.size > 0 &&
-            !isLeftDeleting
-          }
-        />
+          <SelectionMenuButton
+            count={checkedMemos.size}
+            onExport={() => {
+              // TODO: エクスポート処理
+            }}
+            onPin={() => {
+              // TODO: ピン止め処理
+            }}
+            onTagging={() => {
+              setIsTagManagementModalOpen(true);
+            }}
+            onTabMove={() => {
+              // TODO: タブ移動処理
+            }}
+            isVisible={
+              activeTab === "normal" && checkedMemos.size > 0 && !isLeftDeleting
+            }
+          />
         )}
 
         {/* ボード追加ボタン（ボードから呼び出された場合のみ） */}
@@ -619,16 +629,21 @@ function MemoScreen({
         isOpen={isCsvImportModalOpen}
         onClose={() => setIsCsvImportModalOpen(false)}
       />
-      
 
       {/* タグ管理モーダル */}
       <TagManagementModal
         isOpen={isTagManagementModalOpen}
         onClose={() => setIsTagManagementModalOpen(false)}
-        tags={tags?.map(tag => ({ id: tag.id, name: tag.name, color: tag.color })) || []}
+        tags={
+          tags?.map((tag) => ({
+            id: tag.id,
+            name: tag.name,
+            color: tag.color,
+          })) || []
+        }
         selectedItemCount={checkedMemos.size}
         itemType="memo"
-        selectedItems={Array.from(checkedMemos).map(id => id.toString())}
+        selectedItems={Array.from(checkedMemos).map((id) => id.toString())}
         allItems={memos || []}
         allTaggings={safeAllTaggings || []}
         onSuccess={() => {
@@ -646,21 +661,20 @@ function MemoScreen({
                 onClick={() => setSelectedMemoForTag(null)}
                 className="text-gray-400 hover:text-gray-600"
               >
-                <span className="sr-only">閉じる</span>
-                ×
+                <span className="sr-only">閉じる</span>×
               </button>
             </div>
-            
+
             <div className="mb-4">
               <div className="text-sm font-medium mb-2 truncate">
-                {selectedMemoForTag.title || 'タイトルなし'}
+                {selectedMemoForTag.title || "タイトルなし"}
               </div>
               <div className="text-sm text-gray-500">
                 {/* TODO: TagSelector コンポーネントの実装 */}
                 タグ選択・編集機能（実装予定）
               </div>
             </div>
-            
+
             <div className="flex justify-end mt-4 gap-2">
               <button
                 onClick={() => setSelectedMemoForTag(null)}
@@ -733,13 +747,15 @@ function MemoScreen({
               // 削除済メモの削除処理（完全削除）
               if (selectedDeletedMemo) {
                 // 削除完了後の次メモ選択処理
-                const handleDeleteAndSelectNext = (deletedMemo: DeletedMemo) => {
+                const handleDeleteAndSelectNext = (
+                  deletedMemo: DeletedMemo,
+                ) => {
                   if (deletedMemos) {
                     const displayOrder = getMemoDisplayOrder();
                     const nextItem = getNextItemAfterDeletion(
                       deletedMemos,
                       deletedMemo,
-                      displayOrder
+                      displayOrder,
                     );
 
                     setTimeout(() => {
@@ -768,12 +784,12 @@ function MemoScreen({
             }}
             onDeleteAndSelectNext={(deletedMemo: Memo | DeletedMemo) => {
               // 削除完了後の次メモ選択処理（削除済みメモのみ対象）
-              if (deletedMemos && 'deletedAt' in deletedMemo) {
+              if (deletedMemos && "deletedAt" in deletedMemo) {
                 const displayOrder = getMemoDisplayOrder();
                 const nextItem = getNextItemAfterDeletion(
                   deletedMemos,
                   deletedMemo as DeletedMemo,
-                  displayOrder
+                  displayOrder,
                 );
 
                 setTimeout(() => {

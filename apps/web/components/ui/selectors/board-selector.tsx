@@ -25,14 +25,14 @@ export default function BoardSelector({
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (!target.closest('[data-board-selector]')) {
+      if (!target.closest("[data-board-selector]")) {
         setIsOpen(false);
       }
     };
 
     if (isOpen) {
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
+      document.addEventListener("click", handleClickOutside);
+      return () => document.removeEventListener("click", handleClickOutside);
     }
   }, [isOpen]);
 
@@ -58,7 +58,9 @@ export default function BoardSelector({
         onClick={() => setIsOpen(!isOpen)}
         className={`${FORM_STYLES.selector} w-full rounded-lg text-sm text-left flex items-center justify-between hover:border-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
       >
-        <span className={`${FORM_STYLES.selectorText} ${selectedBoard ? "text-gray-900" : "text-gray-500"}`}>
+        <span
+          className={`${FORM_STYLES.selectorText} ${selectedBoard ? "text-gray-900" : "text-gray-500"}`}
+        >
           {selectedBoard ? selectedBoard.name : placeholder}
         </span>
         <svg
@@ -67,7 +69,12 @@ export default function BoardSelector({
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
         </svg>
       </button>
 
@@ -96,7 +103,9 @@ export default function BoardSelector({
                 type="button"
                 onClick={() => handleBoardSelect(board)}
                 className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-50 ${
-                  selectedBoardId === board.id ? "bg-blue-50 text-blue-600" : "text-gray-700"
+                  selectedBoardId === board.id
+                    ? "bg-blue-50 text-blue-600"
+                    : "text-gray-700"
                 }`}
               >
                 {board.name}

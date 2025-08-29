@@ -36,7 +36,9 @@ export default function CategorySelector({
   // 新しいカテゴリー作成ハンドラー
   const handleCreateCategory = async (newCategoryName: string) => {
     try {
-      const newCategory = await createCategory.mutateAsync({ name: newCategoryName.trim() });
+      const newCategory = await createCategory.mutateAsync({
+        name: newCategoryName.trim(),
+      });
       onChange(newCategory.id);
     } catch (error) {
       console.error("カテゴリー作成エラー:", error);

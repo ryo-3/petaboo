@@ -25,15 +25,15 @@ interface MainClientProps {
   teamId?: number;
 }
 
-function MainClient({ 
-  initialBoardName, 
-  boardId, 
-  showBoardHeader = true, 
-  serverBoardTitle, 
+function MainClient({
+  initialBoardName,
+  boardId,
+  showBoardHeader = true,
+  serverBoardTitle,
   serverBoardDescription,
   forceShowBoardDetail = false,
   teamMode = false,
-  teamId
+  teamId,
 }: MainClientProps) {
   // ==========================================
   // State管理
@@ -43,9 +43,17 @@ function MainClient({
   const { preferences } = useUserPreferences(1);
   const pathname = usePathname();
 
-
   // コンテキストから状態を取得
-  const { screenMode, currentMode, setScreenMode, setCurrentMode, isFromBoardDetail, setIsFromBoardDetail, setHandleMainSelectMemo, setHandleMainSelectTask } = useNavigation();
+  const {
+    screenMode,
+    currentMode,
+    setScreenMode,
+    setCurrentMode,
+    isFromBoardDetail,
+    setIsFromBoardDetail,
+    setHandleMainSelectMemo,
+    setHandleMainSelectTask,
+  } = useNavigation();
 
   // refs
   const boardScreenRef = useRef<BoardScreenRef>(null);
@@ -58,10 +66,10 @@ function MainClient({
   // サーバーサイドでボード情報が取得済みの場合は不要なAPI呼び出しを回避
   const shouldFetchBoardFromSlug = !boardId && currentBoardSlug;
   const { data: boardFromSlug } = useBoardBySlug(
-    shouldFetchBoardFromSlug ? currentBoardSlug : null
+    shouldFetchBoardFromSlug ? currentBoardSlug : null,
   );
   const { data: currentBoard } = useBoardWithItems(
-    boardId || boardFromSlug?.id || null
+    boardId || boardFromSlug?.id || null,
   );
 
   // 選択中アイテム管理
@@ -73,14 +81,21 @@ function MainClient({
     useState<DeletedTask | null>(null);
 
   // ボード詳細用の選択状態（Fast Refresh対応）
-  const [boardSelectedItem, setBoardSelectedItem] = useState<{type: 'memo', item: Memo | DeletedMemo} | {type: 'task', item: Task | DeletedTask} | null>(null);
+  const [boardSelectedItem, setBoardSelectedItem] = useState<
+    | { type: "memo"; item: Memo | DeletedMemo }
+    | { type: "task"; item: Task | DeletedTask }
+    | null
+  >(null);
 
   // UI状態管理
   const [showDeleted, setShowDeleted] = useState(false); // モバイル版削除済み表示フラグ
   const [showingBoardDetail, setShowingBoardDetail] = useState(() => {
     // サーバーサイドから明示的に指示されている場合は詳細表示
     // または、ボード情報が渡されている場合、URLがボード詳細の場合は詳細表示
-    return forceShowBoardDetail || Boolean(boardId || initialBoardName || pathname.startsWith("/boards/"));
+    return (
+      forceShowBoardDetail ||
+      Boolean(boardId || initialBoardName || pathname.startsWith("/boards/"))
+    );
   }); // ボード詳細表示フラグ
 
   // URLに基づいてscreenModeを設定（手動設定時は上書きしない）
@@ -107,8 +122,13 @@ function MainClient({
     }
     // ルートパス("/")でもユーザーが手動で切り替えた場合はホームに戻さない
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname, isFromBoardDetail, setScreenMode, setCurrentMode, setIsFromBoardDetail]);
-
+  }, [
+    pathname,
+    isFromBoardDetail,
+    setScreenMode,
+    setCurrentMode,
+    setIsFromBoardDetail,
+  ]);
 
   // Hydration完了前はサーバーと同じ状態を保持
   // サイドバーが表示されない問題を避けるため、早期リターンを削除
@@ -160,7 +180,12 @@ function MainClient({
       setHandleMainSelectMemo(() => handleSelectMemo);
       setHandleMainSelectTask(() => handleSelectTask);
     }
-  }, [handleSelectMemo, handleSelectTask, setHandleMainSelectMemo, setHandleMainSelectTask]);
+  }, [
+    handleSelectMemo,
+    handleSelectTask,
+    setHandleMainSelectMemo,
+    setHandleMainSelectTask,
+  ]);
 
   return (
     <main className="relative">

@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import TaskCard from '@/components/features/task/task-card';
-import TaskListItem from '@/components/features/task/task-list-item';
-import ItemStatusDisplay from '@/components/ui/layout/item-status-display';
-import type { Task, DeletedTask } from '@/src/types/task';
-import type { Tag, Tagging } from '@/src/types/tag';
-import type { Board } from '@/src/types/board';
-import { useMemo } from 'react';
+import TaskCard from "@/components/features/task/task-card";
+import TaskListItem from "@/components/features/task/task-list-item";
+import ItemStatusDisplay from "@/components/ui/layout/item-status-display";
+import type { Task, DeletedTask } from "@/src/types/task";
+import type { Tag, Tagging } from "@/src/types/tag";
+import type { Board } from "@/src/types/board";
+import { useMemo } from "react";
 
 interface TaskStatusDisplayProps {
-  activeTab: 'todo' | 'in_progress' | 'completed';
+  activeTab: "todo" | "in_progress" | "completed";
   tasks: Task[] | undefined;
-  viewMode: 'card' | 'list';
+  viewMode: "card" | "list";
   effectiveColumnCount: number;
-  selectionMode?: 'select' | 'check';
+  selectionMode?: "select" | "check";
   checkedTasks?: Set<number>;
   onToggleCheck?: (taskId: number) => void;
   onSelectTask?: (task: Task) => void;
@@ -22,9 +22,9 @@ interface TaskStatusDisplayProps {
   showBoardName?: boolean;
   showTags?: boolean;
   selectedBoardIds?: number[];
-  boardFilterMode?: 'include' | 'exclude';
+  boardFilterMode?: "include" | "exclude";
   selectedTagIds?: number[];
-  tagFilterMode?: 'include' | 'exclude';
+  tagFilterMode?: "include" | "exclude";
   sortOptions?: Array<{
     id: "createdAt" | "updatedAt" | "dueDate" | "priority" | "deletedAt";
     label: string;
@@ -32,14 +32,14 @@ interface TaskStatusDisplayProps {
     direction: "asc" | "desc";
   }>;
   isBoard?: boolean; // ボード詳細画面での使用かどうか
-  
+
   // 全データ事前取得（ちらつき解消）
   allTags?: Tag[];
   allTaggings?: Tagging[];
   allBoardItems?: Array<{
     boardId: number;
     boardName: string;
-    itemType: 'memo' | 'task';
+    itemType: "memo" | "task";
     itemId: string;
     originalId: string;
     addedAt: number;
@@ -48,9 +48,9 @@ interface TaskStatusDisplayProps {
 
 interface DeletedTaskDisplayProps {
   deletedTasks: DeletedTask[] | undefined;
-  viewMode: 'card' | 'list';
+  viewMode: "card" | "list";
   effectiveColumnCount: number;
-  selectionMode?: 'select' | 'check';
+  selectionMode?: "select" | "check";
   checkedTasks?: Set<number>;
   onToggleCheck?: (taskId: number) => void;
   onSelectTask?: (task: DeletedTask) => void;
@@ -59,9 +59,9 @@ interface DeletedTaskDisplayProps {
   showBoardName?: boolean;
   showTags?: boolean;
   selectedBoardIds?: number[];
-  boardFilterMode?: 'include' | 'exclude';
+  boardFilterMode?: "include" | "exclude";
   selectedTagIds?: number[];
-  tagFilterMode?: 'include' | 'exclude';
+  tagFilterMode?: "include" | "exclude";
   sortOptions?: Array<{
     id: "createdAt" | "updatedAt" | "dueDate" | "priority" | "deletedAt";
     label: string;
@@ -69,7 +69,7 @@ interface DeletedTaskDisplayProps {
     direction: "asc" | "desc";
   }>;
   isBoard?: boolean; // ボード詳細画面での使用かどうか
-  
+
   // 全データ事前取得（ちらつき解消）
   allTags?: Tag[];
   allBoards?: Board[];
@@ -77,7 +77,7 @@ interface DeletedTaskDisplayProps {
   allBoardItems?: Array<{
     boardId: number;
     boardName: string;
-    itemType: 'memo' | 'task';
+    itemType: "memo" | "task";
     itemId: string;
     originalId: string;
     addedAt: number;
@@ -89,7 +89,7 @@ function TaskStatusDisplay({
   tasks,
   viewMode,
   effectiveColumnCount,
-  selectionMode = 'select',
+  selectionMode = "select",
   checkedTasks,
   onToggleCheck,
   onSelectTask,
@@ -98,54 +98,60 @@ function TaskStatusDisplay({
   showBoardName = false,
   showTags = false,
   selectedBoardIds = [],
-  boardFilterMode = 'include',
+  boardFilterMode = "include",
   selectedTagIds = [],
-  tagFilterMode = 'include',
+  tagFilterMode = "include",
   sortOptions = [],
   isBoard = false,
   allTaggings = [],
-  allBoardItems = []
+  allBoardItems = [],
 }: TaskStatusDisplayProps) {
   // ステータスでフィルター
-  const statusFilteredTasks = tasks?.filter(task => task.status === activeTab);
-  
+  const statusFilteredTasks = tasks?.filter(
+    (task) => task.status === activeTab,
+  );
+
   // 各タスクのタグとボードを抽出（事前取得データから）
   const tasksWithData = useMemo(() => {
     if (!statusFilteredTasks) return [];
-    
-    return statusFilteredTasks.map(task => {
+
+    return statusFilteredTasks.map((task) => {
       const originalId = task.originalId || task.id.toString();
-      
+
       // このタスクのタグを抽出
       const taskTaggings = allTaggings.filter(
-        (t: Tagging) => t.targetType === 'task' && t.targetOriginalId === originalId
+        (t: Tagging) =>
+          t.targetType === "task" && t.targetOriginalId === originalId,
       );
-      const taskTags = taskTaggings.map((t: Tagging) => t.tag).filter((tag): tag is NonNullable<typeof tag> => tag !== undefined);
-      
+      const taskTags = taskTaggings
+        .map((t: Tagging) => t.tag)
+        .filter((tag): tag is NonNullable<typeof tag> => tag !== undefined);
+
       // このタスクのボードを抽出
       const taskBoardItems = allBoardItems.filter(
-        (item: {itemType: 'memo' | 'task'; originalId: string}) => item.itemType === 'task' && item.originalId === originalId
+        (item: { itemType: "memo" | "task"; originalId: string }) =>
+          item.itemType === "task" && item.originalId === originalId,
       );
       const taskBoards = taskBoardItems
-        .map(item => ({
+        .map((item) => ({
           id: item.boardId,
           name: item.boardName,
           slug: `board-${item.boardId}`,
-          description: '',
-          userId: '',
+          description: "",
+          userId: "",
           position: 0,
           color: null,
           archived: false,
           completed: false,
           createdAt: Date.now() / 1000,
-          updatedAt: Date.now() / 1000
+          updatedAt: Date.now() / 1000,
         }))
         .filter(Boolean);
-      
+
       return {
         task,
         tags: taskTags,
-        boards: taskBoards
+        boards: taskBoards,
       };
     });
   }, [statusFilteredTasks, allTaggings, allBoardItems]);
@@ -153,55 +159,68 @@ function TaskStatusDisplay({
   // ボードフィルターとタグフィルターを適用（tasksWithDataベース）
   const filteredTasksWithData = useMemo(() => {
     if (!tasksWithData) return [];
-    
+
     let result = tasksWithData;
-    
+
     // ボードフィルターを適用
     if (selectedBoardIds && selectedBoardIds.length > 0) {
       result = result.filter(({ task, boards }) => {
-        const taskBoardIds = boards.map(b => b.id);
-        
+        const taskBoardIds = boards.map((b) => b.id);
+
         // フィルターモードに応じて表示判定
-        if (boardFilterMode === 'exclude') {
+        if (boardFilterMode === "exclude") {
           // 除外モード：選択されたボードのいずれにも所属していない場合に表示
-          return !selectedBoardIds.some(selectedId => taskBoardIds.includes(selectedId));
+          return !selectedBoardIds.some((selectedId) =>
+            taskBoardIds.includes(selectedId),
+          );
         } else {
           // 含むモード（デフォルト）：選択されたボードのいずれかに所属している場合に表示
-          return selectedBoardIds.some(selectedId => taskBoardIds.includes(selectedId));
+          return selectedBoardIds.some((selectedId) =>
+            taskBoardIds.includes(selectedId),
+          );
         }
       });
     }
-    
+
     // タグフィルターを適用
     if (selectedTagIds && selectedTagIds.length > 0) {
       result = result.filter(({ task, tags }) => {
-        const taskTagIds = tags.map(t => t.id);
-        
+        const taskTagIds = tags.map((t) => t.id);
+
         // フィルターモードに応じて表示判定
-        if (tagFilterMode === 'exclude') {
+        if (tagFilterMode === "exclude") {
           // 除外モード：選択されたタグのいずれにも所属していない場合に表示
-          return !selectedTagIds.some(selectedId => taskTagIds.includes(selectedId));
+          return !selectedTagIds.some((selectedId) =>
+            taskTagIds.includes(selectedId),
+          );
         } else {
           // 含むモード（デフォルト）：選択されたタグのいずれかに所属している場合に表示
-          return selectedTagIds.some(selectedId => taskTagIds.includes(selectedId));
+          return selectedTagIds.some((selectedId) =>
+            taskTagIds.includes(selectedId),
+          );
         }
       });
     }
-    
-    return result;
-  }, [tasksWithData, selectedBoardIds, boardFilterMode, selectedTagIds, tagFilterMode]);
 
+    return result;
+  }, [
+    tasksWithData,
+    selectedBoardIds,
+    boardFilterMode,
+    selectedTagIds,
+    tagFilterMode,
+  ]);
 
   const getEmptyMessage = () => {
     switch (activeTab) {
-      case 'todo':
-        return '未着手のタスクがありません';
-      case 'in_progress':
-        return '進行中のタスクがありません';
-      case 'completed':
-        return '完了したタスクがありません';
+      case "todo":
+        return "未着手のタスクがありません";
+      case "in_progress":
+        return "進行中のタスクがありません";
+      case "completed":
+        return "完了したタスクがありません";
       default:
-        return 'タスクがありません';
+        return "タスクがありません";
     }
   };
 
@@ -230,22 +249,27 @@ function TaskStatusDisplay({
     return priorityValue + timeValue;
   };
 
-  const renderTask = (task: Task, props: {
-    isChecked: boolean;
-    onToggleCheck: () => void;
-    onSelect: () => void;
-    isSelected: boolean;
-    showEditDate: boolean;
-    showBoardName?: boolean;
-    showTags?: boolean;
-    variant?: 'normal' | 'deleted';
-  }) => {
+  const renderTask = (
+    task: Task,
+    props: {
+      isChecked: boolean;
+      onToggleCheck: () => void;
+      onSelect: () => void;
+      isSelected: boolean;
+      showEditDate: boolean;
+      showBoardName?: boolean;
+      showTags?: boolean;
+      variant?: "normal" | "deleted";
+    },
+  ) => {
     // 事前取得されたデータからこのタスクのタグとボードを取得
-    const taskWithData = filteredTasksWithData.find(t => t.task.id === task.id);
+    const taskWithData = filteredTasksWithData.find(
+      (t) => t.task.id === task.id,
+    );
     const taskTags = taskWithData?.tags || [];
     const taskBoards = taskWithData?.boards || [];
-    
-    const Component = viewMode === 'card' ? TaskCard : TaskListItem;
+
+    const Component = viewMode === "card" ? TaskCard : TaskListItem;
     /* eslint-disable react/prop-types */
     const taskComponent = (
       <Component
@@ -264,7 +288,7 @@ function TaskStatusDisplay({
         boards={taskBoards}
       />
     );
-    
+
     return taskComponent;
     /* eslint-enable react/prop-types */
   };
@@ -273,7 +297,7 @@ function TaskStatusDisplay({
 
   return (
     <ItemStatusDisplay
-      items={filteredTasksWithData.map(t => t.task)}
+      items={filteredTasksWithData.map((t) => t.task)}
       viewMode={viewMode}
       effectiveColumnCount={effectiveColumnCount}
       isBoard={isBoard}
@@ -301,7 +325,7 @@ export function DeletedTaskDisplay({
   deletedTasks,
   viewMode,
   effectiveColumnCount,
-  selectionMode = 'select',
+  selectionMode = "select",
   checkedTasks,
   onToggleCheck,
   onSelectTask,
@@ -310,21 +334,25 @@ export function DeletedTaskDisplay({
   showBoardName = false,
   showTags = false,
   selectedBoardIds = [],
-  boardFilterMode = 'include',
+  boardFilterMode = "include",
   selectedTagIds = [],
-  tagFilterMode = 'include',
+  tagFilterMode = "include",
   sortOptions = [],
   isBoard = false,
   allTags = [],
   allBoards = [],
   allTaggings = [],
-  allBoardItems = []
+  allBoardItems = [],
 }: DeletedTaskDisplayProps) {
   const getSortValue = (task: DeletedTask, sortId: string): number => {
     switch (sortId) {
       case "priority": {
-        const priorityOrder: Record<string, number> = { high: 3, medium: 2, low: 1 };
-        return (priorityOrder[task.priority] || 0);
+        const priorityOrder: Record<string, number> = {
+          high: 3,
+          medium: 2,
+          low: 1,
+        };
+        return priorityOrder[task.priority] || 0;
       }
       case "createdAt":
         return task.createdAt;
@@ -342,35 +370,47 @@ export function DeletedTaskDisplay({
     return task.deletedAt;
   };
 
-  const renderTask = (task: DeletedTask, props: {
-    isChecked: boolean;
-    onToggleCheck: () => void;
-    onSelect: () => void;
-    isSelected: boolean;
-    showEditDate: boolean;
-    showBoardName?: boolean;
-    showTags?: boolean;
-    variant?: 'normal' | 'deleted';
-  }) => {
+  const renderTask = (
+    task: DeletedTask,
+    props: {
+      isChecked: boolean;
+      onToggleCheck: () => void;
+      onSelect: () => void;
+      isSelected: boolean;
+      showEditDate: boolean;
+      showBoardName?: boolean;
+      showTags?: boolean;
+      variant?: "normal" | "deleted";
+    },
+  ) => {
     // 削除済みタスクのタグ・ボード情報を取得
     const originalId = task.originalId || task.id.toString();
-    
+
     // このタスクのタグを抽出
     const taskTaggings = allTaggings.filter(
-      (t: Tagging) => t.targetType === 'task' && t.targetOriginalId === originalId
+      (t: Tagging) =>
+        t.targetType === "task" && t.targetOriginalId === originalId,
     );
-    const taskTags = taskTaggings.map((t: Tagging) => t.tag).filter((tag): tag is NonNullable<typeof tag> => tag !== undefined);
-    
+    const taskTags = taskTaggings
+      .map((t: Tagging) => t.tag)
+      .filter((tag): tag is NonNullable<typeof tag> => tag !== undefined);
+
     // このタスクのボードを抽出
     const taskBoardItems = allBoardItems.filter(
-      (item: {itemType: 'memo' | 'task'; originalId: string}) => item.itemType === 'task' && item.originalId === originalId
+      (item: { itemType: "memo" | "task"; originalId: string }) =>
+        item.itemType === "task" && item.originalId === originalId,
     );
     const taskBoards = taskBoardItems
-      .map(item => allBoards.find(board => board.id === (item as {boardId: number}).boardId))
-      .filter((board): board is NonNullable<typeof board> => board !== undefined);
+      .map((item) =>
+        allBoards.find(
+          (board) => board.id === (item as { boardId: number }).boardId,
+        ),
+      )
+      .filter(
+        (board): board is NonNullable<typeof board> => board !== undefined,
+      );
 
-
-    const Component = viewMode === 'card' ? TaskCard : TaskListItem;
+    const Component = viewMode === "card" ? TaskCard : TaskListItem;
     /* eslint-disable react/prop-types */
     return (
       <Component

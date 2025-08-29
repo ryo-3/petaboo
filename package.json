@@ -4,23 +4,22 @@
   "type": "module",
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
-    "dev:log": "turbo run dev 2>&1 | tee -a web.log",
+    "dev": "./dev-with-logging.sh",
+    "dev:plain": "turbo run dev",
     "lint": "turbo run lint",
-    "lint:root": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
     "prepare": "husky install",
     "check-types:wsl": "cd apps/web && npx tsc --noEmit",
+    "check-types:api": "cd apps/api && npx tsc --noEmit",
     "lint:wsl": "cd apps/web && npx eslint src --ext .ts,.tsx",
+    "lint:api": "cd apps/api && npx eslint src --ext .ts,.tsx",
     "check:wsl": "npm run check-types:wsl && npm run lint:wsl",
+    "check:web": "npm run check-types:wsl && npm run lint:wsl",
+    "check:api": "npm run check-types:api && npm run lint:api",
     "check:full": "npm run check-types && npm run lint && echo '✅ 全チェック完了'",
     "check:quick": "npm run check-types:wsl && echo '✅ 基本チェック完了'",
-    "log:watch": "tail -f api.log",
-    "log:watch:web": "tail -f web.log",
-    "log:errors": "tail -f api.log | grep --color=always -E 'error|Error|warn|Warning|failed|$'",
-    "log:clear": "truncate -s 0 api.log web.log 2>/dev/null || true && echo 'ログファイルをクリアしました'",
-    "log:cleanup": "node log-cleanup.js"
+    "log:clear": "truncate -s 0 api.log web.log 2>/dev/null || true && echo 'ログファイルをクリアしました'"
   },
   "devDependencies": {
     "husky": "^8.0.0",
@@ -35,6 +34,7 @@
     "node": ">=18"
   },
   "lint-staged": {
-    "**/*.{ts,tsx,js,jsx}": "eslint --fix"
+    "**/*.{ts,tsx,js,jsx}": ["prettier --write", "eslint --fix"],
+    "**/*.md": "prettier --write"
   }
 }

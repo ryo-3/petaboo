@@ -3,11 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: { params: Promise<{ slug: string }> },
 ) {
   try {
     const { userId, getToken } = await auth();
-    
+
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -15,12 +15,15 @@ export async function GET(
     const { slug } = await params;
     const token = await getToken();
 
-    const response = await fetch(`${process.env.API_URL || 'http://localhost:8794'}/boards/slug/${slug}`, {
-      headers: {
-        "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
+    const response = await fetch(
+      `${process.env.API_URL || "http://localhost:8794"}/boards/slug/${slug}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
       },
-    });
+    );
 
     if (!response.ok) {
       throw new Error("Failed to fetch board");
@@ -32,7 +35,7 @@ export async function GET(
     console.error("Board API error:", error);
     return NextResponse.json(
       { error: "Failed to fetch board" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

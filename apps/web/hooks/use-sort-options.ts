@@ -7,7 +7,7 @@ export interface SortOption {
   direction: "asc" | "desc";
 }
 
-export function useSortOptions(mode: 'memo' | 'task' = 'memo') {
+export function useSortOptions(mode: "memo" | "task" = "memo") {
   const getMemoSortOptions = (): SortOption[] => [
     {
       id: "updatedAt" as const,
@@ -57,14 +57,14 @@ export function useSortOptions(mode: 'memo' | 'task' = 'memo') {
   ];
 
   const [sortOptions, setSortOptions] = useState<SortOption[]>(
-    mode === 'memo' ? getMemoSortOptions() : getTaskSortOptions()
+    mode === "memo" ? getMemoSortOptions() : getTaskSortOptions(),
   );
 
   const getVisibleSortOptions = (activeTab: string) => {
-    if (activeTab === 'deleted') {
+    if (activeTab === "deleted") {
       return sortOptions;
     } else {
-      return sortOptions.filter(option => option.id !== 'deletedAt');
+      return sortOptions.filter((option) => option.id !== "deletedAt");
     }
   };
 

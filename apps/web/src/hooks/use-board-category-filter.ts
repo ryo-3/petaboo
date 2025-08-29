@@ -6,9 +6,13 @@ export interface UseBoardCategoryFilterProps {
   taskItems: BoardItemWithContent[];
 }
 
-export function useBoardCategoryFilter({ taskItems }: UseBoardCategoryFilterProps) {
+export function useBoardCategoryFilter({
+  taskItems,
+}: UseBoardCategoryFilterProps) {
   // フィルター状態（デフォルトは「全て」）
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState<(number | "all" | "uncategorized")[]>(["all"]);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<
+    (number | "all" | "uncategorized")[]
+  >(["all"]);
 
   // フィルタリングされたタスクアイテム
   const filteredTaskItems = useMemo(() => {
@@ -17,17 +21,23 @@ export function useBoardCategoryFilter({ taskItems }: UseBoardCategoryFilterProp
       return taskItems;
     }
 
-    return taskItems.filter(item => {
+    return taskItems.filter((item) => {
       const task = item.content as Task | DeletedTask;
       const taskBoardCategoryId = task.boardCategoryId;
 
       // 「未分類」が選択されていて、タスクがカテゴリー未設定の場合
-      if (selectedCategoryIds.includes("uncategorized") && !taskBoardCategoryId) {
+      if (
+        selectedCategoryIds.includes("uncategorized") &&
+        !taskBoardCategoryId
+      ) {
         return true;
       }
 
       // 特定のカテゴリーが選択されていて、タスクがそのカテゴリーの場合
-      if (taskBoardCategoryId && selectedCategoryIds.includes(taskBoardCategoryId)) {
+      if (
+        taskBoardCategoryId &&
+        selectedCategoryIds.includes(taskBoardCategoryId)
+      ) {
         return true;
       }
 

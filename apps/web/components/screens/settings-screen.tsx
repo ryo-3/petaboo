@@ -64,10 +64,26 @@ function SettingsScreen() {
   }
 
   const tabItems = [
-    { id: "memo" as const, label: "メモ", icon: <MemoIcon className="w-4 h-4 text-Green" /> },
-    { id: "task" as const, label: "タスク", icon: <TaskIcon className="w-4 h-4 text-Blue" /> },
-    { id: "board-categories" as const, label: "ボードカテゴリー", icon: <Folder className="w-4 h-4 text-purple-600" /> },
-    { id: "general" as const, label: "全体", icon: <SettingsIcon className="w-4 h-4 text-gray-600" /> },
+    {
+      id: "memo" as const,
+      label: "メモ",
+      icon: <MemoIcon className="w-4 h-4 text-Green" />,
+    },
+    {
+      id: "task" as const,
+      label: "タスク",
+      icon: <TaskIcon className="w-4 h-4 text-Blue" />,
+    },
+    {
+      id: "board-categories" as const,
+      label: "ボードカテゴリー",
+      icon: <Folder className="w-4 h-4 text-purple-600" />,
+    },
+    {
+      id: "general" as const,
+      label: "全体",
+      icon: <SettingsIcon className="w-4 h-4 text-gray-600" />,
+    },
   ];
 
   return (
@@ -112,143 +128,153 @@ function SettingsScreen() {
             <BoardCategoryManager />
           ) : (
             <div className="max-w-lg">
-          {activeTab === "memo" && (
-            <div>
-              <h2 className="text-lg font-semibold text-gray-800 mb-3">メモ設定</h2>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-gray-700 w-20">
-                      表示形式
-                    </span>
-                    <ViewModeToggle
-                      viewMode={memoViewMode}
-                      onViewModeChange={setMemoViewMode}
-                      buttonSize="size-7"
-                      iconSize="size-4"
-                    />
-                  </div>
-                  <span className="text-sm text-gray-500">
-                    {memoViewMode === "card" ? "カード表示" : "リスト表示"}
-                  </span>
-                </div>
+              {activeTab === "memo" && (
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-800 mb-3">
+                    メモ設定
+                  </h2>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-medium text-gray-700 w-20">
+                          表示形式
+                        </span>
+                        <ViewModeToggle
+                          viewMode={memoViewMode}
+                          onViewModeChange={setMemoViewMode}
+                          buttonSize="size-7"
+                          iconSize="size-4"
+                        />
+                      </div>
+                      <span className="text-sm text-gray-500">
+                        {memoViewMode === "card" ? "カード表示" : "リスト表示"}
+                      </span>
+                    </div>
 
-                <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-gray-700 w-20">
-                      列数
-                    </span>
-                    <ColumnCountSelector
-                      columnCount={memoColumnCount}
-                      onColumnCountChange={setMemoColumnCount}
-                      containerHeight="h-7"
-                      buttonSize="size-6"
-                    />
-                  </div>
-                  <span className="text-sm text-gray-500">
-                    {memoColumnCount}列で表示
-                  </span>
-                </div>
+                    <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-medium text-gray-700 w-20">
+                          列数
+                        </span>
+                        <ColumnCountSelector
+                          columnCount={memoColumnCount}
+                          onColumnCountChange={setMemoColumnCount}
+                          containerHeight="h-7"
+                          buttonSize="size-6"
+                        />
+                      </div>
+                      <span className="text-sm text-gray-500">
+                        {memoColumnCount}列で表示
+                      </span>
+                    </div>
 
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-sm font-medium text-gray-700">
-                    コントロール表示
-                  </span>
-                  <Switch
-                    checked={!memoHideControls}
-                    onCheckedChange={(checked) => setMemoHideControls(!checked)}
-                    label=""
-                  />
+                    <div className="flex items-center justify-between py-2">
+                      <span className="text-sm font-medium text-gray-700">
+                        コントロール表示
+                      </span>
+                      <Switch
+                        checked={!memoHideControls}
+                        onCheckedChange={(checked) =>
+                          setMemoHideControls(!checked)
+                        }
+                        label=""
+                      />
+                    </div>
+                  </div>
                 </div>
+              )}
+
+              {activeTab === "task" && (
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-800 mb-3">
+                    タスク設定
+                  </h2>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-medium text-gray-700 w-20">
+                          表示形式
+                        </span>
+                        <ViewModeToggle
+                          viewMode={taskViewMode}
+                          onViewModeChange={setTaskViewMode}
+                          buttonSize="size-7"
+                          iconSize="size-4"
+                        />
+                      </div>
+                      <span className="text-sm text-gray-500">
+                        {taskViewMode === "card" ? "カード表示" : "リスト表示"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-medium text-gray-700 w-20">
+                          列数
+                        </span>
+                        <ColumnCountSelector
+                          columnCount={taskColumnCount}
+                          onColumnCountChange={setTaskColumnCount}
+                          containerHeight="h-7"
+                          buttonSize="size-6"
+                        />
+                      </div>
+                      <span className="text-sm text-gray-500">
+                        {taskColumnCount}列で表示
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between py-2">
+                      <span className="text-sm font-medium text-gray-700">
+                        コントロール表示
+                      </span>
+                      <Switch
+                        checked={!taskHideControls}
+                        onCheckedChange={(checked) =>
+                          setTaskHideControls(!checked)
+                        }
+                        label=""
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === "general" && (
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-800 mb-3">
+                    全体設定
+                  </h2>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between py-2">
+                      <div>
+                        <span className="text-sm font-medium text-gray-700">
+                          ヘッダーを非表示
+                        </span>
+                        <p className="text-xs text-gray-500 mt-1">
+                          より広い作業領域を確保
+                        </p>
+                      </div>
+                      <Switch
+                        checked={hideHeader}
+                        onCheckedChange={setHideHeader}
+                        label=""
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 保存ボタン */}
+              <div className="mt-6">
+                <button
+                  onClick={handleSave}
+                  className="px-6 py-3 bg-Emerald hover:bg-Emerald-dark text-white rounded-lg transition-colors font-medium"
+                >
+                  設定を保存
+                </button>
               </div>
             </div>
-          )}
-
-          {activeTab === "task" && (
-            <div>
-              <h2 className="text-lg font-semibold text-gray-800 mb-3">タスク設定</h2>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-gray-700 w-20">
-                      表示形式
-                    </span>
-                    <ViewModeToggle
-                      viewMode={taskViewMode}
-                      onViewModeChange={setTaskViewMode}
-                      buttonSize="size-7"
-                      iconSize="size-4"
-                    />
-                  </div>
-                  <span className="text-sm text-gray-500">
-                    {taskViewMode === "card" ? "カード表示" : "リスト表示"}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-gray-700 w-20">
-                      列数
-                    </span>
-                    <ColumnCountSelector
-                      columnCount={taskColumnCount}
-                      onColumnCountChange={setTaskColumnCount}
-                      containerHeight="h-7"
-                      buttonSize="size-6"
-                    />
-                  </div>
-                  <span className="text-sm text-gray-500">
-                    {taskColumnCount}列で表示
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-sm font-medium text-gray-700">
-                    コントロール表示
-                  </span>
-                  <Switch
-                    checked={!taskHideControls}
-                    onCheckedChange={(checked) => setTaskHideControls(!checked)}
-                    label=""
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "general" && (
-            <div>
-              <h2 className="text-lg font-semibold text-gray-800 mb-3">全体設定</h2>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between py-2">
-                  <div>
-                    <span className="text-sm font-medium text-gray-700">
-                      ヘッダーを非表示
-                    </span>
-                    <p className="text-xs text-gray-500 mt-1">
-                      より広い作業領域を確保
-                    </p>
-                  </div>
-                  <Switch
-                    checked={hideHeader}
-                    onCheckedChange={setHideHeader}
-                    label=""
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 保存ボタン */}
-          <div className="mt-6">
-            <button
-              onClick={handleSave}
-              className="px-6 py-3 bg-Emerald hover:bg-Emerald-dark text-white rounded-lg transition-colors font-medium"
-            >
-              設定を保存
-            </button>
-            </div>
-          </div>
           )}
         </div>
       </div>

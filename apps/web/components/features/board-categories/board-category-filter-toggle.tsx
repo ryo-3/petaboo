@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import FilterIcon from "@/components/icons/filter-icon";
@@ -25,16 +25,19 @@ export default function BoardCategoryFilterToggle({
   const [showTooltip, setShowTooltip] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const hasActiveFilter = !selectedCategoryIds.includes("all") && selectedCategoryIds.length > 0;
+  const hasActiveFilter =
+    !selectedCategoryIds.includes("all") && selectedCategoryIds.length > 0;
 
   // フィルターオプション作成
   const filterOptions = useMemo(() => {
     const options: { value: string; label: string; color: string }[] = [];
 
     // カテゴリーをsortOrderでソート
-    const sortedCategories = [...categories].sort((a, b) => a.sortOrder - b.sortOrder);
-    
-    sortedCategories.forEach(category => {
+    const sortedCategories = [...categories].sort(
+      (a, b) => a.sortOrder - b.sortOrder,
+    );
+
+    sortedCategories.forEach((category) => {
       options.push({
         value: category.id.toString(),
         label: category.name,
@@ -103,7 +106,10 @@ export default function BoardCategoryFilterToggle({
   // 外部クリックでセレクターを閉じる
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         if (showSelector) {
           setShowSelector(false);
           setTimeout(() => setShowTooltip(true), 100);
@@ -112,18 +118,17 @@ export default function BoardCategoryFilterToggle({
     };
 
     if (showSelector) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showSelector]);
 
-
   return (
     <div className="relative" ref={containerRef}>
-{showTooltip && !showSelector ? (
+      {showTooltip && !showSelector ? (
         <Tooltip text="ボードカテゴリーで絞込" position="bottom">
           <button
             onClick={handleIconClick}
@@ -133,9 +138,7 @@ export default function BoardCategoryFilterToggle({
                 : "bg-gray-100 text-gray-500 opacity-65 hover:opacity-85"
             }`}
           >
-            <FilterIcon 
-              className={iconSize}
-            />
+            <FilterIcon className={iconSize} />
           </button>
         </Tooltip>
       ) : (
@@ -147,9 +150,7 @@ export default function BoardCategoryFilterToggle({
               : "bg-gray-100 text-gray-500 opacity-65 hover:opacity-85"
           }`}
         >
-          <FilterIcon 
-            className={iconSize}
-          />
+          <FilterIcon className={iconSize} />
         </button>
       )}
 
@@ -164,9 +165,13 @@ export default function BoardCategoryFilterToggle({
                   // セレクターは閉じない
                 }}
                 className={`px-2 py-1.5 text-sm text-left rounded transition-colors ${
-                  (selectedCategoryIds.includes("all") && option.value === "all") ||
-                  (selectedCategoryIds.includes("uncategorized") && option.value === "uncategorized") ||
-                  (selectedCategoryIds.includes(parseInt(option.value)) && option.value !== "all" && option.value !== "uncategorized")
+                  (selectedCategoryIds.includes("all") &&
+                    option.value === "all") ||
+                  (selectedCategoryIds.includes("uncategorized") &&
+                    option.value === "uncategorized") ||
+                  (selectedCategoryIds.includes(parseInt(option.value)) &&
+                    option.value !== "all" &&
+                    option.value !== "uncategorized")
                     ? "bg-gray-200 text-gray-700"
                     : "hover:bg-gray-100"
                 }`}

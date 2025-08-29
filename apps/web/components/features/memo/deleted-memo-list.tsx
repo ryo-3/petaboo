@@ -1,10 +1,10 @@
-'use client'
+"use client";
 
 import TrashIcon from "@/components/icons/trash-icon";
-import LoadingState from '@/components/ui/feedback/loading-state';
-import ErrorState from '@/components/ui/feedback/error-state';
-import EmptyState from '@/components/ui/feedback/empty-state';
-import { useDeletedMemos } from '@/src/hooks/use-memos';
+import LoadingState from "@/components/ui/feedback/loading-state";
+import ErrorState from "@/components/ui/feedback/error-state";
+import EmptyState from "@/components/ui/feedback/empty-state";
+import { useDeletedMemos } from "@/src/hooks/use-memos";
 import LogoutButton from "@/components/ui/buttons/logout-button";
 import type { DeletedMemo } from "@/src/types/memo";
 import { formatDateOnly } from "@/src/utils/formatDate";
@@ -14,12 +14,19 @@ interface DeletedMemoListProps {
   onSelectDeletedMemo: (memo: DeletedMemo) => void;
 }
 
-function DeletedMemoList({ onBackToMemos, onSelectDeletedMemo }: DeletedMemoListProps) {
-  const { data: deletedMemos, isLoading, error } = useDeletedMemos() as {
+function DeletedMemoList({
+  onBackToMemos,
+  onSelectDeletedMemo,
+}: DeletedMemoListProps) {
+  const {
+    data: deletedMemos,
+    isLoading,
+    error,
+  } = useDeletedMemos() as {
     data: DeletedMemo[] | undefined;
     isLoading: boolean;
     error: Error | null;
-  }
+  };
 
   return (
     <div className="flex flex-col justify-between">
@@ -29,23 +36,25 @@ function DeletedMemoList({ onBackToMemos, onSelectDeletedMemo }: DeletedMemoList
           onClick={onBackToMemos}
           className="bg-blue-200 hover:bg-blue-300 text-center mx-2 rounded-lg mt-4 w-[calc(100%-16px)] py-2 transition-colors"
         >
-          <span className="text-slate-600 font-medium text-lg">← 通常メモに戻る</span>
+          <span className="text-slate-600 font-medium text-lg">
+            ← 通常メモに戻る
+          </span>
         </button>
-        
+
         <div className="mx-2 mt-4">
           <div className="flex items-center gap-2 mb-2">
             <TrashIcon className="w-4 h-4 text-gray-600" />
             <h3 className="text-sm font-medium text-gray-600">削除済みメモ</h3>
           </div>
-          
+
           {isLoading && <LoadingState />}
-          
+
           {error && <ErrorState />}
-          
+
           {deletedMemos && deletedMemos.length === 0 && (
             <EmptyState message="削除済みメモはありません" variant="simple" />
           )}
-          
+
           {deletedMemos && deletedMemos.length > 0 && (
             <ul className="space-y-1">
               {deletedMemos.map((memo: DeletedMemo) => (
@@ -58,12 +67,14 @@ function DeletedMemoList({ onBackToMemos, onSelectDeletedMemo }: DeletedMemoList
                       {memo.title}
                     </div>
                     <div className="text-xs text-gray-500 truncate mt-1">
-                      {memo.content || '内容なし'}
+                      {memo.content || "内容なし"}
                     </div>
                     <div className="text-xs text-gray-400 mt-1">
                       作成: {formatDateOnly(memo.createdAt)}
                       {memo.updatedAt && memo.updatedAt !== memo.createdAt && (
-                        <span className="ml-2">編集: {formatDateOnly(memo.updatedAt)}</span>
+                        <span className="ml-2">
+                          編集: {formatDateOnly(memo.updatedAt)}
+                        </span>
                       )}
                     </div>
                     <div className="text-xs text-red-400 mt-1">
@@ -81,4 +92,4 @@ function DeletedMemoList({ onBackToMemos, onSelectDeletedMemo }: DeletedMemoList
   );
 }
 
-export default DeletedMemoList
+export default DeletedMemoList;

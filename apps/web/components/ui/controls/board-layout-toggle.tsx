@@ -1,5 +1,5 @@
-import React from 'react';
-import Tooltip from '@/components/ui/base/tooltip';
+import React from "react";
+import Tooltip from "@/components/ui/base/tooltip";
 
 interface BoardLayoutToggleProps {
   boardLayout: "horizontal" | "vertical";
@@ -19,8 +19,14 @@ function BoardLayoutToggle({
   return (
     <div className="flex rounded-lg p-0.5">
       {/* 横並びボタン */}
-      <Tooltip 
-        text={boardLayout === "horizontal" && isReversed ? "メモとタスクを反転" : boardLayout === "horizontal" ? "メモとタスクを反転" : "横並び表示"} 
+      <Tooltip
+        text={
+          boardLayout === "horizontal" && isReversed
+            ? "メモとタスクを反転"
+            : boardLayout === "horizontal"
+              ? "メモとタスクを反転"
+              : "横並び表示"
+        }
         position="bottom"
       >
         <button
@@ -31,25 +37,41 @@ function BoardLayoutToggle({
               : "text-gray-300 hover:text-gray-400"
           }`}
         >
-          <svg className={`${iconSize} transition-all duration-300`} fill="currentColor" viewBox="0 0 24 24">
+          <svg
+            className={`${iconSize} transition-all duration-300`}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
             {/* 左側の棒 */}
-            <rect 
-              x="5" 
-              y="4" 
-              width="5" 
-              height="16" 
-              rx="1" 
-              fill={boardLayout === "horizontal" ? (isReversed ? "#2E6B9A" : "#009645") : "currentColor"}
+            <rect
+              x="5"
+              y="4"
+              width="5"
+              height="16"
+              rx="1"
+              fill={
+                boardLayout === "horizontal"
+                  ? isReversed
+                    ? "#2E6B9A"
+                    : "#009645"
+                  : "currentColor"
+              }
               className="transition-all duration-300"
             />
             {/* 右側の棒 */}
-            <rect 
-              x="14" 
-              y="4" 
-              width="5" 
-              height="16" 
-              rx="1" 
-              fill={boardLayout === "horizontal" ? (isReversed ? "#009645" : "#2E6B9A") : "currentColor"}
+            <rect
+              x="14"
+              y="4"
+              width="5"
+              height="16"
+              rx="1"
+              fill={
+                boardLayout === "horizontal"
+                  ? isReversed
+                    ? "#009645"
+                    : "#2E6B9A"
+                  : "currentColor"
+              }
               className="transition-all duration-300"
             />
           </svg>
@@ -57,8 +79,12 @@ function BoardLayoutToggle({
       </Tooltip>
 
       {/* 縦並びボタン */}
-      <Tooltip 
-        text={boardLayout === "vertical" && isReversed ? "メモとタスクを反転" : "縦並び表示"} 
+      <Tooltip
+        text={
+          boardLayout === "vertical" && isReversed
+            ? "メモとタスクを反転"
+            : "縦並び表示"
+        }
         position="bottom"
       >
         <button
@@ -69,25 +95,41 @@ function BoardLayoutToggle({
               : "text-gray-300 hover:text-gray-400"
           }`}
         >
-          <svg className={`${iconSize} transition-all duration-300`} fill="currentColor" viewBox="0 0 24 24">
+          <svg
+            className={`${iconSize} transition-all duration-300`}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
             {/* 上側の棒 */}
-            <rect 
-              x="4" 
-              y="5" 
-              width="16" 
-              height="5" 
-              rx="1" 
-              fill={boardLayout === "vertical" ? (isReversed ? "#2E6B9A" : "#009645") : "currentColor"}
+            <rect
+              x="4"
+              y="5"
+              width="16"
+              height="5"
+              rx="1"
+              fill={
+                boardLayout === "vertical"
+                  ? isReversed
+                    ? "#2E6B9A"
+                    : "#009645"
+                  : "currentColor"
+              }
               className="transition-all duration-300"
             />
             {/* 下側の棒 */}
-            <rect 
-              x="4" 
-              y="14" 
-              width="16" 
-              height="5" 
-              rx="1" 
-              fill={boardLayout === "vertical" ? (isReversed ? "#009645" : "#2E6B9A") : "currentColor"}
+            <rect
+              x="4"
+              y="14"
+              width="16"
+              height="5"
+              rx="1"
+              fill={
+                boardLayout === "vertical"
+                  ? isReversed
+                    ? "#009645"
+                    : "#2E6B9A"
+                  : "currentColor"
+              }
               className="transition-all duration-300"
             />
           </svg>

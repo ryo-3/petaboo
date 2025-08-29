@@ -49,7 +49,7 @@ export default function DeleteTagModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div 
+      <div
         className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4"
         onClick={(e) => e.stopPropagation()}
       >
@@ -59,9 +59,7 @@ export default function DeleteTagModal({
             <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
               <AlertTriangle className="w-4 h-4 text-red-600" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">
-              タグを削除
-            </h2>
+            <h2 className="text-lg font-semibold text-gray-900">タグを削除</h2>
           </div>
           <CloseButton onClick={onClose} />
         </div>
@@ -69,30 +67,40 @@ export default function DeleteTagModal({
         {/* 内容 */}
         <div className="px-4 pb-4">
           <p className="text-gray-600 mb-2">
-            「<span 
+            「
+            <span
               className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mx-1"
               style={{
                 backgroundColor: tag.color,
-                color: '#374151',
+                color: "#374151",
               }}
             >
               {tag.name}
-            </span>」を削除しますか？
+            </span>
+            」を削除しますか？
           </p>
-          
+
           {tagStats && tagStats.usageCount > 0 && (
             <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
               <p className="text-sm text-yellow-800">
-                このタグは<span className="font-medium">{tagStats.usageCount}件</span>で使用されています：
+                このタグは
+                <span className="font-medium">{tagStats.usageCount}件</span>
+                で使用されています：
               </p>
               <ul className="text-sm text-yellow-700 mt-1 space-y-1">
-                {tagStats.memoCount > 0 && <li>• メモ: {tagStats.memoCount}件</li>}
-                {tagStats.taskCount > 0 && <li>• タスク: {tagStats.taskCount}件</li>}
-                {tagStats.boardCount > 0 && <li>• ボード: {tagStats.boardCount}件</li>}
+                {tagStats.memoCount > 0 && (
+                  <li>• メモ: {tagStats.memoCount}件</li>
+                )}
+                {tagStats.taskCount > 0 && (
+                  <li>• タスク: {tagStats.taskCount}件</li>
+                )}
+                {tagStats.boardCount > 0 && (
+                  <li>• ボード: {tagStats.boardCount}件</li>
+                )}
               </ul>
             </div>
           )}
-          
+
           <p className="text-sm text-gray-500 mb-6">
             この操作は取り消せません。関連付けられた全てのアイテムからタグが削除されます。
           </p>
@@ -107,7 +115,7 @@ export default function DeleteTagModal({
               <Trash2 size={16} />
               {isDeleting ? "削除中..." : "削除"}
             </button>
-            
+
             <button
               onClick={onClose}
               disabled={isDeleting}

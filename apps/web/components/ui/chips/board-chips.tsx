@@ -9,31 +9,30 @@ interface BoardChipsProps {
   interactive?: boolean; // クリック可能かどうか（デフォルト: true）
 }
 
-export default function BoardChips({ 
-  boards, 
+export default function BoardChips({
+  boards,
   variant = "default",
   maxWidth = "120px", // デフォルトは120px
   maxDisplay = 3, // デフォルトは3つまで表示
-  interactive = true // デフォルトはクリック可能
+  interactive = true, // デフォルトはクリック可能
 }: BoardChipsProps) {
   const [expandedBoards, setExpandedBoards] = useState<Set<number>>(new Set());
   const [showAll, setShowAll] = useState(false);
-  
+
   // ボードが変わったら展開状態をリセット
   useEffect(() => {
     setExpandedBoards(new Set());
     setShowAll(false);
   }, [boards]);
-  
+
   if (!boards || boards.length === 0) return null;
 
-  const sizeClasses = variant === "compact" 
-    ? "px-2 py-1 text-xs" 
-    : "px-3 py-1 text-sm";
+  const sizeClasses =
+    variant === "compact" ? "px-2 py-1 text-xs" : "px-3 py-1 text-sm";
 
   // 個別のボードの展開状態を切り替え
   const toggleBoard = (boardId: number) => {
-    setExpandedBoards(prev => {
+    setExpandedBoards((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(boardId)) {
         newSet.delete(boardId);
@@ -50,33 +49,32 @@ export default function BoardChips({
   };
 
   // 表示するボードを決定
-  const displayBoards = showAll || boards.length <= maxDisplay 
-    ? boards 
-    : boards.slice(0, maxDisplay);
+  const displayBoards =
+    showAll || boards.length <= maxDisplay
+      ? boards
+      : boards.slice(0, maxDisplay);
   const remainingCount = boards.length - maxDisplay;
 
   return (
     <div className="flex flex-wrap items-center gap-2">
       {displayBoards.map((board) => {
         const isExpanded = expandedBoards.has(board.id);
-        const Component = interactive ? 'button' : 'div';
+        const Component = interactive ? "button" : "div";
         return (
           <Component
             key={board.id}
             onClick={interactive ? () => toggleBoard(board.id) : undefined}
-            className={`inline-flex items-center rounded-md bg-light-Blue text-white ${interactive ? 'cursor-pointer' : 'cursor-default'} ${sizeClasses}`}
+            className={`inline-flex items-center rounded-md bg-light-Blue text-white ${interactive ? "cursor-pointer" : "cursor-default"} ${sizeClasses}`}
             style={!isExpanded ? { maxWidth } : undefined}
           >
-            <span className={!isExpanded ? "truncate" : ""}>
-              {board.name}
-            </span>
+            <span className={!isExpanded ? "truncate" : ""}>{board.name}</span>
           </Component>
         );
       })}
       {boards.length > maxDisplay && !showAll && (
         <div
           onClick={interactive ? toggleShowAll : undefined}
-          className={`inline-flex items-center rounded-md bg-light-Blue text-white ${interactive ? 'cursor-pointer' : 'cursor-default'} ${sizeClasses}`}
+          className={`inline-flex items-center rounded-md bg-light-Blue text-white ${interactive ? "cursor-pointer" : "cursor-default"} ${sizeClasses}`}
         >
           <span>+{remainingCount}</span>
         </div>

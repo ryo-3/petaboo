@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import DashboardIcon from "@/components/icons/dashboard-icon";
 import Tooltip from "@/components/ui/base/tooltip";
 import BoardSelectionModal from "@/components/ui/modals/board-selection-modal";
@@ -25,29 +25,31 @@ export default function BoardIconSelector({
   className = "",
   iconClassName = "size-4 text-gray-600",
   multiple = false,
-  disabled = false
+  disabled = false,
 }: BoardIconSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   // 値を配列として扱う（単一選択の場合も配列に変換）
-  const selectedValues = Array.isArray(value) 
-    ? value 
-    : (value && value !== "" ? [value] : []);
+  const selectedValues = Array.isArray(value)
+    ? value
+    : value && value !== ""
+      ? [value]
+      : [];
 
   // BoardSelectionModal用のデータ変換
   const boards = options
-    .filter(opt => opt.value !== "") // "なし"オプションを除外
-    .map(opt => ({
+    .filter((opt) => opt.value !== "") // "なし"オプションを除外
+    .map((opt) => ({
       id: parseInt(opt.value, 10),
-      name: opt.label
+      name: opt.label,
     }));
 
   const selectedBoardIds = selectedValues
-    .filter(v => v !== "")
-    .map(v => parseInt(v, 10));
+    .filter((v) => v !== "")
+    .map((v) => parseInt(v, 10));
 
   const handleSelectionChange = (boardIds: number[]) => {
-    const stringValues = boardIds.map(id => id.toString());
+    const stringValues = boardIds.map((id) => id.toString());
     onChange(multiple ? stringValues : stringValues[0] || "");
   };
 
@@ -58,25 +60,30 @@ export default function BoardIconSelector({
     <>
       <div className={`flex items-center gap-1.5 ${className}`}>
         <div className="relative">
-          <Tooltip text={disabled ? "ボード表示（読み取り専用）" : "ボード選択"} position="bottom">
+          <Tooltip
+            text={disabled ? "ボード表示（読み取り専用）" : "ボード選択"}
+            position="bottom"
+          >
             <button
               onClick={disabled ? undefined : () => setIsOpen(true)}
               disabled={disabled}
               className={`flex items-center justify-center size-7 rounded-md ${
-                disabled 
-                  ? "bg-gray-50 cursor-not-allowed" 
-                  : hasSelectedBoard 
-                    ? "bg-light-Blue text-white" 
+                disabled
+                  ? "bg-gray-50 cursor-not-allowed"
+                  : hasSelectedBoard
+                    ? "bg-light-Blue text-white"
                     : "bg-gray-100"
               }`}
             >
-              <DashboardIcon className={`${iconClassName} ${
-                disabled 
-                  ? "text-gray-400" 
-                  : hasSelectedBoard 
-                    ? "text-white" 
-                    : "text-gray-600"
-              }`} />
+              <DashboardIcon
+                className={`${iconClassName} ${
+                  disabled
+                    ? "text-gray-400"
+                    : hasSelectedBoard
+                      ? "text-white"
+                      : "text-gray-600"
+                }`}
+              />
             </button>
           </Tooltip>
         </div>

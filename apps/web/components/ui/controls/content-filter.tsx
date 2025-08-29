@@ -1,7 +1,7 @@
-import React from 'react';
-import MemoIcon from '@/components/icons/memo-icon';
-import TaskIcon from '@/components/icons/task-icon';
-import Tooltip from '@/components/ui/base/tooltip';
+import React from "react";
+import MemoIcon from "@/components/icons/memo-icon";
+import TaskIcon from "@/components/icons/task-icon";
+import Tooltip from "@/components/ui/base/tooltip";
 
 interface ContentFilterProps {
   showMemo: boolean;
@@ -34,15 +34,12 @@ function ContentFilter({
   return (
     <div className="flex bg-gray-100 rounded-lg p-0.5 gap-1">
       {/* メモフィルター */}
-      <Tooltip 
-        text={getMemoTooltip()} 
-        position="bottom"
-      >
+      <Tooltip text={getMemoTooltip()} position="bottom">
         <button
           onClick={() => onMemoToggle(!showMemo)}
           className={`p-1 rounded-md transition-colors ${
-            showMemo 
-              ? "bg-Green text-white hover:bg-Green/80" 
+            showMemo
+              ? "bg-Green text-white hover:bg-Green/80"
               : "text-gray-400 hover:text-gray-600 hover:bg-gray-200"
           }`}
         >
@@ -51,15 +48,12 @@ function ContentFilter({
       </Tooltip>
 
       {/* タスクフィルター */}
-      <Tooltip 
-        text={getTaskTooltip()} 
-        position="bottom"
-      >
+      <Tooltip text={getTaskTooltip()} position="bottom">
         <button
           onClick={() => onTaskToggle(!showTask)}
           className={`p-1 rounded-md transition-colors ${
-            showTask 
-              ? "bg-DeepBlue text-white hover:bg-DeepBlue/80" 
+            showTask
+              ? "bg-DeepBlue text-white hover:bg-DeepBlue/80"
               : "text-gray-400 hover:text-gray-600 hover:bg-gray-200"
           }`}
         >

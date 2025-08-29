@@ -1,11 +1,11 @@
-'use client'
+"use client";
 
-import SidebarItem from '@/components/shared/sidebar-item';
-import LoadingState from '@/components/ui/feedback/loading-state';
-import ErrorState from '@/components/ui/feedback/error-state';
-import EmptyState from '@/components/ui/feedback/empty-state';
-import { useMemos, useDeleteMemo } from '@/src/hooks/use-memos';
-import { useLocalStorageSync } from '@/src/hooks/use-local-storage-sync';
+import SidebarItem from "@/components/shared/sidebar-item";
+import LoadingState from "@/components/ui/feedback/loading-state";
+import ErrorState from "@/components/ui/feedback/error-state";
+import EmptyState from "@/components/ui/feedback/empty-state";
+import { useMemos, useDeleteMemo } from "@/src/hooks/use-memos";
+import { useLocalStorageSync } from "@/src/hooks/use-local-storage-sync";
 import type { Memo } from "@/src/types/memo";
 import { formatDateOnly } from "@/src/utils/formatDate";
 
@@ -17,7 +17,13 @@ interface SidebarMemoListProps {
 }
 
 // Memo item component with localStorage sync
-function SidebarMemoItem({ memo, onSelect, onEdit, onDelete, isSelected }: {
+function SidebarMemoItem({
+  memo,
+  onSelect,
+  onEdit,
+  onDelete,
+  isSelected,
+}: {
   memo: Memo;
   onSelect: () => void;
   onEdit: () => void;
@@ -27,7 +33,7 @@ function SidebarMemoItem({ memo, onSelect, onEdit, onDelete, isSelected }: {
   const { displayTitle, displayContent } = useLocalStorageSync(
     memo.id,
     memo.title,
-    memo.content || ''
+    memo.content || "",
   );
 
   return (
@@ -41,57 +47,57 @@ function SidebarMemoItem({ memo, onSelect, onEdit, onDelete, isSelected }: {
         {displayTitle}
       </div>
       <div className="text-xs text-gray-500 truncate mb-1">
-        {displayContent || '内容なし'}
+        {displayContent || "内容なし"}
       </div>
       <div className="text-xs text-gray-400">
-        {memo.updatedAt && memo.updatedAt !== memo.createdAt 
+        {memo.updatedAt && memo.updatedAt !== memo.createdAt
           ? formatDateOnly(memo.updatedAt)
-          : formatDateOnly(memo.createdAt)
-        }
+          : formatDateOnly(memo.createdAt)}
       </div>
     </SidebarItem>
   );
 }
 
- 
-function SidebarMemoList({ onSelectMemo, onEditMemo, onDeleteMemo, selectedMemoId }: SidebarMemoListProps) {
-  const { data: memos, isLoading, error } = useMemos()
-  const deleteNote = useDeleteMemo()
+function SidebarMemoList({
+  onSelectMemo,
+  onEditMemo,
+  onDeleteMemo,
+  selectedMemoId,
+}: SidebarMemoListProps) {
+  const { data: memos, isLoading, error } = useMemos();
+  const deleteNote = useDeleteMemo();
 
   const handleDelete = async (memo: Memo) => {
     try {
-      
       // 削除前に次のメモを決定
-      let nextMemo: Memo | null = null
-      
+      let nextMemo: Memo | null = null;
+
       if (memos && memos.length > 1) {
-        const deletedIndex = memos.findIndex(m => m.id === memo.id)
-        
+        const deletedIndex = memos.findIndex((m) => m.id === memo.id);
+
         if (deletedIndex !== -1) {
           // 削除されたメモの次のメモを選択（削除されたメモより後にあるメモ）
           if (deletedIndex < memos.length - 1) {
-            nextMemo = memos[deletedIndex + 1] || null
+            nextMemo = memos[deletedIndex + 1] || null;
           }
           // 最後のメモが削除された場合は前のメモを選択
           else if (deletedIndex > 0) {
-            nextMemo = memos[deletedIndex - 1] || null
+            nextMemo = memos[deletedIndex - 1] || null;
           }
         }
       }
-      
-      
+
       // 削除実行
-      await deleteNote.mutateAsync(memo.id)
-      
+      await deleteNote.mutateAsync(memo.id);
+
       // 次のメモが見つかった場合は選択（現在選択中のメモが削除された場合のみ）
       if (nextMemo && onDeleteMemo && selectedMemoId === memo.id) {
-        onDeleteMemo(nextMemo)
+        onDeleteMemo(nextMemo);
       }
-      
     } catch {
       // エラーはミューテーションのエラーハンドリングで処理される
     }
-  }
+  };
 
   if (isLoading) {
     return <LoadingState />;
@@ -124,7 +130,7 @@ function SidebarMemoList({ onSelectMemo, onEditMemo, onDeleteMemo, selectedMemoI
         })}
       </ul>
     </div>
-  )
+  );
 }
 
 export default SidebarMemoList;

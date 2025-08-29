@@ -10,11 +10,12 @@ interface BoardChanges {
  * memo-editor と task-editor で共通利用
  */
 export function useBoardChangeModal(initialBoardIds: string[] = []) {
-  const [selectedBoardIds, setSelectedBoardIds] = useState<string[]>(initialBoardIds);
+  const [selectedBoardIds, setSelectedBoardIds] =
+    useState<string[]>(initialBoardIds);
   const [showBoardChangeModal, setShowBoardChangeModal] = useState(false);
   const [pendingBoardChanges, setPendingBoardChanges] = useState<BoardChanges>({
     toAdd: [],
-    toRemove: []
+    toRemove: [],
   });
 
   // ボード変更ハンドラー（選択状態のみ更新）
@@ -51,7 +52,7 @@ export function useBoardChangeModal(initialBoardIds: string[] = []) {
     selectedBoardIds,
     showBoardChangeModal,
     pendingBoardChanges,
-    
+
     // Actions
     handleBoardChange,
     showModal,

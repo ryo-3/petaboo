@@ -1,19 +1,36 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { getAuth } from "@hono/clerk-auth";
 import { eq, and, desc, isNull, isNotNull } from "drizzle-orm";
-import { boards, boardItems, tasks, memos, deletedBoards, deletedMemos, deletedTasks } from "../../db";
-import type { NewBoard, NewBoardItem, NewDeletedBoard } from "../../db/schema/boards";
+import {
+  boards,
+  boardItems,
+  tasks,
+  memos,
+  deletedBoards,
+  deletedMemos,
+  deletedTasks,
+} from "../../db";
+import type {
+  NewBoard,
+  NewBoardItem,
+  NewDeletedBoard,
+} from "../../db/schema/boards";
 import type { DatabaseType, Env, AppType } from "../../types/common";
 
 // ID→originalId変換ユーティリティ
-async function getOriginalId(itemId: string | number, itemType: 'memo' | 'task', userId: string, db: DatabaseType): Promise<string | null> {
+async function getOriginalId(
+  itemId: string | number,
+  itemType: "memo" | "task",
+  userId: string,
+  db: DatabaseType,
+): Promise<string | null> {
   // itemIdはIDの文字列版または数値版として受け取り、originalIdに変換する
-  const numericId = typeof itemId === 'string' ? parseInt(itemId) : itemId;
+  const numericId = typeof itemId === "string" ? parseInt(itemId) : itemId;
   if (isNaN(numericId)) {
     return null;
   }
-  
-  if (itemType === 'memo') {
+
+  if (itemType === "memo") {
     const memo = await db
       .select({ id: memos.id, originalId: memos.originalId })
       .from(memos)
@@ -43,37 +60,41 @@ function generateSlug(name: string): string {
   // 日本語や特殊文字が含まれる場合は、ランダムな文字列を生成
   const cleaned = name
     .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '') // 英数字、スペース、ハイフン以外を除去
-    .replace(/\s+/g, '-') // スペースをハイフンに変換
-    .replace(/-+/g, '-') // 連続するハイフンを1つに
-    .replace(/^-|-$/g, '') // 先頭と末尾のハイフンを除去
+    .replace(/[^a-z0-9\s-]/g, "") // 英数字、スペース、ハイフン以外を除去
+    .replace(/\s+/g, "-") // スペースをハイフンに変換
+    .replace(/-+/g, "-") // 連続するハイフンを1つに
+    .replace(/^-|-$/g, "") // 先頭と末尾のハイフンを除去
     .substring(0, 50); // 最大50文字に制限
-  
+
   // 空文字の場合はランダムな文字列を生成
   if (cleaned.length === 0) {
     return Math.random().toString(36).substring(2, 8);
   }
-  
+
   return cleaned;
 }
 
 // ユニークなスラッグを生成
-async function generateUniqueSlug(name: string, userId: string, db: DatabaseType): Promise<string> {
+async function generateUniqueSlug(
+  name: string,
+  userId: string,
+  db: DatabaseType,
+): Promise<string> {
   const baseSlug = generateSlug(name);
   let slug = baseSlug;
   let counter = 0;
-  
+
   while (true) {
     const existing = await db
       .select()
       .from(boards)
       .where(eq(boards.slug, slug))
       .limit(1);
-    
+
     if (existing.length === 0) {
       return slug;
     }
-    
+
     counter++;
     slug = `${baseSlug}-${counter}`;
   }
@@ -120,7 +141,6 @@ const AddItemToBoardSchema = z.object({
 });
 
 export function createAPI(app: AppType) {
-  
   // ボード一覧取得
   const getBoardsRoute = createRoute({
     method: "get",
@@ -128,7 +148,10 @@ export function createAPI(app: AppType) {
     tags: ["boards"],
     request: {
       query: z.object({
-        status: z.enum(["normal", "completed", "deleted"]).optional().default("normal"),
+        status: z
+          .enum(["normal", "completed", "deleted"])
+          .optional()
+          .default("normal"),
       }),
     },
     responses: {
@@ -155,17 +178,16 @@ export function createAPI(app: AppType) {
 
   app.openapi(getBoardsRoute, async (c) => {
     const auth = getAuth(c);
-    
-    
+
     if (!auth?.userId) {
       return c.json({ error: "Unauthorized" }, 401);
     }
 
     const { status } = c.req.valid("query");
     const db = c.env.db;
-    
+
     let userBoards;
-    
+
     if (status === "deleted") {
       // 削除済みボードを取得
       userBoards = await db
@@ -179,13 +201,13 @@ export function createAPI(app: AppType) {
         eq(boards.userId, auth.userId),
         eq(boards.archived, false),
       ];
-      
+
       if (status === "completed") {
         conditions.push(eq(boards.completed, true));
       } else {
         conditions.push(eq(boards.completed, false));
       }
-      
+
       userBoards = await db
         .select()
         .from(boards)
@@ -201,10 +223,7 @@ export function createAPI(app: AppType) {
           .select()
           .from(boardItems)
           .where(
-            and(
-              eq(boardItems.boardId, board.id),
-              isNull(boardItems.deletedAt)
-            )
+            and(eq(boardItems.boardId, board.id), isNull(boardItems.deletedAt)),
           );
 
         // メモとタスクの数をカウント & 最終アクティビティ日時を計算
@@ -221,16 +240,17 @@ export function createAPI(app: AppType) {
               .where(
                 and(
                   eq(memos.originalId, item.originalId),
-                  eq(memos.userId, auth.userId)
-                )
+                  eq(memos.userId, auth.userId),
+                ),
               )
               .limit(1);
             if (memo.length > 0) {
               memoCount++;
               // メモの更新日と比較して最新を保持
-              const memoUpdatedAt = typeof memo[0].updatedAt === 'string' 
-                ? Math.floor(new Date(memo[0].updatedAt).getTime() / 1000)
-                : memo[0].updatedAt;
+              const memoUpdatedAt =
+                typeof memo[0].updatedAt === "string"
+                  ? Math.floor(new Date(memo[0].updatedAt).getTime() / 1000)
+                  : memo[0].updatedAt;
               if (memoUpdatedAt > lastActivityAt) {
                 lastActivityAt = memoUpdatedAt;
               }
@@ -243,16 +263,17 @@ export function createAPI(app: AppType) {
               .where(
                 and(
                   eq(tasks.originalId, item.originalId),
-                  eq(tasks.userId, auth.userId)
-                )
+                  eq(tasks.userId, auth.userId),
+                ),
               )
               .limit(1);
             if (task.length > 0) {
               taskCount++;
               // タスクの更新日と比較して最新を保持
-              const taskUpdatedAt = typeof task[0].updatedAt === 'string' 
-                ? Math.floor(new Date(task[0].updatedAt).getTime() / 1000)
-                : task[0].updatedAt;
+              const taskUpdatedAt =
+                typeof task[0].updatedAt === "string"
+                  ? Math.floor(new Date(task[0].updatedAt).getTime() / 1000)
+                  : task[0].updatedAt;
               if (taskUpdatedAt > lastActivityAt) {
                 lastActivityAt = taskUpdatedAt;
               }
@@ -266,7 +287,7 @@ export function createAPI(app: AppType) {
           taskCount,
           updatedAt: lastActivityAt, // 最終アクティビティ日時を使用
         };
-      })
+      }),
     );
 
     return c.json(boardsWithStats);
@@ -417,12 +438,7 @@ export function createAPI(app: AppType) {
     const board = await db
       .select()
       .from(boards)
-      .where(
-        and(
-          eq(boards.id, boardId),
-          eq(boards.userId, auth.userId)
-        )
-      )
+      .where(and(eq(boards.id, boardId), eq(boards.userId, auth.userId)))
       .limit(1);
 
     if (board.length === 0) {
@@ -493,12 +509,7 @@ export function createAPI(app: AppType) {
     const board = await db
       .select()
       .from(boards)
-      .where(
-        and(
-          eq(boards.id, boardId),
-          eq(boards.userId, auth.userId)
-        )
-      )
+      .where(and(eq(boards.id, boardId), eq(boards.userId, auth.userId)))
       .limit(1);
 
     if (board.length === 0) {
@@ -507,9 +518,9 @@ export function createAPI(app: AppType) {
 
     const updated = await db
       .update(boards)
-      .set({ 
+      .set({
         completed: !board[0].completed,
-        updatedAt: new Date() 
+        updatedAt: new Date(),
       })
       .where(eq(boards.id, boardId))
       .returning();
@@ -574,12 +585,7 @@ export function createAPI(app: AppType) {
     const board = await db
       .select()
       .from(boards)
-      .where(
-        and(
-          eq(boards.id, boardId),
-          eq(boards.userId, auth.userId)
-        )
-      )
+      .where(and(eq(boards.id, boardId), eq(boards.userId, auth.userId)))
       .limit(1);
 
     if (board.length === 0) {
@@ -595,8 +601,14 @@ export function createAPI(app: AppType) {
       slug: board[0].slug,
       description: board[0].description,
       archived: board[0].archived,
-      createdAt: typeof board[0].createdAt === 'object' ? Math.floor(board[0].createdAt.getTime() / 1000) : board[0].createdAt,
-      updatedAt: typeof board[0].updatedAt === 'object' ? Math.floor(board[0].updatedAt.getTime() / 1000) : board[0].updatedAt,
+      createdAt:
+        typeof board[0].createdAt === "object"
+          ? Math.floor(board[0].createdAt.getTime() / 1000)
+          : board[0].createdAt,
+      updatedAt:
+        typeof board[0].updatedAt === "object"
+          ? Math.floor(board[0].updatedAt.getTime() / 1000)
+          : board[0].updatedAt,
       deletedAt: Math.floor(Date.now() / 1000),
     };
 
@@ -665,8 +677,8 @@ export function createAPI(app: AppType) {
       .where(
         and(
           eq(deletedBoards.originalId, boardId),
-          eq(deletedBoards.userId, auth.userId)
-        )
+          eq(deletedBoards.userId, auth.userId),
+        ),
       )
       .limit(1);
 
@@ -675,7 +687,11 @@ export function createAPI(app: AppType) {
     }
 
     // 新しいスラッグを生成（重複を避けるため）
-    const newSlug = await generateUniqueSlug(deletedBoard[0].name, auth.userId, db);
+    const newSlug = await generateUniqueSlug(
+      deletedBoard[0].name,
+      auth.userId,
+      db,
+    );
 
     // boardsテーブルに復元
     const restoredBoard: NewBoard = {
@@ -739,12 +755,7 @@ export function createAPI(app: AppType) {
     const board = await db
       .select()
       .from(boards)
-      .where(
-        and(
-          eq(boards.slug, slug),
-          eq(boards.userId, auth.userId)
-        )
-      )
+      .where(and(eq(boards.slug, slug), eq(boards.userId, auth.userId)))
       .limit(1);
 
     if (board.length === 0) {
@@ -770,12 +781,14 @@ export function createAPI(app: AppType) {
           "application/json": {
             schema: z.object({
               board: BoardSchema,
-              items: z.array(z.object({
-                id: z.number(),
-                itemType: z.enum(["memo", "task"]),
-                itemId: z.number(),
-                              content: z.any(), // メモまたはタスクの内容
-              })),
+              items: z.array(
+                z.object({
+                  id: z.number(),
+                  itemType: z.enum(["memo", "task"]),
+                  itemId: z.number(),
+                  content: z.any(), // メモまたはタスクの内容
+                }),
+              ),
             }),
           },
         },
@@ -820,13 +833,15 @@ export function createAPI(app: AppType) {
           "application/json": {
             schema: z.object({
               board: BoardSchema,
-              deletedItems: z.array(z.object({
-                id: z.number(),
-                itemType: z.enum(["memo", "task"]),
-                itemId: z.number(),
-                              deletedAt: z.number(),
-                content: z.any(), // メモまたはタスクの内容
-              })),
+              deletedItems: z.array(
+                z.object({
+                  id: z.number(),
+                  itemType: z.enum(["memo", "task"]),
+                  itemId: z.number(),
+                  deletedAt: z.number(),
+                  content: z.any(), // メモまたはタスクの内容
+                }),
+              ),
             }),
           },
         },
@@ -868,12 +883,7 @@ export function createAPI(app: AppType) {
     const board = await db
       .select()
       .from(boards)
-      .where(
-        and(
-          eq(boards.id, boardId),
-          eq(boards.userId, auth.userId)
-        )
-      )
+      .where(and(eq(boards.id, boardId), eq(boards.userId, auth.userId)))
       .limit(1);
 
     if (board.length === 0) {
@@ -884,12 +894,7 @@ export function createAPI(app: AppType) {
     const items = await db
       .select()
       .from(boardItems)
-      .where(
-        and(
-          eq(boardItems.boardId, boardId),
-          isNull(boardItems.deletedAt)
-        )
-      )
+      .where(and(eq(boardItems.boardId, boardId), isNull(boardItems.deletedAt)))
       .orderBy(boardItems.createdAt);
 
     // アイテムの内容を取得
@@ -900,14 +905,24 @@ export function createAPI(app: AppType) {
           const memo = await db
             .select()
             .from(memos)
-            .where(and(eq(memos.originalId, item.originalId), eq(memos.userId, auth.userId)))
+            .where(
+              and(
+                eq(memos.originalId, item.originalId),
+                eq(memos.userId, auth.userId),
+              ),
+            )
             .limit(1);
           content = memo[0] || null;
         } else {
           const task = await db
             .select()
             .from(tasks)
-            .where(and(eq(tasks.originalId, item.originalId), eq(tasks.userId, auth.userId)))
+            .where(
+              and(
+                eq(tasks.originalId, item.originalId),
+                eq(tasks.userId, auth.userId),
+              ),
+            )
             .limit(1);
           content = task[0] || null;
         }
@@ -919,11 +934,11 @@ export function createAPI(app: AppType) {
           originalId: item.originalId,
           content,
         };
-      })
+      }),
     );
 
     // 削除されたアイテムを除外
-    const validItems = itemsWithContent.filter(item => item.content !== null);
+    const validItems = itemsWithContent.filter((item) => item.content !== null);
 
     return c.json({
       board: board[0],
@@ -944,12 +959,7 @@ export function createAPI(app: AppType) {
     const board = await db
       .select()
       .from(boards)
-      .where(
-        and(
-          eq(boards.id, boardId),
-          eq(boards.userId, auth.userId)
-        )
-      )
+      .where(and(eq(boards.id, boardId), eq(boards.userId, auth.userId)))
       .limit(1);
 
     if (board.length === 0) {
@@ -961,10 +971,7 @@ export function createAPI(app: AppType) {
       .select()
       .from(boardItems)
       .where(
-        and(
-          eq(boardItems.boardId, boardId),
-          isNotNull(boardItems.deletedAt)
-        )
+        and(eq(boardItems.boardId, boardId), isNotNull(boardItems.deletedAt)),
       )
       .orderBy(boardItems.createdAt);
 
@@ -977,7 +984,12 @@ export function createAPI(app: AppType) {
           const deletedMemo = await db
             .select()
             .from(deletedMemos)
-            .where(and(eq(deletedMemos.originalId, item.originalId), eq(deletedMemos.userId, auth.userId)))
+            .where(
+              and(
+                eq(deletedMemos.originalId, item.originalId),
+                eq(deletedMemos.userId, auth.userId),
+              ),
+            )
             .limit(1);
           content = deletedMemo[0] || null;
         } else {
@@ -985,7 +997,12 @@ export function createAPI(app: AppType) {
           const deletedTask = await db
             .select()
             .from(deletedTasks)
-            .where(and(eq(deletedTasks.originalId, item.originalId), eq(deletedTasks.userId, auth.userId)))
+            .where(
+              and(
+                eq(deletedTasks.originalId, item.originalId),
+                eq(deletedTasks.userId, auth.userId),
+              ),
+            )
             .limit(1);
           content = deletedTask[0] || null;
         }
@@ -995,14 +1012,19 @@ export function createAPI(app: AppType) {
           itemType: item.itemType,
           itemId: content?.id || item.id, // content が null の場合は board_item の id を使用
           originalId: item.originalId,
-          deletedAt: typeof item.deletedAt === 'object' ? Math.floor(item.deletedAt.getTime() / 1000) : item.deletedAt,
+          deletedAt:
+            typeof item.deletedAt === "object"
+              ? Math.floor(item.deletedAt.getTime() / 1000)
+              : item.deletedAt,
           content,
         };
-      })
+      }),
     );
 
     // 削除されたアイテムを除外（削除済みテーブルに存在しない場合）
-    const validDeletedItems = deletedItemsWithContent.filter(item => item.content !== null);
+    const validDeletedItems = deletedItemsWithContent.filter(
+      (item) => item.content !== null,
+    );
 
     return c.json({
       board: board[0],
@@ -1078,105 +1100,122 @@ export function createAPI(app: AppType) {
 
       const boardId = parseInt(c.req.param("id"));
       const body = await c.req.json();
-      
+
       // Zodバリデーション
       const validationResult = AddItemToBoardSchema.safeParse(body);
       if (!validationResult.success) {
-        return c.json({ 
-          success: false, 
-          error: validationResult.error 
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: validationResult.error,
+          },
+          400,
+        );
       }
-      
+
       const { itemType, itemId } = validationResult.data;
       const db = c.env.db;
 
-    // ボードの所有権確認
-    const board = await db
-      .select()
-      .from(boards)
-      .where(
-        and(
-          eq(boards.id, boardId),
-          eq(boards.userId, auth.userId)
-        )
-      )
-      .limit(1);
-
-    if (board.length === 0) {
-      return c.json({ error: "Board not found" }, 404);
-    }
-
-    // アイテムの存在確認と所有権確認、originalIdを取得
-    // itemIdが既にoriginalId形式（文字列）の場合はそのまま使い、数値の場合は変換
-    let originalId: string | null = null;
-    
-    // まずitemIdをoriginalIdとして扱ってみる
-    if (itemType === 'memo') {
-      const memoByOriginalId = await db
-        .select({ originalId: memos.originalId })
-        .from(memos)
-        .where(and(eq(memos.originalId, itemId.toString()), eq(memos.userId, auth.userId)))
+      // ボードの所有権確認
+      const board = await db
+        .select()
+        .from(boards)
+        .where(and(eq(boards.id, boardId), eq(boards.userId, auth.userId)))
         .limit(1);
-      if (memoByOriginalId.length > 0) {
-        originalId = memoByOriginalId[0].originalId;
-      }
-    } else {
-      const taskByOriginalId = await db
-        .select({ originalId: tasks.originalId })
-        .from(tasks)
-        .where(and(eq(tasks.originalId, itemId.toString()), eq(tasks.userId, auth.userId)))
-        .limit(1);
-      if (taskByOriginalId.length > 0) {
-        originalId = taskByOriginalId[0].originalId;
-      }
-    }
-    
-    // originalIdとして見つからなかった場合は、数値IDとして処理
-    if (!originalId) {
-      originalId = await getOriginalId(itemId, itemType, auth.userId, db);
-    }
-    
-    if (!originalId) {
-      return c.json({ error: `${itemType === 'memo' ? 'Memo' : 'Task'} not found` }, 404);
-    }
 
-    // 重複チェック（削除されていないアイテムのみ）
-    const existing = await db
-      .select()
-      .from(boardItems)
-      .where(
-        and(
-          eq(boardItems.boardId, boardId),
-          eq(boardItems.itemType, itemType),
-          eq(boardItems.originalId, originalId),
-          isNull(boardItems.deletedAt)
+      if (board.length === 0) {
+        return c.json({ error: "Board not found" }, 404);
+      }
+
+      // アイテムの存在確認と所有権確認、originalIdを取得
+      // itemIdが既にoriginalId形式（文字列）の場合はそのまま使い、数値の場合は変換
+      let originalId: string | null = null;
+
+      // まずitemIdをoriginalIdとして扱ってみる
+      if (itemType === "memo") {
+        const memoByOriginalId = await db
+          .select({ originalId: memos.originalId })
+          .from(memos)
+          .where(
+            and(
+              eq(memos.originalId, itemId.toString()),
+              eq(memos.userId, auth.userId),
+            ),
+          )
+          .limit(1);
+        if (memoByOriginalId.length > 0) {
+          originalId = memoByOriginalId[0].originalId;
+        }
+      } else {
+        const taskByOriginalId = await db
+          .select({ originalId: tasks.originalId })
+          .from(tasks)
+          .where(
+            and(
+              eq(tasks.originalId, itemId.toString()),
+              eq(tasks.userId, auth.userId),
+            ),
+          )
+          .limit(1);
+        if (taskByOriginalId.length > 0) {
+          originalId = taskByOriginalId[0].originalId;
+        }
+      }
+
+      // originalIdとして見つからなかった場合は、数値IDとして処理
+      if (!originalId) {
+        originalId = await getOriginalId(itemId, itemType, auth.userId, db);
+      }
+
+      if (!originalId) {
+        return c.json(
+          { error: `${itemType === "memo" ? "Memo" : "Task"} not found` },
+          404,
+        );
+      }
+
+      // 重複チェック（削除されていないアイテムのみ）
+      const existing = await db
+        .select()
+        .from(boardItems)
+        .where(
+          and(
+            eq(boardItems.boardId, boardId),
+            eq(boardItems.itemType, itemType),
+            eq(boardItems.originalId, originalId),
+            isNull(boardItems.deletedAt),
+          ),
         )
-      )
-      .limit(1);
+        .limit(1);
 
-    if (existing.length > 0) {
-      return c.json({ error: "Item already exists in board" }, 400);
-    }
+      if (existing.length > 0) {
+        return c.json({ error: "Item already exists in board" }, 400);
+      }
 
-    const newItem: NewBoardItem = {
-      boardId,
-      itemType,
-      originalId,
-      createdAt: new Date(),
-    };
+      const newItem: NewBoardItem = {
+        boardId,
+        itemType,
+        originalId,
+        createdAt: new Date(),
+      };
 
-    const result = await db.insert(boardItems).values(newItem).returning();
-    
-    // ボードのupdatedAtを更新
-    await db
-      .update(boards)
-      .set({ updatedAt: new Date() })
-      .where(eq(boards.id, boardId));
-    
-    return c.json(result[0], 201);
+      const result = await db.insert(boardItems).values(newItem).returning();
+
+      // ボードのupdatedAtを更新
+      await db
+        .update(boards)
+        .set({ updatedAt: new Date() })
+        .where(eq(boards.id, boardId));
+
+      return c.json(result[0], 201);
     } catch (error) {
-      return c.json({ error: error instanceof Error ? error.message : 'Internal server error' }, 500);
+      return c.json(
+        {
+          error:
+            error instanceof Error ? error.message : "Internal server error",
+        },
+        500,
+      );
     }
   });
 
@@ -1229,7 +1268,6 @@ export function createAPI(app: AppType) {
   });
 
   app.openapi(removeItemFromBoardRoute, async (c) => {
-    
     const auth = getAuth(c);
     if (!auth?.userId) {
       return c.json({ error: "Unauthorized" }, 401);
@@ -1244,12 +1282,7 @@ export function createAPI(app: AppType) {
     const board = await db
       .select()
       .from(boards)
-      .where(
-        and(
-          eq(boards.id, boardId),
-          eq(boards.userId, auth.userId)
-        )
-      )
+      .where(and(eq(boards.id, boardId), eq(boards.userId, auth.userId)))
       .limit(1);
 
     if (board.length === 0) {
@@ -1266,8 +1299,8 @@ export function createAPI(app: AppType) {
         and(
           eq(boardItems.boardId, boardId),
           eq(boardItems.itemType, itemType),
-          eq(boardItems.originalId, originalId)
-        )
+          eq(boardItems.originalId, originalId),
+        ),
       );
 
     if (result.changes === 0) {
@@ -1336,9 +1369,17 @@ export function createAPI(app: AppType) {
     const db = c.env.db;
 
     // アイテムの存在確認とoriginalIdを取得
-    const originalId = await getOriginalId(itemIdNum, itemType, auth.userId, db);
+    const originalId = await getOriginalId(
+      itemIdNum,
+      itemType,
+      auth.userId,
+      db,
+    );
     if (!originalId) {
-      return c.json({ error: `${itemType === 'memo' ? 'Memo' : 'Task'} not found` }, 404);
+      return c.json(
+        { error: `${itemType === "memo" ? "Memo" : "Task"} not found` },
+        404,
+      );
     }
 
     // アイテムが属するボードを取得（削除されていないもののみ）
@@ -1351,13 +1392,13 @@ export function createAPI(app: AppType) {
           eq(boardItems.itemType, itemType),
           eq(boardItems.originalId, originalId),
           eq(boards.userId, auth.userId),
-          isNull(boardItems.deletedAt)
-        )
+          isNull(boardItems.deletedAt),
+        ),
       )
       .orderBy(boards.name);
 
     // レスポンスの形式を整える
-    const boardsOnly = itemBoards.map(row => row.boards);
+    const boardsOnly = itemBoards.map((row) => row.boards);
     return c.json(boardsOnly);
   });
 
@@ -1370,14 +1411,16 @@ export function createAPI(app: AppType) {
       200: {
         content: {
           "application/json": {
-            schema: z.array(z.object({
-              boardId: z.number(),
-              boardName: z.string(),
-              itemType: z.enum(["memo", "task"]),
-              itemId: z.string(), // originalId
-              originalId: z.string(),
-              addedAt: z.number(),
-            })),
+            schema: z.array(
+              z.object({
+                boardId: z.number(),
+                boardName: z.string(),
+                itemType: z.enum(["memo", "task"]),
+                itemId: z.string(), // originalId
+                originalId: z.string(),
+                addedAt: z.number(),
+              }),
+            ),
           },
         },
         description: "Get all board items across all boards",
@@ -1418,11 +1461,14 @@ export function createAPI(app: AppType) {
         .innerJoin(boards, eq(boardItems.boardId, boards.id))
         .where(eq(boards.userId, auth.userId))
         .orderBy(boards.name, boardItems.createdAt);
-      
+
       return c.json(allBoardItems);
     } catch (error) {
-      console.error('Error in getAllBoardItems:', error);
-      return c.json({ error: "Internal server error", details: error.message }, 500);
+      console.error("Error in getAllBoardItems:", error);
+      return c.json(
+        { error: "Internal server error", details: error.message },
+        500,
+      );
     }
   });
 
@@ -1489,12 +1535,7 @@ export function createAPI(app: AppType) {
     const board = await db
       .select()
       .from(boards)
-      .where(
-        and(
-          eq(boards.id, boardId),
-          eq(boards.userId, auth.userId)
-        )
-      )
+      .where(and(eq(boards.id, boardId), eq(boards.userId, auth.userId)))
       .limit(1);
 
     if (board.length === 0) {
@@ -1503,29 +1544,39 @@ export function createAPI(app: AppType) {
 
     // itemIdからoriginalIdを取得（削除済みアイテムなので削除済みテーブルも確認）
     let originalId: string | null = null;
-    
+
     // まず通常テーブルから確認
     originalId = await getOriginalId(itemId, itemType, auth.userId, db);
-    
+
     // 通常テーブルにない場合は削除済みテーブルから確認
     if (!originalId) {
-      if (itemType === 'memo') {
+      if (itemType === "memo") {
         const deletedMemo = await db
           .select({ originalId: deletedMemos.originalId })
           .from(deletedMemos)
-          .where(and(eq(deletedMemos.id, itemId), eq(deletedMemos.userId, auth.userId)))
+          .where(
+            and(
+              eq(deletedMemos.id, itemId),
+              eq(deletedMemos.userId, auth.userId),
+            ),
+          )
           .limit(1);
         originalId = deletedMemo.length > 0 ? deletedMemo[0].originalId : null;
       } else {
         const deletedTask = await db
           .select({ originalId: deletedTasks.originalId })
           .from(deletedTasks)
-          .where(and(eq(deletedTasks.id, itemId), eq(deletedTasks.userId, auth.userId)))
+          .where(
+            and(
+              eq(deletedTasks.id, itemId),
+              eq(deletedTasks.userId, auth.userId),
+            ),
+          )
           .limit(1);
         originalId = deletedTask.length > 0 ? deletedTask[0].originalId : null;
       }
     }
-    
+
     if (!originalId) {
       return c.json({ error: "Item not found" }, 404);
     }
@@ -1539,8 +1590,8 @@ export function createAPI(app: AppType) {
           eq(boardItems.boardId, boardId),
           eq(boardItems.itemType, itemType),
           eq(boardItems.originalId, originalId),
-          isNotNull(boardItems.deletedAt) // 削除済みアイテムのみ
-        )
+          isNotNull(boardItems.deletedAt), // 削除済みアイテムのみ
+        ),
       );
 
     if (result.changes === 0) {

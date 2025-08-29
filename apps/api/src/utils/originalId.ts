@@ -21,5 +21,5 @@ export function generateUuid(): string {
  * "1_1753257450509_58648" → "11753257450509958648"
  */
 export function migrateOriginalId(oldOriginalId: string): string {
-  return oldOriginalId.replace(/_/g, '');
+  return oldOriginalId.replace(/_/g, "");
 }

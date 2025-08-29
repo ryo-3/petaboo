@@ -5,16 +5,16 @@
  * DOM上のdata-task-id属性から実際の表示順序を取得する
  */
 export function getTaskDisplayOrder(): number[] {
-  const taskListElements = document.querySelectorAll('[data-task-id]');
+  const taskListElements = document.querySelectorAll("[data-task-id]");
   const displayOrder: number[] = [];
-  
+
   taskListElements.forEach((element) => {
-    const taskId = element.getAttribute('data-task-id');
+    const taskId = element.getAttribute("data-task-id");
     if (taskId) {
       displayOrder.push(parseInt(taskId, 10));
     }
   });
-  
+
   return displayOrder;
 }
 
@@ -22,16 +22,16 @@ export function getTaskDisplayOrder(): number[] {
  * DOM上のdata-memo-id属性から実際の表示順序を取得する
  */
 export function getMemoDisplayOrder(): number[] {
-  const memoListElements = document.querySelectorAll('[data-memo-id]');
+  const memoListElements = document.querySelectorAll("[data-memo-id]");
   const displayOrder: number[] = [];
-  
+
   memoListElements.forEach((element) => {
-    const memoId = element.getAttribute('data-memo-id');
+    const memoId = element.getAttribute("data-memo-id");
     if (memoId) {
       displayOrder.push(parseInt(memoId, 10));
     }
   });
-  
+
   return displayOrder;
 }
 
@@ -40,7 +40,7 @@ export function getMemoDisplayOrder(): number[] {
  */
 export function sortByDisplayOrder<T extends { id: number }>(
   items: T[],
-  displayOrder: number[]
+  displayOrder: number[],
 ): T[] {
   return items.sort((a, b) => {
     const aIndex = displayOrder.indexOf(a.id);
@@ -58,13 +58,15 @@ export function sortByDisplayOrder<T extends { id: number }>(
 export function getNextItemAfterDeletion<T extends { id: number }>(
   items: T[],
   deletedItem: T,
-  displayOrder: number[]
+  displayOrder: number[],
 ): T | null {
   const sortedItems = sortByDisplayOrder(items, displayOrder);
-  const deletedIndex = sortedItems.findIndex((item) => item.id === deletedItem.id);
-  
+  const deletedIndex = sortedItems.findIndex(
+    (item) => item.id === deletedItem.id,
+  );
+
   if (deletedIndex === -1) return null;
-  
+
   // 削除されたアイテムの次のアイテムを選択
   if (deletedIndex < sortedItems.length - 1) {
     return sortedItems[deletedIndex + 1] || null;
@@ -73,7 +75,7 @@ export function getNextItemAfterDeletion<T extends { id: number }>(
   else if (deletedIndex > 0) {
     return sortedItems[deletedIndex - 1] || null;
   }
-  
+
   return null;
 }
 
@@ -82,13 +84,17 @@ export function getNextItemAfterDeletion<T extends { id: number }>(
  */
 export function getNextDeletedItem<T extends { id: number; deletedAt: number }>(
   deletedItems: T[],
-  deletedItem: T
+  deletedItem: T,
 ): T | null {
-  const sortedItems = [...deletedItems].sort((a, b) => b.deletedAt - a.deletedAt);
-  const deletedIndex = sortedItems.findIndex((item) => item.id === deletedItem.id);
-  
+  const sortedItems = [...deletedItems].sort(
+    (a, b) => b.deletedAt - a.deletedAt,
+  );
+  const deletedIndex = sortedItems.findIndex(
+    (item) => item.id === deletedItem.id,
+  );
+
   if (deletedIndex === -1) return null;
-  
+
   // 削除されたアイテムの次のアイテムを選択
   if (deletedIndex < sortedItems.length - 1) {
     return sortedItems[deletedIndex + 1] || null;
@@ -97,7 +103,7 @@ export function getNextDeletedItem<T extends { id: number; deletedAt: number }>(
   else if (deletedIndex > 0) {
     return sortedItems[deletedIndex - 1] || null;
   }
-  
+
   return null;
 }
 
@@ -110,10 +116,10 @@ export function createNextSelectionHandler<T extends { id: number }>(
   displayOrder: number[],
   onSelect: (item: T) => void,
   onClose: () => void,
-  setViewMode: (mode: "view" | "list") => void
+  setViewMode: (mode: "view" | "list") => void,
 ) {
   const nextItem = getNextItemAfterDeletion(items, deletedItem, displayOrder);
-  
+
   if (nextItem) {
     onSelect(nextItem);
     setViewMode("view");
@@ -127,19 +133,21 @@ export function createNextSelectionHandler<T extends { id: number }>(
  * 削除済みアイテム削除後の次選択ハンドラー生成
  * 復元処理にも対応
  */
-export function createDeletedNextSelectionHandler<T extends { id: number; deletedAt: number }>(
+export function createDeletedNextSelectionHandler<
+  T extends { id: number; deletedAt: number },
+>(
   deletedItems: T[],
   deletedItem: T,
   onSelect: (item: T | null, fromFullList?: boolean) => void,
   onClose: () => void,
   setViewMode: (mode: "view" | "list") => void,
   options?: {
-    isRestore?: boolean;  // 復元処理かどうか
-    onSelectWithFromFlag?: boolean;  // onSelectにfromFullList=trueを渡すか
-  }
+    isRestore?: boolean; // 復元処理かどうか
+    onSelectWithFromFlag?: boolean; // onSelectにfromFullList=trueを渡すか
+  },
 ) {
   const nextItem = getNextDeletedItem(deletedItems, deletedItem);
-  
+
   if (nextItem) {
     // 復元処理の場合はfromFullList=trueを渡す
     if (options?.isRestore && options?.onSelectWithFromFlag) {
@@ -161,7 +169,7 @@ export function createNewItemSelectionHandler<T extends { id: number }>(
   newItem: T,
   onSelect: (item: T) => void,
   setViewMode: (mode: "view" | "list") => void,
-  delay: number = 100
+  delay: number = 100,
 ) {
   // 少し遅延してからviewモードに切り替え（DOM反映を待つ）
   setTimeout(() => {

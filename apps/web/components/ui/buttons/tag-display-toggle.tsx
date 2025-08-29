@@ -16,8 +16,8 @@ interface TagDisplayToggleProps {
   selectedTagIds?: number[];
   onTagFilterChange?: (tagIds: number[]) => void;
   // フィルターモード関連
-  filterMode?: 'include' | 'exclude';
-  onFilterModeChange?: (mode: 'include' | 'exclude') => void;
+  filterMode?: "include" | "exclude";
+  onFilterModeChange?: (mode: "include" | "exclude") => void;
 }
 
 export default function TagDisplayToggle({
@@ -28,8 +28,8 @@ export default function TagDisplayToggle({
   tags = [],
   selectedTagIds = [],
   onTagFilterChange,
-  filterMode = 'include',
-  onFilterModeChange
+  filterMode = "include",
+  onFilterModeChange,
 }: TagDisplayToggleProps) {
   const [showFilterModal, setShowFilterModal] = useState(false);
 
@@ -41,17 +41,18 @@ export default function TagDisplayToggle({
 
   return (
     <div className="flex items-center gap-1">
-      <Tooltip text={showTags ? "タグを非表示" : "タグを表示"} position="bottom">
+      <Tooltip
+        text={showTags ? "タグを非表示" : "タグを表示"}
+        position="bottom"
+      >
         <button
           onClick={() => onToggle(!showTags)}
           className={`shadow-sm rounded-lg ${buttonSize} flex items-center justify-center transition-all ${
             showTags ? "hover:opacity-80" : "bg-gray-100 hover:bg-gray-200"
           }`}
-          style={
-            showTags ? { backgroundColor: TAG_COLORS.background } : {}
-          }
+          style={showTags ? { backgroundColor: TAG_COLORS.background } : {}}
         >
-          <TagIcon 
+          <TagIcon
             className={iconSize}
             style={{
               color: showTags ? TAG_COLORS.text : TAG_COLORS.iconDefault,
@@ -72,17 +73,16 @@ export default function TagDisplayToggle({
                   : "bg-gray-100 text-gray-500 opacity-65 hover:opacity-85"
               }`}
               style={
-                selectedTagIds.length > 0 
+                selectedTagIds.length > 0
                   ? { backgroundColor: TAG_COLORS.background }
                   : {}
               }
             >
-              <FilterIcon 
+              <FilterIcon
                 className={iconSize}
                 style={{
-                  color: selectedTagIds.length > 0 
-                    ? TAG_COLORS.text 
-                    : undefined
+                  color:
+                    selectedTagIds.length > 0 ? TAG_COLORS.text : undefined,
                 }}
               />
             </button>

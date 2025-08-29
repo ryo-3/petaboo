@@ -1,6 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
-import type { BoardCategory, NewBoardCategory, UpdateBoardCategory } from "@/src/types/board-categories";
+import type {
+  BoardCategory,
+  NewBoardCategory,
+  UpdateBoardCategory,
+} from "@/src/types/board-categories";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8787";
 
@@ -17,7 +21,7 @@ export function useBoardCategories(boardId?: number) {
     queryKey: ["boardCategories", boardId],
     queryFn: async (): Promise<BoardCategory[]> => {
       const token = await getToken();
-      const url = boardId 
+      const url = boardId
         ? `${API_BASE_URL}/board-categories?boardId=${boardId}`
         : `${API_BASE_URL}/board-categories`;
       const response = await fetch(url, {
@@ -32,18 +36,26 @@ export function useBoardCategories(boardId?: number) {
       }
 
       const data = await response.json();
-      return data.map((category: BoardCategory & { createdAt: number; updatedAt?: number }) => ({
-        ...category,
-        createdAt: new Date(category.createdAt * 1000),
-        updatedAt: category.updatedAt ? new Date(category.updatedAt * 1000) : undefined,
-      }));
+      return data.map(
+        (
+          category: BoardCategory & { createdAt: number; updatedAt?: number },
+        ) => ({
+          ...category,
+          createdAt: new Date(category.createdAt * 1000),
+          updatedAt: category.updatedAt
+            ? new Date(category.updatedAt * 1000)
+            : undefined,
+        }),
+      );
     },
     staleTime: 5 * 60 * 1000, // 5分間キャッシュ
   });
 
   // ボードカテゴリー作成
   const createCategory = useMutation({
-    mutationFn: async (newCategory: NewBoardCategory): Promise<BoardCategory> => {
+    mutationFn: async (
+      newCategory: NewBoardCategory,
+    ): Promise<BoardCategory> => {
       const token = await getToken();
       const response = await fetch(`${API_BASE_URL}/board-categories`, {
         method: "POST",
@@ -80,7 +92,13 @@ export function useBoardCategories(boardId?: number) {
 
   // ボードカテゴリー更新
   const updateCategory = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: UpdateBoardCategory }): Promise<BoardCategory> => {
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: number;
+      data: UpdateBoardCategory;
+    }): Promise<BoardCategory> => {
       const token = await getToken();
       const response = await fetch(`${API_BASE_URL}/board-categories/${id}`, {
         method: "PUT",
@@ -98,11 +116,18 @@ export function useBoardCategories(boardId?: number) {
           if (responseText) {
             try {
               const errorData = JSON.parse(responseText);
-              if (errorData.error && errorData.error.name === 'ZodError' && errorData.error.issues) {
+              if (
+                errorData.error &&
+                errorData.error.name === "ZodError" &&
+                errorData.error.issues
+              ) {
                 // Zodバリデーションエラーの場合、具体的なメッセージを構築
-                const issues = errorData.error.issues.map((issue: { path: string[]; message: string }) => 
-                  `${issue.path.join('.')}: ${issue.message}`
-                ).join(', ');
+                const issues = errorData.error.issues
+                  .map(
+                    (issue: { path: string[]; message: string }) =>
+                      `${issue.path.join(".")}: ${issue.message}`,
+                  )
+                  .join(", ");
                 errorMessage = `バリデーションエラー: ${issues}`;
               } else {
                 errorMessage = errorData.error || errorMessage;
@@ -123,7 +148,9 @@ export function useBoardCategories(boardId?: number) {
       return {
         ...responseData,
         createdAt: new Date(responseData.createdAt * 1000),
-        updatedAt: responseData.updatedAt ? new Date(responseData.updatedAt * 1000) : undefined,
+        updatedAt: responseData.updatedAt
+          ? new Date(responseData.updatedAt * 1000)
+          : undefined,
       };
     },
     onSuccess: () => {
@@ -175,7 +202,9 @@ export function useBoardCategories(boardId?: number) {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "カテゴリーの並び替えに失敗しました");
+        throw new Error(
+          errorData.error || "カテゴリーの並び替えに失敗しました",
+        );
       }
     },
     onSuccess: () => {

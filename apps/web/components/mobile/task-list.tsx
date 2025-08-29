@@ -19,12 +19,7 @@ interface TaskListProps {
   selectedTaskId?: number;
 }
 
- 
-function TaskList({
-  onSelectTask,
-  onEditTask,
-  selectedTaskId,
-}: TaskListProps) {
+function TaskList({ onSelectTask, onEditTask, selectedTaskId }: TaskListProps) {
   const { data: tasks, isLoading, error } = useTasks();
   const deleteTask = useDeleteTask();
 
@@ -61,28 +56,30 @@ function TaskList({
                 onEdit={() => onEditTask(task)}
                 onDelete={() => handleDelete(task)}
               >
-              <div className="font-medium text-sm text-gray-800 truncate mb-1 flex items-center gap-1">
-                <span className={`w-2 h-2 rounded-full ${getPriorityIndicatorClass(task.priority)}`} />
-                {task.title}
-              </div>
-              <div className="text-xs text-gray-500 truncate mb-1">
-                {task.description || ""}
-              </div>
-              <div className="flex items-center gap-2 text-xs">
-                <span className={getStatusColorForText(task.status)}>
-                  {getStatusText(task.status)}
-                </span>
-                <span className="text-gray-400">
-                  {task.updatedAt && task.updatedAt !== task.createdAt
-                    ? formatDateOnly(task.updatedAt)
-                    : formatDateOnly(task.createdAt)}
-                </span>
-              </div>
-              {task.dueDate && (
-                <div className="text-xs text-orange-500 mt-1">
-                  期限: {formatDateOnly(task.dueDate)}
+                <div className="font-medium text-sm text-gray-800 truncate mb-1 flex items-center gap-1">
+                  <span
+                    className={`w-2 h-2 rounded-full ${getPriorityIndicatorClass(task.priority)}`}
+                  />
+                  {task.title}
                 </div>
-              )}
+                <div className="text-xs text-gray-500 truncate mb-1">
+                  {task.description || ""}
+                </div>
+                <div className="flex items-center gap-2 text-xs">
+                  <span className={getStatusColorForText(task.status)}>
+                    {getStatusText(task.status)}
+                  </span>
+                  <span className="text-gray-400">
+                    {task.updatedAt && task.updatedAt !== task.createdAt
+                      ? formatDateOnly(task.updatedAt)
+                      : formatDateOnly(task.createdAt)}
+                  </span>
+                </div>
+                {task.dueDate && (
+                  <div className="text-xs text-orange-500 mt-1">
+                    期限: {formatDateOnly(task.dueDate)}
+                  </div>
+                )}
               </SidebarItem>
             </li>
           );

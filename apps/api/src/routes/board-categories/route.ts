@@ -11,13 +11,16 @@ const db = drizzle(sqlite);
 const boardCategoriesRoute = new OpenAPIHono();
 
 // Clerk認証ミドルウェアを追加
-boardCategoriesRoute.use('*', clerkMiddleware({ 
-  secretKey: process.env.CLERK_SECRET_KEY,
-  publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
-}));
+boardCategoriesRoute.use(
+  "*",
+  clerkMiddleware({
+    secretKey: process.env.CLERK_SECRET_KEY,
+    publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
+  }),
+);
 
 // データベースをコンテキストに注入
-boardCategoriesRoute.use('*', async (c, next) => {
+boardCategoriesRoute.use("*", async (c, next) => {
   c.env = { db };
   await next();
 });

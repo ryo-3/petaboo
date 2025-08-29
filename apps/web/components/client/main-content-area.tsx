@@ -15,21 +15,24 @@ interface MainContentAreaProps {
   screenMode: string;
   pathname: string;
   currentMode: "memo" | "task" | "board";
-  
+
   // 選択状態
   selectedMemo: Memo | null;
   selectedDeletedMemo: DeletedMemo | null;
   selectedTask: Task | null;
   selectedDeletedTask: DeletedTask | null;
-  boardSelectedItem: {type: 'memo', item: Memo | DeletedMemo} | {type: 'task', item: Task | DeletedTask} | null;
-  
+  boardSelectedItem:
+    | { type: "memo"; item: Memo | DeletedMemo }
+    | { type: "task"; item: Task | DeletedTask }
+    | null;
+
   // セッター
   setSelectedMemo: (memo: Memo | null) => void;
   setSelectedDeletedMemo: (memo: DeletedMemo | null) => void;
   setSelectedTask: (task: Task | null) => void;
   setSelectedDeletedTask: (task: DeletedTask | null) => void;
   setCurrentMode: (mode: "memo" | "task" | "board") => void;
-  
+
   // ボード関連
   boardId?: number;
   boardFromSlug: Board | null | undefined;
@@ -39,11 +42,11 @@ interface MainContentAreaProps {
   showBoardHeader: boolean;
   showingBoardDetail: boolean;
   boardScreenRef: RefObject<BoardScreenRef | null>;
-  
+
   // チーム機能
   teamMode?: boolean;
   teamId?: number;
-  
+
   // ハンドラー
   handleSelectMemo: (memo: Memo | null) => void;
   handleSelectDeletedMemo: (memo: DeletedMemo | null) => void;
@@ -154,7 +157,7 @@ export function MainContentArea({
 
       {/* ボード画面 */}
       {screenMode === "board" &&
-        ((pathname.startsWith("/boards/") || boardId || initialBoardName) ? (
+        (pathname.startsWith("/boards/") || boardId || initialBoardName ? (
           showingBoardDetail ? (
             <BoardDetailWrapper
               boardId={boardId}
@@ -169,14 +172,10 @@ export function MainContentArea({
               handleBoardClearSelection={handleBoardClearSelection}
             />
           ) : (
-            <BoardScreen 
-              ref={boardScreenRef}
-            />
+            <BoardScreen ref={boardScreenRef} />
           )
         ) : (
-          <BoardScreen 
-            ref={boardScreenRef}
-          />
+          <BoardScreen ref={boardScreenRef} />
         ))}
     </>
   );

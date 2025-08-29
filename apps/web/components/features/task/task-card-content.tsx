@@ -6,7 +6,7 @@ import {
   getStatusColor,
   getStatusText,
 } from "@/src/utils/taskUtils";
-import { useItemBoards } from '@/src/hooks/use-boards';
+import { useItemBoards } from "@/src/hooks/use-boards";
 import { useItemTags } from "@/src/hooks/use-taggings";
 import { TAG_COLORS } from "@/src/constants/colors";
 
@@ -16,10 +16,10 @@ interface TaskCardContentProps {
   showEditDate?: boolean;
   showBoardName?: boolean;
   showTags?: boolean;
-  
+
   // 削除済み表示用の事前取得データ
-  preloadedTags?: Array<{id: number; name: string; color?: string}>
-  preloadedBoards?: Array<{id: number; name: string}>
+  preloadedTags?: Array<{ id: number; name: string; color?: string }>;
+  preloadedBoards?: Array<{ id: number; name: string }>;
 }
 
 function TaskCardContent({
@@ -35,15 +35,17 @@ function TaskCardContent({
   const deletedTask = task as DeletedTask;
 
   // データを取得（削除済み表示の場合はpreloadedデータを優先）
-  const boardItemId = !isDeleted && task.id > 0 
-    ? ((task as Task).originalId || task.id.toString())
-    : '';
-  const { data: boards } = useItemBoards('task', boardItemId || undefined);
-  
-  const targetOriginalId = !isDeleted && task.id > 0 
-    ? ((task as Task).originalId || task.id.toString())
-    : '';
-  const { tags } = useItemTags('task', targetOriginalId);
+  const boardItemId =
+    !isDeleted && task.id > 0
+      ? (task as Task).originalId || task.id.toString()
+      : "";
+  const { data: boards } = useItemBoards("task", boardItemId || undefined);
+
+  const targetOriginalId =
+    !isDeleted && task.id > 0
+      ? (task as Task).originalId || task.id.toString()
+      : "";
+  const { tags } = useItemTags("task", targetOriginalId);
 
   // 削除済み表示の場合はpreloadedデータを使用
   const displayTags = isDeleted ? preloadedTags : tags;
@@ -74,7 +76,8 @@ function TaskCardContent({
       </div>
 
       {/* ボード名・タグ表示 */}
-      {((showBoardName && displayBoards && displayBoards.length > 0) || (showTags && displayTags && displayTags.length > 0)) && (
+      {((showBoardName && displayBoards && displayBoards.length > 0) ||
+        (showTags && displayTags && displayTags.length > 0)) && (
         <div className="mb-2 flex flex-wrap gap-1">
           {/* ボード名 */}
           {showBoardName && displayBoards && displayBoards.length > 0 && (
@@ -89,7 +92,7 @@ function TaskCardContent({
               ))}
             </>
           )}
-          
+
           {/* タグ */}
           {showTags && displayTags && displayTags.length > 0 && (
             <>
@@ -99,7 +102,7 @@ function TaskCardContent({
                   className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
                   style={{
                     backgroundColor: tag.color || TAG_COLORS.background,
-                    color: TAG_COLORS.text
+                    color: TAG_COLORS.text,
                   }}
                 >
                   {tag.name}

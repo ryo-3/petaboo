@@ -1,433 +1,473 @@
 // 直接fetchを使用したAPIクライアント
-import type { CreateMemoData, UpdateMemoData } from '@/src/types/memo'
-import type { CreateTaskData, UpdateTaskData } from '@/src/types/task'
-import type { CreateTagData, UpdateTagData, CreateTaggingData } from '@/src/types/tag'
+import type { CreateMemoData, UpdateMemoData } from "@/src/types/memo";
+import type { CreateTaskData, UpdateTaskData } from "@/src/types/task";
+import type {
+  CreateTagData,
+  UpdateTagData,
+  CreateTaggingData,
+} from "@/src/types/tag";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8794'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8794";
 
 // 共通ヘッダー生成関数
-const createHeaders = (token?: string, includeContentType = true): Record<string, string> => {
-  const headers: Record<string, string> = {}
-  
+const createHeaders = (
+  token?: string,
+  includeContentType = true,
+): Record<string, string> => {
+  const headers: Record<string, string> = {};
+
   if (includeContentType) {
-    headers['Content-Type'] = 'application/json'
+    headers["Content-Type"] = "application/json";
   }
-  
+
   if (token) {
-    headers.Authorization = `Bearer ${token}`
+    headers.Authorization = `Bearer ${token}`;
   }
-  
-  return headers
-}
+
+  return headers;
+};
 
 export const memosApi = {
   // GET /memos
   getMemos: async (token?: string) => {
-    const response = await fetch(`${API_BASE_URL}/memos`, { 
-      headers: createHeaders(token) 
-    })
+    const response = await fetch(`${API_BASE_URL}/memos`, {
+      headers: createHeaders(token),
+    });
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return response
+    return response;
   },
 
   // GET /teams/:teamId/memos
   getTeamMemos: async (teamId: number, token?: string) => {
-    const response = await fetch(`${API_BASE_URL}/teams/${teamId}/memos`, { 
-      headers: createHeaders(token) 
-    })
+    const response = await fetch(`${API_BASE_URL}/teams/${teamId}/memos`, {
+      headers: createHeaders(token),
+    });
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return response
+    return response;
   },
 
-  // GET /teams/:teamId/deleted-memos  
+  // GET /teams/:teamId/deleted-memos
   getDeletedTeamMemos: async (teamId: number, token?: string) => {
-    const response = await fetch(`${API_BASE_URL}/teams/${teamId}/deleted-memos`, { 
-      headers: createHeaders(token) 
-    })
+    const response = await fetch(
+      `${API_BASE_URL}/teams/${teamId}/deleted-memos`,
+      {
+        headers: createHeaders(token),
+      },
+    );
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return response
+    return response;
   },
-  
+
   // POST /memos
   createNote: async (data: CreateMemoData, token?: string) => {
     const response = await fetch(`${API_BASE_URL}/memos`, {
-      method: 'POST',
+      method: "POST",
       headers: createHeaders(token),
       body: JSON.stringify(data),
-    })
-    
+    });
+
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return response
+    return response;
   },
 
   // PUT /memos/:id
   updateNote: async (id: number, data: UpdateMemoData, token?: string) => {
     const response = await fetch(`${API_BASE_URL}/memos/${id}`, {
-      method: 'PUT',
+      method: "PUT",
       headers: createHeaders(token),
       body: JSON.stringify(data),
-    })
-    
+    });
+
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return response
+    return response;
   },
 
   // DELETE /memos/:id
   deleteNote: async (id: number, token?: string) => {
     const response = await fetch(`${API_BASE_URL}/memos/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
       headers: createHeaders(token),
-    })
-    
+    });
+
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return response
+    return response;
   },
 
   // GET /memos/deleted
   getDeletedMemos: async (token?: string) => {
-    const response = await fetch(`${API_BASE_URL}/memos/deleted`, { 
-      headers: createHeaders(token) 
-    })
+    const response = await fetch(`${API_BASE_URL}/memos/deleted`, {
+      headers: createHeaders(token),
+    });
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return response
+    return response;
   },
 
   // DELETE /memos/deleted/:originalId (完全削除)
   permanentDeleteNote: async (originalId: string, token?: string) => {
-    const response = await fetch(`${API_BASE_URL}/memos/deleted/${originalId}`, {
-      method: 'DELETE',
-      headers: createHeaders(token),
-    })
-    
+    const response = await fetch(
+      `${API_BASE_URL}/memos/deleted/${originalId}`,
+      {
+        method: "DELETE",
+        headers: createHeaders(token),
+      },
+    );
+
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return response
+    return response;
   },
 
   // POST /memos/deleted/:originalId/restore (復元)
   restoreNote: async (originalId: string, token?: string) => {
-    const response = await fetch(`${API_BASE_URL}/memos/deleted/${originalId}/restore`, {
-      method: 'POST',
-      headers: createHeaders(token),
-    })
-    
+    const response = await fetch(
+      `${API_BASE_URL}/memos/deleted/${originalId}/restore`,
+      {
+        method: "POST",
+        headers: createHeaders(token),
+      },
+    );
+
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return response
+    return response;
   },
 
   // POST /memos/import (CSVインポート)
   importMemos: async (file: File, token?: string) => {
-    const formData = new FormData()
-    formData.append('file', file)
+    const formData = new FormData();
+    formData.append("file", file);
 
     const response = await fetch(`${API_BASE_URL}/memos/import`, {
-      method: 'POST',
+      method: "POST",
       headers: createHeaders(token, false), // Content-Typeを含めない
       body: formData,
-    })
-    
+    });
+
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return response
+    return response;
   },
-}
+};
 
 export const tasksApi = {
   // GET /tasks
   getTasks: async (token?: string) => {
-    const response = await fetch(`${API_BASE_URL}/tasks`, { 
-      headers: createHeaders(token) 
-    })
+    const response = await fetch(`${API_BASE_URL}/tasks`, {
+      headers: createHeaders(token),
+    });
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return response
+    return response;
   },
-  
+
   // POST /tasks
   createTask: async (data: CreateTaskData, token?: string) => {
     const response = await fetch(`${API_BASE_URL}/tasks`, {
-      method: 'POST',
+      method: "POST",
       headers: createHeaders(token),
       body: JSON.stringify(data),
-    })
-    
+    });
+
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return response
+    return response;
   },
 
   // PUT /tasks/:id
   updateTask: async (id: number, data: UpdateTaskData, token?: string) => {
     const response = await fetch(`${API_BASE_URL}/tasks/${id}`, {
-      method: 'PUT',
+      method: "PUT",
       headers: createHeaders(token),
       body: JSON.stringify(data),
-    })
-    
+    });
+
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return response
+    return response;
   },
 
   // DELETE /tasks/:id
   deleteTask: async (id: number, token?: string) => {
     const response = await fetch(`${API_BASE_URL}/tasks/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
       headers: createHeaders(token),
-    })
-    
+    });
+
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return response
+    return response;
   },
 
   // GET /tasks/deleted
   getDeletedTasks: async (token?: string) => {
-    const response = await fetch(`${API_BASE_URL}/tasks/deleted`, { 
-      headers: createHeaders(token) 
-    })
+    const response = await fetch(`${API_BASE_URL}/tasks/deleted`, {
+      headers: createHeaders(token),
+    });
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return response
+    return response;
   },
 
   // DELETE /tasks/deleted/:originalId (完全削除)
   permanentDeleteTask: async (originalId: string, token?: string) => {
-    const response = await fetch(`${API_BASE_URL}/tasks/deleted/${originalId}`, {
-      method: 'DELETE',
-      headers: createHeaders(token),
-    })
-    
+    const response = await fetch(
+      `${API_BASE_URL}/tasks/deleted/${originalId}`,
+      {
+        method: "DELETE",
+        headers: createHeaders(token),
+      },
+    );
+
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return response
+    return response;
   },
 
   // POST /tasks/deleted/:originalId/restore (復元)
   restoreTask: async (originalId: string, token?: string) => {
-    const response = await fetch(`${API_BASE_URL}/tasks/deleted/${originalId}/restore`, {
-      method: 'POST',
-      headers: createHeaders(token),
-    })
-    
+    const response = await fetch(
+      `${API_BASE_URL}/tasks/deleted/${originalId}/restore`,
+      {
+        method: "POST",
+        headers: createHeaders(token),
+      },
+    );
+
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return response
+    return response;
   },
 
   // POST /tasks/import (CSVインポート)
   importTasks: async (file: File, token?: string) => {
-    const formData = new FormData()
-    formData.append('file', file)
+    const formData = new FormData();
+    formData.append("file", file);
 
     const response = await fetch(`${API_BASE_URL}/tasks/import`, {
-      method: 'POST',
+      method: "POST",
       headers: createHeaders(token, false), // Content-Typeを含めない
       body: formData,
-    })
-    
+    });
+
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return response
+    return response;
   },
-}
+};
 
 export const tagsApi = {
   // GET /tags
-  getTags: async (token?: string, search?: string, sort?: 'name' | 'usage' | 'recent', limit?: number) => {
-    const params = new URLSearchParams()
-    if (search) params.append('search', search)
-    if (sort) params.append('sort', sort)
-    if (limit) params.append('limit', limit.toString())
-    
-    const url = `${API_BASE_URL}/tags${params.toString() ? `?${params.toString()}` : ''}`
-    const response = await fetch(url, { 
-      headers: createHeaders(token) 
-    })
+  getTags: async (
+    token?: string,
+    search?: string,
+    sort?: "name" | "usage" | "recent",
+    limit?: number,
+  ) => {
+    const params = new URLSearchParams();
+    if (search) params.append("search", search);
+    if (sort) params.append("sort", sort);
+    if (limit) params.append("limit", limit.toString());
+
+    const url = `${API_BASE_URL}/tags${params.toString() ? `?${params.toString()}` : ""}`;
+    const response = await fetch(url, {
+      headers: createHeaders(token),
+    });
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return response
+    return response;
   },
-  
+
   // POST /tags
   createTag: async (data: CreateTagData, token?: string) => {
     const response = await fetch(`${API_BASE_URL}/tags`, {
-      method: 'POST',
+      method: "POST",
       headers: createHeaders(token),
       body: JSON.stringify(data),
-    })
-    
+    });
+
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return response
+    return response;
   },
 
   // PUT /tags/:id
   updateTag: async (id: number, data: UpdateTagData, token?: string) => {
     const response = await fetch(`${API_BASE_URL}/tags/${id}`, {
-      method: 'PUT',
+      method: "PUT",
       headers: createHeaders(token),
       body: JSON.stringify(data),
-    })
-    
+    });
+
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return response
+    return response;
   },
 
   // DELETE /tags/:id
   deleteTag: async (id: number, token?: string) => {
     const response = await fetch(`${API_BASE_URL}/tags/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
       headers: createHeaders(token),
-    })
-    
+    });
+
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return response
+    return response;
   },
 
   // GET /tags/:id/stats
   getTagStats: async (id: number, token?: string) => {
-    const response = await fetch(`${API_BASE_URL}/tags/${id}/stats`, { 
-      headers: createHeaders(token) 
-    })
+    const response = await fetch(`${API_BASE_URL}/tags/${id}/stats`, {
+      headers: createHeaders(token),
+    });
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return response
+    return response;
   },
-}
+};
 
 export const taggingsApi = {
   // GET /taggings
-  getTaggings: async (token?: string, targetType?: string, targetOriginalId?: string, tagId?: number) => {
-    const params = new URLSearchParams()
-    if (targetType) params.append('targetType', targetType)
-    if (targetOriginalId) params.append('targetOriginalId', targetOriginalId)
-    if (tagId) params.append('tagId', tagId.toString())
-    params.append('includeTag', 'true') // タグ情報を含める
-    
-    const url = `${API_BASE_URL}/taggings${params.toString() ? `?${params.toString()}` : ''}`
-    const response = await fetch(url, { 
-      headers: createHeaders(token) 
-    })
+  getTaggings: async (
+    token?: string,
+    targetType?: string,
+    targetOriginalId?: string,
+    tagId?: number,
+  ) => {
+    const params = new URLSearchParams();
+    if (targetType) params.append("targetType", targetType);
+    if (targetOriginalId) params.append("targetOriginalId", targetOriginalId);
+    if (tagId) params.append("tagId", tagId.toString());
+    params.append("includeTag", "true"); // タグ情報を含める
+
+    const url = `${API_BASE_URL}/taggings${params.toString() ? `?${params.toString()}` : ""}`;
+    const response = await fetch(url, {
+      headers: createHeaders(token),
+    });
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return response
+    return response;
   },
 
   // POST /taggings
   createTagging: async (data: CreateTaggingData, token?: string) => {
     // ネットワークログを抑制するため、try-catchで囲む
     const response = await fetch(`${API_BASE_URL}/taggings`, {
-      method: 'POST',
+      method: "POST",
       headers: createHeaders(token),
       body: JSON.stringify(data),
     }).catch(() => {
       // ネットワークエラーの場合、ダミーレスポンスを返す
-      return new Response('{"error":"Network error"}', { 
+      return new Response('{"error":"Network error"}', {
         status: 400,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { "Content-Type": "application/json" },
       });
-    })
-    
+    });
+
     if (!response.ok) {
       const errorText = await response.text();
-      
+
       // 400エラー（重複）の場合はデバッグログのみ
-      if (response.status === 400 && errorText.includes('Tag already attached')) {
-        throw new Error(`HTTP error 400: ${errorText}`)
+      if (
+        response.status === 400 &&
+        errorText.includes("Tag already attached")
+      ) {
+        throw new Error(`HTTP error 400: ${errorText}`);
       }
-      
+
       // その他のエラーは通常通りログ出力
-      console.error('createTagging error:', response.status, errorText);
-      
+      console.error("createTagging error:", response.status, errorText);
+
       if (response.status === 400) {
-        throw new Error(`HTTP error 400: ${errorText}`)
+        throw new Error(`HTTP error 400: ${errorText}`);
       }
-      
-      throw new Error(`HTTP error! status: ${response.status}`)
+
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return response
+    return response;
   },
 
   // DELETE /taggings/:id
   deleteTagging: async (id: number, token?: string) => {
     const response = await fetch(`${API_BASE_URL}/taggings/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
       headers: createHeaders(token),
-    })
-    
+    });
+
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return response
+    return response;
   },
 
   // DELETE /taggings/by-tag
-  deleteTaggingsByTag: async (tagId: number, targetType?: string, targetOriginalId?: string, token?: string) => {
+  deleteTaggingsByTag: async (
+    tagId: number,
+    targetType?: string,
+    targetOriginalId?: string,
+    token?: string,
+  ) => {
     const requestBody = {
       tagId,
       targetType,
       targetOriginalId,
     };
-    
-    console.log('🌐 API削除リクエスト:', {
+
+    console.log("🌐 API削除リクエスト:", {
       url: `${API_BASE_URL}/taggings/by-tag`,
-      method: 'DELETE',
+      method: "DELETE",
       body: requestBody,
-      headers: createHeaders(token)
+      headers: createHeaders(token),
     });
-    
+
     const response = await fetch(`${API_BASE_URL}/taggings/by-tag`, {
-      method: 'DELETE',
+      method: "DELETE",
       headers: createHeaders(token),
       body: JSON.stringify(requestBody),
-    })
-    
-    console.log('🌐 API削除レスポンス:', {
+    });
+
+    console.log("🌐 API削除レスポンス:", {
       status: response.status,
       statusText: response.statusText,
-      ok: response.ok
+      ok: response.ok,
     });
-    
+
     if (!response.ok) {
       const errorText = await response.text();
-      console.log('🌐 API削除エラー詳細:', errorText);
-      throw new Error(`HTTP error! status: ${response.status}`)
+      console.log("🌐 API削除エラー詳細:", errorText);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return response
+    return response;
   },
-}
+};

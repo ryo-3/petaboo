@@ -75,18 +75,12 @@ export function createAPI(app: AppType) {
     const { q, sort, limit } = c.req.valid("query");
     const db = c.env.db;
 
-    let query = db
-      .select()
-      .from(tags)
-      .where(eq(tags.userId, auth.userId));
+    let query = db.select().from(tags).where(eq(tags.userId, auth.userId));
 
     // 検索フィルター
     if (q) {
       query = query.where(
-        and(
-          eq(tags.userId, auth.userId),
-          like(tags.name, `%${q}%`)
-        )
+        and(eq(tags.userId, auth.userId), like(tags.name, `%${q}%`)),
       );
     }
 
@@ -110,16 +104,20 @@ export function createAPI(app: AppType) {
         .orderBy(desc(sql<number>`count(${taggings.id})`));
 
       const limitValue = limit ? parseInt(limit) : undefined;
-      const result = limitValue ? tagsWithUsage.slice(0, limitValue) : tagsWithUsage;
-      
-      return c.json(result.map(item => ({
-        id: item.id,
-        name: item.name,
-        color: item.color,
-        userId: item.userId,
-        createdAt: item.createdAt,
-        updatedAt: item.updatedAt,
-      })));
+      const result = limitValue
+        ? tagsWithUsage.slice(0, limitValue)
+        : tagsWithUsage;
+
+      return c.json(
+        result.map((item) => ({
+          id: item.id,
+          name: item.name,
+          color: item.color,
+          userId: item.userId,
+          createdAt: item.createdAt,
+          updatedAt: item.updatedAt,
+        })),
+      );
     } else if (sort === "recent") {
       // 最近使用順
       const recentTags = await db
@@ -140,15 +138,17 @@ export function createAPI(app: AppType) {
 
       const limitValue = limit ? parseInt(limit) : undefined;
       const result = limitValue ? recentTags.slice(0, limitValue) : recentTags;
-      
-      return c.json(result.map(item => ({
-        id: item.id,
-        name: item.name,
-        color: item.color,
-        userId: item.userId,
-        createdAt: item.createdAt,
-        updatedAt: item.updatedAt,
-      })));
+
+      return c.json(
+        result.map((item) => ({
+          id: item.id,
+          name: item.name,
+          color: item.color,
+          userId: item.userId,
+          createdAt: item.createdAt,
+          updatedAt: item.updatedAt,
+        })),
+      );
     } else {
       // 名前順（デフォルト）
       query = query.orderBy(tags.name);
@@ -229,12 +229,7 @@ export function createAPI(app: AppType) {
     const existing = await db
       .select()
       .from(tags)
-      .where(
-        and(
-          eq(tags.userId, auth.userId),
-          eq(tags.name, name)
-        )
-      )
+      .where(and(eq(tags.userId, auth.userId), eq(tags.name, name)))
       .limit(1);
 
     if (existing.length > 0) {
@@ -326,12 +321,7 @@ export function createAPI(app: AppType) {
     const tag = await db
       .select()
       .from(tags)
-      .where(
-        and(
-          eq(tags.id, tagId),
-          eq(tags.userId, auth.userId)
-        )
-      )
+      .where(and(eq(tags.id, tagId), eq(tags.userId, auth.userId)))
       .limit(1);
 
     if (tag.length === 0) {
@@ -346,8 +336,8 @@ export function createAPI(app: AppType) {
         and(
           eq(tags.userId, auth.userId),
           eq(tags.name, name),
-          sql`${tags.id} != ${tagId}`
-        )
+          sql`${tags.id} != ${tagId}`,
+        ),
       )
       .limit(1);
 
@@ -357,10 +347,10 @@ export function createAPI(app: AppType) {
 
     const updated = await db
       .update(tags)
-      .set({ 
-        name, 
-        color: color || null, 
-        updatedAt: new Date() 
+      .set({
+        name,
+        color: color || null,
+        updatedAt: new Date(),
       })
       .where(eq(tags.id, tagId))
       .returning();
@@ -425,12 +415,7 @@ export function createAPI(app: AppType) {
     const tag = await db
       .select()
       .from(tags)
-      .where(
-        and(
-          eq(tags.id, tagId),
-          eq(tags.userId, auth.userId)
-        )
-      )
+      .where(and(eq(tags.id, tagId), eq(tags.userId, auth.userId)))
       .limit(1);
 
     if (tag.length === 0) {
@@ -498,12 +483,7 @@ export function createAPI(app: AppType) {
     const tag = await db
       .select()
       .from(tags)
-      .where(
-        and(
-          eq(tags.id, tagId),
-          eq(tags.userId, auth.userId)
-        )
-      )
+      .where(and(eq(tags.id, tagId), eq(tags.userId, auth.userId)))
       .limit(1);
 
     if (tag.length === 0) {
@@ -518,8 +498,8 @@ export function createAPI(app: AppType) {
         and(
           eq(taggings.tagId, tagId),
           eq(taggings.targetType, "memo"),
-          eq(taggings.userId, auth.userId)
-        )
+          eq(taggings.userId, auth.userId),
+        ),
       );
 
     const taskCount = await db
@@ -529,8 +509,8 @@ export function createAPI(app: AppType) {
         and(
           eq(taggings.tagId, tagId),
           eq(taggings.targetType, "task"),
-          eq(taggings.userId, auth.userId)
-        )
+          eq(taggings.userId, auth.userId),
+        ),
       );
 
     const boardCount = await db
@@ -540,20 +520,15 @@ export function createAPI(app: AppType) {
         and(
           eq(taggings.tagId, tagId),
           eq(taggings.targetType, "board"),
-          eq(taggings.userId, auth.userId)
-        )
+          eq(taggings.userId, auth.userId),
+        ),
       );
 
     // 最後に使用された日時
     const lastUsedResult = await db
       .select({ lastUsed: sql<number>`max(${taggings.createdAt})` })
       .from(taggings)
-      .where(
-        and(
-          eq(taggings.tagId, tagId),
-          eq(taggings.userId, auth.userId)
-        )
-      );
+      .where(and(eq(taggings.tagId, tagId), eq(taggings.userId, auth.userId)));
 
     const memoCountValue = memoCount[0]?.count || 0;
     const taskCountValue = taskCount[0]?.count || 0;

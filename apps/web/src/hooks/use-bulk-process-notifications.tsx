@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { useToast } from '@/src/contexts/toast-context';
+import { useEffect } from "react";
+import { useToast } from "@/src/contexts/toast-context";
 
 /**
  * 一括処理の中断通知を監視するhook
@@ -10,24 +10,29 @@ export function useBulkProcessNotifications() {
   useEffect(() => {
     const handleProcessCancelled = (event: CustomEvent) => {
       const { type, processType, reason } = event.detail;
-      
-      const itemTypeName = type === 'memo' ? 'メモ' : 'タスク';
-      const processTypeName = processType === 'delete' ? '削除' : '復元';
-      
+
+      const itemTypeName = type === "memo" ? "メモ" : "タスク";
+      const processTypeName = processType === "delete" ? "削除" : "復元";
+
       let message = `${itemTypeName}の${processTypeName}処理をキャンセルしました`;
-      if (reason === 'element_not_found') {
-        message += '（タブ切り替えまたはページ移動のため）';
+      if (reason === "element_not_found") {
+        message += "（タブ切り替えまたはページ移動のため）";
       }
-      
-      showToast(message, 'info'); // durationを指定しないので手動でのみ閉じられる
-      
+
+      showToast(message, "info"); // durationを指定しないので手動でのみ閉じられる
     };
 
     // グローバルイベントリスナーを登録
-    window.addEventListener('bulkProcessCancelled', handleProcessCancelled as EventListener);
+    window.addEventListener(
+      "bulkProcessCancelled",
+      handleProcessCancelled as EventListener,
+    );
 
     return () => {
-      window.removeEventListener('bulkProcessCancelled', handleProcessCancelled as EventListener);
+      window.removeEventListener(
+        "bulkProcessCancelled",
+        handleProcessCancelled as EventListener,
+      );
     };
   }, [showToast]);
 }

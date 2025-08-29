@@ -1,22 +1,29 @@
-import { useItemBoards } from '@/src/hooks/use-boards';
-import type { Task } from '@/src/types/task';
-import { ReactElement } from 'react';
+import { useItemBoards } from "@/src/hooks/use-boards";
+import type { Task } from "@/src/types/task";
+import { ReactElement } from "react";
 
 interface TaskFilterWrapperProps {
   task: Task;
   selectedBoardIds: number[];
-  filterMode?: 'include' | 'exclude';
+  filterMode?: "include" | "exclude";
   children: ReactElement;
 }
 
 /**
  * タスクのボードフィルタリングを行うラッパーコンポーネント
  */
-function TaskFilterWrapper({ task, selectedBoardIds, filterMode = 'include', children }: TaskFilterWrapperProps) {
+function TaskFilterWrapper({
+  task,
+  selectedBoardIds,
+  filterMode = "include",
+  children,
+}: TaskFilterWrapperProps) {
   // タスクが所属するボード一覧を取得（フィルター無効時はundefinedを渡してクエリを無効化）
   const { data: boards, isLoading } = useItemBoards(
-    'task', 
-    (selectedBoardIds && selectedBoardIds.length > 0) ? (task.originalId || task.id.toString()) : undefined
+    "task",
+    selectedBoardIds && selectedBoardIds.length > 0
+      ? task.originalId || task.id.toString()
+      : undefined,
   );
 
   // フィルターが設定されていない場合は常に表示
@@ -30,17 +37,21 @@ function TaskFilterWrapper({ task, selectedBoardIds, filterMode = 'include', chi
   }
 
   // タスクが所属するボードのID一覧を取得
-  const taskBoardIds = boards ? boards.map(b => b.id) : [];
+  const taskBoardIds = boards ? boards.map((b) => b.id) : [];
 
   // フィルターモードに応じて表示判定
   let shouldShow: boolean;
-  
-  if (filterMode === 'exclude') {
+
+  if (filterMode === "exclude") {
     // 除外モード：選択されたボードのいずれにも所属していない場合に表示
-    shouldShow = !selectedBoardIds.some(selectedId => taskBoardIds.includes(selectedId));
+    shouldShow = !selectedBoardIds.some((selectedId) =>
+      taskBoardIds.includes(selectedId),
+    );
   } else {
     // 含むモード（デフォルト）：選択されたボードのいずれかに所属している場合に表示
-    shouldShow = selectedBoardIds.some(selectedId => taskBoardIds.includes(selectedId));
+    shouldShow = selectedBoardIds.some((selectedId) =>
+      taskBoardIds.includes(selectedId),
+    );
   }
 
   return shouldShow ? children : null;

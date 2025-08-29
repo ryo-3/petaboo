@@ -1,8 +1,8 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode } from "react";
 
-type ToastType = 'success' | 'error' | 'warning' | 'info';
+type ToastType = "success" | "error" | "warning" | "info";
 
 interface Toast {
   id: string;
@@ -25,10 +25,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const showToast = (message: string, type: ToastType, duration?: number) => {
     const id = Math.random().toString(36).substr(2, 9);
     const newToast: Toast = { id, message, type, duration };
-    
-    
-    setToasts(prev => [...prev, newToast]);
-    
+
+    setToasts((prev) => [...prev, newToast]);
+
     // Auto remove after duration (only if duration is specified and > 0)
     if (duration && duration > 0) {
       setTimeout(() => {
@@ -38,7 +37,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   };
 
   const removeToast = (id: string) => {
-    setToasts(prev => prev.filter(toast => toast.id !== id));
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
   };
 
   return (
@@ -51,7 +50,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 export const useToast = () => {
   const context = useContext(ToastContext);
   if (context === undefined) {
-    throw new Error('useToast must be used within a ToastProvider');
+    throw new Error("useToast must be used within a ToastProvider");
   }
   return context;
 };

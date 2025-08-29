@@ -23,13 +23,15 @@ export default function BoardCategorySelector({
 }: BoardCategorySelectorProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const options = categories.map(category => ({
+  const options = categories.map((category) => ({
     value: category.id.toString(),
     label: category.name,
   }));
 
   // 現在選択されているカテゴリーを取得
-  const selectedCategory = value ? categories.find(cat => cat.id === value) : null;
+  const selectedCategory = value
+    ? categories.find((cat) => cat.id === value)
+    : null;
 
   // オプションを再構築：未選択、現在の選択、その他の順番で並べる
   const reorderedOptions = [];
@@ -37,7 +39,7 @@ export default function BoardCategorySelector({
   // 1. 未選択を最初に追加
   reorderedOptions.push({
     value: "",
-    label: "未選択"
+    label: "未選択",
   });
 
   // 2. 現在選択されているカテゴリーがあれば次に追加
@@ -49,8 +51,8 @@ export default function BoardCategorySelector({
   }
 
   // 3. その他のカテゴリーを追加（選択中のものは除く）
-  const otherOptions = options.filter(option => 
-    option.value !== "" && option.value !== value?.toString()
+  const otherOptions = options.filter(
+    (option) => option.value !== "" && option.value !== value?.toString(),
   );
   reorderedOptions.push(...otherOptions);
 
@@ -58,7 +60,7 @@ export default function BoardCategorySelector({
   if (allowCreate) {
     reorderedOptions.push({
       value: "create_new",
-      label: "新規作成・編集"
+      label: "新規作成・編集",
     });
   }
 

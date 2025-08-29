@@ -1,5 +1,5 @@
-import React from 'react';
-import Modal from '@/components/ui/modals/modal';
+import React from "react";
+import Modal from "@/components/ui/modals/modal";
 
 interface BoardChangeModalProps {
   isOpen: boolean;
@@ -16,7 +16,7 @@ export default function BoardChangeModal({
   onConfirm,
   boardsToAdd: _boardsToAdd, // eslint-disable-line @typescript-eslint/no-unused-vars
   boardsToRemove,
-  parentElement: _parentElement // eslint-disable-line @typescript-eslint/no-unused-vars
+  parentElement: _parentElement, // eslint-disable-line @typescript-eslint/no-unused-vars
 }: BoardChangeModalProps) {
   // 削除するボードがない場合は表示しない
   if (boardsToRemove.length === 0) return null;
@@ -31,7 +31,9 @@ export default function BoardChangeModal({
     >
       <div className="space-y-4">
         <div>
-          <p className="text-gray-700 mb-3">以下のボードからこのメモを外しますか？</p>
+          <p className="text-gray-700 mb-3">
+            以下のボードからこのメモを外しますか？
+          </p>
           <div className="bg-red-50 p-3 rounded-md">
             <ul className="list-disc list-inside text-sm text-red-800 space-y-1">
               {boardsToRemove.map((boardName, index) => (
@@ -40,7 +42,7 @@ export default function BoardChangeModal({
             </ul>
           </div>
         </div>
-        
+
         <div className="flex justify-end gap-2 pt-4">
           <button
             onClick={onClose}

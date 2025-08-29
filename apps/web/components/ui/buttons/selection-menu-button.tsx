@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState } from "react";
 import { ButtonContainer } from "@/components/ui/layout/button-container";
 import SelectionMenu from "@/components/ui/menus/selection-menu";
 import CsvExportIcon from "@/components/icons/csv-export-icon";
@@ -26,40 +26,50 @@ export default function SelectionMenuButton({
   onExport,
   onTagging,
   onPin,
-  onTabMove
+  onTabMove,
 }: SelectionMenuButtonProps) {
   const buttonRef = useRef<HTMLElement>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const menuItems = [
     {
-      id: 'pin',
-      label: 'ピン止め',
+      id: "pin",
+      label: "ピン止め",
       icon: <PinIcon className="w-4 h-4" />,
-      onClick: () => onPin?.()
+      onClick: () => onPin?.(),
     },
     {
-      id: 'tag',
-      label: 'タグ',
+      id: "tag",
+      label: "タグ",
       icon: <TagIcon className="w-5 h-5" />,
-      onClick: () => onTagging?.()
+      onClick: () => onTagging?.(),
     },
     {
-      id: 'export',
-      label: 'エクスポート',
+      id: "export",
+      label: "エクスポート",
       icon: <CsvExportIcon className="w-4 h-4" />,
-      onClick: () => onExport?.()
+      onClick: () => onExport?.(),
     },
     {
-      id: 'tab-move',
-      label: 'タブ移動',
+      id: "tab-move",
+      label: "タブ移動",
       icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+          />
         </svg>
       ),
-      onClick: () => onTabMove?.()
-    }
+      onClick: () => onTabMove?.(),
+    },
   ];
 
   const handleButtonClick = () => {
@@ -69,7 +79,10 @@ export default function SelectionMenuButton({
 
   return (
     <ButtonContainer show={isVisible} position="bottom-left">
-      <div ref={buttonRef as React.RefObject<HTMLDivElement>} className="relative">
+      <div
+        ref={buttonRef as React.RefObject<HTMLDivElement>}
+        className="relative"
+      >
         <button
           onClick={handleButtonClick}
           className="bg-gray-400 hover:bg-gray-500 text-white p-2 rounded-full shadow-lg transition-colors flex items-center justify-center"
@@ -92,7 +105,7 @@ export default function SelectionMenuButton({
         <div className="absolute -top-2 -right-2 bg-Green text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-md">
           {count}
         </div>
-        
+
         {/* メニュー */}
         <SelectionMenu
           isOpen={isMenuOpen}

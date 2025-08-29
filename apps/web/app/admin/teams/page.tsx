@@ -2,7 +2,14 @@
 
 import React from "react";
 import { useCreate } from "@refinedev/core";
-import { List, useTable, EditButton, ShowButton, DeleteButton, CreateButton } from "@refinedev/antd";
+import {
+  List,
+  useTable,
+  EditButton,
+  ShowButton,
+  DeleteButton,
+  CreateButton,
+} from "@refinedev/antd";
 import { Table, Space, Button, Modal, Form, Input, message } from "antd";
 
 export default function TeamsList() {
@@ -100,11 +107,7 @@ export default function TeamsList() {
         onCancel={() => setIsModalVisible(false)}
         footer={null}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleCreateTeam}
-        >
+        <Form form={form} layout="vertical" onFinish={handleCreateTeam}>
           <Form.Item
             name="name"
             label="チーム名"
@@ -115,13 +118,11 @@ export default function TeamsList() {
           >
             <Input placeholder="チーム名を入力" />
           </Form.Item>
-          
+
           <Form.Item
             name="description"
             label="説明"
-            rules={[
-              { max: 500, message: "説明は500文字以内にしてください" },
-            ]}
+            rules={[{ max: 500, message: "説明は500文字以内にしてください" }]}
           >
             <Input.TextArea rows={3} placeholder="チームの説明（任意）" />
           </Form.Item>

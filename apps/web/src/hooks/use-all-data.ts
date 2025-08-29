@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '@clerk/nextjs';
-import type { Tagging } from '@/src/types/tag';
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@clerk/nextjs";
+import type { Tagging } from "@/src/types/tag";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8794";
 
@@ -12,10 +12,10 @@ export function useAllTaggings() {
   const { getToken, isLoaded } = useAuth();
 
   const result = useQuery<Tagging[]>(
-    ['taggings', 'all'],
+    ["taggings", "all"],
     async () => {
       const token = await getToken();
-      
+
       const response = await fetch(`${API_BASE_URL}/taggings`, {
         headers: {
           "Content-Type": "application/json",
@@ -38,7 +38,7 @@ export function useAllTaggings() {
       refetchOnMount: false,
       retry: 3,
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    }
+    },
   );
 
   return result;
@@ -47,7 +47,7 @@ export function useAllTaggings() {
 interface BoardItem {
   boardId: number;
   boardName: string;
-  itemType: 'memo' | 'task';
+  itemType: "memo" | "task";
   itemId: string;
   originalId: string;
   addedAt: number;
@@ -61,10 +61,10 @@ export function useAllBoardItems() {
   const { getToken, isLoaded } = useAuth();
 
   return useQuery<BoardItem[]>(
-    ['boards', 'all-items'],
+    ["boards", "all-items"],
     async () => {
       const token = await getToken();
-      
+
       const response = await fetch(`${API_BASE_URL}/boards/all-items`, {
         headers: {
           "Content-Type": "application/json",
@@ -81,7 +81,7 @@ export function useAllBoardItems() {
       }
 
       const data = await response.json();
-      
+
       // 物理削除になったので、返されるデータはすべて有効
       return data;
     },
@@ -93,6 +93,6 @@ export function useAllBoardItems() {
       refetchOnMount: false,
       retry: 3,
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    }
+    },
   );
 }

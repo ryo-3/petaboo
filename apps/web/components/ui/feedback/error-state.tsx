@@ -3,15 +3,11 @@ interface ErrorStateProps {
   className?: string;
 }
 
-function ErrorState({ 
-  message = "エラーが発生しました", 
-  className = "text-center py-4 text-red-500 text-sm" 
+function ErrorState({
+  message = "エラーが発生しました",
+  className = "text-center py-4 text-red-500 text-sm",
 }: ErrorStateProps) {
-  return (
-    <div className={className}>
-      {message}
-    </div>
-  );
+  return <div className={className}>{message}</div>;
 }
 
 export default ErrorState;

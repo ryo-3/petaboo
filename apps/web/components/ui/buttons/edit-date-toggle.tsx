@@ -10,9 +10,17 @@ interface EditDateToggleProps {
   iconSize: string;
 }
 
-function EditDateToggle({ showEditDate, onToggle, buttonSize, iconSize }: EditDateToggleProps) {
+function EditDateToggle({
+  showEditDate,
+  onToggle,
+  buttonSize,
+  iconSize,
+}: EditDateToggleProps) {
   return (
-    <Tooltip text={showEditDate ? "編集日を非表示" : "編集日を表示"} position="bottom">
+    <Tooltip
+      text={showEditDate ? "編集日を非表示" : "編集日を表示"}
+      position="bottom"
+    >
       <button
         onClick={() => onToggle(!showEditDate)}
         className={`bg-gray-100 shadow-sm rounded-lg ${buttonSize} flex items-center justify-center transition-all ${

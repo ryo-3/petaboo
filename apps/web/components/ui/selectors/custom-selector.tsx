@@ -1,4 +1,11 @@
-import React, { useState, useEffect, useRef, useId, useContext, useCallback } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useId,
+  useContext,
+  useCallback,
+} from "react";
 import ChevronDownIcon from "@/components/icons/chevron-down-icon";
 import PlusIcon from "@/components/icons/plus-icon";
 import CheckIcon from "@/components/icons/check-icon";
@@ -33,24 +40,27 @@ function CustomSelector({
   width = "82px",
   allowCreate = false,
   onCreateNew,
-  disabled = false
+  disabled = false,
 }: CustomSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const selectorRef = useRef<HTMLDivElement>(null);
   const selectorId = useId();
-  
+
   // セレクターコンテキストの安全な使用
   const selectorContext = useContext(SelectorContext);
   const activeSelector = selectorContext?.activeSelector;
-  const setActiveSelector = useCallback((id: string | null) => {
-    if (selectorContext?.setActiveSelector) {
-      selectorContext.setActiveSelector(id);
-    }
-  }, [selectorContext]);
-  
-  const selectedOption = options.find(opt => opt.value === value);
+  const setActiveSelector = useCallback(
+    (id: string | null) => {
+      if (selectorContext?.setActiveSelector) {
+        selectorContext.setActiveSelector(id);
+      }
+    },
+    [selectorContext],
+  );
+
+  const selectedOption = options.find((opt) => opt.value === value);
 
   // 他のセレクターが開いたら閉じる
   useEffect(() => {
@@ -64,7 +74,10 @@ function CustomSelector({
   // 外部クリックで閉じる
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (selectorRef.current && !selectorRef.current.contains(event.target as Node)) {
+      if (
+        selectorRef.current &&
+        !selectorRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
         setIsCreating(false);
         setNewCategoryName("");
@@ -73,13 +86,13 @@ function CustomSelector({
     };
 
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
       return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener("mousedown", handleClickOutside);
       };
     }
   }, [isOpen, setActiveSelector]);
-  
+
   const handleSelect = (optionValue: string) => {
     onChange(optionValue);
     setIsOpen(false);
@@ -103,9 +116,7 @@ function CustomSelector({
   return (
     <div className="relative" ref={selectorRef}>
       <div className="flex items-center justify-between">
-        <label className={FORM_STYLES.label}>
-          {label}
-        </label>
+        <label className={FORM_STYLES.label}>{label}</label>
       </div>
       <div className="relative">
         <div
@@ -122,11 +133,13 @@ function CustomSelector({
         >
           <div className={FORM_STYLES.selectorText}>
             {selectedOption?.color && (
-              <div className={`w-3 h-3 rounded-full ${selectedOption.color}`}></div>
+              <div
+                className={`w-3 h-3 rounded-full ${selectedOption.color}`}
+              ></div>
             )}
             <span className="truncate">{selectedOption?.label}</span>
           </div>
-          <ChevronDownIcon 
+          <ChevronDownIcon
             className={`${FORM_STYLES.chevron} ${isOpen ? "rotate-180" : ""} ${disabled ? "opacity-50" : ""}`}
           />
         </div>
@@ -175,22 +188,22 @@ function CustomSelector({
                   )}
                 </div>
               )}
-              
+
               {options.map((option) => (
                 <div key={option.value}>
                   <button
                     className={`w-full px-3 py-2 text-sm transition-all text-left flex items-center gap-1 rounded-md ${
-                      option.value === value 
-                        ? `bg-gray-100` 
+                      option.value === value
+                        ? `bg-gray-100`
                         : `hover:bg-gray-50`
                     }`}
                     onClick={() => handleSelect(option.value)}
                   >
-                    {option.icon && (
-                      <span>{option.icon}</span>
-                    )}
+                    {option.icon && <span>{option.icon}</span>}
                     {option.color && (
-                      <div className={`w-3 h-3 rounded-full ${option.color}`}></div>
+                      <div
+                        className={`w-3 h-3 rounded-full ${option.color}`}
+                      ></div>
                     )}
                     {option.label}
                   </button>
@@ -200,7 +213,6 @@ function CustomSelector({
           </div>
         )}
       </div>
-      
     </div>
   );
 }

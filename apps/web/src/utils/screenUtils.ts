@@ -5,12 +5,12 @@ export function shouldShowDeleteButton(
   activeTab: string,
   deletedTabName: string,
   checkedItems: Set<number>,
-  checkedDeletedItems: Set<number>
+  checkedDeletedItems: Set<number>,
 ): boolean {
   return (
     (activeTab !== deletedTabName && checkedItems.size > 0) ||
     (activeTab === deletedTabName && checkedDeletedItems.size > 0)
-  )
+  );
 }
 
 /**
@@ -20,9 +20,9 @@ export function getDeleteButtonCount(
   activeTab: string,
   deletedTabName: string,
   checkedItems: Set<number>,
-  checkedDeletedItems: Set<number>
+  checkedDeletedItems: Set<number>,
 ): number {
-  return activeTab === deletedTabName 
-    ? checkedDeletedItems.size 
-    : checkedItems.size
+  return activeTab === deletedTabName
+    ? checkedDeletedItems.size
+    : checkedItems.size;
 }

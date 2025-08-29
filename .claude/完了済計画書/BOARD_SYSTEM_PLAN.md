@@ -1,15 +1,18 @@
 # ボード機能設計計画
 
 ## 概要
+
 メモとタスクをプロジェクトやワークフロー単位で組織化するボード機能を実装する。カテゴリーシステムとは独立したプロジェクト管理システムとして設計。
 
 ## 基本コンセプト
 
 ### 役割分担
+
 - **カテゴリー**: 内容による分類（「仕事」「個人」「勉強」など）
 - **ボード**: プロジェクト/ワークフローによる組織化（「ECサイト開発」「プレゼン準備」など）
 
 ### 利用シーン
+
 - プロジェクトに関連するメモ・タスクをまとめて管理
 - ワークフローの可視化
 - 進捗の追跡
@@ -18,18 +21,21 @@
 ## 機能要件
 
 ### 1. ボード管理
+
 - ボードの作成・編集・削除
 - ボード名・説明の設定
 - ボードの並び替え
 - ボードのアーカイブ機能
 
 ### 2. アイテム管理
+
 - 既存のメモ・タスクをボードに紐づけ
 - ボードから紐づけを解除
 - ボード内でのアイテム表示
 - アイテムの並び替え
 
 ### 3. 表示機能
+
 - ボード一覧表示
 - ボード詳細表示（カンバン風）
 - アイテムの種類別表示（メモ・タスク）
@@ -38,6 +44,7 @@
 ## データベース設計
 
 ### Boards テーブル
+
 ```sql
 CREATE TABLE boards (
   id SERIAL PRIMARY KEY,
@@ -52,6 +59,7 @@ CREATE TABLE boards (
 ```
 
 ### Board_Items テーブル（多対多の中間テーブル）
+
 ```sql
 CREATE TABLE board_items (
   id SERIAL PRIMARY KEY,
@@ -60,7 +68,7 @@ CREATE TABLE board_items (
   item_id INTEGER NOT NULL,
   position INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  
+
   -- 複合ユニーク制約：同じアイテムは同じボードに重複登録できない
   UNIQUE(board_id, item_type, item_id)
 );
@@ -71,6 +79,7 @@ CREATE INDEX idx_board_items_item ON board_items(item_type, item_id);
 ```
 
 ### 既存テーブルの変更
+
 ```sql
 -- 既存テーブルには変更なし
 -- board_itemsテーブルで紐づけを管理するため
@@ -79,6 +88,7 @@ CREATE INDEX idx_board_items_item ON board_items(item_type, item_id);
 ## API設計
 
 ### ボード管理API
+
 ```typescript
 // ボード管理
 GET    /api/boards             // ボード一覧取得
@@ -90,6 +100,7 @@ PUT    /api/boards/reorder     // ボード並び替え
 ```
 
 ### アイテム管理API
+
 ```typescript
 // アイテム管理
 GET    /api/boards/:id/items              // ボード内アイテム取得
@@ -105,6 +116,7 @@ GET    /api/tasks/:id/boards              // タスクが属するボード一�
 ## 型定義
 
 ### 基本型
+
 ```typescript
 // ボード型
 interface Board {
@@ -122,7 +134,7 @@ interface Board {
 interface BoardItem {
   id: number;
   boardId: number;
-  itemType: 'memo' | 'task';
+  itemType: "memo" | "task";
   itemId: number;
   position: number;
   createdAt: string;
@@ -142,12 +154,13 @@ interface UpdateBoardData {
 
 // アイテム追加データ
 interface AddItemToBoardData {
-  itemType: 'memo' | 'task';
+  itemType: "memo" | "task";
   itemId: number;
 }
 ```
 
 ### 拡張型
+
 ```typescript
 // ボード詳細（アイテム情報付き）
 interface BoardWithItems extends Board {
@@ -161,7 +174,7 @@ interface BoardItemWithContent extends BoardItem {
 
 // アイテムのボード情報
 interface ItemBoardInfo {
-  itemType: 'memo' | 'task';
+  itemType: "memo" | "task";
   itemId: number;
   boards: Board[];
 }
@@ -170,6 +183,7 @@ interface ItemBoardInfo {
 ## UI設計
 
 ### 1. ボード一覧画面
+
 ```
 ┌─────────────────────────────────────┐
 │ ボード一覧                           │
@@ -184,6 +198,7 @@ interface ItemBoardInfo {
 ```
 
 ### 2. ボード詳細画面（カンバン風）
+
 ```
 ┌─────────────────────────────────────┐
 │ ECサイト開発                         │
@@ -202,6 +217,7 @@ interface ItemBoardInfo {
 ```
 
 ### 3. アイテム選択画面
+
 ```
 ┌─────────────────────────────────────┐
 │ ボードに追加                         │
@@ -219,6 +235,7 @@ interface ItemBoardInfo {
 ## コンポーネント設計
 
 ### 1. ボード関連コンポーネント
+
 ```
 components/
 ├── features/
@@ -234,6 +251,7 @@ components/
 ```
 
 ### 2. 共通コンポーネント
+
 ```
 components/
 ├── ui/
@@ -247,6 +265,7 @@ components/
 ## フック設計
 
 ### 1. ボード管理フック
+
 ```typescript
 // ボード管理
 export function useBoards() {
@@ -263,9 +282,10 @@ export function useBoardItems(boardId: number) {
 ```
 
 ### 2. アイテム管理フック
+
 ```typescript
 // アイテムのボード情報
-export function useItemBoards(itemType: 'memo' | 'task', itemId: number) {
+export function useItemBoards(itemType: "memo" | "task", itemId: number) {
   // アイテムが属するボード一覧の取得
 }
 
@@ -278,6 +298,7 @@ export function useBoardItemActions(boardId: number) {
 ## 実装手順
 
 ### Phase 1: データベース・API層
+
 1. **データベース設計**
    - boards テーブルの作成
    - board_items テーブルの作成
@@ -289,6 +310,7 @@ export function useBoardItemActions(boardId: number) {
    - 並び替えAPI
 
 ### Phase 2: 基本UI
+
 1. **ボード一覧**
    - ボード一覧表示
    - ボード作成・編集
@@ -300,6 +322,7 @@ export function useBoardItemActions(boardId: number) {
    - 並び替え機能
 
 ### Phase 3: 統合機能
+
 1. **メモ・タスクとの連携**
    - ボード選択機能
    - アイテム追加機能
@@ -310,6 +333,7 @@ export function useBoardItemActions(boardId: number) {
    - ボード間移動
 
 ### Phase 4: 拡張機能
+
 1. **検索・フィルタリング**
    - ボード内検索
    - アイテム種別フィルター
@@ -323,16 +347,19 @@ export function useBoardItemActions(boardId: number) {
 ## 技術的考慮事項
 
 ### 1. パフォーマンス
+
 - ボード・アイテムの効率的な取得
 - 大量アイテムへの対応
 - リアルタイム更新の検討
 
 ### 2. UX配慮
+
 - 直感的なドラッグ&ドロップ
 - 分かりやすい視覚的フィードバック
 - レスポンシブデザイン
 
 ### 3. 拡張性
+
 - チーム機能への対応準備
 - 権限管理の考慮
 - 外部連携の準備
@@ -340,18 +367,21 @@ export function useBoardItemActions(boardId: number) {
 ## 完了条件
 
 ### 機能面
+
 - [ ] ボードの作成・編集・削除
 - [ ] メモ・タスクのボード紐づけ
 - [ ] カンバン風表示
 - [ ] アイテム並び替え
 
 ### 技術面
+
 - [ ] データベース設計完了
 - [ ] API実装完了
 - [ ] 共通コンポーネント実装完了
 - [ ] パフォーマンステスト完了
 
 ### 品質面
+
 - [ ] ドラッグ&ドロップ動作確認
 - [ ] レスポンシブ対応確認
 - [ ] 大量データでの動作確認

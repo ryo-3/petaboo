@@ -128,7 +128,7 @@ export const getSpecificUserInfoRoute = createRoute({
       description: "認証が必要です",
     },
     403: {
-      description: "管理者権限が必要です",  
+      description: "管理者権限が必要です",
     },
     404: {
       description: "ユーザーが見つかりません",
@@ -154,11 +154,13 @@ export const getUsersListRoute = createRoute({
       description: "ユーザー一覧取得成功",
       content: {
         "application/json": {
-          schema: z.array(z.object({
-            userId: z.string(),
-            planType: z.enum(["free", "premium"]),
-            createdAt: z.number(),
-          })),
+          schema: z.array(
+            z.object({
+              userId: z.string(),
+              planType: z.enum(["free", "premium"]),
+              createdAt: z.number(),
+            }),
+          ),
         },
       },
     },
@@ -180,7 +182,8 @@ export async function getUsersList(c: any) {
   }
 
   // 管理者権限チェック
-  const adminIds = process.env.ADMIN_USER_IDS?.split(',').map(id => id.trim()) || [];
+  const adminIds =
+    process.env.ADMIN_USER_IDS?.split(",").map((id) => id.trim()) || [];
   if (!adminIds.includes(auth.userId)) {
     return c.json({ error: "管理者権限が必要です" }, 403);
   }
@@ -192,8 +195,11 @@ export async function getUsersList(c: any) {
     let query = db.select().from(users);
 
     // ソート
-    if (_sort === 'createdAt') {
-      query = _order === 'DESC' ? query.orderBy(desc(users.createdAt)) : query.orderBy(asc(users.createdAt));
+    if (_sort === "createdAt") {
+      query =
+        _order === "DESC"
+          ? query.orderBy(desc(users.createdAt))
+          : query.orderBy(asc(users.createdAt));
     }
 
     // ページネーション
@@ -204,14 +210,15 @@ export async function getUsersList(c: any) {
     }
 
     const usersList = await query;
-    
-    // Refineが期待する形式で返す
-    return c.json(usersList.map(user => ({
-      userId: user.userId,
-      planType: user.planType,
-      createdAt: user.createdAt,
-    })));
 
+    // Refineが期待する形式で返す
+    return c.json(
+      usersList.map((user) => ({
+        userId: user.userId,
+        planType: user.planType,
+        createdAt: user.createdAt,
+      })),
+    );
   } catch (error) {
     console.error("ユーザー一覧取得エラー:", error);
     return c.json({ error: "ユーザー一覧の取得に失敗しました" }, 500);
@@ -234,32 +241,37 @@ export async function getUserInfo(c: any) {
       .from(users)
       .where(eq(users.userId, auth.userId))
       .limit(1);
-    
+
     if (userResult.length === 0) {
       // ユーザーが存在しない場合は作成（既存ユーザー対応）
       const now = Math.floor(Date.now() / 1000);
       await db.insert(users).values({
         userId: auth.userId,
-        planType: 'free',
+        planType: "free",
         createdAt: now,
         updatedAt: now,
       });
-      
+
       // 新しく作成したユーザー情報を返す
-      return c.json({
-        userId: auth.userId,
-        planType: 'free',
-        createdAt: now,
-      }, 200);
+      return c.json(
+        {
+          userId: auth.userId,
+          planType: "free",
+          createdAt: now,
+        },
+        200,
+      );
     }
 
     const user = userResult[0];
-    return c.json({
-      userId: user.userId,
-      planType: user.planType,
-      createdAt: user.createdAt,
-    }, 200);
-
+    return c.json(
+      {
+        userId: user.userId,
+        planType: user.planType,
+        createdAt: user.createdAt,
+      },
+      200,
+    );
   } catch (error) {
     console.error("ユーザー情報取得エラー:", error);
     return c.json({ error: "ユーザー情報の取得に失敗しました" }, 500);
@@ -306,12 +318,14 @@ export async function updateUserPlan(c: any) {
       });
     }
 
-    return c.json({
-      message: `プランを${planType}に変更しました`,
-      userId: auth.userId,
-      planType,
-    }, 200);
-
+    return c.json(
+      {
+        message: `プランを${planType}に変更しました`,
+        userId: auth.userId,
+        planType,
+      },
+      200,
+    );
   } catch (error) {
     console.error("プラン変更エラー:", error);
     return c.json({ error: "プラン変更に失敗しました" }, 500);
@@ -326,13 +340,14 @@ export async function getSpecificUserInfo(c: any) {
   }
 
   // 管理者権限チェック
-  const adminIds = process.env.ADMIN_USER_IDS?.split(',').map(id => id.trim()) || [];
+  const adminIds =
+    process.env.ADMIN_USER_IDS?.split(",").map((id) => id.trim()) || [];
   if (!adminIds.includes(auth.userId)) {
     return c.json({ error: "管理者権限が必要です" }, 403);
   }
 
   const db: DatabaseType = c.env.db;
-  const targetUserId = c.req.param('userId');
+  const targetUserId = c.req.param("userId");
 
   try {
     const userResult = await db
@@ -340,18 +355,20 @@ export async function getSpecificUserInfo(c: any) {
       .from(users)
       .where(eq(users.userId, targetUserId))
       .limit(1);
-    
+
     if (userResult.length === 0) {
       return c.json({ error: "ユーザーが見つかりません" }, 404);
     }
 
     const user = userResult[0];
-    return c.json({
-      userId: user.userId,
-      planType: user.planType,
-      createdAt: user.createdAt,
-    }, 200);
-
+    return c.json(
+      {
+        userId: user.userId,
+        planType: user.planType,
+        createdAt: user.createdAt,
+      },
+      200,
+    );
   } catch (error) {
     console.error("ユーザー情報取得エラー:", error);
     return c.json({ error: "ユーザー情報の取得に失敗しました" }, 500);
@@ -368,7 +385,8 @@ export async function updateSpecificUserPlan(c: any) {
   }
 
   // 管理者権限チェック
-  const adminIds = process.env.ADMIN_USER_IDS?.split(',').map(id => id.trim()) || [];
+  const adminIds =
+    process.env.ADMIN_USER_IDS?.split(",").map((id) => id.trim()) || [];
   console.log("管理者権限チェック:", { userId: auth.userId, adminIds });
   if (!adminIds.includes(auth.userId)) {
     console.log("管理者権限なし:", auth.userId);
@@ -376,8 +394,8 @@ export async function updateSpecificUserPlan(c: any) {
   }
 
   const db: DatabaseType = c.env.db;
-  const targetUserId = c.req.param('userId');
-  
+  const targetUserId = c.req.param("userId");
+
   let body;
   try {
     body = await c.req.json();
@@ -385,36 +403,42 @@ export async function updateSpecificUserPlan(c: any) {
     console.log("JSON解析エラー:", error);
     return c.json({ error: "リクエストボディが不正です" }, 400);
   }
-  
-  console.log("プラン変更リクエスト:", { 
-    adminUser: auth.userId, 
-    targetUserId, 
-    body 
+
+  console.log("プラン変更リクエスト:", {
+    adminUser: auth.userId,
+    targetUserId,
+    body,
   });
 
   try {
     const { planType } = body;
-    
+
     if (!planType) {
       console.log("planTypeが未設定:", body);
       return c.json({ error: "planTypeが必要です" }, 400);
     }
-    
-    if (!['free', 'premium'].includes(planType)) {
+
+    if (!["free", "premium"].includes(planType)) {
       console.log("無効なplanType:", planType);
-      return c.json({ error: "planTypeは'free'または'premium'である必要があります" }, 400);
+      return c.json(
+        { error: "planTypeは'free'または'premium'である必要があります" },
+        400,
+      );
     }
-    
+
     if (!planType) {
       console.log("planType未指定:", body);
       return c.json({ error: "planTypeが必要です" }, 400);
     }
-    
-    if (!['free', 'premium'].includes(planType)) {
+
+    if (!["free", "premium"].includes(planType)) {
       console.log("無効なplanType:", planType);
-      return c.json({ error: "planTypeは'free'または'premium'である必要があります" }, 400);
+      return c.json(
+        { error: "planTypeは'free'または'premium'である必要があります" },
+        400,
+      );
     }
-    
+
     const now = Math.floor(Date.now() / 1000);
 
     // 対象ユーザーの存在確認
@@ -443,12 +467,14 @@ export async function updateSpecificUserPlan(c: any) {
       });
     }
 
-    return c.json({
-      message: `ユーザー ${targetUserId} のプランを${planType}に変更しました`,
-      userId: targetUserId,
-      planType,
-    }, 200);
-
+    return c.json(
+      {
+        message: `ユーザー ${targetUserId} のプランを${planType}に変更しました`,
+        userId: targetUserId,
+        planType,
+      },
+      200,
+    );
   } catch (error) {
     console.error("プラン変更エラー:", error);
     return c.json({ error: "プラン変更に失敗しました" }, 500);

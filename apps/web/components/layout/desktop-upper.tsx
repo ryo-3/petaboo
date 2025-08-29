@@ -25,7 +25,7 @@ interface DesktopUpperProps {
   currentMode: "memo" | "task" | "board";
   activeTab: "normal" | "deleted" | "todo" | "in_progress" | "completed";
   onTabChange: (
-    tab: "normal" | "deleted" | "todo" | "in_progress" | "completed"
+    tab: "normal" | "deleted" | "todo" | "in_progress" | "completed",
   ) => void;
   onCreateNew: () => void;
   viewMode: "card" | "list";
@@ -75,7 +75,7 @@ interface DesktopUpperProps {
       label: string;
       enabled: boolean;
       direction: "asc" | "desc";
-    }>
+    }>,
   ) => void;
   // Date display toggle
   showEditDate?: boolean;
@@ -91,15 +91,15 @@ interface DesktopUpperProps {
   selectedBoardIds?: number[];
   onBoardFilterChange?: (boardIds: number[]) => void;
   // Board filter mode
-  filterMode?: 'include' | 'exclude';
-  onFilterModeChange?: (mode: 'include' | 'exclude') => void;
+  filterMode?: "include" | "exclude";
+  onFilterModeChange?: (mode: "include" | "exclude") => void;
   // Tag filter props
   tags?: Array<{ id: number; name: string; color?: string }>;
   selectedTagIds?: number[];
   onTagFilterChange?: (tagIds: number[]) => void;
   // Tag filter mode
-  tagFilterMode?: 'include' | 'exclude';
-  onTagFilterModeChange?: (mode: 'include' | 'exclude') => void;
+  tagFilterMode?: "include" | "exclude";
+  onTagFilterModeChange?: (mode: "include" | "exclude") => void;
   // Tab counts
   normalCount: number;
   deletedMemosCount?: number;
@@ -155,12 +155,12 @@ function DesktopUpper({
   boards = [],
   selectedBoardIds = [],
   onBoardFilterChange,
-  filterMode = 'include',
+  filterMode = "include",
   onFilterModeChange,
   tags = [],
   selectedTagIds = [],
   onTagFilterChange,
-  tagFilterMode = 'include',
+  tagFilterMode = "include",
   onTagFilterModeChange,
   normalCount,
   deletedMemosCount = 0,
@@ -174,8 +174,10 @@ function DesktopUpper({
 }: DesktopUpperProps) {
   const { preferences } = useUserPreferences(1);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
-  
-  const [shouldShowSettingsIcon, setShouldShowSettingsIcon] = useState(rightPanelMode === "hidden");
+
+  const [shouldShowSettingsIcon, setShouldShowSettingsIcon] = useState(
+    rightPanelMode === "hidden",
+  );
 
   // 右パネルの状態変化に応じて設定アイコンの表示を制御
   useEffect(() => {
@@ -269,7 +271,7 @@ function DesktopUpper({
   // タブの内容をレンダリング
   const renderTabContent = (
     tab: { id: string; label: string; count: number; icon?: React.ReactNode },
-    isActive: boolean
+    isActive: boolean,
   ) => {
     if (tab.icon) {
       return (
@@ -304,7 +306,9 @@ function DesktopUpper({
 
   return (
     <div className={marginBottom}>
-      <div className={`flex justify-between items-center ${headerMarginBottom}`}>
+      <div
+        className={`flex justify-between items-center ${headerMarginBottom}`}
+      >
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">
             {currentMode === "board" && customTitle ? (
@@ -315,24 +319,40 @@ function DesktopUpper({
                   </h1>
                   {/* 説明表示切り替えボタン */}
                   {boardDescription && shouldShowSettingsIcon && (
-                    <Tooltip text={isDescriptionExpanded ? "説明を隠す" : "説明を表示"} position="bottom">
+                    <Tooltip
+                      text={isDescriptionExpanded ? "説明を隠す" : "説明を表示"}
+                      position="bottom"
+                    >
                       <button
-                        onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                        onClick={() =>
+                          setIsDescriptionExpanded(!isDescriptionExpanded)
+                        }
                         className="text-gray-500 hover:text-gray-700 flex items-end"
                       >
-                        <span className="text-gray-400 text-lg font-bold">...</span>
+                        <span className="text-gray-400 text-lg font-bold">
+                          ...
+                        </span>
                       </button>
                     </Tooltip>
                   )}
                 </div>
                 {/* ボード説明（アコーディオン） */}
-                {boardDescription && shouldShowSettingsIcon && isDescriptionExpanded && (
-                  <p className="text-gray-600 text-sm mt-1">{boardDescription}</p>
-                )}
+                {boardDescription &&
+                  shouldShowSettingsIcon &&
+                  isDescriptionExpanded && (
+                    <p className="text-gray-600 text-sm mt-1">
+                      {boardDescription}
+                    </p>
+                  )}
               </div>
             ) : (
               <h1 className="font-bold text-gray-800 text-[22px] w-[105px] truncate">
-                {customTitle || (currentMode === "memo" ? "メモ一覧" : currentMode === "task" ? "タスク一覧" : "ボード一覧")}
+                {customTitle ||
+                  (currentMode === "memo"
+                    ? "メモ一覧"
+                    : currentMode === "task"
+                      ? "タスク一覧"
+                      : "ボード一覧")}
               </h1>
             )}
           </div>
@@ -347,54 +367,55 @@ function DesktopUpper({
               showTooltip={false}
               customSize={{
                 padding: "p-2",
-                iconSize: "w-3.5 h-3.5"
+                iconSize: "w-3.5 h-3.5",
               }}
             />
           )}
-
 
           {/* タブ（boardモード以外） */}
           {currentMode !== "board" && (
             <div className="flex items-center gap-2 ml-2">
               {tabs.map((tab) => {
-              const isActive = activeTab === tab.id;
-              const tabClass = tab.icon
-                ? "pl-2 pr-2 py-2"
-                : "gap-2 px-2 py-1.5";
+                const isActive = activeTab === tab.id;
+                const tabClass = tab.icon
+                  ? "pl-2 pr-2 py-2"
+                  : "gap-2 px-2 py-1.5";
 
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() =>
-                    onTabChange(
-                      tab.id as
-                        | "normal"
-                        | "deleted"
-                        | "todo"
-                        | "in_progress"
-                        | "completed"
-                    )
-                  }
-                  className={`flex items-center ${tabClass} rounded-lg font-medium transition-colors text-gray-600 text-[13px] ${getTabBackgroundClass(tab.id, isActive)}`}
-                >
-                  {renderTabContent(tab, isActive)}
-                </button>
-              );
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() =>
+                      onTabChange(
+                        tab.id as
+                          | "normal"
+                          | "deleted"
+                          | "todo"
+                          | "in_progress"
+                          | "completed",
+                      )
+                    }
+                    className={`flex items-center ${tabClass} rounded-lg font-medium transition-colors text-gray-600 text-[13px] ${getTabBackgroundClass(tab.id, isActive)}`}
+                  >
+                    {renderTabContent(tab, isActive)}
+                  </button>
+                );
               })}
             </div>
           )}
         </div>
 
         {/* 設定ボタン（ボードモードのみ右端に表示、アニメーション完了後に表示） */}
-        {currentMode === "board" && boardId && onBoardSettings && shouldShowSettingsIcon && (
-          <Tooltip text="ボード設定" position="bottom-left">
-            <button onClick={onBoardSettings} className="p-1 text-gray-600">
-              <SettingsIcon className="w-4 h-4" />
-            </button>
-          </Tooltip>
-        )}
+        {currentMode === "board" &&
+          boardId &&
+          onBoardSettings &&
+          shouldShowSettingsIcon && (
+            <Tooltip text="ボード設定" position="bottom-left">
+              <button onClick={onBoardSettings} className="p-1 text-gray-600">
+                <SettingsIcon className="w-4 h-4" />
+              </button>
+            </Tooltip>
+          )}
       </div>
-
 
       {/* コントロール */}
       {!(
@@ -425,7 +446,7 @@ function DesktopUpper({
               iconSize="size-4"
             />
           )}
-          
+
           {/* ボードレイアウト切り替え（boardモードのみ） */}
           {currentMode === "board" && onBoardLayoutChange && (
             <BoardLayoutToggle
@@ -436,7 +457,7 @@ function DesktopUpper({
               iconSize="size-8"
             />
           )}
-          
+
           {/* コンテンツフィルター（boardモードのみ） */}
           {currentMode === "board" && onMemoToggle && onTaskToggle && (
             <ContentFilter
@@ -449,23 +470,33 @@ function DesktopUpper({
           )}
 
           {/* 全選択/全解除ボタン（チェックモードのみ、メモ・タスク画面のみ、対象アイテムがある場合のみ） */}
-          {(currentMode === "memo" || currentMode === "task") && selectionMode === "check" && onSelectAll && (
+          {(currentMode === "memo" || currentMode === "task") &&
+            selectionMode === "check" &&
+            onSelectAll &&
             (() => {
               // 対象アイテム数の確認
               let hasTargetItems = false;
               if (currentMode === "memo") {
-                hasTargetItems = activeTab === "deleted" ? deletedMemosCount > 0 : normalCount > 0;
+                hasTargetItems =
+                  activeTab === "deleted"
+                    ? deletedMemosCount > 0
+                    : normalCount > 0;
               } else if (currentMode === "task") {
                 if (activeTab === "deleted") {
                   hasTargetItems = deletedTasksCount > 0;
                 } else {
-                  const statusCount = activeTab === "todo" ? todoCount : 
-                                    activeTab === "in_progress" ? inProgressCount : 
-                                    activeTab === "completed" ? completedCount : 0;
+                  const statusCount =
+                    activeTab === "todo"
+                      ? todoCount
+                      : activeTab === "in_progress"
+                        ? inProgressCount
+                        : activeTab === "completed"
+                          ? completedCount
+                          : 0;
                   hasTargetItems = statusCount > 0;
                 }
               }
-              
+
               return hasTargetItems ? (
                 <Tooltip
                   text={isAllSelected ? "全解除" : "全選択"}
@@ -483,8 +514,7 @@ function DesktopUpper({
                   </button>
                 </Tooltip>
               ) : null;
-            })()
-          )}
+            })()}
 
           {/* 並び替えメニュー */}
           {onSortChange && sortOptions.length > 0 && (
@@ -497,34 +527,38 @@ function DesktopUpper({
           )}
 
           {/* ボード名表示切り替え（メモ・タスク） */}
-          {(currentMode === "memo" || currentMode === "task") && onShowBoardNameChange && (
-            <BoardNameToggle
-              showBoardName={showBoardName}
-              onToggle={onShowBoardNameChange}
-              buttonSize="size-7"
-              iconSize="size-4"
-              boards={boards}
-              selectedBoardIds={selectedBoardIds}
-              onBoardFilterChange={onBoardFilterChange}
-              filterMode={filterMode}
-              onFilterModeChange={onFilterModeChange}
-            />
-          )}
+          {(currentMode === "memo" || currentMode === "task") &&
+            onShowBoardNameChange && (
+              <BoardNameToggle
+                showBoardName={showBoardName}
+                onToggle={onShowBoardNameChange}
+                buttonSize="size-7"
+                iconSize="size-4"
+                boards={boards}
+                selectedBoardIds={selectedBoardIds}
+                onBoardFilterChange={onBoardFilterChange}
+                filterMode={filterMode}
+                onFilterModeChange={onFilterModeChange}
+              />
+            )}
 
           {/* タグ表示切り替え（メモ・タスク・ボードモード） */}
-          {(currentMode === "memo" || currentMode === "task" || currentMode === "board") && onShowTagDisplayChange && (
-            <TagDisplayToggle
-              showTags={showTagDisplay}
-              onToggle={onShowTagDisplayChange}
-              buttonSize="size-7"
-              iconSize="size-4"
-              tags={tags}
-              selectedTagIds={selectedTagIds}
-              onTagFilterChange={onTagFilterChange}
-              filterMode={tagFilterMode}
-              onFilterModeChange={onTagFilterModeChange}
-            />
-          )}
+          {(currentMode === "memo" ||
+            currentMode === "task" ||
+            currentMode === "board") &&
+            onShowTagDisplayChange && (
+              <TagDisplayToggle
+                showTags={showTagDisplay}
+                onToggle={onShowTagDisplayChange}
+                buttonSize="size-7"
+                iconSize="size-4"
+                tags={tags}
+                selectedTagIds={selectedTagIds}
+                onTagFilterChange={onTagFilterChange}
+                filterMode={tagFilterMode}
+                onFilterModeChange={onTagFilterModeChange}
+              />
+            )}
 
           {/* 編集日表示切り替え */}
           {onShowEditDateChange && (
@@ -537,16 +571,20 @@ function DesktopUpper({
           )}
 
           {/* CSVインポートボタン（メモ・タスクモード、またはボードモードでonCsvImportがある場合） */}
-          {(((!customTitle && !hideAddButton && (currentMode === "memo" || currentMode === "task")) || (currentMode === "board" && customTitle)) && onCsvImport) && (
-            <Tooltip text="CSVインポート" position="bottom">
-              <button
-                onClick={onCsvImport}
-                className="bg-gray-100 shadow-sm rounded-lg size-7 flex items-center justify-center transition-all text-gray-500 opacity-65 hover:opacity-85"
-              >
-                <CsvImportIcon className="size-[18px]" />
-              </button>
-            </Tooltip>
-          )}
+          {((!customTitle &&
+            !hideAddButton &&
+            (currentMode === "memo" || currentMode === "task")) ||
+            (currentMode === "board" && customTitle)) &&
+            onCsvImport && (
+              <Tooltip text="CSVインポート" position="bottom">
+                <button
+                  onClick={onCsvImport}
+                  className="bg-gray-100 shadow-sm rounded-lg size-7 flex items-center justify-center transition-all text-gray-500 opacity-65 hover:opacity-85"
+                >
+                  <CsvImportIcon className="size-[18px]" />
+                </button>
+              </Tooltip>
+            )}
 
           {/* エクスポートボタン（boardモードのみ） */}
           {currentMode === "board" && onBoardExport && (

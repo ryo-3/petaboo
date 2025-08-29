@@ -10,18 +10,24 @@ interface BoardFormProps {
   isLoading?: boolean;
 }
 
-export default function BoardForm({ 
-  initialData, 
-  onSubmit, 
-  onCancel, 
-  isLoading = false 
+export default function BoardForm({
+  initialData,
+  onSubmit,
+  onCancel,
+  isLoading = false,
 }: BoardFormProps) {
   const [name, setName] = useState(initialData?.name || "");
-  const [description, setDescription] = useState(initialData?.description || "");
+  const [description, setDescription] = useState(
+    initialData?.description || "",
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (name.trim() && name.trim().length <= 50 && description.trim().length <= 200) {
+    if (
+      name.trim() &&
+      name.trim().length <= 50 &&
+      description.trim().length <= 200
+    ) {
       onSubmit({
         name: name.trim(),
         description: description.trim() || undefined,
@@ -34,7 +40,7 @@ export default function BoardForm({
       <h3 className="text-lg font-semibold text-gray-900 mb-4">
         {initialData ? "ボードを編集" : "新しいボード"}
       </h3>
-      
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <TextInputWithCounter
           id="name"
@@ -59,7 +65,12 @@ export default function BoardForm({
         <div className="flex items-center gap-3 pt-2">
           <button
             type="submit"
-            disabled={!name.trim() || name.trim().length > 50 || description.trim().length > 200 || isLoading}
+            disabled={
+              !name.trim() ||
+              name.trim().length > 50 ||
+              description.trim().length > 200 ||
+              isLoading
+            }
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isLoading ? "保存中..." : initialData ? "更新" : "作成"}

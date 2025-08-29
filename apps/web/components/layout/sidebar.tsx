@@ -106,8 +106,8 @@ function Sidebar({
               <button
                 onClick={onTeamList}
                 className={`p-2 rounded-lg transition-colors ${
-                  isTeamListPage 
-                    ? "bg-slate-500 text-white" 
+                  isTeamListPage
+                    ? "bg-slate-500 text-white"
                     : "bg-slate-200 hover:bg-slate-300 text-slate-600"
                 }`}
               >
@@ -155,10 +155,12 @@ function Sidebar({
                   : "bg-gray-200 hover:bg-gray-300 text-gray-600"
               }`}
             >
-              <DashboardIcon className={`w-5 h-5 ${currentMode === "board" && !showingBoardDetail ? "" : "text-gray-600"}`} />
+              <DashboardIcon
+                className={`w-5 h-5 ${currentMode === "board" && !showingBoardDetail ? "" : "text-gray-600"}`}
+              />
             </button>
           </Tooltip>
-          
+
           {/* ボード詳細 (選択中のボードがある場合のみ表示) */}
           {currentBoardName && (
             <Tooltip text={`${currentBoardName}詳細`} position="right">
@@ -170,13 +172,21 @@ function Sidebar({
                     : "bg-gray-200 hover:bg-gray-300 text-gray-600"
                 }`}
               >
-                <DashboardEditIcon className={`w-5 h-5 ${currentMode === "board" && showingBoardDetail ? "" : "text-gray-600"}`} />
+                <DashboardEditIcon
+                  className={`w-5 h-5 ${currentMode === "board" && showingBoardDetail ? "" : "text-gray-600"}`}
+                />
               </button>
             </Tooltip>
           )}
           <AddItemButton
             itemType={isBoardActive ? "board" : currentMode}
-            onClick={isBoardActive ? onNewBoard! : (currentMode === "memo" ? onNewMemo : onNewTask!)}
+            onClick={
+              isBoardActive
+                ? onNewBoard!
+                : currentMode === "memo"
+                  ? onNewMemo
+                  : onNewTask!
+            }
             position="right"
           />
 
@@ -228,7 +238,9 @@ function Sidebar({
                   : "bg-gray-200 hover:bg-gray-300 text-gray-600"
               }`}
             >
-              <DashboardIcon className={`w-5 h-5 ${isBoardActive && !showingBoardDetail ? "" : "text-gray-600"}`} />
+              <DashboardIcon
+                className={`w-5 h-5 ${isBoardActive && !showingBoardDetail ? "" : "text-gray-600"}`}
+              />
             </button>
             {/* ボード詳細ボタン (選択中のボードがある場合のみ表示) */}
             {currentBoardName && (
@@ -240,7 +252,9 @@ function Sidebar({
                     : "bg-gray-200 hover:bg-gray-300 text-gray-600"
                 }`}
               >
-                <DashboardEditIcon className={`w-5 h-5 ${isBoardActive && showingBoardDetail ? "" : "text-gray-600"}`} />
+                <DashboardEditIcon
+                  className={`w-5 h-5 ${isBoardActive && showingBoardDetail ? "" : "text-gray-600"}`}
+                />
               </button>
             )}
             {/* 設定ボタン */}
@@ -286,18 +300,29 @@ function Sidebar({
             </span>
           </button>
           <button
-            onClick={isBoardActive ? onNewBoard! : (currentMode === "memo" ? onNewMemo : onNewTask)}
+            onClick={
+              isBoardActive
+                ? onNewBoard!
+                : currentMode === "memo"
+                  ? onNewMemo
+                  : onNewTask
+            }
             className={`flex-1 text-center rounded-lg py-2 transition-colors flex items-center justify-center gap-1 ${
               isBoardActive
                 ? "bg-light-Blue hover:bg-light-Blue/85"
                 : currentMode === "memo"
-                ? "bg-Green hover:bg-Green/85"
-                : "bg-DeepBlue hover:bg-DeepBlue/85"
+                  ? "bg-Green hover:bg-Green/85"
+                  : "bg-DeepBlue hover:bg-DeepBlue/85"
             }`}
           >
             <PlusIcon className="w-4 h-4 text-gray-100" />
             <span className="font-medium text-sm text-gray-100">
-              新規{isBoardActive ? "ボード" : (currentMode === "memo" ? "メモ" : "タスク")}
+              新規
+              {isBoardActive
+                ? "ボード"
+                : currentMode === "memo"
+                  ? "メモ"
+                  : "タスク"}
             </span>
           </button>
         </div>

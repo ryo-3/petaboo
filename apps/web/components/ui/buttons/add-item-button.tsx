@@ -1,49 +1,49 @@
-'use client'
+"use client";
 
-import CreateButton from '@/components/ui/buttons/create-button'
+import CreateButton from "@/components/ui/buttons/create-button";
 
-type ItemType = 'memo' | 'task' | 'board'
+type ItemType = "memo" | "task" | "board";
 
 interface AddItemButtonProps {
-  itemType: ItemType
-  onClick: () => void
-  position?: 'right' | 'top' | 'bottom'
-  className?: string
-  disabled?: boolean
-  size?: 'small' | 'normal'
-  showTooltip?: boolean
+  itemType: ItemType;
+  onClick: () => void;
+  position?: "right" | "top" | "bottom";
+  className?: string;
+  disabled?: boolean;
+  size?: "small" | "normal";
+  showTooltip?: boolean;
   customSize?: {
     padding?: string;
     iconSize?: string;
-  }
+  };
 }
 
 function AddItemButton({
   itemType,
   onClick,
-  position = 'right',
-  className = '',
+  position = "right",
+  className = "",
   disabled = false,
-  size = 'normal',
+  size = "normal",
   showTooltip = true,
-  customSize
+  customSize,
 }: AddItemButtonProps) {
   const typeConfig = {
     memo: {
-      label: '新規メモ作成',
-      color: 'green' as const,
+      label: "新規メモ作成",
+      color: "green" as const,
     },
     task: {
-      label: '新規タスク作成',
-      color: 'yellow' as const,
+      label: "新規タスク作成",
+      color: "yellow" as const,
     },
     board: {
-      label: '新規ボード作成',
-      color: 'blue' as const,
-    }
-  }
+      label: "新規ボード作成",
+      color: "blue" as const,
+    },
+  };
 
-  const config = typeConfig[itemType]
+  const config = typeConfig[itemType];
 
   return (
     <CreateButton
@@ -57,7 +57,7 @@ function AddItemButton({
       showTooltip={showTooltip}
       customSize={customSize}
     />
-  )
+  );
 }
 
-export default AddItemButton
+export default AddItemButton;

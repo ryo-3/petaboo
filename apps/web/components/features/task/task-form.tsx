@@ -16,7 +16,13 @@ import {
   getStatusEditorColor,
   getStatusText,
 } from "@/src/utils/taskUtils";
-import { useEffect, useRef, forwardRef, useImperativeHandle, useMemo } from "react";
+import {
+  useEffect,
+  useRef,
+  forwardRef,
+  useImperativeHandle,
+  useMemo,
+} from "react";
 
 interface TaskFormProps {
   task?: Task | null;
@@ -80,10 +86,12 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
   } = props;
   const titleInputRef = useRef<HTMLInputElement>(null);
   const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
-  
+
   // 表示用のボード（initialBoardIdは除外）
   const displayBoards = useMemo(() => {
-    return boards.filter(board => !initialBoardId || board.id !== initialBoardId);
+    return boards.filter(
+      (board) => !initialBoardId || board.id !== initialBoardId,
+    );
   }, [boards, initialBoardId]);
 
   // 新規作成時のフォーカス遅延
@@ -97,12 +105,15 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
   }, [isNewTask]);
 
   // 外部からタイトルにフォーカスを当てるメソッドを公開
-  useImperativeHandle(ref, () => ({
-    focusTitle: () => {
-      titleInputRef.current?.focus();
-    }
-  }), []);
-
+  useImperativeHandle(
+    ref,
+    () => ({
+      focusTitle: () => {
+        titleInputRef.current?.focus();
+      },
+    }),
+    [],
+  );
 
   // オプションの定義（色はtaskUtilsから取得）
   const statusOptions = [
@@ -143,7 +154,6 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
 
   return (
     <div className="flex flex-col flex-1">
-
       <div className="flex items-center">
         <input
           ref={titleInputRef}
@@ -200,7 +210,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
               disabled={isDeleted}
             />
           </div>
-          
+
           {showBoardCategory && (
             <div className="w-80">
               <BoardCategorySelector
@@ -227,9 +237,9 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
               <div
                 key={tag.id}
                 className="inline-flex items-center px-2 py-1 rounded-md text-xs overflow-hidden"
-                style={{ 
-                  backgroundColor: tag.color || TAG_COLORS.background, 
-                  color: TAG_COLORS.text
+                style={{
+                  backgroundColor: tag.color || TAG_COLORS.background,
+                  color: TAG_COLORS.text,
                 }}
               >
                 <span>{tag.name}</span>
@@ -239,19 +249,21 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
         </div>
       )}
 
-      <div className={`flex-1 flex flex-col ${(displayBoards.length === 0 && tags.length === 0) ? 'mt-2' : ''}`}>
+      <div
+        className={`flex-1 flex flex-col ${displayBoards.length === 0 && tags.length === 0 ? "mt-2" : ""}`}
+      >
         <textarea
           ref={descriptionTextareaRef}
           placeholder={descriptionPlaceholder}
           value={description}
           onChange={(e) => onDescriptionChange(e.target.value)}
-          className={`w-full ${customHeight || 'flex-1'} resize-none outline-none text-gray-700 leading-relaxed pr-1 pb-10 mb-2`}
+          className={`w-full ${customHeight || "flex-1"} resize-none outline-none text-gray-700 leading-relaxed pr-1 pb-10 mb-2`}
         />
       </div>
     </div>
   );
 });
 
-TaskForm.displayName = 'TaskForm';
+TaskForm.displayName = "TaskForm";
 
 export default TaskForm;

@@ -63,14 +63,14 @@ export default function TagSelectionModal({
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter((tag) =>
-        tag.name.toLowerCase().includes(query)
+        tag.name.toLowerCase().includes(query),
       );
     }
 
     // 色フィルタ
     if (colorFilter) {
       filtered = filtered.filter(
-        (tag) => (tag.color || TAG_COLORS.background) === colorFilter
+        (tag) => (tag.color || TAG_COLORS.background) === colorFilter,
       );
     }
 
@@ -99,7 +99,7 @@ export default function TagSelectionModal({
   const isDuplicateTagName =
     newTagName.trim() !== "" &&
     tags.some(
-      (tag) => tag.name.toLowerCase() === newTagName.trim().toLowerCase()
+      (tag) => tag.name.toLowerCase() === newTagName.trim().toLowerCase(),
     );
 
   // 新規タグ作成
@@ -110,7 +110,7 @@ export default function TagSelectionModal({
 
     // 事前バリデーション：重複チェック
     const isDuplicate = tags.some(
-      (tag) => tag.name.toLowerCase() === trimmedName.toLowerCase()
+      (tag) => tag.name.toLowerCase() === trimmedName.toLowerCase(),
     );
 
     if (isDuplicate) {
@@ -134,9 +134,9 @@ export default function TagSelectionModal({
       setNewTagName("");
       setNewTagColor(TAG_COLORS.background); // 色もリセット
       setSearchQuery(""); // 検索もクリア
-      
+
       // 0.5秒遅延
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
     } catch (error) {
       console.error("タグ作成エラー:", error);
     } finally {
@@ -185,12 +185,7 @@ export default function TagSelectionModal({
 
   return (
     <>
-      <Modal
-        isOpen={isOpen}
-        onClose={onClose}
-        maxWidth="3xl"
-        maxHeight="85vh"
-      >
+      <Modal isOpen={isOpen} onClose={onClose} maxWidth="3xl" maxHeight="85vh">
         <div className="min-h-[75vh] max-h-[75vh] flex flex-col">
           {/* カスタムヘッダー：タイトルと検索ボックス */}
           <div className="flex items-center justify-between gap-4 mb-2">
@@ -250,14 +245,19 @@ export default function TagSelectionModal({
                       : "border-gray-200 focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
                   }`}
                 />
-                <div className={`absolute right-3 top-1/2 transform -translate-y-1/2 text-xs ${newTagName.length > 50 || isDuplicateTagName ? "text-red-500" : "text-gray-500"}`}>
+                <div
+                  className={`absolute right-3 top-1/2 transform -translate-y-1/2 text-xs ${newTagName.length > 50 || isDuplicateTagName ? "text-red-500" : "text-gray-500"}`}
+                >
                   {isDuplicateTagName ? "重複" : `${newTagName.length}/50`}
                 </div>
               </div>
               <button
                 onClick={handleCreateTag}
                 disabled={
-                  !newTagName.trim() || isCreating || isDuplicateTagName || newTagName.length > 50
+                  !newTagName.trim() ||
+                  isCreating ||
+                  isDuplicateTagName ||
+                  newTagName.length > 50
                 }
                 className="w-20 py-2 bg-Green text-white rounded-md text-sm font-medium hover:bg-Green/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
               >
@@ -378,7 +378,7 @@ export default function TagSelectionModal({
                   <span className="text-sm text-gray-500">
                     {selectedTags.length}件
                   </span>
-                  {mode === 'filter' && (
+                  {mode === "filter" && (
                     <button
                       onClick={() => onSelectionChange([])}
                       className="px-2 py-0.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded transition-colors"
@@ -541,13 +541,9 @@ export default function TagSelectionModal({
               </div>
             )}
           </div>
-          
+
           {/* カスタムフッター */}
-          {footer && (
-            <div className="pt-4">
-              {footer}
-            </div>
-          )}
+          {footer && <div className="pt-4">{footer}</div>}
         </div>
       </Modal>
 

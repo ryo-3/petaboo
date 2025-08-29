@@ -6,10 +6,10 @@ interface CloseButtonProps {
   className?: string;
 }
 
-export default function CloseButton({ 
-  onClick, 
-  size = 22, 
-  className = "" 
+export default function CloseButton({
+  onClick,
+  size = 22,
+  className = "",
 }: CloseButtonProps) {
   return (
     <button

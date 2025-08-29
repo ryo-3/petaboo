@@ -1,37 +1,37 @@
-import { OriginalId, Uuid } from './common';
+import { OriginalId, Uuid } from "./common";
 
 export interface Memo {
-  id: number
-  originalId?: OriginalId
-  uuid?: Uuid
-  title: string
-  content: string | null
-  categoryId?: number | null
-  createdAt: number
-  updatedAt?: number
-  tempId?: string
+  id: number;
+  originalId?: OriginalId;
+  uuid?: Uuid;
+  title: string;
+  content: string | null;
+  categoryId?: number | null;
+  createdAt: number;
+  updatedAt?: number;
+  tempId?: string;
 }
 
 export interface DeletedMemo {
-  id: number
-  originalId: OriginalId
-  uuid?: Uuid
-  title: string
-  content: string | null
-  categoryId?: number | null
-  createdAt: number
-  updatedAt?: number
-  deletedAt: number
+  id: number;
+  originalId: OriginalId;
+  uuid?: Uuid;
+  title: string;
+  content: string | null;
+  categoryId?: number | null;
+  createdAt: number;
+  updatedAt?: number;
+  deletedAt: number;
 }
 
 export interface CreateMemoData {
-  title: string
-  content?: string
-  categoryId?: number | null
+  title: string;
+  content?: string;
+  categoryId?: number | null;
 }
 
 export interface UpdateMemoData {
-  title: string
-  content?: string
-  categoryId?: number | null
+  title: string;
+  content?: string;
+  categoryId?: number | null;
 }

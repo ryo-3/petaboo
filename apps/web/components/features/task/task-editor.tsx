@@ -14,8 +14,15 @@ import TagSelectionModal from "@/components/ui/modals/tag-selection-modal";
 import DateInfo from "@/components/shared/date-info";
 import TaskForm, { TaskFormHandle } from "./task-form";
 import { useUpdateTask, useCreateTask } from "@/src/hooks/use-tasks";
-import { useAddItemToBoard, useRemoveItemFromBoard } from "@/src/hooks/use-boards";
-import { useCreateTagging, useDeleteTagging, useTaggings } from "@/src/hooks/use-taggings";
+import {
+  useAddItemToBoard,
+  useRemoveItemFromBoard,
+} from "@/src/hooks/use-boards";
+import {
+  useCreateTagging,
+  useDeleteTagging,
+  useTaggings,
+} from "@/src/hooks/use-taggings";
 import { useBoardChangeModal } from "@/src/hooks/use-board-change-modal";
 import { useBoardCategories } from "@/src/hooks/use-board-categories";
 import BoardChangeModal from "@/components/ui/modals/board-change-modal";
@@ -33,12 +40,15 @@ interface TaskEditorProps {
   onClose: () => void;
   onSelectTask?: (task: Task | null, fromFullList?: boolean) => void;
   onClosePanel?: () => void;
-  onDeleteAndSelectNext?: (deletedTask: Task, preDeleteDisplayOrder?: number[]) => void;
+  onDeleteAndSelectNext?: (
+    deletedTask: Task,
+    preDeleteDisplayOrder?: number[],
+  ) => void;
   onSaveComplete?: (savedTask: Task, isNewTask: boolean) => void;
   onRestore?: () => void;
   onDelete?: () => void;
   customHeight?: string;
-  
+
   // 全データ事前取得（ちらつき解消）
   preloadedTags?: Tag[];
   preloadedBoards?: Board[];
@@ -46,7 +56,7 @@ interface TaskEditorProps {
   preloadedBoardItems?: Array<{
     boardId: number;
     boardName: string;
-    itemType: 'memo' | 'task';
+    itemType: "memo" | "task";
     itemId: string;
     originalId: string;
     addedAt: number;
@@ -68,90 +78,98 @@ function TaskEditor({
   preloadedTags = [],
   preloadedBoards = [],
   preloadedTaggings = [],
-  preloadedBoardItems = []
+  preloadedBoardItems = [],
 }: TaskEditorProps) {
   const updateTask = useUpdateTask();
   const createTask = useCreateTask();
   const addItemToBoard = useAddItemToBoard();
   const removeItemFromBoard = useRemoveItemFromBoard();
   const { categories } = useBoardCategories(initialBoardId);
-  
+
   // 削除済みタスクかどうかを判定
-  const isDeleted = task ? 'deletedAt' in task : false;
-  
+  const isDeleted = task ? "deletedAt" in task : false;
+
   // 事前取得されたデータを使用（APIコール不要）
   const boards = preloadedBoards;
   const isNewTask = !task || task.id === 0;
   const taskFormRef = useRef<TaskFormHandle>(null);
-  
+
   // このタスクに実際に紐づいているボードのみを抽出
   const itemBoards = useMemo(() => {
     if (!task || task.id === 0) return [];
-    
+
     const originalId = task.originalId || task.id.toString();
-    
+
     // このタスクに紐づいているボードアイテムを抽出
     const taskBoardItems = preloadedBoardItems.filter(
-      item => item.itemType === 'task' && item.originalId === originalId
+      (item) => item.itemType === "task" && item.originalId === originalId,
     );
-    
+
     // ボードアイテムからボード情報を取得
     const boards = taskBoardItems
-      .map(item => preloadedBoards.find(board => board.id === item.boardId))
-      .filter((board): board is NonNullable<typeof board> => board !== undefined);
-    
+      .map((item) => preloadedBoards.find((board) => board.id === item.boardId))
+      .filter(
+        (board): board is NonNullable<typeof board> => board !== undefined,
+      );
+
     // initialBoardIdがある場合は、そのボードも含める（重複は自動的に除外される）
     if (initialBoardId) {
-      const initialBoard = preloadedBoards.find(board => board.id === initialBoardId);
-      if (initialBoard && !boards.some(b => b.id === initialBoardId)) {
+      const initialBoard = preloadedBoards.find(
+        (board) => board.id === initialBoardId,
+      );
+      if (initialBoard && !boards.some((b) => b.id === initialBoardId)) {
         boards.push(initialBoard);
       }
     }
-    
+
     return boards;
   }, [task, preloadedBoardItems, preloadedBoards, initialBoardId]);
-  
+
   // ライブタグデータ取得（メモエディターと同様）
-  const originalId = task && task.id !== 0 ? task.originalId || task.id.toString() : null;
+  const originalId =
+    task && task.id !== 0 ? task.originalId || task.id.toString() : null;
   const { data: liveTaggings } = useTaggings({
-    targetType: 'task',
+    targetType: "task",
     targetOriginalId: originalId || undefined,
   });
-  
+
   // 事前取得されたデータとライブデータを組み合わせて現在のタグを取得
   const currentTags = useMemo(() => {
     if (!task || task.id === 0) return [];
     const targetOriginalId = task.originalId || task.id.toString();
-    
+
     // ライブデータがある場合は優先的に使用、なければ事前取得データを使用
-    const taggingsToUse = liveTaggings || preloadedTaggings.filter(
-      t => t.targetType === 'task' && t.targetOriginalId === targetOriginalId
-    );
-    
-    const tags = taggingsToUse.map(t => t.tag).filter(Boolean) as Tag[];
-    
-    console.log('🔍 エディター currentTags 更新:', {
+    const taggingsToUse =
+      liveTaggings ||
+      preloadedTaggings.filter(
+        (t) =>
+          t.targetType === "task" && t.targetOriginalId === targetOriginalId,
+      );
+
+    const tags = taggingsToUse.map((t) => t.tag).filter(Boolean) as Tag[];
+
+    console.log("🔍 エディター currentTags 更新:", {
       taskId: task.id,
       targetOriginalId,
       hasLiveTaggings: !!liveTaggings,
       liveTaggingsCount: liveTaggings?.length || 0,
       preloadedTaggingsCount: preloadedTaggings.length,
       tagsToUseCount: taggingsToUse.length,
-      finalTags: tags
+      finalTags: tags,
     });
-    
+
     return tags;
   }, [task, liveTaggings, preloadedTaggings]);
-  
+
   // タグ操作用のmutation
   const createTaggingMutation = useCreateTagging();
   const deleteTaggingMutation = useDeleteTagging();
-  
+
   // ローカルタグ状態
   const [localTags, setLocalTags] = useState<Tag[]>([]);
   const [prevTaskId, setPrevTaskId] = useState<number | null>(null);
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
-  
+
   // 削除機能は編集時のみ
   const {
     handleDelete,
@@ -198,26 +216,34 @@ function TaskEditor({
   const [title, setTitle] = useState(task?.title || "");
   const [description, setDescription] = useState(task?.description || "");
   const [status, setStatus] = useState<"todo" | "in_progress" | "completed">(
-    (task?.status as "todo" | "in_progress" | "completed") || "todo"
+    (task?.status as "todo" | "in_progress" | "completed") || "todo",
   );
   const [priority, setPriority] = useState<"low" | "medium" | "high">(
-    (task?.priority as "low" | "medium" | "high") || "medium"
+    (task?.priority as "low" | "medium" | "high") || "medium",
   );
-  const [categoryId, setCategoryId] = useState<number | null>(task?.categoryId ?? null);
-  const [boardCategoryId, setBoardCategoryId] = useState<number | null>(task?.boardCategoryId ?? null);
+  const [categoryId, setCategoryId] = useState<number | null>(
+    task?.categoryId ?? null,
+  );
+  const [boardCategoryId, setBoardCategoryId] = useState<number | null>(
+    task?.boardCategoryId ?? null,
+  );
   const [dueDate, setDueDate] = useState<string>(() => {
     try {
-      return (task?.dueDate ? new Date(task.dueDate * 1000).toISOString().split('T')[0] : "") as string;
+      return (
+        task?.dueDate
+          ? new Date(task.dueDate * 1000).toISOString().split("T")[0]
+          : ""
+      ) as string;
     } catch {
       return "";
     }
   });
-  
+
   // 初期ボードIDs（ちらつき防止）
   const initialBoardIds = useMemo(() => {
     if (task && task.id !== 0) {
       // 既存タスクの場合は、itemBoardsとinitialBoardIdの両方を含める
-      const boardIds = itemBoards.map(board => board.id.toString());
+      const boardIds = itemBoards.map((board) => board.id.toString());
       // initialBoardIdが指定されていて、まだ含まれていない場合は追加
       if (initialBoardId && !boardIds.includes(initialBoardId.toString())) {
         boardIds.push(initialBoardId.toString());
@@ -240,18 +266,18 @@ function TaskEditor({
     handleCancelBoardChange,
     initializeBoardIds,
   } = useBoardChangeModal(initialBoardIds);
-  
+
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // タスク初期化（メモエディターと同じシンプルパターン）
   useEffect(() => {
     const currentTaskId = task?.id || 0;
-    
+
     if (currentTaskId !== prevTaskId) {
       setLocalTags(currentTags);
       setPrevTaskId(currentTaskId);
-      
+
       // originalDataも同時に設定（変更検知のため）
       if (task) {
         const taskTitle = task.title || "";
@@ -260,12 +286,16 @@ function TaskEditor({
         const taskPriority = task.priority || "medium";
         const taskDueDate = (() => {
           try {
-            return (task.dueDate ? new Date(task.dueDate * 1000).toISOString().split("T")[0] : "") as string;
+            return (
+              task.dueDate
+                ? new Date(task.dueDate * 1000).toISOString().split("T")[0]
+                : ""
+            ) as string;
           } catch {
             return "";
           }
         })();
-        
+
         setTitle(taskTitle);
         setDescription(taskDescription);
         setStatus(taskStatus as "todo" | "in_progress" | "completed");
@@ -274,7 +304,7 @@ function TaskEditor({
         setBoardCategoryId(task.boardCategoryId || null);
         setDueDate(taskDueDate);
         setError(null);
-        
+
         setOriginalData({
           title: taskTitle.trim(),
           description: taskDescription.trim(),
@@ -283,7 +313,7 @@ function TaskEditor({
           categoryId: task.categoryId || null,
           boardCategoryId: task.boardCategoryId || null,
           dueDate: taskDueDate,
-          boardIds: itemBoards.map(board => board.id.toString())
+          boardIds: itemBoards.map((board) => board.id.toString()),
         });
       } else {
         // 新規作成時の初期化
@@ -295,7 +325,7 @@ function TaskEditor({
         setBoardCategoryId(null);
         setDueDate("");
         setError(null);
-        
+
         setOriginalData({
           title: "",
           description: "",
@@ -304,115 +334,140 @@ function TaskEditor({
           categoryId: null,
           boardCategoryId: null,
           dueDate: "",
-          boardIds: initialBoardId ? [initialBoardId.toString()] : []
+          boardIds: initialBoardId ? [initialBoardId.toString()] : [],
         });
       }
     }
   }, [task?.id, currentTags, prevTaskId, task, itemBoards, initialBoardId]);
-  
+
   // currentTagsが変更されたときに自動でlocalTagsを同期（メモエディターと同様）
   useEffect(() => {
-    if (task?.id === prevTaskId && 
-        JSON.stringify(currentTags.map(t => t.id).sort()) !== 
-        JSON.stringify(localTags.map(t => t.id).sort())) {
+    if (
+      task?.id === prevTaskId &&
+      JSON.stringify(currentTags.map((t) => t.id).sort()) !==
+        JSON.stringify(localTags.map((t) => t.id).sort())
+    ) {
       setLocalTags(currentTags);
-      console.log('🔄 タスクエディター localTags 自動同期:', {
+      console.log("🔄 タスクエディター localTags 自動同期:", {
         taskId: task?.id,
-        from: localTags.map(t => ({ id: t.id, name: t.name })),
-        to: currentTags.map(t => ({ id: t.id, name: t.name }))
+        from: localTags.map((t) => ({ id: t.id, name: t.name })),
+        to: currentTags.map((t) => ({ id: t.id, name: t.name })),
       });
     }
   }, [task?.id, prevTaskId, currentTags, localTags]);
-  
-  
+
   // 新規作成・編集両対応の仮タスクオブジェクト
-  const tempTask: Task = task ? {
-    ...(task as Task),
-    title: title || task.title,
-    description: description,
-    status: status,
-    priority: priority,
-    categoryId: categoryId,
-    boardCategoryId: boardCategoryId,
-    dueDate: dueDate ? Math.floor(new Date(dueDate).getTime() / 1000) : null,
-  } : {
-    id: 0,
-    title: title || "新規タスク",
-    description: description,
-    status: status,
-    priority: priority,
-    categoryId: categoryId,
-    boardCategoryId: boardCategoryId,
-    createdAt: Math.floor(Date.now() / 1000),
-    updatedAt: Math.floor(Date.now() / 1000),
-    dueDate: dueDate ? Math.floor(new Date(dueDate).getTime() / 1000) : null,
-  };
+  const tempTask: Task = task
+    ? {
+        ...(task as Task),
+        title: title || task.title,
+        description: description,
+        status: status,
+        priority: priority,
+        categoryId: categoryId,
+        boardCategoryId: boardCategoryId,
+        dueDate: dueDate
+          ? Math.floor(new Date(dueDate).getTime() / 1000)
+          : null,
+      }
+    : {
+        id: 0,
+        title: title || "新規タスク",
+        description: description,
+        status: status,
+        priority: priority,
+        categoryId: categoryId,
+        boardCategoryId: boardCategoryId,
+        createdAt: Math.floor(Date.now() / 1000),
+        updatedAt: Math.floor(Date.now() / 1000),
+        dueDate: dueDate
+          ? Math.floor(new Date(dueDate).getTime() / 1000)
+          : null,
+      };
 
   // タグに変更があるかチェック（シンプル版）
   const hasTagChanges = useMemo(() => {
     if (!task || task.id === 0) return false;
-    
-    const currentTagIds = currentTags.map(tag => tag.id).sort();
-    const localTagIds = localTags.map(tag => tag.id).sort();
-    
+
+    const currentTagIds = currentTags.map((tag) => tag.id).sort();
+    const localTagIds = localTags.map((tag) => tag.id).sort();
+
     return JSON.stringify(currentTagIds) !== JSON.stringify(localTagIds);
   }, [currentTags, localTags, task]);
 
   // タグの差分を計算して一括更新する関数
-  const updateTaggings = useCallback(async (taskId: string) => {
-    if (!task || task.id === 0) return;
+  const updateTaggings = useCallback(
+    async (taskId: string) => {
+      if (!task || task.id === 0) return;
 
-    const currentTagIds = currentTags.map(tag => tag.id);
-    const localTagIds = localTags.map(tag => tag.id);
-    
-    // 削除するタグ（currentにあってlocalにない）
-    const tagsToRemove = currentTagIds.filter(id => !localTagIds.includes(id));
-    // 追加するタグ（localにあってcurrentにない）
-    const tagsToAdd = localTagIds.filter(id => !currentTagIds.includes(id));
+      const currentTagIds = currentTags.map((tag) => tag.id);
+      const localTagIds = localTags.map((tag) => tag.id);
 
-    // 削除処理（preloadedTaggingsからタギングIDを見つける）
-    for (const tagId of tagsToRemove) {
-      const taggingToDelete = preloadedTaggings.find((t) => t.tagId === tagId);
-      if (taggingToDelete) {
-        await deleteTaggingMutation.mutateAsync(taggingToDelete.id);
-      }
-    }
-
-    // 追加処理
-    for (const tagId of tagsToAdd) {
-      // 既に存在するかどうかを再度チェック（リアルタイムデータで）
-      const existingTagging = preloadedTaggings.find(
-        t => t.tagId === tagId && t.targetType === 'task' && t.targetOriginalId === taskId
+      // 削除するタグ（currentにあってlocalにない）
+      const tagsToRemove = currentTagIds.filter(
+        (id) => !localTagIds.includes(id),
       );
-      
-      if (!existingTagging) {
-        try {
-          await createTaggingMutation.mutateAsync({
-            tagId,
-            targetType: 'task',
-            targetOriginalId: taskId
-          });
-        } catch (error: unknown) {
-          // 400エラー（重複）は無視し、他のエラーは再スロー
-          const errorMessage = (error as Error).message || '';
-          
-          const isDuplicateError = (
-            errorMessage.includes('HTTP error 400') && 
-            errorMessage.includes('Tag already attached to this item')
-          ) || (
-            errorMessage.includes('400') && 
-            errorMessage.includes('already attached')
-          );
-          
-          if (isDuplicateError) {
-            continue;
-          }
-          console.error(`Failed to create tagging for tag ${tagId} on task ${taskId}:`, error);
-          throw error;
+      // 追加するタグ（localにあってcurrentにない）
+      const tagsToAdd = localTagIds.filter((id) => !currentTagIds.includes(id));
+
+      // 削除処理（preloadedTaggingsからタギングIDを見つける）
+      for (const tagId of tagsToRemove) {
+        const taggingToDelete = preloadedTaggings.find(
+          (t) => t.tagId === tagId,
+        );
+        if (taggingToDelete) {
+          await deleteTaggingMutation.mutateAsync(taggingToDelete.id);
         }
       }
-    }
-  }, [task, currentTags, localTags, preloadedTaggings, deleteTaggingMutation, createTaggingMutation]);
+
+      // 追加処理
+      for (const tagId of tagsToAdd) {
+        // 既に存在するかどうかを再度チェック（リアルタイムデータで）
+        const existingTagging = preloadedTaggings.find(
+          (t) =>
+            t.tagId === tagId &&
+            t.targetType === "task" &&
+            t.targetOriginalId === taskId,
+        );
+
+        if (!existingTagging) {
+          try {
+            await createTaggingMutation.mutateAsync({
+              tagId,
+              targetType: "task",
+              targetOriginalId: taskId,
+            });
+          } catch (error: unknown) {
+            // 400エラー（重複）は無視し、他のエラーは再スロー
+            const errorMessage = (error as Error).message || "";
+
+            const isDuplicateError =
+              (errorMessage.includes("HTTP error 400") &&
+                errorMessage.includes("Tag already attached to this item")) ||
+              (errorMessage.includes("400") &&
+                errorMessage.includes("already attached"));
+
+            if (isDuplicateError) {
+              continue;
+            }
+            console.error(
+              `Failed to create tagging for tag ${tagId} on task ${taskId}:`,
+              error,
+            );
+            throw error;
+          }
+        }
+      }
+    },
+    [
+      task,
+      currentTags,
+      localTags,
+      preloadedTaggings,
+      deleteTaggingMutation,
+      createTaggingMutation,
+    ],
+  );
 
   // 変更検知用のstate
   const [originalData, setOriginalData] = useState<{
@@ -425,36 +480,51 @@ function TaskEditor({
     dueDate: string;
     boardIds: string[];
   } | null>(null);
-  
 
   // 変更があるかチェック（useMemoで最適化）
   const hasChanges = useMemo(() => {
     if (!originalData) return false; // originalDataがない間は保存ボタンを無効に
-    
+
     // ボードの変更をチェック
-    const boardsChanged = JSON.stringify(selectedBoardIds.sort()) !== JSON.stringify(originalData.boardIds.sort());
-    
-    return title.trim() !== originalData.title.trim() ||
+    const boardsChanged =
+      JSON.stringify(selectedBoardIds.sort()) !==
+      JSON.stringify(originalData.boardIds.sort());
+
+    return (
+      title.trim() !== originalData.title.trim() ||
       description.trim() !== originalData.description.trim() ||
       status !== originalData.status ||
       priority !== originalData.priority ||
       categoryId !== originalData.categoryId ||
       boardCategoryId !== originalData.boardCategoryId ||
       dueDate !== originalData.dueDate ||
-      boardsChanged;
-  }, [title, description, status, priority, categoryId, boardCategoryId, dueDate, selectedBoardIds, originalData]);
+      boardsChanged
+    );
+  }, [
+    title,
+    description,
+    status,
+    priority,
+    categoryId,
+    boardCategoryId,
+    dueDate,
+    selectedBoardIds,
+    originalData,
+  ]);
 
   // 新規作成時の保存可能性チェック
-  const canSave = isDeleted ? false : (isNewTask ? !!title.trim() : (hasChanges || hasTagChanges));
-
-
+  const canSave = isDeleted
+    ? false
+    : isNewTask
+      ? !!title.trim()
+      : hasChanges || hasTagChanges;
 
   // ボード選択の初期化（メインの初期化useEffectに統合）
 
   // ボード変更と保存を実行する関数
   const executeBoardChangesAndSave = useCallback(async () => {
     const { toAdd, toRemove } = pendingBoardChanges;
-    
+
     try {
       // ボードから削除
       for (const boardId of toRemove) {
@@ -462,7 +532,7 @@ function TaskEditor({
           await removeItemFromBoard.mutateAsync({
             boardId: parseInt(boardId),
             itemId: task!.originalId || task!.id.toString(),
-            itemType: 'task'
+            itemType: "task",
           });
         } catch {
           // エラーは上位でハンドリング
@@ -476,7 +546,7 @@ function TaskEditor({
             await addItemToBoard.mutateAsync({
               boardId: parseInt(boardId),
               data: {
-                itemType: 'task',
+                itemType: "task",
                 itemId: task.originalId || task.id.toString(),
               },
             });
@@ -485,15 +555,19 @@ function TaskEditor({
           }
         }
       }
-      
+
       // 現在のボードから外された場合は次のアイテムを選択
-      if (initialBoardId && toRemove.includes(initialBoardId.toString()) && onDeleteAndSelectNext) {
+      if (
+        initialBoardId &&
+        toRemove.includes(initialBoardId.toString()) &&
+        onDeleteAndSelectNext
+      ) {
         onDeleteAndSelectNext(task as Task);
         return;
       }
-      
+
       onSaveComplete?.(task as Task, false);
-      
+
       // 保存成功時にoriginalDataも更新（現在のstateの値を使用）
       setOriginalData({
         title: title.trim(),
@@ -503,15 +577,30 @@ function TaskEditor({
         categoryId: categoryId,
         boardCategoryId: boardCategoryId,
         dueDate: dueDate,
-        boardIds: selectedBoardIds
+        boardIds: selectedBoardIds,
       });
     } catch (error) {
       console.error("ボード変更に失敗しました:", error);
       setError(
-        "ボード変更に失敗しました。APIサーバーが起動していることを確認してください。"
+        "ボード変更に失敗しました。APIサーバーが起動していることを確認してください。",
       );
     }
-  }, [pendingBoardChanges, removeItemFromBoard, addItemToBoard, task, onSaveComplete, title, description, status, priority, categoryId, dueDate, selectedBoardIds, initialBoardId, onDeleteAndSelectNext]);
+  }, [
+    pendingBoardChanges,
+    removeItemFromBoard,
+    addItemToBoard,
+    task,
+    onSaveComplete,
+    title,
+    description,
+    status,
+    priority,
+    categoryId,
+    dueDate,
+    selectedBoardIds,
+    initialBoardId,
+    onDeleteAndSelectNext,
+  ]);
 
   // モーダル確認時の処理
   const handleConfirmBoardChange = useCallback(async () => {
@@ -522,45 +611,40 @@ function TaskEditor({
 
   // ボードIDを名前に変換する関数
   const getBoardName = (boardId: string) => {
-    const board = boards.find(b => b.id.toString() === boardId);
+    const board = boards.find((b) => b.id.toString() === boardId);
     return board ? board.name : `ボード${boardId}`;
   };
 
   // BoardIconSelector用のボードオプション
   const boardOptions = useMemo(() => {
-    const options = [
-      { value: "", label: "なし" }
-    ];
-    
-    boards.forEach(board => {
+    const options = [{ value: "", label: "なし" }];
+
+    boards.forEach((board) => {
       options.push({
         value: board.id.toString(),
-        label: board.name
+        label: board.name,
       });
     });
-    
+
     return options;
   }, [boards]);
 
   // 現在選択されているボードのvalue（複数選択対応）
-  const currentBoardValues = selectedBoardIds.map(id => id.toString());
+  const currentBoardValues = selectedBoardIds.map((id) => id.toString());
 
   // ボード選択変更ハンドラー
   const handleBoardSelectorChange = (value: string | string[]) => {
     const values = Array.isArray(value) ? value : [value];
-    const boardIds = values
-      .filter(v => v !== "")
-      .map(v => parseInt(v, 10));
+    const boardIds = values.filter((v) => v !== "").map((v) => parseInt(v, 10));
     handleBoardChange(boardIds.map(String));
   };
-
 
   const handleSave = useCallback(async () => {
     if (!title.trim() || isSaving || isDeleted) return;
 
     setIsSaving(true);
     setError(null);
-    
+
     try {
       const taskData = {
         title: title.trim(),
@@ -573,7 +657,7 @@ function TaskEditor({
           ? Math.floor(new Date(dueDate).getTime() / 1000)
           : undefined,
       };
-      
+
       // デバッグ用ログ
       console.log("保存するタスクデータ:", taskData);
       console.log("boardCategoryId:", boardCategoryId);
@@ -581,7 +665,7 @@ function TaskEditor({
       if (isNewTask) {
         // 新規作成
         const newTask = await createTask.mutateAsync(taskData);
-        
+
         // 選択されたボードに追加
         if (selectedBoardIds.length > 0 && newTask.id) {
           try {
@@ -589,7 +673,7 @@ function TaskEditor({
               await addItemToBoard.mutateAsync({
                 boardId: parseInt(boardId),
                 data: {
-                  itemType: 'task',
+                  itemType: "task",
                   itemId: newTask.originalId || newTask.id.toString(),
                 },
               });
@@ -598,17 +682,16 @@ function TaskEditor({
             // エラーは上位でハンドリング
           }
         }
-        
+
         // 新規作成完了を通知
         onSaveComplete?.(newTask, true);
-        
+
         // 新規作成後はフォームをリセット
         setTimeout(() => {
-          
           if (isFromBoardDetail) {
             // ボード詳細での新規作成時は、ボード情報を保持
             const currentBoardIds = selectedBoardIds;
-            
+
             const resetData = {
               title: "",
               description: "",
@@ -617,9 +700,9 @@ function TaskEditor({
               categoryId: null,
               boardCategoryId: boardCategoryId, // ボードカテゴリーも保持
               dueDate: "",
-              boardIds: currentBoardIds // ボード選択を保持
+              boardIds: currentBoardIds, // ボード選択を保持
             };
-            
+
             setTitle("");
             setDescription("");
             setStatus("todo");
@@ -628,12 +711,12 @@ function TaskEditor({
             // setBoardCategoryId(null); // ボードカテゴリーを保持
             // initializeBoardIds([]); // ボード選択を保持
             setDueDate("");
-            
+
             // originalDataもリセット
             setOriginalData(resetData);
           } else {
             // 通常のタスク画面での新規作成時は、完全リセット
-            
+
             const resetData = {
               title: "",
               description: "",
@@ -642,9 +725,9 @@ function TaskEditor({
               categoryId: null,
               boardCategoryId: null,
               dueDate: "",
-              boardIds: []
+              boardIds: [],
             };
-            
+
             setTitle("");
             setDescription("");
             setStatus("todo");
@@ -653,12 +736,11 @@ function TaskEditor({
             setBoardCategoryId(null);
             initializeBoardIds([]);
             setDueDate("");
-            
+
             // originalDataもリセット
             setOriginalData(resetData);
           }
-          
-          
+
           // 少し遅延してタイトル入力欄にフォーカス
           setTimeout(() => {
             taskFormRef.current?.focusTitle();
@@ -667,25 +749,29 @@ function TaskEditor({
       } else {
         // 編集
         // タスク内容の変更があるかチェック（ボード変更は除く）
-        const hasContentChanges = title.trim() !== originalData!.title.trim() ||
+        const hasContentChanges =
+          title.trim() !== originalData!.title.trim() ||
           description.trim() !== originalData!.description.trim() ||
           status !== originalData!.status ||
           priority !== originalData!.priority ||
           categoryId !== originalData!.categoryId ||
           boardCategoryId !== originalData!.boardCategoryId ||
           dueDate !== originalData!.dueDate;
-        
+
         let updatedTask = task as Task;
-        
+
         // タスク内容に変更がある場合のみ更新
         if (hasContentChanges) {
           const apiResponse = await updateTask.mutateAsync({
             id: (task as Task).id,
             data: taskData,
           });
-          
+
           // APIが不完全なレスポンスを返した場合は既存データをマージ
-          if (apiResponse.title !== undefined && apiResponse.description !== undefined) {
+          if (
+            apiResponse.title !== undefined &&
+            apiResponse.description !== undefined
+          ) {
             updatedTask = apiResponse;
           } else {
             updatedTask = {
@@ -696,20 +782,26 @@ function TaskEditor({
               priority: taskData.priority,
               categoryId: taskData.categoryId || null,
               dueDate: taskData.dueDate || null,
-              updatedAt: Math.floor(Date.now() / 1000)
+              updatedAt: Math.floor(Date.now() / 1000),
             };
           }
         }
-        
+
         // タグ更新処理
         if (hasTagChanges) {
-          await updateTaggings((task as Task).originalId || (task as Task).id.toString());
+          await updateTaggings(
+            (task as Task).originalId || (task as Task).id.toString(),
+          );
         }
-        
+
         // ボード変更処理
-        const currentBoardIds = itemBoards.map(board => board.id.toString());
-        const toAdd = selectedBoardIds.filter(id => !currentBoardIds.includes(id));
-        const toRemove = currentBoardIds.filter(id => !selectedBoardIds.includes(id));
+        const currentBoardIds = itemBoards.map((board) => board.id.toString());
+        const toAdd = selectedBoardIds.filter(
+          (id) => !currentBoardIds.includes(id),
+        );
+        const toRemove = currentBoardIds.filter(
+          (id) => !selectedBoardIds.includes(id),
+        );
 
         // ボードを外す場合はモーダル表示
         if (toRemove.length > 0) {
@@ -723,7 +815,7 @@ function TaskEditor({
             await removeItemFromBoard.mutateAsync({
               boardId: parseInt(boardId),
               itemId: (task as Task).originalId || (task as Task).id.toString(),
-              itemType: 'task'
+              itemType: "task",
             });
           } catch {
             // エラーは上位でハンドリング
@@ -735,23 +827,23 @@ function TaskEditor({
           for (const boardId of toAdd) {
             try {
               const itemIdToAdd = task.originalId || task.id.toString();
-              
+
               await addItemToBoard.mutateAsync({
                 boardId: parseInt(boardId),
                 data: {
-                  itemType: 'task',
+                  itemType: "task",
                   itemId: itemIdToAdd,
                 },
               });
             } catch (error) {
-              console.error('Failed to add to board:', error);
+              console.error("Failed to add to board:", error);
               // エラーは上位でハンドリング
             }
           }
         }
-        
+
         onSaveComplete?.(updatedTask, false);
-        
+
         // 保存成功時にoriginalDataも更新（現在のstateの値を使用）
         setOriginalData({
           title: title.trim(),
@@ -761,13 +853,13 @@ function TaskEditor({
           categoryId: categoryId,
           boardCategoryId: boardCategoryId,
           dueDate: dueDate,
-          boardIds: selectedBoardIds
+          boardIds: selectedBoardIds,
         });
       }
     } catch (error) {
       console.error("保存に失敗しました:", error);
       setError(
-        "保存に失敗しました。APIサーバーが起動していることを確認してください。"
+        "保存に失敗しました。APIサーバーが起動していることを確認してください。",
       );
       setIsSaving(false);
     } finally {
@@ -825,13 +917,15 @@ function TaskEditor({
           headerActions={
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-2">
-                {error && (
-                  <span className="text-xs text-red-500">{error}</span>
-                )}
+                {error && <span className="text-xs text-red-500">{error}</span>}
                 <SaveButton
                   onClick={handleSave}
                   disabled={!canSave}
-                  isSaving={isSaving || createTaggingMutation.isPending || deleteTaggingMutation.isPending}
+                  isSaving={
+                    isSaving ||
+                    createTaggingMutation.isPending ||
+                    deleteTaggingMutation.isPending
+                  }
                   buttonSize="size-7"
                   iconSize="size-4"
                 />
@@ -849,23 +943,23 @@ function TaskEditor({
                   iconClassName="size-4 text-gray-600"
                   multiple={true}
                 />
-                <TagTriggerButton 
-                  onClick={() => setIsTagModalOpen(true)} 
-                  tags={localTags} 
+                <TagTriggerButton
+                  onClick={() => setIsTagModalOpen(true)}
+                  tags={localTags}
                 />
               </div>
               <div className="flex items-center gap-1">
                 {isDeleted && task && (
                   <span className="text-xs text-red-500 mr-2">
-                    削除日時: {new Date((task as DeletedTask).deletedAt * 1000).toLocaleDateString('ja-JP')}
+                    削除日時:{" "}
+                    {new Date(
+                      (task as DeletedTask).deletedAt * 1000,
+                    ).toLocaleDateString("ja-JP")}
                   </span>
                 )}
                 {task && task.id !== 0 && (
                   <div className="text-[13px] text-gray-400 mr-2">
-                    <DateInfo
-                      item={task}
-                      isEditing={!isDeleted}
-                    />
+                    <DateInfo item={task} isEditing={!isDeleted} />
                   </div>
                 )}
                 {!isNewTask && !isDeleted && (
@@ -877,7 +971,7 @@ function TaskEditor({
                   </button>
                 )}
                 {isDeleted && (
-                    <div className="flex gap-2 mr-2">
+                  <div className="flex gap-2 mr-2">
                     <Tooltip text="復元" position="bottom">
                       <button
                         onClick={() => {
@@ -902,7 +996,13 @@ function TaskEditor({
                       }}
                       className="flex items-center justify-center size-7 rounded-md bg-red-100 hover:bg-red-200"
                     >
-                      <TrashIcon className="size-4" isLidOpen={isAnimating || (isDeleted && deletedTaskActions?.showDeleteModal)} />
+                      <TrashIcon
+                        className="size-4"
+                        isLidOpen={
+                          isAnimating ||
+                          (isDeleted && deletedTaskActions?.showDeleteModal)
+                        }
+                      />
                     </button>
                   </div>
                 )}
@@ -911,36 +1011,34 @@ function TaskEditor({
           }
           isEditing={true}
         >
-          
-        <TaskForm
-          ref={taskFormRef}
-          task={task as Task}
-          title={title}
-          onTitleChange={isDeleted ? () => {} : setTitle}
-          description={description}
-          onDescriptionChange={isDeleted ? () => {} : setDescription}
-          status={status}
-          onStatusChange={isDeleted ? () => {} : setStatus}
-          priority={priority}
-          onPriorityChange={isDeleted ? () => {} : setPriority}
-          categoryId={categoryId}
-          onCategoryChange={isDeleted ? () => {} : setCategoryId}
-          boardCategoryId={boardCategoryId}
-          onBoardCategoryChange={isDeleted ? () => {} : setBoardCategoryId}
-          dueDate={dueDate}
-          onDueDateChange={isDeleted ? () => {} : setDueDate}
-          isNewTask={isNewTask}
-          customHeight={customHeight}
-          tags={task && task.id !== 0 ? localTags : []}
-          boards={task && task.id !== 0 ? itemBoards : []}
-          boardCategories={categories}
-          showBoardCategory={isFromBoardDetail}
-          isDeleted={isDeleted}
-          initialBoardId={initialBoardId}
-        />
+          <TaskForm
+            ref={taskFormRef}
+            task={task as Task}
+            title={title}
+            onTitleChange={isDeleted ? () => {} : setTitle}
+            description={description}
+            onDescriptionChange={isDeleted ? () => {} : setDescription}
+            status={status}
+            onStatusChange={isDeleted ? () => {} : setStatus}
+            priority={priority}
+            onPriorityChange={isDeleted ? () => {} : setPriority}
+            categoryId={categoryId}
+            onCategoryChange={isDeleted ? () => {} : setCategoryId}
+            boardCategoryId={boardCategoryId}
+            onBoardCategoryChange={isDeleted ? () => {} : setBoardCategoryId}
+            dueDate={dueDate}
+            onDueDateChange={isDeleted ? () => {} : setDueDate}
+            isNewTask={isNewTask}
+            customHeight={customHeight}
+            tags={task && task.id !== 0 ? localTags : []}
+            boards={task && task.id !== 0 ? itemBoards : []}
+            boardCategories={categories}
+            showBoardCategory={isFromBoardDetail}
+            isDeleted={isDeleted}
+            initialBoardId={initialBoardId}
+          />
         </BaseViewer>
       </div>
-      
 
       {/* 削除確認モーダル（編集時のみ・削除済みタスクは除外） */}
       {!isNewTask && !isDeleted && (
@@ -953,15 +1051,23 @@ function TaskEditor({
           deleteType="normal"
           isLoading={isDeleting}
           position="center"
-          customTitle={`「${task?.title || 'タイトルなし'}」の削除`}
+          customTitle={`「${task?.title || "タイトルなし"}」の削除`}
           customMessage={
-            itemBoards && itemBoards.filter(board => !initialBoardId || board.id !== initialBoardId).length > 0 ? (
+            itemBoards &&
+            itemBoards.filter(
+              (board) => !initialBoardId || board.id !== initialBoardId,
+            ).length > 0 ? (
               <div className="text-center">
                 <p className="text-sm text-gray-700 mb-3">
                   このタスクは以下のボードに紐づいています
                 </p>
                 <div className="mb-3 flex justify-center">
-                  <BoardChips boards={itemBoards.filter(board => !initialBoardId || board.id !== initialBoardId)} variant="compact" />
+                  <BoardChips
+                    boards={itemBoards.filter(
+                      (board) => !initialBoardId || board.id !== initialBoardId,
+                    )}
+                    variant="compact"
+                  />
                 </div>
                 <p className="text-xs text-gray-500">
                   削除すると各ボードの「削除済み」タブに移動します
@@ -980,15 +1086,17 @@ function TaskEditor({
         boardsToAdd={pendingBoardChanges.toAdd.map(getBoardName)}
         boardsToRemove={pendingBoardChanges.toRemove.map(getBoardName)}
       />
-      
+
       {/* タグ選択モーダル */}
       <TagSelectionModal
         isOpen={isTagModalOpen}
         onClose={() => setIsTagModalOpen(false)}
         tags={preloadedTags}
-        selectedTagIds={localTags.map(tag => tag.id)}
+        selectedTagIds={localTags.map((tag) => tag.id)}
         onSelectionChange={(tagIds) => {
-          const selectedTags = preloadedTags.filter(tag => tagIds.includes(tag.id));
+          const selectedTags = preloadedTags.filter((tag) =>
+            tagIds.includes(tag.id),
+          );
           setLocalTags(selectedTags);
         }}
         mode="selection"
@@ -1006,13 +1114,19 @@ function TaskEditor({
           deleteType="permanent"
           isLoading={deletedTaskActions.isDeleting}
           position="center"
-          customTitle={`「${task?.title || 'タイトルなし'}」の完全削除`}
+          customTitle={`「${task?.title || "タイトルなし"}」の完全削除`}
           customMessage={
             <div className="text-center">
               <div className="mt-3 p-3 bg-red-50 rounded-md">
-                <p className="text-sm text-red-800 font-medium">この操作は取り消せません</p>
-                <p className="text-xs text-red-700 mt-1">データは永久に失われます</p>
-                <p className="text-xs text-red-700 mt-1">ボードからも完全に削除されます</p>
+                <p className="text-sm text-red-800 font-medium">
+                  この操作は取り消せません
+                </p>
+                <p className="text-xs text-red-700 mt-1">
+                  データは永久に失われます
+                </p>
+                <p className="text-xs text-red-700 mt-1">
+                  ボードからも完全に削除されます
+                </p>
               </div>
             </div>
           }

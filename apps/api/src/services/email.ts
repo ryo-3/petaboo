@@ -1,4 +1,4 @@
-import { Resend } from 'resend';
+import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -6,7 +6,7 @@ interface TeamInvitationEmailData {
   to: string;
   teamName: string;
   inviterEmail: string;
-  role: 'admin' | 'member';
+  role: "admin" | "member";
   invitationToken: string;
   invitationLink: string;
 }
@@ -14,13 +14,13 @@ interface TeamInvitationEmailData {
 export async function sendTeamInvitationEmail(data: TeamInvitationEmailData) {
   const { to, teamName, inviterEmail, role, invitationLink } = data;
 
-  const roleText = role === 'admin' ? '管理者' : 'メンバー';
+  const roleText = role === "admin" ? "管理者" : "メンバー";
 
   try {
-    console.log('Resend送信開始:', { to, teamName, role });
-    
+    console.log("Resend送信開始:", { to, teamName, role });
+
     const emailResult = await resend.emails.send({
-      from: 'onboarding@resend.dev', // Resendのテストドメイン（最初はこれでOK）
+      from: "onboarding@resend.dev", // Resendのテストドメイン（最初はこれでOK）
       to,
       subject: `${teamName} チームへの招待`,
       html: `
@@ -64,27 +64,27 @@ ${invitationLink}
 
 この招待は7日間有効です。
 このメールに心当たりがない場合は、無視してください。
-      `.trim()
+      `.trim(),
     });
 
-    console.log('Resend完全な応答:', JSON.stringify(emailResult, null, 2));
-    console.log('招待メール送信成功:', {
+    console.log("Resend完全な応答:", JSON.stringify(emailResult, null, 2));
+    console.log("招待メール送信成功:", {
       emailId: emailResult.data?.id,
       to,
       teamName,
-      error: emailResult.error
+      error: emailResult.error,
     });
 
     return {
       success: true,
-      emailId: emailResult.data?.id
+      emailId: emailResult.data?.id,
     };
-
   } catch (error) {
-    console.error('招待メール送信エラー:', error);
+    console.error("招待メール送信エラー:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'メール送信に失敗しました'
+      error:
+        error instanceof Error ? error.message : "メール送信に失敗しました",
     };
   }
 }

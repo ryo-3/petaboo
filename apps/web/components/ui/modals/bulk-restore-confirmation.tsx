@@ -29,7 +29,9 @@ export function BulkRestoreConfirmation({
       onClose={onClose}
       onConfirm={onConfirm}
       title="復元の確認"
-      message={customMessage || `選択した${count}件の${itemTypeName}を復元しますか？`}
+      message={
+        customMessage || `選択した${count}件の${itemTypeName}を復元しますか？`
+      }
       confirmText="復元する"
       cancelText="キャンセル"
       variant="primary"

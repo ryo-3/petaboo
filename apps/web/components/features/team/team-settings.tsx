@@ -86,7 +86,9 @@ export function TeamSettings({ customUrl }: TeamSettingsProps) {
             >
               <ArrowLeftIcon className="w-5 h-5" />
             </button>
-            <h1 className="text-[22px] font-bold text-gray-800 w-[105px] truncate">チーム設定</h1>
+            <h1 className="text-[22px] font-bold text-gray-800 w-[105px] truncate">
+              チーム設定
+            </h1>
           </div>
         </div>
 
@@ -96,7 +98,10 @@ export function TeamSettings({ customUrl }: TeamSettingsProps) {
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* チーム名 */}
               <div>
-                <label htmlFor="teamName" className="block text-sm font-semibold text-gray-700 mb-2">
+                <label
+                  htmlFor="teamName"
+                  className="block text-sm font-semibold text-gray-700 mb-2"
+                >
                   チーム名 <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -121,7 +126,10 @@ export function TeamSettings({ customUrl }: TeamSettingsProps) {
 
               {/* チーム説明 */}
               <div>
-                <label htmlFor="teamDescription" className="block text-sm font-semibold text-gray-700 mb-2">
+                <label
+                  htmlFor="teamDescription"
+                  className="block text-sm font-semibold text-gray-700 mb-2"
+                >
                   チーム説明（任意）
                 </label>
                 <textarea
@@ -153,11 +161,7 @@ export function TeamSettings({ customUrl }: TeamSettingsProps) {
                 >
                   キャンセル
                 </Button>
-                <Button
-                  type="submit"
-                  disabled={!name.trim()}
-                  className="px-8"
-                >
+                <Button type="submit" disabled={!name.trim()} className="px-8">
                   設定を保存
                 </Button>
               </div>
@@ -176,7 +180,11 @@ export function TeamSettings({ customUrl }: TeamSettingsProps) {
                   variant="outline"
                   className="text-red-600 border-red-300 hover:bg-red-50"
                   onClick={() => {
-                    if (confirm(`本当に「${team.name}」を削除しますか？この操作は取り消せません。`)) {
+                    if (
+                      confirm(
+                        `本当に「${team.name}」を削除しますか？この操作は取り消せません。`,
+                      )
+                    ) {
                       // TODO: チーム削除のAPI実装
                       console.log("チーム削除:", team.id);
                     }
@@ -190,7 +198,9 @@ export function TeamSettings({ customUrl }: TeamSettingsProps) {
 
           {/* 今後の機能予定 */}
           <Card className="max-w-xl mt-4 p-4 bg-gray-50">
-            <h3 className="font-semibold text-gray-800 mb-2 text-sm">今後追加予定の機能</h3>
+            <h3 className="font-semibold text-gray-800 mb-2 text-sm">
+              今後追加予定の機能
+            </h3>
             <div className="space-y-1 text-xs text-gray-600">
               <div className="flex items-center gap-2">
                 <span className="w-1 h-1 bg-gray-400 rounded-full"></span>

@@ -9,9 +9,9 @@ import type { Tag } from "@/src/types/tag";
 interface TagTriggerButtonProps {
   onClick?: () => void;
   tags?: Tag[];
-  targetType?: 'memo' | 'task' | 'board';
+  targetType?: "memo" | "task" | "board";
   targetOriginalId?: string;
-  size?: 'sm' | 'md';
+  size?: "sm" | "md";
   disabled?: boolean;
 }
 
@@ -20,26 +20,26 @@ export default function TagTriggerButton({
   tags: providedTags,
   targetType,
   targetOriginalId,
-  size = 'md',
+  size = "md",
   disabled = false,
 }: TagTriggerButtonProps) {
   const shouldFetchTags = !providedTags && targetType && targetOriginalId;
   const { tags: fetchedTags } = useItemTags(
-    shouldFetchTags ? targetType : 'memo',
-    shouldFetchTags ? targetOriginalId : ''
+    shouldFetchTags ? targetType : "memo",
+    shouldFetchTags ? targetOriginalId : "",
   );
 
   const tags = providedTags || (shouldFetchTags ? fetchedTags : []);
   const hasTagsData = !shouldFetchTags || fetchedTags;
 
   const sizeClasses = {
-    sm: 'size-6',
-    md: 'size-7'
+    sm: "size-6",
+    md: "size-7",
   };
 
   const iconSizeClasses = {
-    sm: 'size-4',
-    md: 'size-5'
+    sm: "size-4",
+    md: "size-5",
   };
 
   if (shouldFetchTags && !hasTagsData) {
@@ -52,28 +52,26 @@ export default function TagTriggerButton({
     );
   }
 
-  const tooltipText = 'タグ';
+  const tooltipText = "タグ";
 
   return (
     <Tooltip text={tooltipText} position="bottom">
       <div
         onClick={disabled ? undefined : onClick}
         className={`flex items-center justify-center ${sizeClasses[size]} rounded-md transition-colors ${
-          disabled 
-            ? "cursor-not-allowed" 
-            : "cursor-pointer"
+          disabled ? "cursor-not-allowed" : "cursor-pointer"
         } ${
           disabled
             ? "bg-gray-50"
-            : tags.length > 0 
-              ? "hover:opacity-80" 
+            : tags.length > 0
+              ? "hover:opacity-80"
               : "bg-gray-100 hover:bg-gray-200"
         }`}
         style={
-          disabled 
+          disabled
             ? {}
-            : tags.length > 0 
-              ? { backgroundColor: TAG_COLORS.background } 
+            : tags.length > 0
+              ? { backgroundColor: TAG_COLORS.background }
               : {}
         }
       >
@@ -81,9 +79,9 @@ export default function TagTriggerButton({
           className={iconSizeClasses[size]}
           style={{
             color: disabled
-              ? '#9ca3af' // gray-400
-              : tags.length > 0 
-                ? TAG_COLORS.text 
+              ? "#9ca3af" // gray-400
+              : tags.length > 0
+                ? TAG_COLORS.text
                 : TAG_COLORS.iconDefault,
           }}
         />

@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import MemoCard from '@/components/features/memo/memo-card';
-import MemoListItem from '@/components/features/memo/memo-list-item';
-import ItemStatusDisplay from '@/components/ui/layout/item-status-display';
-import type { Memo, DeletedMemo } from '@/src/types/memo';
-import type { Tag, Tagging } from '@/src/types/tag';
-import type { Board } from '@/src/types/board';
-import { useMemo } from 'react';
+import MemoCard from "@/components/features/memo/memo-card";
+import MemoListItem from "@/components/features/memo/memo-list-item";
+import ItemStatusDisplay from "@/components/ui/layout/item-status-display";
+import type { Memo, DeletedMemo } from "@/src/types/memo";
+import type { Tag, Tagging } from "@/src/types/tag";
+import type { Board } from "@/src/types/board";
+import { useMemo } from "react";
 
 interface MemoStatusDisplayProps {
   memos: Memo[] | undefined;
-  viewMode: 'card' | 'list';
+  viewMode: "card" | "list";
   effectiveColumnCount: number;
-  selectionMode?: 'select' | 'check';
+  selectionMode?: "select" | "check";
   checkedMemos?: Set<number>;
   onToggleCheck?: (memoId: number) => void;
   onSelectMemo?: (memo: Memo) => void;
@@ -20,9 +20,9 @@ interface MemoStatusDisplayProps {
   showEditDate?: boolean;
   showBoardName?: boolean;
   selectedBoardIds?: number[];
-  boardFilterMode?: 'include' | 'exclude';
+  boardFilterMode?: "include" | "exclude";
   selectedTagIds?: number[];
-  tagFilterMode?: 'include' | 'exclude';
+  tagFilterMode?: "include" | "exclude";
   sortOptions?: Array<{
     id: "createdAt" | "updatedAt" | "deletedAt";
     label: string;
@@ -31,7 +31,7 @@ interface MemoStatusDisplayProps {
   }>;
   isBoard?: boolean; // ボード詳細画面での使用かどうか
   showTags?: boolean;
-  
+
   // 全データ事前取得（ちらつき解消）
   allTags?: Tag[];
   allBoards?: Board[];
@@ -39,7 +39,7 @@ interface MemoStatusDisplayProps {
   allBoardItems?: Array<{
     boardId: number;
     boardName: string;
-    itemType: 'memo' | 'task';
+    itemType: "memo" | "task";
     itemId: string;
     originalId: string;
     addedAt: number;
@@ -48,9 +48,9 @@ interface MemoStatusDisplayProps {
 
 interface DeletedMemoDisplayProps {
   deletedMemos: DeletedMemo[] | undefined;
-  viewMode: 'card' | 'list';
+  viewMode: "card" | "list";
   effectiveColumnCount: number;
-  selectionMode?: 'select' | 'check';
+  selectionMode?: "select" | "check";
   checkedMemos?: Set<number>;
   onToggleCheck?: (memoId: number) => void;
   onSelectMemo?: (memo: DeletedMemo) => void;
@@ -59,9 +59,9 @@ interface DeletedMemoDisplayProps {
   showBoardName?: boolean;
   showTags?: boolean;
   selectedBoardIds?: number[];
-  boardFilterMode?: 'include' | 'exclude';
+  boardFilterMode?: "include" | "exclude";
   selectedTagIds?: number[];
-  tagFilterMode?: 'include' | 'exclude';
+  tagFilterMode?: "include" | "exclude";
   sortOptions?: Array<{
     id: "createdAt" | "updatedAt" | "deletedAt";
     label: string;
@@ -69,7 +69,7 @@ interface DeletedMemoDisplayProps {
     direction: "asc" | "desc";
   }>;
   isBoard?: boolean; // ボード詳細画面での使用かどうか
-  
+
   // 全データ事前取得（ちらつき解消）
   allTags?: Tag[];
   allBoards?: Board[];
@@ -77,7 +77,7 @@ interface DeletedMemoDisplayProps {
   allBoardItems?: Array<{
     boardId: number;
     boardName: string;
-    itemType: 'memo' | 'task';
+    itemType: "memo" | "task";
     itemId: string;
     originalId: string;
     addedAt: number;
@@ -88,7 +88,7 @@ function MemoStatusDisplay({
   memos,
   viewMode,
   effectiveColumnCount,
-  selectionMode = 'select',
+  selectionMode = "select",
   checkedMemos,
   onToggleCheck,
   onSelectMemo,
@@ -96,9 +96,9 @@ function MemoStatusDisplay({
   showEditDate = false,
   showBoardName = false,
   selectedBoardIds = [],
-  boardFilterMode = 'include',
+  boardFilterMode = "include",
   selectedTagIds = [],
-  tagFilterMode = 'include',
+  tagFilterMode = "include",
   sortOptions = [],
   isBoard = false,
   showTags = false,
@@ -110,89 +110,114 @@ function MemoStatusDisplay({
   // フィルタリング済みのメモを取得
   const filteredMemos = useMemo(() => {
     let baseMemos = memos || [];
-    
+
     // ボードフィルタリング
     if (selectedBoardIds && selectedBoardIds.length > 0 && allBoardItems) {
-      baseMemos = baseMemos.filter(memo => {
+      baseMemos = baseMemos.filter((memo) => {
         if (!memo || memo.id === undefined) return false;
-        
+
         const originalId = memo.originalId || memo.id.toString();
-        
+
         // メモが所属するボードのID一覧を取得
         const memoBoardItems = allBoardItems.filter(
-          item => item.itemType === 'memo' && item.originalId === originalId
+          (item) => item.itemType === "memo" && item.originalId === originalId,
         );
-        const memoBoardIds = memoBoardItems.map(item => item.boardId);
+        const memoBoardIds = memoBoardItems.map((item) => item.boardId);
 
         // フィルターモードに応じて表示判定
-        if (boardFilterMode === 'exclude') {
+        if (boardFilterMode === "exclude") {
           // 除外モード：選択されたボードのいずれにも所属していない場合に表示
-          return !selectedBoardIds.some(selectedId => memoBoardIds.includes(selectedId));
+          return !selectedBoardIds.some((selectedId) =>
+            memoBoardIds.includes(selectedId),
+          );
         } else {
           // 含むモード（デフォルト）：選択されたボードのいずれかに所属している場合に表示
-          return selectedBoardIds.some(selectedId => memoBoardIds.includes(selectedId));
+          return selectedBoardIds.some((selectedId) =>
+            memoBoardIds.includes(selectedId),
+          );
         }
       });
     }
 
     // タグフィルタリング
     if (selectedTagIds && selectedTagIds.length > 0 && allTaggings) {
-      baseMemos = baseMemos.filter(memo => {
+      baseMemos = baseMemos.filter((memo) => {
         if (!memo || memo.id === undefined) return false;
-        
+
         const memoOriginalId = memo.originalId || memo.id.toString();
-        
+
         // メモに付けられたタグのID一覧を取得
         const memoTagIds = allTaggings
-          .filter(tagging => 
-            tagging.targetType === 'memo' && 
-            tagging.targetOriginalId === memoOriginalId
+          .filter(
+            (tagging) =>
+              tagging.targetType === "memo" &&
+              tagging.targetOriginalId === memoOriginalId,
           )
-          .map(tagging => tagging.tagId);
+          .map((tagging) => tagging.tagId);
 
         // フィルターモードに応じて表示判定
-        if (tagFilterMode === 'exclude') {
+        if (tagFilterMode === "exclude") {
           // 除外モード：選択されたタグのいずれも付いていない場合に表示
-          return !selectedTagIds.some(selectedId => memoTagIds.includes(selectedId));
+          return !selectedTagIds.some((selectedId) =>
+            memoTagIds.includes(selectedId),
+          );
         } else {
           // 含むモード（デフォルト）：選択されたタグのいずれかが付いている場合に表示
-          return selectedTagIds.some(selectedId => memoTagIds.includes(selectedId));
+          return selectedTagIds.some((selectedId) =>
+            memoTagIds.includes(selectedId),
+          );
         }
       });
     }
 
     return baseMemos;
-  }, [memos, selectedBoardIds, boardFilterMode, allBoardItems, selectedTagIds, tagFilterMode, allTaggings]);
-
+  }, [
+    memos,
+    selectedBoardIds,
+    boardFilterMode,
+    allBoardItems,
+    selectedTagIds,
+    tagFilterMode,
+    allTaggings,
+  ]);
 
   // 各メモのタグ・ボード情報を事前計算（ちらつき解消）
   const memoDataMap = useMemo(() => {
-    if (!filteredMemos || !allTaggings || !allBoardItems || !allTags || !allBoards) {
+    if (
+      !filteredMemos ||
+      !allTaggings ||
+      !allBoardItems ||
+      !allTags ||
+      !allBoards
+    ) {
       return new Map();
     }
 
     const map = new Map();
-    filteredMemos.forEach(memo => {
+    filteredMemos.forEach((memo) => {
       if (!memo || memo.id === undefined) return;
       const originalId = memo.originalId || memo.id.toString();
-      
+
       // メモのタグを抽出
       const memoTaggings = allTaggings.filter(
-        t => t.targetType === 'memo' && t.targetOriginalId === originalId
+        (t) => t.targetType === "memo" && t.targetOriginalId === originalId,
       );
       const memoTags = memoTaggings
-        .map(t => allTags.find(tag => tag.id === t.tagId))
+        .map((t) => allTags.find((tag) => tag.id === t.tagId))
         .filter((tag): tag is NonNullable<typeof tag> => tag !== undefined);
 
       // メモのボードを抽出（重複除去）
       const memoBoardItems = allBoardItems.filter(
-        item => item.itemType === 'memo' && item.originalId === originalId
+        (item) => item.itemType === "memo" && item.originalId === originalId,
       );
-      const uniqueBoardIds = new Set(memoBoardItems.map(item => item.boardId));
+      const uniqueBoardIds = new Set(
+        memoBoardItems.map((item) => item.boardId),
+      );
       const memoBoards = Array.from(uniqueBoardIds)
-        .map(boardId => allBoards.find(board => board.id === boardId))
-        .filter((board): board is NonNullable<typeof board> => board !== undefined);
-
+        .map((boardId) => allBoards.find((board) => board.id === boardId))
+        .filter(
+          (board): board is NonNullable<typeof board> => board !== undefined,
+        );
 
       map.set(memo.id, { tags: memoTags, boards: memoBoards });
     });
@@ -216,19 +241,22 @@ function MemoStatusDisplay({
     return memo.updatedAt || memo.createdAt;
   };
 
-  const renderMemo = (memo: Memo, props: {
-    isChecked: boolean;
-    onToggleCheck: () => void;
-    onSelect: () => void;
-    isSelected: boolean;
-    showEditDate: boolean;
-    showBoardName?: boolean;
-    showTags?: boolean;
-    variant?: 'normal' | 'deleted';
-  }) => {
-    const Component = viewMode === 'card' ? MemoCard : MemoListItem;
+  const renderMemo = (
+    memo: Memo,
+    props: {
+      isChecked: boolean;
+      onToggleCheck: () => void;
+      onSelect: () => void;
+      isSelected: boolean;
+      showEditDate: boolean;
+      showBoardName?: boolean;
+      showTags?: boolean;
+      variant?: "normal" | "deleted";
+    },
+  ) => {
+    const Component = viewMode === "card" ? MemoCard : MemoListItem;
     const memoData = memoDataMap.get(memo.id) || { tags: [], boards: [] };
-    
+
     /* eslint-disable react/prop-types */
     const memoComponent = (
       <Component
@@ -248,7 +276,7 @@ function MemoStatusDisplay({
         preloadedBoards={memoData.boards}
       />
     );
-    
+
     return memoComponent;
     /* eslint-enable react/prop-types */
   };
@@ -285,7 +313,7 @@ export function DeletedMemoDisplay({
   deletedMemos,
   viewMode,
   effectiveColumnCount,
-  selectionMode = 'select',
+  selectionMode = "select",
   checkedMemos,
   onToggleCheck,
   onSelectMemo,
@@ -294,15 +322,15 @@ export function DeletedMemoDisplay({
   showBoardName = false,
   showTags = false,
   selectedBoardIds = [],
-  boardFilterMode = 'include',
+  boardFilterMode = "include",
   selectedTagIds = [],
-  tagFilterMode = 'include',
+  tagFilterMode = "include",
   sortOptions = [],
   isBoard = false,
   allTags = [],
   allBoards = [],
   allTaggings = [],
-  allBoardItems = []
+  allBoardItems = [],
 }: DeletedMemoDisplayProps) {
   const getSortValue = (memo: DeletedMemo, sortId: string): number => {
     switch (sortId) {
@@ -322,52 +350,56 @@ export function DeletedMemoDisplay({
     return memo.deletedAt;
   };
 
-  const renderMemo = (memo: DeletedMemo, props: {
-    isChecked: boolean;
-    onToggleCheck: () => void;
-    onSelect: () => void;
-    isSelected: boolean;
-    showEditDate: boolean;
-    showBoardName?: boolean;
-    showTags?: boolean;
-    variant?: 'normal' | 'deleted';
-  }) => {
+  const renderMemo = (
+    memo: DeletedMemo,
+    props: {
+      isChecked: boolean;
+      onToggleCheck: () => void;
+      onSelect: () => void;
+      isSelected: boolean;
+      showEditDate: boolean;
+      showBoardName?: boolean;
+      showTags?: boolean;
+      variant?: "normal" | "deleted";
+    },
+  ) => {
     // 削除済みメモのタグ・ボード情報を取得
     // 削除済みメモの場合、originalIdは削除前の元のメモIDを文字列化したもの
     const originalId = memo.originalId || memo.id.toString();
-    
+
     // このメモのタグを抽出
     const memoTaggings = allTaggings.filter(
-      t => t.targetType === 'memo' && t.targetOriginalId === originalId
+      (t) => t.targetType === "memo" && t.targetOriginalId === originalId,
     );
     const memoTags = memoTaggings
-      .map(t => allTags.find(tag => tag.id === t.tagId))
+      .map((t) => allTags.find((tag) => tag.id === t.tagId))
       .filter((tag): tag is NonNullable<typeof tag> => tag !== undefined);
 
     // このメモのボードを抽出（重複除去）
     const memoBoardItems = allBoardItems.filter(
-      item => item.itemType === 'memo' && item.originalId === originalId
+      (item) => item.itemType === "memo" && item.originalId === originalId,
     );
-    const uniqueBoardIds = new Set(memoBoardItems.map(item => item.boardId));
+    const uniqueBoardIds = new Set(memoBoardItems.map((item) => item.boardId));
     const memoBoards = Array.from(uniqueBoardIds)
-      .map(boardId => allBoards.find(board => board.id === boardId))
-      .filter((board): board is NonNullable<typeof board> => board !== undefined);
+      .map((boardId) => allBoards.find((board) => board.id === boardId))
+      .filter(
+        (board): board is NonNullable<typeof board> => board !== undefined,
+      );
 
     // 削除済みメモのボード表示調査ログ
     if (deletedMemos && deletedMemos.indexOf(memo) === 0) {
-      
       // originalIdマッチング詳細調査
-      
+
       const nearbyIds = allBoardItems
-        .filter(item => item.itemType === 'memo')
-        .map(item => item.originalId)
-        .filter(id => Math.abs(parseInt(id) - parseInt(originalId)) <= 20);
-      
+        .filter((item) => item.itemType === "memo")
+        .map((item) => item.originalId)
+        .filter((id) => Math.abs(parseInt(id) - parseInt(originalId)) <= 20);
+
       if (memoBoardItems.length === 0) {
       }
     }
 
-    const Component = viewMode === 'card' ? MemoCard : MemoListItem;
+    const Component = viewMode === "card" ? MemoCard : MemoListItem;
     /* eslint-disable react/prop-types */
     return (
       <Component

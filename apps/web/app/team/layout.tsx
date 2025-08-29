@@ -12,15 +12,16 @@ export default function TeamLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  
+
   // /team 関連のページかどうかを判定（/team/create は除く）
-  const isTeamPage = pathname.startsWith('/team') && !pathname.includes('/create');
-  
+  const isTeamPage =
+    pathname.startsWith("/team") && !pathname.includes("/create");
+
   // チーム一覧ページかどうかを判定
-  const isTeamListPage = pathname === '/team';
-  
+  const isTeamListPage = pathname === "/team";
+
   const handleTeamList = () => {
-    router.push('/team');
+    router.push("/team");
   };
   return (
     <div className="flex h-screen bg-white overflow-hidden">
@@ -31,7 +32,7 @@ export default function TeamLayout({
             onNewMemo={() => {}}
             onSelectMemo={() => {}}
             onShowFullList={() => {}}
-            onHome={() => router.push('/')}
+            onHome={() => router.push("/")}
             onEditMemo={() => {}}
             isCompact={true}
             isTeamDetailPage={isTeamPage}
@@ -39,9 +40,7 @@ export default function TeamLayout({
             onTeamList={handleTeamList}
           />
         </div>
-        <main className="flex-1 overflow-hidden">
-          {children}
-        </main>
+        <main className="flex-1 overflow-hidden">{children}</main>
       </div>
     </div>
   );

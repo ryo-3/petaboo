@@ -26,9 +26,7 @@ import { useTags } from "@/src/hooks/use-tags";
 import TagManagementModal from "@/components/ui/tag-management/tag-management-modal";
 import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
 import type { DeletedTask, Task } from "@/src/types/task";
-import {
-  getTaskDisplayOrder,
-} from "@/src/utils/domUtils";
+import { getTaskDisplayOrder } from "@/src/utils/domUtils";
 import { createToggleHandlerWithTabClear } from "@/src/utils/toggleUtils";
 import { useCallback, useRef, useState } from "react";
 
@@ -40,7 +38,7 @@ interface TaskScreenProps {
   onSelectTask: (task: Task | null, fromFullList?: boolean) => void;
   onSelectDeletedTask: (
     task: DeletedTask | null,
-    fromFullList?: boolean
+    fromFullList?: boolean,
   ) => void;
   onClose: () => void;
   onClearSelection?: () => void; // 選択状態だけクリアする関数
@@ -78,7 +76,11 @@ function TaskScreen({
   useBulkProcessNotifications();
 
   // データ取得
-  const { data: tasks, isLoading: taskLoading, error: taskError } = useTasks() as {
+  const {
+    data: tasks,
+    isLoading: taskLoading,
+    error: taskError,
+  } = useTasks() as {
     data: Task[] | undefined;
     isLoading: boolean;
     error: Error | null;
@@ -87,15 +89,14 @@ function TaskScreen({
   const { preferences } = useUserPreferences(1);
   const { data: boards } = useBoards();
   const { data: tags } = useTags();
-  
+
   // 全データ事前取得（ちらつき解消）
   const { data: allTaggings } = useAllTaggings();
   const { data: allBoardItems } = useAllBoardItems();
 
-
   // 選択モード管理
   const [selectionMode, setSelectionMode] = useState<"select" | "check">(
-    initialSelectionMode
+    initialSelectionMode,
   );
 
   // 並び替え管理
@@ -108,34 +109,33 @@ function TaskScreen({
 
   // ボード名表示管理
   const [showBoardName, setShowBoardName] = useState(false); // デフォルトで非表示
-  
+
   // タグ表示管理
   const [showTagDisplay, setShowTagDisplay] = useState(false);
 
   // ボードフィルター管理
   const [selectedBoardIds, setSelectedBoardIds] = useState<number[]>(
-    excludeBoardId ? [excludeBoardId] : []
+    excludeBoardId ? [excludeBoardId] : [],
   );
-  const [boardFilterMode, setBoardFilterMode] = useState<'include' | 'exclude'>(
-    excludeBoardId ? 'exclude' : 'include'
+  const [boardFilterMode, setBoardFilterMode] = useState<"include" | "exclude">(
+    excludeBoardId ? "exclude" : "include",
   );
 
-  
   // タグ管理モーダルの状態
-  const [isTagManagementModalOpen, setIsTagManagementModalOpen] = useState(false);
-  
-  
+  const [isTagManagementModalOpen, setIsTagManagementModalOpen] =
+    useState(false);
+
   // タグフィルター管理
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
-  const [tagFilterMode, setTagFilterMode] = useState<'include' | 'exclude'>('include');
-  
+  const [tagFilterMode, setTagFilterMode] = useState<"include" | "exclude">(
+    "include",
+  );
 
   // 削除ボタンの参照
   const deleteButtonRef = useRef<HTMLButtonElement>(null);
 
   // 復元ボタンの参照
   const restoreButtonRef = useRef<HTMLButtonElement>(null);
-
 
   // 削除完了時に蓋を閉じる処理
   useDeletionLid(() => setIsRightLidOpen(false));
@@ -173,9 +173,8 @@ function TaskScreen({
     "list" as TaskScreenMode,
     selectedTask,
     selectedDeletedTask,
-    preferences || undefined
+    preferences || undefined,
   );
-
 
   // 一括削除ボタンの表示制御
   const { showDeleteButton } = useBulkDeleteButton({
@@ -206,7 +205,7 @@ function TaskScreen({
     selectedTask,
     selectedDeletedTask,
     () => onClearSelection?.(),
-    (mode: string) => setTaskScreenMode(mode as TaskScreenMode)
+    (mode: string) => setTaskScreenMode(mode as TaskScreenMode),
   );
 
   // 型キャストの統一化
@@ -251,21 +250,22 @@ function TaskScreen({
   });
 
   // 削除済みタスク操作の共通ロジック
-  const { selectNextDeletedItem: selectNextDeletedTask, handleRestoreAndSelectNext: handleDeletedTaskRestoreAndSelectNext } = 
-    useDeletedItemOperations({
-      deletedItems: deletedTasks || null,
-      onSelectDeletedItem: onSelectDeletedTask,
-      setScreenMode: (mode: string) => setTaskScreenMode(mode as TaskScreenMode),
-      editorSelector: "[data-task-editor]",
-      restoreOptions: { isRestore: true, onSelectWithFromFlag: true },
-    });
+  const {
+    selectNextDeletedItem: selectNextDeletedTask,
+    handleRestoreAndSelectNext: handleDeletedTaskRestoreAndSelectNext,
+  } = useDeletedItemOperations({
+    deletedItems: deletedTasks || null,
+    onSelectDeletedItem: onSelectDeletedTask,
+    setScreenMode: (mode: string) => setTaskScreenMode(mode as TaskScreenMode),
+    editorSelector: "[data-task-editor]",
+    restoreOptions: { isRestore: true, onSelectWithFromFlag: true },
+  });
 
   // 通常タスクでの次のタスク選択ハンドラー（実際の画面表示順序に基づく）
   const handleTaskDeleteAndSelectNext = (
     deletedTask: Task,
-    preDeleteDisplayOrder?: number[]
+    preDeleteDisplayOrder?: number[],
   ) => {
-
     if (!tasks) return;
 
     // 削除されたタスクが現在のタブと異なるステータスの場合は右パネルを閉じるだけ
@@ -277,7 +277,7 @@ function TaskScreen({
 
     // 削除されたタスクを除外してフィルター
     const filteredTasks = tasks.filter(
-      (t) => t.status === activeTab && t.id !== deletedTask.id
+      (t) => t.status === activeTab && t.id !== deletedTask.id,
     );
 
     // 削除前のDOM順序を使用、なければ現在の順序
@@ -310,7 +310,6 @@ function TaskScreen({
       }
     }
 
-
     if (nextTaskId) {
       const nextTask = filteredTasks.find((t) => t.id === nextTaskId);
 
@@ -318,7 +317,6 @@ function TaskScreen({
         // DOM監視
         setTimeout(() => {
           document.querySelector("[data-task-editor]");
-
         }, 100);
 
         onSelectTask(nextTask, true);
@@ -358,13 +356,15 @@ function TaskScreen({
   const safeAllBoardItems = allBoardItems || [];
 
   // 除外アイテムIDでフィルタリングされたタスク
-  const filteredTasks = tasks?.filter(task => !excludeItemIds.includes(task.id)) || [];
+  const filteredTasks =
+    tasks?.filter((task) => !excludeItemIds.includes(task.id)) || [];
 
   // ボードフィルターから除外するボードをフィルタリング
-  const filteredBoards = boards?.filter(board => board.id !== excludeBoardIdFromFilter) || [];
+  const filteredBoards =
+    boards?.filter((board) => board.id !== excludeBoardIdFromFilter) || [];
 
   return (
-    <div className="flex h-full bg-white">      
+    <div className="flex h-full bg-white">
       {/* 左側：一覧表示エリア */}
       <div
         className={`${taskScreenMode === "list" ? "w-full" : "w-[44%]"} ${taskScreenMode !== "list" ? "border-r border-gray-300" : ""} pt-3 pl-5 pr-2 flex flex-col transition-all duration-300 relative`}
@@ -379,7 +379,7 @@ function TaskScreen({
                 setTaskScreenMode(mode as TaskScreenMode);
                 onClearSelection?.(); // 選択状態もクリア
               },
-            })
+            }),
           )}
           onCreateNew={handleCreateNew}
           viewMode={viewMode}
@@ -456,12 +456,12 @@ function TaskScreen({
           onToggleCheckTask={createToggleHandlerWithTabClear(
             checkedTasks,
             setCheckedTasks,
-            [setCheckedDeletedTasks]
+            [setCheckedDeletedTasks],
           )}
           onToggleCheckDeletedTask={createToggleHandlerWithTabClear(
             checkedDeletedTasks,
             setCheckedDeletedTasks,
-            [setCheckedTasks]
+            [setCheckedTasks],
           )}
           onSelectTask={handleSelectTask}
           onSelectDeletedTask={handleSelectDeletedTask}
@@ -473,59 +473,57 @@ function TaskScreen({
 
         {/* 一括操作ボタン */}
         {!hideBulkActionButtons && (
-        <BulkActionButtons
-          showDeleteButton={showDeleteButton}
-          deleteButtonCount={currentDisplayCount}
-          onDelete={() => {
-            handleBulkDelete()
-          }}
-          deleteButtonRef={deleteButtonRef}
-          isDeleting={isLidOpen}
-          deleteVariant={activeTab === "deleted" ? "danger" : undefined}
-          showRestoreButton={
-            activeTab === "deleted" &&
-            !isDeleting &&
-            (checkedDeletedTasks.size > 0 ||
-              (isRestoring && currentRestoreDisplayCount > 0))
-          }
-          restoreCount={currentRestoreDisplayCount}
-          onRestore={() => {
-            // 復元ボタンを押した瞬間に削除ボタンを非表示にする
-            setIsRestoreLidOpen(true)
-            handleBulkRestore()
-          }}
-          restoreButtonRef={restoreButtonRef}
-          isRestoring={isRestoreLidOpen}
-          animatedRestoreCount={currentRestoreDisplayCount}
-          useAnimatedRestoreCount={true}
-          // アニメーション付きカウンター（タスク側で実装済み）
-          animatedDeleteCount={currentDisplayCount}
-          useAnimatedDeleteCount={true}
-        />
+          <BulkActionButtons
+            showDeleteButton={showDeleteButton}
+            deleteButtonCount={currentDisplayCount}
+            onDelete={() => {
+              handleBulkDelete();
+            }}
+            deleteButtonRef={deleteButtonRef}
+            isDeleting={isLidOpen}
+            deleteVariant={activeTab === "deleted" ? "danger" : undefined}
+            showRestoreButton={
+              activeTab === "deleted" &&
+              !isDeleting &&
+              (checkedDeletedTasks.size > 0 ||
+                (isRestoring && currentRestoreDisplayCount > 0))
+            }
+            restoreCount={currentRestoreDisplayCount}
+            onRestore={() => {
+              // 復元ボタンを押した瞬間に削除ボタンを非表示にする
+              setIsRestoreLidOpen(true);
+              handleBulkRestore();
+            }}
+            restoreButtonRef={restoreButtonRef}
+            isRestoring={isRestoreLidOpen}
+            animatedRestoreCount={currentRestoreDisplayCount}
+            useAnimatedRestoreCount={true}
+            // アニメーション付きカウンター（タスク側で実装済み）
+            animatedDeleteCount={currentDisplayCount}
+            useAnimatedDeleteCount={true}
+          />
         )}
-        
+
         {/* 選択メニューボタン（通常タブでアイテム選択時） */}
         {!hideBulkActionButtons && (
-        <SelectionMenuButton
-          count={checkedTasks.size}
-          onExport={() => {
-            // TODO: エクスポート処理
-          }}
-          onPin={() => {
-            // TODO: ピン止め処理
-          }}
-          onTagging={() => {
-            setIsTagManagementModalOpen(true);
-          }}
-          onTabMove={() => {
-            // TODO: タブ移動処理
-          }}
-          isVisible={
-            activeTab !== "deleted" &&
-            checkedTasks.size > 0 &&
-            !isDeleting
-          }
-        />
+          <SelectionMenuButton
+            count={checkedTasks.size}
+            onExport={() => {
+              // TODO: エクスポート処理
+            }}
+            onPin={() => {
+              // TODO: ピン止め処理
+            }}
+            onTagging={() => {
+              setIsTagManagementModalOpen(true);
+            }}
+            onTabMove={() => {
+              // TODO: タブ移動処理
+            }}
+            isVisible={
+              activeTab !== "deleted" && checkedTasks.size > 0 && !isDeleting
+            }
+          />
         )}
 
         {/* ボード追加ボタン（ボードから呼び出された場合のみ） */}
@@ -560,8 +558,8 @@ function TaskScreen({
         onClose={handleRightPanelClose}
       >
         {taskScreenMode === "create" && (
-          <TaskEditor 
-            task={null} 
+          <TaskEditor
+            task={null}
             onClose={() => setTaskScreenMode("list")}
             onSaveComplete={(savedTask, isNewTask) => {
               if (isNewTask) {
@@ -594,7 +592,9 @@ function TaskScreen({
               task={selectedDeletedTask}
               onClose={() => setTaskScreenMode("list")}
               onDelete={() => selectNextDeletedTask(selectedDeletedTask)}
-              onRestore={() => handleDeletedTaskRestoreAndSelectNext(selectedDeletedTask)}
+              onRestore={() =>
+                handleDeletedTaskRestoreAndSelectNext(selectedDeletedTask)
+              }
               preloadedTags={tags || []}
               preloadedBoards={boards || []}
               preloadedTaggings={safeAllTaggings}
@@ -622,22 +622,27 @@ function TaskScreen({
 
       {/* 一括復元確認モーダル */}
       <RestoreModal />
-      
+
       {/* CSVインポートモーダル */}
       <CSVImportModal
         isOpen={isCsvImportModalOpen}
         onClose={() => setIsCsvImportModalOpen(false)}
       />
-      
-      
+
       {/* タグ管理モーダル */}
       <TagManagementModal
         isOpen={isTagManagementModalOpen}
         onClose={() => setIsTagManagementModalOpen(false)}
-        tags={tags?.map(tag => ({ id: tag.id, name: tag.name, color: tag.color })) || []}
+        tags={
+          tags?.map((tag) => ({
+            id: tag.id,
+            name: tag.name,
+            color: tag.color,
+          })) || []
+        }
         selectedItemCount={checkedTasks.size}
         itemType="task"
-        selectedItems={Array.from(checkedTasks).map(id => id.toString())}
+        selectedItems={Array.from(checkedTasks).map((id) => id.toString())}
         allItems={tasks || []}
         allTaggings={safeAllTaggings || []}
         onSuccess={() => {

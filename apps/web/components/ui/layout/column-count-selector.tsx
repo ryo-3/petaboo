@@ -18,17 +18,15 @@ function ColumnCountSelector({
   buttonSize,
 }: ColumnCountSelectorProps) {
   return (
-    <div className={`flex items-center gap-1 bg-gray-100 rounded-lg ${containerHeight} p-1`}>
+    <div
+      className={`flex items-center gap-1 bg-gray-100 rounded-lg ${containerHeight} p-1`}
+    >
       {[1, 2, 3, 4].map((count) => {
         // 右側表示時: 3と4は非表示
         if (isRightPanelShown && (count === 3 || count === 4)) return null;
 
         return (
-          <Tooltip
-            key={count}
-            text={`${count}列表示`}
-            position="bottom"
-          >
+          <Tooltip key={count} text={`${count}列表示`} position="bottom">
             <button
               onClick={() => onColumnCountChange(count)}
               disabled={disabled}

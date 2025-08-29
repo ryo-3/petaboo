@@ -8,24 +8,30 @@ interface BoardsPageProps {
 export default async function BoardsPage({ params }: BoardsPageProps) {
   const { slug } = await params;
   const boardSlug = slug?.[0];
-  
-  
-  let boardData: { id: number; name: string; description?: string | null } | null = null;
-  
+
+  let boardData: {
+    id: number;
+    name: string;
+    description?: string | null;
+  } | null = null;
+
   // サーバーサイドでボード名を取得（直接認証付きAPI呼び出し）
   if (boardSlug) {
     try {
       const { userId, getToken } = await auth();
-      
+
       if (userId) {
         const token = await getToken();
-        const response = await fetch(`${process.env.API_URL || 'http://localhost:8794'}/boards/slug/${boardSlug}`, {
-          headers: {
-            "Content-Type": "application/json",
-            ...(token && { Authorization: `Bearer ${token}` }),
+        const response = await fetch(
+          `${process.env.API_URL || "http://localhost:8794"}/boards/slug/${boardSlug}`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              ...(token && { Authorization: `Bearer ${token}` }),
+            },
           },
-        });
-        
+        );
+
         if (response.ok) {
           boardData = await response.json();
         }
@@ -34,11 +40,11 @@ export default async function BoardsPage({ params }: BoardsPageProps) {
       // エラーは無視してクライアントサイドで処理
     }
   }
-  
+
   // サーバーサイドでボード情報を取得できた場合
   if (boardData) {
     return (
-      <Main 
+      <Main
         initialBoardName={boardData.name}
         boardId={boardData.id}
         showBoardHeader={true}
@@ -49,10 +55,10 @@ export default async function BoardsPage({ params }: BoardsPageProps) {
       />
     );
   }
-  
+
   // フォールバック：ボード情報が取得できない場合
   return (
-    <Main 
+    <Main
       initialBoardName={undefined}
       initialCurrentMode="board"
       initialScreenMode="board"

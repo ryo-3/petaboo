@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
 /**
  * 削除ボタンの遅延非表示処理を管理するカスタムフック
@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 export function useDelayedButtonVisibility(
   shouldShow: boolean,
   isAnimating: boolean,
-  delayMs: number = 3000
+  delayMs: number = 3000,
 ) {
   const [showButton, setShowButton] = useState(false);
 

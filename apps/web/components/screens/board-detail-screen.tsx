@@ -38,7 +38,6 @@ interface BoardDetailProps {
   isDeleted?: boolean;
 }
 
-
 function BoardDetailScreen({
   boardId,
   selectedMemo: propSelectedMemo,
@@ -56,18 +55,21 @@ function BoardDetailScreen({
 }: BoardDetailProps) {
   // CSVインポートモーダル状態
   const [isCSVImportModalOpen, setIsCSVImportModalOpen] = useState(false);
-  
+
   // ボード選択モーダル状態
-  const [selectionMenuType, setSelectionMenuType] = useState<'memo' | 'task'>('memo');
-  
+  const [selectionMenuType, setSelectionMenuType] = useState<"memo" | "task">(
+    "memo",
+  );
+
   // タグ追加モーダル状態
   const [isTagAddModalOpen, setIsTagAddModalOpen] = useState(false);
-  const [tagSelectionMenuType, setTagSelectionMenuType] = useState<'memo' | 'task'>('memo');
-  
-  
+  const [tagSelectionMenuType, setTagSelectionMenuType] = useState<
+    "memo" | "task"
+  >("memo");
+
   // ボードに追加のAPI
   const addItemToBoard = useAddItemToBoard();
-  
+
   // 削除ボタンのref
   const deleteButtonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -132,7 +134,7 @@ function BoardDetailScreen({
     handleMemoSelectionToggle,
     handleTaskSelectionToggle,
   } = useMultiSelection(activeMemoTab, activeTaskTab);
-  
+
   // 現在のタブに応じた選択状態
   const checkedMemos = getCheckedMemos(activeMemoTab);
   const checkedTasks = getCheckedTasks(activeTaskTab);
@@ -173,11 +175,6 @@ function BoardDetailScreen({
     checkedCompletedTasks,
     checkedDeletedTasks,
   });
-  
-  
-  
-
-
 
   // タブテキスト表示制御
   useEffect(() => {
@@ -202,7 +199,6 @@ function BoardDetailScreen({
           ? columnCount
           : 2
         : columnCount;
-
 
   // ボード操作フック
   const {
@@ -246,7 +242,6 @@ function BoardDetailScreen({
     taskItems: [], // ここでは空で、後でuseBoardItemsから取得
   });
 
-
   // ボードアイテムの計算とフィルタリング
   const {
     allMemoItems,
@@ -278,7 +273,7 @@ function BoardDetailScreen({
   const { data: allTags } = useTags();
   const { data: allBoards } = useBoards();
   const { categories } = useBoardCategories();
-  
+
   // 安全なデータ配布用
   const safeAllTaggings = allTaggings || [];
   const safeAllBoardItems = allBoardItems || [];
@@ -286,13 +281,15 @@ function BoardDetailScreen({
   const safeAllBoards = allBoards || [];
 
   // ボードのカテゴリーを取得
-  const boardCategory = boardWithItems?.boardCategoryId 
-    ? categories.find(cat => cat.id === boardWithItems.boardCategoryId)
+  const boardCategory = boardWithItems?.boardCategoryId
+    ? categories.find((cat) => cat.id === boardWithItems.boardCategoryId)
     : null;
 
-
   // メモの全選択フック
-  const { isAllSelected: isMemoAllSelected, handleSelectAll: handleMemoSelectAll } = useBoardSelectAll({
+  const {
+    isAllSelected: isMemoAllSelected,
+    handleSelectAll: handleMemoSelectAll,
+  } = useBoardSelectAll({
     items: memoItems,
     checkedItems: checkedMemos,
     setCheckedItems: (value) => setCheckedMemos(activeMemoTab, value),
@@ -300,7 +297,10 @@ function BoardDetailScreen({
   });
 
   // タスクの全選択フック（メモと同じ方式）
-  const { isAllSelected: isTaskAllSelected, handleSelectAll: handleTaskSelectAll } = useBoardSelectAll({
+  const {
+    isAllSelected: isTaskAllSelected,
+    handleSelectAll: handleTaskSelectAll,
+  } = useBoardSelectAll({
     items: taskItems,
     checkedItems: checkedTasks,
     setCheckedItems: (value) => setCheckedTasks(activeTaskTab, value),
@@ -311,15 +311,14 @@ function BoardDetailScreen({
 
   // タグ追加関連のハンドラー
   const handleTaggingMemo = useCallback(() => {
-    setTagSelectionMenuType('memo');
+    setTagSelectionMenuType("memo");
     setIsTagAddModalOpen(true);
   }, []);
 
   const handleTaggingTask = useCallback(() => {
-    setTagSelectionMenuType('task');
+    setTagSelectionMenuType("task");
     setIsTagAddModalOpen(true);
   }, []);
-
 
   // 拡張されたタブ変更ハンドラー（削除済タブでキャッシュ更新）
   const handleMemoTabChangeWithRefresh = async (tab: "normal" | "deleted") => {
@@ -329,7 +328,9 @@ function BoardDetailScreen({
     handleMemoTabChange(tab);
   };
 
-  const handleTaskTabChangeWithRefresh = async (tab: "todo" | "in_progress" | "completed" | "deleted") => {
+  const handleTaskTabChangeWithRefresh = async (
+    tab: "todo" | "in_progress" | "completed" | "deleted",
+  ) => {
     if (tab === "deleted") {
       await refetchDeletedItems();
     }
@@ -359,7 +360,7 @@ function BoardDetailScreen({
   }
 
   return (
-    <div className="flex h-full bg-white overflow-hidden">      
+    <div className="flex h-full bg-white overflow-hidden">
       {/* 左側：メモ・タスク一覧 */}
       <div
         className={`${
@@ -413,7 +414,6 @@ function BoardDetailScreen({
             isAllSelected={false}
             onCsvImport={() => setIsCSVImportModalOpen(true)}
           />
-
         </div>
 
         {/* メモ・タスクコンテンツ */}
@@ -457,12 +457,14 @@ function BoardDetailScreen({
             onMemoSelectionToggle={handleMemoSelectionToggle}
             onSelectAll={handleMemoSelectAll}
             isAllSelected={isMemoAllSelected}
-            onBulkDelete={() => handleBulkDelete('memo')}
+            onBulkDelete={() => handleBulkDelete("memo")}
             isDeleting={isMemoDeleting}
             isLidOpen={isMemoLidOpen}
             currentDisplayCount={currentMemoDisplayCount}
             deleteButtonRef={deleteButtonRef}
-            onCheckedMemosChange={(memos) => setCheckedMemos(activeMemoTab, memos)}
+            onCheckedMemosChange={(memos) =>
+              setCheckedMemos(activeMemoTab, memos)
+            }
             onTagging={handleTaggingMemo}
           />
 
@@ -499,16 +501,17 @@ function BoardDetailScreen({
             onTaskSelectionToggle={handleTaskSelectionToggle}
             onSelectAll={handleTaskSelectAll}
             isAllSelected={isTaskAllSelected}
-            onBulkDelete={() => handleBulkDelete('task')}
+            onBulkDelete={() => handleBulkDelete("task")}
             isDeleting={isTaskDeleting}
             isLidOpen={isTaskLidOpen}
             currentDisplayCount={currentTaskDisplayCount}
             deleteButtonRef={deleteButtonRef}
-            onCheckedTasksChange={(tasks) => setCheckedTasks(activeTaskTab, tasks)}
+            onCheckedTasksChange={(tasks) =>
+              setCheckedTasks(activeTaskTab, tasks)
+            }
             onTagging={handleTaggingTask}
           />
         </div>
-
       </div>
 
       {/* 削除モーダル */}
@@ -516,10 +519,16 @@ function BoardDetailScreen({
         isOpen={bulkDelete.isModalOpen}
         onClose={() => {
           setDeletingItemType(null);
-          if (deletingItemType === 'memo') {
-            bulkAnimation.handleModalCancel(setIsMemoDeleting, setIsMemoLidOpen);
-          } else if (deletingItemType === 'task') {
-            bulkAnimation.handleModalCancel(setIsTaskDeleting, setIsTaskLidOpen);
+          if (deletingItemType === "memo") {
+            bulkAnimation.handleModalCancel(
+              setIsMemoDeleting,
+              setIsMemoLidOpen,
+            );
+          } else if (deletingItemType === "task") {
+            bulkAnimation.handleModalCancel(
+              setIsTaskDeleting,
+              setIsTaskLidOpen,
+            );
           }
           bulkDelete.handleCancel();
         }}
@@ -527,13 +536,17 @@ function BoardDetailScreen({
         count={bulkDelete.targetIds.length}
         itemType={deletingItemType || "memo"}
         deleteType={
-          deletingItemType === 'memo' 
-            ? (activeMemoTab === "deleted" ? "permanent" : "normal")
-            : (activeTaskTab === "deleted" ? "permanent" : "normal")
+          deletingItemType === "memo"
+            ? activeMemoTab === "deleted"
+              ? "permanent"
+              : "normal"
+            : activeTaskTab === "deleted"
+              ? "permanent"
+              : "normal"
         }
         isLoading={bulkDelete.isDeleting}
         customMessage={bulkDelete.customMessage}
-        customTitle={`${deletingItemType === 'memo' ? 'メモ' : 'タスク'}の操作を選択`}
+        customTitle={`${deletingItemType === "memo" ? "メモ" : "タスク"}の操作を選択`}
         showRemoveFromBoard={true}
         onRemoveFromBoard={handleRemoveFromBoard}
         statusBreakdown={getModalStatusBreakdown()}
@@ -558,7 +571,11 @@ function BoardDetailScreen({
         allBoards={allBoards || []}
         allTaggings={safeAllTaggings as Tagging[]}
         allBoardItems={safeAllBoardItems}
-        onClose={rightPanelMode ? () => handleCloseRightPanel(onClearSelection) : handleCloseDetail}
+        onClose={
+          rightPanelMode
+            ? () => handleCloseRightPanel(onClearSelection)
+            : handleCloseDetail
+        }
         onSelectMemo={onSelectMemo}
         onSelectTask={onSelectTask}
         onAddSelectedItems={handleAddSelectedItems}
@@ -579,21 +596,30 @@ function BoardDetailScreen({
         onClose={() => setIsCSVImportModalOpen(false)}
         boardId={boardId}
       />
-      
+
       {/* タグ追加モーダル */}
       <TagAddModal
         isOpen={isTagAddModalOpen}
         onClose={() => setIsTagAddModalOpen(false)}
-        tags={safeAllTags.map(tag => ({ id: tag.id, name: tag.name, color: tag.color }))}
-        selectedItemCount={tagSelectionMenuType === 'memo' ? checkedMemos.size : checkedTasks.size}
-        itemType={tagSelectionMenuType}
-        selectedItems={tagSelectionMenuType === 'memo' 
-          ? Array.from(checkedMemos).map(id => id.toString())
-          : Array.from(checkedTasks).map(id => id.toString())
+        tags={safeAllTags.map((tag) => ({
+          id: tag.id,
+          name: tag.name,
+          color: tag.color,
+        }))}
+        selectedItemCount={
+          tagSelectionMenuType === "memo"
+            ? checkedMemos.size
+            : checkedTasks.size
         }
-        allItems={tagSelectionMenuType === 'memo' ? allMemoItems : allTaskItems}
+        itemType={tagSelectionMenuType}
+        selectedItems={
+          tagSelectionMenuType === "memo"
+            ? Array.from(checkedMemos).map((id) => id.toString())
+            : Array.from(checkedTasks).map((id) => id.toString())
+        }
+        allItems={tagSelectionMenuType === "memo" ? allMemoItems : allTaskItems}
         onSuccess={() => {
-          if (tagSelectionMenuType === 'memo') {
+          if (tagSelectionMenuType === "memo") {
             setCheckedMemos(activeMemoTab, new Set());
           } else {
             setCheckedTasks(activeTaskTab, new Set());

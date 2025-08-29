@@ -3,7 +3,9 @@ interface FilterIconProps {
 }
 
 // パターン2: チェックリスト型
-export function FilterIconCheckList({ className = "w-5 h-5" }: FilterIconProps) {
+export function FilterIconCheckList({
+  className = "w-5 h-5",
+}: FilterIconProps) {
   return (
     <svg
       className={className}

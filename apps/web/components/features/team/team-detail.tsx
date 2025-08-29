@@ -18,7 +18,10 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   const { mutate: inviteToTeam, isPending: isInviting } = useInviteToTeam();
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<"admin" | "member">("member");
-  const [inviteMessage, setInviteMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [inviteMessage, setInviteMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   // エラーまたはチームが見つからない場合のリダイレクト処理
   useEffect(() => {
@@ -57,7 +60,9 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         {/* ヘッダー */}
         <div className="mb-4 flex-shrink-0">
           <div className="flex items-center gap-3">
-            <h1 className="text-[22px] font-bold text-gray-800 w-[105px] truncate">チーム詳細</h1>
+            <h1 className="text-[22px] font-bold text-gray-800 w-[105px] truncate">
+              チーム詳細
+            </h1>
             <TeamIcon className="w-6 h-6 text-gray-600" />
           </div>
         </div>
@@ -69,11 +74,13 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <h2 className="text-2xl font-bold text-gray-900">{team.name}</h2>
-                  <span 
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {team.name}
+                  </h2>
+                  <span
                     className={`px-3 py-1 text-sm rounded-full font-medium ${
-                      team.role === "admin" 
-                        ? "bg-blue-100 text-blue-800" 
+                      team.role === "admin"
+                        ? "bg-blue-100 text-blue-800"
                         : "bg-gray-100 text-gray-600"
                     }`}
                   >
@@ -89,7 +96,9 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="font-semibold text-gray-700">作成日:</span>
-                <span className="ml-2">{new Date(team.createdAt * 1000).toLocaleDateString('ja-JP')}</span>
+                <span className="ml-2">
+                  {new Date(team.createdAt * 1000).toLocaleDateString("ja-JP")}
+                </span>
               </div>
               <div>
                 <span className="font-semibold text-gray-700">メンバー数:</span>
@@ -101,7 +110,9 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
           {/* メンバー一覧 */}
           <Card className="p-6 mb-4">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-gray-900">メンバー ({team.memberCount}人)</h3>
+              <h3 className="text-xl font-semibold text-gray-900">
+                メンバー ({team.memberCount}人)
+              </h3>
               {team.role === "admin" && (
                 <Button
                   onClick={() => {
@@ -114,7 +125,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                 </Button>
               )}
             </div>
-            
+
             {/* メンバー一覧（仮データ） */}
             <div className="space-y-3">
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -124,14 +135,16 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                   </div>
                   <div>
                     <div className="font-medium">あなた</div>
-                    <div className="text-sm text-gray-500">user@example.com</div>
+                    <div className="text-sm text-gray-500">
+                      user@example.com
+                    </div>
                   </div>
                 </div>
                 <span className="px-2 py-1 text-xs rounded-full font-medium bg-blue-100 text-blue-800">
                   {team.role === "admin" ? "管理者" : "メンバー"}
                 </span>
               </div>
-              
+
               {/* 他のメンバーは今後API実装時に追加 */}
               <div className="text-center py-4 text-gray-500 text-sm">
                 メンバー一覧の詳細実装は今後追加予定
@@ -142,17 +155,21 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
           {/* 招待リンク（管理者のみ） */}
           {team.role === "admin" && (
             <Card className="p-6 mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">メンバーを招待</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                メンバーを招待
+              </h3>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   メール招待
                 </label>
                 {inviteMessage && (
-                  <div className={`mb-3 p-3 rounded-lg text-sm ${
-                    inviteMessage.type === "success" 
-                      ? "bg-green-100 text-green-800 border border-green-200" 
-                      : "bg-red-100 text-red-800 border border-red-200"
-                  }`}>
+                  <div
+                    className={`mb-3 p-3 rounded-lg text-sm ${
+                      inviteMessage.type === "success"
+                        ? "bg-green-100 text-green-800 border border-green-200"
+                        : "bg-red-100 text-red-800 border border-red-200"
+                    }`}
+                  >
                     {inviteMessage.text}
                   </div>
                 )}
@@ -167,7 +184,9 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                     />
                     <select
                       value={inviteRole}
-                      onChange={(e) => setInviteRole(e.target.value as "admin" | "member")}
+                      onChange={(e) =>
+                        setInviteRole(e.target.value as "admin" | "member")
+                      }
                       className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="member">メンバー</option>
@@ -177,24 +196,33 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                   <Button
                     onClick={() => {
                       if (!inviteEmail || !inviteEmail.includes("@")) {
-                        setInviteMessage({ type: "error", text: "有効なメールアドレスを入力してください" });
+                        setInviteMessage({
+                          type: "error",
+                          text: "有効なメールアドレスを入力してください",
+                        });
                         return;
                       }
-                      
+
                       inviteToTeam(
                         { customUrl, email: inviteEmail, role: inviteRole },
                         {
                           onSuccess: () => {
-                            setInviteMessage({ type: "success", text: `${inviteEmail} に招待メールを送信しました` });
+                            setInviteMessage({
+                              type: "success",
+                              text: `${inviteEmail} に招待メールを送信しました`,
+                            });
                             setInviteEmail("");
                             setTimeout(() => setInviteMessage(null), 5000);
                           },
                           onError: (error) => {
-                            const message = error instanceof Error ? error.message : "招待の送信に失敗しました";
+                            const message =
+                              error instanceof Error
+                                ? error.message
+                                : "招待の送信に失敗しました";
                             setInviteMessage({ type: "error", text: message });
                             setTimeout(() => setInviteMessage(null), 5000);
                           },
-                        }
+                        },
                       );
                     }}
                     disabled={isInviting || !inviteEmail}
@@ -210,7 +238,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
           {/* アクション */}
           <div className="flex gap-3">
             {team.role === "admin" && (
-              <Button 
+              <Button
                 onClick={() => router.push(`/team/${customUrl}/settings`)}
                 variant="outline"
                 className="px-6"
@@ -218,7 +246,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                 チーム設定
               </Button>
             )}
-            <Button 
+            <Button
               variant="outline"
               onClick={() => router.push("/team")}
               className="px-6"
@@ -229,7 +257,9 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
           {/* 今後の機能予定 */}
           <Card className="mt-4 p-4 bg-gray-50">
-            <h3 className="font-semibold text-gray-800 mb-2 text-sm">今後追加予定の機能</h3>
+            <h3 className="font-semibold text-gray-800 mb-2 text-sm">
+              今後追加予定の機能
+            </h3>
             <div className="space-y-1 text-xs text-gray-600">
               <div className="flex items-center gap-2">
                 <span className="w-1 h-1 bg-gray-400 rounded-full"></span>

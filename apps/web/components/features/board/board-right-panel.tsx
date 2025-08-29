@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import MemoEditor from "@/components/features/memo/memo-editor";
 import TaskEditor from "@/components/features/task/task-editor";
@@ -22,13 +22,20 @@ interface BoardRightPanelProps {
   selectedMemo?: Memo | DeletedMemo | null;
   selectedTask?: Task | DeletedTask | null;
   rightPanelMode: "editor" | "memo-list" | "task-list" | null;
-  activeMemoTab?: "normal" | "deleted";  // 現在のメモタブ
+  activeMemoTab?: "normal" | "deleted"; // 現在のメモタブ
   selectedItemsFromList: Set<number>;
   allMemos?: Memo[];
   allTasks?: Task[];
-  allBoards?: Board[];  // 全ボード情報
-  allTaggings?: Tagging[];  // 全タグ情報
-  allBoardItems?: Array<{boardId: number; boardName: string; itemType: 'memo' | 'task'; itemId: string; originalId: string; addedAt: number}>;  // 全ボードアイテム情報
+  allBoards?: Board[]; // 全ボード情報
+  allTaggings?: Tagging[]; // 全タグ情報
+  allBoardItems?: Array<{
+    boardId: number;
+    boardName: string;
+    itemType: "memo" | "task";
+    itemId: string;
+    originalId: string;
+    addedAt: number;
+  }>; // 全ボードアイテム情報
   onClose: () => void;
   onSelectMemo?: (memo: Memo) => void;
   onSelectTask?: (task: Task) => void;
@@ -70,28 +77,32 @@ export default function BoardRightPanel({
   const { data: tags } = useTags();
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
-  
+
   // 現在のボードに既に追加されているアイテムIDのリストを作成
-  const currentBoardMemoIds = allBoardItems?.filter(item => 
-    item.boardId === boardId && item.itemType === 'memo'
-  ).map(item => parseInt(item.itemId, 10)) || [];
-  
-  const currentBoardTaskIds = allBoardItems?.filter(item => 
-    item.boardId === boardId && item.itemType === 'task'
-  ).map(item => parseInt(item.itemId, 10)) || [];
-  
+  const currentBoardMemoIds =
+    allBoardItems
+      ?.filter((item) => item.boardId === boardId && item.itemType === "memo")
+      .map((item) => parseInt(item.itemId, 10)) || [];
+
+  const currentBoardTaskIds =
+    allBoardItems
+      ?.filter((item) => item.boardId === boardId && item.itemType === "task")
+      .map((item) => parseInt(item.itemId, 10)) || [];
+
   // 削除済みアイテムかどうかを判定するヘルパー関数
   const isDeletedMemo = (memo: Memo | DeletedMemo): memo is DeletedMemo => {
     // より確実な判定：deletedAtプロパティが存在し、値があるかチェック
-    return 'deletedAt' in memo && 
-           memo.deletedAt !== undefined && 
-           memo.deletedAt !== null && 
-           typeof memo.deletedAt === 'number' && 
-           memo.deletedAt > 0;
+    return (
+      "deletedAt" in memo &&
+      memo.deletedAt !== undefined &&
+      memo.deletedAt !== null &&
+      typeof memo.deletedAt === "number" &&
+      memo.deletedAt > 0
+    );
   };
-  
+
   const isDeletedTask = (task: Task | DeletedTask): task is DeletedTask => {
-    return 'deletedAt' in task && task.deletedAt !== undefined;
+    return "deletedAt" in task && task.deletedAt !== undefined;
   };
 
   // 削除処理用のstate
@@ -103,26 +114,29 @@ export default function BoardRightPanel({
     try {
       const token = await getToken();
       const promises = memoIds.map((memoId) => {
-        return fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8794'}/boards/${boardId}/items`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token && { Authorization: `Bearer ${token}` }),
+        return fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8794"}/boards/${boardId}/items`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token && { Authorization: `Bearer ${token}` }),
+            },
+            body: JSON.stringify({
+              itemType: "memo",
+              itemId: memoId.toString(),
+            }),
           },
-          body: JSON.stringify({
-            itemType: 'memo',
-            itemId: memoId.toString(),
-          }),
-        });
+        );
       });
-      
+
       await Promise.all(promises);
-      
+
       // キャッシュを無効化してボード一覧を再取得
       queryClient.invalidateQueries({ queryKey: ["boards", boardId, "items"] });
       queryClient.invalidateQueries({ queryKey: ["boards", "all-items"] });
     } catch (error) {
-      console.error('メモの追加に失敗しました:', error);
+      console.error("メモの追加に失敗しました:", error);
     }
   };
 
@@ -131,26 +145,29 @@ export default function BoardRightPanel({
     try {
       const token = await getToken();
       const promises = taskIds.map((taskId) => {
-        return fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8794'}/boards/${boardId}/items`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token && { Authorization: `Bearer ${token}` }),
+        return fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8794"}/boards/${boardId}/items`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token && { Authorization: `Bearer ${token}` }),
+            },
+            body: JSON.stringify({
+              itemType: "task",
+              itemId: taskId.toString(),
+            }),
           },
-          body: JSON.stringify({
-            itemType: 'task',
-            itemId: taskId.toString(),
-          }),
-        });
+        );
       });
-      
+
       await Promise.all(promises);
-      
+
       // キャッシュを無効化してボード一覧を再取得
       queryClient.invalidateQueries({ queryKey: ["boards", boardId, "items"] });
       queryClient.invalidateQueries({ queryKey: ["boards", "all-items"] });
     } catch (error) {
-      console.error('タスクの追加に失敗しました:', error);
+      console.error("タスクの追加に失敗しました:", error);
     }
   };
 
@@ -159,22 +176,24 @@ export default function BoardRightPanel({
     if (selectedMemo && !isDeletedMemo(selectedMemo)) {
       // 削除処理中はエディターを開いたままにする
       try {
-        
-        const memoId = typeof selectedMemo.id === 'number' ? selectedMemo.id : parseInt(selectedMemo.id, 10);
+        const memoId =
+          typeof selectedMemo.id === "number"
+            ? selectedMemo.id
+            : parseInt(selectedMemo.id, 10);
         if (isNaN(memoId)) {
           setIsRightMemoLidOpen(false);
           return;
         }
         await deleteNote.mutateAsync(memoId);
-        
+
         // 削除成功後に蓋を閉じる
         setTimeout(() => {
           setIsRightMemoLidOpen(false);
         }, 200);
-        
+
         // 削除成功後に次のアイテムを選択（削除前のデータで次のアイテムを決定）
         onMemoDeleteAndSelectNext?.(selectedMemo as Memo);
-        
+
         // useDeleteMemoのonSuccessで自動的にキャッシュが無効化されるため、手動での無効化は不要
       } catch {
         // エラー時は蓋を閉じる
@@ -182,7 +201,7 @@ export default function BoardRightPanel({
       }
     }
   };
-  
+
   return (
     <RightPanel isOpen={isOpen} onClose={onClose}>
       {selectedMemo && !selectedTask && rightPanelMode === null && (
@@ -193,9 +212,13 @@ export default function BoardRightPanel({
               onClose={() => {
                 // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
               }}
-              onRestore={onMemoRestoreAndSelectNext ? () => {
-                onMemoRestoreAndSelectNext(selectedMemo as DeletedMemo);
-              } : undefined}
+              onRestore={
+                onMemoRestoreAndSelectNext
+                  ? () => {
+                      onMemoRestoreAndSelectNext(selectedMemo as DeletedMemo);
+                    }
+                  : undefined
+              }
               onDelete={() => {
                 if (onDeletedMemoDeleteAndSelectNext) {
                   onDeletedMemoDeleteAndSelectNext(selectedMemo as DeletedMemo);

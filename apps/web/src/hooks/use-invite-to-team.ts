@@ -14,9 +14,13 @@ export function useInviteToTeam() {
   const { getToken } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ customUrl, email, role = "member" }: InviteToTeamRequest) => {
+    mutationFn: async ({
+      customUrl,
+      email,
+      role = "member",
+    }: InviteToTeamRequest) => {
       const token = await getToken();
-      
+
       const response = await fetch(`${API_URL}/teams/${customUrl}/invite`, {
         method: "POST",
         headers: {
@@ -28,24 +32,26 @@ export function useInviteToTeam() {
           role,
         }),
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
-        console.error('API Error:', error);
-        throw new Error(error.error || error.message || "招待の送信に失敗しました");
+        console.error("API Error:", error);
+        throw new Error(
+          error.error || error.message || "招待の送信に失敗しました",
+        );
       }
-      
+
       return response.json();
     },
     onSuccess: (data, variables) => {
       // チーム詳細をリフレッシュ
-      queryClient.invalidateQueries({ 
-        queryKey: ["team", variables.customUrl] 
+      queryClient.invalidateQueries({
+        queryKey: ["team", variables.customUrl],
       });
-      
+
       // チーム一覧もリフレッシュ（メンバー数の更新など）
-      queryClient.invalidateQueries({ 
-        queryKey: ["teams"] 
+      queryClient.invalidateQueries({
+        queryKey: ["teams"],
       });
     },
   });

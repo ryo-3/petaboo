@@ -18,7 +18,9 @@ export const teamTags = sqliteTable("team_tags", {
 
 export const teamTaggings = sqliteTable("team_taggings", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  tagId: integer("tag_id").notNull().references(() => teamTags.id, { onDelete: "cascade" }),
+  tagId: integer("tag_id")
+    .notNull()
+    .references(() => teamTags.id, { onDelete: "cascade" }),
   targetType: text("target_type").notNull(), // 'memo' | 'task' | 'board'
   targetOriginalId: text("target_original_id").notNull(), // チーム用コンテンツのoriginalId
   teamId: integer("team_id").notNull(), // パフォーマンス向上のため重複保存

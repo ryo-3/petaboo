@@ -11,16 +11,16 @@ interface DeletedTabToggleProps {
   count?: number;
 }
 
-function DeletedTabToggle({ 
-  showDeletedTab, 
-  onToggle, 
-  buttonSize, 
+function DeletedTabToggle({
+  showDeletedTab,
+  onToggle,
+  buttonSize,
   iconSize,
-  count = 0
+  count = 0,
 }: DeletedTabToggleProps) {
   return (
-    <Tooltip 
-      text={showDeletedTab ? "削除済みタブを非表示" : "削除済みタブを表示"} 
+    <Tooltip
+      text={showDeletedTab ? "削除済みタブを非表示" : "削除済みタブを表示"}
       position="bottom"
     >
       <button

@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback } from "react";
 
 interface UseTabChangeConfig {
   setActiveTab: (tab: string) => void;
@@ -25,33 +25,35 @@ export function useTabChange({
   onSelectItem,
   onSelectDeletedItem,
   normalTabName = "normal",
-  deletedTabName = "deleted"
+  deletedTabName = "deleted",
 }: UseTabChangeConfig) {
-  
-  return useCallback((tab: string) => {
-    // 個別選択のクリア（メモ形式）
-    if (onSelectItem && onSelectDeletedItem) {
-      if (tab === normalTabName && selectedDeletedItem) {
-        onSelectDeletedItem(null);
-        setScreenMode("list");
-      } else if (tab === deletedTabName && selectedItem) {
-        onSelectItem(null);
+  return useCallback(
+    (tab: string) => {
+      // 個別選択のクリア（メモ形式）
+      if (onSelectItem && onSelectDeletedItem) {
+        if (tab === normalTabName && selectedDeletedItem) {
+          onSelectDeletedItem(null);
+          setScreenMode("list");
+        } else if (tab === deletedTabName && selectedItem) {
+          onSelectItem(null);
+          setScreenMode("list");
+        }
+      } else {
+        // タスク形式：右パネルを閉じるのみ
         setScreenMode("list");
       }
-    } else {
-      // タスク形式：右パネルを閉じるのみ
-      setScreenMode("list");
-    }
 
-    setActiveTab(tab);
-  }, [
-    setActiveTab,
-    setScreenMode,
-    selectedItem,
-    selectedDeletedItem,
-    onSelectItem,
-    onSelectDeletedItem,
-    normalTabName,
-    deletedTabName
-  ]);
+      setActiveTab(tab);
+    },
+    [
+      setActiveTab,
+      setScreenMode,
+      selectedItem,
+      selectedDeletedItem,
+      onSelectItem,
+      onSelectDeletedItem,
+      normalTabName,
+      deletedTabName,
+    ],
+  );
 }

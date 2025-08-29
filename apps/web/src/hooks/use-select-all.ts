@@ -1,7 +1,10 @@
-import React, { useCallback, useMemo } from 'react';
-import { getTaskDisplayOrder, getMemoDisplayOrder } from '@/src/utils/domUtils';
+import React, { useCallback, useMemo } from "react";
+import { getTaskDisplayOrder, getMemoDisplayOrder } from "@/src/utils/domUtils";
 
-interface UseSelectAllConfig<T extends { id: number }, D extends { id: number }> {
+interface UseSelectAllConfig<
+  T extends { id: number },
+  D extends { id: number },
+> {
   activeTab: string;
   deletedTabName?: string; // "deleted"
   items: T[] | null;
@@ -18,7 +21,10 @@ interface UseSelectAllConfig<T extends { id: number }, D extends { id: number }>
  * 全選択/全解除機能を管理するカスタムフック
  * メモ・タスクの両方で共通使用
  */
-export function useSelectAll<T extends { id: number }, D extends { id: number }>({
+export function useSelectAll<
+  T extends { id: number },
+  D extends { id: number },
+>({
   activeTab,
   deletedTabName = "deleted",
   items,
@@ -30,22 +36,33 @@ export function useSelectAll<T extends { id: number }, D extends { id: number }>
   filterFn,
   currentMode,
 }: UseSelectAllConfig<T, D>) {
-  
   // 全選択状態の判定
   const isAllSelected = useMemo(() => {
-    if (activeTab === deletedTabName && deletedItems && deletedItems.length > 0) {
-      return deletedItems.every(item => checkedDeletedItems.has(item.id));
+    if (
+      activeTab === deletedTabName &&
+      deletedItems &&
+      deletedItems.length > 0
+    ) {
+      return deletedItems.every((item) => checkedDeletedItems.has(item.id));
     } else if (items) {
-      const filteredItems = filterFn 
-        ? items.filter(item => filterFn(item, activeTab))
+      const filteredItems = filterFn
+        ? items.filter((item) => filterFn(item, activeTab))
         : items;
-      
+
       if (filteredItems.length > 0) {
-        return filteredItems.every(item => checkedItems.has(item.id));
+        return filteredItems.every((item) => checkedItems.has(item.id));
       }
     }
     return false;
-  }, [activeTab, deletedTabName, items, deletedItems, checkedItems, checkedDeletedItems, filterFn]);
+  }, [
+    activeTab,
+    deletedTabName,
+    items,
+    deletedItems,
+    checkedItems,
+    checkedDeletedItems,
+    filterFn,
+  ]);
 
   // 全選択/全解除処理
   const handleSelectAll = useCallback(() => {
@@ -54,22 +71,22 @@ export function useSelectAll<T extends { id: number }, D extends { id: number }>
       if (isAllSelected) {
         setCheckedDeletedItems(new Set());
       } else {
-        const allDeletedItemIds = new Set(deletedItems.map(item => item.id));
+        const allDeletedItemIds = new Set(deletedItems.map((item) => item.id));
         setCheckedDeletedItems(allDeletedItemIds);
       }
     } else if (items) {
       // 通常タブの操作時
-      const filteredItems = filterFn 
-        ? items.filter(item => filterFn(item, activeTab))
+      const filteredItems = filterFn
+        ? items.filter((item) => filterFn(item, activeTab))
         : items;
-        
+
       if (isAllSelected) {
         // 現在のタブのアイテムのみを選択から除外
-        const currentTabItemIds = filteredItems.map(item => item.id);
-        
-        setCheckedItems(prev => {
+        const currentTabItemIds = filteredItems.map((item) => item.id);
+
+        setCheckedItems((prev) => {
           const newSet = new Set(prev);
-          currentTabItemIds.forEach(id => newSet.delete(id));
+          currentTabItemIds.forEach((id) => newSet.delete(id));
           return newSet;
         });
       } else {
@@ -77,34 +94,34 @@ export function useSelectAll<T extends { id: number }, D extends { id: number }>
         if (currentMode === "task") {
           // タスクの場合：DOM順序を取得してフィルタ
           const domOrder = getTaskDisplayOrder();
-          const filteredItemIds = domOrder.filter(id => 
-            filteredItems.some(item => item.id === id)
+          const filteredItemIds = domOrder.filter((id) =>
+            filteredItems.some((item) => item.id === id),
           );
           // 既存の選択状態を保持して追加
-          setCheckedItems(prev => {
+          setCheckedItems((prev) => {
             const newSet = new Set(prev);
-            filteredItemIds.forEach(id => newSet.add(id));
+            filteredItemIds.forEach((id) => newSet.add(id));
             return newSet;
           });
         } else if (currentMode === "memo") {
           // メモの場合：DOM順序を取得してフィルタ
           const domOrder = getMemoDisplayOrder();
-          const filteredItemIds = domOrder.filter(id => 
-            filteredItems.some(item => item.id === id)
+          const filteredItemIds = domOrder.filter((id) =>
+            filteredItems.some((item) => item.id === id),
           );
           // 既存の選択状態を保持して追加
-          setCheckedItems(prev => {
+          setCheckedItems((prev) => {
             const newSet = new Set(prev);
-            filteredItemIds.forEach(id => newSet.add(id));
+            filteredItemIds.forEach((id) => newSet.add(id));
             return newSet;
           });
         } else {
           // フォールバック：従来の方法
-          const allItemIds = filteredItems.map(item => item.id);
+          const allItemIds = filteredItems.map((item) => item.id);
           // 既存の選択状態を保持して追加
-          setCheckedItems(prev => {
+          setCheckedItems((prev) => {
             const newSet = new Set(prev);
-            allItemIds.forEach(id => newSet.add(id));
+            allItemIds.forEach((id) => newSet.add(id));
             return newSet;
           });
         }
@@ -119,7 +136,7 @@ export function useSelectAll<T extends { id: number }, D extends { id: number }>
     setCheckedItems,
     setCheckedDeletedItems,
     filterFn,
-    currentMode
+    currentMode,
   ]);
 
   return { isAllSelected, handleSelectAll };

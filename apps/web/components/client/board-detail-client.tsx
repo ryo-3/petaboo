@@ -13,24 +13,29 @@ interface BoardDetailClientProps {
   initialBoardDescription?: string | null;
 }
 
-export default function BoardDetailClient({ 
-  boardId, 
-  initialBoardName, 
-  initialBoardDescription 
+export default function BoardDetailClient({
+  boardId,
+  initialBoardName,
+  initialBoardDescription,
 }: BoardDetailClientProps) {
   const router = useRouter();
   const { data: boardWithItems } = useBoardWithItems(boardId);
-  
-  const [selectedMemo, setSelectedMemo] = useState<Memo | DeletedMemo | null>(null);
-  const [selectedTask, setSelectedTask] = useState<Task | DeletedTask | null>(null);
+
+  const [selectedMemo, setSelectedMemo] = useState<Memo | DeletedMemo | null>(
+    null,
+  );
+  const [selectedTask, setSelectedTask] = useState<Task | DeletedTask | null>(
+    null,
+  );
   const [selectedMemoId, setSelectedMemoId] = useState<number | null>(null);
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
 
   // データ再フェッチ後に選択状態を復元
   useEffect(() => {
     if (boardWithItems?.items && selectedMemoId && !selectedMemo) {
-      const memo = boardWithItems.items.find(item => 
-        item.itemType === 'memo' && item.content.id === selectedMemoId
+      const memo = boardWithItems.items.find(
+        (item) =>
+          item.itemType === "memo" && item.content.id === selectedMemoId,
       );
       if (memo) {
         setSelectedMemo(memo.content as Memo | DeletedMemo);
@@ -40,8 +45,9 @@ export default function BoardDetailClient({
 
   useEffect(() => {
     if (boardWithItems?.items && selectedTaskId && !selectedTask) {
-      const task = boardWithItems.items.find(item => 
-        item.itemType === 'task' && item.content.id === selectedTaskId
+      const task = boardWithItems.items.find(
+        (item) =>
+          item.itemType === "task" && item.content.id === selectedTaskId,
       );
       if (task) {
         setSelectedTask(task.content as Task | DeletedTask);

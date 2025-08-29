@@ -2,17 +2,17 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { clerkMiddleware } from "@hono/clerk-auth";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import Database from "better-sqlite3";
-import { 
-  getUserInfoRoute, 
-  getUserInfo, 
-  updateUserPlanRoute, 
+import {
+  getUserInfoRoute,
+  getUserInfo,
+  updateUserPlanRoute,
   updateUserPlan,
   getSpecificUserInfoRoute,
   getSpecificUserInfo,
   updateSpecificUserPlanRoute,
   updateSpecificUserPlan,
   getUsersListRoute,
-  getUsersList
+  getUsersList,
 } from "./api";
 
 // SQLite & drizzle セットアップ

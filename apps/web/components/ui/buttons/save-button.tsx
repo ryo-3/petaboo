@@ -34,7 +34,7 @@ function SaveButton({
       <button
         onClick={onClick}
         disabled={disabled || isSaving || savedSuccessfully}
-        className={`save-button ${savedSuccessfully ? 'success' : ''} ${buttonSize} rounded-md transition-colors flex items-center justify-center ${
+        className={`save-button ${savedSuccessfully ? "success" : ""} ${buttonSize} rounded-md transition-colors flex items-center justify-center ${
           isSaving
             ? "bg-Green text-white cursor-not-allowed"
             : disabled || savedSuccessfully

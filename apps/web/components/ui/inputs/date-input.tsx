@@ -17,9 +17,7 @@ function DateInput({
 }: DateInputProps) {
   return (
     <div>
-      <label className={FORM_STYLES.label}>
-        {label}
-      </label>
+      <label className={FORM_STYLES.label}>{label}</label>
       <input
         type="date"
         value={value}

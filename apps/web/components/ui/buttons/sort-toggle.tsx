@@ -23,7 +23,13 @@ interface SortToggleProps {
   arrowSize?: string;
 }
 
-function SortToggle({ sortOptions, onSortChange, buttonSize, iconSize, arrowSize = "w-2.5 h-3" }: SortToggleProps) {
+function SortToggle({
+  sortOptions,
+  onSortChange,
+  buttonSize,
+  iconSize,
+  arrowSize = "w-2.5 h-3",
+}: SortToggleProps) {
   const getSortIcon = (id: string) => {
     switch (id) {
       case "createdAt":
@@ -38,7 +44,11 @@ function SortToggle({ sortOptions, onSortChange, buttonSize, iconSize, arrowSize
   };
 
   const getDirectionIcon = (direction: "asc" | "desc") => {
-    return direction === "desc" ? <ArrowDownIcon className={arrowSize} /> : <ArrowUpIcon className={arrowSize} />;
+    return direction === "desc" ? (
+      <ArrowDownIcon className={arrowSize} />
+    ) : (
+      <ArrowUpIcon className={arrowSize} />
+    );
   };
 
   return (

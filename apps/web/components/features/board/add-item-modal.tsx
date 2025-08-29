@@ -11,8 +11,12 @@ interface AddItemModalProps {
   onClose: () => void;
 }
 
-export default function AddItemModal({ boardId, isOpen, onClose }: AddItemModalProps) {
-  const [activeTab, setActiveTab] = useState<'memo' | 'task'>('memo');
+export default function AddItemModal({
+  boardId,
+  isOpen,
+  onClose,
+}: AddItemModalProps) {
+  const [activeTab, setActiveTab] = useState<"memo" | "task">("memo");
   const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
 
   const { data: memos = [] } = useMemos();
@@ -50,14 +54,16 @@ export default function AddItemModal({ boardId, isOpen, onClose }: AddItemModalP
 
   if (!isOpen) return null;
 
-  const currentItems = activeTab === 'memo' ? memos : tasks;
+  const currentItems = activeTab === "memo" ? memos : tasks;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg w-full max-w-2xl max-h-[80vh] overflow-hidden">
         {/* ヘッダー */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">ボードにアイテムを追加</h2>
+          <h2 className="text-lg font-semibold text-gray-900">
+            ボードにアイテムを追加
+          </h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600"
@@ -69,21 +75,21 @@ export default function AddItemModal({ boardId, isOpen, onClose }: AddItemModalP
         {/* タブ */}
         <div className="flex border-b border-gray-200">
           <button
-            onClick={() => setActiveTab('memo')}
+            onClick={() => setActiveTab("memo")}
             className={`flex-1 py-3 px-4 text-sm font-medium ${
-              activeTab === 'memo'
-                ? 'text-blue-600 border-b-2 border-blue-600'
-                : 'text-gray-500 hover:text-gray-700'
+              activeTab === "memo"
+                ? "text-blue-600 border-b-2 border-blue-600"
+                : "text-gray-500 hover:text-gray-700"
             }`}
           >
             📝 メモ ({memos.length})
           </button>
           <button
-            onClick={() => setActiveTab('task')}
+            onClick={() => setActiveTab("task")}
             className={`flex-1 py-3 px-4 text-sm font-medium ${
-              activeTab === 'task'
-                ? 'text-blue-600 border-b-2 border-blue-600'
-                : 'text-gray-500 hover:text-gray-700'
+              activeTab === "task"
+                ? "text-blue-600 border-b-2 border-blue-600"
+                : "text-gray-500 hover:text-gray-700"
             }`}
           >
             ✅ タスク ({tasks.length})
@@ -94,7 +100,7 @@ export default function AddItemModal({ boardId, isOpen, onClose }: AddItemModalP
         <div className="p-4 max-h-96 overflow-y-auto">
           {currentItems.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              {activeTab === 'memo' ? 'メモ' : 'タスク'}がありません
+              {activeTab === "memo" ? "メモ" : "タスク"}がありません
             </div>
           ) : (
             <div className="space-y-2">
@@ -139,21 +145,21 @@ export default function AddItemModal({ boardId, isOpen, onClose }: AddItemModalP
 
 interface ItemCardProps {
   item: Memo | Task;
-  type: 'memo' | 'task';
+  type: "memo" | "task";
   isSelected: boolean;
   onToggle: () => void;
 }
 
 function ItemCard({ item, type, isSelected, onToggle }: ItemCardProps) {
-  const task = type === 'task' ? item as Task : null;
+  const task = type === "task" ? (item as Task) : null;
 
   return (
-    <div 
+    <div
       onClick={onToggle}
       className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-        isSelected 
-          ? 'border-blue-500 bg-blue-50' 
-          : 'border-gray-200 hover:border-gray-300'
+        isSelected
+          ? "border-blue-500 bg-blue-50"
+          : "border-gray-200 hover:border-gray-300"
       }`}
     >
       <div className="flex items-start gap-3">
@@ -166,32 +172,50 @@ function ItemCard({ item, type, isSelected, onToggle }: ItemCardProps) {
           />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-gray-900 line-clamp-1">{item.title}</h3>
-          {'description' in item && item.description && (
-            <p className="text-sm text-gray-600 line-clamp-2 mt-1">{item.description}</p>
+          <h3 className="font-medium text-gray-900 line-clamp-1">
+            {item.title}
+          </h3>
+          {"description" in item && item.description && (
+            <p className="text-sm text-gray-600 line-clamp-2 mt-1">
+              {item.description}
+            </p>
           )}
-          {'content' in item && item.content && (
-            <p className="text-sm text-gray-600 line-clamp-2 mt-1">{item.content}</p>
+          {"content" in item && item.content && (
+            <p className="text-sm text-gray-600 line-clamp-2 mt-1">
+              {item.content}
+            </p>
           )}
           {task && (
             <div className="flex items-center gap-2 mt-2">
-              <span className={`text-xs px-2 py-1 rounded ${
-                task.status === 'completed' 
-                  ? 'bg-green-100 text-green-700'
-                  : task.status === 'in_progress'
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'bg-gray-100 text-gray-700'
-              }`}>
-                {task.status === 'completed' ? '完了' : task.status === 'in_progress' ? '進行中' : '未着手'}
+              <span
+                className={`text-xs px-2 py-1 rounded ${
+                  task.status === "completed"
+                    ? "bg-green-100 text-green-700"
+                    : task.status === "in_progress"
+                      ? "bg-blue-100 text-blue-700"
+                      : "bg-gray-100 text-gray-700"
+                }`}
+              >
+                {task.status === "completed"
+                  ? "完了"
+                  : task.status === "in_progress"
+                    ? "進行中"
+                    : "未着手"}
               </span>
-              <span className={`text-xs px-2 py-1 rounded ${
-                task.priority === 'high'
-                  ? 'bg-red-100 text-red-700'
-                  : task.priority === 'low'
-                  ? 'bg-gray-100 text-gray-600'
-                  : 'bg-yellow-100 text-yellow-700'
-              }`}>
-                {task.priority === 'high' ? '高' : task.priority === 'low' ? '低' : '中'}
+              <span
+                className={`text-xs px-2 py-1 rounded ${
+                  task.priority === "high"
+                    ? "bg-red-100 text-red-700"
+                    : task.priority === "low"
+                      ? "bg-gray-100 text-gray-600"
+                      : "bg-yellow-100 text-yellow-700"
+                }`}
+              >
+                {task.priority === "high"
+                  ? "高"
+                  : task.priority === "low"
+                    ? "低"
+                    : "中"}
               </span>
             </div>
           )}

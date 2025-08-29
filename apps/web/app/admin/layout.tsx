@@ -16,20 +16,26 @@ const originalWarn = console.warn;
 const originalError = console.error;
 
 console.warn = (message: any, ...args: any[]) => {
-  if (typeof message === 'string' && message.includes('[antd: Menu] `children` is deprecated')) {
+  if (
+    typeof message === "string" &&
+    message.includes("[antd: Menu] `children` is deprecated")
+  ) {
     return;
   }
   originalWarn(message, ...args);
 };
 
 console.error = (message: any, ...args: any[]) => {
-  if (typeof message === 'string' && (
-    message.includes('[antd: Menu] `children` is deprecated') ||
-    message.includes('Instance created by `useForm` is not connected to any Form element') ||
-    message.includes('[antd: compatible] antd v5 support React is 16 ~ 18') ||
-    message.includes('[antd: Card] `bordered` is deprecated') ||
-    message.includes('[antd: Drawer] `bodyStyle` is deprecated')
-  )) {
+  if (
+    typeof message === "string" &&
+    (message.includes("[antd: Menu] `children` is deprecated") ||
+      message.includes(
+        "Instance created by `useForm` is not connected to any Form element",
+      ) ||
+      message.includes("[antd: compatible] antd v5 support React is 16 ~ 18") ||
+      message.includes("[antd: Card] `bordered` is deprecated") ||
+      message.includes("[antd: Drawer] `bodyStyle` is deprecated"))
+  ) {
     return;
   }
   originalError(message, ...args);
@@ -44,13 +50,13 @@ export default function AdminLayout({
 }) {
   const { getToken, userId, isLoaded } = useAuth();
   const [isMounted, setIsMounted] = React.useState(false);
-  
+
   // 管理者ユーザーIDのリストを環境変数から取得（常に呼び出し）
   const ADMIN_USER_IDS = React.useMemo(() => {
     const adminIds = process.env.NEXT_PUBLIC_ADMIN_USER_IDS;
-    return adminIds ? adminIds.split(',').map(id => id.trim()) : [];
+    return adminIds ? adminIds.split(",").map((id) => id.trim()) : [];
   }, []);
-  
+
   // カスタムデータプロバイダー
   const simpleDataProvider = React.useMemo(() => {
     return {
@@ -59,25 +65,31 @@ export default function AdminLayout({
         const { current = 1, pageSize = 10 } = pagination || {};
         const start = (current - 1) * pageSize;
         const end = start + pageSize;
-        
-        const response = await fetch(`${API_URL}/${resource}?_start=${start}&_end=${end}`, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token ? `Bearer ${token}` : "",
+
+        const response = await fetch(
+          `${API_URL}/${resource}?_start=${start}&_end=${end}`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: token ? `Bearer ${token}` : "",
+            },
           },
-        });
-        
+        );
+
         const data = await response.json();
         return {
           data: data,
           total: data.length, // 簡易的な実装
         };
       },
-      
+
       getOne: async ({ resource, id }: any) => {
         const token = await getToken();
         // users リソースの場合は既存のエンドポイントを使用
-        const url = resource === 'users' ? `${API_URL}/users/${id}` : `${API_URL}/${resource}/${id}`;
+        const url =
+          resource === "users"
+            ? `${API_URL}/users/${id}`
+            : `${API_URL}/${resource}/${id}`;
         const response = await fetch(url, {
           headers: {
             "Content-Type": "application/json",
@@ -90,17 +102,17 @@ export default function AdminLayout({
         const data = await response.json();
         return { data };
       },
-      
+
       update: async ({ resource, id, variables }: any) => {
         const token = await getToken();
         // users リソースの場合は既存のプラン変更エンドポイントを使用
-        const url = resource === 'users' 
-          ? `${API_URL}/users/${id}/plan`
-          : `${API_URL}/${resource}/${id}`;
-        const body = resource === 'users' 
-          ? { planType: variables.planType }
-          : variables;
-          
+        const url =
+          resource === "users"
+            ? `${API_URL}/users/${id}/plan`
+            : `${API_URL}/${resource}/${id}`;
+        const body =
+          resource === "users" ? { planType: variables.planType } : variables;
+
         const response = await fetch(url, {
           method: "PATCH",
           headers: {
@@ -115,35 +127,39 @@ export default function AdminLayout({
         const data = await response.json();
         return { data };
       },
-      
-      create: async () => { throw new Error("Create not implemented"); },
-      deleteOne: async () => { throw new Error("Delete not implemented"); },
+
+      create: async () => {
+        throw new Error("Create not implemented");
+      },
+      deleteOne: async () => {
+        throw new Error("Delete not implemented");
+      },
       getApiUrl: () => API_URL,
     } as any;
   }, [getToken]);
-  
+
   // クライアントサイドでのマウント状態管理
   React.useEffect(() => {
     setIsMounted(true);
   }, []);
-  
+
   // SSR時やクライアントマウント前は何も表示しない
   if (!isMounted || !isLoaded) {
     return null;
   }
-  
+
   // ログインしていない場合はリダイレクト
   if (!userId) {
-    if (typeof window !== 'undefined') {
-      window.location.href = '/';
+    if (typeof window !== "undefined") {
+      window.location.href = "/";
     }
     return null;
   }
-  
+
   // 管理者権限をチェック
   if (!ADMIN_USER_IDS.includes(userId)) {
     return (
-      <div style={{ padding: 20, textAlign: 'center' }}>
+      <div style={{ padding: 20, textAlign: "center" }}>
         <h2>アクセス権限がありません</h2>
         <p>管理者権限が必要です。</p>
         <a href="/">ホームに戻る</a>
@@ -175,9 +191,7 @@ export default function AdminLayout({
               warnWhenUnsavedChanges: true,
             }}
           >
-            <ThemedLayoutV2>
-              {children}
-            </ThemedLayoutV2>
+            <ThemedLayoutV2>{children}</ThemedLayoutV2>
             <RefineKbar />
           </Refine>
         </AntdApp>

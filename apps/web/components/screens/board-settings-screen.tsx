@@ -20,7 +20,7 @@ export default function BoardSettingsScreen({
   boardSlug,
   initialBoardName,
   initialBoardDescription,
-  initialBoardCompleted
+  initialBoardCompleted,
 }: BoardSettingsScreenProps) {
   const { preferences } = useUserPreferences(1);
   const { currentMode, setCurrentMode } = useNavigation();

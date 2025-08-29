@@ -42,7 +42,7 @@ export default function DeleteCategoryModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div 
+      <div
         className="bg-white rounded-lg shadow-xl w-full max-w-sm mx-4"
         onClick={(e) => e.stopPropagation()}
       >
@@ -62,7 +62,8 @@ export default function DeleteCategoryModal({
         {/* 内容 */}
         <div className="px-4 pb-4">
           <p className="text-gray-600 mb-4">
-            「<span className="font-medium text-gray-900">{category.name}</span>」を削除しますか？
+            「<span className="font-medium text-gray-900">{category.name}</span>
+            」を削除しますか？
           </p>
           <p className="text-sm text-gray-500 mb-6">
             この操作は取り消せません。
@@ -78,7 +79,7 @@ export default function DeleteCategoryModal({
               <Trash2 size={16} />
               {isDeleting ? "削除中..." : "削除"}
             </button>
-            
+
             <button
               onClick={onClose}
               disabled={isDeleting}

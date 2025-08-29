@@ -24,15 +24,17 @@ function ViewModeToggle({
   };
 
   return (
-    <Tooltip 
-      text={viewMode === "card" ? "リスト表示" : "カード表示"} 
+    <Tooltip
+      text={viewMode === "card" ? "リスト表示" : "カード表示"}
       position="bottom"
     >
       <button
         onClick={handleToggle}
         disabled={disabled}
         className={`bg-gray-100 rounded-lg ${buttonSize} flex items-center justify-center transition-colors ${
-          disabled ? "opacity-50 cursor-not-allowed" : "text-gray-500 hover:text-gray-700"
+          disabled
+            ? "opacity-50 cursor-not-allowed"
+            : "text-gray-500 hover:text-gray-700"
         }`}
       >
         {viewMode === "card" ? (

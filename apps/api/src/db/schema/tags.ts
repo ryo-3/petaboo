@@ -17,7 +17,9 @@ export const tags = sqliteTable("tags", {
 
 export const taggings = sqliteTable("taggings", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  tagId: integer("tag_id").notNull().references(() => tags.id, { onDelete: "cascade" }),
+  tagId: integer("tag_id")
+    .notNull()
+    .references(() => tags.id, { onDelete: "cascade" }),
   targetType: text("target_type").notNull(), // 'memo' | 'task' | 'board'
   targetOriginalId: text("target_original_id").notNull(), // 対象のoriginalId
   userId: text("user_id").notNull(), // パフォーマンス向上のため重複保存

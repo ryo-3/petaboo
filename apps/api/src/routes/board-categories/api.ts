@@ -93,8 +93,8 @@ export function createAPI(app: AppType) {
       query = query.where(
         and(
           eq(boardCategories.userId, auth.userId),
-          eq(boardCategories.boardId, parseInt(boardId))
-        )
+          eq(boardCategories.boardId, parseInt(boardId)),
+        ),
       );
     }
 
@@ -103,8 +103,8 @@ export function createAPI(app: AppType) {
       query = query.where(
         and(
           eq(boardCategories.userId, auth.userId),
-          like(boardCategories.name, `%${q}%`)
-        )
+          like(boardCategories.name, `%${q}%`),
+        ),
       );
     }
 
@@ -131,19 +131,23 @@ export function createAPI(app: AppType) {
         .orderBy(sql<number>`count(${boards.id}) DESC`);
 
       const limitValue = limit ? parseInt(limit) : undefined;
-      const result = limitValue ? categoriesWithUsage.slice(0, limitValue) : categoriesWithUsage;
-      
-      return c.json(result.map(item => ({
-        id: item.id,
-        name: item.name,
-        description: item.description,
-        color: item.color,
-        icon: item.icon,
-        sortOrder: item.sortOrder,
-        userId: item.userId,
-        createdAt: item.createdAt,
-        updatedAt: item.updatedAt,
-      })));
+      const result = limitValue
+        ? categoriesWithUsage.slice(0, limitValue)
+        : categoriesWithUsage;
+
+      return c.json(
+        result.map((item) => ({
+          id: item.id,
+          name: item.name,
+          description: item.description,
+          color: item.color,
+          icon: item.icon,
+          sortOrder: item.sortOrder,
+          userId: item.userId,
+          createdAt: item.createdAt,
+          updatedAt: item.updatedAt,
+        })),
+      );
     } else if (sort === "name") {
       // 名前順
       query = query.orderBy(boardCategories.name);
@@ -212,7 +216,8 @@ export function createAPI(app: AppType) {
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const { name, boardId, description, color, icon, sortOrder } = c.req.valid("json");
+    const { name, boardId, description, color, icon, sortOrder } =
+      c.req.valid("json");
     const db = c.env.db;
 
     // カテゴリー数制限チェック（30個）
@@ -222,7 +227,10 @@ export function createAPI(app: AppType) {
       .where(eq(boardCategories.userId, auth.userId));
 
     if (categoryCount[0]?.count >= 30) {
-      return c.json({ error: "Board category limit reached (30 categories maximum)" }, 400);
+      return c.json(
+        { error: "Board category limit reached (30 categories maximum)" },
+        400,
+      );
     }
 
     // 同名カテゴリーの存在チェック
@@ -232,8 +240,8 @@ export function createAPI(app: AppType) {
       .where(
         and(
           eq(boardCategories.userId, auth.userId),
-          eq(boardCategories.name, name)
-        )
+          eq(boardCategories.name, name),
+        ),
       )
       .limit(1);
 
@@ -248,7 +256,7 @@ export function createAPI(app: AppType) {
         .select({ max: sql<number>`max(${boardCategories.sortOrder})` })
         .from(boardCategories)
         .where(eq(boardCategories.userId, auth.userId));
-      
+
       finalSortOrder = (maxSortOrder[0]?.max || 0) + 1;
     }
 
@@ -264,7 +272,10 @@ export function createAPI(app: AppType) {
       updatedAt: new Date(),
     };
 
-    const result = await db.insert(boardCategories).values(newCategory).returning();
+    const result = await db
+      .insert(boardCategories)
+      .values(newCategory)
+      .returning();
     return c.json(result[0], 201);
   });
 
@@ -344,8 +355,8 @@ export function createAPI(app: AppType) {
       .where(
         and(
           eq(boardCategories.id, categoryId),
-          eq(boardCategories.userId, auth.userId)
-        )
+          eq(boardCategories.userId, auth.userId),
+        ),
       )
       .limit(1);
 
@@ -361,8 +372,8 @@ export function createAPI(app: AppType) {
         and(
           eq(boardCategories.userId, auth.userId),
           eq(boardCategories.name, name),
-          sql`${boardCategories.id} != ${categoryId}`
-        )
+          sql`${boardCategories.id} != ${categoryId}`,
+        ),
       )
       .limit(1);
 
@@ -372,13 +383,13 @@ export function createAPI(app: AppType) {
 
     const updated = await db
       .update(boardCategories)
-      .set({ 
+      .set({
         name,
         description: description || null,
         color: color || null,
         icon: icon || null,
         sortOrder: sortOrder !== undefined ? sortOrder : category[0].sortOrder,
-        updatedAt: new Date() 
+        updatedAt: new Date(),
       })
       .where(eq(boardCategories.id, categoryId))
       .returning();
@@ -446,8 +457,8 @@ export function createAPI(app: AppType) {
       .where(
         and(
           eq(boardCategories.id, categoryId),
-          eq(boardCategories.userId, auth.userId)
-        )
+          eq(boardCategories.userId, auth.userId),
+        ),
       )
       .limit(1);
 
@@ -524,8 +535,10 @@ export function createAPI(app: AppType) {
       .from(boardCategories)
       .where(eq(boardCategories.userId, auth.userId));
 
-    const userCategoryIds = categories.map(cat => cat.id);
-    const invalidIds = categoryIds.filter(id => !userCategoryIds.includes(id));
+    const userCategoryIds = categories.map((cat) => cat.id);
+    const invalidIds = categoryIds.filter(
+      (id) => !userCategoryIds.includes(id),
+    );
 
     if (invalidIds.length > 0) {
       return c.json({ error: "Invalid category IDs" }, 400);
@@ -600,8 +613,8 @@ export function createAPI(app: AppType) {
       .where(
         and(
           eq(boardCategories.id, categoryId),
-          eq(boardCategories.userId, auth.userId)
-        )
+          eq(boardCategories.userId, auth.userId),
+        ),
       )
       .limit(1);
 
@@ -616,8 +629,8 @@ export function createAPI(app: AppType) {
       .where(
         and(
           eq(boards.userId, auth.userId),
-          eq(boards.boardCategoryId, categoryId)
-        )
+          eq(boards.boardCategoryId, categoryId),
+        ),
       );
 
     // アーカイブ済みボード数
@@ -628,8 +641,8 @@ export function createAPI(app: AppType) {
         and(
           eq(boards.userId, auth.userId),
           eq(boards.boardCategoryId, categoryId),
-          eq(boards.archived, true)
-        )
+          eq(boards.archived, true),
+        ),
       );
 
     // 完了済みボード数
@@ -640,8 +653,8 @@ export function createAPI(app: AppType) {
         and(
           eq(boards.userId, auth.userId),
           eq(boards.boardCategoryId, categoryId),
-          eq(boards.completed, true)
-        )
+          eq(boards.completed, true),
+        ),
       );
 
     return c.json({

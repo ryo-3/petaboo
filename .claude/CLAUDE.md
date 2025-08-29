@@ -65,7 +65,7 @@
 ### バルク操作機能
 
 - **一括削除**: メモ・タスクの複数選択削除
-- **一括復元**: 削除済みアイテムの複数選択復元  
+- **一括復元**: 削除済みアイテムの複数選択復元
 - **フック**: `use-memo-bulk-delete.tsx`, `use-task-bulk-delete.tsx`
 - **UI**: 選択モード切り替え、一括操作ボタン
 
@@ -151,6 +151,7 @@ const response = await fetch(`${API_BASE_URL}/categories`, {
 ### 必須: 2つのサーバーを起動
 
 **1. APIサーバー起動（ターミナル1）**
+
 ```bash
 cd apps/api
 npm run dev
@@ -159,6 +160,7 @@ npm run dev
 ```
 
 **2. Webサーバー起動（ターミナル2）**
+
 ```bash
 # ルートディレクトリで実行
 npm run dev
@@ -166,25 +168,29 @@ npm run dev
 ```
 
 ### アクセスURL
+
 - **メインアプリ**: http://localhost:7593
 - **管理画面**: http://localhost:7593/admin/users
 - **チーム機能**: http://localhost:7593/team （プレミアムプラン限定）
 - **API仕様書**: http://localhost:7594/docs
 
 ### ポート設定
+
 - **Web**: 7593
 - **API**: 7594 （8794から変更）
 
 ### 環境変数設定
 
 **apps/web/.env.local**
+
 ```bash
 NEXT_PUBLIC_API_URL=http://localhost:7594
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
 NEXT_PUBLIC_ADMIN_USER_IDS=user_2z0DUpwFMhf1Lk6prAP9MzVJZIh
 ```
 
-**apps/api/.env**  
+**apps/api/.env**
+
 ```bash
 CLERK_SECRET_KEY=sk_test_...
 ADMIN_USER_IDS=user_2z0DUpwFMhf1Lk6prAP9MzVJZIh
@@ -210,13 +216,15 @@ cd apps/api && npm run db:reset      # ローカルデータベースを完全�
 ```
 
 ### webログフィルタリング
+
 - **場所**: `apps/web/public/console-logger.js`
 - **機能**: ブラウザコンソールログの重複排除（5秒間同一メッセージ除外）
 - **対象**: console.log/error/warn/info → web.logファイル
 - **メモ**: undefinedフィールドはJSON.stringifyで自動省略される
 
 ### 自動品質管理システム
-- **コミット時自動実行**: 
+
+- **コミット時自動実行**:
   1. ログファイル自動クリア
   2. TypeScript + Lintエラーチェック
   3. 変更ファイルの品質チェック（lint-staged）
@@ -242,23 +250,27 @@ cd apps/api && npm run db:reset      # ローカルデータベースを完全�
 ### 2025-08-21: WSL環境での開発品質管理システム完成
 
 **環境変更**:
+
 - WSL環境への完全移行とHusky正常セットアップ
 - 自動品質管理システム構築
-- TypeScriptパスエイリアス修正（@/* → ./*)
+- TypeScriptパスエイリアス修正（@/_ → ./_)
 
 **新機能**:
+
 - ログ共有システム（api.log, web.log対応）
 - コミット時自動品質チェック（TypeScript + Lint）
 - ログ自動管理（クリア・ローテーション）
 - エラー発生時のコミット自動停止
 
 **開発効率化**:
+
 - `npm run dev` 1コマンドでログ記録付き開発（ユーザーが手動実行）
 - エラーチェックコマンド3段階（quick/wsl/full）
 - pre-commitフックによる品質保証
 - Claude Codeとのログリアルタイム共有
 
 **技術アップデート**:
+
 - Next.js 15.3.0, React 19.1.0, Clerk 6.23.0
 - Hono 4.8.3, Drizzle ORM 0.44.2
 - Turborepo 2.5.4, pnpm 9.0.0
@@ -268,14 +280,16 @@ cd apps/api && npm run db:reset      # ローカルデータベースを完全�
 **問題**: ボードアイテム管理でID型不整合（数値 ⇔ 文字列）によるキャッシュエラー
 
 **修正内容**:
+
 - 全システムで`originalId`（文字列）ベースに統一
-- `parseInt()`等の危険な型変換を全面削除  
+- `parseInt()`等の危険な型変換を全面削除
 - `useItemBoards`, `useRemoveItemFromBoard`の引数型を統一
 - 関連コンポーネント（task-editor, memo-filter-wrapper等）修正
 
 **効果**:
+
 - ✅ キャッシュキー不整合問題の完全解消
-- ✅ 型安全性の大幅向上  
+- ✅ 型安全性の大幅向上
 - ✅ API呼び出し時の型エラー防止
 
 トランザクション処理　メモ一覧から削除するときに　削除済にコピーができていていないと削除を実行できない

@@ -1,7 +1,13 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Crown, Users, Sparkles, Shield, Zap, TrendingUp } from "lucide-react";
 
 export function PremiumUpgradePrompt() {
@@ -19,7 +25,7 @@ export function PremiumUpgradePrompt() {
             プレミアムプランにアップグレードして、チームでのコラボレーション機能を解放しましょう
           </CardDescription>
         </CardHeader>
-        
+
         <CardContent className="space-y-8">
           {/* 特典一覧 */}
           <div className="grid md:grid-cols-2 gap-6">
@@ -67,7 +73,7 @@ export function PremiumUpgradePrompt() {
                 <div className="text-sm text-gray-600">月額（税込）</div>
               </div>
             </div>
-            
+
             <ul className="space-y-2 mb-6">
               <li className="flex items-center text-sm">
                 <span className="mr-2">✓</span>
@@ -94,8 +100,8 @@ export function PremiumUpgradePrompt() {
 
           {/* CTA */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8"
               onClick={() => {
                 // TODO: 支払いページへのリダイレクト
@@ -105,11 +111,11 @@ export function PremiumUpgradePrompt() {
               <Crown className="mr-2 w-5 h-5" />
               プレミアムプランにアップグレード
             </Button>
-            
-            <Button 
-              size="lg" 
+
+            <Button
+              size="lg"
               variant="outline"
-              onClick={() => window.location.href = "/"}
+              onClick={() => (window.location.href = "/")}
             >
               ホームに戻る
             </Button>
@@ -118,7 +124,9 @@ export function PremiumUpgradePrompt() {
           {/* 補足情報 */}
           <div className="text-center text-sm text-gray-500 pt-4 border-t">
             <p>いつでもキャンセル可能 • 7日間の無料トライアル付き</p>
-            <p className="mt-1">ご質問がある場合は、サポートまでお問い合わせください</p>
+            <p className="mt-1">
+              ご質問がある場合は、サポートまでお問い合わせください
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -126,11 +134,11 @@ export function PremiumUpgradePrompt() {
   );
 }
 
-function FeatureCard({ 
-  icon, 
-  title, 
-  description 
-}: { 
+function FeatureCard({
+  icon,
+  title,
+  description,
+}: {
   icon: React.ReactNode;
   title: string;
   description: string;

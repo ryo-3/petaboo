@@ -4,7 +4,16 @@ import path from "path";
 
 export async function POST(request: NextRequest) {
   try {
-    const logData = await request.json();
+    // リクエストボディが空の場合のチェック
+    const text = await request.text();
+    if (!text.trim()) {
+      return NextResponse.json(
+        { error: "Empty request body" },
+        { status: 400 },
+      );
+    }
+
+    const logData = JSON.parse(text);
     const { level, message, timestamp, url } = logData;
 
     // ログメッセージを整形

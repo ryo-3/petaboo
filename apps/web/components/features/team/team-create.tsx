@@ -12,6 +12,7 @@ import { useCreateTeam } from "@/src/hooks/use-create-team";
 export function TeamCreate() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [customUrl, setCustomUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const { data: teamStats } = useTeamStats();
@@ -21,18 +22,19 @@ export function TeamCreate() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canCreateTeam || !name.trim()) return;
+    if (!canCreateTeam || !name.trim() || !customUrl.trim()) return;
 
     setError(null);
     
     try {
-      await createTeamMutation.mutateAsync({
+      const team = await createTeamMutation.mutateAsync({
         name: name.trim(),
         description: description.trim() || undefined,
+        customUrl: customUrl.trim(),
       });
       
-      // 成功後はチーム一覧に戻る
-      router.push("/team");
+      // 成功後は作成したチームの詳細ページに移動
+      router.push(`/team/${team.customUrl}`);
     } catch (error) {
       console.error("チーム作成エラー:", error);
       setError(error instanceof Error ? error.message : "チーム作成に失敗しました");
@@ -82,6 +84,37 @@ export function TeamCreate() {
                   </span>
                   <span className="text-xs text-gray-400">
                     {name.length}/50
+                  </span>
+                </div>
+              </div>
+
+              {/* チームURL */}
+              <div>
+                <label htmlFor="teamUrl" className="block text-sm font-semibold text-gray-700 mb-2">
+                  チームURL <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500 text-sm">/team/</span>
+                  </div>
+                  <input
+                    id="teamUrl"
+                    type="text"
+                    value={customUrl}
+                    onChange={(e) => setCustomUrl(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                    placeholder="my-team"
+                    className="w-full pl-14 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    maxLength={30}
+                    required
+                    disabled={!canCreateTeam}
+                  />
+                </div>
+                <div className="flex justify-between mt-1">
+                  <span className="text-xs text-gray-500">
+                    英小文字・数字・ハイフンのみ使用可能です
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    {customUrl.length}/30
                   </span>
                 </div>
               </div>
@@ -149,7 +182,7 @@ export function TeamCreate() {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={!canCreateTeam || !name.trim() || createTeamMutation.isPending}
+                  disabled={!canCreateTeam || !name.trim() || !customUrl.trim() || createTeamMutation.isPending}
                   className="px-8"
                 >
                   {createTeamMutation.isPending ? (

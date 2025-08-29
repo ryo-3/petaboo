@@ -1,6 +1,6 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { getAuth } from "@hono/clerk-auth";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { teams, teamMembers, teamInvitations, users } from "../../db";
 import { count } from "drizzle-orm";
 import type { DatabaseType } from "../../types/common";
@@ -9,6 +9,10 @@ import type { DatabaseType } from "../../types/common";
 const createTeamSchema = z.object({
   name: z.string().min(1, "チーム名は必須です").max(100, "チーム名は100文字以内にしてください"),
   description: z.string().max(500, "説明は500文字以内にしてください").optional(),
+  customUrl: z.string().min(1, "チームURLは必須です").max(30, "チームURLは30文字以内にしてください")
+    .regex(/^[a-z0-9-]+$/, "チームURLは英小文字・数字・ハイフンのみ使用できます")
+    .refine((url) => !["admin", "api", "auth", "team", "teams", "user", "users", "settings", "help", "about", "contact"].includes(url), 
+      "このURLは予約されているため使用できません"),
 });
 
 // チーム作成ルート定義
@@ -33,6 +37,7 @@ export const createTeamRoute = createRoute({
             id: z.number(),
             name: z.string(),
             description: z.string().nullable(),
+            customUrl: z.string(),
             createdAt: z.number(),
           }),
         },
@@ -51,10 +56,10 @@ export const createTeamRoute = createRoute({
 // 個別チーム詳細取得ルート定義
 export const getTeamDetailRoute = createRoute({
   method: "get",
-  path: "/{id}",
+  path: "/{customUrl}",
   request: {
     params: z.object({
-      id: z.string().transform(Number),
+      customUrl: z.string(),
     }),
   },
   responses: {
@@ -66,6 +71,7 @@ export const getTeamDetailRoute = createRoute({
             id: z.number(),
             name: z.string(),
             description: z.string().nullable(),
+            customUrl: z.string(),
             role: z.enum(["admin", "member"]),
             createdAt: z.number(),
             updatedAt: z.number(),
@@ -123,6 +129,7 @@ export const getTeamsRoute = createRoute({
             id: z.number(),
             name: z.string(),
             description: z.string().nullable(),
+            customUrl: z.string(),
             role: z.enum(["admin", "member"]),
             memberCount: z.number(),
             createdAt: z.number(),
@@ -141,10 +148,10 @@ export const getTeamsRoute = createRoute({
 // チーム招待送信ルート定義
 export const inviteToTeamRoute = createRoute({
   method: "post",
-  path: "/{id}/invite",
+  path: "/{customUrl}/invite",
   request: {
     params: z.object({
-      id: z.string().transform(Number),
+      customUrl: z.string(),
     }),
     body: {
       content: {
@@ -363,6 +370,7 @@ export async function getUserTeamStats(c: any) {
 
 // チーム作成の実装
 export async function createTeam(c: any) {
+  console.log("createTeam関数が呼ばれました");
   const auth = getAuth(c);
   if (!auth?.userId) {
     return c.json({ error: "認証が必要です" }, 401);
@@ -370,6 +378,7 @@ export async function createTeam(c: any) {
 
   const db: DatabaseType = c.env.db;
   const body = await c.req.json();
+  console.log("受け取ったbody:", body);
   
   try {
     // ユーザーのプランをチェック
@@ -414,8 +423,21 @@ export async function createTeam(c: any) {
       return c.json({ error: "チーム作成数の上限に達しています（プレミアムプランは3チームまで）" }, 403);
     }
 
-    const { name, description } = createTeamSchema.parse(body);
+    console.log("チーム作成リクエストボディ:", body);
+    const { name, description, customUrl } = createTeamSchema.parse(body);
+    console.log("パース後のデータ:", { name, description, customUrl });
     const now = Math.floor(Date.now() / 1000);
+
+    // customURLの重複チェック
+    const existingTeam = await db
+      .select()
+      .from(teams)
+      .where(eq(teams.customUrl, customUrl))
+      .limit(1);
+
+    if (existingTeam.length > 0) {
+      return c.json({ error: "このURLは既に使用されています" }, 400);
+    }
 
     // チーム作成
     const teamResult = await db
@@ -423,6 +445,7 @@ export async function createTeam(c: any) {
       .values({
         name,
         description: description || null,
+        customUrl,
         createdAt: now,
         updatedAt: now,
       })
@@ -442,6 +465,7 @@ export async function createTeam(c: any) {
       id: newTeam.id,
       name: newTeam.name,
       description: newTeam.description,
+      customUrl: newTeam.customUrl,
       createdAt: newTeam.createdAt,
     }, 201);
 
@@ -494,12 +518,26 @@ export async function getTeamDetail(c: any) {
     return c.json({ error: "認証が必要です" }, 401);
   }
 
-  const teamId = parseInt(c.req.param("id"));
+  const customUrl = c.req.param("customUrl");
   const db: DatabaseType = c.env.db;
 
-  console.log("チーム詳細取得リクエスト:", { teamId, userId: auth.userId });
+  console.log("チーム詳細取得リクエスト:", { customUrl, userId: auth.userId });
 
   try {
+    // customUrlからチームIDを取得
+    const teamResult = await db
+      .select()
+      .from(teams)
+      .where(eq(teams.customUrl, customUrl))
+      .limit(1);
+
+    if (teamResult.length === 0) {
+      return c.json({ error: "チームが見つかりません" }, 404);
+    }
+
+    const team = teamResult[0];
+    const teamId = team.id;
+
     // ユーザーがそのチームに所属しているかチェック
     const teamMember = await db
       .select({
@@ -517,19 +555,6 @@ export async function getTeamDetail(c: any) {
       return c.json({ error: "チームが見つかりません" }, 404);
     }
 
-    // チーム詳細情報を取得
-    const teamResult = await db
-      .select()
-      .from(teams)
-      .where(eq(teams.id, teamId))
-      .limit(1);
-
-    if (teamResult.length === 0) {
-      return c.json({ error: "チームが見つかりません" }, 404);
-    }
-
-    const team = teamResult[0];
-
     // メンバー数を取得
     const memberCountResult = await db
       .select({ count: count() })
@@ -542,6 +567,7 @@ export async function getTeamDetail(c: any) {
       id: team.id,
       name: team.name,
       description: team.description,
+      customUrl: team.customUrl,
       role: teamMember[0].role,
       createdAt: team.createdAt,
       updatedAt: team.updatedAt,
@@ -570,6 +596,7 @@ export async function getTeams(c: any) {
         id: teams.id,
         name: teams.name,
         description: teams.description,
+        customUrl: teams.customUrl,
         role: teamMembers.role,
         createdAt: teams.createdAt,
         updatedAt: teams.updatedAt,
@@ -691,7 +718,8 @@ export async function joinTeam(c: any) {
 
 // チーム招待送信の実装
 export async function inviteToTeam(c: any) {
-  console.log('招待送信開始:', { teamId: c.req.param("id") });
+  const customUrl = c.req.param("customUrl");
+  console.log('招待送信開始:', { customUrl });
   
   const auth = getAuth(c);
   if (!auth?.userId) {
@@ -699,14 +727,27 @@ export async function inviteToTeam(c: any) {
     return c.json({ error: "認証が必要です" }, 401);
   }
 
-  const teamId = parseInt(c.req.param("id"));
   const requestBody = await c.req.json();
   const { email, role = "member" } = requestBody;
   const db: DatabaseType = c.env.db;
-  
-  console.log('招待送信リクエスト:', { teamId, email, role, userId: auth.userId });
 
   try {
+    // customUrlからチームIDを取得
+    const teamResult = await db
+      .select()
+      .from(teams)
+      .where(eq(teams.customUrl, customUrl))
+      .limit(1);
+
+    if (teamResult.length === 0) {
+      return c.json({ error: "チームが見つかりません" }, 404);
+    }
+
+    const team = teamResult[0];
+    const teamId = team.id;
+  
+  console.log('招待送信リクエスト:', { teamId, customUrl, email, role, userId: auth.userId });
+
     // ユーザーがそのチームの管理者かチェック
     const teamMember = await db
       .select()
@@ -720,17 +761,6 @@ export async function inviteToTeam(c: any) {
 
     if (teamMember.length === 0) {
       return c.json({ error: "管理者権限が必要です" }, 403);
-    }
-
-    // チームの存在確認
-    const team = await db
-      .select()
-      .from(teams)
-      .where(eq(teams.id, teamId))
-      .limit(1);
-
-    if (team.length === 0) {
-      return c.json({ error: "チームが見つかりません" }, 404);
     }
 
     // 既に招待済みかチェック
@@ -793,7 +823,7 @@ export async function inviteToTeam(c: any) {
       console.error('メール送信でエラー:', error);
     }
 
-    console.log(`招待作成完了: ${email} をチーム「${team[0].name}」に招待`);
+    console.log(`招待作成完了: ${email} をチーム「${team.name}」に招待`);
     console.log(`招待リンク: ${invitationLink}`);
 
     return c.json({
@@ -927,7 +957,7 @@ export async function acceptInvitation(c: any) {
       .get();
 
     const MAX_MEMBER_TEAMS = 3;
-    if (memberTeamsCount.count >= MAX_MEMBER_TEAMS) {
+    if (memberTeamsCount && memberTeamsCount.count >= MAX_MEMBER_TEAMS) {
       return c.json({ message: "参加できるチーム数の上限に達しています" }, 400);
     }
 

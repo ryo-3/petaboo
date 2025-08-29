@@ -8,6 +8,7 @@ import PlusIcon from "@/components/icons/plus-icon";
 import SearchIcon from "@/components/icons/search-icon";
 import SettingsIcon from "@/components/icons/settings-icon";
 import TaskIcon from "@/components/icons/task-icon";
+import TeamIcon from "@/components/icons/team-icon";
 import MemoList from "@/components/mobile/memo-list";
 import TaskList from "@/components/mobile/task-list";
 import SwitchTabs from "@/components/ui/base/switch-tabs";
@@ -40,6 +41,9 @@ interface SidebarProps {
   isBoardActive?: boolean;
   currentBoardName?: string;
   showingBoardDetail?: boolean;
+  onTeamList?: () => void;
+  isTeamDetailPage?: boolean;
+  isTeamListPage?: boolean;
 }
 
 function Sidebar({
@@ -66,6 +70,9 @@ function Sidebar({
   isBoardActive = false,
   currentBoardName,
   showingBoardDetail = false,
+  onTeamList,
+  isTeamDetailPage = false,
+  isTeamListPage = false,
 }: SidebarProps) {
   const modeTabs = [
     {
@@ -93,6 +100,21 @@ function Sidebar({
               <HomeIcon className="w-5 h-5 text-gray-600" />
             </button>
           </Tooltip>
+
+          {isTeamDetailPage && onTeamList && (
+            <Tooltip text="チーム一覧" position="right">
+              <button
+                onClick={onTeamList}
+                className={`p-2 rounded-lg transition-colors ${
+                  isTeamListPage 
+                    ? "bg-slate-500 text-white" 
+                    : "bg-slate-200 hover:bg-slate-300 text-slate-600"
+                }`}
+              >
+                <TeamIcon className="w-5 h-5" />
+              </button>
+            </Tooltip>
+          )}
 
           <Tooltip text="メモ一覧" position="right">
             <button

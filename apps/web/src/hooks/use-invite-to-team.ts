@@ -4,7 +4,7 @@ import { useAuth } from "@clerk/nextjs";
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export interface InviteToTeamRequest {
-  teamId: number;
+  customUrl: string;
   email: string;
   role?: "admin" | "member";
 }
@@ -14,10 +14,10 @@ export function useInviteToTeam() {
   const { getToken } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ teamId, email, role = "member" }: InviteToTeamRequest) => {
+    mutationFn: async ({ customUrl, email, role = "member" }: InviteToTeamRequest) => {
       const token = await getToken();
       
-      const response = await fetch(`${API_URL}/teams/${teamId}/invite`, {
+      const response = await fetch(`${API_URL}/teams/${customUrl}/invite`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -40,7 +40,7 @@ export function useInviteToTeam() {
     onSuccess: (data, variables) => {
       // チーム詳細をリフレッシュ
       queryClient.invalidateQueries({ 
-        queryKey: ["team-detail", variables.teamId] 
+        queryKey: ["team", variables.customUrl] 
       });
       
       // チーム一覧もリフレッシュ（メンバー数の更新など）

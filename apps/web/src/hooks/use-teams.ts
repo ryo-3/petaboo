@@ -7,6 +7,7 @@ interface Team {
   id: number;
   name: string;
   description?: string;
+  customUrl: string;
   createdAt: string;
   updatedAt: string;
   role: "admin" | "member";

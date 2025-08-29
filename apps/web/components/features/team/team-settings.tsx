@@ -8,12 +8,12 @@ import ArrowLeftIcon from "@/components/icons/arrow-left-icon";
 import { useTeamDetail } from "@/src/hooks/use-team-detail";
 
 interface TeamSettingsProps {
-  teamId: number;
+  customUrl: string;
 }
 
-export function TeamSettings({ teamId }: TeamSettingsProps) {
+export function TeamSettings({ customUrl }: TeamSettingsProps) {
   const router = useRouter();
-  const { data: team, isLoading } = useTeamDetail(teamId);
+  const { data: team, isLoading } = useTeamDetail(customUrl);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
 
@@ -24,6 +24,13 @@ export function TeamSettings({ teamId }: TeamSettingsProps) {
       setDescription(team.description || "");
     }
   }, [team]);
+
+  // エラーまたはチームが見つからない場合のリダイレクト処理
+  useEffect(() => {
+    if (!isLoading && !team) {
+      router.push("/team");
+    }
+  }, [isLoading, team, router]);
 
   if (isLoading) {
     return (
@@ -41,8 +48,8 @@ export function TeamSettings({ teamId }: TeamSettingsProps) {
     return (
       <div className="flex h-full bg-white overflow-hidden">
         <div className="w-full pt-3 pl-5 pr-2 flex flex-col">
-          <div className="text-center text-gray-500">
-            チーム情報を読み込めませんでした。
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           </div>
         </div>
       </div>
@@ -171,7 +178,7 @@ export function TeamSettings({ teamId }: TeamSettingsProps) {
                   onClick={() => {
                     if (confirm(`本当に「${team.name}」を削除しますか？この操作は取り消せません。`)) {
                       // TODO: チーム削除のAPI実装
-                      console.log("チーム削除:", teamId);
+                      console.log("チーム削除:", team.id);
                     }
                   }}
                 >

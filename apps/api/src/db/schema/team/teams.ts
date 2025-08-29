@@ -4,6 +4,7 @@ export const teams = sqliteTable("teams", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   description: text("description"),
+  customUrl: text("custom_url").notNull().unique(),
   createdAt: integer("created_at").notNull(),
   updatedAt: integer("updated_at"),
 });

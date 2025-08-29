@@ -6,6 +6,14 @@ const config = {
     "./src/**/*.{ts,tsx}", // src配下のファイル（utilsを含む）
     "../../packages/ui/**/*.{ts,tsx}",
   ],
+  safelist: [
+    'bg-slate-200',
+    'hover:bg-slate-300', 
+    'text-slate-600',
+    'bg-slate-500',
+    'bg-slate-600',
+    'text-white',
+  ],
   theme: {
     extend: {
       colors: {

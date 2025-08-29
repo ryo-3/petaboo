@@ -210,9 +210,9 @@ export function TeamWelcome() {
                         <Button 
                           size="sm" 
                           variant="outline"
-                          onClick={() => router.push(`/team/${team.id}`)}
+                          onClick={() => router.push(`/team/${team.customUrl}`)}
                         >
-                          詳細
+                          管理画面
                         </Button>
                       </div>
                     </div>

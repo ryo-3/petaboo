@@ -1,25 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import ArrowLeftIcon from "@/components/icons/arrow-left-icon";
 import TeamIcon from "@/components/icons/team-icon";
 import { useTeamDetail } from "@/src/hooks/use-team-detail";
 import { useInviteToTeam } from "@/src/hooks/use-invite-to-team";
 
 interface TeamDetailProps {
-  teamId: number;
+  customUrl: string;
 }
 
-export function TeamDetail({ teamId }: TeamDetailProps) {
+export function TeamDetail({ customUrl }: TeamDetailProps) {
   const router = useRouter();
-  const { data: team, isLoading, error } = useTeamDetail(teamId);
+  const { data: team, isLoading, error } = useTeamDetail(customUrl);
   const { mutate: inviteToTeam, isPending: isInviting } = useInviteToTeam();
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<"admin" | "member">("member");
   const [inviteMessage, setInviteMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  // エラーまたはチームが見つからない場合のリダイレクト処理
+  useEffect(() => {
+    if (!isLoading && (error || !team)) {
+      router.push("/team");
+    }
+  }, [isLoading, error, team, router]);
 
   if (isLoading) {
     return (
@@ -37,8 +43,8 @@ export function TeamDetail({ teamId }: TeamDetailProps) {
     return (
       <div className="flex h-full bg-white overflow-hidden">
         <div className="w-full pt-3 pl-5 pr-2 flex flex-col">
-          <div className="text-center text-gray-500">
-            チーム情報を読み込めませんでした。
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           </div>
         </div>
       </div>
@@ -51,12 +57,6 @@ export function TeamDetail({ teamId }: TeamDetailProps) {
         {/* ヘッダー */}
         <div className="mb-4 flex-shrink-0">
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => router.back()}
-              className="p-1 text-gray-600 hover:text-gray-800 transition-colors rounded-md hover:bg-gray-100"
-            >
-              <ArrowLeftIcon className="w-5 h-5" />
-            </button>
             <h1 className="text-[22px] font-bold text-gray-800 w-[105px] truncate">チーム詳細</h1>
             <TeamIcon className="w-6 h-6 text-gray-600" />
           </div>
@@ -182,7 +182,7 @@ export function TeamDetail({ teamId }: TeamDetailProps) {
                       }
                       
                       inviteToTeam(
-                        { teamId, email: inviteEmail, role: inviteRole },
+                        { customUrl, email: inviteEmail, role: inviteRole },
                         {
                           onSuccess: () => {
                             setInviteMessage({ type: "success", text: `${inviteEmail} に招待メールを送信しました` });
@@ -211,7 +211,7 @@ export function TeamDetail({ teamId }: TeamDetailProps) {
           <div className="flex gap-3">
             {team.role === "admin" && (
               <Button 
-                onClick={() => router.push(`/team/${teamId}/settings`)}
+                onClick={() => router.push(`/team/${customUrl}/settings`)}
                 variant="outline"
                 className="px-6"
               >

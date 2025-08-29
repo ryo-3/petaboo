@@ -7,20 +7,21 @@ interface TeamDetail {
   id: number;
   name: string;
   description?: string;
+  customUrl: string;
   role: "admin" | "member";
   createdAt: number;
   updatedAt: number;
   memberCount: number;
 }
 
-export function useTeamDetail(teamId: number) {
+export function useTeamDetail(customUrl: string) {
   const { getToken } = useAuth();
 
   return useQuery({
-    queryKey: ["team", teamId],
+    queryKey: ["team", customUrl],
     queryFn: async (): Promise<TeamDetail> => {
       const token = await getToken();
-      const response = await fetch(`${API_URL}/teams/${teamId}`, {
+      const response = await fetch(`${API_URL}/teams/${customUrl}`, {
         headers: {
           "Content-Type": "application/json",
           ...(token && { Authorization: `Bearer ${token}` }),
@@ -33,6 +34,6 @@ export function useTeamDetail(teamId: number) {
 
       return response.json();
     },
-    enabled: !!teamId,
+    enabled: !!customUrl,
   });
 }

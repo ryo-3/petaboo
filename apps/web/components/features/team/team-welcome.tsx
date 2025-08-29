@@ -1,12 +1,15 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useUser } from "@/src/hooks/use-user";
 import { useTeamStats } from "@/src/hooks/use-team-stats";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import TeamIcon from "@/components/icons/team-icon";
+import PlusIcon from "@/components/icons/plus-icon";
 
 export function TeamWelcome() {
+  const router = useRouter();
   const { data: user } = useUser();
   const { data: teamStats, isLoading } = useTeamStats();
 
@@ -44,7 +47,18 @@ export function TeamWelcome() {
         <div className="mb-4">
           <div className="flex items-center gap-3">
             <h1 className="text-[22px] font-bold text-gray-800">チーム管理</h1>
-            <TeamIcon className="w-6 h-6 text-gray-600" />
+            <button
+              onClick={() => canCreateTeam && router.push("/team/create")}
+              disabled={!canCreateTeam}
+              className={`p-1.5 rounded-md transition-colors ${
+                canCreateTeam
+                  ? "bg-slate-500 text-white hover:bg-slate-600"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
+              title={canCreateTeam ? "新しいチームを作成" : "作成上限に達しています"}
+            >
+              <PlusIcon className="w-4 h-4" />
+            </button>
             <div className="text-sm text-gray-500">
               プレミアムプランでは最大3つのチームを作成・管理できます
             </div>
@@ -103,6 +117,7 @@ export function TeamWelcome() {
                 className="w-full text-xs h-8" 
                 disabled={!canCreateTeam}
                 variant={canCreateTeam ? "default" : "secondary"}
+                onClick={() => canCreateTeam && router.push("/team/create")}
               >
                 {canCreateTeam ? "新しいチームを作成" : "作成上限に達しました"}
               </Button>
@@ -146,7 +161,11 @@ export function TeamWelcome() {
                   新しいチームを作成するか、招待コードで既存のチームに参加できます。
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Button size="lg" className="px-8">
+                  <Button 
+                    size="lg" 
+                    className="px-8"
+                    onClick={() => router.push("/team/create")}
+                  >
                     チームを作成
                   </Button>
                   <Button size="lg" variant="outline" className="px-8">

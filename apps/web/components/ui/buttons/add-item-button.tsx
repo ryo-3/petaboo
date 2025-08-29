@@ -16,6 +16,7 @@ interface AddItemButtonProps {
     padding?: string;
     iconSize?: string;
   };
+  isGray?: boolean;
 }
 
 function AddItemButton({
@@ -27,6 +28,7 @@ function AddItemButton({
   size = "normal",
   showTooltip = true,
   customSize,
+  isGray = false,
 }: AddItemButtonProps) {
   const typeConfig = {
     memo: {
@@ -48,7 +50,7 @@ function AddItemButton({
   return (
     <CreateButton
       onClick={onClick}
-      color={config.color}
+      color={isGray ? "bg-gray-200 hover:bg-gray-300" : config.color}
       label={config.label}
       position={position}
       className={className}

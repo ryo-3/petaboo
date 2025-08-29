@@ -202,17 +202,6 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
               </Button>
             </div>
           )}
-
-          {/* 戻るボタン */}
-          <div className="pt-4 border-t">
-            <Button
-              variant="ghost"
-              onClick={() => router.push("/team")}
-              className="text-sm"
-            >
-              ← チーム一覧に戻る
-            </Button>
-          </div>
         </div>
       </div>
     </div>

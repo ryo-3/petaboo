@@ -44,6 +44,7 @@ interface SidebarProps {
   onTeamList?: () => void;
   isTeamDetailPage?: boolean;
   isTeamListPage?: boolean;
+  screenMode?: string;
 }
 
 function Sidebar({
@@ -73,6 +74,7 @@ function Sidebar({
   onTeamList,
   isTeamDetailPage = false,
   isTeamListPage = false,
+  screenMode,
 }: SidebarProps) {
   const modeTabs = [
     {
@@ -95,9 +97,15 @@ function Sidebar({
           <Tooltip text="ホーム" position="right">
             <button
               onClick={onHome}
-              className="p-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
+              className={`p-2 rounded-lg transition-colors ${
+                screenMode === "home"
+                  ? "bg-slate-500 text-white"
+                  : "bg-gray-200 hover:bg-gray-300 text-gray-600"
+              }`}
             >
-              <HomeIcon className="w-5 h-5 text-gray-600" />
+              <HomeIcon
+                className={`w-5 h-5 ${screenMode === "home" ? "text-white" : "text-gray-600"}`}
+              />
             </button>
           </Tooltip>
 
@@ -123,7 +131,9 @@ function Sidebar({
                 onShowFullList();
               }}
               className={`p-2 rounded-lg transition-colors ${
-                currentMode === "memo" && !isBoardActive
+                currentMode === "memo" &&
+                !isBoardActive &&
+                screenMode !== "home"
                   ? "bg-Green text-white"
                   : "bg-gray-200 hover:bg-gray-300 text-gray-600"
               }`}
@@ -138,7 +148,9 @@ function Sidebar({
                 onShowTaskList?.();
               }}
               className={`p-2 rounded-lg transition-colors ${
-                currentMode === "task" && !isBoardActive
+                currentMode === "task" &&
+                !isBoardActive &&
+                screenMode !== "home"
                   ? "bg-DeepBlue text-white"
                   : "bg-gray-200 hover:bg-gray-300 text-gray-600"
               }`}
@@ -150,13 +162,17 @@ function Sidebar({
             <button
               onClick={onDashboard}
               className={`p-2 rounded-lg transition-colors ${
-                currentMode === "board" && !showingBoardDetail
+                currentMode === "board" &&
+                !showingBoardDetail &&
+                screenMode !== "home" &&
+                screenMode !== "search" &&
+                screenMode !== "settings"
                   ? "bg-light-Blue text-white"
                   : "bg-gray-200 hover:bg-gray-300 text-gray-600"
               }`}
             >
               <DashboardIcon
-                className={`w-5 h-5 ${currentMode === "board" && !showingBoardDetail ? "" : "text-gray-600"}`}
+                className={`w-5 h-5 ${currentMode === "board" && !showingBoardDetail && screenMode !== "home" && screenMode !== "search" && screenMode !== "settings" ? "" : "text-gray-600"}`}
               />
             </button>
           </Tooltip>
@@ -167,13 +183,17 @@ function Sidebar({
               <button
                 onClick={onBoardDetail}
                 className={`p-2 rounded-lg transition-colors ${
-                  currentMode === "board" && showingBoardDetail
+                  currentMode === "board" &&
+                  showingBoardDetail &&
+                  screenMode !== "home" &&
+                  screenMode !== "search" &&
+                  screenMode !== "settings"
                     ? "bg-light-Blue text-white"
                     : "bg-gray-200 hover:bg-gray-300 text-gray-600"
                 }`}
               >
                 <DashboardEditIcon
-                  className={`w-5 h-5 ${currentMode === "board" && showingBoardDetail ? "" : "text-gray-600"}`}
+                  className={`w-5 h-5 ${currentMode === "board" && showingBoardDetail && screenMode !== "home" && screenMode !== "search" && screenMode !== "settings" ? "" : "text-gray-600"}`}
                 />
               </button>
             </Tooltip>
@@ -188,6 +208,11 @@ function Sidebar({
                   : onNewTask!
             }
             position="right"
+            isGray={
+              screenMode === "home" ||
+              screenMode === "search" ||
+              screenMode === "settings"
+            }
           />
 
           {/* 検索ボタン（コンパクトモード） */}
@@ -196,9 +221,15 @@ function Sidebar({
               onClick={() => {
                 onSearch?.();
               }}
-              className="p-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-600 transition-colors"
+              className={`p-2 rounded-lg transition-colors ${
+                screenMode === "search"
+                  ? "bg-slate-500 text-white"
+                  : "bg-gray-200 hover:bg-gray-300 text-gray-600"
+              }`}
             >
-              <SearchIcon className="w-5 h-5" />
+              <SearchIcon
+                className={`w-5 h-5 ${screenMode === "search" ? "text-white" : ""}`}
+              />
             </button>
           </Tooltip>
           {/* 設定ボタン（コンパクトモード） */}
@@ -207,9 +238,15 @@ function Sidebar({
               onClick={() => {
                 onSettings?.();
               }}
-              className="p-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-600 transition-colors"
+              className={`p-2 rounded-lg transition-colors ${
+                screenMode === "settings"
+                  ? "bg-slate-500 text-white"
+                  : "bg-gray-200 hover:bg-gray-300 text-gray-600"
+              }`}
             >
-              <SettingsIcon className="w-5 h-5" />
+              <SettingsIcon
+                className={`w-5 h-5 ${screenMode === "settings" ? "text-white" : ""}`}
+              />
             </button>
           </Tooltip>
         </div>
@@ -226,9 +263,15 @@ function Sidebar({
             {/* <HomeButton onClick={onHome} /> */}
             <button
               onClick={onHome}
-              className="p-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
+              className={`p-2 rounded-lg transition-colors ${
+                screenMode === "home"
+                  ? "bg-slate-500 text-white"
+                  : "bg-gray-200 hover:bg-gray-300 text-gray-600"
+              }`}
             >
-              <HomeIcon className="w-5 h-5 text-gray-600" />
+              <HomeIcon
+                className={`w-5 h-5 ${screenMode === "home" ? "text-white" : "text-gray-600"}`}
+              />
             </button>
             <button
               onClick={onDashboard}
@@ -261,9 +304,15 @@ function Sidebar({
             <div className="flex-shrink-0 p-2 border-t border-gray-200">
               <button
                 onClick={() => onSettings?.()}
-                className="w-full p-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors flex items-center justify-center gap-2"
+                className={`w-full p-2 rounded-lg transition-colors flex items-center justify-center gap-2 ${
+                  screenMode === "settings"
+                    ? "bg-slate-500 text-white"
+                    : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+                }`}
               >
-                <SettingsIcon className="w-4 h-4" />
+                <SettingsIcon
+                  className={`w-4 h-4 ${screenMode === "settings" ? "text-white" : ""}`}
+                />
               </button>
             </div>
           </div>

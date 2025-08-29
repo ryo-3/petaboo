@@ -92,6 +92,7 @@ export function MainClientMobile({
           }
           currentBoardName={initialBoardName || currentBoard?.name}
           showingBoardDetail={showingBoardDetail}
+          screenMode={screenMode}
         />
       )}
     </div>

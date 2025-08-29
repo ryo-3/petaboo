@@ -97,6 +97,7 @@ export function MainClientDesktop({
             }
             currentBoardName={initialBoardName || currentBoard?.name}
             showingBoardDetail={showingBoardDetail}
+            screenMode={screenMode}
           />
         }
       >

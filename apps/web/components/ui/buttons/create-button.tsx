@@ -58,7 +58,9 @@ function CreateButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`${paddingClass} rounded-lg text-white transition-colors ${bgColorClass} ${
+      className={`${paddingClass} rounded-lg ${
+        bgColorClass.includes("gray") ? "text-gray-600" : "text-white"
+      } transition-colors ${bgColorClass} ${
         disabled ? "opacity-50 cursor-not-allowed" : ""
       } ${className}`}
     >

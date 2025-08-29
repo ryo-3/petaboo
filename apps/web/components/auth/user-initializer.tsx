@@ -28,8 +28,7 @@ export function UserInitializer() {
             return;
           }
 
-          const data = await response.json();
-          console.log("ユーザー初期化完了:", data);
+          await response.json();
         } catch (error) {
           console.error("ユーザー初期化エラー:", error);
         }

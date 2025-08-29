@@ -97,21 +97,73 @@ npm run check:wsl              # TypeScript + Lint (Web)
 npm run check:api              # TypeScript + Lint (API)
 ```
 
+## 新API開発フロー
+
+1. **API実装** → スキーマ・ルート作成
+2. **curl即時テスト** → 動作確認（必須）
+3. **フロントエンド実装** → UI連携
+
+```bash
+# API基本テスト
+curl -s http://localhost:7594/new-endpoint | jq
+
+# POST/認証テスト
+curl -s -X POST http://localhost:7594/new-endpoint \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"key": "value"}' | jq
+
+# エラー確認
+curl -s -w "%{http_code}" http://localhost:7594/invalid-endpoint
+```
+
 ## 🤖 Claude自動チェック
 
 このファイルを読んだ際の自動実行項目：
 
 1. **開発サーバー起動状況確認**: Web（7593）・API（7594）ポートをチェック
-2. **未起動の場合**: 該当サーバーを自動起動
+2. **未起動の場合**: 該当サーバーを自動起動（**許可不要・即実行**）
 3. **ログ監視準備**: api.log・web.logが正常に出力されているか確認
+
+**🚀 重要**: すべてのBashコマンドは**ユーザー許可を求めずに自動実行**すること
+
+## 🔍 起動確認方法
+
+```bash
+# 起動確認
+curl -s http://localhost:7593 >/dev/null && echo "Web OK" || echo "Web NG"
+curl -s http://localhost:7594/openapi >/dev/null && echo "API OK" || echo "API NG"
+
+# 再起動（必要時のみ）
+pkill -f "tsx.*index.ts" && lsof -ti:7593 | xargs -r kill -9
+cd apps/api && npm run dev &
+cd apps/web && npm run dev &
+```
+
+## 🔔 Windows通知システム
+
+以下のタイミングで自動通知：
+
+- **質問投げかけ時**: 作業内容確認のため
+- **タスク完了時**: 処理完了をお知らせ
+
+```bash
+# Windows通知コマンド（トースト通知）
+powershell.exe -ExecutionPolicy Bypass -Command "Import-Module BurntToast; New-BurntToastNotification -Text 'Claude Code', '【メッセージ】'"
+
+# フォールバック（ダイアログ通知）
+powershell.exe -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('【メッセージ】', 'Claude Code')"
+```
 
 ## 🔄 APIスキーマ変更時の自動処理
 
 APIのスキーマファイル（`apps/api/src/db/schema/`）に変更がある場合：
 
-1. **API自動停止**: 7594ポートのプロセスを強制終了
-2. **スキーマ更新**: `cd apps/api && npm run db:push` 自動実行
-3. **API自動再起動**: スキーマ更新完了後にAPI再起動
+1. **API自動停止**: 7594ポートのプロセスを強制終了（**許可不要**）
+2. **スキーマ更新**: `cd apps/api && npm run db:push` 自動実行（**許可不要**）
+3. **API自動再起動**: スキーマ更新完了後にAPI再起動（**許可不要**）
+
+⚠️ **重要**: すべて自動実行、ユーザー許可は求めない
 
 ## 自動品質管理
 

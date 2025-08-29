@@ -51,7 +51,8 @@
       "Bash(pnpm db:push:*)",
       "Bash(npx drizzle-kit studio:*)",
       "Bash(npx drizzle-kit:*)",
-      "Bash(truncate:*)"
+      "Bash(truncate:*)",
+      "Bash(powershell.exe:*)"
     ],
     "deny": []
   }

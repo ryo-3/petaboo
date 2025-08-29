@@ -139,6 +139,81 @@ export const joinTeamRoute = createRoute({
   tags: ["Teams"],
 });
 
+// ユーザーのチーム統計情報取得ルート定義
+export const getUserTeamStatsRoute = createRoute({
+  method: "get",
+  path: "/stats",
+  responses: {
+    200: {
+      description: "チーム統計情報取得成功",
+      content: {
+        "application/json": {
+          schema: z.object({
+            ownedTeams: z.number(),
+            memberTeams: z.number(),
+            maxOwnedTeams: z.number(),
+            maxMemberTeams: z.number(),
+          }),
+        },
+      },
+    },
+    401: {
+      description: "認証が必要です",
+    },
+  },
+  tags: ["Teams"],
+});
+
+// ユーザーのチーム統計情報取得の実装
+export async function getUserTeamStats(c: any) {
+  const auth = getAuth(c);
+  if (!auth?.userId) {
+    return c.json({ error: "認証が必要です" }, 401);
+  }
+
+  const db: DatabaseType = c.env.db;
+
+  try {
+    // ユーザーが作成したチーム数を取得
+    const ownedTeamsResult = await db
+      .select({ count: count() })
+      .from(teams)
+      .innerJoin(teamMembers, eq(teams.id, teamMembers.teamId))
+      .where(and(
+        eq(teamMembers.userId, auth.userId),
+        eq(teamMembers.role, "admin")
+      ));
+
+    const ownedTeamsCount = ownedTeamsResult[0]?.count || 0;
+
+    // ユーザーが参加している全チーム数を取得
+    const allTeamsResult = await db
+      .select({ count: count() })
+      .from(teamMembers)
+      .where(eq(teamMembers.userId, auth.userId));
+
+    const allTeamsCount = allTeamsResult[0]?.count || 0;
+    
+    // メンバーとして参加しているチーム数（作成したチーム以外）
+    const memberTeamsCount = allTeamsCount - ownedTeamsCount;
+
+    // プレミアムプランの制限値
+    const maxOwnedTeams = 3;
+    const maxMemberTeams = 3;
+
+    return c.json({
+      ownedTeams: ownedTeamsCount,
+      memberTeams: memberTeamsCount,
+      maxOwnedTeams,
+      maxMemberTeams,
+    });
+
+  } catch (error) {
+    console.error("チーム統計情報取得エラー:", error);
+    return c.json({ error: "チーム統計情報の取得に失敗しました" }, 500);
+  }
+}
+
 // チーム作成の実装
 export async function createTeam(c: any) {
   const auth = getAuth(c);
@@ -176,19 +251,20 @@ export async function createTeam(c: any) {
       return c.json({ error: "チーム作成には有料プランが必要です" }, 403);
     }
 
-    // 有料ユーザーが既にチームを作成しているかチェック
-    const existingTeam = await db
-      .select()
+    // プレミアムユーザーのチーム作成数制限チェック
+    const ownedTeamsResult = await db
+      .select({ count: count() })
       .from(teams)
       .innerJoin(teamMembers, eq(teams.id, teamMembers.teamId))
       .where(and(
         eq(teamMembers.userId, auth.userId),
         eq(teamMembers.role, "admin")
-      ))
-      .limit(1);
+      ));
 
-    if (existingTeam.length > 0) {
-      return c.json({ error: "既にチームを作成済みです（有料ユーザーは1チームまで）" }, 403);
+    const ownedTeamsCount = ownedTeamsResult[0]?.count || 0;
+
+    if (ownedTeamsCount >= 3) {
+      return c.json({ error: "チーム作成数の上限に達しています（プレミアムプランは3チームまで）" }, 403);
     }
 
     const { name, description } = createTeamSchema.parse(body);

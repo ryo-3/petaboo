@@ -307,11 +307,11 @@ function DesktopUpper({
       <div className={`flex justify-between items-center ${headerMarginBottom}`}>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">
-            {currentMode === "board" ? (
+            {currentMode === "board" && customTitle ? (
               <div className="flex flex-col w-full">
                 <div className="flex items-end gap-3">
                   <h1 className="font-bold text-gray-800 text-[22px] whitespace-nowrap overflow-hidden truncate min-w-0 max-w-[max(550px,38vw)]">
-                    {customTitle || "ボード一覧"}
+                    {customTitle}
                   </h1>
                   {/* 説明表示切り替えボタン */}
                   {boardDescription && shouldShowSettingsIcon && (

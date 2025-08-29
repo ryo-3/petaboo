@@ -46,18 +46,18 @@ export function TeamWelcome() {
         {/* ヘッダー */}
         <div className="mb-4">
           <div className="flex items-center gap-3">
-            <h1 className="text-[22px] font-bold text-gray-800">チーム管理</h1>
+            <h1 className="text-[22px] font-bold text-gray-800 w-[105px] truncate">チーム管理</h1>
             <button
               onClick={() => canCreateTeam && router.push("/team/create")}
               disabled={!canCreateTeam}
-              className={`p-1.5 rounded-md transition-colors ${
+              className={`p-2 rounded-md transition-colors ${
                 canCreateTeam
                   ? "bg-slate-500 text-white hover:bg-slate-600"
                   : "bg-gray-300 text-gray-500 cursor-not-allowed"
               }`}
               title={canCreateTeam ? "新しいチームを作成" : "作成上限に達しています"}
             >
-              <PlusIcon className="w-4 h-4" />
+              <PlusIcon className="w-3.5 h-3.5" />
             </button>
             <div className="text-sm text-gray-500">
               プレミアムプランでは最大3つのチームを作成・管理できます

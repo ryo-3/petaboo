@@ -1,7 +1,7 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { getAuth } from "@hono/clerk-auth";
 import { eq, and } from "drizzle-orm";
-import { teams, teamMembers, users } from "../../db";
+import { teams, teamMembers, teamInvitations, users } from "../../db";
 import { count } from "drizzle-orm";
 import type { DatabaseType } from "../../types/common";
 
@@ -133,6 +133,118 @@ export const getTeamsRoute = createRoute({
     },
     401: {
       description: "認証が必要です",
+    },
+  },
+  tags: ["Teams"],
+});
+
+// チーム招待送信ルート定義
+export const inviteToTeamRoute = createRoute({
+  method: "post",
+  path: "/{id}/invite",
+  request: {
+    params: z.object({
+      id: z.string().transform(Number),
+    }),
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            email: z.string().email("有効なメールアドレスを入力してください"),
+            role: z.enum(["admin", "member"]).default("member"),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: "招待送信成功",
+      content: {
+        "application/json": {
+          schema: z.object({
+            message: z.string(),
+            invitationId: z.number(),
+          }),
+        },
+      },
+    },
+    400: {
+      description: "バリデーションエラーまたは既に招待済み",
+    },
+    401: {
+      description: "認証が必要です",
+    },
+    403: {
+      description: "管理者権限が必要です",
+    },
+    404: {
+      description: "チームが見つかりません",
+    },
+  },
+  tags: ["Teams"],
+});
+
+// 招待情報取得ルート定義
+export const getInvitationRoute = createRoute({
+  method: "get",
+  path: "/invite/{token}",
+  request: {
+    params: z.object({
+      token: z.string(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "招待情報取得成功",
+      content: {
+        "application/json": {
+          schema: z.object({
+            id: z.number(),
+            teamName: z.string(),
+            inviterEmail: z.string(),
+            role: z.enum(["admin", "member"]),
+            expiresAt: z.number(),
+          }),
+        },
+      },
+    },
+    404: {
+      description: "招待が見つかりません",
+    },
+  },
+  tags: ["Teams"],
+});
+
+// 招待受諾ルート定義
+export const acceptInvitationRoute = createRoute({
+  method: "post",
+  path: "/invite/{token}/accept",
+  request: {
+    params: z.object({
+      token: z.string(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "チーム参加成功",
+      content: {
+        "application/json": {
+          schema: z.object({
+            message: z.string(),
+            teamId: z.number(),
+          }),
+        },
+      },
+    },
+    400: {
+      description: "参加チーム数上限に達しています",
+    },
+    404: {
+      description: "招待が見つかりません",
+    },
+    409: {
+      description: "既にチームに参加しています",
     },
   },
   tags: ["Teams"],
@@ -574,5 +686,271 @@ export async function joinTeam(c: any) {
   } catch (error) {
     console.error("チーム参加エラー:", error);
     return c.json({ error: "チーム参加に失敗しました" }, 500);
+  }
+}
+
+// チーム招待送信の実装
+export async function inviteToTeam(c: any) {
+  console.log('招待送信開始:', { teamId: c.req.param("id") });
+  
+  const auth = getAuth(c);
+  if (!auth?.userId) {
+    console.log('認証エラー: ユーザーが認証されていません');
+    return c.json({ error: "認証が必要です" }, 401);
+  }
+
+  const teamId = parseInt(c.req.param("id"));
+  const requestBody = await c.req.json();
+  const { email, role = "member" } = requestBody;
+  const db: DatabaseType = c.env.db;
+  
+  console.log('招待送信リクエスト:', { teamId, email, role, userId: auth.userId });
+
+  try {
+    // ユーザーがそのチームの管理者かチェック
+    const teamMember = await db
+      .select()
+      .from(teamMembers)
+      .where(and(
+        eq(teamMembers.teamId, teamId),
+        eq(teamMembers.userId, auth.userId),
+        eq(teamMembers.role, "admin")
+      ))
+      .limit(1);
+
+    if (teamMember.length === 0) {
+      return c.json({ error: "管理者権限が必要です" }, 403);
+    }
+
+    // チームの存在確認
+    const team = await db
+      .select()
+      .from(teams)
+      .where(eq(teams.id, teamId))
+      .limit(1);
+
+    if (team.length === 0) {
+      return c.json({ error: "チームが見つかりません" }, 404);
+    }
+
+    // 既に招待済みかチェック
+    console.log('既存招待チェック開始');
+    const existingInvitation = await db
+      .select()
+      .from(teamInvitations)
+      .where(and(
+        eq(teamInvitations.teamId, teamId),
+        eq(teamInvitations.email, email),
+        eq(teamInvitations.status, "pending")
+      ))
+      .limit(1);
+
+    console.log('既存招待チェック結果:', { count: existingInvitation.length, invitations: existingInvitation });
+
+    if (existingInvitation.length > 0) {
+      console.log('既存招待エラー: 重複招待です');
+      return c.json({ error: "このメールアドレスには既に招待を送信済みです" }, 400);
+    }
+
+    // 既にチームメンバーかチェック（メールアドレスでユーザー検索は今回はスキップ）
+
+    // 招待トークンを生成（簡単な実装）
+    const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
+    const now = Math.floor(Date.now() / 1000);
+    const expiresAt = now + (7 * 24 * 60 * 60); // 7日後
+
+    // 招待をDBに保存
+    const invitation = await db
+      .insert(teamInvitations)
+      .values({
+        teamId,
+        email,
+        role,
+        token,
+        invitedBy: auth.userId,
+        createdAt: now,
+        expiresAt,
+        status: "pending",
+      })
+      .returning();
+
+    // メール送信（失敗しても続行）
+    const invitationLink = `http://localhost:7593/team/join/${token}`;
+    
+    try {
+      const { sendTeamInvitationEmail } = await import('../../services/email.js');
+      const emailResult = await sendTeamInvitationEmail({
+        to: email,
+        teamName: team[0].name,
+        inviterEmail: auth.userId,
+        role,
+        invitationToken: token,
+        invitationLink,
+      });
+      
+      console.log(`招待メール送信結果:`, emailResult.success ? '成功' : '失敗');
+    } catch (error) {
+      console.error('メール送信でエラー:', error);
+    }
+
+    console.log(`招待作成完了: ${email} をチーム「${team[0].name}」に招待`);
+    console.log(`招待リンク: ${invitationLink}`);
+
+    return c.json({
+      message: "招待を送信しました",
+      invitationId: invitation[0].id,
+      invitationLink,
+    }, 201);
+
+  } catch (error) {
+    console.error("チーム招待エラー:", error);
+    return c.json({ error: "招待送信に失敗しました" }, 500);
+  }
+}
+
+// 招待情報取得の実装
+export async function getInvitation(c: any) {
+  const token = c.req.param("token");
+  const db: DatabaseType = c.env.db;
+
+  try {
+    // 招待情報を取得
+    const invitation = await db
+      .select({
+        id: teamInvitations.id,
+        teamId: teamInvitations.teamId,
+        email: teamInvitations.email,
+        role: teamInvitations.role,
+        invitedBy: teamInvitations.invitedBy,
+        expiresAt: teamInvitations.expiresAt,
+        status: teamInvitations.status,
+        teamName: teams.name,
+      })
+      .from(teamInvitations)
+      .innerJoin(teams, eq(teamInvitations.teamId, teams.id))
+      .where(
+        and(
+          eq(teamInvitations.token, token),
+          eq(teamInvitations.status, "pending")
+        )
+      )
+      .get();
+
+    if (!invitation) {
+      return c.json({ message: "招待が見つかりません" }, 404);
+    }
+
+    // 期限チェック
+    const now = Math.floor(Date.now() / 1000);
+    if (invitation.expiresAt < now) {
+      // 期限切れの場合はステータスを更新
+      await db
+        .update(teamInvitations)
+        .set({ status: "expired" })
+        .where(eq(teamInvitations.token, token));
+      
+      return c.json({ message: "招待の期限が切れています" }, 404);
+    }
+
+    return c.json({
+      id: invitation.teamId,
+      teamName: invitation.teamName,
+      inviterEmail: invitation.invitedBy,
+      role: invitation.role,
+      expiresAt: invitation.expiresAt,
+    });
+  } catch (error) {
+    console.error("招待情報取得エラー:", error);
+    return c.json({ message: "招待情報の取得に失敗しました" }, 500);
+  }
+}
+
+// 招待受諾の実装
+export async function acceptInvitation(c: any) {
+  const auth = getAuth(c);
+  if (!auth?.userId) {
+    return c.json({ message: "認証が必要です" }, 401);
+  }
+
+  const token = c.req.param("token");
+  const db: DatabaseType = c.env.db;
+
+  try {
+    // 招待情報を取得
+    const invitation = await db
+      .select()
+      .from(teamInvitations)
+      .where(
+        and(
+          eq(teamInvitations.token, token),
+          eq(teamInvitations.status, "pending")
+        )
+      )
+      .get();
+
+    if (!invitation) {
+      return c.json({ message: "招待が見つかりません" }, 404);
+    }
+
+    // 期限チェック
+    const now = Math.floor(Date.now() / 1000);
+    if (invitation.expiresAt < now) {
+      await db
+        .update(teamInvitations)
+        .set({ status: "expired" })
+        .where(eq(teamInvitations.token, token));
+      
+      return c.json({ message: "招待の期限が切れています" }, 404);
+    }
+
+    // 既にチームメンバーかチェック
+    const existingMember = await db
+      .select()
+      .from(teamMembers)
+      .where(
+        and(
+          eq(teamMembers.teamId, invitation.teamId),
+          eq(teamMembers.userId, auth.userId)
+        )
+      )
+      .get();
+
+    if (existingMember) {
+      return c.json({ message: "既にこのチームに参加しています" }, 409);
+    }
+
+    // プレミアムプラン制限チェック
+    const memberTeamsCount = await db
+      .select({ count: sql`count(*)`.as("count") })
+      .from(teamMembers)
+      .where(eq(teamMembers.userId, auth.userId))
+      .get();
+
+    const MAX_MEMBER_TEAMS = 3;
+    if (memberTeamsCount.count >= MAX_MEMBER_TEAMS) {
+      return c.json({ message: "参加できるチーム数の上限に達しています" }, 400);
+    }
+
+    // チームメンバーとして追加
+    await db.insert(teamMembers).values({
+      teamId: invitation.teamId,
+      userId: auth.userId,
+      role: invitation.role,
+      joinedAt: Math.floor(Date.now() / 1000),
+    });
+
+    // 招待ステータスを受諾済みに更新
+    await db
+      .update(teamInvitations)
+      .set({ status: "accepted" })
+      .where(eq(teamInvitations.token, token));
+
+    return c.json({
+      message: "チームに参加しました",
+      teamId: invitation.teamId,
+    });
+  } catch (error) {
+    console.error("招待受諾エラー:", error);
+    return c.json({ message: "チームへの参加に失敗しました" }, 500);
   }
 }

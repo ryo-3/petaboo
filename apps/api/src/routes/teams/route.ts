@@ -2,7 +2,7 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { clerkMiddleware } from "@hono/clerk-auth";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import Database from "better-sqlite3";
-import { createTeamRoute, getMyTeamRoute, joinTeamRoute, getTeamsRoute, createTeam, getMyTeam, joinTeam, getTeams, getUserTeamStatsRoute, getUserTeamStats } from "./api";
+import { createTeamRoute, getMyTeamRoute, joinTeamRoute, getTeamsRoute, createTeam, getMyTeam, joinTeam, getTeams, getUserTeamStatsRoute, getUserTeamStats, getTeamDetailRoute, getTeamDetail } from "./api";
 
 // SQLite & drizzle セットアップ
 const sqlite = new Database("sqlite.db");
@@ -22,6 +22,7 @@ teamsRoute.use("*", clerkMiddleware());
 // ルート定義を登録
 teamsRoute.openapi(getUserTeamStatsRoute, getUserTeamStats);
 teamsRoute.openapi(getTeamsRoute, getTeams);
+teamsRoute.openapi(getTeamDetailRoute, getTeamDetail);
 teamsRoute.openapi(createTeamRoute, createTeam);
 teamsRoute.openapi(getMyTeamRoute, getMyTeam);
 teamsRoute.openapi(joinTeamRoute, joinTeam);

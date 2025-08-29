@@ -1,42 +1,70 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import TeamIcon from "@/components/icons/team-icon";
 import ArrowLeftIcon from "@/components/icons/arrow-left-icon";
-import { useTeamStats } from "@/src/hooks/use-team-stats";
-import { useCreateTeam } from "@/src/hooks/use-create-team";
+import { useTeamDetail } from "@/src/hooks/use-team-detail";
 
-export function TeamCreate() {
+interface TeamSettingsProps {
+  teamId: number;
+}
+
+export function TeamSettings({ teamId }: TeamSettingsProps) {
+  const router = useRouter();
+  const { data: team, isLoading } = useTeamDetail(teamId);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
-  const { data: teamStats } = useTeamStats();
-  const createTeamMutation = useCreateTeam();
 
-  const canCreateTeam = teamStats ? teamStats.ownedTeams < teamStats.maxOwnedTeams : false;
+  // チームデータが読み込まれた時にフォームを初期化
+  useEffect(() => {
+    if (team) {
+      setName(team.name);
+      setDescription(team.description || "");
+    }
+  }, [team]);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full bg-white overflow-hidden">
+        <div className="w-full pt-3 pl-5 pr-2 flex flex-col">
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!team) {
+    return (
+      <div className="flex h-full bg-white overflow-hidden">
+        <div className="w-full pt-3 pl-5 pr-2 flex flex-col">
+          <div className="text-center text-gray-500">
+            チーム情報を読み込めませんでした。
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (team.role !== "admin") {
+    return (
+      <div className="flex h-full bg-white overflow-hidden">
+        <div className="w-full pt-3 pl-5 pr-2 flex flex-col">
+          <div className="text-center text-gray-500">
+            管理者のみがチーム設定を変更できます。
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canCreateTeam || !name.trim()) return;
-
-    setError(null);
-    
-    try {
-      await createTeamMutation.mutateAsync({
-        name: name.trim(),
-        description: description.trim() || undefined,
-      });
-      
-      // 成功後はチーム一覧に戻る
-      router.push("/team");
-    } catch (error) {
-      console.error("チーム作成エラー:", error);
-      setError(error instanceof Error ? error.message : "チーム作成に失敗しました");
-    }
+    // TODO: チーム設定更新のAPI実装
+    console.log("チーム設定更新:", { name, description });
   };
 
   return (
@@ -51,8 +79,7 @@ export function TeamCreate() {
             >
               <ArrowLeftIcon className="w-5 h-5" />
             </button>
-            <h1 className="text-[22px] font-bold text-gray-800">新しいチームを作成</h1>
-            <TeamIcon className="w-6 h-6 text-gray-600" />
+            <h1 className="text-[22px] font-bold text-gray-800 w-[105px] truncate">チーム設定</h1>
           </div>
         </div>
 
@@ -74,7 +101,6 @@ export function TeamCreate() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   maxLength={50}
                   required
-                  disabled={!canCreateTeam}
                 />
                 <div className="flex justify-between mt-1">
                   <span className="text-xs text-gray-500">
@@ -99,7 +125,6 @@ export function TeamCreate() {
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
                   maxLength={200}
-                  disabled={!canCreateTeam}
                 />
                 <div className="flex justify-between mt-1">
                   <span className="text-xs text-gray-500">
@@ -111,75 +136,66 @@ export function TeamCreate() {
                 </div>
               </div>
 
-              {/* エラー表示 */}
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <div className="text-sm text-red-600">{error}</div>
-                </div>
-              )}
-
-              {/* 制限情報 */}
-              {teamStats && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span className="text-sm font-semibold text-blue-800">プレミアムプラン特典</span>
-                  </div>
-                  <div className="text-sm text-blue-700">
-                    作成可能なチーム: {teamStats.ownedTeams}/{teamStats.maxOwnedTeams}
-                  </div>
-                  {!canCreateTeam && (
-                    <div className="text-sm text-red-600 mt-1">
-                      チーム作成数の上限に達しています
-                    </div>
-                  )}
-                </div>
-              )}
-
               {/* アクションボタン */}
               <div className="flex gap-3 pt-4">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => router.back()}
-                  disabled={createTeamMutation.isPending}
                   className="px-6"
                 >
                   キャンセル
                 </Button>
                 <Button
                   type="submit"
-                  disabled={!canCreateTeam || !name.trim() || createTeamMutation.isPending}
+                  disabled={!name.trim()}
                   className="px-8"
                 >
-                  {createTeamMutation.isPending ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      作成中...
-                    </>
-                  ) : (
-                    "チームを作成"
-                  )}
+                  設定を保存
                 </Button>
               </div>
             </form>
           </Card>
 
-          {/* チーム作成後の流れ */}
-          <Card className="max-w-xl mt-4 p-3 bg-gray-50">
-            <h3 className="font-semibold text-gray-800 mb-2 text-sm">チーム作成後の流れ</h3>
-            <div className="space-y-1.5 text-xs text-gray-600">
+          {/* 危険な操作 */}
+          <Card className="max-w-xl mt-4 p-4 border-red-200">
+            <h3 className="font-semibold text-red-800 mb-2">危険な操作</h3>
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm text-gray-600 mb-2">
+                  チームを削除すると、すべてのデータが永久に失われます。この操作は取り消せません。
+                </p>
+                <Button
+                  variant="outline"
+                  className="text-red-600 border-red-300 hover:bg-red-50"
+                  onClick={() => {
+                    if (confirm(`本当に「${team.name}」を削除しますか？この操作は取り消せません。`)) {
+                      // TODO: チーム削除のAPI実装
+                      console.log("チーム削除:", teamId);
+                    }
+                  }}
+                >
+                  チームを削除
+                </Button>
+              </div>
+            </div>
+          </Card>
+
+          {/* 今後の機能予定 */}
+          <Card className="max-w-xl mt-4 p-4 bg-gray-50">
+            <h3 className="font-semibold text-gray-800 mb-2 text-sm">今後追加予定の機能</h3>
+            <div className="space-y-1 text-xs text-gray-600">
               <div className="flex items-center gap-2">
-                <span className="w-4 h-4 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs">1</span>
-                <span>チームが作成され、あなたが管理者になります</span>
+                <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
+                <span>メンバーの招待・削除機能</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-4 h-4 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs">2</span>
-                <span>招待コードが生成され、メンバーを招待できます</span>
+                <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
+                <span>招待リンクの生成・管理</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-4 h-4 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs">3</span>
-                <span>チーム専用のメモ・タスクを共有できます</span>
+                <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
+                <span>チームの権限設定</span>
               </div>
             </div>
           </Card>

@@ -48,6 +48,42 @@ export const createTeamRoute = createRoute({
   tags: ["Teams"],
 });
 
+// 個別チーム詳細取得ルート定義
+export const getTeamDetailRoute = createRoute({
+  method: "get",
+  path: "/{id}",
+  request: {
+    params: z.object({
+      id: z.string().transform(Number),
+    }),
+  },
+  responses: {
+    200: {
+      description: "チーム詳細取得成功",
+      content: {
+        "application/json": {
+          schema: z.object({
+            id: z.number(),
+            name: z.string(),
+            description: z.string().nullable(),
+            role: z.enum(["admin", "member"]),
+            createdAt: z.number(),
+            updatedAt: z.number(),
+            memberCount: z.number(),
+          }),
+        },
+      },
+    },
+    401: {
+      description: "認証が必要です",
+    },
+    404: {
+      description: "チームが見つかりません",
+    },
+  },
+  tags: ["Teams"],
+});
+
 // チーム情報取得ルート定義  
 export const getMyTeamRoute = createRoute({
   method: "get", 
@@ -74,7 +110,7 @@ export const getMyTeamRoute = createRoute({
   tags: ["Teams"],
 });
 
-// 管理者用チーム一覧取得ルート定義
+// ユーザーが所属するチーム一覧取得ルート定義
 export const getTeamsRoute = createRoute({
   method: "get",
   path: "/",
@@ -83,16 +119,15 @@ export const getTeamsRoute = createRoute({
       description: "チーム一覧取得成功",
       content: {
         "application/json": {
-          schema: z.object({
-            teams: z.array(z.object({
-              id: z.number(),
-              name: z.string(),
-              description: z.string().nullable(),
-              memberCount: z.number(),
-              createdAt: z.number(),
-            })),
-            total: z.number(),
-          }),
+          schema: z.array(z.object({
+            id: z.number(),
+            name: z.string(),
+            description: z.string().nullable(),
+            role: z.enum(["admin", "member"]),
+            memberCount: z.number(),
+            createdAt: z.number(),
+            updatedAt: z.number(),
+          })),
         },
       },
     },
@@ -340,7 +375,74 @@ export async function getMyTeam(c: any) {
   }
 }
 
-// 管理者用チーム一覧取得の実装
+// 個別チーム詳細取得の実装
+export async function getTeamDetail(c: any) {
+  const auth = getAuth(c);
+  if (!auth?.userId) {
+    return c.json({ error: "認証が必要です" }, 401);
+  }
+
+  const teamId = parseInt(c.req.param("id"));
+  const db: DatabaseType = c.env.db;
+
+  console.log("チーム詳細取得リクエスト:", { teamId, userId: auth.userId });
+
+  try {
+    // ユーザーがそのチームに所属しているかチェック
+    const teamMember = await db
+      .select({
+        teamId: teamMembers.teamId,
+        role: teamMembers.role,
+      })
+      .from(teamMembers)
+      .where(and(
+        eq(teamMembers.teamId, teamId),
+        eq(teamMembers.userId, auth.userId)
+      ))
+      .limit(1);
+
+    if (teamMember.length === 0) {
+      return c.json({ error: "チームが見つかりません" }, 404);
+    }
+
+    // チーム詳細情報を取得
+    const teamResult = await db
+      .select()
+      .from(teams)
+      .where(eq(teams.id, teamId))
+      .limit(1);
+
+    if (teamResult.length === 0) {
+      return c.json({ error: "チームが見つかりません" }, 404);
+    }
+
+    const team = teamResult[0];
+
+    // メンバー数を取得
+    const memberCountResult = await db
+      .select({ count: count() })
+      .from(teamMembers)
+      .where(eq(teamMembers.teamId, teamId));
+
+    const memberCount = memberCountResult[0]?.count || 0;
+
+    return c.json({
+      id: team.id,
+      name: team.name,
+      description: team.description,
+      role: teamMember[0].role,
+      createdAt: team.createdAt,
+      updatedAt: team.updatedAt,
+      memberCount,
+    }, 200);
+
+  } catch (error) {
+    console.error("チーム詳細取得エラー:", error);
+    return c.json({ error: "チーム詳細の取得に失敗しました" }, 500);
+  }
+}
+
+// ユーザーが所属するチーム一覧取得の実装
 export async function getTeams(c: any) {
   const auth = getAuth(c);
   if (!auth?.userId) {
@@ -350,23 +452,37 @@ export async function getTeams(c: any) {
   const db: DatabaseType = c.env.db;
 
   try {
-    // 全チーム一覧とメンバー数を取得
-    const teamsWithCount = await db
+    // ユーザーが所属するチーム一覧を取得
+    const userTeams = await db
       .select({
         id: teams.id,
         name: teams.name,
         description: teams.description,
+        role: teamMembers.role,
         createdAt: teams.createdAt,
-        memberCount: count(teamMembers.userId),
+        updatedAt: teams.updatedAt,
       })
       .from(teams)
-      .leftJoin(teamMembers, eq(teams.id, teamMembers.teamId))
-      .groupBy(teams.id, teams.name, teams.description, teams.createdAt);
+      .innerJoin(teamMembers, eq(teams.id, teamMembers.teamId))
+      .where(eq(teamMembers.userId, auth.userId))
+      .orderBy(teams.createdAt);
 
-    return c.json({
-      teams: teamsWithCount,
-      total: teamsWithCount.length,
-    }, 200);
+    // 各チームのメンバー数を取得
+    const teamsWithMemberCount = await Promise.all(
+      userTeams.map(async (team) => {
+        const memberCountResult = await db
+          .select({ count: count() })
+          .from(teamMembers)
+          .where(eq(teamMembers.teamId, team.id));
+
+        return {
+          ...team,
+          memberCount: memberCountResult[0]?.count || 0,
+        };
+      })
+    );
+
+    return c.json(teamsWithMemberCount, 200);
 
   } catch (error) {
     console.error("チーム一覧取得エラー:", error);

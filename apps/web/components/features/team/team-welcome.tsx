@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useUser } from "@/src/hooks/use-user";
 import { useTeamStats } from "@/src/hooks/use-team-stats";
+import { useTeams } from "@/src/hooks/use-teams";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import TeamIcon from "@/components/icons/team-icon";
@@ -12,8 +13,9 @@ export function TeamWelcome() {
   const router = useRouter();
   const { data: user } = useUser();
   const { data: teamStats, isLoading } = useTeamStats();
+  const { data: teams, isLoading: teamsLoading } = useTeams();
 
-  if (isLoading) {
+  if (isLoading || teamsLoading) {
     return (
       <div className="flex h-full bg-white overflow-hidden">
         <div className="w-full pt-3 pl-5 pr-2 flex flex-col">
@@ -150,7 +152,7 @@ export function TeamWelcome() {
           </div>
 
           {/* チーム一覧（空の場合の表示） */}
-          {teamStats.ownedTeams === 0 && teamStats.memberTeams === 0 ? (
+          {(!teams || !Array.isArray(teams) || teams.length === 0) ? (
             <Card className="p-6 text-center">
               <div className="mb-4">
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -176,9 +178,47 @@ export function TeamWelcome() {
             </Card>
           ) : (
             <div>
-              {/* TODO: 実際のチーム一覧を表示 */}
-              <h2 className="text-lg font-semibold mb-2">あなたのチーム</h2>
-              <div className="text-gray-500 text-sm">チーム一覧の実装が必要です。</div>
+              <h2 className="text-lg font-semibold mb-4">あなたのチーム</h2>
+              <div className="grid gap-3">
+                {Array.isArray(teams) && teams.map((team) => (
+                  <Card key={team.id} className="p-4 hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="font-semibold text-gray-900">{team.name}</h3>
+                          <span 
+                            className={`px-2 py-1 text-xs rounded-full font-medium ${
+                              team.role === "admin" 
+                                ? "bg-blue-100 text-blue-800" 
+                                : "bg-gray-100 text-gray-600"
+                            }`}
+                          >
+                            {team.role === "admin" ? "管理者" : "メンバー"}
+                          </span>
+                        </div>
+                        {team.description && (
+                          <p className="text-gray-600 text-sm mb-2">{team.description}</p>
+                        )}
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                          <span>作成日: {new Date(team.createdAt).toLocaleDateString()}</span>
+                          {team.memberCount && (
+                            <span>メンバー: {team.memberCount}人</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => router.push(`/team/${team.id}`)}
+                        >
+                          詳細
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
             </div>
           )}
         </div>

@@ -1,11 +1,30 @@
 # Claude開発仕様書
 
-日本語で対応して　
+**🇯🇵 必ず日本語で対応すること**
+
+## プロジェクト概要
+
+**「Note」- 個人・チーム向け統合メモ・タスク管理システム**
+
+### 何を作っているか
+
+- **メモ管理**: 思考の記録・整理
+- **タスク管理**: TODO・進捗管理
+- **ボード機能**: プロジェクト単位での組織化
+- **チーム機能**: 共同作業環境（プレミアム機能）
+
+### 基本思想
+
+- **シンプル**: 複雑な機能より使いやすさを重視
+- **共通化**: 重複コードを徹底的に排除
+- **型安全**: TypeScriptで堅牢なシステム構築
+- **自動化**: 品質管理・デプロイを可能な限り自動化
 
 ## 技術スタック
 
 - **フロントエンド**: Next.js 15.3.0 + TypeScript 5.8.2 + Tailwind CSS 3.4.0
 - **バックエンド**: Hono 4.8.3 + SQLite + Drizzle ORM 0.44.2
+- **API仕様**: OpenAPI 3.0 + Zod (@hono/zod-openapi)
 - **認証**: Clerk 6.23.0 (JWT Bearer認証)
 - **状態管理**: React Query 5.56.2
 - **アーキテクチャ**: Turborepo 2.5.4 monorepo構成
@@ -17,72 +36,6 @@
 - **Props設計**: variant, size, color等のオプションで拡張性重視
 - **親からサイズ指定**: デフォルト値は定義せず、明示的にサイズを渡す
 - **型安全性**: 共通型定義で一元管理、危険な型キャストは禁止
-
-## 主要システム
-
-### カテゴリーシステム
-
-- **API**: `/categories` (CRUD操作、Clerk Bearer認証)
-- **フック**: `use-categories.ts` (React Query)
-- **UI**: `CategorySelector` (CustomSelector利用)
-
-### ボードカテゴリーシステム
-
-- **API**: `/board-categories` (ボード専用カテゴリー、CRUD操作)
-- **テーブル**: `board_categories` (boardId, sortOrder対応)
-- **フック**: `use-board-categories.ts` (React Query)
-- **UI**: `BoardCategorySelector`, `BoardCategoryManager`
-- **特徴**: ボード内でのカテゴリー管理、ソート順序対応
-
-### メモシステム
-
-- **API**: `/memos` (CRUD操作、Clerk Bearer認証)
-- **フック**: `use-memos.ts` (React Query)
-- **テーブル**: `memos`, `deleted_memos`
-- **originalId システム**: `id.toString()` 形式でシンプルかつ安全な一意性保証
-
-### ボードシステム
-
-- **API**: `/boards` `/boards/{id}/items`
-- **フック**: `useBoards()` `useBoardWithItems(id)`
-- **URL設計**: `/boards/{slug}` (SEOフレンドリー)
-- **Slug生成**: 英数字=ケバブケース、日本語=ランダム6文字
-- **itemId**: `OriginalId`型でoriginalIdと統一
-
-### タスクシステム
-
-- **API**: `/tasks` (CRUD操作、Clerk Bearer認証)
-- **フック**: `use-tasks.ts` (React Query)
-- **テーブル**: `tasks`, `deleted_tasks`
-- **originalId システム**: メモと同じ`id.toString()`形式
-
-### データインポート機能
-
-- **CSVインポート**: メモ、タスク、ボードアイテム対応
-- **UI**: `csv-import-modal.tsx` (各機能別)
-- **フォーマット**: CSV形式での一括データ取り込み
-
-### バルク操作機能
-
-- **一括削除**: メモ・タスクの複数選択削除
-- **一括復元**: 削除済みアイテムの複数選択復元
-- **フック**: `use-memo-bulk-delete.tsx`, `use-task-bulk-delete.tsx`
-- **UI**: 選択モード切り替え、一括操作ボタン
-
-### 管理画面システム
-
-- **アクセス**: `/admin/users` (管理者権限必要)
-- **機能**: ユーザープラン管理（free ⇔ premium切り替え）
-- **API**: `PATCH /users/{userId}/plan` (管理者専用)
-- **権限**: 環境変数`ADMIN_USER_IDS`で管理者を指定
-- **Refine**: Ant Designベースの管理画面フレームワーク使用
-
-### プレミアムプラン機能
-
-- **チーム機能**: `/team` (プレミアムプラン限定)
-- **プランガード**: `PremiumPlanGuard`コンポーネント
-- **アップグレード案内**: 非プレミアムユーザー向けUI
-- **API**: `GET /users/me` でプラン情報確認
 
 ## 型システム
 
@@ -102,14 +55,12 @@ export type OriginalId = string;
 - **生成方法**: `generateOriginalId(id) = id.toString()`
 - **一意性**: AUTO_INCREMENTベースで100%保証
 - **用途**: 削除・復元追跡、ボードアイテム識別
-- **将来対応**: UUID拡張準備済み（基本は使わない）
 - **型安全**: `OriginalId`型で統一、`as unknown as`禁止
 
 ### ID種別
 
 - **id**: `number` - データベース主キー（AUTO_INCREMENT）
 - **originalId**: `OriginalId` - 削除・復元追跡用（メイン識別子）
-- **uuid**: `string` - 将来のエクスポート用（基本使わない）
 
 ## API認証パターン
 
@@ -134,106 +85,43 @@ const response = await fetch(`${API_BASE_URL}/categories`, {
   - タスク完了: `bg-Green/20` (アクティブ) / `bg-Green` (アイコン)
   - 削除済み: `bg-red-100` (アクティブ) / `TrashIcon` (アイコン)
 
-## 重要コンポーネント
-
-- `CustomSelector` - セレクター統一
-- `CategorySelector` - 通常カテゴリー選択
-- `BoardCategorySelector` - ボードカテゴリー選択
-- `BoardCategoryManager` - ボードカテゴリー管理（CRUD操作）
-- `SaveButton` - 保存ボタン統一（変更検知対応）
-- `DeleteButton` - 削除ボタン統一（TrashIcon CSS化）
-- `RightPanel` - 右パネル統一
-- `CsvImportModal` - CSVインポート統一（各機能別）
-- `BulkActionButtons` - 一括操作ボタン
-
-## 開発サーバー起動手順 🚀
-
-### 必須: 2つのサーバーを起動
-
-**1. APIサーバー起動（ターミナル1）**
-
-```bash
-cd apps/api
-npm run dev
-# → http://localhost:7594 で起動
-# → http://localhost:7594/docs でAPI仕様確認可能
-```
-
-**2. Webサーバー起動（ターミナル2）**
-
-```bash
-# ルートディレクトリで実行
-npm run dev
-# → http://localhost:7593 で起動
-```
-
-### アクセスURL
-
-- **メインアプリ**: http://localhost:7593
-- **管理画面**: http://localhost:7593/admin/users
-- **チーム機能**: http://localhost:7593/team （プレミアムプラン限定）
-- **API仕様書**: http://localhost:7594/docs
-
-### ポート設定
-
-- **Web**: 7593
-- **API**: 7594 （8794から変更）
-
-### 環境変数設定
-
-**apps/web/.env.local**
-
-```bash
-NEXT_PUBLIC_API_URL=http://localhost:7594
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
-NEXT_PUBLIC_ADMIN_USER_IDS=user_2z0DUpwFMhf1Lk6prAP9MzVJZIh
-```
-
-**apps/api/.env**
-
-```bash
-CLERK_SECRET_KEY=sk_test_...
-ADMIN_USER_IDS=user_2z0DUpwFMhf1Lk6prAP9MzVJZIh
-```
-
 ## 開発コマンド
 
 ```bash
-# エラーチェック（開発中）
-npm run check:quick                  # TypeScriptのみ高速チェック
-npm run check:wsl                    # TypeScript + Lint（WSL最適化）
-npm run check:full                   # 全パッケージ完全チェック
+# 個別開発
+cd apps/web && npm run dev     # Web単体起動（ログ付き）
+cd apps/api && npm run dev     # API単体起動（ログ付き）
 
-# ログ管理（ユーザーが手動実行）
-npm run log:clear                    # 全ログクリア
-npm run log:cleanup                  # サイズベースでログローテーション
-npm run log:watch                    # api.logのリアルタイム監視
-npm run log:watch:web                # web.logのリアルタイム監視（5秒間重複フィルター付き）
-npm run log:errors                   # api.logのエラーログのみ表示
-
-# データベースリセット（API側で実行）
-cd apps/api && npm run db:reset      # ローカルデータベースを完全削除
+# 品質チェック
+npm run check:wsl              # TypeScript + Lint (Web)
+npm run check:api              # TypeScript + Lint (API)
 ```
 
-### webログフィルタリング
+## 🤖 Claude自動チェック
 
-- **場所**: `apps/web/public/console-logger.js`
-- **機能**: ブラウザコンソールログの重複排除（5秒間同一メッセージ除外）
-- **対象**: console.log/error/warn/info → web.logファイル
-- **メモ**: undefinedフィールドはJSON.stringifyで自動省略される
+このファイルを読んだ際の自動実行項目：
 
-### 自動品質管理システム
+1. **開発サーバー起動状況確認**: Web（7593）・API（7594）ポートをチェック
+2. **未起動の場合**: 該当サーバーを自動起動
+3. **ログ監視準備**: api.log・web.logが正常に出力されているか確認
 
-- **コミット時自動実行**:
-  1. ログファイル自動クリア
-  2. TypeScript + Lintエラーチェック
-  3. 変更ファイルの品質チェック（lint-staged）
-- **エラー時**: コミットを自動停止し、修正箇所を表示
-- **ログ管理**: api.log, web.logは.gitignore済み（ユーザーが手動でnpm run dev実行）
+## 🔄 APIスキーマ変更時の自動処理
 
-# 🚨 絶対禁止事項
+APIのスキーマファイル（`apps/api/src/db/schema/`）に変更がある場合：
 
-## 作業方法
+1. **API自動停止**: 7594ポートのプロセスを強制終了
+2. **スキーマ更新**: `cd apps/api && npm run db:push` 自動実行
+3. **API自動再起動**: スキーマ更新完了後にAPI再起動
+
+## 自動品質管理
+
+- **コミット時自動実行**: Prettier + ESLint
+- **エラー検出**: Claude自動ログ監視システム
+- **ログ管理**: api.log, web.logは自動記録
+
+## 🚨 絶対禁止事項
+
+### 作業方法
 
 - ❌ **コードを読まずに修正提案**
 - ❌ **変数・関数の存在確認をしない**
@@ -241,56 +129,16 @@ cd apps/api && npm run db:reset      # ローカルデータベースを完全�
 - ❌ **`as unknown as`等の危険な型キャスト**
 - ❌ **共通型を使わずにstring/numberを直接記述**
 
-## UI・UX関連
+### UI・UX関連
 
 - ❌ **標準HTMLのtitle属性の使用** (カスタムTooltipコンポーネントを使用すること)
 
-## 修正履歴
+## Claudeログ監視システム
 
-### 2025-08-21: WSL環境での開発品質管理システム完成
+君が以下のコマンドを実行すると、自動でエラー検出・修正を行います：
 
-**環境変更**:
-
-- WSL環境への完全移行とHusky正常セットアップ
-- 自動品質管理システム構築
-- TypeScriptパスエイリアス修正（@/_ → ./_)
-
-**新機能**:
-
-- ログ共有システム（api.log, web.log対応）
-- コミット時自動品質チェック（TypeScript + Lint）
-- ログ自動管理（クリア・ローテーション）
-- エラー発生時のコミット自動停止
-
-**開発効率化**:
-
-- `npm run dev` 1コマンドでログ記録付き開発（ユーザーが手動実行）
-- エラーチェックコマンド3段階（quick/wsl/full）
-- pre-commitフックによる品質保証
-- Claude Codeとのログリアルタイム共有
-
-**技術アップデート**:
-
-- Next.js 15.3.0, React 19.1.0, Clerk 6.23.0
-- Hono 4.8.3, Drizzle ORM 0.44.2
-- Turborepo 2.5.4, pnpm 9.0.0
-
-### 2025-08-10: originalIdベース統一完了
-
-**問題**: ボードアイテム管理でID型不整合（数値 ⇔ 文字列）によるキャッシュエラー
-
-**修正内容**:
-
-- 全システムで`originalId`（文字列）ベースに統一
-- `parseInt()`等の危険な型変換を全面削除
-- `useItemBoards`, `useRemoveItemFromBoard`の引数型を統一
-- 関連コンポーネント（task-editor, memo-filter-wrapper等）修正
-
-**効果**:
-
-- ✅ キャッシュキー不整合問題の完全解消
-- ✅ 型安全性の大幅向上
-- ✅ API呼び出し時の型エラー防止
-
-トランザクション処理　メモ一覧から削除するときに　削除済にコピーができていていないと削除を実行できない
-どっちも成功したらどっちも処理する。
+```
+Claude, please check these log files for errors and fix any issues:
+- Web Log: /home/ryosuke/note/web.log
+- API Log: /home/ryosuke/note/api.log
+```

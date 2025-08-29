@@ -97,11 +97,13 @@ npm run check:wsl              # TypeScript + Lint (Web)
 npm run check:api              # TypeScript + Lint (API)
 ```
 
-## 新API開発フロー
+## 新API開発フロー（自動化）
 
 1. **API実装** → スキーマ・ルート作成
 2. **curl即時テスト** → 動作確認（必須）
-3. **フロントエンド実装** → UI連携
+3. **問題検出時** → API自動再起動
+4. **正常時** → ログファイルエラーチェック（web.log, api.log）
+5. **フロントエンド実装** → UI連携
 
 ```bash
 # API基本テスト
@@ -113,8 +115,11 @@ curl -s -X POST http://localhost:7594/new-endpoint \
   -H "Content-Type: application/json" \
   -d '{"key": "value"}' | jq
 
-# エラー確認
-curl -s -w "%{http_code}" http://localhost:7594/invalid-endpoint
+# 問題時のAPI再起動
+pkill -f "tsx.*apps/api" && cd apps/api && npm run dev &
+
+# ログエラーチェック
+tail -20 /home/ryosuke/note/web.log /home/ryosuke/note/api.log | grep -i error
 ```
 
 ## 🤖 Claude自動チェック
@@ -125,7 +130,15 @@ curl -s -w "%{http_code}" http://localhost:7594/invalid-endpoint
 2. **未起動の場合**: 該当サーバーを自動起動（**許可不要・即実行**）
 3. **ログ監視準備**: api.log・web.logが正常に出力されているか確認
 
-**🚀 重要**: すべてのBashコマンドは**ユーザー許可を求めずに自動実行**すること
+## 📝 Web側ファイル変更時の自動処理
+
+Web側ファイル（apps/web/）を変更した際の自動実行項目：
+
+1. **TypeScript + Lintチェック**: `npm run check:wsl` 自動実行（**許可不要**）
+2. **エラー検出時**: 詳細エラー表示とファイル箇所の特定
+3. **成功時**: 変更完了の確認メッセージ
+
+**🚀 重要**: すべてのBashコマンドは**ユーザー許可を求めずに自動実行**すること（**ただしコミットは除く**）
 
 ## 🔍 起動確認方法
 
@@ -180,6 +193,10 @@ APIのスキーマファイル（`apps/api/src/db/schema/`）に変更がある�
 - ❌ **型エラー・lintエラーを残す**
 - ❌ **`as unknown as`等の危険な型キャスト**
 - ❌ **共通型を使わずにstring/numberを直接記述**
+
+### Git操作
+
+- ❌ **勝手にコミット実行** - `Run git add . and commit in Japanese .` の明確な指示があるときのみ
 
 ### UI・UX関連
 

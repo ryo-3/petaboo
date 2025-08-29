@@ -69,6 +69,21 @@
 - **フック**: `use-memo-bulk-delete.tsx`, `use-task-bulk-delete.tsx`
 - **UI**: 選択モード切り替え、一括操作ボタン
 
+### 管理画面システム
+
+- **アクセス**: `/admin/users` (管理者権限必要)
+- **機能**: ユーザープラン管理（free ⇔ premium切り替え）
+- **API**: `PATCH /users/{userId}/plan` (管理者専用)
+- **権限**: 環境変数`ADMIN_USER_IDS`で管理者を指定
+- **Refine**: Ant Designベースの管理画面フレームワーク使用
+
+### プレミアムプラン機能
+
+- **チーム機能**: `/team` (プレミアムプラン限定)
+- **プランガード**: `PremiumPlanGuard`コンポーネント
+- **アップグレード案内**: 非プレミアムユーザー向けUI
+- **API**: `GET /users/me` でプラン情報確認
+
 ## 型システム
 
 ### 共通型定義 (`apps/web/src/types/common.ts`)
@@ -131,6 +146,50 @@ const response = await fetch(`${API_BASE_URL}/categories`, {
 - `CsvImportModal` - CSVインポート統一（各機能別）
 - `BulkActionButtons` - 一括操作ボタン
 
+## 開発サーバー起動手順 🚀
+
+### 必須: 2つのサーバーを起動
+
+**1. APIサーバー起動（ターミナル1）**
+```bash
+cd apps/api
+npm run dev
+# → http://localhost:7594 で起動
+# → http://localhost:7594/docs でAPI仕様確認可能
+```
+
+**2. Webサーバー起動（ターミナル2）**
+```bash
+# ルートディレクトリで実行
+npm run dev
+# → http://localhost:7593 で起動
+```
+
+### アクセスURL
+- **メインアプリ**: http://localhost:7593
+- **管理画面**: http://localhost:7593/admin/users
+- **チーム機能**: http://localhost:7593/team （プレミアムプラン限定）
+- **API仕様書**: http://localhost:7594/docs
+
+### ポート設定
+- **Web**: 7593
+- **API**: 7594 （8794から変更）
+
+### 環境変数設定
+
+**apps/web/.env.local**
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:7594
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+NEXT_PUBLIC_ADMIN_USER_IDS=user_2z0DUpwFMhf1Lk6prAP9MzVJZIh
+```
+
+**apps/api/.env**  
+```bash
+CLERK_SECRET_KEY=sk_test_...
+ADMIN_USER_IDS=user_2z0DUpwFMhf1Lk6prAP9MzVJZIh
+```
+
 ## 開発コマンド
 
 ```bash
@@ -138,9 +197,6 @@ const response = await fetch(`${API_BASE_URL}/categories`, {
 npm run check:quick                  # TypeScriptのみ高速チェック
 npm run check:wsl                    # TypeScript + Lint（WSL最適化）
 npm run check:full                   # 全パッケージ完全チェック
-
-# 開発サーバー起動（ログ記録付き）
-npm run dev                          # api.logとweb.logに記録（ユーザーが手動実行）
 
 # ログ管理（ユーザーが手動実行）
 npm run log:clear                    # 全ログクリア

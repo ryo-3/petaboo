@@ -6,8 +6,9 @@ import { Edit } from "@refinedev/antd";
 import { Form, Select, Input } from "antd";
 
 export default function UserEdit() {
-  const { formProps, saveButtonProps, queryResult } = useForm();
-  const userData = queryResult?.data?.data;
+  const { formProps, saveButtonProps } = useForm({
+    action: "edit",
+  });
 
   return (
     <Edit saveButtonProps={saveButtonProps}>

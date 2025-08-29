@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { PremiumPlanGuard } from "@/components/features/team/premium-plan-guard"
 
 interface TeamMemo {
   id: string
@@ -13,6 +14,14 @@ interface TeamMemo {
 }
 
 export default function TeamMemosPage() {
+  return (
+    <PremiumPlanGuard>
+      <TeamMemosContent />
+    </PremiumPlanGuard>
+  );
+}
+
+function TeamMemosContent() {
   const [memos] = useState<TeamMemo[]>([
     {
       id: '1',

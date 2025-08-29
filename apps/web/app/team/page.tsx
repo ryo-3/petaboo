@@ -1,17 +1,12 @@
-import { auth } from "@clerk/nextjs/server";
+"use client";
+
 import Main from "../main";
+import { PremiumPlanGuard } from "@/components/features/team/premium-plan-guard";
 
-export default async function TeamPage() {
-  const { userId } = await auth();
-
-  if (!userId) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-gray-600">ログインが必要です</p>
-      </div>
-    );
-  }
-
-  // チームモードでMainコンポーネントを使用（個人用と全く同じUI）
-  return <Main teamMode={true} teamId={1} />;
+export default function TeamPage() {
+  return (
+    <PremiumPlanGuard>
+      <Main teamMode={true} teamId={1} />
+    </PremiumPlanGuard>
+  );
 }

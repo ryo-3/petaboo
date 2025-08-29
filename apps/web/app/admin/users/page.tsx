@@ -42,8 +42,8 @@ export default function UsersList() {
       key: "action",
       render: (_: any, record: any) => (
         <Space size="middle">
-          <ShowButton hideText size="small" recordItemId={record.userId} />
-          <EditButton hideText size="small" recordItemId={record.userId} />
+          <ShowButton hideText size="small" recordItemId={record.userId} resource="users" />
+          <EditButton hideText size="small" recordItemId={record.userId} resource="users" />
         </Space>
       ),
     },

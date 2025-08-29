@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { PremiumPlanGuard } from "@/components/features/team/premium-plan-guard"
 
 interface TeamTask {
   id: string
@@ -16,6 +17,14 @@ interface TeamTask {
 }
 
 export default function TeamTasksPage() {
+  return (
+    <PremiumPlanGuard>
+      <TeamTasksContent />
+    </PremiumPlanGuard>
+  );
+}
+
+function TeamTasksContent() {
   const [tasks] = useState<TeamTask[]>([
     {
       id: '1',

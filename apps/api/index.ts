@@ -36,6 +36,20 @@ app.use("*", cors({
 
 console.log("サーバー起動！");
 
+// リクエストログミドルウェア
+app.use("*", async (c, next) => {
+  const start = Date.now();
+  const method = c.req.method;
+  const url = c.req.url;
+  
+  console.log(`[${new Date().toISOString()}] ${method} ${url}`);
+  
+  await next();
+  
+  const duration = Date.now() - start;
+  console.log(`[${new Date().toISOString()}] ${method} ${url} - ${c.res.status} (${duration}ms)`);
+});
+
 app.route("/memos", memosRoute);
 app.route("/tasks", tasksRoute);
 app.route("/user-preferences", userPreferencesRoute);
@@ -61,4 +75,4 @@ app.get("/openapi", (c) => {
 
 app.get("/docs", swaggerUI({ url: "/openapi" }));
 
-serve({ fetch: app.fetch, port: 8794 });
+serve({ fetch: app.fetch, port: 7594 });

@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594";
+
 export function UserInitializer() {
   const { isSignedIn, user } = useUser();
   const { getToken } = useAuth();
@@ -14,7 +16,7 @@ export function UserInitializer() {
           const token = await getToken();
           
           // ユーザー情報を初期化（既存ユーザー対応）
-          const response = await fetch("http://localhost:8794/users/me", {
+          const response = await fetch(`${API_URL}/users/me`, {
             headers: {
               Authorization: `Bearer ${token}`,
             },

@@ -85,19 +85,19 @@ importers:
         specifier: ^0.18.4
         version: 0.18.4(hono@4.8.3)(zod@3.25.76)
       '@refinedev/antd':
-        specifier: ^5.37.0
+        specifier: ^5.37.4
         version: 5.46.3(@refinedev/core@4.57.11(@tanstack/react-query@4.40.1(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(@types/react-dom@19.1.1(@types/react@19.1.0))(@types/react@19.1.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(@types/react-dom@19.1.1(@types/react@19.1.0))(@types/react@19.1.0)(antd@5.27.1(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(dayjs@1.11.15)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@refinedev/core':
-        specifier: ^4.47.0
+        specifier: ^4.47.1
         version: 4.57.11(@tanstack/react-query@4.40.1(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(@types/react-dom@19.1.1(@types/react@19.1.0))(@types/react@19.1.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@refinedev/kbar':
-        specifier: ^1.2.0
+        specifier: ^1.3.6
         version: 1.3.17(@refinedev/core@4.57.11(@tanstack/react-query@4.40.1(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(@types/react-dom@19.1.1(@types/react@19.1.0))(@types/react@19.1.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(@types/react-dom@19.1.1(@types/react@19.1.0))(@types/react@19.1.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@refinedev/nextjs-router':
         specifier: ^6.0.4
         version: 6.2.3(@refinedev/core@4.57.11(@tanstack/react-query@4.40.1(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(@types/react-dom@19.1.1(@types/react@19.1.0))(@types/react@19.1.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(@types/react-dom@19.1.1(@types/react@19.1.0))(@types/react@19.1.0)(next@15.4.6(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@refinedev/simple-rest':
-        specifier: ^4.5.3
+        specifier: ^4.5.4
         version: 4.5.4(@refinedev/core@4.57.11(@tanstack/react-query@4.40.1(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(@types/react-dom@19.1.1(@types/react@19.1.0))(@types/react@19.1.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))
       '@repo/ui':
         specifier: workspace:*
@@ -106,7 +106,7 @@ importers:
         specifier: ^4.36.1
         version: 4.40.1(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       antd:
-        specifier: ^5.22.4
+        specifier: ^5.10.0
         version: 5.27.1(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       clsx:
         specifier: ^2.1.1

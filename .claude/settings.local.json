@@ -48,7 +48,8 @@
       "Bash(pkill:*)",
       "Bash(ss:*)",
       "Bash(cat:*)",
-      "Bash(pnpm db:push:*)"
+      "Bash(pnpm db:push:*)",
+      "Bash(npx drizzle-kit studio:*)"
     ],
     "deny": []
   }

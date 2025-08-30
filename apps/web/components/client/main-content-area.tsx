@@ -172,7 +172,11 @@ export function MainContentArea({
               handleBoardClearSelection={handleBoardClearSelection}
             />
           ) : (
-            <BoardScreen ref={boardScreenRef} />
+            <BoardScreen
+              ref={boardScreenRef}
+              teamMode={teamMode}
+              teamId={teamId}
+            />
           )
         ) : (
           <BoardScreen ref={boardScreenRef} />

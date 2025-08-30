@@ -19,6 +19,8 @@ interface BoardDetailWrapperProps {
   handleBoardSelectMemo: (memo: Memo | null) => void;
   handleBoardSelectTask: (task: Task | DeletedTask | null) => void;
   handleBoardClearSelection: () => void;
+  teamMode?: boolean;
+  teamId?: number | null;
 }
 
 export function BoardDetailWrapper({
@@ -32,6 +34,8 @@ export function BoardDetailWrapper({
   handleBoardSelectMemo,
   handleBoardSelectTask,
   handleBoardClearSelection,
+  teamMode = false,
+  teamId = null,
 }: BoardDetailWrapperProps) {
   const router = useRouter();
 
@@ -79,6 +83,8 @@ export function BoardDetailWrapper({
         initialBoardDescription={currentBoardDescription}
         showBoardHeader={showBoardHeader}
         serverInitialTitle={serverBoardTitle}
+        teamMode={teamMode}
+        teamId={teamId}
       />
     );
   }, [
@@ -94,6 +100,8 @@ export function BoardDetailWrapper({
     handleBoardSelectMemo,
     handleBoardSelectTask,
     handleBoardClearSelection,
+    teamMode,
+    teamId,
     router,
   ]);
 }

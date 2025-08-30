@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useBoards } from "@/src/hooks/use-boards";
+import { useTeamBoards } from "@/src/hooks/use-team-boards";
 import { Board } from "@/src/types/board";
 import { FORM_STYLES } from "@/src/styles/form-styles";
 
@@ -8,6 +9,8 @@ interface BoardSelectorProps {
   onBoardChange: (boardId: number | null) => void;
   placeholder?: string;
   className?: string;
+  teamMode?: boolean;
+  teamId?: number | null;
 }
 
 export default function BoardSelector({
@@ -15,9 +18,20 @@ export default function BoardSelector({
   onBoardChange,
   placeholder = "ボードを選択",
   className = "",
+  teamMode = false,
+  teamId = null,
 }: BoardSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const { data: boards = [], isLoading } = useBoards();
+
+  const { data: individualBoards = [], isLoading: individualLoading } =
+    useBoards("normal", !teamMode);
+  const { data: teamBoards = [], isLoading: teamLoading } = useTeamBoards(
+    teamMode ? teamId : null,
+    "normal",
+  );
+
+  const boards = teamMode ? teamBoards : individualBoards;
+  const isLoading = teamMode ? teamLoading : individualLoading;
 
   const selectedBoard = boards.find((board) => board.id === selectedBoardId);
 

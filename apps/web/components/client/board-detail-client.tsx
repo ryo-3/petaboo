@@ -11,12 +11,16 @@ interface BoardDetailClientProps {
   boardId: number;
   initialBoardName?: string;
   initialBoardDescription?: string | null;
+  teamMode?: boolean;
+  teamId?: number | null;
 }
 
 export default function BoardDetailClient({
   boardId,
   initialBoardName,
   initialBoardDescription,
+  teamMode = false,
+  teamId = null,
 }: BoardDetailClientProps) {
   const router = useRouter();
   const { data: boardWithItems } = useBoardWithItems(boardId);
@@ -78,6 +82,8 @@ export default function BoardDetailClient({
       showBoardHeader={false}
       selectedMemo={selectedMemo}
       selectedTask={selectedTask}
+      teamMode={teamMode}
+      teamId={teamId}
     />
   );
 }

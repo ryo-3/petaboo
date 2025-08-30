@@ -9,6 +9,7 @@ import { useInviteToTeam } from "@/src/hooks/use-invite-to-team";
 import { useUserInfo } from "@/src/hooks/use-user-info";
 import MemoScreen from "@/components/screens/memo-screen";
 import TaskScreen from "@/components/screens/task-screen";
+import BoardScreen from "@/components/screens/board-screen";
 import { DisplayNameModal } from "@/components/modals/display-name-modal";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
@@ -31,9 +32,18 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   const [showInviteForm, setShowInviteForm] = useState(false);
 
   // タブ管理（サイドバーからの制御）
-  const [activeTab, setActiveTab] = useState<"overview" | "memos" | "tasks">(
-    "memos",
-  );
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "memos" | "tasks" | "boards"
+  >("overview");
+
+  // activeTabが変更された時にlayoutに通知
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent("team-tab-change", {
+        detail: { activeTab },
+      }),
+    );
+  }, [activeTab]);
   const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [selectedDeletedMemo, setSelectedDeletedMemo] =
@@ -50,10 +60,14 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       const { mode, pathname } = event.detail;
       console.log("Received team mode change event:", { mode, pathname });
 
-      if (mode === "memo") {
+      if (mode === "overview") {
+        setActiveTab("overview");
+      } else if (mode === "memo") {
         setActiveTab("memos");
       } else if (mode === "task") {
         setActiveTab("tasks");
+      } else if (mode === "board") {
+        setActiveTab("boards");
       }
     };
 
@@ -334,6 +348,20 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                 onClose={() => setActiveTab("overview")}
                 teamMode={true}
                 teamId={team.id}
+              />
+            </div>
+          )}
+
+          {/* ボードタブ */}
+          {activeTab === "boards" && (
+            <div className="h-full -mt-4 -ml-5 -mr-5">
+              <BoardScreen
+                teamMode={true}
+                teamId={team.id}
+                onBoardSelect={(board) => {
+                  // ボード詳細ページに遷移
+                  router.push(`/board/${board.slug}`);
+                }}
               />
             </div>
           )}

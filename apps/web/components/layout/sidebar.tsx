@@ -166,7 +166,23 @@ function Sidebar({
           </Tooltip>
           <Tooltip text="ボード一覧" position="right">
             <button
-              onClick={onDashboard}
+              onClick={() => {
+                if (isTeamDetailPage) {
+                  // チーム詳細ページの場合はボードモードに切り替え
+                  console.log("Team mode changed to: board");
+                  window.dispatchEvent(
+                    new CustomEvent("team-mode-change", {
+                      detail: {
+                        mode: "board",
+                        pathname: window.location.pathname,
+                      },
+                    }),
+                  );
+                } else {
+                  // 通常ページの場合はボード一覧に移動
+                  onDashboard?.();
+                }
+              }}
               className={`p-2 rounded-lg transition-colors ${
                 currentMode === "board" &&
                 !showingBoardDetail &&
@@ -284,7 +300,23 @@ function Sidebar({
               />
             </button>
             <button
-              onClick={onDashboard}
+              onClick={() => {
+                if (isTeamDetailPage) {
+                  // チーム詳細ページの場合はボードモードに切り替え
+                  console.log("Team mode changed to: board");
+                  window.dispatchEvent(
+                    new CustomEvent("team-mode-change", {
+                      detail: {
+                        mode: "board",
+                        pathname: window.location.pathname,
+                      },
+                    }),
+                  );
+                } else {
+                  // 通常ページの場合はボード一覧に移動
+                  onDashboard?.();
+                }
+              }}
               className={`p-2 rounded-lg transition-colors ${
                 isBoardActive && !showingBoardDetail
                   ? "bg-light-Blue text-white"

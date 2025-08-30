@@ -172,7 +172,8 @@ function MemoScreen({
   const { preferences } = useUserPreferences(1);
 
   // 全データ一括取得（ちらつき解消）
-  const { data: boards } = useBoards();
+  console.log(`🏠 memo-screen useBoards called - teamMode: ${teamMode}`);
+  const { data: boards } = useBoards("normal", !teamMode);
   const { data: tags } = useTags();
   const { data: allTaggings, error: taggingsError } = useAllTaggings();
   const { data: allBoardItems, error: boardItemsError } = useAllBoardItems();

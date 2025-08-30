@@ -1,4 +1,5 @@
 import { useBoards, useCreateBoard } from "@/src/hooks/use-boards";
+import { useTeamBoards } from "@/src/hooks/use-team-boards";
 import { CreateBoardData } from "@/src/types/board";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
@@ -11,6 +12,8 @@ interface BoardListProps {
   onCreateFormClose?: () => void;
   activeTab?: "normal" | "completed" | "deleted";
   onPermanentDeleteBoard?: (boardId: number) => void;
+  teamMode?: boolean;
+  teamId?: number | null;
 }
 
 export default function BoardList({
@@ -19,12 +22,27 @@ export default function BoardList({
   onCreateFormClose,
   activeTab = "normal",
   onPermanentDeleteBoard,
+  teamMode = false,
+  teamId = null,
 }: BoardListProps) {
   const [internalShowCreateForm, setInternalShowCreateForm] = useState(false);
   const showCreateForm = externalShowCreateForm ?? internalShowCreateForm;
   const pathname = usePathname();
 
-  const { data: boards, isLoading, error } = useBoards(activeTab);
+  const {
+    data: individualBoards,
+    isLoading: individualLoading,
+    error: individualError,
+  } = useBoards(activeTab, !teamMode);
+  const {
+    data: teamBoards,
+    isLoading: teamLoading,
+    error: teamError,
+  } = useTeamBoards(teamMode ? teamId : null, activeTab);
+
+  const boards = teamMode ? teamBoards : individualBoards;
+  const isLoading = teamMode ? teamLoading : individualLoading;
+  const error = teamMode ? teamError : individualError;
   const createBoard = useCreateBoard();
 
   // 現在のURLから選択されているボードのslugを取得

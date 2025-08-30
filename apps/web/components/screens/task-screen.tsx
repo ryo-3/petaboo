@@ -92,7 +92,8 @@ function TaskScreen({
   };
   const { data: deletedTasks } = useDeletedTasks({ teamMode, teamId });
   const { preferences } = useUserPreferences(1);
-  const { data: boards } = useBoards();
+  console.log(`🏠 task-screen useBoards called - teamMode: ${teamMode}`);
+  const { data: boards } = useBoards("normal", !teamMode);
   const { data: tags } = useTags();
 
   // 全データ事前取得（ちらつき解消）

@@ -22,6 +22,7 @@ import {
   acceptInvitationRoute,
   acceptInvitation,
 } from "./api";
+import { createTeamBoardsAPI } from "./boards";
 
 // SQLite & drizzle セットアップ
 const sqlite = new Database("sqlite.db");
@@ -48,6 +49,9 @@ teamsRoute.openapi(getInvitationRoute, getInvitation);
 teamsRoute.openapi(acceptInvitationRoute, acceptInvitation);
 teamsRoute.openapi(getMyTeamRoute, getMyTeam);
 teamsRoute.openapi(joinTeamRoute, joinTeam);
+
+// チーム用ボードAPIを追加
+createTeamBoardsAPI(teamsRoute);
 
 console.log("チームAPIルート登録完了 - 招待ルート:", inviteToTeamRoute.path);
 

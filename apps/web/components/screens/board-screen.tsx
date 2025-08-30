@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import BoardList from "@/components/features/board/board-list";
 import DesktopUpper from "@/components/layout/desktop-upper";
 import { useBoards, usePermanentDeleteBoard } from "@/src/hooks/use-boards";
+import { useTeamBoards } from "@/src/hooks/use-team-boards";
 import { useToast } from "@/src/contexts/toast-context";
 
 export interface BoardScreenRef {
@@ -13,10 +14,16 @@ export interface BoardScreenRef {
 
 interface BoardScreenProps {
   onBoardSelect?: (board: { id: number; slug: string }) => void;
+  teamMode?: boolean;
+  teamId?: number;
 }
 
 const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(
-  ({ onBoardSelect }, ref) => {
+  ({ onBoardSelect, teamMode = false, teamId }, ref) => {
+    const instanceId = Math.random().toString(36).substr(2, 9);
+    console.log(
+      `🎯 BoardScreen [${instanceId}] Props - teamMode: ${teamMode}, teamId: ${teamId}, !teamMode: ${!teamMode}`,
+    );
     const router = useRouter();
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [activeTab, setActiveTab] = useState<
@@ -24,10 +31,35 @@ const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(
     >("normal");
     const { showToast } = useToast();
 
-    // 各ステータスのボード数を取得
-    const { data: normalBoards } = useBoards("normal");
-    const { data: completedBoards } = useBoards("completed");
-    const { data: deletedBoards } = useBoards("deleted");
+    // 各ステータスのボード数を取得（チーム/個人で切り替え）
+    console.log(
+      `🔧 Individual board queries [${instanceId}] - teamMode: ${teamMode}, enabled (should be false in team mode): ${!teamMode}`,
+    );
+    const { data: individualNormalBoards } = useBoards("normal", !teamMode);
+    const { data: individualCompletedBoards } = useBoards(
+      "completed",
+      !teamMode,
+    );
+    const { data: individualDeletedBoards } = useBoards("deleted", !teamMode);
+
+    const { data: teamNormalBoards } = useTeamBoards(teamId || null, "normal");
+    const { data: teamCompletedBoards } = useTeamBoards(
+      teamId || null,
+      "completed",
+    );
+    const { data: teamDeletedBoards } = useTeamBoards(
+      teamId || null,
+      "deleted",
+    );
+
+    // チームモードかどうかで使用するデータを決定
+    const normalBoards = teamMode ? teamNormalBoards : individualNormalBoards;
+    const completedBoards = teamMode
+      ? teamCompletedBoards
+      : individualCompletedBoards;
+    const deletedBoards = teamMode
+      ? teamDeletedBoards
+      : individualDeletedBoards;
 
     // 完全削除フック
     const permanentDeleteBoard = usePermanentDeleteBoard();
@@ -101,6 +133,8 @@ const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(
             onCreateFormClose={() => setShowCreateForm(false)}
             activeTab={activeTab}
             onPermanentDeleteBoard={handlePermanentDeleteBoard}
+            teamMode={teamMode}
+            teamId={teamId}
           />
         </div>
       </div>

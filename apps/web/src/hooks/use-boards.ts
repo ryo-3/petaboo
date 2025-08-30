@@ -54,24 +54,42 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8794";
 // ボード一覧取得
 export function useBoards(
   status: "normal" | "completed" | "deleted" = "normal",
+  enabled: boolean = true,
 ) {
   const { getToken, isLoaded } = useAuth();
 
   return useQuery<BoardWithStats[]>(
     ["boards", status],
     async () => {
+      const hookId = Math.random().toString(36).substr(2, 9);
+      console.log(
+        `🏠 Individual Boards Request [${hookId}] - status: ${status}, enabled: ${enabled}, API_BASE_URL: ${API_BASE_URL}`,
+      );
+      console.log(
+        `📍 useBoards called from:`,
+        new Error().stack?.split("\n").slice(2, 5),
+      );
+
       // 最大2回リトライ
       for (let attempt = 0; attempt < 2; attempt++) {
         const token = await getCachedToken(getToken);
+        const url = `${API_BASE_URL}/boards?status=${status}`;
 
-        const response = await fetch(
-          `${API_BASE_URL}/boards?status=${status}`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              ...(token && { Authorization: `Bearer ${token}` }),
-            },
+        console.log(`📡 Fetching individual boards - Attempt ${attempt + 1}:`);
+        console.log(`   URL: ${url}`);
+        console.log(
+          `   Token: ${token ? `${token.substring(0, 20)}...` : "null"}`,
+        );
+
+        const response = await fetch(url, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
           },
+        });
+
+        console.log(
+          `📨 Individual boards response status: ${response.status} ${response.statusText}`,
         );
 
         // 401エラーの場合はキャッシュをクリアしてリトライ
@@ -89,14 +107,34 @@ export function useBoards(
           throw error;
         }
 
-        const data = await response.json();
+        const responseText = await response.text();
+        console.log(
+          `📦 Individual boards raw response (status: ${status}):`,
+          responseText,
+        );
+
+        let data;
+        try {
+          data = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error(`❌ Individual boards JSON Parse Error:`, parseError);
+          throw new Error(`Invalid JSON response: ${responseText}`);
+        }
+
+        console.log(`🏠 Individual boards parsed data (status: ${status}):`, {
+          dataType: Array.isArray(data) ? "array" : typeof data,
+          length: Array.isArray(data) ? data.length : "N/A",
+          data: data,
+          firstItem: Array.isArray(data) && data.length > 0 ? data[0] : "none",
+        });
+
         return data;
       }
 
       throw new Error("Failed after retry");
     },
     {
-      enabled: isLoaded,
+      enabled: isLoaded && enabled,
     },
   );
 }

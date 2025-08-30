@@ -147,13 +147,19 @@ Web側ファイル（apps/web/）を変更した際の自動実行項目：
 curl -s http://localhost:7593 >/dev/null && echo "Web OK" || echo "Web NG"
 curl -s http://localhost:7594/openapi >/dev/null && echo "API OK" || echo "API NG"
 
-# 再起動（必要時のみ）
-pkill -f "tsx.*index.ts" && lsof -ti:7593 | xargs -r kill -9
-cd apps/api && npm run dev &
-cd apps/web && npm run dev &
+# 個別サーバー停止（確実）
+lsof -ti:7594 | xargs -r kill -9  # API停止（最頻用）
+lsof -ti:7593 | xargs -r kill -9  # Web停止
+
+# 両方停止
+lsof -ti:7593,7594 | xargs -r kill -9
+
+# 再起動
+cd apps/api && npm run dev &  # API再起動（最頻用）
+cd apps/web && npm run dev &  # Web再起動
 ```
 
-## 🔔 Windows通知システム
+<!-- ## 🔔 Windows通知システム
 
 以下のタイミングで自動通知：
 
@@ -167,7 +173,7 @@ powershell.exe -ExecutionPolicy Bypass -Command "Import-Module BurntToast; New-B
 # フォールバック（ダイアログ通知）
 powershell.exe -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('【メッセージ】', 'Claude Code')"
 
-```
+``` -->
 
 ## 🔄 APIスキーマ変更時の自動処理
 

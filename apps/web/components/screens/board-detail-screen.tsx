@@ -36,6 +36,8 @@ interface BoardDetailProps {
   serverInitialTitle?: string;
   boardCompleted?: boolean;
   isDeleted?: boolean;
+  teamMode?: boolean;
+  teamId?: number | null;
 }
 
 function BoardDetailScreen({
@@ -52,6 +54,8 @@ function BoardDetailScreen({
   serverInitialTitle,
   boardCompleted = false,
   isDeleted = false,
+  teamMode = false,
+  teamId = null,
 }: BoardDetailProps) {
   // CSVインポートモーダル状態
   const [isCSVImportModalOpen, setIsCSVImportModalOpen] = useState(false);
@@ -271,7 +275,7 @@ function BoardDetailScreen({
   const { data: allTaggings } = useAllTaggings();
   const { data: allBoardItems } = useAllBoardItems();
   const { data: allTags } = useTags();
-  const { data: allBoards } = useBoards();
+  const { data: allBoards } = useBoards("normal", !teamMode);
   const { categories } = useBoardCategories();
 
   // 安全なデータ配布用

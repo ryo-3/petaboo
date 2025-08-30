@@ -17,6 +17,9 @@ export default function TeamLayout({
     "memo",
   );
   const [mounted, setMounted] = useState(false);
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "memos" | "tasks" | "boards"
+  >("overview");
 
   // /team 関連のページかどうかを判定（/team/create は除く）
   const isTeamPage =
@@ -31,23 +34,40 @@ export default function TeamLayout({
 
   useEffect(() => {
     setMounted(true);
+
+    // チーム詳細ページのタブ変更イベントをリッスン
+    const handleTeamTabChange = (event: CustomEvent) => {
+      const { activeTab } = event.detail;
+      setActiveTab(activeTab);
+    };
+
+    window.addEventListener(
+      "team-tab-change",
+      handleTeamTabChange as EventListener,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "team-tab-change",
+        handleTeamTabChange as EventListener,
+      );
+    };
   }, []);
 
   const handleTeamList = () => {
     router.push("/team");
   };
 
-  // ホーム遷移ロジック：チーム詳細ページの場合はそのチームのページに戻る
+  // ホーム遷移ロジック：チーム詳細ページの場合はoverviewタブに移動
   const handleHome = () => {
     if (pathname.startsWith("/team/") && pathname !== "/team") {
-      // チーム詳細ページの場合は、現在のチームページに戻る
-      const segments = pathname.split("/");
-      if (segments.length >= 3) {
-        const customUrl = segments[2];
-        router.push(`/team/${customUrl}`);
-      } else {
-        router.push("/");
-      }
+      // チーム詳細ページの場合は、overviewタブに移動
+      console.log("Home button clicked - switching to overview");
+      window.dispatchEvent(
+        new CustomEvent("team-mode-change", {
+          detail: { mode: "overview", pathname },
+        }),
+      );
     } else {
       // それ以外は通常のホームページ
       router.push("/");
@@ -127,7 +147,9 @@ export default function TeamLayout({
             onShowTaskList={handleShowTaskList}
             isTeamDetailPage={mounted ? isTeamDetailPage : false}
             isTeamListPage={mounted ? isTeamListPage : false}
-            isTeamHomePage={mounted ? isTeamDetailPage : false}
+            isTeamHomePage={
+              mounted && isTeamDetailPage && activeTab === "overview"
+            }
             onTeamList={handleTeamList}
             screenMode={mounted && isTeamDetailPage ? "team-detail" : undefined}
           />

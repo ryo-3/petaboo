@@ -2,7 +2,7 @@
 
 import type { Metadata } from "next";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/layout/header";
 import Sidebar from "@/components/layout/sidebar";
 
@@ -16,6 +16,7 @@ export default function TeamLayout({
   const [currentMode, setCurrentMode] = useState<"memo" | "task" | "board">(
     "memo",
   );
+  const [mounted, setMounted] = useState(false);
 
   // /team 関連のページかどうかを判定（/team/create は除く）
   const isTeamPage =
@@ -27,6 +28,10 @@ export default function TeamLayout({
   // チーム詳細ページかどうかを判定（/team/customUrl の形式）
   const isTeamDetailPage =
     pathname.startsWith("/team/") && pathname !== "/team";
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleTeamList = () => {
     router.push("/team");
@@ -113,11 +118,11 @@ export default function TeamLayout({
             onModeChange={handleModeChange}
             onNewTask={handleNewTask}
             onShowTaskList={handleShowTaskList}
-            isTeamDetailPage={isTeamPage}
-            isTeamListPage={isTeamListPage}
-            isTeamHomePage={isTeamDetailPage}
+            isTeamDetailPage={mounted ? isTeamDetailPage : false}
+            isTeamListPage={mounted ? isTeamListPage : false}
+            isTeamHomePage={mounted ? isTeamDetailPage : false}
             onTeamList={handleTeamList}
-            screenMode={isTeamDetailPage ? "team-detail" : undefined}
+            screenMode={mounted && isTeamDetailPage ? "team-detail" : undefined}
           />
         </div>
         <main className="flex-1 overflow-hidden">{children}</main>

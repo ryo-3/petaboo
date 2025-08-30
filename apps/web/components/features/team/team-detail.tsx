@@ -125,48 +125,20 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     <div className="flex h-full bg-white overflow-hidden">
       <div className="w-full pt-3 pl-5 pr-5 flex flex-col">
         {/* ヘッダー */}
-        <div className="mb-4 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <h1 className="text-[22px] font-bold text-gray-800">{team.name}</h1>
+        {activeTab === "overview" && (
+          <div className="mb-4 flex-shrink-0">
+            <div className="flex items-center justify-between">
+              <h1 className="text-[22px] font-bold text-gray-800">
+                {team.name}
+              </h1>
+            </div>
           </div>
-
-          {/* タブナビゲーション */}
-          <div className="flex border-b border-gray-200 mt-4">
-            <button
-              className={`px-4 py-2 text-sm font-medium border-b-2 ${
-                activeTab === "overview"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
-              onClick={() => setActiveTab("overview")}
-            >
-              概要
-            </button>
-            <button
-              className={`px-4 py-2 text-sm font-medium border-b-2 ${
-                activeTab === "memos"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
-              onClick={() => setActiveTab("memos")}
-            >
-              メモ
-            </button>
-            <button
-              className={`px-4 py-2 text-sm font-medium border-b-2 ${
-                activeTab === "tasks"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
-              onClick={() => setActiveTab("tasks")}
-            >
-              タスク
-            </button>
-          </div>
-        </div>
+        )}
 
         {/* コンテンツエリア */}
-        <div className="flex-1 overflow-y-auto">
+        <div
+          className={`${activeTab === "overview" ? "flex-1 overflow-y-auto" : "h-full"}`}
+        >
           {/* 表示名未設定メッセージ */}
           {userInfo && !userInfo.displayName && (
             <div className="mb-4 px-3 py-1 bg-gray-50 border border-gray-200 rounded-lg">
@@ -317,12 +289,6 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
           {/* メモタブ */}
           {activeTab === "memos" && (
             <div className="h-full -mt-4 -ml-5 -mr-5">
-              {/* デバッグ情報 */}
-              {process.env.NODE_ENV === "development" && (
-                <div className="p-2 bg-yellow-100 text-xs">
-                  Debug: teamMode={String(true)}, teamId={team.id}
-                </div>
-              )}
               <MemoScreen
                 selectedMemo={selectedMemo}
                 onSelectMemo={handleSelectMemo}

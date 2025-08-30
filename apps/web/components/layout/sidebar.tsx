@@ -96,25 +96,6 @@ function Sidebar({
     return (
       <div className="flex flex-col items-center py-4 h-screen bg-gray-50 justify-between">
         <div className="flex flex-col items-center gap-y-3">
-          <Tooltip text="ホーム" position="right">
-            <button
-              onClick={onHome}
-              className={`p-2 rounded-lg transition-colors ${
-                screenMode === "home" || isTeamHomePage
-                  ? "bg-slate-500 text-white"
-                  : "bg-gray-200 hover:bg-gray-300 text-gray-600"
-              }`}
-            >
-              <HomeIcon
-                className={`w-5 h-5 ${
-                  screenMode === "home" || isTeamHomePage
-                    ? "text-white" 
-                    : "text-gray-600"
-                }`}
-              />
-            </button>
-          </Tooltip>
-
           {isTeamDetailPage && onTeamList && (
             <Tooltip text="チーム一覧" position="right">
               <button
@@ -129,6 +110,25 @@ function Sidebar({
               </button>
             </Tooltip>
           )}
+
+          <Tooltip text="ホーム" position="right">
+            <button
+              onClick={onHome}
+              className={`p-2 rounded-lg transition-colors ${
+                screenMode === "home" || isTeamHomePage
+                  ? "bg-slate-500 text-white"
+                  : "bg-gray-200 hover:bg-gray-300 text-gray-600"
+              }`}
+            >
+              <HomeIcon
+                className={`w-5 h-5 ${
+                  screenMode === "home" || isTeamHomePage
+                    ? "text-white"
+                    : "text-gray-600"
+                }`}
+              />
+            </button>
+          </Tooltip>
 
           <Tooltip text="メモ一覧" position="right">
             <button
@@ -278,7 +278,7 @@ function Sidebar({
               <HomeIcon
                 className={`w-5 h-5 ${
                   screenMode === "home" || isTeamHomePage
-                    ? "text-white" 
+                    ? "text-white"
                     : "text-gray-600"
                 }`}
               />

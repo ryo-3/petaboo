@@ -370,7 +370,7 @@ export async function getUserTeamStats(c: any) {
 
     const ownedTeamsCount = ownedTeamsResult[0]?.count || 0;
 
-    // ユーザーが参加している全チーム数を取得
+    // ユーザーが参加している全チーム数を取得（管理者・メンバー両方含む）
     const allTeamsResult = await db
       .select({ count: count() })
       .from(teamMembers)
@@ -378,16 +378,13 @@ export async function getUserTeamStats(c: any) {
 
     const allTeamsCount = allTeamsResult[0]?.count || 0;
 
-    // メンバーとして参加しているチーム数（作成したチーム以外）
-    const memberTeamsCount = allTeamsCount - ownedTeamsCount;
-
     // プレミアムプランの制限値
     const maxOwnedTeams = 3;
     const maxMemberTeams = 3;
 
     return c.json({
       ownedTeams: ownedTeamsCount,
-      memberTeams: memberTeamsCount,
+      memberTeams: allTeamsCount, // 全チーム数を返す（管理者・メンバー両方含む）
       maxOwnedTeams,
       maxMemberTeams,
     });

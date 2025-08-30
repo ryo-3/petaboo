@@ -138,6 +138,47 @@ export const getSpecificUserInfoRoute = createRoute({
   tags: ["Users"],
 });
 
+// 表示名更新ルート定義
+export const updateDisplayNameRoute = createRoute({
+  method: "patch",
+  path: "/displayname",
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            displayName: z
+              .string()
+              .min(1, "表示名は必須です")
+              .max(50, "表示名は50文字以内で入力してください"),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "表示名更新成功",
+      content: {
+        "application/json": {
+          schema: z.object({
+            message: z.string(),
+            userId: z.string(),
+            displayName: z.string(),
+          }),
+        },
+      },
+    },
+    400: {
+      description: "リクエストが不正です",
+    },
+    401: {
+      description: "認証が必要です",
+    },
+  },
+  tags: ["Users"],
+});
+
 // Refine用ユーザー一覧取得ルート定義
 export const getUsersListRoute = createRoute({
   method: "get",
@@ -481,5 +522,75 @@ export async function updateSpecificUserPlan(c: any) {
   } catch (error) {
     console.error("プラン変更エラー:", error);
     return c.json({ error: "プラン変更に失敗しました" }, 500);
+  }
+}
+
+// 表示名更新の実装
+export async function updateDisplayName(c: any) {
+  const auth = getAuth(c);
+  if (!auth?.userId) {
+    return c.json({ error: "認証が必要です" }, 401);
+  }
+
+  const db: DatabaseType = c.env.db;
+
+  let body;
+  try {
+    body = await c.req.json();
+  } catch (error) {
+    return c.json({ error: "リクエストボディが不正です" }, 400);
+  }
+
+  try {
+    const { displayName } = body;
+
+    if (!displayName || typeof displayName !== "string") {
+      return c.json({ error: "表示名は必須です" }, 400);
+    }
+
+    if (displayName.length > 50) {
+      return c.json({ error: "表示名は50文字以内で入力してください" }, 400);
+    }
+
+    const now = Math.floor(Date.now() / 1000);
+
+    // ユーザー情報をupsert
+    const existingUser = await db
+      .select()
+      .from(users)
+      .where(eq(users.userId, auth.userId))
+      .limit(1);
+
+    if (existingUser.length > 0) {
+      // 既存ユーザーの更新
+      await db
+        .update(users)
+        .set({
+          displayName,
+          updatedAt: now,
+        })
+        .where(eq(users.userId, auth.userId));
+    } else {
+      // 新規ユーザーの作成
+      await db.insert(users).values({
+        userId: auth.userId,
+        displayName,
+        planType: "free",
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+
+    return c.json(
+      {
+        message: "表示名を更新しました",
+        userId: auth.userId,
+        displayName,
+      },
+      200,
+    );
+  } catch (error) {
+    console.error("表示名更新エラー:", error);
+    return c.json({ error: "表示名の更新に失敗しました" }, 500);
   }
 }

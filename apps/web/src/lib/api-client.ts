@@ -7,7 +7,7 @@ import type {
   CreateTaggingData,
 } from "@/src/types/tag";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8794";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594";
 
 // 共通ヘッダー生成関数
 const createHeaders = (
@@ -50,14 +50,70 @@ export const memosApi = {
     return response;
   },
 
-  // GET /teams/:teamId/deleted-memos
+  // GET /teams/:teamId/memos/deleted
   getDeletedTeamMemos: async (teamId: number, token?: string) => {
     const response = await fetch(
-      `${API_BASE_URL}/teams/${teamId}/deleted-memos`,
+      `${API_BASE_URL}/teams/${teamId}/memos/deleted`,
       {
         headers: createHeaders(token),
       },
     );
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response;
+  },
+
+  // POST /teams/:teamId/memos
+  createTeamMemo: async (
+    teamId: number,
+    data: CreateMemoData,
+    token?: string,
+  ) => {
+    const response = await fetch(`${API_BASE_URL}/teams/${teamId}/memos`, {
+      method: "POST",
+      headers: createHeaders(token),
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response;
+  },
+
+  // PUT /teams/:teamId/memos/:id
+  updateTeamMemo: async (
+    teamId: number,
+    id: number,
+    data: UpdateMemoData,
+    token?: string,
+  ) => {
+    const response = await fetch(
+      `${API_BASE_URL}/teams/${teamId}/memos/${id}`,
+      {
+        method: "PUT",
+        headers: createHeaders(token),
+        body: JSON.stringify(data),
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response;
+  },
+
+  // DELETE /teams/:teamId/memos/:id
+  deleteTeamMemo: async (teamId: number, id: number, token?: string) => {
+    const response = await fetch(
+      `${API_BASE_URL}/teams/${teamId}/memos/${id}`,
+      {
+        method: "DELETE",
+        headers: createHeaders(token),
+      },
+    );
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -178,6 +234,31 @@ export const tasksApi = {
     return response;
   },
 
+  // GET /teams/:teamId/tasks
+  getTeamTasks: async (teamId: number, token?: string) => {
+    const response = await fetch(`${API_BASE_URL}/teams/${teamId}/tasks`, {
+      headers: createHeaders(token),
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response;
+  },
+
+  // GET /teams/:teamId/tasks/deleted
+  getDeletedTeamTasks: async (teamId: number, token?: string) => {
+    const response = await fetch(
+      `${API_BASE_URL}/teams/${teamId}/tasks/deleted`,
+      {
+        headers: createHeaders(token),
+      },
+    );
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response;
+  },
+
   // POST /tasks
   createTask: async (data: CreateTaskData, token?: string) => {
     const response = await fetch(`${API_BASE_URL}/tasks`, {
@@ -185,6 +266,62 @@ export const tasksApi = {
       headers: createHeaders(token),
       body: JSON.stringify(data),
     });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response;
+  },
+
+  // POST /teams/:teamId/tasks
+  createTeamTask: async (
+    teamId: number,
+    data: CreateTaskData,
+    token?: string,
+  ) => {
+    const response = await fetch(`${API_BASE_URL}/teams/${teamId}/tasks`, {
+      method: "POST",
+      headers: createHeaders(token),
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response;
+  },
+
+  // PUT /teams/:teamId/tasks/:id
+  updateTeamTask: async (
+    teamId: number,
+    id: number,
+    data: UpdateTaskData,
+    token?: string,
+  ) => {
+    const response = await fetch(
+      `${API_BASE_URL}/teams/${teamId}/tasks/${id}`,
+      {
+        method: "PUT",
+        headers: createHeaders(token),
+        body: JSON.stringify(data),
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response;
+  },
+
+  // DELETE /teams/:teamId/tasks/:id
+  deleteTeamTask: async (teamId: number, id: number, token?: string) => {
+    const response = await fetch(
+      `${API_BASE_URL}/teams/${teamId}/tasks/${id}`,
+      {
+        method: "DELETE",
+        headers: createHeaders(token),
+      },
+    );
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -466,6 +603,22 @@ export const taggingsApi = {
     if (!response.ok) {
       const errorText = await response.text();
       console.log("🌐 API削除エラー詳細:", errorText);
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response;
+  },
+};
+
+export const usersApi = {
+  // 表示名更新
+  updateDisplayName: async (displayName: string, token?: string) => {
+    const response = await fetch(`${API_BASE_URL}/users/displayname`, {
+      method: "PATCH",
+      headers: createHeaders(token),
+      body: JSON.stringify({ displayName }),
+    });
+
+    if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     return response;

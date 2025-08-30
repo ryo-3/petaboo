@@ -157,6 +157,18 @@ function MemoScreen({
     error: Error | null;
   };
   const { data: deletedMemos } = useDeletedMemos({ teamMode, teamId });
+
+  // デバッグログ
+  if (process.env.NODE_ENV === "development") {
+    console.log("🔍 MemoScreen Debug:", {
+      teamMode,
+      teamId,
+      memosCount: memos?.length,
+      isLoading: memoLoading,
+      error: memoError?.message,
+      deletedMemosCount: deletedMemos?.length,
+    });
+  }
   const { preferences } = useUserPreferences(1);
 
   // 全データ一括取得（ちらつき解消）

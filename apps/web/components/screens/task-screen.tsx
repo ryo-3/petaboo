@@ -53,6 +53,9 @@ interface TaskScreenProps {
   excludeItemIds?: number[];
   // ボードフィルターの選択肢から除外するボードID
   excludeBoardIdFromFilter?: number;
+  // チーム機能
+  teamMode?: boolean;
+  teamId?: number;
 }
 
 function TaskScreen({
@@ -71,6 +74,8 @@ function TaskScreen({
   initialSelectionMode = "select",
   excludeItemIds = [],
   excludeBoardIdFromFilter,
+  teamMode = false,
+  teamId,
 }: TaskScreenProps) {
   // 一括処理中断通知の監視
   useBulkProcessNotifications();
@@ -80,12 +85,12 @@ function TaskScreen({
     data: tasks,
     isLoading: taskLoading,
     error: taskError,
-  } = useTasks() as {
+  } = useTasks({ teamMode, teamId }) as {
     data: Task[] | undefined;
     isLoading: boolean;
     error: Error | null;
   };
-  const { data: deletedTasks } = useDeletedTasks();
+  const { data: deletedTasks } = useDeletedTasks({ teamMode, teamId });
   const { preferences } = useUserPreferences(1);
   const { data: boards } = useBoards();
   const { data: tags } = useTags();

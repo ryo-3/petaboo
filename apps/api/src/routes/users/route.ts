@@ -13,6 +13,8 @@ import {
   updateSpecificUserPlan,
   getUsersListRoute,
   getUsersList,
+  updateDisplayNameRoute,
+  updateDisplayName,
 } from "./api";
 
 // SQLite & drizzle セットアップ
@@ -34,6 +36,7 @@ usersRoute.use("*", clerkMiddleware());
 usersRoute.openapi(getUsersListRoute, getUsersList);
 usersRoute.openapi(getUserInfoRoute, getUserInfo);
 usersRoute.openapi(updateUserPlanRoute, updateUserPlan);
+usersRoute.openapi(updateDisplayNameRoute, updateDisplayName);
 usersRoute.openapi(getSpecificUserInfoRoute, getSpecificUserInfo);
 usersRoute.openapi(updateSpecificUserPlanRoute, updateSpecificUserPlan);
 

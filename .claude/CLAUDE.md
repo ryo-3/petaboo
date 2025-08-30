@@ -166,6 +166,7 @@ powershell.exe -ExecutionPolicy Bypass -Command "Import-Module BurntToast; New-B
 
 # フォールバック（ダイアログ通知）
 powershell.exe -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('【メッセージ】', 'Claude Code')"
+
 ```
 
 ## 🔄 APIスキーマ変更時の自動処理

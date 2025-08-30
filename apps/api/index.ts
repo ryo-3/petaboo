@@ -12,6 +12,9 @@ import tagsRoute from "./src/routes/tags/route";
 import taggingsRoute from "./src/routes/taggings/route";
 import boardCategoriesRoute from "./src/routes/board-categories/route";
 import teamsRoute from "./src/routes/teams/route";
+import teamMemosRoute from "./src/routes/teams/memos";
+import teamTasksRoute from "./src/routes/teams/tasks";
+import teamShareRoute from "./src/routes/teams/share";
 import clerkWebhook from "./src/routes/webhooks/clerk";
 import usersRoute from "./src/routes/users/route";
 
@@ -74,6 +77,9 @@ app.route("/tags", tagsRoute);
 app.route("/taggings", taggingsRoute);
 app.route("/board-categories", boardCategoriesRoute);
 app.route("/teams", teamsRoute);
+app.route("/teams", teamMemosRoute);
+app.route("/teams", teamTasksRoute);
+app.route("/teams", teamShareRoute);
 app.route("/webhooks/clerk", clerkWebhook);
 app.route("/users", usersRoute);
 app.get("/openapi", (c) => {

@@ -18,12 +18,15 @@ export function useMemos(options?: { teamMode?: boolean; teamId?: number }) {
     queryFn: async () => {
       const token = await getToken();
       if (teamMode && teamId) {
-        // チーム用のAPIエンドポイント（まだ未実装）
+        // チーム用のAPIエンドポイント
+        console.log("🌐 Fetching team memos:", { teamId, hasToken: !!token });
         const response = await memosApi.getTeamMemos(
           teamId,
           token || undefined,
         );
+        console.log("🌐 Team memos response status:", response.status);
         const data = await response.json();
+        console.log("🌐 Team memos data:", data);
         return data as Memo[];
       } else {
         const response = await memosApi.getMemos(token || undefined);
@@ -48,7 +51,7 @@ export function useDeletedMemos(options?: {
     queryFn: async () => {
       const token = await getToken();
       if (teamMode && teamId) {
-        // チーム用のAPIエンドポイント（まだ未実装）
+        // チーム用のAPIエンドポイント
         const response = await memosApi.getDeletedTeamMemos(
           teamId,
           token || undefined,

@@ -5,6 +5,7 @@ export const teams = sqliteTable("teams", {
   name: text("name").notNull(),
   description: text("description"),
   customUrl: text("custom_url").notNull().unique(),
+  // isPublic: integer("is_public", { mode: "boolean" }).notNull().default(false), // 一時的にコメントアウト
   createdAt: integer("created_at").notNull(),
   updatedAt: integer("updated_at"),
 });

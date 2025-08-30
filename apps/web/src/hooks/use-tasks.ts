@@ -10,22 +10,34 @@ import type {
 import { useToast } from "@/src/contexts/toast-context";
 
 // タスク一覧を取得するhook
-export function useTasks() {
+export function useTasks(options?: { teamMode?: boolean; teamId?: number }) {
   const { getToken } = useAuth();
+  const { teamMode = false, teamId } = options || {};
 
   return useQuery<Task[]>(
-    ["tasks"],
+    teamMode ? ["team-tasks", teamId] : ["tasks"],
     async () => {
       const token = await getToken();
-      const response = await tasksApi.getTasks(token || undefined);
-      const data = await response.json();
-      return data as Task[];
+      if (teamMode && teamId) {
+        // チーム用のAPIエンドポイント
+        const response = await tasksApi.getTeamTasks(
+          teamId,
+          token || undefined,
+        );
+        const data = await response.json();
+        return data as Task[];
+      } else {
+        const response = await tasksApi.getTasks(token || undefined);
+        const data = await response.json();
+        return data as Task[];
+      }
     },
     {
       staleTime: 2 * 60 * 1000,
       cacheTime: 10 * 60 * 1000,
       refetchOnWindowFocus: false,
       refetchOnMount: false,
+      enabled: teamMode ? Boolean(teamId) : true,
     },
   );
 }
@@ -144,22 +156,37 @@ export function useDeleteTask() {
 }
 
 // 削除済みタスク一覧を取得するhook
-export function useDeletedTasks() {
+export function useDeletedTasks(options?: {
+  teamMode?: boolean;
+  teamId?: number;
+}) {
   const { getToken } = useAuth();
+  const { teamMode = false, teamId } = options || {};
 
   return useQuery<DeletedTask[]>(
-    ["deleted-tasks"],
+    teamMode ? ["team-deleted-tasks", teamId] : ["deleted-tasks"],
     async () => {
       const token = await getToken();
-      const response = await tasksApi.getDeletedTasks(token || undefined);
-      const data = await response.json();
-      return data as DeletedTask[];
+      if (teamMode && teamId) {
+        // チーム用のAPIエンドポイント
+        const response = await tasksApi.getDeletedTeamTasks(
+          teamId,
+          token || undefined,
+        );
+        const data = await response.json();
+        return data as DeletedTask[];
+      } else {
+        const response = await tasksApi.getDeletedTasks(token || undefined);
+        const data = await response.json();
+        return data as DeletedTask[];
+      }
     },
     {
       staleTime: 2 * 60 * 1000,
       cacheTime: 10 * 60 * 1000,
       refetchOnWindowFocus: false,
       refetchOnMount: false,
+      enabled: teamMode ? Boolean(teamId) : true,
     },
   );
 }

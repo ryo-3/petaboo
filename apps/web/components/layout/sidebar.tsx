@@ -44,6 +44,7 @@ interface SidebarProps {
   onTeamList?: () => void;
   isTeamDetailPage?: boolean;
   isTeamListPage?: boolean;
+  isTeamHomePage?: boolean;
   screenMode?: string;
 }
 
@@ -74,6 +75,7 @@ function Sidebar({
   onTeamList,
   isTeamDetailPage = false,
   isTeamListPage = false,
+  isTeamHomePage = false,
   screenMode,
 }: SidebarProps) {
   const modeTabs = [
@@ -98,13 +100,17 @@ function Sidebar({
             <button
               onClick={onHome}
               className={`p-2 rounded-lg transition-colors ${
-                screenMode === "home"
+                screenMode === "home" || isTeamHomePage
                   ? "bg-slate-500 text-white"
                   : "bg-gray-200 hover:bg-gray-300 text-gray-600"
               }`}
             >
               <HomeIcon
-                className={`w-5 h-5 ${screenMode === "home" ? "text-white" : "text-gray-600"}`}
+                className={`w-5 h-5 ${
+                  screenMode === "home" || isTeamHomePage
+                    ? "text-white" 
+                    : "text-gray-600"
+                }`}
               />
             </button>
           </Tooltip>
@@ -264,13 +270,17 @@ function Sidebar({
             <button
               onClick={onHome}
               className={`p-2 rounded-lg transition-colors ${
-                screenMode === "home"
+                screenMode === "home" || isTeamHomePage
                   ? "bg-slate-500 text-white"
                   : "bg-gray-200 hover:bg-gray-300 text-gray-600"
               }`}
             >
               <HomeIcon
-                className={`w-5 h-5 ${screenMode === "home" ? "text-white" : "text-gray-600"}`}
+                className={`w-5 h-5 ${
+                  screenMode === "home" || isTeamHomePage
+                    ? "text-white" 
+                    : "text-gray-600"
+                }`}
               />
             </button>
             <button

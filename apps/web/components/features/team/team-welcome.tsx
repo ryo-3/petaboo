@@ -39,8 +39,12 @@ export function TeamWelcome() {
     );
   }
 
-  const canCreateTeam = teamStats.ownedTeams < teamStats.maxOwnedTeams;
-  const canJoinTeam = teamStats.memberTeams < teamStats.maxMemberTeams;
+  // チーム一覧から実際の統計を計算
+  const actualOwnedTeams = teams?.filter(team => team.role === "admin").length || 0;
+  const actualTotalTeams = teams?.length || 0;
+  
+  const canCreateTeam = actualOwnedTeams < teamStats.maxOwnedTeams;
+  const canJoinTeam = actualTotalTeams < teamStats.maxMemberTeams;
 
   return (
     <div className="flex h-full bg-white overflow-hidden">
@@ -107,7 +111,7 @@ export function TeamWelcome() {
               <h3 className="text-sm font-semibold mb-2">作成したチーム</h3>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xl font-bold text-blue-600">
-                  {teamStats.ownedTeams}
+                  {actualOwnedTeams}
                 </span>
                 <span className="text-gray-500 text-sm">
                   / {teamStats.maxOwnedTeams}
@@ -117,7 +121,7 @@ export function TeamWelcome() {
                 <div
                   className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
                   style={{
-                    width: `${(teamStats.ownedTeams / teamStats.maxOwnedTeams) * 100}%`,
+                    width: `${(actualOwnedTeams / teamStats.maxOwnedTeams) * 100}%`,
                   }}
                 ></div>
               </div>
@@ -135,7 +139,7 @@ export function TeamWelcome() {
               <h3 className="text-sm font-semibold mb-2">参加しているチーム</h3>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xl font-bold text-green-600">
-                  {teamStats.memberTeams}
+                  {actualTotalTeams}
                 </span>
                 <span className="text-gray-500 text-sm">
                   / {teamStats.maxMemberTeams}
@@ -145,7 +149,7 @@ export function TeamWelcome() {
                 <div
                   className="bg-green-600 h-1.5 rounded-full transition-all duration-300"
                   style={{
-                    width: `${(teamStats.memberTeams / teamStats.maxMemberTeams) * 100}%`,
+                    width: `${(actualTotalTeams / teamStats.maxMemberTeams) * 100}%`,
                   }}
                 ></div>
               </div>

@@ -7,6 +7,7 @@ interface UseTaggingsOptions {
   targetType?: "memo" | "task" | "board";
   targetOriginalId?: string;
   tagId?: number;
+  teamMode?: boolean; // チームモードでは個人タグを無効化
 }
 
 export function useTaggings(options: UseTaggingsOptions = {}) {
@@ -15,6 +16,11 @@ export function useTaggings(options: UseTaggingsOptions = {}) {
   return useQuery({
     queryKey: ["taggings", options],
     queryFn: async () => {
+      // チームモードでは個人タグを取得しない
+      if (options.teamMode) {
+        return [] as Tagging[];
+      }
+
       const token = await getToken();
       const response = await taggingsApi.getTaggings(
         token || undefined,
@@ -34,6 +40,7 @@ export function useTaggings(options: UseTaggingsOptions = {}) {
 export function useItemTags(
   targetType: "memo" | "task" | "board",
   targetOriginalId: string,
+  options?: { teamMode?: boolean },
 ) {
   const {
     data: taggings,
@@ -42,6 +49,7 @@ export function useItemTags(
   } = useTaggings({
     targetType,
     targetOriginalId,
+    teamMode: options?.teamMode,
   });
 
   const tags =

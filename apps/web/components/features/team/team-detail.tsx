@@ -30,9 +30,9 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   } | null>(null);
   const [showInviteForm, setShowInviteForm] = useState(false);
 
-  // タブ管理
+  // タブ管理（サイドバーからの制御）
   const [activeTab, setActiveTab] = useState<"overview" | "memos" | "tasks">(
-    "overview",
+    "memos",
   );
   const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -57,15 +57,37 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       }
     };
 
+    const handleTeamNewMemo = (event: CustomEvent) => {
+      console.log("Received team new memo event:", event.detail);
+      setActiveTab("memos");
+      // MemoScreenに新規作成モードを指示するイベント送信
+      setTimeout(() => {
+        window.dispatchEvent(
+          new CustomEvent("memo-create-mode", {
+            detail: { action: "create" },
+          }),
+        );
+      }, 100);
+    };
+
     window.addEventListener(
       "team-mode-change",
       handleTeamModeChange as EventListener,
+    );
+
+    window.addEventListener(
+      "team-new-memo",
+      handleTeamNewMemo as EventListener,
     );
 
     return () => {
       window.removeEventListener(
         "team-mode-change",
         handleTeamModeChange as EventListener,
+      );
+      window.removeEventListener(
+        "team-new-memo",
+        handleTeamNewMemo as EventListener,
       );
     };
   }, []);

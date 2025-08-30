@@ -711,8 +711,11 @@ function MemoScreen({
             onSaveComplete={handleSaveComplete}
             // 全データ事前取得（ちらつき解消）
             preloadedBoards={boards}
-            preloadedTaggings={safeAllTaggings}
+            preloadedTaggings={teamMode ? [] : safeAllTaggings}
             preloadedBoardItems={safeAllBoardItems}
+            // チーム機能
+            teamMode={teamMode}
+            teamId={teamId}
           />
         )}
         {memoScreenMode === "view" && selectedMemo && !selectedDeletedMemo && (

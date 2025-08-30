@@ -69,23 +69,51 @@ export function useDeletedMemos(options?: {
 }
 
 // メモを作成するhook
-export function useCreateMemo() {
+export function useCreateMemo(options?: {
+  teamMode?: boolean;
+  teamId?: number;
+}) {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
+  const { teamMode = false, teamId } = options || {};
 
   return useMutation({
     mutationFn: async (memoData: CreateMemoData) => {
       const token = await getToken();
-      const response = await memosApi.createNote(memoData, token || undefined);
-      const data = await response.json();
-      return data as Memo;
+
+      if (teamMode && teamId) {
+        // チームメモ作成
+        const response = await memosApi.createTeamMemo(
+          teamId,
+          memoData,
+          token || undefined,
+        );
+        const data = await response.json();
+        return data as Memo;
+      } else {
+        // 個人メモ作成
+        const response = await memosApi.createNote(
+          memoData,
+          token || undefined,
+        );
+        const data = await response.json();
+        return data as Memo;
+      }
     },
     onSuccess: (newMemo) => {
-      // 新規作成されたメモのキャッシュを更新
-      queryClient.setQueryData<Memo[]>(["memos"], (oldMemos) => {
-        if (!oldMemos) return [newMemo];
-        return [...oldMemos, newMemo];
-      });
+      if (teamMode && teamId) {
+        // チームメモのキャッシュを更新
+        queryClient.setQueryData<Memo[]>(["team-memos", teamId], (oldMemos) => {
+          if (!oldMemos) return [newMemo];
+          return [...oldMemos, newMemo];
+        });
+      } else {
+        // 個人メモのキャッシュを更新
+        queryClient.setQueryData<Memo[]>(["memos"], (oldMemos) => {
+          if (!oldMemos) return [newMemo];
+          return [...oldMemos, newMemo];
+        });
+      }
       // ボード関連キャッシュを無効化
       queryClient.invalidateQueries({
         queryKey: ["boards"],

@@ -83,12 +83,23 @@ export default function TagSelectionModal({
   }, [tags, selectedTagIds]);
 
   const handleTagToggle = (tagId: number) => {
+    console.log("🏷️ TagModal: タグトグル開始:", {
+      tagId,
+      currentSelection: selectedTagIds,
+      isRemoving: selectedTagIds.includes(tagId),
+    });
+
     if (selectedTagIds.includes(tagId)) {
-      onSelectionChange(selectedTagIds.filter((id) => id !== tagId));
+      const newSelection = selectedTagIds.filter((id) => id !== tagId);
+      console.log("🏷️ TagModal: タグ削除→", newSelection);
+      onSelectionChange(newSelection);
     } else {
       if (multiple) {
-        onSelectionChange([...selectedTagIds, tagId]);
+        const newSelection = [...selectedTagIds, tagId];
+        console.log("🏷️ TagModal: タグ追加→", newSelection);
+        onSelectionChange(newSelection);
       } else {
+        console.log("🏷️ TagModal: タグ単体選択→", [tagId]);
         onSelectionChange([tagId]);
         onClose();
       }

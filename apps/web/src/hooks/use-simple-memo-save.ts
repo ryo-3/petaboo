@@ -21,6 +21,9 @@ interface UseSimpleMemoSaveOptions {
   currentBoardIds?: number[];
   initialBoardId?: number;
   onDeleteAndSelectNext?: (deletedMemo: Memo) => void;
+  // チーム機能
+  teamMode?: boolean;
+  teamId?: number;
 }
 
 export function useSimpleMemoSave({
@@ -29,6 +32,8 @@ export function useSimpleMemoSave({
   currentBoardIds = [],
   initialBoardId,
   onDeleteAndSelectNext,
+  teamMode = false,
+  teamId,
 }: UseSimpleMemoSaveOptions = {}) {
   const [title, setTitle] = useState(() => memo?.title || "");
   const [content, setContent] = useState(() => memo?.content || "");
@@ -65,7 +70,7 @@ export function useSimpleMemoSave({
     () => memo?.content || "",
   );
 
-  const createNote = useCreateMemo();
+  const createNote = useCreateMemo({ teamMode, teamId });
   const updateNote = useUpdateMemo();
   const deleteNote = useDeleteMemo();
   const addItemToBoard = useAddItemToBoard();

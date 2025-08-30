@@ -95,7 +95,14 @@ export default function TeamLayout({
 
   const handleNewMemo = () => {
     console.log("New team memo requested");
-    // 新しいメモ作成のロジックをここに実装
+    if (isTeamDetailPage) {
+      // チーム詳細ページでメモ作成イベントを送信
+      window.dispatchEvent(
+        new CustomEvent("team-new-memo", {
+          detail: { pathname },
+        }),
+      );
+    }
   };
 
   const handleNewTask = () => {

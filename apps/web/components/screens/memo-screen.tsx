@@ -60,6 +60,8 @@ interface MemoScreenProps {
   // チーム機能
   teamMode?: boolean;
   teamId?: number;
+  // URL連動
+  initialMemoId?: string | null;
 }
 
 function MemoScreen({
@@ -79,6 +81,7 @@ function MemoScreen({
   excludeBoardIdFromFilter,
   teamMode = false,
   teamId,
+  initialMemoId,
 }: MemoScreenProps) {
   // 一括処理中断通知の監視
   useBulkProcessNotifications();
@@ -402,6 +405,18 @@ function MemoScreen({
 
   // タブ切り替え用の状態
   const [displayTab, setDisplayTab] = useState(activeTab);
+
+  // URL からの初期メモ選択
+  useEffect(() => {
+    if (initialMemoId && memos && !selectedMemo) {
+      const targetMemo = memos.find(
+        (memo) => memo.id.toString() === initialMemoId,
+      );
+      if (targetMemo) {
+        onSelectMemo(targetMemo);
+      }
+    }
+  }, [initialMemoId, memos, selectedMemo, onSelectMemo]);
 
   // 削除済タブでの表示状態初期化
   useEffect(() => {

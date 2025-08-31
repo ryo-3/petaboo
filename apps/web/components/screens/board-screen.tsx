@@ -20,10 +20,6 @@ interface BoardScreenProps {
 
 const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(
   ({ onBoardSelect, teamMode = false, teamId }, ref) => {
-    const instanceId = Math.random().toString(36).substr(2, 9);
-    console.log(
-      `🎯 BoardScreen [${instanceId}] Props - teamMode: ${teamMode}, teamId: ${teamId}, !teamMode: ${!teamMode}`,
-    );
     const router = useRouter();
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [activeTab, setActiveTab] = useState<
@@ -32,9 +28,6 @@ const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(
     const { showToast } = useToast();
 
     // 各ステータスのボード数を取得（チーム/個人で切り替え）
-    console.log(
-      `🔧 Individual board queries [${instanceId}] - teamMode: ${teamMode}, enabled (should be false in team mode): ${!teamMode}`,
-    );
     const { data: individualNormalBoards } = useBoards("normal", !teamMode);
     const { data: individualCompletedBoards } = useBoards(
       "completed",

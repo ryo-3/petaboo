@@ -28,7 +28,7 @@ import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
 import type { DeletedTask, Task } from "@/src/types/task";
 import { getTaskDisplayOrder } from "@/src/utils/domUtils";
 import { createToggleHandlerWithTabClear } from "@/src/utils/toggleUtils";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type TaskScreenMode = "list" | "view" | "create" | "edit";
 
@@ -56,6 +56,8 @@ interface TaskScreenProps {
   // チーム機能
   teamMode?: boolean;
   teamId?: number;
+  // URL連動
+  initialTaskId?: string | null;
 }
 
 function TaskScreen({
@@ -76,6 +78,7 @@ function TaskScreen({
   excludeBoardIdFromFilter,
   teamMode = false,
   teamId,
+  initialTaskId,
 }: TaskScreenProps) {
   // 一括処理中断通知の監視
   useBulkProcessNotifications();
@@ -104,6 +107,18 @@ function TaskScreen({
   const [selectionMode, setSelectionMode] = useState<"select" | "check">(
     initialSelectionMode,
   );
+
+  // URL からの初期タスク選択
+  useEffect(() => {
+    if (initialTaskId && tasks && !selectedTask) {
+      const targetTask = tasks.find(
+        (task) => task.id.toString() === initialTaskId,
+      );
+      if (targetTask) {
+        onSelectTask(targetTask);
+      }
+    }
+  }, [initialTaskId, tasks, selectedTask, onSelectTask]);
 
   // 並び替え管理
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

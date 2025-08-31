@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useTeamDetail } from "@/src/hooks/use-team-detail";
@@ -20,6 +20,7 @@ interface TeamDetailProps {
 
 export function TeamDetail({ customUrl }: TeamDetailProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: team, isLoading, error } = useTeamDetail(customUrl);
   const { data: userInfo } = useUserInfo();
   const { mutate: inviteToTeam, isPending: isInviting } = useInviteToTeam();
@@ -31,19 +32,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   } | null>(null);
   const [showInviteForm, setShowInviteForm] = useState(false);
 
-  // タブ管理（サイドバーからの制御）
-  const [activeTab, setActiveTab] = useState<
-    "overview" | "memos" | "tasks" | "boards"
-  >("overview");
-
-  // activeTabが変更された時にlayoutに通知
-  useEffect(() => {
-    window.dispatchEvent(
-      new CustomEvent("team-tab-change", {
-        detail: { activeTab },
-      }),
-    );
-  }, [activeTab]);
+  // 選択状態の管理
   const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [selectedDeletedMemo, setSelectedDeletedMemo] =
@@ -54,26 +43,95 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   // 表示名設定モーダル
   const [showDisplayNameModal, setShowDisplayNameModal] = useState(false);
 
+  // URLのクエリパラメータからタブとアイテムIDを取得
+  const getTabFromURL = () => {
+    const tab = searchParams.get("tab");
+    if (tab === "memos" || tab === "tasks" || tab === "boards") {
+      return tab;
+    }
+    return "overview";
+  };
+
+  const getMemoIdFromURL = () => {
+    return searchParams.get("memo");
+  };
+
+  const getTaskIdFromURL = () => {
+    return searchParams.get("task");
+  };
+
+  // タブ管理（URLと同期）
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "memos" | "tasks" | "boards"
+  >(getTabFromURL());
+
+  // URLのパラメータが変更された時にタブとアイテムを更新
+  useEffect(() => {
+    const newTab = getTabFromURL();
+    if (newTab !== activeTab) {
+      setActiveTab(newTab);
+    }
+
+    // メモIDがURLにある場合、メモを選択状態にする
+    const memoId = getMemoIdFromURL();
+    if (memoId && !selectedMemo) {
+      // APIからメモを取得する実装は各画面コンポーネント側で行う
+      // ここでは状態の同期のみ
+    }
+
+    // タスクIDがURLにある場合、タスクを選択状態にする
+    const taskId = getTaskIdFromURL();
+    if (taskId && !selectedTask) {
+      // APIからタスクを取得する実装は各画面コンポーネント側で行う
+      // ここでは状態の同期のみ
+    }
+  }, [searchParams]);
+
+  // タブを変更する関数（URLも更新）
+  const handleTabChange = useCallback(
+    (tab: "overview" | "memos" | "tasks" | "boards") => {
+      setActiveTab(tab);
+
+      // URLを更新
+      const params = new URLSearchParams(searchParams.toString());
+      if (tab === "overview") {
+        params.delete("tab");
+      } else {
+        params.set("tab", tab);
+      }
+      const newUrl = params.toString() ? `?${params.toString()}` : "";
+      router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
+    },
+    [router, customUrl, searchParams],
+  );
+
+  // activeTabが変更された時にlayoutに通知
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent("team-tab-change", {
+        detail: { activeTab },
+      }),
+    );
+  }, [activeTab]);
+
   // サイドバーからのイベントをリッスン
   useEffect(() => {
     const handleTeamModeChange = (event: CustomEvent) => {
       const { mode, pathname } = event.detail;
-      console.log("Received team mode change event:", { mode, pathname });
 
       if (mode === "overview") {
-        setActiveTab("overview");
+        handleTabChange("overview");
       } else if (mode === "memo") {
-        setActiveTab("memos");
+        handleTabChange("memos");
       } else if (mode === "task") {
-        setActiveTab("tasks");
+        handleTabChange("tasks");
       } else if (mode === "board") {
-        setActiveTab("boards");
+        handleTabChange("boards");
       }
     };
 
-    const handleTeamNewMemo = (event: CustomEvent) => {
-      console.log("Received team new memo event:", event.detail);
-      setActiveTab("memos");
+    const handleTeamNewMemo = (_event: CustomEvent) => {
+      handleTabChange("memos");
       // MemoScreenに新規作成モードを指示するイベント送信
       setTimeout(() => {
         window.dispatchEvent(
@@ -104,26 +162,72 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         handleTeamNewMemo as EventListener,
       );
     };
-  }, []);
+  }, [handleTabChange]);
 
   // メモ/タスク選択ハンドラー
   const handleSelectMemo = (memo: Memo | null) => {
     setSelectedMemo(memo);
+
+    // URLを更新
+    const params = new URLSearchParams(searchParams.toString());
+    if (memo) {
+      params.set("memo", memo.id.toString());
+      // メモ選択時は必ずmemosタブに
+      params.set("tab", "memos");
+    } else {
+      params.delete("memo");
+    }
+    const newUrl = params.toString() ? `?${params.toString()}` : "";
+    router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
   };
 
-  const handleSelectTask = (task: Task | null, fromFullList?: boolean) => {
+  const handleSelectTask = (task: Task | null, _fromFullList?: boolean) => {
     setSelectedTask(task);
+
+    // URLを更新
+    const params = new URLSearchParams(searchParams.toString());
+    if (task) {
+      params.set("task", task.id.toString());
+      // タスク選択時は必ずtasksタブに
+      params.set("tab", "tasks");
+    } else {
+      params.delete("task");
+    }
+    const newUrl = params.toString() ? `?${params.toString()}` : "";
+    router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
   };
 
   const handleSelectDeletedMemo = (memo: DeletedMemo | null) => {
     setSelectedDeletedMemo(memo);
+
+    // URLを更新
+    const params = new URLSearchParams(searchParams.toString());
+    if (memo) {
+      params.set("memo", memo.id.toString());
+      params.set("tab", "memos");
+    } else {
+      params.delete("memo");
+    }
+    const newUrl = params.toString() ? `?${params.toString()}` : "";
+    router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
   };
 
   const handleSelectDeletedTask = (
     task: DeletedTask | null,
-    fromFullList?: boolean,
+    _fromFullList?: boolean,
   ) => {
     setSelectedDeletedTask(task);
+
+    // URLを更新
+    const params = new URLSearchParams(searchParams.toString());
+    if (task) {
+      params.set("task", task.id.toString());
+      params.set("tab", "tasks");
+    } else {
+      params.delete("task");
+    }
+    const newUrl = params.toString() ? `?${params.toString()}` : "";
+    router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
   };
 
   // エラーまたはチームが見つからない場合のリダイレクト処理
@@ -330,9 +434,10 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                 onSelectMemo={handleSelectMemo}
                 selectedDeletedMemo={selectedDeletedMemo}
                 onSelectDeletedMemo={handleSelectDeletedMemo}
-                onClose={() => setActiveTab("overview")}
+                onClose={() => handleTabChange("overview")}
                 teamMode={true}
                 teamId={team.id}
+                initialMemoId={getMemoIdFromURL()}
               />
             </div>
           )}
@@ -345,9 +450,10 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                 onSelectTask={handleSelectTask}
                 selectedDeletedTask={selectedDeletedTask}
                 onSelectDeletedTask={handleSelectDeletedTask}
-                onClose={() => setActiveTab("overview")}
+                onClose={() => handleTabChange("overview")}
                 teamMode={true}
                 teamId={team.id}
+                initialTaskId={getTaskIdFromURL()}
               />
             </div>
           )}
@@ -359,8 +465,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                 teamMode={true}
                 teamId={team.id}
                 onBoardSelect={(board) => {
-                  // ボード詳細ページに遷移
-                  router.push(`/board/${board.slug}`);
+                  // チームボード詳細ページに遷移（チーム専用URL）
+                  router.push(`/team/${customUrl}/board/${board.slug}`);
                 }}
               />
             </div>

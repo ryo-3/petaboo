@@ -1,0 +1,8 @@
+name = "petaboo"
+compatibility_date = "2024-08-31"
+account_id = "e7ede1cb0525601a97c71931146a6696"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "petaboo"
+database_id = "7de21e56-0d26-4204-8563-a57bca0772b4"

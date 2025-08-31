@@ -2,6 +2,7 @@
   "name": "api",
   "type": "module",
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250831.0",
     "@types/better-sqlite3": "^7.6.13",
     "drizzle-kit": "^0.31.2",
     "drizzle-orm": "^0.44.2",

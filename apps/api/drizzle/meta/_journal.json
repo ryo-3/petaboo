@@ -15,6 +15,13 @@
       "when": 1756466676417,
       "tag": "0001_dear_deathstrike",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1756619770263,
+      "tag": "0002_fair_arachne",
+      "breakpoints": true
     }
   ]
 }

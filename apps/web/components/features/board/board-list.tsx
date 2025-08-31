@@ -1,5 +1,5 @@
 import { useBoards, useCreateBoard } from "@/src/hooks/use-boards";
-import { useTeamBoards } from "@/src/hooks/use-team-boards";
+import { useTeamBoards, useCreateTeamBoard } from "@/src/hooks/use-team-boards";
 import { CreateBoardData } from "@/src/types/board";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
@@ -43,7 +43,8 @@ export default function BoardList({
   const boards = teamMode ? teamBoards : individualBoards;
   const isLoading = teamMode ? teamLoading : individualLoading;
   const error = teamMode ? teamError : individualError;
-  const createBoard = useCreateBoard();
+  const createIndividualBoard = useCreateBoard();
+  const createTeamBoard = useCreateTeamBoard();
 
   // 現在のURLから選択されているボードのslugを取得
   const currentBoardSlug = pathname.startsWith("/boards/")
@@ -57,7 +58,18 @@ export default function BoardList({
 
   const handleCreateBoard = async (data: CreateBoardData) => {
     try {
-      await createBoard.mutateAsync(data);
+      if (teamMode && teamId) {
+        // チームボード作成
+        await createTeamBoard.mutateAsync({
+          teamId,
+          name: data.name,
+          slug: data.slug,
+          description: data.description,
+        });
+      } else {
+        // 個人ボード作成
+        await createIndividualBoard.mutateAsync(data);
+      }
       if (onCreateFormClose) {
         onCreateFormClose();
       } else {
@@ -125,7 +137,11 @@ export default function BoardList({
           <BoardForm
             onSubmit={handleCreateBoard}
             onCancel={handleCloseCreateForm}
-            isLoading={createBoard.isPending}
+            isLoading={
+              teamMode
+                ? createTeamBoard.isPending
+                : createIndividualBoard.isPending
+            }
           />
         </div>
       )}

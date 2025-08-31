@@ -8,8 +8,8 @@ interface ApiError extends Error {
 }
 
 // セキュアなメモリキャッシュ（localStorage使用せず）
-let cachedToken: string | null = null;
-let tokenExpiry: number = 0;
+// let cachedToken: string | null = null;
+// let tokenExpiry: number = 0;
 let tokenPromise: Promise<string | null> | null = null; // 同期化用
 
 async function getCachedToken(
@@ -25,8 +25,8 @@ async function getCachedToken(
     const token = await getToken();
 
     if (token) {
-      cachedToken = token;
-      tokenExpiry = Date.now() + 1 * 60 * 1000; // 1分のみキャッシュ
+      // cachedToken = token;
+      // tokenExpiry = Date.now() + 1 * 60 * 1000; // 1分のみキャッシュ
     }
 
     // 取得完了後、Promiseをクリア
@@ -88,8 +88,8 @@ export function useTeamBoards(
 
         // 401エラーの場合はキャッシュをクリアしてリトライ
         if (response.status === 401 && attempt === 0) {
-          cachedToken = null;
-          tokenExpiry = 0;
+          // cachedToken = null;
+          // tokenExpiry = 0;
           continue;
         }
 
@@ -162,7 +162,15 @@ export function useCreateTeamBoard() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || "Failed to create team board");
+        console.error("チームボード作成エラー詳細:", {
+          status: response.status,
+          statusText: response.statusText,
+          error,
+        });
+        throw new Error(
+          error.error ||
+            `Failed to create team board: ${response.status} ${response.statusText}`,
+        );
       }
 
       return response.json();

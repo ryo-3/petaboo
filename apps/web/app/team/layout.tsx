@@ -1,6 +1,6 @@
 "use client";
 
-import type { Metadata } from "next";
+// import type { Metadata } from "next";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Header from "@/components/layout/header";
@@ -20,10 +20,16 @@ export default function TeamLayout({
   const [activeTab, setActiveTab] = useState<
     "overview" | "memos" | "tasks" | "boards"
   >("overview");
+  const [currentBoardName, setCurrentBoardName] = useState<string | undefined>(
+    undefined,
+  );
+  const [lastBoardUrl, setLastBoardUrl] = useState<string | undefined>(
+    undefined,
+  );
 
   // /team 関連のページかどうかを判定（/team/create は除く）
-  const isTeamPage =
-    pathname.startsWith("/team") && !pathname.includes("/create");
+  // const isTeamPage =
+  //   pathname.startsWith("/team") && !pathname.includes("/create");
 
   // チーム一覧ページかどうかを判定
   const isTeamListPage = pathname === "/team";
@@ -32,8 +38,18 @@ export default function TeamLayout({
   const isTeamDetailPage =
     pathname.startsWith("/team/") && pathname !== "/team";
 
+  // チームボード詳細ページかどうかを判定
+  const isTeamBoardDetailPage =
+    pathname.includes("/team/") && pathname.includes("/board/");
+
   useEffect(() => {
     setMounted(true);
+
+    // チームボード詳細ページの場合はボードモードに設定し、URLを記憶
+    if (isTeamBoardDetailPage) {
+      setCurrentMode("board");
+      setLastBoardUrl(pathname);
+    }
 
     // チーム詳細ページのタブ変更イベントをリッスン
     const handleTeamTabChange = (event: CustomEvent) => {
@@ -41,9 +57,20 @@ export default function TeamLayout({
       setActiveTab(activeTab);
     };
 
+    // チームボード名変更イベントをリッスン
+    const handleTeamBoardNameChange = (event: CustomEvent) => {
+      const { boardName } = event.detail;
+      setCurrentBoardName(boardName);
+    };
+
     window.addEventListener(
       "team-tab-change",
       handleTeamTabChange as EventListener,
+    );
+
+    window.addEventListener(
+      "team-board-name-change",
+      handleTeamBoardNameChange as EventListener,
     );
 
     return () => {
@@ -51,8 +78,12 @@ export default function TeamLayout({
         "team-tab-change",
         handleTeamTabChange as EventListener,
       );
+      window.removeEventListener(
+        "team-board-name-change",
+        handleTeamBoardNameChange as EventListener,
+      );
     };
-  }, []);
+  }, [isTeamBoardDetailPage, pathname]);
 
   const handleTeamList = () => {
     router.push("/team");
@@ -61,7 +92,7 @@ export default function TeamLayout({
   // ホーム遷移ロジック：チーム詳細ページの場合はoverviewタブに移動
   const handleHome = () => {
     if (pathname.startsWith("/team/") && pathname !== "/team") {
-      // チーム詳細ページの場合は、overviewタブに移動
+      // チーム詳細ページまたはチームボード詳細ページの場合は、overviewタブに移動
       console.log("Home button clicked - switching to overview");
       window.dispatchEvent(
         new CustomEvent("team-mode-change", {
@@ -129,6 +160,27 @@ export default function TeamLayout({
     console.log("New team task requested");
     // 新しいタスク作成のロジックをここに実装
   };
+
+  const handleBoardDetail = () => {
+    // すでにボード詳細ページにいる場合は何もしない
+    if (isTeamBoardDetailPage) {
+      return;
+    }
+
+    // 最後に見ていたボード詳細ページがある場合はそこに戻る
+    if (lastBoardUrl) {
+      router.push(lastBoardUrl);
+    } else {
+      // ない場合はボード一覧ページに移動
+      if (isTeamDetailPage) {
+        window.dispatchEvent(
+          new CustomEvent("team-mode-change", {
+            detail: { mode: "board", pathname },
+          }),
+        );
+      }
+    }
+  };
   return (
     <div className="flex h-screen bg-white overflow-hidden">
       <Header />
@@ -151,7 +203,19 @@ export default function TeamLayout({
               mounted && isTeamDetailPage && activeTab === "overview"
             }
             onTeamList={handleTeamList}
-            screenMode={mounted && isTeamDetailPage ? "team-detail" : undefined}
+            onBoardDetail={handleBoardDetail}
+            screenMode={
+              mounted && isTeamBoardDetailPage
+                ? "board"
+                : mounted && isTeamDetailPage
+                  ? "team-detail"
+                  : undefined
+            }
+            showingBoardDetail={isTeamBoardDetailPage}
+            currentBoardName={
+              currentBoardName || (lastBoardUrl ? "最後のボード" : undefined)
+            }
+            isBoardActive={currentMode === "board"}
           />
         </div>
         <main className="flex-1 overflow-hidden">{children}</main>

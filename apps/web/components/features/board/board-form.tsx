@@ -28,8 +28,18 @@ export default function BoardForm({
       name.trim().length <= 50 &&
       description.trim().length <= 200
     ) {
+      // slugを自動生成（name -> slug変換）
+      const slug = name
+        .trim()
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, "") // 特殊文字除去
+        .replace(/\s+/g, "-") // スペースをハイフンに
+        .replace(/--+/g, "-") // 連続ハイフンを単一に
+        .trim();
+
       onSubmit({
         name: name.trim(),
+        slug: slug || `board-${Date.now()}`, // slugが空の場合はタイムスタンプ
         description: description.trim() || undefined,
       });
     }

@@ -59,6 +59,7 @@ export interface BoardItemWithContent extends BoardItem {
 
 export interface CreateBoardData {
   name: string;
+  slug: string;
   description?: string;
 }
 

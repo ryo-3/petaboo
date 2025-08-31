@@ -71,16 +71,19 @@ const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(
 
     const handleBoardSelect = (board: { id: number; slug: string }) => {
       // 親コンポーネントの処理を呼び出し
-      onBoardSelect?.(board);
-
-      // 現在のURLと同じ場合はリロード
-      const currentPath = window.location.pathname;
-      if (currentPath === `/boards/${board.slug}`) {
-        // 同じボードの場合はページをリロード
-        window.location.reload();
+      if (onBoardSelect) {
+        // 親から onBoardSelect が渡されている場合（TeamDetailなど）は親に処理を委譲
+        onBoardSelect(board);
       } else {
-        // 違うボードの場合は通常の遷移
-        router.push(`/boards/${board.slug}`);
+        // 親から onBoardSelect が渡されていない場合は独自処理（個人ボード画面など）
+        const currentPath = window.location.pathname;
+        if (currentPath === `/boards/${board.slug}`) {
+          // 同じボードの場合はページをリロード
+          window.location.reload();
+        } else {
+          // 違うボードの場合は通常の遷移
+          router.push(`/boards/${board.slug}`);
+        }
       }
     };
 

@@ -53,7 +53,9 @@
       "Bash(npx drizzle-kit:*)",
       "Bash(truncate:*)",
       "Bash(powershell.exe:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(wrangler d1 info:*)",
+      "Bash(wrangler d1 list:*)"
     ],
     "deny": []
   }

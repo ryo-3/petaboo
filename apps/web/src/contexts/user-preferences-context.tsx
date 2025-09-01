@@ -47,7 +47,7 @@ const UserPreferencesContext = createContext<UserPreferencesContextType | null>(
   null,
 );
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8794";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594";
 
 interface UserPreferencesProviderProps {
   children: ReactNode;

@@ -49,7 +49,7 @@ async function getCachedToken(
   return tokenPromise;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8794";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594";
 
 // ボード一覧取得
 export function useBoards(

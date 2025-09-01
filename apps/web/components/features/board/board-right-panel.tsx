@@ -115,7 +115,7 @@ export default function BoardRightPanel({
       const token = await getToken();
       const promises = memoIds.map((memoId) => {
         return fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8794"}/boards/${boardId}/items`,
+          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594"}/boards/${boardId}/items`,
           {
             method: "POST",
             headers: {
@@ -146,7 +146,7 @@ export default function BoardRightPanel({
       const token = await getToken();
       const promises = taskIds.map((taskId) => {
         return fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8794"}/boards/${boardId}/items`,
+          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594"}/boards/${boardId}/items`,
           {
             method: "POST",
             headers: {

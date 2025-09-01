@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { useAddItemToBoard } from "@/src/hooks/use-boards";
 import { useAuth } from "@clerk/nextjs";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8794";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594";
 
 // セキュリティ設定
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB

@@ -8,7 +8,7 @@ import {
 } from "@/src/types/category";
 import { useToast } from "@/src/contexts/toast-context";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8794";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594";
 
 // カテゴリー一覧取得
 export function useCategories() {

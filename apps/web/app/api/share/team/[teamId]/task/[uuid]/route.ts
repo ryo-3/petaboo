@@ -4,9 +4,9 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { teamId: string; uuid: string } },
+  { params }: { params: Promise<{ teamId: string; uuid: string }> },
 ) {
-  const { teamId, uuid } = params;
+  const { teamId, uuid } = await params;
 
   try {
     // APIサーバーにプロキシ

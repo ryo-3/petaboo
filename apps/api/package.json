@@ -1,5 +1,5 @@
 {
-  "name": "api",
+  "name": "@petaboo/api",
   "type": "module",
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250831.0",

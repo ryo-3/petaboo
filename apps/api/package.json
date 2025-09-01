@@ -6,12 +6,16 @@
     "@types/better-sqlite3": "^7.6.13",
     "drizzle-kit": "^0.31.2",
     "drizzle-orm": "^0.44.2",
-    "tsx": "^4.20.3"
+    "tsx": "^4.20.3",
+    "wrangler": "^3.82.0"
   },
   "scripts": {
     "db:studio": "drizzle-kit studio --port 8795",
     "db:push": "drizzle-kit push",
+    "db:push:remote": "wrangler d1 execute petaboo --remote --file=./schema.sql",
     "dev": "tsx --env-file=.env index.ts 2>&1 | tee -a ../../api.log",
+    "deploy": "wrangler deploy",
+    "deploy:dev": "wrangler deploy --env development",
     "db:reset": "node reset-db.js"
   },
   "dependencies": {

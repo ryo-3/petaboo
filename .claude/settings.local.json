@@ -56,7 +56,8 @@
       "Bash(node:*)",
       "Bash(wrangler d1 info:*)",
       "Bash(wrangler d1 list:*)",
-      "Bash(wrangler d1 execute:*)"
+      "Bash(wrangler d1 execute:*)",
+      "Bash(git push:*)"
     ],
     "deny": []
   }

@@ -20,14 +20,10 @@ const app = new Hono<{ Bindings: Env }>();
 app.use(
   "*",
   cors({
-    origin: [
-      "https://note-one-tan.vercel.app",
-      "http://localhost:3000",
-      "http://localhost:7593",
-    ],
+    origin: "*", // 開発中は一時的に全て許可
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
+    credentials: false,
   }),
 );
 
@@ -41,13 +37,18 @@ app.use("*", async (c, next) => {
 // 認証ミドルウェア（シンプル版）
 const authMiddleware = async (c: any, next: any) => {
   const authHeader = c.req.header("Authorization");
+  console.log("Auth middleware:", {
+    authHeader: authHeader ? "present" : "missing",
+  });
 
   if (authHeader && authHeader.startsWith("Bearer ")) {
     const token = authHeader.slice(7);
+    console.log("Token:", token.substring(0, 20) + "...");
     // 簡単な検証（本来はClerk JWTを適切に検証）
     if (token && token.length > 10) {
       c.set("userId", "user_2z0DUpwFMhf1Lk6prAP9MzVJZIh"); // テスト用
       c.set("authenticated", true);
+      console.log("User authenticated");
     }
   }
 

@@ -8,3 +8,7 @@ compatibility_flags = ["nodejs_compat"]
 binding = "DB"
 database_name = "petaboo"
 database_id = "7de21e56-0d26-4204-8563-a57bca0772b4"
+
+# Workers Logs設定
+[observability]
+enabled = true

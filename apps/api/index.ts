@@ -52,6 +52,22 @@ app.use(
 
 console.log("サーバー起動！");
 
+// 基本ルート
+app.get("/", (c) => {
+  return c.json({
+    message: "Petaboo API is running!",
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV,
+  });
+});
+
+app.get("/health", (c) => {
+  return c.json({
+    status: "healthy",
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // リクエストログミドルウェア
 app.use("*", async (c, next) => {
   const start = Date.now();

@@ -14,6 +14,7 @@
     "db:push": "drizzle-kit push",
     "db:push:remote": "wrangler d1 execute petaboo --remote --file=./schema.sql",
     "dev": "tsx --env-file=.env index.ts 2>&1 | tee -a ../../api.log",
+    "dev:wrangler": "wrangler dev --port 7594 --log-level debug 2>&1 | tee -a ../../api.log",
     "deploy": "wrangler deploy",
     "deploy:dev": "wrangler deploy --env development",
     "db:reset": "node reset-db.js"

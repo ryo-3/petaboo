@@ -32,7 +32,11 @@ const app = new Hono<{ Bindings: Env }>();
 app.use(
   "*",
   cors({
-    origin: ["https://petaboo.vercel.app", "http://localhost:7593"], // 本番・開発ドメイン
+    origin: [
+      "https://petaboo.vercel.app",
+      "https://petaboo-git-main-moricrew.vercel.app",
+      "http://localhost:7593",
+    ], // 本番・プレビュー・開発ドメイン
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
     credentials: false,

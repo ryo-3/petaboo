@@ -187,6 +187,35 @@ app.get("/memos", authMiddleware, async (c) => {
   }
 });
 
+// メモ作成エンドポイント
+app.post("/memos", authMiddleware, async (c) => {
+  try {
+    const body = await c.req.json();
+    const db = c.get("db");
+    const userId = c.get("userId");
+
+    const result = await db
+      .insert(schema.memos)
+      .values({
+        title: body.title,
+        content: body.content,
+        userId: userId,
+        originalId: Date.now().toString(), // 一時的な実装
+        uuid: crypto.randomUUID(),
+        createdAt: Math.floor(Date.now() / 1000),
+        updatedAt: Math.floor(Date.now() / 1000),
+      })
+      .returning();
+
+    return c.json(result[0]);
+  } catch (error) {
+    return c.json(
+      { error: "Failed to create memo", details: error.message },
+      500,
+    );
+  }
+});
+
 // メモ更新エンドポイント
 app.put("/memos/:id", authMiddleware, async (c) => {
   try {

@@ -87,6 +87,14 @@ app.get("/health", async (c) => {
   }
 });
 
+// ユーザー情報取得エンドポイント
+app.get("/users/me", async (c) => {
+  return c.json({
+    message: "Users endpoint working (auth needed)",
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // ユーザー設定エンドポイント
 app.get("/user-preferences/:userId", async (c) => {
   try {

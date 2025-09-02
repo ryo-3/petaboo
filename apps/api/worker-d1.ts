@@ -187,6 +187,43 @@ app.get("/memos", authMiddleware, async (c) => {
   }
 });
 
+// メモ更新エンドポイント
+app.put("/memos/:id", authMiddleware, async (c) => {
+  try {
+    const id = parseInt(c.req.param("id"));
+    const body = await c.req.json();
+    const db = c.get("db");
+
+    const result = await db
+      .update(schema.memos)
+      .set({
+        title: body.title,
+        content: body.content,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(schema.memos.id, id));
+
+    return c.json({ success: true, id });
+  } catch (error) {
+    return c.json(
+      { error: "Failed to update memo", details: error.message },
+      500,
+    );
+  }
+});
+
+// 削除メモ一覧エンドポイント
+app.get("/memos/deleted", authMiddleware, async (c) => {
+  try {
+    return c.json([]); // 一時的に空配列を返す
+  } catch (error) {
+    return c.json(
+      { error: "Failed to fetch deleted memos", details: error.message },
+      500,
+    );
+  }
+});
+
 // タスク一覧エンドポイント
 app.get("/tasks", authMiddleware, async (c) => {
   try {
@@ -197,6 +234,42 @@ app.get("/tasks", authMiddleware, async (c) => {
   } catch (error) {
     return c.json(
       { error: "Failed to fetch tasks", details: error.message },
+      500,
+    );
+  }
+});
+
+// タグ一覧エンドポイント
+app.get("/tags", authMiddleware, async (c) => {
+  try {
+    return c.json([]); // 一時的に空配列を返す
+  } catch (error) {
+    return c.json(
+      { error: "Failed to fetch tags", details: error.message },
+      500,
+    );
+  }
+});
+
+// タギング一覧エンドポイント
+app.get("/taggings", authMiddleware, async (c) => {
+  try {
+    return c.json([]); // 一時的に空配列を返す
+  } catch (error) {
+    return c.json(
+      { error: "Failed to fetch taggings", details: error.message },
+      500,
+    );
+  }
+});
+
+// ボード全アイテム取得エンドポイント
+app.get("/boards/all-items", authMiddleware, async (c) => {
+  try {
+    return c.json([]); // 一時的に空配列を返す
+  } catch (error) {
+    return c.json(
+      { error: "Failed to fetch board items", details: error.message },
       500,
     );
   }

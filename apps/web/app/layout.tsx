@@ -38,6 +38,10 @@ export default async function RootLayout({
     <ClerkProvider
       localization={jaJP}
       publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
+      afterSignInUrl="/"
+      afterSignUpUrl="/"
     >
       <html lang="ja">
         <head>

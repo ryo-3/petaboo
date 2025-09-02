@@ -58,7 +58,10 @@
       "Bash(wrangler d1 list:*)",
       "Bash(wrangler d1 execute:*)",
       "Bash(git push:*)",
-      "Bash(wrangler deploy:*)"
+      "Bash(wrangler deploy:*)",
+      "Bash(gh api:*)",
+      "WebSearch",
+      "WebFetch(domain:clerk.com)"
     ],
     "deny": []
   }

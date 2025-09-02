@@ -35,7 +35,10 @@ export default async function RootLayout({
   const initialPreferences = await getServerUserPreferences(1);
 
   return (
-    <ClerkProvider localization={jaJP}>
+    <ClerkProvider
+      localization={jaJP}
+      publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+    >
       <html lang="ja">
         <head>
           {process.env.NODE_ENV === "development" && (

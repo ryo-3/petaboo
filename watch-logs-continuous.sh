@@ -1,5 +1,4 @@
 #!/bin/bash
-Run git add . and commit in Japanese .
 
 # 常時ログ監視システム - web.logとapi.logをリアルタイム監視
 

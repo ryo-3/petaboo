@@ -1,8 +1,6 @@
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
-import { drizzle } from "drizzle-orm/better-sqlite3";
 import { eq, and } from "drizzle-orm";
-import Database from "better-sqlite3";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { teamMemos } from "../../db/schema/team/memos";
 import { teamTasks } from "../../db/schema/team/tasks";

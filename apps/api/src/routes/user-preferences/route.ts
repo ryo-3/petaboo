@@ -1,6 +1,4 @@
 import { Hono } from "hono";
-import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
 import { eq } from "drizzle-orm";
 import { userPreferences } from "../../db/index";
 

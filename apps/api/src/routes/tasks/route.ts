@@ -6,21 +6,15 @@ import { tasks, deletedTasks } from "../../db/schema/tasks";
 import { boardItems } from "../../db/schema/boards";
 import { taggings } from "../../db/schema/tags";
 import { generateOriginalId, generateUuid } from "../../utils/originalId";
-
-// SQLite & drizzle セットアップ
-const sqlite = new Database("sqlite.db");
-const db = drizzle(sqlite);
+import { databaseMiddleware } from "../../middleware/database";
 
 const app = new OpenAPIHono();
 
+// データベースミドルウェアを適用（最初に）
+app.use("*", databaseMiddleware);
+
 // Clerk認証ミドルウェアを追加
-app.use(
-  "*",
-  clerkMiddleware({
-    secretKey: process.env.CLERK_SECRET_KEY,
-    publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
-  }),
-);
+app.use("*", clerkMiddleware());
 
 // 共通スキーマ定義
 const TaskSchema = z.object({
@@ -167,6 +161,7 @@ app.openapi(
       return c.json({ error: "Unauthorized" }, 401);
     }
 
+    const db = c.get("db");
     const result = await db
       .select({
         id: tasks.id,
@@ -254,6 +249,7 @@ app.openapi(
       return c.json({ error: "Unauthorized" }, 401);
     }
 
+    const db = c.get("db");
     const body = await c.req.json();
     const parsed = TaskInputSchema.safeParse(body);
 
@@ -381,6 +377,7 @@ app.openapi(
       return c.json({ error: "Unauthorized" }, 401);
     }
 
+    const db = c.get("db");
     const { id } = c.req.valid("param");
     const body = await c.req.json();
     const parsed = TaskUpdateSchema.safeParse(body);
@@ -450,6 +447,14 @@ app.openapi(
           },
         },
       },
+      500: {
+        description: "Internal server error",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
     },
   }),
   async (c) => {
@@ -458,6 +463,7 @@ app.openapi(
       return c.json({ error: "Unauthorized" }, 401);
     }
 
+    const db = c.get("db");
     const { id } = c.req.valid("param");
 
     // まず該当タスクを取得（ユーザー確認込み）
@@ -471,40 +477,41 @@ app.openapi(
       return c.json({ error: "Task not found" }, 404);
     }
 
-    // トランザクションで削除済みテーブルに移動してから元テーブルから削除
-    db.transaction((tx) => {
+    // D1はトランザクションをサポートしないため、順次実行
+    try {
       // 削除済みテーブルに挿入
-      tx.insert(deletedTasks)
-        .values({
-          userId: auth.userId,
-          originalId: task.originalId, // originalIdをそのままコピー
-          uuid: task.uuid, // UUIDもコピー
-          title: task.title,
-          description: task.description,
-          status: task.status,
-          priority: task.priority,
-          dueDate: task.dueDate,
-          categoryId: task.categoryId,
-          createdAt: task.createdAt,
-          updatedAt: task.updatedAt,
-          deletedAt: Math.floor(Date.now() / 1000),
-        })
-        .run();
+      await db.insert(deletedTasks).values({
+        userId: auth.userId,
+        originalId: task.originalId, // originalIdをそのままコピー
+        uuid: task.uuid, // UUIDもコピー
+        title: task.title,
+        description: task.description,
+        status: task.status,
+        priority: task.priority,
+        dueDate: task.dueDate,
+        categoryId: task.categoryId,
+        createdAt: task.createdAt,
+        updatedAt: task.updatedAt,
+        deletedAt: Math.floor(Date.now() / 1000),
+      });
 
       // 関連するboard_itemsのdeletedAtを設定
-      tx.update(boardItems)
+      await db
+        .update(boardItems)
         .set({ deletedAt: new Date() })
         .where(
           and(
             eq(boardItems.itemType, "task"),
             eq(boardItems.originalId, task.originalId),
           ),
-        )
-        .run();
+        );
 
       // 元テーブルから削除
-      tx.delete(tasks).where(eq(tasks.id, id)).run();
-    });
+      await db.delete(tasks).where(eq(tasks.id, id));
+    } catch (error) {
+      console.error("タスク削除エラー:", error);
+      return c.json({ error: "Failed to delete task" }, 500);
+    }
 
     return c.json({ success: true }, 200);
   },
@@ -562,6 +569,7 @@ app.openapi(
       return c.json({ error: "Unauthorized" }, 401);
     }
 
+    const db = c.get("db");
     try {
       const result = await db
         .select({
@@ -639,6 +647,7 @@ app.openapi(
       return c.json({ error: "Unauthorized" }, 401);
     }
 
+    const db = c.get("db");
     const { originalId } = c.req.valid("param");
 
     try {
@@ -732,6 +741,7 @@ app.openapi(
       return c.json({ error: "Unauthorized" }, 401);
     }
 
+    const db = c.get("db");
     const { originalId } = c.req.valid("param");
 
     try {
@@ -751,56 +761,51 @@ app.openapi(
         return c.json({ error: "Deleted task not found" }, 404);
       }
 
-      // トランザクションで復元処理
-      const restoredTask = db.transaction((tx) => {
-        // 通常のタスクテーブルに復元
-        const result = tx
-          .insert(tasks)
-          .values({
-            userId: auth.userId,
-            originalId: deletedTask.originalId, // 一旦削除前のoriginalIdで復元
-            uuid: deletedTask.uuid, // UUIDも復元
-            title: deletedTask.title,
-            description: deletedTask.description,
-            status: deletedTask.status as "todo" | "in_progress" | "completed",
-            priority: deletedTask.priority as "low" | "medium" | "high",
-            dueDate: deletedTask.dueDate,
-            categoryId: deletedTask.categoryId,
-            createdAt: deletedTask.createdAt,
-            updatedAt: Math.floor(Date.now() / 1000), // 復元時刻を更新
-          })
-          .returning({ id: tasks.id })
-          .get();
+      // D1はトランザクションをサポートしないため、順次実行
+      // 通常のタスクテーブルに復元
+      const result = await db
+        .insert(tasks)
+        .values({
+          userId: auth.userId,
+          originalId: deletedTask.originalId, // 一旦削除前のoriginalIdで復元
+          uuid: deletedTask.uuid, // UUIDも復元
+          title: deletedTask.title,
+          description: deletedTask.description,
+          status: deletedTask.status as "todo" | "in_progress" | "completed",
+          priority: deletedTask.priority as "low" | "medium" | "high",
+          dueDate: deletedTask.dueDate,
+          categoryId: deletedTask.categoryId,
+          createdAt: deletedTask.createdAt,
+          updatedAt: Math.floor(Date.now() / 1000), // 復元時刻を更新
+        })
+        .returning({ id: tasks.id });
 
-        // 復元されたタスクのoriginalIdを新しいIDに更新
-        tx.update(tasks)
-          .set({ originalId: result.id.toString() })
-          .where(eq(tasks.id, result.id))
-          .run();
+      // 復元されたタスクのoriginalIdを新しいIDに更新
+      await db
+        .update(tasks)
+        .set({ originalId: result[0].id.toString() })
+        .where(eq(tasks.id, result[0].id));
 
-        // 関連するboard_itemsのdeletedAtをNULLに戻し、originalIdを新しいIDに更新
-        tx.update(boardItems)
-          .set({
-            deletedAt: null,
-            originalId: result.id.toString(), // 新しいタスクIDをoriginalIdに設定
-          })
-          .where(
-            and(
-              eq(boardItems.itemType, "task"),
-              eq(boardItems.originalId, deletedTask.originalId),
-            ),
-          )
-          .run();
+      // 関連するboard_itemsのdeletedAtをNULLに戻し、originalIdを新しいIDに更新
+      await db
+        .update(boardItems)
+        .set({
+          deletedAt: null,
+          originalId: result[0].id.toString(), // 新しいタスクIDをoriginalIdに設定
+        })
+        .where(
+          and(
+            eq(boardItems.itemType, "task"),
+            eq(boardItems.originalId, deletedTask.originalId),
+          ),
+        );
 
-        // 削除済みテーブルから削除
-        tx.delete(deletedTasks)
-          .where(eq(deletedTasks.originalId, originalId))
-          .run();
+      // 削除済みテーブルから削除
+      await db
+        .delete(deletedTasks)
+        .where(eq(deletedTasks.originalId, originalId));
 
-        return result;
-      });
-
-      return c.json({ success: true, id: restoredTask.id as number }, 200);
+      return c.json({ success: true, id: result[0].id }, 200);
     } catch (error) {
       console.error("復元エラー:", error);
       return c.json({ error: "Internal server error" }, 500);
@@ -868,6 +873,7 @@ app.openapi(
       return c.json({ error: "Unauthorized" }, 401);
     }
 
+    const db = c.get("db");
     try {
       const body = await c.req.parseBody();
       const file = body["file"] as File;

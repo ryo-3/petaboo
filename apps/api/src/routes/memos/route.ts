@@ -2,6 +2,7 @@ import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
 import { eq, desc, and } from "drizzle-orm";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
+import { databaseMiddleware } from "../../middleware/database";
 import { memos, deletedMemos } from "../../db/schema/memos";
 import { boardItems } from "../../db/schema/boards";
 import { taggings } from "../../db/schema/tags";
@@ -11,20 +12,16 @@ import {
   migrateOriginalId,
 } from "../../utils/originalId";
 
-// SQLite & drizzle セットアップ
-const sqlite = new Database("sqlite.db");
-const db = drizzle(sqlite);
+const app = new OpenAPIHono<{
+  Bindings: { DB: D1Database };
+  Variables: { db: any };
+}>();
 
-const app = new OpenAPIHono();
+// データベースミドルウェアを追加
+app.use("*", databaseMiddleware);
 
 // Clerk認証ミドルウェアを追加
-app.use(
-  "*",
-  clerkMiddleware({
-    secretKey: process.env.CLERK_SECRET_KEY,
-    publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
-  }),
-);
+app.use("*", clerkMiddleware());
 
 // 共通スキーマ定義
 const MemoSchema = z.object({
@@ -110,6 +107,7 @@ app.openapi(
   // @ts-ignore OpenAPI type complexity
   async (c) => {
     const auth = getAuth(c);
+    const db = c.get("db");
     if (!auth?.userId) {
       return c.json({ error: "Unauthorized" }, 401);
     }
@@ -177,6 +175,7 @@ app.openapi(
   }),
   async (c) => {
     const auth = getAuth(c);
+    const db = c.get("db");
     if (!auth?.userId) {
       return c.json({ error: "Unauthorized" }, 401);
     }
@@ -283,6 +282,7 @@ app.openapi(
   }),
   async (c) => {
     const auth = getAuth(c);
+    const db = c.get("db");
     if (!auth?.userId) {
       return c.json({ error: "Unauthorized" }, 401);
     }
@@ -351,10 +351,19 @@ app.openapi(
           },
         },
       },
+      500: {
+        description: "Internal server error",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
     },
   }),
   async (c) => {
     const auth = getAuth(c);
+    const db = c.get("db");
     if (!auth?.userId) {
       return c.json({ error: "Unauthorized" }, 401);
     }
@@ -372,10 +381,11 @@ app.openapi(
       return c.json({ error: "Note not found" }, 404);
     }
 
-    // トランザクションで削除済みテーブルに移動してから元テーブルから削除
-    db.transaction((tx) => {
-      // 削除済みテーブルに挿入
-      tx.insert(deletedMemos)
+    // D1はトランザクションをサポートしないため、安全な順次実行
+    try {
+      // Step 1: 削除済みテーブルに安全にコピー
+      const insertResult = await db
+        .insert(deletedMemos)
         .values({
           userId: auth.userId,
           originalId: note.originalId, // originalIdをそのままコピー
@@ -386,22 +396,50 @@ app.openapi(
           updatedAt: note.updatedAt,
           deletedAt: Math.floor(Date.now() / 1000),
         })
-        .run();
+        .returning({ id: deletedMemos.id });
 
-      // 関連するboard_itemsのdeletedAtを設定
-      tx.update(boardItems)
+      // Step 1.5: コピーが正常に完了したことを確認
+      if (!insertResult || insertResult.length === 0) {
+        throw new Error("削除済みテーブルへのコピーが失敗しました");
+      }
+
+      // Step 2: 関連するboard_itemsのdeletedAtを設定
+      await db
+        .update(boardItems)
         .set({ deletedAt: new Date() })
         .where(
           and(
             eq(boardItems.itemType, "memo"),
             eq(boardItems.originalId, note.originalId),
           ),
-        )
-        .run();
+        );
 
-      // 元テーブルから削除
-      tx.delete(memos).where(eq(memos.id, id)).run();
-    });
+      // Step 3: コピー完了後に元テーブルから安全に削除
+      const deleteResult = await db.delete(memos).where(eq(memos.id, id));
+
+      // Step 3.5: 削除が正常に完了したことを確認
+      if (deleteResult.changes === 0) {
+        console.warn(
+          "元テーブルからの削除で対象が見つかりませんでしたが、コピーは完了済みです",
+        );
+      }
+    } catch (error) {
+      console.error("メモ削除エラー:", error);
+      // コピー段階でエラーが発生した場合、削除済みテーブルの重複データをクリーンアップ
+      try {
+        await db
+          .delete(deletedMemos)
+          .where(
+            and(
+              eq(deletedMemos.originalId, note.originalId),
+              eq(deletedMemos.userId, auth.userId),
+            ),
+          );
+      } catch (cleanupError) {
+        console.error("クリーンアップエラー:", cleanupError);
+      }
+      return c.json({ error: "Failed to delete memo" }, 500);
+    }
 
     return c.json({ success: true }, 200);
   },
@@ -452,6 +490,7 @@ app.openapi(
   // @ts-ignore OpenAPI type complexity
   async (c) => {
     const auth = getAuth(c);
+    const db = c.get("db");
     if (!auth?.userId) {
       return c.json({ error: "Unauthorized" }, 401);
     }
@@ -525,6 +564,7 @@ app.openapi(
   }),
   async (c) => {
     const auth = getAuth(c);
+    const db = c.get("db");
     if (!auth?.userId) {
       return c.json({ error: "Unauthorized" }, 401);
     }
@@ -618,6 +658,7 @@ app.openapi(
   }),
   async (c) => {
     const auth = getAuth(c);
+    const db = c.get("db");
     if (!auth?.userId) {
       return c.json({ error: "Unauthorized" }, 401);
     }
@@ -641,52 +682,47 @@ app.openapi(
         return c.json({ error: "Deleted note not found" }, 404);
       }
 
-      // トランザクションで復元処理
-      const restoredNote = db.transaction((tx) => {
-        // 通常メモテーブルに復元
-        const result = tx
-          .insert(memos)
-          .values({
-            userId: auth.userId,
-            originalId: deletedNote.originalId, // 一旦削除前のoriginalIdで復元
-            uuid: deletedNote.uuid, // UUIDも復元
-            title: deletedNote.title,
-            content: deletedNote.content,
-            createdAt: deletedNote.createdAt,
-            updatedAt: Math.floor(Date.now() / 1000), // 復元時刻を更新
-          })
-          .returning({ id: memos.id })
-          .get();
+      // D1はトランザクションをサポートしないため、順次実行
+      // 通常メモテーブルに復元
+      const result = await db
+        .insert(memos)
+        .values({
+          userId: auth.userId,
+          originalId: deletedNote.originalId, // 一旦削除前のoriginalIdで復元
+          uuid: deletedNote.uuid, // UUIDも復元
+          title: deletedNote.title,
+          content: deletedNote.content,
+          createdAt: deletedNote.createdAt,
+          updatedAt: Math.floor(Date.now() / 1000), // 復元時刻を更新
+        })
+        .returning({ id: memos.id });
 
-        // 復元されたメモのoriginalIdを新しいIDに更新
-        tx.update(memos)
-          .set({ originalId: result.id.toString() })
-          .where(eq(memos.id, result.id))
-          .run();
+      // 復元されたメモのoriginalIdを新しいIDに更新
+      await db
+        .update(memos)
+        .set({ originalId: result[0].id.toString() })
+        .where(eq(memos.id, result[0].id));
 
-        // 関連するboard_itemsのdeletedAtをNULLに戻し、originalIdを新しいIDに更新
-        tx.update(boardItems)
-          .set({
-            deletedAt: null,
-            originalId: result.id.toString(), // 新しいメモIDをoriginalIdに設定
-          })
-          .where(
-            and(
-              eq(boardItems.itemType, "memo"),
-              eq(boardItems.originalId, deletedNote.originalId),
-            ),
-          )
-          .run();
+      // 関連するboard_itemsのdeletedAtをNULLに戻し、originalIdを新しいIDに更新
+      await db
+        .update(boardItems)
+        .set({
+          deletedAt: null,
+          originalId: result[0].id.toString(), // 新しいメモIDをoriginalIdに設定
+        })
+        .where(
+          and(
+            eq(boardItems.itemType, "memo"),
+            eq(boardItems.originalId, deletedNote.originalId),
+          ),
+        );
 
-        // 削除済みテーブルから削除
-        tx.delete(deletedMemos)
-          .where(eq(deletedMemos.originalId, originalId))
-          .run();
+      // 削除済みテーブルから削除
+      await db
+        .delete(deletedMemos)
+        .where(eq(deletedMemos.originalId, originalId));
 
-        return result;
-      });
-
-      return c.json({ success: true, id: restoredNote.id as number }, 200);
+      return c.json({ success: true, id: result[0].id }, 200);
     } catch (error) {
       console.error("復元エラー:", error);
       return c.json({ error: "Internal server error" }, 500);
@@ -750,6 +786,7 @@ app.openapi(
   }),
   async (c) => {
     const auth = getAuth(c);
+    const db = c.get("db");
     if (!auth?.userId) {
       return c.json({ error: "Unauthorized" }, 401);
     }

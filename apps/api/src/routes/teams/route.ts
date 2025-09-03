@@ -1,5 +1,6 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { clerkMiddleware } from "@hono/clerk-auth";
+import { databaseMiddleware } from "../../middleware/database";
 import {
   createTeamRoute,
   getMyTeamRoute,
@@ -23,19 +24,14 @@ import {
 import { createTeamBoardsAPI } from "./boards";
 
 // SQLite & drizzle セットアップ
-const sqlite = new Database("sqlite.db");
-const db = drizzle(sqlite);
 
 const teamsRoute = new OpenAPIHono();
 
-// データベースをコンテキストに設定
-teamsRoute.use("*", async (c, next) => {
-  c.env = { ...c.env, db };
-  await next();
-});
-
 // Clerk認証ミドルウェアを適用
 teamsRoute.use("*", clerkMiddleware());
+
+// データベースミドルウェアを追加
+teamsRoute.use("*", databaseMiddleware);
 
 // ルート定義を登録
 teamsRoute.openapi(getUserTeamStatsRoute, getUserTeamStats);

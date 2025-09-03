@@ -1,27 +1,15 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
+import { databaseMiddleware } from "../../middleware/database";
 import { createAPI } from "./api";
-
-// SQLite & drizzle セットアップ
-const sqlite = new Database("sqlite.db");
-const db = drizzle(sqlite);
 
 const boardCategoriesRoute = new OpenAPIHono();
 
 // Clerk認証ミドルウェアを追加
-boardCategoriesRoute.use(
-  "*",
-  clerkMiddleware({
-    secretKey: process.env.CLERK_SECRET_KEY,
-    publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
-  }),
-);
+boardCategoriesRoute.use("*", clerkMiddleware());
 
-// データベースをコンテキストに注入
-boardCategoriesRoute.use("*", async (c, next) => {
-  c.env = { db };
-  await next();
-});
+// データベースミドルウェアを追加
+boardCategoriesRoute.use("*", databaseMiddleware);
 
 const api = createAPI(boardCategoriesRoute);
 

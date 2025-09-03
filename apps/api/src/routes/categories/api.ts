@@ -58,7 +58,7 @@ export function createAPI(app: AppType) {
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const db = c.env.db;
+    const db = c.get("db");
     const userCategories = await db
       .select()
       .from(categories)
@@ -121,7 +121,7 @@ export function createAPI(app: AppType) {
     }
 
     const { name } = c.req.valid("json");
-    const db = c.env.db;
+    const db = c.get("db");
 
     // 同名カテゴリーの存在チェック
     const existing = await db
@@ -212,7 +212,7 @@ export function createAPI(app: AppType) {
 
     const categoryId = parseInt(c.req.param("id"));
     const { name } = c.req.valid("json");
-    const db = c.env.db;
+    const db = c.get("db");
 
     // カテゴリーの所有権確認
     const category = await db
@@ -304,7 +304,7 @@ export function createAPI(app: AppType) {
     }
 
     const categoryId = parseInt(c.req.param("id"));
-    const db = c.env.db;
+    const db = c.get("db");
 
     // カテゴリーの所有権確認
     const category = await db
@@ -374,7 +374,7 @@ export function createAPI(app: AppType) {
     }
 
     const categoryId = parseInt(c.req.param("id"));
-    const db = c.env.db;
+    const db = c.get("db");
 
     // カテゴリーの所有権確認
     const category = await db

@@ -1,10 +1,12 @@
 import { Hono } from "hono";
 import { eq } from "drizzle-orm";
 import { userPreferences } from "../../db/index";
+import { databaseMiddleware } from "../../middleware/database";
 
 const app = new Hono();
-const sqlite = new Database("./sqlite.db");
-const db = drizzle(sqlite);
+
+// データベースミドルウェアを適用
+app.use("*", databaseMiddleware);
 
 // GET /user-preferences/:userId
 app.get("/:userId", async (c) => {
@@ -15,6 +17,7 @@ app.get("/:userId", async (c) => {
       return c.json({ error: "Invalid user ID" }, 400);
     }
 
+    const db = c.get("db");
     const preferences = await db
       .select()
       .from(userPreferences)
@@ -113,6 +116,8 @@ app.put("/:userId", async (c) => {
     if (hideHeader !== undefined && typeof hideHeader !== "boolean") {
       return c.json({ error: "Invalid hide header value" }, 400);
     }
+
+    const db = c.get("db");
 
     // 既存の設定があるかチェック
     const existing = await db

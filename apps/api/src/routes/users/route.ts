@@ -14,18 +14,12 @@ import {
   updateDisplayNameRoute,
   updateDisplayName,
 } from "./api";
-
-// SQLite & drizzle セットアップ
-const sqlite = new Database("sqlite.db");
-const db = drizzle(sqlite);
+import { databaseMiddleware } from "../../middleware/database";
 
 const usersRoute = new OpenAPIHono();
 
-// データベースをコンテキストに設定
-usersRoute.use("*", async (c, next) => {
-  c.env = { ...c.env, db };
-  await next();
-});
+// データベースミドルウェアを適用（最初に）
+usersRoute.use("*", databaseMiddleware);
 
 // Clerk認証ミドルウェアを適用
 usersRoute.use("*", clerkMiddleware());

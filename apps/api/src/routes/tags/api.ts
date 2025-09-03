@@ -73,7 +73,7 @@ export function createAPI(app: AppType) {
     }
 
     const { q, sort, limit } = c.req.valid("query");
-    const db = c.env.db;
+    const db = c.get("db");
 
     let query = db.select().from(tags).where(eq(tags.userId, auth.userId));
 
@@ -213,7 +213,7 @@ export function createAPI(app: AppType) {
     }
 
     const { name, color } = c.req.valid("json");
-    const db = c.env.db;
+    const db = c.get("db");
 
     // タグ数制限チェック（300個）
     const tagCount = await db
@@ -315,7 +315,7 @@ export function createAPI(app: AppType) {
 
     const tagId = parseInt(c.req.param("id"));
     const { name, color } = c.req.valid("json");
-    const db = c.env.db;
+    const db = c.get("db");
 
     // タグの所有権確認
     const tag = await db
@@ -409,7 +409,7 @@ export function createAPI(app: AppType) {
     }
 
     const tagId = parseInt(c.req.param("id"));
-    const db = c.env.db;
+    const db = c.get("db");
 
     // タグの所有権確認
     const tag = await db
@@ -477,7 +477,7 @@ export function createAPI(app: AppType) {
     }
 
     const tagId = parseInt(c.req.param("id"));
-    const db = c.env.db;
+    const db = c.get("db");
 
     // タグの所有権確認
     const tag = await db

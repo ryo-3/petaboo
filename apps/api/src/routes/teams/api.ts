@@ -356,7 +356,7 @@ export async function getUserTeamStats(c: any) {
     return c.json({ error: "認証が必要です" }, 401);
   }
 
-  const db: DatabaseType = c.env.db;
+  const db: DatabaseType = c.get("db");
 
   try {
     // ユーザーが作成したチーム数を取得
@@ -402,7 +402,7 @@ export async function createTeam(c: any) {
     return c.json({ error: "認証が必要です" }, 401);
   }
 
-  const db: DatabaseType = c.env.db;
+  const db: DatabaseType = c.get("db");
   const body = await c.req.json();
   console.log("受け取ったbody:", body);
 
@@ -515,7 +515,7 @@ export async function getMyTeam(c: any) {
     return c.json({ error: "認証が必要です" }, 401);
   }
 
-  const db: DatabaseType = c.env.db;
+  const db: DatabaseType = c.get("db");
 
   try {
     // ユーザーが所属するチームを取得
@@ -551,7 +551,7 @@ export async function getTeamDetail(c: any) {
   }
 
   const customUrl = c.req.param("customUrl");
-  const db: DatabaseType = c.env.db;
+  const db: DatabaseType = c.get("db");
 
   console.log("チーム詳細取得リクエスト:", { customUrl, userId: auth.userId });
 
@@ -623,7 +623,7 @@ export async function getTeams(c: any) {
     return c.json({ error: "認証が必要です" }, 401);
   }
 
-  const db: DatabaseType = c.env.db;
+  const db: DatabaseType = c.get("db");
 
   try {
     // ユーザーが所属するチーム一覧を取得
@@ -672,7 +672,7 @@ export async function joinTeam(c: any) {
   }
 
   const { teamId } = c.req.param();
-  const db: DatabaseType = c.env.db;
+  const db: DatabaseType = c.get("db");
 
   try {
     // チームが存在するかチェック
@@ -771,7 +771,7 @@ export async function inviteToTeam(c: any) {
 
   const requestBody = await c.req.json();
   const { email, role = "member" } = requestBody;
-  const db: DatabaseType = c.env.db;
+  const db: DatabaseType = c.get("db");
 
   try {
     // customUrlからチームIDを取得
@@ -904,7 +904,7 @@ export async function inviteToTeam(c: any) {
 // 招待情報取得の実装
 export async function getInvitation(c: any) {
   const token = c.req.param("token");
-  const db: DatabaseType = c.env.db;
+  const db: DatabaseType = c.get("db");
 
   try {
     // 招待情報を取得
@@ -966,7 +966,7 @@ export async function acceptInvitation(c: any) {
   }
 
   const token = c.req.param("token");
-  const db: DatabaseType = c.env.db;
+  const db: DatabaseType = c.get("db");
 
   try {
     // 招待情報を取得

@@ -78,7 +78,7 @@ export function createAPI(app: AppType) {
 
     const { targetType, targetOriginalId, tagId, includeTag } =
       c.req.valid("query");
-    const db = c.env.db;
+    const db = c.get("db");
 
     let query = db
       .select({
@@ -194,7 +194,7 @@ export function createAPI(app: AppType) {
     }
 
     const { tagId, targetType, targetOriginalId } = c.req.valid("json");
-    const db = c.env.db;
+    const db = c.get("db");
 
     // タグの所有権確認
     const tag = await db
@@ -341,7 +341,7 @@ export function createAPI(app: AppType) {
     }
 
     const { tagId, targetType, targetOriginalId } = c.req.valid("json");
-    const db = c.env.db;
+    const db = c.get("db");
 
     // タグ付けの存在確認と所有権確認
     const tagging = await db
@@ -383,7 +383,7 @@ export function createAPI(app: AppType) {
     }
 
     const taggingId = parseInt(c.req.param("id"));
-    const db = c.env.db;
+    const db = c.get("db");
 
     // タグ付けの所有権確認
     const tagging = await db

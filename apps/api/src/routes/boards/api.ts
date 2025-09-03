@@ -184,7 +184,7 @@ export function createAPI(app: AppType) {
     }
 
     const { status } = c.req.valid("query");
-    const db = c.env.db;
+    const db = c.get("db");
 
     let userBoards;
 
@@ -346,7 +346,7 @@ export function createAPI(app: AppType) {
     }
 
     const { name, description } = c.req.valid("json");
-    const db = c.env.db;
+    const db = c.get("db");
 
     const now = new Date();
     const slug = await generateUniqueSlug(name, auth.userId, db);
@@ -432,7 +432,7 @@ export function createAPI(app: AppType) {
 
     const boardId = parseInt(c.req.param("id"));
     const updateData = c.req.valid("json");
-    const db = c.env.db;
+    const db = c.get("db");
 
     // ボードの所有権確認
     const board = await db
@@ -503,7 +503,7 @@ export function createAPI(app: AppType) {
     }
 
     const boardId = parseInt(c.req.param("id"));
-    const db = c.env.db;
+    const db = c.get("db");
 
     // ボードの所有権確認
     const board = await db
@@ -579,7 +579,7 @@ export function createAPI(app: AppType) {
     }
 
     const boardId = parseInt(c.req.param("id"));
-    const db = c.env.db;
+    const db = c.get("db");
 
     // ボードの所有権確認
     const board = await db
@@ -668,7 +668,7 @@ export function createAPI(app: AppType) {
     }
 
     const boardId = parseInt(c.req.param("id"));
-    const db = c.env.db;
+    const db = c.get("db");
 
     // 削除済みボードの所有権確認
     const deletedBoard = await db
@@ -750,7 +750,7 @@ export function createAPI(app: AppType) {
     }
 
     const { slug } = c.req.valid("param");
-    const db = c.env.db;
+    const db = c.get("db");
 
     const board = await db
       .select()
@@ -877,7 +877,7 @@ export function createAPI(app: AppType) {
     }
 
     const boardId = parseInt(c.req.param("id"));
-    const db = c.env.db;
+    const db = c.get("db");
 
     // ボードの取得と所有権確認
     const board = await db
@@ -953,7 +953,7 @@ export function createAPI(app: AppType) {
     }
 
     const boardId = parseInt(c.req.param("id"));
-    const db = c.env.db;
+    const db = c.get("db");
 
     // ボードの取得と所有権確認
     const board = await db
@@ -1114,7 +1114,7 @@ export function createAPI(app: AppType) {
       }
 
       const { itemType, itemId } = validationResult.data;
-      const db = c.env.db;
+      const db = c.get("db");
 
       // ボードの所有権確認
       const board = await db
@@ -1276,7 +1276,7 @@ export function createAPI(app: AppType) {
     const boardId = parseInt(c.req.param("id"));
     const rawItemId = c.req.param("itemId"); // 文字列として取得
     const { itemType } = c.req.valid("query");
-    const db = c.env.db;
+    const db = c.get("db");
 
     // ボードの所有権確認
     const board = await db
@@ -1366,7 +1366,7 @@ export function createAPI(app: AppType) {
 
     const { itemType, itemId } = c.req.valid("param");
     const itemIdNum = parseInt(itemId);
-    const db = c.env.db;
+    const db = c.get("db");
 
     // アイテムの存在確認とoriginalIdを取得
     const originalId = await getOriginalId(
@@ -1445,7 +1445,7 @@ export function createAPI(app: AppType) {
         return c.json({ error: "Unauthorized" }, 401);
       }
 
-      const db = c.env.db;
+      const db = c.get("db");
 
       // 全ボードのアイテムを一括取得（物理削除なのでレコードが存在するものはすべて有効）
       const allBoardItems = await db
@@ -1529,7 +1529,7 @@ export function createAPI(app: AppType) {
     const boardId = parseInt(c.req.param("id"));
     const itemId = parseInt(c.req.param("itemId"));
     const { itemType } = c.req.valid("query");
-    const db = c.env.db;
+    const db = c.get("db");
 
     // ボードの所有権確認
     const board = await db

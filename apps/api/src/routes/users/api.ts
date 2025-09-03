@@ -230,7 +230,7 @@ export async function getUsersList(c: any) {
     return c.json({ error: "管理者権限が必要です" }, 403);
   }
 
-  const db: DatabaseType = c.env.db;
+  const db = c.get("db");
   const { _start, _end, _sort, _order } = c.req.query();
 
   try {
@@ -274,7 +274,7 @@ export async function getUserInfo(c: any) {
     return c.json({ error: "認証が必要です" }, 401);
   }
 
-  const db: DatabaseType = c.env.db;
+  const db = c.get("db");
 
   try {
     // ユーザー情報を取得または作成
@@ -329,7 +329,7 @@ export async function updateUserPlan(c: any) {
     return c.json({ error: "認証が必要です" }, 401);
   }
 
-  const db: DatabaseType = c.env.db;
+  const db = c.get("db");
   const body = await c.req.json();
 
   try {
@@ -390,7 +390,7 @@ export async function getSpecificUserInfo(c: any) {
     return c.json({ error: "管理者権限が必要です" }, 403);
   }
 
-  const db: DatabaseType = c.env.db;
+  const db = c.get("db");
   const targetUserId = c.req.param("userId");
 
   try {
@@ -437,7 +437,7 @@ export async function updateSpecificUserPlan(c: any) {
     return c.json({ error: "管理者権限が必要です" }, 403);
   }
 
-  const db: DatabaseType = c.env.db;
+  const db = c.get("db");
   const targetUserId = c.req.param("userId");
 
   let body;
@@ -532,7 +532,7 @@ export async function updateDisplayName(c: any) {
     return c.json({ error: "認証が必要です" }, 401);
   }
 
-  const db: DatabaseType = c.env.db;
+  const db = c.get("db");
 
   let body;
   try {

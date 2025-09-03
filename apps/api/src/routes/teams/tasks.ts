@@ -2,24 +2,18 @@ import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
+import { databaseMiddleware } from "../../middleware/database";
 import { teamTasks, teamDeletedTasks } from "../../db/schema/team/tasks";
 import { teamMembers } from "../../db/schema/team/teams";
 import { generateOriginalId, generateUuid } from "../../utils/originalId";
 
-// SQLite & drizzle セットアップ
-const sqlite = new Database("sqlite.db");
-const db = drizzle(sqlite);
-
 const app = new OpenAPIHono();
 
 // Clerk認証ミドルウェアを追加
-app.use(
-  "*",
-  clerkMiddleware({
-    secretKey: process.env.CLERK_SECRET_KEY,
-    publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
-  }),
-);
+app.use("*", clerkMiddleware());
+
+// データベースミドルウェアを追加
+app.use("*", databaseMiddleware);
 
 // 共通スキーマ定義
 const TeamTaskSchema = z.object({
@@ -118,6 +112,7 @@ app.openapi(
   }),
   async (c) => {
     const auth = getAuth(c);
+    const db = c.get("db");
     if (!auth?.userId) {
       return c.json({ error: "Unauthorized" }, 401);
     }
@@ -223,6 +218,7 @@ app.openapi(
   }),
   async (c) => {
     const auth = getAuth(c);
+    const db = c.get("db");
     if (!auth?.userId) {
       return c.json({ error: "Unauthorized" }, 401);
     }
@@ -359,6 +355,7 @@ app.openapi(
   }),
   async (c) => {
     const auth = getAuth(c);
+    const db = c.get("db");
     if (!auth?.userId) {
       return c.json({ error: "Unauthorized" }, 401);
     }
@@ -447,6 +444,7 @@ app.openapi(
   }),
   async (c) => {
     const auth = getAuth(c);
+    const db = c.get("db");
     if (!auth?.userId) {
       return c.json({ error: "Unauthorized" }, 401);
     }
@@ -470,31 +468,32 @@ app.openapi(
       return c.json({ error: "Team task not found" }, 404);
     }
 
-    // トランザクションで削除済みテーブルに移動してから元テーブルから削除
-    db.transaction((tx) => {
+    // D1はトランザクションをサポートしないため、順次実行
+    try {
       // 削除済みテーブルに挿入
-      tx.insert(teamDeletedTasks)
-        .values({
-          teamId,
-          userId: task.userId,
-          originalId: task.originalId,
-          uuid: task.uuid,
-          title: task.title,
-          description: task.description,
-          status: task.status,
-          priority: task.priority,
-          dueDate: task.dueDate,
-          categoryId: task.categoryId,
-          boardCategoryId: task.boardCategoryId,
-          createdAt: task.createdAt,
-          updatedAt: task.updatedAt,
-          deletedAt: Math.floor(Date.now() / 1000),
-        })
-        .run();
+      await db.insert(teamDeletedTasks).values({
+        teamId,
+        userId: task.userId,
+        originalId: task.originalId,
+        uuid: task.uuid,
+        title: task.title,
+        description: task.description,
+        status: task.status,
+        priority: task.priority,
+        dueDate: task.dueDate,
+        categoryId: task.categoryId,
+        boardCategoryId: task.boardCategoryId,
+        createdAt: task.createdAt,
+        updatedAt: task.updatedAt,
+        deletedAt: Math.floor(Date.now() / 1000),
+      });
 
       // 元テーブルから削除
-      tx.delete(teamTasks).where(eq(teamTasks.id, id)).run();
-    });
+      await db.delete(teamTasks).where(eq(teamTasks.id, id));
+    } catch (error) {
+      console.error("チームタスク削除エラー:", error);
+      return c.json({ error: "Failed to delete team task" }, 500);
+    }
 
     return c.json({ success: true }, 200);
   },
@@ -556,6 +555,7 @@ app.openapi(
   }),
   async (c) => {
     const auth = getAuth(c);
+    const db = c.get("db");
     if (!auth?.userId) {
       return c.json({ error: "Unauthorized" }, 401);
     }

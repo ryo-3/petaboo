@@ -2,24 +2,18 @@ import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
 import { eq, desc, and } from "drizzle-orm";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
+import { databaseMiddleware } from "../../middleware/database";
 import { teamMemos, teamDeletedMemos } from "../../db/schema/team/memos";
 import { teamMembers } from "../../db/schema/team/teams";
 import { generateOriginalId, generateUuid } from "../../utils/originalId";
 
-// SQLite & drizzle セットアップ
-const sqlite = new Database("sqlite.db");
-const db = drizzle(sqlite);
-
 const app = new OpenAPIHono();
 
 // Clerk認証ミドルウェアを追加
-app.use(
-  "*",
-  clerkMiddleware({
-    secretKey: process.env.CLERK_SECRET_KEY,
-    publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
-  }),
-);
+app.use("*", clerkMiddleware());
+
+// データベースミドルウェアを追加
+app.use("*", databaseMiddleware);
 
 // 共通スキーマ定義
 const TeamMemoSchema = z.object({
@@ -42,7 +36,7 @@ const TeamMemoInputSchema = z.object({
 });
 
 // チームメンバー確認のヘルパー関数
-async function checkTeamMember(teamId: number, userId: string) {
+async function checkTeamMember(teamId: number, userId: string, db: any) {
   const member = await db
     .select()
     .from(teamMembers)
@@ -91,6 +85,7 @@ app.openapi(
   }),
   async (c) => {
     const auth = getAuth(c);
+    const db = c.get("db");
     if (!auth?.userId) {
       return c.json({ error: "Unauthorized" }, 401);
     }
@@ -98,7 +93,7 @@ app.openapi(
     const { teamId } = c.req.valid("param");
 
     // チームメンバー確認
-    const member = await checkTeamMember(teamId, auth.userId);
+    const member = await checkTeamMember(teamId, auth.userId, db);
     if (!member) {
       return c.json({ error: "Not a team member" }, 403);
     }
@@ -179,6 +174,7 @@ app.openapi(
   }),
   async (c) => {
     const auth = getAuth(c);
+    const db = c.get("db");
     if (!auth?.userId) {
       return c.json({ error: "Unauthorized" }, 401);
     }
@@ -186,7 +182,7 @@ app.openapi(
     const { teamId } = c.req.valid("param");
 
     // チームメンバー確認
-    const member = await checkTeamMember(teamId, auth.userId);
+    const member = await checkTeamMember(teamId, auth.userId, db);
     if (!member) {
       return c.json({ error: "Not a team member" }, 403);
     }
@@ -228,11 +224,11 @@ app.openapi(
       id: result[0].id,
       teamId,
       originalId,
-      uuid: generateUuid(),
+      uuid: generateUuid() as string | null,
       title,
-      content: content || "",
+      content: content || null,
       createdAt,
-      updatedAt: createdAt,
+      updatedAt: createdAt as number | null,
     };
 
     return c.json(newMemo, 200);
@@ -305,6 +301,7 @@ app.openapi(
   }),
   async (c) => {
     const auth = getAuth(c);
+    const db = c.get("db");
     if (!auth?.userId) {
       return c.json({ error: "Unauthorized" }, 401);
     }
@@ -312,7 +309,7 @@ app.openapi(
     const { teamId, id } = c.req.valid("param");
 
     // チームメンバー確認
-    const member = await checkTeamMember(teamId, auth.userId);
+    const member = await checkTeamMember(teamId, auth.userId, db);
     if (!member) {
       return c.json({ error: "Not a team member" }, 403);
     }
@@ -389,10 +386,19 @@ app.openapi(
           },
         },
       },
+      500: {
+        description: "Internal server error",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
     },
   }),
   async (c) => {
     const auth = getAuth(c);
+    const db = c.get("db");
     if (!auth?.userId) {
       return c.json({ error: "Unauthorized" }, 401);
     }
@@ -400,7 +406,7 @@ app.openapi(
     const { teamId, id } = c.req.valid("param");
 
     // チームメンバー確認
-    const member = await checkTeamMember(teamId, auth.userId);
+    const member = await checkTeamMember(teamId, auth.userId, db);
     if (!member) {
       return c.json({ error: "Not a team member" }, 403);
     }
@@ -416,26 +422,27 @@ app.openapi(
       return c.json({ error: "Team memo not found" }, 404);
     }
 
-    // トランザクションで削除済みテーブルに移動してから元テーブルから削除
-    db.transaction((tx) => {
+    // D1はトランザクションをサポートしないため、順次実行
+    try {
       // 削除済みテーブルに挿入
-      tx.insert(teamDeletedMemos)
-        .values({
-          teamId,
-          userId: memo.userId,
-          originalId: memo.originalId,
-          uuid: memo.uuid,
-          title: memo.title,
-          content: memo.content,
-          createdAt: memo.createdAt,
-          updatedAt: memo.updatedAt,
-          deletedAt: Math.floor(Date.now() / 1000),
-        })
-        .run();
+      await db.insert(teamDeletedMemos).values({
+        teamId,
+        userId: memo.userId,
+        originalId: memo.originalId,
+        uuid: memo.uuid,
+        title: memo.title,
+        content: memo.content,
+        createdAt: memo.createdAt,
+        updatedAt: memo.updatedAt,
+        deletedAt: Math.floor(Date.now() / 1000),
+      });
 
       // 元テーブルから削除
-      tx.delete(teamMemos).where(eq(teamMemos.id, id)).run();
-    });
+      await db.delete(teamMemos).where(eq(teamMemos.id, id));
+    } catch (error) {
+      console.error("メモ削除エラー:", error);
+      return c.json({ error: "Failed to delete memo" }, 500);
+    }
 
     return c.json({ success: true }, 200);
   },
@@ -488,10 +495,19 @@ app.openapi(
           },
         },
       },
+      500: {
+        description: "Internal server error",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
     },
   }),
   async (c) => {
     const auth = getAuth(c);
+    const db = c.get("db");
     if (!auth?.userId) {
       return c.json({ error: "Unauthorized" }, 401);
     }
@@ -499,7 +515,7 @@ app.openapi(
     const { teamId } = c.req.valid("param");
 
     // チームメンバー確認
-    const member = await checkTeamMember(teamId, auth.userId);
+    const member = await checkTeamMember(teamId, auth.userId, db);
     if (!member) {
       return c.json({ error: "Not a team member" }, 403);
     }

@@ -81,7 +81,7 @@ export function createAPI(app: AppType) {
     }
 
     const { boardId, q, sort, limit } = c.req.valid("query");
-    const db = c.env.db;
+    const db = c.get("db");
 
     let query = db
       .select()
@@ -218,7 +218,7 @@ export function createAPI(app: AppType) {
 
     const { name, boardId, description, color, icon, sortOrder } =
       c.req.valid("json");
-    const db = c.env.db;
+    const db = c.get("db");
 
     // カテゴリー数制限チェック（30個）
     const categoryCount = await db
@@ -346,7 +346,7 @@ export function createAPI(app: AppType) {
 
     const categoryId = parseInt(c.req.param("id"));
     const { name, description, color, icon, sortOrder } = c.req.valid("json");
-    const db = c.env.db;
+    const db = c.get("db");
 
     // カテゴリーの所有権確認
     const category = await db
@@ -448,7 +448,7 @@ export function createAPI(app: AppType) {
     }
 
     const categoryId = parseInt(c.req.param("id"));
-    const db = c.env.db;
+    const db = c.get("db");
 
     // カテゴリーの所有権確認
     const category = await db
@@ -527,7 +527,7 @@ export function createAPI(app: AppType) {
     }
 
     const { categoryIds } = c.req.valid("json");
-    const db = c.env.db;
+    const db = c.get("db");
 
     // すべてのカテゴリーが存在し、ユーザーの所有であることを確認
     const categories = await db
@@ -604,7 +604,7 @@ export function createAPI(app: AppType) {
     }
 
     const categoryId = parseInt(c.req.param("id"));
-    const db = c.env.db;
+    const db = c.get("db");
 
     // カテゴリーの所有権確認
     const category = await db

@@ -2,13 +2,12 @@ import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
 import { eq, and } from "drizzle-orm";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
+import { databaseMiddleware } from "../../middleware/database";
 import { teamMemos } from "../../db/schema/team/memos";
 import { teamTasks } from "../../db/schema/team/tasks";
 import { teams, teamMembers } from "../../db/schema/team/teams";
 
 // SQLite & drizzle セットアップ
-const sqlite = new Database("sqlite.db");
-const db = drizzle(sqlite);
 
 const app = new OpenAPIHono();
 

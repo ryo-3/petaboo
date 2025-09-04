@@ -17,7 +17,6 @@ export default function SimpleAdminPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
-      console.log("API Test Result:", data);
       alert(`成功: ${JSON.stringify(data, null, 2)}`);
     } catch (error) {
       console.error("API Test Error:", error);

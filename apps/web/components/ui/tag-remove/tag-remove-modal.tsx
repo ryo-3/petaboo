@@ -129,10 +129,6 @@ export default function TagRemoveModal({
             queryClient.invalidateQueries({
               queryKey: [itemType, originalId],
             });
-            console.log("🔄 キャッシュ無効化 (削除):", {
-              itemType,
-              originalId,
-            });
           }
         });
 
@@ -140,7 +136,6 @@ export default function TagRemoveModal({
         queryClient.invalidateQueries({
           queryKey: ["taggings", "all"],
         });
-        console.log("🔄 全タグ付けキャッシュ無効化 (削除): [taggings, all]");
 
         onSuccess();
       }

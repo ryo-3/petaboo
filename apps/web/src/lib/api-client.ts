@@ -581,12 +581,6 @@ export const taggingsApi = {
       targetOriginalId,
     };
 
-    console.log("🌐 API削除リクエスト:", {
-      url: `${API_BASE_URL}/taggings/by-tag`,
-      method: "DELETE",
-      body: requestBody,
-      headers: createHeaders(token),
-    });
 
     const response = await fetch(`${API_BASE_URL}/taggings/by-tag`, {
       method: "DELETE",
@@ -594,15 +588,9 @@ export const taggingsApi = {
       body: JSON.stringify(requestBody),
     });
 
-    console.log("🌐 API削除レスポンス:", {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok,
-    });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.log("🌐 API削除エラー詳細:", errorText);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     return response;

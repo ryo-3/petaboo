@@ -17,7 +17,6 @@ export async function sendTeamInvitationEmail(data: TeamInvitationEmailData) {
   const roleText = role === "admin" ? "管理者" : "メンバー";
 
   try {
-    console.log("Resend送信開始:", { to, teamName, role });
 
     const emailResult = await resend.emails.send({
       from: "onboarding@resend.dev", // Resendのテストドメイン（最初はこれでOK）
@@ -67,13 +66,6 @@ ${invitationLink}
       `.trim(),
     });
 
-    console.log("Resend完全な応答:", JSON.stringify(emailResult, null, 2));
-    console.log("招待メール送信成功:", {
-      emailId: emailResult.data?.id,
-      to,
-      teamName,
-      error: emailResult.error,
-    });
 
     return {
       success: true,

@@ -50,26 +50,15 @@ export function useTeamBoards(
     ["team-boards", teamId, status],
     async () => {
       if (!teamId) {
-        console.log(
-          `useTeamBoards: teamId is null or undefined, returning empty array`,
-        );
         return [];
       }
 
-      console.log(
-        `🔍 Team Boards Request - teamId: ${teamId}, status: ${status}, API_BASE_URL: ${API_BASE_URL}`,
-      );
 
       // 最大2回リトライ
       for (let attempt = 0; attempt < 2; attempt++) {
         const token = await getCachedToken(getToken);
         const url = `${API_BASE_URL}/teams/${teamId}/boards?status=${status}`;
 
-        console.log(`📡 Fetching team boards - Attempt ${attempt + 1}:`);
-        console.log(`   URL: ${url}`);
-        console.log(
-          `   Token: ${token ? `${token.substring(0, 20)}...` : "null"}`,
-        );
 
         const response = await fetch(url, {
           headers: {
@@ -78,13 +67,6 @@ export function useTeamBoards(
           },
         });
 
-        console.log(
-          `📨 Response status: ${response.status} ${response.statusText}`,
-        );
-        console.log(
-          `📨 Response headers:`,
-          Object.fromEntries(response.headers.entries()),
-        );
 
         // 401エラーの場合はキャッシュをクリアしてリトライ
         if (response.status === 401 && attempt === 0) {
@@ -102,7 +84,6 @@ export function useTeamBoards(
         }
 
         const responseText = await response.text();
-        console.log(`📦 Raw response body:`, responseText);
 
         let data;
         try {
@@ -112,16 +93,6 @@ export function useTeamBoards(
           throw new Error(`Invalid JSON response: ${responseText}`);
         }
 
-        console.log(
-          `✅ Parsed team boards data (status: ${status}, teamId: ${teamId}):`,
-          {
-            dataType: Array.isArray(data) ? "array" : typeof data,
-            length: Array.isArray(data) ? data.length : "N/A",
-            data: data,
-            firstItem:
-              Array.isArray(data) && data.length > 0 ? data[0] : "none",
-          },
-        );
 
         return data;
       }

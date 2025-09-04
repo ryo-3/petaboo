@@ -396,7 +396,6 @@ export async function getUserTeamStats(c: any) {
 
 // チーム作成の実装
 export async function createTeam(c: any) {
-  console.log("createTeam関数が呼ばれました");
   const auth = getAuth(c);
   if (!auth?.userId) {
     return c.json({ error: "認証が必要です" }, 401);
@@ -404,7 +403,6 @@ export async function createTeam(c: any) {
 
   const db: DatabaseType = c.get("db");
   const body = await c.req.json();
-  console.log("受け取ったbody:", body);
 
   try {
     // ユーザーのプランをチェック
@@ -454,9 +452,7 @@ export async function createTeam(c: any) {
       );
     }
 
-    console.log("チーム作成リクエストボディ:", body);
     const { name, description, customUrl } = createTeamSchema.parse(body);
-    console.log("パース後のデータ:", { name, description, customUrl });
     const now = Math.floor(Date.now() / 1000);
 
     // customURLの重複チェック
@@ -553,7 +549,6 @@ export async function getTeamDetail(c: any) {
   const customUrl = c.req.param("customUrl");
   const db: DatabaseType = c.get("db");
 
-  console.log("チーム詳細取得リクエスト:", { customUrl, userId: auth.userId });
 
   try {
     // customUrlからチームIDを取得
@@ -761,11 +756,9 @@ export async function joinTeam(c: any) {
 // チーム招待送信の実装
 export async function inviteToTeam(c: any) {
   const customUrl = c.req.param("customUrl");
-  console.log("招待送信開始:", { customUrl });
 
   const auth = getAuth(c);
   if (!auth?.userId) {
-    console.log("認証エラー: ユーザーが認証されていません");
     return c.json({ error: "認証が必要です" }, 401);
   }
 
@@ -788,13 +781,6 @@ export async function inviteToTeam(c: any) {
     const team = teamResult[0];
     const teamId = team.id;
 
-    console.log("招待送信リクエスト:", {
-      teamId,
-      customUrl,
-      email,
-      role,
-      userId: auth.userId,
-    });
 
     // ユーザーがそのチームの管理者かチェック
     const teamMember = await db
@@ -814,7 +800,6 @@ export async function inviteToTeam(c: any) {
     }
 
     // 既に招待済みかチェック
-    console.log("既存招待チェック開始");
     const existingInvitation = await db
       .select()
       .from(teamInvitations)
@@ -827,13 +812,8 @@ export async function inviteToTeam(c: any) {
       )
       .limit(1);
 
-    console.log("既存招待チェック結果:", {
-      count: existingInvitation.length,
-      invitations: existingInvitation,
-    });
 
     if (existingInvitation.length > 0) {
-      console.log("既存招待エラー: 重複招待です");
       return c.json(
         { error: "このメールアドレスには既に招待を送信済みです" },
         400,
@@ -879,13 +859,10 @@ export async function inviteToTeam(c: any) {
         invitationLink,
       });
 
-      console.log(`招待メール送信結果:`, emailResult.success ? "成功" : "失敗");
     } catch (error) {
       console.error("メール送信でエラー:", error);
     }
 
-    console.log(`招待作成完了: ${email} をチーム「${team.name}」に招待`);
-    console.log(`招待リンク: ${invitationLink}`);
 
     return c.json(
       {

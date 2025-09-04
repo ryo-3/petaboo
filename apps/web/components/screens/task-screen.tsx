@@ -95,7 +95,6 @@ function TaskScreen({
   };
   const { data: deletedTasks } = useDeletedTasks({ teamMode, teamId });
   const { preferences } = useUserPreferences(1);
-  console.log(`🏠 task-screen useBoards called - teamMode: ${teamMode}`);
   const { data: boards } = useBoards("normal", !teamMode);
   const { data: tags } = useTags();
 

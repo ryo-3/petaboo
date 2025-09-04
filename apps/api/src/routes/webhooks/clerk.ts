@@ -24,7 +24,6 @@ clerkWebhook.post("/user-created", async (c) => {
         updatedAt: now,
       });
 
-      console.log(`ユーザー作成完了: ${userId}`);
     }
 
     return c.json({ success: true });

@@ -25,7 +25,6 @@ export function useCreateTeam() {
 
   return useMutation({
     mutationFn: async (data: CreateTeamData): Promise<Team> => {
-      console.log("フロントエンド送信データ:", data);
       const token = await getToken();
       const response = await fetch(`${API_URL}/teams`, {
         method: "POST",

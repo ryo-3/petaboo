@@ -421,19 +421,15 @@ export async function getSpecificUserInfo(c: any) {
 
 // 管理者用：特定ユーザーのプラン変更
 export async function updateSpecificUserPlan(c: any) {
-  console.log("updateSpecificUserPlan が呼び出されました");
   const auth = getAuth(c);
   if (!auth?.userId) {
-    console.log("認証エラー: userIdが未設定");
     return c.json({ error: "認証が必要です" }, 401);
   }
 
   // 管理者権限チェック
   const adminIds =
     process.env.ADMIN_USER_IDS?.split(",").map((id) => id.trim()) || [];
-  console.log("管理者権限チェック:", { userId: auth.userId, adminIds });
   if (!adminIds.includes(auth.userId)) {
-    console.log("管理者権限なし:", auth.userId);
     return c.json({ error: "管理者権限が必要です" }, 403);
   }
 
@@ -444,26 +440,18 @@ export async function updateSpecificUserPlan(c: any) {
   try {
     body = await c.req.json();
   } catch (error) {
-    console.log("JSON解析エラー:", error);
     return c.json({ error: "リクエストボディが不正です" }, 400);
   }
 
-  console.log("プラン変更リクエスト:", {
-    adminUser: auth.userId,
-    targetUserId,
-    body,
-  });
 
   try {
     const { planType } = body;
 
     if (!planType) {
-      console.log("planTypeが未設定:", body);
       return c.json({ error: "planTypeが必要です" }, 400);
     }
 
     if (!["free", "premium"].includes(planType)) {
-      console.log("無効なplanType:", planType);
       return c.json(
         { error: "planTypeは'free'または'premium'である必要があります" },
         400,
@@ -471,12 +459,10 @@ export async function updateSpecificUserPlan(c: any) {
     }
 
     if (!planType) {
-      console.log("planType未指定:", body);
       return c.json({ error: "planTypeが必要です" }, 400);
     }
 
     if (!["free", "premium"].includes(planType)) {
-      console.log("無効なplanType:", planType);
       return c.json(
         { error: "planTypeは'free'または'premium'である必要があります" },
         400,

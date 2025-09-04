@@ -18,24 +18,6 @@ import teamShareRoute from "./src/routes/teams/share";
 import clerkWebhook from "./src/routes/webhooks/clerk";
 import usersRoute from "./src/routes/users/route";
 
-// 環境変数確認（開発環境のみ）
-if (process.env.NODE_ENV === "development") {
-  console.log("=== API Server Environment ===");
-  console.log(
-    "CLERK_SECRET_KEY:",
-    process.env.CLERK_SECRET_KEY
-      ? `${process.env.CLERK_SECRET_KEY.substring(0, 20)}...`
-      : "未設定",
-  );
-  console.log(
-    "CLERK_PUBLISHABLE_KEY:",
-    process.env.CLERK_PUBLISHABLE_KEY
-      ? `${process.env.CLERK_PUBLISHABLE_KEY.substring(0, 20)}...`
-      : "未設定",
-  );
-  console.log("NODE_ENV:", process.env.NODE_ENV);
-  console.log("==============================");
-}
 
 const app = new Hono();
 
@@ -50,7 +32,6 @@ app.use(
   }),
 );
 
-console.log("サーバー起動！");
 
 // 基本ルート
 app.get("/", (c) => {
@@ -68,21 +49,6 @@ app.get("/health", (c) => {
   });
 });
 
-// リクエストログミドルウェア
-app.use("*", async (c, next) => {
-  const start = Date.now();
-  const method = c.req.method;
-  const url = c.req.url;
-
-  console.log(`[${new Date().toISOString()}] ${method} ${url}`);
-
-  await next();
-
-  const duration = Date.now() - start;
-  console.log(
-    `[${new Date().toISOString()}] ${method} ${url} - ${c.res.status} (${duration}ms)`,
-  );
-});
 
 app.route("/memos", memosRoute);
 app.route("/tasks", tasksRoute);

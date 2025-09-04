@@ -104,10 +104,6 @@ export default function TagAddModal({
             queryClient.invalidateQueries({
               queryKey: [itemType, originalId],
             });
-            console.log("🔄 キャッシュ無効化 (追加):", {
-              itemType,
-              originalId,
-            });
           }
         });
 
@@ -115,7 +111,6 @@ export default function TagAddModal({
         queryClient.invalidateQueries({
           queryKey: ["taggings", "all"],
         });
-        console.log("🔄 全タグ付けキャッシュ無効化 (追加): [taggings, all]");
 
         onSuccess();
       }

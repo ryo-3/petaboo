@@ -169,7 +169,6 @@ function Sidebar({
               onClick={() => {
                 if (isTeamDetailPage) {
                   // チーム詳細ページの場合はボードモードに切り替え
-                  console.log("Team mode changed to: board");
                   window.dispatchEvent(
                     new CustomEvent("team-mode-change", {
                       detail: {
@@ -303,7 +302,6 @@ function Sidebar({
               onClick={() => {
                 if (isTeamDetailPage) {
                   // チーム詳細ページの場合はボードモードに切り替え
-                  console.log("Team mode changed to: board");
                   window.dispatchEvent(
                     new CustomEvent("team-mode-change", {
                       detail: {

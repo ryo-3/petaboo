@@ -71,7 +71,6 @@ export function TeamSettings({ customUrl }: TeamSettingsProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // TODO: チーム設定更新のAPI実装
-    console.log("チーム設定更新:", { name, description });
   };
 
   return (
@@ -186,7 +185,6 @@ export function TeamSettings({ customUrl }: TeamSettingsProps) {
                       )
                     ) {
                       // TODO: チーム削除のAPI実装
-                      console.log("チーム削除:", team.id);
                     }
                   }}
                 >

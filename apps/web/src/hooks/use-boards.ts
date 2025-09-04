@@ -62,24 +62,12 @@ export function useBoards(
     ["boards", status],
     async () => {
       const hookId = Math.random().toString(36).substr(2, 9);
-      console.log(
-        `🏠 Individual Boards Request [${hookId}] - status: ${status}, enabled: ${enabled}, API_BASE_URL: ${API_BASE_URL}`,
-      );
-      console.log(
-        `📍 useBoards called from:`,
-        new Error().stack?.split("\n").slice(2, 5),
-      );
 
       // 最大2回リトライ
       for (let attempt = 0; attempt < 2; attempt++) {
         const token = await getCachedToken(getToken);
         const url = `${API_BASE_URL}/boards?status=${status}`;
 
-        console.log(`📡 Fetching individual boards - Attempt ${attempt + 1}:`);
-        console.log(`   URL: ${url}`);
-        console.log(
-          `   Token: ${token ? `${token.substring(0, 20)}...` : "null"}`,
-        );
 
         const response = await fetch(url, {
           headers: {
@@ -88,9 +76,6 @@ export function useBoards(
           },
         });
 
-        console.log(
-          `📨 Individual boards response status: ${response.status} ${response.statusText}`,
-        );
 
         // 401エラーの場合はキャッシュをクリアしてリトライ
         if (response.status === 401 && attempt === 0) {
@@ -108,10 +93,6 @@ export function useBoards(
         }
 
         const responseText = await response.text();
-        console.log(
-          `📦 Individual boards raw response (status: ${status}):`,
-          responseText,
-        );
 
         let data;
         try {
@@ -121,12 +102,6 @@ export function useBoards(
           throw new Error(`Invalid JSON response: ${responseText}`);
         }
 
-        console.log(`🏠 Individual boards parsed data (status: ${status}):`, {
-          dataType: Array.isArray(data) ? "array" : typeof data,
-          length: Array.isArray(data) ? data.length : "N/A",
-          data: data,
-          firstItem: Array.isArray(data) && data.length > 0 ? data[0] : "none",
-        });
 
         return data;
       }
@@ -593,17 +568,11 @@ export function useRemoveItemFromBoard() {
     { boardId: number; itemId: string; itemType: "memo" | "task" }
   >({
     mutationFn: async ({ boardId, itemId, itemType }) => {
-      console.log("🔍 ボードからアイテム削除開始:", {
-        boardId,
-        itemId,
-        itemType,
-      });
 
       // 最大2回リトライ
       for (let attempt = 0; attempt < 2; attempt++) {
         const token = await getCachedToken(getToken);
         const url = `${API_BASE_URL}/boards/${boardId}/items/${itemId}?itemType=${itemType}`;
-        console.log("🔍 削除API呼び出し:", { url, attempt });
 
         const response = await fetch(url, {
           method: "DELETE",
@@ -613,41 +582,29 @@ export function useRemoveItemFromBoard() {
           },
         });
 
-        console.log("🔍 削除APIレスポンス:", {
-          status: response.status,
-          statusText: response.statusText,
-          ok: response.ok,
-        });
 
         // 401エラーの場合はキャッシュをクリアしてリトライ
         if (response.status === 401 && attempt === 0) {
           cachedToken = null;
           tokenExpiry = 0;
-          console.log("🔍 401エラー、リトライします");
           continue;
         }
 
         if (!response.ok) {
           try {
             const errorJson = await response.json();
-            console.log("🔍 削除APIエラーレスポンス:", errorJson);
-            throw new Error(
+              throw new Error(
               errorJson.error ||
                 `Failed to remove item from board: ${response.status} ${response.statusText}`,
             );
           } catch (parseError) {
             const rawText = await response.text();
-            console.log("🔍 削除APIエラー(JSON解析失敗):", {
-              rawText,
-              parseError,
-            });
             throw new Error(
               `Failed to remove item from board: ${response.status} ${response.statusText} - ${rawText}`,
             );
           }
         }
 
-        console.log("🔍 ボードからアイテム削除成功");
         return;
       }
 

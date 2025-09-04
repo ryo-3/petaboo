@@ -179,16 +179,6 @@ function MemoEditor({
       .map((t) => t.tag)
       .filter(Boolean) as Tag[];
 
-    // デバッグログ
-    console.log("🔍 エディター currentTags 更新:", {
-      memoId: memo.id,
-      targetOriginalId,
-      hasLiveTaggings: !!liveTaggings,
-      liveTaggingsCount: liveTaggings?.length || 0,
-      preloadedTaggingsCount: preloadedTaggings.length,
-      tagsToUseCount: taggingsToUse.length,
-      finalTags: tags.map((t) => ({ id: t.id, name: t.name })),
-    });
 
     return tags;
   }, [memo, preloadedTaggings, liveTaggings]);
@@ -266,20 +256,12 @@ function MemoEditor({
   const updateTaggings = useCallback(
     async (memoId: string) => {
       if (!memo || memo.id === undefined || memo.id === 0) {
-        console.log("🏷️ updateTaggings: メモが無効のためスキップ");
         return;
       }
 
       const currentTagIds = currentTags.map((tag) => tag.id);
       const localTagIds = localTags.map((tag) => tag.id);
 
-      console.log("🏷️ updateTaggings開始:", {
-        memoId,
-        currentTagIds,
-        localTagIds,
-        currentTags: currentTags.map((t) => ({ id: t.id, name: t.name })),
-        localTags: localTags.map((t) => ({ id: t.id, name: t.name })),
-      });
 
       // 削除するタグ（currentにあってlocalにない）
       const tagsToRemove = currentTagIds.filter(
@@ -288,24 +270,9 @@ function MemoEditor({
       // 追加するタグ（localにあってcurrentにない）
       const tagsToAdd = localTagIds.filter((id) => !currentTagIds.includes(id));
 
-      console.log("🏷️ タグ差分計算:", {
-        tagsToRemove,
-        tagsToAdd,
-      });
 
       // 削除処理（preloadedTaggingsからタギングIDを見つける）
       for (const tagId of tagsToRemove) {
-        console.log("🏷️ タグ削除処理:", {
-          tagId,
-          memoId,
-          preloadedTaggingsCount: preloadedTaggings.length,
-          preloadedTaggings: preloadedTaggings.map((t) => ({
-            id: t.id,
-            tagId: t.tagId,
-            targetType: t.targetType,
-            targetOriginalId: t.targetOriginalId,
-          })),
-        });
 
         const taggingToDelete = preloadedTaggings.find(
           (t) =>
@@ -315,10 +282,8 @@ function MemoEditor({
         );
 
         if (taggingToDelete) {
-          console.log("🏷️ 削除対象タグ付け発見:", taggingToDelete);
           await deleteTaggingMutation.mutateAsync(taggingToDelete.id);
         } else {
-          console.log("🏷️ 削除対象タグ付けが見つかりません", { tagId, memoId });
         }
       }
 
@@ -375,12 +340,6 @@ function MemoEditor({
   const handleSaveWithTags = useCallback(async () => {
     if (isDeleted) return; // 削除済みの場合は保存しない
 
-    console.log("💾 handleSaveWithTags開始:", {
-      memoId: memo?.id,
-      hasTagChanges,
-      localTagsCount: localTags.length,
-      currentTagsCount: currentTags.length,
-    });
 
     try {
       // まずメモを保存
@@ -391,10 +350,6 @@ function MemoEditor({
       // 既存メモの場合は現在のmemo、新規作成の場合は少し待ってから処理
       if (memo && memo.id > 0) {
         // 既存メモの場合
-        console.log(
-          "💾 既存メモのタグ更新:",
-          memo.originalId || memo.id.toString(),
-        );
         await updateTaggings(memo.originalId || memo.id.toString());
         setHasManualChanges(false);
       } else if (localTags.length > 0) {
@@ -735,24 +690,11 @@ function MemoEditor({
           tags={preloadedTags}
           selectedTagIds={localTags.map((tag) => tag.id)}
           onSelectionChange={(tagIds) => {
-            console.log("🏷️ Editor: onSelectionChange呼び出し:", {
-              memoId: memo?.id || "new",
-              targetOriginalId: memo?.originalId,
-              receivedTagIds: tagIds,
-              currentLocalTags: localTags.map((t) => ({
-                id: t.id,
-                name: t.name,
-              })),
-            });
 
             const selectedTags = preloadedTags.filter((tag) =>
               tagIds.includes(tag.id),
             );
 
-            console.log(
-              "🏷️ Editor: setLocalTags実行:",
-              selectedTags.map((t) => ({ id: t.id, name: t.name })),
-            );
             setLocalTags(selectedTags);
             setHasManualChanges(true);
           }}

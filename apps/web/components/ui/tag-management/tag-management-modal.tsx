@@ -59,34 +59,16 @@ export default function TagManagementModal({
         selectedItems.includes(item.id),
     );
 
-    console.log("🔍 タグ存在チェック:", {
-      mode,
-      selectedItems,
-      selectedItemObjects: selectedItemObjects.map((item) => ({
-        id: item.id,
-        originalId: item.originalId || item.id.toString(),
-        tags: item.tags
-          ? item.tags.map((t: any) => ({
-              id: typeof t === "object" ? t.id : t,
-              name: typeof t === "object" ? t.name : t,
-            }))
-          : "undefined",
-      })),
-    });
 
     // 選択されたアイテムが持つタグIDを収集（item.tagsから直接取得）
     const tagIdsInSelectedItems = new Set<number>();
     selectedItemObjects.forEach((item) => {
-      console.log(`📎 アイテム ${item.id} のタグ (item.tags):`, item.tags);
 
       // item.tagsがある場合はそれを使用（個別エディターと同じ方式）
       if (item.tags && Array.isArray(item.tags)) {
         item.tags.forEach((tag: any) => {
           const tagId = typeof tag === "object" ? tag.id : tag;
           tagIdsInSelectedItems.add(tagId);
-          console.log(
-            `🏷️ タグID追加: ${tagId} (${typeof tag === "object" ? tag.name : "不明"})`,
-          );
         });
       }
       // fallback: allTaggingsから検索
@@ -100,22 +82,14 @@ export default function TagManagementModal({
 
         itemTaggings.forEach((tagging) => {
           tagIdsInSelectedItems.add(tagging.tagId);
-          console.log(
-            `🏷️ allTaggingsからタグID追加: ${tagging.tagId} (${tagging.tag?.name || "不明"})`,
-          );
         });
       }
     });
 
-    console.log("🏷️ 削除可能なタグID:", Array.from(tagIdsInSelectedItems));
 
     // 実際に付いているタグのみを返す
     const availableTags = tags.filter((tag) =>
       tagIdsInSelectedItems.has(tag.id),
-    );
-    console.log(
-      "🗂️ 削除可能なタグ:",
-      availableTags.map((t) => ({ id: t.id, name: t.name })),
     );
 
     return availableTags;
@@ -143,13 +117,6 @@ export default function TagManagementModal({
     if (selectedItems.length === 0 || selectedTagIdsForOperation.length === 0)
       return;
 
-    console.log("🏷️ タグ操作開始:", {
-      mode,
-      selectedItems: selectedItems.length,
-      selectedTagIds: selectedTagIdsForOperation,
-      itemType,
-      processedCount,
-    });
 
     setIsProcessingTags(true);
 
@@ -158,7 +125,6 @@ export default function TagManagementModal({
       const remainingItems = selectedItems.slice(processedCount);
       // テスト用に最初は10件まで処理
       const itemsToProcess = remainingItems.slice(0, 10);
-      console.log("📋 処理対象アイテム:", itemsToProcess);
 
       const promises: Promise<unknown>[] = [];
 
@@ -169,12 +135,6 @@ export default function TagManagementModal({
           );
           if (item) {
             const originalId = item.originalId || item.id.toString();
-            console.log(`🎯 ${mode === "add" ? "追加" : "削除"}処理:`, {
-              tagId,
-              itemType,
-              originalId,
-              itemId: item.id,
-            });
 
             if (mode === "add") {
               promises.push(
@@ -185,7 +145,6 @@ export default function TagManagementModal({
                     targetOriginalId: originalId,
                   })
                   .catch((error) => {
-                    console.log("❌ 追加エラー:", error);
                     return null;
                   }),
               );
@@ -198,15 +157,9 @@ export default function TagManagementModal({
                     targetOriginalId: originalId,
                   })
                   .then((result) => {
-                    console.log("✅ 削除成功:", { tagId, originalId, result });
                     return result;
                   })
                   .catch((error) => {
-                    console.log("❌ 削除エラー:", {
-                      tagId,
-                      originalId,
-                      error: error.message || error,
-                    });
                     return { error: true, tagId, originalId };
                   }),
               );
@@ -215,9 +168,7 @@ export default function TagManagementModal({
         }
       }
 
-      console.log("⏳ API呼び出し実行中...", promises.length, "件");
       const results = await Promise.allSettled(promises);
-      console.log("✅ API呼び出し完了:", results);
 
       // 処理済み件数を更新
       const newProcessedCount = processedCount + itemsToProcess.length;
@@ -228,12 +179,6 @@ export default function TagManagementModal({
 
       if (newProcessedCount >= selectedItems.length) {
         // 全て完了した場合
-        console.log(
-          "🎉 全処理完了:",
-          newProcessedCount,
-          "/",
-          selectedItems.length,
-        );
         setIsCompleted(true);
 
         // 個別エディターのキャッシュを無効化
@@ -246,7 +191,6 @@ export default function TagManagementModal({
             queryClient.invalidateQueries({
               queryKey: [itemType, originalId],
             });
-            console.log("🔄 キャッシュ無効化:", { itemType, originalId });
           }
         });
 
@@ -254,7 +198,6 @@ export default function TagManagementModal({
         queryClient.invalidateQueries({
           queryKey: ["taggings", "all"],
         });
-        console.log("🔄 全タグ付けキャッシュ無効化: [taggings, all]");
 
         onSuccess();
       }

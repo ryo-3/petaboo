@@ -23,7 +23,6 @@ export function useTags(options: UseTagsOptions = {}) {
         options.limit,
       );
       if (!response.ok) {
-        console.error("🏷️ Tags API error:", response.statusText);
       }
       const data = await response.json();
       return data as Tag[];

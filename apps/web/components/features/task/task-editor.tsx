@@ -148,15 +148,6 @@ function TaskEditor({
 
     const tags = taggingsToUse.map((t) => t.tag).filter(Boolean) as Tag[];
 
-    console.log("🔍 エディター currentTags 更新:", {
-      taskId: task.id,
-      targetOriginalId,
-      hasLiveTaggings: !!liveTaggings,
-      liveTaggingsCount: liveTaggings?.length || 0,
-      preloadedTaggingsCount: preloadedTaggings.length,
-      tagsToUseCount: taggingsToUse.length,
-      finalTags: tags,
-    });
 
     return tags;
   }, [task, liveTaggings, preloadedTaggings]);
@@ -348,11 +339,6 @@ function TaskEditor({
         JSON.stringify(localTags.map((t) => t.id).sort())
     ) {
       setLocalTags(currentTags);
-      console.log("🔄 タスクエディター localTags 自動同期:", {
-        taskId: task?.id,
-        from: localTags.map((t) => ({ id: t.id, name: t.name })),
-        to: currentTags.map((t) => ({ id: t.id, name: t.name })),
-      });
     }
   }, [task?.id, prevTaskId, currentTags, localTags]);
 
@@ -659,8 +645,6 @@ function TaskEditor({
       };
 
       // デバッグ用ログ
-      console.log("保存するタスクデータ:", taskData);
-      console.log("boardCategoryId:", boardCategoryId);
 
       if (isNewTask) {
         // 新規作成

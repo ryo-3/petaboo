@@ -270,9 +270,6 @@ app.openapi(
       boardCategoryId,
     } = parsed.data;
 
-    // デバッグログ
-    console.log("受信したデータ:", parsed.data);
-    console.log("boardCategoryId:", boardCategoryId);
 
     const insertData = {
       userId: auth.userId,
@@ -288,7 +285,6 @@ app.openapi(
       createdAt: Math.floor(Date.now() / 1000),
     };
 
-    console.log("DBに挿入するデータ:", insertData);
 
     const result = await db
       .insert(tasks)
@@ -309,8 +305,6 @@ app.openapi(
       .where(eq(tasks.id, result[0].id))
       .get();
 
-    console.log("DBから取得した新規タスク:", newTask);
-    console.log("保存されたboardCategoryId:", newTask?.boardCategoryId);
 
     return c.json(newTask, 200);
   },
@@ -389,15 +383,12 @@ app.openapi(
       );
     }
 
-    console.log("更新リクエストのデータ:", parsed.data);
-    console.log("更新するboardCategoryId:", parsed.data.boardCategoryId);
 
     const updateData = {
       ...parsed.data,
       updatedAt: Math.floor(Date.now() / 1000),
     };
 
-    console.log("DBに更新するデータ:", updateData);
 
     const result = await db
       .update(tasks)

@@ -93,7 +93,6 @@ export default function TeamLayout({
   const handleHome = () => {
     if (pathname.startsWith("/team/") && pathname !== "/team") {
       // チーム詳細ページまたはチームボード詳細ページの場合は、overviewタブに移動
-      console.log("Home button clicked - switching to overview");
       window.dispatchEvent(
         new CustomEvent("team-mode-change", {
           detail: { mode: "overview", pathname },
@@ -110,7 +109,6 @@ export default function TeamLayout({
     setCurrentMode(mode);
     // チーム詳細ページでタブを切り替える場合はメッセージを送信
     if (isTeamDetailPage) {
-      console.log(`Team mode changed to: ${mode}`);
       // カスタムイベントを発行してチーム詳細コンポーネントに通知
       window.dispatchEvent(
         new CustomEvent("team-mode-change", {
@@ -123,7 +121,6 @@ export default function TeamLayout({
   const handleShowMemoList = () => {
     setCurrentMode("memo");
     if (isTeamDetailPage) {
-      console.log("Team memo list requested");
       window.dispatchEvent(
         new CustomEvent("team-mode-change", {
           detail: { mode: "memo", pathname },
@@ -135,7 +132,6 @@ export default function TeamLayout({
   const handleShowTaskList = () => {
     setCurrentMode("task");
     if (isTeamDetailPage) {
-      console.log("Team task list requested");
       window.dispatchEvent(
         new CustomEvent("team-mode-change", {
           detail: { mode: "task", pathname },
@@ -145,7 +141,6 @@ export default function TeamLayout({
   };
 
   const handleNewMemo = () => {
-    console.log("New team memo requested");
     if (isTeamDetailPage) {
       // チーム詳細ページでメモ作成イベントを送信
       window.dispatchEvent(
@@ -157,7 +152,6 @@ export default function TeamLayout({
   };
 
   const handleNewTask = () => {
-    console.log("New team task requested");
     // 新しいタスク作成のロジックをここに実装
   };
 

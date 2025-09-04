@@ -9,6 +9,12 @@ binding = "DB"
 database_name = "petaboo"
 database_id = "7de21e56-0d26-4204-8563-a57bca0772b4"
 
+# Environment Variables (Secrets)
+[vars]
+# 一時的にテスト用として設定（実際はsecretを使うべき）
+CLERK_SECRET_KEY = "sk_test_VGEcn7QzPdOl8UXxKlmKyAk9zWmm0oZ1x0pe1NyMxq"
+CLERK_PUBLISHABLE_KEY = "pk_test_bWFpbi1jcmFuZS04Ni5jbGVyay5hY2NvdW50cy5kZXYk"
+
 # Workers Logs設定
 [observability]
 enabled = true

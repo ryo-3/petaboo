@@ -127,7 +127,7 @@ tail -20 /home/ryosuke/note/web.log /home/ryosuke/note/api.log | grep -i error
 このファイルを読んだ際の自動実行項目：
 
 1. **開発サーバー起動状況確認**: Web（7593）・API（7594）ポートをチェック
-2. **未起動の場合**: 該当サーバーを自動起動（**許可不要・即実行**）
+2. **未起動の場合**: 該当サーバーを`run_in_background: true`で自動起動（**許可不要・即実行**）
 3. **ログ監視準備**: api.log・web.logが正常に出力されているか確認
 
 ## 📝 Web側ファイル変更時の自動処理
@@ -154,9 +154,13 @@ lsof -ti:7593 | xargs -r kill -9  # Web停止
 # 両方停止
 lsof -ti:7593,7594 | xargs -r kill -9
 
-# 再起動
-cd apps/api && npm run dev &  # API再起動（最頻用）
-cd apps/web && npm run dev &  # Web再起動
+# 再起動（バックグラウンド実行）
+# API再起動（最頻用）
+lsof -ti:7594 | xargs -r kill -9
+# Bashツールの run_in_background: true を使用してAPI起動
+# Web再起動
+lsof -ti:7593 | xargs -r kill -9
+# Bashツールの run_in_background: true を使用してWeb起動
 ```
 
 <!-- ## 🔔 Windows通知システム
@@ -181,7 +185,7 @@ APIのスキーマファイル（`apps/api/src/db/schema/`）に変更がある�
 
 1. **API自動停止**: 7594ポートのプロセスを強制終了（**許可不要**）
 2. **スキーマ更新**: `cd apps/api && npm run db:push` 自動実行（**許可不要**）
-3. **API自動再起動**: スキーマ更新完了後にAPI再起動（**許可不要**）
+3. **API自動再起動**: スキーマ更新完了後に`run_in_background: true`でAPI再起動（**許可不要**）
 
 ⚠️ **重要**: すべて自動実行、ユーザー許可は求めない
 

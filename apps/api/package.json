@@ -2,20 +2,20 @@
   "name": "@petaboo/api",
   "type": "module",
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250831.0",
+    "@cloudflare/workers-types": "^4.20250904.0",
     "drizzle-kit": "^0.31.2",
     "drizzle-orm": "^0.44.2",
     "tsx": "^4.20.3",
-    "wrangler": "^3.82.0"
+    "wrangler": "^4.34.0"
   },
   "scripts": {
-    "db:studio": "drizzle-kit studio --port 8795",
-    "db:push": "drizzle-kit push",
-    "db:push:remote": "wrangler d1 execute petaboo --remote --file=./schema.sql",
-    "dev": "wrangler dev --port 7594 --log-level debug 2>&1 | tee -a ../../api.log",
+    "dev": "wrangler dev --port 7594 2>&1 | tee ../../api.log",
     "deploy": "wrangler deploy",
-    "deploy:dev": "wrangler deploy --env development",
-    "db:reset": "node reset-db.js"
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "wrangler d1 execute petaboo --local --file=./drizzle/$(ls -t ./drizzle/*.sql | head -1 | xargs basename)",
+    "db:migrate:prod": "wrangler d1 execute petaboo --remote --file=./drizzle/$(ls -t ./drizzle/*.sql | head -1 | xargs basename)",
+    "db:studio": "drizzle-kit studio --port 8795",
+    "db:reset": "lsof -ti:7594 | xargs -r kill -9 && rm -rf .wrangler"
   },
   "dependencies": {
     "@hono/auth-js": "^1.0.15",

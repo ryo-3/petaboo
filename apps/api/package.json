@@ -13,7 +13,7 @@
     "deploy": "wrangler deploy",
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 execute petaboo --local --file=./drizzle/$(ls -t ./drizzle/*.sql | head -1 | xargs basename)",
-    "db:migrate:prod": "wrangler d1 execute petaboo --remote --file=./drizzle/$(ls -t ./drizzle/*.sql | head -1 | xargs basename)",
+    "db:migrate:prod": "find ./drizzle -name '*.sql' -type f | sort -V | while read file; do echo \"Applying $file...\"; wrangler d1 execute petaboo --remote --file=\"$file\" || echo \"Already applied or error: $file\"; done",
     "db:studio": "drizzle-kit studio --port 8795",
     "db:reset": "lsof -ti:7594 | xargs -r kill -9 && rm -rf .wrangler"
   },

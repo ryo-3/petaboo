@@ -12,6 +12,9 @@ export default defineConfig({
       process.env.CLOUDFLARE_DATABASE_ID ||
       "7de21e56-0d26-4204-8563-a57bca0772b4",
     token:
-      process.env.CLOUDFLARE_D1_TOKEN || process.env.CLOUDFLARE_API_TOKEN || "",
+      process.env.CLOUDFLARE_D1_TOKEN ||
+      process.env.CLOUDFLARE_API_TOKEN ||
+      process.env.CF_API_TOKEN ||
+      "",
   },
 });

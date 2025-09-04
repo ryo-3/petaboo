@@ -101,3 +101,5 @@ petaboo/
 ## ライセンス
 
 Private Project
+
+# Vercel環境変数反映のための再デプロイ

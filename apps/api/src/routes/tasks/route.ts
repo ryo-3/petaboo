@@ -477,25 +477,33 @@ app.openapi(
       return c.json({ error: "Task not found" }, 404);
     }
 
-    // D1はトランザクションをサポートしないため、順次実行
+    // D1はトランザクションをサポートしないため、安全な順次実行
     try {
-      // 削除済みテーブルに挿入
-      await db.insert(deletedTasks).values({
-        userId: auth.userId,
-        originalId: task.originalId, // originalIdをそのままコピー
-        uuid: task.uuid, // UUIDもコピー
-        title: task.title,
-        description: task.description,
-        status: task.status,
-        priority: task.priority,
-        dueDate: task.dueDate,
-        categoryId: task.categoryId,
-        createdAt: task.createdAt,
-        updatedAt: task.updatedAt,
-        deletedAt: Math.floor(Date.now() / 1000),
-      });
+      // Step 1: 削除済みテーブルに安全にコピー
+      const insertResult = await db
+        .insert(deletedTasks)
+        .values({
+          userId: auth.userId,
+          originalId: task.originalId, // originalIdをそのままコピー
+          uuid: task.uuid, // UUIDもコピー
+          title: task.title,
+          description: task.description,
+          status: task.status,
+          priority: task.priority,
+          dueDate: task.dueDate,
+          categoryId: task.categoryId,
+          createdAt: task.createdAt,
+          updatedAt: task.updatedAt,
+          deletedAt: Math.floor(Date.now() / 1000),
+        })
+        .returning({ id: deletedTasks.id });
 
-      // 関連するboard_itemsのdeletedAtを設定
+      // Step 1.5: コピーが正常に完了したことを確認
+      if (!insertResult || insertResult.length === 0) {
+        throw new Error("削除済みテーブルへのコピーが失敗しました");
+      }
+
+      // Step 2: 関連するboard_itemsのdeletedAtを設定
       await db
         .update(boardItems)
         .set({ deletedAt: new Date() })
@@ -506,10 +514,30 @@ app.openapi(
           ),
         );
 
-      // 元テーブルから削除
-      await db.delete(tasks).where(eq(tasks.id, id));
+      // Step 3: コピー完了後に元テーブルから安全に削除
+      const deleteResult = await db.delete(tasks).where(eq(tasks.id, id));
+
+      // Step 3.5: 削除が正常に完了したことを確認
+      if (deleteResult.changes === 0) {
+        console.warn(
+          "元テーブルからの削除で対象が見つかりませんでしたが、コピーは完了済みです",
+        );
+      }
     } catch (error) {
       console.error("タスク削除エラー:", error);
+      // コピー段階でエラーが発生した場合、削除済みテーブルの重複データをクリーンアップ
+      try {
+        await db
+          .delete(deletedTasks)
+          .where(
+            and(
+              eq(deletedTasks.originalId, task.originalId),
+              eq(deletedTasks.userId, auth.userId),
+            ),
+          );
+      } catch (cleanupError) {
+        console.error("クリーンアップエラー:", cleanupError);
+      }
       return c.json({ error: "Failed to delete task" }, 500);
     }
 

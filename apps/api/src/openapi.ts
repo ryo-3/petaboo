@@ -22,7 +22,12 @@ const app = new OpenAPIHono();
 
 // CORS設定を追加（管理画面からのアクセスを許可）
 app.use("*", cors({
-  origin: ["http://localhost:3000", "http://localhost:7593"],
+  origin: [
+    "http://localhost:3000", 
+    "http://localhost:7593",
+    "https://petaboo.vercel.app",
+    "https://*.vercel.app"  // Vercelプレビューデプロイも許可
+  ],
   allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowHeaders: ["Content-Type", "Authorization", "x-admin-token"],
   credentials: true,

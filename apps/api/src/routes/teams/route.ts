@@ -20,6 +20,8 @@ import {
   getInvitation,
   acceptInvitationRoute,
   acceptInvitation,
+  generateInviteUrlRoute,
+  generateInviteUrl,
 } from "./api";
 import { createTeamBoardsAPI } from "./boards";
 
@@ -39,6 +41,7 @@ teamsRoute.openapi(getTeamsRoute, getTeams);
 teamsRoute.openapi(getTeamDetailRoute, getTeamDetail);
 teamsRoute.openapi(createTeamRoute, createTeam);
 teamsRoute.openapi(inviteToTeamRoute, inviteToTeam);
+teamsRoute.openapi(generateInviteUrlRoute, generateInviteUrl);
 teamsRoute.openapi(getInvitationRoute, getInvitation);
 teamsRoute.openapi(acceptInvitationRoute, acceptInvitation);
 teamsRoute.openapi(getMyTeamRoute, getMyTeam);

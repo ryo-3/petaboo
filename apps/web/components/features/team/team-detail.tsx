@@ -4,8 +4,10 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { CopyIcon, RefreshCcwIcon, TrashIcon } from "lucide-react";
+import { BackButton } from "@/components/ui/buttons/back-button";
 import { useTeamDetail } from "@/src/hooks/use-team-detail";
-import { useInviteToTeam } from "@/src/hooks/use-invite-to-team";
+import { useGenerateInviteCode } from "@/src/hooks/use-generate-invite-code";
 import { useUserInfo } from "@/src/hooks/use-user-info";
 import MemoScreen from "@/components/screens/memo-screen";
 import TaskScreen from "@/components/screens/task-screen";
@@ -23,14 +25,16 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   const searchParams = useSearchParams();
   const { data: team, isLoading, error } = useTeamDetail(customUrl);
   const { data: userInfo } = useUserInfo();
-  const { mutate: inviteToTeam, isPending: isInviting } = useInviteToTeam();
-  const [inviteEmail, setInviteEmail] = useState("");
+  const { mutate: generateInviteCode, isPending: isGenerating } =
+    useGenerateInviteCode();
   const [inviteRole, setInviteRole] = useState<"admin" | "member">("member");
+  const [generatedCode, setGeneratedCode] = useState<string>("");
+
+  const [showInvitePanel, setShowInvitePanel] = useState(false);
   const [inviteMessage, setInviteMessage] = useState<{
     type: "success" | "error";
     text: string;
   } | null>(null);
-  const [showInviteForm, setShowInviteForm] = useState(false);
 
   // 選択状態の管理
   const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null);
@@ -267,10 +271,16 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         {/* ヘッダー */}
         {activeTab === "overview" && (
           <div className="mb-4 flex-shrink-0">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              {showInvitePanel && (
+                <BackButton onClick={() => setShowInvitePanel(false)} />
+              )}
               <h1 className="text-[22px] font-bold text-gray-800">
-                {team.name}
+                {showInvitePanel ? "チーム招待" : team.name}
               </h1>
+              {showInvitePanel && (
+                <span className="text-gray-600 font-medium">{team.name}</span>
+              )}
             </div>
           </div>
         )}
@@ -300,62 +310,170 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
           {/* タブコンテンツ */}
           {activeTab === "overview" && (
             <>
-              {/* チーム基本情報 */}
-              <div className="mb-6">
-                {team.description && (
-                  <p className="text-gray-600 text-sm">{team.description}</p>
-                )}
-              </div>
-
-              {/* メンバー一覧 */}
-              <Card className="p-4 mb-6">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-medium text-gray-900">
-                    メンバー ({team.memberCount}人)
-                  </h3>
-                  {team.role === "admin" && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setShowInviteForm(!showInviteForm)}
-                    >
-                      招待
-                    </Button>
-                  )}
-                </div>
-
-                {/* メンバー表示 */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3 p-2 bg-gray-50 rounded">
-                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                      {userInfo?.displayName
-                        ? userInfo.displayName.charAt(0).toUpperCase()
-                        : "Y"}
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-sm font-medium">
-                        {userInfo?.displayName || "あなた"}
+              {showInvitePanel ? (
+                /* 招待パネル */
+                <div>
+                  <Card className="p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <svg
+                          className="w-5 h-5 text-blue-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                          />
+                        </svg>
                       </div>
-                      <div className="text-xs text-gray-500">
-                        user@example.com
+                      <div>
+                        <h3 className="font-semibold text-gray-900">
+                          メンバー招待
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          招待コードでチームに参加してもらう
+                        </p>
                       </div>
                     </div>
-                    <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
-                      {team.role === "admin" ? "管理者" : "メンバー"}
-                    </span>
-                  </div>
-                </div>
-              </Card>
 
-              {/* 招待機能（管理者のみ） */}
-              {team.role === "admin" && showInviteForm && (
-                <div className="mb-6">
-                  <h3 className="font-medium text-gray-900 mb-3">
-                    メンバー招待
-                  </h3>
+                    {!generatedCode ? (
+                      <div>
+                        <p className="text-gray-600 text-sm mb-4">
+                          招待コードを生成してメンバーと共有してください。コードは3日間有効です。
+                        </p>
+                        <Button
+                          onClick={() => {
+                            generateInviteCode(
+                              { customUrl, role: inviteRole },
+                              {
+                                onSuccess: (data) => {
+                                  setGeneratedCode(data.url);
+                                  setInviteMessage({
+                                    type: "success",
+                                    text: "生成完了",
+                                  });
+                                  setTimeout(
+                                    () => setInviteMessage(null),
+                                    1500,
+                                  );
+                                },
+                                onError: () => {
+                                  setInviteMessage({
+                                    type: "error",
+                                    text: "生成失敗",
+                                  });
+                                  setTimeout(
+                                    () => setInviteMessage(null),
+                                    2000,
+                                  );
+                                },
+                              },
+                            );
+                          }}
+                          disabled={isGenerating}
+                          className="w-full"
+                        >
+                          {isGenerating ? "生成中..." : "招待コードを生成"}
+                        </Button>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="bg-gray-50 border rounded-lg p-4 mb-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-xs text-gray-500 mb-1">
+                                招待コード
+                              </p>
+                              <code className="text-lg font-mono font-bold text-gray-800">
+                                {generatedCode}
+                              </code>
+                            </div>
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                navigator.clipboard.writeText(generatedCode);
+                                setInviteMessage({
+                                  type: "success",
+                                  text: "コピーしました",
+                                });
+                                setTimeout(() => setInviteMessage(null), 1500);
+                              }}
+                            >
+                              <CopyIcon className="w-4 h-4 mr-1" />
+                              コピー
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-gray-500">3日間有効</span>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                generateInviteCode(
+                                  { customUrl, role: inviteRole },
+                                  {
+                                    onSuccess: (data) => {
+                                      setGeneratedCode(data.url);
+                                      setInviteMessage({
+                                        type: "success",
+                                        text: "新しいURLを生成しました",
+                                      });
+                                      setTimeout(
+                                        () => setInviteMessage(null),
+                                        2000,
+                                      );
+                                    },
+                                    onError: () => {
+                                      setInviteMessage({
+                                        type: "error",
+                                        text: "更新に失敗しました",
+                                      });
+                                      setTimeout(
+                                        () => setInviteMessage(null),
+                                        2000,
+                                      );
+                                    },
+                                  },
+                                );
+                              }}
+                              disabled={isGenerating}
+                            >
+                              <RefreshCcwIcon className="w-4 h-4 mr-1" />
+                              更新
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setGeneratedCode("");
+                                setInviteMessage({
+                                  type: "success",
+                                  text: "招待コードを削除しました",
+                                });
+                                setTimeout(() => setInviteMessage(null), 2000);
+                              }}
+                              className="text-red-600 border-red-300 hover:bg-red-50"
+                            >
+                              <TrashIcon className="w-4 h-4 mr-1" />
+                              削除
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </Card>
+
+                  {/* メッセージ表示 */}
                   {inviteMessage && (
                     <div
-                      className={`mb-3 p-2 rounded text-sm ${
+                      className={`p-3 rounded-lg text-sm text-center ${
                         inviteMessage.type === "success"
                           ? "bg-green-50 text-green-700"
                           : "bg-red-50 text-red-700"
@@ -364,64 +482,73 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                       {inviteMessage.text}
                     </div>
                   )}
-                  <div className="flex gap-2 mb-2">
-                    <input
-                      type="email"
-                      placeholder="メールアドレス"
-                      value={inviteEmail}
-                      onChange={(e) => setInviteEmail(e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-gray-400"
-                    />
-                    <select
-                      value={inviteRole}
-                      onChange={(e) =>
-                        setInviteRole(e.target.value as "admin" | "member")
-                      }
-                      className="px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-gray-400"
-                    >
-                      <option value="member">メンバー</option>
-                      <option value="admin">管理者</option>
-                    </select>
-                  </div>
-                  <Button
-                    onClick={() => {
-                      if (!inviteEmail || !inviteEmail.includes("@")) {
-                        setInviteMessage({
-                          type: "error",
-                          text: "有効なメールアドレスを入力してください",
-                        });
-                        return;
-                      }
-
-                      inviteToTeam(
-                        { customUrl, email: inviteEmail, role: inviteRole },
-                        {
-                          onSuccess: () => {
-                            setInviteMessage({
-                              type: "success",
-                              text: `${inviteEmail} に招待メールを送信しました`,
-                            });
-                            setInviteEmail("");
-                            setTimeout(() => setInviteMessage(null), 5000);
-                          },
-                          onError: (error) => {
-                            const message =
-                              error instanceof Error
-                                ? error.message
-                                : "招待の送信に失敗しました";
-                            setInviteMessage({ type: "error", text: message });
-                            setTimeout(() => setInviteMessage(null), 5000);
-                          },
-                        },
-                      );
-                    }}
-                    disabled={isInviting || !inviteEmail}
-                    size="sm"
-                    className="w-full"
-                  >
-                    {isInviting ? "送信中..." : "招待送信"}
-                  </Button>
                 </div>
+              ) : (
+                /* 通常のチーム概要表示 */
+                <>
+                  {/* チーム基本情報 */}
+                  <div className="mb-6">
+                    {team.description && (
+                      <p className="text-gray-600 text-sm">
+                        {team.description}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* メンバー一覧 */}
+                  <Card className="p-4 mb-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-medium text-gray-900">
+                        メンバー ({team.memberCount}人)
+                      </h3>
+                      {/* 招待ボタン（管理者のみ） */}
+                      {team.role === "admin" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setShowInvitePanel(true)}
+                        >
+                          招待
+                        </Button>
+                      )}
+                    </div>
+
+                    {/* メンバー表示 */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3 p-2 bg-gray-50 rounded">
+                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                          {userInfo?.displayName
+                            ? userInfo.displayName.charAt(0).toUpperCase()
+                            : "Y"}
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-sm font-medium">
+                            {userInfo?.displayName || "あなた"}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            user@example.com
+                          </div>
+                        </div>
+                        <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
+                          {team.role === "admin" ? "管理者" : "メンバー"}
+                        </span>
+                      </div>
+                    </div>
+                  </Card>
+
+                  {/* メッセージ表示エリア */}
+                  {inviteMessage && (
+                    <div
+                      className={`mb-4 p-3 rounded text-sm ${
+                        inviteMessage.type === "success"
+                          ? "bg-green-50 text-green-700"
+                          : "bg-red-50 text-red-700"
+                      }`}
+                    >
+                      {inviteMessage.text}
+                    </div>
+                  )}
+                </>
               )}
             </>
           )}

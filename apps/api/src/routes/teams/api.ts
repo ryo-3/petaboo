@@ -549,7 +549,6 @@ export async function getTeamDetail(c: any) {
   const customUrl = c.req.param("customUrl");
   const db: DatabaseType = c.get("db");
 
-
   try {
     // customUrlからチームIDを取得
     const teamResult = await db
@@ -781,7 +780,6 @@ export async function inviteToTeam(c: any) {
     const team = teamResult[0];
     const teamId = team.id;
 
-
     // ユーザーがそのチームの管理者かチェック
     const teamMember = await db
       .select()
@@ -811,7 +809,6 @@ export async function inviteToTeam(c: any) {
         ),
       )
       .limit(1);
-
 
     if (existingInvitation.length > 0) {
       return c.json(
@@ -844,7 +841,11 @@ export async function inviteToTeam(c: any) {
       .returning();
 
     // メール送信（失敗しても続行）
-    const invitationLink = `http://localhost:7593/team/join/${token}`;
+    const baseUrl =
+      process.env.NODE_ENV === "production"
+        ? "https://petaboo.vercel.app"
+        : "http://localhost:7593";
+    const invitationLink = `${baseUrl}/team/join/${token}`;
 
     try {
       const { sendTeamInvitationEmail } = await import(
@@ -858,11 +859,9 @@ export async function inviteToTeam(c: any) {
         invitationToken: token,
         invitationLink,
       });
-
     } catch (error) {
       console.error("メール送信でエラー:", error);
     }
-
 
     return c.json(
       {
@@ -1022,5 +1021,148 @@ export async function acceptInvitation(c: any) {
   } catch (error) {
     console.error("招待受諾エラー:", error);
     return c.json({ message: "チームへの参加に失敗しました" }, 500);
+  }
+}
+
+// 招待URL生成のスキーマ
+const generateInviteUrlSchema = z.object({
+  expiresInDays: z.number().min(1).max(30).default(3), // 1-30日、デフォルト3日
+});
+
+// 招待URL生成ルート定義
+export const generateInviteUrlRoute = createRoute({
+  method: "post",
+  path: "/{customUrl}/invite-url",
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: generateInviteUrlSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            token: z.string(),
+            url: z.string(),
+            expiresAt: z.string(),
+          }),
+        },
+      },
+      description: "招待URL生成成功",
+    },
+    400: {
+      content: {
+        "application/json": {
+          schema: z.object({ message: z.string() }),
+        },
+      },
+      description: "バリデーションエラー",
+    },
+    403: {
+      content: {
+        "application/json": {
+          schema: z.object({ message: z.string() }),
+        },
+      },
+      description: "権限エラー",
+    },
+    404: {
+      content: {
+        "application/json": {
+          schema: z.object({ message: z.string() }),
+        },
+      },
+      description: "チームが見つからない",
+    },
+  },
+  tags: ["teams"],
+});
+
+// 招待URL生成ハンドラー
+export async function generateInviteUrl(c: any) {
+  try {
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ message: "認証が必要です" }, 401);
+    }
+
+    const { customUrl } = c.req.param();
+    const { expiresInDays } = await c.req.json();
+    const db: DatabaseType = c.get("db");
+
+    // チーム存在確認
+    const team = await db
+      .select()
+      .from(teams)
+      .where(eq(teams.customUrl, customUrl))
+      .get();
+
+    if (!team) {
+      return c.json({ message: "チームが見つかりません" }, 404);
+    }
+
+    // 管理者権限確認
+    const memberRole = await db
+      .select()
+      .from(teamMembers)
+      .where(
+        and(
+          eq(teamMembers.teamId, team.id),
+          eq(teamMembers.userId, auth.userId),
+        ),
+      )
+      .get();
+
+    if (!memberRole || memberRole.role !== "admin") {
+      return c.json({ message: "管理者権限が必要です" }, 403);
+    }
+
+    // 既存のアクティブな招待URLを無効化
+    await db
+      .update(teamInvitations)
+      .set({ status: "expired" })
+      .where(
+        and(
+          eq(teamInvitations.teamId, team.id),
+          eq(teamInvitations.email, "URL_INVITE"),
+          eq(teamInvitations.status, "active"),
+        ),
+      );
+
+    // 新しいトークン生成
+    const token =
+      Math.random().toString(36).substring(2, 12) +
+      Math.random().toString(36).substring(2, 12);
+
+    const expiresAt =
+      Math.floor(Date.now() / 1000) + expiresInDays * 24 * 60 * 60;
+
+    // 招待URL用のレコード作成
+    await db.insert(teamInvitations).values({
+      teamId: team.id,
+      email: "URL_INVITE",
+      role: "member", // デフォルトはメンバー権限
+      token: token,
+      invitedBy: auth.userId,
+      createdAt: Math.floor(Date.now() / 1000),
+      expiresAt: expiresAt,
+      status: "active",
+    });
+
+    const inviteUrl = `${process.env.NODE_ENV === "production" ? "https://petaboo.vercel.app" : "http://localhost:7593"}/join/${customUrl}?token=${token}`;
+
+    return c.json({
+      token: token,
+      url: inviteUrl,
+      expiresAt: new Date(expiresAt * 1000).toISOString(),
+    });
+  } catch (error) {
+    console.error("招待URL生成エラー:", error);
+    return c.json({ message: "招待URLの生成に失敗しました" }, 500);
   }
 }

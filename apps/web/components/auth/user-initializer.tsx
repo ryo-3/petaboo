@@ -11,7 +11,10 @@ export function UserInitializer() {
 
   useEffect(() => {
     // 管理画面パスの場合はユーザー初期化をスキップ
-    if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+    if (
+      typeof window !== "undefined" &&
+      window.location.pathname.startsWith("/admin")
+    ) {
       console.log("Admin panel detected, skipping user initialization");
       return;
     }
@@ -21,9 +24,12 @@ export function UserInitializer() {
         try {
           const token = await getToken();
 
-          // ユーザー情報を初期化（既存ユーザー対応）
-          const response = await fetch(`${API_URL}/users/me`, {
+          // ログイン時にユーザー存在確認・作成
+          console.log("UserInitializer: /users/ensure-existsを呼び出し中...");
+          const response = await fetch(`${API_URL}/users/ensure-exists`, {
+            method: "POST",
             headers: {
+              "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
           });
@@ -34,7 +40,13 @@ export function UserInitializer() {
             return;
           }
 
-          await response.json();
+          const result = await response.json();
+          if (result.created) {
+            console.log(`✅ 新規ユーザー作成: ${result.userId}`);
+          } else {
+            console.log(`🔄 既存ユーザー確認: ${result.userId}`);
+          }
+          console.log("UserInitializer完了:", result);
         } catch (error) {
           console.error("ユーザー初期化エラー:", error);
         }

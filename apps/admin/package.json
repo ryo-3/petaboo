@@ -4,8 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "echo '\n🚀 アドミン画面を起動しています...\n⚠️  APIサーバーも起動してください: cd apps/api && npm run dev\n' && lsof -ti:3010 | xargs -r kill -9 2>/dev/null || true && npx next dev --port 3010 2>&1 | tee ../../admin.log",
-    "dev:local": "lsof -ti:3010 | xargs -r kill -9 2>/dev/null || true && npx next dev --port 3010 2>&1 | tee ../../admin.log",
+    "dev:local": "echo '\n🚀 アドミン画面を起動しています...\n⚠️  APIサーバーも起動してください: cd apps/api && npm run dev\n' && lsof -ti:3010 | xargs -r kill -9 2>/dev/null || true && npx next dev --port 3010 2>&1 | tee ../../admin.log",
     "dev:prod": "lsof -ti:3030 | xargs -r kill -9 2>/dev/null || true && NEXT_PUBLIC_API_URL=https://petaboo-api.t-takatsu02.workers.dev npx next dev --port 3030 2>&1 | tee ../../admin.log",
     "build": "next build",
     "start": "next start",

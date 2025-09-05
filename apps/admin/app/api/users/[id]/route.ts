@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const API_BASE_URL =
-  process.env.NODE_ENV === "production"
-    ? "https://petaboo-api.t-takatsu02.workers.dev"
-    : "http://localhost:7594";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594";
 
 export async function GET(
   request: NextRequest,

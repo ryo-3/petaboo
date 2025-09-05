@@ -5,8 +5,9 @@ import { Refine } from "@refinedev/core";
 import { ThemedLayoutV2, notificationProvider } from "@refinedev/antd";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
 import routerProvider from "@refinedev/nextjs-router";
-import dataProvider from "@refinedev/simple-rest";
+import { customDataProvider } from "../lib/data-provider";
 import { ConfigProvider } from "antd";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "@refinedev/antd/dist/reset.css";
 
 // 開発環境でのAnt Design警告を無効化
@@ -19,6 +20,8 @@ if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
     if (
       message.includes("[antd: Menu] `children` is deprecated") ||
       message.includes("[antd: Drawer] `bodyStyle` is deprecated") ||
+      message.includes("[antd: Card] `bordered` is deprecated") ||
+      message.includes("antd v5 support React is 16 ~ 18") ||
       message.includes("Download the React DevTools")
     ) {
       return;
@@ -31,6 +34,7 @@ if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
     if (
       message.includes("[antd: Menu] `children` is deprecated") ||
       message.includes("[antd: Drawer] `bodyStyle` is deprecated") ||
+      message.includes("[antd: Card] `bordered` is deprecated") ||
       message.includes("antd v5 support React is 16 ~ 18")
     ) {
       return;
@@ -40,6 +44,16 @@ if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
 }
 
 const API_URL = "/api"; // プロキシ経由でAPIアクセス
+
+// QueryClientインスタンスを作成
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 export default function RootLayoutClient({
   children,
@@ -73,25 +87,27 @@ export default function RootLayoutClient({
   }
 
   return (
-    <RefineKbarProvider>
-      <ConfigProvider>
-        <Refine
-          routerProvider={routerProvider}
-          dataProvider={dataProvider(API_URL)}
-          notificationProvider={notificationProvider}
-          resources={[
-            {
-              name: "users",
-              list: "/users",
-            },
-          ]}
-        >
-          <ThemedLayoutV2>
-            {children}
-          </ThemedLayoutV2>
-          <RefineKbar />
-        </Refine>
-      </ConfigProvider>
-    </RefineKbarProvider>
+    <QueryClientProvider client={queryClient}>
+      <RefineKbarProvider>
+        <ConfigProvider>
+          <Refine
+            routerProvider={routerProvider}
+            dataProvider={customDataProvider}
+            notificationProvider={notificationProvider}
+            resources={[
+              {
+                name: "users",
+                list: "/users",
+              },
+            ]}
+          >
+            <ThemedLayoutV2>
+              {children}
+            </ThemedLayoutV2>
+            <RefineKbar />
+          </Refine>
+        </ConfigProvider>
+      </RefineKbarProvider>
+    </QueryClientProvider>
   );
 }

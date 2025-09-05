@@ -2,7 +2,6 @@ import { createRoute, z } from "@hono/zod-openapi";
 import { getAuth } from "@hono/clerk-auth";
 import { eq, desc, asc, sql } from "drizzle-orm";
 import { users } from "../../db";
-import type { DatabaseType } from "../../types/common";
 
 // ユーザー情報取得ルート定義
 export const getUserInfoRoute = createRoute({
@@ -64,7 +63,84 @@ export const updateUserPlanRoute = createRoute({
   tags: ["Users"],
 });
 
-// 管理者用：特定ユーザーのプラン変更ルート定義
+// 管理者用：標準REST - 個別ユーザー取得
+export const getUserRoute = createRoute({
+  method: "get",
+  path: "/:userId",
+  request: {
+    params: z.object({
+      userId: z.string(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "ユーザー取得成功",
+      content: {
+        "application/json": {
+          schema: z.object({
+            id: z.string(),
+            userId: z.string(),
+            planType: z.enum(["free", "premium"]),
+            premiumStartDate: z.number().nullable(),
+            nextBillingDate: z.number().nullable(),
+            createdAt: z.number(),
+            updatedAt: z.number(),
+          }),
+        },
+      },
+    },
+    401: { description: "認証が必要です" },
+    403: { description: "管理者権限が必要です" },
+    404: { description: "ユーザーが見つかりません" },
+  },
+  tags: ["Users"],
+});
+
+// 管理者用：標準REST - ユーザー更新
+export const updateUserRoute = createRoute({
+  method: "put",
+  path: "/:userId",
+  request: {
+    params: z.object({
+      userId: z.string(),
+    }),
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            planType: z.enum(["free", "premium"]).optional(),
+            premiumStartDate: z.number().nullable().optional(),
+            nextBillingDate: z.number().nullable().optional(),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "ユーザー更新成功",
+      content: {
+        "application/json": {
+          schema: z.object({
+            id: z.string(),
+            userId: z.string(),
+            planType: z.enum(["free", "premium"]),
+            premiumStartDate: z.number().nullable(),
+            nextBillingDate: z.number().nullable(),
+            createdAt: z.number(),
+            updatedAt: z.number(),
+          }),
+        },
+      },
+    },
+    401: { description: "認証が必要です" },
+    403: { description: "管理者権限が必要です" },
+    404: { description: "ユーザーが見つかりません" },
+  },
+  tags: ["Users"],
+});
+
+// 管理者用：特定ユーザーのプラン変更ルート定義（既存互換性維持）
 export const updateSpecificUserPlanRoute = createRoute({
   method: "patch",
   path: "/:userId/plan",
@@ -247,7 +323,7 @@ export async function getUsersList(c: any) {
 
     // Refineが期待するX-Total-Countヘッダーを設定
     const response = c.json(
-      usersList.map((user) => ({
+      usersList.map((user: any) => ({
         id: user.userId, // Refineはデフォルトでidフィールドを期待する
         userId: user.userId,
         planType: user.planType,
@@ -372,7 +448,7 @@ export async function updateUserPlan(c: any) {
   }
 }
 
-// 管理者用：特定ユーザー情報取得
+// 管理者用：特定ユーザー情報取得（標準REST対応）
 export async function getSpecificUserInfo(c: any) {
   // 管理者権限チェック（トークンベース）
   const adminToken = c.req.header("x-admin-token");
@@ -401,21 +477,140 @@ export async function getSpecificUserInfo(c: any) {
     }
 
     const user = userResult[0];
-    return c.json(
-      {
-        userId: user.userId,
-        planType: user.planType,
-        createdAt: user.createdAt,
-      },
-      200,
-    );
+    return c.json({
+      id: user.userId,
+      userId: user.userId,
+      planType: user.planType,
+      premiumStartDate: user.premiumStartDate,
+      nextBillingDate: user.nextBillingDate,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    }, 200);
   } catch (error) {
     console.error("ユーザー情報取得エラー:", error);
     return c.json({ error: "ユーザー情報の取得に失敗しました" }, 500);
   }
 }
 
-// 管理者用：特定ユーザーのプラン変更
+// 管理者用：標準REST - 個別ユーザー取得
+export async function getUser(c: any) {
+  // 管理者権限チェック（トークンベース）
+  const adminToken = c.req.header("x-admin-token");
+  const validAdminToken = c.env?.ADMIN_TOKEN;
+  if (!adminToken || adminToken !== validAdminToken) {
+    // 管理者トークンがない場合は通常のClerk認証
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ error: "認証が必要です" }, 401);
+    }
+    return c.json({ error: "管理者権限が必要です" }, 403);
+  }
+
+  const db = c.get("db");
+  const targetUserId = c.req.param("userId");
+
+  try {
+    const userResult = await db
+      .select()
+      .from(users)
+      .where(eq(users.userId, targetUserId))
+      .limit(1);
+
+    if (userResult.length === 0) {
+      return c.json({ error: "ユーザーが見つかりません" }, 404);
+    }
+
+    const user = userResult[0];
+    return c.json({
+      id: user.userId,
+      userId: user.userId,
+      planType: user.planType,
+      premiumStartDate: user.premiumStartDate,
+      nextBillingDate: user.nextBillingDate,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    }, 200);
+  } catch (error) {
+    console.error("ユーザー情報取得エラー:", error);
+    return c.json({ error: "ユーザー情報の取得に失敗しました" }, 500);
+  }
+}
+
+// 管理者用：標準REST - ユーザー更新
+export async function updateUser(c: any) {
+  // 管理者権限チェック（トークンベース）
+  const adminToken = c.req.header("x-admin-token");
+  const validAdminToken = c.env?.ADMIN_TOKEN;
+  if (!adminToken || adminToken !== validAdminToken) {
+    // 管理者トークンがない場合は通常のClerk認証
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ error: "認証が必要です" }, 401);
+    }
+    return c.json({ error: "管理者権限が必要です" }, 403);
+  }
+
+  const db = c.get("db");
+  const targetUserId = c.req.param("userId");
+
+  let body;
+  try {
+    body = await c.req.json();
+  } catch (error) {
+    return c.json({ error: "リクエストボディが不正です" }, 400);
+  }
+
+  try {
+    const { planType, premiumStartDate, nextBillingDate } = body;
+    const now = Math.floor(Date.now() / 1000);
+
+    // 対象ユーザーの存在確認
+    const existingUser = await db
+      .select()
+      .from(users)
+      .where(eq(users.userId, targetUserId))
+      .limit(1);
+
+    if (existingUser.length === 0) {
+      return c.json({ error: "ユーザーが見つかりません" }, 404);
+    }
+
+    // ユーザー情報を更新
+    const updateData: any = { updatedAt: now };
+    if (planType !== undefined) updateData.planType = planType;
+    if (premiumStartDate !== undefined) updateData.premiumStartDate = premiumStartDate;
+    if (nextBillingDate !== undefined) updateData.nextBillingDate = nextBillingDate;
+
+    await db
+      .update(users)
+      .set(updateData)
+      .where(eq(users.userId, targetUserId));
+
+    // 更新後のユーザー情報を取得
+    const updatedUser = await db
+      .select()
+      .from(users)
+      .where(eq(users.userId, targetUserId))
+      .limit(1);
+
+    const user = updatedUser[0];
+    return c.json({
+      id: user.userId,
+      userId: user.userId,
+      planType: user.planType,
+      premiumStartDate: user.premiumStartDate,
+      nextBillingDate: user.nextBillingDate,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    }, 200);
+
+  } catch (error) {
+    console.error("ユーザー更新エラー:", error);
+    return c.json({ error: "ユーザー更新に失敗しました" }, 500);
+  }
+}
+
+// 管理者用：特定ユーザーのプラン変更（既存互換性維持）
 export async function updateSpecificUserPlan(c: any) {
   // 管理者権限チェック（トークンベース）
   const adminToken = c.req.header("x-admin-token");

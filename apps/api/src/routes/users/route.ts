@@ -9,6 +9,10 @@ import {
   getSpecificUserInfo,
   updateSpecificUserPlanRoute,
   updateSpecificUserPlan,
+  getUserRoute,
+  getUser,
+  updateUserRoute,
+  updateUser,
   getUsersListRoute,
   getUsersList,
   updateDisplayNameRoute,
@@ -31,5 +35,7 @@ usersRoute.openapi(updateUserPlanRoute, updateUserPlan);
 usersRoute.openapi(updateDisplayNameRoute, updateDisplayName);
 usersRoute.openapi(getSpecificUserInfoRoute, getSpecificUserInfo);
 usersRoute.openapi(updateSpecificUserPlanRoute, updateSpecificUserPlan);
+usersRoute.openapi(getUserRoute, getUser);
+usersRoute.openapi(updateUserRoute, updateUser);
 
 export default usersRoute;

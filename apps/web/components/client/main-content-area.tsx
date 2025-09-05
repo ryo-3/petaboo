@@ -173,13 +173,13 @@ export function MainContentArea({
             />
           ) : (
             <BoardScreen
-              ref={boardScreenRef}
+              ref={boardScreenRef as React.RefObject<BoardScreenRef>}
               teamMode={teamMode}
               teamId={teamId}
             />
           )
         ) : (
-          <BoardScreen ref={boardScreenRef} />
+          <BoardScreen ref={boardScreenRef as React.RefObject<BoardScreenRef>} />
         ))}
     </>
   );

@@ -1,5 +1,6 @@
 // apps/api/src/openapi.ts
 import { OpenAPIHono } from "@hono/zod-openapi";
+import { cors } from "hono/cors";
 
 // 手動でルートをインポート
 import memosRoute from "./routes/memos/route";
@@ -18,6 +19,14 @@ import clerkWebhook from "./routes/webhooks/clerk";
 import usersRoute from "./routes/users/route";
 
 const app = new OpenAPIHono();
+
+// CORS設定を追加（管理画面からのアクセスを許可）
+app.use("*", cors({
+  origin: ["http://localhost:3000", "http://localhost:7593"],
+  allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowHeaders: ["Content-Type", "Authorization", "x-admin-token"],
+  credentials: true,
+}));
 
 // 手動でルートを登録
 app.route("/memos", memosRoute);

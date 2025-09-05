@@ -65,7 +65,16 @@
       "Bash(git pull:*)",
       "Bash(git merge:*)",
       "Bash(wrangler tail:*)",
-      "Bash(wrangler secret:*)"
+      "Bash(wrangler secret:*)",
+      "Bash(netstat:*)",
+      "WebFetch(domain:refine.dev)",
+      "Bash(timeout 5 pnpm run db:studio:local)",
+      "Bash(npm install)",
+      "Bash(npm install:*)",
+      "Bash(git rm:*)",
+      "Bash(npx refine:*)",
+      "WebFetch(domain:www.npmjs.com)",
+      "Bash(/bashes)"
     ],
     "deny": []
   }

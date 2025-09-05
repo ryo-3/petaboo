@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Card, Form, Input, Button, message } from "antd";
-import { LockOutlined } from "@ant-design/icons";
+import { Lock } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function AdminLogin() {
@@ -43,7 +43,7 @@ export default function AdminLogin() {
             rules={[{ required: true, message: "パスワードを入力してください" }]}
           >
             <Input.Password
-              prefix={<LockOutlined />}
+              prefix={<Lock size={16} />}
               placeholder="管理者パスワード"
               size="large"
             />

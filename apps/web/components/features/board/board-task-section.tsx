@@ -53,7 +53,7 @@ interface BoardTaskSectionProps {
   isDeleting?: boolean;
   isLidOpen?: boolean;
   currentDisplayCount?: number;
-  deleteButtonRef?: React.RefObject<HTMLButtonElement | null>;
+  deleteButtonRef?: React.RefObject<HTMLButtonElement>;
   // 復元関連
   onCheckedTasksChange?: (tasks: Set<string | number>) => void;
 
@@ -136,7 +136,7 @@ export default function BoardTaskSection({
 
   // ソートオプションの管理
   const { setSortOptions, getVisibleSortOptions } = useSortOptions("task");
-  const localDeleteButtonRef = useRef<HTMLButtonElement | null>(null);
+  const localDeleteButtonRef = useRef<HTMLButtonElement>(null);
   const deleteButtonRef = propDeleteButtonRef || localDeleteButtonRef;
 
   // 復元状態管理

@@ -48,7 +48,7 @@ interface BoardMemoSectionProps {
   isDeleting?: boolean;
   isLidOpen?: boolean;
   currentDisplayCount?: number;
-  deleteButtonRef?: React.RefObject<HTMLButtonElement | null>;
+  deleteButtonRef?: React.RefObject<HTMLButtonElement>;
   // 復元関連
   onCheckedMemosChange?: (memos: Set<string | number>) => void;
 
@@ -119,7 +119,7 @@ export default function BoardMemoSection({
 }: BoardMemoSectionProps) {
   // ソートオプションの管理
   const { setSortOptions, getVisibleSortOptions } = useSortOptions("memo");
-  const localDeleteButtonRef = useRef<HTMLButtonElement | null>(null);
+  const localDeleteButtonRef = useRef<HTMLButtonElement>(null);
   const deleteButtonRef = propDeleteButtonRef || localDeleteButtonRef;
 
   // 復元状態管理

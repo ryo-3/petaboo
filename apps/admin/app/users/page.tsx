@@ -2,12 +2,16 @@
 
 import React from "react";
 import { List, useTable } from "@refinedev/antd";
-import { Table, Tag } from "antd";
+import { Table, Tag, Button, Space } from "antd";
+import { EyeOutlined, EditOutlined } from "@ant-design/icons";
+import { useRouter } from "next/navigation";
 
 export default function UsersList() {
   const { tableProps } = useTable({
     resource: "users",
   });
+  
+  const router = useRouter();
 
   return (
     <List>
@@ -36,6 +40,26 @@ export default function UsersList() {
           render={(value: number) => 
             value ? new Date(value * 1000).toLocaleDateString("ja-JP") : "-"
           }
+        />
+        <Table.Column
+          title="操作"
+          render={(_, record: any) => (
+            <Space>
+              <Button
+                icon={<EyeOutlined />}
+                onClick={() => router.push(`/users/show/${record.id}`)}
+              >
+                表示
+              </Button>
+              <Button
+                type="primary"
+                icon={<EditOutlined />}
+                onClick={() => router.push(`/users/edit/${record.id}`)}
+              >
+                編集
+              </Button>
+            </Space>
+          )}
         />
       </Table>
     </List>

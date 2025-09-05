@@ -47,7 +47,7 @@ export default function UsersList() {
     {
       title: "操作",
       key: "actions",
-      render: (_, record: User) => (
+      render: (_: any, record: User) => (
         <Space>
           <ShowButton hideText size="small" recordItemId={record.id} />
           <EditButton hideText size="small" recordItemId={record.id} />

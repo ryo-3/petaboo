@@ -95,7 +95,7 @@ export const customDataProvider: DataProvider = {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    return { data: { id } };
+    return { data: { id } as any };
   },
 
   // その他の必要なメソッド

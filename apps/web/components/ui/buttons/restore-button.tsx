@@ -17,7 +17,7 @@ interface RestoreButtonProps {
   animatedCount?: number;
   useAnimatedCount?: boolean;
   // ref用
-  buttonRef?: React.RefObject<HTMLButtonElement | null>;
+  buttonRef?: React.RefObject<HTMLButtonElement>;
 }
 
 function RestoreButton({

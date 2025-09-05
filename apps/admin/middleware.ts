@@ -43,9 +43,6 @@ export function middleware(request: NextRequest) {
     });
   }
   
-  // アクセスログ
-  console.log(`[Admin] アクセス許可: IP=${ip}, URL=${request.url}`);
-  
   return NextResponse.next();
 }
 

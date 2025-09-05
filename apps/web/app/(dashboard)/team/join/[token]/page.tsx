@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import TeamIcon from "@/components/icons/team-icon";
+import React from "react";
 
 interface InvitationData {
   id: number;

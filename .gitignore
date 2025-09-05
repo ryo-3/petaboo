@@ -7,6 +7,7 @@ out/
 # 環境変数（安全のため必須）
 .env
 .env.*  # .env.local 等も含めて
+.dev.vars
 
 # Turborepo / Turbopack 使用時
 .turbo/
@@ -20,6 +21,7 @@ dev.log
 browser.log
 api.log
 web.log
+admin.log
 
 # OSファイル
 .DS_Store

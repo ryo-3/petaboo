@@ -1,0 +1,13 @@
+/* Next.jsの開発インジケーターのみを隠す */
+[data-nextjs-toast],
+[data-nextjs-dialog],
+.__nextjs_original-stack-frame,
+[class*="__nextjs"],
+[id*="__nextjs"],
+[data-nextjs-build-indicator],
+[data-nextjs-compilation-indicator] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}

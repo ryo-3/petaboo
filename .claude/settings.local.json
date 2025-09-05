@@ -75,7 +75,9 @@
       "Bash(npx refine:*)",
       "WebFetch(domain:www.npmjs.com)",
       "Bash(/bashes)",
-      "Bash(npx wrangler d1 execute:*)"
+      "Bash(npx wrangler d1 execute:*)",
+      "Read(//home/ryosuke/**)",
+      "Read(//home/**)"
     ],
     "deny": []
   }

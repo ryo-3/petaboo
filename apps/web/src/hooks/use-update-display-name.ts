@@ -1,5 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
+
+interface UserInfo {
+  userId: string;
+  displayName: string | null;
+  planType: "free" | "premium";
+  createdAt: number;
+}
 import { usersApi } from "@/src/lib/api-client";
 
 export function useUpdateDisplayName() {
@@ -18,13 +25,16 @@ export function useUpdateDisplayName() {
     },
     onSuccess: (data) => {
       // ユーザー情報キャッシュを更新
-      queryClient.setQueryData(["user-info"], (oldData: any) => {
-        if (!oldData) return oldData;
-        return {
-          ...oldData,
-          displayName: data.displayName,
-        };
-      });
+      queryClient.setQueryData(
+        ["user-info"],
+        (oldData: UserInfo | undefined) => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            displayName: data.displayName,
+          };
+        },
+      );
 
       // ユーザー情報を再取得（念のため）
       queryClient.invalidateQueries({ queryKey: ["user-info"] });

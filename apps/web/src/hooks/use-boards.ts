@@ -61,13 +61,10 @@ export function useBoards(
   return useQuery<BoardWithStats[]>(
     ["boards", status],
     async () => {
-      const hookId = Math.random().toString(36).substr(2, 9);
-
       // 最大2回リトライ
       for (let attempt = 0; attempt < 2; attempt++) {
         const token = await getCachedToken(getToken);
         const url = `${API_BASE_URL}/boards?status=${status}`;
-
 
         const response = await fetch(url, {
           headers: {
@@ -75,7 +72,6 @@ export function useBoards(
             ...(token && { Authorization: `Bearer ${token}` }),
           },
         });
-
 
         // 401エラーの場合はキャッシュをクリアしてリトライ
         if (response.status === 401 && attempt === 0) {
@@ -101,7 +97,6 @@ export function useBoards(
           console.error(`❌ Individual boards JSON Parse Error:`, parseError);
           throw new Error(`Invalid JSON response: ${responseText}`);
         }
-
 
         return data;
       }
@@ -568,7 +563,6 @@ export function useRemoveItemFromBoard() {
     { boardId: number; itemId: string; itemType: "memo" | "task" }
   >({
     mutationFn: async ({ boardId, itemId, itemType }) => {
-
       // 最大2回リトライ
       for (let attempt = 0; attempt < 2; attempt++) {
         const token = await getCachedToken(getToken);
@@ -582,7 +576,6 @@ export function useRemoveItemFromBoard() {
           },
         });
 
-
         // 401エラーの場合はキャッシュをクリアしてリトライ
         if (response.status === 401 && attempt === 0) {
           cachedToken = null;
@@ -593,11 +586,11 @@ export function useRemoveItemFromBoard() {
         if (!response.ok) {
           try {
             const errorJson = await response.json();
-              throw new Error(
+            throw new Error(
               errorJson.error ||
                 `Failed to remove item from board: ${response.status} ${response.statusText}`,
             );
-          } catch (parseError) {
+          } catch {
             const rawText = await response.text();
             throw new Error(
               `Failed to remove item from board: ${response.status} ${response.statusText} - ${rawText}`,

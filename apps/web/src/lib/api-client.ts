@@ -581,17 +581,15 @@ export const taggingsApi = {
       targetOriginalId,
     };
 
-
     const response = await fetch(`${API_BASE_URL}/taggings/by-tag`, {
       method: "DELETE",
       headers: createHeaders(token),
       body: JSON.stringify(requestBody),
     });
 
-
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
     }
     return response;
   },

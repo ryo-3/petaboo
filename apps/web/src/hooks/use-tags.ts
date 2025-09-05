@@ -23,6 +23,7 @@ export function useTags(options: UseTagsOptions = {}) {
         options.limit,
       );
       if (!response.ok) {
+        throw new Error(`Failed to fetch tags: ${response.status}`);
       }
       const data = await response.json();
       return data as Tag[];

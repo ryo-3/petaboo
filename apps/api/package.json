@@ -14,8 +14,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migration:local": "drizzle-kit push --config drizzle.config.local.ts",
     "db:migration:prod": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio --port 8796",
     "db:studio:local": "drizzle-kit studio --port 8795 --config drizzle.config.local.ts",
+    "db:studio:prpd": "drizzle-kit studio --port 8796",
     "db:reset:local": "rm -rf .wrangler && rm -rf ../../.wrangler"
   },
   "dependencies": {

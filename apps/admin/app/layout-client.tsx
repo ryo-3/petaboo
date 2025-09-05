@@ -3,7 +3,6 @@
 import React from "react";
 import { Refine } from "@refinedev/core";
 import { ThemedLayoutV2, notificationProvider } from "@refinedev/antd";
-import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
 import routerProvider from "@refinedev/nextjs-router";
 import { customDataProvider } from "../lib/data-provider";
 import { ConfigProvider } from "antd";
@@ -43,18 +42,6 @@ if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
   };
 }
 
-const API_URL = "/api"; // プロキシ経由でAPIアクセス
-
-// QueryClientインスタンスを作成
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
-    },
-  },
-});
-
 export default function RootLayoutClient({
   children,
 }: {
@@ -62,6 +49,23 @@ export default function RootLayoutClient({
 }) {
   const [isMounted, setIsMounted] = React.useState(false);
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+  
+  // QueryClientをmemoで管理
+  const queryClient = React.useMemo(
+    () => new QueryClient({
+      defaultOptions: {
+        queries: {
+          refetchOnWindowFocus: false,
+          retry: false,
+          staleTime: Infinity,
+        },
+        mutations: {
+          retry: false,
+        },
+      },
+    }),
+    []
+  );
 
   React.useEffect(() => {
     setIsMounted(true);
@@ -73,9 +77,15 @@ export default function RootLayoutClient({
     return <div>Loading...</div>;
   }
 
-  // ログイン画面の場合は認証チェックをスキップ
+  // ログイン画面の場合はQueryClientProviderのみ
   if (typeof window !== "undefined" && window.location.pathname === "/login") {
-    return <>{children}</>;
+    return (
+      <QueryClientProvider client={queryClient}>
+        <ConfigProvider>
+          {children}
+        </ConfigProvider>
+      </QueryClientProvider>
+    );
   }
 
   // 認証されていない場合はログインページにリダイレクト
@@ -88,26 +98,42 @@ export default function RootLayoutClient({
 
   return (
     <QueryClientProvider client={queryClient}>
-      <RefineKbarProvider>
-        <ConfigProvider>
-          <Refine
-            routerProvider={routerProvider}
-            dataProvider={customDataProvider}
-            notificationProvider={notificationProvider}
-            resources={[
-              {
-                name: "users",
-                list: "/users",
+      <ConfigProvider>
+        <Refine
+          routerProvider={routerProvider}
+          dataProvider={customDataProvider}
+          notificationProvider={notificationProvider}
+          resources={[
+            {
+              name: "dashboard",
+              list: "/dashboard",
+              meta: {
+                label: "ダッシュボード",
+                icon: "📊",
               },
-            ]}
-          >
-            <ThemedLayoutV2>
-              {children}
-            </ThemedLayoutV2>
-            <RefineKbar />
-          </Refine>
-        </ConfigProvider>
-      </RefineKbarProvider>
+            },
+            {
+              name: "users",
+              list: "/users",
+              show: "/users/show/:id",
+              edit: "/users/edit/:id",
+              meta: {
+                label: "ユーザー管理",
+                icon: "👥",
+              },
+            },
+          ]}
+          options={{
+            sideNavigation: {
+              collapsed: false,
+            },
+          }}
+        >
+          <ThemedLayoutV2>
+            {children}
+          </ThemedLayoutV2>
+        </Refine>
+      </ConfigProvider>
     </QueryClientProvider>
   );
 }

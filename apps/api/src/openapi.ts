@@ -24,6 +24,8 @@ const app = new OpenAPIHono();
 app.use("*", cors({
   origin: [
     "http://localhost:3000", 
+    "http://localhost:3010",  // アドミン画面（ローカル）
+    "http://localhost:3030",  // アドミン画面（本番データ）
     "http://localhost:7593",
     "https://petaboo.vercel.app",
     "https://*.vercel.app"  // Vercelプレビューデプロイも許可

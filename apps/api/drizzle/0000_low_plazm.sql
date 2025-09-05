@@ -1,3 +1,11 @@
+CREATE TABLE `users` (
+	`user_id` text PRIMARY KEY NOT NULL,
+	`display_name` text,
+	`plan_type` text DEFAULT 'free' NOT NULL,
+	`created_at` integer NOT NULL,
+	`updated_at` integer
+);
+--> statement-breakpoint
 CREATE TABLE `deleted_memos` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`user_id` text NOT NULL,
@@ -65,8 +73,8 @@ CREATE TABLE `user_preferences` (
 	`memo_hide_controls` integer DEFAULT false NOT NULL,
 	`task_hide_controls` integer DEFAULT false NOT NULL,
 	`hide_header` integer DEFAULT false NOT NULL,
-	`created_at` real DEFAULT 1756305432352 NOT NULL,
-	`updated_at` real DEFAULT 1756305432352 NOT NULL
+	`created_at` real NOT NULL,
+	`updated_at` real NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE `categories` (
@@ -170,10 +178,12 @@ CREATE TABLE `teams` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`name` text NOT NULL,
 	`description` text,
+	`custom_url` text NOT NULL,
 	`created_at` integer NOT NULL,
 	`updated_at` integer
 );
 --> statement-breakpoint
+CREATE UNIQUE INDEX `teams_custom_url_unique` ON `teams` (`custom_url`);--> statement-breakpoint
 CREATE TABLE `team_deleted_memos` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`team_id` integer NOT NULL,

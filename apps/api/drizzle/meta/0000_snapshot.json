@@ -1,9 +1,55 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "d85e8f2c-c088-47be-ae81-03ba6a8766d1",
+  "id": "957d15d3-6d28-4e82-9fb3-48d30d638898",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
+    "users": {
+      "name": "users",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "plan_type": {
+          "name": "plan_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'free'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
     "deleted_memos": {
       "name": "deleted_memos",
       "columns": {
@@ -439,16 +485,14 @@
           "type": "real",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": 1756305432352
+          "autoincrement": false
         },
         "updated_at": {
           "name": "updated_at",
           "type": "real",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": 1756305432352
+          "autoincrement": false
         }
       },
       "indexes": {},
@@ -1099,6 +1143,13 @@
           "notNull": false,
           "autoincrement": false
         },
+        "custom_url": {
+          "name": "custom_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "integer",
@@ -1114,7 +1165,15 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "teams_custom_url_unique": {
+          "name": "teams_custom_url_unique",
+          "columns": [
+            "custom_url"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},

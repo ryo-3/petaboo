@@ -255,6 +255,46 @@ export const updateDisplayNameRoute = createRoute({
   tags: ["Users"],
 });
 
+// Refine用個別ユーザー取得ルート定義
+export const getUserByIdRoute = createRoute({
+  method: "get",
+  path: "/{id}",
+  request: {
+    params: z.object({
+      id: z.string(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "ユーザー取得成功",
+      content: {
+        "application/json": {
+          schema: z.object({
+            id: z.string(),
+            userId: z.string(),
+            email: z.string(),
+            planType: z.enum(["free", "premium"]),
+            createdAt: z.number(),
+            updatedAt: z.number().optional(),
+            premiumStartDate: z.number().optional(),
+            nextBillingDate: z.number().optional(),
+          }),
+        },
+      },
+    },
+    401: {
+      description: "認証が必要です",
+    },
+    403: {
+      description: "管理者権限が必要です",
+    },
+    404: {
+      description: "ユーザーが見つかりません",
+    },
+  },
+  tags: ["Users"],
+});
+
 // Refine用ユーザー一覧取得ルート定義
 export const getUsersListRoute = createRoute({
   method: "get",
@@ -274,7 +314,9 @@ export const getUsersListRoute = createRoute({
         "application/json": {
           schema: z.array(
             z.object({
+              id: z.string(),
               userId: z.string(),
+              email: z.string(),
               planType: z.enum(["free", "premium"]),
               createdAt: z.number(),
             }),
@@ -294,6 +336,13 @@ export const getUsersListRoute = createRoute({
 
 // ユーザー一覧取得の実装（Refine用・開発環境のみ）
 export async function getUsersList(c: any) {
+  // 管理者権限チェック（トークンベース）
+  const adminToken = c.req.header("x-admin-token");
+  const validAdminToken = c.env?.ADMIN_TOKEN;
+  if (!adminToken || adminToken !== validAdminToken) {
+    return c.json({ error: "管理者権限が必要です" }, 403);
+  }
+
   const db = c.get("db");
   const { _start, _end, _sort, _order } = c.req.query();
 
@@ -317,25 +366,172 @@ export async function getUsersList(c: any) {
 
     const usersList = await query;
 
+    // Clerk Backend APIを使ってメール情報を取得
+    const clerkSecretKey = c.env?.CLERK_SECRET_KEY;
+    if (!clerkSecretKey) {
+      return c.json({ error: "Clerk設定が見つかりません" }, 500);
+    }
+
+    const usersWithEmail = await Promise.all(
+      usersList.map(async (user: any) => {
+        try {
+          // Clerk Backend API直接呼び出し
+          const response = await fetch(
+            `https://api.clerk.com/v1/users/${user.userId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${clerkSecretKey}`,
+                "Content-Type": "application/json",
+              },
+            },
+          );
+
+          if (response.ok) {
+            const clerkUser = await response.json();
+            const primaryEmail = clerkUser.email_addresses?.find(
+              (email: any) => email.id === clerkUser.primary_email_address_id,
+            );
+
+            return {
+              id: user.userId, // Refineはデフォルトでidフィールドを期待する
+              userId: user.userId,
+              email: primaryEmail?.email_address || "メール不明",
+              planType: user.planType,
+              createdAt: user.createdAt,
+            };
+          } else {
+            console.error(
+              `Clerkユーザー取得失敗 (${user.userId}):`,
+              response.status,
+            );
+            return {
+              id: user.userId,
+              userId: user.userId,
+              email: "取得失敗",
+              planType: user.planType,
+              createdAt: user.createdAt,
+            };
+          }
+        } catch (error) {
+          console.error(`Clerkユーザー取得エラー (${user.userId}):`, error);
+          return {
+            id: user.userId,
+            userId: user.userId,
+            email: "取得エラー",
+            planType: user.planType,
+            createdAt: user.createdAt,
+          };
+        }
+      }),
+    );
+
     // 総数を取得（ページネーション用）
-    const totalCountResult = await db.select({ count: sql`count(*)` }).from(users);
+    const totalCountResult = await db
+      .select({ count: sql`count(*)` })
+      .from(users);
     const total = totalCountResult[0]?.count || 0;
 
     // Refineが期待するX-Total-Countヘッダーを設定
-    const response = c.json(
-      usersList.map((user: any) => ({
-        id: user.userId, // Refineはデフォルトでidフィールドを期待する
-        userId: user.userId,
-        planType: user.planType,
-        createdAt: user.createdAt,
-      })),
-    );
-    
+    const response = c.json(usersWithEmail);
     response.headers.set("X-Total-Count", total.toString());
     return response;
   } catch (error) {
     console.error("ユーザー一覧取得エラー:", error);
     return c.json({ error: "ユーザー一覧の取得に失敗しました" }, 500);
+  }
+}
+
+// 個別ユーザー取得の実装（Refine用・開発環境のみ）
+export async function getUserById(c: any) {
+  // 管理者権限チェック（トークンベース）
+  const adminToken = c.req.header("x-admin-token");
+  const validAdminToken = c.env?.ADMIN_TOKEN;
+  if (!adminToken || adminToken !== validAdminToken) {
+    return c.json({ error: "管理者権限が必要です" }, 403);
+  }
+
+  const db = c.get("db");
+  const { id } = c.req.param();
+
+  try {
+    // データベースからユーザーを取得
+    const userResult = await db
+      .select()
+      .from(users)
+      .where(eq(users.userId, id))
+      .limit(1);
+
+    if (userResult.length === 0) {
+      return c.json({ error: "ユーザーが見つかりません" }, 404);
+    }
+
+    const user = userResult[0];
+
+    // Clerk Backend APIを使ってメール情報を取得
+    const clerkSecretKey = c.env?.CLERK_SECRET_KEY;
+    if (!clerkSecretKey) {
+      return c.json({ error: "Clerk設定が見つかりません" }, 500);
+    }
+
+    try {
+      const response = await fetch(
+        `https://api.clerk.com/v1/users/${user.userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${clerkSecretKey}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      if (response.ok) {
+        const clerkUser = await response.json();
+        const primaryEmail = clerkUser.email_addresses?.find(
+          (email: any) => email.id === clerkUser.primary_email_address_id,
+        );
+
+        return c.json({
+          id: user.userId, // Refineはデフォルトでidフィールドを期待する
+          userId: user.userId,
+          email: primaryEmail?.email_address || "メール不明",
+          planType: user.planType,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+          premiumStartDate: user.premiumStartDate,
+          nextBillingDate: user.nextBillingDate,
+        });
+      } else {
+        console.error(
+          `Clerkユーザー取得失敗 (${user.userId}):`,
+          response.status,
+        );
+        return c.json({
+          id: user.userId,
+          userId: user.userId,
+          email: "取得失敗",
+          planType: user.planType,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+          premiumStartDate: user.premiumStartDate,
+          nextBillingDate: user.nextBillingDate,
+        });
+      }
+    } catch (clerkError) {
+      console.error(`Clerkユーザー取得エラー (${user.userId}):`, clerkError);
+      return c.json({
+        id: user.userId,
+        userId: user.userId,
+        email: "取得エラー",
+        planType: user.planType,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        premiumStartDate: user.premiumStartDate,
+        nextBillingDate: user.nextBillingDate,
+      });
+    }
+  } catch (error) {
+    console.error("個別ユーザー取得エラー:", error);
+    return c.json({ error: "ユーザーの取得に失敗しました" }, 500);
   }
 }
 
@@ -477,15 +673,18 @@ export async function getSpecificUserInfo(c: any) {
     }
 
     const user = userResult[0];
-    return c.json({
-      id: user.userId,
-      userId: user.userId,
-      planType: user.planType,
-      premiumStartDate: user.premiumStartDate,
-      nextBillingDate: user.nextBillingDate,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    }, 200);
+    return c.json(
+      {
+        id: user.userId,
+        userId: user.userId,
+        planType: user.planType,
+        premiumStartDate: user.premiumStartDate,
+        nextBillingDate: user.nextBillingDate,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      },
+      200,
+    );
   } catch (error) {
     console.error("ユーザー情報取得エラー:", error);
     return c.json({ error: "ユーザー情報の取得に失敗しました" }, 500);
@@ -521,15 +720,18 @@ export async function getUser(c: any) {
     }
 
     const user = userResult[0];
-    return c.json({
-      id: user.userId,
-      userId: user.userId,
-      planType: user.planType,
-      premiumStartDate: user.premiumStartDate,
-      nextBillingDate: user.nextBillingDate,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    }, 200);
+    return c.json(
+      {
+        id: user.userId,
+        userId: user.userId,
+        planType: user.planType,
+        premiumStartDate: user.premiumStartDate,
+        nextBillingDate: user.nextBillingDate,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      },
+      200,
+    );
   } catch (error) {
     console.error("ユーザー情報取得エラー:", error);
     return c.json({ error: "ユーザー情報の取得に失敗しました" }, 500);
@@ -578,8 +780,10 @@ export async function updateUser(c: any) {
     // ユーザー情報を更新
     const updateData: any = { updatedAt: now };
     if (planType !== undefined) updateData.planType = planType;
-    if (premiumStartDate !== undefined) updateData.premiumStartDate = premiumStartDate;
-    if (nextBillingDate !== undefined) updateData.nextBillingDate = nextBillingDate;
+    if (premiumStartDate !== undefined)
+      updateData.premiumStartDate = premiumStartDate;
+    if (nextBillingDate !== undefined)
+      updateData.nextBillingDate = nextBillingDate;
 
     await db
       .update(users)
@@ -594,16 +798,18 @@ export async function updateUser(c: any) {
       .limit(1);
 
     const user = updatedUser[0];
-    return c.json({
-      id: user.userId,
-      userId: user.userId,
-      planType: user.planType,
-      premiumStartDate: user.premiumStartDate,
-      nextBillingDate: user.nextBillingDate,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    }, 200);
-
+    return c.json(
+      {
+        id: user.userId,
+        userId: user.userId,
+        planType: user.planType,
+        premiumStartDate: user.premiumStartDate,
+        nextBillingDate: user.nextBillingDate,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      },
+      200,
+    );
   } catch (error) {
     console.error("ユーザー更新エラー:", error);
     return c.json({ error: "ユーザー更新に失敗しました" }, 500);
@@ -633,7 +839,6 @@ export async function updateSpecificUserPlan(c: any) {
   } catch (error) {
     return c.json({ error: "リクエストボディが不正です" }, 400);
   }
-
 
   try {
     const { planType } = body;

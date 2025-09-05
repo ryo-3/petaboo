@@ -10,14 +10,14 @@ export default function UsersList() {
   const { tableProps } = useTable({
     resource: "users",
   });
-  
+
   const router = useRouter();
 
   return (
     <List>
       <Table {...tableProps} rowKey="id">
-        <Table.Column 
-          title="ユーザーID" 
+        <Table.Column
+          title="ユーザーID"
           dataIndex="userId"
           render={(value: string) => (
             <span style={{ fontFamily: "monospace", fontSize: "12px" }}>
@@ -25,8 +25,15 @@ export default function UsersList() {
             </span>
           )}
         />
-        <Table.Column 
-          title="プラン" 
+        <Table.Column
+          title="メールアドレス"
+          dataIndex="email"
+          render={(value: string) => (
+            <span style={{ fontSize: "14px" }}>{value || "未設定"}</span>
+          )}
+        />
+        <Table.Column
+          title="プラン"
           dataIndex="planType"
           render={(value: string) => (
             <Tag color={value === "premium" ? "green" : "default"}>
@@ -34,10 +41,10 @@ export default function UsersList() {
             </Tag>
           )}
         />
-        <Table.Column 
-          title="作成日" 
+        <Table.Column
+          title="作成日"
           dataIndex="createdAt"
-          render={(value: number) => 
+          render={(value: number) =>
             value ? new Date(value * 1000).toLocaleDateString("ja-JP") : "-"
           }
         />

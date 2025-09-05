@@ -15,6 +15,8 @@ import {
   updateUser,
   getUsersListRoute,
   getUsersList,
+  getUserByIdRoute,
+  getUserById,
   updateDisplayNameRoute,
   updateDisplayName,
 } from "./api";
@@ -30,6 +32,7 @@ usersRoute.use("*", clerkMiddleware());
 
 // ルート定義を登録
 usersRoute.openapi(getUsersListRoute, getUsersList);
+usersRoute.openapi(getUserByIdRoute, getUserById);
 usersRoute.openapi(getUserInfoRoute, getUserInfo);
 usersRoute.openapi(updateUserPlanRoute, updateUserPlan);
 usersRoute.openapi(updateDisplayNameRoute, updateDisplayName);

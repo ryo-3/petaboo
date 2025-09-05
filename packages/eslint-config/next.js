@@ -44,6 +44,15 @@ export const nextJsConfig = [
       ...pluginReactHooks.configs.recommended.rules,
       // React scope no longer necessary with new JSX transform.
       "react/react-in-jsx-scope": "off",
+      // TypeScript ESLint互換性修正
+      "@typescript-eslint/no-unused-expressions": [
+        "error",
+        {
+          allowShortCircuit: true,
+          allowTernary: true,
+          allowTaggedTemplates: true,
+        },
+      ],
     },
   },
 ];

@@ -19,8 +19,8 @@ export const userPreferences = sqliteTable("user_preferences", {
   hideHeader: integer("hide_header", { mode: "boolean" })
     .default(false)
     .notNull(),
-  createdAt: real("created_at").default(Date.now()).notNull(),
-  updatedAt: real("updated_at").default(Date.now()).notNull(),
+  createdAt: real("created_at").notNull(),
+  updatedAt: real("updated_at").notNull(),
 });
 
 export type UserPreferences = typeof userPreferences.$inferSelect;

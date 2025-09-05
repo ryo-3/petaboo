@@ -1,6 +1,6 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { getAuth } from "@hono/clerk-auth";
-import { eq, desc, asc } from "drizzle-orm";
+import { eq, desc, asc, sql } from "drizzle-orm";
 import { users } from "../../db";
 import type { DatabaseType } from "../../types/common";
 
@@ -216,20 +216,8 @@ export const getUsersListRoute = createRoute({
   tags: ["Users"],
 });
 
-// ユーザー一覧取得の実装（Refine用）
+// ユーザー一覧取得の実装（Refine用・開発環境のみ）
 export async function getUsersList(c: any) {
-  const auth = getAuth(c);
-  if (!auth?.userId) {
-    return c.json({ error: "認証が必要です" }, 401);
-  }
-
-  // 管理者権限チェック
-  const adminIds =
-    process.env.ADMIN_USER_IDS?.split(",").map((id) => id.trim()) || [];
-  if (!adminIds.includes(auth.userId)) {
-    return c.json({ error: "管理者権限が必要です" }, 403);
-  }
-
   const db = c.get("db");
   const { _start, _end, _sort, _order } = c.req.query();
 
@@ -253,14 +241,22 @@ export async function getUsersList(c: any) {
 
     const usersList = await query;
 
-    // Refineが期待する形式で返す
-    return c.json(
+    // 総数を取得（ページネーション用）
+    const totalCountResult = await db.select({ count: sql`count(*)` }).from(users);
+    const total = totalCountResult[0]?.count || 0;
+
+    // Refineが期待するX-Total-Countヘッダーを設定
+    const response = c.json(
       usersList.map((user) => ({
+        id: user.userId, // Refineはデフォルトでidフィールドを期待する
         userId: user.userId,
         planType: user.planType,
         createdAt: user.createdAt,
       })),
     );
+    
+    response.headers.set("X-Total-Count", total.toString());
+    return response;
   } catch (error) {
     console.error("ユーザー一覧取得エラー:", error);
     return c.json({ error: "ユーザー一覧の取得に失敗しました" }, 500);
@@ -378,15 +374,15 @@ export async function updateUserPlan(c: any) {
 
 // 管理者用：特定ユーザー情報取得
 export async function getSpecificUserInfo(c: any) {
-  const auth = getAuth(c);
-  if (!auth?.userId) {
-    return c.json({ error: "認証が必要です" }, 401);
-  }
-
-  // 管理者権限チェック
-  const adminIds =
-    process.env.ADMIN_USER_IDS?.split(",").map((id) => id.trim()) || [];
-  if (!adminIds.includes(auth.userId)) {
+  // 管理者権限チェック（トークンベース）
+  const adminToken = c.req.header("x-admin-token");
+  const validAdminToken = c.env?.ADMIN_TOKEN;
+  if (!adminToken || adminToken !== validAdminToken) {
+    // 管理者トークンがない場合は通常のClerk認証
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ error: "認証が必要です" }, 401);
+    }
     return c.json({ error: "管理者権限が必要です" }, 403);
   }
 
@@ -421,15 +417,15 @@ export async function getSpecificUserInfo(c: any) {
 
 // 管理者用：特定ユーザーのプラン変更
 export async function updateSpecificUserPlan(c: any) {
-  const auth = getAuth(c);
-  if (!auth?.userId) {
-    return c.json({ error: "認証が必要です" }, 401);
-  }
-
-  // 管理者権限チェック
-  const adminIds =
-    process.env.ADMIN_USER_IDS?.split(",").map((id) => id.trim()) || [];
-  if (!adminIds.includes(auth.userId)) {
+  // 管理者権限チェック（トークンベース）
+  const adminToken = c.req.header("x-admin-token");
+  const validAdminToken = c.env?.ADMIN_TOKEN;
+  if (!adminToken || adminToken !== validAdminToken) {
+    // 管理者トークンがない場合は通常のClerk認証
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ error: "認証が必要です" }, 401);
+    }
     return c.json({ error: "管理者権限が必要です" }, 403);
   }
 

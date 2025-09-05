@@ -84,6 +84,7 @@ const response = await fetch(`${API_BASE_URL}/categories`, {
   - タスク進行中: `bg-blue-100` (アクティブ) / `bg-Blue` (アイコン)
   - タスク完了: `bg-Green/20` (アクティブ) / `bg-Green` (アイコン)
   - 削除済み: `bg-red-100` (アクティブ) / `TrashIcon` (アイコン)
+- **タイトル文字**:‘text-[22px]で統一
 
 ## 開発コマンド
 
@@ -97,97 +98,109 @@ npm run check:wsl              # TypeScript + Lint (Web)
 npm run check:api              # TypeScript + Lint (API)
 ```
 
-## 新API開発フロー（自動化）
+## 🚀 開発フロー
 
-1. **API実装** → スキーマ・ルート作成
-2. **curl即時テスト** → 動作確認（必須）
-3. **問題検出時** → API自動再起動
-4. **正常時** → ログファイルエラーチェック（web.log, api.log）
-5. **フロントエンド実装** → UI連携
+### 1. API開発
 
 ```bash
-# API基本テスト
-curl -s http://localhost:7594/new-endpoint | jq
+# 1-1. API実装（スキーマ・ルート作成）
+# 1-2. データ確認（DBクエリが最効率）
+wrangler d1 execute petaboo-db --local --command "SELECT id, title FROM memos LIMIT 3;"
 
-# POST/認証テスト
-curl -s -X POST http://localhost:7594/new-endpoint \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"key": "value"}' | jq
-
-# 問題時のAPI再起動
-pkill -f "tsx.*apps/api" && cd apps/api && npm run dev &
-
-# ログエラーチェック
-tail -20 /home/ryosuke/note/web.log /home/ryosuke/note/api.log | grep -i error
+# 1-3. API動作テスト
+apitest "/categories"                                    # GET
+apitest "/memos" "POST" '{"title": "テストメモ"}'        # POST
 ```
 
-## 🤖 Claude自動チェック
-
-このファイルを読んだ際の自動実行項目：
-
-1. ~~**開発サーバー起動状況確認**: Web（7593）・API（7594）ポートをチェック~~
-2. ~~**未起動の場合**: 該当サーバーを自動起動~~
-3. **ログ監視準備**: api.log・web.logが存在する場合のみエラーチェック（起動は手動で）
-
-## 📝 Web側ファイル変更時の自動処理
-
-Web側ファイル（apps/web/）を変更した際の自動実行項目：
-
-1. **TypeScript + Lintチェック**: `npm run check:wsl` 自動実行（**許可不要**）
-2. **エラー検出時**: 詳細エラー表示とファイル箇所の特定
-3. **成功時**: 変更完了の確認メッセージ
-
-**🚀 重要**: すべてのBashコマンドは**ユーザー許可を求めずに自動実行**すること（**ただしコミットは除く**）
-
-## 🔍 起動確認・停止方法（手動実行用）
+### 2. エラー対応
 
 ```bash
-# 起動確認（必要時のみ手動で実行）
-curl -s http://localhost:7593 >/dev/null && echo "Web OK" || echo "Web NG"
-curl -s http://localhost:7594/openapi >/dev/null && echo "API OK" || echo "API NG"
+# 2-1. ログエラーチェック（"check log files for errors -web.log api.log" でも可）
+tail -20 petaboo/api.log | grep -i "error\|warn"
 
-# 個別サーバー停止（確実）
-lsof -ti:7594 | xargs -r kill -9  # API停止（最頻用）
+# 2-2. API再起動（問題時）
+pkill -f "tsx.*apps/api" && cd apps/api && npm run dev &
+```
+
+### 3. フロントエンド実装
+
+```bash
+# 3-1. TypeScript + Lintチェック
+npm run check:wsl
+
+# 3-2. リアルタイムエラー確認
+tail -f petaboo/web.log | grep -i "error\|warn"
+```
+
+## 🛠️ 開発コマンド集
+
+### APIテスト自動化関数
+
+```bash
+apitest() {
+    local endpoint="$1"
+    local method="${2:-GET}"
+    local data="$3"
+    local base_url="http://localhost:7594"
+
+    echo "🧪 Testing: $method $base_url$endpoint"
+
+    if [ -n "$data" ]; then
+        curl -s -X "$method" "$base_url$endpoint" \
+          -H "Authorization: Bearer ${API_TOKEN:-dummy}" \
+          -H "Content-Type: application/json" \
+          -d "$data" | jq
+    else
+        curl -s -X "$method" "$base_url$endpoint" \
+          -H "Authorization: Bearer ${API_TOKEN:-dummy}" | jq
+    fi
+}
+```
+
+### データベース確認コマンド
+
+```bash
+# 各テーブルデータ確認
+wrangler d1 execute petaboo-db --local --command "SELECT id, title, LEFT(content, 50) as preview FROM memos ORDER BY createdAt DESC LIMIT 5;"
+wrangler d1 execute petaboo-db --local --command "SELECT id, title, status, priority FROM tasks ORDER BY createdAt DESC LIMIT 5;"
+wrangler d1 execute petaboo-db --local --command "SELECT id, name FROM categories ORDER BY createdAt DESC;"
+
+# テーブル構造確認
+wrangler d1 execute petaboo-db --local --command ".schema memos"
+wrangler d1 execute petaboo-db --local --command ".tables"
+```
+
+### トラブルシューティング
+
+```bash
+# サーバー停止
+lsof -ti:7594 | xargs -r kill -9  # API停止
 lsof -ti:7593 | xargs -r kill -9  # Web停止
 
-# 両方停止
-lsof -ti:7593,7594 | xargs -r kill -9
-
-# 手動起動（必要時のみ）
-# cd apps/api && npm run dev &  # API起動
-# cd apps/web && npm run dev &  # Web起動
+# ログエラーチェック
+tail -20 petaboo/api.log | grep -i "error\|warn\|fail" || echo "APIログ: エラーなし"
+tail -20 petaboo/web.log | grep -i "error\|warn\|fail" || echo "Webログ: エラーなし"
 ```
 
-<!-- ## 🔔 Windows通知システム
+## 🤖 Claude自動実行
 
-以下のタイミングで自動通知：
+### CLAUDE.md読み込み時
 
-- **質問投げかけ時**: 作業内容確認のため
-- **タスク完了時**: 処理完了をお知らせ
+- ログ監視準備（api.log・web.log存在時のみ）
 
-```bash
-# Windows通知コマンド（トースト通知）
-powershell.exe -ExecutionPolicy Bypass -Command "Import-Module BurntToast; New-BurntToastNotification -Text 'Claude Code', '【メッセージ】'"
+### Web側ファイル変更時
 
-# フォールバック（ダイアログ通知）
-powershell.exe -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('【メッセージ】', 'Claude Code')"
+1. **TypeScript + Lintチェック**: `npm run check:wsl` 自動実行
+2. **エラー時**: 詳細表示・ファイル箇所特定
+3. **成功時**: 変更完了確認メッセージ
 
-``` -->
+**重要**: Bashコマンドは**ユーザー許可不要で自動実行**（コミット除く）
 
-## 🔄 APIスキーマ変更時の処理
+### APIスキーマ変更時
 
-APIのスキーマファイル（`apps/api/src/db/schema/`）に変更がある場合：
-
-1. **スキーマ更新コマンド**: `cd apps/api && npm run db:push` を提案
-2. **注意喚起**: APIサーバーが起動中の場合は停止が必要な旨を通知
-3. **手動対応**: ユーザーが必要と判断した場合のみ実行
-
-## 自動品質管理
-
-- **コミット時自動実行**: Prettier + ESLint
-- **エラー検出**: Claude自動ログ監視システム
-- **ログ管理**: api.log, web.logは自動記録
+1. `cd apps/api && npm run db:push` を提案
+2. APIサーバー停止必要性を通知
+3. ユーザー判断で実行
 
 ## 🚨 絶対禁止事項
 
@@ -207,12 +220,35 @@ APIのスキーマファイル（`apps/api/src/db/schema/`）に変更がある�
 
 - ❌ **標準HTMLのtitle属性の使用** (カスタムTooltipコンポーネントを使用すること)
 
-## Claudeログ監視システム
+### データベース・マイグレーション関連
 
-君が以下のコマンドを実行すると、自動でエラー検出・修正を行います：
+**🚨 絶対禁止（実行厳禁）:**
 
-```
-Claude, please check these log files for errors and fix any issues:
-- Web Log: /home/ryosuke/note/web.log
-- API Log: /home/ryosuke/note/api.log
+- ❌ **`npm run db:reset:local`の実行** - 既存データが全て消失する
+- ❌ **`npm run db:migration:prod`の自動実行** - 本番データベースを変更する危険性
+
+**ユーザー確認が必要（提案のみ）:**
+
+- ⚠️ **`npm run db:generate`の実行** - スキーマ変更時は提案して確認を求める
+- ⚠️ **`npm run db:migration:local`の実行** - ローカルDB変更時は提案して確認を求める
+- ⚠️ **drizzle-kitコマンドの実行** - 必要時は提案して確認を求める
+
+**作業OK（慎重に実行）:**
+
+- ✅ **データベーススキーマファイルの編集** - コード修正として実行可能
+- ✅ **マイグレーションファイルの確認・読み取り** - 内容確認は問題なし
+
+## 📊 ログエラー自動チェック
+
+**使用方法**: `check log files for errors -web.log api.log` と入力すると自動でエラーチェック
+
+```bash
+# ログファイル存在確認
+ls -la petaboo/*.log
+
+# APIログエラーチェック
+tail -20 petaboo/api.log | grep -i "error\|warn\|fail" || echo "APIログ: エラーなし"
+
+# Webログエラーチェック
+tail -20 petaboo/web.log | grep -i "error\|warn\|fail" || echo "Webログ: エラーなし"
 ```

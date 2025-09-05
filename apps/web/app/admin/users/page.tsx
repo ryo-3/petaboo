@@ -1,12 +1,19 @@
 "use client";
 
 import React from "react";
-import { useList } from "@refinedev/core";
-import { List, ShowButton, EditButton } from "@refinedev/antd";
+import { List, useTable, ShowButton, EditButton } from "@refinedev/antd";
 import { Table, Tag, Space } from "antd";
+import type { BaseRecord } from "@refinedev/core";
+
+interface User extends BaseRecord {
+  id: string;
+  userId: string;
+  planType: "free" | "premium";
+  createdAt: number;
+}
 
 export default function UsersList() {
-  const { data: userData, isLoading } = useList({
+  const { tableProps } = useTable<User>({
     resource: "users",
   });
 
@@ -17,7 +24,7 @@ export default function UsersList() {
       key: "userId",
       render: (value: string) => (
         <span style={{ fontFamily: "monospace", fontSize: "12px" }}>
-          {value.substring(0, 20)}...
+          {value.substring(0, 25)}...
         </span>
       ),
     },
@@ -35,25 +42,15 @@ export default function UsersList() {
       title: "作成日",
       dataIndex: "createdAt",
       key: "createdAt",
-      render: (value: number) => new Date(value * 1000).toLocaleDateString(),
+      render: (value: number) => new Date(value * 1000).toLocaleDateString("ja-JP"),
     },
     {
       title: "操作",
-      key: "action",
-      render: (_: any, record: any) => (
-        <Space size="middle">
-          <ShowButton
-            hideText
-            size="small"
-            recordItemId={record.userId}
-            resource="users"
-          />
-          <EditButton
-            hideText
-            size="small"
-            recordItemId={record.userId}
-            resource="users"
-          />
+      key: "actions",
+      render: (_, record: User) => (
+        <Space>
+          <ShowButton hideText size="small" recordItemId={record.id} />
+          <EditButton hideText size="small" recordItemId={record.id} />
         </Space>
       ),
     },
@@ -61,12 +58,7 @@ export default function UsersList() {
 
   return (
     <List>
-      <Table
-        dataSource={userData?.data || []}
-        columns={columns}
-        rowKey="userId"
-        loading={isLoading}
-      />
+      <Table {...tableProps} columns={columns} rowKey="id" />
     </List>
   );
 }

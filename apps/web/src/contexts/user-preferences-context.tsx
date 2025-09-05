@@ -85,32 +85,23 @@ export const UserPreferencesProvider: React.FC<
     [userId],
   );
 
-  // ユーザー設定を取得
+  // ユーザー設定を取得（管理画面では常にデフォルト値を使用）
   const fetchPreferences = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`${API_BASE}/user-preferences/${userId}`);
-
-      if (!response.ok) {
-        // サーバーエラーやAPIが見つからない場合はデフォルト値を使用
-        console.warn("Failed to fetch user preferences, using defaults");
-        setPreferences(getDefaultPreferences());
-        setLoading(false);
-        return;
-      }
-
-      const data = await response.json();
-      setPreferences(data);
-    } catch (err) {
-      console.warn("Error fetching user preferences, using defaults:", err);
-      // エラー時はデフォルト設定を使用してアプリが動作するようにする
+      
+      // 管理画面では常にデフォルト設定を使用（APIコールなし）
+      console.log("Using default user preferences for admin panel");
       setPreferences(getDefaultPreferences());
-      setError(null); // エラー状態をリセット
+    } catch (err) {
+      console.warn("Error initializing user preferences:", err);
+      setPreferences(getDefaultPreferences());
+      setError(null);
     } finally {
       setLoading(false);
     }
-  }, [userId, getDefaultPreferences]);
+  }, [getDefaultPreferences]);
 
   // ユーザー設定を更新
   const updatePreferences = useCallback(
@@ -130,11 +121,19 @@ export const UserPreferencesProvider: React.FC<
     ): Promise<UserPreferences> => {
       try {
         setError(null);
+        
+        // Admin Token取得
+        const adminToken = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
+        const headers: HeadersInit = {
+          "Content-Type": "application/json",
+        };
+        if (adminToken) {
+          headers['x-admin-token'] = adminToken;
+        }
+        
         const response = await fetch(`${API_BASE}/user-preferences/${userId}`, {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers,
           body: JSON.stringify(updates),
         });
 

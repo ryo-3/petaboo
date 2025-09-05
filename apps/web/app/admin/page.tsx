@@ -17,7 +17,7 @@ export default function AdminPage() {
         }}
       >
         <Card title="ユーザー管理" extra={<a href="/admin/users">詳細</a>}>
-          <Text>システム内のユーザー管理、プラン変更、権限設定</Text>
+          <Text>ユーザー情報、プラン管理</Text>
         </Card>
 
         <Card title="チーム管理" extra={<a href="/admin/teams">詳細</a>}>

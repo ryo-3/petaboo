@@ -48,124 +48,39 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { getToken, userId, isLoaded } = useAuth();
   const [isMounted, setIsMounted] = React.useState(false);
+  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
 
-  // 管理者ユーザーIDのリストを環境変数から取得（常に呼び出し）
-  const ADMIN_USER_IDS = React.useMemo(() => {
-    const adminIds = process.env.NEXT_PUBLIC_ADMIN_USER_IDS;
-    return adminIds ? adminIds.split(",").map((id) => id.trim()) : [];
+  // 標準的なsimple-restデータプロバイダー（カスタムヘッダーなし）
+  const simpleDataProvider = React.useMemo(() => {
+    return dataProvider(API_URL);
   }, []);
 
-  // カスタムデータプロバイダー
-  const simpleDataProvider = React.useMemo(() => {
-    return {
-      getList: async ({ resource, pagination, sorters, filters }: any) => {
-        const token = await getToken();
-        const { current = 1, pageSize = 10 } = pagination || {};
-        const start = (current - 1) * pageSize;
-        const end = start + pageSize;
-
-        const response = await fetch(
-          `${API_URL}/${resource}?_start=${start}&_end=${end}`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: token ? `Bearer ${token}` : "",
-            },
-          },
-        );
-
-        const data = await response.json();
-        return {
-          data: data,
-          total: data.length, // 簡易的な実装
-        };
-      },
-
-      getOne: async ({ resource, id }: any) => {
-        const token = await getToken();
-        // users リソースの場合は既存のエンドポイントを使用
-        const url =
-          resource === "users"
-            ? `${API_URL}/users/${id}`
-            : `${API_URL}/${resource}/${id}`;
-        const response = await fetch(url, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token ? `Bearer ${token}` : "",
-          },
-        });
-        if (!response.ok) {
-          throw new Error(`Failed to fetch ${resource}/${id}`);
-        }
-        const data = await response.json();
-        return { data };
-      },
-
-      update: async ({ resource, id, variables }: any) => {
-        const token = await getToken();
-        // users リソースの場合は既存のプラン変更エンドポイントを使用
-        const url =
-          resource === "users"
-            ? `${API_URL}/users/${id}/plan`
-            : `${API_URL}/${resource}/${id}`;
-        const body =
-          resource === "users" ? { planType: variables.planType } : variables;
-
-        const response = await fetch(url, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token ? `Bearer ${token}` : "",
-          },
-          body: JSON.stringify(body),
-        });
-        if (!response.ok) {
-          throw new Error(`Failed to update ${resource}/${id}`);
-        }
-        const data = await response.json();
-        return { data };
-      },
-
-      create: async () => {
-        throw new Error("Create not implemented");
-      },
-      deleteOne: async () => {
-        throw new Error("Delete not implemented");
-      },
-      getApiUrl: () => API_URL,
-    } as any;
-  }, [getToken]);
-
-  // クライアントサイドでのマウント状態管理
+  // クライアントサイドでのマウント状態管理と認証チェック
   React.useEffect(() => {
     setIsMounted(true);
+    // セッションストレージから認証状態を確認
+    const authenticated = sessionStorage.getItem("admin_authenticated") === "true";
+    setIsAuthenticated(authenticated);
   }, []);
 
   // SSR時やクライアントマウント前は何も表示しない
-  if (!isMounted || !isLoaded) {
+  if (!isMounted) {
     return null;
   }
 
-  // ログインしていない場合はリダイレクト
-  if (!userId) {
+  // 認証されていない場合はログインページにリダイレクト
+  if (!isAuthenticated) {
     if (typeof window !== "undefined") {
-      window.location.href = "/";
+      window.location.href = "/admin/login";
     }
     return null;
   }
 
-  // 管理者権限をチェック
-  if (!ADMIN_USER_IDS.includes(userId)) {
-    return (
-      <div style={{ padding: 20, textAlign: "center" }}>
-        <h2>アクセス権限がありません</h2>
-        <p>管理者権限が必要です。</p>
-        <a href="/">ホームに戻る</a>
-      </div>
-    );
-  }
+  const handleLogout = () => {
+    sessionStorage.removeItem("admin_authenticated");
+    window.location.href = "/admin/login";
+  };
 
   return (
     <RefineKbarProvider>
@@ -191,7 +106,35 @@ export default function AdminLayout({
               warnWhenUnsavedChanges: true,
             }}
           >
-            <ThemedLayoutV2>{children}</ThemedLayoutV2>
+            <ThemedLayoutV2 
+              Header={() => (
+                <div style={{ 
+                  display: "flex", 
+                  justifyContent: "space-between", 
+                  alignItems: "center", 
+                  padding: "0 24px",
+                  height: "64px",
+                  background: "#fff",
+                  borderBottom: "1px solid #f0f0f0"
+                }}>
+                  <h1 style={{ margin: 0 }}>管理画面</h1>
+                  <button 
+                    onClick={handleLogout}
+                    style={{ 
+                      padding: "4px 12px",
+                      border: "1px solid #d9d9d9",
+                      borderRadius: "4px",
+                      background: "#fff",
+                      cursor: "pointer"
+                    }}
+                  >
+                    ログアウト
+                  </button>
+                </div>
+              )}
+            >
+              {children}
+            </ThemedLayoutV2>
             <RefineKbar />
           </Refine>
         </AntdApp>

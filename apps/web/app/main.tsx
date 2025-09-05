@@ -15,10 +15,13 @@ interface MainProps {
     | "create"
     | "search"
     | "settings"
-    | "board";
+    | "board"
+    | "welcome";
   forceShowBoardDetail?: boolean;
   teamMode?: boolean;
   teamId?: number;
+  showAuthLoading?: boolean;
+  isAuthenticated?: boolean;
 }
 
 function Main({

@@ -11,7 +11,8 @@ type ScreenMode =
   | "create"
   | "search"
   | "settings"
-  | "board";
+  | "board"
+  | "welcome";
 
 interface NavigationContextType {
   screenMode: ScreenMode;

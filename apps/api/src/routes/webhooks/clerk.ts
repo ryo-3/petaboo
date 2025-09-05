@@ -5,7 +5,7 @@ import type { DatabaseType } from "../../types/common";
 const clerkWebhook = new Hono();
 
 // Clerkからのwebhook受信
-clerkWebhook.post("/user-created", async (c) => {
+clerkWebhook.post("/", async (c) => {
   try {
     const body = await c.req.json();
 
@@ -23,7 +23,6 @@ clerkWebhook.post("/user-created", async (c) => {
         createdAt: now,
         updatedAt: now,
       });
-
     }
 
     return c.json({ success: true });

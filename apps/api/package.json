@@ -15,6 +15,7 @@
     "db:migrate:local": "find ./drizzle -name '*.sql' -type f | grep -E '^./drizzle/[0-9]' | sort -V | while read file; do echo \"Applying $file...\"; temp_file=$(mktemp); sed 's/CREATE TABLE /CREATE TABLE IF NOT EXISTS /g; s/CREATE UNIQUE INDEX /CREATE UNIQUE INDEX IF NOT EXISTS /g' \"$file\" > \"$temp_file\"; wrangler d1 execute petaboo --local --file=\"$temp_file\"; rm \"$temp_file\"; done && echo \"Database path: $(pwd)/../../.wrangler/state/v3/d1/miniflare-D1DatabaseObject/\" && find ../../.wrangler/state/v3/d1/miniflare-D1DatabaseObject/ -name '*.sqlite' -exec echo \"SQLite file: {}\" \\;",
     "db:migrate:prod": "find ./drizzle -name '*.sql' -type f | sort -V | while read file; do echo \"Applying $file...\"; wrangler d1 execute petaboo --remote --file=\"$file\" || echo \"Already applied or error: $file\"; done",
     "db:studio:local": "drizzle-kit studio --port 8795 --config drizzle.config.local.ts",
+    "studio:prod": "drizzle-kit studio --port 8796",
     "db:reset": "rm -rf .wrangler && rm -rf ../../.wrangler"
   },
   "dependencies": {

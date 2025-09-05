@@ -5,8 +5,6 @@ import {
   getUserInfo,
   updateUserPlanRoute,
   updateUserPlan,
-  getSpecificUserInfoRoute,
-  getSpecificUserInfo,
   updateSpecificUserPlanRoute,
   updateSpecificUserPlan,
   getUserRoute,
@@ -19,6 +17,8 @@ import {
   getUserById,
   updateDisplayNameRoute,
   updateDisplayName,
+  ensureUserExistsRoute,
+  ensureUserExists,
 } from "./api";
 import { databaseMiddleware } from "../../middleware/database";
 
@@ -30,13 +30,13 @@ usersRoute.use("*", databaseMiddleware);
 // Clerk認証ミドルウェアを適用
 usersRoute.use("*", clerkMiddleware());
 
-// ルート定義を登録
-usersRoute.openapi(getUsersListRoute, getUsersList);
-usersRoute.openapi(getUserByIdRoute, getUserById);
-usersRoute.openapi(getUserInfoRoute, getUserInfo);
+// ルート定義を登録（特定パスを先に定義）
+usersRoute.openapi(ensureUserExistsRoute, ensureUserExists);
+usersRoute.openapi(getUserInfoRoute, getUserInfo); // /me を先に
 usersRoute.openapi(updateUserPlanRoute, updateUserPlan);
 usersRoute.openapi(updateDisplayNameRoute, updateDisplayName);
-usersRoute.openapi(getSpecificUserInfoRoute, getSpecificUserInfo);
+usersRoute.openapi(getUsersListRoute, getUsersList);
+usersRoute.openapi(getUserByIdRoute, getUserById); // /{id} を後に
 usersRoute.openapi(updateSpecificUserPlanRoute, updateSpecificUserPlan);
 usersRoute.openapi(getUserRoute, getUser);
 usersRoute.openapi(updateUserRoute, updateUser);

@@ -179,40 +179,7 @@ export const updateSpecificUserPlanRoute = createRoute({
   tags: ["Users"],
 });
 
-// 特定ユーザー情報取得ルート定義（管理者用）
-export const getSpecificUserInfoRoute = createRoute({
-  method: "get",
-  path: "/:userId",
-  request: {
-    params: z.object({
-      userId: z.string(),
-    }),
-  },
-  responses: {
-    200: {
-      description: "ユーザー情報取得成功",
-      content: {
-        "application/json": {
-          schema: z.object({
-            userId: z.string(),
-            planType: z.enum(["free", "premium"]),
-            createdAt: z.number(),
-          }),
-        },
-      },
-    },
-    401: {
-      description: "認証が必要です",
-    },
-    403: {
-      description: "管理者権限が必要です",
-    },
-    404: {
-      description: "ユーザーが見つかりません",
-    },
-  },
-  tags: ["Users"],
-});
+// 特定ユーザー情報取得ルート定義（管理者用）- 削除（getUserRouteと重複）
 
 // 表示名更新ルート定義
 export const updateDisplayNameRoute = createRoute({
@@ -295,6 +262,30 @@ export const getUserByIdRoute = createRoute({
   tags: ["Users"],
 });
 
+// ユーザー存在確認・作成ルート定義（ログイン時用）
+export const ensureUserExistsRoute = createRoute({
+  method: "post",
+  path: "/ensure-exists",
+  responses: {
+    200: {
+      description: "ユーザー存在確認・作成成功",
+      content: {
+        "application/json": {
+          schema: z.object({
+            message: z.string(),
+            userId: z.string(),
+            created: z.boolean(),
+          }),
+        },
+      },
+    },
+    401: {
+      description: "認証が必要です",
+    },
+  },
+  tags: ["Users"],
+});
+
 // Refine用ユーザー一覧取得ルート定義
 export const getUsersListRoute = createRoute({
   method: "get",
@@ -333,6 +324,54 @@ export const getUsersListRoute = createRoute({
   },
   tags: ["Users"],
 });
+
+// ユーザー存在確認・作成の実装（ログイン時用）
+export async function ensureUserExists(c: any) {
+  const auth = getAuth(c);
+  if (!auth?.userId) {
+    return c.json({ error: "認証が必要です" }, 401);
+  }
+
+  const db = c.get("db");
+
+  try {
+    // ユーザーが既に存在するかチェック
+    const existingUser = await db
+      .select()
+      .from(users)
+      .where(eq(users.userId, auth.userId))
+      .limit(1);
+
+    if (existingUser.length > 0) {
+      // 既存ユーザー
+      return c.json({
+        message: "ユーザーは既に存在します",
+        userId: auth.userId,
+        created: false,
+      });
+    }
+
+    // 新規ユーザー作成
+    const now = Math.floor(Date.now() / 1000);
+    await db.insert(users).values({
+      userId: auth.userId,
+      planType: "free",
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    console.log(`新規ユーザー作成（ログイン時）: ${auth.userId}`);
+
+    return c.json({
+      message: "新規ユーザーを作成しました",
+      userId: auth.userId,
+      created: true,
+    });
+  } catch (error) {
+    console.error("ユーザー存在確認・作成エラー:", error);
+    return c.json({ error: "ユーザー作成に失敗しました" }, 500);
+  }
+}
 
 // ユーザー一覧取得の実装（Refine用・開発環境のみ）
 export async function getUsersList(c: any) {
@@ -538,9 +577,14 @@ export async function getUserById(c: any) {
 // ユーザー情報取得の実装
 export async function getUserInfo(c: any) {
   const auth = getAuth(c);
+  console.log("getUserInfo: auth =", auth);
+
   if (!auth?.userId) {
+    console.log("getUserInfo: 認証失敗 - authがnullまたはuserIdなし");
     return c.json({ error: "認証が必要です" }, 401);
   }
+
+  console.log("getUserInfo: 認証成功 - userId =", auth.userId);
 
   const db = c.get("db");
 
@@ -644,52 +688,7 @@ export async function updateUserPlan(c: any) {
   }
 }
 
-// 管理者用：特定ユーザー情報取得（標準REST対応）
-export async function getSpecificUserInfo(c: any) {
-  // 管理者権限チェック（トークンベース）
-  const adminToken = c.req.header("x-admin-token");
-  const validAdminToken = c.env?.ADMIN_TOKEN;
-  if (!adminToken || adminToken !== validAdminToken) {
-    // 管理者トークンがない場合は通常のClerk認証
-    const auth = getAuth(c);
-    if (!auth?.userId) {
-      return c.json({ error: "認証が必要です" }, 401);
-    }
-    return c.json({ error: "管理者権限が必要です" }, 403);
-  }
-
-  const db = c.get("db");
-  const targetUserId = c.req.param("userId");
-
-  try {
-    const userResult = await db
-      .select()
-      .from(users)
-      .where(eq(users.userId, targetUserId))
-      .limit(1);
-
-    if (userResult.length === 0) {
-      return c.json({ error: "ユーザーが見つかりません" }, 404);
-    }
-
-    const user = userResult[0];
-    return c.json(
-      {
-        id: user.userId,
-        userId: user.userId,
-        planType: user.planType,
-        premiumStartDate: user.premiumStartDate,
-        nextBillingDate: user.nextBillingDate,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      },
-      200,
-    );
-  } catch (error) {
-    console.error("ユーザー情報取得エラー:", error);
-    return c.json({ error: "ユーザー情報の取得に失敗しました" }, 500);
-  }
-}
+// 管理者用：特定ユーザー情報取得（標準REST対応）- 削除（getUserと重複）
 
 // 管理者用：標準REST - 個別ユーザー取得
 export async function getUser(c: any) {

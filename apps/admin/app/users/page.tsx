@@ -2,20 +2,79 @@
 
 import React from "react";
 import { List, useTable } from "@refinedev/antd";
-import { Table, Tag, Button, Space } from "antd";
-import { EyeOutlined, EditOutlined } from "@ant-design/icons";
+import { Table, Tag, Button, Space, Spin, Alert } from "antd";
+import { EyeOutlined, EditOutlined, LoadingOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 
 export default function UsersList() {
-  const { tableProps } = useTable({
+  const { tableProps, tableQueryResult } = useTable({
     resource: "users",
+    pagination: {
+      mode: "off", // ページネーションを無効化（全データを一度に取得）
+    },
+    queryOptions: {
+      staleTime: 30000, // 30秒間はデータを新鮮とみなす
+      refetchOnMount: "always", // マウント時は必ずフェッチ
+    },
   });
 
   const router = useRouter();
 
+  // ローディング中の表示
+  if (tableQueryResult?.isLoading) {
+    return (
+      <List>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            minHeight: "300px",
+            padding: "50px",
+            background: "#fff",
+            borderRadius: "8px",
+            gap: "20px",
+          }}
+        >
+          <Spin
+            indicator={<LoadingOutlined style={{ fontSize: 48 }} spin />}
+            size="large"
+          />
+          <div style={{ fontSize: "16px", color: "#666" }}>
+            ユーザーデータを読み込み中...
+          </div>
+        </div>
+      </List>
+    );
+  }
+
+  // エラー時の表示
+  if (tableQueryResult?.isError) {
+    return (
+      <List>
+        <Alert
+          message="エラーが発生しました"
+          description="データの取得に失敗しました。ページを更新してください。"
+          type="error"
+          showIcon
+          action={
+            <Button
+              size="small"
+              type="primary"
+              onClick={() => tableQueryResult?.refetch()}
+            >
+              再読み込み
+            </Button>
+          }
+        />
+      </List>
+    );
+  }
+
   return (
     <List>
-      <Table {...tableProps} rowKey="id">
+      <Table {...tableProps} rowKey="id" loading={tableQueryResult?.isFetching}>
         <Table.Column
           title="ユーザーID"
           dataIndex="userId"

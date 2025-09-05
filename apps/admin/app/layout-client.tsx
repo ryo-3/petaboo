@@ -13,7 +13,7 @@ import "@refinedev/antd/dist/reset.css";
 if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
   const originalError = console.error;
   const originalWarn = console.warn;
-  
+
   console.error = (...args) => {
     const message = args[0]?.toString() || "";
     if (
@@ -27,7 +27,7 @@ if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
     }
     originalError.apply(console, args);
   };
-  
+
   console.warn = (...args) => {
     const message = args[0]?.toString() || "";
     if (
@@ -49,27 +49,32 @@ export default function RootLayoutClient({
 }) {
   const [isMounted, setIsMounted] = React.useState(false);
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
-  
-  // QueryClientをmemoで管理
+
+  // QueryClientをmemoで管理（リトライ設定を改善）
   const queryClient = React.useMemo(
-    () => new QueryClient({
-      defaultOptions: {
-        queries: {
-          refetchOnWindowFocus: false,
-          retry: false,
-          staleTime: Infinity,
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            refetchOnWindowFocus: false,
+            retry: 2, // 2回まで自動リトライ
+            retryDelay: (attemptIndex) =>
+              Math.min(1000 * 2 ** attemptIndex, 30000), // 指数バックオフ
+            staleTime: 5 * 60 * 1000, // 5分間はキャッシュを新鮮とみなす
+            gcTime: 10 * 60 * 1000, // 10分後にガベージコレクション
+          },
+          mutations: {
+            retry: 1, // ミューテーションも1回リトライ
+          },
         },
-        mutations: {
-          retry: false,
-        },
-      },
-    }),
-    []
+      }),
+    [],
   );
 
   React.useEffect(() => {
     setIsMounted(true);
-    const authenticated = sessionStorage.getItem("admin_authenticated") === "true";
+    const authenticated =
+      sessionStorage.getItem("admin_authenticated") === "true";
     setIsAuthenticated(authenticated);
   }, []);
 
@@ -81,9 +86,7 @@ export default function RootLayoutClient({
   if (typeof window !== "undefined" && window.location.pathname === "/login") {
     return (
       <QueryClientProvider client={queryClient}>
-        <ConfigProvider>
-          {children}
-        </ConfigProvider>
+        <ConfigProvider>{children}</ConfigProvider>
       </QueryClientProvider>
     );
   }
@@ -129,9 +132,7 @@ export default function RootLayoutClient({
             },
           }}
         >
-          <ThemedLayoutV2>
-            {children}
-          </ThemedLayoutV2>
+          <ThemedLayoutV2>{children}</ThemedLayoutV2>
         </Refine>
       </ConfigProvider>
     </QueryClientProvider>

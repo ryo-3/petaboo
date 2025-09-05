@@ -14,7 +14,7 @@ console.log("🔧 Data Provider Configuration:", {
 export const customDataProvider = {
   ...dataProvider(API_URL),
 
-  // getListメソッドをオーバーライド
+  // getListメソッドをオーバーライド（リトライ機能付き）
   getList: async (params: any) => {
     const { resource, pagination, sorters, filters, meta } = params;
 
@@ -27,35 +27,80 @@ export const customDataProvider = {
       env: process.env.NEXT_PUBLIC_API_URL,
     });
 
-    try {
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          "x-admin-token": "petaboo_admin_dev_token_2025",
-          "Content-Type": "application/json",
-        },
-        mode: "cors",
-        credentials: "omit",
-        cache: "no-cache",
-      });
+    // リトライ機能の実装
+    const maxRetries = 3;
+    let lastError: any;
 
-      console.log("📡 Response status:", response.status);
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await fetch(url, {
+          method: "GET",
+          headers: {
+            "x-admin-token": "petaboo_admin_dev_token_2025",
+            "Content-Type": "application/json",
+          },
+          mode: "cors",
+          credentials: "omit",
+          cache: "no-cache",
+        });
 
-      if (!response.ok) {
-        console.error("❌ API Error:", response.status, await response.text());
-        throw new Error(`HTTP error! status: ${response.status}`);
+        console.log(
+          `📡 Response status (attempt ${attempt}/${maxRetries}):`,
+          response.status,
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(
+            `❌ API Error (attempt ${attempt}):`,
+            response.status,
+            errorText,
+          );
+
+          // 404や401など回復不可能なエラーの場合は即座に失敗
+          if (
+            response.status === 404 ||
+            response.status === 401 ||
+            response.status === 403
+          ) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          // 500番台エラーの場合はリトライ
+          if (attempt < maxRetries && response.status >= 500) {
+            console.log(`⏳ Retrying in ${attempt} second(s)...`);
+            await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+            continue;
+          }
+
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("✅ Data received:", data);
+        return {
+          data: data,
+          total: data.length,
+        };
+      } catch (error) {
+        console.error(`🚨 Fetch error (attempt ${attempt}):`, error);
+        lastError = error;
+
+        // ネットワークエラーの場合はリトライ
+        if (
+          attempt < maxRetries &&
+          (error instanceof TypeError || (error as any).code === "ECONNREFUSED")
+        ) {
+          console.log(`⏳ Network error. Retrying in ${attempt} second(s)...`);
+          await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+          continue;
+        }
+
+        throw error;
       }
-
-      const data = await response.json();
-      console.log("✅ Data received:", data);
-      return {
-        data: data,
-        total: data.length,
-      };
-    } catch (error) {
-      console.error("🚨 Fetch error:", error);
-      throw error;
     }
+
+    throw lastError;
   },
 
   // getOneメソッドをオーバーライド

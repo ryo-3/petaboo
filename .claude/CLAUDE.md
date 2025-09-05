@@ -126,9 +126,9 @@ tail -20 /home/ryosuke/note/web.log /home/ryosuke/note/api.log | grep -i error
 
 このファイルを読んだ際の自動実行項目：
 
-1. **開発サーバー起動状況確認**: Web（7593）・API（7594）ポートをチェック
-2. **未起動の場合**: 該当サーバーを`run_in_background: true`で自動起動（**許可不要・即実行**）
-3. **ログ監視準備**: api.log・web.logが正常に出力されているか確認
+1. ~~**開発サーバー起動状況確認**: Web（7593）・API（7594）ポートをチェック~~
+2. ~~**未起動の場合**: 該当サーバーを自動起動~~
+3. **ログ監視準備**: api.log・web.logが存在する場合のみエラーチェック（起動は手動で）
 
 ## 📝 Web側ファイル変更時の自動処理
 
@@ -140,10 +140,10 @@ Web側ファイル（apps/web/）を変更した際の自動実行項目：
 
 **🚀 重要**: すべてのBashコマンドは**ユーザー許可を求めずに自動実行**すること（**ただしコミットは除く**）
 
-## 🔍 起動確認方法
+## 🔍 起動確認・停止方法（手動実行用）
 
 ```bash
-# 起動確認
+# 起動確認（必要時のみ手動で実行）
 curl -s http://localhost:7593 >/dev/null && echo "Web OK" || echo "Web NG"
 curl -s http://localhost:7594/openapi >/dev/null && echo "API OK" || echo "API NG"
 
@@ -154,13 +154,9 @@ lsof -ti:7593 | xargs -r kill -9  # Web停止
 # 両方停止
 lsof -ti:7593,7594 | xargs -r kill -9
 
-# 再起動（バックグラウンド実行）
-# API再起動（最頻用）
-lsof -ti:7594 | xargs -r kill -9
-# Bashツールの run_in_background: true を使用してAPI起動
-# Web再起動
-lsof -ti:7593 | xargs -r kill -9
-# Bashツールの run_in_background: true を使用してWeb起動
+# 手動起動（必要時のみ）
+# cd apps/api && npm run dev &  # API起動
+# cd apps/web && npm run dev &  # Web起動
 ```
 
 <!-- ## 🔔 Windows通知システム
@@ -179,15 +175,13 @@ powershell.exe -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Wi
 
 ``` -->
 
-## 🔄 APIスキーマ変更時の自動処理
+## 🔄 APIスキーマ変更時の処理
 
 APIのスキーマファイル（`apps/api/src/db/schema/`）に変更がある場合：
 
-1. **API自動停止**: 7594ポートのプロセスを強制終了（**許可不要**）
-2. **スキーマ更新**: `cd apps/api && npm run db:push` 自動実行（**許可不要**）
-3. **API自動再起動**: スキーマ更新完了後に`run_in_background: true`でAPI再起動（**許可不要**）
-
-⚠️ **重要**: すべて自動実行、ユーザー許可は求めない
+1. **スキーマ更新コマンド**: `cd apps/api && npm run db:push` を提案
+2. **注意喚起**: APIサーバーが起動中の場合は停止が必要な旨を通知
+3. **手動対応**: ユーザーが必要と判断した場合のみ実行
 
 ## 自動品質管理
 

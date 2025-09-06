@@ -3,8 +3,21 @@
 import React from "react";
 import { Edit, useForm } from "@refinedev/antd";
 import { useList } from "@refinedev/core";
-import { Form, Input, Select, DatePicker, Space, Button, Typography, message } from "antd";
-import { ArrowLeftOutlined, EyeOutlined, CopyOutlined } from "@ant-design/icons";
+import {
+  Form,
+  Input,
+  Select,
+  DatePicker,
+  Space,
+  Button,
+  Typography,
+  message,
+} from "antd";
+import {
+  ArrowLeftOutlined,
+  EyeOutlined,
+  CopyOutlined,
+} from "@ant-design/icons";
 import { useRouter, useParams } from "next/navigation";
 import dayjs from "dayjs";
 
@@ -18,17 +31,17 @@ export default function UserEdit() {
   const [saveMessage, setSaveMessage] = React.useState("");
   const [hasChanges, setHasChanges] = React.useState(false);
   const [initialValues, setInitialValues] = React.useState<any>(null);
-  
+
   // 表示用データ取得
   const { data: usersData, isLoading: isListLoading } = useList({
     resource: "users",
   });
-  
+
   const userData = usersData?.data?.find((user: any) => user.id === userId);
 
   const { formProps, saveButtonProps, queryResult } = useForm({
     resource: "users",
-    action: "edit", 
+    action: "edit",
     id: userId,
     redirect: false,
   });
@@ -36,41 +49,44 @@ export default function UserEdit() {
   // カスタム保存処理
   const handleSave = async () => {
     if (isSaving) return; // 二重送信防止
-    
+
     try {
       setIsSaving(true);
       setSaveMessage("保存中...");
-      console.log('Custom save started');
+      console.log("Custom save started");
       const formValues = formProps.form?.getFieldsValue();
-      console.log('Form values:', formValues);
-      
+      console.log("Form values:", formValues);
+
       // 日付フィールドを適切に変換
       const processedValues = {
         ...formValues,
-        premiumStartDate: formValues.premiumStartDate ? formValues.premiumStartDate.toISOString() : null,
-        nextBillingDate: formValues.nextBillingDate ? formValues.nextBillingDate.toISOString() : null,
+        premiumStartDate: (formValues as any)?.premiumStartDate
+          ? (formValues as any).premiumStartDate.toISOString()
+          : null,
+        nextBillingDate: (formValues as any)?.nextBillingDate
+          ? (formValues as any).nextBillingDate.toISOString()
+          : null,
       };
-      
+
       // formProps.onFinishを直接呼び出し
       if (formProps.onFinish) {
         await formProps.onFinish(processedValues);
       }
-      
+
       setSaveMessage("✅ 保存されました！");
       setHasChanges(false); // 保存後は変更なし状態に
-      
+
       // データを再取得してUIを更新
       queryResult?.refetch?.();
-      
+
       // 3秒後にメッセージを消す
       setTimeout(() => {
         setSaveMessage("");
       }, 3000);
-      
     } catch (error: any) {
-      console.log('Save error:', error);
+      console.log("Save error:", error);
       setSaveMessage("❌ 保存に失敗しました");
-      
+
       // エラーメッセージも3秒後に消す
       setTimeout(() => {
         setSaveMessage("");
@@ -87,14 +103,14 @@ export default function UserEdit() {
         userId: userData.userId,
         planType: userData.planType,
         id: userData.id,
-        premiumStartDate: userData.premiumStartDate 
-          ? dayjs.unix(userData.premiumStartDate) 
+        premiumStartDate: userData.premiumStartDate
+          ? dayjs.unix(userData.premiumStartDate)
           : null,
-        nextBillingDate: userData.nextBillingDate 
-          ? dayjs.unix(userData.nextBillingDate) 
+        nextBillingDate: userData.nextBillingDate
+          ? dayjs.unix(userData.nextBillingDate)
           : null,
       };
-      
+
       formProps.form.setFieldsValue(formValues);
       setInitialValues(formValues);
       setHasChanges(false);
@@ -104,23 +120,33 @@ export default function UserEdit() {
   // フォーム値変更の監視
   const checkForChanges = () => {
     if (!formProps.form || !initialValues) return;
-    
+
     const currentValues = formProps.form.getFieldsValue();
-    
+
     // 値を比較（日付はISOStringで比較）
     const currentForComparison = {
       ...currentValues,
-      premiumStartDate: currentValues.premiumStartDate ? currentValues.premiumStartDate.toISOString() : null,
-      nextBillingDate: currentValues.nextBillingDate ? currentValues.nextBillingDate.toISOString() : null,
+      premiumStartDate: (currentValues as any)?.premiumStartDate
+        ? (currentValues as any).premiumStartDate.toISOString()
+        : null,
+      nextBillingDate: (currentValues as any)?.nextBillingDate
+        ? (currentValues as any).nextBillingDate.toISOString()
+        : null,
     };
-    
+
     const initialForComparison = {
       ...initialValues,
-      premiumStartDate: initialValues.premiumStartDate ? initialValues.premiumStartDate.toISOString() : null,
-      nextBillingDate: initialValues.nextBillingDate ? initialValues.nextBillingDate.toISOString() : null,
+      premiumStartDate: (initialValues as any)?.premiumStartDate
+        ? (initialValues as any).premiumStartDate.toISOString()
+        : null,
+      nextBillingDate: (initialValues as any)?.nextBillingDate
+        ? (initialValues as any).nextBillingDate.toISOString()
+        : null,
     };
-    
-    const changed = JSON.stringify(currentForComparison) !== JSON.stringify(initialForComparison);
+
+    const changed =
+      JSON.stringify(currentForComparison) !==
+      JSON.stringify(initialForComparison);
     setHasChanges(changed);
   };
 
@@ -128,13 +154,12 @@ export default function UserEdit() {
     if (userData?.userId) {
       try {
         await navigator.clipboard.writeText(userData.userId);
-        message.success('ユーザーIDをコピーしました');
+        message.success("ユーザーIDをコピーしました");
       } catch (err) {
-        message.error('コピーに失敗しました');
+        message.error("コピーに失敗しました");
       }
     }
   };
-
 
   return (
     <Edit
@@ -150,7 +175,11 @@ export default function UserEdit() {
           {saveMessage && (
             <span
               style={{
-                color: saveMessage.includes("✅") ? "#52c41a" : saveMessage.includes("❌") ? "#ff4d4f" : "#1890ff",
+                color: saveMessage.includes("✅")
+                  ? "#52c41a"
+                  : saveMessage.includes("❌")
+                    ? "#ff4d4f"
+                    : "#1890ff",
                 fontWeight: "500",
                 fontSize: "14px",
               }}
@@ -165,13 +194,13 @@ export default function UserEdit() {
         title: "ユーザー編集",
         extra: (
           <Space>
-            <Button 
+            <Button
               icon={<ArrowLeftOutlined />}
               onClick={() => router.push("/users")}
             >
               一覧に戻る
             </Button>
-            <Button 
+            <Button
               icon={<EyeOutlined />}
               onClick={() => router.push(`/users/show/${userData?.id}`)}
             >
@@ -181,29 +210,21 @@ export default function UserEdit() {
         ),
       }}
     >
-      
-      <Form 
-        {...formProps}
-        layout="vertical"
-        onValuesChange={checkForChanges}
-      >
+      <Form {...formProps} layout="vertical" onValuesChange={checkForChanges}>
         <Title level={5}>基本情報</Title>
-        
-        <Form.Item
-          label="ユーザーID"
-          name="userId"
-        >
-          <Input 
-            style={{ 
-              fontFamily: "monospace", 
+
+        <Form.Item label="ユーザーID" name="userId">
+          <Input
+            style={{
+              fontFamily: "monospace",
               fontSize: "12px",
-              pointerEvents: "none"
+              pointerEvents: "none",
             }}
             placeholder="user_xxxxxx"
             addonAfter={
-              <Button 
-                type="text" 
-                icon={<CopyOutlined />} 
+              <Button
+                type="text"
+                icon={<CopyOutlined />}
                 onClick={handleCopyUserId}
                 style={{ pointerEvents: "auto" }}
                 size="small"
@@ -212,34 +233,29 @@ export default function UserEdit() {
           />
         </Form.Item>
 
-        <Form.Item
-          label="プラン"
-          name="planType"
-        >
+        <Form.Item label="プラン" name="planType">
           <Select>
             <Select.Option value="free">FREE</Select.Option>
             <Select.Option value="premium">PREMIUM</Select.Option>
           </Select>
         </Form.Item>
 
-        <Form.Item
-          label="作成日時"
-        >
+        <Form.Item label="作成日時">
           <Input
             style={{ pointerEvents: "none" }}
-            value={userData?.createdAt 
-              ? new Date(userData.createdAt * 1000).toLocaleString("ja-JP")
-              : ""
+            value={
+              userData?.createdAt
+                ? new Date(userData.createdAt * 1000).toLocaleString("ja-JP")
+                : ""
             }
           />
         </Form.Item>
 
-        <Title level={5} style={{ marginTop: 24 }}>プレミアム設定</Title>
-        
-        <Form.Item
-          label="プレミアム開始日"
-          name="premiumStartDate"
-        >
+        <Title level={5} style={{ marginTop: 24 }}>
+          プレミアム設定
+        </Title>
+
+        <Form.Item label="プレミアム開始日" name="premiumStartDate">
           <DatePicker
             style={{ width: "100%" }}
             format="YYYY-MM-DD"
@@ -247,10 +263,7 @@ export default function UserEdit() {
           />
         </Form.Item>
 
-        <Form.Item
-          label="次回請求日"
-          name="nextBillingDate"
-        >
+        <Form.Item label="次回請求日" name="nextBillingDate">
           <DatePicker
             style={{ width: "100%" }}
             format="YYYY-MM-DD"
@@ -258,7 +271,9 @@ export default function UserEdit() {
           />
         </Form.Item>
 
-        <Title level={5} style={{ marginTop: 24 }}>システム情報</Title>
+        <Title level={5} style={{ marginTop: 24 }}>
+          システム情報
+        </Title>
       </Form>
     </Edit>
   );

@@ -126,11 +126,13 @@ export default function RootLayoutClient({
               },
             },
           ]}
-          options={{
-            sideNavigation: {
-              collapsed: false,
-            },
-          }}
+          options={
+            {
+              // sideNavigation: {
+              //   collapsed: false,
+              // },
+            }
+          }
         >
           <ThemedLayoutV2>{children}</ThemedLayoutV2>
         </Refine>

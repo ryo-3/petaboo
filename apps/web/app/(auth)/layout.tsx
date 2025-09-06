@@ -8,6 +8,11 @@ export default function AuthLayout({
 }) {
   const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
+  // 本番環境でClerk環境変数が存在しない場合、ClerkProviderなしで返す
+  if (!clerkPublishableKey && process.env.NODE_ENV === "production") {
+    return children;
+  }
+
   return (
     <ClerkProvider
       localization={jaJP}

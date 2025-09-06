@@ -23,7 +23,7 @@ export const teamInvitations = sqliteTable("team_invitations", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   teamId: integer("team_id").notNull(),
   email: text("email").notNull(), // メール招待時はメール、URL招待時は"URL_INVITE"、申請時は申請者メール
-  role: text("role").notNull().default("member"), // "admin" | "member"
+  // role削除: 招待経由は常にmemberで参加、権限はteamMembersで管理
   token: text("token").notNull(),
   invitedBy: text("invited_by").notNull(),
   createdAt: integer("created_at").notNull(),

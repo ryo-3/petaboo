@@ -1,12 +1,79 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export interface GenerateInviteCodeRequest {
   customUrl: string;
-  role?: "admin" | "member";
   expiresInDays?: number;
+  // roleは常にmemberに固定（API側で制御）
+}
+
+export interface InviteUrl {
+  token: string;
+  url: string;
+  expiresAt: string;
+  createdAt: string;
+}
+
+// 既存の招待URL取得フック
+export function useGetInviteUrl(customUrl: string) {
+  const { getToken } = useAuth();
+
+  return useQuery({
+    queryKey: ["inviteUrl", customUrl],
+    queryFn: async (): Promise<InviteUrl | null> => {
+      const token = await getToken();
+
+      const response = await fetch(`${API_URL}/teams/${customUrl}/invite-url`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error("認証が必要です");
+        }
+        throw new Error("招待URLの取得に失敗しました");
+      }
+
+      return response.json();
+    },
+    enabled: !!customUrl,
+  });
+}
+
+// 招待URL削除フック
+export function useDeleteInviteUrl() {
+  const queryClient = useQueryClient();
+  const { getToken } = useAuth();
+
+  return useMutation({
+    mutationFn: async (customUrl: string) => {
+      const token = await getToken();
+
+      const response = await fetch(`${API_URL}/teams/${customUrl}/invite-url`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "招待URLの削除に失敗しました");
+      }
+
+      return response.json();
+    },
+    onSuccess: (data, customUrl) => {
+      // 招待URL情報をリフレッシュ
+      queryClient.invalidateQueries({
+        queryKey: ["inviteUrl", customUrl],
+      });
+    },
+  });
 }
 
 export function useGenerateInviteCode() {
@@ -16,7 +83,6 @@ export function useGenerateInviteCode() {
   return useMutation({
     mutationFn: async ({
       customUrl,
-      role = "member",
       expiresInDays = 3,
     }: GenerateInviteCodeRequest) => {
       const token = await getToken();
@@ -28,8 +94,8 @@ export function useGenerateInviteCode() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          role,
           expiresInDays,
+          // roleは常にmemberで固定（API側で制御）
         }),
       });
 
@@ -44,6 +110,11 @@ export function useGenerateInviteCode() {
       return response.json();
     },
     onSuccess: (data, variables) => {
+      // 招待URL情報をリフレッシュ
+      queryClient.invalidateQueries({
+        queryKey: ["inviteUrl", variables.customUrl],
+      });
+
       // チーム詳細をリフレッシュ
       queryClient.invalidateQueries({
         queryKey: ["team", variables.customUrl],

@@ -7,7 +7,11 @@ import { Button } from "@/components/ui/button";
 import { CopyIcon, RefreshCcwIcon, TrashIcon } from "lucide-react";
 import { BackButton } from "@/components/ui/buttons/back-button";
 import { useTeamDetail } from "@/src/hooks/use-team-detail";
-import { useGenerateInviteCode } from "@/src/hooks/use-generate-invite-code";
+import {
+  useGenerateInviteCode,
+  useGetInviteUrl,
+  useDeleteInviteUrl,
+} from "@/src/hooks/use-generate-invite-code";
 import { useUserInfo } from "@/src/hooks/use-user-info";
 import MemoScreen from "@/components/screens/memo-screen";
 import TaskScreen from "@/components/screens/task-screen";
@@ -25,10 +29,12 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   const searchParams = useSearchParams();
   const { data: team, isLoading, error } = useTeamDetail(customUrl);
   const { data: userInfo } = useUserInfo();
+  const { data: existingInviteUrl, isLoading: isLoadingInviteUrl } =
+    useGetInviteUrl(customUrl);
   const { mutate: generateInviteCode, isPending: isGenerating } =
     useGenerateInviteCode();
-  const [inviteRole, setInviteRole] = useState<"admin" | "member">("member");
-  const [generatedCode, setGeneratedCode] = useState<string>("");
+  const { mutate: deleteInviteUrl, isPending: isDeleting } =
+    useDeleteInviteUrl();
 
   const [showInvitePanel, setShowInvitePanel] = useState(false);
   const [inviteMessage, setInviteMessage] = useState<{
@@ -340,18 +346,17 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                       </div>
                     </div>
 
-                    {!generatedCode ? (
+                    {!existingInviteUrl && !isLoadingInviteUrl ? (
                       <div>
                         <p className="text-gray-600 text-sm mb-4">
-                          招待コードを生成してメンバーと共有してください。コードは3日間有効です。
+                          招待URLを生成してメンバーと共有してください。URLは3日間有効です。
                         </p>
                         <Button
                           onClick={() => {
                             generateInviteCode(
-                              { customUrl, role: inviteRole },
+                              { customUrl },
                               {
                                 onSuccess: (data) => {
-                                  setGeneratedCode(data.url);
                                   setInviteMessage({
                                     type: "success",
                                     text: "生成完了",
@@ -377,53 +382,108 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                           disabled={isGenerating}
                           className="w-full"
                         >
-                          {isGenerating ? "生成中..." : "招待コードを生成"}
+                          {isGenerating ? "生成中..." : "招待URLを生成"}
                         </Button>
                       </div>
                     ) : (
                       <div>
-                        <div className="bg-gray-50 border rounded-lg p-4 mb-4">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="text-xs text-gray-500 mb-1">
-                                招待コード
-                              </p>
-                              <code className="text-lg font-mono font-bold text-gray-800">
-                                {generatedCode}
-                              </code>
-                            </div>
-                            <Button
-                              size="sm"
-                              onClick={() => {
-                                navigator.clipboard.writeText(generatedCode);
-                                setInviteMessage({
-                                  type: "success",
-                                  text: "コピーしました",
-                                });
-                                setTimeout(() => setInviteMessage(null), 1500);
-                              }}
-                            >
-                              <CopyIcon className="w-4 h-4 mr-1" />
-                              コピー
-                            </Button>
+                        {isLoadingInviteUrl ? (
+                          <div className="text-center py-4">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+                            <p className="text-sm text-gray-500 mt-2">
+                              読み込み中...
+                            </p>
                           </div>
-                        </div>
+                        ) : existingInviteUrl ? (
+                          <div className="bg-gray-50 border rounded-lg p-4 mb-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs text-gray-500 mb-1">
+                                  招待URL
+                                </p>
+                                <div className="bg-white border rounded px-3 py-2">
+                                  <code className="text-sm font-mono text-gray-800 break-all">
+                                    {existingInviteUrl.url}
+                                  </code>
+                                </div>
+                              </div>
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(
+                                    existingInviteUrl.url,
+                                  );
+                                  setInviteMessage({
+                                    type: "success",
+                                    text: "コピーしました",
+                                  });
+                                  setTimeout(
+                                    () => setInviteMessage(null),
+                                    1500,
+                                  );
+                                }}
+                                className="ml-2"
+                              >
+                                <CopyIcon className="w-4 h-4 mr-1" />
+                                コピー
+                              </Button>
+                            </div>
+                          </div>
+                        ) : null}
 
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-gray-500">3日間有効</span>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                generateInviteCode(
-                                  { customUrl, role: inviteRole },
-                                  {
-                                    onSuccess: (data) => {
-                                      setGeneratedCode(data.url);
+                        {existingInviteUrl && (
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-gray-500">
+                              {new Date(
+                                existingInviteUrl.expiresAt,
+                              ).toLocaleDateString("ja-JP")}
+                              まで有効
+                            </span>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  generateInviteCode(
+                                    { customUrl },
+                                    {
+                                      onSuccess: (data) => {
+                                        setInviteMessage({
+                                          type: "success",
+                                          text: "新しいURLを生成しました",
+                                        });
+                                        setTimeout(
+                                          () => setInviteMessage(null),
+                                          2000,
+                                        );
+                                      },
+                                      onError: () => {
+                                        setInviteMessage({
+                                          type: "error",
+                                          text: "更新に失敗しました",
+                                        });
+                                        setTimeout(
+                                          () => setInviteMessage(null),
+                                          2000,
+                                        );
+                                      },
+                                    },
+                                  );
+                                }}
+                                disabled={isGenerating || isDeleting}
+                              >
+                                <RefreshCcwIcon className="w-4 h-4 mr-1" />
+                                更新
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  deleteInviteUrl(customUrl, {
+                                    onSuccess: () => {
                                       setInviteMessage({
                                         type: "success",
-                                        text: "新しいURLを生成しました",
+                                        text: "招待URLを削除しました",
                                       });
                                       setTimeout(
                                         () => setInviteMessage(null),
@@ -433,39 +493,24 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                                     onError: () => {
                                       setInviteMessage({
                                         type: "error",
-                                        text: "更新に失敗しました",
+                                        text: "削除に失敗しました",
                                       });
                                       setTimeout(
                                         () => setInviteMessage(null),
                                         2000,
                                       );
                                     },
-                                  },
-                                );
-                              }}
-                              disabled={isGenerating}
-                            >
-                              <RefreshCcwIcon className="w-4 h-4 mr-1" />
-                              更新
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setGeneratedCode("");
-                                setInviteMessage({
-                                  type: "success",
-                                  text: "招待コードを削除しました",
-                                });
-                                setTimeout(() => setInviteMessage(null), 2000);
-                              }}
-                              className="text-red-600 border-red-300 hover:bg-red-50"
-                            >
-                              <TrashIcon className="w-4 h-4 mr-1" />
-                              削除
-                            </Button>
+                                  });
+                                }}
+                                disabled={isGenerating || isDeleting}
+                                className="text-red-600 border-red-300 hover:bg-red-50"
+                              >
+                                <TrashIcon className="w-4 h-4 mr-1" />
+                                {isDeleting ? "削除中..." : "削除"}
+                              </Button>
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                     )}
                   </Card>

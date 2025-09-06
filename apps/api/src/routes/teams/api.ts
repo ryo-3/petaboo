@@ -762,7 +762,8 @@ export async function inviteToTeam(c: any) {
   }
 
   const requestBody = await c.req.json();
-  const { email, role = "member" } = requestBody;
+  const { email } = requestBody;
+  const role = "member"; // 招待経由は常にmember権限で参加
   const db: DatabaseType = c.get("db");
 
   try {
@@ -825,13 +826,12 @@ export async function inviteToTeam(c: any) {
     const now = Math.floor(Date.now() / 1000);
     const expiresAt = now + 7 * 24 * 60 * 60; // 7日後
 
-    // 招待をDBに保存
+    // 招待をDBに保存（roleカラム削除済み）
     const invitation = await db
       .insert(teamInvitations)
       .values({
         teamId,
         email,
-        role,
         token,
         invitedBy: auth.userId,
         createdAt: now,
@@ -855,7 +855,7 @@ export async function inviteToTeam(c: any) {
         to: email,
         teamName: team[0].name,
         inviterEmail: auth.userId,
-        role,
+        role: "member", // 招待経由は常にmember権限
         invitationToken: token,
         invitationLink,
       });
@@ -889,7 +889,6 @@ export async function getInvitation(c: any) {
         id: teamInvitations.id,
         teamId: teamInvitations.teamId,
         email: teamInvitations.email,
-        role: teamInvitations.role,
         invitedBy: teamInvitations.invitedBy,
         expiresAt: teamInvitations.expiresAt,
         status: teamInvitations.status,
@@ -912,11 +911,8 @@ export async function getInvitation(c: any) {
     // 期限チェック
     const now = Math.floor(Date.now() / 1000);
     if (invitation.expiresAt < now) {
-      // 期限切れの場合はステータスを更新
-      await db
-        .update(teamInvitations)
-        .set({ status: "expired" })
-        .where(eq(teamInvitations.token, token));
+      // 期限切れの場合はレコードを削除
+      await db.delete(teamInvitations).where(eq(teamInvitations.token, token));
 
       return c.json({ message: "招待の期限が切れています" }, 404);
     }
@@ -925,7 +921,6 @@ export async function getInvitation(c: any) {
       id: invitation.teamId,
       teamName: invitation.teamName,
       inviterEmail: invitation.invitedBy,
-      role: invitation.role,
       expiresAt: invitation.expiresAt,
     });
   } catch (error) {
@@ -964,10 +959,8 @@ export async function acceptInvitation(c: any) {
     // 期限チェック
     const now = Math.floor(Date.now() / 1000);
     if (invitation.expiresAt < now) {
-      await db
-        .update(teamInvitations)
-        .set({ status: "expired" })
-        .where(eq(teamInvitations.token, token));
+      // 期限切れの場合はレコードを削除
+      await db.delete(teamInvitations).where(eq(teamInvitations.token, token));
 
       return c.json({ message: "招待の期限が切れています" }, 404);
     }
@@ -1000,11 +993,11 @@ export async function acceptInvitation(c: any) {
       return c.json({ message: "参加できるチーム数の上限に達しています" }, 400);
     }
 
-    // チームメンバーとして追加
+    // チームメンバーとして追加（常にmember権限で参加）
     await db.insert(teamMembers).values({
       teamId: invitation.teamId,
       userId: auth.userId,
-      role: invitation.role,
+      role: "member", // 招待経由は常にmemberで参加
       joinedAt: Math.floor(Date.now() / 1000),
     });
 
@@ -1024,9 +1017,83 @@ export async function acceptInvitation(c: any) {
   }
 }
 
+// 既存の招待URL取得ルート定義
+export const getInviteUrlRoute = createRoute({
+  method: "get",
+  path: "/{customUrl}/invite-url",
+  responses: {
+    200: {
+      content: {
+        "application/json": {
+          schema: z
+            .object({
+              token: z.string(),
+              url: z.string(),
+              expiresAt: z.string(),
+              createdAt: z.string(),
+            })
+            .nullable(),
+        },
+      },
+      description: "招待URL取得成功",
+    },
+    403: {
+      content: {
+        "application/json": {
+          schema: z.object({ message: z.string() }),
+        },
+      },
+      description: "権限エラー",
+    },
+    404: {
+      content: {
+        "application/json": {
+          schema: z.object({ message: z.string() }),
+        },
+      },
+      description: "チームが見つからない",
+    },
+  },
+  tags: ["teams"],
+});
+
+// 招待URL削除ルート定義
+export const deleteInviteUrlRoute = createRoute({
+  method: "delete",
+  path: "/{customUrl}/invite-url",
+  responses: {
+    200: {
+      content: {
+        "application/json": {
+          schema: z.object({ message: z.string() }),
+        },
+      },
+      description: "招待URL削除成功",
+    },
+    403: {
+      content: {
+        "application/json": {
+          schema: z.object({ message: z.string() }),
+        },
+      },
+      description: "権限エラー",
+    },
+    404: {
+      content: {
+        "application/json": {
+          schema: z.object({ message: z.string() }),
+        },
+      },
+      description: "チームが見つからない",
+    },
+  },
+  tags: ["teams"],
+});
+
 // 招待URL生成のスキーマ
 const generateInviteUrlSchema = z.object({
   expiresInDays: z.number().min(1).max(30).default(3), // 1-30日、デフォルト3日
+  // roleは常にmemberに固定（後でメンバー一覧で変更可能）
 });
 
 // 招待URL生成ルート定義
@@ -1084,6 +1151,131 @@ export const generateInviteUrlRoute = createRoute({
 });
 
 // 招待URL生成ハンドラー
+// 既存の招待URL取得の実装
+export async function getInviteUrl(c: any) {
+  try {
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ message: "認証が必要です" }, 401);
+    }
+
+    const { customUrl } = c.req.param();
+    const db: DatabaseType = c.get("db");
+
+    // チーム存在確認
+    const team = await db
+      .select()
+      .from(teams)
+      .where(eq(teams.customUrl, customUrl))
+      .get();
+
+    if (!team) {
+      return c.json({ message: "チームが見つかりません" }, 404);
+    }
+
+    // 管理者権限確認
+    const memberRole = await db
+      .select()
+      .from(teamMembers)
+      .where(
+        and(
+          eq(teamMembers.teamId, team.id),
+          eq(teamMembers.userId, auth.userId),
+        ),
+      )
+      .get();
+
+    if (!memberRole || memberRole.role !== "admin") {
+      return c.json({ message: "管理者権限が必要です" }, 403);
+    }
+
+    // 既存のアクティブな招待URLを取得
+    const invitation = await db
+      .select()
+      .from(teamInvitations)
+      .where(
+        and(
+          eq(teamInvitations.teamId, team.id),
+          eq(teamInvitations.email, "URL_INVITE"),
+          eq(teamInvitations.status, "active"),
+        ),
+      )
+      .get();
+
+    if (!invitation) {
+      return c.json(null);
+    }
+
+    const inviteUrl = `${process.env.NODE_ENV === "production" ? "https://petaboo.vercel.app" : "http://localhost:7593"}/join/${customUrl}?token=${invitation.token}`;
+
+    return c.json({
+      token: invitation.token,
+      url: inviteUrl,
+      expiresAt: new Date(invitation.expiresAt * 1000).toISOString(),
+      createdAt: new Date(invitation.createdAt * 1000).toISOString(),
+    });
+  } catch (error) {
+    console.error("招待URL取得エラー:", error);
+    return c.json({ message: "招待URLの取得に失敗しました" }, 500);
+  }
+}
+
+// 招待URL削除の実装
+export async function deleteInviteUrl(c: any) {
+  try {
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ message: "認証が必要です" }, 401);
+    }
+
+    const { customUrl } = c.req.param();
+    const db: DatabaseType = c.get("db");
+
+    // チーム存在確認
+    const team = await db
+      .select()
+      .from(teams)
+      .where(eq(teams.customUrl, customUrl))
+      .get();
+
+    if (!team) {
+      return c.json({ message: "チームが見つかりません" }, 404);
+    }
+
+    // 管理者権限確認
+    const memberRole = await db
+      .select()
+      .from(teamMembers)
+      .where(
+        and(
+          eq(teamMembers.teamId, team.id),
+          eq(teamMembers.userId, auth.userId),
+        ),
+      )
+      .get();
+
+    if (!memberRole || memberRole.role !== "admin") {
+      return c.json({ message: "管理者権限が必要です" }, 403);
+    }
+
+    // 既存のアクティブな招待URLを削除
+    await db
+      .delete(teamInvitations)
+      .where(
+        and(
+          eq(teamInvitations.teamId, team.id),
+          eq(teamInvitations.email, "URL_INVITE"),
+          eq(teamInvitations.status, "active"),
+        ),
+      );
+
+    return c.json({ message: "招待URLを削除しました" });
+  } catch (error) {
+    console.error("招待URL削除エラー:", error);
+    return c.json({ message: "招待URLの削除に失敗しました" }, 500);
+  }
+}
+
 export async function generateInviteUrl(c: any) {
   try {
     const auth = getAuth(c);
@@ -1122,10 +1314,9 @@ export async function generateInviteUrl(c: any) {
       return c.json({ message: "管理者権限が必要です" }, 403);
     }
 
-    // 既存のアクティブな招待URLを無効化
+    // 既存のアクティブな招待URLを削除
     await db
-      .update(teamInvitations)
-      .set({ status: "expired" })
+      .delete(teamInvitations)
       .where(
         and(
           eq(teamInvitations.teamId, team.id),
@@ -1142,11 +1333,10 @@ export async function generateInviteUrl(c: any) {
     const expiresAt =
       Math.floor(Date.now() / 1000) + expiresInDays * 24 * 60 * 60;
 
-    // 招待URL用のレコード作成
+    // 招待URL用のレコード作成（roleカラム削除済み）
     await db.insert(teamInvitations).values({
       teamId: team.id,
       email: "URL_INVITE",
-      role: "member", // デフォルトはメンバー権限
       token: token,
       invitedBy: auth.userId,
       createdAt: Math.floor(Date.now() / 1000),

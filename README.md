@@ -103,3 +103,5 @@ petaboo/
 Private Project
 
 # Vercel環境変数反映のための再デプロイ
+
+# Git Hook自動デプロイテスト完了

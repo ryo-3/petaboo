@@ -50,7 +50,7 @@ export default async function RootLayout({
           <UserPreferencesProvider initialPreferences={initialPreferences}>
             <ToastProvider>
               <SelectorProvider>
-                <UserInitializer />
+                {clerkPublishableKey && <UserInitializer />}
                 {children}
                 <ToastContainer />
               </SelectorProvider>

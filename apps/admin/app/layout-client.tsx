@@ -61,7 +61,7 @@ export default function RootLayoutClient({
             retryDelay: (attemptIndex) =>
               Math.min(1000 * 2 ** attemptIndex, 30000), // 指数バックオフ
             staleTime: 5 * 60 * 1000, // 5分間はキャッシュを新鮮とみなす
-            gcTime: 10 * 60 * 1000, // 10分後にガベージコレクション
+            cacheTime: 10 * 60 * 1000, // 10分後にガベージコレクション
           },
           mutations: {
             retry: 1, // ミューテーションも1回リトライ

@@ -72,9 +72,16 @@ export default async function RootLayout({
       publishableKey={clerkPublishableKey || "pk_test_dummy"}
       signInUrl="/sign-in"
       signUpUrl="/sign-up"
-      signInFallbackRedirectUrl="/"
-      signUpFallbackRedirectUrl="/"
       afterSignOutUrl="/"
+      appearance={{
+        variables: {
+          colorPrimary: "#3B82F6",
+        },
+        elements: {
+          rootBox: "mx-auto",
+          card: "shadow-lg",
+        },
+      }}
     >
       {content}
     </ClerkProvider>

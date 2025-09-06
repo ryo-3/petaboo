@@ -2,15 +2,16 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 // 本当に公開すべきルートのみを指定
 const isPublicRoute = createRouteMatcher([
-  "/sign-in(.*)", 
+  "/sign-in(.*)",
   "/sign-up(.*)",
-  "/api/browser-log"
+  "/join/(.*)",
+  "/api/browser-log",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
   // ホームページは特別扱い - page.tsx内で認証チェック
   const isHomePage = req.nextUrl.pathname === "/";
-  
+
   if (!isPublicRoute(req) && !isHomePage) {
     await auth.protect();
   }

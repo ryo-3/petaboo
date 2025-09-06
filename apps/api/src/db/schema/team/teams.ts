@@ -35,4 +35,7 @@ export const teamInvitations = sqliteTable("team_invitations", {
   message: text("message"), // 申請メッセージ（任意）
   processedAt: integer("processed_at"), // 承認・拒否された日時
   processedBy: text("processed_by"), // 承認・拒否した管理者のuser_id
+  // 使用回数管理フィールド
+  usageCount: integer("usage_count").notNull().default(0), // URL使用回数（初回申請時のみカウント）
+  maxUsage: integer("max_usage").notNull().default(100), // 使用上限（デフォルト100人）
 });

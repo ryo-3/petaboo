@@ -1,5 +1,6 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import { jaJP } from "@clerk/localizations";
+import { Suspense } from "react";
 
 export default function AuthLayout({
   children,
@@ -14,16 +15,25 @@ export default function AuthLayout({
   }
 
   return (
-    <ClerkProvider
-      localization={jaJP}
-      publishableKey={clerkPublishableKey || "pk_test_dummy"}
-      signInUrl="/sign-in"
-      signUpUrl="/sign-up"
-      signInFallbackRedirectUrl="/"
-      signUpFallbackRedirectUrl="/"
-      afterSignOutUrl="/"
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      }
     >
-      {children}
-    </ClerkProvider>
+      <ClerkProvider
+        dynamic
+        localization={jaJP}
+        publishableKey={clerkPublishableKey || "pk_test_dummy"}
+        signInUrl="/sign-in"
+        signUpUrl="/sign-up"
+        signInFallbackRedirectUrl="/"
+        signUpFallbackRedirectUrl="/"
+        afterSignOutUrl="/"
+      >
+        {children}
+      </ClerkProvider>
+    </Suspense>
   );
 }

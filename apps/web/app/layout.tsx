@@ -34,38 +34,49 @@ export default async function RootLayout({
   // サーバーサイドで設定を事前取得
   const initialPreferences = await getServerUserPreferences(1);
 
+  const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
+  const content = (
+    <html lang="ja">
+      <head>
+        {process.env.NODE_ENV === "development" && (
+          <script src="/console-logger.js" />
+        )}
+      </head>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-gray-900 min-h-screen`}
+      >
+        <QueryProvider>
+          <UserPreferencesProvider initialPreferences={initialPreferences}>
+            <ToastProvider>
+              <SelectorProvider>
+                <UserInitializer />
+                {children}
+                <ToastContainer />
+              </SelectorProvider>
+            </ToastProvider>
+          </UserPreferencesProvider>
+        </QueryProvider>
+      </body>
+    </html>
+  );
+
+  // 本番環境でClerk環境変数が存在しない場合、ClerkProviderなしで返す
+  if (!clerkPublishableKey && process.env.NODE_ENV === "production") {
+    return content;
+  }
+
   return (
     <ClerkProvider
       localization={jaJP}
-      publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+      publishableKey={clerkPublishableKey || "pk_test_dummy"}
       signInUrl="/sign-in"
       signUpUrl="/sign-up"
       signInFallbackRedirectUrl="/"
       signUpFallbackRedirectUrl="/"
       afterSignOutUrl="/"
     >
-      <html lang="ja">
-        <head>
-          {process.env.NODE_ENV === "development" && (
-            <script src="/console-logger.js" />
-          )}
-        </head>
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-gray-900 min-h-screen`}
-        >
-          <QueryProvider>
-            <UserPreferencesProvider initialPreferences={initialPreferences}>
-              <ToastProvider>
-                <SelectorProvider>
-                  <UserInitializer />
-                  {children}
-                  <ToastContainer />
-                </SelectorProvider>
-              </ToastProvider>
-            </UserPreferencesProvider>
-          </QueryProvider>
-        </body>
-      </html>
+      {content}
     </ClerkProvider>
   );
 }

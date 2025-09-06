@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-echo "🚀 コミット完了 - Cloudflare APIデプロイを開始..."
+echo "🚀 プッシュ時 - Cloudflare APIデプロイを開始..."
 cd apps/api && pnpm run deploy
 echo "✅ Cloudflare APIデプロイ完了"

@@ -1,0 +1,305 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useUser } from "@/src/hooks/use-user";
+import { useTeamStats } from "@/src/hooks/use-team-stats";
+import { useTeams } from "@/src/hooks/use-teams";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import TeamIcon from "@/components/icons/team-icon";
+import PlusIcon from "@/components/icons/plus-icon";
+import { PremiumUpgradePrompt } from "./premium-upgrade-prompt";
+
+export function TeamWelcome() {
+  const router = useRouter();
+  const { data: user } = useUser();
+  const { data: teamStats, isLoading } = useTeamStats();
+  const { data: teams, isLoading: teamsLoading } = useTeams();
+
+  if (isLoading || teamsLoading) {
+    return (
+      <div className="flex h-full bg-white overflow-hidden">
+        <div className="w-full pt-3 pl-5 pr-5 flex flex-col">
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!teamStats) {
+    return (
+      <div className="flex h-full bg-white overflow-hidden">
+        <div className="w-full pt-3 pl-5 pr-5 flex flex-col">
+          <div className="text-center text-gray-500">
+            チーム統計情報を読み込めませんでした。
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // チーム一覧から実際の統計を計算
+  const actualOwnedTeams = teams?.filter(team => team.role === "admin").length || 0;
+  const actualTotalTeams = teams?.length || 0;
+  
+  // チーム所属判定
+  const hasTeams = actualTotalTeams > 0;
+  
+  const isPremium = user?.planType === "premium";
+  const canCreateTeam = actualOwnedTeams < teamStats.maxOwnedTeams && isPremium;
+  const canJoinTeam = actualTotalTeams < teamStats.maxMemberTeams;
+
+  return (
+    <div className="flex h-full bg-white overflow-hidden">
+      <div className="w-full pt-3 pl-5 pr-5 flex flex-col">
+        {/* ヘッダー */}
+        <div className="mb-4">
+          <div className="flex items-center gap-3">
+            <h1 className="text-[22px] font-bold text-gray-800 w-[105px] truncate">
+              チーム管理
+            </h1>
+            <button
+              onClick={() => canCreateTeam && router.push("/team/create")}
+              disabled={!canCreateTeam}
+              className={`p-2 rounded-md transition-colors ${
+                canCreateTeam
+                  ? "bg-slate-500 text-white hover:bg-slate-600"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
+              title={
+                canCreateTeam ? "新しいチームを作成" : "作成上限に達しています"
+              }
+            >
+              <PlusIcon className="w-3.5 h-3.5" />
+            </button>
+            <div className="text-sm text-gray-500">
+              {isPremium 
+                ? 'プレミアムプランでは最大3つのチームを作成・管理できます'
+                : 'フリープランでは招待されたチームに参加できます'
+              }
+            </div>
+          </div>
+        </div>
+
+        {/* コンテンツエリア - 2カラムレイアウト */}
+        <div className="flex-1 overflow-hidden flex gap-6">
+          {/* 左カラム：プラン情報・統計 */}
+          <div className="w-[44%] flex-shrink-0">
+            {/* チーム未所属時はPremiumUpgradePromptを表示 */}
+            {!hasTeams ? (
+              <div className="h-full overflow-y-auto">
+                <PremiumUpgradePrompt />
+              </div>
+            ) : (
+              <div>
+                {/* プラン情報の説明 */}
+                <Card className={`mb-4 p-4 ${isPremium 
+                  ? 'bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200' 
+                  : 'bg-gradient-to-r from-orange-50 to-yellow-50 border-orange-200'
+                }`}>
+              <div className="flex items-center mb-3">
+                <div className={`text-white px-2 py-1 rounded-full text-xs font-semibold mr-2 ${isPremium 
+                  ? 'bg-blue-500' 
+                  : 'bg-orange-500'
+                }`}>
+                  {isPremium ? 'PREMIUM' : 'FREE'}
+                </div>
+                <h2 className="text-base font-semibold">
+                  {isPremium ? 'プレミアム特典' : 'フリープラン制限'}
+                </h2>
+              </div>
+              <div className="space-y-2 text-xs">
+                <div className="flex items-center">
+                  <div className={`w-1.5 h-1.5 rounded-full mr-2 ${isPremium 
+                    ? 'bg-blue-500' 
+                    : 'bg-orange-500'
+                  }`}></div>
+                  <span>{isPremium ? '最大3つのチーム作成' : 'チーム作成不可（招待のみ）'}</span>
+                </div>
+                <div className="flex items-center">
+                  <div className={`w-1.5 h-1.5 rounded-full mr-2 ${isPremium 
+                    ? 'bg-blue-500' 
+                    : 'bg-orange-500'
+                  }`}></div>
+                  <span>{isPremium ? '最大3つのチームに参加' : '最大3つのチームに参加'}</span>
+                </div>
+                <div className="flex items-center">
+                  <div className={`w-1.5 h-1.5 rounded-full mr-2 ${isPremium 
+                    ? 'bg-blue-500' 
+                    : 'bg-orange-500'
+                  }`}></div>
+                  <span>{isPremium ? '無制限のメモとタスク' : 'チーム機能のみ利用可能'}</span>
+                </div>
+                <div className="flex items-center">
+                  <div className={`w-1.5 h-1.5 rounded-full mr-2 ${isPremium 
+                    ? 'bg-blue-500' 
+                    : 'bg-orange-500'
+                  }`}></div>
+                  <span>{isPremium ? '高度なコラボレーション機能' : 'プレミアムで全機能解放'}</span>
+                </div>
+              </div>
+            </Card>
+
+            {/* 現在の利用状況 */}
+            <div className="space-y-3 mb-4">
+              <Card className="p-3">
+                <h3 className="text-sm font-semibold mb-2">作成したチーム</h3>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xl font-bold text-blue-600">
+                    {actualOwnedTeams}
+                  </span>
+                  <span className="text-gray-500 text-sm">
+                    / {isPremium ? teamStats.maxOwnedTeams : 0}
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-1.5 mb-3">
+                  <div
+                    className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
+                    style={{
+                      width: isPremium ? `${(actualOwnedTeams / teamStats.maxOwnedTeams) * 100}%` : '0%',
+                    }}
+                  ></div>
+                </div>
+                <Button
+                  className="w-full text-xs h-8"
+                  disabled={!canCreateTeam}
+                  variant={canCreateTeam ? "default" : "secondary"}
+                  onClick={() => canCreateTeam && router.push("/team/create")}
+                >
+                  {isPremium 
+                    ? (canCreateTeam ? "新しいチームを作成" : "作成上限に達しました")
+                    : "プレミアムプランで作成可能"
+                  }
+                </Button>
+              </Card>
+
+              <Card className="p-3">
+                <h3 className="text-sm font-semibold mb-2">参加しているチーム</h3>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xl font-bold text-green-600">
+                    {actualTotalTeams}
+                  </span>
+                  <span className="text-gray-500 text-sm">
+                    / {teamStats.maxMemberTeams}
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-1.5 mb-3">
+                  <div
+                    className="bg-green-600 h-1.5 rounded-full transition-all duration-300"
+                    style={{
+                      width: `${(actualTotalTeams / teamStats.maxMemberTeams) * 100}%`,
+                    }}
+                  ></div>
+                </div>
+                <Button
+                  className="w-full text-xs h-8"
+                  disabled={!canJoinTeam}
+                  variant={canJoinTeam ? "default" : "secondary"}
+                >
+                  {canJoinTeam ? "招待URLで参加" : "参加上限に達しました"}
+                </Button>
+              </Card>
+              </div>
+            )}
+          </div>
+
+          {/* 右カラム：チーム一覧 */}
+          <div className="flex-1 overflow-hidden">
+            {/* チーム一覧（空の場合の表示） */}
+            {!teams || !Array.isArray(teams) || teams.length === 0 ? (
+              <Card className="p-8 text-center h-full flex flex-col justify-center">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <TeamIcon className="w-8 h-8 text-gray-400" />
+                </div>
+                <h3 className="text-xl font-semibold mb-3">
+                  チームを始めましょう！
+                </h3>
+                <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                  {isPremium 
+                    ? '新しいチームを作成するか、招待URLで既存のチームに参加できます。'
+                    : '招待URLで既存のチームに参加できます。チームを作成するにはプレミアムプランが必要です。'
+                  }
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button
+                    size="lg"
+                    className="px-8"
+                    disabled={!isPremium}
+                    variant={isPremium ? "default" : "secondary"}
+                    onClick={() => isPremium && router.push("/team/create")}
+                  >
+                    {isPremium ? 'チームを作成' : 'チーム作成（プレミアムのみ）'}
+                  </Button>
+                  <Button size="lg" variant="outline" className="px-8">
+                    招待URLで参加
+                  </Button>
+                </div>
+              </Card>
+            ) : (
+              <div className="h-full overflow-y-auto">
+                <h2 className="text-lg font-semibold mb-4 sticky top-0 bg-white z-10">
+                  あなたのチーム ({teams.length})
+                </h2>
+                <div className="space-y-3">
+                  {Array.isArray(teams) &&
+                    teams.map((team) => (
+                      <Card
+                        key={team.id}
+                        className="p-4 hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h3 className="font-semibold text-gray-900">
+                                {team.name}
+                              </h3>
+                              <span
+                                className={`px-2 py-1 text-xs rounded-full font-medium ${
+                                  team.role === "admin"
+                                    ? "bg-blue-100 text-blue-800"
+                                    : "bg-gray-100 text-gray-600"
+                                }`}
+                              >
+                                {team.role === "admin" ? "管理者" : "メンバー"}
+                              </span>
+                            </div>
+                            {team.description && (
+                              <p className="text-gray-600 text-sm mb-2">
+                                {team.description}
+                              </p>
+                            )}
+                            <div className="flex items-center gap-4 text-xs text-gray-500">
+                              <span>
+                                作成日:{" "}
+                                {new Date(team.createdAt).toLocaleDateString()}
+                              </span>
+                              {team.memberCount && (
+                                <span>メンバー: {team.memberCount}人</span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() =>
+                                router.push(`/team/${team.customUrl}`)
+                              }
+                            >
+                              管理画面
+                            </Button>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

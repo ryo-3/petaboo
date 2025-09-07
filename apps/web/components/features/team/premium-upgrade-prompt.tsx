@@ -19,10 +19,10 @@ export function PremiumUpgradePrompt() {
             <Crown className="w-16 h-16 text-yellow-500" />
           </div>
           <CardTitle className="text-3xl font-bold mb-2">
-            チーム機能はプレミアムプラン限定です
+            チーム作成・管理機能を解放しよう！
           </CardTitle>
           <CardDescription className="text-lg">
-            プレミアムプランにアップグレードして、チームでのコラボレーション機能を解放しましょう
+            プレミアムプランで自分のチームを作成・管理できます。1ヶ月無料でお試しいただけます。
           </CardDescription>
         </CardHeader>
 
@@ -32,12 +32,12 @@ export function PremiumUpgradePrompt() {
             <FeatureCard
               icon={<Users className="w-8 h-8 text-blue-500" />}
               title="チームコラボレーション"
-              description="メンバーと共同でメモやタスクを管理・共有"
+              description="メモ・タスク・ボードをチームで共有・管理"
             />
             <FeatureCard
               icon={<Sparkles className="w-8 h-8 text-purple-500" />}
-              title="高度な管理機能"
-              description="権限管理やメンバー招待機能でチームを効率的に運営"
+              title="プロジェクト管理"
+              description="ボード機能で複数のプロジェクトを整理・管理"
             />
             <FeatureCard
               icon={<Shield className="w-8 h-8 text-green-500" />}
@@ -46,18 +46,18 @@ export function PremiumUpgradePrompt() {
             />
             <FeatureCard
               icon={<Zap className="w-8 h-8 text-orange-500" />}
-              title="リアルタイム同期"
-              description="チームメンバーの変更が即座に反映される快適な体験"
+              title="メンバー管理機能"
+              description="メンバー招待・権限設定でチームを効率的に運営"
             />
             <FeatureCard
               icon={<TrendingUp className="w-8 h-8 text-indigo-500" />}
-              title="生産性向上"
-              description="チーム全体の作業効率を大幅に改善"
+              title="大容量ストレージ"
+              description="たくさんのメモ・タスク・プロジェクトを安心して保存"
             />
             <FeatureCard
               icon={<Crown className="w-8 h-8 text-yellow-500" />}
               title="プレミアムサポート"
-              description="優先的なカスタマーサポートとアップデート"
+              description="プレミアムプランならではのアップデート順次追加予定"
             />
           </div>
 
@@ -69,7 +69,7 @@ export function PremiumUpgradePrompt() {
                 <p className="text-gray-600">すべての機能が利用可能</p>
               </div>
               <div className="text-right">
-                <div className="text-3xl font-bold">¥980</div>
+                <div className="text-3xl font-bold">¥1,980</div>
                 <div className="text-sm text-gray-600">月額（税込）</div>
               </div>
             </div>
@@ -81,7 +81,7 @@ export function PremiumUpgradePrompt() {
               </li>
               <li className="flex items-center text-sm">
                 <span className="mr-2">✓</span>
-                チーム機能（最大10名まで）
+                チーム作成・管理（最大50プロジェクト）
               </li>
               <li className="flex items-center text-sm">
                 <span className="mr-2">✓</span>
@@ -96,34 +96,34 @@ export function PremiumUpgradePrompt() {
                 優先サポート
               </li>
             </ul>
-          </div>
 
-          {/* CTA */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-            <Button
-              size="lg"
-              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8"
-              onClick={() => {
-                // TODO: 支払いページへのリダイレクト
-                alert("支払いページへの実装は別途必要です");
-              }}
-            >
-              <Crown className="mr-2 w-5 h-5" />
-              プレミアムプランにアップグレード
-            </Button>
+            {/* CTA */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8"
+                onClick={() => {
+                  // TODO: 支払いページへのリダイレクト
+                  alert("支払いページへの実装は別途必要です");
+                }}
+              >
+                <Crown className="mr-2 w-5 h-5" />
+                プレミアムプランにアップグレード
+              </Button>
 
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={() => (window.location.href = "/")}
-            >
-              ホームに戻る
-            </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={() => (window.location.href = "/")}
+              >
+                ホームに戻る
+              </Button>
+            </div>
           </div>
 
           {/* 補足情報 */}
           <div className="text-center text-sm text-gray-500 pt-4 border-t">
-            <p>いつでもキャンセル可能 • 7日間の無料トライアル付き</p>
+            <p>いつでもキャンセル可能 • 1ヶ月無料トライアル付き</p>
             <p className="mt-1">
               ご質問がある場合は、サポートまでお問い合わせください
             </p>

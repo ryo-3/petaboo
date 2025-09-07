@@ -116,7 +116,7 @@ export default function JoinTeamPage() {
       const authToken = await getToken();
 
       // Clerkからユーザー情報を取得
-      const user = window.Clerk?.user;
+      const user = (window as any).Clerk?.user;
       const userEmail = user?.emailAddresses?.[0]?.emailAddress || "";
 
       const response = await fetch(

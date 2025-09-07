@@ -13,6 +13,8 @@ import {
   useDeleteInviteUrl,
 } from "@/src/hooks/use-generate-invite-code";
 import { useUserInfo } from "@/src/hooks/use-user-info";
+import { useJoinRequests } from "@/src/hooks/use-join-requests";
+import { useManageJoinRequest } from "@/src/hooks/use-manage-join-request";
 import MemoScreen from "@/components/screens/memo-screen";
 import TaskScreen from "@/components/screens/task-screen";
 import BoardScreen from "@/components/screens/board-screen";
@@ -28,6 +30,47 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: team, isLoading, error } = useTeamDetail(customUrl);
+
+  // ユーザーIDから色を生成する関数
+  const getAvatarColor = (userId: string) => {
+    const colors = [
+      "bg-blue-500",
+      "bg-green-500",
+      "bg-purple-500",
+      "bg-pink-500",
+      "bg-indigo-500",
+      "bg-yellow-500",
+      "bg-red-500",
+      "bg-teal-500",
+      "bg-orange-500",
+      "bg-cyan-500",
+      "bg-violet-500",
+      "bg-fuchsia-500",
+      "bg-rose-500",
+      "bg-amber-500",
+      "bg-lime-500",
+      "bg-emerald-500",
+      "bg-sky-500",
+      "bg-slate-600",
+      "bg-gray-600",
+      "bg-zinc-600",
+      "bg-stone-600",
+      "bg-neutral-600",
+      "bg-blue-600",
+      "bg-green-600",
+      "bg-purple-600",
+      "bg-pink-600",
+      "bg-indigo-600",
+      "bg-red-600",
+      "bg-teal-600",
+      "bg-orange-600",
+    ];
+    // userIdをハッシュして色のインデックスを決める
+    const hash = userId
+      .split("")
+      .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return colors[hash % colors.length];
+  };
   const { data: userInfo } = useUserInfo();
   const { data: existingInviteUrl, isLoading: isLoadingInviteUrl } =
     useGetInviteUrl(customUrl);
@@ -35,6 +78,16 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     useGenerateInviteCode();
   const { mutate: deleteInviteUrl, isPending: isDeleting } =
     useDeleteInviteUrl();
+  const { data: joinRequests, isLoading: isLoadingJoinRequests } =
+    useJoinRequests(customUrl);
+  const {
+    approve,
+    reject,
+    isApproving,
+    isRejecting,
+    approveError,
+    rejectError,
+  } = useManageJoinRequest(customUrl);
 
   const [showInvitePanel, setShowInvitePanel] = useState(false);
   const [inviteMessage, setInviteMessage] = useState<{
@@ -540,6 +593,83 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                     )}
                   </div>
 
+                  {/* 承認待ちリスト（管理者のみ、申請がある場合のみ表示） */}
+                  {team.role === "admin" &&
+                    joinRequests?.requests &&
+                    joinRequests.requests.length > 0 && (
+                      <Card className="p-4 mb-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="font-medium text-gray-900 flex items-center gap-2">
+                            <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
+                            承認待ちの申請 ({joinRequests.requests.length}件)
+                          </h3>
+                        </div>
+
+                        <div className="space-y-3">
+                          {joinRequests.requests.map((request) => (
+                            <div
+                              key={request.id}
+                              className="bg-orange-50 border border-orange-200 rounded-lg p-3"
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-3 mb-1">
+                                    <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                                      {request.displayName
+                                        ? request.displayName
+                                            .charAt(0)
+                                            .toUpperCase()
+                                        : request.email.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div>
+                                      <h4 className="font-medium text-gray-900">
+                                        {request.displayName || "名前未設定"}
+                                      </h4>
+                                      <p className="text-xs text-gray-500">
+                                        {request.email}
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  <div className="text-xs text-gray-400 ml-11">
+                                    申請:{" "}
+                                    {new Date(
+                                      request.createdAt * 1000,
+                                    ).toLocaleString("ja-JP", {
+                                      month: "numeric",
+                                      day: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })}
+                                  </div>
+                                </div>
+
+                                <div className="flex gap-2 ml-4">
+                                  <Button
+                                    size="sm"
+                                    className="bg-green-600 hover:bg-green-700 text-white"
+                                    onClick={() => approve(request.id)}
+                                    disabled={isApproving || isRejecting}
+                                  >
+                                    {isApproving ? "承認中..." : "承認"}
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-red-600 border-red-300 hover:bg-red-50"
+                                    onClick={() => reject(request.id)}
+                                    disabled={isApproving || isRejecting}
+                                  >
+                                    {isRejecting ? "拒否中..." : "拒否"}
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </Card>
+                    )}
+
                   {/* メンバー一覧 */}
                   <Card className="p-4 mb-6">
                     <div className="flex items-center justify-between mb-3">
@@ -560,24 +690,37 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
                     {/* メンバー表示 */}
                     <div className="space-y-3">
-                      <div className="flex items-center gap-3 p-2 bg-gray-50 rounded">
-                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                          {userInfo?.displayName
-                            ? userInfo.displayName.charAt(0).toUpperCase()
-                            : "Y"}
-                        </div>
-                        <div className="flex-1">
-                          <div className="text-sm font-medium">
-                            {userInfo?.displayName || "あなた"}
+                      {(team.members || []).map((member) => (
+                        <div
+                          key={member.userId}
+                          className="flex items-center gap-3 p-2 bg-gray-50 rounded"
+                        >
+                          <div
+                            className={`w-8 h-8 ${getAvatarColor(member.userId)} rounded-full flex items-center justify-center text-white text-sm font-medium`}
+                          >
+                            {member.displayName
+                              ? member.displayName.charAt(0).toUpperCase()
+                              : member.userId.charAt(10).toUpperCase()}
                           </div>
-                          <div className="text-xs text-gray-500">
-                            user@example.com
+                          <div className="flex-1">
+                            <div className="text-sm font-medium">
+                              {member.displayName ||
+                                `ユーザー${member.userId.slice(-4)}`}
+                              {member.userId === userInfo?.userId &&
+                                " (あなた)"}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {new Date(
+                                member.joinedAt * 1000,
+                              ).toLocaleDateString("ja-JP")}
+                              に参加
+                            </div>
                           </div>
+                          <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
+                            {member.role === "admin" ? "管理者" : "メンバー"}
+                          </span>
                         </div>
-                        <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
-                          {team.role === "admin" ? "管理者" : "メンバー"}
-                        </span>
-                      </div>
+                      ))}
                     </div>
                   </Card>
 

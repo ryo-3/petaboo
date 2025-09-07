@@ -3,7 +3,14 @@ import { useAuth } from "@clerk/nextjs";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-interface TeamDetail {
+export interface TeamMember {
+  userId: string;
+  displayName: string | null;
+  role: "admin" | "member";
+  joinedAt: number;
+}
+
+export interface TeamDetail {
   id: number;
   name: string;
   description?: string;
@@ -12,6 +19,7 @@ interface TeamDetail {
   createdAt: number;
   updatedAt: number;
   memberCount: number;
+  members: TeamMember[];
 }
 
 export function useTeamDetail(customUrl: string) {

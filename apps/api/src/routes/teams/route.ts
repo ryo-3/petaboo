@@ -30,6 +30,12 @@ import {
   verifyInviteToken,
   submitJoinRequestRoute,
   submitJoinRequest,
+  getJoinRequestsRoute,
+  getJoinRequests,
+  approveJoinRequestRoute,
+  approveJoinRequest,
+  rejectJoinRequestRoute,
+  rejectJoinRequest,
 } from "./api";
 import { createTeamBoardsAPI } from "./boards";
 
@@ -54,6 +60,9 @@ teamsRoute.openapi(generateInviteUrlRoute, generateInviteUrl);
 teamsRoute.openapi(deleteInviteUrlRoute, deleteInviteUrl);
 teamsRoute.openapi(verifyInviteTokenRoute, verifyInviteToken);
 teamsRoute.openapi(submitJoinRequestRoute, submitJoinRequest);
+teamsRoute.openapi(getJoinRequestsRoute, getJoinRequests);
+teamsRoute.openapi(approveJoinRequestRoute, approveJoinRequest);
+teamsRoute.openapi(rejectJoinRequestRoute, rejectJoinRequest);
 teamsRoute.openapi(getInvitationRoute, getInvitation);
 teamsRoute.openapi(acceptInvitationRoute, acceptInvitation);
 teamsRoute.openapi(getMyTeamRoute, getMyTeam);

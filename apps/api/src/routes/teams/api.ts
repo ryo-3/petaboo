@@ -1,6 +1,6 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { getAuth } from "@hono/clerk-auth";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, desc, ne } from "drizzle-orm";
 import { teams, teamMembers, teamInvitations, users } from "../../db";
 import { count } from "drizzle-orm";
 import type { DatabaseType } from "../../types/common";
@@ -103,6 +103,14 @@ export const getTeamDetailRoute = createRoute({
             createdAt: z.number(),
             updatedAt: z.number(),
             memberCount: z.number(),
+            members: z.array(
+              z.object({
+                userId: z.string(),
+                displayName: z.string().nullable(),
+                role: z.enum(["admin", "member"]),
+                joinedAt: z.number(),
+              }),
+            ),
           }),
         },
       },
@@ -591,6 +599,19 @@ export async function getTeamDetail(c: any) {
 
     const memberCount = memberCountResult[0]?.count || 0;
 
+    // メンバー一覧を取得
+    const membersResult = await db
+      .select({
+        userId: teamMembers.userId,
+        displayName: users.displayName,
+        role: teamMembers.role,
+        joinedAt: teamMembers.joinedAt,
+      })
+      .from(teamMembers)
+      .leftJoin(users, eq(teamMembers.userId, users.userId))
+      .where(eq(teamMembers.teamId, teamId))
+      .orderBy(teamMembers.joinedAt);
+
     return c.json(
       {
         id: team.id,
@@ -601,6 +622,7 @@ export async function getTeamDetail(c: any) {
         createdAt: team.createdAt,
         updatedAt: team.updatedAt,
         memberCount,
+        members: membersResult,
       },
       200,
     );
@@ -1609,6 +1631,397 @@ export async function verifyInviteToken(c: any) {
   } catch (error) {
     console.error("トークン検証エラー:", error);
     return c.json({ message: "トークン検証に失敗しました" }, 500);
+  }
+}
+
+// 承認待ちリスト取得ルート定義
+export const getJoinRequestsRoute = createRoute({
+  method: "get",
+  path: "/{customUrl}/join-requests",
+  request: {
+    params: z.object({
+      customUrl: z.string(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "承認待ちリスト取得成功",
+      content: {
+        "application/json": {
+          schema: z.object({
+            requests: z.array(
+              z.object({
+                id: z.number(),
+                displayName: z.string().nullable(),
+                email: z.string(),
+                createdAt: z.number(),
+                message: z.string().nullable(),
+                userId: z.string().nullable(),
+              }),
+            ),
+          }),
+        },
+      },
+    },
+    401: {
+      description: "認証が必要です",
+    },
+    403: {
+      description: "管理者権限が必要です",
+    },
+    404: {
+      description: "チームが見つかりません",
+    },
+  },
+  tags: ["Teams"],
+});
+
+// 承認待ちリスト取得ハンドラー
+export async function getJoinRequests(c: any) {
+  try {
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ message: "認証が必要です" }, 401);
+    }
+
+    const { customUrl } = c.req.param();
+    const db: DatabaseType = c.get("db");
+
+    // チーム存在確認
+    const team = await db
+      .select()
+      .from(teams)
+      .where(eq(teams.customUrl, customUrl))
+      .get();
+
+    if (!team) {
+      return c.json({ message: "チームが見つかりません" }, 404);
+    }
+
+    // 管理者権限チェック
+    const member = await db
+      .select()
+      .from(teamMembers)
+      .where(
+        and(
+          eq(teamMembers.teamId, team.id),
+          eq(teamMembers.userId, auth.userId),
+          eq(teamMembers.role, "admin"),
+        ),
+      )
+      .get();
+
+    if (!member) {
+      return c.json({ message: "管理者権限が必要です" }, 403);
+    }
+
+    // 承認待ちの申請を取得
+    const joinRequests = await db
+      .select({
+        id: teamInvitations.id,
+        displayName: teamInvitations.displayName,
+        email: teamInvitations.email,
+        createdAt: teamInvitations.createdAt,
+        message: teamInvitations.message,
+        userId: teamInvitations.userId,
+      })
+      .from(teamInvitations)
+      .where(
+        and(
+          eq(teamInvitations.teamId, team.id),
+          eq(teamInvitations.status, "pending"),
+          ne(teamInvitations.email, "URL_INVITE"), // URL招待レコードは除外
+        ),
+      )
+      .orderBy(desc(teamInvitations.createdAt));
+
+    return c.json({
+      requests: joinRequests,
+    });
+  } catch (error) {
+    console.error("承認待ちリスト取得エラー:", error);
+    return c.json({ message: "承認待ちリストの取得に失敗しました" }, 500);
+  }
+}
+
+// 申請承認ルート定義
+export const approveJoinRequestRoute = createRoute({
+  method: "put",
+  path: "/{customUrl}/join-requests/{requestId}/approve",
+  request: {
+    params: z.object({
+      customUrl: z.string(),
+      requestId: z.string().transform((val) => parseInt(val, 10)),
+    }),
+  },
+  responses: {
+    200: {
+      description: "申請の承認に成功しました",
+      content: {
+        "application/json": {
+          schema: z.object({
+            message: z.string(),
+          }),
+        },
+      },
+    },
+    400: {
+      description: "不正なリクエストです",
+    },
+    401: {
+      description: "認証が必要です",
+    },
+    403: {
+      description: "管理者権限が必要です",
+    },
+    404: {
+      description: "申請が見つかりません",
+    },
+  },
+  tags: ["Teams"],
+});
+
+// 申請拒否ルート定義
+export const rejectJoinRequestRoute = createRoute({
+  method: "put",
+  path: "/{customUrl}/join-requests/{requestId}/reject",
+  request: {
+    params: z.object({
+      customUrl: z.string(),
+      requestId: z.string().transform((val) => parseInt(val, 10)),
+    }),
+  },
+  responses: {
+    200: {
+      description: "申請の拒否に成功しました",
+      content: {
+        "application/json": {
+          schema: z.object({
+            message: z.string(),
+          }),
+        },
+      },
+    },
+    400: {
+      description: "不正なリクエストです",
+    },
+    401: {
+      description: "認証が必要です",
+    },
+    403: {
+      description: "管理者権限が必要です",
+    },
+    404: {
+      description: "申請が見つかりません",
+    },
+  },
+  tags: ["Teams"],
+});
+
+// 申請承認ハンドラー
+export async function approveJoinRequest(c: any) {
+  try {
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ message: "認証が必要です" }, 401);
+    }
+
+    const { customUrl, requestId } = c.req.param();
+    const db: DatabaseType = c.get("db");
+
+    // チーム存在確認
+    const team = await db
+      .select()
+      .from(teams)
+      .where(eq(teams.customUrl, customUrl))
+      .get();
+
+    if (!team) {
+      return c.json({ message: "チームが見つかりません" }, 404);
+    }
+
+    // 管理者権限チェック
+    const member = await db
+      .select()
+      .from(teamMembers)
+      .where(
+        and(
+          eq(teamMembers.teamId, team.id),
+          eq(teamMembers.userId, auth.userId),
+        ),
+      )
+      .get();
+
+    if (!member || member.role !== "admin") {
+      return c.json({ message: "管理者権限が必要です" }, 403);
+    }
+
+    // 申請データ取得
+    const request = await db
+      .select()
+      .from(teamInvitations)
+      .where(
+        and(
+          eq(teamInvitations.id, requestId),
+          eq(teamInvitations.teamId, team.id),
+          eq(teamInvitations.status, "pending"),
+        ),
+      )
+      .get();
+
+    if (!request) {
+      return c.json({ message: "申請が見つかりません" }, 404);
+    }
+
+    if (!request.userId) {
+      return c.json({ message: "ユーザーIDが見つかりません" }, 400);
+    }
+
+    // 既にチームメンバーかチェック
+    const existingMember = await db
+      .select()
+      .from(teamMembers)
+      .where(
+        and(
+          eq(teamMembers.teamId, team.id),
+          eq(teamMembers.userId, request.userId),
+        ),
+      )
+      .get();
+
+    if (existingMember) {
+      return c.json({ message: "既にチームメンバーです" }, 409);
+    }
+
+    const now = Date.now();
+
+    // トランザクション開始（SQLiteでは自動コミット）
+    // 1. 申請ステータス更新
+    await db
+      .update(teamInvitations)
+      .set({
+        status: "approved",
+        processedAt: now,
+        processedBy: auth.userId,
+      })
+      .where(eq(teamInvitations.id, requestId));
+
+    // 2. チームメンバーに追加
+    await db.insert(teamMembers).values({
+      teamId: team.id,
+      userId: request.userId,
+      role: "member",
+      joinedAt: now,
+    });
+
+    // 3. ユーザーのdisplay_nameを更新（存在する場合）
+    if (request.displayName) {
+      // ユーザーが既に存在するかチェック
+      const existingUser = await db
+        .select()
+        .from(users)
+        .where(eq(users.userId, request.userId))
+        .get();
+
+      if (existingUser) {
+        // 既存ユーザーの場合は更新
+        await db
+          .update(users)
+          .set({
+            displayName: request.displayName,
+            updatedAt: now,
+          })
+          .where(eq(users.userId, request.userId));
+      } else {
+        // 新規ユーザーの場合は作成
+        await db.insert(users).values({
+          userId: request.userId,
+          displayName: request.displayName,
+          planType: "free",
+          createdAt: now,
+          updatedAt: now,
+        });
+      }
+    }
+
+    return c.json({ message: "申請を承認しました" }, 200);
+  } catch (error) {
+    console.error("申請承認エラー:", error);
+    return c.json({ message: "申請の承認に失敗しました" }, 500);
+  }
+}
+
+// 申請拒否ハンドラー
+export async function rejectJoinRequest(c: any) {
+  try {
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ message: "認証が必要です" }, 401);
+    }
+
+    const { customUrl, requestId } = c.req.param();
+    const db: DatabaseType = c.get("db");
+
+    // チーム存在確認
+    const team = await db
+      .select()
+      .from(teams)
+      .where(eq(teams.customUrl, customUrl))
+      .get();
+
+    if (!team) {
+      return c.json({ message: "チームが見つかりません" }, 404);
+    }
+
+    // 管理者権限チェック
+    const member = await db
+      .select()
+      .from(teamMembers)
+      .where(
+        and(
+          eq(teamMembers.teamId, team.id),
+          eq(teamMembers.userId, auth.userId),
+        ),
+      )
+      .get();
+
+    if (!member || member.role !== "admin") {
+      return c.json({ message: "管理者権限が必要です" }, 403);
+    }
+
+    // 申請データ取得
+    const request = await db
+      .select()
+      .from(teamInvitations)
+      .where(
+        and(
+          eq(teamInvitations.id, requestId),
+          eq(teamInvitations.teamId, team.id),
+          eq(teamInvitations.status, "pending"),
+        ),
+      )
+      .get();
+
+    if (!request) {
+      return c.json({ message: "申請が見つかりません" }, 404);
+    }
+
+    const now = Date.now();
+
+    // 申請ステータス更新
+    await db
+      .update(teamInvitations)
+      .set({
+        status: "rejected",
+        processedAt: now,
+        processedBy: auth.userId,
+      })
+      .where(eq(teamInvitations.id, requestId));
+
+    return c.json({ message: "申請を拒否しました" }, 200);
+  } catch (error) {
+    console.error("申請拒否エラー:", error);
+    return c.json({ message: "申請の拒否に失敗しました" }, 500);
   }
 }
 

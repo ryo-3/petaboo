@@ -96,21 +96,6 @@ function Sidebar({
     return (
       <div className="flex flex-col items-center py-4 h-screen bg-gray-50 justify-between">
         <div className="flex flex-col items-center gap-y-3">
-          {isTeamDetailPage && onTeamList && (
-            <Tooltip text="チーム一覧" position="right">
-              <button
-                onClick={onTeamList}
-                className={`p-2 rounded-lg transition-colors ${
-                  isTeamListPage
-                    ? "bg-slate-500 text-white"
-                    : "bg-slate-200 hover:bg-slate-300 text-slate-600"
-                }`}
-              >
-                <TeamIcon className="w-5 h-5" />
-              </button>
-            </Tooltip>
-          )}
-
           <Tooltip text="ホーム" position="right">
             <button
               onClick={onHome}
@@ -139,7 +124,8 @@ function Sidebar({
               className={`p-2 rounded-lg transition-colors ${
                 currentMode === "memo" &&
                 !isBoardActive &&
-                screenMode !== "home"
+                screenMode !== "home" &&
+                !isTeamListPage
                   ? "bg-Green text-white"
                   : "bg-gray-200 hover:bg-gray-300 text-gray-600"
               }`}
@@ -156,7 +142,8 @@ function Sidebar({
               className={`p-2 rounded-lg transition-colors ${
                 currentMode === "task" &&
                 !isBoardActive &&
-                screenMode !== "home"
+                screenMode !== "home" &&
+                !isTeamListPage
                   ? "bg-DeepBlue text-white"
                   : "bg-gray-200 hover:bg-gray-300 text-gray-600"
               }`}
@@ -187,7 +174,8 @@ function Sidebar({
                 !showingBoardDetail &&
                 screenMode !== "home" &&
                 screenMode !== "search" &&
-                screenMode !== "settings"
+                screenMode !== "settings" &&
+                !isTeamListPage
                   ? "bg-light-Blue text-white"
                   : "bg-gray-200 hover:bg-gray-300 text-gray-600"
               }`}
@@ -232,7 +220,8 @@ function Sidebar({
             isGray={
               screenMode === "home" ||
               screenMode === "search" ||
-              screenMode === "settings"
+              screenMode === "settings" ||
+              isTeamListPage
             }
           />
 
@@ -251,6 +240,19 @@ function Sidebar({
               <SearchIcon
                 className={`w-5 h-5 ${screenMode === "search" ? "text-white" : ""}`}
               />
+            </button>
+          </Tooltip>
+          {/* チーム一覧ボタン（コンパクトモード） */}
+          <Tooltip text="チーム一覧" position="right">
+            <button
+              onClick={onTeamList || (() => (window.location.href = "/team"))}
+              className={`p-2 rounded-lg transition-colors ${
+                isTeamListPage
+                  ? "bg-slate-500 text-white"
+                  : "bg-gray-200 hover:bg-gray-300 text-gray-600"
+              }`}
+            >
+              <TeamIcon className="w-5 h-5" />
             </button>
           </Tooltip>
           {/* 設定ボタン（コンパクトモード） */}
@@ -316,7 +318,7 @@ function Sidebar({
                 }
               }}
               className={`p-2 rounded-lg transition-colors ${
-                isBoardActive && !showingBoardDetail
+                isBoardActive && !showingBoardDetail && !isTeamListPage
                   ? "bg-light-Blue text-white"
                   : "bg-gray-200 hover:bg-gray-300 text-gray-600"
               }`}
@@ -330,7 +332,7 @@ function Sidebar({
               <button
                 onClick={onBoardDetail}
                 className={`p-2 rounded-lg transition-colors ${
-                  isBoardActive && showingBoardDetail
+                  isBoardActive && showingBoardDetail && !isTeamListPage
                     ? "bg-light-Blue text-white"
                     : "bg-gray-200 hover:bg-gray-300 text-gray-600"
                 }`}
@@ -340,8 +342,22 @@ function Sidebar({
                 />
               </button>
             )}
-            {/* 設定ボタン */}
+            {/* チーム一覧ボタン */}
             <div className="flex-shrink-0 p-2 border-t border-gray-200">
+              <button
+                onClick={onTeamList || (() => (window.location.href = "/team"))}
+                className={`w-full p-2 rounded-lg transition-colors flex items-center justify-center gap-2 ${
+                  isTeamListPage
+                    ? "bg-slate-500 text-white"
+                    : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+                }`}
+              >
+                <TeamIcon className="w-5 h-5" />
+                <span className="text-sm font-medium">チーム</span>
+              </button>
+            </div>
+            {/* 設定ボタン */}
+            <div className="flex-shrink-0 p-2">
               <button
                 onClick={() => onSettings?.()}
                 className={`w-full p-2 rounded-lg transition-colors flex items-center justify-center gap-2 ${
@@ -397,15 +413,21 @@ function Sidebar({
                   : onNewTask
             }
             className={`flex-1 text-center rounded-lg py-2 transition-colors flex items-center justify-center gap-1 ${
-              isBoardActive
-                ? "bg-light-Blue hover:bg-light-Blue/85"
-                : currentMode === "memo"
-                  ? "bg-Green hover:bg-Green/85"
-                  : "bg-DeepBlue hover:bg-DeepBlue/85"
+              isTeamListPage
+                ? "bg-gray-100 hover:bg-gray-200"
+                : isBoardActive
+                  ? "bg-light-Blue hover:bg-light-Blue/85"
+                  : currentMode === "memo"
+                    ? "bg-Green hover:bg-Green/85"
+                    : "bg-DeepBlue hover:bg-DeepBlue/85"
             }`}
           >
-            <PlusIcon className="w-4 h-4 text-gray-100" />
-            <span className="font-medium text-sm text-gray-100">
+            <PlusIcon
+              className={`w-4 h-4 ${isTeamListPage ? "text-gray-600" : "text-gray-100"}`}
+            />
+            <span
+              className={`font-medium text-sm ${isTeamListPage ? "text-gray-600" : "text-gray-100"}`}
+            >
               新規
               {isBoardActive
                 ? "ボード"

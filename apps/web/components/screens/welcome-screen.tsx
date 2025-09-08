@@ -2,7 +2,15 @@
 
 import MemoIcon from "@/components/icons/memo-icon";
 import TaskIcon from "@/components/icons/task-icon";
-import { ArrowLeft, Mail, Users, Shield, Settings, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Mail,
+  Users,
+  Shield,
+  Settings,
+  Trash2,
+  Crown,
+} from "lucide-react";
 import { useState } from "react";
 
 interface WelcomeScreenProps {
@@ -75,7 +83,7 @@ function WelcomeScreen({
       className={`h-full bg-gray-50 ${teamMode ? "pt-3 pl-5 pr-5 overflow-auto" : "flex flex-col items-center justify-center px-8"}`}
     >
       <div
-        className={`w-full ${teamMode ? "space-y-6 max-w-none" : "space-y-8 max-w-lg text-center"}`}
+        className={`w-full ${teamMode ? "space-y-6 max-w-none" : "space-y-8 max-w-none text-center"}`}
       >
         <div className="space-y-4">
           {teamMode ? (
@@ -106,32 +114,133 @@ function WelcomeScreen({
         </div>
 
         {!teamMode && (
-          <div className="border-t border-gray-200 pt-6">
-            <div className="space-y-3">
-              <p className="text-sm text-gray-500">
-                チームでメモやタスクを共有したい場合は
-              </p>
-              <a
-                href="/team"
-                className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
-              >
-                <svg
-                  className="w-4 h-4 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                  />
-                </svg>
-                チーム用ワークスペースを開く
-              </a>
+          <>
+            {/* プラン比較セクション */}
+            <div className="border-t border-gray-200 pt-8 pb-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">
+                プラン選択
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* フリープラン */}
+                <div className="border border-gray-200 rounded-lg p-6 bg-white">
+                  <div className="text-center mb-4">
+                    <h4 className="text-lg font-bold text-gray-900">
+                      フリープラン
+                    </h4>
+                    <div className="text-2xl font-bold text-gray-600">無料</div>
+                  </div>
+                  <ul className="space-y-2 text-sm text-gray-600 mb-4">
+                    <li className="flex items-center">
+                      <span className="mr-2 text-green-500">✓</span>
+                      無制限のメモ・タスク作成
+                    </li>
+                    <li className="flex items-center">
+                      <span className="mr-2 text-green-500">✓</span>
+                      ボード（プロジェクト）3個まで
+                    </li>
+                    <li className="flex items-center">
+                      <span className="mr-2 text-green-500">✓</span>
+                      チーム参加（招待のみ）
+                    </li>
+                  </ul>
+                  <div className="text-center">
+                    <div className="text-sm text-gray-500 py-2 px-4 border border-gray-200 rounded-lg">
+                      現在のプラン
+                    </div>
+                  </div>
+                </div>
+
+                {/* チームプラン */}
+                <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-blue-200 p-6 h-full flex flex-col rounded-lg border">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="text-2xl font-bold">チームプラン</h3>
+                      <p className="text-gray-600">チーム機能が利用可能</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-3xl font-bold">¥1,980</div>
+                      <div className="text-sm text-gray-600">月額（税込）</div>
+                      <div className="text-xs text-blue-600 font-medium">
+                        1ヶ月無料トライアル
+                      </div>
+                    </div>
+                  </div>
+
+                  <ul className="space-y-1 mb-3 flex-1">
+                    <li className="flex items-center text-lg">
+                      <span className="mr-2">✓</span>
+                      無制限のメモ・タスク作成
+                    </li>
+                    <li className="flex items-center text-lg">
+                      <span className="mr-2">✓</span>
+                      チーム作成・管理（1チーム）
+                    </li>
+                    <li className="flex items-center text-lg">
+                      <span className="mr-2">✓</span>
+                      ボード（プロジェクト）30個まで作成可能
+                    </li>
+                    <li className="flex items-center text-lg">
+                      <span className="mr-2">✓</span>
+                      1ヶ月無料
+                    </li>
+                  </ul>
+
+                  <div className="flex justify-center mt-auto">
+                    <button
+                      onClick={() => {
+                        alert("プレミアムアップグレード機能は実装予定です");
+                      }}
+                      className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8 py-3 text-lg font-medium rounded-lg transition-colors flex items-center"
+                    >
+                      <Crown className="mr-2 w-5 h-5" />
+                      まずは1ヶ月無料でお試し
+                    </button>
+                  </div>
+                </div>
+
+                {/* プレミアムプラン */}
+                <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-200 p-6 h-full flex flex-col rounded-lg border">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="text-2xl font-bold">プレミアムプラン</h3>
+                      <p className="text-gray-600">すべての機能が利用可能</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-3xl font-bold">¥4,980</div>
+                      <div className="text-sm text-gray-600">月額（税込）</div>
+                    </div>
+                  </div>
+
+                  <ul className="space-y-1 mb-3 flex-1">
+                    <li className="flex items-center text-lg">
+                      <span className="mr-2">✓</span>
+                      チームプランの全機能
+                    </li>
+                    <li className="flex items-center text-lg">
+                      <span className="mr-2">✓</span>
+                      複数チーム作成（最大3チーム）
+                    </li>
+                    <li className="flex items-center text-lg">
+                      <span className="mr-2">✓</span>
+                      ボード（プロジェクト）実質無制限！（999個まで）
+                    </li>
+                  </ul>
+
+                  <div className="flex justify-center mt-auto">
+                    <button
+                      onClick={() => {
+                        alert("プレミアムプランは準備中です");
+                      }}
+                      className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white px-8 py-3 text-lg font-medium rounded-lg transition-colors flex items-center"
+                    >
+                      <Crown className="mr-2 w-5 h-5" />
+                      準備中
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          </>
         )}
 
         {teamMode && currentView === "home" && (

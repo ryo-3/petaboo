@@ -36,6 +36,8 @@ import {
   approveJoinRequest,
   rejectJoinRequestRoute,
   rejectJoinRequest,
+  getMyJoinRequestsRoute,
+  getMyJoinRequests,
 } from "./api";
 import { createTeamBoardsAPI } from "./boards";
 
@@ -52,6 +54,7 @@ teamsRoute.use("*", databaseMiddleware);
 // ルート定義を登録
 teamsRoute.openapi(getUserTeamStatsRoute, getUserTeamStats);
 teamsRoute.openapi(getTeamsRoute, getTeams);
+teamsRoute.openapi(getMyJoinRequestsRoute, getMyJoinRequests);
 teamsRoute.openapi(getTeamDetailRoute, getTeamDetail);
 teamsRoute.openapi(createTeamRoute, createTeam);
 teamsRoute.openapi(inviteToTeamRoute, inviteToTeam);

@@ -14,12 +14,16 @@ interface JoinRequestsResponse {
   requests: JoinRequest[];
 }
 
-export function useJoinRequests(customUrl: string) {
+export function useJoinRequests(customUrl: string | undefined) {
   const { getToken } = useAuth();
 
   return useQuery({
     queryKey: ["join-requests", customUrl],
     queryFn: async () => {
+      if (!customUrl) {
+        return { requests: [] };
+      }
+
       const token = await getToken();
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/teams/${customUrl}/join-requests`,

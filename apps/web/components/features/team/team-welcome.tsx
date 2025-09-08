@@ -1,20 +1,35 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/src/hooks/use-user";
 import { useTeamStats } from "@/src/hooks/use-team-stats";
 import { useTeams } from "@/src/hooks/use-teams";
+import { useJoinRequests } from "@/src/hooks/use-join-requests";
+import { useMyJoinRequests } from "@/src/hooks/use-my-join-requests";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import TeamIcon from "@/components/icons/team-icon";
 import PlusIcon from "@/components/icons/plus-icon";
-import { Crown } from "lucide-react";
+import { Crown, Clock, Users } from "lucide-react";
 
 export function TeamWelcome() {
   const router = useRouter();
   const { data: user } = useUser();
+
+  // パネル切り替え用state
+  const [showDetailedView, setShowDetailedView] = useState(false);
+  const [activeTab, setActiveTab] = useState<"requests" | "teams">("requests");
   const { data: teamStats, isLoading } = useTeamStats();
   const { data: teams, isLoading: teamsLoading } = useTeams();
+
+  // 管理者として所属しているチームの承認待ちリストを取得
+  const adminTeams = teams?.filter((team) => team.role === "admin") || [];
+  const firstAdminTeam = adminTeams[0];
+  const { data: joinRequests } = useJoinRequests(firstAdminTeam?.customUrl);
+
+  // 自分の申請状況を取得
+  const { data: myJoinRequests } = useMyJoinRequests();
 
   if (isLoading || teamsLoading) {
     return (
@@ -83,131 +98,566 @@ export function TeamWelcome() {
           </div>
         </div>
 
-        {/* チーム未所属時の4ブロックレイアウト */}
-        {!hasTeams ? (
-          <div className="flex-1 flex flex-col gap-4 pb-6">
-            {/* 上段：左右2分割 */}
-            <div className="flex gap-4 h-1/2">
-              {/* 左上：プレミアムプラン詳細 */}
-              <div className="flex-1">
-                <Card className="bg-gradient-to-r from-purple-50 to-blue-50 border-blue-200 p-6 h-full flex flex-col">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h3 className="text-2xl font-bold">チームプラン</h3>
-                      <p className="text-gray-600">チーム機能が利用可能</p>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-3xl font-bold">¥1,980</div>
-                      <div className="text-sm text-gray-600">月額（税込）</div>
-                      <div className="text-xs text-blue-600 font-medium">
-                        1ヶ月無料トライアル
+        {/* 詳細ビュー表示時 */}
+        {showDetailedView && !hasTeams ? (
+          <div className="flex-1 p-6">
+            <Card className="p-6 h-full">
+              {/* 戻るボタン */}
+              <div className="flex justify-between items-center mb-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowDetailedView(false)}
+                  className="text-xs text-gray-600 hover:text-gray-800"
+                >
+                  ← 戻る
+                </Button>
+                <h3 className="text-[22px] font-bold">申請・参加状況</h3>
+              </div>
+
+              {/* タブ切り替え */}
+              <div className="flex space-x-1 bg-gray-100 rounded-lg p-1 mb-6">
+                <button
+                  onClick={() => setActiveTab("requests")}
+                  className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                    activeTab === "requests"
+                      ? "bg-white text-blue-600 shadow-sm"
+                      : "text-gray-600 hover:text-gray-800"
+                  }`}
+                >
+                  申請状況
+                </button>
+                <button
+                  onClick={() => setActiveTab("teams")}
+                  className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                    activeTab === "teams"
+                      ? "bg-white text-green-600 shadow-sm"
+                      : "text-gray-600 hover:text-gray-800"
+                  }`}
+                >
+                  参加チーム
+                </button>
+              </div>
+
+              {/* タブ内容 */}
+              <div className="flex-1 overflow-y-auto">
+                {activeTab === "requests" ? (
+                  <div className="space-y-4">
+                    {!myJoinRequests ||
+                    !myJoinRequests.requests ||
+                    myJoinRequests.requests.length === 0 ? (
+                      <div className="text-center text-gray-500 py-12">
+                        <Clock className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                        <div className="text-lg">
+                          申請したチームはありません
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      myJoinRequests.requests.map((request) => (
+                        <div
+                          key={request.id}
+                          className={`border rounded-lg p-4 ${
+                            request.status === "pending"
+                              ? "bg-blue-50 border-blue-200"
+                              : request.status === "approved"
+                                ? "bg-green-50 border-green-200"
+                                : "bg-red-50 border-red-200"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <Users
+                                  className={`w-5 h-5 ${
+                                    request.status === "pending"
+                                      ? "text-blue-600"
+                                      : request.status === "approved"
+                                        ? "text-green-600"
+                                        : "text-red-600"
+                                  }`}
+                                />
+                                <span className="font-semibold text-base text-gray-900">
+                                  {request.teamName}
+                                </span>
+                                <span
+                                  className={`text-sm px-3 py-1 rounded-full font-medium ${
+                                    request.status === "pending"
+                                      ? "bg-blue-100 text-blue-800"
+                                      : request.status === "approved"
+                                        ? "bg-green-100 text-green-800"
+                                        : "bg-red-100 text-red-800"
+                                  }`}
+                                >
+                                  {request.status === "pending"
+                                    ? "承認待ち"
+                                    : request.status === "approved"
+                                      ? "承認済み"
+                                      : "拒否済み"}
+                                </span>
+                              </div>
+                              <div className="text-sm text-gray-600 space-y-1">
+                                <div>
+                                  申請日:{" "}
+                                  {new Date(
+                                    request.createdAt * 1000,
+                                  ).toLocaleDateString("ja-JP", {
+                                    year: "numeric",
+                                    month: "short",
+                                    day: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                </div>
+                                {request.processedAt && (
+                                  <div>
+                                    {request.status === "approved"
+                                      ? "承認"
+                                      : "拒否"}
+                                    日:{" "}
+                                    {new Date(
+                                      request.processedAt * 1000,
+                                    ).toLocaleDateString("ja-JP", {
+                                      year: "numeric",
+                                      month: "short",
+                                      day: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })}
+                                  </div>
+                                )}
+                                {request.message && (
+                                  <div className="mt-3 text-sm text-gray-700 bg-gray-50 rounded p-3">
+                                    メッセージ: {request.message}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
-
-                  <ul className="space-y-1 mb-3">
-                    <li className="flex items-center text-lg">
-                      <span className="mr-2">✓</span>
-                      無制限のメモ・タスク作成
-                    </li>
-                    <li className="flex items-center text-lg">
-                      <span className="mr-2">✓</span>
-                      チーム作成・管理（1チーム）
-                    </li>
-                    <li className="flex items-center text-lg">
-                      <span className="mr-2">✓</span>
-                      ボード（プロジェクト）30個まで作成可能
-                    </li>
-                    <li className="flex items-center text-lg">
-                      <span className="mr-2">✓</span>
-                      1ヶ月無料
-                    </li>
-                  </ul>
-
-                  <div className="flex justify-center mt-auto">
-                    <Button
-                      size="lg"
-                      className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8"
-                      onClick={() => {
-                        alert("プレミアムアップグレード機能は実装予定です");
-                      }}
-                    >
-                      <Crown className="mr-2 w-5 h-5" />
-                      まずは1ヶ月無料でお試し
-                    </Button>
+                ) : (
+                  <div className="space-y-4">
+                    {!myJoinRequests || !myJoinRequests.requests ? (
+                      <div className="text-center text-gray-500 py-12">
+                        <Users className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                        <div className="text-lg">
+                          参加中のチームはありません
+                        </div>
+                      </div>
+                    ) : (
+                      myJoinRequests.requests
+                        .filter((r) => r.status === "approved")
+                        .map((request) => (
+                          <div
+                            key={request.id}
+                            className="border rounded-lg p-4 bg-green-50 border-green-200"
+                          >
+                            <div className="flex items-center gap-3 mb-2">
+                              <Users className="w-5 h-5 text-green-600" />
+                              <span className="font-semibold text-base text-gray-900">
+                                {request.teamName}
+                              </span>
+                              <span className="text-sm px-3 py-1 rounded-full font-medium bg-green-100 text-green-800">
+                                参加中
+                              </span>
+                            </div>
+                            {request.processedAt && (
+                              <div className="text-sm text-gray-600">
+                                参加日:{" "}
+                                {new Date(
+                                  request.processedAt * 1000,
+                                ).toLocaleDateString("ja-JP", {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        ))
+                    )}
+                    {myJoinRequests &&
+                      myJoinRequests.requests &&
+                      myJoinRequests.requests.filter(
+                        (r) => r.status === "approved",
+                      ).length === 0 && (
+                        <div className="text-center text-gray-500 py-12">
+                          <Users className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                          <div className="text-lg">
+                            参加中のチームはありません
+                          </div>
+                        </div>
+                      )}
                   </div>
-                </Card>
+                )}
               </div>
-
-              {/* 右上：プレミアムプラン */}
-              <div className="flex-1">
-                <Card className="bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-200 p-6 h-full flex flex-col">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h3 className="text-2xl font-bold">プレミアムプラン</h3>
-                      <p className="text-gray-600">すべての機能が利用可能</p>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-3xl font-bold">¥4,980</div>
-                      <div className="text-sm text-gray-600">月額（税込）</div>
-                    </div>
-                  </div>
-
-                  <ul className="space-y-1 mb-3">
-                    <li className="flex items-center text-lg">
-                      <span className="mr-2">✓</span>
-                      チームプランの全機能
-                    </li>
-                    <li className="flex items-center text-lg">
-                      <span className="mr-2">✓</span>
-                      複数チーム作成（最大3チーム）
-                    </li>
-                    <li className="flex items-center text-lg">
-                      <span className="mr-2">✓</span>
-                      ボード（プロジェクト）実質無制限！（999個まで）
-                    </li>
-                  </ul>
-
-                  <div className="flex justify-center mt-auto">
-                    <Button
-                      size="lg"
-                      className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white px-8"
-                      onClick={() => {
-                        alert("プレミアムプランは準備中です");
-                      }}
-                    >
-                      <Crown className="mr-2 w-5 h-5" />
-                      準備中
-                    </Button>
-                  </div>
-                </Card>
-              </div>
-            </div>
-
-            {/* 下段：左右2分割 */}
-            <div className="flex gap-4 h-1/2">
+            </Card>
+          </div>
+        ) : !hasTeams && !showDetailedView ? (
+          /* チーム未所属時のシンプルレイアウト */
+          <div className="flex-1 flex flex-col gap-4 pb-6">
+            {/* 左右2分割 */}
+            <div className="flex gap-4 flex-1">
               {/* 左下：承認待ちチーム */}
               <div className="flex-1">
                 <Card className="p-6 h-full border-dashed border-2 border-gray-300">
-                  <h3 className="text-lg font-bold mb-4">承認待ちのチーム</h3>
-                  <div className="text-center text-gray-500 py-8">
-                    <div className="text-sm">
-                      現在承認待ちのチームはありません
-                    </div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold">
+                      {adminTeams.length > 0 ? "承認待ちのチーム" : "申請状況"}
+                    </h3>
+                    {adminTeams.length > 0 &&
+                      joinRequests &&
+                      joinRequests.requests.length > 0 && (
+                        <span className="bg-orange-100 text-orange-800 text-xs font-medium px-2 py-1 rounded-full">
+                          {joinRequests.requests.length}件
+                        </span>
+                      )}
+                    {adminTeams.length === 0 &&
+                      myJoinRequests &&
+                      myJoinRequests.requests.length > 0 && (
+                        <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
+                          {myJoinRequests.requests.length}件
+                        </span>
+                      )}
                   </div>
+
+                  {/* 管理者の場合：承認待ちリスト表示 */}
+                  {adminTeams.length > 0 && (
+                    <>
+                      {!joinRequests ||
+                      !joinRequests.requests ||
+                      joinRequests.requests.length === 0 ? (
+                        <div className="text-center text-gray-500 py-8">
+                          <Clock className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                          <div className="text-sm">
+                            現在承認待ちのチームはありません
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {joinRequests.requests.slice(0, 3).map((request) => (
+                            <div
+                              key={request.id}
+                              className="bg-orange-50 border border-orange-200 rounded-lg p-3"
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <Users className="w-4 h-4 text-orange-600" />
+                                    <span className="font-medium text-sm text-gray-900">
+                                      {request.displayName || "名前未設定"}
+                                    </span>
+                                  </div>
+                                  <div className="text-xs text-gray-600">
+                                    {new Date(
+                                      request.createdAt * 1000,
+                                    ).toLocaleDateString("ja-JP", {
+                                      month: "short",
+                                      day: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })}
+                                  </div>
+                                  {request.message && (
+                                    <div className="text-xs text-gray-600 mt-1 truncate">
+                                      {request.message}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          {joinRequests.requests.length > 3 && (
+                            <div className="text-center">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-xs text-orange-600 hover:text-orange-700"
+                                onClick={() =>
+                                  firstAdminTeam &&
+                                  router.push(
+                                    `/team/${firstAdminTeam.customUrl}`,
+                                  )
+                                }
+                              >
+                                他 {joinRequests.requests.length - 3} 件を見る
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* 申請者の場合：自分の申請状況表示 */}
+                  {adminTeams.length === 0 && (
+                    <>
+                      {!myJoinRequests ||
+                      !myJoinRequests.requests ||
+                      myJoinRequests.requests.length === 0 ? (
+                        <div className="text-center text-gray-500 py-8">
+                          <Clock className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                          <div className="text-sm">
+                            申請したチームはありません
+                          </div>
+                        </div>
+                      ) : !showDetailedView ? (
+                        /* コンパクト表示 */
+                        <div className="space-y-3">
+                          {myJoinRequests.requests
+                            .slice(0, 3)
+                            .map((request) => (
+                              <div
+                                key={request.id}
+                                className={`border rounded-lg p-3 ${
+                                  request.status === "pending"
+                                    ? "bg-blue-50 border-blue-200"
+                                    : request.status === "approved"
+                                      ? "bg-green-50 border-green-200"
+                                      : "bg-red-50 border-red-200"
+                                }`}
+                              >
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <Users
+                                        className={`w-4 h-4 ${
+                                          request.status === "pending"
+                                            ? "text-blue-600"
+                                            : request.status === "approved"
+                                              ? "text-green-600"
+                                              : "text-red-600"
+                                        }`}
+                                      />
+                                      <span className="font-medium text-sm text-gray-900">
+                                        {request.teamName}
+                                      </span>
+                                      <span
+                                        className={`text-xs px-2 py-1 rounded-full font-medium ${
+                                          request.status === "pending"
+                                            ? "bg-blue-100 text-blue-800"
+                                            : request.status === "approved"
+                                              ? "bg-green-100 text-green-800"
+                                              : "bg-red-100 text-red-800"
+                                        }`}
+                                      >
+                                        {request.status === "pending"
+                                          ? "承認待ち"
+                                          : request.status === "approved"
+                                            ? "承認済み"
+                                            : "拒否済み"}
+                                      </span>
+                                    </div>
+                                    <div className="text-xs text-gray-600">
+                                      申請日:{" "}
+                                      {new Date(
+                                        request.createdAt * 1000,
+                                      ).toLocaleDateString("ja-JP", {
+                                        month: "short",
+                                        day: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          <div className="text-center">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-xs text-blue-600 hover:text-blue-700"
+                              onClick={() => setShowDetailedView(true)}
+                            >
+                              すべて見る ({myJoinRequests.requests.length} 件)
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        /* 詳細表示 */
+                        <div className="space-y-4">
+                          {/* 戻るボタン */}
+                          <div className="flex justify-between items-center">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setShowDetailedView(false)}
+                              className="text-xs text-gray-600 hover:text-gray-800"
+                            >
+                              ← 戻る
+                            </Button>
+                          </div>
+
+                          {/* タブ切り替え */}
+                          <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+                            <button
+                              onClick={() => setActiveTab("requests")}
+                              className={`flex-1 px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                                activeTab === "requests"
+                                  ? "bg-white text-blue-600 shadow-sm"
+                                  : "text-gray-600 hover:text-gray-800"
+                              }`}
+                            >
+                              申請状況
+                            </button>
+                            <button
+                              onClick={() => setActiveTab("teams")}
+                              className={`flex-1 px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                                activeTab === "teams"
+                                  ? "bg-white text-green-600 shadow-sm"
+                                  : "text-gray-600 hover:text-gray-800"
+                              }`}
+                            >
+                              参加チーム
+                            </button>
+                          </div>
+
+                          {/* タブ内容 */}
+                          {activeTab === "requests" ? (
+                            <div className="space-y-3">
+                              {myJoinRequests.requests.map((request) => (
+                                <div
+                                  key={request.id}
+                                  className={`border rounded-lg p-3 ${
+                                    request.status === "pending"
+                                      ? "bg-blue-50 border-blue-200"
+                                      : request.status === "approved"
+                                        ? "bg-green-50 border-green-200"
+                                        : "bg-red-50 border-red-200"
+                                  }`}
+                                >
+                                  <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <Users
+                                          className={`w-4 h-4 ${
+                                            request.status === "pending"
+                                              ? "text-blue-600"
+                                              : request.status === "approved"
+                                                ? "text-green-600"
+                                                : "text-red-600"
+                                          }`}
+                                        />
+                                        <span className="font-medium text-sm text-gray-900">
+                                          {request.teamName}
+                                        </span>
+                                        <span
+                                          className={`text-xs px-2 py-1 rounded-full font-medium ${
+                                            request.status === "pending"
+                                              ? "bg-blue-100 text-blue-800"
+                                              : request.status === "approved"
+                                                ? "bg-green-100 text-green-800"
+                                                : "bg-red-100 text-red-800"
+                                          }`}
+                                        >
+                                          {request.status === "pending"
+                                            ? "承認待ち"
+                                            : request.status === "approved"
+                                              ? "承認済み"
+                                              : "拒否済み"}
+                                        </span>
+                                      </div>
+                                      <div className="text-xs text-gray-600 space-y-1">
+                                        <div>
+                                          申請日:{" "}
+                                          {new Date(
+                                            request.createdAt * 1000,
+                                          ).toLocaleDateString("ja-JP", {
+                                            year: "numeric",
+                                            month: "short",
+                                            day: "numeric",
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                          })}
+                                        </div>
+                                        {request.processedAt && (
+                                          <div>
+                                            {request.status === "approved"
+                                              ? "承認"
+                                              : "拒否"}
+                                            日:{" "}
+                                            {new Date(
+                                              request.processedAt * 1000,
+                                            ).toLocaleDateString("ja-JP", {
+                                              year: "numeric",
+                                              month: "short",
+                                              day: "numeric",
+                                              hour: "2-digit",
+                                              minute: "2-digit",
+                                            })}
+                                          </div>
+                                        )}
+                                        {request.message && (
+                                          <div className="mt-2 text-xs text-gray-700 bg-gray-50 rounded p-2">
+                                            メッセージ: {request.message}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              {myJoinRequests.requests
+                                .filter((r) => r.status === "approved")
+                                .map((request) => (
+                                  <div
+                                    key={request.id}
+                                    className="border rounded-lg p-3 bg-green-50 border-green-200"
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <Users className="w-4 h-4 text-green-600" />
+                                      <span className="font-medium text-sm text-gray-900">
+                                        {request.teamName}
+                                      </span>
+                                      <span className="text-xs px-2 py-1 rounded-full font-medium bg-green-100 text-green-800">
+                                        参加中
+                                      </span>
+                                    </div>
+                                    {request.processedAt && (
+                                      <div className="text-xs text-gray-600 mt-1">
+                                        参加日:{" "}
+                                        {new Date(
+                                          request.processedAt * 1000,
+                                        ).toLocaleDateString("ja-JP", {
+                                          year: "numeric",
+                                          month: "short",
+                                          day: "numeric",
+                                        })}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              {myJoinRequests.requests.filter(
+                                (r) => r.status === "approved",
+                              ).length === 0 && (
+                                <div className="text-center text-gray-500 py-8">
+                                  <Users className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                                  <div className="text-sm">
+                                    参加中のチームはありません
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  )}
                 </Card>
               </div>
 
-              {/* 右下：チーム開始 */}
+              {/* 右：チーム参加・作成 */}
               <div className="flex-1">
                 <Card className="p-6 h-full">
-                  <h3 className="text-lg font-bold mb-4">
-                    チームを始めましょう！
-                  </h3>
+                  <h3 className="text-lg font-bold mb-4">チーム機能</h3>
                   <p className="text-sm text-gray-600 mb-4">
-                    招待URLで既存のチームに参加できます。
-                    <br />
-                    チームを作成するにはチームプランが必要です。
+                    チームに参加してメモやタスクを共有できます。
                   </p>
                   <div className="space-y-3">
                     <Button
@@ -216,12 +666,19 @@ export function TeamWelcome() {
                       variant={isPremium ? "default" : "secondary"}
                       onClick={() => isPremium && router.push("/team/create")}
                     >
-                      チーム作成（チームプランのみ）
+                      {isPremium
+                        ? "チーム作成"
+                        : "チーム作成（要アップグレード）"}
                     </Button>
                     <Button variant="outline" className="w-full">
                       招待URLで参加
                     </Button>
                   </div>
+                  {!isPremium && (
+                    <p className="text-xs text-gray-500 mt-3 text-center">
+                      チーム作成にはチームプランが必要です
+                    </p>
+                  )}
                 </Card>
               </div>
             </div>
@@ -239,9 +696,7 @@ export function TeamWelcome() {
                   チームを始めましょう！
                 </h3>
                 <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                  {isPremium
-                    ? "新しいチームを作成するか、招待URLで既存のチームに参加できます。"
-                    : "招待URLで既存のチームに参加できます。チームを作成するにはチームプランが必要です。"}
+                  チームを作成するか、招待URLで既存のチームに参加できます。
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <Button
@@ -252,8 +707,8 @@ export function TeamWelcome() {
                     onClick={() => isPremium && router.push("/team/create")}
                   >
                     {isPremium
-                      ? "チームを作成"
-                      : "チーム作成（チームプランのみ）"}
+                      ? "チーム作成"
+                      : "チーム作成（要アップグレード）"}
                   </Button>
                   <Button size="lg" variant="outline" className="px-8">
                     招待URLで参加

@@ -192,7 +192,7 @@ export default function TeamLayout({
             onNewTask={handleNewTask}
             onShowTaskList={handleShowTaskList}
             isTeamDetailPage={mounted ? isTeamDetailPage : false}
-            isTeamListPage={mounted ? isTeamListPage : false}
+            isTeamListPage={isTeamListPage}
             isTeamHomePage={
               mounted && isTeamDetailPage && activeTab === "overview"
             }

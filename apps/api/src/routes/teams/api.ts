@@ -336,17 +336,38 @@ export const joinTeamRoute = createRoute({
 export const getUserTeamStatsRoute = createRoute({
   method: "get",
   path: "/stats",
+  request: {
+    query: z.object({
+      type: z.enum(["general", "my-requests"]).optional(),
+    }),
+  },
   responses: {
     200: {
       description: "チーム統計情報取得成功",
       content: {
         "application/json": {
-          schema: z.object({
-            ownedTeams: z.number(),
-            memberTeams: z.number(),
-            maxOwnedTeams: z.number(),
-            maxMemberTeams: z.number(),
-          }),
+          schema: z.union([
+            z.object({
+              ownedTeams: z.number(),
+              memberTeams: z.number(),
+              maxOwnedTeams: z.number(),
+              maxMemberTeams: z.number(),
+            }),
+            z.object({
+              requests: z.array(
+                z.object({
+                  id: z.number(),
+                  teamName: z.string(),
+                  teamCustomUrl: z.string(),
+                  displayName: z.string().nullable(),
+                  status: z.enum(["pending", "approved", "rejected"]),
+                  createdAt: z.number(),
+                  processedAt: z.number().nullable(),
+                  message: z.string().nullable(),
+                }),
+              ),
+            }),
+          ]),
         },
       },
     },
@@ -2156,5 +2177,80 @@ export async function submitJoinRequest(c: any) {
   } catch (error) {
     console.error("参加申請エラー:", error);
     return c.json({ message: "参加申請の送信に失敗しました" }, 500);
+  }
+}
+
+// 自分の申請状況取得ルート定義
+export const getMyJoinRequestsRoute = createRoute({
+  method: "get",
+  path: "/my-requests",
+  responses: {
+    200: {
+      description: "自分の申請状況取得成功",
+      content: {
+        "application/json": {
+          schema: z.object({
+            requests: z.array(
+              z.object({
+                id: z.number(),
+                teamName: z.string(),
+                teamCustomUrl: z.string(),
+                displayName: z.string().nullable(),
+                status: z.enum(["pending", "approved", "rejected"]),
+                createdAt: z.number(),
+                processedAt: z.number().nullable(),
+                message: z.string().nullable(),
+              }),
+            ),
+          }),
+        },
+      },
+    },
+    401: {
+      description: "認証が必要です",
+    },
+  },
+  tags: ["Teams"],
+});
+
+// 自分の申請状況取得ハンドラー
+export async function getMyJoinRequests(c: any) {
+  try {
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ error: "認証が必要です" }, 401);
+    }
+
+    const db: DatabaseType = c.get("db");
+
+    // 自分が申請したチーム参加申請を取得
+    const myRequests = await db
+      .select({
+        id: teamInvitations.id,
+        teamName: teams.name,
+        teamCustomUrl: teams.customUrl,
+        displayName: teamInvitations.displayName,
+        status: teamInvitations.status,
+        createdAt: teamInvitations.createdAt,
+        processedAt: teamInvitations.processedAt,
+        message: teamInvitations.message,
+        email: teamInvitations.email, // デバッグ用に追加
+      })
+      .from(teamInvitations)
+      .innerJoin(teams, eq(teamInvitations.teamId, teams.id))
+      .where(
+        and(
+          eq(teamInvitations.userId, auth.userId),
+          ne(teamInvitations.email, "URL_INVITE"), // URL招待レコードは除外
+        ),
+      )
+      .orderBy(desc(teamInvitations.createdAt));
+
+    return c.json({
+      requests: myRequests,
+    });
+  } catch (error) {
+    console.error("自分の申請状況取得エラー:", error);
+    return c.json({ message: "申請状況の取得に失敗しました" }, 500);
   }
 }

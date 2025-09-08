@@ -291,8 +291,8 @@ export function TeamWelcome() {
               </div>
             </Card>
           </div>
-        ) : !hasTeams && !showDetailedView ? (
-          /* チーム未所属時のシンプルレイアウト */
+        ) : !showDetailedView ? (
+          /* 標準の2パネルレイアウト */
           <div className="flex-1 flex flex-col gap-4 pb-6">
             {/* 左右2分割 */}
             <div className="flex gap-4 flex-1">
@@ -482,99 +482,7 @@ export function TeamWelcome() {
               </div>
             </div>
           </div>
-        ) : (
-          /* チーム所属時は既存のチーム一覧表示 */
-          <div className="flex-1 overflow-hidden">
-            {/* チーム一覧（空の場合の表示） */}
-            {!teams || !Array.isArray(teams) || teams.length === 0 ? (
-              <Card className="p-8 text-center h-full flex flex-col justify-center">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <TeamIcon className="w-8 h-8 text-gray-400" />
-                </div>
-                <h3 className="text-xl font-semibold mb-3">
-                  チームを始めましょう！
-                </h3>
-                <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                  チームを作成するか、招待URLで既存のチームに参加できます。
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Button
-                    size="lg"
-                    className="px-8"
-                    variant={isPremium ? "default" : "secondary"}
-                    onClick={() => router.push("/team/create")}
-                  >
-                    {isPremium
-                      ? "チーム作成"
-                      : "チーム作成（要アップグレード）"}
-                  </Button>
-                  <Button size="lg" variant="outline" className="px-8">
-                    招待URLで参加
-                  </Button>
-                </div>
-              </Card>
-            ) : (
-              <div className="h-full overflow-y-auto">
-                <h2 className="text-lg font-semibold mb-4 sticky top-0 bg-white z-10">
-                  あなたのチーム ({teams.length})
-                </h2>
-                <div className="space-y-3">
-                  {Array.isArray(teams) &&
-                    teams.map((team) => (
-                      <Card
-                        key={team.id}
-                        className="p-4 hover:shadow-md transition-shadow"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <h3 className="font-semibold text-gray-900">
-                                {team.name}
-                              </h3>
-                              <span
-                                className={`px-2 py-1 text-xs rounded-full font-medium ${
-                                  team.role === "admin"
-                                    ? "bg-blue-100 text-blue-800"
-                                    : "bg-gray-100 text-gray-600"
-                                }`}
-                              >
-                                {team.role === "admin" ? "管理者" : "メンバー"}
-                              </span>
-                            </div>
-                            {team.description && (
-                              <p className="text-gray-600 text-sm mb-2">
-                                {team.description}
-                              </p>
-                            )}
-                            <div className="flex items-center gap-4 text-xs text-gray-500">
-                              <span>
-                                作成日:{" "}
-                                {new Date(team.createdAt).toLocaleDateString()}
-                              </span>
-                              {team.memberCount && (
-                                <span>メンバー: {team.memberCount}人</span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() =>
-                                router.push(`/team/${team.customUrl}`)
-                              }
-                            >
-                              管理画面
-                            </Button>
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+        ) : null}
       </div>
 
       {/* アクション選択モーダル */}
@@ -619,7 +527,7 @@ export function TeamWelcome() {
                     : "border-gray-200 bg-gray-50 cursor-not-allowed"
                 }`}
               >
-                <div className="flex items-start gap-3">
+                <div className="flex items-center gap-3">
                   <div
                     className={`p-2 rounded-lg ${isPremium ? "bg-blue-100" : "bg-gray-200"}`}
                   >
@@ -633,7 +541,7 @@ export function TeamWelcome() {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        d="M12 4v16m8-8H4"
                       />
                     </svg>
                   </div>
@@ -657,18 +565,18 @@ export function TeamWelcome() {
                 </div>
               </button>
 
-              {/* 招待URLで参加 */}
+              {/* URL入力 */}
               <button
                 onClick={() => {
                   setShowActionModal(false);
                   setShowInviteUrlDialog(true);
                 }}
-                className="w-full p-4 rounded-lg border-2 border-green-200 hover:border-green-300 hover:bg-green-50 text-left transition-all"
+                className="w-full p-4 rounded-lg border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-left transition-all"
               >
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-green-100">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-gray-100">
                     <svg
-                      className="w-5 h-5 text-green-600"
+                      className="w-5 h-5 text-gray-600"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -684,7 +592,7 @@ export function TeamWelcome() {
                   <div className="flex-1">
                     <h4 className="font-medium text-gray-900">招待URLで参加</h4>
                     <p className="text-sm text-gray-600 mt-1">
-                      既存のチームに招待URLで参加
+                      招待URLを入力して既存のチームに参加
                     </p>
                   </div>
                 </div>
@@ -694,17 +602,14 @@ export function TeamWelcome() {
         </div>
       )}
 
-      {/* 招待URL入力ダイアログ */}
+      {/* 招待URLダイアログ */}
       {showInviteUrlDialog && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-semibold">招待URLで参加</h3>
               <button
-                onClick={() => {
-                  setShowInviteUrlDialog(false);
-                  setInviteUrl("");
-                }}
+                onClick={() => setShowInviteUrlDialog(false)}
                 className="text-gray-400 hover:text-gray-600"
               >
                 <svg
@@ -725,32 +630,32 @@ export function TeamWelcome() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="inviteUrl"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   招待URL
                 </label>
                 <input
+                  id="inviteUrl"
                   type="text"
                   value={inviteUrl}
                   onChange={(e) => setInviteUrl(e.target.value)}
-                  placeholder="https://example.com/team/invite/..."
-                  className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                  placeholder="https://example.com/join/teamname?token=..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
-
               <div className="flex gap-3 justify-end">
                 <Button
                   variant="outline"
-                  onClick={() => {
-                    setShowInviteUrlDialog(false);
-                    setInviteUrl("");
-                  }}
+                  onClick={() => setShowInviteUrlDialog(false)}
                 >
                   キャンセル
                 </Button>
                 <Button
                   onClick={() => {
-                    if (inviteUrl) {
-                      window.location.href = inviteUrl;
+                    if (inviteUrl.trim()) {
+                      window.location.href = inviteUrl.trim();
                     }
                   }}
                   disabled={!inviteUrl.trim()}

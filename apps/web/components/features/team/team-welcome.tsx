@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/src/hooks/use-user";
 import { useTeamStats } from "@/src/hooks/use-team-stats";
@@ -20,6 +20,9 @@ export function TeamWelcome() {
   // パネル切り替え用state
   const [showDetailedView, setShowDetailedView] = useState(false);
   const [activeTab, setActiveTab] = useState<"requests" | "teams">("requests");
+  const [showInviteUrlDialog, setShowInviteUrlDialog] = useState(false);
+  const [inviteUrl, setInviteUrl] = useState("");
+  const [showActionModal, setShowActionModal] = useState(false);
   const { data: teamStats, isLoading } = useTeamStats();
   const { data: teams, isLoading: teamsLoading } = useTeams();
 
@@ -64,7 +67,7 @@ export function TeamWelcome() {
   const hasTeams = actualTotalTeams > 0;
 
   const isPremium = user?.planType === "premium";
-  const canCreateTeam = actualOwnedTeams < teamStats.maxOwnedTeams && isPremium;
+  const canCreateTeam = actualOwnedTeams < teamStats.maxOwnedTeams;
   const canJoinTeam = actualTotalTeams < teamStats.maxMemberTeams;
 
   return (
@@ -74,19 +77,12 @@ export function TeamWelcome() {
         <div className="mb-4">
           <div className="flex items-center gap-3">
             <h1 className="text-[22px] font-bold text-gray-800 w-[105px] truncate">
-              チーム管理
+              チーム一覧
             </h1>
             <button
-              onClick={() => canCreateTeam && router.push("/team/create")}
-              disabled={!canCreateTeam}
-              className={`p-2 rounded-md transition-colors ${
-                canCreateTeam
-                  ? "bg-slate-500 text-white hover:bg-slate-600"
-                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
-              }`}
-              title={
-                canCreateTeam ? "新しいチームを作成" : "作成上限に達しています"
-              }
+              onClick={() => setShowActionModal(true)}
+              className="p-2 rounded-md transition-colors bg-slate-500 text-white hover:bg-slate-600"
+              title="チーム作成・参加"
             >
               <PlusIcon className="w-3.5 h-3.5" />
             </button>
@@ -300,384 +296,187 @@ export function TeamWelcome() {
           <div className="flex-1 flex flex-col gap-4 pb-6">
             {/* 左右2分割 */}
             <div className="flex gap-4 flex-1">
-              {/* 左下：承認待ちチーム */}
+              {/* 左：所属チーム一覧 */}
               <div className="flex-1">
-                <Card className="p-6 h-full border-dashed border-2 border-gray-300">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-bold">
-                      {adminTeams.length > 0 ? "承認待ちのチーム" : "申請状況"}
-                    </h3>
-                    {adminTeams.length > 0 &&
-                      joinRequests &&
-                      joinRequests.requests.length > 0 && (
-                        <span className="bg-orange-100 text-orange-800 text-xs font-medium px-2 py-1 rounded-full">
-                          {joinRequests.requests.length}件
-                        </span>
-                      )}
-                    {adminTeams.length === 0 &&
-                      myJoinRequests &&
-                      myJoinRequests.requests.length > 0 && (
-                        <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
-                          {myJoinRequests.requests.length}件
-                        </span>
-                      )}
-                  </div>
-
-                  {/* 管理者の場合：承認待ちリスト表示 */}
-                  {adminTeams.length > 0 && (
-                    <>
-                      {!joinRequests ||
-                      !joinRequests.requests ||
-                      joinRequests.requests.length === 0 ? (
-                        <div className="text-center text-gray-500 py-8">
-                          <Clock className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                          <div className="text-sm">
-                            現在承認待ちのチームはありません
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="space-y-3">
-                          {joinRequests.requests.slice(0, 3).map((request) => (
-                            <div
-                              key={request.id}
-                              className="bg-orange-50 border border-orange-200 rounded-lg p-3"
-                            >
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <Users className="w-4 h-4 text-orange-600" />
-                                    <span className="font-medium text-sm text-gray-900">
-                                      {request.displayName || "名前未設定"}
-                                    </span>
-                                  </div>
-                                  <div className="text-xs text-gray-600">
-                                    {new Date(
-                                      request.createdAt * 1000,
-                                    ).toLocaleDateString("ja-JP", {
-                                      month: "short",
-                                      day: "numeric",
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                    })}
-                                  </div>
-                                  {request.message && (
-                                    <div className="text-xs text-gray-600 mt-1 truncate">
-                                      {request.message}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                          {joinRequests.requests.length > 3 && (
-                            <div className="text-center">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-xs text-orange-600 hover:text-orange-700"
-                                onClick={() =>
-                                  firstAdminTeam &&
-                                  router.push(
-                                    `/team/${firstAdminTeam.customUrl}`,
-                                  )
-                                }
-                              >
-                                他 {joinRequests.requests.length - 3} 件を見る
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </>
-                  )}
-
-                  {/* 申請者の場合：自分の申請状況表示 */}
-                  {adminTeams.length === 0 && (
-                    <>
-                      {!myJoinRequests ||
-                      !myJoinRequests.requests ||
-                      myJoinRequests.requests.length === 0 ? (
-                        <div className="text-center text-gray-500 py-8">
-                          <Clock className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                          <div className="text-sm">
-                            申請したチームはありません
-                          </div>
-                        </div>
-                      ) : !showDetailedView ? (
-                        /* コンパクト表示 */
-                        <div className="space-y-3">
-                          {myJoinRequests.requests
-                            .slice(0, 3)
-                            .map((request) => (
-                              <div
-                                key={request.id}
-                                className={`border rounded-lg p-3 ${
-                                  request.status === "pending"
-                                    ? "bg-blue-50 border-blue-200"
-                                    : request.status === "approved"
-                                      ? "bg-green-50 border-green-200"
-                                      : "bg-red-50 border-red-200"
-                                }`}
-                              >
-                                <div className="flex items-start justify-between">
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <Users
-                                        className={`w-4 h-4 ${
-                                          request.status === "pending"
-                                            ? "text-blue-600"
-                                            : request.status === "approved"
-                                              ? "text-green-600"
-                                              : "text-red-600"
-                                        }`}
-                                      />
-                                      <span className="font-medium text-sm text-gray-900">
-                                        {request.teamName}
-                                      </span>
-                                      <span
-                                        className={`text-xs px-2 py-1 rounded-full font-medium ${
-                                          request.status === "pending"
-                                            ? "bg-blue-100 text-blue-800"
-                                            : request.status === "approved"
-                                              ? "bg-green-100 text-green-800"
-                                              : "bg-red-100 text-red-800"
-                                        }`}
-                                      >
-                                        {request.status === "pending"
-                                          ? "承認待ち"
-                                          : request.status === "approved"
-                                            ? "承認済み"
-                                            : "拒否済み"}
-                                      </span>
-                                    </div>
-                                    <div className="text-xs text-gray-600">
-                                      申請日:{" "}
-                                      {new Date(
-                                        request.createdAt * 1000,
-                                      ).toLocaleDateString("ja-JP", {
-                                        month: "short",
-                                        day: "numeric",
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                      })}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          <div className="text-center">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-xs text-blue-600 hover:text-blue-700"
-                              onClick={() => setShowDetailedView(true)}
-                            >
-                              すべて見る ({myJoinRequests.requests.length} 件)
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        /* 詳細表示 */
-                        <div className="space-y-4">
-                          {/* 戻るボタン */}
-                          <div className="flex justify-between items-center">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setShowDetailedView(false)}
-                              className="text-xs text-gray-600 hover:text-gray-800"
-                            >
-                              ← 戻る
-                            </Button>
-                          </div>
-
-                          {/* タブ切り替え */}
-                          <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
-                            <button
-                              onClick={() => setActiveTab("requests")}
-                              className={`flex-1 px-3 py-1 text-xs font-medium rounded-md transition-colors ${
-                                activeTab === "requests"
-                                  ? "bg-white text-blue-600 shadow-sm"
-                                  : "text-gray-600 hover:text-gray-800"
-                              }`}
-                            >
-                              申請状況
-                            </button>
-                            <button
-                              onClick={() => setActiveTab("teams")}
-                              className={`flex-1 px-3 py-1 text-xs font-medium rounded-md transition-colors ${
-                                activeTab === "teams"
-                                  ? "bg-white text-green-600 shadow-sm"
-                                  : "text-gray-600 hover:text-gray-800"
-                              }`}
-                            >
-                              参加チーム
-                            </button>
-                          </div>
-
-                          {/* タブ内容 */}
-                          {activeTab === "requests" ? (
-                            <div className="space-y-3">
-                              {myJoinRequests.requests.map((request) => (
-                                <div
-                                  key={request.id}
-                                  className={`border rounded-lg p-3 ${
-                                    request.status === "pending"
-                                      ? "bg-blue-50 border-blue-200"
-                                      : request.status === "approved"
-                                        ? "bg-green-50 border-green-200"
-                                        : "bg-red-50 border-red-200"
+                <Card className="p-6 h-full">
+                  <h3 className="text-lg font-bold mb-4">所属チーム</h3>
+                  {!teams || teams.length === 0 ? (
+                    <div className="text-center text-gray-500 py-8">
+                      <TeamIcon className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                      <div className="text-sm">
+                        所属しているチームはありません
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {teams.slice(0, 4).map((team) => (
+                        <div
+                          key={team.id}
+                          className="border rounded-lg p-3 bg-white hover:bg-gray-50 transition-colors cursor-pointer"
+                          onClick={() => router.push(`/team/${team.customUrl}`)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <TeamIcon className="w-4 h-4 text-blue-600" />
+                                <span className="font-medium text-sm text-gray-900">
+                                  {team.name}
+                                </span>
+                                <span
+                                  className={`text-xs px-2 py-1 rounded-full font-medium ${
+                                    team.role === "admin"
+                                      ? "bg-blue-100 text-blue-800"
+                                      : "bg-gray-100 text-gray-600"
                                   }`}
                                 >
-                                  <div className="flex items-start justify-between">
-                                    <div className="flex-1">
-                                      <div className="flex items-center gap-2 mb-1">
-                                        <Users
-                                          className={`w-4 h-4 ${
-                                            request.status === "pending"
-                                              ? "text-blue-600"
-                                              : request.status === "approved"
-                                                ? "text-green-600"
-                                                : "text-red-600"
-                                          }`}
-                                        />
-                                        <span className="font-medium text-sm text-gray-900">
-                                          {request.teamName}
-                                        </span>
-                                        <span
-                                          className={`text-xs px-2 py-1 rounded-full font-medium ${
-                                            request.status === "pending"
-                                              ? "bg-blue-100 text-blue-800"
-                                              : request.status === "approved"
-                                                ? "bg-green-100 text-green-800"
-                                                : "bg-red-100 text-red-800"
-                                          }`}
-                                        >
-                                          {request.status === "pending"
-                                            ? "承認待ち"
-                                            : request.status === "approved"
-                                              ? "承認済み"
-                                              : "拒否済み"}
-                                        </span>
-                                      </div>
-                                      <div className="text-xs text-gray-600 space-y-1">
-                                        <div>
-                                          申請日:{" "}
-                                          {new Date(
-                                            request.createdAt * 1000,
-                                          ).toLocaleDateString("ja-JP", {
-                                            year: "numeric",
-                                            month: "short",
-                                            day: "numeric",
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                          })}
-                                        </div>
-                                        {request.processedAt && (
-                                          <div>
-                                            {request.status === "approved"
-                                              ? "承認"
-                                              : "拒否"}
-                                            日:{" "}
-                                            {new Date(
-                                              request.processedAt * 1000,
-                                            ).toLocaleDateString("ja-JP", {
-                                              year: "numeric",
-                                              month: "short",
-                                              day: "numeric",
-                                              hour: "2-digit",
-                                              minute: "2-digit",
-                                            })}
-                                          </div>
-                                        )}
-                                        {request.message && (
-                                          <div className="mt-2 text-xs text-gray-700 bg-gray-50 rounded p-2">
-                                            メッセージ: {request.message}
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="space-y-3">
-                              {myJoinRequests.requests
-                                .filter((r) => r.status === "approved")
-                                .map((request) => (
-                                  <div
-                                    key={request.id}
-                                    className="border rounded-lg p-3 bg-green-50 border-green-200"
-                                  >
-                                    <div className="flex items-center gap-2">
-                                      <Users className="w-4 h-4 text-green-600" />
-                                      <span className="font-medium text-sm text-gray-900">
-                                        {request.teamName}
-                                      </span>
-                                      <span className="text-xs px-2 py-1 rounded-full font-medium bg-green-100 text-green-800">
-                                        参加中
-                                      </span>
-                                    </div>
-                                    {request.processedAt && (
-                                      <div className="text-xs text-gray-600 mt-1">
-                                        参加日:{" "}
-                                        {new Date(
-                                          request.processedAt * 1000,
-                                        ).toLocaleDateString("ja-JP", {
-                                          year: "numeric",
-                                          month: "short",
-                                          day: "numeric",
-                                        })}
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
-                              {myJoinRequests.requests.filter(
-                                (r) => r.status === "approved",
-                              ).length === 0 && (
-                                <div className="text-center text-gray-500 py-8">
-                                  <Users className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                                  <div className="text-sm">
-                                    参加中のチームはありません
-                                  </div>
+                                  {team.role === "admin"
+                                    ? "管理者"
+                                    : "メンバー"}
+                                </span>
+                              </div>
+                              {team.description && (
+                                <div className="text-xs text-gray-600 truncate">
+                                  {team.description}
                                 </div>
                               )}
                             </div>
-                          )}
+                          </div>
+                        </div>
+                      ))}
+                      {teams.length > 4 && (
+                        <div className="text-center">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-xs text-blue-600 hover:text-blue-700"
+                          >
+                            他 {teams.length - 4} 件を見る
+                          </Button>
                         </div>
                       )}
-                    </>
+                    </div>
                   )}
                 </Card>
               </div>
 
-              {/* 右：チーム参加・作成 */}
+              {/* 右：申請状況 */}
               <div className="flex-1">
                 <Card className="p-6 h-full">
-                  <h3 className="text-lg font-bold mb-4">チーム機能</h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                    チームに参加してメモやタスクを共有できます。
-                  </p>
-                  <div className="space-y-3">
-                    <Button
-                      className="w-full"
-                      disabled={!isPremium}
-                      variant={isPremium ? "default" : "secondary"}
-                      onClick={() => isPremium && router.push("/team/create")}
-                    >
-                      {isPremium
-                        ? "チーム作成"
-                        : "チーム作成（要アップグレード）"}
-                    </Button>
-                    <Button variant="outline" className="w-full">
-                      招待URLで参加
-                    </Button>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold">申請状況</h3>
+                    {myJoinRequests &&
+                      myJoinRequests.requests.filter(
+                        (r) => r.status !== "approved",
+                      ).length > 0 && (
+                        <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
+                          {
+                            myJoinRequests.requests.filter(
+                              (r) => r.status !== "approved",
+                            ).length
+                          }
+                          件
+                        </span>
+                      )}
                   </div>
-                  {!isPremium && (
-                    <p className="text-xs text-gray-500 mt-3 text-center">
-                      チーム作成にはチームプランが必要です
-                    </p>
+
+                  {!myJoinRequests ||
+                  !myJoinRequests.requests ||
+                  myJoinRequests.requests.filter((r) => r.status !== "approved")
+                    .length === 0 ? (
+                    <div className="text-center text-gray-500 py-8">
+                      <Clock className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                      <div className="text-sm">申請したチームはありません</div>
+                      <div className="mt-4 space-y-2">
+                        <Button
+                          className="w-full"
+                          variant={isPremium ? "default" : "secondary"}
+                          onClick={() => router.push("/team/create")}
+                        >
+                          {isPremium
+                            ? "チーム作成"
+                            : "チーム作成（要アップグレード）"}
+                        </Button>
+                        <Button variant="outline" className="w-full">
+                          招待URLで参加
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {myJoinRequests.requests
+                        .filter((r) => r.status !== "approved")
+                        .map((request) => (
+                          <div
+                            key={request.id}
+                            className={`border rounded-lg p-3 ${
+                              request.status === "pending"
+                                ? "bg-blue-50 border-blue-200"
+                                : request.status === "approved"
+                                  ? "bg-green-50 border-green-200"
+                                  : "bg-red-50 border-red-200"
+                            }`}
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <Users
+                                    className={`w-4 h-4 ${
+                                      request.status === "pending"
+                                        ? "text-blue-600"
+                                        : request.status === "approved"
+                                          ? "text-green-600"
+                                          : "text-red-600"
+                                    }`}
+                                  />
+                                  <span className="font-medium text-sm text-gray-900">
+                                    {request.teamName}
+                                  </span>
+                                  <span
+                                    className={`text-xs px-2 py-1 rounded-full font-medium ${
+                                      request.status === "pending"
+                                        ? "bg-blue-100 text-blue-800"
+                                        : request.status === "approved"
+                                          ? "bg-green-100 text-green-800"
+                                          : "bg-red-100 text-red-800"
+                                    }`}
+                                  >
+                                    {request.status === "pending"
+                                      ? "承認待ち"
+                                      : request.status === "approved"
+                                        ? "承認済み"
+                                        : "拒否済み"}
+                                  </span>
+                                </div>
+                                <div className="text-xs text-gray-600">
+                                  申請日:{" "}
+                                  {new Date(
+                                    request.createdAt * 1000,
+                                  ).toLocaleDateString("ja-JP", {
+                                    month: "short",
+                                    day: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      <div className="mt-4 space-y-2">
+                        <Button
+                          className="w-full"
+                          variant={isPremium ? "default" : "secondary"}
+                          onClick={() => router.push("/team/create")}
+                        >
+                          {isPremium
+                            ? "チーム作成"
+                            : "チーム作成（要アップグレード）"}
+                        </Button>
+                        <Button variant="outline" className="w-full">
+                          招待URLで参加
+                        </Button>
+                      </div>
+                    </div>
                   )}
                 </Card>
               </div>
@@ -702,9 +501,8 @@ export function TeamWelcome() {
                   <Button
                     size="lg"
                     className="px-8"
-                    disabled={!isPremium}
                     variant={isPremium ? "default" : "secondary"}
-                    onClick={() => isPremium && router.push("/team/create")}
+                    onClick={() => router.push("/team/create")}
                   >
                     {isPremium
                       ? "チーム作成"
@@ -778,6 +576,192 @@ export function TeamWelcome() {
           </div>
         )}
       </div>
+
+      {/* アクション選択モーダル */}
+      {showActionModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-semibold">チーム機能</h3>
+              <button
+                onClick={() => setShowActionModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {/* 新規作成 */}
+              <button
+                onClick={() => {
+                  setShowActionModal(false);
+                  if (isPremium) {
+                    router.push("/team/create");
+                  }
+                }}
+                disabled={!isPremium}
+                className={`w-full p-4 rounded-lg border-2 text-left transition-all ${
+                  isPremium
+                    ? "border-blue-200 hover:border-blue-300 hover:bg-blue-50"
+                    : "border-gray-200 bg-gray-50 cursor-not-allowed"
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div
+                    className={`p-2 rounded-lg ${isPremium ? "bg-blue-100" : "bg-gray-200"}`}
+                  >
+                    <svg
+                      className={`w-5 h-5 ${isPremium ? "text-blue-600" : "text-gray-400"}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                      />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h4
+                      className={`font-medium ${isPremium ? "text-gray-900" : "text-gray-400"}`}
+                    >
+                      新しいチームを作成
+                      {!isPremium && (
+                        <span className="ml-2 text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">
+                          プレミアム限定
+                        </span>
+                      )}
+                    </h4>
+                    <p
+                      className={`text-sm mt-1 ${isPremium ? "text-gray-600" : "text-gray-400"}`}
+                    >
+                      自分のチームを作成して管理者として運営
+                    </p>
+                  </div>
+                </div>
+              </button>
+
+              {/* 招待URLで参加 */}
+              <button
+                onClick={() => {
+                  setShowActionModal(false);
+                  setShowInviteUrlDialog(true);
+                }}
+                className="w-full p-4 rounded-lg border-2 border-green-200 hover:border-green-300 hover:bg-green-50 text-left transition-all"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-green-100">
+                    <svg
+                      className="w-5 h-5 text-green-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                      />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-gray-900">招待URLで参加</h4>
+                    <p className="text-sm text-gray-600 mt-1">
+                      既存のチームに招待URLで参加
+                    </p>
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 招待URL入力ダイアログ */}
+      {showInviteUrlDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">招待URLで参加</h3>
+              <button
+                onClick={() => {
+                  setShowInviteUrlDialog(false);
+                  setInviteUrl("");
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  招待URL
+                </label>
+                <input
+                  type="text"
+                  value={inviteUrl}
+                  onChange={(e) => setInviteUrl(e.target.value)}
+                  placeholder="https://example.com/team/invite/..."
+                  className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400"
+                />
+              </div>
+
+              <div className="flex gap-3 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowInviteUrlDialog(false);
+                    setInviteUrl("");
+                  }}
+                >
+                  キャンセル
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (inviteUrl) {
+                      window.location.href = inviteUrl;
+                    }
+                  }}
+                  disabled={!inviteUrl.trim()}
+                >
+                  参加する
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

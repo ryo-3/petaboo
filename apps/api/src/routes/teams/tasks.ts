@@ -63,7 +63,7 @@ const TeamTaskUpdateSchema = z.object({
 });
 
 // チームメンバー確認のヘルパー関数
-async function checkTeamMember(teamId: number, userId: string) {
+async function checkTeamMember(db: any, teamId: number, userId: string) {
   const member = await db
     .select()
     .from(teamMembers)
@@ -120,7 +120,7 @@ app.openapi(
     const { teamId } = c.req.valid("param");
 
     // チームメンバー確認
-    const member = await checkTeamMember(teamId, auth.userId);
+    const member = await checkTeamMember(db, teamId, auth.userId);
     if (!member) {
       return c.json({ error: "Not a team member" }, 403);
     }
@@ -226,7 +226,7 @@ app.openapi(
     const { teamId } = c.req.valid("param");
 
     // チームメンバー確認
-    const member = await checkTeamMember(teamId, auth.userId);
+    const member = await checkTeamMember(db, teamId, auth.userId);
     if (!member) {
       return c.json({ error: "Not a team member" }, 403);
     }
@@ -363,7 +363,7 @@ app.openapi(
     const { teamId, id } = c.req.valid("param");
 
     // チームメンバー確認
-    const member = await checkTeamMember(teamId, auth.userId);
+    const member = await checkTeamMember(db, teamId, auth.userId);
     if (!member) {
       return c.json({ error: "Not a team member" }, 403);
     }
@@ -452,7 +452,7 @@ app.openapi(
     const { teamId, id } = c.req.valid("param");
 
     // チームメンバー確認
-    const member = await checkTeamMember(teamId, auth.userId);
+    const member = await checkTeamMember(db, teamId, auth.userId);
     if (!member) {
       return c.json({ error: "Not a team member" }, 403);
     }
@@ -563,7 +563,7 @@ app.openapi(
     const { teamId } = c.req.valid("param");
 
     // チームメンバー確認
-    const member = await checkTeamMember(teamId, auth.userId);
+    const member = await checkTeamMember(db, teamId, auth.userId);
     if (!member) {
       return c.json({ error: "Not a team member" }, 403);
     }

@@ -68,7 +68,7 @@ export function createTeamBoardsAPI(app: AppType) {
 
     const { teamId } = c.req.param();
     const { status } = c.req.query();
-    const db: DatabaseType = c.env.db;
+    const db = c.get("db");
 
     try {
       // チームメンバーかどうか確認
@@ -172,7 +172,7 @@ export function createTeamBoardsAPI(app: AppType) {
 
     const { teamId } = c.req.param();
     const { name, slug, description, boardCategoryId } = await c.req.json();
-    const db: DatabaseType = c.env.db;
+    const db = c.get("db");
 
     try {
       // チームメンバーかどうか確認
@@ -261,7 +261,7 @@ export function createTeamBoardsAPI(app: AppType) {
     }
 
     const { teamId, slug } = c.req.param();
-    const db: DatabaseType = c.env.db;
+    const db = c.get("db");
 
     try {
       // チームメンバーかどうか確認
@@ -383,7 +383,7 @@ export function createTeamBoardsAPI(app: AppType) {
     }
 
     const { teamId, boardId } = c.req.param();
-    const db: DatabaseType = c.env.db;
+    const db = c.get("db");
 
     try {
       // チームメンバーかどうか確認

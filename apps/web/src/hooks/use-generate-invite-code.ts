@@ -41,10 +41,9 @@ export function useGetInviteUrl(customUrl: string) {
       return response.json();
     },
     enabled: !!customUrl,
-    staleTime: 0, // キャッシュしない
-    gcTime: 0, // メモリからすぐに削除
-    refetchOnMount: true, // マウント時に必ず再取得
-    refetchOnWindowFocus: true, // ウィンドウフォーカス時に再取得
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 }
 

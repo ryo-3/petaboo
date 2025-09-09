@@ -2,15 +2,11 @@
 
 // import type { Metadata } from "next";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Header from "@/components/layout/header";
 import Sidebar from "@/components/layout/sidebar";
 
-export default function TeamLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -249,5 +245,17 @@ export default function TeamLayout({
         <main className="flex-1 overflow-hidden">{children}</main>
       </div>
     </div>
+  );
+}
+
+export default function TeamLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <TeamLayoutContent>{children}</TeamLayoutContent>
+    </Suspense>
   );
 }

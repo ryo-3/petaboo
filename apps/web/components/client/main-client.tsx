@@ -237,8 +237,6 @@ function MainClient({
         showDeleted={showDeleted}
         handleBackToMemos={handleBackToMemos}
         handleSelectDeletedMemo={handleSelectDeletedMemo}
-        handleNewMemo={handleNewMemo}
-        handleNewTask={handleNewTask}
         handleSelectMemo={handleSelectMemo}
         handleSelectTask={handleSelectTask}
         handleEditTask={handleEditTask}
@@ -253,7 +251,6 @@ function MainClient({
         handleSettings={wrappedHandleSettings}
         handleDashboard={wrappedHandleDashboard}
         handleBoardDetail={handleBoardDetail}
-        handleNewBoard={handleNewBoard}
         handleTeamList={handleTeamList}
         screenMode={screenMode}
         initialBoardName={initialBoardName}
@@ -265,8 +262,6 @@ function MainClient({
       {/* デスクトップ版レイアウト */}
       <MainClientDesktop
         preferences={preferences}
-        handleNewMemo={handleNewMemo}
-        handleNewTask={handleNewTask}
         handleSelectMemo={handleSelectMemo}
         handleSelectTask={handleSelectTask}
         handleEditTask={handleEditTask}
@@ -282,7 +277,6 @@ function MainClient({
         handleSearch={wrappedHandleSearch}
         handleDashboard={wrappedHandleDashboard}
         handleBoardDetail={handleBoardDetail}
-        handleNewBoard={handleNewBoard}
         handleTeamList={handleTeamList}
         screenMode={screenMode}
         initialBoardName={initialBoardName}

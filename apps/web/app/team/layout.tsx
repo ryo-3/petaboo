@@ -194,7 +194,6 @@ export default function TeamLayout({
       <div className="flex flex-1 pt-16 overflow-hidden">
         <div className="w-16 border-r border-gray-200 overflow-visible">
           <Sidebar
-            onNewMemo={handleNewMemo}
             onSelectMemo={() => {}}
             onShowFullList={handleShowMemoList}
             onHome={handleHome}
@@ -202,7 +201,6 @@ export default function TeamLayout({
             isCompact={true}
             currentMode={mounted ? currentMode : "memo"}
             onModeChange={handleModeChange}
-            onNewTask={handleNewTask}
             onShowTaskList={handleShowTaskList}
             isTeamDetailPage={mounted ? isTeamDetailPage : false}
             isTeamListPage={mounted ? isTeamListPage : pathname === "/team"}

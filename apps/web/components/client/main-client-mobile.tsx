@@ -8,8 +8,6 @@ interface MainClientMobileProps {
   showDeleted: boolean;
   handleBackToMemos: () => void;
   handleSelectDeletedMemo: (memo: DeletedMemo | null) => void;
-  handleNewMemo: () => void;
-  handleNewTask: () => void;
   handleSelectMemo: (memo: Memo | null) => void;
   handleSelectTask: (task: Task | null) => void;
   handleEditTask: (task?: Task) => void;
@@ -24,7 +22,6 @@ interface MainClientMobileProps {
   handleSettings: () => void;
   handleDashboard: () => void;
   handleBoardDetail: () => void;
-  handleNewBoard: () => void;
   handleTeamList: () => void;
   screenMode: string;
   initialBoardName?: string;
@@ -37,8 +34,6 @@ export function MainClientMobile({
   showDeleted,
   handleBackToMemos,
   handleSelectDeletedMemo,
-  handleNewMemo,
-  handleNewTask,
   handleSelectMemo,
   handleSelectTask,
   handleEditTask,
@@ -53,7 +48,6 @@ export function MainClientMobile({
   handleSettings,
   handleDashboard,
   handleBoardDetail,
-  handleNewBoard,
   handleTeamList,
   screenMode,
   initialBoardName,
@@ -72,8 +66,6 @@ export function MainClientMobile({
       ) : (
         // 通常のサイドバー表示（フルサイズ）
         <Sidebar
-          onNewMemo={handleNewMemo}
-          onNewTask={handleNewTask}
           onSelectMemo={handleSelectMemo}
           onSelectTask={handleSelectTask}
           onEditTask={handleEditTask}
@@ -89,7 +81,6 @@ export function MainClientMobile({
           onSettings={handleSettings}
           onDashboard={handleDashboard}
           onBoardDetail={handleBoardDetail}
-          onNewBoard={handleNewBoard}
           isBoardActive={
             screenMode === "board" ||
             (screenMode === "create" && currentMode === "board")

@@ -10,8 +10,6 @@ import type { UserPreferences } from "@/src/hooks/use-user-preferences";
 interface MainClientDesktopProps {
   preferences?: UserPreferences | null;
   children: ReactNode;
-  handleNewMemo: () => void;
-  handleNewTask: () => void;
   handleSelectMemo: (memo: Memo | null) => void;
   handleSelectTask: (task: Task | null) => void;
   handleEditTask: (task?: Task) => void;
@@ -27,7 +25,6 @@ interface MainClientDesktopProps {
   handleSearch: () => void;
   handleDashboard: () => void;
   handleBoardDetail: () => void;
-  handleNewBoard: () => void;
   handleTeamList: () => void;
   screenMode: string;
   initialBoardName?: string;
@@ -39,8 +36,6 @@ interface MainClientDesktopProps {
 export function MainClientDesktop({
   preferences,
   children,
-  handleNewMemo,
-  handleNewTask,
   handleSelectMemo,
   handleSelectTask,
   handleEditTask,
@@ -56,7 +51,6 @@ export function MainClientDesktop({
   handleSearch,
   handleDashboard,
   handleBoardDetail,
-  handleNewBoard,
   handleTeamList,
   screenMode,
   initialBoardName,
@@ -75,8 +69,6 @@ export function MainClientDesktop({
         sidebarContent={
           // コンパクトサイドバー（アイコンナビ）
           <Sidebar
-            onNewMemo={handleNewMemo}
-            onNewTask={handleNewTask}
             onSelectMemo={handleSelectMemo}
             onSelectTask={handleSelectTask}
             onEditTask={handleEditTask}
@@ -94,7 +86,6 @@ export function MainClientDesktop({
             onSearch={handleSearch}
             onDashboard={handleDashboard}
             onBoardDetail={handleBoardDetail}
-            onNewBoard={handleNewBoard}
             isBoardActive={
               screenMode === "board" ||
               (screenMode === "create" && currentMode === "board")

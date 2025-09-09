@@ -38,8 +38,6 @@ export default function BoardSettingsScreen({
         hideHeader={preferences?.hideHeader}
         sidebarContent={
           <Sidebar
-            onNewMemo={emptyHandler}
-            onNewTask={emptyHandler}
             onSelectMemo={emptyHandler}
             onSelectTask={emptyHandler}
             onEditTask={emptyHandler}
@@ -56,7 +54,6 @@ export default function BoardSettingsScreen({
             onSettings={emptyHandler}
             onSearch={emptyHandler}
             onDashboard={emptyHandler}
-            onNewBoard={emptyHandler}
             isBoardActive={true}
             currentBoardName={initialBoardName}
           />

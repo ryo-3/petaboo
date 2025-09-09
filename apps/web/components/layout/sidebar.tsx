@@ -5,7 +5,6 @@ import DashboardIcon from "@/components/icons/dashboard-icon";
 import DashboardEditIcon from "@/components/icons/dashboard-edit-icon";
 import HomeIcon from "@/components/icons/home-icon";
 import MemoIcon from "@/components/icons/memo-icon";
-import PlusIcon from "@/components/icons/plus-icon";
 import SearchIcon from "@/components/icons/search-icon";
 import SettingsIcon from "@/components/icons/settings-icon";
 import TaskIcon from "@/components/icons/task-icon";
@@ -14,12 +13,10 @@ import MemoList from "@/components/mobile/memo-list";
 import TaskList from "@/components/mobile/task-list";
 import SwitchTabs from "@/components/ui/base/switch-tabs";
 import Tooltip from "@/components/ui/base/tooltip";
-import AddItemButton from "@/components/ui/buttons/add-item-button";
 import type { Memo } from "@/src/types/memo";
 import type { Task } from "@/src/types/task";
 
 interface SidebarProps {
-  onNewMemo: () => void;
   onSelectMemo: (memo: Memo) => void;
   onSelectTask?: (task: Task) => void;
   onEditTask?: (task: Task) => void;
@@ -33,12 +30,10 @@ interface SidebarProps {
   isCompact?: boolean;
   currentMode?: "memo" | "task" | "board";
   onModeChange?: (mode: "memo" | "task" | "board") => void;
-  onNewTask?: () => void;
   onSettings?: () => void;
   onSearch?: () => void;
   onDashboard?: () => void;
   onBoardDetail?: () => void;
-  onNewBoard?: () => void;
   isBoardActive?: boolean;
   currentBoardName?: string;
   showingBoardDetail?: boolean;
@@ -50,7 +45,6 @@ interface SidebarProps {
 }
 
 function Sidebar({
-  onNewMemo,
   onSelectMemo,
   onSelectTask,
   onEditTask,
@@ -64,12 +58,10 @@ function Sidebar({
   isCompact = false,
   currentMode = "memo",
   onModeChange,
-  onNewTask,
   onSettings,
   onSearch,
   onDashboard,
   onBoardDetail,
-  onNewBoard,
   isBoardActive = false,
   currentBoardName,
   showingBoardDetail = false,
@@ -227,24 +219,6 @@ function Sidebar({
               </button>
             </Tooltip>
           )}
-          <AddItemButton
-            itemType={isBoardActive ? "board" : currentMode}
-            onClick={
-              isBoardActive
-                ? onNewBoard!
-                : currentMode === "memo"
-                  ? onNewMemo
-                  : onNewTask!
-            }
-            position="right"
-            isGray={
-              isHomePage ||
-              isTeamOverview ||
-              isNormalTeamPage ||
-              screenMode === "search" ||
-              screenMode === "settings"
-            }
-          />
 
           {/* 検索ボタン（コンパクトモード） */}
           <Tooltip text="詳細検索" position="right">
@@ -421,38 +395,6 @@ function Sidebar({
             )}
             <span className="text-gray-600 font-medium text-sm">
               {currentMode === "memo" ? "メモ" : "タスク"}一覧
-            </span>
-          </button>
-          <button
-            onClick={
-              isBoardActive
-                ? onNewBoard!
-                : currentMode === "memo"
-                  ? onNewMemo
-                  : onNewTask
-            }
-            className={`flex-1 text-center rounded-lg py-2 transition-colors flex items-center justify-center gap-1 ${
-              isTeamListPage || isTeamDetailPage
-                ? "bg-gray-100 hover:bg-gray-200"
-                : isBoardActive
-                  ? "bg-light-Blue hover:bg-light-Blue/85"
-                  : currentMode === "memo"
-                    ? "bg-Green hover:bg-Green/85"
-                    : "bg-DeepBlue hover:bg-DeepBlue/85"
-            }`}
-          >
-            <PlusIcon
-              className={`w-4 h-4 ${isTeamListPage || isTeamDetailPage ? "text-gray-600" : "text-gray-100"}`}
-            />
-            <span
-              className={`font-medium text-sm ${isTeamListPage || isTeamDetailPage ? "text-gray-600" : "text-gray-100"}`}
-            >
-              新規
-              {isBoardActive
-                ? "ボード"
-                : currentMode === "memo"
-                  ? "メモ"
-                  : "タスク"}
             </span>
           </button>
         </div>

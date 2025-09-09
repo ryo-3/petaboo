@@ -57,14 +57,6 @@ const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(
     // 完全削除フック
     const permanentDeleteBoard = usePermanentDeleteBoard();
 
-    // ページタイトル設定（デフォルト）
-    useEffect(() => {
-      document.title = "ボード一覧 - メモ帳アプリ";
-      return () => {
-        document.title = "メモ帳アプリ";
-      };
-    }, []);
-
     const handleCreateNew = () => {
       setShowCreateForm(true);
     };

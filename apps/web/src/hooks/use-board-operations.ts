@@ -69,9 +69,6 @@ interface UseBoardOperationsReturn {
   handleAddMemoToBoard: (memo: Memo) => Promise<void>;
   handleAddTaskToBoard: (task: Task) => Promise<void>;
   refetchDeletedItems: () => Promise<unknown>;
-
-  // エフェクト
-  pageTitle: string;
 }
 
 /**
@@ -130,15 +127,6 @@ export function useBoardOperations({
         ?.map((item: BoardItemWithContent) => item.content as Task) || [],
     [boardWithItems?.items],
   );
-
-  // ページタイトル設定
-  const pageTitle = `${boardName} - ボード`;
-  useEffect(() => {
-    document.title = pageTitle;
-    return () => {
-      document.title = "メモ帳アプリ";
-    };
-  }, [pageTitle]);
 
   // エクスポート処理
   const handleExport = useCallback(() => {
@@ -441,8 +429,5 @@ export function useBoardOperations({
     handleAddMemoToBoard,
     handleAddTaskToBoard,
     refetchDeletedItems,
-
-    // エフェクト
-    pageTitle,
   };
 }

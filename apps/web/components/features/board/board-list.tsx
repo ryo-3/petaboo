@@ -51,11 +51,6 @@ export default function BoardList({
     ? pathname.split("/")[2]
     : null;
 
-  // ページタイトル設定
-  useEffect(() => {
-    document.title = "ボード一覧 - メモ帳アプリ";
-  }, []);
-
   const handleCreateBoard = async (data: CreateBoardData) => {
     try {
       if (teamMode && teamId) {

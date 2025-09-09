@@ -54,7 +54,6 @@ export default function BoardSettingsScreen({
             onSettings={emptyHandler}
             onSearch={emptyHandler}
             onDashboard={emptyHandler}
-            isBoardActive={true}
             currentBoardName={initialBoardName}
           />
         }

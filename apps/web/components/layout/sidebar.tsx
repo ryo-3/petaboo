@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import DashboardIcon from "@/components/icons/dashboard-icon";
 import DashboardEditIcon from "@/components/icons/dashboard-edit-icon";
@@ -34,7 +35,6 @@ interface SidebarProps {
   onSearch?: () => void;
   onDashboard?: () => void;
   onBoardDetail?: () => void;
-  isBoardActive?: boolean;
   currentBoardName?: string;
   showingBoardDetail?: boolean;
   onTeamList?: () => void;
@@ -62,7 +62,6 @@ function Sidebar({
   onSearch,
   onDashboard,
   onBoardDetail,
-  isBoardActive = false,
   currentBoardName,
   showingBoardDetail = false,
   onTeamList,
@@ -74,19 +73,73 @@ function Sidebar({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // URLベースでページ種別を判定
-  const isHomePage = pathname === "/";
-  const isNormalTeamPage = pathname === "/team";
-  const isTeamDetailPageUrl =
-    pathname.startsWith("/team/") && pathname !== "/team";
-  const currentTab = searchParams.get("tab");
+  // URLベースでページ種別を判定（メモ化で最適化）
+  const pageState = React.useMemo(() => {
+    const isHomePage = pathname === "/";
+    const isNormalTeamPage = pathname === "/team";
+    const isTeamDetailPageUrl =
+      pathname.startsWith("/team/") && pathname !== "/team";
+    const currentTab = searchParams.get("tab");
 
-  // チーム詳細ページの場合のタブ判定
-  const isTeamOverview =
-    isTeamDetailPageUrl && (!currentTab || currentTab === "overview");
-  const isTeamMemos = isTeamDetailPageUrl && currentTab === "memos";
-  const isTeamTasks = isTeamDetailPageUrl && currentTab === "tasks";
-  const isTeamBoards = isTeamDetailPageUrl && currentTab === "boards";
+    return {
+      isHomePage,
+      isNormalTeamPage,
+      isTeamDetailPageUrl,
+      currentTab,
+      // チーム詳細ページの場合のタブ判定
+      isTeamOverview:
+        isTeamDetailPageUrl && (!currentTab || currentTab === "overview"),
+      isTeamMemos: isTeamDetailPageUrl && currentTab === "memos",
+      isTeamTasks: isTeamDetailPageUrl && currentTab === "tasks",
+      isTeamBoards: isTeamDetailPageUrl && currentTab === "boards",
+    };
+  }, [pathname, searchParams]);
+
+  const {
+    isHomePage,
+    isNormalTeamPage,
+    isTeamDetailPageUrl,
+    isTeamOverview,
+    isTeamMemos,
+    isTeamTasks,
+    isTeamBoards,
+  } = pageState;
+
+  // アイコンの有効化状態をメモ化
+  const iconStates = React.useMemo(
+    () => ({
+      home: (screenMode === "home" && !showTeamList) || isTeamOverview,
+      memo: screenMode === "memo" || isTeamMemos,
+      task: screenMode === "task" || isTeamTasks,
+      board: screenMode === "board" || isTeamBoards,
+      boardDetail:
+        currentMode === "board" &&
+        showingBoardDetail &&
+        screenMode !== "home" &&
+        screenMode !== "search" &&
+        screenMode !== "settings" &&
+        screenMode !== "loading" &&
+        !isTeamDetailPage,
+      search: screenMode === "search",
+      settings: screenMode === "settings",
+      team: isTeamListPage || showTeamList,
+    }),
+    [
+      screenMode,
+      showTeamList,
+      isTeamOverview,
+      currentMode,
+      isTeamDetailPageUrl,
+      isNormalTeamPage,
+      isTeamMemos,
+      isTeamTasks,
+      isTeamBoards,
+      showingBoardDetail,
+      isTeamDetailPage,
+      isTeamListPage,
+    ],
+  );
+
   const modeTabs = [
     {
       id: "memo",
@@ -109,16 +162,14 @@ function Sidebar({
             <button
               onClick={onHome}
               className={`p-2 rounded-lg transition-colors ${
-                (screenMode === "home" && !showTeamList) || isTeamOverview
+                iconStates.home
                   ? "bg-slate-500 text-white"
                   : "bg-gray-200 hover:bg-gray-300 text-gray-600"
               }`}
             >
               <HomeIcon
                 className={`w-5 h-5 ${
-                  (screenMode === "home" && !showTeamList) || isTeamOverview
-                    ? "text-white"
-                    : "text-gray-600"
+                  iconStates.home ? "text-white" : "text-gray-600"
                 }`}
               />
             </button>
@@ -131,11 +182,7 @@ function Sidebar({
                 onShowFullList();
               }}
               className={`p-2 rounded-lg transition-colors ${
-                (currentMode === "memo" &&
-                  screenMode === "memo" &&
-                  !isTeamDetailPageUrl &&
-                  !isNormalTeamPage) ||
-                isTeamMemos
+                iconStates.memo
                   ? "bg-Green text-white"
                   : "bg-gray-200 hover:bg-gray-300 text-gray-600"
               }`}
@@ -150,11 +197,7 @@ function Sidebar({
                 onShowTaskList?.();
               }}
               className={`p-2 rounded-lg transition-colors ${
-                (currentMode === "task" &&
-                  screenMode === "task" &&
-                  !isTeamDetailPageUrl &&
-                  !isNormalTeamPage) ||
-                isTeamTasks
+                iconStates.task
                   ? "bg-DeepBlue text-white"
                   : "bg-gray-200 hover:bg-gray-300 text-gray-600"
               }`}
@@ -181,17 +224,13 @@ function Sidebar({
                 }
               }}
               className={`p-2 rounded-lg transition-colors ${
-                (currentMode === "board" &&
-                  screenMode === "board" &&
-                  !isTeamDetailPageUrl &&
-                  !isNormalTeamPage) ||
-                isTeamBoards
+                iconStates.board
                   ? "bg-light-Blue text-white"
                   : "bg-gray-200 hover:bg-gray-300 text-gray-600"
               }`}
             >
               <DashboardIcon
-                className={`w-5 h-5 ${currentMode === "board" && !showingBoardDetail && screenMode !== "home" && screenMode !== "search" && screenMode !== "settings" ? "" : "text-gray-600"}`}
+                className={`w-5 h-5 ${iconStates.board ? "" : "text-gray-600"}`}
               />
             </button>
           </Tooltip>
@@ -202,19 +241,13 @@ function Sidebar({
               <button
                 onClick={onBoardDetail}
                 className={`p-2 rounded-lg transition-colors ${
-                  currentMode === "board" &&
-                  showingBoardDetail &&
-                  screenMode !== "home" &&
-                  screenMode !== "search" &&
-                  screenMode !== "settings" &&
-                  screenMode !== "loading" &&
-                  !isTeamDetailPage
+                  iconStates.boardDetail
                     ? "bg-light-Blue text-white"
                     : "bg-gray-200 hover:bg-gray-300 text-gray-600"
                 }`}
               >
                 <DashboardEditIcon
-                  className={`w-5 h-5 ${currentMode === "board" && showingBoardDetail && screenMode !== "home" && screenMode !== "search" && screenMode !== "settings" ? "" : "text-gray-600"}`}
+                  className={`w-5 h-5 ${iconStates.boardDetail ? "" : "text-gray-600"}`}
                 />
               </button>
             </Tooltip>
@@ -227,13 +260,13 @@ function Sidebar({
                 onSearch?.();
               }}
               className={`p-2 rounded-lg transition-colors ${
-                screenMode === "search"
+                iconStates.search
                   ? "bg-slate-500 text-white"
                   : "bg-gray-200 hover:bg-gray-300 text-gray-600"
               }`}
             >
               <SearchIcon
-                className={`w-5 h-5 ${screenMode === "search" ? "text-white" : ""}`}
+                className={`w-5 h-5 ${iconStates.search ? "text-white" : ""}`}
               />
             </button>
           </Tooltip>
@@ -242,7 +275,7 @@ function Sidebar({
             <button
               onClick={onTeamList || (() => (window.location.href = "/team"))}
               className={`p-2 rounded-lg transition-colors ${
-                isTeamListPage || showTeamList
+                iconStates.team
                   ? "bg-slate-500 text-white"
                   : "bg-gray-200 hover:bg-gray-300 text-gray-600"
               }`}
@@ -257,13 +290,13 @@ function Sidebar({
                 onSettings?.();
               }}
               className={`p-2 rounded-lg transition-colors ${
-                screenMode === "settings"
+                iconStates.settings
                   ? "bg-slate-500 text-white"
                   : "bg-gray-200 hover:bg-gray-300 text-gray-600"
               }`}
             >
               <SettingsIcon
-                className={`w-5 h-5 ${screenMode === "settings" ? "text-white" : ""}`}
+                className={`w-5 h-5 ${iconStates.settings ? "text-white" : ""}`}
               />
             </button>
           </Tooltip>
@@ -282,14 +315,14 @@ function Sidebar({
             <button
               onClick={onHome}
               className={`p-2 rounded-lg transition-colors ${
-                isHomePage || isTeamOverview
+                iconStates.home
                   ? "bg-slate-500 text-white"
                   : "bg-gray-200 hover:bg-gray-300 text-gray-600"
               }`}
             >
               <HomeIcon
                 className={`w-5 h-5 ${
-                  isHomePage || isTeamOverview ? "text-white" : "text-gray-600"
+                  iconStates.home ? "text-white" : "text-gray-600"
                 }`}
               />
             </button>
@@ -311,13 +344,13 @@ function Sidebar({
                 }
               }}
               className={`p-2 rounded-lg transition-colors ${
-                isBoardActive && !showingBoardDetail && !isTeamListPage
+                iconStates.board
                   ? "bg-light-Blue text-white"
                   : "bg-gray-200 hover:bg-gray-300 text-gray-600"
               }`}
             >
               <DashboardIcon
-                className={`w-5 h-5 ${isBoardActive && !showingBoardDetail ? "" : "text-gray-600"}`}
+                className={`w-5 h-5 ${iconStates.board ? "" : "text-gray-600"}`}
               />
             </button>
             {/* ボード詳細ボタン (選択中のボードがある場合のみ表示) */}
@@ -325,13 +358,13 @@ function Sidebar({
               <button
                 onClick={onBoardDetail}
                 className={`p-2 rounded-lg transition-colors ${
-                  isBoardActive && showingBoardDetail && !isTeamListPage
+                  iconStates.boardDetail
                     ? "bg-light-Blue text-white"
                     : "bg-gray-200 hover:bg-gray-300 text-gray-600"
                 }`}
               >
                 <DashboardEditIcon
-                  className={`w-5 h-5 ${isBoardActive && showingBoardDetail ? "" : "text-gray-600"}`}
+                  className={`w-5 h-5 ${iconStates.boardDetail ? "" : "text-gray-600"}`}
                 />
               </button>
             )}
@@ -340,7 +373,7 @@ function Sidebar({
               <button
                 onClick={onTeamList || (() => (window.location.href = "/team"))}
                 className={`w-full p-2 rounded-lg transition-colors flex items-center justify-center gap-2 ${
-                  isTeamListPage || showTeamList
+                  iconStates.team
                     ? "bg-slate-500 text-white"
                     : "bg-gray-100 hover:bg-gray-200 text-gray-600"
                 }`}
@@ -354,13 +387,13 @@ function Sidebar({
               <button
                 onClick={() => onSettings?.()}
                 className={`w-full p-2 rounded-lg transition-colors flex items-center justify-center gap-2 ${
-                  screenMode === "settings"
+                  iconStates.settings
                     ? "bg-slate-500 text-white"
                     : "bg-gray-100 hover:bg-gray-200 text-gray-600"
                 }`}
               >
                 <SettingsIcon
-                  className={`w-4 h-4 ${screenMode === "settings" ? "text-white" : ""}`}
+                  className={`w-4 h-4 ${iconStates.settings ? "text-white" : ""}`}
                 />
               </button>
             </div>

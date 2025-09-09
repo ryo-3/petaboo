@@ -154,7 +154,9 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       // APIからタスクを取得する実装は各画面コンポーネント側で行う
       // ここでは状態の同期のみ
     }
-  }, [searchParams]);
+    // searchParams以外の依存を追加しない（無限ループを防ぐ）
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams.toString()]);
 
   // タブを変更する関数（URLも更新）
   const handleTabChange = useCallback(

@@ -86,10 +86,6 @@ export function MainClientDesktop({
             onSearch={handleSearch}
             onDashboard={handleDashboard}
             onBoardDetail={handleBoardDetail}
-            isBoardActive={
-              screenMode === "board" ||
-              (screenMode === "create" && currentMode === "board")
-            }
             currentBoardName={initialBoardName || currentBoard?.name}
             showingBoardDetail={showingBoardDetail}
             onTeamList={handleTeamList}

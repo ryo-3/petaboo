@@ -2,6 +2,16 @@ import { createRoute, z } from "@hono/zod-openapi";
 import { getAuth } from "@hono/clerk-auth";
 import { eq, and, sql, desc, ne } from "drizzle-orm";
 import { teams, teamMembers, teamInvitations, users } from "../../db";
+import { teamMemos, teamDeletedMemos } from "../../db/schema/team/memos";
+import { teamTasks, teamDeletedTasks } from "../../db/schema/team/tasks";
+import {
+  teamBoards,
+  teamBoardItems,
+  teamDeletedBoards,
+} from "../../db/schema/team/boards";
+import { teamCategories } from "../../db/schema/team/categories";
+import { teamBoardCategories } from "../../db/schema/team/board-categories";
+import { teamTags, teamTaggings } from "../../db/schema/team/tags";
 import { count } from "drizzle-orm";
 import type { DatabaseType } from "../../types/common";
 
@@ -2252,5 +2262,246 @@ export async function getMyJoinRequests(c: any) {
   } catch (error) {
     console.error("自分の申請状況取得エラー:", error);
     return c.json({ message: "申請状況の取得に失敗しました" }, 500);
+  }
+}
+
+// チーム更新のスキーマ
+const updateTeamSchema = z.object({
+  name: z
+    .string()
+    .min(1, "チーム名は必須です")
+    .max(100, "チーム名は100文字以内にしてください"),
+  description: z
+    .string()
+    .max(500, "説明は500文字以内にしてください")
+    .optional(),
+});
+
+// チーム更新ルート定義
+export const updateTeamRoute = createRoute({
+  method: "patch",
+  path: "/{customUrl}",
+  request: {
+    params: z.object({
+      customUrl: z.string(),
+    }),
+    body: {
+      content: {
+        "application/json": {
+          schema: updateTeamSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "チーム更新成功",
+      content: {
+        "application/json": {
+          schema: z.object({
+            id: z.number(),
+            name: z.string(),
+            description: z.string().nullable(),
+            customUrl: z.string(),
+            updatedAt: z.number(),
+          }),
+        },
+      },
+    },
+    403: {
+      description: "権限がありません",
+    },
+    404: {
+      description: "チームが見つかりません",
+    },
+  },
+  tags: ["Teams"],
+});
+
+// チーム更新ハンドラー
+export async function updateTeam(c: any) {
+  const auth = getAuth(c);
+  const db = c.get("db") as DatabaseType;
+  const { customUrl } = c.req.param();
+  const body = await c.req.json();
+
+  if (!auth?.userId) {
+    return c.json({ message: "認証が必要です" }, 401);
+  }
+
+  try {
+    // チームの存在確認と権限チェック
+    const team = await db
+      .select()
+      .from(teams)
+      .where(eq(teams.customUrl, customUrl))
+      .get();
+
+    if (!team) {
+      return c.json({ message: "チームが見つかりません" }, 404);
+    }
+
+    // 管理者権限の確認
+    const member = await db
+      .select()
+      .from(teamMembers)
+      .where(
+        and(
+          eq(teamMembers.teamId, team.id),
+          eq(teamMembers.userId, auth.userId),
+          eq(teamMembers.role, "admin"),
+        ),
+      )
+      .get();
+
+    if (!member) {
+      return c.json({ message: "チーム設定を変更する権限がありません" }, 403);
+    }
+
+    // チーム情報を更新
+    const now = Date.now();
+    const updatedTeam = await db
+      .update(teams)
+      .set({
+        name: body.name,
+        description: body.description || null,
+        updatedAt: now,
+      })
+      .where(eq(teams.id, team.id))
+      .returning()
+      .get();
+
+    return c.json({
+      id: updatedTeam.id,
+      name: updatedTeam.name,
+      description: updatedTeam.description,
+      customUrl: updatedTeam.customUrl,
+      updatedAt: updatedTeam.updatedAt,
+    });
+  } catch (error) {
+    console.error("チーム更新エラー:", error);
+    return c.json({ message: "チームの更新に失敗しました" }, 500);
+  }
+}
+
+// チーム削除ルート定義
+export const deleteTeamRoute = createRoute({
+  method: "delete",
+  path: "/{customUrl}",
+  request: {
+    params: z.object({
+      customUrl: z.string(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "チーム削除成功",
+      content: {
+        "application/json": {
+          schema: z.object({
+            message: z.string(),
+          }),
+        },
+      },
+    },
+    403: {
+      description: "権限がありません",
+    },
+    404: {
+      description: "チームが見つかりません",
+    },
+  },
+  tags: ["Teams"],
+});
+
+// チーム削除ハンドラー
+export async function deleteTeam(c: any) {
+  const auth = getAuth(c);
+  const db = c.get("db") as DatabaseType;
+  const { customUrl } = c.req.param();
+
+  if (!auth?.userId) {
+    return c.json({ message: "認証が必要です" }, 401);
+  }
+
+  try {
+    // チームの存在確認
+    const team = await db
+      .select()
+      .from(teams)
+      .where(eq(teams.customUrl, customUrl))
+      .get();
+
+    if (!team) {
+      return c.json({ message: "チームが見つかりません" }, 404);
+    }
+
+    // 管理者権限の確認（オーナーのみ削除可能）
+    const member = await db
+      .select()
+      .from(teamMembers)
+      .where(
+        and(
+          eq(teamMembers.teamId, team.id),
+          eq(teamMembers.userId, auth.userId),
+          eq(teamMembers.role, "admin"),
+        ),
+      )
+      .get();
+
+    if (!member) {
+      return c.json({ message: "チームを削除する権限がありません" }, 403);
+    }
+
+    // 関連するすべてのデータを削除
+    // 1. チームタグ関連
+    await db.delete(teamTaggings).where(eq(teamTaggings.teamId, team.id)).run();
+    await db.delete(teamTags).where(eq(teamTags.teamId, team.id)).run();
+
+    // 2. チームボード関連
+    await db
+      .delete(teamBoardItems)
+      .where(
+        sql`board_id IN (SELECT id FROM team_boards WHERE team_id = ${team.id})`,
+      )
+      .run();
+    await db
+      .delete(teamBoardCategories)
+      .where(eq(teamBoardCategories.teamId, team.id))
+      .run();
+    await db.delete(teamBoards).where(eq(teamBoards.teamId, team.id)).run();
+    await db
+      .delete(teamDeletedBoards)
+      .where(eq(teamDeletedBoards.teamId, team.id))
+      .run();
+
+    // 3. チームコンテンツ関連
+    await db.delete(teamMemos).where(eq(teamMemos.teamId, team.id)).run();
+    await db
+      .delete(teamDeletedMemos)
+      .where(eq(teamDeletedMemos.teamId, team.id))
+      .run();
+    await db.delete(teamTasks).where(eq(teamTasks.teamId, team.id)).run();
+    await db
+      .delete(teamDeletedTasks)
+      .where(eq(teamDeletedTasks.teamId, team.id))
+      .run();
+    await db
+      .delete(teamCategories)
+      .where(eq(teamCategories.teamId, team.id))
+      .run();
+
+    // 4. チーム基本情報
+    await db.delete(teamMembers).where(eq(teamMembers.teamId, team.id)).run();
+    await db
+      .delete(teamInvitations)
+      .where(eq(teamInvitations.teamId, team.id))
+      .run();
+    await db.delete(teams).where(eq(teams.id, team.id)).run();
+
+    return c.json({ message: "チームを削除しました" });
+  } catch (error) {
+    console.error("チーム削除エラー:", error);
+    return c.json({ message: "チームの削除に失敗しました" }, 500);
   }
 }

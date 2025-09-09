@@ -4,7 +4,12 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CopyIcon, RefreshCcwIcon, TrashIcon } from "lucide-react";
+import {
+  CopyIcon,
+  RefreshCcwIcon,
+  TrashIcon,
+  Settings as SettingsIcon,
+} from "lucide-react";
 import { BackButton } from "@/components/ui/buttons/back-button";
 import { useTeamDetail } from "@/src/hooks/use-team-detail";
 import {
@@ -21,6 +26,7 @@ import BoardScreen from "@/components/screens/board-screen";
 import SettingsScreen from "@/components/screens/settings-screen";
 import { DisplayNameModal } from "@/components/modals/display-name-modal";
 import { TeamWelcome } from "@/components/features/team/team-welcome";
+import { TeamSettings } from "@/components/features/team/team-settings";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
 
@@ -116,7 +122,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       tab === "tasks" ||
       tab === "boards" ||
       tab === "team-list" ||
-      tab === "settings"
+      tab === "settings" ||
+      tab === "team-settings"
     ) {
       return tab;
     }
@@ -133,7 +140,13 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
   // タブ管理（URLと同期）
   const [activeTab, setActiveTab] = useState<
-    "overview" | "memos" | "tasks" | "boards" | "team-list" | "settings"
+    | "overview"
+    | "memos"
+    | "tasks"
+    | "boards"
+    | "team-list"
+    | "settings"
+    | "team-settings"
   >(getTabFromURL());
 
   // URLのパラメータが変更された時にタブとアイテムを更新
@@ -163,7 +176,14 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   // タブを変更する関数（URLも更新）
   const handleTabChange = useCallback(
     (
-      tab: "overview" | "memos" | "tasks" | "boards" | "team-list" | "settings",
+      tab:
+        | "overview"
+        | "memos"
+        | "tasks"
+        | "boards"
+        | "team-list"
+        | "settings"
+        | "team-settings",
     ) => {
       setActiveTab(tab);
 
@@ -346,15 +366,29 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         {/* ヘッダー */}
         {activeTab === "overview" && (
           <div className="mb-4 flex-shrink-0">
-            <div className="flex items-center gap-4">
-              {showInvitePanel && (
-                <BackButton onClick={() => setShowInvitePanel(false)} />
-              )}
-              <h1 className="text-[22px] font-bold text-gray-800">
-                {showInvitePanel ? "チーム招待" : team.name}
-              </h1>
-              {showInvitePanel && (
-                <span className="text-gray-600 font-medium">{team.name}</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                {showInvitePanel && (
+                  <BackButton onClick={() => setShowInvitePanel(false)} />
+                )}
+                <h1 className="text-[22px] font-bold text-gray-800">
+                  {showInvitePanel ? "チーム招待" : team.name}
+                </h1>
+                {showInvitePanel && (
+                  <span className="text-gray-600 font-medium">{team.name}</span>
+                )}
+              </div>
+              {/* チーム設定ボタン（管理者のみ、招待パネル非表示時のみ） */}
+              {!showInvitePanel && team.role === "admin" && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleTabChange("team-settings")}
+                  className="flex items-center gap-2"
+                >
+                  <SettingsIcon className="w-4 h-4" />
+                  チーム設定
+                </Button>
               )}
             </div>
           </div>
@@ -814,6 +848,13 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
           {activeTab === "settings" && (
             <div className="h-full -mt-4 -ml-5 -mr-5">
               <SettingsScreen />
+            </div>
+          )}
+
+          {/* チーム設定タブ */}
+          {activeTab === "team-settings" && (
+            <div className="h-full -mt-4 -ml-5 -mr-5">
+              <TeamSettings customUrl={customUrl} />
             </div>
           )}
         </div>

@@ -89,6 +89,7 @@ function MainClient({
 
   // UI状態管理
   const [showDeleted, setShowDeleted] = useState(false); // モバイル版削除済み表示フラグ
+  const [showTeamList, setShowTeamList] = useState(false); // チーム一覧表示フラグ
   const [showingBoardDetail, setShowingBoardDetail] = useState(() => {
     // サーバーサイドから明示的に指示されている場合は詳細表示
     // または、ボード情報が渡されている場合、URLがボード詳細の場合は詳細表示
@@ -139,6 +140,45 @@ function MainClient({
   // エラー管理（将来的にAPI同期エラー表示用）
   const errors: string[] = [];
   const clearErrors = () => {};
+
+  // チーム一覧ハンドラー
+  const handleTeamList = () => {
+    if (showTeamList) {
+      // チーム一覧を閉じる場合は、元のホームに戻る
+      setShowTeamList(false);
+      setScreenMode("home");
+    } else {
+      // チーム一覧を開く場合は、他のモードをリセット
+      setShowTeamList(true);
+      setScreenMode("home"); // チーム一覧もホーム画面の一部として扱う
+    }
+  };
+
+  // 他のハンドラーをラップしてチーム表示をリセット
+  const wrappedHandleHome = () => {
+    setShowTeamList(false);
+    handleHome();
+  };
+
+  const wrappedHandleShowList = (mode: "memo" | "task" | "board") => {
+    setShowTeamList(false);
+    handleShowList(mode);
+  };
+
+  const wrappedHandleDashboard = () => {
+    setShowTeamList(false);
+    handleDashboard();
+  };
+
+  const wrappedHandleSettings = () => {
+    setShowTeamList(false);
+    handleSettings();
+  };
+
+  const wrappedHandleSearch = () => {
+    setShowTeamList(false);
+    handleSearch();
+  };
 
   // ハンドラー関数群をカスタムフックから取得
   const {
@@ -202,22 +242,24 @@ function MainClient({
         handleSelectMemo={handleSelectMemo}
         handleSelectTask={handleSelectTask}
         handleEditTask={handleEditTask}
-        handleShowList={handleShowList}
-        handleHome={handleHome}
+        handleShowList={wrappedHandleShowList}
+        handleHome={wrappedHandleHome}
         handleEditMemo={handleEditMemo}
         handleDeleteMemo={handleDeleteMemo}
         selectedMemo={selectedMemo}
         selectedTask={selectedTask}
         currentMode={currentMode}
         setCurrentMode={setCurrentMode}
-        handleSettings={handleSettings}
-        handleDashboard={handleDashboard}
+        handleSettings={wrappedHandleSettings}
+        handleDashboard={wrappedHandleDashboard}
         handleBoardDetail={handleBoardDetail}
         handleNewBoard={handleNewBoard}
+        handleTeamList={handleTeamList}
         screenMode={screenMode}
         initialBoardName={initialBoardName}
         currentBoard={currentBoard}
         showingBoardDetail={showingBoardDetail}
+        showTeamList={showTeamList}
       />
 
       {/* デスクトップ版レイアウト */}
@@ -228,23 +270,25 @@ function MainClient({
         handleSelectMemo={handleSelectMemo}
         handleSelectTask={handleSelectTask}
         handleEditTask={handleEditTask}
-        handleShowList={handleShowList}
-        handleHome={handleHome}
+        handleShowList={wrappedHandleShowList}
+        handleHome={wrappedHandleHome}
         handleEditMemo={handleEditMemo}
         handleDeleteMemo={handleDeleteMemo}
         selectedMemo={selectedMemo}
         selectedTask={selectedTask}
         currentMode={currentMode}
         setCurrentMode={setCurrentMode}
-        handleSettings={handleSettings}
-        handleSearch={handleSearch}
-        handleDashboard={handleDashboard}
+        handleSettings={wrappedHandleSettings}
+        handleSearch={wrappedHandleSearch}
+        handleDashboard={wrappedHandleDashboard}
         handleBoardDetail={handleBoardDetail}
         handleNewBoard={handleNewBoard}
+        handleTeamList={handleTeamList}
         screenMode={screenMode}
         initialBoardName={initialBoardName}
         currentBoard={currentBoard}
         showingBoardDetail={showingBoardDetail}
+        showTeamList={showTeamList}
       >
         <MainContentArea
           screenMode={screenMode}
@@ -279,6 +323,7 @@ function MainClient({
           handleBoardClearSelection={handleBoardClearSelection}
           teamMode={teamMode}
           teamId={teamId}
+          showTeamList={showTeamList}
         />
       </MainClientDesktop>
     </main>

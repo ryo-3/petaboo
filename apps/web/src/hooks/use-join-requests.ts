@@ -36,6 +36,10 @@ export function useJoinRequests(customUrl: string | undefined) {
       );
 
       if (!response.ok) {
+        // 403の場合は権限がないので、空の配列を返す（エラーにしない）
+        if (response.status === 403) {
+          return { requests: [] };
+        }
         const error = await response.json();
         throw new Error(error.message || "承認待ちリストの取得に失敗しました");
       }

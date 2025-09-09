@@ -23,6 +23,11 @@ export function useGetInviteUrl(customUrl: string) {
   return useQuery({
     queryKey: ["inviteUrl", customUrl],
     queryFn: async (): Promise<InviteUrl | null> => {
+      // customUrlが無効な値の場合はnullを返す
+      if (!customUrl || customUrl === "undefined" || customUrl === "null") {
+        return null;
+      }
+
       const token = await getToken();
 
       const response = await fetch(`${API_URL}/teams/${customUrl}/invite-url`, {
@@ -35,12 +40,20 @@ export function useGetInviteUrl(customUrl: string) {
         if (response.status === 401) {
           throw new Error("認証が必要です");
         }
+        // 404の場合は招待URLが存在しないので正常な状態
+        if (response.status === 404) {
+          return null;
+        }
+        // 403の場合は権限がないので、nullを返す（エラーにしない）
+        if (response.status === 403) {
+          return null;
+        }
         throw new Error("招待URLの取得に失敗しました");
       }
 
       return response.json();
     },
-    enabled: !!customUrl,
+    enabled: !!customUrl && customUrl !== "undefined" && customUrl !== "null",
     staleTime: 0,
     refetchOnMount: true,
     refetchOnWindowFocus: true,
@@ -70,7 +83,7 @@ export function useDeleteInviteUrl() {
 
       return response.json();
     },
-    onSuccess: (data, customUrl) => {
+    onSuccess: (_data, customUrl) => {
       // 招待URL情報をリフレッシュ
       queryClient.invalidateQueries({
         queryKey: ["inviteUrl", customUrl],
@@ -112,7 +125,7 @@ export function useGenerateInviteCode() {
 
       return response.json();
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       // 招待URL情報をリフレッシュ
       queryClient.invalidateQueries({
         queryKey: ["inviteUrl", variables.customUrl],

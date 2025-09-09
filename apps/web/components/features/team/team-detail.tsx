@@ -19,6 +19,7 @@ import MemoScreen from "@/components/screens/memo-screen";
 import TaskScreen from "@/components/screens/task-screen";
 import BoardScreen from "@/components/screens/board-screen";
 import { DisplayNameModal } from "@/components/modals/display-name-modal";
+import { TeamWelcome } from "@/components/features/team/team-welcome";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
 
@@ -109,7 +110,12 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   // URLのクエリパラメータからタブとアイテムIDを取得
   const getTabFromURL = () => {
     const tab = searchParams.get("tab");
-    if (tab === "memos" || tab === "tasks" || tab === "boards") {
+    if (
+      tab === "memos" ||
+      tab === "tasks" ||
+      tab === "boards" ||
+      tab === "team-list"
+    ) {
       return tab;
     }
     return "overview";
@@ -125,7 +131,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
   // タブ管理（URLと同期）
   const [activeTab, setActiveTab] = useState<
-    "overview" | "memos" | "tasks" | "boards"
+    "overview" | "memos" | "tasks" | "boards" | "team-list"
   >(getTabFromURL());
 
   // URLのパラメータが変更された時にタブとアイテムを更新
@@ -152,7 +158,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
   // タブを変更する関数（URLも更新）
   const handleTabChange = useCallback(
-    (tab: "overview" | "memos" | "tasks" | "boards") => {
+    (tab: "overview" | "memos" | "tasks" | "boards" | "team-list") => {
       setActiveTab(tab);
 
       // URLを更新
@@ -190,6 +196,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         handleTabChange("tasks");
       } else if (mode === "board") {
         handleTabChange("boards");
+      } else if (mode === "team-list") {
+        handleTabChange("team-list");
       }
     };
 
@@ -784,6 +792,13 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                   router.push(`/team/${customUrl}/board/${board.slug}`);
                 }}
               />
+            </div>
+          )}
+
+          {/* チーム一覧タブ */}
+          {activeTab === "team-list" && (
+            <div className="h-full -mt-4 -ml-5 -mr-5">
+              <TeamWelcome />
             </div>
           )}
         </div>

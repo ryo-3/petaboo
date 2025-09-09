@@ -18,7 +18,7 @@ export default function TeamLayout({
   );
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<
-    "overview" | "memos" | "tasks" | "boards"
+    "overview" | "memos" | "tasks" | "boards" | "team-list"
   >("overview");
   const [currentBoardName, setCurrentBoardName] = useState<string | undefined>(
     undefined,
@@ -31,12 +31,14 @@ export default function TeamLayout({
   // const isTeamPage =
   //   pathname.startsWith("/team") && !pathname.includes("/create");
 
-  // チーム一覧ページかどうかを判定
-  const isTeamListPage = pathname === "/team";
-
   // チーム詳細ページかどうかを判定（/team/customUrl の形式）
   const isTeamDetailPage =
     pathname.startsWith("/team/") && pathname !== "/team";
+
+  // チーム一覧ページかどうかを判定
+  // チーム詳細ページでteam-listタブを表示している場合もtrueにする
+  const isTeamListPage =
+    pathname === "/team" || (isTeamDetailPage && activeTab === "team-list");
 
   // チームボード詳細ページかどうかを判定
   const isTeamBoardDetailPage =
@@ -86,7 +88,18 @@ export default function TeamLayout({
   }, [isTeamBoardDetailPage, pathname]);
 
   const handleTeamList = () => {
-    router.push("/team");
+    // チーム詳細ページの場合は、team-listタブとして表示
+    if (isTeamDetailPage) {
+      setActiveTab("team-list");
+      window.dispatchEvent(
+        new CustomEvent("team-mode-change", {
+          detail: { mode: "team-list", pathname },
+        }),
+      );
+    } else {
+      // それ以外の場合は通常通りチーム一覧ページへ遷移
+      router.push("/team");
+    }
   };
 
   // ホーム遷移ロジック：チーム詳細ページの場合はoverviewタブに移動
@@ -187,29 +200,30 @@ export default function TeamLayout({
             onHome={handleHome}
             onEditMemo={() => {}}
             isCompact={true}
-            currentMode={currentMode}
+            currentMode={mounted ? currentMode : "memo"}
             onModeChange={handleModeChange}
             onNewTask={handleNewTask}
             onShowTaskList={handleShowTaskList}
             isTeamDetailPage={mounted ? isTeamDetailPage : false}
-            isTeamListPage={isTeamListPage}
-            isTeamHomePage={
-              mounted && isTeamDetailPage && activeTab === "overview"
-            }
+            isTeamListPage={mounted ? isTeamListPage : pathname === "/team"}
             onTeamList={handleTeamList}
             onBoardDetail={handleBoardDetail}
             screenMode={
-              mounted && isTeamBoardDetailPage
-                ? "board"
-                : mounted && isTeamDetailPage
-                  ? "team-detail"
-                  : undefined
+              !mounted
+                ? "loading"
+                : isTeamBoardDetailPage
+                  ? "board"
+                  : isTeamDetailPage
+                    ? activeTab === "overview"
+                      ? "home"
+                      : undefined
+                    : undefined
             }
-            showingBoardDetail={isTeamBoardDetailPage}
+            showingBoardDetail={mounted ? isTeamBoardDetailPage : false}
             currentBoardName={
               currentBoardName || (lastBoardUrl ? "最後のボード" : undefined)
             }
-            isBoardActive={currentMode === "board"}
+            isBoardActive={mounted ? currentMode === "board" : false}
           />
         </div>
         <main className="flex-1 overflow-hidden">{children}</main>

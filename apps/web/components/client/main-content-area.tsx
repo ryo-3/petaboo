@@ -5,6 +5,7 @@ import SearchScreen from "@/components/screens/search-screen";
 import SettingsScreen from "@/components/screens/settings-screen";
 import TaskScreen from "@/components/screens/task-screen";
 import WelcomeScreen from "@/components/screens/welcome-screen";
+import { TeamWelcome } from "@/components/features/team/team-welcome";
 import { BoardDetailWrapper } from "./board-detail-wrapper";
 import type { Board } from "@/src/types/board";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
@@ -46,6 +47,7 @@ interface MainContentAreaProps {
   // チーム機能
   teamMode?: boolean;
   teamId?: number;
+  showTeamList?: boolean;
 
   // ハンドラー
   handleSelectMemo: (memo: Memo | null) => void;
@@ -92,11 +94,17 @@ export function MainContentArea({
   handleBoardClearSelection,
   teamMode = false,
   teamId,
+  showTeamList = false,
 }: MainContentAreaProps) {
   return (
     <>
       {/* ホーム画面 */}
-      {screenMode === "home" && <WelcomeScreen teamMode={teamMode} />}
+      {screenMode === "home" && !showTeamList && (
+        <WelcomeScreen teamMode={teamMode} />
+      )}
+
+      {/* チーム一覧画面 */}
+      {showTeamList && <TeamWelcome />}
 
       {/* メモ関連画面（一覧・表示・編集） */}
       {screenMode === "memo" && (
@@ -179,7 +187,9 @@ export function MainContentArea({
             />
           )
         ) : (
-          <BoardScreen ref={boardScreenRef as React.RefObject<BoardScreenRef>} />
+          <BoardScreen
+            ref={boardScreenRef as React.RefObject<BoardScreenRef>}
+          />
         ))}
     </>
   );

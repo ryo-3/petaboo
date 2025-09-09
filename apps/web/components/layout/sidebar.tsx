@@ -122,7 +122,7 @@ function Sidebar({
         !isTeamDetailPage,
       search: screenMode === "search",
       settings: screenMode === "settings",
-      team: isTeamListPage || showTeamList,
+      team: screenMode === "team" || isTeamListPage || showTeamList,
     }),
     [
       screenMode,

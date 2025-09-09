@@ -18,6 +18,7 @@ import { useManageJoinRequest } from "@/src/hooks/use-manage-join-request";
 import MemoScreen from "@/components/screens/memo-screen";
 import TaskScreen from "@/components/screens/task-screen";
 import BoardScreen from "@/components/screens/board-screen";
+import SettingsScreen from "@/components/screens/settings-screen";
 import { DisplayNameModal } from "@/components/modals/display-name-modal";
 import { TeamWelcome } from "@/components/features/team/team-welcome";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
@@ -114,7 +115,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       tab === "memos" ||
       tab === "tasks" ||
       tab === "boards" ||
-      tab === "team-list"
+      tab === "team-list" ||
+      tab === "settings"
     ) {
       return tab;
     }
@@ -131,7 +133,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
   // タブ管理（URLと同期）
   const [activeTab, setActiveTab] = useState<
-    "overview" | "memos" | "tasks" | "boards" | "team-list"
+    "overview" | "memos" | "tasks" | "boards" | "team-list" | "settings"
   >(getTabFromURL());
 
   // URLのパラメータが変更された時にタブとアイテムを更新
@@ -160,7 +162,9 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
   // タブを変更する関数（URLも更新）
   const handleTabChange = useCallback(
-    (tab: "overview" | "memos" | "tasks" | "boards" | "team-list") => {
+    (
+      tab: "overview" | "memos" | "tasks" | "boards" | "team-list" | "settings",
+    ) => {
       setActiveTab(tab);
 
       // URLを更新
@@ -200,6 +204,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         handleTabChange("boards");
       } else if (mode === "team-list") {
         handleTabChange("team-list");
+      } else if (mode === "settings") {
+        handleTabChange("settings");
       }
     };
 
@@ -801,6 +807,13 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
           {activeTab === "team-list" && (
             <div className="h-full -mt-4 -ml-5 -mr-5">
               <TeamWelcome />
+            </div>
+          )}
+
+          {/* 設定タブ */}
+          {activeTab === "settings" && (
+            <div className="h-full -mt-4 -ml-5 -mr-5">
+              <SettingsScreen />
             </div>
           )}
         </div>

@@ -38,8 +38,10 @@ export default function TeamLayout({
   // URLパラメータから直接activeTabを取得
   const urlTab = searchParams.get("tab");
   const activeTab =
-    isTeamDetailPage && urlTab && ["memos", "tasks", "boards"].includes(urlTab)
-      ? (urlTab as "memos" | "tasks" | "boards")
+    isTeamDetailPage &&
+    urlTab &&
+    ["memos", "tasks", "boards", "team-list", "settings"].includes(urlTab)
+      ? (urlTab as "memos" | "tasks" | "boards" | "team-list" | "settings")
       : "overview";
 
   // チームボード詳細ページかどうかを判定
@@ -186,6 +188,20 @@ export default function TeamLayout({
       }
     }
   };
+
+  const handleSettings = () => {
+    // チーム詳細ページの場合は設定イベントを送信
+    if (isTeamDetailPage) {
+      window.dispatchEvent(
+        new CustomEvent("team-mode-change", {
+          detail: { mode: "settings", pathname },
+        }),
+      );
+    } else {
+      // それ以外の場合は設定ページに遷移
+      router.push("/settings");
+    }
+  };
   return (
     <div className="flex h-screen bg-white overflow-hidden">
       <Header />
@@ -204,6 +220,7 @@ export default function TeamLayout({
             isTeamListPage={isTeamListPage}
             onTeamList={handleTeamList}
             onBoardDetail={handleBoardDetail}
+            onSettings={handleSettings}
             screenMode={
               isTeamBoardDetailPage
                 ? "board"
@@ -216,7 +233,11 @@ export default function TeamLayout({
                         ? "task"
                         : activeTab === "boards"
                           ? "board"
-                          : "home"
+                          : activeTab === "team-list"
+                            ? "team"
+                            : activeTab === "settings"
+                              ? "settings"
+                              : "home"
                   : undefined
             }
             showingBoardDetail={isTeamBoardDetailPage}

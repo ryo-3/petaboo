@@ -125,7 +125,8 @@ function Sidebar({
                 currentMode === "memo" &&
                 !isBoardActive &&
                 screenMode !== "home" &&
-                !isTeamListPage
+                !isTeamListPage &&
+                !isTeamDetailPage
                   ? "bg-Green text-white"
                   : "bg-gray-200 hover:bg-gray-300 text-gray-600"
               }`}
@@ -221,7 +222,8 @@ function Sidebar({
               screenMode === "home" ||
               screenMode === "search" ||
               screenMode === "settings" ||
-              isTeamListPage
+              isTeamListPage ||
+              isTeamDetailPage
             }
           />
 
@@ -413,7 +415,7 @@ function Sidebar({
                   : onNewTask
             }
             className={`flex-1 text-center rounded-lg py-2 transition-colors flex items-center justify-center gap-1 ${
-              isTeamListPage
+              isTeamListPage || isTeamDetailPage
                 ? "bg-gray-100 hover:bg-gray-200"
                 : isBoardActive
                   ? "bg-light-Blue hover:bg-light-Blue/85"
@@ -423,10 +425,10 @@ function Sidebar({
             }`}
           >
             <PlusIcon
-              className={`w-4 h-4 ${isTeamListPage ? "text-gray-600" : "text-gray-100"}`}
+              className={`w-4 h-4 ${isTeamListPage || isTeamDetailPage ? "text-gray-600" : "text-gray-100"}`}
             />
             <span
-              className={`font-medium text-sm ${isTeamListPage ? "text-gray-600" : "text-gray-100"}`}
+              className={`font-medium text-sm ${isTeamListPage || isTeamDetailPage ? "text-gray-600" : "text-gray-100"}`}
             >
               新規
               {isBoardActive

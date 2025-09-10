@@ -2747,3 +2747,248 @@ export async function waitUpdatesHandler(c: any) {
     return c.json({ error: "内部エラーが発生しました" }, 500);
   }
 }
+
+// ホーム画面用チーム通知のスキーマ
+const homeTeamUpdatesRequestSchema = z.object({
+  lastCheckedAt: z.string().datetime(),
+  waitTimeoutSec: z.number().min(30).max(300).default(120),
+});
+
+const homeTeamUpdatesResponseSchema = z.object({
+  hasUpdates: z.boolean(),
+  updates: z
+    .object({
+      adminTeamUpdates: z.array(
+        z.object({
+          teamCustomUrl: z.string(),
+          teamName: z.string(),
+          newApplications: z.array(
+            z.object({
+              id: z.number(),
+              userId: z.string(),
+              displayName: z.string().nullable(),
+              appliedAt: z.string(),
+            }),
+          ),
+        }),
+      ),
+      myRequestUpdates: z.array(
+        z.object({
+          id: z.number(),
+          teamName: z.string(),
+          status: z.enum(["approved", "rejected"]),
+          processedAt: z.string(),
+        }),
+      ),
+    })
+    .optional(),
+  timestamp: z.string().datetime(),
+});
+
+// ホーム画面チーム通知ルート定義
+export const waitHomeUpdatesRoute = createRoute({
+  method: "post",
+  path: "/home/wait-updates",
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: homeTeamUpdatesRequestSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      content: {
+        "application/json": {
+          schema: homeTeamUpdatesResponseSchema,
+        },
+      },
+      description: "ホーム画面チーム更新情報取得成功",
+    },
+    401: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            error: z.string(),
+          }),
+        },
+      },
+      description: "認証が必要です",
+    },
+  },
+  tags: ["Teams"],
+});
+
+// ホーム画面チーム通知ハンドラー
+export async function waitHomeUpdatesHandler(c: any) {
+  const auth = getAuth(c);
+  if (!auth?.userId) {
+    return c.json({ error: "認証が必要です" }, 401);
+  }
+
+  const body = await c.req.json();
+  const { lastCheckedAt, waitTimeoutSec } = body;
+  const db = c.get("db") as DatabaseType;
+
+  try {
+    const lastCheckedDate = new Date(lastCheckedAt);
+    const startTime = Date.now();
+
+    // ユーザーが管理者として所属しているチーム一覧を取得
+    const adminTeams = await db
+      .select({
+        teamId: teams.id,
+        teamCustomUrl: teams.customUrl,
+        teamName: teams.name,
+      })
+      .from(teams)
+      .innerJoin(teamMembers, eq(teams.id, teamMembers.teamId))
+      .where(
+        and(eq(teamMembers.userId, auth.userId), eq(teamMembers.role, "admin")),
+      );
+
+    const checkForUpdates = async (): Promise<{
+      hasUpdates: boolean;
+      updates?: any;
+    }> => {
+      const adminTeamUpdates = [];
+      const myRequestUpdates = [];
+
+      // 1. 管理者チームの新規申請をチェック
+      for (const team of adminTeams) {
+        const newApplications = await db
+          .select({
+            id: teamInvitations.id,
+            userId: teamInvitations.userId,
+            displayName: teamInvitations.displayName,
+            appliedAt: teamInvitations.createdAt,
+          })
+          .from(teamInvitations)
+          .where(
+            and(
+              eq(teamInvitations.teamId, team.teamId),
+              eq(teamInvitations.status, "pending"),
+              ne(teamInvitations.email, "URL_INVITE"),
+              gt(
+                teamInvitations.createdAt,
+                Math.floor(lastCheckedDate.getTime() / 1000),
+              ),
+            ),
+          )
+          .orderBy(desc(teamInvitations.createdAt));
+
+        if (newApplications.length > 0) {
+          adminTeamUpdates.push({
+            teamCustomUrl: team.teamCustomUrl,
+            teamName: team.teamName,
+            newApplications: newApplications.map((app) => ({
+              id: app.id,
+              userId: app.userId || "unknown",
+              displayName: app.displayName || "未設定",
+              appliedAt: new Date(app.appliedAt * 1000).toISOString(),
+            })),
+          });
+        }
+      }
+
+      // 2. 自分の申請状況変更をチェック
+      const statusChanges = await db
+        .select({
+          id: teamInvitations.id,
+          teamName: teams.name,
+          status: teamInvitations.status,
+          processedAt: teamInvitations.processedAt,
+        })
+        .from(teamInvitations)
+        .innerJoin(teams, eq(teamInvitations.teamId, teams.id))
+        .where(
+          and(
+            eq(teamInvitations.userId, auth.userId),
+            ne(teamInvitations.email, "URL_INVITE"),
+            sql`${teamInvitations.status} IN ('approved', 'rejected')`,
+            gt(
+              teamInvitations.processedAt,
+              Math.floor(lastCheckedDate.getTime() / 1000),
+            ),
+          ),
+        )
+        .orderBy(desc(teamInvitations.processedAt));
+
+      for (const change of statusChanges) {
+        myRequestUpdates.push({
+          id: change.id,
+          teamName: change.teamName,
+          status: change.status as "approved" | "rejected",
+          processedAt: new Date((change.processedAt || 0) * 1000).toISOString(),
+        });
+      }
+
+      const hasUpdates =
+        adminTeamUpdates.length > 0 || myRequestUpdates.length > 0;
+
+      if (hasUpdates) {
+        return {
+          hasUpdates: true,
+          updates: {
+            adminTeamUpdates,
+            myRequestUpdates,
+          },
+        };
+      }
+
+      return { hasUpdates: false };
+    };
+
+    // 初回チェック
+    const result = await checkForUpdates();
+    if (result.hasUpdates) {
+      return c.json({
+        ...result,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    // ロング・ポーリング: 指定時間まで待機しながら定期チェック
+    const pollInterval = 5000; // 5秒間隔でチェック
+    const timeoutMs = waitTimeoutSec * 1000;
+
+    return new Promise((resolve) => {
+      const checkInterval = setInterval(async () => {
+        const elapsedTime = Date.now() - startTime;
+
+        if (elapsedTime >= timeoutMs) {
+          // タイムアウト
+          clearInterval(checkInterval);
+          resolve(
+            c.json({
+              hasUpdates: false,
+              timestamp: new Date().toISOString(),
+            }),
+          );
+          return;
+        }
+
+        try {
+          const result = await checkForUpdates();
+          if (result.hasUpdates) {
+            clearInterval(checkInterval);
+            resolve(
+              c.json({
+                ...result,
+                timestamp: new Date().toISOString(),
+              }),
+            );
+          }
+        } catch (error) {
+          clearInterval(checkInterval);
+          resolve(c.json({ error: "内部エラーが発生しました" }, 500));
+        }
+      }, pollInterval);
+    });
+  } catch (error) {
+    console.error("ホーム画面wait-updates エラー:", error);
+    return c.json({ error: "内部エラーが発生しました" }, 500);
+  }
+}

@@ -183,7 +183,7 @@ export function TeamSettings({ customUrl }: TeamSettingsProps) {
         <div className="mb-6 flex-shrink-0">
           <div className="flex items-center gap-3 mb-2">
             <button
-              onClick={() => router.back()}
+              onClick={() => router.push(`/team/${customUrl}`)}
               className="p-1 text-gray-600 hover:text-gray-800 transition-colors rounded-md hover:bg-gray-100"
             >
               <ArrowLeftIcon className="w-5 h-5" />

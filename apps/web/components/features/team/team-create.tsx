@@ -172,8 +172,8 @@ export function TeamCreate() {
         adminDisplayName: adminDisplayName.trim(),
       });
 
-      // 成功後は作成したチームの詳細ページに移動
-      router.push(`/team/${team.customUrl}`);
+      // 成功後はホーム画面に戻る
+      router.push("/");
     } catch (error) {
       console.error("チーム作成エラー:", error);
       setError(

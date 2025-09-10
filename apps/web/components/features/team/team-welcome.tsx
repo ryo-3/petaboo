@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import TeamIcon from "@/components/icons/team-icon";
 import PlusIcon from "@/components/icons/plus-icon";
 import { Crown, Clock, Users } from "lucide-react";
+import { TeamCreateInline } from "./team-create-inline";
 
 export function TeamWelcome() {
   const router = useRouter();
@@ -23,6 +24,7 @@ export function TeamWelcome() {
   const [showInviteUrlDialog, setShowInviteUrlDialog] = useState(false);
   const [inviteUrl, setInviteUrl] = useState("");
   const [showActionModal, setShowActionModal] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const { data: teamStats, isLoading } = useTeamStats();
   const { data: teams, isLoading: teamsLoading } = useTeams();
 
@@ -73,26 +75,28 @@ export function TeamWelcome() {
   return (
     <div className="flex h-full bg-white overflow-hidden">
       <div className="w-full pt-3 pl-5 pr-5 flex flex-col">
-        {/* ヘッダー */}
-        <div className="mb-4">
-          <div className="flex items-center gap-3">
-            <h1 className="text-[22px] font-bold text-gray-800 w-[105px] truncate">
-              チーム一覧
-            </h1>
-            <button
-              onClick={() => setShowActionModal(true)}
-              className="p-2 rounded-md transition-colors bg-slate-500 text-white hover:bg-slate-600"
-              title="チーム作成・参加"
-            >
-              <PlusIcon className="w-3.5 h-3.5" />
-            </button>
-            <div className="text-sm text-gray-500">
-              {isPremium
-                ? "チームプランではチームを作成・管理できます"
-                : "フリープランでは招待されたチームに参加できます"}
+        {/* ヘッダー - チーム作成フォーム表示時は非表示 */}
+        {!showCreateForm && (
+          <div className="mb-4">
+            <div className="flex items-center gap-3">
+              <h1 className="text-[22px] font-bold text-gray-800 w-[105px] truncate">
+                チーム一覧
+              </h1>
+              <button
+                onClick={() => setShowActionModal(true)}
+                className="p-2 rounded-md transition-colors bg-slate-500 text-white hover:bg-slate-600"
+                title="チーム作成・参加"
+              >
+                <PlusIcon className="w-3.5 h-3.5" />
+              </button>
+              <div className="text-sm text-gray-500">
+                {isPremium
+                  ? "チームプランではチームを作成・管理できます"
+                  : "フリープランでは招待されたチームに参加できます"}
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* 詳細ビュー表示時 */}
         {showDetailedView && !hasTeams ? (
@@ -291,6 +295,17 @@ export function TeamWelcome() {
               </div>
             </Card>
           </div>
+        ) : showCreateForm ? (
+          /* チーム作成フォーム */
+          <div className="flex-1 pb-12">
+            <TeamCreateInline
+              onCancel={() => setShowCreateForm(false)}
+              onSuccess={() => {
+                setShowCreateForm(false);
+                window.location.reload(); // チーム一覧を更新
+              }}
+            />
+          </div>
         ) : !showDetailedView ? (
           /* 標準の2パネルレイアウト */
           <div className="flex-1 flex flex-col gap-4 pb-6">
@@ -390,7 +405,11 @@ export function TeamWelcome() {
                         <Button
                           className="w-full"
                           variant={isPremium ? "default" : "secondary"}
-                          onClick={() => router.push("/team/create")}
+                          onClick={() => {
+                            if (isPremium) {
+                              setShowCreateForm(true);
+                            }
+                          }}
                         >
                           {isPremium
                             ? "チーム作成"
@@ -466,7 +485,11 @@ export function TeamWelcome() {
                         <Button
                           className="w-full"
                           variant={isPremium ? "default" : "secondary"}
-                          onClick={() => router.push("/team/create")}
+                          onClick={() => {
+                            if (isPremium) {
+                              setShowCreateForm(true);
+                            }
+                          }}
                         >
                           {isPremium
                             ? "チーム作成"
@@ -517,7 +540,7 @@ export function TeamWelcome() {
                 onClick={() => {
                   setShowActionModal(false);
                   if (isPremium) {
-                    router.push("/team/create");
+                    setShowCreateForm(true);
                   }
                 }}
                 disabled={!isPremium}

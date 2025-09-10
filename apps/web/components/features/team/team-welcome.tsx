@@ -7,6 +7,7 @@ import { useTeamStats } from "@/src/hooks/use-team-stats";
 import { useTeams } from "@/src/hooks/use-teams";
 import { useJoinRequests } from "@/src/hooks/use-join-requests";
 import { useMyJoinRequests } from "@/src/hooks/use-my-join-requests";
+import { useTeamApplicationsPolling } from "@/src/hooks/use-team-applications-polling";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import TeamIcon from "@/components/icons/team-icon";
@@ -39,6 +40,15 @@ export function TeamWelcome({ onTeamCreate }: TeamWelcomeProps = {}) {
 
   // 自分の申請状況を取得
   const { data: myJoinRequests } = useMyJoinRequests();
+
+  // リアルタイム更新用ポーリング（ホーム画面でチームアイコンがアクティブな場合のみ）
+  // 注意：チーム詳細ページではすでにTeamDetailコンポーネントでポーリングを実行しているため、
+  // ホーム画面（/）でのみポーリングを実行する
+  const isHomePage =
+    typeof window !== "undefined" && window.location.pathname === "/";
+  useTeamApplicationsPolling(
+    isHomePage ? firstAdminTeam?.customUrl || null : null,
+  );
 
   if (isLoading || teamsLoading) {
     return (

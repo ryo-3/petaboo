@@ -43,10 +43,17 @@ export function useCreateTeam() {
 
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (newTeam) => {
       // チーム統計とチーム一覧を無効化
       queryClient.invalidateQueries({ queryKey: ["teamStats"] });
       queryClient.invalidateQueries({ queryKey: ["teams"] });
+
+      // 新しいチームのcustomUrlに関連する古いキャッシュを削除
+      // 同じURLでチームを作り直した場合に、古いメンバー情報等が残るのを防ぐ
+      queryClient.removeQueries({ queryKey: ["team", newTeam.customUrl] });
+      queryClient.invalidateQueries({
+        queryKey: ["joinRequests", newTeam.customUrl],
+      });
 
       // チーム作成成功フラグを設定（遅延実行で確実に）
       setTimeout(() => {

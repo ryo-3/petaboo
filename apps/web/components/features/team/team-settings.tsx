@@ -159,6 +159,9 @@ export function TeamSettings({ customUrl }: TeamSettingsProps) {
 
       // キャッシュをクリア
       queryClient.invalidateQueries({ queryKey: ["teams"] });
+      queryClient.invalidateQueries({ queryKey: ["teamStats"] });
+      // 現在のチーム詳細キャッシュも削除
+      queryClient.removeQueries({ queryKey: ["team", customUrl] });
 
       // チーム削除成功フラグを設定
       sessionStorage.setItem("showTeamListAfterCreation", "true");

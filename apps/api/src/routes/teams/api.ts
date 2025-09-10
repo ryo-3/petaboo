@@ -1,6 +1,12 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { getAuth } from "@hono/clerk-auth";
 import { eq, and, sql, desc, ne, gt } from "drizzle-orm";
+import {
+  teamEventEmitter,
+  TEAM_EVENTS,
+  type TeamApplicationEvent,
+} from "../../utils/event-emitter.js";
+import { waitUpdatesHandlerEventDriven } from "./wait-updates-event-driven.js";
 import { teams, teamMembers, teamInvitations, users } from "../../db";
 import { teamMemos, teamDeletedMemos } from "../../db/schema/team/memos";
 import { teamTasks, teamDeletedTasks } from "../../db/schema/team/tasks";
@@ -2196,6 +2202,26 @@ export async function submitJoinRequest(c: any) {
         displayName: displayName || "未設定",
       });
 
+      // 🚀 イベント発火: 新しいチーム申請
+      try {
+        const applicationEvent: TeamApplicationEvent = {
+          teamCustomUrl: customUrl,
+          teamId: team.id,
+          application: {
+            id: result.insertId as number,
+            userId: auth.userId,
+            displayName: displayName || "未設定",
+            appliedAt: new Date(currentTime * 1000).toISOString(),
+          },
+        };
+
+        console.log("🔥 Emitting team application event:", applicationEvent);
+        teamEventEmitter.emit(TEAM_EVENTS.NEW_APPLICATION, applicationEvent);
+      } catch (eventError) {
+        console.error("Failed to emit team application event:", eventError);
+        // イベント発火の失敗は申請作成を妨げない
+      }
+
       // 招待URLの使用回数をインクリメント
       await db
         .update(teamInvitations)
@@ -2604,7 +2630,7 @@ export const waitUpdatesRoute = createRoute({
   tags: ["Teams"],
 });
 
-// wait-updates ハンドラー
+// wait-updates ハンドラー (2秒間隔ポーリング)
 export async function waitUpdatesHandler(c: any) {
   const auth = getAuth(c);
   if (!auth?.userId) {
@@ -2652,12 +2678,11 @@ export async function waitUpdatesHandler(c: any) {
     const lastCheckedDate = new Date(lastCheckedAt);
     const startTime = Date.now();
 
-    // 条件付きロング・ポーリング実装
+    // 2秒間隔ポーリング実装
     const checkForUpdates = async (): Promise<{
       hasUpdates: boolean;
       updates?: any;
     }> => {
-      // 実際のチーム申請データを取得
       const newApplications = await db
         .select({
           id: teamInvitations.id,
@@ -2699,14 +2724,15 @@ export async function waitUpdatesHandler(c: any) {
     // 初回チェック
     const result = await checkForUpdates();
     if (result.hasUpdates) {
+      console.log("🔍 Initial check found updates, returning immediately");
       return c.json({
         ...result,
         timestamp: new Date().toISOString(),
       });
     }
 
-    // ロング・ポーリング: 指定時間まで待機しながら定期チェック
-    const pollInterval = 5000; // 5秒間隔でチェック
+    // 2秒間隔ポーリング: 120秒まで待機しながら定期チェック
+    const pollInterval = 2000; // 2秒間隔でチェック
     const timeoutMs = waitTimeoutSec * 1000;
 
     return new Promise((resolve) => {
@@ -2716,6 +2742,7 @@ export async function waitUpdatesHandler(c: any) {
         if (elapsedTime >= timeoutMs) {
           // タイムアウト
           clearInterval(checkInterval);
+          console.log(`⏰ Timeout reached for team: ${customUrl}`);
           resolve(
             c.json({
               hasUpdates: false,
@@ -2729,6 +2756,7 @@ export async function waitUpdatesHandler(c: any) {
           const result = await checkForUpdates();
           if (result.hasUpdates) {
             clearInterval(checkInterval);
+            console.log(`✅ Found updates for team: ${customUrl}`);
             resolve(
               c.json({
                 ...result,
@@ -2738,6 +2766,7 @@ export async function waitUpdatesHandler(c: any) {
           }
         } catch (error) {
           clearInterval(checkInterval);
+          console.error("Polling check error:", error);
           resolve(c.json({ error: "内部エラーが発生しました" }, 500));
         }
       }, pollInterval);

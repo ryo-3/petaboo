@@ -127,7 +127,7 @@ export function useConditionalPolling<T>({
       if (shouldPoll) {
         timeoutRef.current = setTimeout(() => {
           executePoll();
-        }, 1000); // 1秒後に再実行
+        }, 5000); // 5秒後に再実行（負荷軽減）
       }
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {

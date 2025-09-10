@@ -13,11 +13,13 @@ interface TeamUpdates {
   newApplications: TeamApplication[];
 }
 
-export function useTeamApplicationsPolling(customUrl: string) {
-  const { data: teamDetail } = useTeamDetail(customUrl);
+export function useTeamApplicationsPolling(customUrl: string | null) {
+  const { data: teamDetail } = useTeamDetail(customUrl || "");
   const queryClient = useQueryClient();
 
   const handleUpdates = (updates: TeamUpdates) => {
+    if (!customUrl) return; // customUrlが無い場合は何もしない
+
     console.log("📦 handleUpdates called with:", updates);
 
     // React Query キャッシュ更新（正しいキャッシュキー使用）
@@ -33,6 +35,24 @@ export function useTeamApplicationsPolling(customUrl: string) {
     console.log("🔄 Invalidating React Query cache for:", ["team", customUrl]);
     queryClient.invalidateQueries({
       queryKey: ["team", customUrl],
+    });
+
+    // チーム統計を更新（TeamWelcomeで使用）
+    console.log("🔄 Invalidating React Query cache for: team-stats");
+    queryClient.invalidateQueries({
+      queryKey: ["team-stats"],
+    });
+
+    // 自分の申請状況を更新（TeamWelcomeで使用）
+    console.log("🔄 Invalidating React Query cache for: my-join-requests");
+    queryClient.invalidateQueries({
+      queryKey: ["my-join-requests"],
+    });
+
+    // 所属チーム一覧を更新（TeamWelcomeで使用）
+    console.log("🔄 Invalidating React Query cache for: teams");
+    queryClient.invalidateQueries({
+      queryKey: ["teams"],
     });
 
     // コンソールログ（開発用）
@@ -78,7 +98,7 @@ export function useTeamApplicationsPolling(customUrl: string) {
   };
 
   const pollingResult = useConditionalPolling<TeamUpdates>({
-    endpoint: `/teams/${customUrl}/wait-updates`,
+    endpoint: customUrl ? `/teams/${customUrl}/wait-updates` : "",
     iconStateKey: "team", // チームアイコンがアクティブな時のみ
     additionalConditions: {
       isAdmin: teamDetail?.role === "admin",

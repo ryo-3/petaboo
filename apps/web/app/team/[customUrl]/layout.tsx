@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
 import Header from "@/components/layout/header";
 import Sidebar from "@/components/layout/sidebar";
+import { NavigationProvider } from "@/contexts/navigation-context";
 
 function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -273,14 +274,16 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function TeamLayout({
+export default function TeamDetailLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <TeamLayoutContent>{children}</TeamLayoutContent>
-    </Suspense>
+    <NavigationProvider initialScreenMode="home">
+      <Suspense fallback={<div>Loading...</div>}>
+        <TeamLayoutContent>{children}</TeamLayoutContent>
+      </Suspense>
+    </NavigationProvider>
   );
 }

@@ -1,6 +1,6 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { getAuth } from "@hono/clerk-auth";
-import { eq, and, sql, desc, ne } from "drizzle-orm";
+import { eq, and, sql, desc, ne, gt } from "drizzle-orm";
 import { teams, teamMembers, teamInvitations, users } from "../../db";
 import { teamMemos, teamDeletedMemos } from "../../db/schema/team/memos";
 import { teamTasks, teamDeletedTasks } from "../../db/schema/team/tasks";
@@ -2528,5 +2528,222 @@ export async function deleteTeam(c: any) {
   } catch (error) {
     console.error("チーム削除エラー:", error);
     return c.json({ message: "チームの削除に失敗しました" }, 500);
+  }
+}
+
+// wait-updates リクエストスキーマ
+const waitUpdatesRequestSchema = z.object({
+  lastCheckedAt: z.string().datetime(),
+  waitTimeoutSec: z.number().min(30).max(300).default(120), // 30秒〜5分
+});
+
+// wait-updates レスポンススキーマ
+const waitUpdatesResponseSchema = z.object({
+  hasUpdates: z.boolean(),
+  updates: z
+    .object({
+      newApplications: z.array(
+        z.object({
+          id: z.number(),
+          userId: z.string(),
+          displayName: z.string().nullable(),
+          appliedAt: z.string().datetime(),
+        }),
+      ),
+    })
+    .optional(),
+  timestamp: z.string().datetime(),
+});
+
+// wait-updates ルート定義
+export const waitUpdatesRoute = createRoute({
+  method: "post",
+  path: "/{customUrl}/wait-updates",
+  request: {
+    params: z.object({
+      customUrl: z.string(),
+    }),
+    body: {
+      content: {
+        "application/json": {
+          schema: waitUpdatesRequestSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      content: {
+        "application/json": {
+          schema: waitUpdatesResponseSchema,
+        },
+      },
+      description: "更新情報取得成功",
+    },
+    403: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            error: z.string(),
+          }),
+        },
+      },
+      description: "権限なし",
+    },
+    404: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            error: z.string(),
+          }),
+        },
+      },
+      description: "チームが見つかりません",
+    },
+  },
+  tags: ["Teams"],
+});
+
+// wait-updates ハンドラー
+export async function waitUpdatesHandler(c: any) {
+  const auth = getAuth(c);
+  if (!auth?.userId) {
+    return c.json({ error: "認証が必要です" }, 401);
+  }
+
+  const { customUrl } = c.req.param();
+  const body = await c.req.json();
+  const { lastCheckedAt, waitTimeoutSec } = body;
+
+  const db = c.get("db") as DatabaseType;
+
+  try {
+    // チーム存在確認
+    const team = await db
+      .select()
+      .from(teams)
+      .where(eq(teams.customUrl, customUrl))
+      .get();
+
+    if (!team) {
+      return c.json({ error: "チームが見つかりません" }, 404);
+    }
+
+    // ユーザーがチームの管理者かチェック
+    const member = await db
+      .select()
+      .from(teamMembers)
+      .where(
+        and(
+          eq(teamMembers.teamId, team.id),
+          eq(teamMembers.userId, auth.userId),
+        ),
+      )
+      .get();
+
+    if (!member) {
+      return c.json({ error: "チームメンバーではありません" }, 403);
+    }
+
+    if (member.role !== "admin") {
+      return c.json({ error: "管理者権限が必要です" }, 403);
+    }
+
+    const lastCheckedDate = new Date(lastCheckedAt);
+    const startTime = Date.now();
+
+    // 条件付きロング・ポーリング実装
+    const checkForUpdates = async (): Promise<{
+      hasUpdates: boolean;
+      updates?: any;
+    }> => {
+      // 実際のチーム申請データを取得
+      const newApplications = await db
+        .select({
+          id: teamInvitations.id,
+          userId: teamInvitations.userId,
+          displayName: teamInvitations.displayName,
+          appliedAt: teamInvitations.createdAt,
+        })
+        .from(teamInvitations)
+        .where(
+          and(
+            eq(teamInvitations.teamId, team.id),
+            eq(teamInvitations.status, "pending"),
+            ne(teamInvitations.email, "URL_INVITE"), // URL招待レコードは除外
+            gt(
+              teamInvitations.createdAt,
+              Math.floor(lastCheckedDate.getTime() / 1000),
+            ),
+          ),
+        )
+        .orderBy(desc(teamInvitations.createdAt));
+
+      if (newApplications.length > 0) {
+        return {
+          hasUpdates: true,
+          updates: {
+            newApplications: newApplications.map((app) => ({
+              id: app.id,
+              userId: app.userId || "unknown",
+              displayName: app.displayName || "未設定",
+              appliedAt: new Date(app.appliedAt * 1000).toISOString(),
+            })),
+          },
+        };
+      }
+
+      return { hasUpdates: false };
+    };
+
+    // 初回チェック
+    const result = await checkForUpdates();
+    if (result.hasUpdates) {
+      return c.json({
+        ...result,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    // ロング・ポーリング: 指定時間まで待機しながら定期チェック
+    const pollInterval = 5000; // 5秒間隔でチェック
+    const timeoutMs = waitTimeoutSec * 1000;
+
+    return new Promise((resolve) => {
+      const checkInterval = setInterval(async () => {
+        const elapsedTime = Date.now() - startTime;
+
+        if (elapsedTime >= timeoutMs) {
+          // タイムアウト
+          clearInterval(checkInterval);
+          resolve(
+            c.json({
+              hasUpdates: false,
+              timestamp: new Date().toISOString(),
+            }),
+          );
+          return;
+        }
+
+        try {
+          const result = await checkForUpdates();
+          if (result.hasUpdates) {
+            clearInterval(checkInterval);
+            resolve(
+              c.json({
+                ...result,
+                timestamp: new Date().toISOString(),
+              }),
+            );
+          }
+        } catch (error) {
+          clearInterval(checkInterval);
+          resolve(c.json({ error: "内部エラーが発生しました" }, 500));
+        }
+      }, pollInterval);
+    });
+  } catch (error) {
+    console.error("wait-updates エラー:", error);
+    return c.json({ error: "内部エラーが発生しました" }, 500);
   }
 }

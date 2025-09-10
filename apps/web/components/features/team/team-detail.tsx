@@ -20,6 +20,7 @@ import {
 import { useUserInfo } from "@/src/hooks/use-user-info";
 import { useJoinRequests } from "@/src/hooks/use-join-requests";
 import { useManageJoinRequest } from "@/src/hooks/use-manage-join-request";
+import { useTeamApplicationsPolling } from "@/src/hooks/use-team-applications-polling";
 import MemoScreen from "@/components/screens/memo-screen";
 import TaskScreen from "@/components/screens/task-screen";
 import BoardScreen from "@/components/screens/board-screen";
@@ -97,6 +98,9 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     approveError,
     rejectError,
   } = useManageJoinRequest(customUrl);
+
+  // 条件付きロング・ポーリングでチーム申請通知を監視
+  const { isPolling, conditions } = useTeamApplicationsPolling(customUrl);
 
   const [showInvitePanel, setShowInvitePanel] = useState(false);
   const [inviteMessage, setInviteMessage] = useState<{

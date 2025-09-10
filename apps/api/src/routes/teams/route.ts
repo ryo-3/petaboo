@@ -42,6 +42,8 @@ import {
   updateTeam,
   deleteTeamRoute,
   deleteTeam,
+  waitUpdatesRoute,
+  waitUpdatesHandler,
 } from "./api";
 import { createTeamBoardsAPI } from "./boards";
 
@@ -76,6 +78,7 @@ teamsRoute.openapi(getMyTeamRoute, getMyTeam);
 teamsRoute.openapi(joinTeamRoute, joinTeam);
 teamsRoute.openapi(updateTeamRoute, updateTeam);
 teamsRoute.openapi(deleteTeamRoute, deleteTeam);
+teamsRoute.openapi(waitUpdatesRoute, waitUpdatesHandler);
 
 // チーム用ボードAPIを追加
 createTeamBoardsAPI(teamsRoute);

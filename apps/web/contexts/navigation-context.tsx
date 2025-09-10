@@ -1,8 +1,9 @@
 "use client";
 
-import { createContext, useContext, ReactNode, useState } from "react";
+import { createContext, useContext, ReactNode, useState, useMemo } from "react";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
+import { usePathname, useSearchParams } from "next/navigation";
 
 type ScreenMode =
   | "home"
@@ -12,7 +13,19 @@ type ScreenMode =
   | "search"
   | "settings"
   | "board"
-  | "welcome";
+  | "welcome"
+  | "team";
+
+interface IconStates {
+  home: boolean;
+  memo: boolean;
+  task: boolean;
+  board: boolean;
+  boardDetail: boolean;
+  search: boolean;
+  settings: boolean;
+  team: boolean;
+}
 
 interface NavigationContextType {
   screenMode: ScreenMode;
@@ -21,6 +34,7 @@ interface NavigationContextType {
   setCurrentMode: (mode: "memo" | "task" | "board") => void;
   isFromBoardDetail: boolean;
   setIsFromBoardDetail: (value: boolean) => void;
+  iconStates: IconStates;
   // メイン画面のアイテム選択ハンドラー
   handleMainSelectMemo?: (memo: Memo | null) => void;
   handleMainSelectTask?: (task: Task | null) => void;
@@ -59,6 +73,28 @@ export function NavigationProvider({
     ((task: Task | null) => void) | undefined
   >();
 
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // 基本的なiconStatesを計算
+  const iconStates = useMemo((): IconStates => {
+    // URL-based page state detection (simplified from sidebar.tsx)
+    const isTeamDetailPage =
+      pathname.startsWith("/team/") && pathname !== "/team";
+    const isHomePage = pathname === "/";
+
+    return {
+      home: screenMode === "home",
+      memo: screenMode === "memo",
+      task: screenMode === "task",
+      board: screenMode === "board",
+      boardDetail: currentMode === "board" && screenMode === "board",
+      search: screenMode === "search",
+      settings: screenMode === "settings",
+      team: screenMode === "team" || isTeamDetailPage, // チーム詳細ページでもteamアイコンをアクティブに
+    };
+  }, [screenMode, currentMode, pathname]);
+
   return (
     <NavigationContext.Provider
       value={{
@@ -68,6 +104,7 @@ export function NavigationProvider({
         setCurrentMode,
         isFromBoardDetail,
         setIsFromBoardDetail,
+        iconStates,
         handleMainSelectMemo,
         handleMainSelectTask,
         setHandleMainSelectMemo,

@@ -37,11 +37,23 @@ export function useTeamDetail(customUrl: string) {
       });
 
       if (!response.ok) {
+        if (response.status === 404) {
+          // 404は正常な動作（チームが存在しない）なのでサイレントに処理
+          throw new Error("TEAM_NOT_FOUND");
+        }
         throw new Error("チーム詳細の取得に失敗しました");
       }
 
       return response.json();
     },
     enabled: !!customUrl,
+    retry: (failureCount, error) => {
+      // 404エラーの場合はリトライしない
+      if (error instanceof Error && error.message === "TEAM_NOT_FOUND") {
+        return false;
+      }
+      // その他のエラーは最大3回リトライ
+      return failureCount < 3;
+    },
   });
 }

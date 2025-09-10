@@ -134,8 +134,9 @@ export default function JoinTeamPage() {
       const data = await response.json();
 
       if (response.ok) {
-        // 成功時はチーム画面にリダイレクト
-        window.location.href = "/team";
+        // 成功時はホーム画面でチーム一覧を開く
+        sessionStorage.setItem("showTeamListAfterCreation", "true");
+        window.location.href = "/";
       } else {
         setError(data.message || "参加申請の送信に失敗しました");
       }
@@ -283,7 +284,13 @@ export default function JoinTeamPage() {
                     {applicationStatus.role}）
                   </p>
                   <Button
-                    onClick={() => (window.location.href = "/team")}
+                    onClick={() => {
+                      sessionStorage.setItem(
+                        "showTeamListAfterCreation",
+                        "true",
+                      );
+                      window.location.href = "/";
+                    }}
                     className="w-full bg-green-600 hover:bg-green-700"
                   >
                     チーム画面へ移動
@@ -302,7 +309,13 @@ export default function JoinTeamPage() {
                   </p>
                   <div className="space-y-3">
                     <Button
-                      onClick={() => (window.location.href = "/team")}
+                      onClick={() => {
+                        sessionStorage.setItem(
+                          "showTeamListAfterCreation",
+                          "true",
+                        );
+                        window.location.href = "/";
+                      }}
                       variant="outline"
                       className="w-full"
                     >

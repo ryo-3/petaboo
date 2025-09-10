@@ -338,7 +338,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   // エラーまたはチームが見つからない場合のリダイレクト処理
   useEffect(() => {
     if (!isLoading && (error || !team)) {
-      router.push("/team");
+      router.push("/");
     }
   }, [isLoading, error, team, router]);
 

@@ -42,7 +42,7 @@ export function TeamSettings({ customUrl }: TeamSettingsProps) {
   // エラーまたはチームが見つからない場合のリダイレクト処理
   useEffect(() => {
     if (!isLoading && !team) {
-      router.push("/team");
+      router.push("/");
     }
   }, [isLoading, team, router]);
 

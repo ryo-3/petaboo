@@ -202,20 +202,23 @@ export function TeamCreate() {
         </div>
 
         {/* フォームエリア */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl">
+        <div className="flex-1 overflow-y-auto pb-16">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 h-full">
             {/* 左側: メインフォーム */}
-            <div className="lg:col-span-2">
-              <Card className="p-4">
+            <div className="lg:col-span-3 flex flex-col">
+              <Card className="p-4 flex-1 flex flex-col">
                 <h2 className="text-lg font-semibold text-gray-800 mb-4">
                   基本情報
                 </h2>
-                <form onSubmit={handleSubmit} className="space-y-3">
+                <form
+                  onSubmit={handleSubmit}
+                  className="space-y-3 flex-1 flex flex-col"
+                >
                   {/* チーム名 */}
                   <div>
                     <label
                       htmlFor="teamName"
-                      className="block text-sm font-semibold text-gray-700 mb-1"
+                      className="block text-base font-semibold text-gray-800 mb-2"
                     >
                       チーム名 <span className="text-red-500">*</span>
                     </label>
@@ -235,12 +238,12 @@ export function TeamCreate() {
                     />
                     <div className="flex justify-between mt-1">
                       <span
-                        className={`text-xs ${fieldErrors.name ? "text-red-500" : "text-gray-500"}`}
+                        className={`text-sm ${fieldErrors.name ? "text-red-500" : "text-gray-500"}`}
                       >
                         {fieldErrors.name ||
                           "プロジェクトや部署など、わかりやすい名前を付けましょう"}
                       </span>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-sm text-gray-400">
                         {name.length}/50
                       </span>
                     </div>
@@ -250,7 +253,7 @@ export function TeamCreate() {
                   <div>
                     <label
                       htmlFor="adminDisplayName"
-                      className="block text-sm font-semibold text-gray-700 mb-1"
+                      className="block text-base font-semibold text-gray-800 mb-2"
                     >
                       管理者名 <span className="text-red-500">*</span>
                     </label>
@@ -276,12 +279,12 @@ export function TeamCreate() {
                     />
                     <div className="flex justify-between mt-1">
                       <span
-                        className={`text-xs ${fieldErrors.adminDisplayName ? "text-red-500" : "text-gray-500"}`}
+                        className={`text-sm ${fieldErrors.adminDisplayName ? "text-red-500" : "text-gray-500"}`}
                       >
                         {fieldErrors.adminDisplayName ||
                           "チーム内で表示される管理者の名前を入力してください"}
                       </span>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-sm text-gray-400">
                         {adminDisplayName.length}/30
                       </span>
                     </div>
@@ -291,7 +294,7 @@ export function TeamCreate() {
                   <div>
                     <label
                       htmlFor="teamUrl"
-                      className="block text-sm font-semibold text-gray-700 mb-1"
+                      className="block text-base font-semibold text-gray-800 mb-2"
                     >
                       チームURL <span className="text-red-500">*</span>
                     </label>
@@ -322,12 +325,12 @@ export function TeamCreate() {
                     </div>
                     <div className="flex justify-between mt-1">
                       <span
-                        className={`text-xs ${fieldErrors.customUrl ? "text-red-500" : "text-gray-500"}`}
+                        className={`text-sm ${fieldErrors.customUrl ? "text-red-500" : "text-gray-500"}`}
                       >
                         {fieldErrors.customUrl ||
                           "英小文字・数字・ハイフンのみ使用可能です"}
                       </span>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-sm text-gray-400">
                         {customUrl.length}/30
                       </span>
                     </div>
@@ -337,7 +340,7 @@ export function TeamCreate() {
                   <div>
                     <label
                       htmlFor="teamDescription"
-                      className="block text-sm font-semibold text-gray-700 mb-1"
+                      className="block text-base font-semibold text-gray-800 mb-2"
                     >
                       チーム説明（任意）
                     </label>
@@ -362,16 +365,19 @@ export function TeamCreate() {
                     />
                     <div className="flex justify-between mt-1">
                       <span
-                        className={`text-xs ${fieldErrors.description ? "text-red-500" : "text-gray-500"}`}
+                        className={`text-sm ${fieldErrors.description ? "text-red-500" : "text-gray-500"}`}
                       >
                         {fieldErrors.description ||
                           "チームの目的や役割を簡潔に説明しましょう"}
                       </span>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-sm text-gray-400">
                         {description.length}/200
                       </span>
                     </div>
                   </div>
+
+                  {/* フォーム内容の余白を調整するスペーサー */}
+                  <div className="flex-1"></div>
 
                   {/* エラー表示 */}
                   {error && (
@@ -381,7 +387,7 @@ export function TeamCreate() {
                   )}
 
                   {/* アクションボタン */}
-                  <div className="flex gap-3 pt-3 border-t border-gray-100">
+                  <div className="flex justify-between items-center pt-3 border-t border-gray-100 mt-auto">
                     <Button
                       type="button"
                       variant="outline"
@@ -400,7 +406,7 @@ export function TeamCreate() {
                         !adminDisplayName.trim() ||
                         createTeamMutation.isPending
                       }
-                      className="px-8"
+                      className="px-8 bg-Green hover:bg-Green/90 text-white border-Green hover:border-Green/90"
                     >
                       {createTeamMutation.isPending ? (
                         <>
@@ -417,100 +423,128 @@ export function TeamCreate() {
             </div>
 
             {/* 右側: 補助情報 */}
-            <div className="space-y-4">
-              {/* プラン情報カード */}
-              {teamStats && (
-                <Card className="p-4">
-                  <h3 className="font-semibold text-gray-800 mb-3 text-sm">
-                    プラン情報
-                  </h3>
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <div className="flex items-center gap-2 mb-2">
+            <div className="lg:col-span-2 flex flex-col">
+              <Card className="p-6 shadow-sm flex-1 flex flex-col bg-gradient-to-b from-slate-50 to-white">
+                {/* プラン情報セクション */}
+                {teamStats && (
+                  <div className="mb-8">
+                    <h3 className="font-semibold text-lg text-gray-900 mb-4 flex items-center gap-2">
                       <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <span className="text-sm font-semibold text-blue-800">
-                        プレミアムプラン特典
-                      </span>
-                    </div>
-                    <div className="text-sm text-blue-700">
-                      作成可能なチーム: {teamStats.ownedTeams}/
-                      {teamStats.maxOwnedTeams}
-                    </div>
-                    {!canCreateTeam && (
-                      <div className="text-sm text-red-600 mt-1">
-                        チーム作成数の上限に達しています
+                      プラン情報
+                    </h3>
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                          <span className="text-white text-lg font-bold">
+                            ★
+                          </span>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900">
+                            プレミアムプラン
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            チーム機能利用可能
+                          </p>
+                        </div>
                       </div>
-                    )}
+                      <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-md">
+                        <span className="text-sm font-medium text-gray-600">
+                          作成可能チーム数
+                        </span>
+                        <span className="text-xl font-bold text-blue-600">
+                          {teamStats.ownedTeams}/{teamStats.maxOwnedTeams}
+                        </span>
+                      </div>
+                      {!canCreateTeam && (
+                        <div className="mt-3 text-sm text-red-600 font-medium bg-red-50 px-3 py-2 rounded-md">
+                          ⚠️ 作成上限に達しています
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </Card>
-              )}
+                )}
 
-              {/* チーム作成後の流れ */}
-              <Card className="p-4">
-                <h3 className="font-semibold text-gray-800 mb-3 text-sm">
-                  チーム作成後の流れ
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex gap-3">
-                    <span className="w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs flex-shrink-0 mt-0.5">
-                      1
-                    </span>
-                    <div>
-                      <p className="font-medium text-xs text-gray-800">
-                        管理者権限を取得
-                      </p>
-                      <p className="text-xs text-gray-600 mt-1">
-                        チームが作成され、あなたが管理者になります
-                      </p>
+                {/* チーム作成後の流れセクション */}
+                <div className="mb-8">
+                  <h3 className="font-semibold text-lg text-gray-900 mb-4 flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    作成後の流れ
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="flex gap-4 items-start">
+                      <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 mt-1">
+                        1
+                      </div>
+                      <div className="flex-1 pt-1">
+                        <p className="font-medium text-gray-900 mb-1">
+                          管理者権限を取得
+                        </p>
+                        <p className="text-sm text-gray-600 leading-relaxed">
+                          チームが作成され、あなたが管理者になります
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <span className="w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs flex-shrink-0 mt-0.5">
-                      2
-                    </span>
-                    <div>
-                      <p className="font-medium text-xs text-gray-800">
-                        メンバーを招待
-                      </p>
-                      <p className="text-xs text-gray-600 mt-1">
-                        招待コードが生成され、メンバーを招待できます
-                      </p>
+                    <div className="flex gap-4 items-start">
+                      <div className="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 mt-1">
+                        2
+                      </div>
+                      <div className="flex-1 pt-1">
+                        <p className="font-medium text-gray-900 mb-1">
+                          メンバーを招待
+                        </p>
+                        <p className="text-sm text-gray-600 leading-relaxed">
+                          招待コードが生成され、メンバーを招待できます
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <span className="w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs flex-shrink-0 mt-0.5">
-                      3
-                    </span>
-                    <div>
-                      <p className="font-medium text-xs text-gray-800">
-                        コンテンツを共有
-                      </p>
-                      <p className="text-xs text-gray-600 mt-1">
-                        チーム専用のメモ・タスク・ボードを共有できます
-                      </p>
+                    <div className="flex gap-4 items-start">
+                      <div className="w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 mt-1">
+                        3
+                      </div>
+                      <div className="flex-1 pt-1">
+                        <p className="font-medium text-gray-900 mb-1">
+                          コンテンツを共有
+                        </p>
+                        <p className="text-sm text-gray-600 leading-relaxed">
+                          チーム専用のメモ・タスク・ボードを共有できます
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </Card>
 
-              {/* ヒントカード */}
-              <Card className="p-4 bg-amber-50 border-amber-200">
-                <h3 className="font-semibold text-gray-800 mb-3 text-sm">
-                  💡 ヒント
-                </h3>
-                <ul className="space-y-1.5 text-xs text-gray-700">
-                  <li className="flex gap-2">
-                    <span className="text-amber-500">•</span>
-                    <span>チームURLは後から変更できません</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-amber-500">•</span>
-                    <span>管理者名はチーム内で表示されます</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-amber-500">•</span>
-                    <span>チーム説明は後から編集可能です</span>
-                  </li>
-                </ul>
+                {/* ヒントセクション */}
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                    <svg
+                      className="w-5 h-5 text-yellow-500"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    注意事項
+                  </h4>
+                  <ul className="space-y-2 text-sm text-gray-700">
+                    <li className="flex items-start gap-2">
+                      <span className="text-yellow-500 text-xs mt-1.5">●</span>
+                      <span>チームURLは作成後に変更できません</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-yellow-500 text-xs mt-1.5">●</span>
+                      <span>管理者名はチーム内での表示名になります</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-yellow-500 text-xs mt-1.5">●</span>
+                      <span>チーム説明は後から編集可能です</span>
+                    </li>
+                  </ul>
+                </div>
               </Card>
             </div>
           </div>

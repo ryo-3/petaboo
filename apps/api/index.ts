@@ -18,20 +18,21 @@ import teamShareRoute from "./src/routes/teams/share";
 import clerkWebhook from "./src/routes/webhooks/clerk";
 import usersRoute from "./src/routes/users/route";
 
-
 const app = new Hono();
 
 // CORS設定
-app.use("*", cors({
-  origin: "http://localhost:7593",
-  credentials: false,
-}));
-
+app.use(
+  "*",
+  cors({
+    origin: "http://localhost:7593",
+    credentials: false,
+  }),
+);
 
 // 基本ルート
 app.get("/", (c) => {
   return c.json({
-    message: "Petaboo API is running!",
+    message: "ぺたぼー (PETABoo) API is running!",
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
   });
@@ -43,7 +44,6 @@ app.get("/health", (c) => {
     timestamp: new Date().toISOString(),
   });
 });
-
 
 app.route("/memos", memosRoute);
 app.route("/tasks", tasksRoute);

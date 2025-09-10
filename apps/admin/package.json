@@ -1,6 +1,7 @@
 {
   "name": "@petaboo/admin",
   "version": "0.1.0",
+  "description": "ぺたぼー 管理画面 - PETABoo Admin Dashboard",
   "type": "module",
   "private": true,
   "scripts": {

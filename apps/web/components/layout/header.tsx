@@ -6,12 +6,22 @@ function Header() {
       <div className="flex items-center gap-5 flex-1">
         <div className="flex items-center gap-4">
           {/* ロゴ */}
-          <div className="w-9 h-9 bg-Green rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">N</span>
+          <div className="w-10 h-10 bg-Green rounded-xl flex items-center justify-center shadow-sm">
+            <span className="text-white font-bold text-base">ぺ</span>
           </div>
 
-          {/* タイトル */}
-          <h1 className="text-xl font-semibold text-gray-800">Memos</h1>
+          {/* タイトルとキャッチコピー */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold text-gray-800 tracking-wide">
+                ぺたぼー
+              </h1>
+              <span className="text-lg font-medium text-gray-600">PETABoo</span>
+            </div>
+            <span className="text-sm text-gray-600 mt-0.5">
+              - 日々のメモやタスクをひとまとめに
+            </span>
+          </div>
         </div>
       </div>
     </header>

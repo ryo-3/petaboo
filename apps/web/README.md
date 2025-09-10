@@ -1,3 +1,7 @@
+# ぺたぼー (PETABoo) Web
+
+個人・チーム向け統合メモ・タスク管理システムのフロントエンド
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/create-next-app).
 
 ## Getting Started

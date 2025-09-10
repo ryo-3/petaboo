@@ -59,7 +59,7 @@ app.use("*", async (c, next) => {
 // 基本ルート
 app.get("/", (c) => {
   return c.json({
-    message: "Petaboo API is running on Cloudflare Workers with D1!",
+    message: "ぺたぼー (PETABoo) API is running on Cloudflare Workers with D1!",
     timestamp: new Date().toISOString(),
     environment: "production",
     version: "2.1",
@@ -331,9 +331,9 @@ app.get("/openapi", (c) => {
   const openapi = {
     openapi: "3.1.0",
     info: {
-      title: "Petaboo API",
+      title: "PETABoo API",
       version: "2.1.0",
-      description: "Petaboo本番API - Cloudflare Workers + D1（軽量版）",
+      description: "ぺたぼー本番API - Cloudflare Workers + D1（軽量版）",
     },
     paths: {
       "/": {

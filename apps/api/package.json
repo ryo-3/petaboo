@@ -1,5 +1,6 @@
 {
   "name": "@petaboo/api",
+  "description": "ぺたぼー API - メモ・タスク管理システム バックエンド (PETABoo)",
   "type": "module",
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250904.0",

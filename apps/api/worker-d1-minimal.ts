@@ -31,7 +31,7 @@ app.use(
 // 基本ルート
 app.get("/", (c) => {
   return c.json({
-    message: "Petaboo API is running on Cloudflare Workers with D1!",
+    message: "ぺたぼー (PETABoo) API is running on Cloudflare Workers with D1!",
     timestamp: new Date().toISOString(),
     environment: "production",
   });

@@ -6,8 +6,8 @@ import "@refinedev/antd/dist/reset.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Petaboo 管理画面",
-  description: "Petaboo管理者用ダッシュボード",
+  title: "PETABoo 管理画面",
+  description: "ぺたぼー管理者用ダッシュボード",
 };
 
 export default function RootLayout({
@@ -18,9 +18,7 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body>
-        <RootLayoutClient>
-          {children}
-        </RootLayoutClient>
+        <RootLayoutClient>{children}</RootLayoutClient>
       </body>
     </html>
   );

@@ -31,7 +31,7 @@ app.use(
 // 動作確認用のルート
 app.get("/", (c) => {
   return c.json({
-    message: "Petaboo API is running on Cloudflare Workers!",
+    message: "ぺたぼー (PETABoo) API is running on Cloudflare Workers!",
     timestamp: new Date().toISOString(),
     environment: "production",
   });

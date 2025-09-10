@@ -1,6 +1,7 @@
 {
   "name": "@petaboo/web",
   "version": "0.1.0",
+  "description": "ぺたぼー - 個人・チーム向け統合メモ・タスク管理システム (PETABoo)",
   "type": "module",
   "private": true,
   "scripts": {

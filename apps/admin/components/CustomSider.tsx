@@ -4,7 +4,11 @@ import React from "react";
 import { Layout, Menu } from "antd";
 import { useMenu } from "@refinedev/core";
 import Link from "next/link";
-import { UserOutlined, DashboardOutlined, SettingOutlined } from "@ant-design/icons";
+import {
+  UserOutlined,
+  DashboardOutlined,
+  SettingOutlined,
+} from "@ant-design/icons";
 
 const { Sider } = Layout;
 
@@ -50,7 +54,7 @@ export const CustomSider: React.FC = () => {
           background: "rgba(255, 255, 255, 0.2)",
         }}
       >
-        Petaboo
+        PETABoo
       </div>
       <Menu
         theme="dark"

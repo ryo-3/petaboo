@@ -1,4 +1,4 @@
--- Petaboo D1 Database Schema
+-- ぺたぼー (PETABoo) D1 Database Schema
 -- Generated from Drizzle ORM migrations
 
 -- Users table (from latest schema)

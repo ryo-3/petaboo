@@ -69,7 +69,7 @@ function AdminLoginForm() {
         backgroundColor: "#f0f2f5",
       }}
     >
-      <Card title="Petaboo 管理者ログイン" style={{ width: 400 }}>
+      <Card title="PETABoo 管理者ログイン" style={{ width: 400 }}>
         <Form
           form={form}
           onFinish={(values) => onFinish(values, false)}

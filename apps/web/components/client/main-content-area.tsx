@@ -6,6 +6,7 @@ import SettingsScreen from "@/components/screens/settings-screen";
 import TaskScreen from "@/components/screens/task-screen";
 import WelcomeScreen from "@/components/screens/welcome-screen";
 import { TeamWelcome } from "@/components/features/team/team-welcome";
+import { TeamCreate } from "@/components/features/team/team-create";
 import { BoardDetailWrapper } from "./board-detail-wrapper";
 import type { Board } from "@/src/types/board";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
@@ -48,6 +49,9 @@ interface MainContentAreaProps {
   teamMode?: boolean;
   teamId?: number;
   showTeamList?: boolean;
+  showTeamCreate?: boolean;
+  handleTeamCreate?: () => void;
+  handleTeamCreated?: () => void;
 
   // ハンドラー
   handleSelectMemo: (memo: Memo | null) => void;
@@ -95,16 +99,22 @@ export function MainContentArea({
   teamMode = false,
   teamId,
   showTeamList = false,
+  showTeamCreate = false,
+  handleTeamCreate,
+  handleTeamCreated,
 }: MainContentAreaProps) {
   return (
     <>
       {/* ホーム画面 */}
-      {screenMode === "home" && !showTeamList && (
+      {screenMode === "home" && !showTeamList && !showTeamCreate && (
         <WelcomeScreen teamMode={teamMode} />
       )}
 
       {/* チーム一覧画面 */}
-      {showTeamList && <TeamWelcome />}
+      {showTeamList && <TeamWelcome onTeamCreate={handleTeamCreate} />}
+
+      {/* チーム作成画面 */}
+      {showTeamCreate && <TeamCreate onTeamCreated={handleTeamCreated} />}
 
       {/* メモ関連画面（一覧・表示・編集） */}
       {screenMode === "memo" && (

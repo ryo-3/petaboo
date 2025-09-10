@@ -9,7 +9,11 @@ import ArrowLeftIcon from "@/components/icons/arrow-left-icon";
 import { useTeamStats } from "@/src/hooks/use-team-stats";
 import { useCreateTeam } from "@/src/hooks/use-create-team";
 
-export function TeamCreate() {
+interface TeamCreateProps {
+  onTeamCreated?: () => void;
+}
+
+export function TeamCreate({ onTeamCreated }: TeamCreateProps = {}) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [customUrl, setCustomUrl] = useState("");
@@ -172,10 +176,20 @@ export function TeamCreate() {
         adminDisplayName: adminDisplayName.trim(),
       });
 
-      // 成功後はホーム画面に戻る
-      router.push("/");
+      // 成功後の処理
+      console.log("📍 チーム作成成功");
+
+      if (onTeamCreated) {
+        // コールバックがある場合は実行（画面遷移なし）
+        onTeamCreated();
+      } else {
+        // コールバックがない場合は従来通り
+        sessionStorage.setItem("showTeamListAfterCreation", "true");
+        router.back();
+      }
     } catch (error) {
       console.error("チーム作成エラー:", error);
+      console.error("エラー詳細:", JSON.stringify(error, null, 2));
       setError(
         error instanceof Error ? error.message : "チーム作成に失敗しました",
       );
@@ -189,7 +203,13 @@ export function TeamCreate() {
         <div className="mb-4 flex-shrink-0">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => router.back()}
+              onClick={() => {
+                if (onTeamCreated) {
+                  onTeamCreated();
+                } else {
+                  router.back();
+                }
+              }}
               className="p-1 text-gray-600 hover:text-gray-800 transition-colors rounded-md hover:bg-gray-100"
             >
               <ArrowLeftIcon className="w-5 h-5" />
@@ -391,7 +411,13 @@ export function TeamCreate() {
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => router.back()}
+                      onClick={() => {
+                        if (onTeamCreated) {
+                          onTeamCreated();
+                        } else {
+                          router.back();
+                        }
+                      }}
                       disabled={createTeamMutation.isPending}
                       className="px-6"
                     >

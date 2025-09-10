@@ -38,10 +38,12 @@ interface SidebarProps {
   currentBoardName?: string;
   showingBoardDetail?: boolean;
   onTeamList?: () => void;
+  onTeamCreate?: () => void;
   isTeamDetailPage?: boolean;
   isTeamListPage?: boolean;
   screenMode?: string;
   showTeamList?: boolean;
+  showTeamCreate?: boolean;
 }
 
 function Sidebar({
@@ -65,10 +67,12 @@ function Sidebar({
   currentBoardName,
   showingBoardDetail = false,
   onTeamList,
+  onTeamCreate,
   isTeamDetailPage = false,
   isTeamListPage = false,
   screenMode,
   showTeamList = false,
+  showTeamCreate = false,
 }: SidebarProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -122,11 +126,16 @@ function Sidebar({
         !isTeamDetailPage,
       search: screenMode === "search",
       settings: screenMode === "settings",
-      team: isTeamListPage || showTeamList,
+      team:
+        isTeamListPage ||
+        showTeamList ||
+        showTeamCreate ||
+        screenMode === "team",
     }),
     [
       screenMode,
       showTeamList,
+      showTeamCreate,
       isTeamOverview,
       currentMode,
       isTeamDetailPageUrl,

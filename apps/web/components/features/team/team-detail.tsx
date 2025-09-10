@@ -24,6 +24,7 @@ import MemoScreen from "@/components/screens/memo-screen";
 import TaskScreen from "@/components/screens/task-screen";
 import BoardScreen from "@/components/screens/board-screen";
 import SettingsScreen from "@/components/screens/settings-screen";
+import SearchScreen from "@/components/screens/search-screen";
 import { DisplayNameModal } from "@/components/modals/display-name-modal";
 import { TeamWelcome } from "@/components/features/team/team-welcome";
 import { TeamSettings } from "@/components/features/team/team-settings";
@@ -123,7 +124,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       tab === "boards" ||
       tab === "team-list" ||
       tab === "settings" ||
-      tab === "team-settings"
+      tab === "team-settings" ||
+      tab === "search"
     ) {
       return tab;
     }
@@ -147,6 +149,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     | "team-list"
     | "settings"
     | "team-settings"
+    | "search"
   >(getTabFromURL());
 
   // URLのパラメータが変更された時にタブとアイテムを更新
@@ -183,7 +186,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         | "boards"
         | "team-list"
         | "settings"
-        | "team-settings",
+        | "team-settings"
+        | "search",
     ) => {
       setActiveTab(tab);
 
@@ -226,6 +230,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         handleTabChange("team-list");
       } else if (mode === "settings") {
         handleTabChange("settings");
+      } else if (mode === "search") {
+        handleTabChange("search");
       }
     };
 
@@ -837,6 +843,20 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
           {activeTab === "team-settings" && (
             <div className="h-full -mt-4 -ml-5 -mr-5">
               <TeamSettings customUrl={customUrl} />
+            </div>
+          )}
+
+          {/* 検索タブ */}
+          {activeTab === "search" && (
+            <div className="h-full -mt-4 -ml-5 -mr-5">
+              <SearchScreen
+                onSelectMemo={handleSelectMemo}
+                onSelectTask={handleSelectTask}
+                onSelectDeletedMemo={handleSelectDeletedMemo}
+                onSelectDeletedTask={handleSelectDeletedTask}
+                teamMode={true}
+                teamId={team.id}
+              />
             </div>
           )}
         </div>

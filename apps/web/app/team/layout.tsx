@@ -36,8 +36,16 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   const activeTab =
     isTeamDetailPage &&
     urlTab &&
-    ["memos", "tasks", "boards", "team-list", "settings"].includes(urlTab)
-      ? (urlTab as "memos" | "tasks" | "boards" | "team-list" | "settings")
+    ["memos", "tasks", "boards", "team-list", "settings", "search"].includes(
+      urlTab,
+    )
+      ? (urlTab as
+          | "memos"
+          | "tasks"
+          | "boards"
+          | "team-list"
+          | "settings"
+          | "search")
       : "overview";
 
   // チームボード詳細ページかどうかを判定
@@ -198,6 +206,20 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
       router.push("/settings");
     }
   };
+
+  const handleSearch = () => {
+    if (isTeamDetailPage) {
+      // チーム詳細ページの場合は検索タブに切り替え
+      window.dispatchEvent(
+        new CustomEvent("team-mode-change", {
+          detail: { mode: "search", pathname },
+        }),
+      );
+    } else {
+      // それ以外の場合は通常の検索画面
+      router.push("/search");
+    }
+  };
   return (
     <div className="flex h-screen bg-white overflow-hidden">
       <Header />
@@ -217,6 +239,7 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
             onTeamList={handleTeamList}
             onBoardDetail={handleBoardDetail}
             onSettings={handleSettings}
+            onSearch={handleSearch}
             screenMode={
               isTeamBoardDetailPage
                 ? "board"
@@ -233,7 +256,9 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
                             ? "team"
                             : activeTab === "settings"
                               ? "settings"
-                              : "home"
+                              : activeTab === "search"
+                                ? "search"
+                                : "home"
                   : undefined
             }
             showingBoardDetail={isTeamBoardDetailPage}

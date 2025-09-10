@@ -23,11 +23,13 @@ interface MainClientMobileProps {
   handleDashboard: () => void;
   handleBoardDetail: () => void;
   handleTeamList: () => void;
+  handleTeamCreate: () => void;
   screenMode: string;
   initialBoardName?: string;
   currentBoard?: Board | null;
   showingBoardDetail: boolean;
   showTeamList: boolean;
+  showTeamCreate: boolean;
 }
 
 export function MainClientMobile({
@@ -49,11 +51,13 @@ export function MainClientMobile({
   handleDashboard,
   handleBoardDetail,
   handleTeamList,
+  handleTeamCreate,
   screenMode,
   initialBoardName,
   currentBoard,
   showingBoardDetail,
   showTeamList,
+  showTeamCreate,
 }: MainClientMobileProps) {
   return (
     <div className="h-screen w-full md:hidden">
@@ -84,7 +88,9 @@ export function MainClientMobile({
           currentBoardName={initialBoardName || currentBoard?.name}
           showingBoardDetail={showingBoardDetail}
           onTeamList={handleTeamList}
+          onTeamCreate={handleTeamCreate}
           showTeamList={showTeamList}
+          showTeamCreate={showTeamCreate}
           screenMode={screenMode}
         />
       )}

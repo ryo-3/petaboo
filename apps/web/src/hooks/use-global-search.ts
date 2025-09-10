@@ -19,6 +19,7 @@ interface UseGlobalSearchOptions {
   searchScope: SearchScope;
   searchType: SearchType;
   debounceMs?: number;
+  teamId?: number;
 }
 
 export function useGlobalSearch({
@@ -26,15 +27,24 @@ export function useGlobalSearch({
   searchScope,
   searchType,
   debounceMs = 300,
+  teamId,
 }: UseGlobalSearchOptions) {
   const [debouncedQuery, setDebouncedQuery] = useState(query);
   const [isSearching, setIsSearching] = useState(false);
 
-  // データ取得
-  const { data: memos } = useMemos();
-  const { data: deletedMemos } = useDeletedMemos();
-  const { data: tasks } = useTasks();
-  const { data: deletedTasks } = useDeletedTasks();
+  // データ取得 - teamIdがある場合はチーム内のデータのみ取得
+  const { data: memos } = useMemos(
+    teamId ? { teamMode: true, teamId } : undefined,
+  );
+  const { data: deletedMemos } = useDeletedMemos(
+    teamId ? { teamMode: true, teamId } : undefined,
+  );
+  const { data: tasks } = useTasks(
+    teamId ? { teamMode: true, teamId } : undefined,
+  );
+  const { data: deletedTasks } = useDeletedTasks(
+    teamId ? { teamMode: true, teamId } : undefined,
+  );
 
   // デバウンス処理
   useEffect(() => {

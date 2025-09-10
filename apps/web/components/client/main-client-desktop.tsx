@@ -26,11 +26,13 @@ interface MainClientDesktopProps {
   handleDashboard: () => void;
   handleBoardDetail: () => void;
   handleTeamList: () => void;
+  handleTeamCreate: () => void;
   screenMode: string;
   initialBoardName?: string;
   currentBoard?: Board | null;
   showingBoardDetail: boolean;
   showTeamList: boolean;
+  showTeamCreate: boolean;
 }
 
 export function MainClientDesktop({
@@ -52,11 +54,13 @@ export function MainClientDesktop({
   handleDashboard,
   handleBoardDetail,
   handleTeamList,
+  handleTeamCreate,
   screenMode,
   initialBoardName,
   currentBoard,
   showingBoardDetail,
   showTeamList,
+  showTeamCreate,
 }: MainClientDesktopProps) {
   return (
     <div className="hidden md:flex flex-col h-screen w-full">
@@ -89,7 +93,9 @@ export function MainClientDesktop({
             currentBoardName={initialBoardName || currentBoard?.name}
             showingBoardDetail={showingBoardDetail}
             onTeamList={handleTeamList}
+            onTeamCreate={handleTeamCreate}
             showTeamList={showTeamList}
+            showTeamCreate={showTeamCreate}
             screenMode={screenMode}
           />
         }

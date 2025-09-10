@@ -14,7 +14,11 @@ import PlusIcon from "@/components/icons/plus-icon";
 import { Crown, Clock, Users } from "lucide-react";
 import { TeamCreateInline } from "./team-create-inline";
 
-export function TeamWelcome() {
+interface TeamWelcomeProps {
+  onTeamCreate?: () => void;
+}
+
+export function TeamWelcome({ onTeamCreate }: TeamWelcomeProps = {}) {
   const router = useRouter();
   const { data: user } = useUser();
 
@@ -406,8 +410,8 @@ export function TeamWelcome() {
                           className="w-full"
                           variant={isPremium ? "default" : "secondary"}
                           onClick={() => {
-                            if (isPremium) {
-                              setShowCreateForm(true);
+                            if (isPremium && onTeamCreate) {
+                              onTeamCreate();
                             }
                           }}
                         >
@@ -486,8 +490,8 @@ export function TeamWelcome() {
                           className="w-full"
                           variant={isPremium ? "default" : "secondary"}
                           onClick={() => {
-                            if (isPremium) {
-                              setShowCreateForm(true);
+                            if (isPremium && onTeamCreate) {
+                              onTeamCreate();
                             }
                           }}
                         >
@@ -539,8 +543,8 @@ export function TeamWelcome() {
               <button
                 onClick={() => {
                   setShowActionModal(false);
-                  if (isPremium) {
-                    setShowCreateForm(true);
+                  if (isPremium && onTeamCreate) {
+                    onTeamCreate();
                   }
                 }}
                 disabled={!isPremium}

@@ -90,6 +90,7 @@ function MainClient({
   // UI状態管理
   const [showDeleted, setShowDeleted] = useState(false); // モバイル版削除済み表示フラグ
   const [showTeamList, setShowTeamList] = useState(false); // チーム一覧表示フラグ
+  const [showTeamCreate, setShowTeamCreate] = useState(false); // チーム作成画面表示フラグ
   const [showingBoardDetail, setShowingBoardDetail] = useState(() => {
     // サーバーサイドから明示的に指示されている場合は詳細表示
     // または、ボード情報が渡されている場合、URLがボード詳細の場合は詳細表示
@@ -109,16 +110,26 @@ function MainClient({
         setShowingBoardDetail(true); // ボード詳細URLでは詳細表示
       }
     } else if (pathname === "/") {
-      // ルートページではボード一覧を表示
-      if (isFromBoardDetail) {
-        // ボード詳細から戻った場合はボード一覧を表示
-        // isFromBoardDetailがtrueの場合は、すでにscreenModeがboardに設定されているはず
-        // 上書きしない
-        setIsFromBoardDetail(false); // フラグをリセット
-      }
-      // ルートページではボード一覧表示
-      if (screenMode === "board") {
-        setShowingBoardDetail(false);
+      // チーム作成成功後のフラグをチェック
+      const shouldShowTeamList = sessionStorage.getItem(
+        "showTeamListAfterCreation",
+      );
+      if (shouldShowTeamList === "true") {
+        setShowTeamList(true);
+        setScreenMode("home");
+        sessionStorage.removeItem("showTeamListAfterCreation"); // フラグを削除
+      } else {
+        // ルートページではボード一覧を表示
+        if (isFromBoardDetail) {
+          // ボード詳細から戻った場合はボード一覧を表示
+          // isFromBoardDetailがtrueの場合は、すでにscreenModeがboardに設定されているはず
+          // 上書きしない
+          setIsFromBoardDetail(false); // フラグをリセット
+        }
+        // ルートページではボード一覧表示
+        if (screenMode === "board") {
+          setShowingBoardDetail(false);
+        }
       }
     }
     // ルートパス("/")でもユーザーが手動で切り替えた場合はホームに戻さない
@@ -150,33 +161,53 @@ function MainClient({
     } else {
       // チーム一覧を開く場合は、他のモードをリセット
       setShowTeamList(true);
+      setShowTeamCreate(false);
       setScreenMode("home"); // チーム一覧もホーム画面の一部として扱う
     }
+  };
+
+  // チーム作成ハンドラー
+  const handleTeamCreate = () => {
+    setShowTeamCreate(true);
+    setShowTeamList(false);
+    setScreenMode("home");
+  };
+
+  // チーム作成完了ハンドラー
+  const handleTeamCreated = () => {
+    setShowTeamCreate(false);
+    setShowTeamList(true);
+    setScreenMode("home");
   };
 
   // 他のハンドラーをラップしてチーム表示をリセット
   const wrappedHandleHome = () => {
     setShowTeamList(false);
+    setShowTeamCreate(false);
     handleHome();
   };
 
   const wrappedHandleShowList = (mode: "memo" | "task" | "board") => {
     setShowTeamList(false);
+    setShowTeamCreate(false);
     handleShowList(mode);
   };
 
   const wrappedHandleDashboard = () => {
     setShowTeamList(false);
+    setShowTeamCreate(false);
     handleDashboard();
   };
 
   const wrappedHandleSettings = () => {
     setShowTeamList(false);
+    setShowTeamCreate(false);
     handleSettings();
   };
 
   const wrappedHandleSearch = () => {
     setShowTeamList(false);
+    setShowTeamCreate(false);
     handleSearch();
   };
 
@@ -252,11 +283,13 @@ function MainClient({
         handleDashboard={wrappedHandleDashboard}
         handleBoardDetail={handleBoardDetail}
         handleTeamList={handleTeamList}
+        handleTeamCreate={handleTeamCreate}
         screenMode={screenMode}
         initialBoardName={initialBoardName}
         currentBoard={currentBoard}
         showingBoardDetail={showingBoardDetail}
         showTeamList={showTeamList}
+        showTeamCreate={showTeamCreate}
       />
 
       {/* デスクトップ版レイアウト */}
@@ -278,11 +311,13 @@ function MainClient({
         handleDashboard={wrappedHandleDashboard}
         handleBoardDetail={handleBoardDetail}
         handleTeamList={handleTeamList}
+        handleTeamCreate={handleTeamCreate}
         screenMode={screenMode}
         initialBoardName={initialBoardName}
         currentBoard={currentBoard}
         showingBoardDetail={showingBoardDetail}
         showTeamList={showTeamList}
+        showTeamCreate={showTeamCreate}
       >
         <MainContentArea
           screenMode={screenMode}
@@ -318,6 +353,9 @@ function MainClient({
           teamMode={teamMode}
           teamId={teamId}
           showTeamList={showTeamList}
+          showTeamCreate={showTeamCreate}
+          handleTeamCreate={handleTeamCreate}
+          handleTeamCreated={handleTeamCreated}
         />
       </MainClientDesktop>
     </main>

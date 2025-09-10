@@ -47,6 +47,11 @@ export function useCreateTeam() {
       // チーム統計とチーム一覧を無効化
       queryClient.invalidateQueries({ queryKey: ["teamStats"] });
       queryClient.invalidateQueries({ queryKey: ["teams"] });
+
+      // チーム作成成功フラグを設定（遅延実行で確実に）
+      setTimeout(() => {
+        sessionStorage.setItem("showTeamListAfterCreation", "true");
+      }, 100);
     },
   });
 }

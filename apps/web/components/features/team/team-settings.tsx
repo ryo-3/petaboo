@@ -160,7 +160,10 @@ export function TeamSettings({ customUrl }: TeamSettingsProps) {
       // キャッシュをクリア
       queryClient.invalidateQueries({ queryKey: ["teams"] });
 
-      // チーム一覧に戻る
+      // チーム削除成功フラグを設定
+      sessionStorage.setItem("showTeamListAfterCreation", "true");
+
+      // ホーム画面のチーム一覧に戻る
       router.push("/");
     } catch (error) {
       console.error("チーム削除エラー:", error);

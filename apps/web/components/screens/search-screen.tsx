@@ -21,6 +21,8 @@ interface SearchScreenProps {
   onSelectTask?: (task: Task) => void;
   onSelectDeletedMemo?: (memo: DeletedMemo) => void;
   onSelectDeletedTask?: (task: DeletedTask) => void;
+  teamMode?: boolean;
+  teamId?: number;
 }
 
 function SearchScreen({
@@ -28,6 +30,8 @@ function SearchScreen({
   onSelectTask,
   onSelectDeletedMemo,
   onSelectDeletedTask,
+  teamMode = false,
+  teamId,
 }: SearchScreenProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchScope, setSearchScope] = useState<"all" | "title" | "content">(
@@ -58,6 +62,7 @@ function SearchScreen({
     searchScope,
     searchType,
     debounceMs: 500, // 詳細検索では少し長めのデバウンス
+    teamId: teamMode ? teamId : undefined,
   });
 
   // チェックボックス変更ハンドラー

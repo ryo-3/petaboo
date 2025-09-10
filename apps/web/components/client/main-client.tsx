@@ -89,16 +89,36 @@ function MainClient({
 
   // UI状態管理
   const [showDeleted, setShowDeleted] = useState(false); // モバイル版削除済み表示フラグ
-  const [showTeamList, setShowTeamList] = useState(false); // チーム一覧表示フラグ
-  const [showTeamCreate, setShowTeamCreate] = useState(false); // チーム作成画面表示フラグ
-  const [showingBoardDetail, setShowingBoardDetail] = useState(() => {
+
+  // NavigationContextから統一された状態を取得
+  const {
+    showTeamList,
+    setShowTeamList,
+    showTeamCreate,
+    setShowTeamCreate,
+    showingBoardDetail,
+    setShowingBoardDetail,
+  } = useNavigation();
+
+  // 初期値設定（一度だけ実行）
+  useEffect(() => {
     // サーバーサイドから明示的に指示されている場合は詳細表示
     // または、ボード情報が渡されている場合、URLがボード詳細の場合は詳細表示
-    return (
+    const initialShowingBoardDetail =
       forceShowBoardDetail ||
-      Boolean(boardId || initialBoardName || pathname.startsWith("/boards/"))
-    );
-  }); // ボード詳細表示フラグ
+      Boolean(boardId || initialBoardName || pathname.startsWith("/boards/"));
+
+    if (initialShowingBoardDetail && !showingBoardDetail) {
+      setShowingBoardDetail(true);
+    }
+  }, [
+    forceShowBoardDetail,
+    boardId,
+    initialBoardName,
+    pathname,
+    showingBoardDetail,
+    setShowingBoardDetail,
+  ]); // ボード詳細表示フラグ
 
   // URLに基づいてscreenModeを設定（手動設定時は上書きしない）
   useLayoutEffect(() => {
@@ -288,8 +308,6 @@ function MainClient({
         initialBoardName={initialBoardName}
         currentBoard={currentBoard}
         showingBoardDetail={showingBoardDetail}
-        showTeamList={showTeamList}
-        showTeamCreate={showTeamCreate}
       />
 
       {/* デスクトップ版レイアウト */}
@@ -316,8 +334,6 @@ function MainClient({
         initialBoardName={initialBoardName}
         currentBoard={currentBoard}
         showingBoardDetail={showingBoardDetail}
-        showTeamList={showTeamList}
-        showTeamCreate={showTeamCreate}
       >
         <MainContentArea
           screenMode={screenMode}
@@ -352,8 +368,6 @@ function MainClient({
           handleBoardClearSelection={handleBoardClearSelection}
           teamMode={teamMode}
           teamId={teamId}
-          showTeamList={showTeamList}
-          showTeamCreate={showTeamCreate}
           handleTeamCreate={handleTeamCreate}
           handleTeamCreated={handleTeamCreated}
         />

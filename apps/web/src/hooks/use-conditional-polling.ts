@@ -66,7 +66,12 @@ export function useConditionalPolling<T>({
       (condition) => condition === true,
     );
 
-    return baseCondition && visibilityCondition && otherConditions;
+    // チーム申請監視の場合は、特別にチーム詳細ページ内では常に監視する
+    const isTeamPolling =
+      iconStateKey === "team" && additionalConditions.onTeamPage;
+    const effectiveBaseCondition = isTeamPolling ? true : baseCondition;
+
+    return effectiveBaseCondition && visibilityCondition && otherConditions;
   }, [iconStates, iconStateKey, additionalConditions, enabled, isPageVisible]);
 
   // ポーリング実行関数

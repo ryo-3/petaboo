@@ -1,9 +1,17 @@
 "use client";
 
-import { createContext, useContext, ReactNode, useState, useMemo } from "react";
+import {
+  createContext,
+  useContext,
+  ReactNode,
+  useState,
+  useMemo,
+  useEffect,
+} from "react";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
 import { usePathname, useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 
 type ScreenMode =
   | "home"
@@ -14,7 +22,8 @@ type ScreenMode =
   | "settings"
   | "board"
   | "welcome"
-  | "team";
+  | "team"
+  | "loading";
 
 interface IconStates {
   home: boolean;
@@ -35,6 +44,13 @@ interface NavigationContextType {
   isFromBoardDetail: boolean;
   setIsFromBoardDetail: (value: boolean) => void;
   iconStates: IconStates;
+  // UI状態管理（Sidebarとの統一のため）
+  showTeamList: boolean;
+  setShowTeamList: (show: boolean) => void;
+  showTeamCreate: boolean;
+  setShowTeamCreate: (show: boolean) => void;
+  showingBoardDetail: boolean;
+  setShowingBoardDetail: (show: boolean) => void;
   // メイン画面のアイテム選択ハンドラー
   handleMainSelectMemo?: (memo: Memo | null) => void;
   handleMainSelectTask?: (task: Task | null) => void;
@@ -73,27 +89,74 @@ export function NavigationProvider({
     ((task: Task | null) => void) | undefined
   >();
 
+  // UI状態管理（Sidebarとの統一）
+  const [showTeamList, setShowTeamList] = useState(false);
+  const [showTeamCreate, setShowTeamCreate] = useState(false);
+  const [showingBoardDetail, setShowingBoardDetail] = useState(false);
+
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
 
-  // 基本的なiconStatesを計算
+  // Sidebarの詳細なiconStates計算ロジック（統一版）
   const iconStates = useMemo((): IconStates => {
-    // URL-based page state detection (simplified from sidebar.tsx)
-    const isTeamDetailPage =
-      pathname.startsWith("/team/") && pathname !== "/team";
+    // URL-based page state detection（Sidebarから移植）
     const isHomePage = pathname === "/";
+    const isNormalTeamPage = pathname === "/team";
+    const isTeamDetailPageUrl =
+      pathname.startsWith("/team/") && pathname !== "/team";
+    const currentTab = searchParams.get("tab");
+
+    // チーム詳細ページのタブ判定
+    const isTeamOverview =
+      isTeamDetailPageUrl && (!currentTab || currentTab === "overview");
+    const isTeamMemos = isTeamDetailPageUrl && currentTab === "memos";
+    const isTeamTasks = isTeamDetailPageUrl && currentTab === "tasks";
+    const isTeamBoards = isTeamDetailPageUrl && currentTab === "boards";
+    const isTeamListPage = isNormalTeamPage;
+    const isTeamDetailPage = isTeamDetailPageUrl;
 
     return {
-      home: screenMode === "home",
-      memo: screenMode === "memo",
-      task: screenMode === "task",
-      board: screenMode === "board",
-      boardDetail: currentMode === "board" && screenMode === "board",
+      home: (screenMode === "home" && !showTeamList) || isTeamOverview,
+      memo: screenMode === "memo" || isTeamMemos,
+      task: screenMode === "task" || isTeamTasks,
+      board: screenMode === "board" || isTeamBoards,
+      boardDetail:
+        currentMode === "board" &&
+        showingBoardDetail &&
+        screenMode !== "home" &&
+        screenMode !== "search" &&
+        screenMode !== "settings" &&
+        screenMode !== "loading" &&
+        !isTeamDetailPage,
       search: screenMode === "search",
       settings: screenMode === "settings",
-      team: screenMode === "team" || isTeamDetailPage, // チーム詳細ページでもteamアイコンをアクティブに
+      team:
+        isTeamListPage ||
+        showTeamList ||
+        showTeamCreate ||
+        screenMode === "team",
     };
-  }, [screenMode, currentMode, pathname]);
+  }, [
+    screenMode,
+    currentMode,
+    pathname,
+    searchParams,
+    showTeamList,
+    showTeamCreate,
+    showingBoardDetail,
+  ]);
+
+  // デバッグ用: iconStatesの変更をログ出力（必要に応じて削除可能）
+  useEffect(() => {
+    console.log("🔄 iconStates changed:", { screenMode, iconStates });
+  }, [iconStates, screenMode]);
+
+  // TODO: 必要に応じて個別キャッシュ無効化を実装する
+  // - メモ画面: 特定カテゴリや長時間経過時のみ無効化
+  // - タスク画面: 特定カテゴリや長時間経過時のみ無効化
+  // - ボード画面: 特定ボードや長時間経過時のみ無効化
+  // 現在はチーム申請通知のみ useTeamApplicationsPolling で実装済み
 
   return (
     <NavigationContext.Provider
@@ -105,6 +168,12 @@ export function NavigationProvider({
         isFromBoardDetail,
         setIsFromBoardDetail,
         iconStates,
+        showTeamList,
+        setShowTeamList,
+        showTeamCreate,
+        setShowTeamCreate,
+        showingBoardDetail,
+        setShowingBoardDetail,
         handleMainSelectMemo,
         handleMainSelectTask,
         setHandleMainSelectMemo,

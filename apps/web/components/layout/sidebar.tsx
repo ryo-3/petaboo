@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useNavigation } from "@/contexts/navigation-context";
 import DashboardIcon from "@/components/icons/dashboard-icon";
 import DashboardEditIcon from "@/components/icons/dashboard-edit-icon";
 import HomeIcon from "@/components/icons/home-icon";
@@ -39,11 +39,6 @@ interface SidebarProps {
   showingBoardDetail?: boolean;
   onTeamList?: () => void;
   onTeamCreate?: () => void;
-  isTeamDetailPage?: boolean;
-  isTeamListPage?: boolean;
-  screenMode?: string;
-  showTeamList?: boolean;
-  showTeamCreate?: boolean;
 }
 
 function Sidebar({
@@ -68,86 +63,9 @@ function Sidebar({
   showingBoardDetail = false,
   onTeamList,
   onTeamCreate,
-  isTeamDetailPage = false,
-  isTeamListPage = false,
-  screenMode,
-  showTeamList = false,
-  showTeamCreate = false,
 }: SidebarProps) {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  // URLベースでページ種別を判定（メモ化で最適化）
-  const pageState = React.useMemo(() => {
-    const isHomePage = pathname === "/";
-    const isNormalTeamPage = pathname === "/team";
-    const isTeamDetailPageUrl =
-      pathname.startsWith("/team/") && pathname !== "/team";
-    const currentTab = searchParams.get("tab");
-
-    return {
-      isHomePage,
-      isNormalTeamPage,
-      isTeamDetailPageUrl,
-      currentTab,
-      // チーム詳細ページの場合のタブ判定
-      isTeamOverview:
-        isTeamDetailPageUrl && (!currentTab || currentTab === "overview"),
-      isTeamMemos: isTeamDetailPageUrl && currentTab === "memos",
-      isTeamTasks: isTeamDetailPageUrl && currentTab === "tasks",
-      isTeamBoards: isTeamDetailPageUrl && currentTab === "boards",
-    };
-  }, [pathname, searchParams]);
-
-  const {
-    isHomePage,
-    isNormalTeamPage,
-    isTeamDetailPageUrl,
-    isTeamOverview,
-    isTeamMemos,
-    isTeamTasks,
-    isTeamBoards,
-  } = pageState;
-
-  // アイコンの有効化状態をメモ化
-  const iconStates = React.useMemo(
-    () => ({
-      home: (screenMode === "home" && !showTeamList) || isTeamOverview,
-      memo: screenMode === "memo" || isTeamMemos,
-      task: screenMode === "task" || isTeamTasks,
-      board: screenMode === "board" || isTeamBoards,
-      boardDetail:
-        currentMode === "board" &&
-        showingBoardDetail &&
-        screenMode !== "home" &&
-        screenMode !== "search" &&
-        screenMode !== "settings" &&
-        screenMode !== "loading" &&
-        !isTeamDetailPage,
-      search: screenMode === "search",
-      settings: screenMode === "settings",
-      team:
-        isTeamListPage ||
-        showTeamList ||
-        showTeamCreate ||
-        screenMode === "team",
-    }),
-    [
-      screenMode,
-      showTeamList,
-      showTeamCreate,
-      isTeamOverview,
-      currentMode,
-      isTeamDetailPageUrl,
-      isNormalTeamPage,
-      isTeamMemos,
-      isTeamTasks,
-      isTeamBoards,
-      showingBoardDetail,
-      isTeamDetailPage,
-      isTeamListPage,
-    ],
-  );
+  // NavigationContextから統一されたiconStatesを取得
+  const { iconStates } = useNavigation();
 
   const modeTabs = [
     {
@@ -217,6 +135,10 @@ function Sidebar({
           <Tooltip text="ボード一覧" position="right">
             <button
               onClick={() => {
+                // チーム詳細ページかどうかをURLで判定
+                const isTeamDetailPage =
+                  window.location.pathname.startsWith("/team/") &&
+                  window.location.pathname !== "/team";
                 if (isTeamDetailPage) {
                   // チーム詳細ページの場合はボードモードに切り替え
                   window.dispatchEvent(
@@ -337,6 +259,10 @@ function Sidebar({
             </button>
             <button
               onClick={() => {
+                // チーム詳細ページかどうかをURLで判定
+                const isTeamDetailPage =
+                  window.location.pathname.startsWith("/team/") &&
+                  window.location.pathname !== "/team";
                 if (isTeamDetailPage) {
                   // チーム詳細ページの場合はボードモードに切り替え
                   window.dispatchEvent(

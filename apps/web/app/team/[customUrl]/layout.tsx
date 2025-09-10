@@ -5,12 +5,16 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
 import Header from "@/components/layout/header";
 import Sidebar from "@/components/layout/sidebar";
-import { NavigationProvider } from "@/contexts/navigation-context";
+import {
+  NavigationProvider,
+  useNavigation,
+} from "@/contexts/navigation-context";
 
 function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { setScreenMode } = useNavigation();
   const [currentMode, setCurrentMode] = useState<"memo" | "task" | "board">(
     "memo",
   );
@@ -60,6 +64,29 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
       setLastBoardUrl(pathname);
     }
 
+    // NavigationContextのscreenModeを設定
+    const newScreenMode = isTeamBoardDetailPage
+      ? "board"
+      : isTeamDetailPage
+        ? activeTab === "overview"
+          ? "home"
+          : activeTab === "memos"
+            ? "memo"
+            : activeTab === "tasks"
+              ? "task"
+              : activeTab === "boards"
+                ? "board"
+                : activeTab === "team-list"
+                  ? "team"
+                  : activeTab === "settings"
+                    ? "settings"
+                    : activeTab === "search"
+                      ? "search"
+                      : "home"
+        : "team";
+
+    setScreenMode(newScreenMode);
+
     // チーム詳細ページのタブ変更イベントをリッスン
     const handleTeamTabChange = (event: CustomEvent) => {
       // activeTabはURL経由で管理されるため、特に処理不要
@@ -91,7 +118,13 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
         handleTeamBoardNameChange as EventListener,
       );
     };
-  }, [isTeamBoardDetailPage, pathname]);
+  }, [
+    isTeamBoardDetailPage,
+    pathname,
+    isTeamDetailPage,
+    activeTab,
+    setScreenMode,
+  ]);
 
   const handleTeamList = () => {
     // チーム詳細ページの場合は、team-listイベントを送信
@@ -235,33 +268,10 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
             currentMode={currentMode}
             onModeChange={handleModeChange}
             onShowTaskList={handleShowTaskList}
-            isTeamDetailPage={isTeamDetailPage}
-            isTeamListPage={isTeamListPage}
             onTeamList={handleTeamList}
             onBoardDetail={handleBoardDetail}
             onSettings={handleSettings}
             onSearch={handleSearch}
-            screenMode={
-              isTeamBoardDetailPage
-                ? "board"
-                : isTeamDetailPage
-                  ? activeTab === "overview"
-                    ? "home"
-                    : activeTab === "memos"
-                      ? "memo"
-                      : activeTab === "tasks"
-                        ? "task"
-                        : activeTab === "boards"
-                          ? "board"
-                          : activeTab === "team-list"
-                            ? "team"
-                            : activeTab === "settings"
-                              ? "settings"
-                              : activeTab === "search"
-                                ? "search"
-                                : "home"
-                  : undefined
-            }
             showingBoardDetail={isTeamBoardDetailPage}
             currentBoardName={
               currentBoardName || (lastBoardUrl ? "最後のボード" : undefined)

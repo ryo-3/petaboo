@@ -12,6 +12,7 @@ import type { Board } from "@/src/types/board";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
 import { RefObject } from "react";
+import { useNavigation } from "@/contexts/navigation-context";
 
 interface MainContentAreaProps {
   screenMode: string;
@@ -48,8 +49,6 @@ interface MainContentAreaProps {
   // チーム機能
   teamMode?: boolean;
   teamId?: number;
-  showTeamList?: boolean;
-  showTeamCreate?: boolean;
   handleTeamCreate?: () => void;
   handleTeamCreated?: () => void;
 
@@ -98,11 +97,12 @@ export function MainContentArea({
   handleBoardClearSelection,
   teamMode = false,
   teamId,
-  showTeamList = false,
-  showTeamCreate = false,
   handleTeamCreate,
   handleTeamCreated,
 }: MainContentAreaProps) {
+  // NavigationContextから統一された状態を取得
+  const { showTeamList, showTeamCreate } = useNavigation();
+
   return (
     <>
       {/* ホーム画面 */}

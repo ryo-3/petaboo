@@ -31,8 +31,6 @@ interface MainClientDesktopProps {
   initialBoardName?: string;
   currentBoard?: Board | null;
   showingBoardDetail: boolean;
-  showTeamList: boolean;
-  showTeamCreate: boolean;
 }
 
 export function MainClientDesktop({
@@ -59,8 +57,6 @@ export function MainClientDesktop({
   initialBoardName,
   currentBoard,
   showingBoardDetail,
-  showTeamList,
-  showTeamCreate,
 }: MainClientDesktopProps) {
   return (
     <div className="hidden md:flex flex-col h-screen w-full">
@@ -94,9 +90,6 @@ export function MainClientDesktop({
             showingBoardDetail={showingBoardDetail}
             onTeamList={handleTeamList}
             onTeamCreate={handleTeamCreate}
-            showTeamList={showTeamList}
-            showTeamCreate={showTeamCreate}
-            screenMode={screenMode}
           />
         }
       >

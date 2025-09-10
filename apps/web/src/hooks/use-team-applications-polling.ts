@@ -18,9 +18,21 @@ export function useTeamApplicationsPolling(customUrl: string) {
   const queryClient = useQueryClient();
 
   const handleUpdates = (updates: TeamUpdates) => {
-    // React Query キャッシュ更新
+    console.log("📦 handleUpdates called with:", updates);
+
+    // React Query キャッシュ更新（正しいキャッシュキー使用）
+    console.log("🔄 Invalidating React Query cache for:", [
+      "join-requests",
+      customUrl,
+    ]);
     queryClient.invalidateQueries({
-      queryKey: ["team-applications", customUrl],
+      queryKey: ["join-requests", customUrl],
+    });
+
+    // チーム詳細も更新（申請数の表示などのため）
+    console.log("🔄 Invalidating React Query cache for:", ["team", customUrl]);
+    queryClient.invalidateQueries({
+      queryKey: ["team", customUrl],
     });
 
     // コンソールログ（開発用）
@@ -29,8 +41,32 @@ export function useTeamApplicationsPolling(customUrl: string) {
       updates,
     );
 
-    // TODO: 将来的には通知システムと連携
-    // showNotification({
+    // ブラウザ通知を表示
+    if ("Notification" in window && Notification.permission === "granted") {
+      console.log("🔔 Showing browser notification");
+      new Notification("新しいチーム申請", {
+        body: `${updates.newApplications.length}件の新規申請があります`,
+        icon: "/favicon.ico",
+      });
+    } else if (
+      "Notification" in window &&
+      Notification.permission !== "denied"
+    ) {
+      // 通知許可を求める
+      console.log("🔔 Requesting notification permission");
+      Notification.requestPermission().then((permission) => {
+        if (permission === "granted") {
+          console.log("🔔 Permission granted, showing notification");
+          new Notification("新しいチーム申請", {
+            body: `${updates.newApplications.length}件の新規申請があります`,
+            icon: "/favicon.ico",
+          });
+        }
+      });
+    }
+
+    // TODO: 将来的にはトーストメッセージも追加
+    // showToast({
     //   title: "新しい申請",
     //   message: `${updates.newApplications.length}件の新規申請があります`,
     //   type: "info",
@@ -47,6 +83,8 @@ export function useTeamApplicationsPolling(customUrl: string) {
     additionalConditions: {
       isAdmin: teamDetail?.role === "admin",
       teamExists: Boolean(teamDetail),
+      // チーム詳細ページ内であれば、どのタブやパネルでも通知を受け取る
+      onTeamPage: true, // 常にtrueに設定してチーム詳細ページ内では常に通知
     },
     onUpdate: handleUpdates,
     onError: handleError,

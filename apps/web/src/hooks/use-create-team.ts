@@ -7,6 +7,7 @@ interface CreateTeamData {
   name: string;
   description?: string;
   customUrl: string;
+  adminDisplayName: string;
 }
 
 interface Team {

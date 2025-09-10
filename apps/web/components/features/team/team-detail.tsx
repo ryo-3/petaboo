@@ -398,24 +398,6 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         <div
           className={`${activeTab === "overview" ? "flex-1 overflow-y-auto" : "h-full"}`}
         >
-          {/* 表示名未設定メッセージ */}
-          {userInfo && !userInfo.displayName && (
-            <div className="mb-4 px-3 py-1 bg-gray-50 border border-gray-200 rounded-lg">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">
-                  チーム機能を使うには表示名の設定が必要です
-                </span>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setShowDisplayNameModal(true)}
-                >
-                  設定
-                </Button>
-              </div>
-            </div>
-          )}
-
           {/* タブコンテンツ */}
           {activeTab === "overview" && (
             <>

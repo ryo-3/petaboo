@@ -13,7 +13,14 @@ export function TeamCreate() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [customUrl, setCustomUrl] = useState("");
+  const [adminDisplayName, setAdminDisplayName] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{
+    name?: string;
+    adminDisplayName?: string;
+    customUrl?: string;
+    description?: string;
+  }>({});
   const router = useRouter();
   const { data: teamStats } = useTeamStats();
   const createTeamMutation = useCreateTeam();
@@ -22,9 +29,138 @@ export function TeamCreate() {
     ? teamStats.ownedTeams < teamStats.maxOwnedTeams
     : false;
 
+  // バリデーション関数
+  const validateForm = () => {
+    if (!canCreateTeam) {
+      return "チーム作成数の上限に達しています";
+    }
+
+    if (!name.trim()) {
+      return "チーム名を入力してください";
+    }
+
+    if (name.trim().length > 50) {
+      return "チーム名は50文字以内で入力してください";
+    }
+
+    if (!adminDisplayName.trim()) {
+      return "管理者名を入力してください";
+    }
+
+    if (adminDisplayName.trim().length > 30) {
+      return "管理者名は30文字以内で入力してください";
+    }
+
+    if (!customUrl.trim()) {
+      return "チームURLを入力してください";
+    }
+
+    if (customUrl.trim().length > 30) {
+      return "チームURLは30文字以内で入力してください";
+    }
+
+    if (customUrl !== customUrl.toLowerCase()) {
+      return "チームURLに大文字は使用できません。小文字に変換してください";
+    }
+
+    if (!/^[a-z0-9-]+$/.test(customUrl.trim())) {
+      return "チームURLは英小文字・数字・ハイフンのみ使用できます";
+    }
+
+    const reservedUrls = [
+      "admin",
+      "api",
+      "auth",
+      "team",
+      "teams",
+      "user",
+      "users",
+      "settings",
+      "help",
+      "about",
+      "contact",
+    ];
+    if (reservedUrls.includes(customUrl.trim().toLowerCase())) {
+      return "このURLは予約されているため使用できません";
+    }
+
+    if (description.length > 200) {
+      return "チーム説明は200文字以内で入力してください";
+    }
+
+    return null;
+  };
+
+  // フィールド別バリデーション
+  const validateField = (field: string, value: string) => {
+    switch (field) {
+      case "name":
+        if (!value.trim()) return "チーム名を入力してください";
+        if (value.trim().length > 50)
+          return "チーム名は50文字以内で入力してください";
+        break;
+
+      case "adminDisplayName":
+        if (!value.trim()) return "管理者名を入力してください";
+        if (value.trim().length > 30)
+          return "管理者名は30文字以内で入力してください";
+        break;
+
+      case "customUrl":
+        if (!value.trim()) return "チームURLを入力してください";
+        if (value.trim().length > 30)
+          return "チームURLは30文字以内で入力してください";
+        if (value !== value.toLowerCase())
+          return "大文字は使用できません。小文字に変換してください";
+        if (!/^[a-z0-9-]+$/.test(value.trim()))
+          return "英小文字・数字・ハイフンのみ使用できます";
+        const reservedUrls = [
+          "admin",
+          "api",
+          "auth",
+          "team",
+          "teams",
+          "user",
+          "users",
+          "settings",
+          "help",
+          "about",
+          "contact",
+        ];
+        if (reservedUrls.includes(value.trim().toLowerCase()))
+          return "このURLは予約されています";
+        break;
+
+      case "description":
+        if (value.length > 200)
+          return "チーム説明は200文字以内で入力してください";
+        break;
+    }
+    return null;
+  };
+
+  // フィールドの変更ハンドラー
+  const handleFieldChange = (
+    field: string,
+    value: string,
+    setter: (value: string) => void,
+  ) => {
+    setter(value);
+    const fieldError = validateField(field, value);
+    setFieldErrors((prev) => ({
+      ...prev,
+      [field]: fieldError,
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canCreateTeam || !name.trim() || !customUrl.trim()) return;
+
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
 
     setError(null);
 
@@ -33,6 +169,7 @@ export function TeamCreate() {
         name: name.trim(),
         description: description.trim() || undefined,
         customUrl: customUrl.trim(),
+        adminDisplayName: adminDisplayName.trim(),
       });
 
       // 成功後は作成したチームの詳細ページに移動
@@ -80,19 +217,66 @@ export function TeamCreate() {
                   id="teamName"
                   type="text"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) =>
+                    handleFieldChange("name", e.target.value, setName)
+                  }
                   placeholder="例: マーケティングチーム"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  maxLength={50}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    fieldErrors.name ? "border-red-300" : "border-gray-300"
+                  }`}
                   required
                   disabled={!canCreateTeam}
                 />
                 <div className="flex justify-between mt-1">
-                  <span className="text-xs text-gray-500">
-                    プロジェクトや部署など、わかりやすい名前を付けましょう
+                  <span
+                    className={`text-xs ${fieldErrors.name ? "text-red-500" : "text-gray-500"}`}
+                  >
+                    {fieldErrors.name ||
+                      "プロジェクトや部署など、わかりやすい名前を付けましょう"}
                   </span>
                   <span className="text-xs text-gray-400">
                     {name.length}/50
+                  </span>
+                </div>
+              </div>
+
+              {/* 管理者名 */}
+              <div>
+                <label
+                  htmlFor="adminDisplayName"
+                  className="block text-sm font-semibold text-gray-700 mb-2"
+                >
+                  管理者名 <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="adminDisplayName"
+                  type="text"
+                  value={adminDisplayName}
+                  onChange={(e) =>
+                    handleFieldChange(
+                      "adminDisplayName",
+                      e.target.value,
+                      setAdminDisplayName,
+                    )
+                  }
+                  placeholder="例: 田中太郎"
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    fieldErrors.adminDisplayName
+                      ? "border-red-300"
+                      : "border-gray-300"
+                  }`}
+                  required
+                  disabled={!canCreateTeam}
+                />
+                <div className="flex justify-between mt-1">
+                  <span
+                    className={`text-xs ${fieldErrors.adminDisplayName ? "text-red-500" : "text-gray-500"}`}
+                  >
+                    {fieldErrors.adminDisplayName ||
+                      "チーム内で表示される管理者の名前を入力してください"}
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    {adminDisplayName.length}/30
                   </span>
                 </div>
               </div>
@@ -113,21 +297,29 @@ export function TeamCreate() {
                     id="teamUrl"
                     type="text"
                     value={customUrl}
-                    onChange={(e) =>
-                      setCustomUrl(
-                        e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""),
-                      )
-                    }
+                    onChange={(e) => {
+                      handleFieldChange(
+                        "customUrl",
+                        e.target.value,
+                        setCustomUrl,
+                      );
+                    }}
                     placeholder="my-team"
-                    className="w-full pl-14 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    maxLength={30}
+                    className={`w-full pl-14 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      fieldErrors.customUrl
+                        ? "border-red-300"
+                        : "border-gray-300"
+                    }`}
                     required
                     disabled={!canCreateTeam}
                   />
                 </div>
                 <div className="flex justify-between mt-1">
-                  <span className="text-xs text-gray-500">
-                    英小文字・数字・ハイフンのみ使用可能です
+                  <span
+                    className={`text-xs ${fieldErrors.customUrl ? "text-red-500" : "text-gray-500"}`}
+                  >
+                    {fieldErrors.customUrl ||
+                      "英小文字・数字・ハイフンのみ使用可能です"}
                   </span>
                   <span className="text-xs text-gray-400">
                     {customUrl.length}/30
@@ -146,16 +338,28 @@ export function TeamCreate() {
                 <textarea
                   id="teamDescription"
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  onChange={(e) =>
+                    handleFieldChange(
+                      "description",
+                      e.target.value,
+                      setDescription,
+                    )
+                  }
                   placeholder="例: マーケティング戦略の企画・実行を行うチームです"
                   rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                  maxLength={200}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none ${
+                    fieldErrors.description
+                      ? "border-red-300"
+                      : "border-gray-300"
+                  }`}
                   disabled={!canCreateTeam}
                 />
                 <div className="flex justify-between mt-1">
-                  <span className="text-xs text-gray-500">
-                    チームの目的や役割を簡潔に説明しましょう
+                  <span
+                    className={`text-xs ${fieldErrors.description ? "text-red-500" : "text-gray-500"}`}
+                  >
+                    {fieldErrors.description ||
+                      "チームの目的や役割を簡潔に説明しましょう"}
                   </span>
                   <span className="text-xs text-gray-400">
                     {description.length}/200

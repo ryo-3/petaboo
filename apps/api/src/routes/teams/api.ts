@@ -50,6 +50,10 @@ const createTeamSchema = z.object({
         ].includes(url),
       "このURLは予約されているため使用できません",
     ),
+  adminDisplayName: z
+    .string()
+    .min(1, "管理者名は必須です")
+    .max(30, "管理者名は30文字以内にしてください"),
 });
 
 // チーム作成ルート定義
@@ -460,6 +464,7 @@ export async function createTeam(c: any) {
       await db.insert(users).values({
         userId: auth.userId,
         planType: "free",
+        displayName: null, // 後で更新される
         createdAt: now,
         updatedAt: now,
       });
@@ -491,7 +496,8 @@ export async function createTeam(c: any) {
       );
     }
 
-    const { name, description, customUrl } = createTeamSchema.parse(body);
+    const { name, description, customUrl, adminDisplayName } =
+      createTeamSchema.parse(body);
     const now = Math.floor(Date.now() / 1000);
 
     // customURLの重複チェック
@@ -526,6 +532,24 @@ export async function createTeam(c: any) {
       role: "admin",
       joinedAt: now,
     });
+
+    // 管理者のdisplayNameを更新
+    const existingUser = await db
+      .select()
+      .from(users)
+      .where(eq(users.userId, auth.userId))
+      .limit(1);
+
+    if (existingUser.length > 0) {
+      // 既存ユーザーのdisplayNameを更新
+      await db
+        .update(users)
+        .set({
+          displayName: adminDisplayName,
+          updatedAt: now,
+        })
+        .where(eq(users.userId, auth.userId));
+    }
 
     return c.json(
       {
@@ -765,6 +789,7 @@ export async function joinTeam(c: any) {
       await db.insert(users).values({
         userId: auth.userId,
         planType: "free",
+        displayName: null, // 後で更新される
         createdAt: now,
         updatedAt: now,
       });

@@ -17,15 +17,7 @@ export default function ClientHome() {
 
   // ログイン済みならメイン画面を表示
   if (isSignedIn) {
-    return (
-      <div className="relative">
-        {/* 右上にログアウトボタン（開発用） */}
-        <div className="absolute top-4 right-4 z-50">
-          <UserButton afterSignOutUrl="/" />
-        </div>
-        <Main />
-      </div>
-    );
+    return <Main />;
   }
 
   // 未ログイン時はログインフォームを埋め込んだウェルカムページを表示

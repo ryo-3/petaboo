@@ -71,7 +71,13 @@ export function useConditionalPolling<T>({
       iconStateKey === "team" && additionalConditions.onTeamPage;
     const effectiveBaseCondition = isTeamPolling ? true : baseCondition;
 
-    return effectiveBaseCondition && visibilityCondition && otherConditions;
+    // チーム通知の場合は他タブでも通知を有効にする
+    const effectiveVisibilityCondition =
+      iconStateKey === "team" ? true : visibilityCondition;
+
+    return (
+      effectiveBaseCondition && effectiveVisibilityCondition && otherConditions
+    );
   }, [iconStates, iconStateKey, additionalConditions, enabled, isPageVisible]);
 
   // ポーリング実行関数

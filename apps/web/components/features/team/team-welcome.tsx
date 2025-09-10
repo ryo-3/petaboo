@@ -405,24 +405,6 @@ export function TeamWelcome({ onTeamCreate }: TeamWelcomeProps = {}) {
                     <div className="text-center text-gray-500 py-8">
                       <Clock className="w-8 h-8 mx-auto mb-2 text-gray-400" />
                       <div className="text-sm">申請したチームはありません</div>
-                      <div className="mt-4 space-y-2">
-                        <Button
-                          className="w-full"
-                          variant={isPremium ? "default" : "secondary"}
-                          onClick={() => {
-                            if (isPremium && onTeamCreate) {
-                              onTeamCreate();
-                            }
-                          }}
-                        >
-                          {isPremium
-                            ? "チーム作成"
-                            : "チーム作成（要アップグレード）"}
-                        </Button>
-                        <Button variant="outline" className="w-full">
-                          招待URLで参加
-                        </Button>
-                      </div>
                     </div>
                   ) : (
                     <div className="space-y-3">
@@ -485,24 +467,6 @@ export function TeamWelcome({ onTeamCreate }: TeamWelcomeProps = {}) {
                             </div>
                           </div>
                         ))}
-                      <div className="mt-4 space-y-2">
-                        <Button
-                          className="w-full"
-                          variant={isPremium ? "default" : "secondary"}
-                          onClick={() => {
-                            if (isPremium && onTeamCreate) {
-                              onTeamCreate();
-                            }
-                          }}
-                        >
-                          {isPremium
-                            ? "チーム作成"
-                            : "チーム作成（要アップグレード）"}
-                        </Button>
-                        <Button variant="outline" className="w-full">
-                          招待URLで参加
-                        </Button>
-                      </div>
                     </div>
                   )}
                 </Card>

@@ -16,6 +16,8 @@ interface MyJoinRequestUpdate {
 export function useGlobalTeamNotifications() {
   const queryClient = useQueryClient();
 
+  console.log("🌐 useGlobalTeamNotifications initialized");
+
   const handleUpdates = (update: MyJoinRequestUpdate) => {
     console.log("🌐 グローバル通知受信:", update);
 

@@ -62,6 +62,11 @@ export function useConditionalPolling<T>({
 
     // グローバル通知の場合は常に実行
     if (additionalConditions.alwaysEnabled) {
+      console.log("🌐 Always enabled polling - shouldPoll: true", {
+        endpoint,
+        iconStateKey,
+        additionalConditions,
+      });
       return true;
     }
 

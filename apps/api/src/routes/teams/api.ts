@@ -1357,6 +1357,110 @@ export async function deleteInviteUrl(c: any) {
   }
 }
 
+// チームメンバーキック
+export const kickMemberRoute = createRoute({
+  method: "delete",
+  path: "/{customUrl}/members/{userId}",
+  request: {
+    params: z.object({
+      customUrl: z.string(),
+      userId: z.string(),
+    }),
+  },
+  responses: {
+    200: {
+      content: {
+        "application/json": {
+          schema: z.object({ message: z.string() }),
+        },
+      },
+      description: "メンバーキック成功",
+    },
+    403: {
+      content: {
+        "application/json": {
+          schema: z.object({ message: z.string() }),
+        },
+      },
+      description: "権限エラー",
+    },
+    404: {
+      content: {
+        "application/json": {
+          schema: z.object({ message: z.string() }),
+        },
+      },
+      description: "チームまたはメンバーが見つからない",
+    },
+  },
+  tags: ["teams"],
+});
+
+export async function kickMember(c: any) {
+  try {
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ message: "認証が必要です" }, 401);
+    }
+
+    const { customUrl, userId } = c.req.param();
+    const db: DatabaseType = c.get("db");
+
+    // チーム存在確認
+    const team = await db
+      .select()
+      .from(teams)
+      .where(eq(teams.customUrl, customUrl))
+      .get();
+
+    if (!team) {
+      return c.json({ message: "チームが見つかりません" }, 404);
+    }
+
+    // 管理者権限確認
+    const adminMembership = await db
+      .select()
+      .from(teamMembers)
+      .where(
+        and(
+          eq(teamMembers.teamId, team.id),
+          eq(teamMembers.userId, auth.userId),
+          eq(teamMembers.role, "admin"),
+        ),
+      )
+      .get();
+
+    if (!adminMembership) {
+      return c.json({ message: "管理者権限が必要です" }, 403);
+    }
+
+    // キック対象メンバーの存在確認
+    const targetMember = await db
+      .select()
+      .from(teamMembers)
+      .where(
+        and(eq(teamMembers.teamId, team.id), eq(teamMembers.userId, userId)),
+      )
+      .get();
+
+    if (!targetMember) {
+      return c.json({ message: "メンバーが見つかりません" }, 404);
+    }
+
+    // メンバーを削除
+    await db
+      .delete(teamMembers)
+      .where(
+        and(eq(teamMembers.teamId, team.id), eq(teamMembers.userId, userId)),
+      );
+
+    return c.json({ message: "メンバーをキックしました" });
+  } catch (error) {
+    console.error("メンバーキックエラー:", error);
+    return c.json({ message: "メンバーキックに失敗しました" }, 500);
+  }
+}
+
 export async function generateInviteUrl(c: any) {
   try {
     const auth = getAuth(c);

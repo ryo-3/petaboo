@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
 
-const API_URL = "http://localhost:7594";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594";
 
 interface MyJoinRequest {
   id: number;

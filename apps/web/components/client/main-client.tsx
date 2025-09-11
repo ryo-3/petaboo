@@ -136,7 +136,7 @@ function MainClient({
       );
       if (shouldShowTeamList === "true") {
         setShowTeamList(true);
-        setScreenMode("home");
+        setScreenMode("team"); // チーム一覧表示時はteamモードに設定
         sessionStorage.removeItem("showTeamListAfterCreation"); // フラグを削除
       } else {
         // ルートページではホーム画面を表示

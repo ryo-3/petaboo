@@ -2,11 +2,32 @@
 
 import { Bell } from "lucide-react";
 import { useNotificationCount } from "@/src/hooks/use-notification-count";
+import { useMyJoinRequests } from "@/src/hooks/use-my-join-requests";
+import { useQueryClient } from "@tanstack/react-query";
 import { UserButton } from "@clerk/nextjs";
 
 function Header() {
   // 実際の通知数を取得
   const { totalCount: notificationCount } = useNotificationCount();
+  const { data: myJoinRequests } = useMyJoinRequests();
+  const queryClient = useQueryClient();
+
+  // 通知クリック時に既読状態にする
+  const handleNotificationClick = () => {
+    if (myJoinRequests?.requests && myJoinRequests.requests.length > 0) {
+      // 最新の申請IDを既読状態にする
+      const latestRequestId = Math.max(
+        ...myJoinRequests.requests.map((r) => r.id),
+      );
+      localStorage.setItem("lastReadRequestId", latestRequestId.toString());
+      console.log("通知を既読にしました:", latestRequestId);
+
+      // React Queryキャッシュを無効化して自然に更新
+      queryClient.invalidateQueries({
+        queryKey: ["my-join-requests"],
+      });
+    }
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 h-16 border-b border-gray-200 bg-white flex items-center pl-[14px] pr-8 z-10">
@@ -37,7 +58,7 @@ function Header() {
         {/* 通知アイコン */}
         <button
           className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          onClick={() => console.log("通知クリック")}
+          onClick={handleNotificationClick}
         >
           <Bell className="w-5 h-5 text-gray-600" />
           {notificationCount > 0 && (

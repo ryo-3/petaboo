@@ -16,11 +16,35 @@ export function useNotificationCount() {
   // 管理者向け：承認待ち申請数
   const pendingRequestsCount = joinRequests?.requests.length || 0;
 
-  // 申請者向け：現時点では通知不要（将来的に未読フラグ実装時に対応）
-  const myProcessedRequestsCount = 0;
+  // 申請者向け：承認された申請のみカウント（拒否は通知しない）
+  const approvedRequests =
+    myJoinRequests?.requests.filter(
+      (request) => request.status === "approved",
+    ) || [];
 
-  // 合計通知数（管理者向けの承認待ち申請のみ）
-  const totalNotifications = pendingRequestsCount;
+  // 最後に確認した申請IDを取得（localStorage）
+  const lastReadRequestId =
+    typeof window !== "undefined"
+      ? parseInt(localStorage.getItem("lastReadRequestId") || "0")
+      : 0;
+
+  // 未読の承認申請をカウント
+  const unreadApprovedRequests = approvedRequests.filter(
+    (request) => request.id > lastReadRequestId,
+  );
+  const myProcessedRequestsCount = unreadApprovedRequests.length > 0 ? 1 : 0;
+
+  // デバッグログ
+  console.log("🔔 通知カウント詳細:", {
+    adminTeamsCount: adminTeams.length,
+    pendingRequestsCount,
+    myProcessedRequestsCount,
+    myJoinRequestsData: myJoinRequests?.requests,
+    joinRequestsData: joinRequests?.requests,
+  });
+
+  // 合計通知数（管理者向け承認待ち + 申請者向け処理済み）
+  const totalNotifications = pendingRequestsCount + myProcessedRequestsCount;
 
   return {
     totalCount: totalNotifications,

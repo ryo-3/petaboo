@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useNavigation } from "@/contexts/navigation-context";
+import { useTeamNotificationCount } from "@/src/hooks/use-team-notification-count";
 import DashboardIcon from "@/components/icons/dashboard-icon";
 import DashboardEditIcon from "@/components/icons/dashboard-edit-icon";
 import HomeIcon from "@/components/icons/home-icon";
@@ -14,6 +15,7 @@ import MemoList from "@/components/mobile/memo-list";
 import TaskList from "@/components/mobile/task-list";
 import SwitchTabs from "@/components/ui/base/switch-tabs";
 import Tooltip from "@/components/ui/base/tooltip";
+import NotificationBadge from "@/components/ui/base/notification-badge";
 import type { Memo } from "@/src/types/memo";
 import type { Task } from "@/src/types/task";
 
@@ -66,6 +68,8 @@ function Sidebar({
 }: SidebarProps) {
   // NavigationContextから統一されたiconStatesを取得
   const { iconStates } = useNavigation();
+  // チーム通知数を取得
+  const { totalCount: teamNotificationCount } = useTeamNotificationCount();
 
   const modeTabs = [
     {
@@ -205,13 +209,14 @@ function Sidebar({
           <Tooltip text="チーム一覧" position="right">
             <button
               onClick={onTeamList || (() => (window.location.href = "/team"))}
-              className={`p-2 rounded-lg transition-colors ${
+              className={`relative p-2 rounded-lg transition-colors ${
                 iconStates.team
                   ? "bg-slate-500 text-white"
                   : "bg-gray-200 hover:bg-gray-300 text-gray-600"
               }`}
             >
               <TeamIcon className="w-5 h-5" />
+              <NotificationBadge count={teamNotificationCount} size="sm" />
             </button>
           </Tooltip>
           {/* 設定ボタン（コンパクトモード） */}
@@ -307,7 +312,7 @@ function Sidebar({
             <div className="flex-shrink-0 p-2 border-t border-gray-200">
               <button
                 onClick={onTeamList || (() => (window.location.href = "/team"))}
-                className={`w-full p-2 rounded-lg transition-colors flex items-center justify-center gap-2 ${
+                className={`relative w-full p-2 rounded-lg transition-colors flex items-center justify-center gap-2 ${
                   iconStates.team
                     ? "bg-slate-500 text-white"
                     : "bg-gray-100 hover:bg-gray-200 text-gray-600"
@@ -315,6 +320,11 @@ function Sidebar({
               >
                 <TeamIcon className="w-5 h-5" />
                 <span className="text-sm font-medium">チーム</span>
+                <NotificationBadge
+                  count={teamNotificationCount}
+                  size="sm"
+                  className="-top-1 -right-1"
+                />
               </button>
             </div>
             {/* 設定ボタン */}

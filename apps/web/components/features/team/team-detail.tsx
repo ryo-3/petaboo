@@ -22,6 +22,7 @@ import { useJoinRequests } from "@/src/hooks/use-join-requests";
 import { useManageJoinRequest } from "@/src/hooks/use-manage-join-request";
 import { useTeamApplicationsPolling } from "@/src/hooks/use-team-applications-polling";
 import { useKickMember } from "@/src/hooks/use-kick-member";
+import { useSimpleTeamNotifier } from "@/src/hooks/use-simple-team-notifier";
 import MemoScreen from "@/components/screens/memo-screen";
 import TaskScreen from "@/components/screens/task-screen";
 import BoardScreen from "@/components/screens/board-screen";
@@ -41,6 +42,17 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: team, isLoading, error } = useTeamDetail(customUrl);
+
+  // 🧪 シンプル通知チェック機能のテスト
+  const simpleNotifier = useSimpleTeamNotifier(customUrl);
+
+  // デバッグログ
+  // console.log("🎯 TeamDetail レンダリング:", {
+  //   customUrl,
+  //   notifierData: simpleNotifier.data,
+  //   isLoading: simpleNotifier.isLoading,
+  //   error: simpleNotifier.error,
+  // });
 
   // ユーザーIDから色を生成する関数
   const getAvatarColor = (userId: string) => {

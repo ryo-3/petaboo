@@ -16,11 +16,7 @@ interface MyJoinRequestUpdate {
 export function useGlobalTeamNotifications() {
   const queryClient = useQueryClient();
 
-  console.log("🌐 useGlobalTeamNotifications initialized");
-
   const handleUpdates = (update: MyJoinRequestUpdate) => {
-    console.log("🌐 グローバル通知受信:", update);
-
     // 申請状況を再取得
     queryClient.invalidateQueries({
       queryKey: ["my-join-requests"],
@@ -36,16 +32,8 @@ export function useGlobalTeamNotifications() {
       queryKey: ["join-requests"],
     });
 
-    // 通知表示
-    if (update.newStatus === "approved") {
-      console.log(
-        `✅ グローバル通知: チーム「${update.teamName}」への参加が承認されました`,
-      );
-    } else if (update.newStatus === "rejected") {
-      console.log(
-        `❌ グローバル通知: チーム「${update.teamName}」への参加が拒否されました`,
-      );
-    }
+    // 通知表示（ログは削減済み）
+    // 実際のUI通知は別途実装予定
   };
 
   const handleError = (error: Error) => {

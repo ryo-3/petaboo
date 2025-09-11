@@ -12,7 +12,8 @@ type IconStateKey =
   | "boardDetail"
   | "search"
   | "settings"
-  | "team";
+  | "team"
+  | null; // 画面状態に依存しない常時有効なポーリング
 
 export interface ConditionalPollingOptions<T> {
   endpoint: string;
@@ -62,12 +63,15 @@ export function useConditionalPolling<T>({
 
     // グローバル通知の場合は常に実行
     if (additionalConditions.alwaysEnabled) {
-      console.log("🌐 Always enabled polling - shouldPoll: true", {
-        endpoint,
-        iconStateKey,
-        additionalConditions,
-      });
       return true;
+    }
+
+    // iconStateKey が null の場合は、常に有効（画面状態に依存しない）
+    if (iconStateKey === null) {
+      const otherConditions = Object.values(additionalConditions).every(
+        (condition) => condition === true,
+      );
+      return otherConditions;
     }
 
     const baseCondition = iconStates[iconStateKey]; // アイコンがアクティブか
@@ -160,9 +164,8 @@ export function useConditionalPolling<T>({
       const data = await response.json();
       // console.log("✅ JSON parsed successfully:", data);
 
-      // 更新がある場合のみログ出力
+      // 更新がある場合のみ処理（ログなし・ノイズ削減）
       if (data.hasUpdates) {
-        console.log("🔄 Calling onUpdate with:", data.updates);
         onUpdate(data.updates);
       } else if (
         data &&
@@ -170,13 +173,8 @@ export function useConditionalPolling<T>({
         !data.hasUpdates &&
         Object.keys(data).length > 0
       ) {
-        console.log(
-          "🔄 Direct update data detected, calling onUpdate with:",
-          data,
-        );
         onUpdate(data);
       }
-      // 更新なしの場合はログ出力しない（ノイズ削減）
 
       // 条件が満たされている場合は再度ポーリング
       if (shouldPoll) {
@@ -246,7 +244,7 @@ export function useConditionalPolling<T>({
   return {
     isPolling: shouldPoll,
     conditions: {
-      iconActive: iconStates[iconStateKey],
+      iconActive: iconStateKey ? iconStates[iconStateKey] : null,
       pageVisible: isPageVisible,
       additionalConditions,
     },

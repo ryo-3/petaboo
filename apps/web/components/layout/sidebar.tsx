@@ -69,7 +69,8 @@ function Sidebar({
   // NavigationContextから統一されたiconStatesを取得
   const { iconStates } = useNavigation();
   // 通知数を取得
-  const { totalCount: notificationCount } = useNotificationCount();
+  const { totalCount: notificationCount, markNotificationsAsRead } =
+    useNotificationCount();
 
   const modeTabs = [
     {
@@ -208,7 +209,16 @@ function Sidebar({
           {/* チーム一覧ボタン（コンパクトモード） */}
           <Tooltip text="チーム一覧" position="right">
             <button
-              onClick={onTeamList || (() => (window.location.href = "/team"))}
+              onClick={() => {
+                // 通知を既読にする
+                markNotificationsAsRead();
+                // チーム一覧に移動
+                if (onTeamList) {
+                  onTeamList();
+                } else {
+                  window.location.href = "/team";
+                }
+              }}
               className={`relative p-2 rounded-lg transition-colors ${
                 iconStates.team
                   ? "bg-slate-500 text-white"
@@ -311,7 +321,16 @@ function Sidebar({
             {/* チーム一覧ボタン */}
             <div className="flex-shrink-0 p-2 border-t border-gray-200">
               <button
-                onClick={onTeamList || (() => (window.location.href = "/team"))}
+                onClick={() => {
+                  // 通知を既読にする
+                  markNotificationsAsRead();
+                  // チーム一覧に移動
+                  if (onTeamList) {
+                    onTeamList();
+                  } else {
+                    window.location.href = "/team";
+                  }
+                }}
                 className={`relative w-full p-2 rounded-lg transition-colors flex items-center justify-center gap-2 ${
                   iconStates.team
                     ? "bg-slate-500 text-white"

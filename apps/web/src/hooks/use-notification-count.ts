@@ -1,6 +1,7 @@
 import { useTeams } from "./use-teams";
 import { useJoinRequests } from "./use-join-requests";
 import { useMyJoinRequests } from "./use-my-join-requests";
+import { useCallback } from "react";
 
 export function useNotificationCount() {
   const { data: teams } = useTeams();
@@ -34,14 +35,29 @@ export function useNotificationCount() {
   );
   const myProcessedRequestsCount = unreadApprovedRequests.length > 0 ? 1 : 0;
 
-  // デバッグログ
-  console.log("🔔 通知カウント詳細:", {
-    adminTeamsCount: adminTeams.length,
-    pendingRequestsCount,
-    myProcessedRequestsCount,
-    myJoinRequestsData: myJoinRequests?.requests,
-    joinRequestsData: joinRequests?.requests,
-  });
+  // 通知がある場合のみデバッグログ（ノイズ削減）
+  if (pendingRequestsCount > 0 || myProcessedRequestsCount > 0) {
+    console.log("🔔 通知あり:", {
+      pendingRequestsCount,
+      myProcessedRequestsCount,
+      totalNotifications: pendingRequestsCount + myProcessedRequestsCount,
+    });
+  }
+
+  // 通知を既読にする関数
+  const markNotificationsAsRead = useCallback(() => {
+    if (approvedRequests.length > 0) {
+      const latestRequestId = Math.max(
+        ...approvedRequests.map((req) => req.id),
+      );
+      if (typeof window !== "undefined") {
+        localStorage.setItem("lastReadRequestId", latestRequestId.toString());
+        console.log(
+          `✅ 通知を既読にしました: lastReadRequestId=${latestRequestId}`,
+        );
+      }
+    }
+  }, [approvedRequests]);
 
   // 合計通知数（管理者向け承認待ち + 申請者向け処理済み）
   const totalNotifications = pendingRequestsCount + myProcessedRequestsCount;
@@ -51,5 +67,6 @@ export function useNotificationCount() {
     teamRequestsCount: pendingRequestsCount,
     myProcessedCount: myProcessedRequestsCount,
     adminTeamsCount: adminTeams.length,
+    markNotificationsAsRead,
   };
 }

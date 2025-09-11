@@ -116,12 +116,11 @@ export function useTeamApplicationsPolling(
 
   const pollingResult = useConditionalPolling<TeamUpdates>({
     endpoint: customUrl ? `/teams/${customUrl}/wait-updates` : "",
-    iconStateKey: "team", // チームアイコンがアクティブな時のみ
+    iconStateKey: null, // 管理者向け通知は画面に関係なく常に受信
     additionalConditions: {
       isAdmin: isTeamAdmin,
-      teamExists: Boolean(customUrl), // customUrlが存在すればOK（ホーム画面対応）
-      // チーム詳細ページ内であれば、どのタブやパネルでも通知を受け取る
-      onTeamPage: true, // 常にtrueに設定してチーム詳細ページ内では常に通知
+      teamExists: Boolean(customUrl), // customUrlが存在すればOK
+      alwaysEnabled: true, // 管理者向け通知は常に有効
     },
     onUpdate: handleUpdates,
     onError: handleError,

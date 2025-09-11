@@ -8,6 +8,7 @@ import ArrowLeftIcon from "@/components/icons/arrow-left-icon";
 import { useTeamDetail } from "@/src/hooks/use-team-detail";
 import { useAuth } from "@clerk/nextjs";
 import { useQueryClient } from "@tanstack/react-query";
+import { useKickMember } from "@/src/hooks/use-kick-member";
 
 interface TeamSettingsProps {
   customUrl: string;
@@ -30,6 +31,11 @@ export function TeamSettings({ customUrl }: TeamSettingsProps) {
     type: "success" | "error";
     text: string;
   } | null>(null);
+  const [kickConfirmModal, setKickConfirmModal] = useState<{
+    userId: string;
+    displayName: string;
+  } | null>(null);
+  const kickMutation = useKickMember();
 
   // チームデータが読み込まれた時にフォームを初期化
   useEffect(() => {
@@ -127,6 +133,36 @@ export function TeamSettings({ customUrl }: TeamSettingsProps) {
       });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleKickMember = (userId: string, displayName: string) => {
+    setKickConfirmModal({ userId, displayName });
+  };
+
+  const confirmKickMember = async () => {
+    if (!kickConfirmModal) return;
+
+    try {
+      await kickMutation.mutateAsync({
+        customUrl,
+        userId: kickConfirmModal.userId,
+      });
+      setKickConfirmModal(null);
+      setSaveMessage({
+        type: "success",
+        text: `${kickConfirmModal.displayName}をチームから削除しました`,
+      });
+      setTimeout(() => setSaveMessage(null), 3000);
+    } catch (error) {
+      setSaveMessage({
+        type: "error",
+        text:
+          error instanceof Error
+            ? error.message
+            : "メンバーの削除に失敗しました",
+      });
+      setTimeout(() => setSaveMessage(null), 3000);
     }
   };
 
@@ -356,6 +392,59 @@ export function TeamSettings({ customUrl }: TeamSettingsProps) {
                 </div>
               </Card>
 
+              {/* メンバー管理 */}
+              <Card className="p-6">
+                <h3 className="font-semibold text-gray-800 mb-4 text-base">
+                  メンバー管理
+                </h3>
+                {team?.members && team.members.length > 0 ? (
+                  <div className="space-y-3">
+                    {team.members.map((member) => (
+                      <div
+                        key={member.userId}
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                            <span className="text-sm font-medium text-gray-600">
+                              {member.displayName?.[0]?.toUpperCase() || "U"}
+                            </span>
+                          </div>
+                          <div>
+                            <div className="font-medium text-sm">
+                              {member.displayName}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {member.role === "admin" ? "管理者" : "メンバー"}
+                            </div>
+                          </div>
+                        </div>
+                        {member.role !== "admin" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-red-600 border-red-300 hover:bg-red-50"
+                            onClick={() =>
+                              handleKickMember(
+                                member.userId,
+                                member.displayName ||
+                                  `ユーザー${member.userId.slice(-4)}`,
+                              )
+                            }
+                          >
+                            削除
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-sm">
+                    メンバー情報を取得中...
+                  </p>
+                )}
+              </Card>
+
               {/* 今後の機能予定 */}
               <Card className="p-6 bg-gray-50">
                 <h3 className="font-semibold text-gray-800 mb-2 text-sm">
@@ -363,8 +452,13 @@ export function TeamSettings({ customUrl }: TeamSettingsProps) {
                 </h3>
                 <div className="space-y-1 text-xs text-gray-600">
                   <div className="flex items-center gap-2">
-                    <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
-                    <span>メンバーの招待・削除機能</span>
+                    <span className="w-1 h-1 bg-green-600 rounded-full"></span>
+                    <span className="line-through text-green-700">
+                      メンバーの招待・削除機能
+                    </span>
+                    <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">
+                      実装済み
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
@@ -493,6 +587,38 @@ export function TeamSettings({ customUrl }: TeamSettingsProps) {
                 className="flex-1 bg-red-600 hover:bg-red-700 text-white disabled:bg-gray-300"
               >
                 {isDeleting ? "削除中..." : "削除する"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* キック確認モーダル */}
+      {kickConfirmModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              メンバーをキック
+            </h3>
+            <p className="text-gray-600 mb-6">
+              <strong>{kickConfirmModal.displayName}</strong>
+              をチームから削除しますか？ この操作は取り消せません。
+            </p>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setKickConfirmModal(null)}
+                className="flex-1"
+                disabled={kickMutation.isPending}
+              >
+                キャンセル
+              </Button>
+              <Button
+                onClick={confirmKickMember}
+                disabled={kickMutation.isPending}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+              >
+                {kickMutation.isPending ? "削除中..." : "削除する"}
               </Button>
             </div>
           </div>

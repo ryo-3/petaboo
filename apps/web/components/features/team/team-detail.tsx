@@ -21,6 +21,7 @@ import { useUserInfo } from "@/src/hooks/use-user-info";
 import { useJoinRequests } from "@/src/hooks/use-join-requests";
 import { useManageJoinRequest } from "@/src/hooks/use-manage-join-request";
 import { useTeamApplicationsPolling } from "@/src/hooks/use-team-applications-polling";
+import { useKickMember } from "@/src/hooks/use-kick-member";
 import MemoScreen from "@/components/screens/memo-screen";
 import TaskScreen from "@/components/screens/task-screen";
 import BoardScreen from "@/components/screens/board-screen";
@@ -119,6 +120,32 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
   // 表示名設定モーダル
   const [showDisplayNameModal, setShowDisplayNameModal] = useState(false);
+
+  // キック機能
+  const [kickConfirmModal, setKickConfirmModal] = useState<{
+    userId: string;
+    displayName: string;
+  } | null>(null);
+  const kickMutation = useKickMember();
+
+  const handleKickMember = () => {
+    if (!kickConfirmModal) return;
+
+    kickMutation.mutate(
+      {
+        customUrl: customUrl,
+        userId: kickConfirmModal.userId,
+      },
+      {
+        onSuccess: () => {
+          setKickConfirmModal(null);
+        },
+        onError: (error: any) => {
+          console.error("メンバーのキックに失敗:", error);
+        },
+      },
+    );
+  };
 
   // URLのクエリパラメータからタブとアイテムIDを取得
   const getTabFromURL = () => {
@@ -884,6 +911,37 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
           onClose={() => setShowDisplayNameModal(false)}
           currentDisplayName={userInfo?.displayName}
         />
+
+        {/* キック確認モーダル */}
+        {kickConfirmModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+              <h3 className="text-lg font-medium mb-4">メンバーを削除</h3>
+              <p className="text-gray-600 mb-4">
+                <span className="font-medium">
+                  {kickConfirmModal.displayName}
+                </span>
+                をチームから削除しますか？この操作は取り消せません。
+              </p>
+              <div className="flex gap-3 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setKickConfirmModal(null)}
+                  disabled={kickMutation.isPending}
+                >
+                  キャンセル
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleKickMember}
+                  disabled={kickMutation.isPending}
+                >
+                  {kickMutation.isPending ? "削除中..." : "削除"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

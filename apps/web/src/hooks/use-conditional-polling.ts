@@ -95,16 +95,28 @@ export function useConditionalPolling<T>({
       abortControllerRef.current = abortController;
 
       const token = await getToken();
-      const response = await fetch(`${API_URL}${endpoint}`, {
+      const requestUrl = `${API_URL}${endpoint}`;
+      const requestBody = {
+        lastCheckedAt: new Date().toISOString(),
+        waitTimeoutSec,
+      };
+
+      console.log("🚀 Polling request details:", {
+        url: requestUrl,
+        method: "POST",
+        hasToken: Boolean(token),
+        body: requestBody,
+        apiUrl: API_URL,
+        endpoint: endpoint,
+      });
+
+      const response = await fetch(requestUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           ...(token && { Authorization: `Bearer ${token}` }),
         },
-        body: JSON.stringify({
-          lastCheckedAt: new Date().toISOString(),
-          waitTimeoutSec,
-        }),
+        body: JSON.stringify(requestBody),
         signal: abortController.signal,
       });
 
@@ -113,8 +125,25 @@ export function useConditionalPolling<T>({
         return;
       }
 
+      console.log("📥 Polling response:", {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        url: response.url,
+        headers: Object.fromEntries(response.headers.entries()),
+      });
+
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error("❌ Polling request failed:", {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText,
+          url: response.url,
+        });
+        throw new Error(
+          `HTTP ${response.status}: ${response.statusText} - ${errorText}`,
+        );
       }
 
       const data = await response.json();

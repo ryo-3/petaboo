@@ -16,14 +16,11 @@ export function useNotificationCount() {
   // 管理者向け：承認待ち申請数
   const pendingRequestsCount = joinRequests?.requests.length || 0;
 
-  // 申請者向け：承認・拒否された申請数（ペンディングは通知不要）
-  const myProcessedRequestsCount =
-    myJoinRequests?.requests?.filter(
-      (req) => req.status === "approved" || req.status === "rejected",
-    ).length || 0;
+  // 申請者向け：現時点では通知不要（将来的に未読フラグ実装時に対応）
+  const myProcessedRequestsCount = 0;
 
-  // 合計通知数
-  const totalNotifications = pendingRequestsCount + myProcessedRequestsCount;
+  // 合計通知数（管理者向けの承認待ち申請のみ）
+  const totalNotifications = pendingRequestsCount;
 
   return {
     totalCount: totalNotifications,

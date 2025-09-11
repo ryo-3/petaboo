@@ -2319,7 +2319,8 @@ export const waitMyRequestUpdatesRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            timeout: z.number().optional().default(120000), // デフォルト120秒
+            lastCheckedAt: z.string(),
+            waitTimeoutSec: z.number().optional().default(120),
           }),
         },
       },
@@ -2364,8 +2365,8 @@ export async function waitMyRequestUpdates(
     return c.json({ message: "認証が必要です" }, 401);
   }
 
-  const { timeout = 120000 } = c.req.valid("json");
-  const timeoutMs = timeout;
+  const { waitTimeoutSec = 120 } = c.req.valid("json");
+  const timeoutMs = waitTimeoutSec * 1000;
   const startTime = Date.now();
 
   try {

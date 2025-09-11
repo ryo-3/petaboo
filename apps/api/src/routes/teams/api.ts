@@ -2312,12 +2312,18 @@ export async function getMyJoinRequests(c: any) {
 
 // 申請状況更新待機ルート定義
 export const waitMyRequestUpdatesRoute = createRoute({
-  method: "get",
+  method: "post",
   path: "/my-requests/wait-updates",
   request: {
-    query: z.object({
-      timeout: z.string().optional().default("120000"), // デフォルト120秒
-    }),
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            timeout: z.number().optional().default(120000), // デフォルト120秒
+          }),
+        },
+      },
+    },
   },
   responses: {
     200: {
@@ -2358,8 +2364,8 @@ export async function waitMyRequestUpdates(
     return c.json({ message: "認証が必要です" }, 401);
   }
 
-  const { timeout } = c.req.valid("query");
-  const timeoutMs = parseInt(timeout, 10);
+  const { timeout = 120000 } = c.req.valid("json");
+  const timeoutMs = timeout;
   const startTime = Date.now();
 
   try {

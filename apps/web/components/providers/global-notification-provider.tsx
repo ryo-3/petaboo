@@ -16,13 +16,16 @@ export default function GlobalNotificationProvider({
 }: GlobalNotificationProviderProps) {
   const { isSignedIn } = useAuth();
 
-  // 認証済みユーザーのみグローバル通知を有効化
-  useGlobalTeamNotifications();
-
   console.log(
-    "🌐 GlobalNotificationProvider initialized, isSignedIn:",
+    "🌐 GlobalNotificationProvider rendered, isSignedIn:",
     isSignedIn,
   );
+
+  // 認証済みユーザーのみグローバル通知を有効化
+  if (isSignedIn) {
+    console.log("🌐 Initializing global notifications for signed in user");
+    useGlobalTeamNotifications();
+  }
 
   return <>{children}</>;
 }

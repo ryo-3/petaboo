@@ -2310,6 +2310,110 @@ export async function getMyJoinRequests(c: any) {
   }
 }
 
+// 申請状況更新待機ルート定義
+export const waitMyRequestUpdatesRoute = createRoute({
+  method: "get",
+  path: "/my-requests/wait-updates",
+  request: {
+    query: z.object({
+      timeout: z.string().optional().default("120000"), // デフォルト120秒
+    }),
+  },
+  responses: {
+    200: {
+      description: "申請状況更新取得成功",
+      content: {
+        "application/json": {
+          schema: z.object({
+            type: z.literal("request_status_changed"),
+            requestId: z.number(),
+            newStatus: z.enum(["pending", "approved", "rejected"]),
+            teamName: z.string(),
+            message: z.string().optional(),
+          }),
+        },
+      },
+    },
+    204: {
+      description: "タイムアウト - 更新なし",
+    },
+    401: {
+      description: "認証が必要です",
+    },
+  },
+  tags: ["Teams"],
+});
+
+// 申請状況更新待機ハンドラー
+export async function waitMyRequestUpdates(
+  c: Context<{
+    Bindings: {
+      DB: D1Database;
+      CLERK_SECRET_KEY: string;
+    };
+  }>,
+) {
+  const auth = getAuth(c);
+  if (!auth?.userId) {
+    return c.json({ message: "認証が必要です" }, 401);
+  }
+
+  const { timeout } = c.req.valid("query");
+  const timeoutMs = parseInt(timeout, 10);
+  const startTime = Date.now();
+
+  try {
+    // 初期状態を取得
+    const initialRequests = await c.env.DB.prepare(
+      `SELECT id, status, message FROM team_invitations 
+       WHERE user_id = ? AND status != 'expired' 
+       ORDER BY created_at DESC`,
+    )
+      .bind(auth.userId)
+      .all();
+
+    const initialStatusMap = new Map(
+      initialRequests.results.map((req: any) => [req.id, req.status]),
+    );
+
+    // ポーリングループ
+    while (Date.now() - startTime < timeoutMs) {
+      const currentRequests = await c.env.DB.prepare(
+        `SELECT ti.id, ti.status, ti.message, t.name as teamName
+         FROM team_invitations ti
+         JOIN teams t ON ti.team_id = t.id
+         WHERE ti.user_id = ? AND ti.status != 'expired'
+         ORDER BY ti.created_at DESC`,
+      )
+        .bind(auth.userId)
+        .all();
+
+      // 状態変更をチェック
+      for (const req of currentRequests.results as any[]) {
+        const oldStatus = initialStatusMap.get(req.id);
+        if (oldStatus && oldStatus !== req.status) {
+          return c.json({
+            type: "request_status_changed",
+            requestId: req.id,
+            newStatus: req.status,
+            teamName: req.teamName,
+            message: req.message || undefined,
+          });
+        }
+      }
+
+      // 短い間隔でチェック
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // 2秒待機
+    }
+
+    // タイムアウト
+    return c.body(null, 204);
+  } catch (error) {
+    console.error("申請状況更新待機エラー:", error);
+    return c.json({ message: "サーバーエラー" }, 500);
+  }
+}
+
 // チーム更新のスキーマ
 const updateTeamSchema = z.object({
   name: z

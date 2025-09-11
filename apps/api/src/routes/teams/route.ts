@@ -38,6 +38,8 @@ import {
   rejectJoinRequest,
   getMyJoinRequestsRoute,
   getMyJoinRequests,
+  waitMyRequestUpdatesRoute,
+  waitMyRequestUpdates,
   updateTeamRoute,
   updateTeam,
   deleteTeamRoute,
@@ -82,6 +84,7 @@ teamsRoute.openapi(updateTeamRoute, updateTeam);
 teamsRoute.openapi(deleteTeamRoute, deleteTeam);
 teamsRoute.openapi(waitUpdatesRoute, waitUpdatesHandler);
 teamsRoute.openapi(waitHomeUpdatesRoute, waitHomeUpdatesHandler);
+teamsRoute.openapi(waitMyRequestUpdatesRoute, waitMyRequestUpdates);
 
 // チーム用ボードAPIを追加
 createTeamBoardsAPI(teamsRoute);

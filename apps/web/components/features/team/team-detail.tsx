@@ -498,16 +498,20 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                                 </p>
                                 <div className="bg-white border rounded px-3 py-2">
                                   <code className="text-sm font-mono text-gray-800 break-all">
-                                    {existingInviteUrl.url}
+                                    {typeof window !== "undefined"
+                                      ? `${window.location.origin}/join/${customUrl}?token=${existingInviteUrl.token}`
+                                      : existingInviteUrl.url}
                                   </code>
                                 </div>
                               </div>
                               <Button
                                 size="sm"
                                 onClick={() => {
-                                  navigator.clipboard.writeText(
-                                    existingInviteUrl.url,
-                                  );
+                                  const fullUrl =
+                                    typeof window !== "undefined"
+                                      ? `${window.location.origin}/join/${customUrl}?token=${existingInviteUrl.token}`
+                                      : existingInviteUrl.url || "";
+                                  navigator.clipboard.writeText(fullUrl);
                                   setInviteMessage({
                                     type: "success",
                                     text: "コピーしました",

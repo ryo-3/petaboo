@@ -1290,15 +1290,8 @@ export async function getInviteUrl(c: any) {
       return c.json(null);
     }
 
-    const baseUrl =
-      process.env.NODE_ENV === "production"
-        ? process.env.FRONTEND_URL || "https://petaboo.vercel.app"
-        : process.env.FRONTEND_URL || "http://localhost:7593";
-    const inviteUrl = `${baseUrl}/join/${customUrl}?token=${invitation.token}`;
-
     return c.json({
       token: invitation.token,
-      url: inviteUrl,
       expiresAt: new Date(invitation.expiresAt * 1000).toISOString(),
       createdAt: new Date(invitation.createdAt * 1000).toISOString(),
     });
@@ -1432,15 +1425,8 @@ export async function generateInviteUrl(c: any) {
       status: "active",
     });
 
-    const baseUrl =
-      process.env.NODE_ENV === "production"
-        ? process.env.FRONTEND_URL || "https://petaboo.vercel.app"
-        : process.env.FRONTEND_URL || "http://localhost:7593";
-    const inviteUrl = `${baseUrl}/join/${customUrl}?token=${token}`;
-
     return c.json({
       token: token,
-      url: inviteUrl,
       expiresAt: new Date(expiresAt * 1000).toISOString(),
     });
   } catch (error) {

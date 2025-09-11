@@ -78,7 +78,8 @@
       "Bash(npx wrangler d1 execute:*)",
       "Read(//home/ryosuke/**)",
       "Read(//home/**)",
-      "Bash(xargs -r kill -9)"
+      "Bash(xargs -r kill -9)",
+      "Bash(echo:*)"
     ],
     "deny": []
   }

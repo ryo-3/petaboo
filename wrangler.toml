@@ -14,8 +14,12 @@ database_id = "7de21e56-0d26-4204-8563-a57bca0772b4"
 # 一時的にテスト用として設定（実際はsecretを使うべき）
 CLERK_SECRET_KEY = "sk_test_VGEcn7QzPdOl8UXxKlmKyAk9zWmm0oZ1x0pe1NyMxq"
 CLERK_PUBLISHABLE_KEY = "pk_test_bWFpbi1jcmFuZS04Ni5jbGVyay5hY2NvdW50cy5kZXYk"
-# フロントエンドのURL設定
+# 本番環境用フロントエンドURL
 FRONTEND_URL = "https://petaboo.vercel.app"
+
+# ローカル開発環境用設定
+[env.local.vars]
+FRONTEND_URL = "http://localhost:7593"
 
 # Workers Logs設定
 [observability]

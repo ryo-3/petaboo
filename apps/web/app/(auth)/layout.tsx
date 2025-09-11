@@ -1,6 +1,7 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import { jaJP } from "@clerk/localizations";
 import { Suspense } from "react";
+import GlobalNotificationProvider from "@/components/providers/global-notification-provider";
 
 export default function AuthLayout({
   children,
@@ -32,7 +33,7 @@ export default function AuthLayout({
         signUpFallbackRedirectUrl="/"
         afterSignOutUrl="/"
       >
-        {children}
+        <GlobalNotificationProvider>{children}</GlobalNotificationProvider>
       </ClerkProvider>
     </Suspense>
   );

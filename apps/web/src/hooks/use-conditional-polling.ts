@@ -60,6 +60,11 @@ export function useConditionalPolling<T>({
   const shouldPoll = useMemo(() => {
     if (!enabled) return false;
 
+    // グローバル通知の場合は常に実行
+    if (additionalConditions.alwaysEnabled) {
+      return true;
+    }
+
     const baseCondition = iconStates[iconStateKey]; // アイコンがアクティブか
     const visibilityCondition = isPageVisible; // ページがアクティブか
     const otherConditions = Object.values(additionalConditions).every(

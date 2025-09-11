@@ -13,7 +13,15 @@ interface TeamUpdates {
   newApplications: TeamApplication[];
 }
 
-export function useTeamApplicationsPolling(customUrl: string | null) {
+interface PollingOptions {
+  customUrl: string | null;
+  adminRole?: boolean; // 管理者権限を外部から指定
+}
+
+export function useTeamApplicationsPolling(
+  customUrl: string | null,
+  adminRole?: boolean,
+) {
   const { data: teamDetail } = useTeamDetail(customUrl || "");
   const queryClient = useQueryClient();
 
@@ -97,19 +105,23 @@ export function useTeamApplicationsPolling(customUrl: string | null) {
     console.error("チーム申請ポーリングエラー:", error);
   };
 
+  // 管理者権限を確認（外部から指定されるか、teamDetailから取得）
+  const isTeamAdmin =
+    adminRole !== undefined ? adminRole : teamDetail?.role === "admin";
+
   const pollingResult = useConditionalPolling<TeamUpdates>({
     endpoint: customUrl ? `/teams/${customUrl}/wait-updates` : "",
     iconStateKey: "team", // チームアイコンがアクティブな時のみ
     additionalConditions: {
-      isAdmin: teamDetail?.role === "admin",
-      teamExists: Boolean(teamDetail),
+      isAdmin: isTeamAdmin,
+      teamExists: Boolean(customUrl), // customUrlが存在すればOK（ホーム画面対応）
       // チーム詳細ページ内であれば、どのタブやパネルでも通知を受け取る
       onTeamPage: true, // 常にtrueに設定してチーム詳細ページ内では常に通知
     },
     onUpdate: handleUpdates,
     onError: handleError,
     waitTimeoutSec: 120, // 2分待機
-    enabled: Boolean(customUrl && teamDetail), // customUrlとteamDetailが存在する時のみ
+    enabled: Boolean(customUrl && isTeamAdmin), // customUrlと管理者権限が存在する時のみ
   });
 
   return {

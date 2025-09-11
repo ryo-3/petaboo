@@ -46,8 +46,10 @@ export function TeamWelcome({ onTeamCreate }: TeamWelcomeProps = {}) {
   // ホーム画面（/）でのみポーリングを実行する
   const isHomePage =
     typeof window !== "undefined" && window.location.pathname === "/";
-  useTeamApplicationsPolling(
+
+  const { isPolling, conditions } = useTeamApplicationsPolling(
     isHomePage ? firstAdminTeam?.customUrl || null : null,
+    isHomePage ? firstAdminTeam?.role === "admin" : undefined, // 管理者権限を明示的に渡す
   );
 
   if (isLoading || teamsLoading) {

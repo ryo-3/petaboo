@@ -577,7 +577,7 @@ export async function getUserById(c: any) {
 // ユーザー情報取得の実装
 export async function getUserInfo(c: any) {
   const auth = getAuth(c);
-  console.log("getUserInfo: auth =", auth);
+  // console.log("getUserInfo: auth =", auth); // 詳細ログは開発時のみ必要に応じて有効化
 
   if (!auth?.userId) {
     console.log("getUserInfo: 認証失敗 - authがnullまたはuserIdなし");

@@ -102,7 +102,12 @@ export function useTeamApplicationsPolling(
   };
 
   const handleError = (error: Error) => {
-    console.error("チーム申請ポーリングエラー:", error);
+    // ネットワークエラーは軽微なログにして開発中のノイズを軽減
+    if (error.message === "Failed to fetch") {
+      console.debug("チーム申請ポーリング接続エラー（リトライ中）");
+    } else {
+      console.error("チーム申請ポーリングエラー:", error);
+    }
   };
 
   // 管理者権限を確認（外部から指定されるか、teamDetailから取得）

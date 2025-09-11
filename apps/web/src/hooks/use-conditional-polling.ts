@@ -190,10 +190,16 @@ export function useConditionalPolling<T>({
         return;
       }
 
-      console.error(
-        "Conditional polling error:",
-        error instanceof Error ? error.message : String(error),
-      );
+      // ネットワークエラーは詳細ログを避ける（開発中の頻繁な接続エラーを軽減）
+      if (error instanceof Error && error.message === "Failed to fetch") {
+        // ネットワーク接続エラーは軽微なログにする
+        console.debug("ポーリング接続エラー（リトライ中）");
+      } else {
+        console.error(
+          "Conditional polling error:",
+          error instanceof Error ? error.message : String(error),
+        );
+      }
       if (onError) {
         onError(error as Error);
       }

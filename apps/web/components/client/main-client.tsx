@@ -139,11 +139,12 @@ function MainClient({
         setScreenMode("home");
         sessionStorage.removeItem("showTeamListAfterCreation"); // フラグを削除
       } else {
-        // ルートページではボード一覧を表示
+        // ルートページではホーム画面を表示
+        if (screenMode !== "home") {
+          setScreenMode("home");
+        }
         if (isFromBoardDetail) {
-          // ボード詳細から戻った場合はボード一覧を表示
-          // isFromBoardDetailがtrueの場合は、すでにscreenModeがboardに設定されているはず
-          // 上書きしない
+          // ボード詳細から戻った場合
           setIsFromBoardDetail(false); // フラグをリセット
         }
         // ルートページではボード一覧表示
@@ -182,7 +183,7 @@ function MainClient({
       // チーム一覧を開く場合は、他のモードをリセット
       setShowTeamList(true);
       setShowTeamCreate(false);
-      setScreenMode("home"); // チーム一覧もホーム画面の一部として扱う
+      setScreenMode("team"); // チーム一覧表示時はteamモードに設定
     }
   };
 
@@ -190,14 +191,14 @@ function MainClient({
   const handleTeamCreate = () => {
     setShowTeamCreate(true);
     setShowTeamList(false);
-    setScreenMode("home");
+    setScreenMode("team");
   };
 
   // チーム作成完了ハンドラー
   const handleTeamCreated = () => {
     setShowTeamCreate(false);
     setShowTeamList(true);
-    setScreenMode("home");
+    setScreenMode("team");
   };
 
   // 他のハンドラーをラップしてチーム表示をリセット

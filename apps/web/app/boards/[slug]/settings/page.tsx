@@ -25,7 +25,7 @@ export default async function BoardSettingsPage({
     if (userId) {
       const token = await getToken();
       const response = await fetch(
-        `${process.env.API_URL || "http://localhost:8794"}/boards/slug/${slug}`,
+        `${process.env.API_URL || "http://localhost:7594"}/boards/slug/${slug}`,
         {
           headers: {
             "Content-Type": "application/json",

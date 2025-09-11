@@ -41,7 +41,7 @@ console.error = (message: any, ...args: any[]) => {
   originalError(message, ...args);
 };
 
-const API_URL = "http://localhost:7594";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594";
 
 export default function AdminLayout({
   children,
@@ -60,7 +60,8 @@ export default function AdminLayout({
   React.useEffect(() => {
     setIsMounted(true);
     // セッションストレージから認証状態を確認
-    const authenticated = sessionStorage.getItem("admin_authenticated") === "true";
+    const authenticated =
+      sessionStorage.getItem("admin_authenticated") === "true";
     setIsAuthenticated(authenticated);
   }, []);
 
@@ -106,26 +107,28 @@ export default function AdminLayout({
               warnWhenUnsavedChanges: true,
             }}
           >
-            <ThemedLayoutV2 
+            <ThemedLayoutV2
               Header={() => (
-                <div style={{ 
-                  display: "flex", 
-                  justifyContent: "space-between", 
-                  alignItems: "center", 
-                  padding: "0 24px",
-                  height: "64px",
-                  background: "#fff",
-                  borderBottom: "1px solid #f0f0f0"
-                }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "0 24px",
+                    height: "64px",
+                    background: "#fff",
+                    borderBottom: "1px solid #f0f0f0",
+                  }}
+                >
                   <h1 style={{ margin: 0 }}>管理画面</h1>
-                  <button 
+                  <button
                     onClick={handleLogout}
-                    style={{ 
+                    style={{
                       padding: "4px 12px",
                       border: "1px solid #d9d9d9",
                       borderRadius: "4px",
                       background: "#fff",
-                      cursor: "pointer"
+                      cursor: "pointer",
                     }}
                   >
                     ログアウト

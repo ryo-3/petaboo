@@ -23,7 +23,7 @@ export default async function BoardsPage({ params }: BoardsPageProps) {
       if (userId) {
         const token = await getToken();
         const response = await fetch(
-          `${process.env.API_URL || "http://localhost:8794"}/boards/slug/${boardSlug}`,
+          `${process.env.API_URL || "http://localhost:7594"}/boards/slug/${boardSlug}`,
           {
             headers: {
               "Content-Type": "application/json",

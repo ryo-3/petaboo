@@ -6,7 +6,7 @@ import type {
   UpdateBoardCategory,
 } from "@/src/types/board-categories";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8787";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594";
 
 export function useBoardCategories(boardId?: number) {
   const { getToken } = useAuth();

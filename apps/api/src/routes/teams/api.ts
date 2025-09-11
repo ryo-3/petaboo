@@ -927,8 +927,8 @@ export async function inviteToTeam(c: any) {
     // メール送信（失敗しても続行）
     const baseUrl =
       process.env.NODE_ENV === "production"
-        ? "https://petaboo.vercel.app"
-        : "http://localhost:7593";
+        ? process.env.FRONTEND_URL || "https://petaboo.vercel.app"
+        : process.env.FRONTEND_URL || "http://localhost:7593";
     const invitationLink = `${baseUrl}/team/join/${token}`;
 
     try {
@@ -1290,7 +1290,11 @@ export async function getInviteUrl(c: any) {
       return c.json(null);
     }
 
-    const inviteUrl = `${process.env.NODE_ENV === "production" ? "https://petaboo.vercel.app" : "http://localhost:7593"}/join/${customUrl}?token=${invitation.token}`;
+    const baseUrl =
+      process.env.NODE_ENV === "production"
+        ? process.env.FRONTEND_URL || "https://petaboo.vercel.app"
+        : process.env.FRONTEND_URL || "http://localhost:7593";
+    const inviteUrl = `${baseUrl}/join/${customUrl}?token=${invitation.token}`;
 
     return c.json({
       token: invitation.token,
@@ -1428,7 +1432,11 @@ export async function generateInviteUrl(c: any) {
       status: "active",
     });
 
-    const inviteUrl = `${process.env.NODE_ENV === "production" ? "https://petaboo.vercel.app" : "http://localhost:7593"}/join/${customUrl}?token=${token}`;
+    const baseUrl =
+      process.env.NODE_ENV === "production"
+        ? process.env.FRONTEND_URL || "https://petaboo.vercel.app"
+        : process.env.FRONTEND_URL || "http://localhost:7593";
+    const inviteUrl = `${baseUrl}/join/${customUrl}?token=${token}`;
 
     return c.json({
       token: token,

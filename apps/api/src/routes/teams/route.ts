@@ -82,9 +82,9 @@ teamsRoute.openapi(getMyTeamRoute, getMyTeam);
 teamsRoute.openapi(joinTeamRoute, joinTeam);
 teamsRoute.openapi(updateTeamRoute, updateTeam);
 teamsRoute.openapi(deleteTeamRoute, deleteTeam);
-teamsRoute.openapi(waitUpdatesRoute, waitUpdatesHandler);
-teamsRoute.openapi(waitHomeUpdatesRoute, waitHomeUpdatesHandler);
 teamsRoute.openapi(waitMyRequestUpdatesRoute, waitMyRequestUpdates);
+teamsRoute.openapi(waitHomeUpdatesRoute, waitHomeUpdatesHandler);
+teamsRoute.openapi(waitUpdatesRoute, waitUpdatesHandler);
 
 // チーム用ボードAPIを追加
 createTeamBoardsAPI(teamsRoute);

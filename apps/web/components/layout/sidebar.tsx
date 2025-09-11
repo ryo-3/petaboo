@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useNavigation } from "@/contexts/navigation-context";
-import { useTeamNotificationCount } from "@/src/hooks/use-team-notification-count";
+import { useNotificationCount } from "@/src/hooks/use-notification-count";
 import DashboardIcon from "@/components/icons/dashboard-icon";
 import DashboardEditIcon from "@/components/icons/dashboard-edit-icon";
 import HomeIcon from "@/components/icons/home-icon";
@@ -68,8 +68,8 @@ function Sidebar({
 }: SidebarProps) {
   // NavigationContextから統一されたiconStatesを取得
   const { iconStates } = useNavigation();
-  // チーム通知数を取得
-  const { totalCount: teamNotificationCount } = useTeamNotificationCount();
+  // 通知数を取得
+  const { totalCount: notificationCount } = useNotificationCount();
 
   const modeTabs = [
     {
@@ -216,7 +216,7 @@ function Sidebar({
               }`}
             >
               <TeamIcon className="w-5 h-5" />
-              <NotificationBadge count={teamNotificationCount} size="sm" />
+              <NotificationBadge count={notificationCount} size="sm" />
             </button>
           </Tooltip>
           {/* 設定ボタン（コンパクトモード） */}
@@ -321,7 +321,7 @@ function Sidebar({
                 <TeamIcon className="w-5 h-5" />
                 <span className="text-sm font-medium">チーム</span>
                 <NotificationBadge
-                  count={teamNotificationCount}
+                  count={notificationCount}
                   size="sm"
                   className="-top-1 -right-1"
                 />

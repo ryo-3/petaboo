@@ -156,9 +156,21 @@ export function useConditionalPolling<T>({
         fullData: data,
       });
 
+      // APIが直接更新データを返す場合（hasUpdatesプロパティなし）
       if (data.hasUpdates) {
         console.log("🔄 Calling onUpdate with:", data.updates);
         onUpdate(data.updates);
+      } else if (
+        data &&
+        typeof data === "object" &&
+        !data.hasUpdates &&
+        Object.keys(data).length > 0
+      ) {
+        console.log(
+          "🔄 Direct update data detected, calling onUpdate with:",
+          data,
+        );
+        onUpdate(data);
       } else {
         console.log("⏱️ No updates available");
       }

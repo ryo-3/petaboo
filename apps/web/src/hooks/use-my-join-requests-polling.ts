@@ -17,7 +17,8 @@ export function useMyJoinRequestsPolling() {
   const queryClient = useQueryClient();
 
   const handleUpdates = (update: MyJoinRequestUpdate) => {
-    console.log("🔔 申請状況更新:", update);
+    console.log("🔔 申請状況更新 - handleUpdates called:", update);
+    console.log("🔄 Invalidating queries: my-join-requests, teams");
 
     // 申請状況を再取得
     queryClient.invalidateQueries({

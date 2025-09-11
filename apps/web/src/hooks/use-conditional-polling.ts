@@ -148,8 +148,17 @@ export function useConditionalPolling<T>({
 
       const data = await response.json();
 
+      console.log("📦 Polling response data:", {
+        hasUpdates: data.hasUpdates,
+        updates: data.updates,
+        fullData: data,
+      });
+
       if (data.hasUpdates) {
+        console.log("🔄 Calling onUpdate with:", data.updates);
         onUpdate(data.updates);
+      } else {
+        console.log("⏱️ No updates available");
       }
 
       // 条件が満たされている場合は再度ポーリング

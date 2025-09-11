@@ -25,7 +25,6 @@ export function UserInitializer() {
           const token = await getToken();
 
           // ログイン時にユーザー存在確認・作成
-          console.log("UserInitializer: /users/ensure-existsを呼び出し中...");
           const response = await fetch(`${API_URL}/users/ensure-exists`, {
             method: "POST",
             headers: {
@@ -36,17 +35,15 @@ export function UserInitializer() {
 
           if (!response.ok) {
             const text = await response.text();
-            console.error("API エラー:", response.status, text);
+            console.error("UserInitializer API エラー:", response.status, text);
             return;
           }
 
           const result = await response.json();
+          // 新規ユーザー作成時のみログ出力（既存ユーザーは静寂）
           if (result.created) {
             console.log(`✅ 新規ユーザー作成: ${result.userId}`);
-          } else {
-            console.log(`🔄 既存ユーザー確認: ${result.userId}`);
           }
-          console.log("UserInitializer完了:", result);
         } catch (error) {
           console.error("ユーザー初期化エラー:", error);
         }

@@ -111,14 +111,14 @@ export function useConditionalPolling<T>({
         waitTimeoutSec,
       };
 
-      console.log("🚀 Polling request details:", {
-        url: requestUrl,
-        method: "POST",
-        hasToken: Boolean(token),
-        body: requestBody,
-        apiUrl: API_URL,
-        endpoint: endpoint,
-      });
+      // console.log("🚀 Polling request details:", {
+      //   url: requestUrl,
+      //   method: "POST",
+      //   hasToken: Boolean(token),
+      //   body: requestBody,
+      //   apiUrl: API_URL,
+      //   endpoint: endpoint,
+      // });
 
       const response = await fetch(requestUrl, {
         method: "POST",
@@ -135,13 +135,13 @@ export function useConditionalPolling<T>({
         return;
       }
 
-      console.log("📥 Polling response:", {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok,
-        url: response.url,
-        headers: Object.fromEntries(response.headers.entries()),
-      });
+      // console.log("📥 Polling response:", {
+      //   status: response.status,
+      //   statusText: response.statusText,
+      //   ok: response.ok,
+      //   url: response.url,
+      //   headers: Object.fromEntries(response.headers.entries()),
+      // });
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -156,17 +156,11 @@ export function useConditionalPolling<T>({
         );
       }
 
-      console.log("🔍 About to parse JSON response...");
+      // console.log("🔍 About to parse JSON response...");
       const data = await response.json();
-      console.log("✅ JSON parsed successfully:", data);
+      // console.log("✅ JSON parsed successfully:", data);
 
-      console.log("📦 Polling response data:", {
-        hasUpdates: data.hasUpdates,
-        updates: data.updates,
-        fullData: data,
-      });
-
-      // APIが直接更新データを返す場合（hasUpdatesプロパティなし）
+      // 更新がある場合のみログ出力
       if (data.hasUpdates) {
         console.log("🔄 Calling onUpdate with:", data.updates);
         onUpdate(data.updates);
@@ -181,9 +175,8 @@ export function useConditionalPolling<T>({
           data,
         );
         onUpdate(data);
-      } else {
-        console.log("⏱️ No updates available");
       }
+      // 更新なしの場合はログ出力しない（ノイズ削減）
 
       // 条件が満たされている場合は再度ポーリング
       if (shouldPoll) {

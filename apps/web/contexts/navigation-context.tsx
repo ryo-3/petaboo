@@ -147,10 +147,10 @@ export function NavigationProvider({
     showingBoardDetail,
   ]);
 
-  // デバッグ用: iconStatesの変更をログ出力（必要に応じて削除可能）
+  // デバッグ用: スクリーンモード変更をログ出力（iconStatesの詳細は省略）
   useEffect(() => {
-    console.log("🔄 iconStates changed:", { screenMode, iconStates });
-  }, [iconStates, screenMode]);
+    console.log("🔄 Screen mode changed:", screenMode);
+  }, [screenMode]);
 
   // TODO: 必要に応じて個別キャッシュ無効化を実装する
   // - メモ画面: 特定カテゴリや長時間経過時のみ無効化

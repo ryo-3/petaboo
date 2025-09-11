@@ -79,7 +79,8 @@
       "Read(//home/ryosuke/**)",
       "Read(//home/**)",
       "Bash(xargs -r kill -9)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(printf:*)"
     ],
     "deny": []
   }

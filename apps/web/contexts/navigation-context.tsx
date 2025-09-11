@@ -25,7 +25,7 @@ type ScreenMode =
   | "team"
   | "loading";
 
-interface IconStates {
+export interface IconStates {
   home: boolean;
   memo: boolean;
   task: boolean;
@@ -147,10 +147,32 @@ export function NavigationProvider({
     showingBoardDetail,
   ]);
 
-  // デバッグ用: スクリーンモード変更をログ出力（iconStatesの詳細は省略）
+  // デバッグ用: スクリーンモード変更をログ出力
   useEffect(() => {
-    console.log("🔄 Screen mode changed:", screenMode);
-  }, [screenMode]);
+    const currentTab = searchParams.get("tab");
+    const teamName =
+      pathname.startsWith("/team/") && pathname !== "/team"
+        ? pathname.split("/")[2]
+        : undefined;
+
+    // シンプルなログ出力
+    const logInfo = [
+      `mode:${screenMode}`,
+      `path:${pathname}`,
+      currentTab && `tab:${currentTab}`,
+      teamName && `team:${teamName}`,
+      `icons:${
+        Object.entries(iconStates)
+          .filter(([k, v]) => v)
+          .map(([k]) => k)
+          .join(",") || "none"
+      }`,
+    ]
+      .filter(Boolean)
+      .join(" | ");
+
+    console.log("🔄", logInfo);
+  }, [screenMode, pathname, searchParams, iconStates]);
 
   // TODO: 必要に応じて個別キャッシュ無効化を実装する
   // - メモ画面: 特定カテゴリや長時間経過時のみ無効化

@@ -21,6 +21,26 @@ import { teamTags, teamTaggings } from "../../db/schema/team/tags";
 import { count } from "drizzle-orm";
 import type { DatabaseType } from "../../types/common";
 
+// グローバル通知システムの型定義
+interface NotificationData {
+  type: string;
+  requestId: number;
+  newStatus: string;
+  teamName: string;
+  message: string;
+  timestamp: number;
+}
+
+declare global {
+  var userNotifications: Record<string, NotificationData[]> | undefined;
+}
+
+// グローバル通知システムの初期化
+if (typeof global !== "undefined" && !global.userNotifications) {
+  global.userNotifications = {};
+  console.log("🚀 グローバル通知システム初期化完了");
+}
+
 // チーム作成のスキーマ
 const createTeamSchema = z.object({
   name: z
@@ -2104,6 +2124,37 @@ export async function approveJoinRequest(c: any) {
       }
     }
 
+    // 4. 承認通知を送信
+    try {
+      console.log(
+        `🔔 チーム承認通知送信開始: userId=${request.userId}, teamName=${team.name}`,
+      );
+
+      // グローバル通知システムに通知を送信
+      const notificationData = {
+        type: "request_status_changed",
+        requestId: requestId,
+        newStatus: "approved",
+        teamName: team.name,
+        message: `チーム「${team.name}」への参加申請が承認されました！`,
+        timestamp: now,
+      };
+
+      // インメモリ通知キューに追加（将来的にはRedisなど使用）
+      if (global.userNotifications) {
+        if (!global.userNotifications[request.userId]) {
+          global.userNotifications[request.userId] = [];
+        }
+        global.userNotifications[request.userId].push(notificationData);
+        console.log(
+          `✅ 通知追加完了: ${request.userId} - ${notificationData.message}`,
+        );
+      }
+    } catch (notificationError) {
+      // 通知エラーは承認処理の成功に影響させない
+      console.error("承認通知送信エラー:", notificationError);
+    }
+
     return c.json({ message: "申請を承認しました" }, 200);
   } catch (error) {
     console.error("申請承認エラー:", error);
@@ -2456,14 +2507,7 @@ export const waitMyRequestUpdatesRoute = createRoute({
 });
 
 // 申請状況更新待機ハンドラー
-export async function waitMyRequestUpdates(
-  c: Context<{
-    Bindings: {
-      DB: D1Database;
-      CLERK_SECRET_KEY: string;
-    };
-  }>,
-) {
+export async function waitMyRequestUpdates(c: any) {
   const auth = getAuth(c);
   if (!auth?.userId) {
     return c.json({ message: "認証が必要です" }, 401);
@@ -2474,51 +2518,28 @@ export async function waitMyRequestUpdates(
   const startTime = Date.now();
 
   try {
-    // 初期状態を取得
-    const initialRequests = await c.env.DB.prepare(
-      `SELECT id, status, message FROM team_invitations 
-       WHERE user_id = ? AND status != 'expired' 
-       ORDER BY created_at DESC`,
-    )
-      .bind(auth.userId)
-      .all();
+    console.log(`🔍 通知ポーリング開始: userId=${auth.userId}`);
 
-    const initialStatusMap = new Map(
-      initialRequests.results.map((req: any) => [req.id, req.status]),
-    );
-
-    // ポーリングループ
+    // 新しい通知システムをチェック
     while (Date.now() - startTime < timeoutMs) {
-      const currentRequests = await c.env.DB.prepare(
-        `SELECT ti.id, ti.status, ti.message, t.name as teamName
-         FROM team_invitations ti
-         JOIN teams t ON ti.team_id = t.id
-         WHERE ti.user_id = ? AND ti.status != 'expired'
-         ORDER BY ti.created_at DESC`,
-      )
-        .bind(auth.userId)
-        .all();
-
-      // 状態変更をチェック
-      for (const req of currentRequests.results as any[]) {
-        const oldStatus = initialStatusMap.get(req.id);
-        if (oldStatus && oldStatus !== req.status) {
-          return c.json({
-            type: "request_status_changed",
-            requestId: req.id,
-            newStatus: req.status,
-            teamName: req.teamName,
-            message: req.message || undefined,
-          });
+      // グローバル通知システムから通知をチェック
+      if (global.userNotifications && global.userNotifications[auth.userId!]) {
+        const notifications = global.userNotifications[auth.userId!];
+        if (notifications && notifications.length > 0) {
+          // 通知を取得してクリア
+          const notification = notifications.shift(); // 最初の通知を取得
+          console.log(`✅ 通知送信: ${auth.userId}`, notification);
+          return c.json(notification);
         }
       }
 
-      // 短い間隔でチェック
-      await new Promise((resolve) => setTimeout(resolve, 2000)); // 2秒待機
+      // 100ms待機してから再チェック
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
-    // タイムアウト
-    return c.body(null, 204);
+    // タイムアウト時は空のレスポンス
+    console.log(`⏰ 通知ポーリングタイムアウト: userId=${auth.userId}`);
+    return c.json({ hasUpdates: false });
   } catch (error) {
     console.error("申請状況更新待機エラー:", error);
     return c.json({ message: "サーバーエラー" }, 500);

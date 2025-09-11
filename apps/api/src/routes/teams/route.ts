@@ -51,6 +51,7 @@ import {
   kickMemberRoute,
   kickMember,
 } from "./api";
+import { notificationCheckRoute, notificationCheck } from "./check";
 import { createTeamBoardsAPI } from "./boards";
 
 // SQLite & drizzle セットアップ
@@ -88,6 +89,7 @@ teamsRoute.openapi(waitMyRequestUpdatesRoute, waitMyRequestUpdates);
 teamsRoute.openapi(waitHomeUpdatesRoute, waitHomeUpdatesHandler);
 teamsRoute.openapi(waitUpdatesRoute, waitUpdatesHandler);
 teamsRoute.openapi(kickMemberRoute, kickMember);
+teamsRoute.openapi(notificationCheckRoute, notificationCheck);
 
 // チーム用ボードAPIを追加
 createTeamBoardsAPI(teamsRoute);

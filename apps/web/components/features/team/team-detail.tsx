@@ -107,6 +107,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     type: "success" | "error";
     text: string;
   } | null>(null);
+  const [displayInviteUrl, setDisplayInviteUrl] = useState<string>("");
 
   // 選択状態の管理
   const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null);
@@ -179,6 +180,15 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     // searchParams以外の依存を追加しない（無限ループを防ぐ）
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams.toString()]);
+
+  // 招待URLをクライアントサイドで更新
+  useEffect(() => {
+    if (typeof window !== "undefined" && existingInviteUrl?.token) {
+      setDisplayInviteUrl(
+        `${window.location.origin}/join/${customUrl}?token=${existingInviteUrl.token}`,
+      );
+    }
+  }, [existingInviteUrl, customUrl]);
 
   // タブを変更する関数（URLも更新）
   const handleTabChange = useCallback(
@@ -498,28 +508,27 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                                 </p>
                                 <div className="bg-white border rounded px-3 py-2">
                                   <code className="text-sm font-mono text-gray-800 break-all">
-                                    {typeof window !== "undefined"
-                                      ? `${window.location.origin}/join/${customUrl}?token=${existingInviteUrl.token}`
-                                      : existingInviteUrl.url}
+                                    {displayInviteUrl ||
+                                      "招待URLを読み込み中..."}
                                   </code>
                                 </div>
                               </div>
                               <Button
                                 size="sm"
                                 onClick={() => {
-                                  const fullUrl =
-                                    typeof window !== "undefined"
-                                      ? `${window.location.origin}/join/${customUrl}?token=${existingInviteUrl.token}`
-                                      : existingInviteUrl.url || "";
-                                  navigator.clipboard.writeText(fullUrl);
-                                  setInviteMessage({
-                                    type: "success",
-                                    text: "コピーしました",
-                                  });
-                                  setTimeout(
-                                    () => setInviteMessage(null),
-                                    1500,
-                                  );
+                                  if (displayInviteUrl) {
+                                    navigator.clipboard.writeText(
+                                      displayInviteUrl,
+                                    );
+                                    setInviteMessage({
+                                      type: "success",
+                                      text: "コピーしました",
+                                    });
+                                    setTimeout(
+                                      () => setInviteMessage(null),
+                                      1500,
+                                    );
+                                  }
                                 }}
                                 className="ml-2"
                               >

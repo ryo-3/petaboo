@@ -146,7 +146,9 @@ export function useConditionalPolling<T>({
         );
       }
 
+      console.log("🔍 About to parse JSON response...");
       const data = await response.json();
+      console.log("✅ JSON parsed successfully:", data);
 
       console.log("📦 Polling response data:", {
         hasUpdates: data.hasUpdates,

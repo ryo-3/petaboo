@@ -16,18 +16,19 @@ export function useNotificationCount() {
   // 管理者向け：承認待ち申請数
   const pendingRequestsCount = joinRequests?.requests.length || 0;
 
-  // 申請者向け：ペンディング状態の申請数（未読通知の代わり）
-  const myPendingRequestsCount =
-    myJoinRequests?.requests?.filter((req) => req.status === "pending")
-      .length || 0;
+  // 申請者向け：承認・拒否された申請数（ペンディングは通知不要）
+  const myProcessedRequestsCount =
+    myJoinRequests?.requests?.filter(
+      (req) => req.status === "approved" || req.status === "rejected",
+    ).length || 0;
 
   // 合計通知数
-  const totalNotifications = pendingRequestsCount + myPendingRequestsCount;
+  const totalNotifications = pendingRequestsCount + myProcessedRequestsCount;
 
   return {
     totalCount: totalNotifications,
     teamRequestsCount: pendingRequestsCount,
-    myPendingCount: myPendingRequestsCount,
+    myProcessedCount: myProcessedRequestsCount,
     adminTeamsCount: adminTeams.length,
   };
 }

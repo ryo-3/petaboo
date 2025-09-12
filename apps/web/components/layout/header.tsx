@@ -7,6 +7,7 @@ import { usePersonalNotifier } from "@/src/hooks/use-personal-notifier";
 import { useQueryClient } from "@tanstack/react-query";
 import { UserButton } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
+import { usePageVisibility } from "@/src/contexts/PageVisibilityContext";
 
 function Header() {
   // 現在のチーム名を取得（navigation-contextと同じロジック）
@@ -18,8 +19,14 @@ function Header() {
 
   const isPersonalPage = pathname === "/" || !teamName;
 
+  // Page Visibility状態を取得
+  const { isVisible } = usePageVisibility();
+
+  // デバッグ: isVisibleの値を確認
+  console.log(`🔍 [Header] isVisible: ${isVisible}, teamName: ${teamName}`);
+
   // チーム専用通知（チームページでのみ使用）
-  const teamNotifier = useSimpleTeamNotifier(teamName);
+  const teamNotifier = useSimpleTeamNotifier(teamName, isVisible);
 
   // 個人用通知（個人ホームページでのみ使用）
   const personalNotifier = usePersonalNotifier();

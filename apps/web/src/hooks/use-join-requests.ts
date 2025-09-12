@@ -17,6 +17,7 @@ interface JoinRequestsResponse {
 export function useJoinRequests(
   customUrl: string | undefined,
   hasNotifications?: boolean,
+  isVisible?: boolean,
 ) {
   const { getToken } = useAuth();
 
@@ -50,6 +51,6 @@ export function useJoinRequests(
       return response.json() as Promise<JoinRequestsResponse>;
     },
     enabled: !!customUrl,
-    refetchInterval: hasNotifications ? 10000 : false, // 通知がある場合のみ10秒間隔で自動更新
+    refetchInterval: hasNotifications && isVisible ? 10000 : false, // 通知があり、かつページが見える場合のみ10秒間隔で自動更新
   });
 }

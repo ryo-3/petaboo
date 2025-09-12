@@ -9,6 +9,7 @@ import { UserPreferencesProvider } from "@/src/contexts/user-preferences-context
 import { getServerUserPreferences } from "@/src/lib/server-preferences";
 import { SelectorProvider } from "@/src/contexts/selector-context";
 import { UserInitializer } from "@/components/auth/user-initializer";
+import { PageVisibilityProvider } from "@/src/contexts/PageVisibilityContext";
 
 import { jaJP } from "@clerk/localizations";
 const geistSans = Geist({
@@ -47,15 +48,17 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-gray-900 min-h-screen`}
       >
         <QueryProvider>
-          <UserPreferencesProvider initialPreferences={initialPreferences}>
-            <ToastProvider>
-              <SelectorProvider>
-                {clerkPublishableKey && <UserInitializer />}
-                {children}
-                <ToastContainer />
-              </SelectorProvider>
-            </ToastProvider>
-          </UserPreferencesProvider>
+          <PageVisibilityProvider>
+            <UserPreferencesProvider initialPreferences={initialPreferences}>
+              <ToastProvider>
+                <SelectorProvider>
+                  {clerkPublishableKey && <UserInitializer />}
+                  {children}
+                  <ToastContainer />
+                </SelectorProvider>
+              </ToastProvider>
+            </UserPreferencesProvider>
+          </PageVisibilityProvider>
         </QueryProvider>
       </body>
     </html>

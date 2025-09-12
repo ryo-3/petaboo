@@ -20,7 +20,10 @@ interface SimpleNotifierResult {
  * 特定チーム向けのシンプルな通知チェッカー
  * path:/team/moricrew の時に moricrew の申請をチェック
  */
-export function useSimpleTeamNotifier(teamName?: string) {
+export function useSimpleTeamNotifier(
+  teamName?: string,
+  isVisible: boolean = true,
+) {
   const { getToken } = useAuth();
   const [data, setData] = useState<SimpleNotifierResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -79,6 +82,7 @@ export function useSimpleTeamNotifier(teamName?: string) {
 
     console.log(`🎯 チーム切り替え検知: ${teamName}`);
     console.log(`🚀 通知チェック開始: ${teamName} (10秒間隔)`);
+    console.log(`🔍 [useSimpleTeamNotifier] isVisible: ${isVisible}`);
 
     // 共通のチェック関数
     const performCheck = async () => {
@@ -146,17 +150,19 @@ export function useSimpleTeamNotifier(teamName?: string) {
     setIsLoading(true);
     performCheck().finally(() => setIsLoading(false));
 
-    // 10秒間隔でチェック
-    const interval = setInterval(() => {
-      performCheck();
-    }, 10000);
+    // 10秒間隔でチェック（ページ可視時のみ）
+    const interval = isVisible
+      ? setInterval(() => {
+          performCheck();
+        }, 10000)
+      : null;
 
     // クリーンアップ
     return () => {
       console.log(`⏹️ 通知チェック停止: ${teamName}`);
-      clearInterval(interval);
+      if (interval) clearInterval(interval);
     };
-  }, [teamName, getToken]);
+  }, [teamName, getToken, isVisible]);
 
   return {
     data,

@@ -31,6 +31,8 @@ import { TeamWelcome } from "@/components/features/team/team-welcome";
 import { TeamSettings } from "@/components/features/team/team-settings";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
+import { getUserAvatarColor } from "@/src/utils/userUtils";
+import { usePageVisibility } from "@/src/contexts/PageVisibilityContext";
 
 interface TeamDetailProps {
   customUrl: string;
@@ -41,46 +43,124 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   const searchParams = useSearchParams();
   const { data: team, isLoading, error } = useTeamDetail(customUrl);
 
-  // ユーザーIDから色を生成する関数
-  const getAvatarColor = (userId: string) => {
-    const colors = [
-      "bg-blue-500",
-      "bg-green-500",
-      "bg-purple-500",
-      "bg-pink-500",
-      "bg-indigo-500",
-      "bg-yellow-500",
-      "bg-red-500",
-      "bg-teal-500",
-      "bg-orange-500",
-      "bg-cyan-500",
-      "bg-violet-500",
-      "bg-fuchsia-500",
-      "bg-rose-500",
-      "bg-amber-500",
-      "bg-lime-500",
-      "bg-emerald-500",
-      "bg-sky-500",
-      "bg-slate-600",
-      "bg-gray-600",
-      "bg-zinc-600",
-      "bg-stone-600",
-      "bg-neutral-600",
-      "bg-blue-600",
-      "bg-green-600",
-      "bg-purple-600",
-      "bg-pink-600",
-      "bg-indigo-600",
-      "bg-red-600",
-      "bg-teal-600",
-      "bg-orange-600",
-    ];
-    // userIdをハッシュして色のインデックスを決める
-    const hash = userId
-      .split("")
-      .reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    return colors[hash % colors.length];
-  };
+  // 🛡️ ページ可視性状態をContextから取得
+  const { isVisible: isPageVisible } = usePageVisibility();
+
+  // 🖱️ マウス活動監視テスト
+  useEffect(() => {
+    let isMouseInPage = true;
+    let lastActivity = Date.now();
+    let activityLevel: "active" | "idle5m" | "idle10m" = "active";
+
+    const updateTimestamp = () => new Date().toLocaleTimeString();
+
+    // マウス位置監視
+    const handleMouseEnter = () => {
+      if (!isMouseInPage) {
+        isMouseInPage = true;
+        console.log(
+          `🖱️ [${updateTimestamp()}] マウス復帰: ページ内 (${customUrl})`,
+        );
+      }
+    };
+
+    const handleMouseLeave = () => {
+      if (isMouseInPage) {
+        isMouseInPage = false;
+        console.log(
+          `🖱️ [${updateTimestamp()}] マウス離脱: ページ外 (${customUrl})`,
+        );
+      }
+    };
+
+    // ユーザー活動監視（軽量版）
+    const handleUserActivity = (eventType: string) => {
+      const now = Date.now();
+      const inactiveDuration = now - lastActivity;
+      lastActivity = now;
+
+      // 活動レベル判定
+      const newLevel = "active";
+      if (newLevel !== activityLevel) {
+        activityLevel = newLevel;
+        console.log(
+          `⚡ [${updateTimestamp()}] 活動レベル変更: ${activityLevel} (${eventType}) (${customUrl})`,
+        );
+      }
+
+      // 長時間無操作からの復帰時のみログ出力
+      if (inactiveDuration > 60000) {
+        // 1分以上無操作
+        console.log(
+          `🔄 [${updateTimestamp()}] ユーザー活動復帰: ${Math.round(inactiveDuration / 1000)}秒後 (${eventType}) (${customUrl})`,
+        );
+      }
+    };
+
+    // 活動レベル定期チェック（パフォーマンス配慮で30秒間隔）
+    const activityChecker = setInterval(() => {
+      const now = Date.now();
+      const inactiveDuration = now - lastActivity;
+      const oldLevel = activityLevel;
+
+      if (inactiveDuration > 600000) {
+        // 10分以上
+        activityLevel = "idle10m";
+      } else if (inactiveDuration > 300000) {
+        // 5分以上
+        activityLevel = "idle5m";
+      } else {
+        activityLevel = "active";
+      }
+
+      if (oldLevel !== activityLevel) {
+        console.log(
+          `📊 [${updateTimestamp()}] 活動レベル自動更新: ${oldLevel} → ${activityLevel} (無操作${Math.round(inactiveDuration / 1000)}秒) (${customUrl})`,
+        );
+      }
+    }, 30000);
+
+    // 初期状態ログ
+    console.log(`🖱️ [初期化] マウス監視開始 (${customUrl})`);
+
+    // イベントリスナー登録（パフォーマンス配慮でthrottling）
+    let throttleTimer: NodeJS.Timeout | null = null;
+    const throttledActivity = (eventType: string) => {
+      if (!throttleTimer) {
+        handleUserActivity(eventType);
+        throttleTimer = setTimeout(() => {
+          throttleTimer = null;
+        }, 1000); // 1秒間隔でthrottle
+      }
+    };
+
+    document.addEventListener("mouseenter", handleMouseEnter);
+    document.addEventListener("mouseleave", handleMouseLeave);
+    document.addEventListener("mousemove", () =>
+      throttledActivity("mousemove"),
+    );
+    document.addEventListener("keydown", () => throttledActivity("keydown"));
+    document.addEventListener("scroll", () => throttledActivity("scroll"), {
+      passive: true,
+    });
+
+    return () => {
+      console.log(`🖱️ [クリーンアップ] マウス監視終了 (${customUrl})`);
+      clearInterval(activityChecker);
+      if (throttleTimer) clearTimeout(throttleTimer);
+
+      document.removeEventListener("mouseenter", handleMouseEnter);
+      document.removeEventListener("mouseleave", handleMouseLeave);
+      document.removeEventListener("mousemove", () =>
+        throttledActivity("mousemove"),
+      );
+      document.removeEventListener("keydown", () =>
+        throttledActivity("keydown"),
+      );
+      document.removeEventListener("scroll", () => throttledActivity("scroll"));
+    };
+  }, [customUrl]);
+
   const { data: userInfo } = useUserInfo();
   const { data: existingInviteUrl, isLoading: isLoadingInviteUrl } =
     useGetInviteUrl(customUrl);
@@ -89,7 +169,11 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   const { mutate: deleteInviteUrl, isPending: isDeleting } =
     useDeleteInviteUrl();
   const { data: joinRequests, isLoading: isLoadingJoinRequests } =
-    useJoinRequests(customUrl);
+    useJoinRequests(
+      customUrl,
+      true, // 一旦通知ありで初期化（後で最適化）
+      isPageVisible, // ページ可視性
+    );
   const {
     approve,
     reject,
@@ -774,7 +858,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                           className="flex items-center gap-3 p-2 bg-gray-50 rounded"
                         >
                           <div
-                            className={`w-8 h-8 ${getAvatarColor(member.userId)} rounded-full flex items-center justify-center text-white text-sm font-medium`}
+                            className={`w-8 h-8 ${getUserAvatarColor(member.userId)} rounded-full flex items-center justify-center text-white text-sm font-medium`}
                           >
                             {member.displayName
                               ? member.displayName.charAt(0).toUpperCase()

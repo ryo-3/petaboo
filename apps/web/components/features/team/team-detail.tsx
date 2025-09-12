@@ -185,6 +185,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   } = useManageJoinRequest(customUrl);
 
   const [showInvitePanel, setShowInvitePanel] = useState(false);
+  const [previousTab, setPreviousTab] = useState<string | null>(null);
   const [inviteMessage, setInviteMessage] = useState<{
     type: "success" | "error";
     text: string;
@@ -497,7 +498,24 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 {showInvitePanel && (
-                  <BackButton onClick={() => setShowInvitePanel(false)} />
+                  <BackButton
+                    onClick={() => {
+                      setShowInvitePanel(false);
+                      if (previousTab) {
+                        handleTabChange(
+                          previousTab as
+                            | "overview"
+                            | "memos"
+                            | "tasks"
+                            | "boards"
+                            | "team-list"
+                            | "settings"
+                            | "team-settings"
+                            | "search",
+                        );
+                      }
+                    }}
+                  />
                 )}
                 <h1 className="text-[22px] font-bold text-gray-800">
                   {showInvitePanel ? "チーム招待" : team.name}
@@ -569,7 +587,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                             generateInviteCode(
                               { customUrl },
                               {
-                                onSuccess: (data) => {
+                                onSuccess: () => {
                                   setInviteMessage({
                                     type: "success",
                                     text: "生成完了",
@@ -663,7 +681,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                                   generateInviteCode(
                                     { customUrl },
                                     {
-                                      onSuccess: (data) => {
+                                      onSuccess: () => {
                                         setInviteMessage({
                                           type: "success",
                                           text: "新しいURLを生成しました",
@@ -985,7 +1003,11 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => setShowInvitePanel(true)}
+                        onClick={() => {
+                          setPreviousTab(activeTab);
+                          setShowInvitePanel(true);
+                          handleTabChange("overview");
+                        }}
                       >
                         招待
                       </Button>

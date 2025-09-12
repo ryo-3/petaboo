@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 
 interface SimpleNotifierResult {
@@ -25,7 +25,6 @@ export function useSimpleTeamNotifier(teamName?: string) {
   const [data, setData] = useState<SimpleNotifierResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const isFirstCheckRef = useRef(true);
 
   // 手動チェック用（簡潔版）
   const checkNow = async () => {

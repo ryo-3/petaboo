@@ -89,9 +89,9 @@ const response = await fetch(`${API_BASE_URL}/categories`, {
 ## 開発コマンド
 
 ```bash
-# 個別開発
-cd apps/web && npm run dev     # Web単体起動（ログ付き）
-cd apps/api && npm run dev     # API単体起動（ログ付き）
+# 個別開発（🚨 起動禁止 - ユーザーが既に起動済み）
+# cd apps/web && npm run dev     # Web単体起動（ログ付き）- 禁止
+# cd apps/api && npm run dev     # API単体起動（ログ付き）- 禁止
 
 # 品質チェック
 npm run check:wsl              # TypeScript + Lint (Web)
@@ -203,6 +203,12 @@ tail -20 petaboo/web.log | grep -i "error\|warn\|fail" || echo "Webログ: エ�
 3. ユーザー判断で実行
 
 ## 🚨 絶対禁止事項
+
+### サーバー起動
+
+- ❌ **`npm run dev`の実行（Web/API両方）** - ユーザーが既に起動済み
+- ❌ **`cd apps/web && npm run dev`の実行** - Web起動禁止
+- ❌ **`cd apps/api && npm run dev`の実行** - API起動禁止
 
 ### 作業方法
 

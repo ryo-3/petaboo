@@ -18,6 +18,7 @@ interface PersonalNotifierResult {
 /**
  * 個人向け通知チェッカー
  * 承認された申請のみ通知として表示
+ * 申請中データがある時のみ処理を実行（最適化）
  */
 export function usePersonalNotifier() {
   const { data: myRequests, isLoading, error } = useMyJoinRequests();
@@ -25,6 +26,11 @@ export function usePersonalNotifier() {
 
   useEffect(() => {
     if (!myRequests) return;
+
+    // 申請中データがあるかチェック（最適化条件）
+    const hasPendingRequests = myRequests.requests.some(
+      (request) => request.status === "pending",
+    );
 
     // 承認された申請のみ抽出
     const approvedRequests = myRequests.requests
@@ -36,6 +42,18 @@ export function usePersonalNotifier() {
         processedAt: request.processedAt || 0,
       }))
       .sort((a, b) => b.processedAt - a.processedAt); // 新しい順
+
+    // 申請中データがない場合は通知チェックをスキップ
+    if (!hasPendingRequests && approvedRequests.length === 0) {
+      console.log("📭 申請中データなし - 通知チェックをスキップ");
+      setData({
+        hasUpdates: false,
+        counts: { approvedRequests: 0 },
+        lastCheckedAt: new Date().toISOString(),
+        approvedRequests: [],
+      });
+      return;
+    }
 
     // 既読チェック
     const lastReadTime = localStorage.getItem("personalNotificationRead");
@@ -60,6 +78,9 @@ export function usePersonalNotifier() {
     setData(result);
 
     // デバッグログ
+    if (hasPendingRequests) {
+      console.log("🔍 申請中データあり - 通知チェック実行");
+    }
     if (newApprovals.length > 0) {
       console.log(`🎉 新しい承認通知: ${newApprovals.length}件`, newApprovals);
     }

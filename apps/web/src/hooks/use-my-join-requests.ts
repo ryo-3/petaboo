@@ -39,6 +39,12 @@ export function useMyJoinRequests() {
       return response.json();
     },
     enabled: !!getToken,
-    refetchInterval: 10000, // 10秒間隔で自動更新
+    refetchInterval: (data) => {
+      // 申請中データがある場合のみ10秒間隔で自動更新
+      const hasPendingRequests = data?.requests?.some(
+        (request) => request.status === "pending",
+      );
+      return hasPendingRequests ? 10000 : false; // pending がない場合は自動更新停止
+    },
   });
 }

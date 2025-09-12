@@ -9,15 +9,24 @@ import {
   NavigationProvider,
   useNavigation,
 } from "@/contexts/navigation-context";
+import { getModeFromUrl, getActiveTabFromUrl } from "@/src/utils/modeUtils";
 
 function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setScreenMode } = useNavigation();
-  const [currentMode, setCurrentMode] = useState<"memo" | "task" | "board">(
+  // URLベースでcurrentModeを取得（フォールバック用の状態も保持）
+  const [fallbackMode, setFallbackMode] = useState<"memo" | "task" | "board">(
     "memo",
   );
+  const urlBasedMode = getModeFromUrl(pathname, searchParams);
+  const currentMode =
+    urlBasedMode === "memo" ||
+    urlBasedMode === "task" ||
+    urlBasedMode === "board"
+      ? urlBasedMode
+      : fallbackMode;
   const [currentBoardName, setCurrentBoardName] = useState<string | undefined>(
     undefined,
   );
@@ -36,55 +45,21 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   // チーム一覧ページかどうかを判定
   const isTeamListPage = pathname === "/team";
 
-  // URLパラメータから直接activeTabを取得
-  const urlTab = searchParams.get("tab");
-  const activeTab =
-    isTeamDetailPage &&
-    urlTab &&
-    ["memos", "tasks", "boards", "team-list", "settings", "search"].includes(
-      urlTab,
-    )
-      ? (urlTab as
-          | "memos"
-          | "tasks"
-          | "boards"
-          | "team-list"
-          | "settings"
-          | "search")
-      : "overview";
+  // URLから統一的にactiveTabを取得
+  const activeTab = getActiveTabFromUrl(pathname, searchParams);
 
   // チームボード詳細ページかどうかを判定
   const isTeamBoardDetailPage =
     pathname.includes("/team/") && pathname.includes("/board/");
 
   useEffect(() => {
-    // チームボード詳細ページの場合はボードモードに設定し、URLを記憶
+    // チームボード詳細ページの場合はURLを記憶
     if (isTeamBoardDetailPage) {
-      setCurrentMode("board");
       setLastBoardUrl(pathname);
     }
 
-    // NavigationContextのscreenModeを設定
-    const newScreenMode = isTeamBoardDetailPage
-      ? "board"
-      : isTeamDetailPage
-        ? activeTab === "overview"
-          ? "home"
-          : activeTab === "memos"
-            ? "memo"
-            : activeTab === "tasks"
-              ? "task"
-              : activeTab === "boards"
-                ? "board"
-                : activeTab === "team-list"
-                  ? "team"
-                  : activeTab === "settings"
-                    ? "settings"
-                    : activeTab === "search"
-                      ? "search"
-                      : "home"
-        : "team";
-
+    // URLから統一的にscreenModeを設定
+    const newScreenMode = getModeFromUrl(pathname, searchParams);
     setScreenMode(newScreenMode);
 
     // チーム詳細ページのタブ変更イベントをリッスン
@@ -118,13 +93,7 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
         handleTeamBoardNameChange as EventListener,
       );
     };
-  }, [
-    isTeamBoardDetailPage,
-    pathname,
-    isTeamDetailPage,
-    activeTab,
-    setScreenMode,
-  ]);
+  }, [isTeamBoardDetailPage, pathname, searchParams, setScreenMode]);
 
   const handleTeamList = () => {
     // チーム詳細ページの場合は、team-listイベントを送信
@@ -157,10 +126,11 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
 
   // チーム詳細ページでのサイドバーハンドラー
   const handleModeChange = (mode: "memo" | "task" | "board") => {
-    setCurrentMode(mode);
+    // フォールバックモードを更新（URLがない場合の補助）
+    setFallbackMode(mode);
+
     // チーム詳細ページでタブを切り替える場合はメッセージを送信
     if (isTeamDetailPage) {
-      // カスタムイベントを発行してチーム詳細コンポーネントに通知
       window.dispatchEvent(
         new CustomEvent("team-mode-change", {
           detail: { mode, pathname },
@@ -170,7 +140,7 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   };
 
   const handleShowMemoList = () => {
-    setCurrentMode("memo");
+    setFallbackMode("memo");
     if (isTeamDetailPage) {
       window.dispatchEvent(
         new CustomEvent("team-mode-change", {
@@ -181,7 +151,7 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   };
 
   const handleShowTaskList = () => {
-    setCurrentMode("task");
+    setFallbackMode("task");
     if (isTeamDetailPage) {
       window.dispatchEvent(
         new CustomEvent("team-mode-change", {

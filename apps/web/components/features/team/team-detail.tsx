@@ -339,7 +339,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   // サイドバーからのイベントをリッスン
   useEffect(() => {
     const handleTeamModeChange = (event: CustomEvent) => {
-      const { mode, pathname } = event.detail;
+      const { mode } = event.detail;
 
       if (mode === "overview") {
         handleTabChange("overview");

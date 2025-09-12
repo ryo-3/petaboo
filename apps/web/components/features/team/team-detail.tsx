@@ -192,6 +192,9 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   } | null>(null);
   const [displayInviteUrl, setDisplayInviteUrl] = useState<string>("");
 
+  // メンバー管理用の編集モード
+  const [isEditMode, setIsEditMode] = useState(false);
+
   // 選択状態の管理
   const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -998,19 +1001,33 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                     <h3 className="font-medium text-gray-900">
                       メンバー ({team.memberCount}人)
                     </h3>
-                    {/* 招待ボタン（管理者のみ） */}
+                    {/* ボタン群（管理者のみ） */}
                     {team.role === "admin" && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setPreviousTab(activeTab);
-                          setShowInvitePanel(true);
-                          handleTabChange("overview");
-                        }}
-                      >
-                        招待
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setIsEditMode(!isEditMode)}
+                          className={
+                            isEditMode
+                              ? "bg-red-50 text-red-700 border-red-200"
+                              : ""
+                          }
+                        >
+                          {isEditMode ? "完了" : "編集"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setPreviousTab(activeTab);
+                            setShowInvitePanel(true);
+                            handleTabChange("overview");
+                          }}
+                        >
+                          招待
+                        </Button>
+                      </div>
                     )}
                   </div>
 
@@ -1041,9 +1058,32 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                             に参加
                           </div>
                         </div>
-                        <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
-                          {member.role === "admin" ? "管理者" : "メンバー"}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
+                            {member.role === "admin" ? "管理者" : "メンバー"}
+                          </span>
+                          {/* メンバー管理ボタン（編集モード時のみ、管理者・自分以外に表示） */}
+                          {isEditMode &&
+                            team.role === "admin" &&
+                            member.userId !== userInfo?.userId &&
+                            member.role !== "admin" && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-red-600 border-red-300 hover:bg-red-50 text-xs px-2 py-1 h-6"
+                                onClick={() =>
+                                  setKickConfirmModal({
+                                    userId: member.userId,
+                                    displayName:
+                                      member.displayName ||
+                                      `ユーザー${member.userId.slice(-4)}`,
+                                  })
+                                }
+                              >
+                                削除
+                              </Button>
+                            )}
+                        </div>
                       </div>
                     ))}
                   </div>

@@ -392,59 +392,6 @@ export function TeamSettings({ customUrl }: TeamSettingsProps) {
                 </div>
               </Card>
 
-              {/* メンバー管理 */}
-              <Card className="p-6">
-                <h3 className="font-semibold text-gray-800 mb-4 text-base">
-                  メンバー管理
-                </h3>
-                {team?.members && team.members.length > 0 ? (
-                  <div className="space-y-3">
-                    {team.members.map((member) => (
-                      <div
-                        key={member.userId}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                            <span className="text-sm font-medium text-gray-600">
-                              {member.displayName?.[0]?.toUpperCase() || "U"}
-                            </span>
-                          </div>
-                          <div>
-                            <div className="font-medium text-sm">
-                              {member.displayName}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {member.role === "admin" ? "管理者" : "メンバー"}
-                            </div>
-                          </div>
-                        </div>
-                        {member.role !== "admin" && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-red-600 border-red-300 hover:bg-red-50"
-                            onClick={() =>
-                              handleKickMember(
-                                member.userId,
-                                member.displayName ||
-                                  `ユーザー${member.userId.slice(-4)}`,
-                              )
-                            }
-                          >
-                            削除
-                          </Button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-sm">
-                    メンバー情報を取得中...
-                  </p>
-                )}
-              </Card>
-
               {/* 今後の機能予定 */}
               <Card className="p-6 bg-gray-50">
                 <h3 className="font-semibold text-gray-800 mb-2 text-sm">

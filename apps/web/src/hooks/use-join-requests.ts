@@ -14,7 +14,10 @@ interface JoinRequestsResponse {
   requests: JoinRequest[];
 }
 
-export function useJoinRequests(customUrl: string | undefined) {
+export function useJoinRequests(
+  customUrl: string | undefined,
+  hasNotifications?: boolean,
+) {
   const { getToken } = useAuth();
 
   return useQuery({
@@ -47,6 +50,6 @@ export function useJoinRequests(customUrl: string | undefined) {
       return response.json() as Promise<JoinRequestsResponse>;
     },
     enabled: !!customUrl,
-    refetchInterval: 10000, // 10秒間隔で自動更新
+    refetchInterval: hasNotifications ? 10000 : false, // 通知がある場合のみ10秒間隔で自動更新
   });
 }

@@ -8,7 +8,7 @@ interface SimpleNotifierResult {
     myRequests: number;
   };
   lastCheckedAt: string;
-  debug?: any;
+  debug?: { response?: string };
 }
 
 /**

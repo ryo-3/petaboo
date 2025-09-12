@@ -1,12 +1,6 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { getAuth } from "@hono/clerk-auth";
 import { eq, and, sql, desc, ne, gt } from "drizzle-orm";
-import {
-  teamEventEmitter,
-  TEAM_EVENTS,
-  type TeamApplicationEvent,
-} from "../../utils/event-emitter.js";
-import { waitUpdatesHandlerEventDriven } from "./wait-updates-event-driven.js";
 import { teams, teamMembers, teamInvitations, users } from "../../db";
 import { teamMemos, teamDeletedMemos } from "../../db/schema/team/memos";
 import { teamTasks, teamDeletedTasks } from "../../db/schema/team/tasks";

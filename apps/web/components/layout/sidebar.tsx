@@ -2,7 +2,6 @@
 
 import React from "react";
 import { useNavigation } from "@/contexts/navigation-context";
-import { useNotificationCount } from "@/src/hooks/use-notification-count";
 import DashboardIcon from "@/components/icons/dashboard-icon";
 import DashboardEditIcon from "@/components/icons/dashboard-edit-icon";
 import HomeIcon from "@/components/icons/home-icon";
@@ -68,9 +67,9 @@ function Sidebar({
 }: SidebarProps) {
   // NavigationContextから統一されたiconStatesを取得
   const { iconStates } = useNavigation();
-  // 通知数を取得
-  const { totalCount: notificationCount, markNotificationsAsRead } =
-    useNotificationCount();
+  // 通知数を取得（一時的に0に設定）
+  const notificationCount = 0;
+  const markNotificationsAsRead = () => {}; // 空の関数
 
   const modeTabs = [
     {

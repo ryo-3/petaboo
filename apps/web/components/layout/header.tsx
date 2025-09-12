@@ -1,14 +1,13 @@
 "use client";
 
 import { Bell } from "lucide-react";
-import { useNotificationCount } from "@/src/hooks/use-notification-count";
 import { useMyJoinRequests } from "@/src/hooks/use-my-join-requests";
 import { useQueryClient } from "@tanstack/react-query";
 import { UserButton } from "@clerk/nextjs";
 
 function Header() {
   // 実際の通知数を取得
-  const { totalCount: notificationCount } = useNotificationCount();
+  const notificationCount = 0; // 一時的に0に設定
   const { data: myJoinRequests } = useMyJoinRequests();
   const queryClient = useQueryClient();
 

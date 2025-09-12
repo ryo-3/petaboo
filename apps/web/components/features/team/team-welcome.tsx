@@ -7,8 +7,6 @@ import { useTeamStats } from "@/src/hooks/use-team-stats";
 import { useTeams } from "@/src/hooks/use-teams";
 import { useJoinRequests } from "@/src/hooks/use-join-requests";
 import { useMyJoinRequests } from "@/src/hooks/use-my-join-requests";
-import { useTeamApplicationsPolling } from "@/src/hooks/use-team-applications-polling";
-import { useMyJoinRequestsPolling } from "@/src/hooks/use-my-join-requests-polling";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import TeamIcon from "@/components/icons/team-icon";
@@ -47,15 +45,6 @@ export function TeamWelcome({ onTeamCreate }: TeamWelcomeProps = {}) {
   // ホーム画面（/）でのみポーリングを実行する
   const isHomePage =
     typeof window !== "undefined" && window.location.pathname === "/";
-
-  // 管理者側: 承認待ちリストのポーリング
-  const { isPolling, conditions } = useTeamApplicationsPolling(
-    isHomePage ? firstAdminTeam?.customUrl || null : null,
-    isHomePage ? firstAdminTeam?.role === "admin" : undefined, // 管理者権限を明示的に渡す
-  );
-
-  // 申請者側: 申請状況のポーリング
-  const { isPolling: isPollingMyRequests } = useMyJoinRequestsPolling();
 
   if (isLoading || teamsLoading) {
     return (

@@ -22,6 +22,7 @@ import { useUserInfo } from "@/src/hooks/use-user-info";
 import { useJoinRequests } from "@/src/hooks/use-join-requests";
 import { useManageJoinRequest } from "@/src/hooks/use-manage-join-request";
 import { useKickMember } from "@/src/hooks/use-kick-member";
+import { useSimpleTeamNotifier } from "@/src/hooks/use-simple-team-notifier";
 import MemoScreen from "@/components/screens/memo-screen";
 import TaskScreen from "@/components/screens/task-screen";
 import BoardScreen from "@/components/screens/board-screen";
@@ -48,6 +49,13 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
   // 🛡️ ページ可視性&マウス状態をContextから取得
   const { isVisible: isPageVisible, isMouseActive } = usePageVisibility();
+
+  // 通知状態をチェック（承認待ちリスト表示制御用）
+  const { data: notificationData } = useSimpleTeamNotifier(
+    customUrl,
+    isPageVisible,
+    isMouseActive,
+  );
 
   // 🖱️ マウス活動監視テスト
   useEffect(() => {
@@ -174,7 +182,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   const { data: joinRequests, isLoading: isLoadingJoinRequests } =
     useJoinRequests(
       customUrl,
-      true, // 一旦通知ありで初期化（後で最適化）
+      notificationData?.hasNotifications, // 通知システムから実際の値を使用
       isPageVisible, // ページ可視性
       isMouseActive, // マウス活動状態
     );
@@ -925,6 +933,17 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                         <Button
                           size="sm"
                           variant="outline"
+                          onClick={() => {
+                            setPreviousTab(activeTab);
+                            setShowInvitePanel(true);
+                            handleTabChange("overview");
+                          }}
+                        >
+                          招待
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
                           onClick={() => setIsEditMode(!isEditMode)}
                           className={
                             isEditMode
@@ -933,17 +952,6 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                           }
                         >
                           {isEditMode ? "完了" : "編集"}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setPreviousTab(activeTab);
-                            setShowInvitePanel(true);
-                            handleTabChange("overview");
-                          }}
-                        >
-                          招待
                         </Button>
                       </div>
                     )}

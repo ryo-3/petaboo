@@ -109,6 +109,12 @@ export async function notificationCheck(c: any) {
         const count = result.length;
         const hasUpdates = count > 0;
 
+        // デバッグログ追加
+        console.log(
+          `🔍 [NotificationCheck] Team: ${teamFilter} (ID: ${teamId}), Count: ${count}, hasUpdates: ${hasUpdates}`,
+        );
+        console.log(`🔍 [NotificationCheck] Result:`, result);
+
         // 直接返却で最適化
         return c.text(hasUpdates ? "1" : "0", 200);
       }

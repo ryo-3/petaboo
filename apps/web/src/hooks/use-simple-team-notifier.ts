@@ -56,7 +56,7 @@ export function useSimpleTeamNotifier(
         const hasUpdates = resultText === "1";
         const readKey = `teamNotificationRead_${teamName}`;
         const lastReadTime = localStorage.getItem(readKey);
-        const isAlreadyRead = lastReadTime !== null; // 既読データがあるかチェック
+        const isAlreadyRead = false; // 一時的に既読チェックを無効化
         const finalHasUpdates = hasUpdates && !isAlreadyRead;
 
         setData({
@@ -124,10 +124,10 @@ export function useSimpleTeamNotifier(
         const resultText = await response.text();
         const hasUpdates = resultText === "1";
 
-        // 既読チェック
+        // 既読チェック - 一時的に無効化してテスト
         const readKey = `teamNotificationRead_${teamName}`;
         const lastReadTime = localStorage.getItem(readKey);
-        const isAlreadyRead = lastReadTime !== null; // 既読データがあるかチェック
+        const isAlreadyRead = false; // 一時的に既読チェックを無効化
         const finalHasUpdates = hasUpdates && !isAlreadyRead;
 
         const result: SimpleNotifierResult = {
@@ -147,13 +147,15 @@ export function useSimpleTeamNotifier(
           },
         };
 
-        // console.log("✅ 通知チェック完了:", result);
+        console.log("✅ 通知チェック完了:", result);
         if (finalHasUpdates) {
           console.log(
             `🔔 通知あり: チーム ${teamName} に申請あり (${resultText})`,
           );
         } else {
-          // console.log(`📭 通知なし: チーム ${teamName} (${resultText})`);
+          console.log(
+            `📭 通知なし: チーム ${teamName} (${resultText}), 既読=${isAlreadyRead}, hasUpdates=${hasUpdates}`,
+          );
         }
         setData(result);
         setError(null);

@@ -1,7 +1,12 @@
 "use client";
 
 // import type { Metadata } from "next";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import {
+  usePathname,
+  useRouter,
+  useSearchParams,
+  useParams,
+} from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
 import Header from "@/components/layout/header";
 import Sidebar from "@/components/layout/sidebar";
@@ -10,12 +15,22 @@ import {
   useNavigation,
 } from "@/contexts/navigation-context";
 import { getModeFromUrl, getActiveTabFromUrl } from "@/src/utils/modeUtils";
+import { useTeamDetail } from "@/src/hooks/use-team-detail";
 
 function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const params = useParams();
   const { setScreenMode } = useNavigation();
+
+  // URLからcustomUrlを取得
+  const customUrl = Array.isArray(params.customUrl)
+    ? params.customUrl[0]
+    : params.customUrl || "";
+
+  // チーム詳細を取得（customUrlが空文字列の場合はuseTeamDetailが自動的に無効化される）
+  const { data: teamDetail } = useTeamDetail(customUrl || "dummy");
   // URLベースでcurrentModeを取得（フォールバック用の状態も保持）
   const [fallbackMode, setFallbackMode] = useState<"memo" | "task" | "board">(
     "memo",
@@ -246,6 +261,7 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
             currentBoardName={
               currentBoardName || (lastBoardUrl ? "最後のボード" : undefined)
             }
+            currentTeamName={teamDetail?.name}
           />
         </div>
         <main className="flex-1 overflow-hidden">{children}</main>

@@ -40,6 +40,7 @@ interface SidebarProps {
   showingBoardDetail?: boolean;
   onTeamList?: () => void;
   onTeamCreate?: () => void;
+  currentTeamName?: string;
 }
 
 function Sidebar({
@@ -64,6 +65,7 @@ function Sidebar({
   showingBoardDetail = false,
   onTeamList,
   onTeamCreate,
+  currentTeamName,
 }: SidebarProps) {
   // NavigationContextから統一されたiconStatesを取得
   const { iconStates } = useNavigation();
@@ -206,7 +208,7 @@ function Sidebar({
             </button>
           </Tooltip>
           {/* チーム一覧ボタン（コンパクトモード） */}
-          <Tooltip text="チーム一覧" position="right">
+          <Tooltip text={currentTeamName || "チーム"} position="right">
             <button
               onClick={() => {
                 // 通知を既読にする

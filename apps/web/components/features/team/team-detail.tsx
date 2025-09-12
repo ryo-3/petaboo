@@ -43,8 +43,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   const searchParams = useSearchParams();
   const { data: team, isLoading, error } = useTeamDetail(customUrl);
 
-  // 🛡️ ページ可視性状態をContextから取得
-  const { isVisible: isPageVisible } = usePageVisibility();
+  // 🛡️ ページ可視性&マウス状態をContextから取得
+  const { isVisible: isPageVisible, isMouseActive } = usePageVisibility();
 
   // 🖱️ マウス活動監視テスト
   useEffect(() => {
@@ -173,6 +173,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       customUrl,
       true, // 一旦通知ありで初期化（後で最適化）
       isPageVisible, // ページ可視性
+      isMouseActive, // マウス活動状態
     );
   const {
     approve,

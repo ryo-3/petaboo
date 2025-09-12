@@ -18,11 +18,27 @@ export function useJoinRequests(
   customUrl: string | undefined,
   hasNotifications?: boolean,
   isVisible?: boolean,
+  isMouseActive?: boolean,
 ) {
   const { getToken } = useAuth();
 
+  // バックグラウンドまたは通知なしの場合は完全無効化
+  const shouldFetch = hasNotifications && isVisible;
+
+  // 間隔計算（シンプルな静的値）
+  const refetchInterval = !shouldFetch
+    ? false
+    : isMouseActive === true
+      ? 10000
+      : 30000;
+
+  // デバッグログ
+  console.log(
+    `🎯 [useJoinRequests] ${customUrl}: shouldFetch=${shouldFetch}, isMouseActive=${isMouseActive}, refetchInterval=${refetchInterval}`,
+  );
+
   return useQuery({
-    queryKey: ["join-requests", customUrl],
+    queryKey: ["join-requests", customUrl, shouldFetch, isMouseActive],
     queryFn: async () => {
       if (!customUrl) {
         return { requests: [] };
@@ -50,7 +66,7 @@ export function useJoinRequests(
 
       return response.json() as Promise<JoinRequestsResponse>;
     },
-    enabled: !!customUrl,
-    refetchInterval: hasNotifications && isVisible ? 10000 : false, // 通知があり、かつページが見える場合のみ10秒間隔で自動更新
+    enabled: shouldFetch && !!customUrl,
+    refetchInterval,
   });
 }

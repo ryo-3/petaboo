@@ -19,14 +19,20 @@ function Header() {
 
   const isPersonalPage = pathname === "/" || !teamName;
 
-  // Page Visibility状態を取得
-  const { isVisible } = usePageVisibility();
+  // Page Visibility & マウス状態を取得
+  const { isVisible, isMouseActive } = usePageVisibility();
 
-  // デバッグ: isVisibleの値を確認
-  console.log(`🔍 [Header] isVisible: ${isVisible}, teamName: ${teamName}`);
+  // デバッグ: 状態値を確認
+  console.log(
+    `🔍 [Header] isVisible: ${isVisible}, isMouseActive: ${isMouseActive}, teamName: ${teamName}`,
+  );
 
   // チーム専用通知（チームページでのみ使用）
-  const teamNotifier = useSimpleTeamNotifier(teamName, isVisible);
+  const teamNotifier = useSimpleTeamNotifier(
+    teamName,
+    isVisible,
+    isMouseActive,
+  );
 
   // 個人用通知（個人ホームページでのみ使用）
   const personalNotifier = usePersonalNotifier();

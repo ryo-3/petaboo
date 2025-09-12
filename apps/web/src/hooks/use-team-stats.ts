@@ -31,5 +31,6 @@ export function useTeamStats() {
       return response.json();
     },
     enabled: !!getToken,
+    refetchInterval: 10000, // 10秒間隔で自動更新
   });
 }

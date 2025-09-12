@@ -8,7 +8,12 @@ interface SimpleNotifierResult {
     myRequests: number;
   };
   lastCheckedAt: string;
-  debug?: { response?: string };
+  debug?: {
+    response?: string;
+    originalHasUpdates?: boolean;
+    lastReadTime?: string | null;
+    isAlreadyRead?: boolean;
+  };
 }
 
 /**

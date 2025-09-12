@@ -37,5 +37,6 @@ export function useTeams() {
       // APIが { teams: [...] } 形式で返している場合の対応
       return Array.isArray(data) ? data : data.teams || [];
     },
+    refetchInterval: 10000, // 10秒間隔で自動更新
   });
 }

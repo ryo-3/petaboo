@@ -3,6 +3,7 @@
 import { Bell } from "lucide-react";
 import { useMyJoinRequests } from "@/src/hooks/use-my-join-requests";
 import { useSimpleTeamNotifier } from "@/src/hooks/use-simple-team-notifier";
+import { usePersonalNotifier } from "@/src/hooks/use-personal-notifier";
 import { useQueryClient } from "@tanstack/react-query";
 import { UserButton } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
@@ -15,15 +16,30 @@ function Header() {
       ? pathname.split("/")[2]
       : undefined;
 
-  // 現在のチームの申請通知をチェック
+  const isPersonalPage = pathname === "/" || !teamName;
+
+  // チーム専用通知（チームページでのみ使用）
   const teamNotifier = useSimpleTeamNotifier(teamName);
-  const notificationCount = teamNotifier.data?.counts.teamRequests || 0;
+
+  // 個人用通知（個人ホームページでのみ使用）
+  const personalNotifier = usePersonalNotifier();
+
+  // 通知カウントを決定
+  const notificationCount = isPersonalPage
+    ? personalNotifier.data?.counts.approvedRequests || 0
+    : teamNotifier.data?.counts.teamRequests || 0;
+
   const { data: myJoinRequests } = useMyJoinRequests();
   const queryClient = useQueryClient();
 
   // 通知クリック時に既読状態にする
   const handleNotificationClick = () => {
-    if (teamName && notificationCount > 0) {
+    if (isPersonalPage) {
+      // 個人通知を既読にする
+      if (personalNotifier.data?.hasUpdates) {
+        personalNotifier.markAsRead();
+      }
+    } else if (teamName && teamNotifier.data?.hasUpdates) {
       // チーム申請通知を既読にする
       const readKey = `teamNotificationRead_${teamName}`;
       localStorage.setItem(readKey, new Date().toISOString());

@@ -28,6 +28,8 @@ import BoardScreen from "@/components/screens/board-screen";
 import SettingsScreen from "@/components/screens/settings-screen";
 import SearchScreen from "@/components/screens/search-screen";
 import { DisplayNameModal } from "@/components/modals/display-name-modal";
+import Modal from "@/components/ui/modals/modal";
+import WarningIcon from "@/components/icons/warning-icon";
 import { TeamSettings } from "@/components/features/team/team-settings";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
@@ -1152,35 +1154,47 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         />
 
         {/* キック確認モーダル */}
-        {kickConfirmModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-              <h3 className="text-lg font-medium mb-4">メンバーを削除</h3>
-              <p className="text-gray-600 mb-4">
-                <span className="font-medium">
-                  {kickConfirmModal.displayName}
+        <Modal
+          isOpen={!!kickConfirmModal}
+          onClose={() => setKickConfirmModal(null)}
+          maxWidth="md"
+        >
+          <div>
+            <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-200">
+              <WarningIcon className="w-6 h-6 text-red-600" />
+              <h3 className="text-lg font-semibold text-gray-900">
+                メンバーを削除
+              </h3>
+            </div>
+            <div className="mb-4 p-4 bg-red-50 border-2 border-red-300 rounded-lg">
+              <p className="text-red-800 font-medium">
+                <span className="font-bold text-red-900">
+                  {kickConfirmModal?.displayName}
                 </span>
-                をチームから削除しますか？この操作は取り消せません。
+                をチームから削除しますか？
               </p>
-              <div className="flex gap-3 justify-end">
-                <Button
-                  variant="outline"
-                  onClick={() => setKickConfirmModal(null)}
-                  disabled={kickMutation.isPending}
-                >
-                  キャンセル
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={handleKickMember}
-                  disabled={kickMutation.isPending}
-                >
-                  {kickMutation.isPending ? "削除中..." : "削除"}
-                </Button>
-              </div>
+              <p className="text-red-600 text-sm mt-2">
+                この操作は取り消せません。削除されたメンバーは再度招待する必要があります。
+              </p>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setKickConfirmModal(null)}
+                disabled={kickMutation.isPending}
+              >
+                キャンセル
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleKickMember}
+                disabled={kickMutation.isPending}
+              >
+                {kickMutation.isPending ? "削除中..." : "削除"}
+              </Button>
             </div>
           </div>
-        )}
+        </Modal>
       </div>
     </div>
   );

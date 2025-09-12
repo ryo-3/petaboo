@@ -9,6 +9,7 @@ import {
   RefreshCcwIcon,
   TrashIcon,
   Settings as SettingsIcon,
+  Bell,
 } from "lucide-react";
 import { BackButton } from "@/components/ui/buttons/back-button";
 import { useTeamDetail } from "@/src/hooks/use-team-detail";
@@ -27,7 +28,6 @@ import BoardScreen from "@/components/screens/board-screen";
 import SettingsScreen from "@/components/screens/settings-screen";
 import SearchScreen from "@/components/screens/search-screen";
 import { DisplayNameModal } from "@/components/modals/display-name-modal";
-import { TeamWelcome } from "@/components/features/team/team-welcome";
 import { TeamSettings } from "@/components/features/team/team-settings";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
@@ -492,7 +492,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     <div className="flex h-full bg-white overflow-hidden">
       <div className="w-full pt-3 pl-5 pr-5 flex flex-col">
         {/* ヘッダー */}
-        {activeTab === "overview" && (
+        {(activeTab === "overview" || activeTab === "team-list") && (
           <div className="mb-4 flex-shrink-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -745,161 +745,96 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                   )}
                 </div>
               ) : (
-                /* 通常のチーム概要表示 */
-                <>
-                  {/* チーム基本情報 */}
-                  <div className="mb-6">
-                    {team.description && (
-                      <p className="text-gray-600 text-sm">
-                        {team.description}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* 承認待ちリスト（管理者のみ、申請がある場合のみ表示） */}
-                  {team.role === "admin" &&
-                    joinRequests?.requests &&
-                    joinRequests.requests.length > 0 && (
-                      <Card className="p-4 mb-6">
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="font-medium text-gray-900 flex items-center gap-2">
-                            <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
-                            承認待ちの申請 ({joinRequests.requests.length}件)
-                          </h3>
-                        </div>
-
-                        <div className="space-y-3">
-                          {joinRequests.requests.map((request) => (
-                            <div
-                              key={request.id}
-                              className="bg-orange-50 border border-orange-200 rounded-lg p-3"
-                            >
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-3 mb-1">
-                                    <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                                      {request.displayName
-                                        ? request.displayName
-                                            .charAt(0)
-                                            .toUpperCase()
-                                        : request.email.charAt(0).toUpperCase()}
-                                    </div>
-                                    <div>
-                                      <h4 className="font-medium text-gray-900">
-                                        {request.displayName || "名前未設定"}
-                                      </h4>
-                                      <p className="text-xs text-gray-500">
-                                        {request.email}
-                                      </p>
-                                    </div>
-                                  </div>
-
-                                  <div className="text-xs text-gray-400 ml-11">
-                                    申請:{" "}
-                                    {new Date(
-                                      request.createdAt * 1000,
-                                    ).toLocaleString("ja-JP", {
-                                      month: "numeric",
-                                      day: "numeric",
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                    })}
-                                  </div>
-                                </div>
-
-                                <div className="flex gap-2 ml-4">
-                                  <Button
-                                    size="sm"
-                                    className="bg-green-600 hover:bg-green-700 text-white"
-                                    onClick={() => approve(request.id)}
-                                    disabled={isApproving || isRejecting}
-                                  >
-                                    {isApproving ? "承認中..." : "承認"}
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="text-red-600 border-red-300 hover:bg-red-50"
-                                    onClick={() => reject(request.id)}
-                                    disabled={isApproving || isRejecting}
-                                  >
-                                    {isRejecting ? "拒否中..." : "拒否"}
-                                  </Button>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </Card>
-                    )}
-
-                  {/* メンバー一覧 */}
-                  <Card className="p-4 mb-6">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-medium text-gray-900">
-                        メンバー ({team.memberCount}人)
+                /* ダッシュボード表示 */
+                <div className="space-y-6">
+                  {/* 通知一覧 */}
+                  <Card className="p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-medium text-gray-900 flex items-center gap-2">
+                        <Bell className="w-5 h-5 text-gray-600" />
+                        通知一覧
                       </h3>
-                      {/* 招待ボタン（管理者のみ） */}
-                      {team.role === "admin" && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setShowInvitePanel(true)}
-                        >
-                          招待
-                        </Button>
-                      )}
+                      <span className="text-sm text-gray-500">最新の活動</span>
                     </div>
 
-                    {/* メンバー表示 */}
                     <div className="space-y-3">
-                      {(team.members || []).map((member) => (
-                        <div
-                          key={member.userId}
-                          className="flex items-center gap-3 p-2 bg-gray-50 rounded"
-                        >
-                          <div
-                            className={`w-8 h-8 ${getUserAvatarColor(member.userId)} rounded-full flex items-center justify-center text-white text-sm font-medium`}
-                          >
-                            {member.displayName
-                              ? member.displayName.charAt(0).toUpperCase()
-                              : member.userId.charAt(10).toUpperCase()}
-                          </div>
-                          <div className="flex-1">
-                            <div className="text-sm font-medium">
-                              {member.displayName ||
-                                `ユーザー${member.userId.slice(-4)}`}
-                              {member.userId === userInfo?.userId &&
-                                " (あなた)"}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {new Date(
-                                member.joinedAt * 1000,
-                              ).toLocaleDateString("ja-JP")}
-                              に参加
-                            </div>
-                          </div>
-                          <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
-                            {member.role === "admin" ? "管理者" : "メンバー"}
-                          </span>
+                      {/* デモ通知1 */}
+                      <div className="flex items-start gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                          R
                         </div>
-                      ))}
+                        <div className="flex-1">
+                          <p className="text-sm text-gray-900">
+                            <span className="font-medium">ryo</span>{" "}
+                            が新しいタスクを作成しました
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">5分前</p>
+                          <p className="text-sm text-gray-700 mt-1 bg-white p-2 rounded">
+                            「ユーザー認証機能の実装」
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* デモ通知2 */}
+                      <div className="flex items-start gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                          た
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm text-gray-900">
+                            <span className="font-medium">たろうやまだ</span>{" "}
+                            がタスクを完了しました
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">15分前</p>
+                          <p className="text-sm text-gray-700 mt-1 bg-white p-2 rounded">
+                            「データベース設計書の作成」
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* デモ通知3 */}
+                      <div className="flex items-start gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                        <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                          R
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm text-gray-900">
+                            <span className="font-medium">ryo</span>{" "}
+                            が新しいメモを作成しました
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">1時間前</p>
+                          <p className="text-sm text-gray-700 mt-1 bg-white p-2 rounded">
+                            「プロジェクト進捗について」
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* デモ通知4 */}
+                      <div className="flex items-start gap-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                          た
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm text-gray-900">
+                            <span className="font-medium">たろうやまだ</span>{" "}
+                            がボードを更新しました
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">2時間前</p>
+                          <p className="text-sm text-gray-700 mt-1 bg-white p-2 rounded">
+                            「開発ボード」にアイテムを追加
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* もっと見るボタン */}
+                    <div className="text-center mt-4">
+                      <Button variant="outline" size="sm">
+                        すべての通知を見る
+                      </Button>
                     </div>
                   </Card>
-
-                  {/* メッセージ表示エリア */}
-                  {inviteMessage && (
-                    <div
-                      className={`mb-4 p-3 rounded text-sm ${
-                        inviteMessage.type === "success"
-                          ? "bg-green-50 text-green-700"
-                          : "bg-red-50 text-red-700"
-                      }`}
-                    >
-                      {inviteMessage.text}
-                    </div>
-                  )}
-                </>
+                </div>
               )}
             </>
           )}
@@ -952,9 +887,160 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
           {/* チーム一覧タブ */}
           {activeTab === "team-list" && (
-            <div className="h-full -mt-4 -ml-5 -mr-5">
-              <TeamWelcome />
-            </div>
+            <>
+              {/* 通常のチーム概要表示 */}
+              <>
+                {/* チーム基本情報 */}
+                <div className="mb-6">
+                  {team.description && (
+                    <p className="text-gray-600 text-sm">{team.description}</p>
+                  )}
+                </div>
+
+                {/* 承認待ちリスト（管理者のみ、申請がある場合のみ表示） */}
+                {team.role === "admin" &&
+                  joinRequests?.requests &&
+                  joinRequests.requests.length > 0 && (
+                    <Card className="p-4 mb-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-medium text-gray-900 flex items-center gap-2">
+                          <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
+                          承認待ちの申請 ({joinRequests.requests.length}件)
+                        </h3>
+                      </div>
+
+                      <div className="space-y-3">
+                        {joinRequests.requests.map((request) => (
+                          <div
+                            key={request.id}
+                            className="bg-orange-50 border border-orange-200 rounded-lg p-3"
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-1">
+                                  <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                                    {request.displayName
+                                      ? request.displayName
+                                          .charAt(0)
+                                          .toUpperCase()
+                                      : request.email.charAt(0).toUpperCase()}
+                                  </div>
+                                  <div>
+                                    <h4 className="font-medium text-gray-900">
+                                      {request.displayName || "名前未設定"}
+                                    </h4>
+                                    <p className="text-xs text-gray-500">
+                                      {request.email}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="text-xs text-gray-400 ml-11">
+                                  申請:{" "}
+                                  {new Date(
+                                    request.createdAt * 1000,
+                                  ).toLocaleString("ja-JP", {
+                                    month: "numeric",
+                                    day: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                </div>
+                              </div>
+
+                              <div className="flex gap-2 ml-4">
+                                <Button
+                                  size="sm"
+                                  className="bg-green-600 hover:bg-green-700 text-white"
+                                  onClick={() => approve(request.id)}
+                                  disabled={isApproving || isRejecting}
+                                >
+                                  {isApproving ? "承認中..." : "承認"}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-red-600 border-red-300 hover:bg-red-50"
+                                  onClick={() => reject(request.id)}
+                                  disabled={isApproving || isRejecting}
+                                >
+                                  {isRejecting ? "拒否中..." : "拒否"}
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </Card>
+                  )}
+
+                {/* メンバー一覧 */}
+                <Card className="p-4 mb-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-medium text-gray-900">
+                      メンバー ({team.memberCount}人)
+                    </h3>
+                    {/* 招待ボタン（管理者のみ） */}
+                    {team.role === "admin" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setShowInvitePanel(true)}
+                      >
+                        招待
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* メンバー表示 */}
+                  <div className="space-y-3">
+                    {(team.members || []).map((member) => (
+                      <div
+                        key={member.userId}
+                        className="flex items-center gap-3 p-2 bg-gray-50 rounded"
+                      >
+                        <div
+                          className={`w-8 h-8 ${getUserAvatarColor(member.userId)} rounded-full flex items-center justify-center text-white text-sm font-medium`}
+                        >
+                          {member.displayName
+                            ? member.displayName.charAt(0).toUpperCase()
+                            : member.userId.charAt(10).toUpperCase()}
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-sm font-medium">
+                            {member.displayName ||
+                              `ユーザー${member.userId.slice(-4)}`}
+                            {member.userId === userInfo?.userId && " (あなた)"}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {new Date(
+                              member.joinedAt * 1000,
+                            ).toLocaleDateString("ja-JP")}
+                            に参加
+                          </div>
+                        </div>
+                        <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
+                          {member.role === "admin" ? "管理者" : "メンバー"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+
+                {/* メッセージ表示エリア */}
+                {inviteMessage && (
+                  <div
+                    className={`mb-4 p-3 rounded text-sm ${
+                      inviteMessage.type === "success"
+                        ? "bg-green-50 text-green-700"
+                        : "bg-red-50 text-red-700"
+                    }`}
+                  >
+                    {inviteMessage.text}
+                  </div>
+                )}
+              </>
+            </>
           )}
 
           {/* 設定タブ */}

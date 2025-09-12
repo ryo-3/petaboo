@@ -254,6 +254,11 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       {
         onSuccess: () => {
           setKickConfirmModal(null);
+          setInviteMessage({
+            type: "success",
+            text: "メンバーを削除しました",
+          });
+          setTimeout(() => setInviteMessage(null), 2000);
         },
         onError: (error: any) => {
           console.error("メンバーのキックに失敗:", error);

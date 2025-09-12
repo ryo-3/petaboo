@@ -31,10 +31,11 @@ export function useKickMember() {
 
       return response.json();
     },
-    onSuccess: () => {
-      // チームメンバー一覧をリフレッシュ
-      queryClient.invalidateQueries({ queryKey: ["team-members"] });
-      queryClient.invalidateQueries({ queryKey: ["team-detail"] });
+    onSuccess: (_, variables) => {
+      // チーム詳細（メンバー一覧含む）をリフレッシュ
+      queryClient.invalidateQueries({
+        queryKey: ["team", variables.customUrl],
+      });
     },
   });
 }

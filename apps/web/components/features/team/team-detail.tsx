@@ -494,7 +494,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
   return (
     <div className="flex h-full bg-white overflow-hidden">
-      <div className="w-full pt-4 pl-5 pr-5 flex flex-col">
+      <div className="w-full pt-4 pl-5 pr-5 flex flex-col h-full">
         {/* ヘッダー */}
         {(activeTab === "overview" || activeTab === "team-list") && (
           <div className="mb-4 flex-shrink-0">
@@ -912,11 +912,11 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
               {/* 通常のチーム概要表示 */}
               <>
                 {/* チーム基本情報 */}
-                <div className="mb-6">
-                  {team.description && (
+                {team.description && (
+                  <div className="mb-6">
                     <p className="text-gray-600 text-sm">{team.description}</p>
-                  )}
-                </div>
+                  </div>
+                )}
 
                 {/* 承認待ちリスト（管理者のみ、申請がある場合のみ表示） */}
                 {team.role === "admin" &&
@@ -1032,60 +1032,70 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                   </div>
 
                   {/* メンバー表示 */}
-                  <div className="space-y-3">
-                    {(team.members || []).map((member) => (
-                      <div
-                        key={member.userId}
-                        className="flex items-center gap-3 p-2 bg-gray-50 rounded"
-                      >
+                  <div
+                    className="space-y-3 overflow-y-auto"
+                    style={{ maxHeight: "calc(100vh - 250px)" }}
+                  >
+                    {(team.members || [])
+                      .sort((a, b) => {
+                        // 自分を一番上に表示
+                        if (a.userId === userInfo?.userId) return -1;
+                        if (b.userId === userInfo?.userId) return 1;
+                        return 0;
+                      })
+                      .map((member) => (
                         <div
-                          className={`w-8 h-8 ${getUserAvatarColor(member.userId)} rounded-full flex items-center justify-center text-white text-sm font-medium`}
+                          key={member.userId}
+                          className={`flex items-center gap-3 p-2 rounded ${
+                            member.userId === userInfo?.userId
+                              ? "bg-blue-50"
+                              : "bg-gray-50"
+                          }`}
                         >
-                          {member.displayName
-                            ? member.displayName.charAt(0).toUpperCase()
-                            : member.userId.charAt(10).toUpperCase()}
-                        </div>
-                        <div className="flex-1">
-                          <div className="text-sm font-medium">
-                            {member.displayName ||
-                              `ユーザー${member.userId.slice(-4)}`}
-                            {member.userId === userInfo?.userId && " (あなた)"}
+                          <div
+                            className={`w-8 h-8 ${getUserAvatarColor(member.userId)} rounded-full flex items-center justify-center text-white text-sm font-medium`}
+                          >
+                            {member.displayName
+                              ? member.displayName.charAt(0).toUpperCase()
+                              : member.userId.charAt(10).toUpperCase()}
                           </div>
-                          <div className="text-xs text-gray-500">
-                            {new Date(
-                              member.joinedAt * 1000,
-                            ).toLocaleDateString("ja-JP")}
-                            に参加
+                          <div className="flex-1">
+                            <div className="text-sm font-medium">
+                              {member.displayName ||
+                                `ユーザー${member.userId.slice(-4)}`}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {new Date(
+                                member.joinedAt * 1000,
+                              ).toLocaleDateString("ja-JP")}
+                              に参加
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {/* メンバー管理ボタン（編集モード時のみ、管理者・自分以外に表示） */}
+                            {isEditMode &&
+                              team.role === "admin" &&
+                              member.userId !== userInfo?.userId &&
+                              member.role !== "admin" && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-red-600 border-red-300 hover:bg-red-50 text-xs px-2 py-1 h-6"
+                                  onClick={() =>
+                                    setKickConfirmModal({
+                                      userId: member.userId,
+                                      displayName:
+                                        member.displayName ||
+                                        `ユーザー${member.userId.slice(-4)}`,
+                                    })
+                                  }
+                                >
+                                  削除
+                                </Button>
+                              )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
-                            {member.role === "admin" ? "管理者" : "メンバー"}
-                          </span>
-                          {/* メンバー管理ボタン（編集モード時のみ、管理者・自分以外に表示） */}
-                          {isEditMode &&
-                            team.role === "admin" &&
-                            member.userId !== userInfo?.userId &&
-                            member.role !== "admin" && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-red-600 border-red-300 hover:bg-red-50 text-xs px-2 py-1 h-6"
-                                onClick={() =>
-                                  setKickConfirmModal({
-                                    userId: member.userId,
-                                    displayName:
-                                      member.displayName ||
-                                      `ユーザー${member.userId.slice(-4)}`,
-                                  })
-                                }
-                              >
-                                削除
-                              </Button>
-                            )}
-                        </div>
-                      </div>
-                    ))}
+                      ))}
                   </div>
                 </Card>
 

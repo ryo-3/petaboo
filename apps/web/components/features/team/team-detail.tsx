@@ -51,11 +51,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   const { isVisible: isPageVisible, isMouseActive } = usePageVisibility();
 
   // 通知状態をチェック（承認待ちリスト表示制御用）
-  const { data: notificationData } = useSimpleTeamNotifier(
-    customUrl,
-    isPageVisible,
-    isMouseActive,
-  );
+  const { data: notificationData, checkNow: recheckNotifications } =
+    useSimpleTeamNotifier(customUrl, isPageVisible, isMouseActive);
 
   // 🖱️ マウス活動監視テスト
   useEffect(() => {
@@ -223,6 +220,28 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     displayName: string;
   } | null>(null);
   const kickMutation = useKickMember();
+
+  // 承認処理（通知再チェック付き）
+  const handleApprove = (requestId: number) => {
+    approve(requestId);
+    // 承認後に通知を即座に再チェック（バッジをすぐ更新）
+    setTimeout(() => {
+      if (recheckNotifications) {
+        recheckNotifications();
+      }
+    }, 500); // API処理完了後に実行
+  };
+
+  // 拒否処理（通知再チェック付き）
+  const handleReject = (requestId: number) => {
+    reject(requestId);
+    // 拒否後に通知を即座に再チェック（バッジをすぐ更新）
+    setTimeout(() => {
+      if (recheckNotifications) {
+        recheckNotifications();
+      }
+    }, 500); // API処理完了後に実行
+  };
 
   const handleKickMember = () => {
     if (!kickConfirmModal) return;
@@ -899,7 +918,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                                 <Button
                                   size="sm"
                                   className="bg-green-600 hover:bg-green-700 text-white"
-                                  onClick={() => approve(request.id)}
+                                  onClick={() => handleApprove(request.id)}
                                   disabled={isApproving || isRejecting}
                                 >
                                   {isApproving ? "承認中..." : "承認"}
@@ -908,7 +927,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                                   size="sm"
                                   variant="outline"
                                   className="text-red-600 border-red-300 hover:bg-red-50"
-                                  onClick={() => reject(request.id)}
+                                  onClick={() => handleReject(request.id)}
                                   disabled={isApproving || isRejecting}
                                 >
                                   {isRejecting ? "拒否中..." : "拒否"}

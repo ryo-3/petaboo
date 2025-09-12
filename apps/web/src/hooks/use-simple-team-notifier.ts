@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 
 interface SimpleNotifierResult {
-  hasUpdates: boolean;
+  hasUpdates: boolean; // ヘッダーバッジ用（既読後はfalse）
+  hasNotifications: boolean; // 通知一覧用（既読後もtrue）
+  isRead: boolean; // 既読状態
   counts: {
     teamRequests: number;
     myRequests: number;
@@ -54,11 +56,13 @@ export function useSimpleTeamNotifier(
         const hasUpdates = resultText === "1";
         const readKey = `teamNotificationRead_${teamName}`;
         const lastReadTime = localStorage.getItem(readKey);
-        const isAlreadyRead = false; // 一時的にすべて未読として扱う
-        const finalHasUpdates = hasUpdates;
+        const isAlreadyRead = lastReadTime !== null; // 既読データがあるかチェック
+        const finalHasUpdates = hasUpdates && !isAlreadyRead;
 
         setData({
-          hasUpdates: finalHasUpdates,
+          hasUpdates: finalHasUpdates, // ヘッダーバッジ用
+          hasNotifications: hasUpdates, // 通知一覧用（常に実際の通知状況）
+          isRead: isAlreadyRead, // 既読状態
           counts: {
             teamRequests: finalHasUpdates ? 1 : 0,
             myRequests: 0,
@@ -120,14 +124,16 @@ export function useSimpleTeamNotifier(
         const resultText = await response.text();
         const hasUpdates = resultText === "1";
 
-        // 既読チェック（一時的に無効化 - 常に通知表示）
+        // 既読チェック
         const readKey = `teamNotificationRead_${teamName}`;
         const lastReadTime = localStorage.getItem(readKey);
-        const isAlreadyRead = false; // 一時的にすべて未読として扱う
-        const finalHasUpdates = hasUpdates;
+        const isAlreadyRead = lastReadTime !== null; // 既読データがあるかチェック
+        const finalHasUpdates = hasUpdates && !isAlreadyRead;
 
         const result: SimpleNotifierResult = {
-          hasUpdates: finalHasUpdates,
+          hasUpdates: finalHasUpdates, // ヘッダーバッジ用
+          hasNotifications: hasUpdates, // 通知一覧用（常に実際の通知状況）
+          isRead: isAlreadyRead, // 既読状態
           counts: {
             teamRequests: finalHasUpdates ? 1 : 0,
             myRequests: 0,

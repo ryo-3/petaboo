@@ -8,10 +8,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { UserButton } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 import { usePageVisibility } from "@/src/contexts/PageVisibilityContext";
+import { useRouter } from "next/navigation";
 
 function Header() {
   // 現在のチーム名を取得（navigation-contextと同じロジック）
   const pathname = usePathname();
+  const router = useRouter();
   const teamName =
     pathname.startsWith("/team/") && pathname !== "/team"
       ? pathname.split("/")[2]
@@ -45,7 +47,7 @@ function Header() {
   const { data: myJoinRequests } = useMyJoinRequests();
   const queryClient = useQueryClient();
 
-  // 通知クリック時に既読状態にする
+  // 通知クリック時に既読状態にしてホームタブに切り替え
   const handleNotificationClick = () => {
     if (isPersonalPage) {
       // 個人通知を既読にする
@@ -61,6 +63,12 @@ function Header() {
       // 通知チェックを再実行して即座に反映
       if (teamNotifier.checkNow) {
         teamNotifier.checkNow();
+      }
+
+      // チームページでホームタブに切り替え
+      if (pathname.startsWith("/team/")) {
+        const baseTeamUrl = `/team/${teamName}`;
+        router.push(baseTeamUrl);
       }
     }
   };

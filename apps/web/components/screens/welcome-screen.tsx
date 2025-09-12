@@ -12,6 +12,8 @@ import {
   Crown,
 } from "lucide-react";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
+import NotificationList from "@/components/features/notifications/notification-list";
 
 interface WelcomeScreenProps {
   teamMode?: boolean;
@@ -22,6 +24,14 @@ function WelcomeScreen({
   teamMode = false,
   teamName = "開発チーム",
 }: WelcomeScreenProps) {
+  const pathname = usePathname();
+
+  // URLからチーム名を取得（通知機能用）
+  const currentTeamName =
+    pathname.startsWith("/team/") && pathname !== "/team"
+      ? pathname.split("/")[2]
+      : teamName;
+
   const [currentView, setCurrentView] = useState<
     "home" | "invite" | "settings"
   >("home");
@@ -244,7 +254,11 @@ function WelcomeScreen({
         )}
 
         {teamMode && currentView === "home" && (
-          <div className="space-y-4">
+          <div className="space-y-6">
+            {/* 通知一覧 */}
+            <NotificationList teamName={currentTeamName} />
+
+            {/* ボタングループ */}
             <div className="flex gap-3">
               <button
                 onClick={() => setCurrentView("invite")}

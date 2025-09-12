@@ -31,6 +31,7 @@ import { DisplayNameModal } from "@/components/modals/display-name-modal";
 import Modal from "@/components/ui/modals/modal";
 import WarningIcon from "@/components/icons/warning-icon";
 import { TeamSettings } from "@/components/features/team/team-settings";
+import NotificationList from "@/components/features/notifications/notification-list";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
 import { getUserAvatarColor } from "@/src/utils/userUtils";
@@ -770,93 +771,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
               ) : (
                 /* ダッシュボード表示 */
                 <div className="space-y-6">
-                  {/* 通知一覧 */}
-                  <Card className="p-4">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-medium text-gray-900 flex items-center gap-2">
-                        <Bell className="w-5 h-5 text-gray-600" />
-                        通知一覧
-                      </h3>
-                      <span className="text-sm text-gray-500">最新の活動</span>
-                    </div>
-
-                    <div className="space-y-3">
-                      {/* デモ通知1 */}
-                      <div className="flex items-start gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                          R
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm text-gray-900">
-                            <span className="font-medium">ryo</span>{" "}
-                            が新しいタスクを作成しました
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">5分前</p>
-                          <p className="text-sm text-gray-700 mt-1 bg-white p-2 rounded">
-                            「ユーザー認証機能の実装」
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* デモ通知2 */}
-                      <div className="flex items-start gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                          た
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm text-gray-900">
-                            <span className="font-medium">たろうやまだ</span>{" "}
-                            がタスクを完了しました
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">15分前</p>
-                          <p className="text-sm text-gray-700 mt-1 bg-white p-2 rounded">
-                            「データベース設計書の作成」
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* デモ通知3 */}
-                      <div className="flex items-start gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                        <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                          R
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm text-gray-900">
-                            <span className="font-medium">ryo</span>{" "}
-                            が新しいメモを作成しました
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">1時間前</p>
-                          <p className="text-sm text-gray-700 mt-1 bg-white p-2 rounded">
-                            「プロジェクト進捗について」
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* デモ通知4 */}
-                      <div className="flex items-start gap-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                          た
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm text-gray-900">
-                            <span className="font-medium">たろうやまだ</span>{" "}
-                            がボードを更新しました
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">2時間前</p>
-                          <p className="text-sm text-gray-700 mt-1 bg-white p-2 rounded">
-                            「開発ボード」にアイテムを追加
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* もっと見るボタン */}
-                    <div className="text-center mt-4">
-                      <Button variant="outline" size="sm">
-                        すべての通知を見る
-                      </Button>
-                    </div>
-                  </Card>
+                  {/* 通知一覧 - 実際のデータを使用 */}
+                  <NotificationList teamName={customUrl} />
                 </div>
               )}
             </>

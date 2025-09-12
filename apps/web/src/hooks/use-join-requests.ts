@@ -47,5 +47,6 @@ export function useJoinRequests(customUrl: string | undefined) {
       return response.json() as Promise<JoinRequestsResponse>;
     },
     enabled: !!customUrl,
+    refetchInterval: 10000, // 10秒間隔で自動更新
   });
 }

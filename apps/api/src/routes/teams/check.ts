@@ -1,11 +1,7 @@
-import { createRoute, z } from "@hono/zod-openapi";
 import { getAuth } from "@hono/clerk-auth";
-import { eq, sql } from "drizzle-orm";
-import {
-  teams,
-  teamMembers,
-  teamInvitations,
-} from "../../db/schema/team/teams";
+import { createRoute, z } from "@hono/zod-openapi";
+import { and, eq, isNotNull } from "drizzle-orm";
+import { teamInvitations, teams } from "../../db/schema/team/teams";
 
 // チームID事前キャッシュ（軽量化用）
 const teamIdCache = new Map<string, number>();
@@ -98,18 +94,20 @@ export async function notificationCheck(c: any) {
       const teamId = await getTeamId(db, teamFilter);
 
       if (teamId) {
-        // 2. 超軽量な申請存在チェック（EXISTS - 1件見つかったら即停止）
-        const result = await db.select({
-          exists: sql<number>`EXISTS(
-              SELECT 1 FROM ${teamInvitations} 
-              WHERE ${teamInvitations.teamId} = ${teamId} 
-                AND ${teamInvitations.status} = 'pending' 
-                AND ${teamInvitations.userId} IS NOT NULL 
-              LIMIT 1
-            )`.as("exists"),
-        });
+        // 2. 超軽量な申請存在チェック
+        const result = await db
+          .select()
+          .from(teamInvitations)
+          .where(
+            and(
+              eq(teamInvitations.teamId, teamId),
+              eq(teamInvitations.status, "pending"),
+              isNotNull(teamInvitations.userId),
+            ),
+          );
 
-        const hasUpdates = !!result[0]?.exists;
+        const count = result.length;
+        const hasUpdates = count > 0;
 
         // 直接返却で最適化
         return c.text(hasUpdates ? "1" : "0", 200);

@@ -2,29 +2,37 @@
 
 import { Bell } from "lucide-react";
 import { useMyJoinRequests } from "@/src/hooks/use-my-join-requests";
+import { useSimpleTeamNotifier } from "@/src/hooks/use-simple-team-notifier";
 import { useQueryClient } from "@tanstack/react-query";
 import { UserButton } from "@clerk/nextjs";
+import { usePathname } from "next/navigation";
 
 function Header() {
-  // 実際の通知数を取得
-  const notificationCount = 0; // 一時的に0に設定
+  // 現在のチーム名を取得（navigation-contextと同じロジック）
+  const pathname = usePathname();
+  const teamName =
+    pathname.startsWith("/team/") && pathname !== "/team"
+      ? pathname.split("/")[2]
+      : undefined;
+
+  // 現在のチームの申請通知をチェック
+  const teamNotifier = useSimpleTeamNotifier(teamName);
+  const notificationCount = teamNotifier.data?.counts.teamRequests || 0;
   const { data: myJoinRequests } = useMyJoinRequests();
   const queryClient = useQueryClient();
 
   // 通知クリック時に既読状態にする
   const handleNotificationClick = () => {
-    if (myJoinRequests?.requests && myJoinRequests.requests.length > 0) {
-      // 最新の申請IDを既読状態にする
-      const latestRequestId = Math.max(
-        ...myJoinRequests.requests.map((r) => r.id),
-      );
-      localStorage.setItem("lastReadRequestId", latestRequestId.toString());
-      console.log("通知を既読にしました:", latestRequestId);
+    if (teamName && notificationCount > 0) {
+      // チーム申請通知を既読にする
+      const readKey = `teamNotificationRead_${teamName}`;
+      localStorage.setItem(readKey, new Date().toISOString());
+      console.log(`🔔 通知を既読にしました: ${teamName}`);
 
-      // React Queryキャッシュを無効化して自然に更新
-      queryClient.invalidateQueries({
-        queryKey: ["my-join-requests"],
-      });
+      // 通知チェックを再実行して即座に反映
+      if (teamNotifier.checkNow) {
+        teamNotifier.checkNow();
+      }
     }
   };
 

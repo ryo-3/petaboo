@@ -118,8 +118,8 @@ apitest "/memos" "POST" '{"title": "テストメモ"}'        # POST
 # 2-1. ログエラーチェック（"check log files for errors -web.log api.log" でも可）
 tail -20 petaboo/api.log | grep -i "error\|warn"
 
-# 2-2. API再起動（問題時）
-pkill -f "tsx.*apps/api" && cd apps/api && npm run dev &
+# 2-2. API停止（問題時）
+pkill -f "tsx.*apps/api"
 ```
 
 ### 3. フロントエンド実装

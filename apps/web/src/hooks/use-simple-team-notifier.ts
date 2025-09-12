@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useAuth } from "@clerk/nextjs";
 
 interface SimpleNotifierResult {
@@ -20,27 +20,19 @@ export function useSimpleTeamNotifier(teamName?: string) {
   const [data, setData] = useState<SimpleNotifierResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isFirstCheckRef = useRef(true);
 
-  const checkNotifications = useCallback(async () => {
-    if (!teamName) {
-      console.log("❌ チーム名なし、チェック停止");
-      return;
-    }
-
-    // console.log(`🚀 通知チェック開始: ${teamName}`);
-    setIsLoading(true);
-    setError(null);
+  // 手動チェック用（簡潔版）
+  const checkNow = async () => {
+    if (!teamName) return;
 
     try {
       const token = await getToken();
       const url = `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:7594"}/teams/notifications/check`;
-
       const params = new URLSearchParams({
         teamFilter: teamName,
         types: "team_requests",
       });
-
-      // console.log(`📡 API呼び出し: ${url}?${params.toString()}`);
 
       const response = await fetch(`${url}?${params.toString()}`, {
         headers: {
@@ -49,66 +41,118 @@ export function useSimpleTeamNotifier(teamName?: string) {
         },
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      if (response.ok) {
+        const resultText = await response.text();
+        const hasUpdates = resultText === "1";
+        const readKey = `teamNotificationRead_${teamName}`;
+        const lastReadTime = localStorage.getItem(readKey);
+        const isAlreadyRead = false; // 一時的にすべて未読として扱う
+        const finalHasUpdates = hasUpdates;
+
+        setData({
+          hasUpdates: finalHasUpdates,
+          counts: {
+            teamRequests: finalHasUpdates ? 1 : 0,
+            myRequests: 0,
+          },
+          lastCheckedAt: new Date().toISOString(),
+          debug: {
+            response: resultText,
+            originalHasUpdates: hasUpdates,
+            lastReadTime,
+            isAlreadyRead,
+          },
+        });
       }
-
-      const resultText = await response.text();
-      const hasUpdates = resultText === "1";
-
-      const result: SimpleNotifierResult = {
-        hasUpdates,
-        counts: {
-          teamRequests: hasUpdates ? 1 : 0,
-          myRequests: 0,
-        },
-        lastCheckedAt: new Date().toISOString(),
-        debug: { response: resultText },
-      };
-
-      // 通知がある場合のみログ出力
-      if (hasUpdates) {
-        console.log("✅ 通知チェック完了:", result);
-        console.log(
-          `🔔 通知あり: チーム ${teamName} に申請あり (${resultText})`,
-        );
-      }
-
-      setData(result);
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : "Unknown error";
-      console.error(`❌ 通知チェックエラー [${teamName}]:`, errorMsg);
-      setError(errorMsg);
-    } finally {
-      setIsLoading(false);
+      console.error("手動チェックエラー:", err);
     }
-  }, [teamName, getToken]);
-
-  // 手動チェック用
-  const checkNow = () => {
-    checkNotifications();
   };
 
-  // 初回チェック + 10秒間隔での定期チェック
+  // 10秒間隔での通知チェック
   useEffect(() => {
     if (!teamName) return;
 
-    console.log(`🎯 チーム切り替え検知: ${teamName} (10秒間隔開始)`);
+    console.log(`🎯 チーム切り替え検知: ${teamName}`);
+    console.log(`🚀 通知チェック開始: ${teamName} (10秒間隔)`);
+
+    // 共通のチェック関数
+    const performCheck = async () => {
+      try {
+        const token = await getToken();
+        const url = `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:7594"}/teams/notifications/check`;
+        const params = new URLSearchParams({
+          teamFilter: teamName,
+          types: "team_requests",
+        });
+
+        const response = await fetch(`${url}?${params.toString()}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const resultText = await response.text();
+        const hasUpdates = resultText === "1";
+
+        // 既読チェック（一時的に無効化 - 常に通知表示）
+        const readKey = `teamNotificationRead_${teamName}`;
+        const lastReadTime = localStorage.getItem(readKey);
+        const isAlreadyRead = false; // 一時的にすべて未読として扱う
+        const finalHasUpdates = hasUpdates;
+
+        const result: SimpleNotifierResult = {
+          hasUpdates: finalHasUpdates,
+          counts: {
+            teamRequests: finalHasUpdates ? 1 : 0,
+            myRequests: 0,
+          },
+          lastCheckedAt: new Date().toISOString(),
+          debug: {
+            response: resultText,
+            originalHasUpdates: hasUpdates,
+            lastReadTime,
+            isAlreadyRead,
+          },
+        };
+
+        // console.log("✅ 通知チェック完了:", result);
+        if (finalHasUpdates) {
+          console.log(
+            `🔔 通知あり: チーム ${teamName} に申請あり (${resultText})`,
+          );
+        } else {
+          // console.log(`📭 通知なし: チーム ${teamName} (${resultText})`);
+        }
+        setData(result);
+        setError(null);
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : "Unknown error";
+        console.error(`❌ 通知チェックエラー [${teamName}]:`, errorMsg);
+        setError(errorMsg);
+      }
+    };
 
     // 初回実行
-    checkNotifications();
+    setIsLoading(true);
+    performCheck().finally(() => setIsLoading(false));
 
-    // 10秒間隔での定期実行
+    // 10秒間隔でチェック
     const interval = setInterval(() => {
-      checkNotifications();
-    }, 10000); // 10秒間隔
+      performCheck();
+    }, 10000);
 
     // クリーンアップ
     return () => {
-      console.log(`⏹️ チーム通知チェック停止: ${teamName}`);
+      console.log(`⏹️ 通知チェック停止: ${teamName}`);
       clearInterval(interval);
     };
-  }, [teamName, checkNotifications]);
+  }, [teamName, getToken]);
 
   return {
     data,

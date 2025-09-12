@@ -490,7 +490,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
   return (
     <div className="flex h-full bg-white overflow-hidden">
-      <div className="w-full pt-3 pl-5 pr-5 flex flex-col">
+      <div className="w-full pt-4 pl-5 pr-5 flex flex-col">
         {/* ヘッダー */}
         {(activeTab === "overview" || activeTab === "team-list") && (
           <div className="mb-4 flex-shrink-0">

@@ -20,7 +20,7 @@ function DesktopLayout({
     <div className="flex flex-1">
       {/* 左サイドバー */}
       <div
-        className={`fixed left-0 ${topPosition} w-16 h-screen border-r-2 border-gray-400 overflow-visible z-10`}
+        className={`fixed left-0 ${topPosition} w-16 h-screen border-r border-gray-200 overflow-visible z-10`}
       >
         {sidebarContent}
       </div>

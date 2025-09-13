@@ -92,13 +92,13 @@ export function useSimpleTeamNotifier(
         : 30000 // 非アクティブ: 30秒（デフォルト）
       : null; // バックグラウンド: 停止
 
-    console.log(`🎯 チーム切り替え検知: ${teamName}`);
-    console.log(
-      `🚀 通知チェック開始: ${teamName} (${checkInterval ? `${checkInterval / 1000}秒間隔` : "停止"})`,
-    );
-    console.log(
-      `🔍 [useSimpleTeamNotifier] isVisible: ${isVisible}, isMouseActive: ${isMouseActive}`,
-    );
+    // console.log(`🎯 チーム切り替え検知: ${teamName}`);
+    // console.log(
+    //   `🚀 通知チェック開始: ${teamName} (${checkInterval ? `${checkInterval / 1000}秒間隔` : "停止"})`,
+    // );
+    // console.log(
+    //   `🔍 [useSimpleTeamNotifier] isVisible: ${isVisible}, isMouseActive: ${isMouseActive}`,
+    // );
 
     // 共通のチェック関数
     const performCheck = async () => {
@@ -147,16 +147,16 @@ export function useSimpleTeamNotifier(
           },
         };
 
-        console.log("✅ 通知チェック完了:", result);
-        if (finalHasUpdates) {
-          console.log(
-            `🔔 通知あり: チーム ${teamName} に申請あり (${resultText})`,
-          );
-        } else {
-          console.log(
-            `📭 通知なし: チーム ${teamName} (${resultText}), 既読=${isAlreadyRead}, hasUpdates=${hasUpdates}`,
-          );
-        }
+        // console.log("✅ 通知チェック完了:", result);
+        // if (finalHasUpdates) {
+        //   console.log(
+        //     `🔔 通知あり: チーム ${teamName} に申請あり (${resultText})`,
+        //   );
+        // } else {
+        //   console.log(
+        //     `📭 通知なし: チーム ${teamName} (${resultText}), 既読=${isAlreadyRead}, hasUpdates=${hasUpdates}`,
+        //   );
+        // }
         setData(result);
         setError(null);
       } catch (err) {
@@ -179,7 +179,7 @@ export function useSimpleTeamNotifier(
 
     // クリーンアップ
     return () => {
-      console.log(`⏹️ 通知チェック停止: ${teamName}`);
+      // console.log(`⏹️ 通知チェック停止: ${teamName}`);
       if (interval) clearInterval(interval);
     };
   }, [teamName, getToken, isVisible, isMouseActive]);

@@ -33,9 +33,9 @@ export function useJoinRequests(
       : 30000;
 
   // デバッグログ
-  console.log(
-    `🎯 [useJoinRequests] ${customUrl}: shouldFetch=${shouldFetch}, isMouseActive=${isMouseActive}, refetchInterval=${refetchInterval}`,
-  );
+  // console.log(
+  //   `🎯 [useJoinRequests] ${customUrl}: shouldFetch=${shouldFetch}, isMouseActive=${isMouseActive}, refetchInterval=${refetchInterval}`,
+  // );
 
   return useQuery({
     queryKey: ["join-requests", customUrl, shouldFetch, isMouseActive],

@@ -14,6 +14,10 @@ import { teamBoardCategories } from "../../db/schema/team/board-categories";
 import { teamTags, teamTaggings } from "../../db/schema/team/tags";
 import { count } from "drizzle-orm";
 import type { DatabaseType } from "../../types/common";
+import {
+  notifyTeamJoinRequest,
+  notifyTeamJoinApproval,
+} from "../../utils/slack-notifier";
 
 // グローバル通知システムの型定義
 interface NotificationData {
@@ -2149,6 +2153,25 @@ export async function approveJoinRequest(c: any) {
       console.error("承認通知送信エラー:", notificationError);
     }
 
+    // 🔔 Slack通知を送信（承認）
+    try {
+      const teamInfo = await db
+        .select()
+        .from(teams)
+        .where(eq(teams.id, request.teamId))
+        .get();
+
+      if (teamInfo) {
+        await notifyTeamJoinApproval(
+          teamInfo.name,
+          request.displayName || "名前未設定",
+        );
+      }
+    } catch (slackError) {
+      console.error("Slack通知の送信に失敗しました:", slackError);
+      // Slack通知の失敗は承認処理を妨げない
+    }
+
     return c.json({ message: "申請を承認しました" }, 200);
   } catch (error) {
     console.error("申請承認エラー:", error);
@@ -2358,11 +2381,28 @@ export async function submitJoinRequest(c: any) {
           },
         };
 
-        console.log("🔥 Emitting team application event:", applicationEvent);
+        // console.log("🔥 Emitting team application event:", applicationEvent);
         teamEventEmitter.emit(TEAM_EVENTS.NEW_APPLICATION, applicationEvent);
       } catch (eventError) {
         console.error("Failed to emit team application event:", eventError);
         // イベント発火の失敗は申請作成を妨げない
+      }
+
+      // 🔔 Slack通知を送信
+      console.log("📢 [Slack] 申請通知を送信開始:", team.name, displayName);
+      try {
+        await notifyTeamJoinRequest({
+          teamName: team.name,
+          teamUrl: customUrl,
+          applicantName: displayName || "名前未設定",
+          applicantEmail: email || "unknown@example.com",
+          message: "チーム参加申請",
+          webhookUrl: process.env.SLACK_WEBHOOK_URL || "",
+        });
+        console.log("📢 [Slack] 申請通知送信完了");
+      } catch (slackError) {
+        console.error("❌ [Slack] 通知送信失敗:", slackError);
+        // Slack通知の失敗は申請作成を妨げない
       }
 
       // 招待URLの使用回数をインクリメント

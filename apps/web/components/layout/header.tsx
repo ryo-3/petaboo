@@ -25,9 +25,9 @@ function Header() {
   const { isVisible, isMouseActive } = usePageVisibility();
 
   // デバッグ: 状態値を確認
-  console.log(
-    `🔍 [Header] isVisible: ${isVisible}, isMouseActive: ${isMouseActive}, teamName: ${teamName}`,
-  );
+  // console.log(
+  //   `🔍 [Header] isVisible: ${isVisible}, isMouseActive: ${isMouseActive}, teamName: ${teamName}`,
+  // );
 
   // チーム専用通知（チームページでのみ使用）
   const teamNotifier = useSimpleTeamNotifier(

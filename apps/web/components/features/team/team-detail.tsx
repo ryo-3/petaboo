@@ -66,18 +66,18 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     const handleMouseEnter = () => {
       if (!isMouseInPage) {
         isMouseInPage = true;
-        console.log(
-          `🖱️ [${updateTimestamp()}] マウス復帰: ページ内 (${customUrl})`,
-        );
+        // console.log(
+        //   `🖱️ [${updateTimestamp()}] マウス復帰: ページ内 (${customUrl})`,
+        // );
       }
     };
 
     const handleMouseLeave = () => {
       if (isMouseInPage) {
         isMouseInPage = false;
-        console.log(
-          `🖱️ [${updateTimestamp()}] マウス離脱: ページ外 (${customUrl})`,
-        );
+        // console.log(
+        //   `🖱️ [${updateTimestamp()}] マウス離脱: ページ外 (${customUrl})`,
+        // );
       }
     };
 
@@ -91,17 +91,17 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       const newLevel = "active";
       if (newLevel !== activityLevel) {
         activityLevel = newLevel;
-        console.log(
-          `⚡ [${updateTimestamp()}] 活動レベル変更: ${activityLevel} (${eventType}) (${customUrl})`,
-        );
+        // console.log(
+        //   `⚡ [${updateTimestamp()}] 活動レベル変更: ${activityLevel} (${eventType}) (${customUrl})`,
+        // );
       }
 
       // 長時間無操作からの復帰時のみログ出力
       if (inactiveDuration > 60000) {
         // 1分以上無操作
-        console.log(
-          `🔄 [${updateTimestamp()}] ユーザー活動復帰: ${Math.round(inactiveDuration / 1000)}秒後 (${eventType}) (${customUrl})`,
-        );
+        // console.log(
+        //   `🔄 [${updateTimestamp()}] ユーザー活動復帰: ${Math.round(inactiveDuration / 1000)}秒後 (${eventType}) (${customUrl})`,
+        // );
       }
     };
 
@@ -122,14 +122,14 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       }
 
       if (oldLevel !== activityLevel) {
-        console.log(
-          `📊 [${updateTimestamp()}] 活動レベル自動更新: ${oldLevel} → ${activityLevel} (無操作${Math.round(inactiveDuration / 1000)}秒) (${customUrl})`,
-        );
+        // console.log(
+        //   `📊 [${updateTimestamp()}] 活動レベル自動更新: ${oldLevel} → ${activityLevel} (無操作${Math.round(inactiveDuration / 1000)}秒) (${customUrl})`,
+        // );
       }
     }, 30000);
 
     // 初期状態ログ
-    console.log(`🖱️ [初期化] マウス監視開始 (${customUrl})`);
+    // console.log(`🖱️ [初期化] マウス監視開始 (${customUrl})`);
 
     // イベントリスナー登録（パフォーマンス配慮でthrottling）
     let throttleTimer: NodeJS.Timeout | null = null;
@@ -153,7 +153,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     });
 
     return () => {
-      console.log(`🖱️ [クリーンアップ] マウス監視終了 (${customUrl})`);
+      // console.log(`🖱️ [クリーンアップ] マウス監視終了 (${customUrl})`);
       clearInterval(activityChecker);
       if (throttleTimer) clearTimeout(throttleTimer);
 

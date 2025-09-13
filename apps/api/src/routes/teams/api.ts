@@ -14,10 +14,13 @@ import { teamBoardCategories } from "../../db/schema/team/board-categories";
 import { teamTags, teamTaggings } from "../../db/schema/team/tags";
 import { count } from "drizzle-orm";
 import type { DatabaseType } from "../../types/common";
+// Slack通知機能一時的に無効化
+/*
 import {
   notifyTeamJoinRequest,
   notifyTeamJoinApproval,
 } from "../../utils/slack-notifier";
+*/
 
 // グローバル通知システムの型定義
 interface NotificationData {
@@ -2153,7 +2156,8 @@ export async function approveJoinRequest(c: any) {
       console.error("承認通知送信エラー:", notificationError);
     }
 
-    // 🔔 Slack通知を送信（承認）
+    // 🔔 Slack通知を送信（承認）（一時的に無効化）
+    /*
     try {
       const teamInfo = await db
         .select()
@@ -2171,6 +2175,7 @@ export async function approveJoinRequest(c: any) {
       console.error("Slack通知の送信に失敗しました:", slackError);
       // Slack通知の失敗は承認処理を妨げない
     }
+    */
 
     return c.json({ message: "申請を承認しました" }, 200);
   } catch (error) {
@@ -2388,7 +2393,8 @@ export async function submitJoinRequest(c: any) {
         // イベント発火の失敗は申請作成を妨げない
       }
 
-      // 🔔 Slack通知を送信
+      // 🔔 Slack通知を送信（一時的に無効化）
+      /*
       console.log("📢 [Slack] 申請通知を送信開始:", team.name, displayName);
       try {
         await notifyTeamJoinRequest({
@@ -2404,6 +2410,7 @@ export async function submitJoinRequest(c: any) {
         console.error("❌ [Slack] 通知送信失敗:", slackError);
         // Slack通知の失敗は申請作成を妨げない
       }
+      */
 
       // 招待URLの使用回数をインクリメント
       await db

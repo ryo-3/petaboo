@@ -182,12 +182,8 @@ export default function BoardMemoSection({
       });
       return numberSet;
     } else {
-      // 通常タブ: 数値のみをフィルタ
-      return new Set(
-        Array.from(checkedMemos).filter(
-          (id) => typeof id === "number",
-        ) as number[],
-      );
+      // 通常タブ: checkedMemosをそのまま使用（number型のSet）
+      return checkedMemos as Set<number>;
     }
   }, [checkedMemos, activeMemoTab, memoItems]);
 

@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useRef } from "react";
 import { BoardItemWithContent } from "@/src/types/board";
 import { DeletedMemo } from "@/src/types/memo";
 import { Task, DeletedTask } from "@/src/types/task";
@@ -50,6 +50,7 @@ export function useBoardItems({
   setCheckedDeletedMemos,
   isMemoDeleting,
 }: UseBoardItemsProps): UseBoardItemsReturn {
+  const prevDeleteStateRef = useRef(isMemoDeleting);
   // メモとタスクのアイテムを分離（読み込み中も空配列で処理）
   const allMemoItems = useMemo(() => {
     const memoItems =
@@ -108,10 +109,18 @@ export function useBoardItems({
     });
   }, [activeTaskTab, boardDeletedItems?.tasks, boardId, allTaskItems]);
 
-  // チェック状態の自動クリーンアップ
-  // 通常メモのクリーンアップ
+  // チェック状態の自動クリーンアップ（削除操作完了後のみ実行）
   useEffect(() => {
-    if (allMemoItems && activeMemoTab === "normal" && !isMemoDeleting) {
+    const prevDeleteState = prevDeleteStateRef.current;
+    prevDeleteStateRef.current = isMemoDeleting;
+
+    // 削除操作が true → false に変化した時のみクリーンアップを実行
+    if (
+      prevDeleteState === true &&
+      isMemoDeleting === false &&
+      allMemoItems &&
+      activeMemoTab === "normal"
+    ) {
       const allMemoIds = new Set(
         allMemoItems.map((item: BoardItemWithContent) => item.itemId),
       );
@@ -123,24 +132,29 @@ export function useBoardItems({
           return false;
         }),
       );
+      // チェック済みアイテムが実際に減った場合のみ更新
       if (newCheckedNormalMemos.size !== checkedNormalMemos.size) {
         setCheckedNormalMemos(newCheckedNormalMemos);
       }
     }
   }, [
+    isMemoDeleting,
     allMemoItems,
     activeMemoTab,
     checkedNormalMemos,
-    isMemoDeleting,
     setCheckedNormalMemos,
   ]);
 
-  // 削除済みメモのクリーンアップ
+  // 削除済みメモのクリーンアップ（復元操作完了後のみ実行）
   useEffect(() => {
+    const prevDeleteState = prevDeleteStateRef.current;
+
+    // 復元操作が true → false に変化した時のみクリーンアップを実行
     if (
+      prevDeleteState === true &&
+      isMemoDeleting === false &&
       boardDeletedItems?.memos &&
-      activeMemoTab === "deleted" &&
-      !isMemoDeleting
+      activeMemoTab === "deleted"
     ) {
       const allDeletedMemoIds = new Set(
         boardDeletedItems.memos.map((memo: DeletedMemo) => memo.originalId),
@@ -153,15 +167,16 @@ export function useBoardItems({
           return false;
         }),
       );
+      // チェック済みアイテムが実際に減った場合のみ更新
       if (newCheckedDeletedMemos.size !== checkedDeletedMemos.size) {
         setCheckedDeletedMemos(newCheckedDeletedMemos);
       }
     }
   }, [
+    isMemoDeleting,
     boardDeletedItems?.memos,
     activeMemoTab,
     checkedDeletedMemos,
-    isMemoDeleting,
     setCheckedDeletedMemos,
   ]);
 

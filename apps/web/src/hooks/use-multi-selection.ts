@@ -1,79 +1,97 @@
-import { useState, useCallback } from "react";
+"use client";
 
-interface UseMultiSelectionReturn {
+import { useState } from "react";
+
+interface UseMultiSelectionProps {
+  activeMemoTab: string;
+  activeTaskTab: string;
+}
+
+interface MultiSelectionHookReturn {
   // 選択モード
   selectionMode: "select" | "check";
   setSelectionMode: (mode: "select" | "check") => void;
   handleSelectionModeChange: (mode: "select" | "check") => void;
 
   // メモの選択状態
-  checkedNormalMemos: Set<string | number>;
-  setCheckedNormalMemos: React.Dispatch<
-    React.SetStateAction<Set<string | number>>
-  >;
-  checkedDeletedMemos: Set<string | number>;
-  setCheckedDeletedMemos: React.Dispatch<
-    React.SetStateAction<Set<string | number>>
-  >;
-
-  // タスクの選択状態
-  checkedTodoTasks: Set<string | number>;
-  setCheckedTodoTasks: React.Dispatch<
-    React.SetStateAction<Set<string | number>>
-  >;
-  checkedInProgressTasks: Set<string | number>;
-  setCheckedInProgressTasks: React.Dispatch<
-    React.SetStateAction<Set<string | number>>
-  >;
-  checkedCompletedTasks: Set<string | number>;
-  setCheckedCompletedTasks: React.Dispatch<
-    React.SetStateAction<Set<string | number>>
-  >;
-  checkedDeletedTasks: Set<string | number>;
-  setCheckedDeletedTasks: React.Dispatch<
-    React.SetStateAction<Set<string | number>>
-  >;
-
-  // ヘルパー関数
-  getCheckedMemos: (activeMemoTab: string) => Set<string | number>;
+  checkedMemos: Set<string | number>;
   setCheckedMemos: (
-    activeMemoTab: string,
-    value:
-      | Set<string | number>
-      | ((prev: Set<string | number>) => Set<string | number>),
-  ) => void;
-  getCheckedTasks: (activeTaskTab: string) => Set<string | number>;
-  setCheckedTasks: (
-    activeTaskTab: string,
     value:
       | Set<string | number>
       | ((prev: Set<string | number>) => Set<string | number>),
   ) => void;
   handleMemoSelectionToggle: (memoId: string | number) => void;
+
+  // タスクの選択状態
+  checkedTasks: Set<string | number>;
+  setCheckedTasks: (
+    value:
+      | Set<string | number>
+      | ((prev: Set<string | number>) => Set<string | number>),
+  ) => void;
   handleTaskSelectionToggle: (taskId: string | number) => void;
+
+  // 互換性のための個別状態（廃止予定）
+  checkedNormalMemos: Set<string | number>;
+  setCheckedNormalMemos: (
+    value:
+      | Set<string | number>
+      | ((prev: Set<string | number>) => Set<string | number>),
+  ) => void;
+  checkedDeletedMemos: Set<string | number>;
+  setCheckedDeletedMemos: (
+    value:
+      | Set<string | number>
+      | ((prev: Set<string | number>) => Set<string | number>),
+  ) => void;
+  checkedTodoTasks: Set<string | number>;
+  setCheckedTodoTasks: (
+    value:
+      | Set<string | number>
+      | ((prev: Set<string | number>) => Set<string | number>),
+  ) => void;
+  checkedInProgressTasks: Set<string | number>;
+  setCheckedInProgressTasks: (
+    value:
+      | Set<string | number>
+      | ((prev: Set<string | number>) => Set<string | number>),
+  ) => void;
+  checkedCompletedTasks: Set<string | number>;
+  setCheckedCompletedTasks: (
+    value:
+      | Set<string | number>
+      | ((prev: Set<string | number>) => Set<string | number>),
+  ) => void;
+  checkedDeletedTasks: Set<string | number>;
+  setCheckedDeletedTasks: (
+    value:
+      | Set<string | number>
+      | ((prev: Set<string | number>) => Set<string | number>),
+  ) => void;
 }
 
 /**
- * 複数選択状態管理を統合するカスタムフック
- * ボード詳細画面で使用される複数選択関連のロジックを集約
+ * マルチ選択機能を管理するカスタムフック
+ * memo-screenと同じシンプルなuseStateベース
  */
-export function useMultiSelection(
-  activeMemoTab: string,
-  activeTaskTab: string = "todo",
-): UseMultiSelectionReturn {
-  // 複数選択状態管理
+export function useMultiSelection({
+  activeMemoTab,
+  activeTaskTab,
+}: UseMultiSelectionProps): MultiSelectionHookReturn {
+  // 選択モード管理
   const [selectionMode, setSelectionMode] = useState<"select" | "check">(
     "select",
   );
 
-  // メモの選択状態をタブ別に分離
+  // メモの選択状態（タブ別）
   const [checkedNormalMemos, setCheckedNormalMemos] = useState<
     Set<string | number>
   >(new Set());
   const [checkedDeletedMemos, setCheckedDeletedMemos] = useState<
     Set<string | number>
   >(new Set());
-  // タスクの選択状態をタブ別に分離
+
+  // タスクの選択状態（タブ別）
   const [checkedTodoTasks, setCheckedTodoTasks] = useState<
     Set<string | number>
   >(new Set());
@@ -87,133 +105,70 @@ export function useMultiSelection(
     Set<string | number>
   >(new Set());
 
-  // 現在のタブに応じた選択状態を取得
-  const getCheckedMemos = useCallback(
-    (tab: string) => {
-      return tab === "normal" ? checkedNormalMemos : checkedDeletedMemos;
-    },
-    [checkedNormalMemos, checkedDeletedMemos],
-  );
+  // 現在のタブに応じた選択状態を返す
+  const checkedMemos =
+    activeMemoTab === "normal" ? checkedNormalMemos : checkedDeletedMemos;
+  const checkedTasks = (() => {
+    switch (activeTaskTab) {
+      case "todo":
+        return checkedTodoTasks;
+      case "in_progress":
+        return checkedInProgressTasks;
+      case "completed":
+        return checkedCompletedTasks;
+      case "deleted":
+        return checkedDeletedTasks;
+      default:
+        return checkedTodoTasks;
+    }
+  })();
 
-  // 現在のタブに応じたタスク選択状態を取得
-  const getCheckedTasks = useCallback(
-    (tab: string) => {
-      switch (tab) {
-        case "todo":
-          return checkedTodoTasks;
-        case "in_progress":
-          return checkedInProgressTasks;
-        case "completed":
-          return checkedCompletedTasks;
-        case "deleted":
-          return checkedDeletedTasks;
-        default:
-          return checkedTodoTasks;
-      }
-    },
-    [
-      checkedTodoTasks,
-      checkedInProgressTasks,
-      checkedCompletedTasks,
-      checkedDeletedTasks,
-    ],
-  );
-
-  // 現在のタブに応じた選択状態を設定
-  const setCheckedMemos = useCallback(
-    (
-      tab: string,
-      value:
-        | Set<string | number>
-        | ((prev: Set<string | number>) => Set<string | number>),
-    ) => {
-      const targetSetter =
-        tab === "normal" ? setCheckedNormalMemos : setCheckedDeletedMemos;
-      if (typeof value === "function") {
-        targetSetter((prev) => {
-          const result = value(prev);
-          return result;
-        });
-      } else {
-        targetSetter(value);
-      }
-    },
-    [],
-  );
-
-  // 現在のタブに応じたタスク選択状態を設定
-  const setCheckedTasks = useCallback(
-    (
-      tab: string,
-      value:
-        | Set<string | number>
-        | ((prev: Set<string | number>) => Set<string | number>),
-    ) => {
-      let targetSetter;
-      switch (tab) {
-        case "todo":
-          targetSetter = setCheckedTodoTasks;
-          break;
-        case "in_progress":
-          targetSetter = setCheckedInProgressTasks;
-          break;
-        case "completed":
-          targetSetter = setCheckedCompletedTasks;
-          break;
-        case "deleted":
-          targetSetter = setCheckedDeletedTasks;
-          break;
-        default:
-          targetSetter = setCheckedTodoTasks;
-          break;
-      }
-
-      if (typeof value === "function") {
-        targetSetter((prev) => {
-          const result = value(prev);
-          return result;
-        });
-      } else {
-        targetSetter(value);
-      }
-    },
-    [],
-  );
+  // 現在のタブに応じたsetter
+  const setCheckedMemos =
+    activeMemoTab === "normal" ? setCheckedNormalMemos : setCheckedDeletedMemos;
+  const setCheckedTasks = (() => {
+    switch (activeTaskTab) {
+      case "todo":
+        return setCheckedTodoTasks;
+      case "in_progress":
+        return setCheckedInProgressTasks;
+      case "completed":
+        return setCheckedCompletedTasks;
+      case "deleted":
+        return setCheckedDeletedTasks;
+      default:
+        return setCheckedTodoTasks;
+    }
+  })();
 
   // メモの選択トグル
-  const handleMemoSelectionToggle = useCallback(
-    (memoId: string | number) => {
-      setCheckedMemos(activeMemoTab, (prev) => {
-        const newSet = new Set(prev);
-        if (newSet.has(memoId)) {
-          newSet.delete(memoId);
-        } else {
-          newSet.add(memoId);
-        }
-        return newSet;
-      });
-    },
-    [activeMemoTab, setCheckedMemos],
-  );
+  const handleMemoSelectionToggle = (memoId: string | number) => {
+    setCheckedMemos((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(memoId)) {
+        newSet.delete(memoId);
+      } else {
+        newSet.add(memoId);
+      }
+      return newSet;
+    });
+  };
 
-  // タスクの選択トグル（現在のタブに応じて適切な状態を更新）
-  const handleTaskSelectionToggle = useCallback(
-    (taskId: string | number) => {
-      setCheckedTasks(activeTaskTab, (prev) => {
-        const newSet = new Set(prev);
-        if (newSet.has(taskId)) {
-          newSet.delete(taskId);
-        } else {
-          newSet.add(taskId);
-        }
-        return newSet;
-      });
-    },
-    [activeTaskTab, setCheckedTasks],
-  );
+  // タスクの選択トグル
+  const handleTaskSelectionToggle = (taskId: string | number) => {
+    setCheckedTasks((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(taskId)) {
+        newSet.delete(taskId);
+      } else {
+        newSet.add(taskId);
+      }
+      return newSet;
+    });
+  };
 
   // 選択モード切り替え
-  const handleSelectionModeChange = useCallback((mode: "select" | "check") => {
+  const handleSelectionModeChange = (mode: "select" | "check") => {
     setSelectionMode(mode);
     // checkモードからselectモードに切り替える時、選択状態をクリア
     if (mode === "select") {
@@ -224,7 +179,7 @@ export function useMultiSelection(
       setCheckedCompletedTasks(new Set());
       setCheckedDeletedTasks(new Set());
     }
-  }, []);
+  };
 
   return {
     // 選択モード
@@ -232,13 +187,20 @@ export function useMultiSelection(
     setSelectionMode,
     handleSelectionModeChange,
 
-    // メモの選択状態
+    // 現在のタブの選択状態
+    checkedMemos,
+    setCheckedMemos,
+    handleMemoSelectionToggle,
+
+    checkedTasks,
+    setCheckedTasks,
+    handleTaskSelectionToggle,
+
+    // 互換性のための個別状態
     checkedNormalMemos,
     setCheckedNormalMemos,
     checkedDeletedMemos,
     setCheckedDeletedMemos,
-
-    // タスクの選択状態
     checkedTodoTasks,
     setCheckedTodoTasks,
     checkedInProgressTasks,
@@ -247,13 +209,5 @@ export function useMultiSelection(
     setCheckedCompletedTasks,
     checkedDeletedTasks,
     setCheckedDeletedTasks,
-
-    // ヘルパー関数
-    getCheckedMemos,
-    setCheckedMemos,
-    getCheckedTasks,
-    setCheckedTasks,
-    handleMemoSelectionToggle,
-    handleTaskSelectionToggle,
   };
 }

@@ -9,7 +9,7 @@ import { useBoards, useAddItemToBoard } from "@/src/hooks/use-boards";
 import { Memo, DeletedMemo } from "@/src/types/memo";
 import { Task, DeletedTask } from "@/src/types/task";
 import type { Tagging } from "@/src/types/tag";
-import { memo, useEffect, useState, useRef, useCallback } from "react";
+import { memo, useEffect, useState, useRef, useCallback, useMemo } from "react";
 import TagAddModal from "@/components/ui/tag-add/tag-add-modal";
 import BoardHeader from "@/components/features/board/board-header";
 import { BulkDeleteConfirmation } from "@/components/ui/modals";
@@ -123,6 +123,13 @@ function BoardDetailScreen({
   const {
     selectionMode,
     handleSelectionModeChange,
+    checkedMemos,
+    setCheckedMemos,
+    handleMemoSelectionToggle,
+    checkedTasks,
+    setCheckedTasks,
+    handleTaskSelectionToggle,
+    // 互換性のため
     checkedNormalMemos,
     setCheckedNormalMemos,
     checkedDeletedMemos,
@@ -131,17 +138,7 @@ function BoardDetailScreen({
     checkedInProgressTasks,
     checkedCompletedTasks,
     checkedDeletedTasks,
-    getCheckedMemos,
-    setCheckedMemos,
-    getCheckedTasks,
-    setCheckedTasks,
-    handleMemoSelectionToggle,
-    handleTaskSelectionToggle,
-  } = useMultiSelection(activeMemoTab, activeTaskTab);
-
-  // 現在のタブに応じた選択状態
-  const checkedMemos = getCheckedMemos(activeMemoTab);
-  const checkedTasks = getCheckedTasks(activeTaskTab);
+  } = useMultiSelection({ activeMemoTab, activeTaskTab });
 
   // 一括削除操作フック
   const {
@@ -167,8 +164,8 @@ function BoardDetailScreen({
     boardId,
     checkedMemos,
     checkedTasks,
-    setCheckedMemos: (value) => setCheckedMemos(activeMemoTab, value),
-    setCheckedTasks: (value) => setCheckedTasks(activeTaskTab, value),
+    setCheckedMemos,
+    setCheckedTasks,
     deleteButtonRef,
     activeMemoTab,
     activeTaskTab,
@@ -299,7 +296,7 @@ function BoardDetailScreen({
   } = useBoardSelectAll({
     items: memoItems,
     checkedItems: checkedMemos,
-    setCheckedItems: (value) => setCheckedMemos(activeMemoTab, value),
+    setCheckedItems: setCheckedMemos,
     getItemId: (item) => item.itemId,
   });
 
@@ -310,7 +307,7 @@ function BoardDetailScreen({
   } = useBoardSelectAll({
     items: taskItems,
     checkedItems: checkedTasks,
-    setCheckedItems: (value) => setCheckedTasks(activeTaskTab, value),
+    setCheckedItems: setCheckedTasks,
     getItemId: (item) => item.itemId,
   });
 
@@ -469,9 +466,7 @@ function BoardDetailScreen({
             isLidOpen={isMemoLidOpen}
             currentDisplayCount={currentMemoDisplayCount}
             deleteButtonRef={deleteButtonRef}
-            onCheckedMemosChange={(memos) =>
-              setCheckedMemos(activeMemoTab, memos)
-            }
+            onCheckedMemosChange={setCheckedMemos}
             onTagging={handleTaggingMemo}
             teamMode={teamMode}
             teamId={teamId}
@@ -515,9 +510,7 @@ function BoardDetailScreen({
             isLidOpen={isTaskLidOpen}
             currentDisplayCount={currentTaskDisplayCount}
             deleteButtonRef={deleteButtonRef}
-            onCheckedTasksChange={(tasks) =>
-              setCheckedTasks(activeTaskTab, tasks)
-            }
+            onCheckedTasksChange={setCheckedTasks}
             onTagging={handleTaggingTask}
           />
         </div>
@@ -631,9 +624,9 @@ function BoardDetailScreen({
         allItems={tagSelectionMenuType === "memo" ? allMemoItems : allTaskItems}
         onSuccess={() => {
           if (tagSelectionMenuType === "memo") {
-            setCheckedMemos(activeMemoTab, new Set());
+            setCheckedMemos(new Set());
           } else {
-            setCheckedTasks(activeTaskTab, new Set());
+            setCheckedTasks(new Set());
           }
         }}
       />

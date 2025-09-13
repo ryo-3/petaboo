@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,6 +46,7 @@ interface TeamDetailProps {
 export function TeamDetail({ customUrl }: TeamDetailProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
   const { data: team, isLoading, error } = useTeamDetail(customUrl);
 
   // 🛡️ ページ可視性をContextから取得
@@ -105,25 +107,43 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   } | null>(null);
   const kickMutation = useKickMember();
 
-  // 承認処理（通知再チェック付き）
+  // 承認処理（通知即座更新付き）
   const handleApprove = (requestId: number) => {
     approve(requestId);
-    // 承認後に通知を即座に再チェック（バッジをすぐ更新）
+    // 承認後に通知システムを即座に更新（ヘッダーベルアイコン含む）
     setTimeout(() => {
+      // 1. join-requestsクエリ無効化（承認リスト更新）
+      queryClient.invalidateQueries(["join-requests", customUrl]);
+      // 2. 通知チェックAPIを強制実行（ヘッダーベルアイコン更新）
       if (recheckNotifications) {
         recheckNotifications();
       }
+      // 3. 全ての通知チェッカーを強制更新（ヘッダー含む）
+      window.dispatchEvent(
+        new CustomEvent("force-notification-check", {
+          detail: { teamName: customUrl },
+        }),
+      );
     }, 500); // API処理完了後に実行
   };
 
-  // 拒否処理（通知再チェック付き）
+  // 拒否処理（通知即座更新付き）
   const handleReject = (requestId: number) => {
     reject(requestId);
-    // 拒否後に通知を即座に再チェック（バッジをすぐ更新）
+    // 拒否後に通知システムを即座に更新（ヘッダーベルアイコン含む）
     setTimeout(() => {
+      // 1. join-requestsクエリ無効化（承認リスト更新）
+      queryClient.invalidateQueries(["join-requests", customUrl]);
+      // 2. 通知チェックAPIを強制実行（ヘッダーベルアイコン更新）
       if (recheckNotifications) {
         recheckNotifications();
       }
+      // 3. 全ての通知チェッカーを強制更新（ヘッダー含む）
+      window.dispatchEvent(
+        new CustomEvent("force-notification-check", {
+          detail: { teamName: customUrl },
+        }),
+      );
     }, 500); // API処理完了後に実行
   };
 
@@ -702,7 +722,19 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                 onSelectMemo={handleSelectMemo}
                 selectedDeletedMemo={selectedDeletedMemo}
                 onSelectDeletedMemo={handleSelectDeletedMemo}
-                onClose={() => handleTabChange("overview")}
+                onClose={() => {
+                  // メモを閉じる時はmemoパラメータも削除してmemosタブに残る
+                  setSelectedMemo(null);
+                  const params = new URLSearchParams(searchParams.toString());
+                  params.delete("memo");
+                  params.set("tab", "memos");
+                  const newUrl = params.toString()
+                    ? `?${params.toString()}`
+                    : "";
+                  router.replace(`/team/${customUrl}${newUrl}`, {
+                    scroll: false,
+                  });
+                }}
                 teamMode={true}
                 teamId={team.id}
                 initialMemoId={getMemoIdFromURL()}

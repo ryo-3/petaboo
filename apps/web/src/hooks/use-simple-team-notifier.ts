@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -39,7 +39,7 @@ export function useSimpleTeamNotifier(
   const [error, setError] = useState<string | null>(null);
 
   // 手動チェック用（簡潔版）
-  const checkNow = async () => {
+  const checkNow = useCallback(async () => {
     if (!teamName) return;
 
     try {
@@ -90,7 +90,7 @@ export function useSimpleTeamNotifier(
     } catch (err) {
       console.error("手動チェックエラー:", err);
     }
-  };
+  }, [teamName, getToken, queryClient]);
 
   // 10秒間隔での通知チェック
   useEffect(() => {
@@ -200,6 +200,31 @@ export function useSimpleTeamNotifier(
       if (interval) clearInterval(interval);
     };
   }, [teamName, getToken, isVisible, queryClient, options]);
+
+  // 強制通知チェックイベントリスナー（承認・拒否後の即座更新用）
+  useEffect(() => {
+    if (!teamName) return;
+
+    const handleForceCheck = (event: CustomEvent) => {
+      const { teamName: eventTeamName } = event.detail;
+      if (eventTeamName === teamName) {
+        // console.log(`🚀 強制通知チェック実行: ${teamName}`);
+        checkNow();
+      }
+    };
+
+    window.addEventListener(
+      "force-notification-check",
+      handleForceCheck as EventListener,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "force-notification-check",
+        handleForceCheck as EventListener,
+      );
+    };
+  }, [teamName, checkNow]);
 
   return {
     data,

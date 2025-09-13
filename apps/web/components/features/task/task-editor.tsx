@@ -18,6 +18,7 @@ import {
   useAddItemToBoard,
   useRemoveItemFromBoard,
 } from "@/src/hooks/use-boards";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   useCreateTagging,
   useDeleteTagging,
@@ -86,6 +87,7 @@ function TaskEditor({
   teamMode = false,
   teamId,
 }: TaskEditorProps) {
+  const queryClient = useQueryClient();
   const updateTask = useUpdateTask({ teamMode, teamId: teamId || undefined });
   const createTask = useCreateTask({ teamMode, teamId: teamId || undefined });
   const addItemToBoard = useAddItemToBoard({
@@ -658,12 +660,24 @@ function TaskEditor({
 
       if (isNewTask) {
         // 新規作成
+        console.log(
+          `🔧 [新規タスク] 作成開始: title="${title.trim()}", selectedBoardIds=[${selectedBoardIds.join(",")}], teamMode=${teamMode}`,
+        );
         const newTask = await createTask.mutateAsync(taskData);
+        console.log(
+          `🔧 [新規タスク] 作成成功: id=${newTask.id}, originalId=${newTask.originalId}, teamMode=${teamMode}, teamId=${teamId}`,
+        );
 
         // 選択されたボードに追加
         if (selectedBoardIds.length > 0 && newTask.id) {
+          console.log(
+            `🔧 [新規タスク] ボード追加開始: taskId=${newTask.id}, boardIds=[${selectedBoardIds.join(",")}]`,
+          );
           try {
             for (const boardId of selectedBoardIds) {
+              console.log(
+                `🔧 [新規タスク] ボード追加中: boardId=${boardId}, itemId=${newTask.originalId || newTask.id.toString()}`,
+              );
               await addItemToBoard.mutateAsync({
                 boardId: parseInt(boardId),
                 data: {
@@ -671,14 +685,124 @@ function TaskEditor({
                   itemId: newTask.originalId || newTask.id.toString(),
                 },
               });
+              console.log(`✅ [新規タスク] ボード追加成功: boardId=${boardId}`);
             }
-          } catch {
+            console.log(`🔧 [新規タスク] 全ボード追加完了`);
+          } catch (error) {
+            console.error(`❌ [新規タスク] ボード追加失敗:`, error);
             // エラーは上位でハンドリング
           }
+        } else {
+          console.log(
+            `🔧 [新規タスク] ボード追加スキップ: selectedBoardIds.length=${selectedBoardIds.length}, newTask.id=${newTask.id}`,
+          );
+        }
+
+        // キャッシュ手動更新（UIへの反映確保）
+        console.log(
+          `🔧 [新規タスク] キャッシュ無効化開始: teamMode=${teamMode}, teamId=${teamId}`,
+        );
+
+        if (teamMode && teamId) {
+          // チームタスク一覧キャッシュ無効化
+          queryClient.invalidateQueries({
+            queryKey: ["team-tasks", teamId],
+          });
+          console.log(
+            `🔧 [新規タスク] チームタスクキャッシュ無効化: teamId=${teamId}`,
+          );
+
+          // チームボードアイテムキャッシュ無効化
+          for (const boardId of selectedBoardIds) {
+            queryClient.invalidateQueries({
+              queryKey: ["team-boards", teamId, parseInt(boardId), "items"],
+            });
+            console.log(
+              `🔧 [新規タスク] チームボードキャッシュ無効化: teamId=${teamId}, boardId=${boardId}`,
+            );
+          }
+        } else {
+          // 個人タスク一覧キャッシュ無効化
+          queryClient.invalidateQueries({
+            queryKey: ["tasks"],
+          });
+          console.log(`🔧 [新規タスク] 個人タスクキャッシュ無効化`);
+
+          // 個人ボードアイテムキャッシュ無効化
+          for (const boardId of selectedBoardIds) {
+            queryClient.invalidateQueries({
+              queryKey: ["boards", parseInt(boardId), "items"],
+            });
+            console.log(
+              `🔧 [新規タスク] 個人ボードキャッシュ無効化: boardId=${boardId}`,
+            );
+          }
+        }
+
+        // アイテムボードキャッシュ無効化
+        queryClient.invalidateQueries({
+          queryKey: [
+            "item-boards",
+            "task",
+            newTask.originalId || newTask.id.toString(),
+          ],
+        });
+        console.log(
+          `🔧 [新規タスク] アイテムボードキャッシュ無効化: itemId=${newTask.originalId || newTask.id.toString()}`,
+        );
+        console.log(`🔧 [新規タスク] キャッシュ無効化完了`);
+
+        // 強制的にボードアイテムを再取得
+        console.log(
+          `🔧 [新規タスク] 強制refetch開始: teamMode=${teamMode}, teamId=${teamId}`,
+        );
+        if (
+          teamMode &&
+          teamId &&
+          selectedBoardIds.length > 0 &&
+          selectedBoardIds[0]
+        ) {
+          queryClient.refetchQueries({
+            queryKey: [
+              "team-boards",
+              teamId.toString(),
+              parseInt(selectedBoardIds[0]),
+              "items",
+            ],
+          });
+          console.log(
+            `🔧 [新規タスク] チームボード強制refetch: teamId=${teamId}, boardId=${selectedBoardIds[0]}`,
+          );
+        } else if (
+          !teamMode &&
+          selectedBoardIds.length > 0 &&
+          selectedBoardIds[0]
+        ) {
+          queryClient.refetchQueries({
+            queryKey: ["boards", parseInt(selectedBoardIds[0]), "items"],
+          });
+          console.log(
+            `🔧 [新規タスク] 個人ボード強制refetch: boardId=${selectedBoardIds[0]}`,
+          );
         }
 
         // 新規作成完了を通知
         onSaveComplete?.(newTask, true);
+
+        // チームボードの場合はURL更新も必要
+        if (teamMode && typeof window !== "undefined") {
+          const currentPath = window.location.pathname;
+          const teamBoardMatch = currentPath.match(
+            /^\/team\/([^\/]+)\/board\/([^\/]+)/,
+          );
+
+          if (teamBoardMatch) {
+            const [, customUrl, slug] = teamBoardMatch;
+            const newUrl = `/team/${customUrl}/board/${slug}/task/${newTask.id}`;
+            console.log(`🔧 [新規タスク作成] URL更新: /task/0 → ${newUrl}`);
+            window.history.replaceState(null, "", newUrl);
+          }
+        }
 
         // 新規作成後はフォームをリセット
         setTimeout(() => {
@@ -817,10 +941,16 @@ function TaskEditor({
         }
 
         // ボードに追加（既存タスクの場合のみ）
+        console.log(
+          `🔧 [タスク保存] ボード追加処理: taskId=${task?.id}, toAdd=[${toAdd.join(",")}], currentBoardIds=[${currentBoardIds.join(",")}], selectedBoardIds=[${selectedBoardIds.join(",")}]`,
+        );
         if (task && task.id > 0) {
           for (const boardId of toAdd) {
             try {
               const itemIdToAdd = task.originalId || task.id.toString();
+              console.log(
+                `🔧 [タスク保存] ボード追加開始: boardId=${boardId}, itemId=${itemIdToAdd}`,
+              );
 
               await addItemToBoard.mutateAsync({
                 boardId: parseInt(boardId),
@@ -829,8 +959,12 @@ function TaskEditor({
                   itemId: itemIdToAdd,
                 },
               });
+              console.log(`✅ [タスク保存] ボード追加成功: boardId=${boardId}`);
             } catch (error) {
-              console.error("Failed to add to board:", error);
+              console.error(
+                `❌ [タスク保存] ボード追加失敗: boardId=${boardId}, error:`,
+                error,
+              );
               // エラーは上位でハンドリング
             }
           }

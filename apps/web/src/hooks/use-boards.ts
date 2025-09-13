@@ -155,6 +155,10 @@ export function useBoardWithItems(
 
         const data = await response.json();
 
+        console.log(
+          `🔍 [ボードアイテム取得] 成功: boardId=${boardId}, teamId=${teamId || "なし"}, taskItems=${data.items?.filter((item: any) => item.itemType === "task").length || 0}件, memoItems=${data.items?.filter((item: any) => item.itemType === "memo").length || 0}件`,
+        );
+
         return {
           ...data.board,
           items: data.items,

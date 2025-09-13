@@ -70,16 +70,93 @@ export function useCreateTask(options?: {
         return result;
       }
     },
-    onSuccess: () => {
+    onSuccess: (newTask) => {
+      console.log(
+        `🔥 [useCreateTask] onSuccessコールバック開始: teamMode=${teamMode}, teamId=${teamId}, newTask.id=${newTask?.id}`,
+      );
+
       // APIが不完全なデータしか返さないため、タスク一覧を無効化して再取得
       if (teamMode && teamId) {
+        console.log(
+          `🔥 [useCreateTask] チームタスクキャッシュ無効化: teamId=${teamId}`,
+        );
         queryClient.invalidateQueries({ queryKey: ["team-tasks", teamId] });
+
+        // チームタスク一覧に新しいタスクを楽観的に追加
+        queryClient.setQueryData<Task[]>(["team-tasks", teamId], (oldTasks) => {
+          console.log(
+            `📋 チームタスク一覧にタスク追加: ${oldTasks?.length || 0} → ${(oldTasks?.length || 0) + 1}`,
+          );
+          if (!oldTasks) return [newTask];
+          return [...oldTasks, newTask];
+        });
+
+        // チーム掲示板キャッシュを楽観的更新（空表示を避けるため）
+        console.log(
+          `🏷️ チーム掲示板キャッシュ楽観的更新（作成時）: teamId=${teamId}, taskId=${newTask.id}`,
+        );
+
+        // 既存のボードアイテムキャッシュに新しいタスクを即座に追加
+        const boardId = 1; // 仮値（実際はinitialBoardIdから取得すべき）
+        queryClient.setQueryData(
+          ["team-boards", teamId.toString(), boardId, "items"],
+          (oldData: any) => {
+            if (oldData?.items) {
+              console.log(
+                `🚀 楽観的更新: ${oldData.items.length} → ${oldData.items.length + 1}個`,
+              );
+              return {
+                ...oldData,
+                items: [
+                  ...oldData.items,
+                  {
+                    id: newTask.id,
+                    boardId: 1, // 仮で設定、実際のボードIDは後でAPIから取得
+                    itemId: newTask.originalId || newTask.id.toString(),
+                    itemType: "task",
+                    content: newTask,
+                    createdAt: newTask.createdAt,
+                    updatedAt: newTask.updatedAt,
+                    position: oldData.items.length,
+                  },
+                ],
+              };
+            }
+            return oldData;
+          },
+        );
+
+        // バックグラウンドでデータを再取得（楽観的更新の検証）
+        setTimeout(() => {
+          console.log(`🔄 バックグラウンド検証開始: teamId=${teamId}`);
+          queryClient.refetchQueries({
+            predicate: (query) => {
+              const key = query.queryKey as string[];
+              return key[0] === "team-boards" && key[1] === teamId.toString();
+            },
+          });
+        }, 1000);
+
+        console.log(`✨ 楽観的更新完了: teamId=${teamId}`);
       } else {
+        console.log(`🔥 [useCreateTask] 個人タスクキャッシュ無効化`);
         queryClient.invalidateQueries({ queryKey: ["tasks"] });
+
+        // 個人タスクのキャッシュを更新
+        queryClient.setQueryData<Task[]>(["tasks"], (oldTasks) => {
+          console.log(
+            `📋 個人タスク一覧にタスク追加: ${oldTasks?.length || 0} → ${(oldTasks?.length || 0) + 1}`,
+          );
+          if (!oldTasks) return [newTask];
+          return [...oldTasks, newTask];
+        });
       }
 
       // ボード統計の再計算のためボード一覧を無効化
+      console.log(`🔥 [useCreateTask] ボード統計キャッシュ無効化`);
       queryClient.invalidateQueries({ queryKey: ["boards"] });
+
+      console.log(`🔥 [useCreateTask] onSuccessコールバック完了`);
     },
     onError: (error) => {
       console.error("タスク作成に失敗しました:", error);

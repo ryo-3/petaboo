@@ -661,4 +661,97 @@ app.openapi(
   },
 );
 
+// DELETE /teams/:teamId/memos/deleted/:originalId（チーム削除済みメモの完全削除）
+app.openapi(
+  createRoute({
+    method: "delete",
+    path: "/{teamId}/memos/deleted/{originalId}",
+    request: {
+      params: z.object({
+        teamId: z.string().regex(/^\d+$/).transform(Number),
+        originalId: z.string(),
+      }),
+    },
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: z.object({ success: z.boolean() }),
+          },
+        },
+        description: "完全削除成功",
+      },
+      401: {
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+        description: "未認証",
+      },
+      403: {
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+        description: "チームメンバーではない",
+      },
+      404: {
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+        description: "削除済みメモが見つからない",
+      },
+      500: {
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+        description: "サーバーエラー",
+      },
+    },
+  }),
+  async (c) => {
+    const auth = getAuth(c);
+    const db = c.get("db");
+    if (!auth?.userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const { teamId, originalId } = c.req.valid("param");
+
+    // チームメンバー確認
+    const member = await checkTeamMember(teamId, auth.userId, db);
+    if (!member) {
+      return c.json({ error: "Not a team member" }, 403);
+    }
+
+    try {
+      // 削除済みメモを検索して完全削除
+      const deletedResult = await db
+        .delete(teamDeletedMemos)
+        .where(
+          and(
+            eq(teamDeletedMemos.teamId, teamId),
+            eq(teamDeletedMemos.originalId, originalId),
+          ),
+        )
+        .returning();
+
+      if (deletedResult.length === 0) {
+        return c.json({ error: "削除済みメモが見つかりません" }, 404);
+      }
+
+      return c.json({ success: true });
+    } catch (error) {
+      console.error("チーム削除済みメモ完全削除エラー:", error);
+      return c.json({ error: "Internal server error" }, 500);
+    }
+  },
+);
+
 export default app;

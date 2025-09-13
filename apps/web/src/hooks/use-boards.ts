@@ -789,6 +789,12 @@ export function useBoardDeletedItems(boardId: number, teamId?: string | null) {
         console.log(
           `✅ 削除済みアイテム変換完了: memos=${memos.length}件, tasks=${tasks.length}件`,
         );
+        console.log(
+          `🎯 削除済みメモ詳細:`,
+          memos.map(
+            (m) => `id=${m.id}, originalId=${m.originalId}, title="${m.title}"`,
+          ),
+        );
         return { memos, tasks };
       }
 

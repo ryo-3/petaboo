@@ -263,6 +263,11 @@ export default function BoardRightPanel({
                   onDeletedMemoDeleteAndSelectNext(selectedMemo as DeletedMemo);
                 }
               }}
+              onDeleteAndSelectNext={(deletedMemo: Memo | DeletedMemo) => {
+                if (onDeletedMemoDeleteAndSelectNext) {
+                  onDeletedMemoDeleteAndSelectNext(deletedMemo as DeletedMemo);
+                }
+              }}
               initialBoardId={boardId}
               teamMode={teamMode}
               teamId={teamId || undefined}

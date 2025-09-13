@@ -618,8 +618,12 @@ function BoardDetailScreen({
         itemType={tagSelectionMenuType}
         selectedItems={
           tagSelectionMenuType === "memo"
-            ? Array.from(checkedMemos).map((id) => id.toString())
-            : Array.from(checkedTasks).map((id) => id.toString())
+            ? Array.from(checkedMemos)
+                .filter((id) => id != null)
+                .map((id) => id.toString())
+            : Array.from(checkedTasks)
+                .filter((id) => id != null)
+                .map((id) => id.toString())
         }
         allItems={tagSelectionMenuType === "memo" ? allMemoItems : allTaskItems}
         onSuccess={() => {

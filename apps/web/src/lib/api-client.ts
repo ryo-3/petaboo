@@ -224,6 +224,26 @@ export const memosApi = {
     return response;
   },
 
+  // DELETE /teams/:teamId/memos/deleted/:originalId (チーム削除済みメモの完全削除)
+  permanentDeleteTeamMemo: async (
+    teamId: number,
+    originalId: string,
+    token?: string,
+  ) => {
+    const response = await fetch(
+      `${API_BASE_URL}/teams/${teamId}/memos/deleted/${originalId}`,
+      {
+        method: "DELETE",
+        headers: createHeaders(token),
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response;
+  },
+
   // POST /memos/import (CSVインポート)
   importMemos: async (file: File, token?: string) => {
     const formData = new FormData();

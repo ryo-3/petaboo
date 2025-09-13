@@ -180,46 +180,173 @@ export function useCreateMemo(options?: {
 }
 
 // メモを更新するhook
-export function useUpdateMemo() {
+export function useUpdateMemo(options?: {
+  teamMode?: boolean;
+  teamId?: number;
+}) {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
+  const { teamMode = false, teamId } = options || {};
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: number; data: UpdateMemoData }) => {
       const token = await getToken();
-      const response = await memosApi.updateNote(id, data, token || undefined);
-      const responseData = await response.json();
-      return responseData as Memo;
+
+      console.log(
+        `📝 メモ更新開始: id=${id}, teamMode=${teamMode}, teamId=${teamId}`,
+      );
+
+      if (teamMode && teamId) {
+        // チームメモ更新
+        console.log(
+          `🌐 チームメモ更新API呼び出し: teamId=${teamId}, memoId=${id}`,
+        );
+        const response = await memosApi.updateTeamMemo(
+          teamId,
+          id,
+          data,
+          token || undefined,
+        );
+        const responseData = await response.json();
+        console.log(`✅ チームメモ更新API成功: teamId=${teamId}, memoId=${id}`);
+        return responseData as Memo;
+      } else {
+        // 個人メモ更新
+        console.log(`🌐 個人メモ更新API呼び出し: memoId=${id}`);
+        const response = await memosApi.updateNote(
+          id,
+          data,
+          token || undefined,
+        );
+        const responseData = await response.json();
+        console.log(`✅ 個人メモ更新API成功: memoId=${id}`);
+        return responseData as Memo;
+      }
     },
     onSuccess: (updatedMemo, { id, data }) => {
-      // APIが不完全なレスポンスを返す場合があるので、キャッシュから既存メモを取得して更新
-      queryClient.setQueryData<Memo[]>(["memos"], (oldMemos) => {
-        if (!oldMemos) return [updatedMemo];
-        return oldMemos.map((memo) => {
-          if (memo.id === id) {
-            // APIが完全なメモオブジェクトを返した場合はそれを使用
-            if (
-              updatedMemo.title !== undefined &&
-              updatedMemo.content !== undefined
-            ) {
-              return updatedMemo;
+      console.log(
+        `📝 メモ更新成功: id=${id}, teamMode=${teamMode}, teamId=${teamId}`,
+      );
+
+      if (teamMode && teamId) {
+        console.log(`📋 チームメモキャッシュ更新開始: teamId=${teamId}`);
+        // チームメモ一覧のキャッシュを更新
+        queryClient.setQueryData<Memo[]>(["team-memos", teamId], (oldMemos) => {
+          if (!oldMemos) return [updatedMemo];
+          const updated = oldMemos.map((memo) => {
+            if (memo.id === id) {
+              console.log(
+                `🔄 チームメモ更新: id=${id}, title="${data.title || memo.title}"`,
+              );
+              // APIが完全なメモオブジェクトを返した場合はそれを使用
+              if (
+                updatedMemo.title !== undefined &&
+                updatedMemo.content !== undefined
+              ) {
+                return updatedMemo;
+              }
+              // APIが不完全な場合は既存メモを更新データでマージ
+              return {
+                ...memo,
+                title: data.title ?? memo.title,
+                content: data.content ?? memo.content,
+                updatedAt: Math.floor(Date.now() / 1000),
+              };
             }
-            // APIが不完全な場合は既存メモを更新データでマージ
-            return {
-              ...memo,
-              title: data.title ?? memo.title,
-              content: data.content ?? memo.content,
-              updatedAt: Math.floor(Date.now() / 1000),
-            };
-          }
-          return memo;
+            return memo;
+          });
+          console.log(
+            `📝 チームメモ一覧更新完了: ${oldMemos.length}件中1件更新`,
+          );
+          return updated;
         });
-      });
-      // ボード関連キャッシュを無効化（一覧・統計・アイテムを含む）
-      queryClient.invalidateQueries({
-        queryKey: ["boards"],
-        exact: false,
-      });
+
+        // チーム掲示板キャッシュも楽観的更新（作成時と同様のパターン）
+        console.log(
+          `🏷️ チーム掲示板キャッシュ楽観的更新（更新時）: teamId=${teamId}, memoId=${id}`,
+        );
+
+        // 既存のボードアイテムキャッシュ内のメモを更新
+        const boardId = 1; // 仮値（実際はinitialBoardIdから取得すべき）
+        queryClient.setQueryData(
+          ["team-boards", teamId.toString(), boardId, "items"],
+          (oldData: any) => {
+            if (oldData?.items) {
+              const updatedItems = oldData.items.map((item: any) => {
+                if (item.itemType === "memo" && item.content?.id === id) {
+                  console.log(
+                    `🔄 ボードアイテム更新: memoId=${id}, title="${data.title || item.content.title}"`,
+                  );
+                  return {
+                    ...item,
+                    content: {
+                      ...item.content,
+                      title: data.title ?? item.content.title,
+                      content: data.content ?? item.content.content,
+                      updatedAt: Math.floor(Date.now() / 1000),
+                    },
+                    updatedAt: Math.floor(Date.now() / 1000),
+                  };
+                }
+                return item;
+              });
+              console.log(
+                `🚀 楽観的更新（更新）: ボードアイテム内のメモを更新`,
+              );
+              return {
+                ...oldData,
+                items: updatedItems,
+              };
+            }
+            return oldData;
+          },
+        );
+
+        // バックグラウンドでデータを再取得（楽観的更新の検証）
+        setTimeout(() => {
+          console.log(
+            `🔄 バックグラウンド検証開始（更新時）: teamId=${teamId}`,
+          );
+          queryClient.refetchQueries({
+            predicate: (query) => {
+              const key = query.queryKey as string[];
+              return key[0] === "team-boards" && key[1] === teamId.toString();
+            },
+          });
+        }, 1000);
+
+        console.log(`✨ 楽観的更新完了（更新時）: teamId=${teamId}`);
+      } else {
+        // 個人メモのキャッシュを更新
+        queryClient.setQueryData<Memo[]>(["memos"], (oldMemos) => {
+          if (!oldMemos) return [updatedMemo];
+          return oldMemos.map((memo) => {
+            if (memo.id === id) {
+              // APIが完全なメモオブジェクトを返した場合はそれを使用
+              if (
+                updatedMemo.title !== undefined &&
+                updatedMemo.content !== undefined
+              ) {
+                return updatedMemo;
+              }
+              // APIが不完全な場合は既存メモを更新データでマージ
+              return {
+                ...memo,
+                title: data.title ?? memo.title,
+                content: data.content ?? memo.content,
+                updatedAt: Math.floor(Date.now() / 1000),
+              };
+            }
+            return memo;
+          });
+        });
+        // ボード関連キャッシュを無効化（一覧・統計・アイテムを含む）
+        queryClient.invalidateQueries({
+          queryKey: ["boards"],
+          exact: false,
+        });
+      }
+
       // タグ付け関連キャッシュを無効化（タグ表示更新のため）
       queryClient.invalidateQueries({
         queryKey: ["taggings"],

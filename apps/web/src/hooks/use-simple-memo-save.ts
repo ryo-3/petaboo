@@ -71,8 +71,8 @@ export function useSimpleMemoSave({
   );
 
   const createNote = useCreateMemo({ teamMode, teamId });
-  const updateNote = useUpdateMemo();
-  const deleteNote = useDeleteMemo();
+  const updateNote = useUpdateMemo({ teamMode, teamId });
+  const deleteNote = useDeleteMemo({ teamMode, teamId });
   const addItemToBoard = useAddItemToBoard({ teamMode, teamId });
   const removeItemFromBoard = useRemoveItemFromBoard();
   const queryClient = useQueryClient();

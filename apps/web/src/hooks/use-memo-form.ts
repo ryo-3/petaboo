@@ -7,6 +7,8 @@ interface UseMemoFormOptions {
   onMemoAdd?: (memo: Memo) => void;
   onMemoUpdate?: (id: number, updates: Partial<Memo>) => void;
   onMemoIdUpdate?: (oldId: number, newId: number) => void;
+  teamMode?: boolean;
+  teamId?: number;
 }
 
 export function useMemoForm({
@@ -14,6 +16,8 @@ export function useMemoForm({
   onMemoAdd,
   onMemoUpdate,
   onMemoIdUpdate,
+  teamMode = false,
+  teamId,
 }: UseMemoFormOptions = {}) {
   const [title, setTitle] = useState(() => memo?.title || "");
   const [content, setContent] = useState(() => memo?.content || "");
@@ -27,8 +31,14 @@ export function useMemoForm({
     () => memo?.content || "",
   );
 
-  const createNote = useCreateMemo();
-  const updateNote = useUpdateMemo();
+  const createNote = useCreateMemo({
+    teamMode,
+    teamId,
+  });
+  const updateNote = useUpdateMemo({
+    teamMode,
+    teamId,
+  });
 
   // 変更検知
   const hasChanges = useMemo(() => {

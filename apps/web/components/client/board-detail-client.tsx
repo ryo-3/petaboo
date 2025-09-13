@@ -23,7 +23,11 @@ export default function BoardDetailClient({
   teamId = null,
 }: BoardDetailClientProps) {
   const router = useRouter();
-  const { data: boardWithItems } = useBoardWithItems(boardId);
+  const { data: boardWithItems } = useBoardWithItems(
+    boardId,
+    false,
+    teamId?.toString() || null,
+  );
 
   const [selectedMemo, setSelectedMemo] = useState<Memo | DeletedMemo | null>(
     null,

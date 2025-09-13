@@ -114,30 +114,32 @@ function ItemStatusDisplay<T extends { id: number }>({
       effectiveColumnCount={effectiveColumnCount}
       isBoard={isBoard}
     >
-      {sortedItems.map((item, index) => (
-        <div
-          key={
-            item.id !== undefined ? `item-${item.id}` : `item-index-${index}`
-          }
-        >
-          {renderItem(item, {
-            isChecked: checkedItems?.has(item.id) || false,
-            onToggleCheck: () => onToggleCheck?.(item.id),
-            onSelect: () => {
-              if (selectionMode === "check") {
-                onToggleCheck?.(item.id);
-              } else {
-                onSelectItem?.(item);
-              }
-            },
-            isSelected: selectedItemId === item.id,
-            showEditDate,
-            showBoardName,
-            showTags,
-            variant,
-          })}
-        </div>
-      ))}
+      {sortedItems
+        .filter((item) => item && item.id !== undefined)
+        .map((item, index) => (
+          <div
+            key={
+              item.id !== undefined ? `item-${item.id}` : `item-index-${index}`
+            }
+          >
+            {renderItem(item, {
+              isChecked: checkedItems?.has(item.id) || false,
+              onToggleCheck: () => onToggleCheck?.(item.id),
+              onSelect: () => {
+                if (selectionMode === "check") {
+                  onToggleCheck?.(item.id);
+                } else {
+                  onSelectItem?.(item);
+                }
+              },
+              isSelected: selectedItemId === item.id,
+              showEditDate,
+              showBoardName,
+              showTags,
+              variant,
+            })}
+          </div>
+        ))}
     </ItemGrid>
   );
 }

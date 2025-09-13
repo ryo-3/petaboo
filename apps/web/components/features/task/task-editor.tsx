@@ -61,6 +61,10 @@ interface TaskEditorProps {
     originalId: string;
     addedAt: number;
   }>;
+
+  // チーム機能
+  teamMode?: boolean;
+  teamId?: number;
 }
 
 function TaskEditor({
@@ -79,10 +83,15 @@ function TaskEditor({
   preloadedBoards = [],
   preloadedTaggings = [],
   preloadedBoardItems = [],
+  teamMode = false,
+  teamId,
 }: TaskEditorProps) {
-  const updateTask = useUpdateTask();
-  const createTask = useCreateTask();
-  const addItemToBoard = useAddItemToBoard();
+  const updateTask = useUpdateTask({ teamMode, teamId: teamId || undefined });
+  const createTask = useCreateTask({ teamMode, teamId: teamId || undefined });
+  const addItemToBoard = useAddItemToBoard({
+    teamMode,
+    teamId: teamId || undefined,
+  });
   const removeItemFromBoard = useRemoveItemFromBoard();
   const { categories } = useBoardCategories(initialBoardId);
 
@@ -131,11 +140,13 @@ function TaskEditor({
   const { data: liveTaggings } = useTaggings({
     targetType: "task",
     targetOriginalId: originalId || undefined,
+    teamMode, // チームモードでは個人タグを取得しない
   });
 
   // 事前取得されたデータとライブデータを組み合わせて現在のタグを取得
   const currentTags = useMemo(() => {
     if (!task || task.id === 0) return [];
+    if (teamMode) return []; // チームモードではタグを表示しない
     const targetOriginalId = task.originalId || task.id.toString();
 
     // ライブデータがある場合は優先的に使用、なければ事前取得データを使用
@@ -147,7 +158,6 @@ function TaskEditor({
       );
 
     const tags = taggingsToUse.map((t) => t.tag).filter(Boolean) as Tag[];
-
 
     return tags;
   }, [task, liveTaggings, preloadedTaggings]);
@@ -927,10 +937,12 @@ function TaskEditor({
                   iconClassName="size-4 text-gray-600"
                   multiple={true}
                 />
-                <TagTriggerButton
-                  onClick={() => setIsTagModalOpen(true)}
-                  tags={localTags}
-                />
+                {!teamMode && (
+                  <TagTriggerButton
+                    onClick={() => setIsTagModalOpen(true)}
+                    tags={localTags}
+                  />
+                )}
               </div>
               <div className="flex items-center gap-1">
                 {isDeleted && task && (
@@ -1014,7 +1026,7 @@ function TaskEditor({
             onDueDateChange={isDeleted ? () => {} : setDueDate}
             isNewTask={isNewTask}
             customHeight={customHeight}
-            tags={task && task.id !== 0 ? localTags : []}
+            tags={task && task.id !== 0 && !teamMode ? localTags : []}
             boards={task && task.id !== 0 ? itemBoards : []}
             boardCategories={categories}
             showBoardCategory={isFromBoardDetail}
@@ -1072,20 +1084,22 @@ function TaskEditor({
       />
 
       {/* タグ選択モーダル */}
-      <TagSelectionModal
-        isOpen={isTagModalOpen}
-        onClose={() => setIsTagModalOpen(false)}
-        tags={preloadedTags}
-        selectedTagIds={localTags.map((tag) => tag.id)}
-        onSelectionChange={(tagIds) => {
-          const selectedTags = preloadedTags.filter((tag) =>
-            tagIds.includes(tag.id),
-          );
-          setLocalTags(selectedTags);
-        }}
-        mode="selection"
-        multiple={true}
-      />
+      {!teamMode && (
+        <TagSelectionModal
+          isOpen={isTagModalOpen}
+          onClose={() => setIsTagModalOpen(false)}
+          tags={preloadedTags}
+          selectedTagIds={localTags.map((tag) => tag.id)}
+          onSelectionChange={(tagIds) => {
+            const selectedTags = preloadedTags.filter((tag) =>
+              tagIds.includes(tag.id),
+            );
+            setLocalTags(selectedTags);
+          }}
+          mode="selection"
+          multiple={true}
+        />
+      )}
 
       {/* 削除済みタスクの永久削除確認モーダル */}
       {isDeleted && deletedTaskActions && (

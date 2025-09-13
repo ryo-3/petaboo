@@ -244,6 +244,7 @@ function BoardDetailScreen({
     selectedItemsFromList,
     memoItems: [], // ここでは空で、後でuseBoardItemsから取得
     taskItems: [], // ここでは空で、後でuseBoardItemsから取得
+    teamId: teamId?.toString() || undefined,
   });
 
   // ボードアイテムの計算とフィルタリング
@@ -575,6 +576,8 @@ function BoardDetailScreen({
         allBoards={allBoards || []}
         allTaggings={safeAllTaggings as Tagging[]}
         allBoardItems={safeAllBoardItems}
+        teamMode={teamMode}
+        teamId={teamId}
         onClose={
           rightPanelMode
             ? () => handleCloseRightPanel(onClearSelection)

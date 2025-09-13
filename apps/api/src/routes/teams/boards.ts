@@ -421,56 +421,372 @@ export function createTeamBoardsAPI(app: AppType) {
 
       // ボードアイテム一覧取得（メモ・タスク情報も含む）
       const items = await db
-        .select({
-          id: teamBoardItems.id,
-          boardId: teamBoardItems.boardId,
-          itemType: teamBoardItems.itemType,
-          itemId: teamBoardItems.itemId,
-          position: teamBoardItems.position,
-          createdAt: teamBoardItems.createdAt,
-          updatedAt: teamBoardItems.updatedAt,
-          memo: {
-            id: teamMemos.id,
-            title: teamMemos.title,
-            content: teamMemos.content,
-            createdAt: teamMemos.createdAt,
-            updatedAt: teamMemos.updatedAt,
-          },
-          task: {
-            id: teamTasks.id,
-            title: teamTasks.title,
-            description: teamTasks.description,
-            status: teamTasks.status,
-            priority: teamTasks.priority,
-            dueDate: teamTasks.dueDate,
-            createdAt: teamTasks.createdAt,
-            updatedAt: teamTasks.updatedAt,
-          },
-        })
+        .select()
         .from(teamBoardItems)
         .leftJoin(
           teamMemos,
           and(
             eq(teamBoardItems.itemType, "memo"),
-            eq(teamBoardItems.itemId, teamMemos.id),
+            eq(teamBoardItems.originalId, teamMemos.originalId),
           ),
         )
         .leftJoin(
           teamTasks,
           and(
             eq(teamBoardItems.itemType, "task"),
-            eq(teamBoardItems.itemId, teamTasks.id),
+            eq(teamBoardItems.originalId, teamTasks.originalId),
           ),
         )
         .where(eq(teamBoardItems.boardId, parseInt(boardId)))
-        .orderBy(teamBoardItems.position);
+        .orderBy(teamBoardItems.createdAt);
+
+      console.log(
+        `📋 Team Board Items API - teamId:${teamId}, boardId:${boardId}, items count:${items.length}`,
+      );
+      console.log("📋 Board info:", JSON.stringify(board[0], null, 2));
+
+      // フロントエンド用のレスポンス形式に変換（パーソナル用と同じ構造に）
+      const formattedItems = items.map((item) => ({
+        ...item.team_board_items,
+        content: item.team_memos
+          ? {
+              id: item.team_memos.id,
+              title: item.team_memos.title,
+              content: item.team_memos.content,
+              originalId: item.team_memos.originalId,
+              createdAt: item.team_memos.createdAt,
+              updatedAt: item.team_memos.updatedAt,
+            }
+          : item.team_tasks
+            ? {
+                id: item.team_tasks.id,
+                title: item.team_tasks.title,
+                description: item.team_tasks.description,
+                status: item.team_tasks.status,
+                priority: item.team_tasks.priority,
+                dueDate: item.team_tasks.dueDate,
+                originalId: item.team_tasks.originalId,
+                createdAt: item.team_tasks.createdAt,
+                updatedAt: item.team_tasks.updatedAt,
+              }
+            : null,
+      }));
+
+      console.log(
+        "📋 Formatted items preview:",
+        formattedItems.slice(0, 2).map((item) => ({
+          id: item.id,
+          itemType: item.itemType,
+          originalId: item.originalId,
+          memoTitle: item.memo?.title,
+          taskTitle: item.task?.title,
+        })),
+      );
+      console.log(
+        "📋 Full formatted item structure:",
+        JSON.stringify(formattedItems.slice(0, 1), null, 2),
+      );
 
       return c.json({
         board: board[0],
-        items,
+        items: formattedItems,
       });
     } catch (error) {
       console.error("チームボードアイテム取得エラー:", error);
+      return c.json({ error: "サーバーエラーが発生しました" }, 500);
+    }
+  });
+
+  // チームボード削除済みアイテム取得
+  const getTeamBoardDeletedItems = createRoute({
+    method: "get",
+    path: "/{teamId}/boards/{boardId}/deleted-items",
+    request: {
+      param: z.object({
+        teamId: z.string().openapi({ example: "1" }),
+        boardId: z.string().openapi({ example: "1" }),
+      }),
+    },
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              board: z.object({
+                id: z.number(),
+                name: z.string(),
+                slug: z.string(),
+                description: z.string().nullable(),
+                teamId: z.number(),
+                userId: z.string(),
+                boardCategoryId: z.number().nullable(),
+                archived: z.boolean(),
+                completed: z.boolean(),
+                createdAt: z.number(),
+                updatedAt: z.number(),
+              }),
+              deletedItems: z.array(
+                z.object({
+                  id: z.number(),
+                  itemType: z.enum(["memo", "task"]),
+                  itemId: z.number(),
+                  deletedAt: z.number(),
+                  content: z.any(), // メモまたはタスクの内容
+                }),
+              ),
+            }),
+          },
+        },
+        description: "チームボード削除済みアイテム一覧を取得",
+      },
+      404: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+            }),
+          },
+        },
+        description: "ボードが見つかりません",
+      },
+    },
+  });
+
+  app.openapi(getTeamBoardDeletedItems, async (c) => {
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ error: "認証が必要です" }, 401);
+    }
+
+    const { teamId, boardId } = c.req.param();
+    const db = c.get("db");
+
+    try {
+      // チームメンバーかどうか確認
+      const memberCheck = await db
+        .select({ id: teamMembers.id })
+        .from(teamMembers)
+        .where(
+          and(
+            eq(teamMembers.teamId, parseInt(teamId)),
+            eq(teamMembers.userId, auth.userId),
+          ),
+        )
+        .limit(1);
+
+      if (memberCheck.length === 0) {
+        return c.json({ error: "チームメンバーではありません" }, 403);
+      }
+
+      // ボード情報取得
+      const board = await db
+        .select()
+        .from(teamBoards)
+        .where(
+          and(
+            eq(teamBoards.id, parseInt(boardId)),
+            eq(teamBoards.teamId, parseInt(teamId)),
+            eq(teamBoards.archived, false),
+          ),
+        )
+        .limit(1);
+
+      if (board.length === 0) {
+        return c.json({ error: "ボードが見つかりません" }, 404);
+      }
+
+      // チーム用の削除済みアイテムは現在実装されていないため、空配列を返す
+      // 今後必要に応じて teamDeletedBoardItems テーブルを作成して実装する
+      const deletedItems: any[] = [];
+
+      return c.json({
+        board: board[0],
+        deletedItems,
+      });
+    } catch (error) {
+      console.error("チームボード削除済みアイテム取得エラー:", error);
+      return c.json({ error: "サーバーエラーが発生しました" }, 500);
+    }
+  });
+
+  // チームボードアイテム追加
+  const addTeamBoardItem = createRoute({
+    method: "post",
+    path: "/{teamId}/boards/{boardId}/items",
+    request: {
+      param: z.object({
+        teamId: z.string().openapi({ example: "1" }),
+        boardId: z.string().openapi({ example: "1" }),
+      }),
+      body: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              itemType: z.enum(["memo", "task"]).openapi({ example: "memo" }),
+              itemId: z.string().openapi({ example: "1" }),
+            }),
+          },
+        },
+      },
+    },
+    responses: {
+      201: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              id: z.number(),
+              boardId: z.number(),
+              itemType: z.enum(["memo", "task"]),
+              originalId: z.string(),
+              createdAt: z.number(),
+            }),
+          },
+        },
+        description: "チームボードアイテム追加成功",
+      },
+      400: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+            }),
+          },
+        },
+        description: "不正なリクエスト",
+      },
+      403: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+            }),
+          },
+        },
+        description: "チームメンバーではない",
+      },
+      404: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+            }),
+          },
+        },
+        description: "ボードまたはアイテムが見つからない",
+      },
+    },
+  });
+
+  app.openapi(addTeamBoardItem, async (c) => {
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ error: "認証が必要です" }, 401);
+    }
+
+    const { teamId, boardId } = c.req.param();
+    const { itemType, itemId } = await c.req.json();
+    const db = c.get("db");
+
+    try {
+      // チームメンバーかどうか確認
+      const memberCheck = await db
+        .select({ id: teamMembers.id })
+        .from(teamMembers)
+        .where(
+          and(
+            eq(teamMembers.teamId, parseInt(teamId)),
+            eq(teamMembers.userId, auth.userId),
+          ),
+        )
+        .limit(1);
+
+      if (memberCheck.length === 0) {
+        return c.json({ error: "チームメンバーではありません" }, 403);
+      }
+
+      // ボード存在確認
+      const board = await db
+        .select()
+        .from(teamBoards)
+        .where(
+          and(
+            eq(teamBoards.id, parseInt(boardId)),
+            eq(teamBoards.teamId, parseInt(teamId)),
+            eq(teamBoards.archived, false),
+          ),
+        )
+        .limit(1);
+
+      if (board.length === 0) {
+        return c.json({ error: "ボードが見つかりません" }, 404);
+      }
+
+      // アイテム存在確認
+      let originalId: string;
+      if (itemType === "memo") {
+        const memo = await db
+          .select({ originalId: teamMemos.originalId })
+          .from(teamMemos)
+          .where(
+            and(
+              eq(teamMemos.id, parseInt(itemId)),
+              eq(teamMemos.teamId, parseInt(teamId)),
+            ),
+          )
+          .limit(1);
+
+        if (memo.length === 0) {
+          return c.json({ error: "メモが見つかりません" }, 404);
+        }
+        originalId = memo[0].originalId;
+      } else {
+        const task = await db
+          .select({ originalId: teamTasks.originalId })
+          .from(teamTasks)
+          .where(
+            and(
+              eq(teamTasks.id, parseInt(itemId)),
+              eq(teamTasks.teamId, parseInt(teamId)),
+            ),
+          )
+          .limit(1);
+
+        if (task.length === 0) {
+          return c.json({ error: "タスクが見つかりません" }, 404);
+        }
+        originalId = task[0].originalId;
+      }
+
+      // 既に追加されているかチェック
+      const existingItem = await db
+        .select()
+        .from(teamBoardItems)
+        .where(
+          and(
+            eq(teamBoardItems.boardId, parseInt(boardId)),
+            eq(teamBoardItems.originalId, originalId),
+            eq(teamBoardItems.itemType, itemType),
+          ),
+        )
+        .limit(1);
+
+      if (existingItem.length > 0) {
+        return c.json({ error: "アイテムは既にボードに追加されています" }, 400);
+      }
+
+      // ボードアイテム追加
+      const result = await db
+        .insert(teamBoardItems)
+        .values({
+          boardId: parseInt(boardId),
+          itemType: itemType,
+          originalId: originalId,
+        })
+        .returning();
+
+      return c.json(result[0], 201);
+    } catch (error) {
+      console.error("チームボードアイテム追加エラー:", error);
       return c.json({ error: "サーバーエラーが発生しました" }, 500);
     }
   });

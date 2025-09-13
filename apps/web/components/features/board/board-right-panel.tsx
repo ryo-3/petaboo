@@ -36,6 +36,9 @@ interface BoardRightPanelProps {
     originalId: string;
     addedAt: number;
   }>; // 全ボードアイテム情報
+  // チーム機能関連
+  teamMode?: boolean;
+  teamId?: number | null;
   onClose: () => void;
   onSelectMemo?: (memo: Memo) => void;
   onSelectTask?: (task: Task) => void;
@@ -61,6 +64,8 @@ export default function BoardRightPanel({
   allBoards,
   allTaggings,
   allBoardItems,
+  teamMode = false,
+  teamId = null,
   onClose,
   onSelectMemo,
   onSelectTask,
@@ -225,6 +230,8 @@ export default function BoardRightPanel({
                 }
               }}
               initialBoardId={boardId}
+              teamMode={teamMode}
+              teamId={teamId || undefined}
               preloadedTags={tags || []}
               preloadedBoards={allBoards || []}
               preloadedTaggings={allTaggings || []}
@@ -234,6 +241,8 @@ export default function BoardRightPanel({
             <MemoEditor
               memo={selectedMemo}
               initialBoardId={boardId}
+              teamMode={teamMode}
+              teamId={teamId || undefined}
               preloadedTags={tags || []}
               preloadedBoards={allBoards || []}
               preloadedTaggings={allTaggings || []}
@@ -270,6 +279,8 @@ export default function BoardRightPanel({
               task={selectedTask}
               initialBoardId={boardId}
               isFromBoardDetail={true}
+              teamMode={teamMode}
+              teamId={teamId || undefined}
               preloadedTags={tags || []}
               preloadedBoards={allBoards || []}
               preloadedTaggings={allTaggings || []}
@@ -293,6 +304,8 @@ export default function BoardRightPanel({
               task={selectedTask}
               initialBoardId={boardId}
               isFromBoardDetail={true}
+              teamMode={teamMode}
+              teamId={teamId || undefined}
               preloadedTags={tags || []}
               preloadedBoards={allBoards || []}
               preloadedTaggings={allTaggings || []}

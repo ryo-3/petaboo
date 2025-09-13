@@ -15,6 +15,7 @@ import teamsRoute from "./src/routes/teams/route";
 import teamMemosRoute from "./src/routes/teams/memos";
 import teamTasksRoute from "./src/routes/teams/tasks";
 import teamShareRoute from "./src/routes/teams/share";
+import teamBoardsRoute from "./src/routes/teams/boards-route";
 import clerkWebhook from "./src/routes/webhooks/clerk";
 import usersRoute from "./src/routes/users/route";
 
@@ -57,6 +58,7 @@ app.route("/teams", teamsRoute);
 app.route("/teams", teamMemosRoute);
 app.route("/teams", teamTasksRoute);
 app.route("/teams", teamShareRoute);
+app.route("/teams", teamBoardsRoute);
 app.route("/webhooks/clerk", clerkWebhook);
 app.route("/users", usersRoute);
 app.get("/openapi", (c) => {

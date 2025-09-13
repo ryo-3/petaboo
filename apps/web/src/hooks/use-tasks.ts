@@ -43,21 +43,40 @@ export function useTasks(options?: { teamMode?: boolean; teamId?: number }) {
 }
 
 // タスク作成hook
-export function useCreateTask() {
+export function useCreateTask(options?: {
+  teamMode?: boolean;
+  teamId?: number;
+}) {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
   const { showToast } = useToast();
+  const { teamMode = false, teamId } = options || {};
 
   return useMutation({
     mutationFn: async (data: CreateTaskData) => {
       const token = await getToken();
-      const response = await tasksApi.createTask(data, token || undefined);
-      const result = await response.json();
-      return result;
+      if (teamMode && teamId) {
+        // チーム用のAPIエンドポイント
+        const response = await tasksApi.createTeamTask(
+          teamId,
+          data,
+          token || undefined,
+        );
+        const result = await response.json();
+        return result;
+      } else {
+        const response = await tasksApi.createTask(data, token || undefined);
+        const result = await response.json();
+        return result;
+      }
     },
     onSuccess: () => {
       // APIが不完全なデータしか返さないため、タスク一覧を無効化して再取得
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      if (teamMode && teamId) {
+        queryClient.invalidateQueries({ queryKey: ["team-tasks", teamId] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      }
 
       // ボード統計の再計算のためボード一覧を無効化
       queryClient.invalidateQueries({ queryKey: ["boards"] });
@@ -70,21 +89,42 @@ export function useCreateTask() {
 }
 
 // タスク更新hook
-export function useUpdateTask() {
+export function useUpdateTask(options?: {
+  teamMode?: boolean;
+  teamId?: number;
+}) {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
   const { showToast } = useToast();
+  const { teamMode = false, teamId } = options || {};
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: number; data: UpdateTaskData }) => {
       const token = await getToken();
-      const response = await tasksApi.updateTask(id, data, token || undefined);
-      const result = await response.json();
-      return result;
+      if (teamMode && teamId) {
+        // チーム用のAPIエンドポイント
+        const response = await tasksApi.updateTeamTask(
+          teamId,
+          id,
+          data,
+          token || undefined,
+        );
+        const result = await response.json();
+        return result;
+      } else {
+        const response = await tasksApi.updateTask(
+          id,
+          data,
+          token || undefined,
+        );
+        const result = await response.json();
+        return result;
+      }
     },
     onSuccess: (updatedTask, { id, data }) => {
       // APIが不完全なレスポンスを返す場合があるので、キャッシュから既存タスクを取得して更新
-      queryClient.setQueryData<Task[]>(["tasks"], (oldTasks) => {
+      const queryKey = teamMode && teamId ? ["team-tasks", teamId] : ["tasks"];
+      queryClient.setQueryData<Task[]>(queryKey, (oldTasks) => {
         if (!oldTasks) return [updatedTask];
         return oldTasks.map((task) => {
           if (task.id === id) {

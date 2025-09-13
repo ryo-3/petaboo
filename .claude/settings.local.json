@@ -82,7 +82,14 @@
       "Bash(echo:*)",
       "Bash(printf:*)",
       "Bash(git grep:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(source ~/.bashrc)",
+      "Bash(unset LC_ALL)",
+      "Bash(unset LANG)",
+      "Bash(export LANG=C.UTF-8)",
+      "Bash(apitest \"/teams/1/boards/1/items\" \"GET\")",
+      "Bash(apitest \"/boards/1/items\" \"GET\")",
+      "Bash(apitest \"/teams/moricrew/boards/1/items\" \"GET\")"
     ],
     "deny": []
   }

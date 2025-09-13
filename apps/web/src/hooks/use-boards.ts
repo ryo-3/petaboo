@@ -113,25 +113,30 @@ export function useBoards(
 export function useBoardWithItems(
   boardId: number | null,
   skip: boolean = false,
+  teamId?: string | null,
 ) {
   const { getToken, isLoaded } = useAuth();
 
   return useQuery<BoardWithItems>(
-    ["boards", boardId, "items"],
+    teamId
+      ? ["team-boards", teamId, boardId, "items"]
+      : ["boards", boardId, "items"],
     async () => {
       // 最大2回リトライ
       for (let attempt = 0; attempt < 2; attempt++) {
         const token = await getCachedToken(getToken);
 
-        const response = await fetch(
-          `${API_BASE_URL}/boards/${boardId}/items`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              ...(token && { Authorization: `Bearer ${token}` }),
-            },
+        // チーム用かパーソナル用かでAPIエンドポイントを切り替え
+        const apiUrl = teamId
+          ? `${API_BASE_URL}/teams/${teamId}/boards/${boardId}/items`
+          : `${API_BASE_URL}/boards/${boardId}/items`;
+
+        const response = await fetch(apiUrl, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
           },
-        );
+        });
 
         // 401エラーの場合はキャッシュをクリアしてリトライ
         if (response.status === 401 && attempt === 0) {
@@ -474,10 +479,14 @@ export function usePermanentDeleteBoard() {
 }
 
 // ボードにアイテム追加
-export function useAddItemToBoard() {
+export function useAddItemToBoard(options?: {
+  teamMode?: boolean;
+  teamId?: number;
+}) {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
   const { showToast } = useToast();
+  const { teamMode = false, teamId } = options || {};
 
   return useMutation<
     BoardItem,
@@ -488,17 +497,21 @@ export function useAddItemToBoard() {
       // 最大2回リトライ
       for (let attempt = 0; attempt < 2; attempt++) {
         const token = await getCachedToken(getToken);
-        const response = await fetch(
-          `${API_BASE_URL}/boards/${boardId}/items`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              ...(token && { Authorization: `Bearer ${token}` }),
-            },
-            body: JSON.stringify(data),
+
+        // チームモードとそうでない場合でAPIエンドポイントを分ける
+        const url =
+          teamMode && teamId
+            ? `${API_BASE_URL}/teams/${teamId}/boards/${boardId}/items`
+            : `${API_BASE_URL}/boards/${boardId}/items`;
+
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
           },
-        );
+          body: JSON.stringify(data),
+        });
 
         // 401エラーの場合はキャッシュをクリアしてリトライ
         if (response.status === 401 && attempt === 0) {
@@ -530,7 +543,15 @@ export function useAddItemToBoard() {
       const itemType = newItem.itemType || data.itemType;
 
       // 特定のボードのアイテムキャッシュを無効化（新しいアイテムが追加されるため）
-      queryClient.invalidateQueries({ queryKey: ["boards", boardId, "items"] });
+      if (teamMode && teamId) {
+        queryClient.invalidateQueries({
+          queryKey: ["team-boards", teamId, boardId, "items"],
+        });
+      } else {
+        queryClient.invalidateQueries({
+          queryKey: ["boards", boardId, "items"],
+        });
+      }
       // アイテムのボード情報も無効化（originalIdベース） - 確実に更新
       queryClient.invalidateQueries({
         queryKey: ["item-boards", itemType, itemId],
@@ -681,25 +702,29 @@ export function useItemBoards(
 }
 
 // ボード固有の削除済みアイテムを取得
-export function useBoardDeletedItems(boardId: number) {
+export function useBoardDeletedItems(boardId: number, teamId?: string | null) {
   const { getToken, isLoaded } = useAuth();
 
   return useQuery<{ memos: DeletedMemo[]; tasks: DeletedTask[] }>(
-    ["board-deleted-items", boardId],
+    teamId
+      ? ["team-board-deleted-items", teamId, boardId]
+      : ["board-deleted-items", boardId],
     async () => {
       // 最大2回リトライ
       for (let attempt = 0; attempt < 2; attempt++) {
         const token = await getCachedToken(getToken);
 
-        const response = await fetch(
-          `${API_BASE_URL}/boards/${boardId}/deleted-items`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              ...(token && { Authorization: `Bearer ${token}` }),
-            },
+        // チーム用かパーソナル用かでAPIエンドポイントを切り替え
+        const apiUrl = teamId
+          ? `${API_BASE_URL}/teams/${teamId}/boards/${boardId}/deleted-items`
+          : `${API_BASE_URL}/boards/${boardId}/deleted-items`;
+
+        const response = await fetch(apiUrl, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
           },
-        );
+        });
 
         // 401エラーの場合はキャッシュをクリアしてリトライ
         if (response.status === 401 && attempt === 0) {

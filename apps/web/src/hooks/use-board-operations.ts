@@ -36,6 +36,7 @@ interface UseBoardOperationsProps {
   selectedItemsFromList: Set<number>;
   memoItems: BoardItemWithContent[];
   taskItems: BoardItemWithContent[];
+  teamId?: string | null;
 }
 
 interface UseBoardOperationsReturn {
@@ -88,19 +89,20 @@ export function useBoardOperations({
   selectedItemsFromList,
   memoItems,
   taskItems,
+  teamId,
 }: UseBoardOperationsProps): UseBoardOperationsReturn {
   // データ取得
   const {
     data: boardWithItems,
     isLoading,
     error,
-  } = useBoardWithItems(boardId) as {
+  } = useBoardWithItems(boardId, false, teamId) as {
     data: BoardWithItems | undefined;
     isLoading: boolean;
     error: Error | null;
   };
   const { data: boardDeletedItems, refetch: refetchDeletedItems } =
-    useBoardDeletedItems(boardId);
+    useBoardDeletedItems(boardId, teamId);
 
   const removeItemFromBoard = useRemoveItemFromBoard();
   const addItemToBoard = useAddItemToBoard();

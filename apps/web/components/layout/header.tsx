@@ -50,21 +50,22 @@ function Header() {
       if (personalNotifier.data?.hasUpdates) {
         personalNotifier.markAsRead();
       }
-    } else if (teamName && teamNotifier.data?.hasUpdates) {
-      // チーム申請通知を既読にする
-      const readKey = `teamNotificationRead_${teamName}`;
-      localStorage.setItem(readKey, new Date().toISOString());
-      console.log(`🔔 通知を既読にしました: ${teamName}`);
+    } else if (teamName) {
+      // チーム通知を既読にする（通知がない場合でも実行）
+      if (teamNotifier.data?.hasUpdates) {
+        const readKey = `teamNotificationRead_${teamName}`;
+        localStorage.setItem(readKey, new Date().toISOString());
 
-      // 通知チェックを再実行して即座に反映
-      if (teamNotifier.checkNow) {
-        teamNotifier.checkNow();
+        // 通知チェックを再実行して即座に反映
+        if (teamNotifier.checkNow) {
+          teamNotifier.checkNow();
+        }
       }
 
-      // チームページでホームタブに切り替え
+      // チームページでホームタブに切り替え（通知の有無に関係なく実行）
       if (pathname.startsWith("/team/")) {
         const baseTeamUrl = `/team/${teamName}`;
-        router.push(baseTeamUrl);
+        router.replace(baseTeamUrl);
       }
     }
   };

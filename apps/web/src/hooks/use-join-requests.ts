@@ -24,12 +24,12 @@ export function useJoinRequests(
   // バックグラウンドまたは通知なしの場合は完全無効化
   const shouldFetch = hasNotifications && isVisible;
 
-  // 間隔計算（シンプル版）
-  const refetchInterval = shouldFetch ? 10000 : false;
+  // 通知がある時のみ取得（定期チェックは不要）
+  const refetchInterval = false;
 
   // デバッグログ
   // console.log(
-  //   `🎯 [useJoinRequests] ${customUrl}: shouldFetch=${shouldFetch}, refetchInterval=${refetchInterval}`,
+  //   `🎯 [useJoinRequests] ${customUrl}: shouldFetch=${shouldFetch}, 定期チェック無効`,
   // );
 
   return useQuery({

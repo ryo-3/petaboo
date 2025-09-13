@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface SimpleNotifierResult {
   hasUpdates: boolean; // ヘッダーバッジ用（既読後はfalse）
@@ -22,11 +23,17 @@ interface SimpleNotifierResult {
  * 特定チーム向けのシンプルな通知チェッカー
  * path:/team/moricrew の時に moricrew の申請をチェック
  */
+interface NotifierOptions {
+  onUpdate?: (data: SimpleNotifierResult) => void;
+}
+
 export function useSimpleTeamNotifier(
   teamName?: string,
   isVisible: boolean = true,
+  options?: NotifierOptions,
 ) {
   const { getToken } = useAuth();
+  const queryClient = useQueryClient();
   const [data, setData] = useState<SimpleNotifierResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,6 +81,11 @@ export function useSimpleTeamNotifier(
             isAlreadyRead,
           },
         });
+
+        // 通知があった場合、join-requestsクエリを無効化
+        if (hasUpdates && teamName) {
+          queryClient.invalidateQueries(["join-requests", teamName]);
+        }
       }
     } catch (err) {
       console.error("手動チェックエラー:", err);
@@ -154,6 +166,16 @@ export function useSimpleTeamNotifier(
         // }
         setData(result);
         setError(null);
+
+        // 通知があった場合、join-requestsクエリを無効化してリフレッシュ
+        if (result.hasNotifications && teamName) {
+          queryClient.invalidateQueries(["join-requests", teamName]);
+        }
+
+        // コールバック実行
+        if (options?.onUpdate) {
+          options.onUpdate(result);
+        }
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : "Unknown error";
         console.error(`❌ 通知チェックエラー [${teamName}]:`, errorMsg);
@@ -177,7 +199,7 @@ export function useSimpleTeamNotifier(
       // console.log(`⏹️ 通知チェック停止: ${teamName}`);
       if (interval) clearInterval(interval);
     };
-  }, [teamName, getToken, isVisible]);
+  }, [teamName, getToken, isVisible, queryClient, options]);
 
   return {
     data,

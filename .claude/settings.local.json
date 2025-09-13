@@ -80,7 +80,9 @@
       "Read(//home/**)",
       "Bash(xargs -r kill -9)",
       "Bash(echo:*)",
-      "Bash(printf:*)"
+      "Bash(printf:*)",
+      "Bash(git grep:*)",
+      "Bash(git reset:*)"
     ],
     "deny": []
   }

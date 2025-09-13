@@ -486,19 +486,22 @@ export function useRestoreMemo(options?: {
 
       if (teamMode && teamId) {
         console.log(`📋 チームメモ復元キャッシュ更新開始: teamId=${teamId}`);
-        // チームメモ復元時のキャッシュ無効化
+        // チームメモ復元時のキャッシュ無効化と強制再取得
         queryClient.invalidateQueries({ queryKey: ["team-memos", teamId] });
+        queryClient.refetchQueries({ queryKey: ["team-memos", teamId] });
         queryClient.invalidateQueries({
           queryKey: ["team-deleted-memos", teamId],
         });
-        // チームボード関連のキャッシュ無効化
-        queryClient.invalidateQueries({ queryKey: ["team-boards", teamId] });
-        queryClient.invalidateQueries({
-          queryKey: ["team-board-items", teamId],
-        });
-        queryClient.invalidateQueries({
-          queryKey: ["team-board-deleted-items"],
-          exact: false,
+        // チームボード関連のキャッシュを強制再取得（復元されたメモを即座に反映）
+        queryClient.refetchQueries({
+          predicate: (query) => {
+            const key = query.queryKey as string[];
+            return (
+              key[0] === "team-boards" &&
+              key[1] === teamId.toString() &&
+              key[3] === "items"
+            );
+          },
         });
         // 特定のボードの削除済みアイテムも明示的に無効化
         if (boardId) {

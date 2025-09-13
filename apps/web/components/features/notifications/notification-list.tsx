@@ -28,22 +28,17 @@ function NotificationList({
   className = "",
   notificationType = "team_requests",
 }: NotificationListProps) {
-  const { isVisible, isMouseActive } = usePageVisibility();
+  const { isVisible } = usePageVisibility();
   const router = useRouter();
 
   // チーム通知を取得（チーム名が指定されている場合のみ）
-  const teamNotifier = useSimpleTeamNotifier(
-    teamName,
-    isVisible,
-    isMouseActive,
-  );
+  const teamNotifier = useSimpleTeamNotifier(teamName, isVisible);
 
   // 申請詳細データを取得
   const joinRequests = useJoinRequests(
     teamName,
     teamNotifier.data?.hasNotifications,
     isVisible,
-    isMouseActive,
   );
 
   // 承認申請は処理するまで表示し続ける（既読システムは使わない）

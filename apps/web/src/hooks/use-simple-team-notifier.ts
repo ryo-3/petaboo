@@ -25,7 +25,6 @@ interface SimpleNotifierResult {
 export function useSimpleTeamNotifier(
   teamName?: string,
   isVisible: boolean = true,
-  isMouseActive: boolean = true,
 ) {
   const { getToken } = useAuth();
   const [data, setData] = useState<SimpleNotifierResult | null>(null);
@@ -85,19 +84,15 @@ export function useSimpleTeamNotifier(
   useEffect(() => {
     if (!teamName) return;
 
-    // チェック間隔を決定（段階的最適化）
-    const checkInterval = isVisible
-      ? isMouseActive === true
-        ? 10000 // アクティブ: 10秒
-        : 30000 // 非アクティブ: 30秒（デフォルト）
-      : null; // バックグラウンド: 停止
+    // チェック間隔を決定（シンプル版）
+    const checkInterval = isVisible ? 10000 : null; // アクティブ: 10秒, バックグラウンド: 停止
 
     // console.log(`🎯 チーム切り替え検知: ${teamName}`);
     // console.log(
     //   `🚀 通知チェック開始: ${teamName} (${checkInterval ? `${checkInterval / 1000}秒間隔` : "停止"})`,
     // );
     // console.log(
-    //   `🔍 [useSimpleTeamNotifier] isVisible: ${isVisible}, isMouseActive: ${isMouseActive}`,
+    //   `🔍 [useSimpleTeamNotifier] isVisible: ${isVisible}`,
     // );
 
     // 共通のチェック関数
@@ -182,7 +177,7 @@ export function useSimpleTeamNotifier(
       // console.log(`⏹️ 通知チェック停止: ${teamName}`);
       if (interval) clearInterval(interval);
     };
-  }, [teamName, getToken, isVisible, isMouseActive]);
+  }, [teamName, getToken, isVisible]);
 
   return {
     data,

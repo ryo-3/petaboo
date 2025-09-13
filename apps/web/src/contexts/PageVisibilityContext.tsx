@@ -30,8 +30,8 @@ export function PageVisibilityProvider({ children }: { children: ReactNode }) {
       const visible = !document.hidden;
       setIsVisible(visible);
 
-      const status = visible ? "アクティブ" : "バックグラウンド";
-      const timestamp = new Date().toLocaleTimeString();
+      // const status = visible ? "アクティブ" : "バックグラウンド";
+      // const timestamp = new Date().toLocaleTimeString();
       // console.log(`👁️ [${timestamp}] [Context] ページ状態変更: ${status}`);
 
       // if (!visible) {

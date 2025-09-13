@@ -30,11 +30,7 @@ function Header() {
   // );
 
   // チーム専用通知（チームページでのみ使用）
-  const teamNotifier = useSimpleTeamNotifier(
-    teamName,
-    isVisible,
-    isMouseActive,
-  );
+  const teamNotifier = useSimpleTeamNotifier(teamName, isVisible);
 
   // 個人用通知（個人ホームページでのみ使用）
   const personalNotifier = usePersonalNotifier();

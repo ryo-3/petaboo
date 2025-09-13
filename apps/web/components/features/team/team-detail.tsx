@@ -47,127 +47,12 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   const searchParams = useSearchParams();
   const { data: team, isLoading, error } = useTeamDetail(customUrl);
 
-  // 🛡️ ページ可視性&マウス状態をContextから取得
-  const { isVisible: isPageVisible, isMouseActive } = usePageVisibility();
+  // 🛡️ ページ可視性をContextから取得
+  const { isVisible: isPageVisible } = usePageVisibility();
 
   // 通知状態をチェック（承認待ちリスト表示制御用）
   const { data: notificationData, checkNow: recheckNotifications } =
-    useSimpleTeamNotifier(customUrl, isPageVisible, isMouseActive);
-
-  // 🖱️ マウス活動監視テスト
-  useEffect(() => {
-    let isMouseInPage = true;
-    let lastActivity = Date.now();
-    let activityLevel: "active" | "idle5m" | "idle10m" = "active";
-
-    const updateTimestamp = () => new Date().toLocaleTimeString();
-
-    // マウス位置監視
-    const handleMouseEnter = () => {
-      if (!isMouseInPage) {
-        isMouseInPage = true;
-        // console.log(
-        //   `🖱️ [${updateTimestamp()}] マウス復帰: ページ内 (${customUrl})`,
-        // );
-      }
-    };
-
-    const handleMouseLeave = () => {
-      if (isMouseInPage) {
-        isMouseInPage = false;
-        // console.log(
-        //   `🖱️ [${updateTimestamp()}] マウス離脱: ページ外 (${customUrl})`,
-        // );
-      }
-    };
-
-    // ユーザー活動監視（軽量版）
-    const handleUserActivity = (eventType: string) => {
-      const now = Date.now();
-      const inactiveDuration = now - lastActivity;
-      lastActivity = now;
-
-      // 活動レベル判定
-      const newLevel = "active";
-      if (newLevel !== activityLevel) {
-        activityLevel = newLevel;
-        // console.log(
-        //   `⚡ [${updateTimestamp()}] 活動レベル変更: ${activityLevel} (${eventType}) (${customUrl})`,
-        // );
-      }
-
-      // 長時間無操作からの復帰時のみログ出力
-      if (inactiveDuration > 60000) {
-        // 1分以上無操作
-        // console.log(
-        //   `🔄 [${updateTimestamp()}] ユーザー活動復帰: ${Math.round(inactiveDuration / 1000)}秒後 (${eventType}) (${customUrl})`,
-        // );
-      }
-    };
-
-    // 活動レベル定期チェック（パフォーマンス配慮で30秒間隔）
-    const activityChecker = setInterval(() => {
-      const now = Date.now();
-      const inactiveDuration = now - lastActivity;
-      const oldLevel = activityLevel;
-
-      if (inactiveDuration > 600000) {
-        // 10分以上
-        activityLevel = "idle10m";
-      } else if (inactiveDuration > 300000) {
-        // 5分以上
-        activityLevel = "idle5m";
-      } else {
-        activityLevel = "active";
-      }
-
-      if (oldLevel !== activityLevel) {
-        // console.log(
-        //   `📊 [${updateTimestamp()}] 活動レベル自動更新: ${oldLevel} → ${activityLevel} (無操作${Math.round(inactiveDuration / 1000)}秒) (${customUrl})`,
-        // );
-      }
-    }, 30000);
-
-    // 初期状態ログ
-    // console.log(`🖱️ [初期化] マウス監視開始 (${customUrl})`);
-
-    // イベントリスナー登録（パフォーマンス配慮でthrottling）
-    let throttleTimer: NodeJS.Timeout | null = null;
-    const throttledActivity = (eventType: string) => {
-      if (!throttleTimer) {
-        handleUserActivity(eventType);
-        throttleTimer = setTimeout(() => {
-          throttleTimer = null;
-        }, 1000); // 1秒間隔でthrottle
-      }
-    };
-
-    document.addEventListener("mouseenter", handleMouseEnter);
-    document.addEventListener("mouseleave", handleMouseLeave);
-    document.addEventListener("mousemove", () =>
-      throttledActivity("mousemove"),
-    );
-    document.addEventListener("keydown", () => throttledActivity("keydown"));
-    document.addEventListener("scroll", () => throttledActivity("scroll"), {
-      passive: true,
-    });
-
-    return () => {
-      // console.log(`🖱️ [クリーンアップ] マウス監視終了 (${customUrl})`);
-      clearInterval(activityChecker);
-      if (throttleTimer) clearTimeout(throttleTimer);
-
-      document.removeEventListener("mouseenter", handleMouseEnter);
-      document.removeEventListener("mouseleave", handleMouseLeave);
-      document.removeEventListener("mousemove", () =>
-        throttledActivity("mousemove"),
-      );
-      document.removeEventListener("keydown", () =>
-        throttledActivity("keydown"),
-      );
-      document.removeEventListener("scroll", () => throttledActivity("scroll"));
-    };
-  }, [customUrl]);
+    useSimpleTeamNotifier(customUrl, isPageVisible);
 
   const { data: userInfo } = useUserInfo();
   const { data: existingInviteUrl, isLoading: isLoadingInviteUrl } =
@@ -181,7 +66,6 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       customUrl,
       notificationData?.hasNotifications, // 通知システムから実際の値を使用
       isPageVisible, // ページ可視性
-      isMouseActive, // マウス活動状態
     );
   const {
     approve,

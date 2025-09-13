@@ -446,32 +446,37 @@ export function createTeamBoardsAPI(app: AppType) {
       console.log("📋 Board info:", JSON.stringify(board[0], null, 2));
 
       // フロントエンド用のレスポンス形式に変換（パーソナル用と同じ構造に）
-      const formattedItems = items.map((item) => ({
-        ...item.team_board_items,
-        content: item.team_memos
-          ? {
-              id: item.team_memos.id,
-              title: item.team_memos.title,
-              content: item.team_memos.content,
-              originalId: item.team_memos.originalId,
-              createdAt: item.team_memos.createdAt,
-              updatedAt: item.team_memos.updatedAt,
-            }
-          : item.team_tasks
+      const formattedItems = items
+        .map((item) => ({
+          ...item.team_board_items,
+          content: item.team_memos
             ? {
-                id: item.team_tasks.id,
-                title: item.team_tasks.title,
-                description: item.team_tasks.description,
-                status: item.team_tasks.status,
-                priority: item.team_tasks.priority,
-                dueDate: item.team_tasks.dueDate,
-                originalId: item.team_tasks.originalId,
-                createdAt: item.team_tasks.createdAt,
-                updatedAt: item.team_tasks.updatedAt,
+                id: item.team_memos.id,
+                title: item.team_memos.title,
+                content: item.team_memos.content,
+                originalId: item.team_memos.originalId,
+                createdAt: item.team_memos.createdAt,
+                updatedAt: item.team_memos.updatedAt,
               }
-            : null,
-      }));
+            : item.team_tasks
+              ? {
+                  id: item.team_tasks.id,
+                  title: item.team_tasks.title,
+                  description: item.team_tasks.description,
+                  status: item.team_tasks.status,
+                  priority: item.team_tasks.priority,
+                  dueDate: item.team_tasks.dueDate,
+                  originalId: item.team_tasks.originalId,
+                  createdAt: item.team_tasks.createdAt,
+                  updatedAt: item.team_tasks.updatedAt,
+                }
+              : null,
+        }))
+        .filter((item) => item.content !== null); // contentがnullのアイテムを除外
 
+      console.log(
+        `🔍 アイテムフィルタリング結果: ${items.length} → ${formattedItems.length}`,
+      );
       console.log(
         "📋 Formatted items preview:",
         formattedItems.slice(0, 2).map((item) => ({

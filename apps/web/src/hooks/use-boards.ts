@@ -122,14 +122,22 @@ export function useBoardWithItems(
       ? ["team-boards", teamId, boardId, "items"]
       : ["boards", boardId, "items"],
     async () => {
+      // チーム用かパーソナル用かでAPIエンドポイントを切り替え
+      const apiUrl = teamId
+        ? `${API_BASE_URL}/teams/${teamId}/boards/${boardId}/items`
+        : `${API_BASE_URL}/boards/${boardId}/items`;
+
+      console.log(
+        `🌐 ボードアイテム取得開始: ${apiUrl}, teamId=${teamId}, boardId=${boardId}`,
+      );
+      console.log(
+        `🔍 QueryKey: ${JSON.stringify(teamId ? ["team-boards", teamId, boardId, "items"] : ["boards", boardId, "items"])}`,
+      );
+      console.log(`⏰ 実行時刻: ${new Date().toISOString()}`);
+
       // 最大2回リトライ
       for (let attempt = 0; attempt < 2; attempt++) {
         const token = await getCachedToken(getToken);
-
-        // チーム用かパーソナル用かでAPIエンドポイントを切り替え
-        const apiUrl = teamId
-          ? `${API_BASE_URL}/teams/${teamId}/boards/${boardId}/items`
-          : `${API_BASE_URL}/boards/${boardId}/items`;
 
         const response = await fetch(apiUrl, {
           headers: {
@@ -137,6 +145,9 @@ export function useBoardWithItems(
             ...(token && { Authorization: `Bearer ${token}` }),
           },
         });
+        console.log(
+          `📡 ボードアイテム取得レスポンス: status=${response.status}, url=${apiUrl}`,
+        );
 
         // 401エラーの場合はキャッシュをクリアしてリトライ
         if (response.status === 401 && attempt === 0) {
@@ -154,6 +165,24 @@ export function useBoardWithItems(
         }
 
         const data = await response.json();
+        console.log(
+          `📊 ボードアイテムデータ受信: items数=${data.items?.length || 0}, boardId=${boardId}`,
+        );
+        console.log(`🎯 最新データ取得完了時刻: ${new Date().toISOString()}`);
+        if (data.items?.length > 0) {
+          console.log(
+            `📝 アイテムID一覧:`,
+            data.items.map(
+              (item: any) =>
+                `${item.itemType}:${item.content?.id || item.itemId}`,
+            ),
+          );
+          // 最新のアイテムを表示（作成されたばかりのアイテムを確認）
+          const latestItem = data.items[data.items.length - 1];
+          console.log(
+            `🆕 最新アイテム: ${latestItem.itemType}:${latestItem.content?.id}, title=${latestItem.content?.title}`,
+          );
+        }
 
         return {
           ...data.board,

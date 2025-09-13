@@ -226,6 +226,7 @@ function MemoStatusDisplay({
   }, [filteredMemos, allTaggings, allBoardItems, allTags, allBoards]);
 
   const getSortValue = (memo: Memo, sortId: string): number => {
+    if (!memo) return 0;
     switch (sortId) {
       case "createdAt":
         return memo.createdAt;
@@ -238,6 +239,7 @@ function MemoStatusDisplay({
 
   const getDefaultSortValue = (memo: Memo): number => {
     // デフォルトは更新日順（新しい順）
+    if (!memo) return 0;
     return memo.updatedAt || memo.createdAt;
   };
 
@@ -333,6 +335,7 @@ export function DeletedMemoDisplay({
   allBoardItems = [],
 }: DeletedMemoDisplayProps) {
   const getSortValue = (memo: DeletedMemo, sortId: string): number => {
+    if (!memo) return 0;
     switch (sortId) {
       case "createdAt":
         return memo.createdAt;
@@ -347,6 +350,7 @@ export function DeletedMemoDisplay({
 
   const getDefaultSortValue = (memo: DeletedMemo): number => {
     // デフォルトは削除日順（新しい順）
+    if (!memo) return 0;
     return memo.deletedAt;
   };
 

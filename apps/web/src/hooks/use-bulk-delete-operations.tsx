@@ -23,6 +23,8 @@ interface UseBulkDeleteOperationsProps {
   checkedInProgressTasks: Set<string | number>;
   checkedCompletedTasks: Set<string | number>;
   checkedDeletedTasks: Set<string | number>;
+  teamMode?: boolean;
+  teamId?: number;
 }
 
 interface UseBulkDeleteOperationsReturn {
@@ -73,6 +75,8 @@ export function useBulkDeleteOperations({
   checkedInProgressTasks,
   checkedCompletedTasks,
   checkedDeletedTasks,
+  teamMode = false,
+  teamId,
 }: UseBulkDeleteOperationsProps): UseBulkDeleteOperationsReturn {
   const [isMemoDeleting, setIsMemoDeleting] = useState(false);
   const [isMemoLidOpen, setIsMemoLidOpen] = useState(false);
@@ -98,8 +102,14 @@ export function useBulkDeleteOperations({
 
   // 削除関連のフック
   const bulkDelete = useBulkDelete();
-  const deleteMemoMutation = useDeleteMemo();
-  const deleteTaskMutation = useDeleteTask();
+  const deleteMemoMutation = useDeleteMemo({
+    teamMode,
+    teamId,
+  });
+  const deleteTaskMutation = useDeleteTask({
+    teamMode,
+    teamId,
+  });
   const removeItemFromBoard = useRemoveItemFromBoard();
 
   // メモの削除確認メッセージ生成

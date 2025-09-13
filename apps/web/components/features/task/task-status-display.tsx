@@ -225,6 +225,7 @@ function TaskStatusDisplay({
   };
 
   const getSortValue = (task: Task, sortId: string): number => {
+    if (!task) return 0;
     switch (sortId) {
       case "priority": {
         const priorityOrder = { high: 3, medium: 2, low: 1 };
@@ -243,6 +244,7 @@ function TaskStatusDisplay({
 
   const getDefaultSortValue = (task: Task): number => {
     // デフォルトは優先度 > 更新日 > 作成日順
+    if (!task) return 0;
     const priorityOrder = { high: 3, medium: 2, low: 1 };
     const priorityValue = priorityOrder[task.priority] * 1000000000; // 優先度を大きな重みで乗算
     const timeValue = task.updatedAt || task.createdAt;
@@ -345,6 +347,7 @@ export function DeletedTaskDisplay({
   allBoardItems = [],
 }: DeletedTaskDisplayProps) {
   const getSortValue = (task: DeletedTask, sortId: string): number => {
+    if (!task) return 0;
     switch (sortId) {
       case "priority": {
         const priorityOrder: Record<string, number> = {
@@ -367,6 +370,7 @@ export function DeletedTaskDisplay({
 
   const getDefaultSortValue = (task: DeletedTask): number => {
     // デフォルトは削除日順（新しい順）
+    if (!task) return 0;
     return task.deletedAt;
   };
 

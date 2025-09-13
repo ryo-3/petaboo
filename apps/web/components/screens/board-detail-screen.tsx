@@ -178,6 +178,8 @@ function BoardDetailScreen({
     checkedInProgressTasks,
     checkedCompletedTasks,
     checkedDeletedTasks,
+    teamMode,
+    teamId: teamId || undefined,
   });
 
   // タブテキスト表示制御

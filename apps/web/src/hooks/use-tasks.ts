@@ -163,28 +163,64 @@ export function useUpdateTask(options?: {
 }
 
 // タスク削除hook
-export function useDeleteTask() {
+export function useDeleteTask(options?: {
+  teamMode?: boolean;
+  teamId?: number;
+}) {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
   const { showToast } = useToast();
+  const { teamMode = false, teamId } = options || {};
 
   return useMutation({
     mutationFn: async (id: number) => {
       const token = await getToken();
-      const response = await tasksApi.deleteTask(id, token || undefined);
-      const result = await response.json();
-      return result;
+
+      if (teamMode && teamId) {
+        // チームタスク削除
+        const response = await tasksApi.deleteTeamTask(
+          teamId,
+          id,
+          token || undefined,
+        );
+        const result = await response.json();
+        return result;
+      } else {
+        // 個人タスク削除
+        const response = await tasksApi.deleteTask(id, token || undefined);
+        const result = await response.json();
+        return result;
+      }
     },
     onSuccess: (_, id) => {
-      // タスク一覧から削除されたタスクを除去
-      queryClient.setQueryData<Task[]>(["tasks"], (oldTasks) => {
-        if (!oldTasks) return [];
-        return oldTasks.filter((task) => task.id !== id);
-      });
-      // 削除済み一覧は無効化（削除済みタスクが追加されるため）
-      queryClient.invalidateQueries({ queryKey: ["deleted-tasks"] });
-      // ボード関連のキャッシュを強制再取得（統計が変わるため）
-      queryClient.refetchQueries({ queryKey: ["boards"] });
+      if (teamMode && teamId) {
+        // チームタスク一覧から削除されたタスクを除去
+        queryClient.setQueryData<Task[]>(["team-tasks", teamId], (oldTasks) => {
+          if (!oldTasks) return [];
+          return oldTasks.filter((task) => task.id !== id);
+        });
+        // チーム削除済み一覧は無効化（削除済みタスクが追加されるため）
+        queryClient.invalidateQueries({
+          queryKey: ["team-deleted-tasks", teamId],
+        });
+        // チームボード関連のキャッシュを強制再取得（統計が変わるため）
+        queryClient.refetchQueries({ queryKey: ["team-boards", teamId] });
+        // チーム掲示板アイテムのキャッシュを無効化（掲示板からタスクが消えるため）
+        queryClient.invalidateQueries({
+          queryKey: ["team-boards", teamId],
+          exact: false,
+        });
+      } else {
+        // タスク一覧から削除されたタスクを除去
+        queryClient.setQueryData<Task[]>(["tasks"], (oldTasks) => {
+          if (!oldTasks) return [];
+          return oldTasks.filter((task) => task.id !== id);
+        });
+        // 削除済み一覧は無効化（削除済みタスクが追加されるため）
+        queryClient.invalidateQueries({ queryKey: ["deleted-tasks"] });
+        // ボード関連のキャッシュを強制再取得（統計が変わるため）
+        queryClient.refetchQueries({ queryKey: ["boards"] });
+      }
       // 全タグ付け情報を無効化（削除されたタスクに関連するタグ情報が変わる可能性があるため）
       queryClient.invalidateQueries({ queryKey: ["taggings", "all"] });
     },

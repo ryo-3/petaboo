@@ -429,7 +429,7 @@ export default function BoardTaskSection({
             activeTab={activeTaskTab as "todo" | "in_progress" | "completed"}
             tasks={displayTaskItems.map((item) => ({
               ...(item.content as Task),
-              originalId: item.itemId.toString(), // ボードのitemIdを文字列として使用
+              originalId: item.itemId?.toString() || "", // ボードのitemIdを文字列として使用（undefinedチェック）
             }))}
             viewMode={viewMode}
             effectiveColumnCount={effectiveColumnCount}

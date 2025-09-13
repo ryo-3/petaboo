@@ -20,6 +20,25 @@ export default function TeamBoardDetailPage() {
     : params.customUrl;
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
 
+  // URLから初期選択アイテムを取得
+  const [initialMemoId, setInitialMemoId] = useState<string | null>(null);
+  const [initialTaskId, setInitialTaskId] = useState<string | null>(null);
+
+  // ページロード時にURLパスからメモ/タスクIDを抽出
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const pathname = window.location.pathname;
+      const memoMatch = pathname.match(/\/memo\/(\d+)$/);
+      const taskMatch = pathname.match(/\/task\/(\d+)$/);
+
+      if (memoMatch?.[1]) {
+        setInitialMemoId(memoMatch[1]);
+      } else if (taskMatch?.[1]) {
+        setInitialTaskId(taskMatch[1]);
+      }
+    }
+  }, []);
+
   const {
     data: team,
     isLoading: teamLoading,
@@ -93,8 +112,31 @@ export default function TeamBoardDetailPage() {
   }, [error, loading, router, customUrl]);
 
   const handleClearSelection = () => {
+    // 選択解除時はベースのボードURLに戻す
+    const baseUrl = `/team/${customUrl}/board/${slug}`;
+    window.history.replaceState(null, "", baseUrl);
     setSelectedMemo(null);
     setSelectedTask(null);
+  };
+
+  const handleSelectMemo = (memo: Memo | DeletedMemo | null) => {
+    if (!memo) return;
+    // メモ選択時はタスクの選択を解除
+    setSelectedTask(null);
+    // URLを更新
+    const newUrl = `/team/${customUrl}/board/${slug}/memo/${memo.id}`;
+    window.history.replaceState(null, "", newUrl);
+    setSelectedMemo(memo);
+  };
+
+  const handleSelectTask = (task: Task | DeletedTask | null) => {
+    if (!task) return;
+    // タスク選択時はメモの選択を解除
+    setSelectedMemo(null);
+    // URLを更新
+    const newUrl = `/team/${customUrl}/board/${slug}/task/${task.id}`;
+    window.history.replaceState(null, "", newUrl);
+    setSelectedTask(task);
   };
 
   const handleBack = () => {
@@ -200,8 +242,8 @@ export default function TeamBoardDetailPage() {
         boardId={boardData.id}
         selectedMemo={selectedMemo}
         selectedTask={selectedTask}
-        onSelectMemo={setSelectedMemo}
-        onSelectTask={setSelectedTask}
+        onSelectMemo={handleSelectMemo}
+        onSelectTask={handleSelectTask}
         onClearSelection={handleClearSelection}
         onBack={handleBack}
         initialBoardName={boardData.name}

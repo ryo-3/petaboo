@@ -597,4 +597,219 @@ app.openapi(
   },
 );
 
+// POST /teams/:teamId/tasks/deleted/:originalId/restore（チーム削除済みタスク復元）
+app.openapi(
+  createRoute({
+    method: "post",
+    path: "/{teamId}/tasks/deleted/{originalId}/restore",
+    request: {
+      params: z.object({
+        teamId: z.string().regex(/^\d+$/).transform(Number),
+        originalId: z.string(),
+      }),
+    },
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: TeamTaskSchema,
+          },
+        },
+        description: "復元成功",
+      },
+      401: {
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+        description: "未認証",
+      },
+      403: {
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+        description: "チームメンバーではない",
+      },
+      404: {
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+        description: "削除済みタスクが見つからない",
+      },
+      500: {
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+        description: "サーバーエラー",
+      },
+    },
+  }),
+  async (c) => {
+    const auth = getAuth(c);
+    const db = c.get("db");
+    if (!auth?.userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const { teamId, originalId } = c.req.valid("param");
+
+    // チームメンバー確認
+    const member = await checkTeamMember(db, teamId, auth.userId);
+    if (!member) {
+      return c.json({ error: "Not a team member" }, 403);
+    }
+
+    try {
+      // 削除済みタスクを検索
+      const deletedTask = await db
+        .select()
+        .from(teamDeletedTasks)
+        .where(
+          and(
+            eq(teamDeletedTasks.teamId, teamId),
+            eq(teamDeletedTasks.originalId, originalId),
+          ),
+        )
+        .limit(1);
+
+      if (deletedTask.length === 0) {
+        return c.json({ error: "削除済みタスクが見つかりません" }, 404);
+      }
+
+      const taskData = deletedTask[0];
+
+      // チームタスクテーブルに復元
+      const currentTimestamp = Math.floor(Date.now() / 1000);
+      const restoredTask = await db
+        .insert(teamTasks)
+        .values({
+          teamId: taskData.teamId,
+          userId: auth.userId,
+          originalId: taskData.originalId,
+          uuid: taskData.uuid,
+          title: taskData.title,
+          description: taskData.description,
+          status: taskData.status,
+          priority: taskData.priority,
+          dueDate: taskData.dueDate,
+          categoryId: taskData.categoryId,
+          boardCategoryId: taskData.boardCategoryId,
+          createdAt: taskData.createdAt,
+          updatedAt: currentTimestamp,
+        })
+        .returning();
+
+      // 削除済みテーブルから削除
+      await db
+        .delete(teamDeletedTasks)
+        .where(eq(teamDeletedTasks.id, taskData.id));
+
+      return c.json(restoredTask[0]);
+    } catch (error) {
+      console.error("チームタスク復元エラー:", error);
+      return c.json({ error: "Internal server error" }, 500);
+    }
+  },
+);
+
+// DELETE /teams/:teamId/tasks/deleted/:originalId（チーム削除済みタスクの完全削除）
+app.openapi(
+  createRoute({
+    method: "delete",
+    path: "/{teamId}/tasks/deleted/{originalId}",
+    request: {
+      params: z.object({
+        teamId: z.string().regex(/^\d+$/).transform(Number),
+        originalId: z.string(),
+      }),
+    },
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: z.object({ success: z.boolean() }),
+          },
+        },
+        description: "完全削除成功",
+      },
+      401: {
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+        description: "未認証",
+      },
+      403: {
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+        description: "チームメンバーではない",
+      },
+      404: {
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+        description: "削除済みタスクが見つからない",
+      },
+      500: {
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+        description: "サーバーエラー",
+      },
+    },
+  }),
+  async (c) => {
+    const auth = getAuth(c);
+    const db = c.get("db");
+    if (!auth?.userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const { teamId, originalId } = c.req.valid("param");
+
+    // チームメンバー確認
+    const member = await checkTeamMember(db, teamId, auth.userId);
+    if (!member) {
+      return c.json({ error: "Not a team member" }, 403);
+    }
+
+    try {
+      // 削除済みタスクを検索して完全削除
+      const deletedResult = await db
+        .delete(teamDeletedTasks)
+        .where(
+          and(
+            eq(teamDeletedTasks.teamId, teamId),
+            eq(teamDeletedTasks.originalId, originalId),
+          ),
+        )
+        .returning();
+
+      if (deletedResult.length === 0) {
+        return c.json({ error: "削除済みタスクが見つかりません" }, 404);
+      }
+
+      return c.json({ success: true });
+    } catch (error) {
+      console.error("チーム削除済みタスク完全削除エラー:", error);
+      return c.json({ error: "Internal server error" }, 500);
+    }
+  },
+);
+
 export default app;

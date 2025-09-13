@@ -439,6 +439,45 @@ export const tasksApi = {
     return response;
   },
 
+  // POST /teams/:teamId/tasks/deleted/:originalId/restore (チームタスク復元)
+  restoreTeamTask: async (
+    teamId: number,
+    originalId: string,
+    token?: string,
+  ) => {
+    const response = await fetch(
+      `${API_BASE_URL}/teams/${teamId}/tasks/deleted/${originalId}/restore`,
+      {
+        method: "POST",
+        headers: createHeaders(token),
+      },
+    );
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response;
+  },
+
+  // DELETE /teams/:teamId/tasks/deleted/:originalId (チーム削除済みタスクの完全削除)
+  permanentDeleteTeamTask: async (
+    teamId: number,
+    originalId: string,
+    token?: string,
+  ) => {
+    const response = await fetch(
+      `${API_BASE_URL}/teams/${teamId}/tasks/deleted/${originalId}`,
+      {
+        method: "DELETE",
+        headers: createHeaders(token),
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response;
+  },
+
   // POST /tasks/import (CSVインポート)
   importTasks: async (file: File, token?: string) => {
     const formData = new FormData();

@@ -710,6 +710,9 @@ export function useBoardDeletedItems(boardId: number, teamId?: string | null) {
       ? ["team-board-deleted-items", teamId, boardId]
       : ["board-deleted-items", boardId],
     async () => {
+      console.log(
+        `📋 削除済みアイテム取得開始: boardId=${boardId}, teamId=${teamId}, isTeam=${!!teamId}`,
+      );
       // 最大2回リトライ
       for (let attempt = 0; attempt < 2; attempt++) {
         const token = await getCachedToken(getToken);
@@ -719,6 +722,9 @@ export function useBoardDeletedItems(boardId: number, teamId?: string | null) {
           ? `${API_BASE_URL}/teams/${teamId}/boards/${boardId}/deleted-items`
           : `${API_BASE_URL}/boards/${boardId}/deleted-items`;
 
+        console.log(
+          `🌐 削除済みアイテムAPI呼び出し: ${apiUrl}, attempt=${attempt + 1}`,
+        );
         const response = await fetch(apiUrl, {
           headers: {
             "Content-Type": "application/json",
@@ -742,6 +748,10 @@ export function useBoardDeletedItems(boardId: number, teamId?: string | null) {
         }
 
         const data = await response.json();
+        console.log(
+          `📦 削除済みアイテムAPI取得成功: deletedItems=${data.deletedItems?.length || 0}件`,
+        );
+
         // APIレスポンスの形式を変換
         const memos: DeletedMemo[] = [];
         const tasks: DeletedTask[] = [];
@@ -776,6 +786,9 @@ export function useBoardDeletedItems(boardId: number, teamId?: string | null) {
           }
         }
 
+        console.log(
+          `✅ 削除済みアイテム変換完了: memos=${memos.length}件, tasks=${tasks.length}件`,
+        );
         return { memos, tasks };
       }
 

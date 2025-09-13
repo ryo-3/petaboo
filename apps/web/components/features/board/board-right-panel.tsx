@@ -251,6 +251,9 @@ export default function BoardRightPanel({
               onRestore={
                 onMemoRestoreAndSelectNext
                   ? () => {
+                      console.log(
+                        `🔄 右パネル復元コールバック実行: memo.id=${selectedMemo?.id}, memo.originalId=${(selectedMemo as DeletedMemo)?.originalId}`,
+                      );
                       onMemoRestoreAndSelectNext(selectedMemo as DeletedMemo);
                     }
                   : undefined

@@ -13,6 +13,7 @@ interface UseDeletedMemoActionsProps {
   onAnimationChange?: (isAnimating: boolean) => void;
   teamMode?: boolean;
   teamId?: number;
+  boardId?: number;
 }
 
 export function useDeletedMemoActions({
@@ -23,6 +24,7 @@ export function useDeletedMemoActions({
   onAnimationChange,
   teamMode = false,
   teamId,
+  boardId,
 }: UseDeletedMemoActionsProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isLocalRestoring, setIsLocalRestoring] = useState(false);
@@ -75,7 +77,7 @@ export function useDeletedMemoActions({
     },
   });
 
-  const restoreNote = useRestoreMemo({ teamMode, teamId });
+  const restoreNote = useRestoreMemo({ teamMode, teamId, boardId });
 
   const handlePermanentDelete = async () => {
     try {
@@ -139,20 +141,35 @@ export function useDeletedMemoActions({
   };
 
   const handleRestore = async () => {
+    console.log(
+      `🔄 復元処理開始: memo.id=${memo?.id}, memo.originalId=${memo?.originalId}, teamMode=${teamMode}, teamId=${teamId}`,
+    );
     try {
       setIsLocalRestoring(true);
       // API実行
       if (memo) {
+        console.log(
+          `📤 復元API呼び出し: originalId=${memo.originalId}, teamMode=${teamMode}`,
+        );
         await restoreNote.mutateAsync(memo.originalId);
+        console.log(`✅ 復元API成功: originalId=${memo.originalId}`);
       }
 
       // 復元完了後、すぐにUIを更新
       setIsLocalRestoring(false);
+      console.log(
+        `🎯 UI更新処理: onRestoreAndSelectNext=${!!onRestoreAndSelectNext}`,
+      );
       if (onRestoreAndSelectNext && memo) {
+        console.log(
+          `⏭️ 次のアイテム選択実行: memo.originalId=${memo.originalId}`,
+        );
         onRestoreAndSelectNext(memo);
       } else {
+        console.log(`❌ パネルを閉じる`);
         onClose();
       }
+      console.log(`🏁 復元処理完了: memo.originalId=${memo?.originalId}`);
     } catch (error) {
       console.error("メモ復元エラー:", error);
       setIsLocalRestoring(false);

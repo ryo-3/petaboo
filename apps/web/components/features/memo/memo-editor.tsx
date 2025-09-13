@@ -196,6 +196,7 @@ function MemoEditor({
     onAnimationChange: setIsAnimating,
     teamMode,
     teamId,
+    boardId: initialBoardId,
   });
 
   // タグ初期化（メモが変わった時のみ実行）

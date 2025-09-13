@@ -9,6 +9,8 @@ import {
   teamDeletedBoards,
   teamMemos,
   teamTasks,
+  teamDeletedMemos,
+  teamDeletedTasks,
 } from "../../db";
 import type {
   NewTeamBoard,
@@ -577,9 +579,56 @@ export function createTeamBoardsAPI(app: AppType) {
         return c.json({ error: "ボードが見つかりません" }, 404);
       }
 
-      // チーム用の削除済みアイテムは現在実装されていないため、空配列を返す
-      // 今後必要に応じて teamDeletedBoardItems テーブルを作成して実装する
-      const deletedItems: any[] = [];
+      // チーム削除済みメモを取得
+      const deletedMemos = await db
+        .select()
+        .from(teamDeletedMemos)
+        .where(eq(teamDeletedMemos.teamId, parseInt(teamId)));
+
+      // チーム削除済みタスクを取得
+      const deletedTasks = await db
+        .select()
+        .from(teamDeletedTasks)
+        .where(eq(teamDeletedTasks.teamId, parseInt(teamId)));
+
+      // 削除済みアイテムを統合フォーマットに変換
+      const deletedItems = [
+        ...deletedMemos.map((memo) => ({
+          id: memo.id,
+          itemType: "memo" as const,
+          itemId: memo.id,
+          originalId: memo.originalId,
+          deletedAt: memo.deletedAt,
+          content: {
+            id: memo.id,
+            title: memo.title,
+            content: memo.content,
+            originalId: memo.originalId,
+            createdAt: memo.createdAt,
+            updatedAt: memo.updatedAt,
+            deletedAt: memo.deletedAt,
+          },
+        })),
+        ...deletedTasks.map((task) => ({
+          id: task.id,
+          itemType: "task" as const,
+          itemId: task.id,
+          originalId: task.originalId,
+          deletedAt: task.deletedAt,
+          content: {
+            id: task.id,
+            title: task.title,
+            description: task.description,
+            status: task.status,
+            priority: task.priority,
+            dueDate: task.dueDate,
+            originalId: task.originalId,
+            createdAt: task.createdAt,
+            updatedAt: task.updatedAt,
+            deletedAt: task.deletedAt,
+          },
+        })),
+      ].sort((a, b) => b.deletedAt - a.deletedAt); // 削除時刻の降順
 
       return c.json({
         board: board[0],

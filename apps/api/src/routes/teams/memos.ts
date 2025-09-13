@@ -544,4 +544,121 @@ app.openapi(
   },
 );
 
+// POST /teams/:teamId/memos/deleted/:originalId/restore（チーム削除済みメモ復元）
+app.openapi(
+  createRoute({
+    method: "post",
+    path: "/{teamId}/memos/deleted/{originalId}/restore",
+    request: {
+      params: z.object({
+        teamId: z.string().regex(/^\d+$/).transform(Number),
+        originalId: z.string(),
+      }),
+    },
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: TeamMemoSchema,
+          },
+        },
+        description: "復元成功",
+      },
+      401: {
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+        description: "未認証",
+      },
+      403: {
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+        description: "チームメンバーではない",
+      },
+      404: {
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+        description: "削除済みメモが見つからない",
+      },
+      500: {
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+        description: "サーバーエラー",
+      },
+    },
+  }),
+  async (c) => {
+    const auth = getAuth(c);
+    const db = c.get("db");
+    if (!auth?.userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const { teamId, originalId } = c.req.valid("param");
+
+    // チームメンバー確認
+    const member = await checkTeamMember(teamId, auth.userId, db);
+    if (!member) {
+      return c.json({ error: "Not a team member" }, 403);
+    }
+
+    try {
+      // 削除済みメモを検索
+      const deletedMemo = await db
+        .select()
+        .from(teamDeletedMemos)
+        .where(
+          and(
+            eq(teamDeletedMemos.teamId, teamId),
+            eq(teamDeletedMemos.originalId, originalId),
+          ),
+        )
+        .limit(1);
+
+      if (deletedMemo.length === 0) {
+        return c.json({ error: "削除済みメモが見つかりません" }, 404);
+      }
+
+      const memoData = deletedMemo[0];
+
+      // チームメモテーブルに復元
+      const currentTimestamp = Math.floor(Date.now() / 1000);
+      const restoredMemo = await db
+        .insert(teamMemos)
+        .values({
+          teamId: memoData.teamId,
+          userId: auth.userId,
+          originalId: memoData.originalId,
+          uuid: memoData.uuid,
+          title: memoData.title,
+          content: memoData.content,
+          createdAt: memoData.createdAt,
+          updatedAt: currentTimestamp,
+        })
+        .returning();
+
+      // 削除済みテーブルから削除
+      await db
+        .delete(teamDeletedMemos)
+        .where(eq(teamDeletedMemos.id, memoData.id));
+
+      return c.json(restoredMemo[0]);
+    } catch (error) {
+      console.error("チームメモ復元エラー:", error);
+      return c.json({ error: "Internal server error" }, 500);
+    }
+  },
+);
+
 export default app;

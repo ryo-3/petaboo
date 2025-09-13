@@ -11,6 +11,8 @@ interface UseDeletedMemoActionsProps {
   onDeleteAndSelectNext?: (deletedMemo: DeletedMemo) => void;
   onRestoreAndSelectNext?: (deletedMemo: DeletedMemo) => void;
   onAnimationChange?: (isAnimating: boolean) => void;
+  teamMode?: boolean;
+  teamId?: number;
 }
 
 export function useDeletedMemoActions({
@@ -19,6 +21,8 @@ export function useDeletedMemoActions({
   onDeleteAndSelectNext,
   onRestoreAndSelectNext,
   onAnimationChange,
+  teamMode = false,
+  teamId,
 }: UseDeletedMemoActionsProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isLocalRestoring, setIsLocalRestoring] = useState(false);
@@ -71,7 +75,7 @@ export function useDeletedMemoActions({
     },
   });
 
-  const restoreNote = useRestoreMemo();
+  const restoreNote = useRestoreMemo({ teamMode, teamId });
 
   const handlePermanentDelete = async () => {
     try {

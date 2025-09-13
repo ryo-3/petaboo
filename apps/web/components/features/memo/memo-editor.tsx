@@ -179,7 +179,6 @@ function MemoEditor({
       .map((t) => t.tag)
       .filter(Boolean) as Tag[];
 
-
     return tags;
   }, [memo, preloadedTaggings, liveTaggings]);
 
@@ -195,6 +194,8 @@ function MemoEditor({
     onDeleteAndSelectNext,
     onRestoreAndSelectNext: onRestore,
     onAnimationChange: setIsAnimating,
+    teamMode,
+    teamId,
   });
 
   // タグ初期化（メモが変わった時のみ実行）
@@ -262,7 +263,6 @@ function MemoEditor({
       const currentTagIds = currentTags.map((tag) => tag.id);
       const localTagIds = localTags.map((tag) => tag.id);
 
-
       // 削除するタグ（currentにあってlocalにない）
       const tagsToRemove = currentTagIds.filter(
         (id) => !localTagIds.includes(id),
@@ -270,10 +270,8 @@ function MemoEditor({
       // 追加するタグ（localにあってcurrentにない）
       const tagsToAdd = localTagIds.filter((id) => !currentTagIds.includes(id));
 
-
       // 削除処理（preloadedTaggingsからタギングIDを見つける）
       for (const tagId of tagsToRemove) {
-
         const taggingToDelete = preloadedTaggings.find(
           (t) =>
             t.tagId === tagId &&
@@ -339,7 +337,6 @@ function MemoEditor({
   // 拡張された保存処理（削除済みの場合は実行しない）
   const handleSaveWithTags = useCallback(async () => {
     if (isDeleted) return; // 削除済みの場合は保存しない
-
 
     try {
       // まずメモを保存
@@ -474,8 +471,8 @@ function MemoEditor({
       // 削除済みメモの場合は完全削除（蓋を開く）
       setIsAnimating(true);
       deletedMemoActions.showDeleteConfirmation();
-    } else if (itemBoards && itemBoards.length > 0) {
-      // ボードに紐づいている場合はモーダル表示と同時に蓋を開く
+    } else if (teamMode || (itemBoards && itemBoards.length > 0)) {
+      // チームモードまたはボードに紐づいている場合はモーダル表示と同時に蓋を開く
       setIsAnimating(true);
       setShowDeleteModal(true);
     } else {
@@ -690,7 +687,6 @@ function MemoEditor({
           tags={preloadedTags}
           selectedTagIds={localTags.map((tag) => tag.id)}
           onSelectionChange={(tagIds) => {
-
             const selectedTags = preloadedTags.filter((tag) =>
               tagIds.includes(tag.id),
             );

@@ -258,3 +258,59 @@ tail -20 petaboo/api.log | grep -i "error\|warn\|fail" || echo "APIログ: エ�
 # Webログエラーチェック
 tail -20 petaboo/web.log | grep -i "error\|warn\|fail" || echo "Webログ: エラーなし"
 ```
+
+## 🧹 ログフィルタリングシステム
+
+### 概要
+
+開発効率向上のため、不要なログを自動フィルタリングしてクリーンな出力を実現。
+
+### 構成
+
+- **フィルタリングスクリプト**: `filter-logs.sh` - 共通ログフィルタリング
+- **自動ログクリア**: 開発サーバー起動時に前回のログを自動削除
+- **重複除去**: リクエスト開始ログを除去し、レスポンス完了ログのみ保持
+
+### フィルタリング対象
+
+```bash
+# 開発用ログ（除去対象）
+- コンパイルログ: "○ Compiling", "✓ Compiled"
+- Next.js起動メッセージ: "⚡ Next.js", "Local:", "Network:"
+- 開発ツールメッセージ: "[Fast Refresh]", "Clerk development keys"
+- CORSプリフライト: "OPTIONS ... 204 No Content"
+- wrangler情報ログ: "[wrangler:info] GET/POST/PUT/DELETE"
+- HTTP重複ログ: リクエスト開始ログ（レスポンス時間なし）
+
+# 保持対象
+- エラー・警告: すべて保持
+- レスポンス完了ログ: "GET ... - 200 (15ms)" 形式
+- 重要な初期化ログ: "🚀 グローバル通知システム初期化完了"
+- アプリケーションログ: "LOG: 📭 申請中データなし"
+```
+
+### 使用方法
+
+```bash
+# 個別起動時（自動でフィルタリング適用）
+cd apps/web && npm run dev    # Webログを web.log に出力
+cd apps/api && npm run dev    # APIログを api.log に出力
+
+# フィルタリング設定変更
+# filter-logs.sh の FILTER_PATTERNS 配列を編集
+```
+
+### メンテナンス
+
+```bash
+# フィルタリングパターン追加
+# filter-logs.sh を編集してパターンを追加:
+FILTER_PATTERNS=(
+  "新しい除去パターン"
+  # ... 既存パターン
+)
+
+# ログ確認
+tail -f petaboo/web.log    # Web開発ログ
+tail -f petaboo/api.log    # API開発ログ
+```

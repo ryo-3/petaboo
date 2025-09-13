@@ -501,26 +501,53 @@ export function usePermanentDeleteMemo() {
 }
 
 // メモを復元するhook
-export function useRestoreMemo() {
+export function useRestoreMemo(options?: {
+  teamMode?: boolean;
+  teamId?: number;
+}) {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
+  const { teamMode = false, teamId } = options || {};
 
   return useMutation({
     mutationFn: async (originalId: string) => {
       const token = await getToken();
-      await memosApi.restoreNote(originalId, token || undefined);
+
+      if (teamMode && teamId) {
+        // チームメモ復元
+        await memosApi.restoreTeamMemo(teamId, originalId, token || undefined);
+      } else {
+        // 個人メモ復元
+        await memosApi.restoreNote(originalId, token || undefined);
+      }
     },
     onSuccess: () => {
-      // メモと削除済みメモの両方を無効化（復元されたメモの新しいIDが分からないため）
-      queryClient.invalidateQueries({ queryKey: ["memos"] });
-      queryClient.invalidateQueries({ queryKey: ["deletedMemos"] });
-      // ボード関連のキャッシュを強制再取得（復元されたメモがボードに含まれる可能性があるため）
-      queryClient.refetchQueries({ queryKey: ["boards"] });
-      // ボード詳細とボード削除済みアイテムのキャッシュも無効化
-      queryClient.invalidateQueries({ queryKey: ["boards"], exact: false });
-      queryClient.invalidateQueries({ queryKey: ["board-deleted-items"] });
-      // ボードアイテムのキャッシュを無効化（復元時にボード紐づきも復元されるため）
-      queryClient.invalidateQueries({ queryKey: ["board-items"] });
+      if (teamMode && teamId) {
+        // チームメモ復元時のキャッシュ無効化
+        queryClient.invalidateQueries({ queryKey: ["team-memos", teamId] });
+        queryClient.invalidateQueries({
+          queryKey: ["team-deleted-memos", teamId],
+        });
+        // チームボード関連のキャッシュ無効化
+        queryClient.invalidateQueries({ queryKey: ["team-boards", teamId] });
+        queryClient.invalidateQueries({
+          queryKey: ["team-board-items", teamId],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["team-board-deleted-items"],
+        });
+      } else {
+        // 個人メモ復元時のキャッシュ無効化
+        queryClient.invalidateQueries({ queryKey: ["memos"] });
+        queryClient.invalidateQueries({ queryKey: ["deletedMemos"] });
+        // ボード関連のキャッシュを強制再取得（復元されたメモがボードに含まれる可能性があるため）
+        queryClient.refetchQueries({ queryKey: ["boards"] });
+        // ボード詳細とボード削除済みアイテムのキャッシュも無効化
+        queryClient.invalidateQueries({ queryKey: ["boards"], exact: false });
+        queryClient.invalidateQueries({ queryKey: ["board-deleted-items"] });
+        // ボードアイテムのキャッシュを無効化（復元時にボード紐づきも復元されるため）
+        queryClient.invalidateQueries({ queryKey: ["board-items"] });
+      }
       // 全タグ付け情報を無効化（復元されたメモのタグ情報が変わる可能性があるため）
       queryClient.invalidateQueries({ queryKey: ["taggings", "all"] });
     },

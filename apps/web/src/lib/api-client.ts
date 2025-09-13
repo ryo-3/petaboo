@@ -204,6 +204,26 @@ export const memosApi = {
     return response;
   },
 
+  // POST /teams/:teamId/memos/deleted/:originalId/restore (チームメモ復元)
+  restoreTeamMemo: async (
+    teamId: number,
+    originalId: string,
+    token?: string,
+  ) => {
+    const response = await fetch(
+      `${API_BASE_URL}/teams/${teamId}/memos/deleted/${originalId}/restore`,
+      {
+        method: "POST",
+        headers: createHeaders(token),
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response;
+  },
+
   // POST /memos/import (CSVインポート)
   importMemos: async (file: File, token?: string) => {
     const formData = new FormData();

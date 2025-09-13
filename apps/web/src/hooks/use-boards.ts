@@ -533,6 +533,31 @@ export function useAddItemToBoard(options?: {
           } catch {
             errorMessage = `HTTP ${response.status}: ${response.statusText}`;
           }
+
+          // 重複エラーの場合は成功とみなす（既に追加済み）
+          const isDuplicateError =
+            errorMessage.includes("アイテムは既にボードに追加されています") ||
+            errorMessage.includes("already") ||
+            errorMessage.includes("duplicate") ||
+            errorMessage.includes("already exists") ||
+            errorMessage.includes("既に追加");
+
+          if (isDuplicateError) {
+            console.log(
+              `🔧 [useAddItemToBoard] 重複エラーを無視: boardId=${boardId}, itemId=${data.itemId} (既に追加済み)`,
+            );
+            // 重複の場合はダミーのBoardItemオブジェクトを返す
+            return {
+              id: Date.now(), // 仮ID
+              boardId,
+              itemId: data.itemId,
+              itemType: data.itemType,
+              position: 0,
+              createdAt: Math.floor(Date.now() / 1000),
+              updatedAt: Math.floor(Date.now() / 1000),
+            };
+          }
+
           throw new Error(errorMessage);
         }
 
@@ -570,8 +595,20 @@ export function useAddItemToBoard(options?: {
       queryClient.refetchQueries({ queryKey: ["boards", "all-items"] });
     },
     onError: (error) => {
+      const errorMessage = error.message || "";
       console.error("ボードへのアイテム追加に失敗しました:", error);
-      showToast("ボードへのアイテム追加に失敗しました", "error");
+
+      // 重複エラーの場合はトーストを表示しない（既に追加済み）
+      const isDuplicateError =
+        errorMessage.includes("アイテムは既にボードに追加されています") ||
+        errorMessage.includes("already") ||
+        errorMessage.includes("duplicate") ||
+        errorMessage.includes("already exists") ||
+        errorMessage.includes("既に追加");
+
+      if (!isDuplicateError) {
+        showToast("ボードへのアイテム追加に失敗しました", "error");
+      }
     },
   });
 }

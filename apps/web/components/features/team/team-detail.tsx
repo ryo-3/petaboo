@@ -725,6 +725,21 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                 onClose={() => {
                   // メモを閉じる時はmemoパラメータも削除してmemosタブに残る
                   setSelectedMemo(null);
+                  setSelectedDeletedMemo(null);
+                  const params = new URLSearchParams(searchParams.toString());
+                  params.delete("memo");
+                  params.set("tab", "memos");
+                  const newUrl = params.toString()
+                    ? `?${params.toString()}`
+                    : "";
+                  router.replace(`/team/${customUrl}${newUrl}`, {
+                    scroll: false,
+                  });
+                }}
+                onDeselectAndStayOnMemoList={() => {
+                  // メモを閉じてリスト表示に戻る（URLからもmemoパラメータを削除）
+                  setSelectedMemo(null);
+                  setSelectedDeletedMemo(null);
                   const params = new URLSearchParams(searchParams.toString());
                   params.delete("memo");
                   params.set("tab", "memos");
@@ -737,7 +752,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                 }}
                 teamMode={true}
                 teamId={team.id}
-                initialMemoId={getMemoIdFromURL()}
+                initialMemoId={selectedMemo ? getMemoIdFromURL() : null}
               />
             </div>
           )}

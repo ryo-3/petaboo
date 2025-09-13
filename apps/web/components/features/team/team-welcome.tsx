@@ -391,12 +391,12 @@ export function TeamWelcome({ onTeamCreate }: TeamWelcomeProps = {}) {
                     <h3 className="text-lg font-bold">申請状況</h3>
                     {myJoinRequests &&
                       myJoinRequests.requests.filter(
-                        (r) => r.status !== "approved",
+                        (r) => r.status !== "approved", // 承認済みを除外
                       ).length > 0 && (
                         <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
                           {
                             myJoinRequests.requests.filter(
-                              (r) => r.status !== "approved",
+                              (r) => r.status !== "approved", // 承認済みを除外
                             ).length
                           }
                           件
@@ -406,7 +406,7 @@ export function TeamWelcome({ onTeamCreate }: TeamWelcomeProps = {}) {
 
                   {!myJoinRequests ||
                   !myJoinRequests.requests ||
-                  myJoinRequests.requests.filter((r) => r.status !== "approved")
+                  myJoinRequests.requests.filter((r) => r.status !== "approved") // 承認済みを除外
                     .length === 0 ? (
                     <div className="text-center text-gray-500 py-8">
                       <Clock className="w-8 h-8 mx-auto mb-2 text-gray-400" />
@@ -415,7 +415,7 @@ export function TeamWelcome({ onTeamCreate }: TeamWelcomeProps = {}) {
                   ) : (
                     <div className="space-y-3">
                       {myJoinRequests.requests
-                        .filter((r) => r.status !== "approved")
+                        .filter((r) => r.status !== "approved") // 承認済みを除外
                         .map((request) => (
                           <div
                             key={request.id}

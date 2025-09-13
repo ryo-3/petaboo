@@ -2239,17 +2239,8 @@ export async function rejectJoinRequest(c: any) {
       return c.json({ message: "申請が見つかりません" }, 404);
     }
 
-    const now = Date.now();
-
-    // 申請ステータス更新
-    await db
-      .update(teamInvitations)
-      .set({
-        status: "rejected",
-        processedAt: now,
-        processedBy: auth.userId,
-      })
-      .where(eq(teamInvitations.id, requestId));
+    // 申請レコードを削除（拒否済みは履歴として残さない）
+    await db.delete(teamInvitations).where(eq(teamInvitations.id, requestId));
 
     return c.json({ message: "申請を拒否しました" }, 200);
   } catch (error) {

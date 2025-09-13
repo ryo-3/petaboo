@@ -440,11 +440,6 @@ export function createTeamBoardsAPI(app: AppType) {
         .where(eq(teamBoardItems.boardId, parseInt(boardId)))
         .orderBy(teamBoardItems.createdAt);
 
-      console.log(
-        `📋 Team Board Items API - teamId:${teamId}, boardId:${boardId}, items count:${items.length}`,
-      );
-      console.log("📋 Board info:", JSON.stringify(board[0], null, 2));
-
       // フロントエンド用のレスポンス形式に変換（パーソナル用と同じ構造に）
       const formattedItems = items
         .map((item) => ({
@@ -473,24 +468,6 @@ export function createTeamBoardsAPI(app: AppType) {
               : null,
         }))
         .filter((item) => item.content !== null); // contentがnullのアイテムを除外
-
-      console.log(
-        `🔍 アイテムフィルタリング結果: ${items.length} → ${formattedItems.length}`,
-      );
-      console.log(
-        "📋 Formatted items preview:",
-        formattedItems.slice(0, 2).map((item) => ({
-          id: item.id,
-          itemType: item.itemType,
-          originalId: item.originalId,
-          memoTitle: item.memo?.title,
-          taskTitle: item.task?.title,
-        })),
-      );
-      console.log(
-        "📋 Full formatted item structure:",
-        JSON.stringify(formattedItems.slice(0, 1), null, 2),
-      );
 
       return c.json({
         board: board[0],

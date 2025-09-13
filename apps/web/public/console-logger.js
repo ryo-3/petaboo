@@ -1,10 +1,10 @@
 // ブラウザのコンソールログをサーバーに送信してbrowser.logに記録
-(function() {
+(function () {
   const originalConsole = {
     log: console.log,
     error: console.error,
     warn: console.warn,
-    info: console.info
+    info: console.info,
   };
 
   // 重複排除用のキャッシュ
@@ -13,16 +13,27 @@
   const DEDUPE_WINDOW = 5000; // 5秒以内の同じログは重複とみなす
 
   function sendLogToServer(level, args) {
-    const message = args.map(arg => {
-      if (typeof arg === 'object') {
-        try {
-          return JSON.stringify(arg, null, 2);
-        } catch (e) {
-          return String(arg);
+    const message = args
+      .map((arg) => {
+        if (typeof arg === "object") {
+          try {
+            return JSON.stringify(arg, null, 2);
+          } catch (e) {
+            return String(arg);
+          }
         }
-      }
-      return String(arg);
-    }).join(' ');
+        return String(arg);
+      })
+      .join(" ");
+
+    // 不要なログをフィルタリング（開発用メッセージのみ）
+    if (
+      message.includes("[Fast Refresh]") ||
+      message.includes("Clerk has been loaded with development keys") ||
+      message.includes("Download the React DevTools")
+    ) {
+      return; // 開発用ログはスキップ
+    }
 
     // 重複チェック用のキー（メッセージ内容のみ）
     const cacheKey = `${level}:${message}`;
@@ -49,37 +60,37 @@
       level: level,
       message: message,
       timestamp: new Date().toISOString(),
-      url: window.location.href
+      url: window.location.href,
     };
 
     // サーバーにログを送信（非同期、エラーは無視）
-    fetch('/api/browser-log', {
-      method: 'POST',
+    fetch("/api/browser-log", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(logData)
+      body: JSON.stringify(logData),
     }).catch(() => {}); // エラーは無視
   }
 
   // コンソールメソッドをオーバーライド
-  console.log = function(...args) {
+  console.log = function (...args) {
     originalConsole.log.apply(console, args);
-    sendLogToServer('log', args);
+    sendLogToServer("log", args);
   };
 
-  console.error = function(...args) {
+  console.error = function (...args) {
     originalConsole.error.apply(console, args);
-    sendLogToServer('error', args);
+    sendLogToServer("error", args);
   };
 
-  console.warn = function(...args) {
+  console.warn = function (...args) {
     originalConsole.warn.apply(console, args);
-    sendLogToServer('warn', args);
+    sendLogToServer("warn", args);
   };
 
-  console.info = function(...args) {
+  console.info = function (...args) {
     originalConsole.info.apply(console, args);
-    sendLogToServer('info', args);
+    sendLogToServer("info", args);
   };
 })();

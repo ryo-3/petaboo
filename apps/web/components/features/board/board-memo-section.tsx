@@ -34,6 +34,7 @@ interface BoardMemoSectionProps {
   showBoardName?: boolean;
   showTags?: boolean;
   selectedMemo?: Memo | DeletedMemo | null;
+  // モーダル機能
   // 複数選択関連
   memoSelectionMode: "select" | "check";
   checkedMemos: Set<string | number>;
@@ -70,6 +71,9 @@ interface BoardMemoSectionProps {
     originalId: string;
     addedAt: number;
   }>;
+  // チーム機能関連
+  teamMode?: boolean;
+  teamId?: number | null;
 }
 
 import { useRef, useMemo, useState } from "react";
@@ -116,6 +120,8 @@ export default function BoardMemoSection({
   allBoards = [],
   allTaggings = [],
   allBoardItems = [],
+  teamMode = false,
+  teamId = null,
 }: BoardMemoSectionProps) {
   // ソートオプションの管理
   const { setSortOptions, getVisibleSortOptions } = useSortOptions("memo");

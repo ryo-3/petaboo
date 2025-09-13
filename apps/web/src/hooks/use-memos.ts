@@ -406,6 +406,19 @@ export function useDeleteMemo(options?: {
         queryClient.invalidateQueries({
           queryKey: ["team-deleted-memos", teamId],
         });
+        // チーム掲示板削除済みアイテムキャッシュも無効化（削除済みタブに表示するため）
+        console.log(
+          `🗂️ チーム掲示板削除済みアイテムキャッシュ無効化: teamId=${teamId}`,
+        );
+        queryClient.invalidateQueries({
+          predicate: (query) => {
+            const key = query.queryKey as string[];
+            return (
+              key[0] === "team-board-deleted-items" &&
+              key[1] === teamId.toString()
+            );
+          },
+        });
         // チームボード関連のキャッシュを強制再取得（統計が変わるため）
         console.log(`📊 チームボード統計キャッシュ再取得: teamId=${teamId}`);
         queryClient.refetchQueries({ queryKey: ["team-boards", teamId] });

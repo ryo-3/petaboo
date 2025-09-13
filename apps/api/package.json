@@ -10,7 +10,7 @@
     "wrangler": "^4.34.0"
   },
   "scripts": {
-    "dev": "wrangler dev --port 7594 2>&1 | tee ../../api.log",
+    "dev": "> ../../api.log && wrangler dev --port 7594 2>&1 | ../../filter-logs.sh ../../api.log",
     "deploy": "wrangler deploy",
     "db:generate": "drizzle-kit generate",
     "db:migration:local": "drizzle-kit push --config drizzle.config.local.ts",

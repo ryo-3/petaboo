@@ -102,10 +102,6 @@ export function useBoardOperations({
     error: Error | null;
   };
 
-  // データ受信時のログ
-  console.log(
-    `📥 useBoardOperations: データ受信 - boardId=${boardId}, items数=${boardWithItems?.items?.length || 0}, isLoading=${isLoading}`,
-  );
   const { data: boardDeletedItems, refetch: refetchDeletedItems } =
     useBoardDeletedItems(boardId, teamId);
 

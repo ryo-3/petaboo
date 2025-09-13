@@ -473,6 +473,8 @@ function BoardDetailScreen({
               setCheckedMemos(activeMemoTab, memos)
             }
             onTagging={handleTaggingMemo}
+            teamMode={teamMode}
+            teamId={teamId}
           />
 
           {/* タスク列 */}

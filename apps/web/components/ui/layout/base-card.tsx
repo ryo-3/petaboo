@@ -4,6 +4,7 @@ interface BaseCardProps {
   isChecked: boolean;
   onToggleCheck: () => void;
   onSelect: () => void;
+  onDoubleClick?: () => void;
   variant?: "normal" | "deleted";
   isSelected?: boolean;
   children: ReactNode;
@@ -17,6 +18,7 @@ function BaseCard({
   isChecked,
   onToggleCheck,
   onSelect,
+  onDoubleClick,
   variant = "normal",
   isSelected = false,
   children,
@@ -64,6 +66,7 @@ function BaseCard({
       )}
       <button
         onClick={onSelect}
+        onDoubleClick={onDoubleClick}
         className={`${
           isSelected
             ? "bg-gray-100 border border-gray-400"

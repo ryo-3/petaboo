@@ -5,7 +5,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "lsof -ti:7593 | xargs -r kill -9 2>/dev/null || true && NEXT_PUBLIC_API_URL=http://localhost:7594 npx next dev --turbopack --port 7593 2>&1 | tee ../../web.log",
+    "dev": "lsof -ti:7593 | xargs -r kill -9 2>/dev/null || true && > ../../web.log && NEXT_PUBLIC_API_URL=http://localhost:7594 npx next dev --turbopack --port 7593 2>&1 | ../../filter-logs.sh ../../web.log",
     "build": "next build",
     "start": "next start",
     "lint": "next lint --max-warnings 0",

@@ -285,17 +285,7 @@ export default function BoardRightPanel({
                 // 保存後に選択状態を更新
                 onSelectMemo?.(savedMemo);
               }}
-              onDelete={() => {
-                // メモエディターの削除処理
-                if (selectedMemo) {
-                  // 1. 蓋を開く
-                  setIsRightMemoLidOpen(true);
-                  setTimeout(() => {
-                    // 2. 削除実行
-                    handleMemoDelete();
-                  }, 200);
-                }
-              }}
+              onDelete={handleMemoDelete}
               onDeleteAndSelectNext={onMemoDeleteAndSelectNext}
               isLidOpen={isRightMemoLidOpen}
             />

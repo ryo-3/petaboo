@@ -50,23 +50,12 @@ export function useBoardItems({
   setCheckedDeletedMemos,
   isMemoDeleting,
 }: UseBoardItemsProps): UseBoardItemsReturn {
-  // データ更新時のログ
-  console.log(
-    `🧮 useBoardItems: アイテム計算 - boardId=${boardId}, allItems数=${boardWithItems?.items?.length || 0}, activeMemoTab=${activeMemoTab}`,
-  );
-
   // メモとタスクのアイテムを分離（読み込み中も空配列で処理）
   const allMemoItems = useMemo(() => {
     const memoItems =
       boardWithItems?.items?.filter(
         (item: BoardItemWithContent) => item.itemType === "memo",
       ) || [];
-    console.log(
-      `📝 allMemoItems計算結果: ${memoItems.length}個`,
-      memoItems.map(
-        (item) => `id=${item.content?.id}, title=${item.content?.title}`,
-      ),
-    );
     return memoItems;
   }, [boardWithItems]);
 
@@ -75,7 +64,6 @@ export function useBoardItems({
       boardWithItems?.items?.filter(
         (item: BoardItemWithContent) => item.itemType === "task",
       ) || [];
-    console.log(`✅ allTaskItems計算結果: ${taskItems.length}個`);
     return taskItems;
   }, [boardWithItems]);
 

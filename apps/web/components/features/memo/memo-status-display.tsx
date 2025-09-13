@@ -16,6 +16,7 @@ interface MemoStatusDisplayProps {
   checkedMemos?: Set<number>;
   onToggleCheck?: (memoId: number) => void;
   onSelectMemo?: (memo: Memo) => void;
+  onDoubleClick?: (memo: Memo) => void;
   selectedMemoId?: number;
   showEditDate?: boolean;
   showBoardName?: boolean;
@@ -54,6 +55,7 @@ interface DeletedMemoDisplayProps {
   checkedMemos?: Set<number>;
   onToggleCheck?: (memoId: number) => void;
   onSelectMemo?: (memo: DeletedMemo) => void;
+  onDoubleClick?: (memo: DeletedMemo) => void;
   selectedMemoId?: number;
   showEditDate?: boolean;
   showBoardName?: boolean;
@@ -92,6 +94,7 @@ function MemoStatusDisplay({
   checkedMemos,
   onToggleCheck,
   onSelectMemo,
+  onDoubleClick,
   selectedMemoId,
   showEditDate = false,
   showBoardName = false,
@@ -267,6 +270,7 @@ function MemoStatusDisplay({
         isChecked={props.isChecked}
         onToggleCheck={props.onToggleCheck}
         onSelect={props.onSelect}
+        onDoubleClick={() => onDoubleClick?.(memo)}
         isSelected={props.isSelected}
         showEditDate={props.showEditDate}
         showBoardName={props.showBoardName}
@@ -319,6 +323,7 @@ export function DeletedMemoDisplay({
   checkedMemos,
   onToggleCheck,
   onSelectMemo,
+  onDoubleClick,
   selectedMemoId,
   showEditDate = false,
   showBoardName = false,
@@ -412,6 +417,7 @@ export function DeletedMemoDisplay({
         isChecked={props.isChecked}
         onToggleCheck={props.onToggleCheck}
         onSelect={props.onSelect}
+        onDoubleClick={() => onDoubleClick?.(memo)}
         variant="deleted"
         isSelected={props.isSelected}
         showEditDate={props.showEditDate}

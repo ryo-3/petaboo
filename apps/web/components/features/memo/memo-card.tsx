@@ -9,6 +9,7 @@ interface MemoCardProps {
   isChecked: boolean;
   onToggleCheck: () => void;
   onSelect: () => void;
+  onDoubleClick?: () => void;
   variant?: "normal" | "deleted";
   isSelected?: boolean;
   showEditDate?: boolean;
@@ -27,6 +28,7 @@ function MemoCard({
   isChecked,
   onToggleCheck,
   onSelect,
+  onDoubleClick,
   variant = "normal",
   isSelected = false,
   showEditDate = false,
@@ -42,6 +44,7 @@ function MemoCard({
       isChecked={isChecked}
       onToggleCheck={onToggleCheck}
       onSelect={onSelect}
+      onDoubleClick={onDoubleClick}
       variant={variant}
       isSelected={isSelected}
       dataMemoId={memo.id}

@@ -2,33 +2,51 @@
 // 理由: DOM取得は十分高速（<0.5ms）でキャッシュの複雑さに見合わない
 
 /**
- * DOM上のdata-task-id属性から実際の表示順序を取得する
+ * DOM上のdata-task-id属性から実際の表示順序を取得する（重複除去あり）
  */
 export function getTaskDisplayOrder(): number[] {
   const taskListElements = document.querySelectorAll("[data-task-id]");
   const displayOrder: number[] = [];
+  const seenIds = new Set<number>();
 
-  taskListElements.forEach((element) => {
+  console.log(`🔍 [DOM] 現在表示中のタスク: ${taskListElements.length}件`);
+  taskListElements.forEach((element, index) => {
     const taskId = element.getAttribute("data-task-id");
+    const titleElement = element.querySelector(
+      ".task-title, [data-title], .title",
+    );
+    const title = titleElement?.textContent?.trim() || "タイトル不明";
+
+    console.log(`  ${index + 1}番目: ID=${taskId}, タイトル="${title}"`);
     if (taskId) {
-      displayOrder.push(parseInt(taskId, 10));
+      const id = parseInt(taskId, 10);
+      if (!seenIds.has(id)) {
+        seenIds.add(id);
+        displayOrder.push(id);
+      }
     }
   });
 
+  console.log(`🎨 [DOM] 重複除去後の表示順序: [${displayOrder.join(", ")}]`);
   return displayOrder;
 }
 
 /**
- * DOM上のdata-memo-id属性から実際の表示順序を取得する
+ * DOM上のdata-memo-id属性から実際の表示順序を取得する（重複除去あり）
  */
 export function getMemoDisplayOrder(): number[] {
   const memoListElements = document.querySelectorAll("[data-memo-id]");
   const displayOrder: number[] = [];
+  const seenIds = new Set<number>();
 
   memoListElements.forEach((element) => {
     const memoId = element.getAttribute("data-memo-id");
     if (memoId) {
-      displayOrder.push(parseInt(memoId, 10));
+      const id = parseInt(memoId, 10);
+      if (!seenIds.has(id)) {
+        seenIds.add(id);
+        displayOrder.push(id);
+      }
     }
   });
 

@@ -316,6 +316,7 @@ function TaskStatusDisplay({
       renderItem={renderTask}
       getSortValue={getSortValue}
       getDefaultSortValue={getDefaultSortValue}
+      itemType="task"
     />
   );
 }
@@ -456,6 +457,7 @@ export function DeletedTaskDisplay({
       getSortValue={getSortValue}
       getDefaultSortValue={getDefaultSortValue}
       variant="deleted"
+      itemType="task"
     />
   );
 }

@@ -12,6 +12,8 @@ interface UseTaskDeleteProps {
     deletedTask: Task,
     preDeleteDisplayOrder?: number[],
   ) => void;
+  teamMode?: boolean;
+  teamId?: number;
 }
 
 export function useTaskDelete({
@@ -20,11 +22,13 @@ export function useTaskDelete({
   onSelectTask,
   onClosePanel,
   onDeleteAndSelectNext,
+  teamMode = false,
+  teamId,
 }: UseTaskDeleteProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isLidOpen, setIsLidOpen] = useState(false);
-  const deleteTask = useDeleteTask();
+  const deleteTask = useDeleteTask({ teamMode, teamId });
 
   // 削除完了時の処理
   const handleDeleteComplete = (

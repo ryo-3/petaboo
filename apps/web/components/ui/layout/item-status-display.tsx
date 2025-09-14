@@ -42,6 +42,7 @@ interface ItemStatusDisplayProps<T extends { id: number }> {
   getDefaultSortValue: (item: T) => number;
   variant?: "normal" | "deleted";
   isBoard?: boolean; // ボード詳細画面での使用かどうか
+  itemType?: "task" | "memo"; // アイテムタイプ（DOM属性用）
 }
 
 function ItemStatusDisplay<T extends { id: number }>({
@@ -63,6 +64,7 @@ function ItemStatusDisplay<T extends { id: number }>({
   getDefaultSortValue,
   variant = "normal",
   isBoard = false,
+  itemType,
 }: ItemStatusDisplayProps<T>) {
   const getSortedItems = () => {
     if (!items) return [];
@@ -116,30 +118,43 @@ function ItemStatusDisplay<T extends { id: number }>({
     >
       {sortedItems
         .filter((item) => item && item.id !== undefined)
-        .map((item, index) => (
-          <div
-            key={
-              item.id !== undefined ? `item-${item.id}` : `item-index-${index}`
-            }
-          >
-            {renderItem(item, {
-              isChecked: checkedItems?.has(item.id) || false,
-              onToggleCheck: () => onToggleCheck?.(item.id),
-              onSelect: () => {
-                if (selectionMode === "check") {
-                  onToggleCheck?.(item.id);
-                } else {
-                  onSelectItem?.(item);
-                }
-              },
-              isSelected: selectedItemId === item.id,
-              showEditDate,
-              showBoardName,
-              showTags,
-              variant,
-            })}
-          </div>
-        ))}
+        .map((item, index) => {
+          // DOM順序取得のためのdata属性を動的に決定
+          const dataAttributes: { [key: string]: string } = {};
+          if (itemType === "task") {
+            dataAttributes["data-task-id"] = item.id.toString();
+          } else if (itemType === "memo") {
+            dataAttributes["data-memo-id"] = item.id.toString();
+          }
+
+          return (
+            <div
+              key={
+                item.id !== undefined
+                  ? `item-${item.id}`
+                  : `item-index-${index}`
+              }
+              {...dataAttributes}
+            >
+              {renderItem(item, {
+                isChecked: checkedItems?.has(item.id) || false,
+                onToggleCheck: () => onToggleCheck?.(item.id),
+                onSelect: () => {
+                  if (selectionMode === "check") {
+                    onToggleCheck?.(item.id);
+                  } else {
+                    onSelectItem?.(item);
+                  }
+                },
+                isSelected: selectedItemId === item.id,
+                showEditDate,
+                showBoardName,
+                showTags,
+                variant,
+              })}
+            </div>
+          );
+        })}
     </ItemGrid>
   );
 }

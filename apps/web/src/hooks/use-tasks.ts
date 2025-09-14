@@ -253,57 +253,165 @@ export function useDeleteTask(options?: {
     mutationFn: async (id: number) => {
       const token = await getToken();
 
+      console.log(
+        `🗑️ タスク削除開始: taskId=${id}, teamMode=${teamMode}, teamId=${teamId}`,
+      );
+
+      // 削除前チェック: キャッシュ内にタスクが存在するか確認
+      const currentTasks =
+        teamMode && teamId
+          ? queryClient.getQueryData<Task[]>(["team-tasks", teamId])
+          : queryClient.getQueryData<Task[]>(["tasks"]);
+
+      const taskExists = currentTasks?.some((task) => task.id === id);
+      console.log(
+        `🔍 削除前チェック: taskId=${id}, 存在=${taskExists}, 総タスク数=${currentTasks?.length || 0}`,
+      );
+
+      if (!taskExists) {
+        console.log(`⚠️ タスクが既に削除済みまたは存在しません: taskId=${id}`);
+        throw new Error(`タスク(ID: ${id})は既に削除済みまたは存在しません。`);
+      }
+
       if (teamMode && teamId) {
         // チームタスク削除
+        console.log(
+          `🚀 チームタスク削除API実行: teamId=${teamId}, taskId=${id}`,
+        );
         const response = await tasksApi.deleteTeamTask(
           teamId,
           id,
           token || undefined,
         );
         const result = await response.json();
+        console.log(`✅ チームタスク削除API成功: taskId=${id}`);
         return result;
       } else {
         // 個人タスク削除
+        console.log(`🚀 個人タスク削除API実行: taskId=${id}`);
         const response = await tasksApi.deleteTask(id, token || undefined);
         const result = await response.json();
+        console.log(`✅ 個人タスク削除API成功: taskId=${id}`);
         return result;
       }
     },
-    onSuccess: (_, id) => {
+    onSuccess: async (_, id) => {
+      console.log(
+        `🎉 タスク削除成功: taskId=${id}, teamMode=${teamMode}, teamId=${teamId}`,
+      );
+
       if (teamMode && teamId) {
-        // チームタスク一覧から削除されたタスクを除去
+        // 1. チームタスク一覧から削除されたタスクを即座に除去
+        console.log(
+          `🔄 [削除成功] チームタスクキャッシュ手動更新開始: taskId=${id}`,
+        );
         queryClient.setQueryData<Task[]>(["team-tasks", teamId], (oldTasks) => {
           if (!oldTasks) return [];
-          return oldTasks.filter((task) => task.id !== id);
+          const filteredTasks = oldTasks.filter((task) => task.id !== id);
+          console.log(
+            `📊 チームタスク数: ${oldTasks.length} → ${filteredTasks.length} (削除=${oldTasks.length - filteredTasks.length}件)`,
+          );
+          return filteredTasks;
         });
-        // チーム削除済み一覧は無効化（削除済みタスクが追加されるため）
-        queryClient.invalidateQueries({
+
+        // 2. チーム削除済み一覧は無効化（削除済みタスクが追加されるため）
+        console.log(
+          `🔄 [削除成功] チーム削除済みタスクキャッシュ無効化: teamId=${teamId}`,
+        );
+        await queryClient.invalidateQueries({
           queryKey: ["team-deleted-tasks", teamId],
         });
-        // チームボード関連のキャッシュを強制再取得（統計が変わるため）
-        queryClient.refetchQueries({ queryKey: ["team-boards", teamId] });
-        // チーム掲示板アイテムのキャッシュを無効化（掲示板からタスクが消えるため）
-        queryClient.invalidateQueries({
-          queryKey: ["team-boards", teamId],
+
+        // 3. チームボード関連のキャッシュを強制再取得（統計が変わるため）
+        console.log(
+          `🔄 [削除成功] チームボードキャッシュ強制再取得: teamId=${teamId}`,
+        );
+        await queryClient.refetchQueries({
+          queryKey: ["team-boards", teamId.toString()],
+        });
+
+        // 4. 【重要】ボードアイテムキャッシュを完全無効化（削除されたタスクが表示から消えるため）
+        console.log(
+          `🔄 [削除成功] ボードアイテムキャッシュ完全無効化開始: teamId=${teamId}`,
+        );
+        await queryClient.invalidateQueries({
+          queryKey: ["team-boards", teamId.toString()],
+          exact: false,
+        });
+
+        // 5. 特定ボードのアイテムキャッシュも強制無効化
+        const allQueries = queryClient.getQueryCache().getAll();
+        const boardItemsQueries = allQueries.filter((q) => {
+          const key = q.queryKey as string[];
+          return (
+            key[0] === "team-boards" &&
+            key[1] === teamId.toString() &&
+            key[3] === "items"
+          );
+        });
+
+        console.log(
+          `🔍 [削除成功] 発見されたボードアイテムクエリ数: ${boardItemsQueries.length}`,
+        );
+        for (const query of boardItemsQueries) {
+          console.log(
+            `🔄 [削除成功] ボードアイテムクエリ無効化: ${JSON.stringify(query.queryKey)}`,
+          );
+          await queryClient.invalidateQueries({
+            queryKey: query.queryKey,
+            exact: true,
+          });
+        }
+
+        // 6. 強制再取得
+        console.log(`🚀 [削除成功] 全ボードアイテム強制再取得開始`);
+        await queryClient.refetchQueries({
+          queryKey: ["team-boards", teamId.toString()],
           exact: false,
         });
       } else {
-        // タスク一覧から削除されたタスクを除去
+        // 個人モード
+        console.log(
+          `🔄 [削除成功] 個人タスクキャッシュ手動更新開始: taskId=${id}`,
+        );
         queryClient.setQueryData<Task[]>(["tasks"], (oldTasks) => {
           if (!oldTasks) return [];
-          return oldTasks.filter((task) => task.id !== id);
+          const filteredTasks = oldTasks.filter((task) => task.id !== id);
+          console.log(
+            `📊 個人タスク数: ${oldTasks.length} → ${filteredTasks.length} (削除=${oldTasks.length - filteredTasks.length}件)`,
+          );
+          return filteredTasks;
         });
+
         // 削除済み一覧は無効化（削除済みタスクが追加されるため）
-        queryClient.invalidateQueries({ queryKey: ["deleted-tasks"] });
+        console.log(`🔄 [削除成功] 個人削除済みタスクキャッシュ無効化`);
+        await queryClient.invalidateQueries({ queryKey: ["deleted-tasks"] });
+
         // ボード関連のキャッシュを強制再取得（統計が変わるため）
-        queryClient.refetchQueries({ queryKey: ["boards"] });
+        console.log(`🔄 [削除成功] 個人ボードキャッシュ強制再取得`);
+        await queryClient.refetchQueries({ queryKey: ["boards"] });
       }
+
+      console.log(`✅ [削除成功] キャッシュ更新完了: taskId=${id}`);
+
       // 全タグ付け情報を無効化（削除されたタスクに関連するタグ情報が変わる可能性があるため）
-      queryClient.invalidateQueries({ queryKey: ["taggings", "all"] });
+      await queryClient.invalidateQueries({ queryKey: ["taggings", "all"] });
     },
     onError: (error) => {
-      console.error("タスク削除に失敗しました:", error);
-      showToast("タスク削除に失敗しました", "error");
+      const errorObj = error as Error;
+      console.error("❌ タスク削除エラー詳細:", {
+        message: errorObj.message,
+        name: errorObj.name,
+        stack: errorObj.stack,
+        cause: errorObj.cause,
+        fullError: error,
+      });
+
+      // エラーメッセージをより詳しく表示
+      const errorMessage =
+        errorObj.message || errorObj.toString() || "不明なエラー";
+      console.error("❌ タスク削除失敗:", errorMessage);
+      showToast(`タスク削除に失敗しました: ${errorMessage}`, "error");
     },
   });
 }

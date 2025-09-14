@@ -212,6 +212,8 @@ function TaskEditor({
     onSelectTask,
     onClosePanel,
     onDeleteAndSelectNext,
+    teamMode,
+    teamId,
   });
 
   // アニメーション状態管理

@@ -308,6 +308,7 @@ function MemoStatusDisplay({
       renderItem={renderMemo}
       getSortValue={getSortValue}
       getDefaultSortValue={getDefaultSortValue}
+      itemType="memo"
     />
   );
 }

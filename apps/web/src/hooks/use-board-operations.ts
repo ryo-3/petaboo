@@ -291,31 +291,20 @@ export function useBoardOperations({
 
   const handleTaskDeleteAndSelectNext = useCallback(
     (deletedTask: Task) => {
-      console.log(
-        `🎯 [ボード] タスク削除後次選択開始: deletedTask.id=${deletedTask.id}`,
-      );
-
       if (!onSelectTask) {
-        console.log(`❌ [ボード] onSelectTaskが未定義のため処理中断`);
         return;
       }
 
       // 削除前のタスク一覧を取得（boardTasksは削除前のデータ）
       const allTasks = boardTasks;
-      console.log(`📋 [ボード] 削除前タスク: ${allTasks.length}件`);
-      allTasks.forEach((task, index) => {
-        console.log(`  ${index + 1}. ID=${task.id}, タイトル="${task.title}"`);
-      });
 
       if (allTasks.length === 0) {
-        console.log(`⚠️ [ボード] タスク一覧が空のため選択解除`);
         onClearSelection?.();
         return;
       }
 
       // DOM表示順序を取得
       const displayOrder = getTaskDisplayOrder();
-      console.log(`🎨 [ボード] DOM表示順序: [${displayOrder.join(", ")}]`);
 
       // メモと同じロジックを使用
       const nextTask = getNextItemAfterDeletion(
@@ -323,15 +312,10 @@ export function useBoardOperations({
         deletedTask,
         displayOrder,
       );
-      console.log(
-        `⏭️ [ボード] 次タスク選択結果: nextTask=${nextTask?.id || "null"}`,
-      );
 
       if (nextTask && nextTask.id !== deletedTask.id) {
-        console.log(`✅ [ボード] 次タスク選択実行: ${nextTask.id}`);
         onSelectTask(nextTask);
       } else {
-        console.log(`❌ [ボード] 次タスクなしまたは同一タスクのため選択解除`);
         onClearSelection?.();
       }
     },

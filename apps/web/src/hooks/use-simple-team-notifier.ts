@@ -99,7 +99,6 @@ export function useSimpleTeamNotifier(
     // チェック間隔を決定（シンプル版）
     const checkInterval = isVisible ? 10000 : null; // アクティブ: 10秒, バックグラウンド: 停止
 
-    // console.log(`🎯 チーム切り替え検知: ${teamName}`);
     // console.log(
     //   `🚀 通知チェック開始: ${teamName} (${checkInterval ? `${checkInterval / 1000}秒間隔` : "停止"})`,
     // );
@@ -154,7 +153,6 @@ export function useSimpleTeamNotifier(
           },
         };
 
-        // console.log("✅ 通知チェック完了:", result);
         // if (finalHasUpdates) {
         //   console.log(
         //     `🔔 通知あり: チーム ${teamName} に申請あり (${resultText})`,
@@ -208,7 +206,6 @@ export function useSimpleTeamNotifier(
     const handleForceCheck = (event: CustomEvent) => {
       const { teamName: eventTeamName } = event.detail;
       if (eventTeamName === teamName) {
-        // console.log(`🚀 強制通知チェック実行: ${teamName}`);
         checkNow();
       }
     };

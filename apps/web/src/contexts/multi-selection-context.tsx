@@ -195,7 +195,6 @@ export function MultiSelectionProvider({ children }: { children: ReactNode }) {
         const newSet = new Set(prev);
         console.log(`現在のチェック状態:`, Array.from(prev));
         if (newSet.has(memoId)) {
-          console.log(`✅ チェック解除: ${memoId}`);
           newSet.delete(memoId);
         } else {
           console.log(`☑️ チェック追加: ${memoId}`);

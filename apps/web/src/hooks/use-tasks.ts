@@ -128,7 +128,6 @@ export function useCreateTask(options?: {
 
         // バックグラウンドでデータを再取得（楽観的更新の検証）
         setTimeout(() => {
-          console.log(`🔄 バックグラウンド検証開始: teamId=${teamId}`);
           queryClient.refetchQueries({
             predicate: (query) => {
               const key = query.queryKey as string[];
@@ -136,10 +135,7 @@ export function useCreateTask(options?: {
             },
           });
         }, 1000);
-
-        console.log(`✨ 楽観的更新完了: teamId=${teamId}`);
       } else {
-        console.log(`🔥 [useCreateTask] 個人タスクキャッシュ無効化`);
         queryClient.invalidateQueries({ queryKey: ["tasks"] });
 
         // 個人タスクのキャッシュを更新
@@ -153,10 +149,7 @@ export function useCreateTask(options?: {
       }
 
       // ボード統計の再計算のためボード一覧を無効化
-      console.log(`🔥 [useCreateTask] ボード統計キャッシュ無効化`);
       queryClient.invalidateQueries({ queryKey: ["boards"] });
-
-      console.log(`🔥 [useCreateTask] onSuccessコールバック完了`);
     },
     onError: (error) => {
       console.error("タスク作成に失敗しました:", error);
@@ -284,14 +277,11 @@ export function useDeleteTask(options?: {
           token || undefined,
         );
         const result = await response.json();
-        console.log(`✅ チームタスク削除API成功: taskId=${id}`);
         return result;
       } else {
         // 個人タスク削除
-        console.log(`🚀 個人タスク削除API実行: taskId=${id}`);
         const response = await tasksApi.deleteTask(id, token || undefined);
         const result = await response.json();
-        console.log(`✅ 個人タスク削除API成功: taskId=${id}`);
         return result;
       }
     },
@@ -364,7 +354,6 @@ export function useDeleteTask(options?: {
         }
 
         // 6. 強制再取得
-        console.log(`🚀 [削除成功] 全ボードアイテム強制再取得開始`);
         await queryClient.refetchQueries({
           queryKey: ["team-boards", teamId.toString()],
           exact: false,
@@ -384,15 +373,11 @@ export function useDeleteTask(options?: {
         });
 
         // 削除済み一覧は無効化（削除済みタスクが追加されるため）
-        console.log(`🔄 [削除成功] 個人削除済みタスクキャッシュ無効化`);
         await queryClient.invalidateQueries({ queryKey: ["deleted-tasks"] });
 
         // ボード関連のキャッシュを強制再取得（統計が変わるため）
-        console.log(`🔄 [削除成功] 個人ボードキャッシュ強制再取得`);
         await queryClient.refetchQueries({ queryKey: ["boards"] });
       }
-
-      console.log(`✅ [削除成功] キャッシュ更新完了: taskId=${id}`);
 
       // 全タグ付け情報を無効化（削除されたタスクに関連するタグ情報が変わる可能性があるため）
       await queryClient.invalidateQueries({ queryKey: ["taggings", "all"] });

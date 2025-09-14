@@ -50,7 +50,6 @@ export function useDeletedItemOperations<
         setScreenMode,
         restoreOptions,
       );
-      console.log(`✅ 復元後次選択処理完了: deletedItem.id=${deletedItem.id}`);
     },
     [deletedItems, onSelectDeletedItem, setScreenMode, restoreOptions],
   );

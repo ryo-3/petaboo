@@ -111,27 +111,9 @@ function TaskEditor({
 
     const originalId = task.originalId || task.id.toString();
 
-    console.log(
-      `🔍 [itemBoards] タスク分析開始: taskId=${task.id}, originalId=${originalId}, preloadedBoardItems数=${preloadedBoardItems.length}`,
-    );
-
-    // デバッグ: 全てのpreloadedBoardItemsを確認
-    preloadedBoardItems.forEach((item, index) => {
-      console.log(
-        `🔍 [itemBoards] Item[${index}]: type=${item.itemType}, itemId=${item.itemId}, boardId=${item.boardId}`,
-      );
-    });
-
     // このタスクに紐づいているボードアイテムを抽出 - itemIdフィールドを使用
     const taskBoardItems = preloadedBoardItems.filter(
       (item) => item.itemType === "task" && item.itemId === originalId,
-    );
-
-    console.log(
-      `🔍 [itemBoards] フィルタリング結果: マッチしたアイテム=${taskBoardItems.length}件`,
-      taskBoardItems.map(
-        (item) => `boardId=${item.boardId}, itemId=${item.itemId}`,
-      ),
     );
 
     // ボードアイテムからボード情報を取得
@@ -141,20 +123,12 @@ function TaskEditor({
         (board): board is NonNullable<typeof board> => board !== undefined,
       );
 
-    console.log(
-      `🔍 [itemBoards] 最終ボード情報: ${boards.length}件`,
-      boards.map((board) => `boardId=${board.id}, name=${board.name}`),
-    );
-
     // initialBoardIdがある場合は、そのボードも含める（重複は自動的に除外される）
     if (initialBoardId) {
       const initialBoard = preloadedBoards.find(
         (board) => board.id === initialBoardId,
       );
       if (initialBoard && !boards.some((b) => b.id === initialBoardId)) {
-        console.log(
-          `🔍 [itemBoards] initialBoardIdを追加: boardId=${initialBoardId}`,
-        );
         boards.push(initialBoard);
       }
     }
@@ -283,9 +257,6 @@ function TaskEditor({
         return boardIds;
       } else if (initialBoardId) {
         // itemBoardsが空でinitialBoardIdがある場合はそれを使用（URL直接アクセス対応）
-        console.log(
-          `🔍 [initialBoardIds] itemBoardsが空のため、initialBoardIdを使用: ${initialBoardId}`,
-        );
         return [initialBoardId.toString()];
       } else {
         return [];

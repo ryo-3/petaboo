@@ -32,18 +32,11 @@ export default function TeamBoardDetailPage() {
   useEffect(() => {
     if (urlParsed) return; // 既に解析済みなら何もしない
 
-    console.log(
-      `📍 [URL解析] 開始: pathname=${window.location.pathname}, search=${window.location.search}`,
-    );
-
     // まずクエリパラメータをチェック（リダイレクトから来た場合）
     const initialMemoParam = searchParams.get("initialMemo");
     const initialTaskParam = searchParams.get("initialTask");
 
     if (initialMemoParam) {
-      console.log(
-        `📍 [URL解析] クエリパラメータからメモID取得: ${initialMemoParam}`,
-      );
       setInitialMemoId(initialMemoParam);
       setInitialTaskId(null); // 他方をクリア
       setUrlParsed(true);
@@ -51,9 +44,6 @@ export default function TeamBoardDetailPage() {
     }
 
     if (initialTaskParam) {
-      console.log(
-        `📍 [URL解析] クエリパラメータからタスクID取得: ${initialTaskParam}`,
-      );
       setInitialTaskId(initialTaskParam);
       setInitialMemoId(null); // 他方をクリア
       setUrlParsed(true);
@@ -67,13 +57,11 @@ export default function TeamBoardDetailPage() {
       const taskMatch = pathname.match(/\/task\/(\d+)$/);
 
       if (memoMatch?.[1]) {
-        console.log(`📍 [URL解析] パスからメモID取得: ${memoMatch[1]}`);
         setInitialMemoId(memoMatch[1]);
         setInitialTaskId(null);
         setUrlParsed(true);
         return;
       } else if (taskMatch?.[1]) {
-        console.log(`📍 [URL解析] パスからタスクID取得: ${taskMatch[1]}`);
         setInitialTaskId(taskMatch[1]);
         setInitialMemoId(null);
         setUrlParsed(true);
@@ -82,7 +70,6 @@ export default function TeamBoardDetailPage() {
     }
 
     // どのパターンにも該当しない場合も解析完了とする
-    console.log(`📍 [URL解析] 該当するパラメータなし`);
     setUrlParsed(true);
   }, [searchParams, urlParsed]);
 
@@ -121,83 +108,60 @@ export default function TeamBoardDetailPage() {
   useEffect(() => {
     // URL解析が完了していない場合は待機
     if (!urlParsed) {
-      console.log(`⏳ [URL初期選択] URL解析待機中`);
       return;
     }
 
     // データがまだロード中の場合は処理を延期
     if (memosLoading || tasksLoading) {
-      console.log(`⏳ [URL初期選択] データロード中のため待機`);
       return;
     }
 
     // データが用意されていない場合は処理を延期
     if (!teamMemosData || !teamTasksData) {
-      console.log(`⏳ [URL初期選択] チームデータ未取得のため待機`);
       return;
     }
-
-    console.log(
-      `🎯 [URL初期選択] チェック開始: memoId=${initialMemoId}, taskId=${initialTaskId}`,
-    );
-    console.log(
-      `🎯 [URL初期選択] データ状態: teamMemosData=${teamMemosData.length}件, teamTasksData=${teamTasksData.length}件`,
-    );
 
     let hasSelection = false;
 
     // 初期メモ選択（メモIDがある場合）
     if (initialMemoId) {
-      console.log(`🎯 [URL初期選択] メモ検索開始: ID=${initialMemoId}`);
-
       const foundMemo = teamMemosData.find(
         (memo) => memo.id.toString() === initialMemoId,
       );
       if (foundMemo) {
         // 現在選択されているのと違う場合のみ更新
         if (!selectedMemo || selectedMemo.id.toString() !== initialMemoId) {
-          console.log(`✅ [URL初期選択] メモ発見・選択: ${foundMemo.title}`);
           // TeamMemo型をMemo型として扱う（型の互換性を仮定）
           setSelectedMemo(foundMemo as unknown as Memo);
           setSelectedTask(null); // タスクの選択を解除
         } else {
-          console.log(`✅ [URL初期選択] メモ既選択: ${foundMemo.title}`);
         }
         hasSelection = true;
       } else {
-        console.log(`❌ [URL初期選択] メモが見つからない: ID=${initialMemoId}`);
       }
     }
 
     // 初期タスク選択（メモ選択がない場合でタスクIDがある場合）
     if (initialTaskId && !hasSelection) {
-      console.log(`🎯 [URL初期選択] タスク検索開始: ID=${initialTaskId}`);
-
       const foundTask = teamTasksData.find(
         (task) => task.id.toString() === initialTaskId,
       );
       if (foundTask) {
         // 現在選択されているのと違う場合のみ更新
         if (!selectedTask || selectedTask.id.toString() !== initialTaskId) {
-          console.log(`✅ [URL初期選択] タスク発見・選択: ${foundTask.title}`);
           // TeamTask型をTask型として扱う（型の互換性を仮定）
           setSelectedTask(foundTask as unknown as Task);
           setSelectedMemo(null); // メモの選択を解除
         } else {
-          console.log(`✅ [URL初期選択] タスク既選択: ${foundTask.title}`);
         }
         hasSelection = true;
       } else {
-        console.log(
-          `❌ [URL初期選択] タスクが見つからない: ID=${initialTaskId}`,
-        );
       }
     }
 
     // URLにメモIDもタスクIDもない場合は何もしない（選択をクリアしない）
 
     if (!hasSelection) {
-      console.log(`🎯 [URL初期選択] 処理完了 - 条件に該当するアイテムなし`);
     }
   }, [initialMemoId, initialTaskId, urlParsed, memosLoading, tasksLoading]);
 

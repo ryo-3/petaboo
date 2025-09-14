@@ -76,21 +76,12 @@ export function usePersonalNotifier() {
     };
 
     setData(result);
-
-    // デバッグログ
-    if (hasPendingRequests) {
-      console.log("🔍 申請中データあり - 通知チェック実行");
-    }
-    if (newApprovals.length > 0) {
-      console.log(`🎉 新しい承認通知: ${newApprovals.length}件`, newApprovals);
-    }
   }, [myRequests]);
 
   // 手動で既読にする関数
   const markAsRead = () => {
     const now = new Date().toISOString();
     localStorage.setItem("personalNotificationRead", now);
-    console.log("🔔 個人通知を既読にしました");
 
     // データを更新
     if (data) {

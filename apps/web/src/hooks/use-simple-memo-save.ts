@@ -293,7 +293,6 @@ export function useSimpleMemoSave({
                     itemId: createdMemo.originalId || createdMemo.id.toString(),
                   },
                 });
-                console.log(`✅ ボードへの追加成功: boardId=${boardId}`);
               } catch (error: unknown) {
                 const errorMessage =
                   error instanceof Error ? error.message : String(error);
@@ -308,18 +307,13 @@ export function useSimpleMemoSave({
             });
 
             await Promise.all(addPromises);
-            console.log(`🎉 全ボード追加処理完了`);
 
             // ボード追加後にキャッシュを無効化
             queryClient.invalidateQueries({
               queryKey: ["item-boards", "memo", createdMemo.originalId],
             });
-            console.log(
-              `🔄 ボード追加後のキャッシュ無効化完了: ["item-boards", "memo", "${createdMemo.originalId}"]`,
-            );
           }
 
-          console.log(`🏁 新規メモ作成・保存完了: memo.id=${createdMemo.id}`);
           onSaveComplete?.(createdMemo, false, true);
         } else {
           // 空の新規メモは単に閉じる

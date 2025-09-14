@@ -43,13 +43,9 @@ export function useCreateTag() {
       return data as Tag;
     },
     onSuccess: () => {
-      // console.log('🔄 新規タグ作成成功、全キャッシュ無効化:', { id: newTag.id, name: newTag.name });
-
       // 新規タグ作成時は複数のキャッシュキーに影響するため、全て無効化して再取得を促す
       queryClient.invalidateQueries({ queryKey: ["tags"] });
       queryClient.invalidateQueries({ queryKey: ["taggings", "all"] });
-
-      // console.log('✅ 全タグキャッシュとタグ付けキャッシュを無効化完了');
     },
   });
 }

@@ -9,7 +9,6 @@ export function getTaskDisplayOrder(): number[] {
   const displayOrder: number[] = [];
   const seenIds = new Set<number>();
 
-  console.log(`🔍 [DOM] 現在表示中のタスク: ${taskListElements.length}件`);
   taskListElements.forEach((element, index) => {
     const taskId = element.getAttribute("data-task-id");
     const titleElement = element.querySelector(
@@ -17,7 +16,6 @@ export function getTaskDisplayOrder(): number[] {
     );
     const title = titleElement?.textContent?.trim() || "タイトル不明";
 
-    console.log(`  ${index + 1}番目: ID=${taskId}, タイトル="${title}"`);
     if (taskId) {
       const id = parseInt(taskId, 10);
       if (!seenIds.has(id)) {
@@ -27,7 +25,6 @@ export function getTaskDisplayOrder(): number[] {
     }
   });
 
-  console.log(`🎨 [DOM] 重複除去後の表示順序: [${displayOrder.join(", ")}]`);
   return displayOrder;
 }
 
@@ -164,28 +161,20 @@ export function createDeletedNextSelectionHandler<
     onSelectWithFromFlag?: boolean; // onSelectにfromFullList=trueを渡すか
   },
 ) {
-  console.log(
-    `🎯 次選択ハンドラー実行: deletedItem.id=${deletedItem.id}, 全削除済み${deletedItems.length}件, isRestore=${options?.isRestore}`,
-  );
   const nextItem = getNextDeletedItem(deletedItems, deletedItem);
 
   if (nextItem) {
-    console.log(`⏭️ 次アイテム選択: nextItem.id=${nextItem.id}`);
     // 復元処理の場合はfromFullList=trueを渡す
     if (options?.isRestore && options?.onSelectWithFromFlag) {
-      console.log(`🔄 復元モードで次アイテム選択 (fromFullList=true)`);
       onSelect(nextItem, true);
     } else {
-      console.log(`📋 通常モードで次アイテム選択`);
       onSelect(nextItem);
     }
     setViewMode("view");
   } else {
-    console.log(`❌ 次アイテムなし - 選択解除`);
     // 削除済みアイテムがなくなった場合は選択を解除（画面は削除済みリストのまま）
     onSelect(null);
   }
-  console.log(`✅ 次選択ハンドラー完了: deletedItem.id=${deletedItem.id}`);
 }
 
 /**

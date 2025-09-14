@@ -148,7 +148,6 @@ export function useCreateMemo(options?: {
 
         // バックグラウンドでデータを再取得（楽観的更新の検証）
         setTimeout(() => {
-          console.log(`🔄 バックグラウンド検証開始: teamId=${teamId}`);
           queryClient.refetchQueries({
             predicate: (query) => {
               const key = query.queryKey as string[];
@@ -156,8 +155,6 @@ export function useCreateMemo(options?: {
             },
           });
         }, 1000);
-
-        console.log(`✨ 楽観的更新完了: teamId=${teamId}`);
       } else {
         // 個人メモのキャッシュを更新
         queryClient.setQueryData<Memo[]>(["memos"], (oldMemos) => {
@@ -208,7 +205,6 @@ export function useUpdateMemo(options?: {
           token || undefined,
         );
         const responseData = await response.json();
-        console.log(`✅ チームメモ更新API成功: teamId=${teamId}, memoId=${id}`);
         return responseData as Memo;
       } else {
         // 個人メモ更新
@@ -219,7 +215,6 @@ export function useUpdateMemo(options?: {
           token || undefined,
         );
         const responseData = await response.json();
-        console.log(`✅ 個人メモ更新API成功: memoId=${id}`);
         return responseData as Memo;
       }
     },
@@ -314,8 +309,6 @@ export function useUpdateMemo(options?: {
             },
           });
         }, 1000);
-
-        console.log(`✨ 楽観的更新完了（更新時）: teamId=${teamId}`);
       } else {
         // 個人メモのキャッシュを更新
         queryClient.setQueryData<Memo[]>(["memos"], (oldMemos) => {
@@ -378,12 +371,10 @@ export function useDeleteMemo(options?: {
         );
         // チームメモ削除
         await memosApi.deleteTeamMemo(teamId, id, token || undefined);
-        console.log(`✅ チームメモ削除API成功: teamId=${teamId}, memoId=${id}`);
       } else {
         console.log(`🌐 個人メモ削除API呼び出し: memoId=${id}`);
         // 個人メモ削除
         await memosApi.deleteNote(id, token || undefined);
-        console.log(`✅ 個人メモ削除API成功: memoId=${id}`);
       }
     },
     onSuccess: (_, id) => {
@@ -528,7 +519,6 @@ export function useRestoreMemo(options?: {
         queryClient.invalidateQueries({ queryKey: ["board-deleted-items"] });
         // ボードアイテムのキャッシュを無効化（復元時にボード紐づきも復元されるため）
         queryClient.invalidateQueries({ queryKey: ["board-items"] });
-        console.log(`✅ 個人メモ復元キャッシュ更新完了`);
       }
       // 全タグ付け情報を無効化（復元されたメモのタグ情報が変わる可能性があるため）
       queryClient.invalidateQueries({ queryKey: ["taggings", "all"] });

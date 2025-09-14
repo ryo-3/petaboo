@@ -75,12 +75,20 @@ export function getNextItemAfterDeletion<T extends { id: number }>(
   deletedItem: T,
   displayOrder: number[],
 ): T | null {
+  console.log(`削除前のアイテム一覧:`);
+  items.forEach((item, index) => {
+    const title = (item as any).title || "?";
+    console.log(`${index + 1}. ${title} (ID: ${item.id})`);
+  });
+
   const sortedItems = sortByDisplayOrder(items, displayOrder);
   const deletedIndex = sortedItems.findIndex(
     (item) => item.id === deletedItem.id,
   );
 
-  if (deletedIndex === -1) return null;
+  if (deletedIndex === -1) {
+    return null;
+  }
 
   // 削除されたアイテムの次のアイテムを選択
   if (deletedIndex < sortedItems.length - 1) {

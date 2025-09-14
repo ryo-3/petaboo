@@ -98,22 +98,13 @@ export function useCreateMemo(options?: {
       }
     },
     onSuccess: (newMemo) => {
-      console.log(
-        `📝 メモ作成成功: id=${newMemo.id}, teamMode=${teamMode}, teamId=${teamId}`,
-      );
       if (teamMode && teamId) {
         // チームメモのキャッシュを更新
         queryClient.setQueryData<Memo[]>(["team-memos", teamId], (oldMemos) => {
-          console.log(
-            `📋 チームメモ一覧にメモ追加: ${oldMemos?.length || 0} → ${(oldMemos?.length || 0) + 1}`,
-          );
           if (!oldMemos) return [newMemo];
           return [...oldMemos, newMemo];
         });
         // チーム掲示板キャッシュを楽観的更新（空表示を避けるため）
-        console.log(
-          `🏷️ チーム掲示板キャッシュ楽観的更新（作成時）: teamId=${teamId}, memoId=${newMemo.id}`,
-        );
 
         // 既存のボードアイテムキャッシュに新しいメモを即座に追加
         // 実際のクエリキーは ["team-boards", "18", 1, "items"] の形式
@@ -122,9 +113,6 @@ export function useCreateMemo(options?: {
           ["team-boards", teamId.toString(), boardId, "items"],
           (oldData: any) => {
             if (oldData?.items) {
-              console.log(
-                `🚀 楽観的更新: ${oldData.items.length} → ${oldData.items.length + 1}個`,
-              );
               return {
                 ...oldData,
                 items: [
@@ -189,15 +177,8 @@ export function useUpdateMemo(options?: {
     mutationFn: async ({ id, data }: { id: number; data: UpdateMemoData }) => {
       const token = await getToken();
 
-      console.log(
-        `📝 メモ更新開始: id=${id}, teamMode=${teamMode}, teamId=${teamId}`,
-      );
-
       if (teamMode && teamId) {
         // チームメモ更新
-        console.log(
-          `🌐 チームメモ更新API呼び出し: teamId=${teamId}, memoId=${id}`,
-        );
         const response = await memosApi.updateTeamMemo(
           teamId,
           id,
@@ -208,7 +189,6 @@ export function useUpdateMemo(options?: {
         return responseData as Memo;
       } else {
         // 個人メモ更新
-        console.log(`🌐 個人メモ更新API呼び出し: memoId=${id}`);
         const response = await memosApi.updateNote(
           id,
           data,
@@ -219,20 +199,12 @@ export function useUpdateMemo(options?: {
       }
     },
     onSuccess: (updatedMemo, { id, data }) => {
-      console.log(
-        `📝 メモ更新成功: id=${id}, teamMode=${teamMode}, teamId=${teamId}`,
-      );
-
       if (teamMode && teamId) {
-        console.log(`📋 チームメモキャッシュ更新開始: teamId=${teamId}`);
         // チームメモ一覧のキャッシュを更新
         queryClient.setQueryData<Memo[]>(["team-memos", teamId], (oldMemos) => {
           if (!oldMemos) return [updatedMemo];
           const updated = oldMemos.map((memo) => {
             if (memo.id === id) {
-              console.log(
-                `🔄 チームメモ更新: id=${id}, title="${data.title || memo.title}"`,
-              );
               // APIが完全なメモオブジェクトを返した場合はそれを使用
               if (
                 updatedMemo.title !== undefined &&
@@ -250,16 +222,10 @@ export function useUpdateMemo(options?: {
             }
             return memo;
           });
-          console.log(
-            `📝 チームメモ一覧更新完了: ${oldMemos.length}件中1件更新`,
-          );
           return updated;
         });
 
         // チーム掲示板キャッシュも楽観的更新（作成時と同様のパターン）
-        console.log(
-          `🏷️ チーム掲示板キャッシュ楽観的更新（更新時）: teamId=${teamId}, memoId=${id}`,
-        );
 
         // 既存のボードアイテムキャッシュ内のメモを更新
         const boardId = 1; // 仮値（実際はinitialBoardIdから取得すべき）
@@ -269,9 +235,6 @@ export function useUpdateMemo(options?: {
             if (oldData?.items) {
               const updatedItems = oldData.items.map((item: any) => {
                 if (item.itemType === "memo" && item.content?.id === id) {
-                  console.log(
-                    `🔄 ボードアイテム更新: memoId=${id}, title="${data.title || item.content.title}"`,
-                  );
                   return {
                     ...item,
                     content: {
@@ -285,9 +248,6 @@ export function useUpdateMemo(options?: {
                 }
                 return item;
               });
-              console.log(
-                `🚀 楽観的更新（更新）: ボードアイテム内のメモを更新`,
-              );
               return {
                 ...oldData,
                 items: updatedItems,
@@ -299,9 +259,6 @@ export function useUpdateMemo(options?: {
 
         // バックグラウンドでデータを再取得（楽観的更新の検証）
         setTimeout(() => {
-          console.log(
-            `🔄 バックグラウンド検証開始（更新時）: teamId=${teamId}`,
-          );
           queryClient.refetchQueries({
             predicate: (query) => {
               const key = query.queryKey as string[];
@@ -360,27 +317,17 @@ export function useDeleteMemo(options?: {
 
   return useMutation({
     mutationFn: async (id: number) => {
-      console.log(
-        `🚀 メモ削除開始: id=${id}, teamMode=${teamMode}, teamId=${teamId}`,
-      );
       const token = await getToken();
 
       if (teamMode && teamId) {
-        console.log(
-          `🌐 チームメモ削除API呼び出し: teamId=${teamId}, memoId=${id}`,
-        );
         // チームメモ削除
         await memosApi.deleteTeamMemo(teamId, id, token || undefined);
       } else {
-        console.log(`🌐 個人メモ削除API呼び出し: memoId=${id}`);
         // 個人メモ削除
         await memosApi.deleteNote(id, token || undefined);
       }
     },
     onSuccess: (_, id) => {
-      console.log(
-        `🗑️ メモ削除成功: id=${id}, teamMode=${teamMode}, teamId=${teamId}`,
-      );
       if (teamMode && teamId) {
         // チームメモ一覧から削除されたメモを除去
         queryClient.setQueryData<Memo[]>(["team-memos", teamId], (oldMemos) => {
@@ -391,11 +338,11 @@ export function useDeleteMemo(options?: {
         queryClient.invalidateQueries({
           queryKey: ["team-deleted-memos", teamId],
         });
-        // チームボード関連のキャッシュを無効化（統計が変わるため）
-        queryClient.invalidateQueries({
+        // チームボード関連のキャッシュを強制再取得（統計が変わるため）
+        queryClient.refetchQueries({
           queryKey: ["team-boards", teamId],
         });
-        // チーム掲示板アイテムキャッシュも無効化して強制再取得（掲示板から削除されたメモを即座に除去）
+        // ボードアイテムキャッシュを強制再取得（UIからも削除するため）
         queryClient.refetchQueries({
           predicate: (query) => {
             const key = query.queryKey as string[];
@@ -471,12 +418,7 @@ export function useRestoreMemo(options?: {
       }
     },
     onSuccess: (data, originalId) => {
-      console.log(
-        `🔄 メモ復元成功: originalId=${originalId}, teamMode=${teamMode}, teamId=${teamId}`,
-      );
-
       if (teamMode && teamId) {
-        console.log(`📋 チームメモ復元キャッシュ更新開始: teamId=${teamId}`);
         // チームメモ復元時のキャッシュ無効化と強制再取得
         queryClient.invalidateQueries({ queryKey: ["team-memos", teamId] });
         queryClient.refetchQueries({ queryKey: ["team-memos", teamId] });
@@ -504,11 +446,7 @@ export function useRestoreMemo(options?: {
             queryKey: ["team-board-deleted-items", teamId.toString(), boardId],
           });
         }
-        console.log(
-          `✅ チームメモ復元キャッシュ更新完了: teamId=${teamId}, boardId=${boardId}`,
-        );
       } else {
-        console.log(`📋 個人メモ復元キャッシュ更新開始`);
         // 個人メモ復元時のキャッシュ無効化
         queryClient.invalidateQueries({ queryKey: ["memos"] });
         queryClient.invalidateQueries({ queryKey: ["deletedMemos"] });
@@ -522,7 +460,6 @@ export function useRestoreMemo(options?: {
       }
       // 全タグ付け情報を無効化（復元されたメモのタグ情報が変わる可能性があるため）
       queryClient.invalidateQueries({ queryKey: ["taggings", "all"] });
-      console.log(`🏷️ タグキャッシュ無効化完了`);
     },
   });
 }

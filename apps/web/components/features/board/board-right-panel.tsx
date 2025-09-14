@@ -182,13 +182,7 @@ export default function BoardRightPanel({
 
   // メモ削除ハンドラー（メモエディターの削除確認後に呼ばれる）
   const handleMemoDelete = async () => {
-    console.log(
-      `🎯 右パネル削除ハンドラー開始: selectedMemo=${selectedMemo?.id}, isDeletingMemo=${isDeletingMemo}`,
-    );
     if (selectedMemo && !isDeletedMemo(selectedMemo) && !isDeletingMemo) {
-      console.log(
-        `🔄 削除処理開始: memo.id=${selectedMemo.id}, teamMode=${teamMode}, teamId=${teamId}`,
-      );
       // 削除処理中フラグを設定
       setIsDeletingMemo(true);
 
@@ -203,9 +197,7 @@ export default function BoardRightPanel({
           setIsDeletingMemo(false);
           return;
         }
-        console.log(`📤 deleteNote.mutateAsync呼び出し: memoId=${memoId}`);
         await deleteNote.mutateAsync(memoId);
-        console.log(`✅ deleteNote.mutateAsync完了: memoId=${memoId}`);
 
         // 削除成功後に蓋を閉じる
         setTimeout(() => {
@@ -213,28 +205,19 @@ export default function BoardRightPanel({
         }, 200);
 
         // 削除成功後に次のアイテムを選択（削除前のデータで次のアイテムを決定）
-        console.log(`⏭️ 次のアイテム選択: onMemoDeleteAndSelectNext`);
         try {
           onMemoDeleteAndSelectNext?.(selectedMemo as Memo);
-          console.log(`✅ 次のアイテム選択完了`);
-        } catch (nextSelectError) {
-          console.log(`❌ 次のアイテム選択エラー:`, nextSelectError);
-        }
+        } catch (nextSelectError) {}
 
         // useDeleteMemoのonSuccessで自動的にキャッシュが無効化されるため、手動での無効化は不要
       } catch (error) {
-        console.log(`❌ メモ削除エラー:`, error);
         // エラー時は蓋を閉じる
         setIsRightMemoLidOpen(false);
       } finally {
-        console.log(`🏁 削除処理終了: memoId=${selectedMemo.id}`);
         // 削除処理中フラグをリセット
         setIsDeletingMemo(false);
       }
     } else {
-      console.log(
-        `⚠️ 削除条件未満: selectedMemo=${!!selectedMemo}, isDeletedMemo=${selectedMemo ? isDeletedMemo(selectedMemo) : "N/A"}, isDeletingMemo=${isDeletingMemo}`,
-      );
     }
   };
 
@@ -251,9 +234,6 @@ export default function BoardRightPanel({
               onRestore={
                 onMemoRestoreAndSelectNext
                   ? () => {
-                      console.log(
-                        `🔄 右パネル復元コールバック実行: memo.id=${selectedMemo?.id}, memo.originalId=${(selectedMemo as DeletedMemo)?.originalId}`,
-                      );
                       onMemoRestoreAndSelectNext(selectedMemo as DeletedMemo);
                     }
                   : undefined

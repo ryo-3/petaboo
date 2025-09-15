@@ -140,6 +140,9 @@ function BoardDetailScreen({
     checkedDeletedTasks,
   } = useMultiSelection({ activeMemoTab, activeTaskTab });
 
+  // 削除済みタブでの選択モード自動切り替え（完全に無効化）
+  // ユーザーの手動選択を尊重し、自動切り替えは行わない
+
   // 一括削除操作フック
   const {
     isMemoDeleting,
@@ -297,7 +300,10 @@ function BoardDetailScreen({
     items: memoItems,
     checkedItems: checkedMemos,
     setCheckedItems: setCheckedMemos,
-    getItemId: (item) => item.itemId,
+    getItemId: (item) => {
+      // 個別選択との統一性のため、content.idを使用
+      return item.content?.id || item.itemId || item.id;
+    },
   });
 
   // タスクの全選択フック（メモと同じ方式）
@@ -308,7 +314,10 @@ function BoardDetailScreen({
     items: taskItems,
     checkedItems: checkedTasks,
     setCheckedItems: setCheckedTasks,
-    getItemId: (item) => item.itemId,
+    getItemId: (item) => {
+      // 個別選択との統一性のため、content.idを使用
+      return item.content?.id || item.itemId || item.id;
+    },
   });
 
   // 選択メニュー関連のハンドラー

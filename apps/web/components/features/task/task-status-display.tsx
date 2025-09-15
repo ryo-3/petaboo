@@ -82,6 +82,9 @@ interface DeletedTaskDisplayProps {
     originalId: string;
     addedAt: number;
   }>;
+  // 全選択機能
+  onSelectAll?: () => void;
+  isAllSelected?: boolean;
 }
 
 function TaskStatusDisplay({
@@ -346,6 +349,8 @@ export function DeletedTaskDisplay({
   allBoards = [],
   allTaggings = [],
   allBoardItems = [],
+  onSelectAll,
+  isAllSelected,
 }: DeletedTaskDisplayProps) {
   const getSortValue = (task: DeletedTask, sortId: string): number => {
     if (!task) return 0;
@@ -458,6 +463,8 @@ export function DeletedTaskDisplay({
       getDefaultSortValue={getDefaultSortValue}
       variant="deleted"
       itemType="task"
+      onSelectAll={onSelectAll}
+      isAllSelected={isAllSelected}
     />
   );
 }

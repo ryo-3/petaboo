@@ -10,6 +10,7 @@ import { getServerUserPreferences } from "@/src/lib/server-preferences";
 import { SelectorProvider } from "@/src/contexts/selector-context";
 import { UserInitializer } from "@/components/auth/user-initializer";
 import { PageVisibilityProvider } from "@/src/contexts/PageVisibilityContext";
+import { LogCleaner } from "@/components/dev/log-cleaner";
 
 import { jaJP } from "@clerk/localizations";
 const geistSans = Geist({
@@ -53,6 +54,7 @@ export default async function RootLayout({
               <ToastProvider>
                 <SelectorProvider>
                   {clerkPublishableKey && <UserInitializer />}
+                  <LogCleaner />
                   {children}
                   <ToastContainer />
                 </SelectorProvider>

@@ -84,6 +84,9 @@ interface DeletedMemoDisplayProps {
     originalId: string;
     addedAt: number;
   }>;
+  // 全選択機能
+  onSelectAll?: () => void;
+  isAllSelected?: boolean;
 }
 
 function MemoStatusDisplay({
@@ -339,6 +342,8 @@ export function DeletedMemoDisplay({
   allBoards = [],
   allTaggings = [],
   allBoardItems = [],
+  onSelectAll,
+  isAllSelected,
 }: DeletedMemoDisplayProps) {
   const getSortValue = (memo: DeletedMemo, sortId: string): number => {
     if (!memo) return 0;
@@ -373,6 +378,11 @@ export function DeletedMemoDisplay({
       variant?: "normal" | "deleted";
     },
   ) => {
+    console.log("🔍 削除済みメモレンダリング:", {
+      memoId: memo.id,
+      isChecked: props.isChecked,
+      checkedMemosArray: checkedMemos ? Array.from(checkedMemos) : [],
+    });
     // 削除済みメモのタグ・ボード情報を取得
     // 削除済みメモの場合、originalIdは削除前の元のメモIDを文字列化したもの
     const originalId = memo.originalId || memo.id.toString();
@@ -452,6 +462,8 @@ export function DeletedMemoDisplay({
       getSortValue={getSortValue}
       getDefaultSortValue={getDefaultSortValue}
       variant="deleted"
+      onSelectAll={onSelectAll}
+      isAllSelected={isAllSelected}
     />
   );
 }

@@ -135,16 +135,8 @@ export default function BoardMemoSection({
   // 削除ボタン用のチェック済みアイテムSet（ID変換処理）
   const checkedItemsForDeleteButton = useMemo(() => {
     if (activeMemoTab === "deleted") {
-      // 削除済みタブ: originalId（string）からデータベースID（number）に変換
-      const numberSet = new Set<number>();
-      checkedMemos.forEach((originalId) => {
-        const memoItem = memoItems.find((item) => item.itemId === originalId);
-        if (memoItem) {
-          const dbId = (memoItem.content as DeletedMemo).id;
-          numberSet.add(dbId);
-        }
-      });
-      return numberSet;
+      // 削除済みタブ: 全選択で設定されるcontent.idをそのまま使用
+      return checkedMemos as Set<number>;
     } else {
       // 通常タブ: 数値のみをフィルタ
       return new Set(
@@ -153,7 +145,7 @@ export default function BoardMemoSection({
         ) as number[],
       );
     }
-  }, [checkedMemos, activeMemoTab, memoItems]);
+  }, [checkedMemos, activeMemoTab]);
 
   // 削除ボタンのタイマー制御
   const { showDeleteButton } = useBulkDeleteButton({
@@ -170,22 +162,13 @@ export default function BoardMemoSection({
   // 表示用のチェック済みアイテムSet（型変換処理）
   const checkedMemosForDisplay = useMemo(() => {
     if (activeMemoTab === "deleted") {
-      // 削除済みタブ: originalId（string）からデータベースID（number）に変換
-      const numberSet = new Set<number>();
-      checkedMemos.forEach((originalId) => {
-        // memoItemsからoriginalIdに対応するデータベースIDを探す
-        const memoItem = memoItems.find((item) => item.itemId === originalId);
-        if (memoItem) {
-          const dbId = (memoItem.content as DeletedMemo).id;
-          numberSet.add(dbId);
-        }
-      });
-      return numberSet;
+      // 削除済みタブ: 全選択で設定されるcontent.idをそのまま使用
+      return checkedMemos as Set<number>;
     } else {
       // 通常タブ: checkedMemosをそのまま使用（number型のSet）
       return checkedMemos as Set<number>;
     }
-  }, [checkedMemos, activeMemoTab, memoItems]);
+  }, [checkedMemos, activeMemoTab]);
 
   // 復元機能フック（削除済みタブでのみ使用）
   const {
@@ -348,14 +331,11 @@ export default function BoardMemoSection({
             selectionMode={memoSelectionMode}
             checkedMemos={checkedMemosForDisplay}
             onToggleCheck={(memoId) => {
-              // 削除済みメモの場合、originalIdで管理しているので変換が必要
-              const memoItem = memoItems.find(
-                (item) => (item.content as DeletedMemo).id === memoId,
-              );
-              if (memoItem?.itemId) {
-                onMemoSelectionToggle(memoItem.itemId);
-              }
+              // 削除済みメモの場合、content.idで統一
+              onMemoSelectionToggle(memoId);
             }}
+            onSelectAll={onSelectAll}
+            isAllSelected={isAllSelected}
             onSelectMemo={
               memoSelectionMode === "check" ? undefined : onSelectMemo
             }

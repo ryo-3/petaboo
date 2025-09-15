@@ -18,6 +18,7 @@ import teamShareRoute from "./src/routes/teams/share";
 import teamBoardsRoute from "./src/routes/teams/boards-route";
 import clerkWebhook from "./src/routes/webhooks/clerk";
 import usersRoute from "./src/routes/users/route";
+import { execSync } from "child_process";
 
 const app = new Hono();
 
@@ -74,5 +75,17 @@ app.get("/openapi", (c) => {
 });
 
 app.get("/docs", swaggerUI({ url: "/openapi" }));
+
+// 開発用ログクリアエンドポイント
+app.post("/dev/clear-logs", async (c) => {
+  try {
+    execSync("cd /home/ryosuke/petaboo && ./clear-logs.sh", {
+      stdio: "inherit",
+    });
+    return c.json({ success: true, message: "Logs cleared successfully" });
+  } catch (error) {
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
 
 serve({ fetch: app.fetch, port: 7594 });

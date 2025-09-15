@@ -43,6 +43,9 @@ interface ItemStatusDisplayProps<T extends { id: number }> {
   variant?: "normal" | "deleted";
   isBoard?: boolean; // ボード詳細画面での使用かどうか
   itemType?: "task" | "memo"; // アイテムタイプ（DOM属性用）
+  // 全選択機能
+  onSelectAll?: () => void;
+  isAllSelected?: boolean;
 }
 
 function ItemStatusDisplay<T extends { id: number }>({
@@ -65,6 +68,8 @@ function ItemStatusDisplay<T extends { id: number }>({
   variant = "normal",
   isBoard = false,
   itemType,
+  onSelectAll,
+  isAllSelected,
 }: ItemStatusDisplayProps<T>) {
   const getSortedItems = () => {
     if (!items) return [];

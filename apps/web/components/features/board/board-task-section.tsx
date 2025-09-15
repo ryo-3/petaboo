@@ -150,16 +150,8 @@ export default function BoardTaskSection({
   // 削除ボタン用のチェック済みアイテムSet（ID変換処理）
   const checkedItemsForDeleteButton = useMemo(() => {
     if (activeTaskTab === "deleted") {
-      // 削除済みタブ: originalId（string）からデータベースID（number）に変換
-      const numberSet = new Set<number>();
-      checkedTasks.forEach((originalId) => {
-        const taskItem = taskItems.find((item) => item.itemId === originalId);
-        if (taskItem) {
-          const dbId = (taskItem.content as DeletedTask).id;
-          numberSet.add(dbId);
-        }
-      });
-      return numberSet;
+      // 削除済みタブ: 全選択で設定されるcontent.idをそのまま使用
+      return checkedTasks as Set<number>;
     } else {
       // 通常タブ: 数値のみをフィルタ
       return new Set(
@@ -168,7 +160,7 @@ export default function BoardTaskSection({
         ) as number[],
       );
     }
-  }, [checkedTasks, activeTaskTab, taskItems]);
+  }, [checkedTasks, activeTaskTab]);
 
   // 削除ボタンのタイマー制御
   const { showDeleteButton } = useBulkDeleteButton({
@@ -185,26 +177,13 @@ export default function BoardTaskSection({
   // 表示用のチェック済みアイテムSet（型変換処理）
   const checkedTasksForDisplay = useMemo(() => {
     if (activeTaskTab === "deleted") {
-      // 削除済みタブ: originalId（string）からデータベースID（number）に変換
-      const numberSet = new Set<number>();
-      checkedTasks.forEach((originalId) => {
-        // taskItemsからoriginalIdに対応するデータベースIDを探す
-        const taskItem = taskItems.find((item) => item.itemId === originalId);
-        if (taskItem) {
-          const dbId = (taskItem.content as DeletedTask).id;
-          numberSet.add(dbId);
-        }
-      });
-      return numberSet;
+      // 削除済みタブ: 全選択で設定されるcontent.idをそのまま使用
+      return checkedTasks as Set<number>;
     } else {
-      // 通常タブ: 数値のみをフィルタ
-      return new Set(
-        Array.from(checkedTasks).filter(
-          (id) => typeof id === "number",
-        ) as number[],
-      );
+      // 通常タブ: checkedTasksをそのまま使用（number型のSet）
+      return checkedTasks as Set<number>;
     }
-  }, [checkedTasks, activeTaskTab, taskItems]);
+  }, [checkedTasks, activeTaskTab]);
 
   // 復元機能フック（削除済みタブでのみ使用）
   const {
@@ -407,14 +386,11 @@ export default function BoardTaskSection({
             selectionMode={taskSelectionMode}
             checkedTasks={checkedTasksForDisplay}
             onToggleCheck={(taskId) => {
-              // 削除済みタスクの場合、originalIdで管理しているので変換が必要
-              const taskItem = displayTaskItems.find(
-                (item) => (item.content as DeletedTask).id === taskId,
-              );
-              if (taskItem?.itemId) {
-                onTaskSelectionToggle(taskItem.itemId);
-              }
+              // 削除済みタスクの場合、content.idで統一
+              onTaskSelectionToggle(taskId);
             }}
+            onSelectAll={onSelectAll}
+            isAllSelected={isAllSelected}
             onSelectTask={
               taskSelectionMode === "check" ? undefined : onSelectTask
             }

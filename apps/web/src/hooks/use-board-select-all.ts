@@ -27,6 +27,12 @@ export function useBoardSelectAll<T>({
   // 全選択/全解除処理
   const handleSelectAll = useCallback(() => {
     const currentItemIds = items.map(getItemId);
+    console.log("🔍 全選択ボタンクリック:", {
+      itemsLength: items.length,
+      currentItemIds,
+      isAllSelected,
+      checkedItems: Array.from(checkedItems),
+    });
     if (isAllSelected) {
       setCheckedItems(new Set());
     } else {

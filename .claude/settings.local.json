@@ -94,7 +94,8 @@
       "Bash(apitest \"/teams/moricrew/boards/1/deleted-items\")",
       "Bash(apitest \"/teams/18/boards/1/items\" \"GET\")",
       "Bash(apitest \"/teams/18/tasks\" \"GET\")",
-      "Bash(apitest \"/boards/items/task/58/boards\")"
+      "Bash(apitest \"/boards/items/task/58/boards\")",
+      "Bash(./clear-logs.sh:*)"
     ],
     "deny": []
   }

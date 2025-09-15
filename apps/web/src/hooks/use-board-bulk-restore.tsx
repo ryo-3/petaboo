@@ -141,13 +141,19 @@ export function useBoardBulkRestore({
   );
 
   const handleBulkRestore = useCallback(async () => {
-    // originalIdからデータベースIDに変換
+    // checkedItemsから復元対象IDを抽出
     const rawTargetIds: number[] = [];
-    checkedItems.forEach((originalId) => {
-      const boardItem = boardItems.find((item) => item.itemId === originalId);
-      if (boardItem) {
-        const content = boardItem.content as DeletedMemo | DeletedTask;
-        rawTargetIds.push(content.id);
+    checkedItems.forEach((id) => {
+      if (typeof id === "number") {
+        // checkedItemsに直接データベースIDが入っている場合
+        rawTargetIds.push(id);
+      } else {
+        // 従来のoriginalId検索（念のため残す）
+        const boardItem = boardItems.find((item) => item.itemId === id);
+        if (boardItem) {
+          const content = boardItem.content as DeletedMemo | DeletedTask;
+          rawTargetIds.push(content.id);
+        }
       }
     });
 

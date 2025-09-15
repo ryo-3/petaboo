@@ -177,15 +177,9 @@ export function animateBulkFadeOutCSS(
           itemElement.classList.remove("bulk-fade-out-animation");
 
           if (actionType === "restore") {
-            // 復元の場合も要素を非表示にするだけ（ReactのDOMと競合を避ける）
-            itemElement.style.display = "none";
+            // 復元の場合：削除時と同じ処理で段ズレを防止（空間維持）
             itemElement.style.opacity = "0";
             itemElement.style.pointerEvents = "none";
-            // 高さを0にしてスペースを解消
-            itemElement.style.height = "0";
-            itemElement.style.margin = "0";
-            itemElement.style.padding = "0";
-            itemElement.style.overflow = "hidden";
           } else {
             // 削除の場合は透明にするだけ（空間維持）
             itemElement.style.opacity = "0";

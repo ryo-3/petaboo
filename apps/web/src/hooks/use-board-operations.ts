@@ -326,7 +326,14 @@ export function useBoardOperations({
   const { handleRestoreAndSelectNext: handleMemoRestoreAndSelectNext } =
     useDeletedItemOperations({
       deletedItems: boardDeletedItems?.memos || null,
-      onSelectDeletedItem: (memo: DeletedMemo | null) => onSelectMemo?.(memo),
+      onSelectDeletedItem: (memo: DeletedMemo | null) => {
+        if (memo === null) {
+          // 次のアイテムがない場合は選択解除してエディターを閉じる
+          onClearSelection?.();
+        } else {
+          onSelectMemo?.(memo);
+        }
+      },
       setScreenMode: () => {}, // ボードでは画面モード変更なし
       editorSelector: "[data-memo-editor]",
     });
@@ -334,7 +341,14 @@ export function useBoardOperations({
   const { handleRestoreAndSelectNext: handleTaskRestoreAndSelectNext } =
     useDeletedItemOperations({
       deletedItems: boardDeletedItems?.tasks || null,
-      onSelectDeletedItem: (task: DeletedTask | null) => onSelectTask?.(task),
+      onSelectDeletedItem: (task: DeletedTask | null) => {
+        if (task === null) {
+          // 次のアイテムがない場合は選択解除してエディターを閉じる
+          onClearSelection?.();
+        } else {
+          onSelectTask?.(task);
+        }
+      },
       setScreenMode: () => {}, // ボードでは画面モード変更なし
       editorSelector: "[data-task-editor]",
     });
@@ -343,7 +357,14 @@ export function useBoardOperations({
   const { selectNextDeletedItem: handleDeletedMemoDeleteAndSelectNext } =
     useDeletedItemOperations({
       deletedItems: boardDeletedItems?.memos || null,
-      onSelectDeletedItem: (memo: DeletedMemo | null) => onSelectMemo?.(memo),
+      onSelectDeletedItem: (memo: DeletedMemo | null) => {
+        if (memo === null) {
+          // 次のアイテムがない場合は選択解除してエディターを閉じる
+          onClearSelection?.();
+        } else {
+          onSelectMemo?.(memo);
+        }
+      },
       setScreenMode: () => {}, // ボードでは画面モード変更なし
       editorSelector: "[data-memo-editor]",
     });
@@ -351,7 +372,14 @@ export function useBoardOperations({
   const { selectNextDeletedItem: handleDeletedTaskDeleteAndSelectNext } =
     useDeletedItemOperations({
       deletedItems: boardDeletedItems?.tasks || null,
-      onSelectDeletedItem: (task: DeletedTask | null) => onSelectTask?.(task),
+      onSelectDeletedItem: (task: DeletedTask | null) => {
+        if (task === null) {
+          // 次のアイテムがない場合は選択解除してエディターを閉じる
+          onClearSelection?.();
+        } else {
+          onSelectTask?.(task);
+        }
+      },
       setScreenMode: () => {}, // ボードでは画面モード変更なし
       editorSelector: "[data-task-editor]",
     });

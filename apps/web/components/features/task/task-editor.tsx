@@ -204,6 +204,9 @@ function TaskEditor({
       if (onRestore) onRestore();
     },
     onAnimationChange: setIsAnimating,
+    teamMode,
+    teamId: teamId || undefined,
+    boardId: initialBoardId || undefined,
   });
 
   // 削除ボタンのハンドラー（ボード紐づきチェック付き）
@@ -1233,6 +1236,12 @@ function TaskEditor({
                     <Tooltip text="復元" position="bottom">
                       <button
                         onClick={() => {
+                          console.log(
+                            "🔄 復元ボタンクリック: isDeleted=",
+                            isDeleted,
+                            "deletedTaskActions=",
+                            !!deletedTaskActions,
+                          );
                           if (isDeleted && deletedTaskActions) {
                             deletedTaskActions.handleRestore();
                           }

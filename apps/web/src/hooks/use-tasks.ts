@@ -390,34 +390,82 @@ export function usePermanentDeleteTask() {
 }
 
 // タスク復元hook
-export function useRestoreTask() {
+export function useRestoreTask(options?: {
+  teamMode?: boolean;
+  teamId?: number;
+}) {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
   const { showToast } = useToast();
+  const { teamMode = false, teamId } = options || {};
 
   return useMutation({
     mutationFn: async (originalId: string) => {
       const token = await getToken();
-      const response = await tasksApi.restoreTask(
-        originalId,
-        token || undefined,
-      );
-      const result = await response.json();
-      return result;
+
+      if (teamMode && teamId) {
+        // チームタスク復元
+        const response = await tasksApi.restoreTeamTask(
+          teamId,
+          originalId,
+          token || undefined,
+        );
+        const result = await response.json();
+        return result;
+      } else {
+        // 個人タスク復元
+        const response = await tasksApi.restoreTask(
+          originalId,
+          token || undefined,
+        );
+        const result = await response.json();
+        return result;
+      }
     },
     onSuccess: () => {
-      // タスクと削除済みタスクの両方を無効化（復元されたタスクの新しいIDが分からないため）
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      queryClient.invalidateQueries({ queryKey: ["deleted-tasks"] });
-      // ボード関連のキャッシュを強制再取得（復元されたタスクがボードに含まれる可能性があるため）
-      queryClient.refetchQueries({ queryKey: ["boards"] });
-      // ボード詳細とボード削除済みアイテムのキャッシュも無効化
-      queryClient.invalidateQueries({ queryKey: ["boards"], exact: false });
-      queryClient.invalidateQueries({ queryKey: ["board-deleted-items"] });
-      // ボードアイテムのキャッシュを無効化（復元時にボード紐づきも復元されるため）
-      queryClient.invalidateQueries({ queryKey: ["board-items"] });
+      if (teamMode && teamId) {
+        // チームタスク復元時のキャッシュ無効化と強制再取得
+        queryClient.invalidateQueries({ queryKey: ["team-tasks", teamId] });
+        queryClient.invalidateQueries({
+          queryKey: ["team-deleted-tasks", teamId],
+        });
+        queryClient.refetchQueries({ queryKey: ["team-tasks", teamId] });
+
+        // チームボード関連のキャッシュを無効化と強制再取得
+        // boardId付きのクエリとboardIdなしの両方を無効化
+        queryClient.invalidateQueries({
+          queryKey: ["team-boards", teamId.toString()],
+          exact: false,
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["team-board-deleted-items", teamId.toString()],
+          exact: false,
+        });
+
+        // ボードアイテムの強制再取得（復元したタスクが表示されるように）
+        queryClient.refetchQueries({
+          queryKey: ["team-boards", teamId.toString()],
+          exact: false,
+        });
+      } else {
+        // 個人タスク復元時のキャッシュ無効化
+        queryClient.invalidateQueries({ queryKey: ["tasks"] });
+        queryClient.invalidateQueries({ queryKey: ["deleted-tasks"] });
+        queryClient.refetchQueries({ queryKey: ["tasks"] });
+
+        // ボード関連のキャッシュを無効化と強制再取得
+        queryClient.invalidateQueries({ queryKey: ["boards"], exact: false });
+        queryClient.invalidateQueries({
+          queryKey: ["board-deleted-items"],
+          exact: false,
+        });
+
+        // ボードアイテムの強制再取得
+        queryClient.refetchQueries({ queryKey: ["boards"], exact: false });
+      }
       // 全タグ付け情報を無効化（復元されたタスクのタグ情報が変わる可能性があるため）
       queryClient.invalidateQueries({ queryKey: ["taggings", "all"] });
+      showToast("タスクを復元しました", "success");
     },
     onError: (error) => {
       console.error("タスク復元に失敗しました:", error);

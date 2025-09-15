@@ -298,6 +298,10 @@ export default function BoardRightPanel({
                 // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
               }}
               onRestore={() => {
+                console.log(
+                  "🔄 TaskEditor復元処理開始: selectedTask=",
+                  selectedTask,
+                );
                 if (onTaskRestoreAndSelectNext) {
                   onTaskRestoreAndSelectNext(selectedTask);
                 }

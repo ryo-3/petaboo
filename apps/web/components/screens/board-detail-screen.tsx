@@ -452,6 +452,8 @@ function BoardDetailScreen({
             showEditDate={showEditDate}
             showTags={showTags}
             selectedMemo={selectedMemo}
+            teamMode={teamMode}
+            teamId={teamId}
             onCreateNewMemo={handleCreateNewMemo}
             onSetRightPanelMode={setRightPanelMode}
             onMemoTabChange={handleMemoTabChangeWithRefresh}
@@ -468,8 +470,6 @@ function BoardDetailScreen({
             deleteButtonRef={deleteButtonRef}
             onCheckedMemosChange={setCheckedMemos}
             onTagging={handleTaggingMemo}
-            teamMode={teamMode}
-            teamId={teamId}
           />
 
           {/* タスク列 */}
@@ -494,6 +494,8 @@ function BoardDetailScreen({
             allTags={safeAllTags}
             allBoards={safeAllBoards}
             allTaggings={safeAllTaggings as Tagging[]}
+            teamMode={teamMode}
+            teamId={teamId}
             allBoardItems={safeAllBoardItems}
             selectedTask={selectedTask}
             onCreateNewTask={handleCreateNewTask}

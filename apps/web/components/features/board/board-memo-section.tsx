@@ -97,6 +97,8 @@ export default function BoardMemoSection({
   showBoardName = false,
   showTags = false,
   selectedMemo,
+  teamMode = false,
+  teamId,
   memoSelectionMode,
   checkedMemos,
   onCreateNewMemo,
@@ -120,8 +122,6 @@ export default function BoardMemoSection({
   allBoards = [],
   allTaggings = [],
   allBoardItems = [],
-  teamMode = false,
-  teamId = null,
 }: BoardMemoSectionProps) {
   // ソートオプションの管理
   const { setSortOptions, getVisibleSortOptions } = useSortOptions("memo");
@@ -202,6 +202,8 @@ export default function BoardMemoSection({
       activeMemoTab === "deleted"
         ? memoItems.map((item) => item.content as DeletedMemo)
         : undefined,
+    teamMode,
+    teamId: teamId || undefined,
     setIsRestoring,
     setIsLidOpen: setIsRestoreLidOpen,
   });

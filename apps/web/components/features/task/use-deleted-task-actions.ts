@@ -341,10 +341,59 @@ export function useDeletedTaskActions({
     onError: (error) => {
       console.error("restoreTask ミューテーションエラー:", error);
     },
-    onSuccess: async () => {
+    onSuccess: async (restoredTaskData) => {
       console.log(
         `✅ タスク復元成功: task.originalId=${task?.originalId}, teamMode=${teamMode}`,
+        "restoredData:",
+        restoredTaskData,
       );
+
+      // 復元されたタスクをボードアイテムキャッシュに楽観的追加
+      if (boardId && task) {
+        const boardItemsQueryKey =
+          teamMode && teamId
+            ? ["team-boards", teamId.toString(), boardId, "items"]
+            : ["boards", boardId, "items"];
+
+        console.log(
+          `🔄 ボードアイテムキャッシュに復元タスクを追加: queryKey=`,
+          boardItemsQueryKey,
+        );
+
+        queryClient.setQueryData(boardItemsQueryKey, (oldBoardData: any) => {
+          if (!oldBoardData || !oldBoardData.items) {
+            console.log(`⚠️ ボードデータなし - 楽観的更新スキップ`);
+            return oldBoardData;
+          }
+
+          // 復元されたタスクのデータを作成（deletedAtを削除して通常のタスクに戻す）
+          const restoredTask = {
+            ...task,
+            deletedAt: undefined, // 削除日時を削除
+            // APIから返されたデータがあれば使用
+            ...(restoredTaskData || {}),
+          };
+
+          // 新しいボードアイテムを作成
+          const newBoardItem = {
+            itemType: "task",
+            itemId: restoredTask.id.toString(),
+            originalId: restoredTask.originalId,
+            addedAt: Date.now(), // 現在時刻で追加
+            content: restoredTask,
+          };
+
+          const updatedItems = [...oldBoardData.items, newBoardItem];
+          console.log(
+            `📊 ボードアイテム追加: ${oldBoardData.items.length}件 → ${updatedItems.length}件`,
+          );
+
+          return {
+            ...oldBoardData,
+            items: updatedItems,
+          };
+        });
+      }
 
       // キャッシュを手動更新（復元されたアイテムをすぐに除去）
       if (teamMode && teamId) {

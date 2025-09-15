@@ -22,6 +22,10 @@ interface UseBoardBulkRestoreProps {
   // タスク用
   deletedTasks?: DeletedTask[];
 
+  // チーム情報
+  teamMode?: boolean;
+  teamId?: number;
+
   // 状態管理
   setIsRestoring?: (isRestoring: boolean) => void;
   setIsLidOpen?: (isOpen: boolean) => void;
@@ -34,11 +38,13 @@ export function useBoardBulkRestore({
   boardItems,
   deletedMemos,
   deletedTasks,
+  teamMode,
+  teamId,
   setIsRestoring,
   setIsLidOpen,
 }: UseBoardBulkRestoreProps) {
-  const restoreMemoMutation = useRestoreMemo();
-  const restoreTaskMutation = useRestoreTask();
+  const restoreMemoMutation = useRestoreMemo({ teamMode, teamId });
+  const restoreTaskMutation = useRestoreTask({ teamMode, teamId });
   const bulkRestore = useBulkDelete(); // 削除と同じモーダルロジックを使用
   const restoreButtonRef = useRef<HTMLButtonElement | null>(null);
 

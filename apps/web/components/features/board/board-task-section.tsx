@@ -37,6 +37,8 @@ interface BoardTaskSectionProps {
   showTags?: boolean;
   showBoardName?: boolean;
   selectedTask?: Task | DeletedTask | null;
+  teamMode?: boolean;
+  teamId?: number | null;
   // 複数選択関連
   taskSelectionMode: "select" | "check";
   checkedTasks: Set<string | number>;
@@ -103,6 +105,8 @@ export default function BoardTaskSection({
   showTags = false,
   showBoardName = false,
   selectedTask,
+  teamMode = false,
+  teamId,
   taskSelectionMode,
   checkedTasks,
   onCreateNewTask,
@@ -217,6 +221,8 @@ export default function BoardTaskSection({
       activeTaskTab === "deleted"
         ? taskItems.map((item) => item.content as DeletedTask)
         : undefined,
+    teamMode,
+    teamId: teamId || undefined,
     setIsRestoring,
     setIsLidOpen: setIsRestoreLidOpen,
   });

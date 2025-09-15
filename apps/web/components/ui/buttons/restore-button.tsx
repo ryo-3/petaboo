@@ -36,8 +36,6 @@ function RestoreButton({
   // アニメーション付きカウンターを使用する場合はanimatedCountを優先
   const displayCount = useAnimatedCount ? animatedCount : count;
 
-  // デバッグログ
-
   const tooltipText =
     displayCount && displayCount > 1
       ? `${displayCount}件を復元`

@@ -304,7 +304,7 @@ export default function BoardMemoSection({
                 : "opacity-0 w-0 translate-x-2 px-0"
             }`}
           >
-            {deletedMemoCount}
+            {activeMemoTab === "deleted" ? memoItems.length : deletedMemoCount}
           </span>
         </button>
       </div>
@@ -404,7 +404,25 @@ export default function BoardMemoSection({
       {/* 一括削除ボタン - メモ用 */}
       <BulkActionButtons
         showDeleteButton={showDeleteButton}
-        deleteButtonCount={currentDisplayCount || checkedMemos.size}
+        deleteButtonCount={(() => {
+          const count =
+            activeMemoTab === "deleted"
+              ? memoItems.length
+              : currentDisplayCount || checkedMemos.size;
+
+          if (activeMemoTab === "deleted") {
+            console.log("🔍 削除ボタンカウント詳細(メモ):", {
+              activeMemoTab,
+              deletedMemoCount,
+              memoItemsLength: memoItems.length,
+              currentDisplayCount,
+              checkedMemosSize: checkedMemos.size,
+              finalCount: count,
+            });
+          }
+
+          return count;
+        })()}
         onDelete={() => {
           onBulkDelete?.("memo");
         }}
@@ -422,7 +440,7 @@ export default function BoardMemoSection({
         restoreButtonRef={restoreButtonRef}
         isRestoring={isRestoreLidOpen}
         animatedRestoreCount={currentRestoreDisplayCount}
-        useAnimatedRestoreCount={true}
+        useAnimatedRestoreCount={false}
         animatedDeleteCount={currentDisplayCount}
         useAnimatedDeleteCount={true}
       />

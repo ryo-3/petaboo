@@ -87,7 +87,9 @@ export function useBoardBulkRestore({
           });
           setCheckedItems(newCheckedItems);
         } else {
+          console.log("🔍 復元後全クリア実行前:", Array.from(checkedItems));
           setCheckedItems(new Set());
+          console.log("🔍 復元後全クリア実行後: 空のSet");
         }
       };
 
@@ -115,6 +117,7 @@ export function useBoardBulkRestore({
         originalTotalCount,
         buttonRef: restoreButtonRef,
         dataAttribute: itemType === "memo" ? "data-memo-id" : "data-task-id",
+        actionType: "restore",
         onStateUpdate: () => {}, // ボードでは個別の状態更新は不要
         onCheckStateUpdate,
         onApiCall,

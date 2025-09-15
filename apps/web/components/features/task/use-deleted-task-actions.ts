@@ -688,11 +688,52 @@ export function useDeletedTaskActions({
       console.log(
         `🔄 復元処理開始: task.originalId=${task?.originalId}, teamMode=${teamMode}, teamId=${teamId}`,
       );
-      // API実行（onSuccessで次選択とキャッシュ更新が実行される）
-      if (task) {
-        console.log(`🚀 復元API実行開始: originalId=${task.originalId}`);
-        await restoreTask.mutateAsync(task.originalId);
-        console.log(`✅ 復元API実行完了: originalId=${task.originalId}`);
+
+      // エディターコンテンツを復元アニメーション付きで処理
+      const editorArea = document.querySelector(
+        "[data-task-editor]",
+      ) as HTMLElement;
+      const rightTrashButton = document.querySelector(
+        "[data-right-panel-trash]",
+      ) as HTMLElement;
+
+      if (editorArea && rightTrashButton) {
+        console.log("🔍 個別タスク復元: アニメーション付き復元開始");
+        const { animateEditorContentToTrashCSS } = await import(
+          "@/src/utils/deleteAnimation"
+        );
+        animateEditorContentToTrashCSS(
+          editorArea,
+          rightTrashButton,
+          async () => {
+            console.log("🔍 個別タスク復元: アニメーション完了後API実行");
+            // アニメーション完了後の処理
+            try {
+              // API実行（onSuccessで次選択とキャッシュ更新が実行される）
+              if (task) {
+                console.log(
+                  `🚀 復元API実行開始: originalId=${task.originalId}`,
+                );
+                await restoreTask.mutateAsync(task.originalId);
+                console.log(
+                  `✅ 復元API実行完了: originalId=${task.originalId}`,
+                );
+              }
+            } catch (error) {
+              console.error(`❌ 復元処理でエラー (アニメーション内):`, error);
+              alert("復元に失敗しました。");
+            }
+          },
+          "restore", // 復元処理であることを明示
+        );
+      } else {
+        console.log("🔍 個別タスク復元: アニメーションなしで復元");
+        // アニメーション要素がない場合は通常の処理
+        if (task) {
+          console.log(`🚀 復元API実行開始: originalId=${task.originalId}`);
+          await restoreTask.mutateAsync(task.originalId);
+          console.log(`✅ 復元API実行完了: originalId=${task.originalId}`);
+        }
       }
     } catch (error) {
       console.error(`❌ 復元処理でエラー:`, error);

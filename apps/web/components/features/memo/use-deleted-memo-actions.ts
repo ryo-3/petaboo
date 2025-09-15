@@ -120,9 +120,8 @@ export function useDeletedMemoActions({
         });
 
         if (boardId) {
-          const teamIdString = teamId.toString();
           await queryClient.invalidateQueries({
-            queryKey: ["team-board-deleted-items", teamIdString, boardId],
+            queryKey: ["team-board-deleted-items", teamId.toString(), boardId],
           });
         }
       } else {
@@ -206,18 +205,58 @@ export function useDeletedMemoActions({
     try {
       setIsLocalRestoring(true);
 
-      // API実行
-      if (memo) {
-        await restoreNote.mutateAsync(memo.originalId);
-      }
+      // エディターコンテンツを復元アニメーション付きで処理
+      const editorArea = document.querySelector(
+        "[data-memo-editor]",
+      ) as HTMLElement;
+      const rightTrashButton = document.querySelector(
+        "[data-right-panel-trash]",
+      ) as HTMLElement;
 
-      // 復元完了後、すぐにUIを更新
-      setIsLocalRestoring(false);
+      if (editorArea && rightTrashButton) {
+        const { animateEditorContentToTrashCSS } = await import(
+          "@/src/utils/deleteAnimation"
+        );
+        animateEditorContentToTrashCSS(
+          editorArea,
+          rightTrashButton,
+          async () => {
+            // アニメーション完了後の処理
+            try {
+              // API実行
+              if (memo) {
+                await restoreNote.mutateAsync(memo.originalId);
+              }
 
-      if (onRestoreAndSelectNext && memo) {
-        onRestoreAndSelectNext(memo);
+              // 復元完了後、すぐにUIを更新
+              setIsLocalRestoring(false);
+
+              if (onRestoreAndSelectNext && memo) {
+                onRestoreAndSelectNext(memo);
+              } else {
+                onClose();
+              }
+            } catch (error) {
+              console.error("メモ復元エラー (アニメーション内):", error);
+              setIsLocalRestoring(false);
+              alert("復元に失敗しました。");
+            }
+          },
+          "restore", // 復元処理であることを明示
+        );
       } else {
-        onClose();
+        // アニメーション要素がない場合は通常の処理
+        if (memo) {
+          await restoreNote.mutateAsync(memo.originalId);
+        }
+
+        setIsLocalRestoring(false);
+
+        if (onRestoreAndSelectNext && memo) {
+          onRestoreAndSelectNext(memo);
+        } else {
+          onClose();
+        }
       }
     } catch (error) {
       console.error("メモ復元エラー:", error);

@@ -439,7 +439,24 @@ export default function BoardTaskSection({
       {/* 一括削除ボタン - タスク用 */}
       <BulkActionButtons
         showDeleteButton={showDeleteButton}
-        deleteButtonCount={currentDisplayCount || checkedTasks.size}
+        deleteButtonCount={(() => {
+          const count =
+            activeTaskTab === "deleted"
+              ? deletedCount
+              : currentDisplayCount || checkedTasks.size;
+
+          if (activeTaskTab === "deleted") {
+            console.log("🔍 削除ボタンカウント詳細(タスク):", {
+              activeTaskTab,
+              deletedCount,
+              currentDisplayCount,
+              checkedTasksSize: checkedTasks.size,
+              finalCount: count,
+            });
+          }
+
+          return count;
+        })()}
         onDelete={() => {
           onBulkDelete?.("task");
         }}
@@ -457,7 +474,7 @@ export default function BoardTaskSection({
         restoreButtonRef={restoreButtonRef}
         isRestoring={isRestoreLidOpen}
         animatedRestoreCount={currentRestoreDisplayCount}
-        useAnimatedRestoreCount={true}
+        useAnimatedRestoreCount={false}
         animatedDeleteCount={currentDisplayCount}
         useAnimatedDeleteCount={true}
       />

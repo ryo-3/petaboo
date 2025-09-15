@@ -6,6 +6,7 @@ interface ExecuteAnimationParams {
   originalTotalCount?: number;
   buttonRef?: React.RefObject<HTMLButtonElement | null>;
   dataAttribute: string; // 'data-memo-id' or 'data-task-id'
+  actionType?: "delete" | "restore"; // アニメーションタイプ
 
   // Callbacks
   onStateUpdate: (id: number) => void;
@@ -35,6 +36,7 @@ export async function executeWithAnimation({
   originalTotalCount,
   buttonRef,
   dataAttribute,
+  actionType = "delete",
   onStateUpdate,
   onCheckStateUpdate,
   onApiCall,
@@ -113,7 +115,7 @@ export async function executeWithAnimation({
           new CustomEvent("bulkAnimationCancel", {
             detail: {
               type: dataAttribute.includes("memo") ? "memo" : "task",
-              processType: "delete",
+              processType: actionType,
             },
           }),
         );
@@ -123,13 +125,14 @@ export async function executeWithAnimation({
           new CustomEvent("bulkProcessCancelled", {
             detail: {
               type: dataAttribute.includes("memo") ? "memo" : "task",
-              processType: "delete",
+              processType: actionType,
               reason: "element_not_found",
             },
           }),
         );
       },
       DELETE_ANIMATION_INTERVAL,
+      actionType,
     );
   } else {
     // アニメーションなしの場合は即座に処理

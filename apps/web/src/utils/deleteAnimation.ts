@@ -24,7 +24,9 @@ export function animateEditorContentToTrashCSS(
   editorElement: HTMLElement,
   trashElement: HTMLElement,
   onComplete?: () => void,
+  actionType: "delete" | "restore" = "delete",
 ) {
+  console.log("🔍 エディター個別アニメーション開始:", { actionType });
   // CSS変数からアニメーション時間を取得（自動同期）
   const editorAnimationDuration = getAnimationDuration("editor");
 
@@ -80,6 +82,14 @@ export function animateEditorContentToTrashCSS(
 
   // アニメーション完了後の処理（CSS変数から自動取得した時間を使用）
   setTimeout(() => {
+    if (actionType === "restore") {
+      // 復元の場合は元の要素をDOMから削除
+      if (editorElement.parentNode) {
+        editorElement.remove();
+      }
+    } else {
+      // 削除の場合は元の要素を非表示のまま
+    }
     document.body.removeChild(clone);
     onComplete?.();
   }, editorAnimationDuration);
@@ -161,12 +171,27 @@ export function animateBulkFadeOutCSS(
         // フェードアウトアニメーション開始
         itemElement.classList.add("bulk-fade-out-animation");
 
-        // アニメーション完了時の処理（空間維持・透明のみ）
+        // アニメーション完了時の処理
         setTimeout(() => {
-          // アニメーションクラスを削除して透明にするだけ
+          // アニメーションクラスを削除
           itemElement.classList.remove("bulk-fade-out-animation");
-          itemElement.style.opacity = "0";
-          itemElement.style.pointerEvents = "none"; // クリック無効化
+
+          if (actionType === "restore") {
+            // 復元の場合は要素をDOMから完全に削除（1つずつ即座に空白解消）
+            // 削除前に親要素の参照を保存
+            const parentElement = itemElement.parentElement;
+
+            itemElement.remove();
+
+            // 親要素が空になった場合は親要素も削除（空白解消）
+            if (parentElement && parentElement.children.length === 0) {
+              parentElement.remove();
+            }
+          } else {
+            // 削除の場合は透明にするだけ（空間維持）
+            itemElement.style.opacity = "0";
+            itemElement.style.pointerEvents = "none"; // クリック無効化
+          }
 
           // カウントアップ
           completedCount++;

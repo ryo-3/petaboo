@@ -393,11 +393,12 @@ export function usePermanentDeleteTask() {
 export function useRestoreTask(options?: {
   teamMode?: boolean;
   teamId?: number;
+  boardId?: number;
 }) {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
   const { showToast } = useToast();
-  const { teamMode = false, teamId } = options || {};
+  const { teamMode = false, teamId, boardId } = options || {};
 
   return useMutation({
     mutationFn: async (originalId: string) => {
@@ -441,6 +442,16 @@ export function useRestoreTask(options?: {
           queryKey: ["team-board-deleted-items", teamId.toString()],
           exact: false,
         });
+        // 特定のボードの削除済みアイテムも明示的に無効化
+        if (boardId) {
+          queryClient.invalidateQueries({
+            queryKey: ["team-board-deleted-items", teamId.toString(), boardId],
+          });
+          // 即座に再取得も実行
+          queryClient.refetchQueries({
+            queryKey: ["team-board-deleted-items", teamId.toString(), boardId],
+          });
+        }
 
         // ボードアイテムの強制再取得（復元したタスクが表示されるように）
         queryClient.refetchQueries({

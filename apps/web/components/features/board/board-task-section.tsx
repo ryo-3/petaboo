@@ -202,6 +202,7 @@ export default function BoardTaskSection({
         : undefined,
     teamMode,
     teamId: teamId || undefined,
+    boardId,
     setIsRestoring,
     setIsLidOpen: setIsRestoreLidOpen,
   });

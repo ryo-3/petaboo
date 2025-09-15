@@ -103,7 +103,7 @@ export function useBoardOperations({
   };
 
   const { data: boardDeletedItems, refetch: refetchDeletedItems } =
-    useBoardDeletedItems(boardId, teamId);
+    useBoardDeletedItems(boardId, teamId?.toString());
 
   const removeItemFromBoard = useRemoveItemFromBoard();
   const addItemToBoard = useAddItemToBoard();

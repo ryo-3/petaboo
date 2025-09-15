@@ -177,16 +177,15 @@ export function animateBulkFadeOutCSS(
           itemElement.classList.remove("bulk-fade-out-animation");
 
           if (actionType === "restore") {
-            // 復元の場合は要素をDOMから完全に削除（1つずつ即座に空白解消）
-            // 削除前に親要素の参照を保存
-            const parentElement = itemElement.parentElement;
-
-            itemElement.remove();
-
-            // 親要素が空になった場合は親要素も削除（空白解消）
-            if (parentElement && parentElement.children.length === 0) {
-              parentElement.remove();
-            }
+            // 復元の場合も要素を非表示にするだけ（ReactのDOMと競合を避ける）
+            itemElement.style.display = "none";
+            itemElement.style.opacity = "0";
+            itemElement.style.pointerEvents = "none";
+            // 高さを0にしてスペースを解消
+            itemElement.style.height = "0";
+            itemElement.style.margin = "0";
+            itemElement.style.padding = "0";
+            itemElement.style.overflow = "hidden";
           } else {
             // 削除の場合は透明にするだけ（空間維持）
             itemElement.style.opacity = "0";
@@ -203,20 +202,13 @@ export function animateBulkFadeOutCSS(
           }
         }, bulkAnimationDuration); // アニメーション開始から300ms後に完了
       } else {
-        // 復元時は要素が既に削除されている可能性がある
-        if (actionType === "restore") {
-          // カウントアップ
-          completedCount++;
+        // 要素が見つからない場合の処理
+        // カウントアップ（要素がなくても処理完了とみなす）
+        completedCount++;
 
-          // 全てのアイテムが完了したらコールバック実行
-          if (completedCount === totalItems) {
-            // 復元の場合はゴミ箱の蓋を閉じる処理は不要
-            onComplete?.();
-          }
-        } else {
-          // 全体をキャンセル
-          cancelAllProcessing();
-          return;
+        // 全てのアイテムが完了したらコールバック実行
+        if (completedCount === totalItems) {
+          onComplete?.();
         }
       }
     }, index * delay);

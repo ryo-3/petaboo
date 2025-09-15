@@ -74,6 +74,7 @@ interface BoardMemoSectionProps {
   // チーム機能関連
   teamMode?: boolean;
   teamId?: number | null;
+  boardId?: number;
 }
 
 import { useRef, useMemo, useState } from "react";
@@ -99,6 +100,7 @@ export default function BoardMemoSection({
   selectedMemo,
   teamMode = false,
   teamId,
+  boardId,
   memoSelectionMode,
   checkedMemos,
   onCreateNewMemo,
@@ -187,6 +189,7 @@ export default function BoardMemoSection({
         : undefined,
     teamMode,
     teamId: teamId || undefined,
+    boardId,
     setIsRestoring,
     setIsLidOpen: setIsRestoreLidOpen,
   });

@@ -463,6 +463,7 @@ function BoardDetailScreen({
             selectedMemo={selectedMemo}
             teamMode={teamMode}
             teamId={teamId}
+            boardId={boardId}
             onCreateNewMemo={handleCreateNewMemo}
             onSetRightPanelMode={setRightPanelMode}
             onMemoTabChange={handleMemoTabChangeWithRefresh}

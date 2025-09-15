@@ -695,6 +695,16 @@ export function useItemBoards(
   return useQuery<Board[]>({
     queryKey: ["item-boards", itemType, itemId],
     queryFn: async () => {
+      // チームコンテキストかどうかを判断
+      const isTeamContext =
+        typeof window !== "undefined" &&
+        window.location.pathname.includes("/team/");
+
+      // チームコンテキストの場合は早期リターンで空配列を返す
+      if (isTeamContext) {
+        return [];
+      }
+
       // 最大2回リトライ
       for (let attempt = 0; attempt < 2; attempt++) {
         const token = await getCachedToken(getToken);

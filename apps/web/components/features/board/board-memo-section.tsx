@@ -443,7 +443,7 @@ export default function BoardMemoSection({
         restoreButtonRef={restoreButtonRef}
         isRestoring={isRestoreLidOpen}
         animatedRestoreCount={currentRestoreDisplayCount}
-        useAnimatedRestoreCount={false}
+        useAnimatedRestoreCount={true}
         animatedDeleteCount={currentDisplayCount}
         useAnimatedDeleteCount={true}
       />

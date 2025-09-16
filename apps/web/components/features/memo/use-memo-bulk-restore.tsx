@@ -189,8 +189,6 @@ export function useMemosBulkRestore({
     ? bulkAnimation.displayCount
     : currentRestoreCount;
 
-  // デバッグログ
-
   return {
     handleBulkRestore,
     RestoreModal,

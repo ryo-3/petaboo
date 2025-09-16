@@ -212,16 +212,16 @@ export function useBoardItems({
   const normalMemoCount = allMemoItems.length;
   const deletedMemoCount = boardDeletedItems?.memos?.length || 0;
 
-  // デバッグ: 削除済みアイテム状態を監視
-  console.log("🔍 useBoardItems: 削除済みアイテム状態", {
-    boardId,
-    deletedMemoCount,
-    deletedTaskCount: deletedCount,
-    boardDeletedItemsExists: !!boardDeletedItems,
-    memosLength: boardDeletedItems?.memos?.length,
-    tasksLength: boardDeletedItems?.tasks?.length,
-    timestamp: new Date().toISOString(),
-  });
+  // デバッグ: 削除済みアイテム状態を監視（開発時のみ簡略版）
+  // console.log("🔍 useBoardItems: 削除済みアイテム状態", {
+  //   boardId,
+  //   deletedMemoCount,
+  //   deletedTaskCount: deletedCount,
+  //   boardDeletedItemsExists: !!boardDeletedItems,
+  //   memosLength: boardDeletedItems?.memos?.length,
+  //   tasksLength: boardDeletedItems?.tasks?.length,
+  //   timestamp: new Date().toISOString(),
+  // });
 
   return {
     allMemoItems,

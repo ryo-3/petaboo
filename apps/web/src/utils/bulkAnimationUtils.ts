@@ -54,6 +54,15 @@ export async function executeWithAnimation({
   // ボタンの位置を取得
   const buttonRect = buttonRef?.current?.getBoundingClientRect();
 
+  // デバッグ: ボタンの参照状況をログ出力
+  console.log("🔍 executeWithAnimation デバッグ:", {
+    buttonRefExists: !!buttonRef,
+    buttonCurrentExists: !!buttonRef?.current,
+    buttonRect: buttonRect ? "有効" : "無効",
+    actionType,
+    dataAttribute,
+  });
+
   // アニメーションが必要な場合
   if (buttonRect) {
     // 蓋を開く

@@ -6,6 +6,7 @@ interface DesktopLayoutProps {
   sidebarContent: ReactNode;
   children: ReactNode;
   hideHeader?: boolean;
+  teamMode?: boolean;
 }
 
 function DesktopLayout({

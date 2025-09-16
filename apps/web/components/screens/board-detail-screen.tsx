@@ -31,6 +31,7 @@ interface BoardDetailProps {
   onSelectTask?: (task: Task | DeletedTask | null) => void;
   onClearSelection?: () => void;
   onBack?: () => void;
+  onSettings?: () => void;
   initialBoardName?: string;
   initialBoardDescription?: string | null;
   showBoardHeader?: boolean;
@@ -49,6 +50,7 @@ function BoardDetailScreen({
   onSelectTask,
   onClearSelection,
   onBack, // eslint-disable-line @typescript-eslint/no-unused-vars
+  onSettings,
   initialBoardName,
   initialBoardDescription,
   showBoardHeader = true,
@@ -407,7 +409,7 @@ function BoardDetailScreen({
             boardDescription={boardDescription}
             boardId={boardId}
             onBoardExport={handleExport}
-            onBoardSettings={handleSettings}
+            onBoardSettings={onSettings || handleSettings}
             isExportDisabled={false}
             marginBottom="mb-2"
             headerMarginBottom="mb-1.5"

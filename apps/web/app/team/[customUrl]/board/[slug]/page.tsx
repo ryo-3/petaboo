@@ -246,6 +246,10 @@ export default function TeamBoardDetailPage() {
     router.push(`/team/${customUrl}?tab=boards`);
   };
 
+  const handleSettings = () => {
+    router.push(`/team/${customUrl}/board/${slug}/settings`);
+  };
+
   // ボード名をチームレイアウトに通知
   useEffect(() => {
     if (boardData) {
@@ -348,6 +352,7 @@ export default function TeamBoardDetailPage() {
       onSelectTask={handleSelectTask}
       onClearSelection={handleClearSelection}
       onBack={handleBack}
+      onSettings={handleSettings}
       initialBoardName={boardData.name}
       initialBoardDescription={boardData.description}
       showBoardHeader={true}

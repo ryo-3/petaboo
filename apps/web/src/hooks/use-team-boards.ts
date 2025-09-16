@@ -53,12 +53,10 @@ export function useTeamBoards(
         return [];
       }
 
-
       // 最大2回リトライ
       for (let attempt = 0; attempt < 2; attempt++) {
         const token = await getCachedToken(getToken);
         const url = `${API_BASE_URL}/teams/${teamId}/boards?status=${status}`;
-
 
         const response = await fetch(url, {
           headers: {
@@ -66,7 +64,6 @@ export function useTeamBoards(
             ...(token && { Authorization: `Bearer ${token}` }),
           },
         });
-
 
         // 401エラーの場合はキャッシュをクリアしてリトライ
         if (response.status === 401 && attempt === 0) {
@@ -92,7 +89,6 @@ export function useTeamBoards(
           console.error(`❌ JSON Parse Error:`, parseError);
           throw new Error(`Invalid JSON response: ${responseText}`);
         }
-
 
         return data;
       }
@@ -166,6 +162,147 @@ export function useCreateTeamBoard() {
     onError: (error) => {
       console.error("チームボード作成に失敗しました:", error);
       showToast("チームボード作成に失敗しました", "error");
+    },
+  });
+}
+
+// チームボード更新
+export function useUpdateTeamBoard(teamId: number) {
+  const { getToken } = useAuth();
+  const queryClient = useQueryClient();
+  const { showToast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: number;
+      data: {
+        name?: string;
+        description?: string;
+      };
+    }) => {
+      const token = await getCachedToken(getToken);
+
+      const response = await fetch(
+        `${API_BASE_URL}/teams/${teamId}/boards/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+          body: JSON.stringify(data),
+        },
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to update team board");
+      }
+
+      return response.json();
+    },
+    onSuccess: (updatedBoard) => {
+      // 全ステータスのキャッシュを無効化
+      ["normal", "completed", "deleted"].forEach((status) => {
+        queryClient.invalidateQueries({
+          queryKey: ["team-boards", teamId, status],
+        });
+      });
+      showToast("ボードが更新されました", "success");
+    },
+    onError: (error) => {
+      console.error("チームボード更新に失敗しました:", error);
+    },
+  });
+}
+
+// チームボード削除
+export function useDeleteTeamBoard(teamId: number) {
+  const { getToken } = useAuth();
+  const queryClient = useQueryClient();
+  const { showToast } = useToast();
+
+  return useMutation({
+    mutationFn: async (boardId: number) => {
+      const token = await getCachedToken(getToken);
+
+      const response = await fetch(
+        `${API_BASE_URL}/teams/${teamId}/boards/${boardId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        },
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to delete team board");
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      // 全ステータスのキャッシュを無効化
+      ["normal", "completed", "deleted"].forEach((status) => {
+        queryClient.invalidateQueries({
+          queryKey: ["team-boards", teamId, status],
+        });
+      });
+      showToast("ボードが削除されました", "success");
+    },
+    onError: (error) => {
+      console.error("チームボード削除に失敗しました:", error);
+    },
+  });
+}
+
+// チームボード完了状態切り替え
+export function useToggleTeamBoardCompletion(teamId: number) {
+  const { getToken } = useAuth();
+  const queryClient = useQueryClient();
+  const { showToast } = useToast();
+
+  return useMutation({
+    mutationFn: async (boardId: number) => {
+      const token = await getCachedToken(getToken);
+
+      const response = await fetch(
+        `${API_BASE_URL}/teams/${teamId}/boards/${boardId}/toggle-completion`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        },
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(
+          error.error || "Failed to toggle team board completion",
+        );
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      // 全ステータスのキャッシュを無効化
+      ["normal", "completed", "deleted"].forEach((status) => {
+        queryClient.invalidateQueries({
+          queryKey: ["team-boards", teamId, status],
+        });
+      });
+      showToast("ボードの完了状態が更新されました", "success");
+    },
+    onError: (error) => {
+      console.error("チームボード完了状態の変更に失敗しました:", error);
     },
   });
 }

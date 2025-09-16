@@ -100,8 +100,13 @@ function MainClient({
     setShowingBoardDetail,
   } = useNavigation();
 
-  // 初期値設定（一度だけ実行）
+  // 初期値設定（一度だけ実行、ユーザーの手動切り替えは除外）
+  const hasUserManuallyChanged = useRef(false);
+
   useEffect(() => {
+    // ユーザーが手動で切り替えた場合は初期設定をスキップ
+    if (hasUserManuallyChanged.current) return;
+
     // サーバーサイドから明示的に指示されている場合は詳細表示
     // または、ボード情報が渡されている場合、URLがボード詳細の場合は詳細表示
     const initialShowingBoardDetail =
@@ -123,12 +128,10 @@ function MainClient({
   // URLに基づいてscreenModeを設定（手動設定時は上書きしない）
   useLayoutEffect(() => {
     if (pathname.startsWith("/boards/")) {
-      // 手動で設定された状態を上書きしない
-      if (screenMode !== "board") {
-        setScreenMode("board");
-        setCurrentMode("board");
-        setShowingBoardDetail(true); // ボード詳細URLでは詳細表示
-      }
+      // ボード詳細URLでは基本的にボードモードに設定
+      setScreenMode("board");
+      setCurrentMode("board");
+      // showingBoardDetailは初回のみ設定（ユーザーの手動切り替えを尊重）
     } else if (pathname === "/") {
       // チーム作成成功後のフラグをチェック
       const shouldShowTeamList = sessionStorage.getItem(
@@ -217,7 +220,15 @@ function MainClient({
   const wrappedHandleDashboard = () => {
     setShowTeamList(false);
     setShowTeamCreate(false);
+    hasUserManuallyChanged.current = true; // ユーザーが手動で切り替えたことを記録
+    setShowingBoardDetail(false); // ボード一覧を表示
     handleDashboard();
+  };
+
+  const wrappedHandleBoardDetail = () => {
+    hasUserManuallyChanged.current = true; // ユーザーが手動で切り替えたことを記録
+    setShowingBoardDetail(true); // ボード詳細を表示
+    handleBoardDetail();
   };
 
   const wrappedHandleSettings = () => {
@@ -302,7 +313,7 @@ function MainClient({
         setCurrentMode={setCurrentMode}
         handleSettings={wrappedHandleSettings}
         handleDashboard={wrappedHandleDashboard}
-        handleBoardDetail={handleBoardDetail}
+        handleBoardDetail={wrappedHandleBoardDetail}
         handleTeamList={handleTeamList}
         handleTeamCreate={handleTeamCreate}
         screenMode={screenMode}
@@ -328,7 +339,7 @@ function MainClient({
         handleSettings={wrappedHandleSettings}
         handleSearch={wrappedHandleSearch}
         handleDashboard={wrappedHandleDashboard}
-        handleBoardDetail={handleBoardDetail}
+        handleBoardDetail={wrappedHandleBoardDetail}
         handleTeamList={handleTeamList}
         handleTeamCreate={handleTeamCreate}
         screenMode={screenMode}

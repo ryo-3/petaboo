@@ -116,19 +116,21 @@ export function NavigationProvider({
     const isTeamListPage = isNormalTeamPage;
     const isTeamDetailPage = isTeamDetailPageUrl;
 
+    const boardDetailActive =
+      currentMode === "board" &&
+      showingBoardDetail &&
+      screenMode !== "home" &&
+      screenMode !== "search" &&
+      screenMode !== "settings" &&
+      screenMode !== "loading" &&
+      !isTeamDetailPage;
+
     return {
       home: (screenMode === "home" && !showTeamList) || isTeamOverview,
       memo: screenMode === "memo" || isTeamMemos,
       task: screenMode === "task" || isTeamTasks,
-      board: screenMode === "board" || isTeamBoards,
-      boardDetail:
-        currentMode === "board" &&
-        showingBoardDetail &&
-        screenMode !== "home" &&
-        screenMode !== "search" &&
-        screenMode !== "settings" &&
-        screenMode !== "loading" &&
-        !isTeamDetailPage,
+      board: (screenMode === "board" || isTeamBoards) && !boardDetailActive,
+      boardDetail: boardDetailActive,
       search: screenMode === "search",
       settings: screenMode === "settings",
       team:

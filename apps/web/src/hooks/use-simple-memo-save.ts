@@ -195,12 +195,34 @@ export function useSimpleMemoSave({
               (id) => !selectedBoardIds.includes(id),
             );
 
+            // デバッグログ: ボード変更処理
+            console.log("🔧 [メモ保存] ボード変更処理:", {
+              memoId: memo.id,
+              originalId: memo.originalId,
+              currentBoardIds,
+              selectedBoardIds,
+              boardsToAdd,
+              boardsToRemove,
+              teamMode,
+              teamId,
+            });
+
             const promises = [];
 
             // ボード追加
             if (boardsToAdd.length > 0 && memo.id > 0) {
+              console.log("🔧 [メモ保存] ボード追加開始:", {
+                boardsToAdd,
+                memoId: memo.id,
+              });
+
               const addPromises = boardsToAdd.map(async (boardId) => {
                 try {
+                  console.log("🔗 [メモ保存] ボードへの追加実行:", {
+                    boardId,
+                    itemId: memo.originalId || memo.id.toString(),
+                  });
+
                   await addItemToBoard.mutateAsync({
                     boardId,
                     data: {
@@ -208,9 +230,16 @@ export function useSimpleMemoSave({
                       itemId: memo.originalId || memo.id.toString(),
                     },
                   });
+
+                  console.log("✅ [メモ保存] ボード追加成功:", { boardId });
                 } catch (error: unknown) {
                   const errorMessage =
                     error instanceof Error ? error.message : String(error);
+                  console.error("❌ [メモ保存] ボード追加エラー:", {
+                    boardId,
+                    error: errorMessage,
+                  });
+
                   // すでに存在する場合はエラーを無視
                   if (!errorMessage.includes("already exists")) {
                     // エラーは既に上位でハンドリングされる
@@ -242,10 +271,44 @@ export function useSimpleMemoSave({
             if (promises.length > 0) {
               await Promise.all(promises);
 
-              // ボード変更後にキャッシュを無効化
-              queryClient.invalidateQueries({
-                queryKey: ["item-boards", "memo", memo.originalId],
+              console.log("🔄 [メモ保存] キャッシュ無効化開始:", {
+                memoId: memo.id,
+                originalId: memo.originalId,
+                boardsToAdd,
+                boardsToRemove,
               });
+
+              // ボード変更後にキャッシュを無効化
+              if (teamMode && teamId) {
+                // チームモード用のキャッシュ無効化
+                queryClient.invalidateQueries({
+                  queryKey: [
+                    "team-item-boards",
+                    teamId,
+                    "memo",
+                    memo.originalId,
+                  ],
+                });
+              } else {
+                // 個人モード用のキャッシュ無効化
+                queryClient.invalidateQueries({
+                  queryKey: ["item-boards", "memo", memo.originalId],
+                });
+              }
+
+              // 全ボードアイテムキャッシュも無効化（表示更新のため）
+              queryClient.invalidateQueries({
+                queryKey: ["boards", "all-items"],
+              });
+
+              // チームモードの場合、チーム関連のキャッシュも無効化
+              if (teamMode && teamId) {
+                queryClient.invalidateQueries({
+                  queryKey: ["team-boards", teamId],
+                });
+              }
+
+              console.log("✅ [メモ保存] キャッシュ無効化完了");
             }
 
             // 現在のボードから外された場合は次のアイテムを選択
@@ -309,9 +372,22 @@ export function useSimpleMemoSave({
             await Promise.all(addPromises);
 
             // ボード追加後にキャッシュを無効化
-            queryClient.invalidateQueries({
-              queryKey: ["item-boards", "memo", createdMemo.originalId],
-            });
+            if (teamMode && teamId) {
+              // チームモード用のキャッシュ無効化
+              queryClient.invalidateQueries({
+                queryKey: [
+                  "team-item-boards",
+                  teamId,
+                  "memo",
+                  createdMemo.originalId,
+                ],
+              });
+            } else {
+              // 個人モード用のキャッシュ無効化
+              queryClient.invalidateQueries({
+                queryKey: ["item-boards", "memo", createdMemo.originalId],
+              });
+            }
           }
 
           onSaveComplete?.(createdMemo, false, true);
@@ -336,7 +412,11 @@ export function useSimpleMemoSave({
       setInitialTitle(title.trim() || "");
       setInitialContent(content.trim() || "");
 
-      // ボード選択はリセットしない（保存した状態を維持）
+      // 保存成功後にボード選択状態を同期（hasChangesを正しく計算するため）
+      // 少し遅延させてキャッシュ更新後に同期
+      setTimeout(() => {
+        setSelectedBoardIds([...selectedBoardIds]);
+      }, 100);
     } catch (error) {
       console.error("保存に失敗:", error);
       setSaveError("保存に失敗しました");

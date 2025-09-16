@@ -754,4 +754,103 @@ app.openapi(
   },
 );
 
+// チームメモが所属するボード一覧を取得
+const getTeamMemoBoards = createRoute({
+  method: "get",
+  path: "/{teamId}/memos/{memoId}/boards",
+  request: {
+    params: z.object({
+      teamId: z.string().transform((val) => parseInt(val, 10)),
+      memoId: z.string(),
+    }),
+  },
+  responses: {
+    200: {
+      content: {
+        "application/json": {
+          schema: z.array(
+            z.object({
+              id: z.number(),
+              name: z.string(),
+            }),
+          ),
+        },
+      },
+      description: "チームメモが所属するボード一覧",
+    },
+    401: { description: "認証エラー" },
+    403: { description: "権限エラー" },
+    404: { description: "チームまたはメモが見つかりません" },
+    500: { description: "サーバーエラー" },
+  },
+});
+
+app.openapi(getTeamMemoBoards, async (c) => {
+  const auth = getAuth(c);
+  const { teamId, memoId } = c.req.valid("param");
+
+  if (!auth.userId) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  try {
+    const db = c.get("db");
+
+    // チームメンバーシップ確認
+    const member = await db
+      .select()
+      .from(teamMembers)
+      .where(
+        and(
+          eq(teamMembers.teamId, teamId),
+          eq(teamMembers.userId, auth.userId),
+        ),
+      )
+      .limit(1);
+
+    if (member.length === 0) {
+      return c.json({ error: "チームアクセス権限がありません" }, 403);
+    }
+
+    // メモの存在確認
+    const memo = await db
+      .select({ originalId: teamMemos.originalId })
+      .from(teamMemos)
+      .where(
+        and(eq(teamMemos.originalId, memoId), eq(teamMemos.teamId, teamId)),
+      )
+      .limit(1);
+
+    if (memo.length === 0) {
+      return c.json({ error: "メモが見つかりません" }, 404);
+    }
+
+    // ボード一覧を取得（チームボードアイテムテーブルから）
+    const { teamBoards, teamBoardItems } = await import(
+      "../../db/schema/team/boards"
+    );
+
+    const boards = await db
+      .select({
+        id: teamBoards.id,
+        name: teamBoards.name,
+      })
+      .from(teamBoards)
+      .innerJoin(
+        teamBoardItems,
+        and(
+          eq(teamBoardItems.boardId, teamBoards.id),
+          eq(teamBoardItems.itemType, "memo"),
+          eq(teamBoardItems.originalId, memo[0].originalId),
+        ),
+      )
+      .where(eq(teamBoards.teamId, teamId));
+
+    return c.json(boards);
+  } catch (error) {
+    console.error("チームメモボード取得エラー:", error);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+
 export default app;

@@ -6,6 +6,7 @@ import { useBoardState } from "@/src/hooks/use-board-state";
 import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
 import { useTags } from "@/src/hooks/use-tags";
 import { useBoards, useAddItemToBoard } from "@/src/hooks/use-boards";
+import { useTeamBoards } from "@/src/hooks/use-team-boards";
 import { Memo, DeletedMemo } from "@/src/types/memo";
 import { Task, DeletedTask } from "@/src/types/task";
 import type { Tagging } from "@/src/types/tag";
@@ -278,7 +279,11 @@ function BoardDetailScreen({
   const { data: allTaggings } = useAllTaggings();
   const { data: allBoardItems } = useAllBoardItems();
   const { data: allTags } = useTags();
-  const { data: allBoards } = useBoards("normal", !teamMode);
+  const { data: personalBoards } = useBoards("normal", !teamMode);
+  const { data: teamBoards } = useTeamBoards(teamId, "normal");
+
+  // チームモードかどうかでボード一覧を切り替え
+  const allBoards = teamMode ? teamBoards : personalBoards;
   const { categories } = useBoardCategories();
 
   // 安全なデータ配布用

@@ -12,6 +12,7 @@ import TagTriggerButton from "@/components/features/tags/tag-trigger-button";
 import TagSelectionModal from "@/components/ui/modals/tag-selection-modal";
 import { TAG_COLORS } from "@/src/constants/colors";
 import { useSimpleMemoSave } from "@/src/hooks/use-simple-memo-save";
+import { useTeamItemBoards } from "@/src/hooks/use-boards";
 import {
   useCreateTagging,
   useDeleteTagging,
@@ -84,12 +85,39 @@ function MemoEditor({
   const isDeleted = memo ? "deletedAt" in memo : false;
   const deletedMemo = isDeleted ? (memo as DeletedMemo) : null;
 
+  // チームモードではAPI呼び出しでアイテムボードを取得
+  const { data: teamItemBoards = [] } = useTeamItemBoards(
+    teamId || 0,
+    "memo",
+    memo?.originalId,
+  );
+
   // 事前取得されたデータを使用（APIコール不要）
   const boards = preloadedBoards;
+
+  // デバッグログ: ボード一覧データ確認
+  useEffect(() => {
+    if (teamMode) {
+      console.log("🔍 [ボード一覧データ] チームモード:", {
+        preloadedBoardsCount: preloadedBoards.length,
+        preloadedBoards: preloadedBoards.map((b) => ({
+          id: b.id,
+          name: b.name,
+        })),
+        boardsCount: boards.length,
+        boards: boards.map((b) => ({ id: b.id, name: b.name })),
+      });
+    }
+  }, [teamMode, preloadedBoards, boards]);
 
   // このメモに実際に紐づいているボードのみを抽出
   const itemBoards = useMemo(() => {
     if (!memo || memo.id === undefined || memo.id === 0) return [];
+
+    // チームモードでは専用APIから取得したデータを使用
+    if (teamMode) {
+      return teamItemBoards;
+    }
 
     const originalId = memo.originalId || memo.id.toString();
 
@@ -106,14 +134,40 @@ function MemoEditor({
       );
 
     return boards;
-  }, [memo, preloadedBoardItems, preloadedBoards]);
+  }, [memo, preloadedBoardItems, preloadedBoards, teamMode, teamItemBoards]);
 
   const currentBoardIds =
     memo && memo.id !== 0
-      ? itemBoards.map((board) => board.id)
+      ? itemBoards.map((board) => board.id) // チーム/個人モード共通でitemBoardsから計算
       : initialBoardId
         ? [initialBoardId]
         : [];
+
+  // デバッグログ: チームボードでのボードアイコン状態確認
+  useEffect(() => {
+    if (teamMode) {
+      console.log("🔍 [ボードアイコン状態] チームモード:", {
+        memoId: memo?.id,
+        originalId: memo?.originalId,
+        initialBoardId,
+        itemBoards: itemBoards.map((b) => ({ id: b.id, name: b.name })),
+        currentBoardIds,
+        preloadedBoardItemsCount: preloadedBoardItems.length,
+        relevantBoardItems: preloadedBoardItems.filter(
+          (item) =>
+            item.itemType === "memo" &&
+            item.originalId === (memo?.originalId || memo?.id?.toString()),
+        ),
+      });
+    }
+  }, [
+    teamMode,
+    memo,
+    itemBoards,
+    currentBoardIds,
+    initialBoardId,
+    preloadedBoardItems,
+  ]);
 
   const {
     content,

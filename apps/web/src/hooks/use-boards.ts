@@ -504,14 +504,40 @@ export function useAddItemToBoard(options?: {
             ? `${API_BASE_URL}/teams/${teamId}/boards/${boardId}/items`
             : `${API_BASE_URL}/boards/${boardId}/items`;
 
-        const response = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token && { Authorization: `Bearer ${token}` }),
-          },
-          body: JSON.stringify(data),
+        console.log("🌐 [addItemToBoard] API呼び出し:", {
+          teamMode,
+          teamId,
+          boardId,
+          url,
+          data,
         });
+
+        let response;
+        try {
+          console.log("📡 [addItemToBoard] fetch開始:", {
+            url,
+            method: "POST",
+            data,
+          });
+
+          response = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token && { Authorization: `Bearer ${token}` }),
+            },
+            body: JSON.stringify(data),
+          });
+
+          console.log("📡 [addItemToBoard] fetch完了:", {
+            status: response.status,
+            statusText: response.statusText,
+            ok: response.ok,
+          });
+        } catch (fetchError) {
+          console.error("💥 [addItemToBoard] fetchエラー:", fetchError);
+          throw fetchError;
+        }
 
         // 401エラーの場合はキャッシュをクリアしてリトライ
         if (response.status === 401 && attempt === 0) {
@@ -742,6 +768,51 @@ export function useItemBoards(
     },
     enabled: !!itemId,
     keepPreviousData: true, // 前のデータを保持してちらつき防止
+  });
+}
+
+// チーム用アイテムボード取得
+export function useTeamItemBoards(
+  teamId: number,
+  itemType: "memo" | "task",
+  itemId: string | undefined,
+) {
+  const { getToken } = useAuth();
+
+  return useQuery<Board[]>({
+    queryKey: ["team-item-boards", teamId, itemType, itemId],
+    queryFn: async () => {
+      if (!itemId) return [];
+
+      const token = await getToken();
+      const API_BASE_URL =
+        process.env.NODE_ENV === "production"
+          ? "https://petaboo-api.cloudflare-worker.workers.dev"
+          : "http://localhost:7594";
+
+      const response = await fetch(
+        `${API_BASE_URL}/teams/${teamId}/${itemType}s/${itemId}/boards`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        },
+      );
+
+      if (!response.ok) {
+        // 404エラーは空配列を返す（削除済みアイテムなど）
+        if (response.status === 404) {
+          return [];
+        }
+        throw new Error("Failed to fetch team item boards");
+      }
+
+      const data = await response.json();
+      return data;
+    },
+    enabled: !!itemId && !!teamId,
+    keepPreviousData: true,
   });
 }
 

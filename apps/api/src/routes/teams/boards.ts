@@ -760,7 +760,7 @@ export function createTeamBoardsAPI(app: AppType) {
           .from(teamMemos)
           .where(
             and(
-              eq(teamMemos.id, parseInt(itemId)),
+              eq(teamMemos.originalId, itemId), // itemIdは既にoriginalId形式
               eq(teamMemos.teamId, parseInt(teamId)),
             ),
           )
@@ -776,7 +776,7 @@ export function createTeamBoardsAPI(app: AppType) {
           .from(teamTasks)
           .where(
             and(
-              eq(teamTasks.id, parseInt(itemId)),
+              eq(teamTasks.originalId, itemId), // itemIdは既にoriginalId形式
               eq(teamTasks.teamId, parseInt(teamId)),
             ),
           )

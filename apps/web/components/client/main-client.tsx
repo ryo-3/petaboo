@@ -127,10 +127,14 @@ function MainClient({
 
   // URLに基づいてscreenModeを設定（手動設定時は上書きしない）
   useLayoutEffect(() => {
-    if (pathname.startsWith("/boards/")) {
+    if (pathname.startsWith("/boards/") || pathname.includes("/board/")) {
       // ボード詳細URLでは基本的にボードモードに設定
       setScreenMode("board");
       setCurrentMode("board");
+      // チームボード詳細の場合は詳細表示フラグも設定
+      if (pathname.includes("/board/")) {
+        setShowingBoardDetail(true);
+      }
       // showingBoardDetailは初回のみ設定（ユーザーの手動切り替えを尊重）
     } else if (pathname === "/") {
       // チーム作成成功後のフラグをチェック
@@ -164,6 +168,7 @@ function MainClient({
     setScreenMode,
     setCurrentMode,
     setIsFromBoardDetail,
+    setShowingBoardDetail,
   ]);
 
   // Hydration完了前はサーバーと同じ状態を保持

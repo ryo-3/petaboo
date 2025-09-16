@@ -70,12 +70,14 @@ interface NavigationProviderProps {
   children: ReactNode;
   initialCurrentMode?: "memo" | "task" | "board";
   initialScreenMode?: ScreenMode;
+  initialShowingBoardDetail?: boolean;
 }
 
 export function NavigationProvider({
   children,
   initialCurrentMode = "memo",
   initialScreenMode = "home",
+  initialShowingBoardDetail = false,
 }: NavigationProviderProps) {
   const [screenMode, setScreenMode] = useState<ScreenMode>(initialScreenMode);
   const [currentMode, setCurrentMode] = useState<"memo" | "task" | "board">(
@@ -92,9 +94,12 @@ export function NavigationProvider({
   // UI状態管理（Sidebarとの統一）
   const [showTeamList, setShowTeamList] = useState(false);
   const [showTeamCreate, setShowTeamCreate] = useState(false);
-  const [showingBoardDetail, setShowingBoardDetail] = useState(false);
+  const [showingBoardDetail, setShowingBoardDetail] = useState(
+    initialShowingBoardDetail,
+  );
 
   const pathname = usePathname();
+
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
 
@@ -109,12 +114,18 @@ export function NavigationProvider({
 
     // チーム詳細ページのタブ判定
     const isTeamOverview =
-      isTeamDetailPageUrl && (!currentTab || currentTab === "overview");
+      isTeamDetailPageUrl &&
+      !pathname.includes("/board/") &&
+      (!currentTab || currentTab === "overview");
     const isTeamMemos = isTeamDetailPageUrl && currentTab === "memos";
     const isTeamTasks = isTeamDetailPageUrl && currentTab === "tasks";
     const isTeamBoards = isTeamDetailPageUrl && currentTab === "boards";
     const isTeamListPage = isNormalTeamPage;
     const isTeamDetailPage = isTeamDetailPageUrl;
+
+    // チームボード詳細ページの判定
+    const isTeamBoardDetailPage =
+      isTeamDetailPageUrl && pathname.includes("/board/");
 
     const boardDetailActive =
       currentMode === "board" &&
@@ -123,7 +134,7 @@ export function NavigationProvider({
       screenMode !== "search" &&
       screenMode !== "settings" &&
       screenMode !== "loading" &&
-      !isTeamDetailPage;
+      (!isTeamDetailPage || isTeamBoardDetailPage);
 
     return {
       home: (screenMode === "home" && !showTeamList) || isTeamOverview,

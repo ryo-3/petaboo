@@ -7,7 +7,6 @@ import { useTeamDetail } from "@/src/hooks/use-team-detail";
 import { useTeamMemos } from "@/src/hooks/use-team-memos";
 import { useTeamTasks } from "@/src/hooks/use-team-tasks";
 import BoardDetailScreen from "@/components/screens/board-detail-screen";
-import { NavigationProvider } from "@/contexts/navigation-context";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
 
@@ -339,24 +338,22 @@ export default function TeamBoardDetailPage() {
     );
   }
 
-  // NavigationProviderでラップして既存のBoardDetailScreenコンポーネントを使用
+  // 既存のBoardDetailScreenコンポーネントを使用
   return (
-    <NavigationProvider initialCurrentMode="board" initialScreenMode="board">
-      <BoardDetailScreen
-        boardId={boardData.id}
-        selectedMemo={selectedMemo}
-        selectedTask={selectedTask}
-        onSelectMemo={handleSelectMemo}
-        onSelectTask={handleSelectTask}
-        onClearSelection={handleClearSelection}
-        onBack={handleBack}
-        initialBoardName={boardData.name}
-        initialBoardDescription={boardData.description}
-        showBoardHeader={true}
-        serverInitialTitle={boardData.name}
-        teamMode={true}
-        teamId={team.id}
-      />
-    </NavigationProvider>
+    <BoardDetailScreen
+      boardId={boardData.id}
+      selectedMemo={selectedMemo}
+      selectedTask={selectedTask}
+      onSelectMemo={handleSelectMemo}
+      onSelectTask={handleSelectTask}
+      onClearSelection={handleClearSelection}
+      onBack={handleBack}
+      initialBoardName={boardData.name}
+      initialBoardDescription={boardData.description}
+      showBoardHeader={true}
+      serverInitialTitle={boardData.name}
+      teamMode={true}
+      teamId={team.id}
+    />
   );
 }

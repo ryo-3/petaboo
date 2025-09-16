@@ -270,16 +270,29 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function TeamDetailLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function TeamDetailLayoutWrapper({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+
+  // チームボード詳細ページかどうかを判定
+  const isTeamBoardDetailPage = pathname.includes("/board/");
+
   return (
-    <NavigationProvider initialScreenMode="home">
+    <NavigationProvider
+      initialScreenMode={isTeamBoardDetailPage ? "board" : "home"}
+      initialCurrentMode={isTeamBoardDetailPage ? "board" : "memo"}
+      initialShowingBoardDetail={isTeamBoardDetailPage}
+    >
       <Suspense fallback={<div>Loading...</div>}>
         <TeamLayoutContent>{children}</TeamLayoutContent>
       </Suspense>
     </NavigationProvider>
   );
+}
+
+export default function TeamDetailLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return <TeamDetailLayoutWrapper>{children}</TeamDetailLayoutWrapper>;
 }

@@ -7,6 +7,7 @@ import Modal from "@/components/ui/modals/modal";
 import TagEditModal from "@/components/ui/modals/tag-edit-modal";
 import { TAG_COLORS } from "@/src/constants/colors";
 import { useCreateTag } from "@/src/hooks/use-tags";
+import { useCreateTeamTag } from "@/src/hooks/use-team-tags";
 import type { Tag } from "@/src/types/tag";
 import { useMemo, useState } from "react";
 
@@ -30,6 +31,9 @@ interface TagSelectionModalProps {
   onFilterModeChange?: (mode: "include" | "exclude") => void;
   // カスタムフッター
   footer?: React.ReactNode;
+  // チームモード関連
+  teamMode?: boolean;
+  teamId?: number;
 }
 
 export default function TagSelectionModal({
@@ -44,6 +48,8 @@ export default function TagSelectionModal({
   filterMode = "include",
   onFilterModeChange,
   footer,
+  teamMode = false,
+  teamId = 0,
 }: TagSelectionModalProps) {
   const modalTitle = title || (mode === "filter" ? "タグ絞り込み" : "タグ選択");
   const [searchQuery, setSearchQuery] = useState("");
@@ -54,6 +60,7 @@ export default function TagSelectionModal({
   const [editingTag, setEditingTag] = useState<Tag | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const createTagMutation = useCreateTag();
+  const createTeamTagMutation = teamId ? useCreateTeamTag(teamId) : null;
 
   // 検索と色でフィルタリング（並び順は変更しない）
   const filteredTags = useMemo(() => {
@@ -83,7 +90,6 @@ export default function TagSelectionModal({
   }, [tags, selectedTagIds]);
 
   const handleTagToggle = (tagId: number) => {
-
     if (selectedTagIds.includes(tagId)) {
       const newSelection = selectedTagIds.filter((id) => id !== tagId);
       onSelectionChange(newSelection);
@@ -110,6 +116,7 @@ export default function TagSelectionModal({
     if (!newTagName.trim()) return;
 
     const trimmedName = newTagName.trim();
+    console.log("🏷️ タグ作成開始:", { name: trimmedName, color: newTagColor });
 
     // 事前バリデーション：重複チェック
     const isDuplicate = tags.some(
@@ -122,10 +129,30 @@ export default function TagSelectionModal({
 
     try {
       setIsCreating(true);
-      const newTag = await createTagMutation.mutateAsync({
-        name: trimmedName,
-        color: newTagColor,
-      });
+      console.log("🏷️ タグ作成API呼び出し中...");
+
+      let newTag;
+      if (teamMode && teamId && createTeamTagMutation) {
+        console.log("🏷️ チームタグ作成モード:", {
+          teamId,
+          name: trimmedName,
+          color: newTagColor,
+        });
+        newTag = await createTeamTagMutation.mutateAsync({
+          name: trimmedName,
+          color: newTagColor,
+        });
+      } else {
+        console.log("🏷️ 個人タグ作成モード:", {
+          name: trimmedName,
+          color: newTagColor,
+        });
+        newTag = await createTagMutation.mutateAsync({
+          name: trimmedName,
+          color: newTagColor,
+        });
+      }
+      console.log("🏷️ タグ作成成功:", newTag);
 
       // 作成したタグを自動選択
       if (multiple) {
@@ -140,8 +167,18 @@ export default function TagSelectionModal({
 
       // 0.5秒遅延
       await new Promise((resolve) => setTimeout(resolve, 500));
-    } catch (error) {
-      console.error("タグ作成エラー:", error);
+    } catch (error: any) {
+      console.error("🏷️ タグ作成エラー:", error);
+      console.error("🏷️ エラー詳細:", {
+        message: error?.message,
+        response: error?.response,
+        data: error?.data,
+        stack: error?.stack,
+      });
+
+      // ユーザーにエラーを表示
+      const errorMessage = error?.message || "タグの作成に失敗しました";
+      alert(`タグ作成エラー: ${errorMessage}`);
     } finally {
       setIsCreating(false);
     }

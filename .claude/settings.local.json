@@ -95,7 +95,11 @@
       "Bash(apitest \"/teams/18/boards/1/items\" \"GET\")",
       "Bash(apitest \"/teams/18/tasks\" \"GET\")",
       "Bash(apitest \"/boards/items/task/58/boards\")",
-      "Bash(./clear-logs.sh:*)"
+      "Bash(./clear-logs.sh:*)",
+      "Bash(apitest \"/teams/18/tags\" \"GET\")",
+      "Bash(pgrep:*)",
+      "Bash(apitest \"/teams/18/tags\")",
+      "Bash(apitest \"/taggings?teamId=18&targetType=memo&targetOriginalId=377\")"
     ],
     "deny": []
   }

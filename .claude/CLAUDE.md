@@ -314,3 +314,51 @@ FILTER_PATTERNS=(
 tail -f petaboo/web.log    # Web開発ログ
 tail -f petaboo/api.log    # API開発ログ
 ```
+
+## 🚨 チーム機能の既知の問題
+
+### チームAPIルーティング問題
+
+**現象:** チーム機能でパラメーター付きAPIエンドポイント（`/teams/{teamId}/xxx`）が404エラーになる
+
+**影響範囲:**
+
+- `/teams/{teamId}/tags` → 404 Not Found
+- `/teams/{teamId}/taggings` → 404 Not Found
+- その他新規チームAPIエンドポイント
+
+**動作するエンドポイント:**
+
+- `/teams/{teamId}/memos` → 401 Unauthorized（正常動作）
+- `/teams/{teamId}/tasks` → 401 Unauthorized（正常動作）
+- 固定ルート（パラメーターなし）→ 401 Unauthorized（正常動作）
+
+**原因推測:**
+
+- OpenAPIHonoとチームルート登録の競合
+- 複数の`app.route("/teams", ...)`登録による優先順位問題
+- チーム機能特有のルーティング構造上の制約
+
+**回避策:**
+
+1. **既存エンドポイント拡張（推奨）**
+
+   ```typescript
+   // /tags?teamId=18 の形式でチーム対応
+   app.get("/tags", async (c) => {
+     const teamId = c.req.query("teamId");
+     if (teamId) {
+       // チーム用ロジック
+     } else {
+       // 個人用ロジック
+     }
+   });
+   ```
+
+2. **固定ルート使用**
+   ```typescript
+   // /teams/tags/by-team-id/18 等の固定パス
+   app.route("/teams/tags", teamTagsRoute);
+   ```
+
+**注意:** この問題は「毎回発生する」チーム機能の構造的問題のため、新規チームAPIエンドポイント作成時は回避策を使用すること。

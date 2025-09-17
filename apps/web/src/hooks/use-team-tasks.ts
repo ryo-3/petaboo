@@ -128,6 +128,8 @@ export function useCreateTeamTask(teamId?: number) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["team-tasks", teamId] });
+      // チームタグ付け情報も無効化（タスク変更時にタグ情報も更新される可能性）
+      queryClient.invalidateQueries({ queryKey: ["team-taggings", teamId] });
     },
   });
 }
@@ -168,6 +170,8 @@ export function useUpdateTeamTask(teamId?: number) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["team-tasks", teamId] });
+      // チームタグ付け情報も無効化（タスク変更時にタグ情報も更新される可能性）
+      queryClient.invalidateQueries({ queryKey: ["team-taggings", teamId] });
     },
   });
 }
@@ -201,6 +205,8 @@ export function useDeleteTeamTask(teamId?: number) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["team-tasks", teamId] });
+      // チームタグ付け情報も無効化（タスク変更時にタグ情報も更新される可能性）
+      queryClient.invalidateQueries({ queryKey: ["team-taggings", teamId] });
       queryClient.invalidateQueries({
         queryKey: ["team-deleted-tasks", teamId],
       });

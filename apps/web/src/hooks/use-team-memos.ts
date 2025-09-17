@@ -113,6 +113,8 @@ export function useCreateTeamMemo(teamId?: number) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["team-memos", teamId] });
+      // チームタグ付け情報も無効化（新しいメモにタグが付いている可能性）
+      queryClient.invalidateQueries({ queryKey: ["team-taggings", teamId] });
     },
   });
 }
@@ -153,6 +155,8 @@ export function useUpdateTeamMemo(teamId?: number) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["team-memos", teamId] });
+      // チームタグ付け情報も無効化（メモ更新時にタグ情報も更新される可能性）
+      queryClient.invalidateQueries({ queryKey: ["team-taggings", teamId] });
     },
   });
 }

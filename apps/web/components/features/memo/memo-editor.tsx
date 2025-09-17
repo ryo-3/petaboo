@@ -18,6 +18,12 @@ import {
   useDeleteTagging,
   useTaggings,
 } from "@/src/hooks/use-taggings";
+import {
+  useCreateTeamTagging,
+  useDeleteTeamTagging,
+  useTeamTaggings,
+} from "@/src/hooks/use-team-taggings";
+import { useTeamTags } from "@/src/hooks/use-team-tags";
 import { useDeletedMemoActions } from "./use-deleted-memo-actions";
 import { useQueryClient } from "@tanstack/react-query";
 import BoardChips from "@/components/ui/chips/board-chips";
@@ -205,8 +211,17 @@ function MemoEditor({
   const { data: liveTaggings } = useTaggings({
     targetType: "memo",
     targetOriginalId: originalId,
-    teamMode, // チームモードでは個人タグを取得しない
+    teamMode: !teamMode, // 個人モードのみでタグ取得
   });
+
+  // チーム用タグ情報を取得
+  const { data: liveTeamTaggings } = useTeamTaggings(teamId || 0, {
+    targetType: "memo",
+    targetOriginalId: originalId,
+  });
+
+  // チーム用タグ一覧を取得
+  const { data: teamTagsList } = useTeamTags(teamId || 0);
 
   // 手動でタグを変更したかどうかのフラグ
   const [hasManualChanges, setHasManualChanges] = useState(false);
@@ -214,16 +229,16 @@ function MemoEditor({
   // プリロードデータとライブデータを組み合わせてタグを抽出
   const currentTags = useMemo(() => {
     if (!memo || memo.id === undefined || memo.id === 0) return [];
-    if (teamMode) return []; // チームモードではタグを表示しない
     const targetOriginalId = memo.originalId || memo.id.toString();
 
-    // ライブデータが利用可能な場合はそれを優先、なければプリロードデータを使用
-    const taggingsToUse =
-      liveTaggings ||
-      preloadedTaggings.filter(
-        (t) =>
-          t.targetType === "memo" && t.targetOriginalId === targetOriginalId,
-      );
+    // チームモードかどうかに応じてタグ付け情報を選択
+    const taggingsToUse = teamMode
+      ? liveTeamTaggings || []
+      : liveTaggings ||
+        preloadedTaggings.filter(
+          (t) =>
+            t.targetType === "memo" && t.targetOriginalId === targetOriginalId,
+        );
 
     const tags = taggingsToUse
       .filter(
@@ -239,6 +254,10 @@ function MemoEditor({
   // タグ操作用のmutation（既存API使用）
   const createTaggingMutation = useCreateTagging();
   const deleteTaggingMutation = useDeleteTagging();
+
+  // チーム用タグ操作フック
+  const createTeamTaggingMutation = useCreateTeamTagging(teamId || 0);
+  const deleteTeamTaggingMutation = useDeleteTeamTagging(teamId || 0);
   const queryClient = useQueryClient();
 
   // 削除済みメモの操作用（React Hooks違反を避けるため常に呼び出し、nullを許可）
@@ -610,15 +629,13 @@ function MemoEditor({
                   multiple={true}
                   disabled={isDeleted}
                 />
-                {!teamMode && (
-                  <TagTriggerButton
-                    onClick={
-                      isDeleted ? undefined : () => setIsTagModalOpen(true)
-                    }
-                    tags={localTags}
-                    disabled={isDeleted}
-                  />
-                )}
+                <TagTriggerButton
+                  onClick={
+                    isDeleted ? undefined : () => setIsTagModalOpen(true)
+                  }
+                  tags={localTags}
+                  disabled={isDeleted}
+                />
               </div>
               <div className="flex items-center gap-1">
                 {isDeleted && deletedMemo && (
@@ -735,24 +752,25 @@ function MemoEditor({
       )}
 
       {/* タグ選択モーダル */}
-      {!teamMode && (
-        <TagSelectionModal
-          isOpen={isTagModalOpen}
-          onClose={() => setIsTagModalOpen(false)}
-          tags={preloadedTags}
-          selectedTagIds={localTags.map((tag) => tag.id)}
-          onSelectionChange={(tagIds) => {
-            const selectedTags = preloadedTags.filter((tag) =>
-              tagIds.includes(tag.id),
-            );
+      <TagSelectionModal
+        isOpen={isTagModalOpen}
+        onClose={() => setIsTagModalOpen(false)}
+        tags={teamMode ? teamTagsList || [] : preloadedTags}
+        selectedTagIds={localTags.map((tag) => tag.id)}
+        teamMode={teamMode}
+        teamId={teamId}
+        onSelectionChange={(tagIds) => {
+          const availableTags = teamMode ? teamTagsList || [] : preloadedTags;
+          const selectedTags = availableTags.filter((tag) =>
+            tagIds.includes(tag.id),
+          );
 
-            setLocalTags(selectedTags);
-            setHasManualChanges(true);
-          }}
-          mode="selection"
-          multiple={true}
-        />
-      )}
+          setLocalTags(selectedTags);
+          setHasManualChanges(true);
+        }}
+        mode="selection"
+        multiple={true}
+      />
       <BulkDeleteConfirmation
         isOpen={showDeleteModal}
         onClose={handleCancelDelete}

@@ -16,6 +16,8 @@ import teamMemosRoute from "./src/routes/teams/memos";
 import teamTasksRoute from "./src/routes/teams/tasks";
 import teamShareRoute from "./src/routes/teams/share";
 import teamBoardsRoute from "./src/routes/teams/boards-route";
+// import teamTagsRoute from "./src/routes/teams/team-tags-copy-memos"; // 不要（/tags?teamId=X で代替）
+// import teamTaggingsRoute from "./src/routes/teams/team-taggings";
 import clerkWebhook from "./src/routes/webhooks/clerk";
 import usersRoute from "./src/routes/users/route";
 import { execSync } from "child_process";
@@ -55,13 +57,19 @@ app.route("/boards", boardsRoute);
 app.route("/tags", tagsRoute);
 app.route("/taggings", taggingsRoute);
 app.route("/board-categories", boardCategoriesRoute);
-app.route("/teams", teamsRoute);
+// app.route("/teams", teamTagsRoute); // 不要（/tags?teamId=X で代替）
 app.route("/teams", teamMemosRoute);
+app.route("/teams", teamsRoute);
 app.route("/teams", teamTasksRoute);
 app.route("/teams", teamShareRoute);
 app.route("/teams", teamBoardsRoute);
+// app.route("/teams", teamTaggingsRoute);
 app.route("/webhooks/clerk", clerkWebhook);
 app.route("/users", usersRoute);
+
+// OpenAPIアプリからルートをマウント
+app.route("/", openapiApp);
+
 app.get("/openapi", (c) => {
   const openapiJson = openapiApp.getOpenAPIDocument({
     openapi: "3.1.0", // バージョンは "3.0.0" でもOK

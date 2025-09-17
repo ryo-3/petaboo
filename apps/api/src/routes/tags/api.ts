@@ -2,6 +2,8 @@ import { createRoute, z } from "@hono/zod-openapi";
 import { getAuth } from "@hono/clerk-auth";
 import { eq, and, sql, like, desc } from "drizzle-orm";
 import { tags, taggings } from "../../db";
+import { teamTags, teamTaggings } from "../../db/schema/team/tags";
+import { teamMembers } from "../../db/schema/team/teams";
 import type { NewTag } from "../../db/schema/tags";
 import type { DatabaseType, Env, AppType } from "../../types/common";
 
@@ -9,6 +11,16 @@ const TagSchema = z.object({
   id: z.number(),
   name: z.string(),
   color: z.string().nullable(),
+  userId: z.string(),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+});
+
+const TeamTagSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  color: z.string().nullable(),
+  teamId: z.number(),
   userId: z.string(),
   createdAt: z.number(),
   updatedAt: z.number(),
@@ -42,16 +54,17 @@ export function createAPI(app: AppType) {
         q: z.string().optional(),
         sort: z.enum(["name", "usage", "recent"]).optional().default("name"),
         limit: z.string().optional(),
+        teamId: z.string().optional(),
       }),
     },
     responses: {
       200: {
         content: {
           "application/json": {
-            schema: z.array(TagSchema),
+            schema: z.array(z.union([TagSchema, TeamTagSchema])),
           },
         },
-        description: "Get all tags",
+        description: "Get all tags (personal or team)",
       },
       401: {
         content: {
@@ -72,8 +85,48 @@ export function createAPI(app: AppType) {
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const { q, sort, limit } = c.req.valid("query");
+    const { q, sort, limit, teamId } = c.req.valid("query");
     const db = c.get("db");
+
+    // チームIDが指定された場合はチームタグを取得
+    if (teamId) {
+      const teamIdNum = parseInt(teamId, 10);
+      if (isNaN(teamIdNum)) {
+        return c.json({ error: "Invalid teamId" }, 400);
+      }
+
+      // チームメンバー確認
+      const member = await db
+        .select()
+        .from(teamMembers)
+        .where(
+          and(
+            eq(teamMembers.teamId, teamIdNum),
+            eq(teamMembers.userId, auth.userId),
+          ),
+        )
+        .limit(1);
+
+      if (member.length === 0) {
+        return c.json({ error: "Not a team member" }, 403);
+      }
+
+      // チームタグを取得
+      let teamQuery = db
+        .select()
+        .from(teamTags)
+        .where(eq(teamTags.teamId, teamIdNum));
+
+      // 検索フィルター（チーム用）
+      if (q) {
+        teamQuery = teamQuery.where(
+          and(eq(teamTags.teamId, teamIdNum), like(teamTags.name, `%${q}%`)),
+        );
+      }
+
+      const teamTagsResult = await teamQuery.execute();
+      return c.json(teamTagsResult, 200);
+    }
 
     let query = db.select().from(tags).where(eq(tags.userId, auth.userId));
 
@@ -166,6 +219,9 @@ export function createAPI(app: AppType) {
     path: "/",
     tags: ["tags"],
     request: {
+      query: z.object({
+        teamId: z.string().optional(),
+      }),
       body: {
         content: {
           "application/json": {
@@ -181,7 +237,7 @@ export function createAPI(app: AppType) {
             schema: TagSchema,
           },
         },
-        description: "Tag created",
+        description: "Tag created (personal or team)",
       },
       400: {
         content: {
@@ -203,6 +259,16 @@ export function createAPI(app: AppType) {
         },
         description: "Unauthorized",
       },
+      403: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+            }),
+          },
+        },
+        description: "Not a team member",
+      },
     },
   });
 
@@ -213,8 +279,70 @@ export function createAPI(app: AppType) {
     }
 
     const { name, color } = c.req.valid("json");
+    const { teamId } = c.req.valid("query");
     const db = c.get("db");
 
+    // チームタグ作成の場合
+    if (teamId) {
+      const teamIdNum = parseInt(teamId, 10);
+      if (isNaN(teamIdNum)) {
+        return c.json({ error: "Invalid teamId" }, 400);
+      }
+
+      // チームメンバー確認
+      const member = await db
+        .select()
+        .from(teamMembers)
+        .where(
+          and(
+            eq(teamMembers.teamId, teamIdNum),
+            eq(teamMembers.userId, auth.userId),
+          ),
+        )
+        .limit(1);
+
+      if (member.length === 0) {
+        return c.json({ error: "Not a team member" }, 403);
+      }
+
+      // チームタグ数制限チェック（300個）
+      const teamTagCount = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(teamTags)
+        .where(eq(teamTags.teamId, teamIdNum));
+
+      if (teamTagCount[0]?.count >= 300) {
+        return c.json(
+          { error: "Team tag limit reached (300 tags maximum)" },
+          400,
+        );
+      }
+
+      // 同名チームタグの存在チェック
+      const existingTeamTag = await db
+        .select()
+        .from(teamTags)
+        .where(and(eq(teamTags.teamId, teamIdNum), eq(teamTags.name, name)))
+        .limit(1);
+
+      if (existingTeamTag.length > 0) {
+        return c.json({ error: "Team tag already exists" }, 400);
+      }
+
+      const newTeamTag = {
+        name,
+        color: color || null,
+        teamId: teamIdNum,
+        userId: auth.userId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const result = await db.insert(teamTags).values(newTeamTag).returning();
+      return c.json(result[0], 201);
+    }
+
+    // 個人タグ作成の場合（既存のロジック）
     // タグ数制限チェック（300個）
     const tagCount = await db
       .select({ count: sql<number>`count(*)` })
@@ -367,6 +495,9 @@ export function createAPI(app: AppType) {
       params: z.object({
         id: z.string(),
       }),
+      query: z.object({
+        teamId: z.string().optional(),
+      }),
     },
     responses: {
       200: {
@@ -377,7 +508,7 @@ export function createAPI(app: AppType) {
             }),
           },
         },
-        description: "Tag deleted",
+        description: "Tag deleted (personal or team)",
       },
       401: {
         content: {
@@ -388,6 +519,16 @@ export function createAPI(app: AppType) {
           },
         },
         description: "Unauthorized",
+      },
+      403: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+            }),
+          },
+        },
+        description: "Not a team member",
       },
       404: {
         content: {
@@ -409,8 +550,50 @@ export function createAPI(app: AppType) {
     }
 
     const tagId = parseInt(c.req.param("id"));
+    const { teamId } = c.req.valid("query");
     const db = c.get("db");
 
+    // チームタグ削除の場合
+    if (teamId) {
+      const teamIdNum = parseInt(teamId, 10);
+      if (isNaN(teamIdNum)) {
+        return c.json({ error: "Invalid teamId" }, 400);
+      }
+
+      // チームメンバー確認
+      const member = await db
+        .select()
+        .from(teamMembers)
+        .where(
+          and(
+            eq(teamMembers.teamId, teamIdNum),
+            eq(teamMembers.userId, auth.userId),
+          ),
+        )
+        .limit(1);
+
+      if (member.length === 0) {
+        return c.json({ error: "Not a team member" }, 403);
+      }
+
+      // チームタグの存在確認
+      const teamTag = await db
+        .select()
+        .from(teamTags)
+        .where(and(eq(teamTags.id, tagId), eq(teamTags.teamId, teamIdNum)))
+        .limit(1);
+
+      if (teamTag.length === 0) {
+        return c.json({ error: "Team tag not found" }, 404);
+      }
+
+      // チームタグを削除（関連するタグ付けもCASCADEで削除される）
+      await db.delete(teamTags).where(eq(teamTags.id, tagId));
+
+      return c.json({ success: true });
+    }
+
+    // 個人タグ削除の場合（既存のロジック）
     // タグの所有権確認
     const tag = await db
       .select()

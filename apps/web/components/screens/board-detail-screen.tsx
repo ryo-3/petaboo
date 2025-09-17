@@ -5,6 +5,7 @@ import DesktopUpper from "@/components/layout/desktop-upper";
 import { useBoardState } from "@/src/hooks/use-board-state";
 import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
 import { useTags } from "@/src/hooks/use-tags";
+import { useTeamTags } from "@/src/hooks/use-team-tags";
 import { useBoards, useAddItemToBoard } from "@/src/hooks/use-boards";
 import { useTeamBoards } from "@/src/hooks/use-team-boards";
 import { Memo, DeletedMemo } from "@/src/types/memo";
@@ -280,9 +281,13 @@ function BoardDetailScreen({
   // 全データ事前取得（ちらつき解消）
   const { data: allTaggings } = useAllTaggings();
   const { data: allBoardItems } = useAllBoardItems();
-  const { data: allTags } = useTags();
+  const { data: personalTags } = useTags();
+  const { data: teamTags } = useTeamTags(teamId || 0);
   const { data: personalBoards } = useBoards("normal", !teamMode);
   const { data: teamBoards } = useTeamBoards(teamId, "normal");
+
+  // チームモードかどうかでタグを切り替え
+  const allTags = teamMode && teamId ? teamTags : personalTags;
 
   // チームモードかどうかでボード一覧を切り替え
   const allBoards = teamMode ? teamBoards : personalBoards;

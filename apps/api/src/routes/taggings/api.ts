@@ -2,6 +2,8 @@ import { createRoute, z } from "@hono/zod-openapi";
 import { getAuth } from "@hono/clerk-auth";
 import { eq, and } from "drizzle-orm";
 import { taggings, tags } from "../../db";
+import { teamTaggings, teamTags } from "../../db/schema/team/tags";
+import { teamMembers } from "../../db/schema/team/teams";
 import type { NewTagging } from "../../db/schema/tags";
 import type { DatabaseType, Env, AppType } from "../../types/common";
 
@@ -19,6 +21,21 @@ const TaggingWithTagSchema = z.object({
   tagId: z.number(),
   targetType: z.enum(["memo", "task", "board"]),
   targetOriginalId: z.string(),
+  userId: z.string(),
+  createdAt: z.number(),
+  tag: z.object({
+    id: z.number(),
+    name: z.string(),
+    color: z.string().nullable(),
+  }),
+});
+
+const TeamTaggingWithTagSchema = z.object({
+  id: z.number(),
+  tagId: z.number(),
+  targetType: z.enum(["memo", "task", "board"]),
+  targetOriginalId: z.string(),
+  teamId: z.number(),
   userId: z.string(),
   createdAt: z.number(),
   tag: z.object({
@@ -46,16 +63,19 @@ export function createAPI(app: AppType) {
         targetOriginalId: z.string().optional(),
         tagId: z.string().optional(),
         includeTag: z.string().optional(),
+        teamId: z.string().optional(),
       }),
     },
     responses: {
       200: {
         content: {
           "application/json": {
-            schema: z.array(TaggingWithTagSchema),
+            schema: z.array(
+              z.union([TaggingWithTagSchema, TeamTaggingWithTagSchema]),
+            ),
           },
         },
-        description: "Get taggings",
+        description: "Get taggings (personal or team)",
       },
       401: {
         content: {
@@ -76,10 +96,97 @@ export function createAPI(app: AppType) {
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const { targetType, targetOriginalId, tagId, includeTag } =
+    const { targetType, targetOriginalId, tagId, includeTag, teamId } =
       c.req.valid("query");
     const db = c.get("db");
 
+    // チームIDが指定された場合はチームタグ付けを取得
+    if (teamId) {
+      const teamIdNum = parseInt(teamId, 10);
+      if (isNaN(teamIdNum)) {
+        return c.json({ error: "Invalid teamId" }, 400);
+      }
+
+      // チームメンバー確認
+      const member = await db
+        .select()
+        .from(teamMembers)
+        .where(
+          and(
+            eq(teamMembers.teamId, teamIdNum),
+            eq(teamMembers.userId, auth.userId),
+          ),
+        )
+        .limit(1);
+
+      if (member.length === 0) {
+        return c.json({ error: "Not a team member" }, 403);
+      }
+
+      // チームタグ付けを取得
+      let teamQuery = db
+        .select({
+          id: teamTaggings.id,
+          tagId: teamTaggings.tagId,
+          targetType: teamTaggings.targetType,
+          targetOriginalId: teamTaggings.targetOriginalId,
+          teamId: teamTaggings.teamId,
+          userId: teamTaggings.userId,
+          createdAt: teamTaggings.createdAt,
+          tag: {
+            id: teamTags.id,
+            name: teamTags.name,
+            color: teamTags.color,
+          },
+        })
+        .from(teamTaggings)
+        .leftJoin(teamTags, eq(teamTaggings.tagId, teamTags.id))
+        .where(eq(teamTaggings.teamId, teamIdNum));
+
+      // チーム用フィルター条件を追加
+      if (targetType) {
+        teamQuery = teamQuery.where(
+          and(
+            eq(teamTaggings.teamId, teamIdNum),
+            eq(teamTaggings.targetType, targetType),
+          ),
+        );
+      }
+
+      if (targetOriginalId) {
+        teamQuery = teamQuery.where(
+          and(
+            eq(teamTaggings.teamId, teamIdNum),
+            eq(teamTaggings.targetOriginalId, targetOriginalId),
+          ),
+        );
+      }
+
+      if (tagId) {
+        teamQuery = teamQuery.where(
+          and(
+            eq(teamTaggings.teamId, teamIdNum),
+            eq(teamTaggings.tagId, parseInt(tagId)),
+          ),
+        );
+      }
+
+      // 両方のフィルターがある場合
+      if (targetType && targetOriginalId) {
+        teamQuery = teamQuery.where(
+          and(
+            eq(teamTaggings.teamId, teamIdNum),
+            eq(teamTaggings.targetType, targetType),
+            eq(teamTaggings.targetOriginalId, targetOriginalId),
+          ),
+        );
+      }
+
+      const teamResult = await teamQuery.orderBy(teamTaggings.createdAt);
+      return c.json(teamResult);
+    }
+
+    // 個人タグ付けの既存ロジック
     let query = db
       .select({
         id: taggings.id,

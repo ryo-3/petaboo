@@ -91,14 +91,17 @@ export function useCreateTeamTagging(teamId: number) {
     mutationFn: async (taggingData: CreateTaggingData) => {
       const token = await getToken();
 
-      const response = await fetch(`${API_BASE_URL}/teams/${teamId}/taggings`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
+      const response = await fetch(
+        `${API_BASE_URL}/taggings?teamId=${teamId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+          body: JSON.stringify(taggingData),
         },
-        body: JSON.stringify(taggingData),
-      });
+      );
 
       if (!response.ok) {
         const error = await response.json();
@@ -139,7 +142,7 @@ export function useDeleteTeamTagging(teamId: number) {
       const token = await getToken();
 
       const response = await fetch(
-        `${API_BASE_URL}/teams/${teamId}/taggings/${id}`,
+        `${API_BASE_URL}/taggings/${id}?teamId=${teamId}`,
         {
           method: "DELETE",
           headers: {
@@ -161,6 +164,59 @@ export function useDeleteTeamTagging(teamId: number) {
         (oldTaggings) => {
           if (!oldTaggings) return [];
           return oldTaggings.filter((tagging) => tagging.id !== deletedId);
+        },
+      );
+
+      // 関連するキャッシュも無効化
+      queryClient.invalidateQueries({ queryKey: ["team-taggings", teamId] });
+    },
+  });
+}
+
+// チームタグ付け削除（タグとアイテムの組み合わせで削除）
+export function useDeleteTeamTaggingByTag(teamId: number) {
+  const queryClient = useQueryClient();
+  const { getToken } = useAuth();
+
+  return useMutation({
+    mutationFn: async (data: {
+      tagId: number;
+      targetType: "memo" | "task" | "board";
+      targetOriginalId: string;
+    }) => {
+      const token = await getToken();
+
+      const response = await fetch(
+        `${API_BASE_URL}/taggings/by-tag?teamId=${teamId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+          body: JSON.stringify(data),
+        },
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to delete team tagging");
+      }
+    },
+    onSuccess: (_, { tagId, targetType, targetOriginalId }) => {
+      // チームタグ付けキャッシュから該当タグ付けを除去
+      queryClient.setQueriesData<Tagging[]>(
+        { queryKey: ["team-taggings", teamId] },
+        (oldTaggings) => {
+          if (!oldTaggings) return [];
+          return oldTaggings.filter(
+            (tagging) =>
+              !(
+                tagging.tagId === tagId &&
+                tagging.targetType === targetType &&
+                tagging.targetOriginalId === targetOriginalId
+              ),
+          );
         },
       );
 

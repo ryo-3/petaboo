@@ -21,6 +21,7 @@ import {
 import {
   useCreateTeamTagging,
   useDeleteTeamTagging,
+  useDeleteTeamTaggingByTag,
   useTeamTaggings,
 } from "@/src/hooks/use-team-taggings";
 import { useTeamTags } from "@/src/hooks/use-team-tags";
@@ -248,8 +249,20 @@ function MemoEditor({
       .map((t) => t.tag)
       .filter(Boolean) as Tag[];
 
+    // デバッグログ
+    if (teamMode) {
+      console.log("🏷️ [currentTags] チームモード:", {
+        memoId: memo.id,
+        originalId: targetOriginalId,
+        liveTeamTaggingsLength: liveTeamTaggings?.length || 0,
+        liveTeamTaggings: liveTeamTaggings,
+        tagsLength: tags.length,
+        tags: tags,
+      });
+    }
+
     return tags;
-  }, [memo, preloadedTaggings, liveTaggings]);
+  }, [memo, preloadedTaggings, liveTaggings, liveTeamTaggings, teamMode]);
 
   // タグ操作用のmutation（既存API使用）
   const createTaggingMutation = useCreateTagging();
@@ -257,6 +270,7 @@ function MemoEditor({
 
   // チーム用タグ操作フック
   const createTeamTaggingMutation = useCreateTeamTagging(teamId || 0);
+  const deleteTeamTaggingByTagMutation = useDeleteTeamTaggingByTag(teamId || 0);
   const deleteTeamTaggingMutation = useDeleteTeamTagging(teamId || 0);
   const queryClient = useQueryClient();
 
@@ -292,30 +306,68 @@ function MemoEditor({
         JSON.stringify(localTags.map((t) => t.id).sort()) &&
       !hasManualChanges // 手動変更がない場合のみ同期
     ) {
+      if (teamMode) {
+        console.log("🏷️ [localTags同期] チームモード:", {
+          from: localTags,
+          to: currentTags,
+        });
+      }
       setLocalTags(currentTags);
     }
   }, [memo?.id, prevMemoId, currentTags, localTags, hasManualChanges]);
 
-  // preloadedTagsが更新された時にlocalTagsの最新情報を反映
+  // preloadedTagsが更新された時にlocalTagsの最新情報を反映（個人モードのみ）
   useEffect(() => {
-    if (localTags.length > 0 && preloadedTags.length > 0) {
-      const updatedLocalTags = localTags.map((localTag) => {
-        const updatedTag = preloadedTags.find((tag) => tag.id === localTag.id);
-        return updatedTag || localTag;
-      });
-
-      // 実際に変更があった場合のみ更新
-      const hasChanges = updatedLocalTags.some(
-        (tag, index) =>
-          tag.name !== localTags[index]?.name ||
-          tag.color !== localTags[index]?.color,
-      );
-
-      if (hasChanges) {
-        setLocalTags(updatedLocalTags);
-      }
+    // チームモードの時は個人タグでの更新を行わない
+    if (teamMode || localTags.length === 0 || preloadedTags.length === 0) {
+      return;
     }
-  }, [preloadedTags, localTags]);
+
+    const updatedLocalTags = localTags.map((localTag) => {
+      const updatedTag = preloadedTags.find((tag) => tag.id === localTag.id);
+      return updatedTag || localTag;
+    });
+
+    // 実際に変更があった場合のみ更新
+    const hasChanges = updatedLocalTags.some(
+      (tag, index) =>
+        tag.name !== localTags[index]?.name ||
+        tag.color !== localTags[index]?.color,
+    );
+
+    if (hasChanges) {
+      setLocalTags(updatedLocalTags);
+    }
+  }, [preloadedTags, localTags, teamMode]);
+
+  // チームタグが更新された時にlocalTagsの最新情報を反映（チームモードのみ）
+  useEffect(() => {
+    // 個人モードの時はチームタグでの更新を行わない
+    if (
+      !teamMode ||
+      localTags.length === 0 ||
+      !teamTagsList ||
+      teamTagsList.length === 0
+    ) {
+      return;
+    }
+
+    const updatedLocalTags = localTags.map((localTag) => {
+      const updatedTag = teamTagsList.find((tag) => tag.id === localTag.id);
+      return updatedTag || localTag;
+    });
+
+    // 実際に変更があった場合のみ更新
+    const hasChanges = updatedLocalTags.some(
+      (tag, index) =>
+        tag.name !== localTags[index]?.name ||
+        tag.color !== localTags[index]?.color,
+    );
+
+    if (hasChanges) {
+      setLocalTags(updatedLocalTags);
+    }
+  }, [teamTagsList, localTags, teamMode]);
 
   // タグに変更があるかチェック（シンプル版）
   const hasTagChanges = useMemo(() => {
@@ -344,56 +396,98 @@ function MemoEditor({
       // 追加するタグ（localにあってcurrentにない）
       const tagsToAdd = localTagIds.filter((id) => !currentTagIds.includes(id));
 
-      // 削除処理（preloadedTaggingsからタギングIDを見つける）
-      for (const tagId of tagsToRemove) {
-        const taggingToDelete = preloadedTaggings.find(
-          (t) =>
-            t.tagId === tagId &&
-            t.targetType === "memo" &&
-            t.targetOriginalId === memoId,
-        );
-
-        if (taggingToDelete) {
-          await deleteTaggingMutation.mutateAsync(taggingToDelete.id);
-        } else {
-        }
-      }
-
-      // 追加処理
-      for (const tagId of tagsToAdd) {
-        // 既に存在するかどうかを再度チェック（リアルタイムデータで）
-        const existingTagging = preloadedTaggings.find(
-          (t) =>
-            t.tagId === tagId &&
-            t.targetType === "memo" &&
-            t.targetOriginalId === memoId,
-        );
-
-        if (!existingTagging) {
+      if (teamMode && teamId) {
+        // チームモード：チームタグ付けAPIを使用
+        // 削除処理
+        for (const tagId of tagsToRemove) {
           try {
-            await createTaggingMutation.mutateAsync({
+            await deleteTeamTaggingByTagMutation.mutateAsync({
               tagId,
               targetType: "memo",
               targetOriginalId: memoId,
             });
           } catch (error: unknown) {
-            // 400エラー（重複）は無視し、他のエラーは再スロー
             const errorMessage = (error as Error).message || "";
-
-            const isDuplicateError =
-              (errorMessage.includes("HTTP error 400") &&
-                errorMessage.includes("Tag already attached to this item")) ||
-              (errorMessage.includes("400") &&
-                errorMessage.includes("already attached"));
-
-            if (isDuplicateError) {
-              continue;
+            if (!errorMessage.includes("not found")) {
+              // "not found"以外のエラーは表示
+              console.error("チームタグ削除エラー:", error);
             }
-            console.error(
-              `Failed to create tagging for tag ${tagId} on memo ${memoId}:`,
-              error,
-            );
-            throw error;
+          }
+        }
+
+        // 追加処理
+        for (const tagId of tagsToAdd) {
+          try {
+            await createTeamTaggingMutation.mutateAsync({
+              tagId,
+              targetType: "memo",
+              targetOriginalId: memoId,
+            });
+          } catch (error: unknown) {
+            const errorMessage = (error as Error).message || "";
+            const isDuplicateError =
+              errorMessage.includes("already attached") ||
+              errorMessage.includes("duplicate");
+
+            if (!isDuplicateError) {
+              // 重複以外のエラーは再スロー
+              throw error;
+            }
+          }
+        }
+      } else {
+        // 個人モード：既存の個人タグ付けAPIを使用
+        // 削除処理（preloadedTaggingsからタギングIDを見つける）
+        for (const tagId of tagsToRemove) {
+          const taggingToDelete = preloadedTaggings.find(
+            (t) =>
+              t.tagId === tagId &&
+              t.targetType === "memo" &&
+              t.targetOriginalId === memoId,
+          );
+
+          if (taggingToDelete) {
+            await deleteTaggingMutation.mutateAsync(taggingToDelete.id);
+          } else {
+          }
+        }
+
+        // 追加処理
+        for (const tagId of tagsToAdd) {
+          // 既に存在するかどうかを再度チェック（リアルタイムデータで）
+          const existingTagging = preloadedTaggings.find(
+            (t) =>
+              t.tagId === tagId &&
+              t.targetType === "memo" &&
+              t.targetOriginalId === memoId,
+          );
+
+          if (!existingTagging) {
+            try {
+              await createTaggingMutation.mutateAsync({
+                tagId,
+                targetType: "memo",
+                targetOriginalId: memoId,
+              });
+            } catch (error: unknown) {
+              // 400エラー（重複）は無視し、他のエラーは再スロー
+              const errorMessage = (error as Error).message || "";
+
+              const isDuplicateError =
+                (errorMessage.includes("HTTP error 400") &&
+                  errorMessage.includes("Tag already attached to this item")) ||
+                (errorMessage.includes("400") &&
+                  errorMessage.includes("already attached"));
+
+              if (isDuplicateError) {
+                continue;
+              }
+              console.error(
+                `Failed to create tagging for tag ${tagId} on memo ${memoId}:`,
+                error,
+              );
+              throw error;
+            }
           }
         }
       }
@@ -403,8 +497,12 @@ function MemoEditor({
       currentTags,
       localTags,
       preloadedTaggings,
+      teamMode,
+      teamId,
       deleteTaggingMutation,
       createTaggingMutation,
+      deleteTeamTaggingByTagMutation,
+      createTeamTaggingMutation,
     ],
   );
 
@@ -607,7 +705,9 @@ function MemoEditor({
                       isSaving={
                         isSaving ||
                         createTaggingMutation.isPending ||
-                        deleteTaggingMutation.isPending
+                        deleteTaggingMutation.isPending ||
+                        createTeamTaggingMutation.isPending ||
+                        deleteTeamTaggingByTagMutation.isPending
                       }
                       buttonSize="size-7"
                       iconSize="size-4"
@@ -700,19 +800,18 @@ function MemoEditor({
                 <BoardChips boards={displayBoards} variant="compact" />
               )}
               {/* タグ */}
-              {!teamMode &&
-                localTags.map((tag) => (
-                  <div
-                    key={tag.id}
-                    className="inline-flex items-center px-2 py-1 rounded-md text-xs overflow-hidden"
-                    style={{
-                      backgroundColor: tag.color || TAG_COLORS.background,
-                      color: TAG_COLORS.text,
-                    }}
-                  >
-                    <span>{tag.name}</span>
-                  </div>
-                ))}
+              {localTags.map((tag) => (
+                <div
+                  key={tag.id}
+                  className="inline-flex items-center px-2 py-1 rounded-md text-xs overflow-hidden"
+                  style={{
+                    backgroundColor: tag.color || TAG_COLORS.background,
+                    color: TAG_COLORS.text,
+                  }}
+                >
+                  <span>{tag.name}</span>
+                </div>
+              ))}
             </div>
           </div>
 

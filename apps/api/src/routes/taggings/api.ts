@@ -254,6 +254,9 @@ export function createAPI(app: AppType) {
     path: "/",
     tags: ["taggings"],
     request: {
+      query: z.object({
+        teamId: z.string().optional(),
+      }),
       body: {
         content: {
           "application/json": {
@@ -301,8 +304,78 @@ export function createAPI(app: AppType) {
     }
 
     const { tagId, targetType, targetOriginalId } = c.req.valid("json");
+    const { teamId } = c.req.valid("query");
     const db = c.get("db");
 
+    // チームタグ付けの場合
+    if (teamId) {
+      const teamIdNum = parseInt(teamId, 10);
+      if (isNaN(teamIdNum)) {
+        return c.json({ error: "Invalid teamId" }, 400);
+      }
+
+      // チームメンバー確認
+      const member = await db
+        .select()
+        .from(teamMembers)
+        .where(
+          and(
+            eq(teamMembers.teamId, teamIdNum),
+            eq(teamMembers.userId, auth.userId),
+          ),
+        )
+        .limit(1);
+
+      if (member.length === 0) {
+        return c.json({ error: "Not a team member" }, 403);
+      }
+
+      // チームタグの存在確認
+      const teamTag = await db
+        .select()
+        .from(teamTags)
+        .where(and(eq(teamTags.id, tagId), eq(teamTags.teamId, teamIdNum)))
+        .limit(1);
+
+      if (teamTag.length === 0) {
+        return c.json({ error: "Team tag not found" }, 400);
+      }
+
+      // 既に同じチームタグ付けが存在するかチェック
+      const existingTeamTagging = await db
+        .select()
+        .from(teamTaggings)
+        .where(
+          and(
+            eq(teamTaggings.tagId, tagId),
+            eq(teamTaggings.targetType, targetType),
+            eq(teamTaggings.targetOriginalId, targetOriginalId),
+            eq(teamTaggings.teamId, teamIdNum),
+          ),
+        )
+        .limit(1);
+
+      if (existingTeamTagging.length > 0) {
+        return c.json({ error: "Team tag already attached to this item" }, 400);
+      }
+
+      const newTeamTagging = {
+        tagId,
+        targetType,
+        targetOriginalId,
+        teamId: teamIdNum,
+        userId: auth.userId,
+        createdAt: new Date(),
+      };
+
+      const result = await db
+        .insert(teamTaggings)
+        .values(newTeamTagging)
+        .returning();
+      return c.json(result[0], 201);
+    }
+
+    // 個人タグ付けの場合（既存のロジック）
     // タグの所有権確認
     const tag = await db
       .select()
@@ -350,6 +423,9 @@ export function createAPI(app: AppType) {
     path: "/by-tag",
     tags: ["taggings"],
     request: {
+      query: z.object({
+        teamId: z.string().optional(),
+      }),
       body: {
         content: {
           "application/json": {
@@ -448,8 +524,65 @@ export function createAPI(app: AppType) {
     }
 
     const { tagId, targetType, targetOriginalId } = c.req.valid("json");
+    const { teamId } = c.req.valid("query");
     const db = c.get("db");
 
+    // チームタグ付け削除の場合
+    if (teamId) {
+      const teamIdNum = parseInt(teamId, 10);
+      if (isNaN(teamIdNum)) {
+        return c.json({ error: "Invalid teamId" }, 400);
+      }
+
+      // チームメンバー確認
+      const member = await db
+        .select()
+        .from(teamMembers)
+        .where(
+          and(
+            eq(teamMembers.teamId, teamIdNum),
+            eq(teamMembers.userId, auth.userId),
+          ),
+        )
+        .limit(1);
+
+      if (member.length === 0) {
+        return c.json({ error: "Not a team member" }, 403);
+      }
+
+      // チームタグ付けの存在確認
+      const teamTagging = await db
+        .select()
+        .from(teamTaggings)
+        .where(
+          and(
+            eq(teamTaggings.tagId, tagId),
+            eq(teamTaggings.targetType, targetType),
+            eq(teamTaggings.targetOriginalId, targetOriginalId),
+            eq(teamTaggings.teamId, teamIdNum),
+          ),
+        )
+        .limit(1);
+
+      if (teamTagging.length === 0) {
+        return c.json({ error: "Team tagging not found" }, 404);
+      }
+
+      await db
+        .delete(teamTaggings)
+        .where(
+          and(
+            eq(teamTaggings.tagId, tagId),
+            eq(teamTaggings.targetType, targetType),
+            eq(teamTaggings.targetOriginalId, targetOriginalId),
+            eq(teamTaggings.teamId, teamIdNum),
+          ),
+        );
+
+      return c.json({ success: true });
+    }
+
+    // 個人タグ付け削除の場合（既存のロジック）
     // タグ付けの存在確認と所有権確認
     const tagging = await db
       .select()

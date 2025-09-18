@@ -28,8 +28,10 @@ import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useBoards } from "@/src/hooks/use-boards";
 import { useTeamBoards } from "@/src/hooks/use-team-boards";
 import { useTags } from "@/src/hooks/use-tags";
+import { useTeamTags } from "@/src/hooks/use-team-tags";
 import TagManagementModal from "@/components/ui/tag-management/tag-management-modal";
 import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
+import { useAllTeamTaggings } from "@/src/hooks/use-team-taggings";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import {
   getMemoDisplayOrder,
@@ -169,8 +171,20 @@ function MemoScreen({
   const { data: teamBoards } = useTeamBoards(teamId || null, "normal");
   const boards = teamMode ? teamBoards : personalBoards;
 
-  const { data: tags } = useTags();
-  const { data: allTaggings, error: taggingsError } = useAllTaggings();
+  // チームモードと個人モードで異なるタグフックを使用
+  const { data: personalTags } = useTags();
+  const { data: teamTags } = useTeamTags(teamId ?? 0);
+  const tags = teamMode ? teamTags : personalTags;
+
+  // チームモードと個人モードで異なるタグ付けフックを使用
+  const { data: personalTaggings, error: personalTaggingsError } =
+    useAllTaggings();
+  const { data: teamTaggings, error: teamTaggingsError } = useAllTeamTaggings(
+    teamId ?? 0,
+  );
+  const allTaggings = teamMode ? teamTaggings : personalTaggings;
+  const taggingsError = teamMode ? teamTaggingsError : personalTaggingsError;
+
   const { data: allBoardItems, error: boardItemsError } = useAllBoardItems(
     teamMode ? teamId : undefined,
   );

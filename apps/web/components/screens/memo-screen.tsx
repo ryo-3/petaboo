@@ -26,6 +26,7 @@ import { useSelectAll } from "@/src/hooks/use-select-all";
 import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useBoards } from "@/src/hooks/use-boards";
+import { useTeamBoards } from "@/src/hooks/use-team-boards";
 import { useTags } from "@/src/hooks/use-tags";
 import TagManagementModal from "@/components/ui/tag-management/tag-management-modal";
 import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
@@ -164,7 +165,10 @@ function MemoScreen({
   const { preferences } = useUserPreferences(1);
 
   // 全データ一括取得（ちらつき解消）
-  const { data: boards } = useBoards("normal", !teamMode);
+  const { data: personalBoards } = useBoards("normal", !teamMode);
+  const { data: teamBoards } = useTeamBoards(teamId || null, "normal");
+  const boards = teamMode ? teamBoards : personalBoards;
+
   const { data: tags } = useTags();
   const { data: allTaggings, error: taggingsError } = useAllTaggings();
   const { data: allBoardItems, error: boardItemsError } = useAllBoardItems();

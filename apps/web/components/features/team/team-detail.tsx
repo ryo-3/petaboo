@@ -38,6 +38,7 @@ import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
 import { getUserAvatarColor } from "@/src/utils/userUtils";
 import { usePageVisibility } from "@/src/contexts/PageVisibilityContext";
+import { formatDateOnly } from "@/src/utils/formatDate";
 
 interface TeamDetailProps {
   customUrl: string;
@@ -839,15 +840,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                                 </div>
 
                                 <div className="text-xs text-gray-400 ml-11">
-                                  申請:{" "}
-                                  {new Date(
-                                    request.createdAt * 1000,
-                                  ).toLocaleString("ja-JP", {
-                                    month: "numeric",
-                                    day: "numeric",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })}
+                                  申請: {formatDateOnly(request.createdAt)}
                                 </div>
                               </div>
 
@@ -947,10 +940,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                                 `ユーザー${member.userId.slice(-4)}`}
                             </div>
                             <div className="text-xs text-gray-500">
-                              {new Date(
-                                member.joinedAt * 1000,
-                              ).toLocaleDateString("ja-JP")}
-                              に参加
+                              {formatDateOnly(member.joinedAt)}に参加
                             </div>
                           </div>
                           <div className="flex items-center gap-2">

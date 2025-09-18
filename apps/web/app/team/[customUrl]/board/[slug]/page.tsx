@@ -285,6 +285,19 @@ export default function TeamBoardDetailPage() {
       router.push(`/team/${customUrl}`);
     };
 
+    const handleSearch = () => {
+      router.push(`/team/${customUrl}?tab=search`);
+    };
+
+    const handleTeamList = () => {
+      // チームボード詳細ページからはチーム一覧タブに戻る
+      router.push(`/team/${customUrl}?tab=team-list`);
+    };
+
+    const handleSettingsPage = () => {
+      router.push(`/team/${customUrl}?tab=settings`);
+    };
+
     window.addEventListener(
       "team-mode-change",
       handleTeamModeChange as EventListener,
@@ -298,6 +311,20 @@ export default function TeamBoardDetailPage() {
     // ホームボタンのイベントも処理
     window.addEventListener("team-home-change", handleHome as EventListener);
 
+    // 検索・チーム一覧・設定ボタンのイベントも処理
+    window.addEventListener(
+      "team-search-change",
+      handleSearch as EventListener,
+    );
+    window.addEventListener(
+      "team-list-change",
+      handleTeamList as EventListener,
+    );
+    window.addEventListener(
+      "team-settings-change",
+      handleSettingsPage as EventListener,
+    );
+
     return () => {
       window.removeEventListener(
         "team-mode-change",
@@ -310,6 +337,18 @@ export default function TeamBoardDetailPage() {
       window.removeEventListener(
         "team-home-change",
         handleHome as EventListener,
+      );
+      window.removeEventListener(
+        "team-search-change",
+        handleSearch as EventListener,
+      );
+      window.removeEventListener(
+        "team-list-change",
+        handleTeamList as EventListener,
+      );
+      window.removeEventListener(
+        "team-settings-change",
+        handleSettingsPage as EventListener,
       );
     };
   }, [router, customUrl]);

@@ -113,11 +113,17 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   const handleTeamList = () => {
     // チーム詳細ページの場合は、team-listイベントを送信
     if (isTeamDetailPage) {
-      window.dispatchEvent(
-        new CustomEvent("team-mode-change", {
-          detail: { mode: "team-list", pathname },
-        }),
-      );
+      if (isTeamBoardDetailPage) {
+        // チームボード詳細ページの場合は専用イベントを発信
+        window.dispatchEvent(new CustomEvent("team-list-change"));
+      } else {
+        // チーム詳細ページの場合
+        window.dispatchEvent(
+          new CustomEvent("team-mode-change", {
+            detail: { mode: "team-list", pathname },
+          }),
+        );
+      }
     } else {
       // それ以外の場合は通常通りチーム一覧ページへ遷移
       router.push("/team");
@@ -127,12 +133,17 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   // ホーム遷移ロジック：チーム詳細ページの場合はoverviewタブに移動
   const handleHome = () => {
     if (pathname.startsWith("/team/") && pathname !== "/team") {
-      // チーム詳細ページまたはチームボード詳細ページの場合は、overviewタブに移動
-      window.dispatchEvent(
-        new CustomEvent("team-mode-change", {
-          detail: { mode: "overview", pathname },
-        }),
-      );
+      if (isTeamBoardDetailPage) {
+        // チームボード詳細ページの場合は、チーム詳細ページ（概要）に戻る
+        router.push(`/team/${pathname.split("/")[2]}`);
+      } else {
+        // チーム詳細ページの場合は、overviewタブに移動
+        window.dispatchEvent(
+          new CustomEvent("team-mode-change", {
+            detail: { mode: "overview", pathname },
+          }),
+        );
+      }
     } else {
       // それ以外は通常のホームページ
       router.push("/");
@@ -215,11 +226,17 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   const handleSettings = () => {
     // チーム詳細ページの場合は設定イベントを送信
     if (isTeamDetailPage) {
-      window.dispatchEvent(
-        new CustomEvent("team-mode-change", {
-          detail: { mode: "settings", pathname },
-        }),
-      );
+      if (isTeamBoardDetailPage) {
+        // チームボード詳細ページの場合は専用イベントを発信
+        window.dispatchEvent(new CustomEvent("team-settings-change"));
+      } else {
+        // チーム詳細ページの場合
+        window.dispatchEvent(
+          new CustomEvent("team-mode-change", {
+            detail: { mode: "settings", pathname },
+          }),
+        );
+      }
     } else {
       // それ以外の場合は設定ページに遷移
       router.push("/settings");
@@ -228,12 +245,18 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
 
   const handleSearch = () => {
     if (isTeamDetailPage) {
-      // チーム詳細ページの場合は検索タブに切り替え
-      window.dispatchEvent(
-        new CustomEvent("team-mode-change", {
-          detail: { mode: "search", pathname },
-        }),
-      );
+      // チーム詳細ページまたはチームボード詳細ページの場合
+      if (isTeamBoardDetailPage) {
+        // チームボード詳細ページの場合は専用イベントを発信
+        window.dispatchEvent(new CustomEvent("team-search-change"));
+      } else {
+        // チーム詳細ページの場合は検索タブに切り替え
+        window.dispatchEvent(
+          new CustomEvent("team-mode-change", {
+            detail: { mode: "search", pathname },
+          }),
+        );
+      }
     } else {
       // それ以外の場合は通常の検索画面
       router.push("/search");

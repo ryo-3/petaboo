@@ -128,19 +128,27 @@ export function NavigationProvider({
       isTeamDetailPageUrl && pathname.includes("/board/");
 
     const boardDetailActive =
-      currentMode === "board" &&
-      showingBoardDetail &&
+      ((currentMode === "board" &&
+        showingBoardDetail &&
+        !isTeamOverview &&
+        !isTeamMemos &&
+        !isTeamTasks &&
+        !isTeamBoards) ||
+        isTeamBoardDetailPage) &&
       screenMode !== "home" &&
       screenMode !== "search" &&
       screenMode !== "settings" &&
-      screenMode !== "loading" &&
-      (!isTeamDetailPage || isTeamBoardDetailPage);
+      screenMode !== "loading";
 
     return {
-      home: (screenMode === "home" && !showTeamList) || isTeamOverview,
+      home:
+        (screenMode === "home" && !showTeamList && !isTeamBoardDetailPage) ||
+        isTeamOverview,
       memo: screenMode === "memo" || isTeamMemos,
       task: screenMode === "task" || isTeamTasks,
-      board: (screenMode === "board" || isTeamBoards) && !boardDetailActive,
+      board:
+        ((screenMode === "board" && !isTeamDetailPage) || isTeamBoards) &&
+        !boardDetailActive,
       boardDetail: boardDetailActive,
       search: screenMode === "search",
       settings: screenMode === "settings",

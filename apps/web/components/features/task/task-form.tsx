@@ -162,15 +162,9 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
           value={title}
           onChange={(e) => onTitleChange(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && isNewTask) {
+            if (e.key === "Enter") {
               e.preventDefault();
-              if (descriptionTextareaRef.current) {
-                descriptionTextareaRef.current.focus();
-                descriptionTextareaRef.current.scrollIntoView({
-                  behavior: "smooth",
-                  block: "center",
-                });
-              }
+              // エンターキーでの本文移動機能を無効化
             }
           }}
           className="flex-1 mb-1 mt-1 text-lg font-medium border-b border-DeepBlue/80 outline-none focus:border-DeepBlue"

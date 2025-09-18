@@ -631,6 +631,8 @@ function TaskScreen({
             onSelectTask={onSelectTask}
             onClosePanel={() => setTaskScreenMode("list")}
             onDeleteAndSelectNext={handleTaskDeleteAndSelectNext}
+            teamMode={teamMode}
+            teamId={teamId}
             preloadedTags={tags || []}
             preloadedBoards={boards || []}
             preloadedTaggings={safeAllTaggings}
@@ -646,6 +648,8 @@ function TaskScreen({
               onRestore={() =>
                 handleDeletedTaskRestoreAndSelectNext(selectedDeletedTask)
               }
+              teamMode={teamMode}
+              teamId={teamId}
               preloadedTags={tags || []}
               preloadedBoards={boards || []}
               preloadedTaggings={safeAllTaggings}
@@ -660,6 +664,8 @@ function TaskScreen({
             onSelectTask={onSelectTask}
             onClosePanel={() => setTaskScreenMode("list")}
             onDeleteAndSelectNext={handleTaskDeleteAndSelectNext}
+            teamMode={teamMode}
+            teamId={teamId}
             preloadedTags={tags || []}
             preloadedBoards={boards || []}
             preloadedTaggings={safeAllTaggings}

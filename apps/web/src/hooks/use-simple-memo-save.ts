@@ -442,6 +442,8 @@ export function useSimpleMemoSave({
     initialContent,
     initialBoardId,
     onDeleteAndSelectNext,
+    teamMode,
+    teamId,
   ]);
 
   const handleSave = useCallback(async () => {

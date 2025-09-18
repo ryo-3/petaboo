@@ -744,6 +744,9 @@ function MemoScreen({
             preloadedBoards={boards || []}
             preloadedTaggings={safeAllTaggings || []}
             preloadedBoardItems={safeAllBoardItems || []}
+            // チーム機能
+            teamMode={teamMode}
+            teamId={teamId}
           />
         )}
         {memoScreenMode === "view" && selectedDeletedMemo && !selectedMemo && (
@@ -834,6 +837,9 @@ function MemoScreen({
             preloadedBoards={boards || []}
             preloadedTaggings={safeAllTaggings || []}
             preloadedBoardItems={safeAllBoardItems || []}
+            // チーム機能
+            teamMode={teamMode}
+            teamId={teamId}
           />
         )}
       </RightPanel>

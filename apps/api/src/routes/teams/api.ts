@@ -1896,6 +1896,12 @@ export async function getJoinRequests(c: any) {
       return c.json({ message: "管理者権限が必要です" }, 403);
     }
 
+    // デバッグ: チーム情報をログ出力
+    console.log("🔍 [getJoinRequests] Team info:", {
+      teamId: team.id,
+      customUrl,
+    });
+
     // 承認待ちの申請を取得
     const joinRequests = await db
       .select({
@@ -1915,6 +1921,9 @@ export async function getJoinRequests(c: any) {
         ),
       )
       .orderBy(desc(teamInvitations.createdAt));
+
+    // デバッグ: 取得結果をログ出力
+    console.log("🔍 [getJoinRequests] Results:", JSON.stringify(joinRequests));
 
     return c.json({
       requests: joinRequests,

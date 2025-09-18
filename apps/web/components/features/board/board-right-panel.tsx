@@ -41,7 +41,7 @@ interface BoardRightPanelProps {
   teamId?: number | null;
   onClose: () => void;
   onSelectMemo?: (memo: Memo) => void;
-  onSelectTask?: (task: Task) => void;
+  onSelectTask?: (task: Task | null, fromFullList?: boolean) => void;
   onAddSelectedItems: () => void;
   onToggleItemSelection: (itemId: number) => void;
   onMemoDeleteAndSelectNext?: (deletedMemo: Memo) => void;
@@ -294,6 +294,7 @@ export default function BoardRightPanel({
               preloadedBoards={allBoards || []}
               preloadedTaggings={allTaggings || []}
               preloadedBoardItems={allBoardItems}
+              onSelectTask={onSelectTask}
               onClose={() => {
                 // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
               }}
@@ -323,6 +324,7 @@ export default function BoardRightPanel({
               preloadedBoards={allBoards || []}
               preloadedTaggings={allTaggings || []}
               preloadedBoardItems={allBoardItems}
+              onSelectTask={onSelectTask}
               onClose={() => {
                 // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
               }}

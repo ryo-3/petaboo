@@ -491,6 +491,13 @@ export function useSimpleMemoSave({
     setSelectedBoardIds([...currentBoardIds]);
   }, [currentBoardIds]);
 
+  const resetForm = useCallback(() => {
+    setTitle("");
+    setContent("");
+    // ボード選択もリセット（initialBoardIdがある場合は維持）
+    setSelectedBoardIds(initialBoardId ? [initialBoardId] : []);
+  }, [initialBoardId]);
+
   return {
     title,
     content,
@@ -506,5 +513,6 @@ export function useSimpleMemoSave({
     pendingBoardChanges,
     handleConfirmBoardChange,
     handleCancelBoardChange,
+    resetForm,
   };
 }

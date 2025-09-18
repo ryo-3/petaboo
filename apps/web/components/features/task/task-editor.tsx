@@ -5,6 +5,9 @@ import { BulkDeleteConfirmation } from "@/components/ui/modals";
 import BoardChips from "@/components/ui/chips/board-chips";
 import SaveButton from "@/components/ui/buttons/save-button";
 import PhotoButton from "@/components/ui/buttons/photo-button";
+import ContinuousCreateButton, {
+  getContinuousCreateMode,
+} from "@/components/ui/buttons/continuous-create-button";
 import TrashIcon from "@/components/icons/trash-icon";
 import RestoreIcon from "@/components/icons/restore-icon";
 import BoardIconSelector from "@/components/ui/selectors/board-icon-selector";
@@ -220,6 +223,27 @@ function TaskEditor({
   const deleteTeamTaggingByTagMutation = useDeleteTeamTaggingByTag(teamId || 0);
   const deleteTeamTaggingMutation = useDeleteTeamTagging(teamId || 0);
 
+  // nnキーで連続作成モード切り替え（新規作成時のみ）
+  useEffect(() => {
+    if (!isNewTask) return; // 新規作成時のみ有効
+
+    let lastKeyTime = 0;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "n") {
+        const currentTime = Date.now();
+        if (currentTime - lastKeyTime < 300) {
+          // 300ms以内の連続入力
+          e.preventDefault();
+          setContinuousCreateMode((prev) => !prev);
+        }
+        lastKeyTime = currentTime;
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isNewTask]);
+
   // ローカルタグ状態
   const [localTags, setLocalTags] = useState<Tag[]>([]);
   const [prevTaskId, setPrevTaskId] = useState<number | null>(null);
@@ -339,6 +363,11 @@ function TaskEditor({
 
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 連続作成モード状態（新規作成時のみ有効）
+  const [continuousCreateMode, setContinuousCreateMode] = useState(() =>
+    getContinuousCreateMode("task-continuous-create-mode"),
+  );
 
   // 変更検知用のstate
   const [originalData, setOriginalData] = useState<{
@@ -1034,66 +1063,71 @@ function TaskEditor({
           }
         }
 
-        // 新規作成後はフォームをリセット
-        setTimeout(() => {
-          if (isFromBoardDetail) {
-            // ボード詳細での新規作成時は、ボード情報を保持
-            const currentBoardIds = selectedBoardIds;
-
-            const resetData = {
-              title: "",
-              description: "",
-              status: "todo" as const,
-              priority: "medium" as const,
-              categoryId: null,
-              boardCategoryId: boardCategoryId, // ボードカテゴリーも保持
-              dueDate: "",
-              boardIds: currentBoardIds, // ボード選択を保持
-            };
-
-            setTitle("");
-            setDescription("");
-            setStatus("todo");
-            setPriority("medium");
-            setCategoryId(null);
-            // setBoardCategoryId(null); // ボードカテゴリーを保持
-            // initializeBoardIds([]); // ボード選択を保持
-            setDueDate("");
-
-            // originalDataもリセット
-            setOriginalData(resetData);
-          } else {
-            // 通常のタスク画面での新規作成時は、完全リセット
-
-            const resetData = {
-              title: "",
-              description: "",
-              status: "todo" as const,
-              priority: "medium" as const,
-              categoryId: null,
-              boardCategoryId: null,
-              dueDate: "",
-              boardIds: [],
-            };
-
-            setTitle("");
-            setDescription("");
-            setStatus("todo");
-            setPriority("medium");
-            setCategoryId(null);
-            setBoardCategoryId(null);
-            initializeBoardIds([]);
-            setDueDate("");
-
-            // originalDataもリセット
-            setOriginalData(resetData);
-          }
-
-          // 少し遅延してタイトル入力欄にフォーカス
+        // 連続作成モードの場合はフォームをリセット
+        if (continuousCreateMode) {
           setTimeout(() => {
-            taskFormRef.current?.focusTitle();
-          }, 100);
-        }, 400);
+            if (isFromBoardDetail) {
+              // ボード詳細での新規作成時は、ボード情報を保持
+              const currentBoardIds = selectedBoardIds;
+
+              const resetData = {
+                title: "",
+                description: "",
+                status: "todo" as const,
+                priority: "medium" as const,
+                categoryId: null,
+                boardCategoryId: boardCategoryId, // ボードカテゴリーも保持
+                dueDate: "",
+                boardIds: currentBoardIds, // ボード選択を保持
+              };
+
+              setTitle("");
+              setDescription("");
+              setStatus("todo");
+              setPriority("medium");
+              setCategoryId(null);
+              // setBoardCategoryId(null); // ボードカテゴリーを保持
+              // initializeBoardIds([]); // ボード選択を保持
+              setDueDate("");
+
+              // originalDataもリセット
+              setOriginalData(resetData);
+            } else {
+              // 通常のタスク画面での新規作成時は、完全リセット
+
+              const resetData = {
+                title: "",
+                description: "",
+                status: "todo" as const,
+                priority: "medium" as const,
+                categoryId: null,
+                boardCategoryId: null,
+                dueDate: "",
+                boardIds: [],
+              };
+
+              setTitle("");
+              setDescription("");
+              setStatus("todo");
+              setPriority("medium");
+              setCategoryId(null);
+              setBoardCategoryId(null);
+              initializeBoardIds([]);
+              setDueDate("");
+
+              // originalDataもリセット
+              setOriginalData(resetData);
+            }
+
+            // 少し遅延してタイトル入力欄にフォーカス
+            setTimeout(() => {
+              taskFormRef.current?.focusTitle();
+            }, 100);
+          }, 400);
+        } else {
+          // 連続作成モードがOFFの場合は、作成されたタスクを選択
+          onSelectTask?.(newTask);
+        }
       } else {
         // 編集
         // タスク内容の変更があるかチェック（ボード変更は除く）
@@ -1338,6 +1372,13 @@ function TaskEditor({
                   buttonSize="size-7"
                   iconSize="size-4"
                 />
+                {/* 連続作成モード切り替えボタン（新規作成時のみ表示） */}
+                {isNewTask && (
+                  <ContinuousCreateButton
+                    storageKey="task-continuous-create-mode"
+                    onModeChange={setContinuousCreateMode}
+                  />
+                )}
                 <Tooltip text="写真" position="bottom">
                   <PhotoButton
                     buttonSize="size-7"

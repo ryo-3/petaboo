@@ -3,6 +3,9 @@
 import BaseViewer from "@/components/shared/base-viewer";
 import PhotoButton from "@/components/ui/buttons/photo-button";
 import SaveButton from "@/components/ui/buttons/save-button";
+import ContinuousCreateButton, {
+  getContinuousCreateMode,
+} from "@/components/ui/buttons/continuous-create-button";
 import TrashIcon from "@/components/icons/trash-icon";
 import BoardIconSelector from "@/components/ui/selectors/board-icon-selector";
 import Tooltip from "@/components/ui/base/tooltip";
@@ -135,6 +138,11 @@ function MemoEditor({
         ? [initialBoardId]
         : [];
 
+  // 連続作成モード状態（新規作成時のみ有効）
+  const [continuousCreateMode, setContinuousCreateMode] = useState(() =>
+    getContinuousCreateMode("memo-continuous-create-mode"),
+  );
+
   const {
     content,
     selectedBoardIds,
@@ -149,9 +157,27 @@ function MemoEditor({
     pendingBoardChanges,
     handleConfirmBoardChange,
     handleCancelBoardChange,
+    resetForm,
   } = useSimpleMemoSave({
     memo,
-    onSaveComplete,
+    onSaveComplete: useCallback(
+      (savedMemo: Memo, wasEmpty: boolean, isNewMemo: boolean) => {
+        // 新規メモ作成で連続作成モードが有効な場合
+        if (isNewMemo && !wasEmpty && continuousCreateMode) {
+          // タグをリセット
+          setLocalTags([]);
+          setHasManualChanges(false);
+          // フォームを手動でリセット
+          setTimeout(() => {
+            resetForm?.();
+          }, 50);
+          return; // onSaveCompleteを呼ばずに新規作成状態を維持
+        }
+        // 通常の保存完了処理
+        onSaveComplete?.(savedMemo, wasEmpty, isNewMemo);
+      },
+      [onSaveComplete, continuousCreateMode],
+    ),
     currentBoardIds,
     initialBoardId,
     onDeleteAndSelectNext,
@@ -220,6 +246,27 @@ function MemoEditor({
   const deleteTeamTaggingByTagMutation = useDeleteTeamTaggingByTag(teamId || 0);
   const deleteTeamTaggingMutation = useDeleteTeamTagging(teamId || 0);
   const queryClient = useQueryClient();
+
+  // nnキーで連続作成モード切り替え（新規作成時のみ）
+  useEffect(() => {
+    if (memo && memo.id !== 0) return; // 新規作成時のみ有効
+
+    let lastKeyTime = 0;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "n") {
+        const currentTime = Date.now();
+        if (currentTime - lastKeyTime < 300) {
+          // 300ms以内の連続入力
+          e.preventDefault();
+          setContinuousCreateMode((prev) => !prev);
+        }
+        lastKeyTime = currentTime;
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [memo]);
 
   // 削除済みメモの操作用（React Hooks違反を避けるため常に呼び出し、nullを許可）
   const deletedMemoActions = useDeletedMemoActions({
@@ -653,6 +700,15 @@ function MemoEditor({
                       buttonSize="size-7"
                       iconSize="size-4"
                     />
+                    {/* 連続作成モード切り替えボタン（新規作成時のみ表示） */}
+                    {(!memo || memo.id === 0) && (
+                      <ContinuousCreateButton
+                        storageKey="memo-continuous-create-mode"
+                        onModeChange={setContinuousCreateMode}
+                        activeColor="bg-gray-500"
+                        activeHoverColor="hover:bg-gray-600"
+                      />
+                    )}
                     <Tooltip text="写真" position="bottom">
                       <PhotoButton
                         buttonSize="size-7"

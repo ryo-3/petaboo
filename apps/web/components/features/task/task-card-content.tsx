@@ -17,6 +17,9 @@ interface TaskCardContentProps {
   showBoardName?: boolean;
   showTags?: boolean;
 
+  // 事前取得データ（ボード一覧用）
+  tags?: Array<{ id: number; name: string; color?: string }>;
+  boards?: Array<{ id: number; name: string }>;
   // 削除済み表示用の事前取得データ
   preloadedTags?: Array<{ id: number; name: string; color?: string }>;
   preloadedBoards?: Array<{ id: number; name: string }>;
@@ -28,6 +31,8 @@ function TaskCardContent({
   showEditDate = false,
   showBoardName = false,
   showTags = false,
+  tags: propTags,
+  boards: propBoards,
   preloadedTags,
   preloadedBoards,
 }: TaskCardContentProps) {
@@ -39,17 +44,22 @@ function TaskCardContent({
     !isDeleted && task.id > 0
       ? (task as Task).originalId || task.id.toString()
       : "";
-  const { data: boards } = useItemBoards("task", boardItemId || undefined);
+  const { data: fetchedBoards } = useItemBoards(
+    "task",
+    boardItemId || undefined,
+  );
 
   const targetOriginalId =
     !isDeleted && task.id > 0
       ? (task as Task).originalId || task.id.toString()
       : "";
-  const { tags } = useItemTags("task", targetOriginalId);
+  const { tags: fetchedTags } = useItemTags("task", targetOriginalId);
 
-  // 削除済み表示の場合はpreloadedデータを使用
-  const displayTags = isDeleted ? preloadedTags : tags;
-  const displayBoards = isDeleted ? preloadedBoards : boards;
+  // 表示データの優先順位：propTags/propBoards > preloadedTags/preloadedBoards > フック取得データ
+  const displayTags = isDeleted ? preloadedTags : propTags || fetchedTags;
+  const displayBoards = isDeleted
+    ? preloadedBoards
+    : propBoards || fetchedBoards;
 
   return (
     <>

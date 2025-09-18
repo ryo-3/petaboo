@@ -6,6 +6,7 @@ import { useBoardState } from "@/src/hooks/use-board-state";
 import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
 import { useTags } from "@/src/hooks/use-tags";
 import { useTeamTags } from "@/src/hooks/use-team-tags";
+import { useAllTeamTaggings } from "@/src/hooks/use-team-taggings";
 import { useBoards, useAddItemToBoard } from "@/src/hooks/use-boards";
 import { useTeamBoards } from "@/src/hooks/use-team-boards";
 import { Memo, DeletedMemo } from "@/src/types/memo";
@@ -279,12 +280,16 @@ function BoardDetailScreen({
   });
 
   // 全データ事前取得（ちらつき解消）
-  const { data: allTaggings } = useAllTaggings();
+  const { data: personalTaggings } = useAllTaggings();
+  const { data: teamTaggings } = useAllTeamTaggings(teamId || 0);
   const { data: allBoardItems } = useAllBoardItems();
   const { data: personalTags } = useTags();
   const { data: teamTags } = useTeamTags(teamId || 0);
   const { data: personalBoards } = useBoards("normal", !teamMode);
   const { data: teamBoards } = useTeamBoards(teamId, "normal");
+
+  // チームモードかどうかでタグ付けデータを切り替え
+  const allTaggings = teamMode && teamId ? teamTaggings : personalTaggings;
 
   // チームモードかどうかでタグを切り替え
   const allTags = teamMode && teamId ? teamTags : personalTags;

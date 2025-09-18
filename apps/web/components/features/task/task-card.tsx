@@ -15,7 +15,10 @@ interface TaskCardProps {
   isDeleting?: boolean;
   selectionMode?: "select" | "check";
 
-  // 事前取得データ（削除済み表示用）
+  // 事前取得データ
+  tags?: Array<{ id: number; name: string; color?: string }>;
+  boards?: Array<{ id: number; name: string }>;
+  // 削除済み表示用
   preloadedTags?: Array<{ id: number; name: string; color?: string }>;
   preloadedBoards?: Array<{ id: number; name: string }>;
 }
@@ -32,6 +35,8 @@ function TaskCard({
   showTags = false,
   isDeleting = false,
   selectionMode = "select",
+  tags,
+  boards,
   preloadedTags,
   preloadedBoards,
 }: TaskCardProps) {
@@ -52,6 +57,8 @@ function TaskCard({
         showEditDate={showEditDate}
         showBoardName={showBoardName}
         showTags={showTags}
+        tags={tags}
+        boards={boards}
         preloadedTags={preloadedTags}
         preloadedBoards={preloadedBoards}
       />

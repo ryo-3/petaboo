@@ -410,10 +410,17 @@ export default function BoardTaskSection({
         ) : (
           <TaskStatusDisplay
             activeTab={activeTaskTab as "todo" | "in_progress" | "completed"}
-            tasks={displayTaskItems.map((item) => ({
-              ...(item.content as Task),
-              originalId: item.itemId?.toString() || "", // ボードのitemIdを文字列として使用（undefinedチェック）
-            }))}
+            tasks={displayTaskItems.map((item) => {
+              const task = item.content as Task;
+              // ボードアイテムのitemIdを使用（これがタグ付けで使われる正しいoriginalId）
+              const correctOriginalId =
+                item.itemId || task.originalId || task.id.toString();
+
+              return {
+                ...task,
+                originalId: correctOriginalId,
+              };
+            })}
             viewMode={viewMode}
             effectiveColumnCount={effectiveColumnCount}
             isBoard={true}

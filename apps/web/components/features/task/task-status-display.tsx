@@ -6,7 +6,7 @@ import ItemStatusDisplay from "@/components/ui/layout/item-status-display";
 import type { Task, DeletedTask } from "@/src/types/task";
 import type { Tag, Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 
 interface TaskStatusDisplayProps {
   activeTab: "todo" | "in_progress" | "completed";

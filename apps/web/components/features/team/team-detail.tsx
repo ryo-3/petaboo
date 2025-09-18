@@ -70,13 +70,6 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       isPageVisible, // ページ可視性
     );
 
-  // デバッグログ: 承認待ちリスト表示条件
-  console.log(
-    `🎯 [承認待ちリスト] team.role: ${team?.role}, hasNotifications: ${notificationData?.hasNotifications}, joinRequests: ${JSON.stringify(joinRequests)}`,
-  );
-  console.log(
-    `🎯 [承認待ちリスト] isPageVisible: ${isPageVisible}, isLoadingJoinRequests: ${isLoadingJoinRequests}`,
-  );
   const {
     approve,
     reject,

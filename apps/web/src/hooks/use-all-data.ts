@@ -57,15 +57,19 @@ interface BoardItem {
  * 全ボードのアイテム情報を取得するフック
  * 新しい /boards/all-items APIを使用
  */
-export function useAllBoardItems() {
+export function useAllBoardItems(teamId?: number) {
   const { getToken, isLoaded } = useAuth();
 
   return useQuery<BoardItem[]>(
-    ["boards", "all-items"],
+    ["boards", "all-items", teamId],
     async () => {
       const token = await getToken();
 
-      const response = await fetch(`${API_BASE_URL}/boards/all-items`, {
+      const url = teamId
+        ? `${API_BASE_URL}/boards/all-items?teamId=${teamId}`
+        : `${API_BASE_URL}/boards/all-items`;
+
+      const response = await fetch(url, {
         headers: {
           "Content-Type": "application/json",
           ...(token && { Authorization: `Bearer ${token}` }),

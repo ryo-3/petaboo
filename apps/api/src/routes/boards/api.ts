@@ -1407,6 +1407,11 @@ export function createAPI(app: AppType) {
     method: "get",
     path: "/all-items",
     tags: ["boards"],
+    request: {
+      query: z.object({
+        teamId: z.string().regex(/^\d+$/).transform(Number).optional(),
+      }),
+    },
     responses: {
       200: {
         content: {
@@ -1435,6 +1440,16 @@ export function createAPI(app: AppType) {
         },
         description: "Unauthorized",
       },
+      403: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+            }),
+          },
+        },
+        description: "Not a team member",
+      },
     },
   });
 
@@ -1445,24 +1460,64 @@ export function createAPI(app: AppType) {
         return c.json({ error: "Unauthorized" }, 401);
       }
 
+      const { teamId } = c.req.valid("query");
       const db = c.get("db");
 
-      // 全ボードのアイテムを一括取得（物理削除なのでレコードが存在するものはすべて有効）
-      const allBoardItems = await db
-        .select({
-          boardId: boardItems.boardId,
-          boardName: boards.name,
-          itemType: boardItems.itemType,
-          itemId: boardItems.originalId, // itemIdの代わりにoriginalIdを使用
-          originalId: boardItems.originalId,
-          addedAt: boardItems.createdAt,
-        })
-        .from(boardItems)
-        .innerJoin(boards, eq(boardItems.boardId, boards.id))
-        .where(eq(boards.userId, auth.userId))
-        .orderBy(boards.name, boardItems.createdAt);
+      if (teamId) {
+        // チームモード：チームメンバー確認
+        const { teamMembers } = await import("../../db/schema/team/teams");
+        const member = await db
+          .select()
+          .from(teamMembers)
+          .where(
+            and(
+              eq(teamMembers.teamId, teamId),
+              eq(teamMembers.userId, auth.userId),
+            ),
+          )
+          .limit(1);
 
-      return c.json(allBoardItems);
+        if (member.length === 0) {
+          return c.json({ error: "Not a team member" }, 403);
+        }
+
+        // チームボードのアイテムを取得
+        const { teamBoards, teamBoardItems } = await import(
+          "../../db/schema/team/boards"
+        );
+        const allBoardItems = await db
+          .select({
+            boardId: teamBoardItems.boardId,
+            boardName: teamBoards.name,
+            itemType: teamBoardItems.itemType,
+            itemId: teamBoardItems.originalId,
+            originalId: teamBoardItems.originalId,
+            addedAt: teamBoardItems.createdAt,
+          })
+          .from(teamBoardItems)
+          .innerJoin(teamBoards, eq(teamBoardItems.boardId, teamBoards.id))
+          .where(eq(teamBoards.teamId, teamId))
+          .orderBy(teamBoards.name, teamBoardItems.createdAt);
+
+        return c.json(allBoardItems);
+      } else {
+        // 個人モード：全ボードのアイテムを一括取得（物理削除なのでレコードが存在するものはすべて有効）
+        const allBoardItems = await db
+          .select({
+            boardId: boardItems.boardId,
+            boardName: boards.name,
+            itemType: boardItems.itemType,
+            itemId: boardItems.originalId, // itemIdの代わりにoriginalIdを使用
+            originalId: boardItems.originalId,
+            addedAt: boardItems.createdAt,
+          })
+          .from(boardItems)
+          .innerJoin(boards, eq(boardItems.boardId, boards.id))
+          .where(eq(boards.userId, auth.userId))
+          .orderBy(boards.name, boardItems.createdAt);
+
+        return c.json(allBoardItems);
+      }
     } catch (error) {
       console.error("Error in getAllBoardItems:", error);
       return c.json(

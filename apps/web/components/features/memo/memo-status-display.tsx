@@ -189,15 +189,35 @@ function MemoStatusDisplay({
 
   // 各メモのタグ・ボード情報を事前計算（ちらつき解消）
   const memoDataMap = useMemo(() => {
-    if (
-      !filteredMemos ||
-      !allTaggings ||
-      !allBoardItems ||
-      !allTags ||
-      !allBoards
-    ) {
+    // 最小限のデータが揃わない場合は空のMapを返す
+    if (!filteredMemos) {
       return new Map();
     }
+
+    // データが不足している場合でも段階的にMapを構築
+    const safeAllTaggings = allTaggings || [];
+    const safeAllBoardItems = allBoardItems || [];
+    const safeAllTags = allTags || [];
+    const safeAllBoards = allBoards || [];
+
+    // デバッグ用：入力データ確認
+    console.log("🔍 [memoDataMap] 入力データ確認", {
+      filteredMemosLength: filteredMemos?.length,
+      allTaggingsLength: safeAllTaggings?.length,
+      allBoardItemsLength: safeAllBoardItems?.length,
+      allTagsLength: safeAllTags?.length,
+      allBoardsLength: safeAllBoards?.length,
+      sampleBoardItems: safeAllBoardItems?.slice(0, 3).map((item) => ({
+        boardId: item.boardId,
+        itemType: item.itemType,
+        originalId: item.originalId,
+      })),
+      sampleTaggings: safeAllTaggings?.slice(0, 3).map((t) => ({
+        tagId: t.tagId,
+        targetType: t.targetType,
+        targetOriginalId: t.targetOriginalId,
+      })),
+    });
 
     const map = new Map();
     filteredMemos.forEach((memo) => {
@@ -205,27 +225,61 @@ function MemoStatusDisplay({
       const originalId = memo.originalId || memo.id.toString();
 
       // メモのタグを抽出
-      const memoTaggings = allTaggings.filter(
+      const memoTaggings = safeAllTaggings.filter(
         (t) => t.targetType === "memo" && t.targetOriginalId === originalId,
       );
       const memoTags = memoTaggings
-        .map((t) => allTags.find((tag) => tag.id === t.tagId))
+        .map((t) => safeAllTags.find((tag) => tag.id === t.tagId))
         .filter((tag): tag is NonNullable<typeof tag> => tag !== undefined);
 
       // メモのボードを抽出（重複除去）
-      const memoBoardItems = allBoardItems.filter(
+      const memoBoardItems = safeAllBoardItems.filter(
         (item) => item.itemType === "memo" && item.originalId === originalId,
       );
+
+      // デバッグ用：特定メモの詳細確認
+      if (memo.id === 379 || memo.id === 377) {
+        console.log(`🔍 [メモID ${memo.id}] 詳細確認`, {
+          memoId: memo.id,
+          originalId,
+          memoBoardItemsFound: memoBoardItems.length,
+          memoBoardItems,
+          memoTaggingsFound: memoTaggings.length,
+          memoTaggings,
+          // originalIdが一致するアイテムを検索
+          matchingBoardItems: safeAllBoardItems.filter(
+            (item) => item.originalId === originalId,
+          ),
+          matchingTaggings: safeAllTaggings.filter(
+            (t) => t.targetOriginalId === originalId,
+          ),
+        });
+      }
       const uniqueBoardIds = new Set(
         memoBoardItems.map((item) => item.boardId),
       );
       const memoBoards = Array.from(uniqueBoardIds)
-        .map((boardId) => allBoards.find((board) => board.id === boardId))
+        .map((boardId) => safeAllBoards.find((board) => board.id === boardId))
         .filter(
           (board): board is NonNullable<typeof board> => board !== undefined,
         );
 
       map.set(memo.id, { tags: memoTags, boards: memoBoards });
+    });
+
+    // デバッグ用：memoDataMapの中身確認
+    console.log("🔍 [memoDataMap] 構築完了", {
+      filteredMemosLength: filteredMemos?.length,
+      mapSize: map.size,
+      sampleMemos: Array.from(map.entries())
+        .slice(0, 3)
+        .map(([id, data]) => ({
+          memoId: id,
+          boardsLength: data.boards.length,
+          tagsLength: data.tags.length,
+          boards: data.boards.map((b: any) => ({ id: b.id, name: b.name })),
+          tags: data.tags.map((t: any) => ({ id: t.id, name: t.name })),
+        })),
     });
 
     return map;

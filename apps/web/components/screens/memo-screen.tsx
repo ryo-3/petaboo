@@ -171,7 +171,9 @@ function MemoScreen({
 
   const { data: tags } = useTags();
   const { data: allTaggings, error: taggingsError } = useAllTaggings();
-  const { data: allBoardItems, error: boardItemsError } = useAllBoardItems();
+  const { data: allBoardItems, error: boardItemsError } = useAllBoardItems(
+    teamMode ? teamId : undefined,
+  );
 
   // デバッグ用：全タグ・タグ付け情報をログ出力
   // console.log('📋 メモ一覧側データ:', {

@@ -453,16 +453,6 @@ export default function BoardTaskSection({
               ? deletedCount
               : currentDisplayCount || checkedTasks.size;
 
-          if (activeTaskTab === "deleted") {
-            console.log("🔍 削除ボタンカウント詳細(タスク):", {
-              activeTaskTab,
-              deletedCount,
-              currentDisplayCount,
-              checkedTasksSize: checkedTasks.size,
-              finalCount: count,
-            });
-          }
-
           return count;
         })()}
         onDelete={() => {

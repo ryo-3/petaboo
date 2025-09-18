@@ -1693,9 +1693,6 @@ export async function verifyInviteToken(c: any) {
       .from(teamInvitations)
       .where(eq(teamInvitations.teamId, team.id));
 
-    console.log("🔍 Team ID:", team.id, "Token:", token);
-    console.log("🔍 All invitations for this team:", allInvitations);
-
     // トークン検証
     const invitation = await db
       .select()
@@ -1798,8 +1795,6 @@ export async function verifyInviteToken(c: any) {
       }
     }
 
-    console.log("🔍 applicationStatus:", applicationStatus);
-
     return c.json({
       team: {
         name: team.name,
@@ -1896,12 +1891,6 @@ export async function getJoinRequests(c: any) {
       return c.json({ message: "管理者権限が必要です" }, 403);
     }
 
-    // デバッグ: チーム情報をログ出力
-    console.log("🔍 [getJoinRequests] Team info:", {
-      teamId: team.id,
-      customUrl,
-    });
-
     // 承認待ちの申請を取得
     const joinRequests = await db
       .select({
@@ -1923,7 +1912,6 @@ export async function getJoinRequests(c: any) {
       .orderBy(desc(teamInvitations.createdAt));
 
     // デバッグ: 取得結果をログ出力
-    console.log("🔍 [getJoinRequests] Results:", JSON.stringify(joinRequests));
 
     return c.json({
       requests: joinRequests,
@@ -2559,8 +2547,6 @@ export async function waitMyRequestUpdates(c: any) {
   const startTime = Date.now();
 
   try {
-    console.log(`🔍 通知ポーリング開始: userId=${auth.userId}`);
-
     // 新しい通知システムをチェック
     while (Date.now() - startTime < timeoutMs) {
       // グローバル通知システムから通知をチェック
@@ -2995,7 +2981,6 @@ export async function waitUpdatesHandler(c: any) {
     // 初回チェック
     const result = await checkForUpdates();
     if (result.hasUpdates) {
-      console.log("🔍 Initial check found updates, returning immediately");
       return c.json({
         ...result,
         timestamp: new Date().toISOString(),

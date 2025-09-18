@@ -20,6 +20,7 @@ import {
   useDeleteMemo,
   useMemos,
 } from "@/src/hooks/use-memos";
+import { useDeleteTeamMemo } from "@/src/hooks/use-team-memos";
 import { useRightEditorDelete } from "@/src/hooks/use-right-editor-delete";
 import { useScreenState } from "@/src/hooks/use-screen-state";
 import { useSelectAll } from "@/src/hooks/use-select-all";
@@ -199,8 +200,10 @@ function MemoScreen({
   const safeAllTaggings = taggingsError ? [] : allTaggings || [];
   const safeAllBoardItems = boardItemsError ? [] : allBoardItems || [];
 
-  // 削除API
-  const deleteNote = useDeleteMemo();
+  // 削除API（チームモードと個人モードで異なるフックを使用）
+  const personalDeleteNote = useDeleteMemo();
+  const teamDeleteNote = useDeleteTeamMemo(teamId);
+  const deleteNote = teamMode ? teamDeleteNote : personalDeleteNote;
 
   // 共通screen状態管理
   const {

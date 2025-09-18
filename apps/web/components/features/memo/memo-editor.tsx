@@ -102,21 +102,6 @@ function MemoEditor({
   // 事前取得されたデータを使用（APIコール不要）
   const boards = preloadedBoards;
 
-  // デバッグログ: ボード一覧データ確認
-  useEffect(() => {
-    if (teamMode) {
-      console.log("🔍 [ボード一覧データ] チームモード:", {
-        preloadedBoardsCount: preloadedBoards.length,
-        preloadedBoards: preloadedBoards.map((b) => ({
-          id: b.id,
-          name: b.name,
-        })),
-        boardsCount: boards.length,
-        boards: boards.map((b) => ({ id: b.id, name: b.name })),
-      });
-    }
-  }, [teamMode, preloadedBoards, boards]);
-
   // このメモに実際に紐づいているボードのみを抽出
   const itemBoards = useMemo(() => {
     if (!memo || memo.id === undefined || memo.id === 0) return [];
@@ -149,32 +134,6 @@ function MemoEditor({
       : initialBoardId
         ? [initialBoardId]
         : [];
-
-  // デバッグログ: チームボードでのボードアイコン状態確認
-  useEffect(() => {
-    if (teamMode) {
-      console.log("🔍 [ボードアイコン状態] チームモード:", {
-        memoId: memo?.id,
-        originalId: memo?.originalId,
-        initialBoardId,
-        itemBoards: itemBoards.map((b) => ({ id: b.id, name: b.name })),
-        currentBoardIds,
-        preloadedBoardItemsCount: preloadedBoardItems.length,
-        relevantBoardItems: preloadedBoardItems.filter(
-          (item) =>
-            item.itemType === "memo" &&
-            item.originalId === (memo?.originalId || memo?.id?.toString()),
-        ),
-      });
-    }
-  }, [
-    teamMode,
-    memo,
-    itemBoards,
-    currentBoardIds,
-    initialBoardId,
-    preloadedBoardItems,
-  ]);
 
   const {
     content,
@@ -249,18 +208,6 @@ function MemoEditor({
       .map((t) => t.tag)
       .filter(Boolean) as Tag[];
 
-    // デバッグログ
-    if (teamMode) {
-      console.log("🏷️ [currentTags] チームモード:", {
-        memoId: memo.id,
-        originalId: targetOriginalId,
-        liveTeamTaggingsLength: liveTeamTaggings?.length || 0,
-        liveTeamTaggings: liveTeamTaggings,
-        tagsLength: tags.length,
-        tags: tags,
-      });
-    }
-
     return tags;
   }, [memo, preloadedTaggings, liveTaggings, liveTeamTaggings, teamMode]);
 
@@ -306,12 +253,6 @@ function MemoEditor({
         JSON.stringify(localTags.map((t) => t.id).sort()) &&
       !hasManualChanges // 手動変更がない場合のみ同期
     ) {
-      if (teamMode) {
-        console.log("🏷️ [localTags同期] チームモード:", {
-          from: localTags,
-          to: currentTags,
-        });
-      }
       setLocalTags(currentTags);
     }
   }, [memo?.id, prevMemoId, currentTags, localTags, hasManualChanges]);

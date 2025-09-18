@@ -89,9 +89,7 @@ export function useBoardBulkRestore({
           });
           setCheckedItems(newCheckedItems);
         } else {
-          console.log("🔍 復元後全クリア実行前:", Array.from(checkedItems));
           setCheckedItems(new Set());
-          console.log("🔍 復元後全クリア実行後: 空のSet");
         }
       };
 

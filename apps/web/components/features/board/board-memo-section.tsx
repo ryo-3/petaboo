@@ -413,17 +413,6 @@ export default function BoardMemoSection({
               ? memoItems.length
               : currentDisplayCount || checkedMemos.size;
 
-          if (activeMemoTab === "deleted") {
-            console.log("🔍 削除ボタンカウント詳細(メモ):", {
-              activeMemoTab,
-              deletedMemoCount,
-              memoItemsLength: memoItems.length,
-              currentDisplayCount,
-              checkedMemosSize: checkedMemos.size,
-              finalCount: count,
-            });
-          }
-
           return count;
         })()}
         onDelete={() => {

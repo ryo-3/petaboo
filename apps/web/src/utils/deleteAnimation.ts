@@ -26,7 +26,6 @@ export function animateEditorContentToTrashCSS(
   onComplete?: () => void,
   actionType: "delete" | "restore" = "delete",
 ) {
-  console.log("🔍 エディター個別アニメーション開始:", { actionType });
   // CSS変数からアニメーション時間を取得（自動同期）
   const editorAnimationDuration = getAnimationDuration("editor");
 

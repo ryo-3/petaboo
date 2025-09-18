@@ -68,13 +68,6 @@ export function useBulkAnimation({
    * カウントダウンアニメーションを開始
    */
   const startCountdown = (totalCount: number, targetCount: number) => {
-    // デバッグ: startCountdown呼び出し確認
-    console.log("🔍 startCountdown 呼び出し:", {
-      totalCount,
-      targetCount,
-      condition: targetCount <= 999,
-    });
-
     // カウントダウンが必要な場合（999以下になる場合）
     if (targetCount <= 999) {
       const startCount = Math.min(totalCount, 999);
@@ -90,33 +83,14 @@ export function useBulkAnimation({
         setDisplayCount(startCount);
         setIsCountingActive(true);
 
-        console.log("🔍 カウントダウン開始:", {
-          startCount,
-          currentCount,
-          targetCount,
-          delayUntilStart,
-          decrementInterval,
-        });
-
         const counterTimer = setInterval(() => {
-          console.log("🔍 カウントダウン中:", {
-            currentCount,
-            targetCount,
-            shouldStop: currentCount <= targetCount,
-          });
-
           setDisplayCount(currentCount);
 
           // 目標値（削除後の残り数）に到達したら停止
           if (currentCount <= targetCount) {
-            console.log("🔍 カウントダウン完了:", {
-              finalCount: currentCount,
-              targetCount,
-            });
             clearInterval(counterTimer);
             // 最終値を1秒表示してからカウンター無効化
             setTimeout(() => {
-              console.log("🔍 カウンター無効化");
               setIsCountingActive(false);
             }, 1000);
             return;

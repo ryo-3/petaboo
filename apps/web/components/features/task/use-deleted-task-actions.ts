@@ -119,31 +119,6 @@ export function useDeletedTaskActions({
         boardDeletedItemsQueryKey,
       );
 
-      // 削除前にキャッシュの存在状況を詳しく調査
-      console.log(`🔍 削除前キャッシュ調査開始`);
-      const allQueries = queryClient.getQueryCache().getAll();
-      const relevantQueries = allQueries.filter((q) => {
-        const key = q.queryKey as string[];
-        return (
-          key[0] === "team-board-deleted-items" ||
-          key[0] === "board-deleted-items"
-        );
-      });
-      console.log(
-        `🔍 全削除済みアイテム関連クエリ:`,
-        relevantQueries.map((q) => ({
-          queryKey: q.queryKey,
-          state: q.state.status,
-          hasData: !!q.state.data,
-          dataType: typeof q.state.data,
-          dataKeys: q.state.data ? Object.keys(q.state.data) : "no data",
-        })),
-      );
-
-      const exactQueryData = queryClient.getQueryData(
-        boardDeletedItemsQueryKey,
-      );
-      console.log(`🔍 正確なクエリキーでのデータ取得:`, exactQueryData);
       queryClient.setQueryData(boardDeletedItemsQueryKey, (oldItems: any) => {
         console.log(`📊 更新前ボード削除済みアイテム:`, oldItems);
         console.log(
@@ -224,22 +199,6 @@ export function useDeletedTaskActions({
             queryKey: ["team-board-deleted-items", teamIdString, boardId],
             type: "active",
           });
-
-          console.log(
-            `🔍 アクティブなボード削除済みアイテムクエリ数: ${boardDeletedItemsQueries.length}`,
-          );
-          console.log(
-            `🔍 全ボード削除済みアイテムクエリ一覧:`,
-            queryClient
-              .getQueryCache()
-              .findAll({
-                queryKey: ["team-board-deleted-items", teamIdString, boardId],
-              })
-              .map(
-                (q) =>
-                  `state=${q.state.status}, dataUpdatedAt=${q.state.dataUpdatedAt}`,
-              ),
-          );
 
           if (boardDeletedItemsQueries.length > 0) {
             console.log(
@@ -655,9 +614,6 @@ export function useDeletedTaskActions({
       } else {
         // アニメーション要素がない場合は通常の処理
         console.log(`⚠️ アニメーション要素が見つからない - 直接API実行`);
-        console.log(
-          `🔍 エディター要素: ${editorArea ? "存在" : "不在"}, ゴミ箱ボタン: ${rightTrashButton ? "存在" : "不在"}`,
-        );
 
         // API実行（onSuccessで次選択とキャッシュ更新が実行される）
         if (task) {
@@ -698,7 +654,6 @@ export function useDeletedTaskActions({
       ) as HTMLElement;
 
       if (editorArea && rightTrashButton) {
-        console.log("🔍 個別タスク復元: アニメーション付き復元開始");
         const { animateEditorContentToTrashCSS } = await import(
           "@/src/utils/deleteAnimation"
         );
@@ -706,7 +661,6 @@ export function useDeletedTaskActions({
           editorArea,
           rightTrashButton,
           async () => {
-            console.log("🔍 個別タスク復元: アニメーション完了後API実行");
             // アニメーション完了後の処理
             try {
               // API実行（onSuccessで次選択とキャッシュ更新が実行される）
@@ -727,7 +681,6 @@ export function useDeletedTaskActions({
           "restore", // 復元処理であることを明示
         );
       } else {
-        console.log("🔍 個別タスク復元: アニメーションなしで復元");
         // アニメーション要素がない場合は通常の処理
         if (task) {
           console.log(`🚀 復元API実行開始: originalId=${task.originalId}`);

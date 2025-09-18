@@ -200,25 +200,6 @@ function MemoStatusDisplay({
     const safeAllTags = allTags || [];
     const safeAllBoards = allBoards || [];
 
-    // デバッグ用：入力データ確認
-    console.log("🔍 [memoDataMap] 入力データ確認", {
-      filteredMemosLength: filteredMemos?.length,
-      allTaggingsLength: safeAllTaggings?.length,
-      allBoardItemsLength: safeAllBoardItems?.length,
-      allTagsLength: safeAllTags?.length,
-      allBoardsLength: safeAllBoards?.length,
-      sampleBoardItems: safeAllBoardItems?.slice(0, 3).map((item) => ({
-        boardId: item.boardId,
-        itemType: item.itemType,
-        originalId: item.originalId,
-      })),
-      sampleTaggings: safeAllTaggings?.slice(0, 3).map((t) => ({
-        tagId: t.tagId,
-        targetType: t.targetType,
-        targetOriginalId: t.targetOriginalId,
-      })),
-    });
-
     const map = new Map();
     filteredMemos.forEach((memo) => {
       if (!memo || memo.id === undefined) return;
@@ -237,24 +218,6 @@ function MemoStatusDisplay({
         (item) => item.itemType === "memo" && item.originalId === originalId,
       );
 
-      // デバッグ用：特定メモの詳細確認
-      if (memo.id === 379 || memo.id === 377) {
-        console.log(`🔍 [メモID ${memo.id}] 詳細確認`, {
-          memoId: memo.id,
-          originalId,
-          memoBoardItemsFound: memoBoardItems.length,
-          memoBoardItems,
-          memoTaggingsFound: memoTaggings.length,
-          memoTaggings,
-          // originalIdが一致するアイテムを検索
-          matchingBoardItems: safeAllBoardItems.filter(
-            (item) => item.originalId === originalId,
-          ),
-          matchingTaggings: safeAllTaggings.filter(
-            (t) => t.targetOriginalId === originalId,
-          ),
-        });
-      }
       const uniqueBoardIds = new Set(
         memoBoardItems.map((item) => item.boardId),
       );
@@ -265,21 +228,6 @@ function MemoStatusDisplay({
         );
 
       map.set(memo.id, { tags: memoTags, boards: memoBoards });
-    });
-
-    // デバッグ用：memoDataMapの中身確認
-    console.log("🔍 [memoDataMap] 構築完了", {
-      filteredMemosLength: filteredMemos?.length,
-      mapSize: map.size,
-      sampleMemos: Array.from(map.entries())
-        .slice(0, 3)
-        .map(([id, data]) => ({
-          memoId: id,
-          boardsLength: data.boards.length,
-          tagsLength: data.tags.length,
-          boards: data.boards.map((b: any) => ({ id: b.id, name: b.name })),
-          tags: data.tags.map((t: any) => ({ id: t.id, name: t.name })),
-        })),
     });
 
     return map;
@@ -454,19 +402,6 @@ export function DeletedMemoDisplay({
       .filter(
         (board): board is NonNullable<typeof board> => board !== undefined,
       );
-
-    // 削除済みメモのボード表示調査ログ
-    if (deletedMemos && deletedMemos.indexOf(memo) === 0) {
-      // originalIdマッチング詳細調査
-
-      const nearbyIds = allBoardItems
-        .filter((item) => item.itemType === "memo")
-        .map((item) => item.originalId)
-        .filter((id) => Math.abs(parseInt(id) - parseInt(originalId)) <= 20);
-
-      if (memoBoardItems.length === 0) {
-      }
-    }
 
     const Component = viewMode === "card" ? MemoCard : MemoListItem;
     /* eslint-disable react/prop-types */

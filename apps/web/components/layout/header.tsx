@@ -43,30 +43,12 @@ function Header() {
   const { data: myJoinRequests } = useMyJoinRequests();
   const queryClient = useQueryClient();
 
-  // 通知クリック時に既読状態にしてホームタブに切り替え
+  // 通知クリック時にホームタブに切り替え（既読機能無効化）
   const handleNotificationClick = () => {
-    if (isPersonalPage) {
-      // 個人通知を既読にする
-      if (personalNotifier.data?.hasUpdates) {
-        personalNotifier.markAsRead();
-      }
-    } else if (teamName) {
-      // チーム通知を既読にする（通知がない場合でも実行）
-      if (teamNotifier.data?.hasUpdates) {
-        const readKey = `teamNotificationRead_${teamName}`;
-        localStorage.setItem(readKey, new Date().toISOString());
-
-        // 通知チェックを再実行して即座に反映
-        if (teamNotifier.checkNow) {
-          teamNotifier.checkNow();
-        }
-      }
-
-      // チームページでホームタブに切り替え（通知の有無に関係なく実行）
-      if (pathname.startsWith("/team/")) {
-        const baseTeamUrl = `/team/${teamName}`;
-        router.replace(baseTeamUrl);
-      }
+    if (teamName && pathname.startsWith("/team/")) {
+      // チームページでホームタブに切り替え
+      const baseTeamUrl = `/team/${teamName}`;
+      router.replace(baseTeamUrl);
     }
   };
 

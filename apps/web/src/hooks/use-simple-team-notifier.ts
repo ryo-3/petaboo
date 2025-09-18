@@ -38,13 +38,18 @@ export function useSimpleTeamNotifier(
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // 詳細デバッグ
+  console.log(
+    `🔍 [useSimpleTeamNotifier] Hook実行: teamName=${teamName}, isVisible=${isVisible}`,
+  );
+
   // 手動チェック用（簡潔版）
   const checkNow = useCallback(async () => {
     if (!teamName) return;
 
     try {
       const token = await getToken();
-      const url = `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:7594"}/teams/notifications/check`;
+      const url = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594"}/teams/notifications/check`;
       const params = new URLSearchParams({
         teamFilter: teamName,
         types: "team_requests",
@@ -94,27 +99,39 @@ export function useSimpleTeamNotifier(
 
   // 10秒間隔での通知チェック
   useEffect(() => {
-    if (!teamName) return;
+    console.log(
+      `🔍 [useEffect] 開始: teamName=${teamName}, isVisible=${isVisible}`,
+    );
+
+    if (!teamName) {
+      console.log(`⚠️ [useEffect] teamNameがないため早期リターン`);
+      return;
+    }
 
     // チェック間隔を決定（シンプル版）
     const checkInterval = isVisible ? 10000 : null; // アクティブ: 10秒, バックグラウンド: 停止
 
-    // console.log(
-    //   `🚀 通知チェック開始: ${teamName} (${checkInterval ? `${checkInterval / 1000}秒間隔` : "停止"})`,
-    // );
-    // console.log(
-    //   `🔍 [useSimpleTeamNotifier] isVisible: ${isVisible}`,
-    // );
+    console.log(
+      `🚀 通知チェック開始: ${teamName} (${checkInterval ? `${checkInterval / 1000}秒間隔` : "停止"})`,
+    );
+    console.log(`🔍 [useSimpleTeamNotifier] isVisible: ${isVisible}`);
 
     // 共通のチェック関数
     const performCheck = async () => {
+      console.log(`📞 [performCheck] 実行開始: ${teamName}`);
       try {
         const token = await getToken();
-        const url = `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:7594"}/teams/notifications/check`;
+        console.log(`🔑 [performCheck] Token取得: ${token ? "成功" : "失敗"}`);
+        const url = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594"}/teams/notifications/check`;
+        console.log(`🌐 API URL: ${url}`);
+        console.log(
+          `🌍 NEXT_PUBLIC_API_URL: ${process.env.NEXT_PUBLIC_API_URL}`,
+        );
         const params = new URLSearchParams({
           teamFilter: teamName,
           types: "team_requests",
         });
+        console.log(`📋 Request params: ${params.toString()}`);
 
         const response = await fetch(`${url}?${params.toString()}`, {
           headers: {
@@ -182,15 +199,27 @@ export function useSimpleTeamNotifier(
     };
 
     // 初回実行
+    console.log(`🏁 [初回実行] performCheck開始`);
     setIsLoading(true);
     performCheck().finally(() => setIsLoading(false));
 
     // 段階的間隔でチェック
     const interval = checkInterval
       ? setInterval(() => {
+          console.log(
+            `⏰ [定期実行] ${checkInterval / 1000}秒後の自動チェック`,
+          );
           performCheck();
         }, checkInterval)
       : null;
+
+    if (interval) {
+      console.log(
+        `✅ [setInterval] ID: ${interval} で${checkInterval! / 1000}秒間隔のタイマー設定完了`,
+      );
+    } else {
+      console.log(`❌ [setInterval] タイマー未設定（isVisible: ${isVisible}）`);
+    }
 
     // クリーンアップ
     return () => {

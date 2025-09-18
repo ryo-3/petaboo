@@ -55,43 +55,21 @@ export function usePersonalNotifier() {
       return;
     }
 
-    // 既読チェック
-    const lastReadTime = localStorage.getItem("personalNotificationRead");
-    const lastReadTimestamp = lastReadTime
-      ? new Date(lastReadTime).getTime() / 1000
-      : 0;
-
-    // 最後に読んだ時刻より新しい承認があるかチェック
-    const newApprovals = approvedRequests.filter(
-      (request) => request.processedAt > lastReadTimestamp,
-    );
-
     const result: PersonalNotifierResult = {
-      hasUpdates: newApprovals.length > 0,
+      hasUpdates: false,
       counts: {
-        approvedRequests: newApprovals.length,
+        approvedRequests: 0,
       },
       lastCheckedAt: new Date().toISOString(),
-      approvedRequests: newApprovals,
+      approvedRequests: [],
     };
 
     setData(result);
   }, [myRequests]);
 
-  // 手動で既読にする関数
+  // 手動で既読にする関数（無効化）
   const markAsRead = () => {
-    const now = new Date().toISOString();
-    localStorage.setItem("personalNotificationRead", now);
-
-    // データを更新
-    if (data) {
-      setData({
-        ...data,
-        hasUpdates: false,
-        counts: { approvedRequests: 0 },
-        approvedRequests: [],
-      });
-    }
+    // 既読機能を無効化
   };
 
   return {

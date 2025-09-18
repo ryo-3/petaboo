@@ -423,6 +423,11 @@ function TaskEditor({
             ? itemBoards.map((board) => board.id.toString())
             : selectedBoardIds;
 
+        // selectedBoardIdsも正しく設定
+        if (itemBoards.length > 0) {
+          initializeBoardIds(itemBoards.map((board) => board.id.toString()));
+        }
+
         const originalDataValue = {
           title: taskTitle.trim(),
           description: taskDescription.trim(),

@@ -204,7 +204,7 @@ export function useUpdateTeamBoard(teamId: number) {
 
       return response.json();
     },
-    onSuccess: (updatedBoard) => {
+    onSuccess: () => {
       // 全ステータスのキャッシュを無効化
       ["normal", "completed", "deleted"].forEach((status) => {
         queryClient.invalidateQueries({

@@ -87,6 +87,7 @@ export function useCreateTask(options?: {
         const boardId = 1; // 仮値（実際はinitialBoardIdから取得すべき）
         queryClient.setQueryData(
           ["team-boards", teamId.toString(), boardId, "items"],
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (oldData: any) => {
             if (oldData?.items) {
               return {

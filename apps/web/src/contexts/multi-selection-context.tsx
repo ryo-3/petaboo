@@ -294,14 +294,14 @@ export function useMultiSelection(
     (memoId: string | number) => {
       context.handleMemoSelectionToggle(memoId, activeMemoTab);
     },
-    [context.handleMemoSelectionToggle, activeMemoTab],
+    [context, activeMemoTab],
   );
 
   const handleTaskSelectionToggle = useCallback(
     (taskId: string | number) => {
       context.handleTaskSelectionToggle(taskId, activeTaskTab);
     },
-    [context.handleTaskSelectionToggle, activeTaskTab],
+    [context, activeTaskTab],
   );
 
   return {

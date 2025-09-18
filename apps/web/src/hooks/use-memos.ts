@@ -111,6 +111,7 @@ export function useCreateMemo(options?: {
         const boardId = 1; // 仮値（実際はinitialBoardIdから取得すべき）
         queryClient.setQueryData(
           ["team-boards", teamId.toString(), boardId, "items"],
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (oldData: any) => {
             if (oldData?.items) {
               return {
@@ -231,8 +232,10 @@ export function useUpdateMemo(options?: {
         const boardId = 1; // 仮値（実際はinitialBoardIdから取得すべき）
         queryClient.setQueryData(
           ["team-boards", teamId.toString(), boardId, "items"],
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (oldData: any) => {
             if (oldData?.items) {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const updatedItems = oldData.items.map((item: any) => {
                 if (item.itemType === "memo" && item.content?.id === id) {
                   return {
@@ -417,7 +420,7 @@ export function useRestoreMemo(options?: {
         await memosApi.restoreNote(originalId, token || undefined);
       }
     },
-    onSuccess: (data, originalId) => {
+    onSuccess: () => {
       if (teamMode && teamId) {
         // チームメモ復元時のキャッシュ無効化と強制再取得
         queryClient.invalidateQueries({ queryKey: ["team-memos", teamId] });

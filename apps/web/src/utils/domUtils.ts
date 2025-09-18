@@ -9,12 +9,8 @@ export function getTaskDisplayOrder(): number[] {
   const displayOrder: number[] = [];
   const seenIds = new Set<number>();
 
-  taskListElements.forEach((element, index) => {
+  taskListElements.forEach((element) => {
     const taskId = element.getAttribute("data-task-id");
-    const titleElement = element.querySelector(
-      ".task-title, [data-title], .title",
-    );
-    const title = titleElement?.textContent?.trim() || "タイトル不明";
 
     if (taskId) {
       const id = parseInt(taskId, 10);
@@ -77,7 +73,7 @@ export function getNextItemAfterDeletion<T extends { id: number }>(
 ): T | null {
   console.log(`削除前のアイテム一覧:`);
   items.forEach((item, index) => {
-    const title = (item as any).title || "?";
+    const title = (item as { title?: string }).title || "?";
     console.log(`${index + 1}. ${title} (ID: ${item.id})`);
   });
 

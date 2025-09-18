@@ -103,7 +103,9 @@
       "Bash(apitest \"/tags?teamId=18\")",
       "Bash(apitest \"/teams/18/boards?status=normal\")",
       "Bash(apitest \"/teams/my-requests\")",
-      "Bash(apitest \"/teams/18/members\" \"GET\")"
+      "Bash(apitest \"/teams/18/members\" \"GET\")",
+      "Bash(xargs ls:*)",
+      "Read(///**)"
     ],
     "deny": []
   }

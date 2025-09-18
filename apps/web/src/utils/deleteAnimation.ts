@@ -136,19 +136,19 @@ export function animateBulkFadeOutCSS(
   let completedCount = 0;
   const totalItems = sortedItemIds.length;
   const processedItems = new Set<number>(); // 処理済みアイテムを追跡
-  let isCancelled = false; // キャンセルフラグ
+  const isCancelled = false; // キャンセルフラグ（現在未使用）
   const timeoutIds: NodeJS.Timeout[] = []; // setTimeout IDを保持
 
   // 削除の場合は何もしない（isLidOpenプロパティで制御されるため）
 
-  // キャンセル処理関数
-  const cancelAllProcessing = () => {
-    if (isCancelled) return;
-
-    isCancelled = true;
-    timeoutIds.forEach((timeoutId) => clearTimeout(timeoutId));
-    onCancel?.();
-  };
+  // キャンセル処理関数（将来の機能拡張用）
+  // const cancelAllProcessing = () => {
+  //   if (isCancelled) return;
+  //
+  //   isCancelled = true;
+  //   timeoutIds.forEach((timeoutId) => clearTimeout(timeoutId));
+  //   onCancel?.();
+  // };
 
   // DOM順序でソートされたアイテムに順次フェードアウトアニメーション適用
   sortedItemIds.forEach((id, index) => {

@@ -494,6 +494,9 @@ export function useSimpleMemoSave({
   const resetForm = useCallback(() => {
     setTitle("");
     setContent("");
+    // 初期値もリセット（空メモ時に保存ボタンが有効にならないようにするため）
+    setInitialTitle("");
+    setInitialContent("");
     // ボード選択もリセット（initialBoardIdがある場合は維持）
     setSelectedBoardIds(initialBoardId ? [initialBoardId] : []);
   }, [initialBoardId]);

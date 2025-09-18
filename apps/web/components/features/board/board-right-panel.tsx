@@ -328,12 +328,15 @@ export default function BoardRightPanel({
               onClose={() => {
                 // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
               }}
-              onSaveComplete={(savedTask, isNewTask) => {
+              onSaveComplete={(savedTask, isNewTask, isContinuousMode) => {
                 if (!isNewTask) {
                   // 編集の場合は保存後に選択状態を更新
                   onSelectTask?.(savedTask);
+                } else if (!isContinuousMode) {
+                  // 新規作成で連続作成モードOFFの場合は作成されたタスクを選択
+                  onSelectTask?.(savedTask);
                 }
-                // 新規作成の場合はTaskEditor内でのフォームリセットに任せる
+                // 連続作成モードONの場合はTaskEditor内でのフォームリセットに任せる
               }}
               onDeleteAndSelectNext={onTaskDeleteAndSelectNext}
             />

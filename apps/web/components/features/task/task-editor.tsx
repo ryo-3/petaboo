@@ -55,7 +55,11 @@ interface TaskEditorProps {
     deletedTask: Task,
     preDeleteDisplayOrder?: number[],
   ) => void;
-  onSaveComplete?: (savedTask: Task, isNewTask: boolean) => void;
+  onSaveComplete?: (
+    savedTask: Task,
+    isNewTask: boolean,
+    isContinuousMode?: boolean,
+  ) => void;
   onRestore?: () => void;
   onDelete?: () => void;
   customHeight?: string;
@@ -815,7 +819,7 @@ function TaskEditor({
         return;
       }
 
-      onSaveComplete?.(task as Task, false);
+      onSaveComplete?.(task as Task, false, false);
 
       // 保存成功時にoriginalDataも更新（現在のstateの値を使用）
       setOriginalData({
@@ -1060,11 +1064,15 @@ function TaskEditor({
           );
         }
 
-        // 新規作成完了を通知
-        onSaveComplete?.(newTask, true);
+        // 新規作成完了を通知（連続作成モードの情報も渡す）
+        onSaveComplete?.(newTask, true, continuousCreateMode);
 
-        // チームボードの場合はURL更新も必要
-        if (teamMode && typeof window !== "undefined") {
+        // チームボードの場合はURL更新も必要（連続作成モード時は除く）
+        if (
+          teamMode &&
+          !continuousCreateMode &&
+          typeof window !== "undefined"
+        ) {
           const currentPath = window.location.pathname;
           const teamBoardMatch = currentPath.match(
             /^\/team\/([^\/]+)\/board\/([^\/]+)/,
@@ -1076,72 +1084,92 @@ function TaskEditor({
             console.log(`🔧 [新規タスク作成] URL更新: /task/0 → ${newUrl}`);
             window.history.replaceState(null, "", newUrl);
           }
+        } else if (teamMode && continuousCreateMode) {
+          console.log("🔧 [連続作成モード] URL更新をスキップ");
         }
 
         // 連続作成モードの場合はフォームをリセット
+        console.log("🔧 [連続作成モード] チェック:", {
+          continuousCreateMode,
+          teamMode,
+          teamId,
+          isFromBoardDetail,
+        });
+
         if (continuousCreateMode) {
+          console.log("🔧 [連続作成モード] フォームリセット開始");
+
+          if (isFromBoardDetail) {
+            // ボード詳細での新規作成時は、ボード情報を保持
+            const currentBoardIds = selectedBoardIds;
+
+            const resetData = {
+              title: "",
+              description: "",
+              status: "todo" as const,
+              priority: "medium" as const,
+              categoryId: null,
+              boardCategoryId: boardCategoryId, // ボードカテゴリーも保持
+              dueDate: "",
+              boardIds: currentBoardIds, // ボード選択を保持
+            };
+
+            setTitle("");
+            setDescription("");
+            setStatus("todo");
+            setPriority("medium");
+            setCategoryId(null);
+            // setBoardCategoryId(null); // ボードカテゴリーを保持
+            // initializeBoardIds([]); // ボード選択を保持
+            setDueDate("");
+
+            // originalDataもリセット
+            setOriginalData(resetData);
+          } else {
+            // 通常のタスク画面での新規作成時は、完全リセット
+
+            const resetData = {
+              title: "",
+              description: "",
+              status: "todo" as const,
+              priority: "medium" as const,
+              categoryId: null,
+              boardCategoryId: null,
+              dueDate: "",
+              boardIds: [],
+            };
+
+            console.log(
+              "🔧 [連続作成モード] 通常モード: フォーム完全リセット実行",
+            );
+            setTitle("");
+            setDescription("");
+            setStatus("todo");
+            setPriority("medium");
+            setCategoryId(null);
+            setBoardCategoryId(null);
+            initializeBoardIds([]);
+            setDueDate("");
+
+            // originalDataもリセット
+            setOriginalData(resetData);
+            console.log("🔧 [連続作成モード] 通常モード: リセット完了", {
+              resetDataTitle: resetData.title,
+              resetDataDescription: resetData.description,
+              resetDataStatus: resetData.status,
+            });
+          }
+
+          // 少し遅延してタイトル入力欄にフォーカス
           setTimeout(() => {
-            if (isFromBoardDetail) {
-              // ボード詳細での新規作成時は、ボード情報を保持
-              const currentBoardIds = selectedBoardIds;
-
-              const resetData = {
-                title: "",
-                description: "",
-                status: "todo" as const,
-                priority: "medium" as const,
-                categoryId: null,
-                boardCategoryId: boardCategoryId, // ボードカテゴリーも保持
-                dueDate: "",
-                boardIds: currentBoardIds, // ボード選択を保持
-              };
-
-              setTitle("");
-              setDescription("");
-              setStatus("todo");
-              setPriority("medium");
-              setCategoryId(null);
-              // setBoardCategoryId(null); // ボードカテゴリーを保持
-              // initializeBoardIds([]); // ボード選択を保持
-              setDueDate("");
-
-              // originalDataもリセット
-              setOriginalData(resetData);
-            } else {
-              // 通常のタスク画面での新規作成時は、完全リセット
-
-              const resetData = {
-                title: "",
-                description: "",
-                status: "todo" as const,
-                priority: "medium" as const,
-                categoryId: null,
-                boardCategoryId: null,
-                dueDate: "",
-                boardIds: [],
-              };
-
-              setTitle("");
-              setDescription("");
-              setStatus("todo");
-              setPriority("medium");
-              setCategoryId(null);
-              setBoardCategoryId(null);
-              initializeBoardIds([]);
-              setDueDate("");
-
-              // originalDataもリセット
-              setOriginalData(resetData);
-            }
-
-            // 少し遅延してタイトル入力欄にフォーカス
-            setTimeout(() => {
-              taskFormRef.current?.focusTitle();
-            }, 100);
-          }, 400);
+            taskFormRef.current?.focusTitle();
+          }, 500);
         } else {
-          // 連続作成モードがOFFの場合は、作成されたタスクを選択
-          onSelectTask?.(newTask);
+          // 連続作成モードがOFFの場合は、TaskScreen側で処理
+          console.log("🔧 [連続作成モード] OFF: TaskScreen側で選択処理", {
+            taskId: newTask.id,
+          });
+          // onSelectTask?.(newTask); この呼び出しを削除してTaskScreen側に任せる
         }
       } else {
         // 編集
@@ -1281,7 +1309,7 @@ function TaskEditor({
           }
         }
 
-        onSaveComplete?.(updatedTask, false);
+        onSaveComplete?.(updatedTask, false, false);
 
         // 保存成功時にoriginalDataも更新（現在のstateの値を使用）
         setOriginalData({
@@ -1391,7 +1419,14 @@ function TaskEditor({
                 {isNewTask && (
                   <ContinuousCreateButton
                     storageKey="task-continuous-create-mode"
-                    onModeChange={setContinuousCreateMode}
+                    onModeChange={(enabled) => {
+                      console.log("🔧 [連続作成モード] ボタン切り替え:", {
+                        enabled,
+                        teamMode,
+                        teamId,
+                      });
+                      setContinuousCreateMode(enabled);
+                    }}
                   />
                 )}
                 <Tooltip text="写真" position="bottom">

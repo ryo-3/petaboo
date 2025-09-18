@@ -105,7 +105,8 @@
       "Bash(apitest \"/teams/my-requests\")",
       "Bash(apitest \"/teams/18/members\" \"GET\")",
       "Bash(xargs ls:*)",
-      "Read(///**)"
+      "Read(///**)",
+      "Bash(apitest \"/taggings?targetType=memo&targetOriginalId=377\")"
     ],
     "deny": []
   }

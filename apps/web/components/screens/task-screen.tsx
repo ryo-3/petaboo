@@ -42,6 +42,7 @@ interface TaskScreenProps {
   ) => void;
   onClose: () => void;
   onClearSelection?: () => void; // 選択状態だけクリアする関数
+  onScreenModeChange?: (mode: string) => void; // 画面モード変更通知
   rightPanelDisabled?: boolean; // 右パネル無効化（ボードから呼び出される場合）
   hideHeaderButtons?: boolean; // ヘッダーボタンを非表示（ボードから呼び出される場合）
   hideBulkActionButtons?: boolean; // 一括操作ボタンを非表示（ボードから呼び出される場合）
@@ -67,6 +68,7 @@ function TaskScreen({
   onSelectDeletedTask,
   onClose,
   onClearSelection,
+  onScreenModeChange,
   hideHeaderButtons = false,
   hideBulkActionButtons = false,
   onAddToBoard,
@@ -176,7 +178,7 @@ function TaskScreen({
   // 共通screen状態管理
   const {
     screenMode: taskScreenMode,
-    setScreenMode: setTaskScreenMode,
+    setScreenMode: setTaskScreenModeInternal,
     activeTab,
     setActiveTab,
     viewMode,
@@ -194,6 +196,15 @@ function TaskScreen({
     selectedTask,
     selectedDeletedTask,
     preferences || undefined,
+  );
+
+  // 画面モード変更のラッパー（親に通知）
+  const setTaskScreenMode = useCallback(
+    (mode: TaskScreenMode) => {
+      setTaskScreenModeInternal(mode);
+      onScreenModeChange?.(mode);
+    },
+    [setTaskScreenModeInternal, onScreenModeChange],
   );
 
   // 一括削除ボタンの表示制御
@@ -582,12 +593,30 @@ function TaskScreen({
             task={null}
             onClose={() => setTaskScreenMode("list")}
             onSelectTask={onSelectTask}
-            onSaveComplete={(savedTask, isNewTask) => {
-              if (isNewTask) {
-                // 連続作成モードOFFの場合は作成されたタスクを選択状態にする
+            teamMode={teamMode}
+            teamId={teamId}
+            onSaveComplete={(savedTask, isNewTask, isContinuousMode) => {
+              console.log("🎯 [TaskScreen] onSaveComplete:", {
+                taskId: savedTask.id,
+                isNewTask,
+                isContinuousMode,
+                teamMode,
+                teamId,
+              });
+
+              if (isNewTask && !isContinuousMode) {
+                // 連続作成モードOFFの場合のみ作成されたタスクを選択状態にする
+                console.log("🎯 [TaskScreen] タスクを選択状態にします");
                 onSelectTask(savedTask);
                 setTaskScreenMode("view");
+              } else if (isNewTask && isContinuousMode) {
+                console.log(
+                  "🎯 [TaskScreen] 連続作成モード: 選択状態にしません",
+                );
+                // 連続作成モードの場合は、タスク選択を解除してURLパラメーターもクリア
+                onSelectTask(null);
               }
+              // 連続作成モードONの場合は何もしない（TaskEditor内でフォームリセット）
             }}
             preloadedTags={tags || []}
             preloadedBoards={boards || []}

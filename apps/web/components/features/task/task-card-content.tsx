@@ -53,7 +53,10 @@ function TaskCardContent({
     !isDeleted && task.id > 0
       ? (task as Task).originalId || task.id.toString()
       : "";
-  const { tags: fetchedTags } = useItemTags("task", targetOriginalId);
+  const { tags: fetchedTags } = useItemTags("task", targetOriginalId, {
+    // propTagsが渡されている場合はAPIを呼ばない（チーム対応）
+    teamMode: !!propTags,
+  });
 
   // 表示データの優先順位：propTags/propBoards > preloadedTags/preloadedBoards > フック取得データ
   const displayTags = isDeleted ? preloadedTags : propTags || fetchedTags;

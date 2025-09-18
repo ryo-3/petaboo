@@ -146,15 +146,6 @@ function TaskEditor({
   const originalId =
     task && task.id !== 0 ? task.originalId || task.id.toString() : null;
 
-  // デバッグ: タスクデータの状況を確認
-  if (teamMode && task) {
-    console.log("🏷️ [タスクデータ確認] チームモード:", {
-      taskId: task.id,
-      taskOriginalId: task.originalId,
-      taskKeys: Object.keys(task),
-      task: task,
-    });
-  }
   const { data: liveTaggings } = useTaggings({
     targetType: "task",
     targetOriginalId: originalId || undefined,
@@ -169,13 +160,6 @@ function TaskEditor({
   let teamOriginalId = originalId;
   if (task && task.id === 142 && (!task.originalId || task.originalId === "")) {
     teamOriginalId = "5";
-    if (teamMode) {
-      console.log("🏷️ [originalId修正] チームモード:", {
-        taskId: task.id,
-        originalId: originalId,
-        correctedTeamOriginalId: teamOriginalId,
-      });
-    }
   }
 
   const { data: liveTeamTaggings } = useTeamTaggings(teamId || 0, {

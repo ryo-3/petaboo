@@ -92,12 +92,12 @@ export function useSimpleTeamNotifier(
     }
   }, [teamName, getToken, queryClient]);
 
-  // 10秒間隔での通知チェック
+  // 1分間隔での通知チェック
   useEffect(() => {
     if (!teamName) return;
 
     // チェック間隔を決定（シンプル版）
-    const checkInterval = isVisible ? 10000 : null; // アクティブ: 10秒, バックグラウンド: 停止
+    const checkInterval = isVisible ? 60000 : null; // アクティブ: 1分, バックグラウンド: 停止
 
     // 共通のチェック関数
     const performCheck = async () => {

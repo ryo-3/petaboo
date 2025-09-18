@@ -197,7 +197,7 @@ function MemoEditor({
   const { data: liveTaggings } = useTaggings({
     targetType: "memo",
     targetOriginalId: originalId,
-    teamMode: !teamMode, // 個人モードのみでタグ取得
+    teamMode: teamMode, // チームモードフラグをそのまま渡す
   });
 
   // チーム用タグ情報を取得

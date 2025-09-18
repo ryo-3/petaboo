@@ -63,9 +63,11 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   // URLから統一的にactiveTabを取得
   const activeTab = getActiveTabFromUrl(pathname, searchParams);
 
-  // チームボード詳細ページかどうかを判定
+  // チームボード詳細ページかどうかを判定（/memo/ パスは除外）
   const isTeamBoardDetailPage =
-    pathname.includes("/team/") && pathname.includes("/board/");
+    pathname.includes("/team/") &&
+    pathname.includes("/board/") &&
+    !pathname.includes("/memo/");
 
   useEffect(() => {
     // チームボード詳細ページの場合はURLを記憶

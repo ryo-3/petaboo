@@ -584,8 +584,9 @@ function TaskScreen({
             onSelectTask={onSelectTask}
             onSaveComplete={(savedTask, isNewTask) => {
               if (isNewTask) {
-                // 連続作成のため、新規作成モードを維持
-                // タスク一覧は invalidateQueries により自動更新される
+                // 連続作成モードOFFの場合は作成されたタスクを選択状態にする
+                onSelectTask(savedTask);
+                setTaskScreenMode("view");
               }
             }}
             preloadedTags={tags || []}

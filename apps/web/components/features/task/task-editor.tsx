@@ -702,14 +702,24 @@ function TaskEditor({
       JSON.stringify(selectedBoardIds.sort()) !==
       JSON.stringify(originalData.boardIds.sort());
 
+    const titleChanged = title.trim() !== originalData.title.trim();
+    const descriptionChanged =
+      description.trim() !== originalData.description.trim();
+    const statusChanged = status !== originalData.status;
+    const priorityChanged = priority !== originalData.priority;
+    const categoryIdChanged = categoryId !== originalData.categoryId;
+    const boardCategoryIdChanged =
+      boardCategoryId !== originalData.boardCategoryId;
+    const dueDateChanged = dueDate !== originalData.dueDate;
+
     return (
-      title.trim() !== originalData.title.trim() ||
-      description.trim() !== originalData.description.trim() ||
-      status !== originalData.status ||
-      priority !== originalData.priority ||
-      categoryId !== originalData.categoryId ||
-      boardCategoryId !== originalData.boardCategoryId ||
-      dueDate !== originalData.dueDate ||
+      titleChanged ||
+      descriptionChanged ||
+      statusChanged ||
+      priorityChanged ||
+      categoryIdChanged ||
+      boardCategoryIdChanged ||
+      dueDateChanged ||
       boardsChanged
     );
   }, [

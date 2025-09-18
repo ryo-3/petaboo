@@ -581,6 +581,7 @@ function TaskScreen({
           <TaskEditor
             task={null}
             onClose={() => setTaskScreenMode("list")}
+            onSelectTask={onSelectTask}
             onSaveComplete={(savedTask, isNewTask) => {
               if (isNewTask) {
                 // 連続作成のため、新規作成モードを維持

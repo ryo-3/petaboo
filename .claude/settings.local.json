@@ -100,7 +100,8 @@
       "Bash(pgrep:*)",
       "Bash(apitest \"/teams/18/tags\")",
       "Bash(apitest \"/taggings?teamId=18&targetType=memo&targetOriginalId=377\")",
-      "Bash(apitest \"/tags?teamId=18\")"
+      "Bash(apitest \"/tags?teamId=18\")",
+      "Bash(apitest \"/teams/18/boards?status=normal\")"
     ],
     "deny": []
   }

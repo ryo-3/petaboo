@@ -53,6 +53,8 @@ export function createTeamBoardsAPI(app: AppType) {
                 completed: z.boolean(),
                 createdAt: z.number(),
                 updatedAt: z.number(),
+                memoCount: z.number(),
+                taskCount: z.number(),
               }),
             ),
           },
@@ -114,7 +116,62 @@ export function createTeamBoardsAPI(app: AppType) {
           .orderBy(desc(teamBoards.updatedAt));
       }
 
-      return c.json(boardsData);
+      // 各ボードのメモ・タスク数を計算
+      const boardsWithStats = await Promise.all(
+        boardsData.map(async (board) => {
+          // ボードアイテムを取得
+          const items = await db
+            .select()
+            .from(teamBoardItems)
+            .where(eq(teamBoardItems.boardId, board.id));
+
+          // メモとタスクの数をカウント
+          let memoCount = 0;
+          let taskCount = 0;
+
+          for (const item of items) {
+            if (item.itemType === "memo") {
+              // チームメモが削除されていないか確認
+              const memo = await db
+                .select()
+                .from(teamMemos)
+                .where(
+                  and(
+                    eq(teamMemos.originalId, item.originalId),
+                    eq(teamMemos.teamId, parseInt(teamId)),
+                  ),
+                )
+                .limit(1);
+              if (memo.length > 0) {
+                memoCount++;
+              }
+            } else {
+              // チームタスクが削除されていないか確認
+              const task = await db
+                .select()
+                .from(teamTasks)
+                .where(
+                  and(
+                    eq(teamTasks.originalId, item.originalId),
+                    eq(teamTasks.teamId, parseInt(teamId)),
+                  ),
+                )
+                .limit(1);
+              if (task.length > 0) {
+                taskCount++;
+              }
+            }
+          }
+
+          return {
+            ...board,
+            memoCount,
+            taskCount,
+          };
+        }),
+      );
+
+      return c.json(boardsWithStats);
     } catch (error) {
       console.error("チームボード取得エラー:", error);
       return c.json({ error: "サーバーエラーが発生しました" }, 500);
@@ -158,6 +215,8 @@ export function createTeamBoardsAPI(app: AppType) {
               completed: z.boolean(),
               createdAt: z.number(),
               updatedAt: z.number(),
+              memoCount: z.number(),
+              taskCount: z.number(),
             }),
           },
         },
@@ -205,7 +264,8 @@ export function createTeamBoardsAPI(app: AppType) {
       };
 
       const result = await db.insert(teamBoards).values(newBoard).returning();
-      return c.json(result[0], 201);
+      // 新規ボードなのでメモ・タスクカウントは0
+      return c.json({ ...result[0], memoCount: 0, taskCount: 0 }, 201);
     } catch (error) {
       console.error("チームボード作成エラー:", error);
       return c.json({ error: "サーバーエラーが発生しました" }, 500);

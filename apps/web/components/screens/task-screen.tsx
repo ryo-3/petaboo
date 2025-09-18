@@ -25,6 +25,7 @@ import { useBoards } from "@/src/hooks/use-boards";
 import { useTags } from "@/src/hooks/use-tags";
 import TagManagementModal from "@/components/ui/tag-management/tag-management-modal";
 import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
+import { useAllTeamTaggings } from "@/src/hooks/use-team-taggings";
 import type { DeletedTask, Task } from "@/src/types/task";
 import { getTaskDisplayOrder } from "@/src/utils/domUtils";
 import { createToggleHandlerWithTabClear } from "@/src/utils/toggleUtils";
@@ -103,6 +104,9 @@ function TaskScreen({
   // 全データ事前取得（ちらつき解消）
   const { data: allTaggings } = useAllTaggings();
   const { data: allBoardItems } = useAllBoardItems();
+
+  // チーム用タグデータ取得
+  const { data: allTeamTaggings } = useAllTeamTaggings(teamId || 0);
 
   // 選択モード管理
   const [selectionMode, setSelectionMode] = useState<"select" | "check">(
@@ -385,6 +389,7 @@ function TaskScreen({
   // 安全なデータ配布用
   const safeAllTaggings = allTaggings || [];
   const safeAllBoardItems = allBoardItems || [];
+  const safeAllTeamTaggings = allTeamTaggings || [];
 
   // 除外アイテムIDでフィルタリングされたタスク
   const filteredTasks =
@@ -496,9 +501,12 @@ function TaskScreen({
           )}
           onSelectTask={handleSelectTask}
           onSelectDeletedTask={handleSelectDeletedTask}
+          teamMode={teamMode}
+          teamId={teamId}
           allTags={tags || []}
           allBoards={boards || []}
           allTaggings={safeAllTaggings}
+          allTeamTaggings={safeAllTeamTaggings}
           allBoardItems={safeAllBoardItems}
         />
 

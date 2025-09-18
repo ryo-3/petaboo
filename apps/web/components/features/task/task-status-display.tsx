@@ -32,10 +32,13 @@ interface TaskStatusDisplayProps {
     direction: "asc" | "desc";
   }>;
   isBoard?: boolean; // ボード詳細画面での使用かどうか
+  teamMode?: boolean; // チームモードかどうか
+  teamId?: number; // チームID
 
   // 全データ事前取得（ちらつき解消）
   allTags?: Tag[];
   allTaggings?: Tagging[];
+  allTeamTaggings?: Tagging[]; // チーム用タグ情報
   allBoardItems?: Array<{
     boardId: number;
     boardName: string;
@@ -106,7 +109,10 @@ function TaskStatusDisplay({
   tagFilterMode = "include",
   sortOptions = [],
   isBoard = false,
+  teamMode = false,
+  teamId,
   allTaggings = [],
+  allTeamTaggings = [],
   allBoardItems = [],
 }: TaskStatusDisplayProps) {
   // ステータスでフィルター
@@ -121,8 +127,9 @@ function TaskStatusDisplay({
     return statusFilteredTasks.map((task) => {
       const originalId = task.originalId || task.id.toString();
 
-      // このタスクのタグを抽出
-      const taskTaggings = allTaggings.filter(
+      // このタスクのタグを抽出（チームモード対応）
+      const taggingsToUse = teamMode ? allTeamTaggings : allTaggings;
+      const taskTaggings = taggingsToUse.filter(
         (t: Tagging) =>
           t.targetType === "task" && t.targetOriginalId === originalId,
       );
@@ -157,7 +164,13 @@ function TaskStatusDisplay({
         boards: taskBoards,
       };
     });
-  }, [statusFilteredTasks, allTaggings, allBoardItems]);
+  }, [
+    statusFilteredTasks,
+    allTaggings,
+    allTeamTaggings,
+    allBoardItems,
+    teamMode,
+  ]);
 
   // ボードフィルターとタグフィルターを適用（tasksWithDataベース）
   const filteredTasksWithData = useMemo(() => {

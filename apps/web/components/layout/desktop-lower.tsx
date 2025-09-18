@@ -76,10 +76,15 @@ interface DesktopLowerProps {
   onSelectTask?: (task: Task) => void;
   onSelectDeletedTask?: (task: DeletedTask) => void;
 
+  // チームモード
+  teamMode?: boolean;
+  teamId?: number;
+
   // 全データ事前取得（ちらつき解消）
   allTags?: Tag[];
   allBoards?: Board[];
   allTaggings?: Tagging[];
+  allTeamTaggings?: Tagging[]; // チーム用タグ情報
   allBoardItems?: Array<{
     boardId: number;
     boardName: string;
@@ -126,9 +131,12 @@ function DesktopLower({
   onSelectDeletedMemo,
   onSelectTask,
   onSelectDeletedTask,
+  teamMode = false,
+  teamId,
   allTags,
   allBoards,
   allTaggings,
+  allTeamTaggings = [],
   allBoardItems,
 }: DesktopLowerProps) {
   // Loading state
@@ -220,8 +228,11 @@ function DesktopLower({
         boardFilterMode={boardFilterMode}
         selectedTagIds={selectedTagIds}
         tagFilterMode={tagFilterMode}
+        teamMode={teamMode}
+        teamId={teamId}
         allTags={allTags}
         allTaggings={allTaggings}
+        allTeamTaggings={allTeamTaggings}
         allBoardItems={allBoardItems}
       />
     );

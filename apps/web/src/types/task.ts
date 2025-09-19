@@ -13,6 +13,10 @@ export interface Task {
   boardCategoryId: number | null; // ボードカテゴリーID
   createdAt: number;
   updatedAt: number | null;
+  // チーム機能用（チームタスクのみ）
+  userId?: string; // 作成者のuser ID
+  teamId?: number; // チームID
+  createdBy?: string | null; // 作成者の表示名
 }
 
 export interface DeletedTask {
@@ -29,6 +33,10 @@ export interface DeletedTask {
   createdAt: number;
   updatedAt: number | null;
   deletedAt: number;
+  // チーム機能用（チーム削除済みタスクのみ）
+  userId?: string; // 作成者のuser ID
+  teamId?: number; // チームID
+  createdBy?: string | null; // 作成者の表示名
 }
 
 export interface CreateTaskData {

@@ -10,6 +10,10 @@ export interface Memo {
   createdAt: number;
   updatedAt?: number;
   tempId?: string;
+  // チーム機能用（チームメモのみ）
+  userId?: string; // 作成者のuser ID
+  teamId?: number; // チームID
+  createdBy?: string | null; // 作成者の表示名
 }
 
 export interface DeletedMemo {
@@ -22,6 +26,10 @@ export interface DeletedMemo {
   createdAt: number;
   updatedAt?: number;
   deletedAt: number;
+  // チーム機能用（チーム削除済みメモのみ）
+  userId?: string; // 作成者のuser ID
+  teamId?: number; // チームID
+  createdBy?: string | null; // 作成者の表示名
 }
 
 export interface CreateMemoData {

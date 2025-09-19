@@ -21,6 +21,8 @@ interface TaskCardProps {
   // 削除済み表示用
   preloadedTags?: Array<{ id: number; name: string; color?: string }>;
   preloadedBoards?: Array<{ id: number; name: string }>;
+  // チーム機能
+  teamMode?: boolean;
 }
 
 function TaskCard({
@@ -39,6 +41,7 @@ function TaskCard({
   boards,
   preloadedTags,
   preloadedBoards,
+  teamMode = false,
 }: TaskCardProps) {
   return (
     <BaseCard
@@ -61,6 +64,7 @@ function TaskCard({
         boards={boards}
         preloadedTags={preloadedTags}
         preloadedBoards={preloadedBoards}
+        teamMode={teamMode}
       />
     </BaseCard>
   );

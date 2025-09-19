@@ -50,6 +50,9 @@ interface TaskFormProps {
   isDeleted?: boolean;
   initialBoardId?: number;
   showBoardCategory?: boolean; // ボード詳細でのみtrue
+  // チーム機能
+  teamMode?: boolean;
+  createdBy?: string | null;
 }
 
 export interface TaskFormHandle {
@@ -83,6 +86,8 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
     isDeleted = false,
     initialBoardId,
     showBoardCategory = false,
+    teamMode = false,
+    createdBy,
   } = props;
   const titleInputRef = useRef<HTMLInputElement>(null);
   const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -205,6 +210,25 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
             />
           </div>
 
+          {/* チーム機能: 作成者情報 */}
+          {teamMode && createdBy && (
+            <div className="relative">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-medium text-gray-600 mb-1 mt-1">
+                  作成者
+                </label>
+              </div>
+              <div className="flex items-center gap-2 h-8 px-2">
+                <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                  {createdBy.charAt(0)}
+                </div>
+                <span className="text-sm text-gray-700 truncate">
+                  {createdBy}
+                </span>
+              </div>
+            </div>
+          )}
+
           {showBoardCategory && (
             <div className="w-80">
               <BoardCategorySelector
@@ -220,39 +244,37 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
         </div>
       </div>
 
-      {/* ボード名・タグ表示（メモエディターと同じ実装） */}
-      {(displayBoards.length > 0 || tags.length > 0) && (
-        <div className="mb-1 mt-2 min-h-[28px]">
-          <div className="flex flex-wrap gap-2">
-            {/* ボード名（選択中の状態を表示） */}
-            <BoardChips boards={displayBoards} variant="compact" />
-            {/* タグ */}
-            {tags.map((tag) => (
-              <div
-                key={tag.id}
-                className="inline-flex items-center px-2 py-1 rounded-md text-xs overflow-hidden"
-                style={{
-                  backgroundColor: tag.color || TAG_COLORS.background,
-                  color: TAG_COLORS.text,
-                }}
-              >
-                <span>{tag.name}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div
-        className={`flex-1 flex flex-col ${displayBoards.length === 0 && tags.length === 0 ? "mt-2" : ""}`}
-      >
+      <div className="flex-1 flex flex-col mt-2">
         <textarea
           ref={descriptionTextareaRef}
           placeholder={descriptionPlaceholder}
           value={description}
           onChange={(e) => onDescriptionChange(e.target.value)}
-          className={`w-full ${customHeight || "flex-1"} resize-none outline-none text-gray-700 leading-relaxed pr-1 pb-10 mb-2`}
+          className={`w-full ${customHeight || "flex-1"} resize-none outline-none text-gray-700 leading-relaxed pr-1 pb-2 mb-2`}
         />
+
+        {/* ボード名・タグ表示（テキストエリアの下に移動） */}
+        {(displayBoards.length > 0 || tags.length > 0) && (
+          <div className="mb-1 min-h-[28px]">
+            <div className="flex flex-wrap gap-2">
+              {/* ボード名（選択中の状態を表示） */}
+              <BoardChips boards={displayBoards} variant="compact" />
+              {/* タグ */}
+              {tags.map((tag) => (
+                <div
+                  key={tag.id}
+                  className="inline-flex items-center px-2 py-1 rounded-md text-xs overflow-hidden"
+                  style={{
+                    backgroundColor: tag.color || TAG_COLORS.background,
+                    color: TAG_COLORS.text,
+                  }}
+                >
+                  <span>{tag.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

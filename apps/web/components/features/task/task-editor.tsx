@@ -1413,7 +1413,7 @@ function TaskEditor({
 
   return (
     <>
-      <div data-task-editor className="flex flex-col h-full">
+      <div data-task-editor className="flex flex-col h-full relative">
         <BaseViewer
           item={tempTask}
           onClose={onClose}
@@ -1572,6 +1572,8 @@ function TaskEditor({
             showBoardCategory={isFromBoardDetail}
             isDeleted={isDeleted}
             initialBoardId={initialBoardId}
+            teamMode={teamMode}
+            createdBy={task?.createdBy}
           />
         </BaseViewer>
       </div>

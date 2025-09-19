@@ -16,6 +16,8 @@ interface MemoCardContentProps {
   // 全データ事前取得（ちらつき解消）
   preloadedTags?: Tag[];
   preloadedBoards?: Board[];
+  // チーム機能
+  teamMode?: boolean;
 }
 
 function MemoCardContent({
@@ -26,6 +28,7 @@ function MemoCardContent({
   showTags = false,
   preloadedTags = [],
   preloadedBoards = [],
+  teamMode = false,
 }: MemoCardContentProps) {
   const isDeleted = variant === "deleted";
   const deletedMemo = memo as DeletedMemo;
@@ -49,6 +52,13 @@ function MemoCardContent({
       >
         {displayTitle}
       </div>
+
+      {/* チーム機能: 作成者情報 */}
+      {teamMode && memo.createdBy && (
+        <div className="mb-2 text-xs text-gray-600">
+          作成者: {memo.createdBy}
+        </div>
+      )}
 
       {/* ボード名表示 */}
       {showBoardName && boards && boards.length > 0 && (

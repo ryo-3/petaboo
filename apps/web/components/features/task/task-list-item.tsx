@@ -31,6 +31,8 @@ interface TaskListItemProps {
   // 削除済み表示用の事前取得データ
   preloadedTags?: Array<{ id: number; name: string; color?: string }>;
   preloadedBoards?: Array<{ id: number; name: string }>;
+  // チーム機能
+  teamMode?: boolean;
 }
 
 function TaskListItem({
@@ -47,6 +49,7 @@ function TaskListItem({
   selectionMode = "select",
   tags = [],
   boards = [],
+  teamMode = false,
 }: TaskListItemProps) {
   const isDeleted = variant === "deleted";
   const deletedTask = task as DeletedTask;

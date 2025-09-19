@@ -23,6 +23,8 @@ interface TaskCardContentProps {
   // 削除済み表示用の事前取得データ
   preloadedTags?: Array<{ id: number; name: string; color?: string }>;
   preloadedBoards?: Array<{ id: number; name: string }>;
+  // チーム機能
+  teamMode?: boolean;
 }
 
 function TaskCardContent({
@@ -35,6 +37,7 @@ function TaskCardContent({
   boards: propBoards,
   preloadedTags,
   preloadedBoards,
+  teamMode = false,
 }: TaskCardContentProps) {
   const isDeleted = variant === "deleted";
   const deletedTask = task as DeletedTask;

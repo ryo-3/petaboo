@@ -5,6 +5,7 @@ import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { databaseMiddleware } from "../../middleware/database";
 import { teamTasks, teamDeletedTasks } from "../../db/schema/team/tasks";
 import { teamMembers } from "../../db/schema/team/teams";
+import { users } from "../../db/schema/users";
 import { generateOriginalId, generateUuid } from "../../utils/originalId";
 
 const app = new OpenAPIHono();
@@ -19,6 +20,7 @@ app.use("*", databaseMiddleware);
 const TeamTaskSchema = z.object({
   id: z.number(),
   teamId: z.number(),
+  userId: z.string(),
   originalId: z.string(),
   uuid: z.string().nullable(),
   title: z.string(),
@@ -30,6 +32,7 @@ const TeamTaskSchema = z.object({
   boardCategoryId: z.number().nullable(),
   createdAt: z.number(),
   updatedAt: z.number().nullable(),
+  createdBy: z.string().nullable(), // 作成者の表示名
 });
 
 const TeamTaskInputSchema = z.object({
@@ -129,6 +132,7 @@ app.openapi(
       .select({
         id: teamTasks.id,
         teamId: teamTasks.teamId,
+        userId: teamTasks.userId,
         originalId: teamTasks.originalId,
         uuid: teamTasks.uuid,
         title: teamTasks.title,
@@ -140,8 +144,10 @@ app.openapi(
         boardCategoryId: teamTasks.boardCategoryId,
         createdAt: teamTasks.createdAt,
         updatedAt: teamTasks.updatedAt,
+        createdBy: users.displayName, // 作成者の表示名
       })
       .from(teamTasks)
+      .leftJoin(users, eq(teamTasks.userId, users.userId))
       .where(eq(teamTasks.teamId, teamId))
       .orderBy(
         // 優先度順: high(3) > medium(2) > low(1)
@@ -278,10 +284,27 @@ app.openapi(
       .set({ originalId })
       .where(eq(teamTasks.id, result[0].id));
 
-    // 作成されたタスクを取得して返す
+    // 作成されたタスクを取得して返す（作成者情報付き）
     const newTask = await db
-      .select()
+      .select({
+        id: teamTasks.id,
+        teamId: teamTasks.teamId,
+        userId: teamTasks.userId,
+        originalId: teamTasks.originalId,
+        uuid: teamTasks.uuid,
+        title: teamTasks.title,
+        description: teamTasks.description,
+        status: teamTasks.status,
+        priority: teamTasks.priority,
+        dueDate: teamTasks.dueDate,
+        categoryId: teamTasks.categoryId,
+        boardCategoryId: teamTasks.boardCategoryId,
+        createdAt: teamTasks.createdAt,
+        updatedAt: teamTasks.updatedAt,
+        createdBy: users.displayName, // 作成者の表示名
+      })
       .from(teamTasks)
+      .leftJoin(users, eq(teamTasks.userId, users.userId))
       .where(eq(teamTasks.id, result[0].id))
       .get();
 
@@ -687,7 +710,7 @@ app.openapi(
 
       // チームタスクテーブルに復元
       const currentTimestamp = Math.floor(Date.now() / 1000);
-      const restoredTask = await db
+      const insertResult = await db
         .insert(teamTasks)
         .values({
           teamId: taskData.teamId,
@@ -704,14 +727,38 @@ app.openapi(
           createdAt: taskData.createdAt,
           updatedAt: currentTimestamp,
         })
-        .returning();
+        .returning({ id: teamTasks.id });
+
+      // 復元されたタスクを作成者情報付きで取得
+      const restoredTask = await db
+        .select({
+          id: teamTasks.id,
+          teamId: teamTasks.teamId,
+          userId: teamTasks.userId,
+          originalId: teamTasks.originalId,
+          uuid: teamTasks.uuid,
+          title: teamTasks.title,
+          description: teamTasks.description,
+          status: teamTasks.status,
+          priority: teamTasks.priority,
+          dueDate: teamTasks.dueDate,
+          categoryId: teamTasks.categoryId,
+          boardCategoryId: teamTasks.boardCategoryId,
+          createdAt: teamTasks.createdAt,
+          updatedAt: teamTasks.updatedAt,
+          createdBy: users.displayName, // 作成者の表示名
+        })
+        .from(teamTasks)
+        .leftJoin(users, eq(teamTasks.userId, users.userId))
+        .where(eq(teamTasks.id, insertResult[0].id))
+        .get();
 
       // 削除済みテーブルから削除
       await db
         .delete(teamDeletedTasks)
         .where(eq(teamDeletedTasks.id, taskData.id));
 
-      return c.json(restoredTask[0]);
+      return c.json(restoredTask);
     } catch (error) {
       console.error("チームタスク復元エラー:", error);
       return c.json({ error: "Internal server error" }, 500);

@@ -5,6 +5,7 @@ import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { databaseMiddleware } from "../../middleware/database";
 import { teamMemos, teamDeletedMemos } from "../../db/schema/team/memos";
 import { teamMembers } from "../../db/schema/team/teams";
+import { users } from "../../db/schema/users";
 import { generateOriginalId, generateUuid } from "../../utils/originalId";
 
 const app = new OpenAPIHono();
@@ -19,12 +20,14 @@ app.use("*", databaseMiddleware);
 const TeamMemoSchema = z.object({
   id: z.number(),
   teamId: z.number(),
+  userId: z.string(),
   originalId: z.string(),
   uuid: z.string().nullable(),
   title: z.string(),
   content: z.string().nullable(),
   createdAt: z.number(),
   updatedAt: z.number().nullable(),
+  createdBy: z.string().nullable(), // 作成者の表示名
 });
 
 const TeamMemoInputSchema = z.object({
@@ -102,14 +105,17 @@ app.openapi(
       .select({
         id: teamMemos.id,
         teamId: teamMemos.teamId,
+        userId: teamMemos.userId,
         originalId: teamMemos.originalId,
         uuid: teamMemos.uuid,
         title: teamMemos.title,
         content: teamMemos.content,
         createdAt: teamMemos.createdAt,
         updatedAt: teamMemos.updatedAt,
+        createdBy: users.displayName, // 作成者の表示名
       })
       .from(teamMemos)
+      .leftJoin(users, eq(teamMemos.userId, users.userId))
       .where(eq(teamMemos.teamId, teamId))
       .orderBy(desc(teamMemos.updatedAt), desc(teamMemos.createdAt));
 
@@ -219,17 +225,24 @@ app.openapi(
       .set({ originalId, updatedAt: createdAt })
       .where(eq(teamMemos.id, result[0].id));
 
-    // 作成されたメモの完全なオブジェクトを返す
-    const newMemo = {
-      id: result[0].id,
-      teamId,
-      originalId,
-      uuid: generateUuid() as string | null,
-      title,
-      content: content || null,
-      createdAt,
-      updatedAt: createdAt as number | null,
-    };
+    // 作成されたメモを作成者情報付きで取得
+    const newMemo = await db
+      .select({
+        id: teamMemos.id,
+        teamId: teamMemos.teamId,
+        userId: teamMemos.userId,
+        originalId: teamMemos.originalId,
+        uuid: teamMemos.uuid,
+        title: teamMemos.title,
+        content: teamMemos.content,
+        createdAt: teamMemos.createdAt,
+        updatedAt: teamMemos.updatedAt,
+        createdBy: users.displayName, // 作成者の表示名
+      })
+      .from(teamMemos)
+      .leftJoin(users, eq(teamMemos.userId, users.userId))
+      .where(eq(teamMemos.id, result[0].id))
+      .get();
 
     return c.json(newMemo, 200);
   },
@@ -634,7 +647,7 @@ app.openapi(
 
       // チームメモテーブルに復元
       const currentTimestamp = Math.floor(Date.now() / 1000);
-      const restoredMemo = await db
+      const insertResult = await db
         .insert(teamMemos)
         .values({
           teamId: memoData.teamId,
@@ -646,14 +659,33 @@ app.openapi(
           createdAt: memoData.createdAt,
           updatedAt: currentTimestamp,
         })
-        .returning();
+        .returning({ id: teamMemos.id });
+
+      // 復元されたメモを作成者情報付きで取得
+      const restoredMemo = await db
+        .select({
+          id: teamMemos.id,
+          teamId: teamMemos.teamId,
+          userId: teamMemos.userId,
+          originalId: teamMemos.originalId,
+          uuid: teamMemos.uuid,
+          title: teamMemos.title,
+          content: teamMemos.content,
+          createdAt: teamMemos.createdAt,
+          updatedAt: teamMemos.updatedAt,
+          createdBy: users.displayName, // 作成者の表示名
+        })
+        .from(teamMemos)
+        .leftJoin(users, eq(teamMemos.userId, users.userId))
+        .where(eq(teamMemos.id, insertResult[0].id))
+        .get();
 
       // 削除済みテーブルから削除
       await db
         .delete(teamDeletedMemos)
         .where(eq(teamDeletedMemos.id, memoData.id));
 
-      return c.json(restoredMemo[0]);
+      return c.json(restoredMemo);
     } catch (error) {
       console.error("チームメモ復元エラー:", error);
       return c.json({ error: "Internal server error" }, 500);

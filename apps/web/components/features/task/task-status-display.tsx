@@ -304,6 +304,7 @@ function TaskStatusDisplay({
         selectionMode={selectionMode}
         tags={taskTags}
         boards={taskBoards}
+        teamMode={teamMode}
       />
     );
 

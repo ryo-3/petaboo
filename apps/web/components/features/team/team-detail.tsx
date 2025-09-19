@@ -1,44 +1,43 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
-import { Card } from "@/components/ui/card";
+import NotificationList from "@/components/features/notifications/notification-list";
+import { TeamSettings } from "@/components/features/team/team-settings";
+import WarningIcon from "@/components/icons/warning-icon";
+import { DisplayNameModal } from "@/components/modals/display-name-modal";
+import BoardScreen from "@/components/screens/board-screen";
+import MemoScreen from "@/components/screens/memo-screen";
+import SearchScreen from "@/components/screens/search-screen";
+import SettingsScreen from "@/components/screens/settings-screen";
+import TaskScreen from "@/components/screens/task-screen";
 import { Button } from "@/components/ui/button";
+import { BackButton } from "@/components/ui/buttons/back-button";
+import { Card } from "@/components/ui/card";
+import Modal from "@/components/ui/modals/modal";
+import { usePageVisibility } from "@/src/contexts/PageVisibilityContext";
+import {
+  useDeleteInviteUrl,
+  useGenerateInviteCode,
+  useGetInviteUrl,
+} from "@/src/hooks/use-generate-invite-code";
+import { useJoinRequests } from "@/src/hooks/use-join-requests";
+import { useKickMember } from "@/src/hooks/use-kick-member";
+import { useManageJoinRequest } from "@/src/hooks/use-manage-join-request";
+import { useSimpleTeamNotifier } from "@/src/hooks/use-simple-team-notifier";
+import { useTeamDetail } from "@/src/hooks/use-team-detail";
+import { useUserInfo } from "@/src/hooks/use-user-info";
+import type { DeletedMemo, Memo } from "@/src/types/memo";
+import type { DeletedTask, Task } from "@/src/types/task";
+import { formatDateOnly } from "@/src/utils/formatDate";
+import { getUserAvatarColor } from "@/src/utils/userUtils";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   CopyIcon,
   RefreshCcwIcon,
-  TrashIcon,
   Settings as SettingsIcon,
-  Bell,
+  TrashIcon,
 } from "lucide-react";
-import { BackButton } from "@/components/ui/buttons/back-button";
-import { useTeamDetail } from "@/src/hooks/use-team-detail";
-import {
-  useGenerateInviteCode,
-  useGetInviteUrl,
-  useDeleteInviteUrl,
-} from "@/src/hooks/use-generate-invite-code";
-import { useUserInfo } from "@/src/hooks/use-user-info";
-import { useJoinRequests } from "@/src/hooks/use-join-requests";
-import { useManageJoinRequest } from "@/src/hooks/use-manage-join-request";
-import { useKickMember } from "@/src/hooks/use-kick-member";
-import { useSimpleTeamNotifier } from "@/src/hooks/use-simple-team-notifier";
-import MemoScreen from "@/components/screens/memo-screen";
-import TaskScreen from "@/components/screens/task-screen";
-import BoardScreen from "@/components/screens/board-screen";
-import SettingsScreen from "@/components/screens/settings-screen";
-import SearchScreen from "@/components/screens/search-screen";
-import { DisplayNameModal } from "@/components/modals/display-name-modal";
-import Modal from "@/components/ui/modals/modal";
-import WarningIcon from "@/components/icons/warning-icon";
-import { TeamSettings } from "@/components/features/team/team-settings";
-import NotificationList from "@/components/features/notifications/notification-list";
-import type { Memo, DeletedMemo } from "@/src/types/memo";
-import type { Task, DeletedTask } from "@/src/types/task";
-import { getUserAvatarColor } from "@/src/utils/userUtils";
-import { usePageVisibility } from "@/src/contexts/PageVisibilityContext";
-import { formatDateOnly } from "@/src/utils/formatDate";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 
 interface TeamDetailProps {
   customUrl: string;
@@ -467,7 +466,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
   return (
     <div className="flex h-full bg-white overflow-hidden">
-      <div className="w-full pt-4 pl-5 pr-5 flex flex-col h-full">
+      <div className="w-full flex flex-col h-full">
         {/* ヘッダー */}
         {(activeTab === "overview" || activeTab === "team-list") && (
           <div className="mb-4 flex-shrink-0">
@@ -750,7 +749,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
           {/* メモタブ */}
           {activeTab === "memos" && (
-            <div className="h-full -mt-4 -ml-5 -mr-5">
+            <div className="h-full">
               <MemoScreen
                 selectedMemo={selectedMemo}
                 onSelectMemo={handleSelectMemo}
@@ -793,7 +792,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
           {/* タスクタブ */}
           {activeTab === "tasks" && (
-            <div className="h-full -mt-4 -ml-5 -mr-5">
+            <div className="h-full">
               <TaskScreen
                 selectedTask={selectedTask}
                 onSelectTask={handleSelectTask}
@@ -813,7 +812,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
           {/* ボードタブ */}
           {activeTab === "boards" && (
-            <div className="h-full -mt-4 -ml-5 -mr-5">
+            <div className="h-full">
               <BoardScreen
                 teamMode={true}
                 teamId={team.id}
@@ -1025,21 +1024,21 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
           {/* 設定タブ */}
           {activeTab === "settings" && (
-            <div className="h-full -mt-4 -ml-5 -mr-5">
+            <div className="h-full">
               <SettingsScreen />
             </div>
           )}
 
           {/* チーム設定タブ */}
           {activeTab === "team-settings" && (
-            <div className="h-full -mt-4 -ml-5 -mr-5">
+            <div className="h-full">
               <TeamSettings customUrl={customUrl} />
             </div>
           )}
 
           {/* 検索タブ */}
           {activeTab === "search" && (
-            <div className="h-full -mt-4 -ml-5 -mr-5">
+            <div className="h-full">
               <SearchScreen
                 onSelectMemo={handleSelectMemo}
                 onSelectTask={handleSelectTask}

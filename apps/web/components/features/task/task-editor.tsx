@@ -43,6 +43,11 @@ import type { Board } from "@/src/types/board";
 import { useCallback, useEffect, useState, useMemo, memo, useRef } from "react";
 import { useTaskDelete } from "./use-task-delete";
 import { useDeletedTaskActions } from "./use-deleted-task-actions";
+import ShareUrlButton from "@/components/ui/buttons/share-url-button";
+import {
+  generateTeamShareUrl,
+  extractTeamNameFromUrl,
+} from "@/src/utils/urlUtils";
 
 interface TaskEditorProps {
   task?: Task | DeletedTask | null;
@@ -892,6 +897,20 @@ function TaskEditor({
     handleBoardChange(boardIds.map(String));
   };
 
+  // チーム機能でのURL共有用
+  const shareUrl = useMemo(() => {
+    if (!teamMode || !task || task.id === 0) return null;
+
+    const teamName = extractTeamNameFromUrl();
+    if (!teamName) return null;
+
+    return generateTeamShareUrl({
+      teamName,
+      tab: "tasks",
+      itemId: task.id,
+    });
+  }, [teamMode, task]);
+
   const handleSave = useCallback(async () => {
     if (!title.trim() || isSaving || isDeleted) return;
 
@@ -1450,6 +1469,14 @@ function TaskEditor({
                   tags={localTags}
                   disabled={isDeleted}
                 />
+                {/* チーム機能でのURL共有ボタン */}
+                {shareUrl && (
+                  <ShareUrlButton
+                    url={shareUrl}
+                    className=""
+                    label="タスクのURLをコピーして共有"
+                  />
+                )}
               </div>
               <div className="flex items-center gap-1">
                 {isDeleted && task && (

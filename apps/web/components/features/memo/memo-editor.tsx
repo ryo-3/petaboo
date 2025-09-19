@@ -30,6 +30,11 @@ import {
 import { useTeamTags } from "@/src/hooks/use-team-tags";
 import { useDeletedMemoActions } from "./use-deleted-memo-actions";
 import { useQueryClient } from "@tanstack/react-query";
+import ShareUrlButton from "@/components/ui/buttons/share-url-button";
+import {
+  generateTeamShareUrl,
+  extractTeamNameFromUrl,
+} from "@/src/utils/urlUtils";
 import BoardChips from "@/components/ui/chips/board-chips";
 import DateInfo from "@/components/shared/date-info";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
@@ -366,6 +371,20 @@ function MemoEditor({
 
     return JSON.stringify(currentTagIds) !== JSON.stringify(localTagIds);
   }, [currentTags, localTags, memo]);
+
+  // チーム機能でのURL共有用
+  const shareUrl = useMemo(() => {
+    if (!teamMode || !memo || memo.id === 0) return null;
+
+    const teamName = extractTeamNameFromUrl();
+    if (!teamName) return null;
+
+    return generateTeamShareUrl({
+      teamName,
+      tab: "memos",
+      itemId: memo.id,
+    });
+  }, [teamMode, memo]);
 
   // タグの差分を計算して一括更新する関数
   const updateTaggings = useCallback(
@@ -733,6 +752,14 @@ function MemoEditor({
                   tags={localTags}
                   disabled={isDeleted}
                 />
+                {/* チーム機能でのURL共有ボタン */}
+                {shareUrl && (
+                  <ShareUrlButton
+                    url={shareUrl}
+                    className=""
+                    label="メモのURLをコピーして共有"
+                  />
+                )}
               </div>
               <div className="flex items-center gap-1">
                 {isDeleted && deletedMemo && (

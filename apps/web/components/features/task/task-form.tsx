@@ -3,13 +3,12 @@
 import CategorySelector from "@/components/features/category/category-selector";
 import DateInput from "@/components/ui/inputs/date-input";
 import CustomSelector from "@/components/ui/selectors/custom-selector";
-import BoardChips from "@/components/ui/chips/board-chips";
+import BoardTagDisplay from "@/components/shared/board-tag-display";
 import BoardCategorySelector from "@/components/features/board-categories/board-category-selector";
 import type { Task } from "@/src/types/task";
 import type { Tag } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
 import type { BoardCategory } from "@/src/types/board-categories";
-import { TAG_COLORS } from "@/src/constants/colors";
 import {
   getPriorityEditorColor,
   getPriorityText,
@@ -250,31 +249,16 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
           placeholder={descriptionPlaceholder}
           value={description}
           onChange={(e) => onDescriptionChange(e.target.value)}
-          className={`w-full ${customHeight || "flex-1"} resize-none outline-none text-gray-700 leading-relaxed pr-1 pb-2 mb-2`}
+          className={`w-full ${customHeight || "flex-1"} resize-none outline-none text-gray-700 leading-relaxed pr-1 pb-2 mb-2 mt-2`}
         />
 
         {/* ボード名・タグ表示（テキストエリアの下に移動） */}
-        {(displayBoards.length > 0 || tags.length > 0) && (
-          <div className="mb-1 min-h-[28px]">
-            <div className="flex flex-wrap gap-2">
-              {/* ボード名（選択中の状態を表示） */}
-              <BoardChips boards={displayBoards} variant="compact" />
-              {/* タグ */}
-              {tags.map((tag) => (
-                <div
-                  key={tag.id}
-                  className="inline-flex items-center px-2 py-1 rounded-md text-xs overflow-hidden"
-                  style={{
-                    backgroundColor: tag.color || TAG_COLORS.background,
-                    color: TAG_COLORS.text,
-                  }}
-                >
-                  <span>{tag.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <BoardTagDisplay
+          boards={displayBoards}
+          tags={tags}
+          spacing="normal"
+          showWhen="has-content"
+        />
       </div>
     </div>
   );

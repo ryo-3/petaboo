@@ -13,7 +13,6 @@ import BoardChangeModal from "@/components/ui/modals/board-change-modal";
 import { BulkDeleteConfirmation } from "@/components/ui/modals/confirmation-modal";
 import TagTriggerButton from "@/components/features/tags/tag-trigger-button";
 import TagSelectionModal from "@/components/ui/modals/tag-selection-modal";
-import { TAG_COLORS } from "@/src/constants/colors";
 import { useSimpleMemoSave } from "@/src/hooks/use-simple-memo-save";
 import { useTeamItemBoards } from "@/src/hooks/use-boards";
 import {
@@ -35,6 +34,7 @@ import {
   generateTeamShareUrl,
   extractTeamNameFromUrl,
 } from "@/src/utils/urlUtils";
+import BoardTagDisplay from "@/components/shared/board-tag-display";
 import BoardChips from "@/components/ui/chips/board-chips";
 import DateInfo from "@/components/shared/date-info";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
@@ -816,29 +816,6 @@ function MemoEditor({
             </div>
           }
         >
-          {/* ボード名・タグ一覧をテキストエリアの上に配置（常に固定高さでちらつき防止） */}
-          <div className="mb-1 mt-2 min-h-[28px]">
-            <div className="flex flex-wrap gap-2">
-              {/* ボード名（既存メモの場合のみ表示） */}
-              {memo && memo.id !== 0 && (
-                <BoardChips boards={displayBoards} variant="compact" />
-              )}
-              {/* タグ */}
-              {localTags.map((tag) => (
-                <div
-                  key={tag.id}
-                  className="inline-flex items-center px-2 py-1 rounded-md text-xs overflow-hidden"
-                  style={{
-                    backgroundColor: tag.color || TAG_COLORS.background,
-                    color: TAG_COLORS.text,
-                  }}
-                >
-                  <span>{tag.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
           <textarea
             ref={textareaRef}
             placeholder={isDeleted ? "削除済みのメモです" : "入力..."}
@@ -855,11 +832,19 @@ function MemoEditor({
                   }
             }
             readOnly={isDeleted}
-            className={`w-full ${customHeight || "flex-1"} resize-none outline-none leading-relaxed font-medium pb-10 mb-2 pr-1 ${
+            className={`w-full ${customHeight || "flex-1"} resize-none outline-none leading-relaxed font-medium pb-10 mb-2 pr-1 mt-2 ${
               isDeleted
                 ? "text-red-500 bg-red-50 cursor-not-allowed"
                 : "text-gray-500"
             }`}
+          />
+
+          {/* ボード名・タグ一覧をテキストエリアの下に配置（TaskFormと統一） */}
+          <BoardTagDisplay
+            boards={memo && memo.id !== 0 ? displayBoards : []}
+            tags={localTags}
+            spacing="normal"
+            showWhen="has-content"
           />
         </BaseViewer>
       </div>

@@ -440,7 +440,9 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   }
 
   return (
-    <div className="flex h-full bg-white overflow-hidden">
+    <div
+      className={`flex h-full bg-white overflow-hidden ${activeTab === "overview" || activeTab === "team-list" ? "pt-3 pl-5 pr-2" : ""}`}
+    >
       <div className="w-full flex flex-col h-full">
         {/* ヘッダー */}
         {(activeTab === "overview" || activeTab === "team-list") && (
@@ -496,7 +498,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         >
           {/* タブコンテンツ */}
           {activeTab === "overview" && (
-            <>
+            <div className="">
               {showInvitePanel ? (
                 /* 招待パネル */
                 <div>
@@ -719,7 +721,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                   <NotificationList teamName={customUrl} />
                 </div>
               )}
-            </>
+            </div>
           )}
 
           {/* メモタブ */}

@@ -50,6 +50,13 @@
       "when": 1758288386318,
       "tag": "0006_white_sebastian_shaw",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1758429552186,
+      "tag": "0007_jittery_sleepwalker",
+      "breakpoints": true
     }
   ]
 }

@@ -558,6 +558,7 @@ export async function createTeam(c: any) {
       teamId: newTeam.id,
       userId: auth.userId,
       role: "admin",
+      avatarColor: generateAvatarColor(auth.userId), // 色を自動生成
       joinedAt: now,
     });
 
@@ -848,6 +849,7 @@ export async function joinTeam(c: any) {
       teamId,
       userId: auth.userId,
       role: "member",
+      avatarColor: generateAvatarColor(auth.userId), // 色を自動生成
       joinedAt: now,
     });
 
@@ -1104,6 +1106,7 @@ export async function acceptInvitation(c: any) {
       teamId: invitation.teamId,
       userId: auth.userId,
       role: "member", // 招待経由は常にmemberで参加
+      avatarColor: generateAvatarColor(auth.userId), // 色を自動生成
       joinedAt: Math.floor(Date.now() / 1000),
     });
 

@@ -16,6 +16,7 @@ import TagTriggerButton from "@/components/features/tags/tag-trigger-button";
 import TagSelectionModal from "@/components/ui/modals/tag-selection-modal";
 import DateInfo from "@/components/shared/date-info";
 import CreatorAvatar from "@/components/shared/creator-avatar";
+import type { TeamCreatorProps } from "@/src/types/creator";
 import TaskForm, { TaskFormHandle } from "./task-form";
 import { useUpdateTask, useCreateTask } from "@/src/hooks/use-tasks";
 import {
@@ -83,7 +84,7 @@ interface TaskEditorProps {
     addedAt: number;
   }>;
 
-  // チーム機能
+  // チーム機能と作成者情報
   teamMode?: boolean;
   teamId?: number;
   createdBy?: string | null;

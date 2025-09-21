@@ -7,6 +7,10 @@ import { teamMemos, teamDeletedMemos } from "../../db/schema/team/memos";
 import { teamMembers } from "../../db/schema/team/teams";
 import { users } from "../../db/schema/users";
 import { generateOriginalId, generateUuid } from "../../utils/originalId";
+import {
+  getTeamMemoMemberJoin,
+  getTeamMemoSelectFields,
+} from "../../utils/teamJoinUtils";
 
 const app = new OpenAPIHono();
 
@@ -103,27 +107,9 @@ app.openapi(
     }
 
     const result = await db
-      .select({
-        id: teamMemos.id,
-        teamId: teamMemos.teamId,
-        userId: teamMemos.userId,
-        originalId: teamMemos.originalId,
-        uuid: teamMemos.uuid,
-        title: teamMemos.title,
-        content: teamMemos.content,
-        createdAt: teamMemos.createdAt,
-        updatedAt: teamMemos.updatedAt,
-        createdBy: teamMembers.displayName, // 作成者の表示名
-        avatarColor: teamMembers.avatarColor, // 作成者のアバター色
-      })
+      .select(getTeamMemoSelectFields())
       .from(teamMemos)
-      .leftJoin(
-        teamMembers,
-        and(
-          eq(teamMemos.userId, teamMembers.userId),
-          eq(teamMemos.teamId, teamMembers.teamId),
-        ),
-      )
+      .leftJoin(teamMembers, getTeamMemoMemberJoin())
       .where(eq(teamMemos.teamId, teamId))
       .orderBy(desc(teamMemos.updatedAt), desc(teamMemos.createdAt));
 
@@ -235,27 +221,9 @@ app.openapi(
 
     // 作成されたメモを作成者情報付きで取得
     const newMemo = await db
-      .select({
-        id: teamMemos.id,
-        teamId: teamMemos.teamId,
-        userId: teamMemos.userId,
-        originalId: teamMemos.originalId,
-        uuid: teamMemos.uuid,
-        title: teamMemos.title,
-        content: teamMemos.content,
-        createdAt: teamMemos.createdAt,
-        updatedAt: teamMemos.updatedAt,
-        createdBy: teamMembers.displayName, // 作成者の表示名
-        avatarColor: teamMembers.avatarColor, // 作成者のアバター色
-      })
+      .select(getTeamMemoSelectFields())
       .from(teamMemos)
-      .leftJoin(
-        teamMembers,
-        and(
-          eq(teamMemos.userId, teamMembers.userId),
-          eq(teamMemos.teamId, teamMembers.teamId),
-        ),
-      )
+      .leftJoin(teamMembers, getTeamMemoMemberJoin())
       .where(eq(teamMemos.id, result[0].id))
       .get();
 
@@ -678,27 +646,9 @@ app.openapi(
 
       // 復元されたメモを作成者情報付きで取得
       const restoredMemo = await db
-        .select({
-          id: teamMemos.id,
-          teamId: teamMemos.teamId,
-          userId: teamMemos.userId,
-          originalId: teamMemos.originalId,
-          uuid: teamMemos.uuid,
-          title: teamMemos.title,
-          content: teamMemos.content,
-          createdAt: teamMemos.createdAt,
-          updatedAt: teamMemos.updatedAt,
-          createdBy: teamMembers.displayName, // 作成者の表示名
-          avatarColor: teamMembers.avatarColor, // 作成者のアバター色
-        })
+        .select(getTeamMemoSelectFields())
         .from(teamMemos)
-        .leftJoin(
-          teamMembers,
-          and(
-            eq(teamMemos.userId, teamMembers.userId),
-            eq(teamMemos.teamId, teamMembers.teamId),
-          ),
-        )
+        .leftJoin(teamMembers, getTeamMemoMemberJoin())
         .where(eq(teamMemos.id, insertResult[0].id))
         .get();
 

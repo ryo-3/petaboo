@@ -39,6 +39,7 @@ import BoardChips from "@/components/ui/chips/board-chips";
 import UserMemberCard from "@/components/shared/user-member-card";
 import DateInfo from "@/components/shared/date-info";
 import CreatorAvatar from "@/components/shared/creator-avatar";
+import type { TeamCreatorProps } from "@/src/types/creator";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Tag, Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
@@ -72,12 +73,12 @@ interface MemoEditorProps {
     addedAt: number;
   }>;
 
-  // チーム機能
+  // チーム機能と作成者情報
   teamMode?: boolean;
   teamId?: number;
   createdBy?: string | null;
-  createdByUserId?: string | null; // 作成者のユーザーID
-  createdByAvatarColor?: string | null; // 作成者のアバター色
+  createdByUserId?: string | null;
+  createdByAvatarColor?: string | null;
 }
 
 function MemoEditor({

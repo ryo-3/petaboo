@@ -1,8 +1,6 @@
-interface ArrowUpIconProps {
-  className?: string;
-}
+import { BaseIconProps } from "@/src/types/icon";
 
-function ArrowUpIcon({ className = "w-2.5 h-3" }: ArrowUpIconProps) {
+function ArrowUpIcon({ className = "w-2.5 h-3" }: BaseIconProps) {
   return (
     <svg
       className={className}

@@ -1,8 +1,6 @@
-interface HomeIconProps {
-  className?: string;
-}
+import { BaseIconProps } from "@/src/types/icon";
 
-function HomeIcon({ className = "w-4 h-4" }: HomeIconProps) {
+function HomeIcon({ className = "w-4 h-4" }: BaseIconProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

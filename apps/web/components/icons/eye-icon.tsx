@@ -1,8 +1,6 @@
-interface EyeIconProps {
-  className?: string;
-}
+import { BaseIconProps } from "@/src/types/icon";
 
-function EyeIcon({ className = "size-4" }: EyeIconProps) {
+function EyeIcon({ className = "size-4" }: BaseIconProps) {
   return (
     <svg
       className={className}

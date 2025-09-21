@@ -1,8 +1,6 @@
-interface PhotoIconProps {
-  className?: string;
-}
+import { BaseIconProps } from "@/src/types/icon";
 
-function PhotoIcon({ className = "w-4 h-4" }: PhotoIconProps) {
+function PhotoIcon({ className = "w-4 h-4" }: BaseIconProps) {
   return (
     <svg
       className={className}

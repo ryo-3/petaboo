@@ -110,7 +110,9 @@
       "Bash(apitest \"/taggings?teamId=18&targetType=task&targetOriginalId=255\")",
       "Bash(apitest \"/teams/18/memos\" \"GET\")",
       "Bash(python3:*)",
-      "Bash(apitest \"/teams/moricrew\")"
+      "Bash(apitest \"/teams/moricrew\")",
+      "Bash(/home/ryosuke/petaboo/update-icons.sh:*)",
+      "Bash(/home/ryosuke/petaboo/fix-icons.sh:*)"
     ],
     "deny": []
   }

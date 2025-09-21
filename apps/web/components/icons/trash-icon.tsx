@@ -1,5 +1,6 @@
-interface TrashIconProps {
-  className?: string;
+import { BaseIconProps } from "@/src/types/icon";
+
+interface TrashIconProps extends BaseIconProps {
   isLidOpen?: boolean;
 }
 

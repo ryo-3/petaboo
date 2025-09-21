@@ -1,8 +1,6 @@
-interface SettingsIconProps {
-  className?: string;
-}
+import { BaseIconProps } from "@/src/types/icon";
 
-function SettingsIcon({ className = "w-5 h-5" }: SettingsIconProps) {
+function SettingsIcon({ className = "w-5 h-5" }: BaseIconProps) {
   return (
     <svg
       className={className}

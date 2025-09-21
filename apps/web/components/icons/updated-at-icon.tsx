@@ -1,8 +1,6 @@
-interface UpdatedAtIconProps {
-  className?: string;
-}
+import { BaseIconProps } from "@/src/types/icon";
 
-function UpdatedAtIcon({ className = "size-4" }: UpdatedAtIconProps) {
+function UpdatedAtIcon({ className = "size-4" }: BaseIconProps) {
   return (
     <svg
       className={className}

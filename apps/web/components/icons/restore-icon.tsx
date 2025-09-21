@@ -1,8 +1,6 @@
-interface RestoreIconProps {
-  className?: string;
-}
+import { BaseIconProps } from "@/src/types/icon";
 
-function RestoreIcon({ className = "w-4 h-4" }: RestoreIconProps) {
+function RestoreIcon({ className = "w-4 h-4" }: BaseIconProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

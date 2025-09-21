@@ -1,8 +1,6 @@
-interface MemoIconProps {
-  className?: string;
-}
+import { BaseIconProps } from "@/src/types/icon";
 
-function MemoIcon({ className = "w-5 h-5" }: MemoIconProps) {
+function MemoIcon({ className = "w-5 h-5" }: BaseIconProps) {
   return (
     <svg
       className={className}

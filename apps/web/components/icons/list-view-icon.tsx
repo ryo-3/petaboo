@@ -1,8 +1,6 @@
-interface ListViewIconProps {
-  className?: string;
-}
+import { BaseIconProps } from "@/src/types/icon";
 
-function ListViewIcon({ className = "size-4" }: ListViewIconProps) {
+function ListViewIcon({ className = "size-4" }: BaseIconProps) {
   return (
     <svg
       className={className}

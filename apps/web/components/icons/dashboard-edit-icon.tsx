@@ -1,8 +1,6 @@
-interface DashboardEditIconProps {
-  className?: string;
-}
+import { BaseIconProps } from "@/src/types/icon";
 
-function DashboardEditIcon({ className = "w-5 h-5" }: DashboardEditIconProps) {
+function DashboardEditIcon({ className = "w-5 h-5" }: BaseIconProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

@@ -1,8 +1,6 @@
-interface EditIconProps {
-  className?: string;
-}
+import { BaseIconProps } from "@/src/types/icon";
 
-function EditIcon({ className = "w-5 h-5" }: EditIconProps) {
+function EditIcon({ className = "w-5 h-5" }: BaseIconProps) {
   return (
     <svg
       className={className}

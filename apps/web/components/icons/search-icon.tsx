@@ -1,8 +1,6 @@
-interface SearchIconProps {
-  className?: string;
-}
+import { BaseIconProps } from "@/src/types/icon";
 
-function SearchIcon({ className = "w-5 h-5" }: SearchIconProps) {
+function SearchIcon({ className = "w-5 h-5" }: BaseIconProps) {
   return (
     <svg
       className={className}

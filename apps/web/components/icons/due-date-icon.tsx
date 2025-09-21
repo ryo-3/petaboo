@@ -1,8 +1,6 @@
-interface DueDateIconProps {
-  className?: string;
-}
+import { BaseIconProps } from "@/src/types/icon";
 
-function DueDateIcon({ className = "size-4" }: DueDateIconProps) {
+function DueDateIcon({ className = "size-4" }: BaseIconProps) {
   return (
     <svg
       className={className}

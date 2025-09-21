@@ -1,8 +1,6 @@
-interface CopyIconProps {
-  className?: string;
-}
+import { BaseIconProps } from "@/src/types/icon";
 
-function CopyIcon({ className = "w-4 h-4" }: CopyIconProps) {
+function CopyIcon({ className = "w-4 h-4" }: BaseIconProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

@@ -1,8 +1,6 @@
-interface CardViewIconProps {
-  className?: string;
-}
+import { BaseIconProps } from "@/src/types/icon";
 
-function CardViewIcon({ className = "size-4" }: CardViewIconProps) {
+function CardViewIcon({ className = "size-4" }: BaseIconProps) {
   return (
     <svg
       className={className}

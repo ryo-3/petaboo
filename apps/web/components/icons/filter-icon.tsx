@@ -1,5 +1,6 @@
-interface FilterIconProps {
-  className?: string;
+import { BaseIconProps } from "@/src/types/icon";
+
+interface FilterIconProps extends BaseIconProps {
   style?: React.CSSProperties;
 }
 

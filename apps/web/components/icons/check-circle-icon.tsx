@@ -1,8 +1,6 @@
-interface CheckCircleIconProps {
-  className?: string;
-}
+import { BaseIconProps } from "@/src/types/icon";
 
-function CheckCircleIcon({ className = "size-4" }: CheckCircleIconProps) {
+function CheckCircleIcon({ className = "size-4" }: BaseIconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none">
       <circle

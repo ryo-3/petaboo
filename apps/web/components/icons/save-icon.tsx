@@ -1,8 +1,6 @@
-interface SaveIconProps {
-  className?: string;
-}
+import { BaseIconProps } from "@/src/types/icon";
 
-function SaveIcon({ className = "w-6 h-6" }: SaveIconProps) {
+function SaveIcon({ className = "w-6 h-6" }: BaseIconProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

@@ -15,6 +15,7 @@ import Tooltip from "@/components/ui/base/tooltip";
 import TagTriggerButton from "@/components/features/tags/tag-trigger-button";
 import TagSelectionModal from "@/components/ui/modals/tag-selection-modal";
 import DateInfo from "@/components/shared/date-info";
+import CreatorAvatar from "@/components/shared/creator-avatar";
 import TaskForm, { TaskFormHandle } from "./task-form";
 import { useUpdateTask, useCreateTask } from "@/src/hooks/use-tasks";
 import {
@@ -85,6 +86,9 @@ interface TaskEditorProps {
   // チーム機能
   teamMode?: boolean;
   teamId?: number;
+  createdBy?: string | null;
+  createdByUserId?: string | null;
+  createdByAvatarColor?: string | null;
 }
 
 function TaskEditor({
@@ -105,6 +109,9 @@ function TaskEditor({
   preloadedBoardItems = [],
   teamMode = false,
   teamId,
+  createdBy,
+  createdByUserId,
+  createdByAvatarColor,
 }: TaskEditorProps) {
   const queryClient = useQueryClient();
   const updateTask = useUpdateTask({ teamMode, teamId: teamId || undefined });
@@ -1487,6 +1494,14 @@ function TaskEditor({
                     ).toLocaleDateString("ja-JP")}
                   </span>
                 )}
+                {/* チーム機能: 作成者アイコン */}
+                <CreatorAvatar
+                  createdBy={createdBy || task?.createdBy}
+                  avatarColor={createdByAvatarColor || task?.avatarColor}
+                  teamMode={teamMode}
+                  size="lg"
+                  className="mr-2"
+                />
                 {task && task.id !== 0 && (
                   <div className="text-[13px] text-gray-400 mr-2">
                     <DateInfo item={task} isEditing={!isDeleted} />
@@ -1573,7 +1588,6 @@ function TaskEditor({
             isDeleted={isDeleted}
             initialBoardId={initialBoardId}
             teamMode={teamMode}
-            createdBy={task?.createdBy}
           />
         </BaseViewer>
       </div>

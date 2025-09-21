@@ -15,6 +15,8 @@ import { useNavigation } from "@/contexts/navigation-context";
 import { useDeleteMemo } from "@/src/hooks/use-memos";
 import { useAuth } from "@clerk/nextjs";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTeamTasks } from "@/src/hooks/use-team-tasks";
+import { useTeamMemos } from "@/src/hooks/use-team-memos";
 
 interface BoardRightPanelProps {
   isOpen: boolean;
@@ -82,6 +84,26 @@ export default function BoardRightPanel({
   const { data: tags } = useTags();
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
+
+  // チーム機能用: 作成者情報を取得
+  const { data: teamTasksData } = useTeamTasks(
+    teamMode && teamId ? teamId : undefined,
+  );
+  const { data: teamMemosData } = useTeamMemos(
+    teamMode && teamId ? teamId : undefined,
+  );
+
+  // 選択されたタスクの作成者情報を取得
+  const selectedTaskCreatorInfo =
+    teamMode && selectedTask && teamTasksData
+      ? teamTasksData.find((task) => task.id === selectedTask.id)
+      : null;
+
+  // 選択されたメモの作成者情報を取得
+  const selectedMemoCreatorInfo =
+    teamMode && selectedMemo && teamMemosData
+      ? teamMemosData.find((memo) => memo.id === selectedMemo.id)
+      : null;
 
   // 現在のボードに既に追加されているアイテムIDのリストを作成
   const currentBoardMemoIds =
@@ -251,6 +273,9 @@ export default function BoardRightPanel({
               initialBoardId={boardId}
               teamMode={teamMode}
               teamId={teamId || undefined}
+              createdBy={selectedMemoCreatorInfo?.createdBy}
+              createdByUserId={selectedMemoCreatorInfo?.userId}
+              createdByAvatarColor={selectedMemoCreatorInfo?.avatarColor}
               preloadedTags={tags || []}
               preloadedBoards={allBoards || []}
               preloadedTaggings={allTaggings || []}
@@ -262,6 +287,9 @@ export default function BoardRightPanel({
               initialBoardId={boardId}
               teamMode={teamMode}
               teamId={teamId || undefined}
+              createdBy={selectedMemoCreatorInfo?.createdBy}
+              createdByUserId={selectedMemoCreatorInfo?.userId}
+              createdByAvatarColor={selectedMemoCreatorInfo?.avatarColor}
               preloadedTags={tags || []}
               preloadedBoards={allBoards || []}
               preloadedTaggings={allTaggings || []}
@@ -290,6 +318,9 @@ export default function BoardRightPanel({
               isFromBoardDetail={true}
               teamMode={teamMode}
               teamId={teamId || undefined}
+              createdBy={selectedTaskCreatorInfo?.createdBy}
+              createdByUserId={selectedTaskCreatorInfo?.userId}
+              createdByAvatarColor={selectedTaskCreatorInfo?.avatarColor}
               preloadedTags={tags || []}
               preloadedBoards={allBoards || []}
               preloadedTaggings={allTaggings || []}
@@ -320,6 +351,9 @@ export default function BoardRightPanel({
               isFromBoardDetail={true}
               teamMode={teamMode}
               teamId={teamId || undefined}
+              createdBy={selectedTaskCreatorInfo?.createdBy}
+              createdByUserId={selectedTaskCreatorInfo?.userId}
+              createdByAvatarColor={selectedTaskCreatorInfo?.avatarColor}
               preloadedTags={tags || []}
               preloadedBoards={allBoards || []}
               preloadedTaggings={allTaggings || []}
@@ -362,6 +396,8 @@ export default function BoardRightPanel({
           excludeItemIds={currentBoardMemoIds}
           excludeBoardIdFromFilter={boardId}
           initialSelectionMode="check"
+          teamMode={teamMode}
+          teamId={teamId || undefined}
         />
       )}
 

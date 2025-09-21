@@ -361,6 +361,7 @@ export default function BoardMemoSection({
                 direction: "asc" | "desc";
               }>
             }
+            teamMode={teamMode}
             allTags={allTags}
             allBoards={allBoards}
             allTaggings={allTaggings}
@@ -396,6 +397,7 @@ export default function BoardMemoSection({
                 direction: "asc" | "desc";
               }>
             }
+            teamMode={teamMode}
             allTags={allTags}
             allBoards={allBoards}
             allTaggings={allTaggings}

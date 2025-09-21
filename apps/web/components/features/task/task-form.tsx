@@ -51,7 +51,6 @@ interface TaskFormProps {
   showBoardCategory?: boolean; // ボード詳細でのみtrue
   // チーム機能
   teamMode?: boolean;
-  createdBy?: string | null;
 }
 
 export interface TaskFormHandle {
@@ -86,7 +85,6 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
     initialBoardId,
     showBoardCategory = false,
     teamMode = false,
-    createdBy,
   } = props;
   const titleInputRef = useRef<HTMLInputElement>(null);
   const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -158,7 +156,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
 
   return (
     <div className="flex flex-col flex-1">
-      <div className="flex items-center">
+      <div className="flex items-center gap-1">
         <input
           ref={titleInputRef}
           type="text"
@@ -208,25 +206,6 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
               disabled={isDeleted}
             />
           </div>
-
-          {/* チーム機能: 作成者情報 */}
-          {teamMode && createdBy && (
-            <div className="relative">
-              <div className="flex items-center justify-between">
-                <label className="block text-xs font-medium text-gray-600 mb-1 mt-1">
-                  作成者
-                </label>
-              </div>
-              <div className="flex items-center gap-2 h-8 px-2">
-                <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
-                  {createdBy.charAt(0)}
-                </div>
-                <span className="text-sm text-gray-700 truncate">
-                  {createdBy}
-                </span>
-              </div>
-            </div>
-          )}
 
           {showBoardCategory && (
             <div className="w-80">

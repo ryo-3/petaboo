@@ -4,6 +4,7 @@ import type { Board } from "@/src/types/board";
 import { formatDateOnly } from "@/src/utils/formatDate";
 import { TAG_COLORS } from "@/src/constants/colors";
 import BoardChips from "@/components/ui/chips/board-chips";
+import CreatorAvatar from "@/components/shared/creator-avatar";
 
 interface MemoListItemProps {
   memo: Memo | DeletedMemo;
@@ -21,6 +22,9 @@ interface MemoListItemProps {
   // 全データ事前取得（ちらつき解消）
   preloadedTags?: Tag[];
   preloadedBoards?: Board[];
+
+  // チーム機能
+  teamMode?: boolean;
 }
 
 function MemoListItem({
@@ -37,6 +41,7 @@ function MemoListItem({
   showTags = false,
   preloadedTags = [],
   preloadedBoards = [],
+  teamMode = false,
 }: MemoListItemProps) {
   const isDeleted = variant === "deleted";
   const deletedMemo = memo as DeletedMemo;
@@ -94,14 +99,22 @@ function MemoListItem({
 
         <button onClick={onSelect} className="flex-1 min-w-0 text-left">
           <div className="flex flex-col gap-2">
-            <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 min-w-0">
               <h3
-                className={`font-semibold text-sm mb-[2px] truncate ${
+                className={`font-semibold text-sm mb-[2px] truncate flex-1 ${
                   isDeleted ? "text-gray-700" : "text-gray-800"
                 }`}
               >
                 {displayTitle}
               </h3>
+              {/* チーム機能: 作成者アイコン */}
+              <CreatorAvatar
+                createdBy={memo.createdBy}
+                avatarColor={memo.avatarColor}
+                teamMode={teamMode}
+                size="md"
+                className="flex-shrink-0"
+              />
             </div>
 
             {/* ボード名・タグ表示 */}

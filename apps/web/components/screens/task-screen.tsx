@@ -641,6 +641,9 @@ function TaskScreen({
             onDeleteAndSelectNext={handleTaskDeleteAndSelectNext}
             teamMode={teamMode}
             teamId={teamId}
+            createdBy={selectedTask.createdBy}
+            createdByUserId={selectedTask.userId}
+            createdByAvatarColor={selectedTask.avatarColor}
             preloadedTags={tags || []}
             preloadedBoards={boards || []}
             preloadedTaggings={safeAllTaggings}
@@ -658,6 +661,9 @@ function TaskScreen({
               }
               teamMode={teamMode}
               teamId={teamId}
+              createdBy={selectedDeletedTask.createdBy}
+              createdByUserId={selectedDeletedTask.userId}
+              createdByAvatarColor={selectedDeletedTask.avatarColor}
               preloadedTags={tags || []}
               preloadedBoards={boards || []}
               preloadedTaggings={safeAllTaggings}
@@ -674,6 +680,9 @@ function TaskScreen({
             onDeleteAndSelectNext={handleTaskDeleteAndSelectNext}
             teamMode={teamMode}
             teamId={teamId}
+            createdBy={selectedTask.createdBy}
+            createdByUserId={selectedTask.userId}
+            createdByAvatarColor={selectedTask.avatarColor}
             preloadedTags={tags || []}
             preloadedBoards={boards || []}
             preloadedTaggings={safeAllTaggings}

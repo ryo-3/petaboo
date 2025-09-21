@@ -108,7 +108,8 @@
       "Read(///**)",
       "Bash(apitest \"/taggings?targetType=memo&targetOriginalId=377\")",
       "Bash(apitest \"/taggings?teamId=18&targetType=task&targetOriginalId=255\")",
-      "Bash(apitest \"/teams/18/memos\" \"GET\")"
+      "Bash(apitest \"/teams/18/memos\" \"GET\")",
+      "Bash(python3:*)"
     ],
     "deny": []
   }

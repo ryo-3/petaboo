@@ -28,6 +28,7 @@ const TeamMemoSchema = z.object({
   createdAt: z.number(),
   updatedAt: z.number().nullable(),
   createdBy: z.string().nullable(), // 作成者の表示名
+  avatarColor: z.string().nullable(), // 作成者のアバター色
 });
 
 const TeamMemoInputSchema = z.object({
@@ -112,10 +113,17 @@ app.openapi(
         content: teamMemos.content,
         createdAt: teamMemos.createdAt,
         updatedAt: teamMemos.updatedAt,
-        createdBy: users.displayName, // 作成者の表示名
+        createdBy: teamMembers.displayName, // 作成者の表示名
+        avatarColor: teamMembers.avatarColor, // 作成者のアバター色
       })
       .from(teamMemos)
-      .leftJoin(users, eq(teamMemos.userId, users.userId))
+      .leftJoin(
+        teamMembers,
+        and(
+          eq(teamMemos.userId, teamMembers.userId),
+          eq(teamMemos.teamId, teamMembers.teamId),
+        ),
+      )
       .where(eq(teamMemos.teamId, teamId))
       .orderBy(desc(teamMemos.updatedAt), desc(teamMemos.createdAt));
 
@@ -237,10 +245,17 @@ app.openapi(
         content: teamMemos.content,
         createdAt: teamMemos.createdAt,
         updatedAt: teamMemos.updatedAt,
-        createdBy: users.displayName, // 作成者の表示名
+        createdBy: teamMembers.displayName, // 作成者の表示名
+        avatarColor: teamMembers.avatarColor, // 作成者のアバター色
       })
       .from(teamMemos)
-      .leftJoin(users, eq(teamMemos.userId, users.userId))
+      .leftJoin(
+        teamMembers,
+        and(
+          eq(teamMemos.userId, teamMembers.userId),
+          eq(teamMemos.teamId, teamMembers.teamId),
+        ),
+      )
       .where(eq(teamMemos.id, result[0].id))
       .get();
 
@@ -673,10 +688,17 @@ app.openapi(
           content: teamMemos.content,
           createdAt: teamMemos.createdAt,
           updatedAt: teamMemos.updatedAt,
-          createdBy: users.displayName, // 作成者の表示名
+          createdBy: teamMembers.displayName, // 作成者の表示名
+          avatarColor: teamMembers.avatarColor, // 作成者のアバター色
         })
         .from(teamMemos)
-        .leftJoin(users, eq(teamMemos.userId, users.userId))
+        .leftJoin(
+          teamMembers,
+          and(
+            eq(teamMemos.userId, teamMembers.userId),
+            eq(teamMemos.teamId, teamMembers.teamId),
+          ),
+        )
         .where(eq(teamMemos.id, insertResult[0].id))
         .get();
 

@@ -17,6 +17,7 @@ export interface Task {
   userId?: string; // 作成者のuser ID
   teamId?: number; // チームID
   createdBy?: string | null; // 作成者の表示名
+  avatarColor?: string | null; // 作成者のアバター色
 }
 
 export interface DeletedTask {
@@ -37,6 +38,7 @@ export interface DeletedTask {
   userId?: string; // 作成者のuser ID
   teamId?: number; // チームID
   createdBy?: string | null; // 作成者の表示名
+  avatarColor?: string | null; // 作成者のアバター色
 }
 
 export interface CreateTaskData {

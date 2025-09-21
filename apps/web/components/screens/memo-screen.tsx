@@ -770,6 +770,9 @@ function MemoScreen({
             // チーム機能
             teamMode={teamMode}
             teamId={teamId}
+            createdBy={selectedMemo.createdBy}
+            createdByUserId={selectedMemo.userId}
+            createdByAvatarColor={selectedMemo.avatarColor}
           />
         )}
         {memoScreenMode === "view" && selectedDeletedMemo && !selectedMemo && (
@@ -863,6 +866,9 @@ function MemoScreen({
             // チーム機能
             teamMode={teamMode}
             teamId={teamId}
+            createdBy={selectedDeletedMemo.createdBy}
+            createdByUserId={selectedDeletedMemo.userId}
+            createdByAvatarColor={selectedDeletedMemo.avatarColor}
           />
         )}
       </RightPanel>

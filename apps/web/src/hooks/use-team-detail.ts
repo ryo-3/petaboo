@@ -8,6 +8,7 @@ export interface TeamMember {
   displayName: string | null;
   role: "admin" | "member";
   joinedAt: number;
+  avatarColor: string | null;
 }
 
 export interface TeamDetail {

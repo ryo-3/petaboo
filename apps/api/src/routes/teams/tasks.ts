@@ -33,6 +33,7 @@ const TeamTaskSchema = z.object({
   createdAt: z.number(),
   updatedAt: z.number().nullable(),
   createdBy: z.string().nullable(), // 作成者の表示名
+  avatarColor: z.string().nullable(), // 作成者のアバター色
 });
 
 const TeamTaskInputSchema = z.object({
@@ -144,10 +145,17 @@ app.openapi(
         boardCategoryId: teamTasks.boardCategoryId,
         createdAt: teamTasks.createdAt,
         updatedAt: teamTasks.updatedAt,
-        createdBy: users.displayName, // 作成者の表示名
+        createdBy: teamMembers.displayName, // チーム専用の表示名
+        avatarColor: teamMembers.avatarColor, // チーム専用のアバター色
       })
       .from(teamTasks)
-      .leftJoin(users, eq(teamTasks.userId, users.userId))
+      .leftJoin(
+        teamMembers,
+        and(
+          eq(teamTasks.userId, teamMembers.userId),
+          eq(teamTasks.teamId, teamMembers.teamId),
+        ),
+      )
       .where(eq(teamTasks.teamId, teamId))
       .orderBy(
         // 優先度順: high(3) > medium(2) > low(1)
@@ -301,10 +309,17 @@ app.openapi(
         boardCategoryId: teamTasks.boardCategoryId,
         createdAt: teamTasks.createdAt,
         updatedAt: teamTasks.updatedAt,
-        createdBy: users.displayName, // 作成者の表示名
+        createdBy: teamMembers.displayName, // チーム専用の表示名
+        avatarColor: teamMembers.avatarColor, // チーム専用のアバター色
       })
       .from(teamTasks)
-      .leftJoin(users, eq(teamTasks.userId, users.userId))
+      .leftJoin(
+        teamMembers,
+        and(
+          eq(teamTasks.userId, teamMembers.userId),
+          eq(teamTasks.teamId, teamMembers.teamId),
+        ),
+      )
       .where(eq(teamTasks.id, result[0].id))
       .get();
 
@@ -746,10 +761,17 @@ app.openapi(
           boardCategoryId: teamTasks.boardCategoryId,
           createdAt: teamTasks.createdAt,
           updatedAt: teamTasks.updatedAt,
-          createdBy: users.displayName, // 作成者の表示名
+          createdBy: teamMembers.displayName, // チーム専用の表示名
+          avatarColor: teamMembers.avatarColor, // チーム専用のアバター色
         })
         .from(teamTasks)
-        .leftJoin(users, eq(teamTasks.userId, users.userId))
+        .leftJoin(
+          teamMembers,
+          and(
+            eq(teamTasks.userId, teamMembers.userId),
+            eq(teamTasks.teamId, teamMembers.teamId),
+          ),
+        )
         .where(eq(teamTasks.id, insertResult[0].id))
         .get();
 

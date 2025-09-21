@@ -43,6 +43,13 @@
       "when": 1757166047984,
       "tag": "0005_salty_deathbird",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1758288386318,
+      "tag": "0006_white_sebastian_shaw",
+      "breakpoints": true
     }
   ]
 }

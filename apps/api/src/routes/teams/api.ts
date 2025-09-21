@@ -150,6 +150,7 @@ export const getTeamDetailRoute = createRoute({
                 displayName: z.string().nullable(),
                 role: z.enum(["admin", "member"]),
                 joinedAt: z.number(),
+                avatarColor: z.string().nullable(),
               }),
             ),
           }),
@@ -685,12 +686,12 @@ export async function getTeamDetail(c: any) {
     const membersResult = await db
       .select({
         userId: teamMembers.userId,
-        displayName: users.displayName,
+        displayName: teamMembers.displayName, // チーム専用の表示名
         role: teamMembers.role,
         joinedAt: teamMembers.joinedAt,
+        avatarColor: teamMembers.avatarColor, // チーム専用のアバター色
       })
       .from(teamMembers)
-      .leftJoin(users, eq(teamMembers.userId, users.userId))
       .where(eq(teamMembers.teamId, teamId))
       .orderBy(teamMembers.joinedAt);
 
@@ -2074,53 +2075,34 @@ export async function approveJoinRequest(c: any) {
     const now = Date.now();
 
     // トランザクション開始（SQLiteでは自動コミット）
-    // 1. 申請ステータス更新
-    await db
-      .update(teamInvitations)
-      .set({
-        status: "approved",
-        processedAt: now,
-        processedBy: auth.userId,
-      })
-      .where(eq(teamInvitations.id, requestId));
-
-    // 2. チームメンバーに追加
+    // 1. チームメンバーに追加（displayName, avatarColor付き）
     await db.insert(teamMembers).values({
       teamId: team.id,
       userId: request.userId,
       role: "member",
+      displayName: request.displayName || null,
+      avatarColor: generateAvatarColor(request.userId), // 色を自動生成
       joinedAt: now,
     });
 
-    // 3. ユーザーのdisplay_nameを更新（存在する場合）
-    if (request.displayName) {
-      // ユーザーが既に存在するかチェック
-      const existingUser = await db
-        .select()
-        .from(users)
-        .where(eq(users.userId, request.userId))
-        .get();
+    // 2. ユーザーが存在しない場合は作成（displayNameなし）
+    const existingUser = await db
+      .select()
+      .from(users)
+      .where(eq(users.userId, request.userId))
+      .get();
 
-      if (existingUser) {
-        // 既存ユーザーの場合は更新
-        await db
-          .update(users)
-          .set({
-            displayName: request.displayName,
-            updatedAt: now,
-          })
-          .where(eq(users.userId, request.userId));
-      } else {
-        // 新規ユーザーの場合は作成
-        await db.insert(users).values({
-          userId: request.userId,
-          displayName: request.displayName,
-          planType: "free",
-          createdAt: now,
-          updatedAt: now,
-        });
-      }
+    if (!existingUser) {
+      await db.insert(users).values({
+        userId: request.userId,
+        planType: "free",
+        createdAt: now,
+        updatedAt: now,
+      });
     }
+
+    // 3. 申請レコードを削除（履歴不要）
+    await db.delete(teamInvitations).where(eq(teamInvitations.id, requestId));
 
     // 4. 承認通知を送信
     try {
@@ -3276,4 +3258,51 @@ export async function waitHomeUpdatesHandler(c: any) {
     console.error("ホーム画面wait-updates エラー:", error);
     return c.json({ error: "内部エラーが発生しました" }, 500);
   }
+}
+
+/**
+ * ユーザーIDから一意な色を生成する関数
+ * @param userId ユーザーID
+ * @returns Tailwind CSSの背景色クラス
+ */
+function generateAvatarColor(userId: string): string {
+  const colors = [
+    "bg-blue-500",
+    "bg-green-500",
+    "bg-purple-500",
+    "bg-pink-500",
+    "bg-indigo-500",
+    "bg-yellow-500",
+    "bg-red-500",
+    "bg-teal-500",
+    "bg-orange-500",
+    "bg-cyan-500",
+    "bg-violet-500",
+    "bg-fuchsia-500",
+    "bg-rose-500",
+    "bg-amber-500",
+    "bg-lime-500",
+    "bg-emerald-500",
+    "bg-sky-500",
+    "bg-slate-600",
+    "bg-gray-600",
+    "bg-zinc-600",
+    "bg-stone-600",
+    "bg-neutral-600",
+    "bg-blue-600",
+    "bg-green-600",
+    "bg-purple-600",
+    "bg-pink-600",
+    "bg-indigo-600",
+    "bg-red-600",
+    "bg-teal-600",
+    "bg-orange-600",
+  ];
+
+  // userIdをハッシュして色のインデックスを決める
+  const hash = userId
+    .split("")
+    .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+
+  return colors[hash % colors.length] || "bg-gray-500";
 }

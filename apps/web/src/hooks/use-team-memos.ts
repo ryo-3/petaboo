@@ -13,6 +13,10 @@ export interface TeamMemo {
   content: string | null;
   createdAt: number;
   updatedAt: number | null;
+  // チーム機能用（作成者情報）
+  userId?: string;
+  createdBy?: string | null;
+  avatarColor?: string | null;
 }
 
 export interface TeamDeletedMemo extends TeamMemo {

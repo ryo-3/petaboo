@@ -14,6 +14,7 @@ export interface Memo {
   userId?: string; // 作成者のuser ID
   teamId?: number; // チームID
   createdBy?: string | null; // 作成者の表示名
+  avatarColor?: string | null; // 作成者のアバター色
 }
 
 export interface DeletedMemo {
@@ -30,6 +31,7 @@ export interface DeletedMemo {
   userId?: string; // 作成者のuser ID
   teamId?: number; // チームID
   createdBy?: string | null; // 作成者の表示名
+  avatarColor?: string | null; // 作成者のアバター色
 }
 
 export interface CreateMemoData {

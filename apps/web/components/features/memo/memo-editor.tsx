@@ -36,7 +36,9 @@ import {
 } from "@/src/utils/urlUtils";
 import BoardTagDisplay from "@/components/shared/board-tag-display";
 import BoardChips from "@/components/ui/chips/board-chips";
+import UserMemberCard from "@/components/shared/user-member-card";
 import DateInfo from "@/components/shared/date-info";
+import CreatorAvatar from "@/components/shared/creator-avatar";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Tag, Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
@@ -73,6 +75,9 @@ interface MemoEditorProps {
   // チーム機能
   teamMode?: boolean;
   teamId?: number;
+  createdBy?: string | null;
+  createdByUserId?: string | null; // 作成者のユーザーID
+  createdByAvatarColor?: string | null; // 作成者のアバター色
 }
 
 function MemoEditor({
@@ -91,6 +96,9 @@ function MemoEditor({
   preloadedBoardItems = [],
   teamMode = false,
   teamId,
+  createdBy,
+  createdByUserId,
+  createdByAvatarColor,
 }: MemoEditorProps) {
   // ログを一度だけ出力（useEffectで管理）
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -770,6 +778,14 @@ function MemoEditor({
                     )}
                   </span>
                 )}
+                {/* チーム機能: 作成者アイコン */}
+                <CreatorAvatar
+                  createdBy={createdBy}
+                  avatarColor={createdByAvatarColor}
+                  teamMode={teamMode}
+                  size="lg"
+                  className="mr-2"
+                />
                 {memo && memo.id !== 0 && (
                   <div className="text-[13px] text-gray-400 mr-2">
                     <DateInfo item={memo} isEditing={!isDeleted} />

@@ -25,6 +25,7 @@ import { useManageJoinRequest } from "@/src/hooks/use-manage-join-request";
 import { useSimpleTeamNotifier } from "@/src/hooks/use-simple-team-notifier";
 import { useTeamDetail } from "@/src/hooks/use-team-detail";
 import { useUserInfo } from "@/src/hooks/use-user-info";
+import UserMemberCard from "@/components/shared/user-member-card";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
 import { formatDateOnly } from "@/src/utils/formatDate";
@@ -954,54 +955,36 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                         return 0;
                       })
                       .map((member) => (
-                        <div
+                        <UserMemberCard
                           key={member.userId}
-                          className={`flex items-center gap-3 p-2 rounded ${
-                            member.userId === userInfo?.userId
-                              ? "bg-blue-50"
-                              : "bg-gray-50"
-                          }`}
+                          userId={member.userId}
+                          displayName={member.displayName}
+                          joinedAt={member.joinedAt}
+                          isCurrentUser={member.userId === userInfo?.userId}
+                          avatarColor={member.avatarColor}
                         >
-                          <div
-                            className={`w-8 h-8 ${getUserAvatarColor(member.userId)} rounded-full flex items-center justify-center text-white text-sm font-medium`}
-                          >
-                            {member.displayName
-                              ? member.displayName.charAt(0).toUpperCase()
-                              : member.userId.charAt(10).toUpperCase()}
-                          </div>
-                          <div className="flex-1">
-                            <div className="text-sm font-medium">
-                              {member.displayName ||
-                                `ユーザー${member.userId.slice(-4)}`}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {formatDateOnly(member.joinedAt)}に参加
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {/* メンバー管理ボタン（編集モード時のみ、管理者・自分以外に表示） */}
-                            {isEditMode &&
-                              team.role === "admin" &&
-                              member.userId !== userInfo?.userId &&
-                              member.role !== "admin" && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-red-600 border-red-300 hover:bg-red-50 text-xs px-2 py-1 h-6"
-                                  onClick={() =>
-                                    setKickConfirmModal({
-                                      userId: member.userId,
-                                      displayName:
-                                        member.displayName ||
-                                        `ユーザー${member.userId.slice(-4)}`,
-                                    })
-                                  }
-                                >
-                                  削除
-                                </Button>
-                              )}
-                          </div>
-                        </div>
+                          {/* メンバー管理ボタン（編集モード時のみ、管理者・自分以外に表示） */}
+                          {isEditMode &&
+                            team.role === "admin" &&
+                            member.userId !== userInfo?.userId &&
+                            member.role !== "admin" && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-red-600 border-red-300 hover:bg-red-50 text-xs px-2 py-1 h-6"
+                                onClick={() =>
+                                  setKickConfirmModal({
+                                    userId: member.userId,
+                                    displayName:
+                                      member.displayName ||
+                                      `ユーザー${member.userId.slice(-4)}`,
+                                  })
+                                }
+                              >
+                                削除
+                              </Button>
+                            )}
+                        </UserMemberCard>
                       ))}
                   </div>
                 </Card>

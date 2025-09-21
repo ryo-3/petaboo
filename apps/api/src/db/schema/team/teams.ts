@@ -15,6 +15,8 @@ export const teamMembers = sqliteTable("team_members", {
   teamId: integer("team_id").notNull(),
   userId: text("user_id").notNull(),
   role: text("role").notNull().default("member"), // "admin" | "member"
+  displayName: text("display_name"), // チーム内での表示名
+  avatarColor: text("avatar_color"), // チーム内でのアバター色（bg-blue-500等）
   joinedAt: integer("joined_at").notNull(),
 });
 

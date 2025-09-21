@@ -45,6 +45,7 @@ interface MemoStatusDisplayProps {
     originalId: string;
     addedAt: number;
   }>;
+  teamMode?: boolean;
 }
 
 interface DeletedMemoDisplayProps {
@@ -87,6 +88,7 @@ interface DeletedMemoDisplayProps {
   // 全選択機能
   onSelectAll?: () => void;
   isAllSelected?: boolean;
+  teamMode?: boolean;
 }
 
 function MemoStatusDisplay({
@@ -112,6 +114,7 @@ function MemoStatusDisplay({
   allBoards,
   allTaggings,
   allBoardItems,
+  teamMode,
 }: MemoStatusDisplayProps) {
   // フィルタリング済みのメモを取得
   const filteredMemos = useMemo(() => {
@@ -285,6 +288,7 @@ function MemoStatusDisplay({
         // 全データ事前取得（ちらつき解消）
         preloadedTags={memoData.tags}
         preloadedBoards={memoData.boards}
+        teamMode={teamMode}
       />
     );
 
@@ -346,6 +350,7 @@ export function DeletedMemoDisplay({
   allBoardItems = [],
   onSelectAll,
   isAllSelected,
+  teamMode,
 }: DeletedMemoDisplayProps) {
   const getSortValue = (memo: DeletedMemo, sortId: string): number => {
     if (!memo) return 0;
@@ -421,6 +426,7 @@ export function DeletedMemoDisplay({
         preloadedTags={memoTags}
         preloadedBoards={memoBoards}
         selectionMode={selectionMode}
+        teamMode={teamMode}
       />
     );
     /* eslint-enable react/prop-types */

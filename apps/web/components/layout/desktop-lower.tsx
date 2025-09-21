@@ -190,6 +190,7 @@ function DesktopLower({
               direction: "asc" | "desc";
             }>
           }
+          teamMode={teamMode}
           // 全データ事前取得（ちらつき解消）
           allTags={allTags}
           allBoards={allBoards}
@@ -271,6 +272,7 @@ function DesktopLower({
                   direction: "asc" | "desc";
                 }>
               }
+              teamMode={teamMode}
               allTags={allTags}
               allBoards={allBoards}
               allTaggings={allTaggings}

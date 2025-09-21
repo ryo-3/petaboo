@@ -202,7 +202,7 @@ export default function BoardRightPanel({
             ? selectedMemo.id
             : parseInt(selectedMemo.id, 10);
         if (isNaN(memoId)) {
-          console.log(`❌ 無効なメモID: ${selectedMemo.id}`);
+          console.error(`❌ 無効なメモID: ${selectedMemo.id}`);
           setIsRightMemoLidOpen(false);
           setIsDeletingMemo(false);
           return;
@@ -312,10 +312,6 @@ export default function BoardRightPanel({
                 // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
               }}
               onRestore={() => {
-                console.log(
-                  "🔄 TaskEditor復元処理開始: selectedTask=",
-                  selectedTask,
-                );
                 if (onTaskRestoreAndSelectNext) {
                   onTaskRestoreAndSelectNext(selectedTask);
                 }

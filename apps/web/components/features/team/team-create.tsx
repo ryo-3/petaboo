@@ -177,7 +177,6 @@ export function TeamCreate({ onTeamCreated }: TeamCreateProps = {}) {
       });
 
       // 成功後の処理
-      console.log("📍 チーム作成成功");
 
       if (onTeamCreated) {
         // コールバックがある場合は実行（画面遷移なし）

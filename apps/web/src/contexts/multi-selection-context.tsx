@@ -56,8 +56,6 @@ const MultiSelectionContext = createContext<
 >(undefined);
 
 export function MultiSelectionProvider({ children }: { children: ReactNode }) {
-  console.log(`🌍 MultiSelectionProvider初期化`);
-
   // 選択モード
   const [selectionMode, setSelectionMode] = useState<"select" | "check">(
     "select",

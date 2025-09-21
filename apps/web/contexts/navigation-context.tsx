@@ -191,8 +191,6 @@ export function NavigationProvider({
     ]
       .filter(Boolean)
       .join(" | ");
-
-    console.log("🔄", logInfo);
   }, [screenMode, pathname, searchParams, iconStates]);
 
   // TODO: 必要に応じて個別キャッシュ無効化を実装する

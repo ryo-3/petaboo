@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import type { Board } from "@/src/types/board";
+import { useSetState } from "@/src/hooks/use-set-state";
 
 interface BoardChipsProps {
   boards: Board[];
@@ -16,14 +17,14 @@ export default function BoardChips({
   maxDisplay = 3, // デフォルトは3つまで表示
   interactive = true, // デフォルトはクリック可能
 }: BoardChipsProps) {
-  const [expandedBoards, setExpandedBoards] = useState<Set<number>>(new Set());
+  const expandedBoards = useSetState<number>();
   const [showAll, setShowAll] = useState(false);
 
   // ボードが変わったら展開状態をリセット
   useEffect(() => {
-    setExpandedBoards(new Set());
+    expandedBoards.clear();
     setShowAll(false);
-  }, [boards]);
+  }, [boards, expandedBoards]);
 
   if (!boards || boards.length === 0) return null;
 
@@ -32,15 +33,7 @@ export default function BoardChips({
 
   // 個別のボードの展開状態を切り替え
   const toggleBoard = (boardId: number) => {
-    setExpandedBoards((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(boardId)) {
-        newSet.delete(boardId);
-      } else {
-        newSet.add(boardId);
-      }
-      return newSet;
-    });
+    expandedBoards.toggle(boardId);
   };
 
   // 全ボード表示/制限表示を切り替え

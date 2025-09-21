@@ -15,11 +15,6 @@ export default function GlobalNotificationProvider({
 }: GlobalNotificationProviderProps) {
   const { isSignedIn } = useAuth();
 
-  console.log(
-    "🌐 GlobalNotificationProvider rendered, isSignedIn:",
-    isSignedIn,
-  );
-
   // グローバル通知は一時的に無効化
 
   return <>{children}</>;

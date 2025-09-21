@@ -215,19 +215,6 @@ function TaskEditor({
       .map((t) => t.tag)
       .filter(Boolean) as Tag[];
 
-    // デバッグログ
-    if (teamMode) {
-      console.log("🏷️ [タスクcurrentTags] チームモード:", {
-        taskId: task.id,
-        taskOriginalId: task.originalId,
-        computedOriginalId: targetOriginalId,
-        liveTeamTaggingsLength: liveTeamTaggings?.length || 0,
-        liveTeamTaggings: liveTeamTaggings,
-        tagsLength: tags.length,
-        tags: tags,
-      });
-    }
-
     return tags;
   }, [task, liveTaggings, preloadedTaggings, liveTeamTaggings, teamMode]);
 
@@ -490,12 +477,6 @@ function TaskEditor({
         JSON.stringify(localTags.map((t) => t.id).sort()) &&
       !hasManualTagChanges // 手動変更がない場合のみ同期
     ) {
-      if (teamMode) {
-        console.log("🏷️ [タスクlocalTags同期] チームモード:", {
-          from: localTags,
-          to: currentTags,
-        });
-      }
       setLocalTags(currentTags);
     }
   }, [task?.id, prevTaskId, currentTags, localTags, hasManualTagChanges]);
@@ -942,9 +923,6 @@ function TaskEditor({
 
       if (isNewTask) {
         // 新規作成
-        console.log(
-          `🔧 [新規タスク] 作成開始: title="${title.trim()}", selectedBoardIds=[${selectedBoardIds.join(",")}], teamMode=${teamMode}`,
-        );
         const newTask = await createTask.mutateAsync(taskData);
         console.log(
           `🔧 [新規タスク] 作成成功: id=${newTask.id}, originalId=${newTask.originalId}, teamMode=${teamMode}, teamId=${teamId}`,

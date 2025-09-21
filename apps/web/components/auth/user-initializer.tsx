@@ -15,7 +15,6 @@ export function UserInitializer() {
       typeof window !== "undefined" &&
       window.location.pathname.startsWith("/admin")
     ) {
-      console.log("Admin panel detected, skipping user initialization");
       return;
     }
 
@@ -41,7 +40,7 @@ export function UserInitializer() {
 
           const result = await response.json();
           // 新規ユーザー作成時のみログ出力（既存ユーザーは静寂）
-          if (result.created) {
+          if (result.created && process.env.NODE_ENV === "development") {
             console.log(`✅ 新規ユーザー作成: ${result.userId}`);
           }
         } catch (error) {

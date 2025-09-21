@@ -604,23 +604,11 @@ function TaskScreen({
             teamMode={teamMode}
             teamId={teamId}
             onSaveComplete={(savedTask, isNewTask, isContinuousMode) => {
-              console.log("🎯 [TaskScreen] onSaveComplete:", {
-                taskId: savedTask.id,
-                isNewTask,
-                isContinuousMode,
-                teamMode,
-                teamId,
-              });
-
               if (isNewTask && !isContinuousMode) {
                 // 連続作成モードOFFの場合のみ作成されたタスクを選択状態にする
-                console.log("🎯 [TaskScreen] タスクを選択状態にします");
                 onSelectTask(savedTask);
                 setTaskScreenMode("view");
               } else if (isNewTask && isContinuousMode) {
-                console.log(
-                  "🎯 [TaskScreen] 連続作成モード: 選択状態にしません",
-                );
                 // 連続作成モードの場合は、タスク選択を解除してURLパラメーターもクリア
                 onSelectTask(null);
               }

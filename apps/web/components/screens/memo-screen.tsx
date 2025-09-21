@@ -1,8 +1,8 @@
 "use client";
 
 import MemoEditor from "@/components/features/memo/memo-editor";
-import { CSVImportModal } from "@/components/features/memo/csv-import-modal";
-import { useMemosBulkDelete } from "@/components/features/memo/use-memo-bulk-delete";
+import { MemoCsvImport } from "@/components/features/memo/memo-csv-import";
+import { useMemosBulkDelete } from "@/components/features/memo/use-memo-bulk-delete-wrapper";
 import { useMemosBulkRestore } from "@/components/features/memo/use-memo-bulk-restore";
 import DesktopLower from "@/components/layout/desktop-lower";
 import DesktopUpper from "@/components/layout/desktop-upper";
@@ -664,7 +664,7 @@ function MemoScreen({
       {/* モーダル */}
       <BulkDeleteModal />
       <RestoreModal />
-      <CSVImportModal
+      <MemoCsvImport
         isOpen={isCsvImportModalOpen}
         onClose={() => setIsCsvImportModalOpen(false)}
       />

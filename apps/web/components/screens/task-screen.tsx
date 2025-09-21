@@ -1,8 +1,8 @@
 "use client";
 
 import TaskEditor from "@/components/features/task/task-editor";
-import { CSVImportModal } from "@/components/features/task/csv-import-modal";
-import { useTasksBulkDelete } from "@/components/features/task/use-task-bulk-delete";
+import { TaskCsvImport } from "@/components/features/task/task-csv-import";
+import { useTasksBulkDelete } from "@/components/features/task/use-task-bulk-delete-wrapper";
 import { useTasksBulkRestore } from "@/components/features/task/use-task-bulk-restore";
 import DesktopLower from "@/components/layout/desktop-lower";
 import DesktopUpper from "@/components/layout/desktop-upper";
@@ -698,7 +698,7 @@ function TaskScreen({
       <RestoreModal />
 
       {/* CSVインポートモーダル */}
-      <CSVImportModal
+      <TaskCsvImport
         isOpen={isCsvImportModalOpen}
         onClose={() => setIsCsvImportModalOpen(false)}
       />

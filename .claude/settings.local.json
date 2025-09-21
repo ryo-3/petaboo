@@ -112,7 +112,8 @@
       "Bash(python3:*)",
       "Bash(apitest \"/teams/moricrew\")",
       "Bash(/home/ryosuke/petaboo/update-icons.sh:*)",
-      "Bash(/home/ryosuke/petaboo/fix-icons.sh:*)"
+      "Bash(/home/ryosuke/petaboo/fix-icons.sh:*)",
+      "Bash(git stash:*)"
     ],
     "deny": []
   }

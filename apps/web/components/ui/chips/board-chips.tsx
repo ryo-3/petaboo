@@ -24,7 +24,7 @@ export default function BoardChips({
   useEffect(() => {
     expandedBoards.clear();
     setShowAll(false);
-  }, [boards, expandedBoards]);
+  }, [boards, expandedBoards.clear]);
 
   if (!boards || boards.length === 0) return null;
 

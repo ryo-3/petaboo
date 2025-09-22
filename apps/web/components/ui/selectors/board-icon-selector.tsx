@@ -50,7 +50,8 @@ export default function BoardIconSelector({
 
   const handleSelectionChange = (boardIds: number[]) => {
     const stringValues = boardIds.map((id) => id.toString());
-    onChange(multiple ? stringValues : stringValues[0] || "");
+    const result = multiple ? stringValues : stringValues[0] || "";
+    onChange(result);
   };
 
   // ボードが選択されているかどうか
@@ -65,7 +66,13 @@ export default function BoardIconSelector({
             position="bottom"
           >
             <button
-              onClick={disabled ? undefined : () => setIsOpen(true)}
+              onClick={
+                disabled
+                  ? undefined
+                  : () => {
+                      setIsOpen(true);
+                    }
+              }
               disabled={disabled}
               className={`flex items-center justify-center size-7 rounded-md ${
                 disabled

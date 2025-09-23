@@ -137,17 +137,25 @@ function MemoScreen({
   const [, setIsRightDeleting] = useState(false);
   const [isRightLidOpen, setIsRightLidOpen] = useState(false);
 
-  // コメント表示管理（縦展開）
+  // コメント表示管理
   const [showComments, setShowComments] = useState(false);
 
   const handleCommentsToggle = (show: boolean) => {
     setShowComments(show);
   };
 
-  // メモが変更されたときにコメント状態をリセット
+  // メモが変更されたときにコメント状態を決定（コメントがある場合は表示）
   useEffect(() => {
-    setShowComments(false);
-  }, [selectedMemo?.id]);
+    if (selectedMemo && teamMode) {
+      // TODO: 実際のコメント数を取得してここで判定
+      // 現在はダミーで20件のコメントがあると仮定
+      const commentCount = 20; // 実際のAPI実装時にコメント取得APIで判定
+      const hasComments = commentCount > 0;
+      setShowComments(hasComments);
+    } else {
+      setShowComments(false);
+    }
+  }, [selectedMemo?.id, teamMode]);
 
   // 復元の状態
   const [isRestoring, setIsRestoring] = useState(false);
@@ -737,7 +745,7 @@ function MemoScreen({
         isOpen={memoScreenMode !== "list"}
         onClose={handleRightPanelClose}
       >
-        <div className="flex flex-col h-full overflow-y-auto">
+        <div className="flex flex-col h-full">
           {/* メモエディター部分 */}
           <div className="flex-1">
             {memoScreenMode === "create" && (

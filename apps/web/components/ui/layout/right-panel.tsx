@@ -55,7 +55,7 @@ function RightPanel({
 
       {/* コンテンツエリア */}
       <div
-        className={`pl-5 pr-2 flex-1 flex flex-col ${shouldAnimate ? "overflow-hidden" : "overflow-y-auto"}`}
+        className={`pl-5 pr-2 flex-1 flex flex-col hover-scrollbar ${shouldAnimate ? "overflow-hidden" : "overflow-y-auto"}`}
       >
         {children}
       </div>

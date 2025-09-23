@@ -311,48 +311,13 @@ function DesktopUpper({
       >
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">
-            {currentMode === "board" && customTitle ? (
-              <div className="flex flex-col w-full">
-                <div className="flex items-end gap-3">
-                  <h1 className="font-bold text-gray-800 text-[22px] whitespace-nowrap overflow-hidden truncate min-w-0 max-w-[max(550px,38vw)]">
-                    {customTitle}
-                  </h1>
-                  {/* 説明表示切り替えボタン */}
-                  {boardDescription && shouldShowSettingsIcon && (
-                    <Tooltip
-                      text={isDescriptionExpanded ? "説明を隠す" : "説明を表示"}
-                      position="bottom"
-                    >
-                      <button
-                        onClick={() =>
-                          setIsDescriptionExpanded(!isDescriptionExpanded)
-                        }
-                        className="text-gray-500 hover:text-gray-700 flex items-end"
-                      >
-                        <span className="text-gray-400 text-lg font-bold">
-                          ...
-                        </span>
-                      </button>
-                    </Tooltip>
-                  )}
-                </div>
-                {/* ボード説明（アコーディオン） */}
-                {boardDescription &&
-                  shouldShowSettingsIcon &&
-                  isDescriptionExpanded && (
-                    <p className="text-gray-600 text-sm mt-1">
-                      {boardDescription}
-                    </p>
-                  )}
-              </div>
-            ) : (
+            {!customTitle && (
               <h1 className="font-bold text-gray-800 text-[22px] w-[105px] truncate">
-                {customTitle ||
-                  (currentMode === "memo"
-                    ? "メモ一覧"
-                    : currentMode === "task"
-                      ? "タスク一覧"
-                      : "ボード一覧")}
+                {currentMode === "memo"
+                  ? "メモ一覧"
+                  : currentMode === "task"
+                    ? "タスク一覧"
+                    : "ボード一覧"}
               </h1>
             )}
           </div>
@@ -403,18 +368,6 @@ function DesktopUpper({
             </div>
           )}
         </div>
-
-        {/* 設定ボタン（ボードモードのみ右端に表示、アニメーション完了後に表示） */}
-        {currentMode === "board" &&
-          boardId &&
-          onBoardSettings &&
-          shouldShowSettingsIcon && (
-            <Tooltip text="ボード設定" position="bottom-left">
-              <button onClick={onBoardSettings} className="p-1 text-gray-600">
-                <SettingsIcon className="w-4 h-4" />
-              </button>
-            </Tooltip>
-          )}
       </div>
 
       {/* コントロール */}
@@ -446,6 +399,21 @@ function DesktopUpper({
               iconSize="size-4"
             />
           )}
+
+          {/* 設定ボタン（ボードモードのみコントロールパネルに表示） */}
+          {currentMode === "board" &&
+            boardId &&
+            onBoardSettings &&
+            shouldShowSettingsIcon && (
+              <Tooltip text="ボード設定" position="bottom-left">
+                <button
+                  onClick={onBoardSettings}
+                  className="p-1 text-gray-600 h-7 flex items-center"
+                >
+                  <SettingsIcon className="w-4 h-4" />
+                </button>
+              </Tooltip>
+            )}
 
           {/* ボードレイアウト切り替え（boardモードのみ） */}
           {currentMode === "board" && onBoardLayoutChange && (

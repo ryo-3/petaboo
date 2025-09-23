@@ -298,11 +298,30 @@ function BoardDetailScreen({
   const allBoards = teamMode ? teamBoards : personalBoards;
   const { categories } = useBoardCategories();
 
-  // 安全なデータ配布用
+  // 安全なデータ配布用（初期レンダリング時のundefined対策）
   const safeAllTaggings = allTaggings || [];
   const safeAllBoardItems = allBoardItems || [];
   const safeAllTags = allTags || [];
   const safeAllBoards = allBoards || [];
+
+  // データ配布ログ出力（デバッグ用）
+  useEffect(() => {
+    console.log(
+      `🔄 [ボード画面] teamMode:${teamMode} teamId:${teamId} | タグ付け:${safeAllTaggings.length}件 | ボード:${safeAllBoards.length}件 | タグ:${safeAllTags.length}件`,
+    );
+    console.log(
+      `📊 [ボード画面] personalTaggings:${personalTaggings?.length || 0}件 | teamTaggings:${teamTaggings?.length || 0}件 | 選択:${allTaggings?.length || 0}件`,
+    );
+  }, [
+    teamMode,
+    teamId,
+    safeAllTaggings.length,
+    safeAllBoards.length,
+    safeAllTags.length,
+    personalTaggings?.length,
+    teamTaggings?.length,
+    allTaggings?.length,
+  ]);
 
   // ボードのカテゴリーを取得
   const boardCategory = boardWithItems?.boardCategoryId
@@ -473,7 +492,7 @@ function BoardDetailScreen({
             viewMode={viewMode}
             allTags={safeAllTags}
             allBoards={safeAllBoards}
-            allTaggings={safeAllTaggings as Tagging[]}
+            allTaggings={(safeAllTaggings || []) as Tagging[]}
             allBoardItems={safeAllBoardItems}
             showEditDate={showEditDate}
             showTags={showTags}
@@ -520,7 +539,7 @@ function BoardDetailScreen({
             showBoardName={false}
             allTags={safeAllTags}
             allBoards={safeAllBoards}
-            allTaggings={safeAllTaggings as Tagging[]}
+            allTaggings={(safeAllTaggings || []) as Tagging[]}
             teamMode={teamMode}
             teamId={teamId}
             allBoardItems={safeAllBoardItems}
@@ -600,7 +619,7 @@ function BoardDetailScreen({
         allMemos={boardMemos}
         allTasks={boardTasks}
         allBoards={allBoards || []}
-        allTaggings={safeAllTaggings as Tagging[]}
+        allTaggings={(safeAllTaggings || []) as Tagging[]}
         allBoardItems={safeAllBoardItems}
         teamMode={teamMode}
         teamId={teamId}

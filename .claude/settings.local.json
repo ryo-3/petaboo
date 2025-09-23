@@ -113,7 +113,10 @@
       "Bash(apitest \"/teams/moricrew\")",
       "Bash(/home/ryosuke/petaboo/update-icons.sh:*)",
       "Bash(/home/ryosuke/petaboo/fix-icons.sh:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(apitest \"/taggings?teamId=18&targetType=memo&targetOriginalId=428\")",
+      "Bash(apitest \"/taggings?teamId=18&targetType=memo&targetOriginalId=429\" \"GET\")",
+      "Bash(lsof:*)"
     ],
     "deny": []
   }

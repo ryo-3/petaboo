@@ -33,15 +33,10 @@ export function useDeletedItemOperations<
   // 復元時の次選択処理 - 単純なラッパー
   const handleRestoreAndSelectNext = useCallback(
     (deletedItem: T) => {
-      console.log(
-        `🔄 復元後次選択処理開始: deletedItem.id=${deletedItem.id}, deletedItems=${deletedItems?.length || 0}件`,
-      );
       if (!deletedItems) {
-        console.log(`❌ 削除済みアイテムリストなし - 処理中断`);
         return;
       }
 
-      console.log(`⏭️ 次選択ハンドラー実行: deletedItem.id=${deletedItem.id}`);
       createDeletedNextSelectionHandler(
         deletedItems,
         deletedItem,

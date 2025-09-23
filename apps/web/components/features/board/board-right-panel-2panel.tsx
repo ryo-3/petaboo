@@ -10,7 +10,6 @@ import { Task, DeletedTask } from "@/src/types/task";
 import type { Tagging, Tag } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
 import { useTags } from "@/src/hooks/use-tags";
-import { useTeamTags } from "@/src/hooks/use-team-tags";
 import { useState } from "react";
 import { useNavigation } from "@/contexts/navigation-context";
 import { useDeleteMemo } from "@/src/hooks/use-memos";
@@ -82,10 +81,7 @@ export default function BoardRightPanel({
   onAddTaskToBoard, // eslint-disable-line @typescript-eslint/no-unused-vars
 }: BoardRightPanelProps) {
   const { handleMainSelectMemo, handleMainSelectTask } = useNavigation();
-  const { data: personalTags } = useTags();
-  const { data: teamTags } = useTeamTags(teamId || 0);
-  const tags = teamMode && teamId ? teamTags : personalTags;
-
+  const { data: tags } = useTags();
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
 
@@ -272,29 +268,27 @@ export default function BoardRightPanel({
               preloadedBoardItems={allBoardItems}
             />
           ) : (
-            <>
-              <MemoEditor
-                memo={selectedMemo}
-                initialBoardId={boardId}
-                teamMode={teamMode}
-                teamId={teamId || undefined}
-                {...toCreatorProps(selectedMemoCreatorInfo)}
-                preloadedTags={tags || []}
-                preloadedBoards={allBoards || []}
-                preloadedTaggings={allTaggings || []}
-                preloadedBoardItems={allBoardItems}
-                onClose={() => {
-                  // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
-                }}
-                onSaveComplete={(savedMemo) => {
-                  // 保存後に選択状態を更新
-                  onSelectMemo?.(savedMemo);
-                }}
-                onDelete={handleMemoDelete}
-                onDeleteAndSelectNext={onMemoDeleteAndSelectNext}
-                isLidOpen={isRightMemoLidOpen}
-              />
-            </>
+            <MemoEditor
+              memo={selectedMemo}
+              initialBoardId={boardId}
+              teamMode={teamMode}
+              teamId={teamId || undefined}
+              {...toCreatorProps(selectedMemoCreatorInfo)}
+              preloadedTags={tags || []}
+              preloadedBoards={allBoards || []}
+              preloadedTaggings={allTaggings || []}
+              preloadedBoardItems={allBoardItems}
+              onClose={() => {
+                // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
+              }}
+              onSaveComplete={(savedMemo) => {
+                // 保存後に選択状態を更新
+                onSelectMemo?.(savedMemo);
+              }}
+              onDelete={handleMemoDelete}
+              onDeleteAndSelectNext={onMemoDeleteAndSelectNext}
+              isLidOpen={isRightMemoLidOpen}
+            />
           )}
         </>
       )}

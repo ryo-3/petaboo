@@ -78,8 +78,6 @@ interface MemoEditorProps {
   createdBy?: string | null;
   createdByUserId?: string | null;
   createdByAvatarColor?: string | null;
-
-  // コメント機能
   onCommentsToggle?: (show: boolean) => void;
   showComments?: boolean;
 }
@@ -134,6 +132,11 @@ function MemoEditor({
     }
 
     const originalId = memo.originalId || memo.id.toString();
+
+    // デバッグ用ログ
+    console.log(
+      `🔍 [MemoEditor] memo情報: id=${memo.id}, originalId=${memo.originalId}, 使用originalId=${originalId}`,
+    );
 
     // このメモに紐づいているボードアイテムを抽出
     const memoBoardItems = preloadedBoardItems.filter(
@@ -219,11 +222,46 @@ function MemoEditor({
     teamMode: teamMode, // チームモードフラグをそのまま渡す
   });
 
-  // チーム用タグ情報を取得
-  const { data: liveTeamTaggings } = useTeamTaggings(teamId || 0, {
+  // チーム用タグ情報を取得（チームモードの場合のみ、かつmemoオブジェクトが完全に取得された場合のみ）
+  const hookTeamId = teamMode && teamId ? teamId : 0;
+  const shouldEnableHook =
+    hookTeamId > 0 && memo && memo.id && originalId && originalId !== "";
+
+  const {
+    data: liveTeamTaggings,
+    isLoading: teamTaggingsLoading,
+    error: teamTaggingsError,
+  } = useTeamTaggings(shouldEnableHook ? hookTeamId : 0, {
     targetType: "memo",
     targetOriginalId: originalId,
   });
+
+  // チーム用タグ取得のデバッグログ
+  useEffect(() => {
+    if (teamMode && memo && memo.id !== undefined && memo.id !== 0) {
+      console.log(
+        `🔧 [MemoEditor] チーム用タグ取得状況: teamId:${hookTeamId} shouldEnable:${shouldEnableHook} originalId:"${originalId}"`,
+      );
+      console.log(
+        `📡 [MemoEditor] API状況: loading:${teamTaggingsLoading} error:${teamTaggingsError ? "あり" : "なし"} data:${liveTeamTaggings?.length || 0}件`,
+      );
+      if (teamTaggingsError) {
+        console.error(
+          `❌ [MemoEditor] チーム用タグ取得エラー:`,
+          teamTaggingsError,
+        );
+      }
+    }
+  }, [
+    teamMode,
+    memo?.id,
+    hookTeamId,
+    shouldEnableHook,
+    originalId,
+    teamTaggingsLoading,
+    teamTaggingsError,
+    liveTeamTaggings?.length,
+  ]);
 
   // チーム用タグ一覧を取得
   const { data: teamTagsList } = useTeamTags(teamId || 0);
@@ -237,13 +275,14 @@ function MemoEditor({
     const targetOriginalId = memo.originalId || memo.id.toString();
 
     // チームモードかどうかに応じてタグ付け情報を選択
+    // liveデータを優先し、取得できない場合はpreloadedTaggingsからフィルタリング
     const taggingsToUse = teamMode
-      ? liveTeamTaggings || []
-      : liveTaggings ||
-        preloadedTaggings.filter(
-          (t) =>
-            t.targetType === "memo" && t.targetOriginalId === targetOriginalId,
-        );
+      ? liveTeamTaggings && liveTeamTaggings.length > 0
+        ? liveTeamTaggings
+        : preloadedTaggings
+      : liveTaggings && liveTaggings.length > 0
+        ? liveTaggings
+        : preloadedTaggings;
 
     const tags = taggingsToUse
       .filter(
@@ -255,6 +294,47 @@ function MemoEditor({
 
     return tags;
   }, [memo, preloadedTaggings, liveTaggings, liveTeamTaggings, teamMode]);
+
+  // タグデータログ出力（デバッグ用）
+  useEffect(() => {
+    if (memo && memo.id !== undefined && memo.id !== 0) {
+      const targetOriginalId = memo.originalId || memo.id.toString();
+      console.log(
+        `🏷️ [メモエディター] memo:${memo.id} originalId:${targetOriginalId} | タグ数:${currentTags.length} | タグ:${currentTags.map((tag) => `${tag.name}(${tag.id})`).join(", ") || "なし"}`,
+      );
+      console.log(
+        `📂 [メモエディター] memo:${memo.id} | ボード数:${itemBoards.length} | ボード:${itemBoards.map((board) => `${board.name}(${board.id})`).join(", ") || "なし"}`,
+      );
+      console.log(
+        `🔍 [メモエディター] teamMode:${teamMode} | preloadedTaggings:${preloadedTaggings.length}件 | liveTeamTaggings:${liveTeamTaggings?.length || 0}件 | liveTaggings:${liveTaggings?.length || 0}件`,
+      );
+      const filteredPreloaded = preloadedTaggings.filter(
+        (t) =>
+          t.targetType === "memo" && t.targetOriginalId === targetOriginalId,
+      );
+      console.log(
+        `🎯 [メモエディター] フィルタ後タグ付け件数:${teamMode ? (liveTeamTaggings || filteredPreloaded).length : (liveTaggings || filteredPreloaded).length}件`,
+      );
+      console.log(
+        `📋 [メモエディター] preloadedTaggings詳細:`,
+        preloadedTaggings
+          .slice(0, 3)
+          .map((t) => `${t.targetType}:${t.targetOriginalId}`),
+      );
+      console.log(
+        `🔎 [メモエディター] 対象memo originalId="${targetOriginalId}" でフィルタした結果:`,
+        filteredPreloaded.map((t) => `tag:${t.tag?.name}(${t.tag?.id})`),
+      );
+    }
+  }, [
+    memo?.id,
+    currentTags,
+    itemBoards,
+    teamMode,
+    preloadedTaggings.length,
+    liveTeamTaggings?.length,
+    liveTaggings?.length,
+  ]);
 
   // タグ操作用のmutation（既存API使用）
   const createTaggingMutation = useCreateTagging();
@@ -322,10 +402,10 @@ function MemoEditor({
     }
   }, [memo?.id, prevMemoId, currentTags, localTags, hasManualChanges]);
 
-  // preloadedTagsが更新された時にlocalTagsの最新情報を反映（個人モードのみ）
+  // preloadedTagsが更新された時にlocalTagsの最新情報を反映
   useEffect(() => {
-    // チームモードの時は個人タグでの更新を行わない
-    if (teamMode || localTags.length === 0 || preloadedTags.length === 0) {
+    // チームモード・個人モード両方で preloadedTags の更新を反映
+    if (localTags.length === 0 || preloadedTags.length === 0) {
       return;
     }
 
@@ -712,7 +792,6 @@ function MemoEditor({
           createdItemId={null}
           hideDateInfo={true}
           topContent={null}
-          compactPadding={!!customHeight}
           headerActions={
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-2">
@@ -855,7 +934,7 @@ function MemoEditor({
                   }
             }
             readOnly={isDeleted}
-            className={`w-full ${customHeight || "flex-1"} resize-none outline-none leading-relaxed font-medium pb-10 mb-2 pr-1 mt-2 hover-scrollbar ${
+            className={`w-full ${customHeight || "flex-1"} resize-none outline-none leading-relaxed font-medium pb-10 mb-2 pr-1 mt-2 ${
               isDeleted
                 ? "text-red-500 bg-red-50 cursor-not-allowed"
                 : "text-gray-500"
@@ -870,75 +949,121 @@ function MemoEditor({
             showWhen="has-content"
           />
 
-          {/* コメント表示エリア */}
-          {showComments && teamMode && memo && memo.id !== 0 && !isDeleted && (
-            <div className="mt-3 border border-gray-200 rounded-md bg-gray-50">
-              <div className="p-3">
-                <div className="mb-3 flex items-center justify-between">
-                  <h4 className="text-sm font-medium text-gray-700">
-                    コメント (20)
-                  </h4>
-                  <button
-                    onClick={() => onCommentsToggle?.(false)}
-                    className="text-xs text-gray-500 hover:text-gray-700"
+          {/* コメント機能（チームモードの既存メモのみ） */}
+          {teamMode &&
+            memo &&
+            memo.id !== 0 &&
+            !isDeleted &&
+            onCommentsToggle && (
+              <div className="mb-6">
+                {/* コメント切り替えボタン */}
+                <button
+                  onClick={() => {
+                    onCommentsToggle(!showComments);
+                  }}
+                  className={`inline-flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm transition-all duration-200 ${
+                    showComments
+                      ? "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                      : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                  }`}
+                >
+                  <svg
+                    className="size-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    閉じる
-                  </button>
-                </div>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
+                  </svg>
+                  <span>コメント</span>
+                  <span
+                    className={`text-xs font-medium ${
+                      showComments ? "text-blue-700" : "text-gray-500"
+                    }`}
+                  >
+                    (6)
+                  </span>
+                </button>
 
-                {/* コメントリスト */}
-                <div className="space-y-3 max-h-48 overflow-y-auto">
-                  {Array.from({ length: 20 }, (_, i) => (
-                    <div
-                      key={i}
-                      className="bg-white rounded-lg p-3 shadow-sm border border-gray-100"
-                    >
-                      <div className="flex items-start gap-2">
-                        <div className="size-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
-                          U{i + 1}
+                {/* コメント表示エリア */}
+                {showComments && (
+                  <div className="mt-4 p-4 border border-gray-200 rounded-md bg-gray-50">
+                    {/* コメント一覧 */}
+                    <div className="space-y-3 mb-4">
+                      <div className="flex gap-3">
+                        <div className="flex-shrink-0">
+                          <div className="size-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                            A
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-sm font-medium text-gray-800">
-                              ユーザー{i + 1}
+                            <span className="text-sm font-medium text-gray-900">
+                              Alice
                             </span>
                             <span className="text-xs text-gray-500">
-                              {i === 0 ? "2分前" : `${i + 1}時間前`}
+                              2時間前
                             </span>
                           </div>
-                          <p className="text-sm text-gray-700 leading-relaxed">
-                            これはコメント{i + 1}
-                            のダミーテキストです。実際のコメント内容がここに表示されます。
+                          <p className="text-sm text-gray-700">
+                            この内容についてもう少し詳しく教えてください。
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3">
+                        <div className="flex-shrink-0">
+                          <div className="size-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                            B
+                          </div>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-sm font-medium text-gray-900">
+                              Bob
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              1時間前
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-700">
+                            承知しました。明日までに確認して追記します。
                           </p>
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
 
-                {/* 新規コメント入力 */}
-                <div className="mt-3 pt-3 border-t border-gray-200">
-                  <div className="flex items-start gap-2">
-                    <div className="size-7 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
-                      私
-                    </div>
-                    <div className="flex-1">
-                      <textarea
-                        placeholder="コメントを追加..."
-                        className="w-full p-3 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                        rows={3}
-                      />
-                      <div className="flex justify-end mt-2">
-                        <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm font-medium">
-                          コメント
-                        </button>
+                    {/* コメント入力エリア */}
+                    <div className="border-t border-gray-300 pt-4">
+                      <div className="flex gap-3">
+                        <div className="flex-shrink-0">
+                          <div className="size-8 bg-gray-400 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                            Y
+                          </div>
+                        </div>
+                        <div className="flex-1">
+                          <textarea
+                            placeholder="コメントを入力..."
+                            rows={2}
+                            className="w-full p-2 border border-gray-300 rounded-md text-sm resize-none focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                          <div className="flex justify-end mt-2">
+                            <button className="px-3 py-1 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition-colors">
+                              投稿
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
-            </div>
-          )}
+            )}
         </BaseViewer>
       </div>
       {baseViewerRef.current && (
@@ -956,12 +1081,22 @@ function MemoEditor({
       <TagSelectionModal
         isOpen={isTagModalOpen}
         onClose={() => setIsTagModalOpen(false)}
-        tags={teamMode ? teamTagsList || [] : preloadedTags}
+        tags={
+          teamMode
+            ? preloadedTags.length > 0
+              ? preloadedTags
+              : teamTagsList || []
+            : preloadedTags
+        }
         selectedTagIds={localTags.map((tag) => tag.id)}
         teamMode={teamMode}
         teamId={teamId}
         onSelectionChange={(tagIds) => {
-          const availableTags = teamMode ? teamTagsList || [] : preloadedTags;
+          const availableTags = teamMode
+            ? preloadedTags.length > 0
+              ? preloadedTags
+              : teamTagsList || []
+            : preloadedTags;
           const selectedTags = availableTags.filter((tag) =>
             tagIds.includes(tag.id),
           );

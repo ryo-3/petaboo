@@ -55,6 +55,8 @@ export function getTeamMemoSelectFields() {
     id: teamMemos.id,
     teamId: teamMemos.teamId,
     userId: teamMemos.userId,
+    originalId: teamMemos.originalId, // 重要: originalIdフィールドを追加
+    uuid: teamMemos.uuid,
     title: teamMemos.title,
     content: teamMemos.content,
     createdAt: teamMemos.createdAt,

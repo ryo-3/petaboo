@@ -128,11 +128,6 @@ export default function TeamBoardDetailPage() {
         (memo) => memo.id.toString() === initialMemoId,
       );
       if (foundMemo) {
-        // デバッグログ
-        console.log(
-          `🔍 [TeamBoardDetailPage] foundMemo: id=${foundMemo.id}, originalId=${foundMemo.originalId}`,
-        );
-
         // 現在選択されているのと違う場合のみ更新
         if (!selectedMemo || selectedMemo.id.toString() !== initialMemoId) {
           // TeamMemo型をMemo型として扱う（型の互換性を仮定）
@@ -142,9 +137,6 @@ export default function TeamBoardDetailPage() {
             originalId: foundMemo.originalId, // team_memosのoriginal_idを使用
           } as unknown as Memo;
 
-          console.log(
-            `🔧 [TeamBoardDetailPage] 設定するmemo: id=${memoWithCorrectOriginalId.id}, originalId=${memoWithCorrectOriginalId.originalId}`,
-          );
           setSelectedMemo(memoWithCorrectOriginalId);
           setSelectedTask(null); // タスクの選択を解除
           // URLを更新してパス形式に統一

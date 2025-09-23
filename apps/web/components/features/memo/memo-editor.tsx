@@ -133,11 +133,6 @@ function MemoEditor({
 
     const originalId = memo.originalId || memo.id.toString();
 
-    // デバッグ用ログ
-    console.log(
-      `🔍 [MemoEditor] memo情報: id=${memo.id}, originalId=${memo.originalId}, 使用originalId=${originalId}`,
-    );
-
     // このメモに紐づいているボードアイテムを抽出
     const memoBoardItems = preloadedBoardItems.filter(
       (item) => item.itemType === "memo" && item.originalId === originalId,
@@ -236,33 +231,6 @@ function MemoEditor({
     targetOriginalId: originalId,
   });
 
-  // チーム用タグ取得のデバッグログ
-  useEffect(() => {
-    if (teamMode && memo && memo.id !== undefined && memo.id !== 0) {
-      console.log(
-        `🔧 [MemoEditor] チーム用タグ取得状況: teamId:${hookTeamId} shouldEnable:${shouldEnableHook} originalId:"${originalId}"`,
-      );
-      console.log(
-        `📡 [MemoEditor] API状況: loading:${teamTaggingsLoading} error:${teamTaggingsError ? "あり" : "なし"} data:${liveTeamTaggings?.length || 0}件`,
-      );
-      if (teamTaggingsError) {
-        console.error(
-          `❌ [MemoEditor] チーム用タグ取得エラー:`,
-          teamTaggingsError,
-        );
-      }
-    }
-  }, [
-    teamMode,
-    memo?.id,
-    hookTeamId,
-    shouldEnableHook,
-    originalId,
-    teamTaggingsLoading,
-    teamTaggingsError,
-    liveTeamTaggings?.length,
-  ]);
-
   // チーム用タグ一覧を取得
   const { data: teamTagsList } = useTeamTags(teamId || 0);
 
@@ -294,47 +262,6 @@ function MemoEditor({
 
     return tags;
   }, [memo, preloadedTaggings, liveTaggings, liveTeamTaggings, teamMode]);
-
-  // タグデータログ出力（デバッグ用）
-  useEffect(() => {
-    if (memo && memo.id !== undefined && memo.id !== 0) {
-      const targetOriginalId = memo.originalId || memo.id.toString();
-      console.log(
-        `🏷️ [メモエディター] memo:${memo.id} originalId:${targetOriginalId} | タグ数:${currentTags.length} | タグ:${currentTags.map((tag) => `${tag.name}(${tag.id})`).join(", ") || "なし"}`,
-      );
-      console.log(
-        `📂 [メモエディター] memo:${memo.id} | ボード数:${itemBoards.length} | ボード:${itemBoards.map((board) => `${board.name}(${board.id})`).join(", ") || "なし"}`,
-      );
-      console.log(
-        `🔍 [メモエディター] teamMode:${teamMode} | preloadedTaggings:${preloadedTaggings.length}件 | liveTeamTaggings:${liveTeamTaggings?.length || 0}件 | liveTaggings:${liveTaggings?.length || 0}件`,
-      );
-      const filteredPreloaded = preloadedTaggings.filter(
-        (t) =>
-          t.targetType === "memo" && t.targetOriginalId === targetOriginalId,
-      );
-      console.log(
-        `🎯 [メモエディター] フィルタ後タグ付け件数:${teamMode ? (liveTeamTaggings || filteredPreloaded).length : (liveTaggings || filteredPreloaded).length}件`,
-      );
-      console.log(
-        `📋 [メモエディター] preloadedTaggings詳細:`,
-        preloadedTaggings
-          .slice(0, 3)
-          .map((t) => `${t.targetType}:${t.targetOriginalId}`),
-      );
-      console.log(
-        `🔎 [メモエディター] 対象memo originalId="${targetOriginalId}" でフィルタした結果:`,
-        filteredPreloaded.map((t) => `tag:${t.tag?.name}(${t.tag?.id})`),
-      );
-    }
-  }, [
-    memo?.id,
-    currentTags,
-    itemBoards,
-    teamMode,
-    preloadedTaggings.length,
-    liveTeamTaggings?.length,
-    liveTaggings?.length,
-  ]);
 
   // タグ操作用のmutation（既存API使用）
   const createTaggingMutation = useCreateTagging();

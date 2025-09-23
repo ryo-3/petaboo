@@ -304,25 +304,6 @@ function BoardDetailScreen({
   const safeAllTags = allTags || [];
   const safeAllBoards = allBoards || [];
 
-  // データ配布ログ出力（デバッグ用）
-  useEffect(() => {
-    console.log(
-      `🔄 [ボード画面] teamMode:${teamMode} teamId:${teamId} | タグ付け:${safeAllTaggings.length}件 | ボード:${safeAllBoards.length}件 | タグ:${safeAllTags.length}件`,
-    );
-    console.log(
-      `📊 [ボード画面] personalTaggings:${personalTaggings?.length || 0}件 | teamTaggings:${teamTaggings?.length || 0}件 | 選択:${allTaggings?.length || 0}件`,
-    );
-  }, [
-    teamMode,
-    teamId,
-    safeAllTaggings.length,
-    safeAllBoards.length,
-    safeAllTags.length,
-    personalTaggings?.length,
-    teamTaggings?.length,
-    allTaggings?.length,
-  ]);
-
   // ボードのカテゴリーを取得
   const boardCategory = boardWithItems?.boardCategoryId
     ? categories.find((cat) => cat.id === boardWithItems.boardCategoryId)

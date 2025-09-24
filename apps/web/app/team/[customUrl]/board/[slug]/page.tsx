@@ -399,6 +399,7 @@ export default function TeamBoardDetailPage() {
       selectedTask={selectedTask}
       onSelectMemo={handleSelectMemo}
       onSelectTask={handleSelectTask}
+      onSelectDeletedMemo={handleSelectMemo} // 削除済みメモ選択用（handleSelectMemoを再利用）
       onClearSelection={handleClearSelection}
       onBack={handleBack}
       onSettings={handleSettings}

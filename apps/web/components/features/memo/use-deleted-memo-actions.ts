@@ -14,6 +14,8 @@ interface UseDeletedMemoActionsProps {
   teamMode?: boolean;
   teamId?: number;
   boardId?: number;
+  skipAutoSelectionOnRestore?: boolean; // 復元時の自動選択をスキップ
+  totalDeletedCount?: number; // 削除済みアイテムの総数
 }
 
 export function useDeletedMemoActions({
@@ -25,6 +27,8 @@ export function useDeletedMemoActions({
   teamMode = false,
   teamId,
   boardId,
+  skipAutoSelectionOnRestore = false,
+  totalDeletedCount = 0,
 }: UseDeletedMemoActionsProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isLocalRestoring, setIsLocalRestoring] = useState(false);
@@ -59,27 +63,36 @@ export function useDeletedMemoActions({
     onSuccess: async () => {
       // キャッシュを手動更新（削除されたアイテムをすぐに除去）
       if (teamMode && teamId) {
-        // チームモード: チーム削除済みメモキャッシュを更新
-        queryClient.setQueryData(
-          ["team-deleted-memos", teamId],
-          (oldDeletedMemos: DeletedMemo[] | undefined) => {
-            if (!oldDeletedMemos) return [];
-            return oldDeletedMemos.filter(
-              (m) => memo && m.originalId !== memo.originalId,
-            );
-          },
-        );
+        // チームモード: チーム削除済みメモキャッシュを更新（存在する場合のみ）
+        const existingData = queryClient.getQueryData([
+          "team-deleted-memos",
+          teamId,
+        ]);
+        if (existingData) {
+          queryClient.setQueryData(
+            ["team-deleted-memos", teamId],
+            (oldDeletedMemos: DeletedMemo[] | undefined) => {
+              if (!oldDeletedMemos) return [];
+              return oldDeletedMemos.filter(
+                (m) => memo && m.originalId !== memo.originalId,
+              );
+            },
+          );
+        }
       } else {
-        // 個人モード: 個人削除済みメモキャッシュを更新
-        queryClient.setQueryData(
-          ["deletedMemos"],
-          (oldDeletedMemos: DeletedMemo[] | undefined) => {
-            if (!oldDeletedMemos) return [];
-            return oldDeletedMemos.filter(
-              (m) => memo && m.originalId !== memo.originalId,
-            );
-          },
-        );
+        // 個人モード: 個人削除済みメモキャッシュを更新（存在する場合のみ）
+        const existingData = queryClient.getQueryData(["deletedMemos"]);
+        if (existingData) {
+          queryClient.setQueryData(
+            ["deletedMemos"],
+            (oldDeletedMemos: DeletedMemo[] | undefined) => {
+              if (!oldDeletedMemos) return [];
+              return oldDeletedMemos.filter(
+                (m) => memo && m.originalId !== memo.originalId,
+              );
+            },
+          );
+        }
       }
 
       // ボード固有の削除済みアイテムキャッシュも手動更新（teamIdを文字列に統一）
@@ -88,23 +101,29 @@ export function useDeletedMemoActions({
           ? ["team-board-deleted-items", teamId.toString(), boardId]
           : ["board-deleted-items", boardId];
 
-      queryClient.setQueryData(boardDeletedItemsQueryKey, (oldItems: any) => {
-        if (!oldItems) {
-          return null;
-        }
+      // 既存のキャッシュがある場合のみ更新
+      const existingBoardData = queryClient.getQueryData(
+        boardDeletedItemsQueryKey,
+      );
+      if (existingBoardData) {
+        queryClient.setQueryData(boardDeletedItemsQueryKey, (oldItems: any) => {
+          if (!oldItems) {
+            return null;
+          }
 
-        // 削除済みアイテム構造: { memos: [], tasks: [] }
-        if (oldItems.memos) {
-          return {
-            ...oldItems,
-            memos: oldItems.memos.filter(
-              (item: any) => memo && item.originalId !== memo.originalId,
-            ),
-          };
-        }
+          // 削除済みアイテム構造: { memos: [], tasks: [] }
+          if (oldItems.memos) {
+            return {
+              ...oldItems,
+              memos: oldItems.memos.filter(
+                (item: any) => memo && item.originalId !== memo.originalId,
+              ),
+            };
+          }
 
-        return oldItems;
-      });
+          return oldItems;
+        });
+      }
 
       // 即座に次のメモ選択機能を使用（手動更新済みなのでタイミング問題なし）
       if (onDeleteAndSelectNext && memo) {
@@ -116,7 +135,12 @@ export function useDeletedMemoActions({
       // 最後にキャッシュを無効化して最新データを取得（安全なアプローチ）
       if (teamMode && teamId) {
         await queryClient.invalidateQueries({
-          queryKey: ["team-deleted-memos", teamId],
+          predicate: (query) => {
+            const key = query.queryKey as string[];
+            return (
+              key[0] === "team-deleted-memos" && key[1] === teamId?.toString()
+            );
+          },
         });
 
         if (boardId) {
@@ -202,6 +226,11 @@ export function useDeletedMemoActions({
   };
 
   const handleRestore = async () => {
+    // 既に復元中または削除中の場合は早期リターン（連続実行防止）
+    if (isLocalRestoring || restoreNote.isPending) {
+      return;
+    }
+
     try {
       setIsLocalRestoring(true);
 
@@ -231,13 +260,36 @@ export function useDeletedMemoActions({
               // 復元完了後、すぐにUIを更新
               setIsLocalRestoring(false);
 
-              if (onRestoreAndSelectNext && memo) {
+              // 最後の削除済みアイテムの場合は常に閉じる
+              if (totalDeletedCount <= 1) {
+                onClose();
+              } else if (
+                !skipAutoSelectionOnRestore &&
+                onRestoreAndSelectNext &&
+                memo
+              ) {
+                console.log("🎯 復元後の次選択実行", {
+                  skipAutoSelectionOnRestore,
+                  hasOnRestoreAndSelectNext: !!onRestoreAndSelectNext,
+                  memoOriginalId: memo.originalId,
+                });
                 onRestoreAndSelectNext(memo);
-              } else {
+              } else if (!skipAutoSelectionOnRestore) {
                 onClose();
               }
+              // skipAutoSelectionOnRestore=trueで最後でない場合は何もしない（アイテムを開いたまま）
             } catch (error) {
               console.error("メモ復元エラー (アニメーション内):", error);
+              console.error("復元エラーの詳細:", {
+                memoId: memo?.id,
+                originalId: memo?.originalId,
+                teamMode,
+                teamId,
+                error,
+                errorMessage:
+                  error instanceof Error ? error.message : "不明なエラー",
+                stack: error instanceof Error ? error.stack : undefined,
+              });
               setIsLocalRestoring(false);
               alert("復元に失敗しました。");
             }
@@ -252,14 +304,36 @@ export function useDeletedMemoActions({
 
         setIsLocalRestoring(false);
 
-        if (onRestoreAndSelectNext && memo) {
+        // 最後の削除済みアイテムの場合は常に閉じる
+        if (totalDeletedCount <= 1) {
+          onClose();
+        } else if (
+          !skipAutoSelectionOnRestore &&
+          onRestoreAndSelectNext &&
+          memo
+        ) {
+          console.log("🎯 復元後の次選択実行（アニメーションなし）", {
+            skipAutoSelectionOnRestore,
+            hasOnRestoreAndSelectNext: !!onRestoreAndSelectNext,
+            memoOriginalId: memo.originalId,
+          });
           onRestoreAndSelectNext(memo);
-        } else {
+        } else if (!skipAutoSelectionOnRestore) {
           onClose();
         }
+        // skipAutoSelectionOnRestore=trueで最後でない場合は何もしない（アイテムを開いたまま）
       }
     } catch (error) {
       console.error("メモ復元エラー:", error);
+      console.error("復元エラーの詳細:", {
+        memoId: memo?.id,
+        originalId: memo?.originalId,
+        teamMode,
+        teamId,
+        error,
+        errorMessage: error instanceof Error ? error.message : "不明なエラー",
+        stack: error instanceof Error ? error.stack : undefined,
+      });
       setIsLocalRestoring(false);
       alert("復元に失敗しました。");
     }

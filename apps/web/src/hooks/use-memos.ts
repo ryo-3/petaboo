@@ -45,6 +45,7 @@ export function useDeletedMemos(options?: {
 
   return useQuery({
     queryKey: teamMode ? ["team-deleted-memos", teamId] : ["deletedMemos"],
+    enabled: teamMode ? Boolean(teamId) : true, // チームモードの場合はteamIdが必要
     queryFn: async () => {
       const token = await getToken();
       if (teamMode && teamId) {
@@ -61,7 +62,6 @@ export function useDeletedMemos(options?: {
         return data as DeletedMemo[];
       }
     },
-    enabled: teamMode ? Boolean(teamId) : true,
   });
 }
 
@@ -339,7 +339,12 @@ export function useDeleteMemo(options?: {
         });
         // 削除済み一覧は無効化（削除済みメモが追加されるため）
         queryClient.invalidateQueries({
-          queryKey: ["team-deleted-memos", teamId],
+          predicate: (query) => {
+            const key = query.queryKey as string[];
+            return (
+              key[0] === "team-deleted-memos" && key[1] === teamId?.toString()
+            );
+          },
         });
         // チームボード関連のキャッシュを強制再取得（統計が変わるため）
         queryClient.refetchQueries({
@@ -420,13 +425,74 @@ export function useRestoreMemo(options?: {
         await memosApi.restoreNote(originalId, token || undefined);
       }
     },
-    onSuccess: () => {
+    onSuccess: (_, originalId) => {
       if (teamMode && teamId) {
+        // 削除済みメモキャッシュから復元されたメモを即座に除去（存在する場合のみ）
+        const existingData = queryClient.getQueryData([
+          "team-deleted-memos",
+          teamId,
+        ]);
+        if (existingData) {
+          queryClient.setQueryData(
+            ["team-deleted-memos", teamId],
+            (oldDeletedMemos: any[] | undefined) => {
+              if (!oldDeletedMemos) return [];
+              return oldDeletedMemos.filter(
+                (memo) => memo.originalId !== originalId,
+              );
+            },
+          );
+        }
+
+        // 特定のボードの削除済みアイテムからも除去（存在する場合のみ）
+        if (boardId) {
+          const existingBoardData = queryClient.getQueryData([
+            "team-board-deleted-items",
+            teamId.toString(),
+            boardId,
+          ]);
+          if (existingBoardData) {
+            queryClient.setQueryData(
+              ["team-board-deleted-items", teamId.toString(), boardId],
+              (oldData: any) => {
+                if (oldData?.memos) {
+                  return {
+                    ...oldData,
+                    memos: oldData.memos.filter(
+                      (memo: any) => memo.originalId !== originalId,
+                    ),
+                  };
+                }
+                return oldData;
+              },
+            );
+          }
+        }
+
         // チームメモ復元時のキャッシュ無効化と強制再取得
         queryClient.invalidateQueries({ queryKey: ["team-memos", teamId] });
-        queryClient.refetchQueries({ queryKey: ["team-memos", teamId] });
+        queryClient.refetchQueries({
+          predicate: (query) => {
+            const key = query.queryKey as string[];
+            return key[0] === "team-memos" && key[1] === teamId?.toString();
+          },
+        });
         queryClient.invalidateQueries({
-          queryKey: ["team-deleted-memos", teamId],
+          predicate: (query) => {
+            const key = query.queryKey as string[];
+            return (
+              key[0] === "team-deleted-memos" && key[1] === teamId?.toString()
+            );
+          },
+        });
+        // 存在するクエリのみ再取得
+        queryClient.refetchQueries({
+          predicate: (query) => {
+            const key = query.queryKey as string[];
+            return (
+              key[0] === "team-deleted-memos" && key[1] === teamId?.toString()
+            );
+          },
         });
         // チームボード関連のキャッシュを強制再取得（復元されたメモを即座に反映）
         queryClient.refetchQueries({
@@ -439,6 +505,26 @@ export function useRestoreMemo(options?: {
             );
           },
         });
+        // すべてのチーム関連の削除済みアイテムキャッシュを無効化・再取得
+        queryClient.invalidateQueries({
+          predicate: (query) => {
+            const key = query.queryKey as string[];
+            return (
+              key[0] === "team-board-deleted-items" &&
+              key[1] === teamId.toString()
+            );
+          },
+        });
+        queryClient.refetchQueries({
+          predicate: (query) => {
+            const key = query.queryKey as string[];
+            return (
+              key[0] === "team-board-deleted-items" &&
+              key[1] === teamId.toString()
+            );
+          },
+        });
+
         // 特定のボードの削除済みアイテムも明示的に無効化
         if (boardId) {
           queryClient.invalidateQueries({
@@ -450,6 +536,20 @@ export function useRestoreMemo(options?: {
           });
         }
       } else {
+        // 削除済みメモキャッシュから復元されたメモを即座に除去（存在する場合のみ）
+        const existingData = queryClient.getQueryData(["deletedMemos"]);
+        if (existingData) {
+          queryClient.setQueryData(
+            ["deletedMemos"],
+            (oldDeletedMemos: any[] | undefined) => {
+              if (!oldDeletedMemos) return [];
+              return oldDeletedMemos.filter(
+                (memo) => memo.originalId !== originalId,
+              );
+            },
+          );
+        }
+
         // 個人メモ復元時のキャッシュ無効化
         queryClient.invalidateQueries({ queryKey: ["memos"] });
         queryClient.invalidateQueries({ queryKey: ["deletedMemos"] });

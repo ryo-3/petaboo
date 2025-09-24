@@ -370,6 +370,8 @@ app.openapi(
 
     const { id } = c.req.valid("param");
 
+    console.log(`🗑️ メモ削除リクエスト: id=${id}, userId=${auth.userId}`);
+
     // まず該当メモを取得（ユーザー確認込み）
     const note = await db
       .select()
@@ -377,7 +379,23 @@ app.openapi(
       .where(and(eq(memos.id, id), eq(memos.userId, auth.userId)))
       .get();
 
+    console.log(`🔍 検索結果:`, {
+      note: note
+        ? { id: note.id, userId: note.userId, title: note.title }
+        : null,
+    });
+
     if (!note) {
+      // デバッグ用：該当IDのメモが存在するかチェック
+      const anyNote = await db
+        .select()
+        .from(memos)
+        .where(eq(memos.id, id))
+        .get();
+
+      console.log(
+        `❌ ユーザーチェック失敗: requestUserId=${auth.userId}, noteExists=${!!anyNote}, noteUserId=${anyNote?.userId}`,
+      );
       return c.json({ error: "Note not found" }, 404);
     }
 

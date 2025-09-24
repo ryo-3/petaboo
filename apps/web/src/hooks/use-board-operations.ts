@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useEffect } from "react";
 import {
   useAddItemToBoard,
   useRemoveItemFromBoard,
@@ -322,23 +322,78 @@ export function useBoardOperations({
     [boardTasks, onSelectTask, onClearSelection],
   );
 
+  // 削除済みメモ一覧のログ出力
+  useEffect(() => {
+    if (boardDeletedItems?.memos) {
+      console.log("📋 個人ボード削除済みメモ一覧の並び順", {
+        boardId,
+        count: boardDeletedItems.memos.length,
+        memos: boardDeletedItems.memos.map((memo, index) => ({
+          index,
+          id: memo.id,
+          originalId: memo.originalId,
+          title: memo.title?.substring(0, 30) || "(タイトルなし)",
+          deletedAt: memo.deletedAt,
+        })),
+      });
+    }
+  }, [boardDeletedItems?.memos, boardId]);
+
   // 削除済みアイテムの復元ハンドラー
-  const { handleRestoreAndSelectNext: handleMemoRestoreAndSelectNext } =
+  const { handleRestoreAndSelectNext: rawHandleMemoRestoreAndSelectNext } =
     useDeletedItemOperations({
       deletedItems: boardDeletedItems?.memos || null,
       onSelectDeletedItem: (memo: DeletedMemo | null) => {
+        console.log("🔧 useBoardOperations.onSelectDeletedItem 呼び出し", {
+          memoId: memo?.id,
+          memoOriginalId: memo?.originalId,
+          memoTitle: memo?.title,
+          willClearSelection: memo === null,
+        });
+
         if (memo === null) {
           // 次のアイテムがない場合は選択解除してエディターを閉じる
           onClearSelection?.();
         } else {
+          // 削除済みメモとして選択 - 右パネルの選択状態が更新される
           onSelectMemo?.(memo);
+          console.log(
+            "✅ useBoardOperations 削除済みメモ選択完了",
+            memo.originalId,
+          );
         }
       },
       setScreenMode: () => {}, // ボードでは画面モード変更なし
       editorSelector: "[data-memo-editor]",
     });
 
-  const { handleRestoreAndSelectNext: handleTaskRestoreAndSelectNext } =
+  // 復元ハンドラーにデバッグログを追加
+  const handleMemoRestoreAndSelectNext = useCallback(
+    async (deletedMemo: DeletedMemo) => {
+      console.log(
+        "🔧 useBoardOperations.handleMemoRestoreAndSelectNext 呼び出し",
+        {
+          memoId: deletedMemo?.id,
+          memoOriginalId: deletedMemo?.originalId,
+          memoTitle: deletedMemo?.title,
+          hasRawHandler: !!rawHandleMemoRestoreAndSelectNext,
+        },
+      );
+
+      // 実際の処理を実行
+      rawHandleMemoRestoreAndSelectNext(deletedMemo);
+
+      // 復元処理後に削除済みアイテム一覧を更新
+      setTimeout(async () => {
+        console.log("🔄 復元後に削除済みアイテム一覧を更新中...");
+        await refetchDeletedItems();
+        console.log("✅ 削除済みアイテム一覧の更新完了");
+      }, 100);
+    },
+    [rawHandleMemoRestoreAndSelectNext, refetchDeletedItems],
+  );
+
+  const { handleRestoreAndSelectNext: rawHandleTaskRestoreAndSelectNext } =
     useDeletedItemOperations({
       deletedItems: boardDeletedItems?.tasks || null,
       onSelectDeletedItem: (task: DeletedTask | null) => {
@@ -352,6 +407,32 @@ export function useBoardOperations({
       setScreenMode: () => {}, // ボードでは画面モード変更なし
       editorSelector: "[data-task-editor]",
     });
+
+  // タスク復元ハンドラーにキャッシュ更新を追加
+  const handleTaskRestoreAndSelectNext = useCallback(
+    async (deletedTask: DeletedTask) => {
+      console.log(
+        "🔧 useBoardOperations.handleTaskRestoreAndSelectNext 呼び出し",
+        {
+          taskId: deletedTask?.id,
+          taskOriginalId: deletedTask?.originalId,
+          taskTitle: deletedTask?.title,
+          hasRawHandler: !!rawHandleTaskRestoreAndSelectNext,
+        },
+      );
+
+      // 実際の処理を実行
+      rawHandleTaskRestoreAndSelectNext(deletedTask);
+
+      // 復元処理後に削除済みアイテム一覧を更新
+      setTimeout(async () => {
+        console.log("🔄 復元後に削除済みタスク一覧を更新中...");
+        await refetchDeletedItems();
+        console.log("✅ 削除済みタスク一覧の更新完了");
+      }, 100);
+    },
+    [rawHandleTaskRestoreAndSelectNext, refetchDeletedItems],
+  );
 
   // 削除済みアイテムの完全削除ハンドラー
   const { selectNextDeletedItem: handleDeletedMemoDeleteAndSelectNext } =

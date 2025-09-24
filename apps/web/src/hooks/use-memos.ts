@@ -332,12 +332,53 @@ export function useDeleteMemo(options?: {
     },
     onSuccess: (_, id) => {
       if (teamMode && teamId) {
-        // チームメモ一覧から削除されたメモを除去
+        // チームメモ一覧から削除されたメモを楽観的更新で即座に除去
+        const deletedMemo = queryClient
+          .getQueryData<Memo[]>(["team-memos", teamId])
+          ?.find((memo) => memo.id === id);
+
         queryClient.setQueryData<Memo[]>(["team-memos", teamId], (oldMemos) => {
           if (!oldMemos) return [];
           return oldMemos.filter((memo) => memo.id !== id);
         });
-        // 削除済み一覧は無効化（削除済みメモが追加されるため）
+
+        // 削除済み一覧に楽観的更新で即座に追加（キャッシュ問題回避）
+        if (deletedMemo) {
+          console.log("🗑️ 削除済み一覧に楽観的更新で追加", {
+            memoId: id,
+            memoOriginalId: deletedMemo.originalId,
+            memoTitle: deletedMemo.title,
+            teamId,
+            時刻: new Date().toISOString(),
+          });
+
+          const deletedMemoWithDeletedAt = {
+            ...deletedMemo,
+            originalId: deletedMemo.originalId || id.toString(),
+            deletedAt: Date.now(), // Unix timestamp形式
+          };
+
+          queryClient.setQueryData<DeletedMemo[]>(
+            ["team-deleted-memos", teamId],
+            (oldDeletedMemos) => {
+              if (!oldDeletedMemos) return [deletedMemoWithDeletedAt];
+              // 重複チェック
+              const exists = oldDeletedMemos.some(
+                (m) => m.originalId === deletedMemoWithDeletedAt.originalId,
+              );
+              if (exists) {
+                console.log(
+                  "⚠️ 削除済み一覧に既に存在するためスキップ",
+                  deletedMemoWithDeletedAt.originalId,
+                );
+                return oldDeletedMemos;
+              }
+              return [deletedMemoWithDeletedAt, ...oldDeletedMemos];
+            },
+          );
+        }
+
+        // 削除済み一覧もバックグラウンドで無効化（安全性のため）
         queryClient.invalidateQueries({
           predicate: (query) => {
             const key = query.queryKey as string[];
@@ -362,12 +403,52 @@ export function useDeleteMemo(options?: {
           },
         });
       } else {
-        // メモ一覧から削除されたメモを除去
+        // 個人メモ一覧から削除されたメモを楽観的更新で即座に除去
+        const deletedMemo = queryClient
+          .getQueryData<Memo[]>(["memos"])
+          ?.find((memo) => memo.id === id);
+
         queryClient.setQueryData<Memo[]>(["memos"], (oldMemos) => {
           if (!oldMemos) return [];
           return oldMemos.filter((memo) => memo.id !== id);
         });
-        // 削除済み一覧は無効化（削除済みメモが追加されるため）
+
+        // 削除済み一覧に楽観的更新で即座に追加（キャッシュ問題回避）
+        if (deletedMemo) {
+          console.log("🗑️ 個人削除済み一覧に楽観的更新で追加", {
+            memoId: id,
+            memoOriginalId: deletedMemo.originalId,
+            memoTitle: deletedMemo.title,
+            時刻: new Date().toISOString(),
+          });
+
+          const deletedMemoWithDeletedAt = {
+            ...deletedMemo,
+            originalId: deletedMemo.originalId || id.toString(),
+            deletedAt: Date.now(), // Unix timestamp形式
+          };
+
+          queryClient.setQueryData<DeletedMemo[]>(
+            ["deletedMemos"],
+            (oldDeletedMemos) => {
+              if (!oldDeletedMemos) return [deletedMemoWithDeletedAt];
+              // 重複チェック
+              const exists = oldDeletedMemos.some(
+                (m) => m.originalId === deletedMemoWithDeletedAt.originalId,
+              );
+              if (exists) {
+                console.log(
+                  "⚠️ 個人削除済み一覧に既に存在するためスキップ",
+                  deletedMemoWithDeletedAt.originalId,
+                );
+                return oldDeletedMemos;
+              }
+              return [deletedMemoWithDeletedAt, ...oldDeletedMemos];
+            },
+          );
+        }
+
+        // 削除済み一覧もバックグラウンドで無効化（安全性のため）
         queryClient.invalidateQueries({ queryKey: ["deletedMemos"] });
         // ボード関連のキャッシュを強制再取得（統計が変わるため）
         queryClient.refetchQueries({ queryKey: ["boards"] });

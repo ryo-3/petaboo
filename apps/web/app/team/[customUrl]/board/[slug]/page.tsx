@@ -252,6 +252,37 @@ export default function TeamBoardDetailPage() {
     setSelectedTask(task);
   };
 
+  const handleSelectDeletedMemo = (memo: DeletedMemo | null) => {
+    console.log("🔧 TeamBoardPage.handleSelectDeletedMemo 呼び出し", {
+      memoId: memo?.id,
+      memoOriginalId: memo?.originalId,
+      memoTitle: memo?.title,
+      currentSelectedMemoId: selectedMemo?.id,
+      时刻: new Date().toISOString(),
+    });
+
+    if (!memo) {
+      console.log("❌ memo が null のため選択処理スキップ");
+      return;
+    }
+
+    // タスクの選択を解除
+    setSelectedTask(null);
+
+    // URLを更新
+    const newUrl = `/team/${customUrl}/board/${slug}/memo/${memo.id}`;
+    window.history.replaceState(null, "", newUrl);
+
+    // 削除済みメモを選択状態として設定
+    setSelectedMemo(memo as unknown as Memo);
+
+    console.log("✅ TeamBoardPage 削除済みメモ選択完了", {
+      memoId: memo.id,
+      originalId: memo.originalId,
+      newUrl,
+    });
+  };
+
   const handleBack = () => {
     router.push(`/team/${customUrl}?tab=boards`);
   };
@@ -399,7 +430,7 @@ export default function TeamBoardDetailPage() {
       selectedTask={selectedTask}
       onSelectMemo={handleSelectMemo}
       onSelectTask={handleSelectTask}
-      onSelectDeletedMemo={handleSelectMemo} // 削除済みメモ選択用（handleSelectMemoを再利用）
+      onSelectDeletedMemo={handleSelectDeletedMemo} // 削除済みメモ選択用（専用関数）
       onClearSelection={handleClearSelection}
       onBack={handleBack}
       onSettings={handleSettings}

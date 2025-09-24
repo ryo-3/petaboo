@@ -226,8 +226,45 @@ export function useDeletedMemoActions({
   };
 
   const handleRestore = async () => {
+    console.log("🔔 useDeletedMemoActions.handleRestore 開始", {
+      memoId: memo?.id,
+      memoOriginalId: memo?.originalId,
+      isLocalRestoring,
+      isPending: restoreNote.isPending,
+      teamMode,
+      teamId,
+      totalDeletedCount,
+      skipAutoSelectionOnRestore,
+      hasOnRestoreAndSelectNext: !!onRestoreAndSelectNext,
+    });
+
+    // 削除直後の復元で totalDeletedCount が正しくない場合のデバッグ
+    // キャッシュ問題回避: 復元処理が実行される = 最低1つは削除済みアイテムがある
+    const safeDeletedCount = Math.max(totalDeletedCount, 1);
+
+    console.log("🔧 削除済みアイテム数の安全な調整", {
+      originalCount: totalDeletedCount,
+      adjustedCount: safeDeletedCount,
+      wasAdjusted: safeDeletedCount !== totalDeletedCount,
+      reason: "キャッシュ問題回避",
+    });
+
+    if (safeDeletedCount <= 1) {
+      console.log("⚠️ 調整後も1以下 - 画面が閉じる予定", {
+        safeDeletedCount,
+        willClose: true,
+        reason: "最後のアイテム（調整後）",
+      });
+    } else {
+      console.log("✅ 調整後、次選択処理が実行される予定", {
+        safeDeletedCount,
+        willSelectNext: true,
+      });
+    }
+
     // 既に復元中または削除中の場合は早期リターン（連続実行防止）
     if (isLocalRestoring || restoreNote.isPending) {
+      console.log("❌ 復元処理をスキップ（既に実行中）");
       return;
     }
 
@@ -260,21 +297,48 @@ export function useDeletedMemoActions({
               // 復元完了後、すぐにUIを更新
               setIsLocalRestoring(false);
 
-              // 最後の削除済みアイテムの場合は常に閉じる
-              if (totalDeletedCount <= 1) {
+              // 削除済みアイテム数の動的チェック（キャッシュ問題回避）
+              const safeCount = Math.max(totalDeletedCount, 1);
+              const remainingCount = safeCount > 0 ? safeCount - 1 : 0;
+              console.log(
+                "🔍 復元後の残り削除済みアイテム数チェック（アニメーション版）",
+                {
+                  originalCount: totalDeletedCount,
+                  safeCount,
+                  remainingCount,
+                  willClose: remainingCount <= 0,
+                },
+              );
+
+              // 復元後に残りアイテムがない場合のみ閉じる
+              if (remainingCount <= 0) {
+                console.log(
+                  "✅ 残りアイテムなし - 画面を閉じる（アニメーション版）",
+                );
                 onClose();
               } else if (
                 !skipAutoSelectionOnRestore &&
                 onRestoreAndSelectNext &&
                 memo
               ) {
-                console.log("🎯 復元後の次選択実行", {
+                console.log("🎯 復元後の次選択実行（アニメーション版）", {
                   skipAutoSelectionOnRestore,
                   hasOnRestoreAndSelectNext: !!onRestoreAndSelectNext,
                   memoOriginalId: memo.originalId,
+                  remainingCount,
                 });
-                onRestoreAndSelectNext(memo);
+
+                // キャッシュ更新完了を待ってから次選択実行
+                setTimeout(() => {
+                  console.log(
+                    "⏰ キャッシュ更新待機後、次選択実行（アニメーション版）",
+                  );
+                  onRestoreAndSelectNext(memo);
+                }, 50);
               } else if (!skipAutoSelectionOnRestore) {
+                console.log(
+                  "✅ skipAutoSelectionOnRestore=false - 画面を閉じる（アニメーション版）",
+                );
                 onClose();
               }
               // skipAutoSelectionOnRestore=trueで最後でない場合は何もしない（アイテムを開いたまま）
@@ -304,8 +368,24 @@ export function useDeletedMemoActions({
 
         setIsLocalRestoring(false);
 
-        // 最後の削除済みアイテムの場合は常に閉じる
-        if (totalDeletedCount <= 1) {
+        // 削除済みアイテム数の動的チェック（キャッシュ問題回避）
+        const safeCount = Math.max(totalDeletedCount, 1);
+        const remainingCount = safeCount > 0 ? safeCount - 1 : 0;
+        console.log(
+          "🔍 復元後の残り削除済みアイテム数チェック（アニメーションなし）",
+          {
+            originalCount: totalDeletedCount,
+            safeCount,
+            remainingCount,
+            willClose: remainingCount <= 0,
+          },
+        );
+
+        // 復元後に残りアイテムがない場合のみ閉じる
+        if (remainingCount <= 0) {
+          console.log(
+            "✅ 残りアイテムなし - 画面を閉じる（アニメーションなし）",
+          );
           onClose();
         } else if (
           !skipAutoSelectionOnRestore &&
@@ -316,9 +396,20 @@ export function useDeletedMemoActions({
             skipAutoSelectionOnRestore,
             hasOnRestoreAndSelectNext: !!onRestoreAndSelectNext,
             memoOriginalId: memo.originalId,
+            remainingCount,
           });
-          onRestoreAndSelectNext(memo);
+
+          // キャッシュ更新完了を待ってから次選択実行
+          setTimeout(() => {
+            console.log(
+              "⏰ キャッシュ更新待機後、次選択実行（アニメーションなし）",
+            );
+            onRestoreAndSelectNext(memo);
+          }, 50);
         } else if (!skipAutoSelectionOnRestore) {
+          console.log(
+            "✅ skipAutoSelectionOnRestore=false - 画面を閉じる（アニメーションなし）",
+          );
           onClose();
         }
         // skipAutoSelectionOnRestore=trueで最後でない場合は何もしない（アイテムを開いたまま）

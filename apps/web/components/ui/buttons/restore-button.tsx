@@ -48,7 +48,15 @@ function RestoreButton({
       <div className="relative">
         <button
           ref={buttonRef}
-          onClick={onRestore}
+          onClick={() => {
+            console.log("🔔 RestoreButton クリック！", {
+              displayCount,
+              isRestoring,
+              disabled,
+              tooltipText,
+            });
+            onRestore();
+          }}
           disabled={disabled || isRestoring}
           className={`${buttonSize} rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-800 transition-colors relative flex items-center justify-center ${className}`}
         >

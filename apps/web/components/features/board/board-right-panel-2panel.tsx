@@ -241,13 +241,16 @@ export default function BoardRightPanel({
               onClose={() => {
                 // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
               }}
-              onRestore={
-                onMemoRestoreAndSelectNext
-                  ? () => {
-                      onMemoRestoreAndSelectNext(selectedMemo as DeletedMemo);
-                    }
-                  : undefined
-              }
+              onRestore={() => {
+                console.log("🔧 BoardRightPanel onRestore 呼び出し", {
+                  memoId: selectedMemo?.id,
+                  originalId: selectedMemo?.originalId,
+                  hasOnMemoRestoreAndSelectNext: !!onMemoRestoreAndSelectNext,
+                  時刻: new Date().toISOString(),
+                });
+                const memo = selectedMemo as DeletedMemo;
+                onMemoRestoreAndSelectNext?.(memo);
+              }}
               onDelete={() => {
                 if (onDeletedMemoDeleteAndSelectNext) {
                   onDeletedMemoDeleteAndSelectNext(selectedMemo as DeletedMemo);
@@ -258,6 +261,7 @@ export default function BoardRightPanel({
                   onDeletedMemoDeleteAndSelectNext(deletedMemo as DeletedMemo);
                 }
               }}
+              onRestoreAndSelectNext={onMemoRestoreAndSelectNext}
               initialBoardId={boardId}
               teamMode={teamMode}
               teamId={teamId || undefined}
@@ -363,7 +367,37 @@ export default function BoardRightPanel({
               handleMainSelectMemo(memo);
             }
           }}
-          onSelectDeletedMemo={() => {}}
+          onSelectDeletedMemo={(memo) => {
+            console.log("🔗 右パネル onSelectDeletedMemo 呼び出し", {
+              memoId: memo?.id,
+              memoOriginalId: memo?.originalId,
+              memoTitle: memo?.title,
+              hasOnSelectMemo: !!onSelectMemo,
+              memoObject: memo
+                ? {
+                    id: memo.id,
+                    originalId: memo.originalId,
+                    title: memo.title?.substring(0, 30),
+                    type: typeof memo,
+                  }
+                : null,
+              時刻: new Date().toISOString(),
+            });
+
+            if (memo) {
+              console.log("🔧 右パネル onSelectMemo 実行開始", {
+                memoId: memo.id,
+                originalId: memo.originalId,
+                hasOnSelectMemo: !!onSelectMemo,
+              });
+
+              onSelectMemo?.(memo as unknown as Memo);
+
+              console.log("✅ 右パネル 削除済みメモ選択完了", memo.originalId);
+            } else {
+              console.log("❌ 右パネル memo が null のため選択処理スキップ");
+            }
+          }}
           onClose={onClose}
           rightPanelDisabled={true}
           hideHeaderButtons={true}
@@ -374,6 +408,9 @@ export default function BoardRightPanel({
           initialSelectionMode="check"
           teamMode={teamMode}
           teamId={teamId || undefined}
+          onRestoreAndSelectNext={async (deletedMemo: DeletedMemo) => {
+            onMemoRestoreAndSelectNext?.(deletedMemo);
+          }}
         />
       )}
 

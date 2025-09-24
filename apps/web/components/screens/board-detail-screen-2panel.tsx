@@ -130,7 +130,10 @@ function BoardDetailScreen({
   const selectedTask = propSelectedTask;
 
   // 削除済みメモデータを取得（復元時の総数判定用）
-  const { data: deletedMemos } = useDeletedMemos({ teamMode, teamId });
+  const { data: deletedMemos } = useDeletedMemos({
+    teamMode,
+    teamId: teamId || undefined,
+  });
 
   // 複数選択状態管理フック
   const {
@@ -599,58 +602,7 @@ function BoardDetailScreen({
                           }
                         }}
                         onDeleteAndSelectNext={handleMemoDeleteAndSelectNext}
-                        onRestoreAndSelectNext={(restoredMemo) => {
-                          console.log("🔄 復元後の次選択ロジック開始", {
-                            restoredMemo: restoredMemo.originalId,
-                            totalDeletedMemos: deletedMemos?.length,
-                            deletedMemos: deletedMemos?.map(
-                              (m) => m.originalId,
-                            ),
-                          });
-
-                          // 復元後に次の削除済みアイテムを選択
-                          if (deletedMemos && deletedMemos.length > 1) {
-                            const currentIndex = deletedMemos.findIndex(
-                              (memo) =>
-                                memo.originalId === restoredMemo.originalId,
-                            );
-                            console.log("📍 現在のインデックス", {
-                              currentIndex,
-                            });
-
-                            const nextIndex = currentIndex + 1;
-                            const nextMemo =
-                              deletedMemos[nextIndex] || deletedMemos[0];
-
-                            console.log("🎯 次のアイテム候補", {
-                              nextIndex,
-                              nextMemo: nextMemo?.originalId,
-                              willSelect:
-                                nextMemo &&
-                                nextMemo.originalId !== restoredMemo.originalId,
-                            });
-
-                            if (
-                              nextMemo &&
-                              nextMemo.originalId !== restoredMemo.originalId
-                            ) {
-                              console.log(
-                                "✅ 次の削除済みメモを選択",
-                                nextMemo.originalId,
-                              );
-                              console.log("🔗 onSelectDeletedMemo関数", {
-                                hasFunction: !!onSelectDeletedMemo,
-                              });
-                              onSelectDeletedMemo?.(nextMemo);
-                            } else {
-                              console.log("❌ 次選択をスキップ");
-                            }
-                          } else {
-                            console.log(
-                              "❌ 削除済みアイテムが1個以下のため次選択スキップ",
-                            );
-                          }
-                        }}
+                        onRestoreAndSelectNext={handleMemoRestoreAndSelectNext}
                         totalDeletedCount={deletedMemos?.length || 0}
                       />
                     </div>

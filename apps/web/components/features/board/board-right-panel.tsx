@@ -304,8 +304,27 @@ export default function BoardRightPanel({
                   // 保存後に選択状態を更新
                   onSelectMemo?.(savedMemo);
                 }}
-                onDelete={handleMemoDelete}
-                onDeleteAndSelectNext={onMemoDeleteAndSelectNext}
+                onDelete={async () => {
+                  // ボード詳細でのメモ削除処理（削除ボタン表示用）
+                }}
+                onDeleteAndSelectNext={async (deletedMemo: Memo) => {
+                  // API削除開始（楽観的更新でアイテムが即座に消える）
+                  const deletePromise = memoOperations.deleteItem.mutateAsync(
+                    deletedMemo.id,
+                  );
+
+                  // requestAnimationFrameで確実に次のフレームで次選択 + 遅延
+                  requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                      setTimeout(() => {
+                        onMemoDeleteAndSelectNext?.(deletedMemo);
+                      }, 100); // 追加の遅延でより安定化
+                    });
+                  });
+
+                  // API完了を待つ
+                  await deletePromise;
+                }}
                 isLidOpen={isRightMemoLidOpen}
               />
             </>
@@ -328,16 +347,22 @@ export default function BoardRightPanel({
               preloadedTaggings={allTaggings || []}
               preloadedBoardItems={allBoardItems}
               onSelectTask={onSelectTask}
+              unifiedOperations={taskOperations}
               onClose={() => {
                 // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
               }}
-              onRestore={() => {
-                if (onTaskRestoreAndSelectNext) {
+              onRestore={async () => {
+                if (selectedTask && onTaskRestoreAndSelectNext) {
+                  // 個人のタスク復元と同じシンプル処理
+                  await taskOperations.restoreItem.mutateAsync(
+                    selectedTask.originalId,
+                  );
                   onTaskRestoreAndSelectNext(selectedTask);
                 }
               }}
-              onDelete={() => {
-                if (onDeletedTaskDeleteAndSelectNext) {
+              onDelete={async () => {
+                if (selectedTask && onDeletedTaskDeleteAndSelectNext) {
+                  // 削除済みタスクの完全削除処理（usePermanentDeleteTaskが必要）
                   onDeletedTaskDeleteAndSelectNext(selectedTask);
                 }
               }}
@@ -355,6 +380,7 @@ export default function BoardRightPanel({
               preloadedTaggings={allTaggings || []}
               preloadedBoardItems={allBoardItems}
               onSelectTask={onSelectTask}
+              unifiedOperations={taskOperations}
               onClose={() => {
                 // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
               }}
@@ -368,7 +394,27 @@ export default function BoardRightPanel({
                 }
                 // 連続作成モードONの場合はTaskEditor内でのフォームリセットに任せる
               }}
-              onDeleteAndSelectNext={onTaskDeleteAndSelectNext}
+              onDelete={async () => {
+                // ボード詳細でのタスク削除処理（削除ボタン表示用）
+              }}
+              onDeleteAndSelectNext={async (deletedTask: Task) => {
+                // API削除開始（楽観的更新でアイテムが即座に消える）
+                const deletePromise = taskOperations.deleteItem.mutateAsync(
+                  deletedTask.id,
+                );
+
+                // requestAnimationFrameで確実に次のフレームで次選択 + 遅延
+                requestAnimationFrame(() => {
+                  requestAnimationFrame(() => {
+                    setTimeout(() => {
+                      onTaskDeleteAndSelectNext?.(deletedTask);
+                    }, 100); // 追加の遅延でより安定化
+                  });
+                });
+
+                // API完了を待つ
+                await deletePromise;
+              }}
             />
           )}
         </>

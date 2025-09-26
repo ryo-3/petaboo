@@ -719,22 +719,20 @@ function MemoEditor({
         itemBoardsLength: itemBoards?.length,
       });
       setIsAnimating(true);
-      setTimeout(async () => {
-        if (memo && memo.id > 0) {
-          // ダイレクト削除処理も親（MemoScreen）に委任
-          console.log("🔄 ダイレクト削除を親コンポーネントに委任");
+      if (memo && memo.id > 0) {
+        // ダイレクト削除処理も親（MemoScreen）に委任（200ms遅延削除で統一）
+        console.log("🔄 ダイレクト削除を親コンポーネントに委任");
 
-          if (onDeleteAndSelectNext) {
-            onDeleteAndSelectNext(memo);
-          } else if (onDelete) {
-            onDelete();
-          } else {
-            console.warn("⚠️ ダイレクト削除コールバックが設定されていません");
-          }
+        if (onDeleteAndSelectNext) {
+          onDeleteAndSelectNext(memo);
+        } else if (onDelete) {
+          onDelete();
         } else {
-          console.warn("⚠️ 削除対象メモが無効です", { memo });
+          console.warn("⚠️ ダイレクト削除コールバックが設定されていません");
         }
-      }, 200);
+      } else {
+        console.warn("⚠️ 削除対象メモが無効です", { memo });
+      }
     }
   };
 

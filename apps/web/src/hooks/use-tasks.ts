@@ -679,7 +679,7 @@ export function useRestoreTask(options?: {
       }
       // 全タグ付け情報を無効化（復元されたタスクのタグ情報が変わる可能性があるため）
       queryClient.invalidateQueries({ queryKey: ["taggings", "all"] });
-      showToast("タスクを復元しました", "success");
+      // showToast("タスクを復元しました", "success"); // トースト通知は無効化
     },
     onError: (error) => {
       console.error("タスク復元に失敗しました:", error);

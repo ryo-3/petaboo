@@ -700,11 +700,10 @@ function MemoEditor({
 
     console.log("🗑️ 削除ボタンクリック", { memo, teamMode, itemBoards });
 
-    if (isDeleted && deletedMemoActions) {
-      // 削除済みメモの場合は完全削除（蓋を開く）
+    if (isDeleted && onDelete) {
+      // 削除済みメモの場合は完全削除（親コンポーネントに委任）
       console.log("🔄 分岐: 削除済みメモの完全削除パス");
-      setIsAnimating(true);
-      deletedMemoActions.showDeleteConfirmation();
+      onDelete();
     } else if (teamMode || (itemBoards && itemBoards.length > 0)) {
       // チームモードまたはボードに紐づいている場合はモーダル表示と同時に蓋を開く
       console.log("🔄 分岐: モーダル表示パス", {

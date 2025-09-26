@@ -19,7 +19,11 @@ import { useScreenState } from "@/src/hooks/use-screen-state";
 import { useSelectAll } from "@/src/hooks/use-select-all";
 import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
 import { useTabChange } from "@/src/hooks/use-tab-change";
-import { useDeletedTasks, useTasks } from "@/src/hooks/use-tasks";
+import {
+  useDeletedTasks,
+  useTasks,
+  usePermanentDeleteTask,
+} from "@/src/hooks/use-tasks";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useBoards } from "@/src/hooks/use-boards";
 import { useTags } from "@/src/hooks/use-tags";
@@ -113,6 +117,9 @@ function TaskScreen({
   const { preferences } = useUserPreferences(1);
   const { data: boards } = useBoards("normal", !teamMode);
   const { data: tags } = useTags();
+
+  // 削除済みタスクの完全削除フック
+  const permanentDeleteTask = usePermanentDeleteTask();
 
   // 全データ事前取得（ちらつき解消）
   const { data: allTaggings } = useAllTaggings();
@@ -316,73 +323,60 @@ function TaskScreen({
     restoreOptions: { isRestore: true, onSelectWithFromFlag: true },
   });
 
-  // 通常タスクでの次のタスク選択ハンドラー（実際の画面表示順序に基づく）
-  const handleTaskDeleteAndSelectNext = (
-    deletedTask: Task,
-    preDeleteDisplayOrder?: number[],
-  ) => {
-    if (!tasks) return;
+  // 通常タスク削除（メモと同じシンプル構造）
+  const handleTaskDeleteAndSelectNext = async (deletedTask: Task) => {
+    if (!tasks || unifiedOperations.deleteItem.isPending) return;
 
     // 削除されたタスクが現在のタブと異なるステータスの場合は右パネルを閉じるだけ
     if (deletedTask.status !== activeTab) {
       setTaskScreenMode("list");
-      onClearSelection?.(); // 選択状態のみクリア
+      onClearSelection?.();
       return;
     }
 
-    // 削除されたタスクを除外してフィルター
-    const filteredTasks = tasks.filter(
-      (t) => t.status === activeTab && t.id !== deletedTask.id,
-    );
+    // 削除前の状態で計算（メモと同じパターン）
+    const currentTasks = tasks.filter((t) => t.status === activeTab);
+    const currentIndex = currentTasks.findIndex((t) => t.id === deletedTask.id);
+    const filteredTasks = currentTasks.filter((t) => t.id !== deletedTask.id);
 
-    // 削除前のDOM順序を使用、なければ現在の順序
-    const displayOrder = preDeleteDisplayOrder || getTaskDisplayOrder();
+    console.log("🎯 タスク削除:", {
+      deletedTaskId: deletedTask.id,
+      activeTab,
+      currentTasksLength: currentTasks.length,
+      filteredTasksLength: filteredTasks.length,
+      currentIndex,
+    });
 
-    // DOMベースで次のタスクを直接選択
-    const deletedTaskIndex = displayOrder.indexOf(deletedTask.id);
+    try {
+      // 削除API実行（メモと同じ統一処理）
+      await unifiedOperations.deleteItem.mutateAsync(deletedTask.id);
 
-    let nextTaskId = null;
-
-    if (deletedTaskIndex !== -1) {
-      // DOM順序で削除されたタスクの次のタスクを探す
-      for (let i = deletedTaskIndex + 1; i < displayOrder.length; i++) {
-        const candidateId = displayOrder[i];
-        if (filteredTasks.some((t) => t.id === candidateId)) {
-          nextTaskId = candidateId;
-          break;
+      // メモと同じロジックで次選択
+      let nextTask = null;
+      if (filteredTasks.length > 0) {
+        if (currentIndex < filteredTasks.length) {
+          nextTask = filteredTasks[currentIndex];
+        } else if (currentIndex > 0) {
+          nextTask = filteredTasks[currentIndex - 1];
+        } else {
+          nextTask = filteredTasks[0];
         }
       }
 
-      // 次がない場合は前のタスクを探す
-      if (!nextTaskId) {
-        for (let i = deletedTaskIndex - 1; i >= 0; i--) {
-          const candidateId = displayOrder[i];
-          if (filteredTasks.some((t) => t.id === candidateId)) {
-            nextTaskId = candidateId;
-            break;
-          }
-        }
-      }
-    }
-
-    if (nextTaskId) {
-      const nextTask = filteredTasks.find((t) => t.id === nextTaskId);
+      console.log("🎯 次選択:", {
+        nextTask: nextTask?.id,
+        nextTaskTitle: nextTask?.title,
+      });
 
       if (nextTask) {
-        // DOM監視
-        setTimeout(() => {
-          document.querySelector("[data-task-editor]");
-        }, 100);
-
         onSelectTask(nextTask, true);
         setTaskScreenMode("view");
       } else {
         setTaskScreenMode("list");
-        onClearSelection?.(); // ホームに戻らずに選択状態だけクリア
+        onClearSelection?.();
       }
-    } else {
-      setTaskScreenMode("list");
-      onClearSelection?.(); // ホームに戻らずに選択状態だけクリア
+    } catch (error) {
+      console.error("Task deletion failed:", error);
     }
   };
 
@@ -423,7 +417,7 @@ function TaskScreen({
     <div className="flex h-full bg-white">
       {/* 左側：一覧表示エリア */}
       <div
-        className={`${taskScreenMode === "list" ? "w-full" : "w-[44%]"} ${taskScreenMode !== "list" ? "border-r border-gray-300" : ""} pt-3 pl-5 pr-2 flex flex-col transition-all duration-300 relative`}
+        className={`${taskScreenMode === "list" ? "w-full" : "w-[44%]"} ${taskScreenMode !== "list" ? "border-r border-gray-300" : ""} pt-3 pl-5 pr-2 flex flex-col relative`}
       >
         <DesktopUpper
           currentMode="task"
@@ -615,6 +609,7 @@ function TaskScreen({
       <RightPanel
         isOpen={taskScreenMode !== "list"}
         onClose={handleRightPanelClose}
+        disableAnimation={true}
       >
         {taskScreenMode === "create" && (
           <TaskEditor
@@ -665,10 +660,58 @@ function TaskScreen({
             <TaskEditor
               task={selectedDeletedTask}
               onClose={() => setTaskScreenMode("list")}
-              onDelete={() => selectNextDeletedTask(selectedDeletedTask)}
-              onRestore={() =>
-                handleDeletedTaskRestoreAndSelectNext(selectedDeletedTask)
-              }
+              onDelete={async () => {
+                if (selectedDeletedTask && deletedTasks) {
+                  // 削除前に次選択対象を事前計算
+                  const currentIndex = deletedTasks.findIndex(
+                    (task) =>
+                      task.originalId === selectedDeletedTask.originalId,
+                  );
+                  const remainingTasks = deletedTasks.filter(
+                    (task) =>
+                      task.originalId !== selectedDeletedTask.originalId,
+                  );
+                  // 完全削除API実行
+                  await permanentDeleteTask.mutateAsync(
+                    selectedDeletedTask.originalId,
+                  );
+                  // 即座に次選択処理実行
+                  if (remainingTasks.length > 0) {
+                    const nextIndex =
+                      currentIndex >= remainingTasks.length
+                        ? remainingTasks.length - 1
+                        : currentIndex;
+                    onSelectDeletedTask(remainingTasks[nextIndex] || null);
+                  } else {
+                    setTaskScreenMode("list");
+                  }
+                }
+              }}
+              onRestore={async () => {
+                if (selectedDeletedTask && deletedTasks) {
+                  // 復元前に次選択対象を事前計算
+                  const currentIndex = deletedTasks.findIndex(
+                    (task) =>
+                      task.originalId === selectedDeletedTask.originalId,
+                  );
+                  const remainingTasks = deletedTasks.filter(
+                    (task) =>
+                      task.originalId !== selectedDeletedTask.originalId,
+                  );
+                  // 復元API実行
+                  await unifiedOperations.restoreItem.mutateAsync(
+                    selectedDeletedTask.originalId,
+                  );
+                  // 即座に次選択処理実行
+                  if (remainingTasks.length > 0) {
+                    const nextIndex =
+                      currentIndex >= remainingTasks.length
+                        ? remainingTasks.length - 1
+                        : currentIndex;
+                    onSelectDeletedTask(remainingTasks[nextIndex] || null);
+                  }
+                }
+              }}
               teamMode={teamMode}
               teamId={teamId}
               createdBy={selectedDeletedTask.createdBy}

@@ -296,8 +296,8 @@ function TaskEditor({
         if (!task || task.id === 0) return;
         setIsDeleting(true);
         try {
-          await unifiedOperations.deleteItem.mutateAsync(task.id);
-          onDeleteAndSelectNext?.(task as Task);
+          // task-screen.tsxの削除処理に委任（API削除+次選択を一括処理）
+          await onDeleteAndSelectNext?.(task as Task);
           onClose();
         } catch (error) {
           console.error("削除に失敗:", error);

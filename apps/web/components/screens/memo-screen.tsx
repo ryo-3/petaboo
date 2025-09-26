@@ -15,7 +15,11 @@ import { useBulkProcessNotifications } from "@/src/hooks/use-bulk-process-notifi
 import { useUnifiedItemOperations } from "@/src/hooks/use-unified-item-operations";
 import { useDeletionLid } from "@/src/hooks/use-deletion-lid";
 import { useItemDeselect } from "@/src/hooks/use-item-deselect";
-import { useDeletedMemos, useMemos } from "@/src/hooks/use-memos";
+import {
+  useDeletedMemos,
+  useMemos,
+  usePermanentDeleteMemo,
+} from "@/src/hooks/use-memos";
 import { useRightEditorDelete } from "@/src/hooks/use-right-editor-delete";
 import { useScreenState } from "@/src/hooks/use-screen-state";
 import { useSelectAll } from "@/src/hooks/use-select-all";
@@ -430,6 +434,9 @@ function MemoScreen({
   // 統一復元処理（外部から受け取り）
   const { restoreItem } = unifiedOperations;
 
+  // 削除済みメモの完全削除処理
+  const permanentDeleteMemo = usePermanentDeleteMemo();
+
   // タブ切り替え用の状態
   const [displayTab, setDisplayTab] = useState(activeTab);
 
@@ -778,12 +785,9 @@ function MemoScreen({
                   onDelete={() => {
                     // メモエディターの削除処理
                     if (selectedMemo) {
-                      // 1. 蓋を開く
+                      // 蓋を開いて即座に削除実行
                       setIsRightLidOpen(true);
-                      setTimeout(() => {
-                        // 2. 削除実行
-                        handleRightEditorDelete(selectedMemo);
-                      }, 200);
+                      handleRightEditorDelete(selectedMemo);
                     }
                   }}
                   isLidOpen={isRightLidOpen}
@@ -850,69 +854,34 @@ function MemoScreen({
                       }
                     }
                   }}
-                  onDelete={() => {
-                    // 削除済メモの削除処理（完全削除）
-                    if (selectedDeletedMemo) {
-                      // 削除完了後の次メモ選択処理
-                      const handleDeleteAndSelectNext = (
-                        deletedMemo: DeletedMemo,
-                      ) => {
-                        if (deletedMemos) {
-                          const displayOrder = getMemoDisplayOrder();
-                          const nextItem = getNextItemAfterDeletion(
-                            deletedMemos,
-                            deletedMemo,
-                            displayOrder,
-                          );
-
-                          setTimeout(() => {
-                            if (nextItem && nextItem.id !== deletedMemo.id) {
-                              onSelectDeletedMemo(nextItem);
-                              setMemoScreenMode("view");
-                            } else {
-                              setMemoScreenMode("list");
-                              onDeselectAndStayOnMemoList?.();
-                            }
-                            // 蓋を閉じる
-                            setIsRightLidOpen(false);
-                          }, 100);
-                        } else {
-                          onDeselectAndStayOnMemoList?.();
-                          setMemoScreenMode("list");
-                          setIsRightLidOpen(false);
-                        }
-                      };
-
-                      // 1. 蓋を開く
-                      setIsRightLidOpen(true);
-                      // 2. MemoEditor内で削除処理を実行（onDeleteAndSelectNext付き）
-                      // この処理はMemoEditor内部で実装される
-                    }
-                  }}
-                  onDeleteAndSelectNext={(deletedMemo: Memo | DeletedMemo) => {
-                    // 削除完了後の次メモ選択処理（削除済みメモのみ対象）
-                    if (deletedMemos && "deletedAt" in deletedMemo) {
+                  onDelete={async () => {
+                    if (selectedDeletedMemo && deletedMemos) {
+                      // 削除前に次選択対象を事前計算
                       const displayOrder = getMemoDisplayOrder();
                       const nextItem = getNextItemAfterDeletion(
                         deletedMemos,
-                        deletedMemo as DeletedMemo,
+                        selectedDeletedMemo,
                         displayOrder,
                       );
 
-                      setTimeout(() => {
-                        if (nextItem && nextItem.id !== deletedMemo.id) {
-                          onSelectDeletedMemo(nextItem);
-                          setMemoScreenMode("view");
-                        } else {
-                          setMemoScreenMode("list");
-                          onDeselectAndStayOnMemoList?.();
-                        }
-                        // 蓋を閉じる
-                        setIsRightLidOpen(false);
-                      }, 100);
-                    } else {
-                      onDeselectAndStayOnMemoList?.();
-                      setMemoScreenMode("list");
+                      // 蓋を開く
+                      setIsRightLidOpen(true);
+
+                      // 完全削除API実行
+                      await permanentDeleteMemo.mutateAsync(
+                        selectedDeletedMemo.originalId,
+                      );
+
+                      // 即座に次選択処理実行
+                      if (nextItem && nextItem.id !== selectedDeletedMemo.id) {
+                        onSelectDeletedMemo(nextItem);
+                        setMemoScreenMode("view");
+                      } else {
+                        setMemoScreenMode("list");
+                        onDeselectAndStayOnMemoList?.();
+                      }
+
+                      // 蓋を閉じる
                       setIsRightLidOpen(false);
                     }
                   }}

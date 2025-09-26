@@ -715,18 +715,14 @@ app.openapi(
         })
         .returning({ id: memos.id });
 
-      // 復元されたメモのoriginalIdを新しいIDに更新
-      await db
-        .update(memos)
-        .set({ originalId: result[0].id.toString() })
-        .where(eq(memos.id, result[0].id));
+      // originalIdは元の値を保持（新しいIDに更新しない）
 
-      // 関連するboard_itemsのdeletedAtをNULLに戻し、originalIdを新しいIDに更新
+      // 関連するboard_itemsのdeletedAtをNULLに戻す（originalIdは元の値を保持）
       await db
         .update(boardItems)
         .set({
           deletedAt: null,
-          originalId: result[0].id.toString(), // 新しいメモIDをoriginalIdに設定
+          // originalIdは元の値（deletedNote.originalId）を保持
         })
         .where(
           and(

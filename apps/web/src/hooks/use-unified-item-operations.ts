@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
-import { useToast } from "@/src/contexts/toast-context";
-import { useRef } from "react";
+// import { useToast } from "@/src/contexts/toast-context"; // 現在は未使用
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
 import { memosApi } from "@/src/lib/api-client";
@@ -152,7 +151,7 @@ export function useUnifiedItemOperations({
 
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
-  const { showToast } = useToast();
+  // const { showToast } = useToast(); // 現在は未使用
 
   const apiEndpoints = getApiEndpoints(itemType, context, teamId);
   const cacheKeys = getCacheKeys(itemType, context, teamId, boardId);
@@ -166,8 +165,8 @@ export function useUnifiedItemOperations({
       await apiEndpoints.delete(id, token || undefined);
     },
     onSuccess: (_, id) => {
-      const itemName = itemType === "memo" ? "メモ" : "タスク";
-      const contextName = context === "team" ? "チーム" : "個人";
+      // const itemName = itemType === "memo" ? "メモ" : "タスク"; // 現在は未使用
+      // const contextName = context === "team" ? "チーム" : "個人"; // 現在は未使用
 
       // アイテム一覧から削除されたアイテムを楽観的更新で即座に除去
       const deletedItem = queryClient
@@ -258,9 +257,10 @@ export function useUnifiedItemOperations({
 
       // showToast(`${itemName}を削除しました`, "success"); // トースト通知は無効化
     },
-    onError: (error) => {
-      const itemName = itemType === "memo" ? "メモ" : "タスク";
-      console.error(`${itemName}削除に失敗しました:`, error);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    onError: (_error) => {
+      // const itemName = itemType === "memo" ? "メモ" : "タスク"; // 現在は未使用
+      // console.error(`${itemName}削除に失敗しました:`, error);
       // showToast(`${itemName}削除に失敗しました`, "error"); // トースト通知は無効化
     },
   });
@@ -275,10 +275,10 @@ export function useUnifiedItemOperations({
         originalId,
         token || undefined,
       );
-      return response.json();
+      return response;
     },
     onSuccess: (restoredItemData, originalId) => {
-      const contextName = context === "team" ? "チーム" : "個人";
+      // const contextName = context === "team" ? "チーム" : "個人"; // 現在は未使用
 
       // 削除済み一覧から復元されたアイテムを楽観的更新で即座に除去
       const deletedItem = queryClient
@@ -297,18 +297,19 @@ export function useUnifiedItemOperations({
 
       // 通常一覧に復元されたアイテムを楽観的更新で追加
       if (deletedItem && restoredItemData) {
-        console.log(`🔄 ${contextName}通常一覧に楽観的更新で追加`, {
-          itemId: deletedItem.id,
-          itemType,
-          itemOriginalId: originalId,
-          itemTitle: deletedItem.title,
-          context,
-          teamId,
-          boardId,
-          時刻: new Date().toISOString(),
-        });
+        // console.log(`🔄 ${contextName}通常一覧に楽観的更新で追加`, {
+        //   itemId: deletedItem.id,
+        //   itemType,
+        //   itemOriginalId: originalId,
+        //   itemTitle: deletedItem.title,
+        //   context,
+        //   teamId,
+        //   boardId,
+        //   時刻: new Date().toISOString(),
+        // });
 
         // 復元されたアイテムデータを使用（deletedAtを除去）
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { deletedAt, ...restoredItem } = deletedItem;
         queryClient.setQueryData<UnifiedItem[]>(cacheKeys.items, (oldItems) => {
           if (!oldItems) return [restoredItem as UnifiedItem];
@@ -317,10 +318,10 @@ export function useUnifiedItemOperations({
             (item) => item.originalId === restoredItem.originalId,
           );
           if (exists) {
-            console.log(
-              `⚠️ ${contextName}通常一覧に既に存在するためスキップ`,
-              restoredItem.originalId,
-            );
+            // console.log(
+            //   `⚠️ ${contextName}通常一覧に既に存在するためスキップ`,
+            //   restoredItem.originalId,
+            // );
             return oldItems;
           }
           return [restoredItem as UnifiedItem, ...oldItems];
@@ -383,9 +384,10 @@ export function useUnifiedItemOperations({
 
       // showToast(`${itemName}を復元しました`, "success"); // トースト通知は無効化
     },
-    onError: (error) => {
-      const itemName = itemType === "memo" ? "メモ" : "タスク";
-      console.error(`${itemName}復元に失敗しました:`, error);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    onError: (_error) => {
+      // const itemName = itemType === "memo" ? "メモ" : "タスク"; // 現在は未使用
+      // console.error(`${itemName}復元に失敗しました:`, error);
       // showToast(`${itemName}復元に失敗しました`, "error"); // トースト通知は無効化
     },
   });

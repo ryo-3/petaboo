@@ -270,7 +270,6 @@ app.openapi(
       boardCategoryId,
     } = parsed.data;
 
-
     const insertData = {
       userId: auth.userId,
       originalId: "", // 後で更新
@@ -284,7 +283,6 @@ app.openapi(
       boardCategoryId,
       createdAt: Math.floor(Date.now() / 1000),
     };
-
 
     const result = await db
       .insert(tasks)
@@ -304,7 +302,6 @@ app.openapi(
       .from(tasks)
       .where(eq(tasks.id, result[0].id))
       .get();
-
 
     return c.json(newTask, 200);
   },
@@ -383,12 +380,10 @@ app.openapi(
       );
     }
 
-
     const updateData = {
       ...parsed.data,
       updatedAt: Math.floor(Date.now() / 1000),
     };
-
 
     const result = await db
       .update(tasks)
@@ -799,18 +794,14 @@ app.openapi(
         })
         .returning({ id: tasks.id });
 
-      // 復元されたタスクのoriginalIdを新しいIDに更新
-      await db
-        .update(tasks)
-        .set({ originalId: result[0].id.toString() })
-        .where(eq(tasks.id, result[0].id));
+      // originalIdは元の値を保持（新しいIDに更新しない）
 
-      // 関連するboard_itemsのdeletedAtをNULLに戻し、originalIdを新しいIDに更新
+      // 関連するboard_itemsのdeletedAtをNULLに戻す（originalIdは元の値を保持）
       await db
         .update(boardItems)
         .set({
           deletedAt: null,
-          originalId: result[0].id.toString(), // 新しいタスクIDをoriginalIdに設定
+          // originalIdは元の値（deletedTask.originalId）を保持
         })
         .where(
           and(

@@ -114,7 +114,6 @@ export function useTasksBulkDelete(props: UseTasksBulkDeleteProps) {
     deleteButtonRef: props.deleteButtonRef,
     setIsDeleting: props.setIsDeleting,
     setIsLidOpen: props.setIsLidOpen,
-    viewMode: props.viewMode,
     apiMethods,
     itemType: "task",
     dataAttribute: "data-task-id",

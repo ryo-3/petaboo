@@ -882,84 +882,15 @@ function MemoEditor({
                     <DateInfo item={memo} isEditing={!isDeleted} />
                   </div>
                 )}
-                {isDeleted && deletedMemoActions && (
+                {isDeleted && onRestore && (
                   <button
                     onClick={async () => {
-                      // 両方が必要：実際の復元API + 次選択ロジック
-                      console.log("🔧 MemoEditor: 復元処理開始", {
-                        memoId: deletedMemo?.id,
-                        originalId: deletedMemo?.originalId,
-                        hasOnRestoreAndSelectNext: !!onRestoreAndSelectNext,
-                        hasDeletedMemoActions: !!deletedMemoActions,
-                      });
-
-                      try {
-                        // 1. 楽観的更新：削除済み一覧から即座にアイテムを削除
-                        if (deletedMemo) {
-                          console.log(
-                            "🔄 楽観的更新: 削除済み一覧からアイテムを削除",
-                            {
-                              memoId: deletedMemo.id,
-                              originalId: deletedMemo.originalId,
-                              boardId: initialBoardId,
-                              teamMode,
-                              teamId,
-                            },
-                          );
-
-                          // キャッシュキーを決定
-                          const cacheKey =
-                            teamMode && teamId
-                              ? [
-                                  "team-board-deleted-items",
-                                  teamId.toString(),
-                                  initialBoardId,
-                                ]
-                              : ["board-deleted-items", initialBoardId];
-
-                          // 楽観的更新：削除済み一覧からアイテムを除去
-                          queryClient.setQueryData(cacheKey, (oldData: any) => {
-                            if (!oldData?.memos) return oldData;
-                            console.log("🗑️ 楽観的更新: アイテム除去前の一覧", {
-                              countBefore: oldData.memos.length,
-                              removingId: deletedMemo.id,
-                            });
-                            const updatedMemos = oldData.memos.filter(
-                              (memo: any) => memo.id !== deletedMemo.id,
-                            );
-                            console.log("✅ 楽観的更新: アイテム除去後の一覧", {
-                              countAfter: updatedMemos.length,
-                            });
-                            return {
-                              ...oldData,
-                              memos: updatedMemos,
-                            };
-                          });
-
-                          console.log("✅ 楽観的更新完了");
-                        }
-
-                        // 2. 次選択ロジック実行（削除済み一覧が更新された状態で）
-                        if (onRestoreAndSelectNext) {
-                          console.log("🎯 次選択ロジック実行中...");
-                          onRestoreAndSelectNext(deletedMemo as DeletedMemo);
-                          console.log("✅ 次選択ロジック実行完了");
-                        }
-
-                        // 3. 実際の復元API実行（バックグラウンドで）
-                        if (deletedMemoActions) {
-                          console.log("📞 実際の復元API実行中...");
-                          // 非同期で復元APIを実行（UIはブロックしない）
-                          Promise.resolve().then(() => {
-                            deletedMemoActions.handleRestore();
-                          });
-                          console.log("✅ 復元API実行開始（バックグラウンド）");
-                        }
-                      } catch (error) {
-                        console.error("❌ 復元処理エラー:", error);
+                      // シンプルな復元処理：onRestoreコールバックのみ実行
+                      if (onRestore) {
+                        await onRestore();
                       }
                     }}
-                    disabled={deletedMemoActions.isRestoring}
+                    disabled={false}
                     className="flex items-center justify-center size-7 rounded-md bg-blue-100 text-blue-600 hover:bg-blue-200 ml-2 disabled:opacity-50"
                   >
                     <svg

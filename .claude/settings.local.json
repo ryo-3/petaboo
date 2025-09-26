@@ -119,7 +119,9 @@
       "Bash(lsof:*)",
       "Bash(awk:*)",
       "Bash(apitest \"/memos/1\" \"DELETE\")",
-      "Bash(apitest \"/boards/all-items\" \"GET\")"
+      "Bash(apitest \"/boards/all-items\" \"GET\")",
+      "Bash(apitest \"/memos/deleted\" \"GET\")",
+      "Bash(apitest \"/memos/deleted/test/restore\" \"POST\")"
     ],
     "deny": []
   }

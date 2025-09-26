@@ -422,9 +422,6 @@ export default function BoardRightPanel({
           initialSelectionMode="check"
           teamMode={teamMode}
           teamId={teamId || undefined}
-          onRestoreAndSelectNext={async (deletedMemo: DeletedMemo) => {
-            onMemoRestoreAndSelectNext?.(deletedMemo);
-          }}
           unifiedOperations={memoOperations}
         />
       )}

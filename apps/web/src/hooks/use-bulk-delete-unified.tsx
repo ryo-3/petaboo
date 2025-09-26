@@ -1,36 +1,33 @@
 import { useEffect, useRef } from "react";
 import { useBulkDelete, BulkDeleteConfirmation } from "@/components/ui/modals";
-import { UseMutationResult, useMutation } from "@tanstack/react-query";
-import { useAuth } from "@clerk/nextjs";
+import { UseMutationResult } from "@tanstack/react-query";
 import { useBulkAnimation } from "@/src/hooks/use-bulk-animation";
 import { executeWithAnimation } from "@/src/utils/bulkAnimationUtils";
 import { DeletionWarningMessage } from "@/components/ui/modals/deletion-warning-message";
 import React from "react";
 import type { BaseItemFields, TeamCreatorFields } from "@/src/types/common";
-import type { Memo, DeletedMemo } from "@/src/types/memo";
-import type { Task, DeletedTask } from "@/src/types/task";
+import type { Task } from "@/src/types/task";
 
 // アイテム型の基本インターフェース
 type BaseItem = BaseItemFields & TeamCreatorFields;
 type DeletedItem = BaseItem & { deletedAt: number };
 
-// アイテム固有のタブ型定義
-type MemoTab = "normal" | "deleted";
-type TaskTab = "todo" | "in_progress" | "completed" | "deleted";
-
 // API関数の型定義
-interface ApiMethods<T extends BaseItem> {
-  delete: (options?: any) => UseMutationResult<any, unknown, number>;
-  permanentDelete: () => UseMutationResult<any, unknown, string>;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+interface ApiMethods<_T extends BaseItem> {
+  delete: (options?: {
+    teamMode?: boolean;
+    teamId?: number;
+  }) => UseMutationResult<unknown, unknown, number>;
+  permanentDelete: () => UseMutationResult<unknown, unknown, string>;
   deleteWithoutUpdate: (token: string | null) => {
-    mutationFn: (id: number) => Promise<any>;
+    mutationFn: (id: number) => Promise<unknown>;
   };
   permanentDeleteWithoutUpdate: (token: string | null) => {
-    mutationFn: (id: number) => Promise<any>;
+    mutationFn: (id: number) => Promise<unknown>;
   };
 }
 
-// ジェネリック型パラメータ
 interface UseBulkDeleteUnifiedProps<
   T extends BaseItem,
   D extends DeletedItem,
@@ -43,13 +40,11 @@ interface UseBulkDeleteUnifiedProps<
   setCheckedDeletedItems: (items: Set<number>) => void;
   items?: T[];
   deletedItems?: D[];
-  localItems?: T[]; // メモ専用（オプション）
   onItemDelete?: (id: number) => void;
   onDeletedItemDelete?: (id: number) => void; // メモ専用（オプション）
   deleteButtonRef?: React.RefObject<HTMLButtonElement | null>;
   setIsDeleting?: (isDeleting: boolean) => void;
   setIsLidOpen?: (isOpen: boolean) => void;
-  viewMode?: "list" | "card";
   apiMethods: ApiMethods<T>;
   itemType: "memo" | "task";
   dataAttribute: string; // "data-memo-id" | "data-task-id"
@@ -78,13 +73,11 @@ export function useBulkDeleteUnified<
   setCheckedDeletedItems,
   items,
   deletedItems,
-  localItems,
   onItemDelete,
   onDeletedItemDelete,
   deleteButtonRef,
   setIsDeleting,
   setIsLidOpen,
-  viewMode = "list",
   apiMethods,
   itemType,
   dataAttribute,
@@ -95,19 +88,16 @@ export function useBulkDeleteUnified<
   const deleteItemMutation = apiMethods.delete();
   const permanentDeleteItemMutation = apiMethods.permanentDelete();
   const bulkDelete = useBulkDelete();
-  const { getToken } = useAuth();
 
-  // 自動更新なしの削除API - 今後の最適化で使用予定
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const deleteItemWithoutUpdate = useMutation(
-    apiMethods.deleteWithoutUpdate(null),
-  );
+  // 自動更新なしの削除API - 今後の最適化で使用予定（現在は未使用）
+  // const deleteItemWithoutUpdate = useMutation(
+  //   apiMethods.deleteWithoutUpdate(null),
+  // );
 
-  // 自動更新なしの完全削除API - 今後の最適化で使用予定
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const permanentDeleteItemWithoutUpdate = useMutation(
-    apiMethods.permanentDeleteWithoutUpdate(null),
-  );
+  // 自動更新なしの完全削除API - 今後の最適化で使用予定（現在は未使用）
+  // const permanentDeleteItemWithoutUpdate = useMutation(
+  //   apiMethods.permanentDeleteWithoutUpdate(null),
+  // );
 
   // 共通のアニメーション管理
   const bulkAnimation = useBulkAnimation({

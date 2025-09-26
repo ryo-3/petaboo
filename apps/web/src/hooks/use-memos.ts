@@ -503,7 +503,11 @@ export function useRestoreMemo(options?: {
         await memosApi.restoreTeamMemo(teamId, originalId, token || undefined);
       } else {
         // 個人メモ復元
-        await memosApi.restoreNote(originalId, token || undefined);
+        const response = await memosApi.restoreNote(
+          originalId,
+          token || undefined,
+        );
+        await response.json(); // レスポンスをJSONパースしてバックエンドの完了を確認
       }
     },
     onSuccess: (_, originalId) => {
@@ -516,7 +520,7 @@ export function useRestoreMemo(options?: {
         if (existingData) {
           queryClient.setQueryData(
             ["team-deleted-memos", teamId],
-            (oldDeletedMemos: any[] | undefined) => {
+            (oldDeletedMemos: { originalId: string }[] | undefined) => {
               if (!oldDeletedMemos) return [];
               return oldDeletedMemos.filter(
                 (memo) => memo.originalId !== originalId,
@@ -535,12 +539,12 @@ export function useRestoreMemo(options?: {
           if (existingBoardData) {
             queryClient.setQueryData(
               ["team-board-deleted-items", teamId.toString(), boardId],
-              (oldData: any) => {
+              (oldData: { memos?: { originalId: string }[] } | undefined) => {
                 if (oldData?.memos) {
                   return {
                     ...oldData,
                     memos: oldData.memos.filter(
-                      (memo: any) => memo.originalId !== originalId,
+                      (memo) => memo.originalId !== originalId,
                     ),
                   };
                 }
@@ -622,7 +626,7 @@ export function useRestoreMemo(options?: {
         if (existingData) {
           queryClient.setQueryData(
             ["deletedMemos"],
-            (oldDeletedMemos: any[] | undefined) => {
+            (oldDeletedMemos: { originalId: string }[] | undefined) => {
               if (!oldDeletedMemos) return [];
               return oldDeletedMemos.filter(
                 (memo) => memo.originalId !== originalId,

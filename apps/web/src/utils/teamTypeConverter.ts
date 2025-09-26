@@ -1,5 +1,5 @@
-import type { Memo, DeletedMemo } from "@/src/types/memo";
-import type { Task, DeletedTask } from "@/src/types/task";
+import type { Memo } from "@/src/types/memo";
+import type { Task } from "@/src/types/task";
 import type { TeamTask } from "@/src/hooks/use-team-tasks";
 import type { TeamMemo } from "@/src/hooks/use-team-memos";
 

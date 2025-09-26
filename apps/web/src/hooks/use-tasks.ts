@@ -563,7 +563,8 @@ export function useRestoreTask(options?: {
           });
 
           // 復元されたタスクデータを使用（deletedAtを除去）
-          const { deletedAt, ...restoredTask } = deletedTask;
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { deletedAt: _deletedAt, ...restoredTask } = deletedTask;
           queryClient.setQueryData<Task[]>(
             ["team-tasks", teamId],
             (oldTasks) => {
@@ -645,7 +646,8 @@ export function useRestoreTask(options?: {
           });
 
           // 復元されたタスクデータを使用（deletedAtを除去）
-          const { deletedAt, ...restoredTask } = deletedTask;
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { deletedAt: _deletedAt, ...restoredTask } = deletedTask;
           queryClient.setQueryData<Task[]>(["tasks"], (oldTasks) => {
             if (!oldTasks) return [restoredTask as Task];
             // 重複チェック

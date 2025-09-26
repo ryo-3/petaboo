@@ -12,7 +12,7 @@ import RightPanel from "@/components/ui/layout/right-panel";
 import { useSortOptions } from "@/hooks/use-sort-options";
 import { useBulkDeleteButton } from "@/src/hooks/use-bulk-delete-button";
 import { useBulkProcessNotifications } from "@/src/hooks/use-bulk-process-notifications";
-import { useDeletedItemOperations } from "@/src/hooks/use-deleted-item-operations";
+import { useUnifiedItemOperations } from "@/src/hooks/use-unified-item-operations";
 import { useDeletionLid } from "@/src/hooks/use-deletion-lid";
 import { useItemDeselect } from "@/src/hooks/use-item-deselect";
 import { useDeletedMemos, useMemos } from "@/src/hooks/use-memos";
@@ -61,8 +61,6 @@ interface MemoScreenProps {
   teamId?: number;
   // URL連動
   initialMemoId?: string | null;
-  // 右パネル用復元処理（ボードから呼び出される場合のみ）
-  onRestoreAndSelectNext?: (deletedMemo: DeletedMemo) => Promise<void>;
 
   // 統一フック（最上位から受け取り）
   unifiedOperations: {
@@ -96,7 +94,6 @@ function MemoScreen({
   teamMode = false,
   teamId,
   initialMemoId,
-  onRestoreAndSelectNext,
   unifiedOperations,
 }: MemoScreenProps) {
   // 一括処理中断通知の監視
@@ -430,55 +427,8 @@ function MemoScreen({
     setIsLidOpen: setIsRestoreLidOpen,
   });
 
-  // 削除済みメモ操作の共通ロジック（復元API呼び出し付きに変更）
-  const { handleRestoreAndSelectNext: originalHandleRestoreAndSelectNext } =
-    useDeletedItemOperations({
-      deletedItems: deletedMemos || null,
-      onSelectDeletedItem: onSelectDeletedMemo,
-      setScreenMode: (mode: string) =>
-        setMemoScreenMode(mode as MemoScreenMode),
-      editorSelector: "[data-memo-editor]",
-    });
-
-  // 実際の復元API呼び出し付きの復元&次選択処理
-  const handleRestoreAndSelectNext = async (deletedMemo: DeletedMemo) => {
-    try {
-      console.log("🔄 MemoScreen復元&次選択開始", {
-        selectedMemo: deletedMemo.originalId,
-        totalDeletedMemos: deletedMemos?.length,
-        deletedMemos: deletedMemos?.map((m) => m.originalId),
-        rightPanelDisabled,
-        hasExternalRestoreHandler: !!onRestoreAndSelectNext,
-        onSelectDeletedMemo: typeof onSelectDeletedMemo,
-      });
-
-      // 右パネルから外部復元処理が渡されている場合はそれを使用
-      if (onRestoreAndSelectNext) {
-        console.log("🎯 外部復元処理（右パネル用）を実行");
-        await onRestoreAndSelectNext(deletedMemo);
-        return;
-      }
-
-      // デフォルトの復元処理を実行
-      console.log("🎯 デフォルト復元処理を実行");
-      // 実際の復元API呼び出しを行う
-      await unifiedOperations.restoreItem.mutateAsync(deletedMemo.originalId);
-
-      console.log("✅ MemoScreen復元API成功、次選択処理を実行");
-
-      // 復元成功後に次選択処理を実行
-      console.log("📍 originalHandleRestoreAndSelectNext実行前", {
-        deletedMemosLength: deletedMemos?.length,
-        currentMemo: deletedMemo.originalId,
-      });
-
-      originalHandleRestoreAndSelectNext(deletedMemo);
-
-      console.log("✅ originalHandleRestoreAndSelectNext実行完了");
-    } catch (error) {
-      console.error("❌ MemoScreenからの復元に失敗:", error);
-    }
-  };
+  // 統一復元処理（外部から受け取り）
+  const { restoreItem } = unifiedOperations;
 
   // タブ切り替え用の状態
   const [displayTab, setDisplayTab] = useState(activeTab);
@@ -867,13 +817,37 @@ function MemoScreen({
                     }
                     onDeselectAndStayOnMemoList?.();
                   }}
-                  onRestore={() => {
-                    console.log("🔄 MemoScreen内MemoEditor復元ボタンクリック", {
-                      selectedDeletedMemo: selectedDeletedMemo?.originalId,
-                      totalDeletedMemos: deletedMemos?.length,
-                    });
-                    if (selectedDeletedMemo) {
-                      handleRestoreAndSelectNext(selectedDeletedMemo);
+                  onRestore={async () => {
+                    if (selectedDeletedMemo && deletedMemos) {
+                      // 復元前に次選択対象を事前計算
+                      const currentIndex = deletedMemos.findIndex(
+                        (memo) =>
+                          memo.originalId === selectedDeletedMemo.originalId,
+                      );
+                      const remainingMemos = deletedMemos.filter(
+                        (memo) =>
+                          memo.originalId !== selectedDeletedMemo.originalId,
+                      );
+
+                      // 復元API実行
+                      await restoreItem.mutateAsync(
+                        selectedDeletedMemo.originalId,
+                      );
+
+                      // 即座に次選択処理実行
+                      if (remainingMemos.length > 0) {
+                        // 次のメモを選択（現在の位置または前の位置）
+                        const nextIndex =
+                          currentIndex >= remainingMemos.length
+                            ? remainingMemos.length - 1
+                            : currentIndex;
+                        onSelectDeletedMemo(remainingMemos[nextIndex] || null);
+                      } else {
+                        // 削除済みメモが残っていない場合は通常タブに切り替え
+                        onSelectDeletedMemo(null);
+                        setActiveTab("normal");
+                        setMemoScreenMode("list");
+                      }
                     }
                   }}
                   onDelete={() => {
@@ -956,32 +930,7 @@ function MemoScreen({
                   createdByAvatarColor={selectedDeletedMemo.avatarColor}
                   onCommentsToggle={handleCommentsToggle}
                   showComments={showComments}
-                  totalDeletedCount={(() => {
-                    const count = deletedMemos?.length || 0;
-                    console.log(
-                      "📊 MemoScreen -> MemoEditor totalDeletedCount渡し",
-                      {
-                        deletedMemosLength: deletedMemos?.length,
-                        actualCount: count,
-                        memoOriginalId: selectedDeletedMemo?.originalId,
-                        activeTab: displayTab,
-                        deletedMemosArray: deletedMemos?.map((m) => ({
-                          originalId: m.originalId,
-                          title:
-                            m.title.substring(0, 20) +
-                            (m.title.length > 20 ? "..." : ""),
-                        })),
-                        時刻: new Date().toISOString(),
-                        警告:
-                          count === 0
-                            ? "⚠️ 削除済みメモ数が0！キャッシュ未更新の可能性"
-                            : count === 1
-                              ? "⚠️ 削除済みメモ数が1！最後判定になる可能性"
-                              : "正常",
-                      },
-                    );
-                    return count;
-                  })()}
+                  totalDeletedCount={deletedMemos?.length || 0}
                   // 統一フック
                   unifiedOperations={operations}
                 />

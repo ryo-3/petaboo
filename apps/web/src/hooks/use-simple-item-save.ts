@@ -48,9 +48,9 @@ export function useSimpleItemSave<T extends UnifiedItem>({
   const [title, setTitle] = useState(() => item?.title || "");
   const [content, setContent] = useState(() => {
     if (itemType === "memo") {
-      return (item as any)?.content || "";
+      return (item as { content?: string | null })?.content || "";
     } else {
-      return (item as any)?.description || "";
+      return (item as { description?: string | null })?.description || "";
     }
   });
   const [priority, setPriority] = useState<"low" | "medium" | "high">(() =>
@@ -96,9 +96,9 @@ export function useSimpleItemSave<T extends UnifiedItem>({
   const [initialTitle, setInitialTitle] = useState(() => item?.title || "");
   const [initialContent, setInitialContent] = useState(() => {
     if (itemType === "memo") {
-      return (item as any)?.content || "";
+      return (item as { content?: string | null })?.content || "";
     } else {
-      return (item as any)?.description || "";
+      return (item as { description?: string | null })?.description || "";
     }
   });
   const [initialPriority, setInitialPriority] = useState<
@@ -184,8 +184,8 @@ export function useSimpleItemSave<T extends UnifiedItem>({
       const itemTitle = item.title || "";
       const itemContent =
         itemType === "memo"
-          ? (item as any).content || ""
-          : (item as any).description || "";
+          ? (item as { content?: string | null }).content || ""
+          : (item as { description?: string | null }).description || "";
       setTitle(itemTitle);
       setContent(itemContent);
       setInitialTitle(itemTitle);

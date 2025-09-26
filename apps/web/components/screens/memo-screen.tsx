@@ -15,13 +15,7 @@ import { useBulkProcessNotifications } from "@/src/hooks/use-bulk-process-notifi
 import { useDeletedItemOperations } from "@/src/hooks/use-deleted-item-operations";
 import { useDeletionLid } from "@/src/hooks/use-deletion-lid";
 import { useItemDeselect } from "@/src/hooks/use-item-deselect";
-import {
-  useDeletedMemos,
-  useDeleteMemo,
-  useMemos,
-  useRestoreMemo,
-} from "@/src/hooks/use-memos";
-import { useDeleteTeamMemo } from "@/src/hooks/use-team-memos";
+import { useDeletedMemos, useMemos } from "@/src/hooks/use-memos";
 import { useRightEditorDelete } from "@/src/hooks/use-right-editor-delete";
 import { useScreenState } from "@/src/hooks/use-screen-state";
 import { useSelectAll } from "@/src/hooks/use-select-all";
@@ -69,6 +63,18 @@ interface MemoScreenProps {
   initialMemoId?: string | null;
   // 右パネル用復元処理（ボードから呼び出される場合のみ）
   onRestoreAndSelectNext?: (deletedMemo: DeletedMemo) => Promise<void>;
+
+  // 統一フック（最上位から受け取り）
+  unifiedOperations: {
+    deleteItem: {
+      mutateAsync: (id: number) => Promise<any>;
+      isPending: boolean;
+    };
+    restoreItem: {
+      mutateAsync: (originalId: string) => Promise<any>;
+      isPending: boolean;
+    };
+  };
 }
 
 function MemoScreen({
@@ -91,6 +97,7 @@ function MemoScreen({
   teamId,
   initialMemoId,
   onRestoreAndSelectNext,
+  unifiedOperations,
 }: MemoScreenProps) {
   // 一括処理中断通知の監視
   useBulkProcessNotifications();
@@ -219,10 +226,8 @@ function MemoScreen({
   const safeAllTaggings = taggingsError ? [] : allTaggings || [];
   const safeAllBoardItems = boardItemsError ? [] : allBoardItems || [];
 
-  // 削除API（チームモードと個人モードで異なるフックを使用）
-  const personalDeleteNote = useDeleteMemo();
-  const teamDeleteNote = useDeleteTeamMemo(teamId);
-  const deleteNote = teamMode ? teamDeleteNote : personalDeleteNote;
+  // 統一削除・復元API（最上位から受け取り）
+  const operations = unifiedOperations;
 
   // 共通screen状態管理
   const {
@@ -398,7 +403,7 @@ function MemoScreen({
   // 右側エディター削除処理（現在表示中のメモの単体削除）
   const handleRightEditorDelete = useRightEditorDelete({
     item: selectedMemo || null,
-    deleteMutation: deleteNote,
+    deleteMutation: unifiedOperations.deleteItem,
     editorSelector: "[data-memo-editor]",
     setIsDeleting: setIsRightDeleting,
     onDeleteComplete: () => handleDeleteComplete(),
@@ -423,12 +428,6 @@ function MemoScreen({
     restoreButtonRef,
     setIsRestoring,
     setIsLidOpen: setIsRestoreLidOpen,
-  });
-
-  // 復元API処理
-  const restoreNote = useRestoreMemo({
-    teamMode,
-    teamId: teamId || undefined,
   });
 
   // 削除済みメモ操作の共通ロジック（復元API呼び出し付きに変更）
@@ -463,7 +462,7 @@ function MemoScreen({
       // デフォルトの復元処理を実行
       console.log("🎯 デフォルト復元処理を実行");
       // 実際の復元API呼び出しを行う
-      await restoreNote.mutateAsync(deletedMemo.originalId);
+      await unifiedOperations.restoreItem.mutateAsync(deletedMemo.originalId);
 
       console.log("✅ MemoScreen復元API成功、次選択処理を実行");
 
@@ -815,6 +814,8 @@ function MemoScreen({
                 teamId={teamId}
                 onCommentsToggle={handleCommentsToggle}
                 showComments={showComments}
+                // 統一フック
+                unifiedOperations={operations}
               />
             )}
             {memoScreenMode === "view" &&
@@ -849,6 +850,8 @@ function MemoScreen({
                   createdByAvatarColor={selectedMemo.avatarColor}
                   onCommentsToggle={handleCommentsToggle}
                   showComments={showComments}
+                  // 統一フック
+                  unifiedOperations={operations}
                 />
               )}
             {memoScreenMode === "view" &&
@@ -979,6 +982,8 @@ function MemoScreen({
                     );
                     return count;
                   })()}
+                  // 統一フック
+                  unifiedOperations={operations}
                 />
               )}
           </div>

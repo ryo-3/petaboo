@@ -19,6 +19,29 @@ interface CreateScreenProps {
   onShowMemoList?: () => void;
   onShowTaskList?: () => void;
   onShowBoardList?: () => void;
+  // 統一操作フック
+  unifiedOperations: {
+    memoOperations: {
+      deleteItem: {
+        mutateAsync: (id: number) => Promise<any>;
+        isPending: boolean;
+      };
+      restoreItem: {
+        mutateAsync: (originalId: string) => Promise<any>;
+        isPending: boolean;
+      };
+    };
+    taskOperations: {
+      deleteItem: {
+        mutateAsync: (id: number) => Promise<any>;
+        isPending: boolean;
+      };
+      restoreItem: {
+        mutateAsync: (originalId: string) => Promise<any>;
+        isPending: boolean;
+      };
+    };
+  };
 }
 
 function CreateScreen({
@@ -28,6 +51,7 @@ function CreateScreen({
   onShowMemoList,
   onShowTaskList,
   onShowBoardList,
+  unifiedOperations,
 }: CreateScreenProps) {
   const [createMode, setCreateMode] = useState<CreateMode>(initialMode);
   const createBoard = useCreateBoard();
@@ -145,9 +169,19 @@ function CreateScreen({
       {/* メイン：作成エリア */}
       <div className="pl-3 pr-3 flex-1 min-h-0">
         {createMode === "memo" ? (
-          <MemoEditor memo={null} onClose={onClose} customHeight="h-full" />
+          <MemoEditor
+            memo={null}
+            onClose={onClose}
+            customHeight="h-full"
+            unifiedOperations={unifiedOperations.memoOperations}
+          />
         ) : createMode === "task" ? (
-          <TaskEditor task={null} onClose={onClose} customHeight="h-full" />
+          <TaskEditor
+            task={null}
+            onClose={onClose}
+            customHeight="h-full"
+            unifiedOperations={unifiedOperations.taskOperations}
+          />
         ) : (
           <div className="pt-6 pb-6 flex justify-center">
             <div className="w-full max-w-2xl">

@@ -13,8 +13,7 @@ import BoardChangeModal from "@/components/ui/modals/board-change-modal";
 import { BulkDeleteConfirmation } from "@/components/ui/modals/confirmation-modal";
 import TagTriggerButton from "@/components/features/tags/tag-trigger-button";
 import TagSelectionModal from "@/components/ui/modals/tag-selection-modal";
-import { useSimpleMemoSave } from "@/src/hooks/use-simple-memo-save";
-import { useDeleteMemo } from "@/src/hooks/use-memos";
+import { useSimpleItemSave } from "@/src/hooks/use-simple-item-save";
 import { useTeamItemBoards } from "@/src/hooks/use-boards";
 import {
   useCreateTagging,
@@ -60,6 +59,17 @@ interface MemoEditorProps {
   onRestoreAndSelectNext?: (deletedMemo: DeletedMemo) => void; // 削除済み復元後の次選択用
   isLidOpen?: boolean;
   customHeight?: string;
+  // 統一操作フック（親から渡される）
+  unifiedOperations?: {
+    deleteItem: {
+      mutateAsync: (id: number) => Promise<any>;
+      isPending: boolean;
+    };
+    restoreItem: {
+      mutateAsync: (originalId: string) => Promise<any>;
+      isPending: boolean;
+    };
+  };
 
   // 全データ事前取得（ちらつき解消）
   preloadedTags?: Tag[];
@@ -108,6 +118,7 @@ function MemoEditor({
   onCommentsToggle,
   showComments = false,
   totalDeletedCount = 0,
+  unifiedOperations,
 }: MemoEditorProps) {
   // ログを一度だけ出力（useEffectで管理）
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -180,8 +191,9 @@ function MemoEditor({
     handleConfirmBoardChange,
     handleCancelBoardChange,
     resetForm,
-  } = useSimpleMemoSave({
-    memo,
+  } = useSimpleItemSave<Memo>({
+    item: memo,
+    itemType: "memo",
     onSaveComplete: useCallback(
       (savedMemo: Memo, wasEmpty: boolean, isNewMemo: boolean) => {
         // 新規メモ作成で連続作成モードが有効な場合
@@ -674,80 +686,85 @@ function MemoEditor({
 
   // 削除ボタンのハンドラー（ボード紐づきチェック付き）
   const handleDeleteClick = () => {
+    console.log("🎯 handleDeleteClick実行開始", {
+      timestamp: Date.now(),
+      isPending: unifiedOperations?.deleteItem.isPending,
+      isAnimating,
+    });
+
+    // 重複クリック防止
+    if (unifiedOperations?.deleteItem.isPending || isAnimating) {
+      console.warn("⚠️ 削除処理中のためスキップ");
+      return;
+    }
+
     console.log("🗑️ 削除ボタンクリック", { memo, teamMode, itemBoards });
+
     if (isDeleted && deletedMemoActions) {
       // 削除済みメモの場合は完全削除（蓋を開く）
+      console.log("🔄 分岐: 削除済みメモの完全削除パス");
       setIsAnimating(true);
       deletedMemoActions.showDeleteConfirmation();
     } else if (teamMode || (itemBoards && itemBoards.length > 0)) {
       // チームモードまたはボードに紐づいている場合はモーダル表示と同時に蓋を開く
-      console.log("📝 削除モーダル表示", { teamMode, itemBoards });
+      console.log("🔄 分岐: モーダル表示パス", {
+        teamMode,
+        itemBoardsLength: itemBoards?.length,
+      });
       setIsAnimating(true);
       setShowDeleteModal(true);
     } else {
       // ボードに紐づいていない場合は蓋を開いてから直接削除
+      console.log("🔄 分岐: 直接削除パス", {
+        teamMode,
+        itemBoardsLength: itemBoards?.length,
+      });
       setIsAnimating(true);
       setTimeout(async () => {
         if (memo && memo.id > 0) {
-          try {
-            const result = await deleteMemoMutation.mutateAsync(memo.id);
-            console.log("🗑️ ダイレクト削除API成功", {
-              memoId: memo.id,
-              result,
-            });
+          // ダイレクト削除処理も親（MemoScreen）に委任
+          console.log("🔄 ダイレクト削除を親コンポーネントに委任");
 
-            if (onDeleteAndSelectNext) {
-              onDeleteAndSelectNext(memo);
-            } else if (onDelete) {
-              onDelete();
-            }
-          } catch (error) {
-            console.error("❌ ダイレクト削除に失敗:", error);
-            console.error("ダイレクト削除エラーの詳細:", {
-              memoId: memo.id,
-              error,
-              errorMessage:
-                error instanceof Error ? error.message : "不明なエラー",
-              stack: error instanceof Error ? error.stack : undefined,
-            });
+          if (onDeleteAndSelectNext) {
+            onDeleteAndSelectNext(memo);
+          } else if (onDelete) {
+            onDelete();
+          } else {
+            console.warn("⚠️ ダイレクト削除コールバックが設定されていません");
           }
+        } else {
+          console.warn("⚠️ 削除対象メモが無効です", { memo });
         }
       }, 200);
     }
   };
 
   // モーダルでの削除確定
-  // 実際の削除処理（useDeleteMemo hookを使用）
-  const deleteMemoMutation = useDeleteMemo({
-    teamMode,
-    teamId,
-  });
+  // 統一フック（propsから受け取り）
 
   const handleConfirmDelete = async () => {
+    console.log("🎯 handleConfirmDelete実行開始", {
+      timestamp: Date.now(),
+      memoId: memo?.id,
+      showDeleteModal,
+      isPending: unifiedOperations?.deleteItem.isPending,
+    });
+
     if (!memo || memo.id === 0) return;
 
     console.log("✅ 削除確定実行", { memo });
     setShowDeleteModal(false);
 
-    try {
-      // 実際の削除API呼び出し
-      const result = await deleteMemoMutation.mutateAsync(memo.id);
-      console.log("🗑️ メモ削除API成功", { memoId: memo.id, result });
+    // 削除処理は親（MemoScreen）に委任し、memo-editorでは実行しない
+    console.log("🔄 削除処理を親コンポーネント（MemoScreen）に委任");
 
-      // 削除完了後に次のアイテム選択を実行
-      if (onDeleteAndSelectNext) {
-        onDeleteAndSelectNext(memo);
-      } else if (onDelete) {
-        onDelete();
-      }
-    } catch (error) {
-      console.error("❌ メモ削除に失敗:", error);
-      console.error("削除エラーの詳細:", {
-        memoId: memo.id,
-        error,
-        errorMessage: error instanceof Error ? error.message : "不明なエラー",
-        stack: error instanceof Error ? error.stack : undefined,
-      });
+    // 削除コールバックを呼び出し、親側で実際の削除処理を実行してもらう
+    if (onDeleteAndSelectNext) {
+      onDeleteAndSelectNext(memo);
+    } else if (onDelete) {
+      onDelete();
+    } else {
+      console.warn("⚠️ 削除後のコールバック処理が設定されていません");
     }
   };
 
@@ -963,7 +980,7 @@ function MemoEditor({
                 {memo && onDelete && (
                   <button
                     onClick={handleDeleteClick}
-                    disabled={deleteMemoMutation.isPending}
+                    disabled={unifiedOperations?.deleteItem.isPending}
                     className="flex items-center justify-center size-7 rounded-md bg-gray-100 mr-2 disabled:opacity-50"
                   >
                     <TrashIcon
@@ -972,7 +989,7 @@ function MemoEditor({
                         isLidOpen ||
                         isAnimating ||
                         showDeleteModal ||
-                        deleteMemoMutation.isPending ||
+                        unifiedOperations?.deleteItem.isPending ||
                         (isDeleted && deletedMemoActions?.showDeleteModal)
                       }
                     />
@@ -1178,7 +1195,7 @@ function MemoEditor({
         count={1}
         itemType="memo"
         deleteType="normal"
-        isLoading={deleteMemoMutation.isPending}
+        isLoading={unifiedOperations?.deleteItem.isPending}
         position="center"
         customTitle={`「${memo?.title || "タイトルなし"}」の削除`}
         customMessage={

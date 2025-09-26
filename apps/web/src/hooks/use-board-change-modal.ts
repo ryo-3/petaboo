@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 
 interface BoardChanges {
   toAdd: string[];
@@ -17,6 +17,11 @@ export function useBoardChangeModal(initialBoardIds: string[] = []) {
     toAdd: [],
     toRemove: [],
   });
+
+  // initialBoardIdsの変更に反応して selectedBoardIds を更新
+  useEffect(() => {
+    setSelectedBoardIds(initialBoardIds);
+  }, [initialBoardIds]);
 
   // ボード変更ハンドラー（選択状態のみ更新）
   const handleBoardChange = useCallback((newBoardIds: string | string[]) => {

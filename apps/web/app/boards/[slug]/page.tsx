@@ -92,6 +92,7 @@ export default async function BoardPage({ params }: BoardPageProps) {
   return (
     <Main
       initialBoardName={undefined}
+      boardSlug={slug}
       initialCurrentMode="board"
       initialScreenMode="board"
     />

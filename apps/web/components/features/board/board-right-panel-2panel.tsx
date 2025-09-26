@@ -12,11 +12,11 @@ import type { Board } from "@/src/types/board";
 import { useTags } from "@/src/hooks/use-tags";
 import { useState } from "react";
 import { useNavigation } from "@/contexts/navigation-context";
-import { useDeleteMemo } from "@/src/hooks/use-memos";
 import { useAuth } from "@clerk/nextjs";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCreatorInfo } from "@/src/hooks/use-creator-info";
 import { toCreatorProps } from "@/src/types/creator";
+import { useUnifiedItemOperations } from "@/src/hooks/use-unified-item-operations";
 
 interface BoardRightPanelProps {
   isOpen: boolean;
@@ -85,6 +85,21 @@ export default function BoardRightPanel({
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
 
+  // 統一操作フック
+  const memoOperations = useUnifiedItemOperations({
+    itemType: "memo",
+    context: teamMode ? "team" : "board-detail",
+    teamId: teamId || undefined,
+    boardId,
+  });
+
+  const taskOperations = useUnifiedItemOperations({
+    itemType: "task",
+    context: teamMode ? "team" : "board-detail",
+    teamId: teamId || undefined,
+    boardId,
+  });
+
   // チーム機能用: 作成者情報を取得
   const { selectedTaskCreatorInfo, selectedMemoCreatorInfo } = useCreatorInfo(
     teamMode,
@@ -123,10 +138,8 @@ export default function BoardRightPanel({
   // 削除処理用のstate
   const [isRightMemoLidOpen, setIsRightMemoLidOpen] = useState(false);
   const [isDeletingMemo, setIsDeletingMemo] = useState(false);
-  const deleteNote = useDeleteMemo({
-    teamMode,
-    teamId: teamId || undefined,
-  });
+
+  // 統一削除フックは削除（MemoScreen内で処理）
 
   // メモをボードに追加
   const handleAddMemosToBoard = async (memoIds: number[]) => {
@@ -207,7 +220,8 @@ export default function BoardRightPanel({
           setIsDeletingMemo(false);
           return;
         }
-        await deleteNote.mutateAsync(memoId);
+        // 統一削除フックによる削除（MemoScreen内で処理される）
+        console.log("2パネルボード削除処理はMemoScreen内で実行されます");
 
         // 削除成功後に蓋を閉じる
         setTimeout(() => {
@@ -411,6 +425,7 @@ export default function BoardRightPanel({
           onRestoreAndSelectNext={async (deletedMemo: DeletedMemo) => {
             onMemoRestoreAndSelectNext?.(deletedMemo);
           }}
+          unifiedOperations={memoOperations}
         />
       )}
 
@@ -432,6 +447,7 @@ export default function BoardRightPanel({
           excludeItemIds={currentBoardTaskIds}
           excludeBoardIdFromFilter={boardId}
           initialSelectionMode="check"
+          unifiedOperations={taskOperations}
         />
       )}
     </RightPanel>

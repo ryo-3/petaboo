@@ -31,10 +31,21 @@ export default function BoardIconSelector({
 
   // 値を配列として扱う（単一選択の場合も配列に変換）
   const selectedValues = Array.isArray(value)
-    ? value
+    ? value.filter((v) => v !== "") // 空文字列を除外
     : value && value !== ""
       ? [value]
       : [];
+
+  // 🔍 BoardIconSelector内部のログ
+  console.log("🎯 [BoardIconSelector] 内部状態:", {
+    受信value: value,
+    isArray: Array.isArray(value),
+    selectedValues,
+    selectedValuesLength: selectedValues.length,
+    hasSelectedBoard: selectedValues.length > 0,
+    multiple,
+    disabled,
+  });
 
   // BoardSelectionModal用のデータ変換
   const boards = options
@@ -44,9 +55,7 @@ export default function BoardIconSelector({
       name: opt.label,
     }));
 
-  const selectedBoardIds = selectedValues
-    .filter((v) => v !== "")
-    .map((v) => parseInt(v, 10));
+  const selectedBoardIds = selectedValues.map((v) => parseInt(v, 10));
 
   const handleSelectionChange = (boardIds: number[]) => {
     const stringValues = boardIds.map((id) => id.toString());
@@ -54,7 +63,7 @@ export default function BoardIconSelector({
     onChange(result);
   };
 
-  // ボードが選択されているかどうか
+  // ボードが選択されているかどうか（空配列なら false）
   const hasSelectedBoard = selectedValues.length > 0;
 
   return (

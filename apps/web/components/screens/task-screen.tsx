@@ -60,6 +60,18 @@ interface TaskScreenProps {
   teamId?: number;
   // URL連動
   initialTaskId?: string | null;
+
+  // 統一フック（最上位から受け取り）
+  unifiedOperations: {
+    deleteItem: {
+      mutateAsync: (id: number) => Promise<any>;
+      isPending: boolean;
+    };
+    restoreItem: {
+      mutateAsync: (originalId: string) => Promise<any>;
+      isPending: boolean;
+    };
+  };
 }
 
 function TaskScreen({
@@ -82,6 +94,7 @@ function TaskScreen({
   teamMode = false,
   teamId,
   initialTaskId,
+  unifiedOperations,
 }: TaskScreenProps) {
   // 一括処理中断通知の監視
   useBulkProcessNotifications();
@@ -103,7 +116,14 @@ function TaskScreen({
 
   // 全データ事前取得（ちらつき解消）
   const { data: allTaggings } = useAllTaggings();
-  const { data: allBoardItems } = useAllBoardItems();
+  const { data: allBoardItems } = useAllBoardItems(
+    teamMode ? teamId : undefined,
+  );
+
+  // allBoardItems監視（デバッグ用 - 削除予定）
+  // useEffect(() => {
+  //   console.log("🔍 TaskScreen allBoardItems更新", { ... });
+  // }, [allBoardItems, teamMode, teamId]);
 
   // チーム用タグデータ取得
   const { data: allTeamTaggings } = useAllTeamTaggings(teamId || 0);
@@ -618,6 +638,7 @@ function TaskScreen({
             preloadedBoards={boards || []}
             preloadedTaggings={safeAllTaggings}
             preloadedBoardItems={safeAllBoardItems}
+            unifiedOperations={unifiedOperations}
           />
         )}
         {taskScreenMode === "view" && selectedTask && (
@@ -636,6 +657,7 @@ function TaskScreen({
             preloadedBoards={boards || []}
             preloadedTaggings={safeAllTaggings}
             preloadedBoardItems={safeAllBoardItems}
+            unifiedOperations={unifiedOperations}
           />
         )}
         {taskScreenMode === "view" && selectedDeletedTask && (
@@ -656,6 +678,7 @@ function TaskScreen({
               preloadedBoards={boards || []}
               preloadedTaggings={safeAllTaggings}
               preloadedBoardItems={safeAllBoardItems}
+              unifiedOperations={unifiedOperations}
             />
           </>
         )}
@@ -675,6 +698,7 @@ function TaskScreen({
             preloadedBoards={boards || []}
             preloadedTaggings={safeAllTaggings}
             preloadedBoardItems={safeAllBoardItems}
+            unifiedOperations={unifiedOperations}
           />
         )}
       </RightPanel>

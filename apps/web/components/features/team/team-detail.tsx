@@ -28,6 +28,7 @@ import { useUserInfo } from "@/src/hooks/use-user-info";
 import UserMemberCard from "@/components/shared/user-member-card";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
+import { useUnifiedItemOperations } from "@/src/hooks/use-unified-item-operations";
 import { formatDateOnly } from "@/src/utils/formatDate";
 import { getUserAvatarColor } from "@/src/utils/userUtils";
 import { useQueryClient } from "@tanstack/react-query";
@@ -101,6 +102,19 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
   // TaskScreenの作成モード状態を監視
   const [isTaskCreateMode, setIsTaskCreateMode] = useState(false);
+
+  // 🎯 統一フック（チーム用）- 最上位で1つだけ作成
+  const teamMemoOperations = useUnifiedItemOperations({
+    itemType: "memo",
+    context: "team",
+    teamId: team?.id,
+  });
+
+  const teamTaskOperations = useUnifiedItemOperations({
+    itemType: "task",
+    context: "team",
+    teamId: team?.id,
+  });
 
   // 表示名設定モーダル
   const [showDisplayNameModal, setShowDisplayNameModal] = useState(false);
@@ -763,6 +777,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                 teamMode={true}
                 teamId={team.id}
                 initialMemoId={selectedMemo ? getMemoIdFromURL() : null}
+                // 統一フックを渡す
+                unifiedOperations={teamMemoOperations}
               />
             </div>
           )}
@@ -782,6 +798,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                 teamMode={true}
                 teamId={team.id}
                 initialTaskId={isTaskCreateMode ? null : getTaskIdFromURL()}
+                // 統一フックを渡す
+                unifiedOperations={teamTaskOperations}
               />
             </div>
           )}

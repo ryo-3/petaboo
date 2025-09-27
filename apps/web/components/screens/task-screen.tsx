@@ -15,6 +15,7 @@ import { useBulkProcessNotifications } from "@/src/hooks/use-bulk-process-notifi
 import { useDeletedItemOperations } from "@/src/hooks/use-deleted-item-operations";
 import { useDeletionLid } from "@/src/hooks/use-deletion-lid";
 import { useItemDeselect } from "@/src/hooks/use-item-deselect";
+import { useUnifiedRestoration } from "@/src/hooks/use-unified-restoration";
 import { useScreenState } from "@/src/hooks/use-screen-state";
 import { useSelectAll } from "@/src/hooks/use-select-all";
 import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
@@ -324,6 +325,20 @@ function TaskScreen({
     editorSelector: "[data-task-editor]",
     restoreOptions: { isRestore: true, onSelectWithFromFlag: true },
   });
+
+  // 統一復元フック（新しいシンプル実装）
+  const { handleRestoreAndSelectNext: unifiedRestoreAndSelectNext } =
+    useUnifiedRestoration({
+      itemType: "task",
+      deletedItems: deletedTasks || null,
+      selectedDeletedItem: selectedDeletedTask || null,
+      onSelectDeletedItem: onSelectDeletedTask,
+      setActiveTab,
+      setScreenMode: (mode: string) =>
+        setTaskScreenMode(mode as TaskScreenMode),
+      teamMode,
+      teamId,
+    });
 
   // DOMポーリング削除フック（メモと同じ方式）
   const { handleDeleteWithNextSelection, checkDomDeletionAndSelectNext } =
@@ -685,50 +700,7 @@ function TaskScreen({
                   }
                 }
               }}
-              onRestoreAndSelectNext={async () => {
-                console.log("🎯 TaskScreen: onRestoreAndSelectNext実行", {
-                  selectedDeletedTask,
-                });
-                if (!selectedDeletedTask) return;
-
-                // 復元前に次選択対象を事前計算
-                const currentIndex =
-                  deletedTasks?.findIndex(
-                    (task) =>
-                      task.originalId === selectedDeletedTask.originalId,
-                  ) ?? -1;
-                const remainingTasks =
-                  deletedTasks?.filter(
-                    (task) =>
-                      task.originalId !== selectedDeletedTask.originalId,
-                  ) ?? [];
-
-                console.log(
-                  "🎯 次選択処理: currentIndex =",
-                  currentIndex,
-                  "remainingTasks.length =",
-                  remainingTasks.length,
-                );
-
-                // 復元API実行
-                await unifiedOperations.restoreItem.mutateAsync(
-                  selectedDeletedTask.originalId,
-                );
-
-                // 即座に次選択処理実行
-                if (remainingTasks.length > 0) {
-                  const nextIndex =
-                    currentIndex >= remainingTasks.length
-                      ? remainingTasks.length - 1
-                      : currentIndex;
-                  onSelectDeletedTask(remainingTasks[nextIndex] || null);
-                } else {
-                  // 削除済みタスクが残っていない場合は通常タブに切り替え
-                  onSelectDeletedTask(null);
-                  setActiveTab("normal");
-                  setTaskScreenMode("list");
-                }
-              }}
+              onRestoreAndSelectNext={unifiedRestoreAndSelectNext}
               teamMode={teamMode}
               teamId={teamId}
               createdBy={selectedDeletedTask.createdBy}

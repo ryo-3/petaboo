@@ -15,6 +15,7 @@ import { useBulkProcessNotifications } from "@/src/hooks/use-bulk-process-notifi
 import { useUnifiedItemOperations } from "@/src/hooks/use-unified-item-operations";
 import { useDeletionLid } from "@/src/hooks/use-deletion-lid";
 import { useItemDeselect } from "@/src/hooks/use-item-deselect";
+import { useUnifiedRestoration } from "@/src/hooks/use-unified-restoration";
 import {
   useDeletedMemos,
   useMemos,
@@ -415,8 +416,20 @@ function MemoScreen({
     setIsLidOpen: setIsRestoreLidOpen,
   });
 
-  // 統一復元処理（外部から受け取り）
-  const { restoreItem } = unifiedOperations;
+  // 統一復元フック（新しいシンプル実装）
+  const { handleRestoreAndSelectNext: unifiedRestoreAndSelectNext } =
+    useUnifiedRestoration({
+      itemType: "memo",
+      deletedItems: deletedMemos || null,
+      selectedDeletedItem: selectedDeletedMemo || null,
+      onSelectDeletedItem: onSelectDeletedMemo,
+      setActiveTab,
+      setScreenMode: (mode: string) =>
+        setMemoScreenMode(mode as MemoScreenMode),
+      teamMode,
+      teamId,
+      restoreItem: operations.restoreItem,
+    });
 
   // 削除済みメモの完全削除処理
   const permanentDeleteMemo = usePermanentDeleteMemo();
@@ -807,39 +820,7 @@ function MemoScreen({
                     }
                     onDeselectAndStayOnMemoList?.();
                   }}
-                  onRestore={async () => {
-                    if (selectedDeletedMemo && deletedMemos) {
-                      // 復元前に次選択対象を事前計算
-                      const currentIndex = deletedMemos.findIndex(
-                        (memo) =>
-                          memo.originalId === selectedDeletedMemo.originalId,
-                      );
-                      const remainingMemos = deletedMemos.filter(
-                        (memo) =>
-                          memo.originalId !== selectedDeletedMemo.originalId,
-                      );
-
-                      // 復元API実行
-                      await restoreItem.mutateAsync(
-                        selectedDeletedMemo.originalId,
-                      );
-
-                      // 即座に次選択処理実行
-                      if (remainingMemos.length > 0) {
-                        // 次のメモを選択（現在の位置または前の位置）
-                        const nextIndex =
-                          currentIndex >= remainingMemos.length
-                            ? remainingMemos.length - 1
-                            : currentIndex;
-                        onSelectDeletedMemo(remainingMemos[nextIndex] || null);
-                      } else {
-                        // 削除済みメモが残っていない場合は通常タブに切り替え
-                        onSelectDeletedMemo(null);
-                        setActiveTab("normal");
-                        setMemoScreenMode("list");
-                      }
-                    }
-                  }}
+                  onRestore={unifiedRestoreAndSelectNext}
                   onDelete={async () => {
                     if (selectedDeletedMemo && deletedMemos) {
                       // 削除前に次選択対象を事前計算

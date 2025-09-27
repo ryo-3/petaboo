@@ -203,6 +203,7 @@ function TaskScreen({
   // 復元の状態
   const [isRestoring, setIsRestoring] = useState(false);
   const [isRestoreLidOpen, setIsRestoreLidOpen] = useState(false);
+  const [isIndividualRestoring, setIsIndividualRestoring] = useState(false);
 
   // CSVインポートモーダルの状態
   const [isCsvImportModalOpen, setIsCsvImportModalOpen] = useState(false);
@@ -684,29 +685,48 @@ function TaskScreen({
                   }
                 }
               }}
-              onRestore={async () => {
-                if (selectedDeletedTask && deletedTasks) {
-                  // 復元前に次選択対象を事前計算
-                  const currentIndex = deletedTasks.findIndex(
+              onRestoreAndSelectNext={async () => {
+                console.log("🎯 TaskScreen: onRestoreAndSelectNext実行", {
+                  selectedDeletedTask,
+                });
+                if (!selectedDeletedTask) return;
+
+                // 復元前に次選択対象を事前計算
+                const currentIndex =
+                  deletedTasks?.findIndex(
                     (task) =>
                       task.originalId === selectedDeletedTask.originalId,
-                  );
-                  const remainingTasks = deletedTasks.filter(
+                  ) ?? -1;
+                const remainingTasks =
+                  deletedTasks?.filter(
                     (task) =>
                       task.originalId !== selectedDeletedTask.originalId,
-                  );
-                  // 復元API実行
-                  await unifiedOperations.restoreItem.mutateAsync(
-                    selectedDeletedTask.originalId,
-                  );
-                  // 即座に次選択処理実行
-                  if (remainingTasks.length > 0) {
-                    const nextIndex =
-                      currentIndex >= remainingTasks.length
-                        ? remainingTasks.length - 1
-                        : currentIndex;
-                    onSelectDeletedTask(remainingTasks[nextIndex] || null);
-                  }
+                  ) ?? [];
+
+                console.log(
+                  "🎯 次選択処理: currentIndex =",
+                  currentIndex,
+                  "remainingTasks.length =",
+                  remainingTasks.length,
+                );
+
+                // 復元API実行
+                await unifiedOperations.restoreItem.mutateAsync(
+                  selectedDeletedTask.originalId,
+                );
+
+                // 即座に次選択処理実行
+                if (remainingTasks.length > 0) {
+                  const nextIndex =
+                    currentIndex >= remainingTasks.length
+                      ? remainingTasks.length - 1
+                      : currentIndex;
+                  onSelectDeletedTask(remainingTasks[nextIndex] || null);
+                } else {
+                  // 削除済みタスクが残っていない場合は通常タブに切り替え
+                  onSelectDeletedTask(null);
+                  setActiveTab("normal");
+                  setTaskScreenMode("list");
                 }
               }}
               teamMode={teamMode}

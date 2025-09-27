@@ -514,6 +514,14 @@ export function useRestoreTask(options?: {
 
   return useMutation({
     mutationFn: async (originalId: string) => {
+      console.log("🔧 React Query: タスク復元mutationFn開始", {
+        originalId,
+        teamMode,
+        teamId,
+        timestamp: new Date().toISOString(),
+        stackTrace: new Error().stack?.split("\n").slice(1, 3),
+      });
+
       const token = await getToken();
 
       if (teamMode && teamId) {
@@ -527,11 +535,13 @@ export function useRestoreTask(options?: {
         return result;
       } else {
         // 個人タスク復元
+        console.log("📞 個人タスク復元API呼び出し", { originalId });
         const response = await tasksApi.restoreTask(
           originalId,
           token || undefined,
         );
         const result = await response.json();
+        console.log("✅ 個人タスク復元API完了", { originalId, result });
         return result;
       }
     },

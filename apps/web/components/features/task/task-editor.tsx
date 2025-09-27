@@ -66,6 +66,7 @@ interface TaskEditorProps {
     isContinuousMode?: boolean,
   ) => void;
   onRestore?: () => void;
+  onRestoreAndSelectNext?: () => void;
   onDelete?: () => void;
   customHeight?: string;
 
@@ -112,6 +113,7 @@ function TaskEditor({
   onDeleteAndSelectNext,
   onSaveComplete,
   onRestore,
+  onRestoreAndSelectNext,
   onDelete,
   customHeight,
   preloadedTags = [],
@@ -304,9 +306,7 @@ function TaskEditor({
     onDeleteAndSelectNext: () => {
       if (onDelete) onDelete();
     },
-    onRestoreAndSelectNext: () => {
-      if (onRestore) onRestore();
-    },
+    onRestoreAndSelectNext: undefined, // TaskScreenで処理するため無効化
     onAnimationChange: setIsAnimating,
     teamMode,
     teamId: teamId || undefined,
@@ -374,6 +374,28 @@ function TaskEditor({
     teamId,
   });
 
+  // 削除済みタスクの場合は直接タスクデータから値を取得
+  const finalTitle = isDeleted ? task?.title || "" : title;
+  const finalDescription = isDeleted ? task?.description || "" : description;
+  const finalPriority = isDeleted
+    ? (task as DeletedTask)?.priority || "medium"
+    : priority;
+  const finalStatus = isDeleted
+    ? (task as DeletedTask)?.status || "not_started"
+    : status;
+
+  // デバッグログ：削除済みタスクのデータ確認
+  console.log("🏷️ [TaskEditor] データ状態:", {
+    isDeleted,
+    taskExists: !!task,
+    taskTitle: task?.title,
+    taskDescription: task?.description,
+    finalTitle,
+    finalDescription,
+    title: title,
+    description: description,
+  });
+
   // その他のタスク固有のstate
   const [categoryId, setCategoryId] = useState<number | null>(
     task?.categoryId ?? null,
@@ -399,13 +421,13 @@ function TaskEditor({
   const tempTask: Task = task
     ? {
         ...(task as Task),
-        title: title || task.title,
-        description: description,
+        title: finalTitle || task.title,
+        description: finalDescription,
         status:
-          status === "not_started"
+          finalStatus === "not_started"
             ? "todo"
-            : (status as "todo" | "in_progress" | "completed"),
-        priority: priority!,
+            : (finalStatus as "todo" | "in_progress" | "completed"),
+        priority: finalPriority as "low" | "medium" | "high",
         categoryId: categoryId,
         boardCategoryId: boardCategoryId,
         dueDate: dueDate
@@ -414,13 +436,13 @@ function TaskEditor({
       }
     : {
         id: 0,
-        title: title || "新規タスク",
-        description: description,
+        title: finalTitle || "新規タスク",
+        description: finalDescription,
         status:
-          status === "not_started"
+          finalStatus === "not_started"
             ? "todo"
-            : (status as "todo" | "in_progress" | "completed"),
-        priority: priority!,
+            : (finalStatus as "todo" | "in_progress" | "completed"),
+        priority: finalPriority as "low" | "medium" | "high",
         categoryId: categoryId,
         boardCategoryId: boardCategoryId,
         createdAt: Math.floor(Date.now() / 1000),
@@ -732,13 +754,10 @@ function TaskEditor({
                       <button
                         onClick={() => {
                           console.log(
-                            "🔄 復元ボタンクリック: isDeleted=",
-                            isDeleted,
-                            "deletedTaskActions=",
-                            !!deletedTaskActions,
+                            "🔄 TaskEditor復元ボタン: onRestoreAndSelectNext呼び出し",
                           );
-                          if (isDeleted && deletedTaskActions) {
-                            deletedTaskActions.handleRestore();
+                          if (isDeleted && onRestoreAndSelectNext && task) {
+                            onRestoreAndSelectNext();
                           }
                         }}
                         className="flex items-center justify-center size-7 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800 transition-colors"
@@ -770,14 +789,14 @@ function TaskEditor({
           <TaskForm
             ref={taskFormRef}
             task={task as Task}
-            title={title}
+            title={finalTitle}
             onTitleChange={isDeleted ? () => {} : handleTitleChange}
-            description={description}
+            description={finalDescription}
             onDescriptionChange={isDeleted ? () => {} : handleDescriptionChange}
             status={
-              status === "not_started"
+              finalStatus === "not_started"
                 ? "todo"
-                : (status as "todo" | "in_progress" | "completed")
+                : (finalStatus as "todo" | "in_progress" | "completed")
             }
             onStatusChange={
               isDeleted
@@ -787,7 +806,7 @@ function TaskEditor({
                       value === "todo" ? "not_started" : value,
                     )
             }
-            priority={priority!}
+            priority={finalPriority as "low" | "medium" | "high"}
             onPriorityChange={isDeleted ? () => {} : handlePriorityChange!}
             categoryId={categoryId}
             onCategoryChange={isDeleted ? () => {} : setCategoryId}

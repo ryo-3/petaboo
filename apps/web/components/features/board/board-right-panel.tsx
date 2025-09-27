@@ -327,13 +327,26 @@ export default function BoardRightPanel({
               onClose={() => {
                 // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
               }}
-              onRestore={
-                onMemoRestoreAndSelectNext
-                  ? () => {
-                      onMemoRestoreAndSelectNext(selectedMemo as DeletedMemo);
-                    }
-                  : undefined
-              }
+              onRestore={async () => {
+                if (
+                  selectedMemo &&
+                  selectedMemo.originalId &&
+                  onMemoRestoreAndSelectNext
+                ) {
+                  try {
+                    console.log("🔄 ボード詳細メモ復元開始", {
+                      originalId: selectedMemo.originalId,
+                    });
+                    // 個人のメモ復元と同じシンプル処理
+                    await memoOperations.restoreItem.mutateAsync(
+                      selectedMemo.originalId,
+                    );
+                    onMemoRestoreAndSelectNext(selectedMemo as DeletedMemo);
+                  } catch (error) {
+                    console.error("メモ復元API実行エラー:", error);
+                  }
+                }
+              }}
               onDelete={() => {
                 if (onDeletedMemoDeleteAndSelectNext) {
                   onDeletedMemoDeleteAndSelectNext(selectedMemo as DeletedMemo);
@@ -415,11 +428,18 @@ export default function BoardRightPanel({
               }}
               onRestore={async () => {
                 if (selectedTask && onTaskRestoreAndSelectNext) {
-                  // 個人のタスク復元と同じシンプル処理
-                  await taskOperations.restoreItem.mutateAsync(
-                    selectedTask.originalId,
-                  );
-                  onTaskRestoreAndSelectNext(selectedTask);
+                  try {
+                    console.log("🔄 ボード詳細タスク復元開始", {
+                      originalId: selectedTask.originalId,
+                    });
+                    // 個人のタスク復元と同じシンプル処理
+                    await taskOperations.restoreItem.mutateAsync(
+                      selectedTask.originalId,
+                    );
+                    onTaskRestoreAndSelectNext(selectedTask);
+                  } catch (error) {
+                    console.error("タスク復元API実行エラー:", error);
+                  }
                 }
               }}
               onDelete={async () => {

@@ -36,17 +36,6 @@ export default function BoardIconSelector({
       ? [value]
       : [];
 
-  // 🔍 BoardIconSelector内部のログ
-  console.log("🎯 [BoardIconSelector] 内部状態:", {
-    受信value: value,
-    isArray: Array.isArray(value),
-    selectedValues,
-    selectedValuesLength: selectedValues.length,
-    hasSelectedBoard: selectedValues.length > 0,
-    multiple,
-    disabled,
-  });
-
   // BoardSelectionModal用のデータ変換
   const boards = options
     .filter((opt) => opt.value !== "") // "なし"オプションを除外

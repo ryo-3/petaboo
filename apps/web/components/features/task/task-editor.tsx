@@ -693,38 +693,13 @@ function TaskEditor({
                     className="rounded-full"
                   />
                 </Tooltip>
-                {(() => {
-                  // 🔍 ボードアイコン表示状態のログ
-                  console.log("🎨 [タスクエディター] ボードアイコン表示状態:", {
-                    taskId: task?.id,
-                    originalId: task?.originalId || task?.id?.toString(),
-                    currentBoardValues,
-                    currentBoardValuesLength: currentBoardValues.length,
-                    selectedBoardIds,
-                    selectedBoardIdsLength: selectedBoardIds.length,
-                    itemBoards: itemBoards.map((b) => ({
-                      id: b.id,
-                      name: b.name,
-                    })),
-                    itemBoardsLength: itemBoards.length,
-                    boardOptions: boardOptions.map((o) => ({
-                      value: o.value,
-                      label: o.label,
-                    })),
-                    isNewTask,
-                    teamMode,
-                  });
-
-                  return (
-                    <BoardIconSelector
-                      options={boardOptions}
-                      value={currentBoardValues}
-                      onChange={handleBoardSelectorChange}
-                      iconClassName="size-4 text-gray-600"
-                      multiple={true}
-                    />
-                  );
-                })()}
+                <BoardIconSelector
+                  options={boardOptions}
+                  value={currentBoardValues}
+                  onChange={handleBoardSelectorChange}
+                  iconClassName="size-4 text-gray-600"
+                  multiple={true}
+                />
                 <TagTriggerButton
                   onClick={
                     isDeleted ? undefined : () => setIsTagModalOpen(true)

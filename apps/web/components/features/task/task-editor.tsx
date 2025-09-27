@@ -164,26 +164,6 @@ function TaskEditor({
       }
     }
 
-    // 🔍 ボード紐付け状態のログ出力
-    console.log("📌 [タスクエディター] ボード紐付け状態:", {
-      taskId: task.id,
-      originalId,
-      teamMode,
-      teamId,
-      taskBoardItemsCount: taskBoardItems.length,
-      taskBoardItems: taskBoardItems.map((item) => ({
-        boardId: item.boardId,
-        boardName: item.boardName,
-        itemId: item.itemId,
-        addedAt: item.addedAt,
-      })),
-      boardsCount: boards.length,
-      boards: boards.map((b) => ({ id: b.id, name: b.name })),
-      initialBoardId,
-      preloadedBoardsCount: preloadedBoards.length,
-      preloadedBoardItemsCount: preloadedBoardItems.length,
-    });
-
     return boards;
   }, [
     task,

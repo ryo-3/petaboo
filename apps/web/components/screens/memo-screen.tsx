@@ -385,8 +385,8 @@ function MemoScreen({
   const {
     handleDeleteWithNextSelection,
     checkDomDeletionAndSelectNext,
-    deletingMemoId,
-    nextMemoAfterDelete,
+    deletingItemId,
+    nextItemAfterDelete,
   } = useMemoDeleteWithNextSelection({
     memos,
     onSelectMemo,

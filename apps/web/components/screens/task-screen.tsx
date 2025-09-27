@@ -27,6 +27,7 @@ import {
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useBoards } from "@/src/hooks/use-boards";
 import { useTags } from "@/src/hooks/use-tags";
+import { useTaskDeleteWithNextSelection } from "@/src/hooks/use-memo-delete-with-next-selection";
 import TagManagementModal from "@/components/ui/tag-management/tag-management-modal";
 import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
 import { useAllTeamTaggings } from "@/src/hooks/use-team-taggings";
@@ -323,7 +324,36 @@ function TaskScreen({
     restoreOptions: { isRestore: true, onSelectWithFromFlag: true },
   });
 
-  // 通常タスク削除（メモと同じシンプル構造）
+  // DOMポーリング削除フック（メモと同じ方式）
+  const { handleDeleteWithNextSelection, checkDomDeletionAndSelectNext } =
+    useTaskDeleteWithNextSelection({
+      tasks: tasks?.filter((t) => t.status === activeTab),
+      onSelectTask: (task: Task | null) => {
+        if (task) {
+          onSelectTask(task);
+          setTaskScreenMode("view");
+        } else {
+          setTaskScreenMode("list");
+          onClearSelection?.();
+        }
+      },
+      setTaskScreenMode,
+      onDeselectAndStayOnTaskList: () => {
+        setTaskScreenMode("list");
+        onClearSelection?.();
+      },
+      handleRightEditorDelete: () => {
+        // 何もしない（削除処理は外部で実行済み）
+      },
+      setIsRightLidOpen,
+    });
+
+  // DOM削除確認（タスク一覧が変更されたときにチェック）
+  useEffect(() => {
+    checkDomDeletionAndSelectNext();
+  }, [tasks, checkDomDeletionAndSelectNext]);
+
+  // 通常タスク削除（DOMポーリング方式）
   const handleTaskDeleteAndSelectNext = async (deletedTask: Task) => {
     if (!tasks || unifiedOperations.deleteItem.isPending) return;
 
@@ -334,47 +364,14 @@ function TaskScreen({
       return;
     }
 
-    // 削除前の状態で計算（メモと同じパターン）
-    const currentTasks = tasks.filter((t) => t.status === activeTab);
-    const currentIndex = currentTasks.findIndex((t) => t.id === deletedTask.id);
-    const filteredTasks = currentTasks.filter((t) => t.id !== deletedTask.id);
-
-    console.log("🎯 タスク削除:", {
-      deletedTaskId: deletedTask.id,
-      activeTab,
-      currentTasksLength: currentTasks.length,
-      filteredTasksLength: filteredTasks.length,
-      currentIndex,
-    });
+    console.log("🚀 タスク削除とDOMポーリング開始", { taskId: deletedTask.id });
 
     try {
-      // 削除API実行（メモと同じ統一処理）
+      // API削除実行
       await unifiedOperations.deleteItem.mutateAsync(deletedTask.id);
 
-      // メモと同じロジックで次選択
-      let nextTask = null;
-      if (filteredTasks.length > 0) {
-        if (currentIndex < filteredTasks.length) {
-          nextTask = filteredTasks[currentIndex];
-        } else if (currentIndex > 0) {
-          nextTask = filteredTasks[currentIndex - 1];
-        } else {
-          nextTask = filteredTasks[0];
-        }
-      }
-
-      console.log("🎯 次選択:", {
-        nextTask: nextTask?.id,
-        nextTaskTitle: nextTask?.title,
-      });
-
-      if (nextTask) {
-        onSelectTask(nextTask, true);
-        setTaskScreenMode("view");
-      } else {
-        setTaskScreenMode("list");
-        onClearSelection?.();
-      }
+      // DOMポーリング削除フックによる次選択処理
+      handleDeleteWithNextSelection(deletedTask);
     } catch (error) {
       console.error("Task deletion failed:", error);
     }

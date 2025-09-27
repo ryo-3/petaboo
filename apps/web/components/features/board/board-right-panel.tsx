@@ -18,8 +18,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCreatorInfo } from "@/src/hooks/use-creator-info";
 import { toCreatorProps } from "@/src/types/creator";
 import { useUnifiedItemOperations } from "@/src/hooks/use-unified-item-operations";
-import { useMemoDeleteWithNextSelection } from "@/src/hooks/use-memo-delete-with-next-selection";
+import {
+  useMemoDeleteWithNextSelection,
+  useTaskDeleteWithNextSelection,
+} from "@/src/hooks/use-memo-delete-with-next-selection";
 import { useMemos } from "@/src/hooks/use-memos";
+import { useTasks } from "@/src/hooks/use-tasks";
 
 interface BoardRightPanelProps {
   isOpen: boolean;
@@ -98,6 +102,12 @@ export default function BoardRightPanel({
   });
   const allMemos = allMemosData || [];
 
+  const { data: allTasksData } = useTasks({
+    teamMode: teamMode || false,
+    teamId: teamMode ? teamId || undefined : undefined,
+  });
+  const allTasks = allTasksData || [];
+
   // 統一操作フック
   const memoOperations = useUnifiedItemOperations({
     itemType: "memo",
@@ -113,27 +123,56 @@ export default function BoardRightPanel({
     boardId,
   });
 
-  // 共通削除フック（DOM削除確認のみ、API削除は別途行う）
-  const { handleDeleteWithNextSelection, checkDomDeletionAndSelectNext } =
-    useMemoDeleteWithNextSelection({
-      memos: allMemos,
-      onSelectMemo: (memo: Memo | null) => {
-        if (memo) {
-          onSelectMemo?.(memo);
-        } else {
-          onClose();
-        }
-      },
-      onDeselectAndStayOnMemoList: onClose,
-      handleRightEditorDelete: () => {
-        // 何もしない（削除処理は外部で実行済み）
-      },
-    });
+  // 削除処理用のstate
+  const [isRightMemoLidOpen, setIsRightMemoLidOpen] = useState(false);
 
-  // DOM削除確認（メモ一覧が変更されたときにチェック）
+  // メモ用共通削除フック（DOM削除確認のみ、API削除は別途行う）
+  const {
+    handleDeleteWithNextSelection: handleMemoDeleteWithNextSelection,
+    checkDomDeletionAndSelectNext: checkMemoDomDeletionAndSelectNext,
+  } = useMemoDeleteWithNextSelection({
+    memos: allMemos,
+    onSelectMemo: (memo: Memo | null) => {
+      if (memo) {
+        onSelectMemo?.(memo);
+      } else {
+        onClose();
+      }
+    },
+    onDeselectAndStayOnMemoList: onClose,
+    handleRightEditorDelete: () => {
+      // 何もしない（削除処理は外部で実行済み）
+    },
+  });
+
+  // タスク用共通削除フック（DOM削除確認のみ、API削除は別途行う）
+  const {
+    handleDeleteWithNextSelection: handleTaskDeleteWithNextSelection,
+    checkDomDeletionAndSelectNext: checkTaskDomDeletionAndSelectNext,
+  } = useTaskDeleteWithNextSelection({
+    tasks: allTasks,
+    onSelectTask: (task: Task | null) => {
+      if (task) {
+        onSelectTask?.(task);
+      } else {
+        onClose();
+      }
+    },
+    onDeselectAndStayOnTaskList: onClose,
+    handleRightEditorDelete: () => {
+      // 何もしない（削除処理は外部で実行済み）
+    },
+    setIsRightLidOpen: setIsRightMemoLidOpen,
+  });
+
+  // DOM削除確認（メモ・タスク一覧が変更されたときにチェック）
   useEffect(() => {
-    checkDomDeletionAndSelectNext();
-  }, [allMemos, checkDomDeletionAndSelectNext]);
+    checkMemoDomDeletionAndSelectNext();
+  }, [allMemos, checkMemoDomDeletionAndSelectNext]);
+
+  useEffect(() => {
+    checkTaskDomDeletionAndSelectNext();
+  }, [allTasks, checkTaskDomDeletionAndSelectNext]);
 
   // チーム機能用: 作成者情報を取得
   const { selectedTaskCreatorInfo, selectedMemoCreatorInfo } = useCreatorInfo(
@@ -170,8 +209,6 @@ export default function BoardRightPanel({
     return "deletedAt" in task && task.deletedAt !== undefined;
   };
 
-  // 削除処理用のstate
-  const [isRightMemoLidOpen, setIsRightMemoLidOpen] = useState(false);
   const [isDeletingMemo, setIsDeletingMemo] = useState(false);
 
   // 統一削除フックは削除（MemoScreen内で処理）
@@ -265,7 +302,7 @@ export default function BoardRightPanel({
 
         // 共通削除フックを使用した次選択処理
         try {
-          handleDeleteWithNextSelection(selectedMemo as Memo);
+          handleMemoDeleteWithNextSelection(selectedMemo as Memo);
         } catch (nextSelectError) {}
 
         // useDeleteMemoのonSuccessで自動的にキャッシュが無効化されるため、手動での無効化は不要
@@ -345,7 +382,7 @@ export default function BoardRightPanel({
                   );
 
                   // 共通削除フックによる処理（DOM削除確認済み）
-                  handleDeleteWithNextSelection(deletedMemo);
+                  handleMemoDeleteWithNextSelection(deletedMemo);
 
                   // API完了を待つ
                   await deletePromise;
@@ -428,14 +465,8 @@ export default function BoardRightPanel({
                   deletedTask.id,
                 );
 
-                // requestAnimationFrameで確実に次のフレームで次選択 + 遅延
-                requestAnimationFrame(() => {
-                  requestAnimationFrame(() => {
-                    setTimeout(() => {
-                      onTaskDeleteAndSelectNext?.(deletedTask);
-                    }, 100); // 追加の遅延でより安定化
-                  });
-                });
+                // 共通削除フックによる処理（DOM削除確認済み）
+                handleTaskDeleteWithNextSelection(deletedTask);
 
                 // API完了を待つ
                 await deletePromise;

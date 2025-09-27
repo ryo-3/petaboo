@@ -1,85 +1,79 @@
 import { useState, useCallback } from "react";
 import { Memo } from "@/src/types/memo";
+import { Task } from "@/src/types/task";
 import {
   getMemoDisplayOrder,
+  getTaskDisplayOrder,
   getNextItemAfterDeletion,
 } from "@/src/utils/domUtils";
 
-type MemoScreenMode = "list" | "view" | "create";
+type ScreenMode = "list" | "view" | "create";
+type ItemType = "memo" | "task";
 
-interface UseMemoDeleteWithNextSelectionProps {
-  memos: Memo[] | undefined;
-  onSelectMemo: (memo: Memo | null) => void;
-  setMemoScreenMode?: (mode: MemoScreenMode) => void; // ボード詳細では不要
-  onDeselectAndStayOnMemoList?: () => void;
-  handleRightEditorDelete: (memo: Memo) => void;
+interface UseItemDeleteWithNextSelectionProps<T> {
+  items: T[] | undefined;
+  onSelectItem: (item: T | null) => void;
+  setScreenMode?: (mode: ScreenMode) => void; // ボード詳細では不要
+  onDeselectAndStayOnList?: () => void;
+  handleRightEditorDelete: (item: T) => void;
   setIsRightLidOpen?: (open: boolean) => void; // ボード詳細では不要
+  itemType: ItemType;
 }
 
-export function useMemoDeleteWithNextSelection({
-  memos,
-  onSelectMemo,
-  setMemoScreenMode,
-  onDeselectAndStayOnMemoList,
+export function useItemDeleteWithNextSelection<T extends { id: number }>({
+  items,
+  onSelectItem,
+  setScreenMode,
+  onDeselectAndStayOnList,
   handleRightEditorDelete,
   setIsRightLidOpen,
-}: UseMemoDeleteWithNextSelectionProps) {
-  // 削除後に選択する次のメモを保存
-  const [nextMemoAfterDelete, setNextMemoAfterDelete] = useState<Memo | null>(
+  itemType,
+}: UseItemDeleteWithNextSelectionProps<T>) {
+  // 削除後に選択する次のアイテムを保存
+  const [nextItemAfterDelete, setNextItemAfterDelete] = useState<T | null>(
     null,
   );
-  // 削除中のメモIDを追跡
-  const [deletingMemoId, setDeletingMemoId] = useState<number | null>(null);
+  // 削除中のアイテムIDを追跡
+  const [deletingItemId, setDeletingItemId] = useState<number | null>(null);
 
   // DOM削除確認付きの削除処理
   const handleDeleteWithNextSelection = useCallback(
-    (selectedMemo: Memo) => {
-      console.log("🚀 共通削除処理開始", {
-        selectedMemoId: selectedMemo.id,
-        memosLength: memos?.length,
-      });
+    (selectedItem: T) => {
+      if (!items) return;
 
-      if (!memos) return;
+      // DOM表示順を取得（アイテムタイプに応じて）
+      const displayOrder =
+        itemType === "memo" ? getMemoDisplayOrder() : getTaskDisplayOrder();
 
-      // DOM表示順を取得
-      const displayOrder = getMemoDisplayOrder();
-
-      // 削除前に次のメモを計算（DOM表示順で）
+      // 削除前に次のアイテムを計算（DOM表示順で）
       const nextItem = getNextItemAfterDeletion(
-        memos,
-        selectedMemo,
+        items,
+        selectedItem,
         displayOrder,
       );
 
-      console.log("🎯 次選択計算完了", {
-        deletingMemoId: selectedMemo.id,
-        nextItemId: nextItem?.id,
-        displayOrderLength: displayOrder.length,
-      });
-
       // 次選択を保存（削除完了後に使用）
-      setNextMemoAfterDelete(nextItem);
-      setDeletingMemoId(selectedMemo.id); // 削除中フラグ
+      setNextItemAfterDelete(nextItem);
+      setDeletingItemId(selectedItem.id); // 削除中フラグ
 
       // 蓋を開いて即座に削除実行（ボード詳細では蓋なし）
       setIsRightLidOpen?.(true);
-      handleRightEditorDelete(selectedMemo);
+      handleRightEditorDelete(selectedItem);
     },
-    [memos, handleRightEditorDelete, setIsRightLidOpen],
+    [items, handleRightEditorDelete, setIsRightLidOpen, itemType],
   );
 
   // DOM削除確認処理
   const checkDomDeletionAndSelectNext = useCallback(() => {
     if (
-      !deletingMemoId ||
-      !memos ||
-      memos.find((m) => m.id === deletingMemoId)
+      !deletingItemId ||
+      !items ||
+      items.find((item) => item.id === deletingItemId)
     ) {
       return;
     }
 
     // データ削除を検知、DOM削除を確認してから次選択
-    console.log(`📝 メモ削除を検知（ID: ${deletingMemoId}）、DOM確認開始`);
 
     let checkCount = 0;
     const maxChecks = 30; // 最大3秒待つ（100ms × 30）
@@ -87,28 +81,27 @@ export function useMemoDeleteWithNextSelection({
     const checkDomAndSelect = () => {
       checkCount++;
 
-      // DOMから削除されたメモが消えたか確認
+      // DOMから削除されたアイテムが消えたか確認
+      const dataAttribute =
+        itemType === "memo" ? "data-memo-id" : "data-task-id";
       const element = document.querySelector(
-        `[data-memo-id="${deletingMemoId}"]`,
+        `[${dataAttribute}="${deletingItemId}"]`,
       );
 
       if (!element) {
         // DOM削除確認！即座に次選択
-        console.log(
-          `✅ DOM削除確認完了（${checkCount}回目、約${checkCount * 100}ms後）`,
-        );
 
-        if (nextMemoAfterDelete) {
-          onSelectMemo(nextMemoAfterDelete);
-          setMemoScreenMode?.("view");
+        if (nextItemAfterDelete) {
+          onSelectItem(nextItemAfterDelete);
+          setScreenMode?.("view");
         } else {
-          setMemoScreenMode?.("list");
-          onDeselectAndStayOnMemoList?.();
+          setScreenMode?.("list");
+          onDeselectAndStayOnList?.();
         }
 
         // リセット
-        setDeletingMemoId(null);
-        setNextMemoAfterDelete(null);
+        setDeletingItemId(null);
+        setNextItemAfterDelete(null);
 
         // 蓋を閉じる（ボード詳細では蓋なし）
         setTimeout(() => {
@@ -116,23 +109,21 @@ export function useMemoDeleteWithNextSelection({
         }, 200);
       } else if (checkCount < maxChecks) {
         // まだDOMに存在する場合は再チェック
-        console.log(`⏳ DOM削除待機中（${checkCount}回目）`);
         setTimeout(checkDomAndSelect, 100);
       } else {
         // タイムアウト：強制的に次選択
-        console.warn(`⚠️ DOM削除確認タイムアウト（3秒経過）、強制的に次選択`);
 
-        if (nextMemoAfterDelete) {
-          onSelectMemo(nextMemoAfterDelete);
-          setMemoScreenMode?.("view");
+        if (nextItemAfterDelete) {
+          onSelectItem(nextItemAfterDelete);
+          setScreenMode?.("view");
         } else {
-          setMemoScreenMode?.("list");
-          onDeselectAndStayOnMemoList?.();
+          setScreenMode?.("list");
+          onDeselectAndStayOnList?.();
         }
 
         // リセット
-        setDeletingMemoId(null);
-        setNextMemoAfterDelete(null);
+        setDeletingItemId(null);
+        setNextItemAfterDelete(null);
 
         // 蓋を閉じる（ボード詳細では蓋なし）
         setTimeout(() => {
@@ -146,19 +137,60 @@ export function useMemoDeleteWithNextSelection({
       checkDomAndSelect();
     });
   }, [
-    deletingMemoId,
-    memos,
-    nextMemoAfterDelete,
-    onSelectMemo,
-    setMemoScreenMode,
-    onDeselectAndStayOnMemoList,
+    deletingItemId,
+    items,
+    nextItemAfterDelete,
+    onSelectItem,
+    setScreenMode,
+    onDeselectAndStayOnList,
     setIsRightLidOpen,
+    itemType,
   ]);
 
   return {
     handleDeleteWithNextSelection,
     checkDomDeletionAndSelectNext,
-    deletingMemoId,
-    nextMemoAfterDelete,
+    deletingItemId,
+    nextItemAfterDelete,
   };
+}
+
+// メモ用の便利なエクスポート（既存コードとの互換性のため）
+export function useMemoDeleteWithNextSelection(props: {
+  memos: Memo[] | undefined;
+  onSelectMemo: (memo: Memo | null) => void;
+  setMemoScreenMode?: (mode: ScreenMode) => void;
+  onDeselectAndStayOnMemoList?: () => void;
+  handleRightEditorDelete: (memo: Memo) => void;
+  setIsRightLidOpen?: (open: boolean) => void;
+}) {
+  return useItemDeleteWithNextSelection({
+    items: props.memos,
+    onSelectItem: props.onSelectMemo,
+    setScreenMode: props.setMemoScreenMode,
+    onDeselectAndStayOnList: props.onDeselectAndStayOnMemoList,
+    handleRightEditorDelete: props.handleRightEditorDelete,
+    setIsRightLidOpen: props.setIsRightLidOpen,
+    itemType: "memo" as const,
+  });
+}
+
+// タスク用のエクスポート
+export function useTaskDeleteWithNextSelection(props: {
+  tasks: Task[] | undefined;
+  onSelectTask: (task: Task | null) => void;
+  setTaskScreenMode?: (mode: ScreenMode) => void;
+  onDeselectAndStayOnTaskList?: () => void;
+  handleRightEditorDelete: (task: Task) => void;
+  setIsRightLidOpen?: (open: boolean) => void;
+}) {
+  return useItemDeleteWithNextSelection({
+    items: props.tasks,
+    onSelectItem: props.onSelectTask,
+    setScreenMode: props.setTaskScreenMode,
+    onDeselectAndStayOnList: props.onDeselectAndStayOnTaskList,
+    handleRightEditorDelete: props.handleRightEditorDelete,
+    setIsRightLidOpen: props.setIsRightLidOpen,
+    itemType: "task" as const,
+  });
 }

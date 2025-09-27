@@ -294,11 +294,12 @@ function TaskEditor({
   const handleDelete = unifiedOperations
     ? async () => {
         if (!task || task.id === 0) return;
+        setShowDeleteModal(false); // モーダルを閉じる
         setIsDeleting(true);
         try {
           // task-screen.tsxの削除処理に委任（API削除+次選択を一括処理）
           await onDeleteAndSelectNext?.(task as Task);
-          onClose();
+          // ボード詳細では削除フック側でモーダル制御するため、onClose()は不要
         } catch (error) {
           console.error("削除に失敗:", error);
         } finally {
@@ -308,7 +309,10 @@ function TaskEditor({
     : undefined;
 
   const showDeleteConfirmation = () => setShowDeleteModal(true);
-  const hideDeleteConfirmation = () => setShowDeleteModal(false);
+  const hideDeleteConfirmation = () => {
+    setShowDeleteModal(false);
+    setIsAnimating(false); // 蓋を閉じる
+  };
 
   // アニメーション状態管理
   const [isAnimating, setIsAnimating] = useState(false);
@@ -332,6 +336,7 @@ function TaskEditor({
   // 削除ボタンのハンドラー（ボード紐づきチェック付き）
   const handleDeleteClick = () => {
     if (!handleDelete) return; // unifiedOperationsがない場合は何もしない
+    setIsAnimating(true); // 蓋を開く
 
     if (itemBoards && itemBoards.length > 0) {
       // ボードに紐づいている場合はモーダル表示

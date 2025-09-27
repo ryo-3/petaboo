@@ -37,6 +37,7 @@ import {
   getMemoDisplayOrder,
   getNextItemAfterDeletion,
 } from "@/src/utils/domUtils";
+import { useMemoDeleteWithNextSelection } from "@/src/hooks/use-memo-delete-with-next-selection";
 import { createToggleHandler } from "@/src/utils/toggleUtils";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -272,46 +273,14 @@ function MemoScreen({
     [onDeselectAndStayOnMemoList, setMemoScreenMode, onSelectMemo],
   );
 
-  // 削除完了後の処理（次のメモを自動選択）
+  // 削除完了後の処理（次のメモ選択はuseEffectで処理）
   const handleDeleteComplete = useCallback(() => {
     setIsLeftDeleting(false); // 左側削除状態をリセット
     setIsRightDeleting(false); // 右側削除状態をリセット
 
-    // 蓋を閉じる（バックグラウンドで実行）
-    setTimeout(() => {
-      setIsRightLidOpen(false);
-    }, 200);
-
-    // 次のメモを選択（React Queryキャッシュ更新を待つ）
-    if (selectedMemo && memos) {
-      const displayOrder = getMemoDisplayOrder();
-      const nextItem = getNextItemAfterDeletion(
-        memos, // 削除前の全メモを渡す
-        selectedMemo,
-        displayOrder,
-      );
-
-      // React Queryのキャッシュ更新を待つ
-      setTimeout(() => {
-        if (nextItem && nextItem.id !== selectedMemo.id) {
-          onSelectMemo(nextItem);
-          setMemoScreenMode("view");
-        } else {
-          setMemoScreenMode("list");
-          onDeselectAndStayOnMemoList?.();
-        }
-      }, 100); // キャッシュ更新完了を待つ
-    } else {
-      onDeselectAndStayOnMemoList?.();
-      setMemoScreenMode("list");
-    }
-  }, [
-    selectedMemo,
-    memos,
-    onSelectMemo,
-    onDeselectAndStayOnMemoList,
-    setMemoScreenMode,
-  ]);
+    // 削除完了の処理はuseEffect（memosの監視）で行う
+    // ここでは状態のリセットのみ
+  }, []);
 
   // 一括削除ボタンの表示制御
   const { showDeleteButton } = useBulkDeleteButton({
@@ -412,6 +381,21 @@ function MemoScreen({
     restoreEditorVisibility: false,
   });
 
+  // 共通削除フック
+  const {
+    handleDeleteWithNextSelection,
+    checkDomDeletionAndSelectNext,
+    deletingMemoId,
+    nextMemoAfterDelete,
+  } = useMemoDeleteWithNextSelection({
+    memos,
+    onSelectMemo,
+    setMemoScreenMode,
+    onDeselectAndStayOnMemoList,
+    handleRightEditorDelete,
+    setIsRightLidOpen,
+  });
+
   // 復元ボタンの参照
   const restoreButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -451,6 +435,11 @@ function MemoScreen({
       }
     }
   }, [initialMemoId, memos, selectedMemo, onSelectMemo]);
+
+  // memosが更新されたら削除完了を検知して次選択
+  useEffect(() => {
+    checkDomDeletionAndSelectNext();
+  }, [memos, checkDomDeletionAndSelectNext]);
 
   // 削除済タブでの表示状態初期化
   useEffect(() => {
@@ -783,11 +772,8 @@ function MemoScreen({
                   onClose={() => setMemoScreenMode("list")}
                   onSaveComplete={handleSaveComplete}
                   onDelete={() => {
-                    // メモエディターの削除処理
                     if (selectedMemo) {
-                      // 蓋を開いて即座に削除実行
-                      setIsRightLidOpen(true);
-                      handleRightEditorDelete(selectedMemo);
+                      handleDeleteWithNextSelection(selectedMemo);
                     }
                   }}
                   isLidOpen={isRightLidOpen}

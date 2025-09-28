@@ -300,7 +300,6 @@ export default function BoardRightPanel({
           return;
         }
         // 統一削除フックによる削除（MemoScreen内で処理される）
-        console.log("ボード削除処理はMemoScreen内で実行されます");
 
         // 削除成功後に蓋を閉じる
         setTimeout(() => {

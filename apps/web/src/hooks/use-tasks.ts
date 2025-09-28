@@ -535,13 +535,11 @@ export function useRestoreTask(options?: {
         return result;
       } else {
         // 個人タスク復元
-        console.log("📞 個人タスク復元API呼び出し", { originalId });
         const response = await tasksApi.restoreTask(
           originalId,
           token || undefined,
         );
         const result = await response.json();
-        console.log("✅ 個人タスク復元API完了", { originalId, result });
         return result;
       }
     },

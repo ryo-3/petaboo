@@ -17,7 +17,7 @@ interface UseUnifiedRestorationProps<T extends DeletedItem> {
   teamMode?: boolean;
   teamId?: number;
   restoreItem?: {
-    mutateAsync: (originalId: string) => Promise<any>;
+    mutateAsync: (originalId: string) => Promise<unknown>;
   };
 }
 
@@ -44,21 +44,8 @@ export function useUnifiedRestoration<T extends DeletedItem>({
   // 統一復元ミューテーション
   const restoreMutation = useMutation({
     mutationFn: async (originalId: string) => {
-      console.log("🔄 統一復元API実行開始", {
-        itemType,
-        originalId,
-        teamMode,
-        teamId,
-      });
-
       // 既存のrestoreItemがある場合は使用、ない場合は直接API呼び出し
       if (restoreItem) {
-        console.log("🔧 既存restoreItem使用", {
-          itemType,
-          originalId,
-          restoreItemExists: !!restoreItem,
-          mutateAsyncExists: !!restoreItem.mutateAsync,
-        });
         return await restoreItem.mutateAsync(originalId);
       }
 
@@ -100,12 +87,9 @@ export function useUnifiedRestoration<T extends DeletedItem>({
         `Unsupported restoration: ${itemType} without restoreItem`,
       );
     },
-    onSuccess: async (_, originalId) => {
-      console.log("✅ 統一復元API完了", { itemType, originalId });
-
+    onSuccess: async () => {
       // restoreItemを使用した場合はキャッシュ無効化を省略（restoreItem内で実行済み）
       if (restoreItem) {
-        console.log("✅ 統一復元: restoreItem使用のためキャッシュ無効化省略");
         return;
       }
 
@@ -125,40 +109,17 @@ export function useUnifiedRestoration<T extends DeletedItem>({
           queryKey: [itemType + "s"],
         });
       }
-
-      console.log("✅ 統一復元: キャッシュ無効化完了");
     },
     onError: (error) => {
-      console.error("❌ 統一復元エラー:", error);
-      console.error("❌ エラー詳細:", JSON.stringify(error, null, 2));
-      console.error("❌ エラータイプ:", typeof error);
-      console.error("❌ エラー文字列:", String(error));
-      if (error instanceof Error) {
-        console.error("❌ エラーメッセージ:", error.message);
-        console.error("❌ エラースタック:", error.stack);
-      }
+      console.error("統一復元エラー:", error);
     },
   });
 
   // 復元と次選択を実行する統一関数
   const handleRestoreAndSelectNext = useCallback(async () => {
-    console.log("🚀 統一復元フック実行開始", {
-      itemType,
-      selectedDeletedItem: selectedDeletedItem?.originalId,
-      deletedItemsCount: deletedItems?.length,
-      teamMode,
-      teamId,
-    });
-
     if (!selectedDeletedItem || !deletedItems) {
-      console.log("❌ 統一復元対象なし", { selectedDeletedItem, deletedItems });
       return;
     }
-
-    console.log("🎯 統一復元処理開始", {
-      itemType,
-      originalId: selectedDeletedItem.originalId,
-    });
 
     // 復元前に次選択対象を事前計算
     const currentIndex = deletedItems.findIndex(
@@ -167,11 +128,6 @@ export function useUnifiedRestoration<T extends DeletedItem>({
     const remainingItems = deletedItems.filter(
       (item) => item.originalId !== selectedDeletedItem.originalId,
     );
-
-    console.log("🎯 次選択計算:", {
-      currentIndex,
-      remainingItemsLength: remainingItems.length,
-    });
 
     try {
       // 復元API実行
@@ -184,28 +140,23 @@ export function useUnifiedRestoration<T extends DeletedItem>({
             ? remainingItems.length - 1
             : currentIndex;
         const nextItem = remainingItems[nextIndex] || null;
-        console.log("➡️ 次のアイテムを選択:", { nextIndex, nextItem });
         onSelectDeletedItem(nextItem);
       } else {
-        console.log("🏁 削除済みアイテムなし - 通常画面に戻る");
         onSelectDeletedItem(null);
         setActiveTab?.("normal");
         setScreenMode?.("list");
       }
     } catch (error) {
-      console.error("❌ 統一復元処理エラー:", error);
+      console.error("統一復元処理エラー:", error);
       throw error;
     }
   }, [
     selectedDeletedItem,
     deletedItems,
-    itemType,
     restoreMutation,
     onSelectDeletedItem,
     setActiveTab,
     setScreenMode,
-    teamMode,
-    teamId,
   ]);
 
   return {

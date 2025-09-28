@@ -62,9 +62,24 @@ export function useUnifiedRestoration<T extends DeletedItem>({
         return await restoreItem.mutateAsync(originalId);
       }
 
-      // フォールバック: 直接API呼び出し（タスク用）
+      // フォールバック: 直接API呼び出し
       const token = await getToken();
-      if (itemType === "task") {
+      if (itemType === "memo") {
+        if (teamMode && teamId) {
+          const response = await memosApi.restoreTeamMemo(
+            teamId,
+            originalId,
+            token || undefined,
+          );
+          return response.json();
+        } else {
+          const response = await memosApi.restoreNote(
+            originalId,
+            token || undefined,
+          );
+          return response.json();
+        }
+      } else if (itemType === "task") {
         if (teamMode && teamId) {
           const response = await tasksApi.restoreTeamTask(
             teamId,

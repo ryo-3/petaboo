@@ -193,6 +193,8 @@ export default function BoardRightPanel({
       ?.filter((item) => item.boardId === boardId && item.itemType === "task")
       .map((item) => parseInt(item.itemId, 10)) || [];
 
+  const [isDeletingMemo, setIsDeletingMemo] = useState(false);
+
   // 削除済みアイテムかどうかを判定するヘルパー関数
   const isDeletedMemo = (memo: Memo | DeletedMemo): memo is DeletedMemo => {
     // より確実な判定：deletedAtプロパティが存在し、値があるかチェック
@@ -206,10 +208,15 @@ export default function BoardRightPanel({
   };
 
   const isDeletedTask = (task: Task | DeletedTask): task is DeletedTask => {
-    return "deletedAt" in task && task.deletedAt !== undefined;
+    // より確実な判定：deletedAtプロパティが存在し、値があるかチェック
+    return (
+      "deletedAt" in task &&
+      task.deletedAt !== undefined &&
+      task.deletedAt !== null &&
+      typeof task.deletedAt === "number" &&
+      task.deletedAt > 0
+    );
   };
-
-  const [isDeletingMemo, setIsDeletingMemo] = useState(false);
 
   // 統一削除フックは削除（MemoScreen内で処理）
 
@@ -334,10 +341,6 @@ export default function BoardRightPanel({
                   onMemoRestoreAndSelectNext
                 ) {
                   try {
-                    console.log("🔄 ボード詳細メモ復元開始", {
-                      originalId: selectedMemo.originalId,
-                    });
-                    // 個人のメモ復元と同じシンプル処理
                     await memoOperations.restoreItem.mutateAsync(
                       selectedMemo.originalId,
                     );
@@ -392,10 +395,6 @@ export default function BoardRightPanel({
                     onMemoRestoreAndSelectNext
                   ) {
                     try {
-                      console.log("🔄 ボード詳細メモ復元開始", {
-                        originalId: selectedMemo.originalId,
-                      });
-                      // 個人のメモ復元と同じシンプル処理
                       await memoOperations.restoreItem.mutateAsync(
                         selectedMemo.originalId,
                       );
@@ -453,10 +452,6 @@ export default function BoardRightPanel({
                   onTaskRestoreAndSelectNext
                 ) {
                   try {
-                    console.log("🔄 ボード詳細タスク復元開始", {
-                      originalId: selectedTask.originalId,
-                    });
-                    // 個人のタスク復元と同じシンプル処理
                     await taskOperations.restoreItem.mutateAsync(
                       selectedTask.originalId,
                     );

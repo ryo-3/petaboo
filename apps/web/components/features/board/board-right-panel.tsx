@@ -385,6 +385,26 @@ export default function BoardRightPanel({
                   // 保存後に選択状態を更新
                   onSelectMemo?.(savedMemo);
                 }}
+                onRestore={async () => {
+                  if (
+                    selectedMemo &&
+                    selectedMemo.originalId &&
+                    onMemoRestoreAndSelectNext
+                  ) {
+                    try {
+                      console.log("🔄 ボード詳細メモ復元開始", {
+                        originalId: selectedMemo.originalId,
+                      });
+                      // 個人のメモ復元と同じシンプル処理
+                      await memoOperations.restoreItem.mutateAsync(
+                        selectedMemo.originalId,
+                      );
+                      onMemoRestoreAndSelectNext(selectedMemo as DeletedMemo);
+                    } catch (error) {
+                      console.error("メモ復元API実行エラー:", error);
+                    }
+                  }
+                }}
                 onDelete={async () => {
                   // ボード詳細でのメモ削除処理（削除ボタン表示用）
                 }}
@@ -426,8 +446,12 @@ export default function BoardRightPanel({
               onClose={() => {
                 // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
               }}
-              onRestore={async () => {
-                if (selectedTask && onTaskRestoreAndSelectNext) {
+              onRestoreAndSelectNext={async () => {
+                if (
+                  selectedTask &&
+                  selectedTask.originalId &&
+                  onTaskRestoreAndSelectNext
+                ) {
                   try {
                     console.log("🔄 ボード詳細タスク復元開始", {
                       originalId: selectedTask.originalId,
@@ -436,7 +460,7 @@ export default function BoardRightPanel({
                     await taskOperations.restoreItem.mutateAsync(
                       selectedTask.originalId,
                     );
-                    onTaskRestoreAndSelectNext(selectedTask);
+                    onTaskRestoreAndSelectNext(selectedTask as DeletedTask);
                   } catch (error) {
                     console.error("タスク復元API実行エラー:", error);
                   }
@@ -475,6 +499,26 @@ export default function BoardRightPanel({
                   onSelectTask?.(savedTask);
                 }
                 // 連続作成モードONの場合はTaskEditor内でのフォームリセットに任せる
+              }}
+              onRestoreAndSelectNext={async () => {
+                if (
+                  selectedTask &&
+                  selectedTask.originalId &&
+                  onTaskRestoreAndSelectNext
+                ) {
+                  try {
+                    console.log("🔄 ボード詳細タスク復元開始", {
+                      originalId: selectedTask.originalId,
+                    });
+                    // 個人のタスク復元と同じシンプル処理
+                    await taskOperations.restoreItem.mutateAsync(
+                      selectedTask.originalId,
+                    );
+                    onTaskRestoreAndSelectNext(selectedTask as DeletedTask);
+                  } catch (error) {
+                    console.error("タスク復元API実行エラー:", error);
+                  }
+                }
               }}
               onDelete={async () => {
                 // ボード詳細でのタスク削除処理（削除ボタン表示用）

@@ -367,7 +367,7 @@ export function useBoardOperations({
       editorSelector: "[data-memo-editor]",
     });
 
-  // 復元ハンドラーにデバッグログを追加
+  // 復元ハンドラー - 復元完了後に次選択するように修正
   const handleMemoRestoreAndSelectNext = useCallback(
     async (deletedMemo: DeletedMemo) => {
       console.log(
@@ -380,15 +380,14 @@ export function useBoardOperations({
         },
       );
 
-      // 実際の処理を実行
-      rawHandleMemoRestoreAndSelectNext(deletedMemo);
-
       // 復元処理後に削除済みアイテム一覧を更新
-      setTimeout(async () => {
-        console.log("🔄 復元後に削除済みアイテム一覧を更新中...");
-        await refetchDeletedItems();
-        console.log("✅ 削除済みアイテム一覧の更新完了");
-      }, 100);
+      console.log("🔄 復元後に削除済みアイテム一覧を更新中...");
+      await refetchDeletedItems();
+      console.log("✅ 削除済みアイテム一覧の更新完了");
+
+      // 復元とキャッシュ更新が完了してから次選択を実行
+      console.log("➡️ 復元完了後に次選択を実行");
+      rawHandleMemoRestoreAndSelectNext(deletedMemo);
     },
     [rawHandleMemoRestoreAndSelectNext, refetchDeletedItems],
   );
@@ -408,7 +407,7 @@ export function useBoardOperations({
       editorSelector: "[data-task-editor]",
     });
 
-  // タスク復元ハンドラーにキャッシュ更新を追加
+  // タスク復元ハンドラー - 復元完了後に次選択するように修正
   const handleTaskRestoreAndSelectNext = useCallback(
     async (deletedTask: DeletedTask) => {
       console.log(
@@ -421,15 +420,14 @@ export function useBoardOperations({
         },
       );
 
-      // 実際の処理を実行
-      rawHandleTaskRestoreAndSelectNext(deletedTask);
-
       // 復元処理後に削除済みアイテム一覧を更新
-      setTimeout(async () => {
-        console.log("🔄 復元後に削除済みタスク一覧を更新中...");
-        await refetchDeletedItems();
-        console.log("✅ 削除済みタスク一覧の更新完了");
-      }, 100);
+      console.log("🔄 復元後に削除済みタスク一覧を更新中...");
+      await refetchDeletedItems();
+      console.log("✅ 削除済みタスク一覧の更新完了");
+
+      // 復元とキャッシュ更新が完了してから次選択を実行
+      console.log("➡️ 復元完了後に次選択を実行");
+      rawHandleTaskRestoreAndSelectNext(deletedTask);
     },
     [rawHandleTaskRestoreAndSelectNext, refetchDeletedItems],
   );

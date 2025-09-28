@@ -374,6 +374,21 @@ function TaskEditor({
     teamId,
   });
 
+  // 連続作成モード時のフォームリセット処理
+  useEffect(() => {
+    // 保存完了後にリセットが必要かチェック
+    if (
+      continuousCreateMode &&
+      isNewTask &&
+      !isSaving &&
+      !title &&
+      !description
+    ) {
+      // 空のフォームに戻った場合（保存後）はリセット完了とみなす
+      return;
+    }
+  }, [continuousCreateMode, isNewTask, isSaving, title, description]);
+
   // 削除済みタスクの場合は直接タスクデータから値を取得
   const finalTitle = isDeleted ? task?.title || "" : title;
   const finalDescription = isDeleted ? task?.description || "" : description;
@@ -633,8 +648,29 @@ function TaskEditor({
 
   const handleSave = useCallback(async () => {
     if (!title.trim() || isSaving || isDeleted) return;
+
+    // 保存前の状態を記録
+    const wasNewTask = isNewTask;
+    const hasContent = title.trim() || description.trim();
+
     await saveTask();
-  }, [title, isSaving, isDeleted, saveTask]);
+
+    // 連続作成モードで新規タスクの場合、保存後にリセット
+    if (continuousCreateMode && wasNewTask && hasContent) {
+      setTimeout(() => {
+        resetForm();
+      }, 200);
+    }
+  }, [
+    title,
+    description,
+    isSaving,
+    isDeleted,
+    saveTask,
+    isNewTask,
+    continuousCreateMode,
+    resetForm,
+  ]);
 
   // Ctrl+Sショートカット（変更がある場合のみ実行）
   useEffect(() => {

@@ -754,10 +754,13 @@ function TaskEditor({
                       <button
                         onClick={() => {
                           console.log(
-                            "🔄 TaskEditor復元ボタン: onRestoreAndSelectNext呼び出し",
+                            "🔄 TaskEditor復元ボタン: 統一復元処理呼び出し",
                           );
-                          if (isDeleted && onRestoreAndSelectNext && task) {
-                            onRestoreAndSelectNext();
+                          // MemoEditorと同じ統一化：onRestoreAndSelectNext || onRestore
+                          const restoreHandler =
+                            onRestoreAndSelectNext || onRestore;
+                          if (isDeleted && restoreHandler && task) {
+                            restoreHandler();
                           }
                         }}
                         className="flex items-center justify-center size-7 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800 transition-colors"

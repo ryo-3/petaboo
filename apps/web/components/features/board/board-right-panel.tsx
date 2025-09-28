@@ -446,7 +446,7 @@ export default function BoardRightPanel({
               onClose={() => {
                 // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
               }}
-              onRestoreAndSelectNext={async () => {
+              onRestore={async () => {
                 if (
                   selectedTask &&
                   selectedTask.originalId &&
@@ -499,26 +499,6 @@ export default function BoardRightPanel({
                   onSelectTask?.(savedTask);
                 }
                 // 連続作成モードONの場合はTaskEditor内でのフォームリセットに任せる
-              }}
-              onRestoreAndSelectNext={async () => {
-                if (
-                  selectedTask &&
-                  selectedTask.originalId &&
-                  onTaskRestoreAndSelectNext
-                ) {
-                  try {
-                    console.log("🔄 ボード詳細タスク復元開始", {
-                      originalId: selectedTask.originalId,
-                    });
-                    // 個人のタスク復元と同じシンプル処理
-                    await taskOperations.restoreItem.mutateAsync(
-                      selectedTask.originalId,
-                    );
-                    onTaskRestoreAndSelectNext(selectedTask as DeletedTask);
-                  } catch (error) {
-                    console.error("タスク復元API実行エラー:", error);
-                  }
-                }
               }}
               onDelete={async () => {
                 // ボード詳細でのタスク削除処理（削除ボタン表示用）

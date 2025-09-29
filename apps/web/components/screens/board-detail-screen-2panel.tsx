@@ -12,6 +12,7 @@ import { useTags } from "@/src/hooks/use-tags";
 import { useTeamTags } from "@/src/hooks/use-team-tags";
 import { useAllTeamTaggings } from "@/src/hooks/use-team-taggings";
 import { useDeletedMemos, useDeleteMemo } from "@/src/hooks/use-memos";
+import { useDeleteTask, useDeletedTasks } from "@/src/hooks/use-tasks";
 import { useBoards, useAddItemToBoard } from "@/src/hooks/use-boards";
 import { useTeamBoards } from "@/src/hooks/use-team-boards";
 import { Memo, DeletedMemo } from "@/src/types/memo";
@@ -133,6 +134,12 @@ function BoardDetailScreen({
 
   // 削除済みメモデータを取得（復元時の総数判定用）
   const { data: deletedMemos } = useDeletedMemos({
+    teamMode,
+    teamId: teamId || undefined,
+  });
+
+  // 削除済みタスクデータを取得（復元時の総数判定用）
+  const { data: deletedTasks } = useDeletedTasks({
     teamMode,
     teamId: teamId || undefined,
   });
@@ -275,7 +282,13 @@ function BoardDetailScreen({
     teamId: teamId || undefined,
   });
 
-  // 削除と次選択を組み合わせたハンドラー
+  // タスク削除フック
+  const deleteTaskMutation = useDeleteTask({
+    teamMode,
+    teamId: teamId || undefined,
+  });
+
+  // メモ削除と次選択を組み合わせたハンドラー
   const handleMemoDeleteWithNextSelection = useCallback(
     async (memoToDelete: Memo) => {
       try {
@@ -297,6 +310,30 @@ function BoardDetailScreen({
       }
     },
     [deleteMemoMutation, handleMemoDeleteAndSelectNext, teamMode, teamId],
+  );
+
+  // タスク削除と次選択を組み合わせたハンドラー
+  const handleTaskDeleteWithNextSelection = useCallback(
+    async (taskToDelete: Task) => {
+      try {
+        console.log("🗑️ タスク削除処理開始", {
+          taskId: taskToDelete.id,
+          teamMode,
+          teamId,
+        });
+
+        // 実際の削除API呼び出し
+        await deleteTaskMutation.mutateAsync(taskToDelete.id);
+
+        console.log("✅ タスク削除完了、次選択処理実行");
+
+        // 削除完了後に次選択ロジックを実行
+        handleTaskDeleteAndSelectNext(taskToDelete);
+      } catch (error) {
+        console.error("❌ タスク削除エラー", error);
+      }
+    },
+    [deleteTaskMutation, handleTaskDeleteAndSelectNext, teamMode, teamId],
   );
 
   // ボードアイテムの計算とフィルタリング
@@ -641,18 +678,6 @@ function BoardDetailScreen({
                             onSelectMemo?.(savedMemo);
                           }
                         }}
-                        onDelete={() => {
-                          console.log("🚀 onDelete呼び出し", { selectedMemo });
-                          if (selectedMemo && "id" in selectedMemo) {
-                            handleMemoDeleteWithNextSelection(
-                              selectedMemo as Memo,
-                            );
-                          } else {
-                            console.error(
-                              "❌ selectedMemoがnullまたは削除済みメモ",
-                            );
-                          }
-                        }}
                         onDeleteAndSelectNext={(memo) => {
                           if ("id" in memo) {
                             handleMemoDeleteWithNextSelection(memo as Memo);
@@ -714,6 +739,44 @@ function BoardDetailScreen({
                           // 連続作成モードがOFFで新規タスクの場合、保存されたタスクを選択状態にする
                           if (isNewTask && !isContinuousMode) {
                             onSelectTask?.(savedTask);
+                          }
+                        }}
+                        onDeleteAndSelectNext={(task) => {
+                          if ("id" in task) {
+                            handleTaskDeleteWithNextSelection(task as Task);
+                          } else {
+                            console.error("❌ 削除対象タスクが不正", task);
+                          }
+                        }}
+                        onRestore={() => {
+                          console.log(
+                            "🔄 チームボード詳細 - タスク復元ボタンクリック",
+                            {
+                              selectedTask,
+                              hasOriginalId:
+                                selectedTask && "originalId" in selectedTask,
+                              originalId:
+                                selectedTask && "originalId" in selectedTask
+                                  ? (selectedTask as DeletedTask).originalId
+                                  : null,
+                            },
+                          );
+                          if (selectedTask && "originalId" in selectedTask) {
+                            handleTaskRestoreAndSelectNext(
+                              selectedTask as DeletedTask,
+                            );
+                          } else {
+                            console.error(
+                              "❌ 復元対象タスクが不正",
+                              selectedTask,
+                            );
+                          }
+                        }}
+                        onRestoreAndSelectNext={() => {
+                          if (selectedTask && "originalId" in selectedTask) {
+                            handleTaskRestoreAndSelectNext(
+                              selectedTask as DeletedTask,
+                            );
                           }
                         }}
                       />

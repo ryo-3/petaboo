@@ -963,7 +963,7 @@ function MemoEditor({
                     </svg>
                   </button>
                 )}
-                {memo && onDelete && (
+                {memo && (onDelete || onDeleteAndSelectNext) && (
                   <button
                     onClick={handleDeleteClick}
                     disabled={unifiedOperations?.deleteItem.isPending}

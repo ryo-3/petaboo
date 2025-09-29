@@ -288,7 +288,25 @@ function TaskEditor({
           setIsDeleting(false);
         }
       }
-    : undefined;
+    : onDelete || onDeleteAndSelectNext
+      ? async () => {
+          if (!task || task.id === 0) return;
+          setShowDeleteModal(false); // モーダルを閉じる
+          setIsDeleting(true);
+          try {
+            // チームボード詳細等から渡された削除処理を実行
+            if (onDeleteAndSelectNext) {
+              await onDeleteAndSelectNext(task as Task);
+            } else if (onDelete) {
+              await onDelete();
+            }
+          } catch (error) {
+            console.error("削除に失敗:", error);
+          } finally {
+            setIsDeleting(false);
+          }
+        }
+      : undefined;
 
   const showDeleteConfirmation = () => setShowDeleteModal(true);
   const hideDeleteConfirmation = () => {

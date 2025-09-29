@@ -3,6 +3,7 @@ import BoardRightPanel from "@/components/features/board/board-right-panel";
 import BoardTaskSection from "@/components/features/board/board-task-section";
 import DesktopUpper from "@/components/layout/desktop-upper";
 import MemoEditor from "@/components/features/memo/memo-editor";
+import TaskEditor from "@/components/features/task/task-editor";
 import { PanelBackButton } from "@/components/ui/buttons/panel-back-button";
 import { useBoardState } from "@/src/hooks/use-board-state";
 import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
@@ -589,6 +590,7 @@ function BoardDetailScreen({
                     <div className="flex-1 min-h-0 overflow-y-auto hover-scrollbar">
                       <MemoEditor
                         memo={selectedMemo as Memo}
+                        initialBoardId={boardId}
                         onClose={onClearSelection || (() => {})}
                         customHeight="h-full"
                         teamMode={teamMode}
@@ -616,16 +618,15 @@ function BoardDetailScreen({
                         タスク詳細
                       </h3>
                     </div>
-                    <div className="flex-1 p-4">
-                      <div className="p-4 bg-gray-50 rounded">
-                        <p className="text-sm text-gray-600">
-                          選択されたタスク:{" "}
-                          {selectedTask.title || "タイトルなし"}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-2">
-                          ID: {selectedTask.id}
-                        </p>
-                      </div>
+                    <div className="flex-1 min-h-0 overflow-y-auto hover-scrollbar">
+                      <TaskEditor
+                        task={selectedTask as Task}
+                        initialBoardId={boardId}
+                        onClose={onClearSelection || (() => {})}
+                        customHeight="h-full"
+                        teamMode={teamMode}
+                        teamId={teamId || undefined}
+                      />
                     </div>
                   </div>
                 ) : (

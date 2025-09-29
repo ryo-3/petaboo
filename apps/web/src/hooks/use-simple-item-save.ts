@@ -33,6 +33,7 @@ interface UseSimpleItemSaveOptions<T extends UnifiedItem> {
   // チーム機能
   teamMode?: boolean;
   teamId?: number;
+  boardId?: number; // チームボードでのキャッシュ更新に使用
 }
 
 export function useSimpleItemSave<T extends UnifiedItem>({
@@ -44,6 +45,7 @@ export function useSimpleItemSave<T extends UnifiedItem>({
   onDeleteAndSelectNext,
   teamMode = false,
   teamId,
+  boardId,
 }: UseSimpleItemSaveOptions<T>) {
   const [title, setTitle] = useState(() => item?.title || "");
   const [content, setContent] = useState(() => {
@@ -117,13 +119,13 @@ export function useSimpleItemSave<T extends UnifiedItem>({
   );
 
   // Memo hooks
-  const createMemo = useCreateMemo({ teamMode, teamId });
-  const updateMemo = useUpdateMemo({ teamMode, teamId });
+  const createMemo = useCreateMemo({ teamMode, teamId, boardId });
+  const updateMemo = useUpdateMemo({ teamMode, teamId, boardId });
   const deleteMemo = useDeleteMemo({ teamMode, teamId });
 
   // Task hooks
-  const createTask = useCreateTask({ teamMode, teamId });
-  const updateTask = useUpdateTask({ teamMode, teamId });
+  const createTask = useCreateTask({ teamMode, teamId, boardId });
+  const updateTask = useUpdateTask({ teamMode, teamId, boardId });
   const deleteTask = useDeleteTask({ teamMode, teamId });
 
   // Board hooks
@@ -223,7 +225,9 @@ export function useSimpleItemSave<T extends UnifiedItem>({
   const executeSave = useCallback(async () => {
     const isEmpty = !title.trim() && !content.trim();
 
-    if (isSaving) return;
+    if (isSaving) {
+      return;
+    }
 
     setIsSaving(true);
     setSaveError(null);
@@ -446,10 +450,19 @@ export function useSimpleItemSave<T extends UnifiedItem>({
             createdItem = (await createTask.mutateAsync(createData)) as T;
           }
 
-          // ボード選択時はボードに追加
-          if (selectedBoardIds.length > 0 && createdItem.id) {
+          // ボード選択時またはチーム機能の新規作成時はボードに追加
+          if (
+            (selectedBoardIds.length > 0 || (teamMode && initialBoardId)) &&
+            createdItem.id
+          ) {
+            // チーム機能での新規作成時は初期ボードIDを含める
+            const boardIdsToAdd =
+              teamMode && initialBoardId && selectedBoardIds.length === 0
+                ? [initialBoardId]
+                : selectedBoardIds;
+
             // 各ボードに追加（エラーは個別にキャッチ）
-            const addPromises = selectedBoardIds.map(async (boardId) => {
+            const addPromises = boardIdsToAdd.map(async (boardId) => {
               try {
                 await addItemToBoard.mutateAsync({
                   boardId,
@@ -528,11 +541,13 @@ export function useSimpleItemSave<T extends UnifiedItem>({
         setSelectedBoardIds([...selectedBoardIds]);
       }, 100);
     } catch (error) {
-      console.error("保存に失敗:", error);
+      console.error("❌ [use-simple-item-save] 保存に失敗:", error);
       setSaveError("保存に失敗しました");
     } finally {
       // 保存中表示をしっかり見せる
-      setTimeout(() => setIsSaving(false), 400);
+      setTimeout(() => {
+        setIsSaving(false);
+      }, 400);
     }
   }, [
     item,
@@ -562,6 +577,7 @@ export function useSimpleItemSave<T extends UnifiedItem>({
     onDeleteAndSelectNext,
     teamMode,
     teamId,
+    hasChanges,
   ]);
 
   const handleSave = useCallback(async () => {

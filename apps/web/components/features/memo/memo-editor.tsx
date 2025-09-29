@@ -217,6 +217,7 @@ function MemoEditor({
     onDeleteAndSelectNext,
     teamMode,
     teamId,
+    boardId: initialBoardId, // チームボードキャッシュ更新用
   });
 
   const [error] = useState<string | null>(null);
@@ -554,46 +555,92 @@ function MemoEditor({
 
   // 拡張された保存処理（削除済みの場合は実行しない）
   const handleSaveWithTags = useCallback(async () => {
-    if (isDeleted) return; // 削除済みの場合は保存しない
+    if (isDeleted) {
+      return; // 削除済みの場合は保存しない
+    }
 
     try {
       // まずメモを保存
       await handleSave();
+      console.log("✅ [MemoEditor] メモ保存完了");
 
       // 保存後、タグも更新
       // onSaveCompleteで最新のメモを取得できるが、同期の問題があるため
       // 既存メモの場合は現在のmemo、新規作成の場合は少し待ってから処理
       if (memo && memo.id > 0) {
+        console.log("🏷️ [MemoEditor] 既存メモのタグ更新開始", {
+          memoId: memo.id,
+          originalId: memo.originalId,
+          tagsToUpdate: localTags.length,
+        });
         // 既存メモの場合
         await updateTaggings(memo.originalId || memo.id.toString());
         setHasManualChanges(false);
+        console.log("✅ [MemoEditor] 既存メモのタグ更新完了");
       } else if (localTags.length > 0) {
+        console.log("🆕 [MemoEditor] 新規メモのタグ更新開始", {
+          localTagsCount: localTags.length,
+          tags: localTags.map((t) => ({ id: t.id, name: t.name })),
+        });
         // 新規作成でタグがある場合は、少し遅延させて最新のメモリストから取得
         setTimeout(async () => {
           try {
+            console.log(
+              "🔍 [MemoEditor] React Queryキャッシュから最新メモ検索中",
+            );
             // React QueryのキャッシュからmemosQueryを取得して、最新の作成メモを特定
             const memosQuery = queryClient.getQueryData<Memo[]>(["memos"]);
+            console.log("📋 [MemoEditor] キャッシュ取得結果", {
+              hasMemosQuery: !!memosQuery,
+              memosCount: memosQuery?.length || 0,
+            });
 
             if (memosQuery && memosQuery.length > 0) {
               // 最新のメモ（作成時刻順で最後）を取得
               const latestMemo = [...memosQuery].sort(
                 (a, b) => b.createdAt - a.createdAt,
               )[0];
+              console.log("🎯 [MemoEditor] 最新メモ特定", {
+                latestMemoId: latestMemo?.id,
+                latestMemoTitle: latestMemo?.title,
+                latestMemoCreatedAt: latestMemo?.createdAt,
+              });
 
               if (latestMemo) {
                 const targetId =
                   latestMemo.originalId || latestMemo.id.toString();
+                console.log("🏷️ [MemoEditor] 新規メモタグ付け実行", {
+                  targetId,
+                });
                 await updateTaggings(targetId);
                 setHasManualChanges(false);
+                console.log("✅ [MemoEditor] 新規メモタグ付け完了");
+              } else {
+                console.warn("⚠️ [MemoEditor] 最新メモが見つかりません");
               }
+            } else {
+              console.warn("⚠️ [MemoEditor] memosQueryが空またはnull", {
+                hasMemosQuery: !!memosQuery,
+                length: memosQuery?.length,
+              });
             }
           } catch (error) {
-            console.error("❌ 新規メモのタグ保存に失敗しました:", error);
+            console.error(
+              "❌ [MemoEditor] 新規メモのタグ保存に失敗しました:",
+              error,
+            );
           }
         }, 100); // 100ms遅延
+      } else {
+        console.log("ℹ️ [MemoEditor] タグ更新不要", {
+          isNewMemo: !memo || memo.id === 0,
+          hasLocalTags: localTags.length > 0,
+        });
       }
+
+      console.log("🎉 [MemoEditor] handleSaveWithTags完了");
     } catch (error) {
-      console.error("❌ 保存に失敗しました:", error);
+      console.error("❌ [MemoEditor] 保存に失敗しました:", error);
     }
   }, [handleSave, memo, updateTaggings, isDeleted, localTags, queryClient]);
 

@@ -204,7 +204,12 @@ export function useBoardOperations({
 
   // 新規作成ハンドラー
   const handleCreateNewMemo = useCallback(() => {
+    console.log("🏗️ [use-board-operations] handleCreateNewMemo実行", {
+      createNewMemoHandlerExists: !!createNewMemoHandler,
+      onSelectMemoExists: !!onSelectMemo,
+    });
     createNewMemoHandler(onSelectMemo);
+    console.log("✅ [use-board-operations] handleCreateNewMemo完了");
   }, [createNewMemoHandler, onSelectMemo]);
 
   const handleCreateNewTask = useCallback(() => {

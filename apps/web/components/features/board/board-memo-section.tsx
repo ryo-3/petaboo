@@ -211,7 +211,10 @@ export default function BoardMemoSection({
           <Tooltip text="新規追加" position="bottom">
             <AddItemButton
               itemType="memo"
-              onClick={onCreateNewMemo}
+              onClick={() => {
+                console.log("🔥 [BoardMemoSection] メモ追加ボタンクリック");
+                onCreateNewMemo();
+              }}
               size="small"
               showTooltip={false}
               customSize={{

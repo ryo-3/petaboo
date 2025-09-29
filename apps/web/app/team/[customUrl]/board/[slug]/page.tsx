@@ -120,6 +120,13 @@ export default function TeamBoardDetailPage() {
       return;
     }
 
+    // 新規作成中のアイテム（id === 0）がある場合は選択状態を変更しない
+    if (selectedMemo && selectedMemo.id === 0) {
+      return;
+    }
+    if (selectedTask && selectedTask.id === 0) {
+      return;
+    }
     let hasSelection = false;
 
     // 初期メモ選択（メモIDがある場合）
@@ -169,10 +176,18 @@ export default function TeamBoardDetailPage() {
     }
 
     // URLにメモIDもタスクIDもない場合は何もしない（選択をクリアしない）
-
     if (!hasSelection) {
+      // 選択状態を維持
     }
-  }, [initialMemoId, initialTaskId, urlParsed, memosLoading, tasksLoading]);
+  }, [
+    initialMemoId,
+    initialTaskId,
+    urlParsed,
+    memosLoading,
+    tasksLoading,
+    selectedMemo?.id,
+    selectedTask?.id,
+  ]);
 
   useEffect(() => {
     async function fetchTeamBoard() {
@@ -253,16 +268,7 @@ export default function TeamBoardDetailPage() {
   };
 
   const handleSelectDeletedMemo = (memo: DeletedMemo | null) => {
-    console.log("🔧 TeamBoardPage.handleSelectDeletedMemo 呼び出し", {
-      memoId: memo?.id,
-      memoOriginalId: memo?.originalId,
-      memoTitle: memo?.title,
-      currentSelectedMemoId: selectedMemo?.id,
-      时刻: new Date().toISOString(),
-    });
-
     if (!memo) {
-      console.log("❌ memo が null のため選択処理スキップ");
       return;
     }
 
@@ -275,12 +281,6 @@ export default function TeamBoardDetailPage() {
 
     // 削除済みメモを選択状態として設定
     setSelectedMemo(memo as unknown as Memo);
-
-    console.log("✅ TeamBoardPage 削除済みメモ選択完了", {
-      memoId: memo.id,
-      originalId: memo.originalId,
-      newUrl,
-    });
   };
 
   const handleBack = () => {

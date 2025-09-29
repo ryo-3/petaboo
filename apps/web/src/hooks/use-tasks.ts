@@ -53,11 +53,12 @@ export function useTasks(options?: { teamMode?: boolean; teamId?: number }) {
 export function useCreateTask(options?: {
   teamMode?: boolean;
   teamId?: number;
+  boardId?: number; // チームボードキャッシュ更新用
 }) {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
   const { showToast } = useToast();
-  const { teamMode = false, teamId } = options || {};
+  const { teamMode = false, teamId, boardId } = options || {};
 
   return useMutation({
     mutationFn: async (data: CreateTaskData) => {
@@ -78,6 +79,61 @@ export function useCreateTask(options?: {
       }
     },
     onSuccess: (newTask) => {
+      console.log("📌 [useCreateTask] onSuccess実行", {
+        teamMode,
+        teamId,
+        boardId,
+        newTaskId: newTask.id,
+        boardIdType: typeof boardId,
+      });
+
+      if (boardId) {
+        console.log("🔄 [useCreateTask] ボードアイテムキャッシュ更新", {
+          teamId,
+          boardId,
+          newTaskId: newTask.id,
+          newTaskTitle: newTask.title,
+        });
+
+        queryClient.setQueryData(
+          ["team-boards", teamId?.toString(), boardId, "items"],
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (oldData: any) => {
+            if (oldData?.items) {
+              const newBoardItem = {
+                id: `task_${newTask.id}`,
+                boardId: boardId,
+                itemId: newTask.id.toString(),
+                itemType: "task" as const,
+                content: newTask,
+                createdAt: Math.floor(Date.now() / 1000),
+                updatedAt: Math.floor(Date.now() / 1000),
+                position: oldData.items.length + 1,
+              };
+
+              console.log("✅ [useCreateTask] ボードアイテム追加", {
+                newBoardItem,
+                existingItemsCount: oldData.items.length,
+              });
+
+              return {
+                ...oldData,
+                items: [...oldData.items, newBoardItem],
+              };
+            }
+            return oldData;
+          },
+        );
+      } else {
+        console.warn(
+          "⚠️ [useCreateTask] boardIdが未定義のためボードアイテムキャッシュ更新をスキップ",
+          {
+            boardId,
+            teamId,
+          },
+        );
+      }
+
       // APIが不完全なデータしか返さないため、タスク一覧を無効化して再取得
       if (teamMode && teamId) {
         queryClient.invalidateQueries({ queryKey: ["team-tasks", teamId] });
@@ -87,46 +143,6 @@ export function useCreateTask(options?: {
           if (!oldTasks) return [newTask];
           return [...oldTasks, newTask];
         });
-
-        // チーム掲示板キャッシュを楽観的更新（空表示を避けるため）
-
-        // 既存のボードアイテムキャッシュに新しいタスクを即座に追加
-        const boardId = 1; // 仮値（実際はinitialBoardIdから取得すべき）
-        queryClient.setQueryData(
-          ["team-boards", teamId.toString(), boardId, "items"],
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (oldData: any) => {
-            if (oldData?.items) {
-              return {
-                ...oldData,
-                items: [
-                  ...oldData.items,
-                  {
-                    id: newTask.id,
-                    boardId: 1, // 仮で設定、実際のボードIDは後でAPIから取得
-                    itemId: newTask.originalId || newTask.id.toString(),
-                    itemType: "task",
-                    content: newTask,
-                    createdAt: newTask.createdAt,
-                    updatedAt: newTask.updatedAt,
-                    position: oldData.items.length,
-                  },
-                ],
-              };
-            }
-            return oldData;
-          },
-        );
-
-        // バックグラウンドでデータを再取得（楽観的更新の検証）
-        setTimeout(() => {
-          queryClient.refetchQueries({
-            predicate: (query) => {
-              const key = query.queryKey as string[];
-              return key[0] === "team-boards" && key[1] === teamId.toString();
-            },
-          });
-        }, 1000);
       } else {
         queryClient.invalidateQueries({ queryKey: ["tasks"] });
 
@@ -151,6 +167,7 @@ export function useCreateTask(options?: {
 export function useUpdateTask(options?: {
   teamMode?: boolean;
   teamId?: number;
+  boardId?: number; // チームボードキャッシュ更新用
 }) {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();

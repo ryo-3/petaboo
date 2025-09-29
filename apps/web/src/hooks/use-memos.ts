@@ -69,10 +69,11 @@ export function useDeletedMemos(options?: {
 export function useCreateMemo(options?: {
   teamMode?: boolean;
   teamId?: number;
+  boardId?: number; // チームボードキャッシュ更新用
 }) {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
-  const { teamMode = false, teamId } = options || {};
+  const { teamMode = false, teamId, boardId } = options || {};
 
   return useMutation({
     mutationFn: async (memoData: CreateMemoData) => {
@@ -104,36 +105,34 @@ export function useCreateMemo(options?: {
           if (!oldMemos) return [newMemo];
           return [...oldMemos, newMemo];
         });
-        // チーム掲示板キャッシュを楽観的更新（空表示を避けるため）
 
-        // 既存のボードアイテムキャッシュに新しいメモを即座に追加
-        // 実際のクエリキーは ["team-boards", "18", 1, "items"] の形式
-        const boardId = 1; // 仮値（実際はinitialBoardIdから取得すべき）
-        queryClient.setQueryData(
-          ["team-boards", teamId.toString(), boardId, "items"],
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (oldData: any) => {
-            if (oldData?.items) {
-              return {
-                ...oldData,
-                items: [
-                  ...oldData.items,
-                  {
-                    id: newMemo.id,
-                    boardId: 1, // 仮で設定、実際のボードIDは後でAPIから取得
-                    itemId: newMemo.originalId || newMemo.id.toString(),
-                    itemType: "memo",
-                    content: newMemo,
-                    createdAt: newMemo.createdAt,
-                    updatedAt: newMemo.updatedAt,
-                    position: oldData.items.length,
-                  },
-                ],
-              };
-            }
-            return oldData;
-          },
-        );
+        // ボードIDが指定されている場合、ボードアイテムキャッシュも更新
+        if (boardId) {
+          queryClient.setQueryData(
+            ["team-boards", teamId.toString(), boardId, "items"],
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (oldData: any) => {
+              if (oldData?.items) {
+                const newBoardItem = {
+                  id: `memo_${newMemo.id}`, // ボードアイテムID
+                  boardId,
+                  itemId: newMemo.originalId || newMemo.id.toString(),
+                  itemType: "memo" as const,
+                  content: newMemo,
+                  createdAt: newMemo.createdAt,
+                  updatedAt: newMemo.updatedAt,
+                  position: oldData.items.length,
+                };
+
+                return {
+                  ...oldData,
+                  items: [...oldData.items, newBoardItem],
+                };
+              }
+              return oldData;
+            },
+          );
+        }
 
         // バックグラウンドでデータを再取得（楽観的更新の検証）
         setTimeout(() => {
@@ -169,10 +168,11 @@ export function useCreateMemo(options?: {
 export function useUpdateMemo(options?: {
   teamMode?: boolean;
   teamId?: number;
+  boardId?: number; // チームボードキャッシュ更新用
 }) {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
-  const { teamMode = false, teamId } = options || {};
+  const { teamMode = false, teamId, boardId } = options || {};
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: number; data: UpdateMemoData }) => {
@@ -228,37 +228,38 @@ export function useUpdateMemo(options?: {
 
         // チーム掲示板キャッシュも楽観的更新（作成時と同様のパターン）
 
-        // 既存のボードアイテムキャッシュ内のメモを更新
-        const boardId = 1; // 仮値（実際はinitialBoardIdから取得すべき）
-        queryClient.setQueryData(
-          ["team-boards", teamId.toString(), boardId, "items"],
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (oldData: any) => {
-            if (oldData?.items) {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const updatedItems = oldData.items.map((item: any) => {
-                if (item.itemType === "memo" && item.content?.id === id) {
-                  return {
-                    ...item,
-                    content: {
-                      ...item.content,
-                      title: data.title ?? item.content.title,
-                      content: data.content ?? item.content.content,
+        // ボードIDが指定されている場合、ボードアイテムキャッシュも更新
+        if (boardId) {
+          queryClient.setQueryData(
+            ["team-boards", teamId.toString(), boardId, "items"],
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (oldData: any) => {
+              if (oldData?.items) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const updatedItems = oldData.items.map((item: any) => {
+                  if (item.itemType === "memo" && item.content?.id === id) {
+                    return {
+                      ...item,
+                      content: {
+                        ...item.content,
+                        title: data.title ?? item.content.title,
+                        content: data.content ?? item.content.content,
+                        updatedAt: Math.floor(Date.now() / 1000),
+                      },
                       updatedAt: Math.floor(Date.now() / 1000),
-                    },
-                    updatedAt: Math.floor(Date.now() / 1000),
-                  };
-                }
-                return item;
-              });
-              return {
-                ...oldData,
-                items: updatedItems,
-              };
-            }
-            return oldData;
-          },
-        );
+                    };
+                  }
+                  return item;
+                });
+                return {
+                  ...oldData,
+                  items: updatedItems,
+                };
+              }
+              return oldData;
+            },
+          );
+        }
 
         // バックグラウンドでデータを再取得（楽観的更新の検証）
         setTimeout(() => {

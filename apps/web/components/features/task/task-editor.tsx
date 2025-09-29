@@ -369,6 +369,7 @@ function TaskEditor({
     ),
     currentBoardIds,
     initialBoardId,
+    boardId: initialBoardId, // チームボードキャッシュ更新用
     onDeleteAndSelectNext,
     teamMode,
     teamId,
@@ -398,18 +399,6 @@ function TaskEditor({
   const finalStatus = isDeleted
     ? (task as DeletedTask)?.status || "not_started"
     : status;
-
-  // デバッグログ：削除済みタスクのデータ確認
-  console.log("🏷️ [TaskEditor] データ状態:", {
-    isDeleted,
-    taskExists: !!task,
-    taskTitle: task?.title,
-    taskDescription: task?.description,
-    finalTitle,
-    finalDescription,
-    title: title,
-    description: description,
-  });
 
   // その他のタスク固有のstate
   const [categoryId, setCategoryId] = useState<number | null>(

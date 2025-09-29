@@ -147,8 +147,8 @@ export default function TeamBoardDetailPage() {
           setSelectedMemo(memoWithCorrectOriginalId);
           setSelectedTask(null); // タスクの選択を解除
           // URLを更新してパス形式に統一
-          // const newUrl = `/team/${customUrl}/board/${slug}/memo/${foundMemo.id}`;
-          // window.history.replaceState(null, "", newUrl);
+          const newUrl = `/team/${customUrl}/board/${slug}/memo/${foundMemo.id}`;
+          window.history.replaceState(null, "", newUrl);
         }
         hasSelection = true;
       }
@@ -166,8 +166,8 @@ export default function TeamBoardDetailPage() {
           setSelectedTask(foundTask as unknown as Task);
           setSelectedMemo(null); // メモの選択を解除
           // URLを更新してパス形式に統一
-          // const newUrl = `/team/${customUrl}/board/${slug}/task/${foundTask.id}`;
-          // window.history.replaceState(null, "", newUrl);
+          const newUrl = `/team/${customUrl}/board/${slug}/task/${foundTask.id}`;
+          window.history.replaceState(null, "", newUrl);
         } else {
         }
         hasSelection = true;
@@ -185,8 +185,8 @@ export default function TeamBoardDetailPage() {
     urlParsed,
     memosLoading,
     tasksLoading,
-    selectedMemo?.id,
-    selectedTask?.id,
+    teamMemosData,
+    teamTasksData,
   ]);
 
   useEffect(() => {

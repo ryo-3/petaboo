@@ -5,6 +5,7 @@ import DesktopUpper from "@/components/layout/desktop-upper";
 import MemoEditor from "@/components/features/memo/memo-editor";
 import TaskEditor from "@/components/features/task/task-editor";
 import { PanelBackButton } from "@/components/ui/buttons/panel-back-button";
+import { getContinuousCreateMode } from "@/components/ui/buttons/continuous-create-button";
 import { useBoardState } from "@/src/hooks/use-board-state";
 import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
 import { useTags } from "@/src/hooks/use-tags";
@@ -595,6 +596,21 @@ function BoardDetailScreen({
                         customHeight="h-full"
                         teamMode={teamMode}
                         teamId={teamId || undefined}
+                        onSaveComplete={(
+                          savedMemo: Memo,
+                          wasEmpty: boolean,
+                          isNewMemo: boolean,
+                        ) => {
+                          // 連続作成モードがOFFで新規メモの場合、保存されたメモを選択状態にする
+                          if (
+                            isNewMemo &&
+                            !getContinuousCreateMode(
+                              "memo-continuous-create-mode",
+                            )
+                          ) {
+                            onSelectMemo?.(savedMemo);
+                          }
+                        }}
                         onDelete={() => {
                           console.log("🚀 onDelete呼び出し", { selectedMemo });
                           if (selectedMemo) {
@@ -626,6 +642,16 @@ function BoardDetailScreen({
                         customHeight="h-full"
                         teamMode={teamMode}
                         teamId={teamId || undefined}
+                        onSaveComplete={(
+                          savedTask: Task,
+                          isNewTask: boolean,
+                          isContinuousMode?: boolean,
+                        ) => {
+                          // 連続作成モードがOFFで新規タスクの場合、保存されたタスクを選択状態にする
+                          if (isNewTask && !isContinuousMode) {
+                            onSelectTask?.(savedTask);
+                          }
+                        }}
                       />
                     </div>
                   </div>

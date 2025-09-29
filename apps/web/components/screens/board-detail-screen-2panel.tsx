@@ -11,7 +11,7 @@ import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
 import { useTags } from "@/src/hooks/use-tags";
 import { useTeamTags } from "@/src/hooks/use-team-tags";
 import { useAllTeamTaggings } from "@/src/hooks/use-team-taggings";
-import { useDeletedMemos } from "@/src/hooks/use-memos";
+import { useDeletedMemos, useDeleteMemo } from "@/src/hooks/use-memos";
 import { useBoards, useAddItemToBoard } from "@/src/hooks/use-boards";
 import { useTeamBoards } from "@/src/hooks/use-team-boards";
 import { Memo, DeletedMemo } from "@/src/types/memo";
@@ -268,6 +268,36 @@ function BoardDetailScreen({
     taskItems: [], // ここでは空で、後でuseBoardItemsから取得
     teamId: teamId?.toString() || undefined,
   });
+
+  // メモ削除フック
+  const deleteMemoMutation = useDeleteMemo({
+    teamMode,
+    teamId: teamId || undefined,
+  });
+
+  // 削除と次選択を組み合わせたハンドラー
+  const handleMemoDeleteWithNextSelection = useCallback(
+    async (memoToDelete: Memo) => {
+      try {
+        console.log("🗑️ メモ削除処理開始", {
+          memoId: memoToDelete.id,
+          teamMode,
+          teamId,
+        });
+
+        // 実際の削除API呼び出し
+        await deleteMemoMutation.mutateAsync(memoToDelete.id);
+
+        console.log("✅ メモ削除完了、次選択処理実行");
+
+        // 削除完了後に次選択ロジックを実行
+        handleMemoDeleteAndSelectNext(memoToDelete);
+      } catch (error) {
+        console.error("❌ メモ削除エラー", error);
+      }
+    },
+    [deleteMemoMutation, handleMemoDeleteAndSelectNext, teamMode, teamId],
+  );
 
   // ボードアイテムの計算とフィルタリング
   const {
@@ -613,13 +643,47 @@ function BoardDetailScreen({
                         }}
                         onDelete={() => {
                           console.log("🚀 onDelete呼び出し", { selectedMemo });
-                          if (selectedMemo) {
-                            handleMemoDeleteAndSelectNext(selectedMemo);
+                          if (selectedMemo && "id" in selectedMemo) {
+                            handleMemoDeleteWithNextSelection(
+                              selectedMemo as Memo,
+                            );
                           } else {
-                            console.error("❌ selectedMemoがnull");
+                            console.error(
+                              "❌ selectedMemoがnullまたは削除済みメモ",
+                            );
                           }
                         }}
-                        onDeleteAndSelectNext={handleMemoDeleteAndSelectNext}
+                        onDeleteAndSelectNext={(memo) => {
+                          if ("id" in memo) {
+                            handleMemoDeleteWithNextSelection(memo as Memo);
+                          } else {
+                            console.error("❌ 削除対象メモが不正", memo);
+                          }
+                        }}
+                        onRestore={() => {
+                          console.log(
+                            "🔄 チームボード詳細 - 復元ボタンクリック",
+                            {
+                              selectedMemo,
+                              hasOriginalId:
+                                selectedMemo && "originalId" in selectedMemo,
+                              originalId:
+                                selectedMemo && "originalId" in selectedMemo
+                                  ? (selectedMemo as DeletedMemo).originalId
+                                  : null,
+                            },
+                          );
+                          if (selectedMemo && "originalId" in selectedMemo) {
+                            handleMemoRestoreAndSelectNext(
+                              selectedMemo as DeletedMemo,
+                            );
+                          } else {
+                            console.error(
+                              "❌ 復元対象メモが不正",
+                              selectedMemo,
+                            );
+                          }
+                        }}
                         onRestoreAndSelectNext={handleMemoRestoreAndSelectNext}
                         totalDeletedCount={deletedMemos?.length || 0}
                       />

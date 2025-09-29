@@ -121,7 +121,8 @@
       "Bash(apitest \"/memos/1\" \"DELETE\")",
       "Bash(apitest \"/boards/all-items\" \"GET\")",
       "Bash(apitest \"/memos/deleted\" \"GET\")",
-      "Bash(apitest \"/memos/deleted/test/restore\" \"POST\")"
+      "Bash(apitest \"/memos/deleted/test/restore\" \"POST\")",
+      "Bash(apitest \"/teams/18/memos/deleted/597/restore\" \"POST\")"
     ],
     "deny": []
   }

@@ -12,6 +12,8 @@ import {
   getTaskDisplayOrder,
 } from "@/src/utils/domUtils";
 import { useDeletedItemOperations } from "@/src/hooks/use-deleted-item-operations";
+import { useRestoreMemo } from "@/src/hooks/use-memos";
+import { useRestoreTask } from "@/src/hooks/use-tasks";
 import { BoardItemWithContent, BoardWithItems } from "@/src/types/board";
 import { Memo, DeletedMemo } from "@/src/types/memo";
 import { Task, DeletedTask } from "@/src/types/task";
@@ -108,6 +110,19 @@ export function useBoardOperations({
   const removeItemFromBoard = useRemoveItemFromBoard();
   const addItemToBoard = useAddItemToBoard();
   const { exportBoard } = useExport();
+
+  // 復元用フック
+  const restoreMemoMutation = useRestoreMemo({
+    teamMode: !!teamId,
+    teamId: teamId ? parseInt(teamId) : undefined,
+    boardId,
+  });
+
+  const restoreTaskMutation = useRestoreTask({
+    teamMode: !!teamId,
+    teamId: teamId ? parseInt(teamId) : undefined,
+    boardId,
+  });
 
   // ボード情報
   const boardName = initialBoardName || boardWithItems?.name || "ボード";
@@ -347,12 +362,33 @@ export function useBoardOperations({
   // 復元ハンドラー - 復元完了後に次選択するように修正
   const handleMemoRestoreAndSelectNext = useCallback(
     async (deletedMemo: DeletedMemo) => {
-      // 復元処理後に削除済みアイテム一覧を更新
-      await refetchDeletedItems();
-      // 復元とキャッシュ更新が完了してから次選択を実行
-      rawHandleMemoRestoreAndSelectNext(deletedMemo);
+      console.log("🔄 ボード詳細 - メモ復元処理開始", {
+        originalId: deletedMemo.originalId,
+        teamMode: !!teamId,
+        teamId,
+      });
+
+      try {
+        // 実際の復元APIを呼び出す
+        await restoreMemoMutation.mutateAsync(deletedMemo.originalId);
+
+        console.log("✅ メモ復元API成功", deletedMemo.originalId);
+
+        // 復元処理後に削除済みアイテム一覧を更新
+        await refetchDeletedItems();
+
+        // 復元とキャッシュ更新が完了してから次選択を実行
+        rawHandleMemoRestoreAndSelectNext(deletedMemo);
+      } catch (error) {
+        console.error("❌ メモ復元エラー", error);
+      }
     },
-    [rawHandleMemoRestoreAndSelectNext, refetchDeletedItems],
+    [
+      rawHandleMemoRestoreAndSelectNext,
+      refetchDeletedItems,
+      restoreMemoMutation,
+      teamId,
+    ],
   );
 
   const { handleRestoreAndSelectNext: rawHandleTaskRestoreAndSelectNext } =
@@ -373,12 +409,33 @@ export function useBoardOperations({
   // タスク復元ハンドラー - 復元完了後に次選択するように修正
   const handleTaskRestoreAndSelectNext = useCallback(
     async (deletedTask: DeletedTask) => {
-      // 復元処理後に削除済みアイテム一覧を更新
-      await refetchDeletedItems();
-      // 復元とキャッシュ更新が完了してから次選択を実行
-      rawHandleTaskRestoreAndSelectNext(deletedTask);
+      console.log("🔄 ボード詳細 - タスク復元処理開始", {
+        originalId: deletedTask.originalId,
+        teamMode: !!teamId,
+        teamId,
+      });
+
+      try {
+        // 実際の復元APIを呼び出す
+        await restoreTaskMutation.mutateAsync(deletedTask.originalId);
+
+        console.log("✅ タスク復元API成功", deletedTask.originalId);
+
+        // 復元処理後に削除済みアイテム一覧を更新
+        await refetchDeletedItems();
+
+        // 復元とキャッシュ更新が完了してから次選択を実行
+        rawHandleTaskRestoreAndSelectNext(deletedTask);
+      } catch (error) {
+        console.error("❌ タスク復元エラー", error);
+      }
     },
-    [rawHandleTaskRestoreAndSelectNext, refetchDeletedItems],
+    [
+      rawHandleTaskRestoreAndSelectNext,
+      refetchDeletedItems,
+      restoreTaskMutation,
+      teamId,
+    ],
   );
 
   // 削除済みアイテムの完全削除ハンドラー

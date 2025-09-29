@@ -128,6 +128,17 @@ function MemoEditor({
   const isDeleted = memo ? "deletedAt" in memo : false;
   const deletedMemo = isDeleted ? (memo as DeletedMemo) : null;
 
+  // 復元ボタン表示デバッグログ
+  console.log("🔍 MemoEditor 復元ボタン表示条件チェック", {
+    memoExists: !!memo,
+    isDeleted,
+    onRestoreExists: !!onRestore,
+    willShowRestoreButton: isDeleted && onRestore,
+    memoId: memo?.id,
+    deletedAt: isDeleted ? (memo as any).deletedAt : null,
+    memoKeys: memo ? Object.keys(memo) : [],
+  });
+
   // チームモードではAPI呼び出しでアイテムボードを取得
   const { data: teamItemBoards = [] } = useTeamItemBoards(
     teamId || 0,

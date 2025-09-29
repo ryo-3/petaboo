@@ -364,7 +364,9 @@ function BoardDetailScreen({
   // 全データ事前取得（ちらつき解消）
   const { data: personalTaggings } = useAllTaggings();
   const { data: teamTaggings } = useAllTeamTaggings(teamId || 0);
-  const { data: allBoardItems } = useAllBoardItems();
+  const { data: allBoardItems } = useAllBoardItems(
+    teamMode ? teamId || undefined : undefined,
+  );
   const { data: personalTags } = useTags();
   const { data: teamTags } = useTeamTags(teamId || 0);
   const { data: personalBoards } = useBoards("normal", !teamMode);
@@ -663,6 +665,10 @@ function BoardDetailScreen({
                         customHeight="h-full"
                         teamMode={teamMode}
                         teamId={teamId || undefined}
+                        preloadedBoardItems={allBoardItems || []}
+                        preloadedBoards={
+                          teamMode ? teamBoards || [] : personalBoards || []
+                        }
                         onSaveComplete={(
                           savedMemo: Memo,
                           wasEmpty: boolean,
@@ -731,6 +737,10 @@ function BoardDetailScreen({
                         customHeight="h-full"
                         teamMode={teamMode}
                         teamId={teamId || undefined}
+                        preloadedBoardItems={allBoardItems || []}
+                        preloadedBoards={
+                          teamMode ? teamBoards || [] : personalBoards || []
+                        }
                         onSaveComplete={(
                           savedTask: Task,
                           isNewTask: boolean,

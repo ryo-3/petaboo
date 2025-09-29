@@ -790,8 +790,9 @@ export function useTeamItemBoards(
           ? "https://petaboo-api.cloudflare-worker.workers.dev"
           : "http://localhost:7594";
 
+      // チーム機能のAPIルーティング問題のため個人用エンドポイントを使用
       const response = await fetch(
-        `${API_BASE_URL}/teams/${teamId}/${itemType}s/${itemId}/boards`,
+        `${API_BASE_URL}/boards/items/${itemType}/${itemId}/boards`,
         {
           headers: {
             "Content-Type": "application/json",

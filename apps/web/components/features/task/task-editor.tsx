@@ -22,6 +22,7 @@ import { useSimpleItemSave } from "@/src/hooks/use-simple-item-save";
 import {
   useAddItemToBoard,
   useRemoveItemFromBoard,
+  // useTeamItemBoards, // 使用停止：API 404エラーのため
 } from "@/src/hooks/use-boards";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -138,6 +139,14 @@ function TaskEditor({
   const isNewTask = !task || task.id === 0;
   const taskFormRef = useRef<TaskFormHandle>(null);
 
+  // チームモードでも preloadedBoardItems を使用するため API 呼び出しは不要
+  // const teamItemId = task?.originalId || task?.id?.toString();
+  // const { data: teamItemBoards = [] } = useTeamItemBoards(
+  //   teamId || 0,
+  //   "task",
+  //   teamItemId,
+  // );
+
   // このタスクに実際に紐づいているボードのみを抽出
   const itemBoards = useMemo(() => {
     if (!task || task.id === 0) return [];
@@ -165,6 +174,20 @@ function TaskEditor({
         boards.push(initialBoard);
       }
     }
+
+    // デバッグログ: 個人用ボード紐づけ情報を出力
+    console.log("🔍 [TaskEditor] 個人用ボード紐づけ情報:", {
+      taskId: task?.id,
+      taskOriginalId: originalId,
+      teamMode,
+      teamId,
+      initialBoardId,
+      preloadedBoardItemsCount: preloadedBoardItems.length,
+      taskBoardItems,
+      taskBoardItemsCount: taskBoardItems.length,
+      foundBoardsCount: boards.length,
+      foundBoards: boards.map((b) => ({ id: b.id, name: b.name })),
+    });
 
     return boards;
   }, [
@@ -347,7 +370,16 @@ function TaskEditor({
 
   // 初期ボードIDs配列の計算
   const currentBoardIds = useMemo(() => {
-    return itemBoards.map((board) => board.id);
+    const ids = itemBoards.map((board) => board.id);
+
+    // デバッグログ: currentBoardIds計算結果
+    console.log("🔢 [TaskEditor] currentBoardIds計算結果:", {
+      itemBoardsCount: itemBoards.length,
+      currentBoardIds: ids,
+      itemBoards: itemBoards.map((b) => ({ id: b.id, name: b.name })),
+    });
+
+    return ids;
   }, [itemBoards]);
 
   // 連続作成モード状態（新規作成時のみ有効）
@@ -631,6 +663,14 @@ function TaskEditor({
 
   // 現在選択されているボードのvalue（複数選択対応）
   const currentBoardValues = selectedBoardIds.map((id) => id.toString());
+
+  // デバッグログ: selectedBoardIdsの状態
+  console.log("🎯 [TaskEditor] selectedBoardIds状態:", {
+    selectedBoardIds,
+    selectedBoardIdsCount: selectedBoardIds.length,
+    currentBoardValues,
+    currentBoardValuesCount: currentBoardValues.length,
+  });
 
   // ボード選択変更ハンドラー
   const handleBoardSelectorChange = (value: string | string[]) => {

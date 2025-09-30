@@ -177,7 +177,11 @@ function MemoEditor({
 
   const currentBoardIds =
     memo && memo.id !== 0
-      ? itemBoards.map((board) => board.id) // チーム/個人モード共通でitemBoardsから計算
+      ? itemBoards.length > 0
+        ? itemBoards.map((board) => board.id) // ボードが存在する場合
+        : initialBoardId
+          ? [initialBoardId] // 保存直後でpreloadedBoardItemsが更新されていない場合はinitialBoardIdを使用
+          : []
       : initialBoardId
         ? [initialBoardId]
         : [];

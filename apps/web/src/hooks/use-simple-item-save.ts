@@ -85,11 +85,14 @@ export function useSimpleItemSave<T extends UnifiedItem>({
     setIsItemTransition(true); // アイテム切り替え開始
     setSelectedBoardIds([...currentBoardIds]);
     setIsInitialSync(true); // 初期同期開始
-    // 少し遅延させて初期同期完了をマーク
+
+    // 少し遅延させて初期同期完了をマーク（500msに延長してボードID同期を確実にする）
     const timer = setTimeout(() => {
+      // 確実に selectedBoardIds を currentBoardIds に再同期
+      setSelectedBoardIds([...currentBoardIds]);
       setIsInitialSync(false);
       setIsItemTransition(false); // アイテム切り替え完了
-    }, 100);
+    }, 500);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [item?.id, currentBoardIdsStr]); // 文字列で比較
@@ -161,6 +164,7 @@ export function useSimpleItemSave<T extends UnifiedItem>({
     const hasBoardChanges =
       JSON.stringify([...selectedBoardIds].sort()) !==
       JSON.stringify([...currentBoardIds].sort());
+
     return textChanged || taskFieldsChanged || hasBoardChanges;
   }, [
     title,
@@ -188,6 +192,7 @@ export function useSimpleItemSave<T extends UnifiedItem>({
         itemType === "memo"
           ? (item as { content?: string | null }).content || ""
           : (item as { description?: string | null }).description || "";
+
       setTitle(itemTitle);
       setContent(itemContent);
       setInitialTitle(itemTitle);

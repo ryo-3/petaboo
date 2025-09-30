@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell } from "lucide-react";
+import { Bell, LayoutGrid } from "lucide-react";
 import { useMyJoinRequests } from "@/src/hooks/use-my-join-requests";
 import { useSimpleTeamNotifier } from "@/src/hooks/use-simple-team-notifier";
 import { usePersonalNotifier } from "@/src/hooks/use-personal-notifier";
@@ -9,6 +9,7 @@ import { UserButton } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 import { usePageVisibility } from "@/src/contexts/PageVisibilityContext";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 function Header() {
   // 現在のチーム名を取得（navigation-contextと同じロジック）
@@ -18,6 +19,39 @@ function Header() {
     pathname.startsWith("/team/") && pathname !== "/team"
       ? pathname.split("/")[2]
       : undefined;
+
+  // ボード詳細ページかどうかを判定
+  const isTeamBoardPage = pathname.includes("/board/");
+
+  // ボード名の状態管理
+  const [boardTitle, setBoardTitle] = useState<string | null>(null);
+
+  // チームボード名の変更イベントをリッスン
+  useEffect(() => {
+    const handleBoardNameChange = (event: CustomEvent) => {
+      const { boardName } = event.detail;
+      setBoardTitle(boardName);
+    };
+
+    window.addEventListener(
+      "team-board-name-change",
+      handleBoardNameChange as EventListener,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "team-board-name-change",
+        handleBoardNameChange as EventListener,
+      );
+    };
+  }, []);
+
+  // ボード詳細ページから離れる時はボードタイトルをクリア
+  useEffect(() => {
+    if (!isTeamBoardPage) {
+      setBoardTitle(null);
+    }
+  }, [isTeamBoardPage]);
 
   const isPersonalPage = pathname === "/" || !teamName;
 
@@ -58,20 +92,25 @@ function Header() {
         <div className="flex items-center gap-4">
           {/* ロゴ */}
           <div className="w-10 h-10 bg-Green rounded-xl flex items-center justify-center shadow-sm">
-            <span className="text-white font-bold text-base">ぺ</span>
+            {isTeamBoardPage && boardTitle ? (
+              <LayoutGrid className="w-5 h-5 text-white" />
+            ) : (
+              <span className="text-white font-bold text-base">ぺ</span>
+            )}
           </div>
 
           {/* タイトルとキャッチコピー */}
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <h1 className="text-xl font-bold text-gray-800 tracking-wide">
-                ぺたぼー
+                {isTeamBoardPage && boardTitle ? boardTitle : "ぺたぼー"}
               </h1>
-              <span className="text-lg font-medium text-gray-600">PETABoo</span>
             </div>
-            <span className="text-sm text-gray-600 mt-0.5">
-              - 日々のメモやタスクをひとまとめに
-            </span>
+            {!isTeamBoardPage && (
+              <span className="text-sm text-gray-600 mt-0.5">
+                - 日々のメモやタスクをひとまとめに
+              </span>
+            )}
           </div>
         </div>
       </div>

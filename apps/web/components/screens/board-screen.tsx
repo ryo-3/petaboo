@@ -97,7 +97,7 @@ const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(
 
     return (
       <div className="h-full">
-        <div className="pt-3 pl-5 pr-2 flex flex-col h-full">
+        <div className="pt-3 pl-5 pr-2 mr-3 flex flex-col h-full">
           <DesktopUpper
             currentMode="board"
             activeTab={activeTab}

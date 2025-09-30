@@ -1,8 +1,6 @@
-interface PriorityIconProps {
-  className?: string;
-}
+import { BaseIconProps } from "@/src/types/icon";
 
-function PriorityIcon({ className = "size-4" }: PriorityIconProps) {
+function PriorityIcon({ className = "size-4" }: BaseIconProps) {
   return (
     <svg
       className={className}

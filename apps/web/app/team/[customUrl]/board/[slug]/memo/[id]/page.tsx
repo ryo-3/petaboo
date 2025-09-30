@@ -16,9 +16,6 @@ export default function TeamBoardMemoPage() {
   useEffect(() => {
     // メモIDをクエリパラメータとして付けてメインページにリダイレクト
     const redirectUrl = `/team/${customUrl}/board/${slug}?initialMemo=${memoId}`;
-    console.log(
-      `📍 メモURL直接アクセス: ${memoId} → リダイレクト: ${redirectUrl}`,
-    );
     window.location.replace(redirectUrl);
   }, [customUrl, slug, memoId]);
 

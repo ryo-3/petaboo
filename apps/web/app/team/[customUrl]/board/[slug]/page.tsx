@@ -6,7 +6,7 @@ import { useAuth } from "@clerk/nextjs";
 import { useTeamDetail } from "@/src/hooks/use-team-detail";
 import { useTeamMemos } from "@/src/hooks/use-team-memos";
 import { useTeamTasks } from "@/src/hooks/use-team-tasks";
-import BoardDetailScreen from "@/components/screens/board-detail-screen";
+import BoardDetailScreen from "@/components/screens/board-detail-screen-2panel";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
 
@@ -120,6 +120,13 @@ export default function TeamBoardDetailPage() {
       return;
     }
 
+    // 新規作成中のアイテム（id === 0）がある場合は選択状態を変更しない
+    if (selectedMemo && selectedMemo.id === 0) {
+      return;
+    }
+    if (selectedTask && selectedTask.id === 0) {
+      return;
+    }
     let hasSelection = false;
 
     // 初期メモ選択（メモIDがある場合）
@@ -131,12 +138,19 @@ export default function TeamBoardDetailPage() {
         // 現在選択されているのと違う場合のみ更新
         if (!selectedMemo || selectedMemo.id.toString() !== initialMemoId) {
           // TeamMemo型をMemo型として扱う（型の互換性を仮定）
-          setSelectedMemo(foundMemo as unknown as Memo);
+          // originalIdを正しく設定するためにfoundMemoのoriginalIdを使用
+          const memoWithCorrectOriginalId = {
+            ...foundMemo,
+            originalId: foundMemo.originalId, // team_memosのoriginal_idを使用
+          } as unknown as Memo;
+
+          setSelectedMemo(memoWithCorrectOriginalId);
           setSelectedTask(null); // タスクの選択を解除
-        } else {
+          // URLを更新してパス形式に統一
+          const newUrl = `/team/${customUrl}/board/${slug}/memo/${foundMemo.id}`;
+          window.history.replaceState(null, "", newUrl);
         }
         hasSelection = true;
-      } else {
       }
     }
 
@@ -151,6 +165,9 @@ export default function TeamBoardDetailPage() {
           // TeamTask型をTask型として扱う（型の互換性を仮定）
           setSelectedTask(foundTask as unknown as Task);
           setSelectedMemo(null); // メモの選択を解除
+          // URLを更新してパス形式に統一
+          const newUrl = `/team/${customUrl}/board/${slug}/task/${foundTask.id}`;
+          window.history.replaceState(null, "", newUrl);
         } else {
         }
         hasSelection = true;
@@ -159,10 +176,18 @@ export default function TeamBoardDetailPage() {
     }
 
     // URLにメモIDもタスクIDもない場合は何もしない（選択をクリアしない）
-
     if (!hasSelection) {
+      // 選択状態を維持
     }
-  }, [initialMemoId, initialTaskId, urlParsed, memosLoading, tasksLoading]);
+  }, [
+    initialMemoId,
+    initialTaskId,
+    urlParsed,
+    memosLoading,
+    tasksLoading,
+    teamMemosData,
+    teamTasksData,
+  ]);
 
   useEffect(() => {
     async function fetchTeamBoard() {
@@ -240,6 +265,22 @@ export default function TeamBoardDetailPage() {
     const newUrl = `/team/${customUrl}/board/${slug}/task/${task.id}`;
     window.history.replaceState(null, "", newUrl);
     setSelectedTask(task);
+  };
+
+  const handleSelectDeletedMemo = (memo: DeletedMemo | null) => {
+    if (!memo) {
+      return;
+    }
+
+    // タスクの選択を解除
+    setSelectedTask(null);
+
+    // URLを更新
+    const newUrl = `/team/${customUrl}/board/${slug}/memo/${memo.id}`;
+    window.history.replaceState(null, "", newUrl);
+
+    // 削除済みメモを選択状態として設定
+    setSelectedMemo(memo as unknown as Memo);
   };
 
   const handleBack = () => {
@@ -389,6 +430,7 @@ export default function TeamBoardDetailPage() {
       selectedTask={selectedTask}
       onSelectMemo={handleSelectMemo}
       onSelectTask={handleSelectTask}
+      onSelectDeletedMemo={handleSelectDeletedMemo} // 削除済みメモ選択用（専用関数）
       onClearSelection={handleClearSelection}
       onBack={handleBack}
       onSettings={handleSettings}

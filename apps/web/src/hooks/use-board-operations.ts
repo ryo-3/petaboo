@@ -12,6 +12,8 @@ import {
   getTaskDisplayOrder,
 } from "@/src/utils/domUtils";
 import { useDeletedItemOperations } from "@/src/hooks/use-deleted-item-operations";
+import { useRestoreMemo } from "@/src/hooks/use-memos";
+import { useRestoreTask } from "@/src/hooks/use-tasks";
 import { BoardItemWithContent, BoardWithItems } from "@/src/types/board";
 import { Memo, DeletedMemo } from "@/src/types/memo";
 import { Task, DeletedTask } from "@/src/types/task";
@@ -109,6 +111,19 @@ export function useBoardOperations({
   const addItemToBoard = useAddItemToBoard();
   const { exportBoard } = useExport();
 
+  // 復元用フック
+  const restoreMemoMutation = useRestoreMemo({
+    teamMode: !!teamId,
+    teamId: teamId ? parseInt(teamId) : undefined,
+    boardId,
+  });
+
+  const restoreTaskMutation = useRestoreTask({
+    teamMode: !!teamId,
+    teamId: teamId ? parseInt(teamId) : undefined,
+    boardId,
+  });
+
   // ボード情報
   const boardName = initialBoardName || boardWithItems?.name || "ボード";
   const boardDescription =
@@ -204,7 +219,12 @@ export function useBoardOperations({
 
   // 新規作成ハンドラー
   const handleCreateNewMemo = useCallback(() => {
+    console.log("🏗️ [use-board-operations] handleCreateNewMemo実行", {
+      createNewMemoHandlerExists: !!createNewMemoHandler,
+      onSelectMemoExists: !!onSelectMemo,
+    });
     createNewMemoHandler(onSelectMemo);
+    console.log("✅ [use-board-operations] handleCreateNewMemo完了");
   }, [createNewMemoHandler, onSelectMemo]);
 
   const handleCreateNewTask = useCallback(() => {
@@ -323,7 +343,7 @@ export function useBoardOperations({
   );
 
   // 削除済みアイテムの復元ハンドラー
-  const { handleRestoreAndSelectNext: handleMemoRestoreAndSelectNext } =
+  const { handleRestoreAndSelectNext: rawHandleMemoRestoreAndSelectNext } =
     useDeletedItemOperations({
       deletedItems: boardDeletedItems?.memos || null,
       onSelectDeletedItem: (memo: DeletedMemo | null) => {
@@ -331,6 +351,7 @@ export function useBoardOperations({
           // 次のアイテムがない場合は選択解除してエディターを閉じる
           onClearSelection?.();
         } else {
+          // 削除済みメモとして選択 - 右パネルの選択状態が更新される
           onSelectMemo?.(memo);
         }
       },
@@ -338,7 +359,39 @@ export function useBoardOperations({
       editorSelector: "[data-memo-editor]",
     });
 
-  const { handleRestoreAndSelectNext: handleTaskRestoreAndSelectNext } =
+  // 復元ハンドラー - 復元完了後に次選択するように修正
+  const handleMemoRestoreAndSelectNext = useCallback(
+    async (deletedMemo: DeletedMemo) => {
+      console.log("🔄 ボード詳細 - メモ復元処理開始", {
+        originalId: deletedMemo.originalId,
+        teamMode: !!teamId,
+        teamId,
+      });
+
+      try {
+        // 実際の復元APIを呼び出す
+        await restoreMemoMutation.mutateAsync(deletedMemo.originalId);
+
+        console.log("✅ メモ復元API成功", deletedMemo.originalId);
+
+        // 復元処理後に削除済みアイテム一覧を更新
+        await refetchDeletedItems();
+
+        // 復元とキャッシュ更新が完了してから次選択を実行
+        rawHandleMemoRestoreAndSelectNext(deletedMemo);
+      } catch (error) {
+        console.error("❌ メモ復元エラー", error);
+      }
+    },
+    [
+      rawHandleMemoRestoreAndSelectNext,
+      refetchDeletedItems,
+      restoreMemoMutation,
+      teamId,
+    ],
+  );
+
+  const { handleRestoreAndSelectNext: rawHandleTaskRestoreAndSelectNext } =
     useDeletedItemOperations({
       deletedItems: boardDeletedItems?.tasks || null,
       onSelectDeletedItem: (task: DeletedTask | null) => {
@@ -352,6 +405,38 @@ export function useBoardOperations({
       setScreenMode: () => {}, // ボードでは画面モード変更なし
       editorSelector: "[data-task-editor]",
     });
+
+  // タスク復元ハンドラー - 復元完了後に次選択するように修正
+  const handleTaskRestoreAndSelectNext = useCallback(
+    async (deletedTask: DeletedTask) => {
+      console.log("🔄 ボード詳細 - タスク復元処理開始", {
+        originalId: deletedTask.originalId,
+        teamMode: !!teamId,
+        teamId,
+      });
+
+      try {
+        // 実際の復元APIを呼び出す
+        await restoreTaskMutation.mutateAsync(deletedTask.originalId);
+
+        console.log("✅ タスク復元API成功", deletedTask.originalId);
+
+        // 復元処理後に削除済みアイテム一覧を更新
+        await refetchDeletedItems();
+
+        // 復元とキャッシュ更新が完了してから次選択を実行
+        rawHandleTaskRestoreAndSelectNext(deletedTask);
+      } catch (error) {
+        console.error("❌ タスク復元エラー", error);
+      }
+    },
+    [
+      rawHandleTaskRestoreAndSelectNext,
+      refetchDeletedItems,
+      restoreTaskMutation,
+      teamId,
+    ],
+  );
 
   // 削除済みアイテムの完全削除ハンドラー
   const { selectNextDeletedItem: handleDeletedMemoDeleteAndSelectNext } =

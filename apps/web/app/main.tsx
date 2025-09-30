@@ -4,6 +4,7 @@ import { NavigationProvider } from "@/contexts/navigation-context";
 interface MainProps {
   initialBoardName?: string;
   boardId?: number;
+  boardSlug?: string;
   showBoardHeader?: boolean;
   serverBoardTitle?: string;
   serverBoardDescription?: string | null;
@@ -27,6 +28,7 @@ interface MainProps {
 function Main({
   initialBoardName,
   boardId,
+  boardSlug,
   showBoardHeader = true,
   serverBoardTitle,
   serverBoardDescription,
@@ -44,6 +46,7 @@ function Main({
       <MainClient
         initialBoardName={initialBoardName}
         boardId={boardId}
+        boardSlug={boardSlug}
         showBoardHeader={showBoardHeader}
         serverBoardTitle={serverBoardTitle}
         serverBoardDescription={serverBoardDescription}

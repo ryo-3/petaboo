@@ -176,6 +176,14 @@ export function NavigationProvider({
         ? pathname.split("/")[2]
         : undefined;
 
+    // URL情報の詳細取得
+    const internalPath = pathname;
+    const queryString = searchParams.toString();
+    const fullInternalUrl = queryString
+      ? `${internalPath}?${queryString}`
+      : internalPath;
+    const actualDisplayUrl = window.location.href;
+
     // シンプルなログ出力
     const logInfo = [
       `mode:${screenMode}`,
@@ -184,7 +192,7 @@ export function NavigationProvider({
       teamName && `team:${teamName}`,
       `icons:${
         Object.entries(iconStates)
-          .filter(([k, v]) => v)
+          .filter(([, v]) => v)
           .map(([k]) => k)
           .join(",") || "none"
       }`,
@@ -192,7 +200,10 @@ export function NavigationProvider({
       .filter(Boolean)
       .join(" | ");
 
-    console.log("🔄", logInfo);
+    console.log(`🎯 [サイドバー状態] ${logInfo}`);
+    console.log(
+      `📍 [URL詳細] 内部URL: ${fullInternalUrl} | 表示URL: ${actualDisplayUrl}`,
+    );
   }, [screenMode, pathname, searchParams, iconStates]);
 
   // TODO: 必要に応じて個別キャッシュ無効化を実装する

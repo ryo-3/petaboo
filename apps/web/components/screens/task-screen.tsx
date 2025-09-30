@@ -1,8 +1,8 @@
 "use client";
 
 import TaskEditor from "@/components/features/task/task-editor";
-import { CSVImportModal } from "@/components/features/task/csv-import-modal";
-import { useTasksBulkDelete } from "@/components/features/task/use-task-bulk-delete";
+import { TaskCsvImport } from "@/components/features/task/task-csv-import";
+import { useTasksBulkDelete } from "@/components/features/task/use-task-bulk-delete-wrapper";
 import { useTasksBulkRestore } from "@/components/features/task/use-task-bulk-restore";
 import DesktopLower from "@/components/layout/desktop-lower";
 import DesktopUpper from "@/components/layout/desktop-upper";
@@ -15,14 +15,20 @@ import { useBulkProcessNotifications } from "@/src/hooks/use-bulk-process-notifi
 import { useDeletedItemOperations } from "@/src/hooks/use-deleted-item-operations";
 import { useDeletionLid } from "@/src/hooks/use-deletion-lid";
 import { useItemDeselect } from "@/src/hooks/use-item-deselect";
+import { useUnifiedRestoration } from "@/src/hooks/use-unified-restoration";
 import { useScreenState } from "@/src/hooks/use-screen-state";
 import { useSelectAll } from "@/src/hooks/use-select-all";
 import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
 import { useTabChange } from "@/src/hooks/use-tab-change";
-import { useDeletedTasks, useTasks } from "@/src/hooks/use-tasks";
+import {
+  useDeletedTasks,
+  useTasks,
+  usePermanentDeleteTask,
+} from "@/src/hooks/use-tasks";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useBoards } from "@/src/hooks/use-boards";
 import { useTags } from "@/src/hooks/use-tags";
+import { useTaskDeleteWithNextSelection } from "@/src/hooks/use-memo-delete-with-next-selection";
 import TagManagementModal from "@/components/ui/tag-management/tag-management-modal";
 import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
 import { useAllTeamTaggings } from "@/src/hooks/use-team-taggings";
@@ -60,6 +66,18 @@ interface TaskScreenProps {
   teamId?: number;
   // URL連動
   initialTaskId?: string | null;
+
+  // 統一フック（最上位から受け取り）
+  unifiedOperations: {
+    deleteItem: {
+      mutateAsync: (id: number) => Promise<any>;
+      isPending: boolean;
+    };
+    restoreItem: {
+      mutateAsync: (originalId: string) => Promise<any>;
+      isPending: boolean;
+    };
+  };
 }
 
 function TaskScreen({
@@ -82,6 +100,7 @@ function TaskScreen({
   teamMode = false,
   teamId,
   initialTaskId,
+  unifiedOperations,
 }: TaskScreenProps) {
   // 一括処理中断通知の監視
   useBulkProcessNotifications();
@@ -101,9 +120,19 @@ function TaskScreen({
   const { data: boards } = useBoards("normal", !teamMode);
   const { data: tags } = useTags();
 
+  // 削除済みタスクの完全削除フック
+  const permanentDeleteTask = usePermanentDeleteTask();
+
   // 全データ事前取得（ちらつき解消）
   const { data: allTaggings } = useAllTaggings();
-  const { data: allBoardItems } = useAllBoardItems();
+  const { data: allBoardItems } = useAllBoardItems(
+    teamMode ? teamId : undefined,
+  );
+
+  // allBoardItems監視（デバッグ用 - 削除予定）
+  // useEffect(() => {
+  //   console.log("🔍 TaskScreen allBoardItems更新", { ... });
+  // }, [allBoardItems, teamMode, teamId]);
 
   // チーム用タグデータ取得
   const { data: allTeamTaggings } = useAllTeamTaggings(teamId || 0);
@@ -175,6 +204,7 @@ function TaskScreen({
   // 復元の状態
   const [isRestoring, setIsRestoring] = useState(false);
   const [isRestoreLidOpen, setIsRestoreLidOpen] = useState(false);
+  const [isIndividualRestoring, setIsIndividualRestoring] = useState(false);
 
   // CSVインポートモーダルの状態
   const [isCsvImportModalOpen, setIsCsvImportModalOpen] = useState(false);
@@ -296,74 +326,67 @@ function TaskScreen({
     restoreOptions: { isRestore: true, onSelectWithFromFlag: true },
   });
 
-  // 通常タスクでの次のタスク選択ハンドラー（実際の画面表示順序に基づく）
-  const handleTaskDeleteAndSelectNext = (
-    deletedTask: Task,
-    preDeleteDisplayOrder?: number[],
-  ) => {
-    if (!tasks) return;
+  // 統一復元フック（新しいシンプル実装）
+  const { handleRestoreAndSelectNext: unifiedRestoreAndSelectNext } =
+    useUnifiedRestoration({
+      itemType: "task",
+      deletedItems: deletedTasks || null,
+      selectedDeletedItem: selectedDeletedTask || null,
+      onSelectDeletedItem: onSelectDeletedTask,
+      setActiveTab,
+      setScreenMode: (mode: string) =>
+        setTaskScreenMode(mode as TaskScreenMode),
+      teamMode,
+      teamId,
+    });
+
+  // DOMポーリング削除フック（メモと同じ方式）
+  const { handleDeleteWithNextSelection, checkDomDeletionAndSelectNext } =
+    useTaskDeleteWithNextSelection({
+      tasks: tasks?.filter((t) => t.status === activeTab),
+      onSelectTask: (task: Task | null) => {
+        if (task) {
+          onSelectTask(task);
+          setTaskScreenMode("view");
+        } else {
+          setTaskScreenMode("list");
+          onClearSelection?.();
+        }
+      },
+      setTaskScreenMode,
+      onDeselectAndStayOnTaskList: () => {
+        setTaskScreenMode("list");
+        onClearSelection?.();
+      },
+      handleRightEditorDelete: () => {
+        // 何もしない（削除処理は外部で実行済み）
+      },
+      setIsRightLidOpen,
+    });
+
+  // DOM削除確認（タスク一覧が変更されたときにチェック）
+  useEffect(() => {
+    checkDomDeletionAndSelectNext();
+  }, [tasks, checkDomDeletionAndSelectNext]);
+
+  // 通常タスク削除（DOMポーリング方式）
+  const handleTaskDeleteAndSelectNext = async (deletedTask: Task) => {
+    if (!tasks || unifiedOperations.deleteItem.isPending) return;
 
     // 削除されたタスクが現在のタブと異なるステータスの場合は右パネルを閉じるだけ
     if (deletedTask.status !== activeTab) {
       setTaskScreenMode("list");
-      onClearSelection?.(); // 選択状態のみクリア
+      onClearSelection?.();
       return;
     }
 
-    // 削除されたタスクを除外してフィルター
-    const filteredTasks = tasks.filter(
-      (t) => t.status === activeTab && t.id !== deletedTask.id,
-    );
+    try {
+      // API削除実行
+      await unifiedOperations.deleteItem.mutateAsync(deletedTask.id);
 
-    // 削除前のDOM順序を使用、なければ現在の順序
-    const displayOrder = preDeleteDisplayOrder || getTaskDisplayOrder();
-
-    // DOMベースで次のタスクを直接選択
-    const deletedTaskIndex = displayOrder.indexOf(deletedTask.id);
-
-    let nextTaskId = null;
-
-    if (deletedTaskIndex !== -1) {
-      // DOM順序で削除されたタスクの次のタスクを探す
-      for (let i = deletedTaskIndex + 1; i < displayOrder.length; i++) {
-        const candidateId = displayOrder[i];
-        if (filteredTasks.some((t) => t.id === candidateId)) {
-          nextTaskId = candidateId;
-          break;
-        }
-      }
-
-      // 次がない場合は前のタスクを探す
-      if (!nextTaskId) {
-        for (let i = deletedTaskIndex - 1; i >= 0; i--) {
-          const candidateId = displayOrder[i];
-          if (filteredTasks.some((t) => t.id === candidateId)) {
-            nextTaskId = candidateId;
-            break;
-          }
-        }
-      }
-    }
-
-    if (nextTaskId) {
-      const nextTask = filteredTasks.find((t) => t.id === nextTaskId);
-
-      if (nextTask) {
-        // DOM監視
-        setTimeout(() => {
-          document.querySelector("[data-task-editor]");
-        }, 100);
-
-        onSelectTask(nextTask, true);
-        setTaskScreenMode("view");
-      } else {
-        setTaskScreenMode("list");
-        onClearSelection?.(); // ホームに戻らずに選択状態だけクリア
-      }
-    } else {
-      setTaskScreenMode("list");
-      onClearSelection?.(); // ホームに戻らずに選択状態だけクリア
-    }
+      // DOMポーリング削除フックによる次選択処理
+      handleDeleteWithNextSelection(deletedTask);
+    } catch (error) {}
   };
 
   // 選択ハンドラーパターン
@@ -403,7 +426,7 @@ function TaskScreen({
     <div className="flex h-full bg-white">
       {/* 左側：一覧表示エリア */}
       <div
-        className={`${taskScreenMode === "list" ? "w-full" : "w-[44%]"} ${taskScreenMode !== "list" ? "border-r border-gray-300" : ""} pt-3 pl-5 pr-2 flex flex-col transition-all duration-300 relative`}
+        className={`${taskScreenMode === "list" ? "w-full" : "w-[44%]"} ${taskScreenMode !== "list" ? "border-r border-gray-300" : ""} pt-3 pl-5 pr-2 flex flex-col relative`}
       >
         <DesktopUpper
           currentMode="task"
@@ -595,6 +618,7 @@ function TaskScreen({
       <RightPanel
         isOpen={taskScreenMode !== "list"}
         onClose={handleRightPanelClose}
+        disableAnimation={true}
       >
         {taskScreenMode === "create" && (
           <TaskEditor
@@ -604,23 +628,11 @@ function TaskScreen({
             teamMode={teamMode}
             teamId={teamId}
             onSaveComplete={(savedTask, isNewTask, isContinuousMode) => {
-              console.log("🎯 [TaskScreen] onSaveComplete:", {
-                taskId: savedTask.id,
-                isNewTask,
-                isContinuousMode,
-                teamMode,
-                teamId,
-              });
-
               if (isNewTask && !isContinuousMode) {
                 // 連続作成モードOFFの場合のみ作成されたタスクを選択状態にする
-                console.log("🎯 [TaskScreen] タスクを選択状態にします");
                 onSelectTask(savedTask);
                 setTaskScreenMode("view");
               } else if (isNewTask && isContinuousMode) {
-                console.log(
-                  "🎯 [TaskScreen] 連続作成モード: 選択状態にしません",
-                );
                 // 連続作成モードの場合は、タスク選択を解除してURLパラメーターもクリア
                 onSelectTask(null);
               }
@@ -630,6 +642,7 @@ function TaskScreen({
             preloadedBoards={boards || []}
             preloadedTaggings={safeAllTaggings}
             preloadedBoardItems={safeAllBoardItems}
+            unifiedOperations={unifiedOperations}
           />
         )}
         {taskScreenMode === "view" && selectedTask && (
@@ -648,6 +661,7 @@ function TaskScreen({
             preloadedBoards={boards || []}
             preloadedTaggings={safeAllTaggings}
             preloadedBoardItems={safeAllBoardItems}
+            unifiedOperations={unifiedOperations}
           />
         )}
         {taskScreenMode === "view" && selectedDeletedTask && (
@@ -655,10 +669,34 @@ function TaskScreen({
             <TaskEditor
               task={selectedDeletedTask}
               onClose={() => setTaskScreenMode("list")}
-              onDelete={() => selectNextDeletedTask(selectedDeletedTask)}
-              onRestore={() =>
-                handleDeletedTaskRestoreAndSelectNext(selectedDeletedTask)
-              }
+              onDelete={async () => {
+                if (selectedDeletedTask && deletedTasks) {
+                  // 削除前に次選択対象を事前計算
+                  const currentIndex = deletedTasks.findIndex(
+                    (task) =>
+                      task.originalId === selectedDeletedTask.originalId,
+                  );
+                  const remainingTasks = deletedTasks.filter(
+                    (task) =>
+                      task.originalId !== selectedDeletedTask.originalId,
+                  );
+                  // 完全削除API実行
+                  await permanentDeleteTask.mutateAsync(
+                    selectedDeletedTask.originalId,
+                  );
+                  // 即座に次選択処理実行
+                  if (remainingTasks.length > 0) {
+                    const nextIndex =
+                      currentIndex >= remainingTasks.length
+                        ? remainingTasks.length - 1
+                        : currentIndex;
+                    onSelectDeletedTask(remainingTasks[nextIndex] || null);
+                  } else {
+                    setTaskScreenMode("list");
+                  }
+                }
+              }}
+              onRestoreAndSelectNext={unifiedRestoreAndSelectNext}
               teamMode={teamMode}
               teamId={teamId}
               createdBy={selectedDeletedTask.createdBy}
@@ -668,6 +706,7 @@ function TaskScreen({
               preloadedBoards={boards || []}
               preloadedTaggings={safeAllTaggings}
               preloadedBoardItems={safeAllBoardItems}
+              unifiedOperations={unifiedOperations}
             />
           </>
         )}
@@ -687,6 +726,7 @@ function TaskScreen({
             preloadedBoards={boards || []}
             preloadedTaggings={safeAllTaggings}
             preloadedBoardItems={safeAllBoardItems}
+            unifiedOperations={unifiedOperations}
           />
         )}
       </RightPanel>
@@ -698,7 +738,7 @@ function TaskScreen({
       <RestoreModal />
 
       {/* CSVインポートモーダル */}
-      <CSVImportModal
+      <TaskCsvImport
         isOpen={isCsvImportModalOpen}
         onClose={() => setIsCsvImportModalOpen(false)}
       />

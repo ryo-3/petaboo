@@ -1,8 +1,6 @@
-interface CsvExportIconProps {
-  className?: string;
-}
+import { BaseIconProps } from "@/src/types/icon";
 
-function CsvExportIcon({ className = "w-5 h-5" }: CsvExportIconProps) {
+function CsvExportIcon({ className = "w-5 h-5" }: BaseIconProps) {
   return (
     <svg
       className={className}

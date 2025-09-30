@@ -1,8 +1,6 @@
-interface PinIconProps {
-  className?: string;
-}
+import { BaseIconProps } from "@/src/types/icon";
 
-function PinIcon({ className = "w-4 h-4" }: PinIconProps) {
+function PinIcon({ className = "w-4 h-4" }: BaseIconProps) {
   return (
     <svg
       className={className}

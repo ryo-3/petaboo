@@ -29,8 +29,6 @@ export async function ensureUserExists(
         createdAt: now,
         updatedAt: now,
       });
-
-      console.log(`新規ユーザー自動作成: ${userId}`);
     }
   } catch (error) {
     // エラーが発生してもAPI処理は続行（ログのみ）

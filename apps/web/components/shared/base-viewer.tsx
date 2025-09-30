@@ -16,6 +16,7 @@ interface BaseViewerProps {
   lastEditedAt?: number | null;
   hideDateInfo?: boolean; // 日付情報を非表示にするオプション
   topContent?: ReactNode; // 日付情報の上に表示するコンテンツ
+  compactPadding?: boolean; // ボード詳細時などでコンパクトなパディングを使用
 }
 
 function BaseViewer({
@@ -29,9 +30,12 @@ function BaseViewer({
   lastEditedAt,
   hideDateInfo = false,
   topContent,
+  compactPadding = false,
 }: BaseViewerProps) {
   return (
-    <div className="flex flex-col h-full bg-white pt-4">
+    <div
+      className={`flex flex-col h-full bg-white pl-2 ${compactPadding ? "pt-2" : "pt-3"}`}
+    >
       {topContent}
       {!hideDateInfo && (
         <DateInfo

@@ -1,8 +1,6 @@
-interface TeamIconProps {
-  className?: string;
-}
+import { BaseIconProps } from "@/src/types/icon";
 
-function TeamIcon({ className = "w-4 h-4" }: TeamIconProps) {
+function TeamIcon({ className = "w-4 h-4" }: BaseIconProps) {
   return (
     <svg
       className={className}

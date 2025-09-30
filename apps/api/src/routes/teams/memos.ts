@@ -7,6 +7,10 @@ import { teamMemos, teamDeletedMemos } from "../../db/schema/team/memos";
 import { teamMembers } from "../../db/schema/team/teams";
 import { users } from "../../db/schema/users";
 import { generateOriginalId, generateUuid } from "../../utils/originalId";
+import {
+  getTeamMemoMemberJoin,
+  getTeamMemoSelectFields,
+} from "../../utils/teamJoinUtils";
 
 const app = new OpenAPIHono();
 
@@ -103,27 +107,9 @@ app.openapi(
     }
 
     const result = await db
-      .select({
-        id: teamMemos.id,
-        teamId: teamMemos.teamId,
-        userId: teamMemos.userId,
-        originalId: teamMemos.originalId,
-        uuid: teamMemos.uuid,
-        title: teamMemos.title,
-        content: teamMemos.content,
-        createdAt: teamMemos.createdAt,
-        updatedAt: teamMemos.updatedAt,
-        createdBy: teamMembers.displayName, // 作成者の表示名
-        avatarColor: teamMembers.avatarColor, // 作成者のアバター色
-      })
+      .select(getTeamMemoSelectFields())
       .from(teamMemos)
-      .leftJoin(
-        teamMembers,
-        and(
-          eq(teamMemos.userId, teamMembers.userId),
-          eq(teamMemos.teamId, teamMembers.teamId),
-        ),
-      )
+      .leftJoin(teamMembers, getTeamMemoMemberJoin())
       .where(eq(teamMemos.teamId, teamId))
       .orderBy(desc(teamMemos.updatedAt), desc(teamMemos.createdAt));
 
@@ -235,27 +221,9 @@ app.openapi(
 
     // 作成されたメモを作成者情報付きで取得
     const newMemo = await db
-      .select({
-        id: teamMemos.id,
-        teamId: teamMemos.teamId,
-        userId: teamMemos.userId,
-        originalId: teamMemos.originalId,
-        uuid: teamMemos.uuid,
-        title: teamMemos.title,
-        content: teamMemos.content,
-        createdAt: teamMemos.createdAt,
-        updatedAt: teamMemos.updatedAt,
-        createdBy: teamMembers.displayName, // 作成者の表示名
-        avatarColor: teamMembers.avatarColor, // 作成者のアバター色
-      })
+      .select(getTeamMemoSelectFields())
       .from(teamMemos)
-      .leftJoin(
-        teamMembers,
-        and(
-          eq(teamMemos.userId, teamMembers.userId),
-          eq(teamMemos.teamId, teamMembers.teamId),
-        ),
-      )
+      .leftJoin(teamMembers, getTeamMemoMemberJoin())
       .where(eq(teamMemos.id, result[0].id))
       .get();
 
@@ -433,11 +401,22 @@ app.openapi(
 
     const { teamId, id } = c.req.valid("param");
 
+    console.log(
+      `🗑️ チームメモ削除リクエスト: teamId=${teamId}, id=${id}, userId=${auth.userId}`,
+    );
+
     // チームメンバー確認
     const member = await checkTeamMember(teamId, auth.userId, db);
     if (!member) {
+      console.log(
+        `❌ チームメンバー確認失敗: teamId=${teamId}, userId=${auth.userId}`,
+      );
       return c.json({ error: "Not a team member" }, 403);
     }
+
+    console.log(
+      `✅ チームメンバー確認成功: teamId=${teamId}, userId=${auth.userId}, memberRole=${member.role}`,
+    );
 
     // まず該当メモを取得
     const memo = await db
@@ -445,6 +424,17 @@ app.openapi(
       .from(teamMemos)
       .where(and(eq(teamMemos.id, id), eq(teamMemos.teamId, teamId)))
       .get();
+
+    console.log(`🔍 チームメモ検索結果:`, {
+      memo: memo
+        ? {
+            id: memo.id,
+            teamId: memo.teamId,
+            userId: memo.userId,
+            title: memo.title,
+          }
+        : null,
+    });
 
     if (!memo) {
       return c.json({ error: "Team memo not found" }, 404);
@@ -467,8 +457,12 @@ app.openapi(
 
       // 元テーブルから削除
       await db.delete(teamMemos).where(eq(teamMemos.id, id));
+
+      console.log(
+        `🗑️ チームメモ削除成功: id=${id}, teamId=${teamId}, title=${memo.title}`,
+      );
     } catch (error) {
-      console.error("メモ削除エラー:", error);
+      console.error("チームメモ削除エラー:", error);
       return c.json({ error: "Failed to delete memo" }, 500);
     }
 
@@ -635,11 +629,22 @@ app.openapi(
 
     const { teamId, originalId } = c.req.valid("param");
 
+    console.log(
+      `🔄 チームメモ復元リクエスト: teamId=${teamId}, originalId=${originalId}, userId=${auth.userId}`,
+    );
+
     // チームメンバー確認
     const member = await checkTeamMember(teamId, auth.userId, db);
     if (!member) {
+      console.log(
+        `❌ チームメンバー確認失敗: teamId=${teamId}, userId=${auth.userId}`,
+      );
       return c.json({ error: "Not a team member" }, 403);
     }
+
+    console.log(
+      `✅ チームメンバー確認成功: teamId=${teamId}, userId=${auth.userId}, memberRole=${member.role}`,
+    );
 
     try {
       // 削除済みメモを検索
@@ -654,11 +659,25 @@ app.openapi(
         )
         .limit(1);
 
+      console.log(`🔍 削除済みメモ検索結果:`, {
+        found: deletedMemo.length > 0,
+        teamId,
+        originalId,
+      });
+
       if (deletedMemo.length === 0) {
+        console.log(
+          `❌ 削除済みメモが見つからない: teamId=${teamId}, originalId=${originalId}`,
+        );
         return c.json({ error: "削除済みメモが見つかりません" }, 404);
       }
 
       const memoData = deletedMemo[0];
+      console.log(`📋 復元対象メモ:`, {
+        id: memoData.id,
+        title: memoData.title,
+        userId: memoData.userId,
+      });
 
       // チームメモテーブルに復元
       const currentTimestamp = Math.floor(Date.now() / 1000);
@@ -678,27 +697,9 @@ app.openapi(
 
       // 復元されたメモを作成者情報付きで取得
       const restoredMemo = await db
-        .select({
-          id: teamMemos.id,
-          teamId: teamMemos.teamId,
-          userId: teamMemos.userId,
-          originalId: teamMemos.originalId,
-          uuid: teamMemos.uuid,
-          title: teamMemos.title,
-          content: teamMemos.content,
-          createdAt: teamMemos.createdAt,
-          updatedAt: teamMemos.updatedAt,
-          createdBy: teamMembers.displayName, // 作成者の表示名
-          avatarColor: teamMembers.avatarColor, // 作成者のアバター色
-        })
+        .select(getTeamMemoSelectFields())
         .from(teamMemos)
-        .leftJoin(
-          teamMembers,
-          and(
-            eq(teamMemos.userId, teamMembers.userId),
-            eq(teamMemos.teamId, teamMembers.teamId),
-          ),
-        )
+        .leftJoin(teamMembers, getTeamMemoMemberJoin())
         .where(eq(teamMemos.id, insertResult[0].id))
         .get();
 
@@ -707,9 +708,21 @@ app.openapi(
         .delete(teamDeletedMemos)
         .where(eq(teamDeletedMemos.id, memoData.id));
 
+      console.log(
+        `✅ チームメモ復元成功: id=${insertResult[0].id}, title=${memoData.title}, teamId=${teamId}`,
+      );
+
       return c.json(restoredMemo);
     } catch (error) {
       console.error("チームメモ復元エラー:", error);
+      console.error("復元エラーの詳細:", {
+        teamId,
+        originalId,
+        userId: auth.userId,
+        error,
+        errorMessage: error instanceof Error ? error.message : "不明なエラー",
+        stack: error instanceof Error ? error.stack : undefined,
+      });
       return c.json({ error: "Internal server error" }, 500);
     }
   },

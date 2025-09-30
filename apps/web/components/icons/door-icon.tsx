@@ -1,8 +1,6 @@
-interface DoorIconProps {
-  className?: string;
-}
+import { BaseIconProps } from "@/src/types/icon";
 
-function DoorIcon({ className = "w-4 h-4" }: DoorIconProps) {
+function DoorIcon({ className = "w-4 h-4" }: BaseIconProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

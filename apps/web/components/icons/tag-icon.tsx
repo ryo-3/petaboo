@@ -1,5 +1,6 @@
-interface TagIconProps {
-  className?: string;
+import { BaseIconProps } from "@/src/types/icon";
+
+interface TagIconProps extends BaseIconProps {
   style?: React.CSSProperties;
 }
 

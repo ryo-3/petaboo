@@ -211,7 +211,10 @@ export default function BoardMemoSection({
           <Tooltip text="新規追加" position="bottom">
             <AddItemButton
               itemType="memo"
-              onClick={onCreateNewMemo}
+              onClick={() => {
+                console.log("🔥 [BoardMemoSection] メモ追加ボタンクリック");
+                onCreateNewMemo();
+              }}
               size="small"
               showTooltip={false}
               customSize={{
@@ -312,7 +315,7 @@ export default function BoardMemoSection({
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto pr-1 pb-10 mb-2">
+      <div className="flex-1 overflow-y-auto pr-2 pb-10 mb-2 hover-scrollbar">
         {isLoading ? (
           <div className="text-gray-500 text-center py-8">
             メモを読み込み中...

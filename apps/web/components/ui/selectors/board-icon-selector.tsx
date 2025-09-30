@@ -31,7 +31,7 @@ export default function BoardIconSelector({
 
   // 値を配列として扱う（単一選択の場合も配列に変換）
   const selectedValues = Array.isArray(value)
-    ? value
+    ? value.filter((v) => v !== "") // 空文字列を除外
     : value && value !== ""
       ? [value]
       : [];
@@ -44,16 +44,15 @@ export default function BoardIconSelector({
       name: opt.label,
     }));
 
-  const selectedBoardIds = selectedValues
-    .filter((v) => v !== "")
-    .map((v) => parseInt(v, 10));
+  const selectedBoardIds = selectedValues.map((v) => parseInt(v, 10));
 
   const handleSelectionChange = (boardIds: number[]) => {
     const stringValues = boardIds.map((id) => id.toString());
-    onChange(multiple ? stringValues : stringValues[0] || "");
+    const result = multiple ? stringValues : stringValues[0] || "";
+    onChange(result);
   };
 
-  // ボードが選択されているかどうか
+  // ボードが選択されているかどうか（空配列なら false）
   const hasSelectedBoard = selectedValues.length > 0;
 
   return (
@@ -65,7 +64,13 @@ export default function BoardIconSelector({
             position="bottom"
           >
             <button
-              onClick={disabled ? undefined : () => setIsOpen(true)}
+              onClick={
+                disabled
+                  ? undefined
+                  : () => {
+                      setIsOpen(true);
+                    }
+              }
               disabled={disabled}
               className={`flex items-center justify-center size-7 rounded-md ${
                 disabled

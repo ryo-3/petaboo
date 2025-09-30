@@ -370,6 +370,8 @@ app.openapi(
 
     const { id } = c.req.valid("param");
 
+    console.log(`🗑️ メモ削除リクエスト: id=${id}, userId=${auth.userId}`);
+
     // まず該当メモを取得（ユーザー確認込み）
     const note = await db
       .select()
@@ -377,7 +379,23 @@ app.openapi(
       .where(and(eq(memos.id, id), eq(memos.userId, auth.userId)))
       .get();
 
+    console.log(`🔍 検索結果:`, {
+      note: note
+        ? { id: note.id, userId: note.userId, title: note.title }
+        : null,
+    });
+
     if (!note) {
+      // デバッグ用：該当IDのメモが存在するかチェック
+      const anyNote = await db
+        .select()
+        .from(memos)
+        .where(eq(memos.id, id))
+        .get();
+
+      console.log(
+        `❌ ユーザーチェック失敗: requestUserId=${auth.userId}, noteExists=${!!anyNote}, noteUserId=${anyNote?.userId}`,
+      );
       return c.json({ error: "Note not found" }, 404);
     }
 
@@ -424,7 +442,6 @@ app.openapi(
         );
       }
     } catch (error) {
-      console.error("メモ削除エラー:", error);
       // コピー段階でエラーが発生した場合、削除済みテーブルの重複データをクリーンアップ
       try {
         await db
@@ -435,9 +452,7 @@ app.openapi(
               eq(deletedMemos.userId, auth.userId),
             ),
           );
-      } catch (cleanupError) {
-        console.error("クリーンアップエラー:", cleanupError);
-      }
+      } catch (cleanupError) {}
       return c.json({ error: "Failed to delete memo" }, 500);
     }
 
@@ -511,7 +526,6 @@ app.openapi(
         .orderBy(desc(deletedMemos.deletedAt));
       return c.json(result);
     } catch (error) {
-      console.error("削除済みメモ取得エラー:", error);
       return c.json({ error: "Internal server error" }, 500);
     }
   },
@@ -605,7 +619,6 @@ app.openapi(
 
       return c.json({ success: true }, 200);
     } catch (error) {
-      console.error("完全削除エラー:", error);
       return c.json({ error: "Internal server error" }, 500);
     }
   },
@@ -697,18 +710,14 @@ app.openapi(
         })
         .returning({ id: memos.id });
 
-      // 復元されたメモのoriginalIdを新しいIDに更新
-      await db
-        .update(memos)
-        .set({ originalId: result[0].id.toString() })
-        .where(eq(memos.id, result[0].id));
+      // originalIdは元の値を保持（新しいIDに更新しない）
 
-      // 関連するboard_itemsのdeletedAtをNULLに戻し、originalIdを新しいIDに更新
+      // 関連するboard_itemsのdeletedAtをNULLに戻す（originalIdは元の値を保持）
       await db
         .update(boardItems)
         .set({
           deletedAt: null,
-          originalId: result[0].id.toString(), // 新しいメモIDをoriginalIdに設定
+          // originalIdは元の値（deletedNote.originalId）を保持
         })
         .where(
           and(
@@ -724,7 +733,6 @@ app.openapi(
 
       return c.json({ success: true, id: result[0].id }, 200);
     } catch (error) {
-      console.error("復元エラー:", error);
       return c.json({ error: "Internal server error" }, 500);
     }
   },
@@ -866,7 +874,6 @@ app.openapi(
         200,
       );
     } catch (error) {
-      console.error("CSV Import Error:", error);
       return c.json({ error: "Internal server error" }, 500);
     }
   },

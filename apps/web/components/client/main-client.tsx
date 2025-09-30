@@ -17,6 +17,7 @@ import { useLayoutEffect, useRef, useState, useEffect } from "react";
 interface MainClientProps {
   initialBoardName?: string;
   boardId?: number;
+  boardSlug?: string;
   showBoardHeader?: boolean;
   serverBoardTitle?: string;
   serverBoardDescription?: string | null;
@@ -28,6 +29,7 @@ interface MainClientProps {
 function MainClient({
   initialBoardName,
   boardId,
+  boardSlug,
   showBoardHeader = true,
   serverBoardTitle,
   serverBoardDescription,
@@ -58,10 +60,10 @@ function MainClient({
   // refs
   const boardScreenRef = useRef<BoardScreenRef>(null);
 
-  // 現在のボードslug取得
-  const currentBoardSlug = pathname.startsWith("/boards/")
-    ? pathname.split("/")[2]
-    : null;
+  // 現在のボードslug取得（プロパティまたはパスから）
+  const currentBoardSlug =
+    boardSlug ||
+    (pathname.startsWith("/boards/") ? pathname.split("/")[2] : null);
 
   // サーバーサイドでボード情報が取得済みの場合は不要なAPI呼び出しを回避
   const shouldFetchBoardFromSlug = !boardId && currentBoardSlug;

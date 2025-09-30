@@ -1,37 +1,26 @@
-import { OriginalId, Uuid } from "./common";
+import {
+  OriginalId,
+  BaseItemFields,
+  TeamCreatorFields,
+  DeletedItemFields,
+} from "./common";
 
-export interface Memo {
-  id: number;
-  originalId?: OriginalId;
-  uuid?: Uuid;
+export interface Memo extends BaseItemFields, TeamCreatorFields {
   title: string;
   content: string | null;
   categoryId?: number | null;
-  createdAt: number;
-  updatedAt?: number;
   tempId?: string;
-  // チーム機能用（チームメモのみ）
-  userId?: string; // 作成者のuser ID
-  teamId?: number; // チームID
-  createdBy?: string | null; // 作成者の表示名
-  avatarColor?: string | null; // 作成者のアバター色
 }
 
-export interface DeletedMemo {
-  id: number;
+export interface DeletedMemo
+  extends BaseItemFields,
+    TeamCreatorFields,
+    DeletedItemFields {
+  /** 削除済みメモではoriginalIdは必須 */
   originalId: OriginalId;
-  uuid?: Uuid;
   title: string;
   content: string | null;
   categoryId?: number | null;
-  createdAt: number;
-  updatedAt?: number;
-  deletedAt: number;
-  // チーム機能用（チーム削除済みメモのみ）
-  userId?: string; // 作成者のuser ID
-  teamId?: number; // チームID
-  createdBy?: string | null; // 作成者の表示名
-  avatarColor?: string | null; // 作成者のアバター色
 }
 
 export interface CreateMemoData {

@@ -1,7 +1,7 @@
 import React from "react";
+import { BaseIconProps } from "@/src/types/icon";
 
-interface WarningIconProps {
-  className?: string;
+interface WarningIconProps extends BaseIconProps {
   size?: number;
 }
 

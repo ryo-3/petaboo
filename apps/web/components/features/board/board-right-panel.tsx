@@ -10,13 +10,20 @@ import { Task, DeletedTask } from "@/src/types/task";
 import type { Tagging, Tag } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
 import { useTags } from "@/src/hooks/use-tags";
-import { useState } from "react";
+import { useTeamTags } from "@/src/hooks/use-team-tags";
+import { useState, useEffect } from "react";
 import { useNavigation } from "@/contexts/navigation-context";
-import { useDeleteMemo } from "@/src/hooks/use-memos";
 import { useAuth } from "@clerk/nextjs";
 import { useQueryClient } from "@tanstack/react-query";
-import { useTeamTasks } from "@/src/hooks/use-team-tasks";
-import { useTeamMemos } from "@/src/hooks/use-team-memos";
+import { useCreatorInfo } from "@/src/hooks/use-creator-info";
+import { toCreatorProps } from "@/src/types/creator";
+import { useUnifiedItemOperations } from "@/src/hooks/use-unified-item-operations";
+import {
+  useMemoDeleteWithNextSelection,
+  useTaskDeleteWithNextSelection,
+} from "@/src/hooks/use-memo-delete-with-next-selection";
+import { useMemos } from "@/src/hooks/use-memos";
+import { useTasks } from "@/src/hooks/use-tasks";
 
 interface BoardRightPanelProps {
   isOpen: boolean;
@@ -81,29 +88,99 @@ export default function BoardRightPanel({
   onAddTaskToBoard, // eslint-disable-line @typescript-eslint/no-unused-vars
 }: BoardRightPanelProps) {
   const { handleMainSelectMemo, handleMainSelectTask } = useNavigation();
-  const { data: tags } = useTags();
+  const { data: personalTags } = useTags();
+  const { data: teamTags } = useTeamTags(teamId || 0);
+  const tags = teamMode && teamId ? teamTags : personalTags;
+
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
 
+  // メモ一覧データを取得（削除処理用）
+  const { data: allMemosData } = useMemos({
+    teamMode: teamMode || false,
+    teamId: teamMode ? teamId || undefined : undefined,
+  });
+  const allMemos = allMemosData || [];
+
+  const { data: allTasksData } = useTasks({
+    teamMode: teamMode || false,
+    teamId: teamMode ? teamId || undefined : undefined,
+  });
+  const allTasks = allTasksData || [];
+
+  // 統一操作フック
+  const memoOperations = useUnifiedItemOperations({
+    itemType: "memo",
+    context: teamMode ? "team" : "board-detail",
+    teamId: teamId || undefined,
+    boardId,
+  });
+
+  const taskOperations = useUnifiedItemOperations({
+    itemType: "task",
+    context: teamMode ? "team" : "board-detail",
+    teamId: teamId || undefined,
+    boardId,
+  });
+
+  // 削除処理用のstate
+  const [isRightMemoLidOpen, setIsRightMemoLidOpen] = useState(false);
+
+  // メモ用共通削除フック（DOM削除確認のみ、API削除は別途行う）
+  const {
+    handleDeleteWithNextSelection: handleMemoDeleteWithNextSelection,
+    checkDomDeletionAndSelectNext: checkMemoDomDeletionAndSelectNext,
+  } = useMemoDeleteWithNextSelection({
+    memos: allMemos,
+    onSelectMemo: (memo: Memo | null) => {
+      if (memo) {
+        onSelectMemo?.(memo);
+      } else {
+        onClose();
+      }
+    },
+    onDeselectAndStayOnMemoList: onClose,
+    handleRightEditorDelete: () => {
+      // 何もしない（削除処理は外部で実行済み）
+    },
+  });
+
+  // タスク用共通削除フック（DOM削除確認のみ、API削除は別途行う）
+  const {
+    handleDeleteWithNextSelection: handleTaskDeleteWithNextSelection,
+    checkDomDeletionAndSelectNext: checkTaskDomDeletionAndSelectNext,
+  } = useTaskDeleteWithNextSelection({
+    tasks: allTasks,
+    onSelectTask: (task: Task | null) => {
+      if (task) {
+        onSelectTask?.(task);
+      } else {
+        onClose();
+      }
+    },
+    onDeselectAndStayOnTaskList: onClose,
+    handleRightEditorDelete: () => {
+      // 何もしない（削除処理は外部で実行済み）
+    },
+    setIsRightLidOpen: setIsRightMemoLidOpen,
+  });
+
+  // DOM削除確認（メモ・タスク一覧が変更されたときにチェック）
+  useEffect(() => {
+    checkMemoDomDeletionAndSelectNext();
+  }, [allMemos, checkMemoDomDeletionAndSelectNext]);
+
+  useEffect(() => {
+    checkTaskDomDeletionAndSelectNext();
+  }, [allTasks, checkTaskDomDeletionAndSelectNext]);
+
   // チーム機能用: 作成者情報を取得
-  const { data: teamTasksData } = useTeamTasks(
-    teamMode && teamId ? teamId : undefined,
+  const { selectedTaskCreatorInfo, selectedMemoCreatorInfo } = useCreatorInfo(
+    teamMode,
+    teamId,
+    selectedMemo,
+    selectedTask,
   );
-  const { data: teamMemosData } = useTeamMemos(
-    teamMode && teamId ? teamId : undefined,
-  );
-
-  // 選択されたタスクの作成者情報を取得
-  const selectedTaskCreatorInfo =
-    teamMode && selectedTask && teamTasksData
-      ? teamTasksData.find((task) => task.id === selectedTask.id)
-      : null;
-
-  // 選択されたメモの作成者情報を取得
-  const selectedMemoCreatorInfo =
-    teamMode && selectedMemo && teamMemosData
-      ? teamMemosData.find((memo) => memo.id === selectedMemo.id)
-      : null;
 
   // 現在のボードに既に追加されているアイテムIDのリストを作成
   const currentBoardMemoIds =
@@ -115,6 +192,8 @@ export default function BoardRightPanel({
     allBoardItems
       ?.filter((item) => item.boardId === boardId && item.itemType === "task")
       .map((item) => parseInt(item.itemId, 10)) || [];
+
+  const [isDeletingMemo, setIsDeletingMemo] = useState(false);
 
   // 削除済みアイテムかどうかを判定するヘルパー関数
   const isDeletedMemo = (memo: Memo | DeletedMemo): memo is DeletedMemo => {
@@ -129,16 +208,17 @@ export default function BoardRightPanel({
   };
 
   const isDeletedTask = (task: Task | DeletedTask): task is DeletedTask => {
-    return "deletedAt" in task && task.deletedAt !== undefined;
+    // より確実な判定：deletedAtプロパティが存在し、値があるかチェック
+    return (
+      "deletedAt" in task &&
+      task.deletedAt !== undefined &&
+      task.deletedAt !== null &&
+      typeof task.deletedAt === "number" &&
+      task.deletedAt > 0
+    );
   };
 
-  // 削除処理用のstate
-  const [isRightMemoLidOpen, setIsRightMemoLidOpen] = useState(false);
-  const [isDeletingMemo, setIsDeletingMemo] = useState(false);
-  const deleteNote = useDeleteMemo({
-    teamMode,
-    teamId: teamId || undefined,
-  });
+  // 統一削除フックは削除（MemoScreen内で処理）
 
   // メモをボードに追加
   const handleAddMemosToBoard = async (memoIds: number[]) => {
@@ -214,21 +294,21 @@ export default function BoardRightPanel({
             ? selectedMemo.id
             : parseInt(selectedMemo.id, 10);
         if (isNaN(memoId)) {
-          console.log(`❌ 無効なメモID: ${selectedMemo.id}`);
+          console.error(`❌ 無効なメモID: ${selectedMemo.id}`);
           setIsRightMemoLidOpen(false);
           setIsDeletingMemo(false);
           return;
         }
-        await deleteNote.mutateAsync(memoId);
+        // 統一削除フックによる削除（MemoScreen内で処理される）
 
         // 削除成功後に蓋を閉じる
         setTimeout(() => {
           setIsRightMemoLidOpen(false);
         }, 200);
 
-        // 削除成功後に次のアイテムを選択（削除前のデータで次のアイテムを決定）
+        // 共通削除フックを使用した次選択処理
         try {
-          onMemoDeleteAndSelectNext?.(selectedMemo as Memo);
+          handleMemoDeleteWithNextSelection(selectedMemo as Memo);
         } catch (nextSelectError) {}
 
         // useDeleteMemoのonSuccessで自動的にキャッシュが無効化されるため、手動での無効化は不要
@@ -253,13 +333,22 @@ export default function BoardRightPanel({
               onClose={() => {
                 // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
               }}
-              onRestore={
-                onMemoRestoreAndSelectNext
-                  ? () => {
-                      onMemoRestoreAndSelectNext(selectedMemo as DeletedMemo);
-                    }
-                  : undefined
-              }
+              onRestore={async () => {
+                if (
+                  selectedMemo &&
+                  selectedMemo.originalId &&
+                  onMemoRestoreAndSelectNext
+                ) {
+                  try {
+                    await memoOperations.restoreItem.mutateAsync(
+                      selectedMemo.originalId,
+                    );
+                    onMemoRestoreAndSelectNext(selectedMemo as DeletedMemo);
+                  } catch (error) {
+                    console.error("メモ復元API実行エラー:", error);
+                  }
+                }
+              }}
               onDelete={() => {
                 if (onDeletedMemoDeleteAndSelectNext) {
                   onDeletedMemoDeleteAndSelectNext(selectedMemo as DeletedMemo);
@@ -273,38 +362,65 @@ export default function BoardRightPanel({
               initialBoardId={boardId}
               teamMode={teamMode}
               teamId={teamId || undefined}
-              createdBy={selectedMemoCreatorInfo?.createdBy}
-              createdByUserId={selectedMemoCreatorInfo?.userId}
-              createdByAvatarColor={selectedMemoCreatorInfo?.avatarColor}
+              {...toCreatorProps(selectedMemoCreatorInfo)}
               preloadedTags={tags || []}
               preloadedBoards={allBoards || []}
               preloadedTaggings={allTaggings || []}
               preloadedBoardItems={allBoardItems}
             />
           ) : (
-            <MemoEditor
-              memo={selectedMemo}
-              initialBoardId={boardId}
-              teamMode={teamMode}
-              teamId={teamId || undefined}
-              createdBy={selectedMemoCreatorInfo?.createdBy}
-              createdByUserId={selectedMemoCreatorInfo?.userId}
-              createdByAvatarColor={selectedMemoCreatorInfo?.avatarColor}
-              preloadedTags={tags || []}
-              preloadedBoards={allBoards || []}
-              preloadedTaggings={allTaggings || []}
-              preloadedBoardItems={allBoardItems}
-              onClose={() => {
-                // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
-              }}
-              onSaveComplete={(savedMemo) => {
-                // 保存後に選択状態を更新
-                onSelectMemo?.(savedMemo);
-              }}
-              onDelete={handleMemoDelete}
-              onDeleteAndSelectNext={onMemoDeleteAndSelectNext}
-              isLidOpen={isRightMemoLidOpen}
-            />
+            <>
+              <MemoEditor
+                memo={selectedMemo}
+                initialBoardId={boardId}
+                teamMode={teamMode}
+                teamId={teamId || undefined}
+                {...toCreatorProps(selectedMemoCreatorInfo)}
+                preloadedTags={tags || []}
+                preloadedBoards={allBoards || []}
+                preloadedTaggings={allTaggings || []}
+                preloadedBoardItems={allBoardItems}
+                onClose={() => {
+                  // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
+                }}
+                onSaveComplete={(savedMemo) => {
+                  // 保存後に選択状態を更新
+                  onSelectMemo?.(savedMemo);
+                }}
+                onRestore={async () => {
+                  if (
+                    selectedMemo &&
+                    selectedMemo.originalId &&
+                    onMemoRestoreAndSelectNext
+                  ) {
+                    try {
+                      await memoOperations.restoreItem.mutateAsync(
+                        selectedMemo.originalId,
+                      );
+                      onMemoRestoreAndSelectNext(selectedMemo as DeletedMemo);
+                    } catch (error) {
+                      console.error("メモ復元API実行エラー:", error);
+                    }
+                  }
+                }}
+                onDelete={async () => {
+                  // ボード詳細でのメモ削除処理（削除ボタン表示用）
+                }}
+                onDeleteAndSelectNext={async (deletedMemo: Memo) => {
+                  // API削除開始（楽観的更新でアイテムが即座に消える）
+                  const deletePromise = memoOperations.deleteItem.mutateAsync(
+                    deletedMemo.id,
+                  );
+
+                  // 共通削除フックによる処理（DOM削除確認済み）
+                  handleMemoDeleteWithNextSelection(deletedMemo);
+
+                  // API完了を待つ
+                  await deletePromise;
+                }}
+                isLidOpen={isRightMemoLidOpen}
+              />
+            </>
           )}
         </>
       )}
@@ -318,28 +434,35 @@ export default function BoardRightPanel({
               isFromBoardDetail={true}
               teamMode={teamMode}
               teamId={teamId || undefined}
-              createdBy={selectedTaskCreatorInfo?.createdBy}
-              createdByUserId={selectedTaskCreatorInfo?.userId}
-              createdByAvatarColor={selectedTaskCreatorInfo?.avatarColor}
+              {...toCreatorProps(selectedTaskCreatorInfo)}
               preloadedTags={tags || []}
               preloadedBoards={allBoards || []}
               preloadedTaggings={allTaggings || []}
               preloadedBoardItems={allBoardItems}
               onSelectTask={onSelectTask}
+              unifiedOperations={taskOperations}
               onClose={() => {
                 // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
               }}
-              onRestore={() => {
-                console.log(
-                  "🔄 TaskEditor復元処理開始: selectedTask=",
-                  selectedTask,
-                );
-                if (onTaskRestoreAndSelectNext) {
-                  onTaskRestoreAndSelectNext(selectedTask);
+              onRestore={async () => {
+                if (
+                  selectedTask &&
+                  selectedTask.originalId &&
+                  onTaskRestoreAndSelectNext
+                ) {
+                  try {
+                    await taskOperations.restoreItem.mutateAsync(
+                      selectedTask.originalId,
+                    );
+                    onTaskRestoreAndSelectNext(selectedTask as DeletedTask);
+                  } catch (error) {
+                    console.error("タスク復元API実行エラー:", error);
+                  }
                 }
               }}
-              onDelete={() => {
-                if (onDeletedTaskDeleteAndSelectNext) {
+              onDelete={async () => {
+                if (selectedTask && onDeletedTaskDeleteAndSelectNext) {
+                  // 削除済みタスクの完全削除処理（usePermanentDeleteTaskが必要）
                   onDeletedTaskDeleteAndSelectNext(selectedTask);
                 }
               }}
@@ -351,14 +474,13 @@ export default function BoardRightPanel({
               isFromBoardDetail={true}
               teamMode={teamMode}
               teamId={teamId || undefined}
-              createdBy={selectedTaskCreatorInfo?.createdBy}
-              createdByUserId={selectedTaskCreatorInfo?.userId}
-              createdByAvatarColor={selectedTaskCreatorInfo?.avatarColor}
+              {...toCreatorProps(selectedTaskCreatorInfo)}
               preloadedTags={tags || []}
               preloadedBoards={allBoards || []}
               preloadedTaggings={allTaggings || []}
               preloadedBoardItems={allBoardItems}
               onSelectTask={onSelectTask}
+              unifiedOperations={taskOperations}
               onClose={() => {
                 // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
               }}
@@ -372,7 +494,21 @@ export default function BoardRightPanel({
                 }
                 // 連続作成モードONの場合はTaskEditor内でのフォームリセットに任せる
               }}
-              onDeleteAndSelectNext={onTaskDeleteAndSelectNext}
+              onDelete={async () => {
+                // ボード詳細でのタスク削除処理（削除ボタン表示用）
+              }}
+              onDeleteAndSelectNext={async (deletedTask: Task) => {
+                // API削除開始（楽観的更新でアイテムが即座に消える）
+                const deletePromise = taskOperations.deleteItem.mutateAsync(
+                  deletedTask.id,
+                );
+
+                // 共通削除フックによる処理（DOM削除確認済み）
+                handleTaskDeleteWithNextSelection(deletedTask);
+
+                // API完了を待つ
+                await deletePromise;
+              }}
             />
           )}
         </>
@@ -398,6 +534,7 @@ export default function BoardRightPanel({
           initialSelectionMode="check"
           teamMode={teamMode}
           teamId={teamId || undefined}
+          unifiedOperations={memoOperations}
         />
       )}
 
@@ -419,6 +556,7 @@ export default function BoardRightPanel({
           excludeItemIds={currentBoardTaskIds}
           excludeBoardIdFromFilter={boardId}
           initialSelectionMode="check"
+          unifiedOperations={taskOperations}
         />
       )}
     </RightPanel>

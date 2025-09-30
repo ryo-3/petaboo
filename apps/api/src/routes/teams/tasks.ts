@@ -7,6 +7,10 @@ import { teamTasks, teamDeletedTasks } from "../../db/schema/team/tasks";
 import { teamMembers } from "../../db/schema/team/teams";
 import { users } from "../../db/schema/users";
 import { generateOriginalId, generateUuid } from "../../utils/originalId";
+import {
+  getTeamTaskMemberJoin,
+  getTeamTaskSelectFields,
+} from "../../utils/teamJoinUtils";
 
 const app = new OpenAPIHono();
 
@@ -130,32 +134,9 @@ app.openapi(
     }
 
     const result = await db
-      .select({
-        id: teamTasks.id,
-        teamId: teamTasks.teamId,
-        userId: teamTasks.userId,
-        originalId: teamTasks.originalId,
-        uuid: teamTasks.uuid,
-        title: teamTasks.title,
-        description: teamTasks.description,
-        status: teamTasks.status,
-        priority: teamTasks.priority,
-        dueDate: teamTasks.dueDate,
-        categoryId: teamTasks.categoryId,
-        boardCategoryId: teamTasks.boardCategoryId,
-        createdAt: teamTasks.createdAt,
-        updatedAt: teamTasks.updatedAt,
-        createdBy: teamMembers.displayName, // チーム専用の表示名
-        avatarColor: teamMembers.avatarColor, // チーム専用のアバター色
-      })
+      .select(getTeamTaskSelectFields())
       .from(teamTasks)
-      .leftJoin(
-        teamMembers,
-        and(
-          eq(teamTasks.userId, teamMembers.userId),
-          eq(teamTasks.teamId, teamMembers.teamId),
-        ),
-      )
+      .leftJoin(teamMembers, getTeamTaskMemberJoin())
       .where(eq(teamTasks.teamId, teamId))
       .orderBy(
         // 優先度順: high(3) > medium(2) > low(1)
@@ -294,32 +275,9 @@ app.openapi(
 
     // 作成されたタスクを取得して返す（作成者情報付き）
     const newTask = await db
-      .select({
-        id: teamTasks.id,
-        teamId: teamTasks.teamId,
-        userId: teamTasks.userId,
-        originalId: teamTasks.originalId,
-        uuid: teamTasks.uuid,
-        title: teamTasks.title,
-        description: teamTasks.description,
-        status: teamTasks.status,
-        priority: teamTasks.priority,
-        dueDate: teamTasks.dueDate,
-        categoryId: teamTasks.categoryId,
-        boardCategoryId: teamTasks.boardCategoryId,
-        createdAt: teamTasks.createdAt,
-        updatedAt: teamTasks.updatedAt,
-        createdBy: teamMembers.displayName, // チーム専用の表示名
-        avatarColor: teamMembers.avatarColor, // チーム専用のアバター色
-      })
+      .select(getTeamTaskSelectFields())
       .from(teamTasks)
-      .leftJoin(
-        teamMembers,
-        and(
-          eq(teamTasks.userId, teamMembers.userId),
-          eq(teamTasks.teamId, teamMembers.teamId),
-        ),
-      )
+      .leftJoin(teamMembers, getTeamTaskMemberJoin())
       .where(eq(teamTasks.id, result[0].id))
       .get();
 
@@ -746,32 +704,9 @@ app.openapi(
 
       // 復元されたタスクを作成者情報付きで取得
       const restoredTask = await db
-        .select({
-          id: teamTasks.id,
-          teamId: teamTasks.teamId,
-          userId: teamTasks.userId,
-          originalId: teamTasks.originalId,
-          uuid: teamTasks.uuid,
-          title: teamTasks.title,
-          description: teamTasks.description,
-          status: teamTasks.status,
-          priority: teamTasks.priority,
-          dueDate: teamTasks.dueDate,
-          categoryId: teamTasks.categoryId,
-          boardCategoryId: teamTasks.boardCategoryId,
-          createdAt: teamTasks.createdAt,
-          updatedAt: teamTasks.updatedAt,
-          createdBy: teamMembers.displayName, // チーム専用の表示名
-          avatarColor: teamMembers.avatarColor, // チーム専用のアバター色
-        })
+        .select(getTeamTaskSelectFields())
         .from(teamTasks)
-        .leftJoin(
-          teamMembers,
-          and(
-            eq(teamTasks.userId, teamMembers.userId),
-            eq(teamTasks.teamId, teamMembers.teamId),
-          ),
-        )
+        .leftJoin(teamMembers, getTeamTaskMemberJoin())
         .where(eq(teamTasks.id, insertResult[0].id))
         .get();
 

@@ -1,8 +1,8 @@
 "use client";
 
 import MemoEditor from "@/components/features/memo/memo-editor";
-import { CSVImportModal } from "@/components/features/memo/csv-import-modal";
-import { useMemosBulkDelete } from "@/components/features/memo/use-memo-bulk-delete";
+import { MemoCsvImport } from "@/components/features/memo/memo-csv-import";
+import { useMemosBulkDelete } from "@/components/features/memo/use-memo-bulk-delete-wrapper";
 import { useMemosBulkRestore } from "@/components/features/memo/use-memo-bulk-restore";
 import DesktopLower from "@/components/layout/desktop-lower";
 import DesktopUpper from "@/components/layout/desktop-upper";
@@ -12,15 +12,15 @@ import RightPanel from "@/components/ui/layout/right-panel";
 import { useSortOptions } from "@/hooks/use-sort-options";
 import { useBulkDeleteButton } from "@/src/hooks/use-bulk-delete-button";
 import { useBulkProcessNotifications } from "@/src/hooks/use-bulk-process-notifications";
-import { useDeletedItemOperations } from "@/src/hooks/use-deleted-item-operations";
+import { useUnifiedItemOperations } from "@/src/hooks/use-unified-item-operations";
 import { useDeletionLid } from "@/src/hooks/use-deletion-lid";
 import { useItemDeselect } from "@/src/hooks/use-item-deselect";
+import { useUnifiedRestoration } from "@/src/hooks/use-unified-restoration";
 import {
   useDeletedMemos,
-  useDeleteMemo,
   useMemos,
+  usePermanentDeleteMemo,
 } from "@/src/hooks/use-memos";
-import { useDeleteTeamMemo } from "@/src/hooks/use-team-memos";
 import { useRightEditorDelete } from "@/src/hooks/use-right-editor-delete";
 import { useScreenState } from "@/src/hooks/use-screen-state";
 import { useSelectAll } from "@/src/hooks/use-select-all";
@@ -38,6 +38,7 @@ import {
   getMemoDisplayOrder,
   getNextItemAfterDeletion,
 } from "@/src/utils/domUtils";
+import { useMemoDeleteWithNextSelection } from "@/src/hooks/use-memo-delete-with-next-selection";
 import { createToggleHandler } from "@/src/utils/toggleUtils";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -66,6 +67,18 @@ interface MemoScreenProps {
   teamId?: number;
   // URL連動
   initialMemoId?: string | null;
+
+  // 統一フック（最上位から受け取り）
+  unifiedOperations: {
+    deleteItem: {
+      mutateAsync: (id: number) => Promise<any>;
+      isPending: boolean;
+    };
+    restoreItem: {
+      mutateAsync: (originalId: string) => Promise<any>;
+      isPending: boolean;
+    };
+  };
 }
 
 function MemoScreen({
@@ -75,6 +88,7 @@ function MemoScreen({
   onSelectDeletedMemo,
   onClose,
   onDeselectAndStayOnMemoList,
+  rightPanelDisabled = false,
   hideHeaderButtons = false,
   hideBulkActionButtons = false,
   onAddToBoard,
@@ -86,6 +100,7 @@ function MemoScreen({
   teamMode = false,
   teamId,
   initialMemoId,
+  unifiedOperations,
 }: MemoScreenProps) {
   // 一括処理中断通知の監視
   useBulkProcessNotifications();
@@ -136,6 +151,26 @@ function MemoScreen({
   // 右側削除の状態
   const [, setIsRightDeleting] = useState(false);
   const [isRightLidOpen, setIsRightLidOpen] = useState(false);
+
+  // コメント表示管理
+  const [showComments, setShowComments] = useState(false);
+
+  const handleCommentsToggle = (show: boolean) => {
+    setShowComments(show);
+  };
+
+  // メモが変更されたときにコメント状態を決定（コメントがある場合は表示）
+  useEffect(() => {
+    if (selectedMemo && teamMode) {
+      // TODO: 実際のコメント数を取得してここで判定
+      // 現在はダミーで20件のコメントがあると仮定
+      const commentCount = 20; // 実際のAPI実装時にコメント取得APIで判定
+      const hasComments = commentCount > 0;
+      setShowComments(hasComments);
+    } else {
+      setShowComments(false);
+    }
+  }, [selectedMemo?.id, teamMode]);
 
   // 復元の状態
   const [isRestoring, setIsRestoring] = useState(false);
@@ -190,20 +225,12 @@ function MemoScreen({
     teamMode ? teamId : undefined,
   );
 
-  // デバッグ用：全タグ・タグ付け情報をログ出力
-  // console.log('📋 メモ一覧側データ:', {
-  //   tags: tags?.map(t => ({ id: t.id, name: t.name })),
-  //   allTaggings: allTaggings?.map(tg => ({ id: tg.id, tagId: tg.tagId, tagName: tg.tag?.name, targetType: tg.targetType, targetOriginalId: tg.targetOriginalId }))
-  // });
-
   // APIエラー時のフォールバック
   const safeAllTaggings = taggingsError ? [] : allTaggings || [];
   const safeAllBoardItems = boardItemsError ? [] : allBoardItems || [];
 
-  // 削除API（チームモードと個人モードで異なるフックを使用）
-  const personalDeleteNote = useDeleteMemo();
-  const teamDeleteNote = useDeleteTeamMemo(teamId);
-  const deleteNote = teamMode ? teamDeleteNote : personalDeleteNote;
+  // 統一削除・復元API（最上位から受け取り）
+  const operations = unifiedOperations;
 
   // 共通screen状態管理
   const {
@@ -247,46 +274,14 @@ function MemoScreen({
     [onDeselectAndStayOnMemoList, setMemoScreenMode, onSelectMemo],
   );
 
-  // 削除完了後の処理（次のメモを自動選択）
+  // 削除完了後の処理（次のメモ選択はuseEffectで処理）
   const handleDeleteComplete = useCallback(() => {
     setIsLeftDeleting(false); // 左側削除状態をリセット
     setIsRightDeleting(false); // 右側削除状態をリセット
 
-    // 蓋を閉じる（バックグラウンドで実行）
-    setTimeout(() => {
-      setIsRightLidOpen(false);
-    }, 200);
-
-    // 次のメモを選択（React Queryキャッシュ更新を待つ）
-    if (selectedMemo && memos) {
-      const displayOrder = getMemoDisplayOrder();
-      const nextItem = getNextItemAfterDeletion(
-        memos, // 削除前の全メモを渡す
-        selectedMemo,
-        displayOrder,
-      );
-
-      // React Queryのキャッシュ更新を待つ
-      setTimeout(() => {
-        if (nextItem && nextItem.id !== selectedMemo.id) {
-          onSelectMemo(nextItem);
-          setMemoScreenMode("view");
-        } else {
-          setMemoScreenMode("list");
-          onDeselectAndStayOnMemoList?.();
-        }
-      }, 100); // キャッシュ更新完了を待つ
-    } else {
-      onDeselectAndStayOnMemoList?.();
-      setMemoScreenMode("list");
-    }
-  }, [
-    selectedMemo,
-    memos,
-    onSelectMemo,
-    onDeselectAndStayOnMemoList,
-    setMemoScreenMode,
-  ]);
+    // 削除完了の処理はuseEffect（memosの監視）で行う
+    // ここでは状態のリセットのみ
+  }, []);
 
   // 一括削除ボタンの表示制御
   const { showDeleteButton } = useBulkDeleteButton({
@@ -379,12 +374,27 @@ function MemoScreen({
   // 右側エディター削除処理（現在表示中のメモの単体削除）
   const handleRightEditorDelete = useRightEditorDelete({
     item: selectedMemo || null,
-    deleteMutation: deleteNote,
+    deleteMutation: unifiedOperations.deleteItem,
     editorSelector: "[data-memo-editor]",
     setIsDeleting: setIsRightDeleting,
     onDeleteComplete: () => handleDeleteComplete(),
     executeApiFirst: false, // Memo方式：アニメーション内でAPI削除
     restoreEditorVisibility: false,
+  });
+
+  // 共通削除フック
+  const {
+    handleDeleteWithNextSelection,
+    checkDomDeletionAndSelectNext,
+    deletingItemId,
+    nextItemAfterDelete,
+  } = useMemoDeleteWithNextSelection({
+    memos,
+    onSelectMemo,
+    setMemoScreenMode,
+    onDeselectAndStayOnMemoList,
+    handleRightEditorDelete,
+    setIsRightLidOpen,
   });
 
   // 復元ボタンの参照
@@ -406,13 +416,23 @@ function MemoScreen({
     setIsLidOpen: setIsRestoreLidOpen,
   });
 
-  // 削除済みメモ操作の共通ロジック
-  const { handleRestoreAndSelectNext } = useDeletedItemOperations({
-    deletedItems: deletedMemos || null,
-    onSelectDeletedItem: onSelectDeletedMemo,
-    setScreenMode: (mode: string) => setMemoScreenMode(mode as MemoScreenMode),
-    editorSelector: "[data-memo-editor]",
-  });
+  // 統一復元フック（新しいシンプル実装）
+  const { handleRestoreAndSelectNext: unifiedRestoreAndSelectNext } =
+    useUnifiedRestoration({
+      itemType: "memo",
+      deletedItems: deletedMemos || null,
+      selectedDeletedItem: selectedDeletedMemo || null,
+      onSelectDeletedItem: onSelectDeletedMemo,
+      setActiveTab,
+      setScreenMode: (mode: string) =>
+        setMemoScreenMode(mode as MemoScreenMode),
+      teamMode,
+      teamId,
+      restoreItem: operations.restoreItem,
+    });
+
+  // 削除済みメモの完全削除処理
+  const permanentDeleteMemo = usePermanentDeleteMemo();
 
   // タブ切り替え用の状態
   const [displayTab, setDisplayTab] = useState(activeTab);
@@ -428,6 +448,11 @@ function MemoScreen({
       }
     }
   }, [initialMemoId, memos, selectedMemo, onSelectMemo]);
+
+  // memosが更新されたら削除完了を検知して次選択
+  useEffect(() => {
+    checkDomDeletionAndSelectNext();
+  }, [memos, checkDomDeletionAndSelectNext]);
 
   // 削除済タブでの表示状態初期化
   useEffect(() => {
@@ -496,7 +521,7 @@ function MemoScreen({
     boards?.filter((board) => board.id !== excludeBoardIdFromFilter) || [];
 
   return (
-    <div className="flex h-full bg-white overflow-hidden">
+    <div className="flex h-full bg-white overflow-hidden relative">
       {/* 左側：一覧表示エリア */}
       <div
         className={`${memoScreenMode === "list" ? "w-full" : "w-[44%]"} ${memoScreenMode !== "list" ? "border-r border-gray-300" : ""} ${hideHeaderButtons ? "pt-3" : "pt-3 pl-5 pr-2"} flex flex-col transition-all duration-300 relative`}
@@ -664,7 +689,7 @@ function MemoScreen({
       {/* モーダル */}
       <BulkDeleteModal />
       <RestoreModal />
-      <CSVImportModal
+      <MemoCsvImport
         isOpen={isCsvImportModalOpen}
         onClose={() => setIsCsvImportModalOpen(false)}
       />
@@ -731,146 +756,123 @@ function MemoScreen({
         isOpen={memoScreenMode !== "list"}
         onClose={handleRightPanelClose}
       >
-        {memoScreenMode === "create" && (
-          <MemoEditor
-            memo={null}
-            onClose={() => setMemoScreenMode("list")}
-            onSaveComplete={handleSaveComplete}
-            // 全データ事前取得（ちらつき解消）
-            preloadedBoards={boards}
-            preloadedTaggings={teamMode ? [] : safeAllTaggings}
-            preloadedBoardItems={safeAllBoardItems}
-            // チーム機能
-            teamMode={teamMode}
-            teamId={teamId}
-          />
-        )}
-        {memoScreenMode === "view" && selectedMemo && !selectedDeletedMemo && (
-          <MemoEditor
-            memo={selectedMemo}
-            onClose={() => setMemoScreenMode("list")}
-            onSaveComplete={handleSaveComplete}
-            onDelete={() => {
-              // メモエディターの削除処理
-              if (selectedMemo) {
-                // 1. 蓋を開く
-                setIsRightLidOpen(true);
-                setTimeout(() => {
-                  // 2. 削除実行
-                  handleRightEditorDelete(selectedMemo);
-                }, 200);
-              }
-            }}
-            isLidOpen={isRightLidOpen}
-            // 全データ事前取得（ちらつき解消）
-            preloadedTags={tags || []}
-            preloadedBoards={boards || []}
-            preloadedTaggings={safeAllTaggings || []}
-            preloadedBoardItems={safeAllBoardItems || []}
-            // チーム機能
-            teamMode={teamMode}
-            teamId={teamId}
-            createdBy={selectedMemo.createdBy}
-            createdByUserId={selectedMemo.userId}
-            createdByAvatarColor={selectedMemo.avatarColor}
-          />
-        )}
-        {memoScreenMode === "view" && selectedDeletedMemo && !selectedMemo && (
-          <MemoEditor
-            memo={selectedDeletedMemo}
-            onClose={() => {
-              setMemoScreenMode("list");
-              // 削除済みタブからの閉じる時は通常タブに戻る
-              if (activeTab === "deleted") {
-                setActiveTab("normal");
-              }
-              onDeselectAndStayOnMemoList?.();
-            }}
-            onRestore={() => {
-              if (selectedDeletedMemo) {
-                handleRestoreAndSelectNext(selectedDeletedMemo);
-              }
-            }}
-            onDelete={() => {
-              // 削除済メモの削除処理（完全削除）
-              if (selectedDeletedMemo) {
-                // 削除完了後の次メモ選択処理
-                const handleDeleteAndSelectNext = (
-                  deletedMemo: DeletedMemo,
-                ) => {
-                  if (deletedMemos) {
-                    const displayOrder = getMemoDisplayOrder();
-                    const nextItem = getNextItemAfterDeletion(
-                      deletedMemos,
-                      deletedMemo,
-                      displayOrder,
-                    );
+        <div className="flex flex-col h-full">
+          {/* メモエディター部分 */}
+          <div className="flex-1">
+            {memoScreenMode === "create" && (
+              <MemoEditor
+                memo={null}
+                onClose={() => setMemoScreenMode("list")}
+                onSaveComplete={handleSaveComplete}
+                // 全データ事前取得（ちらつき解消）
+                preloadedBoards={boards}
+                preloadedTaggings={teamMode ? [] : safeAllTaggings}
+                preloadedBoardItems={safeAllBoardItems}
+                // チーム機能
+                teamMode={teamMode}
+                teamId={teamId}
+                onCommentsToggle={handleCommentsToggle}
+                showComments={showComments}
+                // 統一フック
+                unifiedOperations={operations}
+              />
+            )}
+            {memoScreenMode === "view" &&
+              selectedMemo &&
+              !selectedDeletedMemo && (
+                <MemoEditor
+                  memo={selectedMemo}
+                  onClose={() => setMemoScreenMode("list")}
+                  onSaveComplete={handleSaveComplete}
+                  onDelete={() => {
+                    if (selectedMemo) {
+                      handleDeleteWithNextSelection(selectedMemo);
+                    }
+                  }}
+                  isLidOpen={isRightLidOpen}
+                  // 全データ事前取得（ちらつき解消）
+                  preloadedTags={tags || []}
+                  preloadedBoards={boards || []}
+                  preloadedTaggings={safeAllTaggings || []}
+                  preloadedBoardItems={safeAllBoardItems || []}
+                  // チーム機能
+                  teamMode={teamMode}
+                  teamId={teamId}
+                  createdBy={selectedMemo.createdBy}
+                  createdByUserId={selectedMemo.userId}
+                  createdByAvatarColor={selectedMemo.avatarColor}
+                  onCommentsToggle={handleCommentsToggle}
+                  showComments={showComments}
+                  // 統一フック
+                  unifiedOperations={operations}
+                />
+              )}
+            {memoScreenMode === "view" &&
+              selectedDeletedMemo &&
+              !selectedMemo && (
+                <MemoEditor
+                  memo={selectedDeletedMemo}
+                  onClose={() => {
+                    setMemoScreenMode("list");
+                    // 削除済みタブからの閉じる時は通常タブに戻る
+                    if (activeTab === "deleted") {
+                      setActiveTab("normal");
+                    }
+                    onDeselectAndStayOnMemoList?.();
+                  }}
+                  onRestore={unifiedRestoreAndSelectNext}
+                  onDelete={async () => {
+                    if (selectedDeletedMemo && deletedMemos) {
+                      // 削除前に次選択対象を事前計算
+                      const displayOrder = getMemoDisplayOrder();
+                      const nextItem = getNextItemAfterDeletion(
+                        deletedMemos,
+                        selectedDeletedMemo,
+                        displayOrder,
+                      );
 
-                    setTimeout(() => {
-                      if (nextItem && nextItem.id !== deletedMemo.id) {
+                      // 蓋を開く
+                      setIsRightLidOpen(true);
+
+                      // 完全削除API実行
+                      await permanentDeleteMemo.mutateAsync(
+                        selectedDeletedMemo.originalId,
+                      );
+
+                      // 即座に次選択処理実行
+                      if (nextItem && nextItem.id !== selectedDeletedMemo.id) {
                         onSelectDeletedMemo(nextItem);
                         setMemoScreenMode("view");
                       } else {
                         setMemoScreenMode("list");
                         onDeselectAndStayOnMemoList?.();
                       }
+
                       // 蓋を閉じる
                       setIsRightLidOpen(false);
-                    }, 100);
-                  } else {
-                    onDeselectAndStayOnMemoList?.();
-                    setMemoScreenMode("list");
-                    setIsRightLidOpen(false);
-                  }
-                };
-
-                // 1. 蓋を開く
-                setIsRightLidOpen(true);
-                // 2. MemoEditor内で削除処理を実行（onDeleteAndSelectNext付き）
-                // この処理はMemoEditor内部で実装される
-              }
-            }}
-            onDeleteAndSelectNext={(deletedMemo: Memo | DeletedMemo) => {
-              // 削除完了後の次メモ選択処理（削除済みメモのみ対象）
-              if (deletedMemos && "deletedAt" in deletedMemo) {
-                const displayOrder = getMemoDisplayOrder();
-                const nextItem = getNextItemAfterDeletion(
-                  deletedMemos,
-                  deletedMemo as DeletedMemo,
-                  displayOrder,
-                );
-
-                setTimeout(() => {
-                  if (nextItem && nextItem.id !== deletedMemo.id) {
-                    onSelectDeletedMemo(nextItem);
-                    setMemoScreenMode("view");
-                  } else {
-                    setMemoScreenMode("list");
-                    onDeselectAndStayOnMemoList?.();
-                  }
-                  // 蓋を閉じる
-                  setIsRightLidOpen(false);
-                }, 100);
-              } else {
-                onDeselectAndStayOnMemoList?.();
-                setMemoScreenMode("list");
-                setIsRightLidOpen(false);
-              }
-            }}
-            isLidOpen={isRightLidOpen}
-            // 全データ事前取得（ちらつき解消）
-            preloadedTags={tags || []}
-            preloadedBoards={boards || []}
-            preloadedTaggings={safeAllTaggings || []}
-            preloadedBoardItems={safeAllBoardItems || []}
-            // チーム機能
-            teamMode={teamMode}
-            teamId={teamId}
-            createdBy={selectedDeletedMemo.createdBy}
-            createdByUserId={selectedDeletedMemo.userId}
-            createdByAvatarColor={selectedDeletedMemo.avatarColor}
-          />
-        )}
+                    }
+                  }}
+                  isLidOpen={isRightLidOpen}
+                  // 全データ事前取得（ちらつき解消）
+                  preloadedTags={tags || []}
+                  preloadedBoards={boards || []}
+                  preloadedTaggings={safeAllTaggings || []}
+                  preloadedBoardItems={safeAllBoardItems || []}
+                  // チーム機能
+                  teamMode={teamMode}
+                  teamId={teamId}
+                  createdBy={selectedDeletedMemo.createdBy}
+                  createdByUserId={selectedDeletedMemo.userId}
+                  createdByAvatarColor={selectedDeletedMemo.avatarColor}
+                  onCommentsToggle={handleCommentsToggle}
+                  showComments={showComments}
+                  totalDeletedCount={deletedMemos?.length || 0}
+                  // 統一フック
+                  unifiedOperations={operations}
+                />
+              )}
+          </div>
+        </div>
       </RightPanel>
     </div>
   );

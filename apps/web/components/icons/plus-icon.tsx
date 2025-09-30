@@ -1,8 +1,6 @@
-interface PlusIconProps {
-  className?: string;
-}
+import { BaseIconProps } from "@/src/types/icon";
 
-function PlusIcon({ className = "w-5 h-5" }: PlusIconProps) {
+function PlusIcon({ className = "w-5 h-5" }: BaseIconProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

@@ -109,7 +109,21 @@
       "Bash(apitest \"/taggings?targetType=memo&targetOriginalId=377\")",
       "Bash(apitest \"/taggings?teamId=18&targetType=task&targetOriginalId=255\")",
       "Bash(apitest \"/teams/18/memos\" \"GET\")",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(apitest \"/teams/moricrew\")",
+      "Bash(/home/ryosuke/petaboo/update-icons.sh:*)",
+      "Bash(/home/ryosuke/petaboo/fix-icons.sh:*)",
+      "Bash(git stash:*)",
+      "Bash(apitest \"/taggings?teamId=18&targetType=memo&targetOriginalId=428\")",
+      "Bash(apitest \"/taggings?teamId=18&targetType=memo&targetOriginalId=429\" \"GET\")",
+      "Bash(lsof:*)",
+      "Bash(awk:*)",
+      "Bash(apitest \"/memos/1\" \"DELETE\")",
+      "Bash(apitest \"/boards/all-items\" \"GET\")",
+      "Bash(apitest \"/memos/deleted\" \"GET\")",
+      "Bash(apitest \"/memos/deleted/test/restore\" \"POST\")",
+      "Bash(apitest \"/teams/18/memos/deleted/597/restore\" \"POST\")",
+      "Bash(apitest \"/boards/items/task/272/boards\" \"GET\")"
     ],
     "deny": []
   }

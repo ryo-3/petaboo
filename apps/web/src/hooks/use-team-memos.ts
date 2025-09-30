@@ -195,7 +195,10 @@ export function useDeleteTeamMemo(teamId?: number) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["team-memos", teamId] });
       queryClient.invalidateQueries({
-        queryKey: ["team-deleted-memos", teamId],
+        predicate: (query) => {
+          const key = query.queryKey as string[];
+          return key[0] === "team-deleted-memos" && key[1] === teamId;
+        },
       });
     },
   });

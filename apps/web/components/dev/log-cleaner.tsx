@@ -26,7 +26,12 @@ export function LogCleaner() {
       pathname?.includes("/sign-up") ||
       pathname?.includes("/join");
 
-    if (process.env.NODE_ENV === "development" && isLocalhost && !isAuthPage) {
+    if (
+      false &&
+      process.env.NODE_ENV === "development" &&
+      isLocalhost &&
+      !isAuthPage
+    ) {
       // ログクリア関数（デバウンス機能付き）
       const clearLogs = () => {
         const now = Date.now();
@@ -81,7 +86,7 @@ export function LogCleaner() {
 
   // 開発環境でのみレンダリング回数を追跡
   useEffect(() => {
-    if (process.env.NODE_ENV === "development") {
+    if (false && process.env.NODE_ENV === "development") {
       console.log("[LogCleaner] Component rendered/updated");
     }
   });

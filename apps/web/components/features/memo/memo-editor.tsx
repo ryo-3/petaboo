@@ -13,7 +13,7 @@ import BoardChangeModal from "@/components/ui/modals/board-change-modal";
 import { BulkDeleteConfirmation } from "@/components/ui/modals/confirmation-modal";
 import TagTriggerButton from "@/components/features/tags/tag-trigger-button";
 import TagSelectionModal from "@/components/ui/modals/tag-selection-modal";
-import { useSimpleMemoSave } from "@/src/hooks/use-simple-memo-save";
+import { useSimpleItemSave } from "@/src/hooks/use-simple-item-save";
 import { useTeamItemBoards } from "@/src/hooks/use-boards";
 import {
   useCreateTagging,
@@ -22,7 +22,6 @@ import {
 } from "@/src/hooks/use-taggings";
 import {
   useCreateTeamTagging,
-  useDeleteTeamTagging,
   useDeleteTeamTaggingByTag,
   useTeamTaggings,
 } from "@/src/hooks/use-team-taggings";
@@ -39,6 +38,7 @@ import BoardChips from "@/components/ui/chips/board-chips";
 import UserMemberCard from "@/components/shared/user-member-card";
 import DateInfo from "@/components/shared/date-info";
 import CreatorAvatar from "@/components/shared/creator-avatar";
+import type { TeamCreatorProps } from "@/src/types/creator";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Tag, Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
@@ -56,8 +56,20 @@ interface MemoEditorProps {
   onDelete?: () => void;
   onDeleteAndSelectNext?: (deletedMemo: Memo | DeletedMemo) => void;
   onRestore?: () => void; // 削除済み復元用
+  onRestoreAndSelectNext?: (deletedMemo: DeletedMemo) => void; // 削除済み復元後の次選択用
   isLidOpen?: boolean;
   customHeight?: string;
+  // 統一操作フック（親から渡される）
+  unifiedOperations?: {
+    deleteItem: {
+      mutateAsync: (id: number) => Promise<any>;
+      isPending: boolean;
+    };
+    restoreItem: {
+      mutateAsync: (originalId: string) => Promise<any>;
+      isPending: boolean;
+    };
+  };
 
   // 全データ事前取得（ちらつき解消）
   preloadedTags?: Tag[];
@@ -72,12 +84,15 @@ interface MemoEditorProps {
     addedAt: number;
   }>;
 
-  // チーム機能
+  // チーム機能と作成者情報
   teamMode?: boolean;
   teamId?: number;
   createdBy?: string | null;
-  createdByUserId?: string | null; // 作成者のユーザーID
-  createdByAvatarColor?: string | null; // 作成者のアバター色
+  createdByUserId?: string | null;
+  createdByAvatarColor?: string | null;
+  onCommentsToggle?: (show: boolean) => void;
+  showComments?: boolean;
+  totalDeletedCount?: number; // 削除済みアイテムの総数
 }
 
 function MemoEditor({
@@ -88,6 +103,7 @@ function MemoEditor({
   onDelete,
   onDeleteAndSelectNext,
   onRestore,
+  onRestoreAndSelectNext,
   isLidOpen = false,
   customHeight,
   preloadedTags = [],
@@ -99,6 +115,10 @@ function MemoEditor({
   createdBy,
   createdByUserId,
   createdByAvatarColor,
+  onCommentsToggle,
+  showComments = false,
+  totalDeletedCount = 0,
+  unifiedOperations,
 }: MemoEditorProps) {
   // ログを一度だけ出力（useEffectで管理）
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -108,11 +128,22 @@ function MemoEditor({
   const isDeleted = memo ? "deletedAt" in memo : false;
   const deletedMemo = isDeleted ? (memo as DeletedMemo) : null;
 
+  // 復元ボタン表示デバッグログ
+  console.log("🔍 MemoEditor 復元ボタン表示条件チェック", {
+    memoExists: !!memo,
+    isDeleted,
+    onRestoreExists: !!onRestore,
+    willShowRestoreButton: isDeleted && onRestore,
+    memoId: memo?.id,
+    deletedAt: isDeleted ? (memo as any).deletedAt : null,
+    memoKeys: memo ? Object.keys(memo) : [],
+  });
+
   // チームモードではAPI呼び出しでアイテムボードを取得
   const { data: teamItemBoards = [] } = useTeamItemBoards(
     teamId || 0,
     "memo",
-    memo?.originalId,
+    memo?.originalId || memo?.id?.toString(),
   );
 
   // 事前取得されたデータを使用（APIコール不要）
@@ -171,8 +202,9 @@ function MemoEditor({
     handleConfirmBoardChange,
     handleCancelBoardChange,
     resetForm,
-  } = useSimpleMemoSave({
-    memo,
+  } = useSimpleItemSave<Memo>({
+    item: memo,
+    itemType: "memo",
     onSaveComplete: useCallback(
       (savedMemo: Memo, wasEmpty: boolean, isNewMemo: boolean) => {
         // 新規メモ作成で連続作成モードが有効な場合
@@ -196,10 +228,12 @@ function MemoEditor({
     onDeleteAndSelectNext,
     teamMode,
     teamId,
+    boardId: initialBoardId, // チームボードキャッシュ更新用
   });
 
   const [error] = useState<string | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
+  const queryClient = useQueryClient();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [localTags, setLocalTags] = useState<Tag[]>([]);
   const [prevMemoId, setPrevMemoId] = useState<number | null>(null);
@@ -213,8 +247,16 @@ function MemoEditor({
     teamMode: teamMode, // チームモードフラグをそのまま渡す
   });
 
-  // チーム用タグ情報を取得
-  const { data: liveTeamTaggings } = useTeamTaggings(teamId || 0, {
+  // チーム用タグ情報を取得（チームモードの場合のみ、かつmemoオブジェクトが完全に取得された場合のみ）
+  const hookTeamId = teamMode && teamId ? teamId : 0;
+  const shouldEnableHook =
+    hookTeamId > 0 && memo && memo.id && originalId && originalId !== "";
+
+  const {
+    data: liveTeamTaggings,
+    isLoading: teamTaggingsLoading,
+    error: teamTaggingsError,
+  } = useTeamTaggings(shouldEnableHook ? hookTeamId : 0, {
     targetType: "memo",
     targetOriginalId: originalId,
   });
@@ -231,13 +273,14 @@ function MemoEditor({
     const targetOriginalId = memo.originalId || memo.id.toString();
 
     // チームモードかどうかに応じてタグ付け情報を選択
+    // liveデータを優先し、取得できない場合はpreloadedTaggingsからフィルタリング
     const taggingsToUse = teamMode
-      ? liveTeamTaggings || []
-      : liveTaggings ||
-        preloadedTaggings.filter(
-          (t) =>
-            t.targetType === "memo" && t.targetOriginalId === targetOriginalId,
-        );
+      ? liveTeamTaggings && liveTeamTaggings.length > 0
+        ? liveTeamTaggings
+        : preloadedTaggings
+      : liveTaggings && liveTaggings.length > 0
+        ? liveTaggings
+        : preloadedTaggings;
 
     const tags = taggingsToUse
       .filter(
@@ -257,8 +300,6 @@ function MemoEditor({
   // チーム用タグ操作フック
   const createTeamTaggingMutation = useCreateTeamTagging(teamId || 0);
   const deleteTeamTaggingByTagMutation = useDeleteTeamTaggingByTag(teamId || 0);
-  const deleteTeamTaggingMutation = useDeleteTeamTagging(teamId || 0);
-  const queryClient = useQueryClient();
 
   // nnキーで連続作成モード切り替え（新規作成時のみ）
   useEffect(() => {
@@ -286,11 +327,13 @@ function MemoEditor({
     memo: isDeleted ? deletedMemo : null,
     onClose,
     onDeleteAndSelectNext,
-    onRestoreAndSelectNext: onRestore,
+    onRestoreAndSelectNext: onRestoreAndSelectNext || onRestore,
     onAnimationChange: setIsAnimating,
     teamMode,
     teamId,
     boardId: initialBoardId,
+    skipAutoSelectionOnRestore: false, // 復元時に次のアイテムを選択
+    totalDeletedCount, // 削除済みアイテムの総数
   });
 
   // タグ初期化（メモが変わった時のみ実行）
@@ -317,10 +360,10 @@ function MemoEditor({
     }
   }, [memo?.id, prevMemoId, currentTags, localTags, hasManualChanges]);
 
-  // preloadedTagsが更新された時にlocalTagsの最新情報を反映（個人モードのみ）
+  // preloadedTagsが更新された時にlocalTagsの最新情報を反映
   useEffect(() => {
-    // チームモードの時は個人タグでの更新を行わない
-    if (teamMode || localTags.length === 0 || preloadedTags.length === 0) {
+    // チームモード・個人モード両方で preloadedTags の更新を反映
+    if (localTags.length === 0 || preloadedTags.length === 0) {
       return;
     }
 
@@ -523,46 +566,92 @@ function MemoEditor({
 
   // 拡張された保存処理（削除済みの場合は実行しない）
   const handleSaveWithTags = useCallback(async () => {
-    if (isDeleted) return; // 削除済みの場合は保存しない
+    if (isDeleted) {
+      return; // 削除済みの場合は保存しない
+    }
 
     try {
       // まずメモを保存
       await handleSave();
+      console.log("✅ [MemoEditor] メモ保存完了");
 
       // 保存後、タグも更新
       // onSaveCompleteで最新のメモを取得できるが、同期の問題があるため
       // 既存メモの場合は現在のmemo、新規作成の場合は少し待ってから処理
       if (memo && memo.id > 0) {
+        console.log("🏷️ [MemoEditor] 既存メモのタグ更新開始", {
+          memoId: memo.id,
+          originalId: memo.originalId,
+          tagsToUpdate: localTags.length,
+        });
         // 既存メモの場合
         await updateTaggings(memo.originalId || memo.id.toString());
         setHasManualChanges(false);
+        console.log("✅ [MemoEditor] 既存メモのタグ更新完了");
       } else if (localTags.length > 0) {
+        console.log("🆕 [MemoEditor] 新規メモのタグ更新開始", {
+          localTagsCount: localTags.length,
+          tags: localTags.map((t) => ({ id: t.id, name: t.name })),
+        });
         // 新規作成でタグがある場合は、少し遅延させて最新のメモリストから取得
         setTimeout(async () => {
           try {
+            console.log(
+              "🔍 [MemoEditor] React Queryキャッシュから最新メモ検索中",
+            );
             // React QueryのキャッシュからmemosQueryを取得して、最新の作成メモを特定
             const memosQuery = queryClient.getQueryData<Memo[]>(["memos"]);
+            console.log("📋 [MemoEditor] キャッシュ取得結果", {
+              hasMemosQuery: !!memosQuery,
+              memosCount: memosQuery?.length || 0,
+            });
 
             if (memosQuery && memosQuery.length > 0) {
               // 最新のメモ（作成時刻順で最後）を取得
               const latestMemo = [...memosQuery].sort(
                 (a, b) => b.createdAt - a.createdAt,
               )[0];
+              console.log("🎯 [MemoEditor] 最新メモ特定", {
+                latestMemoId: latestMemo?.id,
+                latestMemoTitle: latestMemo?.title,
+                latestMemoCreatedAt: latestMemo?.createdAt,
+              });
 
               if (latestMemo) {
                 const targetId =
                   latestMemo.originalId || latestMemo.id.toString();
+                console.log("🏷️ [MemoEditor] 新規メモタグ付け実行", {
+                  targetId,
+                });
                 await updateTaggings(targetId);
                 setHasManualChanges(false);
+                console.log("✅ [MemoEditor] 新規メモタグ付け完了");
+              } else {
+                console.warn("⚠️ [MemoEditor] 最新メモが見つかりません");
               }
+            } else {
+              console.warn("⚠️ [MemoEditor] memosQueryが空またはnull", {
+                hasMemosQuery: !!memosQuery,
+                length: memosQuery?.length,
+              });
             }
           } catch (error) {
-            console.error("❌ 新規メモのタグ保存に失敗しました:", error);
+            console.error(
+              "❌ [MemoEditor] 新規メモのタグ保存に失敗しました:",
+              error,
+            );
           }
         }, 100); // 100ms遅延
+      } else {
+        console.log("ℹ️ [MemoEditor] タグ更新不要", {
+          isNewMemo: !memo || memo.id === 0,
+          hasLocalTags: localTags.length > 0,
+        });
       }
+
+      console.log("🎉 [MemoEditor] handleSaveWithTags完了");
     } catch (error) {
-      console.error("❌ 保存に失敗しました:", error);
+      console.error("❌ [MemoEditor] 保存に失敗しました:", error);
     }
   }, [handleSave, memo, updateTaggings, isDeleted, localTags, queryClient]);
 
@@ -578,7 +667,7 @@ function MemoEditor({
     });
 
     return options;
-  }, [boards]);
+  }, [boards, teamMode, teamId]);
 
   // 現在選択されているボードのvalue（複数選択対応）
   const currentBoardValues = selectedBoardIds.map((id) => id.toString());
@@ -603,6 +692,7 @@ function MemoEditor({
 
     const values = Array.isArray(value) ? value : [value];
     const boardIds = values.filter((v) => v !== "").map((v) => parseInt(v, 10));
+
     handleBoardChange(boardIds);
   };
 
@@ -654,27 +744,83 @@ function MemoEditor({
 
   // 削除ボタンのハンドラー（ボード紐づきチェック付き）
   const handleDeleteClick = () => {
-    if (isDeleted && deletedMemoActions) {
-      // 削除済みメモの場合は完全削除（蓋を開く）
-      setIsAnimating(true);
-      deletedMemoActions.showDeleteConfirmation();
+    console.log("🎯 handleDeleteClick実行開始", {
+      timestamp: Date.now(),
+      isPending: unifiedOperations?.deleteItem.isPending,
+      isAnimating,
+    });
+
+    // 重複クリック防止
+    if (unifiedOperations?.deleteItem.isPending || isAnimating) {
+      console.warn("⚠️ 削除処理中のためスキップ");
+      return;
+    }
+
+    console.log("🗑️ 削除ボタンクリック", { memo, teamMode, itemBoards });
+
+    if (isDeleted && onDelete) {
+      // 削除済みメモの場合は完全削除（親コンポーネントに委任）
+      console.log("🔄 分岐: 削除済みメモの完全削除パス");
+      onDelete();
     } else if (teamMode || (itemBoards && itemBoards.length > 0)) {
       // チームモードまたはボードに紐づいている場合はモーダル表示と同時に蓋を開く
+      console.log("🔄 分岐: モーダル表示パス", {
+        teamMode,
+        itemBoardsLength: itemBoards?.length,
+      });
       setIsAnimating(true);
       setShowDeleteModal(true);
     } else {
       // ボードに紐づいていない場合は蓋を開いてから直接削除
+      console.log("🔄 分岐: 直接削除パス", {
+        teamMode,
+        itemBoardsLength: itemBoards?.length,
+      });
       setIsAnimating(true);
-      setTimeout(() => {
-        onDelete?.();
-      }, 200);
+      if (memo && memo.id > 0) {
+        // ダイレクト削除処理も親（MemoScreen）に委任（200ms遅延削除で統一）
+        console.log("🔄 ダイレクト削除を親コンポーネントに委任");
+
+        if (onDeleteAndSelectNext) {
+          onDeleteAndSelectNext(memo);
+        } else if (onDelete) {
+          onDelete();
+        } else {
+          console.warn("⚠️ ダイレクト削除コールバックが設定されていません");
+        }
+      } else {
+        console.warn("⚠️ 削除対象メモが無効です", { memo });
+      }
     }
   };
 
   // モーダルでの削除確定
-  const handleConfirmDelete = () => {
+  // 統一フック（propsから受け取り）
+
+  const handleConfirmDelete = async () => {
+    console.log("🎯 handleConfirmDelete実行開始", {
+      timestamp: Date.now(),
+      memoId: memo?.id,
+      showDeleteModal,
+      isPending: unifiedOperations?.deleteItem.isPending,
+    });
+
+    if (!memo || memo.id === 0) return;
+
+    console.log("✅ 削除確定実行", { memo });
     setShowDeleteModal(false);
-    onDelete?.();
+
+    // 削除処理は親（MemoScreen）に委任し、memo-editorでは実行しない
+    console.log("🔄 削除処理を親コンポーネント（MemoScreen）に委任");
+
+    // 削除コールバックを呼び出し、親側で実際の削除処理を実行してもらう
+    if (onDeleteAndSelectNext) {
+      onDeleteAndSelectNext(memo);
+    } else if (onDelete) {
+      onDelete();
+    } else {
+      console.warn("⚠️ 削除後のコールバック処理が設定されていません");
+    }
   };
 
   // モーダルキャンセル時の処理
@@ -791,10 +937,15 @@ function MemoEditor({
                     <DateInfo item={memo} isEditing={!isDeleted} />
                   </div>
                 )}
-                {isDeleted && deletedMemoActions && (
+                {isDeleted && onRestore && (
                   <button
-                    onClick={deletedMemoActions.handleRestore}
-                    disabled={deletedMemoActions.isRestoring}
+                    onClick={async () => {
+                      // シンプルな復元処理：onRestoreコールバックのみ実行
+                      if (onRestore) {
+                        await onRestore();
+                      }
+                    }}
+                    disabled={false}
                     className="flex items-center justify-center size-7 rounded-md bg-blue-100 text-blue-600 hover:bg-blue-200 ml-2 disabled:opacity-50"
                   >
                     <svg
@@ -812,10 +963,11 @@ function MemoEditor({
                     </svg>
                   </button>
                 )}
-                {memo && onDelete && (
+                {memo && (onDelete || onDeleteAndSelectNext) && (
                   <button
                     onClick={handleDeleteClick}
-                    className="flex items-center justify-center size-7 rounded-md bg-gray-100 mr-2"
+                    disabled={unifiedOperations?.deleteItem.isPending}
+                    className="flex items-center justify-center size-7 rounded-md bg-gray-100 mr-2 disabled:opacity-50"
                   >
                     <TrashIcon
                       className="size-5"
@@ -823,6 +975,7 @@ function MemoEditor({
                         isLidOpen ||
                         isAnimating ||
                         showDeleteModal ||
+                        unifiedOperations?.deleteItem.isPending ||
                         (isDeleted && deletedMemoActions?.showDeleteModal)
                       }
                     />
@@ -862,6 +1015,122 @@ function MemoEditor({
             spacing="normal"
             showWhen="has-content"
           />
+
+          {/* コメント機能（チームモードの既存メモのみ） */}
+          {teamMode &&
+            memo &&
+            memo.id !== 0 &&
+            !isDeleted &&
+            onCommentsToggle && (
+              <div className="mb-6">
+                {/* コメント切り替えボタン */}
+                <button
+                  onClick={() => {
+                    onCommentsToggle(!showComments);
+                  }}
+                  className={`inline-flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm transition-all duration-200 ${
+                    showComments
+                      ? "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                      : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                  }`}
+                >
+                  <svg
+                    className="size-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
+                  </svg>
+                  <span>コメント</span>
+                  <span
+                    className={`text-xs font-medium ${
+                      showComments ? "text-blue-700" : "text-gray-500"
+                    }`}
+                  >
+                    (6)
+                  </span>
+                </button>
+
+                {/* コメント表示エリア */}
+                {showComments && (
+                  <div className="mt-4 p-4 border border-gray-200 rounded-md bg-gray-50">
+                    {/* コメント一覧 */}
+                    <div className="space-y-3 mb-4">
+                      <div className="flex gap-3">
+                        <div className="flex-shrink-0">
+                          <div className="size-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                            A
+                          </div>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-sm font-medium text-gray-900">
+                              Alice
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              2時間前
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-700">
+                            この内容についてもう少し詳しく教えてください。
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3">
+                        <div className="flex-shrink-0">
+                          <div className="size-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                            B
+                          </div>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-sm font-medium text-gray-900">
+                              Bob
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              1時間前
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-700">
+                            承知しました。明日までに確認して追記します。
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* コメント入力エリア */}
+                    <div className="border-t border-gray-300 pt-4">
+                      <div className="flex gap-3">
+                        <div className="flex-shrink-0">
+                          <div className="size-8 bg-gray-400 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                            Y
+                          </div>
+                        </div>
+                        <div className="flex-1">
+                          <textarea
+                            placeholder="コメントを入力..."
+                            rows={2}
+                            className="w-full p-2 border border-gray-300 rounded-md text-sm resize-none focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                          <div className="flex justify-end mt-2">
+                            <button className="px-3 py-1 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition-colors">
+                              投稿
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
         </BaseViewer>
       </div>
       {baseViewerRef.current && (
@@ -879,12 +1148,22 @@ function MemoEditor({
       <TagSelectionModal
         isOpen={isTagModalOpen}
         onClose={() => setIsTagModalOpen(false)}
-        tags={teamMode ? teamTagsList || [] : preloadedTags}
+        tags={
+          teamMode
+            ? preloadedTags.length > 0
+              ? preloadedTags
+              : teamTagsList || []
+            : preloadedTags
+        }
         selectedTagIds={localTags.map((tag) => tag.id)}
         teamMode={teamMode}
         teamId={teamId}
         onSelectionChange={(tagIds) => {
-          const availableTags = teamMode ? teamTagsList || [] : preloadedTags;
+          const availableTags = teamMode
+            ? preloadedTags.length > 0
+              ? preloadedTags
+              : teamTagsList || []
+            : preloadedTags;
           const selectedTags = availableTags.filter((tag) =>
             tagIds.includes(tag.id),
           );
@@ -902,7 +1181,7 @@ function MemoEditor({
         count={1}
         itemType="memo"
         deleteType="normal"
-        isLoading={false}
+        isLoading={unifiedOperations?.deleteItem.isPending}
         position="center"
         customTitle={`「${memo?.title || "タイトルなし"}」の削除`}
         customMessage={

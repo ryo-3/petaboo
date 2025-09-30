@@ -1,8 +1,6 @@
-interface TaskIconProps {
-  className?: string;
-}
+import { BaseIconProps } from "@/src/types/icon";
 
-function TaskIcon({ className = "w-5 h-5" }: TaskIconProps) {
+function TaskIcon({ className = "w-5 h-5" }: BaseIconProps) {
   return (
     <svg
       className={className}

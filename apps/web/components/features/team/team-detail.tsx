@@ -28,6 +28,7 @@ import { useUserInfo } from "@/src/hooks/use-user-info";
 import UserMemberCard from "@/components/shared/user-member-card";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
+import { useUnifiedItemOperations } from "@/src/hooks/use-unified-item-operations";
 import { formatDateOnly } from "@/src/utils/formatDate";
 import { getUserAvatarColor } from "@/src/utils/userUtils";
 import { useQueryClient } from "@tanstack/react-query";
@@ -101,6 +102,19 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
   // TaskScreenの作成モード状態を監視
   const [isTaskCreateMode, setIsTaskCreateMode] = useState(false);
+
+  // 🎯 統一フック（チーム用）- 最上位で1つだけ作成
+  const teamMemoOperations = useUnifiedItemOperations({
+    itemType: "memo",
+    context: "team",
+    teamId: team?.id,
+  });
+
+  const teamTaskOperations = useUnifiedItemOperations({
+    itemType: "task",
+    context: "team",
+    teamId: team?.id,
+  });
 
   // 表示名設定モーダル
   const [showDisplayNameModal, setShowDisplayNameModal] = useState(false);
@@ -215,12 +229,6 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
   // URLのパラメータが変更された時にタブとアイテムを更新
   useEffect(() => {
-    console.log("🔍 [TeamDetail] useEffect実行:", {
-      searchParams: searchParams.toString(),
-      selectedTask: selectedTask?.id,
-      isTaskCreateMode,
-    });
-
     const newTab = getTabFromURL();
     if (newTab !== activeTab) {
       setActiveTab(newTab);
@@ -229,29 +237,18 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     // メモIDがURLにある場合、メモを選択状態にする
     const memoId = getMemoIdFromURL();
     if (memoId && !selectedMemo) {
-      console.log("🔍 [TeamDetail] メモURL同期:", { memoId, selectedMemo });
       // APIからメモを取得する実装は各画面コンポーネント側で行う
       // ここでは状態の同期のみ
     }
 
     // タスクIDがURLにある場合、タスクを選択状態にする（作成モード時は除く）
     const taskId = getTaskIdFromURL();
-    console.log("🔍 [TeamDetail] タスクURL同期チェック:", {
-      taskId,
-      selectedTask: selectedTask?.id,
-      isTaskCreateMode,
-    });
 
     if (taskId && !selectedTask && !isTaskCreateMode) {
-      console.log(
-        "🎯 [TeamDetail] URLからタスク同期実行予定（但し実装未完了）",
-      );
       // APIからタスクを取得する実装は各画面コンポーネント側で行う
       // ここでは状態の同期のみ
     } else if (taskId && isTaskCreateMode) {
-      console.log("🎯 [TeamDetail] URLからタスク同期をスキップ: 作成モード中");
     } else if (taskId && selectedTask) {
-      console.log("🔍 [TeamDetail] URLからタスク同期をスキップ: 既に選択済み");
     }
     // searchParams以外の依存を追加しない（無限ループを防ぐ）
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -377,10 +374,6 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   };
 
   const handleSelectTask = (task: Task | null, _fromFullList?: boolean) => {
-    console.log("🎯 [TeamDetail] handleSelectTask called:", {
-      task: task ? { id: task.id } : null,
-      fromFullList: _fromFullList,
-    });
     setSelectedTask(task);
 
     // URLを更新
@@ -391,13 +384,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       params.set("tab", "tasks");
     } else {
       params.delete("task");
-      console.log("🎯 [TeamDetail] URLパラメーター削除: task");
     }
     const newUrl = params.toString() ? `?${params.toString()}` : "";
-    console.log("🎯 [TeamDetail] URL更新:", {
-      oldUrl: searchParams.toString(),
-      newUrl: newUrl,
-    });
     router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
   };
 
@@ -466,7 +454,9 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   }
 
   return (
-    <div className="flex h-full bg-white overflow-hidden">
+    <div
+      className={`flex h-full bg-white overflow-hidden ${activeTab === "overview" ? "pt-3 pl-5 pr-2 mr-3" : activeTab === "team-list" ? "pt-3 pl-5 pr-2" : ""}`}
+    >
       <div className="w-full flex flex-col h-full">
         {/* ヘッダー */}
         {(activeTab === "overview" || activeTab === "team-list") && (
@@ -522,7 +512,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         >
           {/* タブコンテンツ */}
           {activeTab === "overview" && (
-            <>
+            <div className="">
               {showInvitePanel ? (
                 /* 招待パネル */
                 <div>
@@ -745,7 +735,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                   <NotificationList teamName={customUrl} />
                 </div>
               )}
-            </>
+            </div>
           )}
 
           {/* メモタブ */}
@@ -787,6 +777,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                 teamMode={true}
                 teamId={team.id}
                 initialMemoId={selectedMemo ? getMemoIdFromURL() : null}
+                // 統一フックを渡す
+                unifiedOperations={teamMemoOperations}
               />
             </div>
           )}
@@ -802,11 +794,12 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                 onClose={() => handleTabChange("overview")}
                 onScreenModeChange={(mode) => {
                   setIsTaskCreateMode(mode === "create");
-                  console.log("🎯 [TeamDetail] TaskScreen mode changed:", mode);
                 }}
                 teamMode={true}
                 teamId={team.id}
                 initialTaskId={isTaskCreateMode ? null : getTaskIdFromURL()}
+                // 統一フックを渡す
+                unifiedOperations={teamTaskOperations}
               />
             </div>
           )}

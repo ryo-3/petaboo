@@ -1,8 +1,6 @@
-interface SortIconProps {
-  className?: string;
-}
+import { BaseIconProps } from "@/src/types/icon";
 
-function SortIcon({ className = "size-4" }: SortIconProps) {
+function SortIcon({ className = "size-4" }: BaseIconProps) {
   return (
     <svg
       className={className}

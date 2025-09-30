@@ -148,6 +148,11 @@ export function useBoardState() {
   // 新規作成用ハンドラー（外部から提供されるcallbackを使用）
   const createNewMemoHandler = useCallback(
     (onSelectMemo?: (memo: Memo | null) => void) => {
+      console.log("🆕 [use-board-state] createNewMemoHandler実行", {
+        onSelectMemoExists: !!onSelectMemo,
+        currentRightPanelMode: rightPanelMode,
+      });
+
       setRightPanelMode(null); // リストモードを解除
       const newMemo: Memo = {
         id: 0, // 新規作成時は0
@@ -156,9 +161,17 @@ export function useBoardState() {
         createdAt: Math.floor(Date.now() / 1000),
         updatedAt: Math.floor(Date.now() / 1000),
       };
+
+      console.log("📋 [use-board-state] 新規メモ作成", {
+        newMemoId: newMemo.id,
+        newMemoTitle: newMemo.title,
+      });
+
       onSelectMemo?.(newMemo);
+
+      console.log("✅ [use-board-state] createNewMemoHandler完了");
     },
-    [], // 依存配列を空にして安定化
+    [rightPanelMode], // rightPanelModeを依存配列に追加
   );
 
   const createNewTaskHandler = useCallback(

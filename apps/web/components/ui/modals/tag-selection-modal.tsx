@@ -116,7 +116,6 @@ export default function TagSelectionModal({
     if (!newTagName.trim()) return;
 
     const trimmedName = newTagName.trim();
-    console.log("🏷️ タグ作成開始:", { name: trimmedName, color: newTagColor });
 
     // 事前バリデーション：重複チェック
     const isDuplicate = tags.some(
@@ -129,30 +128,19 @@ export default function TagSelectionModal({
 
     try {
       setIsCreating(true);
-      console.log("🏷️ タグ作成API呼び出し中...");
 
       let newTag;
       if (teamMode && teamId && createTeamTagMutation) {
-        console.log("🏷️ チームタグ作成モード:", {
-          teamId,
-          name: trimmedName,
-          color: newTagColor,
-        });
         newTag = await createTeamTagMutation.mutateAsync({
           name: trimmedName,
           color: newTagColor,
         });
       } else {
-        console.log("🏷️ 個人タグ作成モード:", {
-          name: trimmedName,
-          color: newTagColor,
-        });
         newTag = await createTagMutation.mutateAsync({
           name: trimmedName,
           color: newTagColor,
         });
       }
-      console.log("🏷️ タグ作成成功:", newTag);
 
       // 作成したタグを自動選択
       if (multiple) {

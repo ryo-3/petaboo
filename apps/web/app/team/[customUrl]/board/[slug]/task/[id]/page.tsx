@@ -14,20 +14,12 @@ export default function TeamBoardTaskPage() {
   const taskId = Array.isArray(params.id) ? params.id[0] : params.id;
 
   useEffect(() => {
-    console.log(
-      `🚀 タスクリダイレクトページ読み込み: customUrl=${customUrl}, slug=${slug}, taskId=${taskId}`,
-    );
-
     if (!customUrl || !slug || !taskId) {
-      console.log(`❌ タスクリダイレクトページ: 必要なパラメータが不足`);
       return;
     }
 
     // タスクIDをクエリパラメータとして付けてメインページにリダイレクト
     const redirectUrl = `/team/${customUrl}/board/${slug}?initialTask=${taskId}`;
-    console.log(
-      `📍 タスクURL直接アクセス: ${taskId} → リダイレクト: ${redirectUrl}`,
-    );
 
     try {
       window.location.replace(redirectUrl);

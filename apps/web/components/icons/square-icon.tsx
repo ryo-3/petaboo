@@ -1,8 +1,6 @@
-interface SquareIconProps {
-  className?: string;
-}
+import { BaseIconProps } from "@/src/types/icon";
 
-function SquareIcon({ className = "w-5 h-5" }: SquareIconProps) {
+function SquareIcon({ className = "w-5 h-5" }: BaseIconProps) {
   return (
     <svg
       className={className}

@@ -133,7 +133,7 @@ function SearchScreen({
   return (
     <div ref={scrollRef} className="h-full overflow-y-auto bg-white">
       {/* ヘッダー */}
-      <div className="bg-white border-b border-gray-200 p-6">
+      <div className="bg-white border-b border-gray-200 px-5 pt-3 pb-6">
         {/* タイトル */}
         <div className="flex items-center gap-3 mb-4">
           <h1 className="font-bold text-gray-900 text-[22px]">詳細検索</h1>

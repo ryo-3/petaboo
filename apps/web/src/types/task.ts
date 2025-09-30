@@ -1,9 +1,11 @@
-import { OriginalId, Uuid } from "./common";
+import {
+  OriginalId,
+  BaseItemFields,
+  TeamCreatorFields,
+  DeletedItemFields,
+} from "./common";
 
-export interface Task {
-  id: number;
-  originalId?: OriginalId;
-  uuid?: Uuid;
+export interface Task extends BaseItemFields, TeamCreatorFields {
   title: string;
   description: string | null;
   status: "todo" | "in_progress" | "completed";
@@ -11,19 +13,14 @@ export interface Task {
   dueDate: number | null; // Unix timestamp
   categoryId: number | null;
   boardCategoryId: number | null; // ボードカテゴリーID
-  createdAt: number;
-  updatedAt: number | null;
-  // チーム機能用（チームタスクのみ）
-  userId?: string; // 作成者のuser ID
-  teamId?: number; // チームID
-  createdBy?: string | null; // 作成者の表示名
-  avatarColor?: string | null; // 作成者のアバター色
 }
 
-export interface DeletedTask {
-  id: number;
+export interface DeletedTask
+  extends BaseItemFields,
+    TeamCreatorFields,
+    DeletedItemFields {
+  /** 削除済みタスクではoriginalIdは必須 */
   originalId: OriginalId;
-  uuid?: Uuid;
   title: string;
   description: string | null;
   status: string;
@@ -31,14 +28,6 @@ export interface DeletedTask {
   dueDate: number | null;
   categoryId: number | null;
   boardCategoryId: number | null; // ボードカテゴリーID
-  createdAt: number;
-  updatedAt: number | null;
-  deletedAt: number;
-  // チーム機能用（チーム削除済みタスクのみ）
-  userId?: string; // 作成者のuser ID
-  teamId?: number; // チームID
-  createdBy?: string | null; // 作成者の表示名
-  avatarColor?: string | null; // 作成者のアバター色
 }
 
 export interface CreateTaskData {

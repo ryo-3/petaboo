@@ -71,12 +71,6 @@ export function getNextItemAfterDeletion<T extends { id: number }>(
   deletedItem: T,
   displayOrder: number[],
 ): T | null {
-  console.log(`削除前のアイテム一覧:`);
-  items.forEach((item, index) => {
-    const title = (item as { title?: string }).title || "?";
-    console.log(`${index + 1}. ${title} (ID: ${item.id})`);
-  });
-
   const sortedItems = sortByDisplayOrder(items, displayOrder);
   const deletedIndex = sortedItems.findIndex(
     (item) => item.id === deletedItem.id,
@@ -108,21 +102,58 @@ export function getNextDeletedItem<T extends { id: number; deletedAt: number }>(
   const sortedItems = [...deletedItems].sort(
     (a, b) => b.deletedAt - a.deletedAt,
   );
+
+  console.log("🔍 getNextDeletedItem ソート後の並び順", {
+    originalCount: deletedItems.length,
+    sortedCount: sortedItems.length,
+    currentItemId: deletedItem.id,
+    sortedItems: sortedItems.map((item, index) => ({
+      index,
+      id: item.id,
+      deletedAt: item.deletedAt,
+      isCurrent: item.id === deletedItem.id,
+    })),
+  });
+
   const deletedIndex = sortedItems.findIndex(
     (item) => item.id === deletedItem.id,
   );
 
-  if (deletedIndex === -1) return null;
+  console.log("📍 現在のアイテムの位置と次選択候補", {
+    currentItemId: deletedItem.id,
+    currentIndex: deletedIndex,
+    totalItems: sortedItems.length,
+    canSelectNext: deletedIndex < sortedItems.length - 1,
+    canSelectPrevious: deletedIndex > 0,
+  });
+
+  if (deletedIndex === -1) {
+    console.log("❌ 現在のアイテムがソート済みリストに見つからない");
+    return null;
+  }
 
   // 削除されたアイテムの次のアイテムを選択
   if (deletedIndex < sortedItems.length - 1) {
-    return sortedItems[deletedIndex + 1] || null;
+    const nextItem = sortedItems[deletedIndex + 1];
+    console.log("✅ 次のアイテムを選択", {
+      direction: "forward",
+      nextItemId: nextItem?.id,
+      nextIndex: deletedIndex + 1,
+    });
+    return nextItem || null;
   }
   // 最後のアイテムが削除された場合は前のアイテムを選択
   else if (deletedIndex > 0) {
-    return sortedItems[deletedIndex - 1] || null;
+    const prevItem = sortedItems[deletedIndex - 1];
+    console.log("✅ 前のアイテムを選択", {
+      direction: "backward",
+      prevItemId: prevItem?.id,
+      prevIndex: deletedIndex - 1,
+    });
+    return prevItem || null;
   }
 
+  console.log("❌ 次選択するアイテムがない（唯一のアイテム）");
   return null;
 }
 
@@ -165,18 +196,33 @@ export function createDeletedNextSelectionHandler<
     onSelectWithFromFlag?: boolean; // onSelectにfromFullList=trueを渡すか
   },
 ) {
+  console.log("🔍 createDeletedNextSelectionHandler実行", {
+    deletedItemsLength: deletedItems.length,
+    deletedItemId: deletedItem.id,
+    isRestore: options?.isRestore,
+    onSelectWithFromFlag: options?.onSelectWithFromFlag,
+  });
+
   const nextItem = getNextDeletedItem(deletedItems, deletedItem);
+
+  console.log("📍 次のアイテム候補", {
+    nextItemId: nextItem?.id,
+    hasNextItem: !!nextItem,
+  });
 
   if (nextItem) {
     // 復元処理の場合はfromFullList=trueを渡す
     if (options?.isRestore && options?.onSelectWithFromFlag) {
+      console.log("✅ 次のアイテムを選択 (fromFullList=true)");
       onSelect(nextItem, true);
     } else {
+      console.log("✅ 次のアイテムを選択 (fromFullList=false)");
       onSelect(nextItem);
     }
     setViewMode("view");
   } else {
     // 削除済みアイテムがなくなった場合は選択を解除（画面は削除済みリストのまま）
+    console.log("❌ 次のアイテムなし、選択解除");
     onSelect(null);
   }
 }

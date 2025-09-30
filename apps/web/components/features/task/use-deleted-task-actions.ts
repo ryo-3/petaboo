@@ -12,11 +12,13 @@ interface UseDeletedTaskActionsProps {
     deletedTask: DeletedTask,
     preDeleteDisplayOrder?: number[],
   ) => void;
-  onRestoreAndSelectNext?: (deletedTask: DeletedTask) => void;
+  onRestoreAndSelectNext?: () => void;
   onAnimationChange?: (isAnimating: boolean) => void;
   teamMode?: boolean;
   teamId?: number;
   boardId?: number;
+  skipAutoSelectionOnRestore?: boolean; // 復元時の自動選択をスキップ
+  totalDeletedCount?: number; // 削除済みアイテムの総数
 }
 
 export function useDeletedTaskActions({
@@ -28,6 +30,8 @@ export function useDeletedTaskActions({
   teamMode = false,
   teamId,
   boardId,
+  skipAutoSelectionOnRestore = false,
+  totalDeletedCount,
 }: UseDeletedTaskActionsProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const queryClient = useQueryClient();
@@ -297,8 +301,13 @@ export function useDeletedTaskActions({
         return response.json();
       }
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error("restoreTask ミューテーションエラー:", error);
+      console.error("エラー詳細:", {
+        message: error?.message || "メッセージなし",
+        stack: error?.stack || "スタックトレースなし",
+        name: error?.name || "エラー名なし",
+      });
     },
     onSuccess: async (restoredTaskData) => {
       console.log(
@@ -448,12 +457,19 @@ export function useDeletedTaskActions({
         return oldItems;
       });
 
-      // 即座に次のタスク選択機能を使用（手動更新済みなのでタイミング問題なし）
-      if (onRestoreAndSelectNext && task) {
-        onRestoreAndSelectNext(task);
-      } else {
-        onClose();
-      }
+      // 削除済みタスクの残り数を確認して最後かどうか判定
+      const deletedTasks = queryClient.getQueryData<DeletedTask[]>(
+        teamMode && teamId ? ["team-deleted-tasks", teamId] : ["deleted-tasks"],
+      );
+      const isLastTask = deletedTasks ? deletedTasks.length <= 1 : true;
+
+      // 復元後の次選択処理を実行（メモと同様の処理）
+      console.log(
+        `🔍 復元後処理チェック: isLastTask=${isLastTask}, skipAutoSelectionOnRestore=${skipAutoSelectionOnRestore}, onRestoreAndSelectNext=${typeof onRestoreAndSelectNext}`,
+      );
+
+      // TaskScreenの onRestoreAndSelectNext に処理を委譲するため、ここでは何もしない
+      console.log("⏭️ useDeletedTaskActions: TaskScreenに処理委譲");
 
       // 最後にキャッシュを無効化して最新データを取得（安全なアプローチ）
       console.log(
@@ -641,9 +657,11 @@ export function useDeletedTaskActions({
 
   const handleRestore = async () => {
     try {
+      const timestamp = Date.now();
       console.log(
-        `🔄 復元処理開始: task.originalId=${task?.originalId}, teamMode=${teamMode}, teamId=${teamId}`,
+        `🔄 復元処理開始: task.originalId=${task?.originalId}, teamMode=${teamMode}, teamId=${teamId}, timestamp=${timestamp}`,
       );
+      console.log(`🔍 handleRestore実行スタック:`, new Error().stack);
 
       // エディターコンテンツを復元アニメーション付きで処理
       const editorArea = document.querySelector(
@@ -666,16 +684,23 @@ export function useDeletedTaskActions({
               // API実行（onSuccessで次選択とキャッシュ更新が実行される）
               if (task) {
                 console.log(
-                  `🚀 復元API実行開始: originalId=${task.originalId}`,
+                  `🚀 復元API実行開始（アニメーション内）: originalId=${task.originalId}, timestamp=${Date.now()}`,
                 );
                 await restoreTask.mutateAsync(task.originalId);
                 console.log(
-                  `✅ 復元API実行完了: originalId=${task.originalId}`,
+                  `✅ 復元API実行完了（アニメーション内）: originalId=${task.originalId}, timestamp=${Date.now()}`,
                 );
               }
-            } catch (error) {
+            } catch (error: any) {
               console.error(`❌ 復元処理でエラー (アニメーション内):`, error);
+              console.error("復元エラー詳細:", {
+                message: error?.message || "メッセージなし",
+                stack: error?.stack || "スタックトレースなし",
+                name: error?.name || "エラー名なし",
+                originalId: task?.originalId,
+              });
               alert("復元に失敗しました。");
+              throw error; // エラーを再スロー
             }
           },
           "restore", // 復元処理であることを明示
@@ -683,13 +708,24 @@ export function useDeletedTaskActions({
       } else {
         // アニメーション要素がない場合は通常の処理
         if (task) {
-          console.log(`🚀 復元API実行開始: originalId=${task.originalId}`);
+          console.log(
+            `🚀 復元API実行開始（通常）: originalId=${task.originalId}, timestamp=${Date.now()}`,
+          );
           await restoreTask.mutateAsync(task.originalId);
-          console.log(`✅ 復元API実行完了: originalId=${task.originalId}`);
+          console.log(
+            `✅ 復元API実行完了（通常）: originalId=${task.originalId}, timestamp=${Date.now()}`,
+          );
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(`❌ 復元処理でエラー:`, error);
+      console.error("復元処理エラー詳細:", {
+        message: error?.message || "メッセージなし",
+        stack: error?.stack || "スタックトレースなし",
+        name: error?.name || "エラー名なし",
+        originalId: task?.originalId,
+        onRestoreAndSelectNext: typeof onRestoreAndSelectNext,
+      });
       alert("復元に失敗しました。");
     }
   };

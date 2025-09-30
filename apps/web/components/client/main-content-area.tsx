@@ -13,6 +13,7 @@ import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
 import { RefObject } from "react";
 import { useNavigation } from "@/contexts/navigation-context";
+import { useUnifiedItemOperations } from "@/src/hooks/use-unified-item-operations";
 
 interface MainContentAreaProps {
   screenMode: string;
@@ -103,6 +104,17 @@ export function MainContentArea({
   // NavigationContextから統一された状態を取得
   const { showTeamList, showTeamCreate } = useNavigation();
 
+  // 🎯 統一フック（個人用）- 最上位で1つだけ作成
+  const personalMemoOperations = useUnifiedItemOperations({
+    itemType: "memo",
+    context: "personal",
+  });
+
+  const personalTaskOperations = useUnifiedItemOperations({
+    itemType: "task",
+    context: "personal",
+  });
+
   return (
     <>
       {/* ホーム画面 */}
@@ -130,6 +142,8 @@ export function MainContentArea({
           }}
           teamMode={teamMode}
           teamId={teamId}
+          // 統一フックを渡す
+          unifiedOperations={personalMemoOperations}
         />
       )}
 
@@ -145,6 +159,8 @@ export function MainContentArea({
             setSelectedTask(null);
             setSelectedDeletedTask(null);
           }}
+          // 統一フックを渡す
+          unifiedOperations={personalTaskOperations}
         />
       )}
 
@@ -157,6 +173,10 @@ export function MainContentArea({
           onShowMemoList={() => handleShowList("memo")}
           onShowTaskList={() => handleShowList("task")}
           onShowBoardList={() => handleShowList("board")}
+          unifiedOperations={{
+            memoOperations: personalMemoOperations,
+            taskOperations: personalTaskOperations,
+          }}
         />
       )}
 

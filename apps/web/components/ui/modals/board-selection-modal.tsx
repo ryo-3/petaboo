@@ -62,10 +62,12 @@ export default function BoardSelectionModal({
     }
 
     if (selectedBoardIds.includes(boardId)) {
-      onSelectionChange(selectedBoardIds.filter((id) => id !== boardId));
+      const newIds = selectedBoardIds.filter((id) => id !== boardId);
+      onSelectionChange(newIds);
     } else {
       if (multiple) {
-        onSelectionChange([...selectedBoardIds, boardId]);
+        const newIds = [...selectedBoardIds, boardId];
+        onSelectionChange(newIds);
       } else {
         onSelectionChange([boardId]);
         onClose();

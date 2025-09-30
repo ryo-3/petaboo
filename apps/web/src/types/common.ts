@@ -24,3 +24,43 @@ export type OriginalId = string;
  * - 基本的には使わない（将来用）
  */
 export type Uuid = string;
+
+/**
+ * チーム機能での作成者情報フィールド
+ * メモ・タスク両方で使用される共通のチーム関連フィールド
+ */
+export interface TeamCreatorFields {
+  /** 作成者のuser ID（チーム機能でのみ使用） */
+  userId?: string;
+  /** チームID（チーム機能でのみ使用） */
+  teamId?: number;
+  /** 作成者の表示名（チーム機能でのみ使用） */
+  createdBy?: string | null;
+  /** 作成者のアバター色（チーム機能でのみ使用） */
+  avatarColor?: string | null;
+}
+
+/**
+ * 基本アイテムの共通フィールド
+ * すべてのアイテム（メモ・タスク）が持つ基本的なフィールド
+ */
+export interface BaseItemFields {
+  /** 主キーID */
+  id: number;
+  /** 元ID（削除・復元時の追跡用） */
+  originalId?: OriginalId;
+  /** UUID（将来の外部連携用） */
+  uuid?: Uuid;
+  /** 作成日時（Unix timestamp） */
+  createdAt: number;
+  /** 更新日時（Unix timestamp） */
+  updatedAt?: number | null;
+}
+
+/**
+ * 削除済みアイテムの追加フィールド
+ */
+export interface DeletedItemFields {
+  /** 削除日時（Unix timestamp） */
+  deletedAt: number;
+}

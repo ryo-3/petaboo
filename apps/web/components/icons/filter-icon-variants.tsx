@@ -1,11 +1,7 @@
-interface FilterIconProps {
-  className?: string;
-}
+import { BaseIconProps } from "@/src/types/icon";
 
 // パターン2: チェックリスト型
-export function FilterIconCheckList({
-  className = "w-5 h-5",
-}: FilterIconProps) {
+export function FilterIconCheckList({ className = "w-5 h-5" }: BaseIconProps) {
   return (
     <svg
       className={className}
@@ -25,7 +21,7 @@ export function FilterIconCheckList({
 }
 
 // パターン3: 3本線（メニュー）型
-export function FilterIconMenu({ className = "w-5 h-5" }: FilterIconProps) {
+export function FilterIconMenu({ className = "w-5 h-5" }: BaseIconProps) {
   return (
     <svg
       className={className}
@@ -45,7 +41,7 @@ export function FilterIconMenu({ className = "w-5 h-5" }: FilterIconProps) {
 }
 
 // パターン4: グリッド（ドット）型
-export function FilterIconGrid({ className = "w-5 h-5" }: FilterIconProps) {
+export function FilterIconGrid({ className = "w-5 h-5" }: BaseIconProps) {
   return (
     <svg
       className={className}
@@ -67,7 +63,7 @@ export function FilterIconGrid({ className = "w-5 h-5" }: FilterIconProps) {
 }
 
 // パターン5: シンプルな漏斗型（軽量版）
-export function FilterIconSimple({ className = "w-5 h-5" }: FilterIconProps) {
+export function FilterIconSimple({ className = "w-5 h-5" }: BaseIconProps) {
   return (
     <svg
       className={className}

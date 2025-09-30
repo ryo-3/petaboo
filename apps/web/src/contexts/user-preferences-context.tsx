@@ -90,9 +90,8 @@ export const UserPreferencesProvider: React.FC<
     try {
       setLoading(true);
       setError(null);
-      
+
       // 管理画面では常にデフォルト設定を使用（APIコールなし）
-      console.log("Using default user preferences for admin panel");
       setPreferences(getDefaultPreferences());
     } catch (err) {
       console.warn("Error initializing user preferences:", err);
@@ -121,16 +120,16 @@ export const UserPreferencesProvider: React.FC<
     ): Promise<UserPreferences> => {
       try {
         setError(null);
-        
+
         // Admin Token取得
         const adminToken = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
         const headers: HeadersInit = {
           "Content-Type": "application/json",
         };
         if (adminToken) {
-          headers['x-admin-token'] = adminToken;
+          headers["x-admin-token"] = adminToken;
         }
-        
+
         const response = await fetch(`${API_BASE}/user-preferences/${userId}`, {
           method: "PUT",
           headers,

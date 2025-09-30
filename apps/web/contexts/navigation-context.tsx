@@ -199,11 +199,6 @@ export function NavigationProvider({
     ]
       .filter(Boolean)
       .join(" | ");
-
-    console.log(`🎯 [サイドバー状態] ${logInfo}`);
-    console.log(
-      `📍 [URL詳細] 内部URL: ${fullInternalUrl} | 表示URL: ${actualDisplayUrl}`,
-    );
   }, [screenMode, pathname, searchParams, iconStates]);
 
   // TODO: 必要に応じて個別キャッシュ無効化を実装する

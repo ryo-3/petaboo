@@ -45,7 +45,6 @@ export function usePersonalNotifier() {
 
     // 申請中データがない場合は通知チェックをスキップ
     if (!hasPendingRequests && approvedRequests.length === 0) {
-      console.log("📭 申請中データなし - 通知チェックをスキップ");
       setData({
         hasUpdates: false,
         counts: { approvedRequests: 0 },

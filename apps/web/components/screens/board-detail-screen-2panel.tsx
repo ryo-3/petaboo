@@ -645,6 +645,16 @@ function BoardDetailScreen({
                         customHeight="h-full"
                         teamMode={teamMode}
                         teamId={teamId || undefined}
+                        createdBy={
+                          selectedMemo && "createdBy" in selectedMemo
+                            ? selectedMemo.createdBy
+                            : null
+                        }
+                        createdByAvatarColor={
+                          selectedMemo && "avatarColor" in selectedMemo
+                            ? selectedMemo.avatarColor
+                            : null
+                        }
                         preloadedBoardItems={allBoardItems || []}
                         preloadedBoards={
                           teamMode ? teamBoards || [] : personalBoards || []
@@ -717,6 +727,16 @@ function BoardDetailScreen({
                         customHeight="h-full"
                         teamMode={teamMode}
                         teamId={teamId || undefined}
+                        createdBy={
+                          selectedTask && "createdBy" in selectedTask
+                            ? selectedTask.createdBy
+                            : null
+                        }
+                        createdByAvatarColor={
+                          selectedTask && "avatarColor" in selectedTask
+                            ? selectedTask.avatarColor
+                            : null
+                        }
                         preloadedBoardItems={allBoardItems || []}
                         preloadedBoards={
                           teamMode ? teamBoards || [] : personalBoards || []

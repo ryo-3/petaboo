@@ -27,6 +27,9 @@ admin.log
 .DS_Store
 Thumbs.db
 
+# TypeScriptビルドキャッシュ
+*.tsbuildinfo
+
 # データベース
 *.db
 *.sqlite

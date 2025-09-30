@@ -1,6 +1,6 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { getAuth } from "@hono/clerk-auth";
-import { eq, and, desc, isNull, isNotNull } from "drizzle-orm";
+import { eq, and, or, desc, isNull, isNotNull } from "drizzle-orm";
 import {
   teams,
   teamMembers,
@@ -410,6 +410,8 @@ export function createTeamBoardsAPI(app: AppType) {
                       content: z.string(),
                       createdAt: z.number(),
                       updatedAt: z.number(),
+                      createdBy: z.string().nullable(),
+                      avatarColor: z.string().nullable(),
                     })
                     .nullable(),
                   task: z
@@ -426,6 +428,8 @@ export function createTeamBoardsAPI(app: AppType) {
                       dueDate: z.string().nullable(),
                       createdAt: z.number(),
                       updatedAt: z.number(),
+                      createdBy: z.string().nullable(),
+                      avatarColor: z.string().nullable(),
                     })
                     .nullable(),
                 }),
@@ -499,6 +503,16 @@ export function createTeamBoardsAPI(app: AppType) {
             eq(teamBoardItems.originalId, teamTasks.originalId),
           ),
         )
+        .leftJoin(
+          teamMembers,
+          and(
+            eq(teamMembers.teamId, parseInt(teamId)),
+            or(
+              eq(teamMembers.userId, teamMemos.userId),
+              eq(teamMembers.userId, teamTasks.userId),
+            ),
+          ),
+        )
         .where(eq(teamBoardItems.boardId, parseInt(boardId)))
         .orderBy(teamBoardItems.createdAt);
 
@@ -514,6 +528,8 @@ export function createTeamBoardsAPI(app: AppType) {
                 originalId: item.team_memos.originalId,
                 createdAt: item.team_memos.createdAt,
                 updatedAt: item.team_memos.updatedAt,
+                createdBy: item.team_members?.displayName || null,
+                avatarColor: item.team_members?.avatarColor || null,
               }
             : item.team_tasks
               ? {
@@ -526,6 +542,8 @@ export function createTeamBoardsAPI(app: AppType) {
                   originalId: item.team_tasks.originalId,
                   createdAt: item.team_tasks.createdAt,
                   updatedAt: item.team_tasks.updatedAt,
+                  createdBy: item.team_members?.displayName || null,
+                  avatarColor: item.team_members?.avatarColor || null,
                 }
               : null,
         }))

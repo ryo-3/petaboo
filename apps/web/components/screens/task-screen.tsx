@@ -380,17 +380,13 @@ function TaskScreen({
       return;
     }
 
-    console.log("🚀 タスク削除とDOMポーリング開始", { taskId: deletedTask.id });
-
     try {
       // API削除実行
       await unifiedOperations.deleteItem.mutateAsync(deletedTask.id);
 
       // DOMポーリング削除フックによる次選択処理
       handleDeleteWithNextSelection(deletedTask);
-    } catch (error) {
-      console.error("Task deletion failed:", error);
-    }
+    } catch (error) {}
   };
 
   // 選択ハンドラーパターン

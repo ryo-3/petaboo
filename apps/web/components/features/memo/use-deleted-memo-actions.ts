@@ -57,9 +57,7 @@ export function useDeletedMemoActions({
         return response.json();
       }
     },
-    onError: (error) => {
-      console.error("permanentDeleteNote ミューテーションエラー:", error);
-    },
+    onError: (error) => {},
     onSuccess: async () => {
       // キャッシュを手動更新（削除されたアイテムをすぐに除去）
       if (teamMode && teamId) {
@@ -197,7 +195,6 @@ export function useDeletedMemoActions({
                 ).closeDeletingLid?.();
               }, 500);
             } catch (error) {
-              console.error("完全削除エラー (アニメーション内):", error);
               onAnimationChange?.(false);
               alert("完全削除に失敗しました。");
             }
@@ -219,52 +216,22 @@ export function useDeletedMemoActions({
         }, 500);
       }
     } catch (error) {
-      console.error("完全削除エラー (メイン):", error);
       onAnimationChange?.(false);
       alert("完全削除に失敗しました。");
     }
   };
 
   const handleRestore = async () => {
-    console.log("🔔 useDeletedMemoActions.handleRestore 開始", {
-      memoId: memo?.id,
-      memoOriginalId: memo?.originalId,
-      isLocalRestoring,
-      isPending: restoreNote.isPending,
-      teamMode,
-      teamId,
-      totalDeletedCount,
-      skipAutoSelectionOnRestore,
-      hasOnRestoreAndSelectNext: !!onRestoreAndSelectNext,
-    });
-
     // 削除直後の復元で totalDeletedCount が正しくない場合のデバッグ
     // キャッシュ問題回避: 復元処理が実行される = 最低1つは削除済みアイテムがある
     const safeDeletedCount = Math.max(totalDeletedCount, 1);
 
-    console.log("🔧 削除済みアイテム数の安全な調整", {
-      originalCount: totalDeletedCount,
-      adjustedCount: safeDeletedCount,
-      wasAdjusted: safeDeletedCount !== totalDeletedCount,
-      reason: "キャッシュ問題回避",
-    });
-
     if (safeDeletedCount <= 1) {
-      console.log("⚠️ 調整後も1以下 - 画面が閉じる予定", {
-        safeDeletedCount,
-        willClose: true,
-        reason: "最後のアイテム（調整後）",
-      });
     } else {
-      console.log("✅ 調整後、次選択処理が実行される予定", {
-        safeDeletedCount,
-        willSelectNext: true,
-      });
     }
 
     // 既に復元中または削除中の場合は早期リターン（連続実行防止）
     if (isLocalRestoring || restoreNote.isPending) {
-      console.log("❌ 復元処理をスキップ（既に実行中）");
       return;
     }
 
@@ -300,60 +267,24 @@ export function useDeletedMemoActions({
               // 削除済みアイテム数の動的チェック（キャッシュ問題回避）
               const safeCount = Math.max(totalDeletedCount, 1);
               const remainingCount = safeCount > 0 ? safeCount - 1 : 0;
-              console.log(
-                "🔍 復元後の残り削除済みアイテム数チェック（アニメーション版）",
-                {
-                  originalCount: totalDeletedCount,
-                  safeCount,
-                  remainingCount,
-                  willClose: remainingCount <= 0,
-                },
-              );
 
               // 復元後に残りアイテムがない場合のみ閉じる
               if (remainingCount <= 0) {
-                console.log(
-                  "✅ 残りアイテムなし - 画面を閉じる（アニメーション版）",
-                );
                 onClose();
               } else if (
                 !skipAutoSelectionOnRestore &&
                 onRestoreAndSelectNext &&
                 memo
               ) {
-                console.log("🎯 復元後の次選択実行（アニメーション版）", {
-                  skipAutoSelectionOnRestore,
-                  hasOnRestoreAndSelectNext: !!onRestoreAndSelectNext,
-                  memoOriginalId: memo.originalId,
-                  remainingCount,
-                });
-
                 // キャッシュ更新完了を待ってから次選択実行
                 setTimeout(() => {
-                  console.log(
-                    "⏰ キャッシュ更新待機後、次選択実行（アニメーション版）",
-                  );
                   onRestoreAndSelectNext(memo);
                 }, 50);
               } else if (!skipAutoSelectionOnRestore) {
-                console.log(
-                  "✅ skipAutoSelectionOnRestore=false - 画面を閉じる（アニメーション版）",
-                );
                 onClose();
               }
               // skipAutoSelectionOnRestore=trueで最後でない場合は何もしない（アイテムを開いたまま）
             } catch (error) {
-              console.error("メモ復元エラー (アニメーション内):", error);
-              console.error("復元エラーの詳細:", {
-                memoId: memo?.id,
-                originalId: memo?.originalId,
-                teamMode,
-                teamId,
-                error,
-                errorMessage:
-                  error instanceof Error ? error.message : "不明なエラー",
-                stack: error instanceof Error ? error.stack : undefined,
-              });
               setIsLocalRestoring(false);
               alert("復元に失敗しました。");
             }
@@ -371,60 +302,25 @@ export function useDeletedMemoActions({
         // 削除済みアイテム数の動的チェック（キャッシュ問題回避）
         const safeCount = Math.max(totalDeletedCount, 1);
         const remainingCount = safeCount > 0 ? safeCount - 1 : 0;
-        console.log(
-          "🔍 復元後の残り削除済みアイテム数チェック（アニメーションなし）",
-          {
-            originalCount: totalDeletedCount,
-            safeCount,
-            remainingCount,
-            willClose: remainingCount <= 0,
-          },
-        );
 
         // 復元後に残りアイテムがない場合のみ閉じる
         if (remainingCount <= 0) {
-          console.log(
-            "✅ 残りアイテムなし - 画面を閉じる（アニメーションなし）",
-          );
           onClose();
         } else if (
           !skipAutoSelectionOnRestore &&
           onRestoreAndSelectNext &&
           memo
         ) {
-          console.log("🎯 復元後の次選択実行（アニメーションなし）", {
-            skipAutoSelectionOnRestore,
-            hasOnRestoreAndSelectNext: !!onRestoreAndSelectNext,
-            memoOriginalId: memo.originalId,
-            remainingCount,
-          });
-
           // キャッシュ更新完了を待ってから次選択実行
           setTimeout(() => {
-            console.log(
-              "⏰ キャッシュ更新待機後、次選択実行（アニメーションなし）",
-            );
             onRestoreAndSelectNext(memo);
           }, 50);
         } else if (!skipAutoSelectionOnRestore) {
-          console.log(
-            "✅ skipAutoSelectionOnRestore=false - 画面を閉じる（アニメーションなし）",
-          );
           onClose();
         }
         // skipAutoSelectionOnRestore=trueで最後でない場合は何もしない（アイテムを開いたまま）
       }
     } catch (error) {
-      console.error("メモ復元エラー:", error);
-      console.error("復元エラーの詳細:", {
-        memoId: memo?.id,
-        originalId: memo?.originalId,
-        teamMode,
-        teamId,
-        error,
-        errorMessage: error instanceof Error ? error.message : "不明なエラー",
-        stack: error instanceof Error ? error.stack : undefined,
-      });
       setIsLocalRestoring(false);
       alert("復元に失敗しました。");
     }

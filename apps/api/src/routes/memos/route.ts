@@ -442,7 +442,6 @@ app.openapi(
         );
       }
     } catch (error) {
-      console.error("メモ削除エラー:", error);
       // コピー段階でエラーが発生した場合、削除済みテーブルの重複データをクリーンアップ
       try {
         await db
@@ -453,9 +452,7 @@ app.openapi(
               eq(deletedMemos.userId, auth.userId),
             ),
           );
-      } catch (cleanupError) {
-        console.error("クリーンアップエラー:", cleanupError);
-      }
+      } catch (cleanupError) {}
       return c.json({ error: "Failed to delete memo" }, 500);
     }
 
@@ -529,7 +526,6 @@ app.openapi(
         .orderBy(desc(deletedMemos.deletedAt));
       return c.json(result);
     } catch (error) {
-      console.error("削除済みメモ取得エラー:", error);
       return c.json({ error: "Internal server error" }, 500);
     }
   },
@@ -623,7 +619,6 @@ app.openapi(
 
       return c.json({ success: true }, 200);
     } catch (error) {
-      console.error("完全削除エラー:", error);
       return c.json({ error: "Internal server error" }, 500);
     }
   },
@@ -738,7 +733,6 @@ app.openapi(
 
       return c.json({ success: true, id: result[0].id }, 200);
     } catch (error) {
-      console.error("復元エラー:", error);
       return c.json({ error: "Internal server error" }, 500);
     }
   },
@@ -880,7 +874,6 @@ app.openapi(
         200,
       );
     } catch (error) {
-      console.error("CSV Import Error:", error);
       return c.json({ error: "Internal server error" }, 500);
     }
   },

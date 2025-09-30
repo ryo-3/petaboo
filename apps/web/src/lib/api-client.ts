@@ -622,9 +622,6 @@ export const taggingsApi = {
         throw new Error(`HTTP error 400: ${errorText}`);
       }
 
-      // その他のエラーは通常通りログ出力
-      console.error("createTagging error:", response.status, errorText);
-
       if (response.status === 400) {
         throw new Error(`HTTP error 400: ${errorText}`);
       }

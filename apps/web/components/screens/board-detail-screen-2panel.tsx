@@ -292,22 +292,12 @@ function BoardDetailScreen({
   const handleMemoDeleteWithNextSelection = useCallback(
     async (memoToDelete: Memo) => {
       try {
-        console.log("🗑️ メモ削除処理開始", {
-          memoId: memoToDelete.id,
-          teamMode,
-          teamId,
-        });
-
         // 実際の削除API呼び出し
         await deleteMemoMutation.mutateAsync(memoToDelete.id);
 
-        console.log("✅ メモ削除完了、次選択処理実行");
-
         // 削除完了後に次選択ロジックを実行
         handleMemoDeleteAndSelectNext(memoToDelete);
-      } catch (error) {
-        console.error("❌ メモ削除エラー", error);
-      }
+      } catch (error) {}
     },
     [deleteMemoMutation, handleMemoDeleteAndSelectNext, teamMode, teamId],
   );
@@ -316,22 +306,12 @@ function BoardDetailScreen({
   const handleTaskDeleteWithNextSelection = useCallback(
     async (taskToDelete: Task) => {
       try {
-        console.log("🗑️ タスク削除処理開始", {
-          taskId: taskToDelete.id,
-          teamMode,
-          teamId,
-        });
-
         // 実際の削除API呼び出し
         await deleteTaskMutation.mutateAsync(taskToDelete.id);
 
-        console.log("✅ タスク削除完了、次選択処理実行");
-
         // 削除完了後に次選択ロジックを実行
         handleTaskDeleteAndSelectNext(taskToDelete);
-      } catch (error) {
-        console.error("❌ タスク削除エラー", error);
-      }
+      } catch (error) {}
     },
     [deleteTaskMutation, handleTaskDeleteAndSelectNext, teamMode, teamId],
   );

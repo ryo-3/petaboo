@@ -79,22 +79,7 @@ export function useCreateTask(options?: {
       }
     },
     onSuccess: (newTask) => {
-      console.log("📌 [useCreateTask] onSuccess実行", {
-        teamMode,
-        teamId,
-        boardId,
-        newTaskId: newTask.id,
-        boardIdType: typeof boardId,
-      });
-
       if (boardId) {
-        console.log("🔄 [useCreateTask] ボードアイテムキャッシュ更新", {
-          teamId,
-          boardId,
-          newTaskId: newTask.id,
-          newTaskTitle: newTask.title,
-        });
-
         queryClient.setQueryData(
           ["team-boards", teamId?.toString(), boardId, "items"],
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -111,11 +96,6 @@ export function useCreateTask(options?: {
                 position: oldData.items.length + 1,
               };
 
-              console.log("✅ [useCreateTask] ボードアイテム追加", {
-                newBoardItem,
-                existingItemsCount: oldData.items.length,
-              });
-
               return {
                 ...oldData,
                 items: [...oldData.items, newBoardItem],
@@ -125,13 +105,6 @@ export function useCreateTask(options?: {
           },
         );
       } else {
-        console.warn(
-          "⚠️ [useCreateTask] boardIdが未定義のためボードアイテムキャッシュ更新をスキップ",
-          {
-            boardId,
-            teamId,
-          },
-        );
       }
 
       // APIが不完全なデータしか返さないため、タスク一覧を無効化して再取得
@@ -255,13 +228,11 @@ export function useDeleteTask(options?: {
 
       // 重複削除チェック
       if (activeTaskDeleteOperations.has(deletionKey)) {
-        console.warn(`⚠️ タスク削除処理実行中のためスキップ: ${deletionKey}`);
         throw new Error("タスク削除処理実行中");
       }
 
       // 削除処理開始を記録
       activeTaskDeleteOperations.add(deletionKey);
-      console.log(`🗑️ タスク削除処理開始: ${deletionKey}`);
 
       try {
         const token = await getToken();
@@ -298,7 +269,6 @@ export function useDeleteTask(options?: {
       } finally {
         // 削除処理完了を記録（成功・失敗関係なく）
         activeTaskDeleteOperations.delete(deletionKey);
-        console.log(`✅ タスク削除処理完了: ${deletionKey}`);
       }
     },
     onSuccess: async (_, id) => {
@@ -315,14 +285,6 @@ export function useDeleteTask(options?: {
 
         // 削除済み一覧に楽観的更新で即座に追加（メモと同じ実装）
         if (deletedTask) {
-          console.log("🗑️ チーム削除済み一覧に楽観的更新で追加", {
-            taskId: id,
-            taskOriginalId: deletedTask.originalId,
-            taskTitle: deletedTask.title,
-            teamId,
-            時刻: new Date().toISOString(),
-          });
-
           const deletedTaskWithDeletedAt = {
             ...deletedTask,
             originalId: deletedTask.originalId || id.toString(),
@@ -338,10 +300,6 @@ export function useDeleteTask(options?: {
                 (t) => t.originalId === deletedTaskWithDeletedAt.originalId,
               );
               if (exists) {
-                console.log(
-                  "⚠️ チーム削除済み一覧に既に存在するためスキップ",
-                  deletedTaskWithDeletedAt.originalId,
-                );
                 return oldDeletedTasks;
               }
               return [deletedTaskWithDeletedAt, ...oldDeletedTasks];
@@ -386,13 +344,6 @@ export function useDeleteTask(options?: {
 
         // 削除済み一覧に楽観的更新で即座に追加（メモと同じ実装）
         if (deletedTask) {
-          console.log("🗑️ 個人削除済み一覧に楽観的更新で追加", {
-            taskId: id,
-            taskOriginalId: deletedTask.originalId,
-            taskTitle: deletedTask.title,
-            時刻: new Date().toISOString(),
-          });
-
           const deletedTaskWithDeletedAt = {
             ...deletedTask,
             originalId: deletedTask.originalId || id.toString(),
@@ -408,10 +359,6 @@ export function useDeleteTask(options?: {
                 (t) => t.originalId === deletedTaskWithDeletedAt.originalId,
               );
               if (exists) {
-                console.log(
-                  "⚠️ 個人削除済み一覧に既に存在するためスキップ",
-                  deletedTaskWithDeletedAt.originalId,
-                );
                 return oldDeletedTasks;
               }
               return [deletedTaskWithDeletedAt, ...oldDeletedTasks];
@@ -430,18 +377,8 @@ export function useDeleteTask(options?: {
     },
     onError: (error) => {
       const errorObj = error as Error;
-      console.error("❌ タスク削除エラー詳細:", {
-        message: errorObj.message,
-        name: errorObj.name,
-        stack: errorObj.stack,
-        cause: errorObj.cause,
-        fullError: error,
-      });
-
-      // エラーメッセージをより詳しく表示
       const errorMessage =
         errorObj.message || errorObj.toString() || "不明なエラー";
-      console.error("❌ タスク削除失敗:", errorMessage);
       showToast(`タスク削除に失敗しました: ${errorMessage}`, "error");
     },
   });
@@ -531,14 +468,6 @@ export function useRestoreTask(options?: {
 
   return useMutation({
     mutationFn: async (originalId: string) => {
-      console.log("🔧 React Query: タスク復元mutationFn開始", {
-        originalId,
-        teamMode,
-        teamId,
-        timestamp: new Date().toISOString(),
-        stackTrace: new Error().stack?.split("\n").slice(1, 3),
-      });
-
       const token = await getToken();
 
       if (teamMode && teamId) {
@@ -579,14 +508,6 @@ export function useRestoreTask(options?: {
 
         // チーム通常タスク一覧に復元されたタスクを楽観的更新で追加（削除時の逆操作）
         if (deletedTask && restoredTaskData) {
-          console.log("🔄 チーム通常一覧に楽観的更新で追加", {
-            taskId: deletedTask.id,
-            taskOriginalId: originalId,
-            taskTitle: deletedTask.title,
-            teamId,
-            時刻: new Date().toISOString(),
-          });
-
           // 復元されたタスクデータを使用（deletedAtを除去）
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { deletedAt: _deletedAt, ...restoredTask } = deletedTask;
@@ -599,10 +520,6 @@ export function useRestoreTask(options?: {
                 (t) => t.originalId === restoredTask.originalId,
               );
               if (exists) {
-                console.log(
-                  "⚠️ チーム通常一覧に既に存在するためスキップ",
-                  restoredTask.originalId,
-                );
                 return oldTasks;
               }
               return [restoredTask as Task, ...oldTasks];
@@ -663,13 +580,6 @@ export function useRestoreTask(options?: {
 
         // 個人通常タスク一覧に復元されたタスクを楽観的更新で追加（削除時の逆操作）
         if (deletedTask && restoredTaskData) {
-          console.log("🔄 個人通常一覧に楽観的更新で追加", {
-            taskId: deletedTask.id,
-            taskOriginalId: originalId,
-            taskTitle: deletedTask.title,
-            時刻: new Date().toISOString(),
-          });
-
           // 復元されたタスクデータを使用（deletedAtを除去）
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { deletedAt: _deletedAt, ...restoredTask } = deletedTask;
@@ -680,10 +590,6 @@ export function useRestoreTask(options?: {
               (t) => t.originalId === restoredTask.originalId,
             );
             if (exists) {
-              console.log(
-                "⚠️ 個人通常一覧に既に存在するためスキップ",
-                restoredTask.originalId,
-              );
               return oldTasks;
             }
             return [restoredTask as Task, ...oldTasks];
@@ -704,7 +610,6 @@ export function useRestoreTask(options?: {
       }
       // 全タグ付け情報を無効化（復元されたタスクのタグ情報が変わる可能性があるため）
       queryClient.invalidateQueries({ queryKey: ["taggings", "all"] });
-      // showToast("タスクを復元しました", "success"); // トースト通知は無効化
     },
     onError: (error) => {
       console.error("タスク復元に失敗しました:", error);

@@ -345,14 +345,6 @@ export function useDeleteMemo(options?: {
 
         // 削除済み一覧に楽観的更新で即座に追加（キャッシュ問題回避）
         if (deletedMemo) {
-          console.log("🗑️ 削除済み一覧に楽観的更新で追加", {
-            memoId: id,
-            memoOriginalId: deletedMemo.originalId,
-            memoTitle: deletedMemo.title,
-            teamId,
-            時刻: new Date().toISOString(),
-          });
-
           const deletedMemoWithDeletedAt = {
             ...deletedMemo,
             originalId: deletedMemo.originalId || id.toString(),
@@ -368,10 +360,6 @@ export function useDeleteMemo(options?: {
                 (m) => m.originalId === deletedMemoWithDeletedAt.originalId,
               );
               if (exists) {
-                console.log(
-                  "⚠️ 削除済み一覧に既に存在するためスキップ",
-                  deletedMemoWithDeletedAt.originalId,
-                );
                 return oldDeletedMemos;
               }
               return [deletedMemoWithDeletedAt, ...oldDeletedMemos];
@@ -416,13 +404,6 @@ export function useDeleteMemo(options?: {
 
         // 削除済み一覧に楽観的更新で即座に追加（キャッシュ問題回避）
         if (deletedMemo) {
-          console.log("🗑️ 個人削除済み一覧に楽観的更新で追加", {
-            memoId: id,
-            memoOriginalId: deletedMemo.originalId,
-            memoTitle: deletedMemo.title,
-            時刻: new Date().toISOString(),
-          });
-
           const deletedMemoWithDeletedAt = {
             ...deletedMemo,
             originalId: deletedMemo.originalId || id.toString(),
@@ -438,10 +419,6 @@ export function useDeleteMemo(options?: {
                 (m) => m.originalId === deletedMemoWithDeletedAt.originalId,
               );
               if (exists) {
-                console.log(
-                  "⚠️ 個人削除済み一覧に既に存在するためスキップ",
-                  deletedMemoWithDeletedAt.originalId,
-                );
                 return oldDeletedMemos;
               }
               return [deletedMemoWithDeletedAt, ...oldDeletedMemos];

@@ -6,7 +6,7 @@ import { useAuth } from "@clerk/nextjs";
 import { useTeamDetail } from "@/src/hooks/use-team-detail";
 import { useTeamMemos } from "@/src/hooks/use-team-memos";
 import { useTeamTasks } from "@/src/hooks/use-team-tasks";
-import BoardDetailScreen from "@/components/screens/board-detail-screen-2panel";
+import BoardDetailScreen from "@/components/screens/board-detail-screen-3panel";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
 

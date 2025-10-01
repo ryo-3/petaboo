@@ -326,50 +326,54 @@ export default function BoardRightPanel({
   return (
     <RightPanel isOpen={isOpen} onClose={onClose}>
       {selectedMemo && !selectedTask && rightPanelMode === null && (
-        <>
-          {activeMemoTab === "deleted" ? (
-            <MemoEditor
-              memo={selectedMemo}
-              onClose={() => {
-                // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
-              }}
-              onRestore={async () => {
-                if (
-                  selectedMemo &&
-                  selectedMemo.originalId &&
-                  onMemoRestoreAndSelectNext
-                ) {
-                  try {
-                    await memoOperations.restoreItem.mutateAsync(
-                      selectedMemo.originalId,
-                    );
-                    onMemoRestoreAndSelectNext(selectedMemo as DeletedMemo);
-                  } catch (error) {
-                    console.error("メモ復元API実行エラー:", error);
+        <div className="flex flex-col h-full overflow-hidden">
+          <div className="flex-shrink-0">
+            {activeMemoTab === "deleted" ? (
+              <MemoEditor
+                memo={selectedMemo}
+                onClose={() => {
+                  // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
+                }}
+                onRestore={async () => {
+                  if (
+                    selectedMemo &&
+                    selectedMemo.originalId &&
+                    onMemoRestoreAndSelectNext
+                  ) {
+                    try {
+                      await memoOperations.restoreItem.mutateAsync(
+                        selectedMemo.originalId,
+                      );
+                      onMemoRestoreAndSelectNext(selectedMemo as DeletedMemo);
+                    } catch (error) {
+                      console.error("メモ復元API実行エラー:", error);
+                    }
                   }
-                }
-              }}
-              onDelete={() => {
-                if (onDeletedMemoDeleteAndSelectNext) {
-                  onDeletedMemoDeleteAndSelectNext(selectedMemo as DeletedMemo);
-                }
-              }}
-              onDeleteAndSelectNext={(deletedMemo: Memo | DeletedMemo) => {
-                if (onDeletedMemoDeleteAndSelectNext) {
-                  onDeletedMemoDeleteAndSelectNext(deletedMemo as DeletedMemo);
-                }
-              }}
-              initialBoardId={boardId}
-              teamMode={teamMode}
-              teamId={teamId || undefined}
-              {...toCreatorProps(selectedMemoCreatorInfo)}
-              preloadedTags={tags || []}
-              preloadedBoards={allBoards || []}
-              preloadedTaggings={allTaggings || []}
-              preloadedBoardItems={allBoardItems}
-            />
-          ) : (
-            <>
+                }}
+                onDelete={() => {
+                  if (onDeletedMemoDeleteAndSelectNext) {
+                    onDeletedMemoDeleteAndSelectNext(
+                      selectedMemo as DeletedMemo,
+                    );
+                  }
+                }}
+                onDeleteAndSelectNext={(deletedMemo: Memo | DeletedMemo) => {
+                  if (onDeletedMemoDeleteAndSelectNext) {
+                    onDeletedMemoDeleteAndSelectNext(
+                      deletedMemo as DeletedMemo,
+                    );
+                  }
+                }}
+                initialBoardId={boardId}
+                teamMode={teamMode}
+                teamId={teamId || undefined}
+                {...toCreatorProps(selectedMemoCreatorInfo)}
+                preloadedTags={tags || []}
+                preloadedBoards={allBoards || []}
+                preloadedTaggings={allTaggings || []}
+                preloadedBoardItems={allBoardItems}
+              />
+            ) : (
               <MemoEditor
                 memo={selectedMemo}
                 initialBoardId={boardId}
@@ -420,98 +424,222 @@ export default function BoardRightPanel({
                 }}
                 isLidOpen={isRightMemoLidOpen}
               />
-            </>
-          )}
-        </>
+            )}
+          </div>
+
+          {/* コメントセクション */}
+          <div className="flex-1 flex flex-col border-t-2 border-red-500 min-h-0 bg-yellow-50">
+            <div className="p-4 flex-shrink-0 bg-blue-100">
+              <h3 className="text-sm font-medium text-gray-700">
+                メモコメント（テスト表示）
+              </h3>
+            </div>
+            <div className="flex flex-col flex-1 min-h-0">
+              {/* コメントリスト */}
+              <div className="flex-1 px-4 space-y-3 overflow-y-auto hover-scrollbar">
+                {Array.from({ length: 8 }, (_, i) => (
+                  <div
+                    key={i}
+                    className="bg-gray-50 rounded-lg p-3 border border-gray-100"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="size-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
+                        U{i + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-sm font-medium text-gray-800">
+                            ユーザー{i + 1}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {i === 0 ? "2分前" : `${i + 1}時間前`}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-700 leading-relaxed">
+                          メモ「{selectedMemo.title || "タイトルなし"}
+                          」に関するコメント{i + 1}です。
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* 新規コメント入力 */}
+              <div className="p-4 border-t border-gray-200 flex-shrink-0">
+                <div className="flex items-start gap-3">
+                  <div className="size-7 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
+                    私
+                  </div>
+                  <div className="flex-1">
+                    <textarea
+                      placeholder="メモにコメントを追加..."
+                      className="w-full p-3 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-gray-50"
+                      rows={3}
+                    />
+                    <div className="flex justify-end mt-2">
+                      <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm font-medium">
+                        コメント
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {selectedTask && !selectedMemo && rightPanelMode === null && (
-        <>
-          {isDeletedTask(selectedTask) ? (
-            <TaskEditor
-              task={selectedTask}
-              initialBoardId={boardId}
-              isFromBoardDetail={true}
-              teamMode={teamMode}
-              teamId={teamId || undefined}
-              {...toCreatorProps(selectedTaskCreatorInfo)}
-              preloadedTags={tags || []}
-              preloadedBoards={allBoards || []}
-              preloadedTaggings={allTaggings || []}
-              preloadedBoardItems={allBoardItems}
-              onSelectTask={onSelectTask}
-              unifiedOperations={taskOperations}
-              onClose={() => {
-                // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
-              }}
-              onRestore={async () => {
-                if (
-                  selectedTask &&
-                  selectedTask.originalId &&
-                  onTaskRestoreAndSelectNext
-                ) {
-                  try {
-                    await taskOperations.restoreItem.mutateAsync(
-                      selectedTask.originalId,
-                    );
-                    onTaskRestoreAndSelectNext(selectedTask as DeletedTask);
-                  } catch (error) {
-                    console.error("タスク復元API実行エラー:", error);
+        <div className="flex flex-col h-full overflow-hidden">
+          <div className="flex-shrink-0">
+            {isDeletedTask(selectedTask) ? (
+              <TaskEditor
+                task={selectedTask}
+                initialBoardId={boardId}
+                isFromBoardDetail={true}
+                teamMode={teamMode}
+                teamId={teamId || undefined}
+                {...toCreatorProps(selectedTaskCreatorInfo)}
+                preloadedTags={tags || []}
+                preloadedBoards={allBoards || []}
+                preloadedTaggings={allTaggings || []}
+                preloadedBoardItems={allBoardItems}
+                onSelectTask={onSelectTask}
+                unifiedOperations={taskOperations}
+                onClose={() => {
+                  // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
+                }}
+                onRestore={async () => {
+                  if (
+                    selectedTask &&
+                    selectedTask.originalId &&
+                    onTaskRestoreAndSelectNext
+                  ) {
+                    try {
+                      await taskOperations.restoreItem.mutateAsync(
+                        selectedTask.originalId,
+                      );
+                      onTaskRestoreAndSelectNext(selectedTask as DeletedTask);
+                    } catch (error) {
+                      console.error("タスク復元API実行エラー:", error);
+                    }
                   }
-                }
-              }}
-              onDelete={async () => {
-                if (selectedTask && onDeletedTaskDeleteAndSelectNext) {
-                  // 削除済みタスクの完全削除処理（usePermanentDeleteTaskが必要）
-                  onDeletedTaskDeleteAndSelectNext(selectedTask);
-                }
-              }}
-            />
-          ) : (
-            <TaskEditor
-              task={selectedTask}
-              initialBoardId={boardId}
-              isFromBoardDetail={true}
-              teamMode={teamMode}
-              teamId={teamId || undefined}
-              {...toCreatorProps(selectedTaskCreatorInfo)}
-              preloadedTags={tags || []}
-              preloadedBoards={allBoards || []}
-              preloadedTaggings={allTaggings || []}
-              preloadedBoardItems={allBoardItems}
-              onSelectTask={onSelectTask}
-              unifiedOperations={taskOperations}
-              onClose={() => {
-                // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
-              }}
-              onSaveComplete={(savedTask, isNewTask, isContinuousMode) => {
-                if (!isNewTask) {
-                  // 編集の場合は保存後に選択状態を更新
-                  onSelectTask?.(savedTask);
-                } else if (!isContinuousMode) {
-                  // 新規作成で連続作成モードOFFの場合は作成されたタスクを選択
-                  onSelectTask?.(savedTask);
-                }
-                // 連続作成モードONの場合はTaskEditor内でのフォームリセットに任せる
-              }}
-              onDelete={async () => {
-                // ボード詳細でのタスク削除処理（削除ボタン表示用）
-              }}
-              onDeleteAndSelectNext={async (deletedTask: Task) => {
-                // API削除開始（楽観的更新でアイテムが即座に消える）
-                const deletePromise = taskOperations.deleteItem.mutateAsync(
-                  deletedTask.id,
-                );
+                }}
+                onDelete={async () => {
+                  if (selectedTask && onDeletedTaskDeleteAndSelectNext) {
+                    // 削除済みタスクの完全削除処理（usePermanentDeleteTaskが必要）
+                    onDeletedTaskDeleteAndSelectNext(selectedTask);
+                  }
+                }}
+              />
+            ) : (
+              <TaskEditor
+                task={selectedTask}
+                initialBoardId={boardId}
+                isFromBoardDetail={true}
+                teamMode={teamMode}
+                teamId={teamId || undefined}
+                {...toCreatorProps(selectedTaskCreatorInfo)}
+                preloadedTags={tags || []}
+                preloadedBoards={allBoards || []}
+                preloadedTaggings={allTaggings || []}
+                preloadedBoardItems={allBoardItems}
+                onSelectTask={onSelectTask}
+                unifiedOperations={taskOperations}
+                onClose={() => {
+                  // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
+                }}
+                onSaveComplete={(savedTask, isNewTask, isContinuousMode) => {
+                  if (!isNewTask) {
+                    // 編集の場合は保存後に選択状態を更新
+                    onSelectTask?.(savedTask);
+                  } else if (!isContinuousMode) {
+                    // 新規作成で連続作成モードOFFの場合は作成されたタスクを選択
+                    onSelectTask?.(savedTask);
+                  }
+                  // 連続作成モードONの場合はTaskEditor内でのフォームリセットに任せる
+                }}
+                onDelete={async () => {
+                  // ボード詳細でのタスク削除処理（削除ボタン表示用）
+                }}
+                onDeleteAndSelectNext={async (deletedTask: Task) => {
+                  // API削除開始（楽観的更新でアイテムが即座に消える）
+                  const deletePromise = taskOperations.deleteItem.mutateAsync(
+                    deletedTask.id,
+                  );
 
-                // 共通削除フックによる処理（DOM削除確認済み）
-                handleTaskDeleteWithNextSelection(deletedTask);
+                  // 共通削除フックによる処理（DOM削除確認済み）
+                  handleTaskDeleteWithNextSelection(deletedTask);
 
-                // API完了を待つ
-                await deletePromise;
-              }}
-            />
-          )}
-        </>
+                  // API完了を待つ
+                  await deletePromise;
+                }}
+              />
+            )}
+          </div>
+
+          {/* コメントセクション */}
+          <div className="flex-1 flex flex-col border-t border-gray-200 min-h-0">
+            <div className="p-4 flex-shrink-0">
+              <h3 className="text-sm font-medium text-gray-700">
+                タスクコメント
+              </h3>
+            </div>
+            <div className="flex flex-col flex-1 min-h-0">
+              {/* コメントリスト */}
+              <div className="flex-1 px-4 space-y-3 overflow-y-auto hover-scrollbar">
+                {Array.from({ length: 8 }, (_, i) => (
+                  <div
+                    key={i}
+                    className="bg-gray-50 rounded-lg p-3 border border-gray-100"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="size-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
+                        U{i + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-sm font-medium text-gray-800">
+                            ユーザー{i + 1}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {i === 0 ? "2分前" : `${i + 1}時間前`}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-700 leading-relaxed">
+                          タスク「{selectedTask.title || "タイトルなし"}
+                          」に関するコメント{i + 1}です。
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* 新規コメント入力 */}
+              <div className="p-4 border-t border-gray-200 flex-shrink-0">
+                <div className="flex items-start gap-3">
+                  <div className="size-7 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
+                    私
+                  </div>
+                  <div className="flex-1">
+                    <textarea
+                      placeholder="タスクにコメントを追加..."
+                      className="w-full p-3 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-gray-50"
+                      rows={3}
+                    />
+                    <div className="flex justify-end mt-2">
+                      <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm font-medium">
+                        コメント
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* メモ一覧表示 */}

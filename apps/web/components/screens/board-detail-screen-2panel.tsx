@@ -630,167 +630,148 @@ function BoardDetailScreen({
               <div className="rounded-lg bg-white flex flex-col min-h-0">
                 {selectedMemo ? (
                   /* メモ選択時: メモ詳細を表示 */
-                  <div className="h-full flex flex-col">
-                    <div className="pl-2 pr-2 flex items-center gap-3">
-                      <PanelBackButton onClick={onClearSelection} />
-                      <h3 className="text-sm font-medium text-gray-700">
-                        メモ詳細
-                      </h3>
-                    </div>
-                    <div className="flex-1 min-h-0 overflow-y-auto hover-scrollbar">
-                      <MemoEditor
-                        memo={selectedMemo as Memo}
-                        initialBoardId={boardId}
-                        onClose={onClearSelection || (() => {})}
-                        customHeight="h-full"
-                        teamMode={teamMode}
-                        teamId={teamId || undefined}
-                        createdBy={
-                          selectedMemo && "createdBy" in selectedMemo
-                            ? selectedMemo.createdBy
-                            : null
+                  <div className="h-full flex flex-col overflow-y-auto hover-scrollbar">
+                    <MemoEditor
+                      memo={selectedMemo as Memo}
+                      initialBoardId={boardId}
+                      onClose={onClearSelection || (() => {})}
+                      customHeight="h-full"
+                      teamMode={teamMode}
+                      teamId={teamId || undefined}
+                      createdBy={
+                        selectedMemo && "createdBy" in selectedMemo
+                          ? selectedMemo.createdBy
+                          : null
+                      }
+                      createdByAvatarColor={
+                        selectedMemo && "avatarColor" in selectedMemo
+                          ? selectedMemo.avatarColor
+                          : null
+                      }
+                      preloadedBoardItems={allBoardItems || []}
+                      preloadedBoards={
+                        teamMode ? teamBoards || [] : personalBoards || []
+                      }
+                      onSaveComplete={(
+                        savedMemo: Memo,
+                        wasEmpty: boolean,
+                        isNewMemo: boolean,
+                      ) => {
+                        // 連続作成モードがOFFで新規メモの場合、保存されたメモを選択状態にする
+                        if (
+                          isNewMemo &&
+                          !getContinuousCreateMode(
+                            "memo-continuous-create-mode",
+                          )
+                        ) {
+                          onSelectMemo?.(savedMemo);
                         }
-                        createdByAvatarColor={
-                          selectedMemo && "avatarColor" in selectedMemo
-                            ? selectedMemo.avatarColor
-                            : null
+                      }}
+                      onDeleteAndSelectNext={(memo) => {
+                        if ("id" in memo) {
+                          handleMemoDeleteWithNextSelection(memo as Memo);
+                        } else {
+                          console.error("❌ 削除対象メモが不正", memo);
                         }
-                        preloadedBoardItems={allBoardItems || []}
-                        preloadedBoards={
-                          teamMode ? teamBoards || [] : personalBoards || []
-                        }
-                        onSaveComplete={(
-                          savedMemo: Memo,
-                          wasEmpty: boolean,
-                          isNewMemo: boolean,
-                        ) => {
-                          // 連続作成モードがOFFで新規メモの場合、保存されたメモを選択状態にする
-                          if (
-                            isNewMemo &&
-                            !getContinuousCreateMode(
-                              "memo-continuous-create-mode",
-                            )
-                          ) {
-                            onSelectMemo?.(savedMemo);
-                          }
-                        }}
-                        onDeleteAndSelectNext={(memo) => {
-                          if ("id" in memo) {
-                            handleMemoDeleteWithNextSelection(memo as Memo);
-                          } else {
-                            console.error("❌ 削除対象メモが不正", memo);
-                          }
-                        }}
-                        onRestore={() => {
-                          console.log(
-                            "🔄 チームボード詳細 - 復元ボタンクリック",
-                            {
-                              selectedMemo,
-                              hasOriginalId:
-                                selectedMemo && "originalId" in selectedMemo,
-                              originalId:
-                                selectedMemo && "originalId" in selectedMemo
-                                  ? (selectedMemo as DeletedMemo).originalId
-                                  : null,
-                            },
+                      }}
+                      onRestore={() => {
+                        console.log(
+                          "🔄 チームボード詳細 - 復元ボタンクリック",
+                          {
+                            selectedMemo,
+                            hasOriginalId:
+                              selectedMemo && "originalId" in selectedMemo,
+                            originalId:
+                              selectedMemo && "originalId" in selectedMemo
+                                ? (selectedMemo as DeletedMemo).originalId
+                                : null,
+                          },
+                        );
+                        if (selectedMemo && "originalId" in selectedMemo) {
+                          handleMemoRestoreAndSelectNext(
+                            selectedMemo as DeletedMemo,
                           );
-                          if (selectedMemo && "originalId" in selectedMemo) {
-                            handleMemoRestoreAndSelectNext(
-                              selectedMemo as DeletedMemo,
-                            );
-                          } else {
-                            console.error(
-                              "❌ 復元対象メモが不正",
-                              selectedMemo,
-                            );
-                          }
-                        }}
-                        onRestoreAndSelectNext={handleMemoRestoreAndSelectNext}
-                        totalDeletedCount={deletedMemos?.length || 0}
-                      />
-                    </div>
+                        } else {
+                          console.error("❌ 復元対象メモが不正", selectedMemo);
+                        }
+                      }}
+                      onRestoreAndSelectNext={handleMemoRestoreAndSelectNext}
+                      totalDeletedCount={deletedMemos?.length || 0}
+                    />
                   </div>
                 ) : selectedTask ? (
                   /* タスク選択時: タスク詳細を表示 */
-                  <div className="h-full flex flex-col">
-                    <div className="pl-2 pr-2 flex items-center gap-3">
-                      <PanelBackButton onClick={onClearSelection} />
-                      <h3 className="text-sm font-medium text-gray-700">
-                        タスク詳細
-                      </h3>
-                    </div>
-                    <div className="flex-1 min-h-0 overflow-y-auto hover-scrollbar">
-                      <TaskEditor
-                        task={selectedTask as Task}
-                        initialBoardId={boardId}
-                        onClose={onClearSelection || (() => {})}
-                        customHeight="h-full"
-                        teamMode={teamMode}
-                        teamId={teamId || undefined}
-                        createdBy={
-                          selectedTask && "createdBy" in selectedTask
-                            ? selectedTask.createdBy
-                            : null
+                  <div className="h-full flex flex-col overflow-y-auto hover-scrollbar">
+                    <TaskEditor
+                      task={selectedTask as Task}
+                      initialBoardId={boardId}
+                      onClose={onClearSelection || (() => {})}
+                      customHeight="h-full"
+                      teamMode={teamMode}
+                      teamId={teamId || undefined}
+                      createdBy={
+                        selectedTask && "createdBy" in selectedTask
+                          ? selectedTask.createdBy
+                          : null
+                      }
+                      createdByAvatarColor={
+                        selectedTask && "avatarColor" in selectedTask
+                          ? selectedTask.avatarColor
+                          : null
+                      }
+                      preloadedBoardItems={allBoardItems || []}
+                      preloadedBoards={
+                        teamMode ? teamBoards || [] : personalBoards || []
+                      }
+                      onSaveComplete={(
+                        savedTask: Task,
+                        isNewTask: boolean,
+                        isContinuousMode?: boolean,
+                      ) => {
+                        // 連続作成モードがOFFで新規タスクの場合、保存されたタスクを選択状態にする
+                        if (isNewTask && !isContinuousMode) {
+                          onSelectTask?.(savedTask);
                         }
-                        createdByAvatarColor={
-                          selectedTask && "avatarColor" in selectedTask
-                            ? selectedTask.avatarColor
-                            : null
+                      }}
+                      onDeleteAndSelectNext={(task) => {
+                        if ("id" in task) {
+                          handleTaskDeleteWithNextSelection(task as Task);
+                        } else {
+                          console.error("❌ 削除対象タスクが不正", task);
                         }
-                        preloadedBoardItems={allBoardItems || []}
-                        preloadedBoards={
-                          teamMode ? teamBoards || [] : personalBoards || []
-                        }
-                        onSaveComplete={(
-                          savedTask: Task,
-                          isNewTask: boolean,
-                          isContinuousMode?: boolean,
-                        ) => {
-                          // 連続作成モードがOFFで新規タスクの場合、保存されたタスクを選択状態にする
-                          if (isNewTask && !isContinuousMode) {
-                            onSelectTask?.(savedTask);
-                          }
-                        }}
-                        onDeleteAndSelectNext={(task) => {
-                          if ("id" in task) {
-                            handleTaskDeleteWithNextSelection(task as Task);
-                          } else {
-                            console.error("❌ 削除対象タスクが不正", task);
-                          }
-                        }}
-                        onRestore={() => {
-                          console.log(
-                            "🔄 チームボード詳細 - タスク復元ボタンクリック",
-                            {
-                              selectedTask,
-                              hasOriginalId:
-                                selectedTask && "originalId" in selectedTask,
-                              originalId:
-                                selectedTask && "originalId" in selectedTask
-                                  ? (selectedTask as DeletedTask).originalId
-                                  : null,
-                            },
+                      }}
+                      onRestore={() => {
+                        console.log(
+                          "🔄 チームボード詳細 - タスク復元ボタンクリック",
+                          {
+                            selectedTask,
+                            hasOriginalId:
+                              selectedTask && "originalId" in selectedTask,
+                            originalId:
+                              selectedTask && "originalId" in selectedTask
+                                ? (selectedTask as DeletedTask).originalId
+                                : null,
+                          },
+                        );
+                        if (selectedTask && "originalId" in selectedTask) {
+                          handleTaskRestoreAndSelectNext(
+                            selectedTask as DeletedTask,
                           );
-                          if (selectedTask && "originalId" in selectedTask) {
-                            handleTaskRestoreAndSelectNext(
-                              selectedTask as DeletedTask,
-                            );
-                          } else {
-                            console.error(
-                              "❌ 復元対象タスクが不正",
-                              selectedTask,
-                            );
-                          }
-                        }}
-                        onRestoreAndSelectNext={() => {
-                          if (selectedTask && "originalId" in selectedTask) {
-                            handleTaskRestoreAndSelectNext(
-                              selectedTask as DeletedTask,
-                            );
-                          }
-                        }}
-                      />
-                    </div>
+                        } else {
+                          console.error(
+                            "❌ 復元対象タスクが不正",
+                            selectedTask,
+                          );
+                        }
+                      }}
+                      onRestoreAndSelectNext={() => {
+                        if (selectedTask && "originalId" in selectedTask) {
+                          handleTaskRestoreAndSelectNext(
+                            selectedTask as DeletedTask,
+                          );
+                        }
+                      }}
+                    />
                   </div>
                 ) : (
                   /* 何も選択されていない時: タスク一覧を表示 */

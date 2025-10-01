@@ -123,7 +123,8 @@
       "Bash(apitest \"/memos/deleted\" \"GET\")",
       "Bash(apitest \"/memos/deleted/test/restore\" \"POST\")",
       "Bash(apitest \"/teams/18/memos/deleted/597/restore\" \"POST\")",
-      "Bash(apitest \"/boards/items/task/272/boards\" \"GET\")"
+      "Bash(apitest \"/boards/items/task/272/boards\" \"GET\")",
+      "Bash(git log:*)"
     ],
     "deny": []
   }

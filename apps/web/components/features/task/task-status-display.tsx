@@ -1,7 +1,6 @@
 "use client";
 
-import TaskCard from "@/components/features/task/task-card";
-import TaskListItem from "@/components/features/task/task-list-item";
+import ItemDisplay from "@/components/ui/layout/item-display";
 import ItemStatusDisplay from "@/components/ui/layout/item-status-display";
 import type { Task, DeletedTask } from "@/src/types/task";
 import type { Tag, Tagging } from "@/src/types/tag";
@@ -287,12 +286,14 @@ function TaskStatusDisplay({
     const taskTags = taskWithData?.tags || [];
     const taskBoards = taskWithData?.boards || [];
 
-    const Component = viewMode === "card" ? TaskCard : TaskListItem;
     /* eslint-disable react/prop-types */
     const taskComponent = (
-      <Component
+      <ItemDisplay
         key={task.id}
-        task={task}
+        itemType="task"
+        item={task}
+        viewMode={viewMode}
+        variant={props.variant}
         isChecked={props.isChecked}
         onToggleCheck={props.onToggleCheck}
         onSelect={props.onSelect}
@@ -300,10 +301,9 @@ function TaskStatusDisplay({
         showEditDate={props.showEditDate}
         showBoardName={props.showBoardName}
         showTags={props.showTags}
-        variant={props.variant}
         selectionMode={selectionMode}
-        tags={taskTags}
-        boards={taskBoards}
+        preloadedTags={taskTags}
+        preloadedBoards={taskBoards}
         teamMode={teamMode}
       />
     );
@@ -434,23 +434,24 @@ export function DeletedTaskDisplay({
         (board): board is NonNullable<typeof board> => board !== undefined,
       );
 
-    const Component = viewMode === "card" ? TaskCard : TaskListItem;
     /* eslint-disable react/prop-types */
     return (
-      <Component
+      <ItemDisplay
         key={task.id}
-        task={task}
+        itemType="task"
+        item={task}
+        viewMode={viewMode}
+        variant="deleted"
         isChecked={props.isChecked}
         onToggleCheck={props.onToggleCheck}
         onSelect={props.onSelect}
-        variant="deleted"
         isSelected={props.isSelected}
         showEditDate={props.showEditDate}
         showBoardName={props.showBoardName}
         showTags={props.showTags}
+        selectionMode={selectionMode}
         preloadedTags={taskTags}
         preloadedBoards={taskBoards}
-        selectionMode={selectionMode}
       />
     );
     /* eslint-enable react/prop-types */

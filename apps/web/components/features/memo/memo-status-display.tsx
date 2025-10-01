@@ -1,7 +1,6 @@
 "use client";
 
-import MemoCard from "@/components/features/memo/memo-card";
-import MemoListItem from "@/components/features/memo/memo-list-item";
+import ItemDisplay from "@/components/ui/layout/item-display";
 import ItemStatusDisplay from "@/components/ui/layout/item-status-display";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Tag, Tagging } from "@/src/types/tag";
@@ -267,14 +266,16 @@ function MemoStatusDisplay({
       variant?: "normal" | "deleted";
     },
   ) => {
-    const Component = viewMode === "card" ? MemoCard : MemoListItem;
     const memoData = memoDataMap.get(memo.id) || { tags: [], boards: [] };
 
     /* eslint-disable react/prop-types */
     const memoComponent = (
-      <Component
+      <ItemDisplay
         key={memo.id}
-        memo={memo}
+        itemType="memo"
+        item={memo}
+        viewMode={viewMode}
+        variant={props.variant}
         isChecked={props.isChecked}
         onToggleCheck={props.onToggleCheck}
         onSelect={props.onSelect}
@@ -282,9 +283,8 @@ function MemoStatusDisplay({
         isSelected={props.isSelected}
         showEditDate={props.showEditDate}
         showBoardName={props.showBoardName}
-        variant={props.variant}
-        selectionMode={selectionMode}
         showTags={props.showTags}
+        selectionMode={selectionMode}
         // 全データ事前取得（ちらつき解消）
         preloadedTags={memoData.tags}
         preloadedBoards={memoData.boards}
@@ -408,24 +408,25 @@ export function DeletedMemoDisplay({
         (board): board is NonNullable<typeof board> => board !== undefined,
       );
 
-    const Component = viewMode === "card" ? MemoCard : MemoListItem;
     /* eslint-disable react/prop-types */
     return (
-      <Component
+      <ItemDisplay
         key={memo.id}
-        memo={memo}
+        itemType="memo"
+        item={memo}
+        viewMode={viewMode}
+        variant="deleted"
         isChecked={props.isChecked}
         onToggleCheck={props.onToggleCheck}
         onSelect={props.onSelect}
         onDoubleClick={() => onDoubleClick?.(memo)}
-        variant="deleted"
         isSelected={props.isSelected}
         showEditDate={props.showEditDate}
         showBoardName={props.showBoardName}
         showTags={props.showTags}
+        selectionMode={selectionMode}
         preloadedTags={memoTags}
         preloadedBoards={memoBoards}
-        selectionMode={selectionMode}
         teamMode={teamMode}
       />
     );

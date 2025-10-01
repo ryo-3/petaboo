@@ -454,7 +454,7 @@ function BoardDetailScreen({
   }
 
   return (
-    <div className="flex h-full bg-white overflow-hidden">
+    <div className="flex h-full bg-white overflow-x-auto overflow-y-hidden">
       {/* 左側：メモ・タスク一覧 */}
       <div
         className={`${
@@ -521,8 +521,8 @@ function BoardDetailScreen({
           className={`${
             teamMode
               ? selectedMemo || selectedTask
-                ? "grid grid-cols-[25%_50%_25%] gap-2 flex-1 min-h-0"
-                : "grid grid-cols-3 gap-2 flex-1 min-h-0"
+                ? "grid grid-cols-[300px_1fr_350px] gap-2 flex-1 min-h-0 min-w-[1280px]"
+                : "grid grid-cols-3 gap-2 flex-1 min-h-0 min-w-[1280px]"
               : !teamMode &&
                   (rightPanelMode === "memo-list" ||
                     rightPanelMode === "task-list")

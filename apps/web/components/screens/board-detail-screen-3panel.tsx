@@ -32,6 +32,11 @@ import { useBoardCategories } from "@/src/hooks/use-board-categories";
 import BoardCategoryChip from "@/components/features/board-categories/board-category-chip";
 import { useUserInfo } from "@/src/hooks/use-user-info";
 import { getUserAvatarColor } from "@/src/utils/userUtils";
+import {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle,
+} from "@/components/ui/base/resizable";
 
 interface BoardDetailProps {
   boardId: number;
@@ -536,7 +541,7 @@ function BoardDetailScreen({
           className={`${
             teamMode
               ? selectedMemo || selectedTask
-                ? "grid grid-cols-[300px_1fr_350px] gap-2 flex-1 min-h-0 min-w-[1280px]"
+                ? "flex gap-2 flex-1 min-h-0 min-w-[1280px]"
                 : "grid grid-cols-3 gap-2 flex-1 min-h-0 min-w-[1280px]"
               : !teamMode &&
                   (rightPanelMode === "memo-list" ||
@@ -551,366 +556,503 @@ function BoardDetailScreen({
         >
           {teamMode ? (
             <>
-              {/* 左パネル: 選択に応じてメモ一覧またはタスク一覧 */}
-              <div className="rounded-lg bg-white flex flex-col min-h-0">
-                {selectedTask ? (
-                  /* タスク選択時: タスク一覧を表示 */
-                  <BoardTaskSection
-                    boardId={boardId}
-                    rightPanelMode={rightPanelMode}
-                    showTask={showTask}
-                    allTaskItems={allTaskItems}
-                    taskItems={taskItems}
-                    activeTaskTab={activeTaskTab}
-                    todoCount={todoCount}
-                    inProgressCount={inProgressCount}
-                    completedCount={completedCount}
-                    deletedCount={deletedCount}
-                    showTabText={showTabText}
-                    isLoading={isLoading}
-                    effectiveColumnCount={effectiveColumnCount}
-                    viewMode={viewMode}
-                    showEditDate={showEditDate}
-                    showTags={showTags}
-                    showBoardName={false}
-                    allTags={safeAllTags}
-                    allBoards={safeAllBoards}
-                    allTaggings={(safeAllTaggings || []) as Tagging[]}
-                    teamMode={teamMode}
-                    teamId={teamId}
-                    allBoardItems={safeAllBoardItems}
-                    selectedTask={selectedTask}
-                    onCreateNewTask={handleCreateNewTask}
-                    onSetRightPanelMode={setRightPanelMode}
-                    onTaskTabChange={handleTaskTabChangeWithRefresh}
-                    onSelectTask={handleSelectTask}
-                    taskSelectionMode={selectionMode}
-                    checkedTasks={checkedTasks}
-                    onTaskSelectionToggle={handleTaskSelectionToggle}
-                    onSelectAll={handleTaskSelectAll}
-                    isAllSelected={isTaskAllSelected}
-                    onBulkDelete={() => handleBulkDelete("task")}
-                    isDeleting={isTaskDeleting}
-                    isLidOpen={isTaskLidOpen}
-                    currentDisplayCount={currentTaskDisplayCount}
-                    deleteButtonRef={deleteButtonRef}
-                    onCheckedTasksChange={setCheckedTasks}
-                    onTagging={handleTaggingTask}
-                  />
-                ) : (
-                  /* デフォルトまたはメモ選択時: メモ一覧を表示 */
-                  <BoardMemoSection
-                    rightPanelMode={rightPanelMode}
-                    showMemo={showMemo}
-                    allMemoItems={allMemoItems}
-                    memoItems={memoItems}
-                    activeMemoTab={activeMemoTab}
-                    normalMemoCount={normalMemoCount}
-                    deletedMemoCount={deletedMemoCount}
-                    showTabText={showTabText}
-                    isLoading={isLoading}
-                    effectiveColumnCount={effectiveColumnCount}
-                    viewMode={viewMode}
-                    allTags={safeAllTags}
-                    allBoards={safeAllBoards}
-                    allTaggings={(safeAllTaggings || []) as Tagging[]}
-                    allBoardItems={safeAllBoardItems}
-                    showEditDate={showEditDate}
-                    showTags={showTags}
-                    selectedMemo={selectedMemo}
-                    teamMode={teamMode}
-                    teamId={teamId}
-                    boardId={boardId}
-                    onCreateNewMemo={handleCreateNewMemo}
-                    onSetRightPanelMode={setRightPanelMode}
-                    onMemoTabChange={handleMemoTabChangeWithRefresh}
-                    onSelectMemo={handleSelectMemo}
-                    memoSelectionMode={selectionMode}
-                    checkedMemos={checkedMemos}
-                    onMemoSelectionToggle={handleMemoSelectionToggle}
-                    onSelectAll={handleMemoSelectAll}
-                    isAllSelected={isMemoAllSelected}
-                    onBulkDelete={() => handleBulkDelete("memo")}
-                    isDeleting={isMemoDeleting}
-                    isLidOpen={isMemoLidOpen}
-                    currentDisplayCount={currentMemoDisplayCount}
-                    deleteButtonRef={deleteButtonRef}
-                    onCheckedMemosChange={setCheckedMemos}
-                    onTagging={handleTaggingMemo}
-                  />
-                )}
-              </div>
-
-              {/* 中央パネル: 詳細表示またはタスク一覧 */}
-              <div className="rounded-lg bg-white flex flex-col min-h-0">
-                {selectedMemo ? (
-                  /* メモ選択時: メモ詳細を表示 */
-                  <div className="h-full flex flex-col overflow-y-auto hover-scrollbar">
-                    <MemoEditor
-                      memo={selectedMemo as Memo}
-                      initialBoardId={boardId}
-                      onClose={onClearSelection || (() => {})}
-                      customHeight="h-full"
-                      teamMode={teamMode}
-                      teamId={teamId || undefined}
-                      createdBy={
-                        selectedMemo && "createdBy" in selectedMemo
-                          ? selectedMemo.createdBy
-                          : null
-                      }
-                      createdByAvatarColor={
-                        selectedMemo && "avatarColor" in selectedMemo
-                          ? selectedMemo.avatarColor
-                          : null
-                      }
-                      preloadedBoardItems={allBoardItems || []}
-                      preloadedBoards={
-                        teamMode ? teamBoards || [] : personalBoards || []
-                      }
-                      onSaveComplete={(
-                        savedMemo: Memo,
-                        wasEmpty: boolean,
-                        isNewMemo: boolean,
-                      ) => {
-                        // 連続作成モードがOFFで新規メモの場合、保存されたメモを選択状態にする
-                        if (
-                          isNewMemo &&
-                          !getContinuousCreateMode(
-                            "memo-continuous-create-mode",
-                          )
-                        ) {
-                          onSelectMemo?.(savedMemo);
-                        }
-                      }}
-                      onDeleteAndSelectNext={(memo) => {
-                        if ("id" in memo) {
-                          handleMemoDeleteWithNextSelection(memo as Memo);
-                        } else {
-                          console.error("❌ 削除対象メモが不正", memo);
-                        }
-                      }}
-                      onRestore={() => {
-                        console.log(
-                          "🔄 チームボード詳細 - 復元ボタンクリック",
-                          {
-                            selectedMemo,
-                            hasOriginalId:
-                              selectedMemo && "originalId" in selectedMemo,
-                            originalId:
-                              selectedMemo && "originalId" in selectedMemo
-                                ? (selectedMemo as DeletedMemo).originalId
-                                : null,
-                          },
-                        );
-                        if (selectedMemo && "originalId" in selectedMemo) {
-                          handleMemoRestoreAndSelectNext(
-                            selectedMemo as DeletedMemo,
-                          );
-                        } else {
-                          console.error("❌ 復元対象メモが不正", selectedMemo);
-                        }
-                      }}
-                      onRestoreAndSelectNext={handleMemoRestoreAndSelectNext}
-                      totalDeletedCount={deletedMemos?.length || 0}
-                    />
-                  </div>
-                ) : selectedTask ? (
-                  /* タスク選択時: タスク詳細を表示 */
-                  <div className="h-full flex flex-col overflow-y-auto hover-scrollbar">
-                    <TaskEditor
-                      task={selectedTask as Task}
-                      initialBoardId={boardId}
-                      onClose={onClearSelection || (() => {})}
-                      customHeight="h-full"
-                      teamMode={teamMode}
-                      teamId={teamId || undefined}
-                      createdBy={
-                        selectedTask && "createdBy" in selectedTask
-                          ? selectedTask.createdBy
-                          : null
-                      }
-                      createdByAvatarColor={
-                        selectedTask && "avatarColor" in selectedTask
-                          ? selectedTask.avatarColor
-                          : null
-                      }
-                      preloadedBoardItems={allBoardItems || []}
-                      preloadedBoards={
-                        teamMode ? teamBoards || [] : personalBoards || []
-                      }
-                      onSaveComplete={(
-                        savedTask: Task,
-                        isNewTask: boolean,
-                        isContinuousMode?: boolean,
-                      ) => {
-                        // 連続作成モードがOFFで新規タスクの場合、保存されたタスクを選択状態にする
-                        if (isNewTask && !isContinuousMode) {
-                          onSelectTask?.(savedTask);
-                        }
-                      }}
-                      onDeleteAndSelectNext={(task) => {
-                        if ("id" in task) {
-                          handleTaskDeleteWithNextSelection(task as Task);
-                        } else {
-                          console.error("❌ 削除対象タスクが不正", task);
-                        }
-                      }}
-                      onRestore={() => {
-                        console.log(
-                          "🔄 チームボード詳細 - タスク復元ボタンクリック",
-                          {
-                            selectedTask,
-                            hasOriginalId:
-                              selectedTask && "originalId" in selectedTask,
-                            originalId:
-                              selectedTask && "originalId" in selectedTask
-                                ? (selectedTask as DeletedTask).originalId
-                                : null,
-                          },
-                        );
-                        if (selectedTask && "originalId" in selectedTask) {
-                          handleTaskRestoreAndSelectNext(
-                            selectedTask as DeletedTask,
-                          );
-                        } else {
-                          console.error(
-                            "❌ 復元対象タスクが不正",
-                            selectedTask,
-                          );
-                        }
-                      }}
-                      onRestoreAndSelectNext={() => {
-                        if (selectedTask && "originalId" in selectedTask) {
-                          handleTaskRestoreAndSelectNext(
-                            selectedTask as DeletedTask,
-                          );
-                        }
-                      }}
-                    />
-                  </div>
-                ) : (
-                  /* 何も選択されていない時: タスク一覧を表示 */
-                  <BoardTaskSection
-                    boardId={boardId}
-                    rightPanelMode={rightPanelMode}
-                    showTask={showTask}
-                    allTaskItems={allTaskItems}
-                    taskItems={taskItems}
-                    activeTaskTab={activeTaskTab}
-                    todoCount={todoCount}
-                    inProgressCount={inProgressCount}
-                    completedCount={completedCount}
-                    deletedCount={deletedCount}
-                    showTabText={showTabText}
-                    isLoading={isLoading}
-                    effectiveColumnCount={effectiveColumnCount}
-                    viewMode={viewMode}
-                    showEditDate={showEditDate}
-                    showTags={showTags}
-                    showBoardName={false}
-                    allTags={safeAllTags}
-                    allBoards={safeAllBoards}
-                    allTaggings={(safeAllTaggings || []) as Tagging[]}
-                    teamMode={teamMode}
-                    teamId={teamId}
-                    allBoardItems={safeAllBoardItems}
-                    selectedTask={selectedTask}
-                    onCreateNewTask={handleCreateNewTask}
-                    onSetRightPanelMode={setRightPanelMode}
-                    onTaskTabChange={handleTaskTabChangeWithRefresh}
-                    onSelectTask={handleSelectTask}
-                    taskSelectionMode={selectionMode}
-                    checkedTasks={checkedTasks}
-                    onTaskSelectionToggle={handleTaskSelectionToggle}
-                    onSelectAll={handleTaskSelectAll}
-                    isAllSelected={isTaskAllSelected}
-                    onBulkDelete={() => handleBulkDelete("task")}
-                    isDeleting={isTaskDeleting}
-                    isLidOpen={isTaskLidOpen}
-                    currentDisplayCount={currentTaskDisplayCount}
-                    deleteButtonRef={deleteButtonRef}
-                    onCheckedTasksChange={setCheckedTasks}
-                    onTagging={handleTaggingTask}
-                  />
-                )}
-              </div>
-
-              {/* 右パネル: コンテキストに応じたコメント */}
-              <div className="rounded-lg bg-white pr-2 flex flex-col min-h-0">
-                <div className="p-4 flex-shrink-0">
-                  <h3 className="text-sm font-medium text-gray-700">
-                    {selectedMemo
-                      ? `メモコメント`
-                      : selectedTask
-                        ? `タスクコメント`
-                        : `ボードコメント`}
-                  </h3>
-                </div>
-                <div className="flex flex-col flex-1 min-h-0">
-                  {/* コメントリスト */}
-                  <div
-                    ref={commentListRef}
-                    className="flex-1 px-4 py-3 space-y-3 overflow-y-auto hover-scrollbar"
+              {selectedMemo || selectedTask ? (
+                /* 3パネルレイアウト（リサイズ可能） */
+                <ResizablePanelGroup direction="horizontal" className="flex-1">
+                  {/* 左パネル: 選択に応じてメモ一覧またはタスク一覧 */}
+                  <ResizablePanel
+                    defaultSize={20}
+                    minSize={15}
+                    maxSize={28}
+                    className="rounded-lg bg-white flex flex-col min-h-0"
                   >
-                    {Array.from({ length: 20 }, (_, i) => {
-                      const commentNumber = i + 1;
-                      return (
-                        <div
-                          key={i}
-                          className="bg-gray-50 rounded-lg p-3 border border-gray-100"
-                        >
-                          <div className="flex items-start gap-3">
-                            <div className="size-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
-                              U{commentNumber}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="text-sm font-medium text-gray-800">
-                                  ユーザー{commentNumber}
-                                </span>
-                                <span className="text-xs text-gray-500">
-                                  {commentNumber === 20
-                                    ? "2分前"
-                                    : `${20 - commentNumber + 1}時間前`}
-                                </span>
+                    {selectedTask ? (
+                      /* タスク選択時: タスク一覧を表示 */
+                      <BoardTaskSection
+                        boardId={boardId}
+                        rightPanelMode={rightPanelMode}
+                        showTask={showTask}
+                        allTaskItems={allTaskItems}
+                        taskItems={taskItems}
+                        activeTaskTab={activeTaskTab}
+                        todoCount={todoCount}
+                        inProgressCount={inProgressCount}
+                        completedCount={completedCount}
+                        deletedCount={deletedCount}
+                        showTabText={showTabText}
+                        isLoading={isLoading}
+                        effectiveColumnCount={effectiveColumnCount}
+                        viewMode={viewMode}
+                        showEditDate={showEditDate}
+                        showTags={showTags}
+                        showBoardName={false}
+                        allTags={safeAllTags}
+                        allBoards={safeAllBoards}
+                        allTaggings={(safeAllTaggings || []) as Tagging[]}
+                        teamMode={teamMode}
+                        teamId={teamId}
+                        allBoardItems={safeAllBoardItems}
+                        selectedTask={selectedTask}
+                        onCreateNewTask={handleCreateNewTask}
+                        onSetRightPanelMode={setRightPanelMode}
+                        onTaskTabChange={handleTaskTabChangeWithRefresh}
+                        onSelectTask={handleSelectTask}
+                        taskSelectionMode={selectionMode}
+                        checkedTasks={checkedTasks}
+                        onTaskSelectionToggle={handleTaskSelectionToggle}
+                        onSelectAll={handleTaskSelectAll}
+                        isAllSelected={isTaskAllSelected}
+                        onBulkDelete={() => handleBulkDelete("task")}
+                        isDeleting={isTaskDeleting}
+                        isLidOpen={isTaskLidOpen}
+                        currentDisplayCount={currentTaskDisplayCount}
+                        deleteButtonRef={deleteButtonRef}
+                        onCheckedTasksChange={setCheckedTasks}
+                        onTagging={handleTaggingTask}
+                      />
+                    ) : (
+                      /* デフォルトまたはメモ選択時: メモ一覧を表示 */
+                      <BoardMemoSection
+                        rightPanelMode={rightPanelMode}
+                        showMemo={showMemo}
+                        allMemoItems={allMemoItems}
+                        memoItems={memoItems}
+                        activeMemoTab={activeMemoTab}
+                        normalMemoCount={normalMemoCount}
+                        deletedMemoCount={deletedMemoCount}
+                        showTabText={showTabText}
+                        isLoading={isLoading}
+                        effectiveColumnCount={effectiveColumnCount}
+                        viewMode={viewMode}
+                        allTags={safeAllTags}
+                        allBoards={safeAllBoards}
+                        allTaggings={(safeAllTaggings || []) as Tagging[]}
+                        allBoardItems={safeAllBoardItems}
+                        showEditDate={showEditDate}
+                        showTags={showTags}
+                        selectedMemo={selectedMemo}
+                        teamMode={teamMode}
+                        teamId={teamId}
+                        boardId={boardId}
+                        onCreateNewMemo={handleCreateNewMemo}
+                        onSetRightPanelMode={setRightPanelMode}
+                        onMemoTabChange={handleMemoTabChangeWithRefresh}
+                        onSelectMemo={handleSelectMemo}
+                        memoSelectionMode={selectionMode}
+                        checkedMemos={checkedMemos}
+                        onMemoSelectionToggle={handleMemoSelectionToggle}
+                        onSelectAll={handleMemoSelectAll}
+                        isAllSelected={isMemoAllSelected}
+                        onBulkDelete={() => handleBulkDelete("memo")}
+                        isDeleting={isMemoDeleting}
+                        isLidOpen={isMemoLidOpen}
+                        currentDisplayCount={currentMemoDisplayCount}
+                        deleteButtonRef={deleteButtonRef}
+                        onCheckedMemosChange={setCheckedMemos}
+                        onTagging={handleTaggingMemo}
+                      />
+                    )}
+                  </ResizablePanel>
+
+                  <ResizableHandle withHandle />
+
+                  {/* 中央パネル: 詳細表示またはタスク一覧 */}
+                  <ResizablePanel
+                    defaultSize={50}
+                    minSize={35}
+                    className="rounded-lg bg-white flex flex-col min-h-0"
+                  >
+                    {selectedMemo ? (
+                      /* メモ選択時: メモ詳細を表示 */
+                      <div className="h-full flex flex-col overflow-y-auto hover-scrollbar">
+                        <MemoEditor
+                          memo={selectedMemo as Memo}
+                          initialBoardId={boardId}
+                          onClose={onClearSelection || (() => {})}
+                          customHeight="h-full"
+                          teamMode={teamMode}
+                          teamId={teamId || undefined}
+                          createdBy={
+                            selectedMemo && "createdBy" in selectedMemo
+                              ? selectedMemo.createdBy
+                              : null
+                          }
+                          createdByAvatarColor={
+                            selectedMemo && "avatarColor" in selectedMemo
+                              ? selectedMemo.avatarColor
+                              : null
+                          }
+                          preloadedBoardItems={allBoardItems || []}
+                          preloadedBoards={
+                            teamMode ? teamBoards || [] : personalBoards || []
+                          }
+                          onSaveComplete={(
+                            savedMemo: Memo,
+                            wasEmpty: boolean,
+                            isNewMemo: boolean,
+                          ) => {
+                            // 連続作成モードがOFFで新規メモの場合、保存されたメモを選択状態にする
+                            if (
+                              isNewMemo &&
+                              !getContinuousCreateMode(
+                                "memo-continuous-create-mode",
+                              )
+                            ) {
+                              onSelectMemo?.(savedMemo);
+                            }
+                          }}
+                          onDeleteAndSelectNext={(memo) => {
+                            if ("id" in memo) {
+                              handleMemoDeleteWithNextSelection(memo as Memo);
+                            } else {
+                              console.error("❌ 削除対象メモが不正", memo);
+                            }
+                          }}
+                          onRestore={() => {
+                            console.log(
+                              "🔄 チームボード詳細 - 復元ボタンクリック",
+                              {
+                                selectedMemo,
+                                hasOriginalId:
+                                  selectedMemo && "originalId" in selectedMemo,
+                                originalId:
+                                  selectedMemo && "originalId" in selectedMemo
+                                    ? (selectedMemo as DeletedMemo).originalId
+                                    : null,
+                              },
+                            );
+                            if (selectedMemo && "originalId" in selectedMemo) {
+                              handleMemoRestoreAndSelectNext(
+                                selectedMemo as DeletedMemo,
+                              );
+                            } else {
+                              console.error(
+                                "❌ 復元対象メモが不正",
+                                selectedMemo,
+                              );
+                            }
+                          }}
+                          onRestoreAndSelectNext={
+                            handleMemoRestoreAndSelectNext
+                          }
+                          totalDeletedCount={deletedMemos?.length || 0}
+                        />
+                      </div>
+                    ) : selectedTask ? (
+                      /* タスク選択時: タスク詳細を表示 */
+                      <div className="h-full flex flex-col overflow-y-auto hover-scrollbar">
+                        <TaskEditor
+                          task={selectedTask as Task}
+                          initialBoardId={boardId}
+                          onClose={onClearSelection || (() => {})}
+                          customHeight="h-full"
+                          teamMode={teamMode}
+                          teamId={teamId || undefined}
+                          createdBy={
+                            selectedTask && "createdBy" in selectedTask
+                              ? selectedTask.createdBy
+                              : null
+                          }
+                          createdByAvatarColor={
+                            selectedTask && "avatarColor" in selectedTask
+                              ? selectedTask.avatarColor
+                              : null
+                          }
+                          preloadedBoardItems={allBoardItems || []}
+                          preloadedBoards={
+                            teamMode ? teamBoards || [] : personalBoards || []
+                          }
+                          onSaveComplete={(
+                            savedTask: Task,
+                            isNewTask: boolean,
+                            isContinuousMode?: boolean,
+                          ) => {
+                            // 連続作成モードがOFFで新規タスクの場合、保存されたタスクを選択状態にする
+                            if (isNewTask && !isContinuousMode) {
+                              onSelectTask?.(savedTask);
+                            }
+                          }}
+                          onDeleteAndSelectNext={(task) => {
+                            if ("id" in task) {
+                              handleTaskDeleteWithNextSelection(task as Task);
+                            } else {
+                              console.error("❌ 削除対象タスクが不正", task);
+                            }
+                          }}
+                          onRestore={() => {
+                            console.log(
+                              "🔄 チームボード詳細 - タスク復元ボタンクリック",
+                              {
+                                selectedTask,
+                                hasOriginalId:
+                                  selectedTask && "originalId" in selectedTask,
+                                originalId:
+                                  selectedTask && "originalId" in selectedTask
+                                    ? (selectedTask as DeletedTask).originalId
+                                    : null,
+                              },
+                            );
+                            if (selectedTask && "originalId" in selectedTask) {
+                              handleTaskRestoreAndSelectNext(
+                                selectedTask as DeletedTask,
+                              );
+                            } else {
+                              console.error(
+                                "❌ 復元対象タスクが不正",
+                                selectedTask,
+                              );
+                            }
+                          }}
+                          onRestoreAndSelectNext={() => {
+                            if (selectedTask && "originalId" in selectedTask) {
+                              handleTaskRestoreAndSelectNext(
+                                selectedTask as DeletedTask,
+                              );
+                            }
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      /* 何も選択されていない時: タスク一覧を表示 */
+                      <BoardTaskSection
+                        boardId={boardId}
+                        rightPanelMode={rightPanelMode}
+                        showTask={showTask}
+                        allTaskItems={allTaskItems}
+                        taskItems={taskItems}
+                        activeTaskTab={activeTaskTab}
+                        todoCount={todoCount}
+                        inProgressCount={inProgressCount}
+                        completedCount={completedCount}
+                        deletedCount={deletedCount}
+                        showTabText={showTabText}
+                        isLoading={isLoading}
+                        effectiveColumnCount={effectiveColumnCount}
+                        viewMode={viewMode}
+                        showEditDate={showEditDate}
+                        showTags={showTags}
+                        showBoardName={false}
+                        allTags={safeAllTags}
+                        allBoards={safeAllBoards}
+                        allTaggings={(safeAllTaggings || []) as Tagging[]}
+                        teamMode={teamMode}
+                        teamId={teamId}
+                        allBoardItems={safeAllBoardItems}
+                        selectedTask={selectedTask}
+                        onCreateNewTask={handleCreateNewTask}
+                        onSetRightPanelMode={setRightPanelMode}
+                        onTaskTabChange={handleTaskTabChangeWithRefresh}
+                        onSelectTask={handleSelectTask}
+                        taskSelectionMode={selectionMode}
+                        checkedTasks={checkedTasks}
+                        onTaskSelectionToggle={handleTaskSelectionToggle}
+                        onSelectAll={handleTaskSelectAll}
+                        isAllSelected={isTaskAllSelected}
+                        onBulkDelete={() => handleBulkDelete("task")}
+                        isDeleting={isTaskDeleting}
+                        isLidOpen={isTaskLidOpen}
+                        currentDisplayCount={currentTaskDisplayCount}
+                        deleteButtonRef={deleteButtonRef}
+                        onCheckedTasksChange={setCheckedTasks}
+                        onTagging={handleTaggingTask}
+                      />
+                    )}
+                  </ResizablePanel>
+
+                  <ResizableHandle withHandle />
+
+                  {/* 右パネル: コンテキストに応じたコメント */}
+                  <ResizablePanel
+                    defaultSize={30}
+                    minSize={20}
+                    maxSize={45}
+                    className="rounded-lg bg-white pr-2 flex flex-col min-h-0"
+                  >
+                    <div className="p-4 flex-shrink-0">
+                      <h3 className="text-sm font-medium text-gray-700">
+                        {selectedMemo
+                          ? `メモコメント`
+                          : selectedTask
+                            ? `タスクコメント`
+                            : `ボードコメント`}
+                      </h3>
+                    </div>
+                    <div className="flex flex-col flex-1 min-h-0">
+                      {/* コメントリスト */}
+                      <div
+                        ref={commentListRef}
+                        className="flex-1 px-4 py-3 space-y-3 overflow-y-auto hover-scrollbar"
+                      >
+                        {Array.from({ length: 20 }, (_, i) => {
+                          const commentNumber = i + 1;
+                          return (
+                            <div
+                              key={i}
+                              className="bg-gray-50 rounded-lg p-3 border border-gray-100"
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className="size-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
+                                  U{commentNumber}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-sm font-medium text-gray-800">
+                                      ユーザー{commentNumber}
+                                    </span>
+                                    <span className="text-xs text-gray-500">
+                                      {commentNumber === 20
+                                        ? "2分前"
+                                        : `${20 - commentNumber + 1}時間前`}
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-gray-700 leading-relaxed">
+                                    {selectedMemo
+                                      ? `メモ「${selectedMemo.title || "タイトルなし"}」に関するコメント${commentNumber}です。`
+                                      : selectedTask
+                                        ? `タスク「${selectedTask.title || "タイトルなし"}」に関するコメント${commentNumber}です。`
+                                        : `ボードコメント${commentNumber}です。ボード全体に関する議論や情報共有に使用します。`}
+                                  </p>
+                                </div>
                               </div>
-                              <p className="text-sm text-gray-700 leading-relaxed">
-                                {selectedMemo
-                                  ? `メモ「${selectedMemo.title || "タイトルなし"}」に関するコメント${commentNumber}です。`
-                                  : selectedTask
-                                    ? `タスク「${selectedTask.title || "タイトルなし"}」に関するコメント${commentNumber}です。`
-                                    : `ボードコメント${commentNumber}です。ボード全体に関する議論や情報共有に使用します。`}
-                              </p>
                             </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* 新規コメント入力 */}
+                      <div className="p-4 border-t border-gray-200 flex-shrink-0">
+                        <div className="flex flex-col gap-2">
+                          <textarea
+                            placeholder={
+                              selectedMemo
+                                ? "メモにコメントを追加..."
+                                : selectedTask
+                                  ? "タスクにコメントを追加..."
+                                  : "ボードにコメントを追加..."
+                            }
+                            className="w-full p-2.5 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-gray-50 border border-gray-200"
+                            rows={2}
+                          />
+                          <div className="flex justify-end">
+                            <button className="px-3 h-8 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                              送信
+                            </button>
                           </div>
                         </div>
-                      );
-                    })}
+                      </div>
+                    </div>
+                  </ResizablePanel>
+                </ResizablePanelGroup>
+              ) : (
+                /* 何も選択されていない時: 3等分グリッド */
+                <>
+                  {/* 左パネル: メモ一覧 */}
+                  <div className="rounded-lg bg-white flex flex-col min-h-0">
+                    <BoardMemoSection
+                      rightPanelMode={rightPanelMode}
+                      showMemo={showMemo}
+                      allMemoItems={allMemoItems}
+                      memoItems={memoItems}
+                      activeMemoTab={activeMemoTab}
+                      normalMemoCount={normalMemoCount}
+                      deletedMemoCount={deletedMemoCount}
+                      showTabText={showTabText}
+                      isLoading={isLoading}
+                      effectiveColumnCount={effectiveColumnCount}
+                      viewMode={viewMode}
+                      allTags={safeAllTags}
+                      allBoards={safeAllBoards}
+                      allTaggings={(safeAllTaggings || []) as Tagging[]}
+                      allBoardItems={safeAllBoardItems}
+                      showEditDate={showEditDate}
+                      showTags={showTags}
+                      selectedMemo={selectedMemo}
+                      teamMode={teamMode}
+                      teamId={teamId}
+                      boardId={boardId}
+                      onCreateNewMemo={handleCreateNewMemo}
+                      onSetRightPanelMode={setRightPanelMode}
+                      onMemoTabChange={handleMemoTabChangeWithRefresh}
+                      onSelectMemo={handleSelectMemo}
+                      memoSelectionMode={selectionMode}
+                      checkedMemos={checkedMemos}
+                      onMemoSelectionToggle={handleMemoSelectionToggle}
+                      onSelectAll={handleMemoSelectAll}
+                      isAllSelected={isMemoAllSelected}
+                      onBulkDelete={() => handleBulkDelete("memo")}
+                      isDeleting={isMemoDeleting}
+                      isLidOpen={isMemoLidOpen}
+                      currentDisplayCount={currentMemoDisplayCount}
+                      deleteButtonRef={deleteButtonRef}
+                      onCheckedMemosChange={setCheckedMemos}
+                      onTagging={handleTaggingMemo}
+                    />
                   </div>
 
-                  {/* 新規コメント入力 */}
-                  <div className="p-4 border-t border-gray-200 flex-shrink-0">
-                    <div className="flex flex-col gap-2">
-                      <textarea
-                        placeholder={
-                          selectedMemo
-                            ? "メモにコメントを追加..."
-                            : selectedTask
-                              ? "タスクにコメントを追加..."
-                              : "ボードにコメントを追加..."
-                        }
-                        className="w-full p-2.5 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-gray-50 border border-gray-200"
-                        rows={2}
-                      />
-                      <div className="flex justify-end">
-                        <button className="px-3 h-8 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                          送信
-                        </button>
+                  {/* 中央パネル: タスク一覧 */}
+                  <div className="rounded-lg bg-white flex flex-col min-h-0">
+                    <BoardTaskSection
+                      boardId={boardId}
+                      rightPanelMode={rightPanelMode}
+                      showTask={showTask}
+                      allTaskItems={allTaskItems}
+                      taskItems={taskItems}
+                      activeTaskTab={activeTaskTab}
+                      todoCount={todoCount}
+                      inProgressCount={inProgressCount}
+                      completedCount={completedCount}
+                      deletedCount={deletedCount}
+                      showTabText={showTabText}
+                      isLoading={isLoading}
+                      effectiveColumnCount={effectiveColumnCount}
+                      viewMode={viewMode}
+                      showEditDate={showEditDate}
+                      showTags={showTags}
+                      showBoardName={false}
+                      allTags={safeAllTags}
+                      allBoards={safeAllBoards}
+                      allTaggings={(safeAllTaggings || []) as Tagging[]}
+                      teamMode={teamMode}
+                      teamId={teamId}
+                      allBoardItems={safeAllBoardItems}
+                      selectedTask={selectedTask}
+                      onCreateNewTask={handleCreateNewTask}
+                      onSetRightPanelMode={setRightPanelMode}
+                      onTaskTabChange={handleTaskTabChangeWithRefresh}
+                      onSelectTask={handleSelectTask}
+                      taskSelectionMode={selectionMode}
+                      checkedTasks={checkedTasks}
+                      onTaskSelectionToggle={handleTaskSelectionToggle}
+                      onSelectAll={handleTaskSelectAll}
+                      isAllSelected={isTaskAllSelected}
+                      onBulkDelete={() => handleBulkDelete("task")}
+                      isDeleting={isTaskDeleting}
+                      isLidOpen={isTaskLidOpen}
+                      currentDisplayCount={currentTaskDisplayCount}
+                      deleteButtonRef={deleteButtonRef}
+                      onCheckedTasksChange={setCheckedTasks}
+                      onTagging={handleTaggingTask}
+                    />
+                  </div>
+
+                  {/* 右パネル: ボードコメント */}
+                  <div className="rounded-lg bg-white pr-2 flex flex-col min-h-0">
+                    <div className="p-4 flex-shrink-0">
+                      <h3 className="text-sm font-medium text-gray-700">
+                        ボードコメント
+                      </h3>
+                    </div>
+                    <div className="flex flex-col flex-1 min-h-0">
+                      {/* コメントリスト */}
+                      <div className="flex-1 px-4 py-3 space-y-3 overflow-y-auto hover-scrollbar">
+                        <p className="text-sm text-gray-500 text-center py-8">
+                          コメント機能は準備中です
+                        </p>
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
+                </>
+              )}
             </>
           ) : (
             <>

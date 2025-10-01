@@ -30,6 +30,8 @@ import { useBoardOperations } from "@/src/hooks/use-board-operations";
 import { CSVImportModal } from "@/components/features/board/csv-import-modal";
 import { useBoardCategories } from "@/src/hooks/use-board-categories";
 import BoardCategoryChip from "@/components/features/board-categories/board-category-chip";
+import { useUserInfo } from "@/src/hooks/use-user-info";
+import { getUserAvatarColor } from "@/src/utils/userUtils";
 
 interface BoardDetailProps {
   boardId: number;
@@ -361,6 +363,19 @@ function BoardDetailScreen({
   // チームモードかどうかでボード一覧を切り替え
   const allBoards = teamMode ? teamBoards : personalBoards;
   const { categories } = useBoardCategories();
+
+  // ユーザー情報取得（コメント入力欄のアバター表示用）
+  const { data: userInfo } = useUserInfo();
+
+  // コメントリストのref（最新コメントへの自動スクロール用）
+  const commentListRef = useRef<HTMLDivElement>(null);
+
+  // コメントリスト初回表示時に最下部へスクロール
+  useEffect(() => {
+    if (commentListRef.current) {
+      commentListRef.current.scrollTop = commentListRef.current.scrollHeight;
+    }
+  }, [selectedMemo, selectedTask]);
 
   // 安全なデータ配布用（初期レンダリング時のundefined対策）
   const safeAllTaggings = allTaggings || [];
@@ -833,61 +848,64 @@ function BoardDetailScreen({
                 </div>
                 <div className="flex flex-col flex-1 min-h-0">
                   {/* コメントリスト */}
-                  <div className="flex-1 px-4 space-y-3 overflow-y-auto hover-scrollbar">
-                    {Array.from({ length: 8 }, (_, i) => (
-                      <div
-                        key={i}
-                        className="bg-gray-50 rounded-lg p-3 border border-gray-100"
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="size-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
-                            U{i + 1}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-sm font-medium text-gray-800">
-                                ユーザー{i + 1}
-                              </span>
-                              <span className="text-xs text-gray-500">
-                                {i === 0 ? "2分前" : `${i + 1}時間前`}
-                              </span>
+                  <div
+                    ref={commentListRef}
+                    className="flex-1 px-4 py-3 space-y-3 overflow-y-auto hover-scrollbar"
+                  >
+                    {Array.from({ length: 20 }, (_, i) => {
+                      const commentNumber = i + 1;
+                      return (
+                        <div
+                          key={i}
+                          className="bg-gray-50 rounded-lg p-3 border border-gray-100"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="size-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
+                              U{commentNumber}
                             </div>
-                            <p className="text-sm text-gray-700 leading-relaxed">
-                              {selectedMemo
-                                ? `メモ「${selectedMemo.title || "タイトルなし"}」に関するコメント${i + 1}です。`
-                                : selectedTask
-                                  ? `タスク「${selectedTask.title || "タイトルなし"}」に関するコメント${i + 1}です。`
-                                  : `ボードコメント${i + 1}です。ボード全体に関する議論や情報共有に使用します。`}
-                            </p>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-sm font-medium text-gray-800">
+                                  ユーザー{commentNumber}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  {commentNumber === 20
+                                    ? "2分前"
+                                    : `${20 - commentNumber + 1}時間前`}
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-700 leading-relaxed">
+                                {selectedMemo
+                                  ? `メモ「${selectedMemo.title || "タイトルなし"}」に関するコメント${commentNumber}です。`
+                                  : selectedTask
+                                    ? `タスク「${selectedTask.title || "タイトルなし"}」に関するコメント${commentNumber}です。`
+                                    : `ボードコメント${commentNumber}です。ボード全体に関する議論や情報共有に使用します。`}
+                              </p>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   {/* 新規コメント入力 */}
                   <div className="p-4 border-t border-gray-200 flex-shrink-0">
-                    <div className="flex items-start gap-3">
-                      <div className="size-7 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
-                        私
-                      </div>
-                      <div className="flex-1">
-                        <textarea
-                          placeholder={
-                            selectedMemo
-                              ? "メモにコメントを追加..."
-                              : selectedTask
-                                ? "タスクにコメントを追加..."
-                                : "ボードにコメントを追加..."
-                          }
-                          className="w-full p-3 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-gray-50"
-                          rows={3}
-                        />
-                        <div className="flex justify-end mt-2">
-                          <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm font-medium">
-                            コメント
-                          </button>
-                        </div>
+                    <div className="flex flex-col gap-2">
+                      <textarea
+                        placeholder={
+                          selectedMemo
+                            ? "メモにコメントを追加..."
+                            : selectedTask
+                              ? "タスクにコメントを追加..."
+                              : "ボードにコメントを追加..."
+                        }
+                        className="w-full p-2.5 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-gray-50 border border-gray-200"
+                        rows={2}
+                      />
+                      <div className="flex justify-end">
+                        <button className="px-3 h-8 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                          送信
+                        </button>
                       </div>
                     </div>
                   </div>

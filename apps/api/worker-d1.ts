@@ -16,6 +16,7 @@ import teamsRoute from "./src/routes/teams/route";
 import teamMemosRoute from "./src/routes/teams/memos";
 import teamTasksRoute from "./src/routes/teams/tasks";
 import teamShareRoute from "./src/routes/teams/share";
+import commentsRoute from "./src/routes/comments/route";
 import clerkWebhook from "./src/routes/webhooks/clerk";
 import usersRoute from "./src/routes/users/route";
 
@@ -89,6 +90,7 @@ app.route("/teams", teamsRoute);
 app.route("/teams", teamMemosRoute);
 app.route("/teams", teamTasksRoute);
 app.route("/teams", teamShareRoute);
+app.route("/comments", commentsRoute);
 app.route("/webhooks/clerk", clerkWebhook);
 app.route("/users", usersRoute);
 

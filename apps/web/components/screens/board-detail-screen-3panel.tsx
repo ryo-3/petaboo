@@ -1007,6 +1007,17 @@ function BoardDetailScreen({
                             ? "タスクにコメントを追加..."
                             : "ボードにコメントを追加..."
                       }
+                      teamId={teamId || undefined}
+                      targetType={
+                        selectedMemo ? "memo" : selectedTask ? "task" : "board"
+                      }
+                      targetOriginalId={
+                        selectedMemo
+                          ? selectedMemo.originalId
+                          : selectedTask
+                            ? selectedTask.originalId
+                            : boardId.toString()
+                      }
                       targetTitle={
                         selectedMemo
                           ? `メモ「${selectedMemo.title || "タイトルなし"}」`
@@ -1138,6 +1149,9 @@ function BoardDetailScreen({
                     <CommentSection
                       title="ボードコメント"
                       placeholder="ボードにコメントを追加..."
+                      teamId={teamId || undefined}
+                      targetType="board"
+                      targetOriginalId={boardId.toString()}
                     />
                   </ResizablePanel>
                 </ResizablePanelGroup>

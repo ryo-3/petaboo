@@ -15,3 +15,4 @@ export * from "./schema/team/boards";
 export * from "./schema/team/board-categories";
 export * from "./schema/team/categories";
 export * from "./schema/team/tags";
+export * from "./schema/team/comments";

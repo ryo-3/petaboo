@@ -15,6 +15,7 @@ import teamsRoute from "./routes/teams/route";
 import teamMemosRoute from "./routes/teams/memos";
 import teamTasksRoute from "./routes/teams/tasks";
 import teamShareRoute from "./routes/teams/share";
+import commentsRoute from "./routes/comments/route";
 // import teamTagsRoute from "./routes/teams/team-tags-simple";  // 削除済み（/tags?teamId=X で代替）
 // import teamTaggingsRoute from "./routes/teams/team-taggings";  // 削除済み（/taggings?teamId=X で代替）
 import clerkWebhook from "./routes/webhooks/clerk";
@@ -41,6 +42,7 @@ app.use(
 );
 
 // 手動でルートを登録
+app.route("/comments", commentsRoute);
 app.route("/memos", memosRoute);
 app.route("/tasks", tasksRoute);
 app.route("/user-preferences", userPreferencesRoute);

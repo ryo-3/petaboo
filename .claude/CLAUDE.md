@@ -105,7 +105,7 @@ npm run check:api              # TypeScript + Lint (API)
 ```bash
 # 1-1. API実装（スキーマ・ルート作成）
 # 1-2. データ確認（DBクエリが最効率）
-wrangler d1 execute petaboo-db --local --command "SELECT id, title FROM memos LIMIT 3;"
+npx wrangler d1 execute DB --local --command "SELECT id, title FROM memos LIMIT 3;"
 
 # 1-3. API動作テスト
 apitest "/categories"                                    # GET
@@ -161,13 +161,13 @@ apitest() {
 
 ```bash
 # 各テーブルデータ確認
-wrangler d1 execute petaboo-db --local --command "SELECT id, title, LEFT(content, 50) as preview FROM memos ORDER BY createdAt DESC LIMIT 5;"
-wrangler d1 execute petaboo-db --local --command "SELECT id, title, status, priority FROM tasks ORDER BY createdAt DESC LIMIT 5;"
-wrangler d1 execute petaboo-db --local --command "SELECT id, name FROM categories ORDER BY createdAt DESC;"
+npx wrangler d1 execute DB --local --command "SELECT id, title, LEFT(content, 50) as preview FROM memos ORDER BY createdAt DESC LIMIT 5;"
+npx wrangler d1 execute DB --local --command "SELECT id, title, status, priority FROM tasks ORDER BY createdAt DESC LIMIT 5;"
+npx wrangler d1 execute DB --local --command "SELECT id, name FROM categories ORDER BY createdAt DESC;"
 
 # テーブル構造確認
-wrangler d1 execute petaboo-db --local --command ".schema memos"
-wrangler d1 execute petaboo-db --local --command ".tables"
+npx wrangler d1 execute DB --local --command "PRAGMA table_info(memos);"
+npx wrangler d1 execute DB --local --command "SELECT name FROM sqlite_master WHERE type='table';"
 ```
 
 ### トラブルシューティング

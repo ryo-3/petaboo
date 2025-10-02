@@ -446,6 +446,7 @@ export default function TeamBoardDetailPage() {
       serverInitialTitle={boardData.name}
       teamMode={true}
       teamId={team.id}
+      teamMembers={team.members}
     />
   );
 }

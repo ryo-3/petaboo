@@ -1,5 +1,5 @@
 import { createRoute, z } from "@hono/zod-openapi";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, asc, and } from "drizzle-orm";
 import { getAuth } from "@hono/clerk-auth";
 import { teamComments } from "../../db/schema/team/comments";
 import { teamMembers } from "../../db/schema/team/teams";
@@ -15,6 +15,7 @@ const TeamCommentSchema = z.object({
   targetType: z.enum(["memo", "task", "board"]),
   targetOriginalId: z.string(),
   content: z.string(),
+  mentions: z.string().nullable(), // JSON文字列: ["user_xxx", "user_yyy"]
   createdAt: z.number(),
   updatedAt: z.number().nullable(),
 });
@@ -37,6 +38,42 @@ async function checkTeamMember(teamId: number, userId: string, db: any) {
     .limit(1);
 
   return member.length > 0 ? member[0] : null;
+}
+
+// メンション解析のヘルパー関数
+// コメント本文から @displayName を抽出し、対応するuserIdの配列を返す
+async function extractMentions(
+  content: string,
+  teamId: number,
+  db: any,
+): Promise<string[]> {
+  // @の後に続く単語を抽出（日本語・英数字・アンダースコア対応）
+  const mentionPattern = /@([\p{L}\p{N}_]+)/gu;
+  const matches = content.matchAll(mentionPattern);
+
+  const mentionedUserIds = new Set<string>();
+
+  for (const match of matches) {
+    const displayName = match[1];
+
+    // チームメンバーからdisplayNameで検索
+    const members = await db
+      .select()
+      .from(teamMembers)
+      .where(
+        and(
+          eq(teamMembers.teamId, teamId),
+          eq(teamMembers.displayName, displayName),
+        ),
+      )
+      .limit(1);
+
+    if (members.length > 0) {
+      mentionedUserIds.add(members[0].userId);
+    }
+  }
+
+  return Array.from(mentionedUserIds);
 }
 
 // GET /comments（コメント一覧取得）
@@ -104,6 +141,7 @@ export const getComments = async (c: any) => {
       targetType: teamComments.targetType,
       targetOriginalId: teamComments.targetOriginalId,
       content: teamComments.content,
+      mentions: teamComments.mentions,
       createdAt: teamComments.createdAt,
       updatedAt: teamComments.updatedAt,
     })
@@ -122,7 +160,7 @@ export const getComments = async (c: any) => {
         eq(teamComments.targetOriginalId, targetOriginalId),
       ),
     )
-    .orderBy(desc(teamComments.createdAt));
+    .orderBy(asc(teamComments.createdAt));
 
   return c.json(result, 200);
 };
@@ -214,6 +252,11 @@ export const postComment = async (c: any) => {
 
   const { targetType, targetOriginalId, content } = body;
 
+  // メンション解析
+  const mentionedUserIds = await extractMentions(content, teamId, db);
+  const mentionsJson =
+    mentionedUserIds.length > 0 ? JSON.stringify(mentionedUserIds) : null;
+
   // コメント作成
   const createdAt = Date.now();
   const result = await db
@@ -224,6 +267,7 @@ export const postComment = async (c: any) => {
       targetType,
       targetOriginalId,
       content,
+      mentions: mentionsJson,
       createdAt,
       updatedAt: createdAt,
     })

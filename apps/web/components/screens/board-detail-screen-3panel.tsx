@@ -38,6 +38,7 @@ import {
   ResizableHandle,
 } from "@/components/ui/base/resizable";
 import CommentSection from "@/components/features/comments/comment-section";
+import type { TeamMember } from "@/src/hooks/use-team-detail";
 
 interface BoardDetailProps {
   boardId: number;
@@ -57,6 +58,7 @@ interface BoardDetailProps {
   isDeleted?: boolean;
   teamMode?: boolean;
   teamId?: number | null;
+  teamMembers?: TeamMember[];
 }
 
 function BoardDetailScreen({
@@ -77,6 +79,7 @@ function BoardDetailScreen({
   isDeleted = false,
   teamMode = false,
   teamId = null,
+  teamMembers = [],
 }: BoardDetailProps) {
   // CSVインポートモーダル状態
   const [isCSVImportModalOpen, setIsCSVImportModalOpen] = useState(false);
@@ -1025,6 +1028,7 @@ function BoardDetailScreen({
                             ? `タスク「${selectedTask.title || "タイトルなし"}」`
                             : undefined
                       }
+                      teamMembers={teamMembers}
                     />
                   </ResizablePanel>
                 </ResizablePanelGroup>
@@ -1152,6 +1156,7 @@ function BoardDetailScreen({
                       teamId={teamId || undefined}
                       targetType="board"
                       targetOriginalId={boardId.toString()}
+                      teamMembers={teamMembers}
                     />
                   </ResizablePanel>
                 </ResizablePanelGroup>

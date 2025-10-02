@@ -9,6 +9,7 @@ export interface TeamComment {
   targetType: "memo" | "task" | "board";
   targetOriginalId: string;
   content: string;
+  mentions: string | null; // JSON文字列: ["user_xxx", "user_yyy"]
   createdAt: number;
   updatedAt: number | null;
 }

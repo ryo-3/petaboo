@@ -141,7 +141,12 @@
       "Bash(git -C /home/ryosuke/petaboo commit -m \"$(cat <<''EOF''\nボード詳細画面のパネルリサイズ機能を実装\n\n- チームボード3パネル（選択時/非選択時）をリサイズ可能に\n- 個人ボード2パネルをリサイズ可能に\n- 選択時と非選択時で別々のローカルストレージキーで幅を保存\n- デバウンス（500ms）で保存頻度を最適化\n- keyプロップで選択・非選択時のコンポーネントを完全分離\n- CommentSectionコンポーネントを共通化\n- 最小サイズ25%、最大サイズ50%に統一\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(apitest \"/teams/18/comments\" \"POST\" '{\"\"targetType\"\": \"\"memo\"\", \"\"targetOriginalId\"\": \"\"600\"\", \"\"content\"\": \"\"テストコメント\"\"}')",
       "Bash(killall:*)",
-      "Bash(apitest \"/comments?teamId=18&targetType=memo&targetOriginalId=600\" \"GET\")"
+      "Bash(apitest \"/comments?teamId=18&targetType=memo&targetOriginalId=600\" \"GET\")",
+      "Bash(pnpm db:generate:*)",
+      "Bash(git -C /home/ryosuke/petaboo diff apps/web/components/features/comments/comment-section.tsx apps/api/src/routes/comments/api.ts apps/api/src/db/schema/team/comments.ts)",
+      "Bash(git -C /home/ryosuke/petaboo diff --stat)",
+      "Bash(git -C /home/ryosuke/petaboo add apps/api/drizzle/0009_warm_komodo.sql apps/api/drizzle/meta/0009_snapshot.json apps/api/drizzle/meta/_journal.json apps/api/src/db/schema/team/comments.ts apps/api/src/routes/comments/api.ts apps/web/app/team/[customUrl]/board/[slug]/page.tsx apps/web/components/features/comments/comment-section.tsx apps/web/components/screens/board-detail-screen-3panel.tsx apps/web/lib/api/comments.ts)",
+      "Bash(git -C /home/ryosuke/petaboo commit -m \"$(cat <<''EOF''\nコメント機能にメンション機能を実装\n\n【DBスキーマ】\n- team_commentsテーブルにmentionsカラム追加（JSON配列形式）\n\n【API】\n- extractMentions関数で@displayNameを解析してuserIdに変換\n- コメント作成時に自動的にmentions情報を保存\n- コメント一覧取得の並び順を昇順（古い順）に変更\n\n【フロントエンド】\n- @入力時にチームメンバーのサジェスト表示\n- 矢印キー（↑↓）で選択、Enterで確定、Escでキャンセル\n- @ボタンでメンションサジェストを即座に表示\n- メンション部分をハイライト表示\n- useTeamDetailから取得したチームメンバー情報を活用\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": []
   }

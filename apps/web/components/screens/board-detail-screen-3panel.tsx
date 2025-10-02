@@ -37,6 +37,7 @@ import {
   ResizablePanel,
   ResizableHandle,
 } from "@/components/ui/base/resizable";
+import CommentSection from "@/components/features/comments/comment-section";
 
 interface BoardDetailProps {
   boardId: number;
@@ -372,18 +373,14 @@ function BoardDetailScreen({
   // ユーザー情報取得（コメント入力欄のアバター表示用）
   const { data: userInfo } = useUserInfo();
 
-  // コメントリストのref（最新コメントへの自動スクロール用）
-  const commentListRef = useRef<HTMLDivElement>(null);
-
-  // パネル幅の状態管理（ローカルストレージ連携）
-  const [panelSizes, setPanelSizes] = useState<{
+  // 選択時のパネル幅の状態管理
+  const [panelSizesSelected, setPanelSizesSelected] = useState<{
     left: number;
     center: number;
     right: number;
   }>(() => {
-    // 初期値をローカルストレージから取得
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("team-board-panel-sizes");
+      const saved = localStorage.getItem("team-board-panel-sizes-selected");
       if (saved) {
         try {
           return JSON.parse(saved);
@@ -392,12 +389,56 @@ function BoardDetailScreen({
         }
       }
     }
-    return { left: 20, center: 50, right: 30 };
+    return { left: 25, center: 45, right: 30 };
   });
 
-  // パネル幅変更時にローカルストレージへ保存
-  const handlePanelResize = useCallback((sizes: number[]) => {
-    // 3パネル分のサイズが揃っているか確認
+  // 非選択時のパネル幅の状態管理
+  const [panelSizesUnselected, setPanelSizesUnselected] = useState<{
+    left: number;
+    center: number;
+    right: number;
+  }>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("team-board-panel-sizes-unselected");
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch {
+          // パース失敗時はデフォルト値
+        }
+      }
+    }
+    return { left: 33, center: 34, right: 33 };
+  });
+
+  // 初回マウント判定用
+  const mountCountSelected = useRef(0);
+  const mountCountUnselected = useRef(0);
+
+  // 選択状態が変わったらカウントをリセット
+  useEffect(() => {
+    mountCountSelected.current = 0;
+  }, [selectedMemo, selectedTask]);
+
+  useEffect(() => {
+    // 非選択状態になったらカウントをリセット
+    if (!selectedMemo && !selectedTask) {
+      mountCountUnselected.current = 0;
+    }
+  }, [selectedMemo, selectedTask]);
+
+  // デバウンス用のタイマー
+  const saveTimerSelected = useRef<NodeJS.Timeout>();
+  const saveTimerUnselected = useRef<NodeJS.Timeout>();
+
+  // 選択時のパネル幅変更時にローカルストレージへ保存（デバウンス）
+  const handlePanelResizeSelected = useCallback((sizes: number[]) => {
+    // 初回マウント時はスキップ（選択状態切り替え時の誤保存を防ぐ）
+    mountCountSelected.current++;
+    if (mountCountSelected.current <= 1) {
+      return;
+    }
+
     if (
       sizes.length === 3 &&
       sizes[0] !== undefined &&
@@ -409,17 +450,58 @@ function BoardDetailScreen({
         center: sizes[1],
         right: sizes[2],
       };
-      setPanelSizes(newSizes);
-      localStorage.setItem("team-board-panel-sizes", JSON.stringify(newSizes));
+
+      // 前のタイマーをクリア
+      if (saveTimerSelected.current) {
+        clearTimeout(saveTimerSelected.current);
+      }
+
+      // 500ms後に保存
+      saveTimerSelected.current = setTimeout(() => {
+        setPanelSizesSelected(newSizes);
+        localStorage.setItem(
+          "team-board-panel-sizes-selected",
+          JSON.stringify(newSizes),
+        );
+      }, 500);
     }
   }, []);
 
-  // コメントリスト初回表示時に最下部へスクロール
-  useEffect(() => {
-    if (commentListRef.current) {
-      commentListRef.current.scrollTop = commentListRef.current.scrollHeight;
+  // 非選択時のパネル幅変更時にローカルストレージへ保存（デバウンス）
+  const handlePanelResizeUnselected = useCallback((sizes: number[]) => {
+    // 初回マウント時はスキップ
+    mountCountUnselected.current++;
+    if (mountCountUnselected.current <= 1) {
+      return;
     }
-  }, [selectedMemo, selectedTask]);
+
+    if (
+      sizes.length === 3 &&
+      sizes[0] !== undefined &&
+      sizes[1] !== undefined &&
+      sizes[2] !== undefined
+    ) {
+      const newSizes = {
+        left: sizes[0],
+        center: sizes[1],
+        right: sizes[2],
+      };
+
+      // 前のタイマーをクリア
+      if (saveTimerUnselected.current) {
+        clearTimeout(saveTimerUnselected.current);
+      }
+
+      // 500ms後に保存
+      saveTimerUnselected.current = setTimeout(() => {
+        setPanelSizesUnselected(newSizes);
+        localStorage.setItem(
+          "team-board-panel-sizes-unselected",
+          JSON.stringify(newSizes),
+        );
+      }, 500);
+    }
+  }, []);
 
   // 安全なデータ配布用（初期レンダリング時のundefined対策）
   const safeAllTaggings = allTaggings || [];
@@ -579,9 +661,7 @@ function BoardDetailScreen({
         <div
           className={`${
             teamMode
-              ? selectedMemo || selectedTask
-                ? "flex gap-2 flex-1 min-h-0 min-w-[1280px]"
-                : "grid grid-cols-3 gap-2 flex-1 min-h-0 min-w-[1280px]"
+              ? "flex gap-2 flex-1 min-h-0 min-w-[1280px]"
               : !teamMode &&
                   (rightPanelMode === "memo-list" ||
                     rightPanelMode === "task-list")
@@ -598,15 +678,16 @@ function BoardDetailScreen({
               {selectedMemo || selectedTask ? (
                 /* 3パネルレイアウト（リサイズ可能） */
                 <ResizablePanelGroup
+                  key="selected"
                   direction="horizontal"
                   className="flex-1"
-                  onLayout={handlePanelResize}
+                  onLayout={handlePanelResizeSelected}
                 >
                   {/* 左パネル: 選択に応じてメモ一覧またはタスク一覧 */}
                   <ResizablePanel
-                    defaultSize={panelSizes.left}
-                    minSize={15}
-                    maxSize={28}
+                    defaultSize={panelSizesSelected.left}
+                    minSize={25}
+                    maxSize={50}
                     className="rounded-lg bg-white flex flex-col min-h-0"
                   >
                     {selectedTask ? (
@@ -701,8 +782,8 @@ function BoardDetailScreen({
 
                   {/* 中央パネル: 詳細表示またはタスク一覧 */}
                   <ResizablePanel
-                    defaultSize={panelSizes.center}
-                    minSize={35}
+                    defaultSize={panelSizesSelected.center}
+                    minSize={25}
                     className="rounded-lg bg-white flex flex-col min-h-0"
                   >
                     {selectedMemo ? (
@@ -906,91 +987,51 @@ function BoardDetailScreen({
 
                   {/* 右パネル: コンテキストに応じたコメント */}
                   <ResizablePanel
-                    defaultSize={panelSizes.right}
-                    minSize={20}
-                    maxSize={45}
+                    defaultSize={panelSizesSelected.right}
+                    minSize={25}
+                    maxSize={50}
                     className="rounded-lg bg-white pr-2 flex flex-col min-h-0"
                   >
-                    <div className="p-4 flex-shrink-0">
-                      <h3 className="text-sm font-medium text-gray-700">
-                        {selectedMemo
-                          ? `メモコメント`
+                    <CommentSection
+                      title={
+                        selectedMemo
+                          ? "メモコメント"
                           : selectedTask
-                            ? `タスクコメント`
-                            : `ボードコメント`}
-                      </h3>
-                    </div>
-                    <div className="flex flex-col flex-1 min-h-0">
-                      {/* コメントリスト */}
-                      <div
-                        ref={commentListRef}
-                        className="flex-1 px-4 py-3 space-y-3 overflow-y-auto hover-scrollbar"
-                      >
-                        {Array.from({ length: 20 }, (_, i) => {
-                          const commentNumber = i + 1;
-                          return (
-                            <div
-                              key={i}
-                              className="bg-gray-50 rounded-lg p-3 border border-gray-100"
-                            >
-                              <div className="flex items-start gap-3">
-                                <div className="size-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
-                                  U{commentNumber}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-sm font-medium text-gray-800">
-                                      ユーザー{commentNumber}
-                                    </span>
-                                    <span className="text-xs text-gray-500">
-                                      {commentNumber === 20
-                                        ? "2分前"
-                                        : `${20 - commentNumber + 1}時間前`}
-                                    </span>
-                                  </div>
-                                  <p className="text-sm text-gray-700 leading-relaxed">
-                                    {selectedMemo
-                                      ? `メモ「${selectedMemo.title || "タイトルなし"}」に関するコメント${commentNumber}です。`
-                                      : selectedTask
-                                        ? `タスク「${selectedTask.title || "タイトルなし"}」に関するコメント${commentNumber}です。`
-                                        : `ボードコメント${commentNumber}です。ボード全体に関する議論や情報共有に使用します。`}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {/* 新規コメント入力 */}
-                      <div className="p-4 border-t border-gray-200 flex-shrink-0">
-                        <div className="flex flex-col gap-2">
-                          <textarea
-                            placeholder={
-                              selectedMemo
-                                ? "メモにコメントを追加..."
-                                : selectedTask
-                                  ? "タスクにコメントを追加..."
-                                  : "ボードにコメントを追加..."
-                            }
-                            className="w-full p-2.5 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-gray-50 border border-gray-200"
-                            rows={2}
-                          />
-                          <div className="flex justify-end">
-                            <button className="px-3 h-8 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                              送信
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                            ? "タスクコメント"
+                            : "ボードコメント"
+                      }
+                      placeholder={
+                        selectedMemo
+                          ? "メモにコメントを追加..."
+                          : selectedTask
+                            ? "タスクにコメントを追加..."
+                            : "ボードにコメントを追加..."
+                      }
+                      targetTitle={
+                        selectedMemo
+                          ? `メモ「${selectedMemo.title || "タイトルなし"}」`
+                          : selectedTask
+                            ? `タスク「${selectedTask.title || "タイトルなし"}」`
+                            : undefined
+                      }
+                    />
                   </ResizablePanel>
                 </ResizablePanelGroup>
               ) : (
-                /* 何も選択されていない時: 3等分グリッド */
-                <>
+                /* 何も選択されていない時: リサイズ可能な3パネル */
+                <ResizablePanelGroup
+                  key="unselected"
+                  direction="horizontal"
+                  className="flex-1"
+                  onLayout={handlePanelResizeUnselected}
+                >
                   {/* 左パネル: メモ一覧 */}
-                  <div className="rounded-lg bg-white flex flex-col min-h-0">
+                  <ResizablePanel
+                    defaultSize={panelSizesUnselected.left}
+                    minSize={25}
+                    maxSize={50}
+                    className="rounded-lg bg-white flex flex-col min-h-0"
+                  >
                     <BoardMemoSection
                       rightPanelMode={rightPanelMode}
                       showMemo={showMemo}
@@ -1030,10 +1071,17 @@ function BoardDetailScreen({
                       onCheckedMemosChange={setCheckedMemos}
                       onTagging={handleTaggingMemo}
                     />
-                  </div>
+                  </ResizablePanel>
+
+                  <ResizableHandle withHandle />
 
                   {/* 中央パネル: タスク一覧 */}
-                  <div className="rounded-lg bg-white flex flex-col min-h-0">
+                  <ResizablePanel
+                    defaultSize={panelSizesUnselected.center}
+                    minSize={25}
+                    maxSize={50}
+                    className="rounded-lg bg-white flex flex-col min-h-0"
+                  >
                     <BoardTaskSection
                       boardId={boardId}
                       rightPanelMode={rightPanelMode}
@@ -1076,25 +1124,23 @@ function BoardDetailScreen({
                       onCheckedTasksChange={setCheckedTasks}
                       onTagging={handleTaggingTask}
                     />
-                  </div>
+                  </ResizablePanel>
+
+                  <ResizableHandle withHandle />
 
                   {/* 右パネル: ボードコメント */}
-                  <div className="rounded-lg bg-white pr-2 flex flex-col min-h-0">
-                    <div className="p-4 flex-shrink-0">
-                      <h3 className="text-sm font-medium text-gray-700">
-                        ボードコメント
-                      </h3>
-                    </div>
-                    <div className="flex flex-col flex-1 min-h-0">
-                      {/* コメントリスト */}
-                      <div className="flex-1 px-4 py-3 space-y-3 overflow-y-auto hover-scrollbar">
-                        <p className="text-sm text-gray-500 text-center py-8">
-                          コメント機能は準備中です
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </>
+                  <ResizablePanel
+                    defaultSize={panelSizesUnselected.right}
+                    minSize={25}
+                    maxSize={50}
+                    className="rounded-lg bg-white pr-2 flex flex-col min-h-0"
+                  >
+                    <CommentSection
+                      title="ボードコメント"
+                      placeholder="ボードにコメントを追加..."
+                    />
+                  </ResizablePanel>
+                </ResizablePanelGroup>
               )}
             </>
           ) : (

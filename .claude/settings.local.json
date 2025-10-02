@@ -124,7 +124,14 @@
       "Bash(apitest \"/memos/deleted/test/restore\" \"POST\")",
       "Bash(apitest \"/teams/18/memos/deleted/597/restore\" \"POST\")",
       "Bash(apitest \"/boards/items/task/272/boards\" \"GET\")",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(git -C /home/ryosuke/petaboo status)",
+      "Bash(git -C /home/ryosuke/petaboo diff apps/web/components/screens/board-detail-screen-3panel.tsx)",
+      "Bash(git -C /home/ryosuke/petaboo log -5 --oneline)",
+      "Bash(git -C /home/ryosuke/petaboo add apps/web/components/screens/board-detail-screen-3panel.tsx)",
+      "Bash(git -C /home/ryosuke/petaboo commit -m \"$(cat <<''EOF''\nチームボード3パネルのリサイズ制約を最適化\n\n- 左パネル（メモ・タスク一覧）: 最大幅を28%に制限\n- 中央パネル（詳細表示）: 最小幅を35%に拡大\n- 右パネル（コメント）: 最大幅を45%に拡大\n- ユーザーがドラッグバーで自由に調整可能な範囲を調整\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git -C /home/ryosuke/petaboo log -1 --stat)",
+      "Bash(git -C /home/ryosuke/petaboo commit -m \"$(cat <<''EOF''\nチームボード3パネルのリサイズ幅をローカルストレージに保存\n\n- パネル幅の状態管理を追加（left/center/right）\n- 初回読み込み時にlocalStorageから復元\n- リサイズ時に自動保存（キー: team-board-panel-sizes）\n- デフォルト値: 左20%、中央50%、右30%\n- 次回開いたときに前回のパネル幅を復元\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": []
   }

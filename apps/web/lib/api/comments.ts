@@ -4,6 +4,8 @@ export interface TeamComment {
   id: number;
   teamId: number;
   userId: string;
+  displayName: string | null;
+  avatarColor: string | null;
   targetType: "memo" | "task" | "board";
   targetOriginalId: string;
   content: string;

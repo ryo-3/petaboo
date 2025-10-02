@@ -163,7 +163,13 @@ export default function TeamBoardDetailPage() {
         // 現在選択されているのと違う場合のみ更新
         if (!selectedTask || selectedTask.id.toString() !== initialTaskId) {
           // TeamTask型をTask型として扱う（型の互換性を仮定）
-          setSelectedTask(foundTask as unknown as Task);
+          // originalIdを正しく設定するためにfoundTaskのoriginalIdを使用
+          const taskWithCorrectOriginalId = {
+            ...foundTask,
+            originalId: foundTask.originalId, // team_tasksのoriginal_idを使用
+          } as unknown as Task;
+
+          setSelectedTask(taskWithCorrectOriginalId);
           setSelectedMemo(null); // メモの選択を解除
           // URLを更新してパス形式に統一
           const newUrl = `/team/${customUrl}/board/${slug}/task/${foundTask.id}`;

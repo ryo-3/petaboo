@@ -81,36 +81,47 @@ export default function CommentSection({
               まだコメントがありません
             </div>
           ) : (
-            comments.map((comment) => (
-              <div
-                key={comment.id}
-                className="bg-gray-50 rounded-lg p-3 border border-gray-100"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="size-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
-                    {comment.userId.slice(0, 2).toUpperCase()}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-medium text-gray-800">
-                        {comment.userId}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {new Date(comment.createdAt).toLocaleString("ja-JP", {
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
+            comments.map((comment) => {
+              const displayName =
+                comment.displayName || `ユーザー${comment.userId.slice(-4)}`;
+              const avatarColor = comment.avatarColor || "bg-blue-500";
+              const avatarInitial = comment.displayName
+                ? comment.displayName.charAt(0).toUpperCase()
+                : comment.userId.charAt(10).toUpperCase();
+
+              return (
+                <div
+                  key={comment.id}
+                  className="bg-gray-50 rounded-lg p-3 border border-gray-100"
+                >
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={`size-7 rounded-full flex items-center justify-center text-white text-xs font-medium flex-shrink-0 ${avatarColor}`}
+                    >
+                      {avatarInitial}
                     </div>
-                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-                      {comment.content}
-                    </p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-sm font-medium text-gray-800">
+                          {displayName}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {new Date(comment.createdAt).toLocaleString("ja-JP", {
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                        {comment.content}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
 

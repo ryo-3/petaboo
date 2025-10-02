@@ -10,6 +10,8 @@ const TeamCommentSchema = z.object({
   id: z.number(),
   teamId: z.number(),
   userId: z.string(),
+  displayName: z.string().nullable(),
+  avatarColor: z.string().nullable(),
   targetType: z.enum(["memo", "task", "board"]),
   targetOriginalId: z.string(),
   content: z.string(),
@@ -91,9 +93,28 @@ export const getComments = async (c: any) => {
     return c.json({ error: "Not a team member" }, 403);
   }
 
+  // コメントとチームメンバー情報をJOINして取得
   const result = await db
-    .select()
+    .select({
+      id: teamComments.id,
+      teamId: teamComments.teamId,
+      userId: teamComments.userId,
+      displayName: teamMembers.displayName,
+      avatarColor: teamMembers.avatarColor,
+      targetType: teamComments.targetType,
+      targetOriginalId: teamComments.targetOriginalId,
+      content: teamComments.content,
+      createdAt: teamComments.createdAt,
+      updatedAt: teamComments.updatedAt,
+    })
     .from(teamComments)
+    .leftJoin(
+      teamMembers,
+      and(
+        eq(teamMembers.teamId, teamComments.teamId),
+        eq(teamMembers.userId, teamComments.userId),
+      ),
+    )
     .where(
       and(
         eq(teamComments.teamId, teamId),

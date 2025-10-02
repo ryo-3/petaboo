@@ -33,6 +33,8 @@ export function getTeamTaskSelectFields() {
     id: teamTasks.id,
     teamId: teamTasks.teamId,
     userId: teamTasks.userId,
+    originalId: teamTasks.originalId, // 重要: originalIdフィールドを追加
+    uuid: teamTasks.uuid,
     title: teamTasks.title,
     description: teamTasks.description,
     status: teamTasks.status,

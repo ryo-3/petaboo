@@ -375,6 +375,45 @@ function BoardDetailScreen({
   // コメントリストのref（最新コメントへの自動スクロール用）
   const commentListRef = useRef<HTMLDivElement>(null);
 
+  // パネル幅の状態管理（ローカルストレージ連携）
+  const [panelSizes, setPanelSizes] = useState<{
+    left: number;
+    center: number;
+    right: number;
+  }>(() => {
+    // 初期値をローカルストレージから取得
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("team-board-panel-sizes");
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch {
+          // パース失敗時はデフォルト値
+        }
+      }
+    }
+    return { left: 20, center: 50, right: 30 };
+  });
+
+  // パネル幅変更時にローカルストレージへ保存
+  const handlePanelResize = useCallback((sizes: number[]) => {
+    // 3パネル分のサイズが揃っているか確認
+    if (
+      sizes.length === 3 &&
+      sizes[0] !== undefined &&
+      sizes[1] !== undefined &&
+      sizes[2] !== undefined
+    ) {
+      const newSizes = {
+        left: sizes[0],
+        center: sizes[1],
+        right: sizes[2],
+      };
+      setPanelSizes(newSizes);
+      localStorage.setItem("team-board-panel-sizes", JSON.stringify(newSizes));
+    }
+  }, []);
+
   // コメントリスト初回表示時に最下部へスクロール
   useEffect(() => {
     if (commentListRef.current) {
@@ -558,10 +597,14 @@ function BoardDetailScreen({
             <>
               {selectedMemo || selectedTask ? (
                 /* 3パネルレイアウト（リサイズ可能） */
-                <ResizablePanelGroup direction="horizontal" className="flex-1">
+                <ResizablePanelGroup
+                  direction="horizontal"
+                  className="flex-1"
+                  onLayout={handlePanelResize}
+                >
                   {/* 左パネル: 選択に応じてメモ一覧またはタスク一覧 */}
                   <ResizablePanel
-                    defaultSize={20}
+                    defaultSize={panelSizes.left}
                     minSize={15}
                     maxSize={28}
                     className="rounded-lg bg-white flex flex-col min-h-0"
@@ -658,7 +701,7 @@ function BoardDetailScreen({
 
                   {/* 中央パネル: 詳細表示またはタスク一覧 */}
                   <ResizablePanel
-                    defaultSize={50}
+                    defaultSize={panelSizes.center}
                     minSize={35}
                     className="rounded-lg bg-white flex flex-col min-h-0"
                   >
@@ -863,7 +906,7 @@ function BoardDetailScreen({
 
                   {/* 右パネル: コンテキストに応じたコメント */}
                   <ResizablePanel
-                    defaultSize={30}
+                    defaultSize={panelSizes.right}
                     minSize={20}
                     maxSize={45}
                     className="rounded-lg bg-white pr-2 flex flex-col min-h-0"

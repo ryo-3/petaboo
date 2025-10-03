@@ -426,67 +426,6 @@ export default function BoardRightPanel({
               />
             )}
           </div>
-
-          {/* コメントセクション */}
-          <div className="flex-1 flex flex-col border-t-2 border-red-500 min-h-0 bg-yellow-50">
-            <div className="p-4 flex-shrink-0 bg-blue-100">
-              <h3 className="text-sm font-medium text-gray-700">
-                メモコメント（テスト表示）
-              </h3>
-            </div>
-            <div className="flex flex-col flex-1 min-h-0">
-              {/* コメントリスト */}
-              <div className="flex-1 px-4 space-y-3 overflow-y-auto hover-scrollbar">
-                {Array.from({ length: 8 }, (_, i) => (
-                  <div
-                    key={i}
-                    className="bg-gray-50 rounded-lg p-3 border border-gray-100"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="size-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
-                        U{i + 1}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-medium text-gray-800">
-                            ユーザー{i + 1}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            {i === 0 ? "2分前" : `${i + 1}時間前`}
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-700 leading-relaxed">
-                          メモ「{selectedMemo.title || "タイトルなし"}
-                          」に関するコメント{i + 1}です。
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* 新規コメント入力 */}
-              <div className="p-4 border-t border-gray-200 flex-shrink-0">
-                <div className="flex items-start gap-3">
-                  <div className="size-7 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
-                    私
-                  </div>
-                  <div className="flex-1">
-                    <textarea
-                      placeholder="メモにコメントを追加..."
-                      className="w-full p-3 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-gray-50"
-                      rows={3}
-                    />
-                    <div className="flex justify-end mt-2">
-                      <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm font-medium">
-                        コメント
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       )}
 
@@ -577,67 +516,6 @@ export default function BoardRightPanel({
                 }}
               />
             )}
-          </div>
-
-          {/* コメントセクション */}
-          <div className="flex-1 flex flex-col border-t border-gray-200 min-h-0">
-            <div className="p-4 flex-shrink-0">
-              <h3 className="text-sm font-medium text-gray-700">
-                タスクコメント
-              </h3>
-            </div>
-            <div className="flex flex-col flex-1 min-h-0">
-              {/* コメントリスト */}
-              <div className="flex-1 px-4 space-y-3 overflow-y-auto hover-scrollbar">
-                {Array.from({ length: 8 }, (_, i) => (
-                  <div
-                    key={i}
-                    className="bg-gray-50 rounded-lg p-3 border border-gray-100"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="size-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
-                        U{i + 1}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-medium text-gray-800">
-                            ユーザー{i + 1}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            {i === 0 ? "2分前" : `${i + 1}時間前`}
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-700 leading-relaxed">
-                          タスク「{selectedTask.title || "タイトルなし"}
-                          」に関するコメント{i + 1}です。
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* 新規コメント入力 */}
-              <div className="p-4 border-t border-gray-200 flex-shrink-0">
-                <div className="flex items-start gap-3">
-                  <div className="size-7 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
-                    私
-                  </div>
-                  <div className="flex-1">
-                    <textarea
-                      placeholder="タスクにコメントを追加..."
-                      className="w-full p-3 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-gray-50"
-                      rows={3}
-                    />
-                    <div className="flex justify-end mt-2">
-                      <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm font-medium">
-                        コメント
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       )}

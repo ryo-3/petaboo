@@ -11,17 +11,12 @@ interface DateInfoProps {
   lastEditedAt?: number | null;
 }
 
- 
 function DateInfo({
   item,
   createdItemId,
   isEditing = false,
   lastEditedAt,
 }: DateInfoProps) {
-  // ローカルストレージの使用を停止し、propsから受け取った値を使用
-  // const [localEditTime, setLocalEditTime] = useState<number | null>(null)
-  // Removed localStorage-based edit time tracking
-
   if (!item) {
     return null;
   }

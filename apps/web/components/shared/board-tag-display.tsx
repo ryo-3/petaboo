@@ -36,7 +36,7 @@ export default function BoardTagDisplay({
   // スペーシング設定
   const spacingClasses = {
     tight: "mb-1",
-    normal: "mb-4",
+    normal: "",
     loose: "mb-6",
   };
 

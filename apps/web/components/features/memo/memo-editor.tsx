@@ -59,6 +59,7 @@ interface MemoEditorProps {
   onRestoreAndSelectNext?: (deletedMemo: DeletedMemo) => void; // 削除済み復元後の次選択用
   isLidOpen?: boolean;
   customHeight?: string;
+  showDateAtBottom?: boolean; // 日付を下に表示するか（デフォルト: false = ヘッダー右側）
   // 統一操作フック（親から渡される）
   unifiedOperations?: {
     deleteItem: {
@@ -106,6 +107,7 @@ function MemoEditor({
   onRestoreAndSelectNext,
   isLidOpen = false,
   customHeight,
+  showDateAtBottom = false,
   preloadedTags = [],
   preloadedBoards = [],
   preloadedTaggings = [],
@@ -935,18 +937,18 @@ function MemoEditor({
                     )}
                   </span>
                 )}
-                {/* チーム機能: 作成者アイコン */}
-                <CreatorAvatar
-                  createdBy={createdBy}
-                  avatarColor={createdByAvatarColor}
-                  teamMode={teamMode}
-                  size="lg"
-                  className="mr-2"
-                />
-                {memo && memo.id !== 0 && (
-                  <div className="text-[13px] text-gray-400 mr-2">
+                {/* ヘッダー右側にアバター・日付を表示（showDateAtBottom=falseの場合） */}
+                {!showDateAtBottom && memo && memo.id !== 0 && (
+                  <>
+                    <CreatorAvatar
+                      createdBy={createdBy}
+                      avatarColor={createdByAvatarColor}
+                      teamMode={teamMode}
+                      size="lg"
+                      className="mr-2"
+                    />
                     <DateInfo item={memo} isEditing={!isDeleted} />
-                  </div>
+                  </>
                 )}
                 {isDeleted && onRestore && (
                   <button
@@ -1012,7 +1014,7 @@ function MemoEditor({
                   }
             }
             readOnly={isDeleted}
-            className={`w-full ${customHeight || "flex-1"} resize-none outline-none leading-relaxed font-medium pb-10 mb-2 pr-1 mt-2 ${
+            className={`w-full ${customHeight || "flex-1 min-h-0"} resize-none outline-none leading-relaxed font-medium pr-1 mt-2 ${
               isDeleted
                 ? "text-red-500 bg-red-50 cursor-not-allowed"
                 : "text-gray-500"
@@ -1026,6 +1028,22 @@ function MemoEditor({
             spacing="normal"
             showWhen="has-content"
           />
+
+          {/* 日付情報とアバターアイコンを右下に配置（showDateAtBottom=trueの場合のみ） */}
+          {showDateAtBottom && memo && memo.id !== 0 && (
+            <div className="flex justify-end items-center gap-2 mb-3 mr-2">
+              {/* チーム機能: 作成者アイコン */}
+              <CreatorAvatar
+                createdBy={createdBy}
+                avatarColor={createdByAvatarColor}
+                teamMode={teamMode}
+                size="lg"
+                className=""
+              />
+              {/* 日付情報 */}
+              <DateInfo item={memo} isEditing={!isDeleted} />
+            </div>
+          )}
 
           {/* コメント機能（チームモードの既存メモのみ） */}
           {teamMode &&

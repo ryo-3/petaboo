@@ -791,12 +791,13 @@ function BoardDetailScreen({
                   >
                     {selectedMemo ? (
                       /* メモ選択時: メモ詳細を表示 */
-                      <div className="h-full flex flex-col overflow-y-auto hover-scrollbar">
+                      <div className="h-full flex flex-col min-h-0">
                         <MemoEditor
                           memo={selectedMemo as Memo}
                           initialBoardId={boardId}
                           onClose={onClearSelection || (() => {})}
-                          customHeight="h-full"
+                          customHeight="flex-1 min-h-0"
+                          showDateAtBottom={true}
                           teamMode={teamMode}
                           teamId={teamId || undefined}
                           createdBy={

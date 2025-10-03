@@ -627,6 +627,7 @@ function TaskScreen({
             onSelectTask={onSelectTask}
             teamMode={teamMode}
             teamId={teamId}
+            showDateAtBottom={teamMode}
             onSaveComplete={(savedTask, isNewTask, isContinuousMode) => {
               if (isNewTask && !isContinuousMode) {
                 // 連続作成モードOFFの場合のみ作成されたタスクを選択状態にする
@@ -657,6 +658,7 @@ function TaskScreen({
             createdBy={selectedTask.createdBy}
             createdByUserId={selectedTask.userId}
             createdByAvatarColor={selectedTask.avatarColor}
+            showDateAtBottom={teamMode}
             preloadedTags={tags || []}
             preloadedBoards={boards || []}
             preloadedTaggings={safeAllTaggings}

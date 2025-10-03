@@ -1025,23 +1025,23 @@ function MemoEditor({
             showWhen="has-content"
             className="mb-4"
           />
-
-          {/* 日付情報とアバターアイコンを右下に配置（showDateAtBottom=trueの場合のみ） */}
-          {showDateAtBottom && memo && memo.id !== 0 && (
-            <div className="flex justify-end items-center gap-2 mb-3 mr-2">
-              {/* チーム機能: 作成者アイコン */}
-              <CreatorAvatar
-                createdBy={createdBy}
-                avatarColor={createdByAvatarColor}
-                teamMode={teamMode}
-                size="lg"
-                className=""
-              />
-              {/* 日付情報 */}
-              <DateInfo item={memo} isEditing={!isDeleted} />
-            </div>
-          )}
         </BaseViewer>
+
+        {/* 日付情報とアバターアイコンを右下に配置（showDateAtBottom=trueの場合のみ） */}
+        {showDateAtBottom && memo && memo.id !== 0 && (
+          <div className="flex justify-end items-center gap-2 mb-3 mr-2">
+            {/* チーム機能: 作成者アイコン */}
+            <CreatorAvatar
+              createdBy={createdBy}
+              avatarColor={createdByAvatarColor}
+              teamMode={teamMode}
+              size="lg"
+              className=""
+            />
+            {/* 日付情報 */}
+            <DateInfo item={memo} isEditing={!isDeleted} />
+          </div>
+        )}
       </div>
       {baseViewerRef.current && (
         <BoardChangeModal

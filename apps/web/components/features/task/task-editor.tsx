@@ -1023,23 +1023,23 @@ function TaskEditor({
             initialBoardId={initialBoardId}
             teamMode={teamMode}
           />
-
-          {/* 日付情報とアバターアイコンを右下に配置（showDateAtBottom=trueの場合のみ） */}
-          {showDateAtBottom && task && task.id !== 0 && (
-            <div className="flex justify-end items-center gap-2 mb-3 mr-2">
-              {/* チーム機能: 作成者アイコン */}
-              <CreatorAvatar
-                createdBy={createdBy || task?.createdBy}
-                avatarColor={createdByAvatarColor || task?.avatarColor}
-                teamMode={teamMode}
-                size="lg"
-                className=""
-              />
-              {/* 日付情報 */}
-              <DateInfo item={task} isEditing={!isDeleted} />
-            </div>
-          )}
         </BaseViewer>
+
+        {/* 日付情報とアバターアイコンを右下に配置（showDateAtBottom=trueの場合のみ） */}
+        {showDateAtBottom && task && task.id !== 0 && (
+          <div className="flex justify-end items-center gap-2 mb-3 mr-2">
+            {/* チーム機能: 作成者アイコン */}
+            <CreatorAvatar
+              createdBy={createdBy || task?.createdBy}
+              avatarColor={createdByAvatarColor || task?.avatarColor}
+              teamMode={teamMode}
+              size="lg"
+              className=""
+            />
+            {/* 日付情報 */}
+            <DateInfo item={task} isEditing={!isDeleted} />
+          </div>
+        )}
       </div>
 
       {/* 削除確認モーダル（編集時のみ・削除済みタスクは除外） */}

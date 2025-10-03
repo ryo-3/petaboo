@@ -752,6 +752,7 @@ function MemoScreen({
                 // チーム機能
                 teamMode={teamMode}
                 teamId={teamId}
+                showDateAtBottom={teamMode}
                 // 統一フック
                 unifiedOperations={operations}
               />
@@ -780,6 +781,7 @@ function MemoScreen({
                   createdBy={selectedMemo.createdBy}
                   createdByUserId={selectedMemo.userId}
                   createdByAvatarColor={selectedMemo.avatarColor}
+                  showDateAtBottom={teamMode}
                   // 統一フック
                   unifiedOperations={operations}
                 />

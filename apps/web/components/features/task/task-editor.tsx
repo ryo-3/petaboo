@@ -294,6 +294,84 @@ function TaskEditor({
   // 手動でタグを変更したかどうかのフラグ
   const [hasManualTagChanges, setHasManualTagChanges] = useState(false);
 
+  // タグ初期化（タスクが変わった時のみ実行）
+  useEffect(() => {
+    const currentTaskId = task?.id || 0;
+
+    if (currentTaskId !== prevTaskId) {
+      setLocalTags(currentTags);
+      setPrevTaskId(currentTaskId);
+      setHasManualTagChanges(false); // タスク切り替え時は手動変更フラグをリセット
+    }
+  }, [task?.id, currentTags, prevTaskId]);
+
+  // currentTagsが変更されたときにlocalTagsも同期（外部からのタグ変更を反映）
+  // 但し、手動変更フラグがある場合は同期しない（ユーザーの操作を優先）
+  useEffect(() => {
+    // タスクが同じで、currentTagsが変更された場合のみ同期
+    if (
+      task?.id === prevTaskId &&
+      JSON.stringify(currentTags.map((t) => t.id).sort()) !==
+        JSON.stringify(localTags.map((t) => t.id).sort()) &&
+      !hasManualTagChanges // 手動変更がない場合のみ同期
+    ) {
+      setLocalTags(currentTags);
+    }
+  }, [task?.id, prevTaskId, currentTags, localTags, hasManualTagChanges]);
+
+  // preloadedTagsが更新された時にlocalTagsの最新情報を反映
+  useEffect(() => {
+    // チームモード・個人モード両方で preloadedTags の更新を反映
+    if (localTags.length === 0 || preloadedTags.length === 0) {
+      return;
+    }
+
+    const updatedLocalTags = localTags.map((localTag) => {
+      const updatedTag = preloadedTags.find((tag) => tag.id === localTag.id);
+      return updatedTag || localTag;
+    });
+
+    // 実際に変更があった場合のみ更新
+    const hasChanges = updatedLocalTags.some(
+      (tag, index) =>
+        tag.name !== localTags[index]?.name ||
+        tag.color !== localTags[index]?.color,
+    );
+
+    if (hasChanges) {
+      setLocalTags(updatedLocalTags);
+    }
+  }, [preloadedTags, localTags, teamMode]);
+
+  // チームタグが更新された時にlocalTagsの最新情報を反映（チームモードのみ）
+  useEffect(() => {
+    // 個人モードの時はチームタグでの更新を行わない
+    if (
+      !teamMode ||
+      localTags.length === 0 ||
+      !teamTagsList ||
+      teamTagsList.length === 0
+    ) {
+      return;
+    }
+
+    const updatedLocalTags = localTags.map((localTag) => {
+      const updatedTag = teamTagsList.find((tag) => tag.id === localTag.id);
+      return updatedTag || localTag;
+    });
+
+    // 実際に変更があった場合のみ更新
+    const hasChanges = updatedLocalTags.some(
+      (tag, index) =>
+        tag.name !== localTags[index]?.name ||
+        tag.color !== localTags[index]?.color,
+    );
+
+    if (hasChanges) {
+      setLocalTags(updatedLocalTags);
+    }
+  }, [teamTagsList, localTags, teamMode]);
+
   // 削除関連の状態
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -640,8 +718,12 @@ function TaskEditor({
     ],
   );
 
-  // 新規作成時の保存可能性チェック
-  const canSave = isDeleted ? false : isNewTask ? !!title.trim() : hasChanges;
+  // 新規作成時の保存可能性チェック（タグ変更も含める）
+  const canSave = isDeleted
+    ? false
+    : isNewTask
+      ? !!title.trim()
+      : hasChanges || hasTagChanges;
 
   // ボードIDを名前に変換する関数
   const getBoardName = (boardId: string) => {
@@ -704,6 +786,12 @@ function TaskEditor({
 
     await saveTask();
 
+    // タグの変更がある場合は保存
+    if (hasTagChanges && task && task.id !== 0) {
+      const taskId = task.originalId || task.id.toString();
+      await updateTaggings(taskId);
+    }
+
     // 連続作成モードで新規タスクの場合、保存後にリセット
     if (continuousCreateMode && wasNewTask && hasContent) {
       setTimeout(() => {
@@ -719,6 +807,9 @@ function TaskEditor({
     isNewTask,
     continuousCreateMode,
     resetForm,
+    hasTagChanges,
+    task,
+    updateTaggings,
   ]);
 
   // Ctrl+Sショートカット（変更がある場合のみ実行）

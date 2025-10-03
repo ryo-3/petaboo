@@ -1,12 +1,14 @@
 "use client";
 
-import { Bell, LayoutGrid } from "lucide-react";
+import { Bell } from "lucide-react";
+import DashboardEditIcon from "@/components/icons/dashboard-edit-icon";
+import EditIcon from "@/components/icons/edit-icon";
 import { useMyJoinRequests } from "@/src/hooks/use-my-join-requests";
 import { useSimpleTeamNotifier } from "@/src/hooks/use-simple-team-notifier";
 import { usePersonalNotifier } from "@/src/hooks/use-personal-notifier";
 import { useQueryClient } from "@tanstack/react-query";
 import { UserButton } from "@clerk/nextjs";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { usePageVisibility } from "@/src/contexts/PageVisibilityContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -20,8 +22,16 @@ function Header() {
       ? pathname.split("/")[2]
       : undefined;
 
-  // ボード詳細ページかどうかを判定
+  // クエリパラメータの取得
+  const searchParams = useSearchParams();
+  const currentTab = searchParams.get("tab");
+
+  // ページ種別の判定
   const isTeamBoardPage = pathname.includes("/board/");
+  const isTeamMemoListPage =
+    teamName && pathname === `/team/${teamName}` && currentTab === "memos";
+  const isTeamTaskListPage =
+    teamName && pathname === `/team/${teamName}` && currentTab === "tasks";
 
   // ボード名の状態管理
   const [boardTitle, setBoardTitle] = useState<string | null>(null);
@@ -91,9 +101,19 @@ function Header() {
       <div className="flex items-center gap-5 flex-1">
         <div className="flex items-center gap-4">
           {/* ロゴ */}
-          <div className="w-10 h-10 bg-Green rounded-xl flex items-center justify-center shadow-sm">
+          <div
+            className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-sm ${
+              isTeamBoardPage && boardTitle
+                ? "bg-light-Blue"
+                : isTeamMemoListPage || isTeamTaskListPage
+                  ? "bg-Green"
+                  : "bg-Green"
+            }`}
+          >
             {isTeamBoardPage && boardTitle ? (
-              <LayoutGrid className="w-5 h-5 text-white" />
+              <DashboardEditIcon className="w-6 h-6 text-white" />
+            ) : isTeamMemoListPage || isTeamTaskListPage ? (
+              <EditIcon className="w-6 h-6 text-white" />
             ) : (
               <span className="text-white font-bold text-base">ぺ</span>
             )}
@@ -103,10 +123,16 @@ function Header() {
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <h1 className="text-xl font-bold text-gray-800 tracking-wide">
-                {isTeamBoardPage && boardTitle ? boardTitle : "ぺたぼー"}
+                {isTeamBoardPage && boardTitle
+                  ? boardTitle
+                  : isTeamMemoListPage
+                    ? "メモ一覧"
+                    : isTeamTaskListPage
+                      ? "タスク一覧"
+                      : "ぺたぼー"}
               </h1>
             </div>
-            {!isTeamBoardPage && (
+            {!isTeamBoardPage && !isTeamMemoListPage && !isTeamTaskListPage && (
               <span className="text-sm text-gray-600 mt-0.5">
                 - 日々のメモやタスクをひとまとめに
               </span>

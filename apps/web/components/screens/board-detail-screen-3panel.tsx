@@ -689,7 +689,7 @@ function BoardDetailScreen({
                   {/* 左パネル: 選択に応じてメモ一覧またはタスク一覧 */}
                   <ResizablePanel
                     defaultSize={panelSizesSelected.left}
-                    minSize={25}
+                    minSize={20}
                     maxSize={50}
                     className="rounded-lg bg-white flex flex-col min-h-0"
                   >
@@ -786,7 +786,7 @@ function BoardDetailScreen({
                   {/* 中央パネル: 詳細表示またはタスク一覧 */}
                   <ResizablePanel
                     defaultSize={panelSizesSelected.center}
-                    minSize={25}
+                    minSize={35}
                     className="rounded-lg bg-white flex flex-col min-h-0"
                   >
                     {selectedMemo ? (
@@ -1093,7 +1093,7 @@ function BoardDetailScreen({
                   {/* 中央パネル: タスク一覧 */}
                   <ResizablePanel
                     defaultSize={panelSizesUnselected.center}
-                    minSize={25}
+                    minSize={35}
                     maxSize={50}
                     className="rounded-lg bg-white flex flex-col min-h-0"
                   >

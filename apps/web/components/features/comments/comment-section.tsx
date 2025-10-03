@@ -6,29 +6,135 @@ import {
 import { useAuth } from "@clerk/nextjs";
 import type { TeamMember } from "@/src/hooks/use-team-detail";
 
-// メンションをハイライト表示するヘルパー関数
-function renderCommentWithMentions(
+// コメント本文をレンダリングするヘルパー関数（メンション・引用・コードブロック対応）
+function renderCommentContent(
   content: string,
   currentUserId?: string,
 ): JSX.Element[] {
-  const mentionPattern = /(@[\p{L}\p{N}_]+)/gu;
-  const parts = content.split(mentionPattern);
+  const lines = content.split("\n");
+  const elements: JSX.Element[] = [];
+  let i = 0;
 
-  return parts.map((part, index) => {
-    if (part.match(mentionPattern)) {
-      // メンション部分
-      const isSelfMention = false; // TODO: 自分へのメンションかチェック
-      return (
-        <span
-          key={index}
-          className={`font-medium ${isSelfMention ? "bg-blue-200 text-blue-800" : "bg-gray-200 text-gray-800"} px-1 rounded`}
-        >
-          {part}
-        </span>
-      );
+  while (i < lines.length) {
+    const line = lines[i];
+    if (!line) {
+      i++;
+      continue;
     }
-    return <span key={index}>{part}</span>;
-  });
+
+    // コードブロック判定
+    if (line.trim().startsWith("```")) {
+      const codeLines: string[] = [];
+      i++; // 開始```をスキップ
+
+      // 終了```まで収集
+      while (i < lines.length) {
+        const codeLine = lines[i];
+        if (!codeLine) {
+          i++;
+          continue;
+        }
+        if (codeLine.trim().startsWith("```")) break;
+        codeLines.push(codeLine);
+        i++;
+      }
+      i++; // 終了```をスキップ
+
+      elements.push(
+        <pre
+          key={`code-${elements.length}`}
+          className="bg-gray-100 border border-gray-300 rounded p-2 my-1 text-xs overflow-x-auto"
+        >
+          <code>{codeLines.join("\n")}</code>
+        </pre>,
+      );
+      continue;
+    }
+
+    // 引用判定（連続する引用行をまとめる）
+    if (line.trim().startsWith(">")) {
+      const quoteLines: JSX.Element[] = [];
+
+      // 連続する引用行を収集
+      while (i < lines.length && lines[i]?.trim().startsWith(">")) {
+        const currentLine = lines[i];
+        if (currentLine) {
+          const quotedText = currentLine.replace(/^>\s*/, "");
+          quoteLines.push(
+            <div key={`quote-line-${i}`}>
+              {renderLineWithMentions(quotedText, currentUserId)}
+            </div>,
+          );
+        }
+        i++;
+      }
+
+      elements.push(
+        <div
+          key={`quote-${elements.length}`}
+          className="border-l-4 border-gray-300 pl-3 my-1 text-gray-600 italic"
+        >
+          {quoteLines}
+        </div>,
+      );
+      continue;
+    }
+
+    // 通常の行（メンション対応）
+    elements.push(
+      <div key={`line-${elements.length}`}>
+        {renderLineWithMentions(line, currentUserId)}
+      </div>,
+    );
+    i++;
+  }
+
+  return elements;
+}
+
+// 1行内のメンション・インラインコードをハイライト表示
+function renderLineWithMentions(
+  line: string,
+  currentUserId?: string,
+): JSX.Element[] {
+  // インラインコードとメンションの両方に対応
+  const pattern = /(`[^`]+`)|(@[\p{L}\p{N}_]+)/gu;
+  const parts = line.split(pattern);
+
+  return parts
+    .map((part, index) => {
+      if (!part) return null;
+
+      // インラインコード判定
+      if (part.startsWith("`") && part.endsWith("`")) {
+        const codeContent = part.slice(1, -1);
+        return (
+          <code
+            key={index}
+            className="bg-gray-200 text-gray-800 px-1.5 py-0.5 rounded text-xs font-mono"
+          >
+            {codeContent}
+          </code>
+        );
+      }
+
+      // メンション判定
+      const mentionPattern = /^@[\p{L}\p{N}_]+$/u;
+      if (part.match(mentionPattern)) {
+        const isSelfMention = false; // TODO: 自分へのメンションかチェック
+        return (
+          <span
+            key={index}
+            className={`font-medium ${isSelfMention ? "bg-blue-200 text-blue-800" : "bg-gray-200 text-gray-800"} px-1 rounded`}
+          >
+            {part}
+          </span>
+        );
+      }
+
+      return <span key={index}>{part}</span>;
+    })
+    .filter((element): element is JSX.Element => element !== null);
 }
 
 interface CommentSectionProps {
@@ -81,12 +187,36 @@ export default function CommentSection({
     }
   }, [comments]);
 
+  // テキストエリアの高さを自動調整
+  const adjustTextareaHeight = (textarea: HTMLTextAreaElement) => {
+    // 親要素の高さを取得
+    const parentHeight =
+      textarea.closest(".flex.flex-col.min-h-0")?.clientHeight || 0;
+    const maxHeight = parentHeight * 0.5; // 50%
+
+    textarea.style.height = "auto";
+    const newHeight = textarea.scrollHeight;
+
+    if (newHeight <= maxHeight) {
+      // 最大高さ以下の場合: スクロールバーなしで高さを設定
+      textarea.style.height = `${newHeight}px`;
+      textarea.style.overflowY = "hidden";
+    } else {
+      // 最大高さを超える場合: 最大高さに固定してスクロールバー表示
+      textarea.style.height = `${maxHeight}px`;
+      textarea.style.overflowY = "auto";
+    }
+  };
+
   // テキスト変更時の処理
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     const cursorPos = e.target.selectionStart;
     setNewComment(value);
     setCursorPosition(cursorPos);
+
+    // テキストエリアの高さを自動調整
+    adjustTextareaHeight(e.target);
 
     // カーソル位置の前の文字列を取得
     const textBeforeCursor = value.slice(0, cursorPos);
@@ -143,6 +273,11 @@ export default function CommentSection({
       });
       setNewComment("");
       setShowMentionSuggestions(false);
+
+      // テキストエリアの高さをリセット
+      if (textareaRef.current) {
+        textareaRef.current.style.height = "auto";
+      }
     } catch (error) {
       console.error("Failed to create comment:", error);
     }
@@ -209,12 +344,12 @@ export default function CommentSection({
                           })}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-                        {renderCommentWithMentions(
+                      <div className="text-sm text-gray-700 leading-relaxed">
+                        {renderCommentContent(
                           comment.content,
                           currentUserId || undefined,
                         )}
-                      </p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -229,7 +364,7 @@ export default function CommentSection({
             <textarea
               ref={textareaRef}
               placeholder={placeholder}
-              className="w-full p-2.5 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-gray-50 border border-gray-200"
+              className="w-full p-2.5 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-gray-50 border border-gray-200 min-h-[60px]"
               rows={2}
               value={newComment}
               onChange={handleTextChange}
@@ -255,7 +390,8 @@ export default function CommentSection({
                   } else if (e.key === "Escape") {
                     setShowMentionSuggestions(false);
                   }
-                } else if (e.key === "Enter" && !e.shiftKey) {
+                } else if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                  // Cmd+Enter (Mac) または Ctrl+Enter (Win/Linux) で送信
                   e.preventDefault();
                   handleSubmit();
                 }
@@ -302,36 +438,154 @@ export default function CommentSection({
             )}
 
             <div className="flex justify-between items-center">
-              <button
-                type="button"
-                onClick={() => {
-                  // @を挿入してサジェストを表示
-                  const textarea = textareaRef.current;
-                  if (!textarea) return;
+              <div className="flex items-center gap-1">
+                {/* @メンションボタン */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    // @を挿入してサジェストを表示
+                    const textarea = textareaRef.current;
+                    if (!textarea) return;
 
-                  const cursorPos = textarea.selectionStart;
-                  const textBefore = newComment.slice(0, cursorPos);
-                  const textAfter = newComment.slice(cursorPos);
-                  const newText = `${textBefore}@${textAfter}`;
+                    const cursorPos = textarea.selectionStart;
+                    const textBefore = newComment.slice(0, cursorPos);
+                    const textAfter = newComment.slice(cursorPos);
+                    const newText = `${textBefore}@${textAfter}`;
 
-                  setNewComment(newText);
-                  setCursorPosition(cursorPos + 1);
+                    setNewComment(newText);
+                    setCursorPosition(cursorPos + 1);
 
-                  // フォーカスを戻す
-                  setTimeout(() => {
-                    textarea.focus();
-                    textarea.setSelectionRange(cursorPos + 1, cursorPos + 1);
-                  }, 0);
+                    // フォーカスを戻す
+                    setTimeout(() => {
+                      textarea.focus();
+                      textarea.setSelectionRange(cursorPos + 1, cursorPos + 1);
+                    }, 0);
 
-                  // サジェストを表示
-                  setMentionQuery("");
-                  setShowMentionSuggestions(true);
-                  setSelectedSuggestionIndex(0);
-                }}
-                className="flex items-center justify-center size-7 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded text-base font-medium transition-colors"
-              >
-                @
-              </button>
+                    // サジェストを表示
+                    setMentionQuery("");
+                    setShowMentionSuggestions(true);
+                    setSelectedSuggestionIndex(0);
+                  }}
+                  className="flex items-center justify-center size-7 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded text-base font-medium transition-colors"
+                  title="メンション"
+                >
+                  @
+                </button>
+
+                {/* 引用ボタン */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const textarea = textareaRef.current;
+                    if (!textarea) return;
+
+                    const cursorPos = textarea.selectionStart;
+                    const selectionStart = textarea.selectionStart;
+                    const selectionEnd = textarea.selectionEnd;
+
+                    if (selectionStart !== selectionEnd) {
+                      // テキストが選択されている場合: 各行の先頭に> を追加
+                      const selectedText = newComment.slice(
+                        selectionStart,
+                        selectionEnd,
+                      );
+                      const quotedText = selectedText
+                        .split("\n")
+                        .map((line) => `> ${line}`)
+                        .join("\n");
+                      const newText =
+                        newComment.slice(0, selectionStart) +
+                        quotedText +
+                        newComment.slice(selectionEnd);
+                      setNewComment(newText);
+
+                      setTimeout(() => {
+                        textarea.focus();
+                        textarea.setSelectionRange(
+                          selectionStart + quotedText.length,
+                          selectionStart + quotedText.length,
+                        );
+                        adjustTextareaHeight(textarea);
+                      }, 0);
+                    } else {
+                      // テキストが選択されていない場合: カーソル位置に> を挿入
+                      const textBefore = newComment.slice(0, cursorPos);
+                      const textAfter = newComment.slice(cursorPos);
+                      const newText = `${textBefore}> ${textAfter}`;
+                      setNewComment(newText);
+
+                      setTimeout(() => {
+                        textarea.focus();
+                        textarea.setSelectionRange(
+                          cursorPos + 2,
+                          cursorPos + 2,
+                        );
+                        adjustTextareaHeight(textarea);
+                      }, 0);
+                    }
+                  }}
+                  className="flex items-center justify-center size-7 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded text-sm font-medium transition-colors"
+                  title="引用"
+                >
+                  "
+                </button>
+
+                {/* コードブロックボタン */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const textarea = textareaRef.current;
+                    if (!textarea) return;
+
+                    const selectionStart = textarea.selectionStart;
+                    const selectionEnd = textarea.selectionEnd;
+
+                    if (selectionStart !== selectionEnd) {
+                      // テキストが選択されている場合: ```で囲む
+                      const selectedText = newComment.slice(
+                        selectionStart,
+                        selectionEnd,
+                      );
+                      const wrappedText = `\`\`\`\n${selectedText}\n\`\`\``;
+                      const newText =
+                        newComment.slice(0, selectionStart) +
+                        wrappedText +
+                        newComment.slice(selectionEnd);
+                      setNewComment(newText);
+
+                      setTimeout(() => {
+                        textarea.focus();
+                        textarea.setSelectionRange(
+                          selectionStart + 4,
+                          selectionStart + 4 + selectedText.length,
+                        );
+                        adjustTextareaHeight(textarea);
+                      }, 0);
+                    } else {
+                      // テキストが選択されていない場合: 空のコードブロックを挿入
+                      const cursorPos = textarea.selectionStart;
+                      const textBefore = newComment.slice(0, cursorPos);
+                      const textAfter = newComment.slice(cursorPos);
+                      const newText = `${textBefore}\`\`\`\n\n\`\`\`${textAfter}`;
+                      setNewComment(newText);
+
+                      setTimeout(() => {
+                        textarea.focus();
+                        textarea.setSelectionRange(
+                          cursorPos + 4,
+                          cursorPos + 4,
+                        );
+                        adjustTextareaHeight(textarea);
+                      }, 0);
+                    }
+                  }}
+                  className="flex items-center justify-center size-7 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded text-xs font-medium transition-colors"
+                  title="コードブロック"
+                >
+                  &lt;&gt;
+                </button>
+              </div>
+
               <button
                 onClick={handleSubmit}
                 disabled={!newComment.trim() || createComment.isPending}

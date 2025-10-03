@@ -152,26 +152,6 @@ function MemoScreen({
   const [, setIsRightDeleting] = useState(false);
   const [isRightLidOpen, setIsRightLidOpen] = useState(false);
 
-  // コメント表示管理
-  const [showComments, setShowComments] = useState(false);
-
-  const handleCommentsToggle = (show: boolean) => {
-    setShowComments(show);
-  };
-
-  // メモが変更されたときにコメント状態を決定（コメントがある場合は表示）
-  useEffect(() => {
-    if (selectedMemo && teamMode) {
-      // TODO: 実際のコメント数を取得してここで判定
-      // 現在はダミーで20件のコメントがあると仮定
-      const commentCount = 20; // 実際のAPI実装時にコメント取得APIで判定
-      const hasComments = commentCount > 0;
-      setShowComments(hasComments);
-    } else {
-      setShowComments(false);
-    }
-  }, [selectedMemo?.id, teamMode]);
-
   // 復元の状態
   const [isRestoring, setIsRestoring] = useState(false);
   const [isRestoreLidOpen, setIsRestoreLidOpen] = useState(false);
@@ -601,6 +581,7 @@ function MemoScreen({
           )}
           onSelectMemo={handleSelectMemo}
           onSelectDeletedMemo={handleSelectDeletedMemo}
+          teamMode={teamMode}
           // 全データ事前取得（ちらつき解消）
           allTags={tags || []}
           allBoards={boards || []}
@@ -771,8 +752,6 @@ function MemoScreen({
                 // チーム機能
                 teamMode={teamMode}
                 teamId={teamId}
-                onCommentsToggle={handleCommentsToggle}
-                showComments={showComments}
                 // 統一フック
                 unifiedOperations={operations}
               />
@@ -801,8 +780,6 @@ function MemoScreen({
                   createdBy={selectedMemo.createdBy}
                   createdByUserId={selectedMemo.userId}
                   createdByAvatarColor={selectedMemo.avatarColor}
-                  onCommentsToggle={handleCommentsToggle}
-                  showComments={showComments}
                   // 統一フック
                   unifiedOperations={operations}
                 />
@@ -864,8 +841,6 @@ function MemoScreen({
                   createdBy={selectedDeletedMemo.createdBy}
                   createdByUserId={selectedDeletedMemo.userId}
                   createdByAvatarColor={selectedDeletedMemo.avatarColor}
-                  onCommentsToggle={handleCommentsToggle}
-                  showComments={showComments}
                   totalDeletedCount={deletedMemos?.length || 0}
                   // 統一フック
                   unifiedOperations={operations}

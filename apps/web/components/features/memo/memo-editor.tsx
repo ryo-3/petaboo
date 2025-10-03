@@ -91,8 +91,6 @@ interface MemoEditorProps {
   createdBy?: string | null;
   createdByUserId?: string | null;
   createdByAvatarColor?: string | null;
-  onCommentsToggle?: (show: boolean) => void;
-  showComments?: boolean;
   totalDeletedCount?: number; // 削除済みアイテムの総数
 }
 
@@ -117,8 +115,6 @@ function MemoEditor({
   createdBy,
   createdByUserId,
   createdByAvatarColor,
-  onCommentsToggle,
-  showComments = false,
   totalDeletedCount = 0,
   unifiedOperations,
 }: MemoEditorProps) {
@@ -1045,122 +1041,6 @@ function MemoEditor({
               <DateInfo item={memo} isEditing={!isDeleted} />
             </div>
           )}
-
-          {/* コメント機能（チームモードの既存メモのみ） */}
-          {teamMode &&
-            memo &&
-            memo.id !== 0 &&
-            !isDeleted &&
-            onCommentsToggle && (
-              <div className="mb-6">
-                {/* コメント切り替えボタン */}
-                <button
-                  onClick={() => {
-                    onCommentsToggle(!showComments);
-                  }}
-                  className={`inline-flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm transition-all duration-200 ${
-                    showComments
-                      ? "bg-blue-50 text-blue-600 hover:bg-blue-100"
-                      : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-                  }`}
-                >
-                  <svg
-                    className="size-3.5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                    />
-                  </svg>
-                  <span>コメント</span>
-                  <span
-                    className={`text-xs font-medium ${
-                      showComments ? "text-blue-700" : "text-gray-500"
-                    }`}
-                  >
-                    (6)
-                  </span>
-                </button>
-
-                {/* コメント表示エリア */}
-                {showComments && (
-                  <div className="mt-4 p-4 border border-gray-200 rounded-md bg-gray-50">
-                    {/* コメント一覧 */}
-                    <div className="space-y-3 mb-4">
-                      <div className="flex gap-3">
-                        <div className="flex-shrink-0">
-                          <div className="size-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                            A
-                          </div>
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-sm font-medium text-gray-900">
-                              Alice
-                            </span>
-                            <span className="text-xs text-gray-500">
-                              2時間前
-                            </span>
-                          </div>
-                          <p className="text-sm text-gray-700">
-                            この内容についてもう少し詳しく教えてください。
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-3">
-                        <div className="flex-shrink-0">
-                          <div className="size-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                            B
-                          </div>
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-sm font-medium text-gray-900">
-                              Bob
-                            </span>
-                            <span className="text-xs text-gray-500">
-                              1時間前
-                            </span>
-                          </div>
-                          <p className="text-sm text-gray-700">
-                            承知しました。明日までに確認して追記します。
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* コメント入力エリア */}
-                    <div className="border-t border-gray-300 pt-4">
-                      <div className="flex gap-3">
-                        <div className="flex-shrink-0">
-                          <div className="size-8 bg-gray-400 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                            Y
-                          </div>
-                        </div>
-                        <div className="flex-1">
-                          <textarea
-                            placeholder="コメントを入力..."
-                            rows={2}
-                            className="w-full p-2 border border-gray-300 rounded-md text-sm resize-none focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                          />
-                          <div className="flex justify-end mt-2">
-                            <button className="px-3 py-1 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition-colors">
-                              投稿
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
         </BaseViewer>
       </div>
       {baseViewerRef.current && (

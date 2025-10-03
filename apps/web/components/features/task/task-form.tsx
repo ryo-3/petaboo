@@ -237,6 +237,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
           tags={tags}
           spacing="normal"
           showWhen="has-content"
+          className="mb-4"
         />
       </div>
     </div>

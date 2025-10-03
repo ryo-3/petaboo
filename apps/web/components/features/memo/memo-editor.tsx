@@ -1027,6 +1027,7 @@ function MemoEditor({
             tags={localTags}
             spacing="normal"
             showWhen="has-content"
+            className="mb-4"
           />
 
           {/* 日付情報とアバターアイコンを右下に配置（showDateAtBottom=trueの場合のみ） */}

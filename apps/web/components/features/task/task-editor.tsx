@@ -341,7 +341,8 @@ function TaskEditor({
     if (hasChanges) {
       setLocalTags(updatedLocalTags);
     }
-  }, [preloadedTags, localTags, teamMode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preloadedTags, teamMode]);
 
   // チームタグが更新された時にlocalTagsの最新情報を反映（チームモードのみ）
   useEffect(() => {
@@ -370,7 +371,8 @@ function TaskEditor({
     if (hasChanges) {
       setLocalTags(updatedLocalTags);
     }
-  }, [teamTagsList, localTags, teamMode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [teamTagsList, teamMode]);
 
   // 削除関連の状態
   const [showDeleteModal, setShowDeleteModal] = useState(false);

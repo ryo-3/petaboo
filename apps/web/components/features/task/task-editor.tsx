@@ -70,6 +70,7 @@ interface TaskEditorProps {
   onRestoreAndSelectNext?: () => void;
   onDelete?: () => void;
   customHeight?: string;
+  showDateAtBottom?: boolean; // 日付を下に表示するか（デフォルト: false = ヘッダー右側）
 
   // 全データ事前取得（ちらつき解消）
   preloadedTags?: Tag[];
@@ -117,6 +118,7 @@ function TaskEditor({
   onRestoreAndSelectNext,
   onDelete,
   customHeight,
+  showDateAtBottom = false,
   preloadedTags = [],
   preloadedBoards = [],
   preloadedTaggings = [],
@@ -828,18 +830,18 @@ function TaskEditor({
                     ).toLocaleDateString("ja-JP")}
                   </span>
                 )}
-                {/* チーム機能: 作成者アイコン */}
-                <CreatorAvatar
-                  createdBy={createdBy || task?.createdBy}
-                  avatarColor={createdByAvatarColor || task?.avatarColor}
-                  teamMode={teamMode}
-                  size="lg"
-                  className="mr-2"
-                />
-                {task && task.id !== 0 && (
-                  <div className="text-[13px] text-gray-400 mr-2">
+                {/* ヘッダー右側にアバター・日付を表示（showDateAtBottom=falseの場合） */}
+                {!showDateAtBottom && task && task.id !== 0 && (
+                  <>
+                    <CreatorAvatar
+                      createdBy={createdBy || task?.createdBy}
+                      avatarColor={createdByAvatarColor || task?.avatarColor}
+                      teamMode={teamMode}
+                      size="lg"
+                      className="mr-2"
+                    />
                     <DateInfo item={task} isEditing={!isDeleted} />
-                  </div>
+                  </>
                 )}
                 {!isNewTask && !isDeleted && handleDelete && (
                   <button
@@ -928,6 +930,22 @@ function TaskEditor({
             initialBoardId={initialBoardId}
             teamMode={teamMode}
           />
+
+          {/* 日付情報とアバターアイコンを右下に配置（showDateAtBottom=trueの場合のみ） */}
+          {showDateAtBottom && task && task.id !== 0 && (
+            <div className="flex justify-end items-center gap-2 mb-3 mr-2">
+              {/* チーム機能: 作成者アイコン */}
+              <CreatorAvatar
+                createdBy={createdBy || task?.createdBy}
+                avatarColor={createdByAvatarColor || task?.avatarColor}
+                teamMode={teamMode}
+                size="lg"
+                className=""
+              />
+              {/* 日付情報 */}
+              <DateInfo item={task} isEditing={!isDeleted} />
+            </div>
+          )}
         </BaseViewer>
       </div>
 

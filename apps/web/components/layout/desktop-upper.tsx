@@ -112,6 +112,8 @@ interface DesktopUpperProps {
   hideAddButton?: boolean;
   // CSV import callback (memo mode only)
   onCsvImport?: () => void;
+  // Team mode (reverse layout for team memo list)
+  teamMode?: boolean;
 }
 
 function DesktopUpper({
@@ -171,6 +173,7 @@ function DesktopUpper({
   completedCount = 0,
   hideAddButton = false,
   onCsvImport,
+  teamMode = false,
 }: DesktopUpperProps) {
   const { preferences } = useUserPreferences(1);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
@@ -304,273 +307,296 @@ function DesktopUpper({
 
   const tabs = getTabsConfig();
 
-  return (
-    <div className={marginBottom}>
-      <div
-        className={`flex justify-between items-center ${headerMarginBottom}`}
-      >
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2">
-            {!customTitle && (
-              <h1 className="font-bold text-gray-800 text-[22px] w-[105px] truncate">
-                {currentMode === "memo"
-                  ? "メモ一覧"
-                  : currentMode === "task"
-                    ? "タスク一覧"
-                    : "ボード一覧"}
-              </h1>
-            )}
+  // ヘッダー部分のJSX
+  const headerContent = (
+    <div className={`flex justify-between items-center ${headerMarginBottom}`}>
+      <div className="flex items-center gap-2">
+        {!customTitle && !teamMode && (
+          <h1 className="font-bold text-gray-800 text-[22px] w-[105px] truncate">
+            {currentMode === "memo"
+              ? "メモ一覧"
+              : currentMode === "task"
+                ? "タスク一覧"
+                : "ボード一覧"}
+          </h1>
+        )}
+
+        {/* 新規追加ボタン（個人モードのみヘッダー部分に表示） */}
+        {!customTitle && !hideAddButton && !teamMode && (
+          <AddItemButton
+            itemType={currentMode}
+            onClick={onCreateNew}
+            position="bottom"
+            size="small"
+            showTooltip={false}
+            customSize={{
+              padding: "p-2",
+              iconSize: "w-3.5 h-3.5",
+            }}
+          />
+        )}
+
+        {/* タブ（boardモード以外） */}
+        {currentMode !== "board" && (
+          <div className={`flex items-center gap-2 ${!teamMode ? "ml-2" : ""}`}>
+            {tabs.map((tab) => {
+              const isActive = activeTab === tab.id;
+              const tabClass = tab.icon
+                ? "pl-2 pr-2 py-2"
+                : "gap-1.5 px-2 py-1.5";
+
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() =>
+                    onTabChange(
+                      tab.id as
+                        | "normal"
+                        | "deleted"
+                        | "todo"
+                        | "in_progress"
+                        | "completed",
+                    )
+                  }
+                  className={`flex items-center ${tabClass} rounded-lg font-medium transition-colors text-gray-600 text-[13px] ${getTabBackgroundClass(tab.id, isActive)}`}
+                >
+                  {renderTabContent(tab, isActive)}
+                </button>
+              );
+            })}
           </div>
-
-          {/* 新規追加ボタン（ボード詳細ページでは非表示） */}
-          {!customTitle && !hideAddButton && (
-            <AddItemButton
-              itemType={currentMode}
-              onClick={onCreateNew}
-              position="bottom"
-              size="small"
-              showTooltip={false}
-              customSize={{
-                padding: "p-2",
-                iconSize: "w-3.5 h-3.5",
-              }}
-            />
-          )}
-
-          {/* タブ（boardモード以外） */}
-          {currentMode !== "board" && (
-            <div className="flex items-center gap-2 ml-2">
-              {tabs.map((tab) => {
-                const isActive = activeTab === tab.id;
-                const tabClass = tab.icon
-                  ? "pl-2 pr-2 py-2"
-                  : "gap-2 px-2 py-1.5";
-
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() =>
-                      onTabChange(
-                        tab.id as
-                          | "normal"
-                          | "deleted"
-                          | "todo"
-                          | "in_progress"
-                          | "completed",
-                      )
-                    }
-                    className={`flex items-center ${tabClass} rounded-lg font-medium transition-colors text-gray-600 text-[13px] ${getTabBackgroundClass(tab.id, isActive)}`}
-                  >
-                    {renderTabContent(tab, isActive)}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
+        )}
       </div>
+    </div>
+  );
 
-      {/* コントロール */}
-      {!(
-        (currentMode === "memo" && preferences?.memoHideControls) ||
-        (currentMode === "task" && preferences?.taskHideControls)
-      ) && (
-        <div className="flex items-center gap-2 h-7">
-          <ViewModeToggle
-            viewMode={viewMode}
-            onViewModeChange={onViewModeChange}
-            buttonSize="size-7"
-            iconSize="size-5"
-          />
-          <ColumnCountSelector
-            columnCount={columnCount}
-            onColumnCountChange={onColumnCountChange}
-            isRightPanelShown={rightPanelMode !== "hidden"}
-            containerHeight="h-7"
-            buttonSize="size-6"
-          />
+  // コントロール部分のJSX
+  const controlsContent = !(
+    (currentMode === "memo" && preferences?.memoHideControls) ||
+    (currentMode === "task" && preferences?.taskHideControls)
+  ) ? (
+    <div className={`flex items-center gap-2 h-7 ${teamMode ? "mb-1.5" : ""}`}>
+      {/* 新規追加ボタン（チームモードのみ、コントロール部分に表示） */}
+      {teamMode && !customTitle && !hideAddButton && (
+        <AddItemButton
+          itemType={currentMode}
+          onClick={onCreateNew}
+          position="bottom"
+          size="small"
+          showTooltip={false}
+          customSize={{
+            padding: "p-2",
+            iconSize: "w-3.5 h-3.5",
+          }}
+        />
+      )}
+      <ViewModeToggle
+        viewMode={viewMode}
+        onViewModeChange={onViewModeChange}
+        buttonSize="size-7"
+        iconSize="size-5"
+      />
+      <ColumnCountSelector
+        columnCount={columnCount}
+        onColumnCountChange={onColumnCountChange}
+        isRightPanelShown={rightPanelMode !== "hidden"}
+        containerHeight="h-7"
+        buttonSize="size-6"
+      />
 
-          {/* 選択モード切り替え */}
-          {onSelectionModeChange && (
-            <SelectionModeToggle
-              mode={selectionMode}
-              onModeChange={onSelectionModeChange}
-              buttonSize="size-7"
-              iconSize="size-4"
-            />
-          )}
+      {/* 選択モード切り替え */}
+      {onSelectionModeChange && (
+        <SelectionModeToggle
+          mode={selectionMode}
+          onModeChange={onSelectionModeChange}
+          buttonSize="size-7"
+          iconSize="size-4"
+        />
+      )}
 
-          {/* 設定ボタン（ボードモードのみコントロールパネルに表示） */}
-          {currentMode === "board" &&
-            boardId &&
-            onBoardSettings &&
-            shouldShowSettingsIcon && (
-              <Tooltip text="ボード設定" position="bottom-left">
-                <button
-                  onClick={onBoardSettings}
-                  className="p-1 text-gray-600 h-7 flex items-center"
-                >
-                  <SettingsIcon className="w-4 h-4" />
-                </button>
-              </Tooltip>
-            )}
+      {/* 設定ボタン（ボードモードのみコントロールパネルに表示） */}
+      {currentMode === "board" &&
+        boardId &&
+        onBoardSettings &&
+        shouldShowSettingsIcon && (
+          <Tooltip text="ボード設定" position="bottom-left">
+            <button
+              onClick={onBoardSettings}
+              className="p-1 text-gray-600 h-7 flex items-center"
+            >
+              <SettingsIcon className="w-4 h-4" />
+            </button>
+          </Tooltip>
+        )}
 
-          {/* ボードレイアウト切り替え（boardモードのみ） */}
-          {currentMode === "board" && onBoardLayoutChange && (
-            <BoardLayoutToggle
-              boardLayout={boardLayout}
-              isReversed={isReversed}
-              onBoardLayoutChange={onBoardLayoutChange}
-              buttonSize="size-7"
-              iconSize="size-8"
-            />
-          )}
+      {/* ボードレイアウト切り替え（boardモードのみ） */}
+      {currentMode === "board" && onBoardLayoutChange && (
+        <BoardLayoutToggle
+          boardLayout={boardLayout}
+          isReversed={isReversed}
+          onBoardLayoutChange={onBoardLayoutChange}
+          buttonSize="size-7"
+          iconSize="size-8"
+        />
+      )}
 
-          {/* コンテンツフィルター（boardモードのみ） */}
-          {currentMode === "board" && onMemoToggle && onTaskToggle && (
-            <ContentFilter
-              showMemo={showMemo}
-              showTask={showTask}
-              onMemoToggle={onMemoToggle}
-              onTaskToggle={onTaskToggle}
-              rightPanelMode={contentFilterRightPanelMode}
-            />
-          )}
+      {/* コンテンツフィルター（boardモードのみ） */}
+      {currentMode === "board" && onMemoToggle && onTaskToggle && (
+        <ContentFilter
+          showMemo={showMemo}
+          showTask={showTask}
+          onMemoToggle={onMemoToggle}
+          onTaskToggle={onTaskToggle}
+          rightPanelMode={contentFilterRightPanelMode}
+        />
+      )}
 
-          {/* 全選択/全解除ボタン（チェックモードのみ、メモ・タスク画面のみ、対象アイテムがある場合のみ） */}
-          {(currentMode === "memo" || currentMode === "task") &&
-            selectionMode === "check" &&
-            onSelectAll &&
-            (() => {
-              // 対象アイテム数の確認
-              let hasTargetItems = false;
-              if (currentMode === "memo") {
-                hasTargetItems =
-                  activeTab === "deleted"
-                    ? deletedMemosCount > 0
-                    : normalCount > 0;
-              } else if (currentMode === "task") {
-                if (activeTab === "deleted") {
-                  hasTargetItems = deletedTasksCount > 0;
-                } else {
-                  const statusCount =
-                    activeTab === "todo"
-                      ? todoCount
-                      : activeTab === "in_progress"
-                        ? inProgressCount
-                        : activeTab === "completed"
-                          ? completedCount
-                          : 0;
-                  hasTargetItems = statusCount > 0;
-                }
-              }
+      {/* 全選択/全解除ボタン（チェックモードのみ、メモ・タスク画面のみ、対象アイテムがある場合のみ） */}
+      {(currentMode === "memo" || currentMode === "task") &&
+        selectionMode === "check" &&
+        onSelectAll &&
+        (() => {
+          // 対象アイテム数の確認
+          let hasTargetItems = false;
+          if (currentMode === "memo") {
+            hasTargetItems =
+              activeTab === "deleted" ? deletedMemosCount > 0 : normalCount > 0;
+          } else if (currentMode === "task") {
+            if (activeTab === "deleted") {
+              hasTargetItems = deletedTasksCount > 0;
+            } else {
+              const statusCount =
+                activeTab === "todo"
+                  ? todoCount
+                  : activeTab === "in_progress"
+                    ? inProgressCount
+                    : activeTab === "completed"
+                      ? completedCount
+                      : 0;
+              hasTargetItems = statusCount > 0;
+            }
+          }
 
-              return hasTargetItems ? (
-                <Tooltip
-                  text={isAllSelected ? "全解除" : "全選択"}
-                  position="bottom"
-                >
-                  <button
-                    onClick={onSelectAll}
-                    className="bg-gray-100 rounded-lg size-7 flex items-center justify-center transition-colors text-gray-500 hover:text-gray-700"
-                  >
-                    {isAllSelected ? (
-                      <SquareIcon className="size-5" />
-                    ) : (
-                      <CheckSquareIcon className="size-5" />
-                    )}
-                  </button>
-                </Tooltip>
-              ) : null;
-            })()}
-
-          {/* 並び替えメニュー */}
-          {onSortChange && sortOptions.length > 0 && (
-            <SortToggle
-              sortOptions={sortOptions}
-              onSortChange={onSortChange}
-              buttonSize="size-6"
-              iconSize="size-4"
-            />
-          )}
-
-          {/* ボード名表示切り替え（メモ・タスク） */}
-          {(currentMode === "memo" || currentMode === "task") &&
-            onShowBoardNameChange && (
-              <BoardNameToggle
-                showBoardName={showBoardName}
-                onToggle={onShowBoardNameChange}
-                buttonSize="size-7"
-                iconSize="size-4"
-                boards={boards}
-                selectedBoardIds={selectedBoardIds}
-                onBoardFilterChange={onBoardFilterChange}
-                filterMode={filterMode}
-                onFilterModeChange={onFilterModeChange}
-              />
-            )}
-
-          {/* タグ表示切り替え（メモ・タスク・ボードモード） */}
-          {(currentMode === "memo" ||
-            currentMode === "task" ||
-            currentMode === "board") &&
-            onShowTagDisplayChange && (
-              <TagDisplayToggle
-                showTags={showTagDisplay}
-                onToggle={onShowTagDisplayChange}
-                buttonSize="size-7"
-                iconSize="size-4"
-                tags={tags}
-                selectedTagIds={selectedTagIds}
-                onTagFilterChange={onTagFilterChange}
-                filterMode={tagFilterMode}
-                onFilterModeChange={onTagFilterModeChange}
-              />
-            )}
-
-          {/* 編集日表示切り替え */}
-          {onShowEditDateChange && (
-            <EditDateToggle
-              showEditDate={showEditDate}
-              onToggle={onShowEditDateChange}
-              buttonSize="size-7"
-              iconSize="size-4"
-            />
-          )}
-
-          {/* CSVインポートボタン（メモ・タスクモード、またはボードモードでonCsvImportがある場合） */}
-          {((!customTitle &&
-            !hideAddButton &&
-            (currentMode === "memo" || currentMode === "task")) ||
-            (currentMode === "board" && customTitle)) &&
-            onCsvImport && (
-              <Tooltip text="CSVインポート" position="bottom">
-                <button
-                  onClick={onCsvImport}
-                  className="bg-gray-100 shadow-sm rounded-lg size-7 flex items-center justify-center transition-all text-gray-500 opacity-65 hover:opacity-85"
-                >
-                  <CsvImportIcon className="size-[18px]" />
-                </button>
-              </Tooltip>
-            )}
-
-          {/* エクスポートボタン（boardモードのみ） */}
-          {currentMode === "board" && onBoardExport && (
-            <Tooltip text="エクスポート" position="bottom">
+          return hasTargetItems ? (
+            <Tooltip
+              text={isAllSelected ? "全解除" : "全選択"}
+              position="bottom"
+            >
               <button
-                onClick={onBoardExport}
-                disabled={isExportDisabled}
-                className={`bg-gray-100 shadow-sm rounded-lg size-7 flex items-center justify-center transition-all ${
-                  isExportDisabled
-                    ? "text-gray-400 cursor-not-allowed opacity-40"
-                    : "text-gray-500 opacity-65 hover:opacity-85"
-                }`}
+                onClick={onSelectAll}
+                className="bg-gray-100 rounded-lg size-7 flex items-center justify-center transition-colors text-gray-500 hover:text-gray-700"
               >
-                <CsvExportIcon className="size-[18px]" />
+                {isAllSelected ? (
+                  <SquareIcon className="size-5" />
+                ) : (
+                  <CheckSquareIcon className="size-5" />
+                )}
               </button>
             </Tooltip>
-          )}
-        </div>
+          ) : null;
+        })()}
+
+      {/* 並び替えメニュー */}
+      {onSortChange && sortOptions.length > 0 && (
+        <SortToggle
+          sortOptions={sortOptions}
+          onSortChange={onSortChange}
+          buttonSize="size-6"
+          iconSize="size-4"
+        />
+      )}
+
+      {/* ボード名表示切り替え（メモ・タスク） */}
+      {(currentMode === "memo" || currentMode === "task") &&
+        onShowBoardNameChange && (
+          <BoardNameToggle
+            showBoardName={showBoardName}
+            onToggle={onShowBoardNameChange}
+            buttonSize="size-7"
+            iconSize="size-4"
+            boards={boards}
+            selectedBoardIds={selectedBoardIds}
+            onBoardFilterChange={onBoardFilterChange}
+            filterMode={filterMode}
+            onFilterModeChange={onFilterModeChange}
+          />
+        )}
+
+      {/* タグ表示切り替え（メモ・タスク・ボードモード） */}
+      {(currentMode === "memo" ||
+        currentMode === "task" ||
+        currentMode === "board") &&
+        onShowTagDisplayChange && (
+          <TagDisplayToggle
+            showTags={showTagDisplay}
+            onToggle={onShowTagDisplayChange}
+            buttonSize="size-7"
+            iconSize="size-4"
+            tags={tags}
+            selectedTagIds={selectedTagIds}
+            onTagFilterChange={onTagFilterChange}
+            filterMode={tagFilterMode}
+            onFilterModeChange={onTagFilterModeChange}
+          />
+        )}
+
+      {/* 編集日表示切り替え */}
+      {onShowEditDateChange && (
+        <EditDateToggle
+          showEditDate={showEditDate}
+          onToggle={onShowEditDateChange}
+          buttonSize="size-7"
+          iconSize="size-4"
+        />
+      )}
+
+      {/* CSVインポートボタン（メモ・タスクモード、またはボードモードでonCsvImportがある場合） */}
+      {((!customTitle &&
+        !hideAddButton &&
+        (currentMode === "memo" || currentMode === "task")) ||
+        (currentMode === "board" && customTitle)) &&
+        onCsvImport && (
+          <Tooltip text="CSVインポート" position="bottom">
+            <button
+              onClick={onCsvImport}
+              className="bg-gray-100 shadow-sm rounded-lg size-7 flex items-center justify-center transition-all text-gray-500 opacity-65 hover:opacity-85"
+            >
+              <CsvImportIcon className="size-[18px]" />
+            </button>
+          </Tooltip>
+        )}
+
+      {/* エクスポートボタン（boardモードのみ） */}
+      {currentMode === "board" && onBoardExport && (
+        <Tooltip text="エクスポート" position="bottom">
+          <button
+            onClick={onBoardExport}
+            disabled={isExportDisabled}
+            className={`bg-gray-100 shadow-sm rounded-lg size-7 flex items-center justify-center transition-all ${
+              isExportDisabled
+                ? "text-gray-400 cursor-not-allowed opacity-40"
+                : "text-gray-500 opacity-65 hover:opacity-85"
+            }`}
+          >
+            <CsvExportIcon className="size-[18px]" />
+          </button>
+        </Tooltip>
+      )}
+    </div>
+  ) : null;
+
+  return (
+    <div className={marginBottom}>
+      {teamMode ? (
+        <>
+          {controlsContent}
+          {headerContent}
+        </>
+      ) : (
+        <>
+          {headerContent}
+          {controlsContent}
+        </>
       )}
     </div>
   );

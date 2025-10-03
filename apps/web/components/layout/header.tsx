@@ -3,6 +3,7 @@
 import { Bell } from "lucide-react";
 import DashboardEditIcon from "@/components/icons/dashboard-edit-icon";
 import EditIcon from "@/components/icons/edit-icon";
+import CheckCircleIcon from "@/components/icons/check-circle-icon";
 import { useMyJoinRequests } from "@/src/hooks/use-my-join-requests";
 import { useSimpleTeamNotifier } from "@/src/hooks/use-simple-team-notifier";
 import { usePersonalNotifier } from "@/src/hooks/use-personal-notifier";
@@ -105,14 +106,18 @@ function Header() {
             className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-sm ${
               isTeamBoardPage && boardTitle
                 ? "bg-light-Blue"
-                : isTeamMemoListPage || isTeamTaskListPage
-                  ? "bg-Green"
-                  : "bg-Green"
+                : isTeamTaskListPage
+                  ? "bg-DeepBlue"
+                  : isTeamMemoListPage
+                    ? "bg-Green"
+                    : "bg-Green"
             }`}
           >
             {isTeamBoardPage && boardTitle ? (
               <DashboardEditIcon className="w-6 h-6 text-white" />
-            ) : isTeamMemoListPage || isTeamTaskListPage ? (
+            ) : isTeamTaskListPage ? (
+              <CheckCircleIcon className="w-6 h-6 text-white" />
+            ) : isTeamMemoListPage ? (
               <EditIcon className="w-6 h-6 text-white" />
             ) : (
               <span className="text-white font-bold text-base">ぺ</span>

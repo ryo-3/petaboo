@@ -618,6 +618,9 @@ function MemoScreen({
               deletedMemosCount={deletedMemos?.length || 0}
               hideAddButton={hideHeaderButtons}
               onCsvImport={() => setIsCsvImportModalOpen(true)}
+              teamMode={teamMode}
+              marginBottom={teamMode ? "mb-2" : "mb-3"}
+              headerMarginBottom="mb-1.5"
             />
 
             <DesktopLower
@@ -969,6 +972,9 @@ function MemoScreen({
           deletedMemosCount={deletedMemos?.length || 0}
           hideAddButton={hideHeaderButtons}
           onCsvImport={() => setIsCsvImportModalOpen(true)}
+          teamMode={teamMode}
+          marginBottom={teamMode ? "mb-2" : "mb-3"}
+          headerMarginBottom="mb-1.5"
         />
 
         <DesktopLower

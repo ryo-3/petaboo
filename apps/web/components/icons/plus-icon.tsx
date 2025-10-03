@@ -10,7 +10,7 @@ function PlusIcon({ className = "w-5 h-5" }: BaseIconProps) {
       stroke="currentColor"
       className={className}
     >
-      <path d="M12 4v16m8-8H4" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
     </svg>
   );
 }

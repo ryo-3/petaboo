@@ -165,12 +165,12 @@ function MemoScreen({
     right: number;
   }>(() => {
     if (typeof window !== "undefined" && teamMode) {
-      const saved = localStorage.getItem("team-memo-3panel-sizes");
+      const saved = localStorage.getItem("team-memo-3panel-sizes-v2");
       if (saved) {
         return JSON.parse(saved);
       }
     }
-    return { left: 20, center: 50, right: 30 };
+    return { left: 25, center: 45, right: 30 };
   });
 
   // エディター + コメントの2パネルサイズ管理（RightPanel内の分割用）
@@ -528,6 +528,21 @@ function MemoScreen({
     onClose: onClose,
   });
 
+  // ヘッダーからの新規メモ作成イベントをリッスン（チームモードのみ）
+  useEffect(() => {
+    if (!teamMode) return;
+
+    const handleTeamMemoCreate = () => {
+      handleCreateNew();
+    };
+
+    window.addEventListener("team-memo-create", handleTeamMemoCreate);
+
+    return () => {
+      window.removeEventListener("team-memo-create", handleTeamMemoCreate);
+    };
+  }, [teamMode, handleCreateNew]);
+
   // 除外アイテムIDでフィルタリングされたメモ
   const filteredMemos =
     memos?.filter((memo) => !excludeItemIds.includes(memo.id)) || [];
@@ -558,7 +573,7 @@ function MemoScreen({
             };
             setThreePanelSizes(newSizes);
             localStorage.setItem(
-              "team-memo-3panel-sizes",
+              "team-memo-3panel-sizes-v2",
               JSON.stringify(newSizes),
             );
           }
@@ -755,6 +770,24 @@ function MemoScreen({
           minSize={35}
           className="flex flex-col min-h-0"
         >
+          {/* 新規作成モード */}
+          {memoScreenMode === "create" && (
+            <MemoEditor
+              memo={null}
+              onClose={() => setMemoScreenMode("list")}
+              onSaveComplete={handleSaveComplete}
+              customHeight="flex-1 min-h-0"
+              preloadedTags={tags || []}
+              preloadedBoards={boards || []}
+              preloadedTaggings={safeAllTaggings || []}
+              preloadedBoardItems={safeAllBoardItems || []}
+              teamMode={teamMode}
+              teamId={teamId}
+              showDateAtBottom={teamMode}
+              unifiedOperations={operations}
+            />
+          )}
+          {/* 表示モード（既存メモ） */}
           {memoScreenMode === "view" &&
             selectedMemo &&
             !selectedDeletedMemo && (
@@ -782,6 +815,7 @@ function MemoScreen({
                 unifiedOperations={operations}
               />
             )}
+          {/* 表示モード（削除済みメモ） */}
           {memoScreenMode === "view" &&
             selectedDeletedMemo &&
             !selectedMemo && (
@@ -840,11 +874,11 @@ function MemoScreen({
 
         <ResizableHandle withHandle />
 
-        {/* 右パネル：コメント */}
+        {/* 右パネル：コメント（新規作成時は非表示） */}
         <ResizablePanel
-          defaultSize={threePanelSizes.right}
-          minSize={25}
-          maxSize={50}
+          defaultSize={memoScreenMode === "create" ? 0 : threePanelSizes.right}
+          minSize={memoScreenMode === "create" ? 0 : 25}
+          maxSize={memoScreenMode === "create" ? 0 : 50}
           className="flex flex-col"
         >
           {selectedMemo && (

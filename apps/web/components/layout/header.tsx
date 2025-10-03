@@ -126,7 +126,7 @@ function Header() {
 
           {/* タイトルとキャッチコピー */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <h1 className="text-xl font-bold text-gray-800 tracking-wide">
                 {isTeamBoardPage && boardTitle
                   ? boardTitle
@@ -136,6 +136,29 @@ function Header() {
                       ? "タスク一覧"
                       : "ぺたぼー"}
               </h1>
+              {/* チームメモ一覧の新規追加ボタン */}
+              {isTeamMemoListPage && (
+                <button
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent("team-memo-create"));
+                  }}
+                  className="p-2 bg-Green hover:bg-Green/90 rounded-lg transition-colors"
+                >
+                  <svg
+                    className="w-3.5 h-3.5 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={3}
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                </button>
+              )}
             </div>
             {!isTeamBoardPage && !isTeamMemoListPage && !isTeamTaskListPage && (
               <span className="text-sm text-gray-600 mt-0.5">

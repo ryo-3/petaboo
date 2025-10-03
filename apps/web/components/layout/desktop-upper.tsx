@@ -298,7 +298,9 @@ function DesktopUpper({
           className={`w-2.5 h-2.5 rounded-full ${getTabColor(tab.id)}`}
         ></div>
         <span>{tab.label}</span>
-        <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full w-9 text-right">
+        <span
+          className={`bg-white/20 text-xs px-1.5 py-0.5 rounded-full text-right ${teamMode ? "" : "w-9"}`}
+        >
           {tab.count}
         </span>
       </>
@@ -321,7 +323,7 @@ function DesktopUpper({
           </h1>
         )}
 
-        {/* 新規追加ボタン（個人モードのみヘッダー部分に表示） */}
+        {/* 新規追加ボタン（個人モードはヘッダー部分に表示） */}
         {!customTitle && !hideAddButton && !teamMode && (
           <AddItemButton
             itemType={currentMode}
@@ -376,20 +378,6 @@ function DesktopUpper({
     (currentMode === "task" && preferences?.taskHideControls)
   ) ? (
     <div className={`flex items-center gap-2 h-7 ${teamMode ? "mb-1.5" : ""}`}>
-      {/* 新規追加ボタン（チームモードのみ、コントロール部分に表示） */}
-      {teamMode && !customTitle && !hideAddButton && (
-        <AddItemButton
-          itemType={currentMode}
-          onClick={onCreateNew}
-          position="bottom"
-          size="small"
-          showTooltip={false}
-          customSize={{
-            padding: "p-2",
-            iconSize: "w-3.5 h-3.5",
-          }}
-        />
-      )}
       <ViewModeToggle
         viewMode={viewMode}
         onViewModeChange={onViewModeChange}

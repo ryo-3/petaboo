@@ -612,6 +612,8 @@ function MemoScreen({
               onSelectAll={handleSelectAll}
               isAllSelected={isAllSelected}
               sortOptions={getVisibleSortOptions(activeTab)}
+              hideControls={false}
+              floatControls={true}
               onSortChange={setSortOptions}
               showEditDate={showEditDate}
               onShowEditDateChange={setShowEditDate}
@@ -1007,6 +1009,7 @@ function MemoScreen({
           hideAddButton={hideHeaderButtons}
           onCsvImport={() => setIsCsvImportModalOpen(true)}
           teamMode={teamMode}
+          floatControls={teamMode}
           marginBottom={teamMode ? "mb-2" : "mb-3"}
           headerMarginBottom="mb-1.5"
         />

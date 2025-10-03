@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 import CheckSquareIcon from "@/components/icons/check-square-icon";
 import CsvExportIcon from "@/components/icons/csv-export-icon";
@@ -114,6 +114,10 @@ interface DesktopUpperProps {
   onCsvImport?: () => void;
   // Team mode (reverse layout for team memo list)
   teamMode?: boolean;
+  // Hide controls (for when controls are in header)
+  hideControls?: boolean;
+  // Float controls (position absolute)
+  floatControls?: boolean;
 }
 
 function DesktopUpper({
@@ -174,6 +178,8 @@ function DesktopUpper({
   hideAddButton = false,
   onCsvImport,
   teamMode = false,
+  hideControls = false,
+  floatControls = false,
 }: DesktopUpperProps) {
   const { preferences } = useUserPreferences(1);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
@@ -181,6 +187,73 @@ function DesktopUpper({
   const [shouldShowSettingsIcon, setShouldShowSettingsIcon] = useState(
     rightPanelMode === "hidden",
   );
+
+  // ドラッグ可能なコントロールパネルの位置管理（共通キーで保存）
+  const [controlPosition, setControlPosition] = useState<{
+    x: number;
+    y: number;
+  }>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("team-float-control-position");
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    }
+    return { x: window.innerWidth - 400, y: 80 }; // デフォルト位置（右上）
+  });
+
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const controlRef = useRef<HTMLDivElement>(null);
+
+  // ドラッグ開始
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!floatControls) return;
+    setIsDragging(true);
+    const rect = controlRef.current?.getBoundingClientRect();
+    if (rect) {
+      setDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      });
+    }
+  };
+
+  // ドラッグ中
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const newX = e.clientX - dragOffset.x;
+      const newY = e.clientY - dragOffset.y;
+
+      // 画面外に出ないように制限
+      const maxX = window.innerWidth - (controlRef.current?.offsetWidth || 0);
+      const maxY = window.innerHeight - (controlRef.current?.offsetHeight || 0);
+
+      const clampedX = Math.max(0, Math.min(newX, maxX));
+      const clampedY = Math.max(0, Math.min(newY, maxY));
+
+      setControlPosition({ x: clampedX, y: clampedY });
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      // localStorageに共通キーで保存
+      localStorage.setItem(
+        "team-float-control-position",
+        JSON.stringify(controlPosition),
+      );
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging, dragOffset, controlPosition]);
 
   // 右パネルの状態変化に応じて設定アイコンの表示を制御
   useEffect(() => {
@@ -377,7 +450,31 @@ function DesktopUpper({
     (currentMode === "memo" && preferences?.memoHideControls) ||
     (currentMode === "task" && preferences?.taskHideControls)
   ) ? (
-    <div className={`flex items-center gap-2 h-7 ${teamMode ? "mb-1.5" : ""}`}>
+    <div
+      ref={floatControls ? controlRef : null}
+      onMouseDown={floatControls ? handleMouseDown : undefined}
+      className={`flex items-center gap-2 h-7 ${floatControls ? `fixed z-20 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-lg ${isDragging ? "cursor-grabbing" : "cursor-grab"}` : teamMode ? "mb-1.5" : ""}`}
+      style={
+        floatControls
+          ? { left: `${controlPosition.x}px`, top: `${controlPosition.y}px` }
+          : undefined
+      }
+    >
+      {/* ドラッグハンドル */}
+      {floatControls && (
+        <div className="flex gap-0.5 mr-1 opacity-40">
+          <div className="flex flex-col gap-0.5">
+            <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+            <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+            <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+          </div>
+          <div className="flex flex-col gap-0.5">
+            <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+            <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+            <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+          </div>
+        </div>
+      )}
       <ViewModeToggle
         viewMode={viewMode}
         onViewModeChange={onViewModeChange}
@@ -577,13 +674,13 @@ function DesktopUpper({
     <div className={marginBottom}>
       {teamMode ? (
         <>
-          {controlsContent}
+          {!hideControls && controlsContent}
           {headerContent}
         </>
       ) : (
         <>
           {headerContent}
-          {controlsContent}
+          {!hideControls && controlsContent}
         </>
       )}
     </div>

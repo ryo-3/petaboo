@@ -188,72 +188,74 @@ function DesktopUpper({
     rightPanelMode === "hidden",
   );
 
-  // ドラッグ可能なコントロールパネルの位置管理（共通キーで保存）
-  const [controlPosition, setControlPosition] = useState<{
-    x: number;
-    y: number;
-  }>(() => {
+  // コントロールパネルの位置管理（左・中央・右の3択）
+  const [controlPosition, setControlPosition] = useState<
+    "left" | "center" | "right"
+  >(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("team-float-control-position");
-      if (saved) {
-        return JSON.parse(saved);
+      if (
+        saved &&
+        (saved === "left" || saved === "center" || saved === "right")
+      ) {
+        return saved;
       }
     }
-    return { x: window.innerWidth - 400, y: 80 }; // デフォルト位置（右上）
+    return "right"; // デフォルト位置（右）
   });
 
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const controlRef = useRef<HTMLDivElement>(null);
+  const [isInitialRender, setIsInitialRender] = useState(true);
 
-  // ドラッグ開始
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!floatControls) return;
-    setIsDragging(true);
-    const rect = controlRef.current?.getBoundingClientRect();
-    if (rect) {
-      setDragOffset({
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
-      });
+  // 初回レンダリング後にアニメーションを有効化
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsInitialRender(false);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // 位置から座標を計算
+  const getPixelPosition = () => {
+    if (typeof window === "undefined") return { x: 0, y: 0 };
+
+    // ヘッダー内に配置（h-16 = 64px、コントロールパネル h-7 = 28px）
+    const headerHeight = 64;
+    const controlHeight = 28;
+    const y = (headerHeight - controlHeight) / 2; // 垂直中央配置
+    let x = 0;
+
+    switch (controlPosition) {
+      case "left":
+        // ロゴ（14px padding + 40px + 16px gap + タイトル等）の後ろから
+        x = 200; // 左側の要素を避けた位置
+        break;
+      case "center":
+        x = window.innerWidth / 2 - (controlRef.current?.offsetWidth || 0) / 2;
+        break;
+      case "right":
+        // 通知ベル（約40px）+ gap（8px）+ UserButton（32px）+ padding（32px）= 約112px
+        x = window.innerWidth - (controlRef.current?.offsetWidth || 0) - 105; // 右側の要素を避けた位置
+        break;
     }
+
+    return { x, y };
   };
 
-  // ドラッグ中
-  useEffect(() => {
-    if (!isDragging) return;
+  // 位置切り替え（左→中央→右→左...）
+  const togglePosition = () => {
+    if (!floatControls) return;
 
-    const handleMouseMove = (e: MouseEvent) => {
-      const newX = e.clientX - dragOffset.x;
-      const newY = e.clientY - dragOffset.y;
+    const nextPosition =
+      controlPosition === "left"
+        ? "center"
+        : controlPosition === "center"
+          ? "right"
+          : "left";
 
-      // 画面外に出ないように制限
-      const maxX = window.innerWidth - (controlRef.current?.offsetWidth || 0);
-      const maxY = window.innerHeight - (controlRef.current?.offsetHeight || 0);
-
-      const clampedX = Math.max(0, Math.min(newX, maxX));
-      const clampedY = Math.max(0, Math.min(newY, maxY));
-
-      setControlPosition({ x: clampedX, y: clampedY });
-    };
-
-    const handleMouseUp = () => {
-      setIsDragging(false);
-      // localStorageに共通キーで保存
-      localStorage.setItem(
-        "team-float-control-position",
-        JSON.stringify(controlPosition),
-      );
-    };
-
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, [isDragging, dragOffset, controlPosition]);
+    setControlPosition(nextPosition);
+    localStorage.setItem("team-float-control-position", nextPosition);
+  };
 
   // 右パネルの状態変化に応じて設定アイコンの表示を制御
   useEffect(() => {
@@ -452,28 +454,34 @@ function DesktopUpper({
   ) ? (
     <div
       ref={floatControls ? controlRef : null}
-      onMouseDown={floatControls ? handleMouseDown : undefined}
-      className={`flex items-center gap-2 h-7 ${floatControls ? `fixed z-20 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-lg ${isDragging ? "cursor-grabbing" : "cursor-grab"}` : teamMode ? "mb-1.5" : ""}`}
+      className={`flex items-center gap-2 h-7 ${floatControls ? `fixed z-20 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-lg ${!isInitialRender ? "transition-all duration-300" : ""}` : teamMode ? "mb-1.5" : ""}`}
       style={
         floatControls
-          ? { left: `${controlPosition.x}px`, top: `${controlPosition.y}px` }
+          ? {
+              left: `${getPixelPosition().x}px`,
+              top: `${getPixelPosition().y}px`,
+            }
           : undefined
       }
     >
-      {/* ドラッグハンドル */}
+      {/* 位置切り替えハンドル */}
       {floatControls && (
-        <div className="flex gap-0.5 mr-1 opacity-40">
-          <div className="flex flex-col gap-0.5">
-            <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
-            <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
-            <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+        <button
+          onClick={togglePosition}
+          className="flex items-center mr-1 opacity-40 hover:opacity-70 transition-opacity cursor-pointer"
+        >
+          <div className="flex items-center gap-0.5">
+            <div
+              className={`${controlPosition === "left" ? "w-1.5 h-1.5 bg-gray-800" : "w-1 h-1 bg-gray-500"} rounded-full transition-all`}
+            ></div>
+            <div
+              className={`${controlPosition === "center" ? "w-1.5 h-1.5 bg-gray-800" : "w-1 h-1 bg-gray-500"} rounded-full transition-all`}
+            ></div>
+            <div
+              className={`${controlPosition === "right" ? "w-1.5 h-1.5 bg-gray-800" : "w-1 h-1 bg-gray-500"} rounded-full transition-all`}
+            ></div>
           </div>
-          <div className="flex flex-col gap-0.5">
-            <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
-            <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
-            <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
-          </div>
-        </div>
+        </button>
       )}
       <ViewModeToggle
         viewMode={viewMode}

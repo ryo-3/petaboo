@@ -574,6 +574,9 @@ function MemoScreen({
   // チームモード＆選択時は3パネルレイアウト
   const shouldUseThreePanelLayout = teamMode && memoScreenMode !== "list";
 
+  // デバウンス用タイマー（リサイズ終了後のみlocalStorage保存）
+  const resizeTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   return shouldUseThreePanelLayout ? (
     // ===== 3パネルレイアウト（チームモード＆選択時） =====
     <div className="flex h-full bg-white overflow-hidden relative">
@@ -592,10 +595,17 @@ function MemoScreen({
               right: sizes[2],
             };
             setThreePanelSizes(newSizes);
-            localStorage.setItem(
-              "team-memo-3panel-sizes-v2",
-              JSON.stringify(newSizes),
-            );
+
+            // デバウンス：300ms後に保存（リサイズ中は保存しない）
+            if (resizeTimerRef.current) {
+              clearTimeout(resizeTimerRef.current);
+            }
+            resizeTimerRef.current = setTimeout(() => {
+              localStorage.setItem(
+                "team-memo-3panel-sizes-v2",
+                JSON.stringify(newSizes),
+              );
+            }, 300);
           }
         }}
         className="h-full"

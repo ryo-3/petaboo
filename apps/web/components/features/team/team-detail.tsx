@@ -764,7 +764,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
           {/* メモタブ */}
           {activeTab === "memos" && (
-            <div className="h-full">
+            <div className="h-full overflow-x-auto">
               <MemoScreen
                 selectedMemo={selectedMemo}
                 onSelectMemo={handleSelectMemo}
@@ -809,7 +809,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
           {/* タスクタブ */}
           {activeTab === "tasks" && (
-            <div className="h-full">
+            <div className="h-full overflow-x-auto">
               <TaskScreen
                 selectedTask={selectedTask}
                 onSelectTask={handleSelectTask}

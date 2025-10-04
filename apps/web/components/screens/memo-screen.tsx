@@ -579,7 +579,7 @@ function MemoScreen({
 
   return shouldUseThreePanelLayout ? (
     // ===== 3パネルレイアウト（チームモード＆選択時） =====
-    <div className="flex h-full bg-white overflow-hidden relative">
+    <div className="flex h-full bg-white overflow-hidden relative min-w-[1280px]">
       <ResizablePanelGroup
         direction="horizontal"
         onLayout={(sizes) => {

@@ -767,7 +767,7 @@ function TaskScreen({
 
   return shouldUseThreePanelLayout ? (
     // ===== 3パネルレイアウト（チームモード＆選択時） =====
-    <>
+    <div className="min-w-[1280px] h-full">
       <ControlPanelLayout
         leftPanel={leftPanelContent}
         centerPanel={centerPanelContent}
@@ -802,7 +802,7 @@ function TaskScreen({
           setCheckedTasks(new Set());
         }}
       />
-    </>
+    </div>
   ) : (
     // ===== 2パネルレイアウト（個人モードまたは未選択時） =====
     <div className="flex h-full bg-white">

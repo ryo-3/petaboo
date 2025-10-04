@@ -285,6 +285,19 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       } else {
         params.set("tab", tab);
       }
+
+      // タブ切り替え時に不要なパラメータを削除
+      if (tab !== "memos") {
+        params.delete("memo");
+        setSelectedMemo(null);
+        setSelectedDeletedMemo(null);
+      }
+      if (tab !== "tasks") {
+        params.delete("task");
+        setSelectedTask(null);
+        setSelectedDeletedTask(null);
+      }
+
       const newUrl = params.toString() ? `?${params.toString()}` : "";
       router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
     },
@@ -366,6 +379,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       params.set("memo", memo.id.toString());
       // メモ選択時は必ずmemosタブに
       params.set("tab", "memos");
+      // タスクパラメータを削除
+      params.delete("task");
     } else {
       params.delete("memo");
     }
@@ -382,6 +397,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       params.set("task", task.id.toString());
       // タスク選択時は必ずtasksタブに
       params.set("tab", "tasks");
+      // メモパラメータを削除
+      params.delete("memo");
     } else {
       params.delete("task");
     }
@@ -397,6 +414,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     if (memo) {
       params.set("memo", memo.id.toString());
       params.set("tab", "memos");
+      // タスクパラメータを削除
+      params.delete("task");
     } else {
       params.delete("memo");
     }
@@ -415,6 +434,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     if (task) {
       params.set("task", task.id.toString());
       params.set("tab", "tasks");
+      // メモパラメータを削除
+      params.delete("memo");
     } else {
       params.delete("task");
     }
@@ -791,7 +812,34 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                 onSelectTask={handleSelectTask}
                 selectedDeletedTask={selectedDeletedTask}
                 onSelectDeletedTask={handleSelectDeletedTask}
-                onClose={() => handleTabChange("overview")}
+                onClose={() => {
+                  // タスクを閉じる時はtaskパラメータも削除してtasksタブに残る
+                  const params = new URLSearchParams(searchParams.toString());
+                  params.delete("task");
+                  params.set("tab", "tasks");
+                  const newUrl = params.toString()
+                    ? `?${params.toString()}`
+                    : "";
+                  router.replace(`/team/${customUrl}${newUrl}`, {
+                    scroll: false,
+                  });
+                  setSelectedTask(null);
+                  setSelectedDeletedTask(null);
+                }}
+                onClearSelection={() => {
+                  // タスク選択を解除してリスト表示に戻る
+                  const params = new URLSearchParams(searchParams.toString());
+                  params.delete("task");
+                  params.set("tab", "tasks");
+                  const newUrl = params.toString()
+                    ? `?${params.toString()}`
+                    : "";
+                  router.replace(`/team/${customUrl}${newUrl}`, {
+                    scroll: false,
+                  });
+                  setSelectedTask(null);
+                  setSelectedDeletedTask(null);
+                }}
                 onScreenModeChange={(mode) => {
                   setIsTaskCreateMode(mode === "create");
                 }}

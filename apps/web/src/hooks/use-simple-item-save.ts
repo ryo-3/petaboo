@@ -140,6 +140,7 @@ export function useSimpleItemSave<T extends UnifiedItem>({
   const hasChanges = useMemo(() => {
     // アイテム切り替え中は変更検知を無効化
     if (isItemTransition) {
+      console.log("🟡 [hasChanges] アイテム切り替え中 → false");
       return false;
     }
 
@@ -158,14 +159,33 @@ export function useSimpleItemSave<T extends UnifiedItem>({
 
     // 初期同期中はボード変更を無視
     if (isInitialSync) {
-      return textChanged || taskFieldsChanged;
+      const result = textChanged || taskFieldsChanged;
+      console.log("🟡 [hasChanges] 初期同期中:", {
+        result,
+        textChanged,
+        taskFieldsChanged,
+        isItemTransition,
+      });
+      return result;
     }
 
     const hasBoardChanges =
       JSON.stringify([...selectedBoardIds].sort()) !==
       JSON.stringify([...currentBoardIds].sort());
 
-    return textChanged || taskFieldsChanged || hasBoardChanges;
+    const result = textChanged || taskFieldsChanged || hasBoardChanges;
+    console.log("🟡 [hasChanges] 計算結果:", {
+      result,
+      textChanged,
+      taskFieldsChanged,
+      hasBoardChanges,
+      isItemTransition,
+      isInitialSync,
+      selectedBoardIds: [...selectedBoardIds].sort(),
+      currentBoardIds: [...currentBoardIds].sort(),
+    });
+
+    return result;
   }, [
     title,
     content,
@@ -184,6 +204,10 @@ export function useSimpleItemSave<T extends UnifiedItem>({
 
   // アイテムが変更された時の初期値更新
   useEffect(() => {
+    console.log("🟠 [useEffect] アイテム切り替え開始:", {
+      itemId: item?.id,
+      itemType,
+    });
     setIsItemTransition(true); // データ更新開始
 
     if (item) {
@@ -219,10 +243,13 @@ export function useSimpleItemSave<T extends UnifiedItem>({
       }
     }
 
-    // データ更新完了を少し遅延させてマーク
+    // データ更新完了を少し遅延させてマーク（100msに延長）
     const timer = setTimeout(() => {
+      console.log("🟠 [useEffect] アイテム切り替え完了（100ms後）:", {
+        itemId: item?.id,
+      });
       setIsItemTransition(false);
-    }, 50);
+    }, 100);
 
     return () => clearTimeout(timer);
   }, [item, itemType]);

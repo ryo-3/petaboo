@@ -148,14 +148,34 @@ function TaskScreen({
     initialSelectionMode,
   );
 
-  // URL からの初期タスク選択
+  // URL からの初期タスク選択（初回のみ）
+  const initialTaskIdRef = useRef<string | null>(null);
   useEffect(() => {
-    if (initialTaskId && tasks && !selectedTask) {
-      const targetTask = tasks.find(
-        (task) => task.id.toString() === initialTaskId,
-      );
-      if (targetTask) {
-        onSelectTask(targetTask);
+    if (initialTaskId) {
+      // selectedTaskがある場合、refを同期
+      if (selectedTask && selectedTask.id.toString() === initialTaskId) {
+        if (initialTaskIdRef.current !== initialTaskId) {
+          initialTaskIdRef.current = initialTaskId;
+        }
+      }
+      // initialTaskIdが変更され、かつselectedTaskがない場合のみ自動選択を実行
+      else if (
+        tasks &&
+        !selectedTask &&
+        initialTaskId !== initialTaskIdRef.current
+      ) {
+        const targetTask = tasks.find(
+          (task) => task.id.toString() === initialTaskId,
+        );
+        if (targetTask) {
+          initialTaskIdRef.current = initialTaskId;
+          onSelectTask(targetTask);
+        }
+      }
+    } else {
+      // initialTaskIdがnullになった場合はrefもリセット
+      if (initialTaskIdRef.current !== null) {
+        initialTaskIdRef.current = null;
       }
     }
   }, [initialTaskId, tasks, selectedTask, onSelectTask]);
@@ -215,18 +235,19 @@ function TaskScreen({
   // CSVインポートモーダルの状態
   const [isCsvImportModalOpen, setIsCsvImportModalOpen] = useState(false);
 
-  // エディター+コメントのパネルサイズ管理（チームモードのみ）
-  const [editorCommentPanelSizes, setEditorCommentPanelSizes] = useState<{
-    editor: number;
-    comment: number;
+  // 3パネルサイズ管理（チームモードのみ）
+  const [threePanelSizes, setThreePanelSizes] = useState<{
+    left: number;
+    center: number;
+    right: number;
   }>(() => {
     if (typeof window !== "undefined" && teamMode) {
-      const saved = localStorage.getItem("team-task-editor-comment-sizes");
+      const saved = localStorage.getItem("team-task-3panel-sizes-v2");
       if (saved) {
         return JSON.parse(saved);
       }
     }
-    return { editor: 60, comment: 40 };
+    return { left: 25, center: 45, right: 30 };
   });
 
   // 共通screen状態管理
@@ -442,7 +463,397 @@ function TaskScreen({
   const filteredBoards =
     boards?.filter((board) => board.id !== excludeBoardIdFromFilter) || [];
 
-  return (
+  // チームモード＆選択時は3パネルレイアウト
+  const shouldUseThreePanelLayout = teamMode && taskScreenMode !== "list";
+
+  return shouldUseThreePanelLayout ? (
+    // ===== 3パネルレイアウト（チームモード＆選択時） =====
+    <div className="flex h-full bg-white overflow-hidden relative">
+      <ResizablePanelGroup
+        direction="horizontal"
+        onLayout={(sizes) => {
+          if (
+            sizes.length === 3 &&
+            sizes[0] !== undefined &&
+            sizes[1] !== undefined &&
+            sizes[2] !== undefined
+          ) {
+            const newSizes = {
+              left: sizes[0],
+              center: sizes[1],
+              right: sizes[2],
+            };
+            setThreePanelSizes(newSizes);
+            localStorage.setItem(
+              "team-task-3panel-sizes-v2",
+              JSON.stringify(newSizes),
+            );
+          }
+        }}
+        className="h-full"
+      >
+        {/* 左パネル：一覧 */}
+        <ResizablePanel
+          defaultSize={threePanelSizes.left}
+          minSize={20}
+          maxSize={50}
+          className="flex flex-col"
+        >
+          <div
+            className={`${hideHeaderButtons ? "pt-3" : "pt-3 pl-5 pr-2"} flex flex-col h-full relative`}
+          >
+            <DesktopUpper
+              currentMode="task"
+              activeTab={activeTabTyped}
+              onTabChange={handleTabChange(
+                useTabChange({
+                  setActiveTab,
+                  setScreenMode: (mode: string) => {
+                    setTaskScreenMode(mode as TaskScreenMode);
+                    onClearSelection?.(); // 選択状態もクリア
+                  },
+                }),
+              )}
+              onCreateNew={handleCreateNew}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              columnCount={columnCount}
+              onColumnCountChange={setColumnCount}
+              rightPanelMode="view"
+              selectionMode={selectionMode}
+              onSelectionModeChange={(mode) => {
+                setSelectionMode(mode);
+                // checkモードからselectモードに切り替える時、選択状態をクリア
+                if (mode === "select") {
+                  setCheckedTasks(new Set());
+                  setCheckedDeletedTasks(new Set());
+                }
+              }}
+              onSelectAll={handleSelectAll}
+              isAllSelected={isAllSelected}
+              sortOptions={getVisibleSortOptions(activeTab)}
+              onSortChange={setSortOptions}
+              showEditDate={showEditDate}
+              onShowEditDateChange={setShowEditDate}
+              showBoardName={showBoardName}
+              onShowBoardNameChange={setShowBoardName}
+              showTagDisplay={showTagDisplay}
+              onShowTagDisplayChange={setShowTagDisplay}
+              boards={filteredBoards}
+              selectedBoardIds={selectedBoardIds}
+              onBoardFilterChange={setSelectedBoardIds}
+              filterMode={boardFilterMode}
+              onFilterModeChange={setBoardFilterMode}
+              tags={tags || []}
+              selectedTagIds={selectedTagIds}
+              onTagFilterChange={setSelectedTagIds}
+              tagFilterMode={tagFilterMode}
+              onTagFilterModeChange={setTagFilterMode}
+              normalCount={0} // タスクでは使わない
+              deletedTasksCount={deletedTasks?.length || 0}
+              todoCount={
+                tasks?.filter((task) => task.status === "todo").length || 0
+              }
+              inProgressCount={
+                tasks?.filter((task) => task.status === "in_progress").length ||
+                0
+              }
+              completedCount={
+                tasks?.filter((task) => task.status === "completed").length || 0
+              }
+              hideAddButton={hideHeaderButtons}
+              onCsvImport={() => setIsCsvImportModalOpen(true)}
+            />
+
+            <DesktopLower
+              currentMode="task"
+              activeTab={activeTabTyped}
+              viewMode={viewMode}
+              effectiveColumnCount={effectiveColumnCount}
+              isLoading={taskLoading}
+              error={taskError}
+              selectionMode={selectionMode}
+              sortOptions={getVisibleSortOptions(activeTab)}
+              showEditDate={showEditDate}
+              showBoardName={showBoardName}
+              showTags={showTagDisplay}
+              selectedBoardIds={selectedBoardIds}
+              boardFilterMode={boardFilterMode}
+              selectedTagIds={selectedTagIds}
+              tagFilterMode={tagFilterMode}
+              tasks={filteredTasks}
+              deletedTasks={deletedTasks || []}
+              selectedTask={selectedTask}
+              selectedDeletedTask={selectedDeletedTask}
+              checkedTasks={checkedTasks}
+              checkedDeletedTasks={checkedDeletedTasks}
+              onToggleCheckTask={createToggleHandlerWithTabClear(
+                checkedTasks,
+                setCheckedTasks,
+                [setCheckedDeletedTasks],
+              )}
+              onToggleCheckDeletedTask={createToggleHandlerWithTabClear(
+                checkedDeletedTasks,
+                setCheckedDeletedTasks,
+                [setCheckedTasks],
+              )}
+              onSelectTask={handleSelectTask}
+              onSelectDeletedTask={handleSelectDeletedTask}
+              teamMode={teamMode}
+              teamId={teamId}
+              allTags={tags || []}
+              allBoards={boards || []}
+              allTaggings={safeAllTaggings}
+              allTeamTaggings={safeAllTeamTaggings}
+              allBoardItems={safeAllBoardItems}
+            />
+
+            {/* 一括操作ボタン */}
+            {!hideBulkActionButtons && (
+              <BulkActionButtons
+                showDeleteButton={showDeleteButton}
+                deleteButtonCount={currentDisplayCount}
+                onDelete={() => {
+                  handleBulkDelete();
+                }}
+                deleteButtonRef={deleteButtonRef}
+                isDeleting={isLidOpen}
+                deleteVariant={activeTab === "deleted" ? "danger" : undefined}
+                showRestoreButton={
+                  activeTab === "deleted" &&
+                  !isDeleting &&
+                  (checkedDeletedTasks.size > 0 ||
+                    (isRestoring && currentRestoreDisplayCount > 0))
+                }
+                restoreCount={currentRestoreDisplayCount}
+                onRestore={() => {
+                  // 復元ボタンを押した瞬間に削除ボタンを非表示にする
+                  setIsRestoreLidOpen(true);
+                  handleBulkRestore();
+                }}
+                restoreButtonRef={restoreButtonRef}
+                isRestoring={isRestoreLidOpen}
+                animatedRestoreCount={currentRestoreDisplayCount}
+                useAnimatedRestoreCount={true}
+                // アニメーション付きカウンター（タスク側で実装済み）
+                animatedDeleteCount={currentDisplayCount}
+                useAnimatedDeleteCount={true}
+              />
+            )}
+
+            {/* 選択メニューボタン（通常タブでアイテム選択時） */}
+            {!hideBulkActionButtons && (
+              <SelectionMenuButton
+                count={checkedTasks.size}
+                onExport={() => {
+                  // TODO: エクスポート処理
+                }}
+                onPin={() => {
+                  // TODO: ピン止め処理
+                }}
+                onTagging={() => {
+                  setIsTagManagementModalOpen(true);
+                }}
+                onTabMove={() => {
+                  // TODO: タブ移動処理
+                }}
+                isVisible={
+                  activeTab !== "deleted" &&
+                  checkedTasks.size > 0 &&
+                  !isDeleting
+                }
+              />
+            )}
+
+            {/* ボード追加ボタン（ボードから呼び出された場合のみ） */}
+            {onAddToBoard &&
+              checkedTasks.size > 0 &&
+              activeTab !== "deleted" && (
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20">
+                  <button
+                    onClick={() => onAddToBoard(Array.from(checkedTasks))}
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 transition-colors"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 4v16m8-8H4"
+                      />
+                    </svg>
+                    選択したタスクをボードに追加 ({checkedTasks.size})
+                  </button>
+                </div>
+              )}
+          </div>
+        </ResizablePanel>
+
+        <ResizableHandle withHandle />
+
+        {/* 中央パネル：エディター */}
+        <ResizablePanel
+          defaultSize={threePanelSizes.center}
+          minSize={35}
+          className="flex flex-col min-h-0"
+        >
+          {/* 新規作成モード */}
+          {taskScreenMode === "create" && (
+            <TaskEditor
+              task={null}
+              onClose={() => setTaskScreenMode("list")}
+              onSelectTask={onSelectTask}
+              teamMode={teamMode}
+              teamId={teamId}
+              customHeight="flex-1 min-h-0"
+              showDateAtBottom={teamMode}
+              onSaveComplete={(savedTask, isNewTask, isContinuousMode) => {
+                if (isNewTask && !isContinuousMode) {
+                  onSelectTask(savedTask);
+                  setTaskScreenMode("view");
+                } else if (isNewTask && isContinuousMode) {
+                  onSelectTask(null);
+                }
+              }}
+              preloadedTags={tags || []}
+              preloadedBoards={boards || []}
+              preloadedTaggings={safeAllTaggings}
+              preloadedBoardItems={safeAllBoardItems}
+              unifiedOperations={unifiedOperations}
+            />
+          )}
+          {/* 表示モード（既存タスク） */}
+          {taskScreenMode === "view" &&
+            selectedTask &&
+            !selectedDeletedTask && (
+              <TaskEditor
+                task={selectedTask}
+                onClose={() => {
+                  onClearSelection?.();
+                  setTaskScreenMode("list");
+                }}
+                onSelectTask={onSelectTask}
+                onClosePanel={() => setTaskScreenMode("list")}
+                onDeleteAndSelectNext={handleTaskDeleteAndSelectNext}
+                teamMode={teamMode}
+                teamId={teamId}
+                createdBy={selectedTask.createdBy}
+                createdByUserId={selectedTask.userId}
+                createdByAvatarColor={selectedTask.avatarColor}
+                customHeight="flex-1 min-h-0"
+                showDateAtBottom={teamMode}
+                preloadedTags={tags || []}
+                preloadedBoards={boards || []}
+                preloadedTaggings={safeAllTaggings}
+                preloadedBoardItems={safeAllBoardItems}
+                unifiedOperations={unifiedOperations}
+              />
+            )}
+          {/* 表示モード（削除済みタスク） */}
+          {taskScreenMode === "view" &&
+            selectedDeletedTask &&
+            !selectedTask && (
+              <TaskEditor
+                task={selectedDeletedTask}
+                onClose={() => setTaskScreenMode("list")}
+                onDelete={async () => {
+                  if (selectedDeletedTask && deletedTasks) {
+                    const currentIndex = deletedTasks.findIndex(
+                      (task) =>
+                        task.originalId === selectedDeletedTask.originalId,
+                    );
+                    const remainingTasks = deletedTasks.filter(
+                      (task) =>
+                        task.originalId !== selectedDeletedTask.originalId,
+                    );
+                    await permanentDeleteTask.mutateAsync(
+                      selectedDeletedTask.originalId,
+                    );
+                    if (remainingTasks.length > 0) {
+                      const nextIndex =
+                        currentIndex >= remainingTasks.length
+                          ? remainingTasks.length - 1
+                          : currentIndex;
+                      onSelectDeletedTask(remainingTasks[nextIndex] || null);
+                    } else {
+                      setTaskScreenMode("list");
+                    }
+                  }
+                }}
+                onRestoreAndSelectNext={unifiedRestoreAndSelectNext}
+                teamMode={teamMode}
+                teamId={teamId}
+                createdBy={selectedDeletedTask.createdBy}
+                createdByUserId={selectedDeletedTask.userId}
+                createdByAvatarColor={selectedDeletedTask.avatarColor}
+                customHeight="flex-1 min-h-0"
+                preloadedTags={tags || []}
+                preloadedBoards={boards || []}
+                preloadedTaggings={safeAllTaggings}
+                preloadedBoardItems={safeAllBoardItems}
+                unifiedOperations={unifiedOperations}
+              />
+            )}
+        </ResizablePanel>
+
+        <ResizableHandle withHandle />
+
+        {/* 右パネル：コメント（新規作成時は非表示） */}
+        <ResizablePanel
+          defaultSize={taskScreenMode === "create" ? 0 : threePanelSizes.right}
+          minSize={taskScreenMode === "create" ? 0 : 25}
+          maxSize={taskScreenMode === "create" ? 0 : 50}
+          className="flex flex-col"
+        >
+          {selectedTask && (
+            <CommentSection
+              targetType="task"
+              targetOriginalId={
+                selectedTask.originalId || selectedTask.id.toString()
+              }
+              teamId={teamId || 0}
+              teamMembers={[]}
+              title="コメント"
+              placeholder="コメントを入力..."
+            />
+          )}
+        </ResizablePanel>
+      </ResizablePanelGroup>
+
+      {/* モーダル（3パネルレイアウト外側） */}
+      <DeleteModal />
+      <RestoreModal />
+      <TaskCsvImport
+        isOpen={isCsvImportModalOpen}
+        onClose={() => setIsCsvImportModalOpen(false)}
+      />
+      <TagManagementModal
+        isOpen={isTagManagementModalOpen}
+        onClose={() => setIsTagManagementModalOpen(false)}
+        tags={
+          tags?.map((tag) => ({
+            id: tag.id,
+            name: tag.name,
+            color: tag.color,
+          })) || []
+        }
+        selectedItemCount={checkedTasks.size}
+        itemType="task"
+        selectedItems={Array.from(checkedTasks).map((id) => id.toString())}
+        allItems={tasks || []}
+        allTaggings={safeAllTaggings || []}
+        onSuccess={() => {
+          setCheckedTasks(new Set());
+        }}
+      />
+    </div>
+  ) : (
+    // ===== 2パネルレイアウト（個人モードまたは未選択時） =====
     <div className="flex h-full bg-white">
       {/* 左側：一覧表示エリア */}
       <div
@@ -456,7 +867,7 @@ function TaskScreen({
               setActiveTab,
               setScreenMode: (mode: string) => {
                 setTaskScreenMode(mode as TaskScreenMode);
-                onClearSelection?.(); // 選択状態もクリア
+                onClearSelection?.();
               },
             }),
           )}
@@ -469,7 +880,6 @@ function TaskScreen({
           selectionMode={selectionMode}
           onSelectionModeChange={(mode) => {
             setSelectionMode(mode);
-            // checkモードからselectモードに切り替える時、選択状態をクリア
             if (mode === "select") {
               setCheckedTasks(new Set());
               setCheckedDeletedTasks(new Set());
@@ -495,7 +905,7 @@ function TaskScreen({
           onTagFilterChange={setSelectedTagIds}
           tagFilterMode={tagFilterMode}
           onTagFilterModeChange={setTagFilterMode}
-          normalCount={0} // タスクでは使わない
+          normalCount={0}
           deletedTasksCount={deletedTasks?.length || 0}
           todoCount={
             tasks?.filter((task) => task.status === "todo").length || 0
@@ -572,7 +982,6 @@ function TaskScreen({
             }
             restoreCount={currentRestoreDisplayCount}
             onRestore={() => {
-              // 復元ボタンを押した瞬間に削除ボタンを非表示にする
               setIsRestoreLidOpen(true);
               handleBulkRestore();
             }}
@@ -580,35 +989,28 @@ function TaskScreen({
             isRestoring={isRestoreLidOpen}
             animatedRestoreCount={currentRestoreDisplayCount}
             useAnimatedRestoreCount={true}
-            // アニメーション付きカウンター（タスク側で実装済み）
             animatedDeleteCount={currentDisplayCount}
             useAnimatedDeleteCount={true}
           />
         )}
 
-        {/* 選択メニューボタン（通常タブでアイテム選択時） */}
+        {/* 選択メニューボタン */}
         {!hideBulkActionButtons && (
           <SelectionMenuButton
             count={checkedTasks.size}
-            onExport={() => {
-              // TODO: エクスポート処理
-            }}
-            onPin={() => {
-              // TODO: ピン止め処理
-            }}
+            onExport={() => {}}
+            onPin={() => {}}
             onTagging={() => {
               setIsTagManagementModalOpen(true);
             }}
-            onTabMove={() => {
-              // TODO: タブ移動処理
-            }}
+            onTabMove={() => {}}
             isVisible={
               activeTab !== "deleted" && checkedTasks.size > 0 && !isDeleting
             }
           />
         )}
 
-        {/* ボード追加ボタン（ボードから呼び出された場合のみ） */}
+        {/* ボード追加ボタン */}
         {onAddToBoard && checkedTasks.size > 0 && activeTab !== "deleted" && (
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20">
             <button
@@ -634,83 +1036,41 @@ function TaskScreen({
         )}
       </div>
 
-      {/* 右側：詳細表示エリア */}
+      {/* モーダル（2パネルレイアウト外側） */}
+      <DeleteModal />
+      <RestoreModal />
+      <TaskCsvImport
+        isOpen={isCsvImportModalOpen}
+        onClose={() => setIsCsvImportModalOpen(false)}
+      />
+      <TagManagementModal
+        isOpen={isTagManagementModalOpen}
+        onClose={() => setIsTagManagementModalOpen(false)}
+        tags={
+          tags?.map((tag) => ({
+            id: tag.id,
+            name: tag.name,
+            color: tag.color,
+          })) || []
+        }
+        selectedItemCount={checkedTasks.size}
+        itemType="task"
+        selectedItems={Array.from(checkedTasks).map((id) => id.toString())}
+        allItems={tasks || []}
+        allTaggings={safeAllTaggings || []}
+        onSuccess={() => {
+          setCheckedTasks(new Set());
+        }}
+      />
+
+      {/* 右側：詳細表示エリア（2パネルレイアウトではRightPanelを使用） */}
       <RightPanel
         isOpen={taskScreenMode !== "list"}
         onClose={handleRightPanelClose}
         disableAnimation={true}
       >
-        {teamMode && taskScreenMode === "view" && selectedTask ? (
-          /* チームモード＆タスク選択時: エディター + コメントの2分割 */
-          <ResizablePanelGroup
-            direction="horizontal"
-            className="h-full"
-            onLayout={(sizes) => {
-              if (
-                sizes.length === 2 &&
-                sizes[0] !== undefined &&
-                sizes[1] !== undefined
-              ) {
-                const newSizes = { editor: sizes[0], comment: sizes[1] };
-                setEditorCommentPanelSizes(newSizes);
-                localStorage.setItem(
-                  "team-task-editor-comment-sizes",
-                  JSON.stringify(newSizes),
-                );
-              }
-            }}
-          >
-            {/* エディターパネル */}
-            <ResizablePanel
-              defaultSize={editorCommentPanelSizes.editor}
-              minSize={35}
-              className="h-full flex flex-col min-h-0"
-            >
-              <TaskEditor
-                task={selectedTask}
-                onClose={() => setTaskScreenMode("list")}
-                onSelectTask={onSelectTask}
-                onClosePanel={() => setTaskScreenMode("list")}
-                onDeleteAndSelectNext={handleTaskDeleteAndSelectNext}
-                teamMode={teamMode}
-                teamId={teamId}
-                createdBy={selectedTask.createdBy}
-                createdByUserId={selectedTask.userId}
-                createdByAvatarColor={selectedTask.avatarColor}
-                customHeight="flex-1 min-h-0"
-                showDateAtBottom={teamMode}
-                preloadedTags={tags || []}
-                preloadedBoards={boards || []}
-                preloadedTaggings={safeAllTaggings}
-                preloadedBoardItems={safeAllBoardItems}
-                unifiedOperations={unifiedOperations}
-              />
-            </ResizablePanel>
-
-            <ResizableHandle withHandle />
-
-            {/* コメントパネル */}
-            <ResizablePanel
-              defaultSize={editorCommentPanelSizes.comment}
-              minSize={25}
-              maxSize={50}
-              className="h-full"
-            >
-              <CommentSection
-                targetType="task"
-                targetOriginalId={
-                  selectedTask.originalId || selectedTask.id.toString()
-                }
-                teamId={teamId || 0}
-                teamMembers={[]}
-                title="コメント"
-                placeholder="コメントを入力..."
-              />
-            </ResizablePanel>
-          </ResizablePanelGroup>
-        ) : (
-          /* 通常モード or 新規作成 or 削除済みタスク: エディターのみ */
-          <>
+        <div className="flex flex-col h-full">
+          <div className="flex-1">
             {taskScreenMode === "create" && (
               <TaskEditor
                 task={null}
@@ -721,14 +1081,11 @@ function TaskScreen({
                 showDateAtBottom={teamMode}
                 onSaveComplete={(savedTask, isNewTask, isContinuousMode) => {
                   if (isNewTask && !isContinuousMode) {
-                    // 連続作成モードOFFの場合のみ作成されたタスクを選択状態にする
                     onSelectTask(savedTask);
                     setTaskScreenMode("view");
                   } else if (isNewTask && isContinuousMode) {
-                    // 連続作成モードの場合は、タスク選択を解除してURLパラメーターもクリア
                     onSelectTask(null);
                   }
-                  // 連続作成モードONの場合は何もしない（TaskEditor内でフォームリセット）
                 }}
                 preloadedTags={tags || []}
                 preloadedBoards={boards || []}
@@ -740,7 +1097,10 @@ function TaskScreen({
             {taskScreenMode === "view" && selectedTask && (
               <TaskEditor
                 task={selectedTask}
-                onClose={() => setTaskScreenMode("list")}
+                onClose={() => {
+                  onClose();
+                  setTaskScreenMode("list");
+                }}
                 onSelectTask={onSelectTask}
                 onClosePanel={() => setTaskScreenMode("list")}
                 onDeleteAndSelectNext={handleTaskDeleteAndSelectNext}
@@ -758,50 +1118,45 @@ function TaskScreen({
               />
             )}
             {taskScreenMode === "view" && selectedDeletedTask && (
-              <>
-                <TaskEditor
-                  task={selectedDeletedTask}
-                  onClose={() => setTaskScreenMode("list")}
-                  onDelete={async () => {
-                    if (selectedDeletedTask && deletedTasks) {
-                      // 削除前に次選択対象を事前計算
-                      const currentIndex = deletedTasks.findIndex(
-                        (task) =>
-                          task.originalId === selectedDeletedTask.originalId,
-                      );
-                      const remainingTasks = deletedTasks.filter(
-                        (task) =>
-                          task.originalId !== selectedDeletedTask.originalId,
-                      );
-                      // 完全削除API実行
-                      await permanentDeleteTask.mutateAsync(
-                        selectedDeletedTask.originalId,
-                      );
-                      // 即座に次選択処理実行
-                      if (remainingTasks.length > 0) {
-                        const nextIndex =
-                          currentIndex >= remainingTasks.length
-                            ? remainingTasks.length - 1
-                            : currentIndex;
-                        onSelectDeletedTask(remainingTasks[nextIndex] || null);
-                      } else {
-                        setTaskScreenMode("list");
-                      }
+              <TaskEditor
+                task={selectedDeletedTask}
+                onClose={() => setTaskScreenMode("list")}
+                onDelete={async () => {
+                  if (selectedDeletedTask && deletedTasks) {
+                    const currentIndex = deletedTasks.findIndex(
+                      (task) =>
+                        task.originalId === selectedDeletedTask.originalId,
+                    );
+                    const remainingTasks = deletedTasks.filter(
+                      (task) =>
+                        task.originalId !== selectedDeletedTask.originalId,
+                    );
+                    await permanentDeleteTask.mutateAsync(
+                      selectedDeletedTask.originalId,
+                    );
+                    if (remainingTasks.length > 0) {
+                      const nextIndex =
+                        currentIndex >= remainingTasks.length
+                          ? remainingTasks.length - 1
+                          : currentIndex;
+                      onSelectDeletedTask(remainingTasks[nextIndex] || null);
+                    } else {
+                      setTaskScreenMode("list");
                     }
-                  }}
-                  onRestoreAndSelectNext={unifiedRestoreAndSelectNext}
-                  teamMode={teamMode}
-                  teamId={teamId}
-                  createdBy={selectedDeletedTask.createdBy}
-                  createdByUserId={selectedDeletedTask.userId}
-                  createdByAvatarColor={selectedDeletedTask.avatarColor}
-                  preloadedTags={tags || []}
-                  preloadedBoards={boards || []}
-                  preloadedTaggings={safeAllTaggings}
-                  preloadedBoardItems={safeAllBoardItems}
-                  unifiedOperations={unifiedOperations}
-                />
-              </>
+                  }
+                }}
+                onRestoreAndSelectNext={unifiedRestoreAndSelectNext}
+                teamMode={teamMode}
+                teamId={teamId}
+                createdBy={selectedDeletedTask.createdBy}
+                createdByUserId={selectedDeletedTask.userId}
+                createdByAvatarColor={selectedDeletedTask.avatarColor}
+                preloadedTags={tags || []}
+                preloadedBoards={boards || []}
+                preloadedTaggings={safeAllTaggings}
+                preloadedBoardItems={safeAllBoardItems}
+                unifiedOperations={unifiedOperations}
+              />
             )}
             {taskScreenMode === "edit" && selectedTask && (
               <TaskEditor
@@ -822,42 +1177,9 @@ function TaskScreen({
                 unifiedOperations={unifiedOperations}
               />
             )}
-          </>
-        )}
+          </div>
+        </div>
       </RightPanel>
-
-      {/* 一括削除確認モーダル */}
-      <DeleteModal />
-
-      {/* 一括復元確認モーダル */}
-      <RestoreModal />
-
-      {/* CSVインポートモーダル */}
-      <TaskCsvImport
-        isOpen={isCsvImportModalOpen}
-        onClose={() => setIsCsvImportModalOpen(false)}
-      />
-
-      {/* タグ管理モーダル */}
-      <TagManagementModal
-        isOpen={isTagManagementModalOpen}
-        onClose={() => setIsTagManagementModalOpen(false)}
-        tags={
-          tags?.map((tag) => ({
-            id: tag.id,
-            name: tag.name,
-            color: tag.color,
-          })) || []
-        }
-        selectedItemCount={checkedTasks.size}
-        itemType="task"
-        selectedItems={Array.from(checkedTasks).map((id) => id.toString())}
-        allItems={tasks || []}
-        allTaggings={safeAllTaggings || []}
-        onSuccess={() => {
-          setCheckedTasks(new Set());
-        }}
-      />
     </div>
   );
 }

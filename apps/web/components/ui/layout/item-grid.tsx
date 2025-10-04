@@ -14,8 +14,8 @@ function ItemGrid({
   isBoard = false,
 }: ItemGridProps) {
   const getGridClassName = () => {
-    const gapClass = isBoard ? "gap-2" : "gap-4";
-    const gapXClass = isBoard ? "gap-x-2" : "gap-x-4";
+    const gapClass = isBoard ? "gap-2" : "gap-3";
+    const gapXClass = isBoard ? "gap-x-2" : "gap-x-3";
 
     if (viewMode === "card") {
       return `grid ${gapClass} ${
@@ -42,7 +42,7 @@ function ItemGrid({
 
   return (
     <div
-      className={`flex-1 overflow-auto hover-scrollbar ${isBoard ? "" : "pr-2"} pb-10 mb-2`}
+      className={`flex-1 overflow-y-auto overflow-x-hidden hover-scrollbar ${isBoard ? "" : "pr-2"} pb-10 mb-2`}
     >
       <div className={getGridClassName()}>{children}</div>
     </div>

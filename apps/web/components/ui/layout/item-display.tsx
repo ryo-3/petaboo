@@ -94,7 +94,7 @@ function ItemDisplay({
           ? "bg-red-50 border-red-200 hover:bg-red-100"
           : "bg-white hover:bg-gray-50"
     }
-    ${viewMode === "list" ? "border-b border-gray-200" : "border border-gray-200"}
+    ${viewMode === "list" ? "border-b border-gray-200" : "border border-gray-300"}
     ${isDeleting ? "opacity-0" : "opacity-100"}
   `;
 

@@ -59,17 +59,20 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     useSimpleTeamNotifier(customUrl, isPageVisible);
 
   const { data: userInfo } = useUserInfo();
+
+  // 管理者のみ招待URL関連のhooksを実行（パフォーマンス最適化）
+  const isAdmin = team?.role === "admin";
   const { data: existingInviteUrl, isLoading: isLoadingInviteUrl } =
-    useGetInviteUrl(customUrl);
+    useGetInviteUrl(isAdmin ? customUrl : "");
   const { mutate: generateInviteCode, isPending: isGenerating } =
     useGenerateInviteCode();
   const { mutate: deleteInviteUrl, isPending: isDeleting } =
     useDeleteInviteUrl();
   const { data: joinRequests, isLoading: isLoadingJoinRequests } =
     useJoinRequests(
-      customUrl,
-      notificationData?.hasNotifications, // 通知システムから実際の値を使用
-      isPageVisible, // ページ可視性
+      isAdmin ? customUrl : "",
+      isAdmin ? notificationData?.hasNotifications : false,
+      isAdmin ? isPageVisible : false,
     );
 
   const {
@@ -79,7 +82,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     isRejecting,
     approveError,
     rejectError,
-  } = useManageJoinRequest(customUrl);
+  } = useManageJoinRequest(isAdmin ? customUrl : "");
 
   const [showInvitePanel, setShowInvitePanel] = useState(false);
   const [previousTab, setPreviousTab] = useState<string | null>(null);
@@ -250,9 +253,9 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     } else if (taskId && isTaskCreateMode) {
     } else if (taskId && selectedTask) {
     }
-    // searchParams以外の依存を追加しない（無限ループを防ぐ）
+    // searchParams自体を依存配列に（.toString()は毎回新しいインスタンスを作るので無限ループの原因）
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams.toString()]);
+  }, [searchParams]);
 
   // 招待URLをクライアントサイドで更新
   useEffect(() => {
@@ -316,7 +319,11 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   // サイドバーからのイベントをリッスン
   useEffect(() => {
     const handleTeamModeChange = (event: CustomEvent) => {
+      const receiveTime = performance.now();
       const { mode } = event.detail;
+      console.log(
+        `📡 [TeamDetail] イベント受信: ${mode} (${receiveTime.toFixed(2)}ms)`,
+      );
 
       if (mode === "overview") {
         handleTabChange("overview");
@@ -333,6 +340,9 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       } else if (mode === "search") {
         handleTabChange("search");
       }
+      console.log(
+        `✅ [TeamDetail] イベント処理完了: ${mode} (${(performance.now() - receiveTime).toFixed(2)}ms)`,
+      );
     };
 
     const handleTeamNewMemo = (_event: CustomEvent) => {

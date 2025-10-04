@@ -111,7 +111,14 @@ function Sidebar({
           <Tooltip text="メモ一覧" position="right">
             <button
               onClick={() => {
+                const clickTime = performance.now();
+                console.log(
+                  `🖱️ [Sidebar] メモボタンクリック (${clickTime.toFixed(2)}ms)`,
+                );
                 onModeChange?.("memo");
+                console.log(
+                  `✅ [Sidebar] onModeChange呼び出し完了 (${(performance.now() - clickTime).toFixed(2)}ms)`,
+                );
                 onShowFullList();
               }}
               className={`p-2 rounded-lg transition-colors ${
@@ -126,7 +133,14 @@ function Sidebar({
           <Tooltip text="タスク一覧" position="right">
             <button
               onClick={() => {
+                const clickTime = performance.now();
+                console.log(
+                  `🖱️ [Sidebar] タスクボタンクリック (${clickTime.toFixed(2)}ms)`,
+                );
                 onModeChange?.("task");
+                console.log(
+                  `✅ [Sidebar] onModeChange呼び出し完了 (${(performance.now() - clickTime).toFixed(2)}ms)`,
+                );
                 onShowTaskList?.();
               }}
               className={`p-2 rounded-lg transition-colors ${

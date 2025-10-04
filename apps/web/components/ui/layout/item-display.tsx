@@ -86,7 +86,7 @@ function ItemDisplay({
 
   // スタイル定義
   const containerClass = `
-    ${viewMode === "card" ? "p-3 rounded-lg" : ""}
+    ${viewMode === "card" ? "px-3 pb-2 pt-1.5 rounded-lg relative" : ""}
     ${
       isSelected
         ? "bg-gray-100"
@@ -101,7 +101,7 @@ function ItemDisplay({
   const contentWrapperClass =
     viewMode === "card"
       ? "flex flex-col h-full min-h-[140px]"
-      : "p-2 flex items-center gap-3";
+      : "p-2 flex items-center gap-3 h-28";
 
   return (
     <div
@@ -175,8 +175,16 @@ function ItemDisplay({
           className={`${viewMode === "list" ? "flex-1 min-w-0 text-left" : "flex-1 flex flex-col text-left"}`}
         >
           {/* タイトル部分 */}
-          <div className={viewMode === "list" ? "flex flex-col gap-2" : ""}>
-            <div className="flex items-center gap-2 min-w-0">
+          <div
+            className={
+              viewMode === "list"
+                ? "flex flex-col gap-2"
+                : "flex flex-col flex-1"
+            }
+          >
+            <div
+              className={`flex items-center gap-2 min-w-0 ${viewMode === "card" && selectionMode === "check" ? "pl-6" : ""}`}
+            >
               <h3
                 className={`font-semibold ${viewMode === "card" ? "text-base mb-1" : "text-sm mb-[2px]"} truncate flex-1 ${
                   isDeleted ? "text-gray-700" : "text-gray-800"
@@ -185,8 +193,8 @@ function ItemDisplay({
                 {isTask ? title.replace(/[\r\n]/g, " ").trim() : title}
               </h3>
 
-              {/* 作成者アイコン（メモ・リストモード・個人モードのみ） */}
-              {isMemo && viewMode === "list" && !teamMode && (
+              {/* 作成者アイコン（メモ・カード表示・チームモードのみ） */}
+              {isMemo && viewMode === "card" && teamMode && (
                 <CreatorAvatar
                   createdBy={item.createdBy}
                   avatarColor={item.avatarColor}
@@ -282,98 +290,75 @@ function ItemDisplay({
               </p>
             )}
 
-            {/* 日付表示・アバター（チームモード） */}
-            {teamMode && viewMode === "list" ? (
-              <div className="flex justify-end items-center gap-2 mt-1">
-                <CreatorAvatar
-                  createdBy={item.createdBy}
-                  avatarColor={item.avatarColor}
-                  teamMode={teamMode}
-                  size="md"
-                  className="flex-shrink-0"
-                />
-                <div className="text-[13px] text-gray-500">
-                  <div className="flex gap-4">
-                    <span>作成 {formatDateOnly(item.createdAt)}</span>
-                    {item.updatedAt && item.updatedAt !== item.createdAt && (
-                      <span>編集 {formatDateOnly(item.updatedAt)}</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              /* 日付表示（従来通り） */
-              <div
-                className={`text-xs ${viewMode === "card" ? "pt-2" : ""} ${
-                  isDeleted
-                    ? "text-red-400"
-                    : viewMode === "card"
-                      ? "text-gray-400 border-t border-gray-100"
-                      : "text-gray-400"
-                } ${viewMode === "card" && isDeleted ? "border-t border-red-200" : ""}`}
-              >
-                {isDeleted && deletedItem ? (
-                  showEditDate ? (
-                    <div className="flex gap-2">
-                      <div>作成: {formatDateOnly(item.createdAt)}</div>
-                      {item.updatedAt && item.updatedAt !== item.createdAt && (
-                        <div>編集: {formatDateOnly(item.updatedAt)}</div>
-                      )}
-                      <div>削除: {formatDateOnly(deletedItem.deletedAt)}</div>
-                    </div>
-                  ) : (
-                    <div>削除: {formatDateOnly(deletedItem.deletedAt)}</div>
-                  )
-                ) : showEditDate ? (
-                  <div className="flex gap-2">
+            {/* 日付表示 */}
+            <div
+              className={`text-xs text-right ${viewMode === "card" ? "pt-2 mt-auto" : ""} ${
+                isDeleted
+                  ? "text-red-400"
+                  : viewMode === "card"
+                    ? "text-gray-400 border-t border-gray-100"
+                    : "text-gray-400"
+              } ${viewMode === "card" && isDeleted ? "border-t border-red-200" : ""}`}
+            >
+              {isDeleted && deletedItem ? (
+                showEditDate ? (
+                  <div className="flex gap-2 justify-end">
                     <div>作成: {formatDateOnly(item.createdAt)}</div>
-                    {(() => {
-                      // 新規作成アイテムの場合
-                      if (item.id < 0) {
-                        const updateTime = item.updatedAt || item.createdAt;
-                        if (updateTime !== item.createdAt) {
-                          return <div>編集: {formatDateOnly(updateTime)}</div>;
-                        }
-                        return null;
-                      }
-
-                      // ローカル編集時間またはAPI更新時間を表示
-                      const hasLocalEdit =
-                        lastEditTime && lastEditTime > (item.updatedAt || 0);
-                      const hasApiUpdate =
-                        item.updatedAt && item.updatedAt !== item.createdAt;
-
-                      if (hasLocalEdit) {
-                        return <div>編集: {formatDateOnly(lastEditTime)}</div>;
-                      } else if (hasApiUpdate) {
-                        return (
-                          <div>編集: {formatDateOnly(item.updatedAt!)}</div>
-                        );
-                      }
-                      return null;
-                    })()}
+                    {item.updatedAt && item.updatedAt !== item.createdAt && (
+                      <div>編集: {formatDateOnly(item.updatedAt)}</div>
+                    )}
+                    <div>削除: {formatDateOnly(deletedItem.deletedAt)}</div>
                   </div>
                 ) : (
-                  <div>
-                    {(() => {
-                      // 新規作成アイテムの場合
-                      if (item.id < 0) {
-                        return formatDateOnly(item.updatedAt || item.createdAt);
+                  <div>削除: {formatDateOnly(deletedItem.deletedAt)}</div>
+                )
+              ) : showEditDate ? (
+                <div className="flex gap-2 justify-end">
+                  <div>作成: {formatDateOnly(item.createdAt)}</div>
+                  {(() => {
+                    // 新規作成アイテムの場合
+                    if (item.id < 0) {
+                      const updateTime = item.updatedAt || item.createdAt;
+                      if (updateTime !== item.createdAt) {
+                        return <div>編集: {formatDateOnly(updateTime)}</div>;
                       }
+                      return null;
+                    }
 
-                      // ローカル編集時間とAPI更新時間のうち最新のものを表示
-                      const latestTime =
-                        lastEditTime && lastEditTime > (item.updatedAt || 0)
-                          ? lastEditTime
-                          : item.updatedAt && item.updatedAt !== item.createdAt
-                            ? item.updatedAt
-                            : item.createdAt;
-                      return formatDateOnly(latestTime);
-                    })()}
-                  </div>
-                )}
-              </div>
-            )}
+                    // ローカル編集時間またはAPI更新時間を表示
+                    const hasLocalEdit =
+                      lastEditTime && lastEditTime > (item.updatedAt || 0);
+                    const hasApiUpdate =
+                      item.updatedAt && item.updatedAt !== item.createdAt;
+
+                    if (hasLocalEdit) {
+                      return <div>編集: {formatDateOnly(lastEditTime)}</div>;
+                    } else if (hasApiUpdate) {
+                      return <div>編集: {formatDateOnly(item.updatedAt!)}</div>;
+                    }
+                    return null;
+                  })()}
+                </div>
+              ) : (
+                <div>
+                  {(() => {
+                    // 新規作成アイテムの場合
+                    if (item.id < 0) {
+                      return formatDateOnly(item.updatedAt || item.createdAt);
+                    }
+
+                    // ローカル編集時間とAPI更新時間のうち最新のものを表示
+                    const latestTime =
+                      lastEditTime && lastEditTime > (item.updatedAt || 0)
+                        ? lastEditTime
+                        : item.updatedAt && item.updatedAt !== item.createdAt
+                          ? item.updatedAt
+                          : item.createdAt;
+                    return formatDateOnly(latestTime);
+                  })()}
+                </div>
+              )}
+            </div>
           </div>
         </button>
       </div>

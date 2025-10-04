@@ -28,6 +28,8 @@ export function formatDate(timestamp: number): string {
 /**
  * UnixタイムスタンプをJST形式の日付のみに変換
  * 秒単位とミリ秒単位の両方に対応
+ * 今年のデータ: 10/01 (月/日のみ)
+ * 去年以前: 24/10/01 (年(下2桁)/月/日)
  */
 export function formatDateOnly(timestamp: number): string {
   if (!timestamp || typeof timestamp !== "number") {
@@ -50,9 +52,24 @@ export function formatDateOnly(timestamp: number): string {
     return "不明な日付";
   }
 
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const dateYear = date.getFullYear();
+
+  // 今年のデータは月/日のみ
+  if (dateYear === currentYear) {
+    return date
+      .toLocaleDateString("ja-JP", {
+        month: "2-digit",
+        day: "2-digit",
+      })
+      .replace(/\//g, "/");
+  }
+
+  // 去年以前は年(下2桁)/月/日
   return date
     .toLocaleDateString("ja-JP", {
-      year: "numeric",
+      year: "2-digit",
       month: "2-digit",
       day: "2-digit",
     })

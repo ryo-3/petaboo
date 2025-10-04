@@ -25,7 +25,7 @@ function ViewModeToggle({
 
   return (
     <Tooltip
-      text={viewMode === "card" ? "リスト表示" : "カード表示"}
+      text={viewMode === "card" ? "リストに切り替え" : "カードに切り替え"}
       position="bottom"
     >
       <button

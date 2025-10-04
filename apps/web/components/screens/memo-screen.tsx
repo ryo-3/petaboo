@@ -994,7 +994,7 @@ function MemoScreen({
     </div>
   ) : (
     // ===== 2パネルレイアウト（個人モードまたは未選択時） =====
-    <div className="flex h-full bg-white overflow-hidden relative">
+    <div className="flex h-full bg-white relative">
       {/* 左側：一覧表示エリア */}
       <div
         className={`${memoScreenMode === "list" ? "w-full" : "w-[44%]"} ${memoScreenMode !== "list" ? "border-r border-gray-300" : ""} ${hideHeaderButtons ? "pt-3" : "pt-3 pl-5 pr-2"} flex flex-col transition-all duration-300 relative`}

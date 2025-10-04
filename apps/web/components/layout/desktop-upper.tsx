@@ -472,7 +472,7 @@ function DesktopUpper({
   ) ? (
     <div
       ref={floatControls ? controlRef : null}
-      className={`flex items-center gap-2 h-7 ${floatControls ? `fixed z-20 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-lg ${!isInitialRender ? "transition-all duration-300" : ""}` : teamMode ? "mb-1.5" : ""}`}
+      className={`flex items-center gap-2 h-7 ${floatControls ? `fixed z-20 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-lg ${!isInitialRender ? "transition-all duration-300" : ""}` : "mb-1.5"}`}
       style={
         floatControls
           ? {

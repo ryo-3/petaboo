@@ -1,7 +1,6 @@
 import CheckIcon from "../../icons/check-icon";
 import SaveIcon from "../../icons/save-icon";
 import Tooltip from "../base/tooltip";
-import { useEffect, useRef } from "react";
 
 interface SaveButtonProps {
   onClick: () => void;
@@ -24,21 +23,6 @@ function SaveButton({
   iconSize = "size-4",
   className = "",
 }: SaveButtonProps) {
-  const prevDisabledRef = useRef(disabled);
-
-  useEffect(() => {
-    if (prevDisabledRef.current !== disabled) {
-      console.log("🔵 [SaveButton] disabled変化:", {
-        prev: prevDisabledRef.current,
-        current: disabled,
-        isSaving,
-        savedSuccessfully,
-        stack: new Error().stack?.split("\n").slice(2, 5).join("\n"),
-      });
-      prevDisabledRef.current = disabled;
-    }
-  }, [disabled, isSaving, savedSuccessfully]);
-
   const getTooltipText = () => {
     if (isSaving) return "保存中...";
     if (savedSuccessfully) return "保存完了";

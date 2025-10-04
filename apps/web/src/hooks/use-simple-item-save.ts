@@ -228,7 +228,8 @@ export function useSimpleItemSave<T extends UnifiedItem>({
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [item, itemType]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item?.id, itemType]);
 
   const executeSave = useCallback(async () => {
     const isEmpty = !title.trim() && !content.trim();

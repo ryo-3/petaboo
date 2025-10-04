@@ -115,8 +115,10 @@ apitest "/memos" "POST" '{"title": "テストメモ"}'        # POST
 ### 2. エラー対応
 
 ```bash
-# 2-1. ログエラーチェック（"check log files for errors -web.log api.log" でも可）
-tail -20 petaboo/api.log | grep -i "error\|warn"
+# 2-1. ログ確認（"check log files for errors -web.log api.log" でも可）
+# ログを読み取って内容を分析・報告する
+tail -50 petaboo/api.log
+tail -50 petaboo/web.log
 
 # 2-2. API停止（問題時）
 pkill -f "tsx.*apps/api"
@@ -244,19 +246,22 @@ tail -20 petaboo/web.log | grep -i "error\|warn\|fail" || echo "Webログ: エ�
 - ✅ **データベーススキーマファイルの編集** - コード修正として実行可能
 - ✅ **マイグレーションファイルの確認・読み取り** - 内容確認は問題なし
 
-## 📊 ログエラー自動チェック
+## 📊 ログ確認・分析
 
-**使用方法**: `check log files for errors -web.log api.log` と入力すると自動でエラーチェック
+**使用方法**: `check log files for errors -web.log api.log` と入力するとログを読み取って分析・報告
 
 ```bash
-# ログファイル存在確認
-ls -la petaboo/*.log
+# APIログを読み取って分析
+tail -50 petaboo/api.log
 
-# APIログエラーチェック
-tail -20 petaboo/api.log | grep -i "error\|warn\|fail" || echo "APIログ: エラーなし"
+# Webログを読み取って分析
+tail -50 petaboo/web.log
 
-# Webログエラーチェック
-tail -20 petaboo/web.log | grep -i "error\|warn\|fail" || echo "Webログ: エラーなし"
+# 分析内容:
+# - エラー・警告の有無
+# - 異常なパターンの検出
+# - 最近のリクエスト・処理内容
+# - 気になる点の報告
 ```
 
 ## 🧹 ログフィルタリングシステム

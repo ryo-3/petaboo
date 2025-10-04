@@ -453,14 +453,34 @@ function MemoScreen({
   // タブ切り替え用の状態
   const [displayTab, setDisplayTab] = useState(activeTab);
 
-  // URL からの初期メモ選択
+  // URL からの初期メモ選択（初回のみ）
+  const initialMemoIdRef = useRef<string | null>(null);
   useEffect(() => {
-    if (initialMemoId && memos && !selectedMemo) {
-      const targetMemo = memos.find(
-        (memo) => memo.id.toString() === initialMemoId,
-      );
-      if (targetMemo) {
-        onSelectMemo(targetMemo);
+    if (initialMemoId) {
+      // selectedMemoがある場合、refを同期
+      if (selectedMemo && selectedMemo.id.toString() === initialMemoId) {
+        if (initialMemoIdRef.current !== initialMemoId) {
+          initialMemoIdRef.current = initialMemoId;
+        }
+      }
+      // initialMemoIdが変更され、かつselectedMemoがない場合のみ自動選択を実行
+      else if (
+        memos &&
+        !selectedMemo &&
+        initialMemoId !== initialMemoIdRef.current
+      ) {
+        const targetMemo = memos.find(
+          (memo) => memo.id.toString() === initialMemoId,
+        );
+        if (targetMemo) {
+          initialMemoIdRef.current = initialMemoId;
+          onSelectMemo(targetMemo);
+        }
+      }
+    } else {
+      // initialMemoIdがnullになった場合はrefもリセット
+      if (initialMemoIdRef.current !== null) {
+        initialMemoIdRef.current = null;
       }
     }
   }, [initialMemoId, memos, selectedMemo, onSelectMemo]);
@@ -795,7 +815,10 @@ function MemoScreen({
             !selectedDeletedMemo && (
               <MemoEditor
                 memo={selectedMemo}
-                onClose={() => setMemoScreenMode("list")}
+                onClose={() => {
+                  onClose();
+                  setMemoScreenMode("list");
+                }}
                 onSaveComplete={handleSaveComplete}
                 onDelete={() => {
                   if (selectedMemo) {
@@ -1214,7 +1237,10 @@ function MemoScreen({
               !selectedDeletedMemo && (
                 <MemoEditor
                   memo={selectedMemo}
-                  onClose={() => setMemoScreenMode("list")}
+                  onClose={() => {
+                    onClose();
+                    setMemoScreenMode("list");
+                  }}
                   onSaveComplete={handleSaveComplete}
                   onDelete={() => {
                     if (selectedMemo) {

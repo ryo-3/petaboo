@@ -450,6 +450,21 @@ function TaskScreen({
     handleSelectTaskBase(task);
   };
 
+  // ヘッダーからの新規タスク作成イベントをリッスン（チームモードのみ）
+  useEffect(() => {
+    if (!teamMode) return;
+
+    const handleTeamTaskCreate = () => {
+      handleCreateNew();
+    };
+
+    window.addEventListener("team-task-create", handleTeamTaskCreate);
+
+    return () => {
+      window.removeEventListener("team-task-create", handleTeamTaskCreate);
+    };
+  }, [teamMode, handleCreateNew]);
+
   // 安全なデータ配布用
   const safeAllTaggings = allTaggings || [];
   const safeAllBoardItems = allBoardItems || [];
@@ -573,6 +588,7 @@ function TaskScreen({
               }
               hideAddButton={hideHeaderButtons}
               onCsvImport={() => setIsCsvImportModalOpen(true)}
+              teamMode={teamMode}
             />
 
             <DesktopLower
@@ -928,6 +944,7 @@ function TaskScreen({
           }
           hideAddButton={hideHeaderButtons}
           onCsvImport={() => setIsCsvImportModalOpen(true)}
+          teamMode={teamMode}
         />
 
         <DesktopLower

@@ -405,28 +405,30 @@ function DesktopUpper({
     <div className={`flex justify-between items-center ${headerMarginBottom}`}>
       <div className="flex items-center gap-2">
         {!customTitle && !teamMode && (
-          <h1 className="font-bold text-gray-800 text-[22px] w-[105px] truncate">
-            {currentMode === "memo"
-              ? "メモ一覧"
-              : currentMode === "task"
-                ? "タスク一覧"
-                : "ボード一覧"}
-          </h1>
-        )}
+          <>
+            <h1 className="font-bold text-gray-800 text-[22px] w-[105px] truncate">
+              {currentMode === "memo"
+                ? "メモ一覧"
+                : currentMode === "task"
+                  ? "タスク一覧"
+                  : "ボード一覧"}
+            </h1>
 
-        {/* 新規追加ボタン（個人モードはヘッダー部分に表示） */}
-        {!customTitle && !hideAddButton && !teamMode && (
-          <AddItemButton
-            itemType={currentMode}
-            onClick={onCreateNew}
-            position="bottom"
-            size="small"
-            showTooltip={false}
-            customSize={{
-              padding: "p-2",
-              iconSize: "w-3.5 h-3.5",
-            }}
-          />
+            {/* 新規追加ボタン（個人モードはヘッダー部分に表示） */}
+            {!hideAddButton && (
+              <AddItemButton
+                itemType={currentMode}
+                onClick={onCreateNew}
+                position="bottom"
+                size="small"
+                showTooltip={false}
+                customSize={{
+                  padding: "p-2",
+                  iconSize: "w-3.5 h-3.5",
+                }}
+              />
+            )}
+          </>
         )}
 
         {/* タブ（boardモード以外） */}

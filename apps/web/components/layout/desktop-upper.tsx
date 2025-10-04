@@ -244,7 +244,7 @@ function DesktopUpper({
     switch (controlPosition) {
       case "left":
         // ロゴ（14px padding + 40px + 16px gap + タイトル等）の後ろから
-        x = 200; // 左側の要素を避けた位置
+        x = 220; // 左側の要素を避けた位置
         break;
       case "center":
         x = windowWidth / 2 - controlWidth / 2;

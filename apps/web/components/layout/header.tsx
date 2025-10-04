@@ -127,7 +127,11 @@ function Header() {
           {/* タイトルとキャッチコピー */}
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-3">
-              <h1 className="text-xl font-bold text-gray-800 tracking-wide">
+              <h1
+                className={`text-xl font-bold text-gray-800 tracking-wide ${
+                  isTeamMemoListPage || isTeamTaskListPage ? "w-[95px]" : ""
+                }`}
+              >
                 {isTeamBoardPage && boardTitle
                   ? boardTitle
                   : isTeamMemoListPage
@@ -143,6 +147,29 @@ function Header() {
                     window.dispatchEvent(new CustomEvent("team-memo-create"));
                   }}
                   className="p-2 bg-Green hover:bg-Green/90 rounded-lg transition-colors"
+                >
+                  <svg
+                    className="w-3.5 h-3.5 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={3}
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                </button>
+              )}
+              {/* チームタスク一覧の新規追加ボタン */}
+              {isTeamTaskListPage && (
+                <button
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent("team-task-create"));
+                  }}
+                  className="p-2 bg-DeepBlue hover:bg-DeepBlue/90 rounded-lg transition-colors"
                 >
                   <svg
                     className="w-3.5 h-3.5 text-white"

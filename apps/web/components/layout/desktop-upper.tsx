@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 
 import CheckSquareIcon from "@/components/icons/check-square-icon";
 import CsvExportIcon from "@/components/icons/csv-export-icon";
@@ -206,6 +206,9 @@ function DesktopUpper({
 
   const controlRef = useRef<HTMLDivElement>(null);
   const [isInitialRender, setIsInitialRender] = useState(true);
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 0,
+  );
 
   // 初回レンダリング後にアニメーションを有効化
   useEffect(() => {
@@ -215,14 +218,27 @@ function DesktopUpper({
     return () => clearTimeout(timer);
   }, []);
 
-  // 位置から座標を計算
-  const getPixelPosition = () => {
+  // リサイズ対応：ウィンドウ幅を監視
+  useEffect(() => {
+    if (typeof window === "undefined" || !floatControls) return;
+
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [floatControls]);
+
+  // 位置から座標を計算（useMemoでメモ化）
+  const pixelPosition = useMemo(() => {
     if (typeof window === "undefined") return { x: 0, y: 0 };
 
     // ヘッダー内に配置（h-16 = 64px、コントロールパネル h-7 = 28px）
     const headerHeight = 64;
     const controlHeight = 28;
     const y = (headerHeight - controlHeight) / 2; // 垂直中央配置
+    const controlWidth = controlRef.current?.offsetWidth || 0;
     let x = 0;
 
     switch (controlPosition) {
@@ -231,16 +247,16 @@ function DesktopUpper({
         x = 200; // 左側の要素を避けた位置
         break;
       case "center":
-        x = window.innerWidth / 2 - (controlRef.current?.offsetWidth || 0) / 2;
+        x = windowWidth / 2 - controlWidth / 2;
         break;
       case "right":
         // 通知ベル（約40px）+ gap（8px）+ UserButton（32px）+ padding（32px）= 約112px
-        x = window.innerWidth - (controlRef.current?.offsetWidth || 0) - 105; // 右側の要素を避けた位置
+        x = windowWidth - controlWidth - 105; // 右側の要素を避けた位置
         break;
     }
 
     return { x, y };
-  };
+  }, [controlPosition, windowWidth]);
 
   // 位置切り替え（左→中央→右→左...）
   const togglePosition = () => {
@@ -458,8 +474,8 @@ function DesktopUpper({
       style={
         floatControls
           ? {
-              left: `${getPixelPosition().x}px`,
-              top: `${getPixelPosition().y}px`,
+              left: `${pixelPosition.x}px`,
+              top: `${pixelPosition.y}px`,
             }
           : undefined
       }

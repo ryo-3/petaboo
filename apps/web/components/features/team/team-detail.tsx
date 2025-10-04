@@ -319,11 +319,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   // サイドバーからのイベントをリッスン
   useEffect(() => {
     const handleTeamModeChange = (event: CustomEvent) => {
-      const receiveTime = performance.now();
       const { mode } = event.detail;
-      console.log(
-        `📡 [TeamDetail] イベント受信: ${mode} (${receiveTime.toFixed(2)}ms)`,
-      );
 
       if (mode === "overview") {
         handleTabChange("overview");
@@ -340,9 +336,6 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       } else if (mode === "search") {
         handleTabChange("search");
       }
-      console.log(
-        `✅ [TeamDetail] イベント処理完了: ${mode} (${(performance.now() - receiveTime).toFixed(2)}ms)`,
-      );
     };
 
     const handleTeamNewMemo = (_event: CustomEvent) => {

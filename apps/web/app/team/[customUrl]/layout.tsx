@@ -154,26 +154,15 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
 
   // チーム詳細ページでのサイドバーハンドラー
   const handleModeChange = (mode: "memo" | "task" | "board") => {
-    const clickTime = performance.now();
-    console.log(
-      `🖱️ [Layout] handleModeChange開始: ${mode} (${clickTime.toFixed(2)}ms)`,
-    );
-
     // フォールバックモードを更新（URLがない場合の補助）
     setFallbackMode(mode);
 
     // チーム詳細ページでタブを切り替える場合はメッセージを送信
     if (isTeamDetailPage) {
-      console.log(
-        `📤 [Layout] イベント発火: ${mode} (${(performance.now() - clickTime).toFixed(2)}ms)`,
-      );
       window.dispatchEvent(
         new CustomEvent("team-mode-change", {
           detail: { mode, pathname },
         }),
-      );
-      console.log(
-        `✅ [Layout] handleModeChange完了: ${mode} (${(performance.now() - clickTime).toFixed(2)}ms)`,
       );
     }
   };

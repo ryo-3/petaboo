@@ -776,7 +776,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                 }}
                 teamMode={true}
                 teamId={team.id}
-                initialMemoId={selectedMemo ? getMemoIdFromURL() : null}
+                initialMemoId={getMemoIdFromURL()}
                 // 統一フックを渡す
                 unifiedOperations={teamMemoOperations}
               />

@@ -224,12 +224,13 @@ export default function TagSelectionModal({
         topOffset={topOffset}
       >
         <div className="min-h-[75vh] max-h-[75vh] flex flex-col">
-          {/* カスタムヘッダー：タイトルと検索ボックス */}
-          <div className="flex items-center justify-between gap-4 mb-2">
+          {/* カスタムヘッダー：タイトルと検索ボックス + 閉じるボタン */}
+          <div className="flex items-center gap-4 mb-2">
             <h2 className="text-lg font-semibold text-gray-900">
               {modalTitle}
             </h2>
-            <div className="relative flex-1 max-w-sm">
+            <div className="flex-1"></div>
+            <div className="relative w-80">
               <input
                 type="text"
                 value={searchQuery}
@@ -259,6 +260,24 @@ export default function TagSelectionModal({
                 </button>
               )}
             </div>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
           </div>
 
           {/* 新規タグ作成 */}

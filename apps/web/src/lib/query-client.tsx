@@ -18,10 +18,10 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 5 * 60 * 1000, // 5分間は新鮮なデータとして扱う
+            staleTime: 30 * 60 * 1000, // 30分間は新鮮なデータとして扱う（キャッシュから高速表示）
             cacheTime: 30 * 60 * 1000, // 30分間キャッシュを保持
             refetchOnWindowFocus: false, // ウィンドウフォーカス時の再取得を無効化
-            refetchOnMount: true, // マウント時の再取得（必要時のみ）
+            refetchOnMount: false, // マウント時の再取得を無効化（staleTimeで制御）
             refetchOnReconnect: true, // 再接続時の再取得（必要時のみ）
             retry: (failureCount, error) => {
               const queryError = error as QueryError;

@@ -30,6 +30,27 @@
 - **アーキテクチャ**: Turborepo 2.5.4 monorepo構成
 - **パッケージ管理**: pnpm 9.0.0
 
+### React Query 設定 (`apps/web/src/lib/query-client.tsx`)
+
+```typescript
+defaultOptions: {
+  queries: {
+    staleTime: 30 * 60 * 1000,       // 30分間は新鮮なデータとして扱う（キャッシュから高速表示）
+    cacheTime: 30 * 60 * 1000,       // 30分間キャッシュを保持
+    refetchOnWindowFocus: false,     // ウィンドウフォーカス時の再取得を無効化
+    refetchOnMount: false,           // マウント時の再取得を無効化（staleTimeで制御）
+    refetchOnReconnect: true,        // 再接続時の再取得（必要時のみ）
+    retry: (failureCount, error) => {
+      // 401エラーの場合はリトライしない（自動ログアウト）
+      // それ以外は最大2回リトライ
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // 指数バックオフ
+  },
+}
+```
+
+**キャッシュ戦略**: メモ↔タスク↔ボード切り替えは30分間キャッシュから高速表示。更新・削除時はmutationで自動invalidate。
+
 ## 基本設計原則
 
 - **共通化ファースト**: 2回以上使われる可能性があるなら即座に共通化

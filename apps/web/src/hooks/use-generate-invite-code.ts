@@ -54,9 +54,7 @@ export function useGetInviteUrl(customUrl: string) {
       return response.json();
     },
     enabled: !!customUrl && customUrl !== "undefined" && customUrl !== "null",
-    staleTime: 0,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    // グローバル設定を使用（staleTime: 30分、refetchOnMount: false）
   });
 }
 

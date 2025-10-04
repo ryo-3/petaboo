@@ -24,6 +24,8 @@ interface BoardSelectionModalProps {
   onFilterModeChange?: (mode: "include" | "exclude") => void;
   // カスタムフッター
   footer?: React.ReactNode;
+  // ヘッダー高さオフセット
+  topOffset?: number;
 }
 
 export default function BoardSelectionModal({
@@ -38,6 +40,7 @@ export default function BoardSelectionModal({
   filterMode = "include",
   onFilterModeChange,
   footer,
+  topOffset = 0,
 }: BoardSelectionModalProps) {
   const modalTitle =
     title || (mode === "filter" ? "ボード絞り込み" : "ボード選択");
@@ -89,7 +92,13 @@ export default function BoardSelectionModal({
   }, [boards, selectedBoardIds]);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} maxWidth="3xl" maxHeight="85vh">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      maxWidth="3xl"
+      maxHeight="85vh"
+      topOffset={topOffset}
+    >
       <div className="min-h-[75vh] max-h-[75vh] flex flex-col">
         {/* カスタムヘッダー：タイトルと検索ボックス */}
         <div className="flex items-center justify-between gap-4 mb-2">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 
 interface ModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ interface ModalProps {
   position?: "center" | "right-panel" | "left-panel";
   parentElement?: HTMLElement;
   maxHeight?: string;
+  topOffset?: number; // ヘッダー高さなどのオフセット（pxで指定）
 }
 
 function Modal({
@@ -31,6 +33,7 @@ function Modal({
   maxWidth = "md",
   position = "center",
   maxHeight,
+  topOffset = 0,
 }: ModalProps) {
   // ESCキーでモーダルを閉じる
   useEffect(() => {
@@ -54,6 +57,13 @@ function Modal({
 
   if (!isOpen) return null;
 
+  console.log("📍 Modal render:", {
+    position,
+    topOffset,
+    maxWidth,
+    maxHeight,
+  });
+
   const maxWidthClasses = {
     sm: "max-w-sm",
     md: "max-w-md",
@@ -76,17 +86,22 @@ function Modal({
 
   const overlayClasses =
     position === "center"
-      ? "absolute inset-0 bg-black bg-opacity-50 transition-opacity"
+      ? "fixed inset-0 bg-black bg-opacity-50 transition-opacity"
       : "absolute inset-0 bg-black bg-opacity-20 transition-opacity";
 
-  return (
+  console.log("📍 Modal classes:", {
+    containerClasses,
+    overlayClasses,
+  });
+
+  const modalContent = (
     <div className={containerClasses}>
       {/* オーバーレイ */}
       <div className={overlayClasses} onClick={onClose} />
 
       {/* モーダル本体 */}
       <div
-        className={`relative bg-white rounded-lg shadow-xl ${maxWidthClasses[maxWidth]} w-full mx-4 transform transition-transform`}
+        className={`relative bg-white rounded-lg shadow-xl ${maxWidthClasses[maxWidth]} w-full mx-4 my-auto transform transition-transform`}
         style={maxHeight ? { maxHeight } : {}}
       >
         {/* ヘッダー */}
@@ -119,6 +134,9 @@ function Modal({
       </div>
     </div>
   );
+
+  // body直下にポータルでレンダリング
+  return createPortal(modalContent, document.body);
 }
 
 export default Modal;

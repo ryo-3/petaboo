@@ -18,6 +18,8 @@ interface TagDisplayToggleProps {
   // フィルターモード関連
   filterMode?: "include" | "exclude";
   onFilterModeChange?: (mode: "include" | "exclude") => void;
+  // ヘッダー内配置フラグ（モーダル位置調整用）
+  inHeader?: boolean;
 }
 
 export default function TagDisplayToggle({
@@ -30,6 +32,7 @@ export default function TagDisplayToggle({
   onTagFilterChange,
   filterMode = "include",
   onFilterModeChange,
+  inHeader = false,
 }: TagDisplayToggleProps) {
   const [showFilterModal, setShowFilterModal] = useState(false);
 
@@ -99,6 +102,7 @@ export default function TagDisplayToggle({
             multiple={true}
             filterMode={filterMode}
             onFilterModeChange={onFilterModeChange}
+            topOffset={inHeader ? 64 : 0}
           />
         </>
       )}

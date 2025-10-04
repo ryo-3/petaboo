@@ -17,6 +17,8 @@ interface BoardNameToggleProps {
   // フィルターモード関連
   filterMode?: "include" | "exclude";
   onFilterModeChange?: (mode: "include" | "exclude") => void;
+  // ヘッダー内配置フラグ（モーダル位置調整用）
+  inHeader?: boolean;
 }
 
 function BoardNameToggle({
@@ -29,6 +31,7 @@ function BoardNameToggle({
   onBoardFilterChange,
   filterMode = "include",
   onFilterModeChange,
+  inHeader = false,
 }: BoardNameToggleProps) {
   const [showFilterModal, setShowFilterModal] = useState(false);
 
@@ -85,6 +88,7 @@ function BoardNameToggle({
             multiple={true}
             filterMode={filterMode}
             onFilterModeChange={onFilterModeChange}
+            topOffset={inHeader ? 64 : 0}
           />
         </>
       )}

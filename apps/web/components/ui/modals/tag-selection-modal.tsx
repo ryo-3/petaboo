@@ -34,6 +34,8 @@ interface TagSelectionModalProps {
   // チームモード関連
   teamMode?: boolean;
   teamId?: number;
+  // ヘッダー高さオフセット
+  topOffset?: number;
 }
 
 export default function TagSelectionModal({
@@ -50,6 +52,7 @@ export default function TagSelectionModal({
   footer,
   teamMode = false,
   teamId = 0,
+  topOffset = 0,
 }: TagSelectionModalProps) {
   const modalTitle = title || (mode === "filter" ? "タグ絞り込み" : "タグ選択");
   const [searchQuery, setSearchQuery] = useState("");
@@ -213,7 +216,13 @@ export default function TagSelectionModal({
 
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onClose} maxWidth="3xl" maxHeight="85vh">
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        maxWidth="3xl"
+        maxHeight="85vh"
+        topOffset={topOffset}
+      >
         <div className="min-h-[75vh] max-h-[75vh] flex flex-col">
           {/* カスタムヘッダー：タイトルと検索ボックス */}
           <div className="flex items-center justify-between gap-4 mb-2">

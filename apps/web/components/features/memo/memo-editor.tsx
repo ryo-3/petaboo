@@ -564,59 +564,32 @@ function MemoEditor({
     try {
       // まずメモを保存
       await handleSave();
-      console.log("✅ [MemoEditor] メモ保存完了");
 
       // 保存後、タグも更新
       // onSaveCompleteで最新のメモを取得できるが、同期の問題があるため
       // 既存メモの場合は現在のmemo、新規作成の場合は少し待ってから処理
       if (memo && memo.id > 0) {
-        console.log("🏷️ [MemoEditor] 既存メモのタグ更新開始", {
-          memoId: memo.id,
-          originalId: memo.originalId,
-          tagsToUpdate: localTags.length,
-        });
         // 既存メモの場合
         await updateTaggings(memo.originalId || memo.id.toString());
         setHasManualChanges(false);
-        console.log("✅ [MemoEditor] 既存メモのタグ更新完了");
       } else if (localTags.length > 0) {
-        console.log("🆕 [MemoEditor] 新規メモのタグ更新開始", {
-          localTagsCount: localTags.length,
-          tags: localTags.map((t) => ({ id: t.id, name: t.name })),
-        });
         // 新規作成でタグがある場合は、少し遅延させて最新のメモリストから取得
         setTimeout(async () => {
           try {
-            console.log(
-              "🔍 [MemoEditor] React Queryキャッシュから最新メモ検索中",
-            );
             // React QueryのキャッシュからmemosQueryを取得して、最新の作成メモを特定
             const memosQuery = queryClient.getQueryData<Memo[]>(["memos"]);
-            console.log("📋 [MemoEditor] キャッシュ取得結果", {
-              hasMemosQuery: !!memosQuery,
-              memosCount: memosQuery?.length || 0,
-            });
 
             if (memosQuery && memosQuery.length > 0) {
               // 最新のメモ（作成時刻順で最後）を取得
               const latestMemo = [...memosQuery].sort(
                 (a, b) => b.createdAt - a.createdAt,
               )[0];
-              console.log("🎯 [MemoEditor] 最新メモ特定", {
-                latestMemoId: latestMemo?.id,
-                latestMemoTitle: latestMemo?.title,
-                latestMemoCreatedAt: latestMemo?.createdAt,
-              });
 
               if (latestMemo) {
                 const targetId =
                   latestMemo.originalId || latestMemo.id.toString();
-                console.log("🏷️ [MemoEditor] 新規メモタグ付け実行", {
-                  targetId,
-                });
                 await updateTaggings(targetId);
                 setHasManualChanges(false);
-                console.log("✅ [MemoEditor] 新規メモタグ付け完了");
               } else {
                 console.warn("⚠️ [MemoEditor] 最新メモが見つかりません");
               }
@@ -634,13 +607,7 @@ function MemoEditor({
           }
         }, 100); // 100ms遅延
       } else {
-        console.log("ℹ️ [MemoEditor] タグ更新不要", {
-          isNewMemo: !memo || memo.id === 0,
-          hasLocalTags: localTags.length > 0,
-        });
       }
-
-      console.log("🎉 [MemoEditor] handleSaveWithTags完了");
     } catch (error) {
       console.error("❌ [MemoEditor] 保存に失敗しました:", error);
     }
@@ -735,42 +702,24 @@ function MemoEditor({
 
   // 削除ボタンのハンドラー（ボード紐づきチェック付き）
   const handleDeleteClick = () => {
-    console.log("🎯 handleDeleteClick実行開始", {
-      timestamp: Date.now(),
-      isPending: unifiedOperations?.deleteItem.isPending,
-      isAnimating,
-    });
-
     // 重複クリック防止
     if (unifiedOperations?.deleteItem.isPending || isAnimating) {
       console.warn("⚠️ 削除処理中のためスキップ");
       return;
     }
 
-    console.log("🗑️ 削除ボタンクリック", { memo, teamMode, itemBoards });
-
     if (isDeleted && onDelete) {
       // 削除済みメモの場合は完全削除（親コンポーネントに委任）
-      console.log("🔄 分岐: 削除済みメモの完全削除パス");
       onDelete();
     } else if (teamMode || (itemBoards && itemBoards.length > 0)) {
       // チームモードまたはボードに紐づいている場合はモーダル表示と同時に蓋を開く
-      console.log("🔄 分岐: モーダル表示パス", {
-        teamMode,
-        itemBoardsLength: itemBoards?.length,
-      });
       setIsAnimating(true);
       setShowDeleteModal(true);
     } else {
       // ボードに紐づいていない場合は蓋を開いてから直接削除
-      console.log("🔄 分岐: 直接削除パス", {
-        teamMode,
-        itemBoardsLength: itemBoards?.length,
-      });
       setIsAnimating(true);
       if (memo && memo.id > 0) {
         // ダイレクト削除処理も親（MemoScreen）に委任（200ms遅延削除で統一）
-        console.log("🔄 ダイレクト削除を親コンポーネントに委任");
 
         if (onDeleteAndSelectNext) {
           onDeleteAndSelectNext(memo);
@@ -789,20 +738,10 @@ function MemoEditor({
   // 統一フック（propsから受け取り）
 
   const handleConfirmDelete = async () => {
-    console.log("🎯 handleConfirmDelete実行開始", {
-      timestamp: Date.now(),
-      memoId: memo?.id,
-      showDeleteModal,
-      isPending: unifiedOperations?.deleteItem.isPending,
-    });
-
     if (!memo || memo.id === 0) return;
-
-    console.log("✅ 削除確定実行", { memo });
     setShowDeleteModal(false);
 
     // 削除処理は親（MemoScreen）に委任し、memo-editorでは実行しない
-    console.log("🔄 削除処理を親コンポーネント（MemoScreen）に委任");
 
     // 削除コールバックを呼び出し、親側で実際の削除処理を実行してもらう
     if (onDeleteAndSelectNext) {

@@ -11,6 +11,8 @@ import type { Tagging, Tag } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
 import { useTags } from "@/src/hooks/use-tags";
 import { useTeamTags } from "@/src/hooks/use-team-tags";
+import { useAllTaggings } from "@/src/hooks/use-all-data";
+import { useAllTeamTaggings } from "@/src/hooks/use-team-taggings";
 import { useState, useEffect } from "react";
 import { useNavigation } from "@/contexts/navigation-context";
 import { useAuth } from "@clerk/nextjs";
@@ -71,7 +73,7 @@ export default function BoardRightPanel({
   rightPanelMode,
   activeMemoTab = "normal",
   allBoards,
-  allTaggings,
+  allTaggings: propsAllTaggings,
   allBoardItems,
   teamMode = false,
   teamId = null,
@@ -91,6 +93,11 @@ export default function BoardRightPanel({
   const { data: personalTags } = useTags();
   const { data: teamTags } = useTeamTags(teamId || 0);
   const tags = teamMode && teamId ? teamTags : personalTags;
+
+  // タグ付けデータを直接取得（propsではなくReact Queryから最新データを取得）
+  const { data: personalTaggings } = useAllTaggings();
+  const { data: teamTaggings } = useAllTeamTaggings(teamId || 0);
+  const allTaggings = teamMode && teamId ? teamTaggings : personalTaggings;
 
   const { getToken } = useAuth();
   const queryClient = useQueryClient();

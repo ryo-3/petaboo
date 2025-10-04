@@ -912,10 +912,27 @@ export function createAPI(app: AppType) {
               ),
             )
             .limit(1);
-          content = memo[0] || null;
+          // IMPORTANT: originalIdを文字列型として確実に返す（Drizzleが数値に変換する場合があるため）
+          content = memo[0]
+            ? { ...memo[0], originalId: String(memo[0].originalId) }
+            : null;
         } else {
           const task = await db
-            .select()
+            .select({
+              id: tasks.id,
+              originalId: tasks.originalId,
+              uuid: tasks.uuid,
+              userId: tasks.userId,
+              title: tasks.title,
+              description: tasks.description,
+              status: tasks.status,
+              priority: tasks.priority,
+              dueDate: tasks.dueDate,
+              categoryId: tasks.categoryId,
+              boardCategoryId: tasks.boardCategoryId,
+              createdAt: tasks.createdAt,
+              updatedAt: tasks.updatedAt,
+            })
             .from(tasks)
             .where(
               and(
@@ -924,15 +941,29 @@ export function createAPI(app: AppType) {
               ),
             )
             .limit(1);
-          content = task[0] || null;
+          // IMPORTANT: originalIdを文字列型として確実に返す（Drizzleが数値に変換する場合があるため）
+          content = task[0]
+            ? { ...task[0], originalId: String(task[0].originalId) }
+            : null;
         }
+
+        // IMPORTANT: contentのoriginalIdも必ず文字列として返す
+        const safeContent = content
+          ? {
+              ...content,
+              originalId:
+                typeof content.originalId === "string"
+                  ? content.originalId
+                  : String(content.originalId || content.id),
+            }
+          : null;
 
         return {
           id: item.id,
           itemType: item.itemType,
           itemId: content?.id || 0, // フロントエンド互換性のため通常のIDを返す
           originalId: item.originalId,
-          content,
+          content: safeContent,
         };
       }),
     );

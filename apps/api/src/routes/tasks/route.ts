@@ -192,7 +192,13 @@ app.openapi(
         desc(tasks.createdAt),
       );
 
-    return c.json(result, 200);
+    // IMPORTANT: originalIdを文字列型として確実に返す（Drizzleが数値に変換する場合があるため）
+    const tasksWithStringOriginalId = result.map((task) => ({
+      ...task,
+      originalId: String(task.originalId || task.id),
+    }));
+
+    return c.json(tasksWithStringOriginalId, 200);
   },
 );
 

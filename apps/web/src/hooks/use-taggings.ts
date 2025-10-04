@@ -102,7 +102,22 @@ export function useCreateTagging() {
 
       const newTagging = result as Tagging;
 
-      // 特定のアイテムタイプ・IDのタグ付け情報を無効化
+      // 全タグ付け情報に新しいタグ付けを追加
+      queryClient.setQueryData(
+        ["taggings", "all"],
+        (oldTaggings: Tagging[] | undefined) => {
+          if (!oldTaggings) return [newTagging];
+          return [...oldTaggings, newTagging];
+        },
+      );
+
+      // 全タグ付けクエリを強制再取得（キャッシュ更新を確実に反映）
+      queryClient.invalidateQueries({
+        queryKey: ["taggings", "all"],
+        refetchType: "active",
+      });
+
+      // 特定のアイテムタイプ・IDのタグ付け情報も無効化
       queryClient.invalidateQueries({
         queryKey: [
           "taggings",
@@ -112,16 +127,6 @@ export function useCreateTagging() {
           },
         ],
       });
-      // 全タグ付け情報に新しいタグ付けを追加
-      queryClient.setQueryData(
-        ["taggings", "all"],
-        (oldTaggings: Tagging[] | undefined) => {
-          if (!oldTaggings) return [newTagging];
-          return [...oldTaggings, newTagging];
-        },
-      );
-      // 汎用タグ付けクエリも無効化
-      queryClient.invalidateQueries({ queryKey: ["taggings"], exact: false });
     },
     onError: () => {
       // エラーをサイレントに処理（ログ出力を抑制）

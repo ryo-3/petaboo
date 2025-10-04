@@ -285,7 +285,8 @@ function BoardDetailScreen({
   });
 
   // 全データ事前取得（ちらつき解消）
-  const { data: personalTaggings } = useAllTaggings();
+  const { data: personalTaggings, dataUpdatedAt: taggingsUpdatedAt } =
+    useAllTaggings();
   const { data: teamTaggings } = useAllTeamTaggings(teamId || 0);
   const { data: allBoardItems } = useAllBoardItems();
   const { data: personalTags } = useTags();
@@ -293,8 +294,11 @@ function BoardDetailScreen({
   const { data: personalBoards } = useBoards("normal", !teamMode);
   const { data: teamBoards } = useTeamBoards(teamId, "normal");
 
-  // チームモードかどうかでタグ付けデータを切り替え
-  const allTaggings = teamMode && teamId ? teamTaggings : personalTaggings;
+  // チームモードかどうかでタグ付けデータを切り替え（dataUpdatedAtで強制再レンダリング）
+  const allTaggings = useMemo(
+    () => (teamMode && teamId ? teamTaggings : personalTaggings),
+    [teamMode, teamId, teamTaggings, personalTaggings, taggingsUpdatedAt],
+  );
 
   // チームモードかどうかでタグを切り替え
   const allTags = teamMode && teamId ? teamTags : personalTags;

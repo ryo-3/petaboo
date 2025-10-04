@@ -106,7 +106,7 @@ interface TaskEditorProps {
 }
 
 function TaskEditor({
-  task,
+  task: rawTask,
   initialBoardId,
   isFromBoardDetail = false,
   onClose,
@@ -130,6 +130,17 @@ function TaskEditor({
   createdByAvatarColor,
   unifiedOperations,
 }: TaskEditorProps) {
+  // IMPORTANT: originalIdを文字列として強制変換（ボードAPI経由だと数値になる場合がある）
+  const task = rawTask
+    ? {
+        ...rawTask,
+        originalId:
+          typeof rawTask.originalId === "string"
+            ? rawTask.originalId
+            : String(rawTask.originalId || rawTask.id),
+      }
+    : rawTask;
+
   const queryClient = useQueryClient();
   const { categories } = useBoardCategories(initialBoardId);
 
@@ -176,20 +187,6 @@ function TaskEditor({
         boards.push(initialBoard);
       }
     }
-
-    // デバッグログ: 個人用ボード紐づけ情報を出力
-    console.log("🔍 [TaskEditor] 個人用ボード紐づけ情報:", {
-      taskId: task?.id,
-      taskOriginalId: originalId,
-      teamMode,
-      teamId,
-      initialBoardId,
-      preloadedBoardItemsCount: preloadedBoardItems.length,
-      taskBoardItems,
-      taskBoardItemsCount: taskBoardItems.length,
-      foundBoardsCount: boards.length,
-      foundBoards: boards.map((b) => ({ id: b.id, name: b.name })),
-    });
 
     return boards;
   }, [
@@ -453,14 +450,6 @@ function TaskEditor({
   // 初期ボードIDs配列の計算
   const currentBoardIds = useMemo(() => {
     const ids = itemBoards.map((board) => board.id);
-
-    // デバッグログ: currentBoardIds計算結果
-    console.log("🔢 [TaskEditor] currentBoardIds計算結果:", {
-      itemBoardsCount: itemBoards.length,
-      currentBoardIds: ids,
-      itemBoards: itemBoards.map((b) => ({ id: b.id, name: b.name })),
-    });
-
     return ids;
   }, [itemBoards]);
 
@@ -751,12 +740,6 @@ function TaskEditor({
   const currentBoardValues = selectedBoardIds.map((id) => id.toString());
 
   // デバッグログ: selectedBoardIdsの状態
-  console.log("🎯 [TaskEditor] selectedBoardIds状態:", {
-    selectedBoardIds,
-    selectedBoardIdsCount: selectedBoardIds.length,
-    currentBoardValues,
-    currentBoardValuesCount: currentBoardValues.length,
-  });
 
   // ボード選択変更ハンドラー
   const handleBoardSelectorChange = (value: string | string[]) => {
@@ -875,11 +858,6 @@ function TaskEditor({
                   <ContinuousCreateButton
                     storageKey="task-continuous-create-mode"
                     onModeChange={(enabled) => {
-                      console.log("🔧 [連続作成モード] ボタン切り替え:", {
-                        enabled,
-                        teamMode,
-                        teamId,
-                      });
                       setContinuousCreateMode(enabled);
                     }}
                   />
@@ -949,9 +927,6 @@ function TaskEditor({
                     <Tooltip text="復元" position="bottom">
                       <button
                         onClick={() => {
-                          console.log(
-                            "🔄 TaskEditor復元ボタン: 統一復元処理呼び出し",
-                          );
                           // MemoEditorと同じ統一化：onRestoreAndSelectNext || onRestore
                           const restoreHandler =
                             onRestoreAndSelectNext || onRestore;
@@ -1107,12 +1082,6 @@ function TaskEditor({
             tagIds.includes(tag.id),
           );
           if (teamMode) {
-            console.log("🏷️ [タスクタグ選択] チームモード:", {
-              tagIds,
-              availableTagsLength: availableTags.length,
-              selectedTagsLength: selectedTags.length,
-              selectedTags,
-            });
           }
           setLocalTags(selectedTags);
           setHasManualTagChanges(true); // 手動変更フラグを設定

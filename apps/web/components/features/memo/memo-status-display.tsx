@@ -124,11 +124,15 @@ function MemoStatusDisplay({
       baseMemos = baseMemos.filter((memo) => {
         if (!memo || memo.id === undefined) return false;
 
-        const originalId = memo.originalId || memo.id.toString();
+        // WORKAROUND: idとoriginalIdの両方でマッチング
+        const originalId = String(memo.originalId || memo.id);
+        const memoId = String(memo.id);
 
         // メモが所属するボードのID一覧を取得
         const memoBoardItems = allBoardItems.filter(
-          (item) => item.itemType === "memo" && item.originalId === originalId,
+          (item) =>
+            item.itemType === "memo" &&
+            (item.originalId === originalId || item.originalId === memoId),
         );
         const memoBoardIds = memoBoardItems.map((item) => item.boardId);
 
@@ -205,11 +209,16 @@ function MemoStatusDisplay({
     const map = new Map();
     filteredMemos.forEach((memo) => {
       if (!memo || memo.id === undefined) return;
-      const originalId = memo.originalId || memo.id.toString();
+      // WORKAROUND: originalIdが数値の場合もあるため、文字列に変換
+      // さらに、idとoriginalIdの両方でマッチング（データ不整合対策）
+      const originalId = String(memo.originalId || memo.id);
+      const memoId = String(memo.id);
 
       // メモのタグを抽出
       const memoTaggings = safeAllTaggings.filter(
-        (t) => t.targetType === "memo" && t.targetOriginalId === originalId,
+        (t) =>
+          t.targetType === "memo" &&
+          (t.targetOriginalId === originalId || t.targetOriginalId === memoId),
       );
       const memoTags = memoTaggings
         .map((t) => safeAllTags.find((tag) => tag.id === t.tagId))
@@ -386,12 +395,15 @@ export function DeletedMemoDisplay({
     },
   ) => {
     // 削除済みメモのタグ・ボード情報を取得
-    // 削除済みメモの場合、originalIdは削除前の元のメモIDを文字列化したもの
-    const originalId = memo.originalId || memo.id.toString();
+    // WORKAROUND: idとoriginalIdの両方でマッチング
+    const originalId = String(memo.originalId || memo.id);
+    const memoId = String(memo.id);
 
     // このメモのタグを抽出
     const memoTaggings = allTaggings.filter(
-      (t) => t.targetType === "memo" && t.targetOriginalId === originalId,
+      (t) =>
+        t.targetType === "memo" &&
+        (t.targetOriginalId === originalId || t.targetOriginalId === memoId),
     );
     const memoTags = memoTaggings
       .map((t) => allTags.find((tag) => tag.id === t.tagId))

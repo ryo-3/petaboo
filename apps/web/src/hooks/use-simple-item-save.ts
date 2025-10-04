@@ -140,7 +140,6 @@ export function useSimpleItemSave<T extends UnifiedItem>({
   const hasChanges = useMemo(() => {
     // アイテム切り替え中は変更検知を無効化
     if (isItemTransition) {
-      console.log("🟡 [hasChanges] アイテム切り替え中 → false");
       return false;
     }
 
@@ -160,12 +159,6 @@ export function useSimpleItemSave<T extends UnifiedItem>({
     // 初期同期中はボード変更を無視
     if (isInitialSync) {
       const result = textChanged || taskFieldsChanged;
-      console.log("🟡 [hasChanges] 初期同期中:", {
-        result,
-        textChanged,
-        taskFieldsChanged,
-        isItemTransition,
-      });
       return result;
     }
 
@@ -174,16 +167,6 @@ export function useSimpleItemSave<T extends UnifiedItem>({
       JSON.stringify([...currentBoardIds].sort());
 
     const result = textChanged || taskFieldsChanged || hasBoardChanges;
-    console.log("🟡 [hasChanges] 計算結果:", {
-      result,
-      textChanged,
-      taskFieldsChanged,
-      hasBoardChanges,
-      isItemTransition,
-      isInitialSync,
-      selectedBoardIds: [...selectedBoardIds].sort(),
-      currentBoardIds: [...currentBoardIds].sort(),
-    });
 
     return result;
   }, [
@@ -204,10 +187,6 @@ export function useSimpleItemSave<T extends UnifiedItem>({
 
   // アイテムが変更された時の初期値更新
   useEffect(() => {
-    console.log("🟠 [useEffect] アイテム切り替え開始:", {
-      itemId: item?.id,
-      itemType,
-    });
     setIsItemTransition(true); // データ更新開始
 
     if (item) {
@@ -245,9 +224,6 @@ export function useSimpleItemSave<T extends UnifiedItem>({
 
     // データ更新完了を少し遅延させてマーク（100msに延長）
     const timer = setTimeout(() => {
-      console.log("🟠 [useEffect] アイテム切り替え完了（100ms後）:", {
-        itemId: item?.id,
-      });
       setIsItemTransition(false);
     }, 100);
 
@@ -482,14 +458,14 @@ export function useSimpleItemSave<T extends UnifiedItem>({
             createdItem = (await createTask.mutateAsync(createData)) as T;
           }
 
-          // ボード選択時またはチーム機能の新規作成時はボードに追加
+          // ボード選択時または初期ボードID指定時はボードに追加
           if (
-            (selectedBoardIds.length > 0 || (teamMode && initialBoardId)) &&
+            (selectedBoardIds.length > 0 || initialBoardId) &&
             createdItem.id
           ) {
-            // チーム機能での新規作成時は初期ボードIDを含める
+            // 初期ボードIDがある場合は必ず含める（個人・チーム共通）
             const boardIdsToAdd =
-              teamMode && initialBoardId && selectedBoardIds.length === 0
+              initialBoardId && selectedBoardIds.length === 0
                 ? [initialBoardId]
                 : selectedBoardIds;
 

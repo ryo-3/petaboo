@@ -199,6 +199,10 @@ export const memosApi = {
     );
 
     if (!response.ok) {
+      // 404は既に復元済みなので正常として扱う
+      if (response.status === 404) {
+        return response;
+      }
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     return response;
@@ -434,6 +438,10 @@ export const tasksApi = {
     );
 
     if (!response.ok) {
+      // 404は既に復元済みなので正常として扱う
+      if (response.status === 404) {
+        return response;
+      }
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     return response;

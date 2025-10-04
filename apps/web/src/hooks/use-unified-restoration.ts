@@ -51,6 +51,7 @@ export function useUnifiedRestoration<T extends DeletedItem>({
 
       // フォールバック: 直接API呼び出し
       const token = await getToken();
+
       if (itemType === "memo") {
         if (teamMode && teamId) {
           const response = await memosApi.restoreTeamMemo(

@@ -57,13 +57,6 @@ function Modal({
 
   if (!isOpen) return null;
 
-  console.log("📍 Modal render:", {
-    position,
-    topOffset,
-    maxWidth,
-    maxHeight,
-  });
-
   const maxWidthClasses = {
     sm: "max-w-sm",
     md: "max-w-md",
@@ -88,11 +81,6 @@ function Modal({
     position === "center"
       ? "fixed inset-0 bg-black bg-opacity-50 transition-opacity"
       : "absolute inset-0 bg-black bg-opacity-20 transition-opacity";
-
-  console.log("📍 Modal classes:", {
-    containerClasses,
-    overlayClasses,
-  });
 
   const modalContent = (
     <div className={containerClasses}>

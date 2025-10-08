@@ -33,6 +33,7 @@ interface TaskStatusDisplayProps {
   isBoard?: boolean; // ボード詳細画面での使用かどうか
   teamMode?: boolean; // チームモードかどうか
   teamId?: number; // チームID
+  initialBoardId?: number; // 初期選択ボードID
 
   // 全データ事前取得（ちらつき解消）
   allTags?: Tag[];
@@ -110,6 +111,7 @@ function TaskStatusDisplay({
   isBoard = false,
   teamMode = false,
   teamId,
+  initialBoardId,
   allTaggings = [],
   allTeamTaggings = [],
   allBoardItems = [],
@@ -309,6 +311,7 @@ function TaskStatusDisplay({
         preloadedTags={taskTags}
         preloadedBoards={taskBoards}
         teamMode={teamMode}
+        initialBoardId={initialBoardId}
       />
     );
 

@@ -553,6 +553,7 @@ function BoardDetailScreen({
               {/* タスク列 */}
               <BoardTaskSection
                 boardId={boardId}
+                initialBoardId={boardId}
                 rightPanelMode={rightPanelMode}
                 showTask={showTask}
                 allTaskItems={allTaskItems}
@@ -744,6 +745,7 @@ function BoardDetailScreen({
             {/* タスク列 */}
             <BoardTaskSection
               boardId={boardId}
+              initialBoardId={boardId}
               rightPanelMode={rightPanelMode}
               showTask={showTask}
               allTaskItems={allTaskItems}

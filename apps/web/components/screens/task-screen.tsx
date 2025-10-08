@@ -27,6 +27,7 @@ import {
 } from "@/src/hooks/use-tasks";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useBoards } from "@/src/hooks/use-boards";
+import { useTeamBoards } from "@/src/hooks/use-team-boards";
 import { useTags } from "@/src/hooks/use-tags";
 import { useTaskDeleteWithNextSelection } from "@/src/hooks/use-memo-delete-with-next-selection";
 import TagManagementModal from "@/components/ui/tag-management/tag-management-modal";
@@ -119,7 +120,9 @@ function TaskScreen({
   };
   const { data: deletedTasks } = useDeletedTasks({ teamMode, teamId });
   const { preferences } = useUserPreferences(1);
-  const { data: boards } = useBoards("normal", !teamMode);
+  const { data: personalBoards } = useBoards("normal", !teamMode);
+  const { data: teamBoards } = useTeamBoards(teamId || null, "normal");
+  const boards = teamMode ? teamBoards : personalBoards;
   const { data: tags } = useTags();
 
   // 削除済みタスクの完全削除フック

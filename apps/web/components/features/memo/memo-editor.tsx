@@ -127,11 +127,23 @@ function MemoEditor({
   const deletedMemo = isDeleted ? (memo as DeletedMemo) : null;
 
   // チームモードではAPI呼び出しでアイテムボードを取得
+  const teamItemId = memo?.originalId || memo?.id?.toString();
+  console.log("📋 [MemoEditor] useTeamItemBoards呼び出し:", {
+    teamId: teamId || 0,
+    itemType: "memo",
+    itemId: teamItemId,
+    memoId: memo?.id,
+    memoOriginalId: memo?.originalId,
+  });
   const { data: teamItemBoards = [] } = useTeamItemBoards(
     teamId || 0,
     "memo",
-    memo?.originalId || memo?.id?.toString(),
+    teamItemId,
   );
+  console.log("📋 [MemoEditor] teamItemBoards取得結果:", {
+    teamItemBoards,
+    count: teamItemBoards.length,
+  });
 
   // 事前取得されたデータを使用（APIコール不要）
   const boards = preloadedBoards;
@@ -198,6 +210,13 @@ function MemoEditor({
     itemType: "memo",
     onSaveComplete: useCallback(
       (savedMemo: Memo, wasEmpty: boolean, isNewMemo: boolean) => {
+        console.log("📝 [MemoEditor] onSaveComplete受信:", {
+          savedMemo,
+          originalId: savedMemo.originalId,
+          id: savedMemo.id,
+          wasEmpty,
+          isNewMemo,
+        });
         // 新規メモ作成で連続作成モードが有効な場合
         if (isNewMemo && !wasEmpty && continuousCreateMode) {
           // タグをリセット

@@ -89,6 +89,12 @@ export default function BoardRightPanel({
   onAddMemoToBoard, // eslint-disable-line @typescript-eslint/no-unused-vars
   onAddTaskToBoard, // eslint-disable-line @typescript-eslint/no-unused-vars
 }: BoardRightPanelProps) {
+  console.log("📋 [BoardRightPanel] Props:", {
+    teamMode,
+    teamId,
+    allBoardsCount: allBoards?.length,
+    allBoards: allBoards?.map((b) => ({ id: b.id, name: b.name })),
+  });
   const { handleMainSelectMemo, handleMainSelectTask } = useNavigation();
   const { data: personalTags } = useTags();
   const { data: teamTags } = useTeamTags(teamId || 0);

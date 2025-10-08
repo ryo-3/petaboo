@@ -9,6 +9,10 @@ import {
   deletedBoards,
   deletedMemos,
   deletedTasks,
+  teamBoards,
+  teamBoardItems,
+  teamMemos,
+  teamTasks,
 } from "../../db";
 import type {
   NewBoard,
@@ -1396,41 +1400,61 @@ export function createAPI(app: AppType) {
     }
 
     const { itemType, itemId } = c.req.valid("param");
-    const itemIdNum = parseInt(itemId);
     const db = c.get("db");
 
-    // アイテムの存在確認とoriginalIdを取得
-    const originalId = await getOriginalId(
-      itemIdNum,
-      itemType,
-      auth.userId,
-      db,
-    );
-    if (!originalId) {
-      return c.json(
-        { error: `${itemType === "memo" ? "Memo" : "Task"} not found` },
-        404,
-      );
+    // itemIdをoriginalIdとして直接使用（フロント側から既にoriginalIdが渡されている）
+    const originalId = itemId;
+
+    // まずチームアイテムかどうかを確認
+    const isTeamItem =
+      itemType === "memo"
+        ? await db
+            .select({ id: teamMemos.id })
+            .from(teamMemos)
+            .where(eq(teamMemos.originalId, originalId))
+            .limit(1)
+        : await db
+            .select({ id: teamTasks.id })
+            .from(teamTasks)
+            .where(eq(teamTasks.originalId, originalId))
+            .limit(1);
+
+    if (isTeamItem.length > 0) {
+      // チームアイテムの場合
+      const teamItemBoards = await db
+        .select()
+        .from(teamBoards)
+        .innerJoin(teamBoardItems, eq(teamBoards.id, teamBoardItems.boardId))
+        .where(
+          and(
+            eq(teamBoardItems.itemType, itemType),
+            eq(teamBoardItems.originalId, originalId),
+            isNull(teamBoardItems.deletedAt),
+          ),
+        )
+        .orderBy(teamBoards.name);
+
+      const boardsOnly = teamItemBoards.map((row) => row.team_boards);
+      return c.json(boardsOnly);
+    } else {
+      // 個人アイテムの場合
+      const itemBoards = await db
+        .select()
+        .from(boards)
+        .innerJoin(boardItems, eq(boards.id, boardItems.boardId))
+        .where(
+          and(
+            eq(boardItems.itemType, itemType),
+            eq(boardItems.originalId, originalId),
+            eq(boards.userId, auth.userId),
+            isNull(boardItems.deletedAt),
+          ),
+        )
+        .orderBy(boards.name);
+
+      const boardsOnly = itemBoards.map((row) => row.boards);
+      return c.json(boardsOnly);
     }
-
-    // アイテムが属するボードを取得（削除されていないもののみ）
-    const itemBoards = await db
-      .select()
-      .from(boards)
-      .innerJoin(boardItems, eq(boards.id, boardItems.boardId))
-      .where(
-        and(
-          eq(boardItems.itemType, itemType),
-          eq(boardItems.originalId, originalId),
-          eq(boards.userId, auth.userId),
-          isNull(boardItems.deletedAt),
-        ),
-      )
-      .orderBy(boards.name);
-
-    // レスポンスの形式を整える
-    const boardsOnly = itemBoards.map((row) => row.boards);
-    return c.json(boardsOnly);
   });
 
   // 全ボードのアイテム情報を一括取得

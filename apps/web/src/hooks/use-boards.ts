@@ -790,6 +790,13 @@ export function useTeamItemBoards(
           ? "https://petaboo-api.cloudflare-worker.workers.dev"
           : "http://localhost:7594";
 
+      console.log("🌐 [useTeamItemBoards] API呼び出し:", {
+        url: `${API_BASE_URL}/boards/items/${itemType}/${itemId}/boards`,
+        teamId,
+        itemType,
+        itemId,
+      });
+
       // チーム機能のAPIルーティング問題のため個人用エンドポイントを使用
       const response = await fetch(
         `${API_BASE_URL}/boards/items/${itemType}/${itemId}/boards`,
@@ -801,6 +808,11 @@ export function useTeamItemBoards(
         },
       );
 
+      console.log("🌐 [useTeamItemBoards] API応答:", {
+        status: response.status,
+        ok: response.ok,
+      });
+
       if (!response.ok) {
         // 404エラーは空配列を返す（削除済みアイテムなど）
         if (response.status === 404) {
@@ -810,10 +822,14 @@ export function useTeamItemBoards(
       }
 
       const data = await response.json();
+      console.log("🌐 [useTeamItemBoards] API結果:", {
+        data,
+        count: data.length,
+      });
       return data;
     },
     enabled: !!itemId && !!teamId,
-    keepPreviousData: true,
+    staleTime: 0, // キャッシュを無効化して常に最新データを取得
   });
 }
 

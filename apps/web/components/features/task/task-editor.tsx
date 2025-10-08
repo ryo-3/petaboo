@@ -22,7 +22,7 @@ import { useSimpleItemSave } from "@/src/hooks/use-simple-item-save";
 import {
   useAddItemToBoard,
   useRemoveItemFromBoard,
-  // useTeamItemBoards, // 使用停止：API 404エラーのため
+  useTeamItemBoards,
 } from "@/src/hooks/use-boards";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -152,23 +152,37 @@ function TaskEditor({
   const isNewTask = !task || task.id === 0;
   const taskFormRef = useRef<TaskFormHandle>(null);
 
-  // チームモードでも preloadedBoardItems を使用するため API 呼び出しは不要
-  // const teamItemId = task?.originalId || task?.id?.toString();
-  // const { data: teamItemBoards = [] } = useTeamItemBoards(
-  //   teamId || 0,
-  //   "task",
-  //   teamItemId,
-  // );
+  // チームモードではAPI呼び出しでアイテムボードを取得
+  const teamItemId = task?.originalId || task?.id?.toString();
+  const { data: teamItemBoards = [] } = useTeamItemBoards(
+    teamId || 0,
+    "task",
+    teamItemId,
+  );
 
   // このタスクに実際に紐づいているボードのみを抽出
   const itemBoards = useMemo(() => {
-    if (!task || task.id === 0) return [];
+    // 新規作成時でもinitialBoardIdがあれば含める
+    if (!task || task.id === undefined || task.id === 0) {
+      if (initialBoardId) {
+        const initialBoard = preloadedBoards.find(
+          (board) => board.id === initialBoardId,
+        );
+        return initialBoard ? [initialBoard] : [];
+      }
+      return [];
+    }
+
+    // チームモードでは専用APIから取得したデータを使用
+    if (teamMode) {
+      return teamItemBoards;
+    }
 
     const originalId = task.originalId || task.id.toString();
 
-    // このタスクに紐づいているボードアイテムを抽出 - itemIdフィールドを使用
+    // このタスクに紐づいているボードアイテムを抽出
     const taskBoardItems = preloadedBoardItems.filter(
-      (item) => item.itemType === "task" && item.itemId === originalId,
+      (item) => item.itemType === "task" && item.originalId === originalId,
     );
 
     // ボードアイテムからボード情報を取得
@@ -178,24 +192,14 @@ function TaskEditor({
         (board): board is NonNullable<typeof board> => board !== undefined,
       );
 
-    // initialBoardIdがある場合は、そのボードも含める（重複は自動的に除外される）
-    if (initialBoardId) {
-      const initialBoard = preloadedBoards.find(
-        (board) => board.id === initialBoardId,
-      );
-      if (initialBoard && !boards.some((b) => b.id === initialBoardId)) {
-        boards.push(initialBoard);
-      }
-    }
-
     return boards;
   }, [
     task,
     preloadedBoardItems,
     preloadedBoards,
-    initialBoardId,
     teamMode,
-    teamId,
+    teamItemBoards,
+    initialBoardId,
   ]);
 
   // ライブタグデータ取得（個人用）
@@ -724,6 +728,11 @@ function TaskEditor({
 
   // BoardIconSelector用のボードオプション
   const boardOptions = useMemo(() => {
+    console.log("📋 [TaskEditor] boardOptions生成:", {
+      boardsCount: boards.length,
+      boards: boards.map((b) => ({ id: b.id, name: b.name })),
+      teamMode,
+    });
     const options = [{ value: "", label: "なし" }];
 
     boards.forEach((board) => {

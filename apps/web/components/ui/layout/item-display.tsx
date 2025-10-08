@@ -37,6 +37,9 @@ interface ItemDisplayProps {
 
   // チーム機能
   teamMode?: boolean;
+
+  // 初期選択ボードID
+  initialBoardId?: number;
 }
 
 function ItemDisplay({
@@ -57,6 +60,7 @@ function ItemDisplay({
   preloadedTags = [],
   preloadedBoards = [],
   teamMode = false,
+  initialBoardId,
 }: ItemDisplayProps) {
   const isDeleted = variant === "deleted";
   const isMemo = itemType === "memo";

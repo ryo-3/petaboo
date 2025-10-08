@@ -20,6 +20,7 @@ import type { Board } from "@/src/types/board";
 
 interface BoardTaskSectionProps {
   boardId: number;
+  initialBoardId?: number;
   rightPanelMode: "editor" | "memo-list" | "task-list" | null;
   showTask: boolean;
   allTaskItems: BoardItemWithContent[];
@@ -88,6 +89,7 @@ import { useBoardCategoryFilter } from "@/src/hooks/use-board-category-filter";
 
 export default function BoardTaskSection({
   boardId,
+  initialBoardId,
   rightPanelMode,
   showTask,
   allTaskItems,
@@ -440,6 +442,7 @@ export default function BoardTaskSection({
             allTags={allTags}
             allTaggings={allTaggings}
             allBoardItems={allBoardItems}
+            initialBoardId={initialBoardId}
           />
         )}
       </div>

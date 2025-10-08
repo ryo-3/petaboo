@@ -745,7 +745,19 @@ function TaskEditor({
   // 現在選択されているボードのvalue（複数選択対応）
   const currentBoardValues = selectedBoardIds.map((id) => id.toString());
 
-  // デバッグログ: selectedBoardIdsの状態
+  // 表示用のボード（現在の選択状態を反映、initialBoardIdは除外）
+  const displayBoards = useMemo(() => {
+    // 選択中のボードIDから、実際のボード情報を取得
+    const selectedBoards = selectedBoardIds
+      .map((id) => preloadedBoards.find((board) => board.id === id))
+      .filter(
+        (board): board is NonNullable<typeof board> => board !== undefined,
+      )
+      // initialBoardIdが指定されている場合（ボード詳細から呼ばれた場合）は、そのボードを除外
+      .filter((board) => !initialBoardId || board.id !== initialBoardId);
+
+    return selectedBoards;
+  }, [selectedBoardIds, preloadedBoards, initialBoardId]);
 
   // ボード選択変更ハンドラー
   const handleBoardSelectorChange = (value: string | string[]) => {
@@ -997,7 +1009,7 @@ function TaskEditor({
             isNewTask={isNewTask}
             customHeight={customHeight}
             tags={task && task.id !== 0 ? localTags : []}
-            boards={task && task.id !== 0 ? itemBoards : []}
+            boards={displayBoards}
             boardCategories={categories}
             showBoardCategory={isFromBoardDetail}
             isDeleted={isDeleted}

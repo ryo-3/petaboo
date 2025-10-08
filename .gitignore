@@ -39,3 +39,6 @@ apps/api/sqlite.db
 
 # Claude設定（ローカル）
 .claude/settings.local.json
+
+# Windows外部ファイル（StreamDeck等）
+**/StreamDeck/**

@@ -22,6 +22,7 @@ import { useSimpleItemSave } from "@/src/hooks/use-simple-item-save";
 import {
   useAddItemToBoard,
   useRemoveItemFromBoard,
+  useItemBoards,
   useTeamItemBoards,
 } from "@/src/hooks/use-boards";
 import { useQueryClient } from "@tanstack/react-query";
@@ -152,12 +153,13 @@ function TaskEditor({
   const isNewTask = !task || task.id === 0;
   const taskFormRef = useRef<TaskFormHandle>(null);
 
-  // チームモードではAPI呼び出しでアイテムボードを取得
-  const teamItemId = task?.originalId || task?.id?.toString();
+  // API呼び出しでアイテムボードを取得
+  const itemId = task?.originalId || task?.id?.toString();
+  const { data: personalItemBoards = [] } = useItemBoards("task", itemId);
   const { data: teamItemBoards = [] } = useTeamItemBoards(
     teamId || 0,
     "task",
-    teamItemId,
+    itemId,
   );
 
   // このタスクに実際に紐づいているボードのみを抽出
@@ -178,19 +180,18 @@ function TaskEditor({
       return teamItemBoards;
     }
 
-    const originalId = task.originalId || task.id.toString();
+    // 個人モードでは専用APIから取得したデータを使用
+    const boards = [...personalItemBoards];
 
-    // このタスクに紐づいているボードアイテムを抽出
-    const taskBoardItems = preloadedBoardItems.filter(
-      (item) => item.itemType === "task" && item.originalId === originalId,
-    );
-
-    // ボードアイテムからボード情報を取得
-    const boards = taskBoardItems
-      .map((item) => preloadedBoards.find((board) => board.id === item.boardId))
-      .filter(
-        (board): board is NonNullable<typeof board> => board !== undefined,
+    // initialBoardIdがある場合は、そのボードも含める（重複は自動的に除外される）
+    if (initialBoardId) {
+      const initialBoard = preloadedBoards.find(
+        (board) => board.id === initialBoardId,
       );
+      if (initialBoard && !boards.some((b) => b.id === initialBoardId)) {
+        boards.push(initialBoard);
+      }
+    }
 
     return boards;
   }, [
@@ -199,6 +200,7 @@ function TaskEditor({
     preloadedBoards,
     teamMode,
     teamItemBoards,
+    personalItemBoards,
     initialBoardId,
   ]);
 
@@ -728,11 +730,6 @@ function TaskEditor({
 
   // BoardIconSelector用のボードオプション
   const boardOptions = useMemo(() => {
-    console.log("📋 [TaskEditor] boardOptions生成:", {
-      boardsCount: boards.length,
-      boards: boards.map((b) => ({ id: b.id, name: b.name })),
-      teamMode,
-    });
     const options = [{ value: "", label: "なし" }];
 
     boards.forEach((board) => {

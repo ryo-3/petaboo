@@ -70,14 +70,8 @@ export function useSimpleItemSave<T extends UnifiedItem>({
   const [selectedBoardIds, setSelectedBoardIds] = useState<number[]>(() => {
     // 新規作成時でcurrentBoardIdsが空の場合はinitialBoardIdを使用
     if (currentBoardIds.length === 0 && initialBoardId) {
-      console.log("🎯 [useState初期化] initialBoardIdで初期化:", {
-        initialBoardId,
-      });
       return [initialBoardId];
     }
-    console.log("🎯 [useState初期化] currentBoardIdsで初期化:", {
-      currentBoardIds,
-    });
     return currentBoardIds;
   });
   const [isSaving, setIsSaving] = useState(false);
@@ -90,24 +84,9 @@ export function useSimpleItemSave<T extends UnifiedItem>({
   const [isInitialSync, setIsInitialSync] = useState(true);
   const [isItemTransition, setIsItemTransition] = useState(false);
 
-  console.log("📊 [use-simple-item-save] レンダリング:", {
-    itemType,
-    itemId: item?.id,
-    originalId: item?.originalId,
-    selectedBoardIds,
-    currentBoardIds,
-    initialBoardId,
-    isItemTransition,
-  });
-
   // アイテムが変更されたらボード選択をリセット
   const currentBoardIdsStr = JSON.stringify([...currentBoardIds].sort());
   useEffect(() => {
-    console.log("🔄 [useEffect] アイテム切り替え検出:", {
-      currentBoardIds,
-      itemId: item?.id,
-      originalId: item?.originalId,
-    });
     setIsItemTransition(true); // アイテム切り替え開始
     setSelectedBoardIds([...currentBoardIds]);
     setIsInitialSync(true); // 初期同期開始
@@ -413,32 +392,11 @@ export function useSimpleItemSave<T extends UnifiedItem>({
             }
 
             if (promises.length > 0) {
-              console.log("📦 [既存アイテム] ボード変更処理開始:", {
-                itemType,
-                originalId: item.originalId,
-                boardsToAdd,
-                boardsToRemove,
-                promiseCount: promises.length,
-              });
               await Promise.all(promises);
 
               // ボード変更後にキャッシュを無効化
               if (teamMode && teamId) {
                 // チームモード用のキャッシュ無効化
-                console.log(
-                  "🔄 [既存アイテム] Invalidating team-item-boards:",
-                  {
-                    teamId,
-                    itemType,
-                    originalId: item.originalId,
-                    queryKey: [
-                      "team-item-boards",
-                      teamId,
-                      itemType,
-                      item.originalId,
-                    ],
-                  },
-                );
                 queryClient.invalidateQueries({
                   queryKey: [
                     "team-item-boards",
@@ -542,17 +500,6 @@ export function useSimpleItemSave<T extends UnifiedItem>({
             // ボード追加後にキャッシュを無効化
             if (teamMode && teamId) {
               // チームモード用のキャッシュ無効化
-              console.log("🔄 [新規作成] Invalidating team-item-boards:", {
-                teamId,
-                itemType,
-                originalId: createdItem.originalId,
-                queryKey: [
-                  "team-item-boards",
-                  teamId,
-                  itemType,
-                  createdItem.originalId,
-                ],
-              });
               queryClient.invalidateQueries({
                 queryKey: [
                   "team-item-boards",
@@ -569,11 +516,6 @@ export function useSimpleItemSave<T extends UnifiedItem>({
             }
           }
 
-          console.log("✅ [新規作成] onSaveComplete呼び出し:", {
-            itemType,
-            originalId: createdItem.originalId,
-            id: createdItem.id,
-          });
           onSaveComplete?.(createdItem, false, true);
         } else {
           // 空の新規アイテムは単に閉じる
@@ -695,18 +637,9 @@ export function useSimpleItemSave<T extends UnifiedItem>({
     [],
   );
 
-  const handleBoardChange = useCallback(
-    (boardIds: number[]) => {
-      console.log("🎯 [handleBoardChange] ボード選択変更:", {
-        itemType,
-        originalId: item?.originalId,
-        oldBoardIds: selectedBoardIds,
-        newBoardIds: boardIds,
-      });
-      setSelectedBoardIds(boardIds);
-    },
-    [itemType, item?.originalId, selectedBoardIds],
-  );
+  const handleBoardChange = useCallback((boardIds: number[]) => {
+    setSelectedBoardIds(boardIds);
+  }, []);
 
   const handleConfirmBoardChange = useCallback(async () => {
     setShowBoardChangeModal(false);

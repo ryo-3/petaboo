@@ -41,6 +41,7 @@ import BoardChangeModal from "@/components/ui/modals/board-change-modal";
 import type { Task, DeletedTask } from "@/src/types/task";
 import type { Tag, Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
+import { OriginalIdUtils } from "@/src/types/common";
 import { useCallback, useEffect, useState, useMemo, memo, useRef } from "react";
 import { useDeletedTaskActions } from "./use-deleted-task-actions";
 import ShareUrlButton from "@/components/ui/buttons/share-url-button";
@@ -178,7 +179,7 @@ function TaskEditor({
 
   // ライブタグデータ取得（個人用）
   const originalId =
-    task && task.id !== 0 ? task.originalId || task.id.toString() : null;
+    task && task.id !== 0 ? OriginalIdUtils.fromItem(task) : null;
 
   const { data: liveTaggings } = useTaggings({
     targetType: "task",
@@ -205,7 +206,7 @@ function TaskEditor({
   const currentTags = useMemo(() => {
     if (!task || task.id === 0) return [];
     // タスクの一意識別子を決定（originalIdが空の場合の特別処理）
-    let targetOriginalId = task.originalId || task.id.toString();
+    let targetOriginalId = OriginalIdUtils.fromItem(task) || "";
 
     // タスクID 142で originalId が空の場合は、既存タグとの整合性のため "5" を使用
     if (task.id === 142 && (!task.originalId || task.originalId === "")) {
@@ -763,7 +764,7 @@ function TaskEditor({
 
     // タグの変更がある場合は保存
     if (hasTagChanges && task && task.id !== 0) {
-      const taskId = task.originalId || task.id.toString();
+      const taskId = OriginalIdUtils.fromItem(task) || "";
       await updateTaggings(taskId);
     }
 

@@ -1,5 +1,6 @@
 import { useItemBoards } from "@/src/hooks/use-boards";
 import { ReactElement } from "react";
+import { OriginalIdUtils } from "@/src/types/common";
 
 // アイテムタイプを定義
 type ItemType = "memo" | "task";
@@ -42,7 +43,7 @@ function ItemFilterWrapper<T extends BaseItem>({
   const isDeleted = variant === "deleted";
   const itemId = isDeleted
     ? (item as DeletedItem).originalId
-    : item.originalId || item.id.toString();
+    : OriginalIdUtils.fromItem(item);
 
   const { data: boards, isLoading } = useItemBoards(
     itemType,

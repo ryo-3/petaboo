@@ -18,6 +18,7 @@ import { Memo, DeletedMemo } from "@/src/types/memo";
 import { Task, DeletedTask } from "@/src/types/task";
 import type { Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
+import { OriginalIdUtils } from "@/src/types/common";
 import { memo, useEffect, useState, useRef, useCallback, useMemo } from "react";
 import TagAddModal from "@/components/ui/tag-add/tag-add-modal";
 import BoardHeader from "@/components/features/board/board-header";
@@ -314,10 +315,8 @@ function BoardDetailScreen({
   const { categories } = useBoardCategories();
 
   // 選択中のメモ・タスクに紐づくボード情報を取得
-  const selectedMemoId =
-    selectedMemo?.originalId || selectedMemo?.id?.toString();
-  const selectedTaskId =
-    selectedTask?.originalId || selectedTask?.id?.toString();
+  const selectedMemoId = OriginalIdUtils.fromItem(selectedMemo);
+  const selectedTaskId = OriginalIdUtils.fromItem(selectedTask);
 
   // 個人モード用のitemBoards取得
   const { data: personalMemoItemBoards = [] } = useItemBoards(

@@ -10,6 +10,7 @@ import {
   useRemoveItemFromBoard,
 } from "@/src/hooks/use-boards";
 import { useQueryClient } from "@tanstack/react-query";
+import { OriginalIdUtils } from "@/src/types/common";
 
 interface UseSimpleMemoSaveOptions {
   memo?: Memo | null;
@@ -220,14 +221,15 @@ export function useSimpleMemoSave({
                 try {
                   console.log("🔗 [メモ保存] ボードへの追加実行:", {
                     boardId,
-                    itemId: memo.originalId || memo.id.toString(),
+                    itemId: OriginalIdUtils.fromItem(memo),
                   });
 
                   await addItemToBoard.mutateAsync({
                     boardId,
                     data: {
                       itemType: "memo",
-                      itemId: memo.originalId || memo.id.toString(),
+                      itemId:
+                        OriginalIdUtils.fromItem(memo) || memo.id.toString(),
                     },
                   });
 
@@ -255,7 +257,8 @@ export function useSimpleMemoSave({
                 try {
                   await removeItemFromBoard.mutateAsync({
                     boardId,
-                    itemId: memo.originalId || memo.id.toString(),
+                    itemId:
+                      OriginalIdUtils.fromItem(memo) || memo.id.toString(),
                     itemType: "memo",
                   });
                 } catch (error: unknown) {
@@ -347,13 +350,15 @@ export function useSimpleMemoSave({
             const addPromises = selectedBoardIds.map(async (boardId) => {
               try {
                 console.log(
-                  `🔗 ボードへの追加実行: boardId=${boardId}, itemId=${createdMemo.originalId || createdMemo.id.toString()}`,
+                  `🔗 ボードへの追加実行: boardId=${boardId}, itemId=${OriginalIdUtils.fromItem(createdMemo)}`,
                 );
                 await addItemToBoard.mutateAsync({
                   boardId,
                   data: {
                     itemType: "memo",
-                    itemId: createdMemo.originalId || createdMemo.id.toString(),
+                    itemId:
+                      OriginalIdUtils.fromItem(createdMemo) ||
+                      createdMemo.id.toString(),
                   },
                 });
               } catch (error: unknown) {

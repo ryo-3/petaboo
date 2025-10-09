@@ -7,6 +7,7 @@ import type {
   CreateMemoData,
   UpdateMemoData,
 } from "@/src/types/memo";
+import { OriginalIdUtils } from "@/src/types/common";
 
 // メモ一覧を取得するhook
 export function useMemos(options?: { teamMode?: boolean; teamId?: number }) {
@@ -116,7 +117,7 @@ export function useCreateMemo(options?: {
                 const newBoardItem = {
                   id: `memo_${newMemo.id}`, // ボードアイテムID
                   boardId,
-                  itemId: newMemo.originalId || newMemo.id.toString(),
+                  itemId: OriginalIdUtils.fromItem(newMemo),
                   itemType: "memo" as const,
                   content: newMemo,
                   createdAt: newMemo.createdAt,
@@ -347,7 +348,7 @@ export function useDeleteMemo(options?: {
         if (deletedMemo) {
           const deletedMemoWithDeletedAt = {
             ...deletedMemo,
-            originalId: deletedMemo.originalId || id.toString(),
+            originalId: OriginalIdUtils.fromItem(deletedMemo) || id.toString(),
             deletedAt: Date.now(), // Unix timestamp形式
           };
 
@@ -406,7 +407,7 @@ export function useDeleteMemo(options?: {
         if (deletedMemo) {
           const deletedMemoWithDeletedAt = {
             ...deletedMemo,
-            originalId: deletedMemo.originalId || id.toString(),
+            originalId: OriginalIdUtils.fromItem(deletedMemo) || id.toString(),
             deletedAt: Date.now(), // Unix timestamp形式
           };
 

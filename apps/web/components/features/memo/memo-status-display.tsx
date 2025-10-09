@@ -6,6 +6,7 @@ import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Tag, Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
 import { useMemo } from "react";
+import { OriginalIdUtils } from "@/src/types/common";
 
 interface MemoStatusDisplayProps {
   memos: Memo[] | undefined;
@@ -156,7 +157,7 @@ function MemoStatusDisplay({
       baseMemos = baseMemos.filter((memo) => {
         if (!memo || memo.id === undefined) return false;
 
-        const memoOriginalId = memo.originalId || memo.id.toString();
+        const memoOriginalId = OriginalIdUtils.fromItem(memo) || "";
 
         // メモに付けられたタグのID一覧を取得
         const memoTagIds = allTaggings

@@ -7,6 +7,7 @@ import {
   useCreateTagging,
   useDeleteTaggingsByTag,
 } from "@/src/hooks/use-taggings";
+import { OriginalIdUtils } from "@/src/types/common";
 
 const TAG_SUCCESS_DELAY = 3000; // タグ操作成功時の待機時間（ミリ秒）
 const MINIMUM_LOADING_TIME = 1000; // 処理中状態の最低表示時間（ミリ秒）
@@ -59,11 +60,9 @@ export default function TagManagementModal({
         selectedItems.includes(item.id),
     );
 
-
     // 選択されたアイテムが持つタグIDを収集（item.tagsから直接取得）
     const tagIdsInSelectedItems = new Set<number>();
     selectedItemObjects.forEach((item) => {
-
       // item.tagsがある場合はそれを使用（個別エディターと同じ方式）
       if (item.tags && Array.isArray(item.tags)) {
         item.tags.forEach((tag: any) => {
@@ -73,7 +72,7 @@ export default function TagManagementModal({
       }
       // fallback: allTaggingsから検索
       else if (allTaggings && allTaggings.length > 0) {
-        const originalId = item.originalId || item.id.toString();
+        const originalId = OriginalIdUtils.fromItem(item) || "";
         const itemTaggings = allTaggings.filter(
           (tagging) =>
             tagging.targetType === itemType &&
@@ -85,7 +84,6 @@ export default function TagManagementModal({
         });
       }
     });
-
 
     // 実際に付いているタグのみを返す
     const availableTags = tags.filter((tag) =>
@@ -117,7 +115,6 @@ export default function TagManagementModal({
     if (selectedItems.length === 0 || selectedTagIdsForOperation.length === 0)
       return;
 
-
     setIsProcessingTags(true);
 
     try {
@@ -134,7 +131,7 @@ export default function TagManagementModal({
             (i) => i.id.toString() === itemId || i.id === parseInt(itemId),
           );
           if (item) {
-            const originalId = item.originalId || item.id.toString();
+            const originalId = OriginalIdUtils.fromItem(item) || "";
 
             if (mode === "add") {
               promises.push(
@@ -187,7 +184,7 @@ export default function TagManagementModal({
             (i) => i.id.toString() === itemId || i.id === parseInt(itemId),
           );
           if (item) {
-            const originalId = item.originalId || item.id.toString();
+            const originalId = OriginalIdUtils.fromItem(item) || "";
             queryClient.invalidateQueries({
               queryKey: [itemType, originalId],
             });

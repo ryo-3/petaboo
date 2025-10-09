@@ -38,6 +38,7 @@ import TagManagementModal from "@/components/ui/tag-management/tag-management-mo
 import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
 import { useAllTeamTaggings } from "@/src/hooks/use-team-taggings";
 import type { DeletedTask, Task } from "@/src/types/task";
+import { OriginalIdUtils } from "@/src/types/common";
 import { getTaskDisplayOrder } from "@/src/utils/domUtils";
 import { createToggleHandlerWithTabClear } from "@/src/utils/toggleUtils";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -130,8 +131,7 @@ function TaskScreen({
   const { data: tags } = useTags();
 
   // 選択中のタスクに紐づくボード情報を取得（フェーズ1対応）
-  const selectedTaskId =
-    selectedTask?.originalId || selectedTask?.id?.toString();
+  const selectedTaskId = OriginalIdUtils.fromItem(selectedTask);
   const { data: personalTaskItemBoards = [] } = useItemBoards(
     "task",
     teamMode ? undefined : selectedTaskId,
@@ -781,7 +781,7 @@ function TaskScreen({
   const rightPanelContent = selectedTask ? (
     <CommentSection
       targetType="task"
-      targetOriginalId={selectedTask.originalId || selectedTask.id.toString()}
+      targetOriginalId={OriginalIdUtils.fromItem(selectedTask) || ""}
       teamId={teamId || 0}
       teamMembers={[]}
       title="コメント"

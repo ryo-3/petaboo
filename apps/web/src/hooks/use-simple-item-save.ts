@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import type { Memo } from "@/src/types/memo";
 import type { Task } from "@/src/types/task";
+import { OriginalIdUtils } from "@/src/types/common";
 import {
   useCreateMemo,
   useUpdateMemo,
@@ -357,7 +358,7 @@ export function useSimpleItemSave<T extends UnifiedItem>({
                     boardId,
                     data: {
                       itemType,
-                      itemId: item.originalId || item.id.toString(),
+                      itemId: OriginalIdUtils.fromItem(item) || "",
                     },
                   });
                 } catch (error: unknown) {
@@ -378,7 +379,7 @@ export function useSimpleItemSave<T extends UnifiedItem>({
                 try {
                   await removeItemFromBoard.mutateAsync({
                     boardId,
-                    itemId: item.originalId || item.id.toString(),
+                    itemId: OriginalIdUtils.fromItem(item) || "",
                     itemType,
                   });
                 } catch (error: unknown) {
@@ -482,7 +483,7 @@ export function useSimpleItemSave<T extends UnifiedItem>({
                   boardId,
                   data: {
                     itemType,
-                    itemId: createdItem.originalId || createdItem.id.toString(),
+                    itemId: OriginalIdUtils.fromItem(createdItem) || "",
                   },
                 });
               } catch (error: unknown) {
@@ -591,7 +592,6 @@ export function useSimpleItemSave<T extends UnifiedItem>({
     onDeleteAndSelectNext,
     teamMode,
     teamId,
-    hasChanges,
   ]);
 
   const handleSave = useCallback(async () => {

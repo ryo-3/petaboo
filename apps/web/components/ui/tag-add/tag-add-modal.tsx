@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import TagSelectionModal from "@/components/ui/modals/tag-selection-modal";
 import { useCreateTagging } from "@/src/hooks/use-taggings";
+import { OriginalIdUtils } from "@/src/types/common";
 
 const TAG_ADD_SUCCESS_DELAY = 3000; // タグ追加成功時の待機時間（ミリ秒）
 const MINIMUM_LOADING_TIME = 1000; // 追加中状態の最低表示時間（ミリ秒）
@@ -70,7 +71,7 @@ export default function TagAddModal({
                 .mutateAsync({
                   tagId,
                   targetType: itemType,
-                  targetOriginalId: item.originalId || item.id.toString(),
+                  targetOriginalId: OriginalIdUtils.fromItem(item) || "",
                 })
                 .catch(() => {
                   // エラーをサイレントに処理
@@ -100,7 +101,7 @@ export default function TagAddModal({
             (i) => i.id.toString() === itemId || i.id === parseInt(itemId),
           );
           if (item) {
-            const originalId = item.originalId || item.id.toString();
+            const originalId = OriginalIdUtils.fromItem(item) || "";
             queryClient.invalidateQueries({
               queryKey: [itemType, originalId],
             });

@@ -38,6 +38,7 @@ import TagManagementModal from "@/components/ui/tag-management/tag-management-mo
 import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
 import { useAllTeamTaggings } from "@/src/hooks/use-team-taggings";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
+import { OriginalIdUtils } from "@/src/types/common";
 import {
   getMemoDisplayOrder,
   getNextItemAfterDeletion,
@@ -227,8 +228,7 @@ function MemoScreen({
   const boards = teamMode ? teamBoards : personalBoards;
 
   // 選択中のメモに紐づくボード情報を取得（フェーズ1対応）
-  const selectedMemoId =
-    selectedMemo?.originalId || selectedMemo?.id?.toString();
+  const selectedMemoId = OriginalIdUtils.fromItem(selectedMemo);
   const { data: personalMemoItemBoards = [] } = useItemBoards(
     "memo",
     teamMode ? undefined : selectedMemoId,
@@ -938,9 +938,7 @@ function MemoScreen({
           {selectedMemo && (
             <CommentSection
               targetType="memo"
-              targetOriginalId={
-                selectedMemo.originalId || selectedMemo.id.toString()
-              }
+              targetOriginalId={OriginalIdUtils.fromItem(selectedMemo) || ""}
               teamId={teamId || 0}
               teamMembers={[]}
               title="コメント"

@@ -8,6 +8,7 @@ import type {
   UpdateTaskData,
 } from "@/src/types/task";
 import { useToast } from "@/src/contexts/toast-context";
+import { OriginalIdUtils } from "@/src/types/common";
 
 // グローバル削除処理追跡（重複削除防止）- タスク用
 const activeTaskDeleteOperations = new Set<string>();
@@ -286,7 +287,7 @@ export function useDeleteTask(options?: {
         if (deletedTask) {
           const deletedTaskWithDeletedAt = {
             ...deletedTask,
-            originalId: deletedTask.originalId || id.toString(),
+            originalId: OriginalIdUtils.fromItem(deletedTask) || id.toString(),
             deletedAt: Date.now(), // Unix timestamp形式
           };
 
@@ -345,7 +346,7 @@ export function useDeleteTask(options?: {
         if (deletedTask) {
           const deletedTaskWithDeletedAt = {
             ...deletedTask,
-            originalId: deletedTask.originalId || id.toString(),
+            originalId: OriginalIdUtils.fromItem(deletedTask) || id.toString(),
             deletedAt: Date.now(), // Unix timestamp形式
           };
 

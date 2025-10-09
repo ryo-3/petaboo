@@ -6,6 +6,7 @@ import type { Task, DeletedTask } from "@/src/types/task";
 import type { Tag, Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
 import { useMemo, useEffect } from "react";
+import { OriginalIdUtils } from "@/src/types/common";
 
 interface TaskStatusDisplayProps {
   activeTab: "todo" | "in_progress" | "completed";
@@ -415,7 +416,7 @@ export function DeletedTaskDisplay({
     },
   ) => {
     // 削除済みタスクのタグ・ボード情報を取得
-    const originalId = task.originalId || task.id.toString();
+    const originalId = OriginalIdUtils.fromItem(task) || "";
 
     // このタスクのタグを抽出
     const taskTaggings = allTaggings.filter(

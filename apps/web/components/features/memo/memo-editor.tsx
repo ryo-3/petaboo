@@ -41,6 +41,7 @@ import type { TeamCreatorProps } from "@/src/types/creator";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Tag, Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
+import { OriginalIdUtils } from "@/src/types/common";
 import { useEffect, useRef, useState, memo, useMemo, useCallback } from "react";
 
 interface MemoEditorProps {
@@ -140,7 +141,7 @@ function MemoEditor({
     // 以下は後方互換性のための既存ロジック（preloadedItemBoardsがない場合のみ実行）
     if (!memo || memo.id === undefined || memo.id === 0) return [];
 
-    const originalId = memo.originalId || memo.id.toString();
+    const originalId = OriginalIdUtils.fromItem(memo) || "";
 
     // このメモに紐づいているボードアイテムを抽出
     const memoBoardItems = preloadedBoardItems.filter(
@@ -226,7 +227,7 @@ function MemoEditor({
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
 
   // 個別のタグ情報も取得（キャッシュ無効化後の最新データ取得用）
-  const originalId = memo?.originalId || memo?.id?.toString();
+  const originalId = OriginalIdUtils.fromItem(memo);
   const { data: liveTaggings } = useTaggings({
     targetType: "memo",
     targetOriginalId: originalId,
@@ -256,7 +257,7 @@ function MemoEditor({
   // プリロードデータとライブデータを組み合わせてタグを抽出
   const currentTags = useMemo(() => {
     if (!memo || memo.id === undefined || memo.id === 0) return [];
-    const targetOriginalId = memo.originalId || memo.id.toString();
+    const targetOriginalId = OriginalIdUtils.fromItem(memo) || "";
 
     // チームモードかどうかに応じてタグ付け情報を選択
     // liveデータを優先し、取得できない場合はpreloadedTaggingsからフィルタリング
@@ -565,7 +566,7 @@ function MemoEditor({
       // 既存メモの場合は現在のmemo、新規作成の場合は少し待ってから処理
       if (memo && memo.id > 0) {
         // 既存メモの場合
-        await updateTaggings(memo.originalId || memo.id.toString());
+        await updateTaggings(OriginalIdUtils.fromItem(memo) || "");
         setHasManualChanges(false);
       } else if (localTags.length > 0) {
         // 新規作成でタグがある場合は、少し遅延させて最新のメモリストから取得
@@ -581,8 +582,7 @@ function MemoEditor({
               )[0];
 
               if (latestMemo) {
-                const targetId =
-                  latestMemo.originalId || latestMemo.id.toString();
+                const targetId = OriginalIdUtils.fromItem(latestMemo) || "";
                 await updateTaggings(targetId);
                 setHasManualChanges(false);
               } else {

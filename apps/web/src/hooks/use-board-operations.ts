@@ -17,6 +17,7 @@ import { useRestoreTask } from "@/src/hooks/use-tasks";
 import { BoardItemWithContent, BoardWithItems } from "@/src/types/board";
 import { Memo, DeletedMemo } from "@/src/types/memo";
 import { Task, DeletedTask } from "@/src/types/task";
+import { OriginalIdUtils } from "@/src/types/common";
 
 interface UseBoardOperationsProps {
   boardId: number;
@@ -466,7 +467,7 @@ export function useBoardOperations({
           boardId,
           data: {
             itemType: "memo",
-            itemId: memo.originalId || memo.id.toString(),
+            itemId: OriginalIdUtils.fromItem(memo) || "",
           },
         });
       } catch {
@@ -490,7 +491,7 @@ export function useBoardOperations({
           boardId,
           data: {
             itemType: "task",
-            itemId: task.originalId || task.id.toString(),
+            itemId: OriginalIdUtils.fromItem(task) || "",
           },
         });
       } catch {

@@ -17,6 +17,7 @@ import { Task } from "@/src/types/task";
 import { useSortOptions } from "@/hooks/use-sort-options";
 import type { Tag, Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
+import { OriginalIdUtils } from "@/src/types/common";
 
 interface BoardTaskSectionProps {
   boardId: number;
@@ -416,7 +417,7 @@ export default function BoardTaskSection({
               const task = item.content as Task;
               // ボードアイテムのitemIdを使用（これがタグ付けで使われる正しいoriginalId）
               const correctOriginalId =
-                item.itemId || task.originalId || task.id.toString();
+                item.itemId || OriginalIdUtils.fromItem(task) || "";
 
               return {
                 ...task,

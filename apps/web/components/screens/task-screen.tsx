@@ -26,7 +26,11 @@ import {
   usePermanentDeleteTask,
 } from "@/src/hooks/use-tasks";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
-import { useBoards } from "@/src/hooks/use-boards";
+import {
+  useBoards,
+  useItemBoards,
+  useTeamItemBoards,
+} from "@/src/hooks/use-boards";
 import { useTeamBoards } from "@/src/hooks/use-team-boards";
 import { useTags } from "@/src/hooks/use-tags";
 import { useTaskDeleteWithNextSelection } from "@/src/hooks/use-memo-delete-with-next-selection";
@@ -124,6 +128,20 @@ function TaskScreen({
   const { data: teamBoards } = useTeamBoards(teamId || null, "normal");
   const boards = teamMode ? teamBoards : personalBoards;
   const { data: tags } = useTags();
+
+  // 選択中のタスクに紐づくボード情報を取得（フェーズ1対応）
+  const selectedTaskId =
+    selectedTask?.originalId || selectedTask?.id?.toString();
+  const { data: personalTaskItemBoards = [] } = useItemBoards(
+    "task",
+    teamMode ? undefined : selectedTaskId,
+  );
+  const { data: teamTaskItemBoards = [] } = useTeamItemBoards(
+    teamMode ? teamId || 0 : 0,
+    "task",
+    teamMode ? selectedTaskId : undefined,
+  );
+  const itemBoards = teamMode ? teamTaskItemBoards : personalTaskItemBoards;
 
   // 削除済みタスクの完全削除フック
   const permanentDeleteTask = usePermanentDeleteTask();
@@ -684,6 +702,7 @@ function TaskScreen({
           preloadedBoards={boards || []}
           preloadedTaggings={safeAllTaggings}
           preloadedBoardItems={safeAllBoardItems}
+          preloadedItemBoards={itemBoards}
           unifiedOperations={unifiedOperations}
         />
       )}
@@ -709,6 +728,7 @@ function TaskScreen({
           preloadedBoards={boards || []}
           preloadedTaggings={safeAllTaggings}
           preloadedBoardItems={safeAllBoardItems}
+          preloadedItemBoards={itemBoards}
           unifiedOperations={unifiedOperations}
         />
       )}
@@ -750,6 +770,7 @@ function TaskScreen({
           preloadedBoards={boards || []}
           preloadedTaggings={safeAllTaggings}
           preloadedBoardItems={safeAllBoardItems}
+          preloadedItemBoards={itemBoards}
           unifiedOperations={unifiedOperations}
         />
       )}
@@ -1040,6 +1061,7 @@ function TaskScreen({
                 preloadedBoards={boards || []}
                 preloadedTaggings={safeAllTaggings}
                 preloadedBoardItems={safeAllBoardItems}
+                preloadedItemBoards={itemBoards}
                 unifiedOperations={unifiedOperations}
               />
             )}
@@ -1063,6 +1085,7 @@ function TaskScreen({
                 preloadedBoards={boards || []}
                 preloadedTaggings={safeAllTaggings}
                 preloadedBoardItems={safeAllBoardItems}
+                preloadedItemBoards={itemBoards}
                 unifiedOperations={unifiedOperations}
               />
             )}
@@ -1123,6 +1146,7 @@ function TaskScreen({
                 preloadedBoards={boards || []}
                 preloadedTaggings={safeAllTaggings}
                 preloadedBoardItems={safeAllBoardItems}
+                preloadedItemBoards={itemBoards}
                 unifiedOperations={unifiedOperations}
               />
             )}

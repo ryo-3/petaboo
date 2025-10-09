@@ -47,6 +47,7 @@ interface BoardRightPanelProps {
     originalId: string;
     addedAt: number;
   }>; // 全ボードアイテム情報
+  itemBoards?: Board[]; // 選択中のアイテムに紐づくボード（親で取得済み）
   // チーム機能関連
   teamMode?: boolean;
   teamId?: number | null;
@@ -75,6 +76,7 @@ export default function BoardRightPanel({
   allBoards,
   allTaggings: propsAllTaggings,
   allBoardItems,
+  itemBoards,
   teamMode = false,
   teamId = null,
   onClose,
@@ -378,7 +380,7 @@ export default function BoardRightPanel({
                 preloadedTags={tags || []}
                 preloadedBoards={allBoards || []}
                 preloadedTaggings={allTaggings || []}
-                preloadedBoardItems={allBoardItems}
+                preloadedItemBoards={itemBoards}
               />
             ) : (
               <MemoEditor
@@ -390,7 +392,7 @@ export default function BoardRightPanel({
                 preloadedTags={tags || []}
                 preloadedBoards={allBoards || []}
                 preloadedTaggings={allTaggings || []}
-                preloadedBoardItems={allBoardItems}
+                preloadedItemBoards={itemBoards}
                 onClose={() => {
                   // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
                 }}
@@ -450,7 +452,7 @@ export default function BoardRightPanel({
                 preloadedTags={tags || []}
                 preloadedBoards={allBoards || []}
                 preloadedTaggings={allTaggings || []}
-                preloadedBoardItems={allBoardItems}
+                preloadedItemBoards={itemBoards}
                 onSelectTask={onSelectTask}
                 unifiedOperations={taskOperations}
                 onClose={() => {
@@ -490,7 +492,7 @@ export default function BoardRightPanel({
                 preloadedTags={tags || []}
                 preloadedBoards={allBoards || []}
                 preloadedTaggings={allTaggings || []}
-                preloadedBoardItems={allBoardItems}
+                preloadedItemBoards={itemBoards}
                 onSelectTask={onSelectTask}
                 unifiedOperations={taskOperations}
                 onClose={() => {

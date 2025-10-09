@@ -22,8 +22,6 @@ import { useSimpleItemSave } from "@/src/hooks/use-simple-item-save";
 import {
   useAddItemToBoard,
   useRemoveItemFromBoard,
-  useItemBoards,
-  useTeamItemBoards,
 } from "@/src/hooks/use-boards";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -85,6 +83,7 @@ interface TaskEditorProps {
     originalId: string;
     addedAt: number;
   }>;
+  preloadedItemBoards?: Board[]; // 親で取得済みのアイテム紐づけボード（優先的に使用）
 
   // チーム機能と作成者情報
   teamMode?: boolean;
@@ -124,6 +123,7 @@ function TaskEditor({
   preloadedBoards = [],
   preloadedTaggings = [],
   preloadedBoardItems = [],
+  preloadedItemBoards,
   teamMode = false,
   teamId,
   createdBy,
@@ -153,17 +153,15 @@ function TaskEditor({
   const isNewTask = !task || task.id === 0;
   const taskFormRef = useRef<TaskFormHandle>(null);
 
-  // API呼び出しでアイテムボードを取得
-  const itemId = task?.originalId || task?.id?.toString();
-  const { data: personalItemBoards = [] } = useItemBoards("task", itemId);
-  const { data: teamItemBoards = [] } = useTeamItemBoards(
-    teamId || 0,
-    "task",
-    itemId,
-  );
-
   // このタスクに実際に紐づいているボードのみを抽出
   const itemBoards = useMemo(() => {
+    // 親で取得済みのデータがあれば優先的に使用（フェーズ1・2対応）
+    if (preloadedItemBoards !== undefined) {
+      return preloadedItemBoards;
+    }
+
+    // 以下は後方互換性のための既存ロジック（preloadedItemBoardsがない場合のみ実行）
+
     // 新規作成時でもinitialBoardIdがあれば含める
     if (!task || task.id === undefined || task.id === 0) {
       if (initialBoardId) {
@@ -175,34 +173,8 @@ function TaskEditor({
       return [];
     }
 
-    // チームモードでは専用APIから取得したデータを使用
-    if (teamMode) {
-      return teamItemBoards;
-    }
-
-    // 個人モードでは専用APIから取得したデータを使用
-    const boards = [...personalItemBoards];
-
-    // initialBoardIdがある場合は、そのボードも含める（重複は自動的に除外される）
-    if (initialBoardId) {
-      const initialBoard = preloadedBoards.find(
-        (board) => board.id === initialBoardId,
-      );
-      if (initialBoard && !boards.some((b) => b.id === initialBoardId)) {
-        boards.push(initialBoard);
-      }
-    }
-
-    return boards;
-  }, [
-    task,
-    preloadedBoardItems,
-    preloadedBoards,
-    teamMode,
-    teamItemBoards,
-    personalItemBoards,
-    initialBoardId,
-  ]);
+    return [];
+  }, [preloadedItemBoards, task, initialBoardId, preloadedBoards]);
 
   // ライブタグデータ取得（個人用）
   const originalId =

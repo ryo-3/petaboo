@@ -13,11 +13,17 @@ import { useTeamTags } from "@/src/hooks/use-team-tags";
 import { useAllTeamTaggings } from "@/src/hooks/use-team-taggings";
 import { useDeletedMemos, useDeleteMemo } from "@/src/hooks/use-memos";
 import { useDeleteTask, useDeletedTasks } from "@/src/hooks/use-tasks";
-import { useBoards, useAddItemToBoard } from "@/src/hooks/use-boards";
+import {
+  useBoards,
+  useAddItemToBoard,
+  useItemBoards,
+  useTeamItemBoards,
+} from "@/src/hooks/use-boards";
 import { useTeamBoards } from "@/src/hooks/use-team-boards";
 import { Memo, DeletedMemo } from "@/src/types/memo";
 import { Task, DeletedTask } from "@/src/types/task";
 import type { Tagging } from "@/src/types/tag";
+import type { Board } from "@/src/types/board";
 import { memo, useEffect, useState, useRef, useCallback, useMemo } from "react";
 import TagAddModal from "@/components/ui/tag-add/tag-add-modal";
 import BoardHeader from "@/components/features/board/board-header";
@@ -372,6 +378,92 @@ function BoardDetailScreen({
   // チームモードかどうかでボード一覧を切り替え
   const allBoards = teamMode ? teamBoards : personalBoards;
   const { categories } = useBoardCategories();
+
+  // 選択中のメモ・タスクに紐づくボード情報を取得
+  const selectedMemoId =
+    selectedMemo?.originalId || selectedMemo?.id?.toString();
+  const selectedTaskId =
+    selectedTask?.originalId || selectedTask?.id?.toString();
+
+  // 個人モード用のitemBoards取得
+  const { data: personalMemoItemBoards = [] } = useItemBoards(
+    "memo",
+    teamMode ? undefined : selectedMemoId,
+  );
+  const { data: personalTaskItemBoards = [] } = useItemBoards(
+    "task",
+    teamMode ? undefined : selectedTaskId,
+  );
+
+  // チームモード用のitemBoards取得
+  const { data: teamMemoItemBoards = [] } = useTeamItemBoards(
+    teamMode ? teamId || 0 : 0,
+    "memo",
+    teamMode ? selectedMemoId : undefined,
+  );
+  const { data: teamTaskItemBoards = [] } = useTeamItemBoards(
+    teamMode ? teamId || 0 : 0,
+    "task",
+    teamMode ? selectedTaskId : undefined,
+  );
+
+  // 完全なitemBoards配列（API取得 + initialBoardId考慮）
+  const completeItemBoards = useMemo(() => {
+    if (!selectedMemo && !selectedTask) return [];
+
+    if (selectedMemo) {
+      const itemBoards = teamMode ? teamMemoItemBoards : personalMemoItemBoards;
+
+      // initialBoardIdがあり、まだitemBoardsに含まれていない場合は追加
+      if (boardId) {
+        const boardExists = itemBoards.some(
+          (board: Board) => board.id === boardId,
+        );
+        if (!boardExists && allBoards) {
+          const initialBoard = allBoards.find((board) => board.id === boardId);
+          if (initialBoard) {
+            return [...itemBoards, initialBoard];
+          }
+        }
+      }
+
+      return itemBoards;
+    }
+
+    if (selectedTask) {
+      const itemBoards = teamMode ? teamTaskItemBoards : personalTaskItemBoards;
+
+      // initialBoardIdがあり、まだitemBoardsに含まれていない場合は追加
+      if (boardId) {
+        const boardExists = itemBoards.some(
+          (board: Board) => board.id === boardId,
+        );
+        if (!boardExists && allBoards) {
+          const initialBoard = allBoards.find((board) => board.id === boardId);
+          if (initialBoard) {
+            return [...itemBoards, initialBoard];
+          }
+        }
+      }
+
+      return itemBoards;
+    }
+
+    return [];
+  }, [
+    selectedMemo,
+    selectedTask,
+    selectedMemoId,
+    selectedTaskId,
+    teamMode,
+    teamId,
+    teamMemoItemBoards,
+    personalMemoItemBoards,
+    teamTaskItemBoards,
+    personalTaskItemBoards,
+    boardId,
+    allBoards,
+  ]);
 
   // ユーザー情報取得（コメント入力欄のアバター表示用）
   const { data: userInfo } = useUserInfo();
@@ -814,6 +906,7 @@ function BoardDetailScreen({
                           preloadedBoards={
                             teamMode ? teamBoards || [] : personalBoards || []
                           }
+                          preloadedItemBoards={completeItemBoards}
                           onSaveComplete={(
                             savedMemo: Memo,
                             wasEmpty: boolean,
@@ -891,6 +984,7 @@ function BoardDetailScreen({
                           preloadedBoards={
                             teamMode ? teamBoards || [] : personalBoards || []
                           }
+                          preloadedItemBoards={completeItemBoards}
                           onSaveComplete={(
                             savedTask: Task,
                             isNewTask: boolean,
@@ -1314,6 +1408,7 @@ function BoardDetailScreen({
           allBoards={allBoards || []}
           allTaggings={(safeAllTaggings || []) as Tagging[]}
           allBoardItems={safeAllBoardItems}
+          itemBoards={completeItemBoards}
           teamMode={teamMode}
           teamId={teamId}
           onClose={

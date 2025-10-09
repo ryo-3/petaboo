@@ -14,7 +14,6 @@ import { BulkDeleteConfirmation } from "@/components/ui/modals/confirmation-moda
 import TagTriggerButton from "@/components/features/tags/tag-trigger-button";
 import TagSelectionModal from "@/components/ui/modals/tag-selection-modal";
 import { useSimpleItemSave } from "@/src/hooks/use-simple-item-save";
-import { useTeamItemBoards } from "@/src/hooks/use-boards";
 import {
   useCreateTagging,
   useDeleteTagging,
@@ -84,6 +83,7 @@ interface MemoEditorProps {
     originalId: string;
     addedAt: number;
   }>;
+  preloadedItemBoards?: Board[]; // 親で取得済みのアイテム紐づけボード（優先的に使用）
 
   // チーム機能と作成者情報
   teamMode?: boolean;
@@ -110,6 +110,7 @@ function MemoEditor({
   preloadedBoards = [],
   preloadedTaggings = [],
   preloadedBoardItems = [],
+  preloadedItemBoards,
   teamMode = false,
   teamId,
   createdBy,
@@ -126,25 +127,18 @@ function MemoEditor({
   const isDeleted = memo ? "deletedAt" in memo : false;
   const deletedMemo = isDeleted ? (memo as DeletedMemo) : null;
 
-  // チームモードではAPI呼び出しでアイテムボードを取得
-  const teamItemId = memo?.originalId || memo?.id?.toString();
-  const { data: teamItemBoards = [] } = useTeamItemBoards(
-    teamId || 0,
-    "memo",
-    teamItemId,
-  );
-
   // 事前取得されたデータを使用（APIコール不要）
   const boards = preloadedBoards;
 
   // このメモに実際に紐づいているボードのみを抽出
   const itemBoards = useMemo(() => {
-    if (!memo || memo.id === undefined || memo.id === 0) return [];
-
-    // チームモードでは専用APIから取得したデータを使用
-    if (teamMode) {
-      return teamItemBoards;
+    // 親で取得済みのデータがあれば優先的に使用（フェーズ1・2対応）
+    if (preloadedItemBoards !== undefined) {
+      return preloadedItemBoards;
     }
+
+    // 以下は後方互換性のための既存ロジック（preloadedItemBoardsがない場合のみ実行）
+    if (!memo || memo.id === undefined || memo.id === 0) return [];
 
     const originalId = memo.originalId || memo.id.toString();
 
@@ -161,7 +155,7 @@ function MemoEditor({
       );
 
     return boards;
-  }, [memo, preloadedBoardItems, preloadedBoards, teamMode, teamItemBoards]);
+  }, [preloadedItemBoards, memo, preloadedBoardItems, preloadedBoards]);
 
   const currentBoardIds =
     memo && memo.id !== 0

@@ -26,7 +26,11 @@ import { useScreenState } from "@/src/hooks/use-screen-state";
 import { useSelectAll } from "@/src/hooks/use-select-all";
 import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
-import { useBoards } from "@/src/hooks/use-boards";
+import {
+  useBoards,
+  useItemBoards,
+  useTeamItemBoards,
+} from "@/src/hooks/use-boards";
 import { useTeamBoards } from "@/src/hooks/use-team-boards";
 import { useTags } from "@/src/hooks/use-tags";
 import { useTeamTags } from "@/src/hooks/use-team-tags";
@@ -221,6 +225,20 @@ function MemoScreen({
   const { data: personalBoards } = useBoards("normal", !teamMode);
   const { data: teamBoards } = useTeamBoards(teamId || null, "normal");
   const boards = teamMode ? teamBoards : personalBoards;
+
+  // 選択中のメモに紐づくボード情報を取得（フェーズ1対応）
+  const selectedMemoId =
+    selectedMemo?.originalId || selectedMemo?.id?.toString();
+  const { data: personalMemoItemBoards = [] } = useItemBoards(
+    "memo",
+    teamMode ? undefined : selectedMemoId,
+  );
+  const { data: teamMemoItemBoards = [] } = useTeamItemBoards(
+    teamMode ? teamId || 0 : 0,
+    "memo",
+    teamMode ? selectedMemoId : undefined,
+  );
+  const itemBoards = teamMode ? teamMemoItemBoards : personalMemoItemBoards;
 
   // チームモードと個人モードで異なるタグフックを使用
   const { data: personalTags } = useTags();
@@ -813,6 +831,7 @@ function MemoScreen({
               preloadedBoards={boards || []}
               preloadedTaggings={safeAllTaggings || []}
               preloadedBoardItems={safeAllBoardItems || []}
+              preloadedItemBoards={itemBoards}
               teamMode={teamMode}
               teamId={teamId}
               showDateAtBottom={teamMode}

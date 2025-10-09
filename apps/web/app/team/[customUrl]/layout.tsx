@@ -14,6 +14,7 @@ import {
   NavigationProvider,
   useNavigation,
 } from "@/contexts/navigation-context";
+import { TeamProvider } from "@/contexts/team-context";
 import { getModeFromUrl, getActiveTabFromUrl } from "@/src/utils/modeUtils";
 import { useTeamDetail } from "@/src/hooks/use-team-detail";
 
@@ -302,15 +303,17 @@ function TeamDetailLayoutWrapper({ children }: { children: React.ReactNode }) {
   const isTeamBoardDetailPage = pathname.includes("/board/");
 
   return (
-    <NavigationProvider
-      initialScreenMode={isTeamBoardDetailPage ? "board" : "home"}
-      initialCurrentMode={isTeamBoardDetailPage ? "board" : "memo"}
-      initialShowingBoardDetail={isTeamBoardDetailPage}
-    >
-      <Suspense fallback={<div>Loading...</div>}>
-        <TeamLayoutContent>{children}</TeamLayoutContent>
-      </Suspense>
-    </NavigationProvider>
+    <TeamProvider>
+      <NavigationProvider
+        initialScreenMode={isTeamBoardDetailPage ? "board" : "home"}
+        initialCurrentMode={isTeamBoardDetailPage ? "board" : "memo"}
+        initialShowingBoardDetail={isTeamBoardDetailPage}
+      >
+        <Suspense fallback={<div>Loading...</div>}>
+          <TeamLayoutContent>{children}</TeamLayoutContent>
+        </Suspense>
+      </NavigationProvider>
+    </TeamProvider>
   );
 }
 

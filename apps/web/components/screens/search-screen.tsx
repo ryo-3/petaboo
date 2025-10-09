@@ -8,6 +8,7 @@ import TaskIcon from "@/components/icons/task-icon";
 import TrashIcon from "@/components/icons/trash-icon";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
+import { useTeamContext } from "@/contexts/team-context";
 
 interface SearchResult {
   type: "memo" | "task" | "deleted-memo" | "deleted-task";
@@ -21,8 +22,6 @@ interface SearchScreenProps {
   onSelectTask?: (task: Task) => void;
   onSelectDeletedMemo?: (memo: DeletedMemo) => void;
   onSelectDeletedTask?: (task: DeletedTask) => void;
-  teamMode?: boolean;
-  teamId?: number;
 }
 
 function SearchScreen({
@@ -30,9 +29,8 @@ function SearchScreen({
   onSelectTask,
   onSelectDeletedMemo,
   onSelectDeletedTask,
-  teamMode = false,
-  teamId,
 }: SearchScreenProps) {
+  const { isTeamMode: teamMode, teamId } = useTeamContext();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchScope, setSearchScope] = useState<"all" | "title" | "content">(
     "all",
@@ -62,7 +60,7 @@ function SearchScreen({
     searchScope,
     searchType,
     debounceMs: 500, // 詳細検索では少し長めのデバウンス
-    teamId: teamMode ? teamId : undefined,
+    teamId: teamMode && teamId ? teamId : undefined,
   });
 
   // チェックボックス変更ハンドラー

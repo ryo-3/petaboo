@@ -7,6 +7,7 @@ import DesktopUpper from "@/components/layout/desktop-upper";
 import { useBoards, usePermanentDeleteBoard } from "@/src/hooks/use-boards";
 import { useTeamBoards } from "@/src/hooks/use-team-boards";
 import { useToast } from "@/src/contexts/toast-context";
+import { useTeamContext } from "@/contexts/team-context";
 
 export interface BoardScreenRef {
   triggerCreateNew: () => void;
@@ -14,12 +15,11 @@ export interface BoardScreenRef {
 
 interface BoardScreenProps {
   onBoardSelect?: (board: { id: number; slug: string }) => void;
-  teamMode?: boolean;
-  teamId?: number;
 }
 
 const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(
-  ({ onBoardSelect, teamMode = false, teamId }, ref) => {
+  ({ onBoardSelect }, ref) => {
+    const { isTeamMode: teamMode, teamId } = useTeamContext();
     const router = useRouter();
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [activeTab, setActiveTab] = useState<

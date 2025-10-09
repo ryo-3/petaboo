@@ -859,8 +859,6 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
           {activeTab === "boards" && (
             <div className="h-full">
               <BoardScreen
-                teamMode={true}
-                teamId={team.id}
                 onBoardSelect={(board) => {
                   // チームボード詳細ページに遷移（チーム専用URL）
                   router.push(`/team/${customUrl}/board/${board.slug}`);
@@ -1071,8 +1069,6 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                 onSelectTask={handleSelectTask}
                 onSelectDeletedMemo={handleSelectDeletedMemo}
                 onSelectDeletedTask={handleSelectDeletedTask}
-                teamMode={true}
-                teamId={team.id}
               />
             </div>
           )}

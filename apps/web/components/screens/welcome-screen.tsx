@@ -14,16 +14,14 @@ import {
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import NotificationList from "@/components/features/notifications/notification-list";
+import { useTeamContext } from "@/contexts/team-context";
 
 interface WelcomeScreenProps {
-  teamMode?: boolean;
   teamName?: string;
 }
 
-function WelcomeScreen({
-  teamMode = false,
-  teamName = "開発チーム",
-}: WelcomeScreenProps) {
+function WelcomeScreen({ teamName = "開発チーム" }: WelcomeScreenProps) {
+  const { isTeamMode: teamMode } = useTeamContext();
   const pathname = usePathname();
 
   // URLからチーム名を取得（通知機能用）

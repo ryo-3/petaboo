@@ -119,7 +119,7 @@ export function MainContentArea({
     <>
       {/* ホーム画面 */}
       {screenMode === "home" && !showTeamList && !showTeamCreate && (
-        <WelcomeScreen teamMode={teamMode} />
+        <WelcomeScreen />
       )}
 
       {/* チーム一覧画面 */}
@@ -212,8 +212,6 @@ export function MainContentArea({
           ) : (
             <BoardScreen
               ref={boardScreenRef as React.RefObject<BoardScreenRef>}
-              teamMode={teamMode}
-              teamId={teamId}
             />
           )
         ) : (

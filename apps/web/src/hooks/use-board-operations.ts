@@ -18,6 +18,7 @@ import { BoardItemWithContent, BoardWithItems } from "@/src/types/board";
 import { Memo, DeletedMemo } from "@/src/types/memo";
 import { Task, DeletedTask } from "@/src/types/task";
 import { OriginalIdUtils } from "@/src/types/common";
+import { useTeamContext } from "@/contexts/team-context";
 
 interface UseBoardOperationsProps {
   boardId: number;
@@ -39,7 +40,7 @@ interface UseBoardOperationsProps {
   selectedItemsFromList: Set<number>;
   memoItems: BoardItemWithContent[];
   taskItems: BoardItemWithContent[];
-  teamId?: string | null;
+  teamId?: string | null; // 後方互換性のため残す（非推奨）
 }
 
 interface UseBoardOperationsReturn {
@@ -92,21 +93,29 @@ export function useBoardOperations({
   selectedItemsFromList,
   memoItems,
   taskItems,
-  teamId,
+  teamId: teamIdProp,
 }: UseBoardOperationsProps): UseBoardOperationsReturn {
+  // TeamContextからチーム情報を取得（propsより優先）
+  const { isTeamMode, teamId: teamIdFromContext } = useTeamContext();
+
+  // propsのteamIdとContextのteamIdを統合（Contextを優先、後方互換性のためpropsも許容）
+  const teamIdStr = teamIdFromContext?.toString() || teamIdProp;
+  const teamId =
+    teamIdFromContext || (teamIdProp ? parseInt(teamIdProp) : undefined);
+
   // データ取得
   const {
     data: boardWithItems,
     isLoading,
     error,
-  } = useBoardWithItems(boardId, false, teamId) as {
+  } = useBoardWithItems(boardId, false, teamIdStr) as {
     data: BoardWithItems | undefined;
     isLoading: boolean;
     error: Error | null;
   };
 
   const { data: boardDeletedItems, refetch: refetchDeletedItems } =
-    useBoardDeletedItems(boardId, teamId?.toString());
+    useBoardDeletedItems(boardId, teamIdStr);
 
   const removeItemFromBoard = useRemoveItemFromBoard();
   const addItemToBoard = useAddItemToBoard();
@@ -114,14 +123,14 @@ export function useBoardOperations({
 
   // 復元用フック
   const restoreMemoMutation = useRestoreMemo({
-    teamMode: !!teamId,
-    teamId: teamId ? parseInt(teamId) : undefined,
+    teamMode: isTeamMode,
+    teamId,
     boardId,
   });
 
   const restoreTaskMutation = useRestoreTask({
-    teamMode: !!teamId,
-    teamId: teamId ? parseInt(teamId) : undefined,
+    teamMode: isTeamMode,
+    teamId,
     boardId,
   });
 

@@ -12,6 +12,7 @@ import {
 import { DeletedMemo } from "@/src/types/memo";
 import { DeletedTask } from "@/src/types/task";
 import { useToast } from "@/src/contexts/toast-context";
+import { OriginalIdUtils } from "@/src/types/common";
 
 interface ApiError extends Error {
   status?: number;
@@ -865,7 +866,7 @@ export function useBoardDeletedItems(boardId: number, teamId?: string | null) {
           if (item.itemType === "memo" && item.content) {
             memos.push({
               id: item.content.id,
-              originalId: item.content.originalId || item.content.id,
+              originalId: OriginalIdUtils.fromItem(item.content) || "",
               title: item.content.title,
               content: item.content.content,
               categoryId: item.content.categoryId,
@@ -876,7 +877,7 @@ export function useBoardDeletedItems(boardId: number, teamId?: string | null) {
           } else if (item.itemType === "task" && item.content) {
             tasks.push({
               id: item.content.id,
-              originalId: item.content.originalId || item.content.id,
+              originalId: OriginalIdUtils.fromItem(item.content) || "",
               title: item.content.title,
               description: item.content.description,
               status: item.content.status,

@@ -126,7 +126,7 @@ function MemoStatusDisplay({
         if (!memo || memo.id === undefined) return false;
 
         // WORKAROUND: idとoriginalIdの両方でマッチング
-        const originalId = String(memo.originalId || memo.id);
+        const originalId = OriginalIdUtils.fromItem(memo) || "";
         const memoId = String(memo.id);
 
         // メモが所属するボードのID一覧を取得
@@ -212,7 +212,7 @@ function MemoStatusDisplay({
       if (!memo || memo.id === undefined) return;
       // WORKAROUND: originalIdが数値の場合もあるため、文字列に変換
       // さらに、idとoriginalIdの両方でマッチング（データ不整合対策）
-      const originalId = String(memo.originalId || memo.id);
+      const originalId = OriginalIdUtils.fromItem(memo) || "";
       const memoId = String(memo.id);
 
       // メモのタグを抽出
@@ -397,7 +397,7 @@ export function DeletedMemoDisplay({
   ) => {
     // 削除済みメモのタグ・ボード情報を取得
     // WORKAROUND: idとoriginalIdの両方でマッチング
-    const originalId = String(memo.originalId || memo.id);
+    const originalId = OriginalIdUtils.fromItem(memo) || "";
     const memoId = String(memo.id);
 
     // このメモのタグを抽出

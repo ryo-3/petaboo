@@ -129,7 +129,7 @@ function TaskStatusDisplay({
     return statusFilteredTasks.map((task) => {
       // WORKAROUND: originalIdが数値の場合もあるため、文字列に変換
       // さらに、idとoriginalIdの両方でマッチング（データ不整合対策）
-      const originalId = String(task.originalId || task.id);
+      const originalId = OriginalIdUtils.fromItem(task) || "";
       const taskId = String(task.id);
 
       // このタスクのタグを抽出（チームモード対応）

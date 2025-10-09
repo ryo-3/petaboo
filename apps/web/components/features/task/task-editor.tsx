@@ -134,13 +134,13 @@ function TaskEditor({
 }: TaskEditorProps) {
   // IMPORTANT: originalIdを文字列として強制変換（ボードAPI経由だと数値になる場合がある）
   const task = rawTask
-    ? {
+    ? ({
         ...rawTask,
         originalId:
           typeof rawTask.originalId === "string"
             ? rawTask.originalId
-            : String(rawTask.originalId || rawTask.id),
-      }
+            : OriginalIdUtils.fromItem(rawTask) || rawTask.originalId,
+      } as typeof rawTask)
     : rawTask;
 
   const queryClient = useQueryClient();

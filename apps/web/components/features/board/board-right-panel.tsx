@@ -547,8 +547,6 @@ export default function BoardRightPanel({
           excludeItemIds={currentBoardMemoIds}
           excludeBoardIdFromFilter={boardId}
           initialSelectionMode="check"
-          teamMode={teamMode}
-          teamId={teamId || undefined}
           unifiedOperations={memoOperations}
         />
       )}

@@ -7,6 +7,7 @@ import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
 import { useTags } from "@/src/hooks/use-tags";
 import { useTeamTags } from "@/src/hooks/use-team-tags";
 import { useAllTeamTaggings } from "@/src/hooks/use-team-taggings";
+import { useTeamContext } from "@/contexts/team-context";
 import {
   useBoards,
   useAddItemToBoard,
@@ -52,8 +53,6 @@ interface BoardDetailProps {
   serverInitialTitle?: string;
   boardCompleted?: boolean;
   isDeleted?: boolean;
-  teamMode?: boolean;
-  teamId?: number | null;
 }
 
 function BoardDetailScreen({
@@ -71,9 +70,8 @@ function BoardDetailScreen({
   serverInitialTitle,
   boardCompleted = false,
   isDeleted = false,
-  teamMode = false,
-  teamId = null,
 }: BoardDetailProps) {
+  const { isTeamMode: teamMode, teamId } = useTeamContext();
   // CSVインポートモーダル状態
   const [isCSVImportModalOpen, setIsCSVImportModalOpen] = useState(false);
 

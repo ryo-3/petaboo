@@ -26,6 +26,7 @@ import { useScreenState } from "@/src/hooks/use-screen-state";
 import { useSelectAll } from "@/src/hooks/use-select-all";
 import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
+import { useTeamContext } from "@/contexts/team-context";
 import {
   useBoards,
   useItemBoards,
@@ -73,9 +74,6 @@ interface MemoScreenProps {
   excludeItemIds?: number[];
   // ボードフィルターの選択肢から除外するボードID
   excludeBoardIdFromFilter?: number;
-  // チーム機能
-  teamMode?: boolean;
-  teamId?: number;
   // URL連動
   initialMemoId?: string | null;
 
@@ -108,11 +106,11 @@ function MemoScreen({
   initialSelectionMode = "select",
   excludeItemIds = [],
   excludeBoardIdFromFilter,
-  teamMode = false,
-  teamId,
   initialMemoId,
   unifiedOperations,
 }: MemoScreenProps) {
+  const { isTeamMode: teamMode, teamId: teamIdRaw } = useTeamContext();
+  const teamId = teamIdRaw ?? undefined; // Convert null to undefined for hook compatibility
   // 一括処理中断通知の監視
   useBulkProcessNotifications();
 

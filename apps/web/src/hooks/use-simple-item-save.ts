@@ -17,6 +17,7 @@ import {
   useRemoveItemFromBoard,
 } from "@/src/hooks/use-boards";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTeamContext } from "@/contexts/team-context";
 
 type UnifiedItem = Memo | Task;
 
@@ -31,7 +32,7 @@ interface UseSimpleItemSaveOptions<T extends UnifiedItem> {
   currentBoardIds?: number[];
   initialBoardId?: number;
   onDeleteAndSelectNext?: (deletedItem: T) => void;
-  // チーム機能
+  // チーム機能（後方互換性のため残す、非推奨）
   teamMode?: boolean;
   teamId?: number;
   boardId?: number; // チームボードでのキャッシュ更新に使用
@@ -44,10 +45,16 @@ export function useSimpleItemSave<T extends UnifiedItem>({
   currentBoardIds = [],
   initialBoardId,
   onDeleteAndSelectNext,
-  teamMode = false,
-  teamId,
+  teamMode: teamModeProp = false,
+  teamId: teamIdProp,
   boardId,
 }: UseSimpleItemSaveOptions<T>) {
+  // TeamContextからチーム情報を取得（propsより優先）
+  const { isTeamMode, teamId: teamIdFromContext } = useTeamContext();
+
+  // propsとContextを統合（Contextを優先、後方互換性のためpropsも許容）
+  const teamMode = isTeamMode || teamModeProp;
+  const teamId = teamIdFromContext || teamIdProp;
   const [title, setTitle] = useState(() => item?.title || "");
   const [content, setContent] = useState(() => {
     if (itemType === "memo") {

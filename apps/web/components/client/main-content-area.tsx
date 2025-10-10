@@ -140,8 +140,6 @@ export function MainContentArea({
             setSelectedMemo(null);
             setSelectedDeletedMemo(null);
           }}
-          teamMode={teamMode}
-          teamId={teamId}
           // 統一フックを渡す
           unifiedOperations={personalMemoOperations}
         />

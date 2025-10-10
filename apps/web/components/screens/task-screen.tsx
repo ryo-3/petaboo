@@ -26,6 +26,7 @@ import {
   usePermanentDeleteTask,
 } from "@/src/hooks/use-tasks";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
+import { useTeamContext } from "@/contexts/team-context";
 import {
   useBoards,
   useItemBoards,
@@ -69,9 +70,6 @@ interface TaskScreenProps {
   excludeItemIds?: number[];
   // ボードフィルターの選択肢から除外するボードID
   excludeBoardIdFromFilter?: number;
-  // チーム機能
-  teamMode?: boolean;
-  teamId?: number;
   // URL連動
   initialTaskId?: string | null;
 
@@ -105,11 +103,11 @@ function TaskScreen({
   initialSelectionMode = "select",
   excludeItemIds = [],
   excludeBoardIdFromFilter,
-  teamMode = false,
-  teamId,
   initialTaskId,
   unifiedOperations,
 }: TaskScreenProps) {
+  const { isTeamMode: teamMode, teamId: teamIdRaw } = useTeamContext();
+  const teamId = teamIdRaw ?? undefined; // Convert null to undefined for hook compatibility
   // 一括処理中断通知の監視
   useBulkProcessNotifications();
 

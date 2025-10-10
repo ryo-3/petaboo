@@ -86,8 +86,6 @@ export default function BoardDetailClient({
       showBoardHeader={false}
       selectedMemo={selectedMemo}
       selectedTask={selectedTask}
-      teamMode={teamMode}
-      teamId={teamId}
     />
   );
 }

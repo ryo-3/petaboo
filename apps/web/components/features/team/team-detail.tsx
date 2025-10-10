@@ -798,8 +798,6 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                   setSelectedMemo(null);
                   setSelectedDeletedMemo(null);
                 }}
-                teamMode={true}
-                teamId={team.id}
                 initialMemoId={getMemoIdFromURL()}
                 // 統一フックを渡す
                 unifiedOperations={teamMemoOperations}
@@ -846,8 +844,6 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                 onScreenModeChange={(mode) => {
                   setIsTaskCreateMode(mode === "create");
                 }}
-                teamMode={true}
-                teamId={team.id}
                 initialTaskId={isTaskCreateMode ? null : getTaskIdFromURL()}
                 // 統一フックを渡す
                 unifiedOperations={teamTaskOperations}

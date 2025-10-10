@@ -83,8 +83,6 @@ export function BoardDetailWrapper({
         initialBoardDescription={currentBoardDescription}
         showBoardHeader={showBoardHeader}
         serverInitialTitle={serverBoardTitle}
-        teamMode={teamMode}
-        teamId={teamId}
       />
     );
   }, [

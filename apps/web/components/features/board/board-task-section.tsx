@@ -18,6 +18,7 @@ import { useSortOptions } from "@/hooks/use-sort-options";
 import type { Tag, Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
 import { OriginalIdUtils } from "@/src/types/common";
+import { useTeamContext } from "@/contexts/team-context";
 
 interface BoardTaskSectionProps {
   boardId: number;
@@ -39,8 +40,6 @@ interface BoardTaskSectionProps {
   showTags?: boolean;
   showBoardName?: boolean;
   selectedTask?: Task | DeletedTask | null;
-  teamMode?: boolean;
-  teamId?: number | null;
   // 複数選択関連
   taskSelectionMode: "select" | "check";
   checkedTasks: Set<string | number>;
@@ -108,8 +107,6 @@ export default function BoardTaskSection({
   showTags = false,
   showBoardName = false,
   selectedTask,
-  teamMode = false,
-  teamId,
   taskSelectionMode,
   checkedTasks,
   onCreateNewTask,
@@ -134,6 +131,9 @@ export default function BoardTaskSection({
   allTaggings = [],
   allBoardItems = [],
 }: BoardTaskSectionProps) {
+  const { isTeamMode: teamMode, teamId: teamIdRaw } = useTeamContext();
+  const teamId = teamIdRaw ?? undefined; // Hook互換性のため変換
+
   // ボードカテゴリーフィルター機能
   const { selectedCategoryIds, setSelectedCategoryIds, filteredTaskItems } =
     useBoardCategoryFilter({ taskItems });

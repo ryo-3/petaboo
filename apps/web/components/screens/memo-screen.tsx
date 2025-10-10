@@ -830,8 +830,6 @@ function MemoScreen({
               preloadedTaggings={safeAllTaggings || []}
               preloadedBoardItems={safeAllBoardItems || []}
               preloadedItemBoards={itemBoards}
-              teamMode={teamMode}
-              teamId={teamId}
               showDateAtBottom={teamMode}
               unifiedOperations={operations}
             />
@@ -858,8 +856,6 @@ function MemoScreen({
                 preloadedBoards={boards || []}
                 preloadedTaggings={safeAllTaggings || []}
                 preloadedBoardItems={safeAllBoardItems || []}
-                teamMode={teamMode}
-                teamId={teamId}
                 createdBy={selectedMemo.createdBy}
                 createdByUserId={selectedMemo.userId}
                 createdByAvatarColor={selectedMemo.avatarColor}
@@ -913,8 +909,6 @@ function MemoScreen({
                 preloadedBoards={boards || []}
                 preloadedTaggings={safeAllTaggings || []}
                 preloadedBoardItems={safeAllBoardItems || []}
-                teamMode={teamMode}
-                teamId={teamId}
                 createdBy={selectedDeletedMemo.createdBy}
                 createdByUserId={selectedDeletedMemo.userId}
                 createdByAvatarColor={selectedDeletedMemo.avatarColor}
@@ -1251,8 +1245,6 @@ function MemoScreen({
                 preloadedBoards={boards}
                 preloadedTaggings={teamMode ? [] : safeAllTaggings}
                 preloadedBoardItems={safeAllBoardItems}
-                teamMode={teamMode}
-                teamId={teamId}
                 showDateAtBottom={teamMode}
                 unifiedOperations={operations}
               />
@@ -1277,8 +1269,6 @@ function MemoScreen({
                   preloadedBoards={boards || []}
                   preloadedTaggings={safeAllTaggings || []}
                   preloadedBoardItems={safeAllBoardItems || []}
-                  teamMode={teamMode}
-                  teamId={teamId}
                   createdBy={selectedMemo.createdBy}
                   createdByUserId={selectedMemo.userId}
                   createdByAvatarColor={selectedMemo.avatarColor}
@@ -1330,8 +1320,6 @@ function MemoScreen({
                   preloadedBoards={boards || []}
                   preloadedTaggings={safeAllTaggings || []}
                   preloadedBoardItems={safeAllBoardItems || []}
-                  teamMode={teamMode}
-                  teamId={teamId}
                   createdBy={selectedDeletedMemo.createdBy}
                   createdByUserId={selectedDeletedMemo.userId}
                   createdByAvatarColor={selectedDeletedMemo.avatarColor}

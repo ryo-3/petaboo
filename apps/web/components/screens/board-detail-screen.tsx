@@ -619,8 +619,6 @@ function BoardDetailScreen({
                 showEditDate={showEditDate}
                 showTags={showTags}
                 selectedMemo={selectedMemo}
-                teamMode={teamMode}
-                teamId={teamId}
                 boardId={boardId}
                 onCreateNewMemo={handleCreateNewMemo}
                 onSetRightPanelMode={setRightPanelMode}
@@ -663,8 +661,6 @@ function BoardDetailScreen({
                 allTags={safeAllTags}
                 allBoards={safeAllBoards}
                 allTaggings={safeAllTaggings as Tagging[]}
-                teamMode={teamMode}
-                teamId={teamId}
                 allBoardItems={safeAllBoardItems}
                 selectedTask={selectedTask}
                 onCreateNewTask={handleCreateNewTask}
@@ -710,8 +706,6 @@ function BoardDetailScreen({
               allTaggings={safeAllTaggings as Tagging[]}
               allBoardItems={safeAllBoardItems}
               itemBoards={completeItemBoards}
-              teamMode={teamMode}
-              teamId={teamId}
               onClose={
                 rightPanelMode
                   ? () => handleCloseRightPanel(onClearSelection)
@@ -812,8 +806,6 @@ function BoardDetailScreen({
               showEditDate={showEditDate}
               showTags={showTags}
               selectedMemo={selectedMemo}
-              teamMode={teamMode}
-              teamId={teamId}
               boardId={boardId}
               onCreateNewMemo={handleCreateNewMemo}
               onSetRightPanelMode={setRightPanelMode}
@@ -856,8 +848,6 @@ function BoardDetailScreen({
               allTags={safeAllTags}
               allBoards={safeAllBoards}
               allTaggings={safeAllTaggings as Tagging[]}
-              teamMode={teamMode}
-              teamId={teamId}
               allBoardItems={safeAllBoardItems}
               selectedTask={selectedTask}
               onCreateNewTask={handleCreateNewTask}

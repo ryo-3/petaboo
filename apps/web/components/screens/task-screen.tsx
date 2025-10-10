@@ -584,8 +584,6 @@ function TaskScreen({
         )}
         onSelectTask={handleSelectTask}
         onSelectDeletedTask={handleSelectDeletedTask}
-        teamMode={teamMode}
-        teamId={teamId}
         allTags={tags || []}
         allBoards={boards || []}
         allTaggings={safeAllTaggings}
@@ -684,8 +682,6 @@ function TaskScreen({
           task={null}
           onClose={() => setTaskScreenMode("list")}
           onSelectTask={onSelectTask}
-          teamMode={teamMode}
-          teamId={teamId}
           customHeight="flex-1 min-h-0"
           showDateAtBottom={teamMode}
           onSaveComplete={(savedTask, isNewTask, isContinuousMode) => {
@@ -715,8 +711,6 @@ function TaskScreen({
           onSelectTask={onSelectTask}
           onClosePanel={() => setTaskScreenMode("list")}
           onDeleteAndSelectNext={handleTaskDeleteAndSelectNext}
-          teamMode={teamMode}
-          teamId={teamId}
           createdBy={selectedTask.createdBy}
           createdByUserId={selectedTask.userId}
           createdByAvatarColor={selectedTask.avatarColor}
@@ -758,8 +752,6 @@ function TaskScreen({
             }
           }}
           onRestoreAndSelectNext={unifiedRestoreAndSelectNext}
-          teamMode={teamMode}
-          teamId={teamId}
           createdBy={selectedDeletedTask.createdBy}
           createdByUserId={selectedDeletedTask.userId}
           createdByAvatarColor={selectedDeletedTask.avatarColor}
@@ -922,8 +914,6 @@ function TaskScreen({
           )}
           onSelectTask={handleSelectTask}
           onSelectDeletedTask={handleSelectDeletedTask}
-          teamMode={teamMode}
-          teamId={teamId}
           allTags={tags || []}
           allBoards={boards || []}
           allTaggings={safeAllTaggings}
@@ -1044,8 +1034,6 @@ function TaskScreen({
                 task={null}
                 onClose={() => setTaskScreenMode("list")}
                 onSelectTask={onSelectTask}
-                teamMode={teamMode}
-                teamId={teamId}
                 showDateAtBottom={teamMode}
                 onSaveComplete={(savedTask, isNewTask, isContinuousMode) => {
                   if (isNewTask && !isContinuousMode) {
@@ -1073,8 +1061,6 @@ function TaskScreen({
                 onSelectTask={onSelectTask}
                 onClosePanel={() => setTaskScreenMode("list")}
                 onDeleteAndSelectNext={handleTaskDeleteAndSelectNext}
-                teamMode={teamMode}
-                teamId={teamId}
                 createdBy={selectedTask.createdBy}
                 createdByUserId={selectedTask.userId}
                 createdByAvatarColor={selectedTask.avatarColor}
@@ -1116,8 +1102,6 @@ function TaskScreen({
                   }
                 }}
                 onRestoreAndSelectNext={unifiedRestoreAndSelectNext}
-                teamMode={teamMode}
-                teamId={teamId}
                 createdBy={selectedDeletedTask.createdBy}
                 createdByUserId={selectedDeletedTask.userId}
                 createdByAvatarColor={selectedDeletedTask.avatarColor}
@@ -1135,8 +1119,6 @@ function TaskScreen({
                 onSelectTask={onSelectTask}
                 onClosePanel={() => setTaskScreenMode("list")}
                 onDeleteAndSelectNext={handleTaskDeleteAndSelectNext}
-                teamMode={teamMode}
-                teamId={teamId}
                 createdBy={selectedTask.createdBy}
                 createdByUserId={selectedTask.userId}
                 createdByAvatarColor={selectedTask.avatarColor}

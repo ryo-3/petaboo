@@ -14,6 +14,7 @@ import { BulkDeleteConfirmation } from "@/components/ui/modals/confirmation-moda
 import TagTriggerButton from "@/components/features/tags/tag-trigger-button";
 import TagSelectionModal from "@/components/ui/modals/tag-selection-modal";
 import { useSimpleItemSave } from "@/src/hooks/use-simple-item-save";
+import { useTeamContext } from "@/contexts/team-context";
 import {
   useCreateTagging,
   useDeleteTagging,
@@ -86,9 +87,7 @@ interface MemoEditorProps {
   }>;
   preloadedItemBoards?: Board[]; // 親で取得済みのアイテム紐づけボード（優先的に使用）
 
-  // チーム機能と作成者情報
-  teamMode?: boolean;
-  teamId?: number;
+  // 作成者情報
   createdBy?: string | null;
   createdByUserId?: string | null;
   createdByAvatarColor?: string | null;
@@ -112,14 +111,15 @@ function MemoEditor({
   preloadedTaggings = [],
   preloadedBoardItems = [],
   preloadedItemBoards,
-  teamMode = false,
-  teamId,
   createdBy,
   createdByUserId,
   createdByAvatarColor,
   totalDeletedCount = 0,
   unifiedOperations,
 }: MemoEditorProps) {
+  const { isTeamMode: teamMode, teamId: teamIdRaw } = useTeamContext();
+  const teamId = teamIdRaw ?? undefined; // Hook互換性のため変換
+
   // ログを一度だけ出力（useEffectで管理）
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const baseViewerRef = useRef<HTMLDivElement>(null);

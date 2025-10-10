@@ -374,8 +374,6 @@ export default function BoardRightPanel({
                   }
                 }}
                 initialBoardId={boardId}
-                teamMode={teamMode}
-                teamId={teamId || undefined}
                 {...toCreatorProps(selectedMemoCreatorInfo)}
                 preloadedTags={tags || []}
                 preloadedBoards={allBoards || []}
@@ -386,8 +384,6 @@ export default function BoardRightPanel({
               <MemoEditor
                 memo={selectedMemo}
                 initialBoardId={boardId}
-                teamMode={teamMode}
-                teamId={teamId || undefined}
                 {...toCreatorProps(selectedMemoCreatorInfo)}
                 preloadedTags={tags || []}
                 preloadedBoards={allBoards || []}
@@ -446,8 +442,6 @@ export default function BoardRightPanel({
                 task={selectedTask}
                 initialBoardId={boardId}
                 isFromBoardDetail={true}
-                teamMode={teamMode}
-                teamId={teamId || undefined}
                 {...toCreatorProps(selectedTaskCreatorInfo)}
                 preloadedTags={tags || []}
                 preloadedBoards={allBoards || []}
@@ -486,8 +480,6 @@ export default function BoardRightPanel({
                 task={selectedTask}
                 initialBoardId={boardId}
                 isFromBoardDetail={true}
-                teamMode={teamMode}
-                teamId={teamId || undefined}
                 {...toCreatorProps(selectedTaskCreatorInfo)}
                 preloadedTags={tags || []}
                 preloadedBoards={allBoards || []}

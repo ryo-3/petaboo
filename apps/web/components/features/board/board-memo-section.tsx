@@ -71,9 +71,6 @@ interface BoardMemoSectionProps {
     originalId: string;
     addedAt: number;
   }>;
-  // チーム機能関連
-  teamMode?: boolean;
-  teamId?: number | null;
   boardId?: number;
 }
 
@@ -81,6 +78,7 @@ import { useRef, useMemo, useState } from "react";
 import { BulkActionButtons } from "@/components/ui/layout/bulk-action-buttons";
 import { useBulkDeleteButton } from "@/src/hooks/use-bulk-delete-button";
 import { useBoardBulkRestore } from "@/src/hooks/use-board-bulk-restore";
+import { useTeamContext } from "@/contexts/team-context";
 
 export default function BoardMemoSection({
   rightPanelMode,
@@ -98,8 +96,6 @@ export default function BoardMemoSection({
   showBoardName = false,
   showTags = false,
   selectedMemo,
-  teamMode = false,
-  teamId,
   boardId,
   memoSelectionMode,
   checkedMemos,
@@ -125,6 +121,9 @@ export default function BoardMemoSection({
   allTaggings = [],
   allBoardItems = [],
 }: BoardMemoSectionProps) {
+  const { isTeamMode: teamMode, teamId: teamIdRaw } = useTeamContext();
+  const teamId = teamIdRaw ?? undefined; // Hook互換性のため変換
+
   // ソートオプションの管理
   const { setSortOptions, getVisibleSortOptions } = useSortOptions("memo");
   const localDeleteButtonRef = useRef<HTMLButtonElement>(null);

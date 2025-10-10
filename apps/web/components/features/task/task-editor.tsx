@@ -49,6 +49,7 @@ import {
   generateTeamShareUrl,
   extractTeamNameFromUrl,
 } from "@/src/utils/urlUtils";
+import { useTeamContext } from "@/contexts/team-context";
 
 interface TaskEditorProps {
   task?: Task | DeletedTask | null;
@@ -86,9 +87,7 @@ interface TaskEditorProps {
   }>;
   preloadedItemBoards?: Board[]; // 親で取得済みのアイテム紐づけボード（優先的に使用）
 
-  // チーム機能と作成者情報
-  teamMode?: boolean;
-  teamId?: number;
+  // 作成者情報
   createdBy?: string | null;
   createdByUserId?: string | null;
   createdByAvatarColor?: string | null;
@@ -125,13 +124,14 @@ function TaskEditor({
   preloadedTaggings = [],
   preloadedBoardItems = [],
   preloadedItemBoards,
-  teamMode = false,
-  teamId,
   createdBy,
   createdByUserId,
   createdByAvatarColor,
   unifiedOperations,
 }: TaskEditorProps) {
+  const { isTeamMode: teamMode, teamId: teamIdRaw } = useTeamContext();
+  const teamId = teamIdRaw ?? undefined; // Hook互換性のため変換
+
   // IMPORTANT: originalIdを文字列として強制変換（ボードAPI経由だと数値になる場合がある）
   const task = rawTask
     ? ({

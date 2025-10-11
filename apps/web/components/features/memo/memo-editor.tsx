@@ -512,7 +512,7 @@ function MemoEditor({
               await createTaggingMutation.mutateAsync({
                 tagId,
                 targetType: "memo",
-                targetOriginalId: memoId,
+                targetOriginalId: String(memoId),
               });
             } catch (error: unknown) {
               // 400エラー（重複）は無視し、他のエラーは再スロー

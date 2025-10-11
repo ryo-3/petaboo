@@ -650,7 +650,7 @@ function TaskEditor({
               await createTaggingMutation.mutateAsync({
                 tagId,
                 targetType: "task",
-                targetOriginalId: taskId,
+                targetOriginalId: String(taskId),
               });
             } catch (error: unknown) {
               // 400エラー（重複）は無視し、他のエラーは再スロー

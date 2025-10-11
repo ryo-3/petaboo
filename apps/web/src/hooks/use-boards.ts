@@ -642,13 +642,20 @@ export function useRemoveItemFromBoard() {
   return useMutation<
     void,
     Error,
-    { boardId: number; itemId: string; itemType: "memo" | "task" }
+    {
+      boardId: number;
+      itemId: string;
+      itemType: "memo" | "task";
+      teamId?: number;
+    }
   >({
-    mutationFn: async ({ boardId, itemId, itemType }) => {
+    mutationFn: async ({ boardId, itemId, itemType, teamId }) => {
       // 最大2回リトライ
       for (let attempt = 0; attempt < 2; attempt++) {
         const token = await getCachedToken(getToken);
-        const url = `${API_BASE_URL}/boards/${boardId}/items/${itemId}?itemType=${itemType}`;
+        const url = teamId
+          ? `${API_BASE_URL}/teams/${teamId}/boards/${boardId}/items/${itemId}?itemType=${itemType}`
+          : `${API_BASE_URL}/boards/${boardId}/items/${itemId}?itemType=${itemType}`;
 
         const response = await fetch(url, {
           method: "DELETE",
@@ -666,14 +673,14 @@ export function useRemoveItemFromBoard() {
         }
 
         if (!response.ok) {
+          const rawText = await response.text();
           try {
-            const errorJson = await response.json();
+            const errorJson = JSON.parse(rawText);
             throw new Error(
               errorJson.error ||
                 `Failed to remove item from board: ${response.status} ${response.statusText}`,
             );
           } catch {
-            const rawText = await response.text();
             throw new Error(
               `Failed to remove item from board: ${response.status} ${response.statusText} - ${rawText}`,
             );

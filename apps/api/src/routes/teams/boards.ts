@@ -900,5 +900,138 @@ export function createTeamBoardsAPI(app: AppType) {
     }
   });
 
+  // チームボードアイテム削除
+  const removeTeamBoardItem = createRoute({
+    method: "delete",
+    path: "/{teamId}/boards/{boardId}/items/{itemId}",
+    request: {
+      param: z.object({
+        teamId: z.string().openapi({ example: "1" }),
+        boardId: z.string().openapi({ example: "1" }),
+        itemId: z.string().openapi({ example: "1" }),
+      }),
+      query: z.object({
+        itemType: z.enum(["memo", "task"]).openapi({ example: "memo" }),
+      }),
+    },
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              success: z.boolean(),
+            }),
+          },
+        },
+        description: "チームボードアイテム削除成功",
+      },
+      401: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+            }),
+          },
+        },
+        description: "認証が必要",
+      },
+      403: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+            }),
+          },
+        },
+        description: "チームメンバーではない",
+      },
+      404: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+            }),
+          },
+        },
+        description: "ボードまたはアイテムが見つからない",
+      },
+    },
+  });
+
+  app.openapi(removeTeamBoardItem, async (c) => {
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ error: "認証が必要です" }, 401);
+    }
+
+    const { teamId, boardId, itemId } = c.req.param();
+    const { itemType } = c.req.valid("query");
+    const db = c.get("db");
+
+    try {
+      // チームメンバーかどうか確認
+      const memberCheck = await db
+        .select({ id: teamMembers.id })
+        .from(teamMembers)
+        .where(
+          and(
+            eq(teamMembers.teamId, parseInt(teamId)),
+            eq(teamMembers.userId, auth.userId),
+          ),
+        )
+        .limit(1);
+
+      if (memberCheck.length === 0) {
+        return c.json({ error: "チームメンバーではありません" }, 403);
+      }
+
+      // ボード存在確認
+      const board = await db
+        .select()
+        .from(teamBoards)
+        .where(
+          and(
+            eq(teamBoards.id, parseInt(boardId)),
+            eq(teamBoards.teamId, parseInt(teamId)),
+            eq(teamBoards.archived, false),
+          ),
+        )
+        .limit(1);
+
+      if (board.length === 0) {
+        return c.json({ error: "ボードが見つかりません" }, 404);
+      }
+
+      // itemIdをoriginalIdとして直接使用（文字列のまま）
+      const originalId = itemId;
+
+      // アイテムを物理削除（レコード自体を削除）
+      const result = await db
+        .delete(teamBoardItems)
+        .where(
+          and(
+            eq(teamBoardItems.boardId, parseInt(boardId)),
+            eq(teamBoardItems.itemType, itemType),
+            eq(teamBoardItems.originalId, originalId),
+          ),
+        );
+
+      if (result.changes === 0) {
+        return c.json({ error: "ボードにアイテムが見つかりません" }, 404);
+      }
+
+      // ボードのupdatedAtを更新
+      await db
+        .update(teamBoards)
+        .set({ updatedAt: new Date() })
+        .where(eq(teamBoards.id, parseInt(boardId)));
+
+      return c.json({ success: true });
+    } catch (error) {
+      console.error("チームボードアイテム削除エラー:", error);
+      return c.json({ error: "サーバーエラーが発生しました" }, 500);
+    }
+  });
+
   return app;
 }

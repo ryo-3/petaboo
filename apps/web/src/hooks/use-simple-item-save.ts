@@ -388,6 +388,7 @@ export function useSimpleItemSave<T extends UnifiedItem>({
                     boardId,
                     itemId: OriginalIdUtils.fromItem(item) || "",
                     itemType,
+                    teamId,
                   });
                 } catch (error: unknown) {
                   console.error(

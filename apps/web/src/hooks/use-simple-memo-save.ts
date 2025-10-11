@@ -260,6 +260,7 @@ export function useSimpleMemoSave({
                     itemId:
                       OriginalIdUtils.fromItem(memo) || memo.id.toString(),
                     itemType: "memo",
+                    teamId,
                   });
                 } catch (error: unknown) {
                   console.error(

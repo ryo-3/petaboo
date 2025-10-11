@@ -606,21 +606,36 @@ export const taggingsApi = {
 
   // POST /taggings
   createTagging: async (data: CreateTaggingData, token?: string) => {
+    console.log("🏷️ [createTagging] リクエスト送信:", {
+      url: `${API_BASE_URL}/taggings`,
+      data,
+    });
+
     // ネットワークログを抑制するため、try-catchで囲む
     const response = await fetch(`${API_BASE_URL}/taggings`, {
       method: "POST",
       headers: createHeaders(token),
       body: JSON.stringify(data),
-    }).catch(() => {
+    }).catch((error) => {
       // ネットワークエラーの場合、ダミーレスポンスを返す
+      console.log("❌ [createTagging] ネットワークエラー:", error);
       return new Response('{"error":"Network error"}', {
         status: 400,
         headers: { "Content-Type": "application/json" },
       });
     });
 
+    console.log("📡 [createTagging] レスポンス:", {
+      status: response.status,
+      ok: response.ok,
+    });
+
     if (!response.ok) {
       const errorText = await response.text();
+      console.log("❌ [createTagging] エラー:", {
+        status: response.status,
+        errorText,
+      });
 
       // 400エラー（重複）の場合はデバッグログのみ
       if (
@@ -636,6 +651,7 @@ export const taggingsApi = {
 
       throw new Error(`HTTP error! status: ${response.status}`);
     }
+    console.log("✅ [createTagging] 成功");
     return response;
   },
 

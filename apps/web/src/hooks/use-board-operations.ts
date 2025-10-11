@@ -185,6 +185,7 @@ export function useBoardOperations({
             boardId,
             itemId: item.itemId,
             itemType: item.itemType,
+            teamId,
           });
           // 削除したアイテムが選択されていた場合、選択を解除
           if (item.itemType === "memo" && onSelectMemo && item.itemId) {
@@ -200,6 +201,7 @@ export function useBoardOperations({
     [
       boardId,
       removeItemFromBoard,
+      teamId,
       onSelectMemo,
       onSelectTask,
       onClearSelection,

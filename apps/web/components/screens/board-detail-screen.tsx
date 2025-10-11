@@ -32,11 +32,6 @@ import { useBoardOperations } from "@/src/hooks/use-board-operations";
 import { CSVImportModal } from "@/components/features/board/csv-import-modal";
 import { useBoardCategories } from "@/src/hooks/use-board-categories";
 import BoardCategoryChip from "@/components/features/board-categories/board-category-chip";
-import {
-  ResizablePanelGroup,
-  ResizablePanel,
-  ResizableHandle,
-} from "@/components/ui/base/resizable";
 
 interface BoardDetailProps {
   boardId: number;
@@ -397,42 +392,6 @@ function BoardDetailScreen({
     allBoards,
   ]);
 
-  // パネル幅の状態管理（ローカルストレージ連携）
-  const [panelSizes, setPanelSizes] = useState<{
-    left: number;
-    right: number;
-  }>(() => {
-    // 初期値をローカルストレージから取得
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("board-panel-sizes");
-      if (saved) {
-        try {
-          return JSON.parse(saved);
-        } catch {
-          // パース失敗時はデフォルト値
-        }
-      }
-    }
-    return { left: 44, right: 56 };
-  });
-
-  // パネル幅変更時にローカルストレージへ保存
-  const handlePanelResize = useCallback((sizes: number[]) => {
-    // 2パネル分のサイズが揃っているか確認
-    if (
-      sizes.length === 2 &&
-      sizes[0] !== undefined &&
-      sizes[1] !== undefined
-    ) {
-      const newSizes = {
-        left: sizes[0],
-        right: sizes[1],
-      };
-      setPanelSizes(newSizes);
-      localStorage.setItem("board-panel-sizes", JSON.stringify(newSizes));
-    }
-  }, []);
-
   // 安全なデータ配布用
   const safeAllTaggings = allTaggings || [];
   const safeAllBoardItems = allBoardItems || [];
@@ -527,19 +486,10 @@ function BoardDetailScreen({
   return (
     <div className="flex h-full bg-white overflow-hidden">
       {selectedMemo || selectedTask || rightPanelMode ? (
-        /* リサイズ可能な2パネルレイアウト */
-        <ResizablePanelGroup
-          direction="horizontal"
-          className="flex-1"
-          onLayout={handlePanelResize}
-        >
+        /* 固定幅の2パネルレイアウト */
+        <>
           {/* 左パネル: メモ・タスク一覧 */}
-          <ResizablePanel
-            defaultSize={panelSizes.left}
-            minSize={30}
-            maxSize={70}
-            className="pt-3 pl-5 pr-2 flex flex-col relative"
-          >
+          <div className="w-[44%] border-r border-gray-300 pt-3 pl-5 pr-2 flex flex-col relative">
             {/* DesktopUpper コントロール（BoardHeaderの代わり） */}
             <div>
               <DesktopUpper
@@ -681,17 +631,10 @@ function BoardDetailScreen({
                 onTagging={handleTaggingTask}
               />
             </div>
-          </ResizablePanel>
-
-          <ResizableHandle withHandle />
+          </div>
 
           {/* 右パネル: 詳細表示 */}
-          <ResizablePanel
-            defaultSize={panelSizes.right}
-            minSize={30}
-            maxSize={70}
-            className="flex flex-col relative"
-          >
+          <div className="flex-1 flex flex-col relative">
             <BoardRightPanel
               isOpen={true}
               boardId={boardId}
@@ -728,8 +671,8 @@ function BoardDetailScreen({
               onAddMemoToBoard={handleAddMemoToBoard}
               onAddTaskToBoard={handleAddTaskToBoard}
             />
-          </ResizablePanel>
-        </ResizablePanelGroup>
+          </div>
+        </>
       ) : (
         /* 右パネルが閉じているとき: 全幅表示 */
         <div className="w-full pt-3 pl-5 pr-4 flex flex-col relative">

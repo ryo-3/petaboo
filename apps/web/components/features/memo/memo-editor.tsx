@@ -780,24 +780,27 @@ function MemoEditor({
           headerActions={
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-2">
-                <button
-                  onClick={onClose}
-                  className="flex items-center justify-center size-7 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 transition-colors"
-                >
-                  <svg
-                    className="size-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+                {/* 閉じるボタン（チームモードのみ表示） */}
+                {teamMode && (
+                  <button
+                    onClick={onClose}
+                    className="flex items-center justify-center size-7 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 transition-colors"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </button>
+                    <svg
+                      className="size-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </button>
+                )}
                 {saveError && (
                   <span className="text-xs text-red-500">{saveError}</span>
                 )}

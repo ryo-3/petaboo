@@ -631,7 +631,7 @@ function MemoScreen({
           defaultSize={threePanelSizes.left}
           minSize={20}
           maxSize={50}
-          className="flex flex-col"
+          className="flex flex-col border-r border-gray-200"
         >
           <div
             className={`${hideHeaderButtons ? "pt-3" : "pt-3 pl-5 pr-2"} flex flex-col h-full relative`}
@@ -816,7 +816,7 @@ function MemoScreen({
         <ResizablePanel
           defaultSize={threePanelSizes.center}
           minSize={35}
-          className="flex flex-col min-h-0"
+          className="flex flex-col min-h-0 border-r border-gray-200"
         >
           {/* 新規作成モード */}
           {memoScreenMode === "create" && (

@@ -84,7 +84,7 @@ export function ControlPanelLayout({
           defaultSize={panelSizes.left}
           minSize={20}
           maxSize={50}
-          className="flex flex-col"
+          className="flex flex-col border-r border-gray-200"
         >
           {leftPanel}
         </ResizablePanel>
@@ -95,7 +95,7 @@ export function ControlPanelLayout({
         <ResizablePanel
           defaultSize={panelSizes.center}
           minSize={30}
-          className="flex flex-col"
+          className="flex flex-col border-r border-gray-200"
         >
           {centerPanel}
         </ResizablePanel>

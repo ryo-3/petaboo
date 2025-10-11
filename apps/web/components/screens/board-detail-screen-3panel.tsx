@@ -780,7 +780,7 @@ function BoardDetailScreen({
                     defaultSize={panelSizesSelected.left}
                     minSize={20}
                     maxSize={50}
-                    className="rounded-lg bg-white flex flex-col min-h-0"
+                    className="rounded-lg bg-white flex flex-col min-h-0 border-r border-gray-200"
                   >
                     {selectedTask ? (
                       /* タスク選択時: タスク一覧を表示 */
@@ -872,7 +872,7 @@ function BoardDetailScreen({
                   <ResizablePanel
                     defaultSize={panelSizesSelected.center}
                     minSize={35}
-                    className="rounded-lg bg-white flex flex-col min-h-0"
+                    className="rounded-lg bg-white flex flex-col min-h-0 border-r border-gray-200"
                   >
                     {selectedMemo ? (
                       /* メモ選択時: メモ詳細を表示 */
@@ -1128,7 +1128,7 @@ function BoardDetailScreen({
                     defaultSize={panelSizesUnselected.left}
                     minSize={25}
                     maxSize={50}
-                    className="rounded-lg bg-white flex flex-col min-h-0"
+                    className="rounded-lg bg-white flex flex-col min-h-0 border-r border-gray-200"
                   >
                     <BoardMemoSection
                       rightPanelMode={rightPanelMode}
@@ -1176,7 +1176,7 @@ function BoardDetailScreen({
                     defaultSize={panelSizesUnselected.center}
                     minSize={35}
                     maxSize={50}
-                    className="rounded-lg bg-white flex flex-col min-h-0"
+                    className="rounded-lg bg-white flex flex-col min-h-0 border-r border-gray-200"
                   >
                     <BoardTaskSection
                       boardId={boardId}

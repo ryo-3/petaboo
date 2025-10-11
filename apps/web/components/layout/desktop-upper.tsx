@@ -209,6 +209,7 @@ function DesktopUpper({
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 0,
   );
+  const [controlWidth, setControlWidth] = useState(0); // コントロール幅を状態管理
 
   // 初回レンダリング後にアニメーションを有効化
   useEffect(() => {
@@ -217,6 +218,27 @@ function DesktopUpper({
     }, 100);
     return () => clearTimeout(timer);
   }, []);
+
+  // コントロールパネルの幅を確実に取得（遅延取得）
+  useEffect(() => {
+    if (!floatControls || !controlRef.current) return;
+
+    // ResizeObserverで幅の変化を監視
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const width = entry.contentRect.width;
+        if (width > 0) {
+          setControlWidth(width);
+        }
+      }
+    });
+
+    resizeObserver.observe(controlRef.current);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [floatControls]);
 
   // リサイズ対応：ウィンドウ幅を監視
   useEffect(() => {
@@ -238,8 +260,12 @@ function DesktopUpper({
     const headerHeight = 64;
     const controlHeight = 28;
     const y = (headerHeight - controlHeight) / 2; // 垂直中央配置
-    const controlWidth = controlRef.current?.offsetWidth || 0;
     let x = 0;
+
+    // コントロール幅が取得できるまで非表示（opacity: 0で対応）
+    if (controlWidth === 0) {
+      return { x: -9999, y }; // 画面外に配置
+    }
 
     switch (controlPosition) {
       case "left":
@@ -250,13 +276,13 @@ function DesktopUpper({
         x = windowWidth / 2 - controlWidth / 2;
         break;
       case "right":
-        // 通知ベル（約40px）+ gap（8px）+ UserButton（32px）+ padding（32px）= 約112px
-        x = windowWidth - controlWidth - 105; // 右側の要素を避けた位置
+        // 通知ベル（約40px）+ gap（8px）+ UserButton（32px）+ padding（32px）= 約128px
+        x = Math.max(0, windowWidth - controlWidth - 128); // 画面外にはみ出さないように
         break;
     }
 
     return { x, y };
-  }, [controlPosition, windowWidth]);
+  }, [controlPosition, windowWidth, controlWidth]);
 
   // 位置切り替え（左→中央→右→左...）
   const togglePosition = () => {

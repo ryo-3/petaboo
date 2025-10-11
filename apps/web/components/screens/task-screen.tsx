@@ -822,7 +822,7 @@ function TaskScreen({
     <div className="flex h-full bg-white">
       {/* 左側：一覧表示エリア */}
       <div
-        className={`${taskScreenMode === "list" ? "w-full" : "w-[44%]"} ${taskScreenMode !== "list" ? "border-r border-gray-300" : ""} pt-3 pl-5 pr-2 flex flex-col relative`}
+        className={`${taskScreenMode === "list" ? "w-full" : "w-[44%]"} ${taskScreenMode !== "list" ? "border-r border-gray-300" : ""} pt-3 pl-5 pr-2 flex flex-col transition-all duration-300 relative`}
       >
         <DesktopUpper
           currentMode="task"
@@ -1025,7 +1025,6 @@ function TaskScreen({
       <RightPanel
         isOpen={taskScreenMode !== "list"}
         onClose={handleRightPanelClose}
-        disableAnimation={true}
       >
         <div className="flex flex-col h-full">
           <div className="flex-1">

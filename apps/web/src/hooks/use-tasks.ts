@@ -46,6 +46,10 @@ export function useTasks(options?: { teamMode?: boolean; teamId?: number }) {
       refetchOnWindowFocus: false,
       refetchOnMount: false,
       enabled: teamMode ? Boolean(teamId) : true,
+      ...(teamMode && {
+        refetchInterval: 60 * 1000, // チームモード: 1分ごとに再取得（他メンバーの変更を反映）
+        refetchIntervalInBackground: true, // バックグラウンドタブでも定期取得を継続
+      }),
     },
   );
 }
@@ -416,6 +420,10 @@ export function useDeletedTasks(options?: {
       refetchOnWindowFocus: false,
       refetchOnMount: false,
       enabled: teamMode ? Boolean(teamId) : true,
+      ...(teamMode && {
+        refetchInterval: 60 * 1000, // チームモード: 1分ごとに再取得（他メンバーの変更を反映）
+        refetchIntervalInBackground: true, // バックグラウンドタブでも定期取得を継続
+      }),
     },
   );
 }

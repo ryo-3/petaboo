@@ -58,6 +58,7 @@ export function useTeamMemos(teamId?: number) {
     },
     enabled: !!teamId,
     refetchInterval: 60 * 1000, // チームモード: 1分ごとに再取得（他メンバーの変更を反映）
+    refetchIntervalInBackground: true, // バックグラウンドタブでも定期取得を継続
   });
 }
 
@@ -89,6 +90,7 @@ export function useDeletedTeamMemos(teamId?: number) {
     },
     enabled: !!teamId,
     refetchInterval: 60 * 1000, // チームモード: 1分ごとに再取得（他メンバーの変更を反映）
+    refetchIntervalInBackground: true, // バックグラウンドタブでも定期取得を継続
   });
 }
 

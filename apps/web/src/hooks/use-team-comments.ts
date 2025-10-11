@@ -26,6 +26,7 @@ export function useTeamComments(
       );
     },
     enabled: !!teamId && !!targetOriginalId,
+    refetchInterval: 60 * 1000, // チームモード: 1分ごとに再取得（他メンバーの変更を反映）
   });
 }
 

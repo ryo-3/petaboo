@@ -57,6 +57,7 @@ export function useTeamMemos(teamId?: number) {
       return response.json() as Promise<TeamMemo[]>;
     },
     enabled: !!teamId,
+    refetchInterval: 60 * 1000, // チームモード: 1分ごとに再取得（他メンバーの変更を反映）
   });
 }
 
@@ -87,6 +88,7 @@ export function useDeletedTeamMemos(teamId?: number) {
       return response.json() as Promise<TeamDeletedMemo[]>;
     },
     enabled: !!teamId,
+    refetchInterval: 60 * 1000, // チームモード: 1分ごとに再取得（他メンバーの変更を反映）
   });
 }
 

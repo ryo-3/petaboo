@@ -72,6 +72,7 @@ export function useTeamTasks(teamId?: number) {
       return response.json() as Promise<TeamTask[]>;
     },
     enabled: !!teamId,
+    refetchInterval: 60 * 1000, // チームモード: 1分ごとに再取得（他メンバーの変更を反映）
   });
 }
 
@@ -102,6 +103,7 @@ export function useDeletedTeamTasks(teamId?: number) {
       return response.json() as Promise<TeamDeletedTask[]>;
     },
     enabled: !!teamId,
+    refetchInterval: 60 * 1000, // チームモード: 1分ごとに再取得（他メンバーの変更を反映）
   });
 }
 

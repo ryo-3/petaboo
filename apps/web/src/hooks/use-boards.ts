@@ -768,7 +768,8 @@ export function useItemBoards(
       throw new Error("Failed after retry");
     },
     enabled: !!itemId,
-    staleTime: 0, // キャッシュを無効化して常に最新データを取得
+    // グローバル設定を使用（staleTime: 30分）
+    // mutation成功時にinvalidateQueriesで最新データを取得
   });
 }
 
@@ -812,7 +813,8 @@ export function useTeamItemBoards(
       return data;
     },
     enabled: !!itemId && !!teamId,
-    staleTime: 0, // キャッシュを無効化して常に最新データを取得
+    // グローバル設定を使用（staleTime: 30分）
+    // mutation成功時にinvalidateQueriesで最新データを取得
   });
 }
 

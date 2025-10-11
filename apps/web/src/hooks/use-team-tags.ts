@@ -45,6 +45,7 @@ export function useTeamTags(teamId: number, options: UseTeamTagsOptions = {}) {
       return data as Tag[];
     },
     enabled: teamId > 0,
+    refetchInterval: 60 * 1000, // チームモード: 1分ごとに再取得（他メンバーの変更を反映）
   });
 }
 

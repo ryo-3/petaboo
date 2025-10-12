@@ -485,332 +485,190 @@ function BoardDetailScreen({
 
   return (
     <div className="flex h-full bg-white overflow-hidden">
-      {selectedMemo || selectedTask || rightPanelMode ? (
-        /* 固定幅の2パネルレイアウト */
-        <>
-          {/* 左パネル: メモ・タスク一覧 */}
-          <div className="w-[44%] border-r border-gray-300 pt-3 pl-5 pr-2 flex flex-col relative">
-            {/* DesktopUpper コントロール（BoardHeaderの代わり） */}
-            <div>
-              <DesktopUpper
-                currentMode="board"
-                activeTab="normal"
-                onTabChange={() => {}} // ボードではタブ切り替えは無効
-                onCreateNew={() => {}} // 既存のボタンを使用
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
-                columnCount={columnCount}
-                onColumnCountChange={setColumnCount}
-                rightPanelMode={
-                  selectedMemo || selectedTask || rightPanelMode
-                    ? "view"
-                    : "hidden"
-                }
-                customTitle={boardName || "ボード詳細"}
-                boardDescription={boardDescription}
-                boardId={boardId}
-                onBoardExport={handleExport}
-                onBoardSettings={onSettings || handleSettings}
-                isExportDisabled={false}
-                marginBottom="mb-2"
-                headerMarginBottom="mb-1.5"
-                showEditDate={showEditDate}
-                onShowEditDateChange={setShowEditDate}
-                showTagDisplay={showTags}
-                onShowTagDisplayChange={handleTagDisplayChange}
-                boardLayout={boardLayout}
-                isReversed={isReversed}
-                onBoardLayoutChange={handleBoardLayoutChange}
-                showMemo={rightPanelMode === "task-list" ? false : showMemo}
-                showTask={rightPanelMode === "memo-list" ? false : showTask}
-                onMemoToggle={handleMemoToggle}
-                onTaskToggle={handleTaskToggle}
-                contentFilterRightPanelMode={rightPanelMode}
-                normalCount={allMemoItems.length + allTaskItems.length}
-                completedCount={completedCount}
-                deletedCount={deletedCount + deletedMemoCount}
-                selectionMode={selectionMode}
-                onSelectionModeChange={handleSelectionModeChange}
-                onSelectAll={undefined}
-                isAllSelected={false}
-                onCsvImport={() => setIsCSVImportModalOpen(true)}
-              />
-            </div>
+      {/* 左パネル: メモ・タスク一覧 */}
+      <div
+        className={`${selectedMemo || selectedTask || rightPanelMode ? "w-[44%]" : "w-full"} ${selectedMemo || selectedTask || rightPanelMode ? "border-r border-gray-300" : ""} pt-3 pl-5 ${selectedMemo || selectedTask || rightPanelMode ? "pr-2" : "pr-4"} flex flex-col relative transition-all duration-300`}
+      >
+        {/* DesktopUpper コントロール（BoardHeaderの代わり） */}
+        <div>
+          <DesktopUpper
+            currentMode="board"
+            activeTab="normal"
+            onTabChange={() => {}} // ボードではタブ切り替えは無効
+            onCreateNew={() => {}} // 既存のボタンを使用
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            columnCount={columnCount}
+            onColumnCountChange={setColumnCount}
+            rightPanelMode={
+              selectedMemo || selectedTask || rightPanelMode ? "view" : "hidden"
+            }
+            customTitle={boardName || "ボード詳細"}
+            boardDescription={boardDescription}
+            boardId={boardId}
+            onBoardExport={handleExport}
+            onBoardSettings={onSettings || handleSettings}
+            isExportDisabled={false}
+            marginBottom="mb-2"
+            headerMarginBottom="mb-1.5"
+            showEditDate={showEditDate}
+            onShowEditDateChange={setShowEditDate}
+            showTagDisplay={showTags}
+            onShowTagDisplayChange={handleTagDisplayChange}
+            boardLayout={boardLayout}
+            isReversed={isReversed}
+            onBoardLayoutChange={handleBoardLayoutChange}
+            showMemo={rightPanelMode === "task-list" ? false : showMemo}
+            showTask={rightPanelMode === "memo-list" ? false : showTask}
+            onMemoToggle={handleMemoToggle}
+            onTaskToggle={handleTaskToggle}
+            contentFilterRightPanelMode={rightPanelMode}
+            normalCount={allMemoItems.length + allTaskItems.length}
+            completedCount={completedCount}
+            deletedCount={deletedCount + deletedMemoCount}
+            selectionMode={selectionMode}
+            onSelectionModeChange={handleSelectionModeChange}
+            onSelectAll={undefined}
+            isAllSelected={false}
+            onCsvImport={() => setIsCSVImportModalOpen(true)}
+          />
+        </div>
 
-            {/* メモ・タスクコンテンツ */}
-            <div
-              className={`${
-                rightPanelMode === "memo-list" || rightPanelMode === "task-list"
-                  ? "flex flex-col"
-                  : !showMemo || !showTask || boardLayout === "vertical"
-                    ? isReversed
-                      ? "flex flex-col-reverse"
-                      : "flex flex-col"
-                    : `grid grid-cols-1 lg:grid-cols-2${isReversed ? " [&>*:nth-child(1)]:order-2 [&>*:nth-child(2)]:order-1" : ""}`
-              } gap-2 flex-1 min-h-0`}
-            >
-              {/* メモ列 */}
-              <BoardMemoSection
-                rightPanelMode={rightPanelMode}
-                showMemo={showMemo}
-                allMemoItems={allMemoItems}
-                memoItems={memoItems}
-                activeMemoTab={activeMemoTab}
-                normalMemoCount={normalMemoCount}
-                deletedMemoCount={deletedMemoCount}
-                showTabText={showTabText}
-                isLoading={isLoading}
-                effectiveColumnCount={effectiveColumnCount}
-                viewMode={viewMode}
-                allTags={safeAllTags}
-                allBoards={safeAllBoards}
-                allTaggings={safeAllTaggings as Tagging[]}
-                allBoardItems={safeAllBoardItems}
-                showEditDate={showEditDate}
-                showTags={showTags}
-                selectedMemo={selectedMemo}
-                boardId={boardId}
-                onCreateNewMemo={handleCreateNewMemo}
-                onSetRightPanelMode={setRightPanelMode}
-                onMemoTabChange={handleMemoTabChangeWithRefresh}
-                onSelectMemo={handleSelectMemo}
-                memoSelectionMode={selectionMode}
-                checkedMemos={checkedMemos}
-                onMemoSelectionToggle={handleMemoSelectionToggle}
-                onSelectAll={handleMemoSelectAll}
-                isAllSelected={isMemoAllSelected}
-                onBulkDelete={() => handleBulkDelete("memo")}
-                isDeleting={isMemoDeleting}
-                isLidOpen={isMemoLidOpen}
-                currentDisplayCount={currentMemoDisplayCount}
-                deleteButtonRef={deleteButtonRef}
-                onCheckedMemosChange={setCheckedMemos}
-                onTagging={handleTaggingMemo}
-              />
-
-              {/* タスク列 */}
-              <BoardTaskSection
-                boardId={boardId}
-                initialBoardId={boardId}
-                rightPanelMode={rightPanelMode}
-                showTask={showTask}
-                allTaskItems={allTaskItems}
-                taskItems={taskItems}
-                activeTaskTab={activeTaskTab}
-                todoCount={todoCount}
-                inProgressCount={inProgressCount}
-                completedCount={completedCount}
-                deletedCount={deletedCount}
-                showTabText={showTabText}
-                isLoading={isLoading}
-                effectiveColumnCount={effectiveColumnCount}
-                viewMode={viewMode}
-                showEditDate={showEditDate}
-                showTags={showTags}
-                showBoardName={false}
-                allTags={safeAllTags}
-                allBoards={safeAllBoards}
-                allTaggings={safeAllTaggings as Tagging[]}
-                allBoardItems={safeAllBoardItems}
-                selectedTask={selectedTask}
-                onCreateNewTask={handleCreateNewTask}
-                onSetRightPanelMode={setRightPanelMode}
-                onTaskTabChange={handleTaskTabChangeWithRefresh}
-                onSelectTask={handleSelectTask}
-                taskSelectionMode={selectionMode}
-                checkedTasks={checkedTasks}
-                onTaskSelectionToggle={handleTaskSelectionToggle}
-                onSelectAll={handleTaskSelectAll}
-                isAllSelected={isTaskAllSelected}
-                onBulkDelete={() => handleBulkDelete("task")}
-                isDeleting={isTaskDeleting}
-                isLidOpen={isTaskLidOpen}
-                currentDisplayCount={currentTaskDisplayCount}
-                deleteButtonRef={deleteButtonRef}
-                onCheckedTasksChange={setCheckedTasks}
-                onTagging={handleTaggingTask}
-              />
-            </div>
-          </div>
-
-          {/* 右パネル: 詳細表示 */}
-          <div className="flex-1 flex flex-col relative">
-            <BoardRightPanel
-              isOpen={true}
-              boardId={boardId}
-              selectedMemo={selectedMemo}
-              selectedTask={selectedTask}
-              rightPanelMode={rightPanelMode}
-              activeMemoTab={activeMemoTab}
-              selectedItemsFromList={selectedItemsFromList}
-              allMemos={boardMemos}
-              allTasks={boardTasks}
-              allBoards={allBoards || []}
-              allTaggings={safeAllTaggings as Tagging[]}
-              allBoardItems={safeAllBoardItems}
-              itemBoards={completeItemBoards}
-              onClose={
-                rightPanelMode
-                  ? () => handleCloseRightPanel(onClearSelection)
-                  : handleCloseDetail
-              }
-              onSelectMemo={onSelectMemo}
-              onSelectTask={onSelectTask}
-              onAddSelectedItems={handleAddSelectedItems}
-              onToggleItemSelection={handleToggleItemSelection}
-              onMemoDeleteAndSelectNext={handleMemoDeleteAndSelectNext}
-              onTaskDeleteAndSelectNext={handleTaskDeleteAndSelectNext}
-              onDeletedMemoDeleteAndSelectNext={
-                handleDeletedMemoDeleteAndSelectNext
-              }
-              onDeletedTaskDeleteAndSelectNext={
-                handleDeletedTaskDeleteAndSelectNext
-              }
-              onMemoRestoreAndSelectNext={handleMemoRestoreAndSelectNext}
-              onTaskRestoreAndSelectNext={handleTaskRestoreAndSelectNext}
-              onAddMemoToBoard={handleAddMemoToBoard}
-              onAddTaskToBoard={handleAddTaskToBoard}
-            />
-          </div>
-        </>
-      ) : (
-        /* 右パネルが閉じているとき: 全幅表示 */
-        <div className="w-full pt-3 pl-5 pr-4 flex flex-col relative">
-          {/* DesktopUpper コントロール（BoardHeaderの代わり） */}
-          <div>
-            <DesktopUpper
-              currentMode="board"
-              activeTab="normal"
-              onTabChange={() => {}} // ボードではタブ切り替えは無効
-              onCreateNew={() => {}} // 既存のボタンを使用
-              viewMode={viewMode}
-              onViewModeChange={setViewMode}
-              columnCount={columnCount}
-              onColumnCountChange={setColumnCount}
-              rightPanelMode="hidden"
-              customTitle={boardName || "ボード詳細"}
-              boardDescription={boardDescription}
-              boardId={boardId}
-              onBoardExport={handleExport}
-              onBoardSettings={onSettings || handleSettings}
-              isExportDisabled={false}
-              marginBottom="mb-2"
-              headerMarginBottom="mb-1.5"
-              showEditDate={showEditDate}
-              onShowEditDateChange={setShowEditDate}
-              showTagDisplay={showTags}
-              onShowTagDisplayChange={handleTagDisplayChange}
-              boardLayout={boardLayout}
-              isReversed={isReversed}
-              onBoardLayoutChange={handleBoardLayoutChange}
-              showMemo={showMemo}
-              showTask={showTask}
-              onMemoToggle={handleMemoToggle}
-              onTaskToggle={handleTaskToggle}
-              contentFilterRightPanelMode={rightPanelMode}
-              normalCount={allMemoItems.length + allTaskItems.length}
-              completedCount={completedCount}
-              deletedCount={deletedCount + deletedMemoCount}
-              selectionMode={selectionMode}
-              onSelectionModeChange={handleSelectionModeChange}
-              onSelectAll={undefined}
-              isAllSelected={false}
-              onCsvImport={() => setIsCSVImportModalOpen(true)}
-            />
-          </div>
-
-          {/* メモ・タスクコンテンツ */}
-          <div
-            className={`${
-              !showMemo || !showTask || boardLayout === "vertical"
+        {/* メモ・タスクコンテンツ */}
+        <div
+          className={`${
+            rightPanelMode === "memo-list" || rightPanelMode === "task-list"
+              ? "flex flex-col"
+              : !showMemo || !showTask || boardLayout === "vertical"
                 ? isReversed
                   ? "flex flex-col-reverse"
                   : "flex flex-col"
                 : `grid grid-cols-1 lg:grid-cols-2${isReversed ? " [&>*:nth-child(1)]:order-2 [&>*:nth-child(2)]:order-1" : ""}`
-            } gap-2 flex-1 min-h-0`}
-          >
-            {/* メモ列 */}
-            <BoardMemoSection
-              rightPanelMode={rightPanelMode}
-              showMemo={showMemo}
-              allMemoItems={allMemoItems}
-              memoItems={memoItems}
-              activeMemoTab={activeMemoTab}
-              normalMemoCount={normalMemoCount}
-              deletedMemoCount={deletedMemoCount}
-              showTabText={showTabText}
-              isLoading={isLoading}
-              effectiveColumnCount={effectiveColumnCount}
-              viewMode={viewMode}
-              allTags={safeAllTags}
-              allBoards={safeAllBoards}
-              allTaggings={safeAllTaggings as Tagging[]}
-              allBoardItems={safeAllBoardItems}
-              showEditDate={showEditDate}
-              showTags={showTags}
-              selectedMemo={selectedMemo}
-              boardId={boardId}
-              onCreateNewMemo={handleCreateNewMemo}
-              onSetRightPanelMode={setRightPanelMode}
-              onMemoTabChange={handleMemoTabChangeWithRefresh}
-              onSelectMemo={handleSelectMemo}
-              memoSelectionMode={selectionMode}
-              checkedMemos={checkedMemos}
-              onMemoSelectionToggle={handleMemoSelectionToggle}
-              onSelectAll={handleMemoSelectAll}
-              isAllSelected={isMemoAllSelected}
-              onBulkDelete={() => handleBulkDelete("memo")}
-              isDeleting={isMemoDeleting}
-              isLidOpen={isMemoLidOpen}
-              currentDisplayCount={currentMemoDisplayCount}
-              deleteButtonRef={deleteButtonRef}
-              onCheckedMemosChange={setCheckedMemos}
-              onTagging={handleTaggingMemo}
-            />
+          } gap-2 flex-1 min-h-0`}
+        >
+          {/* メモ列 */}
+          <BoardMemoSection
+            rightPanelMode={rightPanelMode}
+            showMemo={showMemo}
+            allMemoItems={allMemoItems}
+            memoItems={memoItems}
+            activeMemoTab={activeMemoTab}
+            normalMemoCount={normalMemoCount}
+            deletedMemoCount={deletedMemoCount}
+            showTabText={showTabText}
+            isLoading={isLoading}
+            effectiveColumnCount={effectiveColumnCount}
+            viewMode={viewMode}
+            allTags={safeAllTags}
+            allBoards={safeAllBoards}
+            allTaggings={safeAllTaggings as Tagging[]}
+            allBoardItems={safeAllBoardItems}
+            showEditDate={showEditDate}
+            showTags={showTags}
+            selectedMemo={selectedMemo}
+            boardId={boardId}
+            onCreateNewMemo={handleCreateNewMemo}
+            onSetRightPanelMode={setRightPanelMode}
+            onMemoTabChange={handleMemoTabChangeWithRefresh}
+            onSelectMemo={handleSelectMemo}
+            memoSelectionMode={selectionMode}
+            checkedMemos={checkedMemos}
+            onMemoSelectionToggle={handleMemoSelectionToggle}
+            onSelectAll={handleMemoSelectAll}
+            isAllSelected={isMemoAllSelected}
+            onBulkDelete={() => handleBulkDelete("memo")}
+            isDeleting={isMemoDeleting}
+            isLidOpen={isMemoLidOpen}
+            currentDisplayCount={currentMemoDisplayCount}
+            deleteButtonRef={deleteButtonRef}
+            onCheckedMemosChange={setCheckedMemos}
+            onTagging={handleTaggingMemo}
+          />
 
-            {/* タスク列 */}
-            <BoardTaskSection
-              boardId={boardId}
-              initialBoardId={boardId}
-              rightPanelMode={rightPanelMode}
-              showTask={showTask}
-              allTaskItems={allTaskItems}
-              taskItems={taskItems}
-              activeTaskTab={activeTaskTab}
-              todoCount={todoCount}
-              inProgressCount={inProgressCount}
-              completedCount={completedCount}
-              deletedCount={deletedCount}
-              showTabText={showTabText}
-              isLoading={isLoading}
-              effectiveColumnCount={effectiveColumnCount}
-              viewMode={viewMode}
-              showEditDate={showEditDate}
-              showTags={showTags}
-              showBoardName={false}
-              allTags={safeAllTags}
-              allBoards={safeAllBoards}
-              allTaggings={safeAllTaggings as Tagging[]}
-              allBoardItems={safeAllBoardItems}
-              selectedTask={selectedTask}
-              onCreateNewTask={handleCreateNewTask}
-              onSetRightPanelMode={setRightPanelMode}
-              onTaskTabChange={handleTaskTabChangeWithRefresh}
-              onSelectTask={handleSelectTask}
-              taskSelectionMode={selectionMode}
-              checkedTasks={checkedTasks}
-              onTaskSelectionToggle={handleTaskSelectionToggle}
-              onSelectAll={handleTaskSelectAll}
-              isAllSelected={isTaskAllSelected}
-              onBulkDelete={() => handleBulkDelete("task")}
-              isDeleting={isTaskDeleting}
-              isLidOpen={isTaskLidOpen}
-              currentDisplayCount={currentTaskDisplayCount}
-              deleteButtonRef={deleteButtonRef}
-              onCheckedTasksChange={setCheckedTasks}
-              onTagging={handleTaggingTask}
-            />
-          </div>
+          {/* タスク列 */}
+          <BoardTaskSection
+            boardId={boardId}
+            initialBoardId={boardId}
+            rightPanelMode={rightPanelMode}
+            showTask={showTask}
+            allTaskItems={allTaskItems}
+            taskItems={taskItems}
+            activeTaskTab={activeTaskTab}
+            todoCount={todoCount}
+            inProgressCount={inProgressCount}
+            completedCount={completedCount}
+            deletedCount={deletedCount}
+            showTabText={showTabText}
+            isLoading={isLoading}
+            effectiveColumnCount={effectiveColumnCount}
+            viewMode={viewMode}
+            showEditDate={showEditDate}
+            showTags={showTags}
+            showBoardName={false}
+            allTags={safeAllTags}
+            allBoards={safeAllBoards}
+            allTaggings={safeAllTaggings as Tagging[]}
+            allBoardItems={safeAllBoardItems}
+            selectedTask={selectedTask}
+            onCreateNewTask={handleCreateNewTask}
+            onSetRightPanelMode={setRightPanelMode}
+            onTaskTabChange={handleTaskTabChangeWithRefresh}
+            onSelectTask={handleSelectTask}
+            taskSelectionMode={selectionMode}
+            checkedTasks={checkedTasks}
+            onTaskSelectionToggle={handleTaskSelectionToggle}
+            onSelectAll={handleTaskSelectAll}
+            isAllSelected={isTaskAllSelected}
+            onBulkDelete={() => handleBulkDelete("task")}
+            isDeleting={isTaskDeleting}
+            isLidOpen={isTaskLidOpen}
+            currentDisplayCount={currentTaskDisplayCount}
+            deleteButtonRef={deleteButtonRef}
+            onCheckedTasksChange={setCheckedTasks}
+            onTagging={handleTaggingTask}
+          />
+        </div>
+      </div>
+
+      {/* 右パネル: 詳細表示 */}
+      {(selectedMemo || selectedTask || rightPanelMode) && (
+        <div className="flex-1 flex flex-col relative">
+          <BoardRightPanel
+            isOpen={true}
+            boardId={boardId}
+            selectedMemo={selectedMemo}
+            selectedTask={selectedTask}
+            rightPanelMode={rightPanelMode}
+            activeMemoTab={activeMemoTab}
+            selectedItemsFromList={selectedItemsFromList}
+            allMemos={boardMemos}
+            allTasks={boardTasks}
+            allBoards={allBoards || []}
+            allTaggings={safeAllTaggings as Tagging[]}
+            allBoardItems={safeAllBoardItems}
+            itemBoards={completeItemBoards}
+            onClose={
+              rightPanelMode
+                ? () => handleCloseRightPanel(onClearSelection)
+                : handleCloseDetail
+            }
+            onSelectMemo={onSelectMemo}
+            onSelectTask={onSelectTask}
+            onAddSelectedItems={handleAddSelectedItems}
+            onToggleItemSelection={handleToggleItemSelection}
+            onMemoDeleteAndSelectNext={handleMemoDeleteAndSelectNext}
+            onTaskDeleteAndSelectNext={handleTaskDeleteAndSelectNext}
+            onDeletedMemoDeleteAndSelectNext={
+              handleDeletedMemoDeleteAndSelectNext
+            }
+            onDeletedTaskDeleteAndSelectNext={
+              handleDeletedTaskDeleteAndSelectNext
+            }
+            onMemoRestoreAndSelectNext={handleMemoRestoreAndSelectNext}
+            onTaskRestoreAndSelectNext={handleTaskRestoreAndSelectNext}
+            onAddMemoToBoard={handleAddMemoToBoard}
+            onAddTaskToBoard={handleAddTaskToBoard}
+          />
         </div>
       )}
 

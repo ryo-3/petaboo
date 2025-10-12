@@ -698,7 +698,7 @@ function BoardDetailScreen({
                 ? "w-[44%] min-w-[600px] border-r border-gray-300" // リスト表示時
                 : "w-[44%] min-w-[600px] border-r border-gray-300" // エディター表示時
               : "w-full"
-        } pt-3 pl-5 pr-4 ${!teamMode && (selectedMemo || selectedTask || rightPanelMode) ? "pr-2" : "pr-4"} flex flex-col transition-all duration-300 relative`}
+        } ${teamMode ? "" : "pt-3"} pl-5 pr-4 ${!teamMode && (selectedMemo || selectedTask || rightPanelMode) ? "pr-2" : "pr-4"} flex flex-col transition-all duration-300 relative`}
       >
         {/* チームモード時はDesktopUpperを3パネル内の左パネルに配置、個人モード時は外側に配置 */}
         {!teamMode && (
@@ -782,7 +782,9 @@ function BoardDetailScreen({
                     maxSize={50}
                     className="rounded-lg bg-white flex flex-col min-h-0 border-r border-gray-200"
                   >
-                    <div className="flex flex-col h-full relative">
+                    <div
+                      className={`flex flex-col h-full relative ${teamMode ? "pt-3" : ""}`}
+                    >
                       <DesktopUpper
                         currentMode="board"
                         activeTab="normal"
@@ -1175,7 +1177,9 @@ function BoardDetailScreen({
                     maxSize={50}
                     className="rounded-lg bg-white flex flex-col min-h-0 border-r border-gray-200"
                   >
-                    <div className="flex flex-col h-full relative">
+                    <div
+                      className={`flex flex-col h-full relative ${teamMode ? "pt-3" : ""}`}
+                    >
                       <DesktopUpper
                         currentMode="board"
                         activeTab="normal"

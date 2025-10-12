@@ -566,8 +566,8 @@ function DesktopUpper({
           </Tooltip>
         )}
 
-      {/* ボードレイアウト切り替え（boardモードのみ） */}
-      {currentMode === "board" && onBoardLayoutChange && (
+      {/* ボードレイアウト切り替え（boardモードのみ、チームモードでは非表示） */}
+      {currentMode === "board" && onBoardLayoutChange && !teamMode && (
         <BoardLayoutToggle
           boardLayout={boardLayout}
           isReversed={isReversed}

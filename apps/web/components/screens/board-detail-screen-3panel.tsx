@@ -799,8 +799,8 @@ function BoardDetailScreen({
                         onBoardExport={handleExport}
                         onBoardSettings={onSettings || handleSettings}
                         isExportDisabled={false}
-                        marginBottom="mb-2"
-                        headerMarginBottom="mb-1.5"
+                        marginBottom="mb-0"
+                        headerMarginBottom="mb-0"
                         showEditDate={showEditDate}
                         onShowEditDateChange={setShowEditDate}
                         showTagDisplay={showTags}
@@ -1192,8 +1192,8 @@ function BoardDetailScreen({
                         onBoardExport={handleExport}
                         onBoardSettings={onSettings || handleSettings}
                         isExportDisabled={false}
-                        marginBottom="mb-2"
-                        headerMarginBottom="mb-1.5"
+                        marginBottom="mb-0"
+                        headerMarginBottom="mb-0"
                         showEditDate={showEditDate}
                         onShowEditDateChange={setShowEditDate}
                         showTagDisplay={showTags}

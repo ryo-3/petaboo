@@ -10,6 +10,7 @@ import type { TeamMember } from "@/src/hooks/use-team-detail";
 function renderCommentContent(
   content: string,
   currentUserId?: string,
+  teamMembers: TeamMember[] = [],
 ): JSX.Element[] {
   const lines = content.split("\n");
   const elements: JSX.Element[] = [];
@@ -62,7 +63,7 @@ function renderCommentContent(
           const quotedText = currentLine.replace(/^>\s*/, "");
           quoteLines.push(
             <div key={`quote-line-${i}`}>
-              {renderLineWithMentions(quotedText, currentUserId)}
+              {renderLineWithMentions(quotedText, currentUserId, teamMembers)}
             </div>,
           );
         }
@@ -83,7 +84,7 @@ function renderCommentContent(
     // 通常の行（メンション対応）
     elements.push(
       <div key={`line-${elements.length}`}>
-        {renderLineWithMentions(line, currentUserId)}
+        {renderLineWithMentions(line, currentUserId, teamMembers)}
       </div>,
     );
     i++;
@@ -96,6 +97,7 @@ function renderCommentContent(
 function renderLineWithMentions(
   line: string,
   currentUserId?: string,
+  teamMembers: TeamMember[] = [],
 ): JSX.Element[] {
   // インラインコードとメンションの両方に対応
   const pattern = /(`[^`]+`)|(@[\p{L}\p{N}_]+)/gu;
@@ -121,7 +123,18 @@ function renderLineWithMentions(
       // メンション判定
       const mentionPattern = /^@[\p{L}\p{N}_]+$/u;
       if (part.match(mentionPattern)) {
-        const isSelfMention = false; // TODO: 自分へのメンションかチェック
+        // メンション名から@を除いて比較
+        const mentionName = part.slice(1);
+
+        // 現在のユーザーのdisplayNameを取得
+        const currentUserMember = teamMembers.find(
+          (member) => member.userId === currentUserId,
+        );
+        const currentUserDisplayName = currentUserMember?.displayName || "";
+
+        // 自分へのメンションかチェック
+        const isSelfMention = currentUserDisplayName === mentionName;
+
         return (
           <span
             key={index}
@@ -174,8 +187,9 @@ export default function CommentSection({
   );
   const createComment = useCreateTeamComment(teamId);
 
-  // メンションサジェストのフィルタリング
+  // メンションサジェストのフィルタリング（自分自身を除外）
   const filteredSuggestions = teamMembers.filter((member) => {
+    if (member.userId === currentUserId) return false; // 自分を除外
     const name = member.displayName || `ユーザー${member.userId.slice(-4)}`;
     return name.toLowerCase().includes(mentionQuery.toLowerCase());
   });
@@ -348,6 +362,7 @@ export default function CommentSection({
                         {renderCommentContent(
                           comment.content,
                           currentUserId || undefined,
+                          teamMembers,
                         )}
                       </div>
                     </div>

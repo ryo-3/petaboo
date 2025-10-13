@@ -53,6 +53,7 @@ import {
   ResizableHandle,
 } from "@/components/ui/base/resizable";
 import CommentSection from "@/components/features/comments/comment-section";
+import type { TeamMember } from "@/src/hooks/use-team-detail";
 
 type MemoScreenMode = "list" | "view" | "create";
 
@@ -76,6 +77,8 @@ interface MemoScreenProps {
   excludeBoardIdFromFilter?: number;
   // URL連動
   initialMemoId?: string | null;
+  // チームメンバー（コメント機能用）
+  teamMembers?: TeamMember[];
 
   // 統一フック（最上位から受け取り）
   unifiedOperations: {
@@ -108,6 +111,7 @@ function MemoScreen({
   excludeBoardIdFromFilter,
   initialMemoId,
   unifiedOperations,
+  teamMembers = [],
 }: MemoScreenProps) {
   const { isTeamMode: teamMode, teamId: teamIdRaw } = useTeamContext();
   const teamId = teamIdRaw ?? undefined; // Convert null to undefined for hook compatibility
@@ -933,7 +937,7 @@ function MemoScreen({
               targetType="memo"
               targetOriginalId={OriginalIdUtils.fromItem(selectedMemo) || ""}
               teamId={teamId || 0}
-              teamMembers={[]}
+              teamMembers={teamMembers}
               title="コメント"
               placeholder="コメントを入力..."
             />

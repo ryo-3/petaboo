@@ -46,6 +46,7 @@ import { createToggleHandlerWithTabClear } from "@/src/utils/toggleUtils";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ControlPanelLayout } from "@/components/layout/control-panel-layout";
 import CommentSection from "@/components/features/comments/comment-section";
+import type { TeamMember } from "@/src/hooks/use-team-detail";
 
 type TaskScreenMode = "list" | "view" | "create" | "edit";
 
@@ -73,6 +74,8 @@ interface TaskScreenProps {
   excludeBoardIdFromFilter?: number;
   // URL連動
   initialTaskId?: string | null;
+  // チームメンバー（コメント機能用）
+  teamMembers?: TeamMember[];
 
   // 統一フック（最上位から受け取り）
   unifiedOperations: {
@@ -106,6 +109,7 @@ function TaskScreen({
   excludeBoardIdFromFilter,
   initialTaskId,
   unifiedOperations,
+  teamMembers = [],
 }: TaskScreenProps) {
   const { isTeamMode: teamMode, teamId: teamIdRaw } = useTeamContext();
   const teamId = teamIdRaw ?? undefined; // Convert null to undefined for hook compatibility
@@ -778,7 +782,7 @@ function TaskScreen({
       targetType="task"
       targetOriginalId={OriginalIdUtils.fromItem(selectedTask) || ""}
       teamId={teamId || 0}
-      teamMembers={[]}
+      teamMembers={teamMembers}
       title="コメント"
       placeholder="コメントを入力..."
     />

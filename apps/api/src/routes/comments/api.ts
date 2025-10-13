@@ -6,7 +6,8 @@ import { teamMembers } from "../../db/schema/team/teams";
 import { teamSlackConfigs } from "../../db/schema/team/slack-configs";
 import { teamMemos } from "../../db/schema/team/memos";
 import { teamTasks } from "../../db/schema/team/tasks";
-import { teamBoards } from "../../db/schema/team/boards";
+import { teamBoards, teamBoardItems } from "../../db/schema/team/boards";
+import { teams } from "../../db/schema/team/teams";
 import {
   sendSlackNotification,
   formatMentionNotification,
@@ -134,9 +135,46 @@ async function sendMentionNotificationToSlack(
     (m: any) => m.displayName || "Unknown",
   );
 
-  // 対象アイテムのタイトルを取得
-  let targetTitle = "不明";
+  // コメントから情報を取得
   const { targetType, targetOriginalId } = comment;
+
+  // チーム情報を取得（customUrl用）
+  const teamData = await db
+    .select()
+    .from(teams)
+    .where(eq(teams.id, teamId))
+    .limit(1);
+
+  const teamCustomUrl =
+    teamData.length > 0 ? teamData[0].customUrl : String(teamId);
+
+  // 対象アイテムのタイトルとURL用の識別子を取得
+  let targetTitle = "不明";
+  let targetIdentifier = targetOriginalId;
+  let boardSlug: string | null = null;
+
+  // メモ・タスクの場合、ボード所属チェック
+  if (targetType === "memo" || targetType === "task") {
+    // ボードアイテムテーブルから所属ボード情報を取得
+    const boardItems = await db
+      .select({
+        boardId: teamBoardItems.boardId,
+        boardSlug: teamBoards.slug,
+      })
+      .from(teamBoardItems)
+      .leftJoin(teamBoards, eq(teamBoards.id, teamBoardItems.boardId))
+      .where(
+        and(
+          eq(teamBoardItems.itemType, targetType),
+          eq(teamBoardItems.originalId, targetOriginalId),
+        ),
+      )
+      .limit(1);
+
+    if (boardItems.length > 0) {
+      boardSlug = boardItems[0].boardSlug;
+    }
+  }
 
   if (targetType === "memo") {
     const memos = await db
@@ -149,7 +187,10 @@ async function sendMentionNotificationToSlack(
         ),
       )
       .limit(1);
-    if (memos.length > 0) targetTitle = memos[0].title || "無題のメモ";
+    if (memos.length > 0) {
+      targetTitle = memos[0].title || "無題のメモ";
+      targetIdentifier = targetOriginalId; // originalId
+    }
   } else if (targetType === "task") {
     const tasks = await db
       .select()
@@ -161,7 +202,10 @@ async function sendMentionNotificationToSlack(
         ),
       )
       .limit(1);
-    if (tasks.length > 0) targetTitle = tasks[0].title || "無題のタスク";
+    if (tasks.length > 0) {
+      targetTitle = tasks[0].title || "無題のタスク";
+      targetIdentifier = targetOriginalId; // originalId
+    }
   } else if (targetType === "board") {
     // boardsはoriginalIdがないため、slugまたはidで検索
     const boards = await db
@@ -177,12 +221,23 @@ async function sendMentionNotificationToSlack(
         ),
       )
       .limit(1);
-    if (boards.length > 0) targetTitle = boards[0].name || "無題のボード";
+    if (boards.length > 0) {
+      targetTitle = boards[0].name || "無題のボード";
+      targetIdentifier = boards[0].slug; // slugを使用
+    }
   }
 
-  // TODO: リンクURLを環境変数から取得
+  // リンクURL生成（本番環境用）
   const appBaseUrl = process.env.APP_BASE_URL || "http://localhost:7593";
-  const linkUrl = `${appBaseUrl}/team/${teamId}/${targetType}/${targetOriginalId}`;
+  let linkUrl: string;
+
+  if (boardSlug && (targetType === "memo" || targetType === "task")) {
+    // ボード内のメモ・タスク
+    linkUrl = `${appBaseUrl}/team/${teamCustomUrl}/board/${boardSlug}/${targetType}/${targetIdentifier}`;
+  } else {
+    // ボード外のメモ・タスク、またはボード自体
+    linkUrl = `${appBaseUrl}/team/${teamCustomUrl}/${targetType}/${targetIdentifier}`;
+  }
 
   // 通知メッセージをフォーマット
   const message = formatMentionNotification(

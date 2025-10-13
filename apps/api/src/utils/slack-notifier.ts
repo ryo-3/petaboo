@@ -176,3 +176,95 @@ export async function notifyTeamJoinApproval(
     console.error("Slack通知の送信中にエラーが発生しました:", error);
   }
 }
+
+/**
+ * 汎用Slack通知送信
+ */
+export interface SlackNotificationResult {
+  success: boolean;
+  error?: string;
+}
+
+export async function sendSlackNotification(
+  webhookUrl: string,
+  message: string,
+): Promise<SlackNotificationResult> {
+  try {
+    const response = await fetch(webhookUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ text: message }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(
+        `Slack notification failed: ${response.status} ${errorText}`,
+      );
+      return {
+        success: false,
+        error: `HTTP ${response.status}: ${errorText}`,
+      };
+    }
+
+    return { success: true };
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    console.error("Slack notification error:", errorMessage);
+    return {
+      success: false,
+      error: errorMessage,
+    };
+  }
+}
+
+/**
+ * メンション通知メッセージをフォーマット
+ */
+export function formatMentionNotification(
+  mentionedDisplayNames: string[],
+  commenterDisplayName: string,
+  targetType: "memo" | "task" | "board",
+  targetTitle: string,
+  commentContent: string,
+  linkUrl: string,
+): string {
+  const targetTypeLabel =
+    targetType === "memo"
+      ? "メモ"
+      : targetType === "task"
+        ? "タスク"
+        : "ボード";
+
+  const mentionText =
+    mentionedDisplayNames.length === 1
+      ? `@${mentionedDisplayNames[0]} さんがメンションされました`
+      : `@${mentionedDisplayNames.join(", @")} さんがメンションされました`;
+
+  // コメント内容を100文字でカット
+  const truncatedContent =
+    commentContent.length > 100
+      ? `${commentContent.substring(0, 100)}...`
+      : commentContent;
+
+  return `🔔 ${mentionText}
+
+📝 ${targetTypeLabel}: ${targetTitle}
+💬 ${commenterDisplayName}: ${truncatedContent}
+
+🔗 ${linkUrl}`;
+}
+
+/**
+ * テスト通知メッセージ
+ */
+export function formatTestNotification(teamName: string): string {
+  return `✅ Slack通知のテスト送信に成功しました！
+
+チーム: ${teamName}
+
+ぺたぼーからの通知がこのチャンネルに届きます。`;
+}

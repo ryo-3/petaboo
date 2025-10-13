@@ -1,8 +1,16 @@
 import { createRoute, z } from "@hono/zod-openapi";
-import { eq, asc, and } from "drizzle-orm";
+import { eq, asc, and, or, inArray } from "drizzle-orm";
 import { getAuth } from "@hono/clerk-auth";
 import { teamComments } from "../../db/schema/team/comments";
 import { teamMembers } from "../../db/schema/team/teams";
+import { teamSlackConfigs } from "../../db/schema/team/slack-configs";
+import { teamMemos } from "../../db/schema/team/memos";
+import { teamTasks } from "../../db/schema/team/tasks";
+import { teamBoards } from "../../db/schema/team/boards";
+import {
+  sendSlackNotification,
+  formatMentionNotification,
+} from "../../utils/slack-notifier";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 
 // 共通スキーマ定義
@@ -74,6 +82,127 @@ async function extractMentions(
   }
 
   return Array.from(mentionedUserIds);
+}
+
+// Slack通知送信のヘルパー関数
+async function sendMentionNotificationToSlack(
+  teamId: number,
+  mentionedUserIds: string[],
+  comment: any,
+  commenterDisplayName: string,
+  db: any,
+) {
+  console.log(`🔔 sendMentionNotificationToSlack開始: teamId=${teamId}`);
+
+  // Slack設定取得
+  const slackConfig = await db
+    .select()
+    .from(teamSlackConfigs)
+    .where(
+      and(
+        eq(teamSlackConfigs.teamId, teamId),
+        eq(teamSlackConfigs.isEnabled, true),
+      ),
+    )
+    .limit(1);
+
+  console.log(
+    `⚙️ Slack設定: ${slackConfig.length > 0 ? "見つかった" : "見つからない"}`,
+  );
+
+  if (slackConfig.length === 0) {
+    console.log(`⚠️ Slack設定なし or 無効 - 通知スキップ`);
+    return; // Slack設定なし or 無効
+  }
+
+  // メンションされたユーザーのdisplayName取得
+  const mentionedMembers = await db
+    .select()
+    .from(teamMembers)
+    .where(
+      and(
+        eq(teamMembers.teamId, teamId),
+        inArray(teamMembers.userId, mentionedUserIds),
+      ),
+    );
+
+  if (mentionedMembers.length === 0) {
+    return; // メンションされたユーザーが見つからない
+  }
+
+  const mentionedDisplayNames = mentionedMembers.map(
+    (m: any) => m.displayName || "Unknown",
+  );
+
+  // 対象アイテムのタイトルを取得
+  let targetTitle = "不明";
+  const { targetType, targetOriginalId } = comment;
+
+  if (targetType === "memo") {
+    const memos = await db
+      .select()
+      .from(teamMemos)
+      .where(
+        and(
+          eq(teamMemos.teamId, teamId),
+          eq(teamMemos.originalId, targetOriginalId),
+        ),
+      )
+      .limit(1);
+    if (memos.length > 0) targetTitle = memos[0].title || "無題のメモ";
+  } else if (targetType === "task") {
+    const tasks = await db
+      .select()
+      .from(teamTasks)
+      .where(
+        and(
+          eq(teamTasks.teamId, teamId),
+          eq(teamTasks.originalId, targetOriginalId),
+        ),
+      )
+      .limit(1);
+    if (tasks.length > 0) targetTitle = tasks[0].title || "無題のタスク";
+  } else if (targetType === "board") {
+    // boardsはoriginalIdがないため、slugまたはidで検索
+    const boards = await db
+      .select()
+      .from(teamBoards)
+      .where(
+        and(
+          eq(teamBoards.teamId, teamId),
+          or(
+            eq(teamBoards.slug, targetOriginalId),
+            eq(teamBoards.id, Number.parseInt(targetOriginalId) || 0),
+          ),
+        ),
+      )
+      .limit(1);
+    if (boards.length > 0) targetTitle = boards[0].name || "無題のボード";
+  }
+
+  // TODO: リンクURLを環境変数から取得
+  const appBaseUrl = process.env.APP_BASE_URL || "http://localhost:7593";
+  const linkUrl = `${appBaseUrl}/team/${teamId}/${targetType}/${targetOriginalId}`;
+
+  // 通知メッセージをフォーマット
+  const message = formatMentionNotification(
+    mentionedDisplayNames,
+    commenterDisplayName,
+    targetType as "memo" | "task" | "board",
+    targetTitle,
+    comment.content,
+    linkUrl,
+  );
+
+  // Slack通知送信
+  console.log(`📤 Slack通知送信: ${mentionedDisplayNames.join(", ")}`);
+  const result = await sendSlackNotification(
+    slackConfig[0].webhookUrl,
+    message,
+  );
+  console.log(
+    `✅ Slack通知結果: success=${result.success}, error=${result.error || "なし"}`,
+  );
 }
 
 // GET /comments（コメント一覧取得）
@@ -272,6 +401,29 @@ export const postComment = async (c: any) => {
       updatedAt: createdAt,
     })
     .returning();
+
+  // Slack通知送信
+  console.log(`📬 メンション検出: ${mentionedUserIds.length}人`);
+  if (mentionedUserIds.length > 0) {
+    console.log(
+      `📬 Slack通知送信開始: teamId=${teamId}, mentions=${JSON.stringify(mentionedUserIds)}`,
+    );
+    const commenterDisplayName = member.displayName || "Unknown";
+
+    // Slack通知を送信（エラーは無視）
+    try {
+      await sendMentionNotificationToSlack(
+        teamId,
+        mentionedUserIds,
+        result[0],
+        commenterDisplayName,
+        db,
+      );
+    } catch (error) {
+      console.error("❌ Slack notification failed:", error);
+      // エラーが発生してもコメント投稿は成功として扱う
+    }
+  }
 
   return c.json(result[0], 200);
 };

@@ -10,6 +10,7 @@ import { useTeamDetail } from "@/src/hooks/use-team-detail";
 import { useAuth } from "@clerk/nextjs";
 import { useQueryClient } from "@tanstack/react-query";
 import { useKickMember } from "@/src/hooks/use-kick-member";
+import { TeamSlackSettings } from "./team-slack-settings";
 
 interface TeamSettingsProps {
   customUrl: string;
@@ -374,6 +375,9 @@ export function TeamSettings({ customUrl }: TeamSettingsProps) {
                 </div>
               </Card>
 
+              {/* Slack連携設定 */}
+              {team && <TeamSlackSettings teamId={team.id} />}
+
               {/* 今後の機能予定 */}
               <Card className="p-6 bg-gray-50">
                 <h3 className="font-semibold text-gray-800 mb-2 text-sm">
@@ -384,6 +388,15 @@ export function TeamSettings({ customUrl }: TeamSettingsProps) {
                     <span className="w-1 h-1 bg-green-600 rounded-full"></span>
                     <span className="line-through text-green-700">
                       メンバーの招待・削除機能
+                    </span>
+                    <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">
+                      実装済み
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-1 h-1 bg-green-600 rounded-full"></span>
+                    <span className="line-through text-green-700">
+                      Slack通知連携
                     </span>
                     <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">
                       実装済み

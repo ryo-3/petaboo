@@ -131,6 +131,10 @@ export default function BoardCard({
               <span className="text-xs">タスク</span>
               <span className="font-medium">{board.taskCount}</span>
             </div>
+            <div className="flex items-center gap-1 text-sm text-gray-600">
+              <span className="text-xs">コメント</span>
+              <span className="font-medium">{board.commentCount}</span>
+            </div>
           </div>
 
           <div className="text-xs text-gray-500 flex gap-4">

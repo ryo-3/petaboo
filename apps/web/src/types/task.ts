@@ -13,6 +13,7 @@ export interface Task extends BaseItemFields, TeamCreatorFields {
   dueDate: number | null; // Unix timestamp
   categoryId: number | null;
   boardCategoryId: number | null; // ボードカテゴリーID
+  commentCount?: number;
 }
 
 export interface DeletedTask

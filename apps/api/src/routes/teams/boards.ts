@@ -11,6 +11,7 @@ import {
   teamTasks,
   teamDeletedMemos,
   teamDeletedTasks,
+  teamComments,
 } from "../../db";
 import type {
   NewTeamBoard,
@@ -55,6 +56,7 @@ export function createTeamBoardsAPI(app: AppType) {
                 updatedAt: z.number(),
                 memoCount: z.number(),
                 taskCount: z.number(),
+                commentCount: z.number(),
               }),
             ),
           },
@@ -128,6 +130,8 @@ export function createTeamBoardsAPI(app: AppType) {
           // メモとタスクの数をカウント
           let memoCount = 0;
           let taskCount = 0;
+          const memoOriginalIds: string[] = [];
+          const taskOriginalIds: string[] = [];
 
           for (const item of items) {
             if (item.itemType === "memo") {
@@ -144,6 +148,7 @@ export function createTeamBoardsAPI(app: AppType) {
                 .limit(1);
               if (memo.length > 0) {
                 memoCount++;
+                memoOriginalIds.push(item.originalId);
               }
             } else {
               // チームタスクが削除されていないか確認
@@ -159,14 +164,70 @@ export function createTeamBoardsAPI(app: AppType) {
                 .limit(1);
               if (task.length > 0) {
                 taskCount++;
+                taskOriginalIds.push(item.originalId);
               }
             }
+          }
+
+          // ボードに紐づくコメント数を集計
+          let commentCount = 0;
+
+          // ボード自体へのコメント
+          const boardComments = await db
+            .select()
+            .from(teamComments)
+            .where(
+              and(
+                eq(teamComments.teamId, parseInt(teamId)),
+                eq(teamComments.targetType, "board"),
+                eq(teamComments.targetOriginalId, board.id.toString()),
+              ),
+            );
+          commentCount += boardComments.length;
+
+          // ボード内のメモへのコメント
+          if (memoOriginalIds.length > 0) {
+            const memoComments = await db
+              .select()
+              .from(teamComments)
+              .where(
+                and(
+                  eq(teamComments.teamId, parseInt(teamId)),
+                  eq(teamComments.targetType, "memo"),
+                  or(
+                    ...memoOriginalIds.map((id) =>
+                      eq(teamComments.targetOriginalId, id),
+                    ),
+                  ),
+                ),
+              );
+            commentCount += memoComments.length;
+          }
+
+          // ボード内のタスクへのコメント
+          if (taskOriginalIds.length > 0) {
+            const taskComments = await db
+              .select()
+              .from(teamComments)
+              .where(
+                and(
+                  eq(teamComments.teamId, parseInt(teamId)),
+                  eq(teamComments.targetType, "task"),
+                  or(
+                    ...taskOriginalIds.map((id) =>
+                      eq(teamComments.targetOriginalId, id),
+                    ),
+                  ),
+                ),
+              );
+            commentCount += taskComments.length;
           }
 
           return {
             ...board,
             memoCount,
             taskCount,
+            commentCount,
           };
         }),
       );
@@ -393,6 +454,9 @@ export function createTeamBoardsAPI(app: AppType) {
                 completed: z.boolean(),
                 createdAt: z.number(),
                 updatedAt: z.number(),
+                memoCount: z.number(),
+                taskCount: z.number(),
+                commentCount: z.number(),
               }),
               items: z.array(
                 z.object({
@@ -516,41 +580,140 @@ export function createTeamBoardsAPI(app: AppType) {
         .where(eq(teamBoardItems.boardId, parseInt(boardId)))
         .orderBy(teamBoardItems.createdAt);
 
+      // 各メモ・タスクのコメント数を取得
+      const allComments = await db
+        .select()
+        .from(teamComments)
+        .where(eq(teamComments.teamId, parseInt(teamId)));
+
+      // originalIdごとのコメント数をマップ化
+      const commentCountMap = new Map<string, number>();
+      allComments.forEach((comment) => {
+        const key = `${comment.targetType}:${comment.targetOriginalId}`;
+        commentCountMap.set(key, (commentCountMap.get(key) || 0) + 1);
+      });
+
       // フロントエンド用のレスポンス形式に変換（パーソナル用と同じ構造に）
       const formattedItems = items
-        .map((item) => ({
-          ...item.team_board_items,
-          content: item.team_memos
-            ? {
-                id: item.team_memos.id,
-                title: item.team_memos.title,
-                content: item.team_memos.content,
-                originalId: item.team_memos.originalId,
-                createdAt: item.team_memos.createdAt,
-                updatedAt: item.team_memos.updatedAt,
-                createdBy: item.team_members?.displayName || null,
-                avatarColor: item.team_members?.avatarColor || null,
-              }
-            : item.team_tasks
+        .map((item) => {
+          const originalId =
+            item.team_memos?.originalId || item.team_tasks?.originalId;
+          const itemType = item.team_board_items.itemType;
+          const commentCount = originalId
+            ? commentCountMap.get(`${itemType}:${originalId}`) || 0
+            : 0;
+
+          return {
+            ...item.team_board_items,
+            content: item.team_memos
               ? {
-                  id: item.team_tasks.id,
-                  title: item.team_tasks.title,
-                  description: item.team_tasks.description,
-                  status: item.team_tasks.status,
-                  priority: item.team_tasks.priority,
-                  dueDate: item.team_tasks.dueDate,
-                  originalId: item.team_tasks.originalId,
-                  createdAt: item.team_tasks.createdAt,
-                  updatedAt: item.team_tasks.updatedAt,
+                  id: item.team_memos.id,
+                  title: item.team_memos.title,
+                  content: item.team_memos.content,
+                  originalId: item.team_memos.originalId,
+                  createdAt: item.team_memos.createdAt,
+                  updatedAt: item.team_memos.updatedAt,
                   createdBy: item.team_members?.displayName || null,
                   avatarColor: item.team_members?.avatarColor || null,
+                  commentCount,
                 }
-              : null,
-        }))
+              : item.team_tasks
+                ? {
+                    id: item.team_tasks.id,
+                    title: item.team_tasks.title,
+                    description: item.team_tasks.description,
+                    status: item.team_tasks.status,
+                    priority: item.team_tasks.priority,
+                    dueDate: item.team_tasks.dueDate,
+                    originalId: item.team_tasks.originalId,
+                    createdAt: item.team_tasks.createdAt,
+                    updatedAt: item.team_tasks.updatedAt,
+                    createdBy: item.team_members?.displayName || null,
+                    avatarColor: item.team_members?.avatarColor || null,
+                    commentCount,
+                  }
+                : null,
+          };
+        })
         .filter((item) => item.content !== null); // contentがnullのアイテムを除外
 
+      // メモ数・タスク数・コメント数を計算
+      const memoCount = formattedItems.filter(
+        (item) => item.itemType === "memo",
+      ).length;
+      const taskCount = formattedItems.filter(
+        (item) => item.itemType === "task",
+      ).length;
+
+      // メモとタスクのoriginalIdを収集
+      const memoOriginalIds = formattedItems
+        .filter((item) => item.itemType === "memo")
+        .map((item) => item.originalId);
+      const taskOriginalIds = formattedItems
+        .filter((item) => item.itemType === "task")
+        .map((item) => item.originalId);
+
+      // コメント数集計
+      let commentCount = 0;
+
+      // ボード自体へのコメント
+      const boardComments = await db
+        .select()
+        .from(teamComments)
+        .where(
+          and(
+            eq(teamComments.teamId, parseInt(teamId)),
+            eq(teamComments.targetType, "board"),
+            eq(teamComments.targetOriginalId, board[0].id.toString()),
+          ),
+        );
+      commentCount += boardComments.length;
+
+      // ボード内のメモへのコメント
+      if (memoOriginalIds.length > 0) {
+        const memoComments = await db
+          .select()
+          .from(teamComments)
+          .where(
+            and(
+              eq(teamComments.teamId, parseInt(teamId)),
+              eq(teamComments.targetType, "memo"),
+              or(
+                ...memoOriginalIds.map((id) =>
+                  eq(teamComments.targetOriginalId, id),
+                ),
+              ),
+            ),
+          );
+        commentCount += memoComments.length;
+      }
+
+      // ボード内のタスクへのコメント
+      if (taskOriginalIds.length > 0) {
+        const taskComments = await db
+          .select()
+          .from(teamComments)
+          .where(
+            and(
+              eq(teamComments.teamId, parseInt(teamId)),
+              eq(teamComments.targetType, "task"),
+              or(
+                ...taskOriginalIds.map((id) =>
+                  eq(teamComments.targetOriginalId, id),
+                ),
+              ),
+            ),
+          );
+        commentCount += taskComments.length;
+      }
+
       return c.json({
-        board: board[0],
+        board: {
+          ...board[0],
+          memoCount,
+          taskCount,
+          commentCount,
+        },
         items: formattedItems,
       });
     } catch (error) {
@@ -586,6 +749,9 @@ export function createTeamBoardsAPI(app: AppType) {
                 completed: z.boolean(),
                 createdAt: z.number(),
                 updatedAt: z.number(),
+                memoCount: z.number(),
+                taskCount: z.number(),
+                commentCount: z.number(),
               }),
               deletedItems: z.array(
                 z.object({
@@ -708,8 +874,83 @@ export function createTeamBoardsAPI(app: AppType) {
         })),
       ].sort((a, b) => b.deletedAt - a.deletedAt); // 削除時刻の降順
 
+      // メモ数・タスク数・コメント数を計算（削除済みアイテムもカウント）
+      const memoCount = deletedItems.filter(
+        (item) => item.itemType === "memo",
+      ).length;
+      const taskCount = deletedItems.filter(
+        (item) => item.itemType === "task",
+      ).length;
+
+      // メモとタスクのoriginalIdを収集
+      const memoOriginalIds = deletedItems
+        .filter((item) => item.itemType === "memo")
+        .map((item) => item.originalId);
+      const taskOriginalIds = deletedItems
+        .filter((item) => item.itemType === "task")
+        .map((item) => item.originalId);
+
+      // コメント数集計
+      let commentCount = 0;
+
+      // ボード自体へのコメント
+      const boardComments = await db
+        .select()
+        .from(teamComments)
+        .where(
+          and(
+            eq(teamComments.teamId, parseInt(teamId)),
+            eq(teamComments.targetType, "board"),
+            eq(teamComments.targetOriginalId, board[0].id.toString()),
+          ),
+        );
+      commentCount += boardComments.length;
+
+      // ボード内のメモへのコメント
+      if (memoOriginalIds.length > 0) {
+        const memoComments = await db
+          .select()
+          .from(teamComments)
+          .where(
+            and(
+              eq(teamComments.teamId, parseInt(teamId)),
+              eq(teamComments.targetType, "memo"),
+              or(
+                ...memoOriginalIds.map((id) =>
+                  eq(teamComments.targetOriginalId, id),
+                ),
+              ),
+            ),
+          );
+        commentCount += memoComments.length;
+      }
+
+      // ボード内のタスクへのコメント
+      if (taskOriginalIds.length > 0) {
+        const taskComments = await db
+          .select()
+          .from(teamComments)
+          .where(
+            and(
+              eq(teamComments.teamId, parseInt(teamId)),
+              eq(teamComments.targetType, "task"),
+              or(
+                ...taskOriginalIds.map((id) =>
+                  eq(teamComments.targetOriginalId, id),
+                ),
+              ),
+            ),
+          );
+        commentCount += taskComments.length;
+      }
+
       return c.json({
-        board: board[0],
+        board: {
+          ...board[0],
+          memoCount,
+          taskCount,
+          commentCount,
+        },
         deletedItems,
       });
     } catch (error) {

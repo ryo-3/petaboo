@@ -10,6 +10,7 @@ export interface Memo extends BaseItemFields, TeamCreatorFields {
   content: string | null;
   categoryId?: number | null;
   tempId?: string;
+  commentCount?: number;
 }
 
 export interface DeletedMemo

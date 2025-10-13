@@ -38,6 +38,7 @@ export interface DeletedBoard {
 export interface BoardWithStats extends Board {
   memoCount: number;
   taskCount: number;
+  commentCount: number;
 }
 
 export interface BoardItem {
@@ -51,6 +52,9 @@ export interface BoardItem {
 
 export interface BoardWithItems extends Board {
   items: BoardItemWithContent[];
+  memoCount?: number;
+  taskCount?: number;
+  commentCount?: number;
 }
 
 export interface BoardItemWithContent extends BoardItem {

@@ -592,6 +592,8 @@ function TaskScreen({
         allTaggings={safeAllTaggings}
         allTeamTaggings={safeAllTeamTaggings}
         allBoardItems={safeAllBoardItems}
+        teamMode={teamMode}
+        teamId={teamId}
       />
 
       {/* 一括操作ボタン */}
@@ -922,6 +924,8 @@ function TaskScreen({
           allTaggings={safeAllTaggings}
           allTeamTaggings={safeAllTeamTaggings}
           allBoardItems={safeAllBoardItems}
+          teamMode={teamMode}
+          teamId={teamId}
         />
 
         {/* 一括操作ボタン */}

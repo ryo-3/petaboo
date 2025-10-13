@@ -444,6 +444,8 @@ export default function BoardTaskSection({
             allTaggings={allTaggings}
             allBoardItems={allBoardItems}
             initialBoardId={initialBoardId}
+            teamMode={teamMode}
+            teamId={teamId}
           />
         )}
       </div>

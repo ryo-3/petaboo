@@ -197,8 +197,8 @@ function ItemDisplay({
                 {isTask ? title.replace(/[\r\n]/g, " ").trim() : title}
               </h3>
 
-              {/* 作成者アイコン（メモ・カード表示・チームモードのみ） */}
-              {isMemo && viewMode === "card" && teamMode && (
+              {/* 作成者アイコン（カード表示・チームモードのみ） */}
+              {viewMode === "card" && teamMode && (
                 <CreatorAvatar
                   createdBy={item.createdBy}
                   avatarColor={item.avatarColor}

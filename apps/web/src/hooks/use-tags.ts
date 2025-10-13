@@ -7,13 +7,18 @@ interface UseTagsOptions {
   search?: string;
   sort?: "name" | "usage" | "recent";
   limit?: number;
+  enabled?: boolean; // API重複呼び出し防止用
 }
 
 export function useTags(options: UseTagsOptions = {}) {
   const { getToken } = useAuth();
 
+  // enabledをキャッシュキーから除外（キャッシュを共有するため）
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { enabled: _enabled, ...cacheKeyOptions } = options;
+
   return useQuery({
-    queryKey: ["tags", options],
+    queryKey: ["tags", cacheKeyOptions],
     queryFn: async () => {
       const token = await getToken();
       const response = await tagsApi.getTags(
@@ -28,6 +33,7 @@ export function useTags(options: UseTagsOptions = {}) {
       const data = await response.json();
       return data as Tag[];
     },
+    enabled: options.enabled !== false, // デフォルトはtrue、falseが明示的に渡された時のみ無効化
   });
 }
 

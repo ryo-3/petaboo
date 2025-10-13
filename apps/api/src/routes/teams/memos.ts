@@ -1,10 +1,11 @@
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, sql } from "drizzle-orm";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { databaseMiddleware } from "../../middleware/database";
 import { teamMemos, teamDeletedMemos } from "../../db/schema/team/memos";
 import { teamMembers } from "../../db/schema/team/teams";
+import { teamComments } from "../../db/schema/team/comments";
 import { users } from "../../db/schema/users";
 import { generateOriginalId, generateUuid } from "../../utils/originalId";
 import {
@@ -33,6 +34,7 @@ const TeamMemoSchema = z.object({
   updatedAt: z.number().nullable(),
   createdBy: z.string().nullable(), // 作成者の表示名
   avatarColor: z.string().nullable(), // 作成者のアバター色
+  commentCount: z.number().optional(), // コメント数
 });
 
 const TeamMemoInputSchema = z.object({
@@ -107,7 +109,16 @@ app.openapi(
     }
 
     const result = await db
-      .select(getTeamMemoSelectFields())
+      .select({
+        ...getTeamMemoSelectFields(),
+        commentCount: sql<number>`(
+          SELECT COUNT(*)
+          FROM ${teamComments}
+          WHERE ${teamComments.targetType} = 'memo'
+            AND ${teamComments.targetOriginalId} = ${teamMemos.originalId}
+            AND ${teamComments.teamId} = ${teamMemos.teamId}
+        )`.as("commentCount"),
+      })
       .from(teamMemos)
       .leftJoin(teamMembers, getTeamMemoMemberJoin())
       .where(eq(teamMemos.teamId, teamId))

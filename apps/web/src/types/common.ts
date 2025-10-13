@@ -127,6 +127,8 @@ export interface TeamCreatorFields {
   createdBy?: string | null;
   /** 作成者のアバター色（チーム機能でのみ使用） */
   avatarColor?: string | null;
+  /** コメント数（チーム機能でのみ使用） */
+  commentCount?: number;
 }
 
 /**

@@ -23,7 +23,7 @@ import {
 import {
   useCreateTeamTagging,
   useDeleteTeamTaggingByTag,
-  useTeamTaggings,
+  useAllTeamTaggings,
 } from "@/src/hooks/use-team-taggings";
 import { useTeamTags } from "@/src/hooks/use-team-tags";
 import { useDeletedMemoActions } from "./use-deleted-memo-actions";
@@ -226,27 +226,27 @@ function MemoEditor({
   const [prevMemoId, setPrevMemoId] = useState<number | null>(null);
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
 
-  // 個別のタグ情報も取得（キャッシュ無効化後の最新データ取得用）
+  // 【最適化】個別取得をやめて一括取得を活用
   const originalId = OriginalIdUtils.fromItem(memo);
+
+  // 個人モード: 個別タグ取得（従来通り）
   const { data: liveTaggings } = useTaggings({
     targetType: "memo",
     targetOriginalId: originalId,
-    teamMode: teamMode, // チームモードフラグをそのまま渡す
+    teamMode: teamMode,
+    enabled: !teamMode, // チームモード時は呼ばない
   });
 
-  // チーム用タグ情報を取得（チームモードの場合のみ、かつmemoオブジェクトが完全に取得された場合のみ）
-  const hookTeamId = teamMode && teamId ? teamId : 0;
-  const shouldEnableHook =
-    hookTeamId > 0 && memo && memo.id && originalId && originalId !== "";
-
-  const {
-    data: liveTeamTaggings,
-    isLoading: teamTaggingsLoading,
-    error: teamTaggingsError,
-  } = useTeamTaggings(shouldEnableHook ? hookTeamId : 0, {
-    targetType: "memo",
-    targetOriginalId: originalId,
-  });
+  // チームモード: 一括取得からフィルタリング
+  const { data: allTeamTaggings } = useAllTeamTaggings(teamId || 0);
+  const liveTeamTaggings = useMemo(() => {
+    if (!teamMode || !allTeamTaggings || !originalId) return [];
+    return allTeamTaggings.filter(
+      (tagging) =>
+        tagging.targetType === "memo" &&
+        tagging.targetOriginalId === originalId,
+    );
+  }, [teamMode, allTeamTaggings, originalId]);
 
   // チーム用タグ一覧を取得
   const { data: teamTagsList } = useTeamTags(teamId || 0);
@@ -851,6 +851,7 @@ function MemoEditor({
                   }
                   tags={localTags}
                   disabled={isDeleted}
+                  teamMode={teamMode}
                 />
                 {/* チーム機能でのURL共有ボタン */}
                 {shareUrl && (

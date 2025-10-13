@@ -31,7 +31,7 @@ import {
 } from "@/src/hooks/use-taggings";
 import { useTeamTags } from "@/src/hooks/use-team-tags";
 import {
-  useTeamTaggings,
+  useAllTeamTaggings,
   useCreateTeamTagging,
   useDeleteTeamTagging,
   useDeleteTeamTaggingByTag,
@@ -177,30 +177,40 @@ function TaskEditor({
     return [];
   }, [preloadedItemBoards, task, initialBoardId, preloadedBoards]);
 
-  // ライブタグデータ取得（個人用）
+  // 【最適化】個別取得をやめて一括取得を活用
   const originalId =
     task && task.id !== 0 ? OriginalIdUtils.fromItem(task) : null;
 
+  // 個人モード: 個別タグ取得（従来通り）
   const { data: liveTaggings } = useTaggings({
     targetType: "task",
     targetOriginalId: originalId || undefined,
-    teamMode, // チームモードでは個人タグを取得しない
+    teamMode,
+    enabled: !teamMode, // チームモード時は呼ばない
   });
 
   // チーム用タグ一覧を取得
   const { data: teamTagsList } = useTeamTags(teamId || 0);
 
-  // チーム用タグ情報を取得
+  // チームモード: 一括取得からフィルタリング
   // タスクID 142で originalId が空の場合は、既存タグとの整合性のため "5" を使用
-  let teamOriginalId = originalId;
-  if (task && task.id === 142 && (!task.originalId || task.originalId === "")) {
-    teamOriginalId = "5";
-  }
+  const teamOriginalId = useMemo(() => {
+    if (!task || !teamMode) return null;
+    if (task.id === 142 && (!task.originalId || task.originalId === "")) {
+      return "5";
+    }
+    return originalId;
+  }, [task, teamMode, originalId]);
 
-  const { data: liveTeamTaggings } = useTeamTaggings(teamId || 0, {
-    targetType: "task",
-    targetOriginalId: teamOriginalId || undefined,
-  });
+  const { data: allTeamTaggings } = useAllTeamTaggings(teamId || 0);
+  const liveTeamTaggings = useMemo(() => {
+    if (!teamMode || !allTeamTaggings || !teamOriginalId) return [];
+    return allTeamTaggings.filter(
+      (tagging) =>
+        tagging.targetType === "task" &&
+        tagging.targetOriginalId === teamOriginalId,
+    );
+  }, [teamMode, allTeamTaggings, teamOriginalId]);
 
   // 事前取得されたデータとライブデータを組み合わせて現在のタグを取得
   const currentTags = useMemo(() => {
@@ -876,6 +886,7 @@ function TaskEditor({
                   }
                   tags={localTags}
                   disabled={isDeleted}
+                  teamMode={teamMode}
                 />
                 {/* チーム機能でのURL共有ボタン */}
                 {shareUrl && (

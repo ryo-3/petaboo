@@ -13,6 +13,7 @@ interface TagTriggerButtonProps {
   targetOriginalId?: string;
   size?: "sm" | "md";
   disabled?: boolean;
+  teamMode?: boolean;
 }
 
 export default function TagTriggerButton({
@@ -22,11 +23,13 @@ export default function TagTriggerButton({
   targetOriginalId,
   size = "md",
   disabled = false,
+  teamMode = false,
 }: TagTriggerButtonProps) {
   const shouldFetchTags = !providedTags && targetType && targetOriginalId;
   const { tags: fetchedTags } = useItemTags(
     shouldFetchTags ? targetType : "memo",
     shouldFetchTags ? targetOriginalId : "",
+    { teamMode, enabled: !teamMode }, // チームモード時は個人用APIを呼ばない
   );
 
   const tags = providedTags || (shouldFetchTags ? fetchedTags : []);

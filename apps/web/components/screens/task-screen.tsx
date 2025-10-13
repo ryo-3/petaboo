@@ -34,6 +34,7 @@ import {
 } from "@/src/hooks/use-boards";
 import { useTeamBoards } from "@/src/hooks/use-team-boards";
 import { useTags } from "@/src/hooks/use-tags";
+import { useTeamTags } from "@/src/hooks/use-team-tags";
 import { useTaskDeleteWithNextSelection } from "@/src/hooks/use-memo-delete-with-next-selection";
 import TagManagementModal from "@/components/ui/tag-management/tag-management-modal";
 import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
@@ -126,7 +127,9 @@ function TaskScreen({
   const { data: personalBoards } = useBoards("normal", !teamMode);
   const { data: teamBoards } = useTeamBoards(teamId || null, "normal");
   const boards = teamMode ? teamBoards : personalBoards;
-  const { data: tags } = useTags();
+  const { data: personalTags } = useTags({ enabled: !teamMode });
+  const { data: teamTags } = useTeamTags(teamId ?? 0, { enabled: teamMode });
+  const tags = teamMode ? teamTags : personalTags;
 
   // 選択中のタスクに紐づくボード情報を取得（フェーズ1対応）
   const selectedTaskId = OriginalIdUtils.fromItem(selectedTask);

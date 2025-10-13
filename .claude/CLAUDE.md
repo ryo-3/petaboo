@@ -26,7 +26,7 @@
 - **バックエンド**: Hono 4.8.3 + SQLite + Drizzle ORM 0.44.2
 - **API仕様**: OpenAPI 3.0 + Zod (@hono/zod-openapi)
 - **認証**: Clerk 6.23.0 (JWT Bearer認証)
-- **状態管理**: React Query 5.56.2
+- **状態管理**: React Query 4.36.1 (@tanstack/react-query)
 - **アーキテクチャ**: Turborepo 2.5.4 monorepo構成
 - **パッケージ管理**: pnpm 9.0.0
 

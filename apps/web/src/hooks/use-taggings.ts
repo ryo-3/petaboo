@@ -8,19 +8,23 @@ interface UseTaggingsOptions {
   targetOriginalId?: string;
   tagId?: number;
   teamMode?: boolean; // チームモードでは個人タグを無効化
+  enabled?: boolean; // API重複呼び出し防止用
 }
 
 export function useTaggings(options: UseTaggingsOptions = {}) {
   const { getToken } = useAuth();
 
-  return useQuery({
-    queryKey: ["taggings", options],
-    queryFn: async () => {
-      // チームモードでは個人タグを取得しない
-      if (options.teamMode) {
-        return [] as Tagging[];
-      }
+  // enabled, teamModeをキャッシュキーから除外（キャッシュを共有するため）
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const {
+    enabled: _enabled,
+    teamMode: _teamMode,
+    ...cacheKeyOptions
+  } = options;
 
+  return useQuery({
+    queryKey: ["taggings", cacheKeyOptions],
+    queryFn: async () => {
       const token = await getToken();
       const response = await taggingsApi.getTaggings(
         token || undefined,
@@ -34,13 +38,14 @@ export function useTaggings(options: UseTaggingsOptions = {}) {
       const data = await response.json();
       return data as Tagging[];
     },
+    enabled: options.enabled !== false && !options.teamMode, // enabledオプションとteamModeチェックを両方適用
   });
 }
 
 export function useItemTags(
   targetType: "memo" | "task" | "board",
   targetOriginalId: string,
-  options?: { teamMode?: boolean },
+  options?: { teamMode?: boolean; enabled?: boolean },
 ) {
   const {
     data: taggings,
@@ -50,6 +55,7 @@ export function useItemTags(
     targetType,
     targetOriginalId,
     teamMode: options?.teamMode,
+    enabled: options?.enabled,
   });
 
   const tags =

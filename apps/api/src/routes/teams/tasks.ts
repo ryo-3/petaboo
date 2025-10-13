@@ -5,6 +5,7 @@ import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { databaseMiddleware } from "../../middleware/database";
 import { teamTasks, teamDeletedTasks } from "../../db/schema/team/tasks";
 import { teamMembers } from "../../db/schema/team/teams";
+import { teamComments } from "../../db/schema/team/comments";
 import { users } from "../../db/schema/users";
 import { generateOriginalId, generateUuid } from "../../utils/originalId";
 import {
@@ -38,6 +39,7 @@ const TeamTaskSchema = z.object({
   updatedAt: z.number().nullable(),
   createdBy: z.string().nullable(), // 作成者の表示名
   avatarColor: z.string().nullable(), // 作成者のアバター色
+  commentCount: z.number().optional(), // コメント数
 });
 
 const TeamTaskInputSchema = z.object({
@@ -134,16 +136,25 @@ app.openapi(
     }
 
     const result = await db
-      .select(getTeamTaskSelectFields())
+      .select({
+        ...getTeamTaskSelectFields(),
+        commentCount: sql<number>`(
+          SELECT COUNT(*)
+          FROM ${teamComments}
+          WHERE ${teamComments.targetType} = 'task'
+            AND ${teamComments.targetOriginalId} = ${teamTasks.originalId}
+            AND ${teamComments.teamId} = ${teamTasks.teamId}
+        )`.as("commentCount"),
+      })
       .from(teamTasks)
       .leftJoin(teamMembers, getTeamTaskMemberJoin())
       .where(eq(teamTasks.teamId, teamId))
       .orderBy(
         // 優先度順: high(3) > medium(2) > low(1)
         desc(
-          sql`CASE 
+          sql`CASE
             WHEN ${teamTasks.priority} = 'high' THEN 3
-            WHEN ${teamTasks.priority} = 'medium' THEN 2  
+            WHEN ${teamTasks.priority} = 'medium' THEN 2
             WHEN ${teamTasks.priority} = 'low' THEN 1
             ELSE 0
           END`,

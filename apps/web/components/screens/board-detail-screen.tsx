@@ -286,11 +286,13 @@ function BoardDetailScreen({
 
   // 全データ事前取得（ちらつき解消）
   const { data: personalTaggings, dataUpdatedAt: taggingsUpdatedAt } =
-    useAllTaggings();
-  const { data: teamTaggings } = useAllTeamTaggings(teamId || 0);
+    useAllTaggings({ enabled: !teamMode });
+  const { data: teamTaggings } = useAllTeamTaggings(teamId || 0, {
+    enabled: teamMode,
+  });
   const { data: allBoardItems } = useAllBoardItems();
-  const { data: personalTags } = useTags();
-  const { data: teamTags } = useTeamTags(teamId || 0);
+  const { data: personalTags } = useTags({ enabled: !teamMode });
+  const { data: teamTags } = useTeamTags(teamId || 0, { enabled: teamMode });
   const { data: personalBoards } = useBoards("normal", !teamMode);
   const { data: teamBoards } = useTeamBoards(teamId, "normal");
 

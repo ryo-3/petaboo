@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
+import { useMemo } from "react";
 import type { Tagging, CreateTaggingData, Tag } from "@/src/types/tag";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594";
@@ -8,6 +9,7 @@ interface UseTeamTaggingsOptions {
   targetType?: "memo" | "task" | "board";
   targetOriginalId?: string;
   tagId?: number;
+  enabled?: boolean; // API重複呼び出し防止用
 }
 
 // チームタグ付け取得
@@ -17,8 +19,12 @@ export function useTeamTaggings(
 ) {
   const { getToken } = useAuth();
 
+  // enabledをキャッシュキーから除外（キャッシュを共有するため）
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { enabled: _enabled, ...cacheKeyOptions } = options;
+
   return useQuery({
-    queryKey: ["team-taggings", teamId, options],
+    queryKey: ["team-taggings", teamId, cacheKeyOptions],
     queryFn: async () => {
       const token = await getToken();
       const params = new URLSearchParams();
@@ -228,6 +234,33 @@ export function useDeleteTeamTaggingByTag(teamId: number) {
 }
 
 // 全チームタグ付け取得（検索・フィルタリング用）
-export function useAllTeamTaggings(teamId: number) {
-  return useTeamTaggings(teamId, {});
+export function useAllTeamTaggings(
+  teamId: number,
+  options?: { enabled?: boolean },
+) {
+  return useTeamTaggings(teamId, { enabled: options?.enabled });
+}
+
+// 【最適化】一括取得からフィルタリングするフック（個別API呼び出しを防ぐ）
+export function useFilteredTeamTaggings(
+  teamId: number,
+  targetType: "memo" | "task" | "board",
+  targetOriginalId: string | undefined,
+) {
+  const { data: allTaggings, isLoading, error } = useAllTeamTaggings(teamId);
+
+  const filteredTaggings = useMemo(() => {
+    if (!allTaggings || !targetOriginalId) return [];
+    return allTaggings.filter(
+      (tagging) =>
+        tagging.targetType === targetType &&
+        tagging.targetOriginalId === targetOriginalId,
+    );
+  }, [allTaggings, targetType, targetOriginalId]);
+
+  return {
+    data: filteredTaggings,
+    isLoading,
+    error,
+  };
 }

@@ -8,7 +8,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594";
  * 全タグ付け情報を取得するフック
  * メモ・タスク・ボードすべてのタグ付け情報を一括取得
  */
-export function useAllTaggings() {
+export function useAllTaggings(options?: { enabled?: boolean }) {
   const { getToken, isLoaded } = useAuth();
 
   const result = useQuery<Tagging[]>(
@@ -31,7 +31,7 @@ export function useAllTaggings() {
       return data;
     },
     {
-      enabled: isLoaded,
+      enabled: options?.enabled !== false && isLoaded, // enabledオプションとisLoadedチェックを両方適用
       staleTime: 5 * 60 * 1000,
       cacheTime: 30 * 60 * 1000,
       refetchOnWindowFocus: false,

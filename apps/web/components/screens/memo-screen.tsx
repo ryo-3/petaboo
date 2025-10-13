@@ -238,16 +238,17 @@ function MemoScreen({
   );
   const itemBoards = teamMode ? teamMemoItemBoards : personalMemoItemBoards;
 
-  // チームモードと個人モードで異なるタグフックを使用
-  const { data: personalTags } = useTags();
-  const { data: teamTags } = useTeamTags(teamId ?? 0);
+  // チームモードと個人モードで異なるタグフックを使用（条件分岐で必要な方のみ取得）
+  const { data: personalTags } = useTags({ enabled: !teamMode });
+  const { data: teamTags } = useTeamTags(teamId ?? 0, { enabled: teamMode });
   const tags = teamMode ? teamTags : personalTags;
 
-  // チームモードと個人モードで異なるタグ付けフックを使用
+  // チームモードと個人モードで異なるタグ付けフックを使用（条件分岐で必要な方のみ取得）
   const { data: personalTaggings, error: personalTaggingsError } =
-    useAllTaggings();
+    useAllTaggings({ enabled: !teamMode });
   const { data: teamTaggings, error: teamTaggingsError } = useAllTeamTaggings(
     teamId ?? 0,
+    { enabled: teamMode },
   );
   const allTaggings = teamMode ? teamTaggings : personalTaggings;
   const taggingsError = teamMode ? teamTaggingsError : personalTaggingsError;

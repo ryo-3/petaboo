@@ -8,14 +8,19 @@ interface UseTeamTagsOptions {
   search?: string;
   sort?: "name" | "usage" | "recent";
   limit?: number;
+  enabled?: boolean; // API重複呼び出し防止用
 }
 
 // チームタグ取得
 export function useTeamTags(teamId: number, options: UseTeamTagsOptions = {}) {
   const { getToken } = useAuth();
 
+  // enabledをキャッシュキーから除外（キャッシュを共有するため）
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { enabled: _enabled, ...cacheKeyOptions } = options;
+
   return useQuery({
-    queryKey: ["team-tags", teamId, options],
+    queryKey: ["team-tags", teamId, cacheKeyOptions],
     queryFn: async () => {
       const token = await getToken();
       const params = new URLSearchParams();
@@ -44,7 +49,7 @@ export function useTeamTags(teamId: number, options: UseTeamTagsOptions = {}) {
       const data = await response.json();
       return data as Tag[];
     },
-    enabled: teamId > 0,
+    enabled: options.enabled !== false && teamId > 0, // enabledオプションとteamIdチェックを両方適用
     refetchInterval: 60 * 1000, // チームモード: 1分ごとに再取得（他メンバーの変更を反映）
   });
 }

@@ -222,7 +222,8 @@ export async function sendSlackNotification(
 }
 
 /**
- * メンション通知メッセージをフォーマット
+ * コメント通知メッセージをフォーマット
+ * メンションがある場合とない場合で異なるメッセージを生成
  */
 export function formatMentionNotification(
   mentionedDisplayNames: string[],
@@ -239,10 +240,13 @@ export function formatMentionNotification(
         ? "タスク"
         : "ボード";
 
-  const mentionText =
-    mentionedDisplayNames.length === 1
-      ? `@${mentionedDisplayNames[0]} さんがメンションされました`
-      : `@${mentionedDisplayNames.join(", @")} さんがメンションされました`;
+  // メンションがある場合とない場合で通知内容を変更
+  const headerText =
+    mentionedDisplayNames.length > 0
+      ? mentionedDisplayNames.length === 1
+        ? `🔔 @${mentionedDisplayNames[0]} さんがメンションされました`
+        : `🔔 @${mentionedDisplayNames.join(", @")} さんがメンションされました`
+      : `💬 新しいコメントが投稿されました`;
 
   // コメント内容を100文字でカット
   const truncatedContent =
@@ -250,7 +254,7 @@ export function formatMentionNotification(
       ? `${commentContent.substring(0, 100)}...`
       : commentContent;
 
-  return `🔔 ${mentionText}
+  return `${headerText}
 
 📝 ${targetTypeLabel}: ${targetTitle}
 💬 ${commenterDisplayName}: ${truncatedContent}

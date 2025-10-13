@@ -7,6 +7,11 @@ import {
   sendSlackNotification,
   formatTestNotification,
 } from "../../../utils/slack-notifier";
+import {
+  encryptWebhookUrl,
+  decryptWebhookUrl,
+  hasEncryptionKey,
+} from "../../../utils/encryption";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 
 // Slack設定スキーマ
@@ -118,7 +123,28 @@ export const getSlackConfig = async (c: any) => {
     return c.json({ error: "Slack configuration not found" }, 404);
   }
 
-  return c.json(config[0], 200);
+  // Webhook URLを復号化してマスク表示
+  const encryptionKey = c.env?.ENCRYPTION_KEY;
+  let webhookUrl = config[0].webhookUrl;
+
+  if (encryptionKey && hasEncryptionKey(c.env)) {
+    try {
+      webhookUrl = await decryptWebhookUrl(webhookUrl, encryptionKey);
+    } catch (error) {
+      console.error("復号化エラー:", error);
+      // 復号化失敗時は暗号化されていない可能性（後方互換性）
+      console.log("⚠️ 復号化失敗 - 平文として扱います");
+    }
+  }
+
+  // Webhook URLをマスク表示（セキュリティ対策）
+  // 例: https://hooks.slack.com/services/T04P4J908RK/B09EZ8N4X7F/***********
+  const maskedUrl = webhookUrl.replace(
+    /(https:\/\/hooks\.slack\.com\/services\/[^\/]+\/[^\/]+\/).+/,
+    "$1***********",
+  );
+
+  return c.json({ ...config[0], webhookUrl: maskedUrl }, 200);
 };
 
 // PUT /teams/{teamId}/slack-config（Slack設定登録・更新）
@@ -182,7 +208,22 @@ export const putSlackConfig = async (c: any) => {
   }
 
   const body = c.req.valid("json");
-  const { webhookUrl, isEnabled } = body;
+  let { webhookUrl, isEnabled } = body;
+
+  // Webhook URLを暗号化
+  const encryptionKey = c.env?.ENCRYPTION_KEY;
+  if (encryptionKey && hasEncryptionKey(c.env)) {
+    try {
+      console.log("🔐 Webhook URLを暗号化します");
+      webhookUrl = await encryptWebhookUrl(webhookUrl, encryptionKey);
+      console.log("✅ 暗号化完了");
+    } catch (error) {
+      console.error("暗号化エラー:", error);
+      return c.json({ error: "Failed to encrypt webhook URL" }, 500);
+    }
+  } else {
+    console.log("⚠️ 暗号化キーが設定されていません - 平文保存");
+  }
 
   const now = Date.now();
 
@@ -220,7 +261,8 @@ export const putSlackConfig = async (c: any) => {
       .returning();
   }
 
-  return c.json(result[0], 200);
+  // レスポンスでは暗号化されたURLをそのまま返さない（セキュリティ）
+  return c.json({ ...result[0], webhookUrl: body.webhookUrl }, 200);
 };
 
 // DELETE /teams/{teamId}/slack-config（Slack設定削除）
@@ -362,6 +404,20 @@ export const postSlackConfigTest = async (c: any) => {
     return c.json({ error: "Slack configuration not found" }, 404);
   }
 
+  // Webhook URLを復号化
+  const encryptionKey = c.env?.ENCRYPTION_KEY;
+  let webhookUrl = config[0].webhookUrl;
+
+  if (encryptionKey && hasEncryptionKey(c.env)) {
+    try {
+      webhookUrl = await decryptWebhookUrl(webhookUrl, encryptionKey);
+    } catch (error) {
+      console.error("復号化エラー:", error);
+      // 復号化失敗時は暗号化されていない可能性（後方互換性）
+      console.log("⚠️ 復号化失敗 - 平文として扱います");
+    }
+  }
+
   // チーム名取得
   const team = await db
     .select()
@@ -373,7 +429,7 @@ export const postSlackConfigTest = async (c: any) => {
 
   // テスト通知送信
   const message = formatTestNotification(teamName);
-  const result = await sendSlackNotification(config[0].webhookUrl, message);
+  const result = await sendSlackNotification(webhookUrl, message);
 
   if (result.success) {
     return c.json({

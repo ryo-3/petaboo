@@ -12,6 +12,7 @@ import {
   sendSlackNotification,
   formatMentionNotification,
 } from "../../utils/slack-notifier";
+import { decryptWebhookUrl, hasEncryptionKey } from "../../utils/encryption";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 
 // 共通スキーマ定義
@@ -92,6 +93,7 @@ async function sendMentionNotificationToSlack(
   comment: any,
   commenterDisplayName: string,
   db: any,
+  env: any,
 ) {
   console.log(`🔔 sendMentionNotificationToSlack開始: teamId=${teamId}`);
 
@@ -116,24 +118,39 @@ async function sendMentionNotificationToSlack(
     return; // Slack設定なし or 無効
   }
 
-  // メンションされたユーザーのdisplayName取得
-  const mentionedMembers = await db
-    .select()
-    .from(teamMembers)
-    .where(
-      and(
-        eq(teamMembers.teamId, teamId),
-        inArray(teamMembers.userId, mentionedUserIds),
-      ),
-    );
+  // Webhook URLを復号化
+  const encryptionKey = env?.ENCRYPTION_KEY;
+  let webhookUrl = slackConfig[0].webhookUrl;
 
-  if (mentionedMembers.length === 0) {
-    return; // メンションされたユーザーが見つからない
+  if (encryptionKey && hasEncryptionKey(env)) {
+    try {
+      webhookUrl = await decryptWebhookUrl(webhookUrl, encryptionKey);
+      console.log("🔓 Webhook URL復号化完了");
+    } catch (error) {
+      console.error("復号化エラー:", error);
+      // 復号化失敗時は暗号化されていない可能性（後方互換性）
+      console.log("⚠️ 復号化失敗 - 平文として扱います");
+    }
   }
 
-  const mentionedDisplayNames = mentionedMembers.map(
-    (m: any) => m.displayName || "Unknown",
-  );
+  // メンションされたユーザーのdisplayName取得
+  let mentionedDisplayNames: string[] = [];
+
+  if (mentionedUserIds.length > 0) {
+    const mentionedMembers = await db
+      .select()
+      .from(teamMembers)
+      .where(
+        and(
+          eq(teamMembers.teamId, teamId),
+          inArray(teamMembers.userId, mentionedUserIds),
+        ),
+      );
+
+    mentionedDisplayNames = mentionedMembers.map(
+      (m: any) => m.displayName || "Unknown",
+    );
+  }
 
   // コメントから情報を取得
   const { targetType, targetOriginalId } = comment;
@@ -251,10 +268,7 @@ async function sendMentionNotificationToSlack(
 
   // Slack通知送信
   console.log(`📤 Slack通知送信: ${mentionedDisplayNames.join(", ")}`);
-  const result = await sendSlackNotification(
-    slackConfig[0].webhookUrl,
-    message,
-  );
+  const result = await sendSlackNotification(webhookUrl, message);
   console.log(
     `✅ Slack通知結果: success=${result.success}, error=${result.error || "なし"}`,
   );
@@ -457,27 +471,26 @@ export const postComment = async (c: any) => {
     })
     .returning();
 
-  // Slack通知送信
-  console.log(`📬 メンション検出: ${mentionedUserIds.length}人`);
-  if (mentionedUserIds.length > 0) {
-    console.log(
-      `📬 Slack通知送信開始: teamId=${teamId}, mentions=${JSON.stringify(mentionedUserIds)}`,
-    );
-    const commenterDisplayName = member.displayName || "Unknown";
+  // Slack通知送信（メンションの有無に関わらず送信）
+  console.log(`📬 コメント投稿: メンション=${mentionedUserIds.length}人`);
+  console.log(
+    `📬 Slack通知送信開始: teamId=${teamId}, mentions=${JSON.stringify(mentionedUserIds)}`,
+  );
+  const commenterDisplayName = member.displayName || "Unknown";
 
-    // Slack通知を送信（エラーは無視）
-    try {
-      await sendMentionNotificationToSlack(
-        teamId,
-        mentionedUserIds,
-        result[0],
-        commenterDisplayName,
-        db,
-      );
-    } catch (error) {
-      console.error("❌ Slack notification failed:", error);
-      // エラーが発生してもコメント投稿は成功として扱う
-    }
+  // Slack通知を送信（エラーは無視）
+  try {
+    await sendMentionNotificationToSlack(
+      teamId,
+      mentionedUserIds,
+      result[0],
+      commenterDisplayName,
+      db,
+      c.env,
+    );
+  } catch (error) {
+    console.error("❌ Slack notification failed:", error);
+    // エラーが発生してもコメント投稿は成功として扱う
   }
 
   return c.json(result[0], 200);

@@ -65,3 +65,43 @@ export async function createTeamComment(
 
   return response.json();
 }
+
+// コメント編集
+export async function updateTeamComment(
+  commentId: number,
+  input: { content: string },
+  token?: string,
+): Promise<TeamComment> {
+  const response = await fetch(`${API_BASE_URL}/comments/${commentId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+    body: JSON.stringify(input),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to update comment: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+// コメント削除
+export async function deleteTeamComment(
+  commentId: number,
+  token?: string,
+): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/comments/${commentId}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to delete comment: ${response.statusText}`);
+  }
+}

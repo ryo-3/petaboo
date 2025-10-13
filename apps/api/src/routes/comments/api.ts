@@ -496,9 +496,195 @@ export const postComment = async (c: any) => {
   return c.json(result[0], 200);
 };
 
+// PUT /comments/:id（コメント編集）
+export const updateCommentRoute = createRoute({
+  method: "put",
+  path: "/{id}",
+  request: {
+    params: z.object({
+      id: z.string().regex(/^\d+$/).transform(Number),
+    }),
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            content: z
+              .string()
+              .min(1)
+              .max(1000, "コメントは1,000文字以内で入力してください"),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Updated team comment",
+      content: {
+        "application/json": {
+          schema: TeamCommentSchema,
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: z.object({ error: z.string() }),
+        },
+      },
+    },
+    403: {
+      description: "Forbidden - not the comment owner",
+      content: {
+        "application/json": {
+          schema: z.object({ error: z.string() }),
+        },
+      },
+    },
+    404: {
+      description: "Comment not found",
+      content: {
+        "application/json": {
+          schema: z.object({ error: z.string() }),
+        },
+      },
+    },
+  },
+});
+
+export const updateComment = async (c: any) => {
+  const auth = getAuth(c);
+  const db = c.get("db");
+
+  if (!auth?.userId) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  const { id } = c.req.valid("param");
+  const { content } = c.req.valid("json");
+
+  // コメントを取得して所有者確認
+  const existingComments = await db
+    .select()
+    .from(teamComments)
+    .where(eq(teamComments.id, id))
+    .limit(1);
+
+  if (existingComments.length === 0) {
+    return c.json({ error: "Comment not found" }, 404);
+  }
+
+  const existingComment = existingComments[0];
+
+  // 所有者確認
+  if (existingComment.userId !== auth.userId) {
+    return c.json({ error: "You can only edit your own comments" }, 403);
+  }
+
+  // メンション解析
+  const mentionedUserIds = await extractMentions(
+    content,
+    existingComment.teamId,
+    db,
+  );
+  const mentionsJson =
+    mentionedUserIds.length > 0 ? JSON.stringify(mentionedUserIds) : null;
+
+  // コメント更新
+  const updatedAt = Date.now();
+  const result = await db
+    .update(teamComments)
+    .set({
+      content,
+      mentions: mentionsJson,
+      updatedAt,
+    })
+    .where(eq(teamComments.id, id))
+    .returning();
+
+  return c.json(result[0], 200);
+};
+
+// DELETE /comments/:id（コメント削除）
+export const deleteCommentRoute = createRoute({
+  method: "delete",
+  path: "/{id}",
+  request: {
+    params: z.object({
+      id: z.string().regex(/^\d+$/).transform(Number),
+    }),
+  },
+  responses: {
+    204: {
+      description: "Comment deleted successfully",
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: z.object({ error: z.string() }),
+        },
+      },
+    },
+    403: {
+      description: "Forbidden - not the comment owner",
+      content: {
+        "application/json": {
+          schema: z.object({ error: z.string() }),
+        },
+      },
+    },
+    404: {
+      description: "Comment not found",
+      content: {
+        "application/json": {
+          schema: z.object({ error: z.string() }),
+        },
+      },
+    },
+  },
+});
+
+export const deleteComment = async (c: any) => {
+  const auth = getAuth(c);
+  const db = c.get("db");
+
+  if (!auth?.userId) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  const { id } = c.req.valid("param");
+
+  // コメントを取得して所有者確認
+  const existingComments = await db
+    .select()
+    .from(teamComments)
+    .where(eq(teamComments.id, id))
+    .limit(1);
+
+  if (existingComments.length === 0) {
+    return c.json({ error: "Comment not found" }, 404);
+  }
+
+  const existingComment = existingComments[0];
+
+  // 所有者確認
+  if (existingComment.userId !== auth.userId) {
+    return c.json({ error: "You can only delete your own comments" }, 403);
+  }
+
+  // コメント削除
+  await db.delete(teamComments).where(eq(teamComments.id, id));
+
+  return c.body(null, 204);
+};
+
 export function createAPI(app: OpenAPIHono) {
   app.openapi(getCommentsRoute, getComments);
   app.openapi(postCommentRoute, postComment);
+  app.openapi(updateCommentRoute, updateComment);
+  app.openapi(deleteCommentRoute, deleteComment);
 
   return app;
 }

@@ -2,9 +2,12 @@ import { useRef, useEffect, useState } from "react";
 import {
   useTeamComments,
   useCreateTeamComment,
+  useUpdateTeamComment,
+  useDeleteTeamComment,
 } from "@/src/hooks/use-team-comments";
 import { useAuth } from "@clerk/nextjs";
 import type { TeamMember } from "@/src/hooks/use-team-detail";
+import { MoreVertical, Edit2, Trash2 } from "lucide-react";
 
 // コメント本文をレンダリングするヘルパー関数（メンション・引用・コードブロック対応）
 function renderCommentContent(
@@ -186,6 +189,21 @@ export default function CommentSection({
     targetOriginalId,
   );
   const createComment = useCreateTeamComment(teamId);
+  const updateComment = useUpdateTeamComment(
+    teamId,
+    targetType,
+    targetOriginalId,
+  );
+  const deleteComment = useDeleteTeamComment(
+    teamId,
+    targetType,
+    targetOriginalId,
+  );
+
+  // 編集・削除メニュー用のstate
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editContent, setEditContent] = useState("");
 
   // メンションサジェストのフィルタリング（自分自身を除外）
   const filteredSuggestions = teamMembers.filter((member) => {
@@ -333,11 +351,60 @@ export default function CommentSection({
                 ? comment.displayName.charAt(0).toUpperCase()
                 : comment.userId.charAt(10).toUpperCase();
 
+              const isOwner = comment.userId === currentUserId;
+
               return (
                 <div
                   key={comment.id}
-                  className="bg-gray-50 rounded-lg p-3 border border-gray-100"
+                  className="bg-gray-50 rounded-lg p-3 border border-gray-100 group relative"
                 >
+                  {isOwner && (
+                    <div className="absolute top-2 right-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setOpenMenuId(
+                            openMenuId === comment.id ? null : comment.id,
+                          )
+                        }
+                        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded transition-opacity"
+                      >
+                        <MoreVertical className="size-4 text-gray-600" />
+                      </button>
+                      {openMenuId === comment.id && (
+                        <div className="absolute right-full top-0 mr-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px]">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingCommentId(comment.id);
+                              setEditContent(comment.content);
+                              setOpenMenuId(null);
+                            }}
+                            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors rounded-t-lg"
+                          >
+                            <Edit2 className="size-4" />
+                            編集
+                          </button>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              if (
+                                window.confirm("このコメントを削除しますか？")
+                              ) {
+                                await deleteComment.mutateAsync(comment.id);
+                              }
+                              setOpenMenuId(null);
+                            }}
+                            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors rounded-b-lg"
+                          >
+                            <Trash2 className="size-4" />
+                            削除
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <div className="flex items-start gap-3">
                     <div
                       className={`size-7 rounded-full flex items-center justify-center text-white text-xs font-medium flex-shrink-0 ${avatarColor}`}
@@ -357,14 +424,60 @@ export default function CommentSection({
                             minute: "2-digit",
                           })}
                         </span>
+                        {comment.updatedAt &&
+                          comment.updatedAt !== comment.createdAt && (
+                            <span className="text-xs text-gray-400">
+                              (編集済み)
+                            </span>
+                          )}
                       </div>
-                      <div className="text-sm text-gray-700 leading-relaxed">
-                        {renderCommentContent(
-                          comment.content,
-                          currentUserId || undefined,
-                          teamMembers,
-                        )}
-                      </div>
+
+                      {editingCommentId === comment.id ? (
+                        <div className="mt-2 space-y-2">
+                          <textarea
+                            value={editContent}
+                            onChange={(e) => setEditContent(e.target.value)}
+                            className="w-full p-2 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white border border-gray-200 min-h-[60px]"
+                            rows={3}
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                await updateComment.mutateAsync({
+                                  commentId: comment.id,
+                                  content: editContent,
+                                });
+                                setEditingCommentId(null);
+                              }}
+                              disabled={
+                                !editContent.trim() || updateComment.isPending
+                              }
+                              className="px-3 h-7 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-xs font-medium transition-colors disabled:opacity-50"
+                            >
+                              {updateComment.isPending ? "保存中..." : "保存"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingCommentId(null);
+                                setEditContent("");
+                              }}
+                              className="px-3 h-7 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 text-xs font-medium transition-colors"
+                            >
+                              キャンセル
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-sm text-gray-700 leading-relaxed">
+                          {renderCommentContent(
+                            comment.content,
+                            currentUserId || undefined,
+                            teamMembers,
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

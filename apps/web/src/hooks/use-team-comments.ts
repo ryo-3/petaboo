@@ -3,6 +3,8 @@ import { useAuth } from "@clerk/nextjs";
 import {
   getTeamComments,
   createTeamComment,
+  updateTeamComment,
+  deleteTeamComment,
   CreateCommentInput,
 } from "@/lib/api/comments";
 
@@ -49,6 +51,56 @@ export function useCreateTeamComment(teamId: number | undefined) {
           variables.targetType,
           variables.targetOriginalId,
         ],
+      });
+    },
+  });
+}
+
+export function useUpdateTeamComment(
+  teamId: number | undefined,
+  targetType: "memo" | "task" | "board",
+  targetOriginalId: string | undefined,
+) {
+  const { getToken } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      commentId,
+      content,
+    }: {
+      commentId: number;
+      content: string;
+    }) => {
+      const token = await getToken();
+      return updateTeamComment(commentId, { content }, token || undefined);
+    },
+    onSuccess: () => {
+      // コメント一覧を再取得
+      queryClient.invalidateQueries({
+        queryKey: ["team-comments", teamId, targetType, targetOriginalId],
+      });
+    },
+  });
+}
+
+export function useDeleteTeamComment(
+  teamId: number | undefined,
+  targetType: "memo" | "task" | "board",
+  targetOriginalId: string | undefined,
+) {
+  const { getToken } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (commentId: number) => {
+      const token = await getToken();
+      return deleteTeamComment(commentId, token || undefined);
+    },
+    onSuccess: () => {
+      // コメント一覧を再取得
+      queryClient.invalidateQueries({
+        queryKey: ["team-comments", teamId, targetType, targetOriginalId],
       });
     },
   });

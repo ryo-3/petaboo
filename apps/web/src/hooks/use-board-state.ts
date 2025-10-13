@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Memo } from "@/src/types/memo";
 import { Task } from "@/src/types/task";
+import { useViewModeStorage } from "@/src/hooks/use-view-mode-storage";
 
 export function useBoardState() {
   const router = useRouter();
@@ -24,8 +25,8 @@ export function useBoardState() {
     Set<number>
   >(new Set());
 
-  // 表示モード状態
-  const [viewMode, setViewMode] = useState<"card" | "list">("card");
+  // 表示モード状態（共通のlocalStorage設定を使用）
+  const [viewMode, setViewMode] = useViewModeStorage();
   const [columnCount, setColumnCount] = useState(2);
   const [showEditDate, setShowEditDate] = useState(false);
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import type { UserPreferences } from "@/src/contexts/user-preferences-context";
+import { useViewModeStorage } from "@/src/hooks/use-view-mode-storage";
 
 interface UseScreenStateConfig {
   type: "memo" | "task";
@@ -39,15 +40,7 @@ export function useScreenState<T extends string>(
   selectedDeletedItem?: unknown,
   preferences?: UserPreferences,
 ): ScreenStateReturn<T> {
-  // 設定値から初期値を取得
-  const getInitialViewMode = (): "card" | "list" => {
-    if (preferences) {
-      const viewModeKey = `${config.type}ViewMode` as keyof UserPreferences;
-      return (preferences[viewModeKey] as "card" | "list") || "list";
-    }
-    return "list";
-  };
-
+  // 列数の初期値を取得
   const getInitialColumnCount = (): number => {
     if (preferences) {
       const columnCountKey =
@@ -62,28 +55,22 @@ export function useScreenState<T extends string>(
   // Basic state
   const [screenMode, setScreenMode] = useState<T>(initialScreenMode);
   const [activeTab, setActiveTab] = useState(config.defaultActiveTab);
-  const [viewMode, setViewMode] = useState<"card" | "list">(
-    getInitialViewMode(),
-  );
+  const [viewMode, setViewMode] = useViewModeStorage(); // 共通のlocalStorage設定を使用
   const [columnCount, setColumnCount] = useState(getInitialColumnCount());
   const [checkedItems, setCheckedItems] = useState<Set<number>>(new Set());
   const [checkedDeletedItems, setCheckedDeletedItems] = useState<Set<number>>(
     new Set(),
   );
 
-  // 設定値が変更されたらローカル状態を更新
+  // 列数設定が変更されたらローカル状態を更新
   useEffect(() => {
     if (preferences) {
-      const viewModeKey = `${config.type}ViewMode` as keyof UserPreferences;
       const columnCountKey =
         `${config.type}ColumnCount` as keyof UserPreferences;
 
-      const newViewMode =
-        (preferences[viewModeKey] as "card" | "list") || "list";
       const newColumnCount =
         (preferences[columnCountKey] as number) || config.defaultColumnCount;
 
-      setViewMode(newViewMode);
       setColumnCount(newColumnCount);
     }
   }, [preferences, config.type, config.defaultColumnCount]);

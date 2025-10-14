@@ -10,6 +10,7 @@ export const ALLOWED_MIME_TYPES = [
   "image/png",
   "image/gif",
   "image/webp",
+  "image/svg+xml",
 ] as const;
 
 export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -31,7 +32,7 @@ export function validateImageFile(
   if (!ALLOWED_MIME_TYPES.includes(mimeType as any)) {
     return {
       valid: false,
-      error: `対応していないファイル形式です。JPEG, PNG, GIF, WebPのみ対応しています。`,
+      error: `対応していないファイル形式です。JPEG, PNG, GIF, WebP, SVGのみ対応しています。`,
     };
   }
 

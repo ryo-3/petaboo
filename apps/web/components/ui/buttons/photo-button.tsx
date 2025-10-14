@@ -16,7 +16,7 @@ function PhotoButton({
   disabled = false,
   buttonSize = "size-7",
   iconSize = "size-4",
-  accept = "image/jpeg,image/png,image/gif,image/webp",
+  accept = "image/jpeg,image/png,image/gif,image/webp,image/svg+xml",
 }: PhotoButtonProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 

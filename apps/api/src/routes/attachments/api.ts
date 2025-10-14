@@ -410,6 +410,7 @@ export const getImageRoute = createRoute({
         "image/png": { schema: z.any() },
         "image/gif": { schema: z.any() },
         "image/webp": { schema: z.any() },
+        "image/svg+xml": { schema: z.any() },
       },
     },
     401: {

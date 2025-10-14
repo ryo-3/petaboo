@@ -1,39 +1,61 @@
+import { useRef } from "react";
 import PhotoIcon from "@/components/icons/photo-icon";
 
 interface PhotoButtonProps {
-  onClick?: () => void;
+  onFileSelect?: (file: File) => void;
   className?: string;
   disabled?: boolean;
   buttonSize?: string;
   iconSize?: string;
+  accept?: string;
 }
 
 function PhotoButton({
-  onClick,
+  onFileSelect,
   className = "",
   disabled = false,
   buttonSize = "size-7",
   iconSize = "size-4",
+  accept = "image/jpeg,image/png,image/gif,image/webp",
 }: PhotoButtonProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const handleClick = () => {
-    if (onClick) {
-      onClick();
-    } else {
-      // デフォルトの動作
-      alert("画像添付機能は今後実装予定です");
+    if (disabled) return;
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && onFileSelect) {
+      onFileSelect(file);
+    }
+    // Reset input to allow selecting the same file again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
   return (
-    <button
-      className={`${buttonSize} rounded-lg bg-gray-100 text-gray-500 flex items-center justify-center ${
-        disabled ? "opacity-50 cursor-not-allowed" : ""
-      } ${className}`}
-      onClick={handleClick}
-      disabled={disabled}
-    >
-      <PhotoIcon className={iconSize} />
-    </button>
+    <>
+      <button
+        type="button"
+        className={`${buttonSize} rounded-lg bg-gray-100 text-gray-500 flex items-center justify-center ${
+          disabled ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-200"
+        } ${className}`}
+        onClick={handleClick}
+        disabled={disabled}
+      >
+        <PhotoIcon className={iconSize} />
+      </button>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={accept}
+        onChange={handleFileChange}
+        className="hidden"
+      />
+    </>
   );
 }
 

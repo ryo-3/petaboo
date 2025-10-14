@@ -20,6 +20,7 @@ import teamBoardsRoute from "./src/routes/teams/boards-route";
 import teamSlackConfigRoute from "./src/routes/teams/slack-config/route";
 import boardSlackConfigRoute from "./src/routes/boards/slack-config/route";
 import commentsRoute from "./src/routes/comments/route";
+import attachmentsRoute from "./src/routes/attachments/route";
 import clerkWebhook from "./src/routes/webhooks/clerk";
 import usersRoute from "./src/routes/users/route";
 
@@ -28,6 +29,8 @@ export interface Env {
   CLERK_SECRET_KEY: string;
   CLERK_PUBLISHABLE_KEY: string;
   RESEND_API_KEY: string;
+  R2_BUCKET: R2Bucket;
+  API_BASE_URL: string;
 }
 
 const app = new Hono<{ Bindings: Env }>();
@@ -97,6 +100,7 @@ app.route("/teams", teamBoardsRoute);
 app.route("/teams", teamSlackConfigRoute);
 app.route("/boards", boardSlackConfigRoute);
 app.route("/comments", commentsRoute);
+app.route("/attachments", attachmentsRoute);
 app.route("/webhooks/clerk", clerkWebhook);
 app.route("/users", usersRoute);
 

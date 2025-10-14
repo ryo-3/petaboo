@@ -6,6 +6,7 @@ export * from "./schema/categories";
 export * from "./schema/boards";
 export * from "./schema/tags";
 export * from "./schema/board-categories";
+export * from "./schema/attachments";
 
 // Team schemas
 export * from "./schema/team/teams";
@@ -18,3 +19,4 @@ export * from "./schema/team/tags";
 export * from "./schema/team/comments";
 export * from "./schema/team/slack-configs";
 export * from "./schema/team/board-slack-configs";
+export * from "./schema/team/attachments";

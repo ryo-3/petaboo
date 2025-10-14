@@ -6,6 +6,7 @@ import ArrowLeftIcon from "@/components/icons/arrow-left-icon";
 import { useToast } from "@/src/contexts/toast-context";
 import TextInputWithCounter from "@/components/ui/inputs/text-input-with-counter";
 import TextareaWithCounter from "@/components/ui/inputs/textarea-with-counter";
+import { BoardSlackSettings } from "@/components/features/board/board-slack-settings";
 
 interface SharedBoardSettingsProps {
   boardId: number;
@@ -143,7 +144,7 @@ export default function SharedBoardSettings({
   const title = isTeamMode ? "チームボード設定" : "ボード設定";
 
   return (
-    <div className="max-w-4xl">
+    <div className="max-w-4xl pb-24">
       {/* ヘッダー */}
       <div className="flex items-center gap-4 mb-4">
         <button
@@ -214,9 +215,9 @@ export default function SharedBoardSettings({
         <div className="bg-white border border-gray-200 rounded-lg p-4">
           <h2 className="text-lg font-semibold text-gray-900 mb-3">状態管理</h2>
 
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-            <div>
-              <p className="font-medium text-gray-900">完了状態</p>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <p className="font-medium text-gray-900 mb-1">完了状態</p>
               <p className="text-sm text-gray-500">
                 {initialBoardCompleted
                   ? "このボードは完了済みです"
@@ -226,7 +227,7 @@ export default function SharedBoardSettings({
             <button
               onClick={handleToggleCompletion}
               disabled={toggleCompletionMutation.isPending}
-              className={`px-4 py-2 rounded-lg transition-colors font-medium ${
+              className={`px-4 py-2 rounded-lg transition-colors font-medium whitespace-nowrap ${
                 initialBoardCompleted
                   ? "bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-700"
                   : "bg-green-100 hover:bg-green-200 text-green-600 hover:text-green-700"
@@ -240,6 +241,9 @@ export default function SharedBoardSettings({
             </button>
           </div>
         </div>
+
+        {/* Slack通知設定 */}
+        <BoardSlackSettings boardId={boardId} />
 
         {/* 危険ゾーン */}
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">

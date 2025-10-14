@@ -4,6 +4,7 @@ import { getAuth } from "@hono/clerk-auth";
 import { teamComments } from "../../db/schema/team/comments";
 import { teamMembers } from "../../db/schema/team/teams";
 import { teamSlackConfigs } from "../../db/schema/team/slack-configs";
+import { boardSlackConfigs } from "../../db/schema/team/board-slack-configs";
 import { teamMemos } from "../../db/schema/team/memos";
 import { teamTasks } from "../../db/schema/team/tasks";
 import { teamBoards, teamBoardItems } from "../../db/schema/team/boards";
@@ -97,17 +98,79 @@ async function sendMentionNotificationToSlack(
 ) {
   console.log(`🔔 sendMentionNotificationToSlack開始: teamId=${teamId}`);
 
-  // Slack設定取得
-  const slackConfig = await db
-    .select()
-    .from(teamSlackConfigs)
-    .where(
-      and(
-        eq(teamSlackConfigs.teamId, teamId),
-        eq(teamSlackConfigs.isEnabled, true),
-      ),
-    )
-    .limit(1);
+  // メモ・タスクの場合、ボード所属チェックとボード専用Slack設定の優先確認
+  let boardId: number | null = null;
+  if (comment.targetType === "memo" || comment.targetType === "task") {
+    const boardItems = await db
+      .select({ boardId: teamBoardItems.boardId })
+      .from(teamBoardItems)
+      .where(
+        and(
+          eq(teamBoardItems.itemType, comment.targetType),
+          eq(teamBoardItems.originalId, comment.targetOriginalId),
+        ),
+      )
+      .limit(1);
+
+    if (boardItems.length > 0) {
+      boardId = boardItems[0].boardId;
+    }
+  } else if (comment.targetType === "board") {
+    // ボードコメントの場合は直接targetOriginalIdから取得
+    const boards = await db
+      .select()
+      .from(teamBoards)
+      .where(
+        and(
+          eq(teamBoards.teamId, teamId),
+          or(
+            eq(teamBoards.slug, comment.targetOriginalId),
+            eq(teamBoards.id, Number.parseInt(comment.targetOriginalId) || 0),
+          ),
+        ),
+      )
+      .limit(1);
+    if (boards.length > 0) {
+      boardId = boards[0].id;
+    }
+  }
+
+  // ボードID取得成功時、ボード専用Slack設定を優先確認
+  let slackConfig: any[] = [];
+  if (boardId) {
+    const boardSlackConfig = await db
+      .select()
+      .from(boardSlackConfigs)
+      .where(
+        and(
+          eq(boardSlackConfigs.boardId, boardId),
+          eq(boardSlackConfigs.isEnabled, true),
+        ),
+      )
+      .limit(1);
+
+    if (boardSlackConfig.length > 0) {
+      console.log(`🎯 ボード専用Slack設定を使用: boardId=${boardId}`);
+      slackConfig = boardSlackConfig;
+    }
+  }
+
+  // ボード専用設定がない場合、チーム全体のSlack設定を使用
+  if (slackConfig.length === 0) {
+    console.log(`📢 チーム全体Slack設定を使用: teamId=${teamId}`);
+    const teamSlackConfig = await db
+      .select()
+      .from(teamSlackConfigs)
+      .where(
+        and(
+          eq(teamSlackConfigs.teamId, teamId),
+          eq(teamSlackConfigs.isEnabled, true),
+        ),
+      )
+      .limit(1);
+
+    slackConfig = teamSlackConfig;
+  }
 
   console.log(
     `⚙️ Slack設定: ${slackConfig.length > 0 ? "見つかった" : "見つからない"}`,

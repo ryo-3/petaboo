@@ -218,26 +218,17 @@ function TaskEditor({
     taskOriginalId,
   );
 
-  const handleFileSelect = async (file: File) => {
-    if (!taskOriginalId) {
-      showToast("タスクを保存してから画像を添付してください", "error");
-      return;
-    }
+  // 保存待ちの画像（ローカルstate）
+  const [pendingImages, setPendingImages] = useState<File[]>([]);
 
-    if (attachments.length >= 4) {
+  const handleFileSelect = (file: File) => {
+    const totalCount = attachments.length + pendingImages.length;
+    if (totalCount >= 4) {
       showToast("画像は最大4枚までです", "error");
       return;
     }
 
-    try {
-      await uploadMutation.mutateAsync(file);
-      showToast("画像をアップロードしました", "success");
-    } catch (error) {
-      showToast(
-        error instanceof Error ? error.message : "アップロードに失敗しました",
-        "error",
-      );
-    }
+    setPendingImages((prev) => [...prev, file]);
   };
 
   const handleDeleteAttachment = async (attachmentId: number) => {
@@ -247,6 +238,10 @@ function TaskEditor({
     } catch (error) {
       showToast("削除に失敗しました", "error");
     }
+  };
+
+  const handleDeletePendingImage = (index: number) => {
+    setPendingImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   // チームモード: 一括取得からフィルタリング
@@ -829,10 +824,50 @@ function TaskEditor({
 
     await saveTask();
 
+    // 保存後の処理用のoriginalIdを取得
+    let targetOriginalId =
+      task && task.id > 0 ? OriginalIdUtils.fromItem(task) : null;
+
     // タグの変更がある場合は保存
     if (hasTagChanges && task && task.id !== 0) {
       const taskId = OriginalIdUtils.fromItem(task) || "";
       await updateTaggings(taskId);
+    } else if (wasNewTask && (hasTagChanges || pendingImages.length > 0)) {
+      // 新規作成でタグまたは画像がある場合
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      const tasksQuery = queryClient.getQueryData<Task[]>(["tasks"]);
+      if (tasksQuery && tasksQuery.length > 0) {
+        const latestTask = [...tasksQuery].sort(
+          (a, b) => b.createdAt - a.createdAt,
+        )[0];
+
+        if (latestTask) {
+          targetOriginalId = OriginalIdUtils.fromItem(latestTask) || "";
+          if (hasTagChanges) {
+            await updateTaggings(targetOriginalId);
+          }
+        }
+      }
+    }
+
+    // 保存待ちの画像を一括アップロード
+    if (pendingImages.length > 0 && targetOriginalId) {
+      for (const file of pendingImages) {
+        try {
+          await uploadMutation.mutateAsync(file);
+        } catch (error) {
+          console.error("画像アップロードエラー:", error);
+          showToast(
+            error instanceof Error
+              ? error.message
+              : "画像アップロードに失敗しました",
+            "error",
+          );
+        }
+      }
+      setPendingImages([]);
+      showToast("画像をアップロードしました", "success");
     }
 
     // 連続作成モードで新規タスクの場合、保存後にリセット
@@ -853,6 +888,10 @@ function TaskEditor({
     hasTagChanges,
     task,
     updateTaggings,
+    pendingImages,
+    uploadMutation,
+    showToast,
+    queryClient,
   ]);
 
   // Ctrl+Sショートカット（変更がある場合のみ実行）
@@ -929,7 +968,7 @@ function TaskEditor({
                     iconSize="size-5"
                     className="rounded-full"
                     onFileSelect={handleFileSelect}
-                    disabled={isDeleted || !taskOriginalId}
+                    disabled={isDeleted}
                   />
                 </Tooltip>
                 <BoardIconSelector
@@ -1065,11 +1104,13 @@ function TaskEditor({
         </BaseViewer>
 
         {/* 画像添付ギャラリー */}
-        {teamMode && taskOriginalId && (
+        {teamMode && (
           <AttachmentGallery
             attachments={attachments}
             onDelete={handleDeleteAttachment}
             isDeleting={deleteMutation.isPending}
+            pendingImages={pendingImages}
+            onDeletePending={handleDeletePendingImage}
           />
         )}
 

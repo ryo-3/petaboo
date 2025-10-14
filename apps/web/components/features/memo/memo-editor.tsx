@@ -280,26 +280,17 @@ function MemoEditor({
     memoOriginalId,
   );
 
-  const handleFileSelect = async (file: File) => {
-    if (!memoOriginalId) {
-      showToast("メモを保存してから画像を添付してください", "error");
-      return;
-    }
+  // 保存待ちの画像（ローカルstate）
+  const [pendingImages, setPendingImages] = useState<File[]>([]);
 
-    if (attachments.length >= 4) {
+  const handleFileSelect = (file: File) => {
+    const totalCount = attachments.length + pendingImages.length;
+    if (totalCount >= 4) {
       showToast("画像は最大4枚までです", "error");
       return;
     }
 
-    try {
-      await uploadMutation.mutateAsync(file);
-      showToast("画像をアップロードしました", "success");
-    } catch (error) {
-      showToast(
-        error instanceof Error ? error.message : "アップロードに失敗しました",
-        "error",
-      );
-    }
+    setPendingImages((prev) => [...prev, file]);
   };
 
   const handleDeleteAttachment = async (attachmentId: number) => {
@@ -309,6 +300,10 @@ function MemoEditor({
     } catch (error) {
       showToast("削除に失敗しました", "error");
     }
+  };
+
+  const handleDeletePendingImage = (index: number) => {
+    setPendingImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   // プリロードデータとライブデータを組み合わせてタグを抽出
@@ -618,52 +613,74 @@ function MemoEditor({
       // まずメモを保存
       await handleSave();
 
+      // 保存後の処理用のoriginalIdを取得
+      let targetOriginalId =
+        memo && memo.id > 0 ? OriginalIdUtils.fromItem(memo) : null;
+
       // 保存後、タグも更新
-      // onSaveCompleteで最新のメモを取得できるが、同期の問題があるため
-      // 既存メモの場合は現在のmemo、新規作成の場合は少し待ってから処理
       if (memo && memo.id > 0) {
         // 既存メモの場合
-        await updateTaggings(OriginalIdUtils.fromItem(memo) || "");
+        await updateTaggings(targetOriginalId || "");
         setHasManualChanges(false);
-      } else if (localTags.length > 0) {
-        // 新規作成でタグがある場合は、少し遅延させて最新のメモリストから取得
-        setTimeout(async () => {
-          try {
-            // React QueryのキャッシュからmemosQueryを取得して、最新の作成メモを特定
-            const memosQuery = queryClient.getQueryData<Memo[]>(["memos"]);
+      } else if (localTags.length > 0 || pendingImages.length > 0) {
+        // 新規作成でタグまたは画像がある場合は、少し遅延させて最新のメモリストから取得
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
-            if (memosQuery && memosQuery.length > 0) {
-              // 最新のメモ（作成時刻順で最後）を取得
-              const latestMemo = [...memosQuery].sort(
-                (a, b) => b.createdAt - a.createdAt,
-              )[0];
+        // React QueryのキャッシュからmemosQueryを取得して、最新の作成メモを特定
+        const memosQuery = queryClient.getQueryData<Memo[]>(["memos"]);
 
-              if (latestMemo) {
-                const targetId = OriginalIdUtils.fromItem(latestMemo) || "";
-                await updateTaggings(targetId);
-                setHasManualChanges(false);
-              } else {
-                console.warn("⚠️ [MemoEditor] 最新メモが見つかりません");
-              }
-            } else {
-              console.warn("⚠️ [MemoEditor] memosQueryが空またはnull", {
-                hasMemosQuery: !!memosQuery,
-                length: memosQuery?.length,
-              });
+        if (memosQuery && memosQuery.length > 0) {
+          // 最新のメモ（作成時刻順で最後）を取得
+          const latestMemo = [...memosQuery].sort(
+            (a, b) => b.createdAt - a.createdAt,
+          )[0];
+
+          if (latestMemo) {
+            targetOriginalId = OriginalIdUtils.fromItem(latestMemo) || "";
+            if (localTags.length > 0) {
+              await updateTaggings(targetOriginalId);
+              setHasManualChanges(false);
             }
+          } else {
+            console.warn("⚠️ [MemoEditor] 最新メモが見つかりません");
+          }
+        } else {
+          console.warn("⚠️ [MemoEditor] memosQueryが空またはnull");
+        }
+      }
+
+      // 保存待ちの画像を一括アップロード
+      if (pendingImages.length > 0 && targetOriginalId) {
+        for (const file of pendingImages) {
+          try {
+            await uploadMutation.mutateAsync(file);
           } catch (error) {
-            console.error(
-              "❌ [MemoEditor] 新規メモのタグ保存に失敗しました:",
-              error,
+            console.error("画像アップロードエラー:", error);
+            showToast(
+              error instanceof Error
+                ? error.message
+                : "画像アップロードに失敗しました",
+              "error",
             );
           }
-        }, 100); // 100ms遅延
-      } else {
+        }
+        setPendingImages([]);
+        showToast("画像をアップロードしました", "success");
       }
     } catch (error) {
       console.error("❌ [MemoEditor] 保存に失敗しました:", error);
     }
-  }, [handleSave, memo, updateTaggings, isDeleted, localTags, queryClient]);
+  }, [
+    handleSave,
+    memo,
+    updateTaggings,
+    isDeleted,
+    localTags,
+    queryClient,
+    pendingImages,
+    uploadMutation,
+    showToast,
+  ]);
 
   // BoardIconSelector用のボードオプション
   const boardOptions = useMemo(() => {
@@ -891,7 +908,7 @@ function MemoEditor({
                         iconSize="size-5"
                         className="rounded-full"
                         onFileSelect={handleFileSelect}
-                        disabled={isDeleted || !memoOriginalId}
+                        disabled={isDeleted}
                       />
                     </Tooltip>
                   </>
@@ -1025,11 +1042,13 @@ function MemoEditor({
         </BaseViewer>
 
         {/* 画像添付ギャラリー */}
-        {teamMode && memoOriginalId && (
+        {teamMode && (
           <AttachmentGallery
             attachments={attachments}
             onDelete={handleDeleteAttachment}
             isDeleting={deleteMutation.isPending}
+            pendingImages={pendingImages}
+            onDeletePending={handleDeletePendingImage}
           />
         )}
 

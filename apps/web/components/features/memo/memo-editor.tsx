@@ -780,7 +780,12 @@ function MemoEditor({
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
-        if (hasChanges || hasTagChanges) {
+        if (
+          hasChanges ||
+          hasTagChanges ||
+          pendingImages.length > 0 ||
+          pendingDeletes.length > 0
+        ) {
           handleSaveWithTags();
         }
       }
@@ -788,7 +793,13 @@ function MemoEditor({
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [handleSaveWithTags, hasChanges, hasTagChanges]);
+  }, [
+    handleSaveWithTags,
+    hasChanges,
+    hasTagChanges,
+    pendingImages,
+    pendingDeletes,
+  ]);
 
   // ボード名を取得するためのヘルパー関数
   const getBoardName = (boardId: number) => {
@@ -909,7 +920,12 @@ function MemoEditor({
                   <>
                     <SaveButton
                       onClick={handleSaveWithTags}
-                      disabled={!hasChanges && !hasTagChanges}
+                      disabled={
+                        !hasChanges &&
+                        !hasTagChanges &&
+                        pendingImages.length === 0 &&
+                        pendingDeletes.length === 0
+                      }
                       isSaving={
                         isSaving ||
                         createTaggingMutation.isPending ||

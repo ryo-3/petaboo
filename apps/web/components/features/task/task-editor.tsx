@@ -755,12 +755,15 @@ function TaskEditor({
     ],
   );
 
-  // 新規作成時の保存可能性チェック（タグ変更も含める）
+  // 新規作成時の保存可能性チェック（タグ変更・画像変更も含める）
   const canSave = isDeleted
     ? false
     : isNewTask
       ? !!title.trim()
-      : hasChanges || hasTagChanges;
+      : hasChanges ||
+        hasTagChanges ||
+        pendingImages.length > 0 ||
+        pendingDeletes.length > 0;
 
   // ボードIDを名前に変換する関数
   const getBoardName = (boardId: string) => {

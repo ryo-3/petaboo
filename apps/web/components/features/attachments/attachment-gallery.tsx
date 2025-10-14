@@ -9,6 +9,8 @@ interface AttachmentGalleryProps {
   isDeleting?: boolean;
   pendingImages?: File[]; // 保存待ちの画像
   onDeletePending?: (index: number) => void; // 保存待ち画像の削除
+  pendingDeletes?: number[]; // 削除予定の画像ID
+  onRestore?: (attachmentId: number) => void; // 削除予定から復元
 }
 
 export default function AttachmentGallery({
@@ -17,6 +19,8 @@ export default function AttachmentGallery({
   isDeleting = false,
   pendingImages = [],
   onDeletePending,
+  pendingDeletes = [],
+  onRestore,
 }: AttachmentGalleryProps) {
   const { userId, getToken } = useAuth();
   const { showToast } = useToast();
@@ -80,62 +84,88 @@ export default function AttachmentGallery({
     return null;
   }
 
-  const handleDelete = (attachment: Attachment) => {
-    if (attachment.userId !== userId) {
-      showToast("自分がアップロードした画像のみ削除できます", "error");
-      return;
-    }
-
-    if (
-      window.confirm(
-        `「${attachment.fileName}」を削除しますか？\nこの操作は取り消せません。`,
-      )
-    ) {
-      onDelete?.(attachment.id);
-    }
-  };
-
   return (
     <>
       <div className="flex flex-wrap gap-2 mt-3">
         {/* 既存の画像 */}
         {attachments.map((attachment) => {
           const imageUrl = imageUrls[attachment.id];
+          const isMarkedForDelete = pendingDeletes.includes(attachment.id);
+
           return (
             <div key={attachment.id} className="relative group">
               {imageUrl ? (
-                <img
-                  src={imageUrl}
-                  alt={attachment.fileName}
-                  className="w-20 h-20 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
-                  onClick={() => setSelectedImage(imageUrl)}
-                />
+                <div className="relative">
+                  <img
+                    src={imageUrl}
+                    alt={attachment.fileName}
+                    className={`w-20 h-20 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity ${
+                      isMarkedForDelete
+                        ? "opacity-50 border-2 border-red-400"
+                        : ""
+                    }`}
+                    onClick={() => setSelectedImage(imageUrl)}
+                  />
+                  {isMarkedForDelete && (
+                    <div className="absolute top-0 left-0 bg-red-500 text-white text-[10px] px-1 py-0.5 rounded-br">
+                      削除予定
+                    </div>
+                  )}
+                </div>
               ) : (
                 <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center">
                   <span className="text-xs text-gray-500">読込中...</span>
                 </div>
               )}
-              {attachment.userId === userId && onDelete && imageUrl && (
-                <button
-                  onClick={() => handleDelete(attachment)}
-                  disabled={isDeleting}
-                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 disabled:opacity-50"
-                  title="削除"
-                >
-                  <svg
-                    className="w-3 h-3"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
+              {attachment.userId === userId && imageUrl && (
+                <>
+                  {isMarkedForDelete
+                    ? // 削除予定の場合は復元ボタン
+                      onRestore && (
+                        <button
+                          onClick={() => onRestore(attachment.id)}
+                          className="absolute top-1 right-1 bg-blue-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-blue-600"
+                          title="復元"
+                        >
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                            />
+                          </svg>
+                        </button>
+                      )
+                    : // 通常時は削除ボタン
+                      onDelete && (
+                        <button
+                          onClick={() => onDelete(attachment.id)}
+                          disabled={isDeleting}
+                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 disabled:opacity-50"
+                          title="削除"
+                        >
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      )}
+                </>
               )}
             </div>
           );

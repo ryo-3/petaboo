@@ -220,9 +220,13 @@ function TaskEditor({
 
   // 保存待ちの画像（ローカルstate）
   const [pendingImages, setPendingImages] = useState<File[]>([]);
+  // 削除予定の画像ID（保存時に削除）
+  const [pendingDeletes, setPendingDeletes] = useState<number[]>([]);
 
   const handleFileSelect = (file: File) => {
-    const totalCount = attachments.length + pendingImages.length;
+    const totalCount =
+      attachments.filter((a) => !pendingDeletes.includes(a.id)).length +
+      pendingImages.length;
     if (totalCount >= 4) {
       showToast("画像は最大4枚までです", "error");
       return;
@@ -231,17 +235,18 @@ function TaskEditor({
     setPendingImages((prev) => [...prev, file]);
   };
 
-  const handleDeleteAttachment = async (attachmentId: number) => {
-    try {
-      await deleteMutation.mutateAsync(attachmentId);
-      showToast("画像を削除しました", "success");
-    } catch (error) {
-      showToast("削除に失敗しました", "error");
-    }
+  const handleDeleteAttachment = (attachmentId: number) => {
+    // 削除予定リストに追加（保存時に削除）
+    setPendingDeletes((prev) => [...prev, attachmentId]);
   };
 
   const handleDeletePendingImage = (index: number) => {
     setPendingImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleRestoreAttachment = (attachmentId: number) => {
+    // 削除予定から復元
+    setPendingDeletes((prev) => prev.filter((id) => id !== attachmentId));
   };
 
   // チームモード: 一括取得からフィルタリング
@@ -851,6 +856,22 @@ function TaskEditor({
       }
     }
 
+    // 削除予定の画像を削除
+    if (pendingDeletes.length > 0) {
+      for (const attachmentId of pendingDeletes) {
+        try {
+          await deleteMutation.mutateAsync(attachmentId);
+        } catch (error) {
+          console.error("画像削除エラー:", error);
+          showToast(
+            error instanceof Error ? error.message : "画像削除に失敗しました",
+            "error",
+          );
+        }
+      }
+      setPendingDeletes([]);
+    }
+
     // 保存待ちの画像を一括アップロード
     if (pendingImages.length > 0 && targetOriginalId) {
       for (const file of pendingImages) {
@@ -867,7 +888,11 @@ function TaskEditor({
         }
       }
       setPendingImages([]);
-      showToast("画像をアップロードしました", "success");
+    }
+
+    // 画像の変更があった場合のみトーストを表示
+    if (pendingDeletes.length > 0 || pendingImages.length > 0) {
+      showToast("画像を更新しました", "success");
     }
 
     // 連続作成モードで新規タスクの場合、保存後にリセット
@@ -889,7 +914,9 @@ function TaskEditor({
     task,
     updateTaggings,
     pendingImages,
+    pendingDeletes,
     uploadMutation,
+    deleteMutation,
     showToast,
     queryClient,
   ]);
@@ -1111,6 +1138,8 @@ function TaskEditor({
             isDeleting={deleteMutation.isPending}
             pendingImages={pendingImages}
             onDeletePending={handleDeletePendingImage}
+            pendingDeletes={pendingDeletes}
+            onRestore={handleRestoreAttachment}
           />
         )}
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useToast } from "@/src/contexts/toast-context";
 import type { Attachment } from "@/src/hooks/use-attachments";
@@ -14,9 +14,52 @@ export default function AttachmentGallery({
   onDelete,
   isDeleting = false,
 }: AttachmentGalleryProps) {
-  const { userId } = useAuth();
+  const { userId, getToken } = useAuth();
   const { showToast } = useToast();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [imageUrls, setImageUrls] = useState<Record<number, string>>({});
+
+  // 認証付きで画像を取得してBlob URLを生成
+  useEffect(() => {
+    let isMounted = true;
+    const urls: Record<number, string> = {};
+
+    const loadImages = async () => {
+      const token = await getToken();
+
+      for (const attachment of attachments) {
+        try {
+          const response = await fetch(attachment.url, {
+            method: "GET",
+            headers: {
+              ...(token && { Authorization: `Bearer ${token}` }),
+            },
+          });
+
+          if (response.ok && isMounted) {
+            const blob = await response.blob();
+            urls[attachment.id] = URL.createObjectURL(blob);
+          }
+        } catch (error) {
+          console.error(`画像読み込みエラー [ID: ${attachment.id}]:`, error);
+        }
+      }
+
+      if (isMounted) {
+        setImageUrls(urls);
+      }
+    };
+
+    if (attachments.length > 0) {
+      loadImages();
+    }
+
+    // クリーンアップ: Blob URLを解放
+    return () => {
+      isMounted = false;
+      Object.values(urls).forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [attachments, getToken]);
 
   if (attachments.length === 0) {
     return null;
@@ -40,38 +83,47 @@ export default function AttachmentGallery({
   return (
     <>
       <div className="flex flex-wrap gap-2 mt-3">
-        {attachments.map((attachment) => (
-          <div key={attachment.id} className="relative group">
-            <img
-              src={attachment.url}
-              alt={attachment.fileName}
-              className="w-20 h-20 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
-              onClick={() => setSelectedImage(attachment.url)}
-            />
-            {attachment.userId === userId && onDelete && (
-              <button
-                onClick={() => handleDelete(attachment)}
-                disabled={isDeleting}
-                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 disabled:opacity-50"
-                title="削除"
-              >
-                <svg
-                  className="w-3 h-3"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+        {attachments.map((attachment) => {
+          const imageUrl = imageUrls[attachment.id];
+          return (
+            <div key={attachment.id} className="relative group">
+              {imageUrl ? (
+                <img
+                  src={imageUrl}
+                  alt={attachment.fileName}
+                  className="w-20 h-20 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => setSelectedImage(imageUrl)}
+                />
+              ) : (
+                <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center">
+                  <span className="text-xs text-gray-500">読込中...</span>
+                </div>
+              )}
+              {attachment.userId === userId && onDelete && imageUrl && (
+                <button
+                  onClick={() => handleDelete(attachment)}
+                  disabled={isDeleting}
+                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 disabled:opacity-50"
+                  title="削除"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            )}
-          </div>
-        ))}
+                  <svg
+                    className="w-3 h-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* 画像拡大表示モーダル */}

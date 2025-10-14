@@ -271,7 +271,9 @@ export const uploadAttachment = async (c: any) => {
     .returning();
 
   // Worker経由アクセスURL生成
-  const apiBaseUrl = env.API_BASE_URL || "http://localhost:7594";
+  // Request URLのoriginを使用（ローカルでも本番でも正しいURLになる）
+  const url = new URL(c.req.url);
+  const apiBaseUrl = `${url.protocol}//${url.host}`;
   const workerUrl = `${apiBaseUrl}/attachments/image/${result[0].id}`;
 
   // URLを更新
@@ -482,10 +484,13 @@ export const getImage = async (c: any) => {
   }
 
   // 画像を返却
+  const origin = c.req.header("Origin") || "http://localhost:7593";
   return new Response(object.body, {
     headers: {
       "Content-Type": attachment.mimeType,
       "Cache-Control": "public, max-age=31536000", // 1年キャッシュ
+      "Access-Control-Allow-Origin": origin,
+      "Access-Control-Allow-Credentials": "true",
     },
   });
 };

@@ -28,6 +28,13 @@ import {
 import { useTeamTags } from "@/src/hooks/use-team-tags";
 import { useDeletedMemoActions } from "./use-deleted-memo-actions";
 import { useQueryClient } from "@tanstack/react-query";
+import {
+  useAttachments,
+  useUploadAttachment,
+  useDeleteAttachment,
+} from "@/src/hooks/use-attachments";
+import AttachmentGallery from "@/components/features/attachments/attachment-gallery";
+import { useToast } from "@/src/contexts/toast-context";
 import ShareUrlButton from "@/components/ui/buttons/share-url-button";
 import {
   generateTeamShareUrl,
@@ -253,6 +260,56 @@ function MemoEditor({
 
   // 手動でタグを変更したかどうかのフラグ
   const [hasManualChanges, setHasManualChanges] = useState(false);
+
+  // 画像添付機能
+  const { showToast } = useToast();
+  const memoOriginalId = memo ? OriginalIdUtils.fromItem(memo) : undefined;
+  const { data: attachments = [] } = useAttachments(
+    teamMode ? teamId : undefined,
+    "memo",
+    memoOriginalId,
+  );
+  const uploadMutation = useUploadAttachment(
+    teamMode ? teamId : undefined,
+    "memo",
+    memoOriginalId,
+  );
+  const deleteMutation = useDeleteAttachment(
+    teamMode ? teamId : undefined,
+    "memo",
+    memoOriginalId,
+  );
+
+  const handleFileSelect = async (file: File) => {
+    if (!memoOriginalId) {
+      showToast("メモを保存してから画像を添付してください", "error");
+      return;
+    }
+
+    if (attachments.length >= 4) {
+      showToast("画像は最大4枚までです", "error");
+      return;
+    }
+
+    try {
+      await uploadMutation.mutateAsync(file);
+      showToast("画像をアップロードしました", "success");
+    } catch (error) {
+      showToast(
+        error instanceof Error ? error.message : "アップロードに失敗しました",
+        "error",
+      );
+    }
+  };
+
+  const handleDeleteAttachment = async (attachmentId: number) => {
+    try {
+      await deleteMutation.mutateAsync(attachmentId);
+      showToast("画像を削除しました", "success");
+    } catch (error) {
+      showToast("削除に失敗しました", "error");
+    }
+  };
 
   // プリロードデータとライブデータを組み合わせてタグを抽出
   const currentTags = useMemo(() => {
@@ -833,6 +890,8 @@ function MemoEditor({
                         buttonSize="size-7"
                         iconSize="size-5"
                         className="rounded-full"
+                        onFileSelect={handleFileSelect}
+                        disabled={isDeleted || !memoOriginalId}
                       />
                     </Tooltip>
                   </>
@@ -964,6 +1023,15 @@ function MemoEditor({
             className="mb-4"
           />
         </BaseViewer>
+
+        {/* 画像添付ギャラリー */}
+        {teamMode && memoOriginalId && (
+          <AttachmentGallery
+            attachments={attachments}
+            onDelete={handleDeleteAttachment}
+            isDeleting={deleteMutation.isPending}
+          />
+        )}
 
         {/* 日付情報とアバターアイコンを右下に配置（showDateAtBottom=trueの場合のみ） */}
         {showDateAtBottom && memo && memo.id !== 0 && (

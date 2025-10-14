@@ -29,6 +29,13 @@ import {
   useDeleteTagging,
   useTaggings,
 } from "@/src/hooks/use-taggings";
+import {
+  useAttachments,
+  useUploadAttachment,
+  useDeleteAttachment,
+} from "@/src/hooks/use-attachments";
+import AttachmentGallery from "@/components/features/attachments/attachment-gallery";
+import { useToast } from "@/src/contexts/toast-context";
 import { useTeamTags } from "@/src/hooks/use-team-tags";
 import {
   useAllTeamTaggings,
@@ -191,6 +198,56 @@ function TaskEditor({
 
   // チーム用タグ一覧を取得
   const { data: teamTagsList } = useTeamTags(teamId || 0);
+
+  // 画像添付機能
+  const { showToast } = useToast();
+  const taskOriginalId = task ? OriginalIdUtils.fromItem(task) : undefined;
+  const { data: attachments = [] } = useAttachments(
+    teamMode ? teamId : undefined,
+    "task",
+    taskOriginalId,
+  );
+  const uploadMutation = useUploadAttachment(
+    teamMode ? teamId : undefined,
+    "task",
+    taskOriginalId,
+  );
+  const deleteMutation = useDeleteAttachment(
+    teamMode ? teamId : undefined,
+    "task",
+    taskOriginalId,
+  );
+
+  const handleFileSelect = async (file: File) => {
+    if (!taskOriginalId) {
+      showToast("タスクを保存してから画像を添付してください", "error");
+      return;
+    }
+
+    if (attachments.length >= 4) {
+      showToast("画像は最大4枚までです", "error");
+      return;
+    }
+
+    try {
+      await uploadMutation.mutateAsync(file);
+      showToast("画像をアップロードしました", "success");
+    } catch (error) {
+      showToast(
+        error instanceof Error ? error.message : "アップロードに失敗しました",
+        "error",
+      );
+    }
+  };
+
+  const handleDeleteAttachment = async (attachmentId: number) => {
+    try {
+      await deleteMutation.mutateAsync(attachmentId);
+      showToast("画像を削除しました", "success");
+    } catch (error) {
+      showToast("削除に失敗しました", "error");
+    }
+  };
 
   // チームモード: 一括取得からフィルタリング
   // タスクID 142で originalId が空の場合は、既存タグとの整合性のため "5" を使用
@@ -871,6 +928,8 @@ function TaskEditor({
                     buttonSize="size-7"
                     iconSize="size-5"
                     className="rounded-full"
+                    onFileSelect={handleFileSelect}
+                    disabled={isDeleted || !taskOriginalId}
                   />
                 </Tooltip>
                 <BoardIconSelector
@@ -1004,6 +1063,15 @@ function TaskEditor({
             teamMode={teamMode}
           />
         </BaseViewer>
+
+        {/* 画像添付ギャラリー */}
+        {teamMode && taskOriginalId && (
+          <AttachmentGallery
+            attachments={attachments}
+            onDelete={handleDeleteAttachment}
+            isDeleting={deleteMutation.isPending}
+          />
+        )}
 
         {/* 日付情報とアバターアイコンを右下に配置（showDateAtBottom=trueの場合のみ） */}
         {showDateAtBottom && task && task.id !== 0 && (

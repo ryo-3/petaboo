@@ -311,6 +311,31 @@ function MemoEditor({
     setPendingDeletes((prev) => prev.filter((id) => id !== attachmentId));
   };
 
+  // クリップボードからの画像ペースト処理
+  const handlePaste = useCallback(
+    (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+      if (isDeleted) return; // 削除済みの場合は無効
+
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      // クリップボード内の画像を探す
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item && item.type.startsWith("image/")) {
+          e.preventDefault(); // デフォルトのペースト動作を防止
+
+          const file = item.getAsFile();
+          if (file) {
+            handleFileSelect(file);
+          }
+          break; // 最初の画像のみ処理
+        }
+      }
+    },
+    [isDeleted, handleFileSelect],
+  );
+
   // プリロードデータとライブデータを組み合わせてタグを抽出
   const currentTags = useMemo(() => {
     if (!memo || memo.id === undefined || memo.id === 0) return [];
@@ -1066,6 +1091,7 @@ function MemoEditor({
                     handleContentChange(newContent);
                   }
             }
+            onPaste={handlePaste}
             readOnly={isDeleted}
             className={`w-full ${customHeight || "flex-1 min-h-0"} resize-none outline-none leading-relaxed font-medium pr-1 mt-2 ${
               isDeleted

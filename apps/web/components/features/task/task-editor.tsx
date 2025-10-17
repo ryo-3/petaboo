@@ -249,6 +249,31 @@ function TaskEditor({
     setPendingDeletes((prev) => prev.filter((id) => id !== attachmentId));
   };
 
+  // クリップボードからの画像ペースト処理
+  const handlePaste = useCallback(
+    (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+      if (isDeleted) return; // 削除済みの場合は無効
+
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      // クリップボード内の画像を探す
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item && item.type.startsWith("image/")) {
+          e.preventDefault(); // デフォルトのペースト動作を防止
+
+          const file = item.getAsFile();
+          if (file) {
+            handleFileSelect(file);
+          }
+          break; // 最初の画像のみ処理
+        }
+      }
+    },
+    [isDeleted, handleFileSelect],
+  );
+
   // チームモード: 一括取得からフィルタリング
   // タスクID 142で originalId が空の場合は、既存タグとの整合性のため "5" を使用
   const teamOriginalId = useMemo(() => {
@@ -1130,6 +1155,7 @@ function TaskEditor({
             isDeleted={isDeleted}
             initialBoardId={initialBoardId}
             teamMode={teamMode}
+            onPaste={handlePaste}
           />
         </BaseViewer>
 

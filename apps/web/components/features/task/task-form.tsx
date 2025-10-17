@@ -51,6 +51,8 @@ interface TaskFormProps {
   showBoardCategory?: boolean; // ボード詳細でのみtrue
   // チーム機能
   teamMode?: boolean;
+  // 画像ペースト機能
+  onPaste?: (e: React.ClipboardEvent<HTMLTextAreaElement>) => void;
 }
 
 export interface TaskFormHandle {
@@ -85,6 +87,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
     initialBoardId,
     showBoardCategory = false,
     teamMode = false,
+    onPaste,
   } = props;
   const titleInputRef = useRef<HTMLInputElement>(null);
   const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -228,6 +231,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
           placeholder={descriptionPlaceholder}
           value={description}
           onChange={(e) => onDescriptionChange(e.target.value)}
+          onPaste={onPaste}
           className={`w-full ${customHeight || "flex-1"} resize-none outline-none text-gray-700 leading-relaxed pr-1 pb-2 mb-2 mt-2`}
         />
 

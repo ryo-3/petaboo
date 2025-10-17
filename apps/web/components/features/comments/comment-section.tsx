@@ -236,6 +236,7 @@ interface CommentSectionProps {
   targetTitle?: string;
   teamMembers?: TeamMember[];
   boardId?: number; // ボードIDを追加
+  onItemClick?: (itemType: "memo" | "task", originalId: string) => void; // アイテムクリックハンドラー
 }
 
 export default function CommentSection({
@@ -247,6 +248,7 @@ export default function CommentSection({
   targetTitle,
   teamMembers = [],
   boardId,
+  onItemClick,
 }: CommentSectionProps) {
   const commentListRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -603,20 +605,45 @@ export default function CommentSection({
 
               const isOwner = comment.userId === currentUserId;
 
+              // アイテムコメントの場合はクリック可能にする
+              const isItemComment =
+                targetType === "board" &&
+                commentScope === "items" &&
+                (comment.targetType === "memo" ||
+                  comment.targetType === "task");
+
+              const handleCommentClick = () => {
+                if (isItemComment && onItemClick) {
+                  onItemClick(
+                    comment.targetType as "memo" | "task",
+                    comment.targetOriginalId,
+                  );
+                }
+              };
+
               return (
                 <div
                   key={comment.id}
-                  className="bg-gray-50 rounded-lg p-3 border border-gray-100 group relative"
+                  className={`bg-gray-50 rounded-lg p-3 border border-gray-100 group relative ${
+                    isItemComment
+                      ? "cursor-pointer hover:bg-gray-100 transition-colors"
+                      : ""
+                  }`}
+                  onClick={handleCommentClick}
                 >
                   {isOwner && (
-                    <div className="absolute top-2 right-2">
+                    <div
+                      className="absolute top-2 right-2"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <button
                         type="button"
-                        onClick={() =>
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setOpenMenuId(
                             openMenuId === comment.id ? null : comment.id,
-                          )
-                        }
+                          );
+                        }}
                         className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded transition-opacity"
                       >
                         <MoreVertical className="size-4 text-gray-600" />
@@ -625,7 +652,8 @@ export default function CommentSection({
                         <div className="absolute right-full top-0 mr-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px]">
                           <button
                             type="button"
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               setEditingCommentId(comment.id);
                               setEditContent(comment.content);
                               setOpenMenuId(null);
@@ -637,7 +665,8 @@ export default function CommentSection({
                           </button>
                           <button
                             type="button"
-                            onClick={async () => {
+                            onClick={async (e) => {
+                              e.stopPropagation();
                               if (
                                 window.confirm("このコメントを削除しますか？")
                               ) {

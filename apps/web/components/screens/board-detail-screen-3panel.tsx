@@ -1333,6 +1333,23 @@ function BoardDetailScreen({
                       targetOriginalId={boardId.toString()}
                       teamMembers={teamMembers}
                       boardId={boardId}
+                      onItemClick={(itemType, originalId) => {
+                        if (itemType === "memo") {
+                          const memo = boardMemos.find(
+                            (m) => m.originalId === originalId,
+                          );
+                          if (memo) {
+                            onSelectMemo?.(memo as Memo);
+                          }
+                        } else if (itemType === "task") {
+                          const task = boardTasks.find(
+                            (t) => t.originalId === originalId,
+                          );
+                          if (task) {
+                            onSelectTask?.(task as Task);
+                          }
+                        }
+                      }}
                     />
                   </ResizablePanel>
                 </ResizablePanelGroup>

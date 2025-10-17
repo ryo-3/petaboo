@@ -120,3 +120,34 @@ export function useTeamContext(): TeamContextValue {
 
   return context;
 }
+
+/**
+ * useTeamContextSafe
+ *
+ * TeamProvider外でも安全に使えるバージョン
+ * Provider外の場合はnullを返す
+ *
+ * @example
+ * ```typescript
+ * function Header() {
+ *   const teamContext = useTeamContextSafe();
+ *   const teamId = teamContext?.teamId;
+ * }
+ * ```
+ */
+export function useTeamContextSafe(): TeamContextValue | null {
+  const context = useContext(TeamContext);
+
+  // Provider外の場合、contextは初期値（デフォルト値）のまま
+  // isLoadingがfalseで、他の値がすべてnull/falseの場合はProvider外と判断
+  if (
+    !context.isTeamMode &&
+    context.teamId === null &&
+    context.teamSlug === null &&
+    !context.isLoading
+  ) {
+    return null;
+  }
+
+  return context;
+}

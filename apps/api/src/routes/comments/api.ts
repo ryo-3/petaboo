@@ -8,6 +8,7 @@ import { boardSlackConfigs } from "../../db/schema/team/board-slack-configs";
 import { teamMemos } from "../../db/schema/team/memos";
 import { teamTasks } from "../../db/schema/team/tasks";
 import { teamBoards, teamBoardItems } from "../../db/schema/team/boards";
+import { teamNotifications } from "../../db/schema/team/notifications";
 import { teams } from "../../db/schema/team/teams";
 import {
   sendSlackNotification,
@@ -537,6 +538,33 @@ export const postComment = async (c: any) => {
       updatedAt: createdAt,
     })
     .returning();
+
+  // チーム全メンバーに通知を作成（投稿者以外）
+  const allMembers = await db
+    .select()
+    .from(teamMembers)
+    .where(eq(teamMembers.teamId, teamId));
+
+  const notificationsToCreate = allMembers
+    .filter((m) => m.userId !== auth.userId) // 投稿者自身を除外
+    .map((m) => ({
+      teamId,
+      userId: m.userId,
+      type: "comment",
+      sourceType: "comment",
+      sourceId: result[0].id,
+      targetType,
+      targetOriginalId,
+      actorUserId: auth.userId,
+      message: `${member.displayName || "誰か"}さんがコメントしました`,
+      isRead: 0,
+      createdAt,
+    }));
+
+  // 通知を一括作成
+  if (notificationsToCreate.length > 0) {
+    await db.insert(teamNotifications).values(notificationsToCreate);
+  }
 
   // Slack通知送信（メンションの有無に関わらず送信）
   console.log(`📬 コメント投稿: メンション=${mentionedUserIds.length}人`);

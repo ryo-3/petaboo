@@ -21,6 +21,7 @@ import teamSlackConfigRoute from "./src/routes/teams/slack-config/route";
 import boardSlackConfigRoute from "./src/routes/boards/slack-config/route";
 import commentsRoute from "./src/routes/comments/route";
 import attachmentsRoute from "./src/routes/attachments/route";
+import notificationsRoute from "./src/routes/notifications/route";
 import clerkWebhook from "./src/routes/webhooks/clerk";
 import usersRoute from "./src/routes/users/route";
 
@@ -101,6 +102,7 @@ app.route("/teams", teamSlackConfigRoute);
 app.route("/boards", boardSlackConfigRoute);
 app.route("/comments", commentsRoute);
 app.route("/attachments", attachmentsRoute);
+app.route("/notifications", notificationsRoute);
 app.route("/webhooks/clerk", clerkWebhook);
 app.route("/users", usersRoute);
 

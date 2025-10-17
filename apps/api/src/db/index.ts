@@ -20,3 +20,4 @@ export * from "./schema/team/comments";
 export * from "./schema/team/slack-configs";
 export * from "./schema/team/board-slack-configs";
 export * from "./schema/team/attachments";
+export * from "./schema/team/notifications";

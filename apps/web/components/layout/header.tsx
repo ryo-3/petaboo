@@ -7,12 +7,17 @@ import CheckCircleIcon from "@/components/icons/check-circle-icon";
 import { useMyJoinRequests } from "@/src/hooks/use-my-join-requests";
 import { useSimpleTeamNotifier } from "@/src/hooks/use-simple-team-notifier";
 import { usePersonalNotifier } from "@/src/hooks/use-personal-notifier";
+import {
+  useNotifications,
+  useMarkAllNotificationsAsRead,
+} from "@/src/hooks/use-notifications";
 import { useQueryClient } from "@tanstack/react-query";
 import { UserButton } from "@clerk/nextjs";
 import { usePathname, useSearchParams } from "next/navigation";
 import { usePageVisibility } from "@/src/contexts/PageVisibilityContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useTeamContextSafe } from "@/contexts/team-context";
 
 function Header() {
   // 現在のチーム名を取得（navigation-contextと同じロジック）
@@ -80,17 +85,36 @@ function Header() {
   // 個人用通知（個人ホームページでのみ使用）
   const personalNotifier = usePersonalNotifier();
 
-  // 通知カウントを決定
+  // TeamProviderから安全にteamIdを取得（Provider外ではnull）
+  const teamContext = useTeamContextSafe();
+  const teamId = teamContext?.teamId || undefined;
+
+  // コメント通知を取得（チームページでteamIdがある場合のみ）
+  const { data: commentNotifications } = useNotifications(teamId);
+
+  // 通知カウントを決定（チームページではコメント通知も含める）
   const notificationCount = isPersonalPage
     ? personalNotifier.data?.counts.approvedRequests || 0
-    : teamNotifier.data?.counts.teamRequests || 0;
+    : (teamNotifier.data?.counts.teamRequests || 0) +
+      (commentNotifications?.unreadCount || 0);
 
   const { data: myJoinRequests } = useMyJoinRequests();
   const queryClient = useQueryClient();
 
-  // 通知クリック時にホームタブに切り替え（既読機能無効化）
+  // すべて既読にする機能
+  const { mutate: markAllAsRead } = useMarkAllNotificationsAsRead(teamId);
+
+  // 通知クリック時にホームタブに切り替え & すべて既読
   const handleNotificationClick = () => {
     if (teamName && pathname.startsWith("/team/")) {
+      // コメント通知がある場合はすべて既読にする
+      if (
+        commentNotifications?.unreadCount &&
+        commentNotifications.unreadCount > 0
+      ) {
+        markAllAsRead();
+      }
+
       // チームページでホームタブに切り替え
       const baseTeamUrl = `/team/${teamName}`;
       router.replace(baseTeamUrl);

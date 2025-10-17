@@ -1,13 +1,84 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import {
   useTeamComments,
   useCreateTeamComment,
   useUpdateTeamComment,
   useDeleteTeamComment,
 } from "@/src/hooks/use-team-comments";
+import { useAttachments } from "@/src/hooks/use-attachments";
 import { useAuth } from "@clerk/nextjs";
 import type { TeamMember } from "@/src/hooks/use-team-detail";
-import { MoreVertical, Edit2, Trash2 } from "lucide-react";
+import { MoreVertical, Edit2, Trash2, Image as ImageIcon } from "lucide-react";
+import { useToast } from "@/src/contexts/toast-context";
+
+// コメント画像表示用コンポーネント（シンプル版・モーダル付き）
+function CommentAttachmentGallery({
+  teamId,
+  commentId,
+}: {
+  teamId: number | undefined;
+  commentId: number;
+}) {
+  const { data: attachments = [] } = useAttachments(
+    teamId,
+    "comment",
+    commentId.toString(),
+  );
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  if (attachments.length === 0) return null;
+
+  return (
+    <>
+      <div className="mt-2 flex gap-2 flex-wrap">
+        {attachments.map((attachment) => (
+          <img
+            key={attachment.id}
+            src={attachment.url}
+            alt={attachment.fileName}
+            className="w-32 h-32 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border border-gray-200"
+            onClick={() => setSelectedImage(attachment.url)}
+          />
+        ))}
+      </div>
+
+      {/* 画像拡大表示モーダル */}
+      {selectedImage && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
+          onClick={() => setSelectedImage(null)}
+        >
+          {/* 閉じるボタン（右上固定） */}
+          <button
+            onClick={() => setSelectedImage(null)}
+            className="fixed top-4 right-4 bg-white text-gray-800 rounded-full p-3 hover:bg-gray-100 shadow-lg z-10"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+
+          {/* 画像（最大サイズで表示） */}
+          <img
+            src={selectedImage}
+            alt="拡大表示"
+            className="max-w-[95vw] max-h-[95vh] object-contain"
+          />
+        </div>
+      )}
+    </>
+  );
+}
 
 // コメント本文をレンダリングするヘルパー関数（メンション・引用・コードブロック対応）
 function renderCommentContent(
@@ -174,8 +245,13 @@ export default function CommentSection({
 }: CommentSectionProps) {
   const commentListRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [newComment, setNewComment] = useState("");
-  const { userId: currentUserId } = useAuth();
+  const { userId: currentUserId, getToken } = useAuth();
+  const { showToast } = useToast();
+
+  // 画像添付用の状態
+  const [pendingImages, setPendingImages] = useState<File[]>([]);
 
   // オートコンプリート用のstate
   const [showMentionSuggestions, setShowMentionSuggestions] = useState(false);
@@ -294,15 +370,133 @@ export default function CommentSection({
     }
   };
 
+  // 画像形式バリデーション
+  const validateImageFile = useCallback(
+    (file: File): boolean => {
+      // MIMEタイプチェック
+      const allowedTypes = [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+        "image/svg+xml",
+      ];
+      if (!allowedTypes.includes(file.type)) {
+        showToast(`対応していないファイル形式です（${file.type}）`, "error");
+        return false;
+      }
+
+      // ファイルサイズチェック（5MB）
+      const maxSize = 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        showToast("ファイルサイズは5MB以下にしてください", "error");
+        return false;
+      }
+
+      return true;
+    },
+    [showToast],
+  );
+
+  // 画像ファイル選択処理
+  const handleFileSelect = useCallback(
+    (file: File) => {
+      // バリデーション
+      if (!validateImageFile(file)) {
+        return;
+      }
+
+      const totalCount = pendingImages.length;
+      if (totalCount >= 4) {
+        showToast("画像は最大4枚までです", "error");
+        return;
+      }
+
+      setPendingImages((prev) => [...prev, file]);
+    },
+    [pendingImages.length, showToast, validateImageFile],
+  );
+
+  // ペンディング画像削除
+  const handleDeletePendingImage = useCallback((index: number) => {
+    setPendingImages((prev) => prev.filter((_, i) => i !== index));
+  }, []);
+
+  // クリップボードからの画像ペースト処理
+  const handlePaste = useCallback(
+    (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      // クリップボード内の画像を探す
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item && item.type.startsWith("image/")) {
+          e.preventDefault(); // デフォルトのペースト動作を防止
+
+          const file = item.getAsFile();
+          if (file) {
+            handleFileSelect(file);
+          }
+          break; // 最初の画像のみ処理
+        }
+      }
+    },
+    [handleFileSelect],
+  );
+
   const handleSubmit = async () => {
-    if (!newComment.trim() || !targetOriginalId) return;
+    if ((!newComment.trim() && pendingImages.length === 0) || !targetOriginalId)
+      return;
 
     try {
-      await createComment.mutateAsync({
+      // コメントを作成
+      const createdComment = await createComment.mutateAsync({
         targetType,
         targetOriginalId,
-        content: newComment.trim(),
+        content: newComment.trim() || " ", // 画像のみの場合は空白を入れる
       });
+
+      // 画像をアップロード（コメントIDをoriginalIdとして使用）
+      if (pendingImages.length > 0 && createdComment?.id) {
+        const commentOriginalId = createdComment.id.toString();
+        const token = await getToken();
+
+        for (const file of pendingImages) {
+          try {
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("attachedTo", "comment");
+            formData.append("attachedOriginalId", commentOriginalId);
+
+            const response = await fetch(
+              `${process.env.NEXT_PUBLIC_API_URL}/attachments/upload?teamId=${teamId}`,
+              {
+                method: "POST",
+                headers: {
+                  ...(token && { Authorization: `Bearer ${token}` }),
+                },
+                body: formData,
+              },
+            );
+
+            if (!response.ok) {
+              throw new Error("画像のアップロードに失敗しました");
+            }
+          } catch (error) {
+            console.error("画像アップロードエラー:", error);
+            showToast(
+              error instanceof Error
+                ? error.message
+                : "画像アップロードに失敗しました",
+              "error",
+            );
+          }
+        }
+        setPendingImages([]);
+      }
+
       setNewComment("");
       setShowMentionSuggestions(false);
 
@@ -470,13 +664,20 @@ export default function CommentSection({
                           </div>
                         </div>
                       ) : (
-                        <div className="text-sm text-gray-700 leading-relaxed">
-                          {renderCommentContent(
-                            comment.content,
-                            currentUserId || undefined,
-                            teamMembers,
-                          )}
-                        </div>
+                        <>
+                          <div className="text-sm text-gray-700 leading-relaxed">
+                            {renderCommentContent(
+                              comment.content,
+                              currentUserId || undefined,
+                              teamMembers,
+                            )}
+                          </div>
+                          {/* コメントの画像表示 */}
+                          <CommentAttachmentGallery
+                            teamId={teamId}
+                            commentId={comment.id}
+                          />
+                        </>
                       )}
                     </div>
                   </div>
@@ -496,6 +697,7 @@ export default function CommentSection({
               rows={2}
               value={newComment}
               onChange={handleTextChange}
+              onPaste={handlePaste}
               onKeyDown={(e) => {
                 if (showMentionSuggestions) {
                   if (e.key === "ArrowDown") {
@@ -565,8 +767,54 @@ export default function CommentSection({
               </div>
             )}
 
+            {/* 画像プレビュー */}
+            {pendingImages.length > 0 && (
+              <div className="flex gap-2 flex-wrap mb-2">
+                {pendingImages.map((file, index) => (
+                  <div key={index} className="relative">
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt={`プレビュー ${index + 1}`}
+                      className="w-32 h-32 object-cover rounded border border-gray-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleDeletePendingImage(index)}
+                      className="absolute -top-2 -right-2 size-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors text-sm"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-1">
+                {/* 画像選択ボタン */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      handleFileSelect(file);
+                      // ファイル入力をリセット（同じファイルを再選択可能にする）
+                      e.target.value = "";
+                    }
+                  }}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center justify-center size-7 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                  title="画像を添付"
+                >
+                  <ImageIcon className="size-4" />
+                </button>
+
                 {/* @メンションボタン */}
                 <button
                   type="button"

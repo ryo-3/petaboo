@@ -223,7 +223,38 @@ function TaskEditor({
   // 削除予定の画像ID（保存時に削除）
   const [pendingDeletes, setPendingDeletes] = useState<number[]>([]);
 
+  // 画像形式バリデーション
+  const validateImageFile = (file: File): boolean => {
+    // MIMEタイプチェック
+    const allowedTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+      "image/svg+xml",
+    ];
+    if (!allowedTypes.includes(file.type)) {
+      showToast(`対応していないファイル形式です（${file.type}）`, "error");
+      return false;
+    }
+
+    // ファイルサイズチェック（5MB）
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      showToast("ファイルサイズは5MB以下にしてください", "error");
+      return false;
+    }
+
+    return true;
+  };
+
   const handleFileSelect = (file: File) => {
+    // バリデーション
+    if (!validateImageFile(file)) {
+      return;
+    }
+
     const totalCount =
       attachments.filter((a) => !pendingDeletes.includes(a.id)).length +
       pendingImages.length;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useToast } from "@/src/contexts/toast-context";
 import type { Attachment } from "@/src/hooks/use-attachments";
@@ -27,16 +27,33 @@ export default function AttachmentGallery({
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imageUrls, setImageUrls] = useState<Record<number, string>>({});
   const [pendingUrls, setPendingUrls] = useState<string[]>([]);
+  const loadedIdsRef = useRef<Set<number>>(new Set());
+  const isLoadingRef = useRef(false);
 
   // 認証付きで画像を取得してBlob URLを生成
   useEffect(() => {
+    // 読み込み中の場合はスキップ
+    if (isLoadingRef.current) {
+      return;
+    }
+
+    // 新しい画像のみをフィルタリング
+    const newAttachments = attachments.filter(
+      (a) => !loadedIdsRef.current.has(a.id),
+    );
+
+    if (newAttachments.length === 0) {
+      return;
+    }
+
+    isLoadingRef.current = true;
     let isMounted = true;
-    const urls: Record<number, string> = {};
 
     const loadImages = async () => {
       const token = await getToken();
+      const newUrls: Record<number, string> = {};
 
-      for (const attachment of attachments) {
+      for (const attachment of newAttachments) {
         try {
           const response = await fetch(attachment.url, {
             method: "GET",
@@ -47,28 +64,37 @@ export default function AttachmentGallery({
 
           if (response.ok && isMounted) {
             const blob = await response.blob();
-            urls[attachment.id] = URL.createObjectURL(blob);
+            const blobUrl = URL.createObjectURL(blob);
+            newUrls[attachment.id] = blobUrl;
+            loadedIdsRef.current.add(attachment.id);
           }
         } catch (error) {
           console.error(`画像読み込みエラー [ID: ${attachment.id}]:`, error);
         }
       }
 
+      // 全ての画像を読み込んでから一度だけsetStateを呼ぶ
+      if (isMounted && Object.keys(newUrls).length > 0) {
+        setImageUrls((prev) => ({
+          ...prev,
+          ...newUrls,
+        }));
+      }
+
       if (isMounted) {
-        setImageUrls(urls);
+        isLoadingRef.current = false;
       }
     };
 
-    if (attachments.length > 0) {
-      loadImages();
-    }
+    loadImages();
 
-    // クリーンアップ: Blob URLを解放
     return () => {
       isMounted = false;
-      Object.values(urls).forEach((url) => URL.revokeObjectURL(url));
+      isLoadingRef.current = false;
     };
-  }, [attachments, getToken]);
+    // attachmentsの長さのみを依存に（attachments自体は含めない）
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [attachments.length]);
 
   // 保存待ち画像のプレビューURL生成
   useEffect(() => {
@@ -99,7 +125,7 @@ export default function AttachmentGallery({
                   <img
                     src={imageUrl}
                     alt={attachment.fileName}
-                    className={`w-20 h-20 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity ${
+                    className={`w-32 h-32 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity ${
                       isMarkedForDelete
                         ? "opacity-50 border-2 border-red-400"
                         : ""
@@ -113,7 +139,7 @@ export default function AttachmentGallery({
                   )}
                 </div>
               ) : (
-                <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center">
+                <div className="w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center">
                   <span className="text-xs text-gray-500">読込中...</span>
                 </div>
               )}
@@ -177,7 +203,7 @@ export default function AttachmentGallery({
             <img
               src={url}
               alt={`保存待ち ${index + 1}`}
-              className="w-20 h-20 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border-2 border-blue-400"
+              className="w-32 h-32 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border-2 border-blue-400"
               onClick={() => setSelectedImage(url)}
             />
             {/* 保存待ちバッジ */}

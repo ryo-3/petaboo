@@ -744,9 +744,9 @@ function MemoEditor({
         setPendingImages([]);
       }
 
-      // 画像の変更があった場合のみトーストを表示
+      // 画像の変更があった場合のみトーストを表示（3秒後に自動消去）
       if (pendingDeletes.length > 0 || pendingImages.length > 0) {
-        showToast("画像を更新しました", "success");
+        showToast("画像を更新しました", "success", 3000);
       }
     } catch (error) {
       console.error("❌ [MemoEditor] 保存に失敗しました:", error);

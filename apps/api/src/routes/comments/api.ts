@@ -345,7 +345,7 @@ export const getCommentsRoute = createRoute({
     query: z.object({
       teamId: z.string().regex(/^\d+$/).transform(Number),
       targetType: z.enum(["memo", "task", "board"]),
-      targetOriginalId: z.string(),
+      targetOriginalId: z.string().optional(), // オプションに変更
     }),
   },
   responses: {
@@ -392,6 +392,16 @@ export const getComments = async (c: any) => {
   }
 
   // コメントとチームメンバー情報をJOINして取得
+  const whereConditions = [
+    eq(teamComments.teamId, teamId),
+    eq(teamComments.targetType, targetType),
+  ];
+
+  // targetOriginalIdが指定されている場合のみフィルタリング
+  if (targetOriginalId) {
+    whereConditions.push(eq(teamComments.targetOriginalId, targetOriginalId));
+  }
+
   const result = await db
     .select({
       id: teamComments.id,
@@ -414,13 +424,7 @@ export const getComments = async (c: any) => {
         eq(teamMembers.userId, teamComments.userId),
       ),
     )
-    .where(
-      and(
-        eq(teamComments.teamId, teamId),
-        eq(teamComments.targetType, targetType),
-        eq(teamComments.targetOriginalId, targetOriginalId),
-      ),
-    )
+    .where(and(...whereConditions))
     .orderBy(asc(teamComments.createdAt));
 
   return c.json(result, 200);
@@ -743,11 +747,142 @@ export const deleteComment = async (c: any) => {
   return c.body(null, 204);
 };
 
+// GET /comments/board-items（ボード内アイテムのコメント一覧取得）
+export const getBoardItemCommentsRoute = createRoute({
+  method: "get",
+  path: "/board-items",
+  request: {
+    query: z.object({
+      teamId: z.string().regex(/^\d+$/).transform(Number),
+      boardId: z.string().regex(/^\d+$/).transform(Number),
+    }),
+  },
+  responses: {
+    200: {
+      description: "List of board item comments",
+      content: {
+        "application/json": {
+          schema: z.array(TeamCommentSchema),
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: z.object({ error: z.string() }),
+        },
+      },
+    },
+    403: {
+      description: "Not a team member",
+      content: {
+        "application/json": {
+          schema: z.object({ error: z.string() }),
+        },
+      },
+    },
+  },
+});
+
+export const getBoardItemComments = async (c: any) => {
+  const auth = getAuth(c);
+  const db = c.get("db");
+  if (!auth?.userId) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  const { teamId, boardId } = c.req.valid("query");
+
+  // チームメンバー確認
+  const member = await checkTeamMember(teamId, auth.userId, db);
+  if (!member) {
+    return c.json({ error: "Not a team member" }, 403);
+  }
+
+  // ボード内のメモ・タスクのoriginalIdを取得
+  const boardItems = await db
+    .select({
+      itemType: teamBoardItems.itemType,
+      originalId: teamBoardItems.originalId,
+    })
+    .from(teamBoardItems)
+    .where(eq(teamBoardItems.boardId, boardId));
+
+  if (boardItems.length === 0) {
+    return c.json([], 200);
+  }
+
+  // メモとタスクのoriginalIdを分離
+  const memoOriginalIds = boardItems
+    .filter((item) => item.itemType === "memo")
+    .map((item) => item.originalId);
+  const taskOriginalIds = boardItems
+    .filter((item) => item.itemType === "task")
+    .map((item) => item.originalId);
+
+  // コメントを取得
+  const whereConditions = [eq(teamComments.teamId, teamId)];
+
+  // メモまたはタスクのコメントを取得
+  const orConditions = [];
+  if (memoOriginalIds.length > 0) {
+    orConditions.push(
+      and(
+        eq(teamComments.targetType, "memo"),
+        inArray(teamComments.targetOriginalId, memoOriginalIds),
+      ),
+    );
+  }
+  if (taskOriginalIds.length > 0) {
+    orConditions.push(
+      and(
+        eq(teamComments.targetType, "task"),
+        inArray(teamComments.targetOriginalId, taskOriginalIds),
+      ),
+    );
+  }
+
+  if (orConditions.length === 0) {
+    return c.json([], 200);
+  }
+
+  whereConditions.push(or(...orConditions));
+
+  const result = await db
+    .select({
+      id: teamComments.id,
+      teamId: teamComments.teamId,
+      userId: teamComments.userId,
+      displayName: teamMembers.displayName,
+      avatarColor: teamMembers.avatarColor,
+      targetType: teamComments.targetType,
+      targetOriginalId: teamComments.targetOriginalId,
+      content: teamComments.content,
+      mentions: teamComments.mentions,
+      createdAt: teamComments.createdAt,
+      updatedAt: teamComments.updatedAt,
+    })
+    .from(teamComments)
+    .leftJoin(
+      teamMembers,
+      and(
+        eq(teamMembers.teamId, teamComments.teamId),
+        eq(teamMembers.userId, teamComments.userId),
+      ),
+    )
+    .where(and(...whereConditions))
+    .orderBy(asc(teamComments.createdAt));
+
+  return c.json(result, 200);
+};
+
 export function createAPI(app: OpenAPIHono) {
   app.openapi(getCommentsRoute, getComments);
   app.openapi(postCommentRoute, postComment);
   app.openapi(updateCommentRoute, updateComment);
   app.openapi(deleteCommentRoute, deleteComment);
+  app.openapi(getBoardItemCommentsRoute, getBoardItemComments);
 
   return app;
 }

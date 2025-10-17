@@ -1332,6 +1332,7 @@ function BoardDetailScreen({
                       targetType="board"
                       targetOriginalId={boardId.toString()}
                       teamMembers={teamMembers}
+                      boardId={boardId}
                     />
                   </ResizablePanel>
                 </ResizablePanelGroup>

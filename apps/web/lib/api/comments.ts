@@ -44,6 +44,55 @@ export async function getTeamComments(
   return response.json();
 }
 
+// すべてのボードのコメント一覧取得
+export async function getAllTeamBoardComments(
+  teamId: number,
+  token?: string,
+): Promise<TeamComment[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/comments?teamId=${teamId}&targetType=board`,
+    {
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch all board comments: ${response.statusText}`,
+    );
+  }
+
+  return response.json();
+}
+
+// ボード内アイテムのコメント一覧取得
+export async function getBoardItemComments(
+  teamId: number,
+  boardId: number,
+  token?: string,
+): Promise<TeamComment[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/comments/board-items?teamId=${teamId}&boardId=${boardId}`,
+    {
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch board item comments: ${response.statusText}`,
+    );
+  }
+
+  return response.json();
+}
+
 // コメント投稿
 export async function createTeamComment(
   teamId: number,

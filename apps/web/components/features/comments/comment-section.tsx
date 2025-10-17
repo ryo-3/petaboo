@@ -1,6 +1,8 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import {
   useTeamComments,
+  useAllTeamBoardComments,
+  useBoardItemComments,
   useCreateTeamComment,
   useUpdateTeamComment,
   useDeleteTeamComment,
@@ -10,6 +12,7 @@ import { useAuth } from "@clerk/nextjs";
 import type { TeamMember } from "@/src/hooks/use-team-detail";
 import { MoreVertical, Edit2, Trash2, Image as ImageIcon } from "lucide-react";
 import { useToast } from "@/src/contexts/toast-context";
+import CommentScopeToggle from "@/components/ui/buttons/comment-scope-toggle";
 
 // コメント画像表示用コンポーネント（シンプル版・モーダル付き）
 function CommentAttachmentGallery({
@@ -232,6 +235,7 @@ interface CommentSectionProps {
   targetOriginalId?: string;
   targetTitle?: string;
   teamMembers?: TeamMember[];
+  boardId?: number; // ボードIDを追加
 }
 
 export default function CommentSection({
@@ -242,6 +246,7 @@ export default function CommentSection({
   targetOriginalId,
   targetTitle,
   teamMembers = [],
+  boardId,
 }: CommentSectionProps) {
   const commentListRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -259,11 +264,36 @@ export default function CommentSection({
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
   const [cursorPosition, setCursorPosition] = useState(0);
 
-  const { data: comments = [], isLoading } = useTeamComments(
-    teamId,
-    targetType,
-    targetOriginalId,
-  );
+  // コメント表示範囲の状態
+  const [commentScope, setCommentScope] = useState<"board" | "items">(() => {
+    if (typeof window !== "undefined" && targetType === "board") {
+      const saved = localStorage.getItem("comment-scope");
+      return (saved === "items" ? "items" : "board") as "board" | "items";
+    }
+    return "board";
+  });
+
+  // ボードコメント取得（ボードタイプの場合のみ）
+  const { data: boardComments = [], isLoading: isLoadingBoard } =
+    useTeamComments(teamId, targetType, targetOriginalId);
+
+  // ボード内アイテムのコメント取得（ボードタイプの場合のみ）
+  const { data: itemComments = [], isLoading: isLoadingItems } =
+    useBoardItemComments(
+      targetType === "board" ? teamId : undefined,
+      targetType === "board" ? boardId : undefined,
+    );
+
+  // 表示するコメントを決定
+  const comments =
+    targetType === "board" && commentScope === "items"
+      ? itemComments
+      : boardComments;
+  const isLoading =
+    targetType === "board" && commentScope === "items"
+      ? isLoadingItems
+      : isLoadingBoard;
+
   const createComment = useCreateTeamComment(teamId);
   const updateComment = useUpdateTeamComment(
     teamId,
@@ -280,6 +310,14 @@ export default function CommentSection({
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editContent, setEditContent] = useState("");
+
+  // コメント表示範囲変更時にlocalStorageに保存
+  const handleScopeChange = (scope: "board" | "items") => {
+    setCommentScope(scope);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("comment-scope", scope);
+    }
+  };
 
   // メンションサジェストのフィルタリング（自分自身を除外）
   const filteredSuggestions = teamMembers.filter((member) => {
@@ -517,10 +555,28 @@ export default function CommentSection({
     );
   }
 
+  // タイトルを動的に変更
+  const displayTitle =
+    targetType === "board"
+      ? commentScope === "board"
+        ? "ボードコメント"
+        : "アイテムコメント"
+      : title;
+
   return (
     <>
-      <div className="p-4 flex-shrink-0">
-        <h3 className="text-sm font-medium text-gray-700">{title}</h3>
+      <div className="p-4 flex-shrink-0 flex items-center justify-between">
+        <h3 className="text-sm font-medium text-gray-700">{displayTitle}</h3>
+        {targetType === "board" && (
+          <div className="mr-2">
+            <CommentScopeToggle
+              scope={commentScope}
+              onScopeChange={handleScopeChange}
+              buttonSize="size-6"
+              iconSize="size-3.5"
+            />
+          </div>
+        )}
       </div>
       <div className="flex flex-col flex-1 min-h-0">
         {/* コメントリスト */}

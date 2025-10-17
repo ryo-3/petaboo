@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
 import {
   getTeamComments,
+  getAllTeamBoardComments,
+  getBoardItemComments,
   createTeamComment,
   updateTeamComment,
   deleteTeamComment,
@@ -103,5 +105,40 @@ export function useDeleteTeamComment(
         queryKey: ["team-comments", teamId, targetType, targetOriginalId],
       });
     },
+  });
+}
+
+// すべてのボードのコメント取得用フック
+export function useAllTeamBoardComments(teamId: number | undefined) {
+  const { getToken } = useAuth();
+
+  return useQuery({
+    queryKey: ["team-all-board-comments", teamId],
+    queryFn: async () => {
+      if (!teamId) return [];
+      const token = await getToken();
+      return getAllTeamBoardComments(teamId, token || undefined);
+    },
+    enabled: !!teamId,
+    refetchInterval: 60 * 1000, // チームモード: 1分ごとに再取得（他メンバーの変更を反映）
+  });
+}
+
+// ボード内アイテムのコメント取得用フック
+export function useBoardItemComments(
+  teamId: number | undefined,
+  boardId: number | undefined,
+) {
+  const { getToken } = useAuth();
+
+  return useQuery({
+    queryKey: ["board-item-comments", teamId, boardId],
+    queryFn: async () => {
+      if (!teamId || !boardId) return [];
+      const token = await getToken();
+      return getBoardItemComments(teamId, boardId, token || undefined);
+    },
+    enabled: !!teamId && !!boardId,
+    refetchInterval: 60 * 1000, // チームモード: 1分ごとに再取得（他メンバーの変更を反映）
   });
 }

@@ -10,6 +10,7 @@ import { usePersonalNotifier } from "@/src/hooks/use-personal-notifier";
 import {
   useNotifications,
   useMarkAllNotificationsAsRead,
+  useMarkNotificationAsRead,
 } from "@/src/hooks/use-notifications";
 import { useQueryClient } from "@tanstack/react-query";
 import { UserButton } from "@clerk/nextjs";
@@ -18,6 +19,8 @@ import { usePageVisibility } from "@/src/contexts/PageVisibilityContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useTeamContextSafe } from "@/contexts/team-context";
+import NotificationPopup from "@/components/features/notifications/notification-popup";
+import type { Notification } from "@/lib/api/notifications";
 
 function Header() {
   // 現在のチーム名を取得（navigation-contextと同じロジック）
@@ -41,6 +44,9 @@ function Header() {
 
   // ボード名の状態管理
   const [boardTitle, setBoardTitle] = useState<string | null>(null);
+
+  // 通知ポップアップの状態管理
+  const [isNotificationPopupOpen, setIsNotificationPopupOpen] = useState(false);
 
   // チームボード名の変更イベントをリッスン
   useEffect(() => {
@@ -104,21 +110,67 @@ function Header() {
   // すべて既読にする機能
   const { mutate: markAllAsRead } = useMarkAllNotificationsAsRead(teamId);
 
-  // 通知クリック時にホームタブに切り替え & すべて既読
-  const handleNotificationClick = () => {
-    if (teamName && pathname.startsWith("/team/")) {
-      // コメント通知がある場合はすべて既読にする
-      if (
-        commentNotifications?.unreadCount &&
-        commentNotifications.unreadCount > 0
-      ) {
-        markAllAsRead();
-      }
+  // 単一通知を既読にする機能
+  const { mutate: markAsRead } = useMarkNotificationAsRead();
 
-      // チームページでホームタブに切り替え
-      const baseTeamUrl = `/team/${teamName}`;
-      router.replace(baseTeamUrl);
+  // ベルアイコンクリック時にポップアップ開閉
+  const handleBellClick = () => {
+    setIsNotificationPopupOpen(!isNotificationPopupOpen);
+  };
+
+  // 通知から適切なURLを生成
+  const getNotificationUrl = (notification: Notification): string | null => {
+    if (!teamName) return null;
+
+    const { targetType, targetOriginalId, boardOriginalId } = notification;
+
+    if (!targetType || !targetOriginalId) {
+      return `/team/${teamName}`;
     }
+
+    // boardOriginalIdがない場合はチームホームに戻る
+    if (!boardOriginalId) {
+      return `/team/${teamName}`;
+    }
+
+    // ボードへのコメント
+    if (targetType === "board") {
+      return `/team/${teamName}/board/${boardOriginalId}`;
+    }
+
+    // メモへのコメント - ボード画面でそのメモを開く
+    if (targetType === "memo") {
+      return `/team/${teamName}/board/${boardOriginalId}/memo/${targetOriginalId}`;
+    }
+
+    // タスクへのコメント - ボード画面でそのタスクを開く
+    if (targetType === "task") {
+      return `/team/${teamName}/board/${boardOriginalId}/task/${targetOriginalId}`;
+    }
+
+    return `/team/${teamName}`;
+  };
+
+  // 通知クリック時の処理
+  const handleNotificationClick = (notification: Notification) => {
+    // 既読にする
+    if (notification.isRead === 0) {
+      markAsRead(notification.id);
+    }
+
+    // ポップアップを閉じる
+    setIsNotificationPopupOpen(false);
+
+    // 適切な画面に遷移
+    const url = getNotificationUrl(notification);
+    if (url) {
+      router.push(url);
+    }
+  };
+
+  // 通知を既読にする
+  const handleMarkAsRead = (notificationId: number) => {
+    markAsRead(notificationId);
   };
 
   return (
@@ -224,17 +276,28 @@ function Header() {
       <div className="flex items-center gap-2">
         {/* 通知アイコン - チームページでのみ表示 */}
         {!isPersonalPage && (
-          <button
-            className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            onClick={handleNotificationClick}
-          >
-            <Bell className="w-5 h-5 text-gray-600" />
-            {notificationCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
-                {notificationCount > 99 ? "99+" : notificationCount}
-              </span>
-            )}
-          </button>
+          <div className="relative">
+            <button
+              className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              onClick={handleBellClick}
+            >
+              <Bell className="w-5 h-5 text-gray-600" />
+              {notificationCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
+                  {notificationCount > 99 ? "99+" : notificationCount}
+                </span>
+              )}
+            </button>
+
+            {/* 通知ポップアップ */}
+            <NotificationPopup
+              notifications={commentNotifications?.notifications || []}
+              isOpen={isNotificationPopupOpen}
+              onClose={() => setIsNotificationPopupOpen(false)}
+              onNotificationClick={handleNotificationClick}
+              onMarkAsRead={handleMarkAsRead}
+            />
+          </div>
         )}
 
         {/* Clerkユーザーボタン */}

@@ -35,6 +35,7 @@ const TeamCommentSchema = z.object({
 const TeamCommentInputSchema = z.object({
   targetType: z.enum(["memo", "task", "board"]),
   targetOriginalId: z.string(),
+  boardId: z.number().optional(), // メモ/タスクが所属するボードID
   content: z
     .string()
     .min(1)
@@ -516,7 +517,7 @@ export const postComment = async (c: any) => {
   // リクエストボディのバリデーション
   const body = c.req.valid("json");
 
-  const { targetType, targetOriginalId, content } = body;
+  const { targetType, targetOriginalId, boardId, content } = body;
 
   // メンション解析
   const mentionedUserIds = await extractMentions(content, teamId, db);
@@ -539,6 +540,24 @@ export const postComment = async (c: any) => {
     })
     .returning();
 
+  // boardIdからboardOriginalIdを取得（メモ/タスクの場合）
+  let boardOriginalId: string | null = null;
+  if (boardId && targetType !== "board") {
+    const boards = await db
+      .select({ id: teamBoards.id, slug: teamBoards.slug })
+      .from(teamBoards)
+      .where(eq(teamBoards.id, boardId))
+      .limit(1);
+
+    if (boards.length > 0) {
+      // boardのoriginalIdはslugを使用
+      boardOriginalId = boards[0].slug;
+    }
+  } else if (targetType === "board") {
+    // ボードへのコメントの場合は、targetOriginalIdがboardOriginalId
+    boardOriginalId = targetOriginalId;
+  }
+
   // チーム全メンバーに通知を作成（投稿者以外）
   const allMembers = await db
     .select()
@@ -555,6 +574,7 @@ export const postComment = async (c: any) => {
       sourceId: result[0].id,
       targetType,
       targetOriginalId,
+      boardOriginalId,
       actorUserId: auth.userId,
       message: `${member.displayName || "誰か"}さんがコメントしました`,
       isRead: 0,

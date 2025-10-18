@@ -17,6 +17,7 @@ export interface TeamComment {
 export interface CreateCommentInput {
   targetType: "memo" | "task" | "board";
   targetOriginalId: string;
+  boardId?: number; // メモ/タスクが所属するボードID
   content: string;
 }
 

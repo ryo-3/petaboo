@@ -495,6 +495,7 @@ export default function CommentSection({
       const createdComment = await createComment.mutateAsync({
         targetType,
         targetOriginalId,
+        boardId, // ボードIDを追加
         content: newComment.trim() || " ", // 画像のみの場合は空白を入れる
       });
 

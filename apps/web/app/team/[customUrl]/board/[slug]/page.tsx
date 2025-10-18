@@ -132,7 +132,9 @@ export default function TeamBoardDetailPage() {
     // 初期メモ選択（メモIDがある場合）
     if (initialMemoId) {
       const foundMemo = teamMemosData.find(
-        (memo) => memo.id.toString() === initialMemoId,
+        (memo) =>
+          memo.id.toString() === initialMemoId ||
+          memo.originalId === initialMemoId,
       );
       if (foundMemo) {
         // 現在選択されているのと違う場合のみ更新
@@ -157,7 +159,9 @@ export default function TeamBoardDetailPage() {
     // 初期タスク選択（メモ選択がない場合でタスクIDがある場合）
     if (initialTaskId && !hasSelection) {
       const foundTask = teamTasksData.find(
-        (task) => task.id.toString() === initialTaskId,
+        (task) =>
+          task.id.toString() === initialTaskId ||
+          task.originalId === initialTaskId,
       );
       if (foundTask) {
         // 現在選択されているのと違う場合のみ更新

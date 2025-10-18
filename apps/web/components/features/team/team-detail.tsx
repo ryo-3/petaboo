@@ -755,7 +755,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
               ) : (
                 /* ダッシュボード表示 */
                 <div className="space-y-6">
-                  {/* 通知一覧 - 実際のデータを使用 */}
+                  {/* 統合通知一覧（コメント + 参加申請） */}
                   <NotificationList teamName={customUrl} />
                 </div>
               )}

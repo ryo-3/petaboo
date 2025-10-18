@@ -1143,6 +1143,7 @@ function BoardDetailScreen({
                             : "ボードにコメントを追加..."
                       }
                       teamId={teamId || undefined}
+                      boardId={boardId}
                       targetType={
                         selectedMemo ? "memo" : selectedTask ? "task" : "board"
                       }

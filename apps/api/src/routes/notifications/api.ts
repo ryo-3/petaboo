@@ -76,6 +76,7 @@ export const getNotifications = async (c: any) => {
       sourceId: teamNotifications.sourceId,
       targetType: teamNotifications.targetType,
       targetOriginalId: teamNotifications.targetOriginalId,
+      boardOriginalId: teamNotifications.boardOriginalId,
       actorUserId: teamNotifications.actorUserId,
       actorDisplayName: teamMembers.displayName,
       message: teamNotifications.message,

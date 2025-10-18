@@ -9,6 +9,7 @@ export interface Notification {
   sourceId: number | null;
   targetType: string | null;
   targetOriginalId: string | null;
+  boardOriginalId: string | null;
   actorUserId: string | null;
   actorDisplayName: string | null;
   message: string | null;

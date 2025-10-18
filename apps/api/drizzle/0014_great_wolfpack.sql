@@ -1,0 +1,1 @@
+ALTER TABLE `team_notifications` ADD `board_original_id` text;

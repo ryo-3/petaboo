@@ -44,8 +44,10 @@ interface ControlPanelProps {
   onBoardLayoutChange?: (layout: "horizontal" | "vertical") => void;
   showMemo?: boolean;
   showTask?: boolean;
+  showComment?: boolean;
   onMemoToggle?: (show: boolean) => void;
   onTaskToggle?: (show: boolean) => void;
+  onCommentToggle?: (show: boolean) => void;
   contentFilterRightPanelMode?: "memo-list" | "task-list" | "editor" | null;
 
   // ソート設定
@@ -123,8 +125,10 @@ export default function ControlPanel({
   onBoardLayoutChange,
   showMemo = true,
   showTask = true,
+  showComment = true,
   onMemoToggle,
   onTaskToggle,
+  onCommentToggle,
   contentFilterRightPanelMode,
   sortOptions = [],
   onSortChange,
@@ -364,8 +368,10 @@ export default function ControlPanel({
         <ContentFilter
           showMemo={showMemo}
           showTask={showTask}
+          showComment={showComment}
           onMemoToggle={onMemoToggle}
           onTaskToggle={onTaskToggle}
+          onCommentToggle={onCommentToggle}
           rightPanelMode={contentFilterRightPanelMode}
         />
       )}

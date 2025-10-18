@@ -39,6 +39,7 @@ export function useBoardState() {
   // コンテンツフィルター状態
   const [showMemo, setShowMemo] = useState(true);
   const [showTask, setShowTask] = useState(true);
+  const [showComment, setShowComment] = useState(true);
 
   // 最新値を保持するref
   const rightPanelModeRef = useRef(rightPanelMode);
@@ -74,32 +75,40 @@ export function useBoardState() {
     router.push(`/boards/${boardSlug}/settings`);
   }, [pathname, router]); // 依存配列に追加
 
-  // メモボタンのハンドラー（一覧表示中は切り替え）
+  // メモボタンのハンドラー
   const handleMemoToggle = useCallback(
     (show: boolean) => {
-      if (rightPanelMode === "task-list") {
-        // タスク一覧表示中にメモボタンを押したらメモ一覧に切り替え
-        setRightPanelMode("memo-list");
-      } else {
-        // 通常の表示/非表示切り替え
-        setShowMemo(show);
+      // 非表示にしようとした時、他の2つも非表示なら拒否
+      if (!show && !showTask && !showComment) {
+        return; // 最低1つは表示する必要がある
       }
+      setShowMemo(show);
     },
-    [rightPanelMode],
+    [showTask, showComment],
   );
 
-  // タスクボタンのハンドラー（一覧表示中は切り替え）
+  // タスクボタンのハンドラー
   const handleTaskToggle = useCallback(
     (show: boolean) => {
-      if (rightPanelMode === "memo-list") {
-        // メモ一覧表示中にタスクボタンを押したらタスク一覧に切り替え
-        setRightPanelMode("task-list");
-      } else {
-        // 通常の表示/非表示切り替え
-        setShowTask(show);
+      // 非表示にしようとした時、他の2つも非表示なら拒否
+      if (!show && !showMemo && !showComment) {
+        return; // 最低1つは表示する必要がある
       }
+      setShowTask(show);
     },
-    [rightPanelMode],
+    [showMemo, showComment],
+  );
+
+  // コメントボタンのハンドラー
+  const handleCommentToggle = useCallback(
+    (show: boolean) => {
+      // 非表示にしようとした時、他の2つも非表示なら拒否
+      if (!show && !showMemo && !showTask) {
+        return; // 最低1つは表示する必要がある
+      }
+      setShowComment(show);
+    },
+    [showMemo, showTask],
   );
 
   // タスクタブ切り替え時の処理
@@ -212,6 +221,7 @@ export function useBoardState() {
     isReversed,
     showMemo,
     showTask,
+    showComment,
 
     // セッター
     setActiveTaskTab,
@@ -226,12 +236,14 @@ export function useBoardState() {
     setIsReversed,
     setShowMemo,
     setShowTask,
+    setShowComment,
 
     // ハンドラー
     handleBoardLayoutChange,
     handleSettings,
     handleMemoToggle,
     handleTaskToggle,
+    handleCommentToggle,
     handleTaskTabChange,
     handleMemoTabChange,
     handleToggleItemSelection,

@@ -140,12 +140,12 @@ function Header() {
 
     // メモへのコメント - ボード画面でそのメモを開く
     if (targetType === "memo") {
-      return `/team/${teamName}/board/${boardOriginalId}/memo/${targetOriginalId}`;
+      return `/team/${teamName}/board/${boardOriginalId}?memo=${targetOriginalId}`;
     }
 
     // タスクへのコメント - ボード画面でそのタスクを開く
     if (targetType === "task") {
-      return `/team/${teamName}/board/${boardOriginalId}/task/${targetOriginalId}`;
+      return `/team/${teamName}/board/${boardOriginalId}?task=${targetOriginalId}`;
     }
 
     return `/team/${teamName}`;

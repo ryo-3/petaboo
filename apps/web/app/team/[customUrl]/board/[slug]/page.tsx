@@ -27,45 +27,26 @@ export default function TeamBoardDetailPage() {
   const [initialTaskId, setInitialTaskId] = useState<string | null>(null);
   const [urlParsed, setUrlParsed] = useState(false); // URL解析完了フラグ
 
-  // ページロード時にURLパスまたはクエリパラメータからメモ/タスクIDを抽出（1回だけ実行）
+  // ページロード時にURLクエリパラメータからメモ/タスクIDを抽出（1回だけ実行）
   useEffect(() => {
     if (urlParsed) return; // 既に解析済みなら何もしない
 
-    // まずクエリパラメータをチェック（リダイレクトから来た場合）
-    const initialMemoParam = searchParams.get("initialMemo");
-    const initialTaskParam = searchParams.get("initialTask");
+    // クエリパラメータからメモ/タスクIDを取得
+    const memoParam = searchParams.get("memo");
+    const taskParam = searchParams.get("task");
 
-    if (initialMemoParam) {
-      setInitialMemoId(initialMemoParam);
+    if (memoParam) {
+      setInitialMemoId(memoParam);
       setInitialTaskId(null); // 他方をクリア
       setUrlParsed(true);
       return;
     }
 
-    if (initialTaskParam) {
-      setInitialTaskId(initialTaskParam);
+    if (taskParam) {
+      setInitialTaskId(taskParam);
       setInitialMemoId(null); // 他方をクリア
       setUrlParsed(true);
       return;
-    }
-
-    // 直接URLパスからも確認（念のため）
-    if (typeof window !== "undefined") {
-      const pathname = window.location.pathname;
-      const memoMatch = pathname.match(/\/memo\/(\d+)$/);
-      const taskMatch = pathname.match(/\/task\/(\d+)$/);
-
-      if (memoMatch?.[1]) {
-        setInitialMemoId(memoMatch[1]);
-        setInitialTaskId(null);
-        setUrlParsed(true);
-        return;
-      } else if (taskMatch?.[1]) {
-        setInitialTaskId(taskMatch[1]);
-        setInitialMemoId(null);
-        setUrlParsed(true);
-        return;
-      }
     }
 
     // どのパターンにも該当しない場合も解析完了とする
@@ -148,9 +129,6 @@ export default function TeamBoardDetailPage() {
 
           setSelectedMemo(memoWithCorrectOriginalId);
           setSelectedTask(null); // タスクの選択を解除
-          // URLを更新してパス形式に統一
-          const newUrl = `/team/${customUrl}/board/${slug}/memo/${foundMemo.id}`;
-          window.history.replaceState(null, "", newUrl);
         }
         hasSelection = true;
       }
@@ -175,13 +153,8 @@ export default function TeamBoardDetailPage() {
 
           setSelectedTask(taskWithCorrectOriginalId);
           setSelectedMemo(null); // メモの選択を解除
-          // URLを更新してパス形式に統一
-          const newUrl = `/team/${customUrl}/board/${slug}/task/${foundTask.id}`;
-          window.history.replaceState(null, "", newUrl);
-        } else {
         }
         hasSelection = true;
-      } else {
       }
     }
 
@@ -250,9 +223,9 @@ export default function TeamBoardDetailPage() {
   }, [error, loading, router, customUrl]);
 
   const handleClearSelection = () => {
-    // 選択解除時はベースのボードURLに戻す
+    // 選択解除時はクエリパラメータを削除
     const baseUrl = `/team/${customUrl}/board/${slug}`;
-    window.history.replaceState(null, "", baseUrl);
+    router.replace(baseUrl, { scroll: false });
     setSelectedMemo(null);
     setSelectedTask(null);
   };
@@ -261,9 +234,9 @@ export default function TeamBoardDetailPage() {
     if (!memo) return;
     // メモ選択時はタスクの選択を解除
     setSelectedTask(null);
-    // URLを更新
-    const newUrl = `/team/${customUrl}/board/${slug}/memo/${memo.id}`;
-    window.history.replaceState(null, "", newUrl);
+    // URLをクエリパラメータ形式で更新
+    const newUrl = `/team/${customUrl}/board/${slug}?memo=${memo.id}`;
+    router.replace(newUrl, { scroll: false });
     setSelectedMemo(memo);
   };
 
@@ -271,9 +244,9 @@ export default function TeamBoardDetailPage() {
     if (!task) return;
     // タスク選択時はメモの選択を解除
     setSelectedMemo(null);
-    // URLを更新
-    const newUrl = `/team/${customUrl}/board/${slug}/task/${task.id}`;
-    window.history.replaceState(null, "", newUrl);
+    // URLをクエリパラメータ形式で更新
+    const newUrl = `/team/${customUrl}/board/${slug}?task=${task.id}`;
+    router.replace(newUrl, { scroll: false });
     setSelectedTask(task);
   };
 
@@ -285,9 +258,9 @@ export default function TeamBoardDetailPage() {
     // タスクの選択を解除
     setSelectedTask(null);
 
-    // URLを更新
-    const newUrl = `/team/${customUrl}/board/${slug}/memo/${memo.id}`;
-    window.history.replaceState(null, "", newUrl);
+    // URLをクエリパラメータ形式で更新
+    const newUrl = `/team/${customUrl}/board/${slug}?memo=${memo.id}`;
+    router.replace(newUrl, { scroll: false });
 
     // 削除済みメモを選択状態として設定
     setSelectedMemo(memo as unknown as Memo);

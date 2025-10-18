@@ -120,6 +120,9 @@ export function NavigationProvider({
     const isTeamMemos = isTeamDetailPageUrl && currentTab === "memos";
     const isTeamTasks = isTeamDetailPageUrl && currentTab === "tasks";
     const isTeamBoards = isTeamDetailPageUrl && currentTab === "boards";
+    const isTeamListTab = isTeamDetailPageUrl && currentTab === "team-list";
+    const isTeamSettingsTab =
+      isTeamDetailPageUrl && currentTab === "team-settings";
     const isTeamListPage = isNormalTeamPage;
     const isTeamDetailPage = isTeamDetailPageUrl;
 
@@ -133,11 +136,14 @@ export function NavigationProvider({
         !isTeamOverview &&
         !isTeamMemos &&
         !isTeamTasks &&
-        !isTeamBoards) ||
+        !isTeamBoards &&
+        !isTeamListTab &&
+        !isTeamSettingsTab) ||
         isTeamBoardDetailPage) &&
       screenMode !== "home" &&
       screenMode !== "search" &&
       screenMode !== "settings" &&
+      screenMode !== "team" &&
       screenMode !== "loading";
 
     return {
@@ -199,6 +205,8 @@ export function NavigationProvider({
     ]
       .filter(Boolean)
       .join(" | ");
+
+    // console.log(`🎯 [Navigation] ${logInfo} (${actualDisplayUrl})`);
   }, [screenMode, pathname, searchParams, iconStates]);
 
   // TODO: 必要に応じて個別キャッシュ無効化を実装する

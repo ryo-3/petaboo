@@ -178,9 +178,6 @@ export default function ControlPanel({
     typeof window !== "undefined" ? window.innerWidth : 0,
   );
   const [controlWidth, setControlWidth] = useState(0);
-  const [shouldShowSettingsIcon, setShouldShowSettingsIcon] = useState(
-    rightPanelMode === "hidden",
-  );
 
   // コントロールパネルの位置管理
   const [controlPosition, setControlPosition] = useState<
@@ -237,11 +234,6 @@ export default function ControlPanel({
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [floatControls]);
-
-  // 設定ボタン表示制御
-  useEffect(() => {
-    setShouldShowSettingsIcon(rightPanelMode === "hidden");
-  }, [rightPanelMode]);
 
   // 位置から座標を計算
   const pixelPosition = useMemo(() => {
@@ -345,21 +337,6 @@ export default function ControlPanel({
           iconSize="size-4"
         />
       )}
-
-      {/* 設定ボタン（ボードモードのみ） */}
-      {currentMode === "board" &&
-        boardId &&
-        onBoardSettings &&
-        shouldShowSettingsIcon && (
-          <Tooltip text="ボード設定" position="bottom-left">
-            <button
-              onClick={onBoardSettings}
-              className="p-1 text-gray-600 h-7 flex items-center"
-            >
-              <SettingsIcon className="w-4 h-4" />
-            </button>
-          </Tooltip>
-        )}
 
       {/* ボードレイアウト切り替え（boardモードのみ、チームモードでは非表示） */}
       {currentMode === "board" && onBoardLayoutChange && !teamMode && (
@@ -512,6 +489,18 @@ export default function ControlPanel({
             }`}
           >
             <CsvExportIcon className="size-[18px]" />
+          </button>
+        </Tooltip>
+      )}
+
+      {/* 設定ボタン（ボードモードのみ、一番右） */}
+      {currentMode === "board" && boardId && onBoardSettings && (
+        <Tooltip text="ボード設定" position="bottom-left">
+          <button
+            onClick={onBoardSettings}
+            className="p-1 text-gray-600 h-7 flex items-center"
+          >
+            <SettingsIcon className="w-4 h-4" />
           </button>
         </Tooltip>
       )}

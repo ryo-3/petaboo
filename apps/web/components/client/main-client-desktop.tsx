@@ -53,7 +53,7 @@ export function MainClientDesktop({
   handleBoardDetail,
   handleTeamList,
   handleTeamCreate,
-  screenMode,
+  screenMode: _screenMode,
   initialBoardName,
   currentBoard,
   showingBoardDetail,

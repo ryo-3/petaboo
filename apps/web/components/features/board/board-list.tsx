@@ -1,7 +1,7 @@
 import { useBoards, useCreateBoard } from "@/src/hooks/use-boards";
 import { useTeamBoards, useCreateTeamBoard } from "@/src/hooks/use-team-boards";
 import { CreateBoardData } from "@/src/types/board";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { usePathname } from "next/navigation";
 import BoardCard from "./board-card";
 import BoardForm from "./board-form";

@@ -1,7 +1,6 @@
 import { useBulkDeleteUnified } from "@/src/hooks/use-bulk-delete-unified";
 import { useDeleteMemo, usePermanentDeleteMemo } from "@/src/hooks/use-memos";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
-import { useMutation } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
 import { memosApi } from "@/src/lib/api-client";
 

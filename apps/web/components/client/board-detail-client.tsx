@@ -19,7 +19,7 @@ export default function BoardDetailClient({
   boardId,
   initialBoardName,
   initialBoardDescription,
-  teamMode = false,
+  teamMode: _teamMode = false,
   teamId = null,
 }: BoardDetailClientProps) {
   const router = useRouter();

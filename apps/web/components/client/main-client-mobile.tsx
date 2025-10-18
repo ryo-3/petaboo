@@ -50,7 +50,7 @@ export function MainClientMobile({
   handleBoardDetail,
   handleTeamList,
   handleTeamCreate,
-  screenMode,
+  screenMode: _screenMode,
   initialBoardName,
   currentBoard,
   showingBoardDetail,

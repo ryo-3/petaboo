@@ -86,7 +86,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
     isDeleted = false,
     initialBoardId,
     showBoardCategory = false,
-    teamMode = false,
+    teamMode: _teamMode = false,
     onPaste,
   } = props;
   const titleInputRef = useRef<HTMLInputElement>(null);

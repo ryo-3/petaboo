@@ -111,7 +111,7 @@ function TaskStatusDisplay({
   sortOptions = [],
   isBoard = false,
   teamMode = false,
-  teamId,
+  teamId: _teamId,
   initialBoardId,
   allTaggings = [],
   allTeamTaggings = [],

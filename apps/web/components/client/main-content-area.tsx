@@ -96,8 +96,8 @@ export function MainContentArea({
   handleBoardSelectMemo,
   handleBoardSelectTask,
   handleBoardClearSelection,
-  teamMode = false,
-  teamId,
+  teamMode: _teamMode = false,
+  teamId: _teamId,
   handleTeamCreate,
   handleTeamCreated,
 }: MainContentAreaProps) {

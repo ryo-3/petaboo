@@ -49,7 +49,7 @@ const mockTeamData = {
   ],
 };
 
-function TeamSettingsScreen({ teamId }: TeamSettingsScreenProps) {
+function TeamSettingsScreen({ teamId: _teamId }: TeamSettingsScreenProps) {
   const [activeTab, setActiveTab] = useState<TeamSettingsTab>("members");
   const [teamName, setTeamName] = useState(mockTeamData.name);
   const [teamDescription, setTeamDescription] = useState(

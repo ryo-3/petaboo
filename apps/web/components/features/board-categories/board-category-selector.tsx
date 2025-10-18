@@ -2,7 +2,6 @@ import CustomSelector from "@/components/ui/selectors/custom-selector";
 import type { BoardCategory } from "@/src/types/board-categories";
 import CreateCategoryModal from "./create-category-modal";
 import { useState } from "react";
-import { Plus } from "lucide-react";
 
 interface BoardCategorySelectorProps {
   value: number | null;

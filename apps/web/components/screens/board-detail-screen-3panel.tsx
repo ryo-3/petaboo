@@ -837,7 +837,7 @@ function BoardDetailScreen({
                               id="selected-list"
                               order={listOrder}
                               defaultSize={sizes.list}
-                              minSize={15}
+                              minSize={25}
                               maxSize={50}
                               className="rounded-lg bg-white flex flex-col min-h-0 border-r border-gray-200"
                             >

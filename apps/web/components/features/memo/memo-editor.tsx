@@ -28,11 +28,7 @@ import {
 import { useTeamTags } from "@/src/hooks/use-team-tags";
 import { useDeletedMemoActions } from "./use-deleted-memo-actions";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  useAttachments,
-  useUploadAttachment,
-  useDeleteAttachment,
-} from "@/src/hooks/use-attachments";
+import { useAttachmentManager } from "@/src/hooks/use-attachment-manager";
 import AttachmentGallery from "@/components/features/attachments/attachment-gallery";
 import { useToast } from "@/src/contexts/toast-context";
 import ShareUrlButton from "@/components/ui/buttons/share-url-button";
@@ -261,111 +257,29 @@ function MemoEditor({
   // 手動でタグを変更したかどうかのフラグ
   const [hasManualChanges, setHasManualChanges] = useState(false);
 
-  // 画像添付機能
+  // 画像添付機能（共通フック使用）
   const { showToast } = useToast();
-  const memoOriginalId = memo ? OriginalIdUtils.fromItem(memo) : undefined;
-  const { data: attachments = [] } = useAttachments(
-    teamMode ? teamId : undefined,
-    "memo",
-    memoOriginalId,
-  );
-  const uploadMutation = useUploadAttachment(
-    teamMode ? teamId : undefined,
-    "memo",
-    memoOriginalId,
-  );
-  const deleteMutation = useDeleteAttachment(
-    teamMode ? teamId : undefined,
-    "memo",
-    memoOriginalId,
-  );
+  const attachmentManager = useAttachmentManager({
+    itemType: "memo",
+    item: memo,
+    teamMode,
+    teamId,
+    isDeleted,
+  });
 
-  // 保存待ちの画像（ローカルstate）
-  const [pendingImages, setPendingImages] = useState<File[]>([]);
-  // 削除予定の画像ID（保存時に削除）
-  const [pendingDeletes, setPendingDeletes] = useState<number[]>([]);
-
-  // 画像形式バリデーション
-  const validateImageFile = (file: File): boolean => {
-    // MIMEタイプチェック
-    const allowedTypes = [
-      "image/jpeg",
-      "image/jpg",
-      "image/png",
-      "image/gif",
-      "image/webp",
-      "image/svg+xml",
-    ];
-    if (!allowedTypes.includes(file.type)) {
-      showToast(`対応していないファイル形式です（${file.type}）`, "error");
-      return false;
-    }
-
-    // ファイルサイズチェック（5MB）
-    const maxSize = 5 * 1024 * 1024;
-    if (file.size > maxSize) {
-      showToast("ファイルサイズは5MB以下にしてください", "error");
-      return false;
-    }
-
-    return true;
-  };
-
-  const handleFileSelect = (file: File) => {
-    // バリデーション
-    if (!validateImageFile(file)) {
-      return;
-    }
-
-    const totalCount =
-      attachments.filter((a) => !pendingDeletes.includes(a.id)).length +
-      pendingImages.length;
-    if (totalCount >= 4) {
-      showToast("画像は最大4枚までです", "error");
-      return;
-    }
-
-    setPendingImages((prev) => [...prev, file]);
-  };
-
-  const handleDeleteAttachment = (attachmentId: number) => {
-    // 削除予定リストに追加（保存時に削除）
-    setPendingDeletes((prev) => [...prev, attachmentId]);
-  };
-
-  const handleDeletePendingImage = (index: number) => {
-    setPendingImages((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleRestoreAttachment = (attachmentId: number) => {
-    // 削除予定から復元
-    setPendingDeletes((prev) => prev.filter((id) => id !== attachmentId));
-  };
-
-  // クリップボードからの画像ペースト処理
-  const handlePaste = useCallback(
-    (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
-      if (isDeleted) return; // 削除済みの場合は無効
-
-      const items = e.clipboardData?.items;
-      if (!items) return;
-
-      // クリップボード内の画像を探す
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        if (item && item.type.startsWith("image/")) {
-          e.preventDefault(); // デフォルトのペースト動作を防止
-
-          const file = item.getAsFile();
-          if (file) {
-            handleFileSelect(file);
-          }
-          break; // 最初の画像のみ処理
-        }
-      }
-    },
-    [isDeleted, handleFileSelect],
-  );
+  const {
+    attachments,
+    pendingImages,
+    pendingDeletes,
+    handleFileSelect,
+    handlePaste,
+    handleDeleteAttachment,
+    handleDeletePendingImage,
+    handleRestoreAttachment,
+    uploadPendingImages,
+    deletePendingAttachments,
+    isDeleting,
+  } = attachmentManager;
 
   // プリロードデータとライブデータを組み合わせてタグを抽出
   const currentTags = useMemo(() => {
@@ -711,41 +625,20 @@ function MemoEditor({
       }
 
       // 削除予定の画像を削除
-      if (pendingDeletes.length > 0) {
-        for (const attachmentId of pendingDeletes) {
-          try {
-            await deleteMutation.mutateAsync(attachmentId);
-          } catch (error) {
-            console.error("画像削除エラー:", error);
-            showToast(
-              error instanceof Error ? error.message : "画像削除に失敗しました",
-              "error",
-            );
-          }
-        }
-        setPendingDeletes([]);
+      const hasDeletes = pendingDeletes.length > 0;
+      const hasUploads = pendingImages.length > 0;
+
+      if (hasDeletes) {
+        await deletePendingAttachments();
       }
 
       // 保存待ちの画像を一括アップロード
-      if (pendingImages.length > 0 && targetOriginalId) {
-        for (const file of pendingImages) {
-          try {
-            await uploadMutation.mutateAsync(file);
-          } catch (error) {
-            console.error("画像アップロードエラー:", error);
-            showToast(
-              error instanceof Error
-                ? error.message
-                : "画像アップロードに失敗しました",
-              "error",
-            );
-          }
-        }
-        setPendingImages([]);
+      if (hasUploads && targetOriginalId) {
+        await uploadPendingImages();
       }
 
       // 画像の変更があった場合のみトーストを表示（3秒後に自動消去）
-      if (pendingDeletes.length > 0 || pendingImages.length > 0) {
+      if (hasDeletes || hasUploads) {
         showToast("画像を更新しました", "success", 3000);
       }
     } catch (error) {
@@ -760,8 +653,8 @@ function MemoEditor({
     queryClient,
     pendingImages,
     pendingDeletes,
-    uploadMutation,
-    deleteMutation,
+    uploadPendingImages,
+    deletePendingAttachments,
     showToast,
   ]);
 
@@ -1146,7 +1039,7 @@ function MemoEditor({
           <AttachmentGallery
             attachments={attachments}
             onDelete={handleDeleteAttachment}
-            isDeleting={deleteMutation.isPending}
+            isDeleting={isDeleting}
             pendingImages={pendingImages}
             onDeletePending={handleDeletePendingImage}
             pendingDeletes={pendingDeletes}

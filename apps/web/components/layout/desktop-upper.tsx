@@ -45,6 +45,11 @@ interface DesktopUpperProps {
   onCommentToggle?: (show: boolean) => void;
   // Right panel mode for tooltip context
   contentFilterRightPanelMode?: "memo-list" | "task-list" | "editor" | null;
+  // 選択時モード用
+  isSelectedMode?: boolean;
+  listTooltip?: string;
+  detailTooltip?: string;
+  selectedItemType?: "memo" | "task" | null;
   // Selection mode (memo only)
   selectionMode?: "select" | "check";
   onSelectionModeChange?: (mode: "select" | "check") => void;
@@ -137,6 +142,10 @@ function DesktopUpper({
   onTaskToggle,
   onCommentToggle,
   contentFilterRightPanelMode,
+  isSelectedMode = false,
+  listTooltip,
+  detailTooltip,
+  selectedItemType = null,
   selectionMode = "select",
   onSelectionModeChange,
   onSelectAll,
@@ -384,6 +393,10 @@ function DesktopUpper({
       onTaskToggle={onTaskToggle}
       onCommentToggle={onCommentToggle}
       contentFilterRightPanelMode={contentFilterRightPanelMode}
+      isSelectedMode={isSelectedMode}
+      listTooltip={listTooltip}
+      detailTooltip={detailTooltip}
+      selectedItemType={selectedItemType}
       sortOptions={sortOptions}
       onSortChange={onSortChange}
       showEditDate={showEditDate}

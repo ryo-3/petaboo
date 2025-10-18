@@ -49,6 +49,11 @@ interface ControlPanelProps {
   onTaskToggle?: (show: boolean) => void;
   onCommentToggle?: (show: boolean) => void;
   contentFilterRightPanelMode?: "memo-list" | "task-list" | "editor" | null;
+  // 選択時モード用
+  isSelectedMode?: boolean;
+  listTooltip?: string;
+  detailTooltip?: string;
+  selectedItemType?: "memo" | "task" | null;
 
   // ソート設定
   sortOptions?: Array<{
@@ -130,6 +135,10 @@ export default function ControlPanel({
   onTaskToggle,
   onCommentToggle,
   contentFilterRightPanelMode,
+  isSelectedMode = false,
+  listTooltip,
+  detailTooltip,
+  selectedItemType = null,
   sortOptions = [],
   onSortChange,
   showEditDate = false,
@@ -373,6 +382,10 @@ export default function ControlPanel({
           onTaskToggle={onTaskToggle}
           onCommentToggle={onCommentToggle}
           rightPanelMode={contentFilterRightPanelMode}
+          isSelectedMode={isSelectedMode}
+          listTooltip={listTooltip}
+          detailTooltip={detailTooltip}
+          selectedItemType={selectedItemType}
         />
       )}
 

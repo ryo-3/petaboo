@@ -36,10 +36,15 @@ export function useBoardState() {
   );
   const [isReversed, setIsReversed] = useState(false);
 
-  // コンテンツフィルター状態
+  // コンテンツフィルター状態（非選択時用）
   const [showMemo, setShowMemo] = useState(true);
   const [showTask, setShowTask] = useState(true);
   const [showComment, setShowComment] = useState(true);
+
+  // 選択時のパネル表示状態
+  const [showListPanel, setShowListPanel] = useState(true); // 一覧パネル
+  const [showDetailPanel, setShowDetailPanel] = useState(true); // 詳細パネル
+  const [showCommentPanel, setShowCommentPanel] = useState(true); // コメントパネル
 
   // 最新値を保持するref
   const rightPanelModeRef = useRef(rightPanelMode);
@@ -99,7 +104,7 @@ export function useBoardState() {
     [showMemo, showComment],
   );
 
-  // コメントボタンのハンドラー
+  // コメントボタンのハンドラー（非選択時）
   const handleCommentToggle = useCallback(
     (show: boolean) => {
       // 非表示にしようとした時、他の2つも非表示なら拒否
@@ -109,6 +114,40 @@ export function useBoardState() {
       setShowComment(show);
     },
     [showMemo, showTask],
+  );
+
+  // 選択時のパネルトグルハンドラー
+  const handleListPanelToggle = useCallback(
+    (show: boolean) => {
+      // 非表示にしようとした時、他の2つも非表示なら拒否
+      if (!show && !showDetailPanel && !showCommentPanel) {
+        return; // 最低1つは表示する必要がある
+      }
+      setShowListPanel(show);
+    },
+    [showDetailPanel, showCommentPanel],
+  );
+
+  const handleDetailPanelToggle = useCallback(
+    (show: boolean) => {
+      // 非表示にしようとした時、他の2つも非表示なら拒否
+      if (!show && !showListPanel && !showCommentPanel) {
+        return; // 最低1つは表示する必要がある
+      }
+      setShowDetailPanel(show);
+    },
+    [showListPanel, showCommentPanel],
+  );
+
+  const handleCommentPanelToggle = useCallback(
+    (show: boolean) => {
+      // 非表示にしようとした時、他の2つも非表示なら拒否
+      if (!show && !showListPanel && !showDetailPanel) {
+        return; // 最低1つは表示する必要がある
+      }
+      setShowCommentPanel(show);
+    },
+    [showListPanel, showDetailPanel],
   );
 
   // タスクタブ切り替え時の処理
@@ -222,6 +261,9 @@ export function useBoardState() {
     showMemo,
     showTask,
     showComment,
+    showListPanel,
+    showDetailPanel,
+    showCommentPanel,
 
     // セッター
     setActiveTaskTab,
@@ -237,6 +279,9 @@ export function useBoardState() {
     setShowMemo,
     setShowTask,
     setShowComment,
+    setShowListPanel,
+    setShowDetailPanel,
+    setShowCommentPanel,
 
     // ハンドラー
     handleBoardLayoutChange,
@@ -244,6 +289,9 @@ export function useBoardState() {
     handleMemoToggle,
     handleTaskToggle,
     handleCommentToggle,
+    handleListPanelToggle,
+    handleDetailPanelToggle,
+    handleCommentPanelToggle,
     handleTaskTabChange,
     handleMemoTabChange,
     handleToggleItemSelection,

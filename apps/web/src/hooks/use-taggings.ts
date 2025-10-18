@@ -15,12 +15,7 @@ export function useTaggings(options: UseTaggingsOptions = {}) {
   const { getToken } = useAuth();
 
   // enabled, teamModeをキャッシュキーから除外（キャッシュを共有するため）
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const {
-    enabled: _enabled,
-    teamMode: _teamMode,
-    ...cacheKeyOptions
-  } = options;
+  const { enabled, teamMode, ...cacheKeyOptions } = options;
 
   return useQuery({
     queryKey: ["taggings", cacheKeyOptions],
@@ -38,7 +33,7 @@ export function useTaggings(options: UseTaggingsOptions = {}) {
       const data = await response.json();
       return data as Tagging[];
     },
-    enabled: options.enabled !== false && !options.teamMode, // enabledオプションとteamModeチェックを両方適用
+    enabled: enabled !== false && !teamMode, // enabledオプションとteamModeチェックを両方適用
   });
 }
 

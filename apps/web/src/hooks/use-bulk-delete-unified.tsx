@@ -381,6 +381,9 @@ export function useBulkDeleteUnified<
 
     // タスクの場合、現在表示されているタスクのうち選択されているもののみカウント
     if (itemType === "task" && items) {
+      // 型キャスト: BaseItem[] → Task[]
+      // NOTE: itemType === "task" の場合、items は実際には Task[] なので安全
+      // ジェネリクスの制約上、ここで型キャストが必要
       const allItems = items as unknown as Task[];
       const currentTabItems = allItems.filter(
         (item) => item.status === activeTab,

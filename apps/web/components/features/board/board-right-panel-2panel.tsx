@@ -374,34 +374,11 @@ export default function BoardRightPanel({
             }
           }}
           onSelectDeletedMemo={(memo) => {
-            console.log("🔗 右パネル onSelectDeletedMemo 呼び出し", {
-              memoId: memo?.id,
-              memoOriginalId: memo?.originalId,
-              memoTitle: memo?.title,
-              hasOnSelectMemo: !!onSelectMemo,
-              memoObject: memo
-                ? {
-                    id: memo.id,
-                    originalId: memo.originalId,
-                    title: memo.title?.substring(0, 30),
-                    type: typeof memo,
-                  }
-                : null,
-              時刻: new Date().toISOString(),
-            });
-
             if (memo) {
-              console.log("🔧 右パネル onSelectMemo 実行開始", {
-                memoId: memo.id,
-                originalId: memo.originalId,
-                hasOnSelectMemo: !!onSelectMemo,
-              });
-
+              // 型キャスト: DeletedMemo → Memo
+              // NOTE: DeletedMemoはMemoのスーパーセット（deletedAtフィールドが追加されている）
+              // 選択状態ではdeletedAtの有無を区別せず、Memo型として扱う
               onSelectMemo?.(memo as unknown as Memo);
-
-              console.log("✅ 右パネル 削除済みメモ選択完了", memo.originalId);
-            } else {
-              console.log("❌ 右パネル memo が null のため選択処理スキップ");
             }
           }}
           onClose={onClose}

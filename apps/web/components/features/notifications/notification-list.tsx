@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import { ja } from "date-fns/locale";
 import type { Notification } from "@/lib/api/notifications";
+import { getNotificationUrl } from "@/src/utils/notificationUtils";
 
 // 通知タイプごとの移動先を定義
 const NOTIFICATION_DESTINATIONS = {
@@ -70,39 +71,6 @@ function NotificationList({
     }
   };
 
-  // 通知から適切なURLを生成
-  const getNotificationUrl = (notification: Notification): string | null => {
-    if (!teamName) return null;
-
-    const { targetType, targetOriginalId, boardOriginalId } = notification;
-
-    if (!targetType || !targetOriginalId) {
-      return `/team/${teamName}`;
-    }
-
-    // boardOriginalIdがない場合はチームホームに戻る
-    if (!boardOriginalId) {
-      return `/team/${teamName}`;
-    }
-
-    // ボードへのコメント
-    if (targetType === "board") {
-      return `/team/${teamName}/board/${boardOriginalId}`;
-    }
-
-    // メモへのコメント - ボード画面でそのメモを開く
-    if (targetType === "memo") {
-      return `/team/${teamName}/board/${boardOriginalId}?memo=${targetOriginalId}`;
-    }
-
-    // タスクへのコメント - ボード画面でそのタスクを開く
-    if (targetType === "task") {
-      return `/team/${teamName}/board/${boardOriginalId}?task=${targetOriginalId}`;
-    }
-
-    return `/team/${teamName}`;
-  };
-
   // コメント通知クリック時の処理
   const handleCommentClick = (notification: Notification) => {
     // 既読にする
@@ -111,7 +79,7 @@ function NotificationList({
     }
 
     // 適切な画面に遷移
-    const url = getNotificationUrl(notification);
+    const url = getNotificationUrl(notification, teamName);
     if (url) {
       router.push(url);
     }

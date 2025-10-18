@@ -120,8 +120,12 @@ export default function TeamBoardDetailPage() {
       if (foundMemo) {
         // 現在選択されているのと違う場合のみ更新
         if (!selectedMemo || selectedMemo.id.toString() !== initialMemoId) {
-          // TeamMemo型をMemo型として扱う（型の互換性を仮定）
-          // originalIdを正しく設定するためにfoundMemoのoriginalIdを使用
+          // 型キャスト: TeamMemo → Memo
+          // TODO: 将来的にはTeamMemo/TeamTaskをMemo/Task型に統一することを検討
+          // 現状は以下の理由で型キャストを使用:
+          // - TeamMemo.teamId は必須だが Memo.teamId はオプショナル
+          // - フィールドの有無に若干の違いがある (categoryId, commentCount など)
+          // - 実行時には互換性があり、正常に動作している
           const memoWithCorrectOriginalId = {
             ...foundMemo,
             originalId: foundMemo.originalId, // team_memosのoriginal_idを使用
@@ -144,8 +148,12 @@ export default function TeamBoardDetailPage() {
       if (foundTask) {
         // 現在選択されているのと違う場合のみ更新
         if (!selectedTask || selectedTask.id.toString() !== initialTaskId) {
-          // TeamTask型をTask型として扱う（型の互換性を仮定）
-          // originalIdを正しく設定するためにfoundTaskのoriginalIdを使用
+          // 型キャスト: TeamTask → Task
+          // TODO: 将来的にはTeamMemo/TeamTaskをMemo/Task型に統一することを検討
+          // 現状は以下の理由で型キャストを使用:
+          // - TeamTask.teamId は必須だが Task.teamId はオプショナル
+          // - フィールドの有無に若干の違いがある (status, priority など)
+          // - 実行時には互換性があり、正常に動作している
           const taskWithCorrectOriginalId = {
             ...foundTask,
             originalId: foundTask.originalId, // team_tasksのoriginal_idを使用
@@ -262,7 +270,9 @@ export default function TeamBoardDetailPage() {
     const newUrl = `/team/${customUrl}/board/${slug}?memo=${memo.id}`;
     router.replace(newUrl, { scroll: false });
 
-    // 削除済みメモを選択状態として設定
+    // 型キャスト: DeletedMemo → Memo
+    // NOTE: DeletedMemoはMemoのスーパーセット（deletedAtフィールドが追加されている）
+    // 選択状態ではdeletedAtの有無を区別せず、Memo型として扱う
     setSelectedMemo(memo as unknown as Memo);
   };
 

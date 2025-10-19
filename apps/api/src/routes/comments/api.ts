@@ -5,8 +5,8 @@ import { teamComments } from "../../db/schema/team/comments";
 import { teamMembers } from "../../db/schema/team/teams";
 import { teamSlackConfigs } from "../../db/schema/team/slack-configs";
 import { boardSlackConfigs } from "../../db/schema/team/board-slack-configs";
-import { teamMemos } from "../../db/schema/team/memos";
-import { teamTasks } from "../../db/schema/team/tasks";
+import { teamMemos, teamDeletedMemos } from "../../db/schema/team/memos";
+import { teamTasks, teamDeletedTasks } from "../../db/schema/team/tasks";
 import { teamBoards, teamBoardItems } from "../../db/schema/team/boards";
 import { teamNotifications } from "../../db/schema/team/notifications";
 import { teams } from "../../db/schema/team/teams";
@@ -850,24 +850,45 @@ export const getBoardItemComments = async (c: any) => {
     .filter((item) => item.itemType === "task")
     .map((item) => item.originalId);
 
+  // 削除済みメモ・タスクのoriginalIdを取得
+  const deletedMemoOriginalIds = await db
+    .select({ originalId: teamDeletedMemos.originalId })
+    .from(teamDeletedMemos)
+    .where(eq(teamDeletedMemos.teamId, teamId))
+    .then((rows) => rows.map((r) => r.originalId));
+
+  const deletedTaskOriginalIds = await db
+    .select({ originalId: teamDeletedTasks.originalId })
+    .from(teamDeletedTasks)
+    .where(eq(teamDeletedTasks.teamId, teamId))
+    .then((rows) => rows.map((r) => r.originalId));
+
+  // 削除済みを除外した有効なoriginalIdのみを使用
+  const activeMemoOriginalIds = memoOriginalIds.filter(
+    (id) => !deletedMemoOriginalIds.includes(id),
+  );
+  const activeTaskOriginalIds = taskOriginalIds.filter(
+    (id) => !deletedTaskOriginalIds.includes(id),
+  );
+
   // コメントを取得
   const whereConditions = [eq(teamComments.teamId, teamId)];
 
-  // メモまたはタスクのコメントを取得
+  // メモまたはタスクのコメントを取得（削除済みを除外）
   const orConditions = [];
-  if (memoOriginalIds.length > 0) {
+  if (activeMemoOriginalIds.length > 0) {
     orConditions.push(
       and(
         eq(teamComments.targetType, "memo"),
-        inArray(teamComments.targetOriginalId, memoOriginalIds),
+        inArray(teamComments.targetOriginalId, activeMemoOriginalIds),
       ),
     );
   }
-  if (taskOriginalIds.length > 0) {
+  if (activeTaskOriginalIds.length > 0) {
     orConditions.push(
       and(
         eq(teamComments.targetType, "task"),
-        inArray(teamComments.targetOriginalId, taskOriginalIds),
+        inArray(teamComments.targetOriginalId, activeTaskOriginalIds),
       ),
     );
   }

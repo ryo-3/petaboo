@@ -6,6 +6,7 @@ import { databaseMiddleware } from "../../middleware/database";
 import { teamTasks, teamDeletedTasks } from "../../db/schema/team/tasks";
 import { teamMembers } from "../../db/schema/team/teams";
 import { teamComments } from "../../db/schema/team/comments";
+import { teamAttachments } from "../../db/schema/team/attachments";
 import { users } from "../../db/schema/users";
 import { generateOriginalId, generateUuid } from "../../utils/originalId";
 import {
@@ -804,7 +805,29 @@ app.openapi(
     }
 
     try {
-      // 削除済みタスクを検索して完全削除
+      // 1. 紐づくコメントを削除
+      await db
+        .delete(teamComments)
+        .where(
+          and(
+            eq(teamComments.teamId, teamId),
+            eq(teamComments.targetType, "task"),
+            eq(teamComments.targetOriginalId, originalId),
+          ),
+        );
+
+      // 2. 紐づく添付ファイルを削除
+      await db
+        .delete(teamAttachments)
+        .where(
+          and(
+            eq(teamAttachments.teamId, teamId),
+            eq(teamAttachments.attachedTo, "task"),
+            eq(teamAttachments.attachedOriginalId, originalId),
+          ),
+        );
+
+      // 3. 削除済みタスクを検索して完全削除
       const deletedResult = await db
         .delete(teamDeletedTasks)
         .where(
@@ -818,6 +841,10 @@ app.openapi(
       if (deletedResult.length === 0) {
         return c.json({ error: "削除済みタスクが見つかりません" }, 404);
       }
+
+      console.log(
+        `🗑️ チームタスク完全削除成功: originalId=${originalId}, teamId=${teamId}`,
+      );
 
       return c.json({ success: true });
     } catch (error) {

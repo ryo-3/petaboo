@@ -307,14 +307,6 @@ export function createAPI(app: AppType) {
     const { teamId } = c.req.valid("query");
     const db = c.get("db");
 
-    console.log("🏷️ タグ付けリクエスト:", {
-      tagId,
-      targetType,
-      targetOriginalId,
-      teamId,
-      userId: auth.userId,
-    });
-
     // チームタグ付けの場合
     if (teamId) {
       const teamIdNum = parseInt(teamId, 10);
@@ -384,8 +376,6 @@ export function createAPI(app: AppType) {
     }
 
     // 個人タグ付けの場合（既存のロジック）
-    console.log("📝 個人タグ付け処理開始");
-
     // タグの所有権確認
     const tag = await db
       .select()
@@ -394,11 +384,8 @@ export function createAPI(app: AppType) {
       .limit(1);
 
     if (tag.length === 0) {
-      console.log("❌ タグが見つかりません:", { tagId, userId: auth.userId });
       return c.json({ error: "Tag not found" }, 400);
     }
-
-    console.log("✅ タグ確認OK:", tag[0]);
 
     // 既に同じタグ付けが存在するかチェック
     const existing = await db
@@ -415,11 +402,8 @@ export function createAPI(app: AppType) {
       .limit(1);
 
     if (existing.length > 0) {
-      console.log("⚠️ タグ重複:", existing[0]);
       return c.json({ error: "Tag already attached to this item" }, 400);
     }
-
-    console.log("✅ 重複チェックOK、タグ付け作成します");
 
     const newTagging: NewTagging = {
       tagId,
@@ -429,10 +413,7 @@ export function createAPI(app: AppType) {
       createdAt: new Date(),
     };
 
-    console.log("💾 タグ付けデータ:", newTagging);
-
     const result = await db.insert(taggings).values(newTagging).returning();
-    console.log("🎉 タグ付け成功:", result[0]);
     return c.json(result[0], 201);
   });
 

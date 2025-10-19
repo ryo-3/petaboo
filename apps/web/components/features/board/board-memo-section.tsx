@@ -211,7 +211,6 @@ export default function BoardMemoSection({
             <AddItemButton
               itemType="memo"
               onClick={() => {
-                console.log("🔥 [BoardMemoSection] メモ追加ボタンクリック");
                 onCreateNewMemo();
               }}
               size="small"

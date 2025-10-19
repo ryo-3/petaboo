@@ -98,8 +98,6 @@ async function sendMentionNotificationToSlack(
   db: any,
   env: any,
 ) {
-  console.log(`🔔 sendMentionNotificationToSlack開始: teamId=${teamId}`);
-
   // メモ・タスクの場合、ボード所属チェックとボード専用Slack設定の優先確認
   let boardId: number | null = null;
   if (comment.targetType === "memo" || comment.targetType === "task") {
@@ -152,14 +150,12 @@ async function sendMentionNotificationToSlack(
       .limit(1);
 
     if (boardSlackConfig.length > 0) {
-      console.log(`🎯 ボード専用Slack設定を使用: boardId=${boardId}`);
       slackConfig = boardSlackConfig;
     }
   }
 
   // ボード専用設定がない場合、チーム全体のSlack設定を使用
   if (slackConfig.length === 0) {
-    console.log(`📢 チーム全体Slack設定を使用: teamId=${teamId}`);
     const teamSlackConfig = await db
       .select()
       .from(teamSlackConfigs)
@@ -174,12 +170,7 @@ async function sendMentionNotificationToSlack(
     slackConfig = teamSlackConfig;
   }
 
-  console.log(
-    `⚙️ Slack設定: ${slackConfig.length > 0 ? "見つかった" : "見つからない"}`,
-  );
-
   if (slackConfig.length === 0) {
-    console.log(`⚠️ Slack設定なし or 無効 - 通知スキップ`);
     return; // Slack設定なし or 無効
   }
 
@@ -190,11 +181,9 @@ async function sendMentionNotificationToSlack(
   if (encryptionKey && hasEncryptionKey(env)) {
     try {
       webhookUrl = await decryptWebhookUrl(webhookUrl, encryptionKey);
-      console.log("🔓 Webhook URL復号化完了");
     } catch (error) {
       console.error("復号化エラー:", error);
       // 復号化失敗時は暗号化されていない可能性（後方互換性）
-      console.log("⚠️ 復号化失敗 - 平文として扱います");
     }
   }
 
@@ -332,11 +321,7 @@ async function sendMentionNotificationToSlack(
   );
 
   // Slack通知送信
-  console.log(`📤 Slack通知送信: ${mentionedDisplayNames.join(", ")}`);
   const result = await sendSlackNotification(webhookUrl, message);
-  console.log(
-    `✅ Slack通知結果: success=${result.success}, error=${result.error || "なし"}`,
-  );
 }
 
 // GET /comments（コメント一覧取得）
@@ -587,10 +572,6 @@ export const postComment = async (c: any) => {
   }
 
   // Slack通知送信（メンションの有無に関わらず送信）
-  console.log(`📬 コメント投稿: メンション=${mentionedUserIds.length}人`);
-  console.log(
-    `📬 Slack通知送信開始: teamId=${teamId}, mentions=${JSON.stringify(mentionedUserIds)}`,
-  );
   const commenterDisplayName = member.displayName || "Unknown";
 
   // Slack通知を送信（エラーは無視）

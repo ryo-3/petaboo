@@ -256,7 +256,7 @@ export default function BoardRightPanel({
       queryClient.invalidateQueries({ queryKey: ["boards", boardId, "items"] });
       queryClient.invalidateQueries({ queryKey: ["boards", "all-items"] });
     } catch (error) {
-      console.error("メモの追加に失敗しました:", error);
+      console.error("エラー:", error);
     }
   };
 
@@ -287,7 +287,7 @@ export default function BoardRightPanel({
       queryClient.invalidateQueries({ queryKey: ["boards", boardId, "items"] });
       queryClient.invalidateQueries({ queryKey: ["boards", "all-items"] });
     } catch (error) {
-      console.error("タスクの追加に失敗しました:", error);
+      console.error("エラー:", error);
     }
   };
 
@@ -303,7 +303,7 @@ export default function BoardRightPanel({
             ? selectedMemo.id
             : parseInt(selectedMemo.id, 10);
         if (isNaN(memoId)) {
-          console.error(`❌ 無効なメモID: ${selectedMemo.id}`);
+          console.error(`無効なメモID: ${selectedMemo.id}`);
           setIsRightMemoLidOpen(false);
           setIsDeletingMemo(false);
           return;
@@ -328,7 +328,6 @@ export default function BoardRightPanel({
         // 削除処理中フラグをリセット
         setIsDeletingMemo(false);
       }
-    } else {
     }
   };
 
@@ -355,7 +354,7 @@ export default function BoardRightPanel({
                       );
                       onMemoRestoreAndSelectNext(selectedMemo as DeletedMemo);
                     } catch (error) {
-                      console.error("メモ復元API実行エラー:", error);
+                      console.error("エラー:", error);
                     }
                   }
                 }}
@@ -408,7 +407,7 @@ export default function BoardRightPanel({
                       );
                       onMemoRestoreAndSelectNext(selectedMemo as DeletedMemo);
                     } catch (error) {
-                      console.error("メモ復元API実行エラー:", error);
+                      console.error("エラー:", error);
                     }
                   }
                 }}
@@ -464,7 +463,7 @@ export default function BoardRightPanel({
                       );
                       onTaskRestoreAndSelectNext(selectedTask as DeletedTask);
                     } catch (error) {
-                      console.error("タスク復元API実行エラー:", error);
+                      console.error("エラー:", error);
                     }
                   }
                 }}

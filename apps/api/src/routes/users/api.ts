@@ -360,8 +360,6 @@ export async function ensureUserExists(c: any) {
       updatedAt: now,
     });
 
-    console.log(`新規ユーザー作成（ログイン時）: ${auth.userId}`);
-
     return c.json({
       message: "新規ユーザーを作成しました",
       userId: auth.userId,
@@ -577,14 +575,10 @@ export async function getUserById(c: any) {
 // ユーザー情報取得の実装
 export async function getUserInfo(c: any) {
   const auth = getAuth(c);
-  // console.log("getUserInfo: auth =", auth); // 詳細ログは開発時のみ必要に応じて有効化
 
   if (!auth?.userId) {
-    console.log("getUserInfo: 認証失敗 - authがnullまたはuserIdなし");
     return c.json({ error: "認証が必要です" }, 401);
   }
-
-  console.log("getUserInfo: 認証成功 - userId =", auth.userId);
 
   const db = c.get("db");
 

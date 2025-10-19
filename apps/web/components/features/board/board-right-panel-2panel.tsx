@@ -215,13 +215,11 @@ export default function BoardRightPanel({
             ? selectedMemo.id
             : parseInt(selectedMemo.id, 10);
         if (isNaN(memoId)) {
-          console.error(`❌ 無効なメモID: ${selectedMemo.id}`);
           setIsRightMemoLidOpen(false);
           setIsDeletingMemo(false);
           return;
         }
         // 統一削除フックによる削除（MemoScreen内で処理される）
-        console.log("2パネルボード削除処理はMemoScreen内で実行されます");
 
         // 削除成功後に蓋を閉じる
         setTimeout(() => {
@@ -256,12 +254,6 @@ export default function BoardRightPanel({
                 // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
               }}
               onRestore={() => {
-                console.log("🔧 BoardRightPanel onRestore 呼び出し", {
-                  memoId: selectedMemo?.id,
-                  originalId: selectedMemo?.originalId,
-                  hasOnMemoRestoreAndSelectNext: !!onMemoRestoreAndSelectNext,
-                  時刻: new Date().toISOString(),
-                });
                 const memo = selectedMemo as DeletedMemo;
                 onMemoRestoreAndSelectNext?.(memo);
               }}

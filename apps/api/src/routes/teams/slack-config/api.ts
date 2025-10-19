@@ -133,7 +133,6 @@ export const getSlackConfig = async (c: any) => {
     } catch (error) {
       console.error("復号化エラー:", error);
       // 復号化失敗時は暗号化されていない可能性（後方互換性）
-      console.log("⚠️ 復号化失敗 - 平文として扱います");
     }
   }
 
@@ -214,15 +213,11 @@ export const putSlackConfig = async (c: any) => {
   const encryptionKey = c.env?.ENCRYPTION_KEY;
   if (encryptionKey && hasEncryptionKey(c.env)) {
     try {
-      console.log("🔐 Webhook URLを暗号化します");
       webhookUrl = await encryptWebhookUrl(webhookUrl, encryptionKey);
-      console.log("✅ 暗号化完了");
     } catch (error) {
       console.error("暗号化エラー:", error);
       return c.json({ error: "Failed to encrypt webhook URL" }, 500);
     }
-  } else {
-    console.log("⚠️ 暗号化キーが設定されていません - 平文保存");
   }
 
   const now = Date.now();
@@ -414,7 +409,6 @@ export const postSlackConfigTest = async (c: any) => {
     } catch (error) {
       console.error("復号化エラー:", error);
       // 復号化失敗時は暗号化されていない可能性（後方互換性）
-      console.log("⚠️ 復号化失敗 - 平文として扱います");
     }
   }
 

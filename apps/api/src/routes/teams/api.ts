@@ -1712,7 +1712,6 @@ export async function verifyInviteToken(c: any) {
       .get();
 
     if (!invitation) {
-      console.log("🚨 No matching invitation found");
       return c.json(
         {
           message: "無効な招待URLです",
@@ -2109,10 +2108,6 @@ export async function approveJoinRequest(c: any) {
 
     // 4. 承認通知を送信
     try {
-      console.log(
-        `🔔 チーム承認通知送信開始: userId=${request.userId}, teamName=${team.name}`,
-      );
-
       // グローバル通知システムに通知を送信
       const notificationData = {
         type: "request_status_changed",
@@ -2129,9 +2124,6 @@ export async function approveJoinRequest(c: any) {
           global.userNotifications[request.userId] = [];
         }
         global.userNotifications[request.userId].push(notificationData);
-        console.log(
-          `✅ 通知追加完了: ${request.userId} - ${notificationData.message}`,
-        );
       }
     } catch (notificationError) {
       // 通知エラーは承認処理の成功に影響させない
@@ -2540,7 +2532,6 @@ export async function waitMyRequestUpdates(c: any) {
         if (notifications && notifications.length > 0) {
           // 通知を取得してクリア
           const notification = notifications.shift(); // 最初の通知を取得
-          console.log(`✅ 通知送信: ${auth.userId}`, notification);
           return c.json(notification);
         }
       }
@@ -2550,7 +2541,6 @@ export async function waitMyRequestUpdates(c: any) {
     }
 
     // タイムアウト時は空のレスポンス
-    console.log(`⏰ 通知ポーリングタイムアウト: userId=${auth.userId}`);
     return c.json({ hasUpdates: false });
   } catch (error) {
     console.error("申請状況更新待機エラー:", error);
@@ -2983,7 +2973,6 @@ export async function waitUpdatesHandler(c: any) {
         if (elapsedTime >= timeoutMs) {
           // タイムアウト
           clearInterval(checkInterval);
-          console.log(`⏰ Timeout reached for team: ${customUrl}`);
           resolve(
             c.json({
               hasUpdates: false,
@@ -2997,7 +2986,6 @@ export async function waitUpdatesHandler(c: any) {
           const result = await checkForUpdates();
           if (result.hasUpdates) {
             clearInterval(checkInterval);
-            console.log(`✅ Found updates for team: ${customUrl}`);
             resolve(
               c.json({
                 ...result,

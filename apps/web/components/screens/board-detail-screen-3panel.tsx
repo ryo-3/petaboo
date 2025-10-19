@@ -812,17 +812,6 @@ function BoardDetailScreen({
                     const detailOrder = showDetailPanel ? ++currentOrder : 0;
                     const commentOrder = showCommentPanel ? ++currentOrder : 0;
 
-                    console.log("🔧 [選択時パネル状態]", {
-                      showListPanel,
-                      showDetailPanel,
-                      showCommentPanel,
-                      listOrder,
-                      detailOrder,
-                      commentOrder,
-                      visiblePanels,
-                      sizes,
-                    });
-
                     return (
                       <ResizablePanelGroup
                         key={`selected-${visiblePanels}panel-${listOrder}-${detailOrder}-${commentOrder}`}
@@ -1158,28 +1147,9 @@ function BoardDetailScreen({
                                             memo as Memo,
                                           );
                                         } else {
-                                          console.error(
-                                            "❌ 削除対象メモが不正",
-                                            memo,
-                                          );
                                         }
                                       }}
                                       onRestore={() => {
-                                        console.log(
-                                          "🔄 チームボード詳細 - 復元ボタンクリック",
-                                          {
-                                            selectedMemo,
-                                            hasOriginalId:
-                                              selectedMemo &&
-                                              "originalId" in selectedMemo,
-                                            originalId:
-                                              selectedMemo &&
-                                              "originalId" in selectedMemo
-                                                ? (selectedMemo as DeletedMemo)
-                                                    .originalId
-                                                : null,
-                                          },
-                                        );
                                         if (
                                           selectedMemo &&
                                           "originalId" in selectedMemo
@@ -1188,10 +1158,6 @@ function BoardDetailScreen({
                                             selectedMemo as DeletedMemo,
                                           );
                                         } else {
-                                          console.error(
-                                            "❌ 復元対象メモが不正",
-                                            selectedMemo,
-                                          );
                                         }
                                       }}
                                       onRestoreAndSelectNext={
@@ -1246,28 +1212,9 @@ function BoardDetailScreen({
                                             task as Task,
                                           );
                                         } else {
-                                          console.error(
-                                            "❌ 削除対象タスクが不正",
-                                            task,
-                                          );
                                         }
                                       }}
                                       onRestore={() => {
-                                        console.log(
-                                          "🔄 チームボード詳細 - タスク復元ボタンクリック",
-                                          {
-                                            selectedTask,
-                                            hasOriginalId:
-                                              selectedTask &&
-                                              "originalId" in selectedTask,
-                                            originalId:
-                                              selectedTask &&
-                                              "originalId" in selectedTask
-                                                ? (selectedTask as DeletedTask)
-                                                    .originalId
-                                                : null,
-                                          },
-                                        );
                                         if (
                                           selectedTask &&
                                           "originalId" in selectedTask
@@ -1276,10 +1223,6 @@ function BoardDetailScreen({
                                             selectedTask as DeletedTask,
                                           );
                                         } else {
-                                          console.error(
-                                            "❌ 復元対象タスクが不正",
-                                            selectedTask,
-                                          );
                                         }
                                       }}
                                       onRestoreAndSelectNext={() => {
@@ -1504,17 +1447,6 @@ function BoardDetailScreen({
                       }
                       return 100 / visiblePanels;
                     };
-
-                    console.log("🔧 [非選択時パネル設定]", {
-                      visiblePanels,
-                      minPanelSize,
-                      showMemo,
-                      showTask,
-                      showComment,
-                      memoPanelOrder,
-                      taskPanelOrder,
-                      commentPanelOrder,
-                    });
 
                     return (
                       <ResizablePanelGroup

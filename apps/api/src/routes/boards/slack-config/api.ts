@@ -149,7 +149,6 @@ export const getBoardSlackConfig = async (c: any) => {
       webhookUrl = await decryptWebhookUrl(webhookUrl, encryptionKey);
     } catch (error) {
       console.error("復号化エラー:", error);
-      console.log("⚠️ 復号化失敗 - 平文として扱います");
     }
   }
 
@@ -230,7 +229,6 @@ export const upsertBoardSlackConfig = async (c: any) => {
   if (encryptionKey && hasEncryptionKey(c.env)) {
     try {
       encryptedUrl = await encryptWebhookUrl(webhookUrl, encryptionKey);
-      console.log("🔒 Webhook URL暗号化完了");
     } catch (error) {
       console.error("暗号化エラー:", error);
       return c.json({ error: "Failed to encrypt webhook URL" }, 500);

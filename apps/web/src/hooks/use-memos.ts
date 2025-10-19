@@ -225,8 +225,9 @@ export function useUpdateMemo(options?: {
               // APIが不完全な場合は既存メモを更新データでマージ
               return {
                 ...memo,
-                title: data.title ?? memo.title,
-                content: data.content ?? memo.content,
+                title: data.title !== undefined ? data.title : memo.title,
+                content:
+                  data.content !== undefined ? data.content : memo.content,
                 updatedAt: Math.floor(Date.now() / 1000),
               };
             }
@@ -251,8 +252,14 @@ export function useUpdateMemo(options?: {
                       ...item,
                       content: {
                         ...item.content,
-                        title: data.title ?? item.content.title,
-                        content: data.content ?? item.content.content,
+                        title:
+                          data.title !== undefined
+                            ? data.title
+                            : item.content.title,
+                        content:
+                          data.content !== undefined
+                            ? data.content
+                            : item.content.content,
                         updatedAt: Math.floor(Date.now() / 1000),
                       },
                       updatedAt: Math.floor(Date.now() / 1000),
@@ -295,8 +302,9 @@ export function useUpdateMemo(options?: {
               // APIが不完全な場合は既存メモを更新データでマージ
               return {
                 ...memo,
-                title: data.title ?? memo.title,
-                content: data.content ?? memo.content,
+                title: data.title !== undefined ? data.title : memo.title,
+                content:
+                  data.content !== undefined ? data.content : memo.content,
                 updatedAt: Math.floor(Date.now() / 1000),
               };
             }

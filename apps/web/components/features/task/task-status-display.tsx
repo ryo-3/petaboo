@@ -122,6 +122,21 @@ function TaskStatusDisplay({
     (task) => task.status === activeTab,
   );
 
+  useEffect(() => {
+    console.log("📋 [TaskStatusDisplay] タスクデータ更新:", {
+      activeTab,
+      totalTasks: tasks?.length,
+      filteredTasks: statusFilteredTasks?.length,
+      selectedTaskId,
+      teamMode,
+      tasks: tasks?.map((t) => ({
+        id: t.id,
+        title: t.title,
+        description: t.description?.substring(0, 50),
+      })),
+    });
+  }, [tasks, statusFilteredTasks, activeTab, selectedTaskId, teamMode]);
+
   // 各タスクのタグとボードを抽出（事前取得データから）
   const tasksWithData = useMemo(() => {
     if (!statusFilteredTasks) return [];

@@ -14,6 +14,7 @@ import { MoreVertical, Edit2, Trash2, Image as ImageIcon } from "lucide-react";
 import { useToast } from "@/src/contexts/toast-context";
 import CommentScopeToggle from "@/components/ui/buttons/comment-scope-toggle";
 import ImagePreviewModal from "@/components/ui/modals/image-preview-modal";
+import { useQueryClient } from "@tanstack/react-query";
 
 // コメント画像表示用コンポーネント（シンプル版・モーダル付き）
 function CommentAttachmentGallery({
@@ -228,6 +229,7 @@ export default function CommentSection({
   const [newComment, setNewComment] = useState("");
   const { userId: currentUserId, getToken } = useAuth();
   const { showToast } = useToast();
+  const queryClient = useQueryClient();
 
   // 画像添付用の状態
   const [pendingImages, setPendingImages] = useState<File[]>([]);
@@ -507,6 +509,12 @@ export default function CommentSection({
             );
           }
         }
+
+        // 画像アップロード完了後、キャッシュを更新して即座に反映
+        queryClient.invalidateQueries({
+          queryKey: ["attachments", teamId, "comment", commentOriginalId],
+        });
+
         setPendingImages([]);
       }
 

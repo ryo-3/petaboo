@@ -594,6 +594,7 @@ function BoardDetailScreen({
             rightPanelMode={rightPanelMode}
             showMemo={showMemo}
             showTask={showTask}
+            isReversed={isReversed}
             allTaskItems={allTaskItems}
             taskItems={taskItems}
             activeTaskTab={activeTaskTab}

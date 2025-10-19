@@ -592,6 +592,7 @@ function BoardDetailScreen({
             boardId={boardId}
             initialBoardId={boardId}
             rightPanelMode={rightPanelMode}
+            showMemo={showMemo}
             showTask={showTask}
             allTaskItems={allTaskItems}
             taskItems={taskItems}

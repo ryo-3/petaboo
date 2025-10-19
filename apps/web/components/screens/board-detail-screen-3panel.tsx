@@ -905,6 +905,7 @@ function BoardDetailScreen({
                                   <BoardTaskSection
                                     boardId={boardId}
                                     rightPanelMode={rightPanelMode}
+                                    showMemo={showMemo}
                                     showTask={showTask}
                                     allTaskItems={allTaskItems}
                                     taskItems={taskItems}
@@ -1242,6 +1243,7 @@ function BoardDetailScreen({
                                   <BoardTaskSection
                                     boardId={boardId}
                                     rightPanelMode={rightPanelMode}
+                                    showMemo={showMemo}
                                     showTask={showTask}
                                     allTaskItems={allTaskItems}
                                     taskItems={taskItems}
@@ -1648,6 +1650,7 @@ function BoardDetailScreen({
                                 <BoardTaskSection
                                   boardId={boardId}
                                   rightPanelMode={rightPanelMode}
+                                  showMemo={showMemo}
                                   showTask={showTask}
                                   allTaskItems={allTaskItems}
                                   taskItems={taskItems}
@@ -1843,6 +1846,7 @@ function BoardDetailScreen({
               <BoardTaskSection
                 boardId={boardId}
                 rightPanelMode={rightPanelMode}
+                showMemo={showMemo}
                 showTask={showTask}
                 allTaskItems={allTaskItems}
                 taskItems={taskItems}

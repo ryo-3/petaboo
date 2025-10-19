@@ -24,6 +24,7 @@ interface BoardTaskSectionProps {
   boardId: number;
   initialBoardId?: number;
   rightPanelMode: "editor" | "memo-list" | "task-list" | null;
+  showMemo: boolean;
   showTask: boolean;
   allTaskItems: BoardItemWithContent[];
   taskItems: BoardItemWithContent[];
@@ -91,6 +92,7 @@ export default function BoardTaskSection({
   boardId,
   initialBoardId,
   rightPanelMode,
+  showMemo,
   showTask,
   allTaskItems,
   taskItems,
@@ -215,7 +217,9 @@ export default function BoardTaskSection({
   }
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 relative pl-[7px]">
+    <div
+      className={`flex flex-col flex-1 min-h-0 relative ${showMemo ? "pl-[7px]" : ""}`}
+    >
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-1">

@@ -10,7 +10,7 @@ interface QueryError extends Error {
 }
 
 export function QueryProvider({ children }: { children: React.ReactNode }) {
-  const { signOut } = useAuth();
+  const { signOut, getToken } = useAuth();
   const router = useRouter();
 
   const [queryClient] = useState(
@@ -26,17 +26,28 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
             retry: (failureCount, error) => {
               const queryError = error as QueryError;
 
-              // 401エラーの場合はリトライしない
+              // 401エラーの場合はトークンリフレッシュを試みる
               const is401Error =
                 queryError?.message?.includes("401") ||
                 queryError?.message?.includes("Unauthorized") ||
                 queryError?.status === 401;
 
               if (is401Error) {
-                // 非同期でログアウトとリダイレクトを実行
+                // トークンリフレッシュを試みてから判断
                 setTimeout(async () => {
-                  await signOut();
-                  router.push("/");
+                  try {
+                    const newToken = await getToken({ skipCache: true });
+                    if (!newToken) {
+                      // トークンリフレッシュ失敗時のみログアウト
+                      await signOut();
+                      router.push("/");
+                    }
+                    // トークンリフレッシュ成功時は何もしない（自動的に再試行される）
+                  } catch {
+                    // リフレッシュエラー時はログアウト
+                    await signOut();
+                    router.push("/");
+                  }
                 }, 100);
                 return false;
               }

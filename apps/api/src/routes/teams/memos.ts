@@ -508,6 +508,7 @@ app.openapi(
                 createdAt: z.number(),
                 updatedAt: z.number().nullable(),
                 deletedAt: z.number(),
+                commentCount: z.number(),
               }),
             ),
           },
@@ -555,7 +556,7 @@ app.openapi(
     }
 
     try {
-      const result = await db
+      const deletedMemos = await db
         .select({
           id: teamDeletedMemos.id,
           teamId: teamDeletedMemos.teamId,
@@ -570,6 +571,33 @@ app.openapi(
         .from(teamDeletedMemos)
         .where(eq(teamDeletedMemos.teamId, teamId))
         .orderBy(desc(teamDeletedMemos.deletedAt));
+
+      // 各メモのコメント数を取得
+      const result = await Promise.all(
+        deletedMemos.map(async (memo) => {
+          const comments = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(teamComments)
+            .where(
+              and(
+                eq(teamComments.teamId, teamId),
+                eq(teamComments.targetType, "memo"),
+                eq(teamComments.targetOriginalId, memo.originalId),
+              ),
+            );
+
+          const commentCount = Number(comments[0]?.count || 0);
+
+          return {
+            ...memo,
+            commentCount,
+          };
+        }),
+      );
+
+      console.log(
+        `📋 削除済みメモ一覧取得: teamId=${teamId}, 件数=${result.length}`,
+      );
       return c.json(result);
     } catch (error) {
       console.error("削除済みチームメモ取得エラー:", error);

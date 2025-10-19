@@ -1,6 +1,6 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { getAuth } from "@hono/clerk-auth";
-import { eq, and, or, desc, isNull, isNotNull } from "drizzle-orm";
+import { eq, and, or, desc, isNull, isNotNull, sql } from "drizzle-orm";
 import {
   teams,
   teamMembers,
@@ -835,9 +835,45 @@ export function createTeamBoardsAPI(app: AppType) {
         .from(teamDeletedTasks)
         .where(eq(teamDeletedTasks.teamId, parseInt(teamId)));
 
+      // 各削除済みメモのコメント数を取得
+      const deletedMemosWithCommentCount = await Promise.all(
+        deletedMemos.map(async (memo) => {
+          const comments = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(teamComments)
+            .where(
+              and(
+                eq(teamComments.teamId, parseInt(teamId)),
+                eq(teamComments.targetType, "memo"),
+                eq(teamComments.targetOriginalId, memo.originalId),
+              ),
+            );
+          const commentCount = Number(comments[0]?.count || 0);
+          return { ...memo, commentCount };
+        }),
+      );
+
+      // 各削除済みタスクのコメント数を取得
+      const deletedTasksWithCommentCount = await Promise.all(
+        deletedTasks.map(async (task) => {
+          const comments = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(teamComments)
+            .where(
+              and(
+                eq(teamComments.teamId, parseInt(teamId)),
+                eq(teamComments.targetType, "task"),
+                eq(teamComments.targetOriginalId, task.originalId),
+              ),
+            );
+          const commentCount = Number(comments[0]?.count || 0);
+          return { ...task, commentCount };
+        }),
+      );
+
       // 削除済みアイテムを統合フォーマットに変換
       const deletedItems = [
-        ...deletedMemos.map((memo) => ({
+        ...deletedMemosWithCommentCount.map((memo) => ({
           id: memo.id,
           itemType: "memo" as const,
           itemId: memo.id,
@@ -851,9 +887,10 @@ export function createTeamBoardsAPI(app: AppType) {
             createdAt: memo.createdAt,
             updatedAt: memo.updatedAt,
             deletedAt: memo.deletedAt,
+            commentCount: memo.commentCount,
           },
         })),
-        ...deletedTasks.map((task) => ({
+        ...deletedTasksWithCommentCount.map((task) => ({
           id: task.id,
           itemType: "task" as const,
           itemId: task.id,
@@ -870,6 +907,7 @@ export function createTeamBoardsAPI(app: AppType) {
             createdAt: task.createdAt,
             updatedAt: task.updatedAt,
             deletedAt: task.deletedAt,
+            commentCount: task.commentCount,
           },
         })),
       ].sort((a, b) => b.deletedAt - a.deletedAt); // 削除時刻の降順

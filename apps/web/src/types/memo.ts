@@ -22,6 +22,7 @@ export interface DeletedMemo
   title: string;
   content: string | null;
   categoryId?: number | null;
+  commentCount?: number;
 }
 
 export interface CreateMemoData {

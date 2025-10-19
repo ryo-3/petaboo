@@ -29,6 +29,7 @@ export interface DeletedTask
   dueDate: number | null;
   categoryId: number | null;
   boardCategoryId: number | null; // ボードカテゴリーID
+  commentCount?: number;
 }
 
 export interface CreateTaskData {

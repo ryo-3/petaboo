@@ -538,6 +538,7 @@ app.openapi(
                 createdAt: z.number(),
                 updatedAt: z.number().nullable(),
                 deletedAt: z.number(),
+                commentCount: z.number(),
               }),
             ),
           },
@@ -577,7 +578,7 @@ app.openapi(
     }
 
     try {
-      const result = await db
+      const deletedTasks = await db
         .select({
           id: teamDeletedTasks.id,
           teamId: teamDeletedTasks.teamId,
@@ -597,6 +598,33 @@ app.openapi(
         .from(teamDeletedTasks)
         .where(eq(teamDeletedTasks.teamId, teamId))
         .orderBy(desc(teamDeletedTasks.deletedAt));
+
+      // 各タスクのコメント数を取得
+      const result = await Promise.all(
+        deletedTasks.map(async (task) => {
+          const comments = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(teamComments)
+            .where(
+              and(
+                eq(teamComments.teamId, teamId),
+                eq(teamComments.targetType, "task"),
+                eq(teamComments.targetOriginalId, task.originalId),
+              ),
+            );
+
+          const commentCount = Number(comments[0]?.count || 0);
+
+          return {
+            ...task,
+            commentCount,
+          };
+        }),
+      );
+
+      console.log(
+        `📋 削除済みタスク一覧取得: teamId=${teamId}, 件数=${result.length}`,
+      );
       return c.json(result);
     } catch (error) {
       console.error("削除済みチームタスク取得エラー:", error);

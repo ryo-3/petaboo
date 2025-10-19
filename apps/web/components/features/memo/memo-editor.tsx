@@ -859,10 +859,11 @@ function MemoEditor({
                     <SaveButton
                       onClick={handleSaveWithTags}
                       disabled={
-                        !hasChanges &&
-                        !hasTagChanges &&
-                        pendingImages.length === 0 &&
-                        pendingDeletes.length === 0
+                        (!hasChanges &&
+                          !hasTagChanges &&
+                          pendingImages.length === 0 &&
+                          pendingDeletes.length === 0) ||
+                        (memo !== null && memo.id > 0 && !content.trim())
                       }
                       isSaving={
                         isSaving ||

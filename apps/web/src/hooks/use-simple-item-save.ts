@@ -2,16 +2,8 @@ import { useState, useCallback, useEffect, useMemo } from "react";
 import type { Memo } from "@/src/types/memo";
 import type { Task } from "@/src/types/task";
 import { OriginalIdUtils } from "@/src/types/common";
-import {
-  useCreateMemo,
-  useUpdateMemo,
-  useDeleteMemo,
-} from "@/src/hooks/use-memos";
-import {
-  useCreateTask,
-  useUpdateTask,
-  useDeleteTask,
-} from "@/src/hooks/use-tasks";
+import { useCreateMemo, useUpdateMemo } from "@/src/hooks/use-memos";
+import { useCreateTask, useUpdateTask } from "@/src/hooks/use-tasks";
 import {
   useAddItemToBoard,
   useRemoveItemFromBoard,
@@ -137,12 +129,10 @@ export function useSimpleItemSave<T extends UnifiedItem>({
   // Memo hooks
   const createMemo = useCreateMemo({ teamMode, teamId, boardId });
   const updateMemo = useUpdateMemo({ teamMode, teamId, boardId });
-  const deleteMemo = useDeleteMemo({ teamMode, teamId });
 
   // Task hooks
   const createTask = useCreateTask({ teamMode, teamId, boardId });
   const updateTask = useUpdateTask({ teamMode, teamId, boardId });
-  const deleteTask = useDeleteTask({ teamMode, teamId });
 
   // Board hooks
   const addItemToBoard = useAddItemToBoard({ teamMode, teamId });
@@ -258,195 +248,191 @@ export function useSimpleItemSave<T extends UnifiedItem>({
       if (item?.id) {
         // 既存アイテム更新
         if (isEmpty) {
-          // 空アイテムの場合は削除
+          // 空アイテムの場合は保存しない（保存ボタンが無効化されるため、ここには到達しないはず）
+          console.warn("空アイテムのため保存をスキップしました");
+          return;
+        }
+
+        // アイテム内容の変更があるかチェック（ボード変更は除く）
+        const hasContentChanges =
+          (title.trim() || "無題") !== initialTitle.trim() ||
+          content.trim() !== initialContent.trim() ||
+          (itemType === "task" &&
+            (priority !== initialPriority || status !== initialStatus));
+
+        let updatedItem = item as T;
+
+        // アイテム内容に変更がある場合のみ更新
+        if (hasContentChanges) {
+          const updateData =
+            itemType === "memo"
+              ? {
+                  title: title.trim() || "無題",
+                  content: content.trim() || undefined,
+                }
+              : {
+                  title: title.trim() || "無題",
+                  description: content.trim() || undefined,
+                  priority: priority as "low" | "medium" | "high",
+                  status:
+                    status === "not_started"
+                      ? "todo"
+                      : (status as "todo" | "in_progress" | "completed"),
+                };
+
           if (itemType === "memo") {
-            await deleteMemo.mutateAsync(item.id);
+            await updateMemo.mutateAsync({
+              id: item.id,
+              data: updateData,
+            });
           } else {
-            await deleteTask.mutateAsync(item.id);
+            await updateTask.mutateAsync({
+              id: item.id,
+              data: updateData,
+            });
           }
-          onSaveComplete?.(item as T, true, false);
+
+          updatedItem =
+            itemType === "memo"
+              ? ({
+                  ...item,
+                  title: title.trim() || "無題",
+                  content: content.trim() || "",
+                  updatedAt: Math.floor(Date.now() / 1000),
+                } as T)
+              : ({
+                  ...item,
+                  title: title.trim() || "無題",
+                  description: content.trim() || "",
+                  priority,
+                  status:
+                    status === "not_started"
+                      ? "todo"
+                      : (status as "todo" | "in_progress" | "completed"),
+                  updatedAt: Math.floor(Date.now() / 1000),
+                } as T);
         } else {
-          // アイテム内容の変更があるかチェック（ボード変更は除く）
-          const hasContentChanges =
-            (title.trim() || "無題") !== initialTitle.trim() ||
-            content.trim() !== initialContent.trim() ||
-            (itemType === "task" &&
-              (priority !== initialPriority || status !== initialStatus));
+          // 内容に変更がない場合は現在の値を維持
+          updatedItem =
+            itemType === "memo"
+              ? ({
+                  ...item,
+                  title: title.trim() || "無題",
+                  content: content.trim() || "",
+                } as T)
+              : ({
+                  ...item,
+                  title: title.trim() || "無題",
+                  description: content.trim() || "",
+                  status:
+                    status === "not_started"
+                      ? "todo"
+                      : (status as "todo" | "in_progress" | "completed"),
+                } as T);
+        }
 
-          let updatedItem = item as T;
+        // ボード変更の差分を計算して処理
+        if (item.id) {
+          // 追加するボード
+          const boardsToAdd = selectedBoardIds.filter(
+            (id) => !currentBoardIds.includes(id),
+          );
+          // 削除するボード
+          const boardsToRemove = currentBoardIds.filter(
+            (id) => !selectedBoardIds.includes(id),
+          );
 
-          // アイテム内容に変更がある場合のみ更新
-          if (hasContentChanges) {
-            const updateData =
-              itemType === "memo"
-                ? {
-                    title: title.trim() || "無題",
-                    content: content.trim() || undefined,
-                  }
-                : {
-                    title: title.trim() || "無題",
-                    description: content.trim() || undefined,
-                    priority: priority as "low" | "medium" | "high",
-                    status:
-                      status === "not_started"
-                        ? "todo"
-                        : (status as "todo" | "in_progress" | "completed"),
-                  };
+          const promises = [];
 
-            if (itemType === "memo") {
-              await updateMemo.mutateAsync({
-                id: item.id,
-                data: updateData,
+          // ボード追加
+          if (boardsToAdd.length > 0 && item.id > 0) {
+            const addPromises = boardsToAdd.map(async (boardId) => {
+              try {
+                await addItemToBoard.mutateAsync({
+                  boardId,
+                  data: {
+                    itemType,
+                    itemId: OriginalIdUtils.fromItem(item) || "",
+                  },
+                });
+              } catch (error: unknown) {
+                const errorMessage =
+                  error instanceof Error ? error.message : String(error);
+                // すでに存在する場合はエラーを無視
+                if (!errorMessage.includes("already exists")) {
+                  // エラーは既に上位でハンドリングされる
+                }
+              }
+            });
+            promises.push(...addPromises);
+          }
+
+          // ボード削除
+          if (boardsToRemove.length > 0) {
+            const removePromises = boardsToRemove.map(async (boardId) => {
+              try {
+                await removeItemFromBoard.mutateAsync({
+                  boardId,
+                  itemId: OriginalIdUtils.fromItem(item) || "",
+                  itemType,
+                  teamId,
+                });
+              } catch (error: unknown) {
+                console.error(
+                  `Failed to remove ${itemType} from board ${boardId}:`,
+                  error,
+                );
+              }
+            });
+            promises.push(...removePromises);
+          }
+
+          if (promises.length > 0) {
+            await Promise.all(promises);
+
+            // ボード変更後にキャッシュを無効化
+            if (teamMode && teamId) {
+              // チームモード用のキャッシュ無効化
+              queryClient.invalidateQueries({
+                queryKey: [
+                  "team-item-boards",
+                  teamId,
+                  itemType,
+                  item.originalId,
+                ],
               });
             } else {
-              await updateTask.mutateAsync({
-                id: item.id,
-                data: updateData,
-              });
-            }
-
-            updatedItem =
-              itemType === "memo"
-                ? ({
-                    ...item,
-                    title: title.trim() || "無題",
-                    content: content.trim() || "",
-                    updatedAt: Math.floor(Date.now() / 1000),
-                  } as T)
-                : ({
-                    ...item,
-                    title: title.trim() || "無題",
-                    description: content.trim() || "",
-                    priority,
-                    status:
-                      status === "not_started"
-                        ? "todo"
-                        : (status as "todo" | "in_progress" | "completed"),
-                    updatedAt: Math.floor(Date.now() / 1000),
-                  } as T);
-          } else {
-            // 内容に変更がない場合は現在の値を維持
-            updatedItem =
-              itemType === "memo"
-                ? ({
-                    ...item,
-                    title: title.trim() || "無題",
-                    content: content.trim() || "",
-                  } as T)
-                : ({
-                    ...item,
-                    title: title.trim() || "無題",
-                    description: content.trim() || "",
-                    status:
-                      status === "not_started"
-                        ? "todo"
-                        : (status as "todo" | "in_progress" | "completed"),
-                  } as T);
-          }
-
-          // ボード変更の差分を計算して処理
-          if (item.id) {
-            // 追加するボード
-            const boardsToAdd = selectedBoardIds.filter(
-              (id) => !currentBoardIds.includes(id),
-            );
-            // 削除するボード
-            const boardsToRemove = currentBoardIds.filter(
-              (id) => !selectedBoardIds.includes(id),
-            );
-
-            const promises = [];
-
-            // ボード追加
-            if (boardsToAdd.length > 0 && item.id > 0) {
-              const addPromises = boardsToAdd.map(async (boardId) => {
-                try {
-                  await addItemToBoard.mutateAsync({
-                    boardId,
-                    data: {
-                      itemType,
-                      itemId: OriginalIdUtils.fromItem(item) || "",
-                    },
-                  });
-                } catch (error: unknown) {
-                  const errorMessage =
-                    error instanceof Error ? error.message : String(error);
-                  // すでに存在する場合はエラーを無視
-                  if (!errorMessage.includes("already exists")) {
-                    // エラーは既に上位でハンドリングされる
-                  }
-                }
-              });
-              promises.push(...addPromises);
-            }
-
-            // ボード削除
-            if (boardsToRemove.length > 0) {
-              const removePromises = boardsToRemove.map(async (boardId) => {
-                try {
-                  await removeItemFromBoard.mutateAsync({
-                    boardId,
-                    itemId: OriginalIdUtils.fromItem(item) || "",
-                    itemType,
-                    teamId,
-                  });
-                } catch (error: unknown) {
-                  console.error(
-                    `Failed to remove ${itemType} from board ${boardId}:`,
-                    error,
-                  );
-                }
-              });
-              promises.push(...removePromises);
-            }
-
-            if (promises.length > 0) {
-              await Promise.all(promises);
-
-              // ボード変更後にキャッシュを無効化
-              if (teamMode && teamId) {
-                // チームモード用のキャッシュ無効化
-                queryClient.invalidateQueries({
-                  queryKey: [
-                    "team-item-boards",
-                    teamId,
-                    itemType,
-                    item.originalId,
-                  ],
-                });
-              } else {
-                // 個人モード用のキャッシュ無効化
-                queryClient.invalidateQueries({
-                  queryKey: ["item-boards", itemType, item.originalId],
-                });
-              }
-
-              // 全ボードアイテムキャッシュも無効化（表示更新のため）
+              // 個人モード用のキャッシュ無効化
               queryClient.invalidateQueries({
-                queryKey: ["boards", "all-items"],
+                queryKey: ["item-boards", itemType, item.originalId],
               });
-
-              // チームモードの場合、チーム関連のキャッシュも無効化
-              if (teamMode && teamId) {
-                queryClient.invalidateQueries({
-                  queryKey: ["team-boards", teamId],
-                });
-              }
             }
 
-            // 現在のボードから外された場合は次のアイテムを選択
-            if (
-              initialBoardId &&
-              boardsToRemove.includes(initialBoardId) &&
-              onDeleteAndSelectNext
-            ) {
-              onDeleteAndSelectNext(updatedItem);
-              return;
+            // 全ボードアイテムキャッシュも無効化（表示更新のため）
+            queryClient.invalidateQueries({
+              queryKey: ["boards", "all-items"],
+            });
+
+            // チームモードの場合、チーム関連のキャッシュも無効化
+            if (teamMode && teamId) {
+              queryClient.invalidateQueries({
+                queryKey: ["team-boards", teamId],
+              });
             }
           }
 
-          onSaveComplete?.(updatedItem, false, false);
+          // 現在のボードから外された場合は次のアイテムを選択
+          if (
+            initialBoardId &&
+            boardsToRemove.includes(initialBoardId) &&
+            onDeleteAndSelectNext
+          ) {
+            onDeleteAndSelectNext(updatedItem);
+            return;
+          }
         }
+
+        onSaveComplete?.(updatedItem, false, false);
       } else {
         // 新規アイテム作成（空の場合は何もしない）
         if (!isEmpty) {
@@ -581,10 +567,8 @@ export function useSimpleItemSave<T extends UnifiedItem>({
     status,
     createMemo,
     updateMemo,
-    deleteMemo,
     createTask,
     updateTask,
-    deleteTask,
     onSaveComplete,
     addItemToBoard,
     selectedBoardIds,

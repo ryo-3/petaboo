@@ -730,10 +730,11 @@ function TaskEditor({
     ? false
     : isNewTask
       ? !!title.trim()
-      : hasChanges ||
-        hasTagChanges ||
-        pendingImages.length > 0 ||
-        pendingDeletes.length > 0;
+      : (hasChanges ||
+          hasTagChanges ||
+          pendingImages.length > 0 ||
+          pendingDeletes.length > 0) &&
+        !!title.trim(); // 既存タスクも空タイトルの場合は保存不可
 
   // ボードIDを名前に変換する関数
   const getBoardName = (boardId: string) => {

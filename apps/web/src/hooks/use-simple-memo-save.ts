@@ -1,10 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import type { Memo } from "@/src/types/memo";
-import {
-  useCreateMemo,
-  useUpdateMemo,
-  useDeleteMemo,
-} from "@/src/hooks/use-memos";
+import { useCreateMemo, useUpdateMemo } from "@/src/hooks/use-memos";
 import {
   useAddItemToBoard,
   useRemoveItemFromBoard,
@@ -73,7 +69,6 @@ export function useSimpleMemoSave({
 
   const createNote = useCreateMemo({ teamMode, teamId });
   const updateNote = useUpdateMemo({ teamMode, teamId });
-  const deleteNote = useDeleteMemo({ teamMode, teamId });
   const addItemToBoard = useAddItemToBoard({ teamMode, teamId });
   const removeItemFromBoard = useRemoveItemFromBoard();
   const queryClient = useQueryClient();
@@ -149,185 +144,179 @@ export function useSimpleMemoSave({
       if (memo?.id) {
         // 既存メモ更新
         if (isEmpty) {
-          // 空メモの場合は削除
-          await deleteNote.mutateAsync(memo.id);
-          onSaveComplete?.(memo, true, false);
+          // 空メモの場合は保存しない（保存ボタンが無効化されるため、ここには到達しないはず）
+          console.warn("空メモのため保存をスキップしました");
+          return;
+        }
+
+        // メモ内容の変更があるかチェック（ボード変更は除く）
+        const hasContentChanges =
+          (title.trim() || "無題") !== initialTitle.trim() ||
+          content.trim() !== initialContent.trim();
+
+        let updatedMemo = memo;
+
+        // メモ内容に変更がある場合のみ更新
+        if (hasContentChanges) {
+          await updateNote.mutateAsync({
+            id: memo.id,
+            data: {
+              title: title.trim() || "無題",
+              content: content.trim() || undefined,
+            },
+          });
+
+          updatedMemo = {
+            ...memo,
+            title: title.trim() || "無題",
+            content: content.trim() || "",
+            updatedAt: Math.floor(Date.now() / 1000),
+          };
         } else {
-          // メモ内容の変更があるかチェック（ボード変更は除く）
-          const hasContentChanges =
-            (title.trim() || "無題") !== initialTitle.trim() ||
-            content.trim() !== initialContent.trim();
+          // 内容に変更がない場合は現在の値を維持
+          updatedMemo = {
+            ...memo,
+            title: title.trim() || "無題",
+            content: content.trim() || "",
+          };
+        }
 
-          let updatedMemo = memo;
+        // ボード変更の差分を計算して処理
+        if (memo.id) {
+          // 追加するボード
+          const boardsToAdd = selectedBoardIds.filter(
+            (id) => !currentBoardIds.includes(id),
+          );
+          // 削除するボード
+          const boardsToRemove = currentBoardIds.filter(
+            (id) => !selectedBoardIds.includes(id),
+          );
 
-          // メモ内容に変更がある場合のみ更新
-          if (hasContentChanges) {
-            await updateNote.mutateAsync({
-              id: memo.id,
-              data: {
-                title: title.trim() || "無題",
-                content: content.trim() || undefined,
-              },
-            });
+          // デバッグログ: ボード変更処理
+          console.log("🔧 [メモ保存] ボード変更処理:", {
+            memoId: memo.id,
+            originalId: memo.originalId,
+            currentBoardIds,
+            selectedBoardIds,
+            boardsToAdd,
+            boardsToRemove,
+            teamMode,
+            teamId,
+          });
 
-            updatedMemo = {
-              ...memo,
-              title: title.trim() || "無題",
-              content: content.trim() || "",
-              updatedAt: Math.floor(Date.now() / 1000),
-            };
-          } else {
-            // 内容に変更がない場合は現在の値を維持
-            updatedMemo = {
-              ...memo,
-              title: title.trim() || "無題",
-              content: content.trim() || "",
-            };
-          }
+          const promises = [];
 
-          // ボード変更の差分を計算して処理
-          if (memo.id) {
-            // 追加するボード
-            const boardsToAdd = selectedBoardIds.filter(
-              (id) => !currentBoardIds.includes(id),
-            );
-            // 削除するボード
-            const boardsToRemove = currentBoardIds.filter(
-              (id) => !selectedBoardIds.includes(id),
-            );
-
-            // デバッグログ: ボード変更処理
-            console.log("🔧 [メモ保存] ボード変更処理:", {
-              memoId: memo.id,
-              originalId: memo.originalId,
-              currentBoardIds,
-              selectedBoardIds,
+          // ボード追加
+          if (boardsToAdd.length > 0 && memo.id > 0) {
+            console.log("🔧 [メモ保存] ボード追加開始:", {
               boardsToAdd,
-              boardsToRemove,
-              teamMode,
-              teamId,
+              memoId: memo.id,
             });
 
-            const promises = [];
+            const addPromises = boardsToAdd.map(async (boardId) => {
+              try {
+                console.log("🔗 [メモ保存] ボードへの追加実行:", {
+                  boardId,
+                  itemId: OriginalIdUtils.fromItem(memo),
+                });
 
-            // ボード追加
-            if (boardsToAdd.length > 0 && memo.id > 0) {
-              console.log("🔧 [メモ保存] ボード追加開始:", {
-                boardsToAdd,
-                memoId: memo.id,
-              });
-
-              const addPromises = boardsToAdd.map(async (boardId) => {
-                try {
-                  console.log("🔗 [メモ保存] ボードへの追加実行:", {
-                    boardId,
-                    itemId: OriginalIdUtils.fromItem(memo),
-                  });
-
-                  await addItemToBoard.mutateAsync({
-                    boardId,
-                    data: {
-                      itemType: "memo",
-                      itemId:
-                        OriginalIdUtils.fromItem(memo) || memo.id.toString(),
-                    },
-                  });
-
-                  console.log("✅ [メモ保存] ボード追加成功:", { boardId });
-                } catch (error: unknown) {
-                  const errorMessage =
-                    error instanceof Error ? error.message : String(error);
-                  console.error("❌ [メモ保存] ボード追加エラー:", {
-                    boardId,
-                    error: errorMessage,
-                  });
-
-                  // すでに存在する場合はエラーを無視
-                  if (!errorMessage.includes("already exists")) {
-                    // エラーは既に上位でハンドリングされる
-                  }
-                }
-              });
-              promises.push(...addPromises);
-            }
-
-            // ボード削除
-            if (boardsToRemove.length > 0) {
-              const removePromises = boardsToRemove.map(async (boardId) => {
-                try {
-                  await removeItemFromBoard.mutateAsync({
-                    boardId,
+                await addItemToBoard.mutateAsync({
+                  boardId,
+                  data: {
+                    itemType: "memo",
                     itemId:
                       OriginalIdUtils.fromItem(memo) || memo.id.toString(),
-                    itemType: "memo",
-                    teamId,
-                  });
-                } catch (error: unknown) {
-                  console.error(
-                    `Failed to remove memo from board ${boardId}:`,
-                    error,
-                  );
+                  },
+                });
+
+                console.log("✅ [メモ保存] ボード追加成功:", { boardId });
+              } catch (error: unknown) {
+                const errorMessage =
+                  error instanceof Error ? error.message : String(error);
+                console.error("❌ [メモ保存] ボード追加エラー:", {
+                  boardId,
+                  error: errorMessage,
+                });
+
+                // すでに存在する場合はエラーを無視
+                if (!errorMessage.includes("already exists")) {
+                  // エラーは既に上位でハンドリングされる
                 }
-              });
-              promises.push(...removePromises);
-            }
-
-            if (promises.length > 0) {
-              await Promise.all(promises);
-
-              console.log("🔄 [メモ保存] キャッシュ無効化開始:", {
-                memoId: memo.id,
-                originalId: memo.originalId,
-                boardsToAdd,
-                boardsToRemove,
-              });
-
-              // ボード変更後にキャッシュを無効化
-              if (teamMode && teamId) {
-                // チームモード用のキャッシュ無効化
-                queryClient.invalidateQueries({
-                  queryKey: [
-                    "team-item-boards",
-                    teamId,
-                    "memo",
-                    memo.originalId,
-                  ],
-                });
-              } else {
-                // 個人モード用のキャッシュ無効化
-                queryClient.invalidateQueries({
-                  queryKey: ["item-boards", "memo", memo.originalId],
-                });
               }
-
-              // 全ボードアイテムキャッシュも無効化（表示更新のため）
-              queryClient.invalidateQueries({
-                queryKey: ["boards", "all-items"],
-              });
-
-              // チームモードの場合、チーム関連のキャッシュも無効化
-              if (teamMode && teamId) {
-                queryClient.invalidateQueries({
-                  queryKey: ["team-boards", teamId],
-                });
-              }
-
-              console.log("✅ [メモ保存] キャッシュ無効化完了");
-            }
-
-            // 現在のボードから外された場合は次のアイテムを選択
-            if (
-              initialBoardId &&
-              boardsToRemove.includes(initialBoardId) &&
-              onDeleteAndSelectNext
-            ) {
-              onDeleteAndSelectNext(updatedMemo);
-              return;
-            }
+            });
+            promises.push(...addPromises);
           }
 
-          onSaveComplete?.(updatedMemo, false, false);
+          // ボード削除
+          if (boardsToRemove.length > 0) {
+            const removePromises = boardsToRemove.map(async (boardId) => {
+              try {
+                await removeItemFromBoard.mutateAsync({
+                  boardId,
+                  itemId: OriginalIdUtils.fromItem(memo) || memo.id.toString(),
+                  itemType: "memo",
+                  teamId,
+                });
+              } catch (error: unknown) {
+                console.error(
+                  `Failed to remove memo from board ${boardId}:`,
+                  error,
+                );
+              }
+            });
+            promises.push(...removePromises);
+          }
+
+          if (promises.length > 0) {
+            await Promise.all(promises);
+
+            console.log("🔄 [メモ保存] キャッシュ無効化開始:", {
+              memoId: memo.id,
+              originalId: memo.originalId,
+              boardsToAdd,
+              boardsToRemove,
+            });
+
+            // ボード変更後にキャッシュを無効化
+            if (teamMode && teamId) {
+              // チームモード用のキャッシュ無効化
+              queryClient.invalidateQueries({
+                queryKey: ["team-item-boards", teamId, "memo", memo.originalId],
+              });
+            } else {
+              // 個人モード用のキャッシュ無効化
+              queryClient.invalidateQueries({
+                queryKey: ["item-boards", "memo", memo.originalId],
+              });
+            }
+
+            // 全ボードアイテムキャッシュも無効化（表示更新のため）
+            queryClient.invalidateQueries({
+              queryKey: ["boards", "all-items"],
+            });
+
+            // チームモードの場合、チーム関連のキャッシュも無効化
+            if (teamMode && teamId) {
+              queryClient.invalidateQueries({
+                queryKey: ["team-boards", teamId],
+              });
+            }
+
+            console.log("✅ [メモ保存] キャッシュ無効化完了");
+          }
+
+          // 現在のボードから外された場合は次のアイテムを選択
+          if (
+            initialBoardId &&
+            boardsToRemove.includes(initialBoardId) &&
+            onDeleteAndSelectNext
+          ) {
+            onDeleteAndSelectNext(updatedMemo);
+            return;
+          }
         }
+
+        onSaveComplete?.(updatedMemo, false, false);
       } else {
         // 新規メモ作成（空の場合は何もしない）
         if (!isEmpty) {
@@ -436,7 +425,6 @@ export function useSimpleMemoSave({
     content,
     createNote,
     updateNote,
-    deleteNote,
     onSaveComplete,
     addItemToBoard,
     selectedBoardIds,

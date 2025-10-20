@@ -4,17 +4,19 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import ArrowLeftIcon from "@/components/icons/arrow-left-icon";
+import SettingsIcon from "@/components/icons/settings-icon";
 import WarningIcon from "@/components/icons/warning-icon";
 import { useTeamDetail } from "@/src/hooks/use-team-detail";
 import { useAuth } from "@clerk/nextjs";
 import { useQueryClient } from "@tanstack/react-query";
-import { useKickMember } from "@/src/hooks/use-kick-member";
 import { TeamSlackSettings } from "./team-slack-settings";
+import { Settings, BellRing, AlertTriangle } from "lucide-react";
 
 interface TeamSettingsProps {
   customUrl: string;
 }
+
+type TeamSettingsTab = "basic" | "slack" | "danger";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -23,6 +25,7 @@ export function TeamSettings({ customUrl }: TeamSettingsProps) {
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
   const { data: team, isLoading } = useTeamDetail(customUrl);
+  const [activeTab, setActiveTab] = useState<TeamSettingsTab>("basic");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -33,11 +36,6 @@ export function TeamSettings({ customUrl }: TeamSettingsProps) {
     type: "success" | "error";
     text: string;
   } | null>(null);
-  const [kickConfirmModal, setKickConfirmModal] = useState<{
-    userId: string;
-    displayName: string;
-  } | null>(null);
-  const kickMutation = useKickMember();
 
   // チームデータが読み込まれた時にフォームを初期化
   useEffect(() => {
@@ -114,7 +112,7 @@ export function TeamSettings({ customUrl }: TeamSettingsProps) {
         throw new Error(error.message || "チーム設定の更新に失敗しました");
       }
 
-      const updatedTeam = await response.json();
+      await response.json();
 
       // キャッシュを更新
       queryClient.invalidateQueries({ queryKey: ["team", customUrl] });
@@ -135,36 +133,6 @@ export function TeamSettings({ customUrl }: TeamSettingsProps) {
       });
     } finally {
       setIsSaving(false);
-    }
-  };
-
-  const handleKickMember = (userId: string, displayName: string) => {
-    setKickConfirmModal({ userId, displayName });
-  };
-
-  const confirmKickMember = async () => {
-    if (!kickConfirmModal) return;
-
-    try {
-      await kickMutation.mutateAsync({
-        customUrl,
-        userId: kickConfirmModal.userId,
-      });
-      setKickConfirmModal(null);
-      setSaveMessage({
-        type: "success",
-        text: `${kickConfirmModal.displayName}をチームから削除しました`,
-      });
-      setTimeout(() => setSaveMessage(null), 3000);
-    } catch (error) {
-      setSaveMessage({
-        type: "error",
-        text:
-          error instanceof Error
-            ? error.message
-            : "メンバーの削除に失敗しました",
-      });
-      setTimeout(() => setSaveMessage(null), 3000);
     }
   };
 
@@ -198,7 +166,6 @@ export function TeamSettings({ customUrl }: TeamSettingsProps) {
       // キャッシュをクリア
       queryClient.invalidateQueries({ queryKey: ["teams"] });
       queryClient.invalidateQueries({ queryKey: ["teamStats"] });
-      // 現在のチーム詳細キャッシュも削除
       queryClient.removeQueries({ queryKey: ["team", customUrl] });
 
       // チーム削除成功フラグを設定
@@ -217,202 +184,219 @@ export function TeamSettings({ customUrl }: TeamSettingsProps) {
     }
   };
 
+  const tabItems = [
+    {
+      id: "basic" as const,
+      label: "基本情報",
+      icon: <Settings className="w-4 h-4 text-blue-600" />,
+    },
+    {
+      id: "slack" as const,
+      label: "Slack連携",
+      icon: <BellRing className="w-4 h-4 text-purple-600" />,
+    },
+    {
+      id: "danger" as const,
+      label: "危険な操作",
+      icon: <AlertTriangle className="w-4 h-4 text-red-600" />,
+    },
+  ];
+
   return (
-    <div className="flex h-full bg-white overflow-hidden">
-      <div className="w-full pt-3 pl-5 pr-5 flex flex-col">
-        {/* ヘッダー */}
-        <div className="mb-6 flex-shrink-0">
-          <div className="flex items-center gap-3 mb-2">
-            <button
-              onClick={() => router.push(`/team/${customUrl}?tab=team-list`)}
-              className="p-1 text-gray-600 hover:text-gray-800 transition-colors rounded-md hover:bg-gray-100"
-            >
-              <ArrowLeftIcon className="w-5 h-5" />
-            </button>
-            <h1 className="text-[22px] font-bold text-gray-800">チーム設定</h1>
-          </div>
-          <p className="text-gray-600 text-sm ml-11">
-            チームの基本情報と管理設定
-          </p>
+    <div className="bg-white flex flex-col overflow-hidden h-full">
+      {/* ヘッダー */}
+      <div className="border-b border-gray-200 px-5 py-3">
+        <div className="flex items-center gap-2">
+          <SettingsIcon className="w-6 h-6 text-gray-600" />
+          <h1 className="text-[22px] font-bold text-gray-800">チーム設定</h1>
+          <span className="text-sm text-gray-600 ml-4">
+            {team.name} の管理設定
+          </span>
+        </div>
+      </div>
+
+      {/* サイドバーとメインコンテンツ */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* サイドバー */}
+        <div className="w-[180px] border-r border-gray-200 pt-3 px-3">
+          <nav className="space-y-1">
+            {tabItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
+                  activeTab === item.id
+                    ? "bg-gray-100 text-gray-900 font-medium"
+                    : "text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                {item.icon}
+                <span className="text-sm">{item.label}</span>
+              </button>
+            ))}
+          </nav>
         </div>
 
-        {/* フォームエリア */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="p-6">
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {/* チーム名 */}
-                <div>
-                  <label
-                    htmlFor="teamName"
-                    className="block text-sm font-semibold text-gray-700 mb-2"
-                  >
-                    チーム名 <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    id="teamName"
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="例: マーケティングチーム"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    maxLength={50}
-                    required
-                  />
-                  <div className="flex justify-between mt-1">
-                    <span className="text-xs text-gray-500">
-                      プロジェクトや部署など、わかりやすい名前を付けましょう
-                    </span>
-                    <span className="text-xs text-gray-400">
-                      {name.length}/50
-                    </span>
+        {/* メインコンテンツ */}
+        <div className="flex-1 px-6 pt-4 overflow-y-auto">
+          <div className="max-w-2xl">
+            {/* 基本情報タブ */}
+            {activeTab === "basic" && (
+              <div>
+                <h2 className="text-lg font-semibold text-gray-800 mb-4">
+                  チーム基本情報
+                </h2>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  {/* チーム名 */}
+                  <div>
+                    <label
+                      htmlFor="teamName"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      チーム名 <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      id="teamName"
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="例: マーケティングチーム"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      maxLength={50}
+                      required
+                    />
+                    <div className="flex justify-between mt-1">
+                      <span className="text-xs text-gray-500">
+                        プロジェクトや部署など、わかりやすい名前を付けましょう
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        {name.length}/50
+                      </span>
+                    </div>
                   </div>
-                </div>
 
-                {/* チーム説明 */}
-                <div>
-                  <label
-                    htmlFor="teamDescription"
-                    className="block text-sm font-semibold text-gray-700 mb-2"
-                  >
-                    チーム説明（任意）
-                  </label>
-                  <textarea
-                    id="teamDescription"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="例: マーケティング戦略の企画・実行を行うチームです"
-                    rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                    maxLength={200}
-                  />
-                  <div className="flex justify-between mt-1">
-                    <span className="text-xs text-gray-500">
-                      チームの目的や役割を簡潔に説明しましょう
-                    </span>
-                    <span className="text-xs text-gray-400">
-                      {description.length}/200
-                    </span>
+                  {/* チーム説明 */}
+                  <div>
+                    <label
+                      htmlFor="teamDescription"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      チーム説明（任意）
+                    </label>
+                    <textarea
+                      id="teamDescription"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="例: マーケティング戦略の企画・実行を行うチームです"
+                      rows={4}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                      maxLength={200}
+                    />
+                    <div className="flex justify-between mt-1">
+                      <span className="text-xs text-gray-500">
+                        チームの目的や役割を簡潔に説明しましょう
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        {description.length}/200
+                      </span>
+                    </div>
                   </div>
-                </div>
 
-                {/* アクションボタン */}
-                <div className="pt-6 border-t">
-                  <Button
-                    type="submit"
-                    disabled={!name.trim() || isSaving}
-                    className="w-full bg-blue-600 hover:bg-blue-700"
-                  >
-                    {isSaving ? "保存中..." : "設定を保存"}
-                  </Button>
-                </div>
-
-                {/* 保存メッセージ */}
-                {saveMessage && (
-                  <div
-                    className={`mt-4 p-3 rounded-lg text-sm ${
-                      saveMessage.type === "success"
-                        ? "bg-green-50 text-green-700"
-                        : "bg-red-50 text-red-700"
-                    }`}
-                  >
-                    {saveMessage.text}
+                  {/* 保存ボタン */}
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      disabled={!name.trim() || isSaving}
+                      className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    >
+                      {isSaving ? "保存中..." : "設定を保存"}
+                    </button>
                   </div>
-                )}
-              </form>
-            </Card>
 
-            {/* 右側のコンテンツ */}
-            <div className="space-y-6">
-              {/* 危険な操作 */}
-              <Card className="p-6 border-red-300 bg-red-50/50">
-                <div className="flex items-center gap-2 mb-3">
-                  <WarningIcon className="w-5 h-5 text-red-600" />
-                  <h3 className="font-bold text-red-900 text-base">
-                    危険な操作
-                  </h3>
-                </div>
-                <div className="space-y-3">
-                  <div className="bg-red-100 border border-red-300 rounded-lg p-3">
-                    <p className="text-sm text-red-800 font-semibold mb-1 flex items-center gap-1">
+                  {/* 保存メッセージ */}
+                  {saveMessage && (
+                    <div
+                      className={`mt-4 p-3 rounded-lg text-sm ${
+                        saveMessage.type === "success"
+                          ? "bg-green-50 text-green-700"
+                          : "bg-red-50 text-red-700"
+                      }`}
+                    >
+                      {saveMessage.text}
+                    </div>
+                  )}
+                </form>
+              </div>
+            )}
+
+            {/* Slack連携タブ */}
+            {activeTab === "slack" && (
+              <div>
+                <h2 className="text-lg font-semibold text-gray-800 mb-4">
+                  Slack通知連携
+                </h2>
+                {team && <TeamSlackSettings teamId={team.id} />}
+              </div>
+            )}
+
+            {/* 危険な操作タブ */}
+            {activeTab === "danger" && (
+              <div>
+                <h2 className="text-lg font-semibold text-gray-800 mb-4">
+                  危険な操作
+                </h2>
+                <Card className="p-6 border-red-300 bg-red-50/50">
+                  <div className="flex items-center gap-2 mb-3">
+                    <WarningIcon className="w-5 h-5 text-red-600" />
+                    <h3 className="font-bold text-red-900 text-base">
+                      チームの完全削除
+                    </h3>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="bg-red-100 border border-red-300 rounded-lg p-3">
+                      <p className="text-sm text-red-800 font-semibold mb-1 flex items-center gap-1">
+                        <svg
+                          className="w-4 h-4 text-red-600"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+                        </svg>
+                        完全削除警告
+                      </p>
+                      <p className="text-sm text-red-700 mb-2">
+                        チーム削除により以下がすべて
+                        <strong>完全に削除</strong>
+                        され、<strong>復元不可能</strong>になります：
+                      </p>
+                      <ul className="text-sm text-red-700 space-y-1 list-disc list-inside ml-2">
+                        <li>すべてのメモ・タスク・ボード</li>
+                        <li>すべてのメンバー・権限設定</li>
+                        <li>すべての招待・申請履歴</li>
+                        <li>すべてのカテゴリ・タグ</li>
+                      </ul>
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="w-full text-red-700 border-red-400 hover:bg-red-100 font-semibold"
+                      onClick={() => {
+                        setShowDeleteModal(true);
+                        setDeleteConfirmText("");
+                      }}
+                    >
                       <svg
-                        className="w-4 h-4 text-red-600"
+                        className="w-4 h-4 mr-1"
                         fill="currentColor"
                         viewBox="0 0 24 24"
                       >
-                        <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
                       </svg>
-                      完全削除警告
-                    </p>
-                    <p className="text-sm text-red-700 mb-2">
-                      チーム削除により以下がすべて<strong>完全に削除</strong>
-                      され、<strong>復元不可能</strong>になります：
-                    </p>
-                    <ul className="text-sm text-red-700 space-y-1 list-disc list-inside ml-2">
-                      <li>すべてのメモ・タスク・ボード</li>
-                      <li>すべてのメンバー・権限設定</li>
-                      <li>すべての招待・申請履歴</li>
-                      <li>すべてのカテゴリ・タグ</li>
-                    </ul>
+                      チームを完全削除する
+                    </Button>
                   </div>
-                  <Button
-                    variant="outline"
-                    className="w-full text-red-700 border-red-400 hover:bg-red-100 font-semibold"
-                    onClick={() => {
-                      setShowDeleteModal(true);
-                      setDeleteConfirmText("");
-                    }}
-                  >
-                    <svg
-                      className="w-4 h-4 mr-1"
-                      fill="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
-                    </svg>
-                    チームを完全削除する
-                  </Button>
-                </div>
-              </Card>
-
-              {/* Slack連携設定 */}
-              {team && <TeamSlackSettings teamId={team.id} />}
-
-              {/* 今後の機能予定 */}
-              <Card className="p-6 bg-gray-50">
-                <h3 className="font-semibold text-gray-800 mb-2 text-sm">
-                  今後追加予定の機能
-                </h3>
-                <div className="space-y-1 text-xs text-gray-600">
-                  <div className="flex items-center gap-2">
-                    <span className="w-1 h-1 bg-green-600 rounded-full"></span>
-                    <span className="line-through text-green-700">
-                      メンバーの招待・削除機能
-                    </span>
-                    <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">
-                      実装済み
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-1 h-1 bg-green-600 rounded-full"></span>
-                    <span className="line-through text-green-700">
-                      Slack通知連携
-                    </span>
-                    <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">
-                      実装済み
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
-                    <span>招待リンクの生成・管理</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
-                    <span>チームの権限設定</span>
-                  </div>
-                </div>
-              </Card>
-            </div>
+                </Card>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -529,48 +513,6 @@ export function TeamSettings({ customUrl }: TeamSettingsProps) {
                 className="flex-1 bg-red-600 hover:bg-red-700 text-white disabled:bg-gray-300"
               >
                 {isDeleting ? "削除中..." : "削除する"}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* キック確認モーダル */}
-      {kickConfirmModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <div className="flex items-center gap-3 mb-4">
-              <WarningIcon className="w-6 h-6 text-red-600" />
-              <h3 className="text-lg font-semibold text-gray-900">
-                メンバーをキック
-              </h3>
-            </div>
-            <div className="mb-6 p-4 bg-red-50 border-2 border-red-300 rounded-lg">
-              <p className="text-red-800 font-medium">
-                <span className="font-bold text-red-900">
-                  {kickConfirmModal.displayName}
-                </span>
-                をチームから削除しますか？
-              </p>
-              <p className="text-red-600 text-sm mt-2">
-                この操作は取り消せません
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setKickConfirmModal(null)}
-                className="flex-1"
-                disabled={kickMutation.isPending}
-              >
-                キャンセル
-              </Button>
-              <Button
-                onClick={confirmKickMember}
-                disabled={kickMutation.isPending}
-                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
-              >
-                {kickMutation.isPending ? "削除中..." : "削除する"}
               </Button>
             </div>
           </div>

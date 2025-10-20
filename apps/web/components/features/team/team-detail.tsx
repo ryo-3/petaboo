@@ -7,7 +7,6 @@ import { DisplayNameModal } from "@/components/modals/display-name-modal";
 import BoardScreen from "@/components/screens/board-screen";
 import MemoScreen from "@/components/screens/memo-screen";
 import SearchScreen from "@/components/screens/search-screen";
-import SettingsScreen from "@/components/screens/settings-screen";
 import TaskScreen from "@/components/screens/task-screen";
 import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/ui/buttons/back-button";
@@ -196,12 +195,17 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   // URLのクエリパラメータからタブとアイテムIDを取得
   const getTabFromURL = () => {
     const tab = searchParams.get("tab");
+
+    // 旧URL(?tab=settings)を新URL(?tab=team-settings)にリダイレクト
+    if (tab === "settings") {
+      return "team-settings";
+    }
+
     if (
       tab === "memos" ||
       tab === "tasks" ||
       tab === "boards" ||
       tab === "team-list" ||
-      tab === "settings" ||
       tab === "team-settings" ||
       tab === "search"
     ) {
@@ -225,13 +229,23 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     | "tasks"
     | "boards"
     | "team-list"
-    | "settings"
     | "team-settings"
     | "search"
   >(getTabFromURL());
 
   // URLのパラメータが変更された時にタブとアイテムを更新
   useEffect(() => {
+    const tab = searchParams.get("tab");
+
+    // 旧URL(?tab=settings)を新URL(?tab=team-settings)に自動リダイレクト
+    if (tab === "settings") {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("tab", "team-settings");
+      const newUrl = `?${params.toString()}`;
+      router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
+      return;
+    }
+
     const newTab = getTabFromURL();
     if (newTab !== activeTab) {
       setActiveTab(newTab);
@@ -275,7 +289,6 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         | "tasks"
         | "boards"
         | "team-list"
-        | "settings"
         | "team-settings"
         | "search",
     ) => {
@@ -331,8 +344,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         handleTabChange("boards");
       } else if (mode === "team-list") {
         handleTabChange("team-list");
-      } else if (mode === "settings") {
-        handleTabChange("settings");
+      } else if (mode === "team-settings") {
+        handleTabChange("team-settings");
       } else if (mode === "search") {
         handleTabChange("search");
       }
@@ -499,7 +512,6 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                             | "tasks"
                             | "boards"
                             | "team-list"
-                            | "settings"
                             | "team-settings"
                             | "search",
                         );
@@ -1043,13 +1055,6 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                 )}
               </>
             </>
-          )}
-
-          {/* 設定タブ */}
-          {activeTab === "settings" && (
-            <div className="h-full">
-              <SettingsScreen />
-            </div>
           )}
 
           {/* チーム設定タブ */}

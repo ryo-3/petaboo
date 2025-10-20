@@ -157,12 +157,13 @@ export function NavigationProvider({
         !boardDetailActive,
       boardDetail: boardDetailActive,
       search: screenMode === "search",
-      settings: screenMode === "settings",
+      settings: screenMode === "settings" || isTeamSettingsTab,
       team:
-        isTeamListPage ||
-        showTeamList ||
-        showTeamCreate ||
-        screenMode === "team",
+        (isTeamListPage ||
+          showTeamList ||
+          showTeamCreate ||
+          screenMode === "team") &&
+        !isTeamSettingsTab, // チーム設定画面ではチームアイコンを無効化
     };
   }, [
     screenMode,

@@ -225,21 +225,22 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   };
 
   const handleSettings = () => {
-    // チーム詳細ページの場合は設定イベントを送信
+    // チーム詳細ページの場合はチーム設定タブに移動
     if (isTeamDetailPage) {
       if (isTeamBoardDetailPage) {
-        // チームボード詳細ページの場合は専用イベントを発信
-        window.dispatchEvent(new CustomEvent("team-settings-change"));
+        // チームボード詳細ページの場合は、チーム詳細のチーム設定タブに遷移
+        const teamCustomUrl = pathname.split("/")[2];
+        router.push(`/team/${teamCustomUrl}?tab=team-settings`);
       } else {
-        // チーム詳細ページの場合
+        // チーム詳細ページの場合は、チーム設定タブに切り替え
         window.dispatchEvent(
           new CustomEvent("team-mode-change", {
-            detail: { mode: "settings", pathname },
+            detail: { mode: "team-settings", pathname },
           }),
         );
       }
     } else {
-      // それ以外の場合は設定ページに遷移
+      // それ以外の場合は個人設定ページに遷移
       router.push("/settings");
     }
   };

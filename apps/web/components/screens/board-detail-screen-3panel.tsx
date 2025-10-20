@@ -233,9 +233,7 @@ function BoardDetailScreen({
 
   // タブテキスト表示制御
   useEffect(() => {
-    // チームモードではrightPanelModeの影響を無効化
-    const effectiveRightPanelMode = teamMode ? null : rightPanelMode;
-    if (selectedMemo || selectedTask || effectiveRightPanelMode) {
+    if (selectedMemo || selectedTask || rightPanelMode) {
       // 右パネルが開いたらすぐにテキストを非表示
       setShowTabText(false);
     } else {
@@ -245,13 +243,13 @@ function BoardDetailScreen({
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [selectedMemo, selectedTask, rightPanelMode, setShowTabText, teamMode]);
+  }, [selectedMemo, selectedTask, rightPanelMode, setShowTabText]);
 
   // 計算されたカラム数（エディター表示時にメモ・タスク両方表示なら1列、その他は最大2列に制限）
   const effectiveColumnCount =
     (selectedMemo || selectedTask) && showMemo && showTask
       ? 1
-      : selectedMemo || selectedTask || (!teamMode && rightPanelMode)
+      : selectedMemo || selectedTask || rightPanelMode
         ? columnCount <= 2
           ? columnCount
           : 2
@@ -702,13 +700,15 @@ function BoardDetailScreen({
       <div
         className={`${
           teamMode
-            ? "w-full" // チームモード時は常に100%幅
+            ? rightPanelMode
+              ? "w-[44%] border-r border-gray-300 overflow-hidden" // チームモード：メモ/タスク一覧表示時は2パネル
+              : "w-full" // チームモード：通常時は3パネルレイアウトで制御
             : selectedMemo || selectedTask || rightPanelMode
               ? rightPanelMode
-                ? "w-[44%] min-w-[600px] border-r border-gray-300" // リスト表示時
-                : "w-[44%] min-w-[600px] border-r border-gray-300" // エディター表示時
+                ? "w-[44%] border-r border-gray-300 overflow-hidden" // 個人モード：リスト表示時
+                : "w-[44%] border-r border-gray-300 overflow-hidden" // 個人モード：エディター表示時
               : "w-full"
-        } ${teamMode ? "" : "pt-3"} pl-5 pr-4 ${!teamMode && (selectedMemo || selectedTask || rightPanelMode) ? "pr-2" : "pr-4"} flex flex-col transition-all duration-300 relative`}
+        } ${teamMode && !rightPanelMode ? "" : "pt-3"} pl-5 pr-4 ${selectedMemo || selectedTask || rightPanelMode ? "pr-2" : "pr-4"} flex flex-col ${teamMode ? "" : "transition-all duration-300"} relative`}
       >
         {/* チームモード時はDesktopUpperを3パネル内の左パネルに配置、個人モード時は外側に配置 */}
         {!teamMode && (
@@ -762,20 +762,22 @@ function BoardDetailScreen({
         {/* メモ・タスクコンテンツ - チームモードでは動的3パネル構成 */}
         <div
           className={`${
-            teamMode
-              ? "flex gap-2 flex-1 min-h-0 min-w-[1280px]"
-              : !teamMode &&
-                  (rightPanelMode === "memo-list" ||
-                    rightPanelMode === "task-list")
-                ? "flex flex-col"
-                : !showMemo || !showTask || boardLayout === "vertical"
-                  ? isReversed
-                    ? "flex flex-col-reverse"
-                    : "flex flex-col"
-                  : `grid grid-cols-1 lg:grid-cols-2${isReversed ? " [&>*:nth-child(1)]:order-2 [&>*:nth-child(2)]:order-1" : ""}`
+            teamMode && !rightPanelMode
+              ? "flex gap-2 flex-1 min-h-0 min-w-[1280px]" // チームモード：3パネル時のみ最小幅を設定
+              : teamMode && rightPanelMode
+                ? "flex flex-col gap-2 flex-1 min-h-0" // チームモード：メモ/タスク一覧表示時は最小幅なし
+                : !teamMode &&
+                    (rightPanelMode === "memo-list" ||
+                      rightPanelMode === "task-list")
+                  ? "flex flex-col"
+                  : !showMemo || !showTask || boardLayout === "vertical"
+                    ? isReversed
+                      ? "flex flex-col-reverse"
+                      : "flex flex-col"
+                    : `grid grid-cols-1 lg:grid-cols-2${isReversed ? " [&>*:nth-child(1)]:order-2 [&>*:nth-child(2)]:order-1" : ""}`
           } gap-2 flex-1 min-h-0`}
         >
-          {teamMode ? (
+          {teamMode && !rightPanelMode ? (
             <>
               {selectedMemo || selectedTask
                 ? /* 選択時: 動的パネル構成 */
@@ -1380,46 +1382,49 @@ function BoardDetailScreen({
                               </div>
                             )}
 
-                            <CommentSection
-                              title={
-                                selectedMemo
-                                  ? "メモコメント"
-                                  : selectedTask
-                                    ? "タスクコメント"
-                                    : "ボードコメント"
-                              }
-                              placeholder={
-                                selectedMemo
-                                  ? "メモにコメントを追加..."
-                                  : selectedTask
-                                    ? "タスクにコメントを追加..."
-                                    : "ボードにコメントを追加..."
-                              }
-                              teamId={teamId || undefined}
-                              boardId={boardId}
-                              targetType={
-                                selectedMemo
-                                  ? "memo"
-                                  : selectedTask
-                                    ? "task"
-                                    : "board"
-                              }
-                              targetOriginalId={
-                                selectedMemo
-                                  ? selectedMemo.originalId
-                                  : selectedTask
-                                    ? selectedTask.originalId
-                                    : boardId.toString()
-                              }
-                              targetTitle={
-                                selectedMemo
-                                  ? `メモ「${selectedMemo.title || "タイトルなし"}」`
-                                  : selectedTask
-                                    ? `タスク「${selectedTask.title || "タイトルなし"}」`
-                                    : undefined
-                              }
-                              teamMembers={teamMembers}
-                            />
+                            {/* メモ/タスク一覧表示時はコメント欄を非表示 */}
+                            {!rightPanelMode && (
+                              <CommentSection
+                                title={
+                                  selectedMemo
+                                    ? "メモコメント"
+                                    : selectedTask
+                                      ? "タスクコメント"
+                                      : "ボードコメント"
+                                }
+                                placeholder={
+                                  selectedMemo
+                                    ? "メモにコメントを追加..."
+                                    : selectedTask
+                                      ? "タスクにコメントを追加..."
+                                      : "ボードにコメントを追加..."
+                                }
+                                teamId={teamId || undefined}
+                                boardId={boardId}
+                                targetType={
+                                  selectedMemo
+                                    ? "memo"
+                                    : selectedTask
+                                      ? "task"
+                                      : "board"
+                                }
+                                targetOriginalId={
+                                  selectedMemo
+                                    ? selectedMemo.originalId
+                                    : selectedTask
+                                      ? selectedTask.originalId
+                                      : boardId.toString()
+                                }
+                                targetTitle={
+                                  selectedMemo
+                                    ? `メモ「${selectedMemo.title || "タイトルなし"}」`
+                                    : selectedTask
+                                      ? `タスク「${selectedTask.title || "タイトルなし"}」`
+                                      : undefined
+                                }
+                                teamMembers={teamMembers}
+                              />
+                            )}
                           </ResizablePanel>
                         )}
                       </ResizablePanelGroup>
@@ -1768,32 +1773,35 @@ function BoardDetailScreen({
                               </div>
                             )}
 
-                            <CommentSection
-                              title="ボードコメント"
-                              placeholder="ボードにコメントを追加..."
-                              teamId={teamId || undefined}
-                              targetType="board"
-                              targetOriginalId={boardId.toString()}
-                              teamMembers={teamMembers}
-                              boardId={boardId}
-                              onItemClick={(itemType, originalId) => {
-                                if (itemType === "memo") {
-                                  const memo = boardMemos.find(
-                                    (m) => m.originalId === originalId,
-                                  );
-                                  if (memo) {
-                                    onSelectMemo?.(memo as Memo);
+                            {/* メモ/タスク一覧表示時はコメント欄を非表示 */}
+                            {!rightPanelMode && (
+                              <CommentSection
+                                title="ボードコメント"
+                                placeholder="ボードにコメントを追加..."
+                                teamId={teamId || undefined}
+                                targetType="board"
+                                targetOriginalId={boardId.toString()}
+                                teamMembers={teamMembers}
+                                boardId={boardId}
+                                onItemClick={(itemType, originalId) => {
+                                  if (itemType === "memo") {
+                                    const memo = boardMemos.find(
+                                      (m) => m.originalId === originalId,
+                                    );
+                                    if (memo) {
+                                      onSelectMemo?.(memo as Memo);
+                                    }
+                                  } else if (itemType === "task") {
+                                    const task = boardTasks.find(
+                                      (t) => t.originalId === originalId,
+                                    );
+                                    if (task) {
+                                      onSelectTask?.(task as Task);
+                                    }
                                   }
-                                } else if (itemType === "task") {
-                                  const task = boardTasks.find(
-                                    (t) => t.originalId === originalId,
-                                  );
-                                  if (task) {
-                                    onSelectTask?.(task as Task);
-                                  }
-                                }
-                              }}
-                            />
+                                }}
+                              />
+                            )}
                           </ResizablePanel>
                         )}
                       </ResizablePanelGroup>
@@ -1802,7 +1810,7 @@ function BoardDetailScreen({
             </>
           ) : (
             <>
-              {/* 個人モード: 既存の2パネル構造 */}
+              {/* 個人モード または チームモードでメモ/タスク一覧表示時: 2パネル構造 */}
               {/* メモ列 */}
               <BoardMemoSection
                 rightPanelMode={rightPanelMode}
@@ -1928,13 +1936,15 @@ function BoardDetailScreen({
         hasOtherTabItems={getHasOtherTabItems()}
       />
 
-      {/* 右側：詳細表示（個人モードのみ） */}
-      {!teamMode && (
+      {/* 右側：詳細表示（個人モード）またはメモ/タスク一覧（チームモード） */}
+      {(!teamMode || rightPanelMode !== null) && (
         <BoardRightPanel
           isOpen={
-            selectedMemo !== null ||
-            selectedTask !== null ||
-            rightPanelMode !== null
+            teamMode
+              ? rightPanelMode !== null // チーム側: メモ/タスク一覧表示時のみ
+              : selectedMemo !== null ||
+                selectedTask !== null ||
+                rightPanelMode !== null // 個人側: 従来通り
           }
           boardId={boardId}
           selectedMemo={selectedMemo}
@@ -1948,6 +1958,8 @@ function BoardDetailScreen({
           allTaggings={(safeAllTaggings || []) as Tagging[]}
           allBoardItems={safeAllBoardItems}
           itemBoards={completeItemBoards}
+          teamMode={teamMode}
+          teamId={teamId || null}
           onClose={
             rightPanelMode
               ? () => handleCloseRightPanel(onClearSelection)

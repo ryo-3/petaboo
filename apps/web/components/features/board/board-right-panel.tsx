@@ -332,7 +332,14 @@ export default function BoardRightPanel({
   };
 
   return (
-    <RightPanel isOpen={isOpen} onClose={onClose}>
+    <RightPanel
+      isOpen={isOpen}
+      onClose={onClose}
+      compactPadding={
+        rightPanelMode === "memo-list" || rightPanelMode === "task-list"
+      }
+      disableAnimation={teamMode}
+    >
       {selectedMemo && !selectedTask && rightPanelMode === null && (
         <div className="flex flex-col h-full overflow-hidden">
           <div className="flex-shrink-0">

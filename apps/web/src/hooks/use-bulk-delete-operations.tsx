@@ -413,11 +413,24 @@ export function useBulkDeleteOperations({
 
       console.log("🎉 [handleRemoveFromBoard] 処理完了");
     } catch (error) {
-      console.error("ボードからアイテム削除エラー:", error);
+      console.error("❌ [handleRemoveFromBoard] エラー:", error);
     } finally {
+      console.log(
+        "🧹 [handleRemoveFromBoard] finally: モーダルとチェック状態をクリア",
+      );
+
+      // チェック状態を確実にクリア（エラー時も実行）
+      if (deletingItemType === "memo") {
+        setCheckedMemos(new Set());
+      } else if (deletingItemType === "task") {
+        setCheckedTasks(new Set());
+      }
+
       // エラー発生時も確実にモーダルを閉じる
       bulkDelete.handleCancel();
       setDeletingItemType(null);
+
+      console.log("✅ [handleRemoveFromBoard] finally: 完了");
     }
   }, [
     deletingItemType,

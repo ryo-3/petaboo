@@ -336,48 +336,37 @@ export function useBulkDeleteOperations({
 
   // ボードから削除の処理（アニメーション付き）
   const handleRemoveFromBoard = useCallback(async () => {
+    console.log("🎯 [handleRemoveFromBoard] 呼び出し開始:", {
+      deletingItemType,
+      checkedMemos: Array.from(checkedMemos),
+      checkedTasks: Array.from(checkedTasks),
+    });
+
     const targetIds =
       deletingItemType === "memo"
         ? Array.from(checkedMemos)
         : Array.from(checkedTasks);
     const ids = targetIds.map((id) => Number(id)).filter((id) => !isNaN(id));
 
+    console.log("🎯 [handleRemoveFromBoard] ID変換結果:", {
+      targetIds,
+      ids,
+      idsLength: ids.length,
+    });
+
     if (ids.length === 0) {
+      console.log("⚠️ [handleRemoveFromBoard] IDが空のため終了");
       bulkDelete.handleCancel();
       setDeletingItemType(null);
       return;
     }
 
     try {
-      const onStateUpdate = () => {
-        // アニメーション完了時に即座にキャッシュを無効化してDOMを更新
-        // 個人ボード用
-        queryClient.invalidateQueries({
-          queryKey: ["boards", boardId, "items"],
-        });
-        // チームボード用
-        if (teamMode && teamId) {
-          queryClient.invalidateQueries({
-            queryKey: ["team-boards", teamId.toString(), boardId, "items"],
-          });
-        }
-        // 全ボードアイテム情報も無効化
-        queryClient.invalidateQueries({ queryKey: ["boards", "all-items"] });
-      };
+      console.log("🚀 [handleRemoveFromBoard] API呼び出し開始");
 
-      const onCheckStateUpdate = (processedIds: number[]) => {
-        if (deletingItemType === "memo") {
-          const newCheckedMemos = new Set(checkedMemos);
-          processedIds.forEach((id) => newCheckedMemos.delete(id));
-          setCheckedMemos(newCheckedMemos);
-        } else {
-          const newCheckedTasks = new Set(checkedTasks);
-          processedIds.forEach((id) => newCheckedTasks.delete(id));
-          setCheckedTasks(newCheckedTasks);
-        }
-      };
-
-      const onApiCall = async (id: number) => {
+      // ボード詳細画面ではアニメーションなしで即座に削除処理
+      // （DOM要素にdata-memo-id属性がないため）
+      for (const id of ids) {
         // IDからoriginalIdを取得
         let originalId: string;
         if (deletingItemType === "memo") {
@@ -388,27 +377,41 @@ export function useBulkDeleteOperations({
           originalId = task?.originalId || id.toString();
         }
 
+        console.log("📤 [handleRemoveFromBoard] API呼び出し:", {
+          id,
+          originalId,
+          itemType: deletingItemType,
+        });
+
         await removeItemFromBoard.mutateAsync({
           boardId,
           itemId: originalId,
           itemType: deletingItemType!,
           teamId,
         });
-      };
+      }
 
-      await executeWithAnimation({
-        ids,
-        isPartial: false,
-        buttonRef: deleteButtonRef,
-        dataAttribute:
-          deletingItemType === "memo" ? "data-memo-id" : "data-task-id",
-        onStateUpdate,
-        onCheckStateUpdate,
-        onApiCall,
-        initializeAnimation: bulkAnimation.initializeAnimation,
-        startCountdown: bulkAnimation.startCountdown,
-        finalizeAnimation: bulkAnimation.finalizeAnimation,
+      console.log("✅ [handleRemoveFromBoard] 全API呼び出し完了");
+
+      // チェック状態をクリア
+      if (deletingItemType === "memo") {
+        setCheckedMemos(new Set());
+      } else {
+        setCheckedTasks(new Set());
+      }
+
+      // キャッシュを無効化してDOMを更新
+      queryClient.invalidateQueries({
+        queryKey: ["boards", boardId, "items"],
       });
+      if (teamMode && teamId) {
+        queryClient.invalidateQueries({
+          queryKey: ["team-boards", teamId.toString(), boardId, "items"],
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ["boards", "all-items"] });
+
+      console.log("🎉 [handleRemoveFromBoard] 処理完了");
     } catch (error) {
       console.error("ボードからアイテム削除エラー:", error);
     } finally {
@@ -425,8 +428,6 @@ export function useBulkDeleteOperations({
     setCheckedMemos,
     setCheckedTasks,
     removeItemFromBoard,
-    deleteButtonRef,
-    bulkAnimation,
     teamId,
     teamMode,
     queryClient,

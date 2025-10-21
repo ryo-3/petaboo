@@ -1247,6 +1247,14 @@ export function createTeamBoardsAPI(app: AppType) {
     const { itemType } = c.req.valid("query");
     const db = c.get("db");
 
+    console.log("🗑️ [チームボードアイテム削除] リクエスト受信:", {
+      teamId,
+      boardId,
+      itemId,
+      itemType,
+      userId: auth.userId,
+    });
+
     try {
       // チームメンバーかどうか確認
       const memberCheck = await db
@@ -1261,6 +1269,7 @@ export function createTeamBoardsAPI(app: AppType) {
         .limit(1);
 
       if (memberCheck.length === 0) {
+        console.log("❌ チームメンバーではありません");
         return c.json({ error: "チームメンバーではありません" }, 403);
       }
 
@@ -1278,14 +1287,41 @@ export function createTeamBoardsAPI(app: AppType) {
         .limit(1);
 
       if (board.length === 0) {
+        console.log("❌ ボードが見つかりません:", {
+          boardId: parseInt(boardId),
+          teamId: parseInt(teamId),
+        });
         return c.json({ error: "ボードが見つかりません" }, 404);
       }
 
       // itemIdをoriginalIdとして直接使用（文字列のまま）
       const originalId = itemId;
 
+      console.log("🔍 削除対象アイテム検索:", {
+        boardId: parseInt(boardId),
+        itemType,
+        originalId,
+      });
+
+      // 削除前に存在確認
+      const existingItem = await db
+        .select()
+        .from(teamBoardItems)
+        .where(
+          and(
+            eq(teamBoardItems.boardId, parseInt(boardId)),
+            eq(teamBoardItems.itemType, itemType),
+            eq(teamBoardItems.originalId, originalId),
+          ),
+        )
+        .limit(1);
+
+      if (existingItem.length === 0) {
+        return c.json({ error: "ボードにアイテムが見つかりません" }, 404);
+      }
+
       // アイテムを物理削除（レコード自体を削除）
-      const result = await db
+      await db
         .delete(teamBoardItems)
         .where(
           and(
@@ -1294,10 +1330,6 @@ export function createTeamBoardsAPI(app: AppType) {
             eq(teamBoardItems.originalId, originalId),
           ),
         );
-
-      if (result.changes === 0) {
-        return c.json({ error: "ボードにアイテムが見つかりません" }, 404);
-      }
 
       // ボードのupdatedAtを更新
       await db

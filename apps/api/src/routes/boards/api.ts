@@ -1128,13 +1128,20 @@ export function createAPI(app: AppType) {
 
   app.openapi(addItemToBoardRoute, async (c) => {
     try {
+      console.log("🟣 [API] ボードアイテム追加API呼び出し開始");
       const auth = getAuth(c);
       if (!auth?.userId) {
+        console.log("🟣 [API] 認証エラー: userId not found");
         return c.json({ error: "Unauthorized" }, 401);
       }
 
       const boardId = parseInt(c.req.param("id"));
       const body = await c.req.json();
+      console.log("🟣 [API] リクエストパラメータ:", {
+        boardId,
+        body,
+        userId: auth.userId,
+      });
 
       // Zodバリデーション
       const validationResult = AddItemToBoardSchema.safeParse(body);
@@ -1151,55 +1158,140 @@ export function createAPI(app: AppType) {
       const { itemType, itemId } = validationResult.data;
       const db = c.get("db");
 
-      // ボードの所有権確認
-      const board = await db
+      // ボードの所有権確認（個人ボード）
+      const personalBoard = await db
         .select()
         .from(boards)
         .where(and(eq(boards.id, boardId), eq(boards.userId, auth.userId)))
         .limit(1);
 
-      if (board.length === 0) {
+      // チームボード確認
+      const teamBoard = await db
+        .select()
+        .from(teamBoards)
+        .where(eq(teamBoards.id, boardId))
+        .limit(1);
+
+      const isTeamBoard = teamBoard.length > 0;
+      const boardExists = personalBoard.length > 0 || isTeamBoard;
+
+      if (!boardExists) {
         return c.json({ error: "Board not found" }, 404);
       }
+
+      // チームボードの場合はteamIdを取得
+      const teamId = isTeamBoard ? teamBoard[0].teamId : null;
 
       // アイテムの存在確認と所有権確認、originalIdを取得
       // itemIdが既にoriginalId形式（文字列）の場合はそのまま使い、数値の場合は変換
       let originalId: string | null = null;
 
-      // まずitemIdをoriginalIdとして扱ってみる
-      if (itemType === "memo") {
-        const memoByOriginalId = await db
-          .select({ originalId: memos.originalId })
-          .from(memos)
-          .where(
-            and(
-              eq(memos.originalId, itemId.toString()),
-              eq(memos.userId, auth.userId),
-            ),
-          )
-          .limit(1);
-        if (memoByOriginalId.length > 0) {
-          originalId = memoByOriginalId[0].originalId;
+      // チームボードの場合はチームアイテムから検索
+      if (isTeamBoard && teamId) {
+        if (itemType === "memo") {
+          // チームメモからoriginalIdを検索
+          const teamMemoByOriginalId = await db
+            .select({ originalId: teamMemos.originalId })
+            .from(teamMemos)
+            .where(
+              and(
+                eq(teamMemos.originalId, itemId.toString()),
+                eq(teamMemos.teamId, teamId),
+              ),
+            )
+            .limit(1);
+          if (teamMemoByOriginalId.length > 0) {
+            originalId = teamMemoByOriginalId[0].originalId;
+          } else {
+            // IDから検索
+            const numericId = parseInt(itemId);
+            if (!isNaN(numericId)) {
+              const teamMemoById = await db
+                .select({ originalId: teamMemos.originalId })
+                .from(teamMemos)
+                .where(
+                  and(
+                    eq(teamMemos.id, numericId),
+                    eq(teamMemos.teamId, teamId),
+                  ),
+                )
+                .limit(1);
+              if (teamMemoById.length > 0) {
+                originalId = teamMemoById[0].originalId;
+              }
+            }
+          }
+        } else {
+          // チームタスクからoriginalIdを検索
+          const teamTaskByOriginalId = await db
+            .select({ originalId: teamTasks.originalId })
+            .from(teamTasks)
+            .where(
+              and(
+                eq(teamTasks.originalId, itemId.toString()),
+                eq(teamTasks.teamId, teamId),
+              ),
+            )
+            .limit(1);
+          if (teamTaskByOriginalId.length > 0) {
+            originalId = teamTaskByOriginalId[0].originalId;
+          } else {
+            // IDから検索
+            const numericId = parseInt(itemId);
+            if (!isNaN(numericId)) {
+              const teamTaskById = await db
+                .select({ originalId: teamTasks.originalId })
+                .from(teamTasks)
+                .where(
+                  and(
+                    eq(teamTasks.id, numericId),
+                    eq(teamTasks.teamId, teamId),
+                  ),
+                )
+                .limit(1);
+              if (teamTaskById.length > 0) {
+                originalId = teamTaskById[0].originalId;
+              }
+            }
+          }
         }
       } else {
-        const taskByOriginalId = await db
-          .select({ originalId: tasks.originalId })
-          .from(tasks)
-          .where(
-            and(
-              eq(tasks.originalId, itemId.toString()),
-              eq(tasks.userId, auth.userId),
-            ),
-          )
-          .limit(1);
-        if (taskByOriginalId.length > 0) {
-          originalId = taskByOriginalId[0].originalId;
+        // 個人ボードの場合は個人アイテムから検索
+        // まずitemIdをoriginalIdとして扱ってみる
+        if (itemType === "memo") {
+          const memoByOriginalId = await db
+            .select({ originalId: memos.originalId })
+            .from(memos)
+            .where(
+              and(
+                eq(memos.originalId, itemId.toString()),
+                eq(memos.userId, auth.userId),
+              ),
+            )
+            .limit(1);
+          if (memoByOriginalId.length > 0) {
+            originalId = memoByOriginalId[0].originalId;
+          }
+        } else {
+          const taskByOriginalId = await db
+            .select({ originalId: tasks.originalId })
+            .from(tasks)
+            .where(
+              and(
+                eq(tasks.originalId, itemId.toString()),
+                eq(tasks.userId, auth.userId),
+              ),
+            )
+            .limit(1);
+          if (taskByOriginalId.length > 0) {
+            originalId = taskByOriginalId[0].originalId;
+          }
         }
-      }
 
-      // originalIdとして見つからなかった場合は、数値IDとして処理
-      if (!originalId) {
-        originalId = await getOriginalId(itemId, itemType, auth.userId, db);
+        // originalIdとして見つからなかった場合は、数値IDとして処理
+        if (!originalId) {
+          originalId = await getOriginalId(itemId, itemType, auth.userId, db);
+        }
       }
 
       if (!originalId) {
@@ -1210,39 +1302,81 @@ export function createAPI(app: AppType) {
       }
 
       // 重複チェック（削除されていないアイテムのみ）
-      const existing = await db
-        .select()
-        .from(boardItems)
-        .where(
-          and(
-            eq(boardItems.boardId, boardId),
-            eq(boardItems.itemType, itemType),
-            eq(boardItems.originalId, originalId),
-            isNull(boardItems.deletedAt),
-          ),
-        )
-        .limit(1);
+      if (isTeamBoard) {
+        const existing = await db
+          .select()
+          .from(teamBoardItems)
+          .where(
+            and(
+              eq(teamBoardItems.boardId, boardId),
+              eq(teamBoardItems.itemType, itemType),
+              eq(teamBoardItems.originalId, originalId),
+              isNull(teamBoardItems.deletedAt),
+            ),
+          )
+          .limit(1);
 
-      if (existing.length > 0) {
-        return c.json({ error: "Item already exists in board" }, 400);
+        if (existing.length > 0) {
+          return c.json({ error: "Item already exists in board" }, 400);
+        }
+
+        const newItem = {
+          boardId,
+          itemType,
+          originalId,
+          createdAt: new Date(),
+        };
+
+        console.log("🟣 [API] チームボードアイテム追加実行:", newItem);
+        const result = await db
+          .insert(teamBoardItems)
+          .values(newItem)
+          .returning();
+        console.log("🟣 [API] チームボードアイテム追加結果:", result[0]);
+
+        // チームボードのupdatedAtを更新
+        await db
+          .update(teamBoards)
+          .set({ updatedAt: new Date() })
+          .where(eq(teamBoards.id, boardId));
+
+        console.log("🟣 [API] チームボードアイテム追加完了 - 201を返却");
+        return c.json(result[0], 201);
+      } else {
+        const existing = await db
+          .select()
+          .from(boardItems)
+          .where(
+            and(
+              eq(boardItems.boardId, boardId),
+              eq(boardItems.itemType, itemType),
+              eq(boardItems.originalId, originalId),
+              isNull(boardItems.deletedAt),
+            ),
+          )
+          .limit(1);
+
+        if (existing.length > 0) {
+          return c.json({ error: "Item already exists in board" }, 400);
+        }
+
+        const newItem: NewBoardItem = {
+          boardId,
+          itemType,
+          originalId,
+          createdAt: new Date(),
+        };
+
+        const result = await db.insert(boardItems).values(newItem).returning();
+
+        // ボードのupdatedAtを更新
+        await db
+          .update(boards)
+          .set({ updatedAt: new Date() })
+          .where(eq(boards.id, boardId));
+
+        return c.json(result[0], 201);
       }
-
-      const newItem: NewBoardItem = {
-        boardId,
-        itemType,
-        originalId,
-        createdAt: new Date(),
-      };
-
-      const result = await db.insert(boardItems).values(newItem).returning();
-
-      // ボードのupdatedAtを更新
-      await db
-        .update(boards)
-        .set({ updatedAt: new Date() })
-        .where(eq(boards.id, boardId));
-
-      return c.json(result[0], 201);
     } catch (error) {
       return c.json(
         {

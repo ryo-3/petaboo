@@ -108,16 +108,16 @@ export default function BoardRightPanel({
     selectedTask,
   );
 
-  // 現在のボードに既に追加されているアイテムIDのリストを作成
+  // 現在のボードに既に追加されているアイテムのoriginalIDのリストを作成
   const currentBoardMemoIds =
     allBoardItems
       ?.filter((item) => item.boardId === boardId && item.itemType === "memo")
-      .map((item) => parseInt(item.itemId, 10)) || [];
+      .map((item) => item.originalId) || [];
 
   const currentBoardTaskIds =
     allBoardItems
       ?.filter((item) => item.boardId === boardId && item.itemType === "task")
-      .map((item) => parseInt(item.itemId, 10)) || [];
+      .map((item) => item.originalId) || [];
 
   // 削除済みアイテムかどうかを判定するヘルパー関数
   const isDeletedMemo = (memo: Memo | DeletedMemo): memo is DeletedMemo => {

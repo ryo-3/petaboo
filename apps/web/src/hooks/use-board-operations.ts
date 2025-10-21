@@ -181,6 +181,13 @@ export function useBoardOperations({
     async (item: BoardItemWithContent) => {
       if (confirm("このアイテムをボードから削除しますか？")) {
         try {
+          console.log("🔴 [useBoardOperations] ボードアイテム削除実行:", {
+            boardId,
+            itemId: item.itemId,
+            itemType: item.itemType,
+            teamId,
+            isTeamMode,
+          });
           await removeItemFromBoard.mutateAsync({
             boardId,
             itemId: item.itemId,

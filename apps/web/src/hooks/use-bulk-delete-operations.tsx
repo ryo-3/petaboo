@@ -6,6 +6,7 @@ import { useRemoveItemFromBoard } from "@/src/hooks/use-boards";
 import { useBulkAnimation } from "@/src/hooks/use-bulk-animation";
 import { executeWithAnimation } from "@/src/utils/bulkAnimationUtils";
 import { DeletionWarningMessage } from "@/components/ui/modals/deletion-warning-message";
+import { useQueryClient } from "@tanstack/react-query";
 import React from "react";
 
 interface UseBulkDeleteOperationsProps {
@@ -25,6 +26,8 @@ interface UseBulkDeleteOperationsProps {
   checkedDeletedTasks: Set<string | number>;
   teamMode?: boolean;
   teamId?: number;
+  boardMemos?: Array<{ id: number; originalId?: string }>;
+  boardTasks?: Array<{ id: number; originalId?: string }>;
 }
 
 interface UseBulkDeleteOperationsReturn {
@@ -77,6 +80,8 @@ export function useBulkDeleteOperations({
   checkedDeletedTasks,
   teamMode = false,
   teamId,
+  boardMemos = [],
+  boardTasks = [],
 }: UseBulkDeleteOperationsProps): UseBulkDeleteOperationsReturn {
   const [isMemoDeleting, setIsMemoDeleting] = useState(false);
   const [isMemoLidOpen, setIsMemoLidOpen] = useState(false);
@@ -101,6 +106,7 @@ export function useBulkDeleteOperations({
   });
 
   // 削除関連のフック
+  const queryClient = useQueryClient();
   const bulkDelete = useBulkDelete();
   const deleteMemoMutation = useDeleteMemo({
     teamMode,
@@ -343,7 +349,17 @@ export function useBulkDeleteOperations({
     }
 
     const onStateUpdate = () => {
-      // ボード詳細では特別な状態更新は不要
+      // アニメーション完了時に即座にキャッシュを無効化してDOMを更新
+      // 個人ボード用
+      queryClient.invalidateQueries({ queryKey: ["boards", boardId, "items"] });
+      // チームボード用
+      if (teamMode && teamId) {
+        queryClient.invalidateQueries({
+          queryKey: ["team-boards", teamId.toString(), boardId, "items"],
+        });
+      }
+      // 全ボードアイテム情報も無効化
+      queryClient.invalidateQueries({ queryKey: ["boards", "all-items"] });
     };
 
     const onCheckStateUpdate = (processedIds: number[]) => {
@@ -359,10 +375,21 @@ export function useBulkDeleteOperations({
     };
 
     const onApiCall = async (id: number) => {
+      // IDからoriginalIdを取得
+      let originalId: string;
+      if (deletingItemType === "memo") {
+        const memo = boardMemos.find((m) => m.id === id);
+        originalId = memo?.originalId || id.toString();
+      } else {
+        const task = boardTasks.find((t) => t.id === id);
+        originalId = task?.originalId || id.toString();
+      }
+
       await removeItemFromBoard.mutateAsync({
         boardId,
-        itemId: id.toString(),
+        itemId: originalId,
         itemType: deletingItemType!,
+        teamId,
       });
     };
 
@@ -394,6 +421,11 @@ export function useBulkDeleteOperations({
     removeItemFromBoard,
     deleteButtonRef,
     bulkAnimation,
+    teamId,
+    teamMode,
+    queryClient,
+    boardMemos,
+    boardTasks,
   ]);
 
   // ディスプレイカウントの計算（メモ一覧と同じロジック）

@@ -191,16 +191,24 @@ export default function BoardRightPanel({
     selectedTask,
   );
 
-  // 現在のボードに既に追加されているアイテムIDのリストを作成
-  const currentBoardMemoIds =
+  // 現在のボードに既に追加されているアイテムのoriginalIDのリストを作成
+  const currentBoardMemoOriginalIds =
     allBoardItems
       ?.filter((item) => item.boardId === boardId && item.itemType === "memo")
-      .map((item) => parseInt(item.itemId, 10)) || [];
+      .map((item) => item.originalId) || [];
 
-  const currentBoardTaskIds =
+  const currentBoardTaskOriginalIds =
     allBoardItems
       ?.filter((item) => item.boardId === boardId && item.itemType === "task")
-      .map((item) => parseInt(item.itemId, 10)) || [];
+      .map((item) => item.originalId) || [];
+
+  console.log("🟡 [BoardRightPanel] 除外アイテムID計算:", {
+    boardId,
+    allBoardItemsCount: allBoardItems?.length || 0,
+    allBoardItems: allBoardItems,
+    currentBoardMemoOriginalIds,
+    currentBoardTaskOriginalIds,
+  });
 
   const [isDeletingMemo, setIsDeletingMemo] = useState(false);
 
@@ -231,32 +239,85 @@ export default function BoardRightPanel({
 
   // メモをボードに追加
   const handleAddMemosToBoard = async (memoIds: number[]) => {
+    console.log("🔵🔵🔵 [BoardRightPanel] handleAddMemosToBoard開始 🔵🔵🔵", {
+      memoIds,
+      boardId,
+      memoCount: memoIds.length,
+      timestamp: new Date().toISOString(),
+    });
+
     try {
       const token = await getToken();
-      const promises = memoIds.map((memoId) => {
-        return fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594"}/boards/${boardId}/items`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              ...(token && { Authorization: `Bearer ${token}` }),
-            },
-            body: JSON.stringify({
-              itemType: "memo",
-              itemId: memoId.toString(),
-            }),
-          },
-        );
+      console.log("🔵 [BoardRightPanel] トークン取得完了", {
+        hasToken: !!token,
       });
 
-      await Promise.all(promises);
+      const promises = memoIds.map((memoId) => {
+        const url = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594"}/boards/${boardId}/items`;
+        const body = {
+          itemType: "memo",
+          itemId: memoId.toString(),
+        };
+        console.log("🔵 [BoardRightPanel] APIリクエスト作成", { url, body });
+
+        return fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+          body: JSON.stringify(body),
+        });
+      });
+
+      console.log("🔵 [BoardRightPanel] 全APIリクエスト送信中...");
+      const results = await Promise.all(promises);
+      console.log("🔵 [BoardRightPanel] 全APIレスポンス受信完了", {
+        resultCount: results.length,
+        statuses: results.map((r) => r.status),
+      });
+
+      // レスポンスの詳細を確認
+      for (let i = 0; i < results.length; i++) {
+        const result = results[i];
+        if (result) {
+          const responseText = await result.text();
+          console.log(`🔵 [BoardRightPanel] レスポンス ${i + 1} の内容:`, {
+            status: result.status,
+            body: responseText,
+          });
+        }
+      }
 
       // キャッシュを無効化してボード一覧を再取得
-      queryClient.invalidateQueries({ queryKey: ["boards", boardId, "items"] });
-      queryClient.invalidateQueries({ queryKey: ["boards", "all-items"] });
+      await queryClient.invalidateQueries({
+        queryKey: ["boards", boardId, "items"],
+      });
+      // チームモードの場合はteamIdを含めてキャッシュ無効化
+      if (teamMode && teamId) {
+        await queryClient.invalidateQueries({
+          queryKey: ["boards", "all-items", teamId],
+        });
+      } else {
+        await queryClient.invalidateQueries({
+          queryKey: ["boards", "all-items"],
+        });
+      }
+      console.log(
+        "✅✅✅ [BoardRightPanel] handleAddMemosToBoard完了 - キャッシュ無効化実行 ✅✅✅",
+        {
+          teamMode,
+          teamId,
+        },
+      );
+
+      // 右パネルを閉じて再度開くことで、最新の除外リストを反映
+      onClose();
     } catch (error) {
-      console.error("エラー:", error);
+      console.error(
+        "❌❌❌ [BoardRightPanel] handleAddMemosToBoard失敗:",
+        error,
+      );
     }
   };
 
@@ -284,8 +345,22 @@ export default function BoardRightPanel({
       await Promise.all(promises);
 
       // キャッシュを無効化してボード一覧を再取得
-      queryClient.invalidateQueries({ queryKey: ["boards", boardId, "items"] });
-      queryClient.invalidateQueries({ queryKey: ["boards", "all-items"] });
+      await queryClient.invalidateQueries({
+        queryKey: ["boards", boardId, "items"],
+      });
+      // チームモードの場合はteamIdを含めてキャッシュ無効化
+      if (teamMode && teamId) {
+        await queryClient.invalidateQueries({
+          queryKey: ["boards", "all-items", teamId],
+        });
+      } else {
+        await queryClient.invalidateQueries({
+          queryKey: ["boards", "all-items"],
+        });
+      }
+
+      // 右パネルを閉じて再度開くことで、最新の除外リストを反映
+      onClose();
     } catch (error) {
       console.error("エラー:", error);
     }
@@ -542,7 +617,7 @@ export default function BoardRightPanel({
           hideHeaderButtons={true}
           hideBulkActionButtons={true}
           onAddToBoard={handleAddMemosToBoard}
-          excludeItemIds={currentBoardMemoIds}
+          excludeItemIds={currentBoardMemoOriginalIds}
           excludeBoardIdFromFilter={boardId}
           initialSelectionMode="check"
           unifiedOperations={memoOperations}
@@ -564,7 +639,7 @@ export default function BoardRightPanel({
           hideHeaderButtons={true}
           hideBulkActionButtons={true}
           onAddToBoard={handleAddTasksToBoard}
-          excludeItemIds={currentBoardTaskIds}
+          excludeItemIds={currentBoardTaskOriginalIds}
           excludeBoardIdFromFilter={boardId}
           initialSelectionMode="check"
           unifiedOperations={taskOperations}

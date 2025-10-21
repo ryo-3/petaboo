@@ -68,8 +68,8 @@ interface TaskScreenProps {
   forceShowBoardName?: boolean; // ボード名表示を強制的に有効化（ボードから呼び出される場合）
   excludeBoardId?: number; // 指定されたボードに登録済みのタスクを除外（ボードから呼び出される場合）
   initialSelectionMode?: "select" | "check"; // 初期選択モード
-  // ボード詳細から呼び出された場合の除外アイテムリスト
-  excludeItemIds?: number[];
+  // ボード詳細から呼び出された場合の除外アイテムリスト（originalId）
+  excludeItemIds?: string[];
   // ボードフィルターの選択肢から除外するボードID
   excludeBoardIdFromFilter?: number;
   // URL連動
@@ -486,9 +486,11 @@ function TaskScreen({
   const safeAllBoardItems = allBoardItems || [];
   const safeAllTeamTaggings = allTeamTaggings || [];
 
-  // 除外アイテムIDでフィルタリングされたタスク
+  // 除外アイテムIDでフィルタリングされたタスク（originalIdで比較）
   const filteredTasks =
-    tasks?.filter((task) => !excludeItemIds.includes(task.id)) || [];
+    tasks?.filter(
+      (task) => !excludeItemIds.includes(task.originalId || task.id.toString()),
+    ) || [];
 
   // ボードフィルターから除外するボードをフィルタリング
   const filteredBoards =

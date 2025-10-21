@@ -692,9 +692,16 @@ export function useRemoveItemFromBoard() {
 
       throw new Error("Failed after retry");
     },
-    onSuccess: (_, { boardId, itemId, itemType }) => {
+    onSuccess: (_, { boardId, itemId, itemType, teamId }) => {
       // 特定のボードのアイテムキャッシュを無効化（アイテムが削除されるため）
+      // 個人ボード用
       queryClient.invalidateQueries({ queryKey: ["boards", boardId, "items"] });
+      // チームボード用（teamIdがある場合）
+      if (teamId) {
+        queryClient.invalidateQueries({
+          queryKey: ["team-boards", teamId.toString(), boardId, "items"],
+        });
+      }
       // アイテムのボード情報も無効化 - 確実に更新
       queryClient.invalidateQueries({
         queryKey: ["item-boards", itemType, itemId],

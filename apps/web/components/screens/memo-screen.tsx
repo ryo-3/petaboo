@@ -66,8 +66,8 @@ interface MemoScreenProps {
   forceShowBoardName?: boolean; // ボード名表示を強制的に有効化（ボードから呼び出される場合）
   excludeBoardId?: number; // 指定されたボードに登録済みのメモを除外（ボードから呼び出される場合）
   initialSelectionMode?: "select" | "check"; // 初期選択モード
-  // ボード詳細から呼び出された場合の除外アイテムリスト
-  excludeItemIds?: number[];
+  // ボード詳細から呼び出された場合の除外アイテムリスト（originalId）
+  excludeItemIds?: string[];
   // ボードフィルターの選択肢から除外するボードID
   excludeBoardIdFromFilter?: number;
   // URL連動
@@ -552,9 +552,23 @@ function MemoScreen({
     };
   }, [teamMode, handleCreateNew]);
 
-  // 除外アイテムIDでフィルタリングされたメモ
+  // 除外アイテムIDでフィルタリングされたメモ（originalIdで比較）
   const filteredMemos =
-    memos?.filter((memo) => !excludeItemIds.includes(memo.id)) || [];
+    memos?.filter(
+      (memo) => !excludeItemIds.includes(memo.originalId || memo.id.toString()),
+    ) || [];
+
+  console.log("🟠 [MemoScreen] メモフィルタリング:", {
+    totalMemos: memos?.length || 0,
+    excludeItemIds,
+    filteredMemosCount: filteredMemos.length,
+    excludedCount: (memos?.length || 0) - filteredMemos.length,
+    beforeFilterMemoOriginalIds:
+      memos?.slice(0, 5).map((m) => m.originalId || m.id.toString()) || [],
+    afterFilterMemoOriginalIds: filteredMemos
+      .slice(0, 5)
+      .map((m) => m.originalId || m.id.toString()),
+  });
 
   // ボードフィルターから除外するボードをフィルタリング
   const filteredBoards =
@@ -718,7 +732,19 @@ function MemoScreen({
       {onAddToBoard && checkedMemos.size > 0 && activeTab === "normal" && (
         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20">
           <button
-            onClick={() => onAddToBoard(Array.from(checkedMemos))}
+            onClick={() => {
+              console.log(
+                "🟢🟢🟢 [MemoScreen] ボード追加ボタンクリック 🟢🟢🟢",
+                {
+                  checkedMemos: Array.from(checkedMemos),
+                  checkedMemosSize: checkedMemos.size,
+                  onAddToBoardExists: !!onAddToBoard,
+                  timestamp: new Date().toISOString(),
+                },
+              );
+              onAddToBoard(Array.from(checkedMemos));
+              console.log("🟢✅ [MemoScreen] onAddToBoard呼び出し完了");
+            }}
             className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 transition-colors"
           >
             <svg

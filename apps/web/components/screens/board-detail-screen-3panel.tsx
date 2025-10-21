@@ -192,70 +192,7 @@ function BoardDetailScreen({
   // 削除済みタブでの選択モード自動切り替え（完全に無効化）
   // ユーザーの手動選択を尊重し、自動切り替えは行わない
 
-  // 一括削除操作フック
-  const {
-    isMemoDeleting,
-    isMemoLidOpen,
-    isTaskDeleting,
-    isTaskLidOpen,
-    deletingItemType,
-    bulkDelete,
-    handleBulkDelete,
-    handleRemoveFromBoard,
-    setDeletingItemType,
-    setIsMemoDeleting,
-    setIsMemoLidOpen,
-    setIsTaskDeleting,
-    setIsTaskLidOpen,
-    bulkAnimation,
-    currentMemoDisplayCount,
-    currentTaskDisplayCount,
-    getModalStatusBreakdown,
-    getHasOtherTabItems,
-  } = useBulkDeleteOperations({
-    boardId,
-    checkedMemos,
-    checkedTasks,
-    setCheckedMemos,
-    setCheckedTasks,
-    deleteButtonRef,
-    activeMemoTab,
-    activeTaskTab,
-    checkedNormalMemos,
-    checkedDeletedMemos,
-    checkedTodoTasks,
-    checkedInProgressTasks,
-    checkedCompletedTasks,
-    checkedDeletedTasks,
-    teamMode,
-    teamId: teamId || undefined,
-  });
-
-  // タブテキスト表示制御
-  useEffect(() => {
-    if (selectedMemo || selectedTask || rightPanelMode) {
-      // 右パネルが開いたらすぐにテキストを非表示
-      setShowTabText(false);
-    } else {
-      // 右パネルが閉じたら300ms後にテキストを表示
-      const timer = setTimeout(() => {
-        setShowTabText(true);
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [selectedMemo, selectedTask, rightPanelMode, setShowTabText]);
-
-  // 計算されたカラム数（エディター表示時にメモ・タスク両方表示なら1列、その他は最大2列に制限）
-  const effectiveColumnCount =
-    (selectedMemo || selectedTask) && showMemo && showTask
-      ? 1
-      : selectedMemo || selectedTask || rightPanelMode
-        ? columnCount <= 2
-          ? columnCount
-          : 2
-        : columnCount;
-
-  // ボード操作フック
+  // ボード操作フック（一括削除の前に呼び出してboardMemos/boardTasksを取得）
   const {
     boardWithItems,
     boardDeletedItems,
@@ -297,6 +234,71 @@ function BoardDetailScreen({
     taskItems: [], // ここでは空で、後でuseBoardItemsから取得
     teamId: teamId?.toString() || undefined,
   });
+
+  // 一括削除操作フック（boardMemos/boardTasksを使うので後に呼び出す）
+  const {
+    isMemoDeleting,
+    isMemoLidOpen,
+    isTaskDeleting,
+    isTaskLidOpen,
+    deletingItemType,
+    bulkDelete,
+    handleBulkDelete,
+    handleRemoveFromBoard,
+    setDeletingItemType,
+    setIsMemoDeleting,
+    setIsMemoLidOpen,
+    setIsTaskDeleting,
+    setIsTaskLidOpen,
+    bulkAnimation,
+    currentMemoDisplayCount,
+    currentTaskDisplayCount,
+    getModalStatusBreakdown,
+    getHasOtherTabItems,
+  } = useBulkDeleteOperations({
+    boardId,
+    checkedMemos,
+    checkedTasks,
+    setCheckedMemos,
+    setCheckedTasks,
+    deleteButtonRef,
+    activeMemoTab,
+    activeTaskTab,
+    checkedNormalMemos,
+    checkedDeletedMemos,
+    checkedTodoTasks,
+    checkedInProgressTasks,
+    checkedCompletedTasks,
+    checkedDeletedTasks,
+    teamMode,
+    teamId: teamId || undefined,
+    boardMemos,
+    boardTasks,
+  });
+
+  // タブテキスト表示制御
+  useEffect(() => {
+    if (selectedMemo || selectedTask || rightPanelMode) {
+      // 右パネルが開いたらすぐにテキストを非表示
+      setShowTabText(false);
+    } else {
+      // 右パネルが閉じたら300ms後にテキストを表示
+      const timer = setTimeout(() => {
+        setShowTabText(true);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedMemo, selectedTask, rightPanelMode, setShowTabText]);
+
+  // 計算されたカラム数（エディター表示時にメモ・タスク両方表示なら1列、その他は最大2列に制限）
+  const effectiveColumnCount =
+    (selectedMemo || selectedTask) && showMemo && showTask
+      ? 1
+      : selectedMemo || selectedTask || rightPanelMode
+        ? columnCount <= 2
+          ? columnCount
+          : 2
+        : columnCount;
 
   // メモ削除フック
   const deleteMemoMutation = useDeleteMemo({

@@ -1461,8 +1461,25 @@ export function createAPI(app: AppType) {
     // itemIdをoriginalIdとして直接使用（文字列のまま）
     const originalId = rawItemId;
 
+    // 削除前に存在確認
+    const existingItem = await db
+      .select()
+      .from(boardItems)
+      .where(
+        and(
+          eq(boardItems.boardId, boardId),
+          eq(boardItems.itemType, itemType),
+          eq(boardItems.originalId, originalId),
+        ),
+      )
+      .limit(1);
+
+    if (existingItem.length === 0) {
+      return c.json({ error: "Item not found in board" }, 404);
+    }
+
     // アイテムを物理削除（レコード自体を削除）
-    const result = await db
+    await db
       .delete(boardItems)
       .where(
         and(
@@ -1471,10 +1488,6 @@ export function createAPI(app: AppType) {
           eq(boardItems.originalId, originalId),
         ),
       );
-
-    if (result.changes === 0) {
-      return c.json({ error: "Item not found in board" }, 404);
-    }
 
     // ボードのupdatedAtを更新
     await db

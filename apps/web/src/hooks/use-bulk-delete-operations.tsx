@@ -348,68 +348,74 @@ export function useBulkDeleteOperations({
       return;
     }
 
-    const onStateUpdate = () => {
-      // アニメーション完了時に即座にキャッシュを無効化してDOMを更新
-      // 個人ボード用
-      queryClient.invalidateQueries({ queryKey: ["boards", boardId, "items"] });
-      // チームボード用
-      if (teamMode && teamId) {
+    try {
+      const onStateUpdate = () => {
+        // アニメーション完了時に即座にキャッシュを無効化してDOMを更新
+        // 個人ボード用
         queryClient.invalidateQueries({
-          queryKey: ["team-boards", teamId.toString(), boardId, "items"],
+          queryKey: ["boards", boardId, "items"],
         });
-      }
-      // 全ボードアイテム情報も無効化
-      queryClient.invalidateQueries({ queryKey: ["boards", "all-items"] });
-    };
+        // チームボード用
+        if (teamMode && teamId) {
+          queryClient.invalidateQueries({
+            queryKey: ["team-boards", teamId.toString(), boardId, "items"],
+          });
+        }
+        // 全ボードアイテム情報も無効化
+        queryClient.invalidateQueries({ queryKey: ["boards", "all-items"] });
+      };
 
-    const onCheckStateUpdate = (processedIds: number[]) => {
-      if (deletingItemType === "memo") {
-        const newCheckedMemos = new Set(checkedMemos);
-        processedIds.forEach((id) => newCheckedMemos.delete(id));
-        setCheckedMemos(newCheckedMemos);
-      } else {
-        const newCheckedTasks = new Set(checkedTasks);
-        processedIds.forEach((id) => newCheckedTasks.delete(id));
-        setCheckedTasks(newCheckedTasks);
-      }
-    };
+      const onCheckStateUpdate = (processedIds: number[]) => {
+        if (deletingItemType === "memo") {
+          const newCheckedMemos = new Set(checkedMemos);
+          processedIds.forEach((id) => newCheckedMemos.delete(id));
+          setCheckedMemos(newCheckedMemos);
+        } else {
+          const newCheckedTasks = new Set(checkedTasks);
+          processedIds.forEach((id) => newCheckedTasks.delete(id));
+          setCheckedTasks(newCheckedTasks);
+        }
+      };
 
-    const onApiCall = async (id: number) => {
-      // IDからoriginalIdを取得
-      let originalId: string;
-      if (deletingItemType === "memo") {
-        const memo = boardMemos.find((m) => m.id === id);
-        originalId = memo?.originalId || id.toString();
-      } else {
-        const task = boardTasks.find((t) => t.id === id);
-        originalId = task?.originalId || id.toString();
-      }
+      const onApiCall = async (id: number) => {
+        // IDからoriginalIdを取得
+        let originalId: string;
+        if (deletingItemType === "memo") {
+          const memo = boardMemos.find((m) => m.id === id);
+          originalId = memo?.originalId || id.toString();
+        } else {
+          const task = boardTasks.find((t) => t.id === id);
+          originalId = task?.originalId || id.toString();
+        }
 
-      await removeItemFromBoard.mutateAsync({
-        boardId,
-        itemId: originalId,
-        itemType: deletingItemType!,
-        teamId,
+        await removeItemFromBoard.mutateAsync({
+          boardId,
+          itemId: originalId,
+          itemType: deletingItemType!,
+          teamId,
+        });
+      };
+
+      await executeWithAnimation({
+        ids,
+        isPartial: false,
+        buttonRef: deleteButtonRef,
+        dataAttribute:
+          deletingItemType === "memo" ? "data-memo-id" : "data-task-id",
+        onStateUpdate,
+        onCheckStateUpdate,
+        onApiCall,
+        initializeAnimation: bulkAnimation.initializeAnimation,
+        startCountdown: bulkAnimation.startCountdown,
+        finalizeAnimation: bulkAnimation.finalizeAnimation,
       });
-    };
-
-    await executeWithAnimation({
-      ids,
-      isPartial: false,
-      buttonRef: deleteButtonRef,
-      dataAttribute:
-        deletingItemType === "memo" ? "data-memo-id" : "data-task-id",
-      onStateUpdate,
-      onCheckStateUpdate,
-      onApiCall,
-      initializeAnimation: bulkAnimation.initializeAnimation,
-      startCountdown: bulkAnimation.startCountdown,
-      finalizeAnimation: bulkAnimation.finalizeAnimation,
-    });
-
-    // アニメーション完了後にモーダルを閉じる
-    bulkDelete.handleCancel();
-    setDeletingItemType(null);
+    } catch (error) {
+      console.error("ボードからアイテム削除エラー:", error);
+    } finally {
+      // エラー発生時も確実にモーダルを閉じる
+      bulkDelete.handleCancel();
+      setDeletingItemType(null);
+    }
   }, [
     deletingItemType,
     checkedMemos,

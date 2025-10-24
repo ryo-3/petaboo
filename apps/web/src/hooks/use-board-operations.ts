@@ -181,13 +181,6 @@ export function useBoardOperations({
     async (item: BoardItemWithContent) => {
       if (confirm("このアイテムをボードから削除しますか？")) {
         try {
-          console.log("🔴 [useBoardOperations] ボードアイテム削除実行:", {
-            boardId,
-            itemId: item.itemId,
-            itemType: item.itemType,
-            teamId,
-            isTeamMode,
-          });
           await removeItemFromBoard.mutateAsync({
             boardId,
             itemId: item.itemId,
@@ -238,12 +231,7 @@ export function useBoardOperations({
 
   // 新規作成ハンドラー
   const handleCreateNewMemo = useCallback(() => {
-    console.log("🏗️ [use-board-operations] handleCreateNewMemo実行", {
-      createNewMemoHandlerExists: !!createNewMemoHandler,
-      onSelectMemoExists: !!onSelectMemo,
-    });
     createNewMemoHandler(onSelectMemo);
-    console.log("✅ [use-board-operations] handleCreateNewMemo完了");
   }, [createNewMemoHandler, onSelectMemo]);
 
   const handleCreateNewTask = useCallback(() => {

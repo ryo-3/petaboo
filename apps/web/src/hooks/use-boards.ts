@@ -505,22 +505,8 @@ export function useAddItemToBoard(options?: {
             ? `${API_BASE_URL}/teams/${teamId}/boards/${boardId}/items`
             : `${API_BASE_URL}/boards/${boardId}/items`;
 
-        console.log("🌐 [addItemToBoard] API呼び出し:", {
-          teamMode,
-          teamId,
-          boardId,
-          url,
-          data,
-        });
-
         let response;
         try {
-          console.log("📡 [addItemToBoard] fetch開始:", {
-            url,
-            method: "POST",
-            data,
-          });
-
           response = await fetch(url, {
             method: "POST",
             headers: {
@@ -528,12 +514,6 @@ export function useAddItemToBoard(options?: {
               ...(token && { Authorization: `Bearer ${token}` }),
             },
             body: JSON.stringify(data),
-          });
-
-          console.log("📡 [addItemToBoard] fetch完了:", {
-            status: response.status,
-            statusText: response.statusText,
-            ok: response.ok,
           });
         } catch (fetchError) {
           console.error("💥 [addItemToBoard] fetchエラー:", fetchError);

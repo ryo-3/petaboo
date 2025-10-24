@@ -175,43 +175,22 @@ export function useUpdateTask(options?: {
       }
     },
     onSuccess: (updatedTask, { id, data }) => {
-      console.log("📝 [use-tasks] タスク更新成功:", {
-        taskId: id,
-        teamMode,
-        teamId,
-        updateData: data,
-        updatedTask,
-      });
-
       // APIが不完全なレスポンスを返す場合があるので、キャッシュから既存タスクを取得して更新
       const queryKey = teamMode && teamId ? ["team-tasks", teamId] : ["tasks"];
-
-      console.log("🔄 [use-tasks] キャッシュ更新開始:", {
-        queryKey,
-        oldTasksCount: queryClient.getQueryData<Task[]>(queryKey)?.length,
-      });
 
       queryClient.setQueryData<Task[]>(queryKey, (oldTasks) => {
         if (!oldTasks) return [updatedTask];
         return oldTasks.map((task) => {
           if (task.id === id) {
-            console.log("✏️ [use-tasks] タスク更新前:", {
-              oldTitle: task.title,
-              oldDescription: task.description,
-              newTitle: data.title,
-              newDescription: data.description,
-            });
-
             // APIが完全なタスクオブジェクトを返した場合はそれを使用
             if (
               updatedTask.title !== undefined &&
               updatedTask.description !== undefined
             ) {
-              console.log("✅ [use-tasks] 完全なAPIレスポンスで更新");
               return updatedTask;
             }
             // APIが不完全な場合は既存タスクを更新データでマージ
-            const mergedTask = {
+            return {
               ...task,
               title: data.title !== undefined ? data.title : task.title,
               description:
@@ -224,13 +203,6 @@ export function useUpdateTask(options?: {
               dueDate: data.dueDate !== undefined ? data.dueDate : task.dueDate,
               updatedAt: Math.floor(Date.now() / 1000),
             };
-            console.log("✅ [use-tasks] マージ後のタスク:", {
-              mergedTitle: mergedTask.title,
-              mergedDescription: mergedTask.description,
-              descriptionUpdated: data.description !== undefined,
-              newDescription: data.description,
-            });
-            return mergedTask;
           }
           return task;
         });
@@ -238,10 +210,6 @@ export function useUpdateTask(options?: {
 
       // チームボードアイテムキャッシュも楽観的更新（チーム＋ボードID指定時）
       if (teamMode && teamId && boardId) {
-        console.log("🔄 [use-tasks] チームボードアイテムキャッシュ更新:", {
-          teamId,
-          boardId,
-        });
         queryClient.setQueryData(
           ["team-boards", teamId.toString(), boardId, "items"],
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -250,12 +218,6 @@ export function useUpdateTask(options?: {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const updatedItems = oldData.items.map((item: any) => {
                 if (item.itemType === "task" && item.content?.id === id) {
-                  console.log("📝 [use-tasks] ボードアイテム更新:", {
-                    oldTitle: item.content.title,
-                    oldDescription: item.content.description,
-                    newTitle: data.title,
-                    newDescription: data.description,
-                  });
                   return {
                     ...item,
                     content: {
@@ -297,13 +259,11 @@ export function useUpdateTask(options?: {
         );
       }
 
-      console.log("🔄 [use-tasks] ボードキャッシュ無効化実行");
       // ボード関連キャッシュを無効化（一覧・統計・アイテムを含む）
       queryClient.invalidateQueries({
         queryKey: ["boards"],
         exact: false,
       });
-      console.log("✅ [use-tasks] タスク更新処理完了");
     },
     onError: (error) => {
       console.error("タスク更新に失敗しました:", error);

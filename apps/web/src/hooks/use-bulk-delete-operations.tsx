@@ -381,26 +381,30 @@ export function useBulkDeleteOperations({
           id,
           originalId,
           itemType: deletingItemType,
+          boardId,
+          teamId,
+          url: teamId
+            ? `/teams/${teamId}/boards/${boardId}/items/${originalId}`
+            : `/boards/${boardId}/items/${originalId}`,
         });
 
-        await removeItemFromBoard.mutateAsync({
+        const result = await removeItemFromBoard.mutateAsync({
           boardId,
           itemId: originalId,
           itemType: deletingItemType!,
           teamId,
         });
+
+        console.log("✅ [handleRemoveFromBoard] API呼び出し成功:", {
+          id,
+          originalId,
+          result,
+        });
       }
 
       console.log("✅ [handleRemoveFromBoard] 全API呼び出し完了");
 
-      // チェック状態をクリア
-      if (deletingItemType === "memo") {
-        setCheckedMemos(new Set());
-      } else {
-        setCheckedTasks(new Set());
-      }
-
-      // キャッシュを無効化してDOMを更新
+      // キャッシュを無効化してDOMを更新（チェック状態クリアはfinallyで実行）
       queryClient.invalidateQueries({
         queryKey: ["boards", boardId, "items"],
       });
@@ -417,12 +421,19 @@ export function useBulkDeleteOperations({
     } finally {
       console.log(
         "🧹 [handleRemoveFromBoard] finally: モーダルとチェック状態をクリア",
+        {
+          deletingItemType,
+          checkedMemosSize: checkedMemos.size,
+          checkedTasksSize: checkedTasks.size,
+        },
       );
 
       // チェック状態を確実にクリア（エラー時も実行）
       if (deletingItemType === "memo") {
+        console.log("🗑️ [finally] メモのチェック状態をクリア");
         setCheckedMemos(new Set());
       } else if (deletingItemType === "task") {
+        console.log("🗑️ [finally] タスクのチェック状態をクリア");
         setCheckedTasks(new Set());
       }
 
@@ -430,7 +441,10 @@ export function useBulkDeleteOperations({
       bulkDelete.handleCancel();
       setDeletingItemType(null);
 
-      console.log("✅ [handleRemoveFromBoard] finally: 完了");
+      console.log("✅ [handleRemoveFromBoard] finally: 完了", {
+        afterCheckedMemosSize: checkedMemos.size,
+        afterCheckedTasksSize: checkedTasks.size,
+      });
     }
   }, [
     deletingItemType,

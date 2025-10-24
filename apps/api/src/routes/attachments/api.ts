@@ -499,9 +499,12 @@ export const getImage = async (c: any) => {
   let object = await r2Bucket.get(attachment.r2Key);
 
   // 新形式で見つからない場合、旧形式を試す（後方互換性）
-  if (!object && attachment.r2Key.includes("/images/")) {
-    const oldKey = attachment.r2Key.replace("/images/", "/");
-    object = await r2Bucket.get(oldKey);
+  // 新: user_xxx/images/memo/xxx.png → 旧: user_xxx/memo/xxx.png
+  if (!object) {
+    const oldKey = attachment.r2Key.replace(/\/images\//, "/");
+    if (oldKey !== attachment.r2Key) {
+      object = await r2Bucket.get(oldKey);
+    }
   }
 
   if (!object) {
@@ -614,9 +617,12 @@ export const getFile = async (c: any) => {
   let object = await r2Bucket.get(attachment.r2Key);
 
   // 新形式で見つからない場合、旧形式を試す（後方互換性）
-  if (!object && attachment.r2Key.includes("/files/")) {
-    const oldKey = attachment.r2Key.replace("/files/", "/");
-    object = await r2Bucket.get(oldKey);
+  // 新: user_xxx/files/memo/xxx.pdf → 旧: user_xxx/memo/xxx.pdf
+  if (!object) {
+    const oldKey = attachment.r2Key.replace(/\/files\//, "/");
+    if (oldKey !== attachment.r2Key) {
+      object = await r2Bucket.get(oldKey);
+    }
   }
 
   if (!object) {

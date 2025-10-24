@@ -114,25 +114,73 @@ export default function AttachmentGallery({
   return (
     <>
       <div className="flex flex-wrap gap-2 mt-3">
-        {/* 既存の画像 */}
+        {/* 既存の画像・ファイル */}
         {attachments.map((attachment) => {
           const imageUrl = imageUrls[attachment.id];
           const isMarkedForDelete = pendingDeletes.includes(attachment.id);
+          const isImage = attachment.mimeType.startsWith("image/");
+          const isPdf = attachment.mimeType === "application/pdf";
 
           return (
             <div key={attachment.id} className="relative group">
               {imageUrl ? (
                 <div className="relative">
-                  <img
-                    src={imageUrl}
-                    alt={attachment.fileName}
-                    className={`w-32 h-32 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity ${
-                      isMarkedForDelete
-                        ? "opacity-50 border-2 border-red-400"
-                        : ""
-                    }`}
-                    onClick={() => setSelectedImage(imageUrl)}
-                  />
+                  {isImage ? (
+                    <img
+                      src={imageUrl}
+                      alt={attachment.fileName}
+                      className={`w-32 h-32 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity ${
+                        isMarkedForDelete
+                          ? "opacity-50 border-2 border-red-400"
+                          : ""
+                      }`}
+                      onClick={() => setSelectedImage(imageUrl)}
+                    />
+                  ) : isPdf ? (
+                    <a
+                      href={attachment.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`w-32 h-32 bg-gray-100 rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-200 transition-colors ${
+                        isMarkedForDelete
+                          ? "opacity-50 border-2 border-red-400"
+                          : ""
+                      }`}
+                    >
+                      <svg
+                        className="w-12 h-12 text-red-500 mb-1"
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM8 18v-1h8v1H8zm0-4v-1h8v1H8zm0-4v-1h5v1H8z" />
+                      </svg>
+                      <p className="text-[10px] text-gray-600 text-center truncate w-full">
+                        {attachment.fileName}
+                      </p>
+                    </a>
+                  ) : (
+                    <a
+                      href={attachment.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`w-32 h-32 bg-gray-100 rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-200 transition-colors ${
+                        isMarkedForDelete
+                          ? "opacity-50 border-2 border-red-400"
+                          : ""
+                      }`}
+                    >
+                      <svg
+                        className="w-12 h-12 text-gray-500 mb-1"
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM8 18v-1h8v1H8zm0-4v-1h8v1H8z" />
+                      </svg>
+                      <p className="text-[10px] text-gray-600 text-center truncate w-full">
+                        {attachment.fileName}
+                      </p>
+                    </a>
+                  )}
                   {isMarkedForDelete && (
                     <div className="absolute top-0 left-0 bg-red-500 text-white text-[10px] px-1 py-0.5 rounded-br">
                       削除予定
@@ -198,42 +246,76 @@ export default function AttachmentGallery({
           );
         })}
 
-        {/* 保存待ちの画像（プレビュー） */}
-        {pendingUrls.map((url, index) => (
-          <div key={`pending-${index}`} className="relative group">
-            <img
-              src={url}
-              alt={`保存待ち ${index + 1}`}
-              className="w-32 h-32 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border-2 border-blue-400"
-              onClick={() => setSelectedImage(url)}
-            />
-            {/* 保存待ちバッジ */}
-            <div className="absolute top-0 left-0 bg-blue-500 text-white text-[10px] px-1 py-0.5 rounded-br">
-              未保存
-            </div>
-            {onDeletePending && (
-              <button
-                onClick={() => onDeletePending(index)}
-                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                title="削除"
-              >
-                <svg
-                  className="w-3 h-3"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+        {/* 保存待ちの画像・ファイル（プレビュー） */}
+        {pendingUrls.map((url, index) => {
+          const file = pendingImages[index];
+          const isImage = file?.type.startsWith("image/");
+          const isPdf = file?.type === "application/pdf";
+
+          return (
+            <div key={`pending-${index}`} className="relative group">
+              {isImage ? (
+                <img
+                  src={url}
+                  alt={`保存待ち ${index + 1}`}
+                  className="w-32 h-32 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border-2 border-blue-400"
+                  onClick={() => setSelectedImage(url)}
+                />
+              ) : isPdf ? (
+                <div className="w-32 h-32 bg-gray-100 rounded-lg border-2 border-blue-400 flex flex-col items-center justify-center p-2">
+                  <svg
+                    className="w-12 h-12 text-red-500 mb-1"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM8 18v-1h8v1H8zm0-4v-1h8v1H8zm0-4v-1h5v1H8z" />
+                  </svg>
+                  <p className="text-[10px] text-gray-600 text-center truncate w-full">
+                    {file?.name}
+                  </p>
+                </div>
+              ) : (
+                <div className="w-32 h-32 bg-gray-100 rounded-lg border-2 border-blue-400 flex flex-col items-center justify-center p-2">
+                  <svg
+                    className="w-12 h-12 text-gray-500 mb-1"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM8 18v-1h8v1H8zm0-4v-1h8v1H8z" />
+                  </svg>
+                  <p className="text-[10px] text-gray-600 text-center truncate w-full">
+                    {file?.name}
+                  </p>
+                </div>
+              )}
+              {/* 保存待ちバッジ */}
+              <div className="absolute top-0 left-0 bg-blue-500 text-white text-[10px] px-1 py-0.5 rounded-br">
+                未保存
+              </div>
+              {onDeletePending && (
+                <button
+                  onClick={() => onDeletePending(index)}
+                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                  title="削除"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            )}
-          </div>
-        ))}
+                  <svg
+                    className="w-3 h-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* 画像拡大表示モーダル */}

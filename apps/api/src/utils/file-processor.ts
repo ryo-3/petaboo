@@ -53,7 +53,7 @@ export function validateFile(
 
 /**
  * R2オブジェクトキー生成（ファイル用）
- * フォーマット: {userId}/{attachedTo}/files/{timestamp}-{randomId}.{ext}
+ * フォーマット: {userId}/files/{attachedTo}/{timestamp}-{randomId}.{ext}
  */
 export function generateFileR2Key(
   userId: string,
@@ -63,7 +63,7 @@ export function generateFileR2Key(
   const timestamp = Date.now();
   const randomId = Math.random().toString(36).substring(2, 10);
   const ext = fileName.split(".").pop() || "pdf";
-  return `${userId}/${attachedTo}/files/${timestamp}-${randomId}.${ext}`;
+  return `${userId}/files/${attachedTo}/${timestamp}-${randomId}.${ext}`;
 }
 
 /**

@@ -55,17 +55,28 @@ export const useAttachmentManager = ({
   // 削除予定の画像ID（保存時に削除）
   const [pendingDeletes, setPendingDeletes] = useState<number[]>([]);
 
-  // 画像形式バリデーション
+  // ファイル形式バリデーション（画像 + PDF等）
   const validateImageFile = useCallback(
     (file: File): boolean => {
       // MIMEタイプチェック
       const allowedTypes = [
+        // 画像
         "image/jpeg",
         "image/jpg",
         "image/png",
         "image/gif",
         "image/webp",
         "image/svg+xml",
+        // ファイル
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.ms-excel",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "application/vnd.ms-powerpoint",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        "text/plain",
+        "text/csv",
       ];
 
       if (!allowedTypes.includes(file.type)) {
@@ -73,10 +84,12 @@ export const useAttachmentManager = ({
         return false;
       }
 
-      // ファイルサイズチェック（5MB）
-      const maxSize = 5 * 1024 * 1024;
+      // ファイルサイズチェック（画像5MB、その他20MB）
+      const isImage = file.type.startsWith("image/");
+      const maxSize = isImage ? 5 * 1024 * 1024 : 20 * 1024 * 1024;
       if (file.size > maxSize) {
-        showToast("ファイルサイズは5MB以下にしてください", "error");
+        const maxMB = maxSize / 1024 / 1024;
+        showToast(`ファイルサイズは${maxMB}MB以下にしてください`, "error");
         return false;
       }
 

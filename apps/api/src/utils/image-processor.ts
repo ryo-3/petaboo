@@ -49,7 +49,7 @@ export function validateImageFile(
 
 /**
  * R2オブジェクトキー生成
- * フォーマット: {userId}/{attachedTo}/{timestamp}-{randomId}.{ext}
+ * フォーマット: {userId}/{attachedTo}/images/{timestamp}-{randomId}.{ext}
  */
 export function generateR2Key(
   userId: string,
@@ -59,7 +59,7 @@ export function generateR2Key(
   const timestamp = Date.now();
   const randomId = Math.random().toString(36).substring(2, 10);
   const ext = fileName.split(".").pop() || "jpg";
-  return `${userId}/${attachedTo}/${timestamp}-${randomId}.${ext}`;
+  return `${userId}/${attachedTo}/images/${timestamp}-${randomId}.${ext}`;
 }
 
 /**

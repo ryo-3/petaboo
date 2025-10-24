@@ -6,10 +6,17 @@ import { teamMembers } from "../../db/schema/team/teams";
 import {
   validateImageFile,
   generateR2Key,
-  MAX_FILE_SIZE,
   MAX_ATTACHMENTS_PER_ITEM,
   ALLOWED_MIME_TYPES,
 } from "../../utils/image-processor";
+import {
+  validateFile,
+  generateFileR2Key,
+  MAX_FILE_SIZE,
+  MAX_FILES_PER_ITEM,
+  ALLOWED_FILE_TYPES,
+  isImageFile,
+} from "../../utils/file-processor";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 
 // 共通スキーマ定義
@@ -203,6 +210,9 @@ export const uploadAttachment = async (c: any) => {
     return c.json({ error: "Missing required fields" }, 400);
   }
 
+  // ファイル種別判定
+  const isImage = isImageFile(file.type);
+
   // 添付上限チェック（4枚まで）
   const existingCount = await db
     .select({ count: sql<number>`count(*)` })
@@ -210,27 +220,34 @@ export const uploadAttachment = async (c: any) => {
     .where(
       and(
         eq(teamAttachments.teamId, teamId),
-        eq(teamAttachments.attachedTo, attachedTo),
+        eq(
+          teamAttachments.attachedTo,
+          attachedTo as "memo" | "task" | "comment",
+        ),
         eq(teamAttachments.attachedOriginalId, attachedOriginalId),
         isNull(teamAttachments.deletedAt),
       ),
     );
 
-  if (existingCount[0].count >= MAX_ATTACHMENTS_PER_ITEM) {
-    return c.json(
-      { error: `添付ファイルは最大${MAX_ATTACHMENTS_PER_ITEM}枚までです` },
-      400,
-    );
+  const maxItems = isImage ? MAX_ATTACHMENTS_PER_ITEM : MAX_FILES_PER_ITEM;
+
+  if (existingCount[0].count >= maxItems) {
+    return c.json({ error: `添付ファイルは最大${maxItems}個までです` }, 400);
   }
 
-  // ファイルバリデーション
-  const validation = validateImageFile(file, file.type);
+  // ファイルバリデーション（画像 or 一般ファイル）
+  const validation = isImage
+    ? validateImageFile(file, file.type)
+    : validateFile(file, file.type);
+
   if (!validation.valid) {
     return c.json({ error: validation.error }, 400);
   }
 
-  // R2にアップロード
-  const r2Key = generateR2Key(auth.userId, attachedTo, file.name);
+  // R2にアップロード（単一バケット、パスで分離）
+  const r2Key = isImage
+    ? generateR2Key(auth.userId, attachedTo, file.name)
+    : generateFileR2Key(auth.userId, attachedTo, file.name);
   const r2Bucket = env.R2_BUCKET;
 
   if (!r2Bucket) {
@@ -270,11 +287,12 @@ export const uploadAttachment = async (c: any) => {
     })
     .returning();
 
-  // Worker経由アクセスURL生成
+  // Worker経由アクセスURL生成（画像 or ファイルで分岐）
   // Request URLのoriginを使用（ローカルでも本番でも正しいURLになる）
   const url = new URL(c.req.url);
   const apiBaseUrl = `${url.protocol}//${url.host}`;
-  const workerUrl = `${apiBaseUrl}/attachments/image/${result[0].id}`;
+  const endpoint = isImage ? "image" : "file";
+  const workerUrl = `${apiBaseUrl}/attachments/${endpoint}/${result[0].id}`;
 
   // URLを更新
   await db
@@ -472,13 +490,20 @@ export const getImage = async (c: any) => {
     return c.json({ error: "Not a team member" }, 403);
   }
 
-  // R2から画像取得
+  // R2から画像取得（後方互換性: 新形式→旧形式の順で試す）
   const r2Bucket = env.R2_BUCKET;
   if (!r2Bucket) {
     return c.json({ error: "R2 bucket not configured" }, 500);
   }
 
-  const object = await r2Bucket.get(attachment.r2Key);
+  let object = await r2Bucket.get(attachment.r2Key);
+
+  // 新形式で見つからない場合、旧形式を試す（後方互換性）
+  if (!object && attachment.r2Key.includes("/images/")) {
+    const oldKey = attachment.r2Key.replace("/images/", "/");
+    object = await r2Bucket.get(oldKey);
+  }
+
   if (!object) {
     return c.json({ error: "Image not found in storage" }, 404);
   }
@@ -495,9 +520,126 @@ export const getImage = async (c: any) => {
   });
 };
 
+// GET /attachments/file/:id（ファイル配信 - チームメンバー認証付き）
+export const getFileRoute = createRoute({
+  method: "get",
+  path: "/file/{id}",
+  request: {
+    params: z.object({
+      id: z.string().regex(/^\d+$/).transform(Number),
+    }),
+  },
+  responses: {
+    200: {
+      description: "File",
+      content: {
+        "application/pdf": { schema: z.any() },
+        "application/msword": { schema: z.any() },
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+          { schema: z.any() },
+        "application/vnd.ms-excel": { schema: z.any() },
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+          schema: z.any(),
+        },
+        "application/vnd.ms-powerpoint": { schema: z.any() },
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+          { schema: z.any() },
+        "text/plain": { schema: z.any() },
+        "text/csv": { schema: z.any() },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: z.object({ error: z.string() }),
+        },
+      },
+    },
+    403: {
+      description: "Forbidden",
+      content: {
+        "application/json": {
+          schema: z.object({ error: z.string() }),
+        },
+      },
+    },
+    404: {
+      description: "Not found",
+      content: {
+        "application/json": {
+          schema: z.object({ error: z.string() }),
+        },
+      },
+    },
+  },
+});
+
+export const getFile = async (c: any) => {
+  const auth = getAuth(c);
+  const db = c.get("db");
+  const env = c.env;
+
+  if (!auth?.userId) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  const { id } = c.req.valid("param");
+
+  // 添付ファイル情報取得
+  const attachments = await db
+    .select()
+    .from(teamAttachments)
+    .where(and(eq(teamAttachments.id, id), isNull(teamAttachments.deletedAt)))
+    .limit(1);
+
+  if (attachments.length === 0) {
+    return c.json({ error: "Attachment not found" }, 404);
+  }
+
+  const attachment = attachments[0];
+
+  // チームメンバー確認
+  const member = await checkTeamMember(attachment.teamId, auth.userId, db);
+  if (!member) {
+    return c.json({ error: "Not a team member" }, 403);
+  }
+
+  // R2からファイル取得（後方互換性: 新形式→旧形式の順で試す）
+  const r2Bucket = env.R2_BUCKET;
+  if (!r2Bucket) {
+    return c.json({ error: "R2 bucket not configured" }, 500);
+  }
+
+  let object = await r2Bucket.get(attachment.r2Key);
+
+  // 新形式で見つからない場合、旧形式を試す（後方互換性）
+  if (!object && attachment.r2Key.includes("/files/")) {
+    const oldKey = attachment.r2Key.replace("/files/", "/");
+    object = await r2Bucket.get(oldKey);
+  }
+
+  if (!object) {
+    return c.json({ error: "File not found in storage" }, 404);
+  }
+
+  // ファイルを返却（Content-Dispositionでダウンロード用ファイル名指定）
+  const origin = c.req.header("Origin") || "http://localhost:7593";
+  return new Response(object.body, {
+    headers: {
+      "Content-Type": attachment.mimeType,
+      "Content-Disposition": `inline; filename="${encodeURIComponent(attachment.fileName)}"`,
+      "Cache-Control": "public, max-age=31536000", // 1年キャッシュ
+      "Access-Control-Allow-Origin": origin,
+      "Access-Control-Allow-Credentials": "true",
+    },
+  });
+};
+
 export function registerAttachmentRoutes(app: OpenAPIHono<any, any, any>) {
   app.openapi(getAttachmentsRoute, getAttachments);
   app.openapi(uploadAttachmentRoute, uploadAttachment);
   app.openapi(deleteAttachmentRoute, deleteAttachment);
   app.openapi(getImageRoute, getImage);
+  app.openapi(getFileRoute, getFile);
 }

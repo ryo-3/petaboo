@@ -665,6 +665,9 @@ export function useRemoveItemFromBoard() {
           },
         });
 
+        // レスポンスボディを確認
+        const responseText = await response.text();
+
         // 401エラーの場合はキャッシュをクリアしてリトライ
         if (response.status === 401 && attempt === 0) {
           cachedToken = null;
@@ -673,16 +676,15 @@ export function useRemoveItemFromBoard() {
         }
 
         if (!response.ok) {
-          const rawText = await response.text();
           try {
-            const errorJson = JSON.parse(rawText);
+            const errorJson = JSON.parse(responseText);
             throw new Error(
               errorJson.error ||
                 `Failed to remove item from board: ${response.status} ${response.statusText}`,
             );
           } catch {
             throw new Error(
-              `Failed to remove item from board: ${response.status} ${response.statusText} - ${rawText}`,
+              `Failed to remove item from board: ${response.status} ${response.statusText} - ${responseText}`,
             );
           }
         }

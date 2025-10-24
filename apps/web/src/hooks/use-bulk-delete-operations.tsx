@@ -336,11 +336,7 @@ export function useBulkDeleteOperations({
 
   // ボードから削除の処理（アニメーション付き）
   const handleRemoveFromBoard = useCallback(async () => {
-    console.log("🎯 [handleRemoveFromBoard] 呼び出し開始:", {
-      deletingItemType,
-      checkedMemos: Array.from(checkedMemos),
-      checkedTasks: Array.from(checkedTasks),
-    });
+    if (!deletingItemType) return;
 
     const targetIds =
       deletingItemType === "memo"
@@ -348,63 +344,49 @@ export function useBulkDeleteOperations({
         : Array.from(checkedTasks);
     const ids = targetIds.map((id) => Number(id)).filter((id) => !isNaN(id));
 
-    console.log("🎯 [handleRemoveFromBoard] ID変換結果:", {
-      targetIds,
-      ids,
-      idsLength: ids.length,
-    });
-
     if (ids.length === 0) {
-      console.log("⚠️ [handleRemoveFromBoard] IDが空のため終了");
       bulkDelete.handleCancel();
       setDeletingItemType(null);
       return;
     }
 
-    try {
-      console.log("🚀 [handleRemoveFromBoard] API呼び出し開始");
+    // モーダル削除と同じロジックでアニメーション付き削除
+    const onStateUpdate = () => {
+      // ボード詳細では特別な状態更新は不要
+    };
 
-      // ボード詳細画面ではアニメーションなしで即座に削除処理
-      // （DOM要素にdata-memo-id属性がないため）
-      for (const id of ids) {
-        // IDからoriginalIdを取得
-        let originalId: string;
-        if (deletingItemType === "memo") {
-          const memo = boardMemos.find((m) => m.id === id);
-          originalId = memo?.originalId || id.toString();
-        } else {
-          const task = boardTasks.find((t) => t.id === id);
-          originalId = task?.originalId || id.toString();
-        }
+    const onCheckStateUpdate = (processedIds: number[]) => {
+      if (deletingItemType === "memo") {
+        const newCheckedMemos = new Set(checkedMemos);
+        processedIds.forEach((id) => newCheckedMemos.delete(id));
+        setCheckedMemos(newCheckedMemos);
+      } else {
+        const newCheckedTasks = new Set(checkedTasks);
+        processedIds.forEach((id) => newCheckedTasks.delete(id));
+        setCheckedTasks(newCheckedTasks);
+      }
+    };
 
-        console.log("📤 [handleRemoveFromBoard] API呼び出し:", {
-          id,
-          originalId,
-          itemType: deletingItemType,
-          boardId,
-          teamId,
-          url: teamId
-            ? `/teams/${teamId}/boards/${boardId}/items/${originalId}`
-            : `/boards/${boardId}/items/${originalId}`,
-        });
-
-        const result = await removeItemFromBoard.mutateAsync({
-          boardId,
-          itemId: originalId,
-          itemType: deletingItemType!,
-          teamId,
-        });
-
-        console.log("✅ [handleRemoveFromBoard] API呼び出し成功:", {
-          id,
-          originalId,
-          result,
-        });
+    const onApiCall = async (id: number) => {
+      // IDからoriginalIdを取得
+      let originalId: string;
+      if (deletingItemType === "memo") {
+        const memo = boardMemos.find((m) => m.id === id);
+        originalId = memo?.originalId || id.toString();
+      } else {
+        const task = boardTasks.find((t) => t.id === id);
+        originalId = task?.originalId || id.toString();
       }
 
-      console.log("✅ [handleRemoveFromBoard] 全API呼び出し完了");
+      // ボードから削除APIを呼び出し
+      await removeItemFromBoard.mutateAsync({
+        boardId,
+        itemId: originalId,
+        itemType: deletingItemType,
+        teamId,
+      });
 
-      // キャッシュを無効化してDOMを更新（チェック状態クリアはfinallyで実行）
+      // キャッシュを無効化
       queryClient.invalidateQueries({
         queryKey: ["boards", boardId, "items"],
       });
@@ -414,38 +396,30 @@ export function useBulkDeleteOperations({
         });
       }
       queryClient.invalidateQueries({ queryKey: ["boards", "all-items"] });
+    };
 
-      console.log("🎉 [handleRemoveFromBoard] 処理完了");
-    } catch (error) {
-      console.error("❌ [handleRemoveFromBoard] エラー:", error);
-    } finally {
-      console.log(
-        "🧹 [handleRemoveFromBoard] finally: モーダルとチェック状態をクリア",
-        {
-          deletingItemType,
-          checkedMemosSize: checkedMemos.size,
-          checkedTasksSize: checkedTasks.size,
-        },
-      );
+    // executeWithAnimationを使ってモーダル削除と同じ処理
+    await executeWithAnimation({
+      ids,
+      isPartial: false,
+      buttonRef: deleteButtonRef,
+      dataAttribute:
+        deletingItemType === "memo" ? "data-memo-id" : "data-task-id",
+      onStateUpdate,
+      onCheckStateUpdate,
+      onApiCall,
+      initializeAnimation: bulkAnimation.initializeAnimation,
+      startCountdown: bulkAnimation.startCountdown,
+      finalizeAnimation: bulkAnimation.finalizeAnimation,
+      setIsProcessing:
+        deletingItemType === "memo" ? setIsMemoDeleting : setIsTaskDeleting,
+      setIsLidOpen:
+        deletingItemType === "memo" ? setIsMemoLidOpen : setIsTaskLidOpen,
+    });
 
-      // チェック状態を確実にクリア（エラー時も実行）
-      if (deletingItemType === "memo") {
-        console.log("🗑️ [finally] メモのチェック状態をクリア");
-        setCheckedMemos(new Set());
-      } else if (deletingItemType === "task") {
-        console.log("🗑️ [finally] タスクのチェック状態をクリア");
-        setCheckedTasks(new Set());
-      }
-
-      // エラー発生時も確実にモーダルを閉じる
-      bulkDelete.handleCancel();
-      setDeletingItemType(null);
-
-      console.log("✅ [handleRemoveFromBoard] finally: 完了", {
-        afterCheckedMemosSize: checkedMemos.size,
-        afterCheckedTasksSize: checkedTasks.size,
-      });
-    }
+    // モーダルを閉じる
+    bulkDelete.handleCancel();
+    setDeletingItemType(null);
   }, [
     deletingItemType,
     checkedMemos,
@@ -460,6 +434,10 @@ export function useBulkDeleteOperations({
     queryClient,
     boardMemos,
     boardTasks,
+    deleteButtonRef,
+    bulkAnimation.initializeAnimation,
+    bulkAnimation.startCountdown,
+    bulkAnimation.finalizeAnimation,
   ]);
 
   // ディスプレイカウントの計算（メモ一覧と同じロジック）

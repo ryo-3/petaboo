@@ -38,11 +38,7 @@ export function UserInitializer() {
             return;
           }
 
-          const result = await response.json();
-          // 新規ユーザー作成時のみログ出力（既存ユーザーは静寂）
-          if (result.created && process.env.NODE_ENV === "development") {
-            console.log(`✅ 新規ユーザー作成: ${result.userId}`);
-          }
+          await response.json();
         } catch (error) {
           console.error("ユーザー初期化エラー:", error);
         }

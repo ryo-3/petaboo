@@ -39,9 +39,6 @@ export function useEnsureUser() {
         });
 
         if (response.ok) {
-          const data = await response.json();
-          console.log("ユーザー存在確認完了:", data.message);
-
           // セッション中の重複実行を防ぐ
           sessionStorage.setItem(sessionKey, "true");
           setHasEnsured(true);

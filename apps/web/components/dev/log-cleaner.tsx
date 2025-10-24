@@ -55,13 +55,7 @@ export function LogCleaner() {
                 throw new Error(`HTTP ${res.status}: ${res.statusText}`);
               }
             })
-            .then((data) => {
-              if (data.success) {
-                console.log(
-                  `[LogCleaner] Logs cleared (${clearCount.current}回目)`,
-                );
-              }
-            })
+            .then(() => {})
             .catch((error) => {
               // エラーログを簡略化（404エラーの場合は静かに処理）
               if (!error.message.includes("404")) {
@@ -83,13 +77,6 @@ export function LogCleaner() {
       };
     }
   }, [pathname]);
-
-  // 開発環境でのみレンダリング回数を追跡
-  useEffect(() => {
-    if (false && process.env.NODE_ENV === "development") {
-      console.log("[LogCleaner] Component rendered/updated");
-    }
-  });
 
   return null; // UIは表示しない
 }

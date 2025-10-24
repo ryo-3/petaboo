@@ -192,34 +192,12 @@ export function useSimpleMemoSave({
             (id) => !selectedBoardIds.includes(id),
           );
 
-          // デバッグログ: ボード変更処理
-          console.log("🔧 [メモ保存] ボード変更処理:", {
-            memoId: memo.id,
-            originalId: memo.originalId,
-            currentBoardIds,
-            selectedBoardIds,
-            boardsToAdd,
-            boardsToRemove,
-            teamMode,
-            teamId,
-          });
-
           const promises = [];
 
           // ボード追加
           if (boardsToAdd.length > 0 && memo.id > 0) {
-            console.log("🔧 [メモ保存] ボード追加開始:", {
-              boardsToAdd,
-              memoId: memo.id,
-            });
-
             const addPromises = boardsToAdd.map(async (boardId) => {
               try {
-                console.log("🔗 [メモ保存] ボードへの追加実行:", {
-                  boardId,
-                  itemId: OriginalIdUtils.fromItem(memo),
-                });
-
                 await addItemToBoard.mutateAsync({
                   boardId,
                   data: {
@@ -228,15 +206,9 @@ export function useSimpleMemoSave({
                       OriginalIdUtils.fromItem(memo) || memo.id.toString(),
                   },
                 });
-
-                console.log("✅ [メモ保存] ボード追加成功:", { boardId });
               } catch (error: unknown) {
                 const errorMessage =
                   error instanceof Error ? error.message : String(error);
-                console.error("❌ [メモ保存] ボード追加エラー:", {
-                  boardId,
-                  error: errorMessage,
-                });
 
                 // すでに存在する場合はエラーを無視
                 if (!errorMessage.includes("already exists")) {
@@ -270,13 +242,6 @@ export function useSimpleMemoSave({
           if (promises.length > 0) {
             await Promise.all(promises);
 
-            console.log("🔄 [メモ保存] キャッシュ無効化開始:", {
-              memoId: memo.id,
-              originalId: memo.originalId,
-              boardsToAdd,
-              boardsToRemove,
-            });
-
             // ボード変更後にキャッシュを無効化
             if (teamMode && teamId) {
               // チームモード用のキャッシュ無効化
@@ -301,8 +266,6 @@ export function useSimpleMemoSave({
                 queryKey: ["team-boards", teamId],
               });
             }
-
-            console.log("✅ [メモ保存] キャッシュ無効化完了");
           }
 
           // 現在のボードから外された場合は次のアイテムを選択
@@ -320,28 +283,16 @@ export function useSimpleMemoSave({
       } else {
         // 新規メモ作成（空の場合は何もしない）
         if (!isEmpty) {
-          console.log(
-            `🎯 新規メモ作成開始: title="${title}", selectedBoardIds=[${selectedBoardIds.join(",")}], initialBoardId=${initialBoardId}`,
-          );
           const createdMemo = await createNote.mutateAsync({
             title: title.trim() || "無題",
             content: content.trim() || undefined,
           });
-          console.log(
-            `✅ 新規メモ作成完了: id=${createdMemo.id}, originalId=${createdMemo.originalId}`,
-          );
 
           // ボード選択時はボードに追加
           if (selectedBoardIds.length > 0 && createdMemo.id) {
-            console.log(
-              `📌 ボード追加処理開始: selectedBoardIds=[${selectedBoardIds.join(",")}], memo.id=${createdMemo.id}`,
-            );
             // 各ボードに追加（エラーは個別にキャッチ）
             const addPromises = selectedBoardIds.map(async (boardId) => {
               try {
-                console.log(
-                  `🔗 ボードへの追加実行: boardId=${boardId}, itemId=${OriginalIdUtils.fromItem(createdMemo)}`,
-                );
                 await addItemToBoard.mutateAsync({
                   boardId,
                   data: {
@@ -354,9 +305,6 @@ export function useSimpleMemoSave({
               } catch (error: unknown) {
                 const errorMessage =
                   error instanceof Error ? error.message : String(error);
-                console.log(
-                  `❌ ボードへの追加エラー: boardId=${boardId}, error=${errorMessage}`,
-                );
                 // すでに存在する場合はエラーを無視
                 if (!errorMessage.includes("already exists")) {
                   // エラーは既に上位でハンドリングされる
@@ -388,7 +336,6 @@ export function useSimpleMemoSave({
           onSaveComplete?.(createdMemo, false, true);
         } else {
           // 空の新規メモは単に閉じる
-          console.log(`⏭️ 空メモのため作成スキップ`);
           onSaveComplete?.(
             memo || {
               id: 0,

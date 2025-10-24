@@ -202,14 +202,6 @@ export default function BoardRightPanel({
       ?.filter((item) => item.boardId === boardId && item.itemType === "task")
       .map((item) => item.originalId) || [];
 
-  console.log("🟡 [BoardRightPanel] 除外アイテムID計算:", {
-    boardId,
-    allBoardItemsCount: allBoardItems?.length || 0,
-    allBoardItems: allBoardItems,
-    currentBoardMemoOriginalIds,
-    currentBoardTaskOriginalIds,
-  });
-
   const [isDeletingMemo, setIsDeletingMemo] = useState(false);
 
   // 削除済みアイテムかどうかを判定するヘルパー関数
@@ -239,18 +231,8 @@ export default function BoardRightPanel({
 
   // メモをボードに追加
   const handleAddMemosToBoard = async (memoIds: number[]) => {
-    console.log("🔵🔵🔵 [BoardRightPanel] handleAddMemosToBoard開始 🔵🔵🔵", {
-      memoIds,
-      boardId,
-      memoCount: memoIds.length,
-      timestamp: new Date().toISOString(),
-    });
-
     try {
       const token = await getToken();
-      console.log("🔵 [BoardRightPanel] トークン取得完了", {
-        hasToken: !!token,
-      });
 
       const promises = memoIds.map((memoId) => {
         const url = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594"}/boards/${boardId}/items`;
@@ -258,7 +240,6 @@ export default function BoardRightPanel({
           itemType: "memo",
           itemId: memoId.toString(),
         };
-        console.log("🔵 [BoardRightPanel] APIリクエスト作成", { url, body });
 
         return fetch(url, {
           method: "POST",
@@ -270,24 +251,7 @@ export default function BoardRightPanel({
         });
       });
 
-      console.log("🔵 [BoardRightPanel] 全APIリクエスト送信中...");
       const results = await Promise.all(promises);
-      console.log("🔵 [BoardRightPanel] 全APIレスポンス受信完了", {
-        resultCount: results.length,
-        statuses: results.map((r) => r.status),
-      });
-
-      // レスポンスの詳細を確認
-      for (let i = 0; i < results.length; i++) {
-        const result = results[i];
-        if (result) {
-          const responseText = await result.text();
-          console.log(`🔵 [BoardRightPanel] レスポンス ${i + 1} の内容:`, {
-            status: result.status,
-            body: responseText,
-          });
-        }
-      }
 
       // キャッシュを無効化してボード一覧を再取得
       await queryClient.invalidateQueries({
@@ -303,13 +267,6 @@ export default function BoardRightPanel({
           queryKey: ["boards", "all-items"],
         });
       }
-      console.log(
-        "✅✅✅ [BoardRightPanel] handleAddMemosToBoard完了 - キャッシュ無効化実行 ✅✅✅",
-        {
-          teamMode,
-          teamId,
-        },
-      );
 
       // 右パネルを閉じて再度開くことで、最新の除外リストを反映
       onClose();

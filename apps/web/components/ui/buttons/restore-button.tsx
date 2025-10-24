@@ -49,12 +49,6 @@ function RestoreButton({
         <button
           ref={buttonRef}
           onClick={() => {
-            console.log("🔔 RestoreButton クリック！", {
-              displayCount,
-              isRestoring,
-              disabled,
-              tooltipText,
-            });
             onRestore();
           }}
           disabled={disabled || isRestoring}

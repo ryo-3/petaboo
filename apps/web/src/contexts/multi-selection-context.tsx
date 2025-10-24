@@ -88,14 +88,6 @@ export function MultiSelectionProvider({ children }: { children: ReactNode }) {
     (tab: string) => {
       const result =
         tab === "normal" ? checkedNormalMemos : checkedDeletedMemos;
-      console.log(
-        `🌍 getCheckedMemos: tab=${tab}, normal=`,
-        Array.from(checkedNormalMemos),
-        "deleted=",
-        Array.from(checkedDeletedMemos),
-        "result=",
-        Array.from(result),
-      );
       return result;
     },
     [checkedNormalMemos, checkedDeletedMemos],
@@ -109,8 +101,6 @@ export function MultiSelectionProvider({ children }: { children: ReactNode }) {
         | Set<string | number>
         | ((prev: Set<string | number>) => Set<string | number>),
     ) => {
-      console.log(`🌍 setCheckedMemos: tab=${tab}`);
-
       if (tab === "normal") {
         setCheckedNormalMemos(value);
       } else {
@@ -186,19 +176,13 @@ export function MultiSelectionProvider({ children }: { children: ReactNode }) {
   // メモの選択トグル
   const handleMemoSelectionToggle = useCallback(
     (memoId: string | number, activeMemoTab: string) => {
-      console.log(
-        `🌍 メモチェック切り替え: memoId=${memoId} (${typeof memoId}), activeMemoTab=${activeMemoTab}`,
-      );
       setCheckedMemos(activeMemoTab, (prev) => {
         const newSet = new Set(prev);
-        console.log(`現在のチェック状態:`, Array.from(prev));
         if (newSet.has(memoId)) {
           newSet.delete(memoId);
         } else {
-          console.log(`☑️ チェック追加: ${memoId}`);
           newSet.add(memoId);
         }
-        console.log(`新しいチェック状態:`, Array.from(newSet));
         return newSet;
       });
     },
@@ -278,10 +262,6 @@ export function useMultiSelection(
       "useMultiSelection must be used within a MultiSelectionProvider",
     );
   }
-
-  console.log(
-    `🔧 useMultiSelection Context使用: activeMemoTab=${activeMemoTab}, activeTaskTab=${activeTaskTab}`,
-  );
 
   // 現在のタブに応じた選択状態を計算
   const checkedMemos = context.getCheckedMemos(activeMemoTab);

@@ -264,19 +264,6 @@ export function useSimpleItemSave<T extends UnifiedItem>({
 
         // アイテム内容に変更がある場合のみ更新
         if (hasContentChanges) {
-          console.log("🔄 [use-simple-item-save] アイテム内容変更検知:", {
-            itemId: item.id,
-            itemType,
-            title: title.trim() || "無題",
-            contentLength: content.trim().length,
-            hasContentChanges,
-            titleChanged: (title.trim() || "無題") !== initialTitle.trim(),
-            contentChanged: content.trim() !== initialContent.trim(),
-            teamMode,
-            teamId,
-            boardId,
-          });
-
           const updateData =
             itemType === "memo"
               ? {
@@ -298,13 +285,11 @@ export function useSimpleItemSave<T extends UnifiedItem>({
               id: item.id,
               data: updateData,
             });
-            console.log("✅ [use-simple-item-save] メモ更新完了:", item.id);
           } else {
             await updateTask.mutateAsync({
               id: item.id,
               data: updateData,
             });
-            console.log("✅ [use-simple-item-save] タスク更新完了:", item.id);
           }
 
           updatedItem =

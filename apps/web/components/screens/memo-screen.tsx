@@ -558,18 +558,6 @@ function MemoScreen({
       (memo) => !excludeItemIds.includes(memo.originalId || memo.id.toString()),
     ) || [];
 
-  console.log("🟠 [MemoScreen] メモフィルタリング:", {
-    totalMemos: memos?.length || 0,
-    excludeItemIds,
-    filteredMemosCount: filteredMemos.length,
-    excludedCount: (memos?.length || 0) - filteredMemos.length,
-    beforeFilterMemoOriginalIds:
-      memos?.slice(0, 5).map((m) => m.originalId || m.id.toString()) || [],
-    afterFilterMemoOriginalIds: filteredMemos
-      .slice(0, 5)
-      .map((m) => m.originalId || m.id.toString()),
-  });
-
   // ボードフィルターから除外するボードをフィルタリング
   const filteredBoards =
     boards?.filter((board) => board.id !== excludeBoardIdFromFilter) || [];
@@ -733,17 +721,7 @@ function MemoScreen({
         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20">
           <button
             onClick={() => {
-              console.log(
-                "🟢🟢🟢 [MemoScreen] ボード追加ボタンクリック 🟢🟢🟢",
-                {
-                  checkedMemos: Array.from(checkedMemos),
-                  checkedMemosSize: checkedMemos.size,
-                  onAddToBoardExists: !!onAddToBoard,
-                  timestamp: new Date().toISOString(),
-                },
-              );
               onAddToBoard(Array.from(checkedMemos));
-              console.log("🟢✅ [MemoScreen] onAddToBoard呼び出し完了");
             }}
             className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 transition-colors"
           >

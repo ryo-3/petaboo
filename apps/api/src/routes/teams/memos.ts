@@ -13,6 +13,7 @@ import {
   getTeamMemoMemberJoin,
   getTeamMemoSelectFields,
 } from "../../utils/teamJoinUtils";
+import { logActivity } from "../../utils/activity-logger";
 
 const app = new OpenAPIHono();
 
@@ -238,6 +239,17 @@ app.openapi(
       .leftJoin(teamMembers, getTeamMemoMemberJoin())
       .where(eq(teamMemos.id, result[0].id))
       .get();
+
+    // アクティビティログを記録
+    await logActivity({
+      db,
+      teamId,
+      userId: auth.userId,
+      actionType: "memo_created",
+      targetType: "memo",
+      targetId: originalId,
+      targetTitle: title,
+    });
 
     return c.json(newMemo, 200);
   },

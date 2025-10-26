@@ -21,3 +21,4 @@ export * from "./schema/team/slack-configs";
 export * from "./schema/team/board-slack-configs";
 export * from "./schema/team/attachments";
 export * from "./schema/team/notifications";
+export * from "./schema/team/activity-logs";

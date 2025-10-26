@@ -1,6 +1,7 @@
 "use client";
 
 import NotificationList from "@/components/features/notifications/notification-list";
+import { ActivityFeed } from "@/components/features/team/activity-feed";
 import { TeamSettings } from "@/components/features/team/team-settings";
 import WarningIcon from "@/components/icons/warning-icon";
 import { DisplayNameModal } from "@/components/modals/display-name-modal";
@@ -769,6 +770,14 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                 <div className="space-y-6">
                   {/* 統合通知一覧（コメント + 参加申請） */}
                   <NotificationList teamName={customUrl} />
+
+                  {/* アクティビティフィード */}
+                  <Card className="p-6">
+                    <h3 className="text-[22px] font-semibold text-gray-900 mb-4">
+                      アクティビティ
+                    </h3>
+                    <ActivityFeed customUrl={customUrl} limit={10} />
+                  </Card>
                 </div>
               )}
             </div>

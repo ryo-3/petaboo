@@ -24,6 +24,7 @@ import attachmentsRoute from "./src/routes/attachments/route";
 import notificationsRoute from "./src/routes/notifications/route";
 import clerkWebhook from "./src/routes/webhooks/clerk";
 import usersRoute from "./src/routes/users/route";
+import teamActivitiesRoute from "./src/routes/team-activities/route";
 
 export interface Env {
   DB: D1Database;
@@ -105,6 +106,7 @@ app.route("/attachments", attachmentsRoute);
 app.route("/notifications", notificationsRoute);
 app.route("/webhooks/clerk", clerkWebhook);
 app.route("/users", usersRoute);
+app.route("/teams", teamActivitiesRoute);
 
 // OpenAPI設定
 app.get("/openapi", (c) => {

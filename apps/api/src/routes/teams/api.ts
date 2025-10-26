@@ -558,6 +558,7 @@ export async function createTeam(c: any) {
       teamId: newTeam.id,
       userId: auth.userId,
       role: "admin",
+      displayName: adminDisplayName,
       avatarColor: generateAvatarColor(auth.userId), // 色を自動生成
       joinedAt: now,
     });
@@ -3296,4 +3297,104 @@ function generateAvatarColor(userId: string): string {
     .reduce((acc, char) => acc + char.charCodeAt(0), 0);
 
   return colors[hash % colors.length] || "bg-gray-500";
+}
+
+// チームメンバーの表示名更新スキーマ
+const updateMemberDisplayNameSchema = z.object({
+  displayName: z
+    .string()
+    .min(1, "表示名は必須です")
+    .max(30, "表示名は30文字以内にしてください"),
+});
+
+// チームメンバーの表示名更新ルート定義
+export const updateMemberDisplayNameRoute = createRoute({
+  method: "patch",
+  path: "/{customUrl}/members/me/display-name",
+  request: {
+    params: z.object({
+      customUrl: z.string(),
+    }),
+    body: {
+      content: {
+        "application/json": {
+          schema: updateMemberDisplayNameSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "表示名更新成功",
+      content: {
+        "application/json": {
+          schema: z.object({
+            displayName: z.string(),
+          }),
+        },
+      },
+    },
+    403: {
+      description: "権限がありません",
+    },
+    404: {
+      description: "チームメンバーが見つかりません",
+    },
+  },
+  tags: ["Teams"],
+});
+
+// チームメンバーの表示名更新ハンドラー
+export async function updateMemberDisplayName(c: any) {
+  const auth = getAuth(c);
+  const db = c.get("db") as DatabaseType;
+  const { customUrl } = c.req.param();
+  const { displayName } = await c.req.json();
+
+  if (!auth?.userId) {
+    return c.json({ message: "認証が必要です" }, 401);
+  }
+
+  try {
+    // チームの存在確認
+    const team = await db
+      .select()
+      .from(teams)
+      .where(eq(teams.customUrl, customUrl))
+      .get();
+
+    if (!team) {
+      return c.json({ message: "チームが見つかりません" }, 404);
+    }
+
+    // チームメンバーの存在確認
+    const member = await db
+      .select()
+      .from(teamMembers)
+      .where(
+        and(
+          eq(teamMembers.teamId, team.id),
+          eq(teamMembers.userId, auth.userId),
+        ),
+      )
+      .get();
+
+    if (!member) {
+      return c.json({ message: "チームメンバーではありません" }, 403);
+    }
+
+    // 表示名を更新
+    await db
+      .update(teamMembers)
+      .set({
+        displayName: displayName,
+      })
+      .where(eq(teamMembers.id, member.id))
+      .run();
+
+    return c.json({ displayName });
+  } catch (error) {
+    console.error("表示名更新エラー:", error);
+    return c.json({ message: "表示名の更新に失敗しました" }, 500);
+  }
 }

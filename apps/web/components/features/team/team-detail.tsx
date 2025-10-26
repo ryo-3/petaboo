@@ -5,6 +5,7 @@ import { ActivityFeed } from "@/components/features/team/activity-feed";
 import { TeamSettings } from "@/components/features/team/team-settings";
 import WarningIcon from "@/components/icons/warning-icon";
 import { DisplayNameModal } from "@/components/modals/display-name-modal";
+import { TeamDisplayNameModal } from "@/components/modals/team-display-name-modal";
 import BoardScreen from "@/components/screens/board-screen";
 import MemoScreen from "@/components/screens/memo-screen";
 import SearchScreen from "@/components/screens/search-screen";
@@ -25,6 +26,7 @@ import { useManageJoinRequest } from "@/src/hooks/use-manage-join-request";
 import { useSimpleTeamNotifier } from "@/src/hooks/use-simple-team-notifier";
 import { useTeamDetail } from "@/src/hooks/use-team-detail";
 import { useUserInfo } from "@/src/hooks/use-user-info";
+import { useUpdateMemberDisplayName } from "@/src/hooks/use-update-member-display-name";
 import UserMemberCard from "@/components/shared/user-member-card";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
@@ -84,6 +86,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     rejectError,
   } = useManageJoinRequest(isAdmin ? customUrl : "");
 
+  const { mutate: updateDisplayName } = useUpdateMemberDisplayName();
+
   const [showInvitePanel, setShowInvitePanel] = useState(false);
   const [previousTab, setPreviousTab] = useState<string | null>(null);
   const [inviteMessage, setInviteMessage] = useState<{
@@ -121,6 +125,13 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
   // 表示名設定モーダル
   const [showDisplayNameModal, setShowDisplayNameModal] = useState(false);
+
+  // チーム表示名変更モーダル
+  const [showTeamDisplayNameModal, setShowTeamDisplayNameModal] =
+    useState(false);
+  const [currentMemberDisplayName, setCurrentMemberDisplayName] = useState<
+    string | null
+  >(null);
 
   // キック機能
   const [kickConfirmModal, setKickConfirmModal] = useState<{
@@ -1023,6 +1034,16 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                           joinedAt={member.joinedAt}
                           isCurrentUser={member.userId === userInfo?.userId}
                           avatarColor={member.avatarColor}
+                          onEditClick={
+                            member.userId === userInfo?.userId
+                              ? () => {
+                                  setCurrentMemberDisplayName(
+                                    member.displayName,
+                                  );
+                                  setShowTeamDisplayNameModal(true);
+                                }
+                              : undefined
+                          }
                         >
                           {/* メンバー管理ボタン（編集モード時のみ、管理者・自分以外に表示） */}
                           {isEditMode &&
@@ -1135,6 +1156,24 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
             </div>
           </div>
         </Modal>
+
+        {/* チーム表示名変更モーダル */}
+        <TeamDisplayNameModal
+          isOpen={showTeamDisplayNameModal}
+          onClose={() => setShowTeamDisplayNameModal(false)}
+          currentDisplayName={currentMemberDisplayName}
+          onSave={async (newName: string) => {
+            return new Promise<void>((resolve, reject) => {
+              updateDisplayName(
+                { customUrl, displayName: newName },
+                {
+                  onSuccess: () => resolve(),
+                  onError: (error) => reject(error),
+                },
+              );
+            });
+          }}
+        />
       </div>
     </div>
   );

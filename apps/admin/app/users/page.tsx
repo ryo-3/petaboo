@@ -85,6 +85,13 @@ export default function UsersList() {
           )}
         />
         <Table.Column
+          title="ユーザー名"
+          dataIndex="displayName"
+          render={(value: string) => (
+            <span style={{ fontSize: "14px" }}>{value || "-"}</span>
+          )}
+        />
+        <Table.Column
           title="メールアドレス"
           dataIndex="email"
           render={(value: string) => (

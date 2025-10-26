@@ -240,6 +240,7 @@ export const getUserByIdRoute = createRoute({
             id: z.string(),
             userId: z.string(),
             email: z.string(),
+            displayName: z.string().nullable(),
             planType: z.enum(["free", "premium"]),
             createdAt: z.number(),
             updatedAt: z.number().optional(),
@@ -308,6 +309,7 @@ export const getUsersListRoute = createRoute({
               id: z.string(),
               userId: z.string(),
               email: z.string(),
+              displayName: z.string().nullable(),
               planType: z.enum(["free", "premium"]),
               createdAt: z.number(),
             }),
@@ -424,15 +426,27 @@ export async function getUsersList(c: any) {
           );
 
           if (response.ok) {
-            const clerkUser = await response.json();
+            const clerkUser: any = await response.json();
             const primaryEmail = clerkUser.email_addresses?.find(
               (email: any) => email.id === clerkUser.primary_email_address_id,
             );
+
+            // ユーザー名の取得（優先順位: first_name/last_name → username → null）
+            let displayName = null;
+            if (clerkUser.first_name || clerkUser.last_name) {
+              displayName = [clerkUser.first_name, clerkUser.last_name]
+                .filter(Boolean)
+                .join(" ")
+                .trim();
+            } else if (clerkUser.username) {
+              displayName = clerkUser.username;
+            }
 
             return {
               id: user.userId, // Refineはデフォルトでidフィールドを期待する
               userId: user.userId,
               email: primaryEmail?.email_address || "メール不明",
+              displayName: displayName,
               planType: user.planType,
               createdAt: user.createdAt,
             };
@@ -444,7 +458,8 @@ export async function getUsersList(c: any) {
             return {
               id: user.userId,
               userId: user.userId,
-              email: "取得失敗",
+              email: "削除済みアカウント",
+              displayName: null,
               planType: user.planType,
               createdAt: user.createdAt,
             };
@@ -454,7 +469,8 @@ export async function getUsersList(c: any) {
           return {
             id: user.userId,
             userId: user.userId,
-            email: "取得エラー",
+            email: "削除済みアカウント",
+            displayName: null,
             planType: user.planType,
             createdAt: user.createdAt,
           };
@@ -522,15 +538,27 @@ export async function getUserById(c: any) {
       );
 
       if (response.ok) {
-        const clerkUser = await response.json();
+        const clerkUser: any = await response.json();
         const primaryEmail = clerkUser.email_addresses?.find(
           (email: any) => email.id === clerkUser.primary_email_address_id,
         );
+
+        // ユーザー名の取得（優先順位: first_name/last_name → username → null）
+        let displayName = null;
+        if (clerkUser.first_name || clerkUser.last_name) {
+          displayName = [clerkUser.first_name, clerkUser.last_name]
+            .filter(Boolean)
+            .join(" ")
+            .trim();
+        } else if (clerkUser.username) {
+          displayName = clerkUser.username;
+        }
 
         return c.json({
           id: user.userId, // Refineはデフォルトでidフィールドを期待する
           userId: user.userId,
           email: primaryEmail?.email_address || "メール不明",
+          displayName: displayName,
           planType: user.planType,
           createdAt: user.createdAt,
           updatedAt: user.updatedAt,
@@ -545,7 +573,8 @@ export async function getUserById(c: any) {
         return c.json({
           id: user.userId,
           userId: user.userId,
-          email: "取得失敗",
+          email: "削除済みアカウント",
+          displayName: null,
           planType: user.planType,
           createdAt: user.createdAt,
           updatedAt: user.updatedAt,
@@ -558,7 +587,8 @@ export async function getUserById(c: any) {
       return c.json({
         id: user.userId,
         userId: user.userId,
-        email: "取得エラー",
+        email: "削除済みアカウント",
+        displayName: null,
         planType: user.planType,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,

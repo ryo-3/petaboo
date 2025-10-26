@@ -16,6 +16,7 @@ import {
 } from "../../utils/slack-notifier";
 import { decryptWebhookUrl, hasEncryptionKey } from "../../utils/encryption";
 import type { OpenAPIHono } from "@hono/zod-openapi";
+import { logActivity } from "../../utils/activity-logger";
 
 // 共通スキーマ定義
 const TeamCommentSchema = z.object({
@@ -588,6 +589,44 @@ export const postComment = async (c: any) => {
     console.error("❌ Slack notification failed:", error);
     // エラーが発生してもコメント投稿は成功として扱う
   }
+
+  // アクティビティログを記録（対象タイトルを取得）
+  let targetTitle = null;
+  if (targetType === "memo") {
+    const memos = await db
+      .select({ title: teamMemos.title })
+      .from(teamMemos)
+      .where(
+        and(
+          eq(teamMemos.originalId, targetOriginalId),
+          eq(teamMemos.teamId, teamId),
+        ),
+      )
+      .limit(1);
+    targetTitle = memos.length > 0 ? memos[0].title : null;
+  } else if (targetType === "task") {
+    const tasks = await db
+      .select({ title: teamTasks.title })
+      .from(teamTasks)
+      .where(
+        and(
+          eq(teamTasks.originalId, targetOriginalId),
+          eq(teamTasks.teamId, teamId),
+        ),
+      )
+      .limit(1);
+    targetTitle = tasks.length > 0 ? tasks[0].title : null;
+  }
+
+  await logActivity({
+    db,
+    teamId,
+    userId: auth.userId,
+    actionType: "comment_created",
+    targetType: "comment",
+    targetId: targetOriginalId,
+    targetTitle: targetTitle,
+  });
 
   return c.json(result[0], 200);
 };

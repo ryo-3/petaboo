@@ -13,6 +13,7 @@ import {
   getTeamTaskMemberJoin,
   getTeamTaskSelectFields,
 } from "../../utils/teamJoinUtils";
+import { logActivity } from "../../utils/activity-logger";
 
 const app = new OpenAPIHono();
 
@@ -292,6 +293,17 @@ app.openapi(
       .leftJoin(teamMembers, getTeamTaskMemberJoin())
       .where(eq(teamTasks.id, result[0].id))
       .get();
+
+    // アクティビティログを記録
+    await logActivity({
+      db,
+      teamId,
+      userId: auth.userId,
+      actionType: "task_created",
+      targetType: "task",
+      targetId: originalId,
+      targetTitle: title,
+    });
 
     return c.json(newTask, 200);
   },

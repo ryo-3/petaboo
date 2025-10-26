@@ -24,11 +24,14 @@ CLERK_PUBLISHABLE_KEY = "pk_test_bWFpbi1jcmFuZS04Ni5jbGVyay5hY2NvdW50cy5kZXYk"
 FRONTEND_URL = "https://petaboo.vercel.app"
 # 本番環境用API URL
 API_BASE_URL = "https://petaboo-api.workers.dev"
+# 管理者トークン（開発用）
+ADMIN_TOKEN = "petaboo_admin_dev_token_2025"
 
 # ローカル開発環境用設定
 [env.local.vars]
 FRONTEND_URL = "http://localhost:7593"
 API_BASE_URL = "http://localhost:7594"
+ADMIN_TOKEN = "petaboo_admin_dev_token_2025"
 
 # Workers Logs設定
 [observability]

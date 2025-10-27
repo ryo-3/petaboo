@@ -212,15 +212,43 @@ export const useAttachmentManager = ({
 
   // 削除予定画像を一括削除
   const deletePendingAttachments = useCallback(async () => {
-    if (pendingDeletes.length === 0) return;
+    if (pendingDeletes.length === 0) return { success: true, failedCount: 0 };
 
-    await Promise.allSettled(
+    // 削除開始通知（IDを取得）
+    const count = pendingDeletes.length;
+    const startTime = Date.now();
+
+    // 削除中トーストを表示（自動消去なし）
+    const deletingToastId = showToast(`画像を${count}枚削除中...`, "info", 0);
+
+    const results = await Promise.allSettled(
       pendingDeletes.map((id) => deleteMutation.mutateAsync(id)),
     );
 
+    const failedCount = results.filter((r) => r.status === "rejected").length;
+
+    // 最低3秒表示を保証
+    const elapsed = Date.now() - startTime;
+    const remainingTime = Math.max(0, 3000 - elapsed);
+    if (remainingTime > 0) {
+      await new Promise((resolve) => setTimeout(resolve, remainingTime));
+    }
+
+    // 削除中トーストを削除
+    removeToast(deletingToastId);
+
+    // 完了トーストを表示
+    if (failedCount > 0) {
+      showToast(`${failedCount}枚の画像削除に失敗しました`, "error");
+    } else {
+      showToast("画像の削除が完了しました", "success", 3000);
+    }
+
     // 削除完了後にクリア
     setPendingDeletes([]);
-  }, [pendingDeletes, deleteMutation]);
+
+    return { success: failedCount === 0, failedCount };
+  }, [pendingDeletes, deleteMutation, showToast, removeToast]);
 
   // 保存待ち・削除予定をリセット
   const resetPending = useCallback(() => {

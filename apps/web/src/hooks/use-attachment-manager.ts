@@ -54,6 +54,8 @@ export const useAttachmentManager = ({
   const [pendingImages, setPendingImages] = useState<File[]>([]);
   // 削除予定の画像ID（保存時に削除）
   const [pendingDeletes, setPendingDeletes] = useState<number[]>([]);
+  // アップロード・削除処理中フラグ
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // ファイル形式バリデーション（画像 + PDF等）
   const validateImageFile = useCallback(
@@ -170,84 +172,96 @@ export const useAttachmentManager = ({
   const uploadPendingImages = useCallback(async () => {
     if (pendingImages.length === 0) return { success: true, failedCount: 0 };
 
-    // アップロード開始通知（IDを取得）
-    const count = pendingImages.length;
-    const startTime = Date.now();
+    setIsProcessing(true);
 
-    // アップロード中トーストを表示（自動消去なし）
-    const uploadingToastId = showToast(
-      `画像を${count}枚アップロード中...`,
-      "info",
-      0,
-    );
+    try {
+      // アップロード開始通知（IDを取得）
+      const count = pendingImages.length;
+      const startTime = Date.now();
 
-    const results = await Promise.allSettled(
-      pendingImages.map((file) => uploadMutation.mutateAsync(file)),
-    );
+      // アップロード中トーストを表示（自動消去なし）
+      const uploadingToastId = showToast(
+        `画像を${count}枚アップロード中...`,
+        "info",
+        0,
+      );
 
-    const failedCount = results.filter((r) => r.status === "rejected").length;
+      const results = await Promise.allSettled(
+        pendingImages.map((file) => uploadMutation.mutateAsync(file)),
+      );
 
-    // 最低3秒表示を保証
-    const elapsed = Date.now() - startTime;
-    const remainingTime = Math.max(0, 3000 - elapsed);
-    if (remainingTime > 0) {
-      await new Promise((resolve) => setTimeout(resolve, remainingTime));
+      const failedCount = results.filter((r) => r.status === "rejected").length;
+
+      // 最低3秒表示を保証
+      const elapsed = Date.now() - startTime;
+      const remainingTime = Math.max(0, 3000 - elapsed);
+      if (remainingTime > 0) {
+        await new Promise((resolve) => setTimeout(resolve, remainingTime));
+      }
+
+      // アップロード中トーストを削除
+      removeToast(uploadingToastId);
+
+      // 完了トーストを表示
+      if (failedCount > 0) {
+        showToast(`${failedCount}枚の画像アップロードに失敗しました`, "error");
+      } else {
+        showToast("画像のアップロードが完了しました", "success", 3000);
+      }
+
+      // アップロード成功した画像をクリア
+      setPendingImages([]);
+
+      return { success: failedCount === 0, failedCount };
+    } finally {
+      setIsProcessing(false);
     }
-
-    // アップロード中トーストを削除
-    removeToast(uploadingToastId);
-
-    // 完了トーストを表示
-    if (failedCount > 0) {
-      showToast(`${failedCount}枚の画像アップロードに失敗しました`, "error");
-    } else {
-      showToast("画像のアップロードが完了しました", "success", 3000);
-    }
-
-    // アップロード成功した画像をクリア
-    setPendingImages([]);
-
-    return { success: failedCount === 0, failedCount };
   }, [pendingImages, uploadMutation, showToast, removeToast]);
 
   // 削除予定画像を一括削除
   const deletePendingAttachments = useCallback(async () => {
     if (pendingDeletes.length === 0) return { success: true, failedCount: 0 };
 
-    // 削除開始通知（IDを取得）
-    const count = pendingDeletes.length;
-    const startTime = Date.now();
+    setIsProcessing(true);
 
-    // 削除中トーストを表示（自動消去なし）
-    const deletingToastId = showToast(`画像を${count}枚削除中...`, "info", 0);
+    try {
+      // 削除開始通知（IDを取得）
+      const count = pendingDeletes.length;
+      const startTime = Date.now();
 
-    const results = await Promise.allSettled(
-      pendingDeletes.map((id) => deleteMutation.mutateAsync(id)),
-    );
+      // 削除中トーストを表示（自動消去なし）
+      const deletingToastId = showToast(`画像を${count}枚削除中...`, "info", 0);
 
-    const failedCount = results.filter((r) => r.status === "rejected").length;
+      const results = await Promise.allSettled(
+        pendingDeletes.map((id) => deleteMutation.mutateAsync(id)),
+      );
 
-    // 最低3秒表示を保証
-    const elapsed = Date.now() - startTime;
-    const remainingTime = Math.max(0, 3000 - elapsed);
-    if (remainingTime > 0) {
-      await new Promise((resolve) => setTimeout(resolve, remainingTime));
+      const failedCount = results.filter((r) => r.status === "rejected").length;
+
+      // 最低3秒表示を保証
+      const elapsed = Date.now() - startTime;
+      const remainingTime = Math.max(0, 3000 - elapsed);
+      if (remainingTime > 0) {
+        await new Promise((resolve) => setTimeout(resolve, remainingTime));
+      }
+
+      // 削除中トーストを削除
+      removeToast(deletingToastId);
+
+      // 完了トーストを表示
+      if (failedCount > 0) {
+        showToast(`${failedCount}枚の画像削除に失敗しました`, "error");
+      } else {
+        showToast("画像の削除が完了しました", "success", 3000);
+      }
+
+      // 削除完了後にクリア
+      setPendingDeletes([]);
+
+      return { success: failedCount === 0, failedCount };
+    } finally {
+      setIsProcessing(false);
     }
-
-    // 削除中トーストを削除
-    removeToast(deletingToastId);
-
-    // 完了トーストを表示
-    if (failedCount > 0) {
-      showToast(`${failedCount}枚の画像削除に失敗しました`, "error");
-    } else {
-      showToast("画像の削除が完了しました", "success", 3000);
-    }
-
-    // 削除完了後にクリア
-    setPendingDeletes([]);
-
-    return { success: failedCount === 0, failedCount };
   }, [pendingDeletes, deleteMutation, showToast, removeToast]);
 
   // 保存待ち・削除予定をリセット
@@ -275,7 +289,7 @@ export const useAttachmentManager = ({
     resetPending,
 
     // ローディング状態
-    isUploading: uploadMutation.isPending,
-    isDeleting: deleteMutation.isPending,
+    isUploading: isProcessing || uploadMutation.isPending,
+    isDeleting: isProcessing || deleteMutation.isPending,
   };
 };

@@ -1024,7 +1024,7 @@ function MemoEditor({
             tags={localTags}
             spacing="normal"
             showWhen="has-content"
-            className="mb-4"
+            className="mb-2"
           />
         </BaseViewer>
 

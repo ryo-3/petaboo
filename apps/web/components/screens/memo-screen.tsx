@@ -762,7 +762,7 @@ function MemoScreen({
           preloadedTaggings={safeAllTaggings || []}
           preloadedBoardItems={safeAllBoardItems || []}
           preloadedItemBoards={itemBoards}
-          showDateAtBottom={teamMode}
+          showDateAtBottom={true}
           unifiedOperations={operations}
         />
       )}
@@ -789,7 +789,7 @@ function MemoScreen({
           createdBy={selectedMemo.createdBy}
           createdByUserId={selectedMemo.userId}
           createdByAvatarColor={selectedMemo.avatarColor}
-          showDateAtBottom={teamMode}
+          showDateAtBottom={true}
           unifiedOperations={operations}
         />
       )}

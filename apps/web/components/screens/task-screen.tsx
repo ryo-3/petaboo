@@ -696,7 +696,7 @@ function TaskScreen({
           onClose={() => setTaskScreenMode("list")}
           onSelectTask={onSelectTask}
           customHeight="flex-1 min-h-0"
-          showDateAtBottom={teamMode}
+          showDateAtBottom={true}
           onSaveComplete={(savedTask, isNewTask, isContinuousMode) => {
             if (isNewTask && !isContinuousMode) {
               onSelectTask(savedTask);
@@ -728,7 +728,7 @@ function TaskScreen({
           createdByUserId={selectedTask.userId}
           createdByAvatarColor={selectedTask.avatarColor}
           customHeight="flex-1 min-h-0"
-          showDateAtBottom={teamMode}
+          showDateAtBottom={true}
           preloadedTags={tags || []}
           preloadedBoards={boards || []}
           preloadedTaggings={safeAllTaggings}
@@ -1059,7 +1059,7 @@ function TaskScreen({
                 task={null}
                 onClose={() => setTaskScreenMode("list")}
                 onSelectTask={onSelectTask}
-                showDateAtBottom={teamMode}
+                showDateAtBottom={true}
                 onSaveComplete={(savedTask, isNewTask, isContinuousMode) => {
                   if (isNewTask && !isContinuousMode) {
                     onSelectTask(savedTask);
@@ -1089,7 +1089,7 @@ function TaskScreen({
                 createdBy={selectedTask.createdBy}
                 createdByUserId={selectedTask.userId}
                 createdByAvatarColor={selectedTask.avatarColor}
-                showDateAtBottom={teamMode}
+                showDateAtBottom={true}
                 preloadedTags={tags || []}
                 preloadedBoards={boards || []}
                 preloadedTaggings={safeAllTaggings}

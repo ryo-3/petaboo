@@ -48,7 +48,7 @@ app.use(
     ], // 本番・プレビュー・開発ドメイン
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
-    credentials: false,
+    credentials: true,
   }),
 );
 

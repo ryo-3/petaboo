@@ -1093,6 +1093,7 @@ function TaskEditor({
             onDeletePending={handleDeletePendingImage}
             pendingDeletes={pendingDeletes}
             onRestore={handleRestoreAttachment}
+            isUploading={isUploading}
           />
         )}
 

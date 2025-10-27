@@ -12,6 +12,7 @@ interface AttachmentGalleryProps {
   onDeletePending?: (index: number) => void; // 保存待ち画像の削除
   pendingDeletes?: number[]; // 削除予定の画像ID
   onRestore?: (attachmentId: number) => void; // 削除予定から復元
+  isUploading?: boolean; // アップロード中
 }
 
 export default function AttachmentGallery({
@@ -22,6 +23,7 @@ export default function AttachmentGallery({
   onDeletePending,
   pendingDeletes = [],
   onRestore,
+  isUploading = false,
 }: AttachmentGalleryProps) {
   const { userId, getToken } = useAuth();
   const { showToast } = useToast();
@@ -120,6 +122,7 @@ export default function AttachmentGallery({
           const isMarkedForDelete = pendingDeletes.includes(attachment.id);
           const isImage = attachment.mimeType.startsWith("image/");
           const isPdf = attachment.mimeType === "application/pdf";
+          const isProcessing = isUploading || isDeleting;
 
           return (
             <div key={attachment.id} className="relative group">
@@ -129,23 +132,30 @@ export default function AttachmentGallery({
                     <img
                       src={imageUrl}
                       alt={attachment.fileName}
-                      className={`w-32 h-32 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity ${
-                        isMarkedForDelete
-                          ? "opacity-50 border-2 border-red-400"
-                          : ""
+                      className={`w-32 h-32 object-cover rounded-lg ${
+                        isProcessing
+                          ? "opacity-50 cursor-default"
+                          : isMarkedForDelete
+                            ? "opacity-50 border-2 border-red-400 cursor-pointer hover:opacity-80 transition-opacity"
+                            : "cursor-pointer hover:opacity-80 transition-opacity"
                       }`}
-                      onClick={() => setSelectedImage(imageUrl)}
+                      onClick={() =>
+                        !isProcessing && setSelectedImage(imageUrl)
+                      }
                     />
                   ) : isPdf ? (
                     <a
-                      href={attachment.url}
+                      href={isProcessing ? undefined : attachment.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`w-32 h-32 bg-gray-100 rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-200 transition-colors ${
-                        isMarkedForDelete
-                          ? "opacity-50 border-2 border-red-400"
-                          : ""
+                      className={`w-32 h-32 bg-gray-100 rounded-lg flex flex-col items-center justify-center p-2 ${
+                        isProcessing
+                          ? "opacity-50 cursor-default"
+                          : isMarkedForDelete
+                            ? "opacity-50 border-2 border-red-400 hover:bg-gray-200 transition-colors"
+                            : "hover:bg-gray-200 transition-colors"
                       }`}
+                      onClick={(e) => isProcessing && e.preventDefault()}
                     >
                       <svg
                         className="w-12 h-12 text-red-500 mb-1"
@@ -160,14 +170,17 @@ export default function AttachmentGallery({
                     </a>
                   ) : (
                     <a
-                      href={attachment.url}
+                      href={isProcessing ? undefined : attachment.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`w-32 h-32 bg-gray-100 rounded-lg flex flex-col items-center justify-center p-2 hover:bg-gray-200 transition-colors ${
-                        isMarkedForDelete
-                          ? "opacity-50 border-2 border-red-400"
-                          : ""
+                      className={`w-32 h-32 bg-gray-100 rounded-lg flex flex-col items-center justify-center p-2 ${
+                        isProcessing
+                          ? "opacity-50 cursor-default"
+                          : isMarkedForDelete
+                            ? "opacity-50 border-2 border-red-400 hover:bg-gray-200 transition-colors"
+                            : "hover:bg-gray-200 transition-colors"
                       }`}
+                      onClick={(e) => isProcessing && e.preventDefault()}
                     >
                       <svg
                         className="w-12 h-12 text-gray-500 mb-1"
@@ -192,7 +205,7 @@ export default function AttachmentGallery({
                   <span className="text-xs text-gray-500">読込中...</span>
                 </div>
               )}
-              {attachment.userId === userId && imageUrl && (
+              {attachment.userId === userId && imageUrl && !isProcessing && (
                 <>
                   {isMarkedForDelete
                     ? // 削除予定の場合は復元ボタン

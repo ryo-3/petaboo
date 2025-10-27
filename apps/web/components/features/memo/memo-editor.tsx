@@ -1038,6 +1038,7 @@ function MemoEditor({
             onDeletePending={handleDeletePendingImage}
             pendingDeletes={pendingDeletes}
             onRestore={handleRestoreAttachment}
+            isUploading={isUploading}
           />
         )}
 

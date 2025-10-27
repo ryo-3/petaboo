@@ -1044,7 +1044,7 @@ function MemoEditor({
 
         {/* 日付情報とアバターアイコンを右下に配置（showDateAtBottom=trueの場合のみ） */}
         {showDateAtBottom && memo && memo.id !== 0 && (
-          <div className="flex justify-end items-center gap-2 mb-3 mr-2 mt-1">
+          <div className="flex justify-end items-center gap-2 mb-3 mr-2 mt-2">
             {/* チーム機能: 作成者アイコン */}
             <CreatorAvatar
               createdBy={createdBy}

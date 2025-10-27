@@ -439,7 +439,7 @@ function MemoScreen({
     });
 
   // 削除済みメモの完全削除処理
-  const permanentDeleteMemo = usePermanentDeleteMemo();
+  const permanentDeleteMemo = usePermanentDeleteMemo({ teamMode, teamId });
 
   // タブ切り替え用の状態
   const [displayTab, setDisplayTab] = useState(activeTab);
@@ -795,69 +795,60 @@ function MemoScreen({
       )}
       {/* 表示モード（削除済みメモ） */}
       {memoScreenMode === "view" && selectedDeletedMemo && !selectedMemo && (
-        <>
-          {console.log("📋 削除済みメモエディター表示:", {
-            selectedDeletedMemoId: selectedDeletedMemo.id,
-            selectedDeletedMemoOriginalId: selectedDeletedMemo.originalId,
-            selectedDeletedMemoTitle: selectedDeletedMemo.title,
-            deletedMemosCount: deletedMemos?.length,
-            renderTimestamp: new Date().toISOString(),
-          })}
-          {console.log("🔍 エディター表示状態:", {
-            memoScreenMode,
-            hasSelectedDeletedMemo: !!selectedDeletedMemo,
-            hasSelectedMemo: !!selectedMemo,
-            willRenderEditor: true,
-          })}
-          <MemoEditor
-            memo={selectedDeletedMemo}
-            onClose={() => {
-              setMemoScreenMode("list");
-              if (activeTab === "deleted") {
-                setActiveTab("normal");
-              }
-              onDeselectAndStayOnMemoList?.();
-            }}
-            onRestore={unifiedRestoreAndSelectNext}
-            onDelete={async () => {
-              if (selectedDeletedMemo && deletedMemos) {
-                const displayOrder = getMemoDisplayOrder();
-                const nextItem = getNextItemAfterDeletion(
-                  deletedMemos,
-                  selectedDeletedMemo,
-                  displayOrder,
-                );
+        <MemoEditor
+          memo={selectedDeletedMemo}
+          onClose={() => {
+            setMemoScreenMode("list");
+            if (activeTab === "deleted") {
+              setActiveTab("normal");
+            }
+            onDeselectAndStayOnMemoList?.();
+          }}
+          onRestore={unifiedRestoreAndSelectNext}
+          onDelete={async () => {
+            if (selectedDeletedMemo && deletedMemos) {
+              const displayOrder = getMemoDisplayOrder();
+              const nextItem = getNextItemAfterDeletion(
+                deletedMemos,
+                selectedDeletedMemo,
+                displayOrder,
+              );
 
-                setIsRightLidOpen(true);
+              setIsRightLidOpen(true);
 
+              try {
                 await permanentDeleteMemo.mutateAsync(
                   selectedDeletedMemo.originalId,
                 );
-
-                if (nextItem && nextItem.id !== selectedDeletedMemo.id) {
-                  onSelectDeletedMemo(nextItem);
-                  setMemoScreenMode("view");
-                } else {
-                  setMemoScreenMode("list");
-                  onDeselectAndStayOnMemoList?.();
-                }
-
+              } catch (error) {
+                console.error("❌ 完全削除エラー:", error);
                 setIsRightLidOpen(false);
+                return;
               }
-            }}
-            isLidOpen={isRightLidOpen}
-            customHeight="flex-1 min-h-0"
-            preloadedTags={tags || []}
-            preloadedBoards={boards || []}
-            preloadedTaggings={safeAllTaggings || []}
-            preloadedBoardItems={safeAllBoardItems || []}
-            createdBy={selectedDeletedMemo.createdBy}
-            createdByUserId={selectedDeletedMemo.userId}
-            createdByAvatarColor={selectedDeletedMemo.avatarColor}
-            totalDeletedCount={deletedMemos?.length || 0}
-            unifiedOperations={operations}
-          />
-        </>
+
+              if (nextItem && nextItem.id !== selectedDeletedMemo.id) {
+                onSelectDeletedMemo(nextItem);
+                setMemoScreenMode("view");
+              } else {
+                setMemoScreenMode("list");
+                onDeselectAndStayOnMemoList?.();
+              }
+
+              setIsRightLidOpen(false);
+            }
+          }}
+          isLidOpen={isRightLidOpen}
+          customHeight="flex-1 min-h-0"
+          preloadedTags={tags || []}
+          preloadedBoards={boards || []}
+          preloadedTaggings={safeAllTaggings || []}
+          preloadedBoardItems={safeAllBoardItems || []}
+          createdBy={selectedDeletedMemo.createdBy}
+          createdByUserId={selectedDeletedMemo.userId}
+          createdByAvatarColor={selectedDeletedMemo.avatarColor}
+          totalDeletedCount={deletedMemos?.length || 0}
+          unifiedOperations={operations}
+        />
       )}
     </>
   );

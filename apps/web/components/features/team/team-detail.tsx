@@ -435,24 +435,13 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   };
 
   const handleSelectDeletedMemo = (memo: DeletedMemo | null) => {
-    console.log("🎯 handleSelectDeletedMemo 呼び出し:", {
-      memoId: memo?.id,
-      originalId: memo?.originalId,
-      title: memo?.title,
-      currentSelectedId: selectedDeletedMemo?.id,
-      currentSelectedMemo: selectedMemo?.id,
-      timestamp: new Date().toISOString(),
-    });
-
     // 通常メモの選択をクリア（削除済みメモを選択する場合）
     if (memo && selectedMemo) {
-      console.log("🔄 通常メモをクリア:", { clearedMemoId: selectedMemo.id });
       setSelectedMemo(null);
     }
 
     // 状態を更新
     setSelectedDeletedMemo(memo);
-    console.log("✅ setSelectedDeletedMemo 実行完了:", { newMemoId: memo?.id });
   };
 
   const handleSelectDeletedTask = (

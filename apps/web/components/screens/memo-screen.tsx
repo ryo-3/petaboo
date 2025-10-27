@@ -570,7 +570,7 @@ function MemoScreen({
   // 左パネルのコンテンツ（3パネル・2パネル両方で使用）
   const leftPanelContent = (
     <div
-      className={`${hideHeaderButtons ? "pt-3" : "pt-3 pl-5 pr-2"} flex flex-col h-full relative`}
+      className={`${hideHeaderButtons ? "pt-2 md:pt-3" : "pt-2 md:pt-3 pl-2 md:pl-5 md:pr-2"} flex flex-col h-full relative`}
     >
       <DesktopUpper
         currentMode="memo"
@@ -867,7 +867,7 @@ function MemoScreen({
 
   return shouldUseThreePanelLayout ? (
     // ===== 3パネルレイアウト（チームモード＆選択時） =====
-    <div className="min-w-[1280px] h-full">
+    <div className="md:min-w-[1280px] h-full">
       <ControlPanelLayout
         leftPanel={leftPanelContent}
         centerPanel={centerPanelContent}
@@ -940,9 +940,9 @@ function MemoScreen({
   ) : (
     // ===== 2パネルレイアウト（個人モードまたは未選択時） =====
     <div className="flex h-full bg-white relative">
-      {/* 左側：一覧表示エリア */}
+      {/* 左側：一覧表示エリア（スマホでは詳細表示時に非表示） */}
       <div
-        className={`${memoScreenMode === "list" ? "w-full" : "w-[44%]"} ${memoScreenMode !== "list" ? "border-r border-gray-300" : ""} pt-3 pl-5 pr-2 flex flex-col transition-all duration-300 relative`}
+        className={`${memoScreenMode === "list" ? "w-full" : "hidden md:flex md:w-[44%]"} ${memoScreenMode !== "list" ? "md:border-r md:border-gray-300" : ""} pt-2 md:pt-3 pl-2 md:pl-5 md:pr-2 flex-col transition-all duration-300 relative`}
       >
         <DesktopUpper
           currentMode="memo"

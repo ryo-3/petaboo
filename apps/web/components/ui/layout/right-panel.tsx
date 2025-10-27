@@ -70,7 +70,7 @@ function RightPanel({
 
   return (
     <div
-      className={`flex-1 h-full flex flex-col relative ${shouldAnimateIn ? "animate-slide-in-right" : ""} ${shouldAnimateOut ? "animate-slide-out-right" : ""} ${className || ""}`}
+      className={`w-full md:flex-1 h-full flex flex-col relative ${shouldAnimateIn ? "md:animate-slide-in-right" : ""} ${shouldAnimateOut ? "md:animate-slide-out-right" : ""} ${className || ""}`}
     >
       {/* 閉じるボタン */}
       <ClosePanelButton onClose={onClose} />

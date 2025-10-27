@@ -22,6 +22,7 @@ export function TeamSlackSettings({ teamId }: TeamSlackSettingsProps) {
 
   const [webhookUrl, setWebhookUrl] = useState("");
   const [isEnabled, setIsEnabled] = useState(true);
+  const [originalWebhookUrl, setOriginalWebhookUrl] = useState(""); // 元のWebhook URL（マスク済み）
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
@@ -31,6 +32,7 @@ export function TeamSlackSettings({ teamId }: TeamSlackSettingsProps) {
   useEffect(() => {
     if (slackConfig) {
       setWebhookUrl(slackConfig.webhookUrl);
+      setOriginalWebhookUrl(slackConfig.webhookUrl);
       setIsEnabled(slackConfig.isEnabled);
     }
   }, [slackConfig]);
@@ -38,9 +40,12 @@ export function TeamSlackSettings({ teamId }: TeamSlackSettingsProps) {
   const handleSave = async () => {
     setMessage(null);
 
+    // webhookUrlが変更されていない（マスクされたまま）場合は、isEnabledのみ送信
+    const webhookUrlChanged = webhookUrl !== originalWebhookUrl;
+
     try {
       await saveMutation.mutateAsync({
-        webhookUrl,
+        webhookUrl: webhookUrlChanged ? webhookUrl : undefined,
         isEnabled,
       });
 
@@ -48,6 +53,11 @@ export function TeamSlackSettings({ teamId }: TeamSlackSettingsProps) {
         type: "success",
         text: "Slack連携設定を保存しました",
       });
+
+      // 保存後、新しいwebhookUrlを元のURLとして記録
+      if (webhookUrlChanged) {
+        setOriginalWebhookUrl(webhookUrl);
+      }
 
       setTimeout(() => setMessage(null), 3000);
     } catch (error) {

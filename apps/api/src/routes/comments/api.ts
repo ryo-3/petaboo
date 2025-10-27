@@ -181,10 +181,21 @@ async function sendMentionNotificationToSlack(
 
   if (encryptionKey && hasEncryptionKey(env)) {
     try {
-      webhookUrl = await decryptWebhookUrl(webhookUrl, encryptionKey);
+      const decrypted = await decryptWebhookUrl(webhookUrl, encryptionKey);
+
+      // Slack Webhook URLの形式チェック
+      if (!decrypted.startsWith("https://hooks.slack.com/")) {
+        console.error("Slack通知エラー: 復号化結果が不正なURL形式です");
+        return;
+      }
+
+      webhookUrl = decrypted;
     } catch (error) {
-      console.error("復号化エラー:", error);
-      // 復号化失敗時は暗号化されていない可能性（後方互換性）
+      console.error(
+        "Slack通知エラー: Webhook URLの復号化に失敗しました",
+        error,
+      );
+      return;
     }
   }
 
@@ -323,6 +334,10 @@ async function sendMentionNotificationToSlack(
 
   // Slack通知送信
   const result = await sendSlackNotification(webhookUrl, message);
+
+  if (!result.success) {
+    console.error("Slack通知送信失敗:", result.error);
+  }
 }
 
 // GET /comments（コメント一覧取得）

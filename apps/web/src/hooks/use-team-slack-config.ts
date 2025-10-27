@@ -13,7 +13,7 @@ interface SlackConfig {
 }
 
 interface SlackConfigInput {
-  webhookUrl: string;
+  webhookUrl?: string; // webhookUrl変更なしの場合は省略可能
   isEnabled: boolean;
 }
 

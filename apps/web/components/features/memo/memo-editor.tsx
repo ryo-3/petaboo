@@ -280,6 +280,7 @@ function MemoEditor({
     uploadPendingImages,
     deletePendingAttachments,
     isDeleting,
+    isUploading,
   } = attachmentManager;
 
   // プリロードデータとライブデータを組み合わせてタグを抽出
@@ -860,6 +861,7 @@ function MemoEditor({
                     <SaveButton
                       onClick={handleSaveWithTags}
                       disabled={
+                        isUploading ||
                         (!hasChanges &&
                           !hasTagChanges &&
                           pendingImages.length === 0 &&
@@ -868,6 +870,7 @@ function MemoEditor({
                       }
                       isSaving={
                         isSaving ||
+                        isUploading ||
                         createTaggingMutation.isPending ||
                         deleteTaggingMutation.isPending ||
                         createTeamTaggingMutation.isPending ||

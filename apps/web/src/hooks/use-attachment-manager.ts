@@ -170,6 +170,10 @@ export const useAttachmentManager = ({
   const uploadPendingImages = useCallback(async () => {
     if (pendingImages.length === 0) return;
 
+    // アップロード開始通知
+    const count = pendingImages.length;
+    showToast(`画像を${count}枚アップロード中...`, "info");
+
     const results = await Promise.allSettled(
       pendingImages.map((file) => uploadMutation.mutateAsync(file)),
     );

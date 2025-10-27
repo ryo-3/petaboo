@@ -217,6 +217,7 @@ function TaskEditor({
     uploadPendingImages,
     deletePendingAttachments,
     isDeleting: isAttachmentDeleting,
+    isUploading,
   } = attachmentManager;
 
   // チームモード: 一括取得からフィルタリング
@@ -728,13 +729,15 @@ function TaskEditor({
   // 新規作成時の保存可能性チェック（タグ変更・画像変更も含める）
   const canSave = isDeleted
     ? false
-    : isNewTask
-      ? !!title.trim()
-      : (hasChanges ||
-          hasTagChanges ||
-          pendingImages.length > 0 ||
-          pendingDeletes.length > 0) &&
-        !!title.trim(); // 既存タスクも空タイトルの場合は保存不可
+    : isUploading
+      ? false // アップロード中は保存不可
+      : isNewTask
+        ? !!title.trim()
+        : (hasChanges ||
+            hasTagChanges ||
+            pendingImages.length > 0 ||
+            pendingDeletes.length > 0) &&
+          !!title.trim(); // 既存タスクも空タイトルの場合は保存不可
 
   // ボードIDを名前に変換する関数
   const getBoardName = (boardId: string) => {
@@ -927,6 +930,7 @@ function TaskEditor({
                   disabled={!canSave}
                   isSaving={
                     isSaving ||
+                    isUploading ||
                     createTaggingMutation.isPending ||
                     deleteTaggingMutation.isPending
                   }

@@ -115,7 +115,7 @@ export default function AttachmentGallery({
 
   return (
     <>
-      <div className="flex flex-wrap gap-2 mt-3">
+      <div className="flex flex-col md:flex-row md:flex-wrap gap-2 mt-3 px-1">
         {/* 既存の画像・ファイル */}
         {attachments.map((attachment) => {
           const imageUrl = imageUrls[attachment.id];
@@ -132,7 +132,7 @@ export default function AttachmentGallery({
                     <img
                       src={imageUrl}
                       alt={attachment.fileName}
-                      className={`w-32 h-32 object-cover rounded-lg ${
+                      className={`w-full md:w-32 h-auto md:h-32 md:object-cover rounded-lg ${
                         isProcessing
                           ? "opacity-50 cursor-default"
                           : isMarkedForDelete
@@ -271,7 +271,7 @@ export default function AttachmentGallery({
                 <img
                   src={url}
                   alt={`保存待ち ${index + 1}`}
-                  className="w-32 h-32 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border-2 border-blue-400"
+                  className="w-full md:w-32 h-auto md:h-32 md:object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border-2 border-blue-400"
                   onClick={() => setSelectedImage(url)}
                 />
               ) : isPdf ? (

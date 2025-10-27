@@ -23,7 +23,7 @@ export default function CreatorAvatar({
   const sizeClasses = {
     sm: "w-4 h-4 text-xs",
     md: "w-5 h-5 text-xs",
-    lg: "w-6 h-6 text-sm",
+    lg: "w-5 h-5 md:w-6 md:h-6 text-xs md:text-sm",
   };
 
   return (

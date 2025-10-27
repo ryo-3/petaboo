@@ -16,33 +16,35 @@ html, body {
   overflow-x: hidden;
 }
 
-/* スクロールバー全体 */
-::-webkit-scrollbar {
-  width: 10px; /* 太さ */
-  border-radius: 8px;
-}
+/* スクロールバー全体（デスクトップのみ） */
+@media (min-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 10px; /* 太さ */
+    border-radius: 8px;
+  }
 
-/* スクロールつまみ */
-::-webkit-scrollbar-thumb {
-  background: #8f8f8f; /* お好きな色 */
-  border-radius: 8px;
-  border: 2px solid #e5e7eb; /* 外枠（オプション） */
-}
+  /* スクロールつまみ */
+  ::-webkit-scrollbar-thumb {
+    background: #8f8f8f; /* お好きな色 */
+    border-radius: 8px;
+    border: 2px solid #e5e7eb; /* 外枠（オプション） */
+  }
 
-/* 控えめなスクロールバー */
-.hover-scrollbar::-webkit-scrollbar {
-  width: 5px;
-  background: transparent;
-}
+  /* 控えめなスクロールバー */
+  .hover-scrollbar::-webkit-scrollbar {
+    width: 5px;
+    background: transparent;
+  }
 
-.hover-scrollbar::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 2px;
-  border: none;
-}
+  .hover-scrollbar::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 2px;
+    border: none;
+  }
 
-.hover-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
+  .hover-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
 }
 
 /* 右側詳細パネルのスライドインアニメーション */

@@ -474,7 +474,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   if (isLoading) {
     return (
       <div className="flex h-full bg-white overflow-hidden">
-        <div className="w-full pt-3 pl-5 pr-2 flex flex-col">
+        <div className="w-full pt-2 md:pt-3 pl-2 md:pl-5 md:pr-2 flex flex-col">
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           </div>
@@ -486,7 +486,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   if (error || !team) {
     return (
       <div className="flex h-full bg-white overflow-hidden">
-        <div className="w-full pt-3 pl-5 pr-2 flex flex-col">
+        <div className="w-full pt-2 md:pt-3 pl-2 md:pl-5 md:pr-2 flex flex-col">
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           </div>
@@ -497,12 +497,14 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
   return (
     <div
-      className={`flex h-full bg-white overflow-hidden ${activeTab === "overview" ? "pt-3 pl-5 pr-2 mr-3" : activeTab === "team-list" ? "pt-3 pl-5 pr-2" : ""}`}
+      className={`flex h-full bg-white overflow-hidden ${activeTab === "overview" ? "pt-2 md:pt-3 pl-2 md:pl-5 md:pr-2 md:mr-3" : activeTab === "team-list" ? "pt-2 md:pt-3 pl-2 md:pl-5 md:pr-2" : ""}`}
     >
       <div className="w-full flex flex-col h-full">
-        {/* ヘッダー */}
+        {/* ヘッダー（デスクトップは常に表示、スマホはoverviewのみ表示） */}
         {(activeTab === "overview" || activeTab === "team-list") && (
-          <div className="mb-4 flex-shrink-0">
+          <div
+            className={`mb-4 flex-shrink-0 ${activeTab === "overview" ? "" : "hidden md:block"}`}
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 {showInvitePanel && (
@@ -554,6 +556,39 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
           {/* タブコンテンツ */}
           {activeTab === "overview" && (
             <div className="">
+              {/* スマホ用ヘッダー（固定） */}
+              <div className="md:hidden fixed top-0 left-0 right-0 h-12 border-b border-gray-200 bg-white flex items-center px-3 z-10 overflow-hidden">
+                <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center shadow-sm bg-Green flex-shrink-0">
+                    <span className="text-white font-bold text-sm">ぺ</span>
+                  </div>
+                  <h1 className="text-sm font-bold text-gray-800 tracking-wide flex-shrink-0">
+                    ぺたぼー
+                  </h1>
+                  <span className="text-[9px] text-gray-500 whitespace-nowrap">
+                    - 日々のメモやタスクをひとまとめに -
+                  </span>
+                </div>
+              </div>
+              {/* チーム名とチーム設定ボタン（スマホのみ） */}
+              <div className="md:hidden mb-4 pl-2">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-bold text-gray-800">
+                    {team.name}
+                  </h2>
+                  {team.role === "admin" && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleTabChange("team-settings")}
+                      className="flex items-center gap-1"
+                    >
+                      <SettingsIcon className="w-4 h-4" />
+                      設定
+                    </Button>
+                  )}
+                </div>
+              </div>
               {showInvitePanel ? (
                 /* 招待パネル */
                 <div>

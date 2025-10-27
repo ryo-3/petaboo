@@ -504,7 +504,7 @@ function TaskScreen({
   // 左パネルのコンテンツ
   const leftPanelContent = (
     <div
-      className={`${hideHeaderButtons ? "pt-3" : "pt-3 pl-5 pr-2"} flex flex-col h-full relative`}
+      className={`${hideHeaderButtons ? "pt-2 md:pt-3" : "pt-2 md:pt-3 pl-2 md:pl-5 md:pr-2"} flex flex-col h-full relative`}
     >
       <DesktopUpper
         currentMode="task"
@@ -835,7 +835,7 @@ function TaskScreen({
     <div className="flex h-full bg-white">
       {/* 左側：一覧表示エリア */}
       <div
-        className={`${taskScreenMode === "list" ? "w-full" : "w-[44%]"} ${taskScreenMode !== "list" ? "border-r border-gray-300" : ""} pt-3 pl-5 pr-2 flex flex-col transition-all duration-300 relative`}
+        className={`${taskScreenMode === "list" ? "w-full" : "w-[44%]"} ${taskScreenMode !== "list" ? "border-r border-gray-300" : ""} pt-2 md:pt-3 pl-2 md:pl-5 md:pr-2 flex flex-col transition-all duration-300 relative`}
       >
         <DesktopUpper
           currentMode="task"

@@ -265,10 +265,13 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
     }
   };
   return (
-    <div className="flex h-screen bg-white overflow-hidden">
-      <Header />
-      <div className="flex flex-1 pt-16 overflow-hidden">
-        <div className="w-16 border-r border-gray-200 overflow-visible">
+    <div className="flex flex-col h-screen bg-white overflow-hidden">
+      <div className="hidden md:block">
+        <Header />
+      </div>
+      <div className="flex flex-col md:flex-row flex-1 md:pt-16 overflow-hidden">
+        {/* デスクトップ用サイドバー（左） */}
+        <div className="hidden md:block w-16 border-r border-gray-200 overflow-visible">
           <Sidebar
             onSelectMemo={() => {}}
             onShowFullList={handleShowMemoList}
@@ -289,7 +292,32 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
             currentTeamName={teamDetail?.name}
           />
         </div>
-        <main className="flex-1 overflow-hidden">{children}</main>
+
+        {/* メインコンテンツ */}
+        <main className="flex-1 overflow-hidden mb-14 md:mb-0">{children}</main>
+
+        {/* モバイル用ボトムナビ（下） */}
+        <div className="md:hidden fixed bottom-0 left-0 right-0 h-14 border-t border-gray-200 bg-white">
+          <Sidebar
+            onSelectMemo={() => {}}
+            onShowFullList={handleShowMemoList}
+            onHome={handleHome}
+            onEditMemo={() => {}}
+            isCompact={true}
+            currentMode={currentMode}
+            onModeChange={handleModeChange}
+            onShowTaskList={handleShowTaskList}
+            onTeamList={handleTeamList}
+            onBoardDetail={handleBoardDetail}
+            onSettings={handleSettings}
+            onSearch={handleSearch}
+            showingBoardDetail={isTeamBoardDetailPage}
+            currentBoardName={
+              currentBoardName || (lastBoardUrl ? "最後のボード" : undefined)
+            }
+            currentTeamName={teamDetail?.name}
+          />
+        </div>
       </div>
     </div>
   );

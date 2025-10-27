@@ -192,6 +192,9 @@ export const useAttachmentManager = ({
 
       const failedCount = results.filter((r) => r.status === "rejected").length;
 
+      // アップロード完了後すぐにpendingImagesをクリア（二重表示を防ぐ）
+      setPendingImages([]);
+
       // 最低3秒表示を保証
       const elapsed = Date.now() - startTime;
       const remainingTime = Math.max(0, 3000 - elapsed);
@@ -208,9 +211,6 @@ export const useAttachmentManager = ({
       } else {
         showToast("画像のアップロードが完了しました", "success", 3000);
       }
-
-      // アップロード成功した画像をクリア
-      setPendingImages([]);
 
       return { success: failedCount === 0, failedCount };
     } finally {
@@ -238,6 +238,9 @@ export const useAttachmentManager = ({
 
       const failedCount = results.filter((r) => r.status === "rejected").length;
 
+      // 削除完了後すぐにpendingDeletesをクリア（削除予定表示を即座に解除）
+      setPendingDeletes([]);
+
       // 最低3秒表示を保証
       const elapsed = Date.now() - startTime;
       const remainingTime = Math.max(0, 3000 - elapsed);
@@ -254,9 +257,6 @@ export const useAttachmentManager = ({
       } else {
         showToast("画像の削除が完了しました", "success", 3000);
       }
-
-      // 削除完了後にクリア
-      setPendingDeletes([]);
 
       return { success: failedCount === 0, failedCount };
     } finally {

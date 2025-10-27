@@ -128,6 +128,9 @@ function BoardDetailScreen({
     setViewMode,
     setColumnCount,
     setShowEditDate,
+    setShowMemo,
+    setShowTask,
+    setShowComment,
     handleBoardLayoutChange,
     handleSettings,
     handleMemoToggle,
@@ -277,6 +280,61 @@ function BoardDetailScreen({
   });
 
   // タブテキスト表示制御
+  // モバイルフッターからのセクション切り替えイベントをリッスン
+  useEffect(() => {
+    const handleSectionChange = (event: CustomEvent) => {
+      const { section } = event.detail;
+
+      // スマホ表示では、押したセクションのみを表示し、他は非表示にする
+      if (section === "memos") {
+        // メモのみ表示
+        setShowMemo(true);
+        setShowTask(false);
+        setShowComment(false);
+      } else if (section === "tasks") {
+        // タスクのみ表示
+        setShowMemo(false);
+        setShowTask(true);
+        setShowComment(false);
+      } else if (section === "comments") {
+        // コメントのみ表示
+        setShowMemo(false);
+        setShowTask(false);
+        setShowComment(true);
+      }
+    };
+
+    window.addEventListener(
+      "board-section-change",
+      handleSectionChange as EventListener,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "board-section-change",
+        handleSectionChange as EventListener,
+      );
+    };
+  }, [setShowMemo, setShowTask, setShowComment]);
+
+  // 状態変更時にレイアウトに通知（フッターボタンのアクティブ状態を更新）
+  useEffect(() => {
+    let activeSection: "memos" | "tasks" | "comments" = "memos";
+    if (showMemo && !showTask && !showComment) {
+      activeSection = "memos";
+    } else if (!showMemo && showTask && !showComment) {
+      activeSection = "tasks";
+    } else if (!showMemo && !showTask && showComment) {
+      activeSection = "comments";
+    }
+
+    window.dispatchEvent(
+      new CustomEvent("board-section-state-change", {
+        detail: { activeSection },
+      }),
+    );
+  }, [showMemo, showTask, showComment]);
+
   useEffect(() => {
     if (selectedMemo || selectedTask || rightPanelMode) {
       // 右パネルが開いたらすぐにテキストを非表示
@@ -746,8 +804,10 @@ function BoardDetailScreen({
               onBoardLayoutChange={handleBoardLayoutChange}
               showMemo={rightPanelMode === "task-list" ? false : showMemo}
               showTask={rightPanelMode === "memo-list" ? false : showTask}
+              showComment={teamMode ? showComment : undefined}
               onMemoToggle={handleMemoToggle}
               onTaskToggle={handleTaskToggle}
+              onCommentToggle={teamMode ? handleCommentToggle : undefined}
               contentFilterRightPanelMode={rightPanelMode}
               normalCount={allMemoItems.length + allTaskItems.length}
               completedCount={completedCount}

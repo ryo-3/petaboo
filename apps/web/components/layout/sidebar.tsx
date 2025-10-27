@@ -41,6 +41,7 @@ interface SidebarProps {
   onTeamList?: () => void;
   onTeamCreate?: () => void;
   currentTeamName?: string;
+  onBackToBoardList?: () => void;
 }
 
 function Sidebar({
@@ -66,6 +67,7 @@ function Sidebar({
   onTeamList,
   onTeamCreate,
   currentTeamName,
+  onBackToBoardList,
 }: SidebarProps) {
   // NavigationContextから統一されたiconStatesを取得
   const { iconStates } = useNavigation();
@@ -91,22 +93,70 @@ function Sidebar({
     return (
       <div className="flex md:flex-col flex-row items-center md:py-4 py-0 md:h-screen h-14 bg-gray-50 md:justify-between justify-center w-full">
         <div className="flex md:flex-col flex-row items-center md:gap-y-3 gap-x-4 md:w-auto justify-center md:justify-start">
-          <Tooltip text="ホーム" position="right">
-            <button
-              onClick={onHome}
-              className={`p-2 rounded-lg transition-colors ${
-                iconStates.home
-                  ? "bg-slate-500 text-white"
-                  : "bg-gray-200 hover:bg-gray-300 text-gray-600"
-              }`}
-            >
-              <HomeIcon
-                className={`w-5 h-5 ${
-                  iconStates.home ? "text-white" : "text-gray-600"
+          {/* ボード詳細時はホームの代わりに戻るボタンを表示（モバイルのみ） */}
+          {onBackToBoardList && showingBoardDetail ? (
+            <>
+              {/* モバイル：戻るボタン */}
+              <div className="md:hidden">
+                <Tooltip text="ボード一覧に戻る" position="right">
+                  <button
+                    onClick={onBackToBoardList}
+                    className="p-2 rounded-lg transition-colors bg-gray-200 hover:bg-gray-300 text-gray-600"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                      />
+                    </svg>
+                  </button>
+                </Tooltip>
+              </div>
+              {/* デスクトップ：通常のホームボタン */}
+              <div className="hidden md:block">
+                <Tooltip text="ホーム" position="right">
+                  <button
+                    onClick={onHome}
+                    className={`p-2 rounded-lg transition-colors ${
+                      iconStates.home
+                        ? "bg-slate-500 text-white"
+                        : "bg-gray-200 hover:bg-gray-300 text-gray-600"
+                    }`}
+                  >
+                    <HomeIcon
+                      className={`w-5 h-5 ${
+                        iconStates.home ? "text-white" : "text-gray-600"
+                      }`}
+                    />
+                  </button>
+                </Tooltip>
+              </div>
+            </>
+          ) : (
+            <Tooltip text="ホーム" position="right">
+              <button
+                onClick={onHome}
+                className={`p-2 rounded-lg transition-colors ${
+                  iconStates.home
+                    ? "bg-slate-500 text-white"
+                    : "bg-gray-200 hover:bg-gray-300 text-gray-600"
                 }`}
-              />
-            </button>
-          </Tooltip>
+              >
+                <HomeIcon
+                  className={`w-5 h-5 ${
+                    iconStates.home ? "text-white" : "text-gray-600"
+                  }`}
+                />
+              </button>
+            </Tooltip>
+          )}
 
           <Tooltip text="メモ一覧" position="right">
             <button

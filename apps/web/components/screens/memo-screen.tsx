@@ -867,14 +867,25 @@ function MemoScreen({
 
   return shouldUseThreePanelLayout ? (
     // ===== 3パネルレイアウト（チームモード＆選択時） =====
-    <div className="md:min-w-[1280px] h-full">
-      <ControlPanelLayout
-        leftPanel={leftPanelContent}
-        centerPanel={centerPanelContent}
-        rightPanel={rightPanelContent}
-        storageKey="team-memo-3panel-sizes-v2"
-        defaultSizes={{ left: 25, center: 45, right: 30 }}
-      />
+    <div className="h-full">
+      {/* デスクトップ: 3パネル表示 */}
+      <div className="hidden md:block md:min-w-[1280px] h-full">
+        <ControlPanelLayout
+          leftPanel={leftPanelContent}
+          centerPanel={centerPanelContent}
+          rightPanel={rightPanelContent}
+          storageKey="team-memo-3panel-sizes-v2"
+          defaultSizes={{ left: 25, center: 45, right: 30 }}
+        />
+      </div>
+
+      {/* モバイル: 1パネル表示（詳細+コメント縦並び） */}
+      <div className="md:hidden h-full overflow-y-auto hover-scrollbar bg-white">
+        <div className="flex flex-col">
+          {centerPanelContent}
+          {rightPanelContent}
+        </div>
+      </div>
 
       {/* モーダル（3パネルレイアウト外側） */}
       <BulkDeleteModal />

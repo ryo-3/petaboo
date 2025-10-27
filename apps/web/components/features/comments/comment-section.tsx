@@ -30,22 +30,78 @@ function CommentAttachmentGallery({
     "comment",
     commentId.toString(),
   );
+  const { getToken } = useAuth();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [imageUrls, setImageUrls] = useState<Record<number, string>>({});
+
+  // 認証付きで画像を取得してBlob URLを生成
+  useEffect(() => {
+    if (attachments.length === 0) return;
+
+    let isMounted = true;
+
+    const loadImages = async () => {
+      const token = await getToken();
+      const newUrls: Record<number, string> = {};
+
+      for (const attachment of attachments) {
+        // 既に読み込み済みならスキップ
+        if (imageUrls[attachment.id]) continue;
+
+        try {
+          const response = await fetch(attachment.url, {
+            method: "GET",
+            headers: {
+              ...(token && { Authorization: `Bearer ${token}` }),
+            },
+          });
+
+          if (response.ok && isMounted) {
+            const blob = await response.blob();
+            const blobUrl = URL.createObjectURL(blob);
+            newUrls[attachment.id] = blobUrl;
+          }
+        } catch (error) {
+          console.error(`画像読み込みエラー [ID: ${attachment.id}]:`, error);
+        }
+      }
+
+      if (isMounted && Object.keys(newUrls).length > 0) {
+        setImageUrls((prev) => ({ ...prev, ...newUrls }));
+      }
+    };
+
+    loadImages();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [attachments, getToken, imageUrls]);
 
   if (attachments.length === 0) return null;
 
   return (
     <>
       <div className="mt-2 flex gap-2 flex-wrap">
-        {attachments.map((attachment) => (
-          <img
-            key={attachment.id}
-            src={attachment.url}
-            alt={attachment.fileName}
-            className="w-32 h-32 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border border-gray-200"
-            onClick={() => setSelectedImage(attachment.url)}
-          />
-        ))}
+        {attachments.map((attachment) => {
+          const imageUrl = imageUrls[attachment.id];
+          return imageUrl ? (
+            <img
+              key={attachment.id}
+              src={imageUrl}
+              alt={attachment.fileName}
+              className="w-32 h-32 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border border-gray-200"
+              onClick={() => setSelectedImage(imageUrl)}
+            />
+          ) : (
+            <div
+              key={attachment.id}
+              className="w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center border border-gray-200"
+            >
+              <span className="text-xs text-gray-500">読込中...</span>
+            </div>
+          );
+        })}
       </div>
 
       {/* 画像拡大表示モーダル */}

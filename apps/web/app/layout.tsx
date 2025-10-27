@@ -77,6 +77,8 @@ export default async function RootLayout({
       publishableKey={clerkPublishableKey || "pk_test_dummy"}
       signInUrl="/sign-in"
       signUpUrl="/sign-up"
+      signInFallbackRedirectUrl="/"
+      signUpFallbackRedirectUrl="/"
       afterSignOutUrl="/"
       appearance={{
         variables: {

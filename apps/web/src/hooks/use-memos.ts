@@ -455,26 +455,50 @@ export function useDeleteMemo(options?: {
 }
 
 // メモを完全削除するhook
-export function usePermanentDeleteMemo() {
+export function usePermanentDeleteMemo(options?: {
+  teamMode?: boolean;
+  teamId?: number;
+}) {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
+  const { teamMode = false, teamId } = options || {};
 
   return useMutation({
     mutationFn: async (originalId: string) => {
       const token = await getToken();
-      await memosApi.permanentDeleteNote(originalId, token || undefined);
+      if (teamMode && teamId) {
+        await memosApi.permanentDeleteTeamMemo(
+          teamId,
+          originalId,
+          token || undefined,
+        );
+      } else {
+        await memosApi.permanentDeleteNote(originalId, token || undefined);
+      }
     },
     onSuccess: (_, originalId) => {
       // 削除済み一覧から完全削除されたメモを除去
-      queryClient.setQueryData<DeletedMemo[]>(
-        ["deletedMemos"],
-        (oldDeletedMemos) => {
-          if (!oldDeletedMemos) return [];
-          return oldDeletedMemos.filter(
-            (memo) => memo.originalId !== originalId,
-          );
-        },
-      );
+      if (teamMode && teamId) {
+        queryClient.setQueryData<DeletedMemo[]>(
+          ["team-deleted-memos", teamId],
+          (oldDeletedMemos) => {
+            if (!oldDeletedMemos) return [];
+            return oldDeletedMemos.filter(
+              (memo) => memo.originalId !== originalId,
+            );
+          },
+        );
+      } else {
+        queryClient.setQueryData<DeletedMemo[]>(
+          ["deletedMemos"],
+          (oldDeletedMemos) => {
+            if (!oldDeletedMemos) return [];
+            return oldDeletedMemos.filter(
+              (memo) => memo.originalId !== originalId,
+            );
+          },
+        );
+      }
     },
   });
 }

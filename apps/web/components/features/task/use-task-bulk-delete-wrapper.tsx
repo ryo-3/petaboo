@@ -18,6 +18,8 @@ interface UseTasksBulkDeleteProps {
   setIsDeleting?: (isDeleting: boolean) => void;
   setIsLidOpen?: (isOpen: boolean) => void;
   viewMode?: "list" | "card";
+  teamMode?: boolean;
+  teamId?: number;
 }
 
 export function useTasksBulkDelete(props: UseTasksBulkDeleteProps) {
@@ -25,21 +27,47 @@ export function useTasksBulkDelete(props: UseTasksBulkDeleteProps) {
 
   // API関数の設定
   const apiMethods = {
-    delete: useDeleteTask,
-    permanentDelete: usePermanentDeleteTask,
+    delete: (options?: { teamMode?: boolean; teamId?: number }) =>
+      useDeleteTask({
+        teamMode: options?.teamMode ?? props.teamMode,
+        teamId: options?.teamId ?? props.teamId,
+      }),
+    permanentDelete: (options?: { teamMode?: boolean; teamId?: number }) =>
+      usePermanentDeleteTask({
+        teamMode: options?.teamMode ?? props.teamMode,
+        teamId: options?.teamId ?? props.teamId,
+      }),
     deleteWithoutUpdate: (token: string | null) => ({
       mutationFn: async (id: number) => {
-        const response = await tasksApi.deleteTask(id, token || undefined);
-        return response.json();
+        if (props.teamMode && props.teamId) {
+          const response = await tasksApi.deleteTeamTask(
+            props.teamId,
+            id,
+            token || undefined,
+          );
+          return response.json();
+        } else {
+          const response = await tasksApi.deleteTask(id, token || undefined);
+          return response.json();
+        }
       },
     }),
     permanentDeleteWithoutUpdate: (token: string | null) => ({
       mutationFn: async (id: number) => {
-        const response = await tasksApi.permanentDeleteTask(
-          String(id),
-          token || undefined,
-        );
-        return response.json();
+        if (props.teamMode && props.teamId) {
+          const response = await tasksApi.permanentDeleteTeamTask(
+            props.teamId,
+            String(id),
+            token || undefined,
+          );
+          return response.json();
+        } else {
+          const response = await tasksApi.permanentDeleteTask(
+            String(id),
+            token || undefined,
+          );
+          return response.json();
+        }
       },
     }),
   };

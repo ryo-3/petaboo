@@ -374,6 +374,8 @@ function MemoScreen({
     setIsDeleting: setIsLeftDeleting,
     setIsLidOpen: setIsLeftLidOpen,
     viewMode,
+    teamMode,
+    teamId,
   });
 
   // 右側エディター削除処理（現在表示中のメモの単体削除）

@@ -353,6 +353,8 @@ function TaskScreen({
       setIsDeleting,
       setIsLidOpen,
       viewMode,
+      teamMode,
+      teamId,
     });
 
   // 一括復元関連

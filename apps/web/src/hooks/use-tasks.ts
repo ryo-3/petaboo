@@ -486,32 +486,58 @@ export function useDeletedTasks(options?: {
 }
 
 // タスク完全削除hook
-export function usePermanentDeleteTask() {
+export function usePermanentDeleteTask(options?: {
+  teamMode?: boolean;
+  teamId?: number;
+}) {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
   const { showToast } = useToast();
+  const { teamMode = false, teamId } = options || {};
 
   return useMutation({
     mutationFn: async (originalId: string) => {
       const token = await getToken();
-      const response = await tasksApi.permanentDeleteTask(
-        originalId,
-        token || undefined,
-      );
-      const result = await response.json();
-      return result;
+      if (teamMode && teamId) {
+        const response = await tasksApi.permanentDeleteTeamTask(
+          teamId,
+          originalId,
+          token || undefined,
+        );
+        const result = await response.json();
+        return result;
+      } else {
+        const response = await tasksApi.permanentDeleteTask(
+          originalId,
+          token || undefined,
+        );
+        const result = await response.json();
+        return result;
+      }
     },
     onSuccess: (_, originalId) => {
       // 削除済み一覧から完全削除されたタスクを除去
-      queryClient.setQueryData<DeletedTask[]>(
-        ["deleted-tasks"],
-        (oldDeletedTasks) => {
-          if (!oldDeletedTasks) return [];
-          return oldDeletedTasks.filter(
-            (task) => task.originalId !== originalId,
-          );
-        },
-      );
+      if (teamMode && teamId) {
+        queryClient.setQueryData<DeletedTask[]>(
+          ["team-deleted-tasks", teamId],
+          (oldDeletedTasks) => {
+            if (!oldDeletedTasks) return [];
+            return oldDeletedTasks.filter(
+              (task) => task.originalId !== originalId,
+            );
+          },
+        );
+      } else {
+        queryClient.setQueryData<DeletedTask[]>(
+          ["deleted-tasks"],
+          (oldDeletedTasks) => {
+            if (!oldDeletedTasks) return [];
+            return oldDeletedTasks.filter(
+              (task) => task.originalId !== originalId,
+            );
+          },
+        );
+      }
     },
     onError: (error) => {
       console.error("タスクの完全削除に失敗しました:", error);

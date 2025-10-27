@@ -19,6 +19,8 @@ interface UseMemosBulkDeleteProps {
   setIsDeleting?: (isDeleting: boolean) => void;
   setIsLidOpen?: (isOpen: boolean) => void;
   viewMode?: "list" | "card";
+  teamMode?: boolean;
+  teamId?: number;
 }
 
 export function useMemosBulkDelete(props: UseMemosBulkDeleteProps) {
@@ -26,21 +28,47 @@ export function useMemosBulkDelete(props: UseMemosBulkDeleteProps) {
 
   // API関数の設定
   const apiMethods = {
-    delete: useDeleteMemo,
-    permanentDelete: usePermanentDeleteMemo,
+    delete: (options?: { teamMode?: boolean; teamId?: number }) =>
+      useDeleteMemo({
+        teamMode: options?.teamMode ?? props.teamMode,
+        teamId: options?.teamId ?? props.teamId,
+      }),
+    permanentDelete: (options?: { teamMode?: boolean; teamId?: number }) =>
+      usePermanentDeleteMemo({
+        teamMode: options?.teamMode ?? props.teamMode,
+        teamId: options?.teamId ?? props.teamId,
+      }),
     deleteWithoutUpdate: (token: string | null) => ({
       mutationFn: async (id: number) => {
-        const response = await memosApi.deleteNote(id, token || undefined);
-        return response.json();
+        if (props.teamMode && props.teamId) {
+          const response = await memosApi.deleteTeamMemo(
+            props.teamId,
+            id,
+            token || undefined,
+          );
+          return response.json();
+        } else {
+          const response = await memosApi.deleteNote(id, token || undefined);
+          return response.json();
+        }
       },
     }),
     permanentDeleteWithoutUpdate: (token: string | null) => ({
       mutationFn: async (id: number) => {
-        const response = await memosApi.permanentDeleteNote(
-          String(id),
-          token || undefined,
-        );
-        return response.json();
+        if (props.teamMode && props.teamId) {
+          const response = await memosApi.permanentDeleteTeamMemo(
+            props.teamId,
+            String(id),
+            token || undefined,
+          );
+          return response.json();
+        } else {
+          const response = await memosApi.permanentDeleteNote(
+            String(id),
+            token || undefined,
+          );
+          return response.json();
+        }
       },
     }),
   };

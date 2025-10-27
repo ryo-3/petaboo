@@ -435,20 +435,24 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   };
 
   const handleSelectDeletedMemo = (memo: DeletedMemo | null) => {
-    setSelectedDeletedMemo(memo);
+    console.log("🎯 handleSelectDeletedMemo 呼び出し:", {
+      memoId: memo?.id,
+      originalId: memo?.originalId,
+      title: memo?.title,
+      currentSelectedId: selectedDeletedMemo?.id,
+      currentSelectedMemo: selectedMemo?.id,
+      timestamp: new Date().toISOString(),
+    });
 
-    // URLを更新
-    const params = new URLSearchParams(searchParams.toString());
-    if (memo) {
-      params.set("memo", memo.id.toString());
-      params.set("tab", "memos");
-      // タスクパラメータを削除
-      params.delete("task");
-    } else {
-      params.delete("memo");
+    // 通常メモの選択をクリア（削除済みメモを選択する場合）
+    if (memo && selectedMemo) {
+      console.log("🔄 通常メモをクリア:", { clearedMemoId: selectedMemo.id });
+      setSelectedMemo(null);
     }
-    const newUrl = params.toString() ? `?${params.toString()}` : "";
-    router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
+
+    // 状態を更新
+    setSelectedDeletedMemo(memo);
+    console.log("✅ setSelectedDeletedMemo 実行完了:", { newMemoId: memo?.id });
   };
 
   const handleSelectDeletedTask = (

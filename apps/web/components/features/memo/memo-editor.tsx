@@ -132,6 +132,16 @@ function MemoEditor({
   const isDeleted = memo ? "deletedAt" in memo : false;
   const deletedMemo = isDeleted ? (memo as DeletedMemo) : null;
 
+  // デバッグログ
+  console.log("📝 MemoEditor レンダリング:", {
+    hasMemo: !!memo,
+    isDeleted,
+    memoId: memo?.id,
+    originalId: memo?.originalId,
+    title: memo?.title,
+    contentLength: memo ? ("content" in memo ? memo.content?.length : 0) : 0,
+  });
+
   // 事前取得されたデータを使用（APIコール不要）
   const boards = preloadedBoards;
 

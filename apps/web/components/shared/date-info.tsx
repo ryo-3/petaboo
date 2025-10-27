@@ -35,7 +35,7 @@ function DateInfo({
     item.updatedAt !== item.createdAt;
 
   return (
-    <div className="text-[14px] text-gray-500 mt-1">
+    <div className="text-[14px] text-gray-500">
       <div className="flex gap-4">
         <span>作成 {formatDate(item.createdAt)}</span>
         {showEditTime && <span>編集 {formatDate(latestEditTime)}</span>}

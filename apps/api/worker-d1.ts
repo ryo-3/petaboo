@@ -33,6 +33,8 @@ export interface Env {
   RESEND_API_KEY: string;
   R2_BUCKET: R2Bucket;
   API_BASE_URL: string;
+  FRONTEND_URL: string;
+  SLACK_WEBHOOK_URL?: string;
 }
 
 const app = new Hono<{ Bindings: Env }>();

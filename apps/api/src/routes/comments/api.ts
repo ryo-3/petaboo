@@ -311,7 +311,7 @@ async function sendMentionNotificationToSlack(
   }
 
   // リンクURL生成（本番環境用）
-  const appBaseUrl = process.env.FRONTEND_URL || "http://localhost:7593";
+  const appBaseUrl = env?.FRONTEND_URL || "http://localhost:7593";
   let linkUrl: string;
 
   if (boardSlug && (targetType === "memo" || targetType === "task")) {

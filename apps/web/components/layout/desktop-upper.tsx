@@ -334,8 +334,8 @@ function DesktopUpper({
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id;
               const tabClass = tab.icon
-                ? "pl-2 pr-2 py-2"
-                : "gap-1.5 px-2 py-1.5";
+                ? "pl-1.5 pr-1.5 py-1.5 md:pl-2 md:pr-2 md:py-2"
+                : "gap-1 md:gap-1.5 px-1.5 py-1 md:px-2 md:py-1.5";
 
               return (
                 <button
@@ -350,7 +350,7 @@ function DesktopUpper({
                         | "completed",
                     )
                   }
-                  className={`flex items-center ${tabClass} rounded-lg font-medium transition-colors text-gray-600 text-[13px] ${getTabBackgroundClass(tab.id, isActive)}`}
+                  className={`flex items-center ${tabClass} rounded-lg font-medium transition-colors text-gray-600 text-[11px] md:text-[13px] ${getTabBackgroundClass(tab.id, isActive)}`}
                 >
                   {renderTabContent(tab, isActive)}
                 </button>

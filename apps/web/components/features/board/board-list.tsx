@@ -126,7 +126,7 @@ export default function BoardList({
   }
 
   return (
-    <div className="">
+    <div className="overflow-y-auto flex-1">
       {showCreateForm && activeTab === "normal" && (
         <div className="mb-6">
           <BoardForm

@@ -71,7 +71,7 @@ export default function BoardCard({
     <>
       <div
         onClick={onSelect}
-        className={`bg-white rounded-lg border p-6 hover:shadow-md transition-all cursor-pointer relative ${
+        className={`bg-white rounded-lg border p-6 hover:shadow-md transition-all cursor-pointer relative mr-2 md:mr-0 ${
           mode === "deleted"
             ? "border-red-200 bg-red-50"
             : isSelected

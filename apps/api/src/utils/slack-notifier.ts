@@ -45,7 +45,7 @@ export async function notifyTeamJoinRequest(
   });
 
   // アプリケーションのベースURL（環境変数から取得、デフォルトはlocalhost）
-  const appBaseUrl = process.env.APP_BASE_URL || "http://localhost:7593";
+  const appBaseUrl = process.env.FRONTEND_URL || "http://localhost:7593";
   const fullUrl = `${appBaseUrl}/team/${teamUrl}?tab=team-list`;
 
   const slackMessage = {

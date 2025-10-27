@@ -794,14 +794,25 @@ function TaskScreen({
 
   return shouldUseThreePanelLayout ? (
     // ===== 3パネルレイアウト（チームモード＆選択時） =====
-    <div className="min-w-[1280px] h-full">
-      <ControlPanelLayout
-        leftPanel={leftPanelContent}
-        centerPanel={centerPanelContent}
-        rightPanel={rightPanelContent}
-        storageKey="team-task-3panel-sizes-v2"
-        defaultSizes={{ left: 25, center: 50, right: 25 }}
-      />
+    <div className="h-full">
+      {/* デスクトップ: 3パネル表示 */}
+      <div className="hidden md:block md:min-w-[1280px] h-full">
+        <ControlPanelLayout
+          leftPanel={leftPanelContent}
+          centerPanel={centerPanelContent}
+          rightPanel={rightPanelContent}
+          storageKey="team-task-3panel-sizes-v2"
+          defaultSizes={{ left: 25, center: 50, right: 25 }}
+        />
+      </div>
+
+      {/* モバイル: 1パネル表示（詳細+コメント縦並び） */}
+      <div className="md:hidden h-full overflow-y-auto hover-scrollbar bg-white">
+        <div className="flex flex-col">
+          {centerPanelContent}
+          {rightPanelContent}
+        </div>
+      </div>
 
       {/* モーダル（3パネルレイアウト外側） */}
       <DeleteModal />
@@ -832,10 +843,10 @@ function TaskScreen({
     </div>
   ) : (
     // ===== 2パネルレイアウト（個人モードまたは未選択時） =====
-    <div className="flex h-full bg-white">
-      {/* 左側：一覧表示エリア */}
+    <div className="flex h-full bg-white relative">
+      {/* 左側：一覧表示エリア（スマホでは詳細表示時に非表示） */}
       <div
-        className={`${taskScreenMode === "list" ? "w-full" : "w-[44%]"} ${taskScreenMode !== "list" ? "border-r border-gray-300" : ""} pt-2 md:pt-3 pl-2 md:pl-5 md:pr-2 flex flex-col transition-all duration-300 relative`}
+        className={`${taskScreenMode === "list" ? "w-full" : "hidden md:flex md:w-[44%]"} ${taskScreenMode !== "list" ? "md:border-r md:border-gray-300" : ""} pt-2 md:pt-3 pl-2 md:pl-5 md:pr-2 flex-col transition-all duration-300 relative`}
       >
         <DesktopUpper
           currentMode="task"

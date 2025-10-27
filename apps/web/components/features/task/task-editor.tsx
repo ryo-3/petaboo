@@ -841,14 +841,9 @@ function TaskEditor({
       await deletePendingAttachments();
     }
 
-    // 保存待ちの画像を一括アップロード
+    // 保存待ちの画像を一括アップロード（完了トーストはuploadPendingImagesが表示）
     if (hasUploads && targetOriginalId) {
       await uploadPendingImages();
-    }
-
-    // 画像の変更があった場合のみトーストを表示（3秒後に自動消去）
-    if (hasDeletes || hasUploads) {
-      showToast("画像を更新しました", "success", 3000);
     }
 
     // 連続作成モードで新規タスクの場合、保存後にリセット

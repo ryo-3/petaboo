@@ -45,7 +45,7 @@ function Tooltip({
     <div className={`relative inline-block tooltip-wrapper ${className}`}>
       {children}
       <div
-        className={`absolute ${getPositionClasses()} px-2 py-1 ${bgColor} ${textColor} text-xs rounded whitespace-nowrap opacity-0 transition-opacity pointer-events-none z-[999999] tooltip-content`}
+        className={`hidden md:block absolute ${getPositionClasses()} px-2 py-1 ${bgColor} ${textColor} text-xs rounded whitespace-nowrap opacity-0 transition-opacity pointer-events-none z-[999999] tooltip-content`}
       >
         {text}
         <div

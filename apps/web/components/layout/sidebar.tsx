@@ -89,8 +89,8 @@ function Sidebar({
   // PC表示サイドバー
   if (isCompact) {
     return (
-      <div className="flex flex-col items-center py-4 h-screen bg-gray-50 justify-between">
-        <div className="flex flex-col items-center gap-y-3">
+      <div className="flex md:flex-col flex-row items-center md:py-4 py-0 md:h-screen h-14 bg-gray-50 md:justify-between justify-center w-full">
+        <div className="flex md:flex-col flex-row items-center md:gap-y-3 gap-x-4 md:w-auto justify-center md:justify-start">
           <Tooltip text="ホーム" position="right">
             <button
               onClick={onHome}

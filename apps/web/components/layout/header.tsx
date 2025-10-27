@@ -142,12 +142,12 @@ function Header() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 border-b border-gray-200 bg-white flex items-center pl-[14px] pr-8 z-10">
-      <div className="flex items-center gap-5 flex-1">
-        <div className="flex items-center gap-4">
+    <header className="fixed top-0 left-0 right-0 h-12 md:h-16 border-b border-gray-200 bg-white flex items-center px-3 md:pl-[14px] md:pr-8 z-10">
+      <div className="flex items-center gap-2 md:gap-5 flex-1">
+        <div className="flex items-center gap-2 md:gap-4">
           {/* ロゴ */}
           <div
-            className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-sm ${
+            className={`w-8 h-8 md:w-10 md:h-10 rounded-xl flex items-center justify-center shadow-sm ${
               isTeamBoardPage && boardTitle
                 ? "bg-light-Blue"
                 : isTeamTaskListPage
@@ -160,19 +160,21 @@ function Header() {
             {isTeamBoardPage && boardTitle ? (
               <DashboardEditIcon className="w-6 h-6 text-white" />
             ) : isTeamTaskListPage ? (
-              <CheckCircleIcon className="w-6 h-6 text-white" />
+              <CheckCircleIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
             ) : isTeamMemoListPage ? (
-              <EditIcon className="w-6 h-6 text-white" />
+              <EditIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
             ) : (
-              <span className="text-white font-bold text-base">ぺ</span>
+              <span className="text-white font-bold text-sm md:text-base">
+                ぺ
+              </span>
             )}
           </div>
 
           {/* タイトルとキャッチコピー */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 md:gap-3">
+            <div className="flex items-center gap-1 md:gap-3">
               <h1
-                className={`text-xl font-bold text-gray-800 tracking-wide ${
+                className={`text-sm md:text-xl font-bold text-gray-800 tracking-wide ${
                   isTeamMemoListPage || isTeamTaskListPage ? "w-[95px]" : ""
                 }`}
               >
@@ -190,10 +192,10 @@ function Header() {
                   onClick={() => {
                     window.dispatchEvent(new CustomEvent("team-memo-create"));
                   }}
-                  className="p-2 bg-Green hover:bg-Green/90 rounded-lg transition-colors"
+                  className="p-1.5 md:p-2 bg-Green hover:bg-Green/90 rounded-lg transition-colors"
                 >
                   <svg
-                    className="w-3.5 h-3.5 text-white"
+                    className="w-3 h-3 md:w-3.5 md:h-3.5 text-white"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -213,10 +215,10 @@ function Header() {
                   onClick={() => {
                     window.dispatchEvent(new CustomEvent("team-task-create"));
                   }}
-                  className="p-2 bg-DeepBlue hover:bg-DeepBlue/90 rounded-lg transition-colors"
+                  className="p-1.5 md:p-2 bg-DeepBlue hover:bg-DeepBlue/90 rounded-lg transition-colors"
                 >
                   <svg
-                    className="w-3.5 h-3.5 text-white"
+                    className="w-3 h-3 md:w-3.5 md:h-3.5 text-white"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -232,8 +234,8 @@ function Header() {
               )}
             </div>
             {!isTeamBoardPage && !isTeamMemoListPage && !isTeamTaskListPage && (
-              <span className="text-sm text-gray-600 mt-0.5">
-                - 日々のメモやタスクをひとまとめに
+              <span className="hidden md:inline text-sm text-gray-600 mt-0.5">
+                - 日々のメモやタスクをひとまとめに -
               </span>
             )}
           </div>

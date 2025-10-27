@@ -283,7 +283,7 @@ export default function ControlPanel({
   return (
     <div
       ref={floatControls ? controlRef : null}
-      className={`flex items-center gap-2 h-7 ${floatControls ? `fixed z-20 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-lg ${!isInitialRender ? "transition-all duration-300" : ""}` : "mb-1.5"}`}
+      className={`flex items-center gap-2 h-7 ${floatControls ? `md:fixed z-20 md:bg-white/95 md:backdrop-blur-sm md:px-3 md:py-1.5 md:rounded-lg ${!isInitialRender ? "md:transition-all md:duration-300" : ""} mb-1.5` : "mb-1.5"}`}
       style={
         floatControls
           ? {
@@ -297,7 +297,7 @@ export default function ControlPanel({
       {floatControls && (
         <button
           onClick={togglePosition}
-          className="flex items-center mr-1 opacity-40 hover:opacity-70 transition-opacity cursor-pointer"
+          className="hidden md:flex items-center mr-1 opacity-40 hover:opacity-70 transition-opacity cursor-pointer"
         >
           <div className="flex items-center gap-0.5">
             <div
@@ -320,13 +320,15 @@ export default function ControlPanel({
         iconSize="size-5"
       />
 
-      <ColumnCountSelector
-        columnCount={columnCount}
-        onColumnCountChange={onColumnCountChange}
-        isRightPanelShown={rightPanelMode !== "hidden"}
-        containerHeight="h-7"
-        buttonSize="size-6"
-      />
+      <div className="hidden md:block">
+        <ColumnCountSelector
+          columnCount={columnCount}
+          onColumnCountChange={onColumnCountChange}
+          isRightPanelShown={rightPanelMode !== "hidden"}
+          containerHeight="h-7"
+          buttonSize="size-6"
+        />
+      </div>
 
       {/* 選択モード切り替え */}
       {onSelectionModeChange && (
@@ -469,7 +471,7 @@ export default function ControlPanel({
           <Tooltip text="CSVインポート" position="bottom">
             <button
               onClick={onCsvImport}
-              className="bg-gray-100 shadow-sm rounded-lg size-7 flex items-center justify-center transition-all text-gray-500 opacity-65 hover:opacity-85"
+              className="hidden md:flex bg-gray-100 shadow-sm rounded-lg size-7 items-center justify-center transition-all text-gray-500 opacity-65 hover:opacity-85"
             >
               <CsvImportIcon className="size-[18px]" />
             </button>
@@ -482,7 +484,7 @@ export default function ControlPanel({
           <button
             onClick={onBoardExport}
             disabled={isExportDisabled}
-            className={`bg-gray-100 shadow-sm rounded-lg size-7 flex items-center justify-center transition-all ${
+            className={`hidden md:flex bg-gray-100 shadow-sm rounded-lg size-7 items-center justify-center transition-all ${
               isExportDisabled
                 ? "text-gray-400 cursor-not-allowed opacity-40"
                 : "text-gray-500 opacity-65 hover:opacity-85"

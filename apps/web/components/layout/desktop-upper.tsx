@@ -130,7 +130,7 @@ function DesktopUpper({
   onBoardExport,
   onBoardSettings,
   isExportDisabled = false,
-  marginBottom = "mb-3",
+  marginBottom = "mb-2",
   headerMarginBottom = "mb-1.5",
   boardLayout = "horizontal",
   isReversed = false,

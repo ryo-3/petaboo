@@ -54,6 +54,14 @@ export function useCreateTeamComment(teamId: number | undefined) {
           variables.targetOriginalId,
         ],
       });
+      // ボード内アイテムのコメント一覧も無効化（ボードビューで使用）
+      queryClient.invalidateQueries({
+        queryKey: ["board-item-comments", teamId],
+      });
+      // すべてのボードのコメント一覧も無効化
+      queryClient.invalidateQueries({
+        queryKey: ["team-all-board-comments", teamId],
+      });
     },
   });
 }
@@ -82,6 +90,14 @@ export function useUpdateTeamComment(
       queryClient.invalidateQueries({
         queryKey: ["team-comments", teamId, targetType, targetOriginalId],
       });
+      // ボード内アイテムのコメント一覧も無効化（ボードビューで使用）
+      queryClient.invalidateQueries({
+        queryKey: ["board-item-comments", teamId],
+      });
+      // すべてのボードのコメント一覧も無効化
+      queryClient.invalidateQueries({
+        queryKey: ["team-all-board-comments", teamId],
+      });
     },
   });
 }
@@ -103,6 +119,14 @@ export function useDeleteTeamComment(
       // コメント一覧を再取得
       queryClient.invalidateQueries({
         queryKey: ["team-comments", teamId, targetType, targetOriginalId],
+      });
+      // ボード内アイテムのコメント一覧も無効化（ボードビューで使用）
+      queryClient.invalidateQueries({
+        queryKey: ["board-item-comments", teamId],
+      });
+      // すべてのボードのコメント一覧も無効化
+      queryClient.invalidateQueries({
+        queryKey: ["team-all-board-comments", teamId],
       });
     },
   });

@@ -47,6 +47,7 @@ import type { Tag, Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
 import { OriginalIdUtils } from "@/src/types/common";
 import { useEffect, useRef, useState, memo, useMemo, useCallback } from "react";
+import UrlPreview from "@/src/components/shared/url-preview";
 
 interface MemoEditorProps {
   memo: Memo | DeletedMemo | null;
@@ -1013,6 +1014,11 @@ function MemoEditor({
                 : "text-gray-500"
             }`}
           />
+
+          {/* URL自動リンク化プレビュー（URLを含む行のみ表示） */}
+          {content && !isDeleted && (
+            <UrlPreview text={content} className="mt-2 mb-2 px-1" />
+          )}
 
           {/* ボード名・タグ一覧をテキストエリアの下に配置（TaskFormと統一） */}
           <BoardTagDisplay

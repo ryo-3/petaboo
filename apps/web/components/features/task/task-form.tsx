@@ -22,6 +22,7 @@ import {
   useImperativeHandle,
   useMemo,
 } from "react";
+import UrlPreview from "@/src/components/shared/url-preview";
 
 interface TaskFormProps {
   task?: Task | null;
@@ -234,6 +235,11 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
           onPaste={onPaste}
           className={`w-full ${customHeight || "flex-1"} resize-none outline-none text-gray-700 leading-relaxed pr-1 pb-2 mb-2 mt-2`}
         />
+
+        {/* URL自動リンク化プレビュー（URLを含む行のみ表示） */}
+        {description && !isDeleted && (
+          <UrlPreview text={description} className="mt-2 mb-2 px-1" />
+        )}
 
         {/* ボード名・タグ表示（テキストエリアの下に移動） */}
         <BoardTagDisplay

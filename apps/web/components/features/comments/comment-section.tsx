@@ -15,6 +15,7 @@ import { useToast } from "@/src/contexts/toast-context";
 import CommentScopeToggle from "@/components/ui/buttons/comment-scope-toggle";
 import ImagePreviewModal from "@/components/ui/modals/image-preview-modal";
 import { useQueryClient } from "@tanstack/react-query";
+import { linkifyLine } from "@/src/utils/url-detector";
 
 // コメント画像表示用コンポーネント（シンプル版・モーダル付き）
 function CommentAttachmentGallery({
@@ -143,7 +144,7 @@ function renderCommentContent(
   return elements;
 }
 
-// 1行内のメンション・インラインコードをハイライト表示
+// 1行内のメンション・インラインコード・URLをハイライト表示
 function renderLineWithMentions(
   line: string,
   currentUserId?: string,
@@ -154,20 +155,20 @@ function renderLineWithMentions(
   const parts = line.split(pattern);
 
   return parts
-    .map((part, index) => {
-      if (!part) return null;
+    .flatMap((part, index) => {
+      if (!part) return [];
 
       // インラインコード判定
       if (part.startsWith("`") && part.endsWith("`")) {
         const codeContent = part.slice(1, -1);
-        return (
+        return [
           <code
-            key={index}
+            key={`code-${index}`}
             className="bg-gray-200 text-gray-800 px-1.5 py-0.5 rounded text-xs font-mono"
           >
             {codeContent}
-          </code>
-        );
+          </code>,
+        ];
       }
 
       // メンション判定
@@ -185,17 +186,25 @@ function renderLineWithMentions(
         // 自分へのメンションかチェック
         const isSelfMention = currentUserDisplayName === mentionName;
 
-        return (
+        return [
           <span
-            key={index}
+            key={`mention-${index}`}
             className={`font-medium ${isSelfMention ? "bg-blue-200 text-blue-800" : "bg-gray-200 text-gray-800"} px-1 rounded`}
           >
             {part}
-          </span>
-        );
+          </span>,
+        ];
       }
 
-      return <span key={index}>{part}</span>;
+      // 通常のテキスト: URLを検出してリンク化
+      const linkedParts = linkifyLine(part);
+      return linkedParts.map((linkedPart, linkedIndex) =>
+        typeof linkedPart === "string" ? (
+          <span key={`text-${index}-${linkedIndex}`}>{linkedPart}</span>
+        ) : (
+          <span key={`link-${index}-${linkedIndex}`}>{linkedPart}</span>
+        ),
+      );
     })
     .filter((element): element is JSX.Element => element !== null);
 }

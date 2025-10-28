@@ -88,7 +88,7 @@ function WelcomeScreen({ teamName = "開発チーム" }: WelcomeScreenProps) {
   };
   return (
     <div
-      className={`h-full bg-gray-50 ${teamMode ? "pt-3 pl-5 pr-5 overflow-auto" : "flex flex-col items-center justify-center px-8"}`}
+      className={`h-full bg-gray-50 overflow-auto ${teamMode ? "pt-3 pl-5 pr-5" : "flex flex-col items-center justify-center px-8"}`}
     >
       <div
         className={`w-full ${teamMode ? "space-y-6 max-w-none" : "space-y-8 max-w-none text-center"}`}

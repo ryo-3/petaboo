@@ -2,6 +2,7 @@
 
 import MemoIcon from "@/components/icons/memo-icon";
 import TaskIcon from "@/components/icons/task-icon";
+import HomeIcon from "@/components/icons/home-icon";
 import {
   ArrowLeft,
   Mail,
@@ -18,9 +19,15 @@ import { useTeamContext } from "@/contexts/team-context";
 
 interface WelcomeScreenProps {
   teamName?: string;
+  onNavigateToTeamList?: () => void;
+  onNavigateToHome?: () => void;
 }
 
-function WelcomeScreen({ teamName = "開発チーム" }: WelcomeScreenProps) {
+function WelcomeScreen({
+  teamName = "開発チーム",
+  onNavigateToTeamList,
+  onNavigateToHome,
+}: WelcomeScreenProps) {
   const { isTeamMode: teamMode } = useTeamContext();
   const pathname = usePathname();
 
@@ -96,9 +103,20 @@ function WelcomeScreen({ teamName = "開発チーム" }: WelcomeScreenProps) {
         <div className="space-y-4">
           {teamMode ? (
             <div className="mb-4">
-              <h1 className="text-[22px] font-bold text-gray-800">
-                {teamName}
-              </h1>
+              <div className="flex items-center justify-between">
+                <h1 className="text-[22px] font-bold text-gray-800">
+                  {teamName}
+                </h1>
+                {onNavigateToHome && (
+                  <button
+                    onClick={onNavigateToHome}
+                    className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2 text-sm"
+                  >
+                    <HomeIcon className="w-4 h-4" />
+                    個人ホームへ
+                  </button>
+                )}
+              </div>
             </div>
           ) : (
             <>
@@ -117,6 +135,17 @@ function WelcomeScreen({ teamName = "開発チーム" }: WelcomeScreenProps) {
               <p className="text-gray-600 leading-relaxed">
                 左側からメモを選択するか、新規追加ボタンでメモやタスクを作成してください
               </p>
+              {onNavigateToTeamList && (
+                <div className="mt-6">
+                  <button
+                    onClick={onNavigateToTeamList}
+                    className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2 mx-auto"
+                  >
+                    <Users className="w-5 h-5" />
+                    チーム一覧へ
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>

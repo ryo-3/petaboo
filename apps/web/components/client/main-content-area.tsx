@@ -102,7 +102,8 @@ export function MainContentArea({
   handleTeamCreated,
 }: MainContentAreaProps) {
   // NavigationContextから統一された状態を取得
-  const { showTeamList, showTeamCreate } = useNavigation();
+  const { showTeamList, showTeamCreate, setShowTeamList, setScreenMode } =
+    useNavigation();
 
   // 🎯 統一フック（個人用）- 最上位で1つだけ作成
   const personalMemoOperations = useUnifiedItemOperations({
@@ -119,7 +120,13 @@ export function MainContentArea({
     <>
       {/* ホーム画面 */}
       {screenMode === "home" && !showTeamList && !showTeamCreate && (
-        <WelcomeScreen />
+        <WelcomeScreen
+          onNavigateToTeamList={() => setShowTeamList(true)}
+          onNavigateToHome={() => {
+            setShowTeamList(false);
+            setScreenMode("home");
+          }}
+        />
       )}
 
       {/* チーム一覧画面 */}

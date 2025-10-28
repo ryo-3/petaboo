@@ -780,7 +780,7 @@ function BoardDetailScreen({
                 ? "w-[44%] border-r border-gray-300 overflow-hidden" // 個人モード：リスト表示時
                 : "w-[44%] border-r border-gray-300 overflow-hidden" // 個人モード：エディター表示時
               : "w-full"
-        } ${teamMode && !rightPanelMode ? "" : "pt-3"} pl-5 pr-4 ${selectedMemo || selectedTask || rightPanelMode ? "pr-2" : "pr-4"} flex flex-col ${teamMode ? "" : "transition-all duration-300"} relative`}
+        } ${teamMode && !rightPanelMode ? "" : "pt-3"} pl-2 pr-0 md:pl-5 md:pr-4 ${selectedMemo || selectedTask || rightPanelMode ? "md:pr-2" : "md:pr-4"} flex flex-col ${teamMode ? "" : "transition-all duration-300"} relative`}
       >
         {/* チームモード時はDesktopUpperを3パネル内の左パネルに配置、個人モード時は外側に配置 */}
         {!teamMode && (
@@ -1834,7 +1834,7 @@ function BoardDetailScreen({
                         <div className="flex flex-col flex-1 min-h-0">
                           {/* コメント表示時 */}
                           {showComment && !showMemo && !showTask && (
-                            <div className="flex flex-col h-full relative pt-3">
+                            <div className="flex flex-col h-full relative pt-2">
                               <DesktopUpper
                                 currentMode="board"
                                 activeTab="normal"
@@ -1899,7 +1899,7 @@ function BoardDetailScreen({
                           )}
                           {/* メモ表示時 */}
                           {showMemo && (
-                            <div className="flex flex-col h-full relative pt-3">
+                            <div className="flex flex-col h-full relative pt-2">
                               <DesktopUpper
                                 currentMode="board"
                                 activeTab="normal"
@@ -1995,7 +1995,7 @@ function BoardDetailScreen({
                           )}
                           {/* タスク表示時 */}
                           {showTask && !showMemo && (
-                            <div className="flex flex-col h-full relative pt-3">
+                            <div className="flex flex-col h-full relative pt-2">
                               <DesktopUpper
                                 currentMode="board"
                                 activeTab="normal"

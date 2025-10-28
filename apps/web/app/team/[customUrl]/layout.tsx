@@ -247,9 +247,12 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   // ボード詳細からボード一覧に戻る
   const handleBackToBoardList = () => {
     if (isTeamBoardDetailPage) {
-      // チーム詳細ページのボード一覧に戻る
+      // 状態をクリア
+      setCurrentBoardName(undefined);
+
+      // チームのボード一覧タブに戻る
       const teamCustomUrl = pathname.split("/")[2];
-      router.push(`/team/${teamCustomUrl}?mode=board`);
+      router.push(`/team/${teamCustomUrl}?tab=boards`);
     }
   };
 

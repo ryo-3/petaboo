@@ -222,24 +222,22 @@ function Sidebar({
             </button>
           </Tooltip>
 
-          {/* ボード詳細 (選択中のボードがある場合のみ表示、デスクトップのみ) */}
+          {/* ボード詳細 (選択中のボードがある場合のみ表示) */}
           {currentBoardName && (
-            <div className="hidden md:block">
-              <Tooltip text={`${currentBoardName}詳細`} position="right">
-                <button
-                  onClick={onBoardDetail}
-                  className={`p-2 rounded-lg transition-colors ${
-                    iconStates.boardDetail
-                      ? "bg-light-Blue text-white"
-                      : "bg-gray-200 hover:bg-gray-300 text-gray-600"
-                  }`}
-                >
-                  <DashboardEditIcon
-                    className={`w-5 h-5 ${iconStates.boardDetail ? "" : "text-gray-600"}`}
-                  />
-                </button>
-              </Tooltip>
-            </div>
+            <Tooltip text={`${currentBoardName}詳細`} position="right">
+              <button
+                onClick={onBoardDetail}
+                className={`p-2 rounded-lg transition-colors ${
+                  iconStates.boardDetail
+                    ? "bg-light-Blue text-white"
+                    : "bg-gray-200 hover:bg-gray-300 text-gray-600"
+                }`}
+              >
+                <DashboardEditIcon
+                  className={`w-5 h-5 ${iconStates.boardDetail ? "" : "text-gray-600"}`}
+                />
+              </button>
+            </Tooltip>
           )}
 
           {/* 検索ボタン（コンパクトモード） */}

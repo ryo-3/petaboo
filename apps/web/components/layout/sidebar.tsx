@@ -92,7 +92,7 @@ function Sidebar({
   if (isCompact) {
     return (
       <div className="flex md:flex-col flex-row items-center md:py-4 py-0 md:h-screen h-14 bg-gray-50 md:justify-between justify-center w-full">
-        <div className="flex md:flex-col flex-row items-center md:gap-y-3 gap-x-4 md:w-auto justify-center md:justify-start">
+        <div className="flex md:flex-col flex-row items-center md:gap-y-3 gap-x-2 md:w-auto justify-center md:justify-start">
           {/* ボード詳細時はホームの代わりに戻るボタンを表示（モバイルのみ） */}
           {onBackToBoardList && showingBoardDetail ? (
             <>

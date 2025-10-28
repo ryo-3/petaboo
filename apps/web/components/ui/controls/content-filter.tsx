@@ -57,7 +57,7 @@ function ContentFilter({
   };
 
   return (
-    <div className="flex bg-gray-100 rounded-lg p-0.5 gap-1">
+    <div className="hidden md:flex bg-gray-100 rounded-lg p-0.5 gap-1">
       {/* 左ボタン（非選択時: メモ、選択時: 一覧） */}
       <Tooltip text={getMemoTooltip()} position="bottom">
         <button

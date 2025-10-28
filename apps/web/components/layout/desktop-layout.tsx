@@ -14,20 +14,24 @@ function DesktopLayout({
   children,
   hideHeader = false,
 }: DesktopLayoutProps) {
-  const topPosition = hideHeader ? "top-0" : "top-16";
-  const paddingTop = hideHeader ? "pt-0" : "pt-16";
+  const topPosition = hideHeader ? "top-0" : "md:top-16 top-0";
+  const paddingTop = hideHeader ? "pt-0" : "md:pt-16 pt-0";
 
   return (
-    <div className="flex flex-1">
-      {/* 左サイドバー */}
+    <div className="flex flex-col md:flex-row flex-1">
+      {/* 左サイドバー（デスクトップ: 固定左サイドバー、モバイル: 下部バー） */}
       <div
-        className={`fixed left-0 ${topPosition} w-16 h-screen border-r border-gray-200 overflow-visible z-10`}
+        className={`fixed left-0 right-0 ${hideHeader ? "md:top-0" : "md:top-16"} bottom-0 md:bottom-auto md:w-16 w-full md:h-screen h-14 md:border-r md:border-b-0 border-t border-gray-200 overflow-visible z-10 bg-gray-50`}
       >
         {sidebarContent}
       </div>
 
       {/* メインコンテンツエリア */}
-      <div className={`flex-1 ml-16 h-screen ${paddingTop}`}>{children}</div>
+      <div
+        className={`flex-1 md:ml-16 ml-0 h-screen ${paddingTop} pt-0 md:pb-0 pb-14`}
+      >
+        {children}
+      </div>
     </div>
   );
 }

@@ -59,15 +59,19 @@ export function MainClientDesktop({
   showingBoardDetail,
 }: MainClientDesktopProps) {
   return (
-    <div className="hidden md:flex flex-col h-screen w-full">
-      {/* ヘッダー（設定で非表示可能） */}
-      {!preferences?.hideHeader && <Header />}
+    <div className="flex flex-col h-screen w-full">
+      {/* ヘッダー（設定で非表示可能、デスクトップのみ） */}
+      {!preferences?.hideHeader && (
+        <div className="hidden md:block">
+          <Header />
+        </div>
+      )}
 
       {/* メインレイアウト */}
       <DesktopLayout
         hideHeader={preferences?.hideHeader}
         sidebarContent={
-          // コンパクトサイドバー（アイコンナビ）
+          // レスポンシブサイドバー（アイコンナビ）
           <Sidebar
             onSelectMemo={handleSelectMemo}
             onSelectTask={handleSelectTask}
@@ -79,7 +83,6 @@ export function MainClientDesktop({
             onDeleteMemo={handleDeleteMemo}
             selectedMemoId={selectedMemo?.id}
             selectedTaskId={selectedTask?.id}
-            isCompact={true} // デスクトップは常にコンパクト
             currentMode={currentMode}
             onModeChange={setCurrentMode}
             onSettings={handleSettings}

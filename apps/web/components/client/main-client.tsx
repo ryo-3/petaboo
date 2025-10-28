@@ -2,7 +2,6 @@
 
 import { BoardScreenRef } from "@/components/screens/board-screen";
 import { ErrorDisplay } from "@/components/ui/error-display";
-import { MainClientMobile } from "./main-client-mobile";
 import { MainClientDesktop } from "./main-client-desktop";
 import { MainContentArea } from "./main-content-area";
 import { useBoardBySlug, useBoardWithItems } from "@/src/hooks/use-boards";
@@ -302,34 +301,7 @@ function MainClient({
       {/* エラー表示領域 */}
       <ErrorDisplay errors={errors} onClearErrors={clearErrors} />
 
-      {/* モバイル版レイアウト */}
-      <MainClientMobile
-        showDeleted={showDeleted}
-        handleBackToMemos={handleBackToMemos}
-        handleSelectDeletedMemo={handleSelectDeletedMemo}
-        handleSelectMemo={handleSelectMemo}
-        handleSelectTask={handleSelectTask}
-        handleEditTask={handleEditTask}
-        handleShowList={wrappedHandleShowList}
-        handleHome={wrappedHandleHome}
-        handleEditMemo={handleEditMemo}
-        handleDeleteMemo={handleDeleteMemo}
-        selectedMemo={selectedMemo}
-        selectedTask={selectedTask}
-        currentMode={currentMode}
-        setCurrentMode={setCurrentMode}
-        handleSettings={wrappedHandleSettings}
-        handleDashboard={wrappedHandleDashboard}
-        handleBoardDetail={wrappedHandleBoardDetail}
-        handleTeamList={handleTeamList}
-        handleTeamCreate={handleTeamCreate}
-        screenMode={screenMode}
-        initialBoardName={initialBoardName}
-        currentBoard={currentBoard}
-        showingBoardDetail={showingBoardDetail}
-      />
-
-      {/* デスクトップ版レイアウト */}
+      {/* 統一レイアウト（レスポンシブ対応） */}
       <MainClientDesktop
         preferences={preferences}
         handleSelectMemo={handleSelectMemo}

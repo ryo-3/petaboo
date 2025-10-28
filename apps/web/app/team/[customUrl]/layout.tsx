@@ -309,7 +309,6 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
             onShowFullList={handleShowMemoList}
             onHome={handleHome}
             onEditMemo={() => {}}
-            isCompact={true}
             currentMode={currentMode}
             onModeChange={handleModeChange}
             onShowTaskList={handleShowTaskList}
@@ -449,7 +448,6 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
               onShowFullList={handleShowMemoList}
               onHome={handleHome}
               onEditMemo={() => {}}
-              isCompact={true}
               currentMode={currentMode}
               onModeChange={handleModeChange}
               onShowTaskList={handleShowTaskList}

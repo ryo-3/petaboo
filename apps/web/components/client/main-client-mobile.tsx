@@ -64,7 +64,7 @@ export function MainClientMobile({
           onSelectDeletedMemo={handleSelectDeletedMemo}
         />
       ) : (
-        // 通常のサイドバー表示（フルサイズ）
+        // 通常のサイドバー表示（レスポンシブ対応）
         <Sidebar
           onSelectMemo={handleSelectMemo}
           onSelectTask={handleSelectTask}
@@ -75,7 +75,6 @@ export function MainClientMobile({
           onDeleteMemo={handleDeleteMemo}
           selectedMemoId={selectedMemo?.id}
           selectedTaskId={selectedTask?.id}
-          isCompact={false} // モバイルは常にフルサイズ
           currentMode={currentMode}
           onModeChange={setCurrentMode}
           onSettings={handleSettings}

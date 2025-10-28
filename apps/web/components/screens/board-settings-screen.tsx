@@ -48,7 +48,6 @@ export default function BoardSettingsScreen({
             onDeleteMemo={emptyHandler}
             selectedMemoId={undefined}
             selectedTaskId={undefined}
-            isCompact={true}
             currentMode={currentMode}
             onModeChange={setCurrentMode}
             onSettings={emptyHandler}

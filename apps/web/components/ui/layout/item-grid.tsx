@@ -42,7 +42,7 @@ function ItemGrid({
 
   return (
     <div
-      className={`flex-1 overflow-y-auto overflow-x-hidden hover-scrollbar ${isBoard ? "" : "pr-2"} pb-10 mb-2`}
+      className={`flex-1 overflow-y-auto overflow-x-hidden hover-scrollbar ${isBoard ? "" : "pr-2"} pb-20 md:pb-10 mb-2`}
     >
       <div className={getGridClassName()}>{children}</div>
     </div>

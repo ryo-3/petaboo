@@ -1018,6 +1018,31 @@ function TaskScreen({
             </button>
           </div>
         )}
+
+        {/* スマホ用FAB追加ボタン */}
+        {activeTab !== "deleted" &&
+          selectionMode === "select" &&
+          checkedTasks.size === 0 &&
+          !onAddToBoard && (
+            <button
+              onClick={handleCreateNew}
+              className="md:hidden fixed bottom-16 right-2 size-9 bg-DeepBlue hover:bg-DeepBlue/90 text-white rounded-full shadow-lg flex items-center justify-center z-20 transition-all"
+            >
+              <svg
+                className="size-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                strokeWidth={2.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+            </button>
+          )}
       </div>
 
       {/* モーダル（2パネルレイアウト外側） */}

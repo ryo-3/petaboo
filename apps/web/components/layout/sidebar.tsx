@@ -309,7 +309,11 @@ function Sidebar({
             <Tooltip text="メニュー" position="right">
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="p-2 rounded-lg transition-colors bg-gray-200 hover:bg-gray-300 text-gray-600"
+                className={`p-2 rounded-lg transition-colors ${
+                  iconStates.team || iconStates.settings
+                    ? "bg-slate-500 text-white"
+                    : "bg-gray-200 hover:bg-gray-300 text-gray-600"
+                }`}
               >
                 <svg
                   className="w-5 h-5"

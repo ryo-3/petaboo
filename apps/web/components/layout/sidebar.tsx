@@ -75,6 +75,9 @@ function Sidebar({
   const notificationCount = 0;
   const markNotificationsAsRead = () => {}; // 空の関数
 
+  // モバイルメニュー開閉状態
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+
   const modeTabs = [
     {
       id: "memo",
@@ -257,46 +260,111 @@ function Sidebar({
               />
             </button>
           </Tooltip>
-          {/* チーム一覧ボタン（コンパクトモード） */}
-          <Tooltip text={currentTeamName || "チーム"} position="right">
-            <button
-              onClick={() => {
-                // 通知を既読にする
-                markNotificationsAsRead();
-                // チーム一覧に移動
-                if (onTeamList) {
-                  onTeamList();
-                } else {
-                  window.location.href = "/team";
-                }
-              }}
-              className={`relative p-2 rounded-lg transition-colors ${
-                iconStates.team
-                  ? "bg-slate-500 text-white"
-                  : "bg-gray-200 hover:bg-gray-300 text-gray-600"
-              }`}
-            >
-              <TeamIcon className="w-5 h-5" />
-              <NotificationBadge count={notificationCount} size="sm" />
-            </button>
-          </Tooltip>
-          {/* 設定ボタン（コンパクトモード） */}
-          <Tooltip text="設定" position="right">
-            <button
-              onClick={() => {
-                onSettings?.();
-              }}
-              className={`p-2 rounded-lg transition-colors ${
-                iconStates.settings
-                  ? "bg-slate-500 text-white"
-                  : "bg-gray-200 hover:bg-gray-300 text-gray-600"
-              }`}
-            >
-              <SettingsIcon
-                className={`w-5 h-5 ${iconStates.settings ? "text-white" : ""}`}
-              />
-            </button>
-          </Tooltip>
+          {/* デスクトップ: チーム一覧と設定を個別表示 */}
+          <div className="hidden md:contents">
+            {/* チーム一覧ボタン（コンパクトモード） */}
+            <Tooltip text={currentTeamName || "チーム"} position="right">
+              <button
+                onClick={() => {
+                  // 通知を既読にする
+                  markNotificationsAsRead();
+                  // チーム一覧に移動
+                  if (onTeamList) {
+                    onTeamList();
+                  } else {
+                    window.location.href = "/team";
+                  }
+                }}
+                className={`relative p-2 rounded-lg transition-colors ${
+                  iconStates.team
+                    ? "bg-slate-500 text-white"
+                    : "bg-gray-200 hover:bg-gray-300 text-gray-600"
+                }`}
+              >
+                <TeamIcon className="w-5 h-5" />
+                <NotificationBadge count={notificationCount} size="sm" />
+              </button>
+            </Tooltip>
+            {/* 設定ボタン（コンパクトモード） */}
+            <Tooltip text="設定" position="right">
+              <button
+                onClick={() => {
+                  onSettings?.();
+                }}
+                className={`p-2 rounded-lg transition-colors ${
+                  iconStates.settings
+                    ? "bg-slate-500 text-white"
+                    : "bg-gray-200 hover:bg-gray-300 text-gray-600"
+                }`}
+              >
+                <SettingsIcon
+                  className={`w-5 h-5 ${iconStates.settings ? "text-white" : ""}`}
+                />
+              </button>
+            </Tooltip>
+          </div>
+
+          {/* モバイル: メニューボタン（...） */}
+          <div className="md:hidden relative">
+            <Tooltip text="メニュー" position="right">
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="p-2 rounded-lg transition-colors bg-gray-200 hover:bg-gray-300 text-gray-600"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <circle cx="5" cy="12" r="2" />
+                  <circle cx="12" cy="12" r="2" />
+                  <circle cx="19" cy="12" r="2" />
+                </svg>
+              </button>
+            </Tooltip>
+
+            {/* ドロップダウンメニュー */}
+            {isMobileMenuOpen && (
+              <>
+                {/* 背景オーバーレイ */}
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                />
+                {/* メニュー */}
+                <div className="absolute bottom-full right-0 mb-4 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                  <button
+                    onClick={() => {
+                      markNotificationsAsRead();
+                      if (onTeamList) {
+                        onTeamList();
+                      } else {
+                        window.location.href = "/team";
+                      }
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-2 text-gray-700"
+                  >
+                    <TeamIcon className="w-5 h-5" />
+                    <span>{currentTeamName || "チーム一覧"}</span>
+                    {notificationCount > 0 && (
+                      <NotificationBadge count={notificationCount} size="sm" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => {
+                      onSettings?.();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-2 text-gray-700"
+                  >
+                    <SettingsIcon className="w-5 h-5" />
+                    <span>設定</span>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
     );

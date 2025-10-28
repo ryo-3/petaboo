@@ -846,7 +846,7 @@ function TaskScreen({
     <div className="flex h-full bg-white relative">
       {/* 左側：一覧表示エリア（スマホでは詳細表示時に非表示） */}
       <div
-        className={`${taskScreenMode === "list" ? "w-full" : "hidden md:flex md:w-[44%]"} ${taskScreenMode !== "list" ? "md:border-r md:border-gray-300" : ""} pt-2 md:pt-3 pl-2 md:pl-5 md:pr-2 flex-col transition-all duration-300 relative`}
+        className={`${taskScreenMode === "list" ? "w-full" : "hidden md:flex md:w-[44%]"} ${taskScreenMode !== "list" ? "md:border-r md:border-gray-300" : ""} pt-2 md:pt-3 pl-2 md:pl-5 md:pr-2 flex flex-col transition-all duration-300 relative`}
       >
         <DesktopUpper
           currentMode="task"

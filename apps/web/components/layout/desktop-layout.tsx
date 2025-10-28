@@ -28,7 +28,7 @@ function DesktopLayout({
 
       {/* メインコンテンツエリア */}
       <div
-        className={`flex-1 md:ml-16 ml-0 h-screen ${paddingTop} pt-0 md:pb-0 pb-14`}
+        className={`flex-1 md:ml-16 ml-0 h-screen overflow-hidden ${paddingTop} pt-0 md:mb-0 mb-14`}
       >
         {children}
       </div>

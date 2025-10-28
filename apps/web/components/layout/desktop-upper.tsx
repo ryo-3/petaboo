@@ -131,7 +131,7 @@ function DesktopUpper({
   onBoardSettings,
   isExportDisabled = false,
   marginBottom = "mb-1.5",
-  headerMarginBottom = "mb-1.5",
+  headerMarginBottom = "",
   boardLayout = "horizontal",
   isReversed = false,
   onBoardLayoutChange,
@@ -433,7 +433,7 @@ function DesktopUpper({
   ) : null;
 
   return (
-    <div className={marginBottom}>
+    <div className={`sticky md:static top-2 z-10 bg-white ${marginBottom}`}>
       {teamMode ? (
         <>
           {!hideControls && controlsContent}

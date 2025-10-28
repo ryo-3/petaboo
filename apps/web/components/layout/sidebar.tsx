@@ -25,7 +25,7 @@ interface SidebarProps {
   onShowFullList: () => void;
   onShowTaskList?: () => void;
   onHome: () => void;
-  onEditMemo: (memo: Memo) => void;
+  onEditMemo: (memo?: Memo) => void;
   onDeleteMemo?: (memo: Memo) => void;
   selectedMemoId?: number;
   selectedTaskId?: number;

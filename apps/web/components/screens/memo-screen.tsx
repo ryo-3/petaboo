@@ -624,7 +624,7 @@ function MemoScreen({
         hideAddButton={hideHeaderButtons}
         onCsvImport={() => setIsCsvImportModalOpen(true)}
         teamMode={teamMode}
-        marginBottom={teamMode ? "mb-2" : "mb-3"}
+        marginBottom=""
         headerMarginBottom="mb-1.5"
       />
 
@@ -953,7 +953,7 @@ function MemoScreen({
     <div className="flex h-full bg-white relative">
       {/* 左側：一覧表示エリア（スマホでは詳細表示時に非表示） */}
       <div
-        className={`${memoScreenMode === "list" ? "w-full" : "hidden md:flex md:w-[44%]"} ${memoScreenMode !== "list" ? "md:border-r md:border-gray-300" : ""} pt-2 md:pt-3 pl-2 md:pl-5 md:pr-2 flex-col transition-all duration-300 relative`}
+        className={`${memoScreenMode === "list" ? "w-full" : "hidden md:flex md:w-[44%]"} ${memoScreenMode !== "list" ? "md:border-r md:border-gray-300" : ""} pt-2 md:pt-3 pl-2 md:pl-5 md:pr-2 flex-col relative ${!teamMode ? "transition-all duration-300" : ""}`}
       >
         <DesktopUpper
           currentMode="memo"
@@ -1000,7 +1000,7 @@ function MemoScreen({
           teamMode={teamMode}
           hideControls={false}
           floatControls={teamMode}
-          marginBottom={teamMode ? "mb-2" : "mb-3"}
+          marginBottom=""
           headerMarginBottom="mb-1.5"
         />
 
@@ -1110,6 +1110,31 @@ function MemoScreen({
             </button>
           </div>
         )}
+
+        {/* 新規メモ作成ボタン（右下固定・モバイルのみ） */}
+        {activeTab === "normal" &&
+          selectionMode === "select" &&
+          checkedMemos.size === 0 &&
+          !onAddToBoard && (
+            <button
+              onClick={handleCreateNew}
+              className="md:hidden fixed bottom-16 right-2 size-9 bg-Green hover:bg-Green/90 text-white rounded-full shadow-lg flex items-center justify-center z-20 transition-all"
+            >
+              <svg
+                className="size-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                strokeWidth={2.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+            </button>
+          )}
       </div>
 
       {/* モーダル（2パネルレイアウト外側） */}

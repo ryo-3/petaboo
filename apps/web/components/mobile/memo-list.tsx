@@ -8,10 +8,11 @@ import { useMemos, useDeleteMemo } from "@/src/hooks/use-memos";
 import { useLocalStorageSync } from "@/src/hooks/use-local-storage-sync";
 import type { Memo } from "@/src/types/memo";
 import { formatDateOnly } from "@/src/utils/formatDate";
+import { Plus as PlusIcon } from "lucide-react";
 
 interface SidebarMemoListProps {
   onSelectMemo: (memo: Memo) => void;
-  onEditMemo: (memo: Memo) => void;
+  onEditMemo: (memo?: Memo) => void;
   onDeleteMemo?: (memo: Memo) => void;
   selectedMemoId?: number;
 }
@@ -108,27 +109,55 @@ function SidebarMemoList({
   }
 
   if (!memos || memos.length === 0) {
-    return <EmptyState message="メモがありません" variant="simple" />;
+    return (
+      <div className="h-full flex flex-col">
+        {/* 新規追加ボタン */}
+        <div className="px-2 mb-2">
+          <button
+            onClick={() => onEditMemo()}
+            className="w-full py-2 px-3 bg-Green hover:bg-Green/90 text-white rounded-lg flex items-center justify-center gap-2 transition-colors"
+          >
+            <PlusIcon className="w-5 h-5" />
+            <span className="font-medium">新規メモ作成</span>
+          </button>
+        </div>
+        <EmptyState message="メモがありません" variant="simple" />
+      </div>
+    );
   }
 
   return (
-    <div className="h-full overflow-y-auto overflow-x-hidden">
-      <ul className="space-y-1 pb-8">
-        {memos.map((memo: Memo) => {
-          if (!memo || memo.id === undefined) return null;
-          return (
-            <li key={`memo-${memo.id}`}>
-              <SidebarMemoItem
-                memo={memo}
-                onSelect={() => onSelectMemo(memo)}
-                onEdit={() => onEditMemo(memo)}
-                onDelete={() => handleDelete(memo)}
-                isSelected={selectedMemoId === memo.id}
-              />
-            </li>
-          );
-        })}
-      </ul>
+    <div className="h-full flex flex-col overflow-hidden">
+      {/* 新規追加ボタン */}
+      <div className="px-2 mb-2 flex-shrink-0">
+        <button
+          onClick={() => onEditMemo()}
+          className="w-full py-2 px-3 bg-Green hover:bg-Green/90 text-white rounded-lg flex items-center justify-center gap-2 transition-colors"
+        >
+          <PlusIcon className="w-5 h-5" />
+          <span className="font-medium">新規メモ作成</span>
+        </button>
+      </div>
+
+      {/* メモリスト */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        <ul className="space-y-1 pb-8">
+          {memos.map((memo: Memo) => {
+            if (!memo || memo.id === undefined) return null;
+            return (
+              <li key={`memo-${memo.id}`}>
+                <SidebarMemoItem
+                  memo={memo}
+                  onSelect={() => onSelectMemo(memo)}
+                  onEdit={() => onEditMemo(memo)}
+                  onDelete={() => handleDelete(memo)}
+                  isSelected={selectedMemoId === memo.id}
+                />
+              </li>
+            );
+          })}
+        </ul>
+      </div>
     </div>
   );
 }

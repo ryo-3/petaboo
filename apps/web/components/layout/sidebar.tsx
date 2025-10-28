@@ -222,22 +222,24 @@ function Sidebar({
             </button>
           </Tooltip>
 
-          {/* ボード詳細 (選択中のボードがある場合のみ表示) */}
+          {/* ボード詳細 (選択中のボードがある場合のみ表示、デスクトップのみ) */}
           {currentBoardName && (
-            <Tooltip text={`${currentBoardName}詳細`} position="right">
-              <button
-                onClick={onBoardDetail}
-                className={`p-2 rounded-lg transition-colors ${
-                  iconStates.boardDetail
-                    ? "bg-light-Blue text-white"
-                    : "bg-gray-200 hover:bg-gray-300 text-gray-600"
-                }`}
-              >
-                <DashboardEditIcon
-                  className={`w-5 h-5 ${iconStates.boardDetail ? "" : "text-gray-600"}`}
-                />
-              </button>
-            </Tooltip>
+            <div className="hidden md:block">
+              <Tooltip text={`${currentBoardName}詳細`} position="right">
+                <button
+                  onClick={onBoardDetail}
+                  className={`p-2 rounded-lg transition-colors ${
+                    iconStates.boardDetail
+                      ? "bg-light-Blue text-white"
+                      : "bg-gray-200 hover:bg-gray-300 text-gray-600"
+                  }`}
+                >
+                  <DashboardEditIcon
+                    className={`w-5 h-5 ${iconStates.boardDetail ? "" : "text-gray-600"}`}
+                  />
+                </button>
+              </Tooltip>
+            </div>
           )}
 
           {/* 検索ボタン（コンパクトモード） */}
@@ -354,21 +356,6 @@ function Sidebar({
                 className={`w-5 h-5 ${iconStates.board ? "" : "text-gray-600"}`}
               />
             </button>
-            {/* ボード詳細ボタン (選択中のボードがある場合のみ表示) */}
-            {currentBoardName && (
-              <button
-                onClick={onBoardDetail}
-                className={`p-2 rounded-lg transition-colors ${
-                  iconStates.boardDetail
-                    ? "bg-light-Blue text-white"
-                    : "bg-gray-200 hover:bg-gray-300 text-gray-600"
-                }`}
-              >
-                <DashboardEditIcon
-                  className={`w-5 h-5 ${iconStates.boardDetail ? "" : "text-gray-600"}`}
-                />
-              </button>
-            )}
             {/* チーム一覧ボタン */}
             <div className="flex-shrink-0 p-2 border-t border-gray-200">
               <button

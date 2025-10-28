@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useNavigation } from "@/contexts/navigation-context";
+import { useClerk } from "@clerk/nextjs";
 import DashboardIcon from "@/components/icons/dashboard-icon";
 import DashboardEditIcon from "@/components/icons/dashboard-edit-icon";
 import HomeIcon from "@/components/icons/home-icon";
@@ -15,6 +16,7 @@ import TaskList from "@/components/mobile/task-list";
 import SwitchTabs from "@/components/ui/base/switch-tabs";
 import Tooltip from "@/components/ui/base/tooltip";
 import NotificationBadge from "@/components/ui/base/notification-badge";
+import { LogOut } from "lucide-react";
 import type { Memo } from "@/src/types/memo";
 import type { Task } from "@/src/types/task";
 
@@ -71,12 +73,16 @@ function Sidebar({
 }: SidebarProps) {
   // NavigationContextから統一されたiconStatesを取得
   const { iconStates } = useNavigation();
+  // Clerkのログアウト機能
+  const { signOut } = useClerk();
   // 通知数を取得（一時的に0に設定）
   const notificationCount = 0;
   const markNotificationsAsRead = () => {}; // 空の関数
 
   // モバイルメニュー開閉状態
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  // ログアウト確認モーダル
+  const [showLogoutModal, setShowLogoutModal] = React.useState(false);
 
   const modeTabs = [
     {
@@ -365,11 +371,48 @@ function Sidebar({
                     <SettingsIcon className="w-5 h-5" />
                     <span>設定</span>
                   </button>
+                  <button
+                    onClick={() => {
+                      setShowLogoutModal(true);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-2 text-gray-700"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    <span>ログアウト</span>
+                  </button>
                 </div>
               </>
             )}
           </div>
         </div>
+
+        {/* ログアウト確認モーダル */}
+        {showLogoutModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-80 max-w-[90vw]">
+              <h3 className="text-lg font-medium mb-4">ログアウト確認</h3>
+              <p className="text-gray-600 mb-6">ログアウトしますか？</p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setShowLogoutModal(false)}
+                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors"
+                >
+                  キャンセル
+                </button>
+                <button
+                  onClick={() => {
+                    signOut();
+                    setShowLogoutModal(false);
+                  }}
+                  className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+                >
+                  ログアウト
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -521,6 +564,33 @@ function Sidebar({
           />
         )}
       </div>
+
+      {/* ログアウト確認モーダル */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-80 max-w-[90vw]">
+            <h3 className="text-lg font-medium mb-4">ログアウト確認</h3>
+            <p className="text-gray-600 mb-6">ログアウトしますか？</p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowLogoutModal(false)}
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={() => {
+                  signOut();
+                  setShowLogoutModal(false);
+                }}
+                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+              >
+                ログアウト
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

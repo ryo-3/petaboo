@@ -3,6 +3,7 @@
 import * as React from "react";
 import { DayPicker } from "react-day-picker";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ja } from "react-day-picker/locale";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
@@ -10,11 +11,15 @@ function Calendar({
   className = "",
   classNames,
   showOutsideDays = true,
+  locale = ja,
+  weekStartsOn = 0,
   ...props
 }: CalendarProps) {
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
+      locale={locale}
+      weekStartsOn={weekStartsOn}
       className={`p-3 ${className}`}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",

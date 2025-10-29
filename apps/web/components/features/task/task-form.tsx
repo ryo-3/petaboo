@@ -1,7 +1,7 @@
 "use client";
 
 import CategorySelector from "@/components/features/category/category-selector";
-import { DatePicker } from "@/components/ui/date-picker";
+import { DatePickerSimple } from "@/components/ui/date-picker-simple";
 import CustomSelector from "@/components/ui/selectors/custom-selector";
 import BoardTagDisplay from "@/components/shared/board-tag-display";
 import BoardCategorySelector from "@/components/features/board-categories/board-category-selector";
@@ -253,7 +253,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
 
         <div className="flex-1 flex gap-2.5 items-center">
           <div className="w-32">
-            <DatePicker
+            <DatePickerSimple
               value={dueDate}
               onChange={onDueDateChange}
               disabled={isDeleted}
@@ -328,7 +328,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
           />
 
           <div className="w-32">
-            <DatePicker
+            <DatePickerSimple
               value={dueDate}
               onChange={onDueDateChange}
               disabled={isDeleted}
@@ -455,7 +455,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
 
         <div className="flex-1 flex gap-2.5 items-center">
           <div className="w-32">
-            <DatePicker
+            <DatePickerSimple
               value={dueDate}
               onChange={onDueDateChange}
               disabled={isDeleted}

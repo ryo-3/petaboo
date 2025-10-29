@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { format } from "date-fns";
+import { ja as jaDateFns } from "date-fns/locale";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -9,7 +10,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { ja } from "date-fns/locale";
+import { ja } from "react-day-picker/locale";
 
 interface DatePickerProps {
   value?: string; // YYYY-MM-DD format
@@ -51,7 +52,9 @@ export function DatePicker({
           } ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:bg-gray-50"}`}
         >
           <span className={`truncate ${!date ? "text-gray-600" : ""}`}>
-            {date ? format(date, "yyyy/MM/dd", { locale: ja }) : placeholder}
+            {date
+              ? format(date, "yyyy/MM/dd", { locale: jaDateFns })
+              : placeholder}
           </span>
           <CalendarIcon className="h-4 w-4 opacity-50 flex-shrink-0 ml-1" />
         </button>
@@ -63,6 +66,7 @@ export function DatePicker({
           onSelect={handleSelect}
           initialFocus
           locale={ja}
+          weekStartsOn={0}
         />
       </PopoverContent>
     </Popover>

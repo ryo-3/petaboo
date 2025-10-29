@@ -26,6 +26,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "ぺたぼー",
   description: "個人・チーム向け統合メモ・タスク管理システム PETABoo",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
 };
 
 export default async function RootLayout({

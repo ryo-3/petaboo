@@ -13,7 +13,10 @@ export default clerkMiddleware(async (auth, req) => {
   const isHomePage = req.nextUrl.pathname === "/";
 
   if (!isPublicRoute(req) && !isHomePage) {
-    await auth.protect();
+    await auth.protect({
+      // 未認証時はアプリ内のログイン画面にリダイレクト
+      unauthenticatedUrl: "/sign-in",
+    });
   }
 });
 

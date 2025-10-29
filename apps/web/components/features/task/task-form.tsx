@@ -74,8 +74,6 @@ interface TaskFormProps {
   titleAndDateOnly?: boolean;
   // ステータス欄のみ表示（スクロール領域用）
   statusOnly?: boolean;
-  // スクロール時の表示制御
-  isScrolled?: boolean;
 }
 
 export interface TaskFormHandle {
@@ -121,7 +119,6 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
     editorOnly = false,
     titleAndDateOnly = false,
     statusOnly = false,
-    isScrolled = false,
   } = props;
   const titleInputRef = useRef<HTMLInputElement>(null);
   const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -213,7 +210,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
 
         {/* 作成者・日付を下の行に表示 */}
         {task && task.id !== 0 && (
-          <div className="flex justify-end items-center gap-2 mr-2 mt-1 md:mt-2 mb-1">
+          <div className="flex justify-end items-center gap-2 mr-2 mt-1 mb-1">
             <CreatorAvatar
               createdBy={createdBy}
               avatarColor={createdByAvatarColor}
@@ -302,75 +299,65 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
           />
         </div>
 
-        {/* ステータス欄（スクロール時に非表示） */}
-        <div
-          className={`overflow-hidden ${
-            isScrolled ? "max-h-0" : "max-h-[200px]"
-          }`}
-          style={{
-            transition: "max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-          }}
-        >
-          <div
-            className={`flex gap-2.5 ${
-              isScrolled ? "opacity-0" : "opacity-100"
-            }`}
-            style={{
-              transition: "opacity 0.25s ease-out",
-            }}
-          >
-            <CustomSelector
-              label="ステータス"
-              options={statusOptions}
-              value={status}
-              onChange={(value) =>
-                onStatusChange(value as "todo" | "in_progress" | "completed")
-              }
-              fullWidth
-              disabled={isDeleted}
-            />
+        {/* ステータス欄（常に表示） */}
+        <div className="flex gap-2.5 mt-1">
+          <CustomSelector
+            label="ステータス"
+            options={statusOptions}
+            value={status}
+            onChange={(value) =>
+              onStatusChange(value as "todo" | "in_progress" | "completed")
+            }
+            fullWidth
+            disabled={isDeleted}
+            hideLabel={true}
+            compactMode={true}
+          />
 
-            <CustomSelector
-              label="優先度"
-              options={priorityOptions}
-              value={priority}
-              onChange={(value) =>
-                onPriorityChange(value as "low" | "medium" | "high")
-              }
-              fullWidth
-              disabled={isDeleted}
-            />
+          <CustomSelector
+            label="優先度"
+            options={priorityOptions}
+            value={priority}
+            onChange={(value) =>
+              onPriorityChange(value as "low" | "medium" | "high")
+            }
+            fullWidth
+            disabled={isDeleted}
+            hideLabel={true}
+            compactMode={true}
+          />
 
-            <div className="flex-1 flex gap-2.5 items-center">
-              <div className="w-32">
-                <DateInput
-                  label="期限日"
-                  value={dueDate}
-                  onChange={onDueDateChange}
-                  fullWidth
+          <div className="flex-1 flex gap-2.5 items-center">
+            <div className="w-32">
+              <DateInput
+                label="期限日"
+                value={dueDate}
+                onChange={onDueDateChange}
+                fullWidth
+                disabled={isDeleted}
+                hideLabel={true}
+                compactMode={true}
+              />
+            </div>
+
+            {showBoardCategory && (
+              <div className="w-80">
+                <BoardCategorySelector
+                  value={boardCategoryId}
+                  onChange={onBoardCategoryChange}
+                  categories={boardCategories}
+                  boardId={initialBoardId!}
                   disabled={isDeleted}
+                  allowCreate={true}
                 />
               </div>
-
-              {showBoardCategory && (
-                <div className="w-80">
-                  <BoardCategorySelector
-                    value={boardCategoryId}
-                    onChange={onBoardCategoryChange}
-                    categories={boardCategories}
-                    boardId={initialBoardId!}
-                    disabled={isDeleted}
-                    allowCreate={true}
-                  />
-                </div>
-              )}
-            </div>
+            )}
           </div>
         </div>
 
         {/* 作成者・日付を表示（ツールバー非表示時のみ） */}
         {task && task.id !== 0 && !toolbarVisible && (
-          <div className="flex justify-end items-center gap-2 mr-2 mt-1 md:mt-2 mb-1">
+          <div className="flex justify-end items-center gap-2 mr-2 mt-1 mb-1">
             <CreatorAvatar
               createdBy={createdBy}
               avatarColor={createdByAvatarColor}

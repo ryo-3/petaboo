@@ -157,8 +157,6 @@ function TaskEditor({
   // 書式設定ツールバーの表示状態
   const [toolbarVisible, setToolbarVisible] = useState(false);
   const [tiptapEditor, setTiptapEditor] = useState<Editor | null>(null);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // 事前取得されたデータを使用（APIコール不要）
   const boards = preloadedBoards;
@@ -920,20 +918,6 @@ function TaskEditor({
     onClose();
   }, [onClose]);
 
-  // スクロール監視
-  useEffect(() => {
-    const scrollContainer = scrollContainerRef.current;
-    if (!scrollContainer) return;
-
-    const handleScroll = () => {
-      // 50px以上スクロールしたらステータス欄を隠す
-      setIsScrolled(scrollContainer.scrollTop > 50);
-    };
-
-    scrollContainer.addEventListener("scroll", handleScroll);
-    return () => scrollContainer.removeEventListener("scroll", handleScroll);
-  }, []);
-
   return (
     <>
       <div
@@ -1169,15 +1153,11 @@ function TaskEditor({
             onToolbarToggle={setToolbarVisible}
             tiptapEditor={tiptapEditor}
             headerOnly={true}
-            isScrolled={isScrolled}
           />
         </div>
 
         {/* スクロール可能なコンテンツ部分 */}
-        <div
-          ref={scrollContainerRef}
-          className="flex-1 min-h-0 overflow-y-auto"
-        >
+        <div className="flex-1 min-h-0 overflow-y-auto">
           <TaskForm
             task={task as Task}
             title={finalTitle}

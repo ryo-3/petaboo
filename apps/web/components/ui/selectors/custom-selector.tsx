@@ -29,6 +29,9 @@ interface CustomSelectorProps {
   allowCreate?: boolean;
   onCreateNew?: (newValue: string) => void;
   disabled?: boolean;
+  hideLabelOnMobile?: boolean;
+  hideLabel?: boolean;
+  compactMode?: boolean; // モバイル用コンパクトモード
 }
 
 function CustomSelector({
@@ -41,6 +44,9 @@ function CustomSelector({
   allowCreate = false,
   onCreateNew,
   disabled = false,
+  hideLabelOnMobile = false,
+  hideLabel = false,
+  compactMode = false,
 }: CustomSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -115,12 +121,18 @@ function CustomSelector({
 
   return (
     <div className="relative" ref={selectorRef}>
-      <div className="flex items-center justify-between">
-        <label className={FORM_STYLES.label}>{label}</label>
-      </div>
+      {!hideLabel && (
+        <div className="flex items-center justify-between">
+          <label
+            className={`${FORM_STYLES.label} ${hideLabelOnMobile ? "hidden md:block" : ""}`}
+          >
+            {label}
+          </label>
+        </div>
+      )}
       <div className="relative">
         <div
-          className={`${FORM_STYLES.selector} ${
+          className={`${FORM_STYLES.selector} ${compactMode ? "h-7 md:h-8" : ""} ${
             isOpen ? "rounded-t-lg" : "rounded-lg"
           } ${fullWidth ? "w-full" : ""} ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
           style={fullWidth ? {} : { width }}
@@ -131,7 +143,9 @@ function CustomSelector({
             setActiveSelector(newOpenState ? selectorId : null);
           }}
         >
-          <div className={FORM_STYLES.selectorText}>
+          <div
+            className={`${FORM_STYLES.selectorText} ${compactMode ? "px-1 md:px-1.5 text-xs md:text-sm" : ""}`}
+          >
             {selectedOption?.color && (
               <div
                 className={`w-3 h-3 rounded-full ${selectedOption.color}`}

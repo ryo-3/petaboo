@@ -24,7 +24,8 @@ import {
   useState,
 } from "react";
 import UrlPreview from "@/src/components/shared/url-preview";
-import { TiptapEditor } from "../memo/tiptap-editor";
+import { TiptapEditor, Toolbar } from "../memo/tiptap-editor";
+import type { Editor } from "@tiptap/react";
 import CreatorAvatar from "@/components/shared/creator-avatar";
 import DateInfo from "@/components/shared/date-info";
 
@@ -63,6 +64,8 @@ interface TaskFormProps {
   // Tiptapツールバー制御
   toolbarVisible?: boolean;
   onToolbarToggle?: (visible: boolean) => void;
+  tiptapEditor?: Editor | null;
+  onEditorReady?: (editor: Editor) => void;
   // ヘッダー部分のみ表示（タイトル・ステータス・日付）
   headerOnly?: boolean;
   // エディター部分のみ表示
@@ -112,6 +115,8 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
     onPaste,
     toolbarVisible = false,
     onToolbarToggle,
+    tiptapEditor,
+    onEditorReady,
     headerOnly = false,
     editorOnly = false,
     titleAndDateOnly = false,
@@ -363,8 +368,8 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
           </div>
         </div>
 
-        {/* 作成者・日付を表示（スクロール時もそのまま） */}
-        {task && task.id !== 0 && (
+        {/* 作成者・日付を表示（ツールバー非表示時のみ） */}
+        {task && task.id !== 0 && !toolbarVisible && (
           <div className="flex justify-end items-center gap-2 mr-2 mt-1 md:mt-2 mb-1">
             <CreatorAvatar
               createdBy={createdBy}
@@ -375,6 +380,11 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
             />
             <DateInfo item={task} isEditing={!isDeleted} size="sm" />
           </div>
+        )}
+
+        {/* 書式ツールバー（固定表示・日付の代わりに表示） */}
+        {!isDeleted && toolbarVisible && (
+          <Toolbar editor={tiptapEditor || null} />
         )}
       </>
     );
@@ -397,6 +407,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
             className="font-medium"
             toolbarVisible={toolbarVisible}
             onToolbarToggle={onToolbarToggle}
+            onEditorReady={onEditorReady}
           />
         </div>
 
@@ -513,6 +524,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
             className="font-medium"
             toolbarVisible={toolbarVisible}
             onToolbarToggle={onToolbarToggle}
+            onEditorReady={onEditorReady}
           />
         </div>
 

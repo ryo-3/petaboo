@@ -14,14 +14,15 @@ interface TiptapEditorProps {
   className?: string;
   toolbarVisible?: boolean;
   onToolbarToggle?: (visible: boolean) => void;
+  onEditorReady?: (editor: Editor) => void;
 }
 
 // ツールバーコンポーネント
-function Toolbar({ editor }: { editor: Editor | null }) {
+export function Toolbar({ editor }: { editor: Editor | null }) {
   if (!editor) return null;
 
   return (
-    <div className="flex items-center gap-1 px-1 py-1 border-b border-gray-200 bg-gray-200 flex-wrap mb-2 mr-1 rounded-md">
+    <div className="flex items-center gap-1 px-1 py-1 border-b border-gray-200 bg-gray-200 flex-wrap mb-2 mr-1 mt-1 rounded-md">
       {/* 見出しボタン */}
       <button
         type="button"
@@ -151,6 +152,7 @@ export function TiptapEditor({
   className = "",
   toolbarVisible = false,
   onToolbarToggle,
+  onEditorReady,
 }: TiptapEditorProps) {
   const isFirstRender = useRef(true);
 
@@ -239,11 +241,17 @@ export function TiptapEditor({
     }
   }, [readOnly, editor]);
 
+  // editorが作成されたら親に通知
+  useEffect(() => {
+    if (editor && onEditorReady) {
+      onEditorReady(editor);
+    }
+  }, [editor, onEditorReady]);
+
   return (
     <div
       className={`flex flex-col ${readOnly ? "text-red-500 bg-red-50 cursor-not-allowed" : "text-gray-500"}`}
     >
-      {!readOnly && toolbarVisible && <Toolbar editor={editor} />}
       <EditorContent editor={editor} />
     </div>
   );

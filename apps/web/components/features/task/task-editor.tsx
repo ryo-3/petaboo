@@ -19,6 +19,7 @@ import DateInfo from "@/components/shared/date-info";
 import CreatorAvatar from "@/components/shared/creator-avatar";
 import type { TeamCreatorProps } from "@/src/types/creator";
 import TaskForm, { TaskFormHandle } from "./task-form";
+import type { Editor } from "@tiptap/react";
 import { useSimpleItemSave } from "@/src/hooks/use-simple-item-save";
 import {
   useAddItemToBoard,
@@ -155,6 +156,7 @@ function TaskEditor({
 
   // 書式設定ツールバーの表示状態
   const [toolbarVisible, setToolbarVisible] = useState(false);
+  const [tiptapEditor, setTiptapEditor] = useState<Editor | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -1165,6 +1167,7 @@ function TaskEditor({
             onPaste={handlePaste}
             toolbarVisible={toolbarVisible}
             onToolbarToggle={setToolbarVisible}
+            tiptapEditor={tiptapEditor}
             headerOnly={true}
             isScrolled={isScrolled}
           />
@@ -1216,6 +1219,7 @@ function TaskEditor({
             onPaste={handlePaste}
             toolbarVisible={toolbarVisible}
             onToolbarToggle={setToolbarVisible}
+            onEditorReady={setTiptapEditor}
             editorOnly={true}
           />
           {/* 画像添付ギャラリー */}

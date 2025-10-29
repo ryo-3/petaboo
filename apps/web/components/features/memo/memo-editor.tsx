@@ -49,7 +49,8 @@ import type { Board } from "@/src/types/board";
 import { OriginalIdUtils } from "@/src/types/common";
 import { useEffect, useRef, useState, memo, useMemo, useCallback } from "react";
 import UrlPreview from "@/src/components/shared/url-preview";
-import { TiptapEditor } from "./tiptap-editor";
+import { TiptapEditor, Toolbar } from "./tiptap-editor";
+import type { Editor } from "@tiptap/react";
 
 interface MemoEditorProps {
   memo: Memo | DeletedMemo | null;
@@ -232,6 +233,7 @@ function MemoEditor({
   const [prevMemoId, setPrevMemoId] = useState<number | null>(null);
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
   const [toolbarVisible, setToolbarVisible] = useState(false);
+  const [tiptapEditor, setTiptapEditor] = useState<Editor | null>(null);
   // 未保存変更確認モーダル
   const [isCloseConfirmModalOpen, setIsCloseConfirmModalOpen] = useState(false);
 
@@ -1024,8 +1026,8 @@ function MemoEditor({
               </div>
             </div>
           </div>
-          {/* 作成者・日付をコントロールパネルの下に表示 */}
-          {memo && memo.id !== 0 && (
+          {/* 作成者・日付をコントロールパネルの下に表示（ツールバー非表示時のみ） */}
+          {memo && memo.id !== 0 && !toolbarVisible && (
             <div className="flex justify-end items-center gap-2 mr-2 mt-1 md:mt-0 mb-1">
               <CreatorAvatar
                 createdBy={createdBy}
@@ -1037,6 +1039,9 @@ function MemoEditor({
               <DateInfo item={memo} isEditing={!isDeleted} size="sm" />
             </div>
           )}
+
+          {/* 書式ツールバー（固定表示・日付の代わりに表示） */}
+          {!isDeleted && toolbarVisible && <Toolbar editor={tiptapEditor} />}
         </div>
 
         {/* スクロール可能なコンテンツ部分 */}
@@ -1072,6 +1077,7 @@ function MemoEditor({
                 readOnly={isDeleted}
                 className="font-medium"
                 toolbarVisible={toolbarVisible}
+                onEditorReady={setTiptapEditor}
               />
             </div>
 

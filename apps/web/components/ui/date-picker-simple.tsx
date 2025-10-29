@@ -5,7 +5,7 @@ import ReactDatePicker, { registerLocale } from "react-datepicker";
 import { ja } from "date-fns/locale";
 import "react-datepicker/dist/react-datepicker.css";
 import "@/styles/datepicker-custom.css";
-import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon, X } from "lucide-react";
 
 // 日本語ロケールを登録
 registerLocale("ja", ja);
@@ -39,6 +39,25 @@ export function DatePickerSimple({
     }
     setIsOpen(false);
   };
+
+  // カレンダーが開いたら閉じるボタンを追加
+  React.useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => {
+        const calendar = document.querySelector(".react-datepicker");
+        if (calendar && !calendar.querySelector(".close-button")) {
+          const closeBtn = document.createElement("button");
+          closeBtn.className = "close-button";
+          closeBtn.innerHTML = "閉じる";
+          closeBtn.onclick = (e) => {
+            e.stopPropagation();
+            setIsOpen(false);
+          };
+          calendar.appendChild(closeBtn);
+        }
+      }, 0);
+    }
+  }, [isOpen]);
 
   return (
     <div className="relative" onClick={() => !disabled && setIsOpen(true)}>

@@ -153,6 +153,9 @@ function TaskEditor({
   // 削除済みタスクかどうかを判定
   const isDeleted = task ? "deletedAt" in task : false;
 
+  // 書式設定ツールバーの表示状態
+  const [toolbarVisible, setToolbarVisible] = useState(false);
+
   // 事前取得されたデータを使用（APIコール不要）
   const boards = preloadedBoards;
   const isNewTask = !task || task.id === 0;
@@ -945,62 +948,92 @@ function TaskEditor({
                     </svg>
                   </button>
                 )}
-                {error && <span className="text-xs text-red-500">{error}</span>}
-                <SaveButton
-                  onClick={handleSave}
-                  disabled={!canSave}
-                  isSaving={
-                    isSaving ||
-                    isUploading ||
-                    createTaggingMutation.isPending ||
-                    deleteTaggingMutation.isPending
-                  }
-                  buttonSize="size-7"
-                  iconSize="size-4"
-                />
-                {/* 連続作成モード切り替えボタン（新規作成時のみ表示） */}
-                {isNewTask && (
-                  <ContinuousCreateButton
-                    storageKey="task-continuous-create-mode"
-                    onModeChange={(enabled) => {
-                      setContinuousCreateMode(enabled);
-                    }}
-                  />
+                {/* 書式設定トグルボタン */}
+                {!isDeleted && (
+                  <Tooltip text="書式設定" position="bottom">
+                    <button
+                      type="button"
+                      onClick={() => setToolbarVisible(!toolbarVisible)}
+                      className={`flex items-center justify-center size-7 rounded-md transition-colors ${
+                        toolbarVisible
+                          ? "bg-gray-300 text-gray-700"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      }`}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="size-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"
+                        />
+                      </svg>
+                    </button>
+                  </Tooltip>
                 )}
-                <Tooltip text="写真" position="bottom">
-                  <PhotoButton
-                    buttonSize="size-7"
-                    iconSize="size-5"
-                    className="rounded-full"
-                    onFileSelect={handleFileSelect}
-                    disabled={isDeleted}
-                  />
-                </Tooltip>
-                <BoardIconSelector
-                  options={boardOptions}
-                  value={currentBoardValues}
-                  onChange={handleBoardSelectorChange}
-                  iconClassName="size-4 text-gray-600"
-                  multiple={true}
-                />
-                <TagTriggerButton
-                  onClick={
-                    isDeleted ? undefined : () => setIsTagModalOpen(true)
-                  }
-                  tags={localTags}
-                  disabled={isDeleted}
-                  teamMode={teamMode}
-                />
-                {/* チーム機能でのURL共有ボタン */}
-                {shareUrl && (
-                  <ShareUrlButton
-                    url={shareUrl}
-                    className=""
-                    label="URLをコピー"
-                  />
+                {!isDeleted && (
+                  <>
+                    {/* 連続作成モード切り替えボタン（新規作成時のみ表示） */}
+                    {isNewTask && (
+                      <ContinuousCreateButton
+                        storageKey="task-continuous-create-mode"
+                        onModeChange={(enabled) => {
+                          setContinuousCreateMode(enabled);
+                        }}
+                      />
+                    )}
+                    <Tooltip text="写真" position="bottom">
+                      <PhotoButton
+                        buttonSize="size-7"
+                        iconSize="size-5"
+                        className="rounded-full"
+                        onFileSelect={handleFileSelect}
+                        disabled={isDeleted}
+                      />
+                    </Tooltip>
+                    <BoardIconSelector
+                      options={boardOptions}
+                      value={currentBoardValues}
+                      onChange={handleBoardSelectorChange}
+                      iconClassName="size-4 text-gray-600"
+                      multiple={true}
+                    />
+                    <TagTriggerButton
+                      onClick={
+                        isDeleted ? undefined : () => setIsTagModalOpen(true)
+                      }
+                      tags={localTags}
+                      disabled={isDeleted}
+                      teamMode={teamMode}
+                    />
+                    {/* チーム機能でのURL共有ボタン */}
+                    {shareUrl && (
+                      <ShareUrlButton
+                        url={shareUrl}
+                        className=""
+                        label="URLをコピー"
+                      />
+                    )}
+                    {/* 削除ボタン */}
+                    {!isNewTask && !isDeleted && handleDelete && (
+                      <button
+                        onClick={handleDeleteClick}
+                        className="flex items-center justify-center size-7 rounded-md bg-gray-100"
+                      >
+                        <TrashIcon className="size-5" />
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2">
+                {error && <span className="text-xs text-red-500">{error}</span>}
                 {isDeleted && task && (
                   <span className="text-xs text-red-500 mr-2">
                     削除日時:{" "}
@@ -1021,14 +1054,6 @@ function TaskEditor({
                     />
                     <DateInfo item={task} isEditing={!isDeleted} />
                   </>
-                )}
-                {!isNewTask && !isDeleted && handleDelete && (
-                  <button
-                    onClick={handleDeleteClick}
-                    className="flex items-center justify-center size-7 rounded-md bg-gray-100 mr-2"
-                  >
-                    <TrashIcon className="size-5" />
-                  </button>
                 )}
                 {isDeleted && (
                   <div className="flex gap-2 mr-2">
@@ -1063,6 +1088,18 @@ function TaskEditor({
                     </button>
                   </div>
                 )}
+                <SaveButton
+                  onClick={handleSave}
+                  disabled={!canSave}
+                  isSaving={
+                    isSaving ||
+                    isUploading ||
+                    createTaggingMutation.isPending ||
+                    deleteTaggingMutation.isPending
+                  }
+                  buttonSize="size-7"
+                  iconSize="size-4"
+                />
               </div>
             </div>
           }
@@ -1106,6 +1143,8 @@ function TaskEditor({
             initialBoardId={initialBoardId}
             teamMode={teamMode}
             onPaste={handlePaste}
+            toolbarVisible={toolbarVisible}
+            onToolbarToggle={setToolbarVisible}
           />
         </BaseViewer>
 

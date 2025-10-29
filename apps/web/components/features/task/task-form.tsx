@@ -21,8 +21,10 @@ import {
   forwardRef,
   useImperativeHandle,
   useMemo,
+  useState,
 } from "react";
 import UrlPreview from "@/src/components/shared/url-preview";
+import { TiptapEditor } from "../memo/tiptap-editor";
 
 interface TaskFormProps {
   task?: Task | null;
@@ -54,6 +56,9 @@ interface TaskFormProps {
   teamMode?: boolean;
   // 画像ペースト機能
   onPaste?: (e: React.ClipboardEvent<HTMLTextAreaElement>) => void;
+  // Tiptapツールバー制御
+  toolbarVisible?: boolean;
+  onToolbarToggle?: (visible: boolean) => void;
 }
 
 export interface TaskFormHandle {
@@ -89,6 +94,8 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
     showBoardCategory = false,
     teamMode: _teamMode = false,
     onPaste,
+    toolbarVisible = false,
+    onToolbarToggle,
   } = props;
   const titleInputRef = useRef<HTMLInputElement>(null);
   const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -227,14 +234,21 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
       </div>
 
       <div className="flex-1 flex flex-col mt-2">
-        <textarea
-          ref={descriptionTextareaRef}
-          placeholder={descriptionPlaceholder}
-          value={description}
-          onChange={(e) => onDescriptionChange(e.target.value)}
-          onPaste={onPaste}
-          className={`w-full ${customHeight || "flex-1"} resize-none outline-none text-gray-700 leading-relaxed pr-1 pb-2 mb-2 mt-2`}
-        />
+        <div className={`w-full ${customHeight || "flex-1 min-h-0"} pr-1 mt-2`}>
+          <TiptapEditor
+            content={description}
+            onChange={(newContent) => {
+              onDescriptionChange(newContent);
+            }}
+            placeholder={
+              isDeleted ? "削除済みのタスクです" : descriptionPlaceholder
+            }
+            readOnly={isDeleted}
+            className="font-medium"
+            toolbarVisible={toolbarVisible}
+            onToolbarToggle={onToolbarToggle}
+          />
+        </div>
 
         {/* URL自動リンク化プレビュー（URLを含む行のみ表示） */}
         {description && !isDeleted && (

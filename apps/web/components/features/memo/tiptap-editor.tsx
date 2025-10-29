@@ -21,7 +21,7 @@ function Toolbar({ editor }: { editor: Editor | null }) {
   if (!editor) return null;
 
   return (
-    <div className="flex items-center gap-1 px-2 py-1 border-b border-gray-200 bg-gray-200 flex-wrap mb-2 mr-1">
+    <div className="flex items-center gap-1 px-1 py-1 border-b border-gray-200 bg-gray-200 flex-wrap mb-2 mr-1 rounded-md">
       {/* 見出しボタン */}
       <button
         type="button"

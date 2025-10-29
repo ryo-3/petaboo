@@ -807,11 +807,9 @@ function TaskScreen({
       </div>
 
       {/* モバイル: 1パネル表示（詳細+コメント縦並び） */}
-      <div className="md:hidden h-full overflow-y-auto hover-scrollbar bg-white">
-        <div className="flex flex-col">
-          <div className="max-h-[80vh] overflow-y-auto hover-scrollbar">
-            {centerPanelContent}
-          </div>
+      <div className="md:hidden h-full flex flex-col bg-white">
+        <div className="flex-1 min-h-0 flex flex-col">{centerPanelContent}</div>
+        <div className="flex-shrink-0 max-h-[40vh] overflow-y-auto hover-scrollbar">
           {rightPanelContent}
         </div>
       </div>

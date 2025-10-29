@@ -34,15 +34,15 @@
 
 .react-datepicker__day--selected,
 .react-datepicker__day--keyboard-selected {
-  background-color: #111827;
-  color: #f9fafb;
+  background-color: #1e3a8a !important;
+  color: #ffffff !important;
   font-weight: 500;
 }
 
 .react-datepicker__day--selected:hover,
 .react-datepicker__day--keyboard-selected:hover {
-  background-color: #111827;
-  color: #f9fafb;
+  background-color: #1e40af !important;
+  color: #ffffff !important;
 }
 
 .react-datepicker__day--today {

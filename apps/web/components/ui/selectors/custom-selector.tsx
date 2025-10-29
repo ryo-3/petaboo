@@ -132,7 +132,7 @@ function CustomSelector({
       )}
       <div className="relative">
         <div
-          className={`${FORM_STYLES.selector} ${compactMode ? "h-7 md:h-8" : ""} ${
+          className={`${FORM_STYLES.selector} ${compactMode ? "h-7 md:h-8" : "h-8"} ${
             isOpen ? "rounded-t-lg" : "rounded-lg"
           } ${fullWidth ? "w-full" : ""} ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
           style={fullWidth ? {} : { width }}

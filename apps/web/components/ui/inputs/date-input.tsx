@@ -8,6 +8,7 @@ interface DateInputProps {
   disabled?: boolean;
   hideLabelOnMobile?: boolean;
   hideLabel?: boolean;
+  showLabelOnMobileOnly?: boolean;
   compactMode?: boolean;
 }
 
@@ -19,13 +20,14 @@ function DateInput({
   disabled = false,
   hideLabelOnMobile = false,
   hideLabel = false,
+  showLabelOnMobileOnly = false,
   compactMode = false,
 }: DateInputProps) {
   return (
     <div>
       {!hideLabel && (
         <label
-          className={`${FORM_STYLES.label} ${hideLabelOnMobile ? "hidden md:block" : ""}`}
+          className={`${FORM_STYLES.label} ${hideLabelOnMobile ? "hidden md:block" : ""} ${showLabelOnMobileOnly ? "md:hidden" : ""}`}
         >
           {label}
         </label>
@@ -38,6 +40,10 @@ function DateInput({
         className={`${FORM_STYLES.input} ${compactMode ? "h-7 md:h-8 text-xs md:text-sm px-1 md:px-1.5" : ""} ${
           fullWidth ? "w-full" : ""
         } ${disabled ? "cursor-not-allowed opacity-60" : ""}`}
+        style={{
+          WebkitAppearance: "textfield",
+          MozAppearance: "textfield",
+        }}
       />
     </div>
   );

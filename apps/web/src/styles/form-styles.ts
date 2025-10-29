@@ -4,8 +4,7 @@ export const FORM_STYLES = {
   label: "block text-xs font-medium text-gray-600 mb-1 mt-1",
 
   // セレクター（ボタン部分）
-  selector:
-    "flex items-center cursor-pointer bg-white border border-gray-400 h-8",
+  selector: "flex items-center cursor-pointer bg-white border border-gray-400",
 
   // セレクター内のテキスト
   selectorText:

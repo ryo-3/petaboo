@@ -1,7 +1,7 @@
 "use client";
 
 import CategorySelector from "@/components/features/category/category-selector";
-import DateInput from "@/components/ui/inputs/date-input";
+import { DatePicker } from "@/components/ui/date-picker";
 import CustomSelector from "@/components/ui/selectors/custom-selector";
 import BoardTagDisplay from "@/components/shared/board-tag-display";
 import BoardCategorySelector from "@/components/features/board-categories/board-category-selector";
@@ -253,12 +253,12 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
 
         <div className="flex-1 flex gap-2.5 items-center">
           <div className="w-32">
-            <DateInput
-              label="期限日"
+            <DatePicker
               value={dueDate}
               onChange={onDueDateChange}
-              fullWidth
               disabled={isDeleted}
+              compactMode={true}
+              placeholder="期限日"
             />
           </div>
 
@@ -327,32 +327,28 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
             compactMode={true}
           />
 
-          <div className="flex-1 flex gap-2.5 items-center">
-            <div className="w-32">
-              <DateInput
-                label="期限日"
-                value={dueDate}
-                onChange={onDueDateChange}
-                fullWidth
+          <div className="w-32">
+            <DatePicker
+              value={dueDate}
+              onChange={onDueDateChange}
+              disabled={isDeleted}
+              compactMode={true}
+              placeholder="期限日"
+            />
+          </div>
+
+          {showBoardCategory && (
+            <div className="flex-1">
+              <BoardCategorySelector
+                value={boardCategoryId}
+                onChange={onBoardCategoryChange}
+                categories={boardCategories}
+                boardId={initialBoardId!}
                 disabled={isDeleted}
-                hideLabel={true}
-                compactMode={true}
+                allowCreate={true}
               />
             </div>
-
-            {showBoardCategory && (
-              <div className="w-80">
-                <BoardCategorySelector
-                  value={boardCategoryId}
-                  onChange={onBoardCategoryChange}
-                  categories={boardCategories}
-                  boardId={initialBoardId!}
-                  disabled={isDeleted}
-                  allowCreate={true}
-                />
-              </div>
-            )}
-          </div>
+          )}
         </div>
 
         {/* 作成者・日付を表示（ツールバー非表示時のみ） */}
@@ -459,12 +455,12 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
 
         <div className="flex-1 flex gap-2.5 items-center">
           <div className="w-32">
-            <DateInput
-              label="期限日"
+            <DatePicker
               value={dueDate}
               onChange={onDueDateChange}
-              fullWidth
               disabled={isDeleted}
+              compactMode={false}
+              placeholder="期限日"
             />
           </div>
 

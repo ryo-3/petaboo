@@ -208,7 +208,7 @@ export function useBoardState() {
 
       onSelectMemo?.(newMemo);
     },
-    [rightPanelMode], // rightPanelModeを依存配列に追加
+    [], // setRightPanelModeはステート更新関数なので依存配列不要
   );
 
   const createNewTaskHandler = useCallback(

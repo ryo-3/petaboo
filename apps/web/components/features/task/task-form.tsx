@@ -63,6 +63,16 @@ interface TaskFormProps {
   // Tiptapツールバー制御
   toolbarVisible?: boolean;
   onToolbarToggle?: (visible: boolean) => void;
+  // ヘッダー部分のみ表示（タイトル・ステータス・日付）
+  headerOnly?: boolean;
+  // エディター部分のみ表示
+  editorOnly?: boolean;
+  // タイトル・日付のみ表示（固定ヘッダー用）
+  titleAndDateOnly?: boolean;
+  // ステータス欄のみ表示（スクロール領域用）
+  statusOnly?: boolean;
+  // スクロール時の表示制御
+  isScrolled?: boolean;
 }
 
 export interface TaskFormHandle {
@@ -102,6 +112,11 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
     onPaste,
     toolbarVisible = false,
     onToolbarToggle,
+    headerOnly = false,
+    editorOnly = false,
+    titleAndDateOnly = false,
+    statusOnly = false,
+    isScrolled = false,
   } = props;
   const titleInputRef = useRef<HTMLInputElement>(null);
   const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -171,6 +186,238 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
     },
   ];
 
+  // タイトル・日付のみ表示（固定ヘッダー用）
+  if (titleAndDateOnly) {
+    return (
+      <>
+        <div className="flex items-center gap-1">
+          <input
+            ref={titleInputRef}
+            type="text"
+            placeholder={titlePlaceholder}
+            value={title}
+            onChange={(e) => onTitleChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+              }
+            }}
+            className="flex-1 mb-1 mt-1 text-lg font-medium border-b border-DeepBlue/80 outline-none focus:border-DeepBlue"
+          />
+        </div>
+
+        {/* 作成者・日付を下の行に表示 */}
+        {task && task.id !== 0 && (
+          <div className="flex justify-end items-center gap-2 mr-2 mt-2 mb-1">
+            <CreatorAvatar
+              createdBy={createdBy}
+              avatarColor={createdByAvatarColor}
+              teamMode={_teamMode}
+              size="md"
+              className=""
+            />
+            <DateInfo item={task} isEditing={!isDeleted} size="sm" />
+          </div>
+        )}
+      </>
+    );
+  }
+
+  // ステータス欄のみ表示（スクロール領域用）
+  if (statusOnly) {
+    return (
+      <div className="flex gap-2.5 pl-2">
+        <CustomSelector
+          label="ステータス"
+          options={statusOptions}
+          value={status}
+          onChange={(value) =>
+            onStatusChange(value as "todo" | "in_progress" | "completed")
+          }
+          fullWidth
+          disabled={isDeleted}
+        />
+
+        <CustomSelector
+          label="優先度"
+          options={priorityOptions}
+          value={priority}
+          onChange={(value) =>
+            onPriorityChange(value as "low" | "medium" | "high")
+          }
+          fullWidth
+          disabled={isDeleted}
+        />
+
+        <div className="flex-1 flex gap-2.5 items-center">
+          <div className="w-32">
+            <DateInput
+              label="期限日"
+              value={dueDate}
+              onChange={onDueDateChange}
+              fullWidth
+              disabled={isDeleted}
+            />
+          </div>
+
+          {showBoardCategory && (
+            <div className="w-80">
+              <BoardCategorySelector
+                value={boardCategoryId}
+                onChange={onBoardCategoryChange}
+                categories={boardCategories}
+                boardId={initialBoardId!}
+                disabled={isDeleted}
+                allowCreate={true}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ヘッダー部分のみ表示
+  if (headerOnly) {
+    return (
+      <>
+        <div className="flex items-center gap-1">
+          <input
+            ref={titleInputRef}
+            type="text"
+            placeholder={titlePlaceholder}
+            value={title}
+            onChange={(e) => onTitleChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+              }
+            }}
+            className="flex-1 mb-1 mt-1 text-lg font-medium border-b border-DeepBlue/80 outline-none focus:border-DeepBlue"
+          />
+        </div>
+
+        {/* ステータス欄（スクロール時に非表示） */}
+        <div
+          className={`overflow-hidden ${
+            isScrolled ? "max-h-0" : "max-h-[200px]"
+          }`}
+          style={{
+            transition: "max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+          }}
+        >
+          <div
+            className={`flex gap-2.5 ${
+              isScrolled ? "opacity-0" : "opacity-100"
+            }`}
+            style={{
+              transition: "opacity 0.25s ease-out",
+            }}
+          >
+            <CustomSelector
+              label="ステータス"
+              options={statusOptions}
+              value={status}
+              onChange={(value) =>
+                onStatusChange(value as "todo" | "in_progress" | "completed")
+              }
+              fullWidth
+              disabled={isDeleted}
+            />
+
+            <CustomSelector
+              label="優先度"
+              options={priorityOptions}
+              value={priority}
+              onChange={(value) =>
+                onPriorityChange(value as "low" | "medium" | "high")
+              }
+              fullWidth
+              disabled={isDeleted}
+            />
+
+            <div className="flex-1 flex gap-2.5 items-center">
+              <div className="w-32">
+                <DateInput
+                  label="期限日"
+                  value={dueDate}
+                  onChange={onDueDateChange}
+                  fullWidth
+                  disabled={isDeleted}
+                />
+              </div>
+
+              {showBoardCategory && (
+                <div className="w-80">
+                  <BoardCategorySelector
+                    value={boardCategoryId}
+                    onChange={onBoardCategoryChange}
+                    categories={boardCategories}
+                    boardId={initialBoardId!}
+                    disabled={isDeleted}
+                    allowCreate={true}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* 作成者・日付を表示（スクロール時もそのまま） */}
+        {task && task.id !== 0 && (
+          <div className="flex justify-end items-center gap-2 mr-2 mt-2 mb-1">
+            <CreatorAvatar
+              createdBy={createdBy}
+              avatarColor={createdByAvatarColor}
+              teamMode={_teamMode}
+              size="md"
+              className=""
+            />
+            <DateInfo item={task} isEditing={!isDeleted} size="sm" />
+          </div>
+        )}
+      </>
+    );
+  }
+
+  // エディター部分のみ表示
+  if (editorOnly) {
+    return (
+      <div className="flex-1 flex flex-col min-h-0 pl-2">
+        <div className="w-full pr-1">
+          <TiptapEditor
+            content={description}
+            onChange={(newContent) => {
+              onDescriptionChange(newContent);
+            }}
+            placeholder={
+              isDeleted ? "削除済みのタスクです" : descriptionPlaceholder
+            }
+            readOnly={isDeleted}
+            className="font-medium"
+            toolbarVisible={toolbarVisible}
+            onToolbarToggle={onToolbarToggle}
+          />
+        </div>
+
+        {/* URL自動リンク化プレビュー（URLを含む行のみ表示） */}
+        {description && !isDeleted && (
+          <UrlPreview text={description} className="mt-2 mb-2 px-1" />
+        )}
+
+        {/* ボード名・タグ表示（テキストエリアの下に移動） */}
+        <BoardTagDisplay
+          boards={displayBoards}
+          tags={tags}
+          spacing="normal"
+          showWhen="has-content"
+          className="mb-4"
+        />
+      </div>
+    );
+  }
+
+  // 通常表示（全体）
   return (
     <div className="flex flex-col flex-1 min-h-0">
       <div className="flex items-center gap-1">
@@ -183,7 +430,6 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
-              // エンターキーでの本文移動機能を無効化
             }
           }}
           className="flex-1 mb-1 mt-1 text-lg font-medium border-b border-DeepBlue/80 outline-none focus:border-DeepBlue"

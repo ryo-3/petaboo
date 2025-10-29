@@ -155,6 +155,8 @@ function TaskEditor({
 
   // 書式設定ツールバーの表示状態
   const [toolbarVisible, setToolbarVisible] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // 事前取得されたデータを使用（APIコール不要）
   const boards = preloadedBoards;
@@ -916,18 +918,30 @@ function TaskEditor({
     onClose();
   }, [onClose]);
 
+  // スクロール監視
+  useEffect(() => {
+    const scrollContainer = scrollContainerRef.current;
+    if (!scrollContainer) return;
+
+    const handleScroll = () => {
+      // 50px以上スクロールしたらステータス欄を隠す
+      setIsScrolled(scrollContainer.scrollTop > 50);
+    };
+
+    scrollContainer.addEventListener("scroll", handleScroll);
+    return () => scrollContainer.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
     <>
       <div
         data-task-editor
-        className="flex flex-col h-full relative overflow-y-auto overflow-x-hidden"
+        className="flex flex-col h-full relative overflow-x-hidden"
       >
-        <BaseViewer
-          item={tempTask}
-          onClose={onClose}
-          error={error ? "エラー" : null}
-          hideDateInfo={true}
-          headerActions={
+        {/* 固定ヘッダー部分 */}
+        <div className="flex-shrink-0 bg-white pl-2 pt-2">
+          <div className="flex justify-start items-center">
+            {/* ここにheaderActionsの内容を直接配置 */}
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-2">
                 {/* 閉じるボタン（チームモードのみ表示） */}
@@ -1106,9 +1120,9 @@ function TaskEditor({
                 />
               </div>
             </div>
-          }
-          isEditing={true}
-        >
+          </div>
+
+          {/* タイトル・ステータス・日付を固定ヘッダーに配置 */}
           <TaskForm
             ref={taskFormRef}
             task={task as Task}
@@ -1151,22 +1165,73 @@ function TaskEditor({
             onPaste={handlePaste}
             toolbarVisible={toolbarVisible}
             onToolbarToggle={setToolbarVisible}
+            headerOnly={true}
+            isScrolled={isScrolled}
           />
-        </BaseViewer>
+        </div>
 
-        {/* 画像添付ギャラリー */}
-        {teamMode && (
-          <AttachmentGallery
-            attachments={attachments}
-            onDelete={handleDeleteAttachment}
-            isDeleting={isAttachmentDeleting}
-            pendingImages={pendingImages}
-            onDeletePending={handleDeletePendingImage}
-            pendingDeletes={pendingDeletes}
-            onRestore={handleRestoreAttachment}
-            isUploading={isUploading}
+        {/* スクロール可能なコンテンツ部分 */}
+        <div
+          ref={scrollContainerRef}
+          className="flex-1 min-h-0 overflow-y-auto"
+        >
+          <TaskForm
+            task={task as Task}
+            title={finalTitle}
+            onTitleChange={isDeleted ? () => {} : handleTitleChange}
+            description={finalDescription}
+            onDescriptionChange={isDeleted ? () => {} : handleDescriptionChange}
+            status={
+              finalStatus === "not_started"
+                ? "todo"
+                : (finalStatus as "todo" | "in_progress" | "completed")
+            }
+            onStatusChange={
+              isDeleted
+                ? () => {}
+                : (value) =>
+                    handleStatusChange?.(
+                      value === "todo" ? "not_started" : value,
+                    )
+            }
+            priority={finalPriority as "low" | "medium" | "high"}
+            onPriorityChange={isDeleted ? () => {} : handlePriorityChange!}
+            categoryId={categoryId}
+            onCategoryChange={isDeleted ? () => {} : setCategoryId}
+            boardCategoryId={boardCategoryId}
+            onBoardCategoryChange={isDeleted ? () => {} : setBoardCategoryId}
+            dueDate={dueDate}
+            onDueDateChange={isDeleted ? () => {} : setDueDate}
+            isNewTask={isNewTask}
+            customHeight={customHeight}
+            tags={task && task.id !== 0 ? localTags : []}
+            boards={displayBoards}
+            boardCategories={categories}
+            showBoardCategory={isFromBoardDetail}
+            isDeleted={isDeleted}
+            initialBoardId={initialBoardId}
+            teamMode={teamMode}
+            createdBy={createdBy}
+            createdByAvatarColor={createdByAvatarColor}
+            onPaste={handlePaste}
+            toolbarVisible={toolbarVisible}
+            onToolbarToggle={setToolbarVisible}
+            editorOnly={true}
           />
-        )}
+          {/* 画像添付ギャラリー */}
+          {teamMode && (
+            <AttachmentGallery
+              attachments={attachments}
+              onDelete={handleDeleteAttachment}
+              isDeleting={isAttachmentDeleting}
+              pendingImages={pendingImages}
+              onDeletePending={handleDeletePendingImage}
+              pendingDeletes={pendingDeletes}
+              onRestore={handleRestoreAttachment}
+              isUploading={isUploading}
+            />
+          )}
+        </div>
       </div>
 
       {/* 削除確認モーダル（編集時のみ・削除済みタスクは除外） */}

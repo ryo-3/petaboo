@@ -231,6 +231,7 @@ function MemoEditor({
   const [localTags, setLocalTags] = useState<Tag[]>([]);
   const [prevMemoId, setPrevMemoId] = useState<number | null>(null);
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
+  const [toolbarVisible, setToolbarVisible] = useState(false);
   // 未保存変更確認モーダル
   const [isCloseConfirmModalOpen, setIsCloseConfirmModalOpen] = useState(false);
 
@@ -852,6 +853,7 @@ function MemoEditor({
           createdItemId={null}
           hideDateInfo={true}
           topContent={null}
+          compactPadding={true}
           headerActions={
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-2">
@@ -876,32 +878,37 @@ function MemoEditor({
                     </svg>
                   </button>
                 )}
-                {saveError && (
-                  <span className="text-xs text-red-500">{saveError}</span>
+                {/* 書式設定トグルボタン */}
+                {!isDeleted && (
+                  <Tooltip text="書式設定" position="bottom">
+                    <button
+                      type="button"
+                      onClick={() => setToolbarVisible(!toolbarVisible)}
+                      className={`flex items-center justify-center size-7 rounded-md transition-colors ${
+                        toolbarVisible
+                          ? "bg-gray-300 text-gray-700"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      }`}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="size-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"
+                        />
+                      </svg>
+                    </button>
+                  </Tooltip>
                 )}
                 {!isDeleted && (
                   <>
-                    <SaveButton
-                      onClick={handleSaveWithTags}
-                      disabled={
-                        isUploading ||
-                        (!hasChanges &&
-                          !hasTagChanges &&
-                          pendingImages.length === 0 &&
-                          pendingDeletes.length === 0) ||
-                        (memo !== null && memo.id > 0 && !content.trim())
-                      }
-                      isSaving={
-                        isSaving ||
-                        isUploading ||
-                        createTaggingMutation.isPending ||
-                        deleteTaggingMutation.isPending ||
-                        createTeamTaggingMutation.isPending ||
-                        deleteTeamTaggingByTagMutation.isPending
-                      }
-                      buttonSize="size-7"
-                      iconSize="size-4"
-                    />
                     {/* 連続作成モード切り替えボタン（新規作成時のみ表示） */}
                     {(!memo || memo.id === 0) && (
                       <ContinuousCreateButton
@@ -946,8 +953,30 @@ function MemoEditor({
                     label="メモのURLをコピーして共有"
                   />
                 )}
+                {/* 削除ボタン */}
+                {memo && (onDelete || onDeleteAndSelectNext) && (
+                  <button
+                    onClick={handleDeleteClick}
+                    disabled={unifiedOperations?.deleteItem.isPending}
+                    className="flex items-center justify-center size-7 rounded-md bg-gray-100 disabled:opacity-50"
+                  >
+                    <TrashIcon
+                      className="size-5"
+                      isLidOpen={
+                        isLidOpen ||
+                        isAnimating ||
+                        showDeleteModal ||
+                        unifiedOperations?.deleteItem.isPending ||
+                        (isDeleted && deletedMemoActions?.showDeleteModal)
+                      }
+                    />
+                  </button>
+                )}
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2">
+                {saveError && (
+                  <span className="text-xs text-red-500">{saveError}</span>
+                )}
                 {isDeleted && deletedMemo && (
                   <span className="text-xs text-red-500 mr-2">
                     削除日時:{" "}
@@ -995,23 +1024,30 @@ function MemoEditor({
                     </svg>
                   </button>
                 )}
-                {memo && (onDelete || onDeleteAndSelectNext) && (
-                  <button
-                    onClick={handleDeleteClick}
-                    disabled={unifiedOperations?.deleteItem.isPending}
-                    className="flex items-center justify-center size-7 rounded-md bg-gray-100 mr-2 disabled:opacity-50"
-                  >
-                    <TrashIcon
-                      className="size-5"
-                      isLidOpen={
-                        isLidOpen ||
-                        isAnimating ||
-                        showDeleteModal ||
-                        unifiedOperations?.deleteItem.isPending ||
-                        (isDeleted && deletedMemoActions?.showDeleteModal)
-                      }
-                    />
-                  </button>
+                {/* 保存ボタンを右側に移動 */}
+                {!isDeleted && (
+                  <SaveButton
+                    onClick={handleSaveWithTags}
+                    disabled={
+                      isUploading ||
+                      (!hasChanges &&
+                        !hasTagChanges &&
+                        pendingImages.length === 0 &&
+                        pendingDeletes.length === 0) ||
+                      (memo !== null && memo.id > 0 && !content.trim())
+                    }
+                    isSaving={
+                      isSaving ||
+                      isUploading ||
+                      createTaggingMutation.isPending ||
+                      deleteTaggingMutation.isPending ||
+                      createTeamTaggingMutation.isPending ||
+                      deleteTeamTaggingByTagMutation.isPending
+                    }
+                    buttonSize="size-9"
+                    iconSize="size-5"
+                    className="mr-2"
+                  />
                 )}
               </div>
             </div>
@@ -1030,6 +1066,7 @@ function MemoEditor({
               placeholder={isDeleted ? "削除済みのメモです" : "入力..."}
               readOnly={isDeleted}
               className="font-medium"
+              toolbarVisible={toolbarVisible}
             />
           </div>
 

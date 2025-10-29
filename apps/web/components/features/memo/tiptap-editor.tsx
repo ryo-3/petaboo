@@ -4,7 +4,7 @@ import { useEditor, EditorContent, Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import { Markdown } from "@tiptap/markdown";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface TiptapEditorProps {
   content: string;
@@ -12,6 +12,8 @@ interface TiptapEditorProps {
   placeholder?: string;
   readOnly?: boolean;
   className?: string;
+  toolbarVisible?: boolean;
+  onToolbarToggle?: (visible: boolean) => void;
 }
 
 // ツールバーコンポーネント
@@ -146,6 +148,8 @@ export function TiptapEditor({
   placeholder = "入力...",
   readOnly = false,
   className = "",
+  toolbarVisible = false,
+  onToolbarToggle,
 }: TiptapEditorProps) {
   const isFirstRender = useRef(true);
 
@@ -187,7 +191,6 @@ export function TiptapEditor({
       // 4スペース+改行を2スペース+改行に修正（<br>のマークダウン表現）
       markdown = markdown.replace(/ {4}\n/g, "  \n");
 
-      console.log("💾 保存するマークダウン:", JSON.stringify(markdown));
       onChange(markdown);
     },
     editorProps: {
@@ -219,9 +222,6 @@ export function TiptapEditor({
         // 2スペース+改行を<br>タグに変換してから設定
         const processedContent = content.replace(/ {2}\n/g, "<br>\n");
 
-        console.log("📥 読み込むマークダウン:", JSON.stringify(content));
-        console.log("🔄 変換後:", JSON.stringify(processedContent));
-
         // マークダウンとして解釈して設定
         editor.commands.setContent(processedContent, {
           contentType: "markdown",
@@ -242,7 +242,7 @@ export function TiptapEditor({
     <div
       className={`${readOnly ? "text-red-500 bg-red-50 cursor-not-allowed" : "text-gray-500"}`}
     >
-      {!readOnly && <Toolbar editor={editor} />}
+      {!readOnly && toolbarVisible && <Toolbar editor={editor} />}
       <EditorContent editor={editor} />
     </div>
   );

@@ -835,7 +835,7 @@ function MemoEditor({
       <div
         ref={baseViewerRef}
         data-memo-editor
-        className="flex flex-col h-full"
+        className="flex flex-col h-full overflow-y-auto overflow-x-hidden"
       >
         <BaseViewer
           item={
@@ -1053,9 +1053,7 @@ function MemoEditor({
             </div>
           }
         >
-          <div
-            className={`w-full ${customHeight || "flex-1 min-h-0"} pr-1 mt-2`}
-          >
+          <div className="w-full pr-1 mt-2">
             <TiptapEditor
               content={content}
               onChange={(newContent) => {

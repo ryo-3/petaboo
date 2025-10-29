@@ -241,7 +241,7 @@ export function TiptapEditor({
 
   return (
     <div
-      className={`${readOnly ? "text-red-500 bg-red-50 cursor-not-allowed" : "text-gray-500"}`}
+      className={`flex flex-col ${readOnly ? "text-red-500 bg-red-50 cursor-not-allowed" : "text-gray-500"}`}
     >
       {!readOnly && toolbarVisible && <Toolbar editor={editor} />}
       <EditorContent editor={editor} />

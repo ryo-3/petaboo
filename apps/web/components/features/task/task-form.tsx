@@ -166,7 +166,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
   ];
 
   return (
-    <div className="flex flex-col flex-1">
+    <div className="flex flex-col flex-1 min-h-0">
       <div className="flex items-center gap-1">
         <input
           ref={titleInputRef}
@@ -233,8 +233,8 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col mt-2">
-        <div className={`w-full ${customHeight || "flex-1 min-h-0"} pr-1 mt-2`}>
+      <div className="flex-1 flex flex-col mt-2 min-h-0">
+        <div className="w-full pr-1 mt-2">
           <TiptapEditor
             content={description}
             onChange={(newContent) => {

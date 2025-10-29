@@ -918,7 +918,10 @@ function TaskEditor({
 
   return (
     <>
-      <div data-task-editor className="flex flex-col h-full relative">
+      <div
+        data-task-editor
+        className="flex flex-col h-full relative overflow-y-auto overflow-x-hidden"
+      >
         <BaseViewer
           item={tempTask}
           onClose={onClose}

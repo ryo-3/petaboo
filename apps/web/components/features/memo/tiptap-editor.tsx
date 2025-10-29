@@ -54,14 +54,14 @@ function Toolbar({ editor }: { editor: Editor | null }) {
         H3
       </button>
 
-      {/* 区切り線 */}
-      <div className="w-px h-6 bg-gray-300 mx-1" />
+      {/* 区切り線（モバイルでは非表示） */}
+      <div className="hidden md:block w-px h-6 bg-gray-300 mx-1" />
 
       {/* 太字・斜体ボタン */}
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleBold().run()}
-        className={`px-2 py-0.5 text-sm font-bold rounded hover:bg-gray-200 transition-colors ${
+        className={`px-2 py-0.5 text-sm font-bold rounded hover:bg-gray-200 transition-colors ml-1 md:ml-0 ${
           editor.isActive("bold") ? "bg-gray-300" : "bg-white"
         }`}
         title="太字 (Ctrl+B)"
@@ -89,14 +89,14 @@ function Toolbar({ editor }: { editor: Editor | null }) {
         S
       </button>
 
-      {/* 区切り線 */}
-      <div className="w-px h-6 bg-gray-300 mx-1" />
+      {/* 区切り線（モバイルでは非表示） */}
+      <div className="hidden md:block w-px h-6 bg-gray-300 mx-1" />
 
       {/* リストボタン */}
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleBulletList().run()}
-        className={`px-2 py-0.5 text-sm rounded hover:bg-gray-200 transition-colors ${
+        className={`px-2 py-0.5 text-sm rounded hover:bg-gray-200 transition-colors ml-1 md:ml-0 ${
           editor.isActive("bulletList") ? "bg-gray-300" : "bg-white"
         }`}
         title="箇条書きリスト"
@@ -114,14 +114,14 @@ function Toolbar({ editor }: { editor: Editor | null }) {
         1.
       </button>
 
-      {/* 区切り線 */}
-      <div className="w-px h-6 bg-gray-300 mx-1" />
+      {/* 区切り線（モバイルでは非表示） */}
+      <div className="hidden md:block w-px h-6 bg-gray-300 mx-1" />
 
       {/* その他ボタン */}
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleCode().run()}
-        className={`px-2 py-0.5 text-sm font-mono rounded hover:bg-gray-200 transition-colors ${
+        className={`px-2 py-0.5 text-sm font-mono rounded hover:bg-gray-200 transition-colors ml-1 md:ml-0 ${
           editor.isActive("code") ? "bg-gray-300" : "bg-white"
         }`}
         title="インラインコード"

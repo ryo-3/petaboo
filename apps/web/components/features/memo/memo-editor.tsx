@@ -1026,7 +1026,7 @@ function MemoEditor({
           </div>
           {/* 作成者・日付をコントロールパネルの下に表示 */}
           {memo && memo.id !== 0 && (
-            <div className="flex justify-end items-center gap-2 mr-2 mb-1">
+            <div className="flex justify-end items-center gap-2 mr-2 mt-1 md:mt-0 mb-1">
               <CreatorAvatar
                 createdBy={createdBy}
                 avatarColor={createdByAvatarColor}

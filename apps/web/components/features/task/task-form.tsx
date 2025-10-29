@@ -202,13 +202,13 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
                 e.preventDefault();
               }
             }}
-            className="flex-1 mb-1 mt-1 text-lg font-medium border-b border-DeepBlue/80 outline-none focus:border-DeepBlue"
+            className="flex-1 mb-1 mt-1 text-[15px] md:text-lg font-medium border-b border-DeepBlue/80 outline-none focus:border-DeepBlue"
           />
         </div>
 
         {/* 作成者・日付を下の行に表示 */}
         {task && task.id !== 0 && (
-          <div className="flex justify-end items-center gap-2 mr-2 mt-2 mb-1">
+          <div className="flex justify-end items-center gap-2 mr-2 mt-1 md:mt-2 mb-1">
             <CreatorAvatar
               createdBy={createdBy}
               avatarColor={createdByAvatarColor}
@@ -293,7 +293,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
                 e.preventDefault();
               }
             }}
-            className="flex-1 mb-1 mt-1 text-lg font-medium border-b border-DeepBlue/80 outline-none focus:border-DeepBlue"
+            className="flex-1 mb-1 mt-1 text-[15px] md:text-lg font-medium border-b border-DeepBlue/80 outline-none focus:border-DeepBlue"
           />
         </div>
 
@@ -365,7 +365,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
 
         {/* 作成者・日付を表示（スクロール時もそのまま） */}
         {task && task.id !== 0 && (
-          <div className="flex justify-end items-center gap-2 mr-2 mt-2 mb-1">
+          <div className="flex justify-end items-center gap-2 mr-2 mt-1 md:mt-2 mb-1">
             <CreatorAvatar
               createdBy={createdBy}
               avatarColor={createdByAvatarColor}

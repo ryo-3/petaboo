@@ -3,6 +3,7 @@
 import BaseViewer from "@/components/shared/base-viewer";
 import PhotoButton from "@/components/ui/buttons/photo-button";
 import SaveButton from "@/components/ui/buttons/save-button";
+import ConfirmationModal from "@/components/ui/modals/confirmation-modal";
 import ContinuousCreateButton, {
   getContinuousCreateMode,
 } from "@/components/ui/buttons/continuous-create-button";
@@ -229,6 +230,8 @@ function MemoEditor({
   const [localTags, setLocalTags] = useState<Tag[]>([]);
   const [prevMemoId, setPrevMemoId] = useState<number | null>(null);
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
+  // 未保存変更確認モーダル
+  const [isCloseConfirmModalOpen, setIsCloseConfirmModalOpen] = useState(false);
 
   // 【最適化】個別取得をやめて一括取得を活用
   const originalId = OriginalIdUtils.fromItem(memo);
@@ -438,6 +441,15 @@ function MemoEditor({
 
     return JSON.stringify(currentTagIds) !== JSON.stringify(localTagIds);
   }, [currentTags, localTags, memo]);
+
+  // 未保存の変更があるかチェック
+  const isNewMemo = !memo || memo.id === 0;
+  const hasUnsavedChanges = isNewMemo
+    ? !!content.trim() || pendingImages.length > 0
+    : hasChanges ||
+      hasTagChanges ||
+      pendingImages.length > 0 ||
+      pendingDeletes.length > 0;
 
   // チーム機能でのURL共有用
   const shareUrl = useMemo(() => {
@@ -749,6 +761,21 @@ function MemoEditor({
     return board?.name || `ボード${boardId}`;
   };
 
+  // 戻るボタンクリックハンドラー（未保存変更チェック）
+  const handleCloseClick = useCallback(() => {
+    if (hasUnsavedChanges) {
+      setIsCloseConfirmModalOpen(true);
+    } else {
+      onClose();
+    }
+  }, [hasUnsavedChanges, onClose]);
+
+  // 確認モーダルで「閉じる」を選択
+  const handleConfirmClose = useCallback(() => {
+    setIsCloseConfirmModalOpen(false);
+    onClose();
+  }, [onClose]);
+
   // 削除ボタンのハンドラー（ボード紐づきチェック付き）
   const handleDeleteClick = () => {
     // 重複クリック防止
@@ -830,11 +857,11 @@ function MemoEditor({
                 {/* 閉じるボタン（チームモードのみ表示） */}
                 {teamMode && (
                   <button
-                    onClick={onClose}
+                    onClick={handleCloseClick}
                     className="flex items-center justify-center size-7 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 transition-colors"
                   >
                     <svg
-                      className="size-4"
+                      className="size-4 rotate-180 md:rotate-0"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -1191,6 +1218,19 @@ function MemoEditor({
           }
         />
       )}
+
+      {/* 未保存変更確認モーダル */}
+      <ConfirmationModal
+        isOpen={isCloseConfirmModalOpen}
+        onClose={() => setIsCloseConfirmModalOpen(false)}
+        onConfirm={handleConfirmClose}
+        title="未保存の変更があります"
+        message="保存せずに閉じると、変更内容が失われます。よろしいですか？"
+        confirmText="閉じる"
+        cancelText="キャンセル"
+        variant="warning"
+        icon="warning"
+      />
     </>
   );
 }

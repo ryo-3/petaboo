@@ -2,6 +2,7 @@
 
 import BaseViewer from "@/components/shared/base-viewer";
 import { BulkDeleteConfirmation } from "@/components/ui/modals";
+import ConfirmationModal from "@/components/ui/modals/confirmation-modal";
 import BoardChips from "@/components/ui/chips/board-chips";
 import SaveButton from "@/components/ui/buttons/save-button";
 import PhotoButton from "@/components/ui/buttons/photo-button";
@@ -307,6 +308,8 @@ function TaskEditor({
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
   // 手動でタグを変更したかどうかのフラグ
   const [hasManualTagChanges, setHasManualTagChanges] = useState(false);
+  // 未保存変更確認モーダル
+  const [isCloseConfirmModalOpen, setIsCloseConfirmModalOpen] = useState(false);
 
   // タグ初期化（タスクが変わった時のみ実行）
   useEffect(() => {
@@ -739,6 +742,14 @@ function TaskEditor({
             pendingDeletes.length > 0) &&
           !!title.trim(); // 既存タスクも空タイトルの場合は保存不可
 
+  // 未保存の変更があるかチェック
+  const hasUnsavedChanges = isNewTask
+    ? !!title.trim() || !!description.trim() || pendingImages.length > 0
+    : hasChanges ||
+      hasTagChanges ||
+      pendingImages.length > 0 ||
+      pendingDeletes.length > 0;
+
   // ボードIDを名前に変換する関数
   const getBoardName = (boardId: string) => {
     const board = boards.find((b) => b.id.toString() === boardId);
@@ -887,6 +898,21 @@ function TaskEditor({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [handleSave, canSave]);
 
+  // 戻るボタンクリックハンドラー（未保存変更チェック）
+  const handleCloseClick = useCallback(() => {
+    if (hasUnsavedChanges) {
+      setIsCloseConfirmModalOpen(true);
+    } else {
+      onClose();
+    }
+  }, [hasUnsavedChanges, onClose]);
+
+  // 確認モーダルで「閉じる」を選択
+  const handleConfirmClose = useCallback(() => {
+    setIsCloseConfirmModalOpen(false);
+    onClose();
+  }, [onClose]);
+
   return (
     <>
       <div data-task-editor className="flex flex-col h-full relative">
@@ -901,11 +927,11 @@ function TaskEditor({
                 {/* 閉じるボタン（チームモードのみ表示） */}
                 {teamMode && (
                   <button
-                    onClick={onClose}
+                    onClick={handleCloseClick}
                     className="flex items-center justify-center size-7 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 transition-colors"
                   >
                     <svg
-                      className="size-4"
+                      className="size-4 rotate-180 md:rotate-0"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -1216,6 +1242,19 @@ function TaskEditor({
           }
         />
       )}
+
+      {/* 未保存変更確認モーダル */}
+      <ConfirmationModal
+        isOpen={isCloseConfirmModalOpen}
+        onClose={() => setIsCloseConfirmModalOpen(false)}
+        onConfirm={handleConfirmClose}
+        title="未保存の変更があります"
+        message="保存せずに閉じると、変更内容が失われます。よろしいですか？"
+        confirmText="閉じる"
+        cancelText="キャンセル"
+        variant="warning"
+        icon="warning"
+      />
     </>
   );
 }

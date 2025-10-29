@@ -47,7 +47,8 @@ export function DatePickerSimple({
         locale="ja"
         dateFormat="yyyy/MM/dd"
         placeholderText={placeholder}
-        className={`flex items-center justify-between w-full px-1.5 border border-gray-400 rounded-lg focus:border-DeepBlue outline-none bg-white ${
+        readOnly
+        className={`flex items-center justify-between w-full px-1.5 border border-gray-400 rounded-lg focus:border-DeepBlue outline-none bg-white placeholder:text-gray-700 ${
           compactMode ? "h-7 md:h-8 text-xs md:text-sm" : "h-8 text-sm"
         } ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
         calendarStartDay={0}

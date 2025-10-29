@@ -258,7 +258,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
               onChange={onDueDateChange}
               disabled={isDeleted}
               compactMode={true}
-              placeholder="期限日"
+              placeholder="期限"
             />
           </div>
 
@@ -333,7 +333,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
               onChange={onDueDateChange}
               disabled={isDeleted}
               compactMode={true}
-              placeholder="期限日"
+              placeholder="期限"
             />
           </div>
 
@@ -460,7 +460,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
               onChange={onDueDateChange}
               disabled={isDeleted}
               compactMode={false}
-              placeholder="期限日"
+              placeholder="期限"
             />
           </div>
 

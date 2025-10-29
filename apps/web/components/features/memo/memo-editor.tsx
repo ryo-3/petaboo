@@ -49,6 +49,7 @@ import type { Board } from "@/src/types/board";
 import { OriginalIdUtils } from "@/src/types/common";
 import { useEffect, useRef, useState, memo, useMemo, useCallback } from "react";
 import UrlPreview from "@/src/components/shared/url-preview";
+import { TiptapEditor } from "./tiptap-editor";
 
 interface MemoEditorProps {
   memo: Memo | DeletedMemo | null;
@@ -1016,29 +1017,21 @@ function MemoEditor({
             </div>
           }
         >
-          <textarea
-            ref={textareaRef}
-            placeholder={isDeleted ? "削除済みのメモです" : "入力..."}
-            value={content}
-            onChange={
-              isDeleted
-                ? undefined
-                : (e) => {
-                    const newContent = e.target.value;
-                    const firstLine = newContent.split("\n")[0] || "";
-
-                    handleTitleChange(firstLine);
-                    handleContentChange(newContent);
-                  }
-            }
-            onPaste={handlePaste}
-            readOnly={isDeleted}
-            className={`w-full ${customHeight || "flex-1 min-h-0"} resize-none outline-none leading-relaxed font-medium pr-1 mt-2 ${
-              isDeleted
-                ? "text-red-500 bg-red-50 cursor-not-allowed"
-                : "text-gray-500"
-            }`}
-          />
+          <div
+            className={`w-full ${customHeight || "flex-1 min-h-0"} pr-1 mt-2`}
+          >
+            <TiptapEditor
+              content={content}
+              onChange={(newContent) => {
+                const firstLine = newContent.split("\n")[0] || "";
+                handleTitleChange(firstLine);
+                handleContentChange(newContent);
+              }}
+              placeholder={isDeleted ? "削除済みのメモです" : "入力..."}
+              readOnly={isDeleted}
+              className="font-medium"
+            />
+          </div>
 
           {/* URL自動リンク化プレビュー（URLを含む行のみ表示） */}
           {content && !isDeleted && (

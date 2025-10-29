@@ -196,3 +196,47 @@ html, body {
   animation-delay: var(--animation-delay, 0ms);
 }
 
+/* Tiptap エディター スタイル */
+.ProseMirror {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', 'Hiragino Sans', sans-serif !important;
+}
+
+.ProseMirror p {
+  margin: 0 0 0.5em 0 !important;  /* 段落の下に余白を追加 */
+  min-height: 1em;
+}
+
+/* 空の段落はさらに余白を追加 */
+.ProseMirror p:empty {
+  margin: 0 0 1em 0 !important;
+}
+
+.ProseMirror br {
+  display: block;
+  content: "";
+  margin-top: 0.5em;
+}
+
+.ProseMirror strong,
+.ProseMirror b {
+  font-weight: 700 !important;
+}
+
+.ProseMirror em,
+.ProseMirror i {
+  font-style: italic !important;
+}
+
+.ProseMirror s,
+.ProseMirror del {
+  text-decoration: line-through !important;
+}
+
+.ProseMirror code {
+  background-color: #f3f4f6 !important;
+  padding: 0.125rem 0.25rem !important;
+  border-radius: 0.25rem !important;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+  font-size: 0.875em !important;
+}
+

@@ -835,26 +835,12 @@ function MemoEditor({
       <div
         ref={baseViewerRef}
         data-memo-editor
-        className="flex flex-col h-full overflow-y-auto overflow-x-hidden"
+        className="flex flex-col h-full overflow-x-hidden"
       >
-        <BaseViewer
-          item={
-            memo || {
-              id: 0,
-              title: "",
-              content: "",
-              createdAt: Math.floor(Date.now() / 1000),
-              updatedAt: Math.floor(Date.now() / 1000),
-            }
-          }
-          onClose={onClose}
-          error={error}
-          isEditing={true}
-          createdItemId={null}
-          hideDateInfo={true}
-          topContent={null}
-          compactPadding={true}
-          headerActions={
+        {/* 固定ヘッダー部分 */}
+        <div className="flex-shrink-0 bg-white pl-2 pt-2">
+          <div className="flex justify-start items-center">
+            {/* ここにheaderActionsの内容を直接配置 */}
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-2">
                 {/* 閉じるボタン（チームモードのみ表示） */}
@@ -985,23 +971,9 @@ function MemoEditor({
                     )}
                   </span>
                 )}
-                {/* ヘッダー右側にアバター・日付を表示（showDateAtBottom=falseの場合） */}
-                {!showDateAtBottom && memo && memo.id !== 0 && (
-                  <>
-                    <CreatorAvatar
-                      createdBy={createdBy}
-                      avatarColor={createdByAvatarColor}
-                      teamMode={teamMode}
-                      size="lg"
-                      className="mr-2"
-                    />
-                    <DateInfo item={memo} isEditing={!isDeleted} />
-                  </>
-                )}
                 {isDeleted && onRestore && (
                   <button
                     onClick={async () => {
-                      // シンプルな復元処理：onRestoreコールバックのみ実行
                       if (onRestore) {
                         await onRestore();
                       }
@@ -1051,67 +1023,87 @@ function MemoEditor({
                 )}
               </div>
             </div>
-          }
-        >
-          <div className="w-full pr-1 mt-2">
-            <TiptapEditor
-              content={content}
-              onChange={(newContent) => {
-                const firstLine = newContent.split("\n")[0] || "";
-                handleTitleChange(firstLine);
-                handleContentChange(newContent);
-              }}
-              placeholder={isDeleted ? "削除済みのメモです" : "入力..."}
-              readOnly={isDeleted}
-              className="font-medium"
-              toolbarVisible={toolbarVisible}
-            />
           </div>
-
-          {/* URL自動リンク化プレビュー（URLを含む行のみ表示） */}
-          {content && !isDeleted && (
-            <UrlPreview text={content} className="mt-2 mb-2 px-1" />
+          {/* 作成者・日付をコントロールパネルの下に表示 */}
+          {memo && memo.id !== 0 && (
+            <div className="flex justify-end items-center gap-2 mr-2 mb-1">
+              <CreatorAvatar
+                createdBy={createdBy}
+                avatarColor={createdByAvatarColor}
+                teamMode={teamMode}
+                size="md"
+                className=""
+              />
+              <DateInfo item={memo} isEditing={!isDeleted} size="sm" />
+            </div>
           )}
+        </div>
 
-          {/* ボード名・タグ一覧をテキストエリアの下に配置（TaskFormと統一） */}
-          <BoardTagDisplay
-            boards={memo && memo.id !== 0 ? displayBoards : []}
-            tags={localTags}
-            spacing="normal"
-            showWhen="has-content"
-            className="mb-2"
-          />
-        </BaseViewer>
+        {/* スクロール可能なコンテンツ部分 */}
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <BaseViewer
+            item={
+              memo || {
+                id: 0,
+                title: "",
+                content: "",
+                createdAt: Math.floor(Date.now() / 1000),
+                updatedAt: Math.floor(Date.now() / 1000),
+              }
+            }
+            onClose={onClose}
+            error={null}
+            isEditing={true}
+            createdItemId={null}
+            hideDateInfo={true}
+            topContent={null}
+            compactPadding={true}
+            headerActions={null}
+          >
+            <div className="w-full pr-1">
+              <TiptapEditor
+                content={content}
+                onChange={(newContent) => {
+                  const firstLine = newContent.split("\n")[0] || "";
+                  handleTitleChange(firstLine);
+                  handleContentChange(newContent);
+                }}
+                placeholder={isDeleted ? "削除済みのメモです" : "入力..."}
+                readOnly={isDeleted}
+                className="font-medium"
+                toolbarVisible={toolbarVisible}
+              />
+            </div>
 
-        {/* 画像添付ギャラリー */}
-        {teamMode && (
-          <AttachmentGallery
-            attachments={attachments}
-            onDelete={handleDeleteAttachment}
-            isDeleting={isDeleting}
-            pendingImages={pendingImages}
-            onDeletePending={handleDeletePendingImage}
-            pendingDeletes={pendingDeletes}
-            onRestore={handleRestoreAttachment}
-            isUploading={isUploading}
-          />
-        )}
+            {/* URL自動リンク化プレビュー（URLを含む行のみ表示） */}
+            {content && !isDeleted && (
+              <UrlPreview text={content} className="mt-2 mb-2 px-1" />
+            )}
 
-        {/* 日付情報とアバターアイコンを右下に配置（showDateAtBottom=trueの場合のみ） */}
-        {showDateAtBottom && memo && memo.id !== 0 && (
-          <div className="flex justify-end items-center gap-2 mb-3 mr-2 mt-2">
-            {/* チーム機能: 作成者アイコン */}
-            <CreatorAvatar
-              createdBy={createdBy}
-              avatarColor={createdByAvatarColor}
-              teamMode={teamMode}
-              size="lg"
-              className=""
+            {/* ボード名・タグ一覧をテキストエリアの下に配置（TaskFormと統一） */}
+            <BoardTagDisplay
+              boards={memo && memo.id !== 0 ? displayBoards : []}
+              tags={localTags}
+              spacing="normal"
+              showWhen="has-content"
+              className="mb-2"
             />
-            {/* 日付情報 */}
-            <DateInfo item={memo} isEditing={!isDeleted} />
-          </div>
-        )}
+          </BaseViewer>
+
+          {/* 画像添付ギャラリー */}
+          {teamMode && (
+            <AttachmentGallery
+              attachments={attachments}
+              onDelete={handleDeleteAttachment}
+              isDeleting={isDeleting}
+              pendingImages={pendingImages}
+              onDeletePending={handleDeletePendingImage}
+              pendingDeletes={pendingDeletes}
+              onRestore={handleRestoreAttachment}
+              isUploading={isUploading}
+            />
+          )}
+        </div>
       </div>
       {baseViewerRef.current && (
         <BoardChangeModal

@@ -1100,8 +1100,9 @@ function TaskEditor({
                     createTaggingMutation.isPending ||
                     deleteTaggingMutation.isPending
                   }
-                  buttonSize="size-7"
-                  iconSize="size-4"
+                  buttonSize="size-9"
+                  iconSize="size-5"
+                  className="mr-2"
                 />
               </div>
             </div>
@@ -1145,6 +1146,8 @@ function TaskEditor({
             isDeleted={isDeleted}
             initialBoardId={initialBoardId}
             teamMode={teamMode}
+            createdBy={createdBy}
+            createdByAvatarColor={createdByAvatarColor}
             onPaste={handlePaste}
             toolbarVisible={toolbarVisible}
             onToolbarToggle={setToolbarVisible}
@@ -1163,22 +1166,6 @@ function TaskEditor({
             onRestore={handleRestoreAttachment}
             isUploading={isUploading}
           />
-        )}
-
-        {/* 日付情報とアバターアイコンを右下に配置（showDateAtBottom=trueの場合のみ） */}
-        {showDateAtBottom && task && task.id !== 0 && (
-          <div className="flex justify-end items-center gap-2 mb-3 mr-2 mt-2">
-            {/* チーム機能: 作成者アイコン */}
-            <CreatorAvatar
-              createdBy={createdBy || task?.createdBy}
-              avatarColor={createdByAvatarColor || task?.avatarColor}
-              teamMode={teamMode}
-              size="lg"
-              className=""
-            />
-            {/* 日付情報 */}
-            <DateInfo item={task} isEditing={!isDeleted} />
-          </div>
         )}
       </div>
 

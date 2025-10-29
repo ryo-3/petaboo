@@ -9,6 +9,7 @@ interface DateInfoProps {
   createdItemId?: number | null;
   isEditing?: boolean;
   lastEditedAt?: number | null;
+  size?: "sm" | "md";
 }
 
 function DateInfo({
@@ -16,6 +17,7 @@ function DateInfo({
   createdItemId,
   isEditing = false,
   lastEditedAt,
+  size = "md",
 }: DateInfoProps) {
   if (!item) {
     return null;
@@ -34,9 +36,13 @@ function DateInfo({
     latestEditTime !== item.createdAt &&
     item.updatedAt !== item.createdAt;
 
+  const textSizeClass =
+    size === "sm" ? "text-[12px]" : "text-[12px] md:text-[14px]";
+  const gapClass = size === "sm" ? "gap-3" : "gap-4";
+
   return (
-    <div className="text-[12px] md:text-[14px] text-gray-500">
-      <div className="flex gap-4">
+    <div className={`${textSizeClass} text-gray-500`}>
+      <div className={`flex ${gapClass}`}>
         <span>作成 {formatDate(item.createdAt)}</span>
         {showEditTime && <span>編集 {formatDate(latestEditTime)}</span>}
       </div>

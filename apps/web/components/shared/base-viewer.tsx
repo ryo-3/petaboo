@@ -34,7 +34,7 @@ function BaseViewer({
 }: BaseViewerProps) {
   return (
     <div
-      className={`flex flex-col h-full bg-white pl-2 ${compactPadding ? "pt-2" : "pt-3"}`}
+      className={`flex flex-col ${headerActions ? "h-full" : ""} bg-white pl-2 ${compactPadding ? "" : "pt-2"}`}
     >
       {topContent}
       {!hideDateInfo && (

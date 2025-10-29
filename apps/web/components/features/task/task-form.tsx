@@ -25,6 +25,8 @@ import {
 } from "react";
 import UrlPreview from "@/src/components/shared/url-preview";
 import { TiptapEditor } from "../memo/tiptap-editor";
+import CreatorAvatar from "@/components/shared/creator-avatar";
+import DateInfo from "@/components/shared/date-info";
 
 interface TaskFormProps {
   task?: Task | null;
@@ -54,6 +56,8 @@ interface TaskFormProps {
   showBoardCategory?: boolean; // ボード詳細でのみtrue
   // チーム機能
   teamMode?: boolean;
+  createdBy?: string | null;
+  createdByAvatarColor?: string | null;
   // 画像ペースト機能
   onPaste?: (e: React.ClipboardEvent<HTMLTextAreaElement>) => void;
   // Tiptapツールバー制御
@@ -93,6 +97,8 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
     initialBoardId,
     showBoardCategory = false,
     teamMode: _teamMode = false,
+    createdBy,
+    createdByAvatarColor,
     onPaste,
     toolbarVisible = false,
     onToolbarToggle,
@@ -233,8 +239,22 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col mt-2 min-h-0">
-        <div className="w-full pr-1 mt-2">
+      {/* 作成者・日付を下の行に表示 */}
+      {task && task.id !== 0 && (
+        <div className="flex justify-end items-center gap-2 mr-2 mt-2 mb-1">
+          <CreatorAvatar
+            createdBy={createdBy}
+            avatarColor={createdByAvatarColor}
+            teamMode={_teamMode}
+            size="md"
+            className=""
+          />
+          <DateInfo item={task} isEditing={!isDeleted} size="sm" />
+        </div>
+      )}
+
+      <div className="flex-1 flex flex-col min-h-0">
+        <div className="w-full pr-1">
           <TiptapEditor
             content={description}
             onChange={(newContent) => {

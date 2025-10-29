@@ -15,6 +15,10 @@ import {
   useNavigation,
 } from "@/contexts/navigation-context";
 import { TeamProvider } from "@/contexts/team-context";
+import {
+  TeamDetailProvider,
+  useTeamDetail as useTeamDetailContext,
+} from "@/src/contexts/team-detail-context";
 import { getModeFromUrl, getActiveTabFromUrl } from "@/src/utils/modeUtils";
 import { useTeamDetail } from "@/src/hooks/use-team-detail";
 
@@ -24,6 +28,7 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
   const params = useParams();
   const { setScreenMode } = useNavigation();
+  const { selectedMemoId, setSelectedMemoId } = useTeamDetailContext();
 
   // ボード詳細ページのセクション表示状態
   const [activeBoardSection, setActiveBoardSection] = useState<
@@ -190,8 +195,8 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
     setFallbackMode("memo");
     if (isTeamDetailPage) {
       window.dispatchEvent(
-        new CustomEvent("team-mode-change", {
-          detail: { mode: "memo", pathname },
+        new CustomEvent("team-back-to-memo-list", {
+          detail: { pathname },
         }),
       );
     }
@@ -305,7 +310,7 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
         {/* デスクトップ用サイドバー（左） */}
         <div className="hidden md:block w-16 border-r border-gray-200 overflow-visible">
           <Sidebar
-            onSelectMemo={() => {}}
+            onSelectMemo={() => setSelectedMemoId(null)}
             onShowFullList={handleShowMemoList}
             onHome={handleHome}
             onEditMemo={() => {}}
@@ -321,6 +326,7 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
               currentBoardName || (lastBoardUrl ? "最後のボード" : undefined)
             }
             currentTeamName={teamDetail?.name}
+            selectedMemoId={selectedMemoId ?? undefined}
           />
         </div>
 
@@ -444,7 +450,7 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
           ) : (
             // 通常のサイドバーナビゲーション
             <Sidebar
-              onSelectMemo={() => {}}
+              onSelectMemo={() => setSelectedMemoId(null)}
               onShowFullList={handleShowMemoList}
               onHome={handleHome}
               onEditMemo={() => {}}
@@ -460,6 +466,7 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
                 currentBoardName || (lastBoardUrl ? "最後のボード" : undefined)
               }
               currentTeamName={teamDetail?.name}
+              selectedMemoId={selectedMemoId ?? undefined}
               onBackToBoardList={
                 isTeamBoardDetailPage ? handleBackToBoardList : undefined
               }
@@ -484,9 +491,11 @@ function TeamDetailLayoutWrapper({ children }: { children: React.ReactNode }) {
         initialCurrentMode={isTeamBoardDetailPage ? "board" : "memo"}
         initialShowingBoardDetail={isTeamBoardDetailPage}
       >
-        <Suspense fallback={<div>Loading...</div>}>
-          <TeamLayoutContent>{children}</TeamLayoutContent>
-        </Suspense>
+        <TeamDetailProvider>
+          <Suspense fallback={<div>Loading...</div>}>
+            <TeamLayoutContent>{children}</TeamLayoutContent>
+          </Suspense>
+        </TeamDetailProvider>
       </NavigationProvider>
     </TeamProvider>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigation } from "@/contexts/navigation-context";
 import { useClerk } from "@clerk/nextjs";
 import DashboardIcon from "@/components/icons/dashboard-icon";
@@ -16,6 +16,7 @@ import TaskList from "@/components/mobile/task-list";
 import SwitchTabs from "@/components/ui/base/switch-tabs";
 import Tooltip from "@/components/ui/base/tooltip";
 import NotificationBadge from "@/components/ui/base/notification-badge";
+import MemoEditorFooter from "@/components/mobile/memo-editor-footer";
 import { LogOut } from "lucide-react";
 import type { Memo } from "@/src/types/memo";
 import type { Task } from "@/src/types/task";
@@ -82,6 +83,24 @@ function Sidebar({
   // ログアウト確認モーダル
   const [showLogoutModal, setShowLogoutModal] = React.useState(false);
 
+  // モバイル版メモエディターのアクティブタブ管理
+  const [memoEditorTab, setMemoEditorTab] = useState<"memo" | "comment">(
+    "memo",
+  );
+
+  // CustomEventでタブ切り替えを監視
+  useEffect(() => {
+    const handleTabChange = (e: Event) => {
+      const customEvent = e as CustomEvent<{ tab: "memo" | "comment" }>;
+      setMemoEditorTab(customEvent.detail.tab);
+    };
+
+    window.addEventListener("memo-editor-tab-change", handleTabChange);
+    return () => {
+      window.removeEventListener("memo-editor-tab-change", handleTabChange);
+    };
+  }, []);
+
   const modeTabs = [
     {
       id: "memo",
@@ -94,6 +113,37 @@ function Sidebar({
       icon: <TaskIcon className="w-3 h-3" />,
     },
   ];
+
+  // モバイルでメモエディターが開いている場合は専用フッターを表示
+  const isShowingMemoEditor = selectedMemoId !== undefined;
+
+  if (isShowingMemoEditor) {
+    return (
+      <div className="md:hidden w-full h-full">
+        <MemoEditorFooter
+          onBack={() => {
+            onSelectMemo(null as unknown as Memo);
+            onShowFullList();
+          }}
+          onMemoClick={() =>
+            window.dispatchEvent(
+              new CustomEvent("memo-editor-tab-change", {
+                detail: { tab: "memo" },
+              }),
+            )
+          }
+          onCommentClick={() =>
+            window.dispatchEvent(
+              new CustomEvent("memo-editor-tab-change", {
+                detail: { tab: "comment" },
+              }),
+            )
+          }
+          activeTab={memoEditorTab}
+        />
+      </div>
+    );
+  }
 
   // 統一サイドバー（レスポンシブ対応）
   return (

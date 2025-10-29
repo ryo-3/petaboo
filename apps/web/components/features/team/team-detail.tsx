@@ -42,6 +42,7 @@ import {
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { useTeamDetail as useTeamDetailContext } from "@/src/contexts/team-detail-context";
 
 interface TeamDetailProps {
   customUrl: string;
@@ -52,6 +53,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const { data: team, isLoading, error } = useTeamDetail(customUrl);
+  const { setSelectedMemoId } = useTeamDetailContext();
 
   // 🛡️ ページ可視性をContextから取得
   const { isVisible: isPageVisible } = usePageVisibility();
@@ -132,6 +134,11 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   const [currentMemberDisplayName, setCurrentMemberDisplayName] = useState<
     string | null
   >(null);
+
+  // selectedMemoの変更をContextに反映
+  useEffect(() => {
+    setSelectedMemoId(selectedMemo?.id ?? null);
+  }, [selectedMemo, setSelectedMemoId]);
 
   // キック機能
   const [kickConfirmModal, setKickConfirmModal] = useState<{
@@ -375,6 +382,17 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       }, 100);
     };
 
+    const handleBackToMemoList = (_event: CustomEvent) => {
+      // メモの選択を解除してメモ一覧に戻る
+      setSelectedMemo(null);
+      setSelectedDeletedMemo(null);
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("memo");
+      params.set("tab", "memos");
+      const newUrl = params.toString() ? `?${params.toString()}` : "";
+      router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
+    };
+
     window.addEventListener(
       "team-mode-change",
       handleTeamModeChange as EventListener,
@@ -383,6 +401,11 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     window.addEventListener(
       "team-new-memo",
       handleTeamNewMemo as EventListener,
+    );
+
+    window.addEventListener(
+      "team-back-to-memo-list",
+      handleBackToMemoList as EventListener,
     );
 
     return () => {
@@ -394,8 +417,12 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         "team-new-memo",
         handleTeamNewMemo as EventListener,
       );
+      window.removeEventListener(
+        "team-back-to-memo-list",
+        handleBackToMemoList as EventListener,
+      );
     };
-  }, [handleTabChange]);
+  }, [handleTabChange, router, customUrl, searchParams]);
 
   // メモ/タスク選択ハンドラー
   const handleSelectMemo = (memo: Memo | null) => {

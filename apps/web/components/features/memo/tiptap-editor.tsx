@@ -198,7 +198,7 @@ export function TiptapEditor({
     },
     editorProps: {
       attributes: {
-        class: `prose prose-sm prose-headings:font-bold prose-strong:font-bold prose-em:italic max-w-none ${className} outline-none leading-relaxed`,
+        class: `prose text-[15px] prose-headings:font-bold prose-strong:font-bold prose-em:italic max-w-none ${className} outline-none leading-relaxed`,
       },
       handleKeyDown: (view, event) => {
         // Enterキーで改行（<br>）を挿入

@@ -950,7 +950,7 @@ function MemoEditor({
                   <ShareUrlButton
                     url={shareUrl}
                     className=""
-                    label="メモのURLをコピーして共有"
+                    label="URLをコピー"
                   />
                 )}
                 {/* 削除ボタン */}

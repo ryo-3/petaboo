@@ -21,12 +21,12 @@ function Toolbar({ editor }: { editor: Editor | null }) {
   if (!editor) return null;
 
   return (
-    <div className="flex items-center gap-1 p-2 border-b border-gray-200 bg-gray-50 flex-wrap">
+    <div className="flex items-center gap-1 px-2 py-1 border-b border-gray-200 bg-gray-200 flex-wrap mb-2 mr-1">
       {/* 見出しボタン */}
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-        className={`px-3 py-1 text-sm font-semibold rounded hover:bg-gray-200 transition-colors ${
+        className={`px-2 py-0.5 text-sm font-semibold rounded hover:bg-gray-200 transition-colors ${
           editor.isActive("heading", { level: 1 }) ? "bg-gray-300" : "bg-white"
         }`}
         title="見出し1"
@@ -36,7 +36,7 @@ function Toolbar({ editor }: { editor: Editor | null }) {
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-        className={`px-3 py-1 text-sm font-semibold rounded hover:bg-gray-200 transition-colors ${
+        className={`px-2 py-0.5 text-sm font-semibold rounded hover:bg-gray-200 transition-colors ${
           editor.isActive("heading", { level: 2 }) ? "bg-gray-300" : "bg-white"
         }`}
         title="見出し2"
@@ -46,7 +46,7 @@ function Toolbar({ editor }: { editor: Editor | null }) {
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-        className={`px-3 py-1 text-sm font-semibold rounded hover:bg-gray-200 transition-colors ${
+        className={`px-2 py-0.5 text-sm font-semibold rounded hover:bg-gray-200 transition-colors ${
           editor.isActive("heading", { level: 3 }) ? "bg-gray-300" : "bg-white"
         }`}
         title="見出し3"
@@ -61,7 +61,7 @@ function Toolbar({ editor }: { editor: Editor | null }) {
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleBold().run()}
-        className={`px-3 py-1 text-sm font-bold rounded hover:bg-gray-200 transition-colors ${
+        className={`px-2 py-0.5 text-sm font-bold rounded hover:bg-gray-200 transition-colors ${
           editor.isActive("bold") ? "bg-gray-300" : "bg-white"
         }`}
         title="太字 (Ctrl+B)"
@@ -71,7 +71,7 @@ function Toolbar({ editor }: { editor: Editor | null }) {
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleItalic().run()}
-        className={`px-3 py-1 text-sm italic rounded hover:bg-gray-200 transition-colors ${
+        className={`px-2 py-0.5 text-sm italic rounded hover:bg-gray-200 transition-colors ${
           editor.isActive("italic") ? "bg-gray-300" : "bg-white"
         }`}
         title="斜体 (Ctrl+I)"
@@ -81,7 +81,7 @@ function Toolbar({ editor }: { editor: Editor | null }) {
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleStrike().run()}
-        className={`px-3 py-1 text-sm line-through rounded hover:bg-gray-200 transition-colors ${
+        className={`px-2 py-0.5 text-sm line-through rounded hover:bg-gray-200 transition-colors ${
           editor.isActive("strike") ? "bg-gray-300" : "bg-white"
         }`}
         title="取り消し線"
@@ -96,7 +96,7 @@ function Toolbar({ editor }: { editor: Editor | null }) {
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleBulletList().run()}
-        className={`px-3 py-1 text-sm rounded hover:bg-gray-200 transition-colors ${
+        className={`px-2 py-0.5 text-sm rounded hover:bg-gray-200 transition-colors ${
           editor.isActive("bulletList") ? "bg-gray-300" : "bg-white"
         }`}
         title="箇条書きリスト"
@@ -106,7 +106,7 @@ function Toolbar({ editor }: { editor: Editor | null }) {
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        className={`px-3 py-1 text-sm rounded hover:bg-gray-200 transition-colors ${
+        className={`px-2 py-0.5 text-sm rounded hover:bg-gray-200 transition-colors ${
           editor.isActive("orderedList") ? "bg-gray-300" : "bg-white"
         }`}
         title="番号付きリスト"
@@ -121,7 +121,7 @@ function Toolbar({ editor }: { editor: Editor | null }) {
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleCode().run()}
-        className={`px-3 py-1 text-sm font-mono rounded hover:bg-gray-200 transition-colors ${
+        className={`px-2 py-0.5 text-sm font-mono rounded hover:bg-gray-200 transition-colors ${
           editor.isActive("code") ? "bg-gray-300" : "bg-white"
         }`}
         title="インラインコード"
@@ -131,12 +131,13 @@ function Toolbar({ editor }: { editor: Editor | null }) {
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-        className={`px-3 py-1 text-sm font-mono rounded hover:bg-gray-200 transition-colors ${
+        className={`px-2 py-0.5 text-sm font-mono rounded hover:bg-gray-200 transition-colors ${
           editor.isActive("codeBlock") ? "bg-gray-300" : "bg-white"
         }`}
         title="コードブロック"
       >
-        {}
+        {"{"}
+        {"}"}
       </button>
     </div>
   );

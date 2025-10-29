@@ -996,7 +996,7 @@ function TaskEditor({
                   <ShareUrlButton
                     url={shareUrl}
                     className=""
-                    label="タスクのURLをコピーして共有"
+                    label="URLをコピー"
                   />
                 )}
               </div>

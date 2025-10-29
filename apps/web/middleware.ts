@@ -8,17 +8,20 @@ const isPublicRoute = createRouteMatcher([
   "/api/browser-log",
 ]);
 
-export default clerkMiddleware(async (auth, req) => {
-  // ホームページは特別扱い - page.tsx内で認証チェック
-  const isHomePage = req.nextUrl.pathname === "/";
+export default clerkMiddleware(
+  async (auth, req) => {
+    // ホームページは特別扱い - page.tsx内で認証チェック
+    const isHomePage = req.nextUrl.pathname === "/";
 
-  if (!isPublicRoute(req) && !isHomePage) {
-    await auth.protect({
-      // 未認証時はアプリ内のログイン画面にリダイレクト
-      unauthenticatedUrl: "/sign-in",
-    });
-  }
-});
+    if (!isPublicRoute(req) && !isHomePage) {
+      await auth.protect();
+    }
+  },
+  {
+    // Clerkのデフォルト設定: アプリ内のログイン画面を使用
+    signInUrl: "/sign-in",
+  },
+);
 
 export const config = {
   matcher: [

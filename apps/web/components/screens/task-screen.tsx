@@ -47,9 +47,58 @@ import { createToggleHandlerWithTabClear } from "@/src/utils/toggleUtils";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ControlPanelLayout } from "@/components/layout/control-panel-layout";
 import CommentSection from "@/components/features/comments/comment-section";
+import AttachmentGallery from "@/components/features/attachments/attachment-gallery";
+import { useAttachmentManager } from "@/src/hooks/use-attachment-manager";
 import type { TeamMember } from "@/src/hooks/use-team-detail";
 
 type TaskScreenMode = "list" | "view" | "create" | "edit";
+
+// モバイル版画像・ファイル一覧表示コンポーネント（タスク用）
+function MobileAttachmentView({
+  selectedTask,
+  teamId,
+}: {
+  selectedTask: Task | null;
+  teamId?: number;
+}) {
+  const attachmentManager = useAttachmentManager({
+    itemType: "task",
+    item: selectedTask,
+    teamMode: !!teamId,
+    teamId,
+    isDeleted: false,
+  });
+
+  const { attachments, pendingImages, handleDeleteAttachment } =
+    attachmentManager;
+
+  return (
+    <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+      <div className="pl-2 pr-2 pt-2 pb-2 border-b border-gray-200 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-semibold">画像・ファイル</h2>
+          {attachments.length > 0 && (
+            <span className="text-sm text-gray-500">
+              ({attachments.length}枚)
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="flex-1 overflow-y-auto p-4">
+        {attachments.length === 0 && pendingImages.length === 0 ? (
+          <div className="text-center text-gray-500 text-sm py-8">
+            添付ファイルはありません
+          </div>
+        ) : (
+          <AttachmentGallery
+            attachments={attachments}
+            onDelete={handleDeleteAttachment}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
 
 interface TaskScreenProps {
   selectedTask?: Task | null;
@@ -294,6 +343,31 @@ function TaskScreen({
       teamDetailContext.setIsCreatingTask(taskScreenMode === "create");
     }
   }, [taskScreenMode, teamDetailContext]);
+
+  // モバイル版タスクエディターのタブ切り替え管理（チームモードのみ）
+  const [taskEditorTab, setTaskEditorTab] = useState<
+    "task" | "comment" | "image"
+  >("task");
+
+  // モバイル版タスクエディターのタブ切り替えイベントをリッスン（チームモードのみ）
+  useEffect(() => {
+    if (!teamMode) return;
+
+    const handleTabChange = (e: Event) => {
+      const customEvent = e as CustomEvent<{
+        tab: "task" | "comment" | "image";
+      }>;
+      setTaskEditorTab(customEvent.detail.tab);
+    };
+
+    window.addEventListener("team-task-editor-tab-change", handleTabChange);
+    return () => {
+      window.removeEventListener(
+        "team-task-editor-tab-change",
+        handleTabChange,
+      );
+    };
+  }, [teamMode]);
 
   // 画面モード変更のラッパー（親に通知）
   const setTaskScreenMode = useCallback(
@@ -829,12 +903,22 @@ function TaskScreen({
         />
       </div>
 
-      {/* モバイル: 1パネル表示（詳細+コメント縦並び） */}
+      {/* モバイル: 1パネル表示（タスク OR コメント OR 画像 排他的表示） */}
       <div className="md:hidden h-full flex flex-col bg-white">
-        <div className="flex-1 min-h-0 flex flex-col">{centerPanelContent}</div>
-        <div className="flex-shrink-0 max-h-[40vh] overflow-y-auto hover-scrollbar">
-          {rightPanelContent}
-        </div>
+        {taskEditorTab === "task" ? (
+          <div className="flex-1 min-h-0 flex flex-col">
+            {centerPanelContent}
+          </div>
+        ) : taskEditorTab === "comment" ? (
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+            {rightPanelContent}
+          </div>
+        ) : (
+          <MobileAttachmentView
+            selectedTask={selectedTask || null}
+            teamId={teamId}
+          />
+        )}
       </div>
 
       {/* モーダル（3パネルレイアウト外側） */}

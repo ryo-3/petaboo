@@ -13,11 +13,11 @@ import type { TeamMember } from "@/src/hooks/use-team-detail";
 import { MoreVertical, Edit2, Trash2, Image as ImageIcon } from "lucide-react";
 import { useToast } from "@/src/contexts/toast-context";
 import CommentScopeToggle from "@/components/ui/buttons/comment-scope-toggle";
-import ImagePreviewModal from "@/components/ui/modals/image-preview-modal";
+import AttachmentGallery from "@/components/features/attachments/attachment-gallery";
 import { useQueryClient } from "@tanstack/react-query";
 import { linkifyLine } from "@/src/utils/url-detector";
 
-// コメント画像表示用コンポーネント（シンプル版・モーダル付き）
+// コメント添付ファイル表示用コンポーネント（AttachmentGalleryを使用）
 function CommentAttachmentGallery({
   teamId,
   commentId,
@@ -30,86 +30,13 @@ function CommentAttachmentGallery({
     "comment",
     commentId.toString(),
   );
-  const { getToken } = useAuth();
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [imageUrls, setImageUrls] = useState<Record<number, string>>({});
-
-  // 認証付きで画像を取得してBlob URLを生成
-  useEffect(() => {
-    if (attachments.length === 0) return;
-
-    let isMounted = true;
-
-    const loadImages = async () => {
-      const token = await getToken();
-      const newUrls: Record<number, string> = {};
-
-      for (const attachment of attachments) {
-        // 既に読み込み済みならスキップ
-        if (imageUrls[attachment.id]) continue;
-
-        try {
-          const response = await fetch(attachment.url, {
-            method: "GET",
-            headers: {
-              ...(token && { Authorization: `Bearer ${token}` }),
-            },
-          });
-
-          if (response.ok && isMounted) {
-            const blob = await response.blob();
-            const blobUrl = URL.createObjectURL(blob);
-            newUrls[attachment.id] = blobUrl;
-          }
-        } catch (error) {
-          console.error(`画像読み込みエラー [ID: ${attachment.id}]:`, error);
-        }
-      }
-
-      if (isMounted && Object.keys(newUrls).length > 0) {
-        setImageUrls((prev) => ({ ...prev, ...newUrls }));
-      }
-    };
-
-    loadImages();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [attachments, getToken, imageUrls]);
 
   if (attachments.length === 0) return null;
 
   return (
-    <>
-      <div className="mt-2 flex gap-2 flex-wrap">
-        {attachments.map((attachment) => {
-          const imageUrl = imageUrls[attachment.id];
-          return imageUrl ? (
-            <img
-              key={attachment.id}
-              src={imageUrl}
-              alt={attachment.fileName}
-              className="w-32 h-32 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border border-gray-200"
-              onClick={() => setSelectedImage(imageUrl)}
-            />
-          ) : (
-            <div
-              key={attachment.id}
-              className="w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center border border-gray-200"
-            >
-              <span className="text-xs text-gray-500">読込中...</span>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* 画像拡大表示モーダル */}
-      <ImagePreviewModal
-        imageUrl={selectedImage}
-        onClose={() => setSelectedImage(null)}
-      />
-    </>
+    <div className="mt-2">
+      <AttachmentGallery attachments={attachments} />
+    </div>
   );
 }
 
@@ -462,7 +389,7 @@ export default function CommentSection({
   // 画像形式バリデーション
   const validateImageFile = useCallback(
     (file: File): boolean => {
-      // MIMEタイプチェック
+      // MIMEタイプチェック（画像・PDF・Office文書対応）
       const allowedTypes = [
         "image/jpeg",
         "image/jpg",
@@ -470,16 +397,25 @@ export default function CommentSection({
         "image/gif",
         "image/webp",
         "image/svg+xml",
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.ms-excel",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "application/vnd.ms-powerpoint",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        "text/plain",
+        "text/csv",
       ];
       if (!allowedTypes.includes(file.type)) {
         showToast(`対応していないファイル形式です（${file.type}）`, "error");
         return false;
       }
 
-      // ファイルサイズチェック（5MB）
-      const maxSize = 5 * 1024 * 1024;
+      // ファイルサイズチェック（10MB）
+      const maxSize = 10 * 1024 * 1024;
       if (file.size > maxSize) {
-        showToast("ファイルサイズは5MB以下にしてください", "error");
+        showToast("ファイルサイズは10MB以下にしてください", "error");
         return false;
       }
 
@@ -488,21 +424,23 @@ export default function CommentSection({
     [showToast],
   );
 
-  // 画像ファイル選択処理
+  // ファイル選択処理（複数選択対応）
   const handleFileSelect = useCallback(
-    (file: File) => {
+    (files: File[]) => {
       // バリデーション
-      if (!validateImageFile(file)) {
+      const validFiles = files.filter((file) => validateImageFile(file));
+
+      if (validFiles.length === 0) {
         return;
       }
 
-      const totalCount = pendingImages.length;
-      if (totalCount >= 4) {
-        showToast("画像は最大4枚までです", "error");
+      const totalCount = pendingImages.length + validFiles.length;
+      if (totalCount > 10) {
+        showToast("ファイルは最大10個までです", "error");
         return;
       }
 
-      setPendingImages((prev) => [...prev, file]);
+      setPendingImages((prev) => [...prev, ...validFiles]);
     },
     [pendingImages.length, showToast, validateImageFile],
   );
@@ -526,9 +464,9 @@ export default function CommentSection({
 
           const file = item.getAsFile();
           if (file) {
-            handleFileSelect(file);
+            handleFileSelect([file]);
           }
-          break; // 最初の画像のみ処理
+          break; // 最初のファイルのみ処理
         }
       }
     },
@@ -959,15 +897,16 @@ export default function CommentSection({
 
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-1">
-                  {/* 画像選択ボタン */}
+                  {/* ファイル選択ボタン（画像・PDF・Office文書対応・複数選択可） */}
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain,text/csv"
+                    multiple
                     onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        handleFileSelect(file);
+                      const files = e.target.files;
+                      if (files && files.length > 0) {
+                        handleFileSelect(Array.from(files));
                         // ファイル入力をリセット（同じファイルを再選択可能にする）
                         e.target.value = "";
                       }
@@ -978,7 +917,7 @@ export default function CommentSection({
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     className="flex items-center justify-center size-7 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                    title="画像を添付"
+                    title="ファイルを添付（画像・PDF・Office文書）"
                   >
                     <ImageIcon className="size-4" />
                   </button>

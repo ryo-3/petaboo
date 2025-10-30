@@ -112,8 +112,8 @@ export const useAttachmentManager = ({
         attachments.filter((a) => !pendingDeletes.includes(a.id)).length +
         pendingImages.length;
 
-      if (totalCount >= 4) {
-        showToast("画像は最大4枚までです", "error");
+      if (totalCount >= 10) {
+        showToast("画像は最大10枚までです", "error");
         return;
       }
 

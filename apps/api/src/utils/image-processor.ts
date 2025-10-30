@@ -14,7 +14,7 @@ export const ALLOWED_MIME_TYPES = [
 ] as const;
 
 export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-export const MAX_ATTACHMENTS_PER_ITEM = 4; // メモ・タスク・コメントごと4枚
+export const MAX_ATTACHMENTS_PER_ITEM = 10; // メモ・タスク・コメントごと10枚
 
 export interface ImageValidationResult {
   valid: boolean;

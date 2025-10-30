@@ -18,7 +18,7 @@ export const ALLOWED_FILE_TYPES = [
 ] as const;
 
 export const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
-export const MAX_FILES_PER_ITEM = 4; // メモ・タスク・コメントごと4ファイル
+export const MAX_FILES_PER_ITEM = 10; // メモ・タスク・コメントごと10ファイル
 
 export interface FileValidationResult {
   valid: boolean;

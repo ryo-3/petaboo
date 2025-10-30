@@ -123,43 +123,42 @@ function Sidebar({
   // モバイルでメモエディターが開いている場合は専用フッターを表示
   const isShowingMemoEditor = selectedMemoId !== undefined;
 
-  if (isShowingMemoEditor) {
-    return (
-      <div className="md:hidden w-full h-full">
-        <MemoEditorFooter
-          onBack={() => {
-            window.dispatchEvent(
-              new CustomEvent("memo-editor-mobile-back-requested"),
-            );
-          }}
-          onMemoClick={() =>
-            window.dispatchEvent(
-              new CustomEvent("memo-editor-tab-change", {
-                detail: { tab: "memo" },
-              }),
-            )
-          }
-          onCommentClick={() =>
-            window.dispatchEvent(
-              new CustomEvent("memo-editor-tab-change", {
-                detail: { tab: "comment" },
-              }),
-            )
-          }
-          onImageClick={() =>
-            window.dispatchEvent(
-              new CustomEvent("memo-editor-tab-change", {
-                detail: { tab: "image" },
-              }),
-            )
-          }
-          activeTab={memoEditorTab}
-          imageCount={imageCount}
-          commentCount={commentCount}
-        />
-      </div>
-    );
-  }
+  // モバイルフッター（PCでは非表示、モバイルでメモ選択時のみ表示）
+  const mobileFooter = isShowingMemoEditor ? (
+    <div className="md:hidden w-full h-full">
+      <MemoEditorFooter
+        onBack={() => {
+          window.dispatchEvent(
+            new CustomEvent("memo-editor-mobile-back-requested"),
+          );
+        }}
+        onMemoClick={() =>
+          window.dispatchEvent(
+            new CustomEvent("memo-editor-tab-change", {
+              detail: { tab: "memo" },
+            }),
+          )
+        }
+        onCommentClick={() =>
+          window.dispatchEvent(
+            new CustomEvent("memo-editor-tab-change", {
+              detail: { tab: "comment" },
+            }),
+          )
+        }
+        onImageClick={() =>
+          window.dispatchEvent(
+            new CustomEvent("memo-editor-tab-change", {
+              detail: { tab: "image" },
+            }),
+          )
+        }
+        activeTab={memoEditorTab}
+        imageCount={imageCount}
+        commentCount={commentCount}
+      />
+    </div>
+  ) : null;
 
   // 統一サイドバー（レスポンシブ対応）
   return (
@@ -472,6 +471,9 @@ function Sidebar({
           </div>
         </div>
       )}
+
+      {/* モバイルフッター（メモ選択時のみ） */}
+      {mobileFooter}
     </div>
   );
 }

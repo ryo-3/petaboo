@@ -48,9 +48,87 @@ import { createToggleHandler } from "@/src/utils/toggleUtils";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ControlPanelLayout } from "@/components/layout/control-panel-layout";
 import CommentSection from "@/components/features/comments/comment-section";
+import AttachmentGallery from "@/components/features/attachments/attachment-gallery";
+import PhotoButton from "@/components/ui/buttons/photo-button";
+import { useAttachmentManager } from "@/src/hooks/use-attachment-manager";
 import type { TeamMember } from "@/src/hooks/use-team-detail";
 
 type MemoScreenMode = "list" | "view" | "create";
+
+// モバイル版画像・ファイル一覧表示コンポーネント
+function MobileAttachmentView({
+  selectedMemo,
+  teamId,
+}: {
+  selectedMemo: Memo | null;
+  teamId?: number;
+}) {
+  const attachmentManager = useAttachmentManager({
+    itemType: "memo",
+    item: selectedMemo,
+    teamMode: !!teamId,
+    teamId,
+    isDeleted: false,
+  });
+
+  const {
+    attachments,
+    pendingImages,
+    pendingDeletes,
+    handleFileSelect,
+    handleDeleteAttachment,
+    handleDeletePendingImage,
+    handleRestoreAttachment,
+    isDeleting,
+    isUploading,
+  } = attachmentManager;
+
+  if (!selectedMemo) {
+    return (
+      <div className="flex-1 min-h-0 flex flex-col items-center justify-center p-4">
+        <div className="text-sm text-gray-500">メモを選択してください</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+      <div className="pl-2 pr-2 pt-2 pb-2 border-b border-gray-200 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-semibold">画像・ファイル</h2>
+          {attachments.length > 0 && (
+            <span className="text-sm text-gray-500">
+              ({attachments.length}枚)
+            </span>
+          )}
+        </div>
+        <PhotoButton
+          onFileSelect={handleFileSelect}
+          buttonSize="size-9"
+          iconSize="size-5"
+        />
+      </div>
+      <div className="flex-1 overflow-y-auto p-4">
+        {attachments.length === 0 && pendingImages.length === 0 ? (
+          <div className="text-center text-gray-500 text-sm py-8">
+            添付ファイルはありません
+          </div>
+        ) : (
+          <AttachmentGallery
+            attachments={attachments}
+            onDelete={handleDeleteAttachment}
+            isDeleting={isDeleting}
+            pendingImages={pendingImages}
+            onDeletePending={handleDeletePendingImage}
+            pendingDeletes={pendingDeletes}
+            onRestore={handleRestoreAttachment}
+            isUploading={isUploading}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
 
 interface MemoScreenProps {
   selectedMemo?: Memo | null;
@@ -114,9 +192,9 @@ function MemoScreen({
   useBulkProcessNotifications();
 
   // モバイル版メモエディターのアクティブタブ管理（チーム用）
-  const [memoEditorTab, setMemoEditorTab] = useState<"memo" | "comment">(
-    "memo",
-  );
+  const [memoEditorTab, setMemoEditorTab] = useState<
+    "memo" | "comment" | "image"
+  >("memo");
 
   // 選択モード管理
   const [selectionMode, setSelectionMode] = useState<"select" | "check">(
@@ -564,7 +642,9 @@ function MemoScreen({
     if (!teamMode) return;
 
     const handleTabChange = (e: Event) => {
-      const customEvent = e as CustomEvent<{ tab: "memo" | "comment" }>;
+      const customEvent = e as CustomEvent<{
+        tab: "memo" | "comment" | "image";
+      }>;
       setMemoEditorTab(customEvent.detail.tab);
     };
 
@@ -899,16 +979,21 @@ function MemoScreen({
         />
       </div>
 
-      {/* モバイル: 1パネル表示（メモ OR コメント排他的表示） */}
+      {/* モバイル: 1パネル表示（メモ OR コメント OR 画像 排他的表示） */}
       <div className="md:hidden h-full flex flex-col bg-white">
         {memoEditorTab === "memo" ? (
           <div className="flex-1 min-h-0 flex flex-col">
             {centerPanelContent}
           </div>
-        ) : (
+        ) : memoEditorTab === "comment" ? (
           <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
             {rightPanelContent}
           </div>
+        ) : (
+          <MobileAttachmentView
+            selectedMemo={selectedMemo || null}
+            teamId={teamId}
+          />
         )}
       </div>
 

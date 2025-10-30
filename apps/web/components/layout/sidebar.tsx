@@ -44,6 +44,8 @@ interface SidebarProps {
   onTeamCreate?: () => void;
   currentTeamName?: string;
   onBackToBoardList?: () => void;
+  imageCount?: number;
+  commentCount?: number;
 }
 
 function Sidebar({
@@ -69,6 +71,8 @@ function Sidebar({
   onTeamCreate,
   currentTeamName,
   onBackToBoardList,
+  imageCount = 0,
+  commentCount = 0,
 }: SidebarProps) {
   // NavigationContextから統一されたiconStatesを取得
   const { iconStates } = useNavigation();
@@ -84,14 +88,16 @@ function Sidebar({
   const [showLogoutModal, setShowLogoutModal] = React.useState(false);
 
   // モバイル版メモエディターのアクティブタブ管理
-  const [memoEditorTab, setMemoEditorTab] = useState<"memo" | "comment">(
-    "memo",
-  );
+  const [memoEditorTab, setMemoEditorTab] = useState<
+    "memo" | "comment" | "image"
+  >("memo");
 
   // CustomEventでタブ切り替えを監視
   useEffect(() => {
     const handleTabChange = (e: Event) => {
-      const customEvent = e as CustomEvent<{ tab: "memo" | "comment" }>;
+      const customEvent = e as CustomEvent<{
+        tab: "memo" | "comment" | "image";
+      }>;
       setMemoEditorTab(customEvent.detail.tab);
     };
 
@@ -140,7 +146,16 @@ function Sidebar({
               }),
             )
           }
+          onImageClick={() =>
+            window.dispatchEvent(
+              new CustomEvent("memo-editor-tab-change", {
+                detail: { tab: "image" },
+              }),
+            )
+          }
           activeTab={memoEditorTab}
+          imageCount={imageCount}
+          commentCount={commentCount}
         />
       </div>
     );

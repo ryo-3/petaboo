@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import PhotoIcon from "@/components/icons/photo-icon";
+import { Image } from "lucide-react";
 
 interface PhotoButtonProps {
   onFileSelect?: (file: File) => void;
@@ -46,7 +46,7 @@ function PhotoButton({
         onClick={handleClick}
         disabled={disabled}
       >
-        <PhotoIcon className={iconSize} />
+        <Image className={iconSize} />
       </button>
       <input
         ref={fileInputRef}

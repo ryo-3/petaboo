@@ -43,6 +43,9 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useTeamDetail as useTeamDetailContext } from "@/src/contexts/team-detail-context";
+import { useAttachments } from "@/src/hooks/use-attachments";
+import { useTeamComments } from "@/src/hooks/use-team-comments";
+import { OriginalIdUtils } from "@/src/types/common";
 
 interface TeamDetailProps {
   customUrl: string;
@@ -53,7 +56,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const { data: team, isLoading, error } = useTeamDetail(customUrl);
-  const { setSelectedMemoId } = useTeamDetailContext();
+  const { setSelectedMemoId, setImageCount, setCommentCount } =
+    useTeamDetailContext();
 
   // 🛡️ ページ可視性をContextから取得
   const { isVisible: isPageVisible } = usePageVisibility();
@@ -139,6 +143,24 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   useEffect(() => {
     setSelectedMemoId(selectedMemo?.id ?? null);
   }, [selectedMemo, setSelectedMemoId]);
+
+  // 画像数とコメント数を取得（モバイルフッター用）
+  const { data: attachments = [] } = useAttachments(
+    team?.id,
+    "memo",
+    selectedMemo ? OriginalIdUtils.fromItem(selectedMemo) || "" : "",
+  );
+  const { data: comments = [] } = useTeamComments(
+    team?.id,
+    "memo",
+    selectedMemo ? OriginalIdUtils.fromItem(selectedMemo) || "" : "",
+  );
+
+  // 画像数とコメント数をContextに反映
+  useEffect(() => {
+    setImageCount(attachments.length);
+    setCommentCount(comments.length);
+  }, [attachments.length, comments.length, setImageCount, setCommentCount]);
 
   // キック機能
   const [kickConfirmModal, setKickConfirmModal] = useState<{

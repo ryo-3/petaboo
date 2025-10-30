@@ -28,7 +28,8 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
   const params = useParams();
   const { setScreenMode } = useNavigation();
-  const { selectedMemoId, setSelectedMemoId } = useTeamDetailContext();
+  const { selectedMemoId, setSelectedMemoId, imageCount, commentCount } =
+    useTeamDetailContext();
 
   // ボード詳細ページのセクション表示状態
   const [activeBoardSection, setActiveBoardSection] = useState<
@@ -327,6 +328,8 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
             }
             currentTeamName={teamDetail?.name}
             selectedMemoId={selectedMemoId ?? undefined}
+            imageCount={imageCount}
+            commentCount={commentCount}
           />
         </div>
 
@@ -467,6 +470,8 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
               }
               currentTeamName={teamDetail?.name}
               selectedMemoId={selectedMemoId ?? undefined}
+              imageCount={imageCount}
+              commentCount={commentCount}
               onBackToBoardList={
                 isTeamBoardDetailPage ? handleBackToBoardList : undefined
               }

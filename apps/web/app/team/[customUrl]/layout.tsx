@@ -33,6 +33,7 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
     selectedMemoId,
     setSelectedMemoId,
     selectedTaskId,
+    isCreatingTask,
     imageCount,
     commentCount,
     taskImageCount,
@@ -92,12 +93,12 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   const isTeamBoardDetailPage =
     pathname.includes("/team/") && pathname.includes("/board/");
 
-  // チームタスク詳細表示かどうかを判定（タスクタブでタスクが選択されている）
+  // チームタスク詳細表示かどうかを判定（タスクタブでタスクが選択されているか新規作成中）
   const isShowingTaskDetail =
     isTeamDetailPage &&
     !isTeamBoardDetailPage &&
     activeTab === "tasks" &&
-    selectedTaskId !== null;
+    (selectedTaskId !== null || isCreatingTask);
 
   useEffect(() => {
     // チームボード詳細ページの場合はURLを記憶

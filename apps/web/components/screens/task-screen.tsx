@@ -27,6 +27,7 @@ import {
 } from "@/src/hooks/use-tasks";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useTeamContext } from "@/contexts/team-context";
+import { useTeamDetail } from "@/src/contexts/team-detail-context";
 import {
   useBoards,
   useItemBoards,
@@ -118,6 +119,8 @@ function TaskScreen({
 }: TaskScreenProps) {
   const { isTeamMode: teamMode, teamId: teamIdRaw } = useTeamContext();
   const teamId = teamIdRaw ?? undefined; // Convert null to undefined for hook compatibility
+  // TeamDetailContext（チームモードのみ）
+  const teamDetailContext = teamMode ? useTeamDetail() : null;
   // 一括処理中断通知の監視
   useBulkProcessNotifications();
 
@@ -284,6 +287,13 @@ function TaskScreen({
     selectedDeletedTask,
     preferences || undefined,
   );
+
+  // チームモードで新規作成状態をContextに反映
+  useEffect(() => {
+    if (teamDetailContext) {
+      teamDetailContext.setIsCreatingTask(taskScreenMode === "create");
+    }
+  }, [taskScreenMode, teamDetailContext]);
 
   // 画面モード変更のラッパー（親に通知）
   const setTaskScreenMode = useCallback(

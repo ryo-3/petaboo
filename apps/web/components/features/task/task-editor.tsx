@@ -55,6 +55,7 @@ import {
   extractTeamNameFromUrl,
 } from "@/src/utils/urlUtils";
 import { useTeamContext } from "@/contexts/team-context";
+import { useTeamDetail } from "@/src/contexts/team-detail-context";
 
 interface TaskEditorProps {
   task?: Task | DeletedTask | null;
@@ -142,6 +143,9 @@ function TaskEditor({
 }: TaskEditorProps) {
   const { isTeamMode: teamMode, teamId: teamIdRaw } = useTeamContext();
   const teamId = teamIdRaw ?? undefined; // Hook互換性のため変換
+
+  // TeamDetailContext経由でモバイルフッターに状態を公開
+  const teamDetailContext = teamMode ? useTeamDetail() : null;
 
   // IMPORTANT: originalIdを文字列として強制変換（ボードAPI経由だと数値になる場合がある）
   const task = rawTask
@@ -926,6 +930,43 @@ function TaskEditor({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [handleSave, canSave]);
 
+  // モバイルフッター戻るボタンイベント（Context経由）
+  useEffect(() => {
+    const handleMobileBackRequested = () => {
+      if (teamMode && teamDetailContext) {
+        // Contextから最新の状態を読み取る
+        const currentHasUnsavedChanges =
+          teamDetailContext.taskEditorHasUnsavedChangesRef.current;
+        const showModal =
+          teamDetailContext.taskEditorShowConfirmModalRef.current;
+
+        if (currentHasUnsavedChanges && showModal) {
+          showModal();
+        } else {
+          onClose();
+        }
+      } else {
+        // 個人ページの場合は直接判定
+        if (hasUnsavedChanges) {
+          setIsCloseConfirmModalOpen(true);
+        } else {
+          onClose();
+        }
+      }
+    };
+
+    window.addEventListener(
+      "team-back-to-task-list",
+      handleMobileBackRequested,
+    );
+    return () => {
+      window.removeEventListener(
+        "team-back-to-task-list",
+        handleMobileBackRequested,
+      );
+    };
+  }, [teamMode, teamDetailContext, hasUnsavedChanges, onClose]);
+
   // 戻るボタンクリックハンドラー（未保存変更チェック）
   const handleCloseClick = useCallback(() => {
     if (hasUnsavedChanges) {
@@ -953,11 +994,11 @@ function TaskEditor({
             {/* ここにheaderActionsの内容を直接配置 */}
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-2">
-                {/* 閉じるボタン（チームモードのみ表示） */}
+                {/* 閉じるボタン（チームモードのみ表示・モバイルでは非表示） */}
                 {teamMode && (
                   <button
                     onClick={handleCloseClick}
-                    className="flex items-center justify-center size-7 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 transition-colors"
+                    className="hidden md:flex items-center justify-center size-7 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 transition-colors"
                   >
                     <svg
                       className="size-4 rotate-180 md:rotate-0"

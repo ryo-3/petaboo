@@ -3,48 +3,48 @@
 import MobileEditorFooter, {
   type FooterButton,
 } from "@/components/mobile/mobile-editor-footer";
-import MemoIcon from "@/components/icons/memo-icon";
+import TaskIcon from "@/components/icons/task-icon";
 import CommentIcon from "@/components/icons/comment-icon";
 import { Image } from "lucide-react";
 
-interface MemoEditorFooterProps {
+interface TaskEditorFooterProps {
   onBack: () => void;
-  onMemoClick: () => void;
+  onTaskClick: () => void;
   onCommentClick: () => void;
   onImageClick: () => void;
-  activeTab: "memo" | "comment" | "image";
+  activeTab: "task" | "comment" | "image";
   imageCount?: number;
   commentCount?: number;
 }
 
 /**
- * メモエディター専用フッターコンポーネント
+ * タスクエディター専用フッターコンポーネント
  * MobileEditorFooterを使用して統一的なUIを提供
  */
-export default function MemoEditorFooter({
+export default function TaskEditorFooter({
   onBack,
-  onMemoClick,
+  onTaskClick,
   onCommentClick,
   onImageClick,
   activeTab,
   imageCount = 0,
   commentCount = 0,
-}: MemoEditorFooterProps) {
+}: TaskEditorFooterProps) {
   const buttons: FooterButton[] = [
     {
-      icon: <MemoIcon className="w-6 h-6" />,
-      onClick: onMemoClick,
-      isActive: activeTab === "memo",
-      activeColorClass: "bg-Green",
+      icon: <TaskIcon className="w-6 h-6" />,
+      onClick: onTaskClick,
+      isActive: activeTab === "task",
+      activeColorClass: "bg-DeepBlue",
       inactiveIconColorClass: "text-gray-400",
       activeIconColorClass: "text-white",
-      ariaLabel: "メモ",
+      ariaLabel: "タスク",
     },
     {
       icon: <Image className="w-6 h-6 ml-1" />,
       onClick: onImageClick,
       isActive: activeTab === "image",
-      activeColorClass: "bg-Green",
+      activeColorClass: "bg-DeepBlue",
       inactiveIconColorClass: "text-gray-400",
       activeIconColorClass: "text-white",
       ariaLabel: "画像・ファイル",
@@ -54,7 +54,7 @@ export default function MemoEditorFooter({
       icon: <CommentIcon className="w-6 h-6 ml-1" />,
       onClick: onCommentClick,
       isActive: activeTab === "comment",
-      activeColorClass: "bg-Green",
+      activeColorClass: "bg-DeepBlue",
       inactiveIconColorClass: "text-gray-400",
       activeIconColorClass: "text-white",
       ariaLabel: "コメント",

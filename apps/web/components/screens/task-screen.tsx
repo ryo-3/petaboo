@@ -76,6 +76,9 @@ interface TaskScreenProps {
   initialTaskId?: string | null;
   // チームメンバー（コメント機能用）
   teamMembers?: TeamMember[];
+  // チーム用の未保存変更管理（オプション）
+  taskEditorHasUnsavedChangesRef?: React.MutableRefObject<boolean>;
+  taskEditorShowConfirmModalRef?: React.MutableRefObject<(() => void) | null>;
 
   // 統一フック（最上位から受け取り）
   unifiedOperations: {
@@ -110,6 +113,8 @@ function TaskScreen({
   initialTaskId,
   unifiedOperations,
   teamMembers = [],
+  taskEditorHasUnsavedChangesRef,
+  taskEditorShowConfirmModalRef,
 }: TaskScreenProps) {
   const { isTeamMode: teamMode, teamId: teamIdRaw } = useTeamContext();
   const teamId = teamIdRaw ?? undefined; // Convert null to undefined for hook compatibility
@@ -713,6 +718,8 @@ function TaskScreen({
           preloadedBoardItems={safeAllBoardItems}
           preloadedItemBoards={itemBoards}
           unifiedOperations={unifiedOperations}
+          taskEditorHasUnsavedChangesRef={taskEditorHasUnsavedChangesRef}
+          taskEditorShowConfirmModalRef={taskEditorShowConfirmModalRef}
         />
       )}
       {/* 表示モード（既存タスク） */}
@@ -737,6 +744,8 @@ function TaskScreen({
           preloadedBoardItems={safeAllBoardItems}
           preloadedItemBoards={itemBoards}
           unifiedOperations={unifiedOperations}
+          taskEditorHasUnsavedChangesRef={taskEditorHasUnsavedChangesRef}
+          taskEditorShowConfirmModalRef={taskEditorShowConfirmModalRef}
         />
       )}
       {/* 表示モード（削除済みタスク） */}
@@ -744,6 +753,8 @@ function TaskScreen({
         <TaskEditor
           task={selectedDeletedTask}
           onClose={() => setTaskScreenMode("list")}
+          taskEditorHasUnsavedChangesRef={taskEditorHasUnsavedChangesRef}
+          taskEditorShowConfirmModalRef={taskEditorShowConfirmModalRef}
           onDelete={async () => {
             if (selectedDeletedTask && deletedTasks) {
               const currentIndex = deletedTasks.findIndex(
@@ -1103,6 +1114,8 @@ function TaskScreen({
                 preloadedBoardItems={safeAllBoardItems}
                 preloadedItemBoards={itemBoards}
                 unifiedOperations={unifiedOperations}
+                taskEditorHasUnsavedChangesRef={taskEditorHasUnsavedChangesRef}
+                taskEditorShowConfirmModalRef={taskEditorShowConfirmModalRef}
               />
             )}
             {taskScreenMode === "view" && selectedTask && (
@@ -1125,12 +1138,16 @@ function TaskScreen({
                 preloadedBoardItems={safeAllBoardItems}
                 preloadedItemBoards={itemBoards}
                 unifiedOperations={unifiedOperations}
+                taskEditorHasUnsavedChangesRef={taskEditorHasUnsavedChangesRef}
+                taskEditorShowConfirmModalRef={taskEditorShowConfirmModalRef}
               />
             )}
             {taskScreenMode === "view" && selectedDeletedTask && (
               <TaskEditor
                 task={selectedDeletedTask}
                 onClose={() => setTaskScreenMode("list")}
+                taskEditorHasUnsavedChangesRef={taskEditorHasUnsavedChangesRef}
+                taskEditorShowConfirmModalRef={taskEditorShowConfirmModalRef}
                 onDelete={async () => {
                   if (selectedDeletedTask && deletedTasks) {
                     const currentIndex = deletedTasks.findIndex(
@@ -1178,6 +1195,8 @@ function TaskScreen({
                 createdByAvatarColor={selectedTask.avatarColor}
                 preloadedTags={tags || []}
                 preloadedBoards={boards || []}
+                taskEditorHasUnsavedChangesRef={taskEditorHasUnsavedChangesRef}
+                taskEditorShowConfirmModalRef={taskEditorShowConfirmModalRef}
                 preloadedTaggings={safeAllTaggings}
                 preloadedBoardItems={safeAllBoardItems}
                 preloadedItemBoards={itemBoards}

@@ -21,6 +21,7 @@ import {
 } from "@/src/contexts/team-detail-context";
 import { getModeFromUrl, getActiveTabFromUrl } from "@/src/utils/modeUtils";
 import { useTeamDetail } from "@/src/hooks/use-team-detail";
+import TaskEditorFooter from "@/components/mobile/task-editor-footer";
 
 function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -28,13 +29,25 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
   const params = useParams();
   const { setScreenMode } = useNavigation();
-  const { selectedMemoId, setSelectedMemoId, imageCount, commentCount } =
-    useTeamDetailContext();
+  const {
+    selectedMemoId,
+    setSelectedMemoId,
+    selectedTaskId,
+    imageCount,
+    commentCount,
+    taskImageCount,
+    taskCommentCount,
+  } = useTeamDetailContext();
 
   // ボード詳細ページのセクション表示状態
   const [activeBoardSection, setActiveBoardSection] = useState<
     "memos" | "tasks" | "comments"
   >("memos");
+
+  // タスクエディター用のアクティブタブ状態
+  const [activeTaskTab, setActiveTaskTab] = useState<
+    "task" | "comment" | "image"
+  >("task");
 
   // URLからcustomUrlを取得
   const customUrl = Array.isArray(params.customUrl)
@@ -79,6 +92,13 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   const isTeamBoardDetailPage =
     pathname.includes("/team/") && pathname.includes("/board/");
 
+  // チームタスク詳細表示かどうかを判定（タスクタブでタスクが選択されている）
+  const isShowingTaskDetail =
+    isTeamDetailPage &&
+    !isTeamBoardDetailPage &&
+    activeTab === "tasks" &&
+    selectedTaskId !== null;
+
   useEffect(() => {
     // チームボード詳細ページの場合はURLを記憶
     if (isTeamBoardDetailPage) {
@@ -106,6 +126,12 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
       setActiveBoardSection(activeSection);
     };
 
+    // タスクエディタータブ切り替えイベントをリッスン
+    const handleTaskEditorTabChange = (event: CustomEvent) => {
+      const { tab } = event.detail;
+      setActiveTaskTab(tab);
+    };
+
     window.addEventListener(
       "team-tab-change",
       handleTeamTabChange as EventListener,
@@ -121,6 +147,11 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
       handleBoardSectionStateChange as EventListener,
     );
 
+    window.addEventListener(
+      "team-task-editor-tab-change",
+      handleTaskEditorTabChange as EventListener,
+    );
+
     return () => {
       window.removeEventListener(
         "team-tab-change",
@@ -133,6 +164,10 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
       window.removeEventListener(
         "board-section-state-change",
         handleBoardSectionStateChange as EventListener,
+      );
+      window.removeEventListener(
+        "team-task-editor-tab-change",
+        handleTaskEditorTabChange as EventListener,
       );
     };
   }, [isTeamBoardDetailPage, pathname, searchParams, setScreenMode]);
@@ -209,6 +244,16 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
       window.dispatchEvent(
         new CustomEvent("team-mode-change", {
           detail: { mode: "task", pathname },
+        }),
+      );
+    }
+  };
+
+  const handleBackToTaskList = () => {
+    if (isTeamDetailPage) {
+      window.dispatchEvent(
+        new CustomEvent("team-back-to-task-list", {
+          detail: { pathname },
         }),
       );
     }
@@ -338,7 +383,36 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
 
         {/* モバイル用ボトムナビ（下） */}
         <div className="md:hidden fixed bottom-0 left-0 right-0 h-14 border-t border-gray-200 bg-white">
-          {isTeamBoardDetailPage ? (
+          {isShowingTaskDetail ? (
+            // タスク詳細専用フッター：戻る・タスク・画像・コメント
+            <TaskEditorFooter
+              onBack={handleBackToTaskList}
+              onTaskClick={() =>
+                window.dispatchEvent(
+                  new CustomEvent("team-task-editor-tab-change", {
+                    detail: { tab: "task" },
+                  }),
+                )
+              }
+              onImageClick={() =>
+                window.dispatchEvent(
+                  new CustomEvent("team-task-editor-tab-change", {
+                    detail: { tab: "image" },
+                  }),
+                )
+              }
+              onCommentClick={() =>
+                window.dispatchEvent(
+                  new CustomEvent("team-task-editor-tab-change", {
+                    detail: { tab: "comment" },
+                  }),
+                )
+              }
+              activeTab={activeTaskTab}
+              imageCount={taskImageCount}
+              commentCount={taskCommentCount}
+            />
+          ) : isTeamBoardDetailPage ? (
             // ボード詳細専用ナビゲーション：戻る・メモ・タスク・コメント
             <div className="flex items-center justify-around h-full px-2">
               <button

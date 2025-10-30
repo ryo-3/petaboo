@@ -97,6 +97,10 @@ interface TaskEditorProps {
   createdByUserId?: string | null;
   createdByAvatarColor?: string | null;
 
+  // チーム用の未保存変更管理（オプション）
+  taskEditorHasUnsavedChangesRef?: React.MutableRefObject<boolean>;
+  taskEditorShowConfirmModalRef?: React.MutableRefObject<(() => void) | null>;
+
   // 統一操作フック
   unifiedOperations?: {
     deleteItem: {
@@ -133,6 +137,8 @@ function TaskEditor({
   createdByUserId,
   createdByAvatarColor,
   unifiedOperations,
+  taskEditorHasUnsavedChangesRef,
+  taskEditorShowConfirmModalRef,
 }: TaskEditorProps) {
   const { isTeamMode: teamMode, teamId: teamIdRaw } = useTeamContext();
   const teamId = teamIdRaw ?? undefined; // Hook互換性のため変換
@@ -754,6 +760,22 @@ function TaskEditor({
       hasTagChanges ||
       pendingImages.length > 0 ||
       pendingDeletes.length > 0;
+
+  // チーム用の未保存変更refを更新（モバイルフッター戻るボタン用）
+  useEffect(() => {
+    if (taskEditorHasUnsavedChangesRef) {
+      taskEditorHasUnsavedChangesRef.current = hasUnsavedChanges;
+    }
+  }, [hasUnsavedChanges, taskEditorHasUnsavedChangesRef]);
+
+  // チーム用の確認モーダル表示関数を設定
+  useEffect(() => {
+    if (taskEditorShowConfirmModalRef) {
+      taskEditorShowConfirmModalRef.current = () => {
+        setIsCloseConfirmModalOpen(true);
+      };
+    }
+  }, [taskEditorShowConfirmModalRef]);
 
   // ボードIDを名前に変換する関数
   const getBoardName = (boardId: string) => {

@@ -56,8 +56,16 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const { data: team, isLoading, error } = useTeamDetail(customUrl);
-  const { setSelectedMemoId, setImageCount, setCommentCount } =
-    useTeamDetailContext();
+  const {
+    setSelectedMemoId,
+    setSelectedTaskId,
+    setImageCount,
+    setCommentCount,
+    setTaskImageCount,
+    setTaskCommentCount,
+    taskEditorHasUnsavedChangesRef,
+    taskEditorShowConfirmModalRef,
+  } = useTeamDetailContext();
 
   // 🛡️ ページ可視性をContextから取得
   const { isVisible: isPageVisible } = usePageVisibility();
@@ -156,11 +164,34 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     selectedMemo ? OriginalIdUtils.fromItem(selectedMemo) || "" : "",
   );
 
-  // 画像数とコメント数をContextに反映
+  // 画像数とコメント数をContextに反映（メモ用）
   useEffect(() => {
     setImageCount(attachments.length);
     setCommentCount(comments.length);
   }, [attachments.length, comments.length, setImageCount, setCommentCount]);
+
+  // タスク用の画像数とコメント数を取得（モバイルフッター用）
+  const { data: taskAttachments = [] } = useAttachments(
+    team?.id,
+    "task",
+    selectedTask ? OriginalIdUtils.fromItem(selectedTask) || "" : "",
+  );
+  const { data: taskComments = [] } = useTeamComments(
+    team?.id,
+    "task",
+    selectedTask ? OriginalIdUtils.fromItem(selectedTask) || "" : "",
+  );
+
+  // タスク用の画像数とコメント数をContextに反映
+  useEffect(() => {
+    setTaskImageCount(taskAttachments.length);
+    setTaskCommentCount(taskComments.length);
+  }, [
+    taskAttachments.length,
+    taskComments.length,
+    setTaskImageCount,
+    setTaskCommentCount,
+  ]);
 
   // キック機能
   const [kickConfirmModal, setKickConfirmModal] = useState<{
@@ -415,6 +446,27 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
     };
 
+    const handleBackToTaskList = (_event: CustomEvent) => {
+      // 未保存変更がある場合は確認モーダルを表示
+      if (
+        taskEditorHasUnsavedChangesRef.current &&
+        taskEditorShowConfirmModalRef.current
+      ) {
+        taskEditorShowConfirmModalRef.current();
+        return;
+      }
+
+      // タスクの選択を解除してタスク一覧に戻る
+      setSelectedTask(null);
+      setSelectedTaskId(null);
+      setSelectedDeletedTask(null);
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("task");
+      params.set("tab", "tasks");
+      const newUrl = params.toString() ? `?${params.toString()}` : "";
+      router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
+    };
+
     window.addEventListener(
       "team-mode-change",
       handleTeamModeChange as EventListener,
@@ -430,6 +482,11 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       handleBackToMemoList as EventListener,
     );
 
+    window.addEventListener(
+      "team-back-to-task-list",
+      handleBackToTaskList as EventListener,
+    );
+
     return () => {
       window.removeEventListener(
         "team-mode-change",
@@ -442,6 +499,10 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       window.removeEventListener(
         "team-back-to-memo-list",
         handleBackToMemoList as EventListener,
+      );
+      window.removeEventListener(
+        "team-back-to-task-list",
+        handleBackToTaskList as EventListener,
       );
     };
   }, [handleTabChange, router, customUrl, searchParams]);
@@ -467,6 +528,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
   const handleSelectTask = (task: Task | null, _fromFullList?: boolean) => {
     setSelectedTask(task);
+    setSelectedTaskId(task?.id ?? null);
 
     // URLを更新
     const params = new URLSearchParams(searchParams.toString());
@@ -498,6 +560,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     _fromFullList?: boolean,
   ) => {
     setSelectedDeletedTask(task);
+    setSelectedTaskId(task?.id ?? null);
 
     // URLを更新
     const params = new URLSearchParams(searchParams.toString());
@@ -923,6 +986,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                 onSelectTask={handleSelectTask}
                 selectedDeletedTask={selectedDeletedTask}
                 onSelectDeletedTask={handleSelectDeletedTask}
+                taskEditorHasUnsavedChangesRef={taskEditorHasUnsavedChangesRef}
+                taskEditorShowConfirmModalRef={taskEditorShowConfirmModalRef}
                 onClose={() => {
                   // タスクを閉じる時はtaskパラメータも削除してtasksタブに残る
                   const params = new URLSearchParams(searchParams.toString());
@@ -935,6 +1000,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                     scroll: false,
                   });
                   setSelectedTask(null);
+                  setSelectedTaskId(null);
                   setSelectedDeletedTask(null);
                 }}
                 onClearSelection={() => {
@@ -949,6 +1015,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                     scroll: false,
                   });
                   setSelectedTask(null);
+                  setSelectedTaskId(null);
                   setSelectedDeletedTask(null);
                 }}
                 onScreenModeChange={(mode) => {

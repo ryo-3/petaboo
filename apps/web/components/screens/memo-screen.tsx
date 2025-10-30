@@ -76,6 +76,7 @@ function MobileAttachmentView({
     pendingImages,
     pendingDeletes,
     handleFileSelect,
+    handleFilesSelect,
     handleDeleteAttachment,
     handleDeletePendingImage,
     handleRestoreAttachment,
@@ -103,7 +104,8 @@ function MobileAttachmentView({
           )}
         </div>
         <PhotoButton
-          onFileSelect={handleFileSelect}
+          onFilesSelect={handleFilesSelect}
+          multiple={true}
           buttonSize="size-9"
           iconSize="size-5"
         />

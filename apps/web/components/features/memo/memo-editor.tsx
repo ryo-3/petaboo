@@ -281,6 +281,7 @@ function MemoEditor({
     pendingImages,
     pendingDeletes,
     handleFileSelect,
+    handleFilesSelect,
     handlePaste,
     handleDeleteAttachment,
     handleDeletePendingImage,
@@ -973,7 +974,8 @@ function MemoEditor({
                         buttonSize="size-7"
                         iconSize="size-5"
                         className="rounded-full"
-                        onFileSelect={handleFileSelect}
+                        onFilesSelect={handleFilesSelect}
+                        multiple={true}
                         disabled={isDeleted}
                       />
                     </Tooltip>

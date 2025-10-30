@@ -3,20 +3,24 @@ import { Image } from "lucide-react";
 
 interface PhotoButtonProps {
   onFileSelect?: (file: File) => void;
+  onFilesSelect?: (files: File[]) => void;
   className?: string;
   disabled?: boolean;
   buttonSize?: string;
   iconSize?: string;
   accept?: string;
+  multiple?: boolean;
 }
 
 function PhotoButton({
   onFileSelect,
+  onFilesSelect,
   className = "",
   disabled = false,
   buttonSize = "size-7",
   iconSize = "size-4",
   accept = "image/jpeg,image/png,image/gif,image/webp,image/svg+xml,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain,text/csv",
+  multiple = false,
 }: PhotoButtonProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -26,10 +30,21 @@ function PhotoButton({
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && onFileSelect) {
-      onFileSelect(file);
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    if (multiple && onFilesSelect) {
+      // 複数選択モード
+      const fileArray = Array.from(files);
+      onFilesSelect(fileArray);
+    } else if (onFileSelect) {
+      // 単一選択モード（後方互換性）
+      const file = files[0];
+      if (file) {
+        onFileSelect(file);
+      }
     }
+
     // Reset input to allow selecting the same file again
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -52,6 +67,7 @@ function PhotoButton({
         ref={fileInputRef}
         type="file"
         accept={accept}
+        multiple={multiple}
         onChange={handleFileChange}
         className="hidden"
       />

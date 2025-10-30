@@ -100,7 +100,7 @@ export const useAttachmentManager = ({
     [showToast],
   );
 
-  // ファイル選択ハンドラー
+  // ファイル選択ハンドラー（単一）
   const handleFileSelect = useCallback(
     (file: File) => {
       // バリデーション
@@ -118,6 +118,41 @@ export const useAttachmentManager = ({
       }
 
       setPendingImages((prev) => [...prev, file]);
+    },
+    [
+      validateImageFile,
+      attachments,
+      pendingDeletes,
+      pendingImages.length,
+      showToast,
+    ],
+  );
+
+  // ファイル選択ハンドラー（複数）
+  const handleFilesSelect = useCallback(
+    (files: File[]) => {
+      const currentCount =
+        attachments.filter((a) => !pendingDeletes.includes(a.id)).length +
+        pendingImages.length;
+
+      const validFiles: File[] = [];
+
+      for (const file of files) {
+        // 上限チェック
+        if (currentCount + validFiles.length >= 10) {
+          showToast("画像は最大10枚までです", "error");
+          break;
+        }
+
+        // バリデーション
+        if (validateImageFile(file)) {
+          validFiles.push(file);
+        }
+      }
+
+      if (validFiles.length > 0) {
+        setPendingImages((prev) => [...prev, ...validFiles]);
+      }
     },
     [
       validateImageFile,
@@ -278,6 +313,7 @@ export const useAttachmentManager = ({
 
     // ハンドラー
     handleFileSelect,
+    handleFilesSelect,
     handlePaste,
     handleDeleteAttachment,
     handleDeletePendingImage,

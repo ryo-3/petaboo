@@ -26,6 +26,7 @@ import { useSelectAll } from "@/src/hooks/use-select-all";
 import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useTeamContext } from "@/contexts/team-context";
+import { useTeamDetail } from "@/src/contexts/team-detail-context";
 import {
   useBoards,
   useItemBoards,
@@ -83,14 +84,6 @@ function MobileAttachmentView({
     isDeleting,
     isUploading,
   } = attachmentManager;
-
-  if (!selectedMemo) {
-    return (
-      <div className="flex-1 min-h-0 flex flex-col items-center justify-center p-4">
-        <div className="text-sm text-gray-500">メモを選択してください</div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
@@ -192,6 +185,9 @@ function MemoScreen({
   const teamId = teamIdRaw ?? undefined; // Convert null to undefined for hook compatibility
   // 一括処理中断通知の監視
   useBulkProcessNotifications();
+
+  // TeamDetailContext（チームモードのみ）
+  const teamDetailContext = teamMode ? useTeamDetail() : null;
 
   // モバイル版メモエディターのアクティブタブ管理（チーム用）
   const [memoEditorTab, setMemoEditorTab] = useState<
@@ -344,6 +340,13 @@ function MemoScreen({
     preferences || undefined,
   );
   const memoScreenMode = screenMode as MemoScreenMode;
+
+  // チームモードで新規作成状態をContextに反映
+  useEffect(() => {
+    if (teamDetailContext) {
+      teamDetailContext.setIsCreatingMemo(memoScreenMode === "create");
+    }
+  }, [memoScreenMode, teamDetailContext]);
 
   // 保存完了後の処理（超シンプル）
   const handleSaveComplete = useCallback(
@@ -1324,9 +1327,23 @@ function MemoScreen({
         isOpen={memoScreenMode !== "list"}
         onClose={handleRightPanelClose}
       >
-        <div className="flex flex-col h-full">
-          {/* メモエディター部分 */}
+        {/* デスクトップ: メモエディターのみ */}
+        <div className="hidden md:flex md:flex-col h-full">
           <div className="flex-1">{centerPanelContent}</div>
+        </div>
+
+        {/* モバイル: タブ付き表示（メモ OR 画像 排他的表示） */}
+        <div className="md:hidden h-full flex flex-col bg-white">
+          {memoEditorTab === "memo" ? (
+            <div className="flex-1 min-h-0 flex flex-col">
+              {centerPanelContent}
+            </div>
+          ) : (
+            <MobileAttachmentView
+              selectedMemo={selectedMemo || null}
+              teamId={teamId}
+            />
+          )}
         </div>
       </RightPanel>
     </div>

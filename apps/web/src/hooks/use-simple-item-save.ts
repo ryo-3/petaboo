@@ -432,6 +432,12 @@ export function useSimpleItemSave<T extends UnifiedItem>({
         onSaveComplete?.(updatedItem, false, false);
       } else {
         // 新規アイテム作成（空の場合は何もしない）
+        console.log("🆕 [executeSave] 新規作成チェック", {
+          isEmpty,
+          hasTitle: !!title.trim(),
+          hasContent: !!content.trim(),
+        });
+
         if (!isEmpty) {
           const createData =
             itemType === "memo"
@@ -449,11 +455,15 @@ export function useSimpleItemSave<T extends UnifiedItem>({
                       : (status as "todo" | "in_progress" | "completed"),
                 };
 
+          console.log("📝 [executeSave] 新規作成データ", createData);
+
           let createdItem: T;
           if (itemType === "memo") {
             createdItem = (await createMemo.mutateAsync(createData)) as T;
+            console.log("✅ [executeSave] メモ作成成功", createdItem);
           } else {
             createdItem = (await createTask.mutateAsync(createData)) as T;
+            console.log("✅ [executeSave] タスク作成成功", createdItem);
           }
 
           // ボード選択時または初期ボードID指定時はボードに追加

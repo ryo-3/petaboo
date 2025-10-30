@@ -52,6 +52,9 @@ import { useEffect, useRef, useState, memo, useMemo, useCallback } from "react";
 import UrlPreview from "@/src/components/shared/url-preview";
 import { TiptapEditor, Toolbar } from "./tiptap-editor";
 import type { Editor } from "@tiptap/react";
+import { useAuth } from "@clerk/nextjs";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594";
 
 interface MemoEditorProps {
   memo: Memo | DeletedMemo | null;
@@ -127,6 +130,7 @@ function MemoEditor({
 }: MemoEditorProps) {
   const { isTeamMode: teamMode, teamId: teamIdRaw } = useTeamContext();
   const teamId = teamIdRaw ?? undefined; // Hook互換性のため変換
+  const { getToken } = useAuth();
 
   // ログを一度だけ出力（useEffectで管理）
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -613,13 +617,135 @@ function MemoEditor({
       return; // 削除済みの場合は保存しない
     }
 
-    try {
-      // まずメモを保存
-      await handleSave();
+    console.log("💾 [handleSaveWithTags] 保存開始", {
+      pendingImagesCount: pendingImages.length,
+      localTagsCount: localTags.length,
+      memoId: memo?.id,
+      hasContent: !!content.trim(),
+    });
 
-      // 保存後の処理用のoriginalIdを取得
-      let targetOriginalId =
-        memo && memo.id > 0 ? OriginalIdUtils.fromItem(memo) : null;
+    try {
+      // 新規作成で画像のみの場合（テキストなし）の特別処理
+      const isNewMemo = !memo || memo.id === 0;
+      const hasOnlyImages =
+        isNewMemo && !content.trim() && pendingImages.length > 0;
+
+      console.log("🔍 [handleSaveWithTags] 判定", {
+        isNewMemo,
+        hasOnlyImages,
+      });
+
+      let targetOriginalId: string | null = null;
+
+      if (hasOnlyImages) {
+        // 画像のみの場合は「無題」で新規作成
+        console.log("📸 [handleSaveWithTags] 画像のみ保存モード");
+        const newMemoData = {
+          title: " ", // 最低1文字必要なので半角スペース
+          content: "",
+        };
+
+        if (teamMode && teamId) {
+          // チームモード
+          const token = await getToken();
+          console.log("🔑 [handleSaveWithTags] トークン取得完了", {
+            hasToken: !!token,
+          });
+
+          const url = `${API_URL}/teams/${teamId}/memos`;
+          console.log("📡 [handleSaveWithTags] API呼び出し", {
+            url,
+            data: newMemoData,
+          });
+
+          const response = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token && { Authorization: `Bearer ${token}` }),
+            },
+            body: JSON.stringify(newMemoData),
+          });
+
+          console.log("📥 [handleSaveWithTags] レスポンス受信", {
+            status: response.status,
+            ok: response.ok,
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error("❌ [handleSaveWithTags] APIエラー詳細", {
+              status: response.status,
+              errorText,
+            });
+            throw new Error(
+              `チームメモの作成に失敗しました: ${response.status} - ${errorText}`,
+            );
+          }
+
+          const newMemo = await response.json();
+          targetOriginalId = OriginalIdUtils.fromItem(newMemo) || "";
+
+          // キャッシュ更新
+          queryClient.invalidateQueries({
+            queryKey: ["team-memos", teamId],
+          });
+        } else {
+          // 個人モード
+          const token = await getToken();
+          console.log("🔑 [handleSaveWithTags] トークン取得完了", {
+            hasToken: !!token,
+          });
+
+          const url = `${API_URL}/memos`;
+          console.log("📡 [handleSaveWithTags] API呼び出し", {
+            url,
+            data: newMemoData,
+          });
+
+          const response = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token && { Authorization: `Bearer ${token}` }),
+            },
+            body: JSON.stringify(newMemoData),
+          });
+
+          console.log("📥 [handleSaveWithTags] レスポンス受信", {
+            status: response.status,
+            ok: response.ok,
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error("❌ [handleSaveWithTags] APIエラー詳細", {
+              status: response.status,
+              errorText,
+            });
+            throw new Error(
+              `メモの作成に失敗しました: ${response.status} - ${errorText}`,
+            );
+          }
+
+          const newMemo = await response.json();
+          targetOriginalId = OriginalIdUtils.fromItem(newMemo) || "";
+
+          // キャッシュ更新
+          queryClient.invalidateQueries({ queryKey: ["memos"] });
+        }
+
+        console.log("✅ [handleSaveWithTags] 画像のみメモ作成完了", {
+          targetOriginalId,
+        });
+      } else {
+        // 通常の保存処理
+        await handleSave();
+
+        // 保存後の処理用のoriginalIdを取得
+        targetOriginalId =
+          memo && memo.id > 0 ? (OriginalIdUtils.fromItem(memo) ?? null) : null;
+      }
 
       // 保存後、タグも更新
       if (memo && memo.id > 0) {
@@ -653,13 +779,51 @@ function MemoEditor({
       const hasDeletes = pendingDeletes.length > 0;
       const hasUploads = pendingImages.length > 0;
 
+      console.log("📤 [handleSaveWithTags] 画像処理チェック", {
+        hasDeletes,
+        hasUploads,
+        targetOriginalId,
+      });
+
       if (hasDeletes) {
         await deletePendingAttachments();
       }
 
       // 保存待ちの画像を一括アップロード（完了トーストはuploadPendingImagesが表示）
       if (hasUploads && targetOriginalId) {
-        await uploadPendingImages();
+        console.log("📸 [handleSaveWithTags] 画像アップロード開始", {
+          targetOriginalId,
+          imageCount: pendingImages.length,
+        });
+        await uploadPendingImages(targetOriginalId);
+
+        // 画像のみ保存の場合、作成されたメモを選択してビューモードに切り替え
+        if (hasOnlyImages) {
+          const queryKey =
+            teamMode && teamId ? ["team-memos", teamId] : ["memos"];
+          await queryClient.invalidateQueries({ queryKey });
+
+          // 少し遅延させて最新のメモリストから取得
+          await new Promise((resolve) => setTimeout(resolve, 100));
+
+          const memosQuery = queryClient.getQueryData<Memo[]>(queryKey);
+          if (memosQuery && memosQuery.length > 0) {
+            // 最新のメモ（作成時刻順で最後）を取得
+            const latestMemo = [...memosQuery].sort(
+              (a, b) => b.createdAt - a.createdAt,
+            )[0];
+
+            if (latestMemo && onSaveComplete) {
+              console.log(
+                "✅ [handleSaveWithTags] 画像のみメモ完了、ビューモードに切り替え",
+                {
+                  memoId: latestMemo.id,
+                },
+              );
+              onSaveComplete(latestMemo, false, true);
+            }
+          }
+        }
       }
     } catch (error) {
       console.error("保存に失敗しました:", error);
@@ -676,6 +840,11 @@ function MemoEditor({
     uploadPendingImages,
     deletePendingAttachments,
     showToast,
+    content,
+    teamMode,
+    teamId,
+    getToken,
+    onSaveComplete,
   ]);
 
   // BoardIconSelector用のボードオプション

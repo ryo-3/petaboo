@@ -13,6 +13,11 @@ interface TeamDetailContextType {
   setSelectedMemoId: (id: number | null) => void;
   selectedTaskId: number | null;
   setSelectedTaskId: (id: number | null) => void;
+  // メモ・タスクの新規作成状態
+  isCreatingMemo: boolean;
+  setIsCreatingMemo: (isCreating: boolean) => void;
+  isCreatingTask: boolean;
+  setIsCreatingTask: (isCreating: boolean) => void;
   // メモエディターの未保存変更状態とモーダル表示関数
   memoEditorHasUnsavedChangesRef: React.MutableRefObject<boolean>;
   memoEditorShowConfirmModalRef: React.MutableRefObject<(() => void) | null>;
@@ -38,6 +43,8 @@ const TeamDetailContext = createContext<TeamDetailContextType | undefined>(
 export function TeamDetailProvider({ children }: { children: ReactNode }) {
   const [selectedMemoId, setSelectedMemoId] = useState<number | null>(null);
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
+  const [isCreatingMemo, setIsCreatingMemo] = useState(false);
+  const [isCreatingTask, setIsCreatingTask] = useState(false);
   const [imageCount, setImageCount] = useState(0);
   const [commentCount, setCommentCount] = useState(0);
   const [taskImageCount, setTaskImageCount] = useState(0);
@@ -54,6 +61,10 @@ export function TeamDetailProvider({ children }: { children: ReactNode }) {
         setSelectedMemoId,
         selectedTaskId,
         setSelectedTaskId,
+        isCreatingMemo,
+        setIsCreatingMemo,
+        isCreatingTask,
+        setIsCreatingTask,
         memoEditorHasUnsavedChangesRef,
         memoEditorShowConfirmModalRef,
         taskEditorHasUnsavedChangesRef,

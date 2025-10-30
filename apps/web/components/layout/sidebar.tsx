@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigation } from "@/contexts/navigation-context";
+import { useTeamDetail } from "@/src/contexts/team-detail-context";
 import { useClerk } from "@clerk/nextjs";
 import DashboardIcon from "@/components/icons/dashboard-icon";
 import DashboardEditIcon from "@/components/icons/dashboard-edit-icon";
@@ -76,6 +77,14 @@ function Sidebar({
 }: SidebarProps) {
   // NavigationContextから統一されたiconStatesを取得
   const { iconStates } = useNavigation();
+  // TeamDetailContextから新規作成状態を取得（チームモード外ではエラーになるのでtry-catch）
+  let isCreatingMemo = false;
+  try {
+    const teamDetail = useTeamDetail();
+    isCreatingMemo = teamDetail.isCreatingMemo;
+  } catch {
+    // チームモード外では無視
+  }
   // Clerkのログアウト機能
   const { signOut } = useClerk();
   // 通知数を取得（一時的に0に設定）
@@ -121,7 +130,8 @@ function Sidebar({
   ];
 
   // モバイルでメモエディターが開いている場合は専用フッターを表示
-  const isShowingMemoEditor = selectedMemoId !== undefined;
+  // 新規作成時（selectedMemoId === null かつ isCreatingMemo === true）も含む
+  const isShowingMemoEditor = selectedMemoId !== undefined || isCreatingMemo;
 
   // モバイルフッター（PCでは非表示、モバイルでメモ選択時のみ表示）
   const mobileFooter = isShowingMemoEditor ? (

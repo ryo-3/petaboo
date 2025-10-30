@@ -299,8 +299,8 @@ export default function CommentSection({
   // 画像添付用の状態
   const [pendingImages, setPendingImages] = useState<File[]>([]);
 
-  // 折りたたみ状態
-  const [isExpanded, setIsExpanded] = useState(false);
+  // 折りたたみ状態（モバイルでは常に展開）
+  const [isExpanded, setIsExpanded] = useState(true);
 
   // オートコンプリート用のstate
   const [showMentionSuggestions, setShowMentionSuggestions] = useState(false);
@@ -623,7 +623,8 @@ export default function CommentSection({
 
   return (
     <>
-      <div className="p-4 flex-shrink-0 flex items-center justify-between">
+      {/* デスクトップ: トグルボタン表示 / モバイル: 非表示 */}
+      <div className="p-4 flex-shrink-0 items-center justify-between hidden md:flex">
         <button
           onClick={() => setIsExpanded(!isExpanded)}
           className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"

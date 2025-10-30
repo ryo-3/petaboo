@@ -113,6 +113,11 @@ function MemoScreen({
   // 一括処理中断通知の監視
   useBulkProcessNotifications();
 
+  // モバイル版メモエディターのアクティブタブ管理（チーム用）
+  const [memoEditorTab, setMemoEditorTab] = useState<"memo" | "comment">(
+    "memo",
+  );
+
   // 選択モード管理
   const [selectionMode, setSelectionMode] = useState<"select" | "check">(
     initialSelectionMode,
@@ -554,6 +559,21 @@ function MemoScreen({
     };
   }, [teamMode, handleCreateNew]);
 
+  // モバイル版メモエディターのタブ切り替えイベントをリッスン（チームモードのみ）
+  useEffect(() => {
+    if (!teamMode) return;
+
+    const handleTabChange = (e: Event) => {
+      const customEvent = e as CustomEvent<{ tab: "memo" | "comment" }>;
+      setMemoEditorTab(customEvent.detail.tab);
+    };
+
+    window.addEventListener("memo-editor-tab-change", handleTabChange);
+    return () => {
+      window.removeEventListener("memo-editor-tab-change", handleTabChange);
+    };
+  }, [teamMode]);
+
   // 除外アイテムIDでフィルタリングされたメモ（originalIdで比較）
   const filteredMemos =
     memos?.filter(
@@ -879,12 +899,17 @@ function MemoScreen({
         />
       </div>
 
-      {/* モバイル: 1パネル表示（詳細+コメント縦並び） */}
+      {/* モバイル: 1パネル表示（メモ OR コメント排他的表示） */}
       <div className="md:hidden h-full flex flex-col bg-white">
-        <div className="flex-1 min-h-0 flex flex-col">{centerPanelContent}</div>
-        <div className="flex-shrink-0 max-h-[40vh] overflow-y-auto hover-scrollbar">
-          {rightPanelContent}
-        </div>
+        {memoEditorTab === "memo" ? (
+          <div className="flex-1 min-h-0 flex flex-col">
+            {centerPanelContent}
+          </div>
+        ) : (
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+            {rightPanelContent}
+          </div>
+        )}
       </div>
 
       {/* モーダル（3パネルレイアウト外側） */}

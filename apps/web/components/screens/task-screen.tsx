@@ -561,7 +561,7 @@ function TaskScreen({
         floatControls={true}
       />
 
-      <div className="mt-[88px] md:mt-0">
+      <div className="mt-[70px] md:mt-0">
         <DesktopLower
           currentMode="task"
           activeTab={activeTabTyped}
@@ -906,7 +906,7 @@ function TaskScreen({
           floatControls={teamMode}
         />
 
-        <div className="mt-[88px] md:mt-0">
+        <div className="mt-[70px] md:mt-0">
           <DesktopLower
             currentMode="task"
             activeTab={activeTabTyped}

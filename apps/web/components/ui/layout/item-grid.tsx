@@ -42,9 +42,15 @@ function ItemGrid({
 
   return (
     <div
-      className={`flex-1 overflow-y-auto overflow-x-hidden hover-scrollbar ${isBoard ? "" : "pr-2"} pb-20 md:pb-10 mb-2`}
+      className={`flex-1 overflow-y-auto overflow-x-hidden hover-scrollbar ${isBoard ? "" : "pr-2"} mb-2`}
     >
+      {/* 上部余白用の空要素（固定ヘッダー分） */}
+      {!isBoard && <div className="h-[70px] md:h-0" />}
+
       <div className={getGridClassName()}>{children}</div>
+
+      {/* 下部余白用の空要素（モバイルナビゲーションバー分） */}
+      {!isBoard && <div className="h-[80px] md:h-0" />}
     </div>
   );
 }

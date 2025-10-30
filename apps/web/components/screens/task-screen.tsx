@@ -561,48 +561,50 @@ function TaskScreen({
         floatControls={true}
       />
 
-      <DesktopLower
-        currentMode="task"
-        activeTab={activeTabTyped}
-        viewMode={viewMode}
-        effectiveColumnCount={effectiveColumnCount}
-        isLoading={taskLoading}
-        error={taskError}
-        selectionMode={selectionMode}
-        sortOptions={getVisibleSortOptions(activeTab)}
-        showEditDate={showEditDate}
-        showBoardName={showBoardName}
-        showTags={showTagDisplay}
-        selectedBoardIds={selectedBoardIds}
-        boardFilterMode={boardFilterMode}
-        selectedTagIds={selectedTagIds}
-        tagFilterMode={tagFilterMode}
-        tasks={filteredTasks}
-        deletedTasks={deletedTasks || []}
-        selectedTask={selectedTask}
-        selectedDeletedTask={selectedDeletedTask}
-        checkedTasks={checkedTasks}
-        checkedDeletedTasks={checkedDeletedTasks}
-        onToggleCheckTask={createToggleHandlerWithTabClear(
-          checkedTasks,
-          setCheckedTasks,
-          [setCheckedDeletedTasks],
-        )}
-        onToggleCheckDeletedTask={createToggleHandlerWithTabClear(
-          checkedDeletedTasks,
-          setCheckedDeletedTasks,
-          [setCheckedTasks],
-        )}
-        onSelectTask={handleSelectTask}
-        onSelectDeletedTask={handleSelectDeletedTask}
-        allTags={tags || []}
-        allBoards={boards || []}
-        allTaggings={safeAllTaggings}
-        allTeamTaggings={safeAllTeamTaggings}
-        allBoardItems={safeAllBoardItems}
-        teamMode={teamMode}
-        teamId={teamId}
-      />
+      <div className="mt-[88px] md:mt-0">
+        <DesktopLower
+          currentMode="task"
+          activeTab={activeTabTyped}
+          viewMode={viewMode}
+          effectiveColumnCount={effectiveColumnCount}
+          isLoading={taskLoading}
+          error={taskError}
+          selectionMode={selectionMode}
+          sortOptions={getVisibleSortOptions(activeTab)}
+          showEditDate={showEditDate}
+          showBoardName={showBoardName}
+          showTags={showTagDisplay}
+          selectedBoardIds={selectedBoardIds}
+          boardFilterMode={boardFilterMode}
+          selectedTagIds={selectedTagIds}
+          tagFilterMode={tagFilterMode}
+          tasks={filteredTasks}
+          deletedTasks={deletedTasks || []}
+          selectedTask={selectedTask}
+          selectedDeletedTask={selectedDeletedTask}
+          checkedTasks={checkedTasks}
+          checkedDeletedTasks={checkedDeletedTasks}
+          onToggleCheckTask={createToggleHandlerWithTabClear(
+            checkedTasks,
+            setCheckedTasks,
+            [setCheckedDeletedTasks],
+          )}
+          onToggleCheckDeletedTask={createToggleHandlerWithTabClear(
+            checkedDeletedTasks,
+            setCheckedDeletedTasks,
+            [setCheckedTasks],
+          )}
+          onSelectTask={handleSelectTask}
+          onSelectDeletedTask={handleSelectDeletedTask}
+          allTags={tags || []}
+          allBoards={boards || []}
+          allTaggings={safeAllTaggings}
+          allTeamTaggings={safeAllTeamTaggings}
+          allBoardItems={safeAllBoardItems}
+          teamMode={teamMode}
+          teamId={teamId}
+        />
+      </div>
 
       {/* 一括操作ボタン */}
       {!hideBulkActionButtons && (
@@ -904,48 +906,50 @@ function TaskScreen({
           floatControls={teamMode}
         />
 
-        <DesktopLower
-          currentMode="task"
-          activeTab={activeTabTyped}
-          viewMode={viewMode}
-          effectiveColumnCount={effectiveColumnCount}
-          isLoading={taskLoading}
-          error={taskError}
-          selectionMode={selectionMode}
-          sortOptions={getVisibleSortOptions(activeTab)}
-          showEditDate={showEditDate}
-          showBoardName={showBoardName}
-          showTags={showTagDisplay}
-          selectedBoardIds={selectedBoardIds}
-          boardFilterMode={boardFilterMode}
-          selectedTagIds={selectedTagIds}
-          tagFilterMode={tagFilterMode}
-          tasks={filteredTasks}
-          deletedTasks={deletedTasks || []}
-          selectedTask={selectedTask}
-          selectedDeletedTask={selectedDeletedTask}
-          checkedTasks={checkedTasks}
-          checkedDeletedTasks={checkedDeletedTasks}
-          onToggleCheckTask={createToggleHandlerWithTabClear(
-            checkedTasks,
-            setCheckedTasks,
-            [setCheckedDeletedTasks],
-          )}
-          onToggleCheckDeletedTask={createToggleHandlerWithTabClear(
-            checkedDeletedTasks,
-            setCheckedDeletedTasks,
-            [setCheckedTasks],
-          )}
-          onSelectTask={handleSelectTask}
-          onSelectDeletedTask={handleSelectDeletedTask}
-          allTags={tags || []}
-          allBoards={boards || []}
-          allTaggings={safeAllTaggings}
-          allTeamTaggings={safeAllTeamTaggings}
-          allBoardItems={safeAllBoardItems}
-          teamMode={teamMode}
-          teamId={teamId}
-        />
+        <div className="mt-[88px] md:mt-0">
+          <DesktopLower
+            currentMode="task"
+            activeTab={activeTabTyped}
+            viewMode={viewMode}
+            effectiveColumnCount={effectiveColumnCount}
+            isLoading={taskLoading}
+            error={taskError}
+            selectionMode={selectionMode}
+            sortOptions={getVisibleSortOptions(activeTab)}
+            showEditDate={showEditDate}
+            showBoardName={showBoardName}
+            showTags={showTagDisplay}
+            selectedBoardIds={selectedBoardIds}
+            boardFilterMode={boardFilterMode}
+            selectedTagIds={selectedTagIds}
+            tagFilterMode={tagFilterMode}
+            tasks={filteredTasks}
+            deletedTasks={deletedTasks || []}
+            selectedTask={selectedTask}
+            selectedDeletedTask={selectedDeletedTask}
+            checkedTasks={checkedTasks}
+            checkedDeletedTasks={checkedDeletedTasks}
+            onToggleCheckTask={createToggleHandlerWithTabClear(
+              checkedTasks,
+              setCheckedTasks,
+              [setCheckedDeletedTasks],
+            )}
+            onToggleCheckDeletedTask={createToggleHandlerWithTabClear(
+              checkedDeletedTasks,
+              setCheckedDeletedTasks,
+              [setCheckedTasks],
+            )}
+            onSelectTask={handleSelectTask}
+            onSelectDeletedTask={handleSelectDeletedTask}
+            allTags={tags || []}
+            allBoards={boards || []}
+            allTaggings={safeAllTaggings}
+            allTeamTaggings={safeAllTeamTaggings}
+            allBoardItems={safeAllBoardItems}
+            teamMode={teamMode}
+            teamId={teamId}
+          />
+        </div>
 
         {/* 一括操作ボタン */}
         {!hideBulkActionButtons && (

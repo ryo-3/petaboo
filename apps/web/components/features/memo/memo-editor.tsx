@@ -1160,20 +1160,18 @@ function MemoEditor({
             />
           </BaseViewer>
 
-          {/* 画像添付ギャラリー（デスクトップのみ表示、モバイルは画像タブで表示） */}
+          {/* 画像添付ギャラリー */}
           {teamMode && (
-            <div className="hidden md:block">
-              <AttachmentGallery
-                attachments={attachments}
-                onDelete={handleDeleteAttachment}
-                isDeleting={isDeleting}
-                pendingImages={pendingImages}
-                onDeletePending={handleDeletePendingImage}
-                pendingDeletes={pendingDeletes}
-                onRestore={handleRestoreAttachment}
-                isUploading={isUploading}
-              />
-            </div>
+            <AttachmentGallery
+              attachments={attachments}
+              onDelete={handleDeleteAttachment}
+              isDeleting={isDeleting}
+              pendingImages={pendingImages}
+              onDeletePending={handleDeletePendingImage}
+              pendingDeletes={pendingDeletes}
+              onRestore={handleRestoreAttachment}
+              isUploading={isUploading}
+            />
           )}
         </div>
       </div>

@@ -161,17 +161,14 @@ export function useSimpleItemSave<T extends UnifiedItem>({
 
     // 初期同期中はボード変更を無視
     if (isInitialSync) {
-      const result = textChanged || taskFieldsChanged;
-      return result;
+      return textChanged || taskFieldsChanged;
     }
 
     const hasBoardChanges =
       JSON.stringify([...selectedBoardIds].sort()) !==
       JSON.stringify([...currentBoardIds].sort());
 
-    const result = textChanged || taskFieldsChanged || hasBoardChanges;
-
-    return result;
+    return textChanged || taskFieldsChanged || hasBoardChanges;
   }, [
     title,
     content,

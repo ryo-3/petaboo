@@ -16,6 +16,7 @@ import TagTriggerButton from "@/components/features/tags/tag-trigger-button";
 import TagSelectionModal from "@/components/ui/modals/tag-selection-modal";
 import { useSimpleItemSave } from "@/src/hooks/use-simple-item-save";
 import { useTeamContext } from "@/contexts/team-context";
+import { useTeamDetail } from "@/src/contexts/team-detail-context";
 import {
   useCreateTagging,
   useDeleteTagging,
@@ -446,14 +447,23 @@ function MemoEditor({
     return JSON.stringify(currentTagIds) !== JSON.stringify(localTagIds);
   }, [currentTags, localTags, memo]);
 
-  // 未保存の変更があるかチェック
+  // 未保存の変更があるかチェック（useMemoで確実に再計算）
   const isNewMemo = !memo || memo.id === 0;
-  const hasUnsavedChanges = isNewMemo
-    ? !!content.trim() || pendingImages.length > 0
-    : hasChanges ||
-      hasTagChanges ||
-      pendingImages.length > 0 ||
-      pendingDeletes.length > 0;
+  const hasUnsavedChanges = useMemo(() => {
+    return isNewMemo
+      ? !!content.trim() || pendingImages.length > 0
+      : hasChanges ||
+          hasTagChanges ||
+          pendingImages.length > 0 ||
+          pendingDeletes.length > 0;
+  }, [
+    isNewMemo,
+    content,
+    pendingImages.length,
+    hasChanges,
+    hasTagChanges,
+    pendingDeletes.length,
+  ]);
 
   // チーム機能でのURL共有用
   const shareUrl = useMemo(() => {
@@ -759,6 +769,57 @@ function MemoEditor({
     pendingDeletes,
   ]);
 
+  // TeamDetailContext経由でモバイルフッターに状態を公開
+  const teamDetailContext = teamMode ? useTeamDetail() : null;
+
+  // Contextに最新の状態を常に反映
+  useEffect(() => {
+    if (teamDetailContext) {
+      teamDetailContext.memoEditorHasUnsavedChangesRef.current =
+        hasUnsavedChanges;
+      teamDetailContext.memoEditorShowConfirmModalRef.current = () => {
+        setIsCloseConfirmModalOpen(true);
+      };
+    }
+  }, [hasUnsavedChanges, teamDetailContext]);
+
+  // モバイルフッター戻るボタンイベント（Context経由）
+  useEffect(() => {
+    const handleMobileBackRequested = () => {
+      if (teamMode && teamDetailContext) {
+        // Contextから最新の状態を読み取る
+        const currentHasUnsavedChanges =
+          teamDetailContext.memoEditorHasUnsavedChangesRef.current;
+        const showModal =
+          teamDetailContext.memoEditorShowConfirmModalRef.current;
+
+        if (currentHasUnsavedChanges && showModal) {
+          showModal();
+        } else {
+          onClose();
+        }
+      } else {
+        // 個人ページの場合は直接判定
+        if (hasUnsavedChanges) {
+          setIsCloseConfirmModalOpen(true);
+        } else {
+          onClose();
+        }
+      }
+    };
+
+    window.addEventListener(
+      "memo-editor-mobile-back-requested",
+      handleMobileBackRequested,
+    );
+    return () => {
+      window.removeEventListener(
+        "memo-editor-mobile-back-requested",
+        handleMobileBackRequested,
+      );
+    };
+  }, [teamMode, teamDetailContext, hasUnsavedChanges, onClose]);
+
   // ボード名を取得するためのヘルパー関数
   const getBoardName = (boardId: number) => {
     const board = boards.find((b) => b.id === boardId);
@@ -845,11 +906,12 @@ function MemoEditor({
             {/* ここにheaderActionsの内容を直接配置 */}
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-2">
-                {/* 閉じるボタン（チームモードのみ表示） */}
+                {/* 閉じるボタン（チームモードのみ表示、モバイルではフッターに表示） */}
                 {teamMode && (
                   <button
                     onClick={handleCloseClick}
-                    className="flex items-center justify-center size-7 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 transition-colors"
+                    className="hidden md:flex items-center justify-center size-7 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 transition-colors"
+                    data-memo-close-button="true"
                   >
                     <svg
                       className="size-4 rotate-180 md:rotate-0"

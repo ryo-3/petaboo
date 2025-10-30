@@ -122,8 +122,9 @@ function Sidebar({
       <div className="md:hidden w-full h-full">
         <MemoEditorFooter
           onBack={() => {
-            onSelectMemo(null as unknown as Memo);
-            onShowFullList();
+            window.dispatchEvent(
+              new CustomEvent("memo-editor-mobile-back-requested"),
+            );
           }}
           onMemoClick={() =>
             window.dispatchEvent(

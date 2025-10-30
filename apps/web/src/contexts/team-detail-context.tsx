@@ -1,12 +1,21 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useRef,
+} from "react";
 
 interface TeamDetailContextType {
   selectedMemoId: number | null;
   setSelectedMemoId: (id: number | null) => void;
   selectedTaskId: number | null;
   setSelectedTaskId: (id: number | null) => void;
+  // メモエディターの未保存変更状態とモーダル表示関数
+  memoEditorHasUnsavedChangesRef: React.MutableRefObject<boolean>;
+  memoEditorShowConfirmModalRef: React.MutableRefObject<(() => void) | null>;
 }
 
 const TeamDetailContext = createContext<TeamDetailContextType | undefined>(
@@ -16,6 +25,8 @@ const TeamDetailContext = createContext<TeamDetailContextType | undefined>(
 export function TeamDetailProvider({ children }: { children: ReactNode }) {
   const [selectedMemoId, setSelectedMemoId] = useState<number | null>(null);
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
+  const memoEditorHasUnsavedChangesRef = useRef(false);
+  const memoEditorShowConfirmModalRef = useRef<(() => void) | null>(null);
 
   return (
     <TeamDetailContext.Provider
@@ -24,6 +35,8 @@ export function TeamDetailProvider({ children }: { children: ReactNode }) {
         setSelectedMemoId,
         selectedTaskId,
         setSelectedTaskId,
+        memoEditorHasUnsavedChangesRef,
+        memoEditorShowConfirmModalRef,
       }}
     >
       {children}

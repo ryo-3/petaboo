@@ -297,7 +297,7 @@ function MainClient({
   ]);
 
   return (
-    <main className="relative">
+    <main className="relative md:h-dvh md:overflow-hidden">
       {/* エラー表示領域 */}
       <ErrorDisplay errors={errors} onClearErrors={clearErrors} />
 

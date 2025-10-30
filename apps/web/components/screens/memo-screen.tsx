@@ -1114,42 +1114,47 @@ function MemoScreen({
           headerMarginBottom="mb-1.5"
         />
 
-        <DesktopLower
-          currentMode="memo"
-          activeTab={displayTab as "normal" | "deleted"}
-          viewMode={viewMode}
-          effectiveColumnCount={effectiveColumnCount}
-          isLoading={memoLoading}
-          error={memoError}
-          selectionMode={selectionMode}
-          sortOptions={getVisibleSortOptions(activeTab)}
-          showEditDate={showEditDate}
-          showBoardName={showBoardName}
-          showTags={showTagDisplay}
-          selectedBoardIds={selectedBoardIds}
-          boardFilterMode={boardFilterMode}
-          selectedTagIds={selectedTagIds}
-          tagFilterMode={tagFilterMode}
-          memos={filteredMemos}
-          localMemos={filteredMemos}
-          deletedMemos={deletedMemos || []}
-          selectedMemo={selectedMemo}
-          selectedDeletedMemo={selectedDeletedMemo}
-          checkedMemos={checkedMemos}
-          checkedDeletedMemos={checkedDeletedMemos}
-          onToggleCheckMemo={createToggleHandler(checkedMemos, setCheckedMemos)}
-          onToggleCheckDeletedMemo={createToggleHandler(
-            checkedDeletedMemos,
-            setCheckedDeletedMemos,
-          )}
-          onSelectMemo={handleSelectMemo}
-          onSelectDeletedMemo={handleSelectDeletedMemo}
-          teamMode={teamMode}
-          allTags={tags || []}
-          allBoards={boards || []}
-          allTaggings={safeAllTaggings || []}
-          allBoardItems={safeAllBoardItems || []}
-        />
+        <div className="mt-[70px] md:mt-0">
+          <DesktopLower
+            currentMode="memo"
+            activeTab={displayTab as "normal" | "deleted"}
+            viewMode={viewMode}
+            effectiveColumnCount={effectiveColumnCount}
+            isLoading={memoLoading}
+            error={memoError}
+            selectionMode={selectionMode}
+            sortOptions={getVisibleSortOptions(activeTab)}
+            showEditDate={showEditDate}
+            showBoardName={showBoardName}
+            showTags={showTagDisplay}
+            selectedBoardIds={selectedBoardIds}
+            boardFilterMode={boardFilterMode}
+            selectedTagIds={selectedTagIds}
+            tagFilterMode={tagFilterMode}
+            memos={filteredMemos}
+            localMemos={filteredMemos}
+            deletedMemos={deletedMemos || []}
+            selectedMemo={selectedMemo}
+            selectedDeletedMemo={selectedDeletedMemo}
+            checkedMemos={checkedMemos}
+            checkedDeletedMemos={checkedDeletedMemos}
+            onToggleCheckMemo={createToggleHandler(
+              checkedMemos,
+              setCheckedMemos,
+            )}
+            onToggleCheckDeletedMemo={createToggleHandler(
+              checkedDeletedMemos,
+              setCheckedDeletedMemos,
+            )}
+            onSelectMemo={handleSelectMemo}
+            onSelectDeletedMemo={handleSelectDeletedMemo}
+            teamMode={teamMode}
+            allTags={tags || []}
+            allBoards={boards || []}
+            allTaggings={safeAllTaggings || []}
+            allBoardItems={safeAllBoardItems || []}
+          />
+        </div>
 
         {/* 一括操作ボタン */}
         {!hideBulkActionButtons && (

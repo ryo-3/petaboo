@@ -139,23 +139,7 @@ function DesktopLower({
   allTeamTaggings = [],
   allBoardItems,
 }: DesktopLowerProps) {
-  // Loading state
-  if (currentMode === "memo" ? isLoading : isLoading) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center text-gray-500">読み込み中...</div>
-      </div>
-    );
-  }
-
-  // Error state
-  if (currentMode === "memo" ? error : error) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center text-red-500">エラーが発生しました</div>
-      </div>
-    );
-  }
+  // Loading/Error state を削除 - placeholderDataで即座に画面を表示
 
   // メモの通常タブ
   if (activeTab === "normal" && currentMode === "memo") {

@@ -44,6 +44,8 @@ interface NavigationContextType {
   isFromBoardDetail: boolean;
   setIsFromBoardDetail: (value: boolean) => void;
   iconStates: IconStates;
+  // 楽観的更新（即座にアイコンを切り替える）
+  setOptimisticMode: (mode: "memo" | "task" | "board" | null) => void;
   // UI状態管理（Sidebarとの統一のため）
   showTeamList: boolean;
   setShowTeamList: (show: boolean) => void;
@@ -98,72 +100,74 @@ export function NavigationProvider({
     initialShowingBoardDetail,
   );
 
+  // 楽観的更新用の一時的なモード（URL変更前に即座に反映）
+  const [optimisticMode, setOptimisticMode] = useState<
+    "memo" | "task" | "board" | null
+  >(null);
+
   const pathname = usePathname();
 
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
 
-  // Sidebarの詳細なiconStates計算ロジック（統一版）
+  // Sidebarの詳細なiconStates計算ロジック（統一版・最適化・楽観的更新対応）
   const iconStates = useMemo((): IconStates => {
-    // URL-based page state detection（Sidebarから移植）
-    const isHomePage = pathname === "/";
-    const isNormalTeamPage = pathname === "/team";
-    const isTeamDetailPageUrl =
-      pathname.startsWith("/team/") && pathname !== "/team";
     const currentTab = searchParams.get("tab");
 
-    // チーム詳細ページのタブ判定
-    const isTeamOverview =
-      isTeamDetailPageUrl &&
-      !pathname.includes("/board/") &&
-      (!currentTab || currentTab === "overview");
-    const isTeamMemos = isTeamDetailPageUrl && currentTab === "memos";
-    const isTeamTasks = isTeamDetailPageUrl && currentTab === "tasks";
-    const isTeamBoards = isTeamDetailPageUrl && currentTab === "boards";
-    const isTeamListTab = isTeamDetailPageUrl && currentTab === "team-list";
-    const isTeamSettingsTab =
-      isTeamDetailPageUrl && currentTab === "team-settings";
-    const isTeamListPage = isNormalTeamPage;
-    const isTeamDetailPage = isTeamDetailPageUrl;
+    // URLパターンの早期判定
+    const isTeamDetailPageUrl =
+      pathname.startsWith("/team/") && pathname !== "/team";
+    const isBoardPath = pathname.includes("/board/");
 
-    // チームボード詳細ページの判定
-    const isTeamBoardDetailPage =
-      isTeamDetailPageUrl && pathname.includes("/board/");
+    // チーム詳細ページのタブ判定（最適化・楽観的更新対応）
+    if (isTeamDetailPageUrl) {
+      const isTeamBoardDetailPage = isBoardPath;
+      const isTeamSettingsTab = currentTab === "team-settings";
 
-    const boardDetailActive =
-      ((currentMode === "board" &&
-        showingBoardDetail &&
-        !isTeamOverview &&
-        !isTeamMemos &&
-        !isTeamTasks &&
-        !isTeamBoards &&
-        !isTeamListTab &&
-        !isTeamSettingsTab) ||
-        isTeamBoardDetailPage) &&
-      screenMode !== "home" &&
-      screenMode !== "search" &&
-      screenMode !== "settings" &&
-      screenMode !== "team" &&
-      screenMode !== "loading";
+      // 楽観的モードがある場合は即座に反映
+      const effectiveTab = optimisticMode
+        ? optimisticMode === "memo"
+          ? "memos"
+          : optimisticMode === "task"
+            ? "tasks"
+            : "boards"
+        : currentTab;
+
+      return {
+        home: !effectiveTab || effectiveTab === "overview",
+        memo: effectiveTab === "memos" || optimisticMode === "memo",
+        task: effectiveTab === "tasks" || optimisticMode === "task",
+        board:
+          (effectiveTab === "boards" || optimisticMode === "board") &&
+          !isTeamBoardDetailPage,
+        boardDetail: isTeamBoardDetailPage,
+        search: false,
+        settings: isTeamSettingsTab,
+        team:
+          effectiveTab === "team-list" ||
+          (!effectiveTab && screenMode === "team"),
+      };
+    }
+
+    // 個人ページの判定（screenModeベース・楽観的更新対応）
+    const effectiveMode = optimisticMode || currentMode;
+    const boardDetailActive = effectiveMode === "board" && showingBoardDetail;
 
     return {
-      home:
-        (screenMode === "home" && !showTeamList && !isTeamBoardDetailPage) ||
-        isTeamOverview,
-      memo: screenMode === "memo" || isTeamMemos,
-      task: screenMode === "task" || isTeamTasks,
+      home: screenMode === "home" && !showTeamList,
+      memo: screenMode === "memo" || optimisticMode === "memo",
+      task: screenMode === "task" || optimisticMode === "task",
       board:
-        ((screenMode === "board" && !isTeamDetailPage) || isTeamBoards) &&
+        (screenMode === "board" || optimisticMode === "board") &&
         !boardDetailActive,
       boardDetail: boardDetailActive,
       search: screenMode === "search",
-      settings: screenMode === "settings" || isTeamSettingsTab,
+      settings: screenMode === "settings",
       team:
-        (isTeamListPage ||
-          showTeamList ||
-          showTeamCreate ||
-          screenMode === "team") &&
-        !isTeamSettingsTab, // チーム設定画面ではチームアイコンを無効化
+        pathname === "/team" ||
+        showTeamList ||
+        showTeamCreate ||
+        screenMode === "team",
     };
   }, [
     screenMode,
@@ -173,7 +177,13 @@ export function NavigationProvider({
     showTeamList,
     showTeamCreate,
     showingBoardDetail,
+    optimisticMode,
   ]);
+
+  // URL変更時にoptimisticModeをクリア
+  useEffect(() => {
+    setOptimisticMode(null);
+  }, [pathname, searchParams]);
 
   // デバッグ用: スクリーンモード変更をログ出力
   useEffect(() => {
@@ -226,6 +236,7 @@ export function NavigationProvider({
         isFromBoardDetail,
         setIsFromBoardDetail,
         iconStates,
+        setOptimisticMode,
         showTeamList,
         setShowTeamList,
         showTeamCreate,

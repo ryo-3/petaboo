@@ -75,8 +75,8 @@ function Sidebar({
   imageCount = 0,
   commentCount = 0,
 }: SidebarProps) {
-  // NavigationContextから統一されたiconStatesを取得
-  const { iconStates } = useNavigation();
+  // NavigationContextから統一されたiconStatesと楽観的更新を取得
+  const { iconStates, setOptimisticMode } = useNavigation();
   // TeamDetailContextから新規作成状態を取得（チームモード外ではエラーになるのでtry-catch）
   let isCreatingMemo = false;
   try {
@@ -249,6 +249,7 @@ function Sidebar({
           <Tooltip text="メモ一覧" position="right">
             <button
               onClick={() => {
+                setOptimisticMode("memo"); // 即座にアイコン切り替え
                 onModeChange?.("memo");
                 onShowFullList();
               }}
@@ -264,6 +265,7 @@ function Sidebar({
           <Tooltip text="タスク一覧" position="right">
             <button
               onClick={() => {
+                setOptimisticMode("task"); // 即座にアイコン切り替え
                 onModeChange?.("task");
                 onShowTaskList?.();
               }}
@@ -279,6 +281,7 @@ function Sidebar({
           <Tooltip text="ボード一覧" position="right">
             <button
               onClick={() => {
+                setOptimisticMode("board"); // 即座にアイコン切り替え
                 // チーム詳細ページかどうかをURLで判定
                 const isTeamDetailPage =
                   window.location.pathname.startsWith("/team/") &&

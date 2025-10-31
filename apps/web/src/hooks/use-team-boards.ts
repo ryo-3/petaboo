@@ -97,6 +97,8 @@ export function useTeamBoards(
     },
     {
       enabled: isLoaded && teamId !== null && teamId > 0,
+      placeholderData: [], // 初回も即座に空配列を表示
+      keepPreviousData: true, // 前回のデータを表示しながら新データをフェッチ
       refetchInterval: 60 * 1000, // チームモード: 1分ごとに再取得（他メンバーの変更を反映）
     },
   );

@@ -57,6 +57,8 @@ export function useTeamMemos(teamId?: number) {
       return response.json() as Promise<TeamMemo[]>;
     },
     enabled: !!teamId,
+    placeholderData: [], // 初回も即座に空配列を表示
+    keepPreviousData: true, // 前回のデータを表示しながら新データをフェッチ
     refetchInterval: 60 * 1000, // チームモード: 1分ごとに再取得（他メンバーの変更を反映）
     refetchIntervalInBackground: true, // バックグラウンドタブでも定期取得を継続
   });
@@ -89,6 +91,8 @@ export function useDeletedTeamMemos(teamId?: number) {
       return response.json() as Promise<TeamDeletedMemo[]>;
     },
     enabled: !!teamId,
+    placeholderData: [], // 初回も即座に空配列を表示
+    keepPreviousData: true, // 前回のデータを表示しながら新データをフェッチ
     refetchInterval: 60 * 1000, // チームモード: 1分ごとに再取得（他メンバーの変更を反映）
     refetchIntervalInBackground: true, // バックグラウンドタブでも定期取得を継続
   });

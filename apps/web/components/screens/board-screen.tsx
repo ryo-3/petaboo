@@ -107,7 +107,7 @@ const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(
             onCreateNew={handleCreateNew}
             viewMode="card"
             onViewModeChange={() => {}}
-            columnCount={3}
+            columnCount={1}
             onColumnCountChange={() => {}}
             rightPanelMode="hidden"
             normalCount={normalBoards?.length || 0}

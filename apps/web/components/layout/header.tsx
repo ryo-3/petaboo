@@ -17,7 +17,7 @@ import { UserButton } from "@clerk/nextjs";
 import { usePathname, useSearchParams } from "next/navigation";
 import { usePageVisibility } from "@/src/contexts/PageVisibilityContext";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useTeamContextSafe } from "@/contexts/team-context";
 import { useNavigation } from "@/contexts/navigation-context";
 import NotificationPopup from "@/components/features/notifications/notification-popup";
@@ -37,21 +37,47 @@ function Header() {
   const searchParams = useSearchParams();
   const currentTab = searchParams.get("tab");
 
-  // 個人ページの現在モードを取得
-  const { currentMode } = useNavigation();
-
-  // ページ種別の判定
-  const isTeamBoardPage = pathname.includes("/board/");
-  const isTeamMemoListPage =
-    teamName && pathname === `/team/${teamName}` && currentTab === "memos";
-  const isTeamTaskListPage =
-    teamName && pathname === `/team/${teamName}` && currentTab === "tasks";
+  // 個人ページの現在モードを取得（楽観的更新対応）
+  const { currentMode, iconStates } = useNavigation();
 
   // ボード名の状態管理
   const [boardTitle, setBoardTitle] = useState<string | null>(null);
 
   // 通知ポップアップの状態管理
   const [isNotificationPopupOpen, setIsNotificationPopupOpen] = useState(false);
+
+  // ページ種別の判定（useMemoで最適化・楽観的更新対応）
+  const pageStates = useMemo(() => {
+    const isTeamBoardPage = pathname.includes("/board/");
+    const isPersonalPage = pathname === "/" || !teamName;
+
+    // iconStatesから楽観的更新を反映した状態を取得
+    const isMemoListPage = iconStates.memo;
+    const isTaskListPage = iconStates.task;
+
+    const isTeamMemoListPage =
+      teamName && pathname === `/team/${teamName}` && currentTab === "memos";
+    const isTeamTaskListPage =
+      teamName && pathname === `/team/${teamName}` && currentTab === "tasks";
+
+    return {
+      isTeamBoardPage,
+      isPersonalPage,
+      isTeamMemoListPage,
+      isTeamTaskListPage,
+      isMemoListPage,
+      isTaskListPage,
+    };
+  }, [pathname, teamName, currentTab, iconStates]);
+
+  const {
+    isTeamBoardPage,
+    isPersonalPage,
+    isMemoListPage,
+    isTaskListPage,
+    isTeamMemoListPage,
+    isTeamTaskListPage,
+  } = pageStates;
 
   // チームボード名の変更イベントをリッスン
   useEffect(() => {
@@ -79,14 +105,6 @@ function Header() {
       setBoardTitle(null);
     }
   }, [isTeamBoardPage]);
-
-  const isPersonalPage = pathname === "/" || !teamName;
-  // メモ・タスク画面判定（個人・チーム共通）
-  // 個人ページはcurrentModeで判定、チームページはcurrentTabで判定
-  const isPersonalMemoListPage = isPersonalPage && currentMode === "memo";
-  const isPersonalTaskListPage = isPersonalPage && currentMode === "task";
-  const isMemoListPage = isTeamMemoListPage || isPersonalMemoListPage;
-  const isTaskListPage = isTeamTaskListPage || isPersonalTaskListPage;
 
   // Page Visibility & マウス状態を取得
   const { isVisible, isMouseActive } = usePageVisibility();

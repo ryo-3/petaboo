@@ -255,7 +255,9 @@ function Sidebar({
         activeTab={memoEditorTab}
         imageCount={imageCount}
         commentCount={commentCount}
-        hideComment={!isTeamMode}
+        hideComment={
+          !isTeamMode || (isCreatingMemo && selectedMemoId === undefined)
+        }
       />
     </div>
   ) : null;

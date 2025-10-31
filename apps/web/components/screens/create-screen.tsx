@@ -8,7 +8,7 @@ import MemoIcon from "@/components/icons/memo-icon";
 import TaskIcon from "@/components/icons/task-icon";
 import { useCreateBoard } from "@/src/hooks/use-boards";
 import { CreateBoardData } from "@/src/types/board";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 type CreateMode = "memo" | "task" | "board";
 
@@ -70,10 +70,59 @@ function CreateScreen({
     }
   };
 
+  // モバイルフッターの戻るボタンイベントをリッスン
+  useEffect(() => {
+    const handleMemoBackRequest = () => {
+      console.log(
+        "📱 CreateScreen: memo-editor-mobile-back-requested イベント受信",
+      );
+      if (onShowMemoList) {
+        console.log("→ onShowMemoList() を呼び出し");
+        onShowMemoList();
+      } else {
+        console.log("→ onClose() を呼び出し");
+        onClose();
+      }
+    };
+
+    const handleTaskBackRequest = () => {
+      console.log(
+        "📱 CreateScreen: task-editor-mobile-back-requested イベント受信",
+      );
+      if (onShowTaskList) {
+        console.log("→ onShowTaskList() を呼び出し");
+        onShowTaskList();
+      } else {
+        console.log("→ onClose() を呼び出し");
+        onClose();
+      }
+    };
+
+    window.addEventListener(
+      "memo-editor-mobile-back-requested",
+      handleMemoBackRequest,
+    );
+    window.addEventListener(
+      "task-editor-mobile-back-requested",
+      handleTaskBackRequest,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "memo-editor-mobile-back-requested",
+        handleMemoBackRequest,
+      );
+      window.removeEventListener(
+        "task-editor-mobile-back-requested",
+        handleTaskBackRequest,
+      );
+    };
+  }, [onShowMemoList, onShowTaskList, onClose]);
+
   return (
     <div className="h-full bg-white flex flex-col">
-      {/* 上部：モード切り替えタブ */}
-      <div className="flex border-b border-gray-200 bg-gray-50">
+      {/* 上部：モード切り替えタブ（モバイルでは非表示） */}
+      <div className="hidden md:flex border-b border-gray-200 bg-gray-50">
         <button
           onClick={() => handleModeChange("memo")}
           className={`flex-1 border-b-2 transition-all duration-200 ${

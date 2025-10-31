@@ -50,11 +50,15 @@ export function MainClientMobile({
   handleBoardDetail,
   handleTeamList,
   handleTeamCreate,
-  screenMode: _screenMode,
+  screenMode,
   initialBoardName,
   currentBoard,
   showingBoardDetail,
 }: MainClientMobileProps) {
+  // 新規作成状態を判定
+  const isCreatingMemo = screenMode === "create" && currentMode === "memo";
+  const isCreatingTask = screenMode === "create" && currentMode === "task";
+
   return (
     <div className="h-screen w-full md:hidden">
       {showDeleted ? (
@@ -84,6 +88,8 @@ export function MainClientMobile({
           showingBoardDetail={showingBoardDetail}
           onTeamList={handleTeamList}
           onTeamCreate={handleTeamCreate}
+          isCreatingMemo={isCreatingMemo}
+          isCreatingTask={isCreatingTask}
         />
       )}
     </div>

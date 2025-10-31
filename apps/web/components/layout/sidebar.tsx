@@ -48,6 +48,8 @@ interface SidebarProps {
   onBackToBoardList?: () => void;
   imageCount?: number;
   commentCount?: number;
+  isCreatingMemo?: boolean;
+  isCreatingTask?: boolean;
 }
 
 function Sidebar({
@@ -75,19 +77,27 @@ function Sidebar({
   onBackToBoardList,
   imageCount = 0,
   commentCount = 0,
+  isCreatingMemo: isCreatingMemoProp,
+  isCreatingTask: isCreatingTaskProp,
 }: SidebarProps) {
   // NavigationContextから統一されたiconStatesと楽観的更新を取得
   const { iconStates, setOptimisticMode } = useNavigation();
   // pathnameを取得してチームモード判定
   const pathname = usePathname();
   const isTeamMode = pathname?.startsWith("/team/") ?? false;
-  // TeamDetailContextから新規作成状態を取得（チームモード外ではエラーになるのでtry-catch）
-  let isCreatingMemo = false;
-  try {
-    const teamDetail = useTeamDetail();
-    isCreatingMemo = teamDetail.isCreatingMemo;
-  } catch {
-    // チームモード外では無視
+  // 新規作成状態を取得（propsまたはTeamDetailContext）
+  let isCreatingMemo = isCreatingMemoProp ?? false;
+  let isCreatingTask = isCreatingTaskProp ?? false;
+
+  // チームモードの場合はTeamDetailContextからも取得
+  if (isTeamMode) {
+    try {
+      const teamDetail = useTeamDetail();
+      isCreatingMemo = teamDetail.isCreatingMemo;
+      isCreatingTask = teamDetail.isCreatingTask ?? false;
+    } catch {
+      // チームモード外では無視
+    }
   }
   // Clerkのログアウト機能
   const { signOut } = useClerk();
@@ -158,9 +168,17 @@ function Sidebar({
   // モバイルでメモエディターが開いている場合は専用フッターを表示
   // 新規作成時（selectedMemoId === null かつ isCreatingMemo === true）も含む
   const isShowingMemoEditor = selectedMemoId !== undefined || isCreatingMemo;
+  console.log("🔍 Sidebar判定:", {
+    selectedMemoId,
+    isCreatingMemo,
+    isShowingMemoEditor,
+    selectedTaskId,
+    isCreatingTask,
+  });
 
   // モバイルでタスクエディターが開いている場合は専用フッターを表示
-  const isShowingTaskEditor = selectedTaskId !== undefined;
+  // 新規作成時も含む
+  const isShowingTaskEditor = selectedTaskId !== undefined || isCreatingTask;
 
   // モバイルフッター（PCでは非表示、モバイルでメモ/タスク選択時のみ表示）
   const mobileFooter = isShowingTaskEditor ? (
@@ -214,6 +232,9 @@ function Sidebar({
       <ItemEditorFooter
         type="memo"
         onBack={() => {
+          console.log(
+            "🔙 Sidebar: memo-editor-mobile-back-requested イベント発火",
+          );
           window.dispatchEvent(
             new CustomEvent("memo-editor-mobile-back-requested"),
           );

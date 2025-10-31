@@ -53,11 +53,15 @@ export function MainClientDesktop({
   handleBoardDetail,
   handleTeamList,
   handleTeamCreate,
-  screenMode: _screenMode,
+  screenMode,
   initialBoardName,
   currentBoard,
   showingBoardDetail,
 }: MainClientDesktopProps) {
+  // 新規作成状態を判定
+  const isCreatingMemo = screenMode === "create" && currentMode === "memo";
+  const isCreatingTask = screenMode === "create" && currentMode === "task";
+
   return (
     <div className="flex flex-col h-screen w-full">
       {/* ヘッダー（設定で非表示可能、デスクトップのみ） */}
@@ -93,6 +97,8 @@ export function MainClientDesktop({
             showingBoardDetail={showingBoardDetail}
             onTeamList={handleTeamList}
             onTeamCreate={handleTeamCreate}
+            isCreatingMemo={isCreatingMemo}
+            isCreatingTask={isCreatingTask}
           />
         }
       >

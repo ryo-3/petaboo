@@ -649,11 +649,33 @@ function MemoScreen({
       setMemoEditorTab(customEvent.detail.tab);
     };
 
+    const handleBackRequest = () => {
+      // メモ一覧に戻る（選択解除してメモ一覧に留まる）
+      console.log("📱 memo-editor-mobile-back-requested イベント受信", {
+        hasOnDeselectAndStayOnMemoList: !!onDeselectAndStayOnMemoList,
+      });
+      if (onDeselectAndStayOnMemoList) {
+        console.log("→ onDeselectAndStayOnMemoList() を呼び出し");
+        onDeselectAndStayOnMemoList();
+      } else {
+        console.log("→ onSelectMemo(null) を呼び出し");
+        onSelectMemo(null);
+      }
+    };
+
     window.addEventListener("memo-editor-tab-change", handleTabChange);
+    window.addEventListener(
+      "memo-editor-mobile-back-requested",
+      handleBackRequest,
+    );
     return () => {
       window.removeEventListener("memo-editor-tab-change", handleTabChange);
+      window.removeEventListener(
+        "memo-editor-mobile-back-requested",
+        handleBackRequest,
+      );
     };
-  }, []);
+  }, [onSelectMemo, onDeselectAndStayOnMemoList]);
 
   // 除外アイテムIDでフィルタリングされたメモ（originalIdで比較）
   const filteredMemos =

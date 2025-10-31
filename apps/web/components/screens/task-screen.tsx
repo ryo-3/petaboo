@@ -48,7 +48,7 @@ import { ControlPanelLayout } from "@/components/layout/control-panel-layout";
 import CommentSection from "@/components/features/comments/comment-section";
 import AttachmentGallery from "@/components/features/attachments/attachment-gallery";
 import { useAttachmentManager } from "@/src/hooks/use-attachment-manager";
-import TaskEditorFooter from "@/components/mobile/task-editor-footer";
+import ItemEditorFooter from "@/components/mobile/item-editor-footer";
 import PhotoButton from "@/components/ui/buttons/photo-button";
 import type { TeamMember } from "@/src/hooks/use-team-detail";
 
@@ -73,8 +73,13 @@ function MobileAttachmentView({
   const {
     attachments,
     pendingImages,
+    pendingDeletes,
     handleFilesSelect,
     handleDeleteAttachment,
+    handleDeletePendingImage,
+    handleRestoreAttachment,
+    isDeleting,
+    isUploading,
   } = attachmentManager;
 
   return (
@@ -104,6 +109,12 @@ function MobileAttachmentView({
           <AttachmentGallery
             attachments={attachments}
             onDelete={handleDeleteAttachment}
+            isDeleting={isDeleting}
+            pendingImages={pendingImages}
+            onDeletePending={handleDeletePendingImage}
+            pendingDeletes={pendingDeletes}
+            onRestore={handleRestoreAttachment}
+            isUploading={isUploading}
           />
         )}
       </div>
@@ -268,7 +279,8 @@ function TaskScreen({
         initialTaskIdRef.current = null;
       }
     }
-  }, [initialTaskId, tasks, selectedTask, onSelectTask]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialTaskId]);
 
   // 並び替え管理
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -360,11 +372,9 @@ function TaskScreen({
     "task" | "comment" | "image"
   >("task");
 
-  // onSelectTaskのrefを保持
+  // onSelectTaskの最新値をrefで保持
   const onSelectTaskRef = useRef(onSelectTask);
-  useEffect(() => {
-    onSelectTaskRef.current = onSelectTask;
-  }, [onSelectTask]);
+  onSelectTaskRef.current = onSelectTask;
 
   // モバイル版タスクエディターのタブ切り替えイベントをリッスン
   useEffect(() => {
@@ -376,8 +386,8 @@ function TaskScreen({
     };
 
     const handleBackRequest = () => {
-      // タスクエディターを閉じてリストに戻る
-      onSelectTaskRef.current?.(null);
+      // タスクエディターを閉じてリストに戻る（refから最新の関数を取得）
+      onSelectTaskRef.current(null);
     };
 
     // チーム用と個人用の両方のイベントをリッスン
@@ -543,7 +553,8 @@ function TaskScreen({
   // DOM削除確認（タスク一覧が変更されたときにチェック）
   useEffect(() => {
     checkDomDeletionAndSelectNext();
-  }, [tasks, checkDomDeletionAndSelectNext]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 通常タスク削除（DOMポーリング方式）
   const handleTaskDeleteAndSelectNext = async (deletedTask: Task) => {
@@ -598,7 +609,8 @@ function TaskScreen({
     return () => {
       window.removeEventListener("team-task-create", handleTeamTaskCreate);
     };
-  }, [teamMode, handleCreateNew]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [teamMode]);
 
   // 安全なデータ配布用
   const safeAllTaggings = allTaggings || [];

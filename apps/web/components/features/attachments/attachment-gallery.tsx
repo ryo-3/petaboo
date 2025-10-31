@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useToast } from "@/src/contexts/toast-context";
 import type { Attachment } from "@/src/hooks/use-attachments";
@@ -31,73 +31,67 @@ export default function AttachmentGallery({
   const [imageUrls, setImageUrls] = useState<Record<number, string>>({});
   const [pendingUrls, setPendingUrls] = useState<string[]>([]);
   const loadedIdsRef = useRef<Set<number>>(new Set());
-  const isLoadingRef = useRef(false);
 
-  // 認証付きで画像を取得してBlob URLを生成
+  // attachments配列の安定化（IDリストが同じなら同じ配列を返す）
+  const attachmentIdsString = attachments.map((a) => a.id).join(",");
+  const stableAttachments = useMemo(() => attachments, [attachmentIdsString]);
+
+  // attachments IDリストをメモ化（依存配列用）
+  const attachmentIds = useMemo(
+    () => stableAttachments.map((a) => a.id).join(","),
+    [stableAttachments],
+  );
+
+  // 画像URL読み込み（IDベースの変更検知）
   useEffect(() => {
-    // 読み込み中の場合はスキップ
-    if (isLoadingRef.current) {
-      return;
-    }
+    const currentIds = new Set(stableAttachments.map((a) => a.id));
+    const loadedIds = loadedIdsRef.current;
 
-    // 新しい画像のみをフィルタリング
-    const newAttachments = attachments.filter(
-      (a) => !loadedIdsRef.current.has(a.id),
+    // 新しい画像のみ読み込み
+    const newAttachments = stableAttachments.filter(
+      (a) => !loadedIds.has(a.id) && a.mimeType.startsWith("image/"),
     );
 
-    if (newAttachments.length === 0) {
-      return;
+    // 削除された画像のURLをクリーンアップ
+    const removedIds = Array.from(loadedIds).filter(
+      (id) => !currentIds.has(id),
+    );
+    if (removedIds.length > 0) {
+      setImageUrls((prev) => {
+        const next = { ...prev };
+        removedIds.forEach((id) => {
+          const url = next[id];
+          if (url) URL.revokeObjectURL(url);
+          delete next[id];
+          loadedIds.delete(id);
+        });
+        return next;
+      });
     }
 
-    isLoadingRef.current = true;
-    let isMounted = true;
-
-    const loadImages = async () => {
-      const token = await getToken();
-      const newUrls: Record<number, string> = {};
-
-      for (const attachment of newAttachments) {
+    // 新しい画像を非同期で読み込み
+    if (newAttachments.length > 0) {
+      newAttachments.forEach(async (attachment) => {
         try {
+          const token = await getToken();
           const response = await fetch(attachment.url, {
-            method: "GET",
-            headers: {
-              ...(token && { Authorization: `Bearer ${token}` }),
-            },
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
           });
 
-          if (response.ok && isMounted) {
-            const blob = await response.blob();
-            const blobUrl = URL.createObjectURL(blob);
-            newUrls[attachment.id] = blobUrl;
-            loadedIdsRef.current.add(attachment.id);
-          }
+          if (!response.ok) throw new Error("画像の読み込みに失敗しました");
+
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+
+          setImageUrls((prev) => ({ ...prev, [attachment.id]: url }));
+          loadedIds.add(attachment.id);
         } catch (error) {
-          console.error(`画像読み込みエラー [ID: ${attachment.id}]:`, error);
+          console.error(`画像読み込みエラー (ID: ${attachment.id}):`, error);
         }
-      }
-
-      // 全ての画像を読み込んでから一度だけsetStateを呼ぶ
-      if (isMounted && Object.keys(newUrls).length > 0) {
-        setImageUrls((prev) => ({
-          ...prev,
-          ...newUrls,
-        }));
-      }
-
-      if (isMounted) {
-        isLoadingRef.current = false;
-      }
-    };
-
-    loadImages();
-
-    return () => {
-      isMounted = false;
-      isLoadingRef.current = false;
-    };
-    // attachments.lengthのみを依存配列に（attachments自体の参照変更を無視）
+      });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [attachments.length]);
+  }, [attachmentIds]);
 
   // 保存待ち画像のプレビューURL生成
   useEffect(() => {

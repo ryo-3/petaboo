@@ -21,7 +21,7 @@ import {
 } from "@/src/contexts/team-detail-context";
 import { getModeFromUrl, getActiveTabFromUrl } from "@/src/utils/modeUtils";
 import { useTeamDetail } from "@/src/hooks/use-team-detail";
-import TaskEditorFooter from "@/components/mobile/task-editor-footer";
+import ItemEditorFooter from "@/components/mobile/item-editor-footer";
 
 function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -386,9 +386,10 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
         <div className="md:hidden fixed bottom-0 left-0 right-0 h-14 border-t border-gray-200 bg-white">
           {isShowingTaskDetail ? (
             // タスク詳細専用フッター：戻る・タスク・画像・コメント
-            <TaskEditorFooter
+            <ItemEditorFooter
+              type="task"
               onBack={handleBackToTaskList}
-              onTaskClick={() =>
+              onMainClick={() =>
                 window.dispatchEvent(
                   new CustomEvent("team-task-editor-tab-change", {
                     detail: { tab: "task" },

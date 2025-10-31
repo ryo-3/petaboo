@@ -18,8 +18,7 @@ import TaskList from "@/components/mobile/task-list";
 import SwitchTabs from "@/components/ui/base/switch-tabs";
 import Tooltip from "@/components/ui/base/tooltip";
 import NotificationBadge from "@/components/ui/base/notification-badge";
-import MemoEditorFooter from "@/components/mobile/memo-editor-footer";
-import TaskEditorFooter from "@/components/mobile/task-editor-footer";
+import ItemEditorFooter from "@/components/mobile/item-editor-footer";
 import { LogOut } from "lucide-react";
 import type { Memo } from "@/src/types/memo";
 import type { Task } from "@/src/types/task";
@@ -163,13 +162,14 @@ function Sidebar({
   // モバイルフッター（PCでは非表示、モバイルでメモ/タスク選択時のみ表示）
   const mobileFooter = isShowingTaskEditor ? (
     <div className="md:hidden w-full h-full">
-      <TaskEditorFooter
+      <ItemEditorFooter
+        type="task"
         onBack={() => {
           window.dispatchEvent(
             new CustomEvent("task-editor-mobile-back-requested"),
           );
         }}
-        onTaskClick={() =>
+        onMainClick={() =>
           window.dispatchEvent(
             new CustomEvent("task-editor-tab-change", {
               detail: { tab: "task" },
@@ -198,13 +198,14 @@ function Sidebar({
     </div>
   ) : isShowingMemoEditor ? (
     <div className="md:hidden w-full h-full">
-      <MemoEditorFooter
+      <ItemEditorFooter
+        type="memo"
         onBack={() => {
           window.dispatchEvent(
             new CustomEvent("memo-editor-mobile-back-requested"),
           );
         }}
-        onMemoClick={() =>
+        onMainClick={() =>
           window.dispatchEvent(
             new CustomEvent("memo-editor-tab-change", {
               detail: { tab: "memo" },

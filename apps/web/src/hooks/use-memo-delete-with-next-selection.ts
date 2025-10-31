@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Memo } from "@/src/types/memo";
 import { Task } from "@/src/types/task";
 import {
@@ -36,6 +36,21 @@ export function useItemDeleteWithNextSelection<T extends { id: number }>({
   // 削除中のアイテムIDを追跡
   const [deletingItemId, setDeletingItemId] = useState<number | null>(null);
 
+  // 最新の値をrefで保持（レンダリング時に同期）
+  const itemsRef = useRef(items);
+  const nextItemAfterDeleteRef = useRef(nextItemAfterDelete);
+  const onSelectItemRef = useRef(onSelectItem);
+  const setScreenModeRef = useRef(setScreenMode);
+  const onDeselectAndStayOnListRef = useRef(onDeselectAndStayOnList);
+  const setIsRightLidOpenRef = useRef(setIsRightLidOpen);
+
+  itemsRef.current = items;
+  nextItemAfterDeleteRef.current = nextItemAfterDelete;
+  onSelectItemRef.current = onSelectItem;
+  setScreenModeRef.current = setScreenMode;
+  onDeselectAndStayOnListRef.current = onDeselectAndStayOnList;
+  setIsRightLidOpenRef.current = setIsRightLidOpen;
+
   // DOM削除確認付きの削除処理
   const handleDeleteWithNextSelection = useCallback(
     (selectedItem: T) => {
@@ -67,8 +82,8 @@ export function useItemDeleteWithNextSelection<T extends { id: number }>({
   const checkDomDeletionAndSelectNext = useCallback(() => {
     if (
       !deletingItemId ||
-      !items ||
-      items.find((item) => item.id === deletingItemId)
+      !itemsRef.current ||
+      itemsRef.current.find((item) => item.id === deletingItemId)
     ) {
       return;
     }
@@ -91,12 +106,12 @@ export function useItemDeleteWithNextSelection<T extends { id: number }>({
       if (!element) {
         // DOM削除確認！即座に次選択
 
-        if (nextItemAfterDelete) {
-          onSelectItem(nextItemAfterDelete);
-          setScreenMode?.("view");
+        if (nextItemAfterDeleteRef.current) {
+          onSelectItemRef.current(nextItemAfterDeleteRef.current);
+          setScreenModeRef.current?.("view");
         } else {
-          setScreenMode?.("list");
-          onDeselectAndStayOnList?.();
+          setScreenModeRef.current?.("list");
+          onDeselectAndStayOnListRef.current?.();
         }
 
         // リセット
@@ -105,7 +120,7 @@ export function useItemDeleteWithNextSelection<T extends { id: number }>({
 
         // 蓋を閉じる（ボード詳細では蓋なし）
         setTimeout(() => {
-          setIsRightLidOpen?.(false);
+          setIsRightLidOpenRef.current?.(false);
         }, 200);
       } else if (checkCount < maxChecks) {
         // まだDOMに存在する場合は再チェック
@@ -113,12 +128,12 @@ export function useItemDeleteWithNextSelection<T extends { id: number }>({
       } else {
         // タイムアウト：強制的に次選択
 
-        if (nextItemAfterDelete) {
-          onSelectItem(nextItemAfterDelete);
-          setScreenMode?.("view");
+        if (nextItemAfterDeleteRef.current) {
+          onSelectItemRef.current(nextItemAfterDeleteRef.current);
+          setScreenModeRef.current?.("view");
         } else {
-          setScreenMode?.("list");
-          onDeselectAndStayOnList?.();
+          setScreenModeRef.current?.("list");
+          onDeselectAndStayOnListRef.current?.();
         }
 
         // リセット
@@ -127,7 +142,7 @@ export function useItemDeleteWithNextSelection<T extends { id: number }>({
 
         // 蓋を閉じる（ボード詳細では蓋なし）
         setTimeout(() => {
-          setIsRightLidOpen?.(false);
+          setIsRightLidOpenRef.current?.(false);
         }, 200);
       }
     };
@@ -136,16 +151,7 @@ export function useItemDeleteWithNextSelection<T extends { id: number }>({
     requestAnimationFrame(() => {
       checkDomAndSelect();
     });
-  }, [
-    deletingItemId,
-    items,
-    nextItemAfterDelete,
-    onSelectItem,
-    setScreenMode,
-    onDeselectAndStayOnList,
-    setIsRightLidOpen,
-    itemType,
-  ]);
+  }, [deletingItemId, itemType]);
 
   return {
     handleDeleteWithNextSelection,

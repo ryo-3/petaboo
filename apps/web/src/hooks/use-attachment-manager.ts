@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import {
   useAttachments,
   useUploadAttachment,
@@ -63,6 +63,14 @@ export const useAttachmentManager = ({
   // アップロード・削除処理中フラグ
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // 最新の値をrefで保持（レンダリング時に同期、useEffectは使わない）
+  const attachmentsRef = useRef(attachments);
+  const pendingDeletesRef = useRef(pendingDeletes);
+
+  // レンダリング時にrefを同期（useEffectを使わない）
+  attachmentsRef.current = attachments;
+  pendingDeletesRef.current = pendingDeletes;
+
   // ファイル形式バリデーション（画像 + PDF等）
   const validateImageFile = useCallback(
     (file: File): boolean => {
@@ -114,59 +122,56 @@ export const useAttachmentManager = ({
         return;
       }
 
-      const totalCount =
-        attachments.filter((a) => !pendingDeletes.includes(a.id)).length +
-        pendingImages.length;
+      // refから最新の値を取得（依存配列から配列を除外）
+      setPendingImages((prevPending) => {
+        const currentCount =
+          attachmentsRef.current.filter(
+            (a) => !pendingDeletesRef.current.includes(a.id),
+          ).length + prevPending.length;
 
-      if (totalCount >= 10) {
-        showToast("画像は最大10枚までです", "error");
-        return;
-      }
+        if (currentCount >= 10) {
+          showToast("画像は最大10枚までです", "error");
+          return prevPending;
+        }
 
-      setPendingImages((prev) => [...prev, file]);
+        return [...prevPending, file];
+      });
     },
-    [
-      validateImageFile,
-      attachments,
-      pendingDeletes,
-      pendingImages.length,
-      showToast,
-    ],
+    [validateImageFile, showToast],
   );
 
   // ファイル選択ハンドラー（複数）
   const handleFilesSelect = useCallback(
     (files: File[]) => {
-      const currentCount =
-        attachments.filter((a) => !pendingDeletes.includes(a.id)).length +
-        pendingImages.length;
+      setPendingImages((prevPending) => {
+        const currentCount =
+          attachmentsRef.current.filter(
+            (a) => !pendingDeletesRef.current.includes(a.id),
+          ).length + prevPending.length;
 
-      const validFiles: File[] = [];
+        const validFiles: File[] = [];
 
-      for (const file of files) {
-        // 上限チェック
-        if (currentCount + validFiles.length >= 10) {
-          showToast("画像は最大10枚までです", "error");
-          break;
+        for (const file of files) {
+          // 上限チェック
+          if (currentCount + validFiles.length >= 10) {
+            showToast("画像は最大10枚までです", "error");
+            break;
+          }
+
+          // バリデーション
+          if (validateImageFile(file)) {
+            validFiles.push(file);
+          }
         }
 
-        // バリデーション
-        if (validateImageFile(file)) {
-          validFiles.push(file);
+        if (validFiles.length > 0) {
+          return [...prevPending, ...validFiles];
         }
-      }
 
-      if (validFiles.length > 0) {
-        setPendingImages((prev) => [...prev, ...validFiles]);
-      }
+        return prevPending;
+      });
     },
-    [
-      validateImageFile,
-      attachments,
-      pendingDeletes,
-      pendingImages.length,
-      showToast,
-    ],
+    [validateImageFile, showToast],
   );
 
   // クリップボードからの画像ペースト処理

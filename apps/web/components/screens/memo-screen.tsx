@@ -669,10 +669,7 @@ function MemoScreen({
   const filteredBoards =
     boards?.filter((board) => board.id !== excludeBoardIdFromFilter) || [];
 
-  // チームモード＆選択時は3パネルレイアウト
-  const shouldUseThreePanelLayout = teamMode && memoScreenMode !== "list";
-
-  // 左パネルのコンテンツ（3パネル・2パネル両方で使用）
+  // 左パネルのコンテンツ
   const leftPanelContent = (
     <div
       className={`${hideHeaderButtons ? "pt-2 md:pt-3" : "pt-2 md:pt-3 pl-2 md:pl-5 md:pr-2"} flex flex-col h-full relative`}
@@ -686,13 +683,7 @@ function MemoScreen({
         onViewModeChange={setViewMode}
         columnCount={columnCount}
         onColumnCountChange={setColumnCount}
-        rightPanelMode={
-          shouldUseThreePanelLayout
-            ? "view"
-            : memoScreenMode === "list"
-              ? "hidden"
-              : "view"
-        }
+        rightPanelMode={memoScreenMode === "list" ? "hidden" : "view"}
         selectionMode={selectionMode}
         onSelectionModeChange={(mode) => {
           setSelectionMode(mode);
@@ -876,7 +867,11 @@ function MemoScreen({
         <MemoEditor
           memo={selectedMemo}
           onClose={() => {
-            onClose();
+            if (teamMode) {
+              onClose();
+            } else {
+              onSelectMemo(null); // 個人モードでは選択を解除
+            }
             setMemoScreenMode("list");
           }}
           onSaveComplete={handleSaveComplete}
@@ -958,30 +953,44 @@ function MemoScreen({
     </>
   );
 
-  // 右パネルのコンテンツ（コメント部分）
-  const rightPanelContent = selectedMemo && (
-    <CommentSection
-      targetType="memo"
-      targetOriginalId={OriginalIdUtils.fromItem(selectedMemo) || ""}
-      teamId={teamId || 0}
-      teamMembers={teamMembers}
-      title="コメント"
-      placeholder="コメントを入力..."
-    />
-  );
+  // 右パネルのコンテンツ（チームモードのみコメント表示）
+  const rightPanelContent =
+    teamMode && selectedMemo ? (
+      <CommentSection
+        targetType="memo"
+        targetOriginalId={OriginalIdUtils.fromItem(selectedMemo) || ""}
+        teamId={teamId || 0}
+        teamMembers={teamMembers}
+        title="コメント"
+        placeholder="コメントを入力..."
+      />
+    ) : null;
 
-  return shouldUseThreePanelLayout ? (
-    // ===== 3パネルレイアウト（チームモード＆選択時） =====
+  return (
     <div className="h-full">
-      {/* デスクトップ: 3パネル表示 */}
+      {/* デスクトップ表示 */}
       <div className="hidden md:block md:min-w-[1280px] h-full">
-        <ControlPanelLayout
-          leftPanel={leftPanelContent}
-          centerPanel={centerPanelContent}
-          rightPanel={rightPanelContent}
-          storageKey="team-memo-3panel-sizes-v2"
-          defaultSizes={{ left: 25, center: 45, right: 30 }}
-        />
+        {memoScreenMode === "list" ? (
+          // リストモード: 1パネル表示
+          leftPanelContent
+        ) : (
+          // 選択モード: 2/3パネル表示
+          <ControlPanelLayout
+            leftPanel={leftPanelContent}
+            centerPanel={centerPanelContent}
+            rightPanel={rightPanelContent}
+            storageKey={
+              teamMode
+                ? "team-memo-3panel-sizes-v2"
+                : "personal-memo-2panel-sizes-v1"
+            }
+            defaultSizes={
+              teamMode
+                ? { left: 25, center: 45, right: 30 }
+                : { left: 35, center: 65, right: 0 }
+            }
+          />
+        )}
       </div>
 
       {/* モバイル: 1パネル表示（メモ OR コメント OR 画像 排他的表示） */}
@@ -1062,290 +1071,6 @@ function MemoScreen({
           </div>
         </div>
       )}
-    </div>
-  ) : (
-    // ===== 2パネルレイアウト（個人モードまたは未選択時） =====
-    <div className="flex h-full bg-white relative">
-      {/* 左側：一覧表示エリア（スマホでは詳細表示時に非表示） */}
-      <div
-        className={`${memoScreenMode === "list" ? "w-full" : "hidden md:flex md:w-[44%]"} ${memoScreenMode !== "list" ? "md:border-r md:border-gray-300" : ""} pt-2 md:pt-3 pl-2 md:pl-5 md:pr-2 flex-col relative ${!teamMode ? "transition-all duration-300" : ""}`}
-      >
-        <DesktopUpper
-          currentMode="memo"
-          activeTab={displayTab as "normal" | "deleted"}
-          onTabChange={handleCustomTabChange}
-          onCreateNew={handleCreateNew}
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          columnCount={columnCount}
-          onColumnCountChange={setColumnCount}
-          rightPanelMode={memoScreenMode === "list" ? "hidden" : "view"}
-          selectionMode={selectionMode}
-          onSelectionModeChange={(mode) => {
-            setSelectionMode(mode);
-            if (mode === "select") {
-              setCheckedMemos(new Set());
-              setCheckedDeletedMemos(new Set());
-            }
-          }}
-          onSelectAll={handleSelectAll}
-          isAllSelected={isAllSelected}
-          sortOptions={getVisibleSortOptions(activeTab)}
-          onSortChange={setSortOptions}
-          showEditDate={showEditDate}
-          onShowEditDateChange={setShowEditDate}
-          showBoardName={showBoardName}
-          onShowBoardNameChange={setShowBoardName}
-          showTagDisplay={showTagDisplay}
-          onShowTagDisplayChange={setShowTagDisplay}
-          boards={filteredBoards}
-          selectedBoardIds={selectedBoardIds}
-          onBoardFilterChange={setSelectedBoardIds}
-          filterMode={boardFilterMode}
-          onFilterModeChange={setBoardFilterMode}
-          tags={tags || []}
-          selectedTagIds={selectedTagIds}
-          onTagFilterChange={setSelectedTagIds}
-          tagFilterMode={tagFilterMode}
-          onTagFilterModeChange={setTagFilterMode}
-          normalCount={memos?.length || 0}
-          deletedMemosCount={deletedMemos?.length || 0}
-          hideAddButton={hideHeaderButtons}
-          onCsvImport={() => setIsCsvImportModalOpen(true)}
-          teamMode={teamMode}
-          hideControls={false}
-          floatControls={teamMode}
-          marginBottom=""
-          headerMarginBottom="mb-1.5"
-        />
-
-        <div className="mt-[70px] md:mt-0">
-          <DesktopLower
-            currentMode="memo"
-            activeTab={displayTab as "normal" | "deleted"}
-            viewMode={viewMode}
-            effectiveColumnCount={effectiveColumnCount}
-            isLoading={memoLoading}
-            error={memoError}
-            selectionMode={selectionMode}
-            sortOptions={getVisibleSortOptions(activeTab)}
-            showEditDate={showEditDate}
-            showBoardName={showBoardName}
-            showTags={showTagDisplay}
-            selectedBoardIds={selectedBoardIds}
-            boardFilterMode={boardFilterMode}
-            selectedTagIds={selectedTagIds}
-            tagFilterMode={tagFilterMode}
-            memos={filteredMemos}
-            localMemos={filteredMemos}
-            deletedMemos={deletedMemos || []}
-            selectedMemo={selectedMemo}
-            selectedDeletedMemo={selectedDeletedMemo}
-            checkedMemos={checkedMemos}
-            checkedDeletedMemos={checkedDeletedMemos}
-            onToggleCheckMemo={createToggleHandler(
-              checkedMemos,
-              setCheckedMemos,
-            )}
-            onToggleCheckDeletedMemo={createToggleHandler(
-              checkedDeletedMemos,
-              setCheckedDeletedMemos,
-            )}
-            onSelectMemo={handleSelectMemo}
-            onSelectDeletedMemo={handleSelectDeletedMemo}
-            teamMode={teamMode}
-            allTags={tags || []}
-            allBoards={boards || []}
-            allTaggings={safeAllTaggings || []}
-            allBoardItems={safeAllBoardItems || []}
-          />
-        </div>
-
-        {/* 一括操作ボタン */}
-        {!hideBulkActionButtons && (
-          <BulkActionButtons
-            showDeleteButton={showDeleteButton}
-            deleteButtonCount={currentDisplayCount}
-            onDelete={() => {
-              handleLeftBulkDelete();
-            }}
-            deleteButtonRef={deleteButtonRef}
-            isDeleting={isLeftLidOpen}
-            deleteVariant={activeTab === "deleted" ? "danger" : undefined}
-            showRestoreButton={
-              activeTab === "deleted" &&
-              !isLeftDeleting &&
-              (checkedDeletedMemos.size > 0 ||
-                (isRestoring && currentRestoreDisplayCount > 0))
-            }
-            restoreCount={checkedDeletedMemos.size}
-            onRestore={() => {
-              setIsRestoreLidOpen(true);
-              handleBulkRestore();
-            }}
-            restoreButtonRef={restoreButtonRef}
-            isRestoring={isRestoreLidOpen}
-            animatedRestoreCount={currentRestoreDisplayCount}
-            useAnimatedRestoreCount={true}
-          />
-        )}
-
-        {/* 選択メニューボタン */}
-        {!hideBulkActionButtons && (
-          <SelectionMenuButton
-            count={checkedMemos.size}
-            onExport={() => {}}
-            onPin={() => {}}
-            onTagging={() => {
-              setIsTagManagementModalOpen(true);
-            }}
-            onTabMove={() => {}}
-            isVisible={
-              activeTab === "normal" && checkedMemos.size > 0 && !isLeftDeleting
-            }
-          />
-        )}
-
-        {/* ボード追加ボタン */}
-        {onAddToBoard && checkedMemos.size > 0 && activeTab === "normal" && (
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20">
-            <button
-              onClick={() => onAddToBoard(Array.from(checkedMemos))}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 transition-colors"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-              選択したメモをボードに追加 ({checkedMemos.size})
-            </button>
-          </div>
-        )}
-
-        {/* 新規メモ作成ボタン（右下固定・モバイルのみ） */}
-        {activeTab === "normal" &&
-          selectionMode === "select" &&
-          checkedMemos.size === 0 &&
-          !onAddToBoard && (
-            <button
-              onClick={handleCreateNew}
-              className="md:hidden fixed bottom-16 right-2 size-9 bg-Green hover:bg-Green/90 text-white rounded-full shadow-lg flex items-center justify-center z-20 transition-all"
-            >
-              <svg
-                className="size-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                strokeWidth={2.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-            </button>
-          )}
-      </div>
-
-      {/* モーダル（2パネルレイアウト外側） */}
-      <BulkDeleteModal />
-      <RestoreModal />
-      <MemoCsvImport
-        isOpen={isCsvImportModalOpen}
-        onClose={() => setIsCsvImportModalOpen(false)}
-      />
-
-      {/* タグ管理モーダル */}
-      <TagManagementModal
-        isOpen={isTagManagementModalOpen}
-        onClose={() => setIsTagManagementModalOpen(false)}
-        tags={
-          tags?.map((tag) => ({
-            id: tag.id,
-            name: tag.name,
-            color: tag.color,
-          })) || []
-        }
-        selectedItemCount={checkedMemos.size}
-        itemType="memo"
-        selectedItems={Array.from(checkedMemos).map((id) => id.toString())}
-        allItems={memos || []}
-        allTaggings={safeAllTaggings || []}
-        onSuccess={() => {
-          setCheckedMemos(new Set());
-        }}
-      />
-
-      {/* 個別タグ編集モーダル */}
-      {selectedMemoForTag && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96 max-w-[90vw] max-h-[80vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium">タグ編集</h3>
-              <button
-                onClick={() => setSelectedMemoForTag(null)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <span className="sr-only">閉じる</span>×
-              </button>
-            </div>
-
-            <div className="mb-4">
-              <div className="text-sm font-medium mb-2 truncate">
-                {selectedMemoForTag.title || "タイトルなし"}
-              </div>
-              <div className="text-sm text-gray-500">
-                {/* TODO: TagSelector コンポーネントの実装 */}
-                タグ選択・編集機能（実装予定）
-              </div>
-            </div>
-
-            <div className="flex justify-end mt-4 gap-2">
-              <button
-                onClick={() => setSelectedMemoForTag(null)}
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-              >
-                閉じる
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 右側：詳細表示エリア（2パネルレイアウトではRightPanelを使用） */}
-      <RightPanel
-        isOpen={memoScreenMode !== "list"}
-        onClose={handleRightPanelClose}
-      >
-        {/* デスクトップ: メモエディターのみ */}
-        <div className="hidden md:flex md:flex-col h-full">
-          <div className="flex-1">{centerPanelContent}</div>
-        </div>
-
-        {/* モバイル: タブ付き表示（メモ OR 画像 排他的表示） */}
-        <div className="md:hidden h-full flex flex-col bg-white">
-          {memoEditorTab === "memo" ? (
-            <div className="flex-1 min-h-0 flex flex-col">
-              {centerPanelContent}
-            </div>
-          ) : (
-            <MobileAttachmentView
-              selectedMemo={selectedMemo || null}
-              teamId={teamId}
-            />
-          )}
-        </div>
-      </RightPanel>
     </div>
   );
 }

@@ -1076,28 +1076,26 @@ function MemoEditor({
             {/* ここにheaderActionsの内容を直接配置 */}
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-2">
-                {/* 閉じるボタン（チームモードのみ表示、モバイルではフッターに表示） */}
-                {teamMode && (
-                  <button
-                    onClick={handleCloseClick}
-                    className="hidden md:flex items-center justify-center size-7 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 transition-colors"
-                    data-memo-close-button="true"
+                {/* 閉じるボタン（PCのみ表示、モバイルではフッターに表示） */}
+                <button
+                  onClick={handleCloseClick}
+                  className="hidden md:flex items-center justify-center size-7 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 transition-colors"
+                  data-memo-close-button="true"
+                >
+                  <svg
+                    className="size-4 rotate-180 md:rotate-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    <svg
-                      className="size-4 rotate-180 md:rotate-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </button>
-                )}
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </button>
                 {/* 書式設定トグルボタン */}
                 {!isDeleted && (
                   <Tooltip text="書式設定" position="bottom">

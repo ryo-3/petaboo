@@ -168,7 +168,27 @@ export function useSimpleItemSave<T extends UnifiedItem>({
       JSON.stringify([...selectedBoardIds].sort()) !==
       JSON.stringify([...currentBoardIds].sort());
 
-    return textChanged || taskFieldsChanged || hasBoardChanges;
+    const result = textChanged || taskFieldsChanged || hasBoardChanges;
+
+    // デバッグログ
+    if (result) {
+      console.log("🔍 hasChanges詳細:", {
+        textChanged,
+        titleChanged: currentTitle !== initialTitle.trim(),
+        contentChanged: currentContent !== initialContent.trim(),
+        currentTitle,
+        initialTitle: initialTitle.trim(),
+        currentContent: currentContent.substring(0, 50),
+        initialContent: initialContent.trim().substring(0, 50),
+        taskFieldsChanged,
+        hasBoardChanges,
+        selectedBoardIds: [...selectedBoardIds].sort(),
+        currentBoardIds: [...currentBoardIds].sort(),
+        isInitialSync,
+      });
+    }
+
+    return result;
   }, [
     title,
     content,

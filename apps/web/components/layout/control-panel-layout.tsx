@@ -12,8 +12,8 @@ interface ControlPanelLayoutProps {
   leftPanel: ReactNode;
   // 中央パネル
   centerPanel: ReactNode;
-  // 右パネル
-  rightPanel: ReactNode;
+  // 右パネル（nullの場合は2パネル表示）
+  rightPanel?: ReactNode | null;
   // ローカルストレージのキー名
   storageKey: string;
   // デフォルトサイズ
@@ -95,22 +95,25 @@ export function ControlPanelLayout({
         <ResizablePanel
           defaultSize={panelSizes.center}
           minSize={30}
-          className="flex flex-col border-r border-gray-200"
+          className={`flex flex-col ${rightPanel ? "border-r border-gray-200" : ""}`}
         >
           {centerPanel}
         </ResizablePanel>
 
-        <ResizableHandle withHandle />
-
-        {/* 右パネル */}
-        <ResizablePanel
-          defaultSize={panelSizes.right}
-          minSize={20}
-          maxSize={50}
-          className="flex flex-col"
-        >
-          {rightPanel}
-        </ResizablePanel>
+        {/* 右パネル（rightPanelがある場合のみ表示） */}
+        {rightPanel && (
+          <>
+            <ResizableHandle withHandle />
+            <ResizablePanel
+              defaultSize={panelSizes.right}
+              minSize={20}
+              maxSize={50}
+              className="flex flex-col"
+            >
+              {rightPanel}
+            </ResizablePanel>
+          </>
+        )}
       </ResizablePanelGroup>
     </div>
   );

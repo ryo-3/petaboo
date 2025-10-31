@@ -429,28 +429,25 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       console.log("📱 team-memo-create イベント受信");
       setIsCreatingMemo(true);
       handleTabChange("memos");
-      // MemoScreenに新規作成モードを指示するイベント送信
-      setTimeout(() => {
-        console.log("→ team-memo-create イベント再発火（MemoScreen用）");
-        window.dispatchEvent(new CustomEvent("team-memo-create"));
-      }, 100);
+      // MemoScreenは useEffect で isCreatingMemo の変化を検知して新規作成モードに入る
+      // イベントの再発火は不要（無限ループの原因になる）
     };
 
     const handleTeamTaskCreate = (_event: CustomEvent) => {
       console.log("📱 team-task-create イベント受信");
       setIsCreatingTask(true);
       handleTabChange("tasks");
-      // TaskScreenに新規作成モードを指示するイベント送信
-      setTimeout(() => {
-        console.log("→ team-task-create イベント再発火（TaskScreen用）");
-        window.dispatchEvent(new CustomEvent("team-task-create"));
-      }, 100);
+      // TaskScreenは useEffect で isCreatingTask の変化を検知して新規作成モードに入る
+      // イベントの再発火は不要（無限ループの原因になる）
     };
 
     const handleBackToMemoList = (_event: CustomEvent) => {
+      console.log("📱 team-back-to-memo-list イベント受信");
       // メモの選択を解除してメモ一覧に戻る
       setSelectedMemo(null);
       setSelectedDeletedMemo(null);
+      setIsCreatingMemo(false);
+      console.log("→ setIsCreatingMemo(false) 呼び出し");
       const params = new URLSearchParams(searchParams.toString());
       params.delete("memo");
       params.set("tab", "memos");
@@ -487,15 +484,10 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       handleTeamModeChange as EventListener,
     );
 
-    window.addEventListener(
-      "team-memo-create",
-      handleTeamMemoCreate as EventListener,
-    );
-
-    window.addEventListener(
-      "team-task-create",
-      handleTeamTaskCreate as EventListener,
-    );
+    // team-memo-create と team-task-create はMemoScreen/TaskScreenが直接リッスンするので
+    // ここでリッスンすると無限ループになる（イベント再発火が不要）
+    // window.addEventListener("team-memo-create", handleTeamMemoCreate);
+    // window.addEventListener("team-task-create", handleTeamTaskCreate);
 
     window.addEventListener(
       "team-back-to-memo-list",
@@ -513,14 +505,6 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         handleTeamModeChange as EventListener,
       );
       window.removeEventListener(
-        "team-memo-create",
-        handleTeamMemoCreate as EventListener,
-      );
-      window.removeEventListener(
-        "team-task-create",
-        handleTeamTaskCreate as EventListener,
-      );
-      window.removeEventListener(
         "team-back-to-memo-list",
         handleBackToMemoList as EventListener,
       );
@@ -529,6 +513,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         handleBackToTaskList as EventListener,
       );
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handleTabChange, router, customUrl, searchParams]);
 
   // メモ/タスク選択ハンドラー
@@ -993,6 +978,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                   setSelectedDeletedMemo(null);
                 }}
                 onDeselectAndStayOnMemoList={() => {
+                  console.log("📱 onDeselectAndStayOnMemoList 呼び出し");
                   // メモを閉じてリスト表示に戻る（URLからもmemoパラメータを削除）
                   const params = new URLSearchParams(searchParams.toString());
                   params.delete("memo");
@@ -1005,6 +991,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                   });
                   setSelectedMemo(null);
                   setSelectedDeletedMemo(null);
+                  setIsCreatingMemo(false);
+                  console.log("→ setIsCreatingMemo(false) 完了");
                 }}
                 initialMemoId={getMemoIdFromURL()}
                 // 統一フックを渡す

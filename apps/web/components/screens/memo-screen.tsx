@@ -652,9 +652,20 @@ function MemoScreen({
 
     const handleBackRequest = () => {
       // メモ一覧に戻る（選択解除してメモ一覧に留まる）
-      console.log("📱 memo-editor-mobile-back-requested イベント受信", {
+      const eventName = teamMode
+        ? "team-back-to-memo-list"
+        : "memo-editor-mobile-back-requested";
+      console.log(`📱 MemoScreen: ${eventName} イベント受信`, {
         hasOnDeselectAndStayOnMemoList: !!onDeselectAndStayOnMemoList,
+        currentScreenMode: screenMode,
       });
+
+      // 新規作成モードから抜ける
+      if (screenMode === "create") {
+        console.log("→ setMemoScreenMode('list') を呼び出し");
+        setMemoScreenMode("list");
+      }
+
       if (onDeselectAndStayOnMemoList) {
         console.log("→ onDeselectAndStayOnMemoList() を呼び出し");
         onDeselectAndStayOnMemoList();
@@ -665,18 +676,22 @@ function MemoScreen({
     };
 
     window.addEventListener("memo-editor-tab-change", handleTabChange);
-    window.addEventListener(
-      "memo-editor-mobile-back-requested",
-      handleBackRequest,
-    );
+    const backEventName = teamMode
+      ? "team-back-to-memo-list"
+      : "memo-editor-mobile-back-requested";
+    window.addEventListener(backEventName, handleBackRequest);
+
     return () => {
       window.removeEventListener("memo-editor-tab-change", handleTabChange);
-      window.removeEventListener(
-        "memo-editor-mobile-back-requested",
-        handleBackRequest,
-      );
+      window.removeEventListener(backEventName, handleBackRequest);
     };
-  }, [onSelectMemo, onDeselectAndStayOnMemoList]);
+  }, [
+    onSelectMemo,
+    onDeselectAndStayOnMemoList,
+    teamMode,
+    screenMode,
+    setMemoScreenMode,
+  ]);
 
   // 除外アイテムIDでフィルタリングされたメモ（originalIdで比較）
   const filteredMemos =

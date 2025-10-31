@@ -10,6 +10,7 @@ import {
 import { useState, useEffect, Suspense } from "react";
 import Header from "@/components/layout/header";
 import Sidebar from "@/components/layout/sidebar";
+import ItemEditorFooter from "@/components/mobile/item-editor-footer";
 import {
   NavigationProvider,
   useNavigation,
@@ -32,6 +33,7 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
     selectedMemoId,
     setSelectedMemoId,
     selectedTaskId,
+    isCreatingMemo,
     isCreatingTask,
     imageCount,
     commentCount,
@@ -347,117 +349,33 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
         {/* モバイル用ボトムナビ（下） */}
         <div className="md:hidden fixed bottom-0 left-0 right-0 h-14 border-t border-gray-200 bg-white">
           {isTeamBoardDetailPage ? (
-            // ボード詳細専用ナビゲーション：戻る・メモ・タスク・コメント
-            <div className="flex items-center justify-around h-full px-2">
-              <button
-                onClick={handleBackToBoardList}
-                className="flex items-center justify-center min-w-0 flex-1"
-              >
-                <svg
-                  className="w-6 h-6 text-gray-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                  />
-                </svg>
-              </button>
-              <button
-                onClick={() =>
-                  window.dispatchEvent(
-                    new CustomEvent("board-section-change", {
-                      detail: { section: "memos" },
-                    }),
-                  )
-                }
-                className={`flex items-center justify-center min-w-0 flex-1 transition-colors rounded-md ${
-                  activeBoardSection === "memos" ? "bg-Green" : ""
-                }`}
-              >
-                <svg
-                  className={`w-6 h-6 ${
-                    activeBoardSection === "memos"
-                      ? "text-white"
-                      : "text-gray-400"
-                  }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                  />
-                </svg>
-              </button>
-              <button
-                onClick={() =>
-                  window.dispatchEvent(
-                    new CustomEvent("board-section-change", {
-                      detail: { section: "tasks" },
-                    }),
-                  )
-                }
-                className={`flex items-center justify-center min-w-0 flex-1 transition-colors rounded-md ${
-                  activeBoardSection === "tasks" ? "bg-DeepBlue" : ""
-                }`}
-              >
-                <svg
-                  className={`w-6 h-6 ${
-                    activeBoardSection === "tasks"
-                      ? "text-white"
-                      : "text-gray-400"
-                  }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
-                  />
-                </svg>
-              </button>
-              <button
-                onClick={() =>
-                  window.dispatchEvent(
-                    new CustomEvent("board-section-change", {
-                      detail: { section: "comments" },
-                    }),
-                  )
-                }
-                className={`flex items-center justify-center min-w-0 flex-1 transition-colors rounded-md ${
-                  activeBoardSection === "comments" ? "bg-gray-500" : ""
-                }`}
-              >
-                <svg
-                  className={`w-6 h-6 ${
-                    activeBoardSection === "comments"
-                      ? "text-white"
-                      : "text-gray-400"
-                  }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                  />
-                </svg>
-              </button>
-            </div>
+            // ボード詳細専用ナビゲーション：ItemEditorFooterを使用
+            <ItemEditorFooter
+              type="board"
+              onBack={handleBackToBoardList}
+              onMemoClick={() =>
+                window.dispatchEvent(
+                  new CustomEvent("board-section-change", {
+                    detail: { section: "memos" },
+                  }),
+                )
+              }
+              onTaskClick={() =>
+                window.dispatchEvent(
+                  new CustomEvent("board-section-change", {
+                    detail: { section: "tasks" },
+                  }),
+                )
+              }
+              onCommentClick={() =>
+                window.dispatchEvent(
+                  new CustomEvent("board-section-change", {
+                    detail: { section: "comments" },
+                  }),
+                )
+              }
+              activeSection={activeBoardSection}
+            />
           ) : (
             // 通常のサイドバーナビゲーション
             <Sidebar
@@ -481,6 +399,8 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
               currentTeamName={teamDetail?.name}
               selectedMemoId={selectedMemoId ?? undefined}
               selectedTaskId={selectedTaskId ?? undefined}
+              isCreatingMemo={isCreatingMemo}
+              isCreatingTask={isCreatingTask}
               imageCount={
                 selectedMemoId !== null && selectedMemoId !== undefined
                   ? imageCount

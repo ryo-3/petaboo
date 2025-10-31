@@ -387,7 +387,10 @@ function TaskScreen({
     };
 
     const handleBackRequest = () => {
-      console.log("📱 TaskScreen: 戻るボタンイベント受信");
+      const backEventName = teamMode
+        ? "team-back-to-task-list"
+        : "task-editor-mobile-back-requested";
+      console.log(`📱 TaskScreen: ${backEventName} イベント受信`);
       // タスクエディターを閉じてリストに戻る（refから最新の関数を取得）
       console.log("→ onSelectTask(null) 呼び出し");
       onSelectTaskRef.current(null);
@@ -398,7 +401,7 @@ function TaskScreen({
       ? "team-task-editor-tab-change"
       : "task-editor-tab-change";
     const backEventName = teamMode
-      ? "team-task-editor-mobile-back-requested"
+      ? "team-back-to-task-list"
       : "task-editor-mobile-back-requested";
 
     window.addEventListener(eventName, handleTabChange);

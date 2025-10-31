@@ -180,7 +180,7 @@ function Sidebar({
         type="task"
         onBack={() => {
           const backEventName = isTeamMode
-            ? "team-task-editor-mobile-back-requested"
+            ? "team-back-to-task-list"
             : "task-editor-mobile-back-requested";
           window.dispatchEvent(new CustomEvent(backEventName));
         }}
@@ -225,12 +225,11 @@ function Sidebar({
       <ItemEditorFooter
         type="memo"
         onBack={() => {
-          console.log(
-            "🔙 Sidebar: memo-editor-mobile-back-requested イベント発火",
-          );
-          window.dispatchEvent(
-            new CustomEvent("memo-editor-mobile-back-requested"),
-          );
+          const backEventName = isTeamMode
+            ? "team-back-to-memo-list"
+            : "memo-editor-mobile-back-requested";
+          console.log(`🔙 Sidebar: ${backEventName} イベント発火`);
+          window.dispatchEvent(new CustomEvent(backEventName));
         }}
         onMainClick={() =>
           window.dispatchEvent(

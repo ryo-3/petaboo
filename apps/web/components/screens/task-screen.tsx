@@ -386,7 +386,11 @@ function TaskScreen({
     };
 
     const handleBackRequest = () => {
+      console.log(
+        "📱 TaskScreen: task-editor-mobile-back-requested イベント受信",
+      );
       // タスクエディターを閉じてリストに戻る（refから最新の関数を取得）
+      console.log("→ onSelectTask(null) を呼び出し");
       onSelectTaskRef.current(null);
     };
 

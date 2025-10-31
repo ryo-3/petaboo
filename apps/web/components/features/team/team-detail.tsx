@@ -435,6 +435,16 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       }, 100);
     };
 
+    const handleTeamTaskCreate = (_event: CustomEvent) => {
+      console.log("📱 team-task-create イベント受信 (team-detail.tsx)");
+      handleTabChange("tasks");
+      // TaskScreenに新規作成モードを指示するイベント送信
+      setTimeout(() => {
+        console.log("→ team-task-create イベントをTaskScreenに再発火");
+        window.dispatchEvent(new CustomEvent("team-task-create"));
+      }, 100);
+    };
+
     const handleBackToMemoList = (_event: CustomEvent) => {
       // メモの選択を解除してメモ一覧に戻る
       setSelectedMemo(null);
@@ -478,6 +488,11 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     );
 
     window.addEventListener(
+      "team-task-create",
+      handleTeamTaskCreate as EventListener,
+    );
+
+    window.addEventListener(
       "team-back-to-memo-list",
       handleBackToMemoList as EventListener,
     );
@@ -495,6 +510,10 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       window.removeEventListener(
         "team-new-memo",
         handleTeamNewMemo as EventListener,
+      );
+      window.removeEventListener(
+        "team-task-create",
+        handleTeamTaskCreate as EventListener,
       );
       window.removeEventListener(
         "team-back-to-memo-list",

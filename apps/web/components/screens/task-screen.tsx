@@ -8,7 +8,6 @@ import DesktopLower from "@/components/layout/desktop-lower";
 import DesktopUpper from "@/components/layout/desktop-upper";
 import { BulkActionButtons } from "@/components/ui/layout/bulk-action-buttons";
 import SelectionMenuButton from "@/components/ui/buttons/selection-menu-button";
-import RightPanel from "@/components/ui/layout/right-panel";
 import { useSortOptions } from "@/hooks/use-sort-options";
 import { useBulkDeleteButton } from "@/src/hooks/use-bulk-delete-button";
 import { useBulkProcessNotifications } from "@/src/hooks/use-bulk-process-notifications";

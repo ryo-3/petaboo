@@ -48,6 +48,7 @@ import { ControlPanelLayout } from "@/components/layout/control-panel-layout";
 import CommentSection from "@/components/features/comments/comment-section";
 import AttachmentGallery from "@/components/features/attachments/attachment-gallery";
 import { useAttachmentManager } from "@/src/hooks/use-attachment-manager";
+import TaskEditorFooter from "@/components/mobile/task-editor-footer";
 import type { TeamMember } from "@/src/hooks/use-team-detail";
 
 type TaskScreenMode = "list" | "view" | "create" | "edit";
@@ -348,10 +349,14 @@ function TaskScreen({
     "task" | "comment" | "image"
   >("task");
 
-  // モバイル版タスクエディターのタブ切り替えイベントをリッスン（チームモードのみ）
+  // onSelectTaskのrefを保持
+  const onSelectTaskRef = useRef(onSelectTask);
   useEffect(() => {
-    if (!teamMode) return;
+    onSelectTaskRef.current = onSelectTask;
+  }, [onSelectTask]);
 
+  // モバイル版タスクエディターのタブ切り替えイベントをリッスン
+  useEffect(() => {
     const handleTabChange = (e: Event) => {
       const customEvent = e as CustomEvent<{
         tab: "task" | "comment" | "image";
@@ -359,12 +364,25 @@ function TaskScreen({
       setTaskEditorTab(customEvent.detail.tab);
     };
 
-    window.addEventListener("team-task-editor-tab-change", handleTabChange);
+    const handleBackRequest = () => {
+      // タスクエディターを閉じてリストに戻る
+      onSelectTaskRef.current?.(null);
+    };
+
+    // チーム用と個人用の両方のイベントをリッスン
+    const eventName = teamMode
+      ? "team-task-editor-tab-change"
+      : "task-editor-tab-change";
+    const backEventName = teamMode
+      ? "team-task-editor-mobile-back-requested"
+      : "task-editor-mobile-back-requested";
+
+    window.addEventListener(eventName, handleTabChange);
+    window.addEventListener(backEventName, handleBackRequest);
+
     return () => {
-      window.removeEventListener(
-        "team-task-editor-tab-change",
-        handleTabChange,
-      );
+      window.removeEventListener(eventName, handleTabChange);
+      window.removeEventListener(backEventName, handleBackRequest);
     };
   }, [teamMode]);
 

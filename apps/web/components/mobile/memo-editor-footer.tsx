@@ -15,6 +15,7 @@ interface MemoEditorFooterProps {
   activeTab: "memo" | "comment" | "image";
   imageCount?: number;
   commentCount?: number;
+  hideComment?: boolean; // コメントボタンを非表示にするか
 }
 
 /**
@@ -29,6 +30,7 @@ export default function MemoEditorFooter({
   activeTab,
   imageCount = 0,
   commentCount = 0,
+  hideComment = false,
 }: MemoEditorFooterProps) {
   const buttons: FooterButton[] = [
     {
@@ -50,16 +52,21 @@ export default function MemoEditorFooter({
       ariaLabel: "画像・ファイル",
       count: imageCount,
     },
-    {
-      icon: <CommentIcon className="w-6 h-6 ml-1" />,
-      onClick: onCommentClick,
-      isActive: activeTab === "comment",
-      activeColorClass: "bg-Green",
-      inactiveIconColorClass: "text-gray-400",
-      activeIconColorClass: "text-white",
-      ariaLabel: "コメント",
-      count: commentCount,
-    },
+    // コメントボタンは hideComment が false の場合のみ表示
+    ...(!hideComment
+      ? [
+          {
+            icon: <CommentIcon className="w-6 h-6 ml-1" />,
+            onClick: onCommentClick,
+            isActive: activeTab === "comment",
+            activeColorClass: "bg-Green",
+            inactiveIconColorClass: "text-gray-400",
+            activeIconColorClass: "text-white",
+            ariaLabel: "コメント",
+            count: commentCount,
+          } as FooterButton,
+        ]
+      : []),
   ];
 
   return <MobileEditorFooter onBack={onBack} buttons={buttons} />;

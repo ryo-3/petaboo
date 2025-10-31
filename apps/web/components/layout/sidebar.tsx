@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigation } from "@/contexts/navigation-context";
 import { useTeamDetail } from "@/src/contexts/team-detail-context";
 import { useClerk } from "@clerk/nextjs";
+import { usePathname } from "next/navigation";
 import DashboardIcon from "@/components/icons/dashboard-icon";
 import DashboardEditIcon from "@/components/icons/dashboard-edit-icon";
 import HomeIcon from "@/components/icons/home-icon";
@@ -18,6 +19,7 @@ import SwitchTabs from "@/components/ui/base/switch-tabs";
 import Tooltip from "@/components/ui/base/tooltip";
 import NotificationBadge from "@/components/ui/base/notification-badge";
 import MemoEditorFooter from "@/components/mobile/memo-editor-footer";
+import TaskEditorFooter from "@/components/mobile/task-editor-footer";
 import { LogOut } from "lucide-react";
 import type { Memo } from "@/src/types/memo";
 import type { Task } from "@/src/types/task";
@@ -77,6 +79,9 @@ function Sidebar({
 }: SidebarProps) {
   // NavigationContextから統一されたiconStatesと楽観的更新を取得
   const { iconStates, setOptimisticMode } = useNavigation();
+  // pathnameを取得してチームモード判定
+  const pathname = usePathname();
+  const isTeamMode = pathname?.startsWith("/team/") ?? false;
   // TeamDetailContextから新規作成状態を取得（チームモード外ではエラーになるのでtry-catch）
   let isCreatingMemo = false;
   try {
@@ -95,13 +100,17 @@ function Sidebar({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   // ログアウト確認モーダル
   const [showLogoutModal, setShowLogoutModal] = React.useState(false);
+  // タスクエディターのアクティブタブ
+  const [taskEditorTab, setTaskEditorTab] = React.useState<
+    "task" | "comment" | "image"
+  >("task");
 
   // モバイル版メモエディターのアクティブタブ管理
   const [memoEditorTab, setMemoEditorTab] = useState<
     "memo" | "comment" | "image"
   >("memo");
 
-  // CustomEventでタブ切り替えを監視
+  // CustomEventでメモエディターのタブ切り替えを監視
   useEffect(() => {
     const handleTabChange = (e: Event) => {
       const customEvent = e as CustomEvent<{
@@ -113,6 +122,21 @@ function Sidebar({
     window.addEventListener("memo-editor-tab-change", handleTabChange);
     return () => {
       window.removeEventListener("memo-editor-tab-change", handleTabChange);
+    };
+  }, []);
+
+  // CustomEventでタスクエディターのタブ切り替えを監視
+  useEffect(() => {
+    const handleTabChange = (e: Event) => {
+      const customEvent = e as CustomEvent<{
+        tab: "task" | "comment" | "image";
+      }>;
+      setTaskEditorTab(customEvent.detail.tab);
+    };
+
+    window.addEventListener("task-editor-tab-change", handleTabChange);
+    return () => {
+      window.removeEventListener("task-editor-tab-change", handleTabChange);
     };
   }, []);
 
@@ -133,8 +157,46 @@ function Sidebar({
   // 新規作成時（selectedMemoId === null かつ isCreatingMemo === true）も含む
   const isShowingMemoEditor = selectedMemoId !== undefined || isCreatingMemo;
 
-  // モバイルフッター（PCでは非表示、モバイルでメモ選択時のみ表示）
-  const mobileFooter = isShowingMemoEditor ? (
+  // モバイルでタスクエディターが開いている場合は専用フッターを表示
+  const isShowingTaskEditor = selectedTaskId !== undefined;
+
+  // モバイルフッター（PCでは非表示、モバイルでメモ/タスク選択時のみ表示）
+  const mobileFooter = isShowingTaskEditor ? (
+    <div className="md:hidden w-full h-full">
+      <TaskEditorFooter
+        onBack={() => {
+          window.dispatchEvent(
+            new CustomEvent("task-editor-mobile-back-requested"),
+          );
+        }}
+        onTaskClick={() =>
+          window.dispatchEvent(
+            new CustomEvent("task-editor-tab-change", {
+              detail: { tab: "task" },
+            }),
+          )
+        }
+        onImageClick={() =>
+          window.dispatchEvent(
+            new CustomEvent("task-editor-tab-change", {
+              detail: { tab: "image" },
+            }),
+          )
+        }
+        onCommentClick={() =>
+          window.dispatchEvent(
+            new CustomEvent("task-editor-tab-change", {
+              detail: { tab: "comment" },
+            }),
+          )
+        }
+        activeTab={taskEditorTab}
+        imageCount={imageCount}
+        commentCount={commentCount}
+        hideComment={!isTeamMode}
+      />
+    </div>
+  ) : isShowingMemoEditor ? (
     <div className="md:hidden w-full h-full">
       <MemoEditorFooter
         onBack={() => {
@@ -166,6 +228,7 @@ function Sidebar({
         activeTab={memoEditorTab}
         imageCount={imageCount}
         commentCount={commentCount}
+        hideComment={!isTeamMode}
       />
     </div>
   ) : null;

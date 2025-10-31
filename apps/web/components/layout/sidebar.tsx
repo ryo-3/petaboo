@@ -124,7 +124,7 @@ function Sidebar({
     };
   }, []);
 
-  // CustomEventでタスクエディターのタブ切り替えを監視
+  // CustomEventでタスクエディターのタブ切り替えを監視（個人・チーム両対応）
   useEffect(() => {
     const handleTabChange = (e: Event) => {
       const customEvent = e as CustomEvent<{
@@ -133,11 +133,14 @@ function Sidebar({
       setTaskEditorTab(customEvent.detail.tab);
     };
 
-    window.addEventListener("task-editor-tab-change", handleTabChange);
+    const eventName = isTeamMode
+      ? "team-task-editor-tab-change"
+      : "task-editor-tab-change";
+    window.addEventListener(eventName, handleTabChange);
     return () => {
-      window.removeEventListener("task-editor-tab-change", handleTabChange);
+      window.removeEventListener(eventName, handleTabChange);
     };
-  }, []);
+  }, [isTeamMode]);
 
   const modeTabs = [
     {
@@ -165,31 +168,41 @@ function Sidebar({
       <ItemEditorFooter
         type="task"
         onBack={() => {
-          window.dispatchEvent(
-            new CustomEvent("task-editor-mobile-back-requested"),
-          );
+          const backEventName = isTeamMode
+            ? "team-task-editor-mobile-back-requested"
+            : "task-editor-mobile-back-requested";
+          window.dispatchEvent(new CustomEvent(backEventName));
         }}
-        onMainClick={() =>
+        onMainClick={() => {
+          const eventName = isTeamMode
+            ? "team-task-editor-tab-change"
+            : "task-editor-tab-change";
           window.dispatchEvent(
-            new CustomEvent("task-editor-tab-change", {
+            new CustomEvent(eventName, {
               detail: { tab: "task" },
             }),
-          )
-        }
-        onImageClick={() =>
+          );
+        }}
+        onImageClick={() => {
+          const eventName = isTeamMode
+            ? "team-task-editor-tab-change"
+            : "task-editor-tab-change";
           window.dispatchEvent(
-            new CustomEvent("task-editor-tab-change", {
+            new CustomEvent(eventName, {
               detail: { tab: "image" },
             }),
-          )
-        }
-        onCommentClick={() =>
+          );
+        }}
+        onCommentClick={() => {
+          const eventName = isTeamMode
+            ? "team-task-editor-tab-change"
+            : "task-editor-tab-change";
           window.dispatchEvent(
-            new CustomEvent("task-editor-tab-change", {
+            new CustomEvent(eventName, {
               detail: { tab: "comment" },
             }),
-          )
-        }
+          );
+        }}
         activeTab={taskEditorTab}
         imageCount={imageCount}
         commentCount={commentCount}

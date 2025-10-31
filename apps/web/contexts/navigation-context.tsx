@@ -153,13 +153,14 @@ export function NavigationProvider({
     const effectiveMode = optimisticMode || currentMode;
     const boardDetailActive = effectiveMode === "board" && showingBoardDetail;
 
+    // ホーム画面表示中は、currentModeに関わらずhomeアイコンのみ有効化
+    const isHomeScreen = screenMode === "home" && !showTeamList;
+
     return {
-      home: screenMode === "home" && !showTeamList,
-      memo: screenMode === "memo" || optimisticMode === "memo",
-      task: screenMode === "task" || optimisticMode === "task",
-      board:
-        (screenMode === "board" || optimisticMode === "board") &&
-        !boardDetailActive,
+      home: isHomeScreen,
+      memo: !isHomeScreen && effectiveMode === "memo",
+      task: !isHomeScreen && effectiveMode === "task",
+      board: !isHomeScreen && effectiveMode === "board" && !boardDetailActive,
       boardDetail: boardDetailActive,
       search: screenMode === "search",
       settings: screenMode === "settings",

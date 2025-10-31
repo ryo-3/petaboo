@@ -38,7 +38,7 @@ function Header() {
   const currentTab = searchParams.get("tab");
 
   // 個人ページの現在モードを取得（楽観的更新対応）
-  const { currentMode, iconStates } = useNavigation();
+  const { currentMode, iconStates, screenMode } = useNavigation();
 
   // ボード名の状態管理
   const [boardTitle, setBoardTitle] = useState<string | null>(null);
@@ -51,9 +51,10 @@ function Header() {
     const isTeamBoardPage = pathname.includes("/board/");
     const isPersonalPage = pathname === "/" || !teamName;
 
-    // iconStatesから楽観的更新を反映した状態を取得
-    const isMemoListPage = iconStates.memo;
-    const isTaskListPage = iconStates.task;
+    // 個人ページのメモ/タスク一覧は screenMode で判定
+    // （iconStatesはホーム画面ではfalseになるため、screenModeを使う）
+    const isMemoListPage = isPersonalPage && screenMode === "memo";
+    const isTaskListPage = isPersonalPage && screenMode === "task";
 
     const isTeamMemoListPage =
       teamName && pathname === `/team/${teamName}` && currentTab === "memos";
@@ -68,7 +69,7 @@ function Header() {
       isMemoListPage,
       isTaskListPage,
     };
-  }, [pathname, teamName, currentTab, iconStates]);
+  }, [pathname, teamName, currentTab, screenMode]);
 
   const {
     isTeamBoardPage,
@@ -210,7 +211,7 @@ function Header() {
                       : "ぺたぼー"}
               </h1>
               {/* メモ一覧の新規追加ボタン */}
-              {isMemoListPage && (
+              {(isMemoListPage || isTeamMemoListPage) && (
                 <button
                   onClick={() => {
                     window.dispatchEvent(
@@ -239,7 +240,7 @@ function Header() {
                 </button>
               )}
               {/* タスク一覧の新規追加ボタン */}
-              {isTaskListPage && (
+              {(isTaskListPage || isTeamTaskListPage) && (
                 <button
                   onClick={() => {
                     window.dispatchEvent(

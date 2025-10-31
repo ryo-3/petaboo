@@ -992,9 +992,42 @@ function MemoScreen({
         )}
       </div>
 
-      {/* モバイル: 1パネル表示（メモ OR コメント OR 画像 排他的表示） */}
+      {/* モバイル: 1パネル表示（一覧 OR メモ OR コメント OR 画像 排他的表示） */}
       <div className="md:hidden h-full flex flex-col bg-white">
-        {memoEditorTab === "memo" ? (
+        {!selectedMemo &&
+        !selectedDeletedMemo &&
+        memoScreenMode !== "create" ? (
+          <div className="flex-1 min-h-0 flex flex-col">
+            {leftPanelContent}
+            {/* モバイル: メモ追加FABボタン（削除済みタブ以外で表示） */}
+            {activeTab !== "deleted" && (
+              <button
+                onClick={() => {
+                  window.dispatchEvent(
+                    new CustomEvent(
+                      teamMode ? "team-memo-create" : "personal-memo-create",
+                    ),
+                  );
+                }}
+                className="md:hidden fixed bottom-16 right-2 size-9 bg-Green hover:bg-Green/90 text-white rounded-full shadow-lg flex items-center justify-center z-20 transition-all"
+              >
+                <svg
+                  className="size-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2.5}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+              </button>
+            )}
+          </div>
+        ) : memoEditorTab === "memo" ? (
           <div className="flex-1 min-h-0 flex flex-col">
             {centerPanelContent}
           </div>

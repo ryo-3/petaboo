@@ -195,7 +195,8 @@ export function useMainClientHandlers({
   const handleHome = useCallback(() => {
     clearAllSelections();
     setScreenMode("home");
-  }, [clearAllSelections, setScreenMode]);
+    setCurrentMode("memo"); // currentModeをデフォルトに戻す
+  }, [clearAllSelections, setScreenMode, setCurrentMode]);
 
   /** 設定画面に遷移 */
   const handleSettings = useCallback(() => {

@@ -337,6 +337,7 @@ function DesktopUpper({
 
   // コントロール部分のJSX
   const shouldHideControls =
+    currentMode === "board" ||
     (currentMode === "memo" && preferences?.memoHideControls) ||
     (currentMode === "task" && preferences?.taskHideControls);
 

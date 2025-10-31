@@ -600,7 +600,7 @@ function TaskScreen({
         onViewModeChange={setViewMode}
         columnCount={columnCount}
         onColumnCountChange={setColumnCount}
-        rightPanelMode="view"
+        rightPanelMode={taskScreenMode === "list" ? "hidden" : "view"}
         selectionMode={selectionMode}
         onSelectionModeChange={(mode) => {
           setSelectionMode(mode);

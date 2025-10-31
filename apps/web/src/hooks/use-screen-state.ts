@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import type { UserPreferences } from "@/src/contexts/user-preferences-context";
 import { useViewModeStorage } from "@/src/hooks/use-view-mode-storage";
+import { useColumnCountStorage } from "@/src/hooks/use-column-count-storage";
 
 interface UseScreenStateConfig {
   type: "memo" | "task";
@@ -38,42 +39,18 @@ export function useScreenState<T extends string>(
   initialScreenMode: T,
   selectedItem?: unknown,
   selectedDeletedItem?: unknown,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   preferences?: UserPreferences,
 ): ScreenStateReturn<T> {
-  // 列数の初期値を取得
-  const getInitialColumnCount = (): number => {
-    if (preferences) {
-      const columnCountKey =
-        `${config.type}ColumnCount` as keyof UserPreferences;
-      return (
-        (preferences[columnCountKey] as number) || config.defaultColumnCount
-      );
-    }
-    return config.defaultColumnCount;
-  };
-
   // Basic state
   const [screenMode, setScreenMode] = useState<T>(initialScreenMode);
   const [activeTab, setActiveTab] = useState(config.defaultActiveTab);
-  const [viewMode, setViewMode] = useViewModeStorage(); // 共通のlocalStorage設定を使用
-  const [columnCount, setColumnCount] = useState(getInitialColumnCount());
+  const [viewMode, setViewMode] = useViewModeStorage(config.type); // メモ・タスク個別のlocalStorage設定
+  const [columnCount, setColumnCount] = useColumnCountStorage(config.type); // メモ・タスク個別のlocalStorage設定
   const [checkedItems, setCheckedItems] = useState<Set<number>>(new Set());
   const [checkedDeletedItems, setCheckedDeletedItems] = useState<Set<number>>(
     new Set(),
   );
-
-  // 列数設定が変更されたらローカル状態を更新
-  useEffect(() => {
-    if (preferences) {
-      const columnCountKey =
-        `${config.type}ColumnCount` as keyof UserPreferences;
-
-      const newColumnCount =
-        (preferences[columnCountKey] as number) || config.defaultColumnCount;
-
-      setColumnCount(newColumnCount);
-    }
-  }, [preferences, config.type, config.defaultColumnCount]);
 
   // アイテムが選択されている場合は表示モードに、選択がクリアされた場合は一覧モードに
   useEffect(() => {

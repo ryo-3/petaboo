@@ -25,8 +25,8 @@ export function useBoardState() {
     Set<number>
   >(new Set());
 
-  // 表示モード状態（共通のlocalStorage設定を使用）
-  const [viewMode, setViewMode] = useViewModeStorage();
+  // 表示モード状態（ボード個別のlocalStorage設定を使用）
+  const [viewMode, setViewMode] = useViewModeStorage("board");
   const [columnCount, setColumnCount] = useState(2);
   const [showEditDate, setShowEditDate] = useState(false);
 

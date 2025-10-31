@@ -2,11 +2,11 @@ import { useState, useCallback } from "react";
 
 /**
  * ビューモード設定をlocalStorageで管理する共通フック
- * 全体で1つの共通設定（view-mode）を使用
+ * メモ・タスク・ボード個別に設定を保存（個人・チーム共通）
  */
-export function useViewModeStorage() {
-  const storageKey = "view-mode";
-  const defaultMode = "card";
+export function useViewModeStorage(type: "memo" | "task" | "board") {
+  const storageKey = `${type}-view-mode`;
+  const defaultMode = "list";
 
   // localStorageから初期値を取得
   const [viewMode, setViewModeState] = useState<"card" | "list">(() => {
@@ -20,12 +20,15 @@ export function useViewModeStorage() {
   });
 
   // viewMode変更時にlocalStorageに保存
-  const setViewMode = useCallback((mode: "card" | "list") => {
-    setViewModeState(mode);
-    if (typeof window !== "undefined") {
-      localStorage.setItem(storageKey, mode);
-    }
-  }, []);
+  const setViewMode = useCallback(
+    (mode: "card" | "list") => {
+      setViewModeState(mode);
+      if (typeof window !== "undefined") {
+        localStorage.setItem(storageKey, mode);
+      }
+    },
+    [storageKey],
+  );
 
   return [viewMode, setViewMode] as const;
 }

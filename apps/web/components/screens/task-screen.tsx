@@ -49,6 +49,7 @@ import CommentSection from "@/components/features/comments/comment-section";
 import AttachmentGallery from "@/components/features/attachments/attachment-gallery";
 import { useAttachmentManager } from "@/src/hooks/use-attachment-manager";
 import TaskEditorFooter from "@/components/mobile/task-editor-footer";
+import PhotoButton from "@/components/ui/buttons/photo-button";
 import type { TeamMember } from "@/src/hooks/use-team-detail";
 
 type TaskScreenMode = "list" | "view" | "create" | "edit";
@@ -69,8 +70,12 @@ function MobileAttachmentView({
     isDeleted: false,
   });
 
-  const { attachments, pendingImages, handleDeleteAttachment } =
-    attachmentManager;
+  const {
+    attachments,
+    pendingImages,
+    handleFilesSelect,
+    handleDeleteAttachment,
+  } = attachmentManager;
 
   return (
     <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
@@ -83,6 +88,12 @@ function MobileAttachmentView({
             </span>
           )}
         </div>
+        <PhotoButton
+          onFilesSelect={handleFilesSelect}
+          multiple={true}
+          buttonSize="size-9"
+          iconSize="size-5"
+        />
       </div>
       <div className="flex-1 overflow-y-auto p-4">
         {attachments.length === 0 && pendingImages.length === 0 ? (

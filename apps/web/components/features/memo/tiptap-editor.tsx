@@ -218,10 +218,14 @@ export function TiptapEditor({
   });
 
   // contentが外部から変更された時に更新
+  const prevContentRef = useRef<string>(content);
+
   useEffect(() => {
     if (editor && !isFirstRender.current) {
       const currentMarkdown = editor.getMarkdown();
-      if (content !== currentMarkdown) {
+
+      // 前回のcontentと比較（エディタからの変更を除外）
+      if (content !== prevContentRef.current && content !== currentMarkdown) {
         // 2スペース+改行を<br>タグに変換してから設定
         const processedContent = content.replace(/ {2}\n/g, "<br>\n");
 
@@ -230,6 +234,8 @@ export function TiptapEditor({
           contentType: "markdown",
         });
       }
+
+      prevContentRef.current = content;
     }
     isFirstRender.current = false;
   }, [content, editor]);

@@ -95,7 +95,7 @@ export default function AttachmentGallery({
       isMounted = false;
       isLoadingRef.current = false;
     };
-    // attachmentsの長さのみを依存に（attachments自体は含めない）
+    // attachments.lengthのみを依存配列に（attachments自体の参照変更を無視）
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attachments.length]);
 

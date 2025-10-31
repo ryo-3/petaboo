@@ -626,25 +626,22 @@ function MemoScreen({
     onClose: onClose,
   });
 
-  // ヘッダーからの新規メモ作成イベントをリッスン（チームモードのみ）
+  // ヘッダーからの新規メモ作成イベントをリッスン
   useEffect(() => {
-    if (!teamMode) return;
-
-    const handleTeamMemoCreate = () => {
+    const handleMemoCreate = () => {
       handleCreateNew();
     };
 
-    window.addEventListener("team-memo-create", handleTeamMemoCreate);
+    const eventName = teamMode ? "team-memo-create" : "personal-memo-create";
+    window.addEventListener(eventName, handleMemoCreate);
 
     return () => {
-      window.removeEventListener("team-memo-create", handleTeamMemoCreate);
+      window.removeEventListener(eventName, handleMemoCreate);
     };
   }, [teamMode, handleCreateNew]);
 
-  // モバイル版メモエディターのタブ切り替えイベントをリッスン（チームモードのみ）
+  // モバイル版メモエディターのタブ切り替えイベントをリッスン
   useEffect(() => {
-    if (!teamMode) return;
-
     const handleTabChange = (e: Event) => {
       const customEvent = e as CustomEvent<{
         tab: "memo" | "comment" | "image";
@@ -656,7 +653,7 @@ function MemoScreen({
     return () => {
       window.removeEventListener("memo-editor-tab-change", handleTabChange);
     };
-  }, [teamMode]);
+  }, []);
 
   // 除外アイテムIDでフィルタリングされたメモ（originalIdで比較）
   const filteredMemos =

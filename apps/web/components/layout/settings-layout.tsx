@@ -2,7 +2,7 @@
 
 import { ReactNode } from "react";
 
-export interface SettingsTab {
+export interface SettingsMenuItem {
   id: string;
   label: string;
   icon: ReactNode;
@@ -12,7 +12,7 @@ interface SettingsLayoutProps {
   title: string;
   subtitle?: string;
   headerIcon: ReactNode;
-  tabs: SettingsTab[];
+  menuItems: SettingsMenuItem[];
   activeTab: string;
   onTabChange: (tabId: string) => void;
   children: ReactNode;
@@ -22,7 +22,7 @@ export function SettingsLayout({
   title,
   subtitle,
   headerIcon,
-  tabs,
+  menuItems,
   activeTab,
   onTabChange,
   children,
@@ -40,30 +40,33 @@ export function SettingsLayout({
         </div>
       </div>
 
-      {/* タブナビゲーション */}
-      {tabs.length > 1 && (
-        <div className="border-b border-gray-200">
-          <nav className="flex space-x-8 px-5">
-            {tabs.map((tab) => (
+      {/* サイドバーとメインコンテンツ */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* サイドバー */}
+        <div className="w-[180px] border-r border-gray-200 pt-3 px-3">
+          <nav className="space-y-1">
+            {menuItems.map((item) => (
               <button
-                key={tab.id}
-                onClick={() => onTabChange(tab.id)}
-                className={`py-3 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
-                  activeTab === tab.id
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
+                key={item.id}
+                onClick={() => onTabChange(item.id)}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
+                  activeTab === item.id
+                    ? "bg-gray-100 text-gray-900 font-medium"
+                    : "text-gray-600 hover:bg-gray-50"
                 }`}
               >
-                {tab.icon}
-                {tab.label}
+                {item.icon}
+                <span className="text-sm">{item.label}</span>
               </button>
             ))}
           </nav>
         </div>
-      )}
 
-      {/* コンテンツエリア */}
-      <div className="flex-1 overflow-auto p-5">{children}</div>
+        {/* メインコンテンツ */}
+        <div className="flex-1 px-6 pt-4 overflow-y-auto">
+          <div className="max-w-2xl">{children}</div>
+        </div>
+      </div>
     </div>
   );
 }

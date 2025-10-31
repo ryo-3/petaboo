@@ -141,7 +141,7 @@ export function NavigationProvider({
           (effectiveTab === "boards" || optimisticMode === "board") &&
           !isTeamBoardDetailPage,
         boardDetail: isTeamBoardDetailPage,
-        search: false,
+        search: currentTab === "search",
         settings: isTeamSettingsTab,
         team:
           effectiveTab === "team-list" ||

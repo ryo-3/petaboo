@@ -188,7 +188,10 @@ function Sidebar({
               <div className="md:hidden">
                 <Tooltip text="ボード一覧に戻る" position="right">
                   <button
-                    onClick={onBackToBoardList}
+                    onClick={() => {
+                      setOptimisticMode(null); // optimisticModeをクリア
+                      onBackToBoardList?.();
+                    }}
                     className="p-2 rounded-lg transition-colors bg-gray-200 hover:bg-gray-300 text-gray-600"
                   >
                     <svg
@@ -211,7 +214,10 @@ function Sidebar({
               <div className="hidden md:block">
                 <Tooltip text="ホーム" position="right">
                   <button
-                    onClick={onHome}
+                    onClick={() => {
+                      setOptimisticMode(null); // optimisticModeをクリア
+                      onHome();
+                    }}
                     className={`p-2 rounded-lg transition-colors ${
                       iconStates.home
                         ? "bg-slate-500 text-white"
@@ -230,7 +236,10 @@ function Sidebar({
           ) : (
             <Tooltip text="ホーム" position="right">
               <button
-                onClick={onHome}
+                onClick={() => {
+                  setOptimisticMode(null); // optimisticModeをクリア
+                  onHome();
+                }}
                 className={`p-2 rounded-lg transition-colors ${
                   iconStates.home
                     ? "bg-slate-500 text-white"
@@ -317,7 +326,10 @@ function Sidebar({
           {currentBoardName && (
             <Tooltip text={`${currentBoardName}詳細`} position="right">
               <button
-                onClick={onBoardDetail}
+                onClick={() => {
+                  setOptimisticMode(null); // optimisticModeをクリア
+                  onBoardDetail?.();
+                }}
                 className={`p-2 rounded-lg transition-colors ${
                   iconStates.boardDetail
                     ? "bg-light-Blue text-white"
@@ -335,6 +347,7 @@ function Sidebar({
           <Tooltip text="詳細検索" position="right">
             <button
               onClick={() => {
+                setOptimisticMode(null); // optimisticModeをクリア
                 onSearch?.();
               }}
               className={`p-2 rounded-lg transition-colors ${
@@ -354,6 +367,7 @@ function Sidebar({
             <Tooltip text={currentTeamName || "チーム"} position="right">
               <button
                 onClick={() => {
+                  setOptimisticMode(null); // optimisticModeをクリア
                   // 通知を既読にする
                   markNotificationsAsRead();
                   // チーム一覧に移動
@@ -377,6 +391,7 @@ function Sidebar({
             <Tooltip text="設定" position="right">
               <button
                 onClick={() => {
+                  setOptimisticMode(null); // optimisticModeをクリア
                   onSettings?.();
                 }}
                 className={`p-2 rounded-lg transition-colors ${

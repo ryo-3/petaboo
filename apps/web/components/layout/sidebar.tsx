@@ -168,13 +168,6 @@ function Sidebar({
   // モバイルでメモエディターが開いている場合は専用フッターを表示
   // 新規作成時（selectedMemoId === null かつ isCreatingMemo === true）も含む
   const isShowingMemoEditor = selectedMemoId !== undefined || isCreatingMemo;
-  console.log("🔍 Sidebar判定:", {
-    selectedMemoId,
-    isCreatingMemo,
-    isShowingMemoEditor,
-    selectedTaskId,
-    isCreatingTask,
-  });
 
   // モバイルでタスクエディターが開いている場合は専用フッターを表示
   // 新規作成時も含む

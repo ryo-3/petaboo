@@ -226,7 +226,7 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
     if (isTeamDetailPage) {
       // チーム詳細ページでメモ作成イベントを送信
       window.dispatchEvent(
-        new CustomEvent("team-new-memo", {
+        new CustomEvent("team-memo-create", {
           detail: { pathname },
         }),
       );

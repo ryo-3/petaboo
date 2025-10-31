@@ -51,6 +51,7 @@ import { useAttachmentManager } from "@/src/hooks/use-attachment-manager";
 import ItemEditorFooter from "@/components/mobile/item-editor-footer";
 import PhotoButton from "@/components/ui/buttons/photo-button";
 import type { TeamMember } from "@/src/hooks/use-team-detail";
+import MobileFabButton from "@/components/ui/buttons/mobile-fab-button";
 
 type TaskScreenMode = "list" | "view" | "create" | "edit";
 
@@ -386,11 +387,9 @@ function TaskScreen({
     };
 
     const handleBackRequest = () => {
-      console.log(
-        "📱 TaskScreen: task-editor-mobile-back-requested イベント受信",
-      );
+      console.log("📱 TaskScreen: 戻るボタンイベント受信");
       // タスクエディターを閉じてリストに戻る（refから最新の関数を取得）
-      console.log("→ onSelectTask(null) を呼び出し");
+      console.log("→ onSelectTask(null) 呼び出し");
       onSelectTaskRef.current(null);
     };
 
@@ -600,21 +599,19 @@ function TaskScreen({
     handleSelectTaskBase(task);
   };
 
-  // ヘッダーからの新規タスク作成イベントをリッスン（チームモードのみ）
+  // ヘッダーからの新規タスク作成イベントをリッスン
   useEffect(() => {
-    if (!teamMode) return;
-
-    const handleTeamTaskCreate = () => {
+    const handleTaskCreate = () => {
       handleCreateNew();
     };
 
-    window.addEventListener("team-task-create", handleTeamTaskCreate);
+    const eventName = teamMode ? "team-task-create" : "personal-task-create";
+    window.addEventListener(eventName, handleTaskCreate);
 
     return () => {
-      window.removeEventListener("team-task-create", handleTeamTaskCreate);
+      window.removeEventListener(eventName, handleTaskCreate);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [teamMode]);
+  }, [teamMode, handleCreateNew]);
 
   // 安全なデータ配布用
   const safeAllTaggings = allTaggings || [];
@@ -970,32 +967,11 @@ function TaskScreen({
           <div className="flex-1 min-h-0 flex flex-col">
             {leftPanelContent}
             {/* モバイル: タスク追加FABボタン（削除済みタブ以外で表示） */}
-            {activeTab !== "deleted" && (
-              <button
-                onClick={() => {
-                  window.dispatchEvent(
-                    new CustomEvent(
-                      teamMode ? "team-task-create" : "personal-task-create",
-                    ),
-                  );
-                }}
-                className="md:hidden fixed bottom-16 right-2 size-9 bg-DeepBlue hover:bg-DeepBlue/90 text-white rounded-full shadow-lg flex items-center justify-center z-20 transition-all"
-              >
-                <svg
-                  className="size-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-              </button>
-            )}
+            <MobileFabButton
+              type="task"
+              teamMode={teamMode}
+              show={activeTab !== "deleted"}
+            />
           </div>
         ) : taskEditorTab === "task" ? (
           <div className="flex-1 min-h-0 flex flex-col">

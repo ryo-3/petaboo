@@ -59,6 +59,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   const {
     setSelectedMemoId,
     setSelectedTaskId,
+    setIsCreatingMemo,
+    setIsCreatingTask,
     setImageCount,
     setCommentCount,
     setTaskImageCount,
@@ -423,24 +425,24 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       }
     };
 
-    const handleTeamNewMemo = (_event: CustomEvent) => {
+    const handleTeamMemoCreate = (_event: CustomEvent) => {
+      console.log("📱 team-memo-create イベント受信");
+      setIsCreatingMemo(true);
       handleTabChange("memos");
       // MemoScreenに新規作成モードを指示するイベント送信
       setTimeout(() => {
-        window.dispatchEvent(
-          new CustomEvent("memo-create-mode", {
-            detail: { action: "create" },
-          }),
-        );
+        console.log("→ team-memo-create イベント再発火（MemoScreen用）");
+        window.dispatchEvent(new CustomEvent("team-memo-create"));
       }, 100);
     };
 
     const handleTeamTaskCreate = (_event: CustomEvent) => {
-      console.log("📱 team-task-create イベント受信 (team-detail.tsx)");
+      console.log("📱 team-task-create イベント受信");
+      setIsCreatingTask(true);
       handleTabChange("tasks");
       // TaskScreenに新規作成モードを指示するイベント送信
       setTimeout(() => {
-        console.log("→ team-task-create イベントをTaskScreenに再発火");
+        console.log("→ team-task-create イベント再発火（TaskScreen用）");
         window.dispatchEvent(new CustomEvent("team-task-create"));
       }, 100);
     };
@@ -457,6 +459,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     };
 
     const handleBackToTaskList = (_event: CustomEvent) => {
+      console.log("📱 team-back-to-task-list イベント受信");
       // 未保存変更がある場合は確認モーダルを表示
       if (
         taskEditorHasUnsavedChangesRef.current &&
@@ -470,6 +473,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       setSelectedTask(null);
       setSelectedTaskId(null);
       setSelectedDeletedTask(null);
+      console.log("→ setIsCreatingTask(false) 呼び出し");
+      setIsCreatingTask(false);
       const params = new URLSearchParams(searchParams.toString());
       params.delete("task");
       params.set("tab", "tasks");
@@ -483,8 +488,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     );
 
     window.addEventListener(
-      "team-new-memo",
-      handleTeamNewMemo as EventListener,
+      "team-memo-create",
+      handleTeamMemoCreate as EventListener,
     );
 
     window.addEventListener(
@@ -508,8 +513,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         handleTeamModeChange as EventListener,
       );
       window.removeEventListener(
-        "team-new-memo",
-        handleTeamNewMemo as EventListener,
+        "team-memo-create",
+        handleTeamMemoCreate as EventListener,
       );
       window.removeEventListener(
         "team-task-create",
@@ -528,7 +533,11 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
   // メモ/タスク選択ハンドラー
   const handleSelectMemo = (memo: Memo | null) => {
+    console.log("📱 handleSelectMemo呼び出し", { memo: memo?.id });
     setSelectedMemo(memo);
+
+    // 新規作成状態をクリア
+    setIsCreatingMemo(false);
 
     // URLを更新
     const params = new URLSearchParams(searchParams.toString());
@@ -546,8 +555,16 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   };
 
   const handleSelectTask = (task: Task | null, _fromFullList?: boolean) => {
+    console.log("📱 handleSelectTask呼び出し", { task: task?.id });
     setSelectedTask(task);
     setSelectedTaskId(task?.id ?? null);
+
+    // タスクを選択した時のみ新規作成状態をクリア
+    // task=nullの時は新規作成中の可能性があるのでクリアしない
+    if (task !== null) {
+      console.log("→ setIsCreatingTask(false) 呼び出し");
+      setIsCreatingTask(false);
+    }
 
     // URLを更新
     const params = new URLSearchParams(searchParams.toString());

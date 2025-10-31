@@ -338,7 +338,7 @@ export default function TeamBoardDetailPage() {
     );
 
     window.addEventListener(
-      "team-new-memo",
+      "team-memo-create",
       handleTeamNewMemo as EventListener,
     );
 
@@ -365,7 +365,7 @@ export default function TeamBoardDetailPage() {
         handleTeamModeChange as EventListener,
       );
       window.removeEventListener(
-        "team-new-memo",
+        "team-memo-create",
         handleTeamNewMemo as EventListener,
       );
       window.removeEventListener(

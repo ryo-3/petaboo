@@ -52,6 +52,7 @@ import AttachmentGallery from "@/components/features/attachments/attachment-gall
 import PhotoButton from "@/components/ui/buttons/photo-button";
 import { useAttachmentManager } from "@/src/hooks/use-attachment-manager";
 import type { TeamMember } from "@/src/hooks/use-team-detail";
+import MobileFabButton from "@/components/ui/buttons/mobile-fab-button";
 
 type MemoScreenMode = "list" | "view" | "create";
 
@@ -1019,32 +1020,11 @@ function MemoScreen({
           <div className="flex-1 min-h-0 flex flex-col">
             {leftPanelContent}
             {/* モバイル: メモ追加FABボタン（削除済みタブ以外で表示） */}
-            {activeTab !== "deleted" && (
-              <button
-                onClick={() => {
-                  window.dispatchEvent(
-                    new CustomEvent(
-                      teamMode ? "team-memo-create" : "personal-memo-create",
-                    ),
-                  );
-                }}
-                className="md:hidden fixed bottom-16 right-2 size-9 bg-Green hover:bg-Green/90 text-white rounded-full shadow-lg flex items-center justify-center z-20 transition-all"
-              >
-                <svg
-                  className="size-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-              </button>
-            )}
+            <MobileFabButton
+              type="memo"
+              teamMode={teamMode}
+              show={activeTab !== "deleted"}
+            />
           </div>
         ) : memoEditorTab === "memo" ? (
           <div className="flex-1 min-h-0 flex flex-col">

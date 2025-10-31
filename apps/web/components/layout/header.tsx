@@ -19,6 +19,7 @@ import { usePageVisibility } from "@/src/contexts/PageVisibilityContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useTeamContextSafe } from "@/contexts/team-context";
+import { useNavigation } from "@/contexts/navigation-context";
 import NotificationPopup from "@/components/features/notifications/notification-popup";
 import type { Notification } from "@/lib/api/notifications";
 import { getNotificationUrl } from "@/src/utils/notificationUtils";
@@ -35,6 +36,9 @@ function Header() {
   // クエリパラメータの取得
   const searchParams = useSearchParams();
   const currentTab = searchParams.get("tab");
+
+  // 個人ページの現在モードを取得
+  const { currentMode } = useNavigation();
 
   // ページ種別の判定
   const isTeamBoardPage = pathname.includes("/board/");
@@ -77,14 +81,15 @@ function Header() {
   }, [isTeamBoardPage]);
 
   const isPersonalPage = pathname === "/" || !teamName;
+  // メモ・タスク画面判定（個人・チーム共通）
+  // 個人ページはcurrentModeで判定、チームページはcurrentTabで判定
+  const isPersonalMemoListPage = isPersonalPage && currentMode === "memo";
+  const isPersonalTaskListPage = isPersonalPage && currentMode === "task";
+  const isMemoListPage = isTeamMemoListPage || isPersonalMemoListPage;
+  const isTaskListPage = isTeamTaskListPage || isPersonalTaskListPage;
 
   // Page Visibility & マウス状態を取得
   const { isVisible, isMouseActive } = usePageVisibility();
-
-  // デバッグ: 状態値を確認
-  // console.log(
-  //   `🔍 [Header] isVisible: ${isVisible}, isMouseActive: ${isMouseActive}, teamName: ${teamName}`,
-  // );
 
   // チーム専用通知（チームページでのみ使用）
   const teamNotifier = useSimpleTeamNotifier(teamName, isVisible);
@@ -150,18 +155,18 @@ function Header() {
             className={`w-8 h-8 md:w-10 md:h-10 rounded-xl flex items-center justify-center shadow-sm ${
               isTeamBoardPage && boardTitle
                 ? "bg-light-Blue"
-                : isTeamTaskListPage
+                : isTaskListPage
                   ? "bg-DeepBlue"
-                  : isTeamMemoListPage
+                  : isMemoListPage
                     ? "bg-Green"
                     : "bg-Green"
             }`}
           >
             {isTeamBoardPage && boardTitle ? (
               <DashboardEditIcon className="w-6 h-6 text-white" />
-            ) : isTeamTaskListPage ? (
+            ) : isTaskListPage ? (
               <CheckCircleIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
-            ) : isTeamMemoListPage ? (
+            ) : isMemoListPage ? (
               <EditIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
             ) : (
               <span className="text-white font-bold text-sm md:text-base">
@@ -175,22 +180,28 @@ function Header() {
             <div className="flex items-center gap-1 md:gap-3">
               <h1
                 className={`text-sm md:text-xl font-bold text-gray-800 tracking-wide ${
-                  isTeamMemoListPage || isTeamTaskListPage ? "w-[95px]" : ""
+                  isMemoListPage || isTaskListPage ? "w-[95px]" : ""
                 }`}
               >
                 {isTeamBoardPage && boardTitle
                   ? boardTitle
-                  : isTeamMemoListPage
+                  : isMemoListPage
                     ? "メモ一覧"
-                    : isTeamTaskListPage
+                    : isTaskListPage
                       ? "タスク一覧"
                       : "ぺたぼー"}
               </h1>
-              {/* チームメモ一覧の新規追加ボタン */}
-              {isTeamMemoListPage && (
+              {/* メモ一覧の新規追加ボタン */}
+              {isMemoListPage && (
                 <button
                   onClick={() => {
-                    window.dispatchEvent(new CustomEvent("team-memo-create"));
+                    window.dispatchEvent(
+                      new CustomEvent(
+                        isTeamMemoListPage
+                          ? "team-memo-create"
+                          : "personal-memo-create",
+                      ),
+                    );
                   }}
                   className="p-1.5 md:p-2 bg-Green hover:bg-Green/90 rounded-lg transition-colors"
                 >
@@ -209,11 +220,17 @@ function Header() {
                   </svg>
                 </button>
               )}
-              {/* チームタスク一覧の新規追加ボタン */}
-              {isTeamTaskListPage && (
+              {/* タスク一覧の新規追加ボタン */}
+              {isTaskListPage && (
                 <button
                   onClick={() => {
-                    window.dispatchEvent(new CustomEvent("team-task-create"));
+                    window.dispatchEvent(
+                      new CustomEvent(
+                        isTeamTaskListPage
+                          ? "team-task-create"
+                          : "personal-task-create",
+                      ),
+                    );
                   }}
                   className="p-1.5 md:p-2 bg-DeepBlue hover:bg-DeepBlue/90 rounded-lg transition-colors"
                 >
@@ -233,7 +250,7 @@ function Header() {
                 </button>
               )}
             </div>
-            {!isTeamBoardPage && !isTeamMemoListPage && !isTeamTaskListPage && (
+            {!isTeamBoardPage && !isMemoListPage && !isTaskListPage && (
               <span className="hidden md:inline text-sm text-gray-600 mt-0.5">
                 - 日々のメモやタスクをひとまとめに -
               </span>

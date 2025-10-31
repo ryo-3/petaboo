@@ -296,6 +296,31 @@ function MainClient({
     setHandleMainSelectTask,
   ]);
 
+  // 個人モードの新規作成イベントリスナー
+  useEffect(() => {
+    const handlePersonalMemoCreate = () => {
+      handleNewMemo();
+    };
+
+    const handlePersonalTaskCreate = () => {
+      handleNewTask();
+    };
+
+    window.addEventListener("personal-memo-create", handlePersonalMemoCreate);
+    window.addEventListener("personal-task-create", handlePersonalTaskCreate);
+
+    return () => {
+      window.removeEventListener(
+        "personal-memo-create",
+        handlePersonalMemoCreate,
+      );
+      window.removeEventListener(
+        "personal-task-create",
+        handlePersonalTaskCreate,
+      );
+    };
+  }, [handleNewMemo, handleNewTask]);
+
   return (
     <main className="relative md:h-dvh md:overflow-hidden">
       {/* エラー表示領域 */}

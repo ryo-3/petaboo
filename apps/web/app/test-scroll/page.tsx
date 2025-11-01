@@ -9,14 +9,14 @@ export default function TestScrollPage() {
   }));
 
   return (
-    <div className="h-dvh overflow-hidden flex flex-col bg-gray-50">
-      {/* 固定ヘッダー */}
-      <div className="h-[70px] bg-white border-b border-gray-300 flex items-center justify-center shrink-0">
-        <h1 className="text-xl font-bold">固定ヘッダー（70px）</h1>
+    <div className="bg-gray-50">
+      {/* 固定ヘッダー（fixed） */}
+      <div className="fixed top-0 left-0 right-0 z-50 h-[70px] bg-white border-b border-gray-300 flex items-center justify-center">
+        <h1 className="text-xl font-bold">固定ヘッダー（70px / fixed）</h1>
       </div>
 
-      {/* スクロールコンテンツエリア */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden px-2">
+      {/* スクロールコンテンツエリア（普通にスクロール） */}
+      <div className="pt-[70px] pb-[60px] md:pb-0 px-2">
         <div className="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 py-4">
           {dummyMemos.map((memo) => (
             <div
@@ -30,9 +30,11 @@ export default function TestScrollPage() {
         </div>
       </div>
 
-      {/* 固定ナビゲーションバー（スマホのみ） */}
-      <div className="md:hidden h-[60px] bg-white border-t border-gray-300 flex items-center justify-center shrink-0">
-        <div className="text-sm font-medium">固定ナビゲーション（60px）</div>
+      {/* 固定ナビゲーションバー（スマホのみ / fixed） */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 h-[60px] bg-white border-t border-gray-300 flex items-center justify-center">
+        <div className="text-sm font-medium">
+          固定ナビゲーション（60px / fixed）
+        </div>
       </div>
     </div>
   );

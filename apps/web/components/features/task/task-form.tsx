@@ -60,7 +60,7 @@ interface TaskFormProps {
   createdBy?: string | null;
   createdByAvatarColor?: string | null;
   // 画像ペースト機能
-  onPaste?: (e: React.ClipboardEvent<HTMLTextAreaElement>) => void;
+  onImagePaste?: (file: File) => void;
   // Tiptapツールバー制御
   toolbarVisible?: boolean;
   onToolbarToggle?: (visible: boolean) => void;
@@ -110,7 +110,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
     teamMode: _teamMode = false,
     createdBy,
     createdByAvatarColor,
-    onPaste,
+    onImagePaste,
     toolbarVisible = false,
     onToolbarToggle,
     tiptapEditor,
@@ -391,6 +391,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
             toolbarVisible={toolbarVisible}
             onToolbarToggle={onToolbarToggle}
             onEditorReady={onEditorReady}
+            onImagePaste={onImagePaste}
           />
         </div>
 
@@ -508,6 +509,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
             toolbarVisible={toolbarVisible}
             onToolbarToggle={onToolbarToggle}
             onEditorReady={onEditorReady}
+            onImagePaste={onImagePaste}
           />
         </div>
 

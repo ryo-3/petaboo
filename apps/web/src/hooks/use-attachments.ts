@@ -20,7 +20,7 @@ export interface Attachment {
 }
 
 /**
- * 添付ファイル一覧取得
+ * 添付ファイル一覧取得（個人・チーム両対応）
  */
 export function useAttachments(
   teamId: number | undefined,
@@ -32,17 +32,18 @@ export function useAttachments(
   return useQuery({
     queryKey: ["attachments", teamId, attachedTo, attachedOriginalId],
     queryFn: async (): Promise<Attachment[]> => {
-      if (!teamId || !attachedOriginalId) return [];
+      if (!attachedOriginalId) return [];
 
       const token = await getToken();
-      const response = await fetch(
-        `${API_URL}/attachments?teamId=${teamId}&attachedTo=${attachedTo}&attachedOriginalId=${attachedOriginalId}`,
-        {
-          headers: {
-            ...(token && { Authorization: `Bearer ${token}` }),
-          },
+      const url = teamId
+        ? `${API_URL}/attachments?teamId=${teamId}&attachedTo=${attachedTo}&attachedOriginalId=${attachedOriginalId}`
+        : `${API_URL}/attachments?attachedTo=${attachedTo}&attachedOriginalId=${attachedOriginalId}`;
+
+      const response = await fetch(url, {
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
         },
-      );
+      });
 
       if (!response.ok) {
         throw new Error("添付ファイルの取得に失敗しました");
@@ -50,7 +51,7 @@ export function useAttachments(
 
       return response.json();
     },
-    enabled: !!teamId && !!attachedOriginalId,
+    enabled: !!attachedOriginalId,
   });
 }
 
@@ -67,8 +68,8 @@ export function useUploadAttachment(
 
   return useMutation({
     mutationFn: async (file: File): Promise<Attachment> => {
-      if (!teamId || !attachedOriginalId) {
-        throw new Error("チームIDまたはアイテムIDが指定されていません");
+      if (!attachedOriginalId) {
+        throw new Error("アイテムIDが指定されていません");
       }
 
       // ファイルサイズチェック（5MB）
@@ -82,16 +83,17 @@ export function useUploadAttachment(
       formData.append("attachedOriginalId", attachedOriginalId);
 
       const token = await getToken();
-      const response = await fetch(
-        `${API_URL}/attachments/upload?teamId=${teamId}`,
-        {
-          method: "POST",
-          headers: {
-            ...(token && { Authorization: `Bearer ${token}` }),
-          },
-          body: formData,
+      const url = teamId
+        ? `${API_URL}/attachments/upload?teamId=${teamId}`
+        : `${API_URL}/attachments/upload`;
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
         },
-      );
+        body: formData,
+      });
 
       if (!response.ok) {
         const error = await response.json();

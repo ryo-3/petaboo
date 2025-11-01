@@ -2,6 +2,7 @@ import { createRoute, z } from "@hono/zod-openapi";
 import { eq, and, isNull, sql } from "drizzle-orm";
 import { getAuth } from "@hono/clerk-auth";
 import { teamAttachments } from "../../db/schema/team/attachments";
+import { attachments } from "../../db/schema/attachments";
 import { teamMembers } from "../../db/schema/team/teams";
 import {
   validateImageFile,
@@ -47,13 +48,13 @@ async function checkTeamMember(teamId: number, userId: string, db: any) {
   return member.length > 0 ? member[0] : null;
 }
 
-// GET /attachments（添付ファイル一覧取得）
+// GET /attachments（添付ファイル一覧取得 - 個人・チーム両対応）
 export const getAttachmentsRoute = createRoute({
   method: "get",
   path: "/",
   request: {
     query: z.object({
-      teamId: z.string().regex(/^\d+$/).transform(Number),
+      teamId: z.string().regex(/^\d+$/).transform(Number).optional(),
       attachedTo: z.enum(["memo", "task", "comment"]),
       attachedOriginalId: z.string(),
     }),
@@ -96,36 +97,52 @@ export const getAttachments = async (c: any) => {
 
   const { teamId, attachedTo, attachedOriginalId } = c.req.valid("query");
 
-  // チームメンバー確認
-  const member = await checkTeamMember(teamId, auth.userId, db);
-  if (!member) {
-    return c.json({ error: "Not a team member" }, 403);
+  let results;
+  if (teamId) {
+    // チームモード：メンバー確認
+    const member = await checkTeamMember(teamId, auth.userId, db);
+    if (!member) {
+      return c.json({ error: "Not a team member" }, 403);
+    }
+
+    results = await db
+      .select()
+      .from(teamAttachments)
+      .where(
+        and(
+          eq(teamAttachments.teamId, teamId),
+          eq(teamAttachments.attachedTo, attachedTo),
+          eq(teamAttachments.attachedOriginalId, attachedOriginalId),
+          isNull(teamAttachments.deletedAt),
+        ),
+      )
+      .orderBy(teamAttachments.createdAt);
+  } else {
+    // 個人モード
+    results = await db
+      .select()
+      .from(attachments)
+      .where(
+        and(
+          eq(attachments.userId, auth.userId),
+          eq(attachments.attachedTo, attachedTo as "memo" | "task"),
+          eq(attachments.originalId, attachedOriginalId),
+          isNull(attachments.deletedAt),
+        ),
+      )
+      .orderBy(attachments.createdAt);
   }
 
-  // 添付ファイル一覧取得（削除されていないもののみ）
-  const attachments = await db
-    .select()
-    .from(teamAttachments)
-    .where(
-      and(
-        eq(teamAttachments.teamId, teamId),
-        eq(teamAttachments.attachedTo, attachedTo),
-        eq(teamAttachments.attachedOriginalId, attachedOriginalId),
-        isNull(teamAttachments.deletedAt),
-      ),
-    )
-    .orderBy(teamAttachments.createdAt);
-
-  return c.json(attachments, 200);
+  return c.json(results, 200);
 };
 
-// POST /attachments/upload（画像アップロード）
+// POST /attachments/upload（画像アップロード - 個人・チーム両対応）
 export const uploadAttachmentRoute = createRoute({
   method: "post",
   path: "/upload",
   request: {
     query: z.object({
-      teamId: z.string().regex(/^\d+$/).transform(Number),
+      teamId: z.string().regex(/^\d+$/).transform(Number).optional(),
     }),
     body: {
       content: {
@@ -194,10 +211,12 @@ export const uploadAttachment = async (c: any) => {
 
   const { teamId } = c.req.valid("query");
 
-  // チームメンバー確認
-  const member = await checkTeamMember(teamId, auth.userId, db);
-  if (!member) {
-    return c.json({ error: "Not a team member" }, 403);
+  // チームIDがある場合はメンバー確認
+  if (teamId) {
+    const member = await checkTeamMember(teamId, auth.userId, db);
+    if (!member) {
+      return c.json({ error: "Not a team member" }, 403);
+    }
   }
 
   // FormData パース
@@ -213,23 +232,40 @@ export const uploadAttachment = async (c: any) => {
   // ファイル種別判定
   const isImage = isImageFile(file.type);
 
-  // 添付上限チェック（4枚まで）
-  const existingCount = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(teamAttachments)
-    .where(
-      and(
-        eq(teamAttachments.teamId, teamId),
-        eq(
-          teamAttachments.attachedTo,
-          attachedTo as "memo" | "task" | "comment",
-        ),
-        eq(teamAttachments.attachedOriginalId, attachedOriginalId),
-        isNull(teamAttachments.deletedAt),
-      ),
-    );
-
+  // 添付上限チェック
   const maxItems = isImage ? MAX_ATTACHMENTS_PER_ITEM : MAX_FILES_PER_ITEM;
+
+  let existingCount;
+  if (teamId) {
+    // チームモード
+    existingCount = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(teamAttachments)
+      .where(
+        and(
+          eq(teamAttachments.teamId, teamId),
+          eq(
+            teamAttachments.attachedTo,
+            attachedTo as "memo" | "task" | "comment",
+          ),
+          eq(teamAttachments.attachedOriginalId, attachedOriginalId),
+          isNull(teamAttachments.deletedAt),
+        ),
+      );
+  } else {
+    // 個人モード
+    existingCount = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(attachments)
+      .where(
+        and(
+          eq(attachments.userId, auth.userId),
+          eq(attachments.attachedTo, attachedTo as "memo" | "task"),
+          eq(attachments.originalId, attachedOriginalId),
+          isNull(attachments.deletedAt),
+        ),
+      );
+  }
 
   if (existingCount[0].count >= maxItems) {
     return c.json({ error: `添付ファイルは最大${maxItems}個までです` }, 400);
@@ -269,38 +305,67 @@ export const uploadAttachment = async (c: any) => {
   const createdAt = Date.now();
   const originalId = `${createdAt}-${Math.random().toString(36).substring(2, 10)}`;
 
-  const result = await db
-    .insert(teamAttachments)
-    .values({
-      teamId,
-      userId: auth.userId,
-      attachedTo,
-      attachedOriginalId,
-      originalId,
-      fileName: file.name,
-      fileSize: file.size,
-      mimeType: file.type,
-      r2Key,
-      url: "", // 一旦空、後でWorker経由URLを設定
-      createdAt,
-      deletedAt: null,
-    })
-    .returning();
+  let result;
+  if (teamId) {
+    // チームモード
+    result = await db
+      .insert(teamAttachments)
+      .values({
+        teamId,
+        userId: auth.userId,
+        attachedTo,
+        attachedOriginalId,
+        originalId,
+        fileName: file.name,
+        fileSize: file.size,
+        mimeType: file.type,
+        r2Key,
+        url: "",
+        createdAt,
+        deletedAt: null,
+      })
+      .returning();
+  } else {
+    // 個人モード
+    result = await db
+      .insert(attachments)
+      .values({
+        userId: auth.userId,
+        attachedTo: attachedTo as "memo" | "task",
+        attachedId: 0, // originalIdで管理するためダミー
+        originalId: attachedOriginalId,
+        fileName: file.name,
+        fileSize: file.size,
+        mimeType: file.type,
+        r2Key,
+        url: "",
+        createdAt,
+        deletedAt: null,
+      })
+      .returning();
+  }
 
-  // Worker経由アクセスURL生成（画像 or ファイルで分岐）
-  // Request URLのoriginを使用（ローカルでも本番でも正しいURLになる）
+  // Worker経由アクセスURL生成
   const url = new URL(c.req.url);
   const apiBaseUrl = `${url.protocol}//${url.host}`;
   const endpoint = isImage ? "image" : "file";
-  const workerUrl = `${apiBaseUrl}/attachments/${endpoint}/${result[0].id}`;
+  const prefix = teamId ? "" : "personal/";
+  const workerUrl = `${apiBaseUrl}/attachments/${prefix}${endpoint}/${result[0].id}`;
 
   // URLを更新
-  await db
-    .update(teamAttachments)
-    .set({ url: workerUrl })
-    .where(eq(teamAttachments.id, result[0].id));
+  if (teamId) {
+    await db
+      .update(teamAttachments)
+      .set({ url: workerUrl })
+      .where(eq(teamAttachments.id, result[0].id));
+  } else {
+    await db
+      .update(attachments)
+      .set({ url: workerUrl })
+      .where(eq(attachments.id, result[0].id));
+  }
 
-  return c.json({ ...result[0], url: workerUrl }, 200);
+  return c.json({ ...result[0], url: workerUrl, teamId: teamId || null }, 200);
 };
 
 // DELETE /attachments/:id（添付ファイル削除）
@@ -642,10 +707,105 @@ export const getFile = async (c: any) => {
   });
 };
 
+// GET /attachments/personal/image/:id（個人用画像配信）
+export const getPersonalImageRoute = createRoute({
+  method: "get",
+  path: "/personal/image/{id}",
+  request: {
+    params: z.object({
+      id: z.string().regex(/^\d+$/).transform(Number),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Image file",
+      content: {
+        "image/jpeg": { schema: z.any() },
+        "image/png": { schema: z.any() },
+        "image/gif": { schema: z.any() },
+        "image/webp": { schema: z.any() },
+        "image/svg+xml": { schema: z.any() },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": { schema: z.object({ error: z.string() }) },
+      },
+    },
+    403: {
+      description: "Forbidden",
+      content: {
+        "application/json": { schema: z.object({ error: z.string() }) },
+      },
+    },
+    404: {
+      description: "Not found",
+      content: {
+        "application/json": { schema: z.object({ error: z.string() }) },
+      },
+    },
+  },
+});
+
+export const getPersonalImage = async (c: any) => {
+  const auth = getAuth(c);
+  const db = c.get("db");
+  const env = c.env;
+
+  if (!auth?.userId) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  const { id } = c.req.valid("param");
+
+  // 個人用添付ファイル取得
+  const results = await db
+    .select()
+    .from(attachments)
+    .where(and(eq(attachments.id, id), isNull(attachments.deletedAt)))
+    .limit(1);
+
+  if (results.length === 0) {
+    return c.json({ error: "Attachment not found" }, 404);
+  }
+
+  const attachment = results[0];
+
+  // 所有者確認
+  if (attachment.userId !== auth.userId) {
+    return c.json({ error: "Forbidden" }, 403);
+  }
+
+  // R2から画像取得
+  const r2Bucket = env.R2_BUCKET;
+  if (!r2Bucket) {
+    return c.json({ error: "R2 bucket not configured" }, 500);
+  }
+
+  const object = await r2Bucket.get(attachment.r2Key);
+
+  if (!object) {
+    return c.json({ error: "Image not found in storage" }, 404);
+  }
+
+  // 画像を返却
+  const origin = c.req.header("Origin") || "http://localhost:7593";
+  return new Response(object.body, {
+    headers: {
+      "Content-Type": attachment.mimeType,
+      "Cache-Control": "public, max-age=31536000",
+      "Access-Control-Allow-Origin": origin,
+      "Access-Control-Allow-Credentials": "true",
+    },
+  });
+};
+
 export function registerAttachmentRoutes(app: OpenAPIHono<any, any, any>) {
   app.openapi(getAttachmentsRoute, getAttachments);
   app.openapi(uploadAttachmentRoute, uploadAttachment);
   app.openapi(deleteAttachmentRoute, deleteAttachment);
   app.openapi(getImageRoute, getImage);
   app.openapi(getFileRoute, getFile);
+  app.openapi(getPersonalImageRoute, getPersonalImage);
 }

@@ -286,7 +286,6 @@ function MemoEditor({
     pendingDeletes,
     handleFileSelect,
     handleFilesSelect,
-    handlePaste,
     handleDeleteAttachment,
     handleDeletePendingImage,
     handleRestoreAttachment,
@@ -1309,6 +1308,7 @@ function MemoEditor({
                 className="font-medium"
                 toolbarVisible={toolbarVisible}
                 onEditorReady={setTiptapEditor}
+                onImagePaste={handleFileSelect}
               />
             </div>
 
@@ -1327,19 +1327,17 @@ function MemoEditor({
             />
           </BaseViewer>
 
-          {/* 画像添付ギャラリー */}
-          {teamMode && (
-            <AttachmentGallery
-              attachments={attachments}
-              onDelete={handleDeleteAttachment}
-              isDeleting={isDeleting}
-              pendingImages={pendingImages}
-              onDeletePending={handleDeletePendingImage}
-              pendingDeletes={pendingDeletes}
-              onRestore={handleRestoreAttachment}
-              isUploading={isUploading}
-            />
-          )}
+          {/* 画像添付ギャラリー（個人・チーム両対応） */}
+          <AttachmentGallery
+            attachments={attachments}
+            onDelete={handleDeleteAttachment}
+            isDeleting={isDeleting}
+            pendingImages={pendingImages}
+            onDeletePending={handleDeletePendingImage}
+            pendingDeletes={pendingDeletes}
+            onRestore={handleRestoreAttachment}
+            isUploading={isUploading}
+          />
         </div>
       </div>
       {baseViewerRef.current && (

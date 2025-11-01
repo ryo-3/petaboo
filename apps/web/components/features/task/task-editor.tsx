@@ -227,7 +227,6 @@ function TaskEditor({
     pendingDeletes,
     handleFileSelect,
     handleFilesSelect,
-    handlePaste,
     handleDeleteAttachment,
     handleDeletePendingImage,
     handleRestoreAttachment,
@@ -1211,7 +1210,7 @@ function TaskEditor({
             teamMode={teamMode}
             createdBy={createdBy}
             createdByAvatarColor={createdByAvatarColor}
-            onPaste={handlePaste}
+            onImagePaste={handleFileSelect}
             toolbarVisible={toolbarVisible}
             onToolbarToggle={setToolbarVisible}
             tiptapEditor={tiptapEditor}
@@ -1259,25 +1258,23 @@ function TaskEditor({
             teamMode={teamMode}
             createdBy={createdBy}
             createdByAvatarColor={createdByAvatarColor}
-            onPaste={handlePaste}
+            onImagePaste={handleFileSelect}
             toolbarVisible={toolbarVisible}
             onToolbarToggle={setToolbarVisible}
             onEditorReady={setTiptapEditor}
             editorOnly={true}
           />
-          {/* 画像添付ギャラリー */}
-          {teamMode && (
-            <AttachmentGallery
-              attachments={attachments}
-              onDelete={handleDeleteAttachment}
-              isDeleting={isAttachmentDeleting}
-              pendingImages={pendingImages}
-              onDeletePending={handleDeletePendingImage}
-              pendingDeletes={pendingDeletes}
-              onRestore={handleRestoreAttachment}
-              isUploading={isUploading}
-            />
-          )}
+          {/* 画像添付ギャラリー（個人・チーム両対応） */}
+          <AttachmentGallery
+            attachments={attachments}
+            onDelete={handleDeleteAttachment}
+            isDeleting={isAttachmentDeleting}
+            pendingImages={pendingImages}
+            onDeletePending={handleDeletePendingImage}
+            pendingDeletes={pendingDeletes}
+            onRestore={handleRestoreAttachment}
+            isUploading={isUploading}
+          />
         </div>
       </div>
 

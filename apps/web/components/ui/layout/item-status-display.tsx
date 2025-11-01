@@ -164,8 +164,14 @@ function ItemStatusDisplay<T extends { id: number }>({
           );
         })}
 
-      {/* 下部余白用の空要素（モバイルのみ・ナビゲーションバー分） */}
-      {!isBoard && <div className="h-[80px] md:hidden" key="spacer-bottom" />}
+      {/* 下部余白用の透明カード（モバイルのみ・ナビゲーションバー分） */}
+      {!isBoard && (
+        <div
+          className="md:hidden min-h-[140px] opacity-0 pointer-events-none"
+          key="spacer-bottom"
+          aria-hidden="true"
+        />
+      )}
     </ItemGrid>
   );
 }

@@ -527,7 +527,6 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
   // メモ/タスク選択ハンドラー
   const handleSelectMemo = (memo: Memo | null) => {
-    console.log("📱 handleSelectMemo呼び出し", { memo: memo?.id });
     setSelectedMemo(memo);
 
     // 新規作成状態をクリア

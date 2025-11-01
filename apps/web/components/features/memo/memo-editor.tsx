@@ -616,29 +616,16 @@ function MemoEditor({
       return; // 削除済みの場合は保存しない
     }
 
-    console.log("💾 [handleSaveWithTags] 保存開始", {
-      pendingImagesCount: pendingImages.length,
-      localTagsCount: localTags.length,
-      memoId: memo?.id,
-      hasContent: !!content.trim(),
-    });
-
     try {
       // 新規作成で画像のみの場合（テキストなし）の特別処理
       const isNewMemo = !memo || memo.id === 0;
       const hasOnlyImages =
         isNewMemo && !content.trim() && pendingImages.length > 0;
 
-      console.log("🔍 [handleSaveWithTags] 判定", {
-        isNewMemo,
-        hasOnlyImages,
-      });
-
       let targetOriginalId: string | null = null;
 
       if (hasOnlyImages) {
         // 画像のみの場合は「無題」で新規作成
-        console.log("📸 [handleSaveWithTags] 画像のみ保存モード");
         const newMemoData = {
           title: " ", // 最低1文字必要なので半角スペース
           content: "",
@@ -647,15 +634,8 @@ function MemoEditor({
         if (teamMode && teamId) {
           // チームモード
           const token = await getToken();
-          console.log("🔑 [handleSaveWithTags] トークン取得完了", {
-            hasToken: !!token,
-          });
 
           const url = `${API_URL}/teams/${teamId}/memos`;
-          console.log("📡 [handleSaveWithTags] API呼び出し", {
-            url,
-            data: newMemoData,
-          });
 
           const response = await fetch(url, {
             method: "POST",
@@ -666,17 +646,8 @@ function MemoEditor({
             body: JSON.stringify(newMemoData),
           });
 
-          console.log("📥 [handleSaveWithTags] レスポンス受信", {
-            status: response.status,
-            ok: response.ok,
-          });
-
           if (!response.ok) {
             const errorText = await response.text();
-            console.error("❌ [handleSaveWithTags] APIエラー詳細", {
-              status: response.status,
-              errorText,
-            });
             throw new Error(
               `チームメモの作成に失敗しました: ${response.status} - ${errorText}`,
             );
@@ -692,15 +663,8 @@ function MemoEditor({
         } else {
           // 個人モード
           const token = await getToken();
-          console.log("🔑 [handleSaveWithTags] トークン取得完了", {
-            hasToken: !!token,
-          });
 
           const url = `${API_URL}/memos`;
-          console.log("📡 [handleSaveWithTags] API呼び出し", {
-            url,
-            data: newMemoData,
-          });
 
           const response = await fetch(url, {
             method: "POST",
@@ -711,17 +675,8 @@ function MemoEditor({
             body: JSON.stringify(newMemoData),
           });
 
-          console.log("📥 [handleSaveWithTags] レスポンス受信", {
-            status: response.status,
-            ok: response.ok,
-          });
-
           if (!response.ok) {
             const errorText = await response.text();
-            console.error("❌ [handleSaveWithTags] APIエラー詳細", {
-              status: response.status,
-              errorText,
-            });
             throw new Error(
               `メモの作成に失敗しました: ${response.status} - ${errorText}`,
             );
@@ -733,10 +688,6 @@ function MemoEditor({
           // キャッシュ更新
           queryClient.invalidateQueries({ queryKey: ["memos"] });
         }
-
-        console.log("✅ [handleSaveWithTags] 画像のみメモ作成完了", {
-          targetOriginalId,
-        });
       } else {
         // 通常の保存処理
         await handleSave();
@@ -778,22 +729,12 @@ function MemoEditor({
       const hasDeletes = pendingDeletes.length > 0;
       const hasUploads = pendingImages.length > 0;
 
-      console.log("📤 [handleSaveWithTags] 画像処理チェック", {
-        hasDeletes,
-        hasUploads,
-        targetOriginalId,
-      });
-
       if (hasDeletes) {
         await deletePendingAttachments();
       }
 
       // 保存待ちの画像を一括アップロード（完了トーストはuploadPendingImagesが表示）
       if (hasUploads && targetOriginalId) {
-        console.log("📸 [handleSaveWithTags] 画像アップロード開始", {
-          targetOriginalId,
-          imageCount: pendingImages.length,
-        });
         await uploadPendingImages(targetOriginalId);
 
         // 画像のみ保存の場合、作成されたメモを選択してビューモードに切り替え
@@ -813,12 +754,6 @@ function MemoEditor({
             )[0];
 
             if (latestMemo && onSaveComplete) {
-              console.log(
-                "✅ [handleSaveWithTags] 画像のみメモ完了、ビューモードに切り替え",
-                {
-                  memoId: latestMemo.id,
-                },
-              );
               onSaveComplete(latestMemo, false, true);
             }
           }

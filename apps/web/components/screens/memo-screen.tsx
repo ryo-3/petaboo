@@ -652,25 +652,20 @@ function MemoScreen({
 
     const handleBackRequest = () => {
       // メモ一覧に戻る（選択解除してメモ一覧に留まる）
-      const eventName = teamMode
-        ? "team-back-to-memo-list"
-        : "memo-editor-mobile-back-requested";
-      console.log(`📱 MemoScreen: ${eventName} イベント受信`, {
-        hasOnDeselectAndStayOnMemoList: !!onDeselectAndStayOnMemoList,
-        currentScreenMode: screenMode,
-      });
+
+      // タブ状態をリセット
+      if (memoEditorTab !== "memo") {
+        setMemoEditorTab("memo");
+      }
 
       // 新規作成モードから抜ける
       if (screenMode === "create") {
-        console.log("→ setMemoScreenMode('list') を呼び出し");
         setMemoScreenMode("list");
       }
 
       if (onDeselectAndStayOnMemoList) {
-        console.log("→ onDeselectAndStayOnMemoList() を呼び出し");
         onDeselectAndStayOnMemoList();
       } else {
-        console.log("→ onSelectMemo(null) を呼び出し");
         onSelectMemo(null);
       }
     };
@@ -691,6 +686,7 @@ function MemoScreen({
     teamMode,
     screenMode,
     setMemoScreenMode,
+    memoEditorTab,
   ]);
 
   // 除外アイテムIDでフィルタリングされたメモ（originalIdで比較）

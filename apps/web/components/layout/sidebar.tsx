@@ -182,6 +182,10 @@ function Sidebar({
           const backEventName = isTeamMode
             ? "team-back-to-task-list"
             : "task-editor-mobile-back-requested";
+
+          // タブ状態をリセット
+          setTaskEditorTab("task");
+
           window.dispatchEvent(new CustomEvent(backEventName));
         }}
         onMainClick={() => {
@@ -217,7 +221,9 @@ function Sidebar({
         activeTab={taskEditorTab}
         imageCount={imageCount}
         commentCount={commentCount}
-        hideComment={!isTeamMode}
+        hideComment={
+          !isTeamMode || (isCreatingTask && selectedTaskId === undefined)
+        }
       />
     </div>
   ) : isShowingMemoEditor ? (
@@ -228,7 +234,10 @@ function Sidebar({
           const backEventName = isTeamMode
             ? "team-back-to-memo-list"
             : "memo-editor-mobile-back-requested";
-          console.log(`🔙 Sidebar: ${backEventName} イベント発火`);
+
+          // タブ状態をリセット
+          setMemoEditorTab("memo");
+
           window.dispatchEvent(new CustomEvent(backEventName));
         }}
         onMainClick={() =>

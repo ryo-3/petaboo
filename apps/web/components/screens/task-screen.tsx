@@ -387,12 +387,12 @@ function TaskScreen({
     };
 
     const handleBackRequest = () => {
-      const backEventName = teamMode
-        ? "team-back-to-task-list"
-        : "task-editor-mobile-back-requested";
-      console.log(`📱 TaskScreen: ${backEventName} イベント受信`);
+      // タブ状態をリセット
+      if (taskEditorTab !== "task") {
+        setTaskEditorTab("task");
+      }
+
       // タスクエディターを閉じてリストに戻る（refから最新の関数を取得）
-      console.log("→ onSelectTask(null) 呼び出し");
       onSelectTaskRef.current(null);
     };
 
@@ -411,7 +411,7 @@ function TaskScreen({
       window.removeEventListener(eventName, handleTabChange);
       window.removeEventListener(backEventName, handleBackRequest);
     };
-  }, [teamMode]);
+  }, [teamMode, taskEditorTab]);
 
   // 画面モード変更のラッパー（親に通知）
   const setTaskScreenMode = useCallback(

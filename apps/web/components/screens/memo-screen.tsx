@@ -26,6 +26,7 @@ import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useTeamContext } from "@/contexts/team-context";
 import { useTeamDetail } from "@/src/contexts/team-detail-context";
+import { useNavigation } from "@/contexts/navigation-context";
 import {
   useBoards,
   useItemBoards,
@@ -186,6 +187,9 @@ function MemoScreen({
   // 一括処理中断通知の監視
   useBulkProcessNotifications();
 
+  // NavigationContext（個人モードで新規作成状態を親に伝える用）
+  const navigationContext = !teamMode ? useNavigation() : null;
+
   // TeamDetailContext（チームモードのみ）
   const teamDetailContext = teamMode ? useTeamDetail() : null;
 
@@ -341,12 +345,22 @@ function MemoScreen({
   );
   const memoScreenMode = screenMode as MemoScreenMode;
 
-  // チームモードで新規作成状態をContextに反映
+  // チームモード・個人モードで新規作成状態をContextに反映
   useEffect(() => {
     if (teamDetailContext) {
+      // チームモード: TeamDetailContextに反映
       teamDetailContext.setIsCreatingMemo(memoScreenMode === "create");
+    } else if (navigationContext) {
+      // 個人モード: NavigationContextに反映
+      if (memoScreenMode === "create") {
+        navigationContext.setScreenMode("create");
+      } else if (memoScreenMode === "list") {
+        navigationContext.setScreenMode("memo");
+      } else if (memoScreenMode === "view") {
+        navigationContext.setScreenMode("memo");
+      }
     }
-  }, [memoScreenMode, teamDetailContext]);
+  }, [memoScreenMode, teamDetailContext, navigationContext]);
 
   // 保存完了後の処理（超シンプル）
   const handleSaveComplete = useCallback(

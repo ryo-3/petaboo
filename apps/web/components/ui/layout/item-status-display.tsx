@@ -122,7 +122,7 @@ function ItemStatusDisplay<T extends { id: number }>({
       isBoard={isBoard}
     >
       {/* 上部余白用の空要素（モバイルのみ・固定ヘッダー分） */}
-      {!isBoard && <div className="h-[70px] md:hidden" key="spacer-top" />}
+      {!isBoard && <div className="h-[60px] md:hidden" key="spacer-top" />}
 
       {sortedItems
         .filter((item) => item && item.id !== undefined)

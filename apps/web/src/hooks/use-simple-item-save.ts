@@ -198,8 +198,9 @@ export function useSimpleItemSave<T extends UnifiedItem>({
 
       setTitle(itemTitle);
       setContent(itemContent);
-      setInitialTitle(itemTitle);
-      setInitialContent(itemContent);
+      // trim() を適用して保存時と同じ形式にする（余計な空白による誤検知を防ぐ）
+      setInitialTitle(itemTitle.trim());
+      setInitialContent(itemContent.trim());
 
       if (itemType === "task" && "priority" in item && "status" in item) {
         setPriority(item.priority as "low" | "medium" | "high");

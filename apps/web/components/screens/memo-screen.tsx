@@ -187,7 +187,7 @@ function MemoScreen({
   // 一括処理中断通知の監視
   useBulkProcessNotifications();
 
-  // NavigationContext（個人モードで新規作成状態を親に伝える用）
+  // NavigationContext（個人モードで新規作成状態を管理）
   const navigationContext = !teamMode ? useNavigation() : null;
 
   // TeamDetailContext（チームモードのみ）
@@ -351,14 +351,9 @@ function MemoScreen({
       // チームモード: TeamDetailContextに反映
       teamDetailContext.setIsCreatingMemo(memoScreenMode === "create");
     } else if (navigationContext) {
-      // 個人モード: NavigationContextに反映
-      if (memoScreenMode === "create") {
-        navigationContext.setScreenMode("create");
-      } else if (memoScreenMode === "list") {
-        navigationContext.setScreenMode("memo");
-      } else if (memoScreenMode === "view") {
-        navigationContext.setScreenMode("memo");
-      }
+      // 個人モード: NavigationContext.isCreatingMemoに反映
+      // （screenModeは変更しない。"create"に変更するとCreateScreenが表示されるため）
+      navigationContext.setIsCreatingMemo(memoScreenMode === "create");
     }
   }, [memoScreenMode, teamDetailContext, navigationContext]);
 

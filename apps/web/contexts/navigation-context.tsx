@@ -53,6 +53,11 @@ interface NavigationContextType {
   setShowTeamCreate: (show: boolean) => void;
   showingBoardDetail: boolean;
   setShowingBoardDetail: (show: boolean) => void;
+  // 個人モードの新規作成状態（モバイルフッター切り替え用）
+  isCreatingMemo: boolean;
+  setIsCreatingMemo: (isCreating: boolean) => void;
+  isCreatingTask: boolean;
+  setIsCreatingTask: (isCreating: boolean) => void;
   // メイン画面のアイテム選択ハンドラー
   handleMainSelectMemo?: (memo: Memo | null) => void;
   handleMainSelectTask?: (task: Task | null) => void;
@@ -99,6 +104,10 @@ export function NavigationProvider({
   const [showingBoardDetail, setShowingBoardDetail] = useState(
     initialShowingBoardDetail,
   );
+
+  // 個人モードの新規作成状態（モバイルフッター切り替え用）
+  const [isCreatingMemo, setIsCreatingMemo] = useState(false);
+  const [isCreatingTask, setIsCreatingTask] = useState(false);
 
   // 楽観的更新用の一時的なモード（URL変更前に即座に反映）
   const [optimisticMode, setOptimisticMode] = useState<
@@ -244,6 +253,10 @@ export function NavigationProvider({
         setShowTeamCreate,
         showingBoardDetail,
         setShowingBoardDetail,
+        isCreatingMemo,
+        setIsCreatingMemo,
+        isCreatingTask,
+        setIsCreatingTask,
         handleMainSelectMemo,
         handleMainSelectTask,
         setHandleMainSelectMemo,

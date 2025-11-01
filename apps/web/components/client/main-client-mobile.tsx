@@ -1,5 +1,6 @@
 import DeletedMemoList from "@/components/features/memo/deleted-memo-list";
 import Sidebar from "@/components/layout/sidebar";
+import { useNavigation } from "@/contexts/navigation-context";
 import type { Board } from "@/src/types/board";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task } from "@/src/types/task";
@@ -55,9 +56,10 @@ export function MainClientMobile({
   currentBoard,
   showingBoardDetail,
 }: MainClientMobileProps) {
-  // 新規作成状態を判定
-  const isCreatingMemo = screenMode === "create" && currentMode === "memo";
-  const isCreatingTask = screenMode === "create" && currentMode === "task";
+  // 新規作成状態を NavigationContext から取得（個人モード）
+  const navigation = useNavigation();
+  const isCreatingMemo = navigation.isCreatingMemo;
+  const isCreatingTask = navigation.isCreatingTask;
 
   return (
     <div className="h-screen w-full md:hidden">

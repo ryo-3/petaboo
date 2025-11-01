@@ -121,6 +121,9 @@ function ItemStatusDisplay<T extends { id: number }>({
       effectiveColumnCount={effectiveColumnCount}
       isBoard={isBoard}
     >
+      {/* 上部余白用の空要素（モバイルのみ・固定ヘッダー分） */}
+      {!isBoard && <div className="h-[70px] md:hidden" key="spacer-top" />}
+
       {sortedItems
         .filter((item) => item && item.id !== undefined)
         .map((item, index) => {
@@ -160,6 +163,9 @@ function ItemStatusDisplay<T extends { id: number }>({
             </div>
           );
         })}
+
+      {/* 下部余白用の空要素（モバイルのみ・ナビゲーションバー分） */}
+      {!isBoard && <div className="h-[80px] md:hidden" key="spacer-bottom" />}
     </ItemGrid>
   );
 }

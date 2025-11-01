@@ -44,13 +44,7 @@ function ItemGrid({
     <div
       className={`flex-1 md:overflow-y-auto overflow-x-hidden md:hover-scrollbar ${isBoard ? "" : "pr-2"} mb-2`}
     >
-      {/* 上部余白用の空要素（固定ヘッダー分） */}
-      {!isBoard && <div className="h-[70px] md:h-0" />}
-
       <div className={getGridClassName()}>{children}</div>
-
-      {/* 下部余白用の空要素（モバイルナビゲーションバー分） */}
-      {!isBoard && <div className="h-[80px] md:h-0" />}
     </div>
   );
 }

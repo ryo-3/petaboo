@@ -1024,7 +1024,7 @@ function MemoScreen({
       </div>
 
       {/* モバイル: 1パネル表示（一覧 OR メモ OR コメント OR 画像 排他的表示） */}
-      <div className="md:hidden h-full flex flex-col bg-white">
+      <div className="md:hidden h-full flex flex-col bg-white overscroll-contain">
         {!selectedMemo &&
         !selectedDeletedMemo &&
         memoScreenMode !== "create" ? (

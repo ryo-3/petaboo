@@ -368,7 +368,7 @@ export const uploadAttachment = async (c: any) => {
   return c.json({ ...result[0], url: workerUrl, teamId: teamId || null }, 200);
 };
 
-// DELETE /attachments/:id（添付ファイル削除）
+// DELETE /attachments/:id（添付ファイル削除 - 個人・チーム両対応）
 export const deleteAttachmentRoute = createRoute({
   method: "delete",
   path: "/{id}",
@@ -377,7 +377,7 @@ export const deleteAttachmentRoute = createRoute({
       id: z.string().regex(/^\d+$/).transform(Number),
     }),
     query: z.object({
-      teamId: z.string().regex(/^\d+$/).transform(Number),
+      teamId: z.string().regex(/^\d+$/).transform(Number).optional(),
     }),
   },
   responses: {
@@ -428,41 +428,67 @@ export const deleteAttachment = async (c: any) => {
   const { id } = c.req.valid("param");
   const { teamId } = c.req.valid("query");
 
-  // チームメンバー確認
-  const member = await checkTeamMember(teamId, auth.userId, db);
-  if (!member) {
-    return c.json({ error: "Not a team member" }, 403);
+  let attachment;
+  if (teamId) {
+    // チームモード：メンバー確認
+    const member = await checkTeamMember(teamId, auth.userId, db);
+    if (!member) {
+      return c.json({ error: "Not a team member" }, 403);
+    }
+
+    const results = await db
+      .select()
+      .from(teamAttachments)
+      .where(
+        and(
+          eq(teamAttachments.id, id),
+          eq(teamAttachments.teamId, teamId),
+          isNull(teamAttachments.deletedAt),
+        ),
+      )
+      .limit(1);
+
+    if (results.length === 0) {
+      return c.json({ error: "Attachment not found" }, 404);
+    }
+
+    attachment = results[0];
+
+    // 所有者確認
+    if (attachment.userId !== auth.userId) {
+      return c.json({ error: "You can only delete your own attachments" }, 403);
+    }
+
+    // 論理削除
+    await db
+      .update(teamAttachments)
+      .set({ deletedAt: Date.now() })
+      .where(eq(teamAttachments.id, id));
+  } else {
+    // 個人モード
+    const results = await db
+      .select()
+      .from(attachments)
+      .where(and(eq(attachments.id, id), isNull(attachments.deletedAt)))
+      .limit(1);
+
+    if (results.length === 0) {
+      return c.json({ error: "Attachment not found" }, 404);
+    }
+
+    attachment = results[0];
+
+    // 所有者確認
+    if (attachment.userId !== auth.userId) {
+      return c.json({ error: "Forbidden" }, 403);
+    }
+
+    // 論理削除
+    await db
+      .update(attachments)
+      .set({ deletedAt: Date.now() })
+      .where(eq(attachments.id, id));
   }
-
-  // 添付ファイル取得
-  const attachments = await db
-    .select()
-    .from(teamAttachments)
-    .where(
-      and(
-        eq(teamAttachments.id, id),
-        eq(teamAttachments.teamId, teamId),
-        isNull(teamAttachments.deletedAt),
-      ),
-    )
-    .limit(1);
-
-  if (attachments.length === 0) {
-    return c.json({ error: "Attachment not found" }, 404);
-  }
-
-  const attachment = attachments[0];
-
-  // 所有者確認（アップロード者のみ削除可能）
-  if (attachment.userId !== auth.userId) {
-    return c.json({ error: "You can only delete your own attachments" }, 403);
-  }
-
-  // 論理削除
-  await db
-    .update(teamAttachments)
-    .set({ deletedAt: Date.now() })
-    .where(eq(teamAttachments.id, id));
 
   // R2から削除（オプション）
   const r2Bucket = env.R2_BUCKET;

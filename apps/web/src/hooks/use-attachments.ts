@@ -111,7 +111,7 @@ export function useUploadAttachment(
 }
 
 /**
- * 添付ファイル削除
+ * 添付ファイル削除（個人・チーム両対応）
  */
 export function useDeleteAttachment(
   teamId: number | undefined,
@@ -123,18 +123,17 @@ export function useDeleteAttachment(
 
   return useMutation({
     mutationFn: async (attachmentId: number): Promise<void> => {
-      if (!teamId) throw new Error("チームIDが指定されていません");
-
       const token = await getToken();
-      const response = await fetch(
-        `${API_URL}/attachments/${attachmentId}?teamId=${teamId}`,
-        {
-          method: "DELETE",
-          headers: {
-            ...(token && { Authorization: `Bearer ${token}` }),
-          },
+      const url = teamId
+        ? `${API_URL}/attachments/${attachmentId}?teamId=${teamId}`
+        : `${API_URL}/attachments/${attachmentId}`;
+
+      const response = await fetch(url, {
+        method: "DELETE",
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
         },
-      );
+      });
 
       if (!response.ok) {
         const error = await response.json();

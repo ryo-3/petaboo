@@ -7,6 +7,7 @@ import React, {
   ReactNode,
   useRef,
 } from "react";
+import { useSearchParams } from "next/navigation";
 
 interface TeamDetailContextType {
   selectedMemoId: number | null;
@@ -34,6 +35,25 @@ interface TeamDetailContextType {
   taskCommentCount: number;
   setTaskImageCount: (count: number) => void;
   setTaskCommentCount: (count: number) => void;
+  // アクティブタブ（ヘッダー表示切り替え用）
+  activeTab:
+    | "overview"
+    | "memos"
+    | "tasks"
+    | "boards"
+    | "team-list"
+    | "team-settings"
+    | "search";
+  setActiveTab: (
+    tab:
+      | "overview"
+      | "memos"
+      | "tasks"
+      | "boards"
+      | "team-list"
+      | "team-settings"
+      | "search",
+  ) => void;
 }
 
 const TeamDetailContext = createContext<TeamDetailContextType | undefined>(
@@ -41,6 +61,24 @@ const TeamDetailContext = createContext<TeamDetailContextType | undefined>(
 );
 
 export function TeamDetailProvider({ children }: { children: ReactNode }) {
+  const searchParams = useSearchParams();
+
+  // URLから初期タブを取得する関数
+  const getInitialTab = (): TeamDetailContextType["activeTab"] => {
+    const tab = searchParams.get("tab");
+    if (
+      tab === "memos" ||
+      tab === "tasks" ||
+      tab === "boards" ||
+      tab === "team-list" ||
+      tab === "team-settings" ||
+      tab === "search"
+    ) {
+      return tab;
+    }
+    return "overview";
+  };
+
   const [selectedMemoId, setSelectedMemoId] = useState<number | null>(null);
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
   const [isCreatingMemo, setIsCreatingMemo] = useState(false);
@@ -49,6 +87,15 @@ export function TeamDetailProvider({ children }: { children: ReactNode }) {
   const [commentCount, setCommentCount] = useState(0);
   const [taskImageCount, setTaskImageCount] = useState(0);
   const [taskCommentCount, setTaskCommentCount] = useState(0);
+  const [activeTab, setActiveTab] = useState<
+    | "overview"
+    | "memos"
+    | "tasks"
+    | "boards"
+    | "team-list"
+    | "team-settings"
+    | "search"
+  >(getInitialTab());
   const memoEditorHasUnsavedChangesRef = useRef(false);
   const memoEditorShowConfirmModalRef = useRef<(() => void) | null>(null);
   const taskEditorHasUnsavedChangesRef = useRef(false);
@@ -77,6 +124,8 @@ export function TeamDetailProvider({ children }: { children: ReactNode }) {
         taskCommentCount,
         setTaskImageCount,
         setTaskCommentCount,
+        activeTab,
+        setActiveTab,
       }}
     >
       {children}
@@ -90,4 +139,9 @@ export function useTeamDetail() {
     throw new Error("useTeamDetail must be used within a TeamDetailProvider");
   }
   return context;
+}
+
+// Provider外でも安全に使用できるフック（チーム外ではnullを返す）
+export function useTeamDetailSafe() {
+  return useContext(TeamDetailContext);
 }

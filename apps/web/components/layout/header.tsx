@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
 import { useTeamContextSafe } from "@/contexts/team-context";
 import { useNavigation } from "@/contexts/navigation-context";
+import { useTeamDetailSafe } from "@/src/contexts/team-detail-context";
 import NotificationPopup from "@/components/features/notifications/notification-popup";
 import type { Notification } from "@/lib/api/notifications";
 import { getNotificationUrl } from "@/src/utils/notificationUtils";
@@ -40,6 +41,10 @@ function Header() {
   // 個人ページの現在モードを取得（楽観的更新対応）
   const { currentMode, iconStates, screenMode } = useNavigation();
 
+  // チーム側のactiveTabを取得（即座に切り替えるため）
+  const teamDetailContext = useTeamDetailSafe();
+  const teamActiveTab = teamDetailContext?.activeTab;
+
   // ボード名の状態管理
   const [boardTitle, setBoardTitle] = useState<string | null>(null);
 
@@ -56,10 +61,11 @@ function Header() {
     const isMemoListPage = isPersonalPage && screenMode === "memo";
     const isTaskListPage = isPersonalPage && screenMode === "task";
 
+    // チーム側は Context の activeTab で判定（即座に切り替え）
     const isTeamMemoListPage =
-      teamName && pathname === `/team/${teamName}` && currentTab === "memos";
+      teamName && pathname === `/team/${teamName}` && teamActiveTab === "memos";
     const isTeamTaskListPage =
-      teamName && pathname === `/team/${teamName}` && currentTab === "tasks";
+      teamName && pathname === `/team/${teamName}` && teamActiveTab === "tasks";
 
     return {
       isTeamBoardPage,
@@ -69,7 +75,7 @@ function Header() {
       isMemoListPage,
       isTaskListPage,
     };
-  }, [pathname, teamName, currentTab, screenMode]);
+  }, [pathname, teamName, teamActiveTab, screenMode]);
 
   const {
     isTeamBoardPage,
@@ -174,18 +180,18 @@ function Header() {
             className={`w-8 h-8 md:w-10 md:h-10 rounded-xl flex items-center justify-center shadow-sm ${
               isTeamBoardPage && boardTitle
                 ? "bg-light-Blue"
-                : isTaskListPage
+                : isTaskListPage || isTeamTaskListPage
                   ? "bg-DeepBlue"
-                  : isMemoListPage
+                  : isMemoListPage || isTeamMemoListPage
                     ? "bg-Green"
                     : "bg-Green"
             }`}
           >
             {isTeamBoardPage && boardTitle ? (
               <DashboardEditIcon className="w-6 h-6 text-white" />
-            ) : isTaskListPage ? (
+            ) : isTaskListPage || isTeamTaskListPage ? (
               <CheckCircleIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
-            ) : isMemoListPage ? (
+            ) : isMemoListPage || isTeamMemoListPage ? (
               <EditIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
             ) : (
               <span className="text-white font-bold text-sm md:text-base">
@@ -199,14 +205,19 @@ function Header() {
             <div className="flex items-center gap-1 md:gap-3">
               <h1
                 className={`text-sm md:text-xl font-bold text-gray-800 tracking-wide ${
-                  isMemoListPage || isTaskListPage ? "w-[95px]" : ""
+                  isMemoListPage ||
+                  isTaskListPage ||
+                  isTeamMemoListPage ||
+                  isTeamTaskListPage
+                    ? "w-[95px]"
+                    : ""
                 }`}
               >
                 {isTeamBoardPage && boardTitle
                   ? boardTitle
-                  : isMemoListPage
+                  : isMemoListPage || isTeamMemoListPage
                     ? "メモ一覧"
-                    : isTaskListPage
+                    : isTaskListPage || isTeamTaskListPage
                       ? "タスク一覧"
                       : "ぺたぼー"}
               </h1>
@@ -269,11 +280,15 @@ function Header() {
                 </button>
               )}
             </div>
-            {!isTeamBoardPage && !isMemoListPage && !isTaskListPage && (
-              <span className="hidden md:inline text-sm text-gray-600 mt-0.5">
-                - 日々のメモやタスクをひとまとめに -
-              </span>
-            )}
+            {!isTeamBoardPage &&
+              !isMemoListPage &&
+              !isTaskListPage &&
+              !isTeamMemoListPage &&
+              !isTeamTaskListPage && (
+                <span className="hidden md:inline text-sm text-gray-600 mt-0.5">
+                  - 日々のメモやタスクをひとまとめに -
+                </span>
+              )}
           </div>
         </div>
       </div>

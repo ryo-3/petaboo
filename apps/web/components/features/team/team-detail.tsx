@@ -67,6 +67,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     setTaskCommentCount,
     taskEditorHasUnsavedChangesRef,
     taskEditorShowConfirmModalRef,
+    setActiveTab: setActiveTabContext,
   } = useTeamDetailContext();
 
   // 🛡️ ページ可視性をContextから取得
@@ -307,6 +308,12 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     | "search"
   >(getTabFromURL());
 
+  // 初回レンダリング時に Context を同期
+  useEffect(() => {
+    const initialTab = getTabFromURL();
+    setActiveTabContext(initialTab);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // URLのパラメータが変更された時にタブとアイテムを更新
   useEffect(() => {
     const tab = searchParams.get("tab");
@@ -323,6 +330,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     const newTab = getTabFromURL();
     if (newTab !== activeTab) {
       setActiveTab(newTab);
+      setActiveTabContext(newTab); // Context も更新
     }
 
     // メモIDがURLにある場合、メモを選択状態にする
@@ -367,6 +375,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         | "search",
     ) => {
       setActiveTab(tab);
+      setActiveTabContext(tab); // Context を更新（ヘッダー表示切り替え用）
 
       // URLを更新
       const params = new URLSearchParams(searchParams.toString());
@@ -391,7 +400,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       const newUrl = params.toString() ? `?${params.toString()}` : "";
       router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
     },
-    [router, customUrl, searchParams],
+    [router, customUrl, searchParams, setActiveTabContext],
   );
 
   // activeTabが変更された時にlayoutに通知

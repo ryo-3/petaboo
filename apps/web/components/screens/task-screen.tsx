@@ -963,11 +963,11 @@ function TaskScreen({
       </div>
 
       {/* モバイル: 1パネル表示（一覧 OR タスク OR コメント OR 画像 排他的表示） */}
-      <div className="md:hidden h-full flex flex-col bg-white overscroll-contain">
+      <div className="md:hidden h-screen flex flex-col bg-white">
         {!selectedTask &&
         !selectedDeletedTask &&
         taskScreenMode !== "create" ? (
-          <div className="flex-1 min-h-0 flex flex-col">
+          <div className="flex-1 min-h-0 flex flex-col overflow-y-auto overscroll-contain">
             {leftPanelContent}
             {/* モバイル: タスク追加FABボタン（削除済みタブ以外で表示） */}
             <MobileFabButton
@@ -977,18 +977,20 @@ function TaskScreen({
             />
           </div>
         ) : taskEditorTab === "task" ? (
-          <div className="flex-1 min-h-0 flex flex-col">
+          <div className="flex-1 min-h-0 flex flex-col overflow-y-auto overscroll-contain">
             {centerPanelContent}
           </div>
         ) : taskEditorTab === "comment" ? (
-          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+          <div className="flex-1 min-h-0 flex flex-col overflow-y-auto overscroll-contain">
             {rightPanelContent}
           </div>
         ) : (
-          <MobileAttachmentView
-            selectedTask={selectedTask || null}
-            teamId={teamId}
-          />
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
+            <MobileAttachmentView
+              selectedTask={selectedTask || null}
+              teamId={teamId}
+            />
+          </div>
         )}
       </div>
 

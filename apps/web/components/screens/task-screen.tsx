@@ -963,7 +963,7 @@ function TaskScreen({
       </div>
 
       {/* モバイル: 1パネル表示（一覧 OR タスク OR コメント OR 画像 排他的表示） */}
-      <div className="md:hidden h-screen flex flex-col bg-white">
+      <div className="md:hidden flex flex-col h-full">
         {!selectedTask &&
         !selectedDeletedTask &&
         taskScreenMode !== "create" ? (

@@ -299,11 +299,19 @@ function MainClient({
   // 個人モードの新規作成イベントリスナー
   useEffect(() => {
     const handlePersonalMemoCreate = () => {
-      handleNewMemo();
+      // CreateScreenではなくMemoScreenの新規作成モードに移行
+      setCurrentMode("memo");
+      setScreenMode("memo");
+      setSelectedMemo(null); // 選択解除
+      // MemoScreen側のイベントリスナーが "personal-memo-create" を受け取って新規作成モードに移行
     };
 
     const handlePersonalTaskCreate = () => {
-      handleNewTask();
+      // CreateScreenではなくTaskScreenの新規作成モードに移行
+      setCurrentMode("task");
+      setScreenMode("task");
+      setSelectedTask(null); // 選択解除
+      // TaskScreen側のイベントリスナーが "personal-task-create" を受け取って新規作成モードに移行
     };
 
     window.addEventListener("personal-memo-create", handlePersonalMemoCreate);
@@ -319,7 +327,7 @@ function MainClient({
         handlePersonalTaskCreate,
       );
     };
-  }, [handleNewMemo, handleNewTask]);
+  }, [setCurrentMode, setScreenMode, setSelectedMemo, setSelectedTask]);
 
   return (
     <main className="relative md:h-dvh md:overflow-hidden">

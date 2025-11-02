@@ -1,8 +1,8 @@
 "use client";
 
 interface MobileFabButtonProps {
-  /** メモ or タスク */
-  type: "memo" | "task";
+  /** メモ or タスク or ボード */
+  type: "memo" | "task" | "board";
   /** チームモード or 個人モード */
   teamMode: boolean;
   /** 表示するか（activeTab !== "deleted" など） */
@@ -10,7 +10,7 @@ interface MobileFabButtonProps {
 }
 
 /**
- * モバイル右下の新規追加FABボタン（メモ・タスク共通）
+ * モバイル右下の新規追加FABボタン（メモ・タスク・ボード共通）
  * メモのシンプルなイベントフローを基準に実装
  */
 export default function MobileFabButton({
@@ -30,6 +30,10 @@ export default function MobileFabButton({
       color: "bg-DeepBlue hover:bg-DeepBlue/90",
       eventName: teamMode ? "team-task-create" : "personal-task-create",
     },
+    board: {
+      color: "bg-light-Blue hover:bg-light-Blue/90",
+      eventName: teamMode ? "team-board-create" : "personal-board-create",
+    },
   };
 
   const currentConfig = config[type];
@@ -38,11 +42,14 @@ export default function MobileFabButton({
     window.dispatchEvent(new CustomEvent(currentConfig.eventName));
   };
 
+  const ariaLabel =
+    type === "memo" ? "メモ" : type === "task" ? "タスク" : "ボード";
+
   return (
     <button
       onClick={handleClick}
       className={`md:hidden fixed bottom-16 right-2 size-9 ${currentConfig.color} text-white rounded-full shadow-lg flex items-center justify-center z-20 transition-all`}
-      aria-label={`新規${type === "memo" ? "メモ" : "タスク"}作成`}
+      aria-label={`新規${ariaLabel}作成`}
     >
       <svg
         className="size-5"

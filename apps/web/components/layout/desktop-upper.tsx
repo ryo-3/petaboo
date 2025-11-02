@@ -411,25 +411,6 @@ function DesktopUpper({
       className={`fixed md:static top-0 left-0 right-0 z-10 bg-white px-2 md:px-0 pt-2 ${marginBottom}`}
     >
       {!hideControls && controlsContent}
-      {/* ボードモードの時はタイトルと新規追加ボタンを表示（モバイルのみ） */}
-      {currentMode === "board" && !hideAddButton && (
-        <div className="flex md:hidden items-center gap-2 mb-2">
-          <h1 className="font-bold text-gray-800 text-[22px] w-[105px] truncate">
-            ボード一覧
-          </h1>
-          <AddItemButton
-            itemType="board"
-            onClick={onCreateNew}
-            position="bottom"
-            size="small"
-            showTooltip={false}
-            customSize={{
-              padding: "p-2",
-              iconSize: "w-3.5 h-3.5",
-            }}
-          />
-        </div>
-      )}
       {headerContent}
     </div>
   );

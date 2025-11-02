@@ -8,6 +8,7 @@ import { useBoards, usePermanentDeleteBoard } from "@/src/hooks/use-boards";
 import { useTeamBoards } from "@/src/hooks/use-team-boards";
 import { useToast } from "@/src/contexts/toast-context";
 import { useTeamContext } from "@/contexts/team-context";
+import MobileFabButton from "@/components/ui/buttons/mobile-fab-button";
 
 export interface BoardScreenRef {
   triggerCreateNew: () => void;
@@ -137,6 +138,12 @@ const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(
             onPermanentDeleteBoard={handlePermanentDeleteBoard}
             teamMode={teamMode}
             teamId={teamId}
+          />
+
+          <MobileFabButton
+            type="board"
+            teamMode={teamMode}
+            show={activeTab !== "deleted"}
           />
         </div>
       </div>

@@ -1090,7 +1090,7 @@ function MemoScreen({
               />
             </div>
             {/* スクロール可能なコンテンツ（ツールバーの高さ分 padding-top を追加） */}
-            <div className="overflow-y-auto overscroll-contain pt-20">
+            <div className="overflow-y-auto overscroll-contain pt-20 pl-2">
               <DesktopLower
                 currentMode="memo"
                 activeTab={displayTab as "normal" | "deleted"}

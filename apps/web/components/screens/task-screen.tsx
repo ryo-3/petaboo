@@ -967,15 +967,118 @@ function TaskScreen({
         {!selectedTask &&
         !selectedDeletedTask &&
         taskScreenMode !== "create" ? (
-          <div className="overflow-y-auto overscroll-contain">
-            {leftPanelContent}
-            {/* モバイル: タスク追加FABボタン（削除済みタブ以外で表示） */}
-            <MobileFabButton
-              type="task"
-              teamMode={teamMode}
-              show={activeTab !== "deleted"}
-            />
-          </div>
+          <>
+            {/* ツールバーを固定位置に配置 */}
+            <div className="fixed top-0 left-0 right-0 z-20 bg-white px-2">
+              <DesktopUpper
+                currentMode="task"
+                activeTab={activeTabTyped}
+                onTabChange={handleTabChange(tabChangeHandler)}
+                onCreateNew={handleCreateNew}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+                columnCount={columnCount}
+                onColumnCountChange={setColumnCount}
+                rightPanelMode={taskScreenMode === "list" ? "hidden" : "view"}
+                selectionMode={selectionMode}
+                onSelectionModeChange={(mode) => {
+                  setSelectionMode(mode);
+                  if (mode === "select") {
+                    setCheckedTasks(new Set());
+                    setCheckedDeletedTasks(new Set());
+                  }
+                }}
+                onSelectAll={handleSelectAll}
+                isAllSelected={isAllSelected}
+                sortOptions={getVisibleSortOptions(activeTab)}
+                hideControls={false}
+                floatControls={false}
+                onSortChange={setSortOptions}
+                showEditDate={showEditDate}
+                onShowEditDateChange={setShowEditDate}
+                showTagDisplay={showTagDisplay}
+                onShowTagDisplayChange={setShowTagDisplay}
+                boards={filteredBoards}
+                selectedBoardIds={selectedBoardIds}
+                onBoardFilterChange={setSelectedBoardIds}
+                filterMode={boardFilterMode}
+                onFilterModeChange={setBoardFilterMode}
+                tags={tags || []}
+                selectedTagIds={selectedTagIds}
+                onTagFilterChange={setSelectedTagIds}
+                tagFilterMode={tagFilterMode}
+                onTagFilterModeChange={setTagFilterMode}
+                normalCount={0}
+                todoCount={
+                  tasks?.filter((task) => task.status === "todo").length || 0
+                }
+                inProgressCount={
+                  tasks?.filter((task) => task.status === "in_progress")
+                    .length || 0
+                }
+                completedCount={
+                  tasks?.filter((task) => task.status === "completed").length ||
+                  0
+                }
+                deletedTasksCount={deletedTasks?.length || 0}
+                hideAddButton={hideHeaderButtons}
+                onCsvImport={() => setIsCsvImportModalOpen(true)}
+                teamMode={teamMode}
+                marginBottom=""
+                headerMarginBottom="mb-1.5"
+              />
+            </div>
+            {/* スクロール可能なコンテンツ（ツールバーの高さ分 padding-top を追加） */}
+            <div className="overflow-y-auto overscroll-contain pt-20 pl-2">
+              <DesktopLower
+                currentMode="task"
+                activeTab={activeTabTyped}
+                viewMode={viewMode}
+                effectiveColumnCount={effectiveColumnCount}
+                isLoading={taskLoading}
+                error={taskError}
+                selectionMode={selectionMode}
+                sortOptions={getVisibleSortOptions(activeTab)}
+                showEditDate={showEditDate}
+                showBoardName={showBoardName}
+                showTags={showTagDisplay}
+                selectedBoardIds={selectedBoardIds}
+                boardFilterMode={boardFilterMode}
+                selectedTagIds={selectedTagIds}
+                tagFilterMode={tagFilterMode}
+                tasks={filteredTasks}
+                deletedTasks={deletedTasks || []}
+                selectedTask={selectedTask}
+                selectedDeletedTask={selectedDeletedTask}
+                checkedTasks={checkedTasks}
+                checkedDeletedTasks={checkedDeletedTasks}
+                onToggleCheckTask={createToggleHandlerWithTabClear(
+                  checkedTasks,
+                  setCheckedTasks,
+                  [setCheckedDeletedTasks],
+                )}
+                onToggleCheckDeletedTask={createToggleHandlerWithTabClear(
+                  checkedDeletedTasks,
+                  setCheckedDeletedTasks,
+                  [setCheckedTasks],
+                )}
+                onSelectTask={handleSelectTask}
+                onSelectDeletedTask={handleSelectDeletedTask}
+                allTags={tags || []}
+                allBoards={boards || []}
+                allTaggings={safeAllTaggings}
+                allTeamTaggings={safeAllTeamTaggings}
+                allBoardItems={safeAllBoardItems}
+                teamMode={teamMode}
+              />
+              {/* モバイル: タスク追加FABボタン（削除済みタブ以外で表示） */}
+              <MobileFabButton
+                type="task"
+                teamMode={teamMode}
+                show={activeTab !== "deleted"}
+              />
+            </div>
+          </>
         ) : taskEditorTab === "task" ? (
           <div className="overflow-y-auto overscroll-contain">
             {centerPanelContent}

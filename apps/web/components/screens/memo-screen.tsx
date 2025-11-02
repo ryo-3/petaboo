@@ -1033,11 +1033,11 @@ function MemoScreen({
       </div>
 
       {/* モバイル: 1パネル表示（一覧 OR メモ OR コメント OR 画像 排他的表示） */}
-      <div className="md:hidden flex flex-col h-full">
+      <div className="md:hidden">
         {!selectedMemo &&
         !selectedDeletedMemo &&
         memoScreenMode !== "create" ? (
-          <div className="flex-1 min-h-0 flex flex-col overflow-y-auto overscroll-contain">
+          <div className="overflow-y-auto overscroll-contain">
             {leftPanelContent}
             {/* モバイル: メモ追加FABボタン（削除済みタブ以外で表示） */}
             <MobileFabButton
@@ -1047,15 +1047,15 @@ function MemoScreen({
             />
           </div>
         ) : memoEditorTab === "memo" ? (
-          <div className="flex-1 min-h-0 flex flex-col overflow-y-auto overscroll-contain">
+          <div className="overflow-y-auto overscroll-contain">
             {centerPanelContent}
           </div>
         ) : memoEditorTab === "comment" ? (
-          <div className="flex-1 min-h-0 flex flex-col overflow-y-auto overscroll-contain">
+          <div className="overflow-y-auto overscroll-contain">
             {rightPanelContent}
           </div>
         ) : (
-          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
+          <div className="overflow-y-auto overscroll-contain">
             <MobileAttachmentView
               selectedMemo={selectedMemo || null}
               teamId={teamId}

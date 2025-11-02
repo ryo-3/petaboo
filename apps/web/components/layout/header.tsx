@@ -56,34 +56,42 @@ function Header() {
     const isTeamBoardPage = pathname.includes("/board/");
     const isPersonalPage = pathname === "/" || !teamName;
 
-    // 個人ページのメモ/タスク一覧は screenMode で判定
-    // （iconStatesはホーム画面ではfalseになるため、screenModeを使う）
-    const isMemoListPage = isPersonalPage && screenMode === "memo";
-    const isTaskListPage = isPersonalPage && screenMode === "task";
+    // 個人ページのメモ/タスク/ボード一覧は iconStates で判定（楽観的更新対応）
+    const isMemoListPage = isPersonalPage && iconStates.memo;
+    const isTaskListPage = isPersonalPage && iconStates.task;
+    const isBoardListPage = isPersonalPage && iconStates.board;
 
     // チーム側は Context の activeTab で判定（即座に切り替え）
     const isTeamMemoListPage =
       teamName && pathname === `/team/${teamName}` && teamActiveTab === "memos";
     const isTeamTaskListPage =
       teamName && pathname === `/team/${teamName}` && teamActiveTab === "tasks";
+    const isTeamBoardListPage =
+      teamName &&
+      pathname === `/team/${teamName}` &&
+      teamActiveTab === "boards";
 
     return {
       isTeamBoardPage,
       isPersonalPage,
       isTeamMemoListPage,
       isTeamTaskListPage,
+      isTeamBoardListPage,
       isMemoListPage,
       isTaskListPage,
+      isBoardListPage,
     };
-  }, [pathname, teamName, teamActiveTab, screenMode]);
+  }, [pathname, teamName, teamActiveTab, iconStates]);
 
   const {
     isTeamBoardPage,
     isPersonalPage,
     isMemoListPage,
     isTaskListPage,
+    isBoardListPage,
     isTeamMemoListPage,
     isTeamTaskListPage,
+    isTeamBoardListPage,
   } = pageStates;
 
   // チームボード名の変更イベントをリッスン
@@ -180,15 +188,19 @@ function Header() {
             className={`w-8 h-8 md:w-10 md:h-10 rounded-xl flex items-center justify-center shadow-sm ${
               isTeamBoardPage && boardTitle
                 ? "bg-light-Blue"
-                : isTaskListPage || isTeamTaskListPage
-                  ? "bg-DeepBlue"
-                  : isMemoListPage || isTeamMemoListPage
-                    ? "bg-Green"
-                    : "bg-Green"
+                : isBoardListPage || isTeamBoardListPage
+                  ? "bg-light-Blue"
+                  : isTaskListPage || isTeamTaskListPage
+                    ? "bg-DeepBlue"
+                    : isMemoListPage || isTeamMemoListPage
+                      ? "bg-Green"
+                      : "bg-Green"
             }`}
           >
             {isTeamBoardPage && boardTitle ? (
               <DashboardEditIcon className="w-6 h-6 text-white" />
+            ) : isBoardListPage || isTeamBoardListPage ? (
+              <DashboardEditIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
             ) : isTaskListPage || isTeamTaskListPage ? (
               <CheckCircleIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
             ) : isMemoListPage || isTeamMemoListPage ? (
@@ -207,19 +219,23 @@ function Header() {
                 className={`text-sm md:text-xl font-bold text-gray-800 tracking-wide ${
                   isMemoListPage ||
                   isTaskListPage ||
+                  isBoardListPage ||
                   isTeamMemoListPage ||
-                  isTeamTaskListPage
+                  isTeamTaskListPage ||
+                  isTeamBoardListPage
                     ? "w-[95px]"
                     : ""
                 }`}
               >
                 {isTeamBoardPage && boardTitle
                   ? boardTitle
-                  : isMemoListPage || isTeamMemoListPage
-                    ? "メモ一覧"
-                    : isTaskListPage || isTeamTaskListPage
-                      ? "タスク一覧"
-                      : "ぺたぼー"}
+                  : isBoardListPage || isTeamBoardListPage
+                    ? "ボード一覧"
+                    : isMemoListPage || isTeamMemoListPage
+                      ? "メモ一覧"
+                      : isTaskListPage || isTeamTaskListPage
+                        ? "タスク一覧"
+                        : "ぺたぼー"}
               </h1>
               {/* メモ一覧の新規追加ボタン */}
               {(isMemoListPage || isTeamMemoListPage) && (
@@ -279,12 +295,43 @@ function Header() {
                   </svg>
                 </button>
               )}
+              {/* ボード一覧の新規追加ボタン */}
+              {(isBoardListPage || isTeamBoardListPage) && (
+                <button
+                  onClick={() => {
+                    window.dispatchEvent(
+                      new CustomEvent(
+                        isTeamBoardListPage
+                          ? "team-board-create"
+                          : "personal-board-create",
+                      ),
+                    );
+                  }}
+                  className="p-1.5 md:p-2 bg-light-Blue hover:bg-light-Blue/90 rounded-lg transition-colors"
+                >
+                  <svg
+                    className="w-3 h-3 md:w-3.5 md:h-3.5 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={3}
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                </button>
+              )}
             </div>
             {!isTeamBoardPage &&
               !isMemoListPage &&
               !isTaskListPage &&
+              !isBoardListPage &&
               !isTeamMemoListPage &&
-              !isTeamTaskListPage && (
+              !isTeamTaskListPage &&
+              !isTeamBoardListPage && (
                 <span className="hidden md:inline text-sm text-gray-600 mt-0.5">
                   - 日々のメモやタスクをひとまとめに -
                 </span>

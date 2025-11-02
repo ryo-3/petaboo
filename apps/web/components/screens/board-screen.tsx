@@ -95,6 +95,20 @@ const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(
       triggerCreateNew: handleCreateNew,
     }));
 
+    // ヘッダーからの新規作成イベントをリッスン（個人・チーム両対応）
+    useEffect(() => {
+      const handleCreateEvent = () => {
+        handleCreateNew();
+      };
+
+      window.addEventListener("personal-board-create", handleCreateEvent);
+      window.addEventListener("team-board-create", handleCreateEvent);
+      return () => {
+        window.removeEventListener("personal-board-create", handleCreateEvent);
+        window.removeEventListener("team-board-create", handleCreateEvent);
+      };
+    }, []);
+
     return (
       <div className="h-full">
         <div className="pt-2 md:pt-3 pl-2 md:pl-5 md:pr-2 md:mr-3 flex flex-col h-full">

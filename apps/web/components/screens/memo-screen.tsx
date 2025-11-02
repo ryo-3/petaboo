@@ -1037,15 +1037,107 @@ function MemoScreen({
         {!selectedMemo &&
         !selectedDeletedMemo &&
         memoScreenMode !== "create" ? (
-          <div className="overflow-y-auto overscroll-contain">
-            {leftPanelContent}
-            {/* モバイル: メモ追加FABボタン（削除済みタブ以外で表示） */}
-            <MobileFabButton
-              type="memo"
-              teamMode={teamMode}
-              show={activeTab !== "deleted"}
-            />
-          </div>
+          <>
+            {/* ツールバーを固定位置に配置 */}
+            <div className="fixed top-0 left-0 right-0 z-20 bg-white px-2">
+              <DesktopUpper
+                currentMode="memo"
+                activeTab={displayTab as "normal" | "deleted"}
+                onTabChange={handleCustomTabChange}
+                onCreateNew={handleCreateNew}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+                columnCount={columnCount}
+                onColumnCountChange={setColumnCount}
+                rightPanelMode={memoScreenMode === "list" ? "hidden" : "view"}
+                selectionMode={selectionMode}
+                onSelectionModeChange={(mode) => {
+                  setSelectionMode(mode);
+                  if (mode === "select") {
+                    setCheckedMemos(new Set());
+                    setCheckedDeletedMemos(new Set());
+                  }
+                }}
+                onSelectAll={handleSelectAll}
+                isAllSelected={isAllSelected}
+                sortOptions={getVisibleSortOptions(activeTab)}
+                hideControls={false}
+                floatControls={false}
+                onSortChange={setSortOptions}
+                showEditDate={showEditDate}
+                onShowEditDateChange={setShowEditDate}
+                showBoardName={showBoardName}
+                onShowBoardNameChange={setShowBoardName}
+                showTagDisplay={showTagDisplay}
+                onShowTagDisplayChange={setShowTagDisplay}
+                boards={filteredBoards}
+                selectedBoardIds={selectedBoardIds}
+                onBoardFilterChange={setSelectedBoardIds}
+                filterMode={boardFilterMode}
+                onFilterModeChange={setBoardFilterMode}
+                tags={tags || []}
+                selectedTagIds={selectedTagIds}
+                onTagFilterChange={setSelectedTagIds}
+                tagFilterMode={tagFilterMode}
+                onTagFilterModeChange={setTagFilterMode}
+                normalCount={memos?.length || 0}
+                deletedMemosCount={deletedMemos?.length || 0}
+                hideAddButton={hideHeaderButtons}
+                onCsvImport={() => setIsCsvImportModalOpen(true)}
+                teamMode={teamMode}
+                marginBottom=""
+                headerMarginBottom="mb-1.5"
+              />
+            </div>
+            {/* スクロール可能なコンテンツ（ツールバーの高さ分 padding-top を追加） */}
+            <div className="overflow-y-auto overscroll-contain pt-20">
+              <DesktopLower
+                currentMode="memo"
+                activeTab={displayTab as "normal" | "deleted"}
+                viewMode={viewMode}
+                effectiveColumnCount={effectiveColumnCount}
+                isLoading={memoLoading}
+                error={memoError}
+                selectionMode={selectionMode}
+                sortOptions={getVisibleSortOptions(activeTab)}
+                showEditDate={showEditDate}
+                showBoardName={showBoardName}
+                showTags={showTagDisplay}
+                selectedBoardIds={selectedBoardIds}
+                boardFilterMode={boardFilterMode}
+                selectedTagIds={selectedTagIds}
+                tagFilterMode={tagFilterMode}
+                memos={filteredMemos}
+                localMemos={filteredMemos}
+                deletedMemos={deletedMemos || []}
+                selectedMemo={selectedMemo}
+                selectedDeletedMemo={selectedDeletedMemo}
+                checkedMemos={checkedMemos}
+                checkedDeletedMemos={checkedDeletedMemos}
+                onToggleCheckMemo={createToggleHandler(
+                  checkedMemos,
+                  setCheckedMemos,
+                )}
+                onToggleCheckDeletedMemo={createToggleHandler(
+                  checkedDeletedMemos,
+                  setCheckedDeletedMemos,
+                )}
+                onSelectMemo={handleSelectMemo}
+                onSelectDeletedMemo={handleSelectDeletedMemo}
+                teamMode={teamMode}
+                allTags={tags || []}
+                allBoards={boards || []}
+                allTaggings={safeAllTaggings || []}
+                allBoardItems={safeAllBoardItems || []}
+              />
+              {/* モバイル: メモ追加FABボタン（削除済みタブ以外で表示） */}
+              <MobileFabButton
+                type="memo"
+                teamMode={teamMode}
+                show={activeTab !== "deleted"}
+              />
+            </div>
+          </>
         ) : memoEditorTab === "memo" ? (
           <div className="overflow-y-auto overscroll-contain">
             {centerPanelContent}

@@ -21,7 +21,7 @@ function DesktopLayout({
     <div className="flex flex-col md:flex-row flex-1">
       {/* 左サイドバー（デスクトップ: 固定左サイドバー、モバイル: 下部バー） */}
       <div
-        className={`fixed left-0 right-0 ${hideHeader ? "md:top-0" : "md:top-16"} bottom-0 md:bottom-auto md:w-16 w-full md:h-screen h-14 md:border-r md:border-b-0 border-t border-gray-200 overflow-visible z-10 bg-gray-50`}
+        className={`fixed left-0 right-0 ${hideHeader ? "md:top-0" : "md:top-16"} bottom-0 md:bottom-auto md:w-16 w-full md:h-screen h-14 md:border-r md:border-b-0 border-t border-gray-200 overflow-visible z-30 bg-gray-50`}
       >
         {sidebarContent}
       </div>

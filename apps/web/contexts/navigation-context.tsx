@@ -125,6 +125,9 @@ export function NavigationProvider({
     "memo" | "task" | "board" | null
   >(null);
 
+  // チーム詳細ページの即座のタブ切り替え用（URL更新前の状態）
+  const [teamActiveTab, setTeamActiveTab] = useState<string | null>(null);
+
   const pathname = usePathname();
 
   const searchParams = useSearchParams();
@@ -140,10 +143,14 @@ export function NavigationProvider({
 
     // チーム詳細ページのタブ判定（最適化・楽観的更新対応）
     if (isTeamDetailPageUrl) {
+      // teamActiveTabがあればそれを優先、なければURLパラメータを使用（即座の反映）
+      const activeTab = teamActiveTab || currentTab;
+      const currentSlug = searchParams.get("slug");
+
       // チームボード詳細はクエリパラメータ形式（?tab=board&slug=xxx）
       const isTeamBoardDetailPage =
-        currentTab === "board" && searchParams.get("slug") !== null;
-      const isTeamSettingsTab = currentTab === "team-settings";
+        activeTab === "board" && currentSlug !== null;
+      const isTeamSettingsTab = activeTab === "team-settings";
 
       // 楽観的モードがある場合は即座に反映
       const effectiveTab = optimisticMode
@@ -152,7 +159,7 @@ export function NavigationProvider({
           : optimisticMode === "task"
             ? "tasks"
             : "boards"
-        : currentTab;
+        : activeTab;
 
       return {
         home: !effectiveTab || effectiveTab === "overview",
@@ -166,7 +173,7 @@ export function NavigationProvider({
           optimisticMode !== "memo" &&
           optimisticMode !== "task" &&
           optimisticMode !== "board",
-        search: currentTab === "search",
+        search: activeTab === "search",
         settings: isTeamSettingsTab,
         team:
           effectiveTab === "team-list" ||
@@ -204,12 +211,29 @@ export function NavigationProvider({
     showTeamCreate,
     showingBoardDetail,
     optimisticMode,
+    teamActiveTab,
   ]);
 
-  // URL変更時にoptimisticModeをクリア
+  // URL変更時にoptimisticModeとteamActiveTabをクリア
   useEffect(() => {
     setOptimisticMode(null);
+    setTeamActiveTab(null);
   }, [pathname, searchParams]);
+
+  // チーム詳細ページのタブ変更を即座に反映
+  useEffect(() => {
+    const handleTeamTabChange = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { activeTab } = customEvent.detail;
+      setTeamActiveTab(activeTab);
+    };
+
+    window.addEventListener("team-tab-change", handleTeamTabChange);
+
+    return () => {
+      window.removeEventListener("team-tab-change", handleTeamTabChange);
+    };
+  }, []);
 
   // デバッグ用: スクリーンモード変更をログ出力
   useEffect(() => {

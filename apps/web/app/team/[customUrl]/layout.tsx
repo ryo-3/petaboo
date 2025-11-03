@@ -70,6 +70,9 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   const [lastBoardSlug, setLastBoardSlug] = useState<string | undefined>(
     undefined,
   );
+  const [lastBoardName, setLastBoardName] = useState<string | undefined>(
+    undefined,
+  );
 
   // /team 関連のページかどうかを判定（/team/create は除く）
   // const isTeamPage =
@@ -118,6 +121,7 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
     const handleTeamBoardNameChange = (event: CustomEvent) => {
       const { boardName } = event.detail;
       setCurrentBoardName(boardName);
+      setLastBoardName(boardName); // 最後のボード名として記憶
     };
 
     // チームボード名クリアイベントをリッスン（楽観的更新用）
@@ -360,7 +364,7 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
             onSearch={handleSearch}
             showingBoardDetail={isTeamBoardDetailPage}
             currentBoardName={
-              lastBoardSlug ? currentBoardName || "最後のボード" : undefined
+              lastBoardSlug ? currentBoardName || lastBoardName : undefined
             }
             currentTeamName={teamDetail?.name}
             selectedMemoId={selectedMemoId ?? undefined}
@@ -420,7 +424,7 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
               onSearch={handleSearch}
               showingBoardDetail={isTeamBoardDetailPage}
               currentBoardName={
-                lastBoardSlug ? currentBoardName || "最後のボード" : undefined
+                lastBoardSlug ? currentBoardName || lastBoardName : undefined
               }
               currentTeamName={teamDetail?.name}
               selectedMemoId={selectedMemoId ?? undefined}

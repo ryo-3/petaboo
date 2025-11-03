@@ -429,7 +429,7 @@ function Sidebar({
             <Tooltip text={`${currentBoardName}詳細`} position="right">
               <button
                 onClick={() => {
-                  setOptimisticMode(null); // optimisticModeをクリア
+                  // ボード詳細に遷移（optimisticModeはクリアせずURLベースの判定に任せる）
                   onBoardDetail?.();
                 }}
                 className={`p-2 rounded-lg transition-colors ${

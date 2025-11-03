@@ -17,6 +17,8 @@ interface SharedBoardSettingsProps {
   // Team mode props
   isTeamMode?: boolean;
   teamCustomUrl?: string;
+  // Display options
+  hideBackButton?: boolean;
   // Hook functions
   updateMutation: {
     mutateAsync: (data: {
@@ -43,6 +45,7 @@ export default function SharedBoardSettings({
   initialBoardCompleted,
   isTeamMode = false,
   teamCustomUrl,
+  hideBackButton = false,
   updateMutation,
   toggleCompletionMutation,
   deleteMutation,
@@ -146,15 +149,17 @@ export default function SharedBoardSettings({
   return (
     <div className="max-w-4xl pb-24">
       {/* ヘッダー */}
-      <div className="flex items-center gap-4 mb-4">
-        <button
-          onClick={handleBack}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-        >
-          <ArrowLeftIcon className="w-5 h-5 text-gray-600" />
-        </button>
-        <h1 className="text-xl font-bold text-gray-900">{title}</h1>
-      </div>
+      {!hideBackButton && (
+        <div className="flex items-center gap-4 mb-4">
+          <button
+            onClick={handleBack}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <ArrowLeftIcon className="w-5 h-5 text-gray-600" />
+          </button>
+          <h1 className="text-xl font-bold text-gray-900">{title}</h1>
+        </div>
+      )}
 
       <div className="space-y-4">
         {/* 基本情報 */}

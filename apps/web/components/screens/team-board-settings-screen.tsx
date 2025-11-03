@@ -1,15 +1,19 @@
 "use client";
 
-import TeamBoardSettings from "@/components/features/team-board/team-board-settings";
+import SharedBoardSettings from "@/components/features/board/shared-board-settings";
 import DesktopLayout from "@/components/layout/desktop-layout";
 import Header from "@/components/layout/header";
 import Sidebar from "@/components/layout/sidebar";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useNavigation } from "@/contexts/navigation-context";
+import {
+  useUpdateTeamBoard,
+  useToggleTeamBoardCompletion,
+  useDeleteTeamBoard,
+} from "@/src/hooks/use-team-boards";
 
 interface TeamBoardSettingsScreenProps {
   teamId: number;
-  teamName: string;
   teamCustomUrl: string;
   boardId: number;
   boardSlug: string;
@@ -20,7 +24,6 @@ interface TeamBoardSettingsScreenProps {
 
 export default function TeamBoardSettingsScreen({
   teamId,
-  teamName,
   teamCustomUrl,
   boardId,
   boardSlug,
@@ -30,6 +33,11 @@ export default function TeamBoardSettingsScreen({
 }: TeamBoardSettingsScreenProps) {
   const { preferences } = useUserPreferences(1);
   const { currentMode, setCurrentMode } = useNavigation();
+
+  // チームボード用のhooks
+  const updateBoard = useUpdateTeamBoard(teamId);
+  const toggleCompletion = useToggleTeamBoardCompletion(teamId);
+  const deleteBoard = useDeleteTeamBoard(teamId);
 
   // 空のハンドラー（設定画面では使用しない）
   const emptyHandler = () => {};
@@ -63,14 +71,17 @@ export default function TeamBoardSettingsScreen({
 
       {/* メインコンテンツエリア */}
       <div className="flex-1 pt-6 pl-6 pr-6 flex flex-col overflow-y-auto">
-        <TeamBoardSettings
-          teamId={teamId}
-          teamCustomUrl={teamCustomUrl}
+        <SharedBoardSettings
           boardId={boardId}
           boardSlug={boardSlug}
           initialBoardName={initialBoardName}
           initialBoardDescription={initialBoardDescription}
           initialBoardCompleted={initialBoardCompleted}
+          isTeamMode={true}
+          teamCustomUrl={teamCustomUrl}
+          updateMutation={updateBoard}
+          toggleCompletionMutation={toggleCompletion}
+          deleteMutation={deleteBoard}
         />
       </div>
     </div>

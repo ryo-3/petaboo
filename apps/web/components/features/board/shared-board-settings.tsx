@@ -139,7 +139,7 @@ export default function SharedBoardSettings({
 
   const handleBack = () => {
     const backPath = isTeamMode
-      ? `/team/${teamCustomUrl}/board/${boardSlug}`
+      ? `/team/${teamCustomUrl}?tab=board&slug=${boardSlug}`
       : `/boards/${boardSlug}`;
     router.push(backPath);
   };

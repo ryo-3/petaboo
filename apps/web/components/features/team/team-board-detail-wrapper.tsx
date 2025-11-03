@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { useTeamMemos } from "@/src/hooks/use-team-memos";
-import { useTeamTasks } from "@/src/hooks/use-team-tasks";
 import BoardDetailScreen from "@/components/screens/board-detail-screen-3panel";
 import SharedBoardSettings from "@/components/features/board/shared-board-settings";
 import {
@@ -38,8 +36,13 @@ export function TeamBoardDetailWrapper({
   const searchParams = useSearchParams();
   const { getToken, isLoaded } = useAuth();
 
-  // 設定モーダルの状態（URLパラメータから取得）
+  // 設定画面表示判定
   const showSettings = searchParams.get("settings") === "true";
+
+  // チームボード用のhooks
+  const updateBoard = useUpdateTeamBoard(teamId || 0);
+  const toggleCompletion = useToggleTeamBoardCompletion(teamId || 0);
+  const deleteBoard = useDeleteTeamBoard(teamId || 0);
 
   // 選択状態管理
   const [selectedMemo, setSelectedMemo] = useState<Memo | DeletedMemo | null>(
@@ -134,16 +137,6 @@ export function TeamBoardDetailWrapper({
     router.push(`/team/${customUrl}?tab=board&slug=${slug}&settings=true`);
   };
 
-  // 設定モーダルを閉じる
-  const handleCloseSettings = () => {
-    router.push(`/team/${customUrl}?tab=board&slug=${slug}`);
-  };
-
-  // チームボード用のhooks
-  const updateBoard = useUpdateTeamBoard(teamId || 0);
-  const toggleCompletion = useToggleTeamBoardCompletion(teamId || 0);
-  const deleteBoard = useDeleteTeamBoard(teamId || 0);
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -162,68 +155,43 @@ export function TeamBoardDetailWrapper({
     );
   }
 
-  return (
-    <>
-      <BoardDetailScreen
-        boardId={boardData.id}
-        selectedMemo={selectedMemo}
-        selectedTask={selectedTask}
-        onSelectMemo={handleSelectMemo}
-        onSelectTask={handleSelectTask}
-        onSelectDeletedMemo={handleSelectDeletedMemo}
-        onClearSelection={handleClearSelection}
-        onBack={onBack}
-        onSettings={handleSettings}
-        initialBoardName={boardData.name}
-        initialBoardDescription={boardData.description}
-        showBoardHeader={true}
-        serverInitialTitle={boardData.name}
-        teamMembers={teamMembers}
-      />
+  // 設定画面を表示
+  if (showSettings) {
+    return (
+      <div className="h-full flex flex-col overflow-y-auto pt-6 pl-6 pr-6">
+        <SharedBoardSettings
+          boardId={boardData.id}
+          boardSlug={slug}
+          initialBoardName={boardData.name}
+          initialBoardDescription={boardData.description}
+          initialBoardCompleted={boardData.completed || false}
+          isTeamMode={true}
+          teamCustomUrl={customUrl}
+          updateMutation={updateBoard}
+          toggleCompletionMutation={toggleCompletion}
+          deleteMutation={deleteBoard}
+        />
+      </div>
+    );
+  }
 
-      {/* ボード設定モーダル */}
-      {showSettings && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto m-4">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold">ボード設定</h2>
-                <button
-                  onClick={handleCloseSettings}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-              <SharedBoardSettings
-                boardId={boardData.id}
-                boardSlug={slug}
-                initialBoardName={boardData.name}
-                initialBoardDescription={boardData.description}
-                initialBoardCompleted={boardData.completed || false}
-                isTeamMode={true}
-                teamCustomUrl={customUrl}
-                hideBackButton={true}
-                updateMutation={updateBoard}
-                toggleCompletionMutation={toggleCompletion}
-                deleteMutation={deleteBoard}
-              />
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+  // ボード詳細を表示
+  return (
+    <BoardDetailScreen
+      boardId={boardData.id}
+      selectedMemo={selectedMemo}
+      selectedTask={selectedTask}
+      onSelectMemo={handleSelectMemo}
+      onSelectTask={handleSelectTask}
+      onSelectDeletedMemo={handleSelectDeletedMemo}
+      onClearSelection={handleClearSelection}
+      onBack={onBack}
+      onSettings={handleSettings}
+      initialBoardName={boardData.name}
+      initialBoardDescription={boardData.description}
+      showBoardHeader={true}
+      serverInitialTitle={boardData.name}
+      teamMembers={teamMembers}
+    />
   );
 }

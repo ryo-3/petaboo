@@ -333,6 +333,125 @@ export function createTeamBoardsAPI(app: AppType) {
     }
   });
 
+  // チームボード更新
+  const updateTeamBoard = createRoute({
+    method: "put",
+    path: "/{teamId}/boards/{id}",
+    request: {
+      param: z.object({
+        teamId: z.string().openapi({ example: "1" }),
+        id: z.string().openapi({ example: "1" }),
+      }),
+      body: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              name: z.string().optional(),
+              description: z.string().optional(),
+            }),
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              id: z.number(),
+              name: z.string(),
+              slug: z.string(),
+              description: z.string().nullable(),
+              teamId: z.number(),
+              userId: z.string(),
+              boardCategoryId: z.number().nullable(),
+              archived: z.boolean(),
+              completed: z.boolean(),
+              createdAt: z.number(),
+              updatedAt: z.number(),
+            }),
+          },
+        },
+        description: "更新されたチームボード",
+      },
+    },
+  });
+
+  app.openapi(updateTeamBoard, async (c) => {
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ error: "認証が必要です" }, 401);
+    }
+
+    const { teamId, id } = c.req.param();
+    const { name, description } = await c.req.json();
+    const db = c.get("db");
+
+    try {
+      // チームメンバーかどうか確認
+      const memberCheck = await db
+        .select({ id: teamMembers.id })
+        .from(teamMembers)
+        .where(
+          and(
+            eq(teamMembers.teamId, parseInt(teamId)),
+            eq(teamMembers.userId, auth.userId),
+          ),
+        )
+        .limit(1);
+
+      if (memberCheck.length === 0) {
+        return c.json({ error: "チームメンバーではありません" }, 403);
+      }
+
+      // ボードの存在確認
+      const existingBoard = await db
+        .select()
+        .from(teamBoards)
+        .where(
+          and(
+            eq(teamBoards.id, parseInt(id)),
+            eq(teamBoards.teamId, parseInt(teamId)),
+          ),
+        )
+        .limit(1);
+
+      if (existingBoard.length === 0) {
+        return c.json({ error: "ボードが見つかりません" }, 404);
+      }
+
+      // 更新データの準備
+      const updateData: Partial<NewTeamBoard> = {
+        updatedAt: new Date(),
+      };
+
+      if (name !== undefined) {
+        updateData.name = name;
+      }
+
+      if (description !== undefined) {
+        updateData.description = description || null;
+      }
+
+      // ボード更新
+      const result = await db
+        .update(teamBoards)
+        .set(updateData)
+        .where(
+          and(
+            eq(teamBoards.id, parseInt(id)),
+            eq(teamBoards.teamId, parseInt(teamId)),
+          ),
+        )
+        .returning();
+
+      return c.json(result[0], 200);
+    } catch (error) {
+      console.error("チームボード更新エラー:", error);
+      return c.json({ error: "サーバーエラーが発生しました" }, 500);
+    }
+  });
+
   // チームボード詳細取得（slug指定）
   const getTeamBoardBySlug = createRoute({
     method: "get",

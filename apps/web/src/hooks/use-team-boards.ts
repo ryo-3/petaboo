@@ -214,6 +214,10 @@ export function useUpdateTeamBoard(teamId: number) {
           queryKey: ["team-boards", teamId, status],
         });
       });
+      // ボード詳細のキャッシュも無効化
+      queryClient.invalidateQueries({
+        queryKey: ["team-board", teamId],
+      });
       showToast("ボードが更新されました", "success");
     },
     onError: (error) => {

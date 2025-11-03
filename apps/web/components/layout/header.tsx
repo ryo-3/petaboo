@@ -53,7 +53,12 @@ function Header() {
 
   // ページ種別の判定（useMemoで最適化・楽観的更新対応）
   const pageStates = useMemo(() => {
-    const isTeamBoardPage = pathname.includes("/board/");
+    // チームボード詳細はクエリパラメータ形式に変更（/team/xxx?tab=board&slug=yyy）
+    const isTeamBoardPage =
+      teamName &&
+      pathname === `/team/${teamName}` &&
+      currentTab === "board" &&
+      searchParams.get("slug") !== null;
     const isPersonalPage = pathname === "/" || !teamName;
 
     // 個人ページのメモ/タスク/ボード一覧は iconStates で判定（楽観的更新対応）
@@ -81,7 +86,7 @@ function Header() {
       isTaskListPage,
       isBoardListPage,
     };
-  }, [pathname, teamName, teamActiveTab, iconStates]);
+  }, [pathname, teamName, teamActiveTab, iconStates, currentTab, searchParams]);
 
   const {
     isTeamBoardPage,

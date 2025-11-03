@@ -22,14 +22,14 @@ const ToastContext = createContext<ToastContextType | undefined>(undefined);
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const showToast = (message: string, type: ToastType, duration?: number) => {
-    const id = Math.random().toString(36).substr(2, 9);
+  const showToast = (message: string, type: ToastType, duration = 3000) => {
+    const id = Math.random().toString(36).substring(2, 11);
     const newToast: Toast = { id, message, type, duration };
 
     setToasts((prev) => [...prev, newToast]);
 
-    // Auto remove after duration (only if duration is specified and > 0)
-    if (duration && duration > 0) {
+    // Auto remove after duration (default 3 seconds)
+    if (duration > 0) {
       setTimeout(() => {
         removeToast(id);
       }, duration);

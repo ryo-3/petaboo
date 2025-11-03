@@ -10,6 +10,7 @@ interface BoardHeaderProps {
   isDeleted?: boolean;
   onExport: () => void;
   isExportDisabled?: boolean;
+  onBoardSettings?: () => void;
 }
 
 export default function BoardHeader({
@@ -18,14 +19,20 @@ export default function BoardHeader({
   boardDescription,
   onExport,
   isExportDisabled = false,
+  onBoardSettings,
 }: BoardHeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
 
   const handleSettings = () => {
-    // 現在のパスから設定画面へ遷移
-    const boardSlug = pathname.split("/")[2];
-    router.push(`/boards/${boardSlug}/settings`);
+    if (onBoardSettings) {
+      // propsで渡されたhandlerを優先（チームボード対応）
+      onBoardSettings();
+    } else {
+      // 個人ボード用のデフォルト処理
+      const boardSlug = pathname.split("/")[2];
+      router.push(`/boards/${boardSlug}/settings`);
+    }
   };
   return (
     <div className="flex items-start justify-between mb-1">

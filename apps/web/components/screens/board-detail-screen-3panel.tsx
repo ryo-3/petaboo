@@ -757,6 +757,7 @@ function BoardDetailScreen({
             isDeleted={isDeleted}
             onExport={() => {}}
             isExportDisabled={true}
+            onBoardSettings={onSettings}
           />
         )}
         <div className="text-center py-8">

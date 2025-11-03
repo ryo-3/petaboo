@@ -119,6 +119,11 @@ export function TeamBoardDetailWrapper({
     setSelectedMemo(memo as unknown as Memo);
   };
 
+  // チームボード設定画面への遷移
+  const handleSettings = () => {
+    router.push(`/team/${customUrl}?tab=board&slug=${slug}&settings=true`);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -147,6 +152,7 @@ export function TeamBoardDetailWrapper({
       onSelectDeletedMemo={handleSelectDeletedMemo}
       onClearSelection={handleClearSelection}
       onBack={onBack}
+      onSettings={handleSettings}
       initialBoardName={boardData.name}
       initialBoardDescription={boardData.description}
       showBoardHeader={true}

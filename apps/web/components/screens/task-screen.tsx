@@ -191,8 +191,10 @@ function TaskScreen({
 }: TaskScreenProps) {
   const { isTeamMode: teamMode, teamId: teamIdRaw } = useTeamContext();
   const teamId = teamIdRaw ?? undefined; // Convert null to undefined for hook compatibility
+
   // TeamDetailContext（チームモードのみ）
   const teamDetailContext = teamMode ? useTeamDetail() : null;
+
   // 一括処理中断通知の監視
   useBulkProcessNotifications();
 
@@ -206,13 +208,20 @@ function TaskScreen({
     isLoading: boolean;
     error: Error | null;
   };
+
   const { data: deletedTasks } = useDeletedTasks({ teamMode, teamId });
+
   const { preferences } = useUserPreferences(1);
+
   const { data: personalBoards } = useBoards("normal", !teamMode);
+
   const { data: teamBoards } = useTeamBoards(teamId || null, "normal");
+
   const boards = teamMode ? teamBoards : personalBoards;
   const { data: personalTags } = useTags({ enabled: !teamMode });
+
   const { data: teamTags } = useTeamTags(teamId ?? 0, { enabled: teamMode });
+
   const tags = teamMode ? teamTags : personalTags;
 
   // 選択中のタスクに紐づくボード情報を取得（フェーズ1対応）
@@ -221,11 +230,13 @@ function TaskScreen({
     "task",
     teamMode ? undefined : selectedTaskId,
   );
+
   const { data: teamTaskItemBoards = [] } = useTeamItemBoards(
     teamMode ? teamId || 0 : 0,
     "task",
     teamMode ? selectedTaskId : undefined,
   );
+
   const itemBoards = teamMode ? teamTaskItemBoards : personalTaskItemBoards;
 
   // 削除済みタスクの完全削除フック
@@ -233,6 +244,7 @@ function TaskScreen({
 
   // 全データ事前取得（ちらつき解消）
   const { data: allTaggings } = useAllTaggings();
+
   const { data: allBoardItems } = useAllBoardItems(
     teamMode ? teamId : undefined,
   );

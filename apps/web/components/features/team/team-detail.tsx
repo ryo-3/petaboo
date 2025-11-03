@@ -339,9 +339,12 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     }
 
     const newTab = getTabFromURL();
+    // URL同期確認のみ（状態更新は handleTabChange で即座に実行済み）
+    // ブラウザの戻る/進むボタンでの変更時のみ状態を更新
     if (newTab !== activeTab) {
+      // ブラウザナビゲーション（戻る/進む）による変更の場合のみ更新
       setActiveTab(newTab);
-      setActiveTabContext(newTab); // Context も更新
+      setActiveTabContext(newTab);
     }
 
     // メモIDがURLにある場合、メモを選択状態にする
@@ -400,7 +403,6 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
       // ボード詳細以外に移動する場合、ボード名を即座にクリア
       if (tab !== "board") {
-        console.log("🚀 team-clear-board-name イベント発火");
         window.dispatchEvent(new CustomEvent("team-clear-board-name"));
       }
 
@@ -435,9 +437,10 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       }
 
       const newUrl = params.toString() ? `?${params.toString()}` : "";
+
       router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
     },
-    [router, customUrl, searchParams, setActiveTabContext, setOptimisticMode],
+    [router, customUrl, searchParams, setActiveTabContext],
   );
 
   // activeTabが変更された時にlayoutに通知
@@ -493,7 +496,6 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       setSelectedMemo(null);
       setSelectedDeletedMemo(null);
       setIsCreatingMemo(false);
-      console.log("→ setIsCreatingMemo(false) 呼び出し");
       // handleTabChangeを使って即座にタブ切り替え
       handleTabChange("memos");
     };
@@ -554,7 +556,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       );
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [handleTabChange, router, customUrl, searchParams]);
+  }, []);
 
   // メモ/タスク選択ハンドラー
   const handleSelectMemo = (memo: Memo | null) => {

@@ -91,6 +91,11 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
     searchParams.get("tab") === "board" &&
     searchParams.get("slug") !== null;
 
+  // URL変更時の処理
+  useEffect(() => {
+    // URL変更時の必要な処理をここに追加可能
+  }, [searchParams]);
+
   useEffect(() => {
     // ボード詳細タブの場合はslugを記憶
     const tab = searchParams.get("tab");
@@ -117,9 +122,6 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
 
     // チームボード名クリアイベントをリッスン（楽観的更新用）
     const handleTeamClearBoardName = () => {
-      console.log(
-        "📭 team-clear-board-name イベント受信 - currentBoardNameをクリア",
-      );
       setCurrentBoardName(undefined);
     };
 
@@ -262,22 +264,13 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   };
 
   const handleBoardDetail = () => {
-    // 既にボード詳細タブにいる場合は何もしない
-    const currentTab = searchParams.get("tab");
-    if (currentTab === "board") {
-      return;
-    }
-
     // 🚀 楽観的更新をクリア（ボード詳細は特殊なタブなのでnull）
     setOptimisticMode(null);
 
-    // 最後に見ていたボードスラッグがある場合
     if (lastBoardSlug) {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("tab", "board");
-      params.set("slug", lastBoardSlug);
-      const newUrl = `?${params.toString()}`;
-      router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
+      const newUrl = `/team/${customUrl}?tab=board&slug=${lastBoardSlug}`;
+      // シンプルに直接URLを指定
+      router.replace(newUrl, { scroll: false });
     } else {
       // ボード一覧タブに移動
       if (isTeamDetailPage) {
@@ -300,9 +293,8 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
       const params = new URLSearchParams(searchParams.toString());
       params.set("tab", "boards");
       params.delete("slug");
-      router.replace(`/team/${customUrl}?${params.toString()}`, {
-        scroll: false,
-      });
+      const newUrl = `/team/${customUrl}?${params.toString()}`;
+      router.replace(newUrl, { scroll: false });
     }
   };
 
@@ -368,10 +360,7 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
             onSearch={handleSearch}
             showingBoardDetail={isTeamBoardDetailPage}
             currentBoardName={
-              isTeamBoardDetailPage
-                ? currentBoardName ||
-                  (lastBoardSlug ? "最後のボード" : undefined)
-                : undefined
+              lastBoardSlug ? currentBoardName || "最後のボード" : undefined
             }
             currentTeamName={teamDetail?.name}
             selectedMemoId={selectedMemoId ?? undefined}
@@ -431,10 +420,7 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
               onSearch={handleSearch}
               showingBoardDetail={isTeamBoardDetailPage}
               currentBoardName={
-                isTeamBoardDetailPage
-                  ? currentBoardName ||
-                    (lastBoardSlug ? "最後のボード" : undefined)
-                  : undefined
+                lastBoardSlug ? currentBoardName || "最後のボード" : undefined
               }
               currentTeamName={teamDetail?.name}
               selectedMemoId={selectedMemoId ?? undefined}

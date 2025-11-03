@@ -7,6 +7,7 @@ import {
   useState,
   useMemo,
   useEffect,
+  useCallback,
 } from "react";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
@@ -86,10 +87,20 @@ export function NavigationProvider({
   initialScreenMode = "home",
   initialShowingBoardDetail = false,
 }: NavigationProviderProps) {
-  const [screenMode, setScreenMode] = useState<ScreenMode>(initialScreenMode);
-  const [currentMode, setCurrentMode] = useState<"memo" | "task" | "board">(
-    initialCurrentMode,
-  );
+  const [screenMode, setScreenModeInternal] =
+    useState<ScreenMode>(initialScreenMode);
+  const [currentMode, setCurrentModeInternal] = useState<
+    "memo" | "task" | "board"
+  >(initialCurrentMode);
+
+  // モード切り替え関数（useCallback で安定化）
+  const setScreenMode = useCallback((mode: ScreenMode) => {
+    setScreenModeInternal(mode);
+  }, []);
+
+  const setCurrentMode = useCallback((mode: "memo" | "task" | "board") => {
+    setCurrentModeInternal(mode);
+  }, []);
   const [isFromBoardDetail, setIsFromBoardDetail] = useState(false);
   const [handleMainSelectMemo, setHandleMainSelectMemo] = useState<
     ((memo: Memo | null) => void) | undefined

@@ -313,6 +313,15 @@ export default function ControlPanel({
         </button>
       )}
 
+      {/* モバイル用ボード名表示 */}
+      {customTitle && (
+        <div className="md:hidden flex-shrink-0 mr-2">
+          <h2 className="text-sm font-bold text-gray-800 truncate max-w-[120px]">
+            {customTitle}
+          </h2>
+        </div>
+      )}
+
       <ViewModeToggle
         viewMode={viewMode}
         onViewModeChange={onViewModeChange}

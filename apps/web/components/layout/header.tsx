@@ -45,6 +45,11 @@ function Header() {
   const teamDetailContext = useTeamDetailSafe();
   const teamActiveTab = teamDetailContext?.activeTab;
 
+  // 楽観的なチームタブ状態（イベントから即座に取得）
+  const [optimisticTeamTab, setOptimisticTeamTab] = useState<string | null>(
+    null,
+  );
+
   // ボード名の状態管理
   const [boardTitle, setBoardTitle] = useState<string | null>(null);
 
@@ -66,15 +71,20 @@ function Header() {
     const isTaskListPage = isPersonalPage && iconStates.task;
     const isBoardListPage = isPersonalPage && iconStates.board;
 
-    // チーム側は Context の activeTab で判定（即座に切り替え）
+    // チーム側は楽観的タブ状態を優先（即座に切り替え）
+    const effectiveTeamTab = optimisticTeamTab || teamActiveTab;
     const isTeamMemoListPage =
-      teamName && pathname === `/team/${teamName}` && teamActiveTab === "memos";
+      teamName &&
+      pathname === `/team/${teamName}` &&
+      effectiveTeamTab === "memos";
     const isTeamTaskListPage =
-      teamName && pathname === `/team/${teamName}` && teamActiveTab === "tasks";
+      teamName &&
+      pathname === `/team/${teamName}` &&
+      effectiveTeamTab === "tasks";
     const isTeamBoardListPage =
       teamName &&
       pathname === `/team/${teamName}` &&
-      teamActiveTab === "boards";
+      effectiveTeamTab === "boards";
 
     return {
       isTeamBoardPage,
@@ -86,7 +96,15 @@ function Header() {
       isTaskListPage,
       isBoardListPage,
     };
-  }, [pathname, teamName, teamActiveTab, iconStates, currentTab, searchParams]);
+  }, [
+    pathname,
+    teamName,
+    teamActiveTab,
+    optimisticTeamTab,
+    iconStates,
+    currentTab,
+    searchParams,
+  ]);
 
   const {
     isTeamBoardPage,
@@ -106,15 +124,42 @@ function Header() {
       setBoardTitle(boardName);
     };
 
+    const handleClearBoardName = () => {
+      setBoardTitle(null);
+    };
+
+    const handleTeamTabChange = (event: CustomEvent) => {
+      const { activeTab } = event.detail;
+      setOptimisticTeamTab(activeTab);
+    };
+
     window.addEventListener(
       "team-board-name-change",
       handleBoardNameChange as EventListener,
+    );
+
+    window.addEventListener(
+      "team-clear-board-name",
+      handleClearBoardName as EventListener,
+    );
+
+    window.addEventListener(
+      "team-tab-change",
+      handleTeamTabChange as EventListener,
     );
 
     return () => {
       window.removeEventListener(
         "team-board-name-change",
         handleBoardNameChange as EventListener,
+      );
+      window.removeEventListener(
+        "team-clear-board-name",
+        handleClearBoardName as EventListener,
+      );
+      window.removeEventListener(
+        "team-tab-change",
+        handleTeamTabChange as EventListener,
       );
     };
   }, []);

@@ -41,6 +41,7 @@ interface TeamDetailContextType {
     | "memos"
     | "tasks"
     | "boards"
+    | "board"
     | "team-list"
     | "team-settings"
     | "search";
@@ -50,6 +51,7 @@ interface TeamDetailContextType {
       | "memos"
       | "tasks"
       | "boards"
+      | "board"
       | "team-list"
       | "team-settings"
       | "search",
@@ -70,6 +72,7 @@ export function TeamDetailProvider({ children }: { children: ReactNode }) {
       tab === "memos" ||
       tab === "tasks" ||
       tab === "boards" ||
+      tab === "board" ||
       tab === "team-list" ||
       tab === "team-settings" ||
       tab === "search"
@@ -92,6 +95,7 @@ export function TeamDetailProvider({ children }: { children: ReactNode }) {
     | "memos"
     | "tasks"
     | "boards"
+    | "board"
     | "team-list"
     | "team-settings"
     | "search"

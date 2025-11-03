@@ -7,6 +7,7 @@ import WarningIcon from "@/components/icons/warning-icon";
 import { DisplayNameModal } from "@/components/modals/display-name-modal";
 import { TeamDisplayNameModal } from "@/components/modals/team-display-name-modal";
 import BoardScreen from "@/components/screens/board-screen";
+import { TeamBoardDetailWrapper } from "@/components/features/team/team-board-detail-wrapper";
 import MemoScreen from "@/components/screens/memo-screen";
 import SearchScreen from "@/components/screens/search-screen";
 import TaskScreen from "@/components/screens/task-screen";
@@ -43,6 +44,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useTeamDetail as useTeamDetailContext } from "@/src/contexts/team-detail-context";
+import { useNavigation } from "@/contexts/navigation-context";
 import { useAttachments } from "@/src/hooks/use-attachments";
 import { useTeamComments } from "@/src/hooks/use-team-comments";
 import { OriginalIdUtils } from "@/src/types/common";
@@ -69,6 +71,9 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     taskEditorShowConfirmModalRef,
     setActiveTab: setActiveTabContext,
   } = useTeamDetailContext();
+
+  // 楽観的更新用（サイドバーアイコンを即座に切り替え）
+  const { setOptimisticMode } = useNavigation();
 
   // 🛡️ ページ可視性をContextから取得
   const { isVisible: isPageVisible } = usePageVisibility();
@@ -280,6 +285,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       tab === "memos" ||
       tab === "tasks" ||
       tab === "boards" ||
+      tab === "board" ||
       tab === "team-list" ||
       tab === "team-settings" ||
       tab === "search"
@@ -297,12 +303,17 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     return searchParams.get("task");
   };
 
+  const getBoardSlugFromURL = () => {
+    return searchParams.get("slug");
+  };
+
   // タブ管理（URLと同期）
   const [activeTab, setActiveTab] = useState<
     | "overview"
     | "memos"
     | "tasks"
     | "boards"
+    | "board"
     | "team-list"
     | "team-settings"
     | "search"
@@ -370,10 +381,29 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         | "memos"
         | "tasks"
         | "boards"
+        | "board"
         | "team-list"
         | "team-settings"
         | "search",
+      options?: { slug?: string },
     ) => {
+      // 🚀 楽観的更新：サイドバーアイコンを即座に切り替え
+      if (tab === "memos") {
+        setOptimisticMode("memo");
+      } else if (tab === "tasks") {
+        setOptimisticMode("task");
+      } else if (tab === "boards") {
+        setOptimisticMode("board");
+      } else {
+        setOptimisticMode(null);
+      }
+
+      // ボード詳細以外に移動する場合、ボード名を即座にクリア
+      if (tab !== "board") {
+        console.log("🚀 team-clear-board-name イベント発火");
+        window.dispatchEvent(new CustomEvent("team-clear-board-name"));
+      }
+
       setActiveTab(tab);
       setActiveTabContext(tab); // Context を更新（ヘッダー表示切り替え用）
 
@@ -383,6 +413,13 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         params.delete("tab");
       } else {
         params.set("tab", tab);
+      }
+
+      // ボード詳細の場合はslugを設定
+      if (tab === "board" && options?.slug) {
+        params.set("slug", options.slug);
+      } else {
+        params.delete("slug");
       }
 
       // タブ切り替え時に不要なパラメータを削除
@@ -400,7 +437,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       const newUrl = params.toString() ? `?${params.toString()}` : "";
       router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
     },
-    [router, customUrl, searchParams, setActiveTabContext],
+    [router, customUrl, searchParams, setActiveTabContext, setOptimisticMode],
   );
 
   // activeTabが変更された時にlayoutに通知
@@ -457,11 +494,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       setSelectedDeletedMemo(null);
       setIsCreatingMemo(false);
       console.log("→ setIsCreatingMemo(false) 呼び出し");
-      const params = new URLSearchParams(searchParams.toString());
-      params.delete("memo");
-      params.set("tab", "memos");
-      const newUrl = params.toString() ? `?${params.toString()}` : "";
-      router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
+      // handleTabChangeを使って即座にタブ切り替え
+      handleTabChange("memos");
     };
 
     const handleBackToTaskList = (_event: CustomEvent) => {
@@ -481,11 +515,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       setSelectedDeletedTask(null);
       console.log("→ setIsCreatingTask(false) 呼び出し");
       setIsCreatingTask(false);
-      const params = new URLSearchParams(searchParams.toString());
-      params.delete("task");
-      params.set("tab", "tasks");
-      const newUrl = params.toString() ? `?${params.toString()}` : "";
-      router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
+      // handleTabChangeを使って即座にタブ切り替え
+      handleTabChange("tasks");
     };
 
     window.addEventListener(
@@ -540,6 +571,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       params.set("tab", "memos");
       // タスクパラメータを削除
       params.delete("task");
+      // ボードslugパラメータを削除
+      params.delete("slug");
     } else {
       params.delete("memo");
     }
@@ -567,6 +600,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       params.set("tab", "tasks");
       // メモパラメータを削除
       params.delete("memo");
+      // ボードslugパラメータを削除
+      params.delete("slug");
     } else {
       params.delete("task");
     }
@@ -598,6 +633,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       params.set("tab", "tasks");
       // メモパラメータを削除
       params.delete("memo");
+      // ボードslugパラメータを削除
+      params.delete("slug");
     } else {
       params.delete("task");
     }
@@ -975,6 +1012,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                   // メモを閉じる時はmemoパラメータも削除してmemosタブに残る
                   const params = new URLSearchParams(searchParams.toString());
                   params.delete("memo");
+                  params.delete("slug");
                   params.set("tab", "memos");
                   const newUrl = params.toString()
                     ? `?${params.toString()}`
@@ -990,6 +1028,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                   // メモを閉じてリスト表示に戻る（URLからもmemoパラメータを削除）
                   const params = new URLSearchParams(searchParams.toString());
                   params.delete("memo");
+                  params.delete("slug");
                   params.set("tab", "memos");
                   const newUrl = params.toString()
                     ? `?${params.toString()}`
@@ -1024,6 +1063,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                   // タスクを閉じる時はtaskパラメータも削除してtasksタブに残る
                   const params = new URLSearchParams(searchParams.toString());
                   params.delete("task");
+                  params.delete("slug");
                   params.set("tab", "tasks");
                   const newUrl = params.toString()
                     ? `?${params.toString()}`
@@ -1039,6 +1079,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                   // タスク選択を解除してリスト表示に戻る
                   const params = new URLSearchParams(searchParams.toString());
                   params.delete("task");
+                  params.delete("slug");
                   params.set("tab", "tasks");
                   const newUrl = params.toString()
                     ? `?${params.toString()}`
@@ -1066,9 +1107,22 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
             <div className="h-full">
               <BoardScreen
                 onBoardSelect={(board) => {
-                  // チームボード詳細ページに遷移（チーム専用URL）
-                  router.push(`/team/${customUrl}/board/${board.slug}`);
+                  // ボード詳細タブに切り替え
+                  handleTabChange("board", { slug: board.slug });
                 }}
+              />
+            </div>
+          )}
+
+          {/* ボード詳細タブ */}
+          {activeTab === "board" && getBoardSlugFromURL() && (
+            <div className="h-full">
+              <TeamBoardDetailWrapper
+                slug={getBoardSlugFromURL()!}
+                teamId={team?.id}
+                customUrl={customUrl}
+                teamMembers={team?.members || []}
+                onBack={() => handleTabChange("boards")}
               />
             </div>
           )}

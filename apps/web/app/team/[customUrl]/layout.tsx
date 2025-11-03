@@ -28,7 +28,7 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const params = useParams();
-  const { setScreenMode } = useNavigation();
+  const { setScreenMode, setOptimisticMode } = useNavigation();
   const {
     selectedMemoId,
     setSelectedMemoId,
@@ -67,7 +67,7 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   const [currentBoardName, setCurrentBoardName] = useState<string | undefined>(
     undefined,
   );
-  const [lastBoardUrl, setLastBoardUrl] = useState<string | undefined>(
+  const [lastBoardSlug, setLastBoardSlug] = useState<string | undefined>(
     undefined,
   );
 
@@ -85,14 +85,19 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   // URLから統一的にactiveTabを取得
   const activeTab = getActiveTabFromUrl(pathname, searchParams);
 
-  // チームボード詳細ページかどうかを判定
+  // チームボード詳細ページかどうかを判定（クエリパラメータベース）
   const isTeamBoardDetailPage =
-    pathname.includes("/team/") && pathname.includes("/board/");
+    pathname.startsWith("/team/") &&
+    searchParams.get("tab") === "board" &&
+    searchParams.get("slug") !== null;
 
   useEffect(() => {
-    // チームボード詳細ページの場合はURLを記憶
-    if (isTeamBoardDetailPage) {
-      setLastBoardUrl(pathname);
+    // ボード詳細タブの場合はslugを記憶
+    const tab = searchParams.get("tab");
+    const slug = searchParams.get("slug");
+
+    if (tab === "board" && slug) {
+      setLastBoardSlug(slug);
     }
 
     // URLから統一的にscreenModeを設定
@@ -108,6 +113,14 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
     const handleTeamBoardNameChange = (event: CustomEvent) => {
       const { boardName } = event.detail;
       setCurrentBoardName(boardName);
+    };
+
+    // チームボード名クリアイベントをリッスン（楽観的更新用）
+    const handleTeamClearBoardName = () => {
+      console.log(
+        "📭 team-clear-board-name イベント受信 - currentBoardNameをクリア",
+      );
+      setCurrentBoardName(undefined);
     };
 
     // ボードセクション状態変更イベントをリッスン
@@ -127,6 +140,11 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
     );
 
     window.addEventListener(
+      "team-clear-board-name",
+      handleTeamClearBoardName as EventListener,
+    );
+
+    window.addEventListener(
       "board-section-state-change",
       handleBoardSectionStateChange as EventListener,
     );
@@ -139,6 +157,10 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
       window.removeEventListener(
         "team-board-name-change",
         handleTeamBoardNameChange as EventListener,
+      );
+      window.removeEventListener(
+        "team-clear-board-name",
+        handleTeamClearBoardName as EventListener,
       );
       window.removeEventListener(
         "board-section-state-change",
@@ -240,16 +262,24 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   };
 
   const handleBoardDetail = () => {
-    // すでにボード詳細ページにいる場合は何もしない
-    if (isTeamBoardDetailPage) {
+    // 既にボード詳細タブにいる場合は何もしない
+    const currentTab = searchParams.get("tab");
+    if (currentTab === "board") {
       return;
     }
 
-    // 最後に見ていたボード詳細ページがある場合はそこに戻る
-    if (lastBoardUrl) {
-      router.push(lastBoardUrl);
+    // 🚀 楽観的更新をクリア（ボード詳細は特殊なタブなのでnull）
+    setOptimisticMode(null);
+
+    // 最後に見ていたボードスラッグがある場合
+    if (lastBoardSlug) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("tab", "board");
+      params.set("slug", lastBoardSlug);
+      const newUrl = `?${params.toString()}`;
+      router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
     } else {
-      // ない場合はボード一覧ページに移動
+      // ボード一覧タブに移動
       if (isTeamDetailPage) {
         window.dispatchEvent(
           new CustomEvent("team-mode-change", {
@@ -266,9 +296,13 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
       // 状態をクリア
       setCurrentBoardName(undefined);
 
-      // チームのボード一覧タブに戻る
-      const teamCustomUrl = pathname.split("/")[2];
-      router.push(`/team/${teamCustomUrl}?tab=boards`);
+      // ボード一覧タブに戻る
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("tab", "boards");
+      params.delete("slug");
+      router.replace(`/team/${customUrl}?${params.toString()}`, {
+        scroll: false,
+      });
     }
   };
 
@@ -334,7 +368,10 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
             onSearch={handleSearch}
             showingBoardDetail={isTeamBoardDetailPage}
             currentBoardName={
-              currentBoardName || (lastBoardUrl ? "最後のボード" : undefined)
+              isTeamBoardDetailPage
+                ? currentBoardName ||
+                  (lastBoardSlug ? "最後のボード" : undefined)
+                : undefined
             }
             currentTeamName={teamDetail?.name}
             selectedMemoId={selectedMemoId ?? undefined}
@@ -394,7 +431,10 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
               onSearch={handleSearch}
               showingBoardDetail={isTeamBoardDetailPage}
               currentBoardName={
-                currentBoardName || (lastBoardUrl ? "最後のボード" : undefined)
+                isTeamBoardDetailPage
+                  ? currentBoardName ||
+                    (lastBoardSlug ? "最後のボード" : undefined)
+                  : undefined
               }
               currentTeamName={teamDetail?.name}
               selectedMemoId={selectedMemoId ?? undefined}

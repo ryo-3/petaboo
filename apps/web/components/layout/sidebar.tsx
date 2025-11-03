@@ -85,6 +85,20 @@ function Sidebar({
   // pathnameを取得してチームモード判定
   const pathname = usePathname();
   const isTeamMode = pathname?.startsWith("/team/") ?? false;
+
+  // デバッグログ: ボード詳細アイコン表示状態
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      console.log("🔍 [Sidebar] ボード詳細アイコン表示状態:", {
+        currentBoardName,
+        "iconStates.boardDetail": iconStates.boardDetail,
+        アイコン表示されるか: !!currentBoardName,
+        現在のURL: window.location.href,
+        showingBoardDetail,
+        全iconStates: iconStates,
+      });
+    }
+  }, [currentBoardName, iconStates, showingBoardDetail]);
   // 新規作成状態を取得（propsまたはTeamDetailContext）
   let isCreatingMemo = isCreatingMemoProp ?? false;
   let isCreatingTask = isCreatingTaskProp ?? false;

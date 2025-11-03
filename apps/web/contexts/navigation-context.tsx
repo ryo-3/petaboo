@@ -126,11 +126,12 @@ export function NavigationProvider({
     // URLパターンの早期判定
     const isTeamDetailPageUrl =
       pathname.startsWith("/team/") && pathname !== "/team";
-    const isBoardPath = pathname.includes("/board/");
 
     // チーム詳細ページのタブ判定（最適化・楽観的更新対応）
     if (isTeamDetailPageUrl) {
-      const isTeamBoardDetailPage = isBoardPath;
+      // チームボード詳細はクエリパラメータ形式（?tab=board&slug=xxx）
+      const isTeamBoardDetailPage =
+        currentTab === "board" && searchParams.get("slug") !== null;
       const isTeamSettingsTab = currentTab === "team-settings";
 
       // 楽観的モードがある場合は即座に反映
@@ -149,7 +150,11 @@ export function NavigationProvider({
         board:
           (effectiveTab === "boards" || optimisticMode === "board") &&
           !isTeamBoardDetailPage,
-        boardDetail: isTeamBoardDetailPage,
+        boardDetail:
+          isTeamBoardDetailPage &&
+          optimisticMode !== "memo" &&
+          optimisticMode !== "task" &&
+          optimisticMode !== "board",
         search: currentTab === "search",
         settings: isTeamSettingsTab,
         team:

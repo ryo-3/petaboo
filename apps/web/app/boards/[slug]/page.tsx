@@ -1,8 +1,6 @@
 import Main from "@/app/main";
 import { auth } from "@clerk/nextjs/server";
-import { QueryClient } from "@tanstack/react-query";
-import { dehydrate } from "@tanstack/react-query";
-import { Hydrate } from "@tanstack/react-query";
+import { QueryClient, dehydrate, Hydrate } from "@tanstack/react-query";
 import type { BoardWithItems } from "@/src/types/board";
 
 interface BoardPageProps {

@@ -336,8 +336,9 @@ function DesktopUpper({
   );
 
   // コントロール部分のJSX
+  // ボード一覧（customTitle/boardIdなし）ではコントロール非表示、ボード詳細では表示
   const shouldHideControls =
-    currentMode === "board" ||
+    (currentMode === "board" && !customTitle && !boardId) ||
     (currentMode === "memo" && preferences?.memoHideControls) ||
     (currentMode === "task" && preferences?.taskHideControls);
 

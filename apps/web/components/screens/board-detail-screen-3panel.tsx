@@ -1165,18 +1165,9 @@ function BoardDetailScreen({
                                           savedMemoTitle: savedMemo?.title,
                                           wasEmpty,
                                           isNewMemo,
-                                          continuousMode:
-                                            getContinuousCreateMode(
-                                              "memo-continuous-create-mode",
-                                            ),
                                         },
                                       );
-                                      if (
-                                        isNewMemo &&
-                                        !getContinuousCreateMode(
-                                          "memo-continuous-create-mode",
-                                        )
-                                      ) {
+                                      if (isNewMemo) {
                                         console.log(
                                           "[BoardDetail] selecting memo after save",
                                           {

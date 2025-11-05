@@ -757,6 +757,10 @@ function MemoEditor({
 
           const newMemo = await response.json();
           targetOriginalId = OriginalIdUtils.fromItem(newMemo) || "";
+          console.log("[MemoEditor] new memo created", {
+            targetOriginalId,
+            createdMemoId: newMemo?.id,
+          });
 
           // キャッシュ更新
           queryClient.invalidateQueries({
@@ -882,6 +886,10 @@ function MemoEditor({
 
         // React QueryのキャッシュからmemosQueryを取得して、最新の作成メモを特定
         const memosQuery = queryClient.getQueryData<Memo[]>(["memos"]);
+        console.log("[MemoEditor] memos cache after save", {
+          cacheSize: memosQuery?.length,
+          hasOnlyImages,
+        });
 
         if (memosQuery && memosQuery.length > 0) {
           // 最新のメモ（作成時刻順で最後）を取得
@@ -895,7 +903,16 @@ function MemoEditor({
               await updateTaggings(targetOriginalId);
               setHasManualChanges(false);
             }
+            console.log("[MemoEditor] latest memo from cache", {
+              latestMemoId: latestMemo.id,
+              targetOriginalId,
+            });
           }
+        } else {
+          console.warn("[MemoEditor] 最新メモがキャッシュに見つからない", {
+            hasOnlyImages,
+            queryKey: ["memos"],
+          });
         }
       }
 
@@ -923,6 +940,10 @@ function MemoEditor({
           await new Promise((resolve) => setTimeout(resolve, 100));
 
           const memosQuery = queryClient.getQueryData<Memo[]>(queryKey);
+          console.log("[MemoEditor] cache after invalidate", {
+            queryKey,
+            size: memosQuery?.length,
+          });
           if (memosQuery && memosQuery.length > 0) {
             // 最新のメモ（作成時刻順で最後）を取得
             const latestMemo = [...memosQuery].sort(
@@ -930,8 +951,15 @@ function MemoEditor({
             )[0];
 
             if (latestMemo && onSaveComplete) {
+              console.log("[MemoEditor] invoking onSaveComplete", {
+                latestMemoId: latestMemo.id,
+              });
               onSaveComplete(latestMemo, false, true);
             }
+          } else {
+            console.warn("[MemoEditor] memosQuery empty after invalidate", {
+              queryKey,
+            });
           }
         }
       }

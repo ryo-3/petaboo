@@ -32,6 +32,30 @@ export default function AttachmentGallery({
   const [pendingUrls, setPendingUrls] = useState<string[]>([]);
   const loadedIdsRef = useRef<Set<number>>(new Set());
 
+  // PDFや他のファイルを認証付きで開く
+  const handleFileOpen = async (attachment: Attachment) => {
+    try {
+      const token = await getToken();
+      const response = await fetch(attachment.url, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      if (!response.ok) throw new Error("ファイルの読み込みに失敗しました");
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+
+      // 新しいタブで開く
+      window.open(url, "_blank");
+
+      // 一定時間後にメモリ解放
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (error) {
+      console.error("ファイル読み込みエラー:", error);
+      showToast("ファイルを開けませんでした", "error");
+    }
+  };
+
   // attachments配列の安定化（IDリストが同じなら同じ配列を返す）
   const attachmentIdsString = attachments.map((a) => a.id).join(",");
   const stableAttachments = useMemo(() => attachments, [attachmentIdsString]);
@@ -143,10 +167,10 @@ export default function AttachmentGallery({
                     </div>
                   )
                 ) : isPdf ? (
-                  <a
-                    href={isProcessing ? undefined : attachment.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    type="button"
+                    disabled={isProcessing}
+                    onClick={() => !isProcessing && handleFileOpen(attachment)}
                     className={`w-32 h-32 bg-gray-100 rounded-lg flex flex-col items-center justify-center p-2 ${
                       isProcessing
                         ? "opacity-50 cursor-default"
@@ -154,7 +178,6 @@ export default function AttachmentGallery({
                           ? "opacity-50 border-2 border-red-400 hover:bg-gray-200 transition-colors"
                           : "hover:bg-gray-200 transition-colors"
                     }`}
-                    onClick={(e) => isProcessing && e.preventDefault()}
                   >
                     <svg
                       className="w-12 h-12 text-red-500 mb-1"
@@ -166,12 +189,12 @@ export default function AttachmentGallery({
                     <p className="text-[10px] text-gray-600 text-center truncate w-full">
                       {attachment.fileName}
                     </p>
-                  </a>
+                  </button>
                 ) : (
-                  <a
-                    href={isProcessing ? undefined : attachment.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    type="button"
+                    disabled={isProcessing}
+                    onClick={() => !isProcessing && handleFileOpen(attachment)}
                     className={`w-32 h-32 bg-gray-100 rounded-lg flex flex-col items-center justify-center p-2 ${
                       isProcessing
                         ? "opacity-50 cursor-default"
@@ -179,7 +202,6 @@ export default function AttachmentGallery({
                           ? "opacity-50 border-2 border-red-400 hover:bg-gray-200 transition-colors"
                           : "hover:bg-gray-200 transition-colors"
                     }`}
-                    onClick={(e) => isProcessing && e.preventDefault()}
                   >
                     <svg
                       className="w-12 h-12 text-gray-500 mb-1"
@@ -191,7 +213,7 @@ export default function AttachmentGallery({
                     <p className="text-[10px] text-gray-600 text-center truncate w-full">
                       {attachment.fileName}
                     </p>
-                  </a>
+                  </button>
                 )}
                 {isMarkedForDelete && (
                   <div className="absolute top-0 left-0 bg-red-500 text-white text-[10px] px-1 py-0.5 rounded-br">

@@ -47,6 +47,7 @@ import type { Tag, Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
 import { OriginalIdUtils } from "@/src/types/common";
 import { useCallback, useEffect, useState, useMemo, memo, useRef } from "react";
+import type { DragEvent } from "react";
 import { useDeletedTaskActions } from "./use-deleted-task-actions";
 import ShareUrlButton from "@/components/ui/buttons/share-url-button";
 import {
@@ -233,6 +234,73 @@ function TaskEditor({
     isDeleting: isAttachmentDeleting,
     isUploading,
   } = attachmentManager;
+
+  const [isDragActive, setIsDragActive] = useState(false);
+  const dragCounterRef = useRef<number>(0);
+
+  const isFileDragEvent = useCallback((event: DragEvent<HTMLDivElement>) => {
+    const types = event.dataTransfer?.types;
+    if (!types || types.length === 0) return false;
+    return Array.from(types).includes("Files");
+  }, []);
+
+  const handleDragEnter = useCallback(
+    (event: DragEvent<HTMLDivElement>) => {
+      if (isDeleted) return;
+      if (!isFileDragEvent(event)) return;
+
+      event.preventDefault();
+      dragCounterRef.current += 1;
+      setIsDragActive(true);
+    },
+    [isDeleted, isFileDragEvent],
+  );
+
+  const handleDragOver = useCallback(
+    (event: DragEvent<HTMLDivElement>) => {
+      if (isDeleted) return;
+      if (!isFileDragEvent(event)) return;
+
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "copy";
+    },
+    [isDeleted, isFileDragEvent],
+  );
+
+  const handleDragLeave = useCallback(
+    (event: DragEvent<HTMLDivElement>) => {
+      if (isDeleted) return;
+      if (!isFileDragEvent(event)) return;
+
+      event.preventDefault();
+      dragCounterRef.current = Math.max(0, dragCounterRef.current - 1);
+      if (dragCounterRef.current === 0) {
+        setIsDragActive(false);
+      }
+    },
+    [isDeleted, isFileDragEvent],
+  );
+
+  const handleDrop = useCallback(
+    (event: DragEvent<HTMLDivElement>) => {
+      if (isDeleted) return;
+      if (!event.dataTransfer || !isFileDragEvent(event)) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const files = Array.from(event.dataTransfer.files || []).filter(
+        (file) => file.size > 0,
+      );
+      if (files.length > 0) {
+        handleFilesSelect(files);
+      }
+
+      dragCounterRef.current = 0;
+      setIsDragActive(false);
+    },
+    [handleFilesSelect, isDeleted, isFileDragEvent],
+  );
 
   // チームモード: 一括取得からフィルタリング
   // タスクID 142で originalId が空の場合は、既存タグとの整合性のため "5" を使用
@@ -1222,61 +1290,82 @@ function TaskEditor({
 
         {/* スクロール可能なコンテンツ部分 */}
         <div className="flex-1 min-h-0 overflow-y-auto">
-          <TaskForm
-            task={task as Task}
-            title={finalTitle}
-            onTitleChange={isDeleted ? () => {} : handleTitleChange}
-            description={finalDescription}
-            onDescriptionChange={isDeleted ? () => {} : handleDescriptionChange}
-            status={
-              finalStatus === "not_started"
-                ? "todo"
-                : (finalStatus as "todo" | "in_progress" | "completed")
-            }
-            onStatusChange={
-              isDeleted
-                ? () => {}
-                : (value) =>
-                    handleStatusChange?.(
-                      value === "todo" ? "not_started" : value,
-                    )
-            }
-            priority={finalPriority as "low" | "medium" | "high"}
-            onPriorityChange={isDeleted ? () => {} : handlePriorityChange!}
-            categoryId={categoryId}
-            onCategoryChange={isDeleted ? () => {} : setCategoryId}
-            boardCategoryId={boardCategoryId}
-            onBoardCategoryChange={isDeleted ? () => {} : setBoardCategoryId}
-            dueDate={dueDate}
-            onDueDateChange={isDeleted ? () => {} : setDueDate}
-            isNewTask={isNewTask}
-            customHeight={customHeight}
-            tags={task && task.id !== 0 ? localTags : []}
-            boards={displayBoards}
-            boardCategories={categories}
-            showBoardCategory={isFromBoardDetail}
-            isDeleted={isDeleted}
-            initialBoardId={initialBoardId}
-            teamMode={teamMode}
-            createdBy={createdBy}
-            createdByAvatarColor={createdByAvatarColor}
-            onImagePaste={handleFileSelect}
-            toolbarVisible={toolbarVisible}
-            onToolbarToggle={setToolbarVisible}
-            onEditorReady={setTiptapEditor}
-            editorOnly={true}
-          />
-          {/* 画像添付ギャラリー（個人・チーム両対応） */}
-          <AttachmentGallery
-            attachments={attachments}
-            onDelete={handleDeleteAttachment}
-            isDeleting={isAttachmentDeleting}
-            pendingImages={pendingImages}
-            onDeletePending={handleDeletePendingImage}
-            pendingDeletes={pendingDeletes}
-            onRestore={handleRestoreAttachment}
-            isUploading={isUploading}
-          />
+          <div
+            className={`relative h-full rounded-lg border border-transparent transition-colors ${
+              isDragActive ? "border-dashed border-blue-400 bg-blue-50/40" : ""
+            }`}
+            onDragEnter={handleDragEnter}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            {isDragActive && (
+              <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center rounded-lg bg-blue-50/80 text-sm font-medium text-blue-600">
+                ここにドロップして画像を追加
+              </div>
+            )}
+            <div className="relative z-20">
+              <TaskForm
+                task={task as Task}
+                title={finalTitle}
+                onTitleChange={isDeleted ? () => {} : handleTitleChange}
+                description={finalDescription}
+                onDescriptionChange={
+                  isDeleted ? () => {} : handleDescriptionChange
+                }
+                status={
+                  finalStatus === "not_started"
+                    ? "todo"
+                    : (finalStatus as "todo" | "in_progress" | "completed")
+                }
+                onStatusChange={
+                  isDeleted
+                    ? () => {}
+                    : (value) =>
+                        handleStatusChange?.(
+                          value === "todo" ? "not_started" : value,
+                        )
+                }
+                priority={finalPriority as "low" | "medium" | "high"}
+                onPriorityChange={isDeleted ? () => {} : handlePriorityChange!}
+                categoryId={categoryId}
+                onCategoryChange={isDeleted ? () => {} : setCategoryId}
+                boardCategoryId={boardCategoryId}
+                onBoardCategoryChange={
+                  isDeleted ? () => {} : setBoardCategoryId
+                }
+                dueDate={dueDate}
+                onDueDateChange={isDeleted ? () => {} : setDueDate}
+                isNewTask={isNewTask}
+                customHeight={customHeight}
+                tags={task && task.id !== 0 ? localTags : []}
+                boards={displayBoards}
+                boardCategories={categories}
+                showBoardCategory={isFromBoardDetail}
+                isDeleted={isDeleted}
+                initialBoardId={initialBoardId}
+                teamMode={teamMode}
+                createdBy={createdBy}
+                createdByAvatarColor={createdByAvatarColor}
+                onImagePaste={handleFileSelect}
+                toolbarVisible={toolbarVisible}
+                onToolbarToggle={setToolbarVisible}
+                onEditorReady={setTiptapEditor}
+                editorOnly={true}
+              />
+              {/* 画像添付ギャラリー（個人・チーム両対応） */}
+              <AttachmentGallery
+                attachments={attachments}
+                onDelete={handleDeleteAttachment}
+                isDeleting={isAttachmentDeleting}
+                pendingImages={pendingImages}
+                onDeletePending={handleDeletePendingImage}
+                pendingDeletes={pendingDeletes}
+                onRestore={handleRestoreAttachment}
+                isUploading={isUploading}
+              />
+            </div>
+          </div>
         </div>
       </div>
 

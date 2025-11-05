@@ -702,6 +702,11 @@ function MemoEditor({
       let targetOriginalId: string | null = null;
 
       if (hasOnlyImages) {
+        console.log("[MemoEditor] 画像のみのメモ保存を検出", {
+          isNewMemo,
+          selectedBoardIds,
+          initialBoardId,
+        });
         // 画像のみの場合は「無題」で新規作成
         const newMemoData = {
           title: " ", // 最低1文字必要なので半角スペース
@@ -790,6 +795,50 @@ function MemoEditor({
 
           // キャッシュ更新
           queryClient.invalidateQueries({ queryKey: ["memos"] });
+
+          if (!targetOriginalId) {
+            console.warn("[MemoEditor] 新規メモのoriginalId取得に失敗しました");
+          } else {
+            console.log("[MemoEditor] 新規メモ作成完了", {
+              targetOriginalId,
+            });
+          }
+        }
+
+        const boardsToAdd =
+          selectedBoardIds.length > 0
+            ? selectedBoardIds
+            : initialBoardId
+              ? [initialBoardId]
+              : [];
+
+        console.log("[MemoEditor] ボード紐付け対象", { boardsToAdd });
+
+        for (const boardId of boardsToAdd) {
+          try {
+            await addItemToBoard.mutateAsync({
+              boardId,
+              data: {
+                itemType: "memo",
+                itemId: targetOriginalId || "",
+              },
+            });
+            console.log("[MemoEditor] ボード紐付け完了", {
+              boardId,
+              targetOriginalId,
+            });
+          } catch (error) {
+            const message =
+              error instanceof Error ? error.message : String(error);
+            if (!message.includes("already exists")) {
+              console.error("[MemoEditor] ボード追加に失敗しました", {
+                boardId,
+                message,
+              });
+            } else {
+              console.log("[MemoEditor] ボードに既に存在", { boardId });
+            }
+          }
         }
       } else {
         // 通常の保存処理

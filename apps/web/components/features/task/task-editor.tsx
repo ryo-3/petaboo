@@ -33,7 +33,6 @@ import {
 } from "@/src/hooks/use-taggings";
 import { useAttachmentManager } from "@/src/hooks/use-attachment-manager";
 import AttachmentGallery from "@/components/features/attachments/attachment-gallery";
-import { useToast } from "@/src/contexts/toast-context";
 import { useTeamTags } from "@/src/hooks/use-team-tags";
 import {
   useAllTeamTaggings,
@@ -212,7 +211,6 @@ function TaskEditor({
   const { data: teamTagsList } = useTeamTags(teamId || 0);
 
   // 画像添付機能（共通フック使用）
-  const { showToast } = useToast();
   const attachmentManager = useAttachmentManager({
     itemType: "task",
     item: task,
@@ -860,7 +858,10 @@ function TaskEditor({
       // 新規作成でタグまたは画像がある場合
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      const tasksQuery = queryClient.getQueryData<Task[]>(["tasks"]);
+      const tasksQueryKey = teamMode
+        ? (["team-tasks", teamId] as const)
+        : (["tasks"] as const);
+      const tasksQuery = queryClient.getQueryData<Task[]>(tasksQueryKey);
       if (tasksQuery && tasksQuery.length > 0) {
         const latestTask = [...tasksQuery].sort(
           (a, b) => b.createdAt - a.createdAt,
@@ -885,7 +886,7 @@ function TaskEditor({
 
     // 保存待ちの画像を一括アップロード（完了トーストはuploadPendingImagesが表示）
     if (hasUploads && targetOriginalId) {
-      await uploadPendingImages();
+      await uploadPendingImages(targetOriginalId);
     }
 
     // 連続作成モードで新規タスクの場合、保存後にリセット
@@ -910,8 +911,9 @@ function TaskEditor({
     pendingDeletes,
     uploadPendingImages,
     deletePendingAttachments,
-    showToast,
     queryClient,
+    teamMode,
+    teamId,
   ]);
 
   // Ctrl+Sショートカット（変更がある場合のみ実行）

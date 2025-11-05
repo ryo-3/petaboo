@@ -168,11 +168,14 @@ function Sidebar({
 
   // モバイルでメモエディターが開いている場合は専用フッターを表示
   // 新規作成時（selectedMemoId === null かつ isCreatingMemo === true）も含む
-  const isShowingMemoEditor = selectedMemoId !== undefined || isCreatingMemo;
+  // ボード詳細の一覧表示時（selectedMemoId === null）は通常フッターを表示
+  const isShowingMemoEditor =
+    (selectedMemoId !== undefined && selectedMemoId !== null) || isCreatingMemo;
 
   // モバイルでタスクエディターが開いている場合は専用フッターを表示
   // 新規作成時も含む
-  const isShowingTaskEditor = selectedTaskId !== undefined || isCreatingTask;
+  const isShowingTaskEditor =
+    (selectedTaskId !== undefined && selectedTaskId !== null) || isCreatingTask;
 
   // モバイルフッター（PCでは非表示、モバイルでメモ/タスク選択時のみ表示）
   const mobileFooter = isShowingTaskEditor ? (

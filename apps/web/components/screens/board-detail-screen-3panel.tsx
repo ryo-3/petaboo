@@ -890,7 +890,7 @@ function BoardDetailScreen({
                 ? "w-[44%] border-r border-gray-300 overflow-hidden" // 個人モード：リスト表示時
                 : "w-[44%] border-r border-gray-300 overflow-hidden" // 個人モード：エディター表示時
               : "w-full"
-        } ${teamMode && !rightPanelMode ? "" : "pt-3"} pl-2 pr-0 md:pl-5 md:pr-4 ${selectedMemo || selectedTask || rightPanelMode ? "md:pr-2" : "md:pr-4"} flex flex-col ${teamMode ? "" : "transition-all duration-300"} relative`}
+        } ${teamMode && !rightPanelMode ? "" : !isDesktop && showCommentPanel && !showListPanel && !showDetailPanel ? "" : "pt-3"} pl-2 pr-0 md:pl-5 md:pr-4 ${selectedMemo || selectedTask || rightPanelMode ? "md:pr-2" : "md:pr-4"} flex flex-col ${teamMode ? "" : "transition-all duration-300"} relative`}
       >
         {/* チームモード時はDesktopUpperを3パネル内の左パネルに配置、個人モード時は外側に配置 */}
         {!teamMode && (
@@ -1946,57 +1946,7 @@ function BoardDetailScreen({
                         <div className="flex flex-col flex-1 min-h-0">
                           {/* コメント表示時 */}
                           {showComment && !showMemo && !showTask && (
-                            <div className="flex flex-col h-full relative pt-2">
-                              <DesktopUpper
-                                currentMode="board"
-                                activeTab="normal"
-                                onTabChange={() => {}}
-                                onCreateNew={() => {}}
-                                viewMode={viewMode}
-                                onViewModeChange={setViewMode}
-                                columnCount={columnCount}
-                                onColumnCountChange={setColumnCount}
-                                rightPanelMode="hidden"
-                                customTitle={boardName || "ボード詳細"}
-                                boardDescription={boardDescription}
-                                boardId={boardId}
-                                onBoardExport={handleExport}
-                                onBoardSettings={onSettings || handleSettings}
-                                isExportDisabled={false}
-                                marginBottom="mb-0"
-                                headerMarginBottom="mb-0"
-                                showEditDate={showEditDate}
-                                onShowEditDateChange={setShowEditDate}
-                                showTagDisplay={showTags}
-                                onShowTagDisplayChange={handleTagDisplayChange}
-                                boardLayout={boardLayout}
-                                isReversed={isReversed}
-                                onBoardLayoutChange={handleBoardLayoutChange}
-                                showMemo={showMemo}
-                                showTask={showTask}
-                                showComment={showComment}
-                                onMemoToggle={handleMemoToggle}
-                                onTaskToggle={handleTaskToggle}
-                                onCommentToggle={handleCommentToggle}
-                                contentFilterRightPanelMode={rightPanelMode}
-                                normalCount={
-                                  allMemoItems.length + allTaskItems.length
-                                }
-                                completedCount={completedCount}
-                                deletedCount={deletedCount + deletedMemoCount}
-                                selectionMode={selectionMode}
-                                onSelectionModeChange={
-                                  handleSelectionModeChange
-                                }
-                                onSelectAll={undefined}
-                                isAllSelected={false}
-                                onCsvImport={() =>
-                                  setIsCSVImportModalOpen(true)
-                                }
-                                hideControls={false}
-                                floatControls={true}
-                                teamMode={teamMode}
-                              />
+                            <div className="flex flex-col h-full">
                               <CommentSection
                                 title="ボードコメント"
                                 placeholder="ボードにコメントを追加..."

@@ -1325,7 +1325,10 @@ function MemoEditor({
                         !hasTagChanges &&
                         pendingImages.length === 0 &&
                         pendingDeletes.length === 0) ||
-                      (memo !== null && memo.id > 0 && !content.trim())
+                      (memo !== null &&
+                        memo.id > 0 &&
+                        !content.trim() &&
+                        pendingImages.length === 0)
                     }
                     isSaving={
                       isSaving ||

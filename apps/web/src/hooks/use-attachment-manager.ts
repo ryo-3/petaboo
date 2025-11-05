@@ -4,6 +4,7 @@ import {
   useUploadAttachment,
   useDeleteAttachment,
 } from "@/src/hooks/use-attachments";
+import type { Attachment } from "@/src/hooks/use-attachments";
 import { useToast } from "@/src/contexts/toast-context";
 import { OriginalIdUtils } from "@/src/types/common";
 import { useAuth } from "@clerk/nextjs";
@@ -268,9 +269,17 @@ export const useAttachmentManager = ({
           }),
         );
 
-        const failedCount = results.filter(
-          (r) => r.status === "rejected",
-        ).length;
+        const successfulAttachments: Attachment[] = [];
+        const failedCount = results.filter((r) => {
+          if (r.status === "fulfilled") {
+            const attachment = r.value as Attachment;
+            if (attachment && attachment.id !== undefined) {
+              successfulAttachments.push(attachment);
+            }
+            return false;
+          }
+          return true;
+        }).length;
 
         // 最低3秒表示を保証
         const elapsed = Date.now() - startTime;
@@ -295,10 +304,30 @@ export const useAttachmentManager = ({
         // キャッシュを更新（targetOriginalId使用時）
         if (failedCount === 0) {
           if (targetOriginalId) {
-            await queryClient.invalidateQueries({
-              queryKey: ["attachments", teamId, itemType, targetOriginalId],
-            });
+            const queryKey = [
+              "attachments",
+              teamId,
+              itemType,
+              targetOriginalId,
+            ] as const;
+
+            if (successfulAttachments.length > 0) {
+              queryClient.setQueryData<Attachment[] | undefined>(
+                queryKey,
+                (old) => {
+                  const existing = old ?? [];
+                  const existingIds = new Set(existing.map((item) => item.id));
+                  const merged = successfulAttachments.filter(
+                    (item) => !existingIds.has(item.id),
+                  );
+                  return [...existing, ...merged];
+                },
+              );
+            }
+
+            await queryClient.invalidateQueries({ queryKey });
           }
+
           setPendingImages([]);
         }
 

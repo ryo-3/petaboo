@@ -17,6 +17,8 @@ interface TiptapEditorProps {
   onToolbarToggle?: (visible: boolean) => void;
   onEditorReady?: (editor: Editor) => void;
   onImagePaste?: (file: File) => void;
+  onFilesDrop?: (files: File[]) => void;
+  onDropComplete?: () => void;
 }
 
 // ツールバーコンポーネント
@@ -156,6 +158,8 @@ export function TiptapEditor({
   onToolbarToggle,
   onEditorReady,
   onImagePaste,
+  onFilesDrop,
+  onDropComplete,
 }: TiptapEditorProps) {
   const isFirstRender = useRef(true);
 
@@ -245,6 +249,25 @@ export function TiptapEditor({
         }
 
         // 画像がない場合は通常のペースト処理を続行
+        return false;
+      },
+      handleDrop: (_view, event) => {
+        if (!onFilesDrop || !event.dataTransfer?.files?.length) {
+          return false;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        const files = Array.from(event.dataTransfer.files).filter(
+          (file) => file.size > 0,
+        );
+        if (files.length > 0) {
+          onFilesDrop(files);
+          onDropComplete?.();
+          return true;
+        }
+
         return false;
       },
     },

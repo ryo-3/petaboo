@@ -49,6 +49,7 @@ import type { Tag, Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
 import { OriginalIdUtils } from "@/src/types/common";
 import { useEffect, useRef, useState, memo, useMemo, useCallback } from "react";
+import type { DragEvent } from "react";
 import UrlPreview from "@/src/components/shared/url-preview";
 import { TiptapEditor, Toolbar } from "./tiptap-editor";
 import type { Editor } from "@tiptap/react";
@@ -296,6 +297,77 @@ function MemoEditor({
     isDeleting,
     isUploading,
   } = attachmentManager;
+
+  const [isDragActive, setIsDragActive] = useState(false);
+  const dragCounterRef = useRef<number>(0);
+
+  const resetDragState = useCallback(() => {
+    dragCounterRef.current = 0;
+    setIsDragActive(false);
+  }, []);
+
+  const isFileDragEvent = useCallback((event: DragEvent<HTMLDivElement>) => {
+    const types = event.dataTransfer?.types;
+    if (!types || types.length === 0) return false;
+    return Array.from(types).includes("Files");
+  }, []);
+
+  const handleDragEnter = useCallback(
+    (event: DragEvent<HTMLDivElement>) => {
+      if (isDeleted) return;
+      if (!isFileDragEvent(event)) return;
+
+      event.preventDefault();
+      dragCounterRef.current += 1;
+      setIsDragActive(true);
+    },
+    [isDeleted, isFileDragEvent],
+  );
+
+  const handleDragOver = useCallback(
+    (event: DragEvent<HTMLDivElement>) => {
+      if (isDeleted) return;
+      if (!isFileDragEvent(event)) return;
+
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "copy";
+    },
+    [isDeleted, isFileDragEvent],
+  );
+
+  const handleDragLeave = useCallback(
+    (event: DragEvent<HTMLDivElement>) => {
+      if (isDeleted) return;
+      if (!isFileDragEvent(event)) return;
+
+      event.preventDefault();
+      dragCounterRef.current = Math.max(0, dragCounterRef.current - 1);
+      if (dragCounterRef.current === 0) {
+        setIsDragActive(false);
+      }
+    },
+    [isDeleted, isFileDragEvent],
+  );
+
+  const handleDrop = useCallback(
+    (event: DragEvent<HTMLDivElement>) => {
+      if (isDeleted) return;
+      if (!event.dataTransfer || !isFileDragEvent(event)) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const files = Array.from(event.dataTransfer.files || []).filter(
+        (file) => file.size > 0,
+      );
+      if (files.length > 0) {
+        handleFilesSelect(files);
+      }
+
+      resetDragState();
+    },
+    [handleFilesSelect, isDeleted, isFileDragEvent, resetDragState],
+  );
 
   // プリロードデータとライブデータを組み合わせてタグを抽出
   const currentTags = useMemo(() => {
@@ -1213,68 +1285,87 @@ function MemoEditor({
 
         {/* スクロール可能なコンテンツ部分 */}
         <div className="flex-1 min-h-0 overflow-y-auto">
-          <BaseViewer
-            item={
-              memo || {
-                id: 0,
-                title: "",
-                content: "",
-                createdAt: Math.floor(Date.now() / 1000),
-                updatedAt: Math.floor(Date.now() / 1000),
-              }
-            }
-            onClose={onClose}
-            error={null}
-            isEditing={true}
-            createdItemId={null}
-            hideDateInfo={true}
-            topContent={null}
-            compactPadding={true}
-            headerActions={null}
+          <div
+            className={`relative h-full rounded-lg border border-transparent transition-colors ${
+              isDragActive ? "border-dashed border-blue-400 bg-blue-50/40" : ""
+            }`}
+            onDragEnter={handleDragEnter}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
           >
-            <div className="w-full pr-1">
-              <TiptapEditor
-                content={content}
-                onChange={(newContent) => {
-                  const firstLine = newContent.split("\n")[0] || "";
-                  handleTitleChange(firstLine);
-                  handleContentChange(newContent);
-                }}
-                placeholder={isDeleted ? "削除済みのメモです" : "入力..."}
-                readOnly={isDeleted}
-                className="font-medium"
-                toolbarVisible={toolbarVisible}
-                onEditorReady={setTiptapEditor}
-                onImagePaste={handleFileSelect}
+            {isDragActive && (
+              <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center rounded-lg bg-blue-50/80 text-sm font-medium text-blue-600">
+                ここにドロップして画像を追加
+              </div>
+            )}
+            <div className="relative z-20">
+              <BaseViewer
+                item={
+                  memo || {
+                    id: 0,
+                    title: "",
+                    content: "",
+                    createdAt: Math.floor(Date.now() / 1000),
+                    updatedAt: Math.floor(Date.now() / 1000),
+                  }
+                }
+                onClose={onClose}
+                error={null}
+                isEditing={true}
+                createdItemId={null}
+                hideDateInfo={true}
+                topContent={null}
+                compactPadding={true}
+                headerActions={null}
+              >
+                <div className="w-full pr-1">
+                  <TiptapEditor
+                    content={content}
+                    onChange={(newContent) => {
+                      const firstLine = newContent.split("\n")[0] || "";
+                      handleTitleChange(firstLine);
+                      handleContentChange(newContent);
+                    }}
+                    placeholder={isDeleted ? "削除済みのメモです" : "入力..."}
+                    readOnly={isDeleted}
+                    className="font-medium"
+                    toolbarVisible={toolbarVisible}
+                    onEditorReady={setTiptapEditor}
+                    onImagePaste={handleFileSelect}
+                    onFilesDrop={handleFilesSelect}
+                    onDropComplete={resetDragState}
+                  />
+                </div>
+
+                {/* URL自動リンク化プレビュー（URLを含む行のみ表示） */}
+                {content && !isDeleted && (
+                  <UrlPreview text={content} className="mt-2 mb-2 px-1" />
+                )}
+
+                {/* ボード名・タグ一覧をテキストエリアの下に配置（TaskFormと統一） */}
+                <BoardTagDisplay
+                  boards={memo && memo.id !== 0 ? displayBoards : []}
+                  tags={localTags}
+                  spacing="normal"
+                  showWhen="has-content"
+                  className="mb-2"
+                />
+              </BaseViewer>
+
+              {/* 画像添付ギャラリー（個人・チーム両対応） */}
+              <AttachmentGallery
+                attachments={attachments}
+                onDelete={handleDeleteAttachment}
+                isDeleting={isDeleting}
+                pendingImages={pendingImages}
+                onDeletePending={handleDeletePendingImage}
+                pendingDeletes={pendingDeletes}
+                onRestore={handleRestoreAttachment}
+                isUploading={isUploading}
               />
             </div>
-
-            {/* URL自動リンク化プレビュー（URLを含む行のみ表示） */}
-            {content && !isDeleted && (
-              <UrlPreview text={content} className="mt-2 mb-2 px-1" />
-            )}
-
-            {/* ボード名・タグ一覧をテキストエリアの下に配置（TaskFormと統一） */}
-            <BoardTagDisplay
-              boards={memo && memo.id !== 0 ? displayBoards : []}
-              tags={localTags}
-              spacing="normal"
-              showWhen="has-content"
-              className="mb-2"
-            />
-          </BaseViewer>
-
-          {/* 画像添付ギャラリー（個人・チーム両対応） */}
-          <AttachmentGallery
-            attachments={attachments}
-            onDelete={handleDeleteAttachment}
-            isDeleting={isDeleting}
-            pendingImages={pendingImages}
-            onDeletePending={handleDeletePendingImage}
-            pendingDeletes={pendingDeletes}
-            onRestore={handleRestoreAttachment}
-            isUploading={isUploading}
-          />
+          </div>
         </div>
       </div>
       {baseViewerRef.current && (

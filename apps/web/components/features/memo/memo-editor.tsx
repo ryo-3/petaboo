@@ -15,6 +15,7 @@ import { BulkDeleteConfirmation } from "@/components/ui/modals/confirmation-moda
 import TagTriggerButton from "@/components/features/tags/tag-trigger-button";
 import TagSelectionModal from "@/components/ui/modals/tag-selection-modal";
 import { useSimpleItemSave } from "@/src/hooks/use-simple-item-save";
+import { useAddItemToBoard } from "@/src/hooks/use-boards";
 import { useTeamContext } from "@/contexts/team-context";
 import { useTeamDetail } from "@/src/contexts/team-detail-context";
 import {
@@ -297,6 +298,8 @@ function MemoEditor({
     isDeleting,
     isUploading,
   } = attachmentManager;
+
+  const addItemToBoard = useAddItemToBoard({ teamMode, teamId });
 
   const [isDragActive, setIsDragActive] = useState(false);
   const dragCounterRef = useRef<number>(0);
@@ -758,6 +761,32 @@ function MemoEditor({
 
           const newMemo = await response.json();
           targetOriginalId = OriginalIdUtils.fromItem(newMemo) || "";
+
+          // ボード紐付け（選択されているもの）
+          const boardsToAdd =
+            selectedBoardIds.length > 0
+              ? selectedBoardIds
+              : initialBoardId
+                ? [initialBoardId]
+                : [];
+
+          for (const boardId of boardsToAdd) {
+            try {
+              await addItemToBoard.mutateAsync({
+                boardId,
+                data: {
+                  itemType: "memo",
+                  itemId: targetOriginalId,
+                },
+              });
+            } catch (error) {
+              const message =
+                error instanceof Error ? error.message : String(error);
+              if (!message.includes("already exists")) {
+                console.error("ボード追加に失敗しました", message);
+              }
+            }
+          }
 
           // キャッシュ更新
           queryClient.invalidateQueries({ queryKey: ["memos"] });

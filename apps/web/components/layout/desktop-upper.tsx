@@ -409,7 +409,7 @@ function DesktopUpper({
 
   return (
     <div
-      className={`fixed md:static top-0 left-0 right-0 z-10 bg-white px-2 md:px-0 pt-2 ${marginBottom}`}
+      className={`fixed md:static top-0 left-0 right-0 z-10 bg-white px-2 md:px-0 ${marginBottom}`}
     >
       {!hideControls && controlsContent}
       {headerContent}

@@ -120,9 +120,9 @@ export default function AttachmentGallery({
 
           return (
             <div key={attachment.id} className="relative group">
-              {imageUrl ? (
-                <div className="relative">
-                  {isImage ? (
+              <div className="relative">
+                {isImage ? (
+                  imageUrl ? (
                     <img
                       src={imageUrl}
                       alt={attachment.fileName}
@@ -137,118 +137,120 @@ export default function AttachmentGallery({
                         !isProcessing && setSelectedImage(imageUrl)
                       }
                     />
-                  ) : isPdf ? (
-                    <a
-                      href={isProcessing ? undefined : attachment.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`w-32 h-32 bg-gray-100 rounded-lg flex flex-col items-center justify-center p-2 ${
-                        isProcessing
-                          ? "opacity-50 cursor-default"
-                          : isMarkedForDelete
-                            ? "opacity-50 border-2 border-red-400 hover:bg-gray-200 transition-colors"
-                            : "hover:bg-gray-200 transition-colors"
-                      }`}
-                      onClick={(e) => isProcessing && e.preventDefault()}
-                    >
-                      <svg
-                        className="w-12 h-12 text-red-500 mb-1"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM8 18v-1h8v1H8zm0-4v-1h8v1H8zm0-4v-1h5v1H8z" />
-                      </svg>
-                      <p className="text-[10px] text-gray-600 text-center truncate w-full">
-                        {attachment.fileName}
-                      </p>
-                    </a>
                   ) : (
-                    <a
-                      href={isProcessing ? undefined : attachment.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`w-32 h-32 bg-gray-100 rounded-lg flex flex-col items-center justify-center p-2 ${
-                        isProcessing
-                          ? "opacity-50 cursor-default"
-                          : isMarkedForDelete
-                            ? "opacity-50 border-2 border-red-400 hover:bg-gray-200 transition-colors"
-                            : "hover:bg-gray-200 transition-colors"
-                      }`}
-                      onClick={(e) => isProcessing && e.preventDefault()}
-                    >
-                      <svg
-                        className="w-12 h-12 text-gray-500 mb-1"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM8 18v-1h8v1H8zm0-4v-1h8v1H8z" />
-                      </svg>
-                      <p className="text-[10px] text-gray-600 text-center truncate w-full">
-                        {attachment.fileName}
-                      </p>
-                    </a>
-                  )}
-                  {isMarkedForDelete && (
-                    <div className="absolute top-0 left-0 bg-red-500 text-white text-[10px] px-1 py-0.5 rounded-br">
-                      削除予定
+                    <div className="w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center">
+                      <span className="text-xs text-gray-500">読込中...</span>
                     </div>
-                  )}
-                </div>
-              ) : (
-                <div className="w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center">
-                  <span className="text-xs text-gray-500">読込中...</span>
-                </div>
-              )}
-              {attachment.userId === userId && imageUrl && !isProcessing && (
-                <>
-                  {isMarkedForDelete
-                    ? // 削除予定の場合は復元ボタン
-                      onRestore && (
-                        <button
-                          onClick={() => onRestore(attachment.id)}
-                          className="absolute top-1 right-1 bg-blue-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-blue-600"
-                          title="復元"
-                        >
-                          <svg
-                            className="w-3 h-3"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
+                  )
+                ) : isPdf ? (
+                  <a
+                    href={isProcessing ? undefined : attachment.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`w-32 h-32 bg-gray-100 rounded-lg flex flex-col items-center justify-center p-2 ${
+                      isProcessing
+                        ? "opacity-50 cursor-default"
+                        : isMarkedForDelete
+                          ? "opacity-50 border-2 border-red-400 hover:bg-gray-200 transition-colors"
+                          : "hover:bg-gray-200 transition-colors"
+                    }`}
+                    onClick={(e) => isProcessing && e.preventDefault()}
+                  >
+                    <svg
+                      className="w-12 h-12 text-red-500 mb-1"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM8 18v-1h8v1H8zm0-4v-1h8v1H8zm0-4v-1h5v1H8z" />
+                    </svg>
+                    <p className="text-[10px] text-gray-600 text-center truncate w-full">
+                      {attachment.fileName}
+                    </p>
+                  </a>
+                ) : (
+                  <a
+                    href={isProcessing ? undefined : attachment.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`w-32 h-32 bg-gray-100 rounded-lg flex flex-col items-center justify-center p-2 ${
+                      isProcessing
+                        ? "opacity-50 cursor-default"
+                        : isMarkedForDelete
+                          ? "opacity-50 border-2 border-red-400 hover:bg-gray-200 transition-colors"
+                          : "hover:bg-gray-200 transition-colors"
+                    }`}
+                    onClick={(e) => isProcessing && e.preventDefault()}
+                  >
+                    <svg
+                      className="w-12 h-12 text-gray-500 mb-1"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM8 18v-1h8v1H8zm0-4v-1h8v1H8z" />
+                    </svg>
+                    <p className="text-[10px] text-gray-600 text-center truncate w-full">
+                      {attachment.fileName}
+                    </p>
+                  </a>
+                )}
+                {isMarkedForDelete && (
+                  <div className="absolute top-0 left-0 bg-red-500 text-white text-[10px] px-1 py-0.5 rounded-br">
+                    削除予定
+                  </div>
+                )}
+              </div>
+              {attachment.userId === userId &&
+                (isImage ? imageUrl : true) &&
+                !isProcessing && (
+                  <>
+                    {isMarkedForDelete
+                      ? // 削除予定の場合は復元ボタン
+                        onRestore && (
+                          <button
+                            onClick={() => onRestore(attachment.id)}
+                            className="absolute top-1 right-1 bg-blue-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-blue-600"
+                            title="復元"
                           >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                            />
-                          </svg>
-                        </button>
-                      )
-                    : // 通常時は削除ボタン
-                      onDelete && (
-                        <button
-                          onClick={() => onDelete(attachment.id)}
-                          disabled={isDeleting}
-                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 disabled:opacity-50"
-                          title="削除"
-                        >
-                          <svg
-                            className="w-3 h-3"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
+                            <svg
+                              className="w-3 h-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                              />
+                            </svg>
+                          </button>
+                        )
+                      : // 通常時は削除ボタン
+                        onDelete && (
+                          <button
+                            onClick={() => onDelete(attachment.id)}
+                            disabled={isDeleting}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 disabled:opacity-50"
+                            title="削除"
                           >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
-                        </button>
-                      )}
-                </>
-              )}
+                            <svg
+                              className="w-3 h-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                        )}
+                  </>
+                )}
             </div>
           );
         })}

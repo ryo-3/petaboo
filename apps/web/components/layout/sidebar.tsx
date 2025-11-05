@@ -180,9 +180,11 @@ function Sidebar({
       <ItemEditorFooter
         type="task"
         onBack={() => {
-          const backEventName = isTeamMode
-            ? "team-back-to-task-list"
-            : "task-editor-mobile-back-requested";
+          const backEventName = showingBoardDetail
+            ? "board-task-back"
+            : isTeamMode
+              ? "team-back-to-task-list"
+              : "task-editor-mobile-back-requested";
 
           // タブ状態をリセット
           setTaskEditorTab("task");
@@ -232,9 +234,11 @@ function Sidebar({
       <ItemEditorFooter
         type="memo"
         onBack={() => {
-          const backEventName = isTeamMode
-            ? "team-back-to-memo-list"
-            : "memo-editor-mobile-back-requested";
+          const backEventName = showingBoardDetail
+            ? "board-memo-back"
+            : isTeamMode
+              ? "team-back-to-memo-list"
+              : "memo-editor-mobile-back-requested";
 
           // タブ状態をリセット
           setMemoEditorTab("memo");

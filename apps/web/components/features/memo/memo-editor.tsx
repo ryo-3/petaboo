@@ -103,6 +103,7 @@ interface MemoEditorProps {
   createdByUserId?: string | null;
   createdByAvatarColor?: string | null;
   totalDeletedCount?: number; // 削除済みアイテムの総数
+  insideBoardDetail?: boolean; // ボード詳細内で表示されているか（戻るボタンのイベント切り替え用）
 }
 
 function MemoEditor({
@@ -127,6 +128,7 @@ function MemoEditor({
   createdByAvatarColor,
   totalDeletedCount = 0,
   unifiedOperations,
+  insideBoardDetail = false,
 }: MemoEditorProps) {
   const { isTeamMode: teamMode, teamId: teamIdRaw } = useTeamContext();
   const teamId = teamIdRaw ?? undefined; // Hook互換性のため変換

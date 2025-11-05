@@ -12,6 +12,7 @@ import { useTags } from "@/src/hooks/use-tags";
 import { useTeamTags } from "@/src/hooks/use-team-tags";
 import { useAllTeamTaggings } from "@/src/hooks/use-team-taggings";
 import { useTeamContext } from "@/contexts/team-context";
+import { useTeamDetailSafe } from "@/src/contexts/team-detail-context";
 import { useDeletedMemos, useDeleteMemo } from "@/src/hooks/use-memos";
 import { useDeleteTask, useDeletedTasks } from "@/src/hooks/use-tasks";
 import {
@@ -38,6 +39,7 @@ import { useBoardOperations } from "@/src/hooks/use-board-operations";
 import { CSVImportModal } from "@/components/features/board/csv-import-modal";
 import { useBoardCategories } from "@/src/hooks/use-board-categories";
 import BoardCategoryChip from "@/components/features/board-categories/board-category-chip";
+import MobileFabButton from "@/components/ui/buttons/mobile-fab-button";
 import { useUserInfo } from "@/src/hooks/use-user-info";
 import { getUserAvatarColor } from "@/src/utils/userUtils";
 import {
@@ -86,6 +88,8 @@ function BoardDetailScreen({
   teamMembers = [],
 }: BoardDetailProps) {
   const { isTeamMode: teamMode, teamId } = useTeamContext();
+  const teamDetailContext = useTeamDetailSafe();
+
   // CSVインポートモーダル状態
   const [isCSVImportModalOpen, setIsCSVImportModalOpen] = useState(false);
 
@@ -146,6 +150,9 @@ function BoardDetailScreen({
     createNewMemoHandler,
     createNewTaskHandler,
     setShowTabText,
+    setShowListPanel,
+    setShowDetailPanel,
+    setShowCommentPanel,
   } = useBoardState();
 
   // デスクトップ判定（md: 768px以上）
@@ -170,6 +177,47 @@ function BoardDetailScreen({
   // propsから選択状態を使用（Fast Refresh対応）
   const selectedMemo = propSelectedMemo;
   const selectedTask = propSelectedTask;
+
+  // モバイル時: メモ/タスクが選択されたらエディターパネルを全画面表示
+  useEffect(() => {
+    if (!isDesktop && (selectedMemo || selectedTask)) {
+      setShowListPanel(false);
+      setShowDetailPanel(true);
+      setShowCommentPanel(false);
+    } else if (!isDesktop && !selectedMemo && !selectedTask) {
+      setShowListPanel(true);
+      setShowDetailPanel(false);
+      setShowCommentPanel(false);
+    }
+  }, [
+    isDesktop,
+    selectedMemo,
+    selectedTask,
+    setShowListPanel,
+    setShowDetailPanel,
+    setShowCommentPanel,
+  ]);
+
+  // チームモード時: selectedMemo/selectedTaskの状態をContextに反映（フッター切り替え用）
+  useEffect(() => {
+    if (teamMode && teamDetailContext) {
+      if (selectedMemo) {
+        teamDetailContext.setSelectedMemoId(selectedMemo.id);
+        teamDetailContext.setIsCreatingMemo(selectedMemo.id === 0);
+      } else {
+        teamDetailContext.setSelectedMemoId(null);
+        teamDetailContext.setIsCreatingMemo(false);
+      }
+
+      if (selectedTask) {
+        teamDetailContext.setSelectedTaskId(selectedTask.id);
+        teamDetailContext.setIsCreatingTask(selectedTask.id === 0);
+      } else {
+        teamDetailContext.setSelectedTaskId(null);
+        teamDetailContext.setIsCreatingTask(false);
+      }
+    }
+  }, [teamMode, teamDetailContext, selectedMemo, selectedTask]);
 
   // 削除済みメモデータを取得（復元時の総数判定用）
   const { data: deletedMemos } = useDeletedMemos({
@@ -328,6 +376,67 @@ function BoardDetailScreen({
       );
     };
   }, [setShowMemo, setShowTask, setShowComment]);
+
+  // FABボタンからの新規作成イベントをリッスン
+  useEffect(() => {
+    const handleMemoCreate = () => {
+      // モバイル時は即座にエディターパネルに切り替え（ちらつき防止）
+      if (!isDesktop) {
+        setShowListPanel(false);
+        setShowDetailPanel(true);
+        setShowCommentPanel(false);
+      }
+      handleCreateNewMemo();
+    };
+
+    const handleTaskCreate = () => {
+      // モバイル時は即座にエディターパネルに切り替え（ちらつき防止）
+      if (!isDesktop) {
+        setShowListPanel(false);
+        setShowDetailPanel(true);
+        setShowCommentPanel(false);
+      }
+      handleCreateNewTask();
+    };
+
+    window.addEventListener("team-memo-create", handleMemoCreate);
+    window.addEventListener("team-task-create", handleTaskCreate);
+
+    return () => {
+      window.removeEventListener("team-memo-create", handleMemoCreate);
+      window.removeEventListener("team-task-create", handleTaskCreate);
+    };
+  }, [
+    handleCreateNewMemo,
+    handleCreateNewTask,
+    isDesktop,
+    setShowListPanel,
+    setShowDetailPanel,
+    setShowCommentPanel,
+  ]);
+
+  // ボード詳細内でのメモ/タスクエディターの戻るボタンイベントをリッスン
+  useEffect(() => {
+    const handleMemoBack = () => {
+      if (onSelectMemo) {
+        onSelectMemo(null);
+      }
+    };
+
+    const handleTaskBack = () => {
+      if (onSelectTask) {
+        onSelectTask(null);
+      }
+    };
+
+    window.addEventListener("board-memo-back", handleMemoBack);
+    window.addEventListener("board-task-back", handleTaskBack);
+
+    return () => {
+      window.removeEventListener("board-memo-back", handleMemoBack);
+      window.removeEventListener("board-task-back", handleTaskBack);
+    };
+  }, [onSelectMemo, onSelectTask]);
 
   // 状態変更時にレイアウトに通知（フッターボタンのアクティブ状態を更新）
   useEffect(() => {
@@ -1013,6 +1122,7 @@ function BoardDetailScreen({
                                     onClose={onClearSelection || (() => {})}
                                     customHeight="flex-1 min-h-0"
                                     showDateAtBottom={true}
+                                    insideBoardDetail={true}
                                     createdBy={
                                       selectedMemo &&
                                       "createdBy" in selectedMemo
@@ -1484,6 +1594,7 @@ function BoardDetailScreen({
                                       onClose={onClearSelection || (() => {})}
                                       customHeight="flex-1 min-h-0"
                                       showDateAtBottom={true}
+                                      insideBoardDetail={true}
                                       createdBy={
                                         selectedMemo &&
                                         "createdBy" in selectedMemo
@@ -2668,6 +2779,14 @@ function BoardDetailScreen({
           }
         }}
       />
+
+      {/* モバイル右下FABボタン */}
+      {showMemo && activeMemoTab !== "deleted" && (
+        <MobileFabButton type="memo" teamMode={teamMode} show={true} />
+      )}
+      {!showMemo && showTask && activeTaskTab !== "deleted" && (
+        <MobileFabButton type="task" teamMode={teamMode} show={true} />
+      )}
     </div>
   );
 }

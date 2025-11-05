@@ -376,76 +376,45 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
         {/* メインコンテンツ */}
         <main className="flex-1 overflow-hidden mb-14 md:mb-0">{children}</main>
 
-        {/* モバイル用ボトムナビ（下） */}
+        {/* モバイル用ボトムナビ（下）：Sidebar経由で制御 */}
         <div className="md:hidden fixed bottom-0 left-0 right-0 h-14 border-t border-gray-200 bg-white">
-          {isTeamBoardDetailPage ? (
-            // ボード詳細専用ナビゲーション：ItemEditorFooterを使用
-            <ItemEditorFooter
-              type="board"
-              onBack={handleBackToBoardList}
-              onMemoClick={() =>
-                window.dispatchEvent(
-                  new CustomEvent("board-section-change", {
-                    detail: { section: "memos" },
-                  }),
-                )
-              }
-              onTaskClick={() =>
-                window.dispatchEvent(
-                  new CustomEvent("board-section-change", {
-                    detail: { section: "tasks" },
-                  }),
-                )
-              }
-              onCommentClick={() =>
-                window.dispatchEvent(
-                  new CustomEvent("board-section-change", {
-                    detail: { section: "comments" },
-                  }),
-                )
-              }
-              activeSection={activeBoardSection}
-            />
-          ) : (
-            // 通常のサイドバーナビゲーション
-            <Sidebar
-              onSelectMemo={() => setSelectedMemoId(null)}
-              onSelectTask={() => {}}
-              onEditTask={() => {}}
-              onShowFullList={handleShowMemoList}
-              onHome={handleHome}
-              onEditMemo={() => {}}
-              currentMode={currentMode}
-              onModeChange={handleModeChange}
-              onShowTaskList={handleShowTaskList}
-              onTeamList={handleTeamList}
-              onBoardDetail={handleBoardDetail}
-              onSettings={handleSettings}
-              onSearch={handleSearch}
-              showingBoardDetail={isTeamBoardDetailPage}
-              currentBoardName={
-                lastBoardSlug ? currentBoardName || lastBoardName : undefined
-              }
-              currentTeamName={teamDetail?.name}
-              selectedMemoId={selectedMemoId ?? undefined}
-              selectedTaskId={selectedTaskId ?? undefined}
-              isCreatingMemo={isCreatingMemo}
-              isCreatingTask={isCreatingTask}
-              imageCount={
-                selectedMemoId !== null && selectedMemoId !== undefined
-                  ? imageCount
-                  : taskImageCount
-              }
-              commentCount={
-                selectedMemoId !== null && selectedMemoId !== undefined
-                  ? commentCount
-                  : taskCommentCount
-              }
-              onBackToBoardList={
-                isTeamBoardDetailPage ? handleBackToBoardList : undefined
-              }
-            />
-          )}
+          <Sidebar
+            onSelectMemo={() => setSelectedMemoId(null)}
+            onSelectTask={() => {}}
+            onEditTask={() => {}}
+            onShowFullList={handleShowMemoList}
+            onHome={handleHome}
+            onEditMemo={() => {}}
+            currentMode={currentMode}
+            onModeChange={handleModeChange}
+            onShowTaskList={handleShowTaskList}
+            onTeamList={handleTeamList}
+            onBoardDetail={handleBoardDetail}
+            onSettings={handleSettings}
+            onSearch={handleSearch}
+            showingBoardDetail={isTeamBoardDetailPage}
+            currentBoardName={
+              lastBoardSlug ? currentBoardName || lastBoardName : undefined
+            }
+            currentTeamName={teamDetail?.name}
+            selectedMemoId={selectedMemoId ?? undefined}
+            selectedTaskId={selectedTaskId ?? undefined}
+            isCreatingMemo={isCreatingMemo}
+            isCreatingTask={isCreatingTask}
+            imageCount={
+              selectedMemoId !== null && selectedMemoId !== undefined
+                ? imageCount
+                : taskImageCount
+            }
+            commentCount={
+              selectedMemoId !== null && selectedMemoId !== undefined
+                ? commentCount
+                : taskCommentCount
+            }
+            onBackToBoardList={
+              isTeamBoardDetailPage ? handleBackToBoardList : undefined
+            }
+          />
         </div>
       </div>
     </div>

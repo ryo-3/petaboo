@@ -115,13 +115,11 @@ export function TeamBoardDetailWrapper({
   };
 
   const handleSelectMemo = (memo: Memo | DeletedMemo | null) => {
-    if (!memo) return;
     setSelectedTask(null);
     setSelectedMemo(memo);
   };
 
   const handleSelectTask = (task: Task | DeletedTask | null) => {
-    if (!task) return;
     setSelectedMemo(null);
     setSelectedTask(task);
   };

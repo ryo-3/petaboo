@@ -210,6 +210,7 @@ function MemoEditor({
     itemType: "memo",
     onSaveComplete: useCallback(
       (savedMemo: Memo, wasEmpty: boolean, isNewMemo: boolean) => {
+        lastSavedMemoRef.current = savedMemo;
         // 新規メモ作成で連続作成モードが有効な場合
         if (isNewMemo && !wasEmpty && continuousCreateMode) {
           // タグをリセット
@@ -243,6 +244,9 @@ function MemoEditor({
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
   const [toolbarVisible, setToolbarVisible] = useState(false);
   const [tiptapEditor, setTiptapEditor] = useState<Editor | null>(null);
+  const lastSavedMemoRef = useRef<Memo | null>(
+    memo && memo.id ? (memo as Memo) : null,
+  );
   // 未保存変更確認モーダル
   const [isCloseConfirmModalOpen, setIsCloseConfirmModalOpen] = useState(false);
 
@@ -876,6 +880,11 @@ function MemoEditor({
         // 保存後の処理用のoriginalIdを取得
         targetOriginalId =
           memo && memo.id > 0 ? (OriginalIdUtils.fromItem(memo) ?? null) : null;
+        if (!targetOriginalId && lastSavedMemoRef.current) {
+          targetOriginalId =
+            OriginalIdUtils.fromItem(lastSavedMemoRef.current) ?? null;
+          createdMemo = lastSavedMemoRef.current;
+        }
       }
 
       // 保存後、タグも更新

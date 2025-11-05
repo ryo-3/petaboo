@@ -4,8 +4,12 @@
 
 /**
  * URLパターンを検出する正規表現
+ * - http:// または https:// で始まるURL
+ * - www. で始まるURL
+ * - 否定後読み (?<![...]) で末尾の句読点を除外
  */
-const URL_PATTERN = /(https?:\/\/[^\s<>"\u{3000}]+|www\.[^\s<>"\u{3000}]+)/gu;
+const URL_PATTERN =
+  /(https?:\/\/[^\s<>"\u{3000}]+(?<![。、！？.,!?;:)])|www\.[^\s<>"\u{3000}]+(?<![。、！？.,!?;:)]))/gu;
 
 /**
  * テキスト内にURLが含まれているかチェック
@@ -50,7 +54,7 @@ export function linkifyLine(line: string): (string | JSX.Element)[] {
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-blue-600 hover:text-blue-800 underline break-all"
+        className="!text-blue-600 hover:!text-blue-800 underline break-all cursor-pointer"
         onClick={(e) => e.stopPropagation()}
       >
         {url}

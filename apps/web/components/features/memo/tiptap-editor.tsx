@@ -3,6 +3,7 @@
 import { useEditor, EditorContent, Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
+import Link from "@tiptap/extension-link";
 import { Markdown } from "@tiptap/markdown";
 import { useEffect, useRef, useState } from "react";
 
@@ -172,6 +173,15 @@ export function TiptapEditor({
         },
         hardBreak: {
           keepMarks: true,
+        },
+      }),
+      Link.configure({
+        openOnClick: true,
+        autolink: true,
+        linkOnPaste: true,
+        HTMLAttributes: {
+          class:
+            "!text-blue-600 hover:!text-blue-800 underline cursor-pointer break-all",
         },
       }),
       Placeholder.configure({

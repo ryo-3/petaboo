@@ -938,6 +938,10 @@ function MemoEditor({
 
         // 画像のみ保存の場合、作成されたメモを選択してビューモードに切り替え
         if (hasOnlyImages) {
+          console.log("[MemoEditor] before selecting created memo", {
+            hasCreatedMemo: !!createdMemo,
+            createdMemoId: createdMemo?.id,
+          });
           if (createdMemo && onSaveComplete) {
             console.log(
               "[MemoEditor] invoking onSaveComplete with created memo",

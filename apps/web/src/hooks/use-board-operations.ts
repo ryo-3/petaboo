@@ -211,6 +211,10 @@ export function useBoardOperations({
   // 選択ハンドラー
   const handleSelectMemo = useCallback(
     (memo: Memo | DeletedMemo) => {
+      console.log("[BoardOperations] handleSelectMemo", {
+        memoId: "id" in memo ? memo.id : undefined,
+        title: memo?.title,
+      });
       setRightPanelMode(null); // リストモードを解除
       onSelectMemo?.(memo);
     },

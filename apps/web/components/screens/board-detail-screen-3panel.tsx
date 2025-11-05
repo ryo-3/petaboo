@@ -178,6 +178,17 @@ function BoardDetailScreen({
   const selectedMemo = propSelectedMemo;
   const selectedTask = propSelectedTask;
 
+  useEffect(() => {
+    if (selectedMemo) {
+      console.log("[BoardDetail] selectedMemo updated", {
+        memoId: selectedMemo.id,
+        title: selectedMemo.title,
+      });
+    } else {
+      console.log("[BoardDetail] selectedMemo cleared");
+    }
+  }, [selectedMemo]);
+
   // モバイル時: メモ/タスクが選択されたらエディターパネルを全画面表示
   useEffect(() => {
     if (!isDesktop && (selectedMemo || selectedTask)) {
@@ -1147,12 +1158,31 @@ function BoardDetailScreen({
                                       wasEmpty: boolean,
                                       isNewMemo: boolean,
                                     ) => {
+                                      console.log(
+                                        "[BoardDetail] onSaveComplete",
+                                        {
+                                          savedMemoId: savedMemo?.id,
+                                          savedMemoTitle: savedMemo?.title,
+                                          wasEmpty,
+                                          isNewMemo,
+                                          continuousMode:
+                                            getContinuousCreateMode(
+                                              "memo-continuous-create-mode",
+                                            ),
+                                        },
+                                      );
                                       if (
                                         isNewMemo &&
                                         !getContinuousCreateMode(
                                           "memo-continuous-create-mode",
                                         )
                                       ) {
+                                        console.log(
+                                          "[BoardDetail] selecting memo after save",
+                                          {
+                                            savedMemoId: savedMemo?.id,
+                                          },
+                                        );
                                         onSelectMemo?.(savedMemo);
                                       }
                                     }}

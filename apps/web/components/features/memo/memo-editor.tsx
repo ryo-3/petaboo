@@ -301,6 +301,26 @@ function MemoEditor({
 
   const addItemToBoard = useAddItemToBoard({ teamMode, teamId });
 
+  const invalidateBoardCaches = useCallback(() => {
+    if (teamMode && teamId) {
+      queryClient.invalidateQueries({
+        queryKey: ["boards", "all-items", teamId],
+      });
+      if (initialBoardId) {
+        queryClient.invalidateQueries({
+          queryKey: ["team-boards", teamId.toString(), initialBoardId, "items"],
+        });
+      }
+    } else {
+      queryClient.invalidateQueries({ queryKey: ["boards", "all-items"] });
+      if (initialBoardId) {
+        queryClient.invalidateQueries({
+          queryKey: ["boards", initialBoardId, "items"],
+        });
+      }
+    }
+  }, [teamMode, teamId, initialBoardId, queryClient]);
+
   const [isDragActive, setIsDragActive] = useState(false);
   const dragCounterRef = useRef<number>(0);
 
@@ -805,38 +825,40 @@ function MemoEditor({
           }
         }
 
-        const boardsToAdd =
-          selectedBoardIds.length > 0
-            ? selectedBoardIds
-            : initialBoardId
-              ? [initialBoardId]
-              : [];
+        if (targetOriginalId) {
+          const boardsToAdd =
+            selectedBoardIds.length > 0
+              ? selectedBoardIds
+              : initialBoardId
+                ? [initialBoardId]
+                : [];
 
-        console.log("[MemoEditor] ボード紐付け対象", { boardsToAdd });
+          console.log("[MemoEditor] ボード紐付け対象", { boardsToAdd });
 
-        for (const boardId of boardsToAdd) {
-          try {
-            await addItemToBoard.mutateAsync({
-              boardId,
-              data: {
-                itemType: "memo",
-                itemId: targetOriginalId || "",
-              },
-            });
-            console.log("[MemoEditor] ボード紐付け完了", {
-              boardId,
-              targetOriginalId,
-            });
-          } catch (error) {
-            const message =
-              error instanceof Error ? error.message : String(error);
-            if (!message.includes("already exists")) {
-              console.error("[MemoEditor] ボード追加に失敗しました", {
+          for (const boardId of boardsToAdd) {
+            try {
+              await addItemToBoard.mutateAsync({
                 boardId,
-                message,
+                data: {
+                  itemType: "memo",
+                  itemId: targetOriginalId,
+                },
               });
-            } else {
-              console.log("[MemoEditor] ボードに既に存在", { boardId });
+              console.log("[MemoEditor] ボード紐付け完了", {
+                boardId,
+                targetOriginalId,
+              });
+            } catch (error) {
+              const message =
+                error instanceof Error ? error.message : String(error);
+              if (!message.includes("already exists")) {
+                console.error("[MemoEditor] ボード追加に失敗しました", {
+                  boardId,
+                  message,
+                });
+              } else {
+                console.log("[MemoEditor] ボードに既に存在", { boardId });
+              }
             }
           }
         }
@@ -888,6 +910,8 @@ function MemoEditor({
       // 保存待ちの画像を一括アップロード（完了トーストはuploadPendingImagesが表示）
       if (hasUploads && targetOriginalId) {
         await uploadPendingImages(targetOriginalId);
+
+        invalidateBoardCaches();
 
         // 画像のみ保存の場合、作成されたメモを選択してビューモードに切り替え
         if (hasOnlyImages) {
@@ -1319,17 +1343,32 @@ function MemoEditor({
                 {!isDeleted && (
                   <SaveButton
                     onClick={handleSaveWithTags}
-                    disabled={
-                      isUploading ||
-                      (!hasChanges &&
-                        !hasTagChanges &&
-                        pendingImages.length === 0 &&
-                        pendingDeletes.length === 0) ||
-                      (memo !== null &&
-                        memo.id > 0 &&
-                        !content.trim() &&
-                        pendingImages.length === 0)
-                    }
+                    disabled={(() => {
+                      const disabled =
+                        isUploading ||
+                        (!hasChanges &&
+                          !hasTagChanges &&
+                          pendingImages.length === 0 &&
+                          pendingDeletes.length === 0) ||
+                        (memo !== null &&
+                          memo.id > 0 &&
+                          !content.trim() &&
+                          pendingImages.length === 0);
+
+                      if (pendingImages.length > 0 && disabled) {
+                        console.log("[MemoEditor] 保存ボタンが無効のまま", {
+                          hasChanges,
+                          hasTagChanges,
+                          pendingImages: pendingImages.length,
+                          pendingDeletes: pendingDeletes.length,
+                          contentLength: content.trim().length,
+                          memoId: memo?.id,
+                          isUploading,
+                        });
+                      }
+
+                      return disabled;
+                    })()}
                     isSaving={
                       isSaving ||
                       isUploading ||

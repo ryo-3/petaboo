@@ -272,9 +272,6 @@ export const useAttachmentManager = ({
           (r) => r.status === "rejected",
         ).length;
 
-        // アップロード完了後すぐにpendingImagesをクリア（二重表示を防ぐ）
-        setPendingImages([]);
-
         // 最低3秒表示を保証
         const elapsed = Date.now() - startTime;
         const remainingTime = Math.max(0, 3000 - elapsed);
@@ -296,10 +293,13 @@ export const useAttachmentManager = ({
         }
 
         // キャッシュを更新（targetOriginalId使用時）
-        if (targetOriginalId && failedCount === 0) {
-          queryClient.invalidateQueries({
-            queryKey: ["attachments", teamId, itemType, targetOriginalId],
-          });
+        if (failedCount === 0) {
+          if (targetOriginalId) {
+            await queryClient.invalidateQueries({
+              queryKey: ["attachments", teamId, itemType, targetOriginalId],
+            });
+          }
+          setPendingImages([]);
         }
 
         return { success: failedCount === 0, failedCount };

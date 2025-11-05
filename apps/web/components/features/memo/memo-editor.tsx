@@ -720,6 +720,7 @@ function MemoEditor({
         isNewMemo && !content.trim() && pendingImages.length > 0;
 
       let targetOriginalId: string | null = null;
+      let createdMemo: Memo | null = null;
 
       if (hasOnlyImages) {
         console.log("[MemoEditor] 画像のみのメモ保存を検出", {
@@ -755,8 +756,9 @@ function MemoEditor({
             );
           }
 
-          const newMemo = await response.json();
+          const newMemo = (await response.json()) as Memo;
           targetOriginalId = OriginalIdUtils.fromItem(newMemo) || "";
+          createdMemo = newMemo;
           console.log("[MemoEditor] new memo created", {
             targetOriginalId,
             createdMemoId: newMemo?.id,
@@ -788,8 +790,9 @@ function MemoEditor({
             );
           }
 
-          const newMemo = await response.json();
+          const newMemo = (await response.json()) as Memo;
           targetOriginalId = OriginalIdUtils.fromItem(newMemo) || "";
+          createdMemo = newMemo;
 
           // ボード紐付け（選択されているもの）
           const boardsToAdd =
@@ -880,7 +883,10 @@ function MemoEditor({
         // 既存メモの場合
         await updateTaggings(targetOriginalId || "");
         setHasManualChanges(false);
-      } else if (localTags.length > 0 || pendingImages.length > 0) {
+      } else if (
+        !hasOnlyImages &&
+        (localTags.length > 0 || pendingImages.length > 0)
+      ) {
         // 新規作成でタグまたは画像がある場合は、少し遅延させて最新のメモリストから取得
         await new Promise((resolve) => setTimeout(resolve, 100));
 
@@ -932,34 +938,44 @@ function MemoEditor({
 
         // 画像のみ保存の場合、作成されたメモを選択してビューモードに切り替え
         if (hasOnlyImages) {
-          const queryKey =
-            teamMode && teamId ? ["team-memos", teamId] : ["memos"];
-          await queryClient.invalidateQueries({ queryKey });
-
-          // 少し遅延させて最新のメモリストから取得
-          await new Promise((resolve) => setTimeout(resolve, 100));
-
-          const memosQuery = queryClient.getQueryData<Memo[]>(queryKey);
-          console.log("[MemoEditor] cache after invalidate", {
-            queryKey,
-            size: memosQuery?.length,
-          });
-          if (memosQuery && memosQuery.length > 0) {
-            // 最新のメモ（作成時刻順で最後）を取得
-            const latestMemo = [...memosQuery].sort(
-              (a, b) => b.createdAt - a.createdAt,
-            )[0];
-
-            if (latestMemo && onSaveComplete) {
-              console.log("[MemoEditor] invoking onSaveComplete", {
-                latestMemoId: latestMemo.id,
-              });
-              onSaveComplete(latestMemo, false, true);
-            }
+          if (createdMemo && onSaveComplete) {
+            console.log(
+              "[MemoEditor] invoking onSaveComplete with created memo",
+              {
+                createdMemoId: createdMemo.id,
+              },
+            );
+            onSaveComplete(createdMemo, false, true);
           } else {
-            console.warn("[MemoEditor] memosQuery empty after invalidate", {
+            const queryKey =
+              teamMode && teamId ? ["team-memos", teamId] : ["memos"];
+            await queryClient.invalidateQueries({ queryKey });
+
+            // 少し遅延させて最新のメモリストから取得
+            await new Promise((resolve) => setTimeout(resolve, 100));
+
+            const memosQuery = queryClient.getQueryData<Memo[]>(queryKey);
+            console.log("[MemoEditor] cache after invalidate", {
               queryKey,
+              size: memosQuery?.length,
             });
+            if (memosQuery && memosQuery.length > 0) {
+              // 最新のメモ（作成時刻順で最後）を取得
+              const latestMemo = [...memosQuery].sort(
+                (a, b) => b.createdAt - a.createdAt,
+              )[0];
+
+              if (latestMemo && onSaveComplete) {
+                console.log("[MemoEditor] invoking onSaveComplete", {
+                  latestMemoId: latestMemo.id,
+                });
+                onSaveComplete(latestMemo, false, true);
+              }
+            } else {
+              console.warn("[MemoEditor] memosQuery empty after invalidate", {
+                queryKey,
+              });
+            }
           }
         }
       }

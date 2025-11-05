@@ -1333,8 +1333,6 @@ function MemoEditor({
                     toolbarVisible={toolbarVisible}
                     onEditorReady={setTiptapEditor}
                     onImagePaste={handleFileSelect}
-                    onFilesDrop={handleFilesSelect}
-                    onDropComplete={resetDragState}
                   />
                 </div>
 

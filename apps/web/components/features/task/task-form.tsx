@@ -23,7 +23,6 @@ import {
   useMemo,
   useState,
 } from "react";
-import UrlPreview from "@/src/components/shared/url-preview";
 import { TiptapEditor, Toolbar } from "../memo/tiptap-editor";
 import type { Editor } from "@tiptap/react";
 import CreatorAvatar from "@/components/shared/creator-avatar";
@@ -395,11 +394,6 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
           />
         </div>
 
-        {/* URL自動リンク化プレビュー（URLを含む行のみ表示） */}
-        {description && !isDeleted && (
-          <UrlPreview text={description} className="mt-2 mb-2 px-1" />
-        )}
-
         {/* ボード名・タグ表示（テキストエリアの下に移動） */}
         <BoardTagDisplay
           boards={displayBoards}
@@ -512,11 +506,6 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
             onImagePaste={onImagePaste}
           />
         </div>
-
-        {/* URL自動リンク化プレビュー（URLを含む行のみ表示） */}
-        {description && !isDeleted && (
-          <UrlPreview text={description} className="mt-2 mb-2 px-1" />
-        )}
 
         {/* ボード名・タグ表示（テキストエリアの下に移動） */}
         <BoardTagDisplay

@@ -51,7 +51,6 @@ import type { Board } from "@/src/types/board";
 import { OriginalIdUtils } from "@/src/types/common";
 import { useEffect, useRef, useState, memo, useMemo, useCallback } from "react";
 import type { DragEvent } from "react";
-import UrlPreview from "@/src/components/shared/url-preview";
 import { TiptapEditor, Toolbar } from "./tiptap-editor";
 import type { Editor } from "@tiptap/react";
 import { useAuth } from "@clerk/nextjs";
@@ -1481,11 +1480,6 @@ function MemoEditor({
                     onImagePaste={handleFileSelect}
                   />
                 </div>
-
-                {/* URL自動リンク化プレビュー（URLを含む行のみ表示） */}
-                {content && !isDeleted && (
-                  <UrlPreview text={content} className="mt-2 mb-2 px-1" />
-                )}
 
                 {/* ボード名・タグ一覧をテキストエリアの下に配置（TaskFormと統一） */}
                 <BoardTagDisplay

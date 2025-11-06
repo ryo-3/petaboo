@@ -1018,7 +1018,7 @@ function MemoScreen({
 
   // 右パネルのコンテンツ（チームモードのみコメント表示）
   const rightPanelContent =
-    teamMode && selectedMemo ? (
+    teamMode && memoScreenMode !== "create" && selectedMemo ? (
       <CommentSection
         targetType="memo"
         targetOriginalId={OriginalIdUtils.fromItem(selectedMemo) || ""}

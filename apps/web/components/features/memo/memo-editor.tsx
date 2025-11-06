@@ -190,6 +190,43 @@ function MemoEditor({
     getContinuousCreateMode("memo-continuous-create-mode"),
   );
 
+  const [localTags, setLocalTags] = useState<Tag[]>([]);
+  const [hasManualChanges, setHasManualChanges] = useState(false);
+  const resetFormRef = useRef<(() => void) | null>(null);
+
+  const simpleItemSave = useSimpleItemSave<Memo>({
+    item: memo,
+    itemType: "memo",
+    onSaveComplete: useCallback(
+      (savedMemo: Memo, wasEmpty: boolean, isNewMemo: boolean) => {
+        lastSavedMemoRef.current = savedMemo;
+        // 新規メモ作成で連続作成モードが有効な場合
+        if (isNewMemo && !wasEmpty && continuousCreateMode) {
+          // タグをリセット
+          setLocalTags([]);
+          setHasManualChanges(false);
+          // フォームを手動でリセット
+          setTimeout(() => {
+            resetFormRef.current?.();
+          }, 50);
+          return; // onSaveCompleteを呼ばずに新規作成状態を維持
+        }
+        pendingSaveResultRef.current = {
+          savedMemo,
+          wasEmpty,
+          isNewMemo,
+        };
+      },
+      [continuousCreateMode, setHasManualChanges, setLocalTags],
+    ),
+    currentBoardIds,
+    initialBoardId,
+    onDeleteAndSelectNext,
+    teamMode,
+    teamId,
+    boardId: initialBoardId, // チームボードキャッシュ更新用
+  });
+
   const {
     content,
     selectedBoardIds,
@@ -205,41 +242,16 @@ function MemoEditor({
     handleConfirmBoardChange,
     handleCancelBoardChange,
     resetForm,
-  } = useSimpleItemSave<Memo>({
-    item: memo,
-    itemType: "memo",
-    onSaveComplete: useCallback(
-      (savedMemo: Memo, wasEmpty: boolean, isNewMemo: boolean) => {
-        lastSavedMemoRef.current = savedMemo;
-        // 新規メモ作成で連続作成モードが有効な場合
-        if (isNewMemo && !wasEmpty && continuousCreateMode) {
-          // タグをリセット
-          setLocalTags([]);
-          setHasManualChanges(false);
-          // フォームを手動でリセット
-          setTimeout(() => {
-            resetForm?.();
-          }, 50);
-          return; // onSaveCompleteを呼ばずに新規作成状態を維持
-        }
-        // 通常の保存完了処理
-        onSaveComplete?.(savedMemo, wasEmpty, isNewMemo);
-      },
-      [onSaveComplete, continuousCreateMode],
-    ),
-    currentBoardIds,
-    initialBoardId,
-    onDeleteAndSelectNext,
-    teamMode,
-    teamId,
-    boardId: initialBoardId, // チームボードキャッシュ更新用
-  });
+  } = simpleItemSave;
+
+  useEffect(() => {
+    resetFormRef.current = resetForm ?? null;
+  }, [resetForm]);
 
   const [error] = useState<string | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const queryClient = useQueryClient();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [localTags, setLocalTags] = useState<Tag[]>([]);
   const [prevMemoId, setPrevMemoId] = useState<number | null>(null);
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
   const [toolbarVisible, setToolbarVisible] = useState(false);
@@ -247,6 +259,20 @@ function MemoEditor({
   const lastSavedMemoRef = useRef<Memo | null>(
     memo && memo.id ? (memo as Memo) : null,
   );
+  const pendingSaveResultRef = useRef<{
+    savedMemo: Memo;
+    wasEmpty: boolean;
+    isNewMemo: boolean;
+  } | null>(null);
+
+  const flushPendingSaveResult = useCallback(() => {
+    if (!pendingSaveResultRef.current) {
+      return;
+    }
+    const { savedMemo, wasEmpty, isNewMemo } = pendingSaveResultRef.current;
+    pendingSaveResultRef.current = null;
+    onSaveComplete?.(savedMemo, wasEmpty, isNewMemo);
+  }, [onSaveComplete]);
   // 未保存変更確認モーダル
   const [isCloseConfirmModalOpen, setIsCloseConfirmModalOpen] = useState(false);
 
@@ -274,9 +300,6 @@ function MemoEditor({
 
   // チーム用タグ一覧を取得
   const { data: teamTagsList } = useTeamTags(teamId || 0);
-
-  // 手動でタグを変更したかどうかのフラグ
-  const [hasManualChanges, setHasManualChanges] = useState(false);
 
   // 画像添付機能（共通フック使用）
   const { showToast } = useToast();
@@ -951,14 +974,18 @@ function MemoEditor({
             hasCreatedMemo: !!createdMemo,
             createdMemoId: createdMemo?.id,
           });
-          if (createdMemo && onSaveComplete) {
+          if (createdMemo) {
             console.log(
-              "[MemoEditor] invoking onSaveComplete with created memo",
+              "[MemoEditor] queueing onSaveComplete with created memo",
               {
                 createdMemoId: createdMemo.id,
               },
             );
-            onSaveComplete(createdMemo, false, true);
+            pendingSaveResultRef.current = {
+              savedMemo: createdMemo,
+              wasEmpty: false,
+              isNewMemo: true,
+            };
           } else {
             const queryKey =
               teamMode && teamId ? ["team-memos", teamId] : ["memos"];
@@ -978,11 +1005,15 @@ function MemoEditor({
                 (a, b) => b.createdAt - a.createdAt,
               )[0];
 
-              if (latestMemo && onSaveComplete) {
-                console.log("[MemoEditor] invoking onSaveComplete", {
+              if (latestMemo) {
+                console.log("[MemoEditor] queueing onSaveComplete", {
                   latestMemoId: latestMemo.id,
                 });
-                onSaveComplete(latestMemo, false, true);
+                pendingSaveResultRef.current = {
+                  savedMemo: latestMemo,
+                  wasEmpty: false,
+                  isNewMemo: true,
+                };
               }
             } else {
               console.warn("[MemoEditor] memosQuery empty after invalidate", {
@@ -992,6 +1023,8 @@ function MemoEditor({
           }
         }
       }
+
+      flushPendingSaveResult();
     } catch (error) {
       console.error("保存に失敗しました:", error);
     }
@@ -1012,6 +1045,7 @@ function MemoEditor({
     teamId,
     getToken,
     onSaveComplete,
+    flushPendingSaveResult,
   ]);
 
   // BoardIconSelector用のボードオプション

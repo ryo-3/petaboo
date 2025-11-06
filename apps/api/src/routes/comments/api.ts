@@ -1,5 +1,5 @@
 import { createRoute, z } from "@hono/zod-openapi";
-import { eq, asc, and, or, inArray } from "drizzle-orm";
+import { eq, asc, and, or, inArray, SQL } from "drizzle-orm";
 import { getAuth } from "@hono/clerk-auth";
 import { teamComments } from "../../db/schema/team/comments";
 import { teamMembers } from "../../db/schema/team/teams";
@@ -576,8 +576,8 @@ export const postComment = async (c: any) => {
     .where(eq(teamMembers.teamId, teamId));
 
   const notificationsToCreate = allMembers
-    .filter((m) => m.userId !== auth.userId) // 投稿者自身を除外
-    .map((m) => ({
+    .filter((m: { userId: string }) => m.userId !== auth.userId) // 投稿者自身を除外
+    .map((m: { userId: string }) => ({
       teamId,
       userId: m.userId,
       type: "comment",
@@ -917,61 +917,83 @@ export const getBoardItemComments = async (c: any) => {
   }
 
   // メモとタスクのoriginalIdを分離
-  const memoOriginalIds = boardItems
-    .filter((item) => item.itemType === "memo")
-    .map((item) => item.originalId);
-  const taskOriginalIds = boardItems
-    .filter((item) => item.itemType === "task")
-    .map((item) => item.originalId);
+  const memoOriginalIds: string[] = boardItems
+    .filter(
+      (item: { itemType: "memo" | "task"; originalId: string }) =>
+        item.itemType === "memo",
+    )
+    .map(
+      (item: { itemType: "memo" | "task"; originalId: string }) =>
+        item.originalId,
+    );
+  const taskOriginalIds: string[] = boardItems
+    .filter(
+      (item: { itemType: "memo" | "task"; originalId: string }) =>
+        item.itemType === "task",
+    )
+    .map(
+      (item: { itemType: "memo" | "task"; originalId: string }) =>
+        item.originalId,
+    );
 
   // 削除済みメモ・タスクのoriginalIdを取得
-  const deletedMemoOriginalIds = await db
+  const deletedMemoOriginalIds: string[] = await db
     .select({ originalId: teamDeletedMemos.originalId })
     .from(teamDeletedMemos)
     .where(eq(teamDeletedMemos.teamId, teamId))
-    .then((rows) => rows.map((r) => r.originalId));
+    .then((rows: { originalId: string }[]) =>
+      rows.map((row: { originalId: string }) => row.originalId),
+    );
 
-  const deletedTaskOriginalIds = await db
+  const deletedTaskOriginalIds: string[] = await db
     .select({ originalId: teamDeletedTasks.originalId })
     .from(teamDeletedTasks)
     .where(eq(teamDeletedTasks.teamId, teamId))
-    .then((rows) => rows.map((r) => r.originalId));
+    .then((rows: { originalId: string }[]) =>
+      rows.map((row: { originalId: string }) => row.originalId),
+    );
 
   // 削除済みを除外した有効なoriginalIdのみを使用
   const activeMemoOriginalIds = memoOriginalIds.filter(
-    (id) => !deletedMemoOriginalIds.includes(id),
+    (id: string) => !deletedMemoOriginalIds.includes(id),
   );
   const activeTaskOriginalIds = taskOriginalIds.filter(
-    (id) => !deletedTaskOriginalIds.includes(id),
+    (id: string) => !deletedTaskOriginalIds.includes(id),
   );
 
   // コメントを取得
-  const whereConditions = [eq(teamComments.teamId, teamId)];
+  const whereConditions: SQL<unknown>[] = [eq(teamComments.teamId, teamId)];
 
   // メモまたはタスクのコメントを取得（削除済みを除外）
-  const orConditions = [];
+  const orConditions: SQL<unknown>[] = [];
   if (activeMemoOriginalIds.length > 0) {
-    orConditions.push(
-      and(
-        eq(teamComments.targetType, "memo"),
-        inArray(teamComments.targetOriginalId, activeMemoOriginalIds),
-      ),
+    const memoCondition = and(
+      eq(teamComments.targetType, "memo"),
+      inArray(teamComments.targetOriginalId, activeMemoOriginalIds),
     );
+    if (memoCondition) {
+      orConditions.push(memoCondition);
+    }
   }
+
   if (activeTaskOriginalIds.length > 0) {
-    orConditions.push(
-      and(
-        eq(teamComments.targetType, "task"),
-        inArray(teamComments.targetOriginalId, activeTaskOriginalIds),
-      ),
+    const taskCondition = and(
+      eq(teamComments.targetType, "task"),
+      inArray(teamComments.targetOriginalId, activeTaskOriginalIds),
     );
+    if (taskCondition) {
+      orConditions.push(taskCondition);
+    }
   }
 
   if (orConditions.length === 0) {
     return c.json([], 200);
   }
 
-  whereConditions.push(or(...orConditions));
+  const orClause = or(...orConditions);
+  if (orClause) {
+    whereConditions.push(orClause);
+  }
 
   const result = await db
     .select({

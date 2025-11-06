@@ -150,7 +150,7 @@ function NotificationList({
 
           {/* チーム参加申請通知 */}
           {teamName && teamNotifier.data?.hasNotifications && (
-            <div className="flex items-start gap-3 p-3 rounded-lg border bg-orange-50 border-orange-200">
+            <div className="flex items-start gap-2 p-2 rounded-lg border bg-orange-50 border-orange-200">
               <Users className="w-5 h-5 mt-0.5 text-orange-600" />
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
@@ -256,13 +256,13 @@ function CommentNotificationItem({
   return (
     <div
       onClick={onClick}
-      className={`flex items-start gap-2.5 p-3 rounded-lg border cursor-pointer transition-colors hover:bg-gray-50 ${
+      className={`flex items-start gap-2 p-2 rounded-lg border cursor-pointer transition-colors hover:bg-gray-50 ${
         isUnread ? "bg-blue-50 border-blue-200" : "bg-white border-gray-200"
       }`}
     >
       {/* アイコン */}
       <div
-        className={`p-2 rounded-lg flex-shrink-0 ${
+        className={`p-1.5 rounded-lg flex-shrink-0 ${
           isUnread ? "bg-blue-100" : "bg-gray-100"
         }`}
       >
@@ -273,40 +273,33 @@ function CommentNotificationItem({
 
       {/* 通知内容 */}
       <div className="flex-1 min-w-0">
-        {/* メッセージ */}
-        <p
-          className={`text-sm mb-1 ${isUnread ? "font-semibold text-gray-900" : "text-gray-700"}`}
-        >
-          {notification.message}
-        </p>
-
-        {/* 投稿者と時刻 */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500">
-            {notification.actorDisplayName || "誰か"}
+        {/* メッセージと時刻 */}
+        <div className="flex items-center gap-2 mb-0.5">
+          <span
+            className={`text-sm truncate ${isUnread ? "font-semibold text-gray-900" : "text-gray-700"}`}
+          >
+            {notification.message}
           </span>
-          <span className="text-xs text-gray-400">•</span>
-          <span className="text-xs text-gray-500">{timeAgo}</span>
+          <span className="text-sm text-gray-400 flex-shrink-0">•</span>
+          <span className="text-sm text-gray-500 flex-shrink-0">{timeAgo}</span>
         </div>
 
-        {/* ターゲット情報 */}
+        {/* ターゲット情報（何のコメントか） */}
         {notification.targetType && (
-          <div className="mt-1">
-            <span className="text-xs text-gray-400">
-              {notification.targetType === "board"
-                ? "ボード"
-                : notification.targetType === "memo"
-                  ? "メモ"
-                  : "タスク"}
-              へのコメント
-            </span>
+          <div className="text-sm text-gray-500">
+            {notification.targetType === "board"
+              ? "ボード"
+              : notification.targetType === "memo"
+                ? "メモ"
+                : "タスク"}
+            へのコメント
           </div>
         )}
       </div>
 
       {/* 未読バッジ */}
       {isUnread && (
-        <div className="flex-shrink-0 mt-1">
+        <div className="flex-shrink-0 mt-0.5">
           <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
         </div>
       )}

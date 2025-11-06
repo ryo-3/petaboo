@@ -670,7 +670,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
   return (
     <div
-      className={`flex h-full bg-white overflow-hidden ${activeTab === "overview" ? "pt-2 md:pt-3 px-2 md:px-5" : activeTab === "team-list" ? "pt-2 md:pt-3 px-2 md:px-5" : ""}`}
+      className={`flex h-full bg-white overflow-hidden ${activeTab === "overview" ? "pt-2 md:pt-3 px-2 md:px-5 pb-5" : activeTab === "team-list" ? "pt-2 md:pt-3 px-2 md:px-5 pb-5" : ""}`}
     >
       <div className="w-full flex flex-col h-full">
         {/* ヘッダー（デスクトップは常に表示、スマホはoverviewのみ表示） */}
@@ -979,16 +979,13 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                 </div>
               ) : (
                 /* ダッシュボード表示 */
-                <div className="flex-1 flex flex-col gap-4 overflow-hidden">
-                  {/* 統合通知一覧（コメント + 参加申請） - 固定高さでスクロール可能 */}
-                  <div className="flex-shrink-0">
-                    <NotificationList
-                      teamName={customUrl}
-                      maxHeight="max-h-[300px]"
-                    />
+                <div className="flex-1 flex gap-4 overflow-hidden">
+                  {/* 統合通知一覧（コメント + 参加申請） - 左側50% */}
+                  <div className="flex-1">
+                    <NotificationList teamName={customUrl} maxHeight="h-full" />
                   </div>
 
-                  {/* アクティビティフィード - 残りの高さを使用してスクロール可能 */}
+                  {/* アクティビティフィード - 右側50% */}
                   <Card className="flex-1 flex flex-col overflow-hidden">
                     <h3 className="text-lg font-semibold text-gray-900 mb-3 flex-shrink-0 px-4 pt-4">
                       アクティビティ

@@ -670,7 +670,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
   return (
     <div
-      className={`flex h-full bg-white overflow-hidden ${activeTab === "overview" ? "pt-2 md:pt-3 pl-2 md:pl-5 md:pr-2 md:mr-3" : activeTab === "team-list" ? "pt-2 md:pt-3 pl-2 md:pl-5 md:pr-2" : ""}`}
+      className={`flex h-full bg-white overflow-hidden ${activeTab === "overview" ? "pt-2 md:pt-3 px-2 md:px-5" : activeTab === "team-list" ? "pt-2 md:pt-3 px-2 md:px-5" : ""}`}
     >
       <div className="w-full flex flex-col h-full">
         {/* ヘッダー（デスクトップは常に表示、スマホはoverviewのみ表示） */}
@@ -724,11 +724,11 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
         {/* コンテンツエリア */}
         <div
-          className={`${activeTab === "overview" ? "flex-1 overflow-y-auto" : "h-full"}`}
+          className={`${activeTab === "overview" ? "flex-1 flex flex-col overflow-hidden" : "h-full"}`}
         >
           {/* タブコンテンツ */}
           {activeTab === "overview" && (
-            <div className="">
+            <div className="flex-1 flex flex-col overflow-hidden">
               {/* スマホ用ヘッダー（固定） */}
               <div className="md:hidden fixed top-0 left-0 right-0 h-12 border-b border-gray-200 bg-white flex items-center px-3 z-10 overflow-hidden">
                 <div className="flex items-center gap-1.5 flex-1 min-w-0">
@@ -764,7 +764,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
               </div>
               {showInvitePanel ? (
                 /* 招待パネル */
-                <div>
+                <div className="flex-1 overflow-y-auto">
                   <Card className="p-6">
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -979,16 +979,23 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                 </div>
               ) : (
                 /* ダッシュボード表示 */
-                <div className="space-y-6">
-                  {/* 統合通知一覧（コメント + 参加申請） */}
-                  <NotificationList teamName={customUrl} />
+                <div className="flex-1 flex flex-col gap-4 overflow-hidden">
+                  {/* 統合通知一覧（コメント + 参加申請） - 固定高さでスクロール可能 */}
+                  <div className="flex-shrink-0">
+                    <NotificationList
+                      teamName={customUrl}
+                      maxHeight="max-h-[300px]"
+                    />
+                  </div>
 
-                  {/* アクティビティフィード */}
-                  <Card className="p-6">
-                    <h3 className="text-[22px] font-semibold text-gray-900 mb-4">
+                  {/* アクティビティフィード - 残りの高さを使用してスクロール可能 */}
+                  <Card className="flex-1 flex flex-col overflow-hidden">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3 flex-shrink-0 px-4 pt-4">
                       アクティビティ
                     </h3>
-                    <ActivityFeed customUrl={customUrl} limit={10} />
+                    <div className="flex-1 overflow-y-auto px-4 pb-4">
+                      <ActivityFeed customUrl={customUrl} limit={10} />
+                    </div>
                   </Card>
                 </div>
               )}

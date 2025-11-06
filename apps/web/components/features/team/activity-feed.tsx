@@ -131,11 +131,11 @@ export function ActivityFeed({ customUrl, limit = 20 }: ActivityFeedProps) {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {activities.map((activity) => (
         <div
           key={activity.id}
-          className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+          className="flex items-start gap-2.5 p-2.5 rounded-lg hover:bg-gray-50 transition-colors"
         >
           {/* アイコン */}
           <div className={`mt-0.5 ${getActivityColor(activity.actionType)}`}>

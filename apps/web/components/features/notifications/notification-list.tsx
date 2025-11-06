@@ -30,12 +30,14 @@ interface NotificationListProps {
   teamName?: string;
   className?: string;
   notificationType?: NotificationType;
+  maxHeight?: string;
 }
 
 function NotificationList({
   teamName,
   className = "",
   notificationType = "team_requests",
+  maxHeight = "",
 }: NotificationListProps) {
   const { isVisible } = usePageVisibility();
   const router = useRouter();
@@ -104,25 +106,27 @@ function NotificationList({
   // 通知がない場合（実際に通知データが存在しない場合のみ）
   if (!hasTeamNotifications && !hasCommentNotifications) {
     return (
-      <div className={`bg-white rounded-lg border p-6 ${className}`}>
-        <div className="flex items-center gap-3 mb-4">
+      <div className={`bg-white rounded-lg border p-4 ${className}`}>
+        <div className="flex items-center gap-3 mb-3">
           <Bell className="w-5 h-5 text-gray-500" />
-          <h2 className="text-[22px] font-bold text-gray-800">通知</h2>
+          <h2 className="text-lg font-bold text-gray-800">通知</h2>
         </div>
-        <div className="text-center py-8">
-          <Bell className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500">現在、新しい通知はありません</p>
+        <div className="text-center py-6">
+          <Bell className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+          <p className="text-sm text-gray-500">現在、新しい通知はありません</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`bg-white rounded-lg border ${className}`}>
-      <div className="flex items-center justify-between p-6 pb-4">
+    <div
+      className={`bg-white rounded-lg border flex flex-col ${maxHeight} ${className}`}
+    >
+      <div className="flex items-center justify-between p-4 pb-3 flex-shrink-0">
         <div className="flex items-center gap-3">
           <Bell className="w-5 h-5 text-blue-600" />
-          <h2 className="text-[22px] font-bold text-gray-800">通知</h2>
+          <h2 className="text-lg font-bold text-gray-800">通知</h2>
           {totalNotifications > 0 && (
             <span className="bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
               {totalNotifications}
@@ -131,8 +135,8 @@ function NotificationList({
         </div>
       </div>
 
-      <div className="px-6 pb-6">
-        <div className="space-y-3">
+      <div className="px-4 pb-4 overflow-y-auto flex-1">
+        <div className="space-y-2">
           {/* コメント通知 */}
           {commentNotifications &&
             commentNotifications.notifications.length > 0 &&
@@ -146,7 +150,7 @@ function NotificationList({
 
           {/* チーム参加申請通知 */}
           {teamName && teamNotifier.data?.hasNotifications && (
-            <div className="flex items-start gap-3 p-4 rounded-lg border bg-orange-50 border-orange-200">
+            <div className="flex items-start gap-3 p-3 rounded-lg border bg-orange-50 border-orange-200">
               <Users className="w-5 h-5 mt-0.5 text-orange-600" />
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
@@ -252,7 +256,7 @@ function CommentNotificationItem({
   return (
     <div
       onClick={onClick}
-      className={`flex items-start gap-3 p-4 rounded-lg border cursor-pointer transition-colors hover:bg-gray-50 ${
+      className={`flex items-start gap-2.5 p-3 rounded-lg border cursor-pointer transition-colors hover:bg-gray-50 ${
         isUnread ? "bg-blue-50 border-blue-200" : "bg-white border-gray-200"
       }`}
     >

@@ -5,6 +5,7 @@ import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { tasks, deletedTasks } from "../../db/schema/tasks";
 import { boardItems } from "../../db/schema/boards";
 import { taggings } from "../../db/schema/tags";
+import { teamNotifications } from "../../db/schema/team/notifications";
 import { generateOriginalId, generateUuid } from "../../utils/originalId";
 import { databaseMiddleware } from "../../middleware/database";
 
@@ -503,6 +504,16 @@ app.openapi(
           and(
             eq(boardItems.itemType, "task"),
             eq(boardItems.originalId, task.originalId),
+          ),
+        );
+
+      // Step 2.5: 関連する通知を削除
+      await db
+        .delete(teamNotifications)
+        .where(
+          and(
+            eq(teamNotifications.targetType, "task"),
+            eq(teamNotifications.targetOriginalId, task.originalId),
           ),
         );
 

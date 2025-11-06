@@ -38,6 +38,7 @@ export function TeamBoardDetailWrapper({
 
   // 設定画面表示判定
   const showSettings = searchParams.get("settings") === "true";
+  const boardIdParam = searchParams.get("boardId");
 
   // チームボード用のhooks
   const updateBoard = useUpdateTeamBoard(teamId || 0);
@@ -58,34 +59,69 @@ export function TeamBoardDetailWrapper({
     isLoading: loading,
     error,
   } = useQuery({
-    queryKey: ["team-board", teamId, slug],
+    queryKey: ["team-board", teamId, slug, boardIdParam],
     queryFn: async () => {
-      if (!teamId || !slug) {
-        throw new Error("teamId and slug are required");
+      if (!teamId) {
+        throw new Error("teamId is required");
       }
 
       const token = await getToken();
-      const boardResponse = await fetch(
-        `${API_BASE_URL}/teams/${teamId}/boards/slug/${slug}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            ...(token && { Authorization: `Bearer ${token}` }),
-          },
+      const fetchOptions: RequestInit = {
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
         },
-      );
+      };
 
-      if (!boardResponse.ok) {
-        if (boardResponse.status === 404) {
-          throw new Error("ボードが見つかりません");
-        } else {
+      const fetchBoardBySlug = async (slugValue: string) => {
+        const response = await fetch(
+          `${API_BASE_URL}/teams/${teamId}/boards/slug/${slugValue}`,
+          fetchOptions,
+        );
+        if (!response.ok) {
+          if (response.status === 404) {
+            return null;
+          }
           throw new Error("ボードの取得に失敗しました");
         }
+        return response.json();
+      };
+
+      const fetchBoardById = async (boardIdValue: string) => {
+        const response = await fetch(
+          `${API_BASE_URL}/teams/${teamId}/boards/${boardIdValue}/items`,
+          fetchOptions,
+        );
+        if (!response.ok) {
+          if (response.status === 404) {
+            return null;
+          }
+          throw new Error("ボードの取得に失敗しました");
+        }
+        const data = await response.json();
+        return data?.board ?? null;
+      };
+
+      const slugIsNumeric = /^\d+$/.test(slug);
+      const fallbackBoardId =
+        boardIdParam || (slugIsNumeric ? slug : undefined);
+
+      if (!slugIsNumeric) {
+        const board = await fetchBoardBySlug(slug);
+        if (board) return board;
+      } else {
+        const board = await fetchBoardBySlug(slug);
+        if (board) return board;
       }
 
-      return boardResponse.json();
+      if (fallbackBoardId) {
+        const board = await fetchBoardById(fallbackBoardId);
+        if (board) return board;
+      }
+
+      throw new Error("ボードが見つかりません");
     },
-    enabled: isLoaded && !!teamId && !!slug,
+    enabled: isLoaded && !!teamId && (!!slug || !!boardIdParam),
     staleTime: 5 * 60 * 1000, // 5分間キャッシュ
     cacheTime: 30 * 60 * 1000, // 30分間保持
   });
@@ -108,6 +144,20 @@ export function TeamBoardDetailWrapper({
       onBack();
     }
   }, [error, onBack]);
+
+  useEffect(() => {
+    if (!boardData) return;
+
+    if (/^\d+$/.test(slug) && boardData.slug && boardData.slug !== slug) {
+      router.replace(`/team/${customUrl}?tab=board&slug=${boardData.slug}`, {
+        scroll: false,
+      });
+    } else if (!slug && boardData.slug) {
+      router.replace(`/team/${customUrl}?tab=board&slug=${boardData.slug}`, {
+        scroll: false,
+      });
+    }
+  }, [boardData, slug, customUrl, router]);
 
   const handleClearSelection = () => {
     setSelectedMemo(null);

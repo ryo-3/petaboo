@@ -555,8 +555,18 @@ export const postComment = async (c: any) => {
       boardOriginalId = boards[0].slug;
     }
   } else if (targetType === "board") {
-    // ボードへのコメントの場合は、targetOriginalIdがboardOriginalId
-    boardOriginalId = targetOriginalId;
+    // targetOriginalIdはボードIDとして送られてくるため、slugを取得
+    const boardIdNumeric = Number.parseInt(targetOriginalId, 10);
+    if (!Number.isNaN(boardIdNumeric)) {
+      const boards = await db
+        .select({ slug: teamBoards.slug })
+        .from(teamBoards)
+        .where(eq(teamBoards.id, boardIdNumeric))
+        .limit(1);
+      boardOriginalId = boards.length > 0 ? boards[0].slug : targetOriginalId;
+    } else {
+      boardOriginalId = targetOriginalId;
+    }
   }
 
   // チーム全メンバーに通知を作成（投稿者以外）
@@ -826,6 +836,16 @@ export const deleteComment = async (c: any) => {
 
   // コメント削除
   await db.delete(teamComments).where(eq(teamComments.id, id));
+
+  // 関連する通知を削除
+  await db
+    .delete(teamNotifications)
+    .where(
+      and(
+        eq(teamNotifications.sourceType, "comment"),
+        eq(teamNotifications.sourceId, id),
+      ),
+    );
 
   return c.body(null, 204);
 };

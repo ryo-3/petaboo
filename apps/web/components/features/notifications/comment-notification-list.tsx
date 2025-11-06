@@ -37,6 +37,10 @@ export default function CommentNotificationList({
     // 今は単にホームに戻る
     if (teamContext?.teamSlug) {
       const baseTeamUrl = `/team/${teamContext.teamSlug}`;
+      console.log("[CommentNotificationList] navigate", {
+        notificationId: notification.id,
+        url: baseTeamUrl,
+      });
       router.push(baseTeamUrl);
     }
   };

@@ -67,6 +67,10 @@ function NotificationList({
   const handleGoToDestination = () => {
     if (teamName) {
       const tab = getDestinationTab();
+      console.log("[NotificationList] navigate team destination", {
+        tab,
+        url: `/team/${teamName}?tab=${tab}`,
+      });
       router.push(`/team/${teamName}?tab=${tab}`);
     }
   };
@@ -80,6 +84,10 @@ function NotificationList({
 
     // 適切な画面に遷移
     const url = getNotificationUrl(notification, teamName);
+    console.log("[NotificationList] navigate comment notification", {
+      notificationId: notification.id,
+      url,
+    });
     if (url) {
       router.push(url);
     }

@@ -219,6 +219,10 @@ function Header() {
 
     // 適切な画面に遷移
     const url = getNotificationUrl(notification, teamName);
+    console.log("[NotificationPopup] navigate", {
+      notificationId: notification.id,
+      url,
+    });
     if (url) {
       router.push(url);
     }

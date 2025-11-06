@@ -23,20 +23,22 @@ export function getNotificationUrl(
     return `/team/${teamName}`;
   }
 
-  // ボードへのコメント
-  if (targetType === "board") {
-    return `/team/${teamName}/board/${boardOriginalId}`;
+  const baseUrl = new URL(`/team/${teamName}`, "http://example.com");
+  baseUrl.searchParams.set("tab", "board");
+
+  if (boardOriginalId) {
+    baseUrl.searchParams.set("slug", boardOriginalId);
+    if (/^\d+$/.test(boardOriginalId)) {
+      baseUrl.searchParams.set("boardId", boardOriginalId);
+    }
   }
 
-  // メモへのコメント - ボード画面でそのメモを開く
-  if (targetType === "memo") {
-    return `/team/${teamName}/board/${boardOriginalId}?memo=${targetOriginalId}`;
+  // ターゲット種別ごとのクエリ付与
+  if (targetType === "memo" && targetOriginalId) {
+    baseUrl.searchParams.set("memo", targetOriginalId);
+  } else if (targetType === "task" && targetOriginalId) {
+    baseUrl.searchParams.set("task", targetOriginalId);
   }
 
-  // タスクへのコメント - ボード画面でそのタスクを開く
-  if (targetType === "task") {
-    return `/team/${teamName}/board/${boardOriginalId}?task=${targetOriginalId}`;
-  }
-
-  return `/team/${teamName}`;
+  return `${baseUrl.pathname}${baseUrl.search}`;
 }

@@ -6,6 +6,7 @@ import { databaseMiddleware } from "../../middleware/database";
 import { memos, deletedMemos } from "../../db/schema/memos";
 import { boardItems } from "../../db/schema/boards";
 import { taggings } from "../../db/schema/tags";
+import { teamNotifications } from "../../db/schema/team/notifications";
 import {
   generateOriginalId,
   generateUuid,
@@ -411,6 +412,16 @@ app.openapi(
           and(
             eq(boardItems.itemType, "memo"),
             eq(boardItems.originalId, note.originalId),
+          ),
+        );
+
+      // Step 2.5: 関連する通知を削除
+      await db
+        .delete(teamNotifications)
+        .where(
+          and(
+            eq(teamNotifications.targetType, "memo"),
+            eq(teamNotifications.targetOriginalId, note.originalId),
           ),
         );
 

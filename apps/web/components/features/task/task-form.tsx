@@ -236,7 +236,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
           onChange={(value) =>
             onStatusChange(value as "todo" | "in_progress" | "completed")
           }
-          fullWidth
+          width="96px"
           disabled={isDeleted}
         />
 
@@ -308,7 +308,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
             onChange={(value) =>
               onStatusChange(value as "todo" | "in_progress" | "completed")
             }
-            fullWidth
+            width="96px"
             disabled={isDeleted}
             hideLabel={true}
             compactMode={true}
@@ -439,7 +439,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
           onChange={(value) =>
             onStatusChange(value as "todo" | "in_progress" | "completed")
           }
-          fullWidth
+          width="96px"
           disabled={isDeleted}
         />
 

@@ -345,16 +345,11 @@ function MemoScreen({
   );
   const memoScreenMode = screenMode as MemoScreenMode;
 
-  const handleSelectMemoWithLog = useCallback(
+  const handleSelectMemo = useCallback(
     (memo: Memo | null) => {
-      console.log("[MemoScreen] onSelectMemo", {
-        memoId: memo?.id,
-        title: memo?.title,
-        screenMode: memoScreenMode,
-      });
       onSelectMemo(memo);
     },
-    [onSelectMemo, memoScreenMode],
+    [onSelectMemo],
   );
 
   // チームモード・個人モードで新規作成状態をContextに反映
@@ -372,30 +367,23 @@ function MemoScreen({
   // 保存完了後の処理（超シンプル）
   const handleSaveComplete = useCallback(
     (savedMemo: Memo, wasEmpty: boolean, isNewMemo: boolean) => {
-      console.log("[MemoScreen] handleSaveComplete", {
-        savedMemoId: savedMemo?.id,
-        savedMemoTitle: savedMemo?.title,
-        wasEmpty,
-        isNewMemo,
-        screenMode: memoScreenMode,
-      });
       if (wasEmpty) {
         // 空メモは削除して閉じる
         onDeselectAndStayOnMemoList?.();
         setMemoScreenMode("list");
       } else if (isNewMemo) {
         // 新規作成後は、作成されたメモを選択して表示モードに切り替え
-        handleSelectMemoWithLog(savedMemo);
+        handleSelectMemo(savedMemo);
         setMemoScreenMode("view");
       } else {
         // 既存メモ更新は選択状態更新
-        handleSelectMemoWithLog(savedMemo);
+        handleSelectMemo(savedMemo);
       }
     },
     [
       onDeselectAndStayOnMemoList,
       setMemoScreenMode,
-      handleSelectMemoWithLog,
+      handleSelectMemo,
       memoScreenMode,
     ],
   );
@@ -518,7 +506,7 @@ function MemoScreen({
     nextItemAfterDelete,
   } = useMemoDeleteWithNextSelection({
     memos,
-    onSelectMemo: handleSelectMemoWithLog,
+    onSelectMemo: handleSelectMemo,
     setMemoScreenMode,
     onDeselectAndStayOnMemoList,
     handleRightEditorDelete,
@@ -586,7 +574,7 @@ function MemoScreen({
         );
         if (targetMemo) {
           initialMemoIdRef.current = initialMemoId;
-          handleSelectMemoWithLog(targetMemo);
+          handleSelectMemo(targetMemo);
         }
       }
     } else {
@@ -595,7 +583,7 @@ function MemoScreen({
         initialMemoIdRef.current = null;
       }
     }
-  }, [initialMemoId, memos, selectedMemo, handleSelectMemoWithLog]);
+  }, [initialMemoId, memos, selectedMemo, handleSelectMemo]);
 
   // memosが更新されたら削除完了を検知して次選択
   useEffect(() => {
@@ -622,7 +610,7 @@ function MemoScreen({
         onSelectDeletedMemo(null);
         setMemoScreenMode("list");
       } else if (newTab === "deleted" && selectedMemo) {
-        handleSelectMemoWithLog(null);
+        handleSelectMemo(null);
         setMemoScreenMode("list");
       }
 
@@ -639,7 +627,7 @@ function MemoScreen({
     [
       selectedMemo,
       selectedDeletedMemo,
-      handleSelectMemoWithLog,
+      handleSelectMemo,
       onSelectDeletedMemo,
       setActiveTab,
       setMemoScreenMode,
@@ -648,13 +636,13 @@ function MemoScreen({
 
   // 選択ハンドラーパターン
   const {
-    handleSelectItem: handleSelectMemo,
+    handleSelectItem: handleSelectMemoFromHandlers,
     handleSelectDeletedItem: handleSelectDeletedMemo,
     handleCreateNew,
     handleRightPanelClose,
   } = useSelectionHandlers<Memo, DeletedMemo>({
     setScreenMode: (mode: string) => setMemoScreenMode(mode as MemoScreenMode),
-    onSelectItem: handleSelectMemoWithLog,
+    onSelectItem: handleSelectMemo,
     onSelectDeletedItem: onSelectDeletedMemo,
     onDeselectAndStay: onDeselectAndStayOnMemoList,
     onClose: onClose,
@@ -699,7 +687,7 @@ function MemoScreen({
       if (onDeselectAndStayOnMemoList) {
         onDeselectAndStayOnMemoList();
       } else {
-        handleSelectMemoWithLog(null);
+        handleSelectMemo(null);
       }
     };
 
@@ -714,7 +702,7 @@ function MemoScreen({
       window.removeEventListener(backEventName, handleBackRequest);
     };
   }, [
-    handleSelectMemoWithLog,
+    handleSelectMemo,
     onDeselectAndStayOnMemoList,
     teamMode,
     screenMode,

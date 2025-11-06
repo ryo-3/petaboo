@@ -750,11 +750,6 @@ function MemoEditor({
       let createdMemo: Memo | null = null;
 
       if (hasOnlyImages) {
-        console.log("[MemoEditor] 画像のみのメモ保存を検出", {
-          isNewMemo,
-          selectedBoardIds,
-          initialBoardId,
-        });
         // 画像のみの場合は「無題」で新規作成
         const newMemoData = {
           title: " ", // 最低1文字必要なので半角スペース
@@ -786,10 +781,6 @@ function MemoEditor({
           const newMemo = (await response.json()) as Memo;
           targetOriginalId = OriginalIdUtils.fromItem(newMemo) || "";
           createdMemo = newMemo;
-          console.log("[MemoEditor] new memo created", {
-            targetOriginalId,
-            createdMemoId: newMemo?.id,
-          });
 
           // キャッシュ更新
           queryClient.invalidateQueries({
@@ -849,14 +840,6 @@ function MemoEditor({
 
           // キャッシュ更新
           queryClient.invalidateQueries({ queryKey: ["memos"] });
-
-          if (!targetOriginalId) {
-            console.warn("[MemoEditor] 新規メモのoriginalId取得に失敗しました");
-          } else {
-            console.log("[MemoEditor] 新規メモ作成完了", {
-              targetOriginalId,
-            });
-          }
         }
 
         if (targetOriginalId) {
@@ -867,8 +850,6 @@ function MemoEditor({
                 ? [initialBoardId]
                 : [];
 
-          console.log("[MemoEditor] ボード紐付け対象", { boardsToAdd });
-
           for (const boardId of boardsToAdd) {
             try {
               await addItemToBoard.mutateAsync({
@@ -878,10 +859,6 @@ function MemoEditor({
                   itemId: targetOriginalId,
                 },
               });
-              console.log("[MemoEditor] ボード紐付け完了", {
-                boardId,
-                targetOriginalId,
-              });
             } catch (error) {
               const message =
                 error instanceof Error ? error.message : String(error);
@@ -890,8 +867,6 @@ function MemoEditor({
                   boardId,
                   message,
                 });
-              } else {
-                console.log("[MemoEditor] ボードに既に存在", { boardId });
               }
             }
           }
@@ -924,10 +899,6 @@ function MemoEditor({
 
         // React QueryのキャッシュからmemosQueryを取得して、最新の作成メモを特定
         const memosQuery = queryClient.getQueryData<Memo[]>(["memos"]);
-        console.log("[MemoEditor] memos cache after save", {
-          cacheSize: memosQuery?.length,
-          hasOnlyImages,
-        });
 
         if (memosQuery && memosQuery.length > 0) {
           // 最新のメモ（作成時刻順で最後）を取得
@@ -941,16 +912,11 @@ function MemoEditor({
               await updateTaggings(targetOriginalId);
               setHasManualChanges(false);
             }
-            console.log("[MemoEditor] latest memo from cache", {
-              latestMemoId: latestMemo.id,
-              targetOriginalId,
-            });
           }
         } else {
-          console.warn("[MemoEditor] 最新メモがキャッシュに見つからない", {
-            hasOnlyImages,
-            queryKey: ["memos"],
-          });
+          /**
+           * 最新メモが見つからない場合はスキップ
+           */
         }
       }
 
@@ -970,17 +936,7 @@ function MemoEditor({
 
         // 画像のみ保存の場合、作成されたメモを選択してビューモードに切り替え
         if (hasOnlyImages) {
-          console.log("[MemoEditor] before selecting created memo", {
-            hasCreatedMemo: !!createdMemo,
-            createdMemoId: createdMemo?.id,
-          });
           if (createdMemo) {
-            console.log(
-              "[MemoEditor] queueing onSaveComplete with created memo",
-              {
-                createdMemoId: createdMemo.id,
-              },
-            );
             pendingSaveResultRef.current = {
               savedMemo: createdMemo,
               wasEmpty: false,
@@ -995,10 +951,6 @@ function MemoEditor({
             await new Promise((resolve) => setTimeout(resolve, 100));
 
             const memosQuery = queryClient.getQueryData<Memo[]>(queryKey);
-            console.log("[MemoEditor] cache after invalidate", {
-              queryKey,
-              size: memosQuery?.length,
-            });
             if (memosQuery && memosQuery.length > 0) {
               // 最新のメモ（作成時刻順で最後）を取得
               const latestMemo = [...memosQuery].sort(
@@ -1006,9 +958,6 @@ function MemoEditor({
               )[0];
 
               if (latestMemo) {
-                console.log("[MemoEditor] queueing onSaveComplete", {
-                  latestMemoId: latestMemo.id,
-                });
                 pendingSaveResultRef.current = {
                   savedMemo: latestMemo,
                   wasEmpty: false,
@@ -1016,9 +965,7 @@ function MemoEditor({
                 };
               }
             } else {
-              console.warn("[MemoEditor] memosQuery empty after invalidate", {
-                queryKey,
-              });
+              // クエリ結果が空の場合は追加処理なし
             }
           }
         }
@@ -1445,18 +1392,6 @@ function MemoEditor({
                           memo.id > 0 &&
                           !content.trim() &&
                           pendingImages.length === 0);
-
-                      if (pendingImages.length > 0 && disabled) {
-                        console.log("[MemoEditor] 保存ボタンが無効のまま", {
-                          hasChanges,
-                          hasTagChanges,
-                          pendingImages: pendingImages.length,
-                          pendingDeletes: pendingDeletes.length,
-                          contentLength: content.trim().length,
-                          memoId: memo?.id,
-                          isUploading,
-                        });
-                      }
 
                       return disabled;
                     })()}

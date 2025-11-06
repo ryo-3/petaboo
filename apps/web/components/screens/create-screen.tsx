@@ -73,27 +73,17 @@ function CreateScreen({
   // モバイルフッターの戻るボタンイベントをリッスン
   useEffect(() => {
     const handleMemoBackRequest = () => {
-      console.log(
-        "📱 CreateScreen: memo-editor-mobile-back-requested イベント受信",
-      );
       if (onShowMemoList) {
-        console.log("→ onShowMemoList() を呼び出し");
         onShowMemoList();
       } else {
-        console.log("→ onClose() を呼び出し");
         onClose();
       }
     };
 
     const handleTaskBackRequest = () => {
-      console.log(
-        "📱 CreateScreen: task-editor-mobile-back-requested イベント受信",
-      );
       if (onShowTaskList) {
-        console.log("→ onShowTaskList() を呼び出し");
         onShowTaskList();
       } else {
-        console.log("→ onClose() を呼び出し");
         onClose();
       }
     };

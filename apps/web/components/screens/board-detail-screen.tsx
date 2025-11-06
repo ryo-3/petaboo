@@ -244,17 +244,12 @@ function BoardDetailScreen({
   useEffect(() => {
     const handleSectionChange = (event: CustomEvent) => {
       const { section } = event.detail;
-      console.log("board-section-change event received:", section);
-      console.log("Current state:", { showMemo, showTask, showComment });
 
       if (section === "memos") {
-        console.log("Toggling memos from", showMemo, "to", !showMemo);
         handleMemoToggle(!showMemo);
       } else if (section === "tasks") {
-        console.log("Toggling tasks from", showTask, "to", !showTask);
         handleTaskToggle(!showTask);
       } else if (section === "comments") {
-        console.log("Toggling comments from", showComment, "to", !showComment);
         handleCommentToggle(!showComment);
       }
     };

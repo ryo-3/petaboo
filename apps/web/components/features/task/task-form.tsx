@@ -227,7 +227,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
   // ステータス欄のみ表示（スクロール領域用）
   if (statusOnly) {
     return (
-      <div className="flex gap-2.5 pl-2">
+      <div className="flex gap-2 pl-2">
         <CustomSelector
           label="ステータス"
           options={statusOptions}
@@ -251,7 +251,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
         />
 
         <div className="flex-1 flex gap-2.5 items-center">
-          <div className="w-32">
+          <div className="w-28">
             <DatePickerSimple
               value={dueDate}
               onChange={onDueDateChange}
@@ -299,7 +299,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
         </div>
 
         {/* ステータス欄（常に表示） */}
-        <div className="flex gap-2.5 mt-1">
+        <div className="flex gap-2 mt-1">
           <CustomSelector
             label="ステータス"
             options={statusOptions}
@@ -326,7 +326,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
             compactMode={true}
           />
 
-          <div className="w-32">
+          <div className="w-28">
             <DatePickerSimple
               value={dueDate}
               onChange={onDueDateChange}
@@ -425,7 +425,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
         />
       </div>
 
-      <div className="flex gap-2.5">
+      <div className="flex gap-2">
         <CustomSelector
           label="ステータス"
           options={statusOptions}
@@ -449,7 +449,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
         />
 
         <div className="flex-1 flex gap-2.5 items-center">
-          <div className="w-32">
+          <div className="w-28">
             <DatePickerSimple
               value={dueDate}
               onChange={onDueDateChange}

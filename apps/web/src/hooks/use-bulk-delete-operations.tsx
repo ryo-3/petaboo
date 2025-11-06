@@ -8,6 +8,11 @@ import { executeWithAnimation } from "@/src/utils/bulkAnimationUtils";
 import { DeletionWarningMessage } from "@/components/ui/modals/deletion-warning-message";
 import { useQueryClient } from "@tanstack/react-query";
 import React from "react";
+import {
+  shouldUsePermanentDelete,
+  getItemOriginalId,
+  logDeleteOperation,
+} from "@/src/utils/boardDeleteUtils";
 
 interface UseBulkDeleteOperationsProps {
   boardId: number;
@@ -269,42 +274,53 @@ export function useBulkDeleteOperations({
       };
 
       const onApiCall = async (id: number) => {
+        // タブ判定ロジックを共通化
+        const isPermanentDelete = shouldUsePermanentDelete(
+          itemType,
+          activeMemoTab,
+          activeTaskTab,
+        );
+
         if (itemType === "memo") {
-          // 削除済みタブの場合は完全削除、それ以外は通常削除
-          if (activeMemoTab === "deleted") {
-            // 削除済みメモから検索
-            const deletedMemo = boardDeletedItems?.memos?.find(
-              (m) => m.id === id,
-            );
-            const originalId = deletedMemo?.originalId || id.toString();
-            console.log("🗑️ メモ完全削除:", {
+          if (isPermanentDelete) {
+            // 完全削除: boardDeletedItemsから検索
+            const originalId = getItemOriginalId(
               id,
-              deletedMemo,
-              originalId,
-              deletedMemosCount: boardDeletedItems?.memos?.length || 0,
+              "memo",
+              true,
+              boardMemos,
+              boardDeletedItems,
+            );
+
+            logDeleteOperation("memo", true, id, originalId, activeMemoTab, {
+              deletedItemsCount: boardDeletedItems?.memos?.length || 0,
             });
+
             await permanentDeleteMemoMutation.mutateAsync(originalId);
           } else {
+            // 通常削除
+            logDeleteOperation("memo", false, id, id.toString(), activeMemoTab);
             await deleteMemoMutation.mutateAsync(id);
           }
         } else {
-          // 削除済みタブの場合は完全削除、それ以外は通常削除
-          if (activeTaskTab === "deleted") {
-            // 削除済みタスクから検索
-            const deletedTask = boardDeletedItems?.tasks?.find(
-              (t) => t.id === id,
-            );
-            const originalId = deletedTask?.originalId || id.toString();
-            console.log("🗑️ タスク完全削除:", {
+          if (isPermanentDelete) {
+            // 完全削除: boardDeletedItemsから検索
+            const originalId = getItemOriginalId(
               id,
-              deletedTask,
-              originalId,
-              deletedTasksCount: boardDeletedItems?.tasks?.length || 0,
-              activeTaskTab,
+              "task",
+              true,
+              boardTasks,
+              boardDeletedItems,
+            );
+
+            logDeleteOperation("task", true, id, originalId, activeTaskTab, {
+              deletedItemsCount: boardDeletedItems?.tasks?.length || 0,
             });
+
             await permanentDeleteTaskMutation.mutateAsync(originalId);
           } else {
-            console.log("📝 タスク通常削除:", { id, activeTaskTab });
+            // 通常削除
+            logDeleteOperation("task", false, id, id.toString(), activeTaskTab);
             await deleteTaskMutation.mutateAsync(id);
           }
         }
@@ -424,15 +440,14 @@ export function useBulkDeleteOperations({
     };
 
     const onApiCall = async (id: number) => {
-      // IDからoriginalIdを取得
-      let originalId: string;
-      if (deletingItemType === "memo") {
-        const memo = boardMemos.find((m) => m.id === id);
-        originalId = memo?.originalId || id.toString();
-      } else {
-        const task = boardTasks.find((t) => t.id === id);
-        originalId = task?.originalId || id.toString();
-      }
+      // IDからoriginalIdを取得（共通関数を使用）
+      const originalId = getItemOriginalId(
+        id,
+        deletingItemType,
+        false, // ボードから削除は通常削除扱い
+        deletingItemType === "memo" ? boardMemos : boardTasks,
+        boardDeletedItems,
+      );
 
       // ボードから削除APIを呼び出し
       await removeItemFromBoard.mutateAsync({

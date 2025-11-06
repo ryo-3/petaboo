@@ -12,6 +12,22 @@ const config = {
     'bg-slate-500',
     'bg-slate-600',
     'text-white',
+    // 動的に生成されるカラークラス（タスク・優先度・カテゴリーのセレクター用）
+    'bg-Green',
+    'bg-Green/10',
+    'bg-Green/20',
+    'bg-Green/70',
+    'bg-blue-600',
+    'bg-blue-200',
+    'bg-gray-400',
+    'bg-gray-500',
+    'bg-gray-100',
+    'bg-yellow-500',
+    'bg-red-500',
+    'bg-purple-500',
+    'bg-indigo-500',
+    'bg-pink-500',
+    'bg-orange-500',
   ],
   theme: {
     extend: {

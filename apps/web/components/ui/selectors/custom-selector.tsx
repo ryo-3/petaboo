@@ -160,7 +160,7 @@ function CustomSelector({
 
         {isOpen && (
           <div
-            className={`absolute top-full left-0 z-10 bg-white rounded-b-lg shadow-lg border border-gray-400 border-t-0 ${
+            className={`absolute top-full left-0 z-50 bg-white rounded-b-lg shadow-lg border border-gray-400 border-t-0 ${
               fullWidth ? "w-full" : "w-full"
             }`}
           >

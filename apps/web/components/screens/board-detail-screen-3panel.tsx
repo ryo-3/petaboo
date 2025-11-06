@@ -337,6 +337,7 @@ function BoardDetailScreen({
     teamId: teamId || undefined,
     boardMemos,
     boardTasks,
+    boardDeletedItems,
   });
 
   // タブテキスト表示制御

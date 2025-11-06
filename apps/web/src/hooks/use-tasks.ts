@@ -300,20 +300,6 @@ export function useDeleteTask(options?: {
       try {
         const token = await getToken();
 
-        // 削除前チェック: キャッシュ内にタスクが存在するか確認
-        const currentTasks =
-          teamMode && teamId
-            ? queryClient.getQueryData<Task[]>(["team-tasks", teamId])
-            : queryClient.getQueryData<Task[]>(["tasks"]);
-
-        const taskExists = currentTasks?.some((task) => task.id === id);
-
-        if (!taskExists) {
-          throw new Error(
-            `タスク(ID: ${id})は既に削除済みまたは存在しません。`,
-          );
-        }
-
         if (teamMode && teamId) {
           // チームタスク削除
           const response = await tasksApi.deleteTeamTask(

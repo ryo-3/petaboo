@@ -12,8 +12,8 @@ import {
   getTaskDisplayOrder,
 } from "@/src/utils/domUtils";
 import { useDeletedItemOperations } from "@/src/hooks/use-deleted-item-operations";
-import { useRestoreMemo } from "@/src/hooks/use-memos";
-import { useRestoreTask } from "@/src/hooks/use-tasks";
+import { useRestoreMemo, usePermanentDeleteMemo } from "@/src/hooks/use-memos";
+import { useRestoreTask, usePermanentDeleteTask } from "@/src/hooks/use-tasks";
 import { BoardItemWithContent, BoardWithItems } from "@/src/types/board";
 import { Memo, DeletedMemo } from "@/src/types/memo";
 import { Task, DeletedTask } from "@/src/types/task";
@@ -132,6 +132,17 @@ export function useBoardOperations({
     teamMode: isTeamMode,
     teamId,
     boardId,
+  });
+
+  // 完全削除用フック
+  const permanentDeleteMemoMutation = usePermanentDeleteMemo({
+    teamMode: isTeamMode,
+    teamId,
+  });
+
+  const permanentDeleteTaskMutation = usePermanentDeleteTask({
+    teamMode: isTeamMode,
+    teamId,
   });
 
   // ボード情報

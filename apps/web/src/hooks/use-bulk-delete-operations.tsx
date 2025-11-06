@@ -1,7 +1,7 @@
 import { useCallback, useState, ReactNode } from "react";
 import { useBulkDelete } from "@/components/ui/modals";
-import { useDeleteMemo } from "@/src/hooks/use-memos";
-import { useDeleteTask } from "@/src/hooks/use-tasks";
+import { useDeleteMemo, usePermanentDeleteMemo } from "@/src/hooks/use-memos";
+import { useDeleteTask, usePermanentDeleteTask } from "@/src/hooks/use-tasks";
 import { useRemoveItemFromBoard } from "@/src/hooks/use-boards";
 import { useBulkAnimation } from "@/src/hooks/use-bulk-animation";
 import { executeWithAnimation } from "@/src/utils/bulkAnimationUtils";
@@ -28,6 +28,12 @@ interface UseBulkDeleteOperationsProps {
   teamId?: number;
   boardMemos?: Array<{ id: number; originalId?: string }>;
   boardTasks?: Array<{ id: number; originalId?: string }>;
+  boardDeletedItems?:
+    | {
+        memos?: Array<{ id: number; originalId?: string }>;
+        tasks?: Array<{ id: number; originalId?: string }>;
+      }
+    | undefined;
 }
 
 interface UseBulkDeleteOperationsReturn {
@@ -82,6 +88,7 @@ export function useBulkDeleteOperations({
   teamId,
   boardMemos = [],
   boardTasks = [],
+  boardDeletedItems,
 }: UseBulkDeleteOperationsProps): UseBulkDeleteOperationsReturn {
   const [isMemoDeleting, setIsMemoDeleting] = useState(false);
   const [isMemoLidOpen, setIsMemoLidOpen] = useState(false);
@@ -113,6 +120,14 @@ export function useBulkDeleteOperations({
     teamId,
   });
   const deleteTaskMutation = useDeleteTask({
+    teamMode,
+    teamId,
+  });
+  const permanentDeleteMemoMutation = usePermanentDeleteMemo({
+    teamMode,
+    teamId,
+  });
+  const permanentDeleteTaskMutation = usePermanentDeleteTask({
     teamMode,
     teamId,
   });
@@ -255,9 +270,43 @@ export function useBulkDeleteOperations({
 
       const onApiCall = async (id: number) => {
         if (itemType === "memo") {
-          await deleteMemoMutation.mutateAsync(id);
+          // 削除済みタブの場合は完全削除、それ以外は通常削除
+          if (activeMemoTab === "deleted") {
+            // 削除済みメモから検索
+            const deletedMemo = boardDeletedItems?.memos?.find(
+              (m) => m.id === id,
+            );
+            const originalId = deletedMemo?.originalId || id.toString();
+            console.log("🗑️ メモ完全削除:", {
+              id,
+              deletedMemo,
+              originalId,
+              deletedMemosCount: boardDeletedItems?.memos?.length || 0,
+            });
+            await permanentDeleteMemoMutation.mutateAsync(originalId);
+          } else {
+            await deleteMemoMutation.mutateAsync(id);
+          }
         } else {
-          await deleteTaskMutation.mutateAsync(id);
+          // 削除済みタブの場合は完全削除、それ以外は通常削除
+          if (activeTaskTab === "deleted") {
+            // 削除済みタスクから検索
+            const deletedTask = boardDeletedItems?.tasks?.find(
+              (t) => t.id === id,
+            );
+            const originalId = deletedTask?.originalId || id.toString();
+            console.log("🗑️ タスク完全削除:", {
+              id,
+              deletedTask,
+              originalId,
+              deletedTasksCount: boardDeletedItems?.tasks?.length || 0,
+              activeTaskTab,
+            });
+            await permanentDeleteTaskMutation.mutateAsync(originalId);
+          } else {
+            console.log("📝 タスク通常削除:", { id, activeTaskTab });
+            await deleteTaskMutation.mutateAsync(id);
+          }
         }
       };
 
@@ -284,6 +333,13 @@ export function useBulkDeleteOperations({
       setCheckedTasks,
       deleteMemoMutation,
       deleteTaskMutation,
+      permanentDeleteMemoMutation,
+      permanentDeleteTaskMutation,
+      activeMemoTab,
+      activeTaskTab,
+      boardMemos,
+      boardTasks,
+      boardDeletedItems,
       deleteButtonRef,
       bulkAnimation,
     ],

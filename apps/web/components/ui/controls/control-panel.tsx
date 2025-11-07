@@ -18,7 +18,6 @@ import TagIcon from "@/components/icons/tag-icon";
 import BoardSelectionModal from "@/components/ui/modals/board-selection-modal";
 import TagSelectionModal from "@/components/ui/modals/tag-selection-modal";
 import { UnifiedFilterButton } from "@/components/ui/buttons/unified-filter-button";
-import { UnifiedFilterModal } from "@/components/ui/modals/unified-filter-modal";
 
 interface ControlPanelProps {
   // 基本設定
@@ -171,6 +170,8 @@ export default function ControlPanel({
     typeof window !== "undefined" ? window.innerWidth : 0,
   );
   const [controlWidth, setControlWidth] = useState(0);
+  const [isBoardFilterOpen, setIsBoardFilterOpen] = useState(false);
+  const [isTagFilterOpen, setIsTagFilterOpen] = useState(false);
 
   // コントロールパネルの位置管理
   const [controlPosition, setControlPosition] = useState<
@@ -437,7 +438,12 @@ export default function ControlPanel({
 
         {/* 統合フィルター（タグ・ボード） */}
         {(boardFilterEnabled || tagFilterEnabled) && (
-          <UnifiedFilterButton buttonSize="size-7" iconSize="size-4" />
+          <UnifiedFilterButton
+            buttonSize="size-7"
+            iconSize="w-4 h-4"
+            onOpenTagFilter={() => setIsTagFilterOpen(true)}
+            onOpenBoardFilter={() => setIsBoardFilterOpen(true)}
+          />
         )}
 
         {/* タグ表示切り替え（ボードモードのみ） */}
@@ -501,8 +507,35 @@ export default function ControlPanel({
         )}
       </div>
 
-      {/* 統合フィルターモーダル */}
-      <UnifiedFilterModal />
+      {boardFilterEnabled && (
+        <BoardSelectionModal
+          isOpen={isBoardFilterOpen}
+          onClose={() => setIsBoardFilterOpen(false)}
+          boards={boards || []}
+          selectedBoardIds={selectedBoardIds || []}
+          onSelectionChange={onBoardFilterChange!}
+          mode="filter"
+          filterMode={boardFilterMode}
+          onFilterModeChange={onBoardFilterModeChange}
+          topOffset={floatControls ? 72 : 0}
+        />
+      )}
+
+      {tagFilterEnabled && (
+        <TagSelectionModal
+          isOpen={isTagFilterOpen}
+          onClose={() => setIsTagFilterOpen(false)}
+          tags={tags || []}
+          selectedTagIds={selectedTagIds || []}
+          onSelectionChange={onTagFilterChange!}
+          mode="filter"
+          filterMode={tagFilterMode}
+          onFilterModeChange={onTagFilterModeChange}
+          teamMode={teamMode}
+          teamId={teamId ?? 0}
+          topOffset={floatControls ? 72 : 0}
+        />
+      )}
     </>
   );
 }

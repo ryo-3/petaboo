@@ -1,34 +1,43 @@
 "use client";
 
 import { useViewSettings } from "@/src/contexts/view-settings-context";
-import { Filter } from "lucide-react";
+import FilterIcon from "@/components/icons/filter-icon";
 import Tooltip from "@/components/ui/base/tooltip";
 
 interface UnifiedFilterButtonProps {
   buttonSize?: string;
   iconSize?: string;
+  onOpenTagFilter: () => void;
+  onOpenBoardFilter: () => void;
 }
 
 export function UnifiedFilterButton({
-  buttonSize = "size-9",
-  iconSize = "size-5",
+  buttonSize = "size-7",
+  iconSize = "w-4 h-4",
+  onOpenTagFilter,
+  onOpenBoardFilter,
 }: UnifiedFilterButtonProps) {
-  const { openFilterModal, getActiveFilterCount } = useViewSettings();
-  const count = getActiveFilterCount();
+  const { sessionState, openFilterModal } = useViewSettings();
+  const count =
+    sessionState.selectedTagIds.length + sessionState.selectedBoardIds.length;
+
+  const handleClick = () => {
+    // タグフィルターをデフォルトで開く（既存の動作に合わせる）
+    openFilterModal("tag");
+    onOpenTagFilter();
+  };
 
   return (
     <Tooltip text="フィルター" position="bottom">
       <button
-        onClick={() => openFilterModal()}
-        className={`${buttonSize} relative flex items-center justify-center rounded hover:bg-gray-100 transition-colors`}
-        aria-label="フィルター"
+        onClick={handleClick}
+        className={`${buttonSize} rounded-lg flex items-center justify-center transition-colors ${
+          count > 0
+            ? "bg-blue-500 text-white shadow-sm hover:bg-blue-600"
+            : "bg-gray-100 text-gray-500 hover:text-gray-800 hover:bg-gray-200"
+        }`}
       >
-        <Filter className={iconSize} />
-        {count > 0 && (
-          <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 font-medium">
-            {count}
-          </span>
-        )}
+        <FilterIcon className={iconSize} />
       </button>
     </Tooltip>
   );

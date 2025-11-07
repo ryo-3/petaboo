@@ -13,6 +13,7 @@ export interface Task extends BaseItemFields, TeamCreatorFields {
   dueDate: number | null; // Unix timestamp
   categoryId: number | null;
   boardCategoryId: number | null; // ボードカテゴリーID
+  assigneeId?: string | null;
   commentCount?: number;
 }
 
@@ -29,6 +30,7 @@ export interface DeletedTask
   dueDate: number | null;
   categoryId: number | null;
   boardCategoryId: number | null; // ボードカテゴリーID
+  assigneeId?: string | null;
   commentCount?: number;
 }
 
@@ -40,6 +42,7 @@ export interface CreateTaskData {
   dueDate?: number;
   categoryId?: number | null;
   boardCategoryId?: number | null; // ボードカテゴリーID
+  assigneeId?: string | null;
 }
 
 export interface UpdateTaskData {
@@ -50,4 +53,5 @@ export interface UpdateTaskData {
   dueDate?: number;
   categoryId?: number | null;
   boardCategoryId?: number | null; // ボードカテゴリーID
+  assigneeId?: string | null;
 }

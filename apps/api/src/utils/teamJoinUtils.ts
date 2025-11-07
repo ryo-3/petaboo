@@ -42,6 +42,7 @@ export function getTeamTaskSelectFields() {
     dueDate: teamTasks.dueDate,
     categoryId: teamTasks.categoryId,
     boardCategoryId: teamTasks.boardCategoryId,
+    assigneeId: teamTasks.assigneeId,
     createdAt: teamTasks.createdAt,
     updatedAt: teamTasks.updatedAt,
     createdBy: teamMembers.displayName, // チーム専用の表示名

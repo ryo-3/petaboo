@@ -203,6 +203,10 @@ export function useUpdateTask(options?: {
               priority:
                 data.priority !== undefined ? data.priority : task.priority,
               dueDate: data.dueDate !== undefined ? data.dueDate : task.dueDate,
+              assigneeId:
+                data.assigneeId !== undefined
+                  ? (data.assigneeId ?? null)
+                  : (task.assigneeId ?? null),
               updatedAt: Math.floor(Date.now() / 1000),
             };
           }
@@ -244,6 +248,10 @@ export function useUpdateTask(options?: {
                         data.dueDate !== undefined
                           ? data.dueDate
                           : item.content.dueDate,
+                      assigneeId:
+                        data.assigneeId !== undefined
+                          ? (data.assigneeId ?? null)
+                          : (item.content.assigneeId ?? null),
                       updatedAt: Math.floor(Date.now() / 1000),
                     },
                     updatedAt: Math.floor(Date.now() / 1000),

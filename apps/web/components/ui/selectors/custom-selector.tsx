@@ -146,6 +146,7 @@ function CustomSelector({
           <div
             className={`${FORM_STYLES.selectorText} ${compactMode ? "px-1 md:px-1.5 text-xs md:text-sm" : ""}`}
           >
+            {selectedOption?.icon && <span>{selectedOption.icon}</span>}
             {selectedOption?.color && (
               <div
                 className={`w-3 h-3 rounded-full ${selectedOption.color}`}

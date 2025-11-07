@@ -56,6 +56,7 @@ import {
 } from "@/src/utils/urlUtils";
 import { useTeamContext } from "@/contexts/team-context";
 import { useTeamDetail } from "@/src/contexts/team-detail-context";
+import { useTeamDetail as useTeamDetailQuery } from "@/src/hooks/use-team-detail";
 
 interface TaskEditorProps {
   task?: Task | DeletedTask | null;
@@ -141,11 +142,17 @@ function TaskEditor({
   taskEditorHasUnsavedChangesRef,
   taskEditorShowConfirmModalRef,
 }: TaskEditorProps) {
-  const { isTeamMode: teamMode, teamId: teamIdRaw } = useTeamContext();
+  const {
+    isTeamMode: teamMode,
+    teamId: teamIdRaw,
+    teamSlug,
+  } = useTeamContext();
   const teamId = teamIdRaw ?? undefined; // Hook互換性のため変換
 
   // TeamDetailContext経由でモバイルフッターに状態を公開
   const teamDetailContext = teamMode ? useTeamDetail() : null;
+  const { data: teamDetailData } = useTeamDetailQuery(teamSlug || "");
+  const teamMembers = teamMode ? (teamDetailData?.members ?? []) : [];
 
   // IMPORTANT: originalIdを文字列として強制変換（ボードAPI経由だと数値になる場合がある）
   const task = rawTask
@@ -565,6 +572,7 @@ function TaskEditor({
     content: description,
     priority,
     status,
+    assigneeId: formAssigneeId,
     selectedBoardIds,
     isSaving,
     saveError,
@@ -574,6 +582,7 @@ function TaskEditor({
     handleContentChange: handleDescriptionChange,
     handlePriorityChange,
     handleStatusChange,
+    handleAssigneeChange,
     handleBoardChange,
     showBoardChangeModal,
     pendingBoardChanges,
@@ -656,6 +665,7 @@ function TaskEditor({
         priority: finalPriority as "low" | "medium" | "high",
         categoryId: categoryId,
         boardCategoryId: boardCategoryId,
+        assigneeId: formAssigneeId ?? null,
         dueDate: dueDate
           ? Math.floor(new Date(dueDate).getTime() / 1000)
           : null,
@@ -671,6 +681,7 @@ function TaskEditor({
         priority: finalPriority as "low" | "medium" | "high",
         categoryId: categoryId,
         boardCategoryId: boardCategoryId,
+        assigneeId: formAssigneeId ?? null,
         createdAt: Math.floor(Date.now() / 1000),
         updatedAt: Math.floor(Date.now() / 1000),
         dueDate: dueDate
@@ -1278,6 +1289,9 @@ function TaskEditor({
             isDeleted={isDeleted}
             initialBoardId={initialBoardId}
             teamMode={teamMode}
+            assigneeId={formAssigneeId ?? null}
+            onAssigneeChange={teamMode ? handleAssigneeChange : undefined}
+            teamMembers={teamMembers}
             createdBy={createdBy}
             createdByAvatarColor={createdByAvatarColor}
             onImagePaste={handleFileSelect}
@@ -1345,6 +1359,9 @@ function TaskEditor({
                 isDeleted={isDeleted}
                 initialBoardId={initialBoardId}
                 teamMode={teamMode}
+                assigneeId={formAssigneeId ?? null}
+                onAssigneeChange={teamMode ? handleAssigneeChange : undefined}
+                teamMembers={teamMembers}
                 createdBy={createdBy}
                 createdByAvatarColor={createdByAvatarColor}
                 onImagePaste={handleFileSelect}

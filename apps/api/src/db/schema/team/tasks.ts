@@ -13,6 +13,7 @@ export const teamTasks = sqliteTable("team_tasks", {
   dueDate: integer("due_date"), // Unix timestamp
   categoryId: integer("category_id"),
   boardCategoryId: integer("board_category_id"), // ボードカテゴリーID
+  assigneeId: text("assignee_id"),
   createdAt: integer("created_at").notNull(),
   updatedAt: integer("updated_at"),
 });
@@ -30,6 +31,7 @@ export const teamDeletedTasks = sqliteTable("team_deleted_tasks", {
   dueDate: integer("due_date"),
   categoryId: integer("category_id"),
   boardCategoryId: integer("board_category_id"), // ボードカテゴリーID
+  assigneeId: text("assignee_id"),
   createdAt: integer("created_at").notNull(),
   updatedAt: integer("updated_at"),
   deletedAt: integer("deleted_at").notNull(), // 削除日時

@@ -37,6 +37,7 @@ const TeamTaskSchema = z.object({
   dueDate: z.number().nullable(),
   categoryId: z.number().nullable(),
   boardCategoryId: z.number().nullable(),
+  assigneeId: z.string().nullable(),
   createdAt: z.number(),
   updatedAt: z.number().nullable(),
   createdBy: z.string().nullable(), // 作成者の表示名
@@ -55,6 +56,7 @@ const TeamTaskInputSchema = z.object({
   dueDate: z.number().optional(),
   categoryId: z.number().optional(),
   boardCategoryId: z.number().optional(),
+  assigneeId: z.string().nullable().optional(),
 });
 
 const TeamTaskUpdateSchema = z.object({
@@ -72,6 +74,7 @@ const TeamTaskUpdateSchema = z.object({
   dueDate: z.number().optional(),
   categoryId: z.number().optional(),
   boardCategoryId: z.number().optional(),
+  assigneeId: z.string().nullable().optional(),
 });
 
 // チームメンバー確認のヘルパー関数
@@ -257,7 +260,22 @@ app.openapi(
       dueDate,
       categoryId,
       boardCategoryId,
+      assigneeId,
     } = parsed.data;
+
+    const normalizedAssigneeId =
+      assigneeId && assigneeId !== "" ? assigneeId : null;
+
+    if (normalizedAssigneeId) {
+      const assigneeMember = await checkTeamMember(
+        db,
+        teamId,
+        normalizedAssigneeId,
+      );
+      if (!assigneeMember) {
+        return c.json({ error: "Assignee must be a team member" }, 400);
+      }
+    }
 
     const insertData = {
       teamId,
@@ -271,6 +289,7 @@ app.openapi(
       dueDate,
       categoryId,
       boardCategoryId,
+      assigneeId: normalizedAssigneeId,
       createdAt: Math.floor(Date.now() / 1000),
     };
 
@@ -398,8 +417,27 @@ app.openapi(
       );
     }
 
+    if (
+      "assigneeId" in parsed.data &&
+      parsed.data.assigneeId &&
+      parsed.data.assigneeId !== ""
+    ) {
+      const assigneeMember = await checkTeamMember(
+        db,
+        teamId,
+        parsed.data.assigneeId,
+      );
+      if (!assigneeMember) {
+        return c.json({ error: "Assignee must be a team member" }, 400);
+      }
+    }
+
+    const { assigneeId, ...rest } = parsed.data;
     const updateData = {
-      ...parsed.data,
+      ...rest,
+      ...(assigneeId !== undefined
+        ? { assigneeId: assigneeId === "" ? null : assigneeId }
+        : {}),
       updatedAt: Math.floor(Date.now() / 1000),
     };
 
@@ -503,6 +541,7 @@ app.openapi(
         dueDate: task.dueDate,
         categoryId: task.categoryId,
         boardCategoryId: task.boardCategoryId,
+        assigneeId: task.assigneeId,
         createdAt: task.createdAt,
         updatedAt: task.updatedAt,
         deletedAt: Math.floor(Date.now() / 1000),
@@ -547,6 +586,7 @@ app.openapi(
                 dueDate: z.number().nullable(),
                 categoryId: z.number().nullable(),
                 boardCategoryId: z.number().nullable(),
+                assigneeId: z.string().nullable(),
                 createdAt: z.number(),
                 updatedAt: z.number().nullable(),
                 deletedAt: z.number(),
@@ -603,6 +643,7 @@ app.openapi(
           dueDate: teamDeletedTasks.dueDate,
           categoryId: teamDeletedTasks.categoryId,
           boardCategoryId: teamDeletedTasks.boardCategoryId,
+          assigneeId: teamDeletedTasks.assigneeId,
           createdAt: teamDeletedTasks.createdAt,
           updatedAt: teamDeletedTasks.updatedAt,
           deletedAt: teamDeletedTasks.deletedAt,
@@ -749,6 +790,7 @@ app.openapi(
           dueDate: taskData.dueDate,
           categoryId: taskData.categoryId,
           boardCategoryId: taskData.boardCategoryId,
+          assigneeId: taskData.assigneeId,
           createdAt: taskData.createdAt,
           updatedAt: currentTimestamp,
         })

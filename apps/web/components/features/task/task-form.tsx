@@ -9,6 +9,7 @@ import type { Task } from "@/src/types/task";
 import type { Tag } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
 import type { BoardCategory } from "@/src/types/board-categories";
+import type { TeamMember } from "@/src/hooks/use-team-detail";
 import {
   getPriorityEditorColor,
   getPriorityText,
@@ -27,6 +28,7 @@ import { TiptapEditor, Toolbar } from "../memo/tiptap-editor";
 import type { Editor } from "@tiptap/react";
 import CreatorAvatar from "@/components/shared/creator-avatar";
 import DateInfo from "@/components/shared/date-info";
+import AssigneeSelector from "./assignee-selector";
 
 interface TaskFormProps {
   task?: Task | null;
@@ -54,6 +56,9 @@ interface TaskFormProps {
   isDeleted?: boolean;
   initialBoardId?: number;
   showBoardCategory?: boolean; // ボード詳細でのみtrue
+  assigneeId?: string | null;
+  onAssigneeChange?: (value: string | null) => void;
+  teamMembers?: TeamMember[];
   // チーム機能
   teamMode?: boolean;
   createdBy?: string | null;
@@ -106,6 +111,9 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
     isDeleted = false,
     initialBoardId,
     showBoardCategory = false,
+    assigneeId = null,
+    onAssigneeChange,
+    teamMembers = [],
     teamMode: _teamMode = false,
     createdBy,
     createdByAvatarColor,
@@ -187,6 +195,10 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
     },
   ];
 
+  const resolvedAssigneeId = assigneeId ?? null;
+  const showAssigneeSelector =
+    _teamMode && typeof onAssigneeChange === "function";
+
   // タイトル・日付のみ表示（固定ヘッダー用）
   if (titleAndDateOnly) {
     return (
@@ -249,6 +261,17 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
           fullWidth
           disabled={isDeleted}
         />
+
+        {showAssigneeSelector && onAssigneeChange && (
+          <AssigneeSelector
+            members={teamMembers}
+            value={resolvedAssigneeId}
+            onChange={onAssigneeChange}
+            disabled={isDeleted}
+            width="160px"
+            className="flex-shrink-0"
+          />
+        )}
 
         <div className="flex-1 flex gap-2.5 items-center">
           <div className="w-28">
@@ -325,6 +348,19 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
             hideLabel={true}
             compactMode={true}
           />
+
+          {showAssigneeSelector && onAssigneeChange && (
+            <AssigneeSelector
+              members={teamMembers}
+              value={resolvedAssigneeId}
+              onChange={onAssigneeChange}
+              disabled={isDeleted}
+              width="140px"
+              compact
+              hideLabel
+              className="flex-shrink-0"
+            />
+          )}
 
           <div className="w-28">
             <DatePickerSimple
@@ -447,6 +483,17 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
           fullWidth
           disabled={isDeleted}
         />
+
+        {showAssigneeSelector && onAssigneeChange && (
+          <AssigneeSelector
+            members={teamMembers}
+            value={resolvedAssigneeId}
+            onChange={onAssigneeChange}
+            disabled={isDeleted}
+            width="180px"
+            className="flex-shrink-0"
+          />
+        )}
 
         <div className="flex-1 flex gap-2.5 items-center">
           <div className="w-28">

@@ -8,7 +8,6 @@ import ContentFilter from "@/components/ui/controls/content-filter";
 import SettingsIcon from "@/components/icons/settings-icon";
 import Tooltip from "@/components/ui/base/tooltip";
 import SortToggle from "@/components/ui/buttons/sort-toggle";
-import EditDateToggle from "@/components/ui/buttons/edit-date-toggle";
 import TagDisplayToggle from "@/components/ui/buttons/tag-display-toggle";
 import CheckSquareIcon from "@/components/icons/check-square-icon";
 import SquareIcon from "@/components/icons/square-icon";
@@ -72,8 +71,6 @@ interface ControlPanelProps {
   ) => void;
 
   // 表示切り替え
-  showEditDate?: boolean;
-  onShowEditDateChange?: (show: boolean) => void;
   showTagDisplay?: boolean;
   onShowTagDisplayChange?: (show: boolean) => void;
 
@@ -138,8 +135,6 @@ export default function ControlPanel({
   selectedItemType = null,
   sortOptions = [],
   onSortChange,
-  showEditDate = false,
-  onShowEditDateChange,
   showTagDisplay = false,
   onShowTagDisplayChange,
   boards,
@@ -470,16 +465,6 @@ export default function ControlPanel({
               <TagIcon className="w-4 h-4" />
             </button>
           </Tooltip>
-        )}
-
-        {/* 編集日表示切り替え */}
-        {onShowEditDateChange && (
-          <EditDateToggle
-            showEditDate={showEditDate}
-            onToggle={onShowEditDateChange}
-            buttonSize="size-7"
-            iconSize="size-4"
-          />
         )}
 
         {/* タグ表示切り替え（ボードモードのみ） */}

@@ -70,8 +70,6 @@ interface DesktopUpperProps {
     }>,
   ) => void;
   // Date display toggle
-  showEditDate?: boolean;
-  onShowEditDateChange?: (show: boolean) => void;
   // Tag display toggle
   showTagDisplay?: boolean;
   onShowTagDisplayChange?: (show: boolean) => void;
@@ -144,8 +142,6 @@ function DesktopUpper({
   isAllSelected = false,
   sortOptions = [],
   onSortChange,
-  showEditDate = false,
-  onShowEditDateChange,
   showTagDisplay = false,
   onShowTagDisplayChange,
   boards,
@@ -363,8 +359,6 @@ function DesktopUpper({
       selectedItemType={selectedItemType}
       sortOptions={sortOptions}
       onSortChange={onSortChange}
-      showEditDate={showEditDate}
-      onShowEditDateChange={onShowEditDateChange}
       showTagDisplay={showTagDisplay}
       onShowTagDisplayChange={onShowTagDisplayChange}
       boards={boards}

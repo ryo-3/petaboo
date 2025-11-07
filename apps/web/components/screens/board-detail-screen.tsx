@@ -95,7 +95,6 @@ function BoardDetailScreen({
     rightPanelMode,
     selectedItemsFromList,
     columnCount,
-    showEditDate,
     boardLayout,
     isReversed,
     showMemo,
@@ -103,7 +102,6 @@ function BoardDetailScreen({
     showComment,
     setRightPanelMode,
     setColumnCount,
-    setShowEditDate,
     handleBoardLayoutChange,
     handleSettings,
     handleMemoToggle,
@@ -551,8 +549,6 @@ function BoardDetailScreen({
             isExportDisabled={false}
             marginBottom="mb-2"
             headerMarginBottom="mb-1.5"
-            showEditDate={showEditDate}
-            onShowEditDateChange={setShowEditDate}
             showTagDisplay={showTagDisplay}
             onShowTagDisplayChange={setShowTagDisplay}
             tags={safeAllTags}
@@ -610,7 +606,6 @@ function BoardDetailScreen({
             allBoards={safeAllBoards}
             allTaggings={safeAllTaggings as Tagging[]}
             allBoardItems={safeAllBoardItems}
-            showEditDate={showEditDate}
             showTags={showTagDisplay}
             selectedTagIds={selectedTagIds}
             tagFilterMode={tagFilterMode}
@@ -652,7 +647,6 @@ function BoardDetailScreen({
             showTabText={showTabText}
             isLoading={isLoading}
             effectiveColumnCount={effectiveColumnCount}
-            showEditDate={showEditDate}
             showTags={showTagDisplay}
             selectedTagIds={selectedTagIds}
             tagFilterMode={tagFilterMode}

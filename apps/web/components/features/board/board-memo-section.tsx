@@ -29,7 +29,6 @@ interface BoardMemoSectionProps {
   showTabText: boolean;
   isLoading: boolean;
   effectiveColumnCount: number;
-  showEditDate: boolean;
   showBoardName?: boolean;
   showTags?: boolean;
   selectedTagIds?: number[];
@@ -92,7 +91,6 @@ export default function BoardMemoSection({
   showTabText,
   isLoading,
   effectiveColumnCount,
-  showEditDate,
   showBoardName = false,
   showTags = false,
   selectedMemo,
@@ -345,7 +343,6 @@ export default function BoardMemoSection({
             selectedMemoId={
               memoSelectionMode === "check" ? undefined : selectedMemo?.id
             }
-            showEditDate={showEditDate}
             showBoardName={showBoardName}
             showTags={showTags}
             sortOptions={
@@ -381,7 +378,6 @@ export default function BoardMemoSection({
             selectedMemoId={
               memoSelectionMode === "check" ? undefined : selectedMemo?.id
             }
-            showEditDate={showEditDate}
             showTags={showTags}
             sortOptions={
               getVisibleSortOptions(activeMemoTab).filter(

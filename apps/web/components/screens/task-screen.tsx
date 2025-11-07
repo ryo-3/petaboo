@@ -295,7 +295,6 @@ function TaskScreen({
     useSortOptions("task");
 
   // 編集日表示管理
-  const [showEditDate, setShowEditDate] = useState(false);
 
   // ボードフィルター管理
   const [selectedBoardIds, setSelectedBoardIds] = useState<number[]>(
@@ -650,8 +649,6 @@ function TaskScreen({
         isAllSelected={isAllSelected}
         sortOptions={getVisibleSortOptions(activeTab)}
         onSortChange={setSortOptions}
-        showEditDate={showEditDate}
-        onShowEditDateChange={setShowEditDate}
         boards={boards || []}
         selectedBoardIds={selectedBoardIds}
         onBoardFilterChange={setSelectedBoardIds}
@@ -688,7 +685,6 @@ function TaskScreen({
         error={taskError}
         selectionMode={selectionMode}
         sortOptions={getVisibleSortOptions(activeTab)}
-        showEditDate={showEditDate}
         selectedBoardIds={selectedBoardIds}
         boardFilterMode={boardFilterMode}
         selectedTagIds={selectedTagIds}
@@ -976,8 +972,6 @@ function TaskScreen({
                 hideControls={false}
                 floatControls={false}
                 onSortChange={setSortOptions}
-                showEditDate={showEditDate}
-                onShowEditDateChange={setShowEditDate}
                 boards={boards || []}
                 selectedBoardIds={selectedBoardIds}
                 onBoardFilterChange={setSelectedBoardIds}
@@ -1018,7 +1012,6 @@ function TaskScreen({
                 error={taskError}
                 selectionMode={selectionMode}
                 sortOptions={getVisibleSortOptions(activeTab)}
-                showEditDate={showEditDate}
                 selectedBoardIds={selectedBoardIds}
                 boardFilterMode={boardFilterMode}
                 selectedTagIds={selectedTagIds}

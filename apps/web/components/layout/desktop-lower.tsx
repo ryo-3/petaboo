@@ -30,7 +30,6 @@ interface DesktopLowerProps {
   }>;
 
   // Date display toggle (task and memo)
-  showEditDate?: boolean;
 
   // Board filter
   selectedBoardIds?: number[];
@@ -96,7 +95,6 @@ function DesktopLower({
   error,
   selectionMode = "select",
   sortOptions = [],
-  showEditDate = false,
   selectedBoardIds = [],
   boardFilterMode = "include",
   selectedTagIds = [],
@@ -145,7 +143,6 @@ function DesktopLower({
           onToggleCheck={onToggleCheckMemo}
           onSelectMemo={onSelectMemo}
           selectedMemoId={selectedMemo?.id}
-          showEditDate={showEditDate}
           showBoardName={showBoardName}
           showTags={showTags}
           selectedBoardIds={selectedBoardIds}
@@ -196,7 +193,6 @@ function DesktopLower({
           selectedTask?.status === activeTab ? selectedTask?.id : undefined
         }
         sortOptions={sortOptions}
-        showEditDate={showEditDate}
         showBoardName={showBoardName}
         showTags={showTags}
         selectedBoardIds={selectedBoardIds}
@@ -227,7 +223,6 @@ function DesktopLower({
               onToggleCheck={onToggleCheckDeletedMemo}
               onSelectMemo={onSelectDeletedMemo}
               selectedMemoId={selectedDeletedMemo?.id}
-              showEditDate={showEditDate}
               showBoardName={showBoardName}
               showTags={showTags}
               selectedBoardIds={selectedBoardIds}
@@ -261,7 +256,6 @@ function DesktopLower({
             onToggleCheck={onToggleCheckDeletedTask}
             onSelectTask={onSelectDeletedTask}
             selectedTaskId={selectedDeletedTask?.id}
-            showEditDate={showEditDate}
             showBoardName={true}
             showTags={true}
             selectedBoardIds={selectedBoardIds}

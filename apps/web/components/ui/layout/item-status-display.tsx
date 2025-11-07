@@ -19,7 +19,6 @@ interface ItemStatusDisplayProps<T extends { id: number }> {
   onToggleCheck?: (itemId: number) => void;
   onSelectItem?: (item: T) => void;
   selectedItemId?: number;
-  showEditDate?: boolean;
   showBoardName?: boolean;
   showTags?: boolean;
   sortOptions?: SortOption[];
@@ -31,7 +30,6 @@ interface ItemStatusDisplayProps<T extends { id: number }> {
       onToggleCheck: () => void;
       onSelect: () => void;
       isSelected: boolean;
-      showEditDate: boolean;
       showBoardName?: boolean;
       showTags?: boolean;
       variant?: "normal" | "deleted";
@@ -55,7 +53,6 @@ function ItemStatusDisplay<T extends { id: number }>({
   onToggleCheck,
   onSelectItem,
   selectedItemId,
-  showEditDate = false,
   showBoardName = true,
   showTags = true,
   sortOptions = [],
@@ -146,7 +143,6 @@ function ItemStatusDisplay<T extends { id: number }>({
                   }
                 },
                 isSelected: selectedItemId === item.id,
-                showEditDate,
                 showBoardName,
                 showTags,
                 variant,

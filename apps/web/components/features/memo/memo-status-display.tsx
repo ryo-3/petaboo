@@ -17,7 +17,6 @@ interface MemoStatusDisplayProps {
   onSelectMemo?: (memo: Memo) => void;
   onDoubleClick?: (memo: Memo) => void;
   selectedMemoId?: number;
-  showEditDate?: boolean;
   showBoardName?: boolean;
   selectedBoardIds?: number[];
   boardFilterMode?: "include" | "exclude";
@@ -56,7 +55,6 @@ interface DeletedMemoDisplayProps {
   onSelectMemo?: (memo: DeletedMemo) => void;
   onDoubleClick?: (memo: DeletedMemo) => void;
   selectedMemoId?: number;
-  showEditDate?: boolean;
   showBoardName?: boolean;
   showTags?: boolean;
   selectedBoardIds?: number[];
@@ -98,7 +96,6 @@ function MemoStatusDisplay({
   onSelectMemo,
   onDoubleClick,
   selectedMemoId,
-  showEditDate = false,
   showBoardName = true,
   selectedBoardIds = [],
   boardFilterMode = "include",
@@ -267,7 +264,6 @@ function MemoStatusDisplay({
       onToggleCheck: () => void;
       onSelect: () => void;
       isSelected: boolean;
-      showEditDate: boolean;
       showBoardName?: boolean;
       showTags?: boolean;
       variant?: "normal" | "deleted";
@@ -287,7 +283,6 @@ function MemoStatusDisplay({
         onSelect={props.onSelect}
         onDoubleClick={() => onDoubleClick?.(memo)}
         isSelected={props.isSelected}
-        showEditDate={props.showEditDate}
         showBoardName={props.showBoardName}
         showTags={props.showTags}
         selectionMode={selectionMode}
@@ -314,7 +309,6 @@ function MemoStatusDisplay({
       onToggleCheck={onToggleCheck}
       onSelectItem={onSelectMemo}
       selectedItemId={selectedMemoId}
-      showEditDate={showEditDate}
       showBoardName={showBoardName}
       showTags={showTags}
       sortOptions={sortOptions}
@@ -339,7 +333,6 @@ export function DeletedMemoDisplay({
   onSelectMemo,
   onDoubleClick,
   selectedMemoId,
-  showEditDate = false,
   showBoardName = true,
   showTags = true,
   selectedBoardIds = [],
@@ -383,7 +376,6 @@ export function DeletedMemoDisplay({
       onToggleCheck: () => void;
       onSelect: () => void;
       isSelected: boolean;
-      showEditDate: boolean;
       showBoardName?: boolean;
       showTags?: boolean;
       variant?: "normal" | "deleted";
@@ -427,7 +419,6 @@ export function DeletedMemoDisplay({
         onSelect={props.onSelect}
         onDoubleClick={() => onDoubleClick?.(memo)}
         isSelected={props.isSelected}
-        showEditDate={props.showEditDate}
         showBoardName={props.showBoardName}
         showTags={props.showTags}
         selectionMode={selectionMode}
@@ -449,7 +440,6 @@ export function DeletedMemoDisplay({
       onToggleCheck={onToggleCheck}
       onSelectItem={onSelectMemo}
       selectedItemId={selectedMemoId}
-      showEditDate={showEditDate}
       showBoardName={showBoardName}
       showTags={showTags}
       sortOptions={sortOptions}

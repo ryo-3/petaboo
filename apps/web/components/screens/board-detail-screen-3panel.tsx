@@ -118,7 +118,6 @@ function BoardDetailScreen({
     rightPanelMode,
     selectedItemsFromList,
     columnCount,
-    showEditDate,
     boardLayout,
     isReversed,
     showMemo,
@@ -129,7 +128,6 @@ function BoardDetailScreen({
     showCommentPanel,
     setRightPanelMode,
     setColumnCount,
-    setShowEditDate,
     setShowMemo,
     setShowTask,
     setShowComment,
@@ -920,8 +918,6 @@ function BoardDetailScreen({
               isExportDisabled={false}
               marginBottom="mb-2"
               headerMarginBottom="mb-1.5"
-              showEditDate={showEditDate}
-              onShowEditDateChange={setShowEditDate}
               showTagDisplay={showTagDisplay}
               onShowTagDisplayChange={setShowTagDisplay}
               tags={safeAllTags}
@@ -1033,7 +1029,6 @@ function BoardDetailScreen({
                                       (safeAllTaggings || []) as Tagging[]
                                     }
                                     allBoardItems={safeAllBoardItems}
-                                    showEditDate={showEditDate}
                                     showTags={showTagDisplay}
                                     selectedTagIds={selectedTagIds}
                                     tagFilterMode={tagFilterMode}
@@ -1080,7 +1075,6 @@ function BoardDetailScreen({
                                     showTabText={showTabText}
                                     isLoading={isLoading}
                                     effectiveColumnCount={effectiveColumnCount}
-                                    showEditDate={showEditDate}
                                     showTags={showTagDisplay}
                                     selectedTagIds={selectedTagIds}
                                     tagFilterMode={tagFilterMode}
@@ -1340,8 +1334,6 @@ function BoardDetailScreen({
                                   isExportDisabled={false}
                                   marginBottom="mb-0"
                                   headerMarginBottom="mb-0"
-                                  showEditDate={showEditDate}
-                                  onShowEditDateChange={setShowEditDate}
                                   showTagDisplay={showTagDisplay}
                                   onShowTagDisplayChange={setShowTagDisplay}
                                   tags={safeAllTags}
@@ -1409,7 +1401,6 @@ function BoardDetailScreen({
                                     showTabText={showTabText}
                                     isLoading={isLoading}
                                     effectiveColumnCount={effectiveColumnCount}
-                                    showEditDate={showEditDate}
                                     showTags={showTagDisplay}
                                     selectedTagIds={selectedTagIds}
                                     tagFilterMode={tagFilterMode}
@@ -1465,7 +1456,6 @@ function BoardDetailScreen({
                                       (safeAllTaggings || []) as Tagging[]
                                     }
                                     allBoardItems={safeAllBoardItems}
-                                    showEditDate={showEditDate}
                                     showTags={showTagDisplay}
                                     selectedTagIds={selectedTagIds}
                                     tagFilterMode={tagFilterMode}
@@ -1536,8 +1526,6 @@ function BoardDetailScreen({
                                       isExportDisabled={false}
                                       marginBottom="mb-0"
                                       headerMarginBottom="mb-0"
-                                      showEditDate={showEditDate}
-                                      onShowEditDateChange={setShowEditDate}
                                       showTagDisplay={showTags}
                                       onShowTagDisplayChange={
                                         handleTagDisplayChange
@@ -1748,7 +1736,6 @@ function BoardDetailScreen({
                                     showTabText={showTabText}
                                     isLoading={isLoading}
                                     effectiveColumnCount={effectiveColumnCount}
-                                    showEditDate={showEditDate}
                                     showTags={showTagDisplay}
                                     selectedTagIds={selectedTagIds}
                                     tagFilterMode={tagFilterMode}
@@ -1821,8 +1808,6 @@ function BoardDetailScreen({
                                   isExportDisabled={false}
                                   marginBottom="mb-0"
                                   headerMarginBottom="mb-0"
-                                  showEditDate={showEditDate}
-                                  onShowEditDateChange={setShowEditDate}
                                   showTagDisplay={showTagDisplay}
                                   onShowTagDisplayChange={setShowTagDisplay}
                                   tags={safeAllTags}
@@ -1986,8 +1971,6 @@ function BoardDetailScreen({
                                 isExportDisabled={false}
                                 marginBottom="mb-0"
                                 headerMarginBottom="mb-0"
-                                showEditDate={showEditDate}
-                                onShowEditDateChange={setShowEditDate}
                                 showTagDisplay={showTags}
                                 onShowTagDisplayChange={handleTagDisplayChange}
                                 boardLayout={boardLayout}
@@ -2035,7 +2018,6 @@ function BoardDetailScreen({
                                   (safeAllTaggings || []) as Tagging[]
                                 }
                                 allBoardItems={safeAllBoardItems}
-                                showEditDate={showEditDate}
                                 showTags={showTags}
                                 selectedMemo={selectedMemo}
                                 boardId={boardId}
@@ -2079,8 +2061,6 @@ function BoardDetailScreen({
                                 isExportDisabled={false}
                                 marginBottom="mb-0"
                                 headerMarginBottom="mb-0"
-                                showEditDate={showEditDate}
-                                onShowEditDateChange={setShowEditDate}
                                 showTagDisplay={showTags}
                                 onShowTagDisplayChange={handleTagDisplayChange}
                                 boardLayout={boardLayout}
@@ -2126,7 +2106,6 @@ function BoardDetailScreen({
                                 showTabText={showTabText}
                                 isLoading={isLoading}
                                 effectiveColumnCount={effectiveColumnCount}
-                                showEditDate={showEditDate}
                                 showTags={showTags}
                                 showBoardName={false}
                                 allTags={safeAllTags}
@@ -2198,8 +2177,6 @@ function BoardDetailScreen({
                                   isExportDisabled={false}
                                   marginBottom="mb-0"
                                   headerMarginBottom="mb-0"
-                                  showEditDate={showEditDate}
-                                  onShowEditDateChange={setShowEditDate}
                                   showTagDisplay={showTagDisplay}
                                   onShowTagDisplayChange={setShowTagDisplay}
                                   tags={safeAllTags}
@@ -2253,7 +2230,6 @@ function BoardDetailScreen({
                                     (safeAllTaggings || []) as Tagging[]
                                   }
                                   allBoardItems={safeAllBoardItems}
-                                  showEditDate={showEditDate}
                                   showTags={showTags}
                                   selectedMemo={selectedMemo}
                                   boardId={boardId}
@@ -2317,8 +2293,6 @@ function BoardDetailScreen({
                                     isExportDisabled={false}
                                     marginBottom="mb-0"
                                     headerMarginBottom="mb-0"
-                                    showEditDate={showEditDate}
-                                    onShowEditDateChange={setShowEditDate}
                                     showTagDisplay={showTags}
                                     onShowTagDisplayChange={
                                       handleTagDisplayChange
@@ -2372,7 +2346,6 @@ function BoardDetailScreen({
                                   showTabText={showTabText}
                                   isLoading={isLoading}
                                   effectiveColumnCount={effectiveColumnCount}
-                                  showEditDate={showEditDate}
                                   showTags={showTags}
                                   showBoardName={false}
                                   allTags={safeAllTags}
@@ -2438,8 +2411,6 @@ function BoardDetailScreen({
                                   isExportDisabled={false}
                                   marginBottom="mb-0"
                                   headerMarginBottom="mb-0"
-                                  showEditDate={showEditDate}
-                                  onShowEditDateChange={setShowEditDate}
                                   showTagDisplay={showTagDisplay}
                                   onShowTagDisplayChange={setShowTagDisplay}
                                   tags={safeAllTags}
@@ -2532,7 +2503,6 @@ function BoardDetailScreen({
                 allBoards={safeAllBoards}
                 allTaggings={(safeAllTaggings || []) as Tagging[]}
                 allBoardItems={safeAllBoardItems}
-                showEditDate={showEditDate}
                 showTags={showTags}
                 selectedMemo={selectedMemo}
                 boardId={boardId}
@@ -2570,7 +2540,6 @@ function BoardDetailScreen({
                 showTabText={showTabText}
                 isLoading={isLoading}
                 effectiveColumnCount={effectiveColumnCount}
-                showEditDate={showEditDate}
                 showTags={showTags}
                 showBoardName={false}
                 allTags={safeAllTags}

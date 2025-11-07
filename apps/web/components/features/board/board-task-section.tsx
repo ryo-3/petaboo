@@ -37,7 +37,6 @@ interface BoardTaskSectionProps {
   showTabText: boolean;
   isLoading: boolean;
   effectiveColumnCount: number;
-  showEditDate: boolean;
   showTags?: boolean;
   showBoardName?: boolean;
   selectedTagIds?: number[];
@@ -107,7 +106,6 @@ export default function BoardTaskSection({
   showTabText,
   isLoading,
   effectiveColumnCount,
-  showEditDate,
   showTags = false,
   showBoardName = false,
   selectedTask,
@@ -406,7 +404,6 @@ export default function BoardTaskSection({
             selectedTaskId={
               taskSelectionMode === "check" ? undefined : selectedTask?.id
             }
-            showEditDate={showEditDate}
             showBoardName={showBoardName}
             showTags={showTags}
             sortOptions={getVisibleSortOptions(activeTaskTab)}
@@ -440,7 +437,6 @@ export default function BoardTaskSection({
             selectedTaskId={
               taskSelectionMode === "check" ? undefined : selectedTask?.id
             }
-            showEditDate={showEditDate}
             showBoardName={showBoardName}
             showTags={showTags}
             sortOptions={getVisibleSortOptions(activeTaskTab)}

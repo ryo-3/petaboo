@@ -25,7 +25,6 @@ export function useBoardState() {
   >(new Set());
 
   const [columnCount, setColumnCount] = useState(2);
-  const [showEditDate, setShowEditDate] = useState(false);
 
   // ボードレイアウト状態
   const [boardLayout, setBoardLayout] = useState<"horizontal" | "vertical">(
@@ -239,7 +238,6 @@ export function useBoardState() {
     rightPanelMode,
     selectedItemsFromList,
     columnCount,
-    showEditDate,
     boardLayout,
     isReversed,
     showMemo,
@@ -256,7 +254,6 @@ export function useBoardState() {
     setRightPanelMode,
     setSelectedItemsFromList,
     setColumnCount,
-    setShowEditDate,
     setBoardLayout,
     setIsReversed,
     setShowMemo,

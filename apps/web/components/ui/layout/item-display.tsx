@@ -23,7 +23,6 @@ interface ItemDisplayProps {
   onSelect: () => void;
   onDoubleClick?: () => void;
   isSelected?: boolean;
-  showEditDate?: boolean;
   showBoardName?: boolean;
   showTags?: boolean;
   isDeleting?: boolean;
@@ -49,7 +48,6 @@ function ItemDisplay({
   onSelect,
   onDoubleClick,
   isSelected = false,
-  showEditDate = false,
   showBoardName = true,
   showTags = true,
   isDeleting = false,
@@ -263,18 +261,13 @@ function ItemDisplay({
               }`}
             >
               {isDeleted && deletedItem ? (
-                showEditDate ? (
-                  <div className="flex gap-2 justify-end">
-                    <div>作成: {formatDateOnly(item.createdAt)}</div>
-                    {item.updatedAt && item.updatedAt !== item.createdAt && (
-                      <div>編集: {formatDateOnly(item.updatedAt)}</div>
-                    )}
-                    <div>削除: {formatDateOnly(deletedItem.deletedAt)}</div>
-                  </div>
-                ) : (
+                // 削除済み：作成日 + 削除日
+                <div className="flex gap-2 justify-end">
+                  <div>作成: {formatDateOnly(item.createdAt)}</div>
                   <div>削除: {formatDateOnly(deletedItem.deletedAt)}</div>
-                )
-              ) : showEditDate ? (
+                </div>
+              ) : (
+                // 通常：作成日 + 編集日（両方表示）
                 <div className="flex gap-2 justify-end">
                   <div>作成: {formatDateOnly(item.createdAt)}</div>
                   {(() => {
@@ -299,24 +292,6 @@ function ItemDisplay({
                       return <div>編集: {formatDateOnly(item.updatedAt!)}</div>;
                     }
                     return null;
-                  })()}
-                </div>
-              ) : (
-                <div>
-                  {(() => {
-                    // 新規作成アイテムの場合
-                    if (item.id < 0) {
-                      return formatDateOnly(item.updatedAt || item.createdAt);
-                    }
-
-                    // ローカル編集時間とAPI更新時間のうち最新のものを表示
-                    const latestTime =
-                      lastEditTime && lastEditTime > (item.updatedAt || 0)
-                        ? lastEditTime
-                        : item.updatedAt && item.updatedAt !== item.createdAt
-                          ? item.updatedAt
-                          : item.createdAt;
-                    return formatDateOnly(latestTime);
                   })()}
                 </div>
               )}

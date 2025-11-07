@@ -17,7 +17,6 @@ interface TaskStatusDisplayProps {
   onToggleCheck?: (taskId: number) => void;
   onSelectTask?: (task: Task) => void;
   selectedTaskId?: number;
-  showEditDate?: boolean;
   showBoardName?: boolean;
   showTags?: boolean;
   selectedBoardIds?: number[];
@@ -57,7 +56,6 @@ interface DeletedTaskDisplayProps {
   onToggleCheck?: (taskId: number) => void;
   onSelectTask?: (task: DeletedTask) => void;
   selectedTaskId?: number;
-  showEditDate?: boolean;
   showBoardName?: boolean;
   showTags?: boolean;
   selectedBoardIds?: number[];
@@ -98,7 +96,6 @@ function TaskStatusDisplay({
   onToggleCheck,
   onSelectTask,
   selectedTaskId,
-  showEditDate = false,
   showBoardName = true,
   showTags = true,
   selectedBoardIds = [],
@@ -277,7 +274,6 @@ function TaskStatusDisplay({
       onToggleCheck: () => void;
       onSelect: () => void;
       isSelected: boolean;
-      showEditDate: boolean;
       showBoardName?: boolean;
       showTags?: boolean;
       variant?: "normal" | "deleted";
@@ -301,7 +297,6 @@ function TaskStatusDisplay({
         onToggleCheck={props.onToggleCheck}
         onSelect={props.onSelect}
         isSelected={props.isSelected}
-        showEditDate={props.showEditDate}
         showBoardName={props.showBoardName}
         showTags={props.showTags}
         selectionMode={selectionMode}
@@ -328,7 +323,6 @@ function TaskStatusDisplay({
       onToggleCheck={onToggleCheck}
       onSelectItem={onSelectTask}
       selectedItemId={selectedTaskId}
-      showEditDate={showEditDate}
       showBoardName={showBoardName}
       showTags={showTags}
       sortOptions={sortOptions}
@@ -352,7 +346,6 @@ export function DeletedTaskDisplay({
   onToggleCheck,
   onSelectTask,
   selectedTaskId,
-  showEditDate = false,
   showBoardName = true,
   showTags = true,
   selectedBoardIds = [],
@@ -403,7 +396,6 @@ export function DeletedTaskDisplay({
       onToggleCheck: () => void;
       onSelect: () => void;
       isSelected: boolean;
-      showEditDate: boolean;
       showBoardName?: boolean;
       showTags?: boolean;
       variant?: "normal" | "deleted";
@@ -447,7 +439,6 @@ export function DeletedTaskDisplay({
         onToggleCheck={props.onToggleCheck}
         onSelect={props.onSelect}
         isSelected={props.isSelected}
-        showEditDate={props.showEditDate}
         showBoardName={props.showBoardName}
         showTags={props.showTags}
         selectionMode={selectionMode}
@@ -468,7 +459,6 @@ export function DeletedTaskDisplay({
       onToggleCheck={onToggleCheck}
       onSelectItem={onSelectTask}
       selectedItemId={selectedTaskId}
-      showEditDate={showEditDate}
       showBoardName={showBoardName}
       showTags={showTags}
       sortOptions={sortOptions}

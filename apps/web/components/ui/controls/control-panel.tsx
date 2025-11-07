@@ -17,6 +17,8 @@ import FilterIcon from "@/components/icons/filter-icon";
 import TagIcon from "@/components/icons/tag-icon";
 import BoardSelectionModal from "@/components/ui/modals/board-selection-modal";
 import TagSelectionModal from "@/components/ui/modals/tag-selection-modal";
+import { UnifiedFilterButton } from "@/components/ui/buttons/unified-filter-button";
+import { UnifiedFilterModal } from "@/components/ui/modals/unified-filter-modal";
 
 interface ControlPanelProps {
   // 基本設定
@@ -169,8 +171,6 @@ export default function ControlPanel({
     typeof window !== "undefined" ? window.innerWidth : 0,
   );
   const [controlWidth, setControlWidth] = useState(0);
-  const [isBoardFilterOpen, setIsBoardFilterOpen] = useState(false);
-  const [isTagFilterOpen, setIsTagFilterOpen] = useState(false);
 
   // コントロールパネルの位置管理
   const [controlPosition, setControlPosition] = useState<
@@ -435,36 +435,9 @@ export default function ControlPanel({
           />
         )}
 
-        {/* ボードフィルター */}
-        {boardFilterEnabled && (
-          <Tooltip text={boardFilterTooltip} position="bottom">
-            <button
-              onClick={() => setIsBoardFilterOpen(true)}
-              className={`size-7 rounded-lg flex items-center justify-center transition-colors ${
-                boardFilterActive
-                  ? "bg-blue-500 text-white shadow-sm hover:bg-blue-600"
-                  : "bg-gray-100 text-gray-500 hover:text-gray-800 hover:bg-gray-200"
-              }`}
-            >
-              <FilterIcon className="w-4 h-4" />
-            </button>
-          </Tooltip>
-        )}
-
-        {/* タグフィルター */}
-        {tagFilterEnabled && (
-          <Tooltip text={tagFilterTooltip} position="bottom">
-            <button
-              onClick={() => setIsTagFilterOpen(true)}
-              className={`size-7 rounded-lg flex items-center justify-center transition-colors ${
-                tagFilterActive
-                  ? "bg-rose-500 text-white shadow-sm hover:bg-rose-600"
-                  : "bg-gray-100 text-gray-500 hover:text-gray-800 hover:bg-gray-200"
-              }`}
-            >
-              <TagIcon className="w-4 h-4" />
-            </button>
-          </Tooltip>
+        {/* 統合フィルター（タグ・ボード） */}
+        {(boardFilterEnabled || tagFilterEnabled) && (
+          <UnifiedFilterButton buttonSize="size-7" iconSize="size-4" />
         )}
 
         {/* タグ表示切り替え（ボードモードのみ） */}
@@ -528,35 +501,8 @@ export default function ControlPanel({
         )}
       </div>
 
-      {boardFilterEnabled && (
-        <BoardSelectionModal
-          isOpen={isBoardFilterOpen}
-          onClose={() => setIsBoardFilterOpen(false)}
-          boards={boards || []}
-          selectedBoardIds={selectedBoardIds || []}
-          onSelectionChange={onBoardFilterChange!}
-          mode="filter"
-          filterMode={boardFilterMode}
-          onFilterModeChange={onBoardFilterModeChange}
-          topOffset={floatControls ? 72 : 0}
-        />
-      )}
-
-      {tagFilterEnabled && (
-        <TagSelectionModal
-          isOpen={isTagFilterOpen}
-          onClose={() => setIsTagFilterOpen(false)}
-          tags={tags || []}
-          selectedTagIds={selectedTagIds || []}
-          onSelectionChange={onTagFilterChange!}
-          mode="filter"
-          filterMode={tagFilterMode}
-          onFilterModeChange={onTagFilterModeChange}
-          teamMode={teamMode}
-          teamId={teamId ?? 0}
-          topOffset={floatControls ? 72 : 0}
-        />
-      )}
+      {/* 統合フィルターモーダル */}
+      <UnifiedFilterModal />
     </>
   );
 }

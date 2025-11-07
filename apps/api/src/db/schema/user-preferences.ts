@@ -1,15 +1,9 @@
-import { integer, sqliteTable, text, real } from "drizzle-orm/sqlite-core";
+import { integer, sqliteTable, real } from "drizzle-orm/sqlite-core";
 
 export const userPreferences = sqliteTable("user_preferences", {
   userId: integer("user_id").primaryKey(),
   memoColumnCount: integer("memo_column_count").default(4).notNull(),
   taskColumnCount: integer("task_column_count").default(2).notNull(),
-  memoViewMode: text("memo_view_mode", { enum: ["card", "list"] })
-    .default("list")
-    .notNull(),
-  taskViewMode: text("task_view_mode", { enum: ["card", "list"] })
-    .default("list")
-    .notNull(),
   memoHideControls: integer("memo_hide_controls", { mode: "boolean" })
     .default(false)
     .notNull(),

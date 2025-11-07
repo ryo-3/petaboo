@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Memo } from "@/src/types/memo";
 import { Task } from "@/src/types/task";
-import { useViewModeStorage } from "@/src/hooks/use-view-mode-storage";
 
 export function useBoardState() {
   const router = useRouter();
@@ -25,8 +24,6 @@ export function useBoardState() {
     Set<number>
   >(new Set());
 
-  // 表示モード状態（ボード個別のlocalStorage設定を使用）
-  const [viewMode, setViewMode] = useViewModeStorage("board");
   const [columnCount, setColumnCount] = useState(2);
   const [showEditDate, setShowEditDate] = useState(false);
 
@@ -241,7 +238,6 @@ export function useBoardState() {
     showTabText,
     rightPanelMode,
     selectedItemsFromList,
-    viewMode,
     columnCount,
     showEditDate,
     boardLayout,
@@ -259,7 +255,6 @@ export function useBoardState() {
     setShowTabText,
     setRightPanelMode,
     setSelectedItemsFromList,
-    setViewMode,
     setColumnCount,
     setShowEditDate,
     setBoardLayout,

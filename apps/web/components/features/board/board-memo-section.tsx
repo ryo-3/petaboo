@@ -29,10 +29,11 @@ interface BoardMemoSectionProps {
   showTabText: boolean;
   isLoading: boolean;
   effectiveColumnCount: number;
-  viewMode: "card" | "list";
   showEditDate: boolean;
   showBoardName?: boolean;
   showTags?: boolean;
+  selectedTagIds?: number[];
+  tagFilterMode?: "include" | "exclude";
   selectedMemo?: Memo | DeletedMemo | null;
   // モーダル機能
   // 複数選択関連
@@ -91,7 +92,6 @@ export default function BoardMemoSection({
   showTabText,
   isLoading,
   effectiveColumnCount,
-  viewMode,
   showEditDate,
   showBoardName = false,
   showTags = false,
@@ -329,7 +329,6 @@ export default function BoardMemoSection({
             deletedMemos={
               memoItems.map((item) => item.content) as DeletedMemo[]
             } // DeletedMemo型に変換
-            viewMode={viewMode}
             effectiveColumnCount={effectiveColumnCount}
             isBoard={true}
             selectionMode={memoSelectionMode}
@@ -371,7 +370,6 @@ export default function BoardMemoSection({
         ) : (
           <MemoStatusDisplay
             memos={memoItems.map((item) => item.content as Memo)}
-            viewMode={viewMode}
             effectiveColumnCount={effectiveColumnCount}
             isBoard={true}
             selectionMode={memoSelectionMode}

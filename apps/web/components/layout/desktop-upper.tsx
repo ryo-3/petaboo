@@ -15,8 +15,6 @@ interface DesktopUpperProps {
     tab: "normal" | "deleted" | "todo" | "in_progress" | "completed",
   ) => void;
   onCreateNew: () => void;
-  viewMode: "card" | "list";
-  onViewModeChange: (viewMode: "card" | "list") => void;
   columnCount: number;
   onColumnCountChange: (count: number) => void;
   rightPanelMode: "hidden" | "view" | "create";
@@ -74,24 +72,19 @@ interface DesktopUpperProps {
   // Date display toggle
   showEditDate?: boolean;
   onShowEditDateChange?: (show: boolean) => void;
-  // Board name display toggle (memo only)
-  showBoardName?: boolean;
-  onShowBoardNameChange?: (show: boolean) => void;
-  // Tag display toggle (memo and task)
+  // Tag display toggle
   showTagDisplay?: boolean;
   onShowTagDisplayChange?: (show: boolean) => void;
   // Board filter props
-  boards?: Array<{ id: number; name: string }>;
+  boards?: Array<{ id: number; name: string; isCurrentBoard?: boolean }>;
   selectedBoardIds?: number[];
   onBoardFilterChange?: (boardIds: number[]) => void;
-  // Board filter mode
-  filterMode?: "include" | "exclude";
-  onFilterModeChange?: (mode: "include" | "exclude") => void;
+  boardFilterMode?: "include" | "exclude";
+  onBoardFilterModeChange?: (mode: "include" | "exclude") => void;
   // Tag filter props
   tags?: Array<{ id: number; name: string; color?: string }>;
   selectedTagIds?: number[];
   onTagFilterChange?: (tagIds: number[]) => void;
-  // Tag filter mode
   tagFilterMode?: "include" | "exclude";
   onTagFilterModeChange?: (mode: "include" | "exclude") => void;
   // Tab counts
@@ -108,6 +101,7 @@ interface DesktopUpperProps {
   onCsvImport?: () => void;
   // Team mode (reverse layout for team memo list)
   teamMode?: boolean;
+  teamId?: number;
   // Hide controls (for when controls are in header)
   hideControls?: boolean;
   // Float controls (position absolute)
@@ -119,8 +113,6 @@ function DesktopUpper({
   activeTab,
   onTabChange,
   onCreateNew,
-  viewMode,
-  onViewModeChange,
   columnCount,
   onColumnCountChange,
   rightPanelMode,
@@ -154,19 +146,17 @@ function DesktopUpper({
   onSortChange,
   showEditDate = false,
   onShowEditDateChange,
-  showBoardName = false,
-  onShowBoardNameChange,
   showTagDisplay = false,
   onShowTagDisplayChange,
-  boards = [],
-  selectedBoardIds = [],
+  boards,
+  selectedBoardIds,
   onBoardFilterChange,
-  filterMode = "include",
-  onFilterModeChange,
-  tags = [],
-  selectedTagIds = [],
+  boardFilterMode,
+  onBoardFilterModeChange,
+  tags,
+  selectedTagIds,
   onTagFilterChange,
-  tagFilterMode = "include",
+  tagFilterMode,
   onTagFilterModeChange,
   normalCount,
   deletedMemosCount = 0,
@@ -178,6 +168,7 @@ function DesktopUpper({
   hideAddButton = false,
   onCsvImport,
   teamMode = false,
+  teamId,
   hideControls = false,
   floatControls = false,
 }: DesktopUpperProps) {
@@ -345,8 +336,6 @@ function DesktopUpper({
   const controlsContent = !shouldHideControls ? (
     <ControlPanel
       currentMode={currentMode}
-      viewMode={viewMode}
-      onViewModeChange={onViewModeChange}
       columnCount={columnCount}
       onColumnCountChange={onColumnCountChange}
       rightPanelMode={rightPanelMode}
@@ -376,15 +365,13 @@ function DesktopUpper({
       onSortChange={onSortChange}
       showEditDate={showEditDate}
       onShowEditDateChange={onShowEditDateChange}
-      showBoardName={showBoardName}
-      onShowBoardNameChange={onShowBoardNameChange}
       showTagDisplay={showTagDisplay}
       onShowTagDisplayChange={onShowTagDisplayChange}
       boards={boards}
       selectedBoardIds={selectedBoardIds}
       onBoardFilterChange={onBoardFilterChange}
-      filterMode={filterMode}
-      onFilterModeChange={onFilterModeChange}
+      boardFilterMode={boardFilterMode}
+      onBoardFilterModeChange={onBoardFilterModeChange}
       tags={tags}
       selectedTagIds={selectedTagIds}
       onTagFilterChange={onTagFilterChange}
@@ -394,6 +381,7 @@ function DesktopUpper({
       onBoardExport={onBoardExport}
       isExportDisabled={isExportDisabled}
       teamMode={teamMode}
+      teamId={teamId}
       activeTab={activeTab}
       normalCount={normalCount}
       deletedMemosCount={deletedMemosCount}

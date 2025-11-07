@@ -37,10 +37,11 @@ interface BoardTaskSectionProps {
   showTabText: boolean;
   isLoading: boolean;
   effectiveColumnCount: number;
-  viewMode: "card" | "list";
   showEditDate: boolean;
   showTags?: boolean;
   showBoardName?: boolean;
+  selectedTagIds?: number[];
+  tagFilterMode?: "include" | "exclude";
   selectedTask?: Task | DeletedTask | null;
   // 複数選択関連
   taskSelectionMode: "select" | "check";
@@ -106,7 +107,6 @@ export default function BoardTaskSection({
   showTabText,
   isLoading,
   effectiveColumnCount,
-  viewMode,
   showEditDate,
   showTags = false,
   showBoardName = false,
@@ -390,7 +390,6 @@ export default function BoardTaskSection({
             deletedTasks={
               displayTaskItems.map((item) => item.content) as DeletedTask[]
             } // DeletedTask型に変換
-            viewMode={viewMode}
             effectiveColumnCount={effectiveColumnCount}
             isBoard={true}
             selectionMode={taskSelectionMode}
@@ -430,7 +429,6 @@ export default function BoardTaskSection({
                 originalId: correctOriginalId,
               };
             })}
-            viewMode={viewMode}
             effectiveColumnCount={effectiveColumnCount}
             isBoard={true}
             selectionMode={taskSelectionMode}

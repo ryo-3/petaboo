@@ -379,7 +379,6 @@ export default function BoardRightPanel({
           hideBulkActionButtons={true}
           onAddToBoard={handleAddMemosToBoard}
           excludeItemIds={currentBoardMemoIds}
-          excludeBoardIdFromFilter={boardId}
           initialSelectionMode="check"
           unifiedOperations={memoOperations}
         />
@@ -401,7 +400,6 @@ export default function BoardRightPanel({
           hideBulkActionButtons={true}
           onAddToBoard={handleAddTasksToBoard}
           excludeItemIds={currentBoardTaskIds}
-          excludeBoardIdFromFilter={boardId}
           initialSelectionMode="check"
           unifiedOperations={taskOperations}
         />

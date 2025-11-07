@@ -13,8 +13,6 @@ export interface UserPreferences {
   userId: number;
   memoColumnCount: number;
   taskColumnCount: number;
-  memoViewMode: "card" | "list";
-  taskViewMode: "card" | "list";
   memoHideControls: boolean;
   taskHideControls: boolean;
   hideHeader: boolean;
@@ -32,8 +30,6 @@ interface UserPreferencesContextType {
         UserPreferences,
         | "memoColumnCount"
         | "taskColumnCount"
-        | "memoViewMode"
-        | "taskViewMode"
         | "memoHideControls"
         | "taskHideControls"
         | "hideHeader"
@@ -74,8 +70,6 @@ export const UserPreferencesProvider: React.FC<
       userId,
       memoColumnCount: 4,
       taskColumnCount: 2,
-      memoViewMode: "list",
-      taskViewMode: "list",
       memoHideControls: false,
       taskHideControls: false,
       hideHeader: false,
@@ -110,8 +104,6 @@ export const UserPreferencesProvider: React.FC<
           UserPreferences,
           | "memoColumnCount"
           | "taskColumnCount"
-          | "memoViewMode"
-          | "taskViewMode"
           | "memoHideControls"
           | "taskHideControls"
           | "hideHeader"

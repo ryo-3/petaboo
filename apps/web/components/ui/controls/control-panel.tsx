@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState, useEffect, useMemo } from "react";
-import ViewModeToggle from "@/components/ui/layout/view-mode-toggle";
 import ColumnCountSelector from "@/components/ui/layout/column-count-selector";
 import SelectionModeToggle from "@/components/ui/buttons/selection-mode-toggle";
 import BoardLayoutToggle from "@/components/ui/controls/board-layout-toggle";
@@ -10,18 +9,19 @@ import SettingsIcon from "@/components/icons/settings-icon";
 import Tooltip from "@/components/ui/base/tooltip";
 import SortToggle from "@/components/ui/buttons/sort-toggle";
 import EditDateToggle from "@/components/ui/buttons/edit-date-toggle";
-import BoardNameToggle from "@/components/ui/buttons/board-name-toggle";
 import TagDisplayToggle from "@/components/ui/buttons/tag-display-toggle";
 import CheckSquareIcon from "@/components/icons/check-square-icon";
 import SquareIcon from "@/components/icons/square-icon";
 import CsvImportIcon from "@/components/icons/csv-import-icon";
 import CsvExportIcon from "@/components/icons/csv-export-icon";
+import FilterIcon from "@/components/icons/filter-icon";
+import TagIcon from "@/components/icons/tag-icon";
+import BoardSelectionModal from "@/components/ui/modals/board-selection-modal";
+import TagSelectionModal from "@/components/ui/modals/tag-selection-modal";
 
 interface ControlPanelProps {
   // 基本設定
   currentMode: "memo" | "task" | "board";
-  viewMode: "card" | "list";
-  onViewModeChange: (mode: "card" | "list") => void;
   columnCount: number;
   onColumnCountChange: (count: number) => void;
   rightPanelMode: "hidden" | "view" | "create";
@@ -74,17 +74,15 @@ interface ControlPanelProps {
   // 表示切り替え
   showEditDate?: boolean;
   onShowEditDateChange?: (show: boolean) => void;
-  showBoardName?: boolean;
-  onShowBoardNameChange?: (show: boolean) => void;
   showTagDisplay?: boolean;
   onShowTagDisplayChange?: (show: boolean) => void;
 
   // ボードフィルター
-  boards?: Array<{ id: number; name: string }>;
+  boards?: Array<{ id: number; name: string; isCurrentBoard?: boolean }>;
   selectedBoardIds?: number[];
   onBoardFilterChange?: (boardIds: number[]) => void;
-  filterMode?: "include" | "exclude";
-  onFilterModeChange?: (mode: "include" | "exclude") => void;
+  boardFilterMode?: "include" | "exclude";
+  onBoardFilterModeChange?: (mode: "include" | "exclude") => void;
 
   // タグフィルター
   tags?: Array<{ id: number; name: string; color?: string }>;
@@ -98,6 +96,7 @@ interface ControlPanelProps {
   onBoardExport?: () => void;
   isExportDisabled?: boolean;
   teamMode?: boolean;
+  teamId?: number;
   activeTab?: string;
   normalCount?: number;
   deletedMemosCount?: number;
@@ -112,8 +111,6 @@ interface ControlPanelProps {
 
 export default function ControlPanel({
   currentMode,
-  viewMode,
-  onViewModeChange,
   columnCount,
   onColumnCountChange,
   rightPanelMode,
@@ -143,14 +140,23 @@ export default function ControlPanel({
   onSortChange,
   showEditDate = false,
   onShowEditDateChange,
-  showBoardName = false,
-  onShowBoardNameChange,
   showTagDisplay = false,
   onShowTagDisplayChange,
+  boards,
+  selectedBoardIds = [],
+  onBoardFilterChange,
+  boardFilterMode = "include",
+  onBoardFilterModeChange,
+  tags,
+  selectedTagIds = [],
+  onTagFilterChange,
+  tagFilterMode = "include",
+  onTagFilterModeChange,
   onCsvImport,
   onBoardExport,
   isExportDisabled = false,
   teamMode = false,
+  teamId,
   activeTab,
   normalCount = 0,
   deletedMemosCount = 0,
@@ -161,16 +167,6 @@ export default function ControlPanel({
   completedCount = 0,
   customTitle,
   hideAddButton = false,
-  boards,
-  selectedBoardIds,
-  onBoardFilterChange,
-  filterMode,
-  onFilterModeChange,
-  tags,
-  selectedTagIds,
-  onTagFilterChange,
-  tagFilterMode,
-  onTagFilterModeChange,
 }: ControlPanelProps) {
   const controlRef = useRef<HTMLDivElement>(null);
   const [isInitialRender, setIsInitialRender] = useState(true);
@@ -178,6 +174,8 @@ export default function ControlPanel({
     typeof window !== "undefined" ? window.innerWidth : 0,
   );
   const [controlWidth, setControlWidth] = useState(0);
+  const [isBoardFilterOpen, setIsBoardFilterOpen] = useState(false);
+  const [isTagFilterOpen, setIsTagFilterOpen] = useState(false);
 
   // コントロールパネルの位置管理
   const [controlPosition, setControlPosition] = useState<
@@ -263,6 +261,22 @@ export default function ControlPanel({
     return { x, y };
   }, [controlPosition, windowWidth, controlWidth]);
 
+  const boardFilterEnabled =
+    !!boards?.length && typeof onBoardFilterChange === "function";
+  const tagFilterEnabled =
+    !!tags?.length && typeof onTagFilterChange === "function";
+
+  const boardFilterActive =
+    boardFilterEnabled && (selectedBoardIds?.length || 0) > 0;
+  const tagFilterActive = tagFilterEnabled && (selectedTagIds?.length || 0) > 0;
+
+  const boardFilterTooltip = boardFilterActive
+    ? `ボード絞り込み (${boardFilterMode === "exclude" ? "除外" : "含む"}: ${selectedBoardIds?.length})`
+    : "ボード絞り込み";
+  const tagFilterTooltip = tagFilterActive
+    ? `タグ絞り込み (${tagFilterMode === "exclude" ? "除外" : "含む"}: ${selectedTagIds?.length})`
+    : "タグ絞り込み";
+
   // 位置切り替え
   const togglePosition = () => {
     if (!floatControls) return;
@@ -281,173 +295,195 @@ export default function ControlPanel({
   if (hideControls) return null;
 
   return (
-    <div
-      ref={floatControls ? controlRef : null}
-      className={`flex items-center gap-2 h-7 ${floatControls ? `md:fixed z-20 md:bg-white/95 md:backdrop-blur-sm md:px-3 md:py-1.5 md:rounded-lg ${!isInitialRender ? "md:transition-all md:duration-300" : ""} mb-1.5` : "mb-1.5"}`}
-      style={
-        floatControls
-          ? {
-              left: `${pixelPosition.x}px`,
-              top: `${pixelPosition.y}px`,
-            }
-          : undefined
-      }
-    >
-      {/* 位置切り替えハンドル */}
-      {floatControls && (
-        <button
-          onClick={togglePosition}
-          className="hidden md:flex items-center mr-1 opacity-40 hover:opacity-70 transition-opacity cursor-pointer"
-        >
-          <div className="flex items-center gap-0.5">
-            <div
-              className={`${controlPosition === "left" ? "w-1.5 h-1.5 bg-gray-800" : "w-1 h-1 bg-gray-500"} rounded-full transition-all`}
-            ></div>
-            <div
-              className={`${controlPosition === "center" ? "w-1.5 h-1.5 bg-gray-800" : "w-1 h-1 bg-gray-500"} rounded-full transition-all`}
-            ></div>
-            <div
-              className={`${controlPosition === "right" ? "w-1.5 h-1.5 bg-gray-800" : "w-1 h-1 bg-gray-500"} rounded-full transition-all`}
-            ></div>
+    <>
+      <div
+        ref={floatControls ? controlRef : null}
+        className={`flex items-center gap-2 h-7 ${floatControls ? `md:fixed z-20 md:bg-white/95 md:backdrop-blur-sm md:px-3 md:py-1.5 md:rounded-lg ${!isInitialRender ? "md:transition-all md:duration-300" : ""} mb-1.5` : "mb-1.5"}`}
+        style={
+          floatControls
+            ? {
+                left: `${pixelPosition.x}px`,
+                top: `${pixelPosition.y}px`,
+              }
+            : undefined
+        }
+      >
+        {/* 位置切り替えハンドル */}
+        {floatControls && (
+          <button
+            onClick={togglePosition}
+            className="hidden md:flex items-center mr-1 opacity-40 hover:opacity-70 transition-opacity cursor-pointer"
+          >
+            <div className="flex items-center gap-0.5">
+              <div
+                className={`${controlPosition === "left" ? "w-1.5 h-1.5 bg-gray-800" : "w-1 h-1 bg-gray-500"} rounded-full transition-all`}
+              ></div>
+              <div
+                className={`${controlPosition === "center" ? "w-1.5 h-1.5 bg-gray-800" : "w-1 h-1 bg-gray-500"} rounded-full transition-all`}
+              ></div>
+              <div
+                className={`${controlPosition === "right" ? "w-1.5 h-1.5 bg-gray-800" : "w-1 h-1 bg-gray-500"} rounded-full transition-all`}
+              ></div>
+            </div>
+          </button>
+        )}
+
+        {/* モバイル用ボード名表示 */}
+        {customTitle && (
+          <div className="md:hidden flex-shrink-0 mr-2">
+            <h2 className="text-sm font-bold text-gray-800 truncate max-w-[120px]">
+              {customTitle}
+            </h2>
           </div>
-        </button>
-      )}
+        )}
 
-      {/* モバイル用ボード名表示 */}
-      {customTitle && (
-        <div className="md:hidden flex-shrink-0 mr-2">
-          <h2 className="text-sm font-bold text-gray-800 truncate max-w-[120px]">
-            {customTitle}
-          </h2>
+        <div className="hidden md:block">
+          <ColumnCountSelector
+            columnCount={columnCount}
+            onColumnCountChange={onColumnCountChange}
+            isRightPanelShown={rightPanelMode !== "hidden"}
+            containerHeight="h-7"
+            buttonSize="size-6"
+          />
         </div>
-      )}
 
-      <ViewModeToggle
-        viewMode={viewMode}
-        onViewModeChange={onViewModeChange}
-        buttonSize="size-7"
-        iconSize="size-5"
-      />
+        {/* 選択モード切り替え */}
+        {onSelectionModeChange && (
+          <SelectionModeToggle
+            mode={selectionMode}
+            onModeChange={onSelectionModeChange}
+            buttonSize="size-7"
+            iconSize="size-4"
+          />
+        )}
 
-      <div className="hidden md:block">
-        <ColumnCountSelector
-          columnCount={columnCount}
-          onColumnCountChange={onColumnCountChange}
-          isRightPanelShown={rightPanelMode !== "hidden"}
-          containerHeight="h-7"
-          buttonSize="size-6"
-        />
-      </div>
+        {/* ボードレイアウト切り替え（boardモードのみ、チームモードでは非表示） */}
+        {currentMode === "board" && onBoardLayoutChange && !teamMode && (
+          <BoardLayoutToggle
+            boardLayout={boardLayout}
+            isReversed={isReversed}
+            onBoardLayoutChange={onBoardLayoutChange}
+            buttonSize="size-7"
+            iconSize="size-8"
+          />
+        )}
 
-      {/* 選択モード切り替え */}
-      {onSelectionModeChange && (
-        <SelectionModeToggle
-          mode={selectionMode}
-          onModeChange={onSelectionModeChange}
-          buttonSize="size-7"
-          iconSize="size-4"
-        />
-      )}
+        {/* コンテンツフィルター（boardモードのみ） */}
+        {currentMode === "board" && onMemoToggle && onTaskToggle && (
+          <ContentFilter
+            showMemo={showMemo}
+            showTask={showTask}
+            showComment={showComment}
+            onMemoToggle={onMemoToggle}
+            onTaskToggle={onTaskToggle}
+            onCommentToggle={onCommentToggle}
+            rightPanelMode={contentFilterRightPanelMode}
+            isSelectedMode={isSelectedMode}
+            listTooltip={listTooltip}
+            detailTooltip={detailTooltip}
+            selectedItemType={selectedItemType}
+          />
+        )}
 
-      {/* ボードレイアウト切り替え（boardモードのみ、チームモードでは非表示） */}
-      {currentMode === "board" && onBoardLayoutChange && !teamMode && (
-        <BoardLayoutToggle
-          boardLayout={boardLayout}
-          isReversed={isReversed}
-          onBoardLayoutChange={onBoardLayoutChange}
-          buttonSize="size-7"
-          iconSize="size-8"
-        />
-      )}
-
-      {/* コンテンツフィルター（boardモードのみ） */}
-      {currentMode === "board" && onMemoToggle && onTaskToggle && (
-        <ContentFilter
-          showMemo={showMemo}
-          showTask={showTask}
-          showComment={showComment}
-          onMemoToggle={onMemoToggle}
-          onTaskToggle={onTaskToggle}
-          onCommentToggle={onCommentToggle}
-          rightPanelMode={contentFilterRightPanelMode}
-          isSelectedMode={isSelectedMode}
-          listTooltip={listTooltip}
-          detailTooltip={detailTooltip}
-          selectedItemType={selectedItemType}
-        />
-      )}
-
-      {/* 全選択/全解除ボタン */}
-      {(currentMode === "memo" || currentMode === "task") &&
-        selectionMode === "check" &&
-        onSelectAll &&
-        (() => {
-          let hasTargetItems = false;
-          if (currentMode === "memo") {
-            hasTargetItems =
-              activeTab === "deleted" ? deletedMemosCount > 0 : normalCount > 0;
-          } else if (currentMode === "task") {
-            if (activeTab === "deleted") {
-              hasTargetItems = deletedTasksCount > 0;
-            } else {
-              const statusCount =
-                activeTab === "todo"
-                  ? todoCount
-                  : activeTab === "in_progress"
-                    ? inProgressCount
-                    : activeTab === "completed"
-                      ? completedCount
-                      : 0;
-              hasTargetItems = statusCount > 0;
+        {/* 全選択/全解除ボタン */}
+        {(currentMode === "memo" || currentMode === "task") &&
+          selectionMode === "check" &&
+          onSelectAll &&
+          (() => {
+            let hasTargetItems = false;
+            if (currentMode === "memo") {
+              hasTargetItems =
+                activeTab === "deleted"
+                  ? deletedMemosCount > 0
+                  : normalCount > 0;
+            } else if (currentMode === "task") {
+              if (activeTab === "deleted") {
+                hasTargetItems = deletedTasksCount > 0;
+              } else {
+                const statusCount =
+                  activeTab === "todo"
+                    ? todoCount
+                    : activeTab === "in_progress"
+                      ? inProgressCount
+                      : activeTab === "completed"
+                        ? completedCount
+                        : 0;
+                hasTargetItems = statusCount > 0;
+              }
             }
-          }
-          return hasTargetItems;
-        })() && (
-          <Tooltip text={isAllSelected ? "全解除" : "全選択"} position="bottom">
-            <button
-              onClick={onSelectAll}
-              className="bg-gray-100 rounded-lg size-7 flex items-center justify-center transition-colors text-gray-500 hover:text-gray-700"
+            return hasTargetItems;
+          })() && (
+            <Tooltip
+              text={isAllSelected ? "全解除" : "全選択"}
+              position="bottom"
             >
-              {isAllSelected ? (
-                <CheckSquareIcon className="size-4" />
-              ) : (
-                <SquareIcon className="size-4" />
-              )}
+              <button
+                onClick={onSelectAll}
+                className="bg-gray-100 rounded-lg size-7 flex items-center justify-center transition-colors text-gray-500 hover:text-gray-700"
+              >
+                {isAllSelected ? (
+                  <CheckSquareIcon className="size-4" />
+                ) : (
+                  <SquareIcon className="size-4" />
+                )}
+              </button>
+            </Tooltip>
+          )}
+
+        {/* ソート設定 */}
+        {onSortChange && sortOptions.length > 0 && (
+          <SortToggle
+            sortOptions={sortOptions}
+            onSortChange={onSortChange}
+            buttonSize="size-7"
+            iconSize="size-4"
+          />
+        )}
+
+        {/* ボードフィルター */}
+        {boardFilterEnabled && (
+          <Tooltip text={boardFilterTooltip} position="bottom">
+            <button
+              onClick={() => setIsBoardFilterOpen(true)}
+              className={`size-7 rounded-lg flex items-center justify-center transition-colors ${
+                boardFilterActive
+                  ? "bg-blue-500 text-white shadow-sm hover:bg-blue-600"
+                  : "bg-gray-100 text-gray-500 hover:text-gray-800 hover:bg-gray-200"
+              }`}
+            >
+              <FilterIcon className="w-4 h-4" />
             </button>
           </Tooltip>
         )}
 
-      {/* ソート設定 */}
-      {onSortChange && sortOptions.length > 0 && (
-        <SortToggle
-          sortOptions={sortOptions}
-          onSortChange={onSortChange}
-          buttonSize="size-7"
-          iconSize="size-4"
-        />
-      )}
+        {/* タグフィルター */}
+        {tagFilterEnabled && (
+          <Tooltip text={tagFilterTooltip} position="bottom">
+            <button
+              onClick={() => setIsTagFilterOpen(true)}
+              className={`size-7 rounded-lg flex items-center justify-center transition-colors ${
+                tagFilterActive
+                  ? "bg-rose-500 text-white shadow-sm hover:bg-rose-600"
+                  : "bg-gray-100 text-gray-500 hover:text-gray-800 hover:bg-gray-200"
+              }`}
+            >
+              <TagIcon className="w-4 h-4" />
+            </button>
+          </Tooltip>
+        )}
 
-      {/* ボード名表示切り替え */}
-      {(currentMode === "memo" || currentMode === "task") &&
-        onShowBoardNameChange && (
-          <BoardNameToggle
-            showBoardName={showBoardName}
-            onToggle={onShowBoardNameChange}
+        {/* 編集日表示切り替え */}
+        {onShowEditDateChange && (
+          <EditDateToggle
+            showEditDate={showEditDate}
+            onToggle={onShowEditDateChange}
             buttonSize="size-7"
             iconSize="size-4"
-            boards={boards}
-            selectedBoardIds={selectedBoardIds}
-            onBoardFilterChange={onBoardFilterChange}
-            filterMode={filterMode}
-            onFilterModeChange={onFilterModeChange}
           />
         )}
 
-      {/* タグ表示切り替え */}
-      {(currentMode === "memo" ||
-        currentMode === "task" ||
-        currentMode === "board") &&
-        onShowTagDisplayChange && (
+        {/* タグ表示切り替え（ボードモードのみ） */}
+        {currentMode === "board" && onShowTagDisplayChange && (
           <TagDisplayToggle
             showTags={showTagDisplay}
             onToggle={onShowTagDisplayChange}
@@ -461,60 +497,81 @@ export default function ControlPanel({
           />
         )}
 
-      {/* 編集日表示切り替え */}
-      {onShowEditDateChange && (
-        <EditDateToggle
-          showEditDate={showEditDate}
-          onToggle={onShowEditDateChange}
-          buttonSize="size-7"
-          iconSize="size-4"
-        />
-      )}
+        {/* CSVインポート */}
+        {((!customTitle &&
+          !hideAddButton &&
+          (currentMode === "memo" || currentMode === "task")) ||
+          (currentMode === "board" && customTitle)) &&
+          onCsvImport && (
+            <Tooltip text="CSVインポート" position="bottom">
+              <button
+                onClick={onCsvImport}
+                className="hidden md:flex bg-gray-100 shadow-sm rounded-lg size-7 items-center justify-center transition-all text-gray-500 opacity-65 hover:opacity-85"
+              >
+                <CsvImportIcon className="size-[18px]" />
+              </button>
+            </Tooltip>
+          )}
 
-      {/* CSVインポート */}
-      {((!customTitle &&
-        !hideAddButton &&
-        (currentMode === "memo" || currentMode === "task")) ||
-        (currentMode === "board" && customTitle)) &&
-        onCsvImport && (
-          <Tooltip text="CSVインポート" position="bottom">
+        {/* エクスポート */}
+        {currentMode === "board" && onBoardExport && (
+          <Tooltip text="エクスポート" position="bottom">
             <button
-              onClick={onCsvImport}
-              className="hidden md:flex bg-gray-100 shadow-sm rounded-lg size-7 items-center justify-center transition-all text-gray-500 opacity-65 hover:opacity-85"
+              onClick={onBoardExport}
+              disabled={isExportDisabled}
+              className={`hidden md:flex bg-gray-100 shadow-sm rounded-lg size-7 items-center justify-center transition-all ${
+                isExportDisabled
+                  ? "text-gray-400 cursor-not-allowed opacity-40"
+                  : "text-gray-500 opacity-65 hover:opacity-85"
+              }`}
             >
-              <CsvImportIcon className="size-[18px]" />
+              <CsvExportIcon className="size-[18px]" />
             </button>
           </Tooltip>
         )}
 
-      {/* エクスポート */}
-      {currentMode === "board" && onBoardExport && (
-        <Tooltip text="エクスポート" position="bottom">
-          <button
-            onClick={onBoardExport}
-            disabled={isExportDisabled}
-            className={`hidden md:flex bg-gray-100 shadow-sm rounded-lg size-7 items-center justify-center transition-all ${
-              isExportDisabled
-                ? "text-gray-400 cursor-not-allowed opacity-40"
-                : "text-gray-500 opacity-65 hover:opacity-85"
-            }`}
-          >
-            <CsvExportIcon className="size-[18px]" />
-          </button>
-        </Tooltip>
+        {/* 設定ボタン（ボードモードのみ、一番右） */}
+        {currentMode === "board" && boardId && onBoardSettings && (
+          <Tooltip text="ボード設定" position="bottom-left">
+            <button
+              onClick={onBoardSettings}
+              className="p-1 text-gray-600 h-7 flex items-center"
+            >
+              <SettingsIcon className="w-4 h-4" />
+            </button>
+          </Tooltip>
+        )}
+      </div>
+
+      {boardFilterEnabled && (
+        <BoardSelectionModal
+          isOpen={isBoardFilterOpen}
+          onClose={() => setIsBoardFilterOpen(false)}
+          boards={boards || []}
+          selectedBoardIds={selectedBoardIds || []}
+          onSelectionChange={onBoardFilterChange!}
+          mode="filter"
+          filterMode={boardFilterMode}
+          onFilterModeChange={onBoardFilterModeChange}
+          topOffset={floatControls ? 72 : 0}
+        />
       )}
 
-      {/* 設定ボタン（ボードモードのみ、一番右） */}
-      {currentMode === "board" && boardId && onBoardSettings && (
-        <Tooltip text="ボード設定" position="bottom-left">
-          <button
-            onClick={onBoardSettings}
-            className="p-1 text-gray-600 h-7 flex items-center"
-          >
-            <SettingsIcon className="w-4 h-4" />
-          </button>
-        </Tooltip>
+      {tagFilterEnabled && (
+        <TagSelectionModal
+          isOpen={isTagFilterOpen}
+          onClose={() => setIsTagFilterOpen(false)}
+          tags={tags || []}
+          selectedTagIds={selectedTagIds || []}
+          onSelectionChange={onTagFilterChange!}
+          mode="filter"
+          filterMode={tagFilterMode}
+          onFilterModeChange={onTagFilterModeChange}
+          teamMode={teamMode}
+          teamId={teamId ?? 0}
+          topOffset={floatControls ? 72 : 0}
+        />
       )}
-    </div>
+    </>
   );
 }

@@ -11,7 +11,6 @@ import { OriginalIdUtils } from "@/src/types/common";
 interface TaskStatusDisplayProps {
   activeTab: "todo" | "in_progress" | "completed";
   tasks: Task[] | undefined;
-  viewMode: "card" | "list";
   effectiveColumnCount: number;
   selectionMode?: "select" | "check";
   checkedTasks?: Set<number>;
@@ -52,7 +51,6 @@ interface TaskStatusDisplayProps {
 
 interface DeletedTaskDisplayProps {
   deletedTasks: DeletedTask[] | undefined;
-  viewMode: "card" | "list";
   effectiveColumnCount: number;
   selectionMode?: "select" | "check";
   checkedTasks?: Set<number>;
@@ -94,7 +92,6 @@ interface DeletedTaskDisplayProps {
 function TaskStatusDisplay({
   activeTab,
   tasks,
-  viewMode,
   effectiveColumnCount,
   selectionMode = "select",
   checkedTasks,
@@ -102,8 +99,8 @@ function TaskStatusDisplay({
   onSelectTask,
   selectedTaskId,
   showEditDate = false,
-  showBoardName = false,
-  showTags = false,
+  showBoardName = true,
+  showTags = true,
   selectedBoardIds = [],
   boardFilterMode = "include",
   selectedTagIds = [],
@@ -299,7 +296,6 @@ function TaskStatusDisplay({
         key={task.id}
         itemType="task"
         item={task}
-        viewMode={viewMode}
         variant={props.variant}
         isChecked={props.isChecked}
         onToggleCheck={props.onToggleCheck}
@@ -325,7 +321,6 @@ function TaskStatusDisplay({
   return (
     <ItemStatusDisplay
       items={filteredTasksWithData.map((t) => t.task)}
-      viewMode={viewMode}
       effectiveColumnCount={effectiveColumnCount}
       isBoard={isBoard}
       selectionMode={selectionMode}
@@ -351,7 +346,6 @@ function TaskStatusDisplay({
  */
 export function DeletedTaskDisplay({
   deletedTasks,
-  viewMode,
   effectiveColumnCount,
   selectionMode = "select",
   checkedTasks,
@@ -359,8 +353,8 @@ export function DeletedTaskDisplay({
   onSelectTask,
   selectedTaskId,
   showEditDate = false,
-  showBoardName = false,
-  showTags = false,
+  showBoardName = true,
+  showTags = true,
   selectedBoardIds = [],
   boardFilterMode = "include",
   selectedTagIds = [],
@@ -448,7 +442,6 @@ export function DeletedTaskDisplay({
         key={task.id}
         itemType="task"
         item={task}
-        viewMode={viewMode}
         variant="deleted"
         isChecked={props.isChecked}
         onToggleCheck={props.onToggleCheck}
@@ -468,7 +461,6 @@ export function DeletedTaskDisplay({
   return (
     <ItemStatusDisplay
       items={deletedTasks}
-      viewMode={viewMode}
       effectiveColumnCount={effectiveColumnCount}
       isBoard={isBoard}
       selectionMode={selectionMode}

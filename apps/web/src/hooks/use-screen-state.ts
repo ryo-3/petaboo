@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import type { UserPreferences } from "@/src/contexts/user-preferences-context";
-import { useViewModeStorage } from "@/src/hooks/use-view-mode-storage";
 import { useColumnCountStorage } from "@/src/hooks/use-column-count-storage";
 
 interface UseScreenStateConfig {
@@ -18,9 +17,6 @@ interface ScreenStateReturn<T extends string> {
   activeTab: string;
   setActiveTab: (tab: string) => void;
 
-  // View settings
-  viewMode: "card" | "list";
-  setViewMode: (mode: "card" | "list") => void;
   columnCount: number;
   setColumnCount: (count: number) => void;
 
@@ -45,7 +41,6 @@ export function useScreenState<T extends string>(
   // Basic state
   const [screenMode, setScreenMode] = useState<T>(initialScreenMode);
   const [activeTab, setActiveTab] = useState(config.defaultActiveTab);
-  const [viewMode, setViewMode] = useViewModeStorage(config.type); // メモ・タスク個別のlocalStorage設定
   const [columnCount, setColumnCount] = useColumnCountStorage(config.type); // メモ・タスク個別のlocalStorage設定
   const [checkedItems, setCheckedItems] = useState<Set<number>>(new Set());
   const [checkedDeletedItems, setCheckedDeletedItems] = useState<Set<number>>(
@@ -78,8 +73,6 @@ export function useScreenState<T extends string>(
     setScreenMode,
     activeTab,
     setActiveTab,
-    viewMode,
-    setViewMode,
     columnCount,
     setColumnCount,
     checkedItems,

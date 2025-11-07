@@ -30,8 +30,6 @@ app.get("/:userId", async (c) => {
         userId,
         memoColumnCount: 4,
         taskColumnCount: 2,
-        memoViewMode: "list",
-        taskViewMode: "list",
         memoHideControls: false,
         taskHideControls: false,
         hideHeader: false,
@@ -60,8 +58,6 @@ app.put("/:userId", async (c) => {
     const {
       memoColumnCount,
       taskColumnCount,
-      memoViewMode,
-      taskViewMode,
       memoHideControls,
       taskHideControls,
       hideHeader,
@@ -83,20 +79,6 @@ app.put("/:userId", async (c) => {
         taskColumnCount > 4)
     ) {
       return c.json({ error: "Invalid task column count" }, 400);
-    }
-
-    if (
-      memoViewMode !== undefined &&
-      !["card", "list"].includes(memoViewMode)
-    ) {
-      return c.json({ error: "Invalid memo view mode" }, 400);
-    }
-
-    if (
-      taskViewMode !== undefined &&
-      !["card", "list"].includes(taskViewMode)
-    ) {
-      return c.json({ error: "Invalid task view mode" }, 400);
     }
 
     if (
@@ -133,8 +115,6 @@ app.put("/:userId", async (c) => {
       updateData.memoColumnCount = memoColumnCount;
     if (taskColumnCount !== undefined)
       updateData.taskColumnCount = taskColumnCount;
-    if (memoViewMode !== undefined) updateData.memoViewMode = memoViewMode;
-    if (taskViewMode !== undefined) updateData.taskViewMode = taskViewMode;
     if (memoHideControls !== undefined)
       updateData.memoHideControls = memoHideControls;
     if (taskHideControls !== undefined)
@@ -159,8 +139,6 @@ app.put("/:userId", async (c) => {
           userId,
           memoColumnCount: memoColumnCount || 4,
           taskColumnCount: taskColumnCount || 2,
-          memoViewMode: memoViewMode || "list",
-          taskViewMode: taskViewMode || "list",
           memoHideControls: memoHideControls || false,
           taskHideControls: taskHideControls || false,
           hideHeader: hideHeader || false,

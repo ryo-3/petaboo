@@ -138,13 +138,10 @@ interface TaskScreenProps {
   hideHeaderButtons?: boolean; // ヘッダーボタンを非表示（ボードから呼び出される場合）
   hideBulkActionButtons?: boolean; // 一括操作ボタンを非表示（ボードから呼び出される場合）
   onAddToBoard?: (taskIds: number[]) => void; // ボードに追加（ボードから呼び出される場合のみ）
-  forceShowBoardName?: boolean; // ボード名表示を強制的に有効化（ボードから呼び出される場合）
   excludeBoardId?: number; // 指定されたボードに登録済みのタスクを除外（ボードから呼び出される場合）
   initialSelectionMode?: "select" | "check"; // 初期選択モード
   // ボード詳細から呼び出された場合の除外アイテムリスト（originalId）
   excludeItemIds?: string[];
-  // ボードフィルターの選択肢から除外するボードID
-  excludeBoardIdFromFilter?: number;
   // URL連動
   initialTaskId?: string | null;
   // チームメンバー（コメント機能用）
@@ -177,12 +174,9 @@ function TaskScreen({
   hideHeaderButtons = false,
   hideBulkActionButtons = false,
   onAddToBoard,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  forceShowBoardName: _ = false,
   excludeBoardId,
   initialSelectionMode = "select",
   excludeItemIds = [],
-  excludeBoardIdFromFilter,
   initialTaskId,
   unifiedOperations,
   teamMembers = [],
@@ -303,12 +297,6 @@ function TaskScreen({
   // 編集日表示管理
   const [showEditDate, setShowEditDate] = useState(false);
 
-  // ボード名表示管理
-  const [showBoardName, setShowBoardName] = useState(false); // デフォルトで非表示
-
-  // タグ表示管理
-  const [showTagDisplay, setShowTagDisplay] = useState(false);
-
   // ボードフィルター管理
   const [selectedBoardIds, setSelectedBoardIds] = useState<number[]>(
     excludeBoardId ? [excludeBoardId] : [],
@@ -356,8 +344,6 @@ function TaskScreen({
     setScreenMode: setTaskScreenModeInternal,
     activeTab,
     setActiveTab,
-    viewMode,
-    setViewMode,
     columnCount,
     setColumnCount,
     checkedItems: checkedTasks,
@@ -497,7 +483,6 @@ function TaskScreen({
       deleteButtonRef,
       setIsDeleting,
       setIsLidOpen,
-      viewMode,
       teamMode,
       teamId,
     });
@@ -639,10 +624,6 @@ function TaskScreen({
       (task) => !excludeItemIds.includes(task.originalId || task.id.toString()),
     ) || [];
 
-  // ボードフィルターから除外するボードをフィルタリング
-  const filteredBoards =
-    boards?.filter((board) => board.id !== excludeBoardIdFromFilter) || [];
-
   // 左パネルのコンテンツ
   const leftPanelContent = (
     <div
@@ -653,8 +634,6 @@ function TaskScreen({
         activeTab={activeTabTyped}
         onTabChange={handleTabChange(tabChangeHandler)}
         onCreateNew={handleCreateNew}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
         columnCount={columnCount}
         onColumnCountChange={setColumnCount}
         rightPanelMode={taskScreenMode === "list" ? "hidden" : "view"}
@@ -673,15 +652,11 @@ function TaskScreen({
         onSortChange={setSortOptions}
         showEditDate={showEditDate}
         onShowEditDateChange={setShowEditDate}
-        showBoardName={showBoardName}
-        onShowBoardNameChange={setShowBoardName}
-        showTagDisplay={showTagDisplay}
-        onShowTagDisplayChange={setShowTagDisplay}
-        boards={filteredBoards}
+        boards={boards || []}
         selectedBoardIds={selectedBoardIds}
         onBoardFilterChange={setSelectedBoardIds}
-        filterMode={boardFilterMode}
-        onFilterModeChange={setBoardFilterMode}
+        boardFilterMode={boardFilterMode}
+        onBoardFilterModeChange={setBoardFilterMode}
         tags={tags || []}
         selectedTagIds={selectedTagIds}
         onTagFilterChange={setSelectedTagIds}
@@ -708,15 +683,12 @@ function TaskScreen({
       <DesktopLower
         currentMode="task"
         activeTab={activeTabTyped}
-        viewMode={viewMode}
         effectiveColumnCount={effectiveColumnCount}
         isLoading={taskLoading}
         error={taskError}
         selectionMode={selectionMode}
         sortOptions={getVisibleSortOptions(activeTab)}
         showEditDate={showEditDate}
-        showBoardName={showBoardName}
-        showTags={showTagDisplay}
         selectedBoardIds={selectedBoardIds}
         boardFilterMode={boardFilterMode}
         selectedTagIds={selectedTagIds}
@@ -987,8 +959,6 @@ function TaskScreen({
                 activeTab={activeTabTyped}
                 onTabChange={handleTabChange(tabChangeHandler)}
                 onCreateNew={handleCreateNew}
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
                 columnCount={columnCount}
                 onColumnCountChange={setColumnCount}
                 rightPanelMode={taskScreenMode === "list" ? "hidden" : "view"}
@@ -1008,13 +978,11 @@ function TaskScreen({
                 onSortChange={setSortOptions}
                 showEditDate={showEditDate}
                 onShowEditDateChange={setShowEditDate}
-                showTagDisplay={showTagDisplay}
-                onShowTagDisplayChange={setShowTagDisplay}
-                boards={filteredBoards}
+                boards={boards || []}
                 selectedBoardIds={selectedBoardIds}
                 onBoardFilterChange={setSelectedBoardIds}
-                filterMode={boardFilterMode}
-                onFilterModeChange={setBoardFilterMode}
+                boardFilterMode={boardFilterMode}
+                onBoardFilterModeChange={setBoardFilterMode}
                 tags={tags || []}
                 selectedTagIds={selectedTagIds}
                 onTagFilterChange={setSelectedTagIds}
@@ -1045,15 +1013,12 @@ function TaskScreen({
               <DesktopLower
                 currentMode="task"
                 activeTab={activeTabTyped}
-                viewMode={viewMode}
                 effectiveColumnCount={effectiveColumnCount}
                 isLoading={taskLoading}
                 error={taskError}
                 selectionMode={selectionMode}
                 sortOptions={getVisibleSortOptions(activeTab)}
                 showEditDate={showEditDate}
-                showBoardName={showBoardName}
-                showTags={showTagDisplay}
                 selectedBoardIds={selectedBoardIds}
                 boardFilterMode={boardFilterMode}
                 selectedTagIds={selectedTagIds}

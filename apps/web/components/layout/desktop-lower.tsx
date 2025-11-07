@@ -14,7 +14,6 @@ import type { Board } from "@/src/types/board";
 interface DesktopLowerProps {
   currentMode: "memo" | "task";
   activeTab: "normal" | "deleted" | "todo" | "in_progress" | "completed";
-  viewMode: "card" | "list";
   effectiveColumnCount: number;
   isLoading: boolean;
   error: Error | null;
@@ -32,12 +31,6 @@ interface DesktopLowerProps {
 
   // Date display toggle (task and memo)
   showEditDate?: boolean;
-
-  // Board name display toggle (memo only)
-  showBoardName?: boolean;
-
-  // Tag display toggle (memo and task)
-  showTags?: boolean;
 
   // Board filter
   selectedBoardIds?: number[];
@@ -98,15 +91,12 @@ interface DesktopLowerProps {
 function DesktopLower({
   currentMode,
   activeTab,
-  viewMode,
   effectiveColumnCount,
   isLoading,
   error,
   selectionMode = "select",
   sortOptions = [],
   showEditDate = false,
-  showBoardName = false,
-  showTags = false,
   selectedBoardIds = [],
   boardFilterMode = "include",
   selectedTagIds = [],
@@ -139,6 +129,8 @@ function DesktopLower({
   allTeamTaggings = [],
   allBoardItems,
 }: DesktopLowerProps) {
+  const showBoardName = true;
+  const showTags = true;
   // Loading/Error state を削除 - placeholderDataで即座に画面を表示
 
   // メモの通常タブ
@@ -147,7 +139,6 @@ function DesktopLower({
       <>
         <MemoStatusDisplay
           memos={localMemos}
-          viewMode={viewMode}
           effectiveColumnCount={effectiveColumnCount}
           selectionMode={selectionMode}
           checkedMemos={checkedMemos}
@@ -196,7 +187,6 @@ function DesktopLower({
       <TaskStatusDisplay
         activeTab={activeTab}
         tasks={tasks}
-        viewMode={viewMode}
         effectiveColumnCount={effectiveColumnCount}
         selectionMode={selectionMode}
         checkedTasks={checkedTasks}
@@ -231,7 +221,6 @@ function DesktopLower({
           <>
             <DeletedMemoDisplay
               deletedMemos={deletedMemos}
-              viewMode={viewMode}
               effectiveColumnCount={effectiveColumnCount}
               selectionMode={selectionMode}
               checkedMemos={checkedDeletedMemos}
@@ -266,7 +255,6 @@ function DesktopLower({
         ) : (
           <DeletedTaskDisplay
             deletedTasks={deletedTasks}
-            viewMode={viewMode}
             effectiveColumnCount={effectiveColumnCount}
             selectionMode={selectionMode}
             checkedTasks={checkedDeletedTasks}

@@ -10,7 +10,6 @@ import { OriginalIdUtils } from "@/src/types/common";
 
 interface MemoStatusDisplayProps {
   memos: Memo[] | undefined;
-  viewMode: "card" | "list";
   effectiveColumnCount: number;
   selectionMode?: "select" | "check";
   checkedMemos?: Set<number>;
@@ -50,7 +49,6 @@ interface MemoStatusDisplayProps {
 
 interface DeletedMemoDisplayProps {
   deletedMemos: DeletedMemo[] | undefined;
-  viewMode: "card" | "list";
   effectiveColumnCount: number;
   selectionMode?: "select" | "check";
   checkedMemos?: Set<number>;
@@ -93,7 +91,6 @@ interface DeletedMemoDisplayProps {
 
 function MemoStatusDisplay({
   memos,
-  viewMode,
   effectiveColumnCount,
   selectionMode = "select",
   checkedMemos,
@@ -102,14 +99,14 @@ function MemoStatusDisplay({
   onDoubleClick,
   selectedMemoId,
   showEditDate = false,
-  showBoardName = false,
+  showBoardName = true,
   selectedBoardIds = [],
   boardFilterMode = "include",
   selectedTagIds = [],
   tagFilterMode = "include",
   sortOptions = [],
   isBoard = false,
-  showTags = false,
+  showTags = true,
   allTags,
   allBoards,
   allTaggings,
@@ -284,7 +281,6 @@ function MemoStatusDisplay({
         key={memo.id}
         itemType="memo"
         item={memo}
-        viewMode={viewMode}
         variant={props.variant}
         isChecked={props.isChecked}
         onToggleCheck={props.onToggleCheck}
@@ -311,7 +307,6 @@ function MemoStatusDisplay({
   return (
     <ItemStatusDisplay
       items={filteredMemos}
-      viewMode={viewMode}
       effectiveColumnCount={effectiveColumnCount}
       selectionMode={selectionMode}
       checkedItems={checkedMemos}
@@ -337,7 +332,6 @@ function MemoStatusDisplay({
  */
 export function DeletedMemoDisplay({
   deletedMemos,
-  viewMode,
   effectiveColumnCount,
   selectionMode = "select",
   checkedMemos,
@@ -346,8 +340,8 @@ export function DeletedMemoDisplay({
   onDoubleClick,
   selectedMemoId,
   showEditDate = false,
-  showBoardName = false,
-  showTags = false,
+  showBoardName = true,
+  showTags = true,
   selectedBoardIds = [],
   boardFilterMode = "include",
   selectedTagIds = [],
@@ -427,7 +421,6 @@ export function DeletedMemoDisplay({
         key={memo.id}
         itemType="memo"
         item={memo}
-        viewMode={viewMode}
         variant="deleted"
         isChecked={props.isChecked}
         onToggleCheck={props.onToggleCheck}
@@ -449,7 +442,6 @@ export function DeletedMemoDisplay({
   return (
     <ItemStatusDisplay
       items={deletedMemos}
-      viewMode={viewMode}
       effectiveColumnCount={effectiveColumnCount}
       selectionMode={selectionMode}
       checkedItems={checkedMemos}

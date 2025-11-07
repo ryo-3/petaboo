@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useNextDeletedItemSelection } from "@/src/hooks/use-next-deleted-item-selection";
-import { createDeletedNextSelectionHandler } from "@/src/utils/domUtils";
+import { getNextDeletedItem } from "@/src/utils/domUtils";
 
 /**
  * 削除済みアイテムの共通操作ロジック
@@ -16,10 +16,13 @@ export function useDeletedItemOperations<
   restoreOptions = {},
 }: {
   deletedItems: T[] | null;
-  onSelectDeletedItem: (item: T | null) => void;
+  onSelectDeletedItem: (item: T | null, fromFullList?: boolean) => void;
   setScreenMode: (mode: string) => void;
   editorSelector: string;
-  restoreOptions?: Record<string, unknown>;
+  restoreOptions?: {
+    isRestore?: boolean;
+    onSelectWithFromFlag?: boolean;
+  };
 }) {
   // 削除後の次選択処理
   const selectNextDeletedItem = useNextDeletedItemSelection({
@@ -37,16 +40,20 @@ export function useDeletedItemOperations<
         return;
       }
 
-      createDeletedNextSelectionHandler(
-        deletedItems,
-        deletedItem,
-        onSelectDeletedItem,
-        () => onSelectDeletedItem(null),
-        setScreenMode,
-        restoreOptions,
-      );
+      const nextItem = getNextDeletedItem(deletedItems, deletedItem);
+
+      if (nextItem) {
+        if (restoreOptions?.isRestore && restoreOptions?.onSelectWithFromFlag) {
+          onSelectDeletedItem(nextItem, true);
+        } else {
+          onSelectDeletedItem(nextItem);
+        }
+        setScreenMode("view");
+      } else {
+        onSelectDeletedItem(null);
+      }
     },
-    [deletedItems, onSelectDeletedItem, setScreenMode, restoreOptions],
+    [deletedItems, onSelectDeletedItem, restoreOptions, setScreenMode],
   );
 
   return {

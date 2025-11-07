@@ -94,7 +94,6 @@ function BoardDetailScreen({
     showTabText,
     rightPanelMode,
     selectedItemsFromList,
-    viewMode,
     columnCount,
     showEditDate,
     boardLayout,
@@ -103,7 +102,6 @@ function BoardDetailScreen({
     showTask,
     showComment,
     setRightPanelMode,
-    setViewMode,
     setColumnCount,
     setShowEditDate,
     handleBoardLayoutChange,
@@ -120,12 +118,11 @@ function BoardDetailScreen({
     setShowTabText,
   } = useBoardState();
 
-  // タグ表示管理
-  const [showTags, setShowTags] = useState(false);
-
-  const handleTagDisplayChange = (show: boolean) => {
-    setShowTags(show);
-  };
+  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
+  const [tagFilterMode, setTagFilterMode] = useState<"include" | "exclude">(
+    "include",
+  );
+  const [showTagDisplay, setShowTagDisplay] = useState(true);
 
   // propsから選択状態を使用（Fast Refresh対応）
   const selectedMemo = propSelectedMemo;
@@ -436,6 +433,11 @@ function BoardDetailScreen({
   const safeAllTaggings = allTaggings || [];
   const safeAllBoardItems = allBoardItems || [];
   const safeAllTags = allTags || [];
+  const tagOptions = safeAllTags.map((tag) => ({
+    id: tag.id,
+    name: tag.name,
+    color: tag.color ?? undefined,
+  }));
   const safeAllBoards = allBoards || [];
 
   // ボードのカテゴリーを取得
@@ -536,8 +538,6 @@ function BoardDetailScreen({
             activeTab="normal"
             onTabChange={() => {}} // ボードではタブ切り替えは無効
             onCreateNew={() => {}} // 既存のボタンを使用
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
             columnCount={columnCount}
             onColumnCountChange={setColumnCount}
             rightPanelMode={
@@ -553,8 +553,13 @@ function BoardDetailScreen({
             headerMarginBottom="mb-1.5"
             showEditDate={showEditDate}
             onShowEditDateChange={setShowEditDate}
-            showTagDisplay={showTags}
-            onShowTagDisplayChange={handleTagDisplayChange}
+            showTagDisplay={showTagDisplay}
+            onShowTagDisplayChange={setShowTagDisplay}
+            tags={safeAllTags}
+            selectedTagIds={selectedTagIds}
+            onTagFilterChange={setSelectedTagIds}
+            tagFilterMode={tagFilterMode}
+            onTagFilterModeChange={setTagFilterMode}
             boardLayout={boardLayout}
             isReversed={isReversed}
             onBoardLayoutChange={handleBoardLayoutChange}
@@ -573,6 +578,7 @@ function BoardDetailScreen({
             onSelectAll={undefined}
             isAllSelected={false}
             onCsvImport={() => setIsCSVImportModalOpen(true)}
+            teamId={teamId ?? undefined}
           />
         </div>
 
@@ -600,13 +606,14 @@ function BoardDetailScreen({
             showTabText={showTabText}
             isLoading={isLoading}
             effectiveColumnCount={effectiveColumnCount}
-            viewMode={viewMode}
             allTags={safeAllTags}
             allBoards={safeAllBoards}
             allTaggings={safeAllTaggings as Tagging[]}
             allBoardItems={safeAllBoardItems}
             showEditDate={showEditDate}
-            showTags={showTags}
+            showTags={showTagDisplay}
+            selectedTagIds={selectedTagIds}
+            tagFilterMode={tagFilterMode}
             selectedMemo={selectedMemo}
             boardId={boardId}
             onCreateNewMemo={handleCreateNewMemo}
@@ -645,10 +652,10 @@ function BoardDetailScreen({
             showTabText={showTabText}
             isLoading={isLoading}
             effectiveColumnCount={effectiveColumnCount}
-            viewMode={viewMode}
             showEditDate={showEditDate}
-            showTags={showTags}
-            showBoardName={false}
+            showTags={showTagDisplay}
+            selectedTagIds={selectedTagIds}
+            tagFilterMode={tagFilterMode}
             allTags={safeAllTags}
             allBoards={safeAllBoards}
             allTaggings={safeAllTaggings as Tagging[]}

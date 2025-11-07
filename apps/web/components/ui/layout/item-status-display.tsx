@@ -13,7 +13,6 @@ interface SortOption {
 
 interface ItemStatusDisplayProps<T extends { id: number }> {
   items: T[] | undefined;
-  viewMode: "card" | "list";
   effectiveColumnCount: number;
   selectionMode?: "select" | "check";
   checkedItems?: Set<number>;
@@ -50,7 +49,6 @@ interface ItemStatusDisplayProps<T extends { id: number }> {
 
 function ItemStatusDisplay<T extends { id: number }>({
   items,
-  viewMode,
   effectiveColumnCount,
   selectionMode = "select",
   checkedItems,
@@ -58,8 +56,8 @@ function ItemStatusDisplay<T extends { id: number }>({
   onSelectItem,
   selectedItemId,
   showEditDate = false,
-  showBoardName = false,
-  showTags = false,
+  showBoardName = true,
+  showTags = true,
   sortOptions = [],
   emptyMessage = "アイテムがありません",
   renderItem,
@@ -116,11 +114,7 @@ function ItemStatusDisplay<T extends { id: number }>({
   }
 
   return (
-    <ItemGrid
-      viewMode={viewMode}
-      effectiveColumnCount={effectiveColumnCount}
-      isBoard={isBoard}
-    >
+    <ItemGrid effectiveColumnCount={effectiveColumnCount} isBoard={isBoard}>
       {sortedItems
         .filter((item) => item && item.id !== undefined)
         .map((item, index) => {

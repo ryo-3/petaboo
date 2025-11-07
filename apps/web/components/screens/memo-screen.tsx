@@ -137,13 +137,10 @@ interface MemoScreenProps {
   hideHeaderButtons?: boolean; // ヘッダーボタンを非表示（ボードから呼び出される場合）
   hideBulkActionButtons?: boolean; // 一括操作ボタンを非表示（ボードから呼び出される場合）
   onAddToBoard?: (memoIds: number[]) => void; // ボードに追加（ボードから呼び出される場合のみ）
-  forceShowBoardName?: boolean; // ボード名表示を強制的に有効化（ボードから呼び出される場合）
   excludeBoardId?: number; // 指定されたボードに登録済みのメモを除外（ボードから呼び出される場合）
   initialSelectionMode?: "select" | "check"; // 初期選択モード
   // ボード詳細から呼び出された場合の除外アイテムリスト（originalId）
   excludeItemIds?: string[];
-  // ボードフィルターの選択肢から除外するボードID
-  excludeBoardIdFromFilter?: number;
   // URL連動
   initialMemoId?: string | null;
   // チームメンバー（コメント機能用）
@@ -173,11 +170,9 @@ function MemoScreen({
   hideHeaderButtons = false,
   hideBulkActionButtons = false,
   onAddToBoard,
-  forceShowBoardName = false,
   excludeBoardId,
   initialSelectionMode = "select",
   excludeItemIds = [],
-  excludeBoardIdFromFilter,
   initialMemoId,
   unifiedOperations,
   teamMembers = [],
@@ -205,12 +200,6 @@ function MemoScreen({
 
   // 編集日表示管理
   const [showEditDate, setShowEditDate] = useState(false);
-
-  // ボード名表示管理
-  const [showBoardName, setShowBoardName] = useState(forceShowBoardName);
-
-  // タグ表示管理
-  const [showTagDisplay, setShowTagDisplay] = useState(false);
 
   // ボードフィルター管理
   const [selectedBoardIds, setSelectedBoardIds] = useState<number[]>(
@@ -327,8 +316,6 @@ function MemoScreen({
     setScreenMode: setMemoScreenMode,
     activeTab,
     setActiveTab,
-    viewMode,
-    setViewMode,
     columnCount,
     setColumnCount,
     checkedItems: checkedMemos,
@@ -482,7 +469,6 @@ function MemoScreen({
     deleteButtonRef,
     setIsDeleting: setIsLeftDeleting,
     setIsLidOpen: setIsLeftLidOpen,
-    viewMode,
     teamMode,
     teamId,
   });
@@ -589,16 +575,6 @@ function MemoScreen({
   useEffect(() => {
     checkDomDeletionAndSelectNext();
   }, [memos, checkDomDeletionAndSelectNext]);
-
-  // 削除済タブでの表示状態初期化
-  useEffect(() => {
-    if (activeTab === "deleted") {
-      setShowBoardName(false);
-      setShowTagDisplay(false);
-    } else if (activeTab === "normal") {
-      setShowBoardName(forceShowBoardName);
-    }
-  }, [activeTab, forceShowBoardName]);
 
   // カスタムタブ切り替えハンドラー - 直接状態を制御
   const handleCustomTabChange = useCallback(
@@ -716,10 +692,6 @@ function MemoScreen({
       (memo) => !excludeItemIds.includes(memo.originalId || memo.id.toString()),
     ) || [];
 
-  // ボードフィルターから除外するボードをフィルタリング
-  const filteredBoards =
-    boards?.filter((board) => board.id !== excludeBoardIdFromFilter) || [];
-
   // 左パネルのコンテンツ
   const leftPanelContent = (
     <div
@@ -730,8 +702,6 @@ function MemoScreen({
         activeTab={displayTab as "normal" | "deleted"}
         onTabChange={handleCustomTabChange}
         onCreateNew={handleCreateNew}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
         columnCount={columnCount}
         onColumnCountChange={setColumnCount}
         rightPanelMode={memoScreenMode === "list" ? "hidden" : "view"}
@@ -752,15 +722,11 @@ function MemoScreen({
         onSortChange={setSortOptions}
         showEditDate={showEditDate}
         onShowEditDateChange={setShowEditDate}
-        showBoardName={showBoardName}
-        onShowBoardNameChange={setShowBoardName}
-        showTagDisplay={showTagDisplay}
-        onShowTagDisplayChange={setShowTagDisplay}
-        boards={filteredBoards}
+        boards={boards || []}
         selectedBoardIds={selectedBoardIds}
         onBoardFilterChange={setSelectedBoardIds}
-        filterMode={boardFilterMode}
-        onFilterModeChange={setBoardFilterMode}
+        boardFilterMode={boardFilterMode}
+        onBoardFilterModeChange={setBoardFilterMode}
         tags={tags || []}
         selectedTagIds={selectedTagIds}
         onTagFilterChange={setSelectedTagIds}
@@ -778,15 +744,12 @@ function MemoScreen({
       <DesktopLower
         currentMode="memo"
         activeTab={displayTab as "normal" | "deleted"}
-        viewMode={viewMode}
         effectiveColumnCount={effectiveColumnCount}
         isLoading={memoLoading}
         error={memoError}
         selectionMode={selectionMode}
         sortOptions={getVisibleSortOptions(activeTab)}
         showEditDate={showEditDate}
-        showBoardName={showBoardName}
-        showTags={showTagDisplay}
         selectedBoardIds={selectedBoardIds}
         boardFilterMode={boardFilterMode}
         selectedTagIds={selectedTagIds}
@@ -1057,8 +1020,6 @@ function MemoScreen({
                 activeTab={displayTab as "normal" | "deleted"}
                 onTabChange={handleCustomTabChange}
                 onCreateNew={handleCreateNew}
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
                 columnCount={columnCount}
                 onColumnCountChange={setColumnCount}
                 rightPanelMode={memoScreenMode === "list" ? "hidden" : "view"}
@@ -1078,15 +1039,11 @@ function MemoScreen({
                 onSortChange={setSortOptions}
                 showEditDate={showEditDate}
                 onShowEditDateChange={setShowEditDate}
-                showBoardName={showBoardName}
-                onShowBoardNameChange={setShowBoardName}
-                showTagDisplay={showTagDisplay}
-                onShowTagDisplayChange={setShowTagDisplay}
-                boards={filteredBoards}
+                boards={boards || []}
                 selectedBoardIds={selectedBoardIds}
                 onBoardFilterChange={setSelectedBoardIds}
-                filterMode={boardFilterMode}
-                onFilterModeChange={setBoardFilterMode}
+                boardFilterMode={boardFilterMode}
+                onBoardFilterModeChange={setBoardFilterMode}
                 tags={tags || []}
                 selectedTagIds={selectedTagIds}
                 onTagFilterChange={setSelectedTagIds}
@@ -1106,15 +1063,12 @@ function MemoScreen({
               <DesktopLower
                 currentMode="memo"
                 activeTab={displayTab as "normal" | "deleted"}
-                viewMode={viewMode}
                 effectiveColumnCount={effectiveColumnCount}
                 isLoading={memoLoading}
                 error={memoError}
                 selectionMode={selectionMode}
                 sortOptions={getVisibleSortOptions(activeTab)}
                 showEditDate={showEditDate}
-                showBoardName={showBoardName}
-                showTags={showTagDisplay}
                 selectedBoardIds={selectedBoardIds}
                 boardFilterMode={boardFilterMode}
                 selectedTagIds={selectedTagIds}

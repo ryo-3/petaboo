@@ -117,7 +117,6 @@ function BoardDetailScreen({
     showTabText,
     rightPanelMode,
     selectedItemsFromList,
-    viewMode,
     columnCount,
     showEditDate,
     boardLayout,
@@ -129,7 +128,6 @@ function BoardDetailScreen({
     showDetailPanel,
     showCommentPanel,
     setRightPanelMode,
-    setViewMode,
     setColumnCount,
     setShowEditDate,
     setShowMemo,
@@ -154,6 +152,12 @@ function BoardDetailScreen({
     setShowDetailPanel,
     setShowCommentPanel,
   } = useBoardState();
+
+  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
+  const [tagFilterMode, setTagFilterMode] = useState<"include" | "exclude">(
+    "include",
+  );
+  const [showTagDisplay, setShowTagDisplay] = useState(true);
 
   // デスクトップ判定（md: 768px以上）
   const [isDesktop, setIsDesktop] = useState(true);
@@ -901,8 +905,6 @@ function BoardDetailScreen({
               activeTab="normal"
               onTabChange={() => {}} // ボードではタブ切り替えは無効
               onCreateNew={() => {}} // 既存のボタンを使用
-              viewMode={viewMode}
-              onViewModeChange={setViewMode}
               columnCount={columnCount}
               onColumnCountChange={setColumnCount}
               rightPanelMode={
@@ -920,8 +922,13 @@ function BoardDetailScreen({
               headerMarginBottom="mb-1.5"
               showEditDate={showEditDate}
               onShowEditDateChange={setShowEditDate}
-              showTagDisplay={showTags}
-              onShowTagDisplayChange={handleTagDisplayChange}
+              showTagDisplay={showTagDisplay}
+              onShowTagDisplayChange={setShowTagDisplay}
+              tags={safeAllTags}
+              selectedTagIds={selectedTagIds}
+              onTagFilterChange={setSelectedTagIds}
+              tagFilterMode={tagFilterMode}
+              onTagFilterModeChange={setTagFilterMode}
               boardLayout={boardLayout}
               isReversed={isReversed}
               onBoardLayoutChange={handleBoardLayoutChange}
@@ -1020,7 +1027,6 @@ function BoardDetailScreen({
                                     showTabText={showTabText}
                                     isLoading={isLoading}
                                     effectiveColumnCount={effectiveColumnCount}
-                                    viewMode={viewMode}
                                     allTags={safeAllTags}
                                     allBoards={safeAllBoards}
                                     allTaggings={
@@ -1028,7 +1034,9 @@ function BoardDetailScreen({
                                     }
                                     allBoardItems={safeAllBoardItems}
                                     showEditDate={showEditDate}
-                                    showTags={showTags}
+                                    showTags={showTagDisplay}
+                                    selectedTagIds={selectedTagIds}
+                                    tagFilterMode={tagFilterMode}
                                     selectedMemo={selectedMemo}
                                     boardId={boardId}
                                     onCreateNewMemo={handleCreateNewMemo}
@@ -1072,9 +1080,10 @@ function BoardDetailScreen({
                                     showTabText={showTabText}
                                     isLoading={isLoading}
                                     effectiveColumnCount={effectiveColumnCount}
-                                    viewMode={viewMode}
                                     showEditDate={showEditDate}
-                                    showTags={showTags}
+                                    showTags={showTagDisplay}
+                                    selectedTagIds={selectedTagIds}
+                                    tagFilterMode={tagFilterMode}
                                     showBoardName={false}
                                     allTags={safeAllTags}
                                     allBoards={safeAllBoards}
@@ -1320,8 +1329,6 @@ function BoardDetailScreen({
                                   activeTab="normal"
                                   onTabChange={() => {}}
                                   onCreateNew={() => {}}
-                                  viewMode={viewMode}
-                                  onViewModeChange={setViewMode}
                                   columnCount={columnCount}
                                   onColumnCountChange={setColumnCount}
                                   rightPanelMode="view"
@@ -1335,10 +1342,13 @@ function BoardDetailScreen({
                                   headerMarginBottom="mb-0"
                                   showEditDate={showEditDate}
                                   onShowEditDateChange={setShowEditDate}
-                                  showTagDisplay={showTags}
-                                  onShowTagDisplayChange={
-                                    handleTagDisplayChange
-                                  }
+                                  showTagDisplay={showTagDisplay}
+                                  onShowTagDisplayChange={setShowTagDisplay}
+                                  tags={safeAllTags}
+                                  selectedTagIds={selectedTagIds}
+                                  onTagFilterChange={setSelectedTagIds}
+                                  tagFilterMode={tagFilterMode}
+                                  onTagFilterModeChange={setTagFilterMode}
                                   boardLayout={boardLayout}
                                   isReversed={isReversed}
                                   onBoardLayoutChange={handleBoardLayoutChange}
@@ -1399,9 +1409,10 @@ function BoardDetailScreen({
                                     showTabText={showTabText}
                                     isLoading={isLoading}
                                     effectiveColumnCount={effectiveColumnCount}
-                                    viewMode={viewMode}
                                     showEditDate={showEditDate}
-                                    showTags={showTags}
+                                    showTags={showTagDisplay}
+                                    selectedTagIds={selectedTagIds}
+                                    tagFilterMode={tagFilterMode}
                                     showBoardName={false}
                                     allTags={safeAllTags}
                                     allBoards={safeAllBoards}
@@ -1448,7 +1459,6 @@ function BoardDetailScreen({
                                     showTabText={showTabText}
                                     isLoading={isLoading}
                                     effectiveColumnCount={effectiveColumnCount}
-                                    viewMode={viewMode}
                                     allTags={safeAllTags}
                                     allBoards={safeAllBoards}
                                     allTaggings={
@@ -1456,7 +1466,9 @@ function BoardDetailScreen({
                                     }
                                     allBoardItems={safeAllBoardItems}
                                     showEditDate={showEditDate}
-                                    showTags={showTags}
+                                    showTags={showTagDisplay}
+                                    selectedTagIds={selectedTagIds}
+                                    tagFilterMode={tagFilterMode}
                                     selectedMemo={selectedMemo}
                                     boardId={boardId}
                                     onCreateNewMemo={handleCreateNewMemo}
@@ -1511,8 +1523,6 @@ function BoardDetailScreen({
                                       activeTab="normal"
                                       onTabChange={() => {}}
                                       onCreateNew={() => {}}
-                                      viewMode={viewMode}
-                                      onViewModeChange={setViewMode}
                                       columnCount={columnCount}
                                       onColumnCountChange={setColumnCount}
                                       rightPanelMode="view"
@@ -1738,9 +1748,10 @@ function BoardDetailScreen({
                                     showTabText={showTabText}
                                     isLoading={isLoading}
                                     effectiveColumnCount={effectiveColumnCount}
-                                    viewMode={viewMode}
                                     showEditDate={showEditDate}
-                                    showTags={showTags}
+                                    showTags={showTagDisplay}
+                                    selectedTagIds={selectedTagIds}
+                                    tagFilterMode={tagFilterMode}
                                     showBoardName={false}
                                     allTags={safeAllTags}
                                     allBoards={safeAllBoards}
@@ -1799,8 +1810,6 @@ function BoardDetailScreen({
                                   activeTab="normal"
                                   onTabChange={() => {}}
                                   onCreateNew={() => {}}
-                                  viewMode={viewMode}
-                                  onViewModeChange={setViewMode}
                                   columnCount={columnCount}
                                   onColumnCountChange={setColumnCount}
                                   rightPanelMode="view"
@@ -1814,10 +1823,13 @@ function BoardDetailScreen({
                                   headerMarginBottom="mb-0"
                                   showEditDate={showEditDate}
                                   onShowEditDateChange={setShowEditDate}
-                                  showTagDisplay={showTags}
-                                  onShowTagDisplayChange={
-                                    handleTagDisplayChange
-                                  }
+                                  showTagDisplay={showTagDisplay}
+                                  onShowTagDisplayChange={setShowTagDisplay}
+                                  tags={safeAllTags}
+                                  selectedTagIds={selectedTagIds}
+                                  onTagFilterChange={setSelectedTagIds}
+                                  tagFilterMode={tagFilterMode}
+                                  onTagFilterModeChange={setTagFilterMode}
                                   boardLayout={boardLayout}
                                   isReversed={isReversed}
                                   onBoardLayoutChange={handleBoardLayoutChange}
@@ -1963,8 +1975,6 @@ function BoardDetailScreen({
                                 activeTab="normal"
                                 onTabChange={() => {}}
                                 onCreateNew={() => {}}
-                                viewMode={viewMode}
-                                onViewModeChange={setViewMode}
                                 columnCount={columnCount}
                                 onColumnCountChange={setColumnCount}
                                 rightPanelMode="hidden"
@@ -2019,7 +2029,6 @@ function BoardDetailScreen({
                                 showTabText={showTabText}
                                 isLoading={isLoading}
                                 effectiveColumnCount={effectiveColumnCount}
-                                viewMode={viewMode}
                                 allTags={safeAllTags}
                                 allBoards={safeAllBoards}
                                 allTaggings={
@@ -2059,8 +2068,6 @@ function BoardDetailScreen({
                                 activeTab="normal"
                                 onTabChange={() => {}}
                                 onCreateNew={() => {}}
-                                viewMode={viewMode}
-                                onViewModeChange={setViewMode}
                                 columnCount={columnCount}
                                 onColumnCountChange={setColumnCount}
                                 rightPanelMode="hidden"
@@ -2119,7 +2126,6 @@ function BoardDetailScreen({
                                 showTabText={showTabText}
                                 isLoading={isLoading}
                                 effectiveColumnCount={effectiveColumnCount}
-                                viewMode={viewMode}
                                 showEditDate={showEditDate}
                                 showTags={showTags}
                                 showBoardName={false}
@@ -2181,8 +2187,6 @@ function BoardDetailScreen({
                                   activeTab="normal"
                                   onTabChange={() => {}}
                                   onCreateNew={() => {}}
-                                  viewMode={viewMode}
-                                  onViewModeChange={setViewMode}
                                   columnCount={columnCount}
                                   onColumnCountChange={setColumnCount}
                                   rightPanelMode="hidden"
@@ -2196,10 +2200,13 @@ function BoardDetailScreen({
                                   headerMarginBottom="mb-0"
                                   showEditDate={showEditDate}
                                   onShowEditDateChange={setShowEditDate}
-                                  showTagDisplay={showTags}
-                                  onShowTagDisplayChange={
-                                    handleTagDisplayChange
-                                  }
+                                  showTagDisplay={showTagDisplay}
+                                  onShowTagDisplayChange={setShowTagDisplay}
+                                  tags={safeAllTags}
+                                  selectedTagIds={selectedTagIds}
+                                  onTagFilterChange={setSelectedTagIds}
+                                  tagFilterMode={tagFilterMode}
+                                  onTagFilterModeChange={setTagFilterMode}
                                   boardLayout={boardLayout}
                                   isReversed={isReversed}
                                   onBoardLayoutChange={handleBoardLayoutChange}
@@ -2240,7 +2247,6 @@ function BoardDetailScreen({
                                   showTabText={showTabText}
                                   isLoading={isLoading}
                                   effectiveColumnCount={effectiveColumnCount}
-                                  viewMode={viewMode}
                                   allTags={safeAllTags}
                                   allBoards={safeAllBoards}
                                   allTaggings={
@@ -2298,8 +2304,6 @@ function BoardDetailScreen({
                                     activeTab="normal"
                                     onTabChange={() => {}}
                                     onCreateNew={() => {}}
-                                    viewMode={viewMode}
-                                    onViewModeChange={setViewMode}
                                     columnCount={columnCount}
                                     onColumnCountChange={setColumnCount}
                                     rightPanelMode="hidden"
@@ -2368,7 +2372,6 @@ function BoardDetailScreen({
                                   showTabText={showTabText}
                                   isLoading={isLoading}
                                   effectiveColumnCount={effectiveColumnCount}
-                                  viewMode={viewMode}
                                   showEditDate={showEditDate}
                                   showTags={showTags}
                                   showBoardName={false}
@@ -2424,8 +2427,6 @@ function BoardDetailScreen({
                                   activeTab="normal"
                                   onTabChange={() => {}}
                                   onCreateNew={() => {}}
-                                  viewMode={viewMode}
-                                  onViewModeChange={setViewMode}
                                   columnCount={columnCount}
                                   onColumnCountChange={setColumnCount}
                                   rightPanelMode="hidden"
@@ -2439,10 +2440,13 @@ function BoardDetailScreen({
                                   headerMarginBottom="mb-0"
                                   showEditDate={showEditDate}
                                   onShowEditDateChange={setShowEditDate}
-                                  showTagDisplay={showTags}
-                                  onShowTagDisplayChange={
-                                    handleTagDisplayChange
-                                  }
+                                  showTagDisplay={showTagDisplay}
+                                  onShowTagDisplayChange={setShowTagDisplay}
+                                  tags={safeAllTags}
+                                  selectedTagIds={selectedTagIds}
+                                  onTagFilterChange={setSelectedTagIds}
+                                  tagFilterMode={tagFilterMode}
+                                  onTagFilterModeChange={setTagFilterMode}
                                   boardLayout={boardLayout}
                                   isReversed={isReversed}
                                   onBoardLayoutChange={handleBoardLayoutChange}
@@ -2524,7 +2528,6 @@ function BoardDetailScreen({
                 showTabText={showTabText}
                 isLoading={isLoading}
                 effectiveColumnCount={effectiveColumnCount}
-                viewMode={viewMode}
                 allTags={safeAllTags}
                 allBoards={safeAllBoards}
                 allTaggings={(safeAllTaggings || []) as Tagging[]}
@@ -2567,7 +2570,6 @@ function BoardDetailScreen({
                 showTabText={showTabText}
                 isLoading={isLoading}
                 effectiveColumnCount={effectiveColumnCount}
-                viewMode={viewMode}
                 showEditDate={showEditDate}
                 showTags={showTags}
                 showBoardName={false}

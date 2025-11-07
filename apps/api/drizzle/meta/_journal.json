@@ -120,6 +120,13 @@
       "when": 1762470623515,
       "tag": "0016_bizarre_warhawk",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1762506465414,
+      "tag": "0017_card_only_view_mode",
+      "breakpoints": true
     }
   ]
 }

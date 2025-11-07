@@ -73,8 +73,6 @@ CREATE TABLE `user_preferences` (
 	`user_id` integer PRIMARY KEY NOT NULL,
 	`memo_column_count` integer DEFAULT 4 NOT NULL,
 	`task_column_count` integer DEFAULT 2 NOT NULL,
-	`memo_view_mode` text DEFAULT 'list' NOT NULL,
-	`task_view_mode` text DEFAULT 'list' NOT NULL,
 	`memo_hide_controls` integer DEFAULT false NOT NULL,
 	`task_hide_controls` integer DEFAULT false NOT NULL,
 	`hide_header` integer DEFAULT false NOT NULL,

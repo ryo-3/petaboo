@@ -18,7 +18,6 @@ interface UseMemosBulkDeleteProps {
   deleteButtonRef?: React.RefObject<HTMLButtonElement | null>;
   setIsDeleting?: (isDeleting: boolean) => void;
   setIsLidOpen?: (isOpen: boolean) => void;
-  viewMode?: "list" | "card";
   teamMode?: boolean;
   teamId?: number;
 }

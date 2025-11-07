@@ -83,8 +83,7 @@
 - **日本語コメント・文字列を扱う場合はUTF-8前提で依頼すること**
   → 文字化け防止のため明記する
 - **Codexに git add / git commit を実行させないこと**
-- **完了した場合ファイル名の冒頭に `fixed-` をつける**
-  → 例: `team-home-header-improvement.md` → `fixed-team-home-header-improvement.md`
+- **完了した場合ファイルを`.claude/fixed-plans` に移動する**
 
 ---
 

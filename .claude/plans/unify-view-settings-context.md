@@ -14,7 +14,9 @@
 ## 🎯 目的
 
 DesktopUpper、ControlPanelなどの大量のPropsを削減し、状態管理を一元化する。
-`UserPreferencesContext`を`ViewSettingsContext`に改名・拡張し、DB永続化される設定とセッション限りの状態を統合管理する。
+`ViewSettingsContext`を新規作成し、**localStorage**で永続化される設定とセッション限りの状態を統合管理する。
+
+**重要**: UI表示設定はlocalStorageで管理し、API/DBは使用しない（UserPreferencesContextと併用）。
 
 ## 📋 現在の問題点
 
@@ -49,13 +51,14 @@ DesktopUpper、ControlPanelなどの大量のPropsを削減し、状態管理を
 
 ### 設計思想
 
-1. **DB永続化される設定** - `preferences`
+1. **localStorage永続化される設定** - `viewSettings`
    - カラム数、表示/非表示設定など
    - ページリロードしても保持
+   - キー: `petaboo_view_settings_{userId}`
 
 2. **セッション限りの状態** - `sessionState`
    - フィルター、ソート設定など
-   - ページリロードでリセット
+   - ページリロードでリセット（メモリのみ）
 
 3. **画面モード別の設定** - `mode: "memo" | "task" | "board"`
    - 各画面で適切なデフォルト値を使用
@@ -64,12 +67,10 @@ DesktopUpper、ControlPanelなどの大量のPropsを削減し、状態管理を
 
 ## 📐 新しい型定義
 
-### ViewSettings (DB永続化)
+### ViewSettings (localStorage永続化)
 
 ```typescript
 export interface ViewSettings {
-  userId: number;
-
   // カラム数
   memoColumnCount: number;
   taskColumnCount: number;
@@ -81,11 +82,9 @@ export interface ViewSettings {
   hideHeader: boolean;
 
   // 表示切り替え
-  showEditDate: boolean; // 編集日表示
   showTagDisplay: boolean; // タグ表示（ボード詳細用）
 
-  createdAt: number;
-  updatedAt: number;
+  // 注: showEditDate は削除済み（常時表示に変更）
 }
 ```
 
@@ -115,11 +114,9 @@ interface SessionState {
 
 ```typescript
 interface ViewSettingsContextType {
-  // DB永続化設定
-  settings: ViewSettings | null;
-  loading: boolean;
-  error: string | null;
-  updateSettings: (updates: Partial<ViewSettings>) => Promise<void>;
+  // localStorage永続化設定
+  settings: ViewSettings;
+  updateSettings: (updates: Partial<ViewSettings>) => void;
 
   // セッション状態
   sessionState: SessionState;
@@ -127,81 +124,55 @@ interface ViewSettingsContextType {
 
   // ユーティリティ
   resetFilters: () => void;
-  refreshSettings: () => Promise<void>;
+  resetAllSettings: () => void; // localStorage含めて全リセット
 }
 ```
+
+**注**: `loading`と`error`は不要（localStorageは同期処理）
 
 ---
 
 ## 🔄 実装手順
 
-### フェーズ1: DB・スキーマ変更
+### フェーズ1: Context作成
 
-#### 1. API側スキーマ更新
-
-**ファイル**: `apps/api/src/db/schema/user-preferences.ts`
-
-```typescript
-export const userPreferences = sqliteTable("user_preferences", {
-  userId: integer("user_id").primaryKey(),
-  memoColumnCount: integer("memo_column_count").default(4).notNull(),
-  taskColumnCount: integer("task_column_count").default(2).notNull(),
-  boardColumnCount: integer("board_column_count").default(3).notNull(), // 🆕
-  memoHideControls: integer("memo_hide_controls", { mode: "boolean" })
-    .default(false)
-    .notNull(),
-  taskHideControls: integer("task_hide_controls", { mode: "boolean" })
-    .default(false)
-    .notNull(),
-  hideHeader: integer("hide_header", { mode: "boolean" })
-    .default(false)
-    .notNull(),
-  showEditDate: integer("show_edit_date", { mode: "boolean" })
-    .default(false)
-    .notNull(), // 🆕
-  showTagDisplay: integer("show_tag_display", { mode: "boolean" })
-    .default(true)
-    .notNull(), // 🆕
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
-});
-```
-
-#### 2. マイグレーション生成
-
-```bash
-npm run db:generate
-```
-
-生成されるマイグレーション例：
-
-```sql
-ALTER TABLE `user_preferences` ADD COLUMN `board_column_count` integer DEFAULT 3 NOT NULL;
-ALTER TABLE `user_preferences` ADD COLUMN `show_edit_date` integer DEFAULT 0 NOT NULL;
-ALTER TABLE `user_preferences` ADD COLUMN `show_tag_display` integer DEFAULT 1 NOT NULL;
-```
-
-#### 3. API Routes更新
-
-**ファイル**: `apps/api/src/routes/user-preferences/route.ts`
-
-- 新しいカラムをPUT/GETに追加
-
----
-
-### フェーズ2: Context作成・移行
-
-#### 4. 新しいContext作成
+#### 1. 新しいContext作成
 
 **ファイル**: `apps/web/src/contexts/view-settings-context.tsx`
 
-- `UserPreferencesContext`をコピーして改名
+**実装内容**:
+
 - `ViewSettings`型を定義
 - `SessionState`を追加
-- `updateSessionState()`メソッド追加
-- デフォルト値を設定
+- localStorageの読み書き処理（`petaboo_view_settings_{userId}`）
+- `updateSettings()`: settingsを更新してlocalStorageに保存
+- `updateSessionState()`: sessionStateのみ更新（メモリ）
+- `resetFilters()`: sessionStateをリセット
+- `resetAllSettings()`: 全てリセット
 
-#### 5. Providerをアプリに追加
+**デフォルト値**:
+
+```typescript
+const DEFAULT_SETTINGS: ViewSettings = {
+  memoColumnCount: 4,
+  taskColumnCount: 2,
+  boardColumnCount: 3,
+  memoHideControls: false,
+  taskHideControls: false,
+  hideHeader: false,
+  showTagDisplay: true,
+};
+
+const DEFAULT_SESSION_STATE: SessionState = {
+  selectedTagIds: [],
+  tagFilterMode: "include",
+  selectedBoardIds: [],
+  boardFilterMode: "include",
+  sortOptions: [],
+};
+```
+
+#### 2. Providerをアプリに追加
 
 **ファイル**: `apps/web/app/layout.tsx` または各画面
 
@@ -219,21 +190,21 @@ export default function Layout({ children }) {
 
 ---
 
-### フェーズ3: 各画面の移行
+### フェーズ2: 各画面の移行
 
-#### 6. board-detail-screen.tsx を移行
+#### 3. board-detail-screen.tsx を移行
 
 **削除するstate**:
 
 ```typescript
 // Before
-const [showEditDate, setShowEditDate] = useState(false);
 const [showTagDisplay, setShowTagDisplay] = useState(true);
 const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
 const [tagFilterMode, setTagFilterMode] = useState<"include" | "exclude">(
   "include",
 );
 const [columnCount, setColumnCount] = useState(3);
+// 注: showEditDate は既に削除済み
 ```
 
 **Contextから取得**:
@@ -249,12 +220,14 @@ const { settings, sessionState, updateSettings, updateSessionState } =
 ```typescript
 // Before (20個のProps)
 <DesktopUpper
-  showEditDate={showEditDate}
-  onShowEditDateChange={setShowEditDate}
   showTagDisplay={showTagDisplay}
   onShowTagDisplayChange={setShowTagDisplay}
   columnCount={columnCount}
   onColumnCountChange={setColumnCount}
+  selectedTagIds={selectedTagIds}
+  onTagFilterChange={setSelectedTagIds}
+  tagFilterMode={tagFilterMode}
+  onTagFilterModeChange={setTagFilterMode}
   // ... 以下省略
 />
 
@@ -266,33 +239,33 @@ const { settings, sessionState, updateSettings, updateSessionState } =
 />
 ```
 
-#### 7. board-detail-screen-3panel.tsx を移行
+#### 4. board-detail-screen-3panel.tsx を移行
 
 同様の対応
 
-#### 8. memo-screen.tsx を移行
+#### 5. memo-screen.tsx を移行
 
-同様の対応
+同様の対応（カラム数、フィルター、ソート設定をContextに移行）
 
-#### 9. task-screen.tsx を移行
+#### 6. task-screen.tsx を移行
 
-同様の対応
+同様の対応（カラム数、フィルター、ソート設定をContextに移行）
 
 ---
 
-### フェーズ4: コンポーネント内部の修正
+### フェーズ3: コンポーネント内部の修正
 
-#### 10. DesktopUpper を修正
+#### 7. DesktopUpper を修正
 
 **ファイル**: `apps/web/components/layout/desktop-upper.tsx`
 
 **Props削除**:
 
-- `showEditDate`, `onShowEditDateChange`
 - `showTagDisplay`, `onShowTagDisplayChange`
 - `columnCount`, `onColumnCountChange`
 - `selectedTagIds`, `onTagFilterChange`, `tagFilterMode`, `onTagFilterModeChange`
 - `selectedBoardIds`, `onBoardFilterChange`, `boardFilterMode`, `onBoardFilterModeChange`
+- `sortOptions`, `onSortChange`
 
 **Contextから取得**:
 
@@ -303,9 +276,13 @@ function DesktopUpper({ currentMode, customTitle, ... }) {
   const { settings, sessionState, updateSettings, updateSessionState } = useViewSettings();
 
   // Contextから直接値を取得
-  const showEditDate = settings?.showEditDate ?? false;
-  const columnCount = settings?.memoColumnCount ?? 4; // modeに応じて切り替え
+  const columnCount =
+    currentMode === "memo" ? settings.memoColumnCount :
+    currentMode === "task" ? settings.taskColumnCount :
+    settings.boardColumnCount;
+
   const selectedTagIds = sessionState.selectedTagIds;
+  const sortOptions = sessionState.sortOptions;
 
   return (
     <ControlPanel
@@ -316,15 +293,14 @@ function DesktopUpper({ currentMode, customTitle, ... }) {
 }
 ```
 
-#### 11. ControlPanel を修正
+#### 8. ControlPanel を修正
 
 **ファイル**: `apps/web/components/ui/controls/control-panel.tsx`
 
 同様にPropsを削減し、Contextから取得
 
-#### 12. 各Toggle/Selectorコンポーネント修正
+#### 9. 各Toggle/Selectorコンポーネント修正
 
-- EditDateToggle
 - TagDisplayToggle
 - ColumnCountSelector
 - SortToggle
@@ -332,44 +308,41 @@ function DesktopUpper({ currentMode, customTitle, ... }) {
 
 ---
 
-### フェーズ5: クリーンアップ
+### フェーズ4: クリーンアップ
 
-#### 13. 古いContextを削除
-
-**ファイル**: `apps/web/src/contexts/user-preferences-context.tsx`
-
-削除または非推奨マークを付ける
-
-#### 14. 不要なPropsインターフェースを削除
+#### 10. 不要なPropsインターフェースを削除
 
 - `DesktopUpperProps`を大幅に簡素化
 - `ControlPanelProps`を簡素化
 
+**注**: `UserPreferencesContext`は引き続き使用（DB永続化が必要な設定用）
+
 ---
 
-### フェーズ6: 品質チェック
+### フェーズ5: 品質チェック
 
-#### 15. 型チェック＆lint
+#### 11. 型チェック＆lint
 
 ```bash
 npm run check:wsl
 npm run check:api
 ```
 
-#### 16. 動作確認
+#### 12. 動作確認
 
-- [ ] メモ一覧でカラム数変更が保存される
-- [ ] タスク一覧で編集日表示切り替えが保存される
+- [ ] メモ一覧でカラム数変更がlocalStorageに保存される
+- [ ] タスク一覧でカラム数変更がlocalStorageに保存される
 - [ ] ボード詳細でタグフィルターが動作する（セッション限り）
-- [ ] ページリロード後も設定が保持される
-- [ ] フィルターはリセットされる
+- [ ] ページリロード後も設定（カラム数等）が保持される
+- [ ] ページリロード後、フィルターはリセットされる
+- [ ] localStorageキーが正しい（`petaboo_view_settings_{userId}`）
 
 ---
 
 ## ✅ 完了条件
 
 - ✅ ViewSettingsContextが作成され、アプリ全体で使用可能
-- ✅ DBスキーマにshowEditDate、showTagDisplay、boardColumnCountが追加
+- ✅ localStorageで設定が永続化される（DBは使用しない）
 - ✅ DesktopUpper、ControlPanelのPropsが80%削減
 - ✅ 各画面のuseStateが削除され、Contextから取得
 - ✅ 型エラー・lintエラーがゼロ
@@ -382,10 +355,9 @@ npm run check:api
 ### 修正ファイル数（予測）
 
 - **新規作成**: 1ファイル（view-settings-context.tsx）
-- **DB関連**: 2ファイル（スキーマ、マイグレーション）
 - **画面コンポーネント**: 4ファイル（memo, task, board, board-3panel）
 - **共通コンポーネント**: 10ファイル（DesktopUpper, ControlPanel, 各Toggle等）
-- **合計**: 約17ファイル
+- **合計**: 約15ファイル
 
 ### Props削減効果
 
@@ -411,51 +383,51 @@ npm run check:api
    - Context更新時の再レンダリングに注意
    - 必要に応じてuseMemoを使用
 
-4. **チーム機能との統合**
-   - チームモードでも同じContextを使用
-   - teamIdによる設定の切り替え対応
+4. **localStorage管理**
+   - ユーザーごとにキーを分ける（`petaboo_view_settings_{userId}`）
+   - チームモード用の設定は別途検討（必要に応じてteamIdも含める）
+
+5. **UserPreferencesContextとの併用**
+   - DB永続化が必要な設定: UserPreferencesContext（既存）
+   - UI表示設定: ViewSettingsContext（新規、localStorage）
+   - 将来的に統合する可能性あり
 
 ---
 
 ## 📝 Codex用ToDoリスト
 
-### DB・スキーマ
-
-- [ ] user-preferencesスキーマにboardColumnCount、showEditDate、showTagDisplay追加
-- [ ] マイグレーション生成・確認
-- [ ] API Routesに新しいカラムを追加
-
 ### Context作成
 
 - [ ] view-settings-context.tsx作成
-- [ ] ViewSettings型定義
+- [ ] ViewSettings型定義（showEditDate削除済み）
 - [ ] SessionState型定義
+- [ ] localStorage読み書き処理実装（`petaboo_view_settings_{userId}`）
 - [ ] updateSettings、updateSessionState実装
+- [ ] resetFilters、resetAllSettings実装
 
 ### 画面移行
 
-- [ ] board-detail-screen.tsx移行
+- [ ] board-detail-screen.tsx移行（showTagDisplay、columnCount、フィルター）
 - [ ] board-detail-screen-3panel.tsx移行
-- [ ] memo-screen.tsx移行
-- [ ] task-screen.tsx移行
+- [ ] memo-screen.tsx移行（columnCount、フィルター、ソート）
+- [ ] task-screen.tsx移行（columnCount、フィルター、ソート）
 
 ### コンポーネント修正
 
 - [ ] desktop-upper.tsx修正（Props削減、Context使用）
 - [ ] control-panel.tsx修正（Props削減、Context使用）
-- [ ] EditDateToggle修正
 - [ ] TagDisplayToggle修正
 - [ ] ColumnCountSelector修正
+- [ ] SortToggle修正
 - [ ] その他Toggleコンポーネント修正
 
 ### クリーンアップ
 
-- [ ] 旧user-preferences-context.tsx削除または非推奨化
 - [ ] 不要なPropsインターフェース削除
-- [ ] 型チェック
-- [ ] 動作確認
+- [ ] 型チェック（`npm run check:wsl`）
+- [ ] 動作確認（カラム数、フィルター、localStorage）
 
 ---
 
 **作成日**: 2025-01-07
-**最終更新**: 2025-01-07
+**最終更新**: 2025-01-08（localStorage方式に変更）

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useNavigation } from "@/contexts/navigation-context";
+import { useNavigation } from "@/src/contexts/navigation-context";
 import { useTeamDetail } from "@/src/contexts/team-detail-context";
 import { useClerk } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";

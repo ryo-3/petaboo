@@ -15,7 +15,7 @@ import {
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import NotificationList from "@/components/features/notifications/notification-list";
-import { useTeamContext } from "@/contexts/team-context";
+import { useTeamContext } from "@/src/contexts/team-context";
 
 interface WelcomeScreenProps {
   teamName?: string;

@@ -11,7 +11,7 @@ import type { Tagging, Tag } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
 import { useTags } from "@/src/hooks/use-tags";
 import { useState } from "react";
-import { useNavigation } from "@/contexts/navigation-context";
+import { useNavigation } from "@/src/contexts/navigation-context";
 import { useAuth } from "@clerk/nextjs";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCreatorInfo } from "@/src/hooks/use-creator-info";

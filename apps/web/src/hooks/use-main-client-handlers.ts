@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useNavigation } from "@/contexts/navigation-context";
+import { useNavigation } from "@/src/contexts/navigation-context";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
 

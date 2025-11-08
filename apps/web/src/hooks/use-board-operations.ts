@@ -18,7 +18,7 @@ import { BoardItemWithContent, BoardWithItems } from "@/src/types/board";
 import { Memo, DeletedMemo } from "@/src/types/memo";
 import { Task, DeletedTask } from "@/src/types/task";
 import { OriginalIdUtils } from "@/src/types/common";
-import { useTeamContext } from "@/contexts/team-context";
+import { useTeamContext } from "@/src/contexts/team-context";
 
 interface UseBoardOperationsProps {
   boardId: number;

@@ -12,7 +12,7 @@ import type { Board } from "@/src/types/board";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
 import { RefObject } from "react";
-import { useNavigation } from "@/contexts/navigation-context";
+import { useNavigation } from "@/src/contexts/navigation-context";
 import { useUnifiedItemOperations } from "@/src/hooks/use-unified-item-operations";
 
 interface MainContentAreaProps {

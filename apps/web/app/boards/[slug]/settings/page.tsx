@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import BoardSettingsScreen from "@/components/screens/board-settings-screen";
-import { NavigationProvider } from "@/contexts/navigation-context";
+import { NavigationProvider } from "@/src/contexts/navigation-context";
 
 interface BoardSettingsPageProps {
   params: Promise<{ slug: string }>;

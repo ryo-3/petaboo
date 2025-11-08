@@ -11,7 +11,7 @@ import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
 import { useTags } from "@/src/hooks/use-tags";
 import { useTeamTags } from "@/src/hooks/use-team-tags";
 import { useAllTeamTaggings } from "@/src/hooks/use-team-taggings";
-import { useTeamContext } from "@/contexts/team-context";
+import { useTeamContext } from "@/src/contexts/team-context";
 import { useViewSettings } from "@/src/contexts/view-settings-context";
 import { useTeamDetailSafe } from "@/src/contexts/team-detail-context";
 import { useDeletedMemos, useDeleteMemo } from "@/src/hooks/use-memos";

@@ -5,7 +5,7 @@ import DesktopLayout from "@/components/layout/desktop-layout";
 import Header from "@/components/layout/header";
 import Sidebar from "@/components/layout/sidebar";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
-import { useNavigation } from "@/contexts/navigation-context";
+import { useNavigation } from "@/src/contexts/navigation-context";
 import {
   useUpdateTeamBoard,
   useToggleTeamBoardCompletion,

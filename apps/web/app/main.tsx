@@ -1,5 +1,5 @@
 import MainClient from "@/components/client/main-client";
-import { NavigationProvider } from "@/contexts/navigation-context";
+import { NavigationProvider } from "@/src/contexts/navigation-context";
 
 interface MainProps {
   initialBoardName?: string;

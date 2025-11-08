@@ -18,7 +18,7 @@ import { useSortOptions } from "@/hooks/use-sort-options";
 import type { Tag, Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
 import { OriginalIdUtils } from "@/src/types/common";
-import { useTeamContext } from "@/contexts/team-context";
+import { useTeamContext } from "@/src/contexts/team-context";
 
 interface BoardTaskSectionProps {
   boardId: number;

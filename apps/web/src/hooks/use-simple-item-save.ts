@@ -9,7 +9,7 @@ import {
   useRemoveItemFromBoard,
 } from "@/src/hooks/use-boards";
 import { useQueryClient } from "@tanstack/react-query";
-import { useTeamContext } from "@/contexts/team-context";
+import { useTeamContext } from "@/src/contexts/team-context";
 
 type UnifiedItem = Memo | Task;
 

@@ -14,7 +14,7 @@ import { useTeamTags } from "@/src/hooks/use-team-tags";
 import { useAllTaggings } from "@/src/hooks/use-all-data";
 import { useAllTeamTaggings } from "@/src/hooks/use-team-taggings";
 import { useState, useEffect } from "react";
-import { useNavigation } from "@/contexts/navigation-context";
+import { useNavigation } from "@/src/contexts/navigation-context";
 import { useAuth } from "@clerk/nextjs";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCreatorInfo } from "@/src/hooks/use-creator-info";

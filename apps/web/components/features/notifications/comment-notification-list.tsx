@@ -4,7 +4,7 @@ import {
   useNotifications,
   useMarkNotificationAsRead,
 } from "@/src/hooks/use-notifications";
-import { useTeamContextSafe } from "@/contexts/team-context";
+import { useTeamContextSafe } from "@/src/contexts/team-context";
 import { Bell, MessageSquare } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";

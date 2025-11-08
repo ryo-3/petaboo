@@ -9,7 +9,7 @@ import { useMainClientHandlers } from "@/src/hooks/use-main-client-handlers";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
-import { useNavigation } from "@/contexts/navigation-context";
+import { useNavigation } from "@/src/contexts/navigation-context";
 import { usePathname } from "next/navigation";
 import { useLayoutEffect, useRef, useState, useEffect } from "react";
 

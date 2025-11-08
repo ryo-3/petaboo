@@ -6,7 +6,7 @@ import {
   useNotifications,
   useMarkNotificationAsRead,
 } from "@/src/hooks/use-notifications";
-import { useTeamContextSafe } from "@/contexts/team-context";
+import { useTeamContextSafe } from "@/src/contexts/team-context";
 import { usePageVisibility } from "@/src/contexts/PageVisibilityContext";
 import { Bell, Users, Clock, ArrowRight, MessageSquare } from "lucide-react";
 import { useRouter } from "next/navigation";

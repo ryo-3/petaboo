@@ -16,7 +16,7 @@ import TagTriggerButton from "@/components/features/tags/tag-trigger-button";
 import TagSelectionModal from "@/components/ui/modals/tag-selection-modal";
 import { useSimpleItemSave } from "@/src/hooks/use-simple-item-save";
 import { useAddItemToBoard } from "@/src/hooks/use-boards";
-import { useTeamContext } from "@/contexts/team-context";
+import { useTeamContext } from "@/src/contexts/team-context";
 import { useTeamDetail } from "@/src/contexts/team-detail-context";
 import {
   useCreateTagging,

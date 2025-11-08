@@ -78,7 +78,7 @@ import { useRef, useMemo, useState } from "react";
 import { BulkActionButtons } from "@/components/ui/layout/bulk-action-buttons";
 import { useBulkDeleteButton } from "@/src/hooks/use-bulk-delete-button";
 import { useBoardBulkRestore } from "@/src/hooks/use-board-bulk-restore";
-import { useTeamContext } from "@/contexts/team-context";
+import { useTeamContext } from "@/src/contexts/team-context";
 
 export default function BoardMemoSection({
   rightPanelMode,

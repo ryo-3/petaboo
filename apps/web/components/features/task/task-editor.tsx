@@ -54,7 +54,7 @@ import {
   generateTeamShareUrl,
   extractTeamNameFromUrl,
 } from "@/src/utils/urlUtils";
-import { useTeamContext } from "@/contexts/team-context";
+import { useTeamContext } from "@/src/contexts/team-context";
 import { useTeamDetail } from "@/src/contexts/team-detail-context";
 import { useTeamDetail as useTeamDetailQuery } from "@/src/hooks/use-team-detail";
 

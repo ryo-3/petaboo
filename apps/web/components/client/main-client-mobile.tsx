@@ -1,6 +1,6 @@
 import DeletedMemoList from "@/components/features/memo/deleted-memo-list";
 import Sidebar from "@/components/layout/sidebar";
-import { useNavigation } from "@/contexts/navigation-context";
+import { useNavigation } from "@/src/contexts/navigation-context";
 import type { Board } from "@/src/types/board";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task } from "@/src/types/task";

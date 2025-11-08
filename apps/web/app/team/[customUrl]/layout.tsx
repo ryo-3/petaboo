@@ -14,8 +14,8 @@ import ItemEditorFooter from "@/components/mobile/item-editor-footer";
 import {
   NavigationProvider,
   useNavigation,
-} from "@/contexts/navigation-context";
-import { TeamProvider } from "@/contexts/team-context";
+} from "@/src/contexts/navigation-context";
+import { TeamProvider } from "@/src/contexts/team-context";
 import {
   TeamDetailProvider,
   useTeamDetail as useTeamDetailContext,

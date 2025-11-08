@@ -21,6 +21,7 @@ import {
 } from "@/src/hooks/use-memos";
 import { useRightEditorDelete } from "@/src/hooks/use-right-editor-delete";
 import { useScreenState } from "@/src/hooks/use-screen-state";
+import { useMultiSelection } from "@/src/hooks/use-multi-selection";
 import { useSelectAll } from "@/src/hooks/use-select-all";
 import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
@@ -199,11 +200,6 @@ function MemoScreen({
     "memo" | "comment" | "image"
   >("memo");
 
-  // 選択モード管理
-  const [selectionMode, setSelectionMode] = useState<"select" | "check">(
-    initialSelectionMode,
-  );
-
   // ViewSettingsContextから取得した値を使用
   const selectedBoardIds = sessionState.selectedBoardIds;
   const setSelectedBoardIds = (ids: number[]) =>
@@ -324,10 +320,10 @@ function MemoScreen({
     setScreenMode: setMemoScreenMode,
     activeTab,
     setActiveTab,
-    checkedItems: checkedMemos,
-    setCheckedItems: setCheckedMemos,
-    checkedDeletedItems: checkedDeletedMemos,
-    setCheckedDeletedItems: setCheckedDeletedMemos,
+    checkedItems: unusedCheckedMemos, // useScreenStateから取得するが使わない
+    setCheckedItems: unusedSetCheckedMemos,
+    checkedDeletedItems: unusedCheckedDeletedMemos,
+    setCheckedDeletedItems: unusedSetCheckedDeletedMemos,
   } = useScreenState(
     { type: "memo", defaultActiveTab: "normal", defaultColumnCount: 4 },
     "list" as MemoScreenMode,
@@ -336,6 +332,36 @@ function MemoScreen({
     preferences || undefined,
   );
   const memoScreenMode = screenMode as MemoScreenMode;
+
+  // 選択状態管理（useMultiSelectionに統一）
+  const {
+    selectionMode,
+    handleSelectionModeChange,
+    checkedNormalMemos,
+    setCheckedNormalMemos,
+    checkedDeletedMemos: checkedDeletedMemosFromMultiSelection,
+    setCheckedDeletedMemos: setCheckedDeletedMemosFromMultiSelection,
+  } = useMultiSelection({ activeMemoTab: activeTab, activeTaskTab: "" });
+
+  // initialSelectionModeを反映
+  useEffect(() => {
+    if (initialSelectionMode && selectionMode !== initialSelectionMode) {
+      handleSelectionModeChange(initialSelectionMode);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // エイリアス: 既存のコードとの互換性のため（型アサーション）
+  const checkedMemos = checkedNormalMemos as Set<number>;
+  const setCheckedMemos = setCheckedNormalMemos as React.Dispatch<
+    React.SetStateAction<Set<number>>
+  >;
+  const checkedDeletedMemos =
+    checkedDeletedMemosFromMultiSelection as Set<number>;
+  const setCheckedDeletedMemos =
+    setCheckedDeletedMemosFromMultiSelection as React.Dispatch<
+      React.SetStateAction<Set<number>>
+    >;
 
   // ViewSettingsContextからカラム数を取得・設定
   const columnCount = settings.memoColumnCount;
@@ -722,14 +748,7 @@ function MemoScreen({
         onCreateNew={handleCreateNew}
         rightPanelMode={memoScreenMode === "list" ? "hidden" : "view"}
         selectionMode={selectionMode}
-        onSelectionModeChange={(mode) => {
-          setSelectionMode(mode);
-          // checkモードからselectモードに切り替える時、選択状態をクリア
-          if (mode === "select") {
-            setCheckedMemos(new Set());
-            setCheckedDeletedMemos(new Set());
-          }
-        }}
+        onSelectionModeChange={handleSelectionModeChange}
         onSelectAll={handleSelectAll}
         isAllSelected={isAllSelected}
         hideControls={false}
@@ -1024,13 +1043,7 @@ function MemoScreen({
                 onCreateNew={handleCreateNew}
                 rightPanelMode={memoScreenMode === "list" ? "hidden" : "view"}
                 selectionMode={selectionMode}
-                onSelectionModeChange={(mode) => {
-                  setSelectionMode(mode);
-                  if (mode === "select") {
-                    setCheckedMemos(new Set());
-                    setCheckedDeletedMemos(new Set());
-                  }
-                }}
+                onSelectionModeChange={handleSelectionModeChange}
                 onSelectAll={handleSelectAll}
                 isAllSelected={isAllSelected}
                 hideControls={false}

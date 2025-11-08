@@ -16,6 +16,7 @@ import { useDeletionLid } from "@/src/hooks/use-deletion-lid";
 import { useItemDeselect } from "@/src/hooks/use-item-deselect";
 import { useUnifiedRestoration } from "@/src/hooks/use-unified-restoration";
 import { useScreenState } from "@/src/hooks/use-screen-state";
+import { useMultiSelection } from "@/src/hooks/use-multi-selection";
 import { useSelectAll } from "@/src/hooks/use-select-all";
 import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
 import { useTabChange } from "@/src/hooks/use-tab-change";
@@ -256,11 +257,6 @@ function TaskScreen({
   // チーム用タグデータ取得
   const { data: allTeamTaggings } = useAllTeamTaggings(teamId || 0);
 
-  // 選択モード管理
-  const [selectionMode, setSelectionMode] = useState<"select" | "check">(
-    initialSelectionMode,
-  );
-
   // ViewSettingsContextから取得した値を使用
   const selectedBoardIds = sessionState.selectedBoardIds;
   const setSelectedBoardIds = (ids: number[]) =>
@@ -351,10 +347,10 @@ function TaskScreen({
     setScreenMode: setTaskScreenModeInternal,
     activeTab,
     setActiveTab,
-    checkedItems: checkedTasks,
-    setCheckedItems: setCheckedTasks,
-    checkedDeletedItems: checkedDeletedTasks,
-    setCheckedDeletedItems: setCheckedDeletedTasks,
+    checkedItems: unusedCheckedTasks, // useScreenStateから取得するが使わない
+    setCheckedItems: unusedSetCheckedTasks,
+    checkedDeletedItems: unusedCheckedDeletedTasks,
+    setCheckedDeletedItems: unusedSetCheckedDeletedTasks,
   } = useScreenState(
     { type: "task", defaultActiveTab: "todo", defaultColumnCount: 2 },
     "list" as TaskScreenMode,
@@ -362,6 +358,77 @@ function TaskScreen({
     selectedDeletedTask,
     preferences || undefined,
   );
+
+  // 選択状態管理（useMultiSelectionに統一）
+  const {
+    selectionMode,
+    handleSelectionModeChange,
+    checkedTodoTasks,
+    setCheckedTodoTasks,
+    checkedInProgressTasks,
+    setCheckedInProgressTasks,
+    checkedCompletedTasks,
+    setCheckedCompletedTasks,
+    checkedDeletedTasks: checkedDeletedTasksFromMultiSelection,
+    setCheckedDeletedTasks: setCheckedDeletedTasksFromMultiSelection,
+  } = useMultiSelection({ activeMemoTab: "", activeTaskTab: activeTab });
+
+  // initialSelectionModeを反映
+  useEffect(() => {
+    if (initialSelectionMode && selectionMode !== initialSelectionMode) {
+      handleSelectionModeChange(initialSelectionMode);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // エイリアス: 既存のコードとの互換性のため（型アサーション）
+  // タスクの場合、activeTabに応じて適切なSetを返す
+  const checkedTasks = (() => {
+    switch (activeTab) {
+      case "todo":
+        return checkedTodoTasks as Set<number>;
+      case "in_progress":
+        return checkedInProgressTasks as Set<number>;
+      case "completed":
+        return checkedCompletedTasks as Set<number>;
+      case "deleted":
+        return checkedDeletedTasksFromMultiSelection as Set<number>;
+      default:
+        return checkedTodoTasks as Set<number>;
+    }
+  })();
+
+  const setCheckedTasks = (() => {
+    switch (activeTab) {
+      case "todo":
+        return setCheckedTodoTasks as React.Dispatch<
+          React.SetStateAction<Set<number>>
+        >;
+      case "in_progress":
+        return setCheckedInProgressTasks as React.Dispatch<
+          React.SetStateAction<Set<number>>
+        >;
+      case "completed":
+        return setCheckedCompletedTasks as React.Dispatch<
+          React.SetStateAction<Set<number>>
+        >;
+      case "deleted":
+        return setCheckedDeletedTasksFromMultiSelection as React.Dispatch<
+          React.SetStateAction<Set<number>>
+        >;
+      default:
+        return setCheckedTodoTasks as React.Dispatch<
+          React.SetStateAction<Set<number>>
+        >;
+    }
+  })();
+
+  const checkedDeletedTasks =
+    checkedDeletedTasksFromMultiSelection as Set<number>;
+  const setCheckedDeletedTasks =
+    setCheckedDeletedTasksFromMultiSelection as React.Dispatch<
+      React.SetStateAction<Set<number>>
+    >;
 
   // ViewSettingsContextからカラム数を取得・設定
   const columnCount = settings.taskColumnCount;
@@ -653,14 +720,7 @@ function TaskScreen({
         onCreateNew={handleCreateNew}
         rightPanelMode={taskScreenMode === "list" ? "hidden" : "view"}
         selectionMode={selectionMode}
-        onSelectionModeChange={(mode) => {
-          setSelectionMode(mode);
-          // checkモードからselectモードに切り替える時、選択状態をクリア
-          if (mode === "select") {
-            setCheckedTasks(new Set());
-            setCheckedDeletedTasks(new Set());
-          }
-        }}
+        onSelectionModeChange={handleSelectionModeChange}
         onSelectAll={handleSelectAll}
         isAllSelected={isAllSelected}
         normalCount={0} // タスクでは使わない
@@ -962,13 +1022,7 @@ function TaskScreen({
                 onCreateNew={handleCreateNew}
                 rightPanelMode={taskScreenMode === "list" ? "hidden" : "view"}
                 selectionMode={selectionMode}
-                onSelectionModeChange={(mode) => {
-                  setSelectionMode(mode);
-                  if (mode === "select") {
-                    setCheckedTasks(new Set());
-                    setCheckedDeletedTasks(new Set());
-                  }
-                }}
+                onSelectionModeChange={handleSelectionModeChange}
                 onSelectAll={handleSelectAll}
                 isAllSelected={isAllSelected}
                 hideControls={false}

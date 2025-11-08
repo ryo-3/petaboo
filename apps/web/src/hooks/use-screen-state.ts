@@ -17,16 +17,13 @@ interface ScreenStateReturn<T extends string> {
   activeTab: string;
   setActiveTab: (tab: string) => void;
 
+  // 後方互換性のため残す（実際には使われない）
   columnCount: number;
   setColumnCount: (count: number) => void;
-
-  // Selection state
   checkedItems: Set<number>;
   setCheckedItems: React.Dispatch<React.SetStateAction<Set<number>>>;
   checkedDeletedItems: Set<number>;
   setCheckedDeletedItems: React.Dispatch<React.SetStateAction<Set<number>>>;
-
-  // Computed values
   effectiveColumnCount: number;
 }
 
@@ -41,7 +38,10 @@ export function useScreenState<T extends string>(
   // Basic state
   const [screenMode, setScreenMode] = useState<T>(initialScreenMode);
   const [activeTab, setActiveTab] = useState(config.defaultActiveTab);
-  const [columnCount, setColumnCount] = useColumnCountStorage(config.type); // メモ・タスク個別のlocalStorage設定
+
+  // ⚠️ 以下は後方互換性のため残す（Phase 1完了後に削除予定）
+  // 実際にはmemo-screen/task-screenではuseMultiSelectionを使用
+  const [columnCount, setColumnCount] = useColumnCountStorage(config.type);
   const [checkedItems, setCheckedItems] = useState<Set<number>>(new Set());
   const [checkedDeletedItems, setCheckedDeletedItems] = useState<Set<number>>(
     new Set(),

@@ -17,12 +17,11 @@ import TagIcon from "@/components/icons/tag-icon";
 import BoardSelectionModal from "@/components/ui/modals/board-selection-modal";
 import TagSelectionModal from "@/components/ui/modals/tag-selection-modal";
 import { UnifiedFilterButton } from "@/components/ui/buttons/unified-filter-button";
+import { useViewSettings } from "@/src/contexts/view-settings-context";
 
 interface ControlPanelProps {
   // 基本設定
   currentMode: "memo" | "task" | "board";
-  columnCount: number;
-  onColumnCountChange: (count: number) => void;
   rightPanelMode: "hidden" | "view" | "create";
 
   // フロート設定
@@ -108,8 +107,6 @@ interface ControlPanelProps {
 
 export default function ControlPanel({
   currentMode,
-  columnCount,
-  onColumnCountChange,
   rightPanelMode,
   floatControls = false,
   hideControls = false,
@@ -163,6 +160,26 @@ export default function ControlPanel({
   customTitle,
   hideAddButton = false,
 }: ControlPanelProps) {
+  // ViewSettingsContextから取得
+  const { settings, updateSettings } = useViewSettings();
+
+  // カラム数をContextから取得
+  const columnCount =
+    currentMode === "memo"
+      ? settings.memoColumnCount
+      : currentMode === "task"
+        ? settings.taskColumnCount
+        : settings.boardColumnCount;
+  const onColumnCountChange = (count: number) => {
+    if (currentMode === "memo") {
+      updateSettings({ memoColumnCount: count });
+    } else if (currentMode === "task") {
+      updateSettings({ taskColumnCount: count });
+    } else {
+      updateSettings({ boardColumnCount: count });
+    }
+  };
+
   const controlRef = useRef<HTMLDivElement>(null);
   const [isInitialRender, setIsInitialRender] = useState(true);
   const [windowWidth, setWindowWidth] = useState(

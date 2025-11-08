@@ -326,8 +326,6 @@ function DesktopUpper({
   const controlsContent = !shouldHideControls ? (
     <ControlPanel
       currentMode={currentMode}
-      columnCount={columnCount}
-      onColumnCountChange={onColumnCountChange}
       rightPanelMode={rightPanelMode}
       floatControls={floatControls}
       hideControls={hideControls}

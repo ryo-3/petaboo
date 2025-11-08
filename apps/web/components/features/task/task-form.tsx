@@ -236,95 +236,31 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
     );
   }
 
-  // ステータス欄のみ表示（スクロール領域用）
-  if (statusOnly) {
-    return (
-      <div className="flex gap-2 pl-2">
-        <CustomSelector
-          label="ステータス"
-          options={statusOptions}
-          value={status}
-          onChange={(value) =>
-            onStatusChange(value as "todo" | "in_progress" | "completed")
-          }
-          width="96px"
-          disabled={isDeleted}
-          hideChevron={true}
-        />
-
-        <CustomSelector
-          label="優先度"
-          options={priorityOptions}
-          value={priority}
-          onChange={(value) =>
-            onPriorityChange(value as "low" | "medium" | "high")
-          }
-          fullWidth
-          disabled={isDeleted}
-          hideChevron={true}
-        />
-
-        {showAssigneeSelector && onAssigneeChange && (
-          <AssigneeSelector
-            members={teamMembers}
-            value={resolvedAssigneeId}
-            onChange={onAssigneeChange}
-            disabled={isDeleted}
-            width="160px"
-            className="flex-shrink-0"
-          />
-        )}
-
-        <div className="flex-1 flex gap-2.5 items-center">
-          {showBoardCategory && (
-            <div className="w-80">
-              <BoardCategorySelector
-                value={boardCategoryId}
-                onChange={onBoardCategoryChange}
-                categories={boardCategories}
-                boardId={initialBoardId!}
-                disabled={isDeleted}
-                allowCreate={true}
-              />
-            </div>
-          )}
-
-          <div className="w-28">
-            <DatePickerSimple
-              value={dueDate}
-              onChange={onDueDateChange}
-              disabled={isDeleted}
-              compactMode={true}
-              placeholder="期限"
-            />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ヘッダー部分のみ表示
-  if (headerOnly) {
+  // 統合版: statusOnly と headerOnly を1つに統合
+  if (statusOnly || headerOnly) {
     return (
       <>
-        <div className="flex items-center gap-1">
-          <input
-            ref={titleInputRef}
-            type="text"
-            placeholder={titlePlaceholder}
-            value={title}
-            onChange={(e) => onTitleChange(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-              }
-            }}
-            className="flex-1 mb-1 mt-1 text-[15px] md:text-lg font-medium border-b border-DeepBlue/80 outline-none focus:border-DeepBlue"
-          />
-        </div>
+        {/* タイトル入力（statusOnlyの時は非表示） */}
+        {!statusOnly && (
+          <div className="flex items-center gap-1">
+            <input
+              ref={titleInputRef}
+              type="text"
+              placeholder={titlePlaceholder}
+              value={title}
+              onChange={(e) => onTitleChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                }
+              }}
+              className="flex-1 mb-1 mt-1 text-[15px] md:text-lg font-medium border-b border-DeepBlue/80 outline-none focus:border-DeepBlue"
+            />
+          </div>
+        )}
 
-        {/* ステータス欄（常に表示） */}
-        <div className="flex gap-2 mt-1">
+        {/* ステータスバー（統合版） */}
+        <div className={`flex gap-2 ${statusOnly ? "pl-2" : "mt-1"}`}>
           <CustomSelector
             label="ステータス"
             options={statusOptions}
@@ -359,39 +295,41 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
               value={resolvedAssigneeId}
               onChange={onAssigneeChange}
               disabled={isDeleted}
-              width="140px"
+              width="160px"
               compact
               hideLabel
               className="flex-shrink-0"
             />
           )}
 
-          {showBoardCategory && (
-            <div className="flex-1">
-              <BoardCategorySelector
-                value={boardCategoryId}
-                onChange={onBoardCategoryChange}
-                categories={boardCategories}
-                boardId={initialBoardId!}
+          <div className="flex-1 flex gap-2.5 items-center">
+            {showBoardCategory && (
+              <div className="flex-1 md:w-80">
+                <BoardCategorySelector
+                  value={boardCategoryId}
+                  onChange={onBoardCategoryChange}
+                  categories={boardCategories}
+                  boardId={initialBoardId!}
+                  disabled={isDeleted}
+                  allowCreate={true}
+                />
+              </div>
+            )}
+
+            <div className="w-28">
+              <DatePickerSimple
+                value={dueDate}
+                onChange={onDueDateChange}
                 disabled={isDeleted}
-                allowCreate={true}
+                compactMode={true}
+                placeholder="期限"
               />
             </div>
-          )}
-
-          <div className="w-28">
-            <DatePickerSimple
-              value={dueDate}
-              onChange={onDueDateChange}
-              disabled={isDeleted}
-              compactMode={true}
-              placeholder="期限"
-            />
           </div>
         </div>
 
-        {/* 作成者・日付を表示（ツールバー非表示時のみ） */}
-        {task && task.id !== 0 && !toolbarVisible && (
+        {/* 作成者・日付を表示（headerOnlyかつツールバー非表示時のみ） */}
+        {headerOnly && task && task.id !== 0 && !toolbarVisible && (
           <div className="flex justify-end items-center gap-2 mr-2 mt-1 mb-1">
             <CreatorAvatar
               createdBy={createdBy}
@@ -404,8 +342,8 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
           </div>
         )}
 
-        {/* 書式ツールバー（固定表示・日付の代わりに表示） */}
-        {!isDeleted && toolbarVisible && (
+        {/* 書式ツールバー（headerOnlyかつツールバー表示時のみ） */}
+        {headerOnly && !isDeleted && toolbarVisible && (
           <Toolbar editor={tiptapEditor || null} />
         )}
       </>
@@ -446,7 +384,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
     );
   }
 
-  // 通常表示（全体）
+  // 通常表示（全体）- 統合版に変更
   return (
     <div className="flex flex-col flex-1 min-h-0">
       <div className="flex items-center gap-1">
@@ -461,7 +399,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
               e.preventDefault();
             }
           }}
-          className="flex-1 mb-1 mt-1 text-lg font-medium border-b border-DeepBlue/80 outline-none focus:border-DeepBlue"
+          className="flex-1 mb-1 mt-1 text-[15px] md:text-lg font-medium border-b border-DeepBlue/80 outline-none focus:border-DeepBlue"
         />
       </div>
 
@@ -475,6 +413,8 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
           }
           width="96px"
           disabled={isDeleted}
+          hideLabel={true}
+          compactMode={true}
           hideChevron={true}
         />
 
@@ -487,6 +427,8 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
           }
           fullWidth
           disabled={isDeleted}
+          hideLabel={true}
+          compactMode={true}
           hideChevron={true}
         />
 
@@ -496,14 +438,16 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
             value={resolvedAssigneeId}
             onChange={onAssigneeChange}
             disabled={isDeleted}
-            width="180px"
+            width="160px"
+            compact
+            hideLabel
             className="flex-shrink-0"
           />
         )}
 
         <div className="flex-1 flex gap-2.5 items-center">
           {showBoardCategory && (
-            <div className="w-80">
+            <div className="flex-1 md:w-80">
               <BoardCategorySelector
                 value={boardCategoryId}
                 onChange={onBoardCategoryChange}
@@ -520,7 +464,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
               value={dueDate}
               onChange={onDueDateChange}
               disabled={isDeleted}
-              compactMode={false}
+              compactMode={true}
               placeholder="期限"
             />
           </div>

@@ -32,7 +32,7 @@ export default function AssigneeSelector({
   compact = false,
   hideLabel = false,
   width = "160px",
-  placeholder = "未割り当て",
+  placeholder = "担当者",
   className = "",
   compactMode = false,
 }: AssigneeSelectorProps) {
@@ -90,6 +90,7 @@ export default function AssigneeSelector({
       disabled={disabled}
       hideLabel={hideLabel}
       compactMode={compactMode}
+      hideChevron={true}
     />
   );
 }

@@ -131,6 +131,16 @@ function DesktopLower({
   const showTags = true;
   // Loading/Error state を削除 - placeholderDataで即座に画面を表示
 
+  // デバッグログ
+  console.log("📊 DesktopLower - フィルター状態:", {
+    selectedTagIds,
+    tagFilterMode,
+    selectedBoardIds,
+    boardFilterMode,
+    currentMode,
+    activeTab,
+  });
+
   // メモの通常タブ
   if (activeTab === "normal" && currentMode === "memo") {
     return (

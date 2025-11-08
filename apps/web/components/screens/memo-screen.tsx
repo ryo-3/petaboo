@@ -734,13 +734,12 @@ function MemoScreen({
         isAllSelected={isAllSelected}
         hideControls={false}
         floatControls={true}
-        boards={boards || []}
-        tags={tags || []}
         normalCount={memos?.length || 0}
         deletedMemosCount={deletedMemos?.length || 0}
         hideAddButton={hideHeaderButtons}
         onCsvImport={() => setIsCsvImportModalOpen(true)}
         teamMode={teamMode}
+        teamId={teamId}
         marginBottom=""
         headerMarginBottom="mb-1.5"
       />
@@ -772,6 +771,11 @@ function MemoScreen({
         allBoards={boards || []}
         allTaggings={safeAllTaggings || []}
         allBoardItems={safeAllBoardItems || []}
+        // フィルター設定（ViewSettingsContextから取得）
+        selectedTagIds={selectedTagIds}
+        tagFilterMode={tagFilterMode}
+        selectedBoardIds={selectedBoardIds}
+        boardFilterMode={boardFilterMode}
       />
 
       {/* 一括操作ボタン */}
@@ -1031,13 +1035,12 @@ function MemoScreen({
                 isAllSelected={isAllSelected}
                 hideControls={false}
                 floatControls={false}
-                boards={boards || []}
-                tags={tags || []}
                 normalCount={memos?.length || 0}
                 deletedMemosCount={deletedMemos?.length || 0}
                 hideAddButton={hideHeaderButtons}
                 onCsvImport={() => setIsCsvImportModalOpen(true)}
                 teamMode={teamMode}
+                teamId={teamId}
                 marginBottom=""
                 headerMarginBottom="mb-1.5"
               />
@@ -1073,6 +1076,11 @@ function MemoScreen({
                 allBoards={boards || []}
                 allTaggings={safeAllTaggings || []}
                 allBoardItems={safeAllBoardItems || []}
+                // フィルター設定（ViewSettingsContextから取得）
+                selectedTagIds={selectedTagIds}
+                tagFilterMode={tagFilterMode}
+                selectedBoardIds={selectedBoardIds}
+                boardFilterMode={boardFilterMode}
               />
               {/* モバイル: メモ追加FABボタン（削除済みタブ以外で表示） */}
               <MobileFabButton

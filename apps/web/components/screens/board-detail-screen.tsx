@@ -559,7 +559,6 @@ function BoardDetailScreen({
             isExportDisabled={false}
             marginBottom="mb-2"
             headerMarginBottom="mb-1.5"
-            tags={safeAllTags}
             boardLayout={boardLayout}
             isReversed={isReversed}
             onBoardLayoutChange={handleBoardLayoutChange}

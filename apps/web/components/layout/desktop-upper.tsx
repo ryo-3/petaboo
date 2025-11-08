@@ -53,9 +53,6 @@ interface DesktopUpperProps {
   // Select all functionality
   onSelectAll?: () => void;
   isAllSelected?: boolean;
-  // Board filter props (boards/tags data still needed for display)
-  boards?: Array<{ id: number; name: string; isCurrentBoard?: boolean }>;
-  tags?: Array<{ id: number; name: string; color?: string }>;
   // Tab counts
   normalCount: number;
   deletedMemosCount?: number;
@@ -109,8 +106,6 @@ function DesktopUpper({
   onSelectionModeChange,
   onSelectAll,
   isAllSelected = false,
-  boards,
-  tags,
   normalCount,
   deletedMemosCount = 0,
   deletedTasksCount = 0,
@@ -149,18 +144,6 @@ function DesktopUpper({
   const showTagDisplay = settings.showTagDisplay;
   const onShowTagDisplayChange = (show: boolean) =>
     updateSettings({ showTagDisplay: show });
-  const selectedTagIds = sessionState.selectedTagIds;
-  const onTagFilterChange = (ids: number[]) =>
-    updateSessionState({ selectedTagIds: ids });
-  const tagFilterMode = sessionState.tagFilterMode;
-  const onTagFilterModeChange = (mode: "include" | "exclude") =>
-    updateSessionState({ tagFilterMode: mode });
-  const selectedBoardIds = sessionState.selectedBoardIds;
-  const onBoardFilterChange = (ids: number[]) =>
-    updateSessionState({ selectedBoardIds: ids });
-  const boardFilterMode = sessionState.boardFilterMode;
-  const onBoardFilterModeChange = (mode: "include" | "exclude") =>
-    updateSessionState({ boardFilterMode: mode });
   const sortOptions = sessionState.sortOptions;
   const onSortChange = (options: typeof sessionState.sortOptions) =>
     updateSessionState({ sortOptions: options });
@@ -353,16 +336,6 @@ function DesktopUpper({
       onSortChange={onSortChange}
       showTagDisplay={showTagDisplay}
       onShowTagDisplayChange={onShowTagDisplayChange}
-      boards={boards}
-      selectedBoardIds={selectedBoardIds}
-      onBoardFilterChange={onBoardFilterChange}
-      boardFilterMode={boardFilterMode}
-      onBoardFilterModeChange={onBoardFilterModeChange}
-      tags={tags}
-      selectedTagIds={selectedTagIds}
-      onTagFilterChange={onTagFilterChange}
-      tagFilterMode={tagFilterMode}
-      onTagFilterModeChange={onTagFilterModeChange}
       onCsvImport={onCsvImport}
       onBoardExport={onBoardExport}
       isExportDisabled={isExportDisabled}

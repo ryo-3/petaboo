@@ -7,6 +7,7 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
+import { useTeamContext } from "@/contexts/team-context";
 
 // ============================================================
 // 型定義
@@ -67,6 +68,10 @@ export interface ViewSettingsContextType {
   sessionState: SessionState;
   updateSessionState: (updates: Partial<SessionState>) => void;
 
+  // チーム情報
+  teamMode: boolean;
+  teamId?: number;
+
   // ユーティリティ
   resetFilters: () => void;
   resetAllSettings: () => void;
@@ -123,6 +128,11 @@ export function ViewSettingsProvider({
   userId,
   children,
 }: ViewSettingsProviderProps) {
+  // TeamContextから動的に取得（チームページでのみ利用可能）
+  const teamContext = useTeamContext();
+  const teamMode = teamContext?.isTeamMode ?? false;
+  const teamId = teamContext?.teamId ?? undefined;
+
   const [settings, setSettings] = useState<ViewSettings>(DEFAULT_SETTINGS);
   const [sessionState, setSessionState] = useState<SessionState>(
     DEFAULT_SESSION_STATE,
@@ -257,6 +267,8 @@ export function ViewSettingsProvider({
     updateSettings,
     sessionState,
     updateSessionState,
+    teamMode,
+    teamId,
     resetFilters,
     resetAllSettings,
     openFilterModal,

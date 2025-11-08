@@ -7,24 +7,19 @@ import Tooltip from "@/components/ui/base/tooltip";
 interface UnifiedFilterButtonProps {
   buttonSize?: string;
   iconSize?: string;
-  onOpenTagFilter: () => void;
-  onOpenBoardFilter: () => void;
 }
 
 export function UnifiedFilterButton({
   buttonSize = "size-7",
   iconSize = "w-4 h-4",
-  onOpenTagFilter,
-  onOpenBoardFilter,
 }: UnifiedFilterButtonProps) {
   const { sessionState, openFilterModal } = useViewSettings();
   const count =
     sessionState.selectedTagIds.length + sessionState.selectedBoardIds.length;
 
   const handleClick = () => {
-    // タグフィルターをデフォルトで開く（既存の動作に合わせる）
+    // タグフィルターをデフォルトで開く
     openFilterModal("tag");
-    onOpenTagFilter();
   };
 
   return (

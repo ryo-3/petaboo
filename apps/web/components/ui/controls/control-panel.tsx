@@ -12,11 +12,8 @@ import CheckSquareIcon from "@/components/icons/check-square-icon";
 import SquareIcon from "@/components/icons/square-icon";
 import CsvImportIcon from "@/components/icons/csv-import-icon";
 import CsvExportIcon from "@/components/icons/csv-export-icon";
-import FilterIcon from "@/components/icons/filter-icon";
-import TagIcon from "@/components/icons/tag-icon";
-import BoardSelectionModal from "@/components/ui/modals/board-selection-modal";
-import TagSelectionModal from "@/components/ui/modals/tag-selection-modal";
 import { UnifiedFilterButton } from "@/components/ui/buttons/unified-filter-button";
+import UnifiedFilterModal from "@/components/ui/modals/unified-filter-modal";
 import { useViewSettings } from "@/src/contexts/view-settings-context";
 
 interface ControlPanelProps {
@@ -73,20 +70,6 @@ interface ControlPanelProps {
   showTagDisplay?: boolean;
   onShowTagDisplayChange?: (show: boolean) => void;
 
-  // ボードフィルター
-  boards?: Array<{ id: number; name: string; isCurrentBoard?: boolean }>;
-  selectedBoardIds?: number[];
-  onBoardFilterChange?: (boardIds: number[]) => void;
-  boardFilterMode?: "include" | "exclude";
-  onBoardFilterModeChange?: (mode: "include" | "exclude") => void;
-
-  // タグフィルター
-  tags?: Array<{ id: number; name: string; color?: string }>;
-  selectedTagIds?: number[];
-  onTagFilterChange?: (tagIds: number[]) => void;
-  tagFilterMode?: "include" | "exclude";
-  onTagFilterModeChange?: (mode: "include" | "exclude") => void;
-
   // その他
   onCsvImport?: () => void;
   onBoardExport?: () => void;
@@ -134,16 +117,6 @@ export default function ControlPanel({
   onSortChange,
   showTagDisplay = false,
   onShowTagDisplayChange,
-  boards,
-  selectedBoardIds = [],
-  onBoardFilterChange,
-  boardFilterMode = "include",
-  onBoardFilterModeChange,
-  tags,
-  selectedTagIds = [],
-  onTagFilterChange,
-  tagFilterMode = "include",
-  onTagFilterModeChange,
   onCsvImport,
   onBoardExport,
   isExportDisabled = false,
@@ -187,8 +160,6 @@ export default function ControlPanel({
     typeof window !== "undefined" ? window.innerWidth : 0,
   );
   const [controlWidth, setControlWidth] = useState(0);
-  const [isBoardFilterOpen, setIsBoardFilterOpen] = useState(false);
-  const [isTagFilterOpen, setIsTagFilterOpen] = useState(false);
 
   // コントロールパネルの位置管理
   const [controlPosition, setControlPosition] = useState<
@@ -273,22 +244,6 @@ export default function ControlPanel({
 
     return { x, y };
   }, [controlPosition, windowWidth, controlWidth]);
-
-  const boardFilterEnabled =
-    !!boards?.length && typeof onBoardFilterChange === "function";
-  const tagFilterEnabled =
-    !!tags?.length && typeof onTagFilterChange === "function";
-
-  const boardFilterActive =
-    boardFilterEnabled && (selectedBoardIds?.length || 0) > 0;
-  const tagFilterActive = tagFilterEnabled && (selectedTagIds?.length || 0) > 0;
-
-  const boardFilterTooltip = boardFilterActive
-    ? `ボード絞り込み (${boardFilterMode === "exclude" ? "除外" : "含む"}: ${selectedBoardIds?.length})`
-    : "ボード絞り込み";
-  const tagFilterTooltip = tagFilterActive
-    ? `タグ絞り込み (${tagFilterMode === "exclude" ? "除外" : "含む"}: ${selectedTagIds?.length})`
-    : "タグ絞り込み";
 
   // 位置切り替え
   const togglePosition = () => {
@@ -454,24 +409,7 @@ export default function ControlPanel({
         )}
 
         {/* 統合フィルター（タグ・ボード） */}
-        {/* ボードモードではタグフィルターのみ表示 */}
-        {currentMode === "board"
-          ? tagFilterEnabled && (
-              <UnifiedFilterButton
-                buttonSize="size-7"
-                iconSize="w-4 h-4"
-                onOpenTagFilter={() => setIsTagFilterOpen(true)}
-                onOpenBoardFilter={() => setIsBoardFilterOpen(true)}
-              />
-            )
-          : (boardFilterEnabled || tagFilterEnabled) && (
-              <UnifiedFilterButton
-                buttonSize="size-7"
-                iconSize="w-4 h-4"
-                onOpenTagFilter={() => setIsTagFilterOpen(true)}
-                onOpenBoardFilter={() => setIsBoardFilterOpen(true)}
-              />
-            )}
+        <UnifiedFilterButton buttonSize="size-7" iconSize="w-4 h-4" />
 
         {/* CSVインポート */}
         {((!customTitle &&
@@ -519,47 +457,11 @@ export default function ControlPanel({
         )}
       </div>
 
-      {boardFilterEnabled && (
-        <BoardSelectionModal
-          isOpen={isBoardFilterOpen}
-          onClose={() => setIsBoardFilterOpen(false)}
-          boards={boards || []}
-          selectedBoardIds={selectedBoardIds || []}
-          onSelectionChange={onBoardFilterChange!}
-          mode="filter"
-          filterMode={boardFilterMode}
-          onFilterModeChange={onBoardFilterModeChange}
-          topOffset={floatControls ? 72 : 0}
-          onSwitchToTagFilter={() => {
-            setIsBoardFilterOpen(false);
-            setIsTagFilterOpen(true);
-          }}
-        />
-      )}
-
-      {tagFilterEnabled && (
-        <TagSelectionModal
-          isOpen={isTagFilterOpen}
-          onClose={() => setIsTagFilterOpen(false)}
-          tags={tags || []}
-          selectedTagIds={selectedTagIds || []}
-          onSelectionChange={onTagFilterChange!}
-          mode="filter"
-          filterMode={tagFilterMode}
-          onFilterModeChange={onTagFilterModeChange}
-          teamMode={teamMode}
-          teamId={teamId ?? 0}
-          topOffset={floatControls ? 72 : 0}
-          onSwitchToBoardFilter={
-            currentMode === "board"
-              ? undefined
-              : () => {
-                  setIsTagFilterOpen(false);
-                  setIsBoardFilterOpen(true);
-                }
-          }
-        />
-      )}
+      {/* 統合フィルターモーダル */}
+      <UnifiedFilterModal
+        currentBoardId={boardId}
+        topOffset={floatControls ? 72 : 0}
+      />
     </>
   );
 }

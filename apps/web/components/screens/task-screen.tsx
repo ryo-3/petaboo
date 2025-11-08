@@ -663,8 +663,6 @@ function TaskScreen({
         }}
         onSelectAll={handleSelectAll}
         isAllSelected={isAllSelected}
-        boards={boards || []}
-        tags={tags || []}
         normalCount={0} // タスクでは使わない
         deletedTasksCount={deletedTasks?.length || 0}
         todoCount={tasks?.filter((task) => task.status === "todo").length || 0}
@@ -677,6 +675,7 @@ function TaskScreen({
         hideAddButton={hideHeaderButtons}
         onCsvImport={() => setIsCsvImportModalOpen(true)}
         teamMode={teamMode}
+        teamId={teamId}
         hideControls={false}
         floatControls={true}
         marginBottom=""
@@ -715,6 +714,11 @@ function TaskScreen({
         allBoardItems={safeAllBoardItems}
         teamMode={teamMode}
         teamId={teamId}
+        // フィルター設定（ViewSettingsContextから取得）
+        selectedTagIds={selectedTagIds}
+        tagFilterMode={tagFilterMode}
+        selectedBoardIds={selectedBoardIds}
+        boardFilterMode={boardFilterMode}
       />
 
       {/* 一括操作ボタン */}
@@ -969,8 +973,6 @@ function TaskScreen({
                 isAllSelected={isAllSelected}
                 hideControls={false}
                 floatControls={false}
-                boards={boards || []}
-                tags={tags || []}
                 normalCount={0}
                 todoCount={
                   tasks?.filter((task) => task.status === "todo").length || 0
@@ -987,6 +989,7 @@ function TaskScreen({
                 hideAddButton={hideHeaderButtons}
                 onCsvImport={() => setIsCsvImportModalOpen(true)}
                 teamMode={teamMode}
+                teamId={teamId}
                 marginBottom=""
                 headerMarginBottom="mb-1.5"
               />
@@ -1024,6 +1027,11 @@ function TaskScreen({
                 allTeamTaggings={safeAllTeamTaggings}
                 allBoardItems={safeAllBoardItems}
                 teamMode={teamMode}
+                // フィルター設定（ViewSettingsContextから取得）
+                selectedTagIds={selectedTagIds}
+                tagFilterMode={tagFilterMode}
+                selectedBoardIds={selectedBoardIds}
+                boardFilterMode={boardFilterMode}
               />
               {/* モバイル: タスク追加FABボタン（削除済みタブ以外で表示） */}
               <MobileFabButton

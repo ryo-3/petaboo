@@ -314,16 +314,12 @@ function MemoScreen({
   // 統一削除・復元API（最上位から受け取り）
   const operations = unifiedOperations;
 
-  // 共通screen状態管理
+  // 共通screen状態管理（画面モード + タブのみ）
   const {
     screenMode,
     setScreenMode: setMemoScreenMode,
     activeTab,
     setActiveTab,
-    checkedItems: unusedCheckedMemos, // useScreenStateから取得するが使わない
-    setCheckedItems: unusedSetCheckedMemos,
-    checkedDeletedItems: unusedCheckedDeletedMemos,
-    setCheckedDeletedItems: unusedSetCheckedDeletedMemos,
   } = useScreenState(
     { type: "memo", defaultActiveTab: "normal", defaultColumnCount: 4 },
     "list" as MemoScreenMode,

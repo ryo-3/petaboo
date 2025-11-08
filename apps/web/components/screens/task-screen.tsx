@@ -341,16 +341,12 @@ function TaskScreen({
   // CSVインポートモーダルの状態
   const [isCsvImportModalOpen, setIsCsvImportModalOpen] = useState(false);
 
-  // 共通screen状態管理
+  // 共通screen状態管理（画面モード + タブのみ）
   const {
     screenMode: taskScreenMode,
     setScreenMode: setTaskScreenModeInternal,
     activeTab,
     setActiveTab,
-    checkedItems: unusedCheckedTasks, // useScreenStateから取得するが使わない
-    setCheckedItems: unusedSetCheckedTasks,
-    checkedDeletedItems: unusedCheckedDeletedTasks,
-    setCheckedDeletedItems: unusedSetCheckedDeletedTasks,
   } = useScreenState(
     { type: "task", defaultActiveTab: "todo", defaultColumnCount: 2 },
     "list" as TaskScreenMode,

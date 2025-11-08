@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
 import type { UserPreferences } from "@/src/contexts/user-preferences-context";
-import { useColumnCountStorage } from "@/src/hooks/use-column-count-storage";
 
 interface UseScreenStateConfig {
   type: "memo" | "task";
   defaultActiveTab: string;
-  defaultColumnCount: number;
+  defaultColumnCount: number; // 後方互換性のため残す（実際には使われない）
 }
 
 interface ScreenStateReturn<T extends string> {
@@ -16,15 +15,6 @@ interface ScreenStateReturn<T extends string> {
   // Tab state
   activeTab: string;
   setActiveTab: (tab: string) => void;
-
-  // 後方互換性のため残す（実際には使われない）
-  columnCount: number;
-  setColumnCount: (count: number) => void;
-  checkedItems: Set<number>;
-  setCheckedItems: React.Dispatch<React.SetStateAction<Set<number>>>;
-  checkedDeletedItems: Set<number>;
-  setCheckedDeletedItems: React.Dispatch<React.SetStateAction<Set<number>>>;
-  effectiveColumnCount: number;
 }
 
 export function useScreenState<T extends string>(
@@ -35,17 +25,9 @@ export function useScreenState<T extends string>(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   preferences?: UserPreferences,
 ): ScreenStateReturn<T> {
-  // Basic state
+  // Basic state: 画面モード + タブ管理のみ
   const [screenMode, setScreenMode] = useState<T>(initialScreenMode);
   const [activeTab, setActiveTab] = useState(config.defaultActiveTab);
-
-  // ⚠️ 以下は後方互換性のため残す（Phase 1完了後に削除予定）
-  // 実際にはmemo-screen/task-screenではuseMultiSelectionを使用
-  const [columnCount, setColumnCount] = useColumnCountStorage(config.type);
-  const [checkedItems, setCheckedItems] = useState<Set<number>>(new Set());
-  const [checkedDeletedItems, setCheckedDeletedItems] = useState<Set<number>>(
-    new Set(),
-  );
 
   // アイテムが選択されている場合は表示モードに、選択がクリアされた場合は一覧モードに
   useEffect(() => {
@@ -60,25 +42,10 @@ export function useScreenState<T extends string>(
     }
   }, [selectedItem, selectedDeletedItem, screenMode]);
 
-  // 右側パネル表示時は列数を調整
-  const effectiveColumnCount =
-    screenMode !== ("list" as T)
-      ? columnCount <= 2
-        ? columnCount
-        : 2
-      : columnCount;
-
   return {
     screenMode,
     setScreenMode,
     activeTab,
     setActiveTab,
-    columnCount,
-    setColumnCount,
-    checkedItems,
-    setCheckedItems,
-    checkedDeletedItems,
-    setCheckedDeletedItems,
-    effectiveColumnCount,
   };
 }

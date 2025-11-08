@@ -44,7 +44,10 @@ import { useAllTeamTaggings } from "@/src/hooks/use-team-taggings";
 import type { DeletedTask, Task } from "@/src/types/task";
 import { OriginalIdUtils } from "@/src/types/common";
 import { getTaskDisplayOrder } from "@/src/utils/domUtils";
-import { createToggleHandlerWithTabClear } from "@/src/utils/toggleUtils";
+import {
+  createToggleHandler,
+  createToggleHandlerWithTabClear,
+} from "@/src/utils/toggleUtils";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ControlPanelLayout } from "@/components/layout/control-panel-layout";
 import CommentSection from "@/components/features/comments/comment-section";
@@ -356,6 +359,11 @@ function TaskScreen({
   );
 
   // 選択状態管理（useMultiSelectionに統一）
+  const multiSelectionResult = useMultiSelection({
+    activeMemoTab: "",
+    activeTaskTab: activeTab,
+  });
+
   const {
     selectionMode,
     handleSelectionModeChange,
@@ -367,7 +375,7 @@ function TaskScreen({
     setCheckedCompletedTasks,
     checkedDeletedTasks: checkedDeletedTasksFromMultiSelection,
     setCheckedDeletedTasks: setCheckedDeletedTasksFromMultiSelection,
-  } = useMultiSelection({ activeMemoTab: "", activeTaskTab: activeTab });
+  } = multiSelectionResult;
 
   // initialSelectionModeを反映
   useEffect(() => {
@@ -419,12 +427,13 @@ function TaskScreen({
     }
   })();
 
-  const checkedDeletedTasks =
-    checkedDeletedTasksFromMultiSelection as Set<number>;
-  const setCheckedDeletedTasks =
-    setCheckedDeletedTasksFromMultiSelection as React.Dispatch<
-      React.SetStateAction<Set<number>>
-    >;
+  // 🚨 削除済タブの選択状態をローカルで管理（useMultiSelectionから独立）
+  const [checkedDeletedTasksLocal, setCheckedDeletedTasksLocal] = useState<
+    Set<number>
+  >(new Set());
+
+  const checkedDeletedTasks = checkedDeletedTasksLocal;
+  const setCheckedDeletedTasks = setCheckedDeletedTasksLocal;
 
   // タブクリア機能付きのトグルハンドラー
   const handleTaskToggleWithTabClear = (taskId: number) => {
@@ -823,7 +832,10 @@ function TaskScreen({
         checkedTasks={checkedTasks}
         checkedDeletedTasks={checkedDeletedTasks}
         onToggleCheckTask={handleTaskToggleWithTabClear}
-        onToggleCheckDeletedTask={handleTaskToggleWithTabClear}
+        onToggleCheckDeletedTask={createToggleHandler(
+          checkedDeletedTasks,
+          setCheckedDeletedTasks,
+        )}
         onSelectTask={handleSelectTask}
         onSelectDeletedTask={handleSelectDeletedTask}
         allTags={tags || []}
@@ -1123,7 +1135,10 @@ function TaskScreen({
                 checkedTasks={checkedTasks}
                 checkedDeletedTasks={checkedDeletedTasks}
                 onToggleCheckTask={handleTaskToggleWithTabClear}
-                onToggleCheckDeletedTask={handleTaskToggleWithTabClear}
+                onToggleCheckDeletedTask={createToggleHandler(
+                  checkedDeletedTasks,
+                  setCheckedDeletedTasks,
+                )}
                 onSelectTask={handleSelectTask}
                 onSelectDeletedTask={handleSelectDeletedTask}
                 allTags={tags || []}

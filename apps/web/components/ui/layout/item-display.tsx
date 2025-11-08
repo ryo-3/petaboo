@@ -110,7 +110,11 @@ function ItemDisplay({
         {selectionMode === "check" && (
           <div className="absolute top-2 left-2 z-10">
             <button
-              onClick={onToggleCheck}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onToggleCheck();
+              }}
               className={`size-5 rounded-full border-2 flex items-center justify-center transition-colors ${
                 isChecked
                   ? isDeleted

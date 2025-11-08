@@ -36,6 +36,8 @@ interface TagSelectionModalProps {
   teamId?: number;
   // ヘッダー高さオフセット
   topOffset?: number;
+  // タブ切り替え（filter時のみ使用）
+  onSwitchToBoardFilter?: () => void;
 }
 
 export default function TagSelectionModal({
@@ -53,6 +55,7 @@ export default function TagSelectionModal({
   teamMode = false,
   teamId = 0,
   topOffset = 0,
+  onSwitchToBoardFilter,
 }: TagSelectionModalProps) {
   const modalTitle = title || (mode === "filter" ? "タグ絞り込み" : "タグ選択");
   const [searchQuery, setSearchQuery] = useState("");
@@ -226,9 +229,24 @@ export default function TagSelectionModal({
         <div className="min-h-[75vh] max-h-[75vh] flex flex-col">
           {/* カスタムヘッダー：タイトルと検索ボックス + 閉じるボタン */}
           <div className="flex items-center gap-4 mb-2">
-            <h2 className="text-lg font-semibold text-gray-900">
-              {modalTitle}
-            </h2>
+            {/* タブ（filterモードかつonSwitchToBoardFilterがある場合のみ表示） */}
+            {mode === "filter" && onSwitchToBoardFilter ? (
+              <div className="flex gap-2">
+                <button className="px-4 py-1.5 text-sm font-medium text-gray-900 border-b-2 border-[#ccb79e]">
+                  タグ絞り込み
+                </button>
+                <button
+                  onClick={onSwitchToBoardFilter}
+                  className="px-4 py-1.5 text-sm font-medium text-gray-900 hover:text-gray-600 border-b-2 border-transparent"
+                >
+                  ボード絞り込み
+                </button>
+              </div>
+            ) : (
+              <h2 className="text-lg font-semibold text-gray-900">
+                {modalTitle}
+              </h2>
+            )}
             <div className="flex-1"></div>
             <div className="relative w-80">
               <input

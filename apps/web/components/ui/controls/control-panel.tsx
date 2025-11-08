@@ -518,6 +518,10 @@ export default function ControlPanel({
           filterMode={boardFilterMode}
           onFilterModeChange={onBoardFilterModeChange}
           topOffset={floatControls ? 72 : 0}
+          onSwitchToTagFilter={() => {
+            setIsBoardFilterOpen(false);
+            setIsTagFilterOpen(true);
+          }}
         />
       )}
 
@@ -534,6 +538,10 @@ export default function ControlPanel({
           teamMode={teamMode}
           teamId={teamId ?? 0}
           topOffset={floatControls ? 72 : 0}
+          onSwitchToBoardFilter={() => {
+            setIsTagFilterOpen(false);
+            setIsBoardFilterOpen(true);
+          }}
         />
       )}
     </>

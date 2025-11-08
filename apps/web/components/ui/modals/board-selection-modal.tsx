@@ -26,6 +26,8 @@ interface BoardSelectionModalProps {
   footer?: React.ReactNode;
   // ヘッダー高さオフセット
   topOffset?: number;
+  // タブ切り替え（filter時のみ使用）
+  onSwitchToTagFilter?: () => void;
 }
 
 export default function BoardSelectionModal({
@@ -41,6 +43,7 @@ export default function BoardSelectionModal({
   onFilterModeChange,
   footer,
   topOffset = 0,
+  onSwitchToTagFilter,
 }: BoardSelectionModalProps) {
   const modalTitle =
     title || (mode === "filter" ? "ボード絞り込み" : "ボード選択");
@@ -102,7 +105,24 @@ export default function BoardSelectionModal({
       <div className="min-h-[75vh] max-h-[75vh] flex flex-col">
         {/* カスタムヘッダー：タイトルと検索ボックス + 閉じるボタン */}
         <div className="flex items-center gap-4 mb-2">
-          <h2 className="text-lg font-semibold text-gray-900">{modalTitle}</h2>
+          {/* タブ（filterモードかつonSwitchToTagFilterがある場合のみ表示） */}
+          {mode === "filter" && onSwitchToTagFilter ? (
+            <div className="flex gap-2">
+              <button
+                onClick={onSwitchToTagFilter}
+                className="px-4 py-1.5 text-sm font-medium text-gray-900 hover:text-gray-600 border-b-2 border-transparent"
+              >
+                タグ絞り込み
+              </button>
+              <button className="px-4 py-1.5 text-sm font-medium text-gray-900 border-b-2 border-light-Blue">
+                ボード絞り込み
+              </button>
+            </div>
+          ) : (
+            <h2 className="text-lg font-semibold text-gray-900">
+              {modalTitle}
+            </h2>
+          )}
           <div className="flex-1"></div>
           <div className="relative w-80">
             <input

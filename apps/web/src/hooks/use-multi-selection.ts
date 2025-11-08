@@ -141,9 +141,17 @@ export function useMultiSelection({
     }
   })();
 
-  // メモの選択トグル
+  // 削除済みタブのタスクを選択した時も正しく動作するよう、setterを返す
+  // ※ checkedDeletedTasksは上記のswitch文でactiveTaskTab === "deleted"の時に返される
+
+  // メモの選択トグル（activeMemoTabの現在値に応じて動的にsetterを選択）
   const handleMemoSelectionToggle = (memoId: string | number) => {
-    setCheckedMemos((prev) => {
+    const currentSetter =
+      activeMemoTab === "normal"
+        ? setCheckedNormalMemos
+        : setCheckedDeletedMemos;
+
+    currentSetter((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(memoId)) {
         newSet.delete(memoId);
@@ -154,9 +162,24 @@ export function useMultiSelection({
     });
   };
 
-  // タスクの選択トグル
+  // タスクの選択トグル（activeTaskTabの現在値に応じて動的にsetterを選択）
   const handleTaskSelectionToggle = (taskId: string | number) => {
-    setCheckedTasks((prev) => {
+    const currentSetter = (() => {
+      switch (activeTaskTab) {
+        case "todo":
+          return setCheckedTodoTasks;
+        case "in_progress":
+          return setCheckedInProgressTasks;
+        case "completed":
+          return setCheckedCompletedTasks;
+        case "deleted":
+          return setCheckedDeletedTasks;
+        default:
+          return setCheckedTodoTasks;
+      }
+    })();
+
+    currentSetter((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(taskId)) {
         newSet.delete(taskId);

@@ -426,6 +426,77 @@ function TaskScreen({
       React.SetStateAction<Set<number>>
     >;
 
+  // タブクリア機能付きのトグルハンドラー
+  const handleTaskToggleWithTabClear = (taskId: number) => {
+    // 現在のタブのchecked状態とsetterを取得
+    const { currentChecked, currentSetter, otherSetters } = (() => {
+      switch (activeTab) {
+        case "todo":
+          return {
+            currentChecked: checkedTodoTasks,
+            currentSetter: setCheckedTodoTasks,
+            otherSetters: [
+              setCheckedInProgressTasks,
+              setCheckedCompletedTasks,
+              setCheckedDeletedTasks,
+            ],
+          };
+        case "in_progress":
+          return {
+            currentChecked: checkedInProgressTasks,
+            currentSetter: setCheckedInProgressTasks,
+            otherSetters: [
+              setCheckedTodoTasks,
+              setCheckedCompletedTasks,
+              setCheckedDeletedTasks,
+            ],
+          };
+        case "completed":
+          return {
+            currentChecked: checkedCompletedTasks,
+            currentSetter: setCheckedCompletedTasks,
+            otherSetters: [
+              setCheckedTodoTasks,
+              setCheckedInProgressTasks,
+              setCheckedDeletedTasks,
+            ],
+          };
+        case "deleted":
+          return {
+            currentChecked: checkedDeletedTasks,
+            currentSetter: setCheckedDeletedTasks,
+            otherSetters: [
+              setCheckedTodoTasks,
+              setCheckedInProgressTasks,
+              setCheckedCompletedTasks,
+            ],
+          };
+        default:
+          return {
+            currentChecked: checkedTodoTasks,
+            currentSetter: setCheckedTodoTasks,
+            otherSetters: [
+              setCheckedInProgressTasks,
+              setCheckedCompletedTasks,
+              setCheckedDeletedTasks,
+            ],
+          };
+      }
+    })();
+
+    // トグル処理
+    const newSet = new Set(currentChecked);
+    if (newSet.has(taskId)) {
+      newSet.delete(taskId);
+    } else {
+      newSet.add(taskId);
+      // 新しく選択される場合、他のタブをクリア
+      otherSetters.forEach((setter) => (setter as any)(new Set<number>()));
+    }
+
+    (currentSetter as any)(newSet);
+  };
+
   // ViewSettingsContextからカラム数を取得・設定
   const columnCount = settings.taskColumnCount;
   const setColumnCount = (count: number) =>
@@ -751,16 +822,8 @@ function TaskScreen({
         selectedDeletedTask={selectedDeletedTask}
         checkedTasks={checkedTasks}
         checkedDeletedTasks={checkedDeletedTasks}
-        onToggleCheckTask={createToggleHandlerWithTabClear(
-          checkedTasks,
-          setCheckedTasks,
-          [setCheckedDeletedTasks],
-        )}
-        onToggleCheckDeletedTask={createToggleHandlerWithTabClear(
-          checkedDeletedTasks,
-          setCheckedDeletedTasks,
-          [setCheckedTasks],
-        )}
+        onToggleCheckTask={handleTaskToggleWithTabClear}
+        onToggleCheckDeletedTask={handleTaskToggleWithTabClear}
         onSelectTask={handleSelectTask}
         onSelectDeletedTask={handleSelectDeletedTask}
         allTags={tags || []}
@@ -1059,16 +1122,8 @@ function TaskScreen({
                 selectedDeletedTask={selectedDeletedTask}
                 checkedTasks={checkedTasks}
                 checkedDeletedTasks={checkedDeletedTasks}
-                onToggleCheckTask={createToggleHandlerWithTabClear(
-                  checkedTasks,
-                  setCheckedTasks,
-                  [setCheckedDeletedTasks],
-                )}
-                onToggleCheckDeletedTask={createToggleHandlerWithTabClear(
-                  checkedDeletedTasks,
-                  setCheckedDeletedTasks,
-                  [setCheckedTasks],
-                )}
+                onToggleCheckTask={handleTaskToggleWithTabClear}
+                onToggleCheckDeletedTask={handleTaskToggleWithTabClear}
                 onSelectTask={handleSelectTask}
                 onSelectDeletedTask={handleSelectDeletedTask}
                 allTags={tags || []}

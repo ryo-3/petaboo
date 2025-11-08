@@ -25,6 +25,7 @@ import { useSelectAll } from "@/src/hooks/use-select-all";
 import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useTeamContext } from "@/contexts/team-context";
+import { useViewSettings } from "@/src/contexts/view-settings-context";
 import { useTeamDetail } from "@/src/contexts/team-detail-context";
 import { useNavigation } from "@/contexts/navigation-context";
 import {
@@ -179,6 +180,11 @@ function MemoScreen({
 }: MemoScreenProps) {
   const { isTeamMode: teamMode, teamId: teamIdRaw } = useTeamContext();
   const teamId = teamIdRaw ?? undefined; // Convert null to undefined for hook compatibility
+
+  // ViewSettingsContextから取得
+  const { settings, sessionState, updateSettings, updateSessionState } =
+    useViewSettings();
+
   // 一括処理中断通知の監視
   useBulkProcessNotifications();
 
@@ -198,26 +204,29 @@ function MemoScreen({
     initialSelectionMode,
   );
 
-  // 編集日表示管理
+  // ViewSettingsContextから取得した値を使用
+  const selectedBoardIds = sessionState.selectedBoardIds;
+  const setSelectedBoardIds = (ids: number[]) =>
+    updateSessionState({ selectedBoardIds: ids });
+  const boardFilterMode = sessionState.boardFilterMode;
+  const setBoardFilterMode = (mode: "include" | "exclude") =>
+    updateSessionState({ boardFilterMode: mode });
+  const selectedTagIds = sessionState.selectedTagIds;
+  const setSelectedTagIds = (ids: number[]) =>
+    updateSessionState({ selectedTagIds: ids });
+  const tagFilterMode = sessionState.tagFilterMode;
+  const setTagFilterMode = (mode: "include" | "exclude") =>
+    updateSessionState({ tagFilterMode: mode });
+  const sortOptions = sessionState.sortOptions;
+  const setSortOptions = (options: typeof sessionState.sortOptions) =>
+    updateSessionState({ sortOptions: options });
 
-  // ボードフィルター管理
-  const [selectedBoardIds, setSelectedBoardIds] = useState<number[]>(
-    excludeBoardId ? [excludeBoardId] : [],
-  );
-  const [boardFilterMode, setBoardFilterMode] = useState<"include" | "exclude">(
-    excludeBoardId ? "exclude" : "include",
-  );
-
-  // タグフィルター管理
-  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
-  const [tagFilterMode, setTagFilterMode] = useState<"include" | "exclude">(
-    "include",
-  );
-
-  // 並び替え管理
+  // 並び替え管理（getVisibleSortOptionsをラッパー関数として提供）
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { sortOptions, setSortOptions, getVisibleSortOptions } =
-    useSortOptions("memo");
+  const getVisibleSortOptions = (tab: string) => {
+    // タブに応じてソートオプションをフィルタリング（現状はそのまま返す）
+    return sortOptions;
+  };
 
   // 削除ボタンの参照
   const deleteButtonRef = useRef<HTMLButtonElement>(null);
@@ -315,8 +324,6 @@ function MemoScreen({
     setScreenMode: setMemoScreenMode,
     activeTab,
     setActiveTab,
-    columnCount,
-    setColumnCount,
     checkedItems: checkedMemos,
     setCheckedItems: setCheckedMemos,
     checkedDeletedItems: checkedDeletedMemos,
@@ -330,6 +337,11 @@ function MemoScreen({
     preferences || undefined,
   );
   const memoScreenMode = screenMode as MemoScreenMode;
+
+  // ViewSettingsContextからカラム数を取得・設定
+  const columnCount = settings.memoColumnCount;
+  const setColumnCount = (count: number) =>
+    updateSettings({ memoColumnCount: count });
 
   const handleSelectMemo = useCallback(
     (memo: Memo | null) => {

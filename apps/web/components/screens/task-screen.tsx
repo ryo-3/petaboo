@@ -26,6 +26,7 @@ import {
 } from "@/src/hooks/use-tasks";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useTeamContext } from "@/contexts/team-context";
+import { useViewSettings } from "@/src/contexts/view-settings-context";
 import { useTeamDetail } from "@/src/contexts/team-detail-context";
 import {
   useBoards,
@@ -186,6 +187,10 @@ function TaskScreen({
   const { isTeamMode: teamMode, teamId: teamIdRaw } = useTeamContext();
   const teamId = teamIdRaw ?? undefined; // Convert null to undefined for hook compatibility
 
+  // ViewSettingsContextから取得
+  const { settings, sessionState, updateSettings, updateSessionState } =
+    useViewSettings();
+
   // TeamDetailContext（チームモードのみ）
   const teamDetailContext = teamMode ? useTeamDetail() : null;
 
@@ -256,6 +261,30 @@ function TaskScreen({
     initialSelectionMode,
   );
 
+  // ViewSettingsContextから取得した値を使用
+  const selectedBoardIds = sessionState.selectedBoardIds;
+  const setSelectedBoardIds = (ids: number[]) =>
+    updateSessionState({ selectedBoardIds: ids });
+  const boardFilterMode = sessionState.boardFilterMode;
+  const setBoardFilterMode = (mode: "include" | "exclude") =>
+    updateSessionState({ boardFilterMode: mode });
+  const selectedTagIds = sessionState.selectedTagIds;
+  const setSelectedTagIds = (ids: number[]) =>
+    updateSessionState({ selectedTagIds: ids });
+  const tagFilterMode = sessionState.tagFilterMode;
+  const setTagFilterMode = (mode: "include" | "exclude") =>
+    updateSessionState({ tagFilterMode: mode });
+  const sortOptions = sessionState.sortOptions;
+  const setSortOptions = (options: typeof sessionState.sortOptions) =>
+    updateSessionState({ sortOptions: options });
+
+  // 並び替え管理（getVisibleSortOptionsをラッパー関数として提供）
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const getVisibleSortOptions = (tab: string) => {
+    // タブに応じてソートオプションをフィルタリング（現状はそのまま返す）
+    return sortOptions;
+  };
+
   // URL からの初期タスク選択（初回のみ）
   const initialTaskIdRef = useRef<string | null>(null);
   useEffect(() => {
@@ -289,30 +318,9 @@ function TaskScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialTaskId]);
 
-  // 並び替え管理
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { sortOptions, setSortOptions, getVisibleSortOptions } =
-    useSortOptions("task");
-
-  // 編集日表示管理
-
-  // ボードフィルター管理
-  const [selectedBoardIds, setSelectedBoardIds] = useState<number[]>(
-    excludeBoardId ? [excludeBoardId] : [],
-  );
-  const [boardFilterMode, setBoardFilterMode] = useState<"include" | "exclude">(
-    excludeBoardId ? "exclude" : "include",
-  );
-
   // タグ管理モーダルの状態
   const [isTagManagementModalOpen, setIsTagManagementModalOpen] =
     useState(false);
-
-  // タグフィルター管理
-  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
-  const [tagFilterMode, setTagFilterMode] = useState<"include" | "exclude">(
-    "include",
-  );
 
   // 削除ボタンの参照
   const deleteButtonRef = useRef<HTMLButtonElement>(null);
@@ -343,8 +351,6 @@ function TaskScreen({
     setScreenMode: setTaskScreenModeInternal,
     activeTab,
     setActiveTab,
-    columnCount,
-    setColumnCount,
     checkedItems: checkedTasks,
     setCheckedItems: setCheckedTasks,
     checkedDeletedItems: checkedDeletedTasks,
@@ -357,6 +363,11 @@ function TaskScreen({
     selectedDeletedTask,
     preferences || undefined,
   );
+
+  // ViewSettingsContextからカラム数を取得・設定
+  const columnCount = settings.taskColumnCount;
+  const setColumnCount = (count: number) =>
+    updateSettings({ taskColumnCount: count });
 
   // チームモードで新規作成状態をContextに反映
   useEffect(() => {

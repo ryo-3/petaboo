@@ -8,6 +8,7 @@ import { useTags } from "@/src/hooks/use-tags";
 import { useTeamTags } from "@/src/hooks/use-team-tags";
 import { useAllTeamTaggings } from "@/src/hooks/use-team-taggings";
 import { useTeamContext } from "@/contexts/team-context";
+import { useViewSettings } from "@/src/contexts/view-settings-context";
 import {
   useBoards,
   useAddItemToBoard,
@@ -67,6 +68,11 @@ function BoardDetailScreen({
   isDeleted = false,
 }: BoardDetailProps) {
   const { isTeamMode: teamMode, teamId } = useTeamContext();
+
+  // ViewSettingsContextから取得
+  const { settings, sessionState, updateSettings, updateSessionState } =
+    useViewSettings();
+
   // CSVインポートモーダル状態
   const [isCSVImportModalOpen, setIsCSVImportModalOpen] = useState(false);
 
@@ -94,14 +100,12 @@ function BoardDetailScreen({
     showTabText,
     rightPanelMode,
     selectedItemsFromList,
-    columnCount,
     boardLayout,
     isReversed,
     showMemo,
     showTask,
     showComment,
     setRightPanelMode,
-    setColumnCount,
     handleBoardLayoutChange,
     handleSettings,
     handleMemoToggle,
@@ -116,11 +120,19 @@ function BoardDetailScreen({
     setShowTabText,
   } = useBoardState();
 
-  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
-  const [tagFilterMode, setTagFilterMode] = useState<"include" | "exclude">(
-    "include",
-  );
-  const [showTagDisplay, setShowTagDisplay] = useState(true);
+  // ViewSettingsContextから取得した値を使用
+  const columnCount = settings.boardColumnCount;
+  const setColumnCount = (count: number) =>
+    updateSettings({ boardColumnCount: count });
+  const selectedTagIds = sessionState.selectedTagIds;
+  const setSelectedTagIds = (ids: number[]) =>
+    updateSessionState({ selectedTagIds: ids });
+  const tagFilterMode = sessionState.tagFilterMode;
+  const setTagFilterMode = (mode: "include" | "exclude") =>
+    updateSessionState({ tagFilterMode: mode });
+  const showTagDisplay = settings.showTagDisplay;
+  const setShowTagDisplay = (show: boolean) =>
+    updateSettings({ showTagDisplay: show });
 
   // propsから選択状態を使用（Fast Refresh対応）
   const selectedMemo = propSelectedMemo;

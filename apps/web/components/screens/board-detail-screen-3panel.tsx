@@ -12,6 +12,7 @@ import { useTags } from "@/src/hooks/use-tags";
 import { useTeamTags } from "@/src/hooks/use-team-tags";
 import { useAllTeamTaggings } from "@/src/hooks/use-team-taggings";
 import { useTeamContext } from "@/contexts/team-context";
+import { useViewSettings } from "@/src/contexts/view-settings-context";
 import { useTeamDetailSafe } from "@/src/contexts/team-detail-context";
 import { useDeletedMemos, useDeleteMemo } from "@/src/hooks/use-memos";
 import { useDeleteTask, useDeletedTasks } from "@/src/hooks/use-tasks";
@@ -90,6 +91,10 @@ function BoardDetailScreen({
   const { isTeamMode: teamMode, teamId } = useTeamContext();
   const teamDetailContext = useTeamDetailSafe();
 
+  // ViewSettingsContextから取得
+  const { settings, sessionState, updateSettings, updateSessionState } =
+    useViewSettings();
+
   // CSVインポートモーダル状態
   const [isCSVImportModalOpen, setIsCSVImportModalOpen] = useState(false);
 
@@ -117,7 +122,6 @@ function BoardDetailScreen({
     showTabText,
     rightPanelMode,
     selectedItemsFromList,
-    columnCount,
     boardLayout,
     isReversed,
     showMemo,
@@ -127,7 +131,6 @@ function BoardDetailScreen({
     showDetailPanel,
     showCommentPanel,
     setRightPanelMode,
-    setColumnCount,
     setShowMemo,
     setShowTask,
     setShowComment,
@@ -151,11 +154,19 @@ function BoardDetailScreen({
     setShowCommentPanel,
   } = useBoardState();
 
-  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
-  const [tagFilterMode, setTagFilterMode] = useState<"include" | "exclude">(
-    "include",
-  );
-  const [showTagDisplay, setShowTagDisplay] = useState(true);
+  // ViewSettingsContextから取得した値を使用
+  const columnCount = settings.boardColumnCount;
+  const setColumnCount = (count: number) =>
+    updateSettings({ boardColumnCount: count });
+  const selectedTagIds = sessionState.selectedTagIds;
+  const setSelectedTagIds = (ids: number[]) =>
+    updateSessionState({ selectedTagIds: ids });
+  const tagFilterMode = sessionState.tagFilterMode;
+  const setTagFilterMode = (mode: "include" | "exclude") =>
+    updateSessionState({ tagFilterMode: mode });
+  const showTagDisplay = settings.showTagDisplay;
+  const setShowTagDisplay = (show: boolean) =>
+    updateSettings({ showTagDisplay: show });
 
   // デスクトップ判定（md: 768px以上）
   const [isDesktop, setIsDesktop] = useState(true);

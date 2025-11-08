@@ -68,6 +68,9 @@ interface NavigationContextType {
   setHandleMainSelectTask?: (
     handler: ((task: Task | null) => void) | undefined,
   ) => void;
+  // セレクター制御（SelectorContextから移行）
+  activeSelector: string | null;
+  setActiveSelector: (id: string | null) => void;
 }
 
 const NavigationContext = createContext<NavigationContextType | undefined>(
@@ -119,6 +122,15 @@ export function NavigationProvider({
   // 個人モードの新規作成状態（モバイルフッター切り替え用）
   const [isCreatingMemo, setIsCreatingMemo] = useState(false);
   const [isCreatingTask, setIsCreatingTask] = useState(false);
+
+  // セレクター制御（SelectorContextから移行）
+  const [activeSelector, setActiveSelectorInternal] = useState<string | null>(
+    null,
+  );
+
+  const setActiveSelector = useCallback((id: string | null) => {
+    setActiveSelectorInternal(id);
+  }, []);
 
   // 楽観的更新用の一時的なモード（URL変更前に即座に反映）
   const [optimisticMode, setOptimisticMode] = useState<
@@ -301,6 +313,8 @@ export function NavigationProvider({
         handleMainSelectTask,
         setHandleMainSelectMemo,
         setHandleMainSelectTask,
+        activeSelector,
+        setActiveSelector,
       }}
     >
       {children}

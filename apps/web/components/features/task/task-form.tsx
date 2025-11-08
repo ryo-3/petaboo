@@ -249,6 +249,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
           }
           width="96px"
           disabled={isDeleted}
+          hideChevron={true}
         />
 
         <CustomSelector
@@ -260,6 +261,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
           }
           fullWidth
           disabled={isDeleted}
+          hideChevron={true}
         />
 
         {showAssigneeSelector && onAssigneeChange && (
@@ -274,16 +276,6 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
         )}
 
         <div className="flex-1 flex gap-2.5 items-center">
-          <div className="w-28">
-            <DatePickerSimple
-              value={dueDate}
-              onChange={onDueDateChange}
-              disabled={isDeleted}
-              compactMode={true}
-              placeholder="期限"
-            />
-          </div>
-
           {showBoardCategory && (
             <div className="w-80">
               <BoardCategorySelector
@@ -296,6 +288,16 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
               />
             </div>
           )}
+
+          <div className="w-28">
+            <DatePickerSimple
+              value={dueDate}
+              onChange={onDueDateChange}
+              disabled={isDeleted}
+              compactMode={true}
+              placeholder="期限"
+            />
+          </div>
         </div>
       </div>
     );
@@ -334,6 +336,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
             disabled={isDeleted}
             hideLabel={true}
             compactMode={true}
+            hideChevron={true}
           />
 
           <CustomSelector
@@ -347,6 +350,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
             disabled={isDeleted}
             hideLabel={true}
             compactMode={true}
+            hideChevron={true}
           />
 
           {showAssigneeSelector && onAssigneeChange && (
@@ -362,16 +366,6 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
             />
           )}
 
-          <div className="w-28">
-            <DatePickerSimple
-              value={dueDate}
-              onChange={onDueDateChange}
-              disabled={isDeleted}
-              compactMode={true}
-              placeholder="期限"
-            />
-          </div>
-
           {showBoardCategory && (
             <div className="flex-1">
               <BoardCategorySelector
@@ -384,6 +378,16 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
               />
             </div>
           )}
+
+          <div className="w-28">
+            <DatePickerSimple
+              value={dueDate}
+              onChange={onDueDateChange}
+              disabled={isDeleted}
+              compactMode={true}
+              placeholder="期限"
+            />
+          </div>
         </div>
 
         {/* 作成者・日付を表示（ツールバー非表示時のみ） */}
@@ -471,6 +475,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
           }
           width="96px"
           disabled={isDeleted}
+          hideChevron={true}
         />
 
         <CustomSelector
@@ -482,6 +487,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
           }
           fullWidth
           disabled={isDeleted}
+          hideChevron={true}
         />
 
         {showAssigneeSelector && onAssigneeChange && (
@@ -496,16 +502,6 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
         )}
 
         <div className="flex-1 flex gap-2.5 items-center">
-          <div className="w-28">
-            <DatePickerSimple
-              value={dueDate}
-              onChange={onDueDateChange}
-              disabled={isDeleted}
-              compactMode={false}
-              placeholder="期限"
-            />
-          </div>
-
           {showBoardCategory && (
             <div className="w-80">
               <BoardCategorySelector
@@ -518,6 +514,16 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
               />
             </div>
           )}
+
+          <div className="w-28">
+            <DatePickerSimple
+              value={dueDate}
+              onChange={onDueDateChange}
+              disabled={isDeleted}
+              compactMode={false}
+              placeholder="期限"
+            />
+          </div>
         </div>
       </div>
 

@@ -1285,7 +1285,7 @@ function TaskEditor({
             tags={task && task.id !== 0 ? localTags : []}
             boards={displayBoards}
             boardCategories={categories}
-            showBoardCategory={isFromBoardDetail}
+            showBoardCategory={true}
             isDeleted={isDeleted}
             initialBoardId={initialBoardId}
             teamMode={teamMode}
@@ -1355,7 +1355,7 @@ function TaskEditor({
                 tags={task && task.id !== 0 ? localTags : []}
                 boards={displayBoards}
                 boardCategories={categories}
-                showBoardCategory={isFromBoardDetail}
+                showBoardCategory={true}
                 isDeleted={isDeleted}
                 initialBoardId={initialBoardId}
                 teamMode={teamMode}

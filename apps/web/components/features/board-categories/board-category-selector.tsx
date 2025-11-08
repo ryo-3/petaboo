@@ -35,10 +35,10 @@ export default function BoardCategorySelector({
   // オプションを再構築：未選択、現在の選択、その他の順番で並べる
   const reorderedOptions = [];
 
-  // 1. 未選択を最初に追加
+  // 1. 未選択を最初に追加（ラベルをプレースホルダー形式に変更）
   reorderedOptions.push({
     value: "",
-    label: "未選択",
+    label: "ボードカテゴリー",
   });
 
   // 2. 現在選択されているカテゴリーがあれば次に追加
@@ -82,6 +82,7 @@ export default function BoardCategorySelector({
         }}
         fullWidth
         disabled={disabled}
+        hideLabel={true}
       />
 
       <CreateCategoryModal

@@ -1,15 +1,8 @@
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useId,
-  useContext,
-  useCallback,
-} from "react";
+import React, { useState, useEffect, useRef, useId } from "react";
 import ChevronDownIcon from "@/components/icons/chevron-down-icon";
 import PlusIcon from "@/components/icons/plus-icon";
 import CheckIcon from "@/components/icons/check-icon";
-import { SelectorContext } from "@/src/contexts/selector-context";
+import { useNavigation } from "@/src/contexts/navigation-context";
 import { FORM_STYLES } from "@/src/styles/form-styles";
 
 interface SelectorOption {
@@ -32,6 +25,7 @@ interface CustomSelectorProps {
   hideLabelOnMobile?: boolean;
   hideLabel?: boolean;
   compactMode?: boolean; // モバイル用コンパクトモード
+  hideChevron?: boolean; // シェブロン（▼）を非表示
 }
 
 function CustomSelector({
@@ -47,6 +41,7 @@ function CustomSelector({
   hideLabelOnMobile = false,
   hideLabel = false,
   compactMode = false,
+  hideChevron = false,
 }: CustomSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -54,17 +49,8 @@ function CustomSelector({
   const selectorRef = useRef<HTMLDivElement>(null);
   const selectorId = useId();
 
-  // セレクターコンテキストの安全な使用
-  const selectorContext = useContext(SelectorContext);
-  const activeSelector = selectorContext?.activeSelector;
-  const setActiveSelector = useCallback(
-    (id: string | null) => {
-      if (selectorContext?.setActiveSelector) {
-        selectorContext.setActiveSelector(id);
-      }
-    },
-    [selectorContext],
-  );
+  // NavigationContextからセレクター状態を取得
+  const { activeSelector, setActiveSelector } = useNavigation();
 
   const selectedOption = options.find((opt) => opt.value === value);
 
@@ -154,9 +140,11 @@ function CustomSelector({
             )}
             <span className="truncate">{selectedOption?.label}</span>
           </div>
-          <ChevronDownIcon
-            className={`${FORM_STYLES.chevron} ${isOpen ? "rotate-180" : ""} ${disabled ? "opacity-50" : ""}`}
-          />
+          {!hideChevron && (
+            <ChevronDownIcon
+              className={`${FORM_STYLES.chevron} ${isOpen ? "rotate-180" : ""} ${disabled ? "opacity-50" : ""}`}
+            />
+          )}
         </div>
 
         {isOpen && (

@@ -8,7 +8,6 @@ import ContentFilter from "@/components/ui/controls/content-filter";
 import SettingsIcon from "@/components/icons/settings-icon";
 import Tooltip from "@/components/ui/base/tooltip";
 import SortToggle from "@/components/ui/buttons/sort-toggle";
-import TagDisplayToggle from "@/components/ui/buttons/tag-display-toggle";
 import CheckSquareIcon from "@/components/icons/check-square-icon";
 import SquareIcon from "@/components/icons/square-icon";
 import CsvImportIcon from "@/components/icons/csv-import-icon";
@@ -437,29 +436,24 @@ export default function ControlPanel({
         )}
 
         {/* 統合フィルター（タグ・ボード） */}
-        {(boardFilterEnabled || tagFilterEnabled) && (
-          <UnifiedFilterButton
-            buttonSize="size-7"
-            iconSize="w-4 h-4"
-            onOpenTagFilter={() => setIsTagFilterOpen(true)}
-            onOpenBoardFilter={() => setIsBoardFilterOpen(true)}
-          />
-        )}
-
-        {/* タグ表示切り替え（ボードモードのみ） */}
-        {currentMode === "board" && onShowTagDisplayChange && (
-          <TagDisplayToggle
-            showTags={showTagDisplay}
-            onToggle={onShowTagDisplayChange}
-            buttonSize="size-7"
-            iconSize="size-4"
-            tags={tags}
-            selectedTagIds={selectedTagIds}
-            onTagFilterChange={onTagFilterChange}
-            filterMode={tagFilterMode}
-            onFilterModeChange={onTagFilterModeChange}
-          />
-        )}
+        {/* ボードモードではタグフィルターのみ表示 */}
+        {currentMode === "board"
+          ? tagFilterEnabled && (
+              <UnifiedFilterButton
+                buttonSize="size-7"
+                iconSize="w-4 h-4"
+                onOpenTagFilter={() => setIsTagFilterOpen(true)}
+                onOpenBoardFilter={() => setIsBoardFilterOpen(true)}
+              />
+            )
+          : (boardFilterEnabled || tagFilterEnabled) && (
+              <UnifiedFilterButton
+                buttonSize="size-7"
+                iconSize="w-4 h-4"
+                onOpenTagFilter={() => setIsTagFilterOpen(true)}
+                onOpenBoardFilter={() => setIsBoardFilterOpen(true)}
+              />
+            )}
 
         {/* CSVインポート */}
         {((!customTitle &&
@@ -538,10 +532,14 @@ export default function ControlPanel({
           teamMode={teamMode}
           teamId={teamId ?? 0}
           topOffset={floatControls ? 72 : 0}
-          onSwitchToBoardFilter={() => {
-            setIsTagFilterOpen(false);
-            setIsBoardFilterOpen(true);
-          }}
+          onSwitchToBoardFilter={
+            currentMode === "board"
+              ? undefined
+              : () => {
+                  setIsTagFilterOpen(false);
+                  setIsBoardFilterOpen(true);
+                }
+          }
         />
       )}
     </>

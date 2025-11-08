@@ -1298,7 +1298,7 @@ function TaskEditor({
             toolbarVisible={toolbarVisible}
             onToolbarToggle={setToolbarVisible}
             tiptapEditor={tiptapEditor}
-            headerOnly={true}
+            editorOnly={false}
           />
         </div>
 

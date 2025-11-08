@@ -70,14 +70,10 @@ interface TaskFormProps {
   onToolbarToggle?: (visible: boolean) => void;
   tiptapEditor?: Editor | null;
   onEditorReady?: (editor: Editor) => void;
-  // ヘッダー部分のみ表示（タイトル・ステータス・日付）
-  headerOnly?: boolean;
   // エディター部分のみ表示
   editorOnly?: boolean;
   // タイトル・日付のみ表示（固定ヘッダー用）
   titleAndDateOnly?: boolean;
-  // ステータス欄のみ表示（スクロール領域用）
-  statusOnly?: boolean;
 }
 
 export interface TaskFormHandle {
@@ -122,10 +118,8 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
     onToolbarToggle,
     tiptapEditor,
     onEditorReady,
-    headerOnly = false,
     editorOnly = false,
     titleAndDateOnly = false,
-    statusOnly = false,
   } = props;
   const titleInputRef = useRef<HTMLInputElement>(null);
   const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -236,120 +230,6 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
     );
   }
 
-  // 統合版: statusOnly と headerOnly を1つに統合
-  if (statusOnly || headerOnly) {
-    return (
-      <>
-        {/* タイトル入力（statusOnlyの時は非表示） */}
-        {!statusOnly && (
-          <div className="flex items-center gap-1">
-            <input
-              ref={titleInputRef}
-              type="text"
-              placeholder={titlePlaceholder}
-              value={title}
-              onChange={(e) => onTitleChange(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                }
-              }}
-              className="flex-1 mb-1 mt-1 text-[15px] md:text-lg font-medium border-b border-DeepBlue/80 outline-none focus:border-DeepBlue"
-            />
-          </div>
-        )}
-
-        {/* ステータスバー（統合版） */}
-        <div className={`flex gap-1.5 ${statusOnly ? "pl-2" : "mt-1"}`}>
-          <CustomSelector
-            label="ステータス"
-            options={statusOptions}
-            value={status}
-            onChange={(value) =>
-              onStatusChange(value as "todo" | "in_progress" | "completed")
-            }
-            width="96px"
-            disabled={isDeleted}
-            hideLabel={true}
-            compactMode={true}
-            hideChevron={true}
-          />
-
-          <CustomSelector
-            label="優先度"
-            options={priorityOptions}
-            value={priority}
-            onChange={(value) =>
-              onPriorityChange(value as "low" | "medium" | "high")
-            }
-            fullWidth
-            disabled={isDeleted}
-            hideLabel={true}
-            compactMode={true}
-            hideChevron={true}
-          />
-
-          {showAssigneeSelector && onAssigneeChange && (
-            <AssigneeSelector
-              members={teamMembers}
-              value={resolvedAssigneeId}
-              onChange={onAssigneeChange}
-              disabled={isDeleted}
-              width="160px"
-              compact
-              hideLabel
-              className="flex-shrink-0"
-            />
-          )}
-
-          <div className="flex-1 flex gap-2.5 items-center">
-            {showBoardCategory && (
-              <div className="flex-1 md:w-80">
-                <BoardCategorySelector
-                  value={boardCategoryId}
-                  onChange={onBoardCategoryChange}
-                  categories={boardCategories}
-                  boardId={initialBoardId!}
-                  disabled={isDeleted}
-                  allowCreate={true}
-                />
-              </div>
-            )}
-
-            <div className="w-28">
-              <DatePickerSimple
-                value={dueDate}
-                onChange={onDueDateChange}
-                disabled={isDeleted}
-                compactMode={true}
-                placeholder="期限"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* 作成者・日付を表示（headerOnlyかつツールバー非表示時のみ） */}
-        {headerOnly && task && task.id !== 0 && !toolbarVisible && (
-          <div className="flex justify-end items-center gap-2 mr-2 mt-1 mb-1">
-            <CreatorAvatar
-              createdBy={createdBy}
-              avatarColor={createdByAvatarColor}
-              teamMode={_teamMode}
-              size="md"
-              className=""
-            />
-            <DateInfo item={task} isEditing={!isDeleted} size="sm" />
-          </div>
-        )}
-
-        {/* 書式ツールバー（headerOnlyかつツールバー表示時のみ） */}
-        {headerOnly && !isDeleted && toolbarVisible && (
-          <Toolbar editor={tiptapEditor || null} />
-        )}
-      </>
-    );
-  }
-
   // エディター部分のみ表示
   if (editorOnly) {
     return (
@@ -403,7 +283,8 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
         />
       </div>
 
-      <div className="flex gap-1.5">
+      {/* セレクターバー（統合版と同じ） */}
+      <div className="flex gap-1.5 mt-1">
         <CustomSelector
           label="ステータス"
           options={statusOptions}
@@ -471,9 +352,9 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
         </div>
       </div>
 
-      {/* 作成者・日付を下の行に表示 */}
-      {task && task.id !== 0 && (
-        <div className="flex justify-end items-center gap-2 mr-2 mt-2 mb-1">
+      {/* 作成者・日付を表示（ツールバー非表示時のみ） */}
+      {task && task.id !== 0 && !toolbarVisible && (
+        <div className="flex justify-end items-center gap-2 mr-2 mt-1 mb-1">
           <CreatorAvatar
             createdBy={createdBy}
             avatarColor={createdByAvatarColor}
@@ -485,34 +366,41 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
         </div>
       )}
 
-      <div className="flex-1 flex flex-col min-h-0">
-        <div className="w-full pr-1">
-          <TiptapEditor
-            content={description}
-            onChange={(newContent) => {
-              onDescriptionChange(newContent);
-            }}
-            placeholder={
-              isDeleted ? "削除済みのタスクです" : descriptionPlaceholder
-            }
-            readOnly={isDeleted}
-            className="font-medium"
-            toolbarVisible={toolbarVisible}
-            onToolbarToggle={onToolbarToggle}
-            onEditorReady={onEditorReady}
-            onImagePaste={onImagePaste}
+      {/* 書式ツールバー（ツールバー表示時のみ） */}
+      {!isDeleted && toolbarVisible && (
+        <Toolbar editor={tiptapEditor || null} />
+      )}
+
+      {!editorOnly && (
+        <div className="flex-1 flex flex-col min-h-0">
+          <div className="w-full pr-1">
+            <TiptapEditor
+              content={description}
+              onChange={(newContent) => {
+                onDescriptionChange(newContent);
+              }}
+              placeholder={
+                isDeleted ? "削除済みのタスクです" : descriptionPlaceholder
+              }
+              readOnly={isDeleted}
+              className="font-medium"
+              toolbarVisible={toolbarVisible}
+              onToolbarToggle={onToolbarToggle}
+              onEditorReady={onEditorReady}
+              onImagePaste={onImagePaste}
+            />
+          </div>
+
+          {/* ボード名・タグ表示（テキストエリアの下に移動） */}
+          <BoardTagDisplay
+            boards={displayBoards}
+            tags={tags}
+            spacing="normal"
+            showWhen="has-content"
+            className="mb-4"
           />
         </div>
-
-        {/* ボード名・タグ表示（テキストエリアの下に移動） */}
-        <BoardTagDisplay
-          boards={displayBoards}
-          tags={tags}
-          spacing="normal"
-          showWhen="has-content"
-          className="mb-4"
-        />
-      </div>
+      )}
     </div>
   );
 });

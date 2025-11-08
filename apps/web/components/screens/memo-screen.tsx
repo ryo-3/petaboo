@@ -556,6 +556,8 @@ function MemoScreen({
     restoreButtonRef,
     setIsRestoring,
     setIsLidOpen: setIsRestoreLidOpen,
+    teamMode,
+    teamId,
   });
 
   // 統一復元フック（新しいシンプル実装）

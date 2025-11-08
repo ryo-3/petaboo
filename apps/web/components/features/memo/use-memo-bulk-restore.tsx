@@ -15,6 +15,8 @@ interface UseMemosBulkRestoreProps {
   restoreButtonRef?: React.RefObject<HTMLButtonElement | null>;
   setIsRestoring?: (isRestoring: boolean) => void;
   setIsLidOpen?: (isOpen: boolean) => void;
+  teamMode?: boolean;
+  teamId?: number;
 }
 
 export function useMemosBulkRestore({
@@ -26,8 +28,10 @@ export function useMemosBulkRestore({
   restoreButtonRef,
   setIsRestoring,
   setIsLidOpen,
+  teamMode,
+  teamId,
 }: UseMemosBulkRestoreProps) {
-  const restoreNoteMutation = useRestoreMemo();
+  const restoreNoteMutation = useRestoreMemo({ teamMode, teamId });
   const bulkRestore = useBulkDelete(); // 削除と同じモーダルロジックを使用
 
   // 共通のアニメーション管理

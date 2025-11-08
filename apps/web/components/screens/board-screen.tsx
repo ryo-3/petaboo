@@ -120,8 +120,6 @@ const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(
               setActiveTab(tab as "normal" | "completed" | "deleted")
             }
             onCreateNew={handleCreateNew}
-            columnCount={1}
-            onColumnCountChange={() => {}}
             rightPanelMode="hidden"
             normalCount={normalBoards?.length || 0}
             completedCount={completedBoards?.length || 0}

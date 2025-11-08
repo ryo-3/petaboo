@@ -713,8 +713,6 @@ function MemoScreen({
         activeTab={displayTab as "normal" | "deleted"}
         onTabChange={handleCustomTabChange}
         onCreateNew={handleCreateNew}
-        columnCount={columnCount}
-        onColumnCountChange={setColumnCount}
         rightPanelMode={memoScreenMode === "list" ? "hidden" : "view"}
         selectionMode={selectionMode}
         onSelectionModeChange={(mode) => {
@@ -727,20 +725,10 @@ function MemoScreen({
         }}
         onSelectAll={handleSelectAll}
         isAllSelected={isAllSelected}
-        sortOptions={getVisibleSortOptions(activeTab)}
         hideControls={false}
         floatControls={true}
-        onSortChange={setSortOptions}
         boards={boards || []}
-        selectedBoardIds={selectedBoardIds}
-        onBoardFilterChange={setSelectedBoardIds}
-        boardFilterMode={boardFilterMode}
-        onBoardFilterModeChange={setBoardFilterMode}
         tags={tags || []}
-        selectedTagIds={selectedTagIds}
-        onTagFilterChange={setSelectedTagIds}
-        tagFilterMode={tagFilterMode}
-        onTagFilterModeChange={setTagFilterMode}
         normalCount={memos?.length || 0}
         deletedMemosCount={deletedMemos?.length || 0}
         hideAddButton={hideHeaderButtons}
@@ -757,11 +745,6 @@ function MemoScreen({
         isLoading={memoLoading}
         error={memoError}
         selectionMode={selectionMode}
-        sortOptions={getVisibleSortOptions(activeTab)}
-        selectedBoardIds={selectedBoardIds}
-        boardFilterMode={boardFilterMode}
-        selectedTagIds={selectedTagIds}
-        tagFilterMode={tagFilterMode}
         memos={filteredMemos}
         localMemos={filteredMemos}
         deletedMemos={deletedMemos || []}
@@ -1028,8 +1011,6 @@ function MemoScreen({
                 activeTab={displayTab as "normal" | "deleted"}
                 onTabChange={handleCustomTabChange}
                 onCreateNew={handleCreateNew}
-                columnCount={columnCount}
-                onColumnCountChange={setColumnCount}
                 rightPanelMode={memoScreenMode === "list" ? "hidden" : "view"}
                 selectionMode={selectionMode}
                 onSelectionModeChange={(mode) => {
@@ -1041,20 +1022,10 @@ function MemoScreen({
                 }}
                 onSelectAll={handleSelectAll}
                 isAllSelected={isAllSelected}
-                sortOptions={getVisibleSortOptions(activeTab)}
                 hideControls={false}
                 floatControls={false}
-                onSortChange={setSortOptions}
                 boards={boards || []}
-                selectedBoardIds={selectedBoardIds}
-                onBoardFilterChange={setSelectedBoardIds}
-                boardFilterMode={boardFilterMode}
-                onBoardFilterModeChange={setBoardFilterMode}
                 tags={tags || []}
-                selectedTagIds={selectedTagIds}
-                onTagFilterChange={setSelectedTagIds}
-                tagFilterMode={tagFilterMode}
-                onTagFilterModeChange={setTagFilterMode}
                 normalCount={memos?.length || 0}
                 deletedMemosCount={deletedMemos?.length || 0}
                 hideAddButton={hideHeaderButtons}
@@ -1073,11 +1044,6 @@ function MemoScreen({
                 isLoading={memoLoading}
                 error={memoError}
                 selectionMode={selectionMode}
-                sortOptions={getVisibleSortOptions(activeTab)}
-                selectedBoardIds={selectedBoardIds}
-                boardFilterMode={boardFilterMode}
-                selectedTagIds={selectedTagIds}
-                tagFilterMode={tagFilterMode}
                 memos={filteredMemos}
                 localMemos={filteredMemos}
                 deletedMemos={deletedMemos || []}

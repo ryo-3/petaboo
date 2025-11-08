@@ -7,6 +7,7 @@ import Tooltip from "@/components/ui/base/tooltip";
 import AddItemButton from "@/components/ui/buttons/add-item-button";
 import ControlPanel from "@/components/ui/controls/control-panel";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
+import { useViewSettings } from "@/src/contexts/view-settings-context";
 
 interface DesktopUpperProps {
   currentMode: "memo" | "task" | "board";
@@ -15,8 +16,6 @@ interface DesktopUpperProps {
     tab: "normal" | "deleted" | "todo" | "in_progress" | "completed",
   ) => void;
   onCreateNew: () => void;
-  columnCount: number;
-  onColumnCountChange: (count: number) => void;
   rightPanelMode: "hidden" | "view" | "create";
   // Custom title override
   customTitle?: string;
@@ -54,37 +53,9 @@ interface DesktopUpperProps {
   // Select all functionality
   onSelectAll?: () => void;
   isAllSelected?: boolean;
-  // Sort options (task and memo)
-  sortOptions?: Array<{
-    id: "createdAt" | "updatedAt" | "priority" | "deletedAt" | "dueDate";
-    label: string;
-    enabled: boolean;
-    direction: "asc" | "desc";
-  }>;
-  onSortChange?: (
-    options: Array<{
-      id: "createdAt" | "updatedAt" | "priority" | "deletedAt" | "dueDate";
-      label: string;
-      enabled: boolean;
-      direction: "asc" | "desc";
-    }>,
-  ) => void;
-  // Date display toggle
-  // Tag display toggle
-  showTagDisplay?: boolean;
-  onShowTagDisplayChange?: (show: boolean) => void;
-  // Board filter props
+  // Board filter props (boards/tags data still needed for display)
   boards?: Array<{ id: number; name: string; isCurrentBoard?: boolean }>;
-  selectedBoardIds?: number[];
-  onBoardFilterChange?: (boardIds: number[]) => void;
-  boardFilterMode?: "include" | "exclude";
-  onBoardFilterModeChange?: (mode: "include" | "exclude") => void;
-  // Tag filter props
   tags?: Array<{ id: number; name: string; color?: string }>;
-  selectedTagIds?: number[];
-  onTagFilterChange?: (tagIds: number[]) => void;
-  tagFilterMode?: "include" | "exclude";
-  onTagFilterModeChange?: (mode: "include" | "exclude") => void;
   // Tab counts
   normalCount: number;
   deletedMemosCount?: number;
@@ -111,8 +82,6 @@ function DesktopUpper({
   activeTab,
   onTabChange,
   onCreateNew,
-  columnCount,
-  onColumnCountChange,
   rightPanelMode,
   customTitle,
   boardDescription,
@@ -140,20 +109,8 @@ function DesktopUpper({
   onSelectionModeChange,
   onSelectAll,
   isAllSelected = false,
-  sortOptions = [],
-  onSortChange,
-  showTagDisplay = false,
-  onShowTagDisplayChange,
   boards,
-  selectedBoardIds,
-  onBoardFilterChange,
-  boardFilterMode,
-  onBoardFilterModeChange,
   tags,
-  selectedTagIds,
-  onTagFilterChange,
-  tagFilterMode,
-  onTagFilterModeChange,
   normalCount,
   deletedMemosCount = 0,
   deletedTasksCount = 0,
@@ -169,7 +126,44 @@ function DesktopUpper({
   floatControls = false,
 }: DesktopUpperProps) {
   const { preferences } = useUserPreferences(1);
+  const { settings, sessionState, updateSettings, updateSessionState } =
+    useViewSettings();
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+
+  // Contextから取得した値を使用
+  const columnCount =
+    currentMode === "memo"
+      ? settings.memoColumnCount
+      : currentMode === "task"
+        ? settings.taskColumnCount
+        : settings.boardColumnCount;
+  const onColumnCountChange = (count: number) => {
+    if (currentMode === "memo") {
+      updateSettings({ memoColumnCount: count });
+    } else if (currentMode === "task") {
+      updateSettings({ taskColumnCount: count });
+    } else {
+      updateSettings({ boardColumnCount: count });
+    }
+  };
+  const showTagDisplay = settings.showTagDisplay;
+  const onShowTagDisplayChange = (show: boolean) =>
+    updateSettings({ showTagDisplay: show });
+  const selectedTagIds = sessionState.selectedTagIds;
+  const onTagFilterChange = (ids: number[]) =>
+    updateSessionState({ selectedTagIds: ids });
+  const tagFilterMode = sessionState.tagFilterMode;
+  const onTagFilterModeChange = (mode: "include" | "exclude") =>
+    updateSessionState({ tagFilterMode: mode });
+  const selectedBoardIds = sessionState.selectedBoardIds;
+  const onBoardFilterChange = (ids: number[]) =>
+    updateSessionState({ selectedBoardIds: ids });
+  const boardFilterMode = sessionState.boardFilterMode;
+  const onBoardFilterModeChange = (mode: "include" | "exclude") =>
+    updateSessionState({ boardFilterMode: mode });
+  const sortOptions = sessionState.sortOptions;
+  const onSortChange = (options: typeof sessionState.sortOptions) =>
+    updateSessionState({ sortOptions: options });
 
   // タブ設定
   const getTabsConfig = () => {

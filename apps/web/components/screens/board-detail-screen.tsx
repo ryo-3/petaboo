@@ -548,8 +548,6 @@ function BoardDetailScreen({
             activeTab="normal"
             onTabChange={() => {}} // ボードではタブ切り替えは無効
             onCreateNew={() => {}} // 既存のボタンを使用
-            columnCount={columnCount}
-            onColumnCountChange={setColumnCount}
             rightPanelMode={
               selectedMemo || selectedTask || rightPanelMode ? "view" : "hidden"
             }
@@ -561,13 +559,7 @@ function BoardDetailScreen({
             isExportDisabled={false}
             marginBottom="mb-2"
             headerMarginBottom="mb-1.5"
-            showTagDisplay={showTagDisplay}
-            onShowTagDisplayChange={setShowTagDisplay}
             tags={safeAllTags}
-            selectedTagIds={selectedTagIds}
-            onTagFilterChange={setSelectedTagIds}
-            tagFilterMode={tagFilterMode}
-            onTagFilterModeChange={setTagFilterMode}
             boardLayout={boardLayout}
             isReversed={isReversed}
             onBoardLayoutChange={handleBoardLayoutChange}

@@ -644,8 +644,6 @@ function TaskScreen({
         activeTab={activeTabTyped}
         onTabChange={handleTabChange(tabChangeHandler)}
         onCreateNew={handleCreateNew}
-        columnCount={columnCount}
-        onColumnCountChange={setColumnCount}
         rightPanelMode={taskScreenMode === "list" ? "hidden" : "view"}
         selectionMode={selectionMode}
         onSelectionModeChange={(mode) => {
@@ -658,18 +656,8 @@ function TaskScreen({
         }}
         onSelectAll={handleSelectAll}
         isAllSelected={isAllSelected}
-        sortOptions={getVisibleSortOptions(activeTab)}
-        onSortChange={setSortOptions}
         boards={boards || []}
-        selectedBoardIds={selectedBoardIds}
-        onBoardFilterChange={setSelectedBoardIds}
-        boardFilterMode={boardFilterMode}
-        onBoardFilterModeChange={setBoardFilterMode}
         tags={tags || []}
-        selectedTagIds={selectedTagIds}
-        onTagFilterChange={setSelectedTagIds}
-        tagFilterMode={tagFilterMode}
-        onTagFilterModeChange={setTagFilterMode}
         normalCount={0} // タスクでは使わない
         deletedTasksCount={deletedTasks?.length || 0}
         todoCount={tasks?.filter((task) => task.status === "todo").length || 0}
@@ -695,11 +683,6 @@ function TaskScreen({
         isLoading={taskLoading}
         error={taskError}
         selectionMode={selectionMode}
-        sortOptions={getVisibleSortOptions(activeTab)}
-        selectedBoardIds={selectedBoardIds}
-        boardFilterMode={boardFilterMode}
-        selectedTagIds={selectedTagIds}
-        tagFilterMode={tagFilterMode}
         tasks={filteredTasks}
         deletedTasks={deletedTasks || []}
         selectedTask={selectedTask}
@@ -966,8 +949,6 @@ function TaskScreen({
                 activeTab={activeTabTyped}
                 onTabChange={handleTabChange(tabChangeHandler)}
                 onCreateNew={handleCreateNew}
-                columnCount={columnCount}
-                onColumnCountChange={setColumnCount}
                 rightPanelMode={taskScreenMode === "list" ? "hidden" : "view"}
                 selectionMode={selectionMode}
                 onSelectionModeChange={(mode) => {
@@ -979,20 +960,10 @@ function TaskScreen({
                 }}
                 onSelectAll={handleSelectAll}
                 isAllSelected={isAllSelected}
-                sortOptions={getVisibleSortOptions(activeTab)}
                 hideControls={false}
                 floatControls={false}
-                onSortChange={setSortOptions}
                 boards={boards || []}
-                selectedBoardIds={selectedBoardIds}
-                onBoardFilterChange={setSelectedBoardIds}
-                boardFilterMode={boardFilterMode}
-                onBoardFilterModeChange={setBoardFilterMode}
                 tags={tags || []}
-                selectedTagIds={selectedTagIds}
-                onTagFilterChange={setSelectedTagIds}
-                tagFilterMode={tagFilterMode}
-                onTagFilterModeChange={setTagFilterMode}
                 normalCount={0}
                 todoCount={
                   tasks?.filter((task) => task.status === "todo").length || 0
@@ -1022,11 +993,6 @@ function TaskScreen({
                 isLoading={taskLoading}
                 error={taskError}
                 selectionMode={selectionMode}
-                sortOptions={getVisibleSortOptions(activeTab)}
-                selectedBoardIds={selectedBoardIds}
-                boardFilterMode={boardFilterMode}
-                selectedTagIds={selectedTagIds}
-                tagFilterMode={tagFilterMode}
                 tasks={filteredTasks}
                 deletedTasks={deletedTasks || []}
                 selectedTask={selectedTask}

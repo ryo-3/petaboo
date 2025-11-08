@@ -914,8 +914,6 @@ function BoardDetailScreen({
               activeTab="normal"
               onTabChange={() => {}} // ボードではタブ切り替えは無効
               onCreateNew={() => {}} // 既存のボタンを使用
-              columnCount={columnCount}
-              onColumnCountChange={setColumnCount}
               rightPanelMode={
                 selectedMemo || selectedTask || rightPanelMode
                   ? "view"
@@ -929,13 +927,7 @@ function BoardDetailScreen({
               isExportDisabled={false}
               marginBottom="mb-2"
               headerMarginBottom="mb-1.5"
-              showTagDisplay={showTagDisplay}
-              onShowTagDisplayChange={setShowTagDisplay}
               tags={safeAllTags}
-              selectedTagIds={selectedTagIds}
-              onTagFilterChange={setSelectedTagIds}
-              tagFilterMode={tagFilterMode}
-              onTagFilterModeChange={setTagFilterMode}
               boardLayout={boardLayout}
               isReversed={isReversed}
               onBoardLayoutChange={handleBoardLayoutChange}
@@ -1041,8 +1033,6 @@ function BoardDetailScreen({
                                     }
                                     allBoardItems={safeAllBoardItems}
                                     showTags={showTagDisplay}
-                                    selectedTagIds={selectedTagIds}
-                                    tagFilterMode={tagFilterMode}
                                     selectedMemo={selectedMemo}
                                     boardId={boardId}
                                     onCreateNewMemo={handleCreateNewMemo}
@@ -1087,8 +1077,6 @@ function BoardDetailScreen({
                                     isLoading={isLoading}
                                     effectiveColumnCount={effectiveColumnCount}
                                     showTags={showTagDisplay}
-                                    selectedTagIds={selectedTagIds}
-                                    tagFilterMode={tagFilterMode}
                                     showBoardName={false}
                                     allTags={safeAllTags}
                                     allBoards={safeAllBoards}
@@ -1334,8 +1322,6 @@ function BoardDetailScreen({
                                   activeTab="normal"
                                   onTabChange={() => {}}
                                   onCreateNew={() => {}}
-                                  columnCount={columnCount}
-                                  onColumnCountChange={setColumnCount}
                                   rightPanelMode="view"
                                   customTitle={boardName || "ボード詳細"}
                                   boardDescription={boardDescription}
@@ -1345,13 +1331,7 @@ function BoardDetailScreen({
                                   isExportDisabled={false}
                                   marginBottom="mb-0"
                                   headerMarginBottom="mb-0"
-                                  showTagDisplay={showTagDisplay}
-                                  onShowTagDisplayChange={setShowTagDisplay}
                                   tags={safeAllTags}
-                                  selectedTagIds={selectedTagIds}
-                                  onTagFilterChange={setSelectedTagIds}
-                                  tagFilterMode={tagFilterMode}
-                                  onTagFilterModeChange={setTagFilterMode}
                                   boardLayout={boardLayout}
                                   isReversed={isReversed}
                                   onBoardLayoutChange={handleBoardLayoutChange}
@@ -1413,8 +1393,6 @@ function BoardDetailScreen({
                                     isLoading={isLoading}
                                     effectiveColumnCount={effectiveColumnCount}
                                     showTags={showTagDisplay}
-                                    selectedTagIds={selectedTagIds}
-                                    tagFilterMode={tagFilterMode}
                                     showBoardName={false}
                                     allTags={safeAllTags}
                                     allBoards={safeAllBoards}
@@ -1468,8 +1446,6 @@ function BoardDetailScreen({
                                     }
                                     allBoardItems={safeAllBoardItems}
                                     showTags={showTagDisplay}
-                                    selectedTagIds={selectedTagIds}
-                                    tagFilterMode={tagFilterMode}
                                     selectedMemo={selectedMemo}
                                     boardId={boardId}
                                     onCreateNewMemo={handleCreateNewMemo}
@@ -1524,8 +1500,6 @@ function BoardDetailScreen({
                                       activeTab="normal"
                                       onTabChange={() => {}}
                                       onCreateNew={() => {}}
-                                      columnCount={columnCount}
-                                      onColumnCountChange={setColumnCount}
                                       rightPanelMode="view"
                                       customTitle={boardName || "ボード詳細"}
                                       boardDescription={boardDescription}
@@ -1537,10 +1511,6 @@ function BoardDetailScreen({
                                       isExportDisabled={false}
                                       marginBottom="mb-0"
                                       headerMarginBottom="mb-0"
-                                      showTagDisplay={showTags}
-                                      onShowTagDisplayChange={
-                                        handleTagDisplayChange
-                                      }
                                       boardLayout={boardLayout}
                                       isReversed={isReversed}
                                       onBoardLayoutChange={
@@ -1748,8 +1718,6 @@ function BoardDetailScreen({
                                     isLoading={isLoading}
                                     effectiveColumnCount={effectiveColumnCount}
                                     showTags={showTagDisplay}
-                                    selectedTagIds={selectedTagIds}
-                                    tagFilterMode={tagFilterMode}
                                     showBoardName={false}
                                     allTags={safeAllTags}
                                     allBoards={safeAllBoards}
@@ -1808,8 +1776,6 @@ function BoardDetailScreen({
                                   activeTab="normal"
                                   onTabChange={() => {}}
                                   onCreateNew={() => {}}
-                                  columnCount={columnCount}
-                                  onColumnCountChange={setColumnCount}
                                   rightPanelMode="view"
                                   customTitle={boardName || "ボード詳細"}
                                   boardDescription={boardDescription}
@@ -1819,13 +1785,7 @@ function BoardDetailScreen({
                                   isExportDisabled={false}
                                   marginBottom="mb-0"
                                   headerMarginBottom="mb-0"
-                                  showTagDisplay={showTagDisplay}
-                                  onShowTagDisplayChange={setShowTagDisplay}
                                   tags={safeAllTags}
-                                  selectedTagIds={selectedTagIds}
-                                  onTagFilterChange={setSelectedTagIds}
-                                  tagFilterMode={tagFilterMode}
-                                  onTagFilterModeChange={setTagFilterMode}
                                   boardLayout={boardLayout}
                                   isReversed={isReversed}
                                   onBoardLayoutChange={handleBoardLayoutChange}
@@ -1971,8 +1931,6 @@ function BoardDetailScreen({
                                 activeTab="normal"
                                 onTabChange={() => {}}
                                 onCreateNew={() => {}}
-                                columnCount={columnCount}
-                                onColumnCountChange={setColumnCount}
                                 rightPanelMode="hidden"
                                 customTitle={boardName || "ボード詳細"}
                                 boardDescription={boardDescription}
@@ -1982,8 +1940,6 @@ function BoardDetailScreen({
                                 isExportDisabled={false}
                                 marginBottom="mb-0"
                                 headerMarginBottom="mb-0"
-                                showTagDisplay={showTags}
-                                onShowTagDisplayChange={handleTagDisplayChange}
                                 boardLayout={boardLayout}
                                 isReversed={isReversed}
                                 onBoardLayoutChange={handleBoardLayoutChange}
@@ -2061,8 +2017,6 @@ function BoardDetailScreen({
                                 activeTab="normal"
                                 onTabChange={() => {}}
                                 onCreateNew={() => {}}
-                                columnCount={columnCount}
-                                onColumnCountChange={setColumnCount}
                                 rightPanelMode="hidden"
                                 customTitle={boardName || "ボード詳細"}
                                 boardDescription={boardDescription}
@@ -2072,8 +2026,6 @@ function BoardDetailScreen({
                                 isExportDisabled={false}
                                 marginBottom="mb-0"
                                 headerMarginBottom="mb-0"
-                                showTagDisplay={showTags}
-                                onShowTagDisplayChange={handleTagDisplayChange}
                                 boardLayout={boardLayout}
                                 isReversed={isReversed}
                                 onBoardLayoutChange={handleBoardLayoutChange}
@@ -2177,8 +2129,6 @@ function BoardDetailScreen({
                                   activeTab="normal"
                                   onTabChange={() => {}}
                                   onCreateNew={() => {}}
-                                  columnCount={columnCount}
-                                  onColumnCountChange={setColumnCount}
                                   rightPanelMode="hidden"
                                   customTitle={boardName || "ボード詳細"}
                                   boardDescription={boardDescription}
@@ -2188,13 +2138,7 @@ function BoardDetailScreen({
                                   isExportDisabled={false}
                                   marginBottom="mb-0"
                                   headerMarginBottom="mb-0"
-                                  showTagDisplay={showTagDisplay}
-                                  onShowTagDisplayChange={setShowTagDisplay}
                                   tags={safeAllTags}
-                                  selectedTagIds={selectedTagIds}
-                                  onTagFilterChange={setSelectedTagIds}
-                                  tagFilterMode={tagFilterMode}
-                                  onTagFilterModeChange={setTagFilterMode}
                                   boardLayout={boardLayout}
                                   isReversed={isReversed}
                                   onBoardLayoutChange={handleBoardLayoutChange}
@@ -2291,8 +2235,6 @@ function BoardDetailScreen({
                                     activeTab="normal"
                                     onTabChange={() => {}}
                                     onCreateNew={() => {}}
-                                    columnCount={columnCount}
-                                    onColumnCountChange={setColumnCount}
                                     rightPanelMode="hidden"
                                     customTitle={boardName || "ボード詳細"}
                                     boardDescription={boardDescription}
@@ -2304,10 +2246,6 @@ function BoardDetailScreen({
                                     isExportDisabled={false}
                                     marginBottom="mb-0"
                                     headerMarginBottom="mb-0"
-                                    showTagDisplay={showTags}
-                                    onShowTagDisplayChange={
-                                      handleTagDisplayChange
-                                    }
                                     boardLayout={boardLayout}
                                     isReversed={isReversed}
                                     onBoardLayoutChange={
@@ -2411,8 +2349,6 @@ function BoardDetailScreen({
                                   activeTab="normal"
                                   onTabChange={() => {}}
                                   onCreateNew={() => {}}
-                                  columnCount={columnCount}
-                                  onColumnCountChange={setColumnCount}
                                   rightPanelMode="hidden"
                                   customTitle={boardName || "ボード詳細"}
                                   boardDescription={boardDescription}
@@ -2422,13 +2358,7 @@ function BoardDetailScreen({
                                   isExportDisabled={false}
                                   marginBottom="mb-0"
                                   headerMarginBottom="mb-0"
-                                  showTagDisplay={showTagDisplay}
-                                  onShowTagDisplayChange={setShowTagDisplay}
                                   tags={safeAllTags}
-                                  selectedTagIds={selectedTagIds}
-                                  onTagFilterChange={setSelectedTagIds}
-                                  tagFilterMode={tagFilterMode}
-                                  onTagFilterModeChange={setTagFilterMode}
                                   boardLayout={boardLayout}
                                   isReversed={isReversed}
                                   onBoardLayoutChange={handleBoardLayoutChange}

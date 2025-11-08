@@ -148,11 +148,7 @@ function CustomSelector({
         </div>
 
         {isOpen && (
-          <div
-            className={`absolute top-full left-0 z-50 bg-white rounded-b-lg shadow-lg border border-gray-400 border-t-0 ${
-              fullWidth ? "w-full" : "w-full"
-            }`}
-          >
+          <div className="absolute top-full left-0 z-50 bg-white rounded-b-lg shadow-lg border border-gray-400 border-t-0 w-full">
             <div className="space-y-1 max-h-60 overflow-y-auto mb-2">
               {allowCreate && (
                 <div className="border-b border-gray-200 pb-1 mb-1">
@@ -182,7 +178,7 @@ function CustomSelector({
                     </div>
                   ) : (
                     <button
-                      className="w-full px-3 py-2 text-sm transition-all text-left flex items-center justify-between rounded-md hover:bg-gray-50 text-blue-600"
+                      className="w-full px-1.5 py-2 text-sm transition-all text-left flex items-center justify-between rounded-md hover:bg-gray-50 text-blue-600"
                       onClick={() => setIsCreating(true)}
                     >
                       <span>新規カテゴリー</span>
@@ -195,7 +191,7 @@ function CustomSelector({
               {options.map((option) => (
                 <div key={option.value}>
                   <button
-                    className={`w-full px-3 py-2 text-sm transition-all text-left flex items-center gap-1 rounded-md ${
+                    className={`w-full px-1.5 py-2 text-sm transition-all text-left flex items-center gap-2 rounded-md ${
                       option.value === value
                         ? `bg-gray-100`
                         : `hover:bg-gray-50`

@@ -260,7 +260,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
         )}
 
         {/* ステータスバー（統合版） */}
-        <div className={`flex gap-2 ${statusOnly ? "pl-2" : "mt-1"}`}>
+        <div className={`flex gap-1.5 ${statusOnly ? "pl-2" : "mt-1"}`}>
           <CustomSelector
             label="ステータス"
             options={statusOptions}
@@ -403,7 +403,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
         />
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-1.5">
         <CustomSelector
           label="ステータス"
           options={statusOptions}

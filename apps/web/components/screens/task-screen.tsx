@@ -355,7 +355,6 @@ function TaskScreen({
     setCheckedItems: setCheckedTasks,
     checkedDeletedItems: checkedDeletedTasks,
     setCheckedDeletedItems: setCheckedDeletedTasks,
-    effectiveColumnCount,
   } = useScreenState(
     { type: "task", defaultActiveTab: "todo", defaultColumnCount: 2 },
     "list" as TaskScreenMode,
@@ -368,6 +367,14 @@ function TaskScreen({
   const columnCount = settings.taskColumnCount;
   const setColumnCount = (count: number) =>
     updateSettings({ taskColumnCount: count });
+
+  // 右側パネル表示時は列数を調整（useScreenStateと同じロジック）
+  const effectiveColumnCount =
+    taskScreenMode !== "list"
+      ? columnCount <= 2
+        ? columnCount
+        : 2
+      : columnCount;
 
   // チームモードで新規作成状態をContextに反映
   useEffect(() => {

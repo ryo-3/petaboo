@@ -170,6 +170,7 @@ export default function ControlPanel({
       : currentMode === "task"
         ? settings.taskColumnCount
         : settings.boardColumnCount;
+
   const onColumnCountChange = (count: number) => {
     if (currentMode === "memo") {
       updateSettings({ memoColumnCount: count });

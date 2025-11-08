@@ -328,7 +328,6 @@ function MemoScreen({
     setCheckedItems: setCheckedMemos,
     checkedDeletedItems: checkedDeletedMemos,
     setCheckedDeletedItems: setCheckedDeletedMemos,
-    effectiveColumnCount,
   } = useScreenState(
     { type: "memo", defaultActiveTab: "normal", defaultColumnCount: 4 },
     "list" as MemoScreenMode,
@@ -342,6 +341,14 @@ function MemoScreen({
   const columnCount = settings.memoColumnCount;
   const setColumnCount = (count: number) =>
     updateSettings({ memoColumnCount: count });
+
+  // 右側パネル表示時は列数を調整（useScreenStateと同じロジック）
+  const effectiveColumnCount =
+    memoScreenMode !== "list"
+      ? columnCount <= 2
+        ? columnCount
+        : 2
+      : columnCount;
 
   const handleSelectMemo = useCallback(
     (memo: Memo | null) => {

@@ -450,7 +450,15 @@ app.openapi(
       return c.json({ error: "Team task not found" }, 404);
     }
 
-    return c.json({ success: true }, 200);
+    // 更新後のタスクを取得して返す
+    const updatedTask = await db
+      .select(getTeamTaskSelectFields())
+      .from(teamTasks)
+      .leftJoin(teamMembers, getTeamTaskMemberJoin())
+      .where(and(eq(teamTasks.id, id), eq(teamTasks.teamId, teamId)))
+      .get();
+
+    return c.json(updatedTask || { success: true }, 200);
   },
 );
 

@@ -401,7 +401,14 @@ app.openapi(
       return c.json({ error: "Task not found" }, 404);
     }
 
-    return c.json({ success: true }, 200);
+    // 更新後のタスクを取得して返す
+    const updatedTask = await db
+      .select()
+      .from(tasks)
+      .where(and(eq(tasks.id, id), eq(tasks.userId, auth.userId)))
+      .get();
+
+    return c.json(updatedTask || { success: true }, 200);
   },
 );
 

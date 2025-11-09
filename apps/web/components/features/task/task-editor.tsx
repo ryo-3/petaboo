@@ -1378,28 +1378,26 @@ function TaskEditor({
                 />
               )}
 
-              <div className="flex-1 flex gap-2.5 items-center">
-                <div className="flex-1">
-                  <BoardCategorySelector
-                    value={boardCategoryId}
-                    onChange={isDeleted ? () => {} : setBoardCategoryId}
-                    categories={categories}
-                    boardId={initialBoardId!}
-                    disabled={isDeleted}
-                    allowCreate={true}
-                    hideChevron={true}
-                  />
-                </div>
+              <div className="flex-1">
+                <BoardCategorySelector
+                  value={boardCategoryId}
+                  onChange={isDeleted ? () => {} : setBoardCategoryId}
+                  categories={categories}
+                  boardId={initialBoardId!}
+                  disabled={isDeleted}
+                  allowCreate={true}
+                  hideChevron={true}
+                />
+              </div>
 
-                <div className="w-28 mr-2">
-                  <DatePickerSimple
-                    value={dueDate}
-                    onChange={isDeleted ? () => {} : setDueDate}
-                    disabled={isDeleted}
-                    compactMode={true}
-                    placeholder="期限"
-                  />
-                </div>
+              <div className="w-28 mr-2">
+                <DatePickerSimple
+                  value={dueDate}
+                  onChange={isDeleted ? () => {} : setDueDate}
+                  disabled={isDeleted}
+                  compactMode={true}
+                  placeholder="期限"
+                />
               </div>
             </div>
 

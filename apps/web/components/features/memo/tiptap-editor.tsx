@@ -4,7 +4,6 @@ import { useEditor, EditorContent, Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import Link from "@tiptap/extension-link";
-import { Markdown } from "@tiptap/markdown";
 import { useEffect, useRef, useState } from "react";
 
 interface TiptapEditorProps {
@@ -166,11 +165,6 @@ export function TiptapEditor({
         heading: {
           levels: [1, 2, 3],
         },
-        paragraph: {
-          HTMLAttributes: {
-            class: "my-0",
-          },
-        },
         hardBreak: {
           keepMarks: true,
         },
@@ -187,26 +181,13 @@ export function TiptapEditor({
       Placeholder.configure({
         placeholder,
       }),
-      Markdown.configure({
-        markedOptions: {
-          breaks: true, // 単一の\nを<br>に変換
-          gfm: true,
-          pedantic: false,
-        },
-      }),
     ],
-    // 初期contentをマークダウンとして解釈
     content,
-    contentType: "markdown",
     editable: !readOnly,
     onUpdate: ({ editor }) => {
-      // マークダウン形式で取得
-      let markdown = editor.getMarkdown();
-
-      // 4スペース+改行を2スペース+改行に修正（<br>のマークダウン表現）
-      markdown = markdown.replace(/ {4}\n/g, "  \n");
-
-      onChange(markdown);
+      // HTML形式で取得
+      const html = editor.getHTML();
+      onChange(html);
     },
     editorProps: {
       attributes: {
@@ -255,17 +236,12 @@ export function TiptapEditor({
 
   useEffect(() => {
     if (editor && !isFirstRender.current) {
-      const currentMarkdown = editor.getMarkdown();
+      const currentHTML = editor.getHTML();
 
       // 前回のcontentと比較（エディタからの変更を除外）
-      if (content !== prevContentRef.current && content !== currentMarkdown) {
-        // 2スペース+改行を<br>タグに変換してから設定
-        const processedContent = content.replace(/ {2}\n/g, "<br>\n");
-
-        // マークダウンとして解釈して設定
-        editor.commands.setContent(processedContent, {
-          contentType: "markdown",
-        });
+      if (content !== prevContentRef.current && content !== currentHTML) {
+        // HTMLとして設定
+        editor.commands.setContent(content);
       }
 
       prevContentRef.current = content;

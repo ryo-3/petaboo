@@ -8,6 +8,7 @@ import { useDeletedMemos } from "@/src/hooks/use-memos";
 import LogoutButton from "@/components/ui/buttons/logout-button";
 import type { DeletedMemo } from "@/src/types/memo";
 import { formatDateOnly } from "@/src/utils/formatDate";
+import { stripHtmlTags } from "@/src/utils/htmlUtils";
 
 interface DeletedMemoListProps {
   onBackToMemos: () => void;
@@ -66,9 +67,12 @@ function DeletedMemoList({
                     <div className="font-medium text-sm text-gray-800 truncate">
                       {memo.title}
                     </div>
-                    <div className="text-xs text-gray-500 truncate mt-1">
-                      {memo.content || "内容なし"}
-                    </div>
+                    <div
+                      className="text-xs text-gray-500 line-clamp-2 mt-1"
+                      dangerouslySetInnerHTML={{
+                        __html: memo.content || "内容なし",
+                      }}
+                    />
                     <div className="text-xs text-gray-400 mt-1">
                       作成: {formatDateOnly(memo.createdAt)}
                       {memo.updatedAt && memo.updatedAt !== memo.createdAt && (

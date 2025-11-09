@@ -18,8 +18,19 @@ import TagSelectionModal from "@/components/ui/modals/tag-selection-modal";
 import DateInfo from "@/components/shared/date-info";
 import CreatorAvatar from "@/components/shared/creator-avatar";
 import type { TeamCreatorProps } from "@/src/types/creator";
-import TaskForm, { TaskFormHandle } from "./task-form";
 import type { Editor } from "@tiptap/react";
+import CustomSelector from "@/components/ui/selectors/custom-selector";
+import { DatePickerSimple } from "@/components/ui/date-picker-simple";
+import BoardCategorySelector from "@/components/features/board-categories/board-category-selector";
+import AssigneeSelector from "./assignee-selector";
+import { TiptapEditor, Toolbar } from "../memo/tiptap-editor";
+import BoardTagDisplay from "@/components/shared/board-tag-display";
+import {
+  getPriorityEditorColor,
+  getPriorityText,
+  getStatusEditorColor,
+  getStatusText,
+} from "@/src/utils/taskUtils";
 import { useSimpleItemSave } from "@/src/hooks/use-simple-item-save";
 import {
   useAddItemToBoard,
@@ -178,7 +189,44 @@ function TaskEditor({
   // 事前取得されたデータを使用（APIコール不要）
   const boards = preloadedBoards;
   const isNewTask = !task || task.id === 0;
-  const taskFormRef = useRef<TaskFormHandle>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
+
+  // セレクターのオプション
+  const statusOptions = [
+    {
+      value: "todo",
+      label: getStatusText("todo"),
+      color: getStatusEditorColor("todo"),
+    },
+    {
+      value: "in_progress",
+      label: getStatusText("in_progress"),
+      color: getStatusEditorColor("in_progress"),
+    },
+    {
+      value: "completed",
+      label: getStatusText("completed"),
+      color: getStatusEditorColor("completed"),
+    },
+  ];
+
+  const priorityOptions = [
+    {
+      value: "low",
+      label: getPriorityText("low"),
+      color: getPriorityEditorColor("low"),
+    },
+    {
+      value: "medium",
+      label: getPriorityText("medium"),
+      color: getPriorityEditorColor("medium"),
+    },
+    {
+      value: "high",
+      label: getPriorityText("high"),
+      color: getPriorityEditorColor("high"),
+    },
+  ];
 
   // このタスクに実際に紐づいているボードのみを抽出
   const itemBoards = useMemo(() => {
@@ -1252,54 +1300,131 @@ function TaskEditor({
           </div>
 
           {/* タイトル・ステータス・日付を固定ヘッダーに配置 */}
-          <TaskForm
-            ref={taskFormRef}
-            task={task as Task}
-            title={finalTitle}
-            onTitleChange={isDeleted ? () => {} : handleTitleChange}
-            description={finalDescription}
-            onDescriptionChange={isDeleted ? () => {} : handleDescriptionChange}
-            status={
-              finalStatus === "not_started"
-                ? "todo"
-                : (finalStatus as "todo" | "in_progress" | "completed")
-            }
-            onStatusChange={
-              isDeleted
-                ? () => {}
-                : (value) =>
-                    handleStatusChange?.(
-                      value === "todo" ? "not_started" : value,
-                    )
-            }
-            priority={finalPriority as "low" | "medium" | "high"}
-            onPriorityChange={isDeleted ? () => {} : handlePriorityChange!}
-            categoryId={categoryId}
-            onCategoryChange={isDeleted ? () => {} : setCategoryId}
-            boardCategoryId={boardCategoryId}
-            onBoardCategoryChange={isDeleted ? () => {} : setBoardCategoryId}
-            dueDate={dueDate}
-            onDueDateChange={isDeleted ? () => {} : setDueDate}
-            isNewTask={isNewTask}
-            customHeight={customHeight}
-            tags={task && task.id !== 0 ? localTags : []}
-            boards={displayBoards}
-            boardCategories={categories}
-            showBoardCategory={true}
-            isDeleted={isDeleted}
-            initialBoardId={initialBoardId}
-            teamMode={teamMode}
-            assigneeId={formAssigneeId ?? null}
-            onAssigneeChange={teamMode ? handleAssigneeChange : undefined}
-            teamMembers={teamMembers}
-            createdBy={createdBy}
-            createdByAvatarColor={createdByAvatarColor}
-            onImagePaste={handleFileSelect}
-            toolbarVisible={toolbarVisible}
-            onToolbarToggle={setToolbarVisible}
-            tiptapEditor={tiptapEditor}
-            editorOnly={false}
-          />
+          <>
+            {/* タイトル入力 */}
+            <div className="flex items-center gap-1">
+              <input
+                ref={titleInputRef}
+                type="text"
+                placeholder="タスクタイトルを入力..."
+                value={finalTitle}
+                onChange={(e) =>
+                  isDeleted ? undefined : handleTitleChange(e.target.value)
+                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                  }
+                }}
+                className="flex-1 mb-1 mt-1 text-[15px] md:text-lg font-medium border-b border-DeepBlue/80 outline-none focus:border-DeepBlue"
+              />
+            </div>
+
+            {/* セレクターバー */}
+            <div className="flex gap-1.5 mt-1">
+              <CustomSelector
+                label="ステータス"
+                options={statusOptions}
+                value={
+                  finalStatus === "not_started"
+                    ? "todo"
+                    : (finalStatus as string)
+                }
+                onChange={(value) => {
+                  if (!isDeleted && handleStatusChange) {
+                    handleStatusChange(
+                      value === "todo"
+                        ? "not_started"
+                        : (value as
+                            | "in_progress"
+                            | "completed"
+                            | "not_started"),
+                    );
+                  }
+                }}
+                width="96px"
+                disabled={isDeleted}
+                hideLabel={true}
+                compactMode={true}
+                hideChevron={true}
+              />
+
+              <CustomSelector
+                label="優先度"
+                options={priorityOptions}
+                value={finalPriority as string}
+                onChange={(value) =>
+                  isDeleted
+                    ? undefined
+                    : handlePriorityChange?.(value as "low" | "medium" | "high")
+                }
+                fullWidth
+                disabled={isDeleted}
+                hideLabel={true}
+                compactMode={true}
+                hideChevron={true}
+              />
+
+              {teamMode && handleAssigneeChange && (
+                <AssigneeSelector
+                  members={teamMembers}
+                  value={formAssigneeId ?? null}
+                  onChange={isDeleted ? () => {} : handleAssigneeChange}
+                  disabled={isDeleted}
+                  width="160px"
+                  compact
+                  hideLabel
+                  className="flex-shrink-0"
+                />
+              )}
+
+              <div className="flex-1 flex gap-2.5 items-center">
+                <div className="flex-1 md:w-80">
+                  <BoardCategorySelector
+                    value={boardCategoryId}
+                    onChange={isDeleted ? () => {} : setBoardCategoryId}
+                    categories={categories}
+                    boardId={initialBoardId!}
+                    disabled={isDeleted}
+                    allowCreate={true}
+                  />
+                </div>
+
+                <div className="w-28">
+                  <DatePickerSimple
+                    value={dueDate}
+                    onChange={isDeleted ? () => {} : setDueDate}
+                    disabled={isDeleted}
+                    compactMode={true}
+                    placeholder="期限"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 作成者・日付を表示（ツールバー非表示時のみ） */}
+            {task && task.id !== 0 && !toolbarVisible && (
+              <div className="flex justify-end items-center gap-2 mr-2 mt-1 mb-1">
+                <CreatorAvatar
+                  createdBy={createdBy}
+                  avatarColor={createdByAvatarColor}
+                  teamMode={teamMode}
+                  size="md"
+                  className=""
+                />
+                <DateInfo
+                  item={task as Task}
+                  isEditing={!isDeleted}
+                  size="sm"
+                />
+              </div>
+            )}
+
+            {/* 書式ツールバー（ツールバー表示時のみ） */}
+            {!isDeleted && toolbarVisible && (
+              <Toolbar editor={tiptapEditor || null} />
+            )}
+          </>
         </div>
 
         {/* スクロール可能なコンテンツ部分 */}
@@ -1319,57 +1444,34 @@ function TaskEditor({
               </div>
             )}
             <div className="relative z-20">
-              <TaskForm
-                task={task as Task}
-                title={finalTitle}
-                onTitleChange={isDeleted ? () => {} : handleTitleChange}
-                description={finalDescription}
-                onDescriptionChange={
-                  isDeleted ? () => {} : handleDescriptionChange
-                }
-                status={
-                  finalStatus === "not_started"
-                    ? "todo"
-                    : (finalStatus as "todo" | "in_progress" | "completed")
-                }
-                onStatusChange={
-                  isDeleted
-                    ? () => {}
-                    : (value) =>
-                        handleStatusChange?.(
-                          value === "todo" ? "not_started" : value,
-                        )
-                }
-                priority={finalPriority as "low" | "medium" | "high"}
-                onPriorityChange={isDeleted ? () => {} : handlePriorityChange!}
-                categoryId={categoryId}
-                onCategoryChange={isDeleted ? () => {} : setCategoryId}
-                boardCategoryId={boardCategoryId}
-                onBoardCategoryChange={
-                  isDeleted ? () => {} : setBoardCategoryId
-                }
-                dueDate={dueDate}
-                onDueDateChange={isDeleted ? () => {} : setDueDate}
-                isNewTask={isNewTask}
-                customHeight={customHeight}
-                tags={task && task.id !== 0 ? localTags : []}
-                boards={displayBoards}
-                boardCategories={categories}
-                showBoardCategory={true}
-                isDeleted={isDeleted}
-                initialBoardId={initialBoardId}
-                teamMode={teamMode}
-                assigneeId={formAssigneeId ?? null}
-                onAssigneeChange={teamMode ? handleAssigneeChange : undefined}
-                teamMembers={teamMembers}
-                createdBy={createdBy}
-                createdByAvatarColor={createdByAvatarColor}
-                onImagePaste={handleFileSelect}
-                toolbarVisible={toolbarVisible}
-                onToolbarToggle={setToolbarVisible}
-                onEditorReady={setTiptapEditor}
-                editorOnly={true}
-              />
+              <div className="flex-1 flex flex-col min-h-0 pl-2">
+                <div className="w-full pr-1">
+                  <TiptapEditor
+                    content={finalDescription}
+                    onChange={(newContent) => {
+                      if (!isDeleted) {
+                        handleDescriptionChange(newContent);
+                      }
+                    }}
+                    placeholder={isDeleted ? "削除済みのタスクです" : "入力..."}
+                    readOnly={isDeleted}
+                    className="font-medium"
+                    toolbarVisible={toolbarVisible}
+                    onToolbarToggle={setToolbarVisible}
+                    onEditorReady={setTiptapEditor}
+                    onImagePaste={handleFileSelect}
+                  />
+                </div>
+
+                {/* ボード名・タグ表示 */}
+                <BoardTagDisplay
+                  boards={displayBoards}
+                  tags={task && task.id !== 0 ? localTags : []}
+                  spacing="normal"
+                  showWhen="has-content"
+                  className="mb-4"
+                />
+              </div>
               {/* 画像添付ギャラリー（個人・チーム両対応） */}
               <AttachmentGallery
                 attachments={attachments}

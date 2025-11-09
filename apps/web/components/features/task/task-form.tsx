@@ -70,6 +70,8 @@ interface TaskFormProps {
   onToolbarToggle?: (visible: boolean) => void;
   tiptapEditor?: Editor | null;
   onEditorReady?: (editor: Editor) => void;
+  // ヘッダー部分のみ表示（本文非表示）
+  headerOnly?: boolean;
   // エディター部分のみ表示
   editorOnly?: boolean;
   // タイトル・日付のみ表示（固定ヘッダー用）

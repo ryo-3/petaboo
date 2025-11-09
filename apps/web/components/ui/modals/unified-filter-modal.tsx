@@ -45,16 +45,16 @@ export default function UnifiedFilterModal({
   const boards = teamMode ? teamBoardsData : personalBoards;
 
   // デバッグログ
-  console.log("🔍 UnifiedFilterModal - データ取得状況:", {
-    teamMode,
-    teamId,
-    personalTags: personalTags?.length,
-    teamTagsData: teamTagsData?.length,
-    tags: tags?.length,
-    personalBoards: personalBoards?.length,
-    teamBoardsData: teamBoardsData?.length,
-    boards: boards?.length,
-  });
+  // console.log("🔍 UnifiedFilterModal - データ取得状況:", {
+  //   teamMode,
+  //   teamId,
+  //   personalTags: personalTags?.length,
+  //   teamTagsData: teamTagsData?.length,
+  //   tags: tags?.length,
+  //   personalBoards: personalBoards?.length,
+  //   teamBoardsData: teamBoardsData?.length,
+  //   boards: boards?.length,
+  // });
 
   // ローカルstate
   const [searchQuery, setSearchQuery] = useState("");
@@ -109,7 +109,7 @@ export default function UnifiedFilterModal({
     const newSelection = sessionState.selectedBoardIds.includes(boardId)
       ? sessionState.selectedBoardIds.filter((id) => id !== boardId)
       : [...sessionState.selectedBoardIds, boardId];
-    console.log("📋 ボードフィルター更新:", { boardId, newSelection });
+    // console.log("📋 ボードフィルター更新:", { boardId, newSelection });
     updateSessionState({ selectedBoardIds: newSelection });
   };
 

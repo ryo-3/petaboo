@@ -13,8 +13,6 @@ import SearchIcon from "@/components/icons/search-icon";
 import SettingsIcon from "@/components/icons/settings-icon";
 import TaskIcon from "@/components/icons/task-icon";
 import TeamIcon from "@/components/icons/team-icon";
-import MemoList from "@/components/mobile/memo-list";
-import TaskList from "@/components/mobile/task-list";
 import SwitchTabs from "@/components/ui/base/switch-tabs";
 import Tooltip from "@/components/ui/base/tooltip";
 import NotificationBadge from "@/components/ui/base/notification-badge";

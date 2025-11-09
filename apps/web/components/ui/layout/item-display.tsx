@@ -155,9 +155,10 @@ function ItemDisplay({
                 className={`font-semibold text-base mb-1 truncate flex-1 ${
                   isDeleted ? "text-gray-700" : "text-gray-800"
                 }`}
-              >
-                {isTask ? title.replace(/[\r\n]/g, " ").trim() : title}
-              </h3>
+                dangerouslySetInnerHTML={{
+                  __html: isTask ? title.replace(/[\r\n]/g, " ").trim() : title,
+                }}
+              />
 
               {/* 作成者アイコン（カード表示・チームモードのみ） */}
               {teamMode && (
@@ -225,15 +226,19 @@ function ItemDisplay({
 
             {/* コンテンツ */}
             {isMemo && (
-              <p className="text-xs text-gray-600 line-clamp-4">
-                {displayContent}
-              </p>
+              <p
+                className="text-xs text-gray-600 line-clamp-4"
+                dangerouslySetInnerHTML={{ __html: displayContent }}
+              />
             )}
 
             {isTask && (
-              <p className="text-sm text-gray-600 line-clamp-3 break-words flex-1 overflow-hidden mb-2">
-                {taskDescription.replace(/[\r\n]/g, " ").trim()}
-              </p>
+              <p
+                className="text-sm text-gray-600 line-clamp-3 break-words flex-1 overflow-hidden mb-2"
+                dangerouslySetInnerHTML={{
+                  __html: taskDescription.replace(/[\r\n]/g, " ").trim(),
+                }}
+              />
             )}
 
             {/* コメント数表示 */}

@@ -29,6 +29,7 @@ import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useTeamContext } from "@/src/contexts/team-context";
 import { useViewSettings } from "@/src/contexts/view-settings-context";
 import { useTeamDetail } from "@/src/contexts/team-detail-context";
+import { useNavigation } from "@/src/contexts/navigation-context";
 import {
   useBoards,
   useItemBoards,
@@ -190,6 +191,9 @@ function TaskScreen({
 }: TaskScreenProps) {
   const { isTeamMode: teamMode, teamId: teamIdRaw } = useTeamContext();
   const teamId = teamIdRaw ?? undefined; // Convert null to undefined for hook compatibility
+
+  // NavigationContextからアップロード状態を取得
+  const { isUploadingTask } = useNavigation();
 
   // ViewSettingsContextから取得
   const { settings, sessionState, updateSettings, updateSessionState } =
@@ -694,6 +698,10 @@ function TaskScreen({
     useTaskDeleteWithNextSelection({
       tasks: tasks?.filter((t) => t.status === activeTab),
       onSelectTask: (task: Task | null) => {
+        // アップロード中は切り替えを防ぐ
+        if (isUploadingTask) {
+          return;
+        }
         if (task) {
           onSelectTask(task);
           setTaskScreenMode("view");
@@ -754,8 +762,12 @@ function TaskScreen({
     onClose: onClose,
   });
 
-  // タスク選択ハンドラー
+  // タスク選択ハンドラー（アップロード中チェック追加）
   const handleSelectTask = (task: Task) => {
+    // アップロード中は切り替えを防ぐ
+    if (isUploadingTask) {
+      return;
+    }
     handleSelectTaskBase(task);
   };
 

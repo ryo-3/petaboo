@@ -70,6 +70,7 @@ import {
 import { useTeamContext } from "@/src/contexts/team-context";
 import { useTeamDetail } from "@/src/contexts/team-detail-context";
 import { useTeamDetail as useTeamDetailQuery } from "@/src/hooks/use-team-detail";
+import { useNavigation } from "@/src/contexts/navigation-context";
 
 interface TaskEditorProps {
   task?: Task | DeletedTask | null;
@@ -161,6 +162,9 @@ function TaskEditor({
     teamSlug,
   } = useTeamContext();
   const teamId = teamIdRaw ?? undefined; // Hook互換性のため変換
+
+  // NavigationContextからアップロード状態を管理
+  const { setIsUploadingTask } = useNavigation();
 
   // TeamDetailContext経由でモバイルフッターに状態を公開
   const teamDetailContext = teamMode ? useTeamDetail() : null;
@@ -1066,6 +1070,11 @@ function TaskEditor({
   // モバイルフッター戻るボタンイベント（Context経由）
   useEffect(() => {
     const handleMobileBackRequested = () => {
+      // アップロード中・保存中は閉じられない
+      if (isUploading || isSaving) {
+        return;
+      }
+
       if (teamMode && teamDetailContext) {
         // Contextから最新の状態を読み取る
         const currentHasUnsavedChanges =
@@ -1098,16 +1107,42 @@ function TaskEditor({
         handleMobileBackRequested,
       );
     };
-  }, [teamMode, teamDetailContext, hasUnsavedChanges, onClose]);
+  }, [
+    teamMode,
+    teamDetailContext,
+    hasUnsavedChanges,
+    onClose,
+    isUploading,
+    isSaving,
+  ]);
 
-  // 戻るボタンクリックハンドラー（未保存変更チェック）
+  // アップロード中状態をNavigationContextに同期
+  useEffect(() => {
+    setIsUploadingTask(isUploading);
+    return () => {
+      setIsUploadingTask(false);
+    };
+  }, [isUploading, setIsUploadingTask]);
+
+  // 保存中・アップロード中になったら未保存確認モーダルを強制的に閉じる
+  useEffect(() => {
+    if ((isSaving || isUploading) && isCloseConfirmModalOpen) {
+      setIsCloseConfirmModalOpen(false);
+    }
+  }, [isSaving, isUploading, isCloseConfirmModalOpen]);
+
+  // 戻るボタンクリックハンドラー（未保存変更チェック＆アップロード中チェック）
   const handleCloseClick = useCallback(() => {
+    // アップロード中・保存中は閉じられない
+    if (isUploading || isSaving) {
+      return;
+    }
     if (hasUnsavedChanges) {
       setIsCloseConfirmModalOpen(true);
     } else {
       onClose();
     }
-  }, [hasUnsavedChanges, onClose]);
+  }, [isUploading, isSaving, hasUnsavedChanges, onClose]);
 
   // 確認モーダルで「閉じる」を選択
   const handleConfirmClose = useCallback(() => {
@@ -1130,7 +1165,12 @@ function TaskEditor({
                 {/* 閉じるボタン（PCのみ表示、モバイルではフッターに表示） */}
                 <button
                   onClick={handleCloseClick}
-                  className="hidden md:flex items-center justify-center size-7 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 transition-colors"
+                  disabled={isUploading || isSaving}
+                  className={`hidden md:flex items-center justify-center size-7 rounded-md bg-gray-100 text-gray-600 transition-colors ${
+                    isUploading || isSaving
+                      ? "opacity-50 cursor-not-allowed"
+                      : "hover:bg-gray-200 hover:text-gray-800"
+                  }`}
                 >
                   <svg
                     className="size-4 rotate-180 md:rotate-0"
@@ -1633,7 +1673,7 @@ function TaskEditor({
 
       {/* 未保存変更確認モーダル */}
       <ConfirmationModal
-        isOpen={isCloseConfirmModalOpen}
+        isOpen={isCloseConfirmModalOpen && !isSaving && !isUploading}
         onClose={() => setIsCloseConfirmModalOpen(false)}
         onConfirm={handleConfirmClose}
         title="未保存の変更があります"

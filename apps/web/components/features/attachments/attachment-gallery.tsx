@@ -117,15 +117,25 @@ export default function AttachmentGallery({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attachmentIds]);
 
-  // 保存待ち画像のプレビューURL生成
+  // 保存待ち画像のプレビューURL生成（既にattachmentsに存在するものを除外）
   useEffect(() => {
-    const urls = pendingImages.map((file) => URL.createObjectURL(file));
+    // attachmentsに既に存在するファイル名とサイズのセット
+    const existingFiles = new Set(
+      attachments.map((a) => `${a.fileName}-${a.fileSize}`),
+    );
+
+    // pendingImagesから重複を除外
+    const filteredPendingImages = pendingImages.filter(
+      (file) => !existingFiles.has(`${file.name}-${file.size}`),
+    );
+
+    const urls = filteredPendingImages.map((file) => URL.createObjectURL(file));
     setPendingUrls(urls);
 
     return () => {
       urls.forEach((url) => URL.revokeObjectURL(url));
     };
-  }, [pendingImages]);
+  }, [pendingImages, attachments]);
 
   if (attachments.length === 0 && pendingImages.length === 0) {
     return null;
@@ -289,8 +299,12 @@ export default function AttachmentGallery({
                 <img
                   src={url}
                   alt={`保存待ち ${index + 1}`}
-                  className="w-full md:w-32 h-auto md:h-32 md:object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border-2 border-blue-400"
-                  onClick={() => setSelectedImage(url)}
+                  className={`w-full md:w-32 h-auto md:h-32 md:object-cover rounded-lg transition-opacity ${
+                    isUploading
+                      ? "opacity-0 cursor-default"
+                      : "cursor-pointer hover:opacity-80 border-2 border-blue-400"
+                  }`}
+                  onClick={() => !isUploading && setSelectedImage(url)}
                 />
               ) : isPdf ? (
                 <div className="w-32 h-32 bg-gray-100 rounded-lg border-2 border-blue-400 flex flex-col items-center justify-center p-2">
@@ -319,10 +333,12 @@ export default function AttachmentGallery({
                   </p>
                 </div>
               )}
-              {/* 保存待ちバッジ */}
-              <div className="absolute top-0 left-0 bg-blue-500 text-white text-[10px] px-1 py-0.5 rounded-br">
-                未保存
-              </div>
+              {/* 保存待ちバッジ（アップロード中は非表示） */}
+              {!isUploading && (
+                <div className="absolute top-0 left-0 bg-blue-500 text-white text-[10px] px-1 py-0.5 rounded-br">
+                  未保存
+                </div>
+              )}
               {onDeletePending && (
                 <button
                   onClick={() => onDeletePending(index)}

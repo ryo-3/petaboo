@@ -71,6 +71,9 @@ interface NavigationContextType {
   // セレクター制御（SelectorContextから移行）
   activeSelector: string | null;
   setActiveSelector: (id: string | null) => void;
+  // アップロード中状態管理
+  isUploadingTask: boolean;
+  setIsUploadingTask: (uploading: boolean) => void;
 }
 
 const NavigationContext = createContext<NavigationContextType | undefined>(
@@ -131,6 +134,9 @@ export function NavigationProvider({
   const setActiveSelector = useCallback((id: string | null) => {
     setActiveSelectorInternal(id);
   }, []);
+
+  // アップロード中状態管理
+  const [isUploadingTask, setIsUploadingTask] = useState(false);
 
   // 楽観的更新用の一時的なモード（URL変更前に即座に反映）
   const [optimisticMode, setOptimisticMode] = useState<
@@ -315,6 +321,8 @@ export function NavigationProvider({
         setHandleMainSelectTask,
         activeSelector,
         setActiveSelector,
+        isUploadingTask,
+        setIsUploadingTask,
       }}
     >
       {children}

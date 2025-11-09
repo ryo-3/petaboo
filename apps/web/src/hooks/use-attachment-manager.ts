@@ -312,6 +312,9 @@ export const useAttachmentManager = ({
             ] as const;
 
             if (successfulAttachments.length > 0) {
+              // 重複表示防止のため、キャッシュ更新前にpendingImagesをクリア
+              setPendingImages([]);
+
               queryClient.setQueryData<Attachment[] | undefined>(
                 queryKey,
                 (old) => {
@@ -327,8 +330,6 @@ export const useAttachmentManager = ({
 
             await queryClient.invalidateQueries({ queryKey });
           }
-
-          setPendingImages([]);
         }
 
         return { success: failedCount === 0, failedCount };

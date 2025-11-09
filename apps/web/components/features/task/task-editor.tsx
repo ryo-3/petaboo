@@ -201,6 +201,12 @@ function TaskEditor({
           boardCategoryId: cachedTask.boardCategoryId,
         });
         return cachedTask;
+      } else {
+        console.log("⚠️ [task-editor] キャッシュにタスクが見つかりません:", {
+          taskId: task.id,
+          queryKey,
+          cachedTasksCount: cachedTasks?.length,
+        });
       }
     }
 
@@ -212,15 +218,7 @@ function TaskEditor({
     });
 
     return task;
-  }, [
-    task,
-    task?.id,
-    task?.categoryId,
-    task?.boardCategoryId,
-    teamMode,
-    teamId,
-    queryClient,
-  ]);
+  }, [task?.id, teamMode, teamId, queryClient]);
 
   const { categories } = useBoardCategories(initialBoardId);
 
@@ -1492,22 +1490,25 @@ function TaskEditor({
                   </div>
                 )}
 
-                <div className="w-40">
-                  <BoardCategorySelector
-                    value={boardCategoryId ?? null}
-                    onChange={
-                      isDeleted
-                        ? () => {}
-                        : handleBoardCategoryChange || (() => {})
-                    }
-                    categories={categories}
-                    boardId={initialBoardId!}
-                    disabled={isDeleted}
-                    allowCreate={true}
-                    hideChevron={true}
-                    compactMode
-                  />
-                </div>
+                {/* ボードカテゴリー: ボード詳細でのみ表示 */}
+                {initialBoardId && (
+                  <div className="w-40">
+                    <BoardCategorySelector
+                      value={boardCategoryId ?? null}
+                      onChange={
+                        isDeleted
+                          ? () => {}
+                          : handleBoardCategoryChange || (() => {})
+                      }
+                      categories={categories}
+                      boardId={initialBoardId}
+                      disabled={isDeleted}
+                      allowCreate={true}
+                      hideChevron={true}
+                      compactMode
+                    />
+                  </div>
+                )}
 
                 <div className="w-28 mr-2">
                   <DatePickerSimple

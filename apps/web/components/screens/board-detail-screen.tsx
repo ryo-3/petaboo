@@ -33,6 +33,7 @@ import { useBoardOperations } from "@/src/hooks/use-board-operations";
 import { CSVImportModal } from "@/components/features/board/csv-import-modal";
 import { useBoardCategories } from "@/src/hooks/use-board-categories";
 import BoardCategoryChip from "@/components/features/board-categories/board-category-chip";
+import { useTasks } from "@/src/hooks/use-tasks";
 
 interface BoardDetailProps {
   boardId: number;
@@ -68,6 +69,32 @@ function BoardDetailScreen({
   isDeleted = false,
 }: BoardDetailProps) {
   const { isTeamMode: teamMode, teamId } = useTeamContext();
+
+  // タスクキャッシュを常に準備（task-editorでboardCategoryId取得に必要）
+  const { data: tasksData, refetch: refetchTasks } = useTasks({
+    teamMode,
+    teamId: teamId || undefined,
+  });
+
+  // 初回マウント時に強制的にタスクデータを取得
+  useEffect(() => {
+    if (teamMode && teamId) {
+      console.log("🔄 [board-detail-screen] チームタスク取得開始:", { teamId });
+      refetchTasks();
+    }
+  }, [teamMode, teamId, refetchTasks]);
+
+  // デバッグ: キャッシュの状態を確認
+  useEffect(() => {
+    if (tasksData) {
+      console.log("📦 [board-detail-screen] タスクキャッシュ準備完了:", {
+        teamMode,
+        teamId,
+        tasksCount: tasksData.length,
+        task331: tasksData.find((t) => t.id === 331),
+      });
+    }
+  }, [tasksData, teamMode, teamId]);
 
   // ViewSettingsContextから取得
   const { settings, sessionState, updateSettings, updateSessionState } =

@@ -104,20 +104,22 @@ export default function MobileSelectorModal({
           </div>
         )}
 
-        {/* ボードカテゴリー */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            ボードカテゴリー
-          </label>
-          <BoardCategorySelector
-            value={boardCategoryId}
-            onChange={isDeleted ? () => {} : setBoardCategoryId}
-            categories={categories}
-            boardId={initialBoardId}
-            disabled={isDeleted}
-            allowCreate={true}
-          />
-        </div>
+        {/* ボードカテゴリー: ボード詳細でのみ表示 */}
+        {initialBoardId && (
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              ボードカテゴリー
+            </label>
+            <BoardCategorySelector
+              value={boardCategoryId}
+              onChange={isDeleted ? () => {} : setBoardCategoryId}
+              categories={categories}
+              boardId={initialBoardId}
+              disabled={isDeleted}
+              allowCreate={true}
+            />
+          </div>
+        )}
 
         {/* 期限 */}
         <div className="mb-4">

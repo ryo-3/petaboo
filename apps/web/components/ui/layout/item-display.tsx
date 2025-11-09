@@ -293,6 +293,7 @@ function ItemDisplay({
                       alt={preloadedAttachments[0].fileName}
                       className="w-32 h-32 object-cover rounded border border-gray-200"
                       loading="lazy"
+                      referrerPolicy="no-referrer"
                     />
                     {preloadedAttachments.length > 1 && (
                       <span className="absolute bottom-1 right-1 bg-black bg-opacity-60 text-white text-sm px-2 py-1 rounded">

@@ -12,6 +12,7 @@ interface CreateCategoryModalProps {
   onSuccess: (categoryId: number) => void;
   existingCategories?: BoardCategory[];
   boardId: number;
+  teamId?: number;
   currentCategoryId?: number | null;
   onCategorySelect?: (categoryId: number | null) => void;
 }
@@ -22,10 +23,11 @@ export default function CreateCategoryModal({
   onSuccess,
   existingCategories = [],
   boardId,
+  teamId,
   currentCategoryId,
   onCategorySelect,
 }: CreateCategoryModalProps) {
-  const { createCategory } = useBoardCategories();
+  const { createCategory } = useBoardCategories(boardId, teamId);
   const [formData, setFormData] = useState<NewBoardCategory>({
     name: "",
     boardId,
@@ -55,6 +57,7 @@ export default function CreateCategoryModal({
       const newCategory = await createCategory({
         ...formData,
         name: formData.name.trim(),
+        ...(teamId && { teamId }),
       });
 
       // 成功時の処理

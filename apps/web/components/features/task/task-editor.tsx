@@ -630,6 +630,8 @@ function TaskEditor({
     priority,
     status,
     assigneeId: formAssigneeId,
+    categoryId,
+    boardCategoryId,
     selectedBoardIds,
     isSaving,
     saveError,
@@ -640,6 +642,8 @@ function TaskEditor({
     handlePriorityChange,
     handleStatusChange,
     handleAssigneeChange,
+    handleCategoryChange,
+    handleBoardCategoryChange,
     handleBoardChange,
     showBoardChangeModal,
     pendingBoardChanges,
@@ -687,14 +691,6 @@ function TaskEditor({
   const finalStatus = isDeleted
     ? (task as DeletedTask)?.status || "not_started"
     : status;
-
-  // その他のタスク固有のstate
-  const [categoryId, setCategoryId] = useState<number | null>(
-    task?.categoryId ?? null,
-  );
-  const [boardCategoryId, setBoardCategoryId] = useState<number | null>(
-    task?.boardCategoryId ?? null,
-  );
   const [dueDate, setDueDate] = useState<string>(() => {
     try {
       return (
@@ -720,8 +716,8 @@ function TaskEditor({
             ? "todo"
             : (finalStatus as "todo" | "in_progress" | "completed"),
         priority: finalPriority as "low" | "medium" | "high",
-        categoryId: categoryId,
-        boardCategoryId: boardCategoryId,
+        categoryId: categoryId ?? null,
+        boardCategoryId: boardCategoryId ?? null,
         assigneeId: formAssigneeId ?? null,
         dueDate: dueDate
           ? Math.floor(new Date(dueDate).getTime() / 1000)
@@ -736,8 +732,8 @@ function TaskEditor({
             ? "todo"
             : (finalStatus as "todo" | "in_progress" | "completed"),
         priority: finalPriority as "low" | "medium" | "high",
-        categoryId: categoryId,
-        boardCategoryId: boardCategoryId,
+        categoryId: categoryId ?? null,
+        boardCategoryId: boardCategoryId ?? null,
         assigneeId: formAssigneeId ?? null,
         createdAt: Math.floor(Date.now() / 1000),
         updatedAt: Math.floor(Date.now() / 1000),
@@ -898,6 +894,33 @@ function TaskEditor({
       hasTagChanges ||
       pendingImages.length > 0 ||
       pendingDeletes.length > 0;
+
+  // デバッグログ: canSave の計算過程
+  useEffect(() => {
+    console.log("🔍 canSave Debug:", {
+      isDeleted,
+      isUploading,
+      isNewTask,
+      title: title.trim(),
+      hasChanges,
+      hasTagChanges,
+      pendingImagesLength: pendingImages.length,
+      pendingDeletesLength: pendingDeletes.length,
+      canSave,
+      hasUnsavedChanges,
+    });
+  }, [
+    isDeleted,
+    isUploading,
+    isNewTask,
+    title,
+    hasChanges,
+    hasTagChanges,
+    pendingImages,
+    pendingDeletes,
+    canSave,
+    hasUnsavedChanges,
+  ]);
 
   // チーム用の未保存変更refを更新（モバイルフッター戻るボタン用）
   useEffect(() => {
@@ -1432,8 +1455,12 @@ function TaskEditor({
 
                 <div className="w-40">
                   <BoardCategorySelector
-                    value={boardCategoryId}
-                    onChange={isDeleted ? () => {} : setBoardCategoryId}
+                    value={boardCategoryId ?? null}
+                    onChange={
+                      isDeleted
+                        ? () => {}
+                        : handleBoardCategoryChange || (() => {})
+                    }
                     categories={categories}
                     boardId={initialBoardId!}
                     disabled={isDeleted}
@@ -1473,8 +1500,8 @@ function TaskEditor({
               formAssigneeId={formAssigneeId}
               handleAssigneeChange={handleAssigneeChange}
               teamMembers={teamMembers}
-              boardCategoryId={boardCategoryId}
-              setBoardCategoryId={setBoardCategoryId}
+              boardCategoryId={boardCategoryId ?? null}
+              setBoardCategoryId={handleBoardCategoryChange || (() => {})}
               categories={categories}
               initialBoardId={initialBoardId!}
               dueDate={dueDate}

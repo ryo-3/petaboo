@@ -81,6 +81,34 @@ export function useSimpleItemSave<T extends UnifiedItem>({
       return null;
     },
   );
+  const [categoryId, setCategoryId] = useState<number | null>(() => {
+    if (itemType === "task" && item && "categoryId" in item) {
+      return (item as Task).categoryId ?? null;
+    }
+    return null;
+  });
+  const [boardCategoryId, setBoardCategoryId] = useState<number | null>(() => {
+    if (itemType === "task" && item && "boardCategoryId" in item) {
+      return (item as Task).boardCategoryId ?? null;
+    }
+    return null;
+  });
+  const [initialCategoryId, setInitialCategoryId] = useState<number | null>(
+    () => {
+      if (itemType === "task" && item && "categoryId" in item) {
+        return (item as Task).categoryId ?? null;
+      }
+      return null;
+    },
+  );
+  const [initialBoardCategoryId, setInitialBoardCategoryId] = useState<
+    number | null
+  >(() => {
+    if (itemType === "task" && item && "boardCategoryId" in item) {
+      return (item as Task).boardCategoryId ?? null;
+    }
+    return null;
+  });
   const [selectedBoardIds, setSelectedBoardIds] = useState<number[]>(() => {
     // 新規作成時でcurrentBoardIdsが空の場合はinitialBoardIdを使用
     if (currentBoardIds.length === 0 && initialBoardId) {
@@ -172,7 +200,9 @@ export function useSimpleItemSave<T extends UnifiedItem>({
       taskFieldsChanged =
         priority !== initialPriority ||
         status !== initialStatus ||
-        (teamMode ? assigneeId !== initialAssigneeId : false);
+        (teamMode ? assigneeId !== initialAssigneeId : false) ||
+        categoryId !== initialCategoryId ||
+        boardCategoryId !== initialBoardCategoryId;
     }
 
     // 初期同期中はボード変更を無視
@@ -191,11 +221,15 @@ export function useSimpleItemSave<T extends UnifiedItem>({
     priority,
     status,
     assigneeId,
+    categoryId,
+    boardCategoryId,
     initialTitle,
     initialContent,
     initialPriority,
     initialStatus,
     initialAssigneeId,
+    initialCategoryId,
+    initialBoardCategoryId,
     selectedBoardIds,
     currentBoardIds,
     isInitialSync,
@@ -232,6 +266,17 @@ export function useSimpleItemSave<T extends UnifiedItem>({
           "assigneeId" in item ? ((item as Task).assigneeId ?? null) : null;
         setAssigneeId(nextAssignee);
         setInitialAssigneeId(nextAssignee);
+
+        const nextCategoryId =
+          "categoryId" in item ? ((item as Task).categoryId ?? null) : null;
+        const nextBoardCategoryId =
+          "boardCategoryId" in item
+            ? ((item as Task).boardCategoryId ?? null)
+            : null;
+        setCategoryId(nextCategoryId);
+        setBoardCategoryId(nextBoardCategoryId);
+        setInitialCategoryId(nextCategoryId);
+        setInitialBoardCategoryId(nextBoardCategoryId);
       }
     } else {
       setTitle("");
@@ -245,6 +290,10 @@ export function useSimpleItemSave<T extends UnifiedItem>({
         setInitialStatus("not_started");
         setAssigneeId(null);
         setInitialAssigneeId(null);
+        setCategoryId(null);
+        setBoardCategoryId(null);
+        setInitialCategoryId(null);
+        setInitialBoardCategoryId(null);
       }
     }
 
@@ -281,7 +330,9 @@ export function useSimpleItemSave<T extends UnifiedItem>({
           itemType === "task" &&
           (priority !== initialPriority ||
             status !== initialStatus ||
-            (teamMode ? assigneeId !== initialAssigneeId : false));
+            (teamMode ? assigneeId !== initialAssigneeId : false) ||
+            categoryId !== initialCategoryId ||
+            boardCategoryId !== initialBoardCategoryId);
         const hasContentChanges =
           (title.trim() || "無題") !== initialTitle.trim() ||
           content.trim() !== initialContent.trim() ||
@@ -306,7 +357,16 @@ export function useSimpleItemSave<T extends UnifiedItem>({
                       ? "todo"
                       : (status as "todo" | "in_progress" | "completed"),
                   ...(teamMode ? { assigneeId: assigneeId ?? null } : {}),
+                  categoryId: categoryId ?? undefined,
+                  boardCategoryId: boardCategoryId ?? undefined,
                 };
+
+          console.log("💾 [useSimpleItemSave] 保存データ:", {
+            itemType,
+            updateData,
+            categoryId,
+            boardCategoryId,
+          });
 
           if (itemType === "memo") {
             await updateMemo.mutateAsync({
@@ -338,6 +398,8 @@ export function useSimpleItemSave<T extends UnifiedItem>({
                       ? "todo"
                       : (status as "todo" | "in_progress" | "completed"),
                   ...(teamMode ? { assigneeId: assigneeId ?? null } : {}),
+                  categoryId: categoryId ?? null,
+                  boardCategoryId: boardCategoryId ?? null,
                   updatedAt: Math.floor(Date.now() / 1000),
                 } as T);
         } else {
@@ -358,6 +420,8 @@ export function useSimpleItemSave<T extends UnifiedItem>({
                       ? "todo"
                       : (status as "todo" | "in_progress" | "completed"),
                   ...(teamMode ? { assigneeId: assigneeId ?? null } : {}),
+                  categoryId: categoryId ?? null,
+                  boardCategoryId: boardCategoryId ?? null,
                 } as T);
         }
 
@@ -471,6 +535,8 @@ export function useSimpleItemSave<T extends UnifiedItem>({
           if (teamMode) {
             setInitialAssigneeId(assigneeId);
           }
+          setInitialCategoryId(categoryId);
+          setInitialBoardCategoryId(boardCategoryId);
         }
 
         onSaveComplete?.(updatedItem, false, false);
@@ -498,6 +564,8 @@ export function useSimpleItemSave<T extends UnifiedItem>({
                       ? "todo"
                       : (status as "todo" | "in_progress" | "completed"),
                   ...(teamMode ? { assigneeId: assigneeId ?? null } : {}),
+                  categoryId: categoryId ?? undefined,
+                  boardCategoryId: boardCategoryId ?? undefined,
                 };
 
           console.log("📝 [executeSave] 新規作成データ", createData);
@@ -594,6 +662,8 @@ export function useSimpleItemSave<T extends UnifiedItem>({
       if (itemType === "task") {
         setInitialPriority(priority);
         setInitialStatus(status);
+        setInitialCategoryId(categoryId);
+        setInitialBoardCategoryId(boardCategoryId);
       }
 
       // 保存成功後にボード選択状態を同期（hasChangesを正しく計算するため）
@@ -618,6 +688,8 @@ export function useSimpleItemSave<T extends UnifiedItem>({
     priority,
     status,
     assigneeId,
+    categoryId,
+    boardCategoryId,
     createMemo,
     updateMemo,
     createTask,
@@ -634,6 +706,8 @@ export function useSimpleItemSave<T extends UnifiedItem>({
     initialPriority,
     initialStatus,
     initialAssigneeId,
+    initialCategoryId,
+    initialBoardCategoryId,
     initialBoardId,
     onDeleteAndSelectNext,
     teamMode,
@@ -687,6 +761,17 @@ export function useSimpleItemSave<T extends UnifiedItem>({
     setAssigneeId(newAssigneeId ?? null);
   }, []);
 
+  const handleCategoryChange = useCallback((newCategoryId: number | null) => {
+    setCategoryId(newCategoryId);
+  }, []);
+
+  const handleBoardCategoryChange = useCallback(
+    (newBoardCategoryId: number | null) => {
+      setBoardCategoryId(newBoardCategoryId);
+    },
+    [],
+  );
+
   const handleBoardChange = useCallback((boardIds: number[]) => {
     setSelectedBoardIds(boardIds);
   }, []);
@@ -716,6 +801,10 @@ export function useSimpleItemSave<T extends UnifiedItem>({
       setInitialStatus("not_started");
       setAssigneeId(null);
       setInitialAssigneeId(null);
+      setCategoryId(null);
+      setBoardCategoryId(null);
+      setInitialCategoryId(null);
+      setInitialBoardCategoryId(null);
     }
     // ボード選択もリセット（initialBoardIdがある場合は維持）
     setSelectedBoardIds(initialBoardId ? [initialBoardId] : []);
@@ -724,7 +813,13 @@ export function useSimpleItemSave<T extends UnifiedItem>({
   return {
     title,
     content,
-    ...(itemType === "task" && { priority, status, assigneeId }),
+    ...(itemType === "task" && {
+      priority,
+      status,
+      assigneeId,
+      categoryId,
+      boardCategoryId,
+    }),
     selectedBoardIds,
     isSaving,
     saveError,
@@ -736,6 +831,8 @@ export function useSimpleItemSave<T extends UnifiedItem>({
       handlePriorityChange,
       handleStatusChange,
       handleAssigneeChange,
+      handleCategoryChange,
+      handleBoardCategoryChange,
     }),
     handleBoardChange,
     showBoardChangeModal,

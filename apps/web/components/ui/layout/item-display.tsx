@@ -246,9 +246,9 @@ function ItemDisplay({
 
             {/* コメント数表示 */}
             {item.commentCount !== undefined && item.commentCount > 0 && (
-              <div className="flex items-center gap-1 text-xs text-gray-500 mb-1">
+              <div className="flex items-center gap-1.5 text-sm text-gray-600 mb-1">
                 <svg
-                  className="w-3.5 h-3.5"
+                  className="w-4 h-4"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -264,7 +264,7 @@ function ItemDisplay({
               </div>
             )}
 
-            {/* 画像サムネイル表示（1枚のみ） */}
+            {/* 画像サムネイル表示 */}
             {preloadedAttachments &&
               preloadedAttachments.length > 0 &&
               preloadedAttachments[0] && (
@@ -273,11 +273,11 @@ function ItemDisplay({
                     <img
                       src={preloadedAttachments[0].url}
                       alt={preloadedAttachments[0].fileName}
-                      className="w-20 h-20 object-cover rounded border border-gray-200"
+                      className="w-32 h-32 object-cover rounded border border-gray-200"
                       loading="lazy"
                     />
                     {preloadedAttachments.length > 1 && (
-                      <span className="absolute bottom-0.5 right-0.5 bg-black bg-opacity-60 text-white text-xs px-1.5 py-0.5 rounded">
+                      <span className="absolute bottom-1 right-1 bg-black bg-opacity-60 text-white text-sm px-2 py-1 rounded">
                         +{preloadedAttachments.length - 1}
                       </span>
                     )}

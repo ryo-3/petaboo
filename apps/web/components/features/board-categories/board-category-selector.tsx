@@ -8,6 +8,7 @@ interface BoardCategorySelectorProps {
   onChange: (value: number | null) => void;
   categories: BoardCategory[];
   boardId: number;
+  teamId?: number;
   disabled?: boolean;
   allowCreate?: boolean;
   hideChevron?: boolean;
@@ -19,6 +20,7 @@ export default function BoardCategorySelector({
   onChange,
   categories,
   boardId,
+  teamId,
   disabled = false,
   allowCreate = false,
   hideChevron = false,
@@ -97,6 +99,7 @@ export default function BoardCategorySelector({
         onSuccess={handleCategoryCreated}
         existingCategories={categories}
         boardId={boardId}
+        teamId={teamId}
         currentCategoryId={value}
         onCategorySelect={onChange}
       />

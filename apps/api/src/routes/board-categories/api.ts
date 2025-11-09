@@ -2,14 +2,26 @@ import { createRoute, z } from "@hono/zod-openapi";
 import { getAuth } from "@hono/clerk-auth";
 import { eq, and, sql, like } from "drizzle-orm";
 import { boardCategories, boards } from "../../db";
+import { teamBoardCategories } from "../../db/schema/team/board-categories";
+import { teamBoards } from "../../db/schema/team/boards";
+import { teamMembers } from "../../db/schema/team/teams";
 import type { NewBoardCategory } from "../../db/schema/board-categories";
 import type { DatabaseType, Env, AppType } from "../../types/common";
+
+// チームメンバー確認ヘルパー
+async function checkTeamMember(teamId: number, userId: string, db: any) {
+  const member = await db
+    .select()
+    .from(teamMembers)
+    .where(and(eq(teamMembers.teamId, teamId), eq(teamMembers.userId, userId)))
+    .limit(1);
+
+  return member.length > 0 ? member[0] : null;
+}
 
 const BoardCategorySchema = z.object({
   id: z.number(),
   name: z.string(),
-  description: z.string().nullable(),
-  color: z.string().nullable(),
   icon: z.string().nullable(),
   sortOrder: z.number(),
   userId: z.string(),
@@ -20,8 +32,7 @@ const BoardCategorySchema = z.object({
 const CreateBoardCategorySchema = z.object({
   name: z.string().min(1).max(50),
   boardId: z.number(),
-  description: z.string().optional(),
-  color: z.string().optional(),
+  teamId: z.number().optional(),
   icon: z.string().optional(),
   sortOrder: z.number().optional(),
 });
@@ -39,13 +50,14 @@ const ReorderCategoriesSchema = z.object({
 });
 
 export function createAPI(app: AppType) {
-  // ボードカテゴリー一覧取得
+  // ボードカテゴリー一覧取得（個人・チーム両対応）
   const getBoardCategoriesRoute = createRoute({
     method: "get",
     path: "/",
     tags: ["board-categories"],
     request: {
       query: z.object({
+        teamId: z.string().regex(/^\d+$/).transform(Number).optional(),
         boardId: z.string().optional(),
         q: z.string().optional(),
         sort: z.enum(["name", "usage", "order"]).optional().default("order"),
@@ -80,9 +92,61 @@ export function createAPI(app: AppType) {
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const { boardId, q, sort, limit } = c.req.valid("query");
+    const { teamId, boardId, q, sort, limit } = c.req.valid("query");
     const db = c.get("db");
 
+    // チームモードの場合
+    if (teamId) {
+      // チームメンバー確認
+      const member = await checkTeamMember(teamId, auth.userId, db);
+      if (!member) {
+        return c.json({ error: "Not a team member" }, 403);
+      }
+
+      let query = db
+        .select()
+        .from(teamBoardCategories)
+        .where(eq(teamBoardCategories.teamId, teamId));
+
+      // ボードIDでフィルタリング
+      if (boardId) {
+        query = query.where(
+          and(
+            eq(teamBoardCategories.teamId, teamId),
+            eq(teamBoardCategories.boardId, parseInt(boardId)),
+          ),
+        );
+      }
+
+      // 検索フィルター
+      if (q) {
+        query = query.where(
+          and(
+            eq(teamBoardCategories.teamId, teamId),
+            like(teamBoardCategories.name, `%${q}%`),
+          ),
+        );
+      }
+
+      // ソート・リミット
+      if (sort === "name") {
+        query = query.orderBy(teamBoardCategories.name);
+      } else {
+        query = query.orderBy(
+          teamBoardCategories.sortOrder,
+          teamBoardCategories.name,
+        );
+      }
+
+      if (limit) {
+        query = query.limit(parseInt(limit));
+      }
+
+      const result = await query;
+      return c.json(result);
+    }
+
+    // 個人モード
     let query = db
       .select()
       .from(boardCategories)
@@ -115,8 +179,6 @@ export function createAPI(app: AppType) {
         .select({
           id: boardCategories.id,
           name: boardCategories.name,
-          description: boardCategories.description,
-          color: boardCategories.color,
           icon: boardCategories.icon,
           sortOrder: boardCategories.sortOrder,
           userId: boardCategories.userId,
@@ -139,8 +201,6 @@ export function createAPI(app: AppType) {
         result.map((item) => ({
           id: item.id,
           name: item.name,
-          description: item.description,
-          color: item.color,
           icon: item.icon,
           sortOrder: item.sortOrder,
           userId: item.userId,
@@ -216,10 +276,86 @@ export function createAPI(app: AppType) {
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const { name, boardId, description, color, icon, sortOrder } =
-      c.req.valid("json");
+    const { name, boardId, teamId, icon, sortOrder } = c.req.valid("json");
     const db = c.get("db");
 
+    // チームモードの場合
+    if (teamId) {
+      // チームメンバー確認
+      const member = await checkTeamMember(teamId, auth.userId, db);
+      if (!member) {
+        return c.json({ error: "Not a team member" }, 403);
+      }
+
+      // カテゴリー数制限チェック（30個）
+      const categoryCount = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(teamBoardCategories)
+        .where(
+          and(
+            eq(teamBoardCategories.teamId, teamId),
+            eq(teamBoardCategories.boardId, boardId),
+          ),
+        );
+
+      if (categoryCount[0]?.count >= 30) {
+        return c.json(
+          { error: "Board category limit reached (30 categories maximum)" },
+          400,
+        );
+      }
+
+      // 同名カテゴリーの存在チェック
+      const existing = await db
+        .select()
+        .from(teamBoardCategories)
+        .where(
+          and(
+            eq(teamBoardCategories.teamId, teamId),
+            eq(teamBoardCategories.boardId, boardId),
+            eq(teamBoardCategories.name, name),
+          ),
+        )
+        .limit(1);
+
+      if (existing.length > 0) {
+        return c.json({ error: "Board category already exists" }, 400);
+      }
+
+      // sortOrderが指定されていない場合は最大値+1を設定
+      let finalSortOrder = sortOrder;
+      if (finalSortOrder === undefined) {
+        const maxSortOrder = await db
+          .select({ max: sql<number>`max(${teamBoardCategories.sortOrder})` })
+          .from(teamBoardCategories)
+          .where(
+            and(
+              eq(teamBoardCategories.teamId, teamId),
+              eq(teamBoardCategories.boardId, boardId),
+            ),
+          );
+
+        finalSortOrder = (maxSortOrder[0]?.max || 0) + 1;
+      }
+
+      const result = await db
+        .insert(teamBoardCategories)
+        .values({
+          teamId,
+          boardId,
+          name,
+          icon: icon || null,
+          sortOrder: finalSortOrder,
+          userId: auth.userId,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .returning();
+
+      return c.json(result[0], 201);
+    }
+
+    // 個人モード
     // カテゴリー数制限チェック（30個）
     const categoryCount = await db
       .select({ count: sql<number>`count(*)` })
@@ -263,8 +399,6 @@ export function createAPI(app: AppType) {
     const newCategory: NewBoardCategory = {
       name,
       boardId,
-      description: description || null,
-      color: color || null,
       icon: icon || null,
       sortOrder: finalSortOrder,
       userId: auth.userId,
@@ -345,7 +479,7 @@ export function createAPI(app: AppType) {
     }
 
     const categoryId = parseInt(c.req.param("id"));
-    const { name, description, color, icon, sortOrder } = c.req.valid("json");
+    const { name, icon, sortOrder } = c.req.valid("json");
     const db = c.get("db");
 
     // カテゴリーの所有権確認
@@ -385,8 +519,6 @@ export function createAPI(app: AppType) {
       .update(boardCategories)
       .set({
         name,
-        description: description || null,
-        color: color || null,
         icon: icon || null,
         sortOrder: sortOrder !== undefined ? sortOrder : category[0].sortOrder,
         updatedAt: new Date(),

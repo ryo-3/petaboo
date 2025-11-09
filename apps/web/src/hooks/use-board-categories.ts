@@ -8,22 +8,23 @@ import type {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594";
 
-export function useBoardCategories(boardId?: number) {
+export function useBoardCategories(boardId?: number, teamId?: number) {
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
 
-  // ボードカテゴリー一覧取得
+  // ボードカテゴリー一覧取得（個人・チーム両対応）
   const {
     data: categories,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["boardCategories", boardId],
+    queryKey: ["boardCategories", teamId, boardId],
     queryFn: async (): Promise<BoardCategory[]> => {
       const token = await getToken();
-      const url = boardId
-        ? `${API_BASE_URL}/board-categories?boardId=${boardId}`
-        : `${API_BASE_URL}/board-categories`;
+      let url = `${API_BASE_URL}/board-categories?`;
+      if (teamId) url += `teamId=${teamId}&`;
+      if (boardId) url += `boardId=${boardId}`;
+
       const response = await fetch(url, {
         headers: {
           "Content-Type": "application/json",
@@ -51,10 +52,10 @@ export function useBoardCategories(boardId?: number) {
     staleTime: 5 * 60 * 1000, // 5分間キャッシュ
   });
 
-  // ボードカテゴリー作成
+  // ボードカテゴリー作成（個人・チーム両対応）
   const createCategory = useMutation({
     mutationFn: async (
-      newCategory: NewBoardCategory,
+      newCategory: NewBoardCategory & { teamId?: number },
     ): Promise<BoardCategory> => {
       const token = await getToken();
       const response = await fetch(`${API_BASE_URL}/board-categories`, {
@@ -86,7 +87,7 @@ export function useBoardCategories(boardId?: number) {
       };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["boardCategories"] });
+      queryClient.invalidateQueries({ queryKey: ["boardCategories", teamId] });
     },
   });
 

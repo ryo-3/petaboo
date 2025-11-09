@@ -1,3 +1,6 @@
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+
 interface ImagePreviewModalProps {
   imageUrl: string | null;
   onClose: () => void;
@@ -8,16 +11,24 @@ interface ImagePreviewModalProps {
  * - 背景: 濃い黒（90%不透明）
  * - 閉じるボタン: 右上固定
  * - 画像: 95vw x 95vh の最大サイズ
+ * - React Portalでbody直下にレンダリング
  */
 export default function ImagePreviewModal({
   imageUrl,
   onClose,
 }: ImagePreviewModalProps) {
-  if (!imageUrl) return null;
+  const [mounted, setMounted] = useState(false);
 
-  return (
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  if (!imageUrl || !mounted) return null;
+
+  const modalContent = (
     <div
-      className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black bg-opacity-90 z-[9999] flex items-center justify-center p-4"
       onClick={onClose}
     >
       {/* 閉じるボタン（右上固定） */}
@@ -49,4 +60,6 @@ export default function ImagePreviewModal({
       />
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }

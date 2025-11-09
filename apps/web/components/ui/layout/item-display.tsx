@@ -167,42 +167,20 @@ function ItemDisplay({
                 }}
               />
 
-              {/* 作成者・担当者表示（カード表示・チームモードのみ） */}
+              {/* 作成者表示（カード表示・チームモードのみ） */}
               {teamMode && (
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {/* 作成者 */}
-                  <div className="flex items-center gap-1">
-                    <CreatorAvatar
-                      createdBy={item.createdBy}
-                      avatarColor={item.avatarColor}
-                      teamMode={teamMode}
-                      size="md"
-                    />
-                    <span className="text-xs text-gray-600">
-                      {item.createdBy}
-                    </span>
-                  </div>
-                  {/* 担当者（タスクのみ） */}
-                  {hasAssignee && task && (
-                    <div className="flex items-center gap-1">
-                      <CreatorAvatar
-                        createdBy={task.assigneeName}
-                        avatarColor={task.assigneeAvatarColor}
-                        teamMode={teamMode}
-                        size="md"
-                      />
-                      <span className="text-xs text-gray-600">
-                        {task.assigneeName}
-                      </span>
-                    </div>
-                  )}
-                </div>
+                <CreatorAvatar
+                  createdBy={item.createdBy}
+                  avatarColor={item.avatarColor}
+                  teamMode={teamMode}
+                  size="md"
+                />
               )}
             </div>
 
             {/* タスク：ステータスと優先度 */}
             {isTask && task && (
-              <div className="flex gap-1 mb-2 flex-wrap">
+              <div className="flex gap-2 mb-2 flex-wrap items-center">
                 <span
                   className={`px-2 py-0.5 rounded text-xs ${getStatusColor(task.status)}`}
                 >
@@ -213,6 +191,21 @@ function ItemDisplay({
                 >
                   {getPriorityText(task.priority)}
                 </span>
+                {/* 担当者表示（チームモードのみ） */}
+                {teamMode && hasAssignee && (
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs text-gray-600">担当者：</span>
+                    <CreatorAvatar
+                      createdBy={task.assigneeName}
+                      avatarColor={task.assigneeAvatarColor}
+                      teamMode={teamMode}
+                      size="sm"
+                    />
+                    <span className="text-xs text-gray-600">
+                      {task.assigneeName}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
 

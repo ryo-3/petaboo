@@ -23,8 +23,10 @@ import CustomSelector from "@/components/ui/selectors/custom-selector";
 import { DatePickerSimple } from "@/components/ui/date-picker-simple";
 import BoardCategorySelector from "@/components/features/board-categories/board-category-selector";
 import AssigneeSelector from "./assignee-selector";
+import MobileSelectorModal from "./mobile-selector-modal";
 import { TiptapEditor, Toolbar } from "../memo/tiptap-editor";
 import BoardTagDisplay from "@/components/shared/board-tag-display";
+import { Menu } from "lucide-react";
 import {
   getPriorityEditorColor,
   getPriorityText,
@@ -185,6 +187,9 @@ function TaskEditor({
   // 書式設定ツールバーの表示状態
   const [toolbarVisible, setToolbarVisible] = useState(false);
   const [tiptapEditor, setTiptapEditor] = useState<Editor | null>(null);
+
+  // モバイルセレクターモーダルの表示状態
+  const [isMobileSelectorOpen, setIsMobileSelectorOpen] = useState(false);
 
   // 事前取得されたデータを使用（APIコール不要）
   const boards = preloadedBoards;
@@ -1322,7 +1327,7 @@ function TaskEditor({
 
             {/* セレクターバー */}
             <div className="flex gap-1.5 mt-1">
-              <div className="w-[110px] md:w-20">
+              <div className="w-[85px] md:w-20">
                 <CustomSelector
                   label="ステータス"
                   options={statusOptions}
@@ -1367,45 +1372,75 @@ function TaskEditor({
                 hideChevron={true}
               />
 
-              {teamMode && handleAssigneeChange && (
-                <div className="w-28">
-                  <AssigneeSelector
-                    members={teamMembers}
-                    value={formAssigneeId ?? null}
-                    onChange={isDeleted ? () => {} : handleAssigneeChange}
+              {/* PC（md以上）: 全セレクター表示 */}
+              <div className="hidden md:flex gap-1.5">
+                {teamMode && handleAssigneeChange && (
+                  <div className="w-24 md:w-28">
+                    <AssigneeSelector
+                      members={teamMembers}
+                      value={formAssigneeId ?? null}
+                      onChange={isDeleted ? () => {} : handleAssigneeChange}
+                      disabled={isDeleted}
+                      width="100%"
+                      compact
+                      hideLabel
+                      className="flex-shrink-0"
+                      compactMode
+                    />
+                  </div>
+                )}
+
+                <div className="w-40">
+                  <BoardCategorySelector
+                    value={boardCategoryId}
+                    onChange={isDeleted ? () => {} : setBoardCategoryId}
+                    categories={categories}
+                    boardId={initialBoardId!}
                     disabled={isDeleted}
-                    width="100%"
-                    compact
-                    hideLabel
-                    className="flex-shrink-0"
+                    allowCreate={true}
+                    hideChevron={true}
                     compactMode
                   />
                 </div>
-              )}
 
-              <div className="w-40">
-                <BoardCategorySelector
-                  value={boardCategoryId}
-                  onChange={isDeleted ? () => {} : setBoardCategoryId}
-                  categories={categories}
-                  boardId={initialBoardId!}
-                  disabled={isDeleted}
-                  allowCreate={true}
-                  hideChevron={true}
-                  compactMode
-                />
+                <div className="w-28 mr-2">
+                  <DatePickerSimple
+                    value={dueDate}
+                    onChange={isDeleted ? () => {} : setDueDate}
+                    disabled={isDeleted}
+                    compactMode={true}
+                    placeholder="期限"
+                  />
+                </div>
               </div>
 
-              <div className="w-28 mr-2">
-                <DatePickerSimple
-                  value={dueDate}
-                  onChange={isDeleted ? () => {} : setDueDate}
-                  disabled={isDeleted}
-                  compactMode={true}
-                  placeholder="期限"
-                />
-              </div>
+              {/* スマホ（md未満）: メニューボタン */}
+              <button
+                onClick={() => setIsMobileSelectorOpen(true)}
+                disabled={isDeleted}
+                className="md:hidden flex items-center gap-1.5 px-3 h-7 border border-gray-400 rounded-lg bg-white hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Menu size={16} className="text-gray-600" />
+                <span className="text-sm text-gray-700">メニュー</span>
+              </button>
             </div>
+
+            {/* モバイルセレクターモーダル */}
+            <MobileSelectorModal
+              isOpen={isMobileSelectorOpen}
+              onClose={() => setIsMobileSelectorOpen(false)}
+              teamMode={teamMode}
+              formAssigneeId={formAssigneeId}
+              handleAssigneeChange={handleAssigneeChange}
+              teamMembers={teamMembers}
+              boardCategoryId={boardCategoryId}
+              setBoardCategoryId={setBoardCategoryId}
+              categories={categories}
+              initialBoardId={initialBoardId!}
+              dueDate={dueDate}
+              setDueDate={setDueDate}
+              isDeleted={isDeleted}
+            />
 
             {/* 作成者・日付を表示（ツールバー非表示時のみ） */}
             {task && task.id !== 0 && !toolbarVisible && (

@@ -70,6 +70,12 @@ function BoardDetailScreen({
 }: BoardDetailProps) {
   const { isTeamMode: teamMode, teamId } = useTeamContext();
 
+  console.log("🎯 [board-detail-screen] rendered:", {
+    boardId,
+    teamMode,
+    teamId,
+  });
+
   // ViewSettingsContextから取得
   const { settings, sessionState, updateSettings, updateSessionState } =
     useViewSettings();
@@ -353,10 +359,19 @@ function BoardDetailScreen({
   );
 
   // メモとタスクの添付ファイルを統合
-  const allAttachments = useMemo(
-    () => [...(allMemoAttachments || []), ...(allTaskAttachments || [])],
-    [allMemoAttachments, allTaskAttachments],
-  );
+  const allAttachments = useMemo(() => {
+    const combined = [
+      ...(allMemoAttachments || []),
+      ...(allTaskAttachments || []),
+    ];
+    console.log("📷 [board-detail] allAttachments:", {
+      memoCount: allMemoAttachments?.length || 0,
+      taskCount: allTaskAttachments?.length || 0,
+      totalCount: combined.length,
+      sample: combined[0],
+    });
+    return combined;
+  }, [allMemoAttachments, allTaskAttachments]);
 
   // チームモードかどうかでタグ付けデータを切り替え（dataUpdatedAtで強制再レンダリング）
   const allTaggings = useMemo(

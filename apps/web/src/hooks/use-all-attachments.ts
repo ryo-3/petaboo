@@ -33,7 +33,8 @@ export function useAllAttachments(
         throw new Error("添付ファイルの取得に失敗しました");
       }
 
-      return response.json();
+      const data = await response.json();
+      return data;
     },
     enabled,
   });

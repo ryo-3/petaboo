@@ -895,33 +895,6 @@ function TaskEditor({
       pendingImages.length > 0 ||
       pendingDeletes.length > 0;
 
-  // デバッグログ: canSave の計算過程
-  useEffect(() => {
-    console.log("🔍 canSave Debug:", {
-      isDeleted,
-      isUploading,
-      isNewTask,
-      title: title.trim(),
-      hasChanges,
-      hasTagChanges,
-      pendingImagesLength: pendingImages.length,
-      pendingDeletesLength: pendingDeletes.length,
-      canSave,
-      hasUnsavedChanges,
-    });
-  }, [
-    isDeleted,
-    isUploading,
-    isNewTask,
-    title,
-    hasChanges,
-    hasTagChanges,
-    pendingImages,
-    pendingDeletes,
-    canSave,
-    hasUnsavedChanges,
-  ]);
-
   // チーム用の未保存変更refを更新（モバイルフッター戻るボタン用）
   useEffect(() => {
     if (taskEditorHasUnsavedChangesRef) {

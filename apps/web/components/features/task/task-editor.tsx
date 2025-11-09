@@ -1371,14 +1371,14 @@ function TaskEditor({
                   value={formAssigneeId ?? null}
                   onChange={isDeleted ? () => {} : handleAssigneeChange}
                   disabled={isDeleted}
-                  width="160px"
+                  width="140px"
                   compact
                   hideLabel
                   className="flex-shrink-0"
                 />
               )}
 
-              <div className="flex-1">
+              <div className="w-48">
                 <BoardCategorySelector
                   value={boardCategoryId}
                   onChange={isDeleted ? () => {} : setBoardCategoryId}

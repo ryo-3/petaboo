@@ -31,7 +31,6 @@ interface BoardMemoSectionProps {
   isLoading: boolean;
   effectiveColumnCount: number;
   showBoardName?: boolean;
-  showTags?: boolean;
   selectedTagIds?: number[];
   tagFilterMode?: "include" | "exclude";
   selectedMemo?: Memo | DeletedMemo | null;
@@ -94,7 +93,6 @@ export default function BoardMemoSection({
   isLoading,
   effectiveColumnCount,
   showBoardName = false,
-  showTags = false,
   selectedMemo,
   boardId,
   memoSelectionMode,
@@ -347,7 +345,6 @@ export default function BoardMemoSection({
               memoSelectionMode === "check" ? undefined : selectedMemo?.id
             }
             showBoardName={showBoardName}
-            showTags={showTags}
             sortOptions={
               getVisibleSortOptions(activeMemoTab).filter(
                 (opt) =>
@@ -382,7 +379,7 @@ export default function BoardMemoSection({
             selectedMemoId={
               memoSelectionMode === "check" ? undefined : selectedMemo?.id
             }
-            showTags={showTags}
+            showBoardName={showBoardName}
             sortOptions={
               getVisibleSortOptions(activeMemoTab).filter(
                 (opt) =>

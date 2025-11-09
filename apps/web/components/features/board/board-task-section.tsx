@@ -38,7 +38,6 @@ interface BoardTaskSectionProps {
   showTabText: boolean;
   isLoading: boolean;
   effectiveColumnCount: number;
-  showTags?: boolean;
   showBoardName?: boolean;
   selectedTagIds?: number[];
   tagFilterMode?: "include" | "exclude";
@@ -108,7 +107,6 @@ export default function BoardTaskSection({
   showTabText,
   isLoading,
   effectiveColumnCount,
-  showTags = false,
   showBoardName = false,
   selectedTask,
   taskSelectionMode,
@@ -408,7 +406,6 @@ export default function BoardTaskSection({
               taskSelectionMode === "check" ? undefined : selectedTask?.id
             }
             showBoardName={showBoardName}
-            showTags={showTags}
             sortOptions={getVisibleSortOptions(activeTaskTab)}
             allTags={allTags}
             allBoards={allBoards}
@@ -442,7 +439,6 @@ export default function BoardTaskSection({
               taskSelectionMode === "check" ? undefined : selectedTask?.id
             }
             showBoardName={showBoardName}
-            showTags={showTags}
             sortOptions={getVisibleSortOptions(activeTaskTab)}
             allTags={allTags}
             allTaggings={allTaggings}

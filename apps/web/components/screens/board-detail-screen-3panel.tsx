@@ -180,11 +180,6 @@ function BoardDetailScreen({
   }, []);
 
   // タグ表示管理
-  const [showTags, setShowTags] = useState(false);
-
-  const handleTagDisplayChange = (show: boolean) => {
-    setShowTags(show);
-  };
 
   // propsから選択状態を使用（Fast Refresh対応）
   const selectedMemo = propSelectedMemo;
@@ -1047,7 +1042,6 @@ function BoardDetailScreen({
                                     }
                                     allBoardItems={safeAllBoardItems}
                                     allAttachments={allAttachments || []}
-                                    showTags={showTagDisplay}
                                     selectedMemo={selectedMemo}
                                     boardId={boardId}
                                     onCreateNewMemo={handleCreateNewMemo}
@@ -1091,7 +1085,6 @@ function BoardDetailScreen({
                                     showTabText={showTabText}
                                     isLoading={isLoading}
                                     effectiveColumnCount={effectiveColumnCount}
-                                    showTags={showTagDisplay}
                                     showBoardName={false}
                                     allTags={safeAllTags}
                                     allBoards={safeAllBoards}
@@ -1406,7 +1399,6 @@ function BoardDetailScreen({
                                     showTabText={showTabText}
                                     isLoading={isLoading}
                                     effectiveColumnCount={effectiveColumnCount}
-                                    showTags={showTagDisplay}
                                     showBoardName={false}
                                     allTags={safeAllTags}
                                     allBoards={safeAllBoards}
@@ -1461,7 +1453,6 @@ function BoardDetailScreen({
                                     }
                                     allBoardItems={safeAllBoardItems}
                                     allAttachments={allAttachments || []}
-                                    showTags={showTagDisplay}
                                     selectedMemo={selectedMemo}
                                     boardId={boardId}
                                     onCreateNewMemo={handleCreateNewMemo}
@@ -1733,7 +1724,6 @@ function BoardDetailScreen({
                                     showTabText={showTabText}
                                     isLoading={isLoading}
                                     effectiveColumnCount={effectiveColumnCount}
-                                    showTags={showTagDisplay}
                                     showBoardName={false}
                                     allTags={safeAllTags}
                                     allBoards={safeAllBoards}
@@ -2000,7 +1990,6 @@ function BoardDetailScreen({
                                 }
                                 allBoardItems={safeAllBoardItems}
                                 allAttachments={allAttachments || []}
-                                showTags={showTags}
                                 selectedMemo={selectedMemo}
                                 boardId={boardId}
                                 onCreateNewMemo={handleCreateNewMemo}
@@ -2084,7 +2073,6 @@ function BoardDetailScreen({
                                 showTabText={showTabText}
                                 isLoading={isLoading}
                                 effectiveColumnCount={effectiveColumnCount}
-                                showTags={showTags}
                                 showBoardName={false}
                                 allTags={safeAllTags}
                                 allBoards={safeAllBoards}
@@ -2201,7 +2189,6 @@ function BoardDetailScreen({
                                   }
                                   allBoardItems={safeAllBoardItems}
                                   allAttachments={allAttachments || []}
-                                  showTags={showTags}
                                   selectedMemo={selectedMemo}
                                   boardId={boardId}
                                   onCreateNewMemo={handleCreateNewMemo}
@@ -2311,7 +2298,6 @@ function BoardDetailScreen({
                                   showTabText={showTabText}
                                   isLoading={isLoading}
                                   effectiveColumnCount={effectiveColumnCount}
-                                  showTags={showTags}
                                   showBoardName={false}
                                   allTags={safeAllTags}
                                   allBoards={safeAllBoards}
@@ -2460,7 +2446,6 @@ function BoardDetailScreen({
                 allTaggings={(safeAllTaggings || []) as Tagging[]}
                 allBoardItems={safeAllBoardItems}
                 allAttachments={allAttachments || []}
-                showTags={showTags}
                 selectedMemo={selectedMemo}
                 boardId={boardId}
                 onCreateNewMemo={handleCreateNewMemo}
@@ -2497,7 +2482,6 @@ function BoardDetailScreen({
                 showTabText={showTabText}
                 isLoading={isLoading}
                 effectiveColumnCount={effectiveColumnCount}
-                showTags={showTags}
                 showBoardName={false}
                 allTags={safeAllTags}
                 allBoards={safeAllBoards}

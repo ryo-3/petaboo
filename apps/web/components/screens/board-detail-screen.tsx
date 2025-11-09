@@ -642,7 +642,6 @@ function BoardDetailScreen({
             allTaggings={safeAllTaggings as Tagging[]}
             allBoardItems={safeAllBoardItems}
             allAttachments={allAttachments || []}
-            showTags={showTagDisplay}
             selectedTagIds={selectedTagIds}
             tagFilterMode={tagFilterMode}
             selectedMemo={selectedMemo}
@@ -683,7 +682,6 @@ function BoardDetailScreen({
             showTabText={showTabText}
             isLoading={isLoading}
             effectiveColumnCount={effectiveColumnCount}
-            showTags={showTagDisplay}
             selectedTagIds={selectedTagIds}
             tagFilterMode={tagFilterMode}
             allTags={safeAllTags}

@@ -183,43 +183,6 @@ function TaskEditor({
     : rawTask;
 
   const queryClient = useQueryClient();
-
-  // キャッシュから完全なタスクデータを取得
-  const fullTask = useMemo(() => {
-    if (!task || task.id === 0) return task;
-
-    // propsのtaskにcategoryIdとboardCategoryIdが含まれていない場合、キャッシュから取得
-    if (task.categoryId === undefined || task.boardCategoryId === undefined) {
-      const queryKey = teamMode && teamId ? ["team-tasks", teamId] : ["tasks"];
-      const cachedTasks = queryClient.getQueryData<Task[]>(queryKey);
-      const cachedTask = cachedTasks?.find((t) => t.id === task.id);
-
-      if (cachedTask) {
-        console.log("🔄 [task-editor] キャッシュから完全なタスクを取得:", {
-          id: cachedTask.id,
-          categoryId: cachedTask.categoryId,
-          boardCategoryId: cachedTask.boardCategoryId,
-        });
-        return cachedTask;
-      } else {
-        console.log("⚠️ [task-editor] キャッシュにタスクが見つかりません:", {
-          taskId: task.id,
-          queryKey,
-          cachedTasksCount: cachedTasks?.length,
-        });
-      }
-    }
-
-    console.log("🎯 [task-editor] 受け取ったtask:", {
-      id: task.id,
-      title: task.title,
-      categoryId: task.categoryId,
-      boardCategoryId: task.boardCategoryId,
-    });
-
-    return task;
-  }, [task?.id, teamMode, teamId, queryClient]);
-
   const { categories } = useBoardCategories(initialBoardId);
 
   // 削除済みタスクかどうかを判定
@@ -688,7 +651,7 @@ function TaskEditor({
     handleCancelBoardChange,
     resetForm,
   } = useSimpleItemSave<Task>({
-    item: fullTask && !("deletedAt" in fullTask) ? (fullTask as Task) : null,
+    item: task && !("deletedAt" in task) ? (task as Task) : null,
     itemType: "task",
     onSaveComplete: useCallback(
       (savedTask: Task, wasEmpty: boolean, isNewTask: boolean) => {

@@ -33,6 +33,7 @@ import { useBoardOperations } from "@/src/hooks/use-board-operations";
 import { CSVImportModal } from "@/components/features/board/csv-import-modal";
 import { useBoardCategories } from "@/src/hooks/use-board-categories";
 import BoardCategoryChip from "@/components/features/board-categories/board-category-chip";
+import { useAllAttachments } from "@/src/hooks/use-all-attachments";
 
 interface BoardDetailProps {
   boardId: number;
@@ -340,6 +341,22 @@ function BoardDetailScreen({
   const { data: teamTags } = useTeamTags(teamId || 0, { enabled: teamMode });
   const { data: personalBoards } = useBoards("normal", !teamMode);
   const { data: teamBoards } = useTeamBoards(teamId, "normal");
+  const { data: allMemoAttachments } = useAllAttachments(
+    teamMode ? teamId || undefined : undefined,
+    "memo",
+    true,
+  );
+  const { data: allTaskAttachments } = useAllAttachments(
+    teamMode ? teamId || undefined : undefined,
+    "task",
+    true,
+  );
+
+  // メモとタスクの添付ファイルを統合
+  const allAttachments = useMemo(
+    () => [...(allMemoAttachments || []), ...(allTaskAttachments || [])],
+    [allMemoAttachments, allTaskAttachments],
+  );
 
   // チームモードかどうかでタグ付けデータを切り替え（dataUpdatedAtで強制再レンダリング）
   const allTaggings = useMemo(
@@ -609,6 +626,7 @@ function BoardDetailScreen({
             allBoards={safeAllBoards}
             allTaggings={safeAllTaggings as Tagging[]}
             allBoardItems={safeAllBoardItems}
+            allAttachments={allAttachments || []}
             showTags={showTagDisplay}
             selectedTagIds={selectedTagIds}
             tagFilterMode={tagFilterMode}
@@ -657,6 +675,7 @@ function BoardDetailScreen({
             allBoards={safeAllBoards}
             allTaggings={safeAllTaggings as Tagging[]}
             allBoardItems={safeAllBoardItems}
+            allAttachments={allAttachments || []}
             selectedTask={selectedTask}
             onCreateNewTask={handleCreateNewTask}
             onSetRightPanelMode={setRightPanelMode}

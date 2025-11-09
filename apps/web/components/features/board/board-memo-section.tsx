@@ -17,6 +17,7 @@ import { Memo } from "@/src/types/memo";
 import { useSortOptions } from "@/hooks/use-sort-options";
 import type { Tag, Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
+import type { Attachment } from "@/src/hooks/use-attachments";
 
 interface BoardMemoSectionProps {
   rightPanelMode: "editor" | "memo-list" | "task-list" | null;
@@ -71,6 +72,7 @@ interface BoardMemoSectionProps {
     originalId: string;
     addedAt: number;
   }>;
+  allAttachments?: Attachment[];
   boardId?: number;
 }
 
@@ -118,6 +120,7 @@ export default function BoardMemoSection({
   allBoards = [],
   allTaggings = [],
   allBoardItems = [],
+  allAttachments = [],
 }: BoardMemoSectionProps) {
   const { isTeamMode: teamMode, teamId: teamIdRaw } = useTeamContext();
   const teamId = teamIdRaw ?? undefined; // Hook互換性のため変換
@@ -363,6 +366,7 @@ export default function BoardMemoSection({
             allBoards={allBoards}
             allTaggings={allTaggings}
             allBoardItems={allBoardItems}
+            allAttachments={allAttachments}
           />
         ) : (
           <MemoStatusDisplay
@@ -397,6 +401,7 @@ export default function BoardMemoSection({
             allBoards={allBoards}
             allTaggings={allTaggings}
             allBoardItems={allBoardItems}
+            allAttachments={allAttachments}
           />
         )}
       </div>

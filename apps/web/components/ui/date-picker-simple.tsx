@@ -60,7 +60,10 @@ export function DatePickerSimple({
   }, [isOpen]);
 
   return (
-    <div className="relative" onClick={() => !disabled && setIsOpen(true)}>
+    <div
+      className={`relative ${disabled ? "cursor-not-allowed" : "cursor-pointer"}`}
+      onClick={() => !disabled && setIsOpen(true)}
+    >
       <ReactDatePicker
         selected={date}
         onChange={handleChange}

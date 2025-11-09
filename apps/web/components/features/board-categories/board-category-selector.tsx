@@ -11,6 +11,7 @@ interface BoardCategorySelectorProps {
   disabled?: boolean;
   allowCreate?: boolean;
   hideChevron?: boolean;
+  compactMode?: boolean;
 }
 
 export default function BoardCategorySelector({
@@ -21,6 +22,7 @@ export default function BoardCategorySelector({
   disabled = false,
   allowCreate = false,
   hideChevron = false,
+  compactMode = false,
 }: BoardCategorySelectorProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -86,6 +88,7 @@ export default function BoardCategorySelector({
         disabled={disabled}
         hideLabel={true}
         hideChevron={hideChevron}
+        compactMode={compactMode}
       />
 
       <CreateCategoryModal

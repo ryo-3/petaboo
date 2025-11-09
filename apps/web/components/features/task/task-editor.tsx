@@ -1322,32 +1322,34 @@ function TaskEditor({
 
             {/* セレクターバー */}
             <div className="flex gap-1.5 mt-1">
-              <CustomSelector
-                label="ステータス"
-                options={statusOptions}
-                value={
-                  finalStatus === "not_started"
-                    ? "todo"
-                    : (finalStatus as string)
-                }
-                onChange={(value) => {
-                  if (!isDeleted && handleStatusChange) {
-                    handleStatusChange(
-                      value === "todo"
-                        ? "not_started"
-                        : (value as
-                            | "in_progress"
-                            | "completed"
-                            | "not_started"),
-                    );
+              <div className="w-[110px] md:w-20">
+                <CustomSelector
+                  label="ステータス"
+                  options={statusOptions}
+                  value={
+                    finalStatus === "not_started"
+                      ? "todo"
+                      : (finalStatus as string)
                   }
-                }}
-                width="84px"
-                disabled={isDeleted}
-                hideLabel={true}
-                compactMode={true}
-                hideChevron={true}
-              />
+                  onChange={(value) => {
+                    if (!isDeleted && handleStatusChange) {
+                      handleStatusChange(
+                        value === "todo"
+                          ? "not_started"
+                          : (value as
+                              | "in_progress"
+                              | "completed"
+                              | "not_started"),
+                      );
+                    }
+                  }}
+                  fullWidth
+                  disabled={isDeleted}
+                  hideLabel={true}
+                  compactMode={true}
+                  hideChevron={true}
+                />
+              </div>
 
               <CustomSelector
                 label="優先度"
@@ -1366,19 +1368,22 @@ function TaskEditor({
               />
 
               {teamMode && handleAssigneeChange && (
-                <AssigneeSelector
-                  members={teamMembers}
-                  value={formAssigneeId ?? null}
-                  onChange={isDeleted ? () => {} : handleAssigneeChange}
-                  disabled={isDeleted}
-                  width="140px"
-                  compact
-                  hideLabel
-                  className="flex-shrink-0"
-                />
+                <div className="w-28">
+                  <AssigneeSelector
+                    members={teamMembers}
+                    value={formAssigneeId ?? null}
+                    onChange={isDeleted ? () => {} : handleAssigneeChange}
+                    disabled={isDeleted}
+                    width="100%"
+                    compact
+                    hideLabel
+                    className="flex-shrink-0"
+                    compactMode
+                  />
+                </div>
               )}
 
-              <div className="w-48">
+              <div className="w-40">
                 <BoardCategorySelector
                   value={boardCategoryId}
                   onChange={isDeleted ? () => {} : setBoardCategoryId}
@@ -1387,6 +1392,7 @@ function TaskEditor({
                   disabled={isDeleted}
                   allowCreate={true}
                   hideChevron={true}
+                  compactMode
                 />
               </div>
 

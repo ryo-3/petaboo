@@ -688,7 +688,7 @@ export const getImage = async (c: any) => {
   }
 
   // 画像を返却
-  const origin = c.req.header("Origin") || "http://localhost:7593";
+  const origin = c.req.header("Origin") || "https://petaboo.vercel.app";
   return new Response(object.body, {
     headers: {
       "Content-Type": attachment.mimeType,
@@ -806,7 +806,7 @@ export const getFile = async (c: any) => {
   }
 
   // ファイルを返却（Content-Dispositionでダウンロード用ファイル名指定）
-  const origin = c.req.header("Origin") || "http://localhost:7593";
+  const origin = c.req.header("Origin") || "https://petaboo.vercel.app";
   return new Response(object.body, {
     headers: {
       "Content-Type": attachment.mimeType,

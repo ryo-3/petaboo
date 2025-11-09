@@ -170,6 +170,7 @@ export default function AttachmentGallery({
                       onClick={() =>
                         !isProcessing && setSelectedImage(imageUrl)
                       }
+                      referrerPolicy="no-referrer"
                     />
                   ) : (
                     <div className="w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center">
@@ -305,6 +306,7 @@ export default function AttachmentGallery({
                       : "cursor-pointer hover:opacity-80 border-2 border-blue-400"
                   }`}
                   onClick={() => !isUploading && setSelectedImage(url)}
+                  referrerPolicy="no-referrer"
                 />
               ) : isPdf ? (
                 <div className="w-32 h-32 bg-gray-100 rounded-lg border-2 border-blue-400 flex flex-col items-center justify-center p-2">

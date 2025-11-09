@@ -12,6 +12,7 @@ import {
 } from "@/src/utils/taskUtils";
 import { TAG_COLORS } from "@/src/constants/colors";
 import CreatorAvatar from "@/components/shared/creator-avatar";
+import { useAuthenticatedImage } from "@/src/hooks/use-authenticated-image";
 
 type Item = Memo | DeletedMemo | Task | DeletedTask;
 
@@ -89,6 +90,14 @@ function ItemDisplay({
 
   // 日付計算（メモ用）
   const lastEditTime = null; // 既存ロジックでは使用していない
+
+  // 画像URL取得（認証付き）
+  const firstImageUrl =
+    preloadedAttachments && preloadedAttachments.length > 0
+      ? preloadedAttachments[0]?.url
+      : undefined;
+  const { blobUrl: authenticatedImageUrl } =
+    useAuthenticatedImage(firstImageUrl);
 
   // スタイル定義
   const containerClass = `
@@ -275,15 +284,15 @@ function ItemDisplay({
             {/* 画像サムネイル表示 */}
             {preloadedAttachments &&
               preloadedAttachments.length > 0 &&
-              preloadedAttachments[0] && (
+              preloadedAttachments[0] &&
+              authenticatedImageUrl && (
                 <div className="mt-2 mb-2">
                   <div className="relative inline-block">
                     <img
-                      src={preloadedAttachments[0].url}
+                      src={authenticatedImageUrl}
                       alt={preloadedAttachments[0].fileName}
                       className="w-32 h-32 object-cover rounded border border-gray-200"
                       loading="lazy"
-                      referrerPolicy="no-referrer"
                     />
                     {preloadedAttachments.length > 1 && (
                       <span className="absolute bottom-1 right-1 bg-black bg-opacity-60 text-white text-sm px-2 py-1 rounded">

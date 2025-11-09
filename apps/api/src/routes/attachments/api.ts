@@ -136,6 +136,91 @@ export const getAttachments = async (c: any) => {
   return c.json(results, 200);
 };
 
+// GET /attachments/all（全添付ファイル一括取得 - 個人・チーム両対応）
+export const getAllAttachmentsRoute = createRoute({
+  method: "get",
+  path: "/all",
+  request: {
+    query: z.object({
+      teamId: z.string().regex(/^\d+$/).transform(Number).optional(),
+      attachedTo: z.enum(["memo", "task", "comment"]),
+    }),
+  },
+  responses: {
+    200: {
+      description: "List of all attachments",
+      content: {
+        "application/json": {
+          schema: z.array(TeamAttachmentSchema),
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: z.object({ error: z.string() }),
+        },
+      },
+    },
+    403: {
+      description: "Not a team member",
+      content: {
+        "application/json": {
+          schema: z.object({ error: z.string() }),
+        },
+      },
+    },
+  },
+});
+
+export const getAllAttachments = async (c: any) => {
+  const auth = getAuth(c);
+  const db = c.get("db");
+
+  if (!auth?.userId) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  const { teamId, attachedTo } = c.req.valid("query");
+
+  let results;
+  if (teamId) {
+    // チームモード：メンバー確認
+    const member = await checkTeamMember(teamId, auth.userId, db);
+    if (!member) {
+      return c.json({ error: "Not a team member" }, 403);
+    }
+
+    results = await db
+      .select()
+      .from(teamAttachments)
+      .where(
+        and(
+          eq(teamAttachments.teamId, teamId),
+          eq(teamAttachments.attachedTo, attachedTo),
+          isNull(teamAttachments.deletedAt),
+        ),
+      )
+      .orderBy(teamAttachments.createdAt);
+  } else {
+    // 個人モード
+    results = await db
+      .select()
+      .from(attachments)
+      .where(
+        and(
+          eq(attachments.userId, auth.userId),
+          eq(attachments.attachedTo, attachedTo as "memo" | "task"),
+          isNull(attachments.deletedAt),
+        ),
+      )
+      .orderBy(attachments.createdAt);
+  }
+
+  return c.json(results, 200);
+};
+
 // POST /attachments/upload（画像アップロード - 個人・チーム両対応）
 export const uploadAttachmentRoute = createRoute({
   method: "post",
@@ -828,6 +913,7 @@ export const getPersonalImage = async (c: any) => {
 };
 
 export function registerAttachmentRoutes(app: OpenAPIHono<any, any, any>) {
+  app.openapi(getAllAttachmentsRoute, getAllAttachments);
   app.openapi(getAttachmentsRoute, getAttachments);
   app.openapi(uploadAttachmentRoute, uploadAttachment);
   app.openapi(deleteAttachmentRoute, deleteAttachment);

@@ -5,6 +5,7 @@ import ItemStatusDisplay from "@/components/ui/layout/item-status-display";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Tag, Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
+import type { Attachment } from "@/src/hooks/use-attachments";
 import { useMemo } from "react";
 import { OriginalIdUtils } from "@/src/types/common";
 
@@ -43,6 +44,7 @@ interface MemoStatusDisplayProps {
     originalId: string;
     addedAt: number;
   }>;
+  allAttachments?: Attachment[];
   teamMode?: boolean;
 }
 
@@ -81,6 +83,7 @@ interface DeletedMemoDisplayProps {
     originalId: string;
     addedAt: number;
   }>;
+  allAttachments?: Attachment[];
   // 全選択機能
   onSelectAll?: () => void;
   isAllSelected?: boolean;
@@ -108,6 +111,7 @@ function MemoStatusDisplay({
   allBoards,
   allTaggings,
   allBoardItems,
+  allAttachments,
   teamMode,
 }: MemoStatusDisplayProps) {
   // フィルタリング済みのメモを取得
@@ -200,6 +204,7 @@ function MemoStatusDisplay({
     const safeAllBoardItems = allBoardItems || [];
     const safeAllTags = allTags || [];
     const safeAllBoards = allBoards || [];
+    const safeAllAttachments = allAttachments || [];
 
     const map = new Map();
     filteredMemos.forEach((memo) => {
@@ -233,11 +238,29 @@ function MemoStatusDisplay({
           (board): board is NonNullable<typeof board> => board !== undefined,
         );
 
-      map.set(memo.id, { tags: memoTags, boards: memoBoards });
+      // メモの添付ファイルを抽出（画像のみ）
+      const memoAttachments = safeAllAttachments.filter(
+        (attachment) =>
+          attachment.attachedOriginalId === originalId &&
+          attachment.mimeType.startsWith("image/"),
+      );
+
+      map.set(memo.id, {
+        tags: memoTags,
+        boards: memoBoards,
+        attachments: memoAttachments,
+      });
     });
 
     return map;
-  }, [filteredMemos, allTaggings, allBoardItems, allTags, allBoards]);
+  }, [
+    filteredMemos,
+    allTaggings,
+    allBoardItems,
+    allTags,
+    allBoards,
+    allAttachments,
+  ]);
 
   const getSortValue = (memo: Memo, sortId: string): number => {
     if (!memo) return 0;
@@ -269,7 +292,11 @@ function MemoStatusDisplay({
       variant?: "normal" | "deleted";
     },
   ) => {
-    const memoData = memoDataMap.get(memo.id) || { tags: [], boards: [] };
+    const memoData = memoDataMap.get(memo.id) || {
+      tags: [],
+      boards: [],
+      attachments: [],
+    };
 
     /* eslint-disable react/prop-types */
     const memoComponent = (
@@ -289,6 +316,7 @@ function MemoStatusDisplay({
         // 全データ事前取得（ちらつき解消）
         preloadedTags={memoData.tags}
         preloadedBoards={memoData.boards}
+        preloadedAttachments={memoData.attachments}
         teamMode={teamMode}
       />
     );
@@ -345,6 +373,7 @@ export function DeletedMemoDisplay({
   allBoards = [],
   allTaggings = [],
   allBoardItems = [],
+  allAttachments = [],
   onSelectAll,
   isAllSelected,
   teamMode,
@@ -407,6 +436,13 @@ export function DeletedMemoDisplay({
         (board): board is NonNullable<typeof board> => board !== undefined,
       );
 
+    // このメモの添付ファイルを抽出（画像のみ）
+    const memoAttachments = allAttachments.filter(
+      (attachment) =>
+        attachment.attachedOriginalId === originalId &&
+        attachment.mimeType.startsWith("image/"),
+    );
+
     /* eslint-disable react/prop-types */
     return (
       <ItemDisplay
@@ -424,6 +460,7 @@ export function DeletedMemoDisplay({
         selectionMode={selectionMode}
         preloadedTags={memoTags}
         preloadedBoards={memoBoards}
+        preloadedAttachments={memoAttachments}
         teamMode={teamMode}
       />
     );

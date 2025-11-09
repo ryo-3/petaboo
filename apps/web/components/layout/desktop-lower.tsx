@@ -10,6 +10,7 @@ import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
 import type { Tag, Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
+import type { Attachment } from "@/src/hooks/use-attachments";
 
 interface DesktopLowerProps {
   currentMode: "memo" | "task";
@@ -85,6 +86,7 @@ interface DesktopLowerProps {
     originalId: string;
     addedAt: number;
   }>;
+  allAttachments?: Attachment[];
 }
 
 function DesktopLower({
@@ -126,6 +128,7 @@ function DesktopLower({
   allTaggings,
   allTeamTaggings = [],
   allBoardItems,
+  allAttachments,
 }: DesktopLowerProps) {
   const showBoardName = true;
   const showTags = true;
@@ -178,6 +181,7 @@ function DesktopLower({
           allBoards={allBoards}
           allTaggings={allTaggings}
           allBoardItems={allBoardItems}
+          allAttachments={allAttachments}
         />
       </>
     );
@@ -215,6 +219,7 @@ function DesktopLower({
         allTaggings={allTaggings}
         allTeamTaggings={allTeamTaggings}
         allBoardItems={allBoardItems}
+        allAttachments={allAttachments}
       />
     );
   }
@@ -255,6 +260,7 @@ function DesktopLower({
               allBoards={allBoards}
               allTaggings={allTaggings}
               allBoardItems={allBoardItems}
+              allAttachments={allAttachments}
             />
           </>
         ) : (
@@ -277,6 +283,7 @@ function DesktopLower({
             allBoards={allBoards}
             allTaggings={allTaggings}
             allBoardItems={allBoardItems}
+            allAttachments={allAttachments}
           />
         )}
       </>

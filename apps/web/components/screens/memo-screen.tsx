@@ -40,6 +40,7 @@ import { useTeamTags } from "@/src/hooks/use-team-tags";
 import TagManagementModal from "@/components/ui/tag-management/tag-management-modal";
 import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
 import { useAllTeamTaggings } from "@/src/hooks/use-team-taggings";
+import { useAllAttachments } from "@/src/hooks/use-all-attachments";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import { OriginalIdUtils } from "@/src/types/common";
 import {
@@ -305,6 +306,13 @@ function MemoScreen({
 
   const { data: allBoardItems, error: boardItemsError } = useAllBoardItems(
     teamMode ? teamId : undefined,
+  );
+
+  // 全メモの添付ファイルを取得（サムネイル表示用）
+  const { data: allMemoAttachments } = useAllAttachments(
+    teamMode ? teamId : undefined,
+    "memo",
+    true,
   );
 
   // APIエラー時のフォールバック
@@ -788,6 +796,7 @@ function MemoScreen({
         allBoards={boards || []}
         allTaggings={safeAllTaggings || []}
         allBoardItems={safeAllBoardItems || []}
+        allAttachments={allMemoAttachments || []}
         // フィルター設定（ViewSettingsContextから取得）
         selectedTagIds={selectedTagIds}
         tagFilterMode={tagFilterMode}
@@ -1087,6 +1096,7 @@ function MemoScreen({
                 allBoards={boards || []}
                 allTaggings={safeAllTaggings || []}
                 allBoardItems={safeAllBoardItems || []}
+                allAttachments={allMemoAttachments || []}
                 // フィルター設定（ViewSettingsContextから取得）
                 selectedTagIds={selectedTagIds}
                 tagFilterMode={tagFilterMode}

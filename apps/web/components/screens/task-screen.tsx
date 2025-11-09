@@ -42,6 +42,7 @@ import { useTaskDeleteWithNextSelection } from "@/src/hooks/use-memo-delete-with
 import TagManagementModal from "@/components/ui/tag-management/tag-management-modal";
 import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
 import { useAllTeamTaggings } from "@/src/hooks/use-team-taggings";
+import { useAllAttachments } from "@/src/hooks/use-all-attachments";
 import type { DeletedTask, Task } from "@/src/types/task";
 import { OriginalIdUtils } from "@/src/types/common";
 import { getTaskDisplayOrder } from "@/src/utils/domUtils";
@@ -254,6 +255,13 @@ function TaskScreen({
 
   const { data: allBoardItems } = useAllBoardItems(
     teamMode ? teamId : undefined,
+  );
+
+  // 全タスクの添付ファイルを取得（サムネイル表示用）
+  const { data: allTaskAttachments } = useAllAttachments(
+    teamMode ? teamId : undefined,
+    "task",
+    true,
   );
 
   // allBoardItems監視（デバッグ用 - 削除予定）
@@ -855,6 +863,7 @@ function TaskScreen({
         allTaggings={safeAllTaggings}
         allTeamTaggings={safeAllTeamTaggings}
         allBoardItems={safeAllBoardItems}
+        allAttachments={allTaskAttachments || []}
         teamMode={teamMode}
         teamId={teamId}
         // フィルター設定（ViewSettingsContextから取得）
@@ -1158,6 +1167,7 @@ function TaskScreen({
                 allTaggings={safeAllTaggings}
                 allTeamTaggings={safeAllTeamTaggings}
                 allBoardItems={safeAllBoardItems}
+                allAttachments={allTaskAttachments || []}
                 teamMode={teamMode}
                 // フィルター設定（ViewSettingsContextから取得）
                 selectedTagIds={selectedTagIds}

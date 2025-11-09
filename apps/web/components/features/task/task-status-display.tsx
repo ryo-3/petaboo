@@ -5,6 +5,7 @@ import ItemStatusDisplay from "@/components/ui/layout/item-status-display";
 import type { Task, DeletedTask } from "@/src/types/task";
 import type { Tag, Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
+import type { Attachment } from "@/src/hooks/use-attachments";
 import { useMemo, useEffect } from "react";
 import { OriginalIdUtils } from "@/src/types/common";
 
@@ -46,6 +47,7 @@ interface TaskStatusDisplayProps {
     originalId: string;
     addedAt: number;
   }>;
+  allAttachments?: Attachment[];
 }
 
 interface DeletedTaskDisplayProps {
@@ -82,6 +84,7 @@ interface DeletedTaskDisplayProps {
     originalId: string;
     addedAt: number;
   }>;
+  allAttachments?: Attachment[];
   // 全選択機能
   onSelectAll?: () => void;
   isAllSelected?: boolean;
@@ -110,6 +113,7 @@ function TaskStatusDisplay({
   allTaggings = [],
   allTeamTaggings = [],
   allBoardItems = [],
+  allAttachments = [],
 }: TaskStatusDisplayProps) {
   // ステータスでフィルター
   const statusFilteredTasks = tasks?.filter(
@@ -158,10 +162,18 @@ function TaskStatusDisplay({
         }))
         .filter(Boolean);
 
+      // このタスクの添付ファイルを抽出（画像のみ）
+      const taskAttachments = allAttachments.filter(
+        (attachment) =>
+          attachment.attachedOriginalId === originalId &&
+          attachment.mimeType.startsWith("image/"),
+      );
+
       return {
         task,
         tags: taskTags,
         boards: taskBoards,
+        attachments: taskAttachments,
       };
     });
   }, [
@@ -169,6 +181,7 @@ function TaskStatusDisplay({
     allTaggings,
     allTeamTaggings,
     allBoardItems,
+    allAttachments,
     teamMode,
   ]);
 
@@ -285,6 +298,7 @@ function TaskStatusDisplay({
     );
     const taskTags = taskWithData?.tags || [];
     const taskBoards = taskWithData?.boards || [];
+    const taskAttachments = taskWithData?.attachments || [];
 
     /* eslint-disable react/prop-types */
     const taskComponent = (
@@ -302,6 +316,7 @@ function TaskStatusDisplay({
         selectionMode={selectionMode}
         preloadedTags={taskTags}
         preloadedBoards={taskBoards}
+        preloadedAttachments={taskAttachments}
         teamMode={teamMode}
         initialBoardId={initialBoardId}
       />
@@ -358,6 +373,7 @@ export function DeletedTaskDisplay({
   allBoards = [],
   allTaggings = [],
   allBoardItems = [],
+  allAttachments = [],
   onSelectAll,
   isAllSelected,
 }: DeletedTaskDisplayProps) {
@@ -428,6 +444,13 @@ export function DeletedTaskDisplay({
         (board): board is NonNullable<typeof board> => board !== undefined,
       );
 
+    // このタスクの添付ファイルを抽出（画像のみ）
+    const taskAttachments = allAttachments.filter(
+      (attachment) =>
+        attachment.attachedOriginalId === originalId &&
+        attachment.mimeType.startsWith("image/"),
+    );
+
     /* eslint-disable react/prop-types */
     return (
       <ItemDisplay
@@ -444,6 +467,7 @@ export function DeletedTaskDisplay({
         selectionMode={selectionMode}
         preloadedTags={taskTags}
         preloadedBoards={taskBoards}
+        preloadedAttachments={taskAttachments}
       />
     );
     /* eslint-enable react/prop-types */

@@ -2,6 +2,7 @@ import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
 import type { Tag } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
+import type { Attachment } from "@/src/hooks/use-attachments";
 import { formatDateOnly } from "@/src/utils/formatDate";
 import {
   getPriorityColor,
@@ -31,6 +32,7 @@ interface ItemDisplayProps {
   // 全データ事前取得（ちらつき解消）
   preloadedTags?: Tag[];
   preloadedBoards?: Board[];
+  preloadedAttachments?: Attachment[];
 
   // チーム機能
   teamMode?: boolean;
@@ -54,6 +56,7 @@ function ItemDisplay({
   selectionMode = "select",
   preloadedTags = [],
   preloadedBoards = [],
+  preloadedAttachments = [],
   teamMode = false,
   initialBoardId,
 }: ItemDisplayProps) {
@@ -260,6 +263,27 @@ function ItemDisplay({
                 <span>{item.commentCount}</span>
               </div>
             )}
+
+            {/* 画像サムネイル表示（1枚のみ） */}
+            {preloadedAttachments &&
+              preloadedAttachments.length > 0 &&
+              preloadedAttachments[0] && (
+                <div className="mt-2 mb-2">
+                  <div className="relative inline-block">
+                    <img
+                      src={preloadedAttachments[0].url}
+                      alt={preloadedAttachments[0].fileName}
+                      className="w-20 h-20 object-cover rounded border border-gray-200"
+                      loading="lazy"
+                    />
+                    {preloadedAttachments.length > 1 && (
+                      <span className="absolute bottom-0.5 right-0.5 bg-black bg-opacity-60 text-white text-xs px-1.5 py-0.5 rounded">
+                        +{preloadedAttachments.length - 1}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
 
             {/* 日付表示 */}
             <div

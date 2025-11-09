@@ -166,16 +166,6 @@ function ItemDisplay({
                   __html: isTask ? title.replace(/[\r\n]/g, " ").trim() : title,
                 }}
               />
-
-              {/* 作成者表示（カード表示・チームモードのみ） */}
-              {teamMode && (
-                <CreatorAvatar
-                  createdBy={item.createdBy}
-                  avatarColor={item.avatarColor}
-                  teamMode={teamMode}
-                  size="md"
-                />
-              )}
             </div>
 
             {/* タスク：ステータスと優先度 */}
@@ -314,14 +304,36 @@ function ItemDisplay({
             >
               {isDeleted && deletedItem ? (
                 // 削除済み：作成日 + 削除日
-                <div className="flex gap-2 justify-end">
-                  <div>作成: {formatDateOnly(item.createdAt)}</div>
+                <div className="flex gap-2 justify-end items-center">
+                  <div className="flex gap-1 items-center">
+                    <span>作成:</span>
+                    {teamMode && (
+                      <CreatorAvatar
+                        createdBy={item.createdBy}
+                        avatarColor={item.avatarColor}
+                        teamMode={teamMode}
+                        size="sm"
+                      />
+                    )}
+                    <span>{formatDateOnly(item.createdAt)}</span>
+                  </div>
                   <div>削除: {formatDateOnly(deletedItem.deletedAt)}</div>
                 </div>
               ) : (
                 // 通常：作成日 + 編集日（両方表示）
-                <div className="flex gap-2 justify-end">
-                  <div>作成: {formatDateOnly(item.createdAt)}</div>
+                <div className="flex gap-2 justify-end items-center">
+                  <div className="flex gap-1 items-center">
+                    <span>作成:</span>
+                    {teamMode && (
+                      <CreatorAvatar
+                        createdBy={item.createdBy}
+                        avatarColor={item.avatarColor}
+                        teamMode={teamMode}
+                        size="sm"
+                      />
+                    )}
+                    <span>{formatDateOnly(item.createdAt)}</span>
+                  </div>
                   {(() => {
                     // 新規作成アイテムの場合
                     if (item.id < 0) {

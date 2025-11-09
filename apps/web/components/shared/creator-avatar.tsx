@@ -27,7 +27,7 @@ export default function CreatorAvatar({
   };
 
   return (
-    <Tooltip text={createdBy} position="bottom">
+    <Tooltip text={createdBy} position="top">
       <div
         className={`${sizeClasses[size]} rounded-full flex items-center justify-center text-white font-medium ${className} ${
           avatarColor || "bg-blue-500"

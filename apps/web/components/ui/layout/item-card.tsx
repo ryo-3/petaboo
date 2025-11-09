@@ -16,7 +16,7 @@ import { useAuthenticatedImage } from "@/src/hooks/use-authenticated-image";
 
 type Item = Memo | DeletedMemo | Task | DeletedTask;
 
-interface ItemDisplayProps {
+interface ItemCardProps {
   itemType: "memo" | "task";
   item: Item;
   variant?: "normal" | "deleted";
@@ -42,7 +42,7 @@ interface ItemDisplayProps {
   initialBoardId?: number;
 }
 
-function ItemDisplay({
+function ItemCard({
   itemType,
   item,
   variant = "normal",
@@ -60,7 +60,7 @@ function ItemDisplay({
   preloadedAttachments = [],
   teamMode = false,
   initialBoardId,
-}: ItemDisplayProps) {
+}: ItemCardProps) {
   const isDeleted = variant === "deleted";
   const isMemo = itemType === "memo";
   const isTask = itemType === "task";
@@ -376,4 +376,4 @@ function ItemDisplay({
   );
 }
 
-export default ItemDisplay;
+export default ItemCard;

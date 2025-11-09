@@ -1,7 +1,7 @@
 "use client";
 
-import ItemDisplay from "@/components/ui/layout/item-display";
-import ItemStatusDisplay from "@/components/ui/layout/item-status-display";
+import ItemCard from "@/components/ui/layout/item-card";
+import ItemListDisplay from "@/components/ui/layout/item-list-display";
 import type { Task, DeletedTask } from "@/src/types/task";
 import type { Tag, Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
@@ -302,7 +302,7 @@ function TaskStatusDisplay({
 
     /* eslint-disable react/prop-types */
     const taskComponent = (
-      <ItemDisplay
+      <ItemCard
         key={task.id}
         itemType="task"
         item={task}
@@ -329,7 +329,7 @@ function TaskStatusDisplay({
   // フィルター適用時は個別コンポーネントで判定するため、空メッセージは表示しない
 
   return (
-    <ItemStatusDisplay
+    <ItemListDisplay
       items={filteredTasksWithData.map((t) => t.task)}
       effectiveColumnCount={effectiveColumnCount}
       isBoard={isBoard}
@@ -453,7 +453,7 @@ export function DeletedTaskDisplay({
 
     /* eslint-disable react/prop-types */
     return (
-      <ItemDisplay
+      <ItemCard
         key={task.id}
         itemType="task"
         item={task}
@@ -474,7 +474,7 @@ export function DeletedTaskDisplay({
   };
 
   return (
-    <ItemStatusDisplay
+    <ItemListDisplay
       items={deletedTasks}
       effectiveColumnCount={effectiveColumnCount}
       isBoard={isBoard}

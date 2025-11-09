@@ -11,7 +11,7 @@ interface SortOption {
   direction: "asc" | "desc";
 }
 
-interface ItemStatusDisplayProps<T extends { id: number }> {
+interface ItemListDisplayProps<T extends { id: number }> {
   items: T[] | undefined;
   effectiveColumnCount: number;
   selectionMode?: "select" | "check";
@@ -45,7 +45,7 @@ interface ItemStatusDisplayProps<T extends { id: number }> {
   isAllSelected?: boolean;
 }
 
-function ItemStatusDisplay<T extends { id: number }>({
+function ItemListDisplay<T extends { id: number }>({
   items,
   effectiveColumnCount,
   selectionMode = "select",
@@ -65,7 +65,7 @@ function ItemStatusDisplay<T extends { id: number }>({
   itemType,
   onSelectAll,
   isAllSelected,
-}: ItemStatusDisplayProps<T>) {
+}: ItemListDisplayProps<T>) {
   const getSortedItems = () => {
     if (!items) return [];
 
@@ -163,4 +163,4 @@ function ItemStatusDisplay<T extends { id: number }>({
   );
 }
 
-export default ItemStatusDisplay;
+export default ItemListDisplay;

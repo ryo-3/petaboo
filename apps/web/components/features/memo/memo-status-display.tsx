@@ -1,7 +1,7 @@
 "use client";
 
-import ItemDisplay from "@/components/ui/layout/item-display";
-import ItemStatusDisplay from "@/components/ui/layout/item-status-display";
+import ItemCard from "@/components/ui/layout/item-card";
+import ItemListDisplay from "@/components/ui/layout/item-list-display";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Tag, Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
@@ -300,7 +300,7 @@ function MemoStatusDisplay({
 
     /* eslint-disable react/prop-types */
     const memoComponent = (
-      <ItemDisplay
+      <ItemCard
         key={memo.id}
         itemType="memo"
         item={memo}
@@ -328,7 +328,7 @@ function MemoStatusDisplay({
   // フィルター適用時は個別コンポーネントで判定するため、空メッセージは表示しない
 
   return (
-    <ItemStatusDisplay
+    <ItemListDisplay
       items={filteredMemos}
       effectiveColumnCount={effectiveColumnCount}
       selectionMode={selectionMode}
@@ -445,7 +445,7 @@ export function DeletedMemoDisplay({
 
     /* eslint-disable react/prop-types */
     return (
-      <ItemDisplay
+      <ItemCard
         key={memo.id}
         itemType="memo"
         item={memo}
@@ -468,7 +468,7 @@ export function DeletedMemoDisplay({
   };
 
   return (
-    <ItemStatusDisplay
+    <ItemListDisplay
       items={deletedMemos}
       effectiveColumnCount={effectiveColumnCount}
       selectionMode={selectionMode}

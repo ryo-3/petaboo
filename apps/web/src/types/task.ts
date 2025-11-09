@@ -14,6 +14,8 @@ export interface Task extends BaseItemFields, TeamCreatorFields {
   categoryId: number | null;
   boardCategoryId: number | null; // ボードカテゴリーID
   assigneeId?: string | null;
+  assigneeName?: string | null; // 担当者の表示名
+  assigneeAvatarColor?: string | null; // 担当者のアバター色
   commentCount?: number;
 }
 
@@ -31,6 +33,8 @@ export interface DeletedTask
   categoryId: number | null;
   boardCategoryId: number | null; // ボードカテゴリーID
   assigneeId?: string | null;
+  assigneeName?: string | null; // 担当者の表示名
+  assigneeAvatarColor?: string | null; // 担当者のアバター色
   commentCount?: number;
 }
 

@@ -68,7 +68,6 @@ interface BoardDetailProps {
   serverInitialTitle?: string;
   boardCompleted?: boolean;
   isDeleted?: boolean;
-  teamMembers?: TeamMember[];
 }
 
 function BoardDetailScreen({
@@ -87,7 +86,6 @@ function BoardDetailScreen({
   serverInitialTitle,
   boardCompleted = false,
   isDeleted = false,
-  teamMembers = [],
 }: BoardDetailProps) {
   const { isTeamMode: teamMode, teamId } = useTeamContext();
   const teamDetailContext = useTeamDetailSafe();
@@ -1305,7 +1303,6 @@ function BoardDetailScreen({
                                         ? `タスク「${selectedTask.title || "タイトルなし"}」`
                                         : undefined
                                   }
-                                  teamMembers={teamMembers}
                                 />
                               </div>
                             )}
@@ -1890,7 +1887,6 @@ function BoardDetailScreen({
                                       ? `タスク「${selectedTask.title || "タイトルなし"}」`
                                       : undefined
                                 }
-                                teamMembers={teamMembers}
                               />
                             )}
                           </ResizablePanel>
@@ -1938,7 +1934,6 @@ function BoardDetailScreen({
                                 targetType="board"
                                 targetOriginalId={boardId.toString()}
                                 targetTitle={undefined}
-                                teamMembers={teamMembers}
                               />
                             </div>
                           )}
@@ -2419,7 +2414,6 @@ function BoardDetailScreen({
                                 teamId={teamId || undefined}
                                 targetType="board"
                                 targetOriginalId={boardId.toString()}
-                                teamMembers={teamMembers}
                                 boardId={boardId}
                                 onItemClick={(itemType, originalId) => {
                                   if (itemType === "memo") {

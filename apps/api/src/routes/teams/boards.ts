@@ -1,6 +1,7 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { getAuth } from "@hono/clerk-auth";
 import { eq, and, or, desc, isNull, isNotNull, sql } from "drizzle-orm";
+import { aliasedTable } from "drizzle-orm/alias";
 import {
   teams,
   teamMembers,
@@ -671,6 +672,9 @@ export function createTeamBoardsAPI(app: AppType) {
       }
 
       // ボードアイテム一覧取得（メモ・タスク情報も含む）
+      // 担当者用のteamMembersテーブル別名
+      const assigneeMembers = aliasedTable(teamMembers, "assignee_members");
+
       const items = await db
         .select()
         .from(teamBoardItems)
@@ -696,6 +700,13 @@ export function createTeamBoardsAPI(app: AppType) {
               eq(teamMembers.userId, teamMemos.userId),
               eq(teamMembers.userId, teamTasks.userId),
             ),
+          ),
+        )
+        .leftJoin(
+          assigneeMembers,
+          and(
+            eq(assigneeMembers.teamId, parseInt(teamId)),
+            eq(assigneeMembers.userId, teamTasks.assigneeId),
           ),
         )
         .where(eq(teamBoardItems.boardId, parseInt(boardId)))
@@ -748,11 +759,15 @@ export function createTeamBoardsAPI(app: AppType) {
                     dueDate: item.team_tasks.dueDate,
                     categoryId: item.team_tasks.categoryId,
                     boardCategoryId: item.team_tasks.boardCategoryId,
+                    assigneeId: item.team_tasks.assigneeId,
                     originalId: item.team_tasks.originalId,
                     createdAt: item.team_tasks.createdAt,
                     updatedAt: item.team_tasks.updatedAt,
                     createdBy: item.team_members?.displayName || null,
                     avatarColor: item.team_members?.avatarColor || null,
+                    assigneeName: item.assignee_members?.displayName || null,
+                    assigneeAvatarColor:
+                      item.assignee_members?.avatarColor || null,
                     commentCount,
                   }
                 : null,

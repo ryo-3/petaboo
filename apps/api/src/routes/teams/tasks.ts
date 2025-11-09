@@ -1,6 +1,7 @@
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
 import { eq, desc, and, sql } from "drizzle-orm";
+import { aliasedTable } from "drizzle-orm/alias";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { databaseMiddleware } from "../../middleware/database";
 import { teamTasks, teamDeletedTasks } from "../../db/schema/team/tasks";
@@ -42,6 +43,8 @@ const TeamTaskSchema = z.object({
   updatedAt: z.number().nullable(),
   createdBy: z.string().nullable(), // 作成者の表示名
   avatarColor: z.string().nullable(), // 作成者のアバター色
+  assigneeName: z.string().nullable(), // 担当者の表示名
+  assigneeAvatarColor: z.string().nullable(), // 担当者のアバター色
   commentCount: z.number().optional(), // コメント数
 });
 
@@ -140,9 +143,14 @@ app.openapi(
       return c.json({ error: "Not a team member" }, 403);
     }
 
+    // 担当者用のteamMembersテーブル別名
+    const assigneeMembers = aliasedTable(teamMembers, "assignee_members");
+
     const result = await db
       .select({
         ...getTeamTaskSelectFields(),
+        assigneeName: assigneeMembers.displayName,
+        assigneeAvatarColor: assigneeMembers.avatarColor,
         commentCount: sql<number>`(
           SELECT COUNT(*)
           FROM ${teamComments}
@@ -153,6 +161,13 @@ app.openapi(
       })
       .from(teamTasks)
       .leftJoin(teamMembers, getTeamTaskMemberJoin())
+      .leftJoin(
+        assigneeMembers,
+        and(
+          eq(teamTasks.assigneeId, assigneeMembers.userId),
+          eq(teamTasks.teamId, assigneeMembers.teamId),
+        ),
+      )
       .where(eq(teamTasks.teamId, teamId))
       .orderBy(
         // 優先度順: high(3) > medium(2) > low(1)
@@ -305,11 +320,24 @@ app.openapi(
       .set({ originalId })
       .where(eq(teamTasks.id, result[0].id));
 
-    // 作成されたタスクを取得して返す（作成者情報付き）
+    // 作成されたタスクを取得して返す（作成者・担当者情報付き）
+    const assigneeMembers = aliasedTable(teamMembers, "assignee_members");
+
     const newTask = await db
-      .select(getTeamTaskSelectFields())
+      .select({
+        ...getTeamTaskSelectFields(),
+        assigneeName: assigneeMembers.displayName,
+        assigneeAvatarColor: assigneeMembers.avatarColor,
+      })
       .from(teamTasks)
       .leftJoin(teamMembers, getTeamTaskMemberJoin())
+      .leftJoin(
+        assigneeMembers,
+        and(
+          eq(teamTasks.assigneeId, assigneeMembers.userId),
+          eq(teamTasks.teamId, assigneeMembers.teamId),
+        ),
+      )
       .where(eq(teamTasks.id, result[0].id))
       .get();
 
@@ -451,10 +479,23 @@ app.openapi(
     }
 
     // 更新後のタスクを取得して返す
+    const assigneeMembers = aliasedTable(teamMembers, "assignee_members");
+
     const updatedTask = await db
-      .select(getTeamTaskSelectFields())
+      .select({
+        ...getTeamTaskSelectFields(),
+        assigneeName: assigneeMembers.displayName,
+        assigneeAvatarColor: assigneeMembers.avatarColor,
+      })
       .from(teamTasks)
       .leftJoin(teamMembers, getTeamTaskMemberJoin())
+      .leftJoin(
+        assigneeMembers,
+        and(
+          eq(teamTasks.assigneeId, assigneeMembers.userId),
+          eq(teamTasks.teamId, assigneeMembers.teamId),
+        ),
+      )
       .where(and(eq(teamTasks.id, id), eq(teamTasks.teamId, teamId)))
       .get();
 

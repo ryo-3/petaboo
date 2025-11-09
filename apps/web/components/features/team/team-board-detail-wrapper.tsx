@@ -239,7 +239,6 @@ export function TeamBoardDetailWrapper({
       initialBoardDescription={boardData.description}
       showBoardHeader={true}
       serverInitialTitle={boardData.name}
-      teamMembers={teamMembers}
     />
   );
 }

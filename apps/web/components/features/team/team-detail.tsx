@@ -1041,7 +1041,6 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                 initialMemoId={getMemoIdFromURL()}
                 // 統一フックを渡す
                 unifiedOperations={teamMemoOperations}
-                teamMembers={team?.members || []}
               />
             </div>
           )}
@@ -1094,7 +1093,6 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                 initialTaskId={isTaskCreateMode ? null : getTaskIdFromURL()}
                 // 統一フックを渡す
                 unifiedOperations={teamTaskOperations}
-                teamMembers={team?.members || []}
               />
             </div>
           )}
@@ -1118,7 +1116,6 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                 slug={getBoardSlugFromURL()!}
                 teamId={team?.id}
                 customUrl={customUrl}
-                teamMembers={team?.members || []}
                 onBack={() => handleTabChange("boards")}
               />
             </div>

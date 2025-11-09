@@ -83,6 +83,10 @@ function ItemDisplay({
   // タスク特有データ
   const taskDescription = task?.description || "";
 
+  // 担当者情報（タスクデータに含まれている）
+  const hasAssignee =
+    teamMode && isTask && task?.assigneeId && task?.assigneeName;
+
   // 日付計算（メモ用）
   const lastEditTime = null; // 既存ロジックでは使用していない
 
@@ -163,15 +167,36 @@ function ItemDisplay({
                 }}
               />
 
-              {/* 作成者アイコン（カード表示・チームモードのみ） */}
+              {/* 作成者・担当者表示（カード表示・チームモードのみ） */}
               {teamMode && (
-                <CreatorAvatar
-                  createdBy={item.createdBy}
-                  avatarColor={item.avatarColor}
-                  teamMode={teamMode}
-                  size="md"
-                  className="flex-shrink-0"
-                />
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {/* 作成者 */}
+                  <div className="flex items-center gap-1">
+                    <CreatorAvatar
+                      createdBy={item.createdBy}
+                      avatarColor={item.avatarColor}
+                      teamMode={teamMode}
+                      size="md"
+                    />
+                    <span className="text-xs text-gray-600">
+                      {item.createdBy}
+                    </span>
+                  </div>
+                  {/* 担当者（タスクのみ） */}
+                  {hasAssignee && task && (
+                    <div className="flex items-center gap-1">
+                      <CreatorAvatar
+                        createdBy={task.assigneeName}
+                        avatarColor={task.assigneeAvatarColor}
+                        teamMode={teamMode}
+                        size="md"
+                      />
+                      <span className="text-xs text-gray-600">
+                        {task.assigneeName}
+                      </span>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 

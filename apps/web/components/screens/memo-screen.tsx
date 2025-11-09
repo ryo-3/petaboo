@@ -1002,7 +1002,6 @@ function MemoScreen({
         targetType="memo"
         targetOriginalId={OriginalIdUtils.fromItem(selectedMemo) || ""}
         teamId={teamId || 0}
-        teamMembers={teamMembers}
         title="コメント"
         placeholder="コメントを入力..."
       />

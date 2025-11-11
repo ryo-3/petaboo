@@ -898,7 +898,7 @@ function BoardDetailScreen({
                 ? "w-[44%] border-r border-gray-300 overflow-hidden" // 個人モード：リスト表示時
                 : "w-[44%] border-r border-gray-300 overflow-hidden" // 個人モード：エディター表示時
               : "w-full"
-        } ${teamMode && !rightPanelMode ? "" : !isDesktop && showCommentPanel && !showListPanel && !showDetailPanel ? "" : "pt-3"} pl-2 pr-0 md:pl-5 md:pr-4 ${selectedMemo || selectedTask || rightPanelMode ? "md:pr-2" : "md:pr-4"} flex flex-col ${teamMode ? "" : "transition-all duration-300"} relative`}
+        } pl-2 pr-0 md:pl-5 md:pr-4 ${selectedMemo || selectedTask || rightPanelMode ? "md:pr-2" : "md:pr-4"} flex flex-col ${teamMode ? "" : "transition-all duration-300"} relative`}
       >
         {/* チームモード時はDesktopUpperを3パネル内の左パネルに配置、個人モード時は外側に配置 */}
         {!teamMode && (
@@ -1311,9 +1311,7 @@ function BoardDetailScreen({
                               maxSize={50}
                               className="rounded-lg bg-white flex flex-col min-h-0 border-r border-gray-200"
                             >
-                              <div
-                                className={`flex flex-col h-full relative ${teamMode ? "pt-3" : ""}`}
-                              >
+                              <div className="flex flex-col h-full relative">
                                 <DesktopUpper
                                   currentMode="board"
                                   activeTab="normal"
@@ -1490,7 +1488,7 @@ function BoardDetailScreen({
                               <div className="h-full flex flex-col min-h-0">
                                 {/* 一覧非表示時はDesktopUpperを表示 */}
                                 {!showListPanel && (
-                                  <div className={`${teamMode ? "pt-3" : ""}`}>
+                                  <div>
                                     <DesktopUpper
                                       currentMode="board"
                                       activeTab="normal"
@@ -1766,7 +1764,7 @@ function BoardDetailScreen({
                           >
                             {/* 一覧・詳細の両方が非表示の時はDesktopUpperを表示 */}
                             {!showListPanel && !showDetailPanel && (
-                              <div className={`${teamMode ? "pt-3" : ""}`}>
+                              <div>
                                 <DesktopUpper
                                   currentMode="board"
                                   activeTab="normal"
@@ -2123,9 +2121,7 @@ function BoardDetailScreen({
                               minSize={minPanelSize}
                               className="rounded-lg bg-white flex flex-col min-h-0 border-r border-gray-200"
                             >
-                              <div
-                                className={`flex flex-col h-full relative ${teamMode ? "pt-3" : ""}`}
-                              >
+                              <div className="flex flex-col h-full relative">
                                 <DesktopUpper
                                   currentMode="board"
                                   activeTab="normal"
@@ -2227,9 +2223,7 @@ function BoardDetailScreen({
                               minSize={minPanelSize}
                               className="rounded-lg bg-white flex flex-col min-h-0 border-r border-gray-200"
                             >
-                              <div
-                                className={`flex flex-col h-full relative ${teamMode ? "pt-3" : ""}`}
-                              >
+                              <div className="flex flex-col h-full relative">
                                 {!showMemo && (
                                   <DesktopUpper
                                     currentMode="board"
@@ -2344,7 +2338,7 @@ function BoardDetailScreen({
                           >
                             {/* コメントのみ表示時はヘッダーを追加 */}
                             {!showMemo && !showTask && (
-                              <div className={`${teamMode ? "pt-3" : ""}`}>
+                              <div>
                                 <DesktopUpper
                                   currentMode="board"
                                   activeTab="normal"

@@ -1381,6 +1381,27 @@ function MemoEditor({
                   <SaveButton
                     onClick={handleSaveWithTags}
                     disabled={(() => {
+                      // HTMLタグを除去してテキスト内容のみを抽出
+                      const textContent = content
+                        .replace(/<[^>]*>/g, "") // HTMLタグを除去
+                        .replace(/&nbsp;/g, " ") // &nbsp;を空白に変換
+                        .trim();
+
+                      const isContentEmpty = !textContent;
+
+                      console.log("🔍 保存ボタン判定:", {
+                        memo: memo,
+                        "memo?.id": memo?.id,
+                        content: content,
+                        textContent: textContent,
+                        isContentEmpty: isContentEmpty,
+                        "pendingImages.length": pendingImages.length,
+                        hasChanges: hasChanges,
+                        hasTagChanges: hasTagChanges,
+                        "pendingDeletes.length": pendingDeletes.length,
+                        isUploading: isUploading,
+                      });
+
                       const disabled =
                         isUploading ||
                         (!hasChanges &&
@@ -1389,9 +1410,14 @@ function MemoEditor({
                           pendingDeletes.length === 0) ||
                         (memo !== null &&
                           memo.id > 0 &&
-                          !content.trim() &&
+                          isContentEmpty &&
+                          pendingImages.length === 0) ||
+                        // 新規メモで空の場合は保存不可
+                        ((memo === null || memo.id === 0) &&
+                          isContentEmpty &&
                           pendingImages.length === 0);
 
+                      console.log("🔍 保存ボタン disabled:", disabled);
                       return disabled;
                     })()}
                     isSaving={

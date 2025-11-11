@@ -165,7 +165,13 @@ export function TeamBoardDetailWrapper({
 
   // URLパラメータからメモ/タスクを復元（ボードアイテム取得が必要）
   const { data: boardItems } = useQuery({
-    queryKey: ["team-board-items", teamId, boardData?.id],
+    queryKey: [
+      "team-board-items",
+      teamId,
+      boardData?.id,
+      memoIdParam,
+      taskIdParam,
+    ],
     queryFn: async () => {
       if (!teamId || !boardData?.id) return null;
 
@@ -186,6 +192,7 @@ export function TeamBoardDetailWrapper({
 
       return response.json();
     },
+    // URLパラメータがある場合のみ取得（最適化）
     enabled: !!teamId && !!boardData?.id && (!!memoIdParam || !!taskIdParam),
     staleTime: 5 * 60 * 1000,
   });
@@ -195,25 +202,53 @@ export function TeamBoardDetailWrapper({
     if (!boardItems) return;
 
     // memoIdParamがある場合、該当するメモを選択
-    if (memoIdParam && !selectedMemo) {
-      const memos = boardItems.memos || [];
-      const targetMemo = memos.find((m: Memo) => m.originalId === memoIdParam);
-      if (targetMemo) {
+    if (memoIdParam) {
+      const allItems = boardItems.items || [];
+      const memoItems = allItems.filter(
+        (item: any) => item.itemType === "memo",
+      );
+
+      const targetMemo = memoItems
+        .map((item: any) => item.content)
+        .find(
+          (m: Memo) =>
+            m.originalId === memoIdParam ||
+            m.originalId === `memo-${memoIdParam}` ||
+            m.id?.toString() === memoIdParam,
+        );
+
+      if (targetMemo && targetMemo.originalId !== selectedMemo?.originalId) {
         setSelectedMemo(targetMemo);
         setSelectedTask(null);
       }
+    } else if (!memoIdParam && !taskIdParam && selectedMemo) {
+      setSelectedMemo(null);
     }
 
     // taskIdParamがある場合、該当するタスクを選択
-    if (taskIdParam && !selectedTask) {
-      const tasks = boardItems.tasks || [];
-      const targetTask = tasks.find((t: Task) => t.originalId === taskIdParam);
-      if (targetTask) {
+    if (taskIdParam) {
+      const allItems = boardItems.items || [];
+      const taskItems = allItems.filter(
+        (item: any) => item.itemType === "task",
+      );
+
+      const targetTask = taskItems
+        .map((item: any) => item.content)
+        .find(
+          (t: Task) =>
+            t.originalId === taskIdParam ||
+            t.originalId === `task-${taskIdParam}` ||
+            t.id?.toString() === taskIdParam,
+        );
+
+      if (targetTask && targetTask.originalId !== selectedTask?.originalId) {
         setSelectedTask(targetTask);
         setSelectedMemo(null);
       }
+    } else if (!taskIdParam && !memoIdParam && selectedTask) {
+      setSelectedTask(null);
     }
-  }, [boardItems, memoIdParam, taskIdParam, selectedMemo, selectedTask]);
+  }, [boardItems, memoIdParam, taskIdParam]);
 
   const handleClearSelection = () => {
     setSelectedMemo(null);

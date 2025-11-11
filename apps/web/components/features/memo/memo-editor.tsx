@@ -1218,7 +1218,9 @@ function MemoEditor({
         className="flex flex-col h-full overflow-x-hidden"
       >
         {/* 固定ヘッダー部分 */}
-        <div className="flex-shrink-0 bg-white pl-2 pt-2">
+        <div
+          className={`flex-shrink-0 bg-white pt-2 ${showDateAtBottom ? "" : "pl-2"}`}
+        >
           <div className="flex justify-start items-center">
             {/* ここにheaderActionsの内容を直接配置 */}
             <div className="flex items-center justify-between w-full">

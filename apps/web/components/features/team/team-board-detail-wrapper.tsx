@@ -40,6 +40,10 @@ export function TeamBoardDetailWrapper({
   const showSettings = searchParams.get("settings") === "true";
   const boardIdParam = searchParams.get("boardId");
 
+  // URLパラメータからメモ/タスクIDを取得
+  const memoIdParam = searchParams.get("memoId");
+  const taskIdParam = searchParams.get("taskId");
+
   // チームボード用のhooks
   const updateBoard = useUpdateTeamBoard(teamId || 0);
   const toggleCompletion = useToggleTeamBoardCompletion(teamId || 0);
@@ -159,19 +163,100 @@ export function TeamBoardDetailWrapper({
     }
   }, [boardData, slug, customUrl, router]);
 
+  // URLパラメータからメモ/タスクを復元（ボードアイテム取得が必要）
+  const { data: boardItems } = useQuery({
+    queryKey: ["team-board-items", teamId, boardData?.id],
+    queryFn: async () => {
+      if (!teamId || !boardData?.id) return null;
+
+      const token = await getToken();
+      const response = await fetch(
+        `${API_BASE_URL}/teams/${teamId}/boards/${boardData.id}/items`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("ボードアイテムの取得に失敗しました");
+      }
+
+      return response.json();
+    },
+    enabled: !!teamId && !!boardData?.id && (!!memoIdParam || !!taskIdParam),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // URLパラメータに基づいてメモ/タスクを選択
+  useEffect(() => {
+    if (!boardItems) return;
+
+    // memoIdParamがある場合、該当するメモを選択
+    if (memoIdParam && !selectedMemo) {
+      const memos = boardItems.memos || [];
+      const targetMemo = memos.find((m: Memo) => m.originalId === memoIdParam);
+      if (targetMemo) {
+        setSelectedMemo(targetMemo);
+        setSelectedTask(null);
+      }
+    }
+
+    // taskIdParamがある場合、該当するタスクを選択
+    if (taskIdParam && !selectedTask) {
+      const tasks = boardItems.tasks || [];
+      const targetTask = tasks.find((t: Task) => t.originalId === taskIdParam);
+      if (targetTask) {
+        setSelectedTask(targetTask);
+        setSelectedMemo(null);
+      }
+    }
+  }, [boardItems, memoIdParam, taskIdParam, selectedMemo, selectedTask]);
+
   const handleClearSelection = () => {
     setSelectedMemo(null);
     setSelectedTask(null);
+
+    // URLからメモ/タスクIDを削除
+    router.replace(`/team/${customUrl}?tab=board&slug=${slug}`, {
+      scroll: false,
+    });
   };
 
   const handleSelectMemo = (memo: Memo | DeletedMemo | null) => {
     setSelectedTask(null);
     setSelectedMemo(memo);
+
+    // URLを更新（originalIdを使用）
+    if (memo && memo.originalId) {
+      router.replace(
+        `/team/${customUrl}?tab=board&slug=${slug}&memoId=${memo.originalId}`,
+        { scroll: false },
+      );
+    } else {
+      router.replace(`/team/${customUrl}?tab=board&slug=${slug}`, {
+        scroll: false,
+      });
+    }
   };
 
   const handleSelectTask = (task: Task | DeletedTask | null) => {
     setSelectedMemo(null);
     setSelectedTask(task);
+
+    // URLを更新（originalIdを使用）
+    if (task && task.originalId) {
+      router.replace(
+        `/team/${customUrl}?tab=board&slug=${slug}&taskId=${task.originalId}`,
+        { scroll: false },
+      );
+    } else {
+      router.replace(`/team/${customUrl}?tab=board&slug=${slug}`, {
+        scroll: false,
+      });
+    }
   };
 
   const handleSelectDeletedMemo = (memo: DeletedMemo | null) => {

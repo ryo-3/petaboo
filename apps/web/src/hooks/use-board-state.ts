@@ -32,15 +32,63 @@ export function useBoardState() {
   );
   const [isReversed, setIsReversed] = useState(false);
 
-  // コンテンツフィルター状態（非選択時用）
-  const [showMemo, setShowMemo] = useState(true);
-  const [showTask, setShowTask] = useState(true);
-  const [showComment, setShowComment] = useState(true);
+  // コンテンツフィルター状態（非選択時用、localStorageから復元）
+  const [showMemo, setShowMemo] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("board-show-memo");
+      if (saved !== null) {
+        return saved === "true";
+      }
+    }
+    return true;
+  });
+  const [showTask, setShowTask] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("board-show-task");
+      if (saved !== null) {
+        return saved === "true";
+      }
+    }
+    return true;
+  });
+  const [showComment, setShowComment] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("board-show-comment");
+      if (saved !== null) {
+        return saved === "true";
+      }
+    }
+    return true;
+  });
 
-  // 選択時のパネル表示状態
-  const [showListPanel, setShowListPanel] = useState(true); // 一覧パネル
-  const [showDetailPanel, setShowDetailPanel] = useState(true); // 詳細パネル
-  const [showCommentPanel, setShowCommentPanel] = useState(true); // コメントパネル
+  // 選択時のパネル表示状態（localStorageから復元）
+  const [showListPanel, setShowListPanel] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("board-show-list-panel");
+      if (saved !== null) {
+        return saved === "true";
+      }
+    }
+    return true;
+  });
+  const [showDetailPanel, setShowDetailPanel] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("board-show-detail-panel");
+      if (saved !== null) {
+        return saved === "true";
+      }
+    }
+    return true;
+  });
+  const [showCommentPanel, setShowCommentPanel] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("board-show-comment-panel");
+      if (saved !== null) {
+        return saved === "true";
+      }
+    }
+    return true;
+  });
 
   // 最新値を保持するref
   const rightPanelModeRef = useRef(rightPanelMode);
@@ -54,6 +102,47 @@ export function useBoardState() {
       setSelectedItemsFromList(new Set());
     }
   }, [rightPanelMode]);
+
+  // 非選択時のパネル表示状態をlocalStorageに保存
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("board-show-memo", String(showMemo));
+    }
+  }, [showMemo]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("board-show-task", String(showTask));
+    }
+  }, [showTask]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("board-show-comment", String(showComment));
+    }
+  }, [showComment]);
+
+  // 選択時のパネル表示状態をlocalStorageに保存
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("board-show-list-panel", String(showListPanel));
+    }
+  }, [showListPanel]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("board-show-detail-panel", String(showDetailPanel));
+    }
+  }, [showDetailPanel]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(
+        "board-show-comment-panel",
+        String(showCommentPanel),
+      );
+    }
+  }, [showCommentPanel]);
 
   // ボードレイアウト変更ハンドラー（反転機能付き）
   const handleBoardLayoutChange = useCallback(

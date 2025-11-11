@@ -1124,6 +1124,7 @@ function BoardDetailScreen({
                                     customHeight="flex-1 min-h-0"
                                     showDateAtBottom={true}
                                     insideBoardDetail={true}
+                                    isInLeftPanel={!showListPanel}
                                     createdBy={
                                       selectedMemo &&
                                       "createdBy" in selectedMemo
@@ -1183,6 +1184,7 @@ function BoardDetailScreen({
                                     onClose={onClearSelection || (() => {})}
                                     customHeight="flex-1 min-h-0"
                                     showDateAtBottom={true}
+                                    isInLeftPanel={!showListPanel}
                                     createdBy={
                                       selectedTask &&
                                       "createdBy" in selectedTask
@@ -1564,6 +1566,7 @@ function BoardDetailScreen({
                                       customHeight="flex-1 min-h-0"
                                       showDateAtBottom={true}
                                       insideBoardDetail={true}
+                                      isInLeftPanel={!showListPanel}
                                       createdBy={
                                         selectedMemo &&
                                         "createdBy" in selectedMemo
@@ -1634,6 +1637,7 @@ function BoardDetailScreen({
                                       onClose={onClearSelection || (() => {})}
                                       customHeight="flex-1 min-h-0"
                                       showDateAtBottom={true}
+                                      isInLeftPanel={!showListPanel}
                                       createdBy={
                                         selectedTask &&
                                         "createdBy" in selectedTask

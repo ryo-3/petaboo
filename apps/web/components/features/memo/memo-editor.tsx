@@ -105,6 +105,7 @@ interface MemoEditorProps {
   createdByAvatarColor?: string | null;
   totalDeletedCount?: number; // 削除済みアイテムの総数
   insideBoardDetail?: boolean; // ボード詳細内で表示されているか（戻るボタンのイベント切り替え用）
+  isInLeftPanel?: boolean; // 左側パネルに表示されているか（余白制御用）
 }
 
 function MemoEditor({
@@ -130,6 +131,7 @@ function MemoEditor({
   totalDeletedCount = 0,
   unifiedOperations,
   insideBoardDetail = false,
+  isInLeftPanel = false,
 }: MemoEditorProps) {
   const { isTeamMode: teamMode, teamId: teamIdRaw } = useTeamContext();
   const teamId = teamIdRaw ?? undefined; // Hook互換性のため変換
@@ -1219,7 +1221,7 @@ function MemoEditor({
       >
         {/* 固定ヘッダー部分 */}
         <div
-          className={`flex-shrink-0 bg-white pt-2 ${showDateAtBottom ? "" : "pl-2"}`}
+          className={`flex-shrink-0 bg-white pt-2 ${isInLeftPanel ? "" : "pl-2"}`}
         >
           <div className="flex justify-start items-center">
             {/* ここにheaderActionsの内容を直接配置 */}

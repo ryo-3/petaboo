@@ -93,6 +93,7 @@ interface TaskEditorProps {
   onDelete?: () => void;
   customHeight?: string;
   showDateAtBottom?: boolean; // 日付を下に表示するか（デフォルト: false = ヘッダー右側）
+  isInLeftPanel?: boolean; // 左側パネルに表示されているか（余白制御用）
 
   // 全データ事前取得（ちらつき解消）
   preloadedTags?: Tag[];
@@ -144,6 +145,7 @@ function TaskEditor({
   onDelete,
   customHeight,
   showDateAtBottom = false,
+  isInLeftPanel = false,
   preloadedTags = [],
   preloadedBoards = [],
   preloadedTaggings = [],
@@ -1154,7 +1156,7 @@ function TaskEditor({
       >
         {/* 固定ヘッダー部分 */}
         <div
-          className={`flex-shrink-0 pt-2 md:relative fixed top-0 left-0 right-0 z-50 bg-white ${showDateAtBottom ? "" : "pl-2"}`}
+          className={`flex-shrink-0 pt-2 md:relative fixed top-0 left-0 right-0 z-50 bg-white ${isInLeftPanel ? "" : "pl-2"}`}
         >
           <div className="flex justify-start items-center">
             {/* ここにheaderActionsの内容を直接配置 */}

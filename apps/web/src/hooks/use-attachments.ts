@@ -102,11 +102,7 @@ export function useUploadAttachment(
 
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["attachments", teamId, attachedTo, attachedOriginalId],
-      });
-    },
+    // onSuccessは削除（use-attachment-manager.tsで一括管理）
   });
 }
 
@@ -140,10 +136,6 @@ export function useDeleteAttachment(
         throw new Error(error.error || "画像の削除に失敗しました");
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["attachments", teamId, attachedTo, attachedOriginalId],
-      });
-    },
+    // onSuccessは削除（use-attachment-manager.tsで一括管理）
   });
 }

@@ -119,7 +119,18 @@ export default function AttachmentGallery({
 
   // 保存待ち画像のプレビューURL生成（既にattachmentsに存在するものを除外）
   useEffect(() => {
-    // attachmentsに既に存在するファイル名とサイズのセット
+    // アップロード中は除外処理をスキップ（楽観的UIを維持）
+    if (isUploading) {
+      // アップロード中は現在のpendingImagesをそのまま表示
+      const urls = pendingImages.map((file) => URL.createObjectURL(file));
+      setPendingUrls(urls);
+
+      return () => {
+        urls.forEach((url) => URL.revokeObjectURL(url));
+      };
+    }
+
+    // 通常時：attachmentsに既に存在するファイル名とサイズのセット
     const existingFiles = new Set(
       attachments.map((a) => `${a.fileName}-${a.fileSize}`),
     );
@@ -135,7 +146,7 @@ export default function AttachmentGallery({
     return () => {
       urls.forEach((url) => URL.revokeObjectURL(url));
     };
-  }, [pendingImages, attachments]);
+  }, [pendingImages, attachments, isUploading]);
 
   if (attachments.length === 0 && pendingImages.length === 0) {
     return null;
@@ -297,51 +308,79 @@ export default function AttachmentGallery({
           return (
             <div key={`pending-${index}`} className="relative group">
               {isImage ? (
-                <img
-                  src={url}
-                  alt={`保存待ち ${index + 1}`}
-                  className={`w-full md:w-32 h-auto md:h-32 md:object-cover rounded-lg transition-opacity ${
-                    isUploading
-                      ? "opacity-0 cursor-default"
-                      : "cursor-pointer hover:opacity-80 border-2 border-blue-400"
-                  }`}
-                  onClick={() => !isUploading && setSelectedImage(url)}
-                  referrerPolicy="no-referrer"
-                />
+                <div className="relative">
+                  <img
+                    src={url}
+                    alt={`保存待ち ${index + 1}`}
+                    className={`w-full md:w-32 h-auto md:h-32 md:object-cover rounded-lg transition-opacity ${
+                      isUploading
+                        ? "opacity-50"
+                        : "cursor-pointer hover:opacity-80 border-2 border-blue-400"
+                    }`}
+                    onClick={() => !isUploading && setSelectedImage(url)}
+                    referrerPolicy="no-referrer"
+                  />
+                  {/* アップロード中のローディング表示 */}
+                  {isUploading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/30 rounded-lg">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+                    </div>
+                  )}
+                </div>
               ) : isPdf ? (
-                <div className="w-32 h-32 bg-gray-100 rounded-lg border-2 border-blue-400 flex flex-col items-center justify-center p-2">
-                  <svg
-                    className="w-12 h-12 text-red-500 mb-1"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
+                <div className="relative">
+                  <div
+                    className={`w-32 h-32 bg-gray-100 rounded-lg border-2 border-blue-400 flex flex-col items-center justify-center p-2 ${
+                      isUploading ? "opacity-50" : ""
+                    }`}
                   >
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM8 18v-1h8v1H8zm0-4v-1h8v1H8zm0-4v-1h5v1H8z" />
-                  </svg>
-                  <p className="text-[10px] text-gray-600 text-center truncate w-full">
-                    {file?.name}
-                  </p>
+                    <svg
+                      className="w-12 h-12 text-red-500 mb-1"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM8 18v-1h8v1H8zm0-4v-1h8v1H8zm0-4v-1h5v1H8z" />
+                    </svg>
+                    <p className="text-[10px] text-gray-600 text-center truncate w-full">
+                      {file?.name}
+                    </p>
+                  </div>
+                  {isUploading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/30 rounded-lg">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+                    </div>
+                  )}
                 </div>
               ) : (
-                <div className="w-32 h-32 bg-gray-100 rounded-lg border-2 border-blue-400 flex flex-col items-center justify-center p-2">
-                  <svg
-                    className="w-12 h-12 text-gray-500 mb-1"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
+                <div className="relative">
+                  <div
+                    className={`w-32 h-32 bg-gray-100 rounded-lg border-2 border-blue-400 flex flex-col items-center justify-center p-2 ${
+                      isUploading ? "opacity-50" : ""
+                    }`}
                   >
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM8 18v-1h8v1H8zm0-4v-1h8v1H8z" />
-                  </svg>
-                  <p className="text-[10px] text-gray-600 text-center truncate w-full">
-                    {file?.name}
-                  </p>
+                    <svg
+                      className="w-12 h-12 text-gray-500 mb-1"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM8 18v-1h8v1H8zm0-4v-1h8v1H8z" />
+                    </svg>
+                    <p className="text-[10px] text-gray-600 text-center truncate w-full">
+                      {file?.name}
+                    </p>
+                  </div>
+                  {isUploading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/30 rounded-lg">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+                    </div>
+                  )}
                 </div>
               )}
-              {/* 保存待ちバッジ（アップロード中は非表示） */}
-              {!isUploading && (
-                <div className="absolute top-0 left-0 bg-blue-500 text-white text-[10px] px-1 py-0.5 rounded-br">
-                  未保存
-                </div>
-              )}
-              {onDeletePending && (
+              {/* ステータスバッジ：アップロード中は「保存中...」に変更 */}
+              <div className="absolute top-0 left-0 bg-blue-500 text-white text-[10px] px-1 py-0.5 rounded-br">
+                {isUploading ? "保存中..." : "未保存"}
+              </div>
+              {onDeletePending && !isUploading && (
                 <button
                   onClick={() => onDeletePending(index)}
                   className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"

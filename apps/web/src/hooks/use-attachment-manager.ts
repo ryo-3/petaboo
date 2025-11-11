@@ -303,6 +303,9 @@ export const useAttachmentManager = ({
 
         // キャッシュを更新（targetOriginalId使用時）
         if (failedCount === 0) {
+          // 先にpendingImagesをクリア（重複表示防止）
+          setPendingImages([]);
+
           if (targetOriginalId) {
             const queryKey = [
               "attachments",
@@ -311,23 +314,7 @@ export const useAttachmentManager = ({
               targetOriginalId,
             ] as const;
 
-            if (successfulAttachments.length > 0) {
-              // 重複表示防止のため、キャッシュ更新前にpendingImagesをクリア
-              setPendingImages([]);
-
-              queryClient.setQueryData<Attachment[] | undefined>(
-                queryKey,
-                (old) => {
-                  const existing = old ?? [];
-                  const existingIds = new Set(existing.map((item) => item.id));
-                  const merged = successfulAttachments.filter(
-                    (item) => !existingIds.has(item.id),
-                  );
-                  return [...existing, ...merged];
-                },
-              );
-            }
-
+            // pendingImagesクリア後にリフェッチ
             await queryClient.invalidateQueries({ queryKey });
           }
         }
@@ -390,11 +377,26 @@ export const useAttachmentManager = ({
         showToast("画像の削除が完了しました", "success", 3000);
       }
 
+      // 削除完了後、キャッシュを更新
+      if (failedCount === 0 && originalId) {
+        const queryKey = ["attachments", teamId, itemType, originalId] as const;
+        await queryClient.invalidateQueries({ queryKey });
+      }
+
       return { success: failedCount === 0, failedCount };
     } finally {
       setIsProcessing(false);
     }
-  }, [pendingDeletes, deleteMutation, showToast, removeToast]);
+  }, [
+    pendingDeletes,
+    deleteMutation,
+    showToast,
+    removeToast,
+    originalId,
+    teamId,
+    itemType,
+    queryClient,
+  ]);
 
   // 保存待ち・削除予定をリセット
   const resetPending = useCallback(() => {

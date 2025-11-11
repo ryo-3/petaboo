@@ -1389,19 +1389,6 @@ function MemoEditor({
 
                       const isContentEmpty = !textContent;
 
-                      console.log("🔍 保存ボタン判定:", {
-                        memo: memo,
-                        "memo?.id": memo?.id,
-                        content: content,
-                        textContent: textContent,
-                        isContentEmpty: isContentEmpty,
-                        "pendingImages.length": pendingImages.length,
-                        hasChanges: hasChanges,
-                        hasTagChanges: hasTagChanges,
-                        "pendingDeletes.length": pendingDeletes.length,
-                        isUploading: isUploading,
-                      });
-
                       const disabled =
                         isUploading ||
                         (!hasChanges &&
@@ -1411,13 +1398,13 @@ function MemoEditor({
                         (memo !== null &&
                           memo.id > 0 &&
                           isContentEmpty &&
-                          pendingImages.length === 0) ||
+                          pendingImages.length === 0 &&
+                          pendingDeletes.length === 0) ||
                         // 新規メモで空の場合は保存不可
                         ((memo === null || memo.id === 0) &&
                           isContentEmpty &&
                           pendingImages.length === 0);
 
-                      console.log("🔍 保存ボタン disabled:", disabled);
                       return disabled;
                     })()}
                     isSaving={

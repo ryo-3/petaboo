@@ -7,6 +7,18 @@ export function useBoardState() {
   const router = useRouter();
   const pathname = usePathname();
 
+  // デスクトップ判定（768px以上）
+  const [isDesktop, setIsDesktop] = useState(true);
+
+  useEffect(() => {
+    const checkDesktop = () => {
+      setIsDesktop(window.innerWidth >= 768);
+    };
+    checkDesktop();
+    window.addEventListener("resize", checkDesktop);
+    return () => window.removeEventListener("resize", checkDesktop);
+  }, []);
+
   // タブ状態
   const [activeTaskTab, setActiveTaskTab] = useState<
     "todo" | "in_progress" | "completed" | "deleted"
@@ -103,46 +115,46 @@ export function useBoardState() {
     }
   }, [rightPanelMode]);
 
-  // 非選択時のパネル表示状態をlocalStorageに保存
+  // 非選択時のパネル表示状態をlocalStorageに保存（デスクトップのみ）
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && isDesktop) {
       localStorage.setItem("board-show-memo", String(showMemo));
     }
-  }, [showMemo]);
+  }, [showMemo, isDesktop]);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && isDesktop) {
       localStorage.setItem("board-show-task", String(showTask));
     }
-  }, [showTask]);
+  }, [showTask, isDesktop]);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && isDesktop) {
       localStorage.setItem("board-show-comment", String(showComment));
     }
-  }, [showComment]);
+  }, [showComment, isDesktop]);
 
-  // 選択時のパネル表示状態をlocalStorageに保存
+  // 選択時のパネル表示状態をlocalStorageに保存（デスクトップのみ）
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && isDesktop) {
       localStorage.setItem("board-show-list-panel", String(showListPanel));
     }
-  }, [showListPanel]);
+  }, [showListPanel, isDesktop]);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && isDesktop) {
       localStorage.setItem("board-show-detail-panel", String(showDetailPanel));
     }
-  }, [showDetailPanel]);
+  }, [showDetailPanel, isDesktop]);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && isDesktop) {
       localStorage.setItem(
         "board-show-comment-panel",
         String(showCommentPanel),
       );
     }
-  }, [showCommentPanel]);
+  }, [showCommentPanel, isDesktop]);
 
   // ボードレイアウト変更ハンドラー（反転機能付き）
   const handleBoardLayoutChange = useCallback(

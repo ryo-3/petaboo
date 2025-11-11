@@ -1092,6 +1092,8 @@ function TaskScreen({
                 ? { left: 25, center: 50, right: 25 }
                 : { left: 35, center: 65, right: 0 }
             }
+            skipInitialSave={true}
+            stateKey={selectedTask?.originalId || "none"}
           />
         )}
       </div>

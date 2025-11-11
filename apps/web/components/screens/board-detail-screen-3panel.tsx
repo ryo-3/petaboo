@@ -2,6 +2,7 @@ import BoardMemoSection from "@/components/features/board/board-memo-section";
 import BoardRightPanel from "@/components/features/board/board-right-panel";
 import BoardTaskSection from "@/components/features/board/board-task-section";
 import DesktopUpper from "@/components/layout/desktop-upper";
+import { ControlPanelLayout } from "@/components/layout/control-panel-layout";
 import MemoEditor from "@/components/features/memo/memo-editor";
 import TaskEditor from "@/components/features/task/task-editor";
 import { PanelBackButton } from "@/components/ui/buttons/panel-back-button";
@@ -678,7 +679,13 @@ function BoardDetailScreen({
   // ユーザー情報取得（コメント入力欄のアバター表示用）
   const { data: userInfo } = useUserInfo();
 
-  // 選択時のパネル幅の状態管理
+  // パネル幅管理（ControlPanelLayoutと同じロジック）
+  const resizeTimerSelected = useRef<NodeJS.Timeout | null>(null);
+  const resizeTimerUnselected = useRef<NodeJS.Timeout | null>(null);
+  const mountCountSelected = useRef(0);
+  const mountCountUnselected = useRef(0);
+
+  // 選択時のパネル幅を取得（localStorageから復元）
   const [panelSizesSelected, setPanelSizesSelected] = useState<{
     left: number;
     center: number;
@@ -697,7 +704,7 @@ function BoardDetailScreen({
     return { left: 25, center: 45, right: 30 };
   });
 
-  // 非選択時のパネル幅の状態管理
+  // 非選択時のパネル幅を取得（localStorageから復元）
   const [panelSizesUnselected, setPanelSizesUnselected] = useState<{
     left: number;
     center: number;
@@ -716,32 +723,22 @@ function BoardDetailScreen({
     return { left: 33, center: 34, right: 33 };
   });
 
-  // 初回マウント判定用
-  const mountCountSelected = useRef(0);
-  const mountCountUnselected = useRef(0);
-
-  // 選択状態が変わったらカウントをリセット
+  // 選択状態が変わったらマウントカウントをリセット
   useEffect(() => {
     mountCountSelected.current = 0;
-  }, [selectedMemo, selectedTask]);
+  }, [selectedMemo?.originalId, selectedTask?.originalId]);
 
   useEffect(() => {
-    // 非選択状態になったらカウントをリセット
     if (!selectedMemo && !selectedTask) {
       mountCountUnselected.current = 0;
     }
   }, [selectedMemo, selectedTask]);
 
-  // デバウンス用のタイマー
-  const saveTimerSelected = useRef<NodeJS.Timeout>();
-  const saveTimerUnselected = useRef<NodeJS.Timeout>();
-
-  // 選択時のパネル幅変更時にローカルストレージへ保存（デバウンス）
+  // 選択時のパネルリサイズハンドラー
   const handlePanelResizeSelected = useCallback((sizes: number[]) => {
-    // 初回マウント時はスキップ（選択状態切り替え時の誤保存を防ぐ）
     mountCountSelected.current++;
     if (mountCountSelected.current <= 1) {
-      return;
+      return; // 初回マウント時はスキップ
     }
 
     if (
@@ -750,19 +747,13 @@ function BoardDetailScreen({
       sizes[1] !== undefined &&
       sizes[2] !== undefined
     ) {
-      const newSizes = {
-        left: sizes[0],
-        center: sizes[1],
-        right: sizes[2],
-      };
+      const newSizes = { left: sizes[0], center: sizes[1], right: sizes[2] };
 
-      // 前のタイマーをクリア
-      if (saveTimerSelected.current) {
-        clearTimeout(saveTimerSelected.current);
+      if (resizeTimerSelected.current) {
+        clearTimeout(resizeTimerSelected.current);
       }
 
-      // 500ms後に保存
-      saveTimerSelected.current = setTimeout(() => {
+      resizeTimerSelected.current = setTimeout(() => {
         setPanelSizesSelected(newSizes);
         localStorage.setItem(
           "team-board-panel-sizes-selected",
@@ -772,12 +763,11 @@ function BoardDetailScreen({
     }
   }, []);
 
-  // 非選択時のパネル幅変更時にローカルストレージへ保存（デバウンス）
+  // 非選択時のパネルリサイズハンドラー
   const handlePanelResizeUnselected = useCallback((sizes: number[]) => {
-    // 初回マウント時はスキップ
     mountCountUnselected.current++;
     if (mountCountUnselected.current <= 1) {
-      return;
+      return; // 初回マウント時はスキップ
     }
 
     if (
@@ -786,19 +776,13 @@ function BoardDetailScreen({
       sizes[1] !== undefined &&
       sizes[2] !== undefined
     ) {
-      const newSizes = {
-        left: sizes[0],
-        center: sizes[1],
-        right: sizes[2],
-      };
+      const newSizes = { left: sizes[0], center: sizes[1], right: sizes[2] };
 
-      // 前のタイマーをクリア
-      if (saveTimerUnselected.current) {
-        clearTimeout(saveTimerUnselected.current);
+      if (resizeTimerUnselected.current) {
+        clearTimeout(resizeTimerUnselected.current);
       }
 
-      // 500ms後に保存
-      saveTimerUnselected.current = setTimeout(() => {
+      resizeTimerUnselected.current = setTimeout(() => {
         setPanelSizesUnselected(newSizes);
         localStorage.setItem(
           "team-board-panel-sizes-unselected",
@@ -989,10 +973,15 @@ function BoardDetailScreen({
                       showCommentPanel,
                     ].filter(Boolean).length;
 
-                    // パネルサイズの計算（2パネル時は表示パネルに応じて動的に設定）
+                    // パネルサイズの計算（localStorageから復元、または固定値）
                     const getPanelSize = () => {
                       if (visiblePanels === 3) {
-                        return { list: 25, detail: 45, comment: 30 };
+                        // 3パネル時は保存された値を使用
+                        return {
+                          list: panelSizesSelected.left,
+                          detail: panelSizesSelected.center,
+                          comment: panelSizesSelected.right,
+                        };
                       }
                       if (visiblePanels === 2) {
                         // 一覧+詳細、一覧+コメント、詳細+コメント の場合
@@ -1901,8 +1890,17 @@ function BoardDetailScreen({
                     const taskPanelOrder = showTask ? ++currentOrder : 0;
                     const commentPanelOrder = showComment ? ++currentOrder : 0;
 
-                    // パネルサイズを計算（2パネル時: 1番目30%, 2番目70%; 3パネル時: 均等）
+                    // パネルサイズを計算（3パネル時はlocalStorageから復元、2パネル時は固定値）
                     const getPanelSize = (order: number) => {
+                      if (visiblePanels === 3) {
+                        // 3パネル時は保存された値を使用
+                        if (order === memoPanelOrder)
+                          return panelSizesUnselected.left;
+                        if (order === taskPanelOrder)
+                          return panelSizesUnselected.center;
+                        if (order === commentPanelOrder)
+                          return panelSizesUnselected.right;
+                      }
                       if (visiblePanels === 2) {
                         return order === 1 ? 30 : 70;
                       }

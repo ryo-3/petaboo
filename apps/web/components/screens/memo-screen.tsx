@@ -1030,6 +1030,8 @@ function MemoScreen({
                 ? { left: 25, center: 45, right: 30 }
                 : { left: 35, center: 65, right: 0 }
             }
+            skipInitialSave={true}
+            stateKey={selectedMemo?.originalId || "none"}
           />
         )}
       </div>

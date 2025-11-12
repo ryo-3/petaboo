@@ -759,17 +759,20 @@ function BoardDetailScreen({
 
       // 2パネル以上の場合に保存（1パネルは常に100%なので保存不要）
       if (sizes.length >= 2) {
-        // 現在のパネル表示状態からキーを取得
-        const combinationKey = getPanelCombinationKey({
+        // 現在のパネル表示状態からキーとorderを取得
+        const visibility = {
           left: showListPanel,
           center: showDetailPanel,
           right: showCommentPanel,
-        });
+        };
+        const combinationKey = getPanelCombinationKey(visibility);
+        const orders = calculatePanelOrders(visibility);
 
+        // sizesはorderの順番で入っているので、正しく対応させる
         const newSizes = {
-          left: sizes[0] ?? 0,
-          center: sizes[1] ?? 0,
-          right: sizes[2] ?? 0,
+          left: orders.left > 0 ? (sizes[orders.left - 1] ?? 0) : 0,
+          center: orders.center > 0 ? (sizes[orders.center - 1] ?? 0) : 0,
+          right: orders.right > 0 ? (sizes[orders.right - 1] ?? 0) : 0,
         };
 
         if (resizeTimerSelected.current) {
@@ -804,17 +807,20 @@ function BoardDetailScreen({
 
       // 2パネル以上の場合に保存（1パネルは常に100%なので保存不要）
       if (sizes.length >= 2) {
-        // 現在のパネル表示状態からキーを取得
-        const combinationKey = getPanelCombinationKey({
+        // 現在のパネル表示状態からキーとorderを取得
+        const visibility = {
           left: showMemo,
           center: showTask,
           right: showComment,
-        });
+        };
+        const combinationKey = getPanelCombinationKey(visibility);
+        const orders = calculatePanelOrders(visibility);
 
+        // sizesはorderの順番で入っているので、正しく対応させる
         const newSizes = {
-          left: sizes[0] ?? 0,
-          center: sizes[1] ?? 0,
-          right: sizes[2] ?? 0,
+          left: orders.left > 0 ? (sizes[orders.left - 1] ?? 0) : 0,
+          center: orders.center > 0 ? (sizes[orders.center - 1] ?? 0) : 0,
+          right: orders.right > 0 ? (sizes[orders.right - 1] ?? 0) : 0,
         };
 
         if (resizeTimerUnselected.current) {

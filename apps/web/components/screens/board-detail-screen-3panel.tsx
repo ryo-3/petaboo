@@ -46,6 +46,11 @@ import MobileFabButton from "@/components/ui/buttons/mobile-fab-button";
 import { useUserInfo } from "@/src/hooks/use-user-info";
 import { getUserAvatarColor } from "@/src/utils/userUtils";
 import {
+  calculatePanelOrders,
+  countVisiblePanels,
+  calculatePanelSizes,
+} from "@/src/utils/panel-helpers";
+import {
   ResizablePanelGroup,
   ResizablePanel,
   ResizableHandle,
@@ -967,41 +972,30 @@ function BoardDetailScreen({
                 ? /* 選択時: 動的パネル構成 */
                   (() => {
                     // 選択時: 一覧・詳細・コメントの3パネル構成（各パネル個別にトグル可能）
-                    const visiblePanels = [
-                      showListPanel,
-                      showDetailPanel,
-                      showCommentPanel,
-                    ].filter(Boolean).length;
+                    const visibility = {
+                      left: showListPanel,
+                      center: showDetailPanel,
+                      right: showCommentPanel,
+                    };
+                    const visiblePanels = countVisiblePanels(visibility);
+                    const orders = calculatePanelOrders(visibility);
+                    const {
+                      left: listOrder,
+                      center: detailOrder,
+                      right: commentOrder,
+                    } = orders;
 
                     // パネルサイズの計算（localStorageから復元、または固定値）
-                    const getPanelSize = () => {
-                      if (visiblePanels === 3) {
-                        // 3パネル時は保存された値を使用
-                        return {
-                          list: panelSizesSelected.left,
-                          detail: panelSizesSelected.center,
-                          comment: panelSizesSelected.right,
-                        };
-                      }
-                      if (visiblePanels === 2) {
-                        // 一覧+詳細、一覧+コメント、詳細+コメント の場合
-                        if (showListPanel && showDetailPanel)
-                          return { list: 30, detail: 70, comment: 0 };
-                        if (showListPanel && showCommentPanel)
-                          return { list: 30, detail: 0, comment: 70 };
-                        if (showDetailPanel && showCommentPanel)
-                          return { list: 0, detail: 40, comment: 60 };
-                      }
-                      // 1パネルのみ
-                      return { list: 100, detail: 100, comment: 100 };
+                    const calculatedSizes = calculatePanelSizes(
+                      visiblePanels,
+                      panelSizesSelected,
+                      orders,
+                    );
+                    const sizes = {
+                      list: calculatedSizes.left,
+                      detail: calculatedSizes.center,
+                      comment: calculatedSizes.right,
                     };
-                    const sizes = getPanelSize();
-
-                    // パネルのorder計算（表示されているパネルのみカウント）
-                    let currentOrder = 0;
-                    const listOrder = showListPanel ? ++currentOrder : 0;
-                    const detailOrder = showDetailPanel ? ++currentOrder : 0;
-                    const commentOrder = showCommentPanel ? ++currentOrder : 0;
 
                     // スマホ時: 1パネルずつ排他的に表示
                     if (!isDesktop) {
@@ -1878,35 +1872,35 @@ function BoardDetailScreen({
                 : /* 非選択時: 動的パネル構成 */
                   (() => {
                     // 表示されているパネルの数を計算
-                    const visiblePanels = [
-                      showMemo,
-                      showTask,
-                      showComment,
-                    ].filter(Boolean).length;
+                    const visibility = {
+                      left: showMemo,
+                      center: showTask,
+                      right: showComment,
+                    };
+                    const visiblePanels = countVisiblePanels(visibility);
+                    const orders = calculatePanelOrders(visibility);
+                    const {
+                      left: memoPanelOrder,
+                      center: taskPanelOrder,
+                      right: commentPanelOrder,
+                    } = orders;
+
                     // 最小サイズは常に25%
                     const minPanelSize = 25;
 
-                    // 各パネルのorderを計算（表示されるパネルのみカウント）
-                    let currentOrder = 0;
-                    const memoPanelOrder = showMemo ? ++currentOrder : 0;
-                    const taskPanelOrder = showTask ? ++currentOrder : 0;
-                    const commentPanelOrder = showComment ? ++currentOrder : 0;
-
                     // パネルサイズを計算（3パネル時はlocalStorageから復元、2パネル時は固定値）
+                    const calculatedSizes = calculatePanelSizes(
+                      visiblePanels,
+                      panelSizesUnselected,
+                      orders,
+                    );
                     const getPanelSize = (order: number) => {
-                      if (visiblePanels === 3) {
-                        // 3パネル時は保存された値を使用
-                        if (order === memoPanelOrder)
-                          return panelSizesUnselected.left;
-                        if (order === taskPanelOrder)
-                          return panelSizesUnselected.center;
-                        if (order === commentPanelOrder)
-                          return panelSizesUnselected.right;
-                      }
-                      if (visiblePanels === 2) {
-                        return order === 1 ? 30 : 70;
-                      }
-                      return 100 / visiblePanels;
+                      if (order === memoPanelOrder) return calculatedSizes.left;
+                      if (order === taskPanelOrder)
+                        return calculatedSizes.center;
+                      if (order === commentPanelOrder)
+                        return calculatedSizes.right;
+                      return 100;
                     };
 
                     // スマホ時: 1パネルずつ排他的に表示

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Memo } from "@/src/types/memo";
 import { Task } from "@/src/types/task";
+import { validatePanelToggle } from "@/src/utils/panel-helpers";
 
 export function useBoardState() {
   const router = useRouter();
@@ -180,71 +181,119 @@ export function useBoardState() {
   // メモボタンのハンドラー
   const handleMemoToggle = useCallback(
     (show: boolean) => {
-      // 非表示にしようとした時、他の2つも非表示なら拒否
-      if (!show && !showTask && !showComment) {
-        return; // 最低1つは表示する必要がある
+      // バリデーション: 最低1つは表示する必要がある
+      if (
+        !validatePanelToggle(
+          { left: showMemo, center: showTask, right: showComment },
+          "left",
+          show,
+        )
+      ) {
+        return;
       }
       setShowMemo(show);
     },
-    [showTask, showComment],
+    [showMemo, showTask, showComment],
   );
 
   // タスクボタンのハンドラー
   const handleTaskToggle = useCallback(
     (show: boolean) => {
-      // 非表示にしようとした時、他の2つも非表示なら拒否
-      if (!show && !showMemo && !showComment) {
-        return; // 最低1つは表示する必要がある
+      // バリデーション: 最低1つは表示する必要がある
+      if (
+        !validatePanelToggle(
+          { left: showMemo, center: showTask, right: showComment },
+          "center",
+          show,
+        )
+      ) {
+        return;
       }
       setShowTask(show);
     },
-    [showMemo, showComment],
+    [showMemo, showTask, showComment],
   );
 
   // コメントボタンのハンドラー（非選択時）
   const handleCommentToggle = useCallback(
     (show: boolean) => {
-      // 非表示にしようとした時、他の2つも非表示なら拒否
-      if (!show && !showMemo && !showTask) {
-        return; // 最低1つは表示する必要がある
+      // バリデーション: 最低1つは表示する必要がある
+      if (
+        !validatePanelToggle(
+          { left: showMemo, center: showTask, right: showComment },
+          "right",
+          show,
+        )
+      ) {
+        return;
       }
       setShowComment(show);
     },
-    [showMemo, showTask],
+    [showMemo, showTask, showComment],
   );
 
   // 選択時のパネルトグルハンドラー
   const handleListPanelToggle = useCallback(
     (show: boolean) => {
-      // 非表示にしようとした時、他の2つも非表示なら拒否
-      if (!show && !showDetailPanel && !showCommentPanel) {
-        return; // 最低1つは表示する必要がある
+      // バリデーション: 最低1つは表示する必要がある
+      if (
+        !validatePanelToggle(
+          {
+            left: showListPanel,
+            center: showDetailPanel,
+            right: showCommentPanel,
+          },
+          "left",
+          show,
+        )
+      ) {
+        return;
       }
       setShowListPanel(show);
     },
-    [showDetailPanel, showCommentPanel],
+    [showListPanel, showDetailPanel, showCommentPanel],
   );
 
   const handleDetailPanelToggle = useCallback(
     (show: boolean) => {
-      // 非表示にしようとした時、他の2つも非表示なら拒否
-      if (!show && !showListPanel && !showCommentPanel) {
-        return; // 最低1つは表示する必要がある
+      // バリデーション: 最低1つは表示する必要がある
+      if (
+        !validatePanelToggle(
+          {
+            left: showListPanel,
+            center: showDetailPanel,
+            right: showCommentPanel,
+          },
+          "center",
+          show,
+        )
+      ) {
+        return;
       }
       setShowDetailPanel(show);
     },
-    [showListPanel, showCommentPanel],
+    [showListPanel, showDetailPanel, showCommentPanel],
   );
 
   const handleCommentPanelToggle = useCallback(
     (show: boolean) => {
-      // 非表示にしようとした時、他の2つも非表示なら拒否
-      if (!show && !showListPanel && !showDetailPanel) {
-        return; // 最低1つは表示する必要がある
+      // バリデーション: 最低1つは表示する必要がある
+      if (
+        !validatePanelToggle(
+          {
+            left: showListPanel,
+            center: showDetailPanel,
+            right: showCommentPanel,
+          },
+          "right",
+          show,
+        )
+      ) {
+        return;
       }
       setShowCommentPanel(show);
     },
-    [showListPanel, showDetailPanel],
+    [showListPanel, showDetailPanel, showCommentPanel],
   );
 
   // タスクタブ切り替え時の処理

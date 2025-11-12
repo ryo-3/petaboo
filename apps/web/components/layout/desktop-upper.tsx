@@ -5,7 +5,7 @@ import { useState } from "react";
 import TrashIcon from "@/components/icons/trash-icon";
 import Tooltip from "@/components/ui/base/tooltip";
 import AddItemButton from "@/components/ui/buttons/add-item-button";
-import ControlPanel from "@/components/ui/controls/control-panel";
+import HeaderControlPanel from "@/components/ui/controls/header-control-panel";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useViewSettings } from "@/src/contexts/view-settings-context";
 
@@ -307,7 +307,7 @@ function DesktopUpper({
     (currentMode === "task" && preferences?.taskHideControls);
 
   const controlsContent = !shouldHideControls ? (
-    <ControlPanel
+    <HeaderControlPanel
       currentMode={currentMode}
       rightPanelMode={rightPanelMode}
       floatControls={floatControls}

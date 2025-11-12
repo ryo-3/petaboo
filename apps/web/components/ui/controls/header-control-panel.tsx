@@ -16,7 +16,7 @@ import { UnifiedFilterButton } from "@/components/ui/buttons/unified-filter-butt
 import UnifiedFilterModal from "@/components/ui/modals/unified-filter-modal";
 import { useViewSettings } from "@/src/contexts/view-settings-context";
 
-interface ControlPanelProps {
+interface HeaderControlPanelProps {
   // 基本設定
   currentMode: "memo" | "task" | "board";
   rightPanelMode: "hidden" | "view" | "create";
@@ -88,7 +88,7 @@ interface ControlPanelProps {
   hideAddButton?: boolean;
 }
 
-export default function ControlPanel({
+export default function HeaderControlPanel({
   currentMode,
   rightPanelMode,
   floatControls = false,
@@ -132,7 +132,7 @@ export default function ControlPanel({
   completedCount = 0,
   customTitle,
   hideAddButton = false,
-}: ControlPanelProps) {
+}: HeaderControlPanelProps) {
   // ViewSettingsContextから取得
   const { settings, updateSettings } = useViewSettings();
 

@@ -108,3 +108,19 @@ export function validatePanelToggle(
 
   return otherPanels.some((visible) => visible);
 }
+
+/**
+ * パネルの組み合わせキーを取得
+ * localStorage保存用のキーを生成
+ */
+export function getPanelCombinationKey(visibility: PanelVisibility): string {
+  const visiblePanels: string[] = [];
+  if (visibility.left) visiblePanels.push("left");
+  if (visibility.center) visiblePanels.push("center");
+  if (visibility.right) visiblePanels.push("right");
+
+  if (visiblePanels.length === 3) return "3panel";
+  if (visiblePanels.length === 2) return visiblePanels.join("-");
+  if (visiblePanels.length === 1) return visiblePanels[0] || "none";
+  return "none"; // 通常はありえない
+}

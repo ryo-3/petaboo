@@ -49,6 +49,7 @@ import {
   calculatePanelOrders,
   countVisiblePanels,
   calculatePanelSizes,
+  getPanelCombinationKey,
 } from "@/src/utils/panel-helpers";
 import {
   ResizablePanelGroup,
@@ -690,43 +691,52 @@ function BoardDetailScreen({
   const mountCountSelected = useRef(0);
   const mountCountUnselected = useRef(0);
 
-  // 選択時のパネル幅を取得（localStorageから復元）
-  const [panelSizesSelected, setPanelSizesSelected] = useState<{
-    left: number;
-    center: number;
-    right: number;
-  }>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("team-board-panel-sizes-selected");
-      if (saved) {
-        try {
-          return JSON.parse(saved);
-        } catch {
-          // パース失敗時はデフォルト値
-        }
-      }
-    }
-    return { left: 25, center: 45, right: 30 };
-  });
+  // パネル幅保存の型定義
+  type PanelSizesMap = {
+    [key: string]: { left: number; center: number; right: number };
+  };
 
-  // 非選択時のパネル幅を取得（localStorageから復元）
-  const [panelSizesUnselected, setPanelSizesUnselected] = useState<{
-    left: number;
-    center: number;
-    right: number;
-  }>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("team-board-panel-sizes-unselected");
-      if (saved) {
-        try {
-          return JSON.parse(saved);
-        } catch {
-          // パース失敗時はデフォルト値
+  // 選択時のパネル幅を取得（localStorageから復元、組み合わせごとに保存）
+  const [panelSizesSelectedMap, setPanelSizesSelectedMap] =
+    useState<PanelSizesMap>(() => {
+      if (typeof window !== "undefined") {
+        const saved = localStorage.getItem("team-board-panel-sizes-selected");
+        if (saved) {
+          try {
+            return JSON.parse(saved);
+          } catch {
+            // パース失敗時はデフォルト値
+          }
         }
       }
-    }
-    return { left: 33, center: 34, right: 33 };
-  });
+      return {
+        "3panel": { left: 25, center: 45, right: 30 },
+        "left-center": { left: 30, center: 70, right: 0 },
+        "left-right": { left: 30, center: 0, right: 70 },
+        "center-right": { left: 0, center: 40, right: 60 },
+      };
+    });
+
+  // 非選択時のパネル幅を取得（localStorageから復元、組み合わせごとに保存）
+  const [panelSizesUnselectedMap, setPanelSizesUnselectedMap] =
+    useState<PanelSizesMap>(() => {
+      if (typeof window !== "undefined") {
+        const saved = localStorage.getItem("team-board-panel-sizes-unselected");
+        if (saved) {
+          try {
+            return JSON.parse(saved);
+          } catch {
+            // パース失敗時はデフォルト値
+          }
+        }
+      }
+      return {
+        "3panel": { left: 33, center: 34, right: 33 },
+        "left-center": { left: 50, center: 50, right: 0 },
+        "left-right": { left: 40, center: 0, right: 60 },
+        "center-right": { left: 0, center: 50, right: 50 },
+      };
+    });
 
   // 選択状態が変わったらマウントカウントをリセット
   useEffect(() => {
@@ -740,62 +750,88 @@ function BoardDetailScreen({
   }, [selectedMemo, selectedTask]);
 
   // 選択時のパネルリサイズハンドラー
-  const handlePanelResizeSelected = useCallback((sizes: number[]) => {
-    mountCountSelected.current++;
-    if (mountCountSelected.current <= 1) {
-      return; // 初回マウント時はスキップ
-    }
-
-    if (
-      sizes.length === 3 &&
-      sizes[0] !== undefined &&
-      sizes[1] !== undefined &&
-      sizes[2] !== undefined
-    ) {
-      const newSizes = { left: sizes[0], center: sizes[1], right: sizes[2] };
-
-      if (resizeTimerSelected.current) {
-        clearTimeout(resizeTimerSelected.current);
+  const handlePanelResizeSelected = useCallback(
+    (sizes: number[]) => {
+      mountCountSelected.current++;
+      if (mountCountSelected.current <= 1) {
+        return; // 初回マウント時はスキップ
       }
 
-      resizeTimerSelected.current = setTimeout(() => {
-        setPanelSizesSelected(newSizes);
-        localStorage.setItem(
-          "team-board-panel-sizes-selected",
-          JSON.stringify(newSizes),
-        );
-      }, 500);
-    }
-  }, []);
+      // 2パネル以上の場合に保存（1パネルは常に100%なので保存不要）
+      if (sizes.length >= 2) {
+        // 現在のパネル表示状態からキーを取得
+        const combinationKey = getPanelCombinationKey({
+          left: showListPanel,
+          center: showDetailPanel,
+          right: showCommentPanel,
+        });
+
+        const newSizes = {
+          left: sizes[0] ?? 0,
+          center: sizes[1] ?? 0,
+          right: sizes[2] ?? 0,
+        };
+
+        if (resizeTimerSelected.current) {
+          clearTimeout(resizeTimerSelected.current);
+        }
+
+        resizeTimerSelected.current = setTimeout(() => {
+          setPanelSizesSelectedMap((prev) => {
+            const updated = { ...prev, [combinationKey]: newSizes };
+            localStorage.setItem(
+              "team-board-panel-sizes-selected",
+              JSON.stringify(updated),
+            );
+            return updated;
+          });
+        }, 500);
+      }
+    },
+    [showListPanel, showDetailPanel, showCommentPanel],
+  );
 
   // 非選択時のパネルリサイズハンドラー
-  const handlePanelResizeUnselected = useCallback((sizes: number[]) => {
-    mountCountUnselected.current++;
-    if (mountCountUnselected.current <= 1) {
-      return; // 初回マウント時はスキップ
-    }
-
-    if (
-      sizes.length === 3 &&
-      sizes[0] !== undefined &&
-      sizes[1] !== undefined &&
-      sizes[2] !== undefined
-    ) {
-      const newSizes = { left: sizes[0], center: sizes[1], right: sizes[2] };
-
-      if (resizeTimerUnselected.current) {
-        clearTimeout(resizeTimerUnselected.current);
+  const handlePanelResizeUnselected = useCallback(
+    (sizes: number[]) => {
+      mountCountUnselected.current++;
+      if (mountCountUnselected.current <= 1) {
+        return; // 初回マウント時はスキップ
       }
 
-      resizeTimerUnselected.current = setTimeout(() => {
-        setPanelSizesUnselected(newSizes);
-        localStorage.setItem(
-          "team-board-panel-sizes-unselected",
-          JSON.stringify(newSizes),
-        );
-      }, 500);
-    }
-  }, []);
+      // 2パネル以上の場合に保存（1パネルは常に100%なので保存不要）
+      if (sizes.length >= 2) {
+        // 現在のパネル表示状態からキーを取得
+        const combinationKey = getPanelCombinationKey({
+          left: showMemo,
+          center: showTask,
+          right: showComment,
+        });
+
+        const newSizes = {
+          left: sizes[0] ?? 0,
+          center: sizes[1] ?? 0,
+          right: sizes[2] ?? 0,
+        };
+
+        if (resizeTimerUnselected.current) {
+          clearTimeout(resizeTimerUnselected.current);
+        }
+
+        resizeTimerUnselected.current = setTimeout(() => {
+          setPanelSizesUnselectedMap((prev) => {
+            const updated = { ...prev, [combinationKey]: newSizes };
+            localStorage.setItem(
+              "team-board-panel-sizes-unselected",
+              JSON.stringify(updated),
+            );
+            return updated;
+          });
+        }, 500);
+      }
+    },
+    [showMemo, showTask, showComment],
+  );
 
   // 安全なデータ配布用（初期レンダリング時のundefined対策）
   const safeAllTaggings = allTaggings || [];
@@ -986,9 +1022,16 @@ function BoardDetailScreen({
                     } = orders;
 
                     // パネルサイズの計算（localStorageから復元、または固定値）
+                    const combinationKey = getPanelCombinationKey(visibility);
+                    const savedSizes = panelSizesSelectedMap[combinationKey] ||
+                      panelSizesSelectedMap["3panel"] || {
+                        left: 25,
+                        center: 45,
+                        right: 30,
+                      };
                     const calculatedSizes = calculatePanelSizes(
                       visiblePanels,
-                      panelSizesSelected,
+                      savedSizes,
                       orders,
                     );
                     const sizes = {
@@ -1888,10 +1931,19 @@ function BoardDetailScreen({
                     // 最小サイズは常に25%
                     const minPanelSize = 25;
 
-                    // パネルサイズを計算（3パネル時はlocalStorageから復元、2パネル時は固定値）
+                    // パネルサイズを計算（localStorageから復元、または固定値）
+                    const combinationKey = getPanelCombinationKey(visibility);
+                    const savedSizes = panelSizesUnselectedMap[
+                      combinationKey
+                    ] ||
+                      panelSizesUnselectedMap["3panel"] || {
+                        left: 33,
+                        center: 34,
+                        right: 33,
+                      };
                     const calculatedSizes = calculatePanelSizes(
                       visiblePanels,
-                      panelSizesUnselected,
+                      savedSizes,
                       orders,
                     );
                     const getPanelSize = (order: number) => {

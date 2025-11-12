@@ -891,12 +891,12 @@ function BoardDetailScreen({
         className={`${
           teamMode
             ? rightPanelMode
-              ? "w-[44%] border-r border-gray-300 overflow-hidden" // チームモード：メモ/タスク一覧表示時は2パネル
+              ? "w-[44%] border-r border-gray-300" // チームモード：メモ/タスク一覧表示時は2パネル
               : "w-full" // チームモード：通常時は3パネルレイアウトで制御
             : selectedMemo || selectedTask || rightPanelMode
               ? rightPanelMode
-                ? "w-[44%] border-r border-gray-300 overflow-hidden" // 個人モード：リスト表示時
-                : "w-[44%] border-r border-gray-300 overflow-hidden" // 個人モード：エディター表示時
+                ? "w-[44%] border-r border-gray-300" // 個人モード：リスト表示時
+                : "w-[44%] border-r border-gray-300" // 個人モード：エディター表示時
               : "w-full"
         } pl-2 pr-0 md:pl-5 md:pr-4 ${selectedMemo || selectedTask || rightPanelMode ? "md:pr-2" : "md:pr-4"} flex flex-col ${teamMode ? "" : "transition-all duration-300"} relative`}
       >

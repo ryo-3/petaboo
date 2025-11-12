@@ -1150,10 +1150,7 @@ function TaskEditor({
 
   return (
     <>
-      <div
-        data-task-editor
-        className="flex flex-col h-full relative overflow-x-hidden"
-      >
+      <div data-task-editor className="flex flex-col h-full relative">
         {/* 固定ヘッダー部分 */}
         <div
           className={`flex-shrink-0 pt-2 md:relative fixed top-0 left-0 right-0 z-50 bg-white ${isInLeftPanel ? "" : "pl-2"}`}
@@ -1515,7 +1512,7 @@ function TaskEditor({
         </div>
 
         {/* スクロール可能なコンテンツ部分 */}
-        <div className="flex-1 min-h-0 overflow-y-auto md:pt-0 pt-[130px]">
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden md:pt-0 pt-[130px]">
           <div
             className={`relative h-full rounded-lg border border-transparent transition-colors ${
               isDragActive ? "border-dashed border-blue-400 bg-blue-50/40" : ""

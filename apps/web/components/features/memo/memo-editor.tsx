@@ -1217,7 +1217,7 @@ function MemoEditor({
       <div
         ref={baseViewerRef}
         data-memo-editor
-        className="flex flex-col h-full overflow-x-hidden"
+        className="flex flex-col h-full"
       >
         {/* 固定ヘッダー部分 */}
         <div
@@ -1446,7 +1446,7 @@ function MemoEditor({
         </div>
 
         {/* スクロール可能なコンテンツ部分 */}
-        <div className="flex-1 min-h-0 overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
           <div
             className={`relative h-full rounded-lg border border-transparent transition-colors ${
               isDragActive ? "border-dashed border-blue-400 bg-blue-50/40" : ""

@@ -58,12 +58,8 @@ export function calculatePanelSizes(
   }
 
   if (visibleCount === 2) {
-    // 2パネル時は固定値（左30%、右70%）
-    return {
-      left: orders.left === 1 ? 30 : orders.left === 2 ? 70 : 0,
-      center: orders.center === 1 ? 30 : orders.center === 2 ? 70 : 0,
-      right: orders.right === 1 ? 30 : orders.right === 2 ? 70 : 0,
-    };
+    // 2パネル時も保存された値を使用
+    return savedSizes;
   }
 
   // 1パネル時は100%

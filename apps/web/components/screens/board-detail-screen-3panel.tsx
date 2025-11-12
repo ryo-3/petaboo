@@ -777,8 +777,11 @@ function BoardDetailScreen({
         }
 
         resizeTimerSelected.current = setTimeout(() => {
+          console.log("[選択時リサイズ] 組み合わせキー:", combinationKey);
+          console.log("[選択時リサイズ] 保存する幅:", newSizes);
           setPanelSizesSelectedMap((prev) => {
             const updated = { ...prev, [combinationKey]: newSizes };
+            console.log("[選択時リサイズ] 更新後のMap:", updated);
             localStorage.setItem(
               "team-board-panel-sizes-selected",
               JSON.stringify(updated),
@@ -819,8 +822,11 @@ function BoardDetailScreen({
         }
 
         resizeTimerUnselected.current = setTimeout(() => {
+          console.log("[非選択時リサイズ] 組み合わせキー:", combinationKey);
+          console.log("[非選択時リサイズ] 保存する幅:", newSizes);
           setPanelSizesUnselectedMap((prev) => {
             const updated = { ...prev, [combinationKey]: newSizes };
+            console.log("[非選択時リサイズ] 更新後のMap:", updated);
             localStorage.setItem(
               "team-board-panel-sizes-unselected",
               JSON.stringify(updated),
@@ -1039,6 +1045,19 @@ function BoardDetailScreen({
                       detail: calculatedSizes.center,
                       comment: calculatedSizes.right,
                     };
+
+                    // デバッグログ
+                    console.log("[選択時パネル] 表示状態:", visibility);
+                    console.log(
+                      "[選択時パネル] 組み合わせキー:",
+                      combinationKey,
+                    );
+                    console.log(
+                      "[選択時パネル] 保存済みMap:",
+                      panelSizesSelectedMap,
+                    );
+                    console.log("[選択時パネル] 使用する幅:", savedSizes);
+                    console.log("[選択時パネル] 計算後の幅:", sizes);
 
                     // スマホ時: 1パネルずつ排他的に表示
                     if (!isDesktop) {
@@ -1954,6 +1973,22 @@ function BoardDetailScreen({
                         return calculatedSizes.right;
                       return 100;
                     };
+
+                    // デバッグログ
+                    console.log("[非選択時パネル] 表示状態:", visibility);
+                    console.log(
+                      "[非選択時パネル] 組み合わせキー:",
+                      combinationKey,
+                    );
+                    console.log(
+                      "[非選択時パネル] 保存済みMap:",
+                      panelSizesUnselectedMap,
+                    );
+                    console.log("[非選択時パネル] 使用する幅:", savedSizes);
+                    console.log(
+                      "[非選択時パネル] 計算後の幅:",
+                      calculatedSizes,
+                    );
 
                     // スマホ時: 1パネルずつ排他的に表示
                     if (!isDesktop) {

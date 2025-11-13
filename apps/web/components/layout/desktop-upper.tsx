@@ -72,6 +72,8 @@ interface DesktopUpperProps {
   hideControls?: boolean;
   // Float controls (position absolute)
   floatControls?: boolean;
+  // Hide tabs (for center/right panel usage)
+  hideTabs?: boolean;
 }
 
 function DesktopUpper({
@@ -119,6 +121,7 @@ function DesktopUpper({
   teamId,
   hideControls = false,
   floatControls = false,
+  hideTabs = false,
 }: DesktopUpperProps) {
   const { preferences } = useUserPreferences(1);
   const { settings, sessionState, updateSettings, updateSessionState } =
@@ -266,7 +269,7 @@ function DesktopUpper({
     <div className={`flex justify-between items-center ${headerMarginBottom}`}>
       <div className="flex items-center gap-2">
         {/* タブ（boardモード以外） */}
-        {currentMode !== "board" && (
+        {!hideTabs && currentMode !== "board" && (
           <div className="flex items-center gap-2">
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id;
@@ -359,7 +362,7 @@ function DesktopUpper({
       className={`fixed md:static top-0 left-0 right-0 z-10 bg-white px-2 md:px-0 ${marginBottom}`}
     >
       {!hideControls && controlsContent}
-      {headerContent}
+      {!hideTabs && headerContent}
     </div>
   );
 }

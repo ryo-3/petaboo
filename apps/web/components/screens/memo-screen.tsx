@@ -49,6 +49,7 @@ import {
 } from "@/src/utils/domUtils";
 import { useMemoDeleteWithNextSelection } from "@/src/hooks/use-memo-delete-with-next-selection";
 import { createToggleHandler } from "@/src/utils/toggleUtils";
+import { validatePanelToggle } from "@/src/utils/panel-helpers";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ControlPanelLayout } from "@/components/layout/control-panel-layout";
 import CommentSection from "@/components/features/comments/comment-section";
@@ -336,6 +337,98 @@ function MemoScreen({
     preferences || undefined,
   );
   const memoScreenMode = screenMode as MemoScreenMode;
+
+  const getInitialPanelState = (
+    key: "showListPanel" | "showDetailPanel" | "showCommentPanel",
+  ) => {
+    if (typeof window !== "undefined" && teamMode) {
+      const saved = localStorage.getItem("team-memo-panel-visibility");
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (typeof parsed[key] === "boolean") {
+            return parsed[key] as boolean;
+          }
+        } catch {
+          // ignore parse errors
+        }
+      }
+    }
+    return true;
+  };
+
+  const [showListPanel, setShowListPanel] = useState<boolean>(() =>
+    getInitialPanelState("showListPanel"),
+  );
+  const [showDetailPanel, setShowDetailPanel] = useState<boolean>(() =>
+    getInitialPanelState("showDetailPanel"),
+  );
+  const [showCommentPanel, setShowCommentPanel] = useState<boolean>(() =>
+    getInitialPanelState("showCommentPanel"),
+  );
+
+  useEffect(() => {
+    if (!teamMode || typeof window === "undefined") {
+      return;
+    }
+
+    localStorage.setItem(
+      "team-memo-panel-visibility",
+      JSON.stringify({
+        showListPanel,
+        showDetailPanel,
+        showCommentPanel,
+      }),
+    );
+  }, [showListPanel, showDetailPanel, showCommentPanel, teamMode]);
+
+  const handleListPanelToggle = useCallback(() => {
+    setShowListPanel((prev) => {
+      const newValue = !prev;
+      if (
+        !validatePanelToggle(
+          { left: prev, center: showDetailPanel, right: showCommentPanel },
+          "left",
+          newValue,
+        )
+      ) {
+        return prev;
+      }
+      return newValue;
+    });
+  }, [showDetailPanel, showCommentPanel]);
+
+  const handleDetailPanelToggle = useCallback(() => {
+    setShowDetailPanel((prev) => {
+      const newValue = !prev;
+      if (
+        !validatePanelToggle(
+          { left: showListPanel, center: prev, right: showCommentPanel },
+          "center",
+          newValue,
+        )
+      ) {
+        return prev;
+      }
+      return newValue;
+    });
+  }, [showListPanel, showCommentPanel]);
+
+  const handleCommentPanelToggle = useCallback(() => {
+    setShowCommentPanel((prev) => {
+      const newValue = !prev;
+      if (
+        !validatePanelToggle(
+          { left: showListPanel, center: showDetailPanel, right: prev },
+          "right",
+          newValue,
+        )
+      ) {
+        return prev;
+      }
+      return newValue;
+    });
+  }, [showListPanel, showDetailPanel]);
 
   // 選択状態管理（useMultiSelectionに統一）
   const {
@@ -742,32 +835,54 @@ function MemoScreen({
       (memo) => !excludeItemIds.includes(memo.originalId || memo.id.toString()),
     ) || [];
 
+  const shouldShowPanelControls = teamMode && memoScreenMode !== "list";
+
+  const desktopUpperCommonProps = {
+    currentMode: "memo" as const,
+    activeTab: displayTab as "normal" | "deleted",
+    onTabChange: handleCustomTabChange,
+    onCreateNew: handleCreateNew,
+    rightPanelMode: (memoScreenMode === "list" ? "hidden" : "view") as
+      | "hidden"
+      | "view"
+      | "create",
+    selectionMode,
+    onSelectionModeChange: handleSelectionModeChange,
+    onSelectAll: handleSelectAll,
+    isAllSelected,
+    hideControls: false,
+    floatControls: true,
+    normalCount: memos?.length || 0,
+    deletedMemosCount: deletedMemos?.length || 0,
+    hideAddButton: hideHeaderButtons,
+    onCsvImport: () => setIsCsvImportModalOpen(true),
+    teamMode,
+    teamId,
+    marginBottom: "",
+    headerMarginBottom: "mb-1.5",
+    isSelectedMode: shouldShowPanelControls,
+    ...(shouldShowPanelControls
+      ? {
+          showMemo: showListPanel,
+          showTask: showDetailPanel,
+          showComment: showCommentPanel,
+          onMemoToggle: handleListPanelToggle,
+          onTaskToggle: handleDetailPanelToggle,
+          onCommentToggle: handleCommentPanelToggle,
+          contentFilterRightPanelMode: "editor" as const,
+          listTooltip: "メモ一覧パネル",
+          detailTooltip: "メモ詳細パネル",
+          selectedItemType: "memo" as const,
+        }
+      : {}),
+  };
+
   // 左パネルのコンテンツ
   const leftPanelContent = (
     <div
       className={`${hideHeaderButtons ? "pt-2 md:pt-3" : "pt-2 md:pt-3 pl-2 md:pl-5 md:pr-2"} flex flex-col h-full relative`}
     >
-      <DesktopUpper
-        currentMode="memo"
-        activeTab={displayTab as "normal" | "deleted"}
-        onTabChange={handleCustomTabChange}
-        onCreateNew={handleCreateNew}
-        rightPanelMode={memoScreenMode === "list" ? "hidden" : "view"}
-        selectionMode={selectionMode}
-        onSelectionModeChange={handleSelectionModeChange}
-        onSelectAll={handleSelectAll}
-        isAllSelected={isAllSelected}
-        hideControls={false}
-        floatControls={true}
-        normalCount={memos?.length || 0}
-        deletedMemosCount={deletedMemos?.length || 0}
-        hideAddButton={hideHeaderButtons}
-        onCsvImport={() => setIsCsvImportModalOpen(true)}
-        teamMode={teamMode}
-        teamId={teamId}
-        marginBottom=""
-        headerMarginBottom="mb-1.5"
-      />
+      <DesktopUpper {...desktopUpperCommonProps} />
 
       <DesktopLower
         currentMode="memo"
@@ -888,6 +1003,10 @@ function MemoScreen({
   // 中央パネルのコンテンツ（エディター部分）
   const centerPanelContent = (
     <>
+      {/* 左パネル非表示時は中央にヘッダーを表示 */}
+      {shouldShowPanelControls && !showListPanel && (
+        <DesktopUpper {...desktopUpperCommonProps} hideTabs={true} />
+      )}
       {/* 新規作成モード */}
       {memoScreenMode === "create" && (
         <MemoEditor
@@ -997,14 +1116,22 @@ function MemoScreen({
 
   // 右パネルのコンテンツ（チームモードのみコメント表示）
   const rightPanelContent =
-    teamMode && memoScreenMode !== "create" && selectedMemo ? (
-      <CommentSection
-        targetType="memo"
-        targetOriginalId={OriginalIdUtils.fromItem(selectedMemo) || ""}
-        teamId={teamId || 0}
-        title="コメント"
-        placeholder="コメントを入力..."
-      />
+    teamMode &&
+    memoScreenMode !== "create" &&
+    selectedMemo &&
+    showCommentPanel ? (
+      <>
+        {shouldShowPanelControls && !showListPanel && !showDetailPanel && (
+          <DesktopUpper {...desktopUpperCommonProps} hideTabs={true} />
+        )}
+        <CommentSection
+          targetType="memo"
+          targetOriginalId={OriginalIdUtils.fromItem(selectedMemo) || ""}
+          teamId={teamId || 0}
+          title="コメント"
+          placeholder="コメントを入力..."
+        />
+      </>
     ) : null;
 
   return (
@@ -1032,6 +1159,15 @@ function MemoScreen({
             }
             skipInitialSave={true}
             stateKey={selectedMemo?.originalId || "none"}
+            visibility={
+              teamMode
+                ? {
+                    left: showListPanel,
+                    center: showDetailPanel,
+                    right: showCommentPanel,
+                  }
+                : undefined
+            }
           />
         )}
       </div>

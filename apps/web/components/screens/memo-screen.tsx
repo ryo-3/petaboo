@@ -1002,7 +1002,7 @@ function MemoScreen({
 
   // 中央パネルのコンテンツ（エディター部分）
   const centerPanelContent = (
-    <>
+    <div className={shouldShowPanelControls && !showListPanel ? "pl-2" : ""}>
       {/* 左パネル非表示時は中央にヘッダーを表示 */}
       {shouldShowPanelControls && !showListPanel && (
         <DesktopUpper {...desktopUpperCommonProps} hideTabs={true} />
@@ -1111,7 +1111,7 @@ function MemoScreen({
           unifiedOperations={operations}
         />
       )}
-    </>
+    </div>
   );
 
   // 右パネルのコンテンツ（チームモードのみコメント表示）

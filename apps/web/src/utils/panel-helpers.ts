@@ -71,21 +71,6 @@ export function calculatePanelSizes(
 }
 
 /**
- * orderに基づいてパネルサイズを取得
- * ResizablePanelのdefaultSizeに渡す値を計算
- */
-export function getPanelSizeByOrder(
-  order: number,
-  sizes: PanelSizes,
-  orders: PanelOrders,
-): number {
-  if (order === orders.left) return sizes.left;
-  if (order === orders.center) return sizes.center;
-  if (order === orders.right) return sizes.right;
-  return 0;
-}
-
-/**
  * パネル切り替え時のバリデーション
  * 最低1つのパネルは表示されている必要がある
  */

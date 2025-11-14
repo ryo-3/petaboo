@@ -1971,13 +1971,10 @@ function BoardDetailScreen({
                       savedSizes,
                       orders,
                     );
-                    const getPanelSize = (order: number) => {
-                      if (order === memoPanelOrder) return calculatedSizes.left;
-                      if (order === taskPanelOrder)
-                        return calculatedSizes.center;
-                      if (order === commentPanelOrder)
-                        return calculatedSizes.right;
-                      return 100;
+                    const sizes = {
+                      memo: calculatedSizes.left,
+                      task: calculatedSizes.center,
+                      comment: calculatedSizes.right,
                     };
 
                     // デバッグログ
@@ -2208,7 +2205,7 @@ function BoardDetailScreen({
                             <ResizablePanel
                               id="unselected-memo"
                               order={memoPanelOrder}
-                              defaultSize={getPanelSize(memoPanelOrder)}
+                              defaultSize={sizes.memo}
                               minSize={minPanelSize}
                               className="rounded-lg bg-white flex flex-col min-h-0 border-r border-gray-200"
                             >
@@ -2310,7 +2307,7 @@ function BoardDetailScreen({
                             <ResizablePanel
                               id="unselected-task"
                               order={taskPanelOrder}
-                              defaultSize={getPanelSize(taskPanelOrder)}
+                              defaultSize={sizes.task}
                               minSize={minPanelSize}
                               className="rounded-lg bg-white flex flex-col min-h-0 border-r border-gray-200"
                             >
@@ -2423,7 +2420,7 @@ function BoardDetailScreen({
                           <ResizablePanel
                             id="unselected-comment"
                             order={commentPanelOrder}
-                            defaultSize={getPanelSize(commentPanelOrder)}
+                            defaultSize={sizes.comment}
                             minSize={minPanelSize}
                             className="rounded-lg bg-white pr-2 flex flex-col min-h-0"
                           >

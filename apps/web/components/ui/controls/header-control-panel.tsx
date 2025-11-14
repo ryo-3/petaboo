@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import ColumnCountSelector from "@/components/ui/layout/column-count-selector";
 import SelectionModeToggle from "@/components/ui/buttons/selection-mode-toggle";
 import BoardLayoutToggle from "@/components/ui/controls/board-layout-toggle";
@@ -154,28 +154,7 @@ export default function HeaderControlPanel({
     }
   };
 
-  const controlRef = useRef<HTMLDivElement>(null);
   const [isInitialRender, setIsInitialRender] = useState(true);
-  const [windowWidth, setWindowWidth] = useState(
-    typeof window !== "undefined" ? window.innerWidth : 0,
-  );
-  const [controlWidth, setControlWidth] = useState(0);
-
-  // コントロールパネルの位置管理
-  const [controlPosition, setControlPosition] = useState<
-    "left" | "center" | "right"
-  >(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("control-panel-position");
-      if (
-        saved &&
-        (saved === "left" || saved === "center" || saved === "right")
-      ) {
-        return saved;
-      }
-    }
-    return "right";
-  });
 
   // 初回レンダリング後にアニメーションを有効化
   useEffect(() => {
@@ -185,121 +164,21 @@ export default function HeaderControlPanel({
     return () => clearTimeout(timer);
   }, []);
 
-  // コントロールパネルの幅を確実に取得
-  useEffect(() => {
-    if (!floatControls || !controlRef.current) return;
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const width = entry.contentRect.width;
-        if (width > 0) {
-          setControlWidth(width);
-        }
-      }
-    });
-
-    resizeObserver.observe(controlRef.current);
-
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, [floatControls]);
-
-  // リサイズ対応
-  useEffect(() => {
-    if (typeof window === "undefined" || !floatControls) return;
-
-    const handleResize = () => {
-      setWindowWidth(window.innerWidth);
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [floatControls]);
-
-  // 位置から座標を計算
-  const pixelPosition = useMemo(() => {
-    if (typeof window === "undefined") return { x: 0, y: 0 };
-
-    const headerHeight = 64;
-    const controlHeight = 28;
-    const y = (headerHeight - controlHeight) / 2;
-    let x = 0;
-
-    if (controlWidth === 0) {
-      return { x: -9999, y };
-    }
-
-    switch (controlPosition) {
-      case "left":
-        x = 220;
-        break;
-      case "center":
-        x = windowWidth / 2 - controlWidth / 2;
-        break;
-      case "right":
-        x = Math.max(0, windowWidth - controlWidth - 128);
-        break;
-    }
-
-    return { x, y };
-  }, [controlPosition, windowWidth, controlWidth]);
-
-  // 位置切り替え
-  const togglePosition = () => {
-    if (!floatControls) return;
-
-    const nextPosition =
-      controlPosition === "left"
-        ? "center"
-        : controlPosition === "center"
-          ? "right"
-          : "left";
-
-    setControlPosition(nextPosition);
-    localStorage.setItem("control-panel-position", nextPosition);
-  };
-
   if (hideControls) return null;
 
   return (
     <>
       <div
-        ref={floatControls ? controlRef : null}
-        className={`flex items-center gap-2 h-7 ${floatControls ? `md:fixed z-20 md:bg-white/95 md:backdrop-blur-sm md:px-3 md:py-1.5 md:rounded-lg ${!isInitialRender ? "md:transition-all md:duration-300" : ""} mb-1.5` : "mb-1.5"}`}
-        style={
+        className={`flex items-center gap-2 h-7 mb-1.5 ${
           floatControls
-            ? {
-                left: `${pixelPosition.x}px`,
-                top: `${pixelPosition.y}px`,
-              }
-            : undefined
-        }
+            ? `md:fixed md:top-[18px] md:right-[128px] md:left-auto z-20 md:bg-white/95 md:backdrop-blur-sm md:px-3 md:py-1.5 md:rounded-lg ${!isInitialRender ? "md:transition-all md:duration-300" : ""}`
+            : ""
+        }`}
       >
-        {/* 位置切り替えハンドル */}
-        {floatControls && (
-          <button
-            onClick={togglePosition}
-            className="hidden md:flex items-center mr-1 opacity-40 hover:opacity-70 transition-opacity cursor-pointer"
-          >
-            <div className="flex items-center gap-0.5">
-              <div
-                className={`${controlPosition === "left" ? "w-1.5 h-1.5 bg-gray-800" : "w-1 h-1 bg-gray-500"} rounded-full transition-all`}
-              ></div>
-              <div
-                className={`${controlPosition === "center" ? "w-1.5 h-1.5 bg-gray-800" : "w-1 h-1 bg-gray-500"} rounded-full transition-all`}
-              ></div>
-              <div
-                className={`${controlPosition === "right" ? "w-1.5 h-1.5 bg-gray-800" : "w-1 h-1 bg-gray-500"} rounded-full transition-all`}
-              ></div>
-            </div>
-          </button>
-        )}
-
         {/* モバイル用ボード名表示 */}
         {customTitle && (
           <div className="md:hidden flex-shrink-0 mr-2">
-            <h2 className="text-sm font-bold text-gray-800 truncate max-w-[120px]">
+            <h2 className="text-sm font-bold text-gray-800 truncate max-w-[180px]">
               {customTitle}
             </h2>
           </div>

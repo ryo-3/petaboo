@@ -122,12 +122,12 @@ const BoardWithStatsSchema = BoardSchema.extend({
 });
 
 const CreateBoardSchema = z.object({
-  name: z.string().min(1).max(100),
+  name: z.string().min(1).max(50),
   description: z.string().optional(),
 });
 
 const UpdateBoardSchema = z.object({
-  name: z.string().min(1).max(100).optional(),
+  name: z.string().min(1).max(50).optional(),
   description: z.string().optional(),
 });
 

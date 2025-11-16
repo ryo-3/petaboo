@@ -106,12 +106,12 @@ function NotificationList({
   // 通知がない場合（実際に通知データが存在しない場合のみ）
   if (!hasTeamNotifications && !hasCommentNotifications) {
     return (
-      <div className={`bg-white rounded-lg border p-4 ${className}`}>
-        <div className="flex items-center gap-3 mb-3">
+      <div className={`bg-white rounded-lg border p-3 md:p-4 ${className}`}>
+        <div className="hidden md:flex items-center gap-3 mb-3">
           <Bell className="w-5 h-5 text-gray-500" />
           <h2 className="text-lg font-bold text-gray-800">通知</h2>
         </div>
-        <div className="text-center py-6">
+        <div className="text-center py-8 md:py-6">
           <Bell className="w-10 h-10 text-gray-300 mx-auto mb-2" />
           <p className="text-sm text-gray-500">現在、新しい通知はありません</p>
         </div>
@@ -123,7 +123,7 @@ function NotificationList({
     <div
       className={`bg-white rounded-lg border flex flex-col ${maxHeight} ${className}`}
     >
-      <div className="flex items-center justify-between p-4 pb-3 flex-shrink-0">
+      <div className="hidden md:flex items-center justify-between p-4 pb-3 flex-shrink-0">
         <div className="flex items-center gap-3">
           <Bell className="w-5 h-5 text-blue-600" />
           <h2 className="text-lg font-bold text-gray-800">通知</h2>
@@ -135,7 +135,7 @@ function NotificationList({
         </div>
       </div>
 
-      <div className="px-4 pb-4 overflow-y-auto flex-1">
+      <div className="px-3 md:px-4 pb-3 md:pb-4 overflow-y-auto flex-1">
         <div className="space-y-2">
           {/* コメント通知 */}
           {commentNotifications &&

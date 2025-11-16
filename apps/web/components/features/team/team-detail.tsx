@@ -319,6 +319,11 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     | "search"
   >(getTabFromURL());
 
+  // モバイル用：通知/アクティビティの切り替え
+  const [mobileOverviewTab, setMobileOverviewTab] = useState<
+    "notifications" | "activity"
+  >("notifications");
+
   // 初回レンダリング時に Context を同期
   useEffect(() => {
     const initialTab = getTabFromURL();
@@ -1005,22 +1010,95 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                 </div>
               ) : (
                 /* ダッシュボード表示 */
-                <div className="flex-1 flex gap-4 overflow-hidden">
-                  {/* 統合通知一覧（コメント + 参加申請） - 左側50% */}
-                  <div className="flex-1">
-                    <NotificationList teamName={customUrl} maxHeight="h-full" />
+                <>
+                  {/* モバイル用タブ切り替え */}
+                  <div className="md:hidden mb-3 flex gap-2 border-b border-gray-200">
+                    <button
+                      onClick={() => setMobileOverviewTab("notifications")}
+                      className="flex-1 py-2.5 text-sm font-medium text-gray-800 transition-colors relative flex items-center justify-center gap-2"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="w-4 h-4"
+                      >
+                        <path d="M10.268 21a2 2 0 0 0 3.464 0"></path>
+                        <path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"></path>
+                      </svg>
+                      通知
+                      {mobileOverviewTab === "notifications" && (
+                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setMobileOverviewTab("activity")}
+                      className="flex-1 py-2.5 text-sm font-medium text-gray-800 transition-colors relative flex items-center justify-center gap-2"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="w-4 h-4"
+                      >
+                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                      </svg>
+                      アクティビティ
+                      {mobileOverviewTab === "activity" && (
+                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />
+                      )}
+                    </button>
                   </div>
 
-                  {/* アクティビティフィード - 右側50% */}
-                  <Card className="flex-1 flex flex-col overflow-hidden">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3 flex-shrink-0 px-4 pt-4">
-                      アクティビティ
-                    </h3>
-                    <div className="flex-1 overflow-y-auto px-4 pb-4">
-                      <ActivityFeed customUrl={customUrl} limit={10} />
+                  {/* モバイル：選択されたタブのみ表示 */}
+                  <div className="flex-1 md:hidden overflow-hidden">
+                    {mobileOverviewTab === "notifications" ? (
+                      <NotificationList
+                        teamName={customUrl}
+                        maxHeight="h-full"
+                      />
+                    ) : (
+                      <Card className="h-full flex flex-col overflow-hidden">
+                        <div className="flex-1 overflow-y-auto px-3 py-3">
+                          <ActivityFeed customUrl={customUrl} limit={20} />
+                        </div>
+                      </Card>
+                    )}
+                  </div>
+
+                  {/* デスクトップ：両方表示 */}
+                  <div className="hidden md:flex flex-1 gap-4 overflow-hidden">
+                    {/* 統合通知一覧（コメント + 参加申請） - 左側50% */}
+                    <div className="flex-1">
+                      <NotificationList
+                        teamName={customUrl}
+                        maxHeight="h-full"
+                      />
                     </div>
-                  </Card>
-                </div>
+
+                    {/* アクティビティフィード - 右側50% */}
+                    <Card className="flex-1 flex flex-col overflow-hidden">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3 flex-shrink-0 px-4 pt-4">
+                        アクティビティ
+                      </h3>
+                      <div className="flex-1 overflow-y-auto px-4 pb-4">
+                        <ActivityFeed customUrl={customUrl} limit={10} />
+                      </div>
+                    </Card>
+                  </div>
+                </>
               )}
             </div>
           )}

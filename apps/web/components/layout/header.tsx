@@ -272,19 +272,7 @@ function Header() {
           {/* タイトルとキャッチコピー */}
           <div className="flex items-center gap-1 md:gap-3">
             <div className="flex items-center gap-1 md:gap-3">
-              <h1
-                className={`text-sm md:text-xl font-bold text-gray-800 tracking-wide ${
-                  isMemoListPage ||
-                  isTaskListPage ||
-                  isBoardListPage ||
-                  isTeamMemoListPage ||
-                  isTeamTaskListPage ||
-                  isTeamBoardListPage ||
-                  (isTeamBoardPage && boardTitle)
-                    ? "w-[95px] truncate"
-                    : ""
-                }`}
-              >
+              <h1 className="text-sm md:text-xl font-bold text-gray-800 tracking-wide">
                 {isTeamBoardPage && boardTitle
                   ? boardTitle
                   : isBoardListPage || isTeamBoardListPage

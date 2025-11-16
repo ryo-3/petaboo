@@ -1076,7 +1076,7 @@ function BoardDetailScreen({
                 ? "w-[44%] border-r border-gray-300" // 個人モード：リスト表示時
                 : "w-[44%] border-r border-gray-300" // 個人モード：エディター表示時
               : "w-full"
-        } pl-2 pr-0 md:pl-5 md:pr-4 ${selectedMemo || selectedTask || rightPanelMode ? "md:pr-2" : "md:pr-4"} flex flex-col ${teamMode ? "" : "transition-all duration-300"} relative`}
+        } flex flex-col ${teamMode ? "" : "transition-all duration-300"} relative`}
       >
         {/* メモ・タスクコンテンツ - チームモードでは動的3パネル構成 */}
         <div
@@ -1773,7 +1773,7 @@ function BoardDetailScreen({
                             order={commentOrder}
                             defaultSize={sizes.comment}
                             minSize={25}
-                            className="rounded-lg bg-white pr-2 flex flex-col min-h-0"
+                            className="rounded-lg bg-white flex flex-col min-h-0"
                           >
                             {!showListPanel && !showDetailPanel && <div></div>}
 
@@ -1886,7 +1886,7 @@ function BoardDetailScreen({
                           )}
                           {/* メモ表示時 */}
                           {showMemo && (
-                            <div className="flex flex-col h-full relative pt-2">
+                            <div className="flex flex-col h-full relative">
                               <BoardMemoSection
                                 rightPanelMode={rightPanelMode}
                                 showMemo={showMemo}
@@ -1930,7 +1930,7 @@ function BoardDetailScreen({
                           )}
                           {/* タスク表示時 */}
                           {showTask && !showMemo && (
-                            <div className="flex flex-col h-full relative pt-2">
+                            <div className="flex flex-col h-full relative">
                               <BoardTaskSection
                                 boardId={boardId}
                                 rightPanelMode={rightPanelMode}
@@ -2117,7 +2117,7 @@ function BoardDetailScreen({
                             order={commentPanelOrder}
                             defaultSize={sizes.comment}
                             minSize={minPanelSize}
-                            className="rounded-lg bg-white pr-2 flex flex-col min-h-0"
+                            className="rounded-lg bg-white flex flex-col min-h-0"
                           >
                             {/* コメントのみ表示時はヘッダーを追加 */}
                             {!showMemo && !showTask && <div></div>}

@@ -51,11 +51,9 @@ export function useAuthenticatedImage(imageUrl: string | undefined) {
     // クリーンアップ
     return () => {
       isMounted = false;
-      if (blobUrl) {
-        URL.revokeObjectURL(blobUrl);
-      }
     };
-  }, [imageUrl, getToken]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [imageUrl]);
 
   return { blobUrl, isLoading };
 }

@@ -94,7 +94,7 @@ function MobileAttachmentView({
 
   return (
     <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-      <div className="pl-2 pr-2 pt-2 pb-2 border-b border-gray-200 flex items-center justify-between">
+      <div className="border-b border-gray-200 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-semibold">画像・ファイル</h2>
           {attachments.length > 0 && (
@@ -950,9 +950,7 @@ function MemoScreen({
 
   // 左パネルのコンテンツ
   const leftPanelContent = (
-    <div
-      className={`${hideHeaderButtons ? "pt-2 md:pt-3" : "pt-2 md:pt-3 pl-2 md:pl-5 md:pr-2"} flex flex-col h-full relative`}
-    >
+    <div className="flex flex-col h-full relative">
       <DesktopUpper {...desktopUpperCommonProps} />
 
       <DesktopLower
@@ -1073,7 +1071,7 @@ function MemoScreen({
 
   // 中央パネルのコンテンツ（エディター部分）
   const centerPanelContent = (
-    <div className={shouldShowPanelControls && !showListPanel ? "pl-2" : ""}>
+    <div>
       {/* 左パネル非表示時は中央にヘッダーを表示 */}
       {shouldShowPanelControls && !showListPanel && (
         <DesktopUpper {...desktopUpperCommonProps} hideTabs={true} />
@@ -1251,7 +1249,7 @@ function MemoScreen({
         memoScreenMode !== "create" ? (
           <>
             {/* ツールバーを固定位置に配置 */}
-            <div className="fixed top-0 left-0 right-0 z-20 bg-white px-2">
+            <div className="fixed top-0 left-0 right-0 z-20 bg-white">
               <DesktopUpper
                 currentMode="memo"
                 activeTab={displayTab as "normal" | "deleted"}
@@ -1265,7 +1263,7 @@ function MemoScreen({
               />
             </div>
             {/* スクロール可能なコンテンツ（ツールバーの高さ分 padding-top を追加） */}
-            <div className="overflow-y-auto overscroll-contain pt-20 pl-2">
+            <div className="overflow-y-auto overscroll-contain">
               <DesktopLower
                 currentMode="memo"
                 activeTab={displayTab as "normal" | "deleted"}

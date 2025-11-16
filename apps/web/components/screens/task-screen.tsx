@@ -1047,7 +1047,7 @@ function TaskScreen({
 
   // 左パネルのコンテンツ
   const leftPanelContent = (
-    <div className="flex flex-col h-full relative">
+    <div className="pl-4 pt-3 flex flex-col h-full relative">
       <DesktopUpper {...desktopUpperCommonProps} />
 
       <DesktopLower
@@ -1169,7 +1169,7 @@ function TaskScreen({
 
   // 中央パネルのコンテンツ
   const centerPanelContent = (
-    <div>
+    <div className={shouldShowPanelControls && !showListPanel ? "pl-2" : ""}>
       {/* 左パネル非表示時は中央にヘッダーを表示 */}
       {shouldShowPanelControls && !showListPanel && (
         <DesktopUpper {...desktopUpperCommonProps} hideTabs={true} />

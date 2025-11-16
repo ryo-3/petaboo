@@ -1062,6 +1062,26 @@ function BoardDetailScreen({
     );
   }
 
+  // 本番デバッグ用
+  if (typeof window !== "undefined") {
+    console.log("[Board Padding Debug]", {
+      teamMode,
+      selectedMemo: !!selectedMemo,
+      selectedTask: !!selectedTask,
+      showCommentPanel,
+      showComment,
+      showMemo,
+      showTask,
+      condition1: teamMode && (selectedMemo || selectedTask),
+      condition2: showCommentPanel,
+      condition3: showComment && !showMemo && !showTask,
+      shouldRemovePadding:
+        (teamMode && (selectedMemo || selectedTask)) ||
+        showCommentPanel ||
+        (showComment && !showMemo && !showTask),
+    });
+  }
+
   return (
     <div className="flex h-full bg-white overflow-x-auto overflow-y-hidden">
       {/* 左側：メモ・タスク一覧 */}

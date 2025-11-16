@@ -474,6 +474,14 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       }
     };
 
+    const handleTeamSearchChange = () => {
+      handleTabChange("search");
+    };
+
+    const handleTeamListChange = () => {
+      handleTabChange("team-list");
+    };
+
     const handleTeamMemoCreate = (_event: CustomEvent) => {
       setIsCreatingMemo(true);
       handleTabChange("memos");
@@ -521,6 +529,16 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       handleTeamModeChange as EventListener,
     );
 
+    window.addEventListener(
+      "team-search-change",
+      handleTeamSearchChange as EventListener,
+    );
+
+    window.addEventListener(
+      "team-list-change",
+      handleTeamListChange as EventListener,
+    );
+
     // team-memo-create と team-task-create はMemoScreen/TaskScreenが直接リッスンするので
     // ここでリッスンすると無限ループになる（イベント再発火が不要）
     // window.addEventListener("team-memo-create", handleTeamMemoCreate);
@@ -540,6 +558,14 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       window.removeEventListener(
         "team-mode-change",
         handleTeamModeChange as EventListener,
+      );
+      window.removeEventListener(
+        "team-search-change",
+        handleTeamSearchChange as EventListener,
+      );
+      window.removeEventListener(
+        "team-list-change",
+        handleTeamListChange as EventListener,
       );
       window.removeEventListener(
         "team-back-to-memo-list",

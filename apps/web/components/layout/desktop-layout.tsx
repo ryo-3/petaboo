@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 
 interface DesktopLayoutProps {
   sidebarContent: ReactNode;
@@ -16,6 +16,16 @@ function DesktopLayout({
 }: DesktopLayoutProps) {
   const topPosition = hideHeader ? "top-0" : "md:top-16 top-0";
   const paddingTop = hideHeader ? "pt-0" : "md:pt-16 pt-0";
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   return (
     <div className="flex flex-col md:flex-row flex-1">
@@ -28,7 +38,10 @@ function DesktopLayout({
 
       {/* メインコンテンツエリア */}
       <div
-        className={`flex-1 md:ml-16 ml-0 md:h-screen md:overflow-hidden ${paddingTop} pt-0 md:mb-0 mb-14`}
+        className={`flex-1 md:ml-16 ml-0 md:h-screen overflow-hidden ${paddingTop} pt-0`}
+        style={{
+          height: isMobile ? `calc(100dvh - 3.5rem)` : undefined,
+        }}
       >
         {children}
       </div>

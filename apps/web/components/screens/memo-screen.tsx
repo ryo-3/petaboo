@@ -1201,6 +1201,7 @@ function MemoScreen({
           teamId={teamId || 0}
           title="コメント"
           placeholder="コメントを入力..."
+          teamMembers={teamMembers}
         />
       </>
     ) : null;

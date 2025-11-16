@@ -15,6 +15,7 @@ import { useTeamContext } from "@/src/contexts/team-context";
 import { useViewSettings } from "@/src/contexts/view-settings-context";
 import { useHeaderControlPanel } from "@/src/contexts/header-control-panel-context";
 import { useTeamDetailSafe } from "@/src/contexts/team-detail-context";
+import { useTeamDetail } from "@/src/hooks/use-team-detail";
 import { useDeletedMemos, useDeleteMemo } from "@/src/hooks/use-memos";
 import { useDeleteTask, useDeletedTasks } from "@/src/hooks/use-tasks";
 import {
@@ -95,9 +96,13 @@ function BoardDetailScreen({
   boardCompleted = false,
   isDeleted = false,
 }: BoardDetailProps) {
-  const { isTeamMode: teamMode, teamId } = useTeamContext();
+  const { isTeamMode: teamMode, teamId, teamSlug } = useTeamContext();
   const { setConfig } = useHeaderControlPanel();
   const teamDetailContext = useTeamDetailSafe();
+
+  // チームメンバーを取得（メンション機能用）
+  const { data: teamDetail } = useTeamDetail(teamSlug || "");
+  const teamMembers = teamDetail?.members || [];
 
   // ViewSettingsContextから取得
   const { settings, sessionState, updateSettings, updateSessionState } =
@@ -1413,6 +1418,7 @@ function BoardDetailScreen({
                                         ? `タスク「${selectedTask.title || "タイトルなし"}」`
                                         : undefined
                                   }
+                                  teamMembers={teamMembers}
                                 />
                               </div>
                             )}
@@ -1811,6 +1817,7 @@ function BoardDetailScreen({
                                       ? `タスク「${selectedTask.title || "タイトルなし"}」`
                                       : undefined
                                 }
+                                teamMembers={teamMembers}
                               />
                             )}
                           </ResizablePanel>
@@ -1873,6 +1880,7 @@ function BoardDetailScreen({
                                 targetType="board"
                                 targetOriginalId={boardId.toString()}
                                 targetTitle={undefined}
+                                teamMembers={teamMembers}
                               />
                             </div>
                           )}
@@ -2123,6 +2131,7 @@ function BoardDetailScreen({
                                 targetType="board"
                                 targetOriginalId={boardId.toString()}
                                 boardId={boardId}
+                                teamMembers={teamMembers}
                                 onItemClick={(itemType, originalId) => {
                                   if (itemType === "memo") {
                                     const memo = boardMemos.find(

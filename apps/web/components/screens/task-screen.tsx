@@ -156,6 +156,7 @@ interface TaskScreenProps {
   // URL連動
   initialTaskId?: string | null;
   // チームメンバー（コメント機能用）
+  teamMembers?: TeamMember[];
   // チーム用の未保存変更管理（オプション）
   taskEditorHasUnsavedChangesRef?: React.MutableRefObject<boolean>;
   taskEditorShowConfirmModalRef?: React.MutableRefObject<(() => void) | null>;
@@ -189,6 +190,7 @@ function TaskScreen({
   initialSelectionMode = "select",
   excludeItemIds = [],
   initialTaskId,
+  teamMembers = [],
   unifiedOperations,
   taskEditorHasUnsavedChangesRef,
   taskEditorShowConfirmModalRef,
@@ -1291,6 +1293,7 @@ function TaskScreen({
           teamId={teamId || 0}
           title="コメント"
           placeholder="コメントを入力..."
+          teamMembers={teamMembers}
         />
       </>
     ) : null;

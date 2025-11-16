@@ -1039,6 +1039,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                   setIsCreatingMemo(false);
                 }}
                 initialMemoId={getMemoIdFromURL()}
+                teamMembers={team.members || []}
                 // 統一フックを渡す
                 unifiedOperations={teamMemoOperations}
               />
@@ -1091,6 +1092,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                   setIsTaskCreateMode(mode === "create");
                 }}
                 initialTaskId={isTaskCreateMode ? null : getTaskIdFromURL()}
+                teamMembers={team.members || []}
                 // 統一フックを渡す
                 unifiedOperations={teamTaskOperations}
               />

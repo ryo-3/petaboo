@@ -54,7 +54,7 @@ export default async function RootLayout({
         )}
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-gray-900 min-h-screen`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-gray-900 h-screen overflow-hidden`}
       >
         <QueryProvider>
           <PageVisibilityProvider>

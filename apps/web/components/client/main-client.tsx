@@ -330,7 +330,7 @@ function MainClient({
   }, [setCurrentMode, setScreenMode, setSelectedMemo, setSelectedTask]);
 
   return (
-    <main className="relative md:h-dvh md:overflow-hidden">
+    <main className="relative h-full md:h-dvh overflow-hidden">
       {/* エラー表示領域 */}
       <ErrorDisplay errors={errors} onClearErrors={clearErrors} />
 

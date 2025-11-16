@@ -119,11 +119,11 @@ const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(
             onTabChange={(tab) =>
               setActiveTab(tab as "normal" | "completed" | "deleted")
             }
-            onCreateNew={handleCreateNew}
             rightPanelMode="hidden"
             normalCount={normalBoards?.length || 0}
             completedCount={completedBoards?.length || 0}
             deletedCount={deletedBoards?.length || 0}
+            teamMode={teamMode}
           />
 
           <BoardList

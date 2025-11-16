@@ -30,6 +30,7 @@ import { useTeamContext } from "@/src/contexts/team-context";
 import { useViewSettings } from "@/src/contexts/view-settings-context";
 import { useTeamDetail } from "@/src/contexts/team-detail-context";
 import { useNavigation } from "@/src/contexts/navigation-context";
+import { useHeaderControlPanel } from "@/src/contexts/header-control-panel-context";
 import {
   useBoards,
   useItemBoards,
@@ -50,7 +51,8 @@ import {
   createToggleHandler,
   createToggleHandlerWithTabClear,
 } from "@/src/utils/toggleUtils";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { validatePanelToggle } from "@/src/utils/panel-helpers";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ControlPanelLayout } from "@/components/layout/control-panel-layout";
 import CommentSection from "@/components/features/comments/comment-section";
 import AttachmentGallery from "@/components/features/attachments/attachment-gallery";
@@ -58,6 +60,7 @@ import { useAttachmentManager } from "@/src/hooks/use-attachment-manager";
 import ItemEditorFooter from "@/components/mobile/item-editor-footer";
 import PhotoButton from "@/components/ui/buttons/photo-button";
 import type { TeamMember } from "@/src/hooks/use-team-detail";
+import type { HeaderControlPanelConfig } from "@/src/contexts/header-control-panel-context";
 import MobileFabButton from "@/components/ui/buttons/mobile-fab-button";
 
 type TaskScreenMode = "list" | "view" | "create" | "edit";
@@ -144,6 +147,7 @@ interface TaskScreenProps {
   rightPanelDisabled?: boolean; // 右パネル無効化（ボードから呼び出される場合）
   hideHeaderButtons?: boolean; // ヘッダーボタンを非表示（ボードから呼び出される場合）
   hideBulkActionButtons?: boolean; // 一括操作ボタンを非表示（ボードから呼び出される場合）
+  disableHeaderControls?: boolean; // ヘッダーコントロールパネルを無効化
   onAddToBoard?: (taskIds: number[]) => void; // ボードに追加（ボードから呼び出される場合のみ）
   excludeBoardId?: number; // 指定されたボードに登録済みのタスクを除外（ボードから呼び出される場合）
   initialSelectionMode?: "select" | "check"; // 初期選択モード
@@ -179,6 +183,7 @@ function TaskScreen({
   onScreenModeChange,
   hideHeaderButtons = false,
   hideBulkActionButtons = false,
+  disableHeaderControls = false,
   onAddToBoard,
   excludeBoardId,
   initialSelectionMode = "select",
@@ -190,6 +195,7 @@ function TaskScreen({
 }: TaskScreenProps) {
   const { isTeamMode: teamMode, teamId: teamIdRaw } = useTeamContext();
   const teamId = teamIdRaw ?? undefined; // Convert null to undefined for hook compatibility
+  const { setConfig } = useHeaderControlPanel();
 
   // NavigationContextからアップロード状態を取得
   const { isUploadingTask } = useNavigation();
@@ -353,6 +359,9 @@ function TaskScreen({
 
   // CSVインポートモーダルの状態
   const [isCsvImportModalOpen, setIsCsvImportModalOpen] = useState(false);
+  const handleCsvImport = useCallback(() => {
+    setIsCsvImportModalOpen(true);
+  }, []);
 
   // 共通screen状態管理（画面モード + タブのみ）
   const {
@@ -367,6 +376,99 @@ function TaskScreen({
     selectedDeletedTask,
     preferences || undefined,
   );
+
+  // パネル表示状態管理（チームモード用）
+  const getInitialPanelState = (
+    key: "showListPanel" | "showDetailPanel" | "showCommentPanel",
+  ) => {
+    if (typeof window !== "undefined" && teamMode) {
+      const saved = localStorage.getItem("team-task-panel-visibility");
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (typeof parsed[key] === "boolean") {
+            return parsed[key] as boolean;
+          }
+        } catch {
+          // ignore parse errors
+        }
+      }
+    }
+    return true;
+  };
+
+  const [showListPanel, setShowListPanel] = useState<boolean>(() =>
+    getInitialPanelState("showListPanel"),
+  );
+  const [showDetailPanel, setShowDetailPanel] = useState<boolean>(() =>
+    getInitialPanelState("showDetailPanel"),
+  );
+  const [showCommentPanel, setShowCommentPanel] = useState<boolean>(() =>
+    getInitialPanelState("showCommentPanel"),
+  );
+
+  useEffect(() => {
+    if (!teamMode || typeof window === "undefined") {
+      return;
+    }
+
+    localStorage.setItem(
+      "team-task-panel-visibility",
+      JSON.stringify({
+        showListPanel,
+        showDetailPanel,
+        showCommentPanel,
+      }),
+    );
+  }, [showListPanel, showDetailPanel, showCommentPanel, teamMode]);
+
+  const handleListPanelToggle = useCallback(() => {
+    setShowListPanel((prev) => {
+      const newValue = !prev;
+      if (
+        !validatePanelToggle(
+          { left: prev, center: showDetailPanel, right: showCommentPanel },
+          "left",
+          newValue,
+        )
+      ) {
+        return prev;
+      }
+      return newValue;
+    });
+  }, [showDetailPanel, showCommentPanel]);
+
+  const handleDetailPanelToggle = useCallback(() => {
+    setShowDetailPanel((prev) => {
+      const newValue = !prev;
+      if (
+        !validatePanelToggle(
+          { left: showListPanel, center: prev, right: showCommentPanel },
+          "center",
+          newValue,
+        )
+      ) {
+        return prev;
+      }
+      return newValue;
+    });
+  }, [showListPanel, showCommentPanel]);
+
+  const handleCommentPanelToggle = useCallback(() => {
+    setShowCommentPanel((prev) => {
+      const newValue = !prev;
+      if (
+        !validatePanelToggle(
+          { left: showListPanel, center: showDetailPanel, right: prev },
+          "right",
+          newValue,
+        )
+      ) {
+        return prev;
+      }
+      return newValue;
+    });
+  }, [showListPanel, showDetailPanel]);
 
   // 選択状態管理（useMultiSelectionに統一）
   const multiSelectionResult = useMultiSelection({
@@ -802,39 +904,151 @@ function TaskScreen({
       (task) => !excludeItemIds.includes(task.originalId || task.id.toString()),
     ) || [];
 
+  const deletedTasksCountValue = deletedTasks?.length || 0;
+
+  const taskStatusCounts = useMemo(() => {
+    if (!tasks) {
+      return { todo: 0, inProgress: 0, completed: 0 };
+    }
+    return tasks.reduce(
+      (acc, task) => {
+        if (task.status === "todo") {
+          acc.todo += 1;
+        } else if (task.status === "in_progress") {
+          acc.inProgress += 1;
+        } else if (task.status === "completed") {
+          acc.completed += 1;
+        }
+        return acc;
+      },
+      { todo: 0, inProgress: 0, completed: 0 },
+    );
+  }, [tasks]);
+
+  const {
+    todo: todoCount,
+    inProgress: inProgressCount,
+    completed: completedCount,
+  } = taskStatusCounts;
+
+  // アイテム選択時のみパネルコントロールを表示（3パネル切り替え用）
+  const shouldShowPanelControls = teamMode && taskScreenMode !== "list";
+
+  const taskRightPanelMode = (taskScreenMode === "list" ? "hidden" : "view") as
+    | "hidden"
+    | "view"
+    | "create";
+
+  const desktopUpperCommonProps = {
+    currentMode: "task" as const,
+    activeTab: activeTabTyped,
+    onTabChange: handleTabChange(tabChangeHandler),
+    rightPanelMode: taskRightPanelMode,
+    normalCount: 0,
+    deletedTasksCount: deletedTasksCountValue,
+    todoCount,
+    inProgressCount,
+    completedCount,
+    marginBottom: "",
+    headerMarginBottom: "mb-1.5",
+    teamMode,
+  };
+
+  const taskHeaderConfig = useMemo<HeaderControlPanelConfig | null>(() => {
+    if (disableHeaderControls) {
+      return null;
+    }
+
+    const config: HeaderControlPanelConfig = {
+      currentMode: "task",
+      rightPanelMode: taskRightPanelMode,
+      selectionMode,
+      onSelectionModeChange: handleSelectionModeChange,
+      onSelectAll: handleSelectAll,
+      isAllSelected,
+      onCsvImport: handleCsvImport,
+      activeTab: activeTabTyped,
+      todoCount,
+      inProgressCount,
+      completedCount,
+      deletedTasksCount: deletedTasksCountValue,
+      hideAddButton: hideHeaderButtons,
+      teamMode,
+      teamId,
+      hideControls: preferences?.taskHideControls,
+    };
+
+    if (shouldShowPanelControls) {
+      config.isSelectedMode = true;
+      config.showMemo = showListPanel;
+      config.showTask = showDetailPanel;
+      config.showComment = showCommentPanel;
+      config.onMemoToggle = handleListPanelToggle;
+      config.onTaskToggle = handleDetailPanelToggle;
+      config.onCommentToggle = handleCommentPanelToggle;
+      config.contentFilterRightPanelMode = "editor";
+      config.listTooltip = "タスク一覧パネル";
+      config.detailTooltip = "タスク詳細パネル";
+      config.selectedItemType = "task";
+    }
+
+    return config;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    disableHeaderControls,
+    taskRightPanelMode,
+    selectionMode,
+    // handleSelectionModeChange, // 関数は除外（毎回変わるため）
+    // handleSelectAll, // 関数は除外
+    isAllSelected,
+    // handleCsvImport, // 関数は除外
+    activeTabTyped,
+    todoCount,
+    inProgressCount,
+    completedCount,
+    deletedTasksCountValue,
+    hideHeaderButtons,
+    teamMode,
+    teamId,
+    preferences?.taskHideControls,
+    shouldShowPanelControls,
+    showListPanel,
+    showDetailPanel,
+    showCommentPanel,
+    // handleListPanelToggle, // 関数は除外
+    // handleDetailPanelToggle, // 関数は除外
+    // handleCommentPanelToggle, // 関数は除外
+  ]);
+
+  const taskHeaderOwnerRef = useRef<symbol | null>(null);
+
+  useEffect(() => {
+    if (!taskHeaderConfig) {
+      if (taskHeaderOwnerRef.current) {
+        setConfig(null);
+        taskHeaderOwnerRef.current = null;
+      }
+      return;
+    }
+
+    const owner = Symbol("header-control-panel");
+    taskHeaderOwnerRef.current = owner;
+    setConfig(taskHeaderConfig);
+
+    return () => {
+      if (taskHeaderOwnerRef.current === owner) {
+        setConfig(null);
+        taskHeaderOwnerRef.current = null;
+      }
+    };
+  }, [taskHeaderConfig]);
+
   // 左パネルのコンテンツ
   const leftPanelContent = (
     <div
       className={`${hideHeaderButtons ? "pt-2 md:pt-3" : "pt-2 md:pt-3 pl-2 md:pl-5 md:pr-2"} flex flex-col h-full relative`}
     >
-      <DesktopUpper
-        currentMode="task"
-        activeTab={activeTabTyped}
-        onTabChange={handleTabChange(tabChangeHandler)}
-        onCreateNew={handleCreateNew}
-        rightPanelMode={taskScreenMode === "list" ? "hidden" : "view"}
-        selectionMode={selectionMode}
-        onSelectionModeChange={handleSelectionModeChange}
-        onSelectAll={handleSelectAll}
-        isAllSelected={isAllSelected}
-        normalCount={0} // タスクでは使わない
-        deletedTasksCount={deletedTasks?.length || 0}
-        todoCount={tasks?.filter((task) => task.status === "todo").length || 0}
-        inProgressCount={
-          tasks?.filter((task) => task.status === "in_progress").length || 0
-        }
-        completedCount={
-          tasks?.filter((task) => task.status === "completed").length || 0
-        }
-        hideAddButton={hideHeaderButtons}
-        onCsvImport={() => setIsCsvImportModalOpen(true)}
-        teamMode={teamMode}
-        teamId={teamId}
-        hideControls={false}
-        floatControls={true}
-        marginBottom=""
-        headerMarginBottom="mb-1.5"
-      />
+      <DesktopUpper {...desktopUpperCommonProps} />
 
       <DesktopLower
         currentMode="task"
@@ -955,7 +1169,11 @@ function TaskScreen({
 
   // 中央パネルのコンテンツ
   const centerPanelContent = (
-    <>
+    <div className={shouldShowPanelControls && !showListPanel ? "pl-2" : ""}>
+      {/* 左パネル非表示時は中央にヘッダーを表示 */}
+      {shouldShowPanelControls && !showListPanel && (
+        <DesktopUpper {...desktopUpperCommonProps} hideTabs={true} />
+      )}
       {/* 新規作成モード */}
       {taskScreenMode === "create" && (
         <TaskEditor
@@ -1054,19 +1272,27 @@ function TaskScreen({
           unifiedOperations={unifiedOperations}
         />
       )}
-    </>
+    </div>
   );
 
   // 右パネルのコンテンツ（チームモードのみコメント表示）
   const rightPanelContent =
-    teamMode && selectedTask ? (
-      <CommentSection
-        targetType="task"
-        targetOriginalId={OriginalIdUtils.fromItem(selectedTask) || ""}
-        teamId={teamId || 0}
-        title="コメント"
-        placeholder="コメントを入力..."
-      />
+    teamMode &&
+    taskScreenMode !== "create" &&
+    selectedTask &&
+    showCommentPanel ? (
+      <>
+        {shouldShowPanelControls && !showListPanel && !showDetailPanel && (
+          <DesktopUpper {...desktopUpperCommonProps} hideTabs={true} />
+        )}
+        <CommentSection
+          targetType="task"
+          targetOriginalId={OriginalIdUtils.fromItem(selectedTask) || ""}
+          teamId={teamId || 0}
+          title="コメント"
+          placeholder="コメントを入力..."
+        />
+      </>
     ) : null;
 
   return (
@@ -1094,6 +1320,15 @@ function TaskScreen({
             }
             skipInitialSave={true}
             stateKey={selectedTask?.originalId || "none"}
+            visibility={
+              teamMode
+                ? {
+                    left: showListPanel,
+                    center: showDetailPanel,
+                    right: showCommentPanel,
+                  }
+                : undefined
+            }
           />
         )}
       </div>
@@ -1106,38 +1341,7 @@ function TaskScreen({
           <>
             {/* ツールバーを固定位置に配置 */}
             <div className="fixed top-0 left-0 right-0 z-20 bg-white px-2">
-              <DesktopUpper
-                currentMode="task"
-                activeTab={activeTabTyped}
-                onTabChange={handleTabChange(tabChangeHandler)}
-                onCreateNew={handleCreateNew}
-                rightPanelMode={taskScreenMode === "list" ? "hidden" : "view"}
-                selectionMode={selectionMode}
-                onSelectionModeChange={handleSelectionModeChange}
-                onSelectAll={handleSelectAll}
-                isAllSelected={isAllSelected}
-                hideControls={false}
-                floatControls={false}
-                normalCount={0}
-                todoCount={
-                  tasks?.filter((task) => task.status === "todo").length || 0
-                }
-                inProgressCount={
-                  tasks?.filter((task) => task.status === "in_progress")
-                    .length || 0
-                }
-                completedCount={
-                  tasks?.filter((task) => task.status === "completed").length ||
-                  0
-                }
-                deletedTasksCount={deletedTasks?.length || 0}
-                hideAddButton={hideHeaderButtons}
-                onCsvImport={() => setIsCsvImportModalOpen(true)}
-                teamMode={teamMode}
-                teamId={teamId}
-                marginBottom=""
-                headerMarginBottom="mb-1.5"
-              />
+              <DesktopUpper {...desktopUpperCommonProps} />
             </div>
             {/* スクロール可能なコンテンツ（ツールバーの高さ分 padding-top を追加） */}
             <div className="overflow-y-auto overscroll-contain pt-20 pl-2">

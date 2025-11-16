@@ -1,13 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import type { ReactNode } from "react";
 
 import TrashIcon from "@/components/icons/trash-icon";
-import Tooltip from "@/components/ui/base/tooltip";
-import AddItemButton from "@/components/ui/buttons/add-item-button";
-import HeaderControlPanel from "@/components/ui/controls/header-control-panel";
-import { useUserPreferences } from "@/src/hooks/use-user-preferences";
-import { useViewSettings } from "@/src/contexts/view-settings-context";
 
 interface DesktopUpperProps {
   currentMode: "memo" | "task" | "board";
@@ -15,45 +10,9 @@ interface DesktopUpperProps {
   onTabChange: (
     tab: "normal" | "deleted" | "todo" | "in_progress" | "completed",
   ) => void;
-  onCreateNew: () => void;
   rightPanelMode: "hidden" | "view" | "create";
-  // Custom title override
-  customTitle?: string;
-  // Board specific props
-  boardDescription?: string | null;
-  boardId?: number;
-  onBoardExport?: () => void;
-  onBoardSettings?: () => void;
-  isExportDisabled?: boolean;
-  // Custom margin bottom
   marginBottom?: string;
-  // Custom margin bottom for internal header
   headerMarginBottom?: string;
-  // Board layout control
-  boardLayout?: "horizontal" | "vertical";
-  isReversed?: boolean;
-  onBoardLayoutChange?: (layout: "horizontal" | "vertical") => void;
-  // Content filter control (board mode only)
-  showMemo?: boolean;
-  showTask?: boolean;
-  showComment?: boolean;
-  onMemoToggle?: (show: boolean) => void;
-  onTaskToggle?: (show: boolean) => void;
-  onCommentToggle?: (show: boolean) => void;
-  // Right panel mode for tooltip context
-  contentFilterRightPanelMode?: "memo-list" | "task-list" | "editor" | null;
-  // 選択時モード用
-  isSelectedMode?: boolean;
-  listTooltip?: string;
-  detailTooltip?: string;
-  selectedItemType?: "memo" | "task" | null;
-  // Selection mode (memo only)
-  selectionMode?: "select" | "check";
-  onSelectionModeChange?: (mode: "select" | "check") => void;
-  // Select all functionality
-  onSelectAll?: () => void;
-  isAllSelected?: boolean;
-  // Tab counts
   normalCount: number;
   deletedMemosCount?: number;
   deletedTasksCount?: number;
@@ -61,18 +20,7 @@ interface DesktopUpperProps {
   todoCount?: number;
   inProgressCount?: number;
   completedCount?: number;
-  // Hide add button (for board right panel usage)
-  hideAddButton?: boolean;
-  // CSV import callback (memo mode only)
-  onCsvImport?: () => void;
-  // Team mode (reverse layout for team memo list)
   teamMode?: boolean;
-  teamId?: number;
-  // Hide controls (for when controls are in header)
-  hideControls?: boolean;
-  // Float controls (position absolute)
-  floatControls?: boolean;
-  // Hide tabs (for center/right panel usage)
   hideTabs?: boolean;
 }
 
@@ -80,34 +28,9 @@ function DesktopUpper({
   currentMode,
   activeTab,
   onTabChange,
-  onCreateNew,
   rightPanelMode,
-  customTitle,
-  boardDescription,
-  boardId,
-  onBoardExport,
-  onBoardSettings,
-  isExportDisabled = false,
   marginBottom = "mb-1.5",
   headerMarginBottom = "",
-  boardLayout = "horizontal",
-  isReversed = false,
-  onBoardLayoutChange,
-  showMemo = true,
-  showTask = true,
-  showComment = true,
-  onMemoToggle,
-  onTaskToggle,
-  onCommentToggle,
-  contentFilterRightPanelMode,
-  isSelectedMode = false,
-  listTooltip,
-  detailTooltip,
-  selectedItemType = null,
-  selectionMode = "select",
-  onSelectionModeChange,
-  onSelectAll,
-  isAllSelected = false,
   normalCount,
   deletedMemosCount = 0,
   deletedTasksCount = 0,
@@ -115,42 +38,9 @@ function DesktopUpper({
   todoCount = 0,
   inProgressCount = 0,
   completedCount = 0,
-  hideAddButton = false,
-  onCsvImport,
   teamMode = false,
-  teamId,
-  hideControls = false,
-  floatControls = false,
   hideTabs = false,
 }: DesktopUpperProps) {
-  const { preferences } = useUserPreferences(1);
-  const { settings, sessionState, updateSettings, updateSessionState } =
-    useViewSettings();
-  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
-
-  // Contextから取得した値を使用
-  const columnCount =
-    currentMode === "memo"
-      ? settings.memoColumnCount
-      : currentMode === "task"
-        ? settings.taskColumnCount
-        : settings.boardColumnCount;
-  const onColumnCountChange = (count: number) => {
-    if (currentMode === "memo") {
-      updateSettings({ memoColumnCount: count });
-    } else if (currentMode === "task") {
-      updateSettings({ taskColumnCount: count });
-    } else {
-      updateSettings({ boardColumnCount: count });
-    }
-  };
-  const showTagDisplay = settings.showTagDisplay;
-  const onShowTagDisplayChange = (show: boolean) =>
-    updateSettings({ showTagDisplay: show });
-  const sortOptions = sessionState.sortOptions;
-  const onSortChange = (options: typeof sessionState.sortOptions) =>
-    updateSessionState({ sortOptions: options });
-
   // タブ設定
   const getTabsConfig = () => {
     if (currentMode === "task") {
@@ -228,7 +118,7 @@ function DesktopUpper({
 
   // タブの内容をレンダリング
   const renderTabContent = (
-    tab: { id: string; label: string; count: number; icon?: React.ReactNode },
+    tab: { id: string; label: string; count: number; icon?: ReactNode },
     isActive: boolean,
   ) => {
     if (tab.icon) {
@@ -302,66 +192,10 @@ function DesktopUpper({
     </div>
   );
 
-  // コントロール部分のJSX
-  // ボード一覧（customTitle/boardIdなし）ではコントロール非表示、ボード詳細では表示
-  const shouldHideControls =
-    (currentMode === "board" && !customTitle && !boardId) ||
-    (currentMode === "memo" && preferences?.memoHideControls) ||
-    (currentMode === "task" && preferences?.taskHideControls);
-
-  const controlsContent = !shouldHideControls ? (
-    <HeaderControlPanel
-      currentMode={currentMode}
-      rightPanelMode={rightPanelMode}
-      floatControls={floatControls}
-      hideControls={hideControls}
-      selectionMode={selectionMode}
-      onSelectionModeChange={onSelectionModeChange}
-      onSelectAll={onSelectAll}
-      isAllSelected={isAllSelected}
-      boardId={boardId}
-      onBoardSettings={onBoardSettings}
-      boardLayout={boardLayout}
-      isReversed={isReversed}
-      onBoardLayoutChange={onBoardLayoutChange}
-      showMemo={showMemo}
-      showTask={showTask}
-      showComment={showComment}
-      onMemoToggle={onMemoToggle}
-      onTaskToggle={onTaskToggle}
-      onCommentToggle={onCommentToggle}
-      contentFilterRightPanelMode={contentFilterRightPanelMode}
-      isSelectedMode={isSelectedMode}
-      listTooltip={listTooltip}
-      detailTooltip={detailTooltip}
-      selectedItemType={selectedItemType}
-      sortOptions={sortOptions}
-      onSortChange={onSortChange}
-      showTagDisplay={showTagDisplay}
-      onShowTagDisplayChange={onShowTagDisplayChange}
-      onCsvImport={onCsvImport}
-      onBoardExport={onBoardExport}
-      isExportDisabled={isExportDisabled}
-      teamMode={teamMode}
-      teamId={teamId}
-      activeTab={activeTab}
-      normalCount={normalCount}
-      deletedMemosCount={deletedMemosCount}
-      deletedTasksCount={deletedTasksCount}
-      deletedCount={deletedCount}
-      todoCount={todoCount}
-      inProgressCount={inProgressCount}
-      completedCount={completedCount}
-      customTitle={customTitle}
-      hideAddButton={hideAddButton}
-    />
-  ) : null;
-
   return (
     <div
       className={`fixed md:static top-0 left-0 right-0 z-10 bg-white px-2 md:px-0 ${marginBottom}`}
     >
-      {!hideControls && controlsContent}
       {!hideTabs && headerContent}
     </div>
   );

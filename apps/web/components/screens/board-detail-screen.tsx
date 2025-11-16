@@ -1,7 +1,6 @@
 import BoardMemoSection from "@/components/features/board/board-memo-section";
 import BoardRightPanel from "@/components/features/board/board-right-panel";
 import BoardTaskSection from "@/components/features/board/board-task-section";
-import DesktopUpper from "@/components/layout/desktop-upper";
 import { useBoardState } from "@/src/hooks/use-board-state";
 import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
 import { useTags } from "@/src/hooks/use-tags";
@@ -9,6 +8,7 @@ import { useTeamTags } from "@/src/hooks/use-team-tags";
 import { useAllTeamTaggings } from "@/src/hooks/use-team-taggings";
 import { useTeamContext } from "@/src/contexts/team-context";
 import { useViewSettings } from "@/src/contexts/view-settings-context";
+import { useHeaderControlPanel } from "@/src/contexts/header-control-panel-context";
 import {
   useBoards,
   useAddItemToBoard,
@@ -22,6 +22,7 @@ import type { Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
 import { OriginalIdUtils } from "@/src/types/common";
 import { memo, useEffect, useState, useRef, useCallback, useMemo } from "react";
+import type { HeaderControlPanelConfig } from "@/src/contexts/header-control-panel-context";
 import TagAddModal from "@/components/ui/tag-add/tag-add-modal";
 import BoardHeader from "@/components/features/board/board-header";
 import { BulkDeleteConfirmation } from "@/components/ui/modals";
@@ -69,12 +70,7 @@ function BoardDetailScreen({
   isDeleted = false,
 }: BoardDetailProps) {
   const { isTeamMode: teamMode, teamId } = useTeamContext();
-
-  console.log("🎯 [board-detail-screen] rendered:", {
-    boardId,
-    teamMode,
-    teamId,
-  });
+  const { setConfig } = useHeaderControlPanel();
 
   // ViewSettingsContextから取得
   const { settings, sessionState, updateSettings, updateSessionState } =
@@ -82,6 +78,9 @@ function BoardDetailScreen({
 
   // CSVインポートモーダル状態
   const [isCSVImportModalOpen, setIsCSVImportModalOpen] = useState(false);
+  const handleCsvImport = useCallback(() => {
+    setIsCSVImportModalOpen(true);
+  }, []);
 
   // ボード選択モーダル状態
   const [selectionMenuType, setSelectionMenuType] = useState<"memo" | "task">(
@@ -364,12 +363,6 @@ function BoardDetailScreen({
       ...(allMemoAttachments || []),
       ...(allTaskAttachments || []),
     ];
-    console.log("📷 [board-detail] allAttachments:", {
-      memoCount: allMemoAttachments?.length || 0,
-      taskCount: allTaskAttachments?.length || 0,
-      totalCount: combined.length,
-      sample: combined[0],
-    });
     return combined;
   }, [allMemoAttachments, allTaskAttachments]);
 
@@ -385,6 +378,98 @@ function BoardDetailScreen({
   // チームモードかどうかでボード一覧を切り替え
   const allBoards = teamMode ? teamBoards : personalBoards;
   const { categories } = useBoardCategories();
+
+  const headerShowMemo = rightPanelMode === "task-list" ? false : showMemo;
+  const headerShowTask = rightPanelMode === "memo-list" ? false : showTask;
+  const boardSettingsHandler = onSettings || handleSettings;
+  const headerRightPanelMode = (
+    selectedMemo || selectedTask || rightPanelMode ? "view" : "hidden"
+  ) as "hidden" | "view" | "create";
+  const totalNormalCount = allMemoItems.length + allTaskItems.length;
+  const totalDeletedCount = deletedCount + deletedMemoCount;
+
+  const boardHeaderConfig = useMemo<HeaderControlPanelConfig | null>(() => {
+    const config: HeaderControlPanelConfig = {
+      currentMode: "board",
+      rightPanelMode: headerRightPanelMode,
+      boardId,
+      onBoardSettings: boardSettingsHandler,
+      onBoardExport: handleExport,
+      isExportDisabled: false,
+      boardLayout,
+      isReversed,
+      onBoardLayoutChange: handleBoardLayoutChange,
+      showMemo: headerShowMemo,
+      showTask: headerShowTask,
+      onMemoToggle: handleMemoToggle,
+      onTaskToggle: handleTaskToggle,
+      contentFilterRightPanelMode: rightPanelMode,
+      selectionMode,
+      onSelectionModeChange: handleSelectionModeChange,
+      onCsvImport: handleCsvImport,
+      customTitle: boardName || "ボード詳細",
+      normalCount: totalNormalCount,
+      completedCount,
+      deletedCount: totalDeletedCount,
+      teamMode,
+      teamId: teamId ?? undefined,
+    };
+
+    if (teamMode) {
+      config.showComment = showComment;
+      config.onCommentToggle = handleCommentToggle;
+    }
+
+    return config;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    headerRightPanelMode,
+    boardId,
+    // boardSettingsHandler, // 関数は除外
+    // handleExport, // 関数は除外
+    boardLayout,
+    isReversed,
+    // handleBoardLayoutChange, // 関数は除外
+    headerShowMemo,
+    headerShowTask,
+    // handleMemoToggle, // 関数は除外
+    // handleTaskToggle, // 関数は除外
+    rightPanelMode,
+    selectionMode,
+    // handleSelectionModeChange, // 関数は除外
+    // handleCsvImport, // 関数は除外
+    boardName,
+    totalNormalCount,
+    completedCount,
+    totalDeletedCount,
+    teamMode,
+    teamId,
+    showComment,
+    // handleCommentToggle, // 関数は除外
+  ]);
+
+  const boardHeaderOwnerRef = useRef<symbol | null>(null);
+
+  useEffect(() => {
+    if (!boardHeaderConfig) {
+      if (boardHeaderOwnerRef.current) {
+        setConfig(null);
+        boardHeaderOwnerRef.current = null;
+      }
+      return;
+    }
+
+    const owner = Symbol("header-control-panel");
+    boardHeaderOwnerRef.current = owner;
+    setConfig(boardHeaderConfig);
+
+    return () => {
+      if (boardHeaderOwnerRef.current === owner) {
+        setConfig(null);
+        boardHeaderOwnerRef.current = null;
+      }
+    };
+  }, [boardHeaderConfig]);
 
   // 選択中のメモ・タスクに紐づくボード情報を取得
   const selectedMemoId = OriginalIdUtils.fromItem(selectedMemo);
@@ -573,46 +658,6 @@ function BoardDetailScreen({
       <div
         className={`${selectedMemo || selectedTask || rightPanelMode ? "w-[44%]" : "w-full"} ${selectedMemo || selectedTask || rightPanelMode ? "border-r border-gray-300" : ""} pt-3 pl-5 ${selectedMemo || selectedTask || rightPanelMode ? "pr-2" : "pr-4"} flex flex-col relative transition-all duration-300`}
       >
-        {/* DesktopUpper コントロール（BoardHeaderの代わり） */}
-        <div>
-          <DesktopUpper
-            currentMode="board"
-            activeTab="normal"
-            onTabChange={() => {}} // ボードではタブ切り替えは無効
-            onCreateNew={() => {}} // 既存のボタンを使用
-            rightPanelMode={
-              selectedMemo || selectedTask || rightPanelMode ? "view" : "hidden"
-            }
-            customTitle={boardName || "ボード詳細"}
-            boardDescription={boardDescription}
-            boardId={boardId}
-            onBoardExport={handleExport}
-            onBoardSettings={onSettings || handleSettings}
-            isExportDisabled={false}
-            marginBottom="mb-2"
-            headerMarginBottom="mb-1.5"
-            boardLayout={boardLayout}
-            isReversed={isReversed}
-            onBoardLayoutChange={handleBoardLayoutChange}
-            showMemo={rightPanelMode === "task-list" ? false : showMemo}
-            showTask={rightPanelMode === "memo-list" ? false : showTask}
-            showComment={teamMode ? showComment : undefined}
-            onMemoToggle={handleMemoToggle}
-            onTaskToggle={handleTaskToggle}
-            onCommentToggle={teamMode ? handleCommentToggle : undefined}
-            contentFilterRightPanelMode={rightPanelMode}
-            normalCount={allMemoItems.length + allTaskItems.length}
-            completedCount={completedCount}
-            deletedCount={deletedCount + deletedMemoCount}
-            selectionMode={selectionMode}
-            onSelectionModeChange={handleSelectionModeChange}
-            onSelectAll={undefined}
-            isAllSelected={false}
-            onCsvImport={() => setIsCSVImportModalOpen(true)}
-            teamId={teamId ?? undefined}
-          />
-        </div>
-
         {/* メモ・タスクコンテンツ */}
         <div
           className={`${

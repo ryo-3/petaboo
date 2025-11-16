@@ -4,6 +4,7 @@ import { Bell } from "lucide-react";
 import DashboardEditIcon from "@/components/icons/dashboard-edit-icon";
 import EditIcon from "@/components/icons/edit-icon";
 import CheckCircleIcon from "@/components/icons/check-circle-icon";
+import HeaderControlPanel from "@/components/ui/controls/header-control-panel";
 import { useMyJoinRequests } from "@/src/hooks/use-my-join-requests";
 import { useSimpleTeamNotifier } from "@/src/hooks/use-simple-team-notifier";
 import { usePersonalNotifier } from "@/src/hooks/use-personal-notifier";
@@ -24,8 +25,10 @@ import { useTeamDetailSafe } from "@/src/contexts/team-detail-context";
 import NotificationPopup from "@/components/features/notifications/notification-popup";
 import type { Notification } from "@/lib/api/notifications";
 import { getNotificationUrl } from "@/src/utils/notificationUtils";
+import { useHeaderControlPanel } from "@/src/contexts/header-control-panel-context";
 
 function Header() {
+  const { config } = useHeaderControlPanel();
   // 現在のチーム名を取得（navigation-contextと同じロジック）
   const pathname = usePathname();
   const router = useRouter();
@@ -276,8 +279,9 @@ function Header() {
                   isBoardListPage ||
                   isTeamMemoListPage ||
                   isTeamTaskListPage ||
-                  isTeamBoardListPage
-                    ? "w-[95px]"
+                  isTeamBoardListPage ||
+                  (isTeamBoardPage && boardTitle)
+                    ? "w-[95px] truncate"
                     : ""
                 }`}
               >
@@ -393,6 +397,12 @@ function Header() {
           </div>
         </div>
       </div>
+
+      {config && !config.hideControls && (
+        <div className="hidden md:flex items-center mr-4">
+          <HeaderControlPanel />
+        </div>
+      )}
 
       {/* 通知アイコン & ユーザーメニュー */}
       <div className="flex items-center gap-2">

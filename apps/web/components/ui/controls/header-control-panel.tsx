@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import ColumnCountSelector from "@/components/ui/layout/column-count-selector";
 import SelectionModeToggle from "@/components/ui/buttons/selection-mode-toggle";
 import BoardLayoutToggle from "@/components/ui/controls/board-layout-toggle";
@@ -14,127 +13,56 @@ import CsvImportIcon from "@/components/icons/csv-import-icon";
 import CsvExportIcon from "@/components/icons/csv-export-icon";
 import { UnifiedFilterButton } from "@/components/ui/buttons/unified-filter-button";
 import UnifiedFilterModal from "@/components/ui/modals/unified-filter-modal";
+import { useHeaderControlPanel } from "@/src/contexts/header-control-panel-context";
 import { useViewSettings } from "@/src/contexts/view-settings-context";
 
-interface HeaderControlPanelProps {
-  // 基本設定
-  currentMode: "memo" | "task" | "board";
-  rightPanelMode: "hidden" | "view" | "create";
+export default function HeaderControlPanel() {
+  const { config } = useHeaderControlPanel();
+  const { settings, updateSettings, sessionState, updateSessionState } =
+    useViewSettings();
 
-  // フロート設定
-  floatControls?: boolean;
-  hideControls?: boolean;
+  if (!config || config.hideControls) {
+    return null;
+  }
 
-  // 選択モード
-  selectionMode?: "select" | "check";
-  onSelectionModeChange?: (mode: "select" | "check") => void;
-  onSelectAll?: () => void;
-  isAllSelected?: boolean;
-
-  // ボード専用
-  boardId?: number;
-  onBoardSettings?: () => void;
-  boardLayout?: "horizontal" | "vertical";
-  isReversed?: boolean;
-  onBoardLayoutChange?: (layout: "horizontal" | "vertical") => void;
-  showMemo?: boolean;
-  showTask?: boolean;
-  showComment?: boolean;
-  onMemoToggle?: (show: boolean) => void;
-  onTaskToggle?: (show: boolean) => void;
-  onCommentToggle?: (show: boolean) => void;
-  contentFilterRightPanelMode?: "memo-list" | "task-list" | "editor" | null;
-  // 選択時モード用
-  isSelectedMode?: boolean;
-  listTooltip?: string;
-  detailTooltip?: string;
-  selectedItemType?: "memo" | "task" | null;
-
-  // ソート設定
-  sortOptions?: Array<{
-    id: "createdAt" | "updatedAt" | "priority" | "deletedAt" | "dueDate";
-    label: string;
-    enabled: boolean;
-    direction: "asc" | "desc";
-  }>;
-  onSortChange?: (
-    options: Array<{
-      id: "createdAt" | "updatedAt" | "priority" | "deletedAt" | "dueDate";
-      label: string;
-      enabled: boolean;
-      direction: "asc" | "desc";
-    }>,
-  ) => void;
-
-  // 表示切り替え
-  showTagDisplay?: boolean;
-  onShowTagDisplayChange?: (show: boolean) => void;
-
-  // その他
-  onCsvImport?: () => void;
-  onBoardExport?: () => void;
-  isExportDisabled?: boolean;
-  teamMode?: boolean;
-  teamId?: number;
-  activeTab?: string;
-  normalCount?: number;
-  deletedMemosCount?: number;
-  deletedTasksCount?: number;
-  deletedCount?: number;
-  todoCount?: number;
-  inProgressCount?: number;
-  completedCount?: number;
-  customTitle?: string;
-  hideAddButton?: boolean;
-}
-
-export default function HeaderControlPanel({
-  currentMode,
-  rightPanelMode,
-  floatControls = false,
-  hideControls = false,
-  selectionMode = "select",
-  onSelectionModeChange,
-  onSelectAll,
-  isAllSelected = false,
-  boardId,
-  onBoardSettings,
-  boardLayout = "horizontal",
-  isReversed = false,
-  onBoardLayoutChange,
-  showMemo = true,
-  showTask = true,
-  showComment = true,
-  onMemoToggle,
-  onTaskToggle,
-  onCommentToggle,
-  contentFilterRightPanelMode,
-  isSelectedMode = false,
-  listTooltip,
-  detailTooltip,
-  selectedItemType = null,
-  sortOptions = [],
-  onSortChange,
-  showTagDisplay = false,
-  onShowTagDisplayChange,
-  onCsvImport,
-  onBoardExport,
-  isExportDisabled = false,
-  teamMode = false,
-  teamId,
-  activeTab,
-  normalCount = 0,
-  deletedMemosCount = 0,
-  deletedTasksCount = 0,
-  deletedCount = 0,
-  todoCount = 0,
-  inProgressCount = 0,
-  completedCount = 0,
-  customTitle,
-  hideAddButton = false,
-}: HeaderControlPanelProps) {
-  // ViewSettingsContextから取得
-  const { settings, updateSettings } = useViewSettings();
+  const {
+    currentMode,
+    rightPanelMode,
+    selectionMode = "select",
+    onSelectionModeChange,
+    onSelectAll,
+    isAllSelected = false,
+    boardId,
+    onBoardSettings,
+    boardLayout = "horizontal",
+    isReversed = false,
+    onBoardLayoutChange,
+    showMemo = true,
+    showTask = true,
+    showComment = true,
+    onMemoToggle,
+    onTaskToggle,
+    onCommentToggle,
+    contentFilterRightPanelMode,
+    isSelectedMode = false,
+    listTooltip,
+    detailTooltip,
+    selectedItemType = null,
+    onCsvImport,
+    onBoardExport,
+    isExportDisabled = false,
+    teamMode = false,
+    activeTab,
+    normalCount = 0,
+    deletedMemosCount = 0,
+    deletedTasksCount = 0,
+    deletedCount = 0,
+    todoCount = 0,
+    inProgressCount = 0,
+    completedCount = 0,
+    customTitle,
+    hideAddButton = false,
+  } = config;
 
   // カラム数をContextから取得
   const columnCount =
@@ -154,36 +82,13 @@ export default function HeaderControlPanel({
     }
   };
 
-  const [isInitialRender, setIsInitialRender] = useState(true);
-
-  // 初回レンダリング後にアニメーションを有効化
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsInitialRender(false);
-    }, 100);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (hideControls) return null;
+  const sortOptions = sessionState.sortOptions;
+  const onSortChange = (options: typeof sessionState.sortOptions) =>
+    updateSessionState({ sortOptions: options });
 
   return (
     <>
-      <div
-        className={`flex items-center gap-2 h-7 mb-1.5 ${
-          floatControls
-            ? `md:fixed md:top-[18px] md:right-[128px] md:left-auto z-20 md:bg-white/95 md:backdrop-blur-sm md:px-3 md:py-1.5 md:rounded-lg ${!isInitialRender ? "md:transition-all md:duration-300" : ""}`
-            : ""
-        }`}
-      >
-        {/* モバイル用ボード名表示 */}
-        {customTitle && (
-          <div className="md:hidden flex-shrink-0 mr-2">
-            <h2 className="text-sm font-bold text-gray-800 truncate max-w-[180px]">
-              {customTitle}
-            </h2>
-          </div>
-        )}
-
+      <div className="flex items-center gap-2 h-7">
         <div className="hidden md:block">
           <ColumnCountSelector
             columnCount={columnCount}
@@ -339,10 +244,7 @@ export default function HeaderControlPanel({
       </div>
 
       {/* 統合フィルターモーダル */}
-      <UnifiedFilterModal
-        currentBoardId={boardId}
-        topOffset={floatControls ? 72 : 0}
-      />
+      <UnifiedFilterModal currentBoardId={boardId} topOffset={0} />
     </>
   );
 }

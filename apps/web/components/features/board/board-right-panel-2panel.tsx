@@ -381,6 +381,7 @@ export default function BoardRightPanel({
           excludeItemIds={currentBoardMemoIds}
           initialSelectionMode="check"
           unifiedOperations={memoOperations}
+          disableHeaderControls={true}
         />
       )}
 
@@ -402,6 +403,7 @@ export default function BoardRightPanel({
           excludeItemIds={currentBoardTaskIds}
           initialSelectionMode="check"
           unifiedOperations={taskOperations}
+          disableHeaderControls={true}
         />
       )}
     </RightPanel>

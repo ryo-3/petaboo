@@ -1,7 +1,6 @@
 import BoardMemoSection from "@/components/features/board/board-memo-section";
 import BoardRightPanel from "@/components/features/board/board-right-panel";
 import BoardTaskSection from "@/components/features/board/board-task-section";
-import DesktopUpper from "@/components/layout/desktop-upper";
 import { ControlPanelLayout } from "@/components/layout/control-panel-layout";
 import MemoEditor from "@/components/features/memo/memo-editor";
 import TaskEditor from "@/components/features/task/task-editor";
@@ -14,6 +13,7 @@ import { useTeamTags } from "@/src/hooks/use-team-tags";
 import { useAllTeamTaggings } from "@/src/hooks/use-team-taggings";
 import { useTeamContext } from "@/src/contexts/team-context";
 import { useViewSettings } from "@/src/contexts/view-settings-context";
+import { useHeaderControlPanel } from "@/src/contexts/header-control-panel-context";
 import { useTeamDetailSafe } from "@/src/contexts/team-detail-context";
 import { useDeletedMemos, useDeleteMemo } from "@/src/hooks/use-memos";
 import { useDeleteTask, useDeletedTasks } from "@/src/hooks/use-tasks";
@@ -30,6 +30,7 @@ import type { Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
 import { OriginalIdUtils } from "@/src/types/common";
 import { memo, useEffect, useState, useRef, useCallback, useMemo } from "react";
+import type { HeaderControlPanelConfig } from "@/src/contexts/header-control-panel-context";
 import TagAddModal from "@/components/ui/tag-add/tag-add-modal";
 import BoardHeader from "@/components/features/board/board-header";
 import { BulkDeleteConfirmation } from "@/components/ui/modals";
@@ -95,6 +96,7 @@ function BoardDetailScreen({
   isDeleted = false,
 }: BoardDetailProps) {
   const { isTeamMode: teamMode, teamId } = useTeamContext();
+  const { setConfig } = useHeaderControlPanel();
   const teamDetailContext = useTeamDetailSafe();
 
   // ViewSettingsContextから取得
@@ -103,6 +105,9 @@ function BoardDetailScreen({
 
   // CSVインポートモーダル状態
   const [isCSVImportModalOpen, setIsCSVImportModalOpen] = useState(false);
+  const handleCsvImport = useCallback(() => {
+    setIsCSVImportModalOpen(true);
+  }, []);
 
   // ボード選択モーダル状態
   const [selectionMenuType, setSelectionMenuType] = useState<"memo" | "task">(
@@ -598,6 +603,127 @@ function BoardDetailScreen({
   const allBoards = teamMode ? teamBoards : personalBoards;
   const { categories } = useBoardCategories();
 
+  const headerShowMemo = rightPanelMode === "task-list" ? false : showMemo;
+  const headerShowTask = rightPanelMode === "memo-list" ? false : showTask;
+  const boardSettingsHandler = onSettings || handleSettings;
+  const headerRightPanelMode = (
+    selectedMemo || selectedTask || rightPanelMode ? "view" : "hidden"
+  ) as "hidden" | "view" | "create";
+  const totalNormalCount = allMemoItems.length + allTaskItems.length;
+  const totalDeletedCount = deletedCount + deletedMemoCount;
+  const shouldShowPanelControls =
+    teamMode && !rightPanelMode && (selectedMemo || selectedTask);
+  const selectedItemType = selectedMemo ? "memo" : selectedTask ? "task" : null;
+
+  const boardHeaderConfig = useMemo<HeaderControlPanelConfig | null>(() => {
+    const config: HeaderControlPanelConfig = {
+      currentMode: "board",
+      rightPanelMode: headerRightPanelMode,
+      boardId,
+      onBoardSettings: boardSettingsHandler,
+      onBoardExport: handleExport,
+      isExportDisabled: false,
+      boardLayout,
+      isReversed,
+      onBoardLayoutChange: handleBoardLayoutChange,
+      normalCount: totalNormalCount,
+      completedCount,
+      deletedCount: totalDeletedCount,
+      onCsvImport: handleCsvImport,
+      customTitle: boardName || "ボード詳細",
+      teamMode,
+      teamId: teamId ?? undefined,
+      selectionMode,
+      onSelectionModeChange: handleSelectionModeChange,
+    };
+
+    if (shouldShowPanelControls) {
+      config.isSelectedMode = true;
+      config.showMemo = showListPanel;
+      config.showTask = showDetailPanel;
+      config.showComment = showCommentPanel;
+      config.onMemoToggle = handleListPanelToggle;
+      config.onTaskToggle = handleDetailPanelToggle;
+      config.onCommentToggle = handleCommentPanelToggle;
+      config.contentFilterRightPanelMode = rightPanelMode;
+      config.listTooltip = showListPanel
+        ? "一覧パネルを非表示"
+        : "一覧パネルを表示";
+      config.detailTooltip = showDetailPanel
+        ? "詳細パネルを非表示"
+        : "詳細パネルを表示";
+      config.selectedItemType = selectedItemType;
+    } else {
+      config.showMemo = headerShowMemo;
+      config.showTask = headerShowTask;
+      config.onMemoToggle = handleMemoToggle;
+      config.onTaskToggle = handleTaskToggle;
+      config.contentFilterRightPanelMode = rightPanelMode;
+      if (teamMode) {
+        config.showComment = showComment;
+        config.onCommentToggle = handleCommentToggle;
+      }
+    }
+
+    return config;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    headerRightPanelMode,
+    boardId,
+    // boardSettingsHandler, // 関数は除外
+    // handleExport, // 関数は除外
+    boardLayout,
+    isReversed,
+    // handleBoardLayoutChange, // 関数は除外
+    totalNormalCount,
+    completedCount,
+    totalDeletedCount,
+    // handleCsvImport, // 関数は除外
+    boardName,
+    teamMode,
+    teamId,
+    selectionMode,
+    // handleSelectionModeChange, // 関数は除外
+    shouldShowPanelControls,
+    showListPanel,
+    showDetailPanel,
+    showCommentPanel,
+    // handleListPanelToggle, // 関数は除外
+    // handleDetailPanelToggle, // 関数は除外
+    // handleCommentPanelToggle, // 関数は除外
+    rightPanelMode,
+    selectedItemType,
+    headerShowMemo,
+    headerShowTask,
+    // handleMemoToggle, // 関数は除外
+    // handleTaskToggle, // 関数は除外
+    showComment,
+    // handleCommentToggle, // 関数は除外
+  ]);
+
+  const boardHeaderOwnerRef = useRef<symbol | null>(null);
+
+  useEffect(() => {
+    if (!boardHeaderConfig) {
+      if (boardHeaderOwnerRef.current) {
+        setConfig(null);
+        boardHeaderOwnerRef.current = null;
+      }
+      return;
+    }
+
+    const owner = Symbol("header-control-panel");
+    boardHeaderOwnerRef.current = owner;
+    setConfig(boardHeaderConfig);
+
+    return () => {
+      if (boardHeaderOwnerRef.current === owner) {
+        setConfig(null);
+        boardHeaderOwnerRef.current = null;
+      }
+    };
+  }, [boardHeaderConfig]);
+
   // 選択中のメモ・タスクに紐づくボード情報を取得
   const selectedMemoId = OriginalIdUtils.fromItem(selectedMemo);
   const selectedTaskId = OriginalIdUtils.fromItem(selectedTask);
@@ -780,11 +906,8 @@ function BoardDetailScreen({
         }
 
         resizeTimerSelected.current = setTimeout(() => {
-          console.log("[選択時リサイズ] 組み合わせキー:", combinationKey);
-          console.log("[選択時リサイズ] 保存する幅:", newSizes);
           setPanelSizesSelectedMap((prev) => {
             const updated = { ...prev, [combinationKey]: newSizes };
-            console.log("[選択時リサイズ] 更新後のMap:", updated);
             localStorage.setItem(
               "team-board-panel-sizes-selected",
               JSON.stringify(updated),
@@ -828,11 +951,8 @@ function BoardDetailScreen({
         }
 
         resizeTimerUnselected.current = setTimeout(() => {
-          console.log("[非選択時リサイズ] 組み合わせキー:", combinationKey);
-          console.log("[非選択時リサイズ] 保存する幅:", newSizes);
           setPanelSizesUnselectedMap((prev) => {
             const updated = { ...prev, [combinationKey]: newSizes };
-            console.log("[非選択時リサイズ] 更新後のMap:", updated);
             localStorage.setItem(
               "team-board-panel-sizes-unselected",
               JSON.stringify(updated),
@@ -953,49 +1073,6 @@ function BoardDetailScreen({
               : "w-full"
         } pl-2 pr-0 md:pl-5 md:pr-4 ${selectedMemo || selectedTask || rightPanelMode ? "md:pr-2" : "md:pr-4"} flex flex-col ${teamMode ? "" : "transition-all duration-300"} relative`}
       >
-        {/* チームモード時はDesktopUpperを3パネル内の左パネルに配置、個人モード時は外側に配置 */}
-        {!teamMode && (
-          <div>
-            <DesktopUpper
-              currentMode="board"
-              activeTab="normal"
-              onTabChange={() => {}} // ボードではタブ切り替えは無効
-              onCreateNew={() => {}} // 既存のボタンを使用
-              rightPanelMode={
-                selectedMemo || selectedTask || rightPanelMode
-                  ? "view"
-                  : "hidden"
-              }
-              customTitle={boardName || "ボード詳細"}
-              boardDescription={boardDescription}
-              boardId={boardId}
-              onBoardExport={handleExport}
-              onBoardSettings={onSettings || handleSettings}
-              isExportDisabled={false}
-              marginBottom="mb-2"
-              headerMarginBottom="mb-1.5"
-              boardLayout={boardLayout}
-              isReversed={isReversed}
-              onBoardLayoutChange={handleBoardLayoutChange}
-              showMemo={rightPanelMode === "task-list" ? false : showMemo}
-              showTask={rightPanelMode === "memo-list" ? false : showTask}
-              showComment={teamMode ? showComment : undefined}
-              onMemoToggle={handleMemoToggle}
-              onTaskToggle={handleTaskToggle}
-              onCommentToggle={teamMode ? handleCommentToggle : undefined}
-              contentFilterRightPanelMode={rightPanelMode}
-              normalCount={allMemoItems.length + allTaskItems.length}
-              completedCount={completedCount}
-              deletedCount={deletedCount + deletedMemoCount}
-              selectionMode={selectionMode}
-              onSelectionModeChange={handleSelectionModeChange}
-              onSelectAll={undefined}
-              isAllSelected={false}
-              onCsvImport={() => setIsCSVImportModalOpen(true)}
-            />
-          </div>
-        )}
-
         {/* メモ・タスクコンテンツ - チームモードでは動的3パネル構成 */}
         <div
           className={`${
@@ -1051,19 +1128,6 @@ function BoardDetailScreen({
                       detail: calculatedSizes.center,
                       comment: calculatedSizes.right,
                     };
-
-                    // デバッグログ
-                    console.log("[選択時パネル] 表示状態:", visibility);
-                    console.log(
-                      "[選択時パネル] 組み合わせキー:",
-                      combinationKey,
-                    );
-                    console.log(
-                      "[選択時パネル] 保存済みMap:",
-                      panelSizesSelectedMap,
-                    );
-                    console.log("[選択時パネル] 使用する幅:", savedSizes);
-                    console.log("[選択時パネル] 計算後の幅:", sizes);
 
                     // スマホ時: 1パネルずつ排他的に表示
                     if (!isDesktop) {
@@ -1376,63 +1440,6 @@ function BoardDetailScreen({
                               className="rounded-lg bg-white flex flex-col min-h-0 border-r border-gray-200"
                             >
                               <div className="flex flex-col h-full relative">
-                                <DesktopUpper
-                                  currentMode="board"
-                                  activeTab="normal"
-                                  onTabChange={() => {}}
-                                  onCreateNew={() => {}}
-                                  rightPanelMode="view"
-                                  customTitle={boardName || "ボード詳細"}
-                                  boardDescription={boardDescription}
-                                  boardId={boardId}
-                                  onBoardExport={handleExport}
-                                  onBoardSettings={onSettings || handleSettings}
-                                  isExportDisabled={false}
-                                  marginBottom="mb-0"
-                                  headerMarginBottom="mb-0"
-                                  boardLayout={boardLayout}
-                                  isReversed={isReversed}
-                                  onBoardLayoutChange={handleBoardLayoutChange}
-                                  showMemo={showListPanel}
-                                  showTask={showDetailPanel}
-                                  showComment={showCommentPanel}
-                                  onMemoToggle={handleListPanelToggle}
-                                  onTaskToggle={handleDetailPanelToggle}
-                                  onCommentToggle={handleCommentPanelToggle}
-                                  contentFilterRightPanelMode={rightPanelMode}
-                                  isSelectedMode={true}
-                                  listTooltip={
-                                    showListPanel
-                                      ? "一覧パネルを非表示"
-                                      : "一覧パネルを表示"
-                                  }
-                                  detailTooltip={
-                                    showDetailPanel
-                                      ? "詳細パネルを非表示"
-                                      : "詳細パネルを表示"
-                                  }
-                                  selectedItemType={
-                                    selectedMemo ? "memo" : "task"
-                                  }
-                                  normalCount={
-                                    allMemoItems.length + allTaskItems.length
-                                  }
-                                  completedCount={completedCount}
-                                  deletedCount={deletedCount + deletedMemoCount}
-                                  selectionMode={selectionMode}
-                                  onSelectionModeChange={
-                                    handleSelectionModeChange
-                                  }
-                                  onSelectAll={undefined}
-                                  isAllSelected={false}
-                                  onCsvImport={() =>
-                                    setIsCSVImportModalOpen(true)
-                                  }
-                                  hideControls={false}
-                                  floatControls={true}
-                                  teamMode={teamMode}
-                                />
-
                                 {selectedTask ? (
                                   /* タスク選択時: タスク一覧を表示 */
                                   <BoardTaskSection
@@ -1550,73 +1557,7 @@ function BoardDetailScreen({
                               className="rounded-lg bg-white flex flex-col min-h-0 border-r border-gray-200"
                             >
                               <div className="h-full flex flex-col min-h-0">
-                                {/* 一覧非表示時はDesktopUpperを表示 */}
-                                {!showListPanel && (
-                                  <div>
-                                    <DesktopUpper
-                                      currentMode="board"
-                                      activeTab="normal"
-                                      onTabChange={() => {}}
-                                      onCreateNew={() => {}}
-                                      rightPanelMode="view"
-                                      customTitle={boardName || "ボード詳細"}
-                                      boardDescription={boardDescription}
-                                      boardId={boardId}
-                                      onBoardExport={handleExport}
-                                      onBoardSettings={
-                                        onSettings || handleSettings
-                                      }
-                                      isExportDisabled={false}
-                                      marginBottom="mb-0"
-                                      headerMarginBottom="mb-0"
-                                      boardLayout={boardLayout}
-                                      isReversed={isReversed}
-                                      onBoardLayoutChange={
-                                        handleBoardLayoutChange
-                                      }
-                                      showMemo={showListPanel}
-                                      showTask={showDetailPanel}
-                                      showComment={showCommentPanel}
-                                      onMemoToggle={handleListPanelToggle}
-                                      onTaskToggle={handleDetailPanelToggle}
-                                      onCommentToggle={handleCommentPanelToggle}
-                                      contentFilterRightPanelMode={
-                                        rightPanelMode
-                                      }
-                                      isSelectedMode={true}
-                                      listTooltip={
-                                        showListPanel
-                                          ? "一覧パネルを非表示"
-                                          : "一覧パネルを表示"
-                                      }
-                                      detailTooltip={
-                                        showDetailPanel
-                                          ? "詳細パネルを非表示"
-                                          : "詳細パネルを表示"
-                                      }
-                                      normalCount={
-                                        allMemoItems.length +
-                                        allTaskItems.length
-                                      }
-                                      completedCount={completedCount}
-                                      deletedCount={
-                                        deletedCount + deletedMemoCount
-                                      }
-                                      selectionMode={selectionMode}
-                                      onSelectionModeChange={
-                                        handleSelectionModeChange
-                                      }
-                                      onSelectAll={undefined}
-                                      isAllSelected={false}
-                                      onCsvImport={() =>
-                                        setIsCSVImportModalOpen(true)
-                                      }
-                                      hideControls={false}
-                                      floatControls={true}
-                                      teamMode={teamMode}
-                                    />
-                                  </div>
-                                )}
+                                {!showListPanel && <div></div>}
 
                                 {selectedMemo ? (
                                   /* メモ選択時: メモ詳細を表示 */
@@ -1828,67 +1769,7 @@ function BoardDetailScreen({
                             minSize={25}
                             className="rounded-lg bg-white pr-2 flex flex-col min-h-0"
                           >
-                            {/* 一覧・詳細の両方が非表示の時はDesktopUpperを表示 */}
-                            {!showListPanel && !showDetailPanel && (
-                              <div>
-                                <DesktopUpper
-                                  currentMode="board"
-                                  activeTab="normal"
-                                  onTabChange={() => {}}
-                                  onCreateNew={() => {}}
-                                  rightPanelMode="view"
-                                  customTitle={boardName || "ボード詳細"}
-                                  boardDescription={boardDescription}
-                                  boardId={boardId}
-                                  onBoardExport={handleExport}
-                                  onBoardSettings={onSettings || handleSettings}
-                                  isExportDisabled={false}
-                                  marginBottom="mb-0"
-                                  headerMarginBottom="mb-0"
-                                  boardLayout={boardLayout}
-                                  isReversed={isReversed}
-                                  onBoardLayoutChange={handleBoardLayoutChange}
-                                  showMemo={showListPanel}
-                                  showTask={showDetailPanel}
-                                  showComment={showCommentPanel}
-                                  onMemoToggle={handleListPanelToggle}
-                                  onTaskToggle={handleDetailPanelToggle}
-                                  onCommentToggle={handleCommentPanelToggle}
-                                  contentFilterRightPanelMode={rightPanelMode}
-                                  isSelectedMode={true}
-                                  listTooltip={
-                                    showListPanel
-                                      ? "一覧パネルを非表示"
-                                      : "一覧パネルを表示"
-                                  }
-                                  detailTooltip={
-                                    showDetailPanel
-                                      ? "詳細パネルを非表示"
-                                      : "詳細パネルを表示"
-                                  }
-                                  selectedItemType={
-                                    selectedMemo ? "memo" : "task"
-                                  }
-                                  normalCount={
-                                    allMemoItems.length + allTaskItems.length
-                                  }
-                                  completedCount={completedCount}
-                                  deletedCount={deletedCount + deletedMemoCount}
-                                  selectionMode={selectionMode}
-                                  onSelectionModeChange={
-                                    handleSelectionModeChange
-                                  }
-                                  onSelectAll={undefined}
-                                  isAllSelected={false}
-                                  onCsvImport={() =>
-                                    setIsCSVImportModalOpen(true)
-                                  }
-                                  hideControls={false}
-                                  floatControls={true}
-                                  teamMode={teamMode}
-                                />
-                              </div>
-                            )}
+                            {!showListPanel && !showDetailPanel && <div></div>}
 
                             {/* メモ/タスク一覧表示時はコメント欄を非表示 */}
                             {!rightPanelMode && (
@@ -1977,22 +1858,6 @@ function BoardDetailScreen({
                       comment: calculatedSizes.right,
                     };
 
-                    // デバッグログ
-                    console.log("[非選択時パネル] 表示状態:", visibility);
-                    console.log(
-                      "[非選択時パネル] 組み合わせキー:",
-                      combinationKey,
-                    );
-                    console.log(
-                      "[非選択時パネル] 保存済みMap:",
-                      panelSizesUnselectedMap,
-                    );
-                    console.log("[非選択時パネル] 使用する幅:", savedSizes);
-                    console.log(
-                      "[非選択時パネル] 計算後の幅:",
-                      calculatedSizes,
-                    );
-
                     // スマホ時: 1パネルずつ排他的に表示
                     if (!isDesktop) {
                       return (
@@ -2014,48 +1879,6 @@ function BoardDetailScreen({
                           {/* メモ表示時 */}
                           {showMemo && (
                             <div className="flex flex-col h-full relative pt-2">
-                              <DesktopUpper
-                                currentMode="board"
-                                activeTab="normal"
-                                onTabChange={() => {}}
-                                onCreateNew={() => {}}
-                                rightPanelMode="hidden"
-                                customTitle={boardName || "ボード詳細"}
-                                boardDescription={boardDescription}
-                                boardId={boardId}
-                                onBoardExport={handleExport}
-                                onBoardSettings={onSettings || handleSettings}
-                                isExportDisabled={false}
-                                marginBottom="mb-0"
-                                headerMarginBottom="mb-0"
-                                boardLayout={boardLayout}
-                                isReversed={isReversed}
-                                onBoardLayoutChange={handleBoardLayoutChange}
-                                showMemo={showMemo}
-                                showTask={showTask}
-                                showComment={showComment}
-                                onMemoToggle={handleMemoToggle}
-                                onTaskToggle={handleTaskToggle}
-                                onCommentToggle={handleCommentToggle}
-                                contentFilterRightPanelMode={rightPanelMode}
-                                normalCount={
-                                  allMemoItems.length + allTaskItems.length
-                                }
-                                completedCount={completedCount}
-                                deletedCount={deletedCount + deletedMemoCount}
-                                selectionMode={selectionMode}
-                                onSelectionModeChange={
-                                  handleSelectionModeChange
-                                }
-                                onSelectAll={undefined}
-                                isAllSelected={false}
-                                onCsvImport={() =>
-                                  setIsCSVImportModalOpen(true)
-                                }
-                                hideControls={false}
-                                floatControls={true}
-                                teamMode={teamMode}
-                              />
                               <BoardMemoSection
                                 rightPanelMode={rightPanelMode}
                                 showMemo={showMemo}
@@ -2100,48 +1923,6 @@ function BoardDetailScreen({
                           {/* タスク表示時 */}
                           {showTask && !showMemo && (
                             <div className="flex flex-col h-full relative pt-2">
-                              <DesktopUpper
-                                currentMode="board"
-                                activeTab="normal"
-                                onTabChange={() => {}}
-                                onCreateNew={() => {}}
-                                rightPanelMode="hidden"
-                                customTitle={boardName || "ボード詳細"}
-                                boardDescription={boardDescription}
-                                boardId={boardId}
-                                onBoardExport={handleExport}
-                                onBoardSettings={onSettings || handleSettings}
-                                isExportDisabled={false}
-                                marginBottom="mb-0"
-                                headerMarginBottom="mb-0"
-                                boardLayout={boardLayout}
-                                isReversed={isReversed}
-                                onBoardLayoutChange={handleBoardLayoutChange}
-                                showMemo={showMemo}
-                                showTask={showTask}
-                                showComment={showComment}
-                                onMemoToggle={handleMemoToggle}
-                                onTaskToggle={handleTaskToggle}
-                                onCommentToggle={handleCommentToggle}
-                                contentFilterRightPanelMode={rightPanelMode}
-                                normalCount={
-                                  allMemoItems.length + allTaskItems.length
-                                }
-                                completedCount={completedCount}
-                                deletedCount={deletedCount + deletedMemoCount}
-                                selectionMode={selectionMode}
-                                onSelectionModeChange={
-                                  handleSelectionModeChange
-                                }
-                                onSelectAll={undefined}
-                                isAllSelected={false}
-                                onCsvImport={() =>
-                                  setIsCSVImportModalOpen(true)
-                                }
-                                hideControls={false}
-                                floatControls={true}
-                                teamMode={teamMode}
-                              />
                               <BoardTaskSection
                                 boardId={boardId}
                                 rightPanelMode={rightPanelMode}
@@ -2210,49 +1991,6 @@ function BoardDetailScreen({
                               className="rounded-lg bg-white flex flex-col min-h-0 border-r border-gray-200"
                             >
                               <div className="flex flex-col h-full relative">
-                                <DesktopUpper
-                                  currentMode="board"
-                                  activeTab="normal"
-                                  onTabChange={() => {}}
-                                  onCreateNew={() => {}}
-                                  rightPanelMode="hidden"
-                                  customTitle={boardName || "ボード詳細"}
-                                  boardDescription={boardDescription}
-                                  boardId={boardId}
-                                  onBoardExport={handleExport}
-                                  onBoardSettings={onSettings || handleSettings}
-                                  isExportDisabled={false}
-                                  marginBottom="mb-0"
-                                  headerMarginBottom="mb-0"
-                                  boardLayout={boardLayout}
-                                  isReversed={isReversed}
-                                  onBoardLayoutChange={handleBoardLayoutChange}
-                                  showMemo={showMemo}
-                                  showTask={showTask}
-                                  showComment={showComment}
-                                  onMemoToggle={handleMemoToggle}
-                                  onTaskToggle={handleTaskToggle}
-                                  onCommentToggle={handleCommentToggle}
-                                  contentFilterRightPanelMode={rightPanelMode}
-                                  normalCount={
-                                    allMemoItems.length + allTaskItems.length
-                                  }
-                                  completedCount={completedCount}
-                                  deletedCount={deletedCount + deletedMemoCount}
-                                  selectionMode={selectionMode}
-                                  onSelectionModeChange={
-                                    handleSelectionModeChange
-                                  }
-                                  onSelectAll={undefined}
-                                  isAllSelected={false}
-                                  onCsvImport={() =>
-                                    setIsCSVImportModalOpen(true)
-                                  }
-                                  hideControls={false}
-                                  floatControls={true}
-                                  teamMode={teamMode}
-                                />
-
                                 <BoardMemoSection
                                   rightPanelMode={rightPanelMode}
                                   showMemo={showMemo}
@@ -2312,57 +2050,6 @@ function BoardDetailScreen({
                               className="rounded-lg bg-white flex flex-col min-h-0 border-r border-gray-200"
                             >
                               <div className="flex flex-col h-full relative">
-                                {!showMemo && (
-                                  <DesktopUpper
-                                    currentMode="board"
-                                    activeTab="normal"
-                                    onTabChange={() => {}}
-                                    onCreateNew={() => {}}
-                                    rightPanelMode="hidden"
-                                    customTitle={boardName || "ボード詳細"}
-                                    boardDescription={boardDescription}
-                                    boardId={boardId}
-                                    onBoardExport={handleExport}
-                                    onBoardSettings={
-                                      onSettings || handleSettings
-                                    }
-                                    isExportDisabled={false}
-                                    marginBottom="mb-0"
-                                    headerMarginBottom="mb-0"
-                                    boardLayout={boardLayout}
-                                    isReversed={isReversed}
-                                    onBoardLayoutChange={
-                                      handleBoardLayoutChange
-                                    }
-                                    showMemo={showMemo}
-                                    showTask={showTask}
-                                    showComment={showComment}
-                                    onMemoToggle={handleMemoToggle}
-                                    onTaskToggle={handleTaskToggle}
-                                    onCommentToggle={handleCommentToggle}
-                                    contentFilterRightPanelMode={rightPanelMode}
-                                    normalCount={
-                                      allMemoItems.length + allTaskItems.length
-                                    }
-                                    completedCount={completedCount}
-                                    deletedCount={
-                                      deletedCount + deletedMemoCount
-                                    }
-                                    selectionMode={selectionMode}
-                                    onSelectionModeChange={
-                                      handleSelectionModeChange
-                                    }
-                                    onSelectAll={undefined}
-                                    isAllSelected={false}
-                                    onCsvImport={() =>
-                                      setIsCSVImportModalOpen(true)
-                                    }
-                                    hideControls={false}
-                                    floatControls={true}
-                                    teamMode={teamMode}
-                                  />
-                                )}
-
                                 <BoardTaskSection
                                   boardId={boardId}
                                   rightPanelMode={rightPanelMode}
@@ -2425,52 +2112,7 @@ function BoardDetailScreen({
                             className="rounded-lg bg-white pr-2 flex flex-col min-h-0"
                           >
                             {/* コメントのみ表示時はヘッダーを追加 */}
-                            {!showMemo && !showTask && (
-                              <div>
-                                <DesktopUpper
-                                  currentMode="board"
-                                  activeTab="normal"
-                                  onTabChange={() => {}}
-                                  onCreateNew={() => {}}
-                                  rightPanelMode="hidden"
-                                  customTitle={boardName || "ボード詳細"}
-                                  boardDescription={boardDescription}
-                                  boardId={boardId}
-                                  onBoardExport={handleExport}
-                                  onBoardSettings={onSettings || handleSettings}
-                                  isExportDisabled={false}
-                                  marginBottom="mb-0"
-                                  headerMarginBottom="mb-0"
-                                  boardLayout={boardLayout}
-                                  isReversed={isReversed}
-                                  onBoardLayoutChange={handleBoardLayoutChange}
-                                  showMemo={showMemo}
-                                  showTask={showTask}
-                                  showComment={showComment}
-                                  onMemoToggle={handleMemoToggle}
-                                  onTaskToggle={handleTaskToggle}
-                                  onCommentToggle={handleCommentToggle}
-                                  contentFilterRightPanelMode={rightPanelMode}
-                                  normalCount={
-                                    allMemoItems.length + allTaskItems.length
-                                  }
-                                  completedCount={completedCount}
-                                  deletedCount={deletedCount + deletedMemoCount}
-                                  selectionMode={selectionMode}
-                                  onSelectionModeChange={
-                                    handleSelectionModeChange
-                                  }
-                                  onSelectAll={undefined}
-                                  isAllSelected={false}
-                                  onCsvImport={() =>
-                                    setIsCSVImportModalOpen(true)
-                                  }
-                                  hideControls={false}
-                                  floatControls={true}
-                                  teamMode={teamMode}
-                                />
-                              </div>
-                            )}
+                            {!showMemo && !showTask && <div></div>}
 
                             {/* メモ/タスク一覧表示時はコメント欄を非表示 */}
                             {!rightPanelMode && (

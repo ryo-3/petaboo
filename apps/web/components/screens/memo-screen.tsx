@@ -29,6 +29,7 @@ import { useTeamContext } from "@/src/contexts/team-context";
 import { useViewSettings } from "@/src/contexts/view-settings-context";
 import { useTeamDetail } from "@/src/contexts/team-detail-context";
 import { useNavigation } from "@/src/contexts/navigation-context";
+import { useHeaderControlPanel } from "@/src/contexts/header-control-panel-context";
 import {
   useBoards,
   useItemBoards,
@@ -50,13 +51,14 @@ import {
 import { useMemoDeleteWithNextSelection } from "@/src/hooks/use-memo-delete-with-next-selection";
 import { createToggleHandler } from "@/src/utils/toggleUtils";
 import { validatePanelToggle } from "@/src/utils/panel-helpers";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ControlPanelLayout } from "@/components/layout/control-panel-layout";
 import CommentSection from "@/components/features/comments/comment-section";
 import AttachmentGallery from "@/components/features/attachments/attachment-gallery";
 import PhotoButton from "@/components/ui/buttons/photo-button";
 import { useAttachmentManager } from "@/src/hooks/use-attachment-manager";
 import type { TeamMember } from "@/src/hooks/use-team-detail";
+import type { HeaderControlPanelConfig } from "@/src/contexts/header-control-panel-context";
 import MobileFabButton from "@/components/ui/buttons/mobile-fab-button";
 
 type MemoScreenMode = "list" | "view" | "create";
@@ -140,6 +142,7 @@ interface MemoScreenProps {
   rightPanelDisabled?: boolean; // 右パネル無効化（ボードから呼び出される場合）
   hideHeaderButtons?: boolean; // ヘッダーボタンを非表示（ボードから呼び出される場合）
   hideBulkActionButtons?: boolean; // 一括操作ボタンを非表示（ボードから呼び出される場合）
+  disableHeaderControls?: boolean; // ヘッダーコントロールパネルを無効化
   onAddToBoard?: (memoIds: number[]) => void; // ボードに追加（ボードから呼び出される場合のみ）
   excludeBoardId?: number; // 指定されたボードに登録済みのメモを除外（ボードから呼び出される場合）
   initialSelectionMode?: "select" | "check"; // 初期選択モード
@@ -173,6 +176,7 @@ function MemoScreen({
   rightPanelDisabled = false,
   hideHeaderButtons = false,
   hideBulkActionButtons = false,
+  disableHeaderControls = false,
   onAddToBoard,
   excludeBoardId,
   initialSelectionMode = "select",
@@ -183,6 +187,7 @@ function MemoScreen({
 }: MemoScreenProps) {
   const { isTeamMode: teamMode, teamId: teamIdRaw } = useTeamContext();
   const teamId = teamIdRaw ?? undefined; // Convert null to undefined for hook compatibility
+  const { setConfig } = useHeaderControlPanel();
 
   // ViewSettingsContextから取得
   const { settings, sessionState, updateSettings, updateSessionState } =
@@ -248,6 +253,9 @@ function MemoScreen({
 
   // CSVインポートモーダルの状態
   const [isCsvImportModalOpen, setIsCsvImportModalOpen] = useState(false);
+  const handleCsvImport = useCallback(() => {
+    setIsCsvImportModalOpen(true);
+  }, []);
 
   // タグ管理モーダルの状態
   const [isTagManagementModalOpen, setIsTagManagementModalOpen] =
@@ -835,47 +843,110 @@ function MemoScreen({
       (memo) => !excludeItemIds.includes(memo.originalId || memo.id.toString()),
     ) || [];
 
+  // アイテム選択時のみパネルコントロールを表示（3パネル切り替え用）
   const shouldShowPanelControls = teamMode && memoScreenMode !== "list";
+
+  const memoRightPanelMode = (memoScreenMode === "list" ? "hidden" : "view") as
+    | "hidden"
+    | "view"
+    | "create";
 
   const desktopUpperCommonProps = {
     currentMode: "memo" as const,
     activeTab: displayTab as "normal" | "deleted",
     onTabChange: handleCustomTabChange,
-    onCreateNew: handleCreateNew,
-    rightPanelMode: (memoScreenMode === "list" ? "hidden" : "view") as
-      | "hidden"
-      | "view"
-      | "create",
-    selectionMode,
-    onSelectionModeChange: handleSelectionModeChange,
-    onSelectAll: handleSelectAll,
-    isAllSelected,
-    hideControls: false,
-    floatControls: true,
+    rightPanelMode: memoRightPanelMode,
     normalCount: memos?.length || 0,
     deletedMemosCount: deletedMemos?.length || 0,
-    hideAddButton: hideHeaderButtons,
-    onCsvImport: () => setIsCsvImportModalOpen(true),
-    teamMode,
-    teamId,
     marginBottom: "",
     headerMarginBottom: "mb-1.5",
-    isSelectedMode: shouldShowPanelControls,
-    ...(shouldShowPanelControls
-      ? {
-          showMemo: showListPanel,
-          showTask: showDetailPanel,
-          showComment: showCommentPanel,
-          onMemoToggle: handleListPanelToggle,
-          onTaskToggle: handleDetailPanelToggle,
-          onCommentToggle: handleCommentPanelToggle,
-          contentFilterRightPanelMode: "editor" as const,
-          listTooltip: "メモ一覧パネル",
-          detailTooltip: "メモ詳細パネル",
-          selectedItemType: "memo" as const,
-        }
-      : {}),
+    teamMode,
   };
+
+  const memoHeaderConfig = useMemo<HeaderControlPanelConfig | null>(() => {
+    if (disableHeaderControls) {
+      return null;
+    }
+
+    const config: HeaderControlPanelConfig = {
+      currentMode: "memo",
+      rightPanelMode: memoRightPanelMode,
+      selectionMode,
+      onSelectionModeChange: handleSelectionModeChange,
+      onSelectAll: handleSelectAll,
+      isAllSelected,
+      onCsvImport: handleCsvImport,
+      activeTab: displayTab,
+      normalCount: memos?.length || 0,
+      deletedMemosCount: deletedMemos?.length || 0,
+      hideAddButton: hideHeaderButtons,
+      teamMode,
+      teamId,
+      hideControls: preferences?.memoHideControls,
+    };
+
+    if (shouldShowPanelControls) {
+      config.isSelectedMode = true;
+      config.showMemo = showListPanel;
+      config.showTask = showDetailPanel;
+      config.showComment = showCommentPanel;
+      config.onMemoToggle = handleListPanelToggle;
+      config.onTaskToggle = handleDetailPanelToggle;
+      config.onCommentToggle = handleCommentPanelToggle;
+      config.contentFilterRightPanelMode = "editor";
+      config.listTooltip = "メモ一覧パネル";
+      config.detailTooltip = "メモ詳細パネル";
+      config.selectedItemType = "memo";
+    }
+
+    return config;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    disableHeaderControls,
+    memoRightPanelMode,
+    selectionMode,
+    // handleSelectionModeChange, // 関数は除外
+    // handleSelectAll, // 関数は除外
+    isAllSelected,
+    // handleCsvImport, // 関数は除外
+    displayTab,
+    memos?.length,
+    deletedMemos?.length,
+    hideHeaderButtons,
+    teamMode,
+    teamId,
+    preferences?.memoHideControls,
+    shouldShowPanelControls,
+    showListPanel,
+    showDetailPanel,
+    showCommentPanel,
+    // handleListPanelToggle, // 関数は除外
+    // handleDetailPanelToggle, // 関数は除外
+    // handleCommentPanelToggle, // 関数は除外
+  ]);
+
+  const headerOwnerRef = useRef<symbol | null>(null);
+
+  useEffect(() => {
+    if (!memoHeaderConfig) {
+      if (headerOwnerRef.current) {
+        setConfig(null);
+        headerOwnerRef.current = null;
+      }
+      return;
+    }
+
+    const owner = Symbol("header-control-panel");
+    headerOwnerRef.current = owner;
+    setConfig(memoHeaderConfig);
+
+    return () => {
+      if (headerOwnerRef.current === owner) {
+        setConfig(null);
+        headerOwnerRef.current = null;
+      }
+    };
+  }, [memoHeaderConfig]);
 
   // 左パネルのコンテンツ
   const leftPanelContent = (
@@ -1184,20 +1255,10 @@ function MemoScreen({
                 currentMode="memo"
                 activeTab={displayTab as "normal" | "deleted"}
                 onTabChange={handleCustomTabChange}
-                onCreateNew={handleCreateNew}
-                rightPanelMode={memoScreenMode === "list" ? "hidden" : "view"}
-                selectionMode={selectionMode}
-                onSelectionModeChange={handleSelectionModeChange}
-                onSelectAll={handleSelectAll}
-                isAllSelected={isAllSelected}
-                hideControls={false}
-                floatControls={false}
+                rightPanelMode={memoRightPanelMode}
                 normalCount={memos?.length || 0}
                 deletedMemosCount={deletedMemos?.length || 0}
-                hideAddButton={hideHeaderButtons}
-                onCsvImport={() => setIsCsvImportModalOpen(true)}
                 teamMode={teamMode}
-                teamId={teamId}
                 marginBottom=""
                 headerMarginBottom="mb-1.5"
               />

@@ -8,6 +8,7 @@ import { ToastContainer } from "@/components/ui/toast/toast-container";
 import { UserPreferencesProvider } from "@/src/contexts/user-preferences-context";
 import { getServerUserPreferences } from "@/src/lib/server-preferences";
 import { ViewSettingsProvider } from "@/src/contexts/view-settings-context";
+import { HeaderControlPanelProvider } from "@/src/contexts/header-control-panel-context";
 import { UserInitializer } from "@/components/auth/user-initializer";
 import { PageVisibilityProvider } from "@/src/contexts/PageVisibilityContext";
 import { LogCleaner } from "@/components/dev/log-cleaner";
@@ -60,10 +61,12 @@ export default async function RootLayout({
             <UserPreferencesProvider initialPreferences={initialPreferences}>
               <ViewSettingsProvider userId={1}>
                 <ToastProvider>
-                  {clerkPublishableKey && <UserInitializer />}
-                  <LogCleaner />
-                  {children}
-                  <ToastContainer />
+                  <HeaderControlPanelProvider>
+                    {clerkPublishableKey && <UserInitializer />}
+                    <LogCleaner />
+                    {children}
+                    <ToastContainer />
+                  </HeaderControlPanelProvider>
                 </ToastProvider>
               </ViewSettingsProvider>
             </UserPreferencesProvider>

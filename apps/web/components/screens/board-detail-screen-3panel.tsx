@@ -1116,7 +1116,10 @@ function BoardDetailScreen({
         } pl-4 flex flex-col ${teamMode ? "" : "transition-all duration-300"} relative`}
         style={{
           paddingLeft:
-            teamMode && (selectedMemo || selectedTask) ? "0" : undefined,
+            (teamMode && (selectedMemo || selectedTask)) ||
+            (showComment && !showMemo && !showTask)
+              ? "0"
+              : undefined,
         }}
       >
         {/* メモ・タスクコンテンツ - チームモードでは動的3パネル構成 */}

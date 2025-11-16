@@ -156,7 +156,9 @@ function DesktopUpper({
 
   // ヘッダー部分のJSX
   const headerContent = (
-    <div className={`flex justify-between items-center ${headerMarginBottom}`}>
+    <div
+      className={`flex justify-between items-center mt-2 md:mt-0 ${headerMarginBottom}`}
+    >
       <div className="flex items-center gap-2">
         {/* タブ（boardモード以外） */}
         {!hideTabs && currentMode !== "board" && (
@@ -180,7 +182,7 @@ function DesktopUpper({
                         | "completed",
                     )
                   }
-                  className={`flex items-center ${tabClass} rounded-lg font-medium transition-colors text-gray-600 text-[11px] md:text-[13px] ${getTabBackgroundClass(tab.id, isActive)}`}
+                  className={`flex items-center ${tabClass} rounded-lg font-medium transition-colors text-gray-600 text-xs md:text-[13px] ${getTabBackgroundClass(tab.id, isActive)}`}
                 >
                   {renderTabContent(tab, isActive)}
                 </button>

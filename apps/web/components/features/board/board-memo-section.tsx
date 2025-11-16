@@ -260,7 +260,7 @@ export default function BoardMemoSection({
       </div>
 
       {/* メモステータスタブ */}
-      <div className="flex items-center gap-2 flex-wrap mb-2">
+      <div className="flex items-center gap-2 flex-wrap mb-2 mt-2 md:mt-0">
         {/* 全選択/全解除ボタン（チェックモード時のみ表示） */}
         {memoSelectionMode === "check" && onSelectAll && (
           <Tooltip text={isAllSelected ? "全解除" : "全選択"} position="bottom">
@@ -279,7 +279,7 @@ export default function BoardMemoSection({
 
         <button
           onClick={() => onMemoTabChange("normal")}
-          className={`flex items-center gap-1 px-2 py-1 rounded-lg font-medium transition-colors text-gray-600 text-sm h-7 ${
+          className={`flex items-center gap-1 md:gap-1.5 px-1.5 py-1 md:px-2 md:py-1.5 rounded-lg font-medium transition-colors text-gray-600 text-xs md:text-[13px] ${
             activeMemoTab === "normal"
               ? "bg-gray-200"
               : "bg-gray-100 hover:bg-gray-200"
@@ -287,13 +287,13 @@ export default function BoardMemoSection({
         >
           <div className="w-2.5 h-2.5 rounded-full bg-gray-500"></div>
           {showTabText && <span>通常</span>}
-          <span className="bg-white/20 text-[11px] px-1 py-0.5 rounded-full min-w-[20px] text-center">
+          <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full text-right">
             {normalMemoCount}
           </span>
         </button>
         <button
           onClick={() => onMemoTabChange("deleted")}
-          className={`flex items-center px-2 py-1 rounded-lg font-medium transition-colors text-gray-600 text-sm h-7 ${
+          className={`flex items-center pl-1.5 pr-1.5 py-1.5 md:pl-2 md:pr-2 md:py-2 rounded-lg font-medium transition-colors text-gray-600 text-xs md:text-[13px] ${
             activeMemoTab === "deleted"
               ? "bg-red-100"
               : "bg-gray-100 hover:bg-red-100"

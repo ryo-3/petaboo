@@ -62,7 +62,7 @@ export function MainClientMobile({
   const isCreatingTask = navigation.isCreatingTask;
 
   return (
-    <div className="h-screen w-full md:hidden">
+    <div className="w-full md:hidden">
       {showDeleted ? (
         // 削除済みメモ一覧表示
         <DeletedMemoList

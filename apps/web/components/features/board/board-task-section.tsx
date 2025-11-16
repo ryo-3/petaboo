@@ -292,7 +292,7 @@ export default function BoardTaskSection({
       </div>
 
       {/* タスクステータスタブ */}
-      <div className="flex items-center gap-2 flex-wrap mb-2">
+      <div className="flex items-center gap-2 flex-wrap mb-2 mt-2 md:mt-0">
         {/* 全選択/全解除ボタン（チェックモード時のみ表示） */}
         {taskSelectionMode === "check" && onSelectAll && (
           <Tooltip text={isAllSelected ? "全解除" : "全選択"} position="bottom">
@@ -311,7 +311,7 @@ export default function BoardTaskSection({
 
         <button
           onClick={() => onTaskTabChange("todo")}
-          className={`flex items-center gap-1 px-2 py-1 rounded-lg font-medium transition-colors text-gray-600 text-sm h-7 ${
+          className={`flex items-center gap-1 md:gap-1.5 px-1.5 py-1 md:px-2 md:py-1.5 rounded-lg font-medium transition-colors text-gray-600 text-xs md:text-[13px] ${
             activeTaskTab === "todo"
               ? "bg-zinc-200"
               : "bg-gray-100 hover:bg-zinc-200"
@@ -319,13 +319,13 @@ export default function BoardTaskSection({
         >
           <div className="w-2.5 h-2.5 rounded-full bg-zinc-400"></div>
           {showTabText && <span>未着手</span>}
-          <span className="bg-white/20 text-[11px] px-1 py-0.5 rounded-full min-w-[20px] text-center">
+          <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full text-right">
             {todoCount}
           </span>
         </button>
         <button
           onClick={() => onTaskTabChange("in_progress")}
-          className={`flex items-center gap-1 px-2 py-1 rounded-lg font-medium transition-colors text-gray-600 text-sm h-7 ${
+          className={`flex items-center gap-1 md:gap-1.5 px-1.5 py-1 md:px-2 md:py-1.5 rounded-lg font-medium transition-colors text-gray-600 text-xs md:text-[13px] ${
             activeTaskTab === "in_progress"
               ? "bg-blue-100"
               : "bg-gray-100 hover:bg-blue-100"
@@ -333,13 +333,13 @@ export default function BoardTaskSection({
         >
           <div className="w-2.5 h-2.5 rounded-full bg-Blue"></div>
           {showTabText && <span>進行中</span>}
-          <span className="bg-white/20 text-[11px] px-1 py-0.5 rounded-full min-w-[20px] text-center">
+          <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full text-right">
             {inProgressCount}
           </span>
         </button>
         <button
           onClick={() => onTaskTabChange("completed")}
-          className={`flex items-center gap-1 px-2 py-1 rounded-lg font-medium transition-colors text-gray-600 text-sm h-7 ${
+          className={`flex items-center gap-1 md:gap-1.5 px-1.5 py-1 md:px-2 md:py-1.5 rounded-lg font-medium transition-colors text-gray-600 text-xs md:text-[13px] ${
             activeTaskTab === "completed"
               ? "bg-Green/20"
               : "bg-gray-100 hover:bg-Green/20"
@@ -347,13 +347,13 @@ export default function BoardTaskSection({
         >
           <div className="w-2.5 h-2.5 rounded-full bg-Green"></div>
           {showTabText && <span>完了</span>}
-          <span className="bg-white/20 text-[11px] px-1 py-0.5 rounded-full min-w-[20px] text-center">
+          <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full text-right">
             {completedCount}
           </span>
         </button>
         <button
           onClick={() => onTaskTabChange("deleted")}
-          className={`flex items-center px-2 py-1 rounded-lg font-medium transition-colors text-gray-600 text-sm h-7 ${
+          className={`flex items-center pl-1.5 pr-1.5 py-1.5 md:pl-2 md:pr-2 md:py-2 rounded-lg font-medium transition-colors text-gray-600 text-xs md:text-[13px] ${
             activeTaskTab === "deleted"
               ? "bg-red-100"
               : "bg-gray-100 hover:bg-red-100"

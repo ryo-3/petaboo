@@ -1096,7 +1096,7 @@ function BoardDetailScreen({
                 ? "w-[44%] border-r border-gray-300" // 個人モード：リスト表示時
                 : "w-[44%] border-r border-gray-300" // 個人モード：エディター表示時
               : "w-full"
-        } ${(teamMode && (selectedMemo || selectedTask)) || showCommentPanel || (showComment && !showMemo && !showTask) ? "" : "pl-4"} flex flex-col ${teamMode ? "" : "transition-all duration-300"} relative`}
+        } ${!(teamMode && (selectedMemo || selectedTask)) && !showCommentPanel && !(showComment && !showMemo && !showTask) ? "pl-4" : ""} flex flex-col ${teamMode ? "" : "transition-all duration-300"} relative`}
       >
         {/* メモ・タスクコンテンツ - チームモードでは動的3パネル構成 */}
         <div

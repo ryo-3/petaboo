@@ -1063,29 +1063,46 @@ function BoardDetailScreen({
   }
 
   // 本番デバッグ用
-  if (typeof window !== "undefined") {
-    console.log("[Board Padding Debug]", {
-      teamMode,
-      selectedMemo: !!selectedMemo,
-      selectedTask: !!selectedTask,
-      showCommentPanel,
-      showComment,
-      showMemo,
-      showTask,
-      condition1: teamMode && (selectedMemo || selectedTask),
-      condition2: showCommentPanel,
-      condition3: showComment && !showMemo && !showTask,
-      shouldRemovePadding:
-        (teamMode && (selectedMemo || selectedTask)) ||
-        showCommentPanel ||
-        (showComment && !showMemo && !showTask),
-    });
-  }
+  useEffect(() => {
+    const centerPanel = document.querySelector(
+      '[data-panel-id="board-center-panel"]',
+    );
+    if (centerPanel) {
+      const computedStyle = window.getComputedStyle(centerPanel);
+      const actualPaddingLeft = computedStyle.paddingLeft;
+
+      console.log("🎯 [Board Padding Debug - Actual DOM]", {
+        teamMode,
+        selectedMemo: !!selectedMemo,
+        selectedTask: !!selectedTask,
+        showCommentPanel,
+        showComment,
+        showMemo,
+        showTask,
+        shouldRemovePadding:
+          (teamMode && (selectedMemo || selectedTask)) ||
+          showCommentPanel ||
+          (showComment && !showMemo && !showTask),
+        "📏 実際のpaddingLeft": actualPaddingLeft,
+        "✅ pl-4が適用されているか": actualPaddingLeft === "16px",
+        className: centerPanel.className,
+      });
+    }
+  }, [
+    teamMode,
+    selectedMemo,
+    selectedTask,
+    showCommentPanel,
+    showComment,
+    showMemo,
+    showTask,
+  ]);
 
   return (
     <div className="flex h-full bg-white overflow-x-auto overflow-y-hidden">
       {/* 左側：メモ・タスク一覧 */}
       <div
+        data-panel-id="board-center-panel"
         className={`${
           teamMode
             ? rightPanelMode
@@ -1096,7 +1113,15 @@ function BoardDetailScreen({
                 ? "w-[44%] border-r border-gray-300" // 個人モード：リスト表示時
                 : "w-[44%] border-r border-gray-300" // 個人モード：エディター表示時
               : "w-full"
-        } ${!(teamMode && (selectedMemo || selectedTask)) && !showCommentPanel && !(showComment && !showMemo && !showTask) ? "pl-4" : ""} flex flex-col ${teamMode ? "" : "transition-all duration-300"} relative`}
+        } pl-4 flex flex-col ${teamMode ? "" : "transition-all duration-300"} relative`}
+        style={{
+          paddingLeft:
+            (teamMode && (selectedMemo || selectedTask)) ||
+            showCommentPanel ||
+            (showComment && !showMemo && !showTask)
+              ? "0"
+              : undefined,
+        }}
       >
         {/* メモ・タスクコンテンツ - チームモードでは動的3パネル構成 */}
         <div

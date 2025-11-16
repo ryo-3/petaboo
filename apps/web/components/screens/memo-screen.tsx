@@ -1208,7 +1208,7 @@ function MemoScreen({
   return (
     <div className="h-full">
       {/* デスクトップ表示 */}
-      <div className="hidden md:block md:min-w-[1280px] h-full">
+      <div className="hidden md:block h-full">
         {memoScreenMode === "list" ? (
           // リストモード: 1パネル表示
           leftPanelContent

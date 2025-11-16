@@ -1077,9 +1077,9 @@ function BoardDetailScreen({
         <div
           className={`${
             teamMode && !rightPanelMode
-              ? "flex gap-2 flex-1 min-h-0 md:min-w-[1280px]" // チームモード：3パネル時のみ最小幅を設定
+              ? "flex gap-2 flex-1 min-h-0"
               : teamMode && rightPanelMode
-                ? "flex flex-col gap-2 flex-1 min-h-0" // チームモード：メモ/タスク一覧表示時は最小幅なし
+                ? "flex flex-col gap-2 flex-1 min-h-0"
                 : !teamMode &&
                     (rightPanelMode === "memo-list" ||
                       rightPanelMode === "task-list")

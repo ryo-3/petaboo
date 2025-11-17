@@ -39,12 +39,6 @@ export function useBoardState() {
 
   const [columnCount, setColumnCount] = useState(2);
 
-  // ボードレイアウト状態
-  const [boardLayout, setBoardLayout] = useState<"horizontal" | "vertical">(
-    "horizontal",
-  );
-  const [isReversed, setIsReversed] = useState(false);
-
   // コンテンツフィルター状態（非選択時用、localStorageから復元）
   const [showMemo, setShowMemo] = useState(() => {
     if (typeof window !== "undefined") {
@@ -156,21 +150,6 @@ export function useBoardState() {
       );
     }
   }, [showCommentPanel, isDesktop]);
-
-  // ボードレイアウト変更ハンドラー（反転機能付き）
-  const handleBoardLayoutChange = useCallback(
-    (newLayout: "horizontal" | "vertical") => {
-      if (boardLayout === newLayout) {
-        // 同じレイアウトをクリックした場合は反転
-        setIsReversed((prev) => !prev);
-      } else {
-        // 異なるレイアウトの場合は変更して反転状態をリセット
-        setBoardLayout(newLayout);
-        setIsReversed(false);
-      }
-    },
-    [boardLayout],
-  );
 
   // 設定画面への遷移
   const handleSettings = useCallback(() => {
@@ -388,8 +367,6 @@ export function useBoardState() {
     rightPanelMode,
     selectedItemsFromList,
     columnCount,
-    boardLayout,
-    isReversed,
     showMemo,
     showTask,
     showComment,
@@ -404,8 +381,6 @@ export function useBoardState() {
     setRightPanelMode,
     setSelectedItemsFromList,
     setColumnCount,
-    setBoardLayout,
-    setIsReversed,
     setShowMemo,
     setShowTask,
     setShowComment,
@@ -414,7 +389,6 @@ export function useBoardState() {
     setShowCommentPanel,
 
     // ハンドラー
-    handleBoardLayoutChange,
     handleSettings,
     handleMemoToggle,
     handleTaskToggle,

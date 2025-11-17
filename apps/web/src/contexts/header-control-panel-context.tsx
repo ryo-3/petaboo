@@ -16,9 +16,6 @@ export type HeaderControlPanelConfig = {
   // ボード専用
   boardId?: number;
   onBoardSettings?: () => void;
-  boardLayout?: "horizontal" | "vertical";
-  isReversed?: boolean;
-  onBoardLayoutChange?: (layout: "horizontal" | "vertical") => void;
   showMemo?: boolean;
   showTask?: boolean;
   showComment?: boolean;

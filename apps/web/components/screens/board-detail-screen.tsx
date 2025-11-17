@@ -106,13 +106,10 @@ function BoardDetailScreen({
     showTabText,
     rightPanelMode,
     selectedItemsFromList,
-    boardLayout,
-    isReversed,
     showMemo,
     showTask,
     showComment,
     setRightPanelMode,
-    handleBoardLayoutChange,
     handleSettings,
     handleMemoToggle,
     handleTaskToggle,
@@ -396,9 +393,6 @@ function BoardDetailScreen({
       onBoardSettings: boardSettingsHandler,
       onBoardExport: handleExport,
       isExportDisabled: false,
-      boardLayout,
-      isReversed,
-      onBoardLayoutChange: handleBoardLayoutChange,
       showMemo: headerShowMemo,
       showTask: headerShowTask,
       onMemoToggle: handleMemoToggle,
@@ -427,9 +421,6 @@ function BoardDetailScreen({
     boardId,
     // boardSettingsHandler, // 関数は除外
     // handleExport, // 関数は除外
-    boardLayout,
-    isReversed,
-    // handleBoardLayoutChange, // 関数は除外
     headerShowMemo,
     headerShowTask,
     // handleMemoToggle, // 関数は除外
@@ -663,11 +654,9 @@ function BoardDetailScreen({
           className={`${
             rightPanelMode === "memo-list" || rightPanelMode === "task-list"
               ? "flex flex-col"
-              : !showMemo || !showTask || boardLayout === "vertical"
-                ? isReversed
-                  ? "flex flex-col-reverse"
-                  : "flex flex-col"
-                : `grid grid-cols-1 lg:grid-cols-2${isReversed ? " [&>*:nth-child(1)]:order-2 [&>*:nth-child(2)]:order-1" : ""}`
+              : !showMemo || !showTask
+                ? "flex flex-col"
+                : "grid grid-cols-1 lg:grid-cols-2"
           } gap-2 flex-1 min-h-0`}
         >
           {/* メモ列 */}
@@ -716,7 +705,6 @@ function BoardDetailScreen({
             rightPanelMode={rightPanelMode}
             showMemo={showMemo}
             showTask={showTask}
-            isReversed={isReversed}
             allTaskItems={allTaskItems}
             taskItems={taskItems}
             activeTaskTab={activeTaskTab}

@@ -2,7 +2,6 @@
 
 import ColumnCountSelector from "@/components/ui/layout/column-count-selector";
 import SelectionModeToggle from "@/components/ui/buttons/selection-mode-toggle";
-import BoardLayoutToggle from "@/components/ui/controls/board-layout-toggle";
 import ContentFilter from "@/components/ui/controls/content-filter";
 import SettingsIcon from "@/components/icons/settings-icon";
 import Tooltip from "@/components/ui/base/tooltip";
@@ -34,9 +33,6 @@ export default function HeaderControlPanel() {
     isAllSelected = false,
     boardId,
     onBoardSettings,
-    boardLayout = "horizontal",
-    isReversed = false,
-    onBoardLayoutChange,
     showMemo = true,
     showTask = true,
     showComment = true,
@@ -106,17 +102,6 @@ export default function HeaderControlPanel() {
             onModeChange={onSelectionModeChange}
             buttonSize="size-7"
             iconSize="size-4"
-          />
-        )}
-
-        {/* ボードレイアウト切り替え（boardモードのみ、チームモードでは非表示） */}
-        {currentMode === "board" && onBoardLayoutChange && !teamMode && (
-          <BoardLayoutToggle
-            boardLayout={boardLayout}
-            isReversed={isReversed}
-            onBoardLayoutChange={onBoardLayoutChange}
-            buttonSize="size-7"
-            iconSize="size-8"
           />
         )}
 

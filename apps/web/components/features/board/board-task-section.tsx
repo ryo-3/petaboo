@@ -27,7 +27,6 @@ interface BoardTaskSectionProps {
   rightPanelMode: "editor" | "memo-list" | "task-list" | null;
   showMemo: boolean;
   showTask: boolean;
-  isReversed?: boolean;
   allTaskItems: BoardItemWithContent[];
   taskItems: BoardItemWithContent[];
   activeTaskTab: "todo" | "in_progress" | "completed" | "deleted";
@@ -96,7 +95,6 @@ export default function BoardTaskSection({
   rightPanelMode,
   showMemo,
   showTask,
-  isReversed = false,
   allTaskItems,
   taskItems,
   activeTaskTab,
@@ -220,7 +218,7 @@ export default function BoardTaskSection({
   return (
     <div
       className={`flex flex-col flex-1 min-h-0 relative ${
-        showMemo && !isReversed ? (selectedTask ? "pl-4" : "pl-[7px]") : ""
+        showMemo ? (selectedTask ? "pl-4" : "pl-[7px]") : ""
       }`}
     >
       <div className="hidden md:flex items-center justify-between mb-1 pt-2">

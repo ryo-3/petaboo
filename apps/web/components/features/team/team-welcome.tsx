@@ -150,7 +150,7 @@ export function TeamWelcome({ onTeamCreate }: TeamWelcomeProps = {}) {
               </div>
 
               {/* タブ内容 */}
-              <div className="flex-1 overflow-y-auto">
+              <div className="flex-1 overflow-hidden md:overflow-y-auto">
                 {activeTab === "requests" ? (
                   <div className="space-y-4">
                     {!myJoinRequests ||
@@ -318,7 +318,7 @@ export function TeamWelcome({ onTeamCreate }: TeamWelcomeProps = {}) {
           </div>
         ) : !showDetailedView ? (
           /* 標準の2パネルレイアウト（PC: 横並び / スマホ: 縦並び） */
-          <div className="flex-1 overflow-auto pr-2 pb-10 mb-2">
+          <div className="flex-1 overflow-hidden md:overflow-auto pr-2 pb-10 mb-2">
             <div className="flex flex-col gap-4">
               {/* 2分割レイアウト */}
               <div className="flex flex-col md:flex-row gap-4 flex-1">
@@ -336,7 +336,7 @@ export function TeamWelcome({ onTeamCreate }: TeamWelcomeProps = {}) {
                         </div>
                       </div>
                     ) : (
-                      <div className="space-y-2 md:space-y-3 overflow-auto flex-1">
+                      <div className="space-y-2 md:space-y-3 overflow-hidden md:overflow-auto flex-1">
                         {teams.map((team) => (
                           <div
                             key={team.id}
@@ -406,7 +406,7 @@ export function TeamWelcome({ onTeamCreate }: TeamWelcomeProps = {}) {
                         </div>
                       </div>
                     ) : (
-                      <div className="space-y-2 md:space-y-3 overflow-auto flex-1">
+                      <div className="space-y-2 md:space-y-3 overflow-hidden md:overflow-auto flex-1">
                         {myJoinRequests.requests
                           .filter((r) => r.status !== "approved") // 承認済みを除外
                           .map((request) => (

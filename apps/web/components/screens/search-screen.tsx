@@ -129,7 +129,10 @@ function SearchScreen({
   };
 
   return (
-    <div ref={scrollRef} className="h-full overflow-y-auto bg-white">
+    <div
+      ref={scrollRef}
+      className="h-full overflow-hidden md:overflow-y-auto bg-white"
+    >
       {/* ヘッダー */}
       <div className="bg-white border-b border-gray-200 px-5 pt-3 pb-6">
         {/* タイトル */}

@@ -326,7 +326,7 @@ export function TeamBoardDetailWrapper({
   // 設定画面を表示
   if (showSettings) {
     return (
-      <div className="h-full flex flex-col overflow-y-auto pt-6 pl-6 pr-6">
+      <div className="h-full flex flex-col overflow-hidden md:overflow-y-auto pt-6 pl-6 pr-6">
         <SharedBoardSettings
           boardId={boardData.id}
           boardSlug={slug}

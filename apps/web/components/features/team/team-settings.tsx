@@ -238,7 +238,7 @@ export function TeamSettings({ customUrl }: TeamSettingsProps) {
         </div>
 
         {/* メインコンテンツ */}
-        <div className="flex-1 px-6 pt-4 overflow-y-auto">
+        <div className="flex-1 px-6 pt-4 overflow-hidden md:overflow-y-auto">
           <div className="max-w-2xl">
             {/* 基本情報タブ */}
             {activeTab === "basic" && (

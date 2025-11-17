@@ -63,7 +63,7 @@ export function MainClientDesktop({
   const isCreatingTask = screenMode === "create" && currentMode === "task";
 
   return (
-    <div className="flex flex-col md:h-screen w-full">
+    <div className="flex flex-col h-full md:h-screen w-full overflow-hidden">
       {/* ヘッダー（設定で非表示可能、デスクトップのみ） */}
       {!preferences?.hideHeader && (
         <div className="hidden md:block">

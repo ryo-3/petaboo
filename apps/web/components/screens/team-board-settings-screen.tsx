@@ -70,7 +70,7 @@ export default function TeamBoardSettingsScreen({
       </div>
 
       {/* メインコンテンツエリア */}
-      <div className="flex-1 pt-6 pl-6 pr-6 flex flex-col overflow-y-auto">
+      <div className="flex-1 pt-6 pl-6 pr-6 flex flex-col overflow-hidden md:overflow-y-auto">
         <SharedBoardSettings
           boardId={boardId}
           boardSlug={boardSlug}

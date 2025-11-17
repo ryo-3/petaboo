@@ -127,7 +127,7 @@ function TeamSettingsScreen({ teamId: _teamId }: TeamSettingsScreenProps) {
       </div>
 
       {/* コンテンツエリア */}
-      <div className="flex-1 overflow-auto p-5">
+      <div className="flex-1 overflow-hidden md:overflow-auto p-5">
         {/* メンバー管理タブ */}
         {activeTab === "members" && (
           <div className="space-y-6">

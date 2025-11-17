@@ -95,7 +95,7 @@ function WelcomeScreen({
   };
   return (
     <div
-      className={`h-full bg-gray-50 overflow-auto ${teamMode ? "pt-3 pl-5 pr-5" : "flex flex-col items-center justify-center px-8"}`}
+      className={`h-full bg-gray-50 overflow-hidden md:overflow-auto ${teamMode ? "pt-3 pl-5 pr-5" : "flex flex-col items-center justify-center px-8"}`}
     >
       <div
         className={`w-full ${teamMode ? "space-y-6 max-w-none" : "space-y-8 max-w-none text-center"}`}

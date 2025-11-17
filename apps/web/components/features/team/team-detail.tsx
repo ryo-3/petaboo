@@ -795,7 +795,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
               </div>
               {showInvitePanel ? (
                 /* 招待パネル */
-                <div className="flex-1 overflow-y-auto">
+                <div className="flex-1 overflow-hidden md:overflow-y-auto">
                   <Card className="p-6">
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -1071,7 +1071,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                       />
                     ) : (
                       <Card className="h-full flex flex-col overflow-hidden">
-                        <div className="flex-1 overflow-y-auto px-3 py-3">
+                        <div className="flex-1 overflow-hidden md:overflow-y-auto px-3 py-3">
                           <ActivityFeed customUrl={customUrl} limit={20} />
                         </div>
                       </Card>
@@ -1093,7 +1093,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                       <h3 className="text-lg font-semibold text-gray-900 mb-3 flex-shrink-0 px-4 pt-4">
                         アクティビティ
                       </h3>
-                      <div className="flex-1 overflow-y-auto px-4 pb-4">
+                      <div className="flex-1 overflow-hidden md:overflow-y-auto px-4 pb-4">
                         <ActivityFeed customUrl={customUrl} limit={10} />
                       </div>
                     </Card>
@@ -1346,7 +1346,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
                   {/* メンバー表示 */}
                   <div
-                    className="space-y-3 overflow-y-auto"
+                    className="space-y-3 overflow-hidden md:overflow-y-auto"
                     style={{ maxHeight: "calc(100vh - 250px)" }}
                   >
                     {(team.members || [])

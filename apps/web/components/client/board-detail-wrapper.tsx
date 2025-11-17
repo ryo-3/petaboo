@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import BoardDetailScreen from "@/components/screens/board-detail-screen";
 import type { Board } from "@/src/types/board";
@@ -39,13 +39,30 @@ export function BoardDetailWrapper({
 }: BoardDetailWrapperProps) {
   const router = useRouter();
 
-  return useMemo(() => {
-    // サーバーサイドからのボード情報がある場合は優先使用
-    const currentBoardId = boardId || boardFromSlug?.id;
-    const currentBoardName = initialBoardName || boardFromSlug?.name;
-    const currentBoardDescription =
-      serverBoardDescription || boardFromSlug?.description;
+  // サーバーサイドからのボード情報がある場合は優先使用
+  const currentBoardId = boardId || boardFromSlug?.id;
+  const currentBoardName = initialBoardName || boardFromSlug?.name;
+  const currentBoardDescription =
+    serverBoardDescription || boardFromSlug?.description;
 
+  // 個人側：ボード名をヘッダーに通知
+  useEffect(() => {
+    if (!teamMode && currentBoardName) {
+      window.dispatchEvent(
+        new CustomEvent("team-board-name-change", {
+          detail: { boardName: currentBoardName },
+        }),
+      );
+    }
+
+    return () => {
+      if (!teamMode) {
+        window.dispatchEvent(new CustomEvent("team-clear-board-name"));
+      }
+    };
+  }, [currentBoardName, teamMode]);
+
+  return useMemo(() => {
     // ボードIDがない場合はエラー
     if (!currentBoardId) {
       return (

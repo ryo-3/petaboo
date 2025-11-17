@@ -69,6 +69,10 @@ function Header() {
       searchParams.get("slug") !== null;
     const isPersonalPage = pathname === "/" || !teamName;
 
+    // 個人ボード詳細ページ（/boards/[slug]）
+    const isPersonalBoardDetailPage =
+      pathname.startsWith("/boards/") && !pathname.includes("/settings");
+
     // 個人ページのメモ/タスク/ボード一覧は iconStates で判定（楽観的更新対応）
     const isMemoListPage = isPersonalPage && iconStates.memo;
     const isTaskListPage = isPersonalPage && iconStates.task;
@@ -92,6 +96,7 @@ function Header() {
     return {
       isTeamBoardPage,
       isPersonalPage,
+      isPersonalBoardDetailPage,
       isTeamMemoListPage,
       isTeamTaskListPage,
       isTeamBoardListPage,
@@ -112,6 +117,7 @@ function Header() {
   const {
     isTeamBoardPage,
     isPersonalPage,
+    isPersonalBoardDetailPage,
     isMemoListPage,
     isTaskListPage,
     isBoardListPage,
@@ -169,10 +175,10 @@ function Header() {
 
   // ボード詳細ページから離れる時はボードタイトルをクリア
   useEffect(() => {
-    if (!isTeamBoardPage) {
+    if (!isTeamBoardPage && !isPersonalBoardDetailPage) {
       setBoardTitle(null);
     }
-  }, [isTeamBoardPage]);
+  }, [isTeamBoardPage, isPersonalBoardDetailPage]);
 
   // Page Visibility & マウス状態を取得
   const { isVisible, isMouseActive } = usePageVisibility();
@@ -243,7 +249,7 @@ function Header() {
           {/* ロゴ */}
           <div
             className={`w-8 h-8 md:w-10 md:h-10 rounded-xl flex items-center justify-center shadow-sm ${
-              isTeamBoardPage && boardTitle
+              (isTeamBoardPage || isPersonalBoardDetailPage) && boardTitle
                 ? "bg-light-Blue"
                 : isBoardListPage || isTeamBoardListPage
                   ? "bg-light-Blue"
@@ -254,7 +260,7 @@ function Header() {
                       : "bg-Green"
             }`}
           >
-            {isTeamBoardPage && boardTitle ? (
+            {(isTeamBoardPage || isPersonalBoardDetailPage) && boardTitle ? (
               <DashboardEditIcon className="w-6 h-6 text-white" />
             ) : isBoardListPage || isTeamBoardListPage ? (
               <DashboardEditIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
@@ -273,7 +279,7 @@ function Header() {
           <div className="flex items-center gap-1 md:gap-3">
             <div className="flex items-center gap-1 md:gap-3">
               <h1 className="text-sm md:text-xl font-bold text-gray-800 tracking-wide">
-                {isTeamBoardPage && boardTitle
+                {(isTeamBoardPage || isPersonalBoardDetailPage) && boardTitle
                   ? boardTitle
                   : isBoardListPage || isTeamBoardListPage
                     ? "ボード一覧"

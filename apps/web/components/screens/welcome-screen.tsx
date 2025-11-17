@@ -156,7 +156,7 @@ function WelcomeScreen({
           {!teamMode && (
             <>
               {/* プラン比較セクション */}
-              <div className="border-t border-gray-200 pt-4 md:pt-5 pb-3">
+              <div className="border-t border-gray-200 pt-4 md:pt-5 pb-20 md:pb-3">
                 <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 text-center">
                   プラン選択
                 </h3>
@@ -174,7 +174,7 @@ function WelcomeScreen({
                           </div>
                         </div>
                       </div>
-                      <ul className="space-y-2 text-base text-gray-600 mb-5">
+                      <ul className="space-y-2 text-lg text-gray-600 mb-5">
                         <li className="flex items-start">
                           <span className="mr-2 text-green-500">✓</span>
                           <span>無制限のメモ・タスク作成</span>
@@ -213,7 +213,7 @@ function WelcomeScreen({
                           </p>
                         </div>
                       </div>
-                      <ul className="space-y-2 text-base mb-5">
+                      <ul className="space-y-2 text-lg mb-5">
                         <li className="flex items-center">
                           <span className="mr-2">✓</span>
                           無制限のメモ・タスク作成
@@ -265,7 +265,7 @@ function WelcomeScreen({
                           </p>
                         </div>
                       </div>
-                      <ul className="space-y-2 text-base mb-5">
+                      <ul className="space-y-2 text-lg mb-5">
                         <li className="flex items-center">
                           <span className="mr-2">✓</span>
                           チームプランの全機能

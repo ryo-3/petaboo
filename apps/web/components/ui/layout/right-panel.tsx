@@ -8,7 +8,6 @@ interface RightPanelProps {
   children: React.ReactNode;
   className?: string;
   disableAnimation?: boolean; // アニメーション無効化オプション
-  compactPadding?: boolean; // パディングを小さくするオプション
 }
 
 /**
@@ -22,7 +21,6 @@ function RightPanel({
   children,
   className,
   disableAnimation = false,
-  compactPadding = false,
 }: RightPanelProps) {
   const [hasAnimated, setHasAnimated] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
@@ -73,7 +71,7 @@ function RightPanel({
     >
       {/* コンテンツエリア */}
       <div
-        className={`${compactPadding ? "pl-1" : "pl-5"} pr-2 flex-1 flex flex-col hover-scrollbar ${shouldAnimateIn ? "overflow-hidden" : "overflow-y-auto"}`}
+        className={`pr-2 flex-1 flex flex-col hover-scrollbar ${shouldAnimateIn ? "overflow-hidden" : "overflow-y-auto"}`}
       >
         {children}
       </div>

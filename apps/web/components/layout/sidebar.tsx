@@ -285,7 +285,7 @@ function Sidebar({
 
       {/* デスクトップサイドバー（PCでは常に表示、モバイルでメモ選択時は非表示） */}
       <div
-        className={`flex md:flex-col flex-row items-center md:py-4 py-0 md:h-screen h-14 bg-gray-50 md:justify-between justify-center w-full ${isShowingMemoEditor ? "hidden md:flex" : "flex"}`}
+        className={`flex md:flex-col flex-row items-center md:py-4 py-0 md:h-screen h-14 bg-gray-50 md:justify-between justify-center w-full overflow-hidden ${isShowingMemoEditor ? "hidden md:flex" : "flex"}`}
       >
         <div className="flex md:flex-col flex-row items-center md:gap-y-3 gap-x-2 md:w-auto justify-center md:justify-start">
           {/* ボード詳細時はホームの代わりに戻るボタンを表示（モバイルのみ） */}

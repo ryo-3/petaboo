@@ -28,17 +28,17 @@ function DesktopLayout({
   }, []);
 
   return (
-    <div className="flex flex-col md:flex-row flex-1 h-full overflow-hidden">
+    <div className="flex flex-col md:flex-row flex-1 h-full w-full overflow-hidden">
       {/* 左サイドバー（デスクトップ: 固定左サイドバー、モバイル: 下部バー） */}
       <div
-        className={`fixed left-0 right-0 ${hideHeader ? "md:top-0" : "md:top-16"} bottom-0 md:bottom-auto md:w-16 w-full md:h-screen h-14 md:border-r md:border-b-0 border-t border-gray-200 overflow-visible z-30 bg-gray-50`}
+        className={`fixed left-0 right-0 ${hideHeader ? "md:top-0" : "md:top-16"} bottom-0 md:bottom-auto md:w-16 w-full md:h-screen h-14 md:border-r md:border-b-0 border-t border-gray-200 overflow-hidden z-30 bg-gray-50`}
       >
         {sidebarContent}
       </div>
 
       {/* メインコンテンツエリア */}
       <div
-        className={`flex-1 md:ml-16 ml-0 md:h-screen overflow-hidden ${paddingTop} pt-0`}
+        className={`flex-1 md:ml-16 ml-0 md:h-screen w-full overflow-hidden ${paddingTop} pt-0`}
         style={{
           height: isMobile ? `calc(100dvh - 3.5rem)` : undefined,
         }}

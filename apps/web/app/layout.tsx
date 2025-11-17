@@ -47,14 +47,14 @@ export default async function RootLayout({
   const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
   const content = (
-    <html lang="ja" className="h-full overflow-hidden">
+    <html lang="ja" className="h-full w-full overflow-hidden">
       <head>
         {process.env.NODE_ENV === "development" && (
           <script src="/console-logger.js" />
         )}
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-gray-900 h-screen overflow-hidden`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-gray-900 h-screen w-full overflow-hidden`}
       >
         <QueryProvider>
           <PageVisibilityProvider>

@@ -378,9 +378,7 @@ export default function BoardRightPanel({
             {activeMemoTab === "deleted" ? (
               <MemoEditor
                 memo={selectedMemo}
-                onClose={() => {
-                  // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
-                }}
+                onClose={onClose}
                 onRestore={async () => {
                   if (
                     selectedMemo &&
@@ -427,9 +425,7 @@ export default function BoardRightPanel({
                 preloadedBoards={allBoards || []}
                 preloadedTaggings={allTaggings || []}
                 preloadedItemBoards={itemBoards}
-                onClose={() => {
-                  // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
-                }}
+                onClose={onClose}
                 onSaveComplete={(savedMemo) => {
                   // 保存後に選択状態を更新
                   onSelectMemo?.(savedMemo);
@@ -487,9 +483,7 @@ export default function BoardRightPanel({
                 preloadedItemBoards={itemBoards}
                 onSelectTask={onSelectTask}
                 unifiedOperations={taskOperations}
-                onClose={() => {
-                  // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
-                }}
+                onClose={onClose}
                 onRestore={async () => {
                   if (
                     selectedTask &&
@@ -525,9 +519,7 @@ export default function BoardRightPanel({
                 preloadedItemBoards={itemBoards}
                 onSelectTask={onSelectTask}
                 unifiedOperations={taskOperations}
-                onClose={() => {
-                  // エディター内からの閉じる操作は無視（右パネルの×ボタンのみで閉じる）
-                }}
+                onClose={onClose}
                 onSaveComplete={(savedTask, isNewTask, isContinuousMode) => {
                   if (!isNewTask) {
                     // 編集の場合は保存後に選択状態を更新

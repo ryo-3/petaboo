@@ -1,6 +1,5 @@
 "use client";
 
-import ClosePanelButton from "@/components/ui/buttons/close-panel-button";
 import { useEffect, useState } from "react";
 
 interface RightPanelProps {
@@ -72,9 +71,6 @@ function RightPanel({
     <div
       className={`w-full md:flex-1 h-full flex flex-col relative ${shouldAnimateIn ? "md:animate-slide-in-right" : ""} ${shouldAnimateOut ? "md:animate-slide-out-right" : ""} ${className || ""}`}
     >
-      {/* 閉じるボタン */}
-      <ClosePanelButton onClose={onClose} />
-
       {/* コンテンツエリア */}
       <div
         className={`${compactPadding ? "pl-1" : "pl-5"} pr-2 flex-1 flex flex-col hover-scrollbar ${shouldAnimateIn ? "overflow-hidden" : "overflow-y-auto"}`}

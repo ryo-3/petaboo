@@ -1252,7 +1252,9 @@ function BoardDetailScreen({
                           {showDetailPanel &&
                             !showListPanel &&
                             !showCommentPanel && (
-                              <div className="flex flex-col h-full pb-2">
+                              <div
+                                className={`flex flex-col h-full pb-2 ${!showListPanel ? "pl-2" : ""}`}
+                              >
                                 {selectedMemo ? (
                                   <MemoEditor
                                     memo={selectedMemo as Memo}
@@ -1573,7 +1575,9 @@ function BoardDetailScreen({
 
                                 {selectedMemo ? (
                                   /* メモ選択時: メモ詳細を表示 */
-                                  <div className="h-full flex flex-col min-h-0">
+                                  <div
+                                    className={`h-full flex flex-col min-h-0 ${!showListPanel ? "pl-2" : ""}`}
+                                  >
                                     <MemoEditor
                                       memo={selectedMemo as Memo}
                                       initialBoardId={boardId}
@@ -1645,7 +1649,9 @@ function BoardDetailScreen({
                                   </div>
                                 ) : selectedTask ? (
                                   /* タスク選択時: タスク詳細を表示 */
-                                  <div className="h-full flex flex-col min-h-0">
+                                  <div
+                                    className={`h-full flex flex-col min-h-0 ${!showListPanel ? "pl-2" : ""}`}
+                                  >
                                     <TaskEditor
                                       task={selectedTask as Task}
                                       initialBoardId={boardId}

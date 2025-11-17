@@ -219,7 +219,9 @@ export default function BoardTaskSection({
 
   return (
     <div
-      className={`flex flex-col flex-1 min-h-0 relative ${showMemo && !isReversed ? "pl-[7px]" : ""}`}
+      className={`flex flex-col flex-1 min-h-0 relative ${
+        showMemo && !isReversed ? (selectedTask ? "pl-4" : "pl-[7px]") : ""
+      }`}
     >
       <div className="hidden md:flex items-center justify-between mb-1 pt-2">
         <div className="flex items-center gap-2">

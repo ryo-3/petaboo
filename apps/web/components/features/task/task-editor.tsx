@@ -1152,9 +1152,7 @@ function TaskEditor({
     <>
       <div data-task-editor className="flex flex-col h-full relative">
         {/* 固定ヘッダー部分 */}
-        <div
-          className={`flex-shrink-0 pt-2 md:relative fixed top-0 left-0 right-0 z-50 bg-white ${isInLeftPanel ? "" : "pl-2"}`}
-        >
+        <div className="flex-shrink-0 pt-2 md:relative fixed top-0 left-0 right-0 z-50 bg-white pl-2">
           <div className="flex justify-start items-center">
             {/* ここにheaderActionsの内容を直接配置 */}
             <div className="flex items-center justify-between w-full">

@@ -197,7 +197,9 @@ export default function BoardMemoSection({
   }
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 relative">
+    <div
+      className={`flex flex-col flex-1 min-h-0 relative ${selectedMemo ? "pl-4" : ""}`}
+    >
       <div className="hidden md:flex items-center justify-between mb-1 pt-2">
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-1">

@@ -19,6 +19,7 @@ import { Memo, DeletedMemo } from "@/src/types/memo";
 import { Task, DeletedTask } from "@/src/types/task";
 import { OriginalIdUtils } from "@/src/types/common";
 import { useTeamContext } from "@/src/contexts/team-context";
+import { useUnsavedChangesGuard } from "@/src/hooks/use-unsaved-changes-guard";
 
 interface UseBoardOperationsProps {
   boardId: number;
@@ -74,6 +75,12 @@ interface UseBoardOperationsReturn {
   handleAddMemoToBoard: (memo: Memo) => Promise<void>;
   handleAddTaskToBoard: (task: Task) => Promise<void>;
   refetchDeletedItems: () => Promise<unknown>;
+
+  // 未保存変更チェック用ref
+  memoHasUnsavedChangesRef: React.MutableRefObject<boolean>;
+  memoShowConfirmModalRef: React.MutableRefObject<(() => void) | null>;
+  taskHasUnsavedChangesRef: React.MutableRefObject<boolean>;
+  taskShowConfirmModalRef: React.MutableRefObject<(() => void) | null>;
 }
 
 /**
@@ -219,26 +226,43 @@ export function useBoardOperations({
     ],
   );
 
-  // 選択ハンドラー
-  const handleSelectMemo = useCallback(
-    (memo: Memo | DeletedMemo) => {
-      console.log("[BoardOperations] handleSelectMemo", {
-        memoId: "id" in memo ? memo.id : undefined,
-        title: memo?.title,
-      });
-      setRightPanelMode(null); // リストモードを解除
-      onSelectMemo?.(memo);
+  // 未保存変更ガード（メモ用）
+  const {
+    personalHasUnsavedChangesRef: memoHasUnsavedChangesRef,
+    personalShowConfirmModalRef: memoShowConfirmModalRef,
+    handleSelectWithGuard: handleSelectMemoWithGuard,
+  } = useUnsavedChangesGuard<Memo | DeletedMemo>({
+    itemType: "memo",
+    teamMode: isTeamMode,
+    teamDetailContext: undefined, // ボード詳細では個人モードのみ対応
+    onSelectItem: onSelectMemo || (() => {}),
+    setScreenMode: (mode) => {
+      if (mode === "view") {
+        setRightPanelMode(null);
+      }
     },
-    [onSelectMemo, setRightPanelMode],
-  );
+  });
 
-  const handleSelectTask = useCallback(
-    (task: Task | DeletedTask) => {
-      setRightPanelMode(null); // リストモードを解除
-      onSelectTask?.(task);
+  // 未保存変更ガード（タスク用）
+  const {
+    personalHasUnsavedChangesRef: taskHasUnsavedChangesRef,
+    personalShowConfirmModalRef: taskShowConfirmModalRef,
+    handleSelectWithGuard: handleSelectTaskWithGuard,
+  } = useUnsavedChangesGuard<Task | DeletedTask>({
+    itemType: "task",
+    teamMode: isTeamMode,
+    teamDetailContext: undefined,
+    onSelectItem: onSelectTask || (() => {}),
+    setScreenMode: (mode) => {
+      if (mode === "view") {
+        setRightPanelMode(null);
+      }
     },
-    [onSelectTask, setRightPanelMode],
-  );
+  });
+
+  // 選択ハンドラー（未保存ガード付き）
+  const handleSelectMemo = handleSelectMemoWithGuard;
+  const handleSelectTask = handleSelectTaskWithGuard;
 
   const handleCloseDetail = useCallback(() => {
     onClearSelection?.();
@@ -551,5 +575,11 @@ export function useBoardOperations({
     handleAddMemoToBoard,
     handleAddTaskToBoard,
     refetchDeletedItems,
+
+    // 未保存変更チェック用ref
+    memoHasUnsavedChangesRef,
+    memoShowConfirmModalRef,
+    taskHasUnsavedChangesRef,
+    taskShowConfirmModalRef,
   };
 }

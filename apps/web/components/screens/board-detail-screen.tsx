@@ -196,6 +196,10 @@ function BoardDetailScreen({
     handleAddMemoToBoard,
     handleAddTaskToBoard,
     refetchDeletedItems,
+    memoHasUnsavedChangesRef,
+    memoShowConfirmModalRef,
+    taskHasUnsavedChangesRef,
+    taskShowConfirmModalRef,
   } = useBoardOperations({
     boardId,
     initialBoardName,
@@ -1086,6 +1090,18 @@ function BoardDetailScreen({
                           }
                           onAddMemoToBoard={handleAddMemoToBoard}
                           onAddTaskToBoard={handleAddTaskToBoard}
+                          memoEditorHasUnsavedChangesRef={
+                            memoHasUnsavedChangesRef
+                          }
+                          memoEditorShowConfirmModalRef={
+                            memoShowConfirmModalRef
+                          }
+                          taskEditorHasUnsavedChangesRef={
+                            taskHasUnsavedChangesRef
+                          }
+                          taskEditorShowConfirmModalRef={
+                            taskShowConfirmModalRef
+                          }
                         />
                       </div>
                     </ResizablePanel>

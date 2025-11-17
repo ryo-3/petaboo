@@ -64,6 +64,11 @@ interface BoardRightPanelProps {
   onTaskRestoreAndSelectNext?: (deletedTask: DeletedTask) => void;
   onAddMemoToBoard?: (memo: Memo) => void;
   onAddTaskToBoard?: (task: Task) => void;
+  // 未保存変更チェック用ref
+  memoEditorHasUnsavedChangesRef?: React.MutableRefObject<boolean>;
+  memoEditorShowConfirmModalRef?: React.MutableRefObject<(() => void) | null>;
+  taskEditorHasUnsavedChangesRef?: React.MutableRefObject<boolean>;
+  taskEditorShowConfirmModalRef?: React.MutableRefObject<(() => void) | null>;
 }
 
 export default function BoardRightPanel({
@@ -90,6 +95,10 @@ export default function BoardRightPanel({
   onTaskRestoreAndSelectNext,
   onAddMemoToBoard, // eslint-disable-line @typescript-eslint/no-unused-vars
   onAddTaskToBoard, // eslint-disable-line @typescript-eslint/no-unused-vars
+  memoEditorHasUnsavedChangesRef,
+  memoEditorShowConfirmModalRef,
+  taskEditorHasUnsavedChangesRef,
+  taskEditorShowConfirmModalRef,
 }: BoardRightPanelProps) {
   const { handleMainSelectMemo, handleMainSelectTask } = useNavigation();
   const { data: personalTags } = useTags();
@@ -408,6 +417,8 @@ export default function BoardRightPanel({
                 preloadedBoards={allBoards || []}
                 preloadedTaggings={allTaggings || []}
                 preloadedItemBoards={itemBoards}
+                memoEditorHasUnsavedChangesRef={memoEditorHasUnsavedChangesRef}
+                memoEditorShowConfirmModalRef={memoEditorShowConfirmModalRef}
               />
             ) : (
               <MemoEditor
@@ -455,6 +466,8 @@ export default function BoardRightPanel({
                   await deletePromise;
                 }}
                 isLidOpen={isRightMemoLidOpen}
+                memoEditorHasUnsavedChangesRef={memoEditorHasUnsavedChangesRef}
+                memoEditorShowConfirmModalRef={memoEditorShowConfirmModalRef}
               />
             )}
           </div>
@@ -499,6 +512,8 @@ export default function BoardRightPanel({
                     onDeletedTaskDeleteAndSelectNext(selectedTask);
                   }
                 }}
+                taskEditorHasUnsavedChangesRef={taskEditorHasUnsavedChangesRef}
+                taskEditorShowConfirmModalRef={taskEditorShowConfirmModalRef}
               />
             ) : (
               <TaskEditor
@@ -538,6 +553,8 @@ export default function BoardRightPanel({
                   // API完了を待つ
                   await deletePromise;
                 }}
+                taskEditorHasUnsavedChangesRef={taskEditorHasUnsavedChangesRef}
+                taskEditorShowConfirmModalRef={taskEditorShowConfirmModalRef}
               />
             )}
           </div>

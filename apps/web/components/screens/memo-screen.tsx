@@ -1263,7 +1263,7 @@ function MemoScreen({
               />
             </div>
             {/* スクロール可能なコンテンツ（ツールバーの高さ分 padding-top を追加） */}
-            <div className="overflow-y-auto overscroll-contain">
+            <div className="h-full overflow-y-auto overscroll-contain">
               <DesktopLower
                 currentMode="memo"
                 activeTab={displayTab as "normal" | "deleted"}
@@ -1309,15 +1309,15 @@ function MemoScreen({
             </div>
           </>
         ) : memoEditorTab === "memo" ? (
-          <div className="overflow-y-auto overscroll-contain">
+          <div className="h-full overflow-y-auto overscroll-contain">
             {centerPanelContent}
           </div>
         ) : memoEditorTab === "comment" ? (
-          <div className="overflow-y-auto overscroll-contain">
+          <div className="h-full overflow-y-auto overscroll-contain">
             {rightPanelContent}
           </div>
         ) : (
-          <div className="overflow-y-auto overscroll-contain">
+          <div className="h-full overflow-y-auto overscroll-contain">
             <MobileAttachmentView
               selectedMemo={selectedMemo || null}
               teamId={teamId}

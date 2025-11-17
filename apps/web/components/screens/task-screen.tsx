@@ -1345,7 +1345,7 @@ function TaskScreen({
               <DesktopUpper {...desktopUpperCommonProps} />
             </div>
             {/* スクロール可能なコンテンツ（ツールバーの高さ分 padding-top を追加） */}
-            <div className="overflow-y-auto overscroll-contain">
+            <div className="h-full overflow-y-auto overscroll-contain">
               <DesktopLower
                 currentMode="task"
                 activeTab={activeTabTyped}
@@ -1388,15 +1388,15 @@ function TaskScreen({
             </div>
           </>
         ) : taskEditorTab === "task" ? (
-          <div className="overflow-y-auto overscroll-contain">
+          <div className="h-full overflow-y-auto overscroll-contain">
             {centerPanelContent}
           </div>
         ) : taskEditorTab === "comment" ? (
-          <div className="overflow-y-auto overscroll-contain">
+          <div className="h-full overflow-y-auto overscroll-contain">
             {rightPanelContent}
           </div>
         ) : (
-          <div className="overflow-y-auto overscroll-contain">
+          <div className="h-full overflow-y-auto overscroll-contain">
             <MobileAttachmentView
               selectedTask={selectedTask || null}
               teamId={teamId}

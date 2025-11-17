@@ -47,7 +47,7 @@ export default async function RootLayout({
   const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
   const content = (
-    <html lang="ja">
+    <html lang="ja" className="h-full overflow-hidden">
       <head>
         {process.env.NODE_ENV === "development" && (
           <script src="/console-logger.js" />

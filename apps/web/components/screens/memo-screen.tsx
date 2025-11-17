@@ -953,40 +953,42 @@ function MemoScreen({
     <div className="pl-4 pt-3 flex flex-col h-full relative">
       <DesktopUpper {...desktopUpperCommonProps} />
 
-      <DesktopLower
-        currentMode="memo"
-        activeTab={displayTab as "normal" | "deleted"}
-        effectiveColumnCount={effectiveColumnCount}
-        isLoading={memoLoading}
-        error={memoError}
-        selectionMode={selectionMode}
-        memos={filteredMemos}
-        localMemos={filteredMemos}
-        deletedMemos={deletedMemos || []}
-        selectedMemo={selectedMemo}
-        selectedDeletedMemo={selectedDeletedMemo}
-        checkedMemos={checkedMemos}
-        checkedDeletedMemos={checkedDeletedMemos}
-        onToggleCheckMemo={createToggleHandler(checkedMemos, setCheckedMemos)}
-        onToggleCheckDeletedMemo={createToggleHandler(
-          checkedDeletedMemos,
-          setCheckedDeletedMemos,
-        )}
-        onSelectMemo={handleSelectMemo}
-        onSelectDeletedMemo={handleSelectDeletedMemo}
-        teamMode={teamMode}
-        // 全データ事前取得（ちらつき解消）
-        allTags={tags || []}
-        allBoards={boards || []}
-        allTaggings={safeAllTaggings || []}
-        allBoardItems={safeAllBoardItems || []}
-        allAttachments={allMemoAttachments || []}
-        // フィルター設定（ViewSettingsContextから取得）
-        selectedTagIds={selectedTagIds}
-        tagFilterMode={tagFilterMode}
-        selectedBoardIds={selectedBoardIds}
-        boardFilterMode={boardFilterMode}
-      />
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        <DesktopLower
+          currentMode="memo"
+          activeTab={displayTab as "normal" | "deleted"}
+          effectiveColumnCount={effectiveColumnCount}
+          isLoading={memoLoading}
+          error={memoError}
+          selectionMode={selectionMode}
+          memos={filteredMemos}
+          localMemos={filteredMemos}
+          deletedMemos={deletedMemos || []}
+          selectedMemo={selectedMemo}
+          selectedDeletedMemo={selectedDeletedMemo}
+          checkedMemos={checkedMemos}
+          checkedDeletedMemos={checkedDeletedMemos}
+          onToggleCheckMemo={createToggleHandler(checkedMemos, setCheckedMemos)}
+          onToggleCheckDeletedMemo={createToggleHandler(
+            checkedDeletedMemos,
+            setCheckedDeletedMemos,
+          )}
+          onSelectMemo={handleSelectMemo}
+          onSelectDeletedMemo={handleSelectDeletedMemo}
+          teamMode={teamMode}
+          // 全データ事前取得（ちらつき解消）
+          allTags={tags || []}
+          allBoards={boards || []}
+          allTaggings={safeAllTaggings || []}
+          allBoardItems={safeAllBoardItems || []}
+          allAttachments={allMemoAttachments || []}
+          // フィルター設定（ViewSettingsContextから取得）
+          selectedTagIds={selectedTagIds}
+          tagFilterMode={tagFilterMode}
+          selectedBoardIds={selectedBoardIds}
+          boardFilterMode={boardFilterMode}
+        />
+      </div>
 
       {/* 一括操作ボタン */}
       {!hideBulkActionButtons && (
@@ -1243,13 +1245,13 @@ function MemoScreen({
       </div>
 
       {/* モバイル: 1パネル表示（一覧 OR メモ OR コメント OR 画像 排他的表示） */}
-      <div className="md:hidden">
+      <div className="md:hidden h-full flex flex-col">
         {!selectedMemo &&
         !selectedDeletedMemo &&
         memoScreenMode !== "create" ? (
           <>
             {/* ツールバーを固定位置に配置 */}
-            <div className="fixed top-0 left-0 right-0 z-20 bg-white">
+            <div className="flex-shrink-0 bg-white">
               <DesktopUpper
                 currentMode="memo"
                 activeTab={displayTab as "normal" | "deleted"}
@@ -1262,8 +1264,8 @@ function MemoScreen({
                 headerMarginBottom="mb-1.5"
               />
             </div>
-            {/* スクロール可能なコンテンツ（ツールバーの高さ分 padding-top を追加） */}
-            <div className="h-full overflow-y-auto overscroll-contain">
+            {/* スクロール可能なコンテンツ */}
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
               <DesktopLower
                 currentMode="memo"
                 activeTab={displayTab as "normal" | "deleted"}

@@ -1335,17 +1335,17 @@ function TaskScreen({
       </div>
 
       {/* モバイル: 1パネル表示（一覧 OR タスク OR コメント OR 画像 排他的表示） */}
-      <div className="md:hidden">
+      <div className="md:hidden h-full flex flex-col">
         {!selectedTask &&
         !selectedDeletedTask &&
         taskScreenMode !== "create" ? (
           <>
             {/* ツールバーを固定位置に配置 */}
-            <div className="fixed top-0 left-0 right-0 z-20 bg-white">
+            <div className="flex-shrink-0 bg-white">
               <DesktopUpper {...desktopUpperCommonProps} />
             </div>
-            {/* スクロール可能なコンテンツ（ツールバーの高さ分 padding-top を追加） */}
-            <div className="h-full overflow-y-auto overscroll-contain">
+            {/* スクロール可能なコンテンツ */}
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
               <DesktopLower
                 currentMode="task"
                 activeTab={activeTabTyped}

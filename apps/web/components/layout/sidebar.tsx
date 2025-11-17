@@ -454,8 +454,13 @@ function Sidebar({
           <Tooltip text="詳細検索" position="right">
             <button
               onClick={() => {
+                console.log("[Sidebar] 🔍 詳細検索ボタン押下", {
+                  beforeOptimistic: iconStates,
+                  screenMode: currentMode,
+                });
                 setOptimisticMode(null); // optimisticModeをクリア
                 onSearch?.();
+                console.log("[Sidebar] 🔍 詳細検索実行後");
               }}
               className={`p-2 rounded-lg transition-colors ${
                 iconStates.search
@@ -474,6 +479,10 @@ function Sidebar({
             <Tooltip text={currentTeamName || "チーム"} position="right">
               <button
                 onClick={() => {
+                  console.log("[Sidebar] 👥 チーム一覧ボタン押下", {
+                    beforeOptimistic: iconStates,
+                    screenMode: currentMode,
+                  });
                   setOptimisticMode(null); // optimisticModeをクリア
                   // 通知を既読にする
                   markNotificationsAsRead();
@@ -483,6 +492,7 @@ function Sidebar({
                   } else {
                     window.location.href = "/team";
                   }
+                  console.log("[Sidebar] 👥 チーム一覧実行後");
                 }}
                 className={`relative p-2 rounded-lg transition-colors ${
                   iconStates.team
@@ -498,8 +508,13 @@ function Sidebar({
             <Tooltip text="設定" position="right">
               <button
                 onClick={() => {
+                  console.log("[Sidebar] ⚙️ 設定ボタン押下", {
+                    beforeOptimistic: iconStates,
+                    screenMode: currentMode,
+                  });
                   setOptimisticMode(null); // optimisticModeをクリア
                   onSettings?.();
+                  console.log("[Sidebar] ⚙️ 設定実行後");
                 }}
                 className={`p-2 rounded-lg transition-colors ${
                   iconStates.settings

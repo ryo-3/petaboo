@@ -206,20 +206,50 @@ export function NavigationProvider({
     // ホーム画面表示中は、currentModeに関わらずhomeアイコンのみ有効化
     const isHomeScreen = screenMode === "home" && !showTeamList;
 
-    return {
+    // 検索・設定・チーム画面では他のアイコンを無効化
+    const isTeamScreen =
+      pathname === "/team" ||
+      showTeamList ||
+      showTeamCreate ||
+      screenMode === "team";
+    const isExclusiveScreen =
+      screenMode === "search" || screenMode === "settings" || isTeamScreen;
+
+    const result = {
       home: isHomeScreen,
-      memo: !isHomeScreen && effectiveMode === "memo",
-      task: !isHomeScreen && effectiveMode === "task",
-      board: !isHomeScreen && effectiveMode === "board" && !boardDetailActive,
-      boardDetail: boardDetailActive,
+      memo: !isHomeScreen && !isExclusiveScreen && effectiveMode === "memo",
+      task: !isHomeScreen && !isExclusiveScreen && effectiveMode === "task",
+      board:
+        !isHomeScreen &&
+        !isExclusiveScreen &&
+        effectiveMode === "board" &&
+        !boardDetailActive,
+      boardDetail: !isExclusiveScreen && boardDetailActive,
       search: screenMode === "search",
       settings: screenMode === "settings",
-      team:
-        pathname === "/team" ||
-        showTeamList ||
-        showTeamCreate ||
-        screenMode === "team",
+      team: isTeamScreen,
     };
+
+    console.log("[NavigationContext] 🎯 iconStates計算（個人側）", {
+      screenMode,
+      currentMode,
+      optimisticMode,
+      effectiveMode,
+      isHomeScreen,
+      isTeamScreen,
+      isExclusiveScreen,
+      showingBoardDetail,
+      boardDetailActive,
+      showTeamList,
+      showTeamCreate,
+      pathname,
+      activeIcons: Object.entries(result)
+        .filter(([, v]) => v)
+        .map(([k]) => k)
+        .join(","),
+    });
+
+    return result;
   }, [
     screenMode,
     currentMode,

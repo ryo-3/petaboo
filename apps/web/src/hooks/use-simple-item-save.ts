@@ -10,6 +10,7 @@ import {
 } from "@/src/hooks/use-boards";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTeamContext } from "@/src/contexts/team-context";
+import { stripHtmlTags } from "@/src/utils/html";
 
 type UnifiedItem = Memo | Task;
 
@@ -28,6 +29,11 @@ interface UseSimpleItemSaveOptions<T extends UnifiedItem> {
   teamMode?: boolean;
   teamId?: number;
   boardId?: number; // チームボードでのキャッシュ更新に使用
+  hasTagChanges?: boolean;
+  pendingImages?: Array<unknown>;
+  pendingDeletes?: Array<unknown>;
+  isDeleted?: boolean;
+  isUploading?: boolean;
 }
 
 export function useSimpleItemSave<T extends UnifiedItem>({
@@ -40,6 +46,11 @@ export function useSimpleItemSave<T extends UnifiedItem>({
   teamMode: teamModeProp = false,
   teamId: teamIdProp,
   boardId,
+  hasTagChanges = false,
+  pendingImages = [],
+  pendingDeletes = [],
+  isDeleted = false,
+  isUploading = false,
 }: UseSimpleItemSaveOptions<T>) {
   // TeamContextからチーム情報を取得（propsより優先）
   const { isTeamMode, teamId: teamIdFromContext } = useTeamContext();
@@ -182,19 +193,6 @@ export function useSimpleItemSave<T extends UnifiedItem>({
   const queryClient = useQueryClient();
 
   // HTMLタグを除去して実質的な内容を取得
-  const stripHtmlTags = (str: string): string => {
-    // HTMLタグを除去
-    const withoutTags = str.replace(/<[^>]*>/g, "");
-    // HTML実体参照をデコード（&nbsp;など）
-    const withoutEntities = withoutTags
-      .replace(/&nbsp;/g, " ")
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&quot;/g, '"');
-    return withoutEntities.trim();
-  };
-
   // 変更検知（ボード選択も含める）
   const hasChanges = useMemo(() => {
     // アイテム切り替え中または初期同期中は変更検知を完全に無効化
@@ -861,6 +859,55 @@ export function useSimpleItemSave<T extends UnifiedItem>({
     setSelectedBoardIds(initialBoardId ? [initialBoardId] : []);
   }, [initialBoardId, itemType]);
 
+  const canSave = useMemo(() => {
+    const strippedTitle = stripHtmlTags(title);
+    const isNewItem = !item || item.id === 0;
+    const hasAttachmentChanges =
+      pendingImages.length > 0 || pendingDeletes.length > 0;
+
+    if (isDeleted) return false;
+    if (isUploading) return false;
+    if (isNewItem) return !!strippedTitle;
+
+    return (
+      (hasChanges || hasTagChanges || hasAttachmentChanges) && !!strippedTitle
+    );
+  }, [
+    title,
+    item,
+    isDeleted,
+    isUploading,
+    hasChanges,
+    hasTagChanges,
+    pendingImages.length,
+    pendingDeletes.length,
+  ]);
+
+  const hasUnsavedChanges = useMemo(() => {
+    const strippedTitle = stripHtmlTags(title);
+    const strippedContent = stripHtmlTags(content);
+    const isNewItem = !item || item.id === 0;
+
+    if (isNewItem) {
+      return !!strippedTitle || !!strippedContent || pendingImages.length > 0;
+    }
+
+    return (
+      hasChanges ||
+      hasTagChanges ||
+      pendingImages.length > 0 ||
+      pendingDeletes.length > 0
+    );
+  }, [
+    title,
+    content,
+    item,
+    hasChanges,
+    hasTagChanges,
+    pendingImages.length,
+    pendingDeletes.length,
+  ]);
+
   return {
     title,
     content,
@@ -875,6 +922,8 @@ export function useSimpleItemSave<T extends UnifiedItem>({
     isSaving,
     saveError,
     hasChanges,
+    canSave,
+    hasUnsavedChanges,
     isInitialSync, // タグ変更検知でも使用するためエクスポート
     handleSave,
     handleTitleChange,

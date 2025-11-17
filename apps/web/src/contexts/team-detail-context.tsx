@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import { useSearchParams } from "next/navigation";
 
-interface TeamDetailContextType {
+export interface TeamDetailContextType {
   selectedMemoId: number | null;
   setSelectedMemoId: (id: number | null) => void;
   selectedTaskId: number | null;

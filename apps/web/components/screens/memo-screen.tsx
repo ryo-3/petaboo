@@ -30,6 +30,7 @@ import { useViewSettings } from "@/src/contexts/view-settings-context";
 import { useTeamDetail } from "@/src/contexts/team-detail-context";
 import { useNavigation } from "@/src/contexts/navigation-context";
 import { useHeaderControlPanel } from "@/src/contexts/header-control-panel-context";
+import { useUnsavedChangesGuard } from "@/src/hooks/use-unsaved-changes-guard";
 import {
   useBoards,
   useItemBoards,
@@ -481,59 +482,18 @@ function MemoScreen({
         : 2
       : columnCount;
 
-  // 保留中の選択メモ（未保存モーダル表示時に使用）
-  const pendingMemoSelectionRef = useRef<Memo | null>(null);
-
-  // 個人モード用の未保存チェック用ref
-  const personalMemoEditorHasUnsavedChangesRef = useRef<boolean>(false);
-  const personalMemoEditorShowConfirmModalRef = useRef<(() => void) | null>(
-    null,
-  );
-
-  const handleSelectMemo = useCallback(
-    (memo: Memo | null) => {
-      console.log(`🎯 [memo-screen] handleSelectMemo called`, {
-        memoId: memo?.id,
-        memoTitle: memo?.title,
-        currentMode: memoScreenMode,
-        teamMode,
-      });
-
-      // 未保存の変更がある場合は選択を保留（チーム・個人共通）
-      if (memo) {
-        const hasUnsavedChanges = teamMode
-          ? teamDetailContext?.memoEditorHasUnsavedChangesRef.current
-          : personalMemoEditorHasUnsavedChangesRef.current;
-        const showModal = teamMode
-          ? teamDetailContext?.memoEditorShowConfirmModalRef.current
-          : personalMemoEditorShowConfirmModalRef.current;
-
-        if (hasUnsavedChanges && showModal) {
-          console.log(`🚫 [memo-screen] 未保存の変更があるため選択を保留`, {
-            pendingMemoId: memo.id,
-            teamMode,
-          });
-          // 選択を保留してモーダルを表示
-          pendingMemoSelectionRef.current = memo;
-          showModal();
-          return;
-        }
-      }
-
-      onSelectMemo(memo);
-      // メモを選択したら必ずviewモードに切り替える
-      if (memo) {
-        setMemoScreenMode("view");
-      }
-    },
-    [
-      onSelectMemo,
-      memoScreenMode,
-      teamMode,
-      setMemoScreenMode,
-      teamDetailContext,
-    ],
-  );
+  // 未保存変更ガード（チーム/個人モード共通）
+  const {
+    personalHasUnsavedChangesRef,
+    personalShowConfirmModalRef,
+    handleSelectWithGuard: handleSelectMemo,
+  } = useUnsavedChangesGuard({
+    itemType: "memo",
+    teamMode,
+    teamDetailContext,
+    onSelectItem: onSelectMemo,
+    setScreenMode: setMemoScreenMode,
+  });
 
   // チームモード・個人モードで新規作成状態をContextに反映
   useEffect(() => {
@@ -835,34 +795,6 @@ function MemoScreen({
       window.removeEventListener(eventName, handleMemoCreate);
     };
   }, [teamMode, handleCreateNew]);
-
-  // 未保存変更破棄イベントをリッスン（保留中の選択を実行）
-  useEffect(() => {
-    const handleUnsavedChangesDiscarded = () => {
-      if (pendingMemoSelectionRef.current) {
-        console.log(`✅ [memo-screen] 破棄確認後、保留中のメモを選択`, {
-          pendingMemoId: pendingMemoSelectionRef.current.id,
-        });
-        const pendingMemo = pendingMemoSelectionRef.current;
-        pendingMemoSelectionRef.current = null;
-        // 保留中のメモを選択（未保存チェックを回避するため直接実行）
-        onSelectMemo(pendingMemo);
-        setMemoScreenMode("view");
-      }
-    };
-
-    window.addEventListener(
-      "memo-unsaved-changes-discarded",
-      handleUnsavedChangesDiscarded,
-    );
-
-    return () => {
-      window.removeEventListener(
-        "memo-unsaved-changes-discarded",
-        handleUnsavedChangesDiscarded,
-      );
-    };
-  }, [onSelectMemo, setMemoScreenMode]);
 
   // モバイル版メモエディターのタブ切り替えイベントをリッスン
   useEffect(() => {
@@ -1168,10 +1100,10 @@ function MemoScreen({
           showDateAtBottom={true}
           unifiedOperations={operations}
           memoEditorHasUnsavedChangesRef={
-            teamMode ? undefined : personalMemoEditorHasUnsavedChangesRef
+            teamMode ? undefined : personalHasUnsavedChangesRef
           }
           memoEditorShowConfirmModalRef={
-            teamMode ? undefined : personalMemoEditorShowConfirmModalRef
+            teamMode ? undefined : personalShowConfirmModalRef
           }
         />
       )}
@@ -1205,10 +1137,10 @@ function MemoScreen({
           showDateAtBottom={true}
           unifiedOperations={operations}
           memoEditorHasUnsavedChangesRef={
-            teamMode ? undefined : personalMemoEditorHasUnsavedChangesRef
+            teamMode ? undefined : personalHasUnsavedChangesRef
           }
           memoEditorShowConfirmModalRef={
-            teamMode ? undefined : personalMemoEditorShowConfirmModalRef
+            teamMode ? undefined : personalShowConfirmModalRef
           }
         />
       )}

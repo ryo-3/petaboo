@@ -31,6 +31,7 @@ import { useViewSettings } from "@/src/contexts/view-settings-context";
 import { useTeamDetail } from "@/src/contexts/team-detail-context";
 import { useNavigation } from "@/src/contexts/navigation-context";
 import { useHeaderControlPanel } from "@/src/contexts/header-control-panel-context";
+import { useUnsavedChangesGuard } from "@/src/hooks/use-unsaved-changes-guard";
 import {
   useBoards,
   useItemBoards,
@@ -872,14 +873,22 @@ function TaskScreen({
     onClose: onClose,
   });
 
-  // 保留中の選択タスク（未保存モーダル表示時に使用）
-  const pendingTaskSelectionRef = useRef<Task | null>(null);
-
-  // 個人モード用の未保存チェック用ref
-  const personalTaskEditorHasUnsavedChangesRef = useRef<boolean>(false);
-  const personalTaskEditorShowConfirmModalRef = useRef<(() => void) | null>(
-    null,
-  );
+  // 未保存変更ガード（チーム/個人モード共通）
+  const {
+    personalHasUnsavedChangesRef,
+    personalShowConfirmModalRef,
+    handleSelectWithGuard,
+  } = useUnsavedChangesGuard({
+    itemType: "task",
+    teamMode,
+    teamDetailContext,
+    onSelectItem: (task: Task | null) => {
+      if (task) {
+        handleSelectTaskBase(task);
+      }
+    },
+    setScreenMode: setTaskScreenMode,
+  });
 
   // タスク選択ハンドラー（アップロード中チェック・未保存チェック追加）
   const handleSelectTask = (task: Task) => {
@@ -888,28 +897,7 @@ function TaskScreen({
       return;
     }
 
-    // 未保存の変更がある場合は選択を保留（チーム・個人共通）
-    if (task) {
-      const hasUnsavedChanges = teamMode
-        ? teamDetailContext?.taskEditorHasUnsavedChangesRef.current
-        : personalTaskEditorHasUnsavedChangesRef.current;
-      const showModal = teamMode
-        ? teamDetailContext?.taskEditorShowConfirmModalRef.current
-        : personalTaskEditorShowConfirmModalRef.current;
-
-      if (hasUnsavedChanges && showModal) {
-        console.log(`🚫 [task-screen] 未保存の変更があるため選択を保留`, {
-          pendingTaskId: task.id,
-          teamMode,
-        });
-        // 選択を保留してモーダルを表示
-        pendingTaskSelectionRef.current = task;
-        showModal();
-        return;
-      }
-    }
-
-    handleSelectTaskBase(task);
+    handleSelectWithGuard(task);
   };
 
   // ヘッダーからの新規タスク作成イベントをリッスン
@@ -925,34 +913,6 @@ function TaskScreen({
       window.removeEventListener(eventName, handleTaskCreate);
     };
   }, [teamMode, handleCreateNew]);
-
-  // 未保存変更破棄イベントをリッスン（保留中の選択を実行）
-  useEffect(() => {
-    const handleUnsavedChangesDiscarded = () => {
-      if (pendingTaskSelectionRef.current) {
-        console.log(`✅ [task-screen] 破棄確認後、保留中のタスクを選択`, {
-          pendingTaskId: pendingTaskSelectionRef.current.id,
-        });
-        const pendingTask = pendingTaskSelectionRef.current;
-        pendingTaskSelectionRef.current = null;
-        // 保留中のタスクを選択（未保存チェックを回避するため直接実行）
-        onSelectTask(pendingTask);
-        setTaskScreenMode("view");
-      }
-    };
-
-    window.addEventListener(
-      "task-unsaved-changes-discarded",
-      handleUnsavedChangesDiscarded,
-    );
-
-    return () => {
-      window.removeEventListener(
-        "task-unsaved-changes-discarded",
-        handleUnsavedChangesDiscarded,
-      );
-    };
-  }, [onSelectTask, setTaskScreenMode]);
 
   // 安全なデータ配布用
   const safeAllTaggings = allTaggings || [];
@@ -1258,12 +1218,12 @@ function TaskScreen({
           taskEditorHasUnsavedChangesRef={
             teamMode
               ? taskEditorHasUnsavedChangesRef
-              : personalTaskEditorHasUnsavedChangesRef
+              : personalHasUnsavedChangesRef
           }
           taskEditorShowConfirmModalRef={
             teamMode
               ? taskEditorShowConfirmModalRef
-              : personalTaskEditorShowConfirmModalRef
+              : personalShowConfirmModalRef
           }
         />
       )}
@@ -1296,12 +1256,12 @@ function TaskScreen({
           taskEditorHasUnsavedChangesRef={
             teamMode
               ? taskEditorHasUnsavedChangesRef
-              : personalTaskEditorHasUnsavedChangesRef
+              : personalHasUnsavedChangesRef
           }
           taskEditorShowConfirmModalRef={
             teamMode
               ? taskEditorShowConfirmModalRef
-              : personalTaskEditorShowConfirmModalRef
+              : personalShowConfirmModalRef
           }
         />
       )}

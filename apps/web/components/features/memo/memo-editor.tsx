@@ -34,6 +34,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAttachmentManager } from "@/src/hooks/use-attachment-manager";
 import AttachmentGallery from "@/components/features/attachments/attachment-gallery";
 import { useToast } from "@/src/contexts/toast-context";
+import { dispatchDiscardEvent } from "@/src/types/unsaved-changes";
 import ShareUrlButton from "@/components/ui/buttons/share-url-button";
 import {
   generateTeamShareUrl,
@@ -199,61 +200,6 @@ function MemoEditor({
   const [localTags, setLocalTags] = useState<Tag[]>([]);
   const [hasManualChanges, setHasManualChanges] = useState(false);
   const resetFormRef = useRef<(() => void) | null>(null);
-
-  const simpleItemSave = useSimpleItemSave<Memo>({
-    item: memo,
-    itemType: "memo",
-    onSaveComplete: useCallback(
-      (savedMemo: Memo, wasEmpty: boolean, isNewMemo: boolean) => {
-        lastSavedMemoRef.current = savedMemo;
-        // 新規メモ作成で連続作成モードが有効な場合
-        if (isNewMemo && !wasEmpty && continuousCreateMode) {
-          // タグをリセット
-          setLocalTags([]);
-          setHasManualChanges(false);
-          // フォームを手動でリセット
-          setTimeout(() => {
-            resetFormRef.current?.();
-          }, 50);
-          return; // onSaveCompleteを呼ばずに新規作成状態を維持
-        }
-        pendingSaveResultRef.current = {
-          savedMemo,
-          wasEmpty,
-          isNewMemo,
-        };
-      },
-      [continuousCreateMode, setHasManualChanges, setLocalTags],
-    ),
-    currentBoardIds,
-    initialBoardId,
-    onDeleteAndSelectNext,
-    teamMode,
-    teamId,
-    boardId: initialBoardId, // チームボードキャッシュ更新用
-  });
-
-  const {
-    title,
-    content,
-    selectedBoardIds,
-    isSaving,
-    saveError,
-    hasChanges,
-    handleSave,
-    handleTitleChange,
-    handleContentChange,
-    handleBoardChange,
-    showBoardChangeModal,
-    pendingBoardChanges,
-    handleConfirmBoardChange,
-    handleCancelBoardChange,
-    resetForm,
-  } = simpleItemSave;
-
-  useEffect(() => {
-    resetFormRef.current = resetForm ?? null;
-  }, [resetForm]);
 
   const [error] = useState<string | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -582,61 +528,67 @@ function MemoEditor({
     return JSON.stringify(currentTagIds) !== JSON.stringify(localTagIds);
   }, [currentTags, localTags, memo]);
 
-  // HTMLタグを除去して実質的な内容を取得
-  const stripHtmlTags = useCallback((str: string): string => {
-    // HTMLタグを除去
-    const withoutTags = str.replace(/<[^>]*>/g, "");
-    // HTML実体参照をデコード（&nbsp;など）
-    const withoutEntities = withoutTags
-      .replace(/&nbsp;/g, " ")
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&quot;/g, '"');
-    return withoutEntities.trim();
-  }, []);
-
-  // 未保存の変更があるかチェック（useMemoで確実に再計算）
-  const isNewMemo = !memo || memo.id === 0;
-  const hasUnsavedChanges = useMemo(() => {
-    // HTMLタグを除去した実質的な内容で判定
-    const strippedTitle = stripHtmlTags(title);
-    const strippedContent = stripHtmlTags(content);
-
-    const result = isNewMemo
-      ? !!strippedTitle || !!strippedContent || pendingImages.length > 0
-      : hasChanges ||
-        hasTagChanges ||
-        pendingImages.length > 0 ||
-        pendingDeletes.length > 0;
-
-    console.log(`📝 [memo-editor] hasUnsavedChanges=${result}`, {
-      isNewMemo,
-      memoId: memo?.id,
-      title: `"${title}"`,
-      titleTrimmed: `"${title.trim()}"`,
-      strippedTitle: `"${strippedTitle}"`,
-      content: `"${content.substring(0, 50)}..."`,
-      contentTrimmed: `"${content.trim().substring(0, 50)}..."`,
-      strippedContent: `"${strippedContent.substring(0, 50)}..."`,
-      pendingImagesCount: pendingImages.length,
-      hasChanges,
-      hasTagChanges,
-      pendingDeletesCount: pendingDeletes.length,
-    });
-
-    return result;
-  }, [
-    isNewMemo,
-    memo?.id,
+  const {
     title,
     content,
-    stripHtmlTags,
-    pendingImages.length,
+    selectedBoardIds,
+    isSaving,
+    saveError,
     hasChanges,
+    canSave,
+    hasUnsavedChanges,
+    handleSave,
+    handleTitleChange,
+    handleContentChange,
+    handleBoardChange,
+    showBoardChangeModal,
+    pendingBoardChanges,
+    handleConfirmBoardChange,
+    handleCancelBoardChange,
+    resetForm,
+  } = useSimpleItemSave<Memo>({
+    item: memo,
+    itemType: "memo",
+    onSaveComplete: useCallback(
+      (savedMemo: Memo, wasEmpty: boolean, isNewMemo: boolean) => {
+        lastSavedMemoRef.current = savedMemo;
+        // 新規メモ作成で連続作成モードが有効な場合
+        if (isNewMemo && !wasEmpty && continuousCreateMode) {
+          // タグをリセット
+          setLocalTags([]);
+          setHasManualChanges(false);
+          // フォームを手動でリセット
+          setTimeout(() => {
+            resetFormRef.current?.();
+          }, 50);
+          return; // onSaveCompleteを呼ばずに新規作成状態を維持
+        }
+        pendingSaveResultRef.current = {
+          savedMemo,
+          wasEmpty,
+          isNewMemo,
+        };
+      },
+      [continuousCreateMode, setHasManualChanges, setLocalTags],
+    ),
+    currentBoardIds,
+    initialBoardId,
+    onDeleteAndSelectNext,
+    teamMode,
+    teamId,
+    boardId: initialBoardId, // チームボードキャッシュ更新用
     hasTagChanges,
-    pendingDeletes.length,
-  ]);
+    pendingImages,
+    pendingDeletes,
+    isDeleted,
+    isUploading,
+  });
+
+  useEffect(() => {
+    resetFormRef.current = resetForm ?? null;
+  }, [resetForm]);
+
+  const isNewMemo = !memo || memo.id === 0;
 
   // チーム機能でのURL共有用
   const shareUrl = useMemo(() => {
@@ -1218,7 +1170,7 @@ function MemoEditor({
   const handleConfirmClose = useCallback(() => {
     setIsCloseConfirmModalOpen(false);
     // 破棄が選択されたことを通知（保留中の選択を実行するため）
-    window.dispatchEvent(new CustomEvent("memo-unsaved-changes-discarded"));
+    dispatchDiscardEvent("memo");
     onClose();
   }, [onClose]);
 
@@ -1444,33 +1396,7 @@ function MemoEditor({
                 {!isDeleted && (
                   <SaveButton
                     onClick={handleSaveWithTags}
-                    disabled={(() => {
-                      // HTMLタグを除去してテキスト内容のみを抽出
-                      const textContent = content
-                        .replace(/<[^>]*>/g, "") // HTMLタグを除去
-                        .replace(/&nbsp;/g, " ") // &nbsp;を空白に変換
-                        .trim();
-
-                      const isContentEmpty = !textContent;
-
-                      const disabled =
-                        isUploading ||
-                        (!hasChanges &&
-                          !hasTagChanges &&
-                          pendingImages.length === 0 &&
-                          pendingDeletes.length === 0) ||
-                        (memo !== null &&
-                          memo.id > 0 &&
-                          isContentEmpty &&
-                          pendingImages.length === 0 &&
-                          pendingDeletes.length === 0) ||
-                        // 新規メモで空の場合は保存不可
-                        ((memo === null || memo.id === 0) &&
-                          isContentEmpty &&
-                          pendingImages.length === 0);
-
-                      return disabled;
-                    })()}
+                    disabled={!canSave}
                     isSaving={
                       isSaving ||
                       isUploading ||

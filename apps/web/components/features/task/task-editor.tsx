@@ -38,6 +38,7 @@ import {
   useAddItemToBoard,
   useRemoveItemFromBoard,
 } from "@/src/hooks/use-boards";
+import { dispatchDiscardEvent } from "@/src/types/unsaved-changes";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useCreateTagging,
@@ -455,6 +456,7 @@ function TaskEditor({
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
   // 手動でタグを変更したかどうかのフラグ
   const [hasManualTagChanges, setHasManualTagChanges] = useState(false);
+  const [isTagInitialSync, setIsTagInitialSync] = useState(true);
   // 未保存変更確認モーダル
   const [isCloseConfirmModalOpen, setIsCloseConfirmModalOpen] = useState(false);
 
@@ -466,6 +468,7 @@ function TaskEditor({
       setLocalTags(currentTags);
       setPrevTaskId(currentTaskId);
       setHasManualTagChanges(false); // タスク切り替え時は手動変更フラグをリセット
+      setIsTagInitialSync(true);
     }
   }, [task?.id, currentTags, prevTaskId]);
 
@@ -537,6 +540,19 @@ function TaskEditor({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamTagsList, teamMode]);
+
+  useEffect(() => {
+    if (!isTagInitialSync) {
+      return;
+    }
+
+    const currentTagIds = currentTags.map((tag) => tag.id).sort();
+    const localTagIds = localTags.map((tag) => tag.id).sort();
+
+    if (JSON.stringify(currentTagIds) === JSON.stringify(localTagIds)) {
+      setIsTagInitialSync(false);
+    }
+  }, [currentTags, localTags, isTagInitialSync]);
 
   // 削除関連の状態
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -625,6 +641,19 @@ function TaskEditor({
     getContinuousCreateMode("task-continuous-create-mode"),
   );
 
+  const hasTagChanges = useMemo(() => {
+    if (!task || task.id === 0) return false;
+
+    if (isTagInitialSync) {
+      return false;
+    }
+
+    const currentTagIds = currentTags.map((tag) => tag.id).sort();
+    const localTagIds = localTags.map((tag) => tag.id).sort();
+
+    return JSON.stringify(currentTagIds) !== JSON.stringify(localTagIds);
+  }, [currentTags, localTags, task, isTagInitialSync]);
+
   // 統合フックの使用
   const {
     title,
@@ -638,7 +667,8 @@ function TaskEditor({
     isSaving,
     saveError,
     hasChanges,
-    isInitialSync,
+    canSave,
+    hasUnsavedChanges,
     handleSave: saveTask,
     handleTitleChange,
     handleContentChange: handleDescriptionChange,
@@ -668,6 +698,11 @@ function TaskEditor({
     onDeleteAndSelectNext,
     teamMode,
     teamId,
+    hasTagChanges,
+    pendingImages,
+    pendingDeletes,
+    isDeleted,
+    isUploading,
   });
 
   // 連続作成モード時のフォームリセット処理
@@ -744,21 +779,6 @@ function TaskEditor({
           ? Math.floor(new Date(dueDate).getTime() / 1000)
           : null,
       };
-
-  // タグに変更があるかチェック（シンプル版）
-  const hasTagChanges = useMemo(() => {
-    if (!task || task.id === 0) return false;
-
-    // フォーム初期化中は変更なしと判定（useSimpleItemSaveと同期）
-    if (isInitialSync) {
-      return false;
-    }
-
-    const currentTagIds = currentTags.map((tag) => tag.id).sort();
-    const localTagIds = localTags.map((tag) => tag.id).sort();
-
-    return JSON.stringify(currentTagIds) !== JSON.stringify(localTagIds);
-  }, [currentTags, localTags, task, isInitialSync]);
 
   // タグの差分を計算して一括更新する関数
   const updateTaggings = useCallback(
@@ -881,41 +901,6 @@ function TaskEditor({
       deleteTeamTaggingByTagMutation,
     ],
   );
-
-  // HTMLタグを除去して実質的な内容を取得
-  const stripHtmlTags = (str: string): string => {
-    const withoutTags = str.replace(/<[^>]*>/g, "");
-    const withoutEntities = withoutTags
-      .replace(/&nbsp;/g, " ")
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&quot;/g, '"');
-    return withoutEntities.trim();
-  };
-
-  // 新規作成時の保存可能性チェック（タグ変更・画像変更も含める）
-  const canSave = isDeleted
-    ? false
-    : isUploading
-      ? false // アップロード中は保存不可
-      : isNewTask
-        ? !!stripHtmlTags(title)
-        : (hasChanges ||
-            hasTagChanges ||
-            pendingImages.length > 0 ||
-            pendingDeletes.length > 0) &&
-          !!stripHtmlTags(title); // 既存タスクも空タイトルの場合は保存不可
-
-  // 未保存の変更があるかチェック
-  const hasUnsavedChanges = isNewTask
-    ? !!stripHtmlTags(title) ||
-      !!stripHtmlTags(description) ||
-      pendingImages.length > 0
-    : hasChanges ||
-      hasTagChanges ||
-      pendingImages.length > 0 ||
-      pendingDeletes.length > 0;
 
   // Contextまたはprops経由のrefに最新の状態を常に反映
   useEffect(() => {
@@ -1177,7 +1162,7 @@ function TaskEditor({
   const handleConfirmClose = useCallback(() => {
     setIsCloseConfirmModalOpen(false);
     // 破棄が選択されたことを通知（保留中の選択を実行するため）
-    window.dispatchEvent(new CustomEvent("task-unsaved-changes-discarded"));
+    dispatchDiscardEvent("task");
     onClose();
   }, [onClose]);
 

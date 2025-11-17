@@ -394,6 +394,27 @@ function Sidebar({
               <TaskIcon className="w-5 h-5" />
             </button>
           </Tooltip>
+          {/* ボード詳細 (選択中のボードがある場合のみ表示) */}
+          {currentBoardName && (
+            <Tooltip text={`${currentBoardName}詳細`} position="right">
+              <button
+                onClick={() => {
+                  // ボード詳細に遷移（optimisticModeはクリアせずURLベースの判定に任せる）
+                  onBoardDetail?.();
+                }}
+                className={`p-2 rounded-lg transition-colors ${
+                  iconStates.boardDetail
+                    ? "bg-light-Blue text-white"
+                    : "bg-gray-200 hover:bg-gray-300 text-gray-600"
+                }`}
+              >
+                <DashboardEditIcon
+                  className={`w-5 h-5 ${iconStates.boardDetail ? "" : "text-gray-600"}`}
+                />
+              </button>
+            </Tooltip>
+          )}
+
           <Tooltip text="ボード一覧" position="right">
             <button
               onClick={() => {
@@ -428,27 +449,6 @@ function Sidebar({
               />
             </button>
           </Tooltip>
-
-          {/* ボード詳細 (選択中のボードがある場合のみ表示) */}
-          {currentBoardName && (
-            <Tooltip text={`${currentBoardName}詳細`} position="right">
-              <button
-                onClick={() => {
-                  // ボード詳細に遷移（optimisticModeはクリアせずURLベースの判定に任せる）
-                  onBoardDetail?.();
-                }}
-                className={`p-2 rounded-lg transition-colors ${
-                  iconStates.boardDetail
-                    ? "bg-light-Blue text-white"
-                    : "bg-gray-200 hover:bg-gray-300 text-gray-600"
-                }`}
-              >
-                <DashboardEditIcon
-                  className={`w-5 h-5 ${iconStates.boardDetail ? "" : "text-gray-600"}`}
-                />
-              </button>
-            </Tooltip>
-          )}
 
           {/* 検索ボタン（コンパクトモード） */}
           <Tooltip text="詳細検索" position="right">

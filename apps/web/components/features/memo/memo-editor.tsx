@@ -106,6 +106,9 @@ interface MemoEditorProps {
   totalDeletedCount?: number; // 削除済みアイテムの総数
   insideBoardDetail?: boolean; // ボード詳細内で表示されているか（戻るボタンのイベント切り替え用）
   isInLeftPanel?: boolean; // 左側パネルに表示されているか（余白制御用）
+  // 個人モード用の未保存チェック用ref
+  memoEditorHasUnsavedChangesRef?: React.MutableRefObject<boolean>;
+  memoEditorShowConfirmModalRef?: React.MutableRefObject<(() => void) | null>;
 }
 
 function MemoEditor({
@@ -132,6 +135,8 @@ function MemoEditor({
   unifiedOperations,
   insideBoardDetail = false,
   isInLeftPanel = false,
+  memoEditorHasUnsavedChangesRef,
+  memoEditorShowConfirmModalRef,
 }: MemoEditorProps) {
   const { isTeamMode: teamMode, teamId: teamIdRaw } = useTeamContext();
   const teamId = teamIdRaw ?? undefined; // Hook互換性のため変換
@@ -1130,16 +1135,32 @@ function MemoEditor({
   // TeamDetailContext経由でモバイルフッターに状態を公開
   const teamDetailContext = teamMode ? useTeamDetail() : null;
 
-  // Contextに最新の状態を常に反映
+  // Contextまたはprops経由のrefに最新の状態を常に反映
   useEffect(() => {
-    if (teamDetailContext) {
+    if (teamMode && teamDetailContext) {
+      // チームモード: TeamDetailContext経由
       teamDetailContext.memoEditorHasUnsavedChangesRef.current =
         hasUnsavedChanges;
       teamDetailContext.memoEditorShowConfirmModalRef.current = () => {
         setIsCloseConfirmModalOpen(true);
       };
+    } else if (
+      memoEditorHasUnsavedChangesRef &&
+      memoEditorShowConfirmModalRef
+    ) {
+      // 個人モード: props経由のref
+      memoEditorHasUnsavedChangesRef.current = hasUnsavedChanges;
+      memoEditorShowConfirmModalRef.current = () => {
+        setIsCloseConfirmModalOpen(true);
+      };
     }
-  }, [hasUnsavedChanges, teamDetailContext]);
+  }, [
+    hasUnsavedChanges,
+    teamMode,
+    teamDetailContext,
+    memoEditorHasUnsavedChangesRef,
+    memoEditorShowConfirmModalRef,
+  ]);
 
   // モバイルフッター戻るボタンイベント（Context経由）
   useEffect(() => {

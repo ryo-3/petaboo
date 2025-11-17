@@ -882,42 +882,67 @@ function TaskEditor({
     ],
   );
 
+  // HTMLタグを除去して実質的な内容を取得
+  const stripHtmlTags = (str: string): string => {
+    const withoutTags = str.replace(/<[^>]*>/g, "");
+    const withoutEntities = withoutTags
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"');
+    return withoutEntities.trim();
+  };
+
   // 新規作成時の保存可能性チェック（タグ変更・画像変更も含める）
   const canSave = isDeleted
     ? false
     : isUploading
       ? false // アップロード中は保存不可
       : isNewTask
-        ? !!title.trim()
+        ? !!stripHtmlTags(title)
         : (hasChanges ||
             hasTagChanges ||
             pendingImages.length > 0 ||
             pendingDeletes.length > 0) &&
-          !!title.trim(); // 既存タスクも空タイトルの場合は保存不可
+          !!stripHtmlTags(title); // 既存タスクも空タイトルの場合は保存不可
 
   // 未保存の変更があるかチェック
   const hasUnsavedChanges = isNewTask
-    ? !!title.trim() || !!description.trim() || pendingImages.length > 0
+    ? !!stripHtmlTags(title) ||
+      !!stripHtmlTags(description) ||
+      pendingImages.length > 0
     : hasChanges ||
       hasTagChanges ||
       pendingImages.length > 0 ||
       pendingDeletes.length > 0;
 
-  // チーム用の未保存変更refを更新（モバイルフッター戻るボタン用）
+  // Contextまたはprops経由のrefに最新の状態を常に反映
   useEffect(() => {
-    if (taskEditorHasUnsavedChangesRef) {
+    if (teamMode && teamDetailContext) {
+      // チームモード: TeamDetailContext経由
+      teamDetailContext.taskEditorHasUnsavedChangesRef.current =
+        hasUnsavedChanges;
+      teamDetailContext.taskEditorShowConfirmModalRef.current = () => {
+        setIsCloseConfirmModalOpen(true);
+      };
+    } else if (
+      taskEditorHasUnsavedChangesRef &&
+      taskEditorShowConfirmModalRef
+    ) {
+      // 個人モード: props経由のref
       taskEditorHasUnsavedChangesRef.current = hasUnsavedChanges;
-    }
-  }, [hasUnsavedChanges, taskEditorHasUnsavedChangesRef]);
-
-  // チーム用の確認モーダル表示関数を設定
-  useEffect(() => {
-    if (taskEditorShowConfirmModalRef) {
       taskEditorShowConfirmModalRef.current = () => {
         setIsCloseConfirmModalOpen(true);
       };
     }
-  }, [taskEditorShowConfirmModalRef]);
+  }, [
+    hasUnsavedChanges,
+    teamMode,
+    teamDetailContext,
+    taskEditorHasUnsavedChangesRef,
+    taskEditorShowConfirmModalRef,
+  ]);
 
   // ボードIDを名前に変換する関数
   const getBoardName = (boardId: string) => {

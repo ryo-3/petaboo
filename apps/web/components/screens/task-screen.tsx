@@ -875,6 +875,12 @@ function TaskScreen({
   // 保留中の選択タスク（未保存モーダル表示時に使用）
   const pendingTaskSelectionRef = useRef<Task | null>(null);
 
+  // 個人モード用の未保存チェック用ref
+  const personalTaskEditorHasUnsavedChangesRef = useRef<boolean>(false);
+  const personalTaskEditorShowConfirmModalRef = useRef<(() => void) | null>(
+    null,
+  );
+
   // タスク選択ハンドラー（アップロード中チェック・未保存チェック追加）
   const handleSelectTask = (task: Task) => {
     // アップロード中は切り替えを防ぐ
@@ -882,15 +888,19 @@ function TaskScreen({
       return;
     }
 
-    // チームモードで未保存の変更がある場合は選択を保留
-    if (teamMode && task && teamDetailContext) {
-      const hasUnsavedChanges =
-        teamDetailContext.taskEditorHasUnsavedChangesRef.current;
-      const showModal = teamDetailContext.taskEditorShowConfirmModalRef.current;
+    // 未保存の変更がある場合は選択を保留（チーム・個人共通）
+    if (task) {
+      const hasUnsavedChanges = teamMode
+        ? teamDetailContext?.taskEditorHasUnsavedChangesRef.current
+        : personalTaskEditorHasUnsavedChangesRef.current;
+      const showModal = teamMode
+        ? teamDetailContext?.taskEditorShowConfirmModalRef.current
+        : personalTaskEditorShowConfirmModalRef.current;
 
       if (hasUnsavedChanges && showModal) {
         console.log(`🚫 [task-screen] 未保存の変更があるため選択を保留`, {
           pendingTaskId: task.id,
+          teamMode,
         });
         // 選択を保留してモーダルを表示
         pendingTaskSelectionRef.current = task;
@@ -1245,8 +1255,16 @@ function TaskScreen({
           preloadedBoardItems={safeAllBoardItems}
           preloadedItemBoards={itemBoards}
           unifiedOperations={unifiedOperations}
-          taskEditorHasUnsavedChangesRef={taskEditorHasUnsavedChangesRef}
-          taskEditorShowConfirmModalRef={taskEditorShowConfirmModalRef}
+          taskEditorHasUnsavedChangesRef={
+            teamMode
+              ? taskEditorHasUnsavedChangesRef
+              : personalTaskEditorHasUnsavedChangesRef
+          }
+          taskEditorShowConfirmModalRef={
+            teamMode
+              ? taskEditorShowConfirmModalRef
+              : personalTaskEditorShowConfirmModalRef
+          }
         />
       )}
       {/* 表示モード（既存タスク） */}
@@ -1275,8 +1293,16 @@ function TaskScreen({
           preloadedBoardItems={safeAllBoardItems}
           preloadedItemBoards={itemBoards}
           unifiedOperations={unifiedOperations}
-          taskEditorHasUnsavedChangesRef={taskEditorHasUnsavedChangesRef}
-          taskEditorShowConfirmModalRef={taskEditorShowConfirmModalRef}
+          taskEditorHasUnsavedChangesRef={
+            teamMode
+              ? taskEditorHasUnsavedChangesRef
+              : personalTaskEditorHasUnsavedChangesRef
+          }
+          taskEditorShowConfirmModalRef={
+            teamMode
+              ? taskEditorShowConfirmModalRef
+              : personalTaskEditorShowConfirmModalRef
+          }
         />
       )}
       {/* 表示モード（削除済みタスク） */}

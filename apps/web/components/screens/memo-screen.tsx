@@ -484,6 +484,12 @@ function MemoScreen({
   // 保留中の選択メモ（未保存モーダル表示時に使用）
   const pendingMemoSelectionRef = useRef<Memo | null>(null);
 
+  // 個人モード用の未保存チェック用ref
+  const personalMemoEditorHasUnsavedChangesRef = useRef<boolean>(false);
+  const personalMemoEditorShowConfirmModalRef = useRef<(() => void) | null>(
+    null,
+  );
+
   const handleSelectMemo = useCallback(
     (memo: Memo | null) => {
       console.log(`🎯 [memo-screen] handleSelectMemo called`, {
@@ -493,16 +499,19 @@ function MemoScreen({
         teamMode,
       });
 
-      // チームモードで未保存の変更がある場合は選択を保留
-      if (teamMode && memo && teamDetailContext) {
-        const hasUnsavedChanges =
-          teamDetailContext.memoEditorHasUnsavedChangesRef.current;
-        const showModal =
-          teamDetailContext.memoEditorShowConfirmModalRef.current;
+      // 未保存の変更がある場合は選択を保留（チーム・個人共通）
+      if (memo) {
+        const hasUnsavedChanges = teamMode
+          ? teamDetailContext?.memoEditorHasUnsavedChangesRef.current
+          : personalMemoEditorHasUnsavedChangesRef.current;
+        const showModal = teamMode
+          ? teamDetailContext?.memoEditorShowConfirmModalRef.current
+          : personalMemoEditorShowConfirmModalRef.current;
 
         if (hasUnsavedChanges && showModal) {
           console.log(`🚫 [memo-screen] 未保存の変更があるため選択を保留`, {
             pendingMemoId: memo.id,
+            teamMode,
           });
           // 選択を保留してモーダルを表示
           pendingMemoSelectionRef.current = memo;
@@ -1158,6 +1167,12 @@ function MemoScreen({
           preloadedItemBoards={itemBoards}
           showDateAtBottom={true}
           unifiedOperations={operations}
+          memoEditorHasUnsavedChangesRef={
+            teamMode ? undefined : personalMemoEditorHasUnsavedChangesRef
+          }
+          memoEditorShowConfirmModalRef={
+            teamMode ? undefined : personalMemoEditorShowConfirmModalRef
+          }
         />
       )}
       {/* 表示モード（既存メモ） */}
@@ -1189,6 +1204,12 @@ function MemoScreen({
           createdByAvatarColor={selectedMemo.avatarColor}
           showDateAtBottom={true}
           unifiedOperations={operations}
+          memoEditorHasUnsavedChangesRef={
+            teamMode ? undefined : personalMemoEditorHasUnsavedChangesRef
+          }
+          memoEditorShowConfirmModalRef={
+            teamMode ? undefined : personalMemoEditorShowConfirmModalRef
+          }
         />
       )}
       {/* 表示モード（削除済みメモ） */}

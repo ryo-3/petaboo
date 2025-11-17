@@ -11,6 +11,30 @@
   --bulk-animation-duration: 300ms;     /* 一括削除アニメーション時間 */
 }
 
+/* モバイルでのスクロール完全無効化 */
+@media (max-width: 767px) {
+  html, body {
+    position: fixed;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* すべての要素でタッチによるスクロールを防止 */
+  * {
+    overscroll-behavior: none;
+  }
+
+  /* スクロール可能な要素のみ縦スクロールを許可 */
+  .overflow-y-auto,
+  .overflow-auto,
+  [class*="overflow-y-auto"],
+  [class*="overflow-auto"] {
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
 /* 横スクロールバーを非表示 */
 html, body {
   overflow-x: hidden;

@@ -638,6 +638,7 @@ function TaskEditor({
     isSaving,
     saveError,
     hasChanges,
+    isInitialSync,
     handleSave: saveTask,
     handleTitleChange,
     handleContentChange: handleDescriptionChange,
@@ -748,11 +749,16 @@ function TaskEditor({
   const hasTagChanges = useMemo(() => {
     if (!task || task.id === 0) return false;
 
+    // フォーム初期化中は変更なしと判定（useSimpleItemSaveと同期）
+    if (isInitialSync) {
+      return false;
+    }
+
     const currentTagIds = currentTags.map((tag) => tag.id).sort();
     const localTagIds = localTags.map((tag) => tag.id).sort();
 
     return JSON.stringify(currentTagIds) !== JSON.stringify(localTagIds);
-  }, [currentTags, localTags, task]);
+  }, [currentTags, localTags, task, isInitialSync]);
 
   // タグの差分を計算して一括更新する関数
   const updateTaggings = useCallback(

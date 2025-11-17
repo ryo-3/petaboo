@@ -183,8 +183,8 @@ export function useSimpleItemSave<T extends UnifiedItem>({
 
   // 変更検知（ボード選択も含める）
   const hasChanges = useMemo(() => {
-    // アイテム切り替え中は変更検知を無効化
-    if (isItemTransition) {
+    // アイテム切り替え中または初期同期中は変更検知を完全に無効化
+    if (isItemTransition || isInitialSync) {
       return false;
     }
 
@@ -205,17 +205,13 @@ export function useSimpleItemSave<T extends UnifiedItem>({
         boardCategoryId !== initialBoardCategoryId;
     }
 
-    // 初期同期中はボード変更を無視
-    if (isInitialSync) {
-      return textChanged || taskFieldsChanged;
-    }
-
     const hasBoardChanges =
       JSON.stringify([...selectedBoardIds].sort()) !==
       JSON.stringify([...currentBoardIds].sort());
 
     return textChanged || taskFieldsChanged || hasBoardChanges;
   }, [
+    item?.id,
     title,
     content,
     priority,
@@ -824,6 +820,7 @@ export function useSimpleItemSave<T extends UnifiedItem>({
     isSaving,
     saveError,
     hasChanges,
+    isInitialSync, // タグ変更検知でも使用するためエクスポート
     handleSave,
     handleTitleChange,
     handleContentChange,

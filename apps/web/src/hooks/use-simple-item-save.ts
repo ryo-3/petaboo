@@ -181,15 +181,53 @@ export function useSimpleItemSave<T extends UnifiedItem>({
   const removeItemFromBoard = useRemoveItemFromBoard();
   const queryClient = useQueryClient();
 
+  // HTMLタグを除去して実質的な内容を取得
+  const stripHtmlTags = (str: string): string => {
+    // HTMLタグを除去
+    const withoutTags = str.replace(/<[^>]*>/g, "");
+    // HTML実体参照をデコード（&nbsp;など）
+    const withoutEntities = withoutTags
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"');
+    return withoutEntities.trim();
+  };
+
   // 変更検知（ボード選択も含める）
   const hasChanges = useMemo(() => {
     // アイテム切り替え中または初期同期中は変更検知を完全に無効化
     if (isItemTransition || isInitialSync) {
+      console.log(`🔍 [use-simple-item-save] hasChanges=false (同期中)`, {
+        isItemTransition,
+        isInitialSync,
+        itemType,
+        itemId: item?.id,
+      });
       return false;
     }
 
     const currentTitle = title.trim();
     const currentContent = content.trim();
+
+    // HTMLタグを除去した実質的な内容
+    const strippedTitle = stripHtmlTags(currentTitle);
+    const strippedContent = stripHtmlTags(currentContent);
+
+    // 新規作成時（itemがnullまたはitem.id === 0）で、タイトルもコンテンツも空の場合は変更なし
+    const isNewItem = !item || item.id === 0;
+    if (isNewItem && !strippedTitle && !strippedContent) {
+      console.log(`🔍 [use-simple-item-save] hasChanges=false (新規・空)`, {
+        itemType,
+        currentTitle: `"${currentTitle}"`,
+        currentContent: `"${currentContent}"`,
+        strippedTitle: `"${strippedTitle}"`,
+        strippedContent: `"${strippedContent}"`,
+      });
+      return false;
+    }
+
     const textChanged =
       currentTitle !== initialTitle.trim() ||
       currentContent !== initialContent.trim();
@@ -209,7 +247,24 @@ export function useSimpleItemSave<T extends UnifiedItem>({
       JSON.stringify([...selectedBoardIds].sort()) !==
       JSON.stringify([...currentBoardIds].sort());
 
-    return textChanged || taskFieldsChanged || hasBoardChanges;
+    const result = textChanged || taskFieldsChanged || hasBoardChanges;
+
+    console.log(`🔍 [use-simple-item-save] hasChanges=${result}`, {
+      itemType,
+      itemId: item?.id,
+      isNewItem,
+      currentTitle: `"${currentTitle}"`,
+      currentContent: `"${currentContent}"`,
+      initialTitle: `"${initialTitle.trim()}"`,
+      initialContent: `"${initialContent.trim()}"`,
+      textChanged,
+      taskFieldsChanged,
+      hasBoardChanges,
+      selectedBoardIds,
+      currentBoardIds,
+    });
+
+    return result;
   }, [
     item?.id,
     title,

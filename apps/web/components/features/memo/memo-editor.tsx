@@ -229,6 +229,7 @@ function MemoEditor({
   });
 
   const {
+    title,
     content,
     selectedBoardIds,
     isSaving,
@@ -576,18 +577,56 @@ function MemoEditor({
     return JSON.stringify(currentTagIds) !== JSON.stringify(localTagIds);
   }, [currentTags, localTags, memo]);
 
+  // HTMLタグを除去して実質的な内容を取得
+  const stripHtmlTags = useCallback((str: string): string => {
+    // HTMLタグを除去
+    const withoutTags = str.replace(/<[^>]*>/g, "");
+    // HTML実体参照をデコード（&nbsp;など）
+    const withoutEntities = withoutTags
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"');
+    return withoutEntities.trim();
+  }, []);
+
   // 未保存の変更があるかチェック（useMemoで確実に再計算）
   const isNewMemo = !memo || memo.id === 0;
   const hasUnsavedChanges = useMemo(() => {
-    return isNewMemo
-      ? !!content.trim() || pendingImages.length > 0
+    // HTMLタグを除去した実質的な内容で判定
+    const strippedTitle = stripHtmlTags(title);
+    const strippedContent = stripHtmlTags(content);
+
+    const result = isNewMemo
+      ? !!strippedTitle || !!strippedContent || pendingImages.length > 0
       : hasChanges ||
-          hasTagChanges ||
-          pendingImages.length > 0 ||
-          pendingDeletes.length > 0;
+        hasTagChanges ||
+        pendingImages.length > 0 ||
+        pendingDeletes.length > 0;
+
+    console.log(`📝 [memo-editor] hasUnsavedChanges=${result}`, {
+      isNewMemo,
+      memoId: memo?.id,
+      title: `"${title}"`,
+      titleTrimmed: `"${title.trim()}"`,
+      strippedTitle: `"${strippedTitle}"`,
+      content: `"${content.substring(0, 50)}..."`,
+      contentTrimmed: `"${content.trim().substring(0, 50)}..."`,
+      strippedContent: `"${strippedContent.substring(0, 50)}..."`,
+      pendingImagesCount: pendingImages.length,
+      hasChanges,
+      hasTagChanges,
+      pendingDeletesCount: pendingDeletes.length,
+    });
+
+    return result;
   }, [
     isNewMemo,
+    memo?.id,
+    title,
     content,
+    stripHtmlTags,
     pendingImages.length,
     hasChanges,
     hasTagChanges,
@@ -1157,6 +1196,8 @@ function MemoEditor({
   // 確認モーダルで「閉じる」を選択
   const handleConfirmClose = useCallback(() => {
     setIsCloseConfirmModalOpen(false);
+    // 破棄が選択されたことを通知（保留中の選択を実行するため）
+    window.dispatchEvent(new CustomEvent("memo-unsaved-changes-discarded"));
     onClose();
   }, [onClose]);
 

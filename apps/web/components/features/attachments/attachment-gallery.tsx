@@ -97,20 +97,43 @@ export default function AttachmentGallery({
     if (newAttachments.length > 0) {
       newAttachments.forEach(async (attachment) => {
         try {
+          console.log(`📷 [AttachmentGallery] 画像読み込み開始`, {
+            id: attachment.id,
+            url: attachment.url,
+            fileName: attachment.fileName,
+            mimeType: attachment.mimeType,
+          });
+
           const token = await getToken();
           const response = await fetch(attachment.url, {
             headers: token ? { Authorization: `Bearer ${token}` } : {},
           });
 
-          if (!response.ok) throw new Error("画像の読み込みに失敗しました");
+          if (!response.ok) {
+            console.error(`❌ [AttachmentGallery] fetch失敗`, {
+              id: attachment.id,
+              url: attachment.url,
+              status: response.status,
+              statusText: response.statusText,
+            });
+            throw new Error("画像の読み込みに失敗しました");
+          }
 
           const blob = await response.blob();
           const url = URL.createObjectURL(blob);
 
           setImageUrls((prev) => ({ ...prev, [attachment.id]: url }));
           loadedIds.add(attachment.id);
+
+          console.log(`✅ [AttachmentGallery] 画像読み込み成功`, {
+            id: attachment.id,
+          });
         } catch (error) {
-          console.error(`画像読み込みエラー (ID: ${attachment.id}):`, error);
+          console.error(`❌ [AttachmentGallery] 画像読み込みエラー`, {
+            id: attachment.id,
+            url: attachment.url,
+            error,
+          });
         }
       });
     }

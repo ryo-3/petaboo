@@ -872,12 +872,33 @@ function TaskScreen({
     onClose: onClose,
   });
 
-  // タスク選択ハンドラー（アップロード中チェック追加）
+  // 保留中の選択タスク（未保存モーダル表示時に使用）
+  const pendingTaskSelectionRef = useRef<Task | null>(null);
+
+  // タスク選択ハンドラー（アップロード中チェック・未保存チェック追加）
   const handleSelectTask = (task: Task) => {
     // アップロード中は切り替えを防ぐ
     if (isUploadingTask) {
       return;
     }
+
+    // チームモードで未保存の変更がある場合は選択を保留
+    if (teamMode && task && teamDetailContext) {
+      const hasUnsavedChanges =
+        teamDetailContext.taskEditorHasUnsavedChangesRef.current;
+      const showModal = teamDetailContext.taskEditorShowConfirmModalRef.current;
+
+      if (hasUnsavedChanges && showModal) {
+        console.log(`🚫 [task-screen] 未保存の変更があるため選択を保留`, {
+          pendingTaskId: task.id,
+        });
+        // 選択を保留してモーダルを表示
+        pendingTaskSelectionRef.current = task;
+        showModal();
+        return;
+      }
+    }
+
     handleSelectTaskBase(task);
   };
 
@@ -894,6 +915,34 @@ function TaskScreen({
       window.removeEventListener(eventName, handleTaskCreate);
     };
   }, [teamMode, handleCreateNew]);
+
+  // 未保存変更破棄イベントをリッスン（保留中の選択を実行）
+  useEffect(() => {
+    const handleUnsavedChangesDiscarded = () => {
+      if (pendingTaskSelectionRef.current) {
+        console.log(`✅ [task-screen] 破棄確認後、保留中のタスクを選択`, {
+          pendingTaskId: pendingTaskSelectionRef.current.id,
+        });
+        const pendingTask = pendingTaskSelectionRef.current;
+        pendingTaskSelectionRef.current = null;
+        // 保留中のタスクを選択（未保存チェックを回避するため直接実行）
+        onSelectTask(pendingTask);
+        setTaskScreenMode("view");
+      }
+    };
+
+    window.addEventListener(
+      "task-unsaved-changes-discarded",
+      handleUnsavedChangesDiscarded,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "task-unsaved-changes-discarded",
+        handleUnsavedChangesDiscarded,
+      );
+    };
+  }, [onSelectTask, setTaskScreenMode]);
 
   // 安全なデータ配布用
   const safeAllTaggings = allTaggings || [];

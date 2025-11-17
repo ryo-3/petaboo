@@ -1151,6 +1151,8 @@ function TaskEditor({
   // 確認モーダルで「閉じる」を選択
   const handleConfirmClose = useCallback(() => {
     setIsCloseConfirmModalOpen(false);
+    // 破棄が選択されたことを通知（保留中の選択を実行するため）
+    window.dispatchEvent(new CustomEvent("task-unsaved-changes-discarded"));
     onClose();
   }, [onClose]);
 

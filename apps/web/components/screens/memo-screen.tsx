@@ -481,11 +481,49 @@ function MemoScreen({
         : 2
       : columnCount;
 
+  // 保留中の選択メモ（未保存モーダル表示時に使用）
+  const pendingMemoSelectionRef = useRef<Memo | null>(null);
+
   const handleSelectMemo = useCallback(
     (memo: Memo | null) => {
+      console.log(`🎯 [memo-screen] handleSelectMemo called`, {
+        memoId: memo?.id,
+        memoTitle: memo?.title,
+        currentMode: memoScreenMode,
+        teamMode,
+      });
+
+      // チームモードで未保存の変更がある場合は選択を保留
+      if (teamMode && memo && teamDetailContext) {
+        const hasUnsavedChanges =
+          teamDetailContext.memoEditorHasUnsavedChangesRef.current;
+        const showModal =
+          teamDetailContext.memoEditorShowConfirmModalRef.current;
+
+        if (hasUnsavedChanges && showModal) {
+          console.log(`🚫 [memo-screen] 未保存の変更があるため選択を保留`, {
+            pendingMemoId: memo.id,
+          });
+          // 選択を保留してモーダルを表示
+          pendingMemoSelectionRef.current = memo;
+          showModal();
+          return;
+        }
+      }
+
       onSelectMemo(memo);
+      // メモを選択したら必ずviewモードに切り替える
+      if (memo) {
+        setMemoScreenMode("view");
+      }
     },
-    [onSelectMemo],
+    [
+      onSelectMemo,
+      memoScreenMode,
+      teamMode,
+      setMemoScreenMode,
+      teamDetailContext,
+    ],
   );
 
   // チームモード・個人モードで新規作成状態をContextに反映
@@ -788,6 +826,34 @@ function MemoScreen({
       window.removeEventListener(eventName, handleMemoCreate);
     };
   }, [teamMode, handleCreateNew]);
+
+  // 未保存変更破棄イベントをリッスン（保留中の選択を実行）
+  useEffect(() => {
+    const handleUnsavedChangesDiscarded = () => {
+      if (pendingMemoSelectionRef.current) {
+        console.log(`✅ [memo-screen] 破棄確認後、保留中のメモを選択`, {
+          pendingMemoId: pendingMemoSelectionRef.current.id,
+        });
+        const pendingMemo = pendingMemoSelectionRef.current;
+        pendingMemoSelectionRef.current = null;
+        // 保留中のメモを選択（未保存チェックを回避するため直接実行）
+        onSelectMemo(pendingMemo);
+        setMemoScreenMode("view");
+      }
+    };
+
+    window.addEventListener(
+      "memo-unsaved-changes-discarded",
+      handleUnsavedChangesDiscarded,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "memo-unsaved-changes-discarded",
+        handleUnsavedChangesDiscarded,
+      );
+    };
+  }, [onSelectMemo, setMemoScreenMode]);
 
   // モバイル版メモエディターのタブ切り替えイベントをリッスン
   useEffect(() => {

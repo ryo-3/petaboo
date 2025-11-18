@@ -1171,8 +1171,9 @@ function MemoEditor({
     setIsCloseConfirmModalOpen(false);
     // 破棄が選択されたことを通知（保留中の選択を実行するため）
     dispatchDiscardEvent("memo");
-    onClose();
-  }, [onClose]);
+    // 注意: onClose() は呼ばない！
+    // use-unsaved-changes-guard が破棄イベントを受け取り、保留中のアイテムに切り替える
+  }, []);
 
   // 削除ボタンのハンドラー（ボード紐づきチェック付き）
   const handleDeleteClick = () => {

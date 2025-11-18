@@ -19,6 +19,7 @@ import { Memo, DeletedMemo } from "@/src/types/memo";
 import { Task, DeletedTask } from "@/src/types/task";
 import { OriginalIdUtils } from "@/src/types/common";
 import { useTeamContext } from "@/src/contexts/team-context";
+import { useTeamDetailSafe } from "@/src/contexts/team-detail-context";
 import { useUnsavedChangesGuard } from "@/src/hooks/use-unsaved-changes-guard";
 
 interface UseBoardOperationsProps {
@@ -104,6 +105,8 @@ export function useBoardOperations({
 }: UseBoardOperationsProps): UseBoardOperationsReturn {
   // TeamContextからチーム情報を取得（propsより優先）
   const { isTeamMode, teamId: teamIdFromContext } = useTeamContext();
+  // TeamDetailContextから未保存チェック用refを取得（チーム側のみ）
+  const teamDetailContext = useTeamDetailSafe();
 
   // propsのteamIdとContextのteamIdを統合（Contextを優先、後方互換性のためpropsも許容）
   const teamIdStr = teamIdFromContext?.toString() || teamIdProp;
@@ -234,7 +237,7 @@ export function useBoardOperations({
   } = useUnsavedChangesGuard<Memo | DeletedMemo>({
     itemType: "memo",
     teamMode: isTeamMode,
-    teamDetailContext: undefined, // ボード詳細では個人モードのみ対応
+    teamDetailContext: teamDetailContext,
     onSelectItem: onSelectMemo || (() => {}),
     setScreenMode: (mode) => {
       if (mode === "view") {
@@ -251,7 +254,7 @@ export function useBoardOperations({
   } = useUnsavedChangesGuard<Task | DeletedTask>({
     itemType: "task",
     teamMode: isTeamMode,
-    teamDetailContext: undefined,
+    teamDetailContext: teamDetailContext,
     onSelectItem: onSelectTask || (() => {}),
     setScreenMode: (mode) => {
       if (mode === "view") {

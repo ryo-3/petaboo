@@ -1091,16 +1091,16 @@ function BoardDetailScreen({
                           onAddMemoToBoard={handleAddMemoToBoard}
                           onAddTaskToBoard={handleAddTaskToBoard}
                           memoEditorHasUnsavedChangesRef={
-                            memoHasUnsavedChangesRef
+                            teamMode ? undefined : memoHasUnsavedChangesRef
                           }
                           memoEditorShowConfirmModalRef={
-                            memoShowConfirmModalRef
+                            teamMode ? undefined : memoShowConfirmModalRef
                           }
                           taskEditorHasUnsavedChangesRef={
-                            taskHasUnsavedChangesRef
+                            teamMode ? undefined : taskHasUnsavedChangesRef
                           }
                           taskEditorShowConfirmModalRef={
-                            taskShowConfirmModalRef
+                            teamMode ? undefined : taskShowConfirmModalRef
                           }
                         />
                       </div>

@@ -77,6 +77,18 @@ function BoardDetailScreen({
   const { isTeamMode: teamMode, teamId } = useTeamContext();
   const { setConfig } = useHeaderControlPanel();
 
+  // モバイル判定（md: 768px以下）
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   // ViewSettingsContextから取得
   const { settings, sessionState, updateSettings, updateSessionState } =
     useViewSettings();
@@ -264,13 +276,30 @@ function BoardDetailScreen({
     const handleSectionChange = (event: CustomEvent) => {
       const { section } = event.detail;
 
+      // モバイル用: セクション切り替え（トグルではなく、指定されたセクションのみ表示）
       if (section === "memos") {
-        handleMemoToggle(!showMemo);
+        // メモのみ表示
+        if (!showMemo) handleMemoToggle(true);
+        if (showTask) handleTaskToggle(false);
+        if (showComment) handleCommentToggle(false);
       } else if (section === "tasks") {
-        handleTaskToggle(!showTask);
+        // タスクのみ表示
+        if (showMemo) handleMemoToggle(false);
+        if (!showTask) handleTaskToggle(true);
+        if (showComment) handleCommentToggle(false);
       } else if (section === "comments") {
-        handleCommentToggle(!showComment);
+        // コメントのみ表示
+        if (showMemo) handleMemoToggle(false);
+        if (showTask) handleTaskToggle(false);
+        if (!showComment) handleCommentToggle(true);
       }
+
+      // 現在のセクション状態を通知（フッターのアクティブ状態同期用）
+      window.dispatchEvent(
+        new CustomEvent("board-section-state-change", {
+          detail: { activeSection: section },
+        }),
+      );
     };
 
     window.addEventListener(
@@ -1133,6 +1162,104 @@ function BoardDetailScreen({
                 return <div className="flex-1" />;
               }
 
+              // モバイル時: 1パネルずつ排他的に表示
+              if (isMobile) {
+                return (
+                  <div className="flex flex-col flex-1 min-h-0">
+                    {/* メモ表示時 */}
+                    {showMemo && (
+                      <div className="flex flex-col h-full relative">
+                        <BoardMemoSection
+                          rightPanelMode={rightPanelMode}
+                          showMemo={showMemo}
+                          allMemoItems={allMemoItems}
+                          memoItems={memoItems}
+                          activeMemoTab={activeMemoTab}
+                          normalMemoCount={normalMemoCount}
+                          deletedMemoCount={deletedMemoCount}
+                          showTabText={showTabText}
+                          isLoading={isLoading}
+                          effectiveColumnCount={effectiveColumnCount}
+                          allTags={safeAllTags}
+                          allBoards={safeAllBoards}
+                          allTaggings={safeAllTaggings as Tagging[]}
+                          allBoardItems={safeAllBoardItems}
+                          allAttachments={allAttachments || []}
+                          selectedTagIds={selectedTagIds}
+                          tagFilterMode={tagFilterMode}
+                          selectedMemo={selectedMemo}
+                          boardId={boardId}
+                          onCreateNewMemo={handleCreateNewMemo}
+                          onSetRightPanelMode={setRightPanelMode}
+                          onMemoTabChange={handleMemoTabChangeWithRefresh}
+                          onSelectMemo={handleSelectMemo}
+                          memoSelectionMode={selectionMode}
+                          checkedMemos={checkedMemos}
+                          onMemoSelectionToggle={handleMemoSelectionToggle}
+                          onSelectAll={handleMemoSelectAll}
+                          isAllSelected={isMemoAllSelected}
+                          onBulkDelete={() => handleBulkDelete("memo")}
+                          isDeleting={isMemoDeleting}
+                          isLidOpen={isMemoLidOpen}
+                          currentDisplayCount={currentMemoDisplayCount}
+                          deleteButtonRef={deleteButtonRef}
+                          onCheckedMemosChange={setCheckedMemos}
+                          onTagging={handleTaggingMemo}
+                        />
+                      </div>
+                    )}
+
+                    {/* タスク表示時 */}
+                    {showTask && (
+                      <div className="flex flex-col h-full relative">
+                        <BoardTaskSection
+                          boardId={boardId}
+                          initialBoardId={boardId}
+                          rightPanelMode={rightPanelMode}
+                          showMemo={showMemo}
+                          showTask={showTask}
+                          allTaskItems={allTaskItems}
+                          taskItems={taskItems}
+                          activeTaskTab={activeTaskTab}
+                          todoCount={todoCount}
+                          inProgressCount={inProgressCount}
+                          completedCount={completedCount}
+                          deletedCount={deletedCount}
+                          showTabText={showTabText}
+                          isLoading={isLoading}
+                          effectiveColumnCount={effectiveColumnCount}
+                          selectedTagIds={selectedTagIds}
+                          tagFilterMode={tagFilterMode}
+                          allTags={safeAllTags}
+                          allBoards={safeAllBoards}
+                          allTaggings={safeAllTaggings as Tagging[]}
+                          allBoardItems={safeAllBoardItems}
+                          allAttachments={allAttachments || []}
+                          selectedTask={selectedTask}
+                          onCreateNewTask={handleCreateNewTask}
+                          onSetRightPanelMode={setRightPanelMode}
+                          onTaskTabChange={handleTaskTabChangeWithRefresh}
+                          onSelectTask={handleSelectTask}
+                          taskSelectionMode={selectionMode}
+                          checkedTasks={checkedTasks}
+                          onTaskSelectionToggle={handleTaskSelectionToggle}
+                          onSelectAll={handleTaskSelectAll}
+                          isAllSelected={isTaskAllSelected}
+                          onBulkDelete={() => handleBulkDelete("task")}
+                          isDeleting={isTaskDeleting}
+                          isLidOpen={isTaskLidOpen}
+                          currentDisplayCount={currentTaskDisplayCount}
+                          deleteButtonRef={deleteButtonRef}
+                          onCheckedTasksChange={setCheckedTasks}
+                          onTagging={handleTaggingTask}
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              // デスクトップ時: ResizablePanelGroup で2パネル
               return (
                 <ResizablePanelGroup
                   key={`unselected-${combinationKey}-${visiblePanels}`}
@@ -1190,7 +1317,7 @@ function BoardDetailScreen({
                           />
                         </div>
                       </ResizablePanel>
-                      {showTask && <ResizableHandle withHandle />}
+                      {showTask && !isMobile && <ResizableHandle withHandle />}
                     </>
                   )}
 

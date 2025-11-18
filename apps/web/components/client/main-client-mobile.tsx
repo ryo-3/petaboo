@@ -1,9 +1,11 @@
 import DeletedMemoList from "@/components/features/memo/deleted-memo-list";
 import Sidebar from "@/components/layout/sidebar";
+import ItemEditorFooter from "@/components/mobile/item-editor-footer";
 import { useNavigation } from "@/src/contexts/navigation-context";
 import type { Board } from "@/src/types/board";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task } from "@/src/types/task";
+import { useState, useEffect } from "react";
 
 interface MainClientMobileProps {
   showDeleted: boolean;
@@ -61,6 +63,49 @@ export function MainClientMobile({
   const isCreatingMemo = navigation.isCreatingMemo;
   const isCreatingTask = navigation.isCreatingTask;
 
+  // ボード詳細のセクション表示状態
+  const [activeBoardSection, setActiveBoardSection] = useState<
+    "memos" | "tasks"
+  >("memos");
+
+  // ボード詳細のセクション切り替えイベントをリッスン
+  useEffect(() => {
+    const handleSectionChange = (event: CustomEvent) => {
+      const { section } = event.detail;
+      setActiveBoardSection(section);
+    };
+
+    const handleSectionStateChange = (event: CustomEvent) => {
+      const { activeSection } = event.detail;
+      setActiveBoardSection(activeSection);
+    };
+
+    window.addEventListener(
+      "board-section-change",
+      handleSectionChange as EventListener,
+    );
+    window.addEventListener(
+      "board-section-state-change",
+      handleSectionStateChange as EventListener,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "board-section-change",
+        handleSectionChange as EventListener,
+      );
+      window.removeEventListener(
+        "board-section-state-change",
+        handleSectionStateChange as EventListener,
+      );
+    };
+  }, []);
+
+  // ボード一覧に戻る
+  const handleBackToBoardList = () => {
+    handleDashboard();
+  };
+
   return (
     <div className="w-full md:hidden">
       {showDeleted ? (
@@ -68,6 +113,34 @@ export function MainClientMobile({
         <DeletedMemoList
           onBackToMemos={handleBackToMemos}
           onSelectDeletedMemo={handleSelectDeletedMemo}
+        />
+      ) : showingBoardDetail ? (
+        // ボード詳細時は専用フッター
+        <ItemEditorFooter
+          type="board"
+          onBack={handleBackToBoardList}
+          onMemoClick={() =>
+            window.dispatchEvent(
+              new CustomEvent("board-section-change", {
+                detail: { section: "memos" },
+              }),
+            )
+          }
+          onTaskClick={() =>
+            window.dispatchEvent(
+              new CustomEvent("board-section-change", {
+                detail: { section: "tasks" },
+              }),
+            )
+          }
+          onCommentClick={() =>
+            window.dispatchEvent(
+              new CustomEvent("board-section-change", {
+                detail: { section: "comments" },
+              }),
+            )
+          }
+          activeSection={activeBoardSection}
         />
       ) : (
         // 通常のサイドバー表示（レスポンシブ対応）

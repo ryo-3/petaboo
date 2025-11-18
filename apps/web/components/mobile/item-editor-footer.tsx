@@ -27,9 +27,10 @@ interface BoardFooterProps {
   onBack: () => void;
   onMemoClick: () => void;
   onTaskClick: () => void;
-  onCommentClick: () => void;
+  onCommentClick?: () => void;
   activeSection: "memos" | "tasks" | "comments";
   commentCount?: number;
+  hideComment?: boolean; // 個人側ではコメント非表示
 }
 
 // 型安全な条件付きプロパティ
@@ -45,8 +46,15 @@ export default function ItemEditorFooter(props: ItemEditorFooterProps) {
   let buttons: FooterButton[];
 
   if (type === "board") {
-    // ボード詳細用のボタン構成: メモ | タスク | コメント
-    const { onMemoClick, onTaskClick, activeSection, commentCount = 0 } = props;
+    // ボード詳細用のボタン構成: メモ | タスク | コメント（hideCommentでコメント非表示可）
+    const {
+      onMemoClick,
+      onTaskClick,
+      onCommentClick,
+      activeSection,
+      commentCount = 0,
+      hideComment = false,
+    } = props;
 
     buttons = [
       {
@@ -67,16 +75,21 @@ export default function ItemEditorFooter(props: ItemEditorFooterProps) {
         activeIconColorClass: "text-white",
         ariaLabel: "タスク",
       },
-      {
-        icon: <CommentIcon className="w-6 h-6 ml-1" />,
-        onClick: onCommentClick,
-        isActive: activeSection === "comments",
-        activeColorClass: "bg-gray-500",
-        inactiveIconColorClass: "text-gray-400",
-        activeIconColorClass: "text-white",
-        ariaLabel: "コメント",
-        count: commentCount,
-      },
+      // hideCommentがfalseの場合のみコメントボタンを表示
+      ...(!hideComment && onCommentClick
+        ? [
+            {
+              icon: <CommentIcon className="w-6 h-6 ml-1" />,
+              onClick: onCommentClick,
+              isActive: activeSection === "comments",
+              activeColorClass: "bg-gray-500",
+              inactiveIconColorClass: "text-gray-400",
+              activeIconColorClass: "text-white",
+              ariaLabel: "コメント",
+              count: commentCount,
+            } as FooterButton,
+          ]
+        : []),
     ];
   } else {
     // メモ・タスクエディター用のボタン構成: メモ/タスク | 画像 | コメント

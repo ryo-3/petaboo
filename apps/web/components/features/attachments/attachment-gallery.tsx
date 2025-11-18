@@ -97,13 +97,6 @@ export default function AttachmentGallery({
     if (newAttachments.length > 0) {
       newAttachments.forEach(async (attachment) => {
         try {
-          console.log(`📷 [AttachmentGallery] 画像読み込み開始`, {
-            id: attachment.id,
-            url: attachment.url,
-            fileName: attachment.fileName,
-            mimeType: attachment.mimeType,
-          });
-
           const token = await getToken();
           const response = await fetch(attachment.url, {
             headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -124,10 +117,6 @@ export default function AttachmentGallery({
 
           setImageUrls((prev) => ({ ...prev, [attachment.id]: url }));
           loadedIds.add(attachment.id);
-
-          console.log(`✅ [AttachmentGallery] 画像読み込み成功`, {
-            id: attachment.id,
-          });
         } catch (error) {
           console.error(`❌ [AttachmentGallery] 画像読み込みエラー`, {
             id: attachment.id,

@@ -230,25 +230,6 @@ export function NavigationProvider({
       team: isTeamScreen,
     };
 
-    console.log("[NavigationContext] 🎯 iconStates計算（個人側）", {
-      screenMode,
-      currentMode,
-      optimisticMode,
-      effectiveMode,
-      isHomeScreen,
-      isTeamScreen,
-      isExclusiveScreen,
-      showingBoardDetail,
-      boardDetailActive,
-      showTeamList,
-      showTeamCreate,
-      pathname,
-      activeIcons: Object.entries(result)
-        .filter(([, v]) => v)
-        .map(([k]) => k)
-        .join(","),
-    });
-
     return result;
   }, [
     screenMode,

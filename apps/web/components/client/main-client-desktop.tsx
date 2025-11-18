@@ -70,7 +70,7 @@ export function MainClientDesktop({
 
   // ボード詳細のセクション切り替えイベントをリッスン
   useEffect(() => {
-    const handleSectionChange = (event: CustomEvent) => {
+    const handleSectionToggle = (event: CustomEvent) => {
       const { section } = event.detail;
       setActiveBoardSection(section);
     };
@@ -81,8 +81,8 @@ export function MainClientDesktop({
     };
 
     window.addEventListener(
-      "board-section-change",
-      handleSectionChange as EventListener,
+      "board-section-toggle",
+      handleSectionToggle as EventListener,
     );
     window.addEventListener(
       "board-section-state-change",
@@ -91,8 +91,8 @@ export function MainClientDesktop({
 
     return () => {
       window.removeEventListener(
-        "board-section-change",
-        handleSectionChange as EventListener,
+        "board-section-toggle",
+        handleSectionToggle as EventListener,
       );
       window.removeEventListener(
         "board-section-state-change",
@@ -122,24 +122,24 @@ export function MainClientDesktop({
           <>
             {/* モバイル: ボード詳細時は専用フッター */}
             {showingBoardDetail ? (
-              <div className="md:hidden">
+              <div className="md:hidden h-full">
                 <ItemEditorFooter
                   type="board"
                   onBack={handleBackToBoardList}
-                  onMemoClick={() =>
+                  onMemoClick={() => {
                     window.dispatchEvent(
-                      new CustomEvent("board-section-change", {
+                      new CustomEvent("board-section-toggle", {
                         detail: { section: "memos" },
                       }),
-                    )
-                  }
-                  onTaskClick={() =>
+                    );
+                  }}
+                  onTaskClick={() => {
                     window.dispatchEvent(
-                      new CustomEvent("board-section-change", {
+                      new CustomEvent("board-section-toggle", {
                         detail: { section: "tasks" },
                       }),
-                    )
-                  }
+                    );
+                  }}
                   activeSection={activeBoardSection}
                   hideComment={true}
                 />

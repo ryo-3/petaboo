@@ -121,22 +121,7 @@ export function useUnsavedChangesGuard<T = unknown>({
         const hasUnsavedChanges = refs.hasUnsavedChangesRef.current;
         const showModal = refs.showConfirmModalRef.current;
 
-        console.log(`🔍 [use-unsaved-changes-guard] 選択チェック`, {
-          itemType,
-          teamMode,
-          itemId: (item as { id?: number | string }).id,
-          hasUnsavedChanges,
-          hasShowModal: !!showModal,
-        });
-
         if (hasUnsavedChanges && showModal) {
-          console.log(
-            `⚠️ [use-unsaved-changes-guard] 未保存変更あり → モーダル表示`,
-            {
-              itemType,
-              pendingItemId: (item as { id?: number | string }).id,
-            },
-          );
           // 選択を保留してモーダルを表示
           pendingSelectionRef.current = item;
           showModal();
@@ -161,15 +146,6 @@ export function useUnsavedChangesGuard<T = unknown>({
 
     const handleUnsavedChangesDiscarded = () => {
       if (pendingSelectionRef.current) {
-        console.log(
-          `✅ [use-unsaved-changes-guard] 破棄確認後、保留中のアイテムを選択`,
-          {
-            itemType,
-            pendingItemId: (
-              pendingSelectionRef.current as { id?: number | string }
-            ).id,
-          },
-        );
         const pendingItem = pendingSelectionRef.current;
         pendingSelectionRef.current = null;
         // 保留中のアイテムを選択（未保存チェックを回避するため直接実行）

@@ -138,7 +138,23 @@ function BoardDetailScreen({
     createNewMemoHandler,
     createNewTaskHandler,
     setShowTabText,
+    setShowMemo,
+    setShowTask,
+    setShowComment,
   } = useBoardState();
+
+  // モバイル時の初期化: メモのみ表示（isMobileがtrueになった時に1回だけ実行）
+  const mobileInitializedRef = useRef(false);
+  useEffect(() => {
+    if (isMobile && !mobileInitializedRef.current) {
+      // メモのみ表示に強制設定（validateをバイパス）
+      setShowMemo(true);
+      setShowTask(false);
+      setShowComment(false);
+      mobileInitializedRef.current = true;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMobile]); // isMobileが変わった時のみチェック
 
   // ViewSettingsContextから取得した値を使用
   const columnCount = settings.boardColumnCount;
@@ -271,52 +287,82 @@ function BoardDetailScreen({
   });
 
   // タブテキスト表示制御
-  // モバイルフッターからのセクション切り替えイベントをリッスン
+  // モバイルフッターからのセクショントグルイベントをリッスン
   useEffect(() => {
-    const handleSectionChange = (event: CustomEvent) => {
+    const handleSectionToggle = (event: CustomEvent) => {
       const { section } = event.detail;
 
-      // モバイル用: セクション切り替え（トグルではなく、指定されたセクションのみ表示）
-      if (section === "memos") {
-        // メモのみ表示
-        if (!showMemo) handleMemoToggle(true);
-        if (showTask) handleTaskToggle(false);
-        if (showComment) handleCommentToggle(false);
-      } else if (section === "tasks") {
-        // タスクのみ表示
-        if (showMemo) handleMemoToggle(false);
-        if (!showTask) handleTaskToggle(true);
-        if (showComment) handleCommentToggle(false);
-      } else if (section === "comments") {
-        // コメントのみ表示
-        if (showMemo) handleMemoToggle(false);
-        if (showTask) handleTaskToggle(false);
-        if (!showComment) handleCommentToggle(true);
+      if (isMobile) {
+        // モバイル: 排他的表示（validateをバイパスして直接設定）
+        if (section === "memos") {
+          setShowMemo(true);
+          setShowTask(false);
+          setShowComment(false);
+          // フッターのアクティブ状態を即座に更新
+          window.dispatchEvent(
+            new CustomEvent("board-section-state-change", {
+              detail: { activeSection: "memos" },
+            }),
+          );
+        } else if (section === "tasks") {
+          setShowMemo(false);
+          setShowTask(true);
+          setShowComment(false);
+          // フッターのアクティブ状態を即座に更新
+          window.dispatchEvent(
+            new CustomEvent("board-section-state-change", {
+              detail: { activeSection: "tasks" },
+            }),
+          );
+        } else if (section === "comments") {
+          setShowMemo(false);
+          setShowTask(false);
+          setShowComment(true);
+          // フッターのアクティブ状態を即座に更新
+          window.dispatchEvent(
+            new CustomEvent("board-section-state-change", {
+              detail: { activeSection: "comments" },
+            }),
+          );
+        }
+      } else {
+        // デスクトップ: トグルロジック（コントロールパネルと同じ）
+        if (section === "memos") {
+          handleMemoToggle(!showMemo);
+        } else if (section === "tasks") {
+          handleTaskToggle(!showTask);
+        } else if (section === "comments") {
+          handleCommentToggle(!showComment);
+        }
+        // デスクトップは状態変更後に通知（トグルなので計算が必要）
+        const activeSection = !showMemo && showTask ? "tasks" : "memos";
+        window.dispatchEvent(
+          new CustomEvent("board-section-state-change", {
+            detail: { activeSection },
+          }),
+        );
       }
-
-      // 現在のセクション状態を通知（フッターのアクティブ状態同期用）
-      window.dispatchEvent(
-        new CustomEvent("board-section-state-change", {
-          detail: { activeSection: section },
-        }),
-      );
     };
 
     window.addEventListener(
-      "board-section-change",
-      handleSectionChange as EventListener,
+      "board-section-toggle",
+      handleSectionToggle as EventListener,
     );
 
     return () => {
       window.removeEventListener(
-        "board-section-change",
-        handleSectionChange as EventListener,
+        "board-section-toggle",
+        handleSectionToggle as EventListener,
       );
     };
   }, [
     showMemo,
     showTask,
     showComment,
+    isMobile,
+    setShowMemo,
+    setShowTask,
+    setShowComment,
     handleMemoToggle,
     handleTaskToggle,
     handleCommentToggle,
@@ -1168,7 +1214,7 @@ function BoardDetailScreen({
                   <div className="flex flex-col flex-1 min-h-0">
                     {/* メモ表示時 */}
                     {showMemo && (
-                      <div className="flex flex-col h-full relative">
+                      <div className="flex flex-col h-full relative pb-16">
                         <BoardMemoSection
                           rightPanelMode={rightPanelMode}
                           showMemo={showMemo}
@@ -1211,7 +1257,7 @@ function BoardDetailScreen({
 
                     {/* タスク表示時 */}
                     {showTask && (
-                      <div className="flex flex-col h-full relative">
+                      <div className="flex flex-col h-full relative pb-16">
                         <BoardTaskSection
                           boardId={boardId}
                           initialBoardId={boardId}

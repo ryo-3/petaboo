@@ -135,7 +135,7 @@ export function useUnsavedChangesGuard<T = unknown>({
         setScreenMode("view");
       }
     },
-    [itemType, teamMode, getRefs, onSelectItem, setScreenMode],
+    [getRefs, onSelectItem, setScreenMode],
   );
 
   /**

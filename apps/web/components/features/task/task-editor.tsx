@@ -1503,8 +1503,8 @@ function TaskEditor({
               isDeleted={isDeleted}
             />
 
-            {/* 作成者・日付を表示（ツールバー非表示時のみ） */}
-            {task && task.id !== 0 && !toolbarVisible && (
+            {/* 作成者・日付を表示（showDateAtBottom=trueかつツールバー非表示時のみ） */}
+            {task && task.id !== 0 && !toolbarVisible && showDateAtBottom && (
               <div className="flex justify-end items-center gap-2 mr-2 mt-1 mb-1">
                 <CreatorAvatar
                   createdBy={createdBy}

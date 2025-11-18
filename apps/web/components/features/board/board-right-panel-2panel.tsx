@@ -306,6 +306,7 @@ export default function BoardRightPanel({
               task={selectedTask}
               initialBoardId={boardId}
               isFromBoardDetail={true}
+              showDateAtBottom={true}
               {...toCreatorProps(selectedTaskCreatorInfo)}
               preloadedTags={tags || []}
               preloadedBoards={allBoards || []}
@@ -330,6 +331,7 @@ export default function BoardRightPanel({
             <TaskEditor
               task={selectedTask}
               initialBoardId={boardId}
+              showDateAtBottom={true}
               isFromBoardDetail={true}
               {...toCreatorProps(selectedTaskCreatorInfo)}
               preloadedTags={tags || []}

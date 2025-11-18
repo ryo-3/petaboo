@@ -197,12 +197,6 @@ export function useSimpleItemSave<T extends UnifiedItem>({
   const hasChanges = useMemo(() => {
     // アイテム切り替え中または初期同期中は変更検知を完全に無効化
     if (isItemTransition || isInitialSync) {
-      console.log(`🔍 [use-simple-item-save] hasChanges=false (同期中)`, {
-        isItemTransition,
-        isInitialSync,
-        itemType,
-        itemId: item?.id,
-      });
       return false;
     }
 
@@ -216,13 +210,6 @@ export function useSimpleItemSave<T extends UnifiedItem>({
     // 新規作成時（itemがnullまたはitem.id === 0）で、タイトルもコンテンツも空の場合は変更なし
     const isNewItem = !item || item.id === 0;
     if (isNewItem && !strippedTitle && !strippedContent) {
-      console.log(`🔍 [use-simple-item-save] hasChanges=false (新規・空)`, {
-        itemType,
-        currentTitle: `"${currentTitle}"`,
-        currentContent: `"${currentContent}"`,
-        strippedTitle: `"${strippedTitle}"`,
-        strippedContent: `"${strippedContent}"`,
-      });
       return false;
     }
 
@@ -246,21 +233,6 @@ export function useSimpleItemSave<T extends UnifiedItem>({
       JSON.stringify([...currentBoardIds].sort());
 
     const result = textChanged || taskFieldsChanged || hasBoardChanges;
-
-    console.log(`🔍 [use-simple-item-save] hasChanges=${result}`, {
-      itemType,
-      itemId: item?.id,
-      isNewItem,
-      currentTitle: `"${currentTitle}"`,
-      currentContent: `"${currentContent}"`,
-      initialTitle: `"${initialTitle.trim()}"`,
-      initialContent: `"${initialContent.trim()}"`,
-      textChanged,
-      taskFieldsChanged,
-      hasBoardChanges,
-      selectedBoardIds,
-      currentBoardIds,
-    });
 
     return result;
   }, [
@@ -370,7 +342,6 @@ export function useSimpleItemSave<T extends UnifiedItem>({
         // 既存アイテム更新
         if (isEmpty) {
           // 空アイテムの場合は保存しない（保存ボタンが無効化されるため、ここには到達しないはず）
-          console.warn("空アイテムのため保存をスキップしました");
           return;
         }
 
@@ -409,13 +380,6 @@ export function useSimpleItemSave<T extends UnifiedItem>({
                   categoryId: categoryId ?? undefined,
                   boardCategoryId: boardCategoryId ?? undefined,
                 };
-
-          console.log("💾 [useSimpleItemSave] 保存データ:", {
-            itemType,
-            updateData,
-            categoryId,
-            boardCategoryId,
-          });
 
           if (itemType === "memo") {
             await updateMemo.mutateAsync({
@@ -591,12 +555,6 @@ export function useSimpleItemSave<T extends UnifiedItem>({
         onSaveComplete?.(updatedItem, false, false);
       } else {
         // 新規アイテム作成（空の場合は何もしない）
-        console.log("🆕 [executeSave] 新規作成チェック", {
-          isEmpty,
-          hasTitle: !!title.trim(),
-          hasContent: !!content.trim(),
-        });
-
         if (!isEmpty) {
           const createData =
             itemType === "memo"
@@ -617,15 +575,11 @@ export function useSimpleItemSave<T extends UnifiedItem>({
                   boardCategoryId: boardCategoryId ?? undefined,
                 };
 
-          console.log("📝 [executeSave] 新規作成データ", createData);
-
           let createdItem: T;
           if (itemType === "memo") {
             createdItem = (await createMemo.mutateAsync(createData)) as T;
-            console.log("✅ [executeSave] メモ作成成功", createdItem);
           } else {
             createdItem = (await createTask.mutateAsync(createData)) as T;
-            console.log("✅ [executeSave] タスク作成成功", createdItem);
           }
 
           // ボード選択時または初期ボードID指定時はボードに追加
@@ -721,7 +675,6 @@ export function useSimpleItemSave<T extends UnifiedItem>({
         setSelectedBoardIds([...selectedBoardIds]);
       }, 100);
     } catch (error) {
-      console.error("❌ [use-simple-item-save] 保存に失敗:", error);
       setSaveError("保存に失敗しました");
     } finally {
       // 保存中表示をしっかり見せる

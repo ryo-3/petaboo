@@ -116,6 +116,10 @@ function BoardDetailScreen({
   // 削除ボタンのref
   const deleteButtonRef = useRef<HTMLButtonElement | null>(null);
 
+  // 選択モード時の一覧パネル表示状態
+  const [showListPanelInSelectedMode, setShowListPanelInSelectedMode] =
+    useState(true);
+
   // 状態管理フック
   const {
     activeTaskTab,
@@ -173,6 +177,19 @@ function BoardDetailScreen({
   // propsから選択状態を使用（Fast Refresh対応）
   const selectedMemo = propSelectedMemo;
   const selectedTask = propSelectedTask;
+
+  // 選択/選択解除時に一覧パネルの状態を制御
+  useEffect(() => {
+    if (selectedMemo || selectedTask) {
+      // モバイル時: アイテム選択時は一覧を非表示（詳細のみ）
+      if (isMobile) {
+        setShowListPanelInSelectedMode(false);
+      }
+    } else {
+      // 選択解除時: 一覧を表示に戻す
+      setShowListPanelInSelectedMode(true);
+    }
+  }, [selectedMemo, selectedTask, isMobile]);
 
   // 複数選択状態管理フック
   const {
@@ -632,6 +649,14 @@ function BoardDetailScreen({
   ) as "hidden" | "view" | "create";
   const totalNormalCount = allMemoItems.length + allTaskItems.length;
   const totalDeletedCount = deletedCount + deletedMemoCount;
+  const shouldShowSelectedMode =
+    !rightPanelMode && (selectedMemo || selectedTask);
+  const selectedItemType = selectedMemo ? "memo" : selectedTask ? "task" : null;
+
+  // 選択モード時の一覧パネルトグルハンドラー
+  const handleListPanelToggleInSelectedMode = useCallback((show: boolean) => {
+    setShowListPanelInSelectedMode(show);
+  }, []);
 
   const boardHeaderConfig = useMemo<HeaderControlPanelConfig | null>(() => {
     const config: HeaderControlPanelConfig = {
@@ -656,6 +681,29 @@ function BoardDetailScreen({
       teamMode,
       teamId: teamId ?? undefined,
     };
+
+    // アイテム選択時のパネル制御モード（個人ボードのみ）
+    if (shouldShowSelectedMode) {
+      config.isSelectedMode = true;
+      config.showMemo = showListPanelInSelectedMode;
+      config.showTask = true; // 詳細は常に表示（ボタン自体を非表示にする）
+      config.onMemoToggle = handleListPanelToggleInSelectedMode;
+      config.onTaskToggle = () => {}; // ダミー（ボタン非表示なので呼ばれない）
+      config.contentFilterRightPanelMode = rightPanelMode;
+      config.listTooltip = showListPanelInSelectedMode
+        ? "一覧パネルを非表示"
+        : "一覧パネルを表示";
+      config.detailTooltip = ""; // 使用しない
+      config.selectedItemType = selectedItemType;
+      config.hideDetailButton = true; // 詳細ボタンを非表示
+    } else {
+      // 通常モード
+      config.showMemo = headerShowMemo;
+      config.showTask = headerShowTask;
+      config.onMemoToggle = handleMemoToggle;
+      config.onTaskToggle = handleTaskToggle;
+      config.contentFilterRightPanelMode = rightPanelMode;
+    }
 
     if (teamMode) {
       config.showComment = showComment;
@@ -685,6 +733,12 @@ function BoardDetailScreen({
     teamId,
     showComment,
     // handleCommentToggle, // 関数は除外
+    shouldShowSelectedMode,
+    selectedItemType,
+    showMemo,
+    showTask,
+    showListPanelInSelectedMode,
+    // handleListPanelToggleInSelectedMode, // 関数は除外
   ]);
 
   const boardHeaderOwnerRef = useRef<symbol | null>(null);
@@ -902,7 +956,9 @@ function BoardDetailScreen({
               const showList =
                 rightPanelMode === "memo-list" ||
                 rightPanelMode === "task-list" ||
-                (!rightPanelMode && (selectedMemo || selectedTask));
+                (!rightPanelMode &&
+                  (selectedMemo || selectedTask) &&
+                  showListPanelInSelectedMode);
               const showDetail = selectedMemo || selectedTask;
 
               const combinationKey =

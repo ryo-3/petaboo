@@ -44,6 +44,7 @@ export default function HeaderControlPanel() {
     listTooltip,
     detailTooltip,
     selectedItemType = null,
+    hideDetailButton = false,
     onCsvImport,
     onBoardExport,
     isExportDisabled = false,
@@ -121,6 +122,7 @@ export default function HeaderControlPanel() {
               listTooltip={listTooltip}
               detailTooltip={detailTooltip}
               selectedItemType={selectedItemType}
+              hideDetailButton={hideDetailButton}
             />
           )}
 

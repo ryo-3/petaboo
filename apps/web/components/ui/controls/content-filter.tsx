@@ -17,6 +17,7 @@ interface ContentFilterProps {
   listTooltip?: string;
   detailTooltip?: string;
   selectedItemType?: "memo" | "task" | null; // 選択中のアイテムタイプ
+  hideDetailButton?: boolean; // 詳細ボタンを非表示（個人ボード選択時）
 }
 
 function ContentFilter({
@@ -31,6 +32,7 @@ function ContentFilter({
   listTooltip,
   detailTooltip,
   selectedItemType = null,
+  hideDetailButton = false,
 }: ContentFilterProps) {
   const getMemoTooltip = () => {
     if (isSelectedMode && listTooltip) {
@@ -79,28 +81,30 @@ function ContentFilter({
       </Tooltip>
 
       {/* 中央ボタン（非選択時: タスク、選択時: 詳細） */}
-      <Tooltip text={getTaskTooltip()} position="bottom">
-        <button
-          onClick={() => onTaskToggle(!showTask)}
-          className={`p-1 rounded-md transition-colors ${
-            showTask
-              ? isSelectedMode && selectedItemType === "memo"
-                ? "bg-Green text-white hover:bg-Green/80"
-                : "bg-DeepBlue text-white hover:bg-DeepBlue/80"
-              : "text-gray-400 hover:text-gray-600 hover:bg-gray-200"
-          }`}
-        >
-          {isSelectedMode ? (
-            selectedItemType === "memo" ? (
-              <MemoIcon className="w-4 h-4" />
+      {!hideDetailButton && (
+        <Tooltip text={getTaskTooltip()} position="bottom">
+          <button
+            onClick={() => onTaskToggle(!showTask)}
+            className={`p-1 rounded-md transition-colors ${
+              showTask
+                ? isSelectedMode && selectedItemType === "memo"
+                  ? "bg-Green text-white hover:bg-Green/80"
+                  : "bg-DeepBlue text-white hover:bg-DeepBlue/80"
+                : "text-gray-400 hover:text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            {isSelectedMode ? (
+              selectedItemType === "memo" ? (
+                <MemoIcon className="w-4 h-4" />
+              ) : (
+                <TaskIcon className="w-4 h-4" />
+              )
             ) : (
               <TaskIcon className="w-4 h-4" />
-            )
-          ) : (
-            <TaskIcon className="w-4 h-4" />
-          )}
-        </button>
-      </Tooltip>
+            )}
+          </button>
+        </Tooltip>
+      )}
 
       {/* コメントフィルター（チームモードのみ） */}
       {showComment !== undefined && onCommentToggle && (

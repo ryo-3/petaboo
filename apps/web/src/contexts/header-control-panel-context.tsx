@@ -29,6 +29,7 @@ export type HeaderControlPanelConfig = {
   listTooltip?: string;
   detailTooltip?: string;
   selectedItemType?: "memo" | "task" | null;
+  hideDetailButton?: boolean; // 詳細ボタンを非表示（個人ボード選択時）
 
   // CSV / エクスポート
   onCsvImport?: () => void;

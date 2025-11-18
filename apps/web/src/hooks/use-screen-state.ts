@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import type { UserPreferences } from "@/src/contexts/user-preferences-context";
 
 interface UseScreenStateConfig {

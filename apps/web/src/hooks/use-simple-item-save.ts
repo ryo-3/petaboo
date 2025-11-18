@@ -236,7 +236,7 @@ export function useSimpleItemSave<T extends UnifiedItem>({
 
     return result;
   }, [
-    item?.id,
+    item,
     title,
     content,
     priority,
@@ -674,7 +674,7 @@ export function useSimpleItemSave<T extends UnifiedItem>({
       setTimeout(() => {
         setSelectedBoardIds([...selectedBoardIds]);
       }, 100);
-    } catch (error) {
+    } catch {
       setSaveError("保存に失敗しました");
     } finally {
       // 保存中表示をしっかり見せる

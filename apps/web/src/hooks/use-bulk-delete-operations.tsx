@@ -496,6 +496,7 @@ export function useBulkDeleteOperations({
     checkedMemos,
     checkedTasks,
     boardId,
+    boardDeletedItems,
     bulkDelete,
     setCheckedMemos,
     setCheckedTasks,

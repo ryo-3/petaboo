@@ -51,11 +51,7 @@ export const useAttachmentManager = ({
     originalId,
   );
 
-  const deleteMutation = useDeleteAttachment(
-    teamMode ? teamId : undefined,
-    itemType,
-    originalId,
-  );
+  const deleteMutation = useDeleteAttachment(teamMode ? teamId : undefined);
 
   // 保存待ちの画像（ローカルstate）
   const [pendingImages, setPendingImages] = useState<File[]>([]);

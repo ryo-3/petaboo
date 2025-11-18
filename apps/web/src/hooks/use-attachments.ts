@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -64,7 +64,6 @@ export function useUploadAttachment(
   attachedOriginalId: string | undefined,
 ) {
   const { getToken } = useAuth();
-  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (file: File): Promise<Attachment> => {
@@ -109,13 +108,8 @@ export function useUploadAttachment(
 /**
  * 添付ファイル削除（個人・チーム両対応）
  */
-export function useDeleteAttachment(
-  teamId: number | undefined,
-  attachedTo: "memo" | "task" | "comment",
-  attachedOriginalId: string | undefined,
-) {
+export function useDeleteAttachment(teamId: number | undefined) {
   const { getToken } = useAuth();
-  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (attachmentId: number): Promise<void> => {

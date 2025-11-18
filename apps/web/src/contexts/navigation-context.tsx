@@ -9,10 +9,9 @@ import {
   useEffect,
   useCallback,
 } from "react";
-import type { Memo, DeletedMemo } from "@/src/types/memo";
-import type { Task, DeletedTask } from "@/src/types/task";
+import type { Memo } from "@/src/types/memo";
+import type { Task } from "@/src/types/task";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
 
 type ScreenMode =
   | "home"
@@ -149,7 +148,6 @@ export function NavigationProvider({
   const pathname = usePathname();
 
   const searchParams = useSearchParams();
-  const queryClient = useQueryClient();
 
   // Sidebarの詳細なiconStates計算ロジック（統一版・最適化・楽観的更新対応）
   const iconStates = useMemo((): IconStates => {
@@ -264,38 +262,16 @@ export function NavigationProvider({
     };
   }, []);
 
-  // デバッグ用: スクリーンモード変更をログ出力
+  // デバッグ用: スクリーンモード変更をログ出力（無効化）
   useEffect(() => {
-    const currentTab = searchParams.get("tab");
-    const teamName =
-      pathname.startsWith("/team/") && pathname !== "/team"
-        ? pathname.split("/")[2]
-        : undefined;
-
-    // URL情報の詳細取得
-    const internalPath = pathname;
-    const queryString = searchParams.toString();
-    const fullInternalUrl = queryString
-      ? `${internalPath}?${queryString}`
-      : internalPath;
-    const actualDisplayUrl = window.location.href;
-
-    // シンプルなログ出力
-    const logInfo = [
-      `mode:${screenMode}`,
-      `path:${pathname}`,
-      currentTab && `tab:${currentTab}`,
-      teamName && `team:${teamName}`,
-      `icons:${
-        Object.entries(iconStates)
-          .filter(([, v]) => v)
-          .map(([k]) => k)
-          .join(",") || "none"
-      }`,
-    ]
-      .filter(Boolean)
-      .join(" | ");
-
+    // URL logging is disabled
+    // const currentTab = searchParams.get("tab");
+    // const teamName = pathname.startsWith("/team/") && pathname !== "/team" ? pathname.split("/")[2] : undefined;
+    // const internalPath = pathname;
+    // const queryString = searchParams.toString();
+    // const fullInternalUrl = queryString ? `${internalPath}?${queryString}` : internalPath;
+    // const actualDisplayUrl = window.location.href;
+    // const logInfo = [...];
     // console.log(`🎯 [Navigation] ${logInfo} (${actualDisplayUrl})`);
   }, [screenMode, pathname, searchParams, iconStates]);
 

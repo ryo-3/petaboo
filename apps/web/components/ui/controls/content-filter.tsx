@@ -9,7 +9,7 @@ interface ContentFilterProps {
   showTask: boolean;
   showComment?: boolean;
   onMemoToggle: (show: boolean) => void;
-  onTaskToggle: (show: boolean) => void;
+  onTaskToggle?: (show: boolean) => void; // オプショナル（個人モードで一覧のみ表示時）
   onCommentToggle?: (show: boolean) => void;
   rightPanelMode?: "memo-list" | "task-list" | "editor" | null;
   // 選択時モード用
@@ -81,7 +81,7 @@ function ContentFilter({
       </Tooltip>
 
       {/* 中央ボタン（非選択時: タスク、選択時: 詳細） */}
-      {!hideDetailButton && (
+      {!hideDetailButton && onTaskToggle && (
         <Tooltip text={getTaskTooltip()} position="bottom">
           <button
             onClick={() => onTaskToggle(!showTask)}

@@ -959,8 +959,10 @@ function TaskScreen({
     completed: completedCount,
   } = taskStatusCounts;
 
-  // アイテム選択時のみパネルコントロールを表示（3パネル切り替え用）
-  const shouldShowPanelControls = teamMode && taskScreenMode !== "list";
+  // パネルコントロール表示条件
+  // - 個人: タスク選択時に一覧パネルの切り替えのみ表示
+  // - チーム: タスク選択時に一覧・詳細・コメントの切り替えを表示
+  const shouldShowPanelControls = taskScreenMode !== "list";
 
   const taskRightPanelMode = (taskScreenMode === "list" ? "hidden" : "view") as
     | "hidden"
@@ -1009,15 +1011,24 @@ function TaskScreen({
     if (shouldShowPanelControls) {
       config.isSelectedMode = true;
       config.showMemo = showListPanel;
-      config.showTask = showDetailPanel;
-      config.showComment = showCommentPanel;
       config.onMemoToggle = handleListPanelToggle;
-      config.onTaskToggle = handleDetailPanelToggle;
-      config.onCommentToggle = handleCommentPanelToggle;
       config.contentFilterRightPanelMode = "editor";
       config.listTooltip = "タスク一覧パネル";
-      config.detailTooltip = "タスク詳細パネル";
       config.selectedItemType = "task";
+
+      // チームモードのみ: 詳細パネルとコメントパネルの切り替えを表示
+      if (teamMode) {
+        config.showTask = showDetailPanel;
+        config.onTaskToggle = handleDetailPanelToggle;
+        config.detailTooltip = "タスク詳細パネル";
+        config.showComment = showCommentPanel;
+        config.onCommentToggle = handleCommentPanelToggle;
+      } else {
+        // 個人モード: 詳細は常に表示、ボタンのみ非表示
+        config.showTask = true; // 詳細は常に表示（ボタン自体を非表示にする）
+        config.onTaskToggle = () => {}; // ダミー（ボタン非表示なので呼ばれない）
+        config.hideDetailButton = true; // 詳細ボタンを非表示
+      }
     }
 
     return config;
@@ -1372,7 +1383,11 @@ function TaskScreen({
                     center: showDetailPanel,
                     right: showCommentPanel,
                   }
-                : undefined
+                : {
+                    left: showListPanel,
+                    center: true, // 個人モードでは詳細は常に表示
+                    right: false, // 個人モードではコメントなし
+                  }
             }
           />
         )}

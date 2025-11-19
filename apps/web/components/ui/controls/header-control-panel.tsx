@@ -107,24 +107,22 @@ export default function HeaderControlPanel() {
         )}
 
         {/* コンテンツフィルター（boardモード または 選択モード時） */}
-        {(currentMode === "board" || isSelectedMode) &&
-          onMemoToggle &&
-          onTaskToggle && (
-            <ContentFilter
-              showMemo={showMemo}
-              showTask={showTask}
-              showComment={showComment}
-              onMemoToggle={onMemoToggle}
-              onTaskToggle={onTaskToggle}
-              onCommentToggle={onCommentToggle}
-              rightPanelMode={contentFilterRightPanelMode}
-              isSelectedMode={isSelectedMode}
-              listTooltip={listTooltip}
-              detailTooltip={detailTooltip}
-              selectedItemType={selectedItemType}
-              hideDetailButton={hideDetailButton}
-            />
-          )}
+        {(currentMode === "board" || isSelectedMode) && onMemoToggle && (
+          <ContentFilter
+            showMemo={showMemo}
+            showTask={showTask}
+            showComment={showComment}
+            onMemoToggle={onMemoToggle}
+            onTaskToggle={onTaskToggle}
+            onCommentToggle={onCommentToggle}
+            rightPanelMode={contentFilterRightPanelMode}
+            isSelectedMode={isSelectedMode}
+            listTooltip={listTooltip}
+            detailTooltip={detailTooltip}
+            selectedItemType={selectedItemType}
+            hideDetailButton={hideDetailButton}
+          />
+        )}
 
         {/* 全選択/全解除ボタン */}
         {(currentMode === "memo" || currentMode === "task") &&

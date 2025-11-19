@@ -1249,7 +1249,8 @@ function MemoScreen({
   );
 
   // 右パネルのコンテンツ（チームモードのみコメント表示）
-  const rightPanelContent =
+  // デスクトップ用: showCommentPanelで制御
+  const rightPanelContentDesktop =
     teamMode &&
     memoScreenMode !== "create" &&
     selectedMemo &&
@@ -1269,6 +1270,19 @@ function MemoScreen({
       </>
     ) : null;
 
+  // モバイル用: 常に表示可能（showCommentPanelに関わらず）
+  const rightPanelContentMobile =
+    teamMode && memoScreenMode !== "create" && selectedMemo ? (
+      <CommentSection
+        targetType="memo"
+        targetOriginalId={OriginalIdUtils.fromItem(selectedMemo) || ""}
+        teamId={teamId || 0}
+        title="コメント"
+        placeholder="コメントを入力..."
+        teamMembers={teamMembers}
+      />
+    ) : null;
+
   return (
     <div className="h-full">
       {/* デスクトップ表示 */}
@@ -1281,7 +1295,7 @@ function MemoScreen({
           <ControlPanelLayout
             leftPanel={leftPanelContent}
             centerPanel={centerPanelContent}
-            rightPanel={rightPanelContent}
+            rightPanel={rightPanelContentDesktop}
             storageKey={
               teamMode
                 ? "team-memo-3panel-sizes-v2"
@@ -1383,7 +1397,7 @@ function MemoScreen({
           </div>
         ) : memoEditorTab === "comment" ? (
           <div className="h-full overflow-y-auto overscroll-contain">
-            {rightPanelContent}
+            {rightPanelContentMobile}
           </div>
         ) : (
           <div className="h-full overflow-y-auto overscroll-contain">

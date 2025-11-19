@@ -1331,7 +1331,8 @@ function TaskScreen({
   );
 
   // 右パネルのコンテンツ（チームモードのみコメント表示）
-  const rightPanelContent =
+  // デスクトップ用: showCommentPanelで制御
+  const rightPanelContentDesktop =
     teamMode &&
     taskScreenMode !== "create" &&
     selectedTask &&
@@ -1351,6 +1352,19 @@ function TaskScreen({
       </>
     ) : null;
 
+  // モバイル用: 常に表示可能（showCommentPanelに関わらず）
+  const rightPanelContentMobile =
+    teamMode && taskScreenMode !== "create" && selectedTask ? (
+      <CommentSection
+        targetType="task"
+        targetOriginalId={OriginalIdUtils.fromItem(selectedTask) || ""}
+        teamId={teamId || 0}
+        title="コメント"
+        placeholder="コメントを入力..."
+        teamMembers={teamMembers}
+      />
+    ) : null;
+
   return (
     <div className="h-full">
       {/* デスクトップ表示 */}
@@ -1363,7 +1377,7 @@ function TaskScreen({
           <ControlPanelLayout
             leftPanel={leftPanelContent}
             centerPanel={centerPanelContent}
-            rightPanel={rightPanelContent}
+            rightPanel={rightPanelContentDesktop}
             storageKey={
               teamMode
                 ? "team-task-3panel-sizes-v2"
@@ -1452,7 +1466,7 @@ function TaskScreen({
           </div>
         ) : taskEditorTab === "comment" ? (
           <div className="h-full overflow-y-auto overscroll-contain">
-            {rightPanelContent}
+            {rightPanelContentMobile}
           </div>
         ) : (
           <div className="h-full overflow-y-auto overscroll-contain">

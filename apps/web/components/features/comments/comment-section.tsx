@@ -560,7 +560,7 @@ export default function CommentSection({
       : title;
 
   return (
-    <>
+    <div className="flex flex-col h-full">
       {/* デスクトップ: トグルボタン表示 / モバイル: 非表示 */}
       <div className="p-4 flex-shrink-0 items-center justify-between hidden md:flex">
         <button
@@ -1084,6 +1084,6 @@ export default function CommentSection({
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

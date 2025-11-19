@@ -377,7 +377,7 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
         <main className="flex-1 overflow-hidden mb-14 md:mb-0">{children}</main>
 
         {/* モバイル用ボトムナビ（下）：ボード詳細時は専用フッター、それ以外はSidebar */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 h-14 border-t border-gray-200 bg-white">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 h-14 border-t border-gray-200 bg-white z-50">
           {isTeamBoardDetailPage ? (
             <ItemEditorFooter
               type="board"

@@ -543,11 +543,11 @@ function Sidebar({
               <>
                 {/* 背景オーバーレイ */}
                 <div
-                  className="fixed inset-0 z-40"
+                  className="fixed inset-0 z-[60]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 />
                 {/* メニュー */}
-                <div className="absolute bottom-full right-0 mb-4 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                <div className="fixed bottom-16 right-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-[70]">
                   <button
                     onClick={() => {
                       markNotificationsAsRead();

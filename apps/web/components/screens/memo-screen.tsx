@@ -354,17 +354,11 @@ function MemoScreen({
       const storageKey = teamMode
         ? "team-memo-panel-visibility"
         : "personal-memo-panel-visibility";
-      console.log(
-        `[MemoScreen] getInitialPanelState - key: ${key}, teamMode: ${teamMode}, storageKey: ${storageKey}`,
-      );
       const saved = localStorage.getItem(storageKey);
-      console.log(`[MemoScreen] localStorage value:`, saved);
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
-          console.log(`[MemoScreen] parsed value:`, parsed);
           if (typeof parsed[key] === "boolean") {
-            console.log(`[MemoScreen] returning saved value: ${parsed[key]}`);
             return parsed[key] as boolean;
           }
         } catch {
@@ -372,7 +366,6 @@ function MemoScreen({
         }
       }
     }
-    console.log(`[MemoScreen] returning default value: true`);
     return true;
   };
 
@@ -401,20 +394,12 @@ function MemoScreen({
       showCommentPanel,
     };
 
-    console.log(
-      `[MemoScreen] saving to localStorage - teamMode: ${teamMode}, storageKey: ${storageKey}, value:`,
-      value,
-    );
     localStorage.setItem(storageKey, JSON.stringify(value));
   }, [showListPanel, showDetailPanel, showCommentPanel, teamMode]);
 
   const handleListPanelToggle = useCallback(() => {
-    console.log(`[MemoScreen] handleListPanelToggle called`);
     setShowListPanel((prev) => {
       const newValue = !prev;
-      console.log(
-        `[MemoScreen] toggleListPanel - prev: ${prev}, newValue: ${newValue}`,
-      );
       if (
         !validatePanelToggle(
           { left: prev, center: showDetailPanel, right: showCommentPanel },
@@ -422,14 +407,8 @@ function MemoScreen({
           newValue,
         )
       ) {
-        console.log(
-          `[MemoScreen] toggle validation failed, keeping prev value`,
-        );
         return prev;
       }
-      console.log(
-        `[MemoScreen] toggle validation passed, returning new value: ${newValue}`,
-      );
       return newValue;
     });
   }, [showDetailPanel, showCommentPanel]);
@@ -951,15 +930,11 @@ function MemoScreen({
     }
 
     return config;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     disableHeaderControls,
     memoRightPanelMode,
     selectionMode,
-    // handleSelectionModeChange, // 関数は除外
-    // handleSelectAll, // 関数は除外
     isAllSelected,
-    // handleCsvImport, // 関数は除外
     displayTab,
     memos?.length,
     deletedMemos?.length,
@@ -971,9 +946,6 @@ function MemoScreen({
     showListPanel,
     showDetailPanel,
     showCommentPanel,
-    // handleListPanelToggle, // 関数は除外
-    // handleDetailPanelToggle, // 関数は除外
-    // handleCommentPanelToggle, // 関数は除外
   ]);
 
   const headerOwnerRef = useRef<symbol | null>(null);
@@ -1216,7 +1188,6 @@ function MemoScreen({
                   selectedDeletedMemo.originalId,
                 );
               } catch (error) {
-                console.error("❌ 完全削除エラー:", error);
                 setIsRightLidOpen(false);
                 return;
               }

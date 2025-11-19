@@ -421,12 +421,17 @@ function BoardDetailScreen({
       handleCreateNewTask();
     };
 
+    // チーム・個人両方のイベントをリッスン
     window.addEventListener("team-memo-create", handleMemoCreate);
     window.addEventListener("team-task-create", handleTaskCreate);
+    window.addEventListener("personal-memo-create", handleMemoCreate);
+    window.addEventListener("personal-task-create", handleTaskCreate);
 
     return () => {
       window.removeEventListener("team-memo-create", handleMemoCreate);
       window.removeEventListener("team-task-create", handleTaskCreate);
+      window.removeEventListener("personal-memo-create", handleMemoCreate);
+      window.removeEventListener("personal-task-create", handleTaskCreate);
     };
   }, [
     handleCreateNewMemo,
@@ -1927,6 +1932,12 @@ function BoardDetailScreen({
                                 onCheckedMemosChange={setCheckedMemos}
                                 onTagging={handleTaggingMemo}
                               />
+                              {/* モバイル: メモ追加FABボタン（削除済みタブ以外で表示） */}
+                              <MobileFabButton
+                                type="memo"
+                                teamMode={teamMode}
+                                show={activeMemoTab !== "deleted"}
+                              />
                             </div>
                           )}
                           {/* タスク表示時 */}
@@ -1974,6 +1985,12 @@ function BoardDetailScreen({
                                 deleteButtonRef={deleteButtonRef}
                                 onCheckedTasksChange={setCheckedTasks}
                                 onTagging={handleTaggingTask}
+                              />
+                              {/* モバイル: タスク追加FABボタン（削除済みタブ以外で表示） */}
+                              <MobileFabButton
+                                type="task"
+                                teamMode={teamMode}
+                                show={activeTaskTab !== "deleted"}
                               />
                             </div>
                           )}
@@ -2370,14 +2387,6 @@ function BoardDetailScreen({
           }
         }}
       />
-
-      {/* モバイル右下FABボタン */}
-      {showMemo && activeMemoTab !== "deleted" && (
-        <MobileFabButton type="memo" teamMode={teamMode} show={true} />
-      )}
-      {!showMemo && showTask && activeTaskTab !== "deleted" && (
-        <MobileFabButton type="task" teamMode={teamMode} show={true} />
-      )}
     </div>
   );
 }

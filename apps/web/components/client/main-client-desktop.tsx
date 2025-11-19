@@ -120,28 +120,59 @@ export function MainClientDesktop({
         hideHeader={preferences?.hideHeader}
         sidebarContent={
           showingBoardDetail ? (
-            <div className="md:hidden h-full">
-              <ItemEditorFooter
-                type="board"
-                onBack={handleBackToBoardList}
-                onMemoClick={() => {
-                  window.dispatchEvent(
-                    new CustomEvent("board-section-toggle", {
-                      detail: { section: "memos" },
-                    }),
-                  );
-                }}
-                onTaskClick={() => {
-                  window.dispatchEvent(
-                    new CustomEvent("board-section-toggle", {
-                      detail: { section: "tasks" },
-                    }),
-                  );
-                }}
-                activeSection={activeBoardSection}
-                hideComment={true}
-              />
-            </div>
+            <>
+              {/* モバイル用ボード詳細フッター */}
+              <div className="md:hidden h-full">
+                <ItemEditorFooter
+                  type="board"
+                  onBack={handleBackToBoardList}
+                  onMemoClick={() => {
+                    window.dispatchEvent(
+                      new CustomEvent("board-section-toggle", {
+                        detail: { section: "memos" },
+                      }),
+                    );
+                  }}
+                  onTaskClick={() => {
+                    window.dispatchEvent(
+                      new CustomEvent("board-section-toggle", {
+                        detail: { section: "tasks" },
+                      }),
+                    );
+                  }}
+                  activeSection={activeBoardSection}
+                  hideComment={true}
+                />
+              </div>
+              {/* PC用サイドバー */}
+              <div className="hidden md:block h-full">
+                <Sidebar
+                  onSelectMemo={handleSelectMemo}
+                  onSelectTask={handleSelectTask}
+                  onEditTask={handleEditTask}
+                  onShowFullList={() => handleShowList("memo")}
+                  onShowTaskList={() => handleShowList("task")}
+                  onHome={handleHome}
+                  onEditMemo={handleEditMemo}
+                  onDeleteMemo={handleDeleteMemo}
+                  selectedMemoId={selectedMemo?.id}
+                  selectedTaskId={selectedTask?.id}
+                  currentMode={currentMode}
+                  onModeChange={setCurrentMode}
+                  onSettings={handleSettings}
+                  onSearch={handleSearch}
+                  onDashboard={handleDashboard}
+                  onBoardDetail={handleBoardDetail}
+                  currentBoardName={initialBoardName || currentBoard?.name}
+                  showingBoardDetail={showingBoardDetail}
+                  onTeamList={handleTeamList}
+                  onTeamCreate={handleTeamCreate}
+                  isCreatingMemo={isCreatingMemo}
+                  isCreatingTask={isCreatingTask}
+                  onBackToBoardList={handleBackToBoardList}
+                />
+              </div>
+            </>
           ) : (
             <Sidebar
               onSelectMemo={handleSelectMemo}

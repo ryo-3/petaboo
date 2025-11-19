@@ -35,6 +35,7 @@ import { CSVImportModal } from "@/components/features/board/csv-import-modal";
 import { useBoardCategories } from "@/src/hooks/use-board-categories";
 import BoardCategoryChip from "@/components/features/board-categories/board-category-chip";
 import { useAllAttachments } from "@/src/hooks/use-all-attachments";
+import MobileFabButton from "@/components/ui/buttons/mobile-fab-button";
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -177,6 +178,26 @@ function BoardDetailScreen({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isMobile]); // isMobileが変わった時のみチェック
+
+  // FABボタンのイベントリスナー（個人モード用）
+  useEffect(() => {
+    const handleMemoCreate = () => {
+      createNewMemoHandler();
+    };
+
+    const handleTaskCreate = () => {
+      createNewTaskHandler();
+    };
+
+    // 個人モードのイベントをリッスン
+    window.addEventListener("personal-memo-create", handleMemoCreate);
+    window.addEventListener("personal-task-create", handleTaskCreate);
+
+    return () => {
+      window.removeEventListener("personal-memo-create", handleMemoCreate);
+      window.removeEventListener("personal-task-create", handleTaskCreate);
+    };
+  }, [createNewMemoHandler, createNewTaskHandler]);
 
   // ViewSettingsContextから取得した値を使用
   const columnCount = settings.boardColumnCount;
@@ -1340,6 +1361,12 @@ function BoardDetailScreen({
                           onCheckedMemosChange={setCheckedMemos}
                           onTagging={handleTaggingMemo}
                         />
+                        {/* モバイル: メモ追加FABボタン（削除済みタブ以外で表示） */}
+                        <MobileFabButton
+                          type="memo"
+                          teamMode={teamMode}
+                          show={activeMemoTab !== "deleted"}
+                        />
                       </div>
                     )}
 
@@ -1386,6 +1413,12 @@ function BoardDetailScreen({
                           deleteButtonRef={deleteButtonRef}
                           onCheckedTasksChange={setCheckedTasks}
                           onTagging={handleTaggingTask}
+                        />
+                        {/* モバイル: タスク追加FABボタン（削除済みタブ以外で表示） */}
+                        <MobileFabButton
+                          type="task"
+                          teamMode={teamMode}
+                          show={activeTaskTab !== "deleted"}
                         />
                       </div>
                     )}

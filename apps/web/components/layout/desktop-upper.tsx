@@ -142,10 +142,8 @@ function DesktopUpper({
         <div
           className={`w-2.5 h-2.5 rounded-full ${getTabColor(tab.id)}`}
         ></div>
-        {!(teamMode && rightPanelMode === "view") && <span>{tab.label}</span>}
-        <span
-          className={`bg-white/20 text-xs px-1.5 py-0.5 rounded-full text-right ${teamMode ? "" : "w-9"}`}
-        >
+        {rightPanelMode !== "view" && <span>{tab.label}</span>}
+        <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full text-right">
           {tab.count}
         </span>
       </>

@@ -119,61 +119,55 @@ export function MainClientDesktop({
       <DesktopLayout
         hideHeader={preferences?.hideHeader}
         sidebarContent={
-          <>
-            {/* モバイル: ボード詳細時は専用フッター */}
-            {showingBoardDetail ? (
-              <div className="md:hidden h-full">
-                <ItemEditorFooter
-                  type="board"
-                  onBack={handleBackToBoardList}
-                  onMemoClick={() => {
-                    window.dispatchEvent(
-                      new CustomEvent("board-section-toggle", {
-                        detail: { section: "memos" },
-                      }),
-                    );
-                  }}
-                  onTaskClick={() => {
-                    window.dispatchEvent(
-                      new CustomEvent("board-section-toggle", {
-                        detail: { section: "tasks" },
-                      }),
-                    );
-                  }}
-                  activeSection={activeBoardSection}
-                  hideComment={true}
-                />
-              </div>
-            ) : null}
-
-            {/* デスクトップ: 常にサイドバー表示 / モバイル: ボード詳細以外でサイドバー表示 */}
-            <div className={showingBoardDetail ? "hidden md:block" : ""}>
-              <Sidebar
-                onSelectMemo={handleSelectMemo}
-                onSelectTask={handleSelectTask}
-                onEditTask={handleEditTask}
-                onShowFullList={() => handleShowList("memo")}
-                onShowTaskList={() => handleShowList("task")}
-                onHome={handleHome}
-                onEditMemo={handleEditMemo}
-                onDeleteMemo={handleDeleteMemo}
-                selectedMemoId={selectedMemo?.id}
-                selectedTaskId={selectedTask?.id}
-                currentMode={currentMode}
-                onModeChange={setCurrentMode}
-                onSettings={handleSettings}
-                onSearch={handleSearch}
-                onDashboard={handleDashboard}
-                onBoardDetail={handleBoardDetail}
-                currentBoardName={initialBoardName || currentBoard?.name}
-                showingBoardDetail={showingBoardDetail}
-                onTeamList={handleTeamList}
-                onTeamCreate={handleTeamCreate}
-                isCreatingMemo={isCreatingMemo}
-                isCreatingTask={isCreatingTask}
+          showingBoardDetail ? (
+            <div className="md:hidden h-full">
+              <ItemEditorFooter
+                type="board"
+                onBack={handleBackToBoardList}
+                onMemoClick={() => {
+                  window.dispatchEvent(
+                    new CustomEvent("board-section-toggle", {
+                      detail: { section: "memos" },
+                    }),
+                  );
+                }}
+                onTaskClick={() => {
+                  window.dispatchEvent(
+                    new CustomEvent("board-section-toggle", {
+                      detail: { section: "tasks" },
+                    }),
+                  );
+                }}
+                activeSection={activeBoardSection}
+                hideComment={true}
               />
             </div>
-          </>
+          ) : (
+            <Sidebar
+              onSelectMemo={handleSelectMemo}
+              onSelectTask={handleSelectTask}
+              onEditTask={handleEditTask}
+              onShowFullList={() => handleShowList("memo")}
+              onShowTaskList={() => handleShowList("task")}
+              onHome={handleHome}
+              onEditMemo={handleEditMemo}
+              onDeleteMemo={handleDeleteMemo}
+              selectedMemoId={selectedMemo?.id}
+              selectedTaskId={selectedTask?.id}
+              currentMode={currentMode}
+              onModeChange={setCurrentMode}
+              onSettings={handleSettings}
+              onSearch={handleSearch}
+              onDashboard={handleDashboard}
+              onBoardDetail={handleBoardDetail}
+              currentBoardName={initialBoardName || currentBoard?.name}
+              showingBoardDetail={showingBoardDetail}
+              onTeamList={handleTeamList}
+              onTeamCreate={handleTeamCreate}
+              isCreatingMemo={isCreatingMemo}
+              isCreatingTask={isCreatingTask}
+            />
+          )
         }
       >
         {children}

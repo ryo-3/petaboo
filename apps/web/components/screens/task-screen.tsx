@@ -1069,40 +1069,42 @@ function TaskScreen({
     <div className="pl-4 pt-3 flex flex-col h-full relative">
       <DesktopUpper {...desktopUpperCommonProps} />
 
-      <DesktopLower
-        currentMode="task"
-        activeTab={activeTabTyped}
-        effectiveColumnCount={effectiveColumnCount}
-        isLoading={taskLoading}
-        error={taskError}
-        selectionMode={selectionMode}
-        tasks={filteredTasks}
-        deletedTasks={deletedTasks || []}
-        selectedTask={selectedTask}
-        selectedDeletedTask={selectedDeletedTask}
-        checkedTasks={checkedTasks}
-        checkedDeletedTasks={checkedDeletedTasks}
-        onToggleCheckTask={handleTaskToggleWithTabClear}
-        onToggleCheckDeletedTask={createToggleHandler(
-          checkedDeletedTasks,
-          setCheckedDeletedTasks,
-        )}
-        onSelectTask={handleSelectTask}
-        onSelectDeletedTask={handleSelectDeletedTask}
-        allTags={tags || []}
-        allBoards={boards || []}
-        allTaggings={safeAllTaggings}
-        allTeamTaggings={safeAllTeamTaggings}
-        allBoardItems={safeAllBoardItems}
-        allAttachments={allTaskAttachments || []}
-        teamMode={teamMode}
-        teamId={teamId}
-        // フィルター設定（ViewSettingsContextから取得）
-        selectedTagIds={selectedTagIds}
-        tagFilterMode={tagFilterMode}
-        selectedBoardIds={selectedBoardIds}
-        boardFilterMode={boardFilterMode}
-      />
+      <div className="flex-1 min-h-0 overflow-y-auto pb-16">
+        <DesktopLower
+          currentMode="task"
+          activeTab={activeTabTyped}
+          effectiveColumnCount={effectiveColumnCount}
+          isLoading={taskLoading}
+          error={taskError}
+          selectionMode={selectionMode}
+          tasks={filteredTasks}
+          deletedTasks={deletedTasks || []}
+          selectedTask={selectedTask}
+          selectedDeletedTask={selectedDeletedTask}
+          checkedTasks={checkedTasks}
+          checkedDeletedTasks={checkedDeletedTasks}
+          onToggleCheckTask={handleTaskToggleWithTabClear}
+          onToggleCheckDeletedTask={createToggleHandler(
+            checkedDeletedTasks,
+            setCheckedDeletedTasks,
+          )}
+          onSelectTask={handleSelectTask}
+          onSelectDeletedTask={handleSelectDeletedTask}
+          allTags={tags || []}
+          allBoards={boards || []}
+          allTaggings={safeAllTaggings}
+          allTeamTaggings={safeAllTeamTaggings}
+          allBoardItems={safeAllBoardItems}
+          allAttachments={allTaskAttachments || []}
+          teamMode={teamMode}
+          teamId={teamId}
+          // フィルター設定（ViewSettingsContextから取得）
+          selectedTagIds={selectedTagIds}
+          tagFilterMode={tagFilterMode}
+          selectedBoardIds={selectedBoardIds}
+          boardFilterMode={boardFilterMode}
+        />
+      </div>
 
       {/* 一括操作ボタン */}
       {!hideBulkActionButtons && (
@@ -1380,7 +1382,7 @@ function TaskScreen({
               <DesktopUpper {...desktopUpperCommonProps} />
             </div>
             {/* スクロール可能なコンテンツ */}
-            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain pb-16">
               <DesktopLower
                 currentMode="task"
                 activeTab={activeTabTyped}

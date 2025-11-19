@@ -38,7 +38,7 @@ function DesktopLayout({
 
       {/* メインコンテンツエリア */}
       <div
-        className={`flex-1 md:ml-16 ml-0 md:h-screen w-full md:overflow-hidden ${paddingTop} pt-0`}
+        className={`flex-1 md:ml-16 ml-0 md:h-screen w-full md:overflow-hidden ${paddingTop} pt-0 mb-14 md:mb-0`}
         style={{
           height: isMobile ? `calc(100dvh - 3.5rem)` : undefined,
         }}

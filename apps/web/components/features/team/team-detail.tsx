@@ -755,7 +755,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
         {/* コンテンツエリア */}
         <div
-          className={`${activeTab === "overview" ? "flex-1 flex flex-col overflow-hidden" : "h-full"}`}
+          className={`${activeTab === "overview" ? "flex-1 flex flex-col overflow-hidden" : "h-full overflow-hidden"}`}
         >
           {/* タブコンテンツ */}
           {activeTab === "overview" && (
@@ -1105,7 +1105,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
           {/* メモタブ */}
           {activeTab === "memos" && (
-            <div className="h-full overflow-x-auto">
+            <div className="h-full">
               <MemoScreen
                 selectedMemo={selectedMemo}
                 onSelectMemo={handleSelectMemo}

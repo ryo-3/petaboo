@@ -393,7 +393,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         | "team-list"
         | "team-settings"
         | "search",
-      options?: { slug?: string },
+      options?: { slug?: string; fromSidebar?: boolean },
     ) => {
       // 🚀 楽観的更新：サイドバーアイコンを即座に切り替え
       if (tab === "memos") {
@@ -430,12 +430,13 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       }
 
       // タブ切り替え時に不要なパラメータを削除
-      if (tab !== "memos") {
+      // サイドバー経由の場合は、同じタブでもアイテムパラメータを強制削除
+      if (tab !== "memos" || options?.fromSidebar) {
         params.delete("memo");
         setSelectedMemo(null);
         setSelectedDeletedMemo(null);
       }
-      if (tab !== "tasks") {
+      if (tab !== "tasks" || options?.fromSidebar) {
         params.delete("task");
         setSelectedTask(null);
         setSelectedDeletedTask(null);
@@ -445,7 +446,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
       router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
     },
-    [router, customUrl, searchParams, setActiveTabContext],
+    [router, customUrl, searchParams, setActiveTabContext, setOptimisticMode],
   );
 
   // activeTabが変更された時にlayoutに通知
@@ -463,19 +464,19 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       const { mode } = event.detail;
 
       if (mode === "overview") {
-        handleTabChange("overview");
+        handleTabChange("overview", { fromSidebar: true });
       } else if (mode === "memo") {
-        handleTabChange("memos");
+        handleTabChange("memos", { fromSidebar: true });
       } else if (mode === "task") {
-        handleTabChange("tasks");
+        handleTabChange("tasks", { fromSidebar: true });
       } else if (mode === "board") {
-        handleTabChange("boards");
+        handleTabChange("boards", { fromSidebar: true });
       } else if (mode === "team-list") {
-        handleTabChange("team-list");
+        handleTabChange("team-list", { fromSidebar: true });
       } else if (mode === "team-settings") {
-        handleTabChange("team-settings");
+        handleTabChange("team-settings", { fromSidebar: true });
       } else if (mode === "search") {
-        handleTabChange("search");
+        handleTabChange("search", { fromSidebar: true });
       }
     };
 
@@ -506,8 +507,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       setSelectedMemo(null);
       setSelectedDeletedMemo(null);
       setIsCreatingMemo(false);
-      // handleTabChangeを使って即座にタブ切り替え
-      handleTabChange("memos");
+      // handleTabChangeを使って即座にタブ切り替え（サイドバー経由フラグを付与）
+      handleTabChange("memos", { fromSidebar: true });
     };
 
     const handleBackToTaskList = (_event: CustomEvent) => {
@@ -525,8 +526,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       setSelectedTaskId(null);
       setSelectedDeletedTask(null);
       setIsCreatingTask(false);
-      // handleTabChangeを使って即座にタブ切り替え
-      handleTabChange("tasks");
+      // handleTabChangeを使って即座にタブ切り替え（サイドバー経由フラグを付与）
+      handleTabChange("tasks", { fromSidebar: true });
     };
 
     window.addEventListener(
@@ -581,8 +582,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         handleBackToTaskList as EventListener,
       );
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [handleTabChange]);
 
   // メモ/タスク選択ハンドラー
   const handleSelectMemo = (memo: Memo | null) => {

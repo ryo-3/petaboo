@@ -384,8 +384,11 @@ function TaskScreen({
   const getInitialPanelState = (
     key: "showListPanel" | "showDetailPanel" | "showCommentPanel",
   ) => {
-    if (typeof window !== "undefined" && teamMode) {
-      const saved = localStorage.getItem("team-task-panel-visibility");
+    if (typeof window !== "undefined") {
+      const storageKey = teamMode
+        ? "team-task-panel-visibility"
+        : "personal-task-panel-visibility";
+      const saved = localStorage.getItem(storageKey);
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
@@ -411,12 +414,16 @@ function TaskScreen({
   );
 
   useEffect(() => {
-    if (!teamMode || typeof window === "undefined") {
+    if (typeof window === "undefined") {
       return;
     }
 
+    const storageKey = teamMode
+      ? "team-task-panel-visibility"
+      : "personal-task-panel-visibility";
+
     localStorage.setItem(
-      "team-task-panel-visibility",
+      storageKey,
       JSON.stringify({
         showListPanel,
         showDetailPanel,

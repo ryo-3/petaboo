@@ -116,9 +116,27 @@ function BoardDetailScreen({
   // 削除ボタンのref
   const deleteButtonRef = useRef<HTMLButtonElement | null>(null);
 
-  // 選択モード時の一覧パネル表示状態
+  // 選択モード時の一覧パネル表示状態（localStorageから復元）
   const [showListPanelInSelectedMode, setShowListPanelInSelectedMode] =
-    useState(true);
+    useState(() => {
+      if (typeof window !== "undefined") {
+        const storageKey = teamMode
+          ? "team-board-detail-list-panel"
+          : "personal-board-detail-list-panel";
+        console.log(
+          `[BoardDetail] init - teamMode: ${teamMode}, storageKey: ${storageKey}`,
+        );
+        const saved = localStorage.getItem(storageKey);
+        console.log(`[BoardDetail] localStorage value:`, saved);
+        if (saved !== null) {
+          const value = saved === "true";
+          console.log(`[BoardDetail] returning saved value: ${value}`);
+          return value;
+        }
+      }
+      console.log(`[BoardDetail] returning default value: true`);
+      return true;
+    });
 
   // 状態管理フック
   const {
@@ -178,16 +196,11 @@ function BoardDetailScreen({
   const selectedMemo = propSelectedMemo;
   const selectedTask = propSelectedTask;
 
-  // 選択/選択解除時に一覧パネルの状態を制御
+  // モバイル時のみ: アイテム選択時に一覧を非表示（チーム側と同じ動作）
   useEffect(() => {
-    if (selectedMemo || selectedTask) {
-      // モバイル時: アイテム選択時は一覧を非表示（詳細のみ）
-      if (isMobile) {
-        setShowListPanelInSelectedMode(false);
-      }
-    } else {
-      // 選択解除時: 一覧を表示に戻す
-      setShowListPanelInSelectedMode(true);
+    if (isMobile && (selectedMemo || selectedTask)) {
+      console.log(`[BoardDetail] mobile useEffect - hiding list panel`);
+      setShowListPanelInSelectedMode(false);
     }
   }, [selectedMemo, selectedTask, isMobile]);
 
@@ -654,9 +667,25 @@ function BoardDetailScreen({
   const selectedItemType = selectedMemo ? "memo" : selectedTask ? "task" : null;
 
   // 選択モード時の一覧パネルトグルハンドラー
-  const handleListPanelToggleInSelectedMode = useCallback((show: boolean) => {
-    setShowListPanelInSelectedMode(show);
-  }, []);
+  const handleListPanelToggleInSelectedMode = useCallback(
+    (show: boolean) => {
+      console.log(
+        `[BoardDetail] handleListPanelToggleInSelectedMode called - show: ${show}, teamMode: ${teamMode}`,
+      );
+      setShowListPanelInSelectedMode(show);
+      // localStorageに保存
+      if (typeof window !== "undefined") {
+        const storageKey = teamMode
+          ? "team-board-detail-list-panel"
+          : "personal-board-detail-list-panel";
+        console.log(
+          `[BoardDetail] saving to localStorage - storageKey: ${storageKey}, value: ${show}`,
+        );
+        localStorage.setItem(storageKey, String(show));
+      }
+    },
+    [teamMode],
+  );
 
   const boardHeaderConfig = useMemo<HeaderControlPanelConfig | null>(() => {
     const config: HeaderControlPanelConfig = {
@@ -684,6 +713,9 @@ function BoardDetailScreen({
 
     // アイテム選択時のパネル制御モード（個人ボードのみ）
     if (shouldShowSelectedMode) {
+      console.log(
+        `[BoardDetail] config - shouldShowSelectedMode: true, showListPanelInSelectedMode: ${showListPanelInSelectedMode}`,
+      );
       config.isSelectedMode = true;
       config.showMemo = showListPanelInSelectedMode;
       config.showTask = true; // 詳細は常に表示（ボタン自体を非表示にする）

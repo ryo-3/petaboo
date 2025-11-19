@@ -41,11 +41,9 @@ export function useSelectionHandlers<T, D = T>({
 
   // 新規作成ハンドラー
   const handleCreateNew = useCallback(() => {
-    console.log(`🆕 [use-selection-handlers] handleCreateNew called`);
     onSelectItem(null, true);
     onSelectDeletedItem(null, true);
     setScreenMode("create");
-    console.log(`🆕 [use-selection-handlers] screenMode set to "create"`);
   }, [onSelectItem, onSelectDeletedItem, setScreenMode]);
 
   // 右パネルクローズハンドラー

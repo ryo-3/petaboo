@@ -44,6 +44,8 @@ import { CSVImportModal } from "@/components/features/board/csv-import-modal";
 import { useBoardCategories } from "@/src/hooks/use-board-categories";
 import BoardCategoryChip from "@/components/features/board-categories/board-category-chip";
 import { useAllAttachments } from "@/src/hooks/use-all-attachments";
+import { useAttachments } from "@/src/hooks/use-attachments";
+import { useTeamComments } from "@/src/hooks/use-team-comments";
 import MobileFabButton from "@/components/ui/buttons/mobile-fab-button";
 import { useUserInfo } from "@/src/hooks/use-user-info";
 import { getUserAvatarColor } from "@/src/utils/userUtils";
@@ -59,7 +61,80 @@ import {
   ResizableHandle,
 } from "@/components/ui/base/resizable";
 import CommentSection from "@/components/features/comments/comment-section";
+import AttachmentGallery from "@/components/features/attachments/attachment-gallery";
+import PhotoButton from "@/components/ui/buttons/photo-button";
+import { useAttachmentManager } from "@/src/hooks/use-attachment-manager";
 import type { TeamMember } from "@/src/hooks/use-team-detail";
+
+// ボード詳細用の画像・ファイル一覧表示コンポーネント（メモ/タスク共通）
+function BoardAttachmentView({
+  itemType,
+  item,
+  teamId,
+}: {
+  itemType: "memo" | "task";
+  item: Memo | Task | null;
+  teamId?: number;
+}) {
+  const attachmentManager = useAttachmentManager({
+    itemType,
+    item,
+    teamMode: !!teamId,
+    teamId,
+    isDeleted: false,
+  });
+
+  const {
+    attachments,
+    pendingImages,
+    pendingDeletes,
+    handleFilesSelect,
+    handleDeleteAttachment,
+    handleDeletePendingImage,
+    handleRestoreAttachment,
+    isDeleting,
+    isUploading,
+  } = attachmentManager;
+
+  return (
+    <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+      <div className="border-b border-gray-200 flex items-center justify-between p-4">
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-semibold">画像・ファイル</h2>
+          {attachments.length > 0 && (
+            <span className="text-sm text-gray-500">
+              ({attachments.length}枚)
+            </span>
+          )}
+        </div>
+        <PhotoButton
+          onFilesSelect={handleFilesSelect}
+          multiple={true}
+          buttonSize="size-9"
+          iconSize="size-5"
+        />
+      </div>
+      <div className="flex-1 overflow-y-auto p-4">
+        {attachments.length === 0 && pendingImages.length === 0 ? (
+          <div className="text-center text-gray-500 text-sm py-8">
+            添付ファイルはありません
+          </div>
+        ) : (
+          <AttachmentGallery
+            attachments={attachments}
+            onDelete={handleDeleteAttachment}
+            isDeleting={isDeleting}
+            pendingImages={pendingImages}
+            onDeletePending={handleDeletePendingImage}
+            pendingDeletes={pendingDeletes}
+            onRestore={handleRestoreAttachment}
+            isUploading={isUploading}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
 
 interface BoardDetailProps {
   boardId: number;
@@ -103,6 +178,14 @@ function BoardDetailScreen({
   // チームメンバーを取得（メンション機能用）
   const { data: teamDetail } = useTeamDetail(teamSlug || "");
   const teamMembers = teamDetail?.members || [];
+
+  // エディター内のタブ状態管理
+  const [memoEditorTab, setMemoEditorTab] = useState<
+    "memo" | "comment" | "image"
+  >("memo");
+  const [taskEditorTab, setTaskEditorTab] = useState<
+    "task" | "comment" | "image"
+  >("task");
 
   // ViewSettingsContextから取得
   const { settings, sessionState, updateSettings, updateSessionState } =
@@ -242,6 +325,64 @@ function BoardDetailScreen({
       }
     }
   }, [teamMode, teamDetailContext, selectedMemo, selectedTask]);
+
+  // チームモード時: メモの画像数とコメント数を取得（モバイルフッター用）
+  const { data: memoAttachments = [] } = useAttachments(
+    teamId || undefined,
+    "memo",
+    selectedMemo && selectedMemo.id !== 0
+      ? OriginalIdUtils.fromItem(selectedMemo) || ""
+      : "",
+  );
+  const { data: memoComments = [] } = useTeamComments(
+    teamId || undefined,
+    "memo",
+    selectedMemo && selectedMemo.id !== 0
+      ? OriginalIdUtils.fromItem(selectedMemo) || ""
+      : "",
+  );
+
+  // チームモード時: タスクの画像数とコメント数を取得（モバイルフッター用）
+  const { data: taskAttachments = [] } = useAttachments(
+    teamId || undefined,
+    "task",
+    selectedTask && selectedTask.id !== 0
+      ? OriginalIdUtils.fromItem(selectedTask) || ""
+      : "",
+  );
+  const { data: taskComments = [] } = useTeamComments(
+    teamId || undefined,
+    "task",
+    selectedTask && selectedTask.id !== 0
+      ? OriginalIdUtils.fromItem(selectedTask) || ""
+      : "",
+  );
+
+  // チームモード時: 画像数とコメント数をContextに反映（メモ用）
+  useEffect(() => {
+    if (teamMode && teamDetailContext) {
+      teamDetailContext.setImageCount(memoAttachments.length);
+      teamDetailContext.setCommentCount(memoComments.length);
+    }
+  }, [
+    teamMode,
+    teamDetailContext,
+    memoAttachments.length,
+    memoComments.length,
+  ]);
+
+  // チームモード時: 画像数とコメント数をContextに反映（タスク用）
+  useEffect(() => {
+    if (teamMode && teamDetailContext) {
+      teamDetailContext.setTaskImageCount(taskAttachments.length);
+      teamDetailContext.setTaskCommentCount(taskComments.length);
+    }
+  }, [
+    teamMode,
+    teamDetailContext,
+    taskAttachments.length,
+    taskComments.length,
+  ]);
 
   // 削除済みメモデータを取得（復元時の総数判定用）
   const { data: deletedMemos } = useDeletedMemos({
@@ -460,6 +601,43 @@ function BoardDetailScreen({
     setShowDetailPanel,
     setShowCommentPanel,
   ]);
+
+  // メモ/タスクエディターのタブ切り替えイベントをリッスン（モバイルフッター用）
+  useEffect(() => {
+    const onMemoTabChangeEvent = (event: CustomEvent) => {
+      const { tab } = event.detail;
+      if (tab === "memo" || tab === "image" || tab === "comment") {
+        setMemoEditorTab(tab);
+      }
+    };
+
+    const onTaskTabChangeEvent = (event: CustomEvent) => {
+      const { tab } = event.detail;
+      if (tab === "task" || tab === "image" || tab === "comment") {
+        setTaskEditorTab(tab);
+      }
+    };
+
+    window.addEventListener(
+      "memo-editor-tab-change",
+      onMemoTabChangeEvent as EventListener,
+    );
+    window.addEventListener(
+      "team-task-editor-tab-change",
+      onTaskTabChangeEvent as EventListener,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "memo-editor-tab-change",
+        onMemoTabChangeEvent as EventListener,
+      );
+      window.removeEventListener(
+        "team-task-editor-tab-change",
+        onTaskTabChangeEvent as EventListener,
+      );
+    };
+  }, []);
 
   // ボード詳細内でのメモ/タスクエディターの戻るボタンイベントをリッスン
   useEffect(() => {
@@ -1272,129 +1450,177 @@ function BoardDetailScreen({
                             !showCommentPanel && (
                               <div className="flex flex-col h-full pb-2 md:pl-2">
                                 {selectedMemo ? (
-                                  <MemoEditor
-                                    memo={selectedMemo as Memo}
-                                    initialBoardId={boardId}
-                                    onClose={onClearSelection || (() => {})}
-                                    customHeight="flex-1 min-h-0"
-                                    showDateAtBottom={true}
-                                    isInLeftPanel={!showListPanel}
-                                    createdBy={
-                                      selectedMemo &&
-                                      "createdBy" in selectedMemo
-                                        ? selectedMemo.createdBy
-                                        : null
-                                    }
-                                    createdByAvatarColor={
-                                      selectedMemo &&
-                                      "avatarColor" in selectedMemo
-                                        ? selectedMemo.avatarColor
-                                        : null
-                                    }
-                                    preloadedBoardItems={allBoardItems || []}
-                                    preloadedBoards={
-                                      teamMode
-                                        ? teamBoards || []
-                                        : personalBoards || []
-                                    }
-                                    preloadedItemBoards={completeItemBoards}
-                                    onSaveComplete={(
-                                      savedMemo: Memo,
-                                      _wasEmpty: boolean,
-                                      isNewMemo: boolean,
-                                    ) => {
-                                      if (isNewMemo) {
-                                        onSelectMemo?.(savedMemo);
-                                      }
-                                    }}
-                                    onDeleteAndSelectNext={(memo) => {
-                                      if ("id" in memo) {
-                                        handleMemoDeleteWithNextSelection(
-                                          memo as Memo,
-                                        );
-                                      }
-                                    }}
-                                    onRestore={() => {
-                                      if (
+                                  memoEditorTab === "memo" ? (
+                                    <MemoEditor
+                                      memo={selectedMemo as Memo}
+                                      initialBoardId={boardId}
+                                      onClose={onClearSelection || (() => {})}
+                                      customHeight="flex-1 min-h-0"
+                                      showDateAtBottom={true}
+                                      isInLeftPanel={!showListPanel}
+                                      createdBy={
                                         selectedMemo &&
-                                        "originalId" in selectedMemo
-                                      ) {
-                                        handleMemoRestoreAndSelectNext(
-                                          selectedMemo as DeletedMemo,
-                                        );
+                                        "createdBy" in selectedMemo
+                                          ? selectedMemo.createdBy
+                                          : null
                                       }
-                                    }}
-                                    onRestoreAndSelectNext={
-                                      handleMemoRestoreAndSelectNext
-                                    }
-                                    totalDeletedCount={
-                                      deletedMemos?.length || 0
-                                    }
-                                  />
+                                      createdByAvatarColor={
+                                        selectedMemo &&
+                                        "avatarColor" in selectedMemo
+                                          ? selectedMemo.avatarColor
+                                          : null
+                                      }
+                                      preloadedBoardItems={allBoardItems || []}
+                                      preloadedBoards={
+                                        teamMode
+                                          ? teamBoards || []
+                                          : personalBoards || []
+                                      }
+                                      preloadedItemBoards={completeItemBoards}
+                                      onSaveComplete={(
+                                        savedMemo: Memo,
+                                        _wasEmpty: boolean,
+                                        isNewMemo: boolean,
+                                      ) => {
+                                        if (isNewMemo) {
+                                          onSelectMemo?.(savedMemo);
+                                        }
+                                      }}
+                                      onDeleteAndSelectNext={(memo) => {
+                                        if ("id" in memo) {
+                                          handleMemoDeleteWithNextSelection(
+                                            memo as Memo,
+                                          );
+                                        }
+                                      }}
+                                      onRestore={() => {
+                                        if (
+                                          selectedMemo &&
+                                          "originalId" in selectedMemo
+                                        ) {
+                                          handleMemoRestoreAndSelectNext(
+                                            selectedMemo as DeletedMemo,
+                                          );
+                                        }
+                                      }}
+                                      onRestoreAndSelectNext={
+                                        handleMemoRestoreAndSelectNext
+                                      }
+                                      totalDeletedCount={
+                                        deletedMemos?.length || 0
+                                      }
+                                    />
+                                  ) : memoEditorTab === "comment" ? (
+                                    <div className="h-full overflow-y-auto">
+                                      {selectedMemo && (
+                                        <CommentSection
+                                          title="コメント"
+                                          placeholder="コメントを入力..."
+                                          targetType="memo"
+                                          targetOriginalId={
+                                            selectedMemo.originalId
+                                          }
+                                          teamId={teamId || undefined}
+                                          teamMembers={teamMembers}
+                                          boardId={boardId}
+                                        />
+                                      )}
+                                    </div>
+                                  ) : memoEditorTab === "image" ? (
+                                    <BoardAttachmentView
+                                      itemType="memo"
+                                      item={selectedMemo as Memo}
+                                      teamId={teamId || undefined}
+                                    />
+                                  ) : null
                                 ) : selectedTask ? (
-                                  <TaskEditor
-                                    task={selectedTask as Task}
-                                    initialBoardId={boardId}
-                                    onClose={onClearSelection || (() => {})}
-                                    customHeight="flex-1 min-h-0"
-                                    showDateAtBottom={true}
-                                    isInLeftPanel={!showListPanel}
-                                    createdBy={
-                                      selectedTask &&
-                                      "createdBy" in selectedTask
-                                        ? selectedTask.createdBy
-                                        : null
-                                    }
-                                    createdByAvatarColor={
-                                      selectedTask &&
-                                      "avatarColor" in selectedTask
-                                        ? selectedTask.avatarColor
-                                        : null
-                                    }
-                                    preloadedBoardItems={allBoardItems || []}
-                                    preloadedBoards={
-                                      teamMode
-                                        ? teamBoards || []
-                                        : personalBoards || []
-                                    }
-                                    preloadedItemBoards={completeItemBoards}
-                                    onSaveComplete={(
-                                      savedTask: Task,
-                                      isNewTask: boolean,
-                                      isContinuousMode?: boolean,
-                                    ) => {
-                                      if (isNewTask && !isContinuousMode) {
-                                        onSelectTask?.(savedTask);
-                                      }
-                                    }}
-                                    onDeleteAndSelectNext={(task) => {
-                                      if ("id" in task) {
-                                        handleTaskDeleteWithNextSelection(
-                                          task as Task,
-                                        );
-                                      }
-                                    }}
-                                    onRestore={() => {
-                                      if (
+                                  taskEditorTab === "task" ? (
+                                    <TaskEditor
+                                      task={selectedTask as Task}
+                                      initialBoardId={boardId}
+                                      onClose={onClearSelection || (() => {})}
+                                      customHeight="flex-1 min-h-0"
+                                      showDateAtBottom={true}
+                                      isInLeftPanel={!showListPanel}
+                                      createdBy={
                                         selectedTask &&
-                                        "originalId" in selectedTask
-                                      ) {
-                                        handleTaskRestoreAndSelectNext(
-                                          selectedTask as DeletedTask,
-                                        );
+                                        "createdBy" in selectedTask
+                                          ? selectedTask.createdBy
+                                          : null
                                       }
-                                    }}
-                                    onRestoreAndSelectNext={() => {
-                                      if (
+                                      createdByAvatarColor={
                                         selectedTask &&
-                                        "originalId" in selectedTask
-                                      ) {
-                                        handleTaskRestoreAndSelectNext(
-                                          selectedTask as DeletedTask,
-                                        );
+                                        "avatarColor" in selectedTask
+                                          ? selectedTask.avatarColor
+                                          : null
                                       }
-                                    }}
-                                  />
+                                      preloadedBoardItems={allBoardItems || []}
+                                      preloadedBoards={
+                                        teamMode
+                                          ? teamBoards || []
+                                          : personalBoards || []
+                                      }
+                                      preloadedItemBoards={completeItemBoards}
+                                      onSaveComplete={(
+                                        savedTask: Task,
+                                        isNewTask: boolean,
+                                        isContinuousMode?: boolean,
+                                      ) => {
+                                        if (isNewTask && !isContinuousMode) {
+                                          onSelectTask?.(savedTask);
+                                        }
+                                      }}
+                                      onDeleteAndSelectNext={(task) => {
+                                        if ("id" in task) {
+                                          handleTaskDeleteWithNextSelection(
+                                            task as Task,
+                                          );
+                                        }
+                                      }}
+                                      onRestore={() => {
+                                        if (
+                                          selectedTask &&
+                                          "originalId" in selectedTask
+                                        ) {
+                                          handleTaskRestoreAndSelectNext(
+                                            selectedTask as DeletedTask,
+                                          );
+                                        }
+                                      }}
+                                      onRestoreAndSelectNext={() => {
+                                        if (
+                                          selectedTask &&
+                                          "originalId" in selectedTask
+                                        ) {
+                                          handleTaskRestoreAndSelectNext(
+                                            selectedTask as DeletedTask,
+                                          );
+                                        }
+                                      }}
+                                    />
+                                  ) : taskEditorTab === "comment" ? (
+                                    <div className="h-full overflow-y-auto">
+                                      {selectedTask && (
+                                        <CommentSection
+                                          title="コメント"
+                                          placeholder="コメントを入力..."
+                                          targetType="task"
+                                          targetOriginalId={
+                                            selectedTask.originalId
+                                          }
+                                          teamId={teamId || undefined}
+                                          teamMembers={teamMembers}
+                                          boardId={boardId}
+                                        />
+                                      )}
+                                    </div>
+                                  ) : taskEditorTab === "image" ? (
+                                    <BoardAttachmentView
+                                      itemType="task"
+                                      item={selectedTask as Task}
+                                      teamId={teamId || undefined}
+                                    />
+                                  ) : null
                                 ) : null}
                               </div>
                             )}

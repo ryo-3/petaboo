@@ -46,6 +46,24 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
     "memos" | "tasks" | "comments"
   >("memos");
 
+  // メモ/タスクエディターのアクティブタブ状態
+  const [memoEditorActiveTab, setMemoEditorActiveTab] = useState<
+    "memo" | "image" | "comment"
+  >("memo");
+  const [taskEditorActiveTab, setTaskEditorActiveTab] = useState<
+    "task" | "image" | "comment"
+  >("task");
+
+  // メモ/タスク選択時にタブをリセット
+  useEffect(() => {
+    if (selectedMemoId !== null && selectedMemoId !== undefined) {
+      setMemoEditorActiveTab("memo");
+    }
+    if (selectedTaskId !== null && selectedTaskId !== undefined) {
+      setTaskEditorActiveTab("task");
+    }
+  }, [selectedMemoId, selectedTaskId]);
+
   // URLからcustomUrlを取得
   const customUrl = Array.isArray(params.customUrl)
     ? params.customUrl[0]
@@ -135,6 +153,22 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
       setActiveBoardSection(activeSection);
     };
 
+    // メモエディタータブ切り替えイベントをリッスン
+    const handleMemoEditorTabChange = (event: CustomEvent) => {
+      const { tab } = event.detail;
+      if (tab === "memo" || tab === "image" || tab === "comment") {
+        setMemoEditorActiveTab(tab);
+      }
+    };
+
+    // タスクエディタータブ切り替えイベントをリッスン
+    const handleTaskEditorTabChange = (event: CustomEvent) => {
+      const { tab } = event.detail;
+      if (tab === "task" || tab === "image" || tab === "comment") {
+        setTaskEditorActiveTab(tab);
+      }
+    };
+
     window.addEventListener(
       "team-tab-change",
       handleTeamTabChange as EventListener,
@@ -155,6 +189,16 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
       handleBoardSectionStateChange as EventListener,
     );
 
+    window.addEventListener(
+      "memo-editor-tab-change",
+      handleMemoEditorTabChange as EventListener,
+    );
+
+    window.addEventListener(
+      "team-task-editor-tab-change",
+      handleTaskEditorTabChange as EventListener,
+    );
+
     return () => {
       window.removeEventListener(
         "team-tab-change",
@@ -171,6 +215,14 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
       window.removeEventListener(
         "board-section-state-change",
         handleBoardSectionStateChange as EventListener,
+      );
+      window.removeEventListener(
+        "memo-editor-tab-change",
+        handleMemoEditorTabChange as EventListener,
+      );
+      window.removeEventListener(
+        "team-task-editor-tab-change",
+        handleTaskEditorTabChange as EventListener,
       );
     };
   }, [isTeamBoardDetailPage, pathname, searchParams, setScreenMode]);
@@ -388,32 +440,93 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
         {/* モバイル用ボトムナビ（下）：ボード詳細時は専用フッター、それ以外はSidebar */}
         <div className="md:hidden fixed bottom-0 left-0 right-0 h-14 border-t border-gray-200 bg-white z-50">
           {isTeamBoardDetailPage ? (
-            <ItemEditorFooter
-              type="board"
-              onBack={handleBackToBoardList}
-              onMemoClick={() =>
-                window.dispatchEvent(
-                  new CustomEvent("board-section-change", {
-                    detail: { section: "memos" },
-                  }),
-                )
-              }
-              onTaskClick={() =>
-                window.dispatchEvent(
-                  new CustomEvent("board-section-change", {
-                    detail: { section: "tasks" },
-                  }),
-                )
-              }
-              onCommentClick={() =>
-                window.dispatchEvent(
-                  new CustomEvent("board-section-change", {
-                    detail: { section: "comments" },
-                  }),
-                )
-              }
-              activeSection={activeBoardSection}
-            />
+            // ボード詳細ページ：メモ/タスク選択状態でフッターを切り替え
+            selectedMemoId !== null && selectedMemoId !== undefined ? (
+              <ItemEditorFooter
+                type="memo"
+                onBack={handleBackToBoardList}
+                onMainClick={() =>
+                  window.dispatchEvent(
+                    new CustomEvent("memo-editor-tab-change", {
+                      detail: { tab: "memo" },
+                    }),
+                  )
+                }
+                onCommentClick={() =>
+                  window.dispatchEvent(
+                    new CustomEvent("memo-editor-tab-change", {
+                      detail: { tab: "comment" },
+                    }),
+                  )
+                }
+                onImageClick={() =>
+                  window.dispatchEvent(
+                    new CustomEvent("memo-editor-tab-change", {
+                      detail: { tab: "image" },
+                    }),
+                  )
+                }
+                activeTab={memoEditorActiveTab}
+                imageCount={imageCount}
+                commentCount={commentCount}
+              />
+            ) : selectedTaskId !== null && selectedTaskId !== undefined ? (
+              <ItemEditorFooter
+                type="task"
+                onBack={handleBackToBoardList}
+                onMainClick={() =>
+                  window.dispatchEvent(
+                    new CustomEvent("team-task-editor-tab-change", {
+                      detail: { tab: "task" },
+                    }),
+                  )
+                }
+                onCommentClick={() =>
+                  window.dispatchEvent(
+                    new CustomEvent("team-task-editor-tab-change", {
+                      detail: { tab: "comment" },
+                    }),
+                  )
+                }
+                onImageClick={() =>
+                  window.dispatchEvent(
+                    new CustomEvent("team-task-editor-tab-change", {
+                      detail: { tab: "image" },
+                    }),
+                  )
+                }
+                activeTab={taskEditorActiveTab}
+                imageCount={taskImageCount}
+                commentCount={taskCommentCount}
+              />
+            ) : (
+              <ItemEditorFooter
+                type="board"
+                onBack={handleBackToBoardList}
+                onMemoClick={() =>
+                  window.dispatchEvent(
+                    new CustomEvent("board-section-change", {
+                      detail: { section: "memos" },
+                    }),
+                  )
+                }
+                onTaskClick={() =>
+                  window.dispatchEvent(
+                    new CustomEvent("board-section-change", {
+                      detail: { section: "tasks" },
+                    }),
+                  )
+                }
+                onCommentClick={() =>
+                  window.dispatchEvent(
+                    new CustomEvent("board-section-change", {
+                      detail: { section: "comments" },
+                    }),
+                  )
+                }
+                activeSection={activeBoardSection}
+              />
+            )
           ) : (
             <Sidebar
               onSelectMemo={() => setSelectedMemoId(null)}

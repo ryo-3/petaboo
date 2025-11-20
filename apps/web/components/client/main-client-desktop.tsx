@@ -4,8 +4,8 @@ import Header from "@/components/layout/header";
 import Sidebar from "@/components/layout/sidebar";
 import ItemEditorFooter from "@/components/mobile/item-editor-footer";
 import type { Board } from "@/src/types/board";
-import type { Memo } from "@/src/types/memo";
-import type { Task } from "@/src/types/task";
+import type { Memo, DeletedMemo } from "@/src/types/memo";
+import type { Task, DeletedTask } from "@/src/types/task";
 import type { UserPreferences } from "@/src/hooks/use-user-preferences";
 
 interface MainClientDesktopProps {
@@ -32,6 +32,11 @@ interface MainClientDesktopProps {
   initialBoardName?: string;
   currentBoard?: Board | null;
   showingBoardDetail: boolean;
+  boardSelectedItem:
+    | { type: "memo"; item: Memo | DeletedMemo }
+    | { type: "task"; item: Task | DeletedTask }
+    | null;
+  handleBoardClearSelection: () => void;
 }
 
 export function MainClientDesktop({
@@ -58,6 +63,8 @@ export function MainClientDesktop({
   initialBoardName,
   currentBoard,
   showingBoardDetail,
+  boardSelectedItem,
+  handleBoardClearSelection,
 }: MainClientDesktopProps) {
   // 新規作成状態を判定
   const isCreatingMemo = screenMode === "create" && currentMode === "memo";
@@ -101,8 +108,15 @@ export function MainClientDesktop({
     };
   }, []);
 
-  // ボード一覧に戻る
+  // ボード詳細での「戻る」処理
   const handleBackToBoardList = () => {
+    // メモ/タスクを選択中（作成中含む）の場合は選択解除してボード詳細の一覧に戻る
+    if (boardSelectedItem) {
+      handleBoardClearSelection();
+      return;
+    }
+
+    // 何も選択していない場合はボード一覧に戻る
     handleDashboard();
   };
 

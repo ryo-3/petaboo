@@ -182,11 +182,11 @@ function BoardDetailScreen({
   // FABボタンのイベントリスナー（個人モード用）
   useEffect(() => {
     const handleMemoCreate = () => {
-      createNewMemoHandler();
+      createNewMemoHandler(onSelectMemo);
     };
 
     const handleTaskCreate = () => {
-      createNewTaskHandler();
+      createNewTaskHandler(onSelectTask);
     };
 
     // 個人モードのイベントをリッスン
@@ -197,7 +197,7 @@ function BoardDetailScreen({
       window.removeEventListener("personal-memo-create", handleMemoCreate);
       window.removeEventListener("personal-task-create", handleTaskCreate);
     };
-  }, [createNewMemoHandler, createNewTaskHandler]);
+  }, [createNewMemoHandler, createNewTaskHandler, onSelectMemo, onSelectTask]);
 
   // ViewSettingsContextから取得した値を使用
   const columnCount = settings.boardColumnCount;

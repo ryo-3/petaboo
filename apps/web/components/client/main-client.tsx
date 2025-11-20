@@ -358,6 +358,8 @@ function MainClient({
         initialBoardName={initialBoardName}
         currentBoard={currentBoard}
         showingBoardDetail={showingBoardDetail}
+        boardSelectedItem={boardSelectedItem}
+        handleBoardClearSelection={handleBoardClearSelection}
       >
         <MainContentArea
           screenMode={screenMode}

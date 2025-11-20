@@ -1,6 +1,7 @@
 "use client";
 
-import BoardDetailScreen from "@/components/screens/board-detail-screen";
+import BoardDetailScreenLegacy from "@/components/screens/board-detail-screen";
+import BoardDetailScreenUnified from "@/components/screens/board-detail-screen-3panel";
 import { useRouter } from "next/navigation";
 import { useBoardWithItems } from "@/src/hooks/use-boards";
 import { useState, useEffect } from "react";
@@ -14,6 +15,8 @@ interface BoardDetailClientProps {
   teamMode?: boolean;
   teamId?: number | null;
 }
+
+const USE_UNIFIED_BOARD_DETAIL = false;
 
 export default function BoardDetailClient({
   boardId,
@@ -63,8 +66,12 @@ export default function BoardDetailClient({
     }
   }, [boardWithItems?.items, selectedTaskId, selectedTask]);
 
+  const BoardComponent = USE_UNIFIED_BOARD_DETAIL
+    ? BoardDetailScreenUnified
+    : BoardDetailScreenLegacy;
+
   return (
-    <BoardDetailScreen
+    <BoardComponent
       boardId={boardId}
       onBack={() => router.push("/")}
       onSelectMemo={(memo) => {

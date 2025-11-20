@@ -330,7 +330,6 @@ export function useBoardState() {
         createdAt: Math.floor(Date.now() / 1000),
         updatedAt: Math.floor(Date.now() / 1000),
       };
-
       onSelectMemo?.(newMemo);
     },
     [], // setRightPanelModeはステート更新関数なので依存配列不要

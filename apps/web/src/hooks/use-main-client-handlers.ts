@@ -291,8 +291,12 @@ export function useMainClientHandlers({
       }
 
       setBoardSelectedItem({ type: "memo", item: memo });
+
+      // ボード詳細画面に遷移（既にboard画面の場合は何もしない）
+      setScreenMode("board");
+      setCurrentMode("board");
     },
-    [boardSelectedItem, setBoardSelectedItem],
+    [boardSelectedItem, setBoardSelectedItem, setScreenMode, setCurrentMode],
   );
 
   /** ボード詳細でのタスク選択 */
@@ -312,8 +316,12 @@ export function useMainClientHandlers({
       }
 
       setBoardSelectedItem({ type: "task", item: task });
+
+      // ボード詳細画面に遷移（既にboard画面の場合は何もしない）
+      setScreenMode("board");
+      setCurrentMode("board");
     },
-    [boardSelectedItem, setBoardSelectedItem],
+    [boardSelectedItem, setBoardSelectedItem, setScreenMode, setCurrentMode],
   );
 
   /** ボード詳細での選択クリア */

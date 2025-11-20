@@ -1,6 +1,7 @@
 import { useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import BoardDetailScreen from "@/components/screens/board-detail-screen";
+import BoardDetailScreenLegacy from "@/components/screens/board-detail-screen";
+import BoardDetailScreenUnified from "@/components/screens/board-detail-screen-3panel";
 import type { Board } from "@/src/types/board";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
@@ -22,6 +23,8 @@ interface BoardDetailWrapperProps {
   teamMode?: boolean;
   teamId?: number | null;
 }
+
+const USE_UNIFIED_BOARD_DETAIL = false;
 
 export function BoardDetailWrapper({
   boardId,
@@ -63,6 +66,10 @@ export function BoardDetailWrapper({
   }, [currentBoardName, teamMode]);
 
   return useMemo(() => {
+    const BoardComponent = USE_UNIFIED_BOARD_DETAIL
+      ? BoardDetailScreenUnified
+      : BoardDetailScreenLegacy;
+
     // ボードIDがない場合はエラー
     if (!currentBoardId) {
       return (
@@ -84,7 +91,7 @@ export function BoardDetailWrapper({
 
     // シンプルにBoardDetailを表示（メモ・タスク一覧と同じパターン）
     return (
-      <BoardDetailScreen
+      <BoardComponent
         boardId={currentBoardId}
         onBack={() => router.push("/")}
         selectedMemo={

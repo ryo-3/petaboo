@@ -1115,12 +1115,6 @@ function MemoScreen({
           preloadedItemBoards={itemBoards}
           showDateAtBottom={true}
           unifiedOperations={operations}
-          memoEditorHasUnsavedChangesRef={
-            teamMode ? undefined : personalHasUnsavedChangesRef
-          }
-          memoEditorShowConfirmModalRef={
-            teamMode ? undefined : personalShowConfirmModalRef
-          }
         />
       )}
       {/* 表示モード（既存メモ） */}
@@ -1128,6 +1122,7 @@ function MemoScreen({
         <MemoEditor
           memo={selectedMemo}
           onClose={() => {
+            console.log("[MemoScreen] onClose called (view mode)");
             if (teamMode) {
               onClose();
             } else {
@@ -1152,12 +1147,6 @@ function MemoScreen({
           createdByAvatarColor={selectedMemo.avatarColor}
           showDateAtBottom={true}
           unifiedOperations={operations}
-          memoEditorHasUnsavedChangesRef={
-            teamMode ? undefined : personalHasUnsavedChangesRef
-          }
-          memoEditorShowConfirmModalRef={
-            teamMode ? undefined : personalShowConfirmModalRef
-          }
         />
       )}
       {/* 表示モード（削除済みメモ） */}

@@ -3,6 +3,7 @@ import DesktopLayout from "@/components/layout/desktop-layout";
 import Header from "@/components/layout/header";
 import Sidebar from "@/components/layout/sidebar";
 import ItemEditorFooter from "@/components/mobile/item-editor-footer";
+import { useNavigation } from "@/src/contexts/navigation-context";
 import type { Board } from "@/src/types/board";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
@@ -66,9 +67,8 @@ export function MainClientDesktop({
   boardSelectedItem,
   handleBoardClearSelection,
 }: MainClientDesktopProps) {
-  // 新規作成状態を判定
-  const isCreatingMemo = screenMode === "create" && currentMode === "memo";
-  const isCreatingTask = screenMode === "create" && currentMode === "task";
+  // NavigationContextから新規作成状態を取得（個人モード用）
+  const { isCreatingMemo, isCreatingTask } = useNavigation();
 
   // ボード詳細のセクション表示状態
   const [activeBoardSection, setActiveBoardSection] = useState<

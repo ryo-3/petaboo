@@ -241,6 +241,11 @@ function Sidebar({
               ? "team-back-to-memo-list"
               : "memo-editor-mobile-back-requested";
 
+          console.log("[Sidebar] Memo back button clicked");
+          console.log("[Sidebar] isTeamMode:", isTeamMode);
+          console.log("[Sidebar] showingBoardDetail:", showingBoardDetail);
+          console.log("[Sidebar] Dispatching event:", backEventName);
+
           // タブ状態をリセット
           setMemoEditorTab("memo");
 

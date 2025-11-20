@@ -143,6 +143,17 @@ function MemoEditor({
   const teamId = teamIdRaw ?? undefined; // Hook互換性のため変換
   const { getToken } = useAuth();
 
+  // デバッグ: refが渡されているか確認
+  console.log(
+    "[MemoEditor] Props received - memoEditorHasUnsavedChangesRef:",
+    memoEditorHasUnsavedChangesRef,
+  );
+  console.log(
+    "[MemoEditor] Props received - memoEditorShowConfirmModalRef:",
+    memoEditorShowConfirmModalRef,
+  );
+  console.log("[MemoEditor] Props received - teamMode:", teamMode);
+
   // ログを一度だけ出力（useEffectで管理）
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const baseViewerRef = useRef<HTMLDivElement>(null);
@@ -228,6 +239,28 @@ function MemoEditor({
   }, [onSaveComplete]);
   // 未保存変更確認モーダル
   const [isCloseConfirmModalOpen, setIsCloseConfirmModalOpen] = useState(false);
+
+  // デバッグ: モーダル状態をログ出力
+  useEffect(() => {
+    console.log(
+      "[MemoEditor] isCloseConfirmModalOpen changed:",
+      isCloseConfirmModalOpen,
+    );
+  }, [isCloseConfirmModalOpen]);
+
+  // デバッグ: コンポーネントのマウント/アンマウントをトラッキング
+  useEffect(() => {
+    console.log("[MemoEditor] Component mounted, memo.id:", memo?.id);
+    return () => {
+      console.log("[MemoEditor] Component unmounting, memo.id:", memo?.id);
+    };
+  }, []);
+
+  // onCloseをrefで保持（useEffectの依存配列に入れないため）
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   // 【最適化】個別取得をやめて一括取得を活用
   const originalId = OriginalIdUtils.fromItem(memo);
@@ -1084,72 +1117,59 @@ function MemoEditor({
     pendingDeletes,
   ]);
 
-  // TeamDetailContext経由でモバイルフッターに状態を公開
+  // TeamDetailContext経由でモバイルフッターに状態を公開（チームモードのみ）
   const teamDetailContext = teamMode ? useTeamDetail() : null;
 
-  // Contextまたはprops経由のrefに最新の状態を常に反映
+  // チームモードの場合、Contextに最新の状態を反映
   useEffect(() => {
     if (teamMode && teamDetailContext) {
-      // チームモード: TeamDetailContext経由
       teamDetailContext.memoEditorHasUnsavedChangesRef.current =
         hasUnsavedChanges;
       teamDetailContext.memoEditorShowConfirmModalRef.current = () => {
         setIsCloseConfirmModalOpen(true);
       };
-    } else if (
-      memoEditorHasUnsavedChangesRef &&
-      memoEditorShowConfirmModalRef
-    ) {
-      // 個人モード: props経由のref
-      memoEditorHasUnsavedChangesRef.current = hasUnsavedChanges;
-      memoEditorShowConfirmModalRef.current = () => {
-        setIsCloseConfirmModalOpen(true);
-      };
     }
-  }, [
-    hasUnsavedChanges,
-    teamMode,
-    teamDetailContext,
-    memoEditorHasUnsavedChangesRef,
-    memoEditorShowConfirmModalRef,
-  ]);
+  }, [hasUnsavedChanges, teamMode, teamDetailContext]);
+
+  // hasUnsavedChangesの最新値をrefで保持
+  const hasUnsavedChangesRef = useRef(hasUnsavedChanges);
+  useEffect(() => {
+    hasUnsavedChangesRef.current = hasUnsavedChanges;
+  }, [hasUnsavedChanges]);
 
   // モバイルフッター戻るボタンイベント（Context経由）
   useEffect(() => {
-    const handleMobileBackRequested = () => {
-      if (teamMode && teamDetailContext) {
-        // Contextから最新の状態を読み取る
-        const currentHasUnsavedChanges =
-          teamDetailContext.memoEditorHasUnsavedChangesRef.current;
-        const showModal =
-          teamDetailContext.memoEditorShowConfirmModalRef.current;
+    const handleBackRequested = () => {
+      console.log("[MemoEditor] Back requested event received");
+      console.log("[MemoEditor] teamMode:", teamMode);
 
-        if (currentHasUnsavedChanges && showModal) {
-          showModal();
-        } else {
-          onClose();
-        }
+      // refから最新の値を読み取る
+      const currentHasUnsavedChanges = hasUnsavedChangesRef.current;
+      console.log("[MemoEditor] hasUnsavedChanges:", currentHasUnsavedChanges);
+
+      // 未保存変更がある場合はモーダルを表示
+      if (currentHasUnsavedChanges) {
+        console.log("[MemoEditor] Showing unsaved changes modal");
+        setIsCloseConfirmModalOpen(true);
       } else {
-        // 個人ページの場合は直接判定
-        if (hasUnsavedChanges) {
-          setIsCloseConfirmModalOpen(true);
-        } else {
-          onClose();
-        }
+        // 未保存変更がない場合は直接onCloseを呼ぶ
+        console.log("[MemoEditor] No unsaved changes - calling onClose");
+        onCloseRef.current();
       }
     };
 
-    window.addEventListener(
-      "memo-editor-mobile-back-requested",
-      handleMobileBackRequested,
-    );
+    // insideBoardDetailに応じてイベント名を切り替え
+    const eventName = insideBoardDetail
+      ? "board-memo-back"
+      : "memo-editor-mobile-back-requested";
+    console.log(`[MemoEditor] Adding event listener for ${eventName}`);
+
+    window.addEventListener(eventName, handleBackRequested);
     return () => {
-      window.removeEventListener(
-        "memo-editor-mobile-back-requested",
-        handleMobileBackRequested,
-      );
+      console.log(`[MemoEditor] Removing event listener for ${eventName}`);
+      window.removeEventListener(eventName, handleBackRequested);
     };
-  }, [teamMode, teamDetailContext, hasUnsavedChanges, onClose]);
+  }, [insideBoardDetail, teamMode]);
 
   // ボード名を取得するためのヘルパー関数
   const getBoardName = (boardId: number) => {
@@ -1168,12 +1188,18 @@ function MemoEditor({
 
   // 確認モーダルで「閉じる」を選択
   const handleConfirmClose = useCallback(() => {
+    console.log("[MemoEditor] handleConfirmClose called");
     setIsCloseConfirmModalOpen(false);
     // 破棄が選択されたことを通知（保留中の選択を実行するため）
     dispatchDiscardEvent("memo");
-    // 注意: onClose() は呼ばない！
-    // use-unsaved-changes-guard が破棄イベントを受け取り、保留中のアイテムに切り替える
-  }, []);
+    // 保留中の選択がない場合（戻るボタンの場合）はonCloseを呼ぶ
+    // 少し遅延させてdispatchDiscardEventが処理されるのを待つ
+    console.log("[MemoEditor] Calling onClose after 50ms delay");
+    setTimeout(() => {
+      console.log("[MemoEditor] Executing onClose");
+      onClose();
+    }, 50);
+  }, [onClose]);
 
   // 削除ボタンのハンドラー（ボード紐づきチェック付き）
   const handleDeleteClick = () => {
@@ -1645,9 +1671,16 @@ function MemoEditor({
       )}
 
       {/* 未保存変更確認モーダル */}
+      {console.log(
+        "[MemoEditor] Rendering modal, isCloseConfirmModalOpen:",
+        isCloseConfirmModalOpen,
+      )}
       <ConfirmationModal
         isOpen={isCloseConfirmModalOpen}
-        onClose={() => setIsCloseConfirmModalOpen(false)}
+        onClose={() => {
+          console.log("[MemoEditor] Modal onClose called");
+          setIsCloseConfirmModalOpen(false);
+        }}
         onConfirm={handleConfirmClose}
         title="未保存の変更があります"
         message="保存せずに閉じると、変更内容が失われます。よろしいですか？"

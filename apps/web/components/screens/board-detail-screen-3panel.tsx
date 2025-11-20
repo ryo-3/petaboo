@@ -187,6 +187,16 @@ function BoardDetailScreen({
     "task" | "comment" | "image"
   >("task");
 
+  // メモIDが変わったらタブをリセット（新しいメモは常にmemoタブから）
+  useEffect(() => {
+    setMemoEditorTab("memo");
+  }, [propSelectedMemo?.id]);
+
+  // タスクIDが変わったらタブをリセット（新しいタスクは常にtaskタブから）
+  useEffect(() => {
+    setTaskEditorTab("task");
+  }, [propSelectedTask?.id]);
+
   // ViewSettingsContextから取得
   const { settings, sessionState, updateSettings, updateSessionState } =
     useViewSettings();

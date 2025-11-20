@@ -46,23 +46,13 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
     "memos" | "tasks" | "comments"
   >("memos");
 
-  // メモ/タスクエディターのアクティブタブ状態
+  // メモ/タスクエディターのアクティブタブ状態（ボード詳細用）
   const [memoEditorActiveTab, setMemoEditorActiveTab] = useState<
     "memo" | "image" | "comment"
   >("memo");
   const [taskEditorActiveTab, setTaskEditorActiveTab] = useState<
     "task" | "image" | "comment"
   >("task");
-
-  // メモ/タスク選択時にタブをリセット
-  useEffect(() => {
-    if (selectedMemoId !== null && selectedMemoId !== undefined) {
-      setMemoEditorActiveTab("memo");
-    }
-    if (selectedTaskId !== null && selectedTaskId !== undefined) {
-      setTaskEditorActiveTab("task");
-    }
-  }, [selectedMemoId, selectedTaskId]);
 
   // URLからcustomUrlを取得
   const customUrl = Array.isArray(params.customUrl)
@@ -111,6 +101,45 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
     pathname.startsWith("/team/") &&
     searchParams.get("tab") === "board" &&
     searchParams.get("slug") !== null;
+
+  // メモIDが変わったらタブをリセット
+  useEffect(() => {
+    setMemoEditorActiveTab("memo");
+  }, [selectedMemoId]);
+
+  // タスクIDが変わったらタブをリセット
+  useEffect(() => {
+    setTaskEditorActiveTab("task");
+  }, [selectedTaskId]);
+
+  // メモエディターのタブ切り替えイベントを監視
+  useEffect(() => {
+    const handleTabChange = (e: Event) => {
+      const customEvent = e as CustomEvent<{
+        tab: "memo" | "comment" | "image";
+      }>;
+      setMemoEditorActiveTab(customEvent.detail.tab);
+    };
+    window.addEventListener("memo-editor-tab-change", handleTabChange);
+    return () =>
+      window.removeEventListener("memo-editor-tab-change", handleTabChange);
+  }, []);
+
+  // タスクエディターのタブ切り替えイベントを監視
+  useEffect(() => {
+    const handleTabChange = (e: Event) => {
+      const customEvent = e as CustomEvent<{
+        tab: "task" | "comment" | "image";
+      }>;
+      setTaskEditorActiveTab(customEvent.detail.tab);
+    };
+    window.addEventListener("team-task-editor-tab-change", handleTabChange);
+    return () =>
+      window.removeEventListener(
+        "team-task-editor-tab-change",
+        handleTabChange,
+      );
+  }, []);
 
   // URL変更時の処理
   useEffect(() => {

@@ -109,15 +109,23 @@ function Sidebar({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   // ログアウト確認モーダル
   const [showLogoutModal, setShowLogoutModal] = React.useState(false);
-  // タスクエディターのアクティブタブ
-  const [taskEditorTab, setTaskEditorTab] = React.useState<
-    "task" | "comment" | "image"
-  >("task");
-
-  // モバイル版メモエディターのアクティブタブ管理
+  // モバイル版メモ/タスクエディターのアクティブタブ
   const [memoEditorTab, setMemoEditorTab] = useState<
     "memo" | "comment" | "image"
   >("memo");
+  const [taskEditorTab, setTaskEditorTab] = useState<
+    "task" | "comment" | "image"
+  >("task");
+
+  // メモIDが変わったらタブをリセット（新しいメモは常にmemoタブから）
+  useEffect(() => {
+    setMemoEditorTab("memo");
+  }, [selectedMemoId]);
+
+  // タスクIDが変わったらタブをリセット（新しいタスクは常にtaskタブから）
+  useEffect(() => {
+    setTaskEditorTab("task");
+  }, [selectedTaskId]);
 
   // CustomEventでメモエディターのタブ切り替えを監視
   useEffect(() => {
@@ -188,9 +196,6 @@ function Sidebar({
               ? "team-back-to-task-list"
               : "task-editor-mobile-back-requested";
 
-          // タブ状態をリセット
-          setTaskEditorTab("task");
-
           window.dispatchEvent(new CustomEvent(backEventName));
         }}
         onMainClick={() => {
@@ -236,19 +241,14 @@ function Sidebar({
       <ItemEditorFooter
         type="memo"
         onBack={() => {
-          console.log("[Sidebar] Memo back button clicked");
-          console.log("[Sidebar] isTeamMode:", isTeamMode);
-          console.log("[Sidebar] showingBoardDetail:", showingBoardDetail);
-
-          // タブ状態をリセット
-          setMemoEditorTab("memo");
-
-          // refから直接ハンドラーを呼ぶ（超シンプル）
-          if (mobileBackHandlerRef.current) {
-            console.log("[Sidebar] Calling mobile back handler directly");
-            mobileBackHandlerRef.current();
+          // チームモードの場合はメモ一覧に戻るイベントを発火
+          if (isTeamMode) {
+            window.dispatchEvent(new CustomEvent("team-back-to-memo-list"));
           } else {
-            console.log("[Sidebar] No mobile back handler registered");
+            // 個人モードの場合はrefから直接ハンドラーを呼ぶ
+            if (mobileBackHandlerRef.current) {
+              mobileBackHandlerRef.current();
+            }
           }
         }}
         onMainClick={() =>

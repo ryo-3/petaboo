@@ -900,13 +900,7 @@ function MemoScreen({
       hideControls: preferences?.memoHideControls,
     };
 
-    console.log(
-      `[MemoScreen] headerConfig - shouldShowPanelControls: ${shouldShowPanelControls}, memoScreenMode: ${memoScreenMode}, teamMode: ${teamMode}`,
-    );
     if (shouldShowPanelControls) {
-      console.log(
-        `[MemoScreen] setting panel controls - showListPanel: ${showListPanel}, showDetailPanel: ${showDetailPanel}`,
-      );
       config.isSelectedMode = true;
       config.showMemo = showListPanel;
       config.onMemoToggle = handleListPanelToggle;
@@ -1122,7 +1116,6 @@ function MemoScreen({
         <MemoEditor
           memo={selectedMemo}
           onClose={() => {
-            console.log("[MemoScreen] onClose called (view mode)");
             if (teamMode) {
               onClose();
             } else {

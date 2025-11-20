@@ -66,6 +66,31 @@ import PhotoButton from "@/components/ui/buttons/photo-button";
 import { useAttachmentManager } from "@/src/hooks/use-attachment-manager";
 import type { TeamMember } from "@/src/hooks/use-team-detail";
 
+// ボード名ヘッダーコンポーネント
+function BoardNameHeader({
+  boardName,
+  className,
+  fixed = false,
+}: {
+  boardName?: string;
+  className?: string;
+  fixed?: boolean;
+}) {
+  if (!boardName) return null;
+
+  return (
+    <div
+      className={`pr-2 py-2 flex-shrink-0 bg-white ${
+        fixed ? "fixed top-0 left-0 right-0 z-[60]" : ""
+      } ${className || ""}`}
+    >
+      <h2 className="text-sm font-semibold text-gray-700 truncate">
+        {boardName}
+      </h2>
+    </div>
+  );
+}
+
 // ボード詳細用の画像・ファイル一覧表示コンポーネント（メモ/タスク共通）
 function BoardAttachmentView({
   itemType,
@@ -1639,6 +1664,10 @@ function BoardDetailScreen({
                             !showListPanel &&
                             !showDetailPanel && (
                               <div className="flex flex-col h-full">
+                                <BoardNameHeader
+                                  boardName={serverInitialTitle}
+                                  className="pl-2"
+                                />
                                 <CommentSection
                                   title={
                                     selectedMemo
@@ -2134,6 +2163,10 @@ function BoardDetailScreen({
                           {/* コメント表示時 */}
                           {showComment && !showMemo && !showTask && (
                             <div className="flex flex-col h-full">
+                              <BoardNameHeader
+                                boardName={serverInitialTitle}
+                                className="pl-2"
+                              />
                               <CommentSection
                                 title="ボードコメント"
                                 placeholder="ボードにコメントを追加..."
@@ -2149,6 +2182,7 @@ function BoardDetailScreen({
                           {/* メモ表示時 */}
                           {showMemo && (
                             <div className="flex flex-col h-full relative">
+                              <BoardNameHeader boardName={serverInitialTitle} />
                               <BoardMemoSection
                                 rightPanelMode={rightPanelMode}
                                 showMemo={showMemo}
@@ -2199,6 +2233,7 @@ function BoardDetailScreen({
                           {/* タスク表示時 */}
                           {showTask && !showMemo && (
                             <div className="flex flex-col h-full relative">
+                              <BoardNameHeader boardName={serverInitialTitle} />
                               <BoardTaskSection
                                 boardId={boardId}
                                 rightPanelMode={rightPanelMode}

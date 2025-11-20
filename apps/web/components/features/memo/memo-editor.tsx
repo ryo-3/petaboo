@@ -18,6 +18,7 @@ import { useSimpleItemSave } from "@/src/hooks/use-simple-item-save";
 import { useAddItemToBoard } from "@/src/hooks/use-boards";
 import { useTeamContext } from "@/src/contexts/team-context";
 import { useTeamDetail } from "@/src/contexts/team-detail-context";
+import { useNavigation } from "@/src/contexts/navigation-context";
 import {
   useCreateTagging,
   useDeleteTagging,
@@ -105,7 +106,6 @@ interface MemoEditorProps {
   createdByUserId?: string | null;
   createdByAvatarColor?: string | null;
   totalDeletedCount?: number; // 削除済みアイテムの総数
-  insideBoardDetail?: boolean; // ボード詳細内で表示されているか（戻るボタンのイベント切り替え用）
   isInLeftPanel?: boolean; // 左側パネルに表示されているか（余白制御用）
   // 個人モード用の未保存チェック用ref
   memoEditorHasUnsavedChangesRef?: React.MutableRefObject<boolean>;
@@ -134,7 +134,6 @@ function MemoEditor({
   createdByAvatarColor,
   totalDeletedCount = 0,
   unifiedOperations,
-  insideBoardDetail = false,
   isInLeftPanel = false,
   memoEditorHasUnsavedChangesRef,
   memoEditorShowConfirmModalRef,
@@ -142,6 +141,9 @@ function MemoEditor({
   const { isTeamMode: teamMode, teamId: teamIdRaw } = useTeamContext();
   const teamId = teamIdRaw ?? undefined; // Hook互換性のため変換
   const { getToken } = useAuth();
+
+  // NavigationContextから showingBoardDetail とハンドラー用refを取得
+  const { showingBoardDetail, mobileBackHandlerRef } = useNavigation();
 
   // デバッグ: refが渡されているか確認
   console.log(
@@ -153,6 +155,10 @@ function MemoEditor({
     memoEditorShowConfirmModalRef,
   );
   console.log("[MemoEditor] Props received - teamMode:", teamMode);
+  console.log(
+    "[MemoEditor] showingBoardDetail from Context:",
+    showingBoardDetail,
+  );
 
   // ログを一度だけ出力（useEffectで管理）
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -1135,41 +1141,36 @@ function MemoEditor({
   const hasUnsavedChangesRef = useRef(hasUnsavedChanges);
   useEffect(() => {
     hasUnsavedChangesRef.current = hasUnsavedChanges;
-  }, [hasUnsavedChanges]);
+    // 親が管理する場合は親のrefにも書き込む
+    if (memoEditorHasUnsavedChangesRef) {
+      memoEditorHasUnsavedChangesRef.current = hasUnsavedChanges;
+    }
+  }, [hasUnsavedChanges, memoEditorHasUnsavedChangesRef]);
 
-  // モバイルフッター戻るボタンイベント（Context経由）
+  // モバイルフッター戻るボタンハンドラー（ref経由・超シンプル版）
+  // 注意: memoEditorHasUnsavedChangesRefが渡されている場合は親が管理するため登録しない
   useEffect(() => {
-    const handleBackRequested = () => {
-      console.log("[MemoEditor] Back requested event received");
-      console.log("[MemoEditor] teamMode:", teamMode);
+    // 親が管理する場合はスキップ
+    if (memoEditorHasUnsavedChangesRef) {
+      return;
+    }
 
-      // refから最新の値を読み取る
+    const handleMobileBack = () => {
       const currentHasUnsavedChanges = hasUnsavedChangesRef.current;
-      console.log("[MemoEditor] hasUnsavedChanges:", currentHasUnsavedChanges);
 
-      // 未保存変更がある場合はモーダルを表示
       if (currentHasUnsavedChanges) {
-        console.log("[MemoEditor] Showing unsaved changes modal");
         setIsCloseConfirmModalOpen(true);
       } else {
-        // 未保存変更がない場合は直接onCloseを呼ぶ
-        console.log("[MemoEditor] No unsaved changes - calling onClose");
         onCloseRef.current();
       }
     };
 
-    // insideBoardDetailに応じてイベント名を切り替え
-    const eventName = insideBoardDetail
-      ? "board-memo-back"
-      : "memo-editor-mobile-back-requested";
-    console.log(`[MemoEditor] Adding event listener for ${eventName}`);
+    mobileBackHandlerRef.current = handleMobileBack;
 
-    window.addEventListener(eventName, handleBackRequested);
     return () => {
-      console.log(`[MemoEditor] Removing event listener for ${eventName}`);
-      window.removeEventListener(eventName, handleBackRequested);
+      mobileBackHandlerRef.current = null;
     };
-  }, [insideBoardDetail, teamMode]);
+  }, [memoEditorHasUnsavedChangesRef]);
 
   // ボード名を取得するためのヘルパー関数
   const getBoardName = (boardId: number) => {

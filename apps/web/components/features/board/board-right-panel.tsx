@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import MemoEditor from "@/components/features/memo/memo-editor";
 import TaskEditor from "@/components/features/task/task-editor";
 import MemoScreen from "@/components/screens/memo-screen";
@@ -71,7 +72,7 @@ interface BoardRightPanelProps {
   taskEditorShowConfirmModalRef?: React.MutableRefObject<(() => void) | null>;
 }
 
-export default function BoardRightPanel({
+function BoardRightPanel({
   isOpen,
   boardId,
   selectedMemo,
@@ -379,6 +380,7 @@ export default function BoardRightPanel({
           <div className="flex-shrink-0">
             {activeMemoTab === "deleted" ? (
               <MemoEditor
+                key={`memo-${selectedMemo.id}`}
                 memo={selectedMemo}
                 onClose={onClose}
                 onRestore={async () => {
@@ -422,6 +424,7 @@ export default function BoardRightPanel({
               />
             ) : (
               <MemoEditor
+                key={`memo-${selectedMemo.id}`}
                 memo={selectedMemo}
                 initialBoardId={boardId}
                 {...toCreatorProps(selectedMemoCreatorInfo)}
@@ -607,3 +610,5 @@ export default function BoardRightPanel({
     </RightPanel>
   );
 }
+
+export default memo(BoardRightPanel);

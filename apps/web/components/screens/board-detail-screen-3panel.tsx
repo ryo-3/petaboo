@@ -199,13 +199,19 @@ function BoardDetailScreen({
   const selectedMemo = propSelectedMemo;
   const selectedTask = propSelectedTask;
 
-  // デスクトップ時のみ: メモ/タスクが選択されたら詳細パネルを表示
-  // モバイルでは自動非表示しない（個人側と同じ方式、未保存確認が動作しなくなるため）
+  // デスクトップ時: メモ/タスクが選択されたら詳細パネルを表示
+  // モバイル時: 状態変更せず、レンダリング時に直接判定（ちらつき防止）
   useEffect(() => {
-    if (isDesktop && (selectedMemo || selectedTask)) {
-      setShowListPanel(false);
-      setShowDetailPanel(true);
-      setShowCommentPanel(false);
+    if (isDesktop) {
+      if (selectedMemo || selectedTask) {
+        setShowListPanel(false);
+        setShowDetailPanel(true);
+        setShowCommentPanel(false);
+      } else {
+        setShowListPanel(true);
+        setShowDetailPanel(false);
+        setShowCommentPanel(false);
+      }
     }
   }, [
     isDesktop,
@@ -496,7 +502,13 @@ function BoardDetailScreen({
     );
   }, [showMemo, showTask, showComment]);
 
+  // タブテキスト表示制御（デスクトップのみ）
   useEffect(() => {
+    // モバイルでは一覧パネル自体が非表示になるため、タブテキスト制御は不要
+    if (!isDesktop) {
+      return;
+    }
+
     if (selectedMemo || selectedTask || rightPanelMode) {
       // 右パネルが開いたらすぐにテキストを非表示
       setShowTabText(false);
@@ -507,7 +519,7 @@ function BoardDetailScreen({
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [selectedMemo, selectedTask, rightPanelMode, setShowTabText]);
+  }, [isDesktop, selectedMemo, selectedTask, rightPanelMode, setShowTabText]);
 
   // 計算されたカラム数（エディター表示時にメモ・タスク両方表示なら1列、その他は最大2列に制限）
   const effectiveColumnCount =
@@ -1151,9 +1163,9 @@ function BoardDetailScreen({
                     if (!isDesktop) {
                       return (
                         <div className="flex flex-col flex-1 min-h-0">
-                          {/* 一覧パネル表示時 */}
-                          {showListPanel &&
-                            !showDetailPanel &&
+                          {/* 一覧パネル表示時（メモ/タスク未選択時） */}
+                          {!selectedMemo &&
+                            !selectedTask &&
                             !showCommentPanel && (
                               <div className="flex flex-col h-full">
                                 {showMemo ? (
@@ -1255,13 +1267,10 @@ function BoardDetailScreen({
                                 ) : null}
                               </div>
                             )}
-                          {/* 詳細パネル表示時 */}
-                          {showDetailPanel &&
-                            !showListPanel &&
+                          {/* 詳細パネル表示時（メモ/タスク選択時） */}
+                          {(selectedMemo || selectedTask) &&
                             !showCommentPanel && (
-                              <div
-                                className={`flex flex-col h-full pb-2 ${!showListPanel ? "pl-2" : ""}`}
-                              >
+                              <div className="flex flex-col h-full pb-2 md:pl-2">
                                 {selectedMemo ? (
                                   <MemoEditor
                                     memo={selectedMemo as Memo}

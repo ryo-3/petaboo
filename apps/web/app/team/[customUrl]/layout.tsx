@@ -290,15 +290,24 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   // ボード詳細からボード一覧に戻る
   const handleBackToBoardList = () => {
     if (isTeamBoardDetailPage) {
-      // 状態をクリア
-      setCurrentBoardName(undefined);
-
-      // ボード一覧タブに戻る
       const params = new URLSearchParams(searchParams.toString());
-      params.set("tab", "boards");
-      params.delete("slug");
-      const newUrl = `/team/${customUrl}?${params.toString()}`;
-      router.replace(newUrl, { scroll: false });
+      const hasMemoId = params.has("memoId");
+      const hasTaskId = params.has("taskId");
+
+      // メモ/タスクが選択されている場合は、選択を解除してボード詳細に戻る
+      if (hasMemoId || hasTaskId) {
+        params.delete("memoId");
+        params.delete("taskId");
+        const newUrl = `/team/${customUrl}?${params.toString()}`;
+        router.replace(newUrl, { scroll: false });
+      } else {
+        // 何も選択されていない場合は、ボード一覧に戻る
+        setCurrentBoardName(undefined);
+        params.set("tab", "boards");
+        params.delete("slug");
+        const newUrl = `/team/${customUrl}?${params.toString()}`;
+        router.replace(newUrl, { scroll: false });
+      }
     }
   };
 

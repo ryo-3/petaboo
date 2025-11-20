@@ -197,6 +197,14 @@ export function TeamBoardDetailWrapper({
     staleTime: 5 * 60 * 1000,
   });
 
+  // URLパラメータが削除された場合に選択状態をクリア
+  useEffect(() => {
+    if (!memoIdParam && !taskIdParam) {
+      setSelectedMemo(null);
+      setSelectedTask(null);
+    }
+  }, [memoIdParam, taskIdParam]);
+
   // URLパラメータに基づいてメモ/タスクを選択
   useEffect(() => {
     if (!boardItems) return;
@@ -221,8 +229,6 @@ export function TeamBoardDetailWrapper({
         setSelectedMemo(targetMemo);
         setSelectedTask(null);
       }
-    } else if (!memoIdParam && !taskIdParam && selectedMemo) {
-      setSelectedMemo(null);
     }
 
     // taskIdParamがある場合、該当するタスクを選択
@@ -245,8 +251,6 @@ export function TeamBoardDetailWrapper({
         setSelectedTask(targetTask);
         setSelectedMemo(null);
       }
-    } else if (!taskIdParam && !memoIdParam && selectedTask) {
-      setSelectedTask(null);
     }
   }, [boardItems, memoIdParam, taskIdParam]);
 

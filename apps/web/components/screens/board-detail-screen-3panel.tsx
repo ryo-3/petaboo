@@ -98,7 +98,7 @@ function BoardAttachmentView({
 
   return (
     <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-      <div className="border-b border-gray-200 flex items-center justify-between p-4">
+      <div className="border-b border-gray-200 flex items-center justify-between p-2">
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-semibold">画像・ファイル</h2>
           {attachments.length > 0 && (

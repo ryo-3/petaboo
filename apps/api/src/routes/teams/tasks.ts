@@ -724,9 +724,6 @@ app.openapi(
         }),
       );
 
-      console.log(
-        `📋 削除済みタスク一覧取得: teamId=${teamId}, 件数=${result.length}`,
-      );
       return c.json(result);
     } catch (error) {
       console.error("削除済みチームタスク取得エラー:", error);

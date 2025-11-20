@@ -145,21 +145,6 @@ function MemoEditor({
   // NavigationContextから showingBoardDetail とハンドラー用refを取得
   const { showingBoardDetail, mobileBackHandlerRef } = useNavigation();
 
-  // デバッグ: refが渡されているか確認
-  console.log(
-    "[MemoEditor] Props received - memoEditorHasUnsavedChangesRef:",
-    memoEditorHasUnsavedChangesRef,
-  );
-  console.log(
-    "[MemoEditor] Props received - memoEditorShowConfirmModalRef:",
-    memoEditorShowConfirmModalRef,
-  );
-  console.log("[MemoEditor] Props received - teamMode:", teamMode);
-  console.log(
-    "[MemoEditor] showingBoardDetail from Context:",
-    showingBoardDetail,
-  );
-
   // ログを一度だけ出力（useEffectで管理）
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const baseViewerRef = useRef<HTMLDivElement>(null);
@@ -245,22 +230,6 @@ function MemoEditor({
   }, [onSaveComplete]);
   // 未保存変更確認モーダル
   const [isCloseConfirmModalOpen, setIsCloseConfirmModalOpen] = useState(false);
-
-  // デバッグ: モーダル状態をログ出力
-  useEffect(() => {
-    console.log(
-      "[MemoEditor] isCloseConfirmModalOpen changed:",
-      isCloseConfirmModalOpen,
-    );
-  }, [isCloseConfirmModalOpen]);
-
-  // デバッグ: コンポーネントのマウント/アンマウントをトラッキング
-  useEffect(() => {
-    console.log("[MemoEditor] Component mounted, memo.id:", memo?.id);
-    return () => {
-      console.log("[MemoEditor] Component unmounting, memo.id:", memo?.id);
-    };
-  }, []);
 
   // onCloseをrefで保持（useEffectの依存配列に入れないため）
   const onCloseRef = useRef(onClose);
@@ -866,11 +835,7 @@ function MemoEditor({
                 },
               });
             } catch (error) {
-              const message =
-                error instanceof Error ? error.message : String(error);
-              if (!message.includes("already exists")) {
-                console.error("ボード追加に失敗しました", message);
-              }
+              // ボード追加失敗時の処理（already existsは無視）
             }
           }
 
@@ -896,14 +861,7 @@ function MemoEditor({
                 },
               });
             } catch (error) {
-              const message =
-                error instanceof Error ? error.message : String(error);
-              if (!message.includes("already exists")) {
-                console.error("[MemoEditor] ボード追加に失敗しました", {
-                  boardId,
-                  message,
-                });
-              }
+              // ボード追加失敗時の処理（already existsは無視）
             }
           }
         }
@@ -1189,15 +1147,12 @@ function MemoEditor({
 
   // 確認モーダルで「閉じる」を選択
   const handleConfirmClose = useCallback(() => {
-    console.log("[MemoEditor] handleConfirmClose called");
     setIsCloseConfirmModalOpen(false);
     // 破棄が選択されたことを通知（保留中の選択を実行するため）
     dispatchDiscardEvent("memo");
     // 保留中の選択がない場合（戻るボタンの場合）はonCloseを呼ぶ
     // 少し遅延させてdispatchDiscardEventが処理されるのを待つ
-    console.log("[MemoEditor] Calling onClose after 50ms delay");
     setTimeout(() => {
-      console.log("[MemoEditor] Executing onClose");
       onClose();
     }, 50);
   }, [onClose]);
@@ -1672,14 +1627,9 @@ function MemoEditor({
       )}
 
       {/* 未保存変更確認モーダル */}
-      {console.log(
-        "[MemoEditor] Rendering modal, isCloseConfirmModalOpen:",
-        isCloseConfirmModalOpen,
-      )}
       <ConfirmationModal
         isOpen={isCloseConfirmModalOpen}
         onClose={() => {
-          console.log("[MemoEditor] Modal onClose called");
           setIsCloseConfirmModalOpen(false);
         }}
         onConfirm={handleConfirmClose}

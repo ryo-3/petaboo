@@ -199,15 +199,12 @@ function BoardDetailScreen({
   const selectedMemo = propSelectedMemo;
   const selectedTask = propSelectedTask;
 
-  // モバイル時: メモ/タスクが選択されたらエディターパネルを全画面表示
+  // デスクトップ時のみ: メモ/タスクが選択されたら詳細パネルを表示
+  // モバイルでは自動非表示しない（個人側と同じ方式、未保存確認が動作しなくなるため）
   useEffect(() => {
-    if (!isDesktop && (selectedMemo || selectedTask)) {
+    if (isDesktop && (selectedMemo || selectedTask)) {
       setShowListPanel(false);
       setShowDetailPanel(true);
-      setShowCommentPanel(false);
-    } else if (!isDesktop && !selectedMemo && !selectedTask) {
-      setShowListPanel(true);
-      setShowDetailPanel(false);
       setShowCommentPanel(false);
     }
   }, [
@@ -369,17 +366,26 @@ function BoardDetailScreen({
 
       // スマホ表示では、押したセクションのみを表示し、他は非表示にする
       if (section === "memos") {
-        // メモのみ表示
+        // メモ一覧パネルを表示
+        setShowListPanel(true);
+        setShowDetailPanel(false);
+        setShowCommentPanel(false);
         setShowMemo(true);
         setShowTask(false);
         setShowComment(false);
       } else if (section === "tasks") {
-        // タスクのみ表示
+        // タスク一覧パネルを表示
+        setShowListPanel(true);
+        setShowDetailPanel(false);
+        setShowCommentPanel(false);
         setShowMemo(false);
         setShowTask(true);
         setShowComment(false);
       } else if (section === "comments") {
-        // コメントのみ表示
+        // コメントパネルを表示
+        setShowListPanel(false);
+        setShowDetailPanel(false);
+        setShowCommentPanel(true);
         setShowMemo(false);
         setShowTask(false);
         setShowComment(true);
@@ -397,7 +403,14 @@ function BoardDetailScreen({
         handleSectionChange as EventListener,
       );
     };
-  }, [setShowMemo, setShowTask, setShowComment]);
+  }, [
+    setShowListPanel,
+    setShowDetailPanel,
+    setShowCommentPanel,
+    setShowMemo,
+    setShowTask,
+    setShowComment,
+  ]);
 
   // FABボタンからの新規作成イベントをリッスン
   useEffect(() => {
@@ -1143,7 +1156,7 @@ function BoardDetailScreen({
                             !showDetailPanel &&
                             !showCommentPanel && (
                               <div className="flex flex-col h-full">
-                                {selectedMemo ? (
+                                {showMemo ? (
                                   <BoardMemoSection
                                     rightPanelMode={rightPanelMode}
                                     showMemo={showMemo}
@@ -1189,7 +1202,7 @@ function BoardDetailScreen({
                                     onCheckedMemosChange={setCheckedMemos}
                                     onTagging={handleTaggingMemo}
                                   />
-                                ) : (
+                                ) : showTask ? (
                                   <BoardTaskSection
                                     boardId={boardId}
                                     rightPanelMode={rightPanelMode}
@@ -1239,7 +1252,7 @@ function BoardDetailScreen({
                                     onCheckedTasksChange={setCheckedTasks}
                                     onTagging={handleTaggingTask}
                                   />
-                                )}
+                                ) : null}
                               </div>
                             )}
                           {/* 詳細パネル表示時 */}

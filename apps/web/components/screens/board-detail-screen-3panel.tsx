@@ -1256,7 +1256,6 @@ function BoardDetailScreen({
                                     onClose={onClearSelection || (() => {})}
                                     customHeight="flex-1 min-h-0"
                                     showDateAtBottom={true}
-                                    insideBoardDetail={true}
                                     isInLeftPanel={!showListPanel}
                                     createdBy={
                                       selectedMemo &&
@@ -1578,7 +1577,6 @@ function BoardDetailScreen({
                                       onClose={onClearSelection || (() => {})}
                                       customHeight="flex-1 min-h-0"
                                       showDateAtBottom={true}
-                                      insideBoardDetail={true}
                                       isInLeftPanel={!showListPanel}
                                       createdBy={
                                         selectedMemo &&

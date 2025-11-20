@@ -78,8 +78,9 @@ function Sidebar({
   isCreatingMemo: isCreatingMemoProp,
   isCreatingTask: isCreatingTaskProp,
 }: SidebarProps) {
-  // NavigationContextから統一されたiconStatesと楽観的更新を取得
-  const { iconStates, setOptimisticMode } = useNavigation();
+  // NavigationContextから統一されたiconStatesと楽観的更新、モバイルハンドラーrefを取得
+  const { iconStates, setOptimisticMode, mobileBackHandlerRef } =
+    useNavigation();
   // pathnameを取得してチームモード判定
   const pathname = usePathname();
   const isTeamMode = pathname?.startsWith("/team/") ?? false;
@@ -235,21 +236,20 @@ function Sidebar({
       <ItemEditorFooter
         type="memo"
         onBack={() => {
-          const backEventName = showingBoardDetail
-            ? "board-memo-back"
-            : isTeamMode
-              ? "team-back-to-memo-list"
-              : "memo-editor-mobile-back-requested";
-
           console.log("[Sidebar] Memo back button clicked");
           console.log("[Sidebar] isTeamMode:", isTeamMode);
           console.log("[Sidebar] showingBoardDetail:", showingBoardDetail);
-          console.log("[Sidebar] Dispatching event:", backEventName);
 
           // タブ状態をリセット
           setMemoEditorTab("memo");
 
-          window.dispatchEvent(new CustomEvent(backEventName));
+          // refから直接ハンドラーを呼ぶ（超シンプル）
+          if (mobileBackHandlerRef.current) {
+            console.log("[Sidebar] Calling mobile back handler directly");
+            mobileBackHandlerRef.current();
+          } else {
+            console.log("[Sidebar] No mobile back handler registered");
+          }
         }}
         onMainClick={() =>
           window.dispatchEvent(

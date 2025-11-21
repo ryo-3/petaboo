@@ -39,63 +39,47 @@ export function useBoardState() {
 
   const [columnCount, setColumnCount] = useState(2);
 
-  // コンテンツフィルター状態（非選択時用、localStorageから復元）
-  const [showMemo, setShowMemo] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("board-show-memo");
-      if (saved !== null) {
-        return saved === "true";
-      }
-    }
-    return true;
-  });
-  const [showTask, setShowTask] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("board-show-task");
-      if (saved !== null) {
-        return saved === "true";
-      }
-    }
-    return true;
-  });
-  const [showComment, setShowComment] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("board-show-comment");
-      if (saved !== null) {
-        return saved === "true";
-      }
-    }
-    return true;
+  // localStorage読み込みヘルパー（クライアントサイドでのみ動作）
+  const getStorageValue = (key: string, defaultValue: boolean): boolean => {
+    if (typeof window === "undefined") return defaultValue;
+    const saved = localStorage.getItem(key);
+    return saved !== null ? saved === "true" : defaultValue;
+  };
+
+  // コンテンツフィルター状態（非選択時用）- 同期的に初期化
+  const [showMemo, setShowMemo] = useState(() =>
+    getStorageValue("board-show-memo", true),
+  );
+  const [showTask, setShowTask] = useState(() =>
+    getStorageValue("board-show-task", true),
+  );
+  const [showComment, setShowComment] = useState(() =>
+    getStorageValue("board-show-comment", true),
+  );
+
+  // 選択時のパネル表示状態 - 同期的に初期化
+  const [showListPanel, setShowListPanel] = useState(() =>
+    getStorageValue("board-show-list-panel", true),
+  );
+  const [showDetailPanel, setShowDetailPanel] = useState(() =>
+    getStorageValue("board-show-detail-panel", true),
+  );
+  const [showCommentPanel, setShowCommentPanel] = useState(() =>
+    getStorageValue("board-show-comment-panel", true),
+  );
+
+  // ユーザー設定があったかどうか（初回ユーザー判定用）- 同期的に初期化
+  const [hasUserPanelSettings] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return (
+      localStorage.getItem("board-show-list-panel") !== null ||
+      localStorage.getItem("board-show-detail-panel") !== null ||
+      localStorage.getItem("board-show-comment-panel") !== null
+    );
   });
 
-  // 選択時のパネル表示状態（localStorageから復元）
-  const [showListPanel, setShowListPanel] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("board-show-list-panel");
-      if (saved !== null) {
-        return saved === "true";
-      }
-    }
-    return true;
-  });
-  const [showDetailPanel, setShowDetailPanel] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("board-show-detail-panel");
-      if (saved !== null) {
-        return saved === "true";
-      }
-    }
-    return true;
-  });
-  const [showCommentPanel, setShowCommentPanel] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("board-show-comment-panel");
-      if (saved !== null) {
-        return saved === "true";
-      }
-    }
-    return true;
-  });
+  // 復元完了フラグ（同期初期化なのでクライアントでは最初からtrue）
+  const [isPanelStateRestored] = useState(() => typeof window !== "undefined");
 
   // 最新値を保持するref
   const rightPanelModeRef = useRef(rightPanelMode);
@@ -110,46 +94,46 @@ export function useBoardState() {
     }
   }, [rightPanelMode]);
 
-  // 非選択時のパネル表示状態をlocalStorageに保存（デスクトップのみ）
+  // 非選択時のパネル表示状態をlocalStorageに保存（デスクトップのみ、復元完了後のみ）
   useEffect(() => {
-    if (typeof window !== "undefined" && isDesktop) {
+    if (typeof window !== "undefined" && isDesktop && isPanelStateRestored) {
       localStorage.setItem("board-show-memo", String(showMemo));
     }
-  }, [showMemo, isDesktop]);
+  }, [showMemo, isDesktop, isPanelStateRestored]);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && isDesktop) {
+    if (typeof window !== "undefined" && isDesktop && isPanelStateRestored) {
       localStorage.setItem("board-show-task", String(showTask));
     }
-  }, [showTask, isDesktop]);
+  }, [showTask, isDesktop, isPanelStateRestored]);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && isDesktop) {
+    if (typeof window !== "undefined" && isDesktop && isPanelStateRestored) {
       localStorage.setItem("board-show-comment", String(showComment));
     }
-  }, [showComment, isDesktop]);
+  }, [showComment, isDesktop, isPanelStateRestored]);
 
   // 選択時のパネル表示状態をlocalStorageに保存（デスクトップのみ）
   useEffect(() => {
-    if (typeof window !== "undefined" && isDesktop) {
+    if (typeof window !== "undefined" && isDesktop && isPanelStateRestored) {
       localStorage.setItem("board-show-list-panel", String(showListPanel));
     }
-  }, [showListPanel, isDesktop]);
+  }, [showListPanel, isDesktop, isPanelStateRestored]);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && isDesktop) {
+    if (typeof window !== "undefined" && isDesktop && isPanelStateRestored) {
       localStorage.setItem("board-show-detail-panel", String(showDetailPanel));
     }
-  }, [showDetailPanel, isDesktop]);
+  }, [showDetailPanel, isDesktop, isPanelStateRestored]);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && isDesktop) {
+    if (typeof window !== "undefined" && isDesktop && isPanelStateRestored) {
       localStorage.setItem(
         "board-show-comment-panel",
         String(showCommentPanel),
       );
     }
-  }, [showCommentPanel, isDesktop]);
+  }, [showCommentPanel, isDesktop, isPanelStateRestored]);
 
   // 設定画面への遷移
   const handleSettings = useCallback(() => {
@@ -214,7 +198,6 @@ export function useBoardState() {
   // 選択時のパネルトグルハンドラー
   const handleListPanelToggle = useCallback(
     (show: boolean) => {
-      // バリデーション: 最低1つは表示する必要がある
       if (
         !validatePanelToggle(
           {
@@ -235,7 +218,6 @@ export function useBoardState() {
 
   const handleDetailPanelToggle = useCallback(
     (show: boolean) => {
-      // バリデーション: 最低1つは表示する必要がある
       if (
         !validatePanelToggle(
           {
@@ -256,7 +238,6 @@ export function useBoardState() {
 
   const handleCommentPanelToggle = useCallback(
     (show: boolean) => {
-      // バリデーション: 最低1つは表示する必要がある
       if (
         !validatePanelToggle(
           {
@@ -372,6 +353,8 @@ export function useBoardState() {
     showListPanel,
     showDetailPanel,
     showCommentPanel,
+    isPanelStateRestored,
+    hasUserPanelSettings,
 
     // セッター
     setActiveTaskTab,

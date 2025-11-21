@@ -262,6 +262,8 @@ function BoardDetailScreen({
     showListPanel,
     showDetailPanel,
     showCommentPanel,
+    isPanelStateRestored,
+    hasUserPanelSettings,
     setRightPanelMode,
     setShowMemo,
     setShowTask,
@@ -319,7 +321,14 @@ function BoardDetailScreen({
 
   // デスクトップ時: メモ/タスクが選択されたら詳細パネルを表示
   // モバイル時: 状態変更せず、レンダリング時に直接判定（ちらつき防止）
+  // 注意: ユーザー設定がある場合は強制リセットしない
   useEffect(() => {
+    // 復元完了前またはユーザー設定がある場合はスキップ
+    if (!isPanelStateRestored || hasUserPanelSettings) {
+      return;
+    }
+
+    // 初回ユーザー（localStorage無し）のみ強制リセット
     if (isDesktop) {
       if (selectedMemo || selectedTask) {
         setShowListPanel(false);
@@ -338,6 +347,8 @@ function BoardDetailScreen({
     setShowListPanel,
     setShowDetailPanel,
     setShowCommentPanel,
+    isPanelStateRestored,
+    hasUserPanelSettings,
   ]);
 
   // チームモード時: selectedMemo/selectedTaskの状態をContextに反映（フッター切り替え用）

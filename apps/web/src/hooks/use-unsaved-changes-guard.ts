@@ -107,9 +107,18 @@ export function useUnsavedChangesGuard<T = unknown>({
    */
   const handleSelectWithGuard = useCallback(
     (item: T | null) => {
+      console.log(`[useUnsavedChangesGuard] handleSelectWithGuard called`, {
+        itemType,
+        hasItem: !!item,
+        teamMode,
+      });
+
       if (item) {
         const refs = getRefs();
         if (!refs) {
+          console.log(
+            `[useUnsavedChangesGuard] refs not found, selecting directly`,
+          );
           // refsが取得できない場合はそのまま選択
           onSelectItem(item);
           if (item) {
@@ -121,7 +130,15 @@ export function useUnsavedChangesGuard<T = unknown>({
         const hasUnsavedChanges = refs.hasUnsavedChangesRef.current;
         const showModal = refs.showConfirmModalRef.current;
 
+        console.log(`[useUnsavedChangesGuard] checking unsaved changes`, {
+          hasUnsavedChanges,
+          hasShowModal: !!showModal,
+        });
+
         if (hasUnsavedChanges && showModal) {
+          console.log(
+            `[useUnsavedChangesGuard] has unsaved changes, showing modal`,
+          );
           // 選択を保留してモーダルを表示
           pendingSelectionRef.current = item;
           showModal();
@@ -129,13 +146,14 @@ export function useUnsavedChangesGuard<T = unknown>({
         }
       }
 
+      console.log(`[useUnsavedChangesGuard] selecting item directly`);
       // 未保存変更がない、またはitemがnullの場合はそのまま選択
       onSelectItem(item);
       if (item) {
         setScreenMode("view");
       }
     },
-    [getRefs, onSelectItem, setScreenMode],
+    [getRefs, onSelectItem, setScreenMode, itemType, teamMode],
   );
 
   /**
@@ -145,13 +163,22 @@ export function useUnsavedChangesGuard<T = unknown>({
     const eventName = getDiscardEventName(itemType);
 
     const handleUnsavedChangesDiscarded = () => {
+      console.log(`[useUnsavedChangesGuard] discard event received`, {
+        itemType,
+        hasPendingSelection: !!pendingSelectionRef.current,
+      });
+
       if (pendingSelectionRef.current) {
         const pendingItem = pendingSelectionRef.current;
         pendingSelectionRef.current = null;
+        console.log(`[useUnsavedChangesGuard] executing pending selection`);
         // 保留中のアイテムを選択（未保存チェックを回避するため直接実行）
         onSelectItem(pendingItem);
         setScreenMode("view");
       } else {
+        console.log(
+          `[useUnsavedChangesGuard] no pending selection, calling onSelectItem(null)`,
+        );
         // 保留中の選択がない場合（戻るボタンなど）は選択を解除
         onSelectItem(null);
       }

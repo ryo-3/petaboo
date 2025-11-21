@@ -2,7 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigation } from "@/src/contexts/navigation-context";
-import { useTeamDetail } from "@/src/contexts/team-detail-context";
+import {
+  useTeamDetail,
+  useTeamDetailSafe,
+} from "@/src/contexts/team-detail-context";
 import { useClerk } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 import DashboardIcon from "@/components/icons/dashboard-icon";
@@ -83,6 +86,8 @@ function Sidebar({
   // pathnameを取得してチームモード判定
   const pathname = usePathname();
   const isTeamMode = pathname?.startsWith("/team/") ?? false;
+  // チームモードの未保存確認用（Provider外でも安全に使用可能）
+  const teamDetailContext = useTeamDetailSafe();
 
   // 新規作成状態を取得（propsまたはTeamDetailContext）
   let isCreatingMemo = isCreatingMemoProp ?? false;
@@ -189,6 +194,18 @@ function Sidebar({
       <ItemEditorFooter
         type="task"
         onBack={() => {
+          // チームモードの場合、未保存変更をチェック
+          if (isTeamMode && teamDetailContext) {
+            const hasUnsaved =
+              teamDetailContext.taskEditorHasUnsavedChangesRef.current;
+            if (hasUnsaved) {
+              // 未保存変更あり → モーダル表示して終了
+              teamDetailContext.taskEditorShowConfirmModalRef.current?.();
+              return;
+            }
+          }
+
+          // 未保存変更なし → 通常の閉じる処理
           const backEventName = showingBoardDetail
             ? "board-task-back"
             : isTeamMode
@@ -240,8 +257,18 @@ function Sidebar({
       <ItemEditorFooter
         type="memo"
         onBack={() => {
-          // チームモードの場合はメモ一覧に戻るイベントを発火
           if (isTeamMode) {
+            // チームモードの場合、未保存変更をチェック
+            if (teamDetailContext) {
+              const hasUnsaved =
+                teamDetailContext.memoEditorHasUnsavedChangesRef.current;
+              if (hasUnsaved) {
+                // 未保存変更あり → モーダル表示して終了
+                teamDetailContext.memoEditorShowConfirmModalRef.current?.();
+                return;
+              }
+            }
+            // 未保存変更なし → 通常の閉じる処理
             window.dispatchEvent(new CustomEvent("team-back-to-memo-list"));
           }
           // TODO: 個人モードの戻るボタン処理（未実装）

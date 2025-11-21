@@ -921,6 +921,14 @@ function TaskEditor({
         setIsCloseConfirmModalOpen(true);
       };
     }
+
+    // クリーンアップ: アンマウント時にrefをリセット
+    return () => {
+      if (teamMode && teamDetailContext) {
+        teamDetailContext.taskEditorHasUnsavedChangesRef.current = false;
+        teamDetailContext.taskEditorShowConfirmModalRef.current = null;
+      }
+    };
   }, [
     hasUnsavedChanges,
     teamMode,
@@ -1163,9 +1171,15 @@ function TaskEditor({
     setIsCloseConfirmModalOpen(false);
     // 破棄が選択されたことを通知（保留中の選択を実行するため）
     dispatchDiscardEvent("task");
-    // 注意: onClose() は呼ばない！
+
+    // モバイル版チームモードの場合はイベント発火で閉じる
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+    if (isMobile && teamMode) {
+      window.dispatchEvent(new CustomEvent("team-back-to-task-list"));
+    }
+    // 注意: PC版では onClose() は呼ばない！
     // use-unsaved-changes-guard が破棄イベントを受け取り、保留中のアイテムに切り替える
-  }, []);
+  }, [teamMode]);
 
   return (
     <>

@@ -164,7 +164,7 @@ export function TeamBoardDetailWrapper({
   }, [boardData, slug, customUrl, router]);
 
   // URLパラメータからメモ/タスクを復元（ボードアイテム取得が必要）
-  const { data: boardItems } = useQuery({
+  const { data: boardItems, isLoading: boardItemsLoading } = useQuery({
     queryKey: [
       "team-board-items",
       teamId,
@@ -309,7 +309,13 @@ export function TeamBoardDetailWrapper({
     router.push(`/team/${customUrl}?tab=board&slug=${slug}&settings=true`);
   };
 
-  if (loading) {
+  // URLからの復元が必要な場合（URLパラメータあり＆選択なし）のみローディング表示
+  // ユーザーが手動で選択した場合はURLが更新されても待たない
+  const needsUrlRestore =
+    (memoIdParam && !selectedMemo) || (taskIdParam && !selectedTask);
+  const isFullyLoaded = !loading && !needsUrlRestore;
+
+  if (!isFullyLoaded) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>

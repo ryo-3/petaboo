@@ -336,6 +336,12 @@ function TaskScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialTaskId]);
 
+  // URLからの復元が必要な場合（URLパラメータあり＆選択なし＆リストロード中）のみローディング表示
+  // リストがロード完了したら、useEffectで選択されるので待たない
+  const needsUrlRestore =
+    teamMode && initialTaskId && !selectedTask && taskLoading;
+  const isFullyLoaded = !needsUrlRestore;
+
   // タグ管理モーダルの状態
   const [isTagManagementModalOpen, setIsTagManagementModalOpen] =
     useState(false);
@@ -1364,6 +1370,15 @@ function TaskScreen({
         teamMembers={teamMembers}
       />
     ) : null;
+
+  // URLからの復元待ち（チームモードでinitialTaskIdありの場合のみ）
+  if (!isFullyLoaded) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full">

@@ -735,6 +735,12 @@ function MemoScreen({
     }
   }, [initialMemoId, memos, selectedMemo, handleSelectMemo]);
 
+  // URLからの復元が必要な場合（URLパラメータあり＆選択なし＆リストロード中）のみローディング表示
+  // リストがロード完了したら、useEffectで選択されるので待たない
+  const needsUrlRestore =
+    teamMode && initialMemoId && !selectedMemo && memoLoading;
+  const isFullyLoaded = !needsUrlRestore;
+
   // memosが更新されたら削除完了を検知して次選択
   useEffect(() => {
     checkDomDeletionAndSelectNext();
@@ -1235,6 +1241,15 @@ function MemoScreen({
         teamMembers={teamMembers}
       />
     ) : null;
+
+  // URLからの復元待ち（チームモードでinitialMemoIdありの場合のみ）
+  if (!isFullyLoaded) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full">

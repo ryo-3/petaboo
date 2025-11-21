@@ -1126,19 +1126,22 @@ function MemoEditor({
 
   // 確認モーダルで「閉じる」を選択
   const handleConfirmClose = useCallback(() => {
-    console.log(`[MemoEditor] handleConfirmClose called`, { teamMode });
     setIsCloseConfirmModalOpen(false);
     // 破棄が選択されたことを通知（保留中の選択を実行するため）
     // use-unsaved-changes-guard側で保留中選択の処理または選択解除が行われる
     dispatchDiscardEvent("memo");
-    console.log(`[MemoEditor] dispatchDiscardEvent("memo") fired`);
 
     // モバイル版チームモードの場合はイベント発火で閉じる
     const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
-    console.log(`[MemoEditor] isMobile=${isMobile}, teamMode=${teamMode}`);
     if (isMobile && teamMode) {
-      console.log(`[MemoEditor] dispatching team-back-to-memo-list`);
-      window.dispatchEvent(new CustomEvent("team-back-to-memo-list"));
+      // ボード詳細画面かどうかをURLから判断
+      const isFromBoardDetail =
+        typeof window !== "undefined" &&
+        window.location.search.includes("tab=board");
+      const backEventName = isFromBoardDetail
+        ? "board-memo-back"
+        : "team-back-to-memo-list";
+      window.dispatchEvent(new CustomEvent(backEventName));
     }
   }, [teamMode]);
 

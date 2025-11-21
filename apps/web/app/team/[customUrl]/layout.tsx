@@ -10,7 +10,6 @@ import {
 import { useState, useEffect, Suspense } from "react";
 import Header from "@/components/layout/header";
 import Sidebar from "@/components/layout/sidebar";
-import ItemEditorFooter from "@/components/mobile/item-editor-footer";
 import {
   NavigationProvider,
   useNavigation,
@@ -466,135 +465,48 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
         {/* メインコンテンツ */}
         <main className="flex-1 overflow-hidden mb-14 md:mb-0">{children}</main>
 
-        {/* モバイル用ボトムナビ（下）：ボード詳細時は専用フッター、それ以外はSidebar */}
+        {/* モバイル用ボトムナビ（下）：統一してSidebarを使用 */}
         <div className="md:hidden fixed bottom-0 left-0 right-0 h-14 border-t border-gray-200 bg-white z-50">
-          {isTeamBoardDetailPage ? (
-            // ボード詳細ページ：メモ/タスク選択状態でフッターを切り替え
-            selectedMemoId !== null && selectedMemoId !== undefined ? (
-              <ItemEditorFooter
-                type="memo"
-                onBack={handleBackToBoardList}
-                onMainClick={() =>
-                  window.dispatchEvent(
-                    new CustomEvent("memo-editor-tab-change", {
-                      detail: { tab: "memo" },
-                    }),
-                  )
-                }
-                onCommentClick={() =>
-                  window.dispatchEvent(
-                    new CustomEvent("memo-editor-tab-change", {
-                      detail: { tab: "comment" },
-                    }),
-                  )
-                }
-                onImageClick={() =>
-                  window.dispatchEvent(
-                    new CustomEvent("memo-editor-tab-change", {
-                      detail: { tab: "image" },
-                    }),
-                  )
-                }
-                activeTab={memoEditorActiveTab}
-                imageCount={imageCount}
-                commentCount={commentCount}
-              />
-            ) : selectedTaskId !== null && selectedTaskId !== undefined ? (
-              <ItemEditorFooter
-                type="task"
-                onBack={handleBackToBoardList}
-                onMainClick={() =>
-                  window.dispatchEvent(
-                    new CustomEvent("team-task-editor-tab-change", {
-                      detail: { tab: "task" },
-                    }),
-                  )
-                }
-                onCommentClick={() =>
-                  window.dispatchEvent(
-                    new CustomEvent("team-task-editor-tab-change", {
-                      detail: { tab: "comment" },
-                    }),
-                  )
-                }
-                onImageClick={() =>
-                  window.dispatchEvent(
-                    new CustomEvent("team-task-editor-tab-change", {
-                      detail: { tab: "image" },
-                    }),
-                  )
-                }
-                activeTab={taskEditorActiveTab}
-                imageCount={taskImageCount}
-                commentCount={taskCommentCount}
-              />
-            ) : (
-              <ItemEditorFooter
-                type="board"
-                onBack={handleBackToBoardList}
-                onMemoClick={() =>
-                  window.dispatchEvent(
-                    new CustomEvent("board-section-change", {
-                      detail: { section: "memos" },
-                    }),
-                  )
-                }
-                onTaskClick={() =>
-                  window.dispatchEvent(
-                    new CustomEvent("board-section-change", {
-                      detail: { section: "tasks" },
-                    }),
-                  )
-                }
-                onCommentClick={() =>
-                  window.dispatchEvent(
-                    new CustomEvent("board-section-change", {
-                      detail: { section: "comments" },
-                    }),
-                  )
-                }
-                activeSection={activeBoardSection}
-              />
-            )
-          ) : (
-            <Sidebar
-              onSelectMemo={() => setSelectedMemoId(null)}
-              onSelectTask={() => {}}
-              onEditTask={() => {}}
-              onShowFullList={handleShowMemoList}
-              onHome={handleHome}
-              onEditMemo={() => {}}
-              currentMode={currentMode}
-              onModeChange={handleModeChange}
-              onShowTaskList={handleShowTaskList}
-              onTeamList={handleTeamList}
-              onBoardDetail={handleBoardDetail}
-              onSettings={handleSettings}
-              onSearch={handleSearch}
-              showingBoardDetail={isTeamBoardDetailPage}
-              currentBoardName={
-                lastBoardSlug ? currentBoardName || lastBoardName : undefined
-              }
-              currentTeamName={teamDetail?.name}
-              selectedMemoId={selectedMemoId ?? undefined}
-              selectedTaskId={selectedTaskId ?? undefined}
-              isCreatingMemo={isCreatingMemo}
-              isCreatingTask={isCreatingTask}
-              imageCount={
-                selectedMemoId !== null && selectedMemoId !== undefined
-                  ? imageCount
-                  : taskImageCount
-              }
-              commentCount={
-                selectedMemoId !== null && selectedMemoId !== undefined
-                  ? commentCount
-                  : taskCommentCount
-              }
-              onBackToBoardList={
-                isTeamBoardDetailPage ? handleBackToBoardList : undefined
-              }
-            />
-          )}
+          <Sidebar
+            onSelectMemo={() => setSelectedMemoId(null)}
+            onSelectTask={() => {}}
+            onEditTask={() => {}}
+            onShowFullList={handleShowMemoList}
+            onHome={handleHome}
+            onEditMemo={() => {}}
+            currentMode={currentMode}
+            onModeChange={handleModeChange}
+            onShowTaskList={handleShowTaskList}
+            onTeamList={handleTeamList}
+            onBoardDetail={handleBoardDetail}
+            onSettings={handleSettings}
+            onSearch={handleSearch}
+            showingBoardDetail={isTeamBoardDetailPage}
+            currentBoardName={
+              lastBoardSlug ? currentBoardName || lastBoardName : undefined
+            }
+            currentTeamName={teamDetail?.name}
+            selectedMemoId={selectedMemoId ?? undefined}
+            selectedTaskId={selectedTaskId ?? undefined}
+            isCreatingMemo={isCreatingMemo}
+            isCreatingTask={isCreatingTask}
+            imageCount={imageCount}
+            commentCount={commentCount}
+            taskImageCount={taskImageCount}
+            taskCommentCount={taskCommentCount}
+            onBackToBoardList={
+              isTeamBoardDetailPage ? handleBackToBoardList : undefined
+            }
+            activeBoardSection={activeBoardSection}
+            onBoardSectionChange={(section) => {
+              setActiveBoardSection(section);
+              window.dispatchEvent(
+                new CustomEvent("board-section-change", {
+                  detail: { section },
+                }),
+              );
+            }}
+          />
         </div>
       </div>
     </div>

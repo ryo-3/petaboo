@@ -49,8 +49,13 @@ interface SidebarProps {
   onBackToBoardList?: () => void;
   imageCount?: number;
   commentCount?: number;
+  taskImageCount?: number;
+  taskCommentCount?: number;
   isCreatingMemo?: boolean;
   isCreatingTask?: boolean;
+  // ボード詳細用
+  activeBoardSection?: "memos" | "tasks" | "comments";
+  onBoardSectionChange?: (section: "memos" | "tasks" | "comments") => void;
 }
 
 function Sidebar({
@@ -78,8 +83,12 @@ function Sidebar({
   onBackToBoardList,
   imageCount = 0,
   commentCount = 0,
+  taskImageCount = 0,
+  taskCommentCount = 0,
   isCreatingMemo: isCreatingMemoProp,
   isCreatingTask: isCreatingTaskProp,
+  activeBoardSection,
+  onBoardSectionChange,
 }: SidebarProps) {
   // NavigationContextから統一されたiconStatesと楽観的更新を取得
   const { iconStates, setOptimisticMode } = useNavigation();
@@ -245,8 +254,8 @@ function Sidebar({
           );
         }}
         activeTab={taskEditorTab}
-        imageCount={imageCount}
-        commentCount={commentCount}
+        imageCount={taskImageCount}
+        commentCount={taskCommentCount}
         hideComment={
           !isTeamMode || (isCreatingTask && selectedTaskId === undefined)
         }
@@ -269,7 +278,10 @@ function Sidebar({
               }
             }
             // 未保存変更なし → 通常の閉じる処理
-            window.dispatchEvent(new CustomEvent("team-back-to-memo-list"));
+            const backEventName = showingBoardDetail
+              ? "board-memo-back"
+              : "team-back-to-memo-list";
+            window.dispatchEvent(new CustomEvent(backEventName));
           }
           // TODO: 個人モードの戻るボタン処理（未実装）
         }}
@@ -300,6 +312,21 @@ function Sidebar({
         hideComment={
           !isTeamMode || (isCreatingMemo && selectedMemoId === undefined)
         }
+      />
+    </div>
+  ) : showingBoardDetail && onBoardSectionChange ? (
+    // ボード詳細画面（メモ/タスク未選択時）：セクション切り替え用フッター
+    <div className="md:hidden h-full">
+      <ItemEditorFooter
+        type="board"
+        onBack={() => {
+          // ボード一覧に戻る（未保存チェック不要：メモ/タスク未選択なので）
+          onBackToBoardList?.();
+        }}
+        onMemoClick={() => onBoardSectionChange("memos")}
+        onTaskClick={() => onBoardSectionChange("tasks")}
+        onCommentClick={() => onBoardSectionChange("comments")}
+        activeSection={activeBoardSection || "memos"}
       />
     </div>
   ) : null;

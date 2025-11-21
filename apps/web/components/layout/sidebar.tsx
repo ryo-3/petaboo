@@ -78,9 +78,8 @@ function Sidebar({
   isCreatingMemo: isCreatingMemoProp,
   isCreatingTask: isCreatingTaskProp,
 }: SidebarProps) {
-  // NavigationContextから統一されたiconStatesと楽観的更新、モバイルハンドラーrefを取得
-  const { iconStates, setOptimisticMode, mobileBackHandlerRef } =
-    useNavigation();
+  // NavigationContextから統一されたiconStatesと楽観的更新を取得
+  const { iconStates, setOptimisticMode } = useNavigation();
   // pathnameを取得してチームモード判定
   const pathname = usePathname();
   const isTeamMode = pathname?.startsWith("/team/") ?? false;
@@ -244,12 +243,8 @@ function Sidebar({
           // チームモードの場合はメモ一覧に戻るイベントを発火
           if (isTeamMode) {
             window.dispatchEvent(new CustomEvent("team-back-to-memo-list"));
-          } else {
-            // 個人モードの場合はrefから直接ハンドラーを呼ぶ
-            if (mobileBackHandlerRef.current) {
-              mobileBackHandlerRef.current();
-            }
           }
+          // TODO: 個人モードの戻るボタン処理（未実装）
         }}
         onMainClick={() =>
           window.dispatchEvent(

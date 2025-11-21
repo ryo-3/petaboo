@@ -9,7 +9,6 @@ import { useAllTeamTaggings } from "@/src/hooks/use-team-taggings";
 import { useTeamContext } from "@/src/contexts/team-context";
 import { useViewSettings } from "@/src/contexts/view-settings-context";
 import { useHeaderControlPanel } from "@/src/contexts/header-control-panel-context";
-import { useNavigation } from "@/src/contexts/navigation-context";
 import {
   useBoards,
   useAddItemToBoard,
@@ -27,7 +26,6 @@ import type { HeaderControlPanelConfig } from "@/src/contexts/header-control-pan
 import TagAddModal from "@/components/ui/tag-add/tag-add-modal";
 import BoardHeader from "@/components/features/board/board-header";
 import { BulkDeleteConfirmation } from "@/components/ui/modals";
-import ConfirmationModal from "@/components/ui/modals/confirmation-modal";
 import { useBoardSelectAll } from "@/src/hooks/use-board-select-all";
 import { useMultiSelection } from "@/src/hooks/use-multi-selection";
 import { useBulkDeleteOperations } from "@/src/hooks/use-bulk-delete-operations";
@@ -681,41 +679,6 @@ function BoardDetailScreen({
   const allBoards = teamMode ? teamBoards : personalBoards;
   const { categories } = useBoardCategories();
 
-  // モバイル版未保存確認モーダル管理（BoardDetailScreen側で管理）
-  const [isMobileCloseConfirmOpen, setIsMobileCloseConfirmOpen] =
-    useState(false);
-  const memoEditorHasUnsavedChangesRef = useRef(false);
-  const { mobileBackHandlerRef } = useNavigation();
-
-  // handleCloseDetailをrefで保持（依存配列の変更を避ける）
-  const handleCloseDetailRef = useRef(handleCloseDetail);
-  useEffect(() => {
-    handleCloseDetailRef.current = handleCloseDetail;
-  }, [handleCloseDetail]);
-
-  // モバイル戻るボタンハンドラー（BoardDetailScreen側で登録）
-  useEffect(() => {
-    if (!isMobile || !selectedMemo) {
-      // モバイルじゃない、またはメモ未選択の場合はクリア
-      mobileBackHandlerRef.current = null;
-      return;
-    }
-
-    const handleMobileBack = () => {
-      if (memoEditorHasUnsavedChangesRef.current) {
-        setIsMobileCloseConfirmOpen(true);
-      } else {
-        handleCloseDetailRef.current();
-      }
-    };
-
-    mobileBackHandlerRef.current = handleMobileBack;
-
-    return () => {
-      mobileBackHandlerRef.current = null;
-    };
-  }, [isMobile, selectedMemo, mobileBackHandlerRef]); // handleCloseDetailを依存配列から削除
-
   // BoardRightPanelのonCloseを安定化（memo化のため）
   const stableOnClose = useCallback(() => {
     if (rightPanelMode) {
@@ -1334,12 +1297,6 @@ function BoardDetailScreen({
                           }
                           onAddMemoToBoard={handleAddMemoToBoard}
                           onAddTaskToBoard={handleAddTaskToBoard}
-                          memoEditorHasUnsavedChangesRef={
-                            memoEditorHasUnsavedChangesRef
-                          }
-                          memoEditorShowConfirmModalRef={undefined}
-                          taskEditorHasUnsavedChangesRef={undefined}
-                          taskEditorShowConfirmModalRef={undefined}
                         />
                       </div>
                     </ResizablePanel>
@@ -1679,22 +1636,6 @@ function BoardDetailScreen({
             setCheckedTasks(new Set());
           }
         }}
-      />
-
-      {/* モバイル版未保存変更確認モーダル */}
-      <ConfirmationModal
-        isOpen={isMobileCloseConfirmOpen}
-        onClose={() => setIsMobileCloseConfirmOpen(false)}
-        onConfirm={() => {
-          setIsMobileCloseConfirmOpen(false);
-          handleCloseDetailRef.current();
-        }}
-        title="未保存の変更があります"
-        message="編集中の内容が保存されていません。破棄してもよろしいですか？"
-        confirmText="破棄して閉じる"
-        cancelText="編集に戻る"
-        variant="warning"
-        icon="warning"
       />
     </div>
   );

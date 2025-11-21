@@ -8,7 +8,6 @@ import {
   useMemo,
   useEffect,
   useCallback,
-  useRef,
 } from "react";
 import type { Memo } from "@/src/types/memo";
 import type { Task } from "@/src/types/task";
@@ -74,8 +73,6 @@ interface NavigationContextType {
   // アップロード中状態管理
   isUploadingTask: boolean;
   setIsUploadingTask: (uploading: boolean) => void;
-  // モバイル戻るボタンハンドラー（ref経由でシンプル）
-  mobileBackHandlerRef: React.MutableRefObject<(() => void) | null>;
 }
 
 const NavigationContext = createContext<NavigationContextType | undefined>(
@@ -139,9 +136,6 @@ export function NavigationProvider({
 
   // アップロード中状態管理
   const [isUploadingTask, setIsUploadingTask] = useState(false);
-
-  // モバイル戻るボタンハンドラー（ref使用でシンプル化）
-  const mobileBackHandlerRef = useRef<(() => void) | null>(null);
 
   // 楽観的更新用の一時的なモード（URL変更前に即座に反映）
   const [optimisticMode, setOptimisticMode] = useState<
@@ -316,7 +310,6 @@ export function NavigationProvider({
         setActiveSelector,
         isUploadingTask,
         setIsUploadingTask,
-        mobileBackHandlerRef,
       }}
     >
       {children}

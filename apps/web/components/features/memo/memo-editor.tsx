@@ -18,7 +18,6 @@ import { useSimpleItemSave } from "@/src/hooks/use-simple-item-save";
 import { useAddItemToBoard } from "@/src/hooks/use-boards";
 import { useTeamContext } from "@/src/contexts/team-context";
 import { useTeamDetail } from "@/src/contexts/team-detail-context";
-import { useNavigation } from "@/src/contexts/navigation-context";
 import {
   useCreateTagging,
   useDeleteTagging,
@@ -141,9 +140,6 @@ function MemoEditor({
   const { isTeamMode: teamMode, teamId: teamIdRaw } = useTeamContext();
   const teamId = teamIdRaw ?? undefined; // Hook互換性のため変換
   const { getToken } = useAuth();
-
-  // NavigationContextから showingBoardDetail とハンドラー用refを取得
-  const { showingBoardDetail, mobileBackHandlerRef } = useNavigation();
 
   // ログを一度だけ出力（useEffectで管理）
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -1104,31 +1100,6 @@ function MemoEditor({
       memoEditorHasUnsavedChangesRef.current = hasUnsavedChanges;
     }
   }, [hasUnsavedChanges, memoEditorHasUnsavedChangesRef]);
-
-  // モバイルフッター戻るボタンハンドラー（ref経由・超シンプル版）
-  // 注意: memoEditorHasUnsavedChangesRefが渡されている場合は親が管理するため登録しない
-  useEffect(() => {
-    // 親が管理する場合はスキップ
-    if (memoEditorHasUnsavedChangesRef) {
-      return;
-    }
-
-    const handleMobileBack = () => {
-      const currentHasUnsavedChanges = hasUnsavedChangesRef.current;
-
-      if (currentHasUnsavedChanges) {
-        setIsCloseConfirmModalOpen(true);
-      } else {
-        onCloseRef.current();
-      }
-    };
-
-    mobileBackHandlerRef.current = handleMobileBack;
-
-    return () => {
-      mobileBackHandlerRef.current = null;
-    };
-  }, [memoEditorHasUnsavedChangesRef]);
 
   // ボード名を取得するためのヘルパー関数
   const getBoardName = (boardId: number) => {

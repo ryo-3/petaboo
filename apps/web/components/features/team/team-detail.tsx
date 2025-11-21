@@ -512,15 +512,6 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     };
 
     const handleBackToTaskList = (_event: CustomEvent) => {
-      // 未保存変更がある場合は確認モーダルを表示
-      if (
-        taskEditorHasUnsavedChangesRef.current &&
-        taskEditorShowConfirmModalRef.current
-      ) {
-        taskEditorShowConfirmModalRef.current();
-        return;
-      }
-
       // タスクの選択を解除してタスク一覧に戻る
       setSelectedTask(null);
       setSelectedTaskId(null);

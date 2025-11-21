@@ -1120,13 +1120,9 @@ function MemoEditor({
   const handleConfirmClose = useCallback(() => {
     setIsCloseConfirmModalOpen(false);
     // 破棄が選択されたことを通知（保留中の選択を実行するため）
+    // use-unsaved-changes-guard側で保留中選択の処理または選択解除が行われる
     dispatchDiscardEvent("memo");
-    // 保留中の選択がない場合（戻るボタンの場合）はonCloseを呼ぶ
-    // 少し遅延させてdispatchDiscardEventが処理されるのを待つ
-    setTimeout(() => {
-      onClose();
-    }, 50);
-  }, [onClose]);
+  }, []);
 
   // 削除ボタンのハンドラー（ボード紐づきチェック付き）
   const handleDeleteClick = () => {

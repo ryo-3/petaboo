@@ -151,6 +151,9 @@ export function useUnsavedChangesGuard<T = unknown>({
         // 保留中のアイテムを選択（未保存チェックを回避するため直接実行）
         onSelectItem(pendingItem);
         setScreenMode("view");
+      } else {
+        // 保留中の選択がない場合（戻るボタンなど）は選択を解除
+        onSelectItem(null);
       }
     };
 

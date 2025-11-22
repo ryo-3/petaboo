@@ -16,6 +16,8 @@ import CommentScopeToggle from "@/components/ui/buttons/comment-scope-toggle";
 import AttachmentGallery from "@/components/features/attachments/attachment-gallery";
 import { useQueryClient } from "@tanstack/react-query";
 import { linkifyLine } from "@/src/utils/url-detector";
+import { validateFile, MAX_ATTACHMENTS_PER_ITEM } from "@/src/utils/file-validator";
+import { compressImage, formatBytes } from "@/src/utils/image-compressor";
 
 // コメント添付ファイル表示用コンポーネント（AttachmentGalleryを使用）
 function CommentAttachmentGallery({
@@ -386,63 +388,66 @@ export default function CommentSection({
     }
   };
 
-  // 画像形式バリデーション
-  const validateImageFile = useCallback(
-    (file: File): boolean => {
-      // MIMEタイプチェック（画像・PDF・Office文書対応）
-      const allowedTypes = [
-        "image/jpeg",
-        "image/jpg",
-        "image/png",
-        "image/gif",
-        "image/webp",
-        "image/svg+xml",
-        "application/pdf",
-        "application/msword",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "application/vnd.ms-excel",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "application/vnd.ms-powerpoint",
-        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-        "text/plain",
-        "text/csv",
-      ];
-      if (!allowedTypes.includes(file.type)) {
-        showToast(`対応していないファイル形式です（${file.type}）`, "error");
-        return false;
+  // ファイル処理（バリデーション + 圧縮）
+  const processFile = useCallback(
+    async (file: File): Promise<{ success: boolean; file?: File }> => {
+      // バリデーション
+      const validation = validateFile(file);
+      if (!validation.valid) {
+        showToast(validation.error!, "error");
+        return { success: false };
       }
 
-      // ファイルサイズチェック（10MB）
-      const maxSize = 10 * 1024 * 1024;
-      if (file.size > maxSize) {
-        showToast("ファイルサイズは10MB以下にしてください", "error");
-        return false;
+      // 圧縮が必要な場合
+      if (validation.needsCompression) {
+        try {
+          const result = await compressImage(file);
+          if (result.wasCompressed) {
+            const saved = formatBytes(result.originalSize - result.compressedSize);
+            showToast(`画像を圧縮しました（${saved}削減）`, "info", 3000);
+          }
+          // 圧縮後も5MB超の場合はエラー
+          if (result.file.size > 5 * 1024 * 1024) {
+            showToast("圧縮後も5MB以下にできませんでした", "error");
+            return { success: false };
+          }
+          return { success: true, file: result.file };
+        } catch (error) {
+          console.error("画像圧縮エラー:", error);
+          showToast("画像の圧縮に失敗しました", "error");
+          return { success: false };
+        }
       }
 
-      return true;
+      return { success: true, file };
     },
     [showToast],
   );
 
   // ファイル選択処理（複数選択対応）
   const handleFileSelect = useCallback(
-    (files: File[]) => {
-      // バリデーション
-      const validFiles = files.filter((file) => validateImageFile(file));
-
-      if (validFiles.length === 0) {
+    async (files: File[]) => {
+      const totalCount = pendingImages.length + files.length;
+      if (totalCount > MAX_ATTACHMENTS_PER_ITEM) {
+        showToast(`ファイルは最大${MAX_ATTACHMENTS_PER_ITEM}個までです`, "error");
         return;
       }
 
-      const totalCount = pendingImages.length + validFiles.length;
-      if (totalCount > 10) {
-        showToast("ファイルは最大10個までです", "error");
-        return;
+      const processedFiles: File[] = [];
+
+      for (const file of files) {
+        // バリデーション + 圧縮
+        const result = await processFile(file);
+        if (result.success && result.file) {
+          processedFiles.push(result.file);
+        }
       }
 
-      setPendingImages((prev) => [...prev, ...validFiles]);
+      if (processedFiles.length > 0) {
+        setPendingImages((prev) => [...prev, ...processedFiles]);
+      }
     },
-    [pendingImages.length, showToast, validateImageFile],
+    [pendingImages.length, showToast, processFile],
   );
 
   // ペンディング画像削除

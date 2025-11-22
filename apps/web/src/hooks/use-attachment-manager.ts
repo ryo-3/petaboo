@@ -9,6 +9,8 @@ import { useToast } from "@/src/contexts/toast-context";
 import { OriginalIdUtils } from "@/src/types/common";
 import { useAuth } from "@clerk/nextjs";
 import { useQueryClient } from "@tanstack/react-query";
+import { validateFile, MAX_ATTACHMENTS_PER_ITEM } from "@/src/utils/file-validator";
+import { compressImage, formatBytes } from "@/src/utils/image-compressor";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594";
 
@@ -68,107 +70,96 @@ export const useAttachmentManager = ({
   attachmentsRef.current = attachments;
   pendingDeletesRef.current = pendingDeletes;
 
-  // ファイル形式バリデーション（画像 + PDF等）
-  const validateImageFile = useCallback(
-    (file: File): boolean => {
-      // MIMEタイプチェック
-      const allowedTypes = [
-        // 画像
-        "image/jpeg",
-        "image/jpg",
-        "image/png",
-        "image/gif",
-        "image/webp",
-        "image/svg+xml",
-        // ファイル
-        "application/pdf",
-        "application/msword",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "application/vnd.ms-excel",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "application/vnd.ms-powerpoint",
-        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-        "text/plain",
-        "text/csv",
-      ];
-
-      if (!allowedTypes.includes(file.type)) {
-        showToast(`対応していないファイル形式です（${file.type}）`, "error");
-        return false;
+  // ファイル処理（バリデーション + 圧縮）
+  const processFile = useCallback(
+    async (file: File): Promise<{ success: boolean; file?: File }> => {
+      // バリデーション
+      const validation = validateFile(file);
+      if (!validation.valid) {
+        showToast(validation.error!, "error");
+        return { success: false };
       }
 
-      // ファイルサイズチェック（画像5MB、その他20MB）
-      const isImage = file.type.startsWith("image/");
-      const maxSize = isImage ? 5 * 1024 * 1024 : 20 * 1024 * 1024;
-      if (file.size > maxSize) {
-        const maxMB = maxSize / 1024 / 1024;
-        showToast(`ファイルサイズは${maxMB}MB以下にしてください`, "error");
-        return false;
+      // 圧縮が必要な場合
+      if (validation.needsCompression) {
+        try {
+          const result = await compressImage(file);
+          if (result.wasCompressed) {
+            const saved = formatBytes(result.originalSize - result.compressedSize);
+            showToast(`画像を圧縮しました（${saved}削減）`, "info", 3000);
+          }
+          // 圧縮後も5MB超の場合はエラー
+          if (result.file.size > 5 * 1024 * 1024) {
+            showToast("圧縮後も5MB以下にできませんでした", "error");
+            return { success: false };
+          }
+          return { success: true, file: result.file };
+        } catch (error) {
+          console.error("画像圧縮エラー:", error);
+          showToast("画像の圧縮に失敗しました", "error");
+          return { success: false };
+        }
       }
 
-      return true;
+      return { success: true, file };
     },
     [showToast],
   );
 
   // ファイル選択ハンドラー（単一）
   const handleFileSelect = useCallback(
-    (file: File) => {
-      // バリデーション
-      if (!validateImageFile(file)) {
+    async (file: File) => {
+      // 上限チェック
+      const currentCount =
+        attachmentsRef.current.filter(
+          (a) => !pendingDeletesRef.current.includes(a.id),
+        ).length + pendingImages.length;
+
+      if (currentCount >= MAX_ATTACHMENTS_PER_ITEM) {
+        showToast(`ファイルは最大${MAX_ATTACHMENTS_PER_ITEM}個までです`, "error");
         return;
       }
 
-      // refから最新の値を取得（依存配列から配列を除外）
-      setPendingImages((prevPending) => {
-        const currentCount =
-          attachmentsRef.current.filter(
-            (a) => !pendingDeletesRef.current.includes(a.id),
-          ).length + prevPending.length;
+      // バリデーション + 圧縮
+      const result = await processFile(file);
+      if (!result.success || !result.file) {
+        return;
+      }
 
-        if (currentCount >= 10) {
-          showToast("画像は最大10枚までです", "error");
-          return prevPending;
-        }
-
-        return [...prevPending, file];
-      });
+      setPendingImages((prev) => [...prev, result.file!]);
     },
-    [validateImageFile, showToast],
+    [processFile, showToast, pendingImages.length],
   );
 
   // ファイル選択ハンドラー（複数）
   const handleFilesSelect = useCallback(
-    (files: File[]) => {
-      setPendingImages((prevPending) => {
-        const currentCount =
-          attachmentsRef.current.filter(
-            (a) => !pendingDeletesRef.current.includes(a.id),
-          ).length + prevPending.length;
+    async (files: File[]) => {
+      const currentCount =
+        attachmentsRef.current.filter(
+          (a) => !pendingDeletesRef.current.includes(a.id),
+        ).length + pendingImages.length;
 
-        const validFiles: File[] = [];
+      const processedFiles: File[] = [];
 
-        for (const file of files) {
-          // 上限チェック
-          if (currentCount + validFiles.length >= 10) {
-            showToast("画像は最大10枚までです", "error");
-            break;
-          }
-
-          // バリデーション
-          if (validateImageFile(file)) {
-            validFiles.push(file);
-          }
+      for (const file of files) {
+        // 上限チェック
+        if (currentCount + processedFiles.length >= MAX_ATTACHMENTS_PER_ITEM) {
+          showToast(`ファイルは最大${MAX_ATTACHMENTS_PER_ITEM}個までです`, "error");
+          break;
         }
 
-        if (validFiles.length > 0) {
-          return [...prevPending, ...validFiles];
+        // バリデーション + 圧縮
+        const result = await processFile(file);
+        if (result.success && result.file) {
+          processedFiles.push(result.file);
         }
+      }
 
-        return prevPending;
-      });
+      if (processedFiles.length > 0) {
+        setPendingImages((prev) => [...prev, ...processedFiles]);
+      }
     },
-    [validateImageFile, showToast],
+    [processFile, showToast, pendingImages.length],
   );
 
   // クリップボードからの画像ペースト処理

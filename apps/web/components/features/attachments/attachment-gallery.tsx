@@ -129,6 +129,12 @@ export default function AttachmentGallery({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attachmentIds]);
 
+  // pendingImagesの安定化（ファイル名とサイズでキーを生成）
+  const pendingImagesKey = useMemo(
+    () => pendingImages.map((f) => `${f.name}-${f.size}`).join(","),
+    [pendingImages],
+  );
+
   // 保存待ち画像のプレビューURL生成（既にattachmentsに存在するものを除外）
   useEffect(() => {
     // アップロード中は除外処理をスキップ（楽観的UIを維持）
@@ -158,7 +164,8 @@ export default function AttachmentGallery({
     return () => {
       urls.forEach((url) => URL.revokeObjectURL(url));
     };
-  }, [pendingImages, attachments, isUploading]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingImagesKey, attachmentIds, isUploading]);
 
   if (attachments.length === 0 && pendingImages.length === 0) {
     return null;

@@ -21,3 +21,29 @@ export function stripHtmlTags(str: string): string {
 export function isContentEmpty(str: string): boolean {
   return !stripHtmlTags(str);
 }
+
+/**
+ * HTMLコンテンツから最初の行をプレーンテキストで抽出
+ * メモのタイトル表示に使用
+ * @param content - HTMLコンテンツ
+ * @param maxLength - 最大文字数（デフォルト200）
+ * @returns プレーンテキストの1行目（空の場合は"無題"）
+ */
+export function extractFirstLine(
+  content: string | null | undefined,
+  maxLength: number = 200,
+): string {
+  if (!content || content.trim() === "") {
+    return "無題";
+  }
+
+  // HTMLタグを除去
+  const plainText = stripHtmlTags(content);
+
+  // 最初の行を取得
+  const firstLine = plainText.split("\n")[0] || "";
+
+  // 空白を除去して指定文字数に制限
+  const trimmed = firstLine.trim();
+  return trimmed.slice(0, maxLength) || "無題";
+}

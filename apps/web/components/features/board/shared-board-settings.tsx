@@ -57,6 +57,8 @@ export default function SharedBoardSettings({
   );
   const [editSlug, setEditSlug] = useState(boardSlug);
   const [hasChanges, setHasChanges] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
   const handleNameChange = (value: string) => {
     setEditName(value);
@@ -142,19 +144,18 @@ export default function SharedBoardSettings({
     }
   };
 
-  const handleDelete = async () => {
-    if (confirm("このボードを削除しますか？")) {
-      try {
-        await deleteMutation.mutateAsync(boardId);
-        const redirectPath = isTeamMode ? `/team/${teamCustomUrl}` : "/";
-        router.push(redirectPath);
-      } catch (error) {
-        console.error("ボード削除に失敗しました:", error);
-        showToast(
-          "ボード削除に失敗しました。しばらく待ってから再試行してください。",
-          "error",
-        );
-      }
+  const handleDeleteConfirm = async () => {
+    setIsDeleteDialogOpen(false);
+    try {
+      await deleteMutation.mutateAsync(boardId);
+      const redirectPath = isTeamMode ? `/team/${teamCustomUrl}` : "/";
+      router.push(redirectPath);
+    } catch (error) {
+      console.error("ボード削除に失敗しました:", error);
+      showToast(
+        "ボード削除に失敗しました。しばらく待ってから再試行してください。",
+        "error",
+      );
     }
   };
 
@@ -321,7 +322,7 @@ export default function SharedBoardSettings({
               </div>
             </div>
             <button
-              onClick={handleDelete}
+              onClick={() => setIsDeleteDialogOpen(true)}
               disabled={deleteMutation.isPending}
               className="self-end px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 font-medium"
             >
@@ -330,6 +331,116 @@ export default function SharedBoardSettings({
           </div>
         </div>
       </div>
+
+      {/* 削除確認モーダル */}
+      {isDeleteDialogOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-2xl max-w-md w-full mx-4 p-6 border-2 border-red-200">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center">
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-red-900">ボードを削除</h2>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-r from-red-100 via-red-50 to-red-100 border-2 border-red-300 rounded-lg p-4 mb-6">
+              <p className="text-sm text-red-900 font-bold mb-3 flex items-center gap-2">
+                <svg
+                  className="w-5 h-5 text-red-600"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                </svg>
+                <strong>完全削除される内容</strong>
+              </p>
+              <div className="grid grid-cols-1 gap-2">
+                <div className="flex items-center gap-2 text-sm text-red-800">
+                  <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                  <span>
+                    <strong>ボード本体とボードコメント</strong> → 完全消失
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-red-800">
+                  <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                  <span>
+                    <strong>メモ・タスクとの紐づけ</strong> → 削除
+                  </span>
+                </div>
+              </div>
+              <div className="mt-3 p-2 bg-red-200 rounded border-l-4 border-red-600">
+                <p className="text-xs text-red-900 font-bold flex items-center gap-1">
+                  <svg
+                    className="w-4 h-4 text-red-600"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M17.6 11.48L19.44 8.3a.63.63 0 0 0-.59-.91h-2.44l.61-2.24a.63.63 0 0 0-1.06-.59l-6.12 5.87a.63.63 0 0 0 .59.91h2.44l-.61 2.24a.63.63 0 0 0 1.06.59l6.12-5.87a.63.63 0 0 0-.04-.93z" />
+                  </svg>
+                  この操作は取り消せません
+                </p>
+              </div>
+              <div className="mt-3 p-2 bg-blue-100 rounded border-l-4 border-blue-500">
+                <p className="text-xs text-blue-900 font-semibold">
+                  ※ メモ・タスク本体とそれらへのコメントは削除されません
+                </p>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                削除を確認するには、ボードスラッグ「
+                <strong className="text-red-600">{boardSlug}</strong>
+                」を入力してください
+              </label>
+              <input
+                type="text"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder={boardSlug}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                autoFocus
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setIsDeleteDialogOpen(false);
+                  setDeleteConfirmText("");
+                }}
+                disabled={deleteMutation.isPending}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium disabled:opacity-50"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                disabled={
+                  deleteConfirmText !== boardSlug || deleteMutation.isPending
+                }
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                {deleteMutation.isPending ? "削除中..." : "削除する"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

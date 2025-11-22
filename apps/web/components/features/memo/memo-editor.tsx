@@ -1401,16 +1401,20 @@ function MemoEditor({
             </div>
           </div>
           {/* 作成者・日付をコントロールパネルの下に表示（ツールバー非表示時のみ） */}
-          {memo && memo.id !== 0 && !toolbarVisible && (
-            <div className="flex justify-end items-center gap-2 mr-2 mt-1 md:mt-0 mb-1">
-              <CreatorAvatar
-                createdBy={createdBy}
-                avatarColor={createdByAvatarColor}
-                teamMode={teamMode}
-                size="md"
-                className=""
-              />
-              <DateInfo item={memo} isEditing={!isDeleted} size="sm" />
+          {!toolbarVisible && (
+            <div className="flex justify-end items-center gap-2 mr-2 mt-1 md:mt-0 mb-1 h-[20px]">
+              {memo && memo.id !== 0 && (
+                <>
+                  <CreatorAvatar
+                    createdBy={createdBy}
+                    avatarColor={createdByAvatarColor}
+                    teamMode={teamMode}
+                    size="md"
+                    className=""
+                  />
+                  <DateInfo item={memo} isEditing={!isDeleted} size="sm" />
+                </>
+              )}
             </div>
           )}
 

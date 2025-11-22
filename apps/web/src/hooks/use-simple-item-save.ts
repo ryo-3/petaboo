@@ -374,15 +374,6 @@ export function useSimpleItemSave<T extends UnifiedItem>({
               content: content.trim() || "",
             };
 
-            console.log("📤 [useSimpleItemSave] API送信データ:", {
-              itemType,
-              itemId: item.id,
-              teamMode,
-              teamId,
-              updateData,
-              contentLength: updateData.content.length,
-            });
-
             await updateMemo.mutateAsync({
               id: item.id,
               data: updateData,
@@ -400,16 +391,6 @@ export function useSimpleItemSave<T extends UnifiedItem>({
               categoryId: categoryId ?? undefined,
               boardCategoryId: boardCategoryId ?? undefined,
             };
-
-            console.log("📤 [useSimpleItemSave] API送信データ:", {
-              itemType,
-              itemId: item.id,
-              teamMode,
-              teamId,
-              updateData,
-              titleLength: updateData.title.length,
-              descriptionLength: updateData.description.length,
-            });
 
             await updateTask.mutateAsync({
               id: item.id,
@@ -585,14 +566,6 @@ export function useSimpleItemSave<T extends UnifiedItem>({
               content: content.trim() || undefined,
             };
 
-            console.log("📤 [useSimpleItemSave] API送信データ（新規作成）:", {
-              itemType,
-              teamMode,
-              teamId,
-              createData,
-              contentLength: createData.content?.length,
-            });
-
             createdItem = (await createMemo.mutateAsync(createData)) as T;
           } else {
             const createData = {
@@ -607,15 +580,6 @@ export function useSimpleItemSave<T extends UnifiedItem>({
               categoryId: categoryId ?? undefined,
               boardCategoryId: boardCategoryId ?? undefined,
             };
-
-            console.log("📤 [useSimpleItemSave] API送信データ（新規作成）:", {
-              itemType,
-              teamMode,
-              teamId,
-              createData,
-              titleLength: createData.title.length,
-              descriptionLength: createData.description?.length,
-            });
 
             createdItem = (await createTask.mutateAsync(createData)) as T;
           }

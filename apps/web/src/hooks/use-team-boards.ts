@@ -254,7 +254,6 @@ export function useDeleteTeamBoard(teamId: number) {
     },
     onSuccess: () => {
       // キャッシュ無効化はリダイレクト先で行うため、ここでは何もしない
-      console.log("✅ ボード削除API成功（キャッシュはリダイレクト先で無効化）");
     },
     onError: (error) => {
       console.error("チームボード削除に失敗しました:", error);

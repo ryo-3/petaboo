@@ -144,23 +144,14 @@ function MainClient({
     } else if (pathname === "/") {
       // ボード削除成功後のフラグをチェック
       const boardDeleted = sessionStorage.getItem("boardDeleted");
-      console.log(
-        "🏠 個人モード: pathname =",
-        pathname,
-        "boardDeleted =",
-        boardDeleted,
-      );
       if (boardDeleted === "true") {
         sessionStorage.removeItem("boardDeleted");
-        console.log("🗑️ sessionStorageフラグ削除");
         // ボード一覧のキャッシュを完全削除して最新データを取得
-        console.log("♻️ キャッシュ完全削除");
         ["normal", "completed", "deleted"].forEach((status) => {
           queryClient.removeQueries({
             queryKey: ["boards", status],
           });
         });
-        console.log("🍞 トースト表示!");
         showToast("ボードが削除されました", "success");
       }
 

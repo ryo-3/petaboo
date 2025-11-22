@@ -152,23 +152,18 @@ export default function SharedBoardSettings({
   const handleDeleteConfirm = async () => {
     setIsDeleting(true);
     try {
-      console.log("🗑️ 削除API開始");
       await deleteMutation.mutateAsync(boardId);
-      console.log("✅ 削除API完了");
       // 削除成功後、3秒間「削除中...」を表示してからリダイレクト
       await new Promise((resolve) => setTimeout(resolve, 3000));
-      console.log("⏰ 3秒待機完了");
 
       // リダイレクト前にキャッシュを完全削除
       if (isTeamMode && teamId) {
-        console.log("♻️ チームボードキャッシュ完全削除（リダイレクト前）");
         ["normal", "completed", "deleted"].forEach((status) => {
           queryClient.removeQueries({
             queryKey: ["team-boards", teamId, status],
           });
         });
       } else {
-        console.log("♻️ 個人ボードキャッシュ完全削除（リダイレクト前）");
         ["normal", "completed", "deleted"].forEach((status) => {
           queryClient.removeQueries({
             queryKey: ["boards", status],
@@ -178,12 +173,10 @@ export default function SharedBoardSettings({
 
       // 削除成功フラグをsessionStorageに保存（リダイレクト直前）
       sessionStorage.setItem("boardDeleted", "true");
-      console.log("💾 sessionStorageにフラグ保存");
       setIsDeleteDialogOpen(false);
       const redirectPath = isTeamMode
         ? `/team/${teamCustomUrl}?tab=boards`
         : "/";
-      console.log("🔀 リダイレクト:", redirectPath);
       router.push(redirectPath);
     } catch (error) {
       console.error("ボード削除に失敗しました:", error);

@@ -124,18 +124,12 @@ function BoardDetailScreen({
         const storageKey = teamMode
           ? "team-board-detail-list-panel"
           : "personal-board-detail-list-panel";
-        console.log(
-          `[BoardDetail] init - teamMode: ${teamMode}, storageKey: ${storageKey}`,
-        );
         const saved = localStorage.getItem(storageKey);
-        console.log(`[BoardDetail] localStorage value:`, saved);
         if (saved !== null) {
           const value = saved === "true";
-          console.log(`[BoardDetail] returning saved value: ${value}`);
           return value;
         }
       }
-      console.log(`[BoardDetail] returning default value: true`);
       return true;
     });
 
@@ -223,7 +217,6 @@ function BoardDetailScreen({
       // すでにfalseの場合は何もしない（不要な再レンダリングを防ぐ）
       setShowListPanelInSelectedMode((prev) => {
         if (prev === false) return prev;
-        console.log(`[BoardDetail] desktop useEffect - hiding list panel`);
         return false;
       });
     }
@@ -708,18 +701,12 @@ function BoardDetailScreen({
   // 選択モード時の一覧パネルトグルハンドラー
   const handleListPanelToggleInSelectedMode = useCallback(
     (show: boolean) => {
-      console.log(
-        `[BoardDetail] handleListPanelToggleInSelectedMode called - show: ${show}, teamMode: ${teamMode}`,
-      );
       setShowListPanelInSelectedMode(show);
       // localStorageに保存
       if (typeof window !== "undefined") {
         const storageKey = teamMode
           ? "team-board-detail-list-panel"
           : "personal-board-detail-list-panel";
-        console.log(
-          `[BoardDetail] saving to localStorage - storageKey: ${storageKey}, value: ${show}`,
-        );
         localStorage.setItem(storageKey, String(show));
       }
     },
@@ -752,9 +739,6 @@ function BoardDetailScreen({
 
     // アイテム選択時のパネル制御モード（個人ボードのみ）
     if (shouldShowSelectedMode) {
-      console.log(
-        `[BoardDetail] config - shouldShowSelectedMode: true, showListPanelInSelectedMode: ${showListPanelInSelectedMode}`,
-      );
       config.isSelectedMode = true;
       config.showMemo = showListPanelInSelectedMode;
       config.showTask = true; // 詳細は常に表示（ボタン自体を非表示にする）

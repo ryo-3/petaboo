@@ -100,7 +100,6 @@ export default function UnifiedFilterModal({
     const newSelection = sessionState.selectedTagIds.includes(tagId)
       ? sessionState.selectedTagIds.filter((id) => id !== tagId)
       : [...sessionState.selectedTagIds, tagId];
-    console.log("🏷️ タグフィルター更新:", { tagId, newSelection });
     updateSessionState({ selectedTagIds: newSelection });
   };
 

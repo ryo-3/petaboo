@@ -20,6 +20,35 @@ export default function BoardForm({
   const [description, setDescription] = useState(
     initialData?.description || "",
   );
+  const [slug, setSlug] = useState("");
+  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
+
+  // slug生成用の関数
+  const generateSlug = (text: string): string => {
+    return text
+      .trim()
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, "") // 特殊文字除去
+      .replace(/\s+/g, "-") // スペースをハイフンに
+      .replace(/--+/g, "-") // 連続ハイフンを単一に
+      .trim();
+  };
+
+  // nameが変更された時、slugが手動編集されていなければ自動生成
+  const handleNameChange = (value: string) => {
+    setName(value);
+    if (!isSlugManuallyEdited) {
+      setSlug(generateSlug(value));
+    }
+  };
+
+  // slugを手動編集した時
+  const handleSlugChange = (value: string) => {
+    // 英数字とハイフンのみ許可
+    const sanitized = value.toLowerCase().replace(/[^a-z0-9-]/g, "");
+    setSlug(sanitized);
+    setIsSlugManuallyEdited(true);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,18 +57,9 @@ export default function BoardForm({
       name.trim().length <= 50 &&
       description.trim().length <= 200
     ) {
-      // slugを自動生成（name -> slug変換）
-      const slug = name
-        .trim()
-        .toLowerCase()
-        .replace(/[^\w\s-]/g, "") // 特殊文字除去
-        .replace(/\s+/g, "-") // スペースをハイフンに
-        .replace(/--+/g, "-") // 連続ハイフンを単一に
-        .trim();
-
       onSubmit({
         name: name.trim(),
-        slug: slug || `board-${Date.now()}`, // slugが空の場合はタイムスタンプ
+        slug: slug.trim() || `board-${Date.now()}`, // slugが空の場合はタイムスタンプ
         description: description.trim() || undefined,
       });
     }
@@ -55,12 +75,31 @@ export default function BoardForm({
         <TextInputWithCounter
           id="name"
           value={name}
-          onChange={setName}
+          onChange={handleNameChange}
           placeholder="例: プロジェクト名、学習テーマなど（50文字以内）"
           maxLength={50}
           label="ボード名"
           required
         />
+
+        <div className="space-y-2">
+          <TextInputWithCounter
+            id="slug"
+            value={slug}
+            onChange={handleSlugChange}
+            placeholder="例: my-project-board（英数字とハイフンのみ、50文字以内）"
+            maxLength={50}
+            label="スラッグ（URL用の識別子）"
+            required
+            className="font-mono"
+          />
+          <p className="text-xs text-gray-500">
+            URL: /boards/
+            <span className="font-mono font-semibold text-blue-600">
+              {slug}
+            </span>
+          </p>
+        </div>
 
         <TextareaWithCounter
           id="description"
@@ -77,7 +116,9 @@ export default function BoardForm({
             type="submit"
             disabled={
               !name.trim() ||
+              !slug.trim() ||
               name.trim().length > 50 ||
+              slug.trim().length > 50 ||
               description.trim().length > 200 ||
               isLoading
             }

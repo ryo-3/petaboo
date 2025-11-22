@@ -7,7 +7,6 @@ import {
   teamMembers,
   teamBoards,
   teamBoardItems,
-  teamDeletedBoards,
   teamMemos,
   teamTasks,
   teamDeletedMemos,
@@ -17,7 +16,6 @@ import {
 import type {
   NewTeamBoard,
   NewTeamBoardItem,
-  NewTeamDeletedBoard,
 } from "../../db/schema/team/boards";
 import type { DatabaseType, Env, AppType } from "../../types/common";
 
@@ -28,7 +26,7 @@ export function createTeamBoardsAPI(app: AppType) {
     method: "get",
     path: "/{teamId}/boards",
     request: {
-      param: z.object({
+      params: z.object({
         teamId: z.string().openapi({ example: "1" }),
       }),
       query: z.object({
@@ -97,12 +95,8 @@ export function createTeamBoardsAPI(app: AppType) {
       let boardsData;
 
       if (status === "deleted") {
-        // 削除済みボード
-        boardsData = await db
-          .select()
-          .from(teamDeletedBoards)
-          .where(eq(teamDeletedBoards.teamId, parseInt(teamId)))
-          .orderBy(desc(teamDeletedBoards.deletedAt));
+        // 削除済みボードは管理しない（空配列を返す）
+        boardsData = [];
       } else {
         // 通常/完了ボード
         const completedStatus = status === "completed";
@@ -245,7 +239,7 @@ export function createTeamBoardsAPI(app: AppType) {
     method: "post",
     path: "/{teamId}/boards",
     request: {
-      param: z.object({
+      params: z.object({
         teamId: z.string().openapi({ example: "1" }),
       }),
       body: {
@@ -339,7 +333,7 @@ export function createTeamBoardsAPI(app: AppType) {
     method: "put",
     path: "/{teamId}/boards/{id}",
     request: {
-      param: z.object({
+      params: z.object({
         teamId: z.string().openapi({ example: "1" }),
         id: z.string().openapi({ example: "1" }),
       }),
@@ -493,7 +487,7 @@ export function createTeamBoardsAPI(app: AppType) {
     method: "get",
     path: "/{teamId}/boards/slug/{slug}",
     request: {
-      param: z.object({
+      params: z.object({
         teamId: z.string().openapi({ example: "1" }),
         slug: z.string().openapi({ example: "my-board" }),
       }),
@@ -587,7 +581,7 @@ export function createTeamBoardsAPI(app: AppType) {
     method: "get",
     path: "/{teamId}/boards/{boardId}/items",
     request: {
-      param: z.object({
+      params: z.object({
         teamId: z.string().openapi({ example: "1" }),
         boardId: z.string().openapi({ example: "1" }),
       }),
@@ -900,7 +894,7 @@ export function createTeamBoardsAPI(app: AppType) {
     method: "get",
     path: "/{teamId}/boards/{boardId}/deleted-items",
     request: {
-      param: z.object({
+      params: z.object({
         teamId: z.string().openapi({ example: "1" }),
         boardId: z.string().openapi({ example: "1" }),
       }),
@@ -1175,7 +1169,7 @@ export function createTeamBoardsAPI(app: AppType) {
     method: "post",
     path: "/{teamId}/boards/{boardId}/items",
     request: {
-      param: z.object({
+      params: z.object({
         teamId: z.string().openapi({ example: "1" }),
         boardId: z.string().openapi({ example: "1" }),
       }),
@@ -1357,7 +1351,7 @@ export function createTeamBoardsAPI(app: AppType) {
     method: "delete",
     path: "/{teamId}/boards/{boardId}/items/{itemId}",
     request: {
-      param: z.object({
+      params: z.object({
         teamId: z.string().openapi({ example: "1" }),
         boardId: z.string().openapi({ example: "1" }),
         itemId: z.string().openapi({ example: "1" }),
@@ -1513,6 +1507,123 @@ export function createTeamBoardsAPI(app: AppType) {
       return c.json({ success: true });
     } catch (error) {
       console.error("チームボードアイテム削除エラー:", error);
+      return c.json({ error: "サーバーエラーが発生しました" }, 500);
+    }
+  });
+
+  // チームボード削除
+  const deleteTeamBoard = createRoute({
+    method: "delete",
+    path: "/{teamId}/boards/{id}",
+    request: {
+      params: z.object({
+        teamId: z.string().openapi({ example: "1" }),
+        id: z.string().openapi({ example: "1" }),
+      }),
+    },
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              success: z.boolean(),
+            }),
+          },
+        },
+        description: "チームボード削除成功",
+      },
+      401: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+            }),
+          },
+        },
+        description: "認証が必要",
+      },
+      403: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+            }),
+          },
+        },
+        description: "チームメンバーではない",
+      },
+      404: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+            }),
+          },
+        },
+        description: "ボードが見つかりません",
+      },
+    },
+  });
+
+  app.openapi(deleteTeamBoard, async (c) => {
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ error: "認証が必要です" }, 401);
+    }
+
+    const { teamId, id } = c.req.param();
+    const db = c.get("db");
+
+    try {
+      // チームメンバーかどうか確認
+      const memberCheck = await db
+        .select({ id: teamMembers.id })
+        .from(teamMembers)
+        .where(
+          and(
+            eq(teamMembers.teamId, parseInt(teamId)),
+            eq(teamMembers.userId, auth.userId),
+          ),
+        )
+        .limit(1);
+
+      if (memberCheck.length === 0) {
+        return c.json({ error: "チームメンバーではありません" }, 403);
+      }
+
+      // ボード存在確認
+      const board = await db
+        .select()
+        .from(teamBoards)
+        .where(
+          and(
+            eq(teamBoards.id, parseInt(id)),
+            eq(teamBoards.teamId, parseInt(teamId)),
+          ),
+        )
+        .limit(1);
+
+      if (board.length === 0) {
+        return c.json({ error: "ボードが見つかりません" }, 404);
+      }
+
+      // ボードに紐づくコメントを削除
+      await db
+        .delete(teamComments)
+        .where(
+          and(
+            eq(teamComments.teamId, parseInt(teamId)),
+            eq(teamComments.targetType, "board"),
+            eq(teamComments.targetOriginalId, board[0].id.toString()),
+          ),
+        );
+
+      // ボード本体を物理削除（team_board_itemsはカスケード削除される）
+      await db.delete(teamBoards).where(eq(teamBoards.id, parseInt(id)));
+
+      return c.json({ success: true });
+    } catch (error) {
+      console.error("チームボード削除エラー:", error);
       return c.json({ error: "サーバーエラーが発生しました" }, 500);
     }
   });

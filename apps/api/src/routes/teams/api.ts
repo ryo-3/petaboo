@@ -4,11 +4,7 @@ import { eq, and, sql, desc, ne, gt } from "drizzle-orm";
 import { teams, teamMembers, teamInvitations, users } from "../../db";
 import { teamMemos, teamDeletedMemos } from "../../db/schema/team/memos";
 import { teamTasks, teamDeletedTasks } from "../../db/schema/team/tasks";
-import {
-  teamBoards,
-  teamBoardItems,
-  teamDeletedBoards,
-} from "../../db/schema/team/boards";
+import { teamBoards, teamBoardItems } from "../../db/schema/team/boards";
 import { teamCategories } from "../../db/schema/team/categories";
 import { teamBoardCategories } from "../../db/schema/team/board-categories";
 import { teamTags, teamTaggings } from "../../db/schema/team/tags";
@@ -2754,10 +2750,6 @@ export async function deleteTeam(c: any) {
       .where(eq(teamBoardCategories.teamId, team.id))
       .run();
     await db.delete(teamBoards).where(eq(teamBoards.teamId, team.id)).run();
-    await db
-      .delete(teamDeletedBoards)
-      .where(eq(teamDeletedBoards.teamId, team.id))
-      .run();
 
     // 3. チームコンテンツ関連
     await db.delete(teamMemos).where(eq(teamMemos.teamId, team.id)).run();

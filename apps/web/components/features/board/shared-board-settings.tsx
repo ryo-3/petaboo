@@ -303,17 +303,27 @@ export default function SharedBoardSettings({
             危険ゾーン
           </h2>
 
-          <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-red-200">
-            <div>
+          <div className="flex flex-col p-3 bg-white rounded-lg border border-red-200">
+            <div className="mb-4">
               <p className="font-medium text-red-900">ボードを削除</p>
-              <p className="text-sm text-red-600">
-                この操作は元に戻せません。ボード内のメモとタスクの関連付けが削除されます。
-              </p>
+              <div className="text-sm text-red-600 space-y-2">
+                <p className="font-semibold">この操作は取り消せません。</p>
+                <div>
+                  <p className="font-medium mb-1">削除されるもの：</p>
+                  <ul className="list-disc list-inside pl-2 space-y-0.5">
+                    <li>ボード本体とボードコメント</li>
+                    <li>メモ・タスクとの紐づけ</li>
+                  </ul>
+                </div>
+                <p className="text-xs">
+                  ※メモ・タスク本体とメモタスク本体に紐づいてるコメントは削除されません
+                </p>
+              </div>
             </div>
             <button
               onClick={handleDelete}
               disabled={deleteMutation.isPending}
-              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 font-medium"
+              className="self-end px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 font-medium"
             >
               {deleteMutation.isPending ? "削除中..." : "削除"}
             </button>

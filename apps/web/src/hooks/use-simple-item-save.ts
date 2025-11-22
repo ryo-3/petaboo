@@ -381,6 +381,21 @@ export function useSimpleItemSave<T extends UnifiedItem>({
                   boardCategoryId: boardCategoryId ?? undefined,
                 };
 
+          console.log("📤 [useSimpleItemSave] API送信データ:", {
+            itemType,
+            itemId: item.id,
+            teamMode,
+            teamId,
+            updateData,
+            titleLength: updateData.title.length,
+            contentLength:
+              "content" in updateData
+                ? updateData.content?.length
+                : "description" in updateData
+                  ? updateData.description?.length
+                  : 0,
+          });
+
           if (itemType === "memo") {
             await updateMemo.mutateAsync({
               id: item.id,
@@ -574,6 +589,20 @@ export function useSimpleItemSave<T extends UnifiedItem>({
                   categoryId: categoryId ?? undefined,
                   boardCategoryId: boardCategoryId ?? undefined,
                 };
+
+          console.log("📤 [useSimpleItemSave] API送信データ（新規作成）:", {
+            itemType,
+            teamMode,
+            teamId,
+            createData,
+            titleLength: createData.title.length,
+            contentLength:
+              "content" in createData
+                ? createData.content?.length
+                : "description" in createData
+                  ? createData.description?.length
+                  : 0,
+          });
 
           let createdItem: T;
           if (itemType === "memo") {

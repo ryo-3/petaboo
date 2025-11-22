@@ -77,6 +77,14 @@ export const memosApi = {
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error("❌ [createTeamMemo] エラー詳細:", {
+        status: response.status,
+        statusText: response.statusText,
+        teamId,
+        sentData: data,
+        errorResponse: errorText,
+      });
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     return response;
@@ -99,6 +107,15 @@ export const memosApi = {
     );
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error("❌ [updateTeamMemo] エラー詳細:", {
+        status: response.status,
+        statusText: response.statusText,
+        teamId,
+        memoId: id,
+        sentData: data,
+        errorResponse: errorText,
+      });
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     return response;

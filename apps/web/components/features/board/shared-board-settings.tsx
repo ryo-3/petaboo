@@ -8,6 +8,7 @@ import TextInputWithCounter from "@/components/ui/inputs/text-input-with-counter
 import TextareaWithCounter from "@/components/ui/inputs/textarea-with-counter";
 import { BoardSlackSettings } from "@/components/features/board/board-slack-settings";
 import { UpdateBoardData } from "@/src/types/board";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface SharedBoardSettingsProps {
   boardId: number;
@@ -18,6 +19,7 @@ interface SharedBoardSettingsProps {
   // Team mode props
   isTeamMode?: boolean;
   teamCustomUrl?: string;
+  teamId?: number;
   // Display options
   hideBackButton?: boolean;
   // Hook functions
@@ -43,6 +45,7 @@ export default function SharedBoardSettings({
   initialBoardCompleted,
   isTeamMode = false,
   teamCustomUrl,
+  teamId,
   hideBackButton = false,
   updateMutation,
   toggleCompletionMutation,
@@ -50,6 +53,7 @@ export default function SharedBoardSettings({
 }: SharedBoardSettingsProps) {
   const router = useRouter();
   const { showToast } = useToast();
+  const queryClient = useQueryClient();
 
   const [editName, setEditName] = useState(initialBoardName);
   const [editDescription, setEditDescription] = useState(
@@ -59,6 +63,7 @@ export default function SharedBoardSettings({
   const [hasChanges, setHasChanges] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleNameChange = (value: string) => {
     setEditName(value);
@@ -145,10 +150,40 @@ export default function SharedBoardSettings({
   };
 
   const handleDeleteConfirm = async () => {
-    setIsDeleteDialogOpen(false);
+    setIsDeleting(true);
     try {
+      console.log("🗑️ 削除API開始");
       await deleteMutation.mutateAsync(boardId);
-      const redirectPath = isTeamMode ? `/team/${teamCustomUrl}` : "/";
+      console.log("✅ 削除API完了");
+      // 削除成功後、3秒間「削除中...」を表示してからリダイレクト
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      console.log("⏰ 3秒待機完了");
+
+      // リダイレクト前にキャッシュを完全削除
+      if (isTeamMode && teamId) {
+        console.log("♻️ チームボードキャッシュ完全削除（リダイレクト前）");
+        ["normal", "completed", "deleted"].forEach((status) => {
+          queryClient.removeQueries({
+            queryKey: ["team-boards", teamId, status],
+          });
+        });
+      } else {
+        console.log("♻️ 個人ボードキャッシュ完全削除（リダイレクト前）");
+        ["normal", "completed", "deleted"].forEach((status) => {
+          queryClient.removeQueries({
+            queryKey: ["boards", status],
+          });
+        });
+      }
+
+      // 削除成功フラグをsessionStorageに保存（リダイレクト直前）
+      sessionStorage.setItem("boardDeleted", "true");
+      console.log("💾 sessionStorageにフラグ保存");
+      setIsDeleteDialogOpen(false);
+      const redirectPath = isTeamMode
+        ? `/team/${teamCustomUrl}?tab=boards`
+        : "/";
+      console.log("🔀 リダイレクト:", redirectPath);
       router.push(redirectPath);
     } catch (error) {
       console.error("ボード削除に失敗しました:", error);
@@ -156,6 +191,7 @@ export default function SharedBoardSettings({
         "ボード削除に失敗しました。しばらく待ってから再試行してください。",
         "error",
       );
+      setIsDeleting(false);
     }
   };
 
@@ -323,10 +359,10 @@ export default function SharedBoardSettings({
             </div>
             <button
               onClick={() => setIsDeleteDialogOpen(true)}
-              disabled={deleteMutation.isPending}
+              disabled={isDeleting}
               className="self-end px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 font-medium"
             >
-              {deleteMutation.isPending ? "削除中..." : "削除"}
+              {isDeleting ? "削除中..." : "削除"}
             </button>
           </div>
         </div>
@@ -423,19 +459,17 @@ export default function SharedBoardSettings({
                   setIsDeleteDialogOpen(false);
                   setDeleteConfirmText("");
                 }}
-                disabled={deleteMutation.isPending}
+                disabled={isDeleting}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium disabled:opacity-50"
               >
                 キャンセル
               </button>
               <button
                 onClick={handleDeleteConfirm}
-                disabled={
-                  deleteConfirmText !== boardSlug || deleteMutation.isPending
-                }
+                disabled={deleteConfirmText !== boardSlug || isDeleting}
                 className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium disabled:bg-gray-300 disabled:cursor-not-allowed"
               >
-                {deleteMutation.isPending ? "削除中..." : "削除する"}
+                {isDeleting ? "削除中..." : "削除する"}
               </button>
             </div>
           </div>

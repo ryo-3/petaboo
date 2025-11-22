@@ -12,6 +12,8 @@ import type { DeletedTask, Task } from "@/src/types/task";
 import { useNavigation } from "@/src/contexts/navigation-context";
 import { usePathname } from "next/navigation";
 import { useLayoutEffect, useRef, useState, useEffect } from "react";
+import { useToast } from "@/src/contexts/toast-context";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface MainClientProps {
   initialBoardName?: string;
@@ -43,6 +45,8 @@ function MainClient({
   // ユーザー設定取得
   const { preferences } = useUserPreferences(1);
   const pathname = usePathname();
+  const { showToast } = useToast();
+  const queryClient = useQueryClient();
 
   // コンテキストから状態を取得
   const {
@@ -138,6 +142,28 @@ function MainClient({
       }
       // showingBoardDetailは初回のみ設定（ユーザーの手動切り替えを尊重）
     } else if (pathname === "/") {
+      // ボード削除成功後のフラグをチェック
+      const boardDeleted = sessionStorage.getItem("boardDeleted");
+      console.log(
+        "🏠 個人モード: pathname =",
+        pathname,
+        "boardDeleted =",
+        boardDeleted,
+      );
+      if (boardDeleted === "true") {
+        sessionStorage.removeItem("boardDeleted");
+        console.log("🗑️ sessionStorageフラグ削除");
+        // ボード一覧のキャッシュを完全削除して最新データを取得
+        console.log("♻️ キャッシュ完全削除");
+        ["normal", "completed", "deleted"].forEach((status) => {
+          queryClient.removeQueries({
+            queryKey: ["boards", status],
+          });
+        });
+        console.log("🍞 トースト表示!");
+        showToast("ボードが削除されました", "success");
+      }
+
       // チーム作成成功後のフラグをチェック
       const shouldShowTeamList = sessionStorage.getItem(
         "showTeamListAfterCreation",
@@ -170,6 +196,7 @@ function MainClient({
     setCurrentMode,
     setIsFromBoardDetail,
     setShowingBoardDetail,
+    showToast,
   ]);
 
   // Hydration完了前はサーバーと同じ状態を保持

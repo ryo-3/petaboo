@@ -79,6 +79,7 @@ export default function TeamBoardSettingsScreen({
           initialBoardCompleted={initialBoardCompleted}
           isTeamMode={true}
           teamCustomUrl={teamCustomUrl}
+          teamId={teamId}
           updateMutation={updateBoard}
           toggleCompletionMutation={toggleCompletion}
           deleteMutation={deleteBoard}

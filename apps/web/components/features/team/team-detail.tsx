@@ -48,6 +48,7 @@ import { useNavigation } from "@/src/contexts/navigation-context";
 import { useAttachments } from "@/src/hooks/use-attachments";
 import { useTeamComments } from "@/src/hooks/use-team-comments";
 import { OriginalIdUtils } from "@/src/types/common";
+import { useToast } from "@/src/contexts/toast-context";
 
 interface TeamDetailProps {
   customUrl: string;
@@ -58,6 +59,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const { data: team, isLoading, error } = useTeamDetail(customUrl);
+  const { showToast } = useToast();
   const {
     setSelectedMemoId,
     setSelectedTaskId,
@@ -457,6 +459,31 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       }),
     );
   }, [activeTab]);
+
+  // ボード削除後のトースト表示（URLパラメータ変化を検知）
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    console.log("🔍 useEffect発火: tab =", tab);
+    if (tab === "boards") {
+      const boardDeleted = sessionStorage.getItem("boardDeleted");
+      console.log("📋 sessionStorage確認: boardDeleted =", boardDeleted);
+      if (boardDeleted === "true") {
+        sessionStorage.removeItem("boardDeleted");
+        console.log("🗑️ sessionStorageフラグ削除");
+        // ボード一覧のキャッシュを完全削除して最新データを取得
+        if (team?.id) {
+          console.log("♻️ キャッシュ完全削除");
+          ["normal", "completed", "deleted"].forEach((status) => {
+            queryClient.removeQueries({
+              queryKey: ["team-boards", team.id, status],
+            });
+          });
+        }
+        console.log("🍞 トースト表示!");
+        showToast("ボードが削除されました", "success");
+      }
+    }
+  }, [searchParams, showToast, team?.id, queryClient]);
 
   // サイドバーからのイベントをリッスン
   useEffect(() => {

@@ -229,8 +229,6 @@ export function useUpdateTeamBoard(teamId: number) {
 // チームボード削除
 export function useDeleteTeamBoard(teamId: number) {
   const { getToken } = useAuth();
-  const queryClient = useQueryClient();
-  const { showToast } = useToast();
 
   return useMutation({
     mutationFn: async (boardId: number) => {
@@ -255,13 +253,8 @@ export function useDeleteTeamBoard(teamId: number) {
       return response.json();
     },
     onSuccess: () => {
-      // 全ステータスのキャッシュを無効化
-      ["normal", "completed", "deleted"].forEach((status) => {
-        queryClient.invalidateQueries({
-          queryKey: ["team-boards", teamId, status],
-        });
-      });
-      showToast("ボードが削除されました", "success");
+      // キャッシュ無効化はリダイレクト先で行うため、ここでは何もしない
+      console.log("✅ ボード削除API成功（キャッシュはリダイレクト先で無効化）");
     },
     onError: (error) => {
       console.error("チームボード削除に失敗しました:", error);

@@ -229,7 +229,8 @@ export default function BoardTaskSection({
           <span className="font-normal text-gray-500">
             {allTaskItems.length}
           </span>
-          <Tooltip text="新規追加" position="bottom">
+          {selectedTask?.originalId === "new" ? (
+            // 新規作成エディター開いている時だけツールチップなし
             <AddItemButton
               itemType="task"
               onClick={onCreateNewTask}
@@ -241,7 +242,21 @@ export default function BoardTaskSection({
               }}
               className="size-6 flex items-center justify-center"
             />
-          </Tooltip>
+          ) : (
+            <Tooltip text="新規追加" position="bottom">
+              <AddItemButton
+                itemType="task"
+                onClick={onCreateNewTask}
+                size="small"
+                showTooltip={false}
+                customSize={{
+                  padding: "p-1",
+                  iconSize: "size-5",
+                }}
+                className="size-6 flex items-center justify-center"
+              />
+            </Tooltip>
+          )}
           <Tooltip
             text={
               rightPanelMode === "task-list"

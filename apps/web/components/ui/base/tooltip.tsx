@@ -28,6 +28,11 @@ function Tooltip({
   const [isHovered, setIsHovered] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
 
+  // クリック時にツールチップを非表示にする
+  const handleClick = () => {
+    setIsHovered(false);
+  };
+
   useEffect(() => {
     if (isHovered && wrapperRef.current) {
       const rect = wrapperRef.current.getBoundingClientRect();
@@ -84,8 +89,12 @@ function Tooltip({
     }
   };
 
+  // 位置が計算されていない場合は表示しない（左上(0,0)に表示されるのを防ぐ）
+  const hasValidPosition =
+    tooltipPosition.top !== 0 || tooltipPosition.left !== 0;
+
   const tooltipContent =
-    isHovered && typeof document !== "undefined"
+    isHovered && hasValidPosition && typeof document !== "undefined"
       ? createPortal(
           <div
             className={`hidden md:block fixed px-2 py-1 ${bgColor} ${textColor} text-xs rounded whitespace-nowrap transition-opacity pointer-events-none z-[999999] ${getPositionClasses()}`}
@@ -145,6 +154,7 @@ function Tooltip({
       className={`relative inline-block ${className}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={handleClick}
     >
       {children}
       {tooltipContent}

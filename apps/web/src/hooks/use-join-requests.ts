@@ -27,11 +27,6 @@ export function useJoinRequests(
   // 通知がある時のみ取得（定期チェックは不要）
   const refetchInterval = false;
 
-  // デバッグログ
-  // console.log(
-  //   `🎯 [useJoinRequests] ${customUrl}: shouldFetch=${shouldFetch}, 定期チェック無効`,
-  // );
-
   return useQuery({
     queryKey: ["join-requests", customUrl, shouldFetch],
     queryFn: async () => {

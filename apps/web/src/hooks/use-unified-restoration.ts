@@ -138,11 +138,6 @@ export function useUnifiedRestoration<T extends DeletedItem>({
     }
 
     // 復元完了を検知！次のアイテムを選択
-    console.log("✅ 復元完了検知（deletedItems更新）:", {
-      restoringItemId,
-      nextItemAfterRestore: nextItemAfterRestore?.id,
-      deletedItemsCount: deletedItems.length,
-    });
 
     // リセット（次選択の前にリセットして無限ループ防止）
     const nextItem = nextItemAfterRestore;
@@ -150,14 +145,8 @@ export function useUnifiedRestoration<T extends DeletedItem>({
     setNextItemAfterRestore(null);
 
     if (nextItem) {
-      console.log("🔄 次のアイテムを選択:", {
-        id: nextItem.id,
-        originalId: nextItem.originalId,
-        title: "title" in nextItem ? nextItem.title : "N/A",
-      });
       onSelectDeletedItem(nextItem);
     } else if (deletedItems.length === 0) {
-      console.log("🔄 削除済みアイテムがなくなったため通常タブに移動");
       onSelectDeletedItem(null);
       setActiveTab?.("normal");
       setScreenMode?.("list");
@@ -174,20 +163,8 @@ export function useUnifiedRestoration<T extends DeletedItem>({
   // 復元と次選択を実行する統一関数
   const handleRestoreAndSelectNext = useCallback(async () => {
     if (!selectedDeletedItem || !deletedItems) {
-      console.log(
-        "🔄 復元スキップ: selectedDeletedItem または deletedItems が null",
-      );
       return;
     }
-
-    console.log("🔄 復元開始:", {
-      itemType,
-      originalId: selectedDeletedItem.originalId,
-      title: "title" in selectedDeletedItem ? selectedDeletedItem.title : "N/A",
-      teamMode,
-      teamId,
-      deletedItemsCount: deletedItems.length,
-    });
 
     // 復元前に次選択対象を事前計算（削除時の次選択と同じパターン）
     const currentIndex = deletedItems.findIndex(
@@ -206,27 +183,15 @@ export function useUnifiedRestoration<T extends DeletedItem>({
         : currentIndex;
     const nextItem = remainingItems[nextIndex] || null;
 
-    console.log("🔄 次選択対象を事前計算:", {
-      currentIndex,
-      remainingItemsCount: remainingItems.length,
-      nextIndex,
-      nextItemId: nextItem?.id,
-      nextItemOriginalId: nextItem?.originalId,
-      nextItemTitle: nextItem && "title" in nextItem ? nextItem.title : "N/A",
-    });
-
     // 次選択を保存（deletedItems更新時のuseEffectで使用）
     setNextItemAfterRestore(nextItem);
     setRestoringItemId(selectedDeletedItem.id);
 
     try {
       // 復元API実行
-      console.log("🔄 復元API実行中...");
       await restoreMutation.mutateAsync(selectedDeletedItem.originalId);
-      console.log("✅ 復元API完了");
 
       // キャッシュ無効化（次選択はuseEffectで自動実行）
-      console.log("🔄 キャッシュ無効化開始...");
       if (teamMode && teamId) {
         await queryClient.invalidateQueries({
           queryKey: [`team-deleted-${itemType}s`, teamId],
@@ -234,7 +199,6 @@ export function useUnifiedRestoration<T extends DeletedItem>({
         await queryClient.invalidateQueries({
           queryKey: [`team-${itemType}s`, teamId],
         });
-        console.log("✅ チームキャッシュ無効化完了");
       } else {
         await queryClient.invalidateQueries({
           queryKey: [itemType === "memo" ? "deletedMemos" : "deleted-tasks"],
@@ -242,9 +206,7 @@ export function useUnifiedRestoration<T extends DeletedItem>({
         await queryClient.invalidateQueries({
           queryKey: [itemType + "s"],
         });
-        console.log("✅ 個人キャッシュ無効化完了");
       }
-      console.log("✅ 復元処理完了（次選択はuseEffectで自動実行）");
     } catch (error) {
       console.error("❌ 統一復元処理エラー:", error);
       throw error;

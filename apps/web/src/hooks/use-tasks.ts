@@ -155,7 +155,6 @@ export function useUpdateTask(options?: {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: number; data: UpdateTaskData }) => {
-      console.log("📤 [useUpdateTask] 送信データ:", { id, data });
       const token = await getToken();
       if (teamMode && teamId) {
         // チーム用のAPIエンドポイント
@@ -166,7 +165,6 @@ export function useUpdateTask(options?: {
           token || undefined,
         );
         const result = await response.json();
-        console.log("📥 [useUpdateTask] APIレスポンス (team):", result);
         return result;
       } else {
         const response = await tasksApi.updateTask(
@@ -175,20 +173,14 @@ export function useUpdateTask(options?: {
           token || undefined,
         );
         const result = await response.json();
-        console.log("📥 [useUpdateTask] APIレスポンス:", result);
         return result;
       }
     },
     onSuccess: (updatedTask, { id, data }) => {
-      console.log("✅ [useUpdateTask] onSuccess開始:", { id, data });
       // APIが不完全なレスポンスを返す場合があるので、キャッシュから既存タスクを取得して更新
       const queryKey = teamMode && teamId ? ["team-tasks", teamId] : ["tasks"];
 
       queryClient.setQueryData<Task[]>(queryKey, (oldTasks) => {
-        console.log("🔄 [useUpdateTask] キャッシュ更新:", {
-          oldTasksCount: oldTasks?.length,
-          dataToMerge: data,
-        });
         if (!oldTasks) return [updatedTask];
         return oldTasks.map((task) => {
           if (task.id === id) {
@@ -225,13 +217,6 @@ export function useUpdateTask(options?: {
                   : (task.boardCategoryId ?? null),
               updatedAt: Math.floor(Date.now() / 1000),
             };
-            console.log("🔀 [useUpdateTask] マージ結果:", {
-              taskId: task.id,
-              oldCategoryId: task.categoryId,
-              newCategoryId: merged.categoryId,
-              oldBoardCategoryId: task.boardCategoryId,
-              newBoardCategoryId: merged.boardCategoryId,
-            });
             return merged;
           }
           return task;

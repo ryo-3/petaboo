@@ -129,36 +129,3 @@ export function getItemOriginalId(
   );
   return id.toString();
 }
-
-/**
- * ログ出力用のヘルパー関数
- *
- * @param itemType - アイテムの種類
- * @param isPermanentDelete - 完全削除かどうか
- * @param id - アイテムのID
- * @param originalId - アイテムのoriginalId
- * @param activeTab - 現在のタブ状態
- * @param context - 追加のコンテキスト情報
- */
-export function logDeleteOperation(
-  itemType: "memo" | "task",
-  isPermanentDelete: boolean,
-  id: number,
-  originalId: string,
-  activeTab: string,
-  context?: {
-    deletedItemsCount?: number;
-    boardItemsCount?: number;
-  },
-): void {
-  const emoji = isPermanentDelete ? "🗑️" : "📝";
-  const operation = isPermanentDelete ? "完全削除" : "通常削除";
-  const itemLabel = itemType === "memo" ? "メモ" : "タスク";
-
-  console.log(`${emoji} ${itemLabel}${operation}:`, {
-    id,
-    originalId,
-    activeTab,
-    ...context,
-  });
-}

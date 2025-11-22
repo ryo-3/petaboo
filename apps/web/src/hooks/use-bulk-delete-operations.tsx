@@ -11,7 +11,6 @@ import React from "react";
 import {
   shouldUsePermanentDelete,
   getItemOriginalId,
-  logDeleteOperation,
 } from "@/src/utils/boardDeleteUtils";
 
 interface UseBulkDeleteOperationsProps {
@@ -292,14 +291,9 @@ export function useBulkDeleteOperations({
               boardDeletedItems,
             );
 
-            logDeleteOperation("memo", true, id, originalId, activeMemoTab, {
-              deletedItemsCount: boardDeletedItems?.memos?.length || 0,
-            });
-
             await permanentDeleteMemoMutation.mutateAsync(originalId);
           } else {
             // 通常削除
-            logDeleteOperation("memo", false, id, id.toString(), activeMemoTab);
             await deleteMemoMutation.mutateAsync(id);
           }
         } else {
@@ -313,14 +307,9 @@ export function useBulkDeleteOperations({
               boardDeletedItems,
             );
 
-            logDeleteOperation("task", true, id, originalId, activeTaskTab, {
-              deletedItemsCount: boardDeletedItems?.tasks?.length || 0,
-            });
-
             await permanentDeleteTaskMutation.mutateAsync(originalId);
           } else {
             // 通常削除
-            logDeleteOperation("task", false, id, id.toString(), activeTaskTab);
             await deleteTaskMutation.mutateAsync(id);
           }
         }

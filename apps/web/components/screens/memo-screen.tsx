@@ -516,6 +516,11 @@ function MemoScreen({
   // 保存完了後の処理（超シンプル）
   const handleSaveComplete = useCallback(
     (savedMemo: Memo, wasEmpty: boolean, isNewMemo: boolean) => {
+      // 保存完了時、未保存フラグを明示的にクリア（選択前に実行）
+      if (teamDetailContext) {
+        teamDetailContext.memoEditorHasUnsavedChangesRef.current = false;
+      }
+
       if (wasEmpty) {
         // 空メモは削除して閉じる
         onDeselectAndStayOnMemoList?.();
@@ -533,7 +538,7 @@ function MemoScreen({
       onDeselectAndStayOnMemoList,
       setMemoScreenMode,
       handleSelectMemo,
-      memoScreenMode,
+      teamDetailContext,
     ],
   );
 

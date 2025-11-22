@@ -1318,7 +1318,7 @@ function BoardDetailScreen({
                   <div className="flex flex-col flex-1 min-h-0">
                     {/* メモ表示時 */}
                     {showMemo && (
-                      <div className="flex flex-col h-full relative pb-32 md:pb-16">
+                      <div className="flex flex-col h-full relative pb-40 md:pb-16">
                         <BoardMemoSection
                           rightPanelMode={rightPanelMode}
                           showMemo={showMemo}
@@ -1367,7 +1367,7 @@ function BoardDetailScreen({
 
                     {/* タスク表示時 */}
                     {showTask && (
-                      <div className="flex flex-col h-full relative pb-32 md:pb-16">
+                      <div className="flex flex-col h-full relative pb-40 md:pb-16">
                         <BoardTaskSection
                           boardId={boardId}
                           initialBoardId={boardId}

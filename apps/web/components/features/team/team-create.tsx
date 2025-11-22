@@ -221,7 +221,7 @@ export function TeamCreate({ onTeamCreated }: TeamCreateProps = {}) {
         </div>
 
         {/* フォームエリア */}
-        <div className="flex-1 overflow-hidden md:overflow-y-auto pb-32 md:pb-16">
+        <div className="flex-1 overflow-hidden md:overflow-y-auto pb-40 md:pb-16">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 h-full">
             {/* 左側: メインフォーム */}
             <div className="lg:col-span-3 flex flex-col">

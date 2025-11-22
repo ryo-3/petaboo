@@ -981,7 +981,7 @@ function MemoScreen({
     <div className="pl-4 pt-3 flex flex-col h-full relative">
       <DesktopUpper {...desktopUpperCommonProps} />
 
-      <div className="flex-1 min-h-0 overflow-y-auto pb-32 md:pb-16">
+      <div className="flex-1 min-h-0 overflow-y-auto pb-40 md:pb-16">
         <DesktopLower
           currentMode="memo"
           activeTab={displayTab as "normal" | "deleted"}
@@ -1319,7 +1319,7 @@ function MemoScreen({
               />
             </div>
             {/* スクロール可能なコンテンツ */}
-            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain pb-32 md:pb-16">
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain pb-40 md:pb-16">
               <DesktopLower
                 currentMode="memo"
                 activeTab={displayTab as "normal" | "deleted"}

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@clerk/nextjs";
+import { extractFirstLine } from "@/src/utils/html";
 
 interface SharedMemo {
   id: number;
@@ -118,7 +119,9 @@ export default function SharedMemoPage() {
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{memo.title}</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                {extractFirstLine(memo.content)}
+              </h1>
               <p className="text-sm text-gray-500">
                 {memo.teamName} のチーム共有メモ
               </p>

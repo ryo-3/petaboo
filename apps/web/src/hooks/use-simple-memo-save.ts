@@ -62,7 +62,6 @@ export function useSimpleMemoSave({
   }, [memo?.id, currentBoardIdsStr]); // 文字列で比較
 
   // 変更検知用の初期値
-  const [initialTitle, setInitialTitle] = useState(() => memo?.title || "");
   const [initialContent, setInitialContent] = useState(
     () => memo?.content || "",
   );
@@ -80,11 +79,9 @@ export function useSimpleMemoSave({
       return false;
     }
 
-    const currentTitle = title.trim();
+    // メモの場合、titleは送らないのでcontentだけで判定
     const currentContent = content.trim();
-    const textChanged =
-      currentTitle !== initialTitle.trim() ||
-      currentContent !== initialContent.trim();
+    const textChanged = currentContent !== initialContent.trim();
 
     // 初期同期中はボード変更を無視
     if (isInitialSync) {
@@ -94,11 +91,11 @@ export function useSimpleMemoSave({
     const hasBoardChanges =
       JSON.stringify([...selectedBoardIds].sort()) !==
       JSON.stringify([...currentBoardIds].sort());
-    return textChanged || hasBoardChanges;
+    const result = textChanged || hasBoardChanges;
+
+    return result;
   }, [
-    title,
     content,
-    initialTitle,
     initialContent,
     selectedBoardIds,
     currentBoardIds,
@@ -115,12 +112,10 @@ export function useSimpleMemoSave({
       const memoContent = memo.content || "";
       setTitle(memoTitle);
       setContent(memoContent);
-      setInitialTitle(memoTitle);
       setInitialContent(memoContent);
     } else {
       setTitle("");
       setContent("");
-      setInitialTitle("");
       setInitialContent("");
     }
 
@@ -150,9 +145,8 @@ export function useSimpleMemoSave({
         }
 
         // メモ内容の変更があるかチェック（ボード変更は除く）
-        const hasContentChanges =
-          (title.trim() || "無題") !== initialTitle.trim() ||
-          content.trim() !== initialContent.trim();
+        // メモの場合、titleは送らないのでcontentだけで判定
+        const hasContentChanges = content.trim() !== initialContent.trim();
 
         let updatedMemo = memo;
 
@@ -161,14 +155,12 @@ export function useSimpleMemoSave({
           await updateNote.mutateAsync({
             id: memo.id,
             data: {
-              title: title.trim() || "無題",
               content: content.trim() || undefined,
             },
           });
 
           updatedMemo = {
             ...memo,
-            title: title.trim() || "無題",
             content: content.trim() || "",
             updatedAt: Math.floor(Date.now() / 1000),
           };
@@ -176,7 +168,6 @@ export function useSimpleMemoSave({
           // 内容に変更がない場合は現在の値を維持
           updatedMemo = {
             ...memo,
-            title: title.trim() || "無題",
             content: content.trim() || "",
           };
         }
@@ -284,7 +275,6 @@ export function useSimpleMemoSave({
         // 新規メモ作成（空の場合は何もしない）
         if (!isEmpty) {
           const createdMemo = await createNote.mutateAsync({
-            title: title.trim() || "無題",
             content: content.trim() || undefined,
           });
 
@@ -351,7 +341,6 @@ export function useSimpleMemoSave({
       }
 
       // 保存成功時に初期値を更新
-      setInitialTitle(title.trim() || "");
       setInitialContent(content.trim() || "");
 
       // 保存成功後にボード選択状態を同期（hasChangesを正しく計算するため）
@@ -379,7 +368,6 @@ export function useSimpleMemoSave({
     queryClient,
     removeItemFromBoard,
     isSaving,
-    initialTitle,
     initialContent,
     initialBoardId,
     onDeleteAndSelectNext,
@@ -436,7 +424,6 @@ export function useSimpleMemoSave({
     setTitle("");
     setContent("");
     // 初期値もリセット（空メモ時に保存ボタンが有効にならないようにするため）
-    setInitialTitle("");
     setInitialContent("");
     // ボード選択もリセット（initialBoardIdがある場合は維持）
     setSelectedBoardIds(initialBoardId ? [initialBoardId] : []);

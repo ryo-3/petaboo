@@ -26,7 +26,6 @@ export function useMemoForm({
   const [savedSuccessfully, setSavedSuccessfully] = useState(false);
 
   // 変更検知用の初期値
-  const [initialTitle, setInitialTitle] = useState(() => memo?.title || "");
   const [initialContent, setInitialContent] = useState(
     () => memo?.content || "",
   );
@@ -41,14 +40,11 @@ export function useMemoForm({
   });
 
   // 変更検知
+  // メモの場合、titleは送らないのでcontentだけで判定
   const hasChanges = useMemo(() => {
-    const currentTitle = title.trim();
     const currentContent = content.trim();
-    return (
-      currentTitle !== initialTitle.trim() ||
-      currentContent !== initialContent.trim()
-    );
-  }, [title, content, initialTitle, initialContent]);
+    return currentContent !== initialContent.trim();
+  }, [content, initialContent]);
 
   // Update form when memo changes (switching to different memo)
   useEffect(() => {
@@ -57,12 +53,10 @@ export function useMemoForm({
       const memoContent = memo.content || "";
       setTitle(memoTitle);
       setContent(memoContent);
-      setInitialTitle(memoTitle);
       setInitialContent(memoContent);
     } else {
       setTitle("");
       setContent("");
-      setInitialTitle("");
       setInitialContent("");
     }
   }, [memo]);
@@ -82,21 +76,18 @@ export function useMemoForm({
         await updateNote.mutateAsync({
           id: memo.id,
           data: {
-            title: title.trim() || "無題",
             content: content.trim() || undefined,
           },
         });
 
         // APIが更新データを返さないので、フォームの値を使用
         onMemoUpdate?.(memo.id, {
-          title: title.trim() || "無題",
           content: content.trim() || "",
           updatedAt: Math.floor(Date.now() / 1000), // 現在時刻
         });
       } else {
         // Create new memo
         const createdMemo = await createNote.mutateAsync({
-          title: title.trim() || "無題",
           content: content.trim() || undefined,
         });
 
@@ -110,7 +101,6 @@ export function useMemoForm({
       }
 
       // 保存成功時に初期値を更新
-      setInitialTitle(title.trim() || "");
       setInitialContent(content.trim() || "");
 
       setSavedSuccessfully(true);
@@ -143,7 +133,6 @@ export function useMemoForm({
   const resetForm = useCallback(() => {
     setTitle("");
     setContent("");
-    setInitialTitle("");
     setInitialContent("");
     setSaveError(null);
     setSavedSuccessfully(false);

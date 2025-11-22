@@ -3,6 +3,7 @@ import { useMemos, useDeletedMemos } from "./use-memos";
 import { useTasks, useDeletedTasks } from "./use-tasks";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
+import { extractFirstLine } from "@/src/utils/html";
 
 type SearchScope = "all" | "title" | "content";
 type SearchType = "all" | "memo" | "task" | "deleted";
@@ -96,13 +97,16 @@ export function useGlobalSearch({
         let matchedField: "title" | "content" = "title";
         let snippet = "";
 
+        // タイトル検索: contentから1行目を抽出
+        const searchableTitle = extractFirstLine(memo.content);
+
         if (
           (searchScope === "all" || searchScope === "title") &&
-          searchInText(memo.title)
+          searchInText(searchableTitle)
         ) {
           matched = true;
           matchedField = "title";
-          snippet = createSnippet(memo.title, searchTerm);
+          snippet = createSnippet(searchableTitle, searchTerm);
         } else if (
           (searchScope === "all" || searchScope === "content") &&
           memo.content &&
@@ -131,13 +135,16 @@ export function useGlobalSearch({
         let matchedField: "title" | "content" = "title";
         let snippet = "";
 
+        // タイトル検索: contentから1行目を抽出
+        const searchableTitle = extractFirstLine(memo.content);
+
         if (
           (searchScope === "all" || searchScope === "title") &&
-          searchInText(memo.title)
+          searchInText(searchableTitle)
         ) {
           matched = true;
           matchedField = "title";
-          snippet = createSnippet(memo.title, searchTerm);
+          snippet = createSnippet(searchableTitle, searchTerm);
         } else if (
           (searchScope === "all" || searchScope === "content") &&
           memo.content &&

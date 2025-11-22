@@ -13,6 +13,7 @@ import {
 import { TAG_COLORS } from "@/src/constants/colors";
 import CreatorAvatar from "@/components/shared/creator-avatar";
 import { useAuthenticatedImage } from "@/src/hooks/use-authenticated-image";
+import { extractFirstLine } from "@/src/utils/html";
 
 type Item = Memo | DeletedMemo | Task | DeletedTask;
 
@@ -73,7 +74,8 @@ function ItemCard({
   // 共通データ
   const boards = preloadedBoards;
   const tags = preloadedTags;
-  const title = item.title;
+  const title =
+    itemType === "memo" ? extractFirstLine(memo?.content) : item.title;
 
   // メモ特有データ
   const memoContent = memo?.content || "";

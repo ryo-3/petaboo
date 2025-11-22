@@ -4,7 +4,7 @@ import CSVImportModal from "@/components/shared/csv-import-modal";
 import { useImportMemos } from "@/src/hooks/use-memos";
 
 interface MemoCsvData {
-  title: string;
+  title?: string;
   content?: string;
 }
 
@@ -33,14 +33,20 @@ const parseMemoCsv = (csvText: string): MemoCsvData[] => {
     const values = line.split(",").map((v) => v.trim().replace(/^"|"$/g, ""));
 
     if (values.length >= 1 && values[0]) {
+      const titleText = values[0];
       // 2番目以降のすべての値をcontentとして結合
-      const content = values
+      const restContent = values
         .slice(1)
         .filter((v) => v)
         .join("、");
+
+      // titleをcontentの先頭に追加（改行で区切る）
+      const fullContent = restContent
+        ? `${titleText}\n${restContent}`
+        : titleText;
+
       results.push({
-        title: values[0],
-        content: content || undefined,
+        content: fullContent,
       });
     }
   }

@@ -26,13 +26,13 @@ export interface DeletedMemo
 }
 
 export interface CreateMemoData {
-  title: string;
+  title?: string;
   content?: string;
   categoryId?: number | null;
 }
 
 export interface UpdateMemoData {
-  title: string;
+  title?: string;
   content?: string;
   categoryId?: number | null;
 }

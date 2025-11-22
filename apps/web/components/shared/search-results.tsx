@@ -2,6 +2,7 @@
 
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
+import { extractFirstLine } from "@/src/utils/html";
 
 interface SearchResult {
   type: "memo" | "task" | "deleted-memo" | "deleted-task";
@@ -94,7 +95,10 @@ function SearchResultItem({ result, onClick, isLast }: SearchResultItemProps) {
   };
 
   const typeInfo = getTypeInfo();
-  const title = result.item.title;
+  const title =
+    result.type === "memo" || result.type === "deleted-memo"
+      ? extractFirstLine((result.item as Memo | DeletedMemo).content)
+      : result.item.title;
   const isDeleted = result.type.startsWith("deleted-");
 
   return (

@@ -213,9 +213,12 @@ export function useSimpleItemSave<T extends UnifiedItem>({
       return false;
     }
 
+    // メモの場合はcontentだけで判定（titleは送らないため）
     const textChanged =
-      currentTitle !== initialTitle.trim() ||
-      currentContent !== initialContent.trim();
+      itemType === "memo"
+        ? currentContent !== initialContent.trim()
+        : currentTitle !== initialTitle.trim() ||
+          currentContent !== initialContent.trim();
 
     // タスクの場合は優先度とステータスの変更もチェック
     let taskFieldsChanged = false;
@@ -353,55 +356,61 @@ export function useSimpleItemSave<T extends UnifiedItem>({
             (teamMode ? assigneeId !== initialAssigneeId : false) ||
             categoryId !== initialCategoryId ||
             boardCategoryId !== initialBoardCategoryId);
+
+        // メモの場合はcontentだけで判定（titleは送らないため）
         const hasContentChanges =
-          (title.trim() || "無題") !== initialTitle.trim() ||
-          content.trim() !== initialContent.trim() ||
-          taskFieldChanged;
+          itemType === "memo"
+            ? content.trim() !== initialContent.trim()
+            : (title.trim() || "無題") !== initialTitle.trim() ||
+              content.trim() !== initialContent.trim() ||
+              taskFieldChanged;
 
         let updatedItem = item as T;
 
         // アイテム内容に変更がある場合のみ更新
         if (hasContentChanges) {
-          const updateData =
-            itemType === "memo"
-              ? {
-                  title: title.trim() || "無題",
-                  content: content.trim() || "",
-                }
-              : {
-                  title: title.trim() || "無題",
-                  description: content.trim() || "",
-                  priority: priority as "low" | "medium" | "high",
-                  status:
-                    status === "not_started"
-                      ? "todo"
-                      : (status as "todo" | "in_progress" | "completed"),
-                  ...(teamMode ? { assigneeId: assigneeId ?? null } : {}),
-                  categoryId: categoryId ?? undefined,
-                  boardCategoryId: boardCategoryId ?? undefined,
-                };
-
-          console.log("📤 [useSimpleItemSave] API送信データ:", {
-            itemType,
-            itemId: item.id,
-            teamMode,
-            teamId,
-            updateData,
-            titleLength: updateData.title.length,
-            contentLength:
-              "content" in updateData
-                ? updateData.content?.length
-                : "description" in updateData
-                  ? updateData.description?.length
-                  : 0,
-          });
-
           if (itemType === "memo") {
+            const updateData = {
+              content: content.trim() || "",
+            };
+
+            console.log("📤 [useSimpleItemSave] API送信データ:", {
+              itemType,
+              itemId: item.id,
+              teamMode,
+              teamId,
+              updateData,
+              contentLength: updateData.content.length,
+            });
+
             await updateMemo.mutateAsync({
               id: item.id,
               data: updateData,
             });
           } else {
+            const updateData = {
+              title: title.trim() || "無題",
+              description: content.trim() || "",
+              priority: priority as "low" | "medium" | "high",
+              status:
+                status === "not_started"
+                  ? "todo"
+                  : (status as "todo" | "in_progress" | "completed"),
+              ...(teamMode ? { assigneeId: assigneeId ?? null } : {}),
+              categoryId: categoryId ?? undefined,
+              boardCategoryId: boardCategoryId ?? undefined,
+            };
+
+            console.log("📤 [useSimpleItemSave] API送信データ:", {
+              itemType,
+              itemId: item.id,
+              teamMode,
+              teamId,
+              updateData,
+              titleLength: updateData.title.length,
+              descriptionLength: updateData.description.length,
+            });
+
             await updateTask.mutateAsync({
               id: item.id,
               data: updateData,
@@ -412,7 +421,6 @@ export function useSimpleItemSave<T extends UnifiedItem>({
             itemType === "memo"
               ? ({
                   ...item,
-                  title: title.trim() || "無題",
                   content: content.trim() || "",
                   updatedAt: Math.floor(Date.now() / 1000),
                 } as T)
@@ -436,7 +444,6 @@ export function useSimpleItemSave<T extends UnifiedItem>({
             itemType === "memo"
               ? ({
                   ...item,
-                  title: title.trim() || "無題",
                   content: content.trim() || "",
                 } as T)
               : ({
@@ -571,43 +578,45 @@ export function useSimpleItemSave<T extends UnifiedItem>({
       } else {
         // 新規アイテム作成（空の場合は何もしない）
         if (!isEmpty) {
-          const createData =
-            itemType === "memo"
-              ? {
-                  title: title.trim() || "無題",
-                  content: content.trim() || undefined,
-                }
-              : {
-                  title: title.trim() || "無題",
-                  description: content.trim() || undefined,
-                  priority: priority as "low" | "medium" | "high",
-                  status:
-                    status === "not_started"
-                      ? "todo"
-                      : (status as "todo" | "in_progress" | "completed"),
-                  ...(teamMode ? { assigneeId: assigneeId ?? null } : {}),
-                  categoryId: categoryId ?? undefined,
-                  boardCategoryId: boardCategoryId ?? undefined,
-                };
-
-          console.log("📤 [useSimpleItemSave] API送信データ（新規作成）:", {
-            itemType,
-            teamMode,
-            teamId,
-            createData,
-            titleLength: createData.title.length,
-            contentLength:
-              "content" in createData
-                ? createData.content?.length
-                : "description" in createData
-                  ? createData.description?.length
-                  : 0,
-          });
-
           let createdItem: T;
+
           if (itemType === "memo") {
+            const createData = {
+              content: content.trim() || undefined,
+            };
+
+            console.log("📤 [useSimpleItemSave] API送信データ（新規作成）:", {
+              itemType,
+              teamMode,
+              teamId,
+              createData,
+              contentLength: createData.content?.length,
+            });
+
             createdItem = (await createMemo.mutateAsync(createData)) as T;
           } else {
+            const createData = {
+              title: title.trim() || "無題",
+              description: content.trim() || undefined,
+              priority: priority as "low" | "medium" | "high",
+              status:
+                status === "not_started"
+                  ? "todo"
+                  : (status as "todo" | "in_progress" | "completed"),
+              ...(teamMode ? { assigneeId: assigneeId ?? null } : {}),
+              categoryId: categoryId ?? undefined,
+              boardCategoryId: boardCategoryId ?? undefined,
+            };
+
+            console.log("📤 [useSimpleItemSave] API送信データ（新規作成）:", {
+              itemType,
+              teamMode,
+              teamId,
+              createData,
+              titleLength: createData.title.length,
+              descriptionLength: createData.description?.length,
+            });
+
             createdItem = (await createTask.mutateAsync(createData)) as T;
           }
 

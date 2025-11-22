@@ -40,7 +40,11 @@ const TeamMemoSchema = z.object({
 });
 
 const TeamMemoInputSchema = z.object({
-  title: z.string().min(1).max(200, "タイトルは200文字以内で入力してください"),
+  title: z
+    .string()
+    .max(200, "タイトルは200文字以内で入力してください")
+    .optional()
+    .default(""),
   content: z
     .string()
     .max(10000, "内容は10,000文字以内で入力してください")

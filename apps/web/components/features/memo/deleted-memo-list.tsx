@@ -9,6 +9,7 @@ import LogoutButton from "@/components/ui/buttons/logout-button";
 import type { DeletedMemo } from "@/src/types/memo";
 import { formatDateOnly } from "@/src/utils/formatDate";
 import { stripHtmlTags } from "@/src/utils/htmlUtils";
+import { extractFirstLine } from "@/src/utils/html";
 
 interface DeletedMemoListProps {
   onBackToMemos: () => void;
@@ -65,7 +66,7 @@ function DeletedMemoList({
                     className="w-full text-left p-2 rounded hover:bg-gray-100 transition-colors opacity-75"
                   >
                     <div className="font-medium text-sm text-gray-800 truncate">
-                      {memo.title}
+                      {extractFirstLine(memo.content)}
                     </div>
                     <div
                       className="text-xs text-gray-500 line-clamp-2 mt-1"

@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { useAddItemToBoard } from "@/src/hooks/use-boards";
 import { useAuth } from "@clerk/nextjs";
+import { extractFirstLine } from "@/src/utils/html";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594";
 
@@ -268,6 +269,10 @@ export function CSVImportModal({
           }
 
           if (item.itemType === "memo") {
+            // titleをcontentの先頭に含める
+            const fullContent =
+              item.title + (item.content ? "\n" + item.content : "");
+
             // まずメモAPIで作成してからボードに追加
             const memoResponse = await fetch(`${API_BASE_URL}/memos`, {
               method: "POST",
@@ -276,8 +281,7 @@ export function CSVImportModal({
                 ...(token && { Authorization: `Bearer ${token}` }),
               },
               body: JSON.stringify({
-                title: item.title,
-                content: item.title + (item.content ? "\n" + item.content : ""),
+                content: fullContent,
               }),
             });
 
@@ -294,8 +298,9 @@ export function CSVImportModal({
               imported++;
             } else {
               const errorText = await memoResponse.text();
+              const displayTitle = extractFirstLine(fullContent) || "無題";
               errors.push(
-                `メモ「${item.title}」の作成に失敗しました: ${errorText}`,
+                `メモ「${displayTitle}」の作成に失敗しました: ${errorText}`,
               );
             }
           } else if (item.itemType === "task") {
@@ -332,13 +337,21 @@ export function CSVImportModal({
               );
             }
           } else {
-            errors.push(`「${item.title}」の種別が不明です`);
+            const displayTitle =
+              item.itemType === "memo"
+                ? extractFirstLine(item.content || item.title)
+                : item.title;
+            errors.push(`「${displayTitle}」の種別が不明です`);
           }
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : String(error);
+          const displayTitle =
+            item.itemType === "memo"
+              ? extractFirstLine(item.content || item.title)
+              : item.title || "不明";
           errors.push(
-            `「${item.title || "不明"}」のインポートに失敗しました: ${errorMessage}`,
+            `「${displayTitle}」のインポートに失敗しました: ${errorMessage}`,
           );
         }
       }

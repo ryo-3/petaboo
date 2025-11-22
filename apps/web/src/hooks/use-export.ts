@@ -1,6 +1,7 @@
 import { BoardItemWithContent } from "@/src/types/board";
 import { Memo } from "@/src/types/memo";
 import { Task } from "@/src/types/task";
+import { extractFirstLine } from "@/src/utils/html";
 
 export interface ExportData {
   name: string;
@@ -92,7 +93,7 @@ export function useExport() {
       memos: memoItems.map((item) => {
         const memo = item.content as Memo;
         return {
-          title: memo.title,
+          title: extractFirstLine(memo.content),
           content: memo.content,
           createdAt: new Date((memo.createdAt as number) * 1000).toLocaleString(
             "ja-JP",

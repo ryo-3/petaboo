@@ -9,4 +9,7 @@ pnpm run log:clear
 echo "🔍 TypeScriptエラーをチェックしています..."
 pnpm run check:wsl
 
+# リファクタリングチェック
+bash .claude/hooks/refactor-check.sh
+
 pnpm lint-staged

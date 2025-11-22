@@ -7,6 +7,7 @@ import { useToast } from "@/src/contexts/toast-context";
 import TextInputWithCounter from "@/components/ui/inputs/text-input-with-counter";
 import TextareaWithCounter from "@/components/ui/inputs/textarea-with-counter";
 import { BoardSlackSettings } from "@/components/features/board/board-slack-settings";
+import { UpdateBoardData } from "@/src/types/board";
 
 interface SharedBoardSettingsProps {
   boardId: number;
@@ -21,10 +22,7 @@ interface SharedBoardSettingsProps {
   hideBackButton?: boolean;
   // Hook functions
   updateMutation: {
-    mutateAsync: (data: {
-      id: number;
-      data: { name: string; description?: string };
-    }) => Promise<any>;
+    mutateAsync: (data: { id: number; data: UpdateBoardData }) => Promise<any>;
     isPending: boolean;
   };
   toggleCompletionMutation: {
@@ -57,13 +55,15 @@ export default function SharedBoardSettings({
   const [editDescription, setEditDescription] = useState(
     initialBoardDescription || "",
   );
+  const [editSlug, setEditSlug] = useState(boardSlug);
   const [hasChanges, setHasChanges] = useState(false);
 
   const handleNameChange = (value: string) => {
     setEditName(value);
     setHasChanges(
       value !== initialBoardName ||
-        editDescription !== (initialBoardDescription || ""),
+        editDescription !== (initialBoardDescription || "") ||
+        editSlug !== boardSlug,
     );
   };
 
@@ -71,7 +71,19 @@ export default function SharedBoardSettings({
     setEditDescription(value);
     setHasChanges(
       editName !== initialBoardName ||
-        value !== (initialBoardDescription || ""),
+        value !== (initialBoardDescription || "") ||
+        editSlug !== boardSlug,
+    );
+  };
+
+  const handleSlugChange = (value: string) => {
+    // 英数字とハイフンのみ許可、小文字に変換
+    const sanitized = value.toLowerCase().replace(/[^a-z0-9-]/g, "");
+    setEditSlug(sanitized);
+    setHasChanges(
+      editName !== initialBoardName ||
+        editDescription !== (initialBoardDescription || "") ||
+        sanitized !== boardSlug,
     );
   };
 
@@ -97,9 +109,18 @@ export default function SharedBoardSettings({
         data: {
           name: editName.trim(),
           description: editDescription || undefined,
+          slug: editSlug !== boardSlug ? editSlug : undefined,
         },
       });
       setHasChanges(false);
+
+      // slugが変更された場合はページをリダイレクト
+      if (editSlug !== boardSlug) {
+        const redirectPath = isTeamMode
+          ? `/team/${teamCustomUrl}?tab=board&slug=${editSlug}&settings=true`
+          : `/boards/${editSlug}?settings=true`;
+        router.push(redirectPath);
+      }
     } catch (error) {
       console.error("ボード更新に失敗しました:", error);
       showToast(
@@ -176,6 +197,31 @@ export default function SharedBoardSettings({
               className="px-4 py-3"
             />
 
+            <div>
+              <TextInputWithCounter
+                value={editSlug}
+                onChange={(value) => handleSlugChange(value)}
+                placeholder="例: my-project-board（英数字とハイフンのみ、50文字以内）"
+                maxLength={50}
+                label="スラッグ（URL用の識別子）"
+                className="px-4 py-3"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                URL:{" "}
+                {isTeamMode
+                  ? `/team/${teamCustomUrl}?tab=board&slug=`
+                  : `/boards/`}
+                <span className="font-mono font-semibold text-blue-600">
+                  {editSlug}
+                </span>
+              </p>
+              {editSlug !== boardSlug && (
+                <p className="text-xs text-amber-600 mt-1">
+                  ⚠️ スラッグを変更すると既存のURLが無効になります
+                </p>
+              )}
+            </div>
+
             <TextareaWithCounter
               value={editDescription}
               onChange={(value) => handleDescriptionChange(value)}
@@ -204,6 +250,7 @@ export default function SharedBoardSettings({
                   onClick={() => {
                     setEditName(initialBoardName);
                     setEditDescription(initialBoardDescription || "");
+                    setEditSlug(boardSlug);
                     setHasChanges(false);
                   }}
                   disabled={updateMutation.isPending}

@@ -70,6 +70,7 @@ export interface CreateBoardData {
 export interface UpdateBoardData {
   name?: string;
   description?: string;
+  slug?: string;
 }
 
 export interface AddItemToBoardData {

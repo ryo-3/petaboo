@@ -349,6 +349,15 @@ export function createTeamBoardsAPI(app: AppType) {
             schema: z.object({
               name: z.string().optional(),
               description: z.string().optional(),
+              slug: z
+                .string()
+                .regex(
+                  /^[a-z0-9-]+$/,
+                  "Slug must contain only lowercase letters, numbers, and hyphens",
+                )
+                .min(1)
+                .max(50)
+                .optional(),
             }),
           },
         },
@@ -385,7 +394,7 @@ export function createTeamBoardsAPI(app: AppType) {
     }
 
     const { teamId, id } = c.req.param();
-    const { name, description } = await c.req.json();
+    const { name, description, slug } = await c.req.json();
     const db = c.get("db");
 
     try {
@@ -421,6 +430,28 @@ export function createTeamBoardsAPI(app: AppType) {
         return c.json({ error: "ボードが見つかりません" }, 404);
       }
 
+      // slugが指定されている場合は重複チェック
+      if (slug) {
+        const duplicateBoard = await db
+          .select()
+          .from(teamBoards)
+          .where(
+            and(
+              eq(teamBoards.slug, slug),
+              eq(teamBoards.teamId, parseInt(teamId)),
+            ),
+          )
+          .limit(1);
+
+        // 自分以外のボードで同じslugが存在する場合はエラー
+        if (
+          duplicateBoard.length > 0 &&
+          duplicateBoard[0].id !== parseInt(id)
+        ) {
+          return c.json({ error: "このスラッグは既に使用されています" }, 400);
+        }
+      }
+
       // 更新データの準備
       const updateData: Partial<NewTeamBoard> = {
         updatedAt: new Date(),
@@ -432,6 +463,10 @@ export function createTeamBoardsAPI(app: AppType) {
 
       if (description !== undefined) {
         updateData.description = description || null;
+      }
+
+      if (slug !== undefined) {
+        updateData.slug = slug;
       }
 
       // ボード更新

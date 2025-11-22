@@ -4,6 +4,379 @@
  */
 
 export interface paths {
+  "/comments": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: {
+      parameters: {
+        query: {
+          teamId: string;
+          targetType: "memo" | "task" | "board";
+          targetOriginalId?: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description List of team comments */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              id: number;
+              teamId: number;
+              userId: string;
+              displayName: string | null;
+              avatarColor: string | null;
+              /** @enum {string} */
+              targetType: "memo" | "task" | "board";
+              targetOriginalId: string;
+              content: string;
+              mentions: string | null;
+              createdAt: number;
+              updatedAt: number | null;
+            }[];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              error: string;
+            };
+          };
+        };
+        /** @description Not a team member */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              error: string;
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post: {
+      parameters: {
+        query: {
+          teamId: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: {
+        content: {
+          "application/json": {
+            /** @enum {string} */
+            targetType: "memo" | "task" | "board";
+            targetOriginalId: string;
+            boardId?: number;
+            content: string;
+          };
+        };
+      };
+      responses: {
+        /** @description Created team comment */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              id: number;
+              teamId: number;
+              userId: string;
+              displayName: string | null;
+              avatarColor: string | null;
+              /** @enum {string} */
+              targetType: "memo" | "task" | "board";
+              targetOriginalId: string;
+              content: string;
+              mentions: string | null;
+              createdAt: number;
+              updatedAt: number | null;
+            };
+          };
+        };
+        /** @description Invalid input */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              success: boolean;
+              error: {
+                issues: {
+                  code: string;
+                  path: (string | number)[];
+                  message?: string;
+                }[];
+                name: string;
+              };
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              error: string;
+            };
+          };
+        };
+        /** @description Not a team member */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              error: string;
+            };
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/comments/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: {
+        content: {
+          "application/json": {
+            content: string;
+          };
+        };
+      };
+      responses: {
+        /** @description Updated team comment */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              id: number;
+              teamId: number;
+              userId: string;
+              displayName: string | null;
+              avatarColor: string | null;
+              /** @enum {string} */
+              targetType: "memo" | "task" | "board";
+              targetOriginalId: string;
+              content: string;
+              mentions: string | null;
+              createdAt: number;
+              updatedAt: number | null;
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              error: string;
+            };
+          };
+        };
+        /** @description Forbidden - not the comment owner */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              error: string;
+            };
+          };
+        };
+        /** @description Comment not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              error: string;
+            };
+          };
+        };
+      };
+    };
+    post?: never;
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Comment deleted successfully */
+        204: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              error: string;
+            };
+          };
+        };
+        /** @description Forbidden - not the comment owner */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              error: string;
+            };
+          };
+        };
+        /** @description Comment not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              error: string;
+            };
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/comments/board-items": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: {
+      parameters: {
+        query: {
+          teamId: string;
+          boardId: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description List of board item comments */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              id: number;
+              teamId: number;
+              userId: string;
+              displayName: string | null;
+              avatarColor: string | null;
+              /** @enum {string} */
+              targetType: "memo" | "task" | "board";
+              targetOriginalId: string;
+              content: string;
+              mentions: string | null;
+              createdAt: number;
+              updatedAt: number | null;
+            }[];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              error: string;
+            };
+          };
+        };
+        /** @description Not a team member */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              error: string;
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/memos": {
     parameters: {
       query?: never;
@@ -60,7 +433,8 @@ export interface paths {
       requestBody?: {
         content: {
           "application/json": {
-            title: string;
+            /** @default  */
+            title?: string;
             content?: string;
           };
         };
@@ -133,7 +507,8 @@ export interface paths {
       requestBody?: {
         content: {
           "application/json": {
-            title: string;
+            /** @default  */
+            title?: string;
             content?: string;
           };
         };
@@ -1536,6 +1911,7 @@ export interface paths {
           "application/json": {
             name?: string;
             description?: string;
+            slug?: string;
           };
         };
       };
@@ -2211,7 +2587,9 @@ export interface paths {
     };
     get: {
       parameters: {
-        query?: never;
+        query?: {
+          teamId?: string;
+        };
         header?: never;
         path?: never;
         cookie?: never;
@@ -2237,6 +2615,17 @@ export interface paths {
         };
         /** @description Unauthorized */
         401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              error: string;
+            };
+          };
+        };
+        /** @description Not a team member */
+        403: {
           headers: {
             [name: string]: unknown;
           };
@@ -2951,6 +3340,7 @@ export interface paths {
     get: {
       parameters: {
         query?: {
+          teamId?: string;
           boardId?: string;
           q?: string;
           sort?: "name" | "usage" | "order";
@@ -2971,8 +3361,6 @@ export interface paths {
             "application/json": {
               id: number;
               name: string;
-              description: string | null;
-              color: string | null;
               icon: string | null;
               sortOrder: number;
               userId: string;
@@ -3007,8 +3395,7 @@ export interface paths {
           "application/json": {
             name: string;
             boardId: number;
-            description?: string;
-            color?: string;
+            teamId?: number;
             icon?: string;
             sortOrder?: number;
           };
@@ -3024,8 +3411,6 @@ export interface paths {
             "application/json": {
               id: number;
               name: string;
-              description: string | null;
-              color: string | null;
               icon: string | null;
               sortOrder: number;
               userId: string;
@@ -3086,8 +3471,7 @@ export interface paths {
           "application/json": {
             name: string;
             boardId: number;
-            description?: string;
-            color?: string;
+            teamId?: number;
             icon?: string;
             sortOrder?: number;
           };
@@ -3103,8 +3487,6 @@ export interface paths {
             "application/json": {
               id: number;
               name: string;
-              description: string | null;
-              color: string | null;
               icon: string | null;
               sortOrder: number;
               userId: string;
@@ -3587,6 +3969,7 @@ export interface paths {
                 /** @enum {string} */
                 role: "admin" | "member";
                 joinedAt: number;
+                avatarColor: string | null;
               }[];
             };
           };
@@ -4797,6 +5180,65 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/teams/{customUrl}/members/me/display-name": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          customUrl: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: {
+        content: {
+          "application/json": {
+            displayName: string;
+          };
+        };
+      };
+      responses: {
+        /** @description 表示名更新成功 */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              displayName: string;
+            };
+          };
+        };
+        /** @description 権限がありません */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description チームメンバーが見つかりません */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+      };
+    };
+    trace?: never;
+  };
   "/teams/notifications/check": {
     parameters: {
       query?: never;
@@ -4895,6 +5337,7 @@ export interface paths {
               updatedAt: number;
               memoCount: number;
               taskCount: number;
+              commentCount: number;
             }[];
           };
         };
@@ -4946,6 +5389,60 @@ export interface paths {
         };
       };
     };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/teams/{teamId}/boards/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: {
+        content: {
+          "application/json": {
+            name?: string;
+            description?: string;
+          };
+        };
+      };
+      responses: {
+        /** @description 更新されたチームボード */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              id: number;
+              name: string;
+              slug: string;
+              description: string | null;
+              teamId: number;
+              userId: string;
+              boardCategoryId: number | null;
+              archived: boolean;
+              completed: boolean;
+              createdAt: number;
+              updatedAt: number;
+            };
+          };
+        };
+      };
+    };
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -5045,6 +5542,9 @@ export interface paths {
                 completed: boolean;
                 createdAt: number;
                 updatedAt: number;
+                memoCount: number;
+                taskCount: number;
+                commentCount: number;
               };
               items: {
                 id: number;
@@ -5061,6 +5561,8 @@ export interface paths {
                   content: string;
                   createdAt: number;
                   updatedAt: number;
+                  createdBy: string | null;
+                  avatarColor: string | null;
                 } | null;
                 task: {
                   id: number;
@@ -5071,8 +5573,12 @@ export interface paths {
                   /** @enum {string} */
                   priority: "low" | "medium" | "high";
                   dueDate: string | null;
+                  categoryId: number | null;
+                  boardCategoryId: number | null;
                   createdAt: number;
                   updatedAt: number;
+                  createdBy: string | null;
+                  avatarColor: string | null;
                 } | null;
               }[];
             };
@@ -5194,6 +5700,9 @@ export interface paths {
                 completed: boolean;
                 createdAt: number;
                 updatedAt: number;
+                memoCount: number;
+                taskCount: number;
+                commentCount: number;
               };
               deletedItems: {
                 id: number;
@@ -5227,6 +5736,78 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/teams/{teamId}/boards/{boardId}/items/{itemId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: {
+      parameters: {
+        query: {
+          itemType: "memo" | "task";
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description チームボードアイテム削除成功 */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              success: boolean;
+            };
+          };
+        };
+        /** @description 認証が必要 */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              error: string;
+            };
+          };
+        };
+        /** @description チームメンバーではない */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              error: string;
+            };
+          };
+        };
+        /** @description ボードまたはアイテムが見つからない */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              error: string;
+            };
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/teams/{teamId}/memos": {
     parameters: {
       query?: never;
@@ -5254,12 +5835,16 @@ export interface paths {
             "application/json": {
               id: number;
               teamId: number;
+              userId: string;
               originalId: string;
               uuid: string | null;
               title: string;
               content: string | null;
               createdAt: number;
               updatedAt: number | null;
+              createdBy: string | null;
+              avatarColor: string | null;
+              commentCount?: number;
             }[];
           };
         };
@@ -5300,7 +5885,8 @@ export interface paths {
       requestBody?: {
         content: {
           "application/json": {
-            title: string;
+            /** @default  */
+            title?: string;
             content?: string;
           };
         };
@@ -5315,12 +5901,16 @@ export interface paths {
             "application/json": {
               id: number;
               teamId: number;
+              userId: string;
               originalId: string;
               uuid: string | null;
               title: string;
               content: string | null;
               createdAt: number;
               updatedAt: number | null;
+              createdBy: string | null;
+              avatarColor: string | null;
+              commentCount?: number;
             };
           };
         };
@@ -5387,7 +5977,8 @@ export interface paths {
       requestBody?: {
         content: {
           "application/json": {
-            title: string;
+            /** @default  */
+            title?: string;
             content?: string;
           };
         };
@@ -5560,6 +6151,7 @@ export interface paths {
               createdAt: number;
               updatedAt: number | null;
               deletedAt: number;
+              commentCount: number;
             }[];
           };
         };
@@ -5636,12 +6228,16 @@ export interface paths {
             "application/json": {
               id: number;
               teamId: number;
+              userId: string;
               originalId: string;
               uuid: string | null;
               title: string;
               content: string | null;
               createdAt: number;
               updatedAt: number | null;
+              createdBy: string | null;
+              avatarColor: string | null;
+              commentCount?: number;
             };
           };
         };
@@ -5877,6 +6473,7 @@ export interface paths {
             "application/json": {
               id: number;
               teamId: number;
+              userId: string;
               originalId: string;
               uuid: string | null;
               title: string;
@@ -5888,8 +6485,14 @@ export interface paths {
               dueDate: number | null;
               categoryId: number | null;
               boardCategoryId: number | null;
+              assigneeId: string | null;
               createdAt: number;
               updatedAt: number | null;
+              createdBy: string | null;
+              avatarColor: string | null;
+              assigneeName: string | null;
+              assigneeAvatarColor: string | null;
+              commentCount?: number;
             }[];
           };
         };
@@ -5945,6 +6548,7 @@ export interface paths {
             dueDate?: number;
             categoryId?: number;
             boardCategoryId?: number;
+            assigneeId?: string | null;
           };
         };
       };
@@ -5958,6 +6562,7 @@ export interface paths {
             "application/json": {
               id: number;
               teamId: number;
+              userId: string;
               originalId: string;
               uuid: string | null;
               title: string;
@@ -5969,8 +6574,14 @@ export interface paths {
               dueDate: number | null;
               categoryId: number | null;
               boardCategoryId: number | null;
+              assigneeId: string | null;
               createdAt: number;
               updatedAt: number | null;
+              createdBy: string | null;
+              avatarColor: string | null;
+              assigneeName: string | null;
+              assigneeAvatarColor: string | null;
+              commentCount?: number;
             };
           };
         };
@@ -6046,6 +6657,7 @@ export interface paths {
             dueDate?: number;
             categoryId?: number;
             boardCategoryId?: number;
+            assigneeId?: string | null;
           };
         };
       };
@@ -6208,9 +6820,11 @@ export interface paths {
               dueDate: number | null;
               categoryId: number | null;
               boardCategoryId: number | null;
+              assigneeId: string | null;
               createdAt: number;
               updatedAt: number | null;
               deletedAt: number;
+              commentCount: number;
             }[];
           };
         };
@@ -6276,6 +6890,7 @@ export interface paths {
             "application/json": {
               id: number;
               teamId: number;
+              userId: string;
               originalId: string;
               uuid: string | null;
               title: string;
@@ -6287,8 +6902,14 @@ export interface paths {
               dueDate: number | null;
               categoryId: number | null;
               boardCategoryId: number | null;
+              assigneeId: string | null;
               createdAt: number;
               updatedAt: number | null;
+              createdBy: string | null;
+              avatarColor: string | null;
+              assigneeName: string | null;
+              assigneeAvatarColor: string | null;
+              commentCount?: number;
             };
           };
         };
@@ -6805,6 +7426,7 @@ export interface paths {
               id: string;
               userId: string;
               email: string;
+              displayName: string | null;
               /** @enum {string} */
               planType: "free" | "premium";
               createdAt: number;
@@ -6863,6 +7485,7 @@ export interface paths {
               id: string;
               userId: string;
               email: string;
+              displayName: string | null;
               /** @enum {string} */
               planType: "free" | "premium";
               createdAt: number;

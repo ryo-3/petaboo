@@ -129,6 +129,15 @@ const CreateBoardSchema = z.object({
 const UpdateBoardSchema = z.object({
   name: z.string().min(1).max(50).optional(),
   description: z.string().optional(),
+  slug: z
+    .string()
+    .regex(
+      /^[a-z0-9-]+$/,
+      "Slug must contain only lowercase letters, numbers, and hyphens",
+    )
+    .min(1)
+    .max(50)
+    .optional(),
 });
 
 const BoardItemSchema = z.object({
@@ -447,6 +456,22 @@ export function createAPI(app: AppType) {
 
     if (board.length === 0) {
       return c.json({ error: "Board not found" }, 404);
+    }
+
+    // slugが指定されている場合は重複チェック
+    if (updateData.slug) {
+      const existingBoard = await db
+        .select()
+        .from(boards)
+        .where(
+          and(eq(boards.slug, updateData.slug), eq(boards.userId, auth.userId)),
+        )
+        .limit(1);
+
+      // 自分以外のボードで同じslugが存在する場合はエラー
+      if (existingBoard.length > 0 && existingBoard[0].id !== boardId) {
+        return c.json({ error: "このスラッグは既に使用されています" }, 400);
+      }
     }
 
     const updated = await db

@@ -1040,11 +1040,21 @@ function TaskEditor({
 
     if (hasDeletes) {
       await deletePendingAttachments();
+
+      // 一覧表示用の添付ファイルキャッシュを無効化（削除の即時反映）
+      queryClient.invalidateQueries({
+        queryKey: ["all-attachments", teamId, "task"],
+      });
     }
 
     // 保存待ちの画像を一括アップロード（完了トーストはuploadPendingImagesが表示）
     if (hasUploads && targetOriginalId) {
       await uploadPendingImages(targetOriginalId);
+
+      // 一覧表示用の添付ファイルキャッシュを無効化（サムネイル即時表示のため）
+      queryClient.invalidateQueries({
+        queryKey: ["all-attachments", teamId, "task"],
+      });
     }
 
     // 連続作成モードで新規タスクの場合、保存後にリセット

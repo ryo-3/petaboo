@@ -820,7 +820,14 @@ export function useSimpleItemSave<T extends UnifiedItem>({
 
     if (isDeleted) return false;
     if (isUploading) return false;
-    if (isNewItem) return !!strippedTitle;
+    if (isNewItem) {
+      // メモの場合：タイトルまたは画像があればOK
+      if (itemType === "memo") {
+        return !!strippedTitle || hasAttachmentChanges;
+      }
+      // タスクの場合：タイトル必須
+      return !!strippedTitle;
+    }
 
     return (
       (hasChanges || hasTagChanges || hasAttachmentChanges) && !!strippedTitle
@@ -828,6 +835,7 @@ export function useSimpleItemSave<T extends UnifiedItem>({
   }, [
     title,
     item,
+    itemType,
     isDeleted,
     isUploading,
     hasChanges,

@@ -916,6 +916,11 @@ function MemoEditor({
 
       if (hasDeletes) {
         await deletePendingAttachments();
+
+        // 一覧表示用の添付ファイルキャッシュを無効化（削除の即時反映）
+        queryClient.invalidateQueries({
+          queryKey: ["all-attachments", teamId, "memo"],
+        });
       }
 
       // 保存待ちの画像を一括アップロード（完了トーストはuploadPendingImagesが表示）
@@ -923,6 +928,11 @@ function MemoEditor({
         await uploadPendingImages(targetOriginalId);
 
         invalidateBoardCaches();
+
+        // 一覧表示用の添付ファイルキャッシュを無効化（サムネイル即時表示のため）
+        queryClient.invalidateQueries({
+          queryKey: ["all-attachments", teamId, "memo"],
+        });
 
         // 画像のみ保存の場合、作成されたメモを選択してビューモードに切り替え
         if (hasOnlyImages) {

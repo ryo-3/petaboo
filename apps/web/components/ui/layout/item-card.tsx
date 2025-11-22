@@ -171,7 +171,11 @@ function ItemCard({
             >
               <h3
                 className={`font-semibold text-base mb-1 truncate flex-1 ${
-                  isDeleted ? "text-gray-700" : "text-gray-800"
+                  title === "無題"
+                    ? "text-gray-400"
+                    : isDeleted
+                      ? "text-gray-700"
+                      : "text-gray-800"
                 }`}
                 dangerouslySetInnerHTML={{
                   __html: isTask ? title.replace(/[\r\n]/g, " ").trim() : title,

@@ -783,7 +783,8 @@ function TaskEditor({
   // タグの差分を計算して一括更新する関数
   const updateTaggings = useCallback(
     async (taskId: string) => {
-      if (!task || task.id === 0) return;
+      // taskIdが渡されていない場合のみ早期リターン
+      if (!taskId) return;
 
       const currentTagIds = currentTags.map((tag) => tag.id);
       const localTagIds = localTags.map((tag) => tag.id);
@@ -1012,7 +1013,10 @@ function TaskEditor({
     if (hasTagChanges && task && task.id !== 0) {
       const taskId = OriginalIdUtils.fromItem(task) || "";
       await updateTaggings(taskId);
-    } else if (wasNewTask && (hasTagChanges || pendingImages.length > 0)) {
+    } else if (
+      wasNewTask &&
+      (localTags.length > 0 || pendingImages.length > 0)
+    ) {
       // 新規作成でタグまたは画像がある場合
       await new Promise((resolve) => setTimeout(resolve, 100));
 
@@ -1027,7 +1031,7 @@ function TaskEditor({
 
         if (latestTask) {
           targetOriginalId = OriginalIdUtils.fromItem(latestTask) || "";
-          if (hasTagChanges) {
+          if (localTags.length > 0) {
             await updateTaggings(targetOriginalId);
           }
         }
@@ -1591,7 +1595,7 @@ function TaskEditor({
                 {/* ボード名・タグ表示 */}
                 <BoardTagDisplay
                   boards={displayBoards}
-                  tags={task && task.id !== 0 ? localTags : []}
+                  tags={localTags}
                   spacing="normal"
                   showWhen="has-content"
                   className="mb-4"

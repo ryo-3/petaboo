@@ -611,7 +611,8 @@ function MemoEditor({
   // タグの差分を計算して一括更新する関数
   const updateTaggings = useCallback(
     async (memoId: string) => {
-      if (!memo || memo.id === undefined || memo.id === 0) {
+      // memoIdが渡されていない場合のみ早期リターン
+      if (!memoId) {
         return;
       }
 
@@ -880,33 +881,38 @@ function MemoEditor({
         // 既存メモの場合
         await updateTaggings(targetOriginalId || "");
         setHasManualChanges(false);
-      } else if (
-        !hasOnlyImages &&
-        (localTags.length > 0 || pendingImages.length > 0)
-      ) {
-        // 新規作成でタグまたは画像がある場合は、少し遅延させて最新のメモリストから取得
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
-        // React QueryのキャッシュからmemosQueryを取得して、最新の作成メモを特定
-        const memosQuery = queryClient.getQueryData<Memo[]>(["memos"]);
-
-        if (memosQuery && memosQuery.length > 0) {
-          // 最新のメモ（作成時刻順で最後）を取得
-          const latestMemo = [...memosQuery].sort(
-            (a, b) => b.createdAt - a.createdAt,
-          )[0];
-
-          if (latestMemo) {
-            targetOriginalId = OriginalIdUtils.fromItem(latestMemo) || "";
-            if (localTags.length > 0) {
-              await updateTaggings(targetOriginalId);
-              setHasManualChanges(false);
-            }
+      } else if (localTags.length > 0 || pendingImages.length > 0) {
+        // 新規作成でタグまたは画像がある場合
+        if (hasOnlyImages && targetOriginalId) {
+          // 画像のみの場合は既にtargetOriginalIdがあるのでそれを使う
+          if (localTags.length > 0) {
+            await updateTaggings(targetOriginalId);
+            setHasManualChanges(false);
           }
         } else {
-          /**
-           * 最新メモが見つからない場合はスキップ
-           */
+          // 通常の新規作成の場合は、少し遅延させて最新のメモリストから取得
+          await new Promise((resolve) => setTimeout(resolve, 100));
+
+          // React QueryのキャッシュからmemosQueryを取得して、最新の作成メモを特定
+          const memosQueryKey = teamMode
+            ? (["team-memos", teamId] as const)
+            : (["memos"] as const);
+          const memosQuery = queryClient.getQueryData<Memo[]>(memosQueryKey);
+
+          if (memosQuery && memosQuery.length > 0) {
+            // 最新のメモ（作成時刻順で最後）を取得
+            const latestMemo = [...memosQuery].sort(
+              (a, b) => b.createdAt - a.createdAt,
+            )[0];
+
+            if (latestMemo) {
+              targetOriginalId = OriginalIdUtils.fromItem(latestMemo) || "";
+              if (localTags.length > 0) {
+                await updateTaggings(targetOriginalId);
+                setHasManualChanges(false);
+              }
+            }
+          }
         }
       }
 

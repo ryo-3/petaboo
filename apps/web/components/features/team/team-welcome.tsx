@@ -318,7 +318,7 @@ export function TeamWelcome({ onTeamCreate }: TeamWelcomeProps = {}) {
           </div>
         ) : !showDetailedView ? (
           /* 標準の2パネルレイアウト（PC: 横並び / スマホ: 縦並び） */
-          <div className="flex-1 overflow-hidden md:overflow-auto pr-2 pb-10 mb-2">
+          <div className="flex-1 overflow-hidden md:overflow-auto pr-2 pb-32 md:pb-10 mb-2">
             <div className="flex flex-col gap-4">
               {/* 2分割レイアウト */}
               <div className="flex flex-col md:flex-row gap-4 flex-1">

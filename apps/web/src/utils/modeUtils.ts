@@ -31,7 +31,8 @@ export function getModeFromUrl(
         return "memo";
       case "tasks":
         return "task";
-      case "boards":
+      case "board": // ボード詳細 (単数形)
+      case "boards": // ボード一覧 (複数形)
         return "board";
       case "team-list":
       case "team-settings":

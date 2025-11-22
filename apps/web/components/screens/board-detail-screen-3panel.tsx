@@ -1489,6 +1489,11 @@ function BoardDetailScreen({
                               {selectedMemo ? (
                                 memoEditorTab === "memo" ? (
                                   <MemoEditor
+                                    key={
+                                      selectedMemo.originalId ||
+                                      selectedMemo.id ||
+                                      "new"
+                                    }
                                     memo={selectedMemo as Memo}
                                     initialBoardId={boardId}
                                     onClose={onClearSelection || (() => {})}
@@ -1573,6 +1578,11 @@ function BoardDetailScreen({
                               ) : selectedTask ? (
                                 taskEditorTab === "task" ? (
                                   <TaskEditor
+                                    key={
+                                      selectedTask.originalId ||
+                                      selectedTask.id ||
+                                      "new"
+                                    }
                                     task={selectedTask as Task}
                                     initialBoardId={boardId}
                                     onClose={onClearSelection || (() => {})}
@@ -1861,6 +1871,11 @@ function BoardDetailScreen({
                                     className={`h-full flex flex-col min-h-0 ${!showListPanel ? "pl-2" : ""}`}
                                   >
                                     <MemoEditor
+                                      key={
+                                        selectedMemo.originalId ||
+                                        selectedMemo.id ||
+                                        "new"
+                                      }
                                       memo={selectedMemo as Memo}
                                       initialBoardId={boardId}
                                       onClose={onClearSelection || (() => {})}
@@ -1934,6 +1949,11 @@ function BoardDetailScreen({
                                     className={`h-full flex flex-col min-h-0 ${!showListPanel ? "pl-2" : ""}`}
                                   >
                                     <TaskEditor
+                                      key={
+                                        selectedTask.originalId ||
+                                        selectedTask.id ||
+                                        "new"
+                                      }
                                       task={selectedTask as Task}
                                       initialBoardId={boardId}
                                       onClose={onClearSelection || (() => {})}

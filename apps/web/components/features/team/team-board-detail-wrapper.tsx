@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -206,11 +206,29 @@ export function TeamBoardDetailWrapper({
   }, [memoIdParam, taskIdParam]);
 
   // URLパラメータに基づいてメモ/タスクを選択
+  // ただし、既に選択済み（新規作成含む）の場合はスキップ
+  const selectedMemoRef = useRef(selectedMemo);
+  selectedMemoRef.current = selectedMemo;
+  const selectedTaskRef = useRef(selectedTask);
+  selectedTaskRef.current = selectedTask;
+
   useEffect(() => {
     if (!boardItems) return;
 
     // memoIdParamがある場合、該当するメモを選択
     if (memoIdParam) {
+      // 既にメモが選択されている場合（新規作成含む）はスキップ
+      if (selectedMemoRef.current?.originalId !== undefined) {
+        // ただし、URLのmemoIdと異なる場合のみスキップ
+        if (
+          selectedMemoRef.current.originalId !== memoIdParam &&
+          selectedMemoRef.current.originalId !== `memo-${memoIdParam}` &&
+          selectedMemoRef.current.id?.toString() !== memoIdParam
+        ) {
+          return; // URL復元をスキップ（新規作成中など）
+        }
+      }
+
       const allItems = boardItems.items || [];
       const memoItems = allItems.filter(
         (item: any) => item.itemType === "memo",
@@ -233,6 +251,17 @@ export function TeamBoardDetailWrapper({
 
     // taskIdParamがある場合、該当するタスクを選択
     if (taskIdParam) {
+      // 既にタスクが選択されている場合（新規作成含む）はスキップ
+      if (selectedTaskRef.current?.originalId !== undefined) {
+        if (
+          selectedTaskRef.current.originalId !== taskIdParam &&
+          selectedTaskRef.current.originalId !== `task-${taskIdParam}` &&
+          selectedTaskRef.current.id?.toString() !== taskIdParam
+        ) {
+          return; // URL復元をスキップ（新規作成中など）
+        }
+      }
+
       const allItems = boardItems.items || [];
       const taskItems = allItems.filter(
         (item: any) => item.itemType === "task",
@@ -252,6 +281,7 @@ export function TeamBoardDetailWrapper({
         setSelectedMemo(null);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [boardItems, memoIdParam, taskIdParam]);
 
   const handleClearSelection = () => {
@@ -269,16 +299,18 @@ export function TeamBoardDetailWrapper({
     setSelectedMemo(memo);
 
     // URLを更新（originalIdを使用）
-    if (memo && memo.originalId) {
+    // 新規作成時 (originalId === "new") はURL更新をスキップ
+    if (memo && memo.originalId && memo.originalId !== "new") {
       router.replace(
         `/team/${customUrl}?tab=board&slug=${slug}&memoId=${memo.originalId}`,
         { scroll: false },
       );
-    } else {
+    } else if (!memo) {
       router.replace(`/team/${customUrl}?tab=board&slug=${slug}`, {
         scroll: false,
       });
     }
+    // 新規作成時はURL更新をスキップ（現在のmemoIdパラメータを維持）
   };
 
   const handleSelectTask = (task: Task | DeletedTask | null) => {
@@ -286,16 +318,18 @@ export function TeamBoardDetailWrapper({
     setSelectedTask(task);
 
     // URLを更新（originalIdを使用）
-    if (task && task.originalId) {
+    // 新規作成時 (originalId === "new") はURL更新をスキップ
+    if (task && task.originalId && task.originalId !== "new") {
       router.replace(
         `/team/${customUrl}?tab=board&slug=${slug}&taskId=${task.originalId}`,
         { scroll: false },
       );
-    } else {
+    } else if (!task) {
       router.replace(`/team/${customUrl}?tab=board&slug=${slug}`, {
         scroll: false,
       });
     }
+    // 新規作成時はURL更新をスキップ（現在のtaskIdパラメータを維持）
   };
 
   const handleSelectDeletedMemo = (memo: DeletedMemo | null) => {

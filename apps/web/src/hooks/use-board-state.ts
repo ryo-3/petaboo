@@ -304,13 +304,17 @@ export function useBoardState() {
   const createNewMemoHandler = useCallback(
     (onSelectMemo?: (memo: Memo | null) => void) => {
       setRightPanelMode(null); // リストモードを解除
+
       const newMemo: Memo = {
         id: 0, // 新規作成時は0
         title: "",
         content: "",
+        originalId: "new", // 新規作成を示す特別なID（URL更新スキップ用）
         createdAt: Math.floor(Date.now() / 1000),
         updatedAt: Math.floor(Date.now() / 1000),
       };
+
+      // 直接新規メモをセット（nullを経由するとURL変更が起きて問題が発生する）
       onSelectMemo?.(newMemo);
     },
     [], // setRightPanelModeはステート更新関数なので依存配列不要
@@ -319,10 +323,12 @@ export function useBoardState() {
   const createNewTaskHandler = useCallback(
     (onSelectTask?: (task: Task | null) => void) => {
       setRightPanelMode(null); // リストモードを解除
+
       const newTask: Task = {
         id: 0, // 新規作成時は0
         title: "",
         description: null,
+        originalId: "new", // 新規作成を示す特別なID（URL更新スキップ用）
         status:
           activeTaskTabRef.current === "deleted"
             ? "todo"
@@ -334,6 +340,8 @@ export function useBoardState() {
         createdAt: Math.floor(Date.now() / 1000),
         updatedAt: Math.floor(Date.now() / 1000),
       };
+
+      // 直接新規タスクをセット（nullを経由するとURL変更が起きて問題が発生する）
       onSelectTask?.(newTask);
     },
     [], // 依存配列を空にして安定化

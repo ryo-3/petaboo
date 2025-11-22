@@ -7,5 +7,6 @@
     {
       "mode": "auto"
     }
-  ]
+  ],
+  "claudeCode.disableLoginPrompt": true
 }

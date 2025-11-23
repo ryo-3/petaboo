@@ -7,11 +7,7 @@ import { memos, deletedMemos } from "../../db/schema/memos";
 import { boardItems } from "../../db/schema/boards";
 import { taggings } from "../../db/schema/tags";
 import { teamNotifications } from "../../db/schema/team/notifications";
-import {
-  generateOriginalId,
-  generateUuid,
-  migrateOriginalId,
-} from "../../utils/originalId";
+import { generateDisplayId, migrate } from "../../utils/displayId";
 
 const app = new OpenAPIHono<{
   Bindings: { DB: D1Database };
@@ -27,7 +23,7 @@ app.use("*", clerkMiddleware());
 // 共通スキーマ定義
 const MemoSchema = z.object({
   id: z.number(),
-  originalId: z.string(),
+  displayId: z.string(),
   displayId: z.string(),
   title: z.string(),
   content: z.string().nullable(),
@@ -121,7 +117,7 @@ app.openapi(
     const result = await db
       .select({
         id: memos.id,
-        originalId: memos.originalId,
+        displayId: memos.displayId,
         title: memos.title,
         content: memos.content,
         createdAt: memos.createdAt,
@@ -202,7 +198,7 @@ app.openapi(
       .insert(memos)
       .values({
         userId: auth.userId,
-        originalId: "", // 後で更新
+        displayId: "", // 後で更新
         displayId: "", // 後で更新（個人用はoriginalIdと同じ）
         uuid: generateUuid(), // UUID生成
         title,
@@ -211,18 +207,18 @@ app.openapi(
       })
       .returning({ id: memos.id });
 
-    // originalId と displayId を生成して更新
-    const originalId = generateOriginalId(result[0].id);
-    const displayId = originalId; // 個人用は originalId と同じ
+    // displayId と displayId を生成して更新
+    const displayId = generateOriginalId(result[0].id);
+    const displayId = displayId; // 個人用は displayId と同じ
     await db
       .update(memos)
-      .set({ originalId, displayId, updatedAt: createdAt })
+      .set({ displayId, displayId, updatedAt: createdAt })
       .where(eq(memos.id, result[0].id));
 
     // 作成されたメモの完全なオブジェクトを返す
     const newMemo = {
       id: result[0].id,
-      originalId,
+      displayId,
       displayId,
       title,
       content: content || "",
@@ -397,7 +393,7 @@ app.openapi(
         .insert(deletedMemos)
         .values({
           userId: auth.userId,
-          originalId: note.originalId, // originalIdをそのままコピー
+          displayId: note.displayId, // originalIdをそのままコピー
           uuid: note.uuid, // UUIDもコピー
           title: note.title,
           content: note.content,
@@ -419,7 +415,7 @@ app.openapi(
         .where(
           and(
             eq(boardItems.itemType, "memo"),
-            eq(boardItems.originalId, note.originalId),
+            eq(boardItems.displayId, note.displayId),
           ),
         );
 
@@ -429,7 +425,7 @@ app.openapi(
         .where(
           and(
             eq(teamNotifications.targetType, "memo"),
-            eq(teamNotifications.targetOriginalId, note.originalId),
+            eq(teamNotifications.targetnote.displayId),
           ),
         );
 
@@ -449,7 +445,7 @@ app.openapi(
           .delete(deletedMemos)
           .where(
             and(
-              eq(deletedMemos.originalId, note.originalId),
+              eq(deletedMemos.displayId, note.displayId),
               eq(deletedMemos.userId, auth.userId),
             ),
           );
@@ -474,7 +470,7 @@ app.openapi(
             schema: z.array(
               z.object({
                 id: z.number(),
-                originalId: z.string(),
+                displayId: z.string(),
                 title: z.string(),
                 content: z.string().nullable(),
                 createdAt: z.number(),
@@ -515,7 +511,7 @@ app.openapi(
       const result = await db
         .select({
           id: deletedMemos.id,
-          originalId: deletedMemos.originalId,
+          displayId: deletedMemos.displayId,
           title: deletedMemos.title,
           content: deletedMemos.content,
           createdAt: deletedMemos.createdAt,
@@ -532,14 +528,14 @@ app.openapi(
   },
 );
 
-// DELETE /deleted/:originalId（完全削除）
+// DELETE /deleted/:displayId（完全削除）
 app.openapi(
   createRoute({
     method: "delete",
-    path: "/deleted/{originalId}",
+    path: "/deleted/{displayId}",
     request: {
       params: z.object({
-        originalId: z.string(),
+        displayId: z.string(),
       }),
     },
     responses: {
@@ -584,7 +580,7 @@ app.openapi(
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const { originalId } = c.req.valid("param");
+    const { displayId } = c.req.valid("param");
 
     try {
       const result = db.transaction((tx) => {
@@ -593,7 +589,7 @@ app.openapi(
           .where(
             and(
               eq(taggings.targetType, "memo"),
-              eq(taggings.targetOriginalId, originalId),
+              eq(taggings.targetDisplayId, displayId),
             ),
           )
           .run();
@@ -605,7 +601,7 @@ app.openapi(
           .delete(deletedMemos)
           .where(
             and(
-              eq(deletedMemos.originalId, originalId),
+              eq(deletedMemos.displayId, displayId),
               eq(deletedMemos.userId, auth.userId),
             ),
           )
@@ -625,14 +621,14 @@ app.openapi(
   },
 );
 
-// POST /deleted/:originalId/restore（復元）
+// POST /deleted/:displayId/restore（復元）
 app.openapi(
   createRoute({
     method: "post",
-    path: "/deleted/{originalId}/restore",
+    path: "/deleted/{displayId}/restore",
     request: {
       params: z.object({
-        originalId: z.string(),
+        displayId: z.string(),
       }),
     },
     responses: {
@@ -677,7 +673,7 @@ app.openapi(
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const { originalId } = c.req.valid("param");
+    const { displayId } = c.req.valid("param");
 
     try {
       // まず削除済みメモを取得
@@ -686,7 +682,7 @@ app.openapi(
         .from(deletedMemos)
         .where(
           and(
-            eq(deletedMemos.originalId, originalId),
+            eq(deletedMemos.displayId, displayId),
             eq(deletedMemos.userId, auth.userId),
           ),
         )
@@ -702,8 +698,8 @@ app.openapi(
         .insert(memos)
         .values({
           userId: auth.userId,
-          originalId: deletedNote.originalId, // 一旦削除前のoriginalIdで復元
-          displayId: deletedNote.displayId || deletedNote.originalId, // displayIdも復元（既存データ用フォールバック）
+          displayId: deletedNote.displayId, // 一旦削除前のoriginalIdで復元
+          displayId: deletedNote.displayId || deletedNote.displayId, // displayIdも復元（既存データ用フォールバック）
           uuid: deletedNote.uuid, // UUIDも復元
           title: deletedNote.title,
           content: deletedNote.content,
@@ -719,19 +715,19 @@ app.openapi(
         .update(boardItems)
         .set({
           deletedAt: null,
-          // originalIdは元の値（deletedNote.originalId）を保持
+          // originalIdは元の値（deletedNote.displayId）を保持
         })
         .where(
           and(
             eq(boardItems.itemType, "memo"),
-            eq(boardItems.originalId, deletedNote.originalId),
+            eq(boardItems.displayId, deletedNote.displayId),
           ),
         );
 
       // 削除済みテーブルから削除
       await db
         .delete(deletedMemos)
-        .where(eq(deletedMemos.originalId, originalId));
+        .where(eq(deletedMemos.displayId, displayId));
 
       return c.json({ success: true, id: result[0].id }, 200);
     } catch (error) {
@@ -846,7 +842,7 @@ app.openapi(
             .insert(memos)
             .values({
               userId: auth.userId,
-              originalId: "", // 後で更新
+              displayId: "", // 後で更新
               displayId: "", // 後で更新（個人用はoriginalIdと同じ）
               uuid: generateUuid(),
               title,
@@ -855,12 +851,12 @@ app.openapi(
             })
             .returning({ id: memos.id });
 
-          // originalId と displayId を生成して更新
-          const originalId = generateOriginalId(result[0].id);
-          const displayId = originalId; // 個人用は originalId と同じ
+          // displayId と displayId を生成して更新
+          const displayId = generateOriginalId(result[0].id);
+          const displayId = displayId; // 個人用は displayId と同じ
           await db
             .update(memos)
-            .set({ originalId, displayId })
+            .set({ displayId, displayId })
             .where(eq(memos.id, result[0].id));
 
           imported++;

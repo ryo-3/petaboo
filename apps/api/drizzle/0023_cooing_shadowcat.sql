@@ -1,0 +1,1 @@
+ALTER TABLE `taggings` ADD `target_display_id` text;

@@ -47,7 +47,6 @@ import { useTeamDetail as useTeamDetailContext } from "@/src/contexts/team-detai
 import { useNavigation } from "@/src/contexts/navigation-context";
 import { useAttachments } from "@/src/hooks/use-attachments";
 import { useTeamComments } from "@/src/hooks/use-team-comments";
-import { OriginalIdUtils } from "@/src/types/common";
 import { useToast } from "@/src/contexts/toast-context";
 
 interface TeamDetailProps {

@@ -83,7 +83,7 @@ interface DesktopLowerProps {
     boardName: string;
     itemType: "memo" | "task";
     itemId: string;
-    originalId: string;
+    displayId: string;
     addedAt: number;
   }>;
   allAttachments?: Attachment[];

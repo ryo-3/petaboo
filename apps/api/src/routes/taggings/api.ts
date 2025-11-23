@@ -11,7 +11,7 @@ const TaggingSchema = z.object({
   id: z.number(),
   tagId: z.number(),
   targetType: z.enum(["memo", "task", "board"]),
-  targetOriginalId: z.string(), // Phase 6で削除予定
+  targetDisplayId: z.string(), // Phase 6で削除予定
   targetDisplayId: z.string(),
   userId: z.string(),
   createdAt: z.number(),
@@ -21,7 +21,7 @@ const TaggingWithTagSchema = z.object({
   id: z.number(),
   tagId: z.number(),
   targetType: z.enum(["memo", "task", "board"]),
-  targetOriginalId: z.string(), // Phase 6で削除予定
+  targetDisplayId: z.string(), // Phase 6で削除予定
   targetDisplayId: z.string(),
   userId: z.string(),
   createdAt: z.number(),
@@ -36,7 +36,7 @@ const TeamTaggingWithTagSchema = z.object({
   id: z.number(),
   tagId: z.number(),
   targetType: z.enum(["memo", "task", "board"]),
-  targetOriginalId: z.string(), // Phase 6で削除予定
+  targetDisplayId: z.string(), // Phase 6で削除予定
   targetDisplayId: z.string(),
   teamId: z.number(),
   userId: z.string(),
@@ -64,7 +64,7 @@ export function createAPI(app: AppType) {
       query: z.object({
         targetType: z.enum(["memo", "task", "board"]).optional(),
         targetDisplayId: z.string().optional(),
-        targetOriginalId: z.string().optional(),
+        targetDisplayId: z.string().optional(),
         tagId: z.string().optional(),
         includeTag: z.string().optional(),
         teamId: z.string().optional(),
@@ -103,7 +103,7 @@ export function createAPI(app: AppType) {
     const {
       targetType,
       targetDisplayId,
-      targetOriginalId,
+      targetDisplayId,
       tagId,
       includeTag,
       teamId,
@@ -139,7 +139,7 @@ export function createAPI(app: AppType) {
           id: teamTaggings.id,
           tagId: teamTaggings.tagId,
           targetType: teamTaggings.targetType,
-          targetOriginalId: teamTaggings.targetOriginalId, // Phase 6で削除予定
+          targetDisplayId: teamTaggings.targetDisplayId, // Phase 6で削除予定
           targetDisplayId: teamTaggings.targetDisplayId,
           teamId: teamTaggings.teamId,
           userId: teamTaggings.userId,
@@ -203,7 +203,7 @@ export function createAPI(app: AppType) {
         id: taggings.id,
         tagId: taggings.tagId,
         targetType: taggings.targetType,
-        targetOriginalId: taggings.targetOriginalId,
+        targetDisplayId: taggings.targetDisplayId,
         userId: taggings.userId,
         createdAt: taggings.createdAt,
         tag: {
@@ -226,11 +226,11 @@ export function createAPI(app: AppType) {
       );
     }
 
-    if (targetOriginalId) {
+    if (targetDisplayId) {
       query = query.where(
         and(
           eq(taggings.userId, auth.userId),
-          eq(taggings.targetOriginalId, targetOriginalId),
+          eq(taggings.targetDisplayId, targetDisplayId),
         ),
       );
     }
@@ -245,12 +245,12 @@ export function createAPI(app: AppType) {
     }
 
     // 両方のフィルターがある場合
-    if (targetType && targetOriginalId) {
+    if (targetType && targetDisplayId) {
       query = query.where(
         and(
           eq(taggings.userId, auth.userId),
           eq(taggings.targetType, targetType),
-          eq(taggings.targetOriginalId, targetOriginalId),
+          eq(taggings.targetDisplayId, targetDisplayId),
         ),
       );
     }
@@ -373,7 +373,7 @@ export function createAPI(app: AppType) {
       const newTeamTagging = {
         tagId,
         targetType,
-        targetOriginalId: targetDisplayId, // Phase 6で削除予定（displayIdと同じ値）
+        targetDisplayId: targetDisplayId, // Phase 6で削除予定（displayIdと同じ値）
         targetDisplayId,
         teamId: teamIdNum,
         userId: auth.userId,
@@ -407,7 +407,7 @@ export function createAPI(app: AppType) {
         and(
           eq(taggings.tagId, tagId),
           eq(taggings.targetType, targetType),
-          eq(taggings.targetOriginalId, targetOriginalId),
+          eq(taggings.targetDisplayId, targetDisplayId),
           eq(taggings.userId, auth.userId),
         ),
       )
@@ -420,7 +420,7 @@ export function createAPI(app: AppType) {
     const newTagging: NewTagging = {
       tagId,
       targetType,
-      targetOriginalId,
+      targetDisplayId,
       userId: auth.userId,
       createdAt: new Date(),
     };
@@ -603,7 +603,7 @@ export function createAPI(app: AppType) {
         and(
           eq(taggings.tagId, tagId),
           eq(taggings.targetType, targetType),
-          eq(taggings.targetOriginalId, targetOriginalId),
+          eq(taggings.targetDisplayId, targetDisplayId),
           eq(taggings.userId, auth.userId),
         ),
       )
@@ -619,7 +619,7 @@ export function createAPI(app: AppType) {
         and(
           eq(taggings.tagId, tagId),
           eq(taggings.targetType, targetType),
-          eq(taggings.targetOriginalId, targetOriginalId),
+          eq(taggings.targetDisplayId, targetDisplayId),
           eq(taggings.userId, auth.userId),
         ),
       );

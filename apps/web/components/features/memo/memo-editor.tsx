@@ -49,7 +49,6 @@ import type { TeamCreatorProps } from "@/src/types/creator";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Tag, Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
-import { OriginalIdUtils } from "@/src/types/common";
 import { useEffect, useRef, useState, memo, useMemo, useCallback } from "react";
 import type { DragEvent } from "react";
 import { TiptapEditor, Toolbar } from "./tiptap-editor";
@@ -81,7 +80,7 @@ interface MemoEditorProps {
       isPending: boolean;
     };
     restoreItem: {
-      mutateAsync: (originalId: string) => Promise<any>;
+      mutateAsync: (displayId: string) => Promise<any>;
       isPending: boolean;
     };
   };
@@ -95,7 +94,7 @@ interface MemoEditorProps {
     boardName: string;
     itemType: "memo" | "task";
     itemId: string;
-    originalId: string;
+    displayId: string;
     addedAt: number;
   }>;
   preloadedItemBoards?: Board[]; // 親で取得済みのアイテム紐づけボード（優先的に使用）
@@ -162,11 +161,11 @@ function MemoEditor({
     // 以下は後方互換性のための既存ロジック（preloadedItemBoardsがない場合のみ実行）
     if (!memo || memo.id === undefined || memo.id === 0) return [];
 
-    const originalId = OriginalIdUtils.fromItem(memo) || "";
+    const displayId = memo?.displayId || "";
 
     // このメモに紐づいているボードアイテムを抽出
     const memoBoardItems = preloadedBoardItems.filter(
-      (item) => item.itemType === "memo" && item.originalId === originalId,
+      (item) => item.itemType === "memo" && item.displayId === displayId,
     );
 
     // ボードアイテムからボード情報を取得
@@ -234,9 +233,8 @@ function MemoEditor({
   }, [onClose]);
 
   // 【最適化】個別取得をやめて一括取得を活用
-  const originalId = OriginalIdUtils.fromItem(memo);
   const displayId = memo?.displayId;
-  const memoTargetId = teamMode ? displayId : originalId;
+  const memoTargetId = teamMode ? displayId : displayId;
 
   // 個人モード: 個別タグ取得（従来通り）
   const { data: liveTaggings } = useTaggings({
@@ -382,7 +380,7 @@ function MemoEditor({
   // プリロードデータとライブデータを組み合わせてタグを抽出
   const currentTags = useMemo(() => {
     if (!memo || memo.id === undefined || memo.id === 0) return [];
-    const fallbackOriginalId = OriginalIdUtils.fromItem(memo) || "";
+    const fallbackOriginalId = memo?.displayId || "";
     const targetIds = [fallbackOriginalId, String(memo.id)];
     if (teamMode && displayId) {
       targetIds.push(displayId);
@@ -876,7 +874,7 @@ function MemoEditor({
           }
 
           const newMemo = (await response.json()) as Memo;
-          targetId = OriginalIdUtils.fromItem(newMemo) || "";
+          targetId = newMemo.displayId || "";
           createdMemo = newMemo;
 
           // ボード紐付け（選択されているもの）
@@ -935,11 +933,11 @@ function MemoEditor({
         targetId =
           memo && memo.id > 0
             ? teamMode
-              ? (memo.displayId ?? OriginalIdUtils.fromItem(memo) ?? null)
-              : (OriginalIdUtils.fromItem(memo) ?? null)
+              ? (memo?.displayId ?? memo.displayId ?? null)
+              : (memo?.displayId ?? null)
             : null;
         if (!targetId && lastSavedMemoRef.current) {
-          targetId = OriginalIdUtils.fromItem(lastSavedMemoRef.current) ?? null;
+          targetId = lastSavedMemoRef.current?.displayId ?? null;
           createdMemo = lastSavedMemoRef.current;
         }
       }
@@ -975,9 +973,7 @@ function MemoEditor({
 
             if (latestMemo) {
               targetId =
-                (teamMode
-                  ? latestMemo.displayId
-                  : OriginalIdUtils.fromItem(latestMemo)) || "";
+                (teamMode ? latestMemo.displayId : latestMemo.displayId) || "";
               if (localTags.length > 0) {
                 await updateTaggings(targetId);
                 setHasManualChanges(false);

@@ -6,7 +6,6 @@ import { tasks, deletedTasks } from "../../db/schema/tasks";
 import { boardItems } from "../../db/schema/boards";
 import { taggings } from "../../db/schema/tags";
 import { teamNotifications } from "../../db/schema/team/notifications";
-import { generateOriginalId, generateUuid } from "../../utils/originalId";
 import { databaseMiddleware } from "../../middleware/database";
 
 const app = new OpenAPIHono();
@@ -20,7 +19,7 @@ app.use("*", clerkMiddleware());
 // 共通スキーマ定義
 const TaskSchema = z.object({
   id: z.number(),
-  originalId: z.string(),
+  displayId: z.string(),
   displayId: z.string(),
   title: z.string(),
   description: z.string().nullable(),
@@ -167,7 +166,7 @@ app.openapi(
     const result = await db
       .select({
         id: tasks.id,
-        originalId: tasks.originalId,
+        displayId: tasks.displayId,
         title: tasks.title,
         description: tasks.description,
         status: tasks.status,
@@ -197,10 +196,10 @@ app.openapi(
     // IMPORTANT: originalIdを文字列型として確実に返す（Drizzleが数値に変換する場合があるため）
     const tasksWithStringOriginalId = result.map((task) => ({
       ...task,
-      originalId: String(task.originalId || task.id),
+      displayId: String(task.displayId || task.id),
     }));
 
-    return c.json(tasksWithStringOriginalId, 200);
+    return c.json(tasksWithString200);
   },
 );
 
@@ -280,7 +279,7 @@ app.openapi(
 
     const insertData = {
       userId: auth.userId,
-      originalId: "", // 後で更新
+      displayId: "", // 後で更新
       displayId: "", // 後で更新（個人用はoriginalIdと同じ）
       uuid: generateUuid(), // UUID生成
       title,
@@ -298,12 +297,12 @@ app.openapi(
       .values(insertData)
       .returning({ id: tasks.id });
 
-    // originalId と displayId を生成して更新
-    const originalId = generateOriginalId(result[0].id);
-    const displayId = originalId; // 個人用は originalId と同じ
+    // displayId と displayId を生成して更新
+    const displayId = generateOriginalId(result[0].id);
+    const displayId = displayId; // 個人用は displayId と同じ
     await db
       .update(tasks)
-      .set({ originalId, displayId })
+      .set({ displayId, displayId })
       .where(eq(tasks.id, result[0].id));
 
     // 作成されたタスクを取得して返す
@@ -487,7 +486,7 @@ app.openapi(
         .insert(deletedTasks)
         .values({
           userId: auth.userId,
-          originalId: task.originalId, // originalIdをそのままコピー
+          displayId: task.displayId, // originalIdをそのままコピー
           uuid: task.uuid, // UUIDもコピー
           title: task.title,
           description: task.description,
@@ -513,7 +512,7 @@ app.openapi(
         .where(
           and(
             eq(boardItems.itemType, "task"),
-            eq(boardItems.originalId, task.originalId),
+            eq(boardItems.displayId, task.displayId),
           ),
         );
 
@@ -523,7 +522,7 @@ app.openapi(
         .where(
           and(
             eq(teamNotifications.targetType, "task"),
-            eq(teamNotifications.targetOriginalId, task.originalId),
+            eq(teamNotifications.targettask.displayId),
           ),
         );
 
@@ -543,7 +542,7 @@ app.openapi(
           .delete(deletedTasks)
           .where(
             and(
-              eq(deletedTasks.originalId, task.originalId),
+              eq(deletedTasks.displayId, task.displayId),
               eq(deletedTasks.userId, auth.userId),
             ),
           );
@@ -570,7 +569,7 @@ app.openapi(
             schema: z.array(
               z.object({
                 id: z.number(),
-                originalId: z.string(),
+                displayId: z.string(),
                 title: z.string(),
                 description: z.string().nullable(),
                 status: z.string(),
@@ -614,7 +613,7 @@ app.openapi(
       const result = await db
         .select({
           id: deletedTasks.id,
-          originalId: deletedTasks.originalId,
+          displayId: deletedTasks.displayId,
           title: deletedTasks.title,
           description: deletedTasks.description,
           status: deletedTasks.status,
@@ -639,10 +638,10 @@ app.openapi(
 app.openapi(
   createRoute({
     method: "delete",
-    path: "/deleted/{originalId}",
+    path: "/deleted/{displayId}",
     request: {
       params: z.object({
-        originalId: z.string(),
+        displayId: z.string(),
       }),
     },
     responses: {
@@ -687,7 +686,7 @@ app.openapi(
     }
 
     const db = c.get("db");
-    const { originalId } = c.req.valid("param");
+    const { displayId } = c.req.valid("param");
 
     try {
       const result = db.transaction((tx) => {
@@ -696,7 +695,7 @@ app.openapi(
           .where(
             and(
               eq(taggings.targetType, "task"),
-              eq(taggings.targetOriginalId, originalId),
+              eq(taggings.targetDisplayId, displayId),
             ),
           )
           .run();
@@ -708,7 +707,7 @@ app.openapi(
           .delete(deletedTasks)
           .where(
             and(
-              eq(deletedTasks.originalId, originalId),
+              eq(deletedTasks.displayId, displayId),
               eq(deletedTasks.userId, auth.userId),
             ),
           )
@@ -728,14 +727,14 @@ app.openapi(
   },
 );
 
-// POST /deleted/:originalId/restore（復元）
+// POST /deleted/:displayId/restore（復元）
 app.openapi(
   createRoute({
     method: "post",
-    path: "/deleted/{originalId}/restore",
+    path: "/deleted/{displayId}/restore",
     request: {
       params: z.object({
-        originalId: z.string(),
+        displayId: z.string(),
       }),
     },
     responses: {
@@ -780,7 +779,7 @@ app.openapi(
     }
 
     const db = c.get("db");
-    const { originalId } = c.req.valid("param");
+    const { displayId } = c.req.valid("param");
 
     try {
       // まず削除済みタスクを取得
@@ -789,7 +788,7 @@ app.openapi(
         .from(deletedTasks)
         .where(
           and(
-            eq(deletedTasks.originalId, originalId),
+            eq(deletedTasks.displayId, displayId),
             eq(deletedTasks.userId, auth.userId),
           ),
         )
@@ -805,8 +804,8 @@ app.openapi(
         .insert(tasks)
         .values({
           userId: auth.userId,
-          originalId: deletedTask.originalId, // 一旦削除前のoriginalIdで復元
-          displayId: deletedTask.displayId || deletedTask.originalId, // displayIdも復元（既存データ用フォールバック）
+          displayId: deletedTask.displayId, // 一旦削除前のoriginalIdで復元
+          displayId: deletedTask.displayId || deletedTask.displayId, // displayIdも復元（既存データ用フォールバック）
           uuid: deletedTask.uuid, // UUIDも復元
           title: deletedTask.title,
           description: deletedTask.description,
@@ -826,19 +825,19 @@ app.openapi(
         .update(boardItems)
         .set({
           deletedAt: null,
-          // originalIdは元の値（deletedTask.originalId）を保持
+          // originalIdは元の値（deletedTask.displayId）を保持
         })
         .where(
           and(
             eq(boardItems.itemType, "task"),
-            eq(boardItems.originalId, deletedTask.originalId),
+            eq(boardItems.displayId, deletedTask.displayId),
           ),
         );
 
       // 削除済みテーブルから削除
       await db
         .delete(deletedTasks)
-        .where(eq(deletedTasks.originalId, originalId));
+        .where(eq(deletedTasks.displayId, displayId));
 
       return c.json({ success: true, id: result[0].id }, 200);
     } catch (error) {
@@ -951,7 +950,7 @@ app.openapi(
             .insert(tasks)
             .values({
               userId: auth.userId,
-              originalId: "", // 後で更新
+              displayId: "", // 後で更新
               displayId: "", // 後で更新（個人用はoriginalIdと同じ）
               uuid: generateUuid(),
               title,
@@ -965,12 +964,12 @@ app.openapi(
             })
             .returning({ id: tasks.id });
 
-          // originalId と displayId を生成して更新
-          const originalId = generateOriginalId(result[0].id);
-          const displayId = originalId; // 個人用は originalId と同じ
+          // displayId と displayId を生成して更新
+          const displayId = generateOriginalId(result[0].id);
+          const displayId = displayId; // 個人用は displayId と同じ
           await db
             .update(tasks)
-            .set({ originalId, displayId })
+            .set({ displayId, displayId })
             .where(eq(tasks.id, result[0].id));
 
           imported++;

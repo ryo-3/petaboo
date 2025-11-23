@@ -17,7 +17,7 @@ interface UseUnifiedRestorationProps<T extends DeletedItem> {
   teamMode?: boolean;
   teamId?: number;
   restoreItem?: {
-    mutateAsync: (originalId: string) => Promise<unknown>;
+    mutateAsync: (displayId: string) => Promise<unknown>;
   };
 }
 
@@ -69,7 +69,7 @@ export function useUnifiedRestoration<T extends DeletedItem>({
           );
           return response.json();
         } else {
-          // 個人メモ復元: originalId を送信
+          // 個人メモ復元: displayId を送信
           const response = await memosApi.restoreNote(
             itemId,
             token || undefined,
@@ -86,7 +86,7 @@ export function useUnifiedRestoration<T extends DeletedItem>({
           );
           return response.json();
         } else {
-          // 個人タスク復元: originalId を送信
+          // 個人タスク復元: displayId を送信
           const response = await tasksApi.restoreTask(
             itemId,
             token || undefined,
@@ -177,12 +177,12 @@ export function useUnifiedRestoration<T extends DeletedItem>({
 
     // 復元前に次選択対象を事前計算（削除時の次選択と同じパターン）
     const currentIndex = deletedItems.findIndex(
-      (item) => item.originalId === selectedDeletedItem.originalId,
+      (item) => item.displayId === selectedDeletedItem.displayId,
     );
 
     // 復元後のリスト（復元するアイテムを除外）から次アイテムを計算
     const remainingItems = deletedItems.filter(
-      (item) => item.originalId !== selectedDeletedItem.originalId,
+      (item) => item.displayId !== selectedDeletedItem.displayId,
     );
 
     // 同じインデックス位置を選択（存在しない場合は最後のアイテム）
@@ -197,11 +197,11 @@ export function useUnifiedRestoration<T extends DeletedItem>({
     setRestoringItemId(selectedDeletedItem.id);
 
     try {
-      // 復元API実行（チーム側はdisplayId、個人側はoriginalId）
+      // 復元API実行（チーム側はdisplayId、個人側はdisplayId）
       const itemId =
         teamMode && selectedDeletedItem.displayId
           ? selectedDeletedItem.displayId
-          : selectedDeletedItem.originalId;
+          : selectedDeletedItem.displayId;
       await restoreMutation.mutateAsync(itemId);
 
       // キャッシュ無効化（次選択はuseEffectで自動実行）
@@ -229,7 +229,7 @@ export function useUnifiedRestoration<T extends DeletedItem>({
         itemId:
           teamMode && selectedDeletedItem.displayId
             ? selectedDeletedItem.displayId
-            : selectedDeletedItem.originalId,
+            : selectedDeletedItem.displayId,
         teamMode,
         teamId,
       });

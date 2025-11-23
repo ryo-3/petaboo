@@ -59,7 +59,6 @@ import BoardChangeModal from "@/components/ui/modals/board-change-modal";
 import type { Task, DeletedTask } from "@/src/types/task";
 import type { Tag, Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
-import { OriginalIdUtils } from "@/src/types/common";
 import { useCallback, useEffect, useState, useMemo, memo, useRef } from "react";
 import type { DragEvent } from "react";
 import { useDeletedTaskActions } from "./use-deleted-task-actions";
@@ -105,7 +104,7 @@ interface TaskEditorProps {
     boardName: string;
     itemType: "memo" | "task";
     itemId: string;
-    originalId: string;
+    displayId: string;
     addedAt: number;
   }>;
   preloadedItemBoards?: Board[]; // 親で取得済みのアイテム紐づけボード（優先的に使用）
@@ -126,7 +125,7 @@ interface TaskEditorProps {
       isPending: boolean;
     };
     restoreItem: {
-      mutateAsync: (originalId: string) => Promise<any>;
+      mutateAsync: (displayId: string) => Promise<any>;
       isPending: boolean;
     };
   };
@@ -174,14 +173,14 @@ function TaskEditor({
   const { data: teamDetailData } = useTeamDetailQuery(teamSlug || "");
   const teamMembers = teamMode ? (teamDetailData?.members ?? []) : [];
 
-  // IMPORTANT: originalIdを文字列として強制変換（ボードAPI経由だと数値になる場合がある）
+  // IMPORTANT: displayIdを文字列として強制変換（ボードAPI経由だと数値になる場合がある）
   const task = rawTask
     ? ({
         ...rawTask,
-        originalId:
-          typeof rawTask.originalId === "string"
-            ? rawTask.originalId
-            : OriginalIdUtils.fromItem(rawTask) || rawTask.originalId,
+        displayId:
+          typeof rawTask.displayId === "string"
+            ? rawTask.displayId
+            : rawTask.displayId,
       } as typeof rawTask)
     : rawTask;
 
@@ -264,10 +263,8 @@ function TaskEditor({
   }, [preloadedItemBoards, task, initialBoardId, preloadedBoards]);
 
   // 【最適化】個別取得をやめて一括取得を活用
-  const originalId =
-    task && task.id !== 0 ? OriginalIdUtils.fromItem(task) : null;
-  const displayId = task?.displayId;
-  const taskTargetId = teamMode ? displayId : originalId;
+  const displayId = task && task.id !== 0 ? task.displayId : null;
+  const taskTargetId = teamMode ? displayId : displayId;
 
   // 個人モード: 個別タグ取得（従来通り）
   const { data: liveTaggings } = useTaggings({
@@ -372,10 +369,10 @@ function TaskEditor({
   );
 
   // チームモード: 一括取得からフィルタリング
-  // タスクID 142で originalId が空の場合は、既存タグとの整合性のため "5" を使用
+  // タスクID 142で displayId が空の場合は、既存タグとの整合性のため "5" を使用
   const teamOriginalId = useMemo(() => {
     if (!task || !teamMode) return null;
-    if (task.id === 142 && (!task.originalId || task.originalId === "")) {
+    if (task.id === 142 && (!task.displayId || task.displayId === "")) {
       return "5";
     }
     return displayId;
@@ -395,11 +392,11 @@ function TaskEditor({
   // 事前取得されたデータとライブデータを組み合わせて現在のタグを取得
   const currentTags = useMemo(() => {
     if (!task || task.id === 0) return [];
-    // タスクの一意識別子を決定（originalIdが空の場合の特別処理）
-    let targetOriginalId = OriginalIdUtils.fromItem(task) || "";
+    // タスクの一意識別子を決定（displayIdが空の場合の特別処理）
+    let targetOriginalId = task.displayId || "";
 
-    // タスクID 142で originalId が空の場合は、既存タグとの整合性のため "5" を使用
-    if (task.id === 142 && (!task.originalId || task.originalId === "")) {
+    // タスクID 142で displayId が空の場合は、既存タグとの整合性のため "5" を使用
+    if (task.id === 142 && (!task.displayId || task.displayId === "")) {
       targetOriginalId = "5";
     }
 
@@ -1031,16 +1028,14 @@ function TaskEditor({
     let targetId =
       task && task.id > 0
         ? teamMode
-          ? (task.displayId ?? OriginalIdUtils.fromItem(task))
-          : OriginalIdUtils.fromItem(task)
+          ? (task.displayId ?? task.displayId)
+          : task.displayId
         : null;
 
     // タグの変更がある場合は保存
     if (hasTagChanges && task && task.id !== 0) {
       const taskId =
-        (teamMode
-          ? (task.displayId ?? OriginalIdUtils.fromItem(task))
-          : OriginalIdUtils.fromItem(task)) || "";
+        (teamMode ? (task.displayId ?? task.displayId) : task.displayId) || "";
       await updateTaggings(taskId);
     } else if (
       wasNewTask &&
@@ -1060,9 +1055,7 @@ function TaskEditor({
 
         if (latestTask) {
           targetId =
-            (teamMode
-              ? latestTask.displayId
-              : OriginalIdUtils.fromItem(latestTask)) || "";
+            (teamMode ? latestTask.displayId : latestTask.displayId) || "";
           if (localTags.length > 0) {
             await updateTaggings(targetId);
           }

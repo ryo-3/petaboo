@@ -217,10 +217,10 @@ export function useBulkDeleteUnified<
 
     const onApiCall = async (id: number) => {
       if (activeTab === deletedTabKey) {
-        // 削除済みアイテムの場合はoriginalIdを使用
+        // 削除済みアイテムの場合はdisplayIdを使用
         const deletedItem = deletedItems?.find((item) => item.id === id);
-        if (deletedItem && deletedItem.originalId) {
-          await permanentDeleteItemMutation.mutateAsync(deletedItem.originalId);
+        if (deletedItem && deletedItem.displayId) {
+          await permanentDeleteItemMutation.mutateAsync(deletedItem.displayId);
         } else {
           // 対象が見つからない場合もアニメーションの一貫性のため処理を継続
         }

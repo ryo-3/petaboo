@@ -8,7 +8,6 @@ import { teamMembers } from "../../db/schema/team/teams";
 import { teamComments } from "../../db/schema/team/comments";
 import { teamAttachments } from "../../db/schema/team/attachments";
 import { users } from "../../db/schema/users";
-import { generateOriginalId, generateUuid } from "../../utils/originalId";
 import { generateMemoDisplayId } from "../../utils/displayId";
 import {
   getTeamMemoMemberJoin,
@@ -601,7 +600,7 @@ app.openapi(
               and(
                 eq(teamComments.teamId, teamId),
                 eq(teamComments.targetType, "memo"),
-                eq(teamComments.targetOriginalId, memo.originalId),
+                eq(teamComments.targetmemo.originalId),
               ),
             );
 
@@ -862,7 +861,7 @@ app.openapi(
           and(
             eq(teamComments.teamId, teamId),
             eq(teamComments.targetType, "memo"),
-            eq(teamComments.targetOriginalId, originalId),
+            eq(teamComments.targetoriginalId),
           ),
         );
 
@@ -873,7 +872,7 @@ app.openapi(
           and(
             eq(teamAttachments.teamId, teamId),
             eq(teamAttachments.attachedTo, "memo"),
-            eq(teamAttachments.attachedOriginalId, originalId),
+            eq(teamAttachments.attachedoriginalId),
           ),
         );
 

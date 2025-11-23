@@ -309,8 +309,7 @@ export function useBoardState() {
         id: 0, // 新規作成時は0
         title: "",
         content: "",
-        originalId: "new", // 新規作成を示す特別なID（URL更新スキップ用）
-        displayId: "0",
+        displayId: "new", // 新規作成を示す特別なID（URL更新スキップ用）
         createdAt: Math.floor(Date.now() / 1000),
         updatedAt: Math.floor(Date.now() / 1000),
       };
@@ -329,8 +328,7 @@ export function useBoardState() {
         id: 0, // 新規作成時は0
         title: "",
         description: null,
-        originalId: "new", // 新規作成を示す特別なID（URL更新スキップ用）
-        displayId: "0",
+        displayId: "new", // 新規作成を示す特別なID（URL更新スキップ用）
         status:
           activeTaskTabRef.current === "deleted"
             ? "todo"

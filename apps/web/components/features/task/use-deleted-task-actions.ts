@@ -51,7 +51,7 @@ export function useDeletedTaskActions({
         );
         return response.json();
       } else {
-        // 個人モード: originalIdを使用
+        // 個人モード: displayIdを使用
         const response = await tasksApi.permanentDeleteTask(
           itemId,
           token || undefined,
@@ -75,7 +75,7 @@ export function useDeletedTaskActions({
                 task &&
                 (teamMode
                   ? t.displayId !== task.displayId
-                  : t.originalId !== task.originalId),
+                  : t.displayId !== task.displayId),
             );
             return filteredTasks;
           },
@@ -91,7 +91,7 @@ export function useDeletedTaskActions({
                 task &&
                 (teamMode
                   ? t.displayId !== task.displayId
-                  : t.originalId !== task.originalId),
+                  : t.displayId !== task.displayId),
             );
             return filteredTasks;
           },
@@ -118,7 +118,7 @@ export function useDeletedTaskActions({
                 task &&
                 (teamMode
                   ? item.displayId !== task.displayId
-                  : item.originalId !== task.originalId),
+                  : item.displayId !== task.displayId),
             ),
           };
           return filteredItems;
@@ -200,21 +200,21 @@ export function useDeletedTaskActions({
 
   // 復元用のカスタムミューテーション（チーム対応）
   const restoreTask = useMutation({
-    mutationFn: async (originalId: string) => {
+    mutationFn: async (displayId: string) => {
       const token = await getToken();
 
       if (teamMode && teamId) {
         // チームモード: チーム用復元API
         const response = await tasksApi.restoreTeamTask(
           teamId,
-          originalId,
+          displayId,
           token || undefined,
         );
         return response.json();
       } else {
         // 個人モード: 個人用復元API
         const response = await tasksApi.restoreTask(
-          originalId,
+          displayId,
           token || undefined,
         );
         return response.json();
@@ -253,7 +253,7 @@ export function useDeletedTaskActions({
           const newBoardItem = {
             itemType: "task",
             itemId: restoredTask.id.toString(),
-            originalId: restoredTask.originalId,
+            displayId: restoredTask.displayId,
             addedAt: Date.now(), // 現在時刻で追加
             content: restoredTask,
           };
@@ -279,7 +279,7 @@ export function useDeletedTaskActions({
                 task &&
                 (teamMode
                   ? t.displayId !== task.displayId
-                  : t.originalId !== task.originalId),
+                  : t.displayId !== task.displayId),
             );
             return filteredTasks;
           },
@@ -295,7 +295,7 @@ export function useDeletedTaskActions({
                 task &&
                 (teamMode
                   ? t.displayId !== task.displayId
-                  : t.originalId !== task.originalId),
+                  : t.displayId !== task.displayId),
             );
             return filteredTasks;
           },
@@ -322,7 +322,7 @@ export function useDeletedTaskActions({
                 task &&
                 (teamMode
                   ? item.displayId !== task.displayId
-                  : item.originalId !== task.originalId),
+                  : item.displayId !== task.displayId),
             ),
           };
           return filteredItems;
@@ -428,7 +428,7 @@ export function useDeletedTaskActions({
               // API実行（onSuccessで次選択とキャッシュ更新が実行される）
               if (task) {
                 await permanentDeleteTask.mutateAsync(
-                  teamMode ? task.displayId : task.originalId,
+                  teamMode ? task.displayId : task.displayId,
                 );
               }
 
@@ -451,7 +451,7 @@ export function useDeletedTaskActions({
 
         // API実行（onSuccessで次選択とキャッシュ更新が実行される）
         if (task) {
-          await permanentDeleteTask.mutateAsync(task.originalId);
+          await permanentDeleteTask.mutateAsync(task.displayId);
         }
 
         // アニメーション状態をリセットしてから蓋を閉じる
@@ -492,7 +492,7 @@ export function useDeletedTaskActions({
               // API実行（onSuccessで次選択とキャッシュ更新が実行される）
               if (task) {
                 await restoreTask.mutateAsync(
-                  teamMode ? task.displayId : task.originalId,
+                  teamMode ? task.displayId : task.displayId,
                 );
               }
             } catch (error: any) {
@@ -501,7 +501,7 @@ export function useDeletedTaskActions({
                 message: error?.message || "メッセージなし",
                 stack: error?.stack || "スタックトレースなし",
                 name: error?.name || "エラー名なし",
-                originalId: task?.originalId,
+                displayId: task?.displayId,
               });
               alert("復元に失敗しました。");
               throw error; // エラーを再スロー
@@ -513,7 +513,7 @@ export function useDeletedTaskActions({
         // アニメーション要素がない場合は通常の処理
         if (task) {
           await restoreTask.mutateAsync(
-            teamMode ? task.displayId : task.originalId,
+            teamMode ? task.displayId : task.displayId,
           );
         }
       }
@@ -523,7 +523,7 @@ export function useDeletedTaskActions({
         message: error?.message || "メッセージなし",
         stack: error?.stack || "スタックトレースなし",
         name: error?.name || "エラー名なし",
-        originalId: task?.originalId,
+        displayId: task?.displayId,
         onRestoreAndSelectNext: typeof onRestoreAndSelectNext,
       });
       alert("復元に失敗しました。");

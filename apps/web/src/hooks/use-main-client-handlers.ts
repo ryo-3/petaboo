@@ -292,9 +292,9 @@ export function useMainClientHandlers({
 
       setBoardSelectedItem({ type: "memo", item: memo });
 
-      // 新規作成時 (originalId === "new" または id === 0) は画面遷移をスキップ
+      // 新規作成時 (displayId === "new" または id === 0) は画面遷移をスキップ
       // （新規作成画面を維持するため）
-      const isNewItem = memo.originalId === "new" || memo.id === 0;
+      const isNewItem = memo.displayId === "new" || memo.id === 0;
       if (isNewItem) {
         return;
       }
@@ -324,9 +324,9 @@ export function useMainClientHandlers({
 
       setBoardSelectedItem({ type: "task", item: task });
 
-      // 新規作成時 (originalId === "new" または id === 0) は画面遷移をスキップ
+      // 新規作成時 (displayId === "new" または id === 0) は画面遷移をスキップ
       // （新規作成画面を維持するため）
-      const isNewItem = task.originalId === "new" || task.id === 0;
+      const isNewItem = task.displayId === "new" || task.id === 0;
       if (isNewItem) {
         return;
       }

@@ -35,7 +35,7 @@ interface BoardRightPanelProps {
     boardName: string;
     itemType: "memo" | "task";
     itemId: string;
-    originalId: string;
+    displayId: string;
     addedAt: number;
   }>; // 全ボードアイテム情報
   // チーム機能関連
@@ -112,12 +112,12 @@ export default function BoardRightPanel({
   const currentBoardMemoIds =
     allBoardItems
       ?.filter((item) => item.boardId === boardId && item.itemType === "memo")
-      .map((item) => item.originalId) || [];
+      .map((item) => item.displayId) || [];
 
   const currentBoardTaskIds =
     allBoardItems
       ?.filter((item) => item.boardId === boardId && item.itemType === "task")
-      .map((item) => item.originalId) || [];
+      .map((item) => item.displayId) || [];
 
   // 削除済みアイテムかどうかを判定するヘルパー関数
   const isDeletedMemo = (memo: Memo | DeletedMemo): memo is DeletedMemo => {

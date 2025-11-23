@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import type { Memo } from "@/src/types/memo";
 import type { Task } from "@/src/types/task";
-import { OriginalIdUtils } from "@/src/types/common";
 import { useCreateMemo, useUpdateMemo } from "@/src/hooks/use-memos";
 import { useCreateTask, useUpdateTask } from "@/src/hooks/use-tasks";
 import {
@@ -462,7 +461,7 @@ export function useSimpleItemSave<T extends UnifiedItem>({
                   boardId,
                   data: {
                     itemType,
-                    itemId: OriginalIdUtils.fromItem(item) || "",
+                    itemId: item.displayId || "",
                   },
                 });
               } catch (error: unknown) {
@@ -483,7 +482,7 @@ export function useSimpleItemSave<T extends UnifiedItem>({
               try {
                 await removeItemFromBoard.mutateAsync({
                   boardId,
-                  itemId: OriginalIdUtils.fromItem(item) || "",
+                  itemId: item.displayId || "",
                   itemType,
                   teamId,
                 });
@@ -508,13 +507,13 @@ export function useSimpleItemSave<T extends UnifiedItem>({
                   "team-item-boards",
                   teamId,
                   itemType,
-                  item.originalId,
+                  item.displayId,
                 ],
               });
             } else {
               // 個人モード用のキャッシュ無効化
               queryClient.invalidateQueries({
-                queryKey: ["item-boards", itemType, item.originalId],
+                queryKey: ["item-boards", itemType, item.displayId],
               });
             }
 
@@ -602,7 +601,7 @@ export function useSimpleItemSave<T extends UnifiedItem>({
                   boardId,
                   data: {
                     itemType,
-                    itemId: OriginalIdUtils.fromItem(createdItem) || "",
+                    itemId: createdItem.displayId || "",
                   },
                 });
               } catch (error: unknown) {
@@ -625,13 +624,13 @@ export function useSimpleItemSave<T extends UnifiedItem>({
                   "team-item-boards",
                   teamId,
                   itemType,
-                  createdItem.originalId,
+                  createdItem.displayId,
                 ],
               });
             } else {
               // 個人モード用のキャッシュ無効化
               queryClient.invalidateQueries({
-                queryKey: ["item-boards", itemType, createdItem.originalId],
+                queryKey: ["item-boards", itemType, createdItem.displayId],
               });
             }
           }

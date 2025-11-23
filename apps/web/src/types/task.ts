@@ -1,9 +1,4 @@
-import {
-  OriginalId,
-  BaseItemFields,
-  TeamCreatorFields,
-  DeletedItemFields,
-} from "./common";
+import { BaseItemFields, TeamCreatorFields, DeletedItemFields } from "./common";
 
 export interface Task extends BaseItemFields, TeamCreatorFields {
   title: string;
@@ -23,8 +18,7 @@ export interface DeletedTask
   extends BaseItemFields,
     TeamCreatorFields,
     DeletedItemFields {
-  /** 削除済みタスクではoriginalIdは必須 */
-  originalId: OriginalId;
+  /** 削除済みタスクではdisplayIdは必須 */
   /** displayIdは必須（個人用・チーム用共通） */
   displayId: string;
   title: string;

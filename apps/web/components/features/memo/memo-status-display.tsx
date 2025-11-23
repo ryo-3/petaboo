@@ -7,7 +7,6 @@ import type { Tag, Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
 import type { Attachment } from "@/src/hooks/use-attachments";
 import { useMemo } from "react";
-import { OriginalIdUtils } from "@/src/types/common";
 
 interface MemoStatusDisplayProps {
   memos: Memo[] | undefined;
@@ -41,7 +40,7 @@ interface MemoStatusDisplayProps {
     boardName: string;
     itemType: "memo" | "task";
     itemId: string;
-    originalId: string;
+    displayId: string;
     addedAt: number;
   }>;
   allAttachments?: Attachment[];
@@ -80,7 +79,7 @@ interface DeletedMemoDisplayProps {
     boardName: string;
     itemType: "memo" | "task";
     itemId: string;
-    originalId: string;
+    displayId: string;
     addedAt: number;
   }>;
   allAttachments?: Attachment[];
@@ -124,10 +123,10 @@ function MemoStatusDisplay({
         if (!memo || memo.id === undefined) return false;
 
         // WORKAROUND: idとoriginalIdの両方でマッチング
-        const originalId = OriginalIdUtils.fromItem(memo) || "";
+        const displayId = memo.displayId || "";
         const memoId = String(memo.id);
         const memoDisplayId = memo.displayId;
-        const memoIdentifiers = [originalId, memoId];
+        const memoIdentifiers = [displayId, memoId];
         if (teamMode && memoDisplayId) {
           memoIdentifiers.push(memoDisplayId);
         }
@@ -136,7 +135,7 @@ function MemoStatusDisplay({
         const memoBoardItems = allBoardItems.filter(
           (item) =>
             item.itemType === "memo" &&
-            (memoIdentifiers.includes(item.originalId) ||
+            (memoIdentifiers.includes(item.displayId) ||
               memoIdentifiers.includes(item.itemId)),
         );
         const memoBoardIds = memoBoardItems.map((item) => item.boardId);
@@ -161,7 +160,7 @@ function MemoStatusDisplay({
       baseMemos = baseMemos.filter((memo) => {
         if (!memo || memo.id === undefined) return false;
 
-        const memoOriginalId = OriginalIdUtils.fromItem(memo) || "";
+        const memoOriginalId = memo.displayId || "";
         const memoDisplayId = memo.displayId;
         const memoIdentifiers = [memoOriginalId, String(memo.id)];
         if (teamMode && memoDisplayId) {
@@ -224,12 +223,12 @@ function MemoStatusDisplay({
     const map = new Map();
     filteredMemos.forEach((memo) => {
       if (!memo || memo.id === undefined) return;
-      // WORKAROUND: originalIdが数値の場合もあるため、文字列に変換
+      // WORKAROUND: displayIdが数値の場合もあるため、文字列に変換
       // さらに、idとoriginalIdの両方でマッチング（データ不整合対策）
-      const originalId = OriginalIdUtils.fromItem(memo) || "";
+      const displayId = memo.displayId || "";
       const memoId = String(memo.id);
       const memoDisplayId = memo.displayId;
-      const memoIdentifiers = [originalId, memoId];
+      const memoIdentifiers = [displayId, memoId];
       if (teamMode && memoDisplayId) {
         memoIdentifiers.push(memoDisplayId);
       }
@@ -250,7 +249,7 @@ function MemoStatusDisplay({
       const memoBoardItems = safeAllBoardItems.filter(
         (item) =>
           item.itemType === "memo" &&
-          (memoIdentifiers.includes(item.originalId) ||
+          (memoIdentifiers.includes(item.displayId) ||
             memoIdentifiers.includes(item.itemId)),
       );
 
@@ -437,10 +436,10 @@ export function DeletedMemoDisplay({
   ) => {
     // 削除済みメモのタグ・ボード情報を取得
     // WORKAROUND: idとoriginalIdの両方でマッチング
-    const originalId = OriginalIdUtils.fromItem(memo) || "";
+    const displayId = memo.displayId || "";
     const memoId = String(memo.id);
     const memoDisplayId = memo.displayId;
-    const memoIdentifiers = [originalId, memoId];
+    const memoIdentifiers = [displayId, memoId];
     if (teamMode && memoDisplayId) {
       memoIdentifiers.push(memoDisplayId);
     }
@@ -461,7 +460,7 @@ export function DeletedMemoDisplay({
     const memoBoardItems = allBoardItems.filter(
       (item) =>
         item.itemType === "memo" &&
-        (memoIdentifiers.includes(item.originalId) ||
+        (memoIdentifiers.includes(item.displayId) ||
           memoIdentifiers.includes(item.itemId)),
     );
     const uniqueBoardIds = new Set(memoBoardItems.map((item) => item.boardId));

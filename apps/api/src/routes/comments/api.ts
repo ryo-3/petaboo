@@ -603,9 +603,9 @@ export const postComment = async (c: any) => {
       sourceType: "comment",
       sourceId: result[0].id,
       targetType,
-      targetOriginalId, // Phase 6で削除予定
+      targetOriginalId: targetDisplayId, // Phase 6で削除予定
       targetDisplayId,
-      boardOriginalId, // Phase 6で削除予定
+      boardOriginalId: boardDisplayId, // Phase 6で削除予定
       boardDisplayId,
       actorUserId: auth.userId,
       message: `${member.displayName || "誰か"}さんがコメントしました`,

@@ -21,7 +21,8 @@ export const taggings = sqliteTable("taggings", {
     .notNull()
     .references(() => tags.id, { onDelete: "cascade" }),
   targetType: text("target_type").notNull(), // 'memo' | 'task' | 'board'
-  targetOriginalId: text("target_original_id").notNull(), // 対象のoriginalId
+  targetOriginalId: text("target_original_id").notNull(), // 対象のoriginalId（移行中、後で削除予定）
+  targetDisplayId: text("target_display_id"), // 対象のdisplayId（移行先）
   userId: text("user_id").notNull(), // パフォーマンス向上のため重複保存
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()

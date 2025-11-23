@@ -308,7 +308,7 @@ export const useAttachmentManager = ({
               "attachments",
               teamId,
               itemType,
-              targetOriginalId,
+              displayId,
             ] as const;
 
             // pendingImagesクリア後にリフェッチ

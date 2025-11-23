@@ -292,7 +292,7 @@ export function CSVImportModal({
                 boardId,
                 data: {
                   itemType: "memo",
-                  itemId: newMemo.originalId,
+                  itemId: newMemo.displayId,
                 },
               });
               imported++;
@@ -326,7 +326,7 @@ export function CSVImportModal({
                 boardId,
                 data: {
                   itemType: "task",
-                  itemId: newTask.originalId,
+                  itemId: newTask.displayId,
                 },
               });
               imported++;

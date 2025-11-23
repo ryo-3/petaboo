@@ -29,7 +29,6 @@ import { Memo, DeletedMemo } from "@/src/types/memo";
 import { Task, DeletedTask } from "@/src/types/task";
 import type { Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
-import { OriginalIdUtils } from "@/src/types/common";
 import { memo, useEffect, useState, useRef, useCallback, useMemo } from "react";
 import type { HeaderControlPanelConfig } from "@/src/contexts/header-control-panel-context";
 import TagAddModal from "@/components/ui/tag-add/tag-add-modal";
@@ -376,32 +375,24 @@ function BoardDetailScreen({
   const { data: memoAttachments = [] } = useAttachments(
     teamId || undefined,
     "memo",
-    selectedMemo && selectedMemo.id !== 0
-      ? OriginalIdUtils.fromItem(selectedMemo) || ""
-      : "",
+    selectedMemo && selectedMemo.id !== 0 ? selectedMemo.displayId || "" : "",
   );
   const { data: memoComments = [] } = useTeamComments(
     teamId || undefined,
     "memo",
-    selectedMemo && selectedMemo.id !== 0
-      ? OriginalIdUtils.fromItem(selectedMemo) || ""
-      : "",
+    selectedMemo && selectedMemo.id !== 0 ? selectedMemo.displayId || "" : "",
   );
 
   // チームモード時: タスクの画像数とコメント数を取得（モバイルフッター用）
   const { data: taskAttachments = [] } = useAttachments(
     teamId || undefined,
     "task",
-    selectedTask && selectedTask.id !== 0
-      ? OriginalIdUtils.fromItem(selectedTask) || ""
-      : "",
+    selectedTask && selectedTask.id !== 0 ? selectedTask.displayId || "" : "",
   );
   const { data: taskComments = [] } = useTeamComments(
     teamId || undefined,
     "task",
-    selectedTask && selectedTask.id !== 0
-      ? OriginalIdUtils.fromItem(selectedTask) || ""
-      : "",
+    selectedTask && selectedTask.id !== 0 ? selectedTask.displayId || "" : "",
   );
 
   // チームモード時: 画像数とコメント数をContextに反映（メモ用）
@@ -975,8 +966,8 @@ function BoardDetailScreen({
   }, [boardHeaderConfig]);
 
   // 選択中のメモ・タスクに紐づくボード情報を取得
-  const selectedMemoId = OriginalIdUtils.fromItem(selectedMemo);
-  const selectedTaskId = OriginalIdUtils.fromItem(selectedTask);
+  const selectedMemoId = selectedMemo?.displayId;
+  const selectedTaskId = selectedTask?.displayId;
 
   // 個人モード用のitemBoards取得
   const { data: personalMemoItemBoards = [] } = useItemBoards(
@@ -1117,7 +1108,7 @@ function BoardDetailScreen({
   // 選択状態が変わったらマウントカウントをリセット
   useEffect(() => {
     mountCountSelected.current = 0;
-  }, [selectedMemo?.originalId, selectedTask?.originalId]);
+  }, [selectedMemo?.displayId, selectedTask?.displayId]);
 
   useEffect(() => {
     if (!selectedMemo && !selectedTask) {
@@ -1490,7 +1481,7 @@ function BoardDetailScreen({
                                 memoEditorTab === "memo" ? (
                                   <MemoEditor
                                     key={
-                                      selectedMemo.originalId ||
+                                      selectedMemo.displayId ||
                                       selectedMemo.id ||
                                       "new"
                                     }
@@ -1538,7 +1529,7 @@ function BoardDetailScreen({
                                     onRestore={() => {
                                       if (
                                         selectedMemo &&
-                                        "originalId" in selectedMemo
+                                        "displayId" in selectedMemo
                                       ) {
                                         handleMemoRestoreAndSelectNext(
                                           selectedMemo as DeletedMemo,
@@ -1577,7 +1568,7 @@ function BoardDetailScreen({
                                 taskEditorTab === "task" ? (
                                   <TaskEditor
                                     key={
-                                      selectedTask.originalId ||
+                                      selectedTask.displayId ||
                                       selectedTask.id ||
                                       "new"
                                     }
@@ -1625,7 +1616,7 @@ function BoardDetailScreen({
                                     onRestore={() => {
                                       if (
                                         selectedTask &&
-                                        "originalId" in selectedTask
+                                        "displayId" in selectedTask
                                       ) {
                                         handleTaskRestoreAndSelectNext(
                                           selectedTask as DeletedTask,
@@ -1635,7 +1626,7 @@ function BoardDetailScreen({
                                     onRestoreAndSelectNext={() => {
                                       if (
                                         selectedTask &&
-                                        "originalId" in selectedTask
+                                        "displayId" in selectedTask
                                       ) {
                                         handleTaskRestoreAndSelectNext(
                                           selectedTask as DeletedTask,
@@ -1652,7 +1643,7 @@ function BoardDetailScreen({
                                         targetType="task"
                                         targetDisplayId={
                                           selectedTask.displayId ||
-                                          selectedTask.originalId
+                                          selectedTask.displayId
                                         }
                                         teamId={teamId || undefined}
                                         teamMembers={teamMembers}
@@ -1706,10 +1697,10 @@ function BoardDetailScreen({
                                   targetDisplayId={
                                     selectedMemo
                                       ? selectedMemo.displayId ||
-                                        selectedMemo.originalId
+                                        selectedMemo.displayId
                                       : selectedTask
                                         ? selectedTask.displayId ||
-                                          selectedTask.originalId
+                                          selectedTask.displayId
                                         : boardId.toString()
                                   }
                                   targetTitle={
@@ -1873,7 +1864,7 @@ function BoardDetailScreen({
                                   >
                                     <MemoEditor
                                       key={
-                                        selectedMemo.originalId ||
+                                        selectedMemo.displayId ||
                                         selectedMemo.id ||
                                         "new"
                                       }
@@ -1928,7 +1919,7 @@ function BoardDetailScreen({
                                       onRestore={() => {
                                         if (
                                           selectedMemo &&
-                                          "originalId" in selectedMemo
+                                          "displayId" in selectedMemo
                                         ) {
                                           handleMemoRestoreAndSelectNext(
                                             selectedMemo as DeletedMemo,
@@ -1951,7 +1942,7 @@ function BoardDetailScreen({
                                   >
                                     <TaskEditor
                                       key={
-                                        selectedTask.originalId ||
+                                        selectedTask.displayId ||
                                         selectedTask.id ||
                                         "new"
                                       }
@@ -2001,7 +1992,7 @@ function BoardDetailScreen({
                                       onRestore={() => {
                                         if (
                                           selectedTask &&
-                                          "originalId" in selectedTask
+                                          "displayId" in selectedTask
                                         ) {
                                           handleTaskRestoreAndSelectNext(
                                             selectedTask as DeletedTask,
@@ -2012,7 +2003,7 @@ function BoardDetailScreen({
                                       onRestoreAndSelectNext={() => {
                                         if (
                                           selectedTask &&
-                                          "originalId" in selectedTask
+                                          "displayId" in selectedTask
                                         ) {
                                           handleTaskRestoreAndSelectNext(
                                             selectedTask as DeletedTask,
@@ -2120,10 +2111,10 @@ function BoardDetailScreen({
                                 targetDisplayId={
                                   selectedMemo
                                     ? selectedMemo.displayId ||
-                                      selectedMemo.originalId
+                                      selectedMemo.displayId
                                     : selectedTask
                                       ? selectedTask.displayId ||
-                                        selectedTask.originalId
+                                        selectedTask.displayId
                                       : boardId.toString()
                                 }
                                 targetTitle={
@@ -2471,7 +2462,7 @@ function BoardDetailScreen({
                                     const memo = boardMemos.find(
                                       (m) =>
                                         m.displayId === displayId ||
-                                        m.originalId === displayId,
+                                        m.displayId === displayId,
                                     );
                                     if (memo) {
                                       onSelectMemo?.(memo as Memo);
@@ -2480,7 +2471,7 @@ function BoardDetailScreen({
                                     const task = boardTasks.find(
                                       (t) =>
                                         t.displayId === displayId ||
-                                        t.originalId === displayId,
+                                        t.displayId === displayId,
                                     );
                                     if (task) {
                                       onSelectTask?.(task as Task);

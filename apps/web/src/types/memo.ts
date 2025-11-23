@@ -1,9 +1,4 @@
-import {
-  OriginalId,
-  BaseItemFields,
-  TeamCreatorFields,
-  DeletedItemFields,
-} from "./common";
+import { BaseItemFields, TeamCreatorFields, DeletedItemFields } from "./common";
 
 export interface Memo extends BaseItemFields, TeamCreatorFields {
   title: string;
@@ -17,8 +12,7 @@ export interface DeletedMemo
   extends BaseItemFields,
     TeamCreatorFields,
     DeletedItemFields {
-  /** 削除済みメモではoriginalIdは必須 */
-  originalId: OriginalId;
+  /** 削除済みメモではdisplayIdは必須 */
   /** displayIdは必須（個人用・チーム用共通） */
   displayId: string;
   title: string;

@@ -175,7 +175,7 @@ export function createTeamBoardsAPI(app: AppType) {
               and(
                 eq(teamComments.teamId, parseInt(teamId)),
                 eq(teamComments.targetType, "board"),
-                eq(teamComments.targetOriginalId, board.id.toString()),
+                eq(teamComments.targetboard.id.toString()),
               ),
             );
           commentCount += boardComments.length;
@@ -831,7 +831,7 @@ export function createTeamBoardsAPI(app: AppType) {
           and(
             eq(teamComments.teamId, parseInt(teamId)),
             eq(teamComments.targetType, "board"),
-            eq(teamComments.targetOriginalId, board[0].id.toString()),
+            eq(teamComments.targetboard[0].id.toString()),
           ),
         );
       commentCount += boardComments.length;
@@ -1106,7 +1106,7 @@ export function createTeamBoardsAPI(app: AppType) {
           and(
             eq(teamComments.teamId, parseInt(teamId)),
             eq(teamComments.targetType, "board"),
-            eq(teamComments.targetOriginalId, board[0].id.toString()),
+            eq(teamComments.targetboard[0].id.toString()),
           ),
         );
       commentCount += boardComments.length;
@@ -1614,7 +1614,7 @@ export function createTeamBoardsAPI(app: AppType) {
           and(
             eq(teamComments.teamId, parseInt(teamId)),
             eq(teamComments.targetType, "board"),
-            eq(teamComments.targetOriginalId, board[0].id.toString()),
+            eq(teamComments.targetboard[0].id.toString()),
           ),
         );
 

@@ -75,7 +75,7 @@ export function useBoardItems({
         (memo: DeletedMemo, index: number) => ({
           id: memo.id,
           boardId: boardId,
-          itemId: memo.originalId,
+          itemId: memo.displayId,
           itemType: "memo" as const,
           content: memo,
           createdAt: memo.createdAt,
@@ -94,7 +94,7 @@ export function useBoardItems({
         (task: DeletedTask, index: number) => ({
           id: task.id,
           boardId: boardId,
-          itemId: task.originalId,
+          itemId: task.displayId,
           itemType: "task" as const,
           content: task,
           createdAt: task.createdAt,
@@ -157,7 +157,7 @@ export function useBoardItems({
       activeMemoTab === "deleted"
     ) {
       const allDeletedMemoIds = new Set(
-        boardDeletedItems.memos.map((memo: DeletedMemo) => memo.originalId),
+        boardDeletedItems.memos.map((memo: DeletedMemo) => memo.displayId),
       );
       const newCheckedDeletedMemos = new Set(
         Array.from(checkedDeletedMemos).filter((id) => {

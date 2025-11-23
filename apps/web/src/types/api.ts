@@ -405,7 +405,6 @@ export interface paths {
           content: {
             "application/json": {
               id: number;
-              originalId: string;
               displayId: string;
               title: string;
               content: string | null;
@@ -453,7 +452,6 @@ export interface paths {
           content: {
             "application/json": {
               id: number;
-              originalId: string;
               displayId: string;
               title: string;
               content: string | null;
@@ -654,7 +652,7 @@ export interface paths {
           content: {
             "application/json": {
               id: number;
-              originalId: string;
+              displayId: string;
               title: string;
               content: string | null;
               createdAt: number;
@@ -695,7 +693,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/memos/deleted/{originalId}": {
+  "/memos/deleted/{displayId}": {
     parameters: {
       query?: never;
       header?: never;
@@ -710,7 +708,7 @@ export interface paths {
         query?: never;
         header?: never;
         path: {
-          originalId: string;
+          displayId: string;
         };
         cookie?: never;
       };
@@ -767,7 +765,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/memos/deleted/{originalId}/restore": {
+  "/memos/deleted/{displayId}/restore": {
     parameters: {
       query?: never;
       header?: never;
@@ -781,7 +779,7 @@ export interface paths {
         query?: never;
         header?: never;
         path: {
-          originalId: string;
+          displayId: string;
         };
         cookie?: never;
       };
@@ -944,7 +942,6 @@ export interface paths {
           content: {
             "application/json": {
               id: number;
-              originalId: string;
               displayId: string;
               title: string;
               description: string | null;
@@ -1213,7 +1210,7 @@ export interface paths {
           content: {
             "application/json": {
               id: number;
-              originalId: string;
+              displayId: string;
               title: string;
               description: string | null;
               status: string;
@@ -1257,7 +1254,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/tasks/deleted/{originalId}": {
+  "/tasks/deleted/{displayId}": {
     parameters: {
       query?: never;
       header?: never;
@@ -1272,7 +1269,7 @@ export interface paths {
         query?: never;
         header?: never;
         path: {
-          originalId: string;
+          displayId: string;
         };
         cookie?: never;
       };
@@ -1329,7 +1326,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/tasks/deleted/{originalId}/restore": {
+  "/tasks/deleted/{displayId}/restore": {
     parameters: {
       query?: never;
       header?: never;
@@ -1343,7 +1340,7 @@ export interface paths {
         query?: never;
         header?: never;
         path: {
-          originalId: string;
+          displayId: string;
         };
         cookie?: never;
       };
@@ -2326,7 +2323,7 @@ export interface paths {
               boardId: number;
               /** @enum {string} */
               itemType: "memo" | "task";
-              originalId: string;
+              displayId: string;
               createdAt: number;
             };
           };
@@ -2615,7 +2612,7 @@ export interface paths {
               /** @enum {string} */
               itemType: "memo" | "task";
               itemId: string;
-              originalId: string;
+              displayId: string;
               addedAt: number;
             }[];
           };
@@ -5927,7 +5924,7 @@ export interface paths {
               id: number;
               teamId: number;
               userId: string;
-              originalId: string;
+              displayId: string;
               uuid: string | null;
               title: string;
               content: string | null;
@@ -5993,7 +5990,7 @@ export interface paths {
               id: number;
               teamId: number;
               userId: string;
-              originalId: string;
+              displayId: string;
               uuid: string | null;
               title: string;
               content: string | null;
@@ -6235,7 +6232,7 @@ export interface paths {
             "application/json": {
               id: number;
               teamId: number;
-              originalId: string;
+              displayId: string;
               uuid: string | null;
               title: string;
               content: string | null;
@@ -6320,7 +6317,7 @@ export interface paths {
               id: number;
               teamId: number;
               userId: string;
-              originalId: string;
+              displayId: string;
               uuid: string | null;
               title: string;
               content: string | null;
@@ -6384,7 +6381,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/teams/{teamId}/memos/deleted/{originalId}": {
+  "/teams/{teamId}/memos/deleted/{displayId}": {
     parameters: {
       query?: never;
       header?: never;
@@ -6400,7 +6397,7 @@ export interface paths {
         header?: never;
         path: {
           teamId: string;
-          originalId: string;
+          displayId: string;
         };
         cookie?: never;
       };
@@ -6565,7 +6562,7 @@ export interface paths {
               id: number;
               teamId: number;
               userId: string;
-              originalId: string;
+              displayId: string;
               uuid: string | null;
               title: string;
               description: string | null;
@@ -6654,7 +6651,7 @@ export interface paths {
               id: number;
               teamId: number;
               userId: string;
-              originalId: string;
+              displayId: string;
               uuid: string | null;
               title: string;
               description: string | null;
@@ -6902,7 +6899,7 @@ export interface paths {
             "application/json": {
               id: number;
               teamId: number;
-              originalId: string;
+              displayId: string;
               uuid: string | null;
               title: string;
               description: string | null;
@@ -6951,7 +6948,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/teams/{teamId}/tasks/deleted/{originalId}/restore": {
+  "/teams/{teamId}/tasks/deleted/{displayId}/restore": {
     parameters: {
       query?: never;
       header?: never;
@@ -6966,7 +6963,7 @@ export interface paths {
         header?: never;
         path: {
           teamId: string;
-          originalId: string;
+          displayId: string;
         };
         cookie?: never;
       };
@@ -6982,7 +6979,7 @@ export interface paths {
               id: number;
               teamId: number;
               userId: string;
-              originalId: string;
+              displayId: string;
               uuid: string | null;
               title: string;
               description: string | null;
@@ -7056,7 +7053,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/teams/{teamId}/tasks/deleted/{originalId}": {
+  "/teams/{teamId}/tasks/deleted/{displayId}": {
     parameters: {
       query?: never;
       header?: never;
@@ -7072,7 +7069,7 @@ export interface paths {
         header?: never;
         path: {
           teamId: string;
-          originalId: string;
+          displayId: string;
         };
         cookie?: never;
       };

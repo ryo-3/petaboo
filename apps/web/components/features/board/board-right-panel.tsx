@@ -45,7 +45,7 @@ interface BoardRightPanelProps {
     boardName: string;
     itemType: "memo" | "task";
     itemId: string;
-    originalId: string;
+    displayId: string;
     addedAt: number;
   }>; // 全ボードアイテム情報
   itemBoards?: Board[]; // 選択中のアイテムに紐づくボード（親で取得済み）
@@ -205,12 +205,12 @@ function BoardRightPanel({
   const currentBoardMemoOriginalIds =
     allBoardItems
       ?.filter((item) => item.boardId === boardId && item.itemType === "memo")
-      .map((item) => item.originalId) || [];
+      .map((item) => item.displayId) || [];
 
   const currentBoardTaskOriginalIds =
     allBoardItems
       ?.filter((item) => item.boardId === boardId && item.itemType === "task")
-      .map((item) => item.originalId) || [];
+      .map((item) => item.displayId) || [];
 
   const [isDeletingMemo, setIsDeletingMemo] = useState(false);
 
@@ -386,14 +386,14 @@ function BoardRightPanel({
                 onRestore={async () => {
                   if (
                     selectedMemo &&
-                    selectedMemo.originalId &&
+                    selectedMemo.displayId &&
                     onMemoRestoreAndSelectNext
                   ) {
                     try {
                       await memoOperations.restoreItem.mutateAsync(
                         teamMode
                           ? selectedMemo.displayId
-                          : selectedMemo.originalId,
+                          : selectedMemo.displayId,
                       );
                       onMemoRestoreAndSelectNext(selectedMemo as DeletedMemo);
                     } catch (error) {
@@ -442,14 +442,14 @@ function BoardRightPanel({
                 onRestore={async () => {
                   if (
                     selectedMemo &&
-                    selectedMemo.originalId &&
+                    selectedMemo.displayId &&
                     onMemoRestoreAndSelectNext
                   ) {
                     try {
                       await memoOperations.restoreItem.mutateAsync(
                         teamMode
                           ? selectedMemo.displayId
-                          : selectedMemo.originalId,
+                          : selectedMemo.displayId,
                       );
                       onMemoRestoreAndSelectNext(selectedMemo as DeletedMemo);
                     } catch (error) {
@@ -500,14 +500,14 @@ function BoardRightPanel({
                 onRestore={async () => {
                   if (
                     selectedTask &&
-                    selectedTask.originalId &&
+                    selectedTask.displayId &&
                     onTaskRestoreAndSelectNext
                   ) {
                     try {
                       await taskOperations.restoreItem.mutateAsync(
                         teamMode
                           ? selectedTask.displayId
-                          : selectedTask.originalId,
+                          : selectedTask.displayId,
                       );
                       onTaskRestoreAndSelectNext(selectedTask as DeletedTask);
                     } catch (error) {

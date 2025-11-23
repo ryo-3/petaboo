@@ -7,7 +7,6 @@ import type {
   CreateMemoData,
   UpdateMemoData,
 } from "@/src/types/memo";
-import { OriginalIdUtils } from "@/src/types/common";
 
 // メモ一覧を取得するhook
 export function useMemos(options?: { teamMode?: boolean; teamId?: number }) {
@@ -128,7 +127,7 @@ export function useCreateMemo(options?: {
                 const newBoardItem = {
                   id: `memo_${newMemo.id}`, // ボードアイテムID
                   boardId,
-                  itemId: OriginalIdUtils.fromItem(newMemo),
+                  itemId: newMemo.displayId,
                   itemType: "memo" as const,
                   content: newMemo,
                   createdAt: newMemo.createdAt,
@@ -367,7 +366,7 @@ export function useDeleteMemo(options?: {
         if (deletedMemo) {
           const deletedMemoWithDeletedAt = {
             ...deletedMemo,
-            originalId: OriginalIdUtils.fromItem(deletedMemo) || id.toString(),
+            displayId: deletedMemo.displayId || id.toString(),
             deletedAt: Date.now(), // Unix timestamp形式
           };
 
@@ -377,7 +376,7 @@ export function useDeleteMemo(options?: {
               if (!oldDeletedMemos) return [deletedMemoWithDeletedAt];
               // 重複チェック
               const exists = oldDeletedMemos.some(
-                (m) => m.originalId === deletedMemoWithDeletedAt.originalId,
+                (m) => m.displayId === deletedMemoWithDeletedAt.displayId,
               );
               if (exists) {
                 return oldDeletedMemos;
@@ -426,7 +425,7 @@ export function useDeleteMemo(options?: {
         if (deletedMemo) {
           const deletedMemoWithDeletedAt = {
             ...deletedMemo,
-            originalId: OriginalIdUtils.fromItem(deletedMemo) || id.toString(),
+            displayId: deletedMemo.displayId || id.toString(),
             deletedAt: Date.now(), // Unix timestamp形式
           };
 
@@ -436,7 +435,7 @@ export function useDeleteMemo(options?: {
               if (!oldDeletedMemos) return [deletedMemoWithDeletedAt];
               // 重複チェック
               const exists = oldDeletedMemos.some(
-                (m) => m.originalId === deletedMemoWithDeletedAt.originalId,
+                (m) => m.displayId === deletedMemoWithDeletedAt.displayId,
               );
               if (exists) {
                 return oldDeletedMemos;
@@ -477,7 +476,7 @@ export function usePermanentDeleteMemo(options?: {
           token || undefined,
         );
       } else {
-        // 個人側: originalId を送信
+        // 個人側: displayId を送信
         await memosApi.permanentDeleteNote(itemId, token || undefined);
       }
     },
@@ -497,8 +496,8 @@ export function usePermanentDeleteMemo(options?: {
           ["deletedMemos"],
           (oldDeletedMemos) => {
             if (!oldDeletedMemos) return [];
-            // 個人側: originalId で比較
-            return oldDeletedMemos.filter((memo) => memo.originalId !== itemId);
+            // 個人側: displayId で比較
+            return oldDeletedMemos.filter((memo) => memo.displayId !== itemId);
           },
         );
       }
@@ -524,7 +523,7 @@ export function useRestoreMemo(options?: {
         // チームメモ復元: displayId を送信
         await memosApi.restoreTeamMemo(teamId, itemId, token || undefined);
       } else {
-        // 個人メモ復元: originalId を送信
+        // 個人メモ復元: displayId を送信
         const response = await memosApi.restoreNote(itemId, token || undefined);
         await response.json(); // レスポンスをJSONパースしてバックエンドの完了を確認
       }
@@ -539,11 +538,7 @@ export function useRestoreMemo(options?: {
         if (existingData) {
           queryClient.setQueryData(
             ["team-deleted-memos", teamId],
-            (
-              oldDeletedMemos:
-                | { originalId: string; displayId?: string }[]
-                | undefined,
-            ) => {
+            (oldDeletedMemos: { displayId: string }[] | undefined) => {
               if (!oldDeletedMemos) return [];
               return oldDeletedMemos.filter(
                 (memo) => memo.displayId !== itemId,
@@ -562,11 +557,7 @@ export function useRestoreMemo(options?: {
           if (existingBoardData) {
             queryClient.setQueryData(
               ["team-board-deleted-items", teamId.toString(), boardId],
-              (
-                oldData:
-                  | { memos?: { originalId: string; displayId?: string }[] }
-                  | undefined,
-              ) => {
+              (oldData: { memos?: { displayId: string }[] } | undefined) => {
                 if (oldData?.memos) {
                   return {
                     ...oldData,
@@ -653,10 +644,10 @@ export function useRestoreMemo(options?: {
         if (existingData) {
           queryClient.setQueryData(
             ["deletedMemos"],
-            (oldDeletedMemos: { originalId: string }[] | undefined) => {
+            (oldDeletedMemos: { displayId: string }[] | undefined) => {
               if (!oldDeletedMemos) return [];
               return oldDeletedMemos.filter(
-                (memo) => memo.originalId !== itemId,
+                (memo) => memo.displayId !== itemId,
               );
             },
           );

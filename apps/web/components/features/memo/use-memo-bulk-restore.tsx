@@ -93,13 +93,13 @@ export function useMemosBulkRestore({
     };
 
     const onApiCall = async (id: number) => {
-      // idからitemIdに変換（チームモード: displayId、個人モード: originalId）
+      // idからitemIdに変換（チームモード: displayId、個人モード: displayId）
       const deletedMemo = deletedMemos?.find((memo) => memo.id === id);
       if (!deletedMemo) {
         throw new Error(`削除済みメモが見つかりません: ID ${id}`);
       }
       await restoreNoteMutation.mutateAsync(
-        teamMode ? deletedMemo.displayId : deletedMemo.originalId,
+        teamMode ? deletedMemo.displayId : deletedMemo.displayId,
       );
     };
 

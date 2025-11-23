@@ -6,7 +6,6 @@ import {
   useRemoveItemFromBoard,
 } from "@/src/hooks/use-boards";
 import { useQueryClient } from "@tanstack/react-query";
-import { OriginalIdUtils } from "@/src/types/common";
 
 interface UseSimpleMemoSaveOptions {
   memo?: Memo | null;
@@ -193,8 +192,7 @@ export function useSimpleMemoSave({
                   boardId,
                   data: {
                     itemType: "memo",
-                    itemId:
-                      OriginalIdUtils.fromItem(memo) || memo.id.toString(),
+                    itemId: memo.displayId || memo.id.toString(),
                   },
                 });
               } catch (error: unknown) {
@@ -216,7 +214,7 @@ export function useSimpleMemoSave({
               try {
                 await removeItemFromBoard.mutateAsync({
                   boardId,
-                  itemId: OriginalIdUtils.fromItem(memo) || memo.id.toString(),
+                  itemId: memo.displayId || memo.id.toString(),
                   itemType: "memo",
                   teamId,
                 });
@@ -237,12 +235,12 @@ export function useSimpleMemoSave({
             if (teamMode && teamId) {
               // チームモード用のキャッシュ無効化
               queryClient.invalidateQueries({
-                queryKey: ["team-item-boards", teamId, "memo", memo.originalId],
+                queryKey: ["team-item-boards", teamId, "memo", memo.displayId],
               });
             } else {
               // 個人モード用のキャッシュ無効化
               queryClient.invalidateQueries({
-                queryKey: ["item-boards", "memo", memo.originalId],
+                queryKey: ["item-boards", "memo", memo.displayId],
               });
             }
 
@@ -287,9 +285,7 @@ export function useSimpleMemoSave({
                   boardId,
                   data: {
                     itemType: "memo",
-                    itemId:
-                      OriginalIdUtils.fromItem(createdMemo) ||
-                      createdMemo.id.toString(),
+                    itemId: createdMemo.displayId || createdMemo.id.toString(),
                   },
                 });
               } catch (error: unknown) {
@@ -312,13 +308,13 @@ export function useSimpleMemoSave({
                   "team-item-boards",
                   teamId,
                   "memo",
-                  createdMemo.originalId,
+                  createdMemo.displayId,
                 ],
               });
             } else {
               // 個人モード用のキャッシュ無効化
               queryClient.invalidateQueries({
-                queryKey: ["item-boards", "memo", createdMemo.originalId],
+                queryKey: ["item-boards", "memo", createdMemo.displayId],
               });
             }
           }

@@ -1,20 +1,19 @@
 import { useItemBoards } from "@/src/hooks/use-boards";
 import { ReactElement } from "react";
-import { OriginalIdUtils } from "@/src/types/common";
 
 // アイテムタイプを定義
 type ItemType = "memo" | "task";
 
-// 基本的なアイテム型（idまたはoriginalIdを持つ）
+// 基本的なアイテム型（idまたはdisplayIdを持つ）
 interface BaseItem {
   id: number;
-  originalId?: string;
+  displayId: string;
 }
 
-// 削除済みアイテム型（originalIdは必須）
+// 削除済みアイテム型（displayIdは必須）
 interface DeletedItem {
   id: number;
-  originalId: string;
+  displayId: string;
 }
 
 interface ItemFilterWrapperProps<T extends BaseItem> {
@@ -41,9 +40,7 @@ function ItemFilterWrapper<T extends BaseItem>({
   // アイテムが所属するボード一覧を取得（フィルター無効時はundefinedを渡してクエリを無効化）
   // 削除済みアイテムの場合はoriginalIdを使用
   const isDeleted = variant === "deleted";
-  const itemId = isDeleted
-    ? (item as DeletedItem).originalId
-    : OriginalIdUtils.fromItem(item);
+  const itemId = isDeleted ? (item as DeletedItem).displayId : item.displayId;
 
   const { data: boards, isLoading } = useItemBoards(
     itemType,

@@ -7,7 +7,6 @@ import type { Tag, Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
 import type { Attachment } from "@/src/hooks/use-attachments";
 import { useMemo, useEffect } from "react";
-import { OriginalIdUtils } from "@/src/types/common";
 
 interface TaskStatusDisplayProps {
   activeTab: "todo" | "in_progress" | "completed";
@@ -43,8 +42,7 @@ interface TaskStatusDisplayProps {
     boardId: number;
     boardName: string;
     itemType: "memo" | "task";
-    originalId: string;
-    displayId?: string;
+    displayId: string;
     addedAt: number;
   }>;
   allAttachments?: Attachment[];
@@ -82,8 +80,7 @@ interface DeletedTaskDisplayProps {
     boardId: number;
     boardName: string;
     itemType: "memo" | "task";
-    originalId: string;
-    displayId?: string;
+    displayId: string;
     addedAt: number;
   }>;
   allAttachments?: Attachment[];
@@ -127,12 +124,11 @@ function TaskStatusDisplay({
     if (!statusFilteredTasks) return [];
 
     return statusFilteredTasks.map((task) => {
-      // WORKAROUND: originalIdが数値の場合もあるため、文字列に変換
+      // WORKAROUND: displayIdが数値の場合もあるため、文字列に変換
       // さらに、idとoriginalIdの両方でマッチング（データ不整合対策）
-      const originalId = OriginalIdUtils.fromItem(task) || "";
+      const displayId = task.displayId || "";
       const taskId = String(task.id);
-      const displayId = task.displayId;
-      const identifiers = [originalId, taskId];
+      const identifiers = [displayId, taskId];
       if (teamMode && displayId) {
         identifiers.push(displayId);
       }
@@ -152,14 +148,10 @@ function TaskStatusDisplay({
 
       // このタスクのボードを抽出
       const taskBoardItems = allBoardItems.filter(
-        (item: {
-          itemType: "memo" | "task";
-          originalId: string;
-          displayId?: string;
-        }) =>
+        (item: { itemType: "memo" | "task"; displayId: string }) =>
           item.itemType === "task" &&
           identifiers.some(
-            (id) => item.originalId === id || item.displayId === id,
+            (id) => item.displayId === id || item.displayId === id,
           ),
       );
       const taskBoards = taskBoardItems
@@ -436,9 +428,8 @@ export function DeletedTaskDisplay({
     },
   ) => {
     // 削除済みタスクのタグ・ボード情報を取得
-    const originalId = OriginalIdUtils.fromItem(task) || "";
-    const displayId = task.displayId;
-    const taskIds = [originalId, String(task.id)];
+    const displayId = task.displayId || "";
+    const taskIds = [displayId, String(task.id)];
     if (teamMode && displayId) {
       taskIds.push(displayId);
     }
@@ -457,13 +448,9 @@ export function DeletedTaskDisplay({
 
     // このタスクのボードを抽出
     const taskBoardItems = allBoardItems.filter(
-      (item: {
-        itemType: "memo" | "task";
-        originalId: string;
-        displayId?: string;
-      }) =>
+      (item: { itemType: "memo" | "task"; displayId: string }) =>
         item.itemType === "task" &&
-        taskIds.some((id) => item.originalId === id || item.displayId === id),
+        taskIds.some((id) => item.displayId === id || item.displayId === id),
     );
     const taskBoards = taskBoardItems
       .map((item) =>

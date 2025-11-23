@@ -93,13 +93,13 @@ export function useTasksBulkRestore({
     };
 
     const onApiCall = async (id: number) => {
-      // idからitemIdに変換（チームモード: displayId、個人モード: originalId）
+      // idからitemIdに変換（チームモード: displayId、個人モード: displayId）
       const deletedTask = deletedTasks?.find((task) => task.id === id);
       if (!deletedTask) {
         throw new Error(`削除済みタスクが見つかりません: ID ${id}`);
       }
       await restoreTaskMutation.mutateAsync(
-        teamMode ? deletedTask.displayId : deletedTask.originalId,
+        teamMode ? deletedTask.displayId : deletedTask.displayId,
       );
     };
 

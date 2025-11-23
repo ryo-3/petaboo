@@ -44,7 +44,6 @@ import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
 import { useAllTeamTaggings } from "@/src/hooks/use-team-taggings";
 import { useAllAttachments } from "@/src/hooks/use-all-attachments";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
-import { OriginalIdUtils } from "@/src/types/common";
 import {
   getMemoDisplayOrder,
   getNextItemAfterDeletion,
@@ -147,7 +146,7 @@ interface MemoScreenProps {
   onAddToBoard?: (memoIds: number[]) => void; // ボードに追加（ボードから呼び出される場合のみ）
   excludeBoardId?: number; // 指定されたボードに登録済みのメモを除外（ボードから呼び出される場合）
   initialSelectionMode?: "select" | "check"; // 初期選択モード
-  // ボード詳細から呼び出された場合の除外アイテムリスト（originalId）
+  // ボード詳細から呼び出された場合の除外アイテムリスト（displayId）
   excludeItemIds?: string[];
   // URL連動
   initialMemoId?: string | null;
@@ -161,7 +160,7 @@ interface MemoScreenProps {
       isPending: boolean;
     };
     restoreItem: {
-      mutateAsync: (originalId: string) => Promise<any>;
+      mutateAsync: (displayId: string) => Promise<any>;
       isPending: boolean;
     };
   };
@@ -287,7 +286,7 @@ function MemoScreen({
   const boards = teamMode ? teamBoards : personalBoards;
 
   // 選択中のメモに紐づくボード情報を取得（フェーズ1対応）
-  const selectedMemoId = OriginalIdUtils.fromItem(selectedMemo);
+  const selectedMemoId = selectedMemo?.displayId;
   const { data: personalMemoItemBoards = [] } = useItemBoards(
     "memo",
     teamMode ? undefined : selectedMemoId,
@@ -715,7 +714,7 @@ function MemoScreen({
       const isTargetMemo = (memo: Memo | DeletedMemo) => {
         const candidates = [
           memo.displayId,
-          (memo as any).originalId as string | undefined,
+          (memo as any).displayId as string | undefined,
           memo.id?.toString(),
         ].filter(Boolean) as string[];
         return candidates.includes(initialMemoId);
@@ -867,10 +866,10 @@ function MemoScreen({
     memoEditorTab,
   ]);
 
-  // 除外アイテムIDでフィルタリングされたメモ（originalIdで比較）
+  // 除外アイテムIDでフィルタリングされたメモ（displayIdで比較）
   const filteredMemos =
     memos?.filter(
-      (memo) => !excludeItemIds.includes(memo.originalId || memo.id.toString()),
+      (memo) => !excludeItemIds.includes(memo.displayId || memo.id.toString()),
     ) || [];
 
   // パネルコントロール表示条件
@@ -1184,7 +1183,7 @@ function MemoScreen({
 
               try {
                 await permanentDeleteMemo.mutateAsync(
-                  selectedDeletedMemo.originalId,
+                  selectedDeletedMemo.displayId,
                 );
               } catch (error) {
                 setIsRightLidOpen(false);
@@ -1232,9 +1231,7 @@ function MemoScreen({
         <CommentSection
           targetType="memo"
           targetDisplayId={
-            selectedMemo.displayId ||
-            OriginalIdUtils.fromItem(selectedMemo) ||
-            ""
+            selectedMemo.displayId || selectedMemo.displayId || ""
           }
           teamId={teamId || 0}
           title="コメント"
@@ -1249,9 +1246,7 @@ function MemoScreen({
     teamMode && memoScreenMode !== "create" && selectedMemo ? (
       <CommentSection
         targetType="memo"
-        targetDisplayId={
-          selectedMemo.displayId || OriginalIdUtils.fromItem(selectedMemo) || ""
-        }
+        targetDisplayId={selectedMemo.displayId || selectedMemo.displayId || ""}
         teamId={teamId || 0}
         title="コメント"
         placeholder="コメントを入力..."
@@ -1292,7 +1287,7 @@ function MemoScreen({
                 : { left: 35, center: 65, right: 0 }
             }
             skipInitialSave={true}
-            stateKey={selectedMemo?.originalId || "none"}
+            stateKey={selectedMemo?.displayId || "none"}
             visibility={
               teamMode
                 ? {

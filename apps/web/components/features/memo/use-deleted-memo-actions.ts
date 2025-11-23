@@ -49,7 +49,7 @@ export function useDeletedMemoActions({
         );
         return response.json();
       } else {
-        // 個人モード: originalIdを使用
+        // 個人モード: displayIdを使用
         const response = await memosApi.permanentDeleteNote(
           itemId,
           token || undefined,
@@ -86,7 +86,7 @@ export function useDeletedMemoActions({
             (oldDeletedMemos: DeletedMemo[] | undefined) => {
               if (!oldDeletedMemos) return [];
               return oldDeletedMemos.filter(
-                (m) => memo && m.originalId !== memo.originalId,
+                (m) => memo && m.displayId !== memo.displayId,
               );
             },
           );
@@ -118,7 +118,7 @@ export function useDeletedMemoActions({
                   memo &&
                   (teamMode
                     ? item.displayId !== memo.displayId
-                    : item.originalId !== memo.originalId),
+                    : item.displayId !== memo.displayId),
               ),
             };
           }
@@ -189,7 +189,7 @@ export function useDeletedMemoActions({
               // API実行（onSuccessで次選択とキャッシュ更新が実行される）
               if (memo) {
                 await permanentDeleteNote.mutateAsync(
-                  teamMode ? memo.displayId : memo.originalId,
+                  teamMode ? memo.displayId : memo.displayId,
                 );
               }
 
@@ -211,7 +211,7 @@ export function useDeletedMemoActions({
         // API実行（onSuccessで次選択とキャッシュ更新が実行される）
         if (memo) {
           await permanentDeleteNote.mutateAsync(
-            teamMode ? memo.displayId : memo.originalId,
+            teamMode ? memo.displayId : memo.displayId,
           );
         }
 
@@ -267,7 +267,7 @@ export function useDeletedMemoActions({
               // API実行
               if (memo) {
                 await restoreNote.mutateAsync(
-                  teamMode ? memo.displayId : memo.originalId,
+                  teamMode ? memo.displayId : memo.displayId,
                 );
               }
 
@@ -305,7 +305,7 @@ export function useDeletedMemoActions({
         // アニメーション要素がない場合は通常の処理
         if (memo) {
           await restoreNote.mutateAsync(
-            teamMode ? memo.displayId : memo.originalId,
+            teamMode ? memo.displayId : memo.displayId,
           );
         }
 

@@ -18,7 +18,6 @@ import { useSortOptions } from "@/hooks/use-sort-options";
 import type { Tag, Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
 import type { Attachment } from "@/src/hooks/use-attachments";
-import { OriginalIdUtils } from "@/src/types/common";
 import { useTeamContext } from "@/src/contexts/team-context";
 
 interface BoardTaskSectionProps {
@@ -76,7 +75,7 @@ interface BoardTaskSectionProps {
     boardName: string;
     itemType: "memo" | "task";
     itemId: string;
-    originalId: string;
+    displayId: string;
     addedAt: number;
   }>;
   allAttachments?: Attachment[];
@@ -229,7 +228,7 @@ export default function BoardTaskSection({
           <span className="font-normal text-gray-500">
             {allTaskItems.length}
           </span>
-          {selectedTask?.originalId === "new" ? (
+          {selectedTask?.displayId === "new" ? (
             // 新規作成エディター開いている時だけツールチップなし
             <AddItemButton
               itemType="task"
@@ -434,12 +433,11 @@ export default function BoardTaskSection({
             tasks={displayTaskItems.map((item) => {
               const task = item.content as Task;
               // ボードアイテムのitemIdを使用（これがタグ付けで使われる正しいoriginalId）
-              const correctOriginalId =
-                item.itemId || OriginalIdUtils.fromItem(task) || "";
+              const correctOriginalId = item.itemId || task.displayId || "";
 
               return {
                 ...task,
-                originalId: correctOriginalId,
+                displayId: correctOriginalId,
               };
             })}
             effectiveColumnCount={effectiveColumnCount}

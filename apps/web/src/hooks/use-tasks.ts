@@ -8,7 +8,6 @@ import type {
   UpdateTaskData,
 } from "@/src/types/task";
 import { useToast } from "@/src/contexts/toast-context";
-import { OriginalIdUtils } from "@/src/types/common";
 
 // グローバル削除処理追跡（重複削除防止）- タスク用
 const activeTaskDeleteOperations = new Set<string>();
@@ -361,7 +360,7 @@ export function useDeleteTask(options?: {
         if (deletedTask) {
           const deletedTaskWithDeletedAt = {
             ...deletedTask,
-            originalId: OriginalIdUtils.fromItem(deletedTask) || id.toString(),
+            displayId: deletedTask.displayId || id.toString(),
             deletedAt: Date.now(), // Unix timestamp形式
           };
 
@@ -371,7 +370,7 @@ export function useDeleteTask(options?: {
               if (!oldDeletedTasks) return [deletedTaskWithDeletedAt];
               // 重複チェック
               const exists = oldDeletedTasks.some(
-                (t) => t.originalId === deletedTaskWithDeletedAt.originalId,
+                (t) => t.displayId === deletedTaskWithDeletedAt.displayId,
               );
               if (exists) {
                 return oldDeletedTasks;
@@ -420,7 +419,7 @@ export function useDeleteTask(options?: {
         if (deletedTask) {
           const deletedTaskWithDeletedAt = {
             ...deletedTask,
-            originalId: OriginalIdUtils.fromItem(deletedTask) || id.toString(),
+            displayId: deletedTask.displayId || id.toString(),
             deletedAt: Date.now(), // Unix timestamp形式
           };
 
@@ -430,7 +429,7 @@ export function useDeleteTask(options?: {
               if (!oldDeletedTasks) return [deletedTaskWithDeletedAt];
               // 重複チェック
               const exists = oldDeletedTasks.some(
-                (t) => t.originalId === deletedTaskWithDeletedAt.originalId,
+                (t) => t.displayId === deletedTaskWithDeletedAt.displayId,
               );
               if (exists) {
                 return oldDeletedTasks;
@@ -523,7 +522,7 @@ export function usePermanentDeleteTask(options?: {
         const result = await response.json();
         return result;
       } else {
-        // 個人側: originalId を送信
+        // 個人側: displayId を送信
         const response = await tasksApi.permanentDeleteTask(
           itemId,
           token || undefined,
@@ -532,7 +531,7 @@ export function usePermanentDeleteTask(options?: {
         return result;
       }
     },
-    onSuccess: (_, originalId) => {
+    onSuccess: (_, displayId) => {
       // 削除済み一覧から完全削除されたタスクを除去
       if (teamMode && teamId) {
         queryClient.setQueryData<DeletedTask[]>(
@@ -540,7 +539,7 @@ export function usePermanentDeleteTask(options?: {
           (oldDeletedTasks) => {
             if (!oldDeletedTasks) return [];
             return oldDeletedTasks.filter(
-              (task) => task.originalId !== originalId,
+              (task) => task.displayId !== displayId,
             );
           },
         );
@@ -550,7 +549,7 @@ export function usePermanentDeleteTask(options?: {
           (oldDeletedTasks) => {
             if (!oldDeletedTasks) return [];
             return oldDeletedTasks.filter(
-              (task) => task.originalId !== originalId,
+              (task) => task.displayId !== displayId,
             );
           },
         );
@@ -588,25 +587,25 @@ export function useRestoreTask(options?: {
         const result = await response.json();
         return result;
       } else {
-        // 個人タスク復元: originalId を送信
+        // 個人タスク復元: displayId を送信
         const response = await tasksApi.restoreTask(itemId, token || undefined);
         const result = await response.json();
         return result;
       }
     },
-    onSuccess: (restoredTaskData, originalId) => {
+    onSuccess: (restoredTaskData, displayId) => {
       if (teamMode && teamId) {
         // チーム削除済みタスク一覧から復元されたタスクを楽観的更新で即座に除去
         const deletedTask = queryClient
           .getQueryData<DeletedTask[]>(["team-deleted-tasks", teamId])
-          ?.find((task) => task.originalId === originalId);
+          ?.find((task) => task.displayId === displayId);
 
         queryClient.setQueryData<DeletedTask[]>(
           ["team-deleted-tasks", teamId],
           (oldDeletedTasks) => {
             if (!oldDeletedTasks) return [];
             return oldDeletedTasks.filter(
-              (task) => task.originalId !== originalId,
+              (task) => task.displayId !== displayId,
             );
           },
         );
@@ -622,7 +621,7 @@ export function useRestoreTask(options?: {
               if (!oldTasks) return [restoredTask as Task];
               // 重複チェック
               const exists = oldTasks.some(
-                (t) => t.originalId === restoredTask.originalId,
+                (t) => t.displayId === restoredTask.displayId,
               );
               if (exists) {
                 return oldTasks;
@@ -671,14 +670,14 @@ export function useRestoreTask(options?: {
         // 個人削除済みタスク一覧から復元されたタスクを楽観的更新で即座に除去
         const deletedTask = queryClient
           .getQueryData<DeletedTask[]>(["deleted-tasks"])
-          ?.find((task) => task.originalId === originalId);
+          ?.find((task) => task.displayId === displayId);
 
         queryClient.setQueryData<DeletedTask[]>(
           ["deleted-tasks"],
           (oldDeletedTasks) => {
             if (!oldDeletedTasks) return [];
             return oldDeletedTasks.filter(
-              (task) => task.originalId !== originalId,
+              (task) => task.displayId !== displayId,
             );
           },
         );
@@ -692,7 +691,7 @@ export function useRestoreTask(options?: {
             if (!oldTasks) return [restoredTask as Task];
             // 重複チェック
             const exists = oldTasks.some(
-              (t) => t.originalId === restoredTask.originalId,
+              (t) => t.displayId === restoredTask.displayId,
             );
             if (exists) {
               return oldTasks;

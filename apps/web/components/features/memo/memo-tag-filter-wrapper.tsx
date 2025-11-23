@@ -1,7 +1,6 @@
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Tagging } from "@/src/types/tag";
 import { ReactElement } from "react";
-import { OriginalIdUtils } from "@/src/types/common";
 
 interface MemoTagFilterWrapperProps {
   memo: Memo | DeletedMemo;
@@ -31,8 +30,8 @@ function MemoTagFilterWrapper({
   // 削除済みメモの場合はoriginalIdを使用
   const isDeleted = variant === "deleted";
   const memoOriginalId = isDeleted
-    ? (memo as DeletedMemo).originalId
-    : OriginalIdUtils.fromItem(memo);
+    ? (memo as DeletedMemo).displayId
+    : memo.displayId;
   const memoIds = [memoOriginalId, memo.displayId].filter(
     (id): id is string => !!id,
   );

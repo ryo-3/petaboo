@@ -9,7 +9,7 @@ export interface Attachment {
   userId: string;
   attachedTo: "memo" | "task" | "comment";
   attachedDisplayId: string;
-  originalId: string;
+  displayId: string;
   fileName: string;
   fileSize: number;
   mimeType: string;

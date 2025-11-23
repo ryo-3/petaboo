@@ -189,15 +189,12 @@ export const memosApi = {
     return response;
   },
 
-  // DELETE /memos/deleted/:originalId (完全削除)
-  permanentDeleteNote: async (originalId: string, token?: string) => {
-    const response = await fetch(
-      `${API_BASE_URL}/memos/deleted/${originalId}`,
-      {
-        method: "DELETE",
-        headers: createHeaders(token),
-      },
-    );
+  // DELETE /memos/deleted/:displayId (完全削除)
+  permanentDeleteNote: async (displayId: string, token?: string) => {
+    const response = await fetch(`${API_BASE_URL}/memos/deleted/${displayId}`, {
+      method: "DELETE",
+      headers: createHeaders(token),
+    });
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -205,10 +202,10 @@ export const memosApi = {
     return response;
   },
 
-  // POST /memos/deleted/:originalId/restore (復元)
-  restoreNote: async (originalId: string, token?: string) => {
+  // POST /memos/deleted/:displayId/restore (復元)
+  restoreNote: async (displayId: string, token?: string) => {
     const response = await fetch(
-      `${API_BASE_URL}/memos/deleted/${originalId}/restore`,
+      `${API_BASE_URL}/memos/deleted/${displayId}/restore`,
       {
         method: "POST",
         headers: createHeaders(token),
@@ -428,15 +425,12 @@ export const tasksApi = {
     return response;
   },
 
-  // DELETE /tasks/deleted/:originalId (完全削除)
-  permanentDeleteTask: async (originalId: string, token?: string) => {
-    const response = await fetch(
-      `${API_BASE_URL}/tasks/deleted/${originalId}`,
-      {
-        method: "DELETE",
-        headers: createHeaders(token),
-      },
-    );
+  // DELETE /tasks/deleted/:displayId (完全削除)
+  permanentDeleteTask: async (displayId: string, token?: string) => {
+    const response = await fetch(`${API_BASE_URL}/tasks/deleted/${displayId}`, {
+      method: "DELETE",
+      headers: createHeaders(token),
+    });
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -444,10 +438,10 @@ export const tasksApi = {
     return response;
   },
 
-  // POST /tasks/deleted/:originalId/restore (復元)
-  restoreTask: async (originalId: string, token?: string) => {
+  // POST /tasks/deleted/:displayId/restore (復元)
+  restoreTask: async (displayId: string, token?: string) => {
     const response = await fetch(
-      `${API_BASE_URL}/tasks/deleted/${originalId}/restore`,
+      `${API_BASE_URL}/tasks/deleted/${displayId}/restore`,
       {
         method: "POST",
         headers: createHeaders(token),

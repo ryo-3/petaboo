@@ -27,7 +27,7 @@ interface CreateScreenProps {
         isPending: boolean;
       };
       restoreItem: {
-        mutateAsync: (originalId: string) => Promise<any>;
+        mutateAsync: (displayId: string) => Promise<any>;
         isPending: boolean;
       };
     };
@@ -37,7 +37,7 @@ interface CreateScreenProps {
         isPending: boolean;
       };
       restoreItem: {
-        mutateAsync: (originalId: string) => Promise<any>;
+        mutateAsync: (displayId: string) => Promise<any>;
         isPending: boolean;
       };
     };

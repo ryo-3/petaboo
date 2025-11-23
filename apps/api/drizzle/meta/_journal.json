@@ -162,6 +162,13 @@
       "when": 1763896251237,
       "tag": "0022_yummy_impossible_man",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "6",
+      "when": 1763900653116,
+      "tag": "0023_cooing_shadowcat",
+      "breakpoints": true
     }
   ]
 }

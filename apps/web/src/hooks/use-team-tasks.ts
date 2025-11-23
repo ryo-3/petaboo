@@ -7,7 +7,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594";
 export interface TeamTask {
   id: number;
   teamId: number;
-  originalId: string;
+  displayId: string;
   uuid: string | null;
   title: string;
   description: string | null;

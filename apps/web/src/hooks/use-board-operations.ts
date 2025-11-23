@@ -17,7 +17,6 @@ import { useRestoreTask } from "@/src/hooks/use-tasks";
 import { BoardItemWithContent, BoardWithItems } from "@/src/types/board";
 import { Memo, DeletedMemo } from "@/src/types/memo";
 import { Task, DeletedTask } from "@/src/types/task";
-import { OriginalIdUtils } from "@/src/types/common";
 import { useTeamContext } from "@/src/contexts/team-context";
 import { useTeamDetailSafe } from "@/src/contexts/team-detail-context";
 import { useUnsavedChangesGuard } from "@/src/hooks/use-unsaved-changes-guard";
@@ -412,7 +411,7 @@ export function useBoardOperations({
     async (deletedMemo: DeletedMemo) => {
       try {
         // 実際の復元APIを呼び出す
-        await restoreMemoMutation.mutateAsync(deletedMemo.originalId);
+        await restoreMemoMutation.mutateAsync(deletedMemo.displayId);
 
         // 復元処理後に削除済みアイテム一覧を更新
         await refetchDeletedItems();
@@ -450,7 +449,7 @@ export function useBoardOperations({
     async (deletedTask: DeletedTask) => {
       try {
         // 実際の復元APIを呼び出す
-        await restoreTaskMutation.mutateAsync(deletedTask.originalId);
+        await restoreTaskMutation.mutateAsync(deletedTask.displayId);
 
         // 復元処理後に削除済みアイテム一覧を更新
         await refetchDeletedItems();
@@ -514,7 +513,7 @@ export function useBoardOperations({
           boardId,
           data: {
             itemType: "memo",
-            itemId: OriginalIdUtils.fromItem(memo) || "",
+            itemId: memo.displayId || "",
           },
         });
       } catch {
@@ -538,7 +537,7 @@ export function useBoardOperations({
           boardId,
           data: {
             itemType: "task",
-            itemId: OriginalIdUtils.fromItem(task) || "",
+            itemId: task.displayId || "",
           },
         });
       } catch {

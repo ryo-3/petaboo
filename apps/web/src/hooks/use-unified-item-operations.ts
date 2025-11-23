@@ -36,8 +36,8 @@ const getApiEndpoints = (
             const response = await memosApi.deleteNote(id, token);
             return response; // 個人メモはresponseオブジェクトをそのまま返す
           },
-          restore: async (originalId: string, token?: string) => {
-            const response = await memosApi.restoreNote(originalId, token);
+          restore: async (displayId: string, token?: string) => {
+            const response = await memosApi.restoreNote(displayId, token);
             return response.json();
           },
         };
@@ -47,10 +47,10 @@ const getApiEndpoints = (
             const response = await memosApi.deleteTeamMemo(teamId!, id, token);
             return response.json();
           },
-          restore: async (originalId: string, token?: string) => {
+          restore: async (displayId: string, token?: string) => {
             const response = await memosApi.restoreTeamMemo(
               teamId!,
-              originalId,
+              displayId,
               token,
             );
             return response.json();
@@ -66,8 +66,8 @@ const getApiEndpoints = (
             const response = await tasksApi.deleteTask(id, token);
             return response; // 個人タスクはresponseオブジェクトをそのまま返す
           },
-          restore: async (originalId: string, token?: string) => {
-            const response = await tasksApi.restoreTask(originalId, token);
+          restore: async (displayId: string, token?: string) => {
+            const response = await tasksApi.restoreTask(displayId, token);
             return response.json();
           },
         };
@@ -77,10 +77,10 @@ const getApiEndpoints = (
             const response = await tasksApi.deleteTeamTask(teamId!, id, token);
             return response.json();
           },
-          restore: async (originalId: string, token?: string) => {
+          restore: async (displayId: string, token?: string) => {
             const response = await tasksApi.restoreTeamTask(
               teamId!,
-              originalId,
+              displayId,
               token,
             );
             return response.json();
@@ -184,7 +184,7 @@ export function useUnifiedItemOperations({
 
         const deletedItemWithDeletedAt = {
           ...deletedItem,
-          originalId: deletedItem.originalId || id.toString(),
+          displayId: deletedItem.displayId || id.toString(),
           deletedAt: Date.now(), // Unix timestamp形式
         };
 
@@ -195,7 +195,7 @@ export function useUnifiedItemOperations({
               return [deletedItemWithDeletedAt as UnifiedDeletedItem];
             // 重複チェック
             const exists = oldDeletedItems.some(
-              (item) => item.originalId === deletedItemWithDeletedAt.originalId,
+              (item) => item.displayId === deletedItemWithDeletedAt.displayId,
             );
             if (exists) {
               // 重複スキップログ（削除予定）
@@ -267,31 +267,29 @@ export function useUnifiedItemOperations({
 
   // 統一復元処理
   const restoreItem = useMutation({
-    mutationFn: async (originalId: string) => {
+    mutationFn: async (displayId: string) => {
       // 復元実行ログ（削除予定）
 
       const token = await getToken();
       const response = await apiEndpoints.restore(
-        originalId,
+        displayId,
         token || undefined,
       );
       return response;
     },
-    onSuccess: (restoredItemData, originalId) => {
+    onSuccess: (restoredItemData, displayId) => {
       // const contextName = context === "team" ? "チーム" : "個人"; // 現在は未使用
 
       // 削除済み一覧から復元されたアイテムを楽観的更新で即座に除去
       const deletedItem = queryClient
         .getQueryData<UnifiedDeletedItem[]>(cacheKeys.deletedItems)
-        ?.find((item) => item.originalId === originalId);
+        ?.find((item) => item.displayId === displayId);
 
       queryClient.setQueryData<UnifiedDeletedItem[]>(
         cacheKeys.deletedItems,
         (oldDeletedItems) => {
           if (!oldDeletedItems) return [];
-          return oldDeletedItems.filter(
-            (item) => item.originalId !== originalId,
-          );
+          return oldDeletedItems.filter((item) => item.displayId !== displayId);
         },
       );
 
@@ -300,7 +298,7 @@ export function useUnifiedItemOperations({
         // console.log(`🔄 ${contextName}通常一覧に楽観的更新で追加`, {
         //   itemId: deletedItem.id,
         //   itemType,
-        //   itemOriginalId: originalId,
+        //   itemOriginalId: displayId,
         //   itemTitle: deletedItem.title,
         //   context,
         //   teamId,
@@ -315,12 +313,12 @@ export function useUnifiedItemOperations({
           if (!oldItems) return [restoredItem as UnifiedItem];
           // 重複チェック
           const exists = oldItems.some(
-            (item) => item.originalId === restoredItem.originalId,
+            (item) => item.displayId === restoredItem.displayId,
           );
           if (exists) {
             // console.log(
             //   `⚠️ ${contextName}通常一覧に既に存在するためスキップ`,
-            //   restoredItem.originalId,
+            //   restoredItem.displayId,
             // );
             return oldItems;
           }

@@ -9,7 +9,6 @@ import { teamMembers } from "../../db/schema/team/teams";
 import { teamComments } from "../../db/schema/team/comments";
 import { teamAttachments } from "../../db/schema/team/attachments";
 import { users } from "../../db/schema/users";
-import { generateOriginalId, generateUuid } from "../../utils/originalId";
 import { generateTaskDisplayId } from "../../utils/displayId";
 import {
   getTeamTaskMemberJoin,
@@ -713,7 +712,7 @@ app.openapi(
               and(
                 eq(teamComments.teamId, teamId),
                 eq(teamComments.targetType, "task"),
-                eq(teamComments.targetOriginalId, task.originalId),
+                eq(teamComments.targettask.originalId),
               ),
             );
 
@@ -943,7 +942,7 @@ app.openapi(
           and(
             eq(teamComments.teamId, teamId),
             eq(teamComments.targetType, "task"),
-            eq(teamComments.targetOriginalId, originalId),
+            eq(teamComments.targetoriginalId),
           ),
         );
 
@@ -954,7 +953,7 @@ app.openapi(
           and(
             eq(teamAttachments.teamId, teamId),
             eq(teamAttachments.attachedTo, "task"),
-            eq(teamAttachments.attachedOriginalId, originalId),
+            eq(teamAttachments.attachedoriginalId),
           ),
         );
 

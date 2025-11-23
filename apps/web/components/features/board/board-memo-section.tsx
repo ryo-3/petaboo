@@ -68,7 +68,7 @@ interface BoardMemoSectionProps {
     boardName: string;
     itemType: "memo" | "task";
     itemId: string;
-    originalId: string;
+    displayId: string;
     addedAt: number;
   }>;
   allAttachments?: Attachment[];
@@ -208,7 +208,7 @@ export default function BoardMemoSection({
           <span className="font-normal text-gray-500">
             {allMemoItems.length}
           </span>
-          {selectedMemo?.originalId === "new" ? (
+          {selectedMemo?.displayId === "new" ? (
             // 新規作成エディター開いている時だけツールチップなし
             <AddItemButton
               itemType="memo"

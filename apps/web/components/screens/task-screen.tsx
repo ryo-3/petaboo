@@ -46,7 +46,6 @@ import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
 import { useAllTeamTaggings } from "@/src/hooks/use-team-taggings";
 import { useAllAttachments } from "@/src/hooks/use-all-attachments";
 import type { DeletedTask, Task } from "@/src/types/task";
-import { OriginalIdUtils } from "@/src/types/common";
 import { getTaskDisplayOrder } from "@/src/utils/domUtils";
 import {
   createToggleHandler,
@@ -152,7 +151,7 @@ interface TaskScreenProps {
   onAddToBoard?: (taskIds: number[]) => void; // ボードに追加（ボードから呼び出される場合のみ）
   excludeBoardId?: number; // 指定されたボードに登録済みのタスクを除外（ボードから呼び出される場合）
   initialSelectionMode?: "select" | "check"; // 初期選択モード
-  // ボード詳細から呼び出された場合の除外アイテムリスト（originalId）
+  // ボード詳細から呼び出された場合の除外アイテムリスト（displayId）
   excludeItemIds?: string[];
   // URL連動
   initialTaskId?: string | null;
@@ -169,7 +168,7 @@ interface TaskScreenProps {
       isPending: boolean;
     };
     restoreItem: {
-      mutateAsync: (originalId: string) => Promise<any>;
+      mutateAsync: (displayId: string) => Promise<any>;
       isPending: boolean;
     };
   };
@@ -240,7 +239,7 @@ function TaskScreen({
   const tags = teamMode ? teamTags : personalTags;
 
   // 選択中のタスクに紐づくボード情報を取得（フェーズ1対応）
-  const selectedTaskId = OriginalIdUtils.fromItem(selectedTask);
+  const selectedTaskId = selectedTask?.displayId;
   const { data: personalTaskItemBoards = [] } = useItemBoards(
     "task",
     teamMode ? undefined : selectedTaskId,
@@ -310,7 +309,7 @@ function TaskScreen({
       const isTargetTask = (task: Task | DeletedTask) => {
         const ids = [
           task.displayId,
-          (task as any).originalId as string | undefined,
+          (task as any).displayId as string | undefined,
           task.id?.toString(),
         ].filter(Boolean) as string[];
         return ids.includes(initialTaskId);
@@ -938,10 +937,10 @@ function TaskScreen({
   const safeAllBoardItems = allBoardItems || [];
   const safeAllTeamTaggings = allTeamTaggings || [];
 
-  // 除外アイテムIDでフィルタリングされたタスク（originalIdで比較）
+  // 除外アイテムIDでフィルタリングされたタスク（displayIdで比較）
   const filteredTasks =
     tasks?.filter(
-      (task) => !excludeItemIds.includes(task.originalId || task.id.toString()),
+      (task) => !excludeItemIds.includes(task.displayId || task.id.toString()),
     ) || [];
 
   const deletedTasksCountValue = deletedTasks?.length || 0;
@@ -1307,13 +1306,13 @@ function TaskScreen({
           onDelete={async () => {
             if (selectedDeletedTask && deletedTasks) {
               const currentIndex = deletedTasks.findIndex(
-                (task) => task.originalId === selectedDeletedTask.originalId,
+                (task) => task.displayId === selectedDeletedTask.displayId,
               );
               const remainingTasks = deletedTasks.filter(
-                (task) => task.originalId !== selectedDeletedTask.originalId,
+                (task) => task.displayId !== selectedDeletedTask.displayId,
               );
               await permanentDeleteTask.mutateAsync(
-                selectedDeletedTask.originalId,
+                selectedDeletedTask.displayId,
               );
               if (remainingTasks.length > 0) {
                 const nextIndex =
@@ -1356,9 +1355,7 @@ function TaskScreen({
         <CommentSection
           targetType="task"
           targetDisplayId={
-            selectedTask.displayId ||
-            OriginalIdUtils.fromItem(selectedTask) ||
-            ""
+            selectedTask.displayId || selectedTask.displayId || ""
           }
           teamId={teamId || 0}
           title="コメント"
@@ -1373,9 +1370,7 @@ function TaskScreen({
     teamMode && taskScreenMode !== "create" && selectedTask ? (
       <CommentSection
         targetType="task"
-        targetDisplayId={
-          selectedTask.displayId || OriginalIdUtils.fromItem(selectedTask) || ""
-        }
+        targetDisplayId={selectedTask.displayId || selectedTask.displayId || ""}
         teamId={teamId || 0}
         title="コメント"
         placeholder="コメントを入力..."
@@ -1416,7 +1411,7 @@ function TaskScreen({
                 : { left: 35, center: 65, right: 0 }
             }
             skipInitialSave={true}
-            stateKey={selectedTask?.originalId || "none"}
+            stateKey={selectedTask?.displayId || "none"}
             visibility={
               teamMode
                 ? {

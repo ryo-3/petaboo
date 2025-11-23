@@ -30,12 +30,12 @@ interface UseBulkDeleteOperationsProps {
   checkedDeletedTasks: Set<string | number>;
   teamMode?: boolean;
   teamId?: number;
-  boardMemos?: Array<{ id: number; originalId?: string }>;
-  boardTasks?: Array<{ id: number; originalId?: string }>;
+  boardMemos?: Array<{ id: number; displayId?: string }>;
+  boardTasks?: Array<{ id: number; displayId?: string }>;
   boardDeletedItems?:
     | {
-        memos?: Array<{ id: number; originalId?: string }>;
-        tasks?: Array<{ id: number; originalId?: string }>;
+        memos?: Array<{ id: number; displayId?: string }>;
+        tasks?: Array<{ id: number; displayId?: string }>;
       }
     | undefined;
 }
@@ -283,7 +283,7 @@ export function useBulkDeleteOperations({
         if (itemType === "memo") {
           if (isPermanentDelete) {
             // 完全削除: boardDeletedItemsから検索
-            const originalId = getItemOriginalId(
+            const displayId = getItemOriginalId(
               id,
               "memo",
               true,
@@ -291,7 +291,7 @@ export function useBulkDeleteOperations({
               boardDeletedItems,
             );
 
-            await permanentDeleteMemoMutation.mutateAsync(originalId);
+            await permanentDeleteMemoMutation.mutateAsync(displayId);
           } else {
             // 通常削除
             await deleteMemoMutation.mutateAsync(id);
@@ -299,7 +299,7 @@ export function useBulkDeleteOperations({
         } else {
           if (isPermanentDelete) {
             // 完全削除: boardDeletedItemsから検索
-            const originalId = getItemOriginalId(
+            const displayId = getItemOriginalId(
               id,
               "task",
               true,
@@ -307,7 +307,7 @@ export function useBulkDeleteOperations({
               boardDeletedItems,
             );
 
-            await permanentDeleteTaskMutation.mutateAsync(originalId);
+            await permanentDeleteTaskMutation.mutateAsync(displayId);
           } else {
             // 通常削除
             await deleteTaskMutation.mutateAsync(id);
@@ -429,8 +429,8 @@ export function useBulkDeleteOperations({
     };
 
     const onApiCall = async (id: number) => {
-      // IDからoriginalIdを取得（共通関数を使用）
-      const originalId = getItemOriginalId(
+      // IDからdisplayIdを取得（共通関数を使用）
+      const displayId = getItemOriginalId(
         id,
         deletingItemType,
         false, // ボードから削除は通常削除扱い
@@ -441,7 +441,7 @@ export function useBulkDeleteOperations({
       // ボードから削除APIを呼び出し
       await removeItemFromBoard.mutateAsync({
         boardId,
-        itemId: originalId,
+        itemId: displayId,
         itemType: deletingItemType,
         teamId,
       });

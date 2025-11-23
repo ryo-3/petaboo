@@ -78,7 +78,7 @@ export function useBoardBulkRestore({
         if (isPartial) {
           const newCheckedItems = new Set(checkedItems);
           ids.forEach((id) => {
-            // originalIdで管理されている場合の変換処理
+            // displayIdで管理されている場合の変換処理
             const boardItem = boardItems.find((item) => {
               const content = item.content as DeletedMemo | DeletedTask;
               return content.id === id;
@@ -95,19 +95,19 @@ export function useBoardBulkRestore({
 
       const onApiCall = async (id: number) => {
         if (itemType === "memo") {
-          // idからoriginalIdに変換
+          // idからdisplayIdに変換
           const deletedMemo = deletedMemos?.find((memo) => memo.id === id);
           if (!deletedMemo) {
             throw new Error(`削除済みメモが見つかりません: ID ${id}`);
           }
-          await restoreMemoMutation.mutateAsync(deletedMemo.originalId);
+          await restoreMemoMutation.mutateAsync(deletedMemo.displayId);
         } else {
-          // idからoriginalIdに変換
+          // idからdisplayIdに変換
           const deletedTask = deletedTasks?.find((task) => task.id === id);
           if (!deletedTask) {
             throw new Error(`削除済みタスクが見つかりません: ID ${id}`);
           }
-          await restoreTaskMutation.mutateAsync(deletedTask.originalId);
+          await restoreTaskMutation.mutateAsync(deletedTask.displayId);
         }
       };
 
@@ -151,7 +151,7 @@ export function useBoardBulkRestore({
         // checkedItemsに直接データベースIDが入っている場合
         rawTargetIds.push(id);
       } else {
-        // 従来のoriginalId検索（念のため残す）
+        // 従来のdisplayId検索（念のため残す）
         const boardItem = boardItems.find((item) => item.itemId === id);
         if (boardItem) {
           const content = boardItem.content as DeletedMemo | DeletedTask;

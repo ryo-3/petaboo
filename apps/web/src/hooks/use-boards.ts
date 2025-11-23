@@ -12,7 +12,6 @@ import {
 import { DeletedMemo } from "@/src/types/memo";
 import { DeletedTask } from "@/src/types/task";
 import { useToast } from "@/src/contexts/toast-context";
-import { OriginalIdUtils } from "@/src/types/common";
 
 interface ApiError extends Error {
   status?: number;
@@ -581,7 +580,7 @@ export function useAddItemToBoard(options?: {
           queryKey: ["boards", boardId, "items"],
         });
       }
-      // アイテムのボード情報も無効化（originalIdベース） - 確実に更新
+      // アイテムのボード情報も無効化（displayIdベース） - 確実に更新
       queryClient.invalidateQueries({
         queryKey: ["item-boards", itemType, itemId],
       });
@@ -864,11 +863,7 @@ export function useBoardDeletedItems(boardId: number, teamId?: string | null) {
           if (item.itemType === "memo" && item.content) {
             memos.push({
               id: item.content.id,
-              originalId: OriginalIdUtils.fromItem(item.content) || "",
-              displayId:
-                item.content.displayId ||
-                item.content.originalId ||
-                String(item.content.id),
+              displayId: item.content.displayId || "",
               title: item.content.title,
               content: item.content.content,
               categoryId: item.content.categoryId,
@@ -880,11 +875,7 @@ export function useBoardDeletedItems(boardId: number, teamId?: string | null) {
           } else if (item.itemType === "task" && item.content) {
             tasks.push({
               id: item.content.id,
-              originalId: OriginalIdUtils.fromItem(item.content) || "",
-              displayId:
-                item.content.displayId ||
-                item.content.originalId ||
-                String(item.content.id),
+              displayId: item.content.displayId || "",
               title: item.content.title,
               description: item.content.description,
               status: item.content.status,

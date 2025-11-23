@@ -3,7 +3,7 @@
  *
  * 【目的】
  * - ボード詳細の削除ロジックで壊れやすい部分を共通関数化
- * - タブ判定ロジックとoriginalId検索ロジックを統一
+ * - タブ判定ロジックとdisplayId検索ロジックを統一
  * - メモ一覧/タスク一覧と同じロジックを再利用可能に
  *
  * 【背景】
@@ -12,7 +12,7 @@
  * - この差異がマージ時のバグの原因
  *
  * 【解決策】
- * - 壊れやすい部分（タブ判定、originalId検索）だけを共通化
+ * - 壊れやすい部分（タブ判定、displayId検索）だけを共通化
  * - チェックボックスロジックは既存実装のまま（案3: 最小限の変更）
  */
 
@@ -49,7 +49,7 @@ export function shouldUsePermanentDelete(
 }
 
 /**
- * アイテムのoriginalIdを取得
+ * アイテムのdisplayIdを取得
  *
  * 【検索ロジック】
  * 1. 完全削除の場合: `boardDeletedItems` から検索
@@ -61,27 +61,27 @@ export function shouldUsePermanentDelete(
  * @param isPermanentDelete - 完全削除かどうか
  * @param boardItems - ボード内のアイテム一覧（通常削除時に使用）
  * @param boardDeletedItems - ボード内の削除済みアイテム一覧（完全削除時に使用）
- * @returns originalId
+ * @returns displayId
  *
  * @example
  * // メモの完全削除
  * getItemOriginalId(123, "memo", true, boardMemos, boardDeletedItems)
- * // => boardDeletedItems.memos から id=123 を探してoriginalIdを返す
+ * // => boardDeletedItems.memos から id=123 を探してdisplayIdを返す
  *
  * @example
  * // タスクの通常削除
  * getItemOriginalId(456, "task", false, boardTasks, boardDeletedItems)
- * // => boardTasks から id=456 を探してoriginalIdを返す
+ * // => boardTasks から id=456 を探してdisplayIdを返す
  */
 export function getItemOriginalId(
   id: number,
   itemType: "memo" | "task",
   isPermanentDelete: boolean,
-  boardItems: Array<{ id: number; originalId?: string }>,
+  boardItems: Array<{ id: number; displayId?: string }>,
   boardDeletedItems?:
     | {
-        memos?: Array<{ id: number; originalId?: string }>;
-        tasks?: Array<{ id: number; originalId?: string }>;
+        memos?: Array<{ id: number; displayId?: string }>;
+        tasks?: Array<{ id: number; displayId?: string }>;
       }
     | undefined,
 ): string {
@@ -93,13 +93,13 @@ export function getItemOriginalId(
         : boardDeletedItems.tasks || [];
     const deletedItem = deletedItems.find((item) => item.id === id);
 
-    if (deletedItem?.originalId) {
-      return deletedItem.originalId;
+    if (deletedItem?.displayId) {
+      return deletedItem.displayId;
     }
 
     // 見つからない場合は警告を出してフォールバック
     console.warn(
-      `⚠️ 削除済み${itemType === "memo" ? "メモ" : "タスク"}のoriginalIdが見つかりません:`,
+      `⚠️ 削除済み${itemType === "memo" ? "メモ" : "タスク"}のdisplayIdが見つかりません:`,
       {
         id,
         itemType,
@@ -113,13 +113,13 @@ export function getItemOriginalId(
   // 通常削除の場合はボードアイテムから検索
   const item = boardItems.find((item) => item.id === id);
 
-  if (item?.originalId) {
-    return item.originalId;
+  if (item?.displayId) {
+    return item.displayId;
   }
 
   // 見つからない場合は警告を出してフォールバック
   console.warn(
-    `⚠️ ${itemType === "memo" ? "メモ" : "タスク"}のoriginalIdが見つかりません:`,
+    `⚠️ ${itemType === "memo" ? "メモ" : "タスク"}のdisplayIdが見つかりません:`,
     {
       id,
       itemType,

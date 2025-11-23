@@ -7,7 +7,6 @@ import {
   useCreateTagging,
   useDeleteTaggingsByTag,
 } from "@/src/hooks/use-taggings";
-import { OriginalIdUtils } from "@/src/types/common";
 
 const TAG_SUCCESS_DELAY = 3000; // タグ操作成功時の待機時間（ミリ秒）
 const MINIMUM_LOADING_TIME = 1000; // 処理中状態の最低表示時間（ミリ秒）
@@ -72,9 +71,9 @@ export default function TagManagementModal({
       }
       // fallback: allTaggingsから検索
       else if (allTaggings && allTaggings.length > 0) {
-        const originalId = OriginalIdUtils.fromItem(item) || "";
+        const displayId = item.displayId || "";
         const identifiers = [
-          originalId,
+          displayId,
           (item as any).displayId as string | undefined,
         ].filter((id): id is string => !!id);
         const itemTaggings = allTaggings.filter(
@@ -139,8 +138,7 @@ export default function TagManagementModal({
             (i) => i.id.toString() === itemId || i.id === parseInt(itemId),
           );
           if (item) {
-            const targetId =
-              item.displayId || OriginalIdUtils.fromItem(item) || "";
+            const targetId = item.displayId || "";
 
             if (mode === "add") {
               promises.push(
@@ -193,10 +191,9 @@ export default function TagManagementModal({
             (i) => i.id.toString() === itemId || i.id === parseInt(itemId),
           );
           if (item) {
-            const originalId =
-              item.displayId || OriginalIdUtils.fromItem(item) || "";
+            const displayId = item.displayId || "";
             queryClient.invalidateQueries({
-              queryKey: [itemType, originalId],
+              queryKey: [itemType, displayId],
             });
           }
         });

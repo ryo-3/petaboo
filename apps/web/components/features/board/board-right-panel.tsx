@@ -391,7 +391,9 @@ function BoardRightPanel({
                   ) {
                     try {
                       await memoOperations.restoreItem.mutateAsync(
-                        selectedMemo.originalId,
+                        teamMode
+                          ? selectedMemo.displayId
+                          : selectedMemo.originalId,
                       );
                       onMemoRestoreAndSelectNext(selectedMemo as DeletedMemo);
                     } catch (error) {
@@ -445,7 +447,9 @@ function BoardRightPanel({
                   ) {
                     try {
                       await memoOperations.restoreItem.mutateAsync(
-                        selectedMemo.originalId,
+                        teamMode
+                          ? selectedMemo.displayId
+                          : selectedMemo.originalId,
                       );
                       onMemoRestoreAndSelectNext(selectedMemo as DeletedMemo);
                     } catch (error) {
@@ -501,7 +505,9 @@ function BoardRightPanel({
                   ) {
                     try {
                       await taskOperations.restoreItem.mutateAsync(
-                        selectedTask.originalId,
+                        teamMode
+                          ? selectedTask.displayId
+                          : selectedTask.originalId,
                       );
                       onTaskRestoreAndSelectNext(selectedTask as DeletedTask);
                     } catch (error) {

@@ -126,7 +126,7 @@ function MemoStatusDisplay({
         // WORKAROUND: idとoriginalIdの両方でマッチング
         const originalId = OriginalIdUtils.fromItem(memo) || "";
         const memoId = String(memo.id);
-        const memoDisplayId = memo.displayId || "";
+        const memoDisplayId = memo.displayId;
         const memoIdentifiers = [originalId, memoId];
         if (teamMode && memoDisplayId) {
           memoIdentifiers.push(memoDisplayId);
@@ -162,7 +162,7 @@ function MemoStatusDisplay({
         if (!memo || memo.id === undefined) return false;
 
         const memoOriginalId = OriginalIdUtils.fromItem(memo) || "";
-        const memoDisplayId = memo.displayId || "";
+        const memoDisplayId = memo.displayId;
         const memoIdentifiers = [memoOriginalId, String(memo.id)];
         if (teamMode && memoDisplayId) {
           memoIdentifiers.push(memoDisplayId);
@@ -228,7 +228,7 @@ function MemoStatusDisplay({
       // さらに、idとoriginalIdの両方でマッチング（データ不整合対策）
       const originalId = OriginalIdUtils.fromItem(memo) || "";
       const memoId = String(memo.id);
-      const memoDisplayId = memo.displayId || "";
+      const memoDisplayId = memo.displayId;
       const memoIdentifiers = [originalId, memoId];
       if (teamMode && memoDisplayId) {
         memoIdentifiers.push(memoDisplayId);
@@ -266,7 +266,7 @@ function MemoStatusDisplay({
       // メモの添付ファイルを抽出（画像のみ）
       const memoAttachments = safeAllAttachments.filter(
         (attachment) =>
-          memoIdentifiers.includes(attachment.attachedOriginalId || "") &&
+          memoIdentifiers.includes(attachment.attachedDisplayId || "") &&
           attachment.mimeType.startsWith("image/"),
       );
 
@@ -439,7 +439,7 @@ export function DeletedMemoDisplay({
     // WORKAROUND: idとoriginalIdの両方でマッチング
     const originalId = OriginalIdUtils.fromItem(memo) || "";
     const memoId = String(memo.id);
-    const memoDisplayId = memo.displayId || "";
+    const memoDisplayId = memo.displayId;
     const memoIdentifiers = [originalId, memoId];
     if (teamMode && memoDisplayId) {
       memoIdentifiers.push(memoDisplayId);
@@ -474,7 +474,7 @@ export function DeletedMemoDisplay({
     // このメモの添付ファイルを抽出（画像のみ）
     const memoAttachments = allAttachments.filter(
       (attachment) =>
-        memoIdentifiers.includes(attachment.attachedOriginalId || "") &&
+        memoIdentifiers.includes(attachment.attachedDisplayId || "") &&
         attachment.mimeType.startsWith("image/"),
     );
 

@@ -488,10 +488,8 @@ export function usePermanentDeleteMemo(options?: {
           ["team-deleted-memos", teamId],
           (oldDeletedMemos) => {
             if (!oldDeletedMemos) return [];
-            // チーム側: displayId で比較、なければ originalId で比較
-            return oldDeletedMemos.filter(
-              (memo) => (memo.displayId || memo.originalId) !== itemId,
-            );
+            // チーム側: displayId で比較
+            return oldDeletedMemos.filter((memo) => memo.displayId !== itemId);
           },
         );
       } else {
@@ -548,7 +546,7 @@ export function useRestoreMemo(options?: {
             ) => {
               if (!oldDeletedMemos) return [];
               return oldDeletedMemos.filter(
-                (memo) => (memo.displayId || memo.originalId) !== itemId,
+                (memo) => memo.displayId !== itemId,
               );
             },
           );
@@ -573,7 +571,7 @@ export function useRestoreMemo(options?: {
                   return {
                     ...oldData,
                     memos: oldData.memos.filter(
-                      (memo) => (memo.displayId || memo.originalId) !== itemId,
+                      (memo) => memo.displayId !== itemId,
                     ),
                   };
                 }

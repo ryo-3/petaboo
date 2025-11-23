@@ -1559,10 +1559,7 @@ function BoardDetailScreen({
                                         title="コメント"
                                         placeholder="コメントを入力..."
                                         targetType="memo"
-                                        targetDisplayId={
-                                          selectedMemo.displayId ||
-                                          selectedMemo.originalId
-                                        }
+                                        targetDisplayId={selectedMemo.displayId}
                                         teamId={teamId || undefined}
                                         teamMembers={teamMembers}
                                         boardId={boardId}

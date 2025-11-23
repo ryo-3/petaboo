@@ -406,6 +406,7 @@ export interface paths {
             "application/json": {
               id: number;
               originalId: string;
+              displayId: string;
               title: string;
               content: string | null;
               createdAt: number;
@@ -453,6 +454,7 @@ export interface paths {
             "application/json": {
               id: number;
               originalId: string;
+              displayId: string;
               title: string;
               content: string | null;
               createdAt: number;
@@ -943,6 +945,7 @@ export interface paths {
             "application/json": {
               id: number;
               originalId: string;
+              displayId: string;
               title: string;
               description: string | null;
               /** @enum {string} */

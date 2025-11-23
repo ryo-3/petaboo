@@ -34,6 +34,7 @@ export function getTeamTaskSelectFields() {
     teamId: teamTasks.teamId,
     userId: teamTasks.userId,
     originalId: teamTasks.originalId, // 重要: originalIdフィールドを追加
+    displayId: teamTasks.displayId, // 🆕 displayIdフィールドを追加
     uuid: teamTasks.uuid,
     title: teamTasks.title,
     description: teamTasks.description,
@@ -59,6 +60,7 @@ export function getTeamMemoSelectFields() {
     teamId: teamMemos.teamId,
     userId: teamMemos.userId,
     originalId: teamMemos.originalId, // 重要: originalIdフィールドを追加
+    displayId: teamMemos.displayId, // 🆕 displayIdフィールドを追加
     uuid: teamMemos.uuid,
     title: teamMemos.title,
     content: teamMemos.content,

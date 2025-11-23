@@ -122,8 +122,13 @@ export function useUnifiedRestoration<T extends DeletedItem>({
         });
       }
     },
-    onError: (error) => {
+    onError: (error: unknown) => {
       console.error("統一復元エラー:", error);
+      console.error("エラー詳細:", {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        error,
+      });
     },
   });
 
@@ -215,8 +220,19 @@ export function useUnifiedRestoration<T extends DeletedItem>({
           queryKey: [itemType + "s"],
         });
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("❌ 統一復元処理エラー:", error);
+      console.error("エラー詳細:", {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        selectedDeletedItem,
+        itemId:
+          teamMode && selectedDeletedItem.displayId
+            ? selectedDeletedItem.displayId
+            : selectedDeletedItem.originalId,
+        teamMode,
+        teamId,
+      });
       throw error;
     }
   }, [

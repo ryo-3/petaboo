@@ -331,6 +331,7 @@ export function useSimpleMemoSave({
               id: 0,
               title: "",
               content: "",
+              displayId: "0",
               createdAt: 0,
               updatedAt: 0,
             },

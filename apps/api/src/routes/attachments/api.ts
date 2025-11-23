@@ -26,7 +26,7 @@ const TeamAttachmentSchema = z.object({
   teamId: z.number(),
   userId: z.string(),
   attachedTo: z.enum(["memo", "task", "comment"]),
-  attachedOriginalId: z.string(),
+  attachedDisplayId: z.string(),
   originalId: z.string(),
   fileName: z.string(),
   fileSize: z.number(),
@@ -56,7 +56,7 @@ export const getAttachmentsRoute = createRoute({
     query: z.object({
       teamId: z.string().regex(/^\d+$/).transform(Number).optional(),
       attachedTo: z.enum(["memo", "task", "comment"]),
-      attachedOriginalId: z.string(),
+      attachedDisplayId: z.string(),
     }),
   },
   responses: {
@@ -95,7 +95,7 @@ export const getAttachments = async (c: any) => {
     return c.json({ error: "Unauthorized" }, 401);
   }
 
-  const { teamId, attachedTo, attachedOriginalId } = c.req.valid("query");
+  const { teamId, attachedTo, attachedDisplayId } = c.req.valid("query");
 
   let results;
   if (teamId) {
@@ -112,13 +112,13 @@ export const getAttachments = async (c: any) => {
         and(
           eq(teamAttachments.teamId, teamId),
           eq(teamAttachments.attachedTo, attachedTo),
-          eq(teamAttachments.attachedOriginalId, attachedOriginalId),
+          eq(teamAttachments.attachedDisplayId, attachedDisplayId),
           isNull(teamAttachments.deletedAt),
         ),
       )
       .orderBy(teamAttachments.createdAt);
   } else {
-    // 個人モード
+    // 個人モード（originalIdを使用）
     results = await db
       .select()
       .from(attachments)
@@ -126,7 +126,7 @@ export const getAttachments = async (c: any) => {
         and(
           eq(attachments.userId, auth.userId),
           eq(attachments.attachedTo, attachedTo as "memo" | "task"),
-          eq(attachments.originalId, attachedOriginalId),
+          eq(attachments.originalId, attachedDisplayId),
           isNull(attachments.deletedAt),
         ),
       )
@@ -235,7 +235,7 @@ export const uploadAttachmentRoute = createRoute({
           schema: z.object({
             file: z.any(), // FormDataのファイル
             attachedTo: z.enum(["memo", "task", "comment"]),
-            attachedOriginalId: z.string(),
+            attachedDisplayId: z.string(),
           }),
         },
       },
@@ -308,9 +308,9 @@ export const uploadAttachment = async (c: any) => {
   const formData = await c.req.formData();
   const file = formData.get("file") as File;
   const attachedTo = formData.get("attachedTo") as string;
-  const attachedOriginalId = formData.get("attachedOriginalId") as string;
+  const attachedDisplayId = formData.get("attachedDisplayId") as string;
 
-  if (!file || !attachedTo || !attachedOriginalId) {
+  if (!file || !attachedTo || !attachedDisplayId) {
     return c.json({ error: "Missing required fields" }, 400);
   }
 
@@ -333,12 +333,12 @@ export const uploadAttachment = async (c: any) => {
             teamAttachments.attachedTo,
             attachedTo as "memo" | "task" | "comment",
           ),
-          eq(teamAttachments.attachedOriginalId, attachedOriginalId),
+          eq(teamAttachments.attachedDisplayId, attachedDisplayId),
           isNull(teamAttachments.deletedAt),
         ),
       );
   } else {
-    // 個人モード
+    // 個人モード（originalIdを使用）
     existingCount = await db
       .select({ count: sql<number>`count(*)` })
       .from(attachments)
@@ -346,7 +346,7 @@ export const uploadAttachment = async (c: any) => {
         and(
           eq(attachments.userId, auth.userId),
           eq(attachments.attachedTo, attachedTo as "memo" | "task"),
-          eq(attachments.originalId, attachedOriginalId),
+          eq(attachments.originalId, attachedDisplayId),
           isNull(attachments.deletedAt),
         ),
       );
@@ -399,7 +399,7 @@ export const uploadAttachment = async (c: any) => {
         teamId,
         userId: auth.userId,
         attachedTo,
-        attachedOriginalId,
+        attachedDisplayId,
         originalId,
         fileName: file.name,
         fileSize: file.size,
@@ -411,14 +411,14 @@ export const uploadAttachment = async (c: any) => {
       })
       .returning();
   } else {
-    // 個人モード
+    // 個人モード（originalIdを使用）
     result = await db
       .insert(attachments)
       .values({
         userId: auth.userId,
         attachedTo: attachedTo as "memo" | "task",
         attachedId: 0, // originalIdで管理するためダミー
-        originalId: attachedOriginalId,
+        originalId: attachedDisplayId,
         fileName: file.name,
         fileSize: file.size,
         mimeType: file.type,

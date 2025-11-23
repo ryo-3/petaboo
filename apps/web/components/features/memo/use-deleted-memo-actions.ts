@@ -37,21 +37,21 @@ export function useDeletedMemoActions({
 
   // 完全削除用のカスタムミューテーション（onSuccessで次選択を実行）
   const permanentDeleteNote = useMutation({
-    mutationFn: async (originalId: string) => {
+    mutationFn: async (itemId: string) => {
       const token = await getToken();
 
       if (teamMode && teamId) {
-        // チームモード: チーム用完全削除API
+        // チームモード: displayIdを使用
         const response = await memosApi.permanentDeleteTeamMemo(
           teamId,
-          originalId,
+          itemId,
           token || undefined,
         );
         return response.json();
       } else {
-        // 個人モード: 個人用完全削除API
+        // 個人モード: originalIdを使用
         const response = await memosApi.permanentDeleteNote(
-          originalId,
+          itemId,
           token || undefined,
         );
         return response.json();
@@ -72,7 +72,7 @@ export function useDeletedMemoActions({
             (oldDeletedMemos: DeletedMemo[] | undefined) => {
               if (!oldDeletedMemos) return [];
               return oldDeletedMemos.filter(
-                (m) => memo && m.originalId !== memo.originalId,
+                (m) => memo && m.displayId !== memo.displayId,
               );
             },
           );
@@ -114,7 +114,11 @@ export function useDeletedMemoActions({
             return {
               ...oldItems,
               memos: oldItems.memos.filter(
-                (item: any) => memo && item.originalId !== memo.originalId,
+                (item: any) =>
+                  memo &&
+                  (teamMode
+                    ? item.displayId !== memo.displayId
+                    : item.originalId !== memo.originalId),
               ),
             };
           }
@@ -184,7 +188,9 @@ export function useDeletedMemoActions({
             try {
               // API実行（onSuccessで次選択とキャッシュ更新が実行される）
               if (memo) {
-                await permanentDeleteNote.mutateAsync(memo.originalId);
+                await permanentDeleteNote.mutateAsync(
+                  teamMode ? memo.displayId : memo.originalId,
+                );
               }
 
               // アニメーション状態をリセットしてから蓋を閉じる
@@ -204,7 +210,9 @@ export function useDeletedMemoActions({
         // アニメーション要素がない場合は通常の処理
         // API実行（onSuccessで次選択とキャッシュ更新が実行される）
         if (memo) {
-          await permanentDeleteNote.mutateAsync(memo.originalId);
+          await permanentDeleteNote.mutateAsync(
+            teamMode ? memo.displayId : memo.originalId,
+          );
         }
 
         // アニメーション状態をリセットしてから蓋を閉じる
@@ -258,7 +266,9 @@ export function useDeletedMemoActions({
             try {
               // API実行
               if (memo) {
-                await restoreNote.mutateAsync(memo.originalId);
+                await restoreNote.mutateAsync(
+                  teamMode ? memo.displayId : memo.originalId,
+                );
               }
 
               // 復元完了後、すぐにUIを更新
@@ -294,7 +304,9 @@ export function useDeletedMemoActions({
       } else {
         // アニメーション要素がない場合は通常の処理
         if (memo) {
-          await restoreNote.mutateAsync(memo.originalId);
+          await restoreNote.mutateAsync(
+            teamMode ? memo.displayId : memo.originalId,
+          );
         }
 
         setIsLocalRestoring(false);

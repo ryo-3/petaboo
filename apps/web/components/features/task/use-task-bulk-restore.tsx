@@ -15,6 +15,8 @@ interface UseTasksBulkRestoreProps {
   restoreButtonRef?: React.RefObject<HTMLButtonElement | null>;
   setIsRestoring?: (isRestoring: boolean) => void;
   setIsLidOpen?: (isOpen: boolean) => void;
+  teamMode?: boolean;
+  teamId?: number;
 }
 
 export function useTasksBulkRestore({
@@ -26,8 +28,10 @@ export function useTasksBulkRestore({
   restoreButtonRef,
   setIsRestoring,
   setIsLidOpen,
+  teamMode,
+  teamId,
 }: UseTasksBulkRestoreProps) {
-  const restoreTaskMutation = useRestoreTask();
+  const restoreTaskMutation = useRestoreTask({ teamMode, teamId });
   const bulkRestore = useBulkDelete(); // 削除と同じモーダルロジックを使用
 
   // 共通のアニメーション管理
@@ -89,12 +93,14 @@ export function useTasksBulkRestore({
     };
 
     const onApiCall = async (id: number) => {
-      // idからoriginalIdに変換
+      // idからitemIdに変換（チームモード: displayId、個人モード: originalId）
       const deletedTask = deletedTasks?.find((task) => task.id === id);
       if (!deletedTask) {
         throw new Error(`削除済みタスクが見つかりません: ID ${id}`);
       }
-      await restoreTaskMutation.mutateAsync(deletedTask.originalId);
+      await restoreTaskMutation.mutateAsync(
+        teamMode ? deletedTask.displayId : deletedTask.originalId,
+      );
     };
 
     await executeWithAnimation({

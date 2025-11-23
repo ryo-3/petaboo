@@ -296,9 +296,9 @@ export function TeamBoardDetailWrapper({
     setSelectedTask(null);
     setSelectedMemo(memo);
 
-    // URLを更新（displayIdを優先）
+    // URLを更新（displayIdを使用）
     // 新規作成時 (originalId === "new") はURL更新をスキップ
-    const targetMemoId = memo?.displayId || memo?.originalId;
+    const targetMemoId = memo?.displayId;
     if (memo && targetMemoId && targetMemoId !== "new") {
       router.replace(
         `/team/${customUrl}?tab=board&slug=${slug}&memo=${targetMemoId}`,
@@ -316,9 +316,9 @@ export function TeamBoardDetailWrapper({
     setSelectedMemo(null);
     setSelectedTask(task);
 
-    // URLを更新（displayIdを優先）
+    // URLを更新（displayIdを使用）
     // 新規作成時 (originalId === "new") はURL更新をスキップ
-    const targetTaskId = task?.displayId || task?.originalId;
+    const targetTaskId = task?.displayId;
     if (task && targetTaskId && targetTaskId !== "new") {
       router.replace(
         `/team/${customUrl}?tab=board&slug=${slug}&task=${targetTaskId}`,

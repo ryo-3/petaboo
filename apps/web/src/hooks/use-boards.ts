@@ -865,6 +865,10 @@ export function useBoardDeletedItems(boardId: number, teamId?: string | null) {
             memos.push({
               id: item.content.id,
               originalId: OriginalIdUtils.fromItem(item.content) || "",
+              displayId:
+                item.content.displayId ||
+                item.content.originalId ||
+                String(item.content.id),
               title: item.content.title,
               content: item.content.content,
               categoryId: item.content.categoryId,
@@ -877,6 +881,10 @@ export function useBoardDeletedItems(boardId: number, teamId?: string | null) {
             tasks.push({
               id: item.content.id,
               originalId: OriginalIdUtils.fromItem(item.content) || "",
+              displayId:
+                item.content.displayId ||
+                item.content.originalId ||
+                String(item.content.id),
               title: item.content.title,
               description: item.content.description,
               status: item.content.status,

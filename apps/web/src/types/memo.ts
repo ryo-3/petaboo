@@ -19,8 +19,8 @@ export interface DeletedMemo
     DeletedItemFields {
   /** 削除済みメモではoriginalIdは必須 */
   originalId: OriginalId;
-  /** チームメモの場合はdisplayIdも必須 */
-  displayId?: string;
+  /** displayIdは必須（個人用・チーム用共通） */
+  displayId: string;
   title: string;
   content: string | null;
   categoryId?: number | null;

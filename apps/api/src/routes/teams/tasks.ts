@@ -31,6 +31,7 @@ const TeamTaskSchema = z.object({
   teamId: z.number(),
   userId: z.string(),
   originalId: z.string(),
+  displayId: z.string(), // 🆕 displayId追加
   uuid: z.string().nullable(),
   title: z.string(),
   description: z.string().nullable(),
@@ -626,6 +627,7 @@ app.openapi(
                 id: z.number(),
                 teamId: z.number(),
                 originalId: z.string(),
+                displayId: z.string(),
                 uuid: z.string().nullable(),
                 title: z.string(),
                 description: z.string().nullable(),
@@ -683,6 +685,7 @@ app.openapi(
           id: teamDeletedTasks.id,
           teamId: teamDeletedTasks.teamId,
           originalId: teamDeletedTasks.originalId,
+          displayId: teamDeletedTasks.displayId,
           uuid: teamDeletedTasks.uuid,
           title: teamDeletedTasks.title,
           description: teamDeletedTasks.description,

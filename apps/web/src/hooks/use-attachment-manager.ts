@@ -9,7 +9,10 @@ import { useToast } from "@/src/contexts/toast-context";
 import { OriginalIdUtils } from "@/src/types/common";
 import { useAuth } from "@clerk/nextjs";
 import { useQueryClient } from "@tanstack/react-query";
-import { validateFile, MAX_ATTACHMENTS_PER_ITEM } from "@/src/utils/file-validator";
+import {
+  validateFile,
+  MAX_ATTACHMENTS_PER_ITEM,
+} from "@/src/utils/file-validator";
 import { compressImage, formatBytes } from "@/src/utils/image-compressor";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594";
@@ -85,7 +88,9 @@ export const useAttachmentManager = ({
         try {
           const result = await compressImage(file);
           if (result.wasCompressed) {
-            const saved = formatBytes(result.originalSize - result.compressedSize);
+            const saved = formatBytes(
+              result.originalSize - result.compressedSize,
+            );
             showToast(`画像を圧縮しました（${saved}削減）`, "info", 3000);
           }
           // 圧縮後も5MB超の場合はエラー
@@ -116,7 +121,10 @@ export const useAttachmentManager = ({
         ).length + pendingImages.length;
 
       if (currentCount >= MAX_ATTACHMENTS_PER_ITEM) {
-        showToast(`ファイルは最大${MAX_ATTACHMENTS_PER_ITEM}個までです`, "error");
+        showToast(
+          `ファイルは最大${MAX_ATTACHMENTS_PER_ITEM}個までです`,
+          "error",
+        );
         return;
       }
 
@@ -144,7 +152,10 @@ export const useAttachmentManager = ({
       for (const file of files) {
         // 上限チェック
         if (currentCount + processedFiles.length >= MAX_ATTACHMENTS_PER_ITEM) {
-          showToast(`ファイルは最大${MAX_ATTACHMENTS_PER_ITEM}個までです`, "error");
+          showToast(
+            `ファイルは最大${MAX_ATTACHMENTS_PER_ITEM}個までです`,
+            "error",
+          );
           break;
         }
 
@@ -228,7 +239,7 @@ export const useAttachmentManager = ({
               const formData = new FormData();
               formData.append("file", file);
               formData.append("attachedTo", itemType);
-              formData.append("attachedOriginalId", targetOriginalId);
+              formData.append("attachedDisplayId", targetOriginalId);
 
               const token = await getToken();
               const response = await fetch(

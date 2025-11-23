@@ -4,6 +4,7 @@ export const memos = sqliteTable("memos", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   userId: text("user_id").notNull(),
   originalId: text("original_id").notNull(),
+  displayId: text("display_id").notNull(), // 個人用はoriginalIdと同じ値
   uuid: text("uuid"), // 将来用UUID（オプショナル）
   title: text("title").notNull(),
   content: text("content"),
@@ -16,6 +17,7 @@ export const deletedMemos = sqliteTable("deleted_memos", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   userId: text("user_id").notNull(),
   originalId: text("original_id").notNull(), // 元のmemosテーブルのoriginalId
+  displayId: text("display_id").notNull(), // 個人用はoriginalIdと同じ値
   uuid: text("uuid"), // 将来用UUID（オプショナル）
   title: text("title").notNull(),
   content: text("content"),

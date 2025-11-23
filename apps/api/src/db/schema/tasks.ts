@@ -4,6 +4,7 @@ export const tasks = sqliteTable("tasks", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   userId: text("user_id").notNull(),
   originalId: text("original_id").notNull(),
+  displayId: text("display_id").notNull(), // 個人用はoriginalIdと同じ値
   uuid: text("uuid"), // 将来用UUID（オプショナル）
   title: text("title").notNull(),
   description: text("description"),
@@ -20,6 +21,7 @@ export const deletedTasks = sqliteTable("deleted_tasks", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   userId: text("user_id").notNull(),
   originalId: text("original_id").notNull(), // 元のtasksテーブルのoriginalId
+  displayId: text("display_id").notNull(), // 個人用はoriginalIdと同じ値
   uuid: text("uuid"), // 将来用UUID（オプショナル）
   title: text("title").notNull(),
   description: text("description"),

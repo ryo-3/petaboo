@@ -145,8 +145,8 @@ export interface BaseItemFields {
   id: number;
   /** 元ID（削除・復元時の追跡用） */
   originalId?: OriginalId;
-  /** 表示用連番ID（チーム機能用） */
-  displayId?: string;
+  /** 表示用連番ID（個人用・チーム用共通） */
+  displayId: string;
   /** UUID（将来の外部連携用） */
   uuid?: Uuid;
   /** 作成日時（Unix timestamp） */

@@ -25,8 +25,8 @@ export interface DeletedTask
     DeletedItemFields {
   /** 削除済みタスクではoriginalIdは必須 */
   originalId: OriginalId;
-  /** チームタスクの場合はdisplayIdも必須 */
-  displayId?: string;
+  /** displayIdは必須（個人用・チーム用共通） */
+  displayId: string;
   title: string;
   description: string | null;
   status: string;

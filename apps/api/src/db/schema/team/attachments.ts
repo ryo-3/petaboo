@@ -10,7 +10,7 @@ export const teamAttachments = sqliteTable("team_attachments", {
   attachedTo: text("attached_to", {
     enum: ["memo", "task", "comment"],
   }).notNull(),
-  attachedOriginalId: text("attached_original_id").notNull(), // memo/task/comment の originalId
+  attachedDisplayId: text("attached_display_id").notNull(), // memo/task/comment の displayId
   originalId: text("original_id").notNull(), // この添付ファイル自身の originalId（削除・復元追跡用）
   fileName: text("file_name").notNull(), // 元ファイル名
   fileSize: integer("file_size").notNull(), // バイト数

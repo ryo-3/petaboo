@@ -166,16 +166,12 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   const { data: attachments = [] } = useAttachments(
     team?.id,
     "memo",
-    selectedMemo
-      ? selectedMemo.displayId || OriginalIdUtils.fromItem(selectedMemo) || ""
-      : "",
+    selectedMemo ? selectedMemo.displayId : "",
   );
   const { data: comments = [] } = useTeamComments(
     team?.id,
     "memo",
-    selectedMemo
-      ? selectedMemo.displayId || OriginalIdUtils.fromItem(selectedMemo) || ""
-      : "",
+    selectedMemo ? selectedMemo.displayId : "",
   );
 
   // 画像数とコメント数をContextに反映（メモ用）
@@ -188,16 +184,12 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   const { data: taskAttachments = [] } = useAttachments(
     team?.id,
     "task",
-    selectedTask
-      ? selectedTask.displayId || OriginalIdUtils.fromItem(selectedTask) || ""
-      : "",
+    selectedTask ? selectedTask.displayId : "",
   );
   const { data: taskComments = [] } = useTeamComments(
     team?.id,
     "task",
-    selectedTask
-      ? selectedTask.displayId || OriginalIdUtils.fromItem(selectedTask) || ""
-      : "",
+    selectedTask ? selectedTask.displayId : "",
   );
 
   // タスク用の画像数とコメント数をContextに反映
@@ -664,6 +656,22 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
     // 状態を更新
     setSelectedDeletedMemo(memo);
+    setSelectedMemoId(memo?.id ?? null);
+
+    // URLを更新
+    const params = new URLSearchParams(searchParams.toString());
+    if (memo) {
+      params.set("memo", memo.id.toString());
+      params.set("tab", "memos");
+      // タスクパラメータを削除
+      params.delete("task");
+      // ボードslugパラメータを削除
+      params.delete("slug");
+    } else {
+      params.delete("memo");
+    }
+    const newUrl = params.toString() ? `?${params.toString()}` : "";
+    router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
   };
 
   const handleSelectDeletedTask = (

@@ -64,6 +64,7 @@ export function createAPI(app: AppType) {
       query: z.object({
         targetType: z.enum(["memo", "task", "board"]).optional(),
         targetDisplayId: z.string().optional(),
+        targetOriginalId: z.string().optional(),
         tagId: z.string().optional(),
         includeTag: z.string().optional(),
         teamId: z.string().optional(),
@@ -99,8 +100,14 @@ export function createAPI(app: AppType) {
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const { targetType, targetDisplayId, tagId, includeTag, teamId } =
-      c.req.valid("query");
+    const {
+      targetType,
+      targetDisplayId,
+      targetOriginalId,
+      tagId,
+      includeTag,
+      teamId,
+    } = c.req.valid("query");
     const db = c.get("db");
 
     // チームIDが指定された場合はチームタグ付けを取得

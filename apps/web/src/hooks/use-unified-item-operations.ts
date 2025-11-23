@@ -385,9 +385,17 @@ export function useUnifiedItemOperations({
       // showToast(`${itemName}を復元しました`, "success"); // トースト通知は無効化
     },
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    onError: (_error) => {
-      // const itemName = itemType === "memo" ? "メモ" : "タスク"; // 現在は未使用
-      // console.error(`${itemName}復元に失敗しました:`, error);
+    onError: (error) => {
+      const itemName = itemType === "memo" ? "メモ" : "タスク";
+      console.error(`${itemName}復元に失敗しました:`, error);
+      console.error("復元エラー詳細:", {
+        message: error?.message,
+        stack: error?.stack,
+        itemType,
+        context,
+        teamId,
+        error,
+      });
       // showToast(`${itemName}復元に失敗しました`, "error"); // トースト通知は無効化
     },
   });

@@ -21,6 +21,7 @@ app.use("*", clerkMiddleware());
 const TaskSchema = z.object({
   id: z.number(),
   originalId: z.string(),
+  displayId: z.string(),
   title: z.string(),
   description: z.string().nullable(),
   status: z.enum(["todo", "in_progress", "completed"]),
@@ -280,6 +281,7 @@ app.openapi(
     const insertData = {
       userId: auth.userId,
       originalId: "", // 後で更新
+      displayId: "", // 後で更新（個人用はoriginalIdと同じ）
       uuid: generateUuid(), // UUID生成
       title,
       description,
@@ -296,11 +298,12 @@ app.openapi(
       .values(insertData)
       .returning({ id: tasks.id });
 
-    // originalIdを生成して更新
+    // originalId と displayId を生成して更新
     const originalId = generateOriginalId(result[0].id);
+    const displayId = originalId; // 個人用は originalId と同じ
     await db
       .update(tasks)
-      .set({ originalId })
+      .set({ originalId, displayId })
       .where(eq(tasks.id, result[0].id));
 
     // 作成されたタスクを取得して返す
@@ -803,6 +806,7 @@ app.openapi(
         .values({
           userId: auth.userId,
           originalId: deletedTask.originalId, // 一旦削除前のoriginalIdで復元
+          displayId: deletedTask.displayId || deletedTask.originalId, // displayIdも復元（既存データ用フォールバック）
           uuid: deletedTask.uuid, // UUIDも復元
           title: deletedTask.title,
           description: deletedTask.description,
@@ -948,6 +952,7 @@ app.openapi(
             .values({
               userId: auth.userId,
               originalId: "", // 後で更新
+              displayId: "", // 後で更新（個人用はoriginalIdと同じ）
               uuid: generateUuid(),
               title,
               description: description || null,
@@ -960,11 +965,12 @@ app.openapi(
             })
             .returning({ id: tasks.id });
 
-          // originalIdを生成して更新
+          // originalId と displayId を生成して更新
           const originalId = generateOriginalId(result[0].id);
+          const displayId = originalId; // 個人用は originalId と同じ
           await db
             .update(tasks)
-            .set({ originalId })
+            .set({ originalId, displayId })
             .where(eq(tasks.id, result[0].id));
 
           imported++;

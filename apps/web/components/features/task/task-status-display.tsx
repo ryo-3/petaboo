@@ -131,7 +131,7 @@ function TaskStatusDisplay({
       // さらに、idとoriginalIdの両方でマッチング（データ不整合対策）
       const originalId = OriginalIdUtils.fromItem(task) || "";
       const taskId = String(task.id);
-      const displayId = task.displayId || "";
+      const displayId = task.displayId;
       const identifiers = [originalId, taskId];
       if (teamMode && displayId) {
         identifiers.push(displayId);
@@ -181,7 +181,7 @@ function TaskStatusDisplay({
       // このタスクの添付ファイルを抽出（画像のみ）
       const taskAttachments = allAttachments.filter(
         (attachment) =>
-          identifiers.includes(attachment.attachedOriginalId || "") &&
+          identifiers.includes(attachment.attachedDisplayId || "") &&
           attachment.mimeType.startsWith("image/"),
       );
 
@@ -437,7 +437,7 @@ export function DeletedTaskDisplay({
   ) => {
     // 削除済みタスクのタグ・ボード情報を取得
     const originalId = OriginalIdUtils.fromItem(task) || "";
-    const displayId = task.displayId || "";
+    const displayId = task.displayId;
     const taskIds = [originalId, String(task.id)];
     if (teamMode && displayId) {
       taskIds.push(displayId);
@@ -478,7 +478,7 @@ export function DeletedTaskDisplay({
     // このタスクの添付ファイルを抽出（画像のみ）
     const taskAttachments = allAttachments.filter(
       (attachment) =>
-        taskIds.includes(attachment.attachedOriginalId || "") &&
+        taskIds.includes(attachment.attachedDisplayId || "") &&
         attachment.mimeType.startsWith("image/"),
     );
 

@@ -28,6 +28,7 @@ app.use("*", clerkMiddleware());
 const MemoSchema = z.object({
   id: z.number(),
   originalId: z.string(),
+  displayId: z.string(),
   title: z.string(),
   content: z.string().nullable(),
   createdAt: z.number(),
@@ -202,6 +203,7 @@ app.openapi(
       .values({
         userId: auth.userId,
         originalId: "", // 後で更新
+        displayId: "", // 後で更新（個人用はoriginalIdと同じ）
         uuid: generateUuid(), // UUID生成
         title,
         content,
@@ -209,17 +211,19 @@ app.openapi(
       })
       .returning({ id: memos.id });
 
-    // originalIdを生成して更新
+    // originalId と displayId を生成して更新
     const originalId = generateOriginalId(result[0].id);
+    const displayId = originalId; // 個人用は originalId と同じ
     await db
       .update(memos)
-      .set({ originalId, updatedAt: createdAt })
+      .set({ originalId, displayId, updatedAt: createdAt })
       .where(eq(memos.id, result[0].id));
 
     // 作成されたメモの完全なオブジェクトを返す
     const newMemo = {
       id: result[0].id,
       originalId,
+      displayId,
       title,
       content: content || "",
       createdAt,
@@ -699,6 +703,7 @@ app.openapi(
         .values({
           userId: auth.userId,
           originalId: deletedNote.originalId, // 一旦削除前のoriginalIdで復元
+          displayId: deletedNote.displayId || deletedNote.originalId, // displayIdも復元（既存データ用フォールバック）
           uuid: deletedNote.uuid, // UUIDも復元
           title: deletedNote.title,
           content: deletedNote.content,
@@ -842,6 +847,7 @@ app.openapi(
             .values({
               userId: auth.userId,
               originalId: "", // 後で更新
+              displayId: "", // 後で更新（個人用はoriginalIdと同じ）
               uuid: generateUuid(),
               title,
               content: combinedContent,
@@ -849,11 +855,12 @@ app.openapi(
             })
             .returning({ id: memos.id });
 
-          // originalIdを生成して更新
+          // originalId と displayId を生成して更新
           const originalId = generateOriginalId(result[0].id);
+          const displayId = originalId; // 個人用は originalId と同じ
           await db
             .update(memos)
-            .set({ originalId })
+            .set({ originalId, displayId })
             .where(eq(memos.id, result[0].id));
 
           imported++;

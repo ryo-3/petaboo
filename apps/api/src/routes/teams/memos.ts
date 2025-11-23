@@ -30,6 +30,7 @@ const TeamMemoSchema = z.object({
   teamId: z.number(),
   userId: z.string(),
   originalId: z.string(),
+  displayId: z.string(), // 🆕 displayId追加
   uuid: z.string().nullable(),
   title: z.string(),
   content: z.string().nullable(),
@@ -518,6 +519,7 @@ app.openapi(
                 id: z.number(),
                 teamId: z.number(),
                 originalId: z.string(),
+                displayId: z.string(),
                 uuid: z.string().nullable(),
                 title: z.string(),
                 content: z.string().nullable(),
@@ -577,6 +579,7 @@ app.openapi(
           id: teamDeletedMemos.id,
           teamId: teamDeletedMemos.teamId,
           originalId: teamDeletedMemos.originalId,
+          displayId: teamDeletedMemos.displayId,
           uuid: teamDeletedMemos.uuid,
           title: teamDeletedMemos.title,
           content: teamDeletedMemos.content,

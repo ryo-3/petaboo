@@ -378,8 +378,8 @@ function TaskEditor({
     if (task.id === 142 && (!task.originalId || task.originalId === "")) {
       return "5";
     }
-    return displayId || originalId;
-  }, [task, teamMode, displayId, originalId]);
+    return displayId;
+  }, [task, teamMode, displayId]);
 
   const { data: allTeamTaggings } = useAllTeamTaggings(teamId || 0);
   const liveTeamTaggings = useMemo(() => {
@@ -784,6 +784,7 @@ function TaskEditor({
         id: 0,
         title: finalTitle || "新規タスク",
         description: finalDescription,
+        displayId: "0",
         status:
           finalStatus === "not_started"
             ? "todo"

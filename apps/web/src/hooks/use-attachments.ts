@@ -8,7 +8,7 @@ export interface Attachment {
   teamId: number;
   userId: string;
   attachedTo: "memo" | "task" | "comment";
-  attachedOriginalId: string;
+  attachedDisplayId: string;
   originalId: string;
   fileName: string;
   fileSize: number;
@@ -25,19 +25,19 @@ export interface Attachment {
 export function useAttachments(
   teamId: number | undefined,
   attachedTo: "memo" | "task" | "comment",
-  attachedOriginalId: string | undefined,
+  attachedDisplayId: string | undefined,
 ) {
   const { getToken } = useAuth();
 
   return useQuery({
-    queryKey: ["attachments", teamId, attachedTo, attachedOriginalId],
+    queryKey: ["attachments", teamId, attachedTo, attachedDisplayId],
     queryFn: async (): Promise<Attachment[]> => {
-      if (!attachedOriginalId) return [];
+      if (!attachedDisplayId) return [];
 
       const token = await getToken();
       const url = teamId
-        ? `${API_URL}/attachments?teamId=${teamId}&attachedTo=${attachedTo}&attachedOriginalId=${attachedOriginalId}`
-        : `${API_URL}/attachments?attachedTo=${attachedTo}&attachedOriginalId=${attachedOriginalId}`;
+        ? `${API_URL}/attachments?teamId=${teamId}&attachedTo=${attachedTo}&attachedDisplayId=${attachedDisplayId}`
+        : `${API_URL}/attachments?attachedTo=${attachedTo}&attachedDisplayId=${attachedDisplayId}`;
 
       const response = await fetch(url, {
         headers: {
@@ -51,7 +51,7 @@ export function useAttachments(
 
       return response.json();
     },
-    enabled: !!attachedOriginalId,
+    enabled: !!attachedDisplayId,
   });
 }
 
@@ -61,13 +61,13 @@ export function useAttachments(
 export function useUploadAttachment(
   teamId: number | undefined,
   attachedTo: "memo" | "task" | "comment",
-  attachedOriginalId: string | undefined,
+  attachedDisplayId: string | undefined,
 ) {
   const { getToken } = useAuth();
 
   return useMutation({
     mutationFn: async (file: File): Promise<Attachment> => {
-      if (!attachedOriginalId) {
+      if (!attachedDisplayId) {
         throw new Error("アイテムIDが指定されていません");
       }
 
@@ -79,7 +79,7 @@ export function useUploadAttachment(
       const formData = new FormData();
       formData.append("file", file);
       formData.append("attachedTo", attachedTo);
-      formData.append("attachedOriginalId", attachedOriginalId);
+      formData.append("attachedDisplayId", attachedDisplayId);
 
       const token = await getToken();
       const url = teamId

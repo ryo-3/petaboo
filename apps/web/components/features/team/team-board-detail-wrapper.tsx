@@ -41,8 +41,8 @@ export function TeamBoardDetailWrapper({
   const boardIdParam = searchParams.get("boardId");
 
   // URLパラメータからメモ/タスクIDを取得
-  const memoIdParam = searchParams.get("memoId");
-  const taskIdParam = searchParams.get("taskId");
+  const memoParam = searchParams.get("memo");
+  const taskParam = searchParams.get("task");
 
   // チームボード用のhooks
   const updateBoard = useUpdateTeamBoard(teamId || 0);
@@ -165,13 +165,7 @@ export function TeamBoardDetailWrapper({
 
   // URLパラメータからメモ/タスクを復元（ボードアイテム取得が必要）
   const { data: boardItems, isLoading: boardItemsLoading } = useQuery({
-    queryKey: [
-      "team-board-items",
-      teamId,
-      boardData?.id,
-      memoIdParam,
-      taskIdParam,
-    ],
+    queryKey: ["team-board-items", teamId, boardData?.id, memoParam, taskParam],
     queryFn: async () => {
       if (!teamId || !boardData?.id) return null;
 
@@ -193,17 +187,17 @@ export function TeamBoardDetailWrapper({
       return response.json();
     },
     // URLパラメータがある場合のみ取得（最適化）
-    enabled: !!teamId && !!boardData?.id && (!!memoIdParam || !!taskIdParam),
+    enabled: !!teamId && !!boardData?.id && (!!memoParam || !!taskParam),
     staleTime: 5 * 60 * 1000,
   });
 
   // URLパラメータが削除された場合に選択状態をクリア
   useEffect(() => {
-    if (!memoIdParam && !taskIdParam) {
+    if (!memoParam && !taskParam) {
       setSelectedMemo(null);
       setSelectedTask(null);
     }
-  }, [memoIdParam, taskIdParam]);
+  }, [memoParam, taskParam]);
 
   // URLパラメータに基づいてメモ/タスクを選択
   // ただし、既に選択済み（新規作成含む）の場合はスキップ
@@ -215,15 +209,16 @@ export function TeamBoardDetailWrapper({
   useEffect(() => {
     if (!boardItems) return;
 
-    // memoIdParamがある場合、該当するメモを選択
-    if (memoIdParam) {
+    // memoパラメータがある場合、該当するメモを選択
+    if (memoParam) {
       // 既にメモが選択されている場合（新規作成含む）はスキップ
       if (selectedMemoRef.current?.originalId !== undefined) {
-        // ただし、URLのmemoIdと異なる場合のみスキップ
+        // ただし、URLのmemoパラメータと異なる場合のみスキップ
         if (
-          selectedMemoRef.current.originalId !== memoIdParam &&
-          selectedMemoRef.current.originalId !== `memo-${memoIdParam}` &&
-          selectedMemoRef.current.id?.toString() !== memoIdParam
+          selectedMemoRef.current.displayId !== memoParam &&
+          selectedMemoRef.current.originalId !== memoParam &&
+          selectedMemoRef.current.originalId !== `memo-${memoParam}` &&
+          selectedMemoRef.current.id?.toString() !== memoParam
         ) {
           return; // URL復元をスキップ（新規作成中など）
         }
@@ -238,25 +233,27 @@ export function TeamBoardDetailWrapper({
         .map((item: any) => item.content)
         .find(
           (m: Memo) =>
-            m.originalId === memoIdParam ||
-            m.originalId === `memo-${memoIdParam}` ||
-            m.id?.toString() === memoIdParam,
+            m.displayId === memoParam ||
+            m.originalId === memoParam ||
+            m.originalId === `memo-${memoParam}` ||
+            m.id?.toString() === memoParam,
         );
 
-      if (targetMemo && targetMemo.originalId !== selectedMemo?.originalId) {
+      if (targetMemo && targetMemo.displayId !== selectedMemo?.displayId) {
         setSelectedMemo(targetMemo);
         setSelectedTask(null);
       }
     }
 
-    // taskIdParamがある場合、該当するタスクを選択
-    if (taskIdParam) {
+    // taskパラメータがある場合、該当するタスクを選択
+    if (taskParam) {
       // 既にタスクが選択されている場合（新規作成含む）はスキップ
       if (selectedTaskRef.current?.originalId !== undefined) {
         if (
-          selectedTaskRef.current.originalId !== taskIdParam &&
-          selectedTaskRef.current.originalId !== `task-${taskIdParam}` &&
-          selectedTaskRef.current.id?.toString() !== taskIdParam
+          selectedTaskRef.current.displayId !== taskParam &&
+          selectedTaskRef.current.originalId !== taskParam &&
+          selectedTaskRef.current.originalId !== `task-${taskParam}` &&
+          selectedTaskRef.current.id?.toString() !== taskParam
         ) {
           return; // URL復元をスキップ（新規作成中など）
         }
@@ -271,18 +268,19 @@ export function TeamBoardDetailWrapper({
         .map((item: any) => item.content)
         .find(
           (t: Task) =>
-            t.originalId === taskIdParam ||
-            t.originalId === `task-${taskIdParam}` ||
-            t.id?.toString() === taskIdParam,
+            t.displayId === taskParam ||
+            t.originalId === taskParam ||
+            t.originalId === `task-${taskParam}` ||
+            t.id?.toString() === taskParam,
         );
 
-      if (targetTask && targetTask.originalId !== selectedTask?.originalId) {
+      if (targetTask && targetTask.displayId !== selectedTask?.displayId) {
         setSelectedTask(targetTask);
         setSelectedMemo(null);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [boardItems, memoIdParam, taskIdParam]);
+  }, [boardItems, memoParam, taskParam]);
 
   const handleClearSelection = () => {
     setSelectedMemo(null);
@@ -298,11 +296,12 @@ export function TeamBoardDetailWrapper({
     setSelectedTask(null);
     setSelectedMemo(memo);
 
-    // URLを更新（originalIdを使用）
+    // URLを更新（displayIdを優先）
     // 新規作成時 (originalId === "new") はURL更新をスキップ
-    if (memo && memo.originalId && memo.originalId !== "new") {
+    const targetMemoId = memo?.displayId || memo?.originalId;
+    if (memo && targetMemoId && targetMemoId !== "new") {
       router.replace(
-        `/team/${customUrl}?tab=board&slug=${slug}&memoId=${memo.originalId}`,
+        `/team/${customUrl}?tab=board&slug=${slug}&memo=${targetMemoId}`,
         { scroll: false },
       );
     } else if (!memo) {
@@ -310,18 +309,19 @@ export function TeamBoardDetailWrapper({
         scroll: false,
       });
     }
-    // 新規作成時はURL更新をスキップ（現在のmemoIdパラメータを維持）
+    // 新規作成時はURL更新をスキップ（現在のmemoパラメータを維持）
   };
 
   const handleSelectTask = (task: Task | DeletedTask | null) => {
     setSelectedMemo(null);
     setSelectedTask(task);
 
-    // URLを更新（originalIdを使用）
+    // URLを更新（displayIdを優先）
     // 新規作成時 (originalId === "new") はURL更新をスキップ
-    if (task && task.originalId && task.originalId !== "new") {
+    const targetTaskId = task?.displayId || task?.originalId;
+    if (task && targetTaskId && targetTaskId !== "new") {
       router.replace(
-        `/team/${customUrl}?tab=board&slug=${slug}&taskId=${task.originalId}`,
+        `/team/${customUrl}?tab=board&slug=${slug}&task=${targetTaskId}`,
         { scroll: false },
       );
     } else if (!task) {
@@ -329,7 +329,7 @@ export function TeamBoardDetailWrapper({
         scroll: false,
       });
     }
-    // 新規作成時はURL更新をスキップ（現在のtaskIdパラメータを維持）
+    // 新規作成時はURL更新をスキップ（現在のtaskパラメータを維持）
   };
 
   const handleSelectDeletedMemo = (memo: DeletedMemo | null) => {
@@ -346,7 +346,7 @@ export function TeamBoardDetailWrapper({
   // URLからの復元が必要な場合（URLパラメータあり＆選択なし）のみローディング表示
   // ユーザーが手動で選択した場合はURLが更新されても待たない
   const needsUrlRestore =
-    (memoIdParam && !selectedMemo) || (taskIdParam && !selectedTask);
+    (memoParam && !selectedMemo) || (taskParam && !selectedTask);
   const isFullyLoaded = !loading && !needsUrlRestore;
 
   if (!isFullyLoaded) {

@@ -225,14 +225,14 @@ export const memosApi = {
     return response;
   },
 
-  // POST /teams/:teamId/memos/deleted/:originalId/restore (チームメモ復元)
+  // POST /teams/:teamId/memos/deleted/:displayId/restore (チームメモ復元)
   restoreTeamMemo: async (
     teamId: number,
-    originalId: string,
+    displayId: string,
     token?: string,
   ) => {
     const response = await fetch(
-      `${API_BASE_URL}/teams/${teamId}/memos/deleted/${originalId}/restore`,
+      `${API_BASE_URL}/teams/${teamId}/memos/deleted/${displayId}/restore`,
       {
         method: "POST",
         headers: createHeaders(token),
@@ -245,14 +245,14 @@ export const memosApi = {
     return response;
   },
 
-  // DELETE /teams/:teamId/memos/deleted/:originalId (チーム削除済みメモの完全削除)
+  // DELETE /teams/:teamId/memos/deleted/:displayId (チーム削除済みメモの完全削除)
   permanentDeleteTeamMemo: async (
     teamId: number,
-    originalId: string,
+    displayId: string,
     token?: string,
   ) => {
     const response = await fetch(
-      `${API_BASE_URL}/teams/${teamId}/memos/deleted/${originalId}`,
+      `${API_BASE_URL}/teams/${teamId}/memos/deleted/${displayId}`,
       {
         method: "DELETE",
         headers: createHeaders(token),
@@ -464,14 +464,14 @@ export const tasksApi = {
     return response;
   },
 
-  // POST /teams/:teamId/tasks/deleted/:originalId/restore (チームタスク復元)
+  // POST /teams/:teamId/tasks/deleted/:displayId/restore (チームタスク復元)
   restoreTeamTask: async (
     teamId: number,
-    originalId: string,
+    displayId: string,
     token?: string,
   ) => {
     const response = await fetch(
-      `${API_BASE_URL}/teams/${teamId}/tasks/deleted/${originalId}/restore`,
+      `${API_BASE_URL}/teams/${teamId}/tasks/deleted/${displayId}/restore`,
       {
         method: "POST",
         headers: createHeaders(token),
@@ -483,14 +483,14 @@ export const tasksApi = {
     return response;
   },
 
-  // DELETE /teams/:teamId/tasks/deleted/:originalId (チーム削除済みタスクの完全削除)
+  // DELETE /teams/:teamId/tasks/deleted/:displayId (チーム削除済みタスクの完全削除)
   permanentDeleteTeamTask: async (
     teamId: number,
-    originalId: string,
+    displayId: string,
     token?: string,
   ) => {
     const response = await fetch(
-      `${API_BASE_URL}/teams/${teamId}/tasks/deleted/${originalId}`,
+      `${API_BASE_URL}/teams/${teamId}/tasks/deleted/${displayId}`,
       {
         method: "DELETE",
         headers: createHeaders(token),
@@ -602,13 +602,15 @@ export const taggingsApi = {
   getTaggings: async (
     token?: string,
     targetType?: string,
-    targetOriginalId?: string,
+    targetDisplayId?: string,
     tagId?: number,
+    teamId?: number,
   ) => {
     const params = new URLSearchParams();
     if (targetType) params.append("targetType", targetType);
-    if (targetOriginalId) params.append("targetOriginalId", targetOriginalId);
+    if (targetDisplayId) params.append("targetDisplayId", targetDisplayId);
     if (tagId) params.append("tagId", tagId.toString());
+    if (teamId) params.append("teamId", teamId.toString());
     params.append("includeTag", "true"); // タグ情報を含める
 
     const url = `${API_BASE_URL}/taggings${params.toString() ? `?${params.toString()}` : ""}`;
@@ -673,16 +675,22 @@ export const taggingsApi = {
   deleteTaggingsByTag: async (
     tagId: number,
     targetType?: string,
-    targetOriginalId?: string,
+    targetDisplayId?: string,
     token?: string,
+    teamId?: number,
   ) => {
     const requestBody = {
       tagId,
       targetType,
-      targetOriginalId,
+      targetDisplayId,
     };
 
-    const response = await fetch(`${API_BASE_URL}/taggings/by-tag`, {
+    const url = new URL(`${API_BASE_URL}/taggings/by-tag`);
+    if (teamId) {
+      url.searchParams.set("teamId", teamId.toString());
+    }
+
+    const response = await fetch(url.toString(), {
       method: "DELETE",
       headers: createHeaders(token),
       body: JSON.stringify(requestBody),

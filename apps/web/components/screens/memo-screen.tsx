@@ -712,8 +712,16 @@ function MemoScreen({
   const initialMemoIdRef = useRef<string | null>(null);
   useEffect(() => {
     if (initialMemoId) {
+      const isTargetMemo = (memo: Memo | DeletedMemo) => {
+        const candidates = [
+          memo.displayId,
+          (memo as any).originalId as string | undefined,
+          memo.id?.toString(),
+        ].filter(Boolean) as string[];
+        return candidates.includes(initialMemoId);
+      };
       // selectedMemoがある場合、refを同期
-      if (selectedMemo && selectedMemo.id.toString() === initialMemoId) {
+      if (selectedMemo && isTargetMemo(selectedMemo)) {
         if (initialMemoIdRef.current !== initialMemoId) {
           initialMemoIdRef.current = initialMemoId;
         }
@@ -724,9 +732,7 @@ function MemoScreen({
         !selectedMemo &&
         initialMemoId !== initialMemoIdRef.current
       ) {
-        const targetMemo = memos.find(
-          (memo) => memo.id.toString() === initialMemoId,
-        );
+        const targetMemo = memos.find((memo) => isTargetMemo(memo));
         if (targetMemo) {
           initialMemoIdRef.current = initialMemoId;
           handleSelectMemo(targetMemo);
@@ -1225,7 +1231,11 @@ function MemoScreen({
         )}
         <CommentSection
           targetType="memo"
-          targetOriginalId={OriginalIdUtils.fromItem(selectedMemo) || ""}
+          targetDisplayId={
+            selectedMemo.displayId ||
+            OriginalIdUtils.fromItem(selectedMemo) ||
+            ""
+          }
           teamId={teamId || 0}
           title="コメント"
           placeholder="コメントを入力..."
@@ -1239,7 +1249,9 @@ function MemoScreen({
     teamMode && memoScreenMode !== "create" && selectedMemo ? (
       <CommentSection
         targetType="memo"
-        targetOriginalId={OriginalIdUtils.fromItem(selectedMemo) || ""}
+        targetDisplayId={
+          selectedMemo.displayId || OriginalIdUtils.fromItem(selectedMemo) || ""
+        }
         teamId={teamId || 0}
         title="コメント"
         placeholder="コメントを入力..."

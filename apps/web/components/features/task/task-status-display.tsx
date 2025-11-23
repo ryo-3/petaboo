@@ -43,8 +43,8 @@ interface TaskStatusDisplayProps {
     boardId: number;
     boardName: string;
     itemType: "memo" | "task";
-    itemId: string;
     originalId: string;
+    displayId?: string;
     addedAt: number;
   }>;
   allAttachments?: Attachment[];
@@ -71,6 +71,8 @@ interface DeletedTaskDisplayProps {
     direction: "asc" | "desc";
   }>;
   isBoard?: boolean; // ボード詳細画面での使用かどうか
+  teamMode?: boolean; // チームモードかどうか
+  teamId?: number; // チームID
 
   // 全データ事前取得（ちらつき解消）
   allTags?: Tag[];
@@ -80,8 +82,8 @@ interface DeletedTaskDisplayProps {
     boardId: number;
     boardName: string;
     itemType: "memo" | "task";
-    itemId: string;
     originalId: string;
+    displayId?: string;
     addedAt: number;
   }>;
   allAttachments?: Attachment[];
@@ -129,13 +131,20 @@ function TaskStatusDisplay({
       // さらに、idとoriginalIdの両方でマッチング（データ不整合対策）
       const originalId = OriginalIdUtils.fromItem(task) || "";
       const taskId = String(task.id);
+      const displayId = task.displayId || "";
+      const identifiers = [originalId, taskId];
+      if (teamMode && displayId) {
+        identifiers.push(displayId);
+      }
 
       // このタスクのタグを抽出（チームモード対応）
       const taggingsToUse = teamMode ? allTeamTaggings : allTaggings;
       const taskTaggings = taggingsToUse.filter(
         (t: Tagging) =>
           t.targetType === "task" &&
-          (t.targetOriginalId === originalId || t.targetOriginalId === taskId),
+          identifiers.some(
+            (id) => t.targetOriginalId === id || t.targetDisplayId === id,
+          ),
       );
       const taskTags = taskTaggings
         .map((t: Tagging) => t.tag)
@@ -143,8 +152,15 @@ function TaskStatusDisplay({
 
       // このタスクのボードを抽出
       const taskBoardItems = allBoardItems.filter(
-        (item: { itemType: "memo" | "task"; originalId: string }) =>
-          item.itemType === "task" && item.originalId === originalId,
+        (item: {
+          itemType: "memo" | "task";
+          originalId: string;
+          displayId?: string;
+        }) =>
+          item.itemType === "task" &&
+          identifiers.some(
+            (id) => item.originalId === id || item.displayId === id,
+          ),
       );
       const taskBoards = taskBoardItems
         .map((item) => ({
@@ -165,7 +181,7 @@ function TaskStatusDisplay({
       // このタスクの添付ファイルを抽出（画像のみ）
       const taskAttachments = allAttachments.filter(
         (attachment) =>
-          attachment.attachedOriginalId === originalId &&
+          identifiers.includes(attachment.attachedOriginalId || "") &&
           attachment.mimeType.startsWith("image/"),
       );
 
@@ -369,6 +385,8 @@ export function DeletedTaskDisplay({
   tagFilterMode = "include",
   sortOptions = [],
   isBoard = false,
+  teamMode = false,
+  teamId: _teamId,
   allTags = [],
   allBoards = [],
   allTaggings = [],
@@ -419,11 +437,19 @@ export function DeletedTaskDisplay({
   ) => {
     // 削除済みタスクのタグ・ボード情報を取得
     const originalId = OriginalIdUtils.fromItem(task) || "";
+    const displayId = task.displayId || "";
+    const taskIds = [originalId, String(task.id)];
+    if (teamMode && displayId) {
+      taskIds.push(displayId);
+    }
 
     // このタスクのタグを抽出
     const taskTaggings = allTaggings.filter(
       (t: Tagging) =>
-        t.targetType === "task" && t.targetOriginalId === originalId,
+        t.targetType === "task" &&
+        taskIds.some(
+          (id) => t.targetOriginalId === id || t.targetDisplayId === id,
+        ),
     );
     const taskTags = taskTaggings
       .map((t: Tagging) => t.tag)
@@ -431,8 +457,13 @@ export function DeletedTaskDisplay({
 
     // このタスクのボードを抽出
     const taskBoardItems = allBoardItems.filter(
-      (item: { itemType: "memo" | "task"; originalId: string }) =>
-        item.itemType === "task" && item.originalId === originalId,
+      (item: {
+        itemType: "memo" | "task";
+        originalId: string;
+        displayId?: string;
+      }) =>
+        item.itemType === "task" &&
+        taskIds.some((id) => item.originalId === id || item.displayId === id),
     );
     const taskBoards = taskBoardItems
       .map((item) =>
@@ -447,7 +478,7 @@ export function DeletedTaskDisplay({
     // このタスクの添付ファイルを抽出（画像のみ）
     const taskAttachments = allAttachments.filter(
       (attachment) =>
-        attachment.attachedOriginalId === originalId &&
+        taskIds.includes(attachment.attachedOriginalId || "") &&
         attachment.mimeType.startsWith("image/"),
     );
 

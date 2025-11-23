@@ -10,7 +10,7 @@ interface TagTriggerButtonProps {
   onClick?: () => void;
   tags?: Tag[];
   targetType?: "memo" | "task" | "board";
-  targetOriginalId?: string;
+  targetDisplayId?: string;
   size?: "sm" | "md";
   disabled?: boolean;
   teamMode?: boolean;
@@ -20,15 +20,15 @@ export default function TagTriggerButton({
   onClick,
   tags: providedTags,
   targetType,
-  targetOriginalId,
+  targetDisplayId,
   size = "md",
   disabled = false,
   teamMode = false,
 }: TagTriggerButtonProps) {
-  const shouldFetchTags = !providedTags && targetType && targetOriginalId;
+  const shouldFetchTags = !providedTags && targetType && targetDisplayId;
   const { tags: fetchedTags } = useItemTags(
     shouldFetchTags ? targetType : "memo",
-    shouldFetchTags ? targetOriginalId : "",
+    shouldFetchTags ? targetDisplayId : "",
     { teamMode, enabled: !teamMode }, // チームモード時は個人用APIを呼ばない
   );
 

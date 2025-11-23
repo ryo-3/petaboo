@@ -235,11 +235,13 @@ function MemoEditor({
 
   // 【最適化】個別取得をやめて一括取得を活用
   const originalId = OriginalIdUtils.fromItem(memo);
+  const displayId = memo?.displayId;
+  const memoTargetId = teamMode ? displayId : originalId;
 
   // 個人モード: 個別タグ取得（従来通り）
   const { data: liveTaggings } = useTaggings({
     targetType: "memo",
-    targetOriginalId: originalId,
+    targetDisplayId: memoTargetId,
     teamMode: teamMode,
     enabled: !teamMode, // チームモード時は呼ばない
   });
@@ -247,13 +249,14 @@ function MemoEditor({
   // チームモード: 一括取得からフィルタリング
   const { data: allTeamTaggings } = useAllTeamTaggings(teamId || 0);
   const liveTeamTaggings = useMemo(() => {
-    if (!teamMode || !allTeamTaggings || !originalId) return [];
+    if (!teamMode || !allTeamTaggings || !memoTargetId) return [];
     return allTeamTaggings.filter(
       (tagging) =>
         tagging.targetType === "memo" &&
-        tagging.targetOriginalId === originalId,
+        (tagging.targetDisplayId === memoTargetId ||
+          tagging.targetOriginalId === memoTargetId),
     );
-  }, [teamMode, allTeamTaggings, originalId]);
+  }, [teamMode, allTeamTaggings, memoTargetId]);
 
   // チーム用タグ一覧を取得
   const { data: teamTagsList } = useTeamTags(teamId || 0);
@@ -379,7 +382,11 @@ function MemoEditor({
   // プリロードデータとライブデータを組み合わせてタグを抽出
   const currentTags = useMemo(() => {
     if (!memo || memo.id === undefined || memo.id === 0) return [];
-    const targetOriginalId = OriginalIdUtils.fromItem(memo) || "";
+    const fallbackOriginalId = OriginalIdUtils.fromItem(memo) || "";
+    const targetIds = [fallbackOriginalId, String(memo.id)];
+    if (teamMode && displayId) {
+      targetIds.push(displayId);
+    }
 
     // チームモードかどうかに応じてタグ付け情報を選択
     // liveデータを優先し、取得できない場合はpreloadedTaggingsからフィルタリング
@@ -394,13 +401,23 @@ function MemoEditor({
     const tags = taggingsToUse
       .filter(
         (t) =>
-          t.targetType === "memo" && t.targetOriginalId === targetOriginalId,
+          t.targetType === "memo" &&
+          targetIds.some(
+            (id) => t.targetOriginalId === id || t.targetDisplayId === id,
+          ),
       )
       .map((t) => t.tag)
       .filter(Boolean) as Tag[];
 
     return tags;
-  }, [memo, preloadedTaggings, liveTaggings, liveTeamTaggings, teamMode]);
+  }, [
+    memo,
+    preloadedTaggings,
+    liveTaggings,
+    liveTeamTaggings,
+    teamMode,
+    displayId,
+  ]);
 
   // タグ操作用のmutation（既存API使用）
   const createTaggingMutation = useCreateTagging();
@@ -634,7 +651,7 @@ function MemoEditor({
             await deleteTeamTaggingByTagMutation.mutateAsync({
               tagId,
               targetType: "memo",
-              targetOriginalId: memoId,
+              targetDisplayId: memoId,
             });
           } catch (error: unknown) {
             const errorMessage = (error as Error).message || "";
@@ -651,7 +668,7 @@ function MemoEditor({
             await createTeamTaggingMutation.mutateAsync({
               tagId,
               targetType: "memo",
-              targetOriginalId: memoId,
+              targetDisplayId: memoId,
             });
           } catch (error: unknown) {
             const errorMessage = (error as Error).message || "";
@@ -673,7 +690,7 @@ function MemoEditor({
             (t) =>
               t.tagId === tagId &&
               t.targetType === "memo" &&
-              t.targetOriginalId === memoId,
+              (t.targetOriginalId === memoId || t.targetDisplayId === memoId),
           );
 
           if (taggingToDelete) {
@@ -689,7 +706,7 @@ function MemoEditor({
             (t) =>
               t.tagId === tagId &&
               t.targetType === "memo" &&
-              t.targetOriginalId === memoId,
+              (t.targetOriginalId === memoId || t.targetDisplayId === memoId),
           );
 
           if (!existingTagging) {
@@ -697,7 +714,7 @@ function MemoEditor({
               await createTaggingMutation.mutateAsync({
                 tagId,
                 targetType: "memo",
-                targetOriginalId: String(memoId),
+                targetDisplayId: String(memoId),
               });
             } catch (error: unknown) {
               // 400エラー（重複）は無視し、他のエラーは再スロー
@@ -748,7 +765,7 @@ function MemoEditor({
       const hasOnlyImages =
         isNewMemo && !content.trim() && pendingImages.length > 0;
 
-      let targetOriginalId: string | null = null;
+      let targetId: string | null = null;
       let createdMemo: Memo | null = null;
 
       if (hasOnlyImages) {
@@ -781,7 +798,8 @@ function MemoEditor({
           }
 
           const newMemo = (await response.json()) as Memo;
-          targetOriginalId = OriginalIdUtils.fromItem(newMemo) || "";
+          targetId =
+            newMemo.displayId || OriginalIdUtils.fromItem(newMemo) || "";
           createdMemo = newMemo;
 
           // キャッシュ更新
@@ -811,7 +829,7 @@ function MemoEditor({
           }
 
           const newMemo = (await response.json()) as Memo;
-          targetOriginalId = OriginalIdUtils.fromItem(newMemo) || "";
+          targetId = OriginalIdUtils.fromItem(newMemo) || "";
           createdMemo = newMemo;
 
           // ボード紐付け（選択されているもの）
@@ -828,7 +846,7 @@ function MemoEditor({
                 boardId,
                 data: {
                   itemType: "memo",
-                  itemId: targetOriginalId,
+                  itemId: targetId,
                 },
               });
             } catch (error) {
@@ -840,7 +858,7 @@ function MemoEditor({
           queryClient.invalidateQueries({ queryKey: ["memos"] });
         }
 
-        if (targetOriginalId) {
+        if (targetId) {
           const boardsToAdd =
             selectedBoardIds.length > 0
               ? selectedBoardIds
@@ -854,7 +872,7 @@ function MemoEditor({
                 boardId,
                 data: {
                   itemType: "memo",
-                  itemId: targetOriginalId,
+                  itemId: targetId,
                 },
               });
             } catch (error) {
@@ -867,11 +885,14 @@ function MemoEditor({
         await handleSave();
 
         // 保存後の処理用のoriginalIdを取得
-        targetOriginalId =
-          memo && memo.id > 0 ? (OriginalIdUtils.fromItem(memo) ?? null) : null;
-        if (!targetOriginalId && lastSavedMemoRef.current) {
-          targetOriginalId =
-            OriginalIdUtils.fromItem(lastSavedMemoRef.current) ?? null;
+        targetId =
+          memo && memo.id > 0
+            ? teamMode
+              ? (memo.displayId ?? OriginalIdUtils.fromItem(memo) ?? null)
+              : (OriginalIdUtils.fromItem(memo) ?? null)
+            : null;
+        if (!targetId && lastSavedMemoRef.current) {
+          targetId = OriginalIdUtils.fromItem(lastSavedMemoRef.current) ?? null;
           createdMemo = lastSavedMemoRef.current;
         }
       }
@@ -879,14 +900,14 @@ function MemoEditor({
       // 保存後、タグも更新
       if (memo && memo.id > 0) {
         // 既存メモの場合
-        await updateTaggings(targetOriginalId || "");
+        await updateTaggings(targetId || "");
         setHasManualChanges(false);
       } else if (localTags.length > 0 || pendingImages.length > 0) {
         // 新規作成でタグまたは画像がある場合
-        if (hasOnlyImages && targetOriginalId) {
-          // 画像のみの場合は既にtargetOriginalIdがあるのでそれを使う
+        if (hasOnlyImages && targetId) {
+          // 画像のみの場合は既にtargetIdがあるのでそれを使う
           if (localTags.length > 0) {
-            await updateTaggings(targetOriginalId);
+            await updateTaggings(targetId);
             setHasManualChanges(false);
           }
         } else {
@@ -906,9 +927,12 @@ function MemoEditor({
             )[0];
 
             if (latestMemo) {
-              targetOriginalId = OriginalIdUtils.fromItem(latestMemo) || "";
+              targetId =
+                (teamMode
+                  ? latestMemo.displayId
+                  : OriginalIdUtils.fromItem(latestMemo)) || "";
               if (localTags.length > 0) {
-                await updateTaggings(targetOriginalId);
+                await updateTaggings(targetId);
                 setHasManualChanges(false);
               }
             }
@@ -930,8 +954,8 @@ function MemoEditor({
       }
 
       // 保存待ちの画像を一括アップロード（完了トーストはuploadPendingImagesが表示）
-      if (hasUploads && targetOriginalId) {
-        await uploadPendingImages(targetOriginalId);
+      if (hasUploads && targetId) {
+        await uploadPendingImages(targetId);
 
         invalidateBoardCaches();
 

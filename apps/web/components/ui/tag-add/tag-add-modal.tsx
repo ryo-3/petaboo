@@ -71,7 +71,8 @@ export default function TagAddModal({
                 .mutateAsync({
                   tagId,
                   targetType: itemType,
-                  targetOriginalId: OriginalIdUtils.fromItem(item) || "",
+                  targetDisplayId:
+                    item.displayId || OriginalIdUtils.fromItem(item) || "",
                 })
                 .catch(() => {
                   // エラーをサイレントに処理

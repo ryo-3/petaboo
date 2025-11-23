@@ -126,12 +126,18 @@ function MemoStatusDisplay({
         // WORKAROUND: idとoriginalIdの両方でマッチング
         const originalId = OriginalIdUtils.fromItem(memo) || "";
         const memoId = String(memo.id);
+        const memoDisplayId = memo.displayId || "";
+        const memoIdentifiers = [originalId, memoId];
+        if (teamMode && memoDisplayId) {
+          memoIdentifiers.push(memoDisplayId);
+        }
 
         // メモが所属するボードのID一覧を取得
         const memoBoardItems = allBoardItems.filter(
           (item) =>
             item.itemType === "memo" &&
-            (item.originalId === originalId || item.originalId === memoId),
+            (memoIdentifiers.includes(item.originalId) ||
+              memoIdentifiers.includes(item.itemId)),
         );
         const memoBoardIds = memoBoardItems.map((item) => item.boardId);
 
@@ -156,13 +162,22 @@ function MemoStatusDisplay({
         if (!memo || memo.id === undefined) return false;
 
         const memoOriginalId = OriginalIdUtils.fromItem(memo) || "";
+        const memoDisplayId = memo.displayId || "";
+        const memoIdentifiers = [memoOriginalId, String(memo.id)];
+        if (teamMode && memoDisplayId) {
+          memoIdentifiers.push(memoDisplayId);
+        }
 
         // メモに付けられたタグのID一覧を取得
         const memoTagIds = allTaggings
           .filter(
             (tagging) =>
               tagging.targetType === "memo" &&
-              tagging.targetOriginalId === memoOriginalId,
+              memoIdentifiers.some(
+                (id) =>
+                  tagging.targetOriginalId === id ||
+                  tagging.targetDisplayId === id,
+              ),
           )
           .map((tagging) => tagging.tagId);
 
@@ -213,12 +228,19 @@ function MemoStatusDisplay({
       // さらに、idとoriginalIdの両方でマッチング（データ不整合対策）
       const originalId = OriginalIdUtils.fromItem(memo) || "";
       const memoId = String(memo.id);
+      const memoDisplayId = memo.displayId || "";
+      const memoIdentifiers = [originalId, memoId];
+      if (teamMode && memoDisplayId) {
+        memoIdentifiers.push(memoDisplayId);
+      }
 
       // メモのタグを抽出
       const memoTaggings = safeAllTaggings.filter(
         (t) =>
           t.targetType === "memo" &&
-          (t.targetOriginalId === originalId || t.targetOriginalId === memoId),
+          memoIdentifiers.some(
+            (id) => t.targetOriginalId === id || t.targetDisplayId === id,
+          ),
       );
       const memoTags = memoTaggings
         .map((t) => safeAllTags.find((tag) => tag.id === t.tagId))
@@ -226,7 +248,10 @@ function MemoStatusDisplay({
 
       // メモのボードを抽出（重複除去）
       const memoBoardItems = safeAllBoardItems.filter(
-        (item) => item.itemType === "memo" && item.originalId === originalId,
+        (item) =>
+          item.itemType === "memo" &&
+          (memoIdentifiers.includes(item.originalId) ||
+            memoIdentifiers.includes(item.itemId)),
       );
 
       const uniqueBoardIds = new Set(
@@ -241,7 +266,7 @@ function MemoStatusDisplay({
       // メモの添付ファイルを抽出（画像のみ）
       const memoAttachments = safeAllAttachments.filter(
         (attachment) =>
-          attachment.attachedOriginalId === originalId &&
+          memoIdentifiers.includes(attachment.attachedOriginalId || "") &&
           attachment.mimeType.startsWith("image/"),
       );
 
@@ -414,12 +439,19 @@ export function DeletedMemoDisplay({
     // WORKAROUND: idとoriginalIdの両方でマッチング
     const originalId = OriginalIdUtils.fromItem(memo) || "";
     const memoId = String(memo.id);
+    const memoDisplayId = memo.displayId || "";
+    const memoIdentifiers = [originalId, memoId];
+    if (teamMode && memoDisplayId) {
+      memoIdentifiers.push(memoDisplayId);
+    }
 
     // このメモのタグを抽出
     const memoTaggings = allTaggings.filter(
       (t) =>
         t.targetType === "memo" &&
-        (t.targetOriginalId === originalId || t.targetOriginalId === memoId),
+        memoIdentifiers.some(
+          (id) => t.targetOriginalId === id || t.targetDisplayId === id,
+        ),
     );
     const memoTags = memoTaggings
       .map((t) => allTags.find((tag) => tag.id === t.tagId))
@@ -427,7 +459,10 @@ export function DeletedMemoDisplay({
 
     // このメモのボードを抽出（重複除去）
     const memoBoardItems = allBoardItems.filter(
-      (item) => item.itemType === "memo" && item.originalId === originalId,
+      (item) =>
+        item.itemType === "memo" &&
+        (memoIdentifiers.includes(item.originalId) ||
+          memoIdentifiers.includes(item.itemId)),
     );
     const uniqueBoardIds = new Set(memoBoardItems.map((item) => item.boardId));
     const memoBoards = Array.from(uniqueBoardIds)
@@ -439,7 +474,7 @@ export function DeletedMemoDisplay({
     // このメモの添付ファイルを抽出（画像のみ）
     const memoAttachments = allAttachments.filter(
       (attachment) =>
-        attachment.attachedOriginalId === originalId &&
+        memoIdentifiers.includes(attachment.attachedOriginalId || "") &&
         attachment.mimeType.startsWith("image/"),
     );
 

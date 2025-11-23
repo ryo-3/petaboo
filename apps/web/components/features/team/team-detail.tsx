@@ -166,12 +166,16 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   const { data: attachments = [] } = useAttachments(
     team?.id,
     "memo",
-    selectedMemo ? OriginalIdUtils.fromItem(selectedMemo) || "" : "",
+    selectedMemo
+      ? selectedMemo.displayId || OriginalIdUtils.fromItem(selectedMemo) || ""
+      : "",
   );
   const { data: comments = [] } = useTeamComments(
     team?.id,
     "memo",
-    selectedMemo ? OriginalIdUtils.fromItem(selectedMemo) || "" : "",
+    selectedMemo
+      ? selectedMemo.displayId || OriginalIdUtils.fromItem(selectedMemo) || ""
+      : "",
   );
 
   // 画像数とコメント数をContextに反映（メモ用）
@@ -184,12 +188,16 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   const { data: taskAttachments = [] } = useAttachments(
     team?.id,
     "task",
-    selectedTask ? OriginalIdUtils.fromItem(selectedTask) || "" : "",
+    selectedTask
+      ? selectedTask.displayId || OriginalIdUtils.fromItem(selectedTask) || ""
+      : "",
   );
   const { data: taskComments = [] } = useTeamComments(
     team?.id,
     "task",
-    selectedTask ? OriginalIdUtils.fromItem(selectedTask) || "" : "",
+    selectedTask
+      ? selectedTask.displayId || OriginalIdUtils.fromItem(selectedTask) || ""
+      : "",
   );
 
   // タスク用の画像数とコメント数をContextに反映

@@ -12,32 +12,32 @@ export function getNotificationUrl(
 ): string | null {
   if (!teamName) return null;
 
-  const { targetType, targetOriginalId, boardOriginalId } = notification;
+  const { targetType, targetDisplayId, boardDisplayId } = notification;
 
-  if (!targetType || !targetOriginalId) {
+  if (!targetType || !targetDisplayId) {
     return `/team/${teamName}`;
   }
 
-  // boardOriginalIdがない場合はチームホームに戻る
-  if (!boardOriginalId) {
+  // boardDisplayIdがない場合はチームホームに戻る
+  if (!boardDisplayId) {
     return `/team/${teamName}`;
   }
 
   const baseUrl = new URL(`/team/${teamName}`, "http://example.com");
   baseUrl.searchParams.set("tab", "board");
 
-  if (boardOriginalId) {
-    baseUrl.searchParams.set("slug", boardOriginalId);
-    if (/^\d+$/.test(boardOriginalId)) {
-      baseUrl.searchParams.set("boardId", boardOriginalId);
+  if (boardDisplayId) {
+    baseUrl.searchParams.set("slug", boardDisplayId);
+    if (/^\d+$/.test(boardDisplayId)) {
+      baseUrl.searchParams.set("boardId", boardDisplayId);
     }
   }
 
   // ターゲット種別ごとのクエリ付与
-  if (targetType === "memo" && targetOriginalId) {
-    baseUrl.searchParams.set("memo", targetOriginalId);
-  } else if (targetType === "task" && targetOriginalId) {
-    baseUrl.searchParams.set("task", targetOriginalId);
+  if (targetType === "memo" && targetDisplayId) {
+    baseUrl.searchParams.set("memo", targetDisplayId);
+  } else if (targetType === "task" && targetDisplayId) {
+    baseUrl.searchParams.set("task", targetDisplayId);
   }
 
   return `${baseUrl.pathname}${baseUrl.search}`;

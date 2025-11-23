@@ -8,6 +8,7 @@ export interface TeamComment {
   avatarColor: string | null;
   targetType: "memo" | "task" | "board";
   targetOriginalId: string;
+  targetDisplayId: string;
   content: string;
   mentions: string | null; // JSON文字列: ["user_xxx", "user_yyy"]
   createdAt: number;
@@ -16,7 +17,7 @@ export interface TeamComment {
 
 export interface CreateCommentInput {
   targetType: "memo" | "task" | "board";
-  targetOriginalId: string;
+  targetDisplayId: string;
   boardId?: number; // メモ/タスクが所属するボードID
   content: string;
 }
@@ -25,11 +26,11 @@ export interface CreateCommentInput {
 export async function getTeamComments(
   teamId: number,
   targetType: "memo" | "task" | "board",
-  targetOriginalId: string,
+  targetDisplayId: string,
   token?: string,
 ): Promise<TeamComment[]> {
   const response = await fetch(
-    `${API_BASE_URL}/comments?teamId=${teamId}&targetType=${targetType}&targetOriginalId=${targetOriginalId}`,
+    `${API_BASE_URL}/comments?teamId=${teamId}&targetType=${targetType}&targetDisplayId=${targetDisplayId}`,
     {
       headers: {
         "Content-Type": "application/json",

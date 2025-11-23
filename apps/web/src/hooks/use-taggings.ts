@@ -5,8 +5,9 @@ import type { Tagging, CreateTaggingData, Tag } from "@/src/types/tag";
 
 interface UseTaggingsOptions {
   targetType?: "memo" | "task" | "board";
-  targetOriginalId?: string;
+  targetDisplayId?: string;
   tagId?: number;
+  teamId?: number;
   teamMode?: boolean; // チームモードでは個人タグを無効化
   enabled?: boolean; // API重複呼び出し防止用
 }
@@ -24,8 +25,9 @@ export function useTaggings(options: UseTaggingsOptions = {}) {
       const response = await taggingsApi.getTaggings(
         token || undefined,
         options.targetType,
-        options.targetOriginalId,
+        options.targetDisplayId,
         options.tagId,
+        options.teamId,
       );
       if (!response.ok) {
         console.error("🔗 Taggings API error:", response.statusText);
@@ -39,7 +41,7 @@ export function useTaggings(options: UseTaggingsOptions = {}) {
 
 export function useItemTags(
   targetType: "memo" | "task" | "board",
-  targetOriginalId: string,
+  targetDisplayId: string,
   options?: { teamMode?: boolean; enabled?: boolean },
 ) {
   const {
@@ -48,7 +50,7 @@ export function useItemTags(
     error,
   } = useTaggings({
     targetType,
-    targetOriginalId,
+    targetDisplayId,
     teamMode: options?.teamMode,
     enabled: options?.enabled,
   });
@@ -124,7 +126,7 @@ export function useCreateTagging() {
           "taggings",
           {
             targetType: taggingData.targetType,
-            targetOriginalId: taggingData.targetOriginalId,
+            targetDisplayId: taggingData.targetDisplayId,
           },
         ],
       });
@@ -168,21 +170,24 @@ export function useDeleteTaggingsByTag() {
     mutationFn: async ({
       tagId,
       targetType,
-      targetOriginalId,
+      targetDisplayId,
+      teamId,
     }: {
       tagId: number;
       targetType?: "memo" | "task" | "board";
-      targetOriginalId?: string;
+      targetDisplayId?: string;
+      teamId?: number;
     }) => {
       const token = await getToken();
       await taggingsApi.deleteTaggingsByTag(
         tagId,
         targetType,
-        targetOriginalId,
+        targetDisplayId,
         token || undefined,
+        teamId,
       );
     },
-    onSuccess: (_, { tagId, targetType, targetOriginalId }) => {
+    onSuccess: (_, { tagId, targetType, targetDisplayId, teamId }) => {
       // 全タグ付け情報から条件に一致するタグ付けを除去
       queryClient.setQueryData(
         ["taggings", "all"],
@@ -191,19 +196,16 @@ export function useDeleteTaggingsByTag() {
           return oldTaggings.filter((tagging) => {
             if (tagging.tagId !== tagId) return true;
             if (targetType && tagging.targetType !== targetType) return true;
-            if (
-              targetOriginalId &&
-              tagging.targetOriginalId !== targetOriginalId
-            )
+            if (targetDisplayId && tagging.targetDisplayId !== targetDisplayId)
               return true;
             return false;
           });
         },
       );
       // 特定条件のタグ付けクエリを無効化
-      if (targetType && targetOriginalId) {
+      if (targetType && targetDisplayId) {
         queryClient.invalidateQueries({
-          queryKey: ["taggings", { targetType, targetOriginalId }],
+          queryKey: ["taggings", { targetType, targetDisplayId, teamId }],
         });
       }
       // 汎用タグ付けクエリを無効化

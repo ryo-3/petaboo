@@ -16,7 +16,10 @@ import CommentScopeToggle from "@/components/ui/buttons/comment-scope-toggle";
 import AttachmentGallery from "@/components/features/attachments/attachment-gallery";
 import { useQueryClient } from "@tanstack/react-query";
 import { linkifyLine } from "@/src/utils/url-detector";
-import { validateFile, MAX_ATTACHMENTS_PER_ITEM } from "@/src/utils/file-validator";
+import {
+  validateFile,
+  MAX_ATTACHMENTS_PER_ITEM,
+} from "@/src/utils/file-validator";
 import { compressImage, formatBytes } from "@/src/utils/image-compressor";
 
 // コメント添付ファイル表示用コンポーネント（AttachmentGalleryを使用）
@@ -199,11 +202,11 @@ interface CommentSectionProps {
   placeholder: string;
   teamId?: number;
   targetType?: "memo" | "task" | "board";
-  targetOriginalId?: string;
+  targetDisplayId?: string;
   targetTitle?: string;
   teamMembers?: TeamMember[];
   boardId?: number; // ボードIDを追加
-  onItemClick?: (itemType: "memo" | "task", originalId: string) => void; // アイテムクリックハンドラー
+  onItemClick?: (itemType: "memo" | "task", displayId: string) => void; // アイテムクリックハンドラー
 }
 
 export default function CommentSection({
@@ -211,7 +214,7 @@ export default function CommentSection({
   placeholder,
   teamId,
   targetType = "memo",
-  targetOriginalId,
+  targetDisplayId,
   targetTitle,
   teamMembers = [],
   boardId,
@@ -248,7 +251,7 @@ export default function CommentSection({
 
   // ボードコメント取得（ボードタイプの場合のみ）
   const { data: boardComments = [], isLoading: isLoadingBoard } =
-    useTeamComments(teamId, targetType, targetOriginalId);
+    useTeamComments(teamId, targetType, targetDisplayId);
 
   // ボード内アイテムのコメント取得（ボードタイプの場合のみ）
   const { data: itemComments = [], isLoading: isLoadingItems } =
@@ -278,12 +281,12 @@ export default function CommentSection({
   const updateComment = useUpdateTeamComment(
     teamId,
     targetType,
-    targetOriginalId,
+    targetDisplayId,
   );
   const deleteComment = useDeleteTeamComment(
     teamId,
     targetType,
-    targetOriginalId,
+    targetDisplayId,
   );
 
   // 編集・削除メニュー用のstate
@@ -403,7 +406,9 @@ export default function CommentSection({
         try {
           const result = await compressImage(file);
           if (result.wasCompressed) {
-            const saved = formatBytes(result.originalSize - result.compressedSize);
+            const saved = formatBytes(
+              result.originalSize - result.compressedSize,
+            );
             showToast(`画像を圧縮しました（${saved}削減）`, "info", 3000);
           }
           // 圧縮後も5MB超の場合はエラー
@@ -429,7 +434,10 @@ export default function CommentSection({
     async (files: File[]) => {
       const totalCount = pendingImages.length + files.length;
       if (totalCount > MAX_ATTACHMENTS_PER_ITEM) {
-        showToast(`ファイルは最大${MAX_ATTACHMENTS_PER_ITEM}個までです`, "error");
+        showToast(
+          `ファイルは最大${MAX_ATTACHMENTS_PER_ITEM}個までです`,
+          "error",
+        );
         return;
       }
 
@@ -479,14 +487,14 @@ export default function CommentSection({
   );
 
   const handleSubmit = async () => {
-    if ((!newComment.trim() && pendingImages.length === 0) || !targetOriginalId)
+    if ((!newComment.trim() && pendingImages.length === 0) || !targetDisplayId)
       return;
 
     try {
       // コメントを作成
       const createdComment = await createComment.mutateAsync({
         targetType,
-        targetOriginalId,
+        targetDisplayId,
         boardId, // ボードIDを追加
         content: newComment.trim() || " ", // 画像のみの場合は空白を入れる
       });
@@ -548,7 +556,7 @@ export default function CommentSection({
     }
   };
 
-  if (!teamId || !targetOriginalId) {
+  if (!teamId || !targetDisplayId) {
     return (
       <div className="p-4 text-center text-gray-500">
         <p className="text-sm">コメント機能は個人ボードでは使用できません</p>
@@ -638,7 +646,7 @@ export default function CommentSection({
                   if (isItemComment && onItemClick) {
                     onItemClick(
                       comment.targetType as "memo" | "task",
-                      comment.targetOriginalId,
+                      comment.targetDisplayId,
                     );
                   }
                 };

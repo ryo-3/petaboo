@@ -511,19 +511,21 @@ export function usePermanentDeleteTask(options?: {
   const { teamMode = false, teamId } = options || {};
 
   return useMutation({
-    mutationFn: async (originalId: string) => {
+    mutationFn: async (itemId: string) => {
       const token = await getToken();
       if (teamMode && teamId) {
+        // チーム側: displayId を送信
         const response = await tasksApi.permanentDeleteTeamTask(
           teamId,
-          originalId,
+          itemId,
           token || undefined,
         );
         const result = await response.json();
         return result;
       } else {
+        // 個人側: originalId を送信
         const response = await tasksApi.permanentDeleteTask(
-          originalId,
+          itemId,
           token || undefined,
         );
         const result = await response.json();
@@ -573,24 +575,21 @@ export function useRestoreTask(options?: {
   const { teamMode = false, teamId, boardId } = options || {};
 
   return useMutation({
-    mutationFn: async (originalId: string) => {
+    mutationFn: async (itemId: string) => {
       const token = await getToken();
 
       if (teamMode && teamId) {
-        // チームタスク復元
+        // チームタスク復元: displayId を送信
         const response = await tasksApi.restoreTeamTask(
           teamId,
-          originalId,
+          itemId,
           token || undefined,
         );
         const result = await response.json();
         return result;
       } else {
-        // 個人タスク復元
-        const response = await tasksApi.restoreTask(
-          originalId,
-          token || undefined,
-        );
+        // 個人タスク復元: originalId を送信
+        const response = await tasksApi.restoreTask(itemId, token || undefined);
         const result = await response.json();
         return result;
       }

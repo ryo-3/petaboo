@@ -266,11 +266,13 @@ function TaskEditor({
   // 【最適化】個別取得をやめて一括取得を活用
   const originalId =
     task && task.id !== 0 ? OriginalIdUtils.fromItem(task) : null;
+  const displayId = task?.displayId;
+  const taskTargetId = teamMode ? displayId : originalId;
 
   // 個人モード: 個別タグ取得（従来通り）
   const { data: liveTaggings } = useTaggings({
     targetType: "task",
-    targetOriginalId: originalId || undefined,
+    targetDisplayId: taskTargetId || undefined,
     teamMode,
     enabled: !teamMode, // チームモード時は呼ばない
   });
@@ -376,8 +378,8 @@ function TaskEditor({
     if (task.id === 142 && (!task.originalId || task.originalId === "")) {
       return "5";
     }
-    return originalId;
-  }, [task, teamMode, originalId]);
+    return displayId || originalId;
+  }, [task, teamMode, displayId, originalId]);
 
   const { data: allTeamTaggings } = useAllTeamTaggings(teamId || 0);
   const liveTeamTaggings = useMemo(() => {
@@ -385,7 +387,8 @@ function TaskEditor({
     return allTeamTaggings.filter(
       (tagging) =>
         tagging.targetType === "task" &&
-        tagging.targetOriginalId === teamOriginalId,
+        (tagging.targetDisplayId === teamOriginalId ||
+          tagging.targetOriginalId === teamOriginalId),
     );
   }, [teamMode, allTeamTaggings, teamOriginalId]);
 
@@ -400,19 +403,35 @@ function TaskEditor({
       targetOriginalId = "5";
     }
 
+    const targetIds = [targetOriginalId, String(task.id)];
+    if (teamMode && teamOriginalId) {
+      targetIds.unshift(teamOriginalId);
+    }
+    if (displayId) {
+      targetIds.push(displayId);
+    }
+
     // チームモードかどうかに応じてタグ付け情報を選択
     const taggingsToUse = teamMode
-      ? liveTeamTaggings || []
+      ? liveTeamTaggings && liveTeamTaggings.length > 0
+        ? liveTeamTaggings
+        : preloadedTaggings
       : liveTaggings ||
-        preloadedTaggings.filter(
-          (t) =>
-            t.targetType === "task" && t.targetOriginalId === targetOriginalId,
+        preloadedTaggings.filter((t) =>
+          targetIds.some(
+            (id) =>
+              t.targetType === "task" &&
+              (t.targetOriginalId === id || t.targetDisplayId === id),
+          ),
         );
 
     const tags = taggingsToUse
       .filter(
         (t) =>
-          t.targetType === "task" && t.targetOriginalId === targetOriginalId,
+          t.targetType === "task" &&
+          targetIds.some(
+            (id) => t.targetOriginalId === id || t.targetDisplayId === id,
+          ),
       )
       .map((t) => t.tag)
       .filter(Boolean) as Tag[];
@@ -804,7 +823,7 @@ function TaskEditor({
             await deleteTeamTaggingByTagMutation.mutateAsync({
               tagId,
               targetType: "task",
-              targetOriginalId: taskId,
+              targetDisplayId: taskId,
             });
           } catch (error) {
             console.error("チームタグ削除エラー:", error);
@@ -817,7 +836,7 @@ function TaskEditor({
             await createTeamTaggingMutation.mutateAsync({
               tagId,
               targetType: "task",
-              targetOriginalId: taskId,
+              targetDisplayId: taskId,
             });
           } catch (error: unknown) {
             // 400エラー（重複）は無視し、他のエラーは再スロー
@@ -843,7 +862,9 @@ function TaskEditor({
         // 削除処理（preloadedTaggingsからタギングIDを見つける）
         for (const tagId of tagsToRemove) {
           const taggingToDelete = preloadedTaggings.find(
-            (t) => t.tagId === tagId,
+            (t) =>
+              t.tagId === tagId &&
+              (t.targetOriginalId === taskId || t.targetDisplayId === taskId),
           );
           if (taggingToDelete) {
             await deleteTaggingMutation.mutateAsync(taggingToDelete.id);
@@ -857,7 +878,7 @@ function TaskEditor({
             (t) =>
               t.tagId === tagId &&
               t.targetType === "task" &&
-              t.targetOriginalId === taskId,
+              (t.targetOriginalId === taskId || t.targetDisplayId === taskId),
           );
 
           if (!existingTagging) {
@@ -865,7 +886,7 @@ function TaskEditor({
               await createTaggingMutation.mutateAsync({
                 tagId,
                 targetType: "task",
-                targetOriginalId: String(taskId),
+                targetDisplayId: String(taskId),
               });
             } catch (error: unknown) {
               // 400エラー（重複）は無視し、他のエラーは再スロー
@@ -1006,12 +1027,19 @@ function TaskEditor({
     await saveTask();
 
     // 保存後の処理用のoriginalIdを取得
-    let targetOriginalId =
-      task && task.id > 0 ? OriginalIdUtils.fromItem(task) : null;
+    let targetId =
+      task && task.id > 0
+        ? teamMode
+          ? (task.displayId ?? OriginalIdUtils.fromItem(task))
+          : OriginalIdUtils.fromItem(task)
+        : null;
 
     // タグの変更がある場合は保存
     if (hasTagChanges && task && task.id !== 0) {
-      const taskId = OriginalIdUtils.fromItem(task) || "";
+      const taskId =
+        (teamMode
+          ? (task.displayId ?? OriginalIdUtils.fromItem(task))
+          : OriginalIdUtils.fromItem(task)) || "";
       await updateTaggings(taskId);
     } else if (
       wasNewTask &&
@@ -1030,9 +1058,12 @@ function TaskEditor({
         )[0];
 
         if (latestTask) {
-          targetOriginalId = OriginalIdUtils.fromItem(latestTask) || "";
+          targetId =
+            (teamMode
+              ? latestTask.displayId
+              : OriginalIdUtils.fromItem(latestTask)) || "";
           if (localTags.length > 0) {
-            await updateTaggings(targetOriginalId);
+            await updateTaggings(targetId);
           }
         }
       }
@@ -1052,8 +1083,8 @@ function TaskEditor({
     }
 
     // 保存待ちの画像を一括アップロード（完了トーストはuploadPendingImagesが表示）
-    if (hasUploads && targetOriginalId) {
-      await uploadPendingImages(targetOriginalId);
+    if (hasUploads && targetId) {
+      await uploadPendingImages(targetId);
 
       // 一覧表示用の添付ファイルキャッシュを無効化（サムネイル即時表示のため）
       queryClient.invalidateQueries({

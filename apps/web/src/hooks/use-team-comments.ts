@@ -13,23 +13,23 @@ import {
 export function useTeamComments(
   teamId: number | undefined,
   targetType: "memo" | "task" | "board",
-  targetOriginalId: string | undefined,
+  targetDisplayId: string | undefined,
 ) {
   const { getToken } = useAuth();
 
   return useQuery({
-    queryKey: ["team-comments", teamId, targetType, targetOriginalId],
+    queryKey: ["team-comments", teamId, targetType, targetDisplayId],
     queryFn: async () => {
-      if (!teamId || !targetOriginalId) return [];
+      if (!teamId || !targetDisplayId) return [];
       const token = await getToken();
       return getTeamComments(
         teamId,
         targetType,
-        targetOriginalId,
+        targetDisplayId,
         token || undefined,
       );
     },
-    enabled: !!teamId && !!targetOriginalId,
+    enabled: !!teamId && !!targetDisplayId,
     refetchInterval: 60 * 1000, // チームモード: 1分ごとに再取得（他メンバーの変更を反映）
   });
 }
@@ -51,7 +51,7 @@ export function useCreateTeamComment(teamId: number | undefined) {
           "team-comments",
           teamId,
           variables.targetType,
-          variables.targetOriginalId,
+          variables.targetDisplayId,
         ],
       });
       // ボード内アイテムのコメント一覧も無効化（ボードビューで使用）
@@ -69,7 +69,7 @@ export function useCreateTeamComment(teamId: number | undefined) {
 export function useUpdateTeamComment(
   teamId: number | undefined,
   targetType: "memo" | "task" | "board",
-  targetOriginalId: string | undefined,
+  targetDisplayId: string | undefined,
 ) {
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
@@ -88,7 +88,7 @@ export function useUpdateTeamComment(
     onSuccess: () => {
       // コメント一覧を再取得
       queryClient.invalidateQueries({
-        queryKey: ["team-comments", teamId, targetType, targetOriginalId],
+        queryKey: ["team-comments", teamId, targetType, targetDisplayId],
       });
       // ボード内アイテムのコメント一覧も無効化（ボードビューで使用）
       queryClient.invalidateQueries({
@@ -105,7 +105,7 @@ export function useUpdateTeamComment(
 export function useDeleteTeamComment(
   teamId: number | undefined,
   targetType: "memo" | "task" | "board",
-  targetOriginalId: string | undefined,
+  targetDisplayId: string | undefined,
 ) {
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
@@ -118,7 +118,7 @@ export function useDeleteTeamComment(
     onSuccess: () => {
       // コメント一覧を再取得
       queryClient.invalidateQueries({
-        queryKey: ["team-comments", teamId, targetType, targetOriginalId],
+        queryKey: ["team-comments", teamId, targetType, targetDisplayId],
       });
       // ボード内アイテムのコメント一覧も無効化（ボードビューで使用）
       queryClient.invalidateQueries({

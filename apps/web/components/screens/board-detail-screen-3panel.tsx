@@ -1559,7 +1559,8 @@ function BoardDetailScreen({
                                         title="コメント"
                                         placeholder="コメントを入力..."
                                         targetType="memo"
-                                        targetOriginalId={
+                                        targetDisplayId={
+                                          selectedMemo.displayId ||
                                           selectedMemo.originalId
                                         }
                                         teamId={teamId || undefined}
@@ -1652,7 +1653,8 @@ function BoardDetailScreen({
                                         title="コメント"
                                         placeholder="コメントを入力..."
                                         targetType="task"
-                                        targetOriginalId={
+                                        targetDisplayId={
+                                          selectedTask.displayId ||
                                           selectedTask.originalId
                                         }
                                         teamId={teamId || undefined}
@@ -1704,11 +1706,13 @@ function BoardDetailScreen({
                                         ? "task"
                                         : "board"
                                   }
-                                  targetOriginalId={
+                                  targetDisplayId={
                                     selectedMemo
-                                      ? selectedMemo.originalId
+                                      ? selectedMemo.displayId ||
+                                        selectedMemo.originalId
                                       : selectedTask
-                                        ? selectedTask.originalId
+                                        ? selectedTask.displayId ||
+                                          selectedTask.originalId
                                         : boardId.toString()
                                   }
                                   targetTitle={
@@ -2116,11 +2120,13 @@ function BoardDetailScreen({
                                       ? "task"
                                       : "board"
                                 }
-                                targetOriginalId={
+                                targetDisplayId={
                                   selectedMemo
-                                    ? selectedMemo.originalId
+                                    ? selectedMemo.displayId ||
+                                      selectedMemo.originalId
                                     : selectedTask
-                                      ? selectedTask.originalId
+                                      ? selectedTask.displayId ||
+                                        selectedTask.originalId
                                       : boardId.toString()
                                 }
                                 targetTitle={
@@ -2195,7 +2201,7 @@ function BoardDetailScreen({
                                 teamId={teamId || undefined}
                                 boardId={boardId}
                                 targetType="board"
-                                targetOriginalId={boardId.toString()}
+                                targetDisplayId={boardId.toString()}
                                 targetTitle={undefined}
                                 teamMembers={teamMembers}
                               />
@@ -2460,20 +2466,24 @@ function BoardDetailScreen({
                                 placeholder="ボードにコメントを追加..."
                                 teamId={teamId || undefined}
                                 targetType="board"
-                                targetOriginalId={boardId.toString()}
+                                targetDisplayId={boardId.toString()}
                                 boardId={boardId}
                                 teamMembers={teamMembers}
-                                onItemClick={(itemType, originalId) => {
+                                onItemClick={(itemType, displayId) => {
                                   if (itemType === "memo") {
                                     const memo = boardMemos.find(
-                                      (m) => m.originalId === originalId,
+                                      (m) =>
+                                        m.displayId === displayId ||
+                                        m.originalId === displayId,
                                     );
                                     if (memo) {
                                       onSelectMemo?.(memo as Memo);
                                     }
                                   } else if (itemType === "task") {
                                     const task = boardTasks.find(
-                                      (t) => t.originalId === originalId,
+                                      (t) =>
+                                        t.displayId === displayId ||
+                                        t.originalId === displayId,
                                     );
                                     if (task) {
                                       onSelectTask?.(task as Task);

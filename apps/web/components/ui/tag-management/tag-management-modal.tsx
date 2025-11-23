@@ -73,10 +73,18 @@ export default function TagManagementModal({
       // fallback: allTaggingsから検索
       else if (allTaggings && allTaggings.length > 0) {
         const originalId = OriginalIdUtils.fromItem(item) || "";
+        const identifiers = [
+          originalId,
+          (item as any).displayId as string | undefined,
+        ].filter((id): id is string => !!id);
         const itemTaggings = allTaggings.filter(
           (tagging) =>
             tagging.targetType === itemType &&
-            tagging.targetOriginalId === originalId,
+            identifiers.some(
+              (id) =>
+                tagging.targetOriginalId === id ||
+                tagging.targetDisplayId === id,
+            ),
         );
 
         itemTaggings.forEach((tagging) => {
@@ -131,7 +139,8 @@ export default function TagManagementModal({
             (i) => i.id.toString() === itemId || i.id === parseInt(itemId),
           );
           if (item) {
-            const originalId = OriginalIdUtils.fromItem(item) || "";
+            const targetId =
+              item.displayId || OriginalIdUtils.fromItem(item) || "";
 
             if (mode === "add") {
               promises.push(
@@ -139,7 +148,7 @@ export default function TagManagementModal({
                   .mutateAsync({
                     tagId,
                     targetType: itemType,
-                    targetOriginalId: originalId,
+                    targetDisplayId: targetId,
                   })
                   .catch((error) => {
                     return null;
@@ -151,13 +160,13 @@ export default function TagManagementModal({
                   .mutateAsync({
                     tagId,
                     targetType: itemType,
-                    targetOriginalId: originalId,
+                    targetDisplayId: targetId,
                   })
                   .then((result) => {
                     return result;
                   })
                   .catch((error) => {
-                    return { error: true, tagId, originalId };
+                    return { error: true, tagId, targetId };
                   }),
               );
             }
@@ -184,7 +193,8 @@ export default function TagManagementModal({
             (i) => i.id.toString() === itemId || i.id === parseInt(itemId),
           );
           if (item) {
-            const originalId = OriginalIdUtils.fromItem(item) || "";
+            const originalId =
+              item.displayId || OriginalIdUtils.fromItem(item) || "";
             queryClient.invalidateQueries({
               queryKey: [itemType, originalId],
             });

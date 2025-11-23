@@ -50,10 +50,10 @@ export function useUnifiedRestoration<T extends DeletedItem>({
 
   // 統一復元ミューテーション
   const restoreMutation = useMutation({
-    mutationFn: async (originalId: string) => {
+    mutationFn: async (itemId: string) => {
       // 既存のrestoreItemがある場合は使用、ない場合は直接API呼び出し
       if (restoreItem) {
-        return await restoreItem.mutateAsync(originalId);
+        return await restoreItem.mutateAsync(itemId);
       }
 
       // フォールバック: 直接API呼び出し
@@ -61,30 +61,34 @@ export function useUnifiedRestoration<T extends DeletedItem>({
 
       if (itemType === "memo") {
         if (teamMode && teamId) {
+          // チームメモ復元: displayId を送信
           const response = await memosApi.restoreTeamMemo(
             teamId,
-            originalId,
+            itemId,
             token || undefined,
           );
           return response.json();
         } else {
+          // 個人メモ復元: originalId を送信
           const response = await memosApi.restoreNote(
-            originalId,
+            itemId,
             token || undefined,
           );
           return response.json();
         }
       } else if (itemType === "task") {
         if (teamMode && teamId) {
+          // チームタスク復元: displayId を送信
           const response = await tasksApi.restoreTeamTask(
             teamId,
-            originalId,
+            itemId,
             token || undefined,
           );
           return response.json();
         } else {
+          // 個人タスク復元: originalId を送信
           const response = await tasksApi.restoreTask(
-            originalId,
+            itemId,
             token || undefined,
           );
           return response.json();
@@ -188,8 +192,12 @@ export function useUnifiedRestoration<T extends DeletedItem>({
     setRestoringItemId(selectedDeletedItem.id);
 
     try {
-      // 復元API実行
-      await restoreMutation.mutateAsync(selectedDeletedItem.originalId);
+      // 復元API実行（チーム側はdisplayId、個人側はoriginalId）
+      const itemId =
+        teamMode && selectedDeletedItem.displayId
+          ? selectedDeletedItem.displayId
+          : selectedDeletedItem.originalId;
+      await restoreMutation.mutateAsync(itemId);
 
       // キャッシュ無効化（次選択はuseEffectで自動実行）
       if (teamMode && teamId) {

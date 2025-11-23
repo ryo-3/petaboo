@@ -467,27 +467,30 @@ export function usePermanentDeleteMemo(options?: {
   const { teamMode = false, teamId } = options || {};
 
   return useMutation({
-    mutationFn: async (originalId: string) => {
+    mutationFn: async (itemId: string) => {
       const token = await getToken();
       if (teamMode && teamId) {
+        // チーム側: displayId を送信
         await memosApi.permanentDeleteTeamMemo(
           teamId,
-          originalId,
+          itemId,
           token || undefined,
         );
       } else {
-        await memosApi.permanentDeleteNote(originalId, token || undefined);
+        // 個人側: originalId を送信
+        await memosApi.permanentDeleteNote(itemId, token || undefined);
       }
     },
-    onSuccess: (_, originalId) => {
+    onSuccess: (_, itemId) => {
       // 削除済み一覧から完全削除されたメモを除去
       if (teamMode && teamId) {
         queryClient.setQueryData<DeletedMemo[]>(
           ["team-deleted-memos", teamId],
           (oldDeletedMemos) => {
             if (!oldDeletedMemos) return [];
+            // チーム側: displayId で比較、なければ originalId で比較
             return oldDeletedMemos.filter(
-              (memo) => memo.originalId !== originalId,
+              (memo) => (memo.displayId || memo.originalId) !== itemId,
             );
           },
         );
@@ -496,9 +499,8 @@ export function usePermanentDeleteMemo(options?: {
           ["deletedMemos"],
           (oldDeletedMemos) => {
             if (!oldDeletedMemos) return [];
-            return oldDeletedMemos.filter(
-              (memo) => memo.originalId !== originalId,
-            );
+            // 個人側: originalId で比較
+            return oldDeletedMemos.filter((memo) => memo.originalId !== itemId);
           },
         );
       }
@@ -517,22 +519,19 @@ export function useRestoreMemo(options?: {
   const { teamMode = false, teamId, boardId } = options || {};
 
   return useMutation({
-    mutationFn: async (originalId: string) => {
+    mutationFn: async (itemId: string) => {
       const token = await getToken();
 
       if (teamMode && teamId) {
-        // チームメモ復元
-        await memosApi.restoreTeamMemo(teamId, originalId, token || undefined);
+        // チームメモ復元: displayId を送信
+        await memosApi.restoreTeamMemo(teamId, itemId, token || undefined);
       } else {
-        // 個人メモ復元
-        const response = await memosApi.restoreNote(
-          originalId,
-          token || undefined,
-        );
+        // 個人メモ復元: originalId を送信
+        const response = await memosApi.restoreNote(itemId, token || undefined);
         await response.json(); // レスポンスをJSONパースしてバックエンドの完了を確認
       }
     },
-    onSuccess: (_, originalId) => {
+    onSuccess: (_, itemId) => {
       if (teamMode && teamId) {
         // 削除済みメモキャッシュから復元されたメモを即座に除去（存在する場合のみ）
         const existingData = queryClient.getQueryData([
@@ -542,10 +541,14 @@ export function useRestoreMemo(options?: {
         if (existingData) {
           queryClient.setQueryData(
             ["team-deleted-memos", teamId],
-            (oldDeletedMemos: { originalId: string }[] | undefined) => {
+            (
+              oldDeletedMemos:
+                | { originalId: string; displayId?: string }[]
+                | undefined,
+            ) => {
               if (!oldDeletedMemos) return [];
               return oldDeletedMemos.filter(
-                (memo) => memo.originalId !== originalId,
+                (memo) => (memo.displayId || memo.originalId) !== itemId,
               );
             },
           );
@@ -561,12 +564,16 @@ export function useRestoreMemo(options?: {
           if (existingBoardData) {
             queryClient.setQueryData(
               ["team-board-deleted-items", teamId.toString(), boardId],
-              (oldData: { memos?: { originalId: string }[] } | undefined) => {
+              (
+                oldData:
+                  | { memos?: { originalId: string; displayId?: string }[] }
+                  | undefined,
+              ) => {
                 if (oldData?.memos) {
                   return {
                     ...oldData,
                     memos: oldData.memos.filter(
-                      (memo) => memo.originalId !== originalId,
+                      (memo) => (memo.displayId || memo.originalId) !== itemId,
                     ),
                   };
                 }
@@ -651,7 +658,7 @@ export function useRestoreMemo(options?: {
             (oldDeletedMemos: { originalId: string }[] | undefined) => {
               if (!oldDeletedMemos) return [];
               return oldDeletedMemos.filter(
-                (memo) => memo.originalId !== originalId,
+                (memo) => memo.originalId !== itemId,
               );
             },
           );

@@ -16,7 +16,7 @@ export interface paths {
         query: {
           teamId: string;
           targetType: "memo" | "task" | "board";
-          targetOriginalId?: string;
+          targetDisplayId?: string;
         };
         header?: never;
         path?: never;
@@ -39,6 +39,7 @@ export interface paths {
               /** @enum {string} */
               targetType: "memo" | "task" | "board";
               targetOriginalId: string;
+              targetDisplayId: string;
               content: string;
               mentions: string | null;
               createdAt: number;
@@ -85,7 +86,7 @@ export interface paths {
           "application/json": {
             /** @enum {string} */
             targetType: "memo" | "task" | "board";
-            targetOriginalId: string;
+            targetDisplayId: string;
             boardId?: number;
             content: string;
           };
@@ -107,6 +108,7 @@ export interface paths {
               /** @enum {string} */
               targetType: "memo" | "task" | "board";
               targetOriginalId: string;
+              targetDisplayId: string;
               content: string;
               mentions: string | null;
               createdAt: number;
@@ -203,6 +205,7 @@ export interface paths {
               /** @enum {string} */
               targetType: "memo" | "task" | "board";
               targetOriginalId: string;
+              targetDisplayId: string;
               content: string;
               mentions: string | null;
               createdAt: number;
@@ -338,6 +341,7 @@ export interface paths {
               /** @enum {string} */
               targetType: "memo" | "task" | "board";
               targetOriginalId: string;
+              targetDisplayId: string;
               content: string;
               mentions: string | null;
               createdAt: number;
@@ -3068,7 +3072,7 @@ export interface paths {
       parameters: {
         query?: {
           targetType?: "memo" | "task" | "board";
-          targetOriginalId?: string;
+          targetDisplayId?: string;
           tagId?: string;
           includeTag?: string;
           teamId?: string;
@@ -3092,6 +3096,7 @@ export interface paths {
                   /** @enum {string} */
                   targetType: "memo" | "task" | "board";
                   targetOriginalId: string;
+                  targetDisplayId: string;
                   userId: string;
                   createdAt: number;
                   tag: {
@@ -3106,6 +3111,7 @@ export interface paths {
                   /** @enum {string} */
                   targetType: "memo" | "task" | "board";
                   targetOriginalId: string;
+                  targetDisplayId: string;
                   teamId: number;
                   userId: string;
                   createdAt: number;
@@ -3147,7 +3153,7 @@ export interface paths {
             tagId: number;
             /** @enum {string} */
             targetType: "memo" | "task" | "board";
-            targetOriginalId: string;
+            targetDisplayId: string;
           };
         };
       };
@@ -3164,6 +3170,7 @@ export interface paths {
               /** @enum {string} */
               targetType: "memo" | "task" | "board";
               targetOriginalId: string;
+              targetDisplayId: string;
               userId: string;
               createdAt: number;
             };
@@ -3224,7 +3231,7 @@ export interface paths {
             tagId: number;
             /** @enum {string} */
             targetType: "memo" | "task" | "board";
-            targetOriginalId: string;
+            targetDisplayId: string;
           };
         };
       };
@@ -5312,7 +5319,9 @@ export interface paths {
           status: "normal" | "completed" | "deleted";
         };
         header?: never;
-        path?: never;
+        path: {
+          teamId: string;
+        };
         cookie?: never;
       };
       requestBody?: never;
@@ -5348,7 +5357,9 @@ export interface paths {
       parameters: {
         query?: never;
         header?: never;
-        path?: never;
+        path: {
+          teamId: string;
+        };
         cookie?: never;
       };
       requestBody?: {
@@ -5407,7 +5418,10 @@ export interface paths {
       parameters: {
         query?: never;
         header?: never;
-        path?: never;
+        path: {
+          teamId: string;
+          id: string;
+        };
         cookie?: never;
       };
       requestBody?: {
@@ -5415,6 +5429,7 @@ export interface paths {
           "application/json": {
             name?: string;
             description?: string;
+            slug?: string;
           };
         };
       };
@@ -5443,7 +5458,64 @@ export interface paths {
       };
     };
     post?: never;
-    delete?: never;
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          teamId: string;
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description チームボード削除成功 */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              success: boolean;
+            };
+          };
+        };
+        /** @description 認証が必要 */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              error: string;
+            };
+          };
+        };
+        /** @description チームメンバーではない */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              error: string;
+            };
+          };
+        };
+        /** @description ボードが見つかりません */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              error: string;
+            };
+          };
+        };
+      };
+    };
     options?: never;
     head?: never;
     patch?: never;
@@ -5460,7 +5532,10 @@ export interface paths {
       parameters: {
         query?: never;
         header?: never;
-        path?: never;
+        path: {
+          teamId: string;
+          slug: string;
+        };
         cookie?: never;
       };
       requestBody?: never;
@@ -5518,7 +5593,10 @@ export interface paths {
       parameters: {
         query?: never;
         header?: never;
-        path?: never;
+        path: {
+          teamId: string;
+          boardId: string;
+        };
         cookie?: never;
       };
       requestBody?: never;
@@ -5591,7 +5669,10 @@ export interface paths {
       parameters: {
         query?: never;
         header?: never;
-        path?: never;
+        path: {
+          teamId: string;
+          boardId: string;
+        };
         cookie?: never;
       };
       requestBody?: {
@@ -5619,7 +5700,7 @@ export interface paths {
               boardId: number;
               /** @enum {string} */
               itemType: "memo" | "task";
-              originalId: string;
+              displayId: string;
               createdAt: number;
             };
           };
@@ -5676,7 +5757,10 @@ export interface paths {
       parameters: {
         query?: never;
         header?: never;
-        path?: never;
+        path: {
+          teamId: string;
+          boardId: string;
+        };
         cookie?: never;
       };
       requestBody?: never;
@@ -5752,7 +5836,11 @@ export interface paths {
           itemType: "memo" | "task";
         };
         header?: never;
-        path?: never;
+        path: {
+          teamId: string;
+          boardId: string;
+          itemId: string;
+        };
         cookie?: never;
       };
       requestBody?: never;
@@ -6198,7 +6286,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/teams/{teamId}/memos/deleted/{originalId}/restore": {
+  "/teams/{teamId}/memos/deleted/{displayId}/restore": {
     parameters: {
       query?: never;
       header?: never;
@@ -6213,7 +6301,7 @@ export interface paths {
         header?: never;
         path: {
           teamId: string;
-          originalId: string;
+          displayId: string;
         };
         cookie?: never;
       };

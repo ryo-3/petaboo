@@ -307,8 +307,16 @@ function TaskScreen({
   const initialTaskIdRef = useRef<string | null>(null);
   useEffect(() => {
     if (initialTaskId) {
+      const isTargetTask = (task: Task | DeletedTask) => {
+        const ids = [
+          task.displayId,
+          (task as any).originalId as string | undefined,
+          task.id?.toString(),
+        ].filter(Boolean) as string[];
+        return ids.includes(initialTaskId);
+      };
       // selectedTaskがある場合、refを同期
-      if (selectedTask && selectedTask.id.toString() === initialTaskId) {
+      if (selectedTask && isTargetTask(selectedTask)) {
         if (initialTaskIdRef.current !== initialTaskId) {
           initialTaskIdRef.current = initialTaskId;
         }
@@ -319,9 +327,7 @@ function TaskScreen({
         !selectedTask &&
         initialTaskId !== initialTaskIdRef.current
       ) {
-        const targetTask = tasks.find(
-          (task) => task.id.toString() === initialTaskId,
-        );
+        const targetTask = tasks.find((task) => isTargetTask(task));
         if (targetTask) {
           initialTaskIdRef.current = initialTaskId;
           onSelectTask(targetTask);
@@ -1349,7 +1355,11 @@ function TaskScreen({
         )}
         <CommentSection
           targetType="task"
-          targetOriginalId={OriginalIdUtils.fromItem(selectedTask) || ""}
+          targetDisplayId={
+            selectedTask.displayId ||
+            OriginalIdUtils.fromItem(selectedTask) ||
+            ""
+          }
           teamId={teamId || 0}
           title="コメント"
           placeholder="コメントを入力..."
@@ -1363,7 +1373,9 @@ function TaskScreen({
     teamMode && taskScreenMode !== "create" && selectedTask ? (
       <CommentSection
         targetType="task"
-        targetOriginalId={OriginalIdUtils.fromItem(selectedTask) || ""}
+        targetDisplayId={
+          selectedTask.displayId || OriginalIdUtils.fromItem(selectedTask) || ""
+        }
         teamId={teamId || 0}
         title="コメント"
         placeholder="コメントを入力..."

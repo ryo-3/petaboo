@@ -33,13 +33,19 @@ function MemoTagFilterWrapper({
   const memoOriginalId = isDeleted
     ? (memo as DeletedMemo).originalId
     : OriginalIdUtils.fromItem(memo);
+  const memoIds = [memoOriginalId, memo.displayId].filter(
+    (id): id is string => !!id,
+  );
 
   // メモに付けられたタグのID一覧を取得
   const memoTagIds = allTaggings
     .filter(
       (tagging) =>
         tagging.targetType === "memo" &&
-        tagging.targetOriginalId === memoOriginalId,
+        memoIds.some(
+          (id) =>
+            tagging.targetOriginalId === id || tagging.targetDisplayId === id,
+        ),
     )
     .map((tagging) => tagging.tagId);
 

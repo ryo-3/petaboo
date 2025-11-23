@@ -7,7 +7,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594";
 
 interface UseTeamTaggingsOptions {
   targetType?: "memo" | "task" | "board";
-  targetOriginalId?: string;
+  targetDisplayId?: string;
   tagId?: number;
   enabled?: boolean; // API重複呼び出し防止用
 }
@@ -33,8 +33,8 @@ export function useTeamTaggings(
       params.set("teamId", teamId.toString());
 
       if (options.targetType) params.set("targetType", options.targetType);
-      if (options.targetOriginalId)
-        params.set("targetOriginalId", options.targetOriginalId);
+      if (options.targetDisplayId)
+        params.set("targetDisplayId", options.targetDisplayId);
       if (options.tagId) params.set("tagId", options.tagId.toString());
 
       const queryString = params.toString();
@@ -64,7 +64,7 @@ export function useTeamTaggings(
 export function useTeamItemTags(
   teamId: number,
   targetType: "memo" | "task" | "board",
-  targetOriginalId: string,
+  targetDisplayId: string,
 ) {
   const {
     data: taggings,
@@ -72,7 +72,7 @@ export function useTeamItemTags(
     error,
   } = useTeamTaggings(teamId, {
     targetType,
-    targetOriginalId,
+    targetDisplayId,
   });
 
   // タグ情報を含むタグリストを取得
@@ -123,14 +123,14 @@ export function useCreateTeamTagging(teamId: number) {
       queryClient.invalidateQueries({ queryKey: ["team-taggings", teamId] });
 
       // 特定のアイテムのタグも無効化
-      if (newTagging.targetType && newTagging.targetOriginalId) {
+      if (newTagging.targetType && newTagging.targetDisplayId) {
         queryClient.invalidateQueries({
           queryKey: [
             "team-taggings",
             teamId,
             {
               targetType: newTagging.targetType,
-              targetOriginalId: newTagging.targetOriginalId,
+              targetDisplayId: newTagging.targetDisplayId,
             },
           ],
         });
@@ -189,7 +189,7 @@ export function useDeleteTeamTaggingByTag(teamId: number) {
     mutationFn: async (data: {
       tagId: number;
       targetType: "memo" | "task" | "board";
-      targetOriginalId: string;
+      targetDisplayId: string;
     }) => {
       const token = await getToken();
 
@@ -210,7 +210,7 @@ export function useDeleteTeamTaggingByTag(teamId: number) {
         throw new Error(error.error || "Failed to delete team tagging");
       }
     },
-    onSuccess: (_, { tagId, targetType, targetOriginalId }) => {
+    onSuccess: (_, { tagId, targetType, targetDisplayId }) => {
       // チームタグ付けキャッシュから該当タグ付けを除去
       queryClient.setQueriesData<Tagging[]>(
         { queryKey: ["team-taggings", teamId] },
@@ -221,7 +221,7 @@ export function useDeleteTeamTaggingByTag(teamId: number) {
               !(
                 tagging.tagId === tagId &&
                 tagging.targetType === targetType &&
-                tagging.targetOriginalId === targetOriginalId
+                tagging.targetDisplayId === targetDisplayId
               ),
           );
         },
@@ -245,18 +245,18 @@ export function useAllTeamTaggings(
 export function useFilteredTeamTaggings(
   teamId: number,
   targetType: "memo" | "task" | "board",
-  targetOriginalId: string | undefined,
+  targetDisplayId: string | undefined,
 ) {
   const { data: allTaggings, isLoading, error } = useAllTeamTaggings(teamId);
 
   const filteredTaggings = useMemo(() => {
-    if (!allTaggings || !targetOriginalId) return [];
+    if (!allTaggings || !targetDisplayId) return [];
     return allTaggings.filter(
       (tagging) =>
         tagging.targetType === targetType &&
-        tagging.targetOriginalId === targetOriginalId,
+        tagging.targetDisplayId === targetDisplayId,
     );
-  }, [allTaggings, targetType, targetOriginalId]);
+  }, [allTaggings, targetType, targetDisplayId]);
 
   return {
     data: filteredTaggings,

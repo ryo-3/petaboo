@@ -384,13 +384,12 @@ export function useUnifiedItemOperations({
 
       // showToast(`${itemName}を復元しました`, "success"); // トースト通知は無効化
     },
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    onError: (error) => {
+    onError: (error: unknown) => {
       const itemName = itemType === "memo" ? "メモ" : "タスク";
       console.error(`${itemName}復元に失敗しました:`, error);
       console.error("復元エラー詳細:", {
-        message: error?.message,
-        stack: error?.stack,
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
         itemType,
         context,
         teamId,

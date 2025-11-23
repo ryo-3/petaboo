@@ -6,7 +6,6 @@ import {
 } from "@/src/hooks/use-attachments";
 import type { Attachment } from "@/src/hooks/use-attachments";
 import { useToast } from "@/src/contexts/toast-context";
-import { OriginalIdUtils } from "@/src/types/common";
 import { useAuth } from "@clerk/nextjs";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -19,7 +18,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594";
 
 interface UseAttachmentManagerOptions {
   itemType: "memo" | "task";
-  item?: { id: number; originalId?: string } | null;
+  item?: { id: number; displayId?: string } | null;
   teamMode: boolean;
   teamId?: number;
   isDeleted: boolean;
@@ -40,20 +39,20 @@ export const useAttachmentManager = ({
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
 
-  // originalIdを取得
-  const originalId = item ? OriginalIdUtils.fromItem(item) : undefined;
+  // displayIdを取得（個人・チーム共通）
+  const displayId = item?.displayId;
 
   // 画像添付API
   const { data: attachments = [] } = useAttachments(
     teamMode ? teamId : undefined,
     itemType,
-    originalId,
+    displayId,
   );
 
   const uploadMutation = useUploadAttachment(
     teamMode ? teamId : undefined,
     itemType,
-    originalId,
+    displayId,
   );
 
   const deleteMutation = useDeleteAttachment(teamMode ? teamId : undefined);
@@ -235,7 +234,7 @@ export const useAttachmentManager = ({
         const results = await Promise.allSettled(
           pendingImages.map(async (file) => {
             // targetOriginalIdが指定されている場合は、直接fetch APIを使用（新規作成時）
-            if (targetOriginalId && targetOriginalId !== originalId) {
+            if (targetOriginalId && targetOriginalId !== displayId) {
               const formData = new FormData();
               formData.append("file", file);
               formData.append("attachedTo", itemType);
@@ -328,7 +327,7 @@ export const useAttachmentManager = ({
       showToast,
       removeToast,
       itemType,
-      originalId,
+      displayId,
       teamId,
       getToken,
       queryClient,
@@ -376,8 +375,8 @@ export const useAttachmentManager = ({
       }
 
       // 削除完了後、キャッシュを更新
-      if (failedCount === 0 && originalId) {
-        const queryKey = ["attachments", teamId, itemType, originalId] as const;
+      if (failedCount === 0 && displayId) {
+        const queryKey = ["attachments", teamId, itemType, displayId] as const;
         await queryClient.invalidateQueries({ queryKey });
       }
 
@@ -390,7 +389,7 @@ export const useAttachmentManager = ({
     deleteMutation,
     showToast,
     removeToast,
-    originalId,
+    displayId,
     teamId,
     itemType,
     queryClient,

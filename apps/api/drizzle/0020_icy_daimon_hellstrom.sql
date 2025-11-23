@@ -1,0 +1,1 @@
+ALTER TABLE `team_comments` ADD `target_display_id` text;

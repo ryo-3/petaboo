@@ -26,7 +26,8 @@ const TeamCommentSchema = z.object({
   displayName: z.string().nullable(),
   avatarColor: z.string().nullable(),
   targetType: z.enum(["memo", "task", "board"]),
-  targetOriginalId: z.string(),
+  targetOriginalId: z.string(), // Phase 6で削除予定
+  targetDisplayId: z.string(),
   content: z.string(),
   mentions: z.string().nullable(), // JSON文字列: ["user_xxx", "user_yyy"]
   createdAt: z.number(),
@@ -35,7 +36,7 @@ const TeamCommentSchema = z.object({
 
 const TeamCommentInputSchema = z.object({
   targetType: z.enum(["memo", "task", "board"]),
-  targetOriginalId: z.string(),
+  targetDisplayId: z.string(),
   boardId: z.number().optional(), // メモ/タスクが所属するボードID
   content: z
     .string()
@@ -108,7 +109,7 @@ async function sendMentionNotificationToSlack(
       .where(
         and(
           eq(teamBoardItems.itemType, comment.targetType),
-          eq(teamBoardItems.originalId, comment.targetOriginalId),
+          eq(teamBoardItems.displayId, comment.targetDisplayId),
         ),
       )
       .limit(1);
@@ -117,7 +118,7 @@ async function sendMentionNotificationToSlack(
       boardId = boardItems[0].boardId;
     }
   } else if (comment.targetType === "board") {
-    // ボードコメントの場合は直接targetOriginalIdから取得
+    // ボードコメントの場合は直接targetDisplayIdから取得
     const boards = await db
       .select()
       .from(teamBoards)
@@ -125,8 +126,8 @@ async function sendMentionNotificationToSlack(
         and(
           eq(teamBoards.teamId, teamId),
           or(
-            eq(teamBoards.slug, comment.targetOriginalId),
-            eq(teamBoards.id, Number.parseInt(comment.targetOriginalId) || 0),
+            eq(teamBoards.displayId, comment.targetDisplayId),
+            eq(teamBoards.id, Number.parseInt(comment.targetDisplayId) || 0),
           ),
         ),
       )
@@ -219,7 +220,7 @@ async function sendMentionNotificationToSlack(
   }
 
   // コメントから情報を取得
-  const { targetType, targetOriginalId } = comment;
+  const { targetType, targetDisplayId } = comment;
 
   // チーム情報を取得（customUrl用）
   const teamData = await db
@@ -233,7 +234,7 @@ async function sendMentionNotificationToSlack(
 
   // 対象アイテムのタイトルとURL用の識別子を取得
   let targetTitle = "不明";
-  let targetIdentifier = targetOriginalId;
+  let targetIdentifier = targetDisplayId;
   let boardSlug: string | null = null;
 
   // メモ・タスクの場合、ボード所属チェック
@@ -249,7 +250,7 @@ async function sendMentionNotificationToSlack(
       .where(
         and(
           eq(teamBoardItems.itemType, targetType),
-          eq(teamBoardItems.originalId, targetOriginalId),
+          eq(teamBoardItems.displayId, targetDisplayId),
         ),
       )
       .limit(1);
@@ -266,13 +267,13 @@ async function sendMentionNotificationToSlack(
       .where(
         and(
           eq(teamMemos.teamId, teamId),
-          eq(teamMemos.originalId, targetOriginalId),
+          eq(teamMemos.displayId, targetDisplayId),
         ),
       )
       .limit(1);
     if (memos.length > 0) {
       targetTitle = memos[0].title || "無題のメモ";
-      targetIdentifier = targetOriginalId; // originalId
+      targetIdentifier = targetDisplayId;
     }
   } else if (targetType === "task") {
     const tasks = await db
@@ -281,16 +282,16 @@ async function sendMentionNotificationToSlack(
       .where(
         and(
           eq(teamTasks.teamId, teamId),
-          eq(teamTasks.originalId, targetOriginalId),
+          eq(teamTasks.displayId, targetDisplayId),
         ),
       )
       .limit(1);
     if (tasks.length > 0) {
       targetTitle = tasks[0].title || "無題のタスク";
-      targetIdentifier = targetOriginalId; // originalId
+      targetIdentifier = targetDisplayId;
     }
   } else if (targetType === "board") {
-    // boardsはoriginalIdがないため、slugまたはidで検索
+    // boardsはdisplayIdまたはslugで検索
     const boards = await db
       .select()
       .from(teamBoards)
@@ -298,8 +299,9 @@ async function sendMentionNotificationToSlack(
         and(
           eq(teamBoards.teamId, teamId),
           or(
-            eq(teamBoards.slug, targetOriginalId),
-            eq(teamBoards.id, Number.parseInt(targetOriginalId) || 0),
+            eq(teamBoards.displayId, targetDisplayId),
+            eq(teamBoards.slug, targetDisplayId),
+            eq(teamBoards.id, Number.parseInt(targetDisplayId) || 0),
           ),
         ),
       )
@@ -348,7 +350,7 @@ export const getCommentsRoute = createRoute({
     query: z.object({
       teamId: z.string().regex(/^\d+$/).transform(Number),
       targetType: z.enum(["memo", "task", "board"]),
-      targetOriginalId: z.string().optional(), // オプションに変更
+      targetDisplayId: z.string().optional(),
     }),
   },
   responses: {
@@ -386,7 +388,7 @@ export const getComments = async (c: any) => {
     return c.json({ error: "Unauthorized" }, 401);
   }
 
-  const { teamId, targetType, targetOriginalId } = c.req.valid("query");
+  const { teamId, targetType, targetDisplayId } = c.req.valid("query");
 
   // チームメンバー確認
   const member = await checkTeamMember(teamId, auth.userId, db);
@@ -400,9 +402,9 @@ export const getComments = async (c: any) => {
     eq(teamComments.targetType, targetType),
   ];
 
-  // targetOriginalIdが指定されている場合のみフィルタリング
-  if (targetOriginalId) {
-    whereConditions.push(eq(teamComments.targetOriginalId, targetOriginalId));
+  // targetDisplayIdでフィルタ
+  if (targetDisplayId) {
+    whereConditions.push(eq(teamComments.targetDisplayId, targetDisplayId));
   }
 
   const result = await db
@@ -413,7 +415,8 @@ export const getComments = async (c: any) => {
       displayName: teamMembers.displayName,
       avatarColor: teamMembers.avatarColor,
       targetType: teamComments.targetType,
-      targetOriginalId: teamComments.targetOriginalId,
+      targetOriginalId: teamComments.targetOriginalId, // Phase 6で削除予定
+      targetDisplayId: teamComments.targetDisplayId,
       content: teamComments.content,
       mentions: teamComments.mentions,
       createdAt: teamComments.createdAt,
@@ -518,7 +521,7 @@ export const postComment = async (c: any) => {
   // リクエストボディのバリデーション
   const body = c.req.valid("json");
 
-  const { targetType, targetOriginalId, boardId, content } = body;
+  const { targetType, targetDisplayId, boardId, content } = body;
 
   // メンション解析
   const mentionedUserIds = await extractMentions(content, teamId, db);
@@ -533,7 +536,8 @@ export const postComment = async (c: any) => {
       teamId,
       userId: auth.userId,
       targetType,
-      targetOriginalId,
+      targetOriginalId: targetDisplayId, // Phase 6で削除予定（displayIdと同じ値）
+      targetDisplayId,
       content,
       mentions: mentionsJson,
       createdAt,
@@ -541,31 +545,46 @@ export const postComment = async (c: any) => {
     })
     .returning();
 
-  // boardIdからboardOriginalIdを取得（メモ/タスクの場合）
+  // boardIdからboardDisplayIdを取得（メモ/タスクの場合）
   let boardOriginalId: string | null = null;
+  let boardDisplayId: string | null = null;
   if (boardId && targetType !== "board") {
     const boards = await db
-      .select({ id: teamBoards.id, slug: teamBoards.slug })
+      .select({
+        id: teamBoards.id,
+        slug: teamBoards.slug,
+        displayId: teamBoards.displayId,
+      })
       .from(teamBoards)
       .where(eq(teamBoards.id, boardId))
       .limit(1);
 
     if (boards.length > 0) {
-      // boardのoriginalIdはslugを使用
-      boardOriginalId = boards[0].slug;
+      boardDisplayId = boards[0].displayId;
+      boardOriginalId = boards[0].displayId; // Phase 6で削除予定（displayIdと同じ値）
     }
   } else if (targetType === "board") {
-    // targetOriginalIdはボードIDとして送られてくるため、slugを取得
-    const boardIdNumeric = Number.parseInt(targetOriginalId, 10);
+    // targetDisplayIdから取得
+    const boardIdNumeric = Number.parseInt(targetDisplayId, 10);
     if (!Number.isNaN(boardIdNumeric)) {
       const boards = await db
-        .select({ slug: teamBoards.slug })
+        .select({
+          slug: teamBoards.slug,
+          displayId: teamBoards.displayId,
+        })
         .from(teamBoards)
         .where(eq(teamBoards.id, boardIdNumeric))
         .limit(1);
-      boardOriginalId = boards.length > 0 ? boards[0].slug : targetOriginalId;
+      if (boards.length > 0) {
+        boardDisplayId = boards[0].displayId;
+        boardOriginalId = boards[0].displayId; // Phase 6で削除予定（displayIdと同じ値）
+      } else {
+        boardDisplayId = targetDisplayId;
+        boardOriginalId = targetDisplayId; // Phase 6で削除予定（displayIdと同じ値）
+      }
     } else {
-      boardOriginalId = targetOriginalId;
+      boardDisplayId = targetDisplayId;
+      boardOriginalId = targetDisplayId; // Phase 6で削除予定（displayIdと同じ値）
     }
   }
 
@@ -584,8 +603,10 @@ export const postComment = async (c: any) => {
       sourceType: "comment",
       sourceId: result[0].id,
       targetType,
-      targetOriginalId,
-      boardOriginalId,
+      targetOriginalId, // Phase 6で削除予定
+      targetDisplayId,
+      boardOriginalId, // Phase 6で削除予定
+      boardDisplayId,
       actorUserId: auth.userId,
       message: `${member.displayName || "誰か"}さんがコメントしました`,
       isRead: 0,
@@ -623,7 +644,7 @@ export const postComment = async (c: any) => {
       .from(teamMemos)
       .where(
         and(
-          eq(teamMemos.originalId, targetOriginalId),
+          eq(teamMemos.displayId, targetDisplayId),
           eq(teamMemos.teamId, teamId),
         ),
       )
@@ -635,7 +656,7 @@ export const postComment = async (c: any) => {
       .from(teamTasks)
       .where(
         and(
-          eq(teamTasks.originalId, targetOriginalId),
+          eq(teamTasks.displayId, targetDisplayId),
           eq(teamTasks.teamId, teamId),
         ),
       )
@@ -649,7 +670,7 @@ export const postComment = async (c: any) => {
     userId: auth.userId,
     actionType: "comment_created",
     targetType: "comment",
-    targetId: targetOriginalId,
+    targetId: targetDisplayId,
     targetTitle: targetTitle,
   });
 
@@ -903,11 +924,11 @@ export const getBoardItemComments = async (c: any) => {
     return c.json({ error: "Not a team member" }, 403);
   }
 
-  // ボード内のメモ・タスクのoriginalIdを取得
+  // ボード内のメモ・タスクのdisplayIdを取得
   const boardItems = await db
     .select({
       itemType: teamBoardItems.itemType,
-      originalId: teamBoardItems.originalId,
+      displayId: teamBoardItems.displayId,
     })
     .from(teamBoardItems)
     .where(eq(teamBoardItems.boardId, boardId));
@@ -916,49 +937,49 @@ export const getBoardItemComments = async (c: any) => {
     return c.json([], 200);
   }
 
-  // メモとタスクのoriginalIdを分離
-  const memoOriginalIds: string[] = boardItems
+  // メモとタスクのdisplayIdを分離
+  const memoDisplayIds: string[] = boardItems
     .filter(
-      (item: { itemType: "memo" | "task"; originalId: string }) =>
+      (item: { itemType: "memo" | "task"; displayId: string }) =>
         item.itemType === "memo",
     )
     .map(
-      (item: { itemType: "memo" | "task"; originalId: string }) =>
-        item.originalId,
+      (item: { itemType: "memo" | "task"; displayId: string }) =>
+        item.displayId,
     );
-  const taskOriginalIds: string[] = boardItems
+  const taskDisplayIds: string[] = boardItems
     .filter(
-      (item: { itemType: "memo" | "task"; originalId: string }) =>
+      (item: { itemType: "memo" | "task"; displayId: string }) =>
         item.itemType === "task",
     )
     .map(
-      (item: { itemType: "memo" | "task"; originalId: string }) =>
-        item.originalId,
+      (item: { itemType: "memo" | "task"; displayId: string }) =>
+        item.displayId,
     );
 
-  // 削除済みメモ・タスクのoriginalIdを取得
-  const deletedMemoOriginalIds: string[] = await db
-    .select({ originalId: teamDeletedMemos.originalId })
+  // 削除済みメモ・タスクのdisplayIdを取得
+  const deletedMemoDisplayIds: string[] = await db
+    .select({ displayId: teamDeletedMemos.displayId })
     .from(teamDeletedMemos)
     .where(eq(teamDeletedMemos.teamId, teamId))
-    .then((rows: { originalId: string }[]) =>
-      rows.map((row: { originalId: string }) => row.originalId),
+    .then((rows: { displayId: string }[]) =>
+      rows.map((row: { displayId: string }) => row.displayId),
     );
 
-  const deletedTaskOriginalIds: string[] = await db
-    .select({ originalId: teamDeletedTasks.originalId })
+  const deletedTaskDisplayIds: string[] = await db
+    .select({ displayId: teamDeletedTasks.displayId })
     .from(teamDeletedTasks)
     .where(eq(teamDeletedTasks.teamId, teamId))
-    .then((rows: { originalId: string }[]) =>
-      rows.map((row: { originalId: string }) => row.originalId),
+    .then((rows: { displayId: string }[]) =>
+      rows.map((row: { displayId: string }) => row.displayId),
     );
 
-  // 削除済みを除外した有効なoriginalIdのみを使用
-  const activeMemoOriginalIds = memoOriginalIds.filter(
-    (id: string) => !deletedMemoOriginalIds.includes(id),
+  // 削除済みを除外した有効なdisplayIdのみを使用
+  const activeMemoDisplayIds = memoDisplayIds.filter(
+    (id: string) => !deletedMemoDisplayIds.includes(id),
   );
-  const activeTaskOriginalIds = taskOriginalIds.filter(
-    (id: string) => !deletedTaskOriginalIds.includes(id),
+  const activeTaskDisplayIds = taskDisplayIds.filter(
+    (id: string) => !deletedTaskDisplayIds.includes(id),
   );
 
   // コメントを取得
@@ -966,20 +987,20 @@ export const getBoardItemComments = async (c: any) => {
 
   // メモまたはタスクのコメントを取得（削除済みを除外）
   const orConditions: SQL<unknown>[] = [];
-  if (activeMemoOriginalIds.length > 0) {
+  if (activeMemoDisplayIds.length > 0) {
     const memoCondition = and(
       eq(teamComments.targetType, "memo"),
-      inArray(teamComments.targetOriginalId, activeMemoOriginalIds),
+      inArray(teamComments.targetDisplayId, activeMemoDisplayIds),
     );
     if (memoCondition) {
       orConditions.push(memoCondition);
     }
   }
 
-  if (activeTaskOriginalIds.length > 0) {
+  if (activeTaskDisplayIds.length > 0) {
     const taskCondition = and(
       eq(teamComments.targetType, "task"),
-      inArray(teamComments.targetOriginalId, activeTaskOriginalIds),
+      inArray(teamComments.targetDisplayId, activeTaskDisplayIds),
     );
     if (taskCondition) {
       orConditions.push(taskCondition);
@@ -1003,7 +1024,8 @@ export const getBoardItemComments = async (c: any) => {
       displayName: teamMembers.displayName,
       avatarColor: teamMembers.avatarColor,
       targetType: teamComments.targetType,
-      targetOriginalId: teamComments.targetOriginalId,
+      targetOriginalId: teamComments.targetOriginalId, // Phase 6で削除予定
+      targetDisplayId: teamComments.targetDisplayId,
       content: teamComments.content,
       mentions: teamComments.mentions,
       createdAt: teamComments.createdAt,

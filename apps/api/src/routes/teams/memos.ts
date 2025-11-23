@@ -9,6 +9,7 @@ import { teamComments } from "../../db/schema/team/comments";
 import { teamAttachments } from "../../db/schema/team/attachments";
 import { users } from "../../db/schema/users";
 import { generateOriginalId, generateUuid } from "../../utils/originalId";
+import { generateMemoDisplayId } from "../../utils/displayId";
 import {
   getTeamMemoMemberJoin,
   getTeamMemoSelectFields,
@@ -216,25 +217,23 @@ app.openapi(
 
     const { title, content } = parsed.data;
     const createdAt = Math.floor(Date.now() / 1000);
+
+    // displayIdを事前生成
+    const displayId = await generateMemoDisplayId(db, teamId);
+
     const result = await db
       .insert(teamMemos)
       .values({
         teamId,
         userId: auth.userId,
-        originalId: "", // 後で更新
+        originalId: "", // Phase 6で削除予定（互換性のため暫定的に空文字）
+        displayId, // 🆕 displayId追加
         uuid: generateUuid(), // UUID生成
         title,
         content,
         createdAt,
       })
       .returning({ id: teamMemos.id });
-
-    // originalIdを生成して更新
-    const originalId = generateOriginalId(result[0].id);
-    await db
-      .update(teamMemos)
-      .set({ originalId, updatedAt: createdAt })
-      .where(eq(teamMemos.id, result[0].id));
 
     // 作成されたメモを作成者情報付きで取得
     const newMemo = await db
@@ -251,7 +250,7 @@ app.openapi(
       userId: auth.userId,
       actionType: "memo_created",
       targetType: "memo",
-      targetId: originalId,
+      targetId: displayId, // 🆕 originalId → displayId
       targetTitle: title,
     });
 
@@ -475,6 +474,7 @@ app.openapi(
         teamId,
         userId: memo.userId,
         originalId: memo.originalId,
+        displayId: memo.displayId, // 🆕 displayId追加
         uuid: memo.uuid,
         title: memo.title,
         content: memo.content,
@@ -619,15 +619,15 @@ app.openapi(
   },
 );
 
-// POST /teams/:teamId/memos/deleted/:originalId/restore（チーム削除済みメモ復元）
+// POST /teams/:teamId/memos/deleted/:displayId/restore（チーム削除済みメモ復元）
 app.openapi(
   createRoute({
     method: "post",
-    path: "/{teamId}/memos/deleted/{originalId}/restore",
+    path: "/{teamId}/memos/deleted/{displayId}/restore",
     request: {
       params: z.object({
         teamId: z.string().regex(/^\d+$/).transform(Number),
-        originalId: z.string(),
+        displayId: z.string(),
       }),
     },
     responses: {
@@ -680,10 +680,10 @@ app.openapi(
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const { teamId, originalId } = c.req.valid("param");
+    const { teamId, displayId } = c.req.valid("param");
 
     console.log(
-      `🔄 チームメモ復元リクエスト: teamId=${teamId}, originalId=${originalId}, userId=${auth.userId}`,
+      `🔄 チームメモ復元リクエスト: teamId=${teamId}, displayId=${displayId}, userId=${auth.userId}`,
     );
 
     // チームメンバー確認
@@ -707,7 +707,7 @@ app.openapi(
         .where(
           and(
             eq(teamDeletedMemos.teamId, teamId),
-            eq(teamDeletedMemos.originalId, originalId),
+            eq(teamDeletedMemos.displayId, displayId),
           ),
         )
         .limit(1);
@@ -715,12 +715,12 @@ app.openapi(
       console.log(`🔍 削除済みメモ検索結果:`, {
         found: deletedMemo.length > 0,
         teamId,
-        originalId,
+        displayId,
       });
 
       if (deletedMemo.length === 0) {
         console.log(
-          `❌ 削除済みメモが見つからない: teamId=${teamId}, originalId=${originalId}`,
+          `❌ 削除済みメモが見つからない: teamId=${teamId}, displayId=${displayId}`,
         );
         return c.json({ error: "削除済みメモが見つかりません" }, 404);
       }
@@ -740,6 +740,7 @@ app.openapi(
           teamId: memoData.teamId,
           userId: auth.userId,
           originalId: memoData.originalId,
+          displayId: memoData.displayId, // 🆕 displayId追加
           uuid: memoData.uuid,
           title: memoData.title,
           content: memoData.content,
@@ -770,7 +771,7 @@ app.openapi(
       console.error("チームメモ復元エラー:", error);
       console.error("復元エラーの詳細:", {
         teamId,
-        originalId,
+        displayId,
         userId: auth.userId,
         error,
         errorMessage: error instanceof Error ? error.message : "不明なエラー",

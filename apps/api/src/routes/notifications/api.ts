@@ -14,7 +14,10 @@ const NotificationSchema = z.object({
   sourceType: z.string().nullable(),
   sourceId: z.number().nullable(),
   targetType: z.string().nullable(),
-  targetOriginalId: z.string().nullable(),
+  targetOriginalId: z.string().nullable(), // Phase 6で削除予定
+  targetDisplayId: z.string().nullable(),
+  boardOriginalId: z.string().nullable(), // Phase 6で削除予定
+  boardDisplayId: z.string().nullable(),
   actorUserId: z.string().nullable(),
   actorDisplayName: z.string().nullable(),
   message: z.string().nullable(),
@@ -75,8 +78,10 @@ export const getNotifications = async (c: any) => {
       sourceType: teamNotifications.sourceType,
       sourceId: teamNotifications.sourceId,
       targetType: teamNotifications.targetType,
-      targetOriginalId: teamNotifications.targetOriginalId,
-      boardOriginalId: teamNotifications.boardOriginalId,
+      targetOriginalId: teamNotifications.targetOriginalId, // Phase 6で削除予定
+      targetDisplayId: teamNotifications.targetDisplayId,
+      boardOriginalId: teamNotifications.boardOriginalId, // Phase 6で削除予定
+      boardDisplayId: teamNotifications.boardDisplayId,
       actorUserId: teamNotifications.actorUserId,
       actorDisplayName: teamMembers.displayName,
       message: teamNotifications.message,

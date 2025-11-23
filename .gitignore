@@ -37,6 +37,9 @@ Thumbs.db
 apps/api/sqlite.db
 .wrangler/
 
+# バックアップファイル
+backups/
+
 # Claude設定（ローカル）
 .claude/settings.local.json
 

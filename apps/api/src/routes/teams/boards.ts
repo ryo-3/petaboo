@@ -125,8 +125,8 @@ export function createTeamBoardsAPI(app: AppType) {
           // メモとタスクの数をカウント
           let memoCount = 0;
           let taskCount = 0;
-          const memoOriginalIds: string[] = [];
-          const taskOriginalIds: string[] = [];
+          const memoDisplayIds: string[] = [];
+          const taskDisplayIds: string[] = [];
 
           for (const item of items) {
             if (item.itemType === "memo") {
@@ -136,14 +136,14 @@ export function createTeamBoardsAPI(app: AppType) {
                 .from(teamMemos)
                 .where(
                   and(
-                    eq(teamMemos.originalId, item.originalId),
+                    eq(teamMemos.displayId, item.displayId),
                     eq(teamMemos.teamId, parseInt(teamId)),
                   ),
                 )
                 .limit(1);
               if (memo.length > 0) {
                 memoCount++;
-                memoOriginalIds.push(item.originalId);
+                memoDisplayIds.push(item.displayId);
               }
             } else {
               // チームタスクが削除されていないか確認
@@ -152,14 +152,14 @@ export function createTeamBoardsAPI(app: AppType) {
                 .from(teamTasks)
                 .where(
                   and(
-                    eq(teamTasks.originalId, item.originalId),
+                    eq(teamTasks.displayId, item.displayId),
                     eq(teamTasks.teamId, parseInt(teamId)),
                   ),
                 )
                 .limit(1);
               if (task.length > 0) {
                 taskCount++;
-                taskOriginalIds.push(item.originalId);
+                taskDisplayIds.push(item.displayId);
               }
             }
           }
@@ -181,7 +181,7 @@ export function createTeamBoardsAPI(app: AppType) {
           commentCount += boardComments.length;
 
           // ボード内のメモへのコメント
-          if (memoOriginalIds.length > 0) {
+          if (memoDisplayIds.length > 0) {
             const memoComments = await db
               .select()
               .from(teamComments)
@@ -190,8 +190,8 @@ export function createTeamBoardsAPI(app: AppType) {
                   eq(teamComments.teamId, parseInt(teamId)),
                   eq(teamComments.targetType, "memo"),
                   or(
-                    ...memoOriginalIds.map((id) =>
-                      eq(teamComments.targetOriginalId, id),
+                    ...memoDisplayIds.map((id: string) =>
+                      eq(teamComments.targetDisplayId, id),
                     ),
                   ),
                 ),
@@ -200,7 +200,7 @@ export function createTeamBoardsAPI(app: AppType) {
           }
 
           // ボード内のタスクへのコメント
-          if (taskOriginalIds.length > 0) {
+          if (taskDisplayIds.length > 0) {
             const taskComments = await db
               .select()
               .from(teamComments)
@@ -209,8 +209,8 @@ export function createTeamBoardsAPI(app: AppType) {
                   eq(teamComments.teamId, parseInt(teamId)),
                   eq(teamComments.targetType, "task"),
                   or(
-                    ...taskOriginalIds.map((id) =>
-                      eq(teamComments.targetOriginalId, id),
+                    ...taskDisplayIds.map((id: string) =>
+                      eq(teamComments.targetDisplayId, id),
                     ),
                   ),
                 ),
@@ -711,14 +711,14 @@ export function createTeamBoardsAPI(app: AppType) {
           teamMemos,
           and(
             eq(teamBoardItems.itemType, "memo"),
-            eq(teamBoardItems.originalId, teamMemos.originalId),
+            eq(teamBoardItems.displayId, teamMemos.displayId),
           ),
         )
         .leftJoin(
           teamTasks,
           and(
             eq(teamBoardItems.itemType, "task"),
-            eq(teamBoardItems.originalId, teamTasks.originalId),
+            eq(teamBoardItems.displayId, teamTasks.displayId),
           ),
         )
         .leftJoin(
@@ -747,21 +747,21 @@ export function createTeamBoardsAPI(app: AppType) {
         .from(teamComments)
         .where(eq(teamComments.teamId, parseInt(teamId)));
 
-      // originalIdごとのコメント数をマップ化
+      // displayIdごとのコメント数をマップ化
       const commentCountMap = new Map<string, number>();
       allComments.forEach((comment) => {
-        const key = `${comment.targetType}:${comment.targetOriginalId}`;
+        const key = `${comment.targetType}:${comment.targetDisplayId}`;
         commentCountMap.set(key, (commentCountMap.get(key) || 0) + 1);
       });
 
       // フロントエンド用のレスポンス形式に変換（パーソナル用と同じ構造に）
       const formattedItems = items
         .map((item) => {
-          const originalId =
-            item.team_memos?.originalId || item.team_tasks?.originalId;
+          const displayId =
+            item.team_memos?.displayId || item.team_tasks?.displayId;
           const itemType = item.team_board_items.itemType;
-          const commentCount = originalId
-            ? commentCountMap.get(`${itemType}:${originalId}`) || 0
+          const commentCount = displayId
+            ? commentCountMap.get(`${itemType}:${displayId}`) || 0
             : 0;
 
           return {
@@ -771,7 +771,7 @@ export function createTeamBoardsAPI(app: AppType) {
                   id: item.team_memos.id,
                   title: item.team_memos.title,
                   content: item.team_memos.content,
-                  originalId: item.team_memos.originalId,
+                  displayId: item.team_memos.displayId,
                   createdAt: item.team_memos.createdAt,
                   updatedAt: item.team_memos.updatedAt,
                   createdBy: item.team_members?.displayName || null,
@@ -789,7 +789,7 @@ export function createTeamBoardsAPI(app: AppType) {
                     categoryId: item.team_tasks.categoryId,
                     boardCategoryId: item.team_tasks.boardCategoryId,
                     assigneeId: item.team_tasks.assigneeId,
-                    originalId: item.team_tasks.originalId,
+                    displayId: item.team_tasks.displayId,
                     createdAt: item.team_tasks.createdAt,
                     updatedAt: item.team_tasks.updatedAt,
                     createdBy: item.team_members?.displayName || null,
@@ -812,13 +812,13 @@ export function createTeamBoardsAPI(app: AppType) {
         (item) => item.itemType === "task",
       ).length;
 
-      // メモとタスクのoriginalIdを収集
-      const memoOriginalIds = formattedItems
+      // メモとタスクのdisplayIdを収集
+      const memoDisplayIds = formattedItems
         .filter((item) => item.itemType === "memo")
-        .map((item) => item.originalId);
-      const taskOriginalIds = formattedItems
+        .map((item) => item.displayId);
+      const taskDisplayIds = formattedItems
         .filter((item) => item.itemType === "task")
-        .map((item) => item.originalId);
+        .map((item) => item.displayId);
 
       // コメント数集計
       let commentCount = 0;
@@ -837,7 +837,7 @@ export function createTeamBoardsAPI(app: AppType) {
       commentCount += boardComments.length;
 
       // ボード内のメモへのコメント
-      if (memoOriginalIds.length > 0) {
+      if (memoDisplayIds.length > 0) {
         const memoComments = await db
           .select()
           .from(teamComments)
@@ -846,8 +846,8 @@ export function createTeamBoardsAPI(app: AppType) {
               eq(teamComments.teamId, parseInt(teamId)),
               eq(teamComments.targetType, "memo"),
               or(
-                ...memoOriginalIds.map((id) =>
-                  eq(teamComments.targetOriginalId, id),
+                ...memoDisplayIds.map((id: string) =>
+                  eq(teamComments.targetDisplayId, id),
                 ),
               ),
             ),
@@ -856,7 +856,7 @@ export function createTeamBoardsAPI(app: AppType) {
       }
 
       // ボード内のタスクへのコメント
-      if (taskOriginalIds.length > 0) {
+      if (taskDisplayIds.length > 0) {
         const taskComments = await db
           .select()
           .from(teamComments)
@@ -865,8 +865,8 @@ export function createTeamBoardsAPI(app: AppType) {
               eq(teamComments.teamId, parseInt(teamId)),
               eq(teamComments.targetType, "task"),
               or(
-                ...taskOriginalIds.map((id) =>
-                  eq(teamComments.targetOriginalId, id),
+                ...taskDisplayIds.map((id: string) =>
+                  eq(teamComments.targetDisplayId, id),
                 ),
               ),
             ),
@@ -1012,7 +1012,7 @@ export function createTeamBoardsAPI(app: AppType) {
               and(
                 eq(teamComments.teamId, parseInt(teamId)),
                 eq(teamComments.targetType, "memo"),
-                eq(teamComments.targetOriginalId, memo.originalId),
+                eq(teamComments.targetDisplayId, memo.displayId),
               ),
             );
           const commentCount = Number(comments[0]?.count || 0);
@@ -1030,7 +1030,7 @@ export function createTeamBoardsAPI(app: AppType) {
               and(
                 eq(teamComments.teamId, parseInt(teamId)),
                 eq(teamComments.targetType, "task"),
-                eq(teamComments.targetOriginalId, task.originalId),
+                eq(teamComments.targetDisplayId, task.displayId),
               ),
             );
           const commentCount = Number(comments[0]?.count || 0);
@@ -1044,13 +1044,13 @@ export function createTeamBoardsAPI(app: AppType) {
           id: memo.id,
           itemType: "memo" as const,
           itemId: memo.id,
-          originalId: memo.originalId,
+          displayId: memo.displayId,
           deletedAt: memo.deletedAt,
           content: {
             id: memo.id,
             title: memo.title,
             content: memo.content,
-            originalId: memo.originalId,
+            displayId: memo.displayId,
             createdAt: memo.createdAt,
             updatedAt: memo.updatedAt,
             deletedAt: memo.deletedAt,
@@ -1061,7 +1061,7 @@ export function createTeamBoardsAPI(app: AppType) {
           id: task.id,
           itemType: "task" as const,
           itemId: task.id,
-          originalId: task.originalId,
+          displayId: task.displayId,
           deletedAt: task.deletedAt,
           content: {
             id: task.id,
@@ -1070,7 +1070,7 @@ export function createTeamBoardsAPI(app: AppType) {
             status: task.status,
             priority: task.priority,
             dueDate: task.dueDate,
-            originalId: task.originalId,
+            displayId: task.displayId,
             createdAt: task.createdAt,
             updatedAt: task.updatedAt,
             deletedAt: task.deletedAt,
@@ -1087,13 +1087,13 @@ export function createTeamBoardsAPI(app: AppType) {
         (item) => item.itemType === "task",
       ).length;
 
-      // メモとタスクのoriginalIdを収集
-      const memoOriginalIds = deletedItems
+      // メモとタスクのdisplayIdを収集
+      const memoDisplayIds = deletedItems
         .filter((item) => item.itemType === "memo")
-        .map((item) => item.originalId);
-      const taskOriginalIds = deletedItems
+        .map((item) => item.displayId);
+      const taskDisplayIds = deletedItems
         .filter((item) => item.itemType === "task")
-        .map((item) => item.originalId);
+        .map((item) => item.displayId);
 
       // コメント数集計
       let commentCount = 0;
@@ -1112,7 +1112,7 @@ export function createTeamBoardsAPI(app: AppType) {
       commentCount += boardComments.length;
 
       // ボード内のメモへのコメント
-      if (memoOriginalIds.length > 0) {
+      if (memoDisplayIds.length > 0) {
         const memoComments = await db
           .select()
           .from(teamComments)
@@ -1121,8 +1121,8 @@ export function createTeamBoardsAPI(app: AppType) {
               eq(teamComments.teamId, parseInt(teamId)),
               eq(teamComments.targetType, "memo"),
               or(
-                ...memoOriginalIds.map((id) =>
-                  eq(teamComments.targetOriginalId, id),
+                ...memoDisplayIds.map((id: string) =>
+                  eq(teamComments.targetDisplayId, id),
                 ),
               ),
             ),
@@ -1131,7 +1131,7 @@ export function createTeamBoardsAPI(app: AppType) {
       }
 
       // ボード内のタスクへのコメント
-      if (taskOriginalIds.length > 0) {
+      if (taskDisplayIds.length > 0) {
         const taskComments = await db
           .select()
           .from(teamComments)
@@ -1140,8 +1140,8 @@ export function createTeamBoardsAPI(app: AppType) {
               eq(teamComments.teamId, parseInt(teamId)),
               eq(teamComments.targetType, "task"),
               or(
-                ...taskOriginalIds.map((id) =>
-                  eq(teamComments.targetOriginalId, id),
+                ...taskDisplayIds.map((id: string) =>
+                  eq(teamComments.targetDisplayId, id),
                 ),
               ),
             ),
@@ -1192,7 +1192,7 @@ export function createTeamBoardsAPI(app: AppType) {
               id: z.number(),
               boardId: z.number(),
               itemType: z.enum(["memo", "task"]),
-              originalId: z.string(),
+              displayId: z.string(),
               createdAt: z.number(),
             }),
           },
@@ -1277,14 +1277,14 @@ export function createTeamBoardsAPI(app: AppType) {
       }
 
       // アイテム存在確認
-      let originalId: string;
+      let displayId: string;
       if (itemType === "memo") {
         const memo = await db
-          .select({ originalId: teamMemos.originalId })
+          .select({ displayId: teamMemos.displayId })
           .from(teamMemos)
           .where(
             and(
-              eq(teamMemos.originalId, itemId), // itemIdは既にoriginalId形式
+              eq(teamMemos.displayId, itemId), // itemIdは既にdisplayId形式
               eq(teamMemos.teamId, parseInt(teamId)),
             ),
           )
@@ -1293,14 +1293,14 @@ export function createTeamBoardsAPI(app: AppType) {
         if (memo.length === 0) {
           return c.json({ error: "メモが見つかりません" }, 404);
         }
-        originalId = memo[0].originalId;
+        displayId = memo[0].displayId!;
       } else {
         const task = await db
-          .select({ originalId: teamTasks.originalId })
+          .select({ displayId: teamTasks.displayId })
           .from(teamTasks)
           .where(
             and(
-              eq(teamTasks.originalId, itemId), // itemIdは既にoriginalId形式
+              eq(teamTasks.displayId, itemId), // itemIdは既にdisplayId形式
               eq(teamTasks.teamId, parseInt(teamId)),
             ),
           )
@@ -1309,7 +1309,7 @@ export function createTeamBoardsAPI(app: AppType) {
         if (task.length === 0) {
           return c.json({ error: "タスクが見つかりません" }, 404);
         }
-        originalId = task[0].originalId;
+        displayId = task[0].displayId!;
       }
 
       // 既に追加されているかチェック
@@ -1319,7 +1319,7 @@ export function createTeamBoardsAPI(app: AppType) {
         .where(
           and(
             eq(teamBoardItems.boardId, parseInt(boardId)),
-            eq(teamBoardItems.originalId, originalId),
+            eq(teamBoardItems.displayId, displayId),
             eq(teamBoardItems.itemType, itemType),
           ),
         )
@@ -1335,7 +1335,7 @@ export function createTeamBoardsAPI(app: AppType) {
         .values({
           boardId: parseInt(boardId),
           itemType: itemType,
-          originalId: originalId,
+          displayId: displayId,
         })
         .returning();
 
@@ -1461,13 +1461,13 @@ export function createTeamBoardsAPI(app: AppType) {
         return c.json({ error: "ボードが見つかりません" }, 404);
       }
 
-      // itemIdをoriginalIdとして直接使用（文字列のまま）
-      const originalId = itemId;
+      // itemIdをdisplayIdとして直接使用（文字列のまま）
+      const displayId = itemId;
 
       console.log("🔍 削除対象アイテム検索:", {
         boardId: parseInt(boardId),
         itemType,
-        originalId,
+        displayId,
       });
 
       // 削除前に存在確認
@@ -1478,7 +1478,7 @@ export function createTeamBoardsAPI(app: AppType) {
           and(
             eq(teamBoardItems.boardId, parseInt(boardId)),
             eq(teamBoardItems.itemType, itemType),
-            eq(teamBoardItems.originalId, originalId),
+            eq(teamBoardItems.displayId, displayId),
           ),
         )
         .limit(1);
@@ -1494,7 +1494,7 @@ export function createTeamBoardsAPI(app: AppType) {
           and(
             eq(teamBoardItems.boardId, parseInt(boardId)),
             eq(teamBoardItems.itemType, itemType),
-            eq(teamBoardItems.originalId, originalId),
+            eq(teamBoardItems.displayId, displayId),
           ),
         );
 

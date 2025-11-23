@@ -4,7 +4,8 @@ export const teamTasks = sqliteTable("team_tasks", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   teamId: integer("team_id").notNull(),
   userId: text("user_id").notNull(),
-  originalId: text("original_id").notNull(),
+  originalId: text("original_id").notNull(), // Phase 6で削除予定
+  displayId: text("display_id"), // チーム連番ID（例: "MORICREW-1"）
   uuid: text("uuid"), // 将来用UUID（オプショナル）
   title: text("title").notNull(),
   description: text("description"),
@@ -22,7 +23,8 @@ export const teamDeletedTasks = sqliteTable("team_deleted_tasks", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   teamId: integer("team_id").notNull(),
   userId: text("user_id").notNull(),
-  originalId: text("original_id").notNull(), // 元のteam_tasksテーブルのoriginalId
+  originalId: text("original_id").notNull(), // Phase 6で削除予定
+  displayId: text("display_id"), // チーム連番ID
   uuid: text("uuid"), // 将来用UUID（オプショナル）
   title: text("title").notNull(),
   description: text("description"),

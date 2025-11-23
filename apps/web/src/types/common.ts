@@ -3,15 +3,20 @@
  */
 
 /**
- * originalId型 - AUTO_INCREMENTのIDを文字列化したもの
- * 例: id=5 → originalId="5"
+ * displayId型 - チーム内連番ID
+ * 例: "1", "2", "3" (チーム識別子なし)
  *
  * 用途:
  * - 削除・復元時の一意性追跡
  * - ボードアイテムの識別
- * - 基本的にはIDの文字列版として使用
+ * - URL表示用のID
  */
-export type OriginalId = string;
+export type DisplayId = string;
+
+/**
+ * @deprecated originalIdからdisplayIdに移行中。互換性のため残しています。
+ */
+export type OriginalId = DisplayId;
 
 /**
  * OriginalId変換ユーティリティ

@@ -11,7 +11,8 @@ const TaggingSchema = z.object({
   id: z.number(),
   tagId: z.number(),
   targetType: z.enum(["memo", "task", "board"]),
-  targetOriginalId: z.string(),
+  targetOriginalId: z.string(), // Phase 6で削除予定
+  targetDisplayId: z.string(),
   userId: z.string(),
   createdAt: z.number(),
 });
@@ -20,7 +21,8 @@ const TaggingWithTagSchema = z.object({
   id: z.number(),
   tagId: z.number(),
   targetType: z.enum(["memo", "task", "board"]),
-  targetOriginalId: z.string(),
+  targetOriginalId: z.string(), // Phase 6で削除予定
+  targetDisplayId: z.string(),
   userId: z.string(),
   createdAt: z.number(),
   tag: z.object({
@@ -34,7 +36,8 @@ const TeamTaggingWithTagSchema = z.object({
   id: z.number(),
   tagId: z.number(),
   targetType: z.enum(["memo", "task", "board"]),
-  targetOriginalId: z.string(),
+  targetOriginalId: z.string(), // Phase 6で削除予定
+  targetDisplayId: z.string(),
   teamId: z.number(),
   userId: z.string(),
   createdAt: z.number(),
@@ -48,7 +51,7 @@ const TeamTaggingWithTagSchema = z.object({
 const CreateTaggingSchema = z.object({
   tagId: z.number(),
   targetType: z.enum(["memo", "task", "board"]),
-  targetOriginalId: z.string(),
+  targetDisplayId: z.string(),
 });
 
 export function createAPI(app: AppType) {
@@ -60,7 +63,7 @@ export function createAPI(app: AppType) {
     request: {
       query: z.object({
         targetType: z.enum(["memo", "task", "board"]).optional(),
-        targetOriginalId: z.string().optional(),
+        targetDisplayId: z.string().optional(),
         tagId: z.string().optional(),
         includeTag: z.string().optional(),
         teamId: z.string().optional(),
@@ -96,7 +99,7 @@ export function createAPI(app: AppType) {
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const { targetType, targetOriginalId, tagId, includeTag, teamId } =
+    const { targetType, targetDisplayId, tagId, includeTag, teamId } =
       c.req.valid("query");
     const db = c.get("db");
 
@@ -129,7 +132,8 @@ export function createAPI(app: AppType) {
           id: teamTaggings.id,
           tagId: teamTaggings.tagId,
           targetType: teamTaggings.targetType,
-          targetOriginalId: teamTaggings.targetOriginalId,
+          targetOriginalId: teamTaggings.targetOriginalId, // Phase 6で削除予定
+          targetDisplayId: teamTaggings.targetDisplayId,
           teamId: teamTaggings.teamId,
           userId: teamTaggings.userId,
           createdAt: teamTaggings.createdAt,
@@ -153,11 +157,11 @@ export function createAPI(app: AppType) {
         );
       }
 
-      if (targetOriginalId) {
+      if (targetDisplayId) {
         teamQuery = teamQuery.where(
           and(
             eq(teamTaggings.teamId, teamIdNum),
-            eq(teamTaggings.targetOriginalId, targetOriginalId),
+            eq(teamTaggings.targetDisplayId, targetDisplayId),
           ),
         );
       }
@@ -172,12 +176,12 @@ export function createAPI(app: AppType) {
       }
 
       // 両方のフィルターがある場合
-      if (targetType && targetOriginalId) {
+      if (targetType && targetDisplayId) {
         teamQuery = teamQuery.where(
           and(
             eq(teamTaggings.teamId, teamIdNum),
             eq(teamTaggings.targetType, targetType),
-            eq(teamTaggings.targetOriginalId, targetOriginalId),
+            eq(teamTaggings.targetDisplayId, targetDisplayId),
           ),
         );
       }
@@ -303,7 +307,7 @@ export function createAPI(app: AppType) {
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const { tagId, targetType, targetOriginalId } = c.req.valid("json");
+    const { tagId, targetType, targetDisplayId } = c.req.valid("json");
     const { teamId } = c.req.valid("query");
     const db = c.get("db");
 
@@ -349,7 +353,7 @@ export function createAPI(app: AppType) {
           and(
             eq(teamTaggings.tagId, tagId),
             eq(teamTaggings.targetType, targetType),
-            eq(teamTaggings.targetOriginalId, targetOriginalId),
+            eq(teamTaggings.targetDisplayId, targetDisplayId),
             eq(teamTaggings.teamId, teamIdNum),
           ),
         )
@@ -362,7 +366,8 @@ export function createAPI(app: AppType) {
       const newTeamTagging = {
         tagId,
         targetType,
-        targetOriginalId,
+        targetOriginalId: targetDisplayId, // Phase 6で削除予定（displayIdと同じ値）
+        targetDisplayId,
         teamId: teamIdNum,
         userId: auth.userId,
         createdAt: new Date(),
@@ -432,7 +437,7 @@ export function createAPI(app: AppType) {
             schema: z.object({
               tagId: z.number(),
               targetType: z.enum(["memo", "task", "board"]),
-              targetOriginalId: z.string(),
+              targetDisplayId: z.string(),
             }),
           },
         },
@@ -523,7 +528,7 @@ export function createAPI(app: AppType) {
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const { tagId, targetType, targetOriginalId } = c.req.valid("json");
+    const { tagId, targetType, targetDisplayId } = c.req.valid("json");
     const { teamId } = c.req.valid("query");
     const db = c.get("db");
 
@@ -558,7 +563,7 @@ export function createAPI(app: AppType) {
           and(
             eq(teamTaggings.tagId, tagId),
             eq(teamTaggings.targetType, targetType),
-            eq(teamTaggings.targetOriginalId, targetOriginalId),
+            eq(teamTaggings.targetDisplayId, targetDisplayId),
             eq(teamTaggings.teamId, teamIdNum),
           ),
         )
@@ -574,7 +579,7 @@ export function createAPI(app: AppType) {
           and(
             eq(teamTaggings.tagId, tagId),
             eq(teamTaggings.targetType, targetType),
-            eq(teamTaggings.targetOriginalId, targetOriginalId),
+            eq(teamTaggings.targetDisplayId, targetDisplayId),
             eq(teamTaggings.teamId, teamIdNum),
           ),
         );

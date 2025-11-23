@@ -10,6 +10,7 @@ import { teamComments } from "../../db/schema/team/comments";
 import { teamAttachments } from "../../db/schema/team/attachments";
 import { users } from "../../db/schema/users";
 import { generateOriginalId, generateUuid } from "../../utils/originalId";
+import { generateTaskDisplayId } from "../../utils/displayId";
 import {
   getTeamTaskMemberJoin,
   getTeamTaskSelectFields,
@@ -292,10 +293,14 @@ app.openapi(
       }
     }
 
+    // displayIdを事前生成
+    const displayId = await generateTaskDisplayId(db, teamId);
+
     const insertData = {
       teamId,
       userId: auth.userId,
-      originalId: "", // 後で更新
+      originalId: "", // Phase 6で削除予定（互換性のため暫定的に空文字）
+      displayId, // 🆕 displayId追加
       uuid: generateUuid(), // UUID生成
       title,
       description,
@@ -312,13 +317,6 @@ app.openapi(
       .insert(teamTasks)
       .values(insertData)
       .returning({ id: teamTasks.id });
-
-    // originalIdを生成して更新
-    const originalId = generateOriginalId(result[0].id);
-    await db
-      .update(teamTasks)
-      .set({ originalId })
-      .where(eq(teamTasks.id, result[0].id));
 
     // 作成されたタスクを取得して返す（作成者・担当者情報付き）
     const assigneeMembers = aliasedTable(teamMembers, "assignee_members");
@@ -348,7 +346,7 @@ app.openapi(
       userId: auth.userId,
       actionType: "task_created",
       targetType: "task",
-      targetId: originalId,
+      targetId: displayId, // 🆕 originalId → displayId
       targetTitle: title,
     });
 
@@ -582,6 +580,7 @@ app.openapi(
         teamId,
         userId: task.userId,
         originalId: task.originalId,
+        displayId: task.displayId, // 🆕 displayId追加
         uuid: task.uuid,
         title: task.title,
         description: task.description,
@@ -828,6 +827,7 @@ app.openapi(
           teamId: taskData.teamId,
           userId: auth.userId,
           originalId: taskData.originalId,
+          displayId: taskData.displayId, // 🆕 displayId追加
           uuid: taskData.uuid,
           title: taskData.title,
           description: taskData.description,

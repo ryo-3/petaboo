@@ -30,7 +30,8 @@ export const teamBoardItems = sqliteTable("team_board_items", {
     .notNull()
     .references(() => teamBoards.id, { onDelete: "cascade" }),
   itemType: text("item_type").notNull(), // 'memo' | 'task'
-  originalId: text("original_id").notNull(), // チームメモ/タスクのoriginalId
+  originalId: text("original_id").notNull(), // Phase 6で削除予定
+  displayId: text("display_id"), // チーム連番ID
   deletedAt: integer("deleted_at", { mode: "timestamp" }),
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()

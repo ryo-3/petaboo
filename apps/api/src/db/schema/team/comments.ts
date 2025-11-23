@@ -5,7 +5,8 @@ export const teamComments = sqliteTable("team_comments", {
   teamId: integer("team_id").notNull(),
   userId: text("user_id").notNull(),
   targetType: text("target_type").notNull(), // "memo" | "task" | "board"
-  targetOriginalId: text("target_original_id").notNull(), // 対象のoriginalId
+  targetOriginalId: text("target_original_id").notNull(), // Phase 6で削除予定
+  targetDisplayId: text("target_display_id"), // 対象のdisplayId
   content: text("content").notNull(),
   mentions: text("mentions"), // JSON配列: メンションされたuserIdのリスト ["user_xxx", "user_yyy"]
   createdAt: integer("created_at").notNull(),

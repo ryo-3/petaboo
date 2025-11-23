@@ -1,7 +1,8 @@
 # チーム側originalID完全撤廃 → displayId一本化 実装プラン
 
 **作成日**: 2025-01-22
-**ステータス**: 計画中
+**最終更新**: 2025-01-23
+**ステータス**: Phase 3完了（API修正完了）
 **優先度**: 高（技術的負債の早期解消）
 
 ---
@@ -9,9 +10,11 @@
 ## 🎯 目的
 
 - チーム機能のみoriginalIdを完全撤廃
-- displayId（"MORICREW-1"形式）に一本化
+- displayId（単純連番: "1", "2", "3"）に一本化
+- タスクとメモで別カウンタ（両方とも"1"から開始）
+- URLで区別（`?task=1` vs `?memo=1`）
 - 個人側（memos/tasks）は変更なし（originalId継続）
-- 今のうちに技術的負債を解消
+- 後方互換性は捨てる（Phase 5でバックアップデータを手動修正）
 
 ---
 
@@ -173,87 +176,76 @@ npx wrangler d1 execute DB --local --command "PRAGMA table_info(team_tasks)"
 
 ---
 
-## Phase 2: displayId生成ロジック実装（半日）
+## ✅ Phase 2: displayId生成ロジック実装（完了）
 
 ### 2.1 生成関数の作成
 
-**ファイル: `apps/api/src/utils/displayId.ts`（新規作成）**
+**ファイル: `apps/api/src/utils/displayId.ts`**
 
 ```typescript
-import { db } from "../db";
-import { teams } from "../db/schema/team/teams";
-import { teamTasks, teamMemos } from "../db/schema/team";
-import { eq, desc, sql } from "drizzle-orm";
+import { teamTasks } from "../db/schema/team/tasks";
+import { teamMemos } from "../db/schema/team/memos";
+import { eq, sql } from "drizzle-orm";
+import type { DB } from "../lib/db-d1";
 
 /**
  * チームタスク用のdisplayIdを生成
- * @param db データベース接続
- * @param teamId チームID
- * @returns displayId（例: "MORICREW-1"）
+ * @returns displayId（例: "1", "2", "3"）
  */
 export async function generateTaskDisplayId(
-  db: D1Database,
+  db: DB,
   teamId: number,
 ): Promise<string> {
-  // 1. チームのcustomUrlを取得
-  const team = await db
-    .select({ customUrl: teams.customUrl })
-    .from(teams)
-    .where(eq(teams.id, teamId))
-    .get();
-
-  if (!team) {
-    throw new Error(`Team not found: ${teamId}`);
-  }
-
-  const teamSlug = team.customUrl.toUpperCase(); // "MORICREW"
-
-  // 2. チーム全体の最大シーケンス番号を取得（タスクとメモ共通）
-  const [maxTask] = await db
+  // タスクのみの最大シーケンス番号を取得
+  const maxTask = await db
     .select({
-      max: sql<number>`MAX(CAST(SUBSTR(display_id, LENGTH('${teamSlug}-') + 1) AS INTEGER))`,
+      max: sql<number | null>`MAX(CAST(display_id AS INTEGER))`,
     })
     .from(teamTasks)
-    .where(eq(teamTasks.teamId, teamId));
+    .where(eq(teamTasks.teamId, teamId))
+    .get();
 
-  const [maxMemo] = await db
-    .select({
-      max: sql<number>`MAX(CAST(SUBSTR(display_id, LENGTH('${teamSlug}-') + 1) AS INTEGER))`,
-    })
-    .from(teamMemos)
-    .where(eq(teamMemos.teamId, teamId));
-
-  const maxSeq = Math.max(maxTask?.max || 0, maxMemo?.max || 0);
-  const nextSeq = maxSeq + 1;
-
-  return `${teamSlug}-${nextSeq}`;
+  const nextSeq = (maxTask?.max || 0) + 1;
+  return nextSeq.toString();
 }
 
 /**
  * チームメモ用のdisplayIdを生成
+ * @returns displayId（例: "1", "2", "3"）
  */
 export async function generateMemoDisplayId(
-  db: D1Database,
+  db: DB,
   teamId: number,
 ): Promise<string> {
-  // タスクと同じロジック（共通連番）
-  return generateTaskDisplayId(db, teamId);
+  // メモのみの最大シーケンス番号を取得（タスクとは別カウンタ）
+  const maxMemo = await db
+    .select({
+      max: sql<number | null>`MAX(CAST(display_id AS INTEGER))`,
+    })
+    .from(teamMemos)
+    .where(eq(teamMemos.teamId, teamId))
+    .get();
+
+  const nextSeq = (maxMemo?.max || 0) + 1;
+  return nextSeq.toString();
 }
 
 /**
  * displayIdをパース
  */
 export function parseDisplayId(displayId: string): {
-  teamSlug: string;
   sequence: number;
 } | null {
-  const match = displayId.match(/^([A-Z0-9_-]+)-(\d+)$/);
-  if (!match) return null;
+  const sequence = parseInt(displayId, 10);
+  if (isNaN(sequence) || sequence <= 0) return null;
+  return { sequence };
+}
 
-  return {
-    teamSlug: match[1].toLowerCase(),
-    sequence: parseInt(match[2], 10),
-  };
+/**
+ * displayIdの妥当性チェック
+ */
+export function isValidDisplayId(displayId: string): boolean {
+  return /^\d+$/.test(displayId);
 }
 ```
 
@@ -266,7 +258,13 @@ export function parseDisplayId(displayId: string): {
 
 ---
 
-## Phase 3: API実装修正（2日）
+## ✅ Phase 3: API実装修正（完了）
+
+### 修正方針
+
+- **後方互換性は捨てる**: `targetOriginalId`パラメータ削除、`targetDisplayId`のみ使用
+- **新規作成時**: `originalId = displayId` として同じ値を保存（Phase 6まで）
+- **検索**: `displayId`のみ使用
 
 ### 3.1 タスク作成API修正
 
@@ -815,4 +813,54 @@ git revert <commit-hash>
 
 ---
 
-**最終更新**: 2025-01-22
+---
+
+## 🎉 Phase 3完了サマリー（2025-01-23）
+
+### 完了した作業
+
+#### Phase 3-1: チームタスクAPI修正
+
+- タスク作成時に `displayId` 生成（単純連番: "1", "2", "3"）
+- `originalId = displayId` として同じ値を保存
+- 削除・復元APIも `displayId` 使用
+
+#### Phase 3-2: チームメモAPI修正
+
+- メモ作成時に `displayId` 生成（タスクとは別カウンタ）
+- 削除・復元APIも `displayId` 使用
+
+#### Phase 3-3: ボードアイテムAPI修正
+
+- JOIN条件を `displayId` に変更
+- コメント集計も `displayId` 使用
+- ボードアイテム追加・削除も `displayId` 使用
+
+#### Phase 3-4: 通知・タグAPI修正
+
+- 通知スキーマに `targetDisplayId`, `boardDisplayId` 追加
+- コメントAPIから `targetOriginalId` パラメータ削除、`displayId` のみ使用
+- タグAPIも `targetDisplayId` のみ使用
+
+### 修正したファイル
+
+- `apps/api/src/routes/teams/tasks.ts`
+- `apps/api/src/routes/teams/memos.ts`
+- `apps/api/src/routes/teams/boards.ts`
+- `apps/api/src/routes/notifications/api.ts`
+- `apps/api/src/routes/comments/api.ts`
+- `apps/api/src/routes/taggings/api.ts`
+- `apps/api/src/db/schema/team/comments.ts`
+- `apps/api/src/db/schema/team/tags.ts`
+- `apps/api/src/db/schema/team/notifications.ts`
+- `apps/api/src/utils/displayId.ts`
+
+### 次のステップ
+
+- **Phase 4**: フロントエンド修正（APIリクエストを `displayId` に変更）
+- **Phase 5**: 既存データの連番付与（マイグレーションスクリプト）
+- **Phase 6**: `original_id` カラム完全削除
+
+---
+
+**最終更新**: 2025-01-23

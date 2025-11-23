@@ -134,6 +134,20 @@
       "when": 1763813135300,
       "tag": "0018_quiet_thena",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "6",
+      "when": 1763859323297,
+      "tag": "0019_slippery_ezekiel_stane",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1763860759920,
+      "tag": "0020_icy_daimon_hellstrom",
+      "breakpoints": true
     }
   ]
 }

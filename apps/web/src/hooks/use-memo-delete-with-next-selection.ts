@@ -6,6 +6,7 @@ import {
   getTaskDisplayOrder,
   getNextItemAfterDeletion,
 } from "@/src/utils/domUtils";
+import type { TeamDetailContextType } from "@/src/contexts/team-detail-context";
 
 type ScreenMode = "list" | "view" | "create";
 type ItemType = "memo" | "task";
@@ -18,6 +19,9 @@ interface UseItemDeleteWithNextSelectionProps<T> {
   handleRightEditorDelete: (item: T) => void;
   setIsRightLidOpen?: (open: boolean) => void; // ボード詳細では不要
   itemType: ItemType;
+  teamMode?: boolean;
+  teamDetailContext?: TeamDetailContextType | null;
+  personalHasUnsavedChangesRef?: React.MutableRefObject<boolean>;
 }
 
 export function useItemDeleteWithNextSelection<T extends { id: number }>({
@@ -28,6 +32,9 @@ export function useItemDeleteWithNextSelection<T extends { id: number }>({
   handleRightEditorDelete,
   setIsRightLidOpen,
   itemType,
+  teamMode,
+  teamDetailContext,
+  personalHasUnsavedChangesRef,
 }: UseItemDeleteWithNextSelectionProps<T>) {
   // 削除後に選択する次のアイテムを保存
   const [nextItemAfterDelete, setNextItemAfterDelete] = useState<T | null>(
@@ -106,6 +113,17 @@ export function useItemDeleteWithNextSelection<T extends { id: number }>({
       if (!element) {
         // DOM削除確認！即座に次選択
 
+        // 削除後の自動選択前に未保存フラグをクリア
+        if (teamMode && teamDetailContext) {
+          if (itemType === "memo") {
+            teamDetailContext.memoEditorHasUnsavedChangesRef.current = false;
+          } else if (itemType === "task") {
+            teamDetailContext.taskEditorHasUnsavedChangesRef.current = false;
+          }
+        } else if (personalHasUnsavedChangesRef) {
+          personalHasUnsavedChangesRef.current = false;
+        }
+
         if (nextItemAfterDeleteRef.current) {
           onSelectItemRef.current(nextItemAfterDeleteRef.current);
           setScreenModeRef.current?.("view");
@@ -127,6 +145,17 @@ export function useItemDeleteWithNextSelection<T extends { id: number }>({
         setTimeout(checkDomAndSelect, 100);
       } else {
         // タイムアウト：強制的に次選択
+
+        // 削除後の自動選択前に未保存フラグをクリア
+        if (teamMode && teamDetailContext) {
+          if (itemType === "memo") {
+            teamDetailContext.memoEditorHasUnsavedChangesRef.current = false;
+          } else if (itemType === "task") {
+            teamDetailContext.taskEditorHasUnsavedChangesRef.current = false;
+          }
+        } else if (personalHasUnsavedChangesRef) {
+          personalHasUnsavedChangesRef.current = false;
+        }
 
         if (nextItemAfterDeleteRef.current) {
           onSelectItemRef.current(nextItemAfterDeleteRef.current);
@@ -151,6 +180,7 @@ export function useItemDeleteWithNextSelection<T extends { id: number }>({
     requestAnimationFrame(() => {
       checkDomAndSelect();
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deletingItemId, itemType]);
 
   return {
@@ -169,6 +199,9 @@ export function useMemoDeleteWithNextSelection(props: {
   onDeselectAndStayOnMemoList?: () => void;
   handleRightEditorDelete: (memo: Memo) => void;
   setIsRightLidOpen?: (open: boolean) => void;
+  teamMode?: boolean;
+  teamDetailContext?: TeamDetailContextType | null;
+  personalHasUnsavedChangesRef?: React.MutableRefObject<boolean>;
 }) {
   return useItemDeleteWithNextSelection({
     items: props.memos,
@@ -178,6 +211,9 @@ export function useMemoDeleteWithNextSelection(props: {
     handleRightEditorDelete: props.handleRightEditorDelete,
     setIsRightLidOpen: props.setIsRightLidOpen,
     itemType: "memo" as const,
+    teamMode: props.teamMode,
+    teamDetailContext: props.teamDetailContext,
+    personalHasUnsavedChangesRef: props.personalHasUnsavedChangesRef,
   });
 }
 
@@ -189,6 +225,9 @@ export function useTaskDeleteWithNextSelection(props: {
   onDeselectAndStayOnTaskList?: () => void;
   handleRightEditorDelete: (task: Task) => void;
   setIsRightLidOpen?: (open: boolean) => void;
+  teamMode?: boolean;
+  teamDetailContext?: TeamDetailContextType | null;
+  personalHasUnsavedChangesRef?: React.MutableRefObject<boolean>;
 }) {
   return useItemDeleteWithNextSelection({
     items: props.tasks,
@@ -198,5 +237,8 @@ export function useTaskDeleteWithNextSelection(props: {
     handleRightEditorDelete: props.handleRightEditorDelete,
     setIsRightLidOpen: props.setIsRightLidOpen,
     itemType: "task" as const,
+    teamMode: props.teamMode,
+    teamDetailContext: props.teamDetailContext,
+    personalHasUnsavedChangesRef: props.personalHasUnsavedChangesRef,
   });
 }

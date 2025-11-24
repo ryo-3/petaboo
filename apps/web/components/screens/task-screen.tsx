@@ -822,40 +822,6 @@ function TaskScreen({
       teamId,
     });
 
-  // DOMポーリング削除フック（メモと同じ方式）
-  const { handleDeleteWithNextSelection, checkDomDeletionAndSelectNext } =
-    useTaskDeleteWithNextSelection({
-      tasks: tasks?.filter((t) => t.status === activeTab),
-      onSelectTask: (task: Task | null) => {
-        // アップロード中は切り替えを防ぐ
-        if (isUploadingTask) {
-          return;
-        }
-        if (task) {
-          onSelectTask(task);
-          setTaskScreenMode("view");
-        } else {
-          setTaskScreenMode("list");
-          onClearSelection?.();
-        }
-      },
-      setTaskScreenMode,
-      onDeselectAndStayOnTaskList: () => {
-        setTaskScreenMode("list");
-        onClearSelection?.();
-      },
-      handleRightEditorDelete: () => {
-        // 何もしない（削除処理は外部で実行済み）
-      },
-      setIsRightLidOpen,
-    });
-
-  // DOM削除確認（タスク一覧が変更されたときにチェック）
-  useEffect(() => {
-    checkDomDeletionAndSelectNext();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   // 通常タスク削除（DOMポーリング方式）
   const handleTaskDeleteAndSelectNext = async (deletedTask: Task) => {
     if (!tasks || unifiedOperations.deleteItem.isPending) return;
@@ -907,6 +873,43 @@ function TaskScreen({
     },
     setScreenMode: setTaskScreenMode,
   });
+
+  // DOMポーリング削除フック（メモと同じ方式）
+  const { handleDeleteWithNextSelection, checkDomDeletionAndSelectNext } =
+    useTaskDeleteWithNextSelection({
+      tasks: tasks?.filter((t) => t.status === activeTab),
+      onSelectTask: (task: Task | null) => {
+        // アップロード中は切り替えを防ぐ
+        if (isUploadingTask) {
+          return;
+        }
+        if (task) {
+          onSelectTask(task);
+          setTaskScreenMode("view");
+        } else {
+          setTaskScreenMode("list");
+          onClearSelection?.();
+        }
+      },
+      setTaskScreenMode,
+      onDeselectAndStayOnTaskList: () => {
+        setTaskScreenMode("list");
+        onClearSelection?.();
+      },
+      handleRightEditorDelete: () => {
+        // 何もしない（削除処理は外部で実行済み）
+      },
+      teamMode,
+      teamDetailContext,
+      personalHasUnsavedChangesRef,
+      setIsRightLidOpen,
+    });
+
+  // DOM削除確認（タスク一覧が変更されたときにチェック）
+  useEffect(() => {
+    checkDomDeletionAndSelectNext();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // タスク選択ハンドラー（アップロード中チェック・未保存チェック追加）
   const handleSelectTask = (task: Task) => {

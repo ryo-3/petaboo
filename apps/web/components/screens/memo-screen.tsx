@@ -663,6 +663,9 @@ function MemoScreen({
     onDeselectAndStayOnMemoList,
     handleRightEditorDelete,
     setIsRightLidOpen,
+    teamMode,
+    teamDetailContext,
+    personalHasUnsavedChangesRef,
   });
 
   // 復元ボタンの参照

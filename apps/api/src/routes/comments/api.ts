@@ -26,7 +26,6 @@ const TeamCommentSchema = z.object({
   displayName: z.string().nullable(),
   avatarColor: z.string().nullable(),
   targetType: z.enum(["memo", "task", "board"]),
-  targetOriginalId: z.string(), // Phase 6で削除予定
   targetDisplayId: z.string(),
   content: z.string(),
   mentions: z.string().nullable(), // JSON文字列: ["user_xxx", "user_yyy"]
@@ -411,7 +410,6 @@ export const getComments = async (c: any) => {
       displayName: teamMembers.displayName,
       avatarColor: teamMembers.avatarColor,
       targetType: teamComments.targetType,
-      targetOriginalId: teamComments.targetOriginalId, // Phase 6で削除予定
       targetDisplayId: teamComments.targetDisplayId,
       content: teamComments.content,
       mentions: teamComments.mentions,
@@ -532,7 +530,6 @@ export const postComment = async (c: any) => {
       teamId,
       userId: auth.userId,
       targetType,
-      targetOriginalId: targetDisplayId, // Phase 6で削除予定（displayIdと同じ値）
       targetDisplayId,
       content,
       mentions: mentionsJson,
@@ -542,7 +539,6 @@ export const postComment = async (c: any) => {
     .returning();
 
   // boardIdからboardDisplayIdを取得（メモ/タスクの場合）
-  let boardOriginalId: string | null = null;
   let boardDisplayId: string | null = null;
   if (boardId && targetType !== "board") {
     const boards = await db
@@ -556,7 +552,6 @@ export const postComment = async (c: any) => {
 
     if (boards.length > 0) {
       boardDisplayId = String(boards[0].id);
-      boardOriginalId = String(boards[0].id);
     }
   } else if (targetType === "board") {
     // targetDisplayIdから取得
@@ -572,14 +567,11 @@ export const postComment = async (c: any) => {
         .limit(1);
       if (boards.length > 0) {
         boardDisplayId = String(boards[0].id);
-        boardOriginalId = String(boards[0].id);
       } else {
         boardDisplayId = targetDisplayId;
-        boardOriginalId = targetDisplayId; // Phase 6で削除予定（displayIdと同じ値）
       }
     } else {
       boardDisplayId = targetDisplayId;
-      boardOriginalId = targetDisplayId; // Phase 6で削除予定（displayIdと同じ値）
     }
   }
 
@@ -598,9 +590,7 @@ export const postComment = async (c: any) => {
       sourceType: "comment",
       sourceId: result[0].id,
       targetType,
-      targetOriginalId: targetDisplayId, // Phase 6で削除予定
       targetDisplayId,
-      boardOriginalId: boardDisplayId, // Phase 6で削除予定
       boardDisplayId,
       actorUserId: auth.userId,
       message: `${member.displayName || "誰か"}さんがコメントしました`,
@@ -1019,7 +1009,6 @@ export const getBoardItemComments = async (c: any) => {
       displayName: teamMembers.displayName,
       avatarColor: teamMembers.avatarColor,
       targetType: teamComments.targetType,
-      targetOriginalId: teamComments.targetOriginalId, // Phase 6で削除予定
       targetDisplayId: teamComments.targetDisplayId,
       content: teamComments.content,
       mentions: teamComments.mentions,

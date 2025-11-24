@@ -362,7 +362,6 @@ export function createAPI(app: AppType) {
       const newTeamTagging = {
         tagId,
         targetType,
-        targetOriginalId: targetDisplayId, // Phase 6で削除予定（暫定的にdisplayIdと同じ値）
         targetDisplayId,
         teamId: teamIdNum,
         userId: auth.userId,

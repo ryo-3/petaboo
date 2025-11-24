@@ -7,6 +7,7 @@ import { teamMemos, teamDeletedMemos } from "../../db/schema/team/memos";
 import { teamMembers } from "../../db/schema/team/teams";
 import { teamComments } from "../../db/schema/team/comments";
 import { teamAttachments } from "../../db/schema/team/attachments";
+import { teamTaggings } from "../../db/schema/team/tags";
 import { users } from "../../db/schema/users";
 import { generateMemoDisplayId } from "../../utils/displayId";
 import { generateUuid } from "../../utils/originalId";
@@ -122,7 +123,7 @@ app.openapi(
           SELECT COUNT(*)
           FROM ${teamComments}
           WHERE ${teamComments.targetType} = 'memo'
-            AND ${teamComments.targetOriginalId} = ${teamMemos.displayId}
+            AND ${teamComments.targetDisplayId} = ${teamMemos.displayId}
             AND ${teamComments.teamId} = ${teamMemos.teamId}
         )`.as("commentCount"),
       })
@@ -226,9 +227,8 @@ app.openapi(
       .values({
         teamId,
         userId: auth.userId,
-        originalId: "", // Phase 6で削除予定（互換性のため暫定的に空文字）
-        displayId, // 🆕 displayId追加
-        uuid: generateUuid(), // UUID生成
+        displayId,
+        uuid: generateUuid(),
         title,
         content,
         createdAt,
@@ -469,15 +469,12 @@ app.openapi(
 
     // D1はトランザクションをサポートしないため、順次実行
     try {
-      console.log(
-        `🗑️ [削除開始] id=${id} displayId="${memo.displayId}" originalId="${memo.originalId}"`,
-      );
+      console.log(`🗑️ [削除開始] id=${id} displayId="${memo.displayId}"`);
 
       // 削除済みテーブルに挿入
       await db.insert(teamDeletedMemos).values({
         teamId,
         userId: memo.userId,
-        originalId: memo.originalId,
         displayId: memo.displayId,
         uuid: memo.uuid,
         title: memo.title,
@@ -741,16 +738,13 @@ app.openapi(
 
       // チームメモテーブルに復元
       const currentTimestamp = Math.floor(Date.now() / 1000);
-      console.log(
-        `🔄 [復元開始] displayId="${memoData.displayId}" originalId="${memoData.originalId}"`,
-      );
+      console.log(`🔄 [復元開始] displayId="${memoData.displayId}"`);
 
       const insertResult = await db
         .insert(teamMemos)
         .values({
           teamId: memoData.teamId,
           userId: auth.userId,
-          originalId: memoData.originalId,
           displayId: memoData.displayId,
           uuid: memoData.uuid,
           title: memoData.title,

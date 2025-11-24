@@ -8,6 +8,7 @@ import { teamTasks, teamDeletedTasks } from "../../db/schema/team/tasks";
 import { teamMembers } from "../../db/schema/team/teams";
 import { teamComments } from "../../db/schema/team/comments";
 import { teamAttachments } from "../../db/schema/team/attachments";
+import { teamTaggings } from "../../db/schema/team/tags";
 import { users } from "../../db/schema/users";
 import { generateTaskDisplayId } from "../../utils/displayId";
 import { generateUuid } from "../../utils/originalId";
@@ -156,7 +157,7 @@ app.openapi(
           SELECT COUNT(*)
           FROM ${teamComments}
           WHERE ${teamComments.targetType} = 'task'
-            AND ${teamComments.targetOriginalId} = ${teamTasks.displayId}
+            AND ${teamComments.targetDisplayId} = ${teamTasks.displayId}
             AND ${teamComments.teamId} = ${teamTasks.teamId}
         )`.as("commentCount"),
       })
@@ -299,9 +300,8 @@ app.openapi(
     const insertData = {
       teamId,
       userId: auth.userId,
-      originalId: "", // Phase 6で削除予定（互換性のため暫定的に空文字）
-      displayId, // 🆕 displayId追加
-      uuid: generateUuid(), // UUID生成
+      displayId,
+      uuid: generateUuid(),
       title,
       description,
       status,
@@ -575,15 +575,12 @@ app.openapi(
 
     // D1はトランザクションをサポートしないため、順次実行
     try {
-      console.log(
-        `🗑️ [タスク削除開始] id=${id} displayId="${task.displayId}" originalId="${task.originalId}"`,
-      );
+      console.log(`🗑️ [タスク削除開始] id=${id} displayId="${task.displayId}"`);
 
       // 削除済みテーブルに挿入
       await db.insert(teamDeletedTasks).values({
         teamId,
         userId: task.userId,
-        originalId: task.originalId,
         displayId: task.displayId,
         uuid: task.uuid,
         title: task.title,
@@ -830,16 +827,13 @@ app.openapi(
 
       // チームタスクテーブルに復元
       const currentTimestamp = Math.floor(Date.now() / 1000);
-      console.log(
-        `🔄 [タスク復元開始] displayId="${taskData.displayId}" originalId="${taskData.originalId}"`,
-      );
+      console.log(`🔄 [タスク復元開始] displayId="${taskData.displayId}"`);
 
       const insertResult = await db
         .insert(teamTasks)
         .values({
           teamId: taskData.teamId,
           userId: auth.userId,
-          originalId: taskData.originalId,
           displayId: taskData.displayId,
           uuid: taskData.uuid,
           title: taskData.title,
@@ -868,7 +862,7 @@ app.openapi(
         .get();
 
       console.log(
-        `📤 [タスク復元API応答] displayId="${restoredTask?.displayId}" originalId="${restoredTask?.originalId}"`,
+        `📤 [タスク復元API応答] displayId="${restoredTask?.displayId}"`,
       );
 
       // 削除済みテーブルから削除

@@ -8,9 +8,7 @@ export const teamNotifications = sqliteTable("team_notifications", {
   sourceType: text("source_type"), // "comment" | "memo" | "task" など
   sourceId: integer("source_id"), // コメントIDなど
   targetType: text("target_type"), // "memo" | "task" | "board"
-  targetOriginalId: text("target_original_id"), // Phase 6で削除予定
   targetDisplayId: text("target_display_id"), // 対象のdisplayId
-  boardOriginalId: text("board_original_id"), // Phase 6で削除予定
   boardDisplayId: text("board_display_id"), // ボードのdisplayId
   actorUserId: text("actor_user_id"), // アクションを起こしたユーザー
   message: text("message"), // 通知メッセージ

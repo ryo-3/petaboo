@@ -15,7 +15,7 @@ export interface Tagging {
   id: number;
   tagId: number;
   targetType: "memo" | "task" | "board";
-  targetOriginalId: string;
+  targetOriginalId: string; // 個人側で使用中（個人側Phase完了後に削除予定）
   targetDisplayId: string;
   userId: string;
   createdAt: Date;

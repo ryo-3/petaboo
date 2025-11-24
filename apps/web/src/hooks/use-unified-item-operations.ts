@@ -295,17 +295,6 @@ export function useUnifiedItemOperations({
 
       // 通常一覧に復元されたアイテムを楽観的更新で追加
       if (deletedItem && restoredItemData) {
-        // console.log(`🔄 ${contextName}通常一覧に楽観的更新で追加`, {
-        //   itemId: deletedItem.id,
-        //   itemType,
-        //   itemOriginalId: displayId,
-        //   itemTitle: deletedItem.title,
-        //   context,
-        //   teamId,
-        //   boardId,
-        //   時刻: new Date().toISOString(),
-        // });
-
         // 復元されたアイテムデータを使用（deletedAtを除去）
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { deletedAt, ...restoredItem } = deletedItem;

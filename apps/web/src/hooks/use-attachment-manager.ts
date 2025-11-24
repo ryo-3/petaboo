@@ -214,7 +214,7 @@ export const useAttachmentManager = ({
 
   // 保存待ち画像を一括アップロード
   const uploadPendingImages = useCallback(
-    async (targetOriginalId?: string) => {
+    async (targetDisplayId?: string) => {
       if (pendingImages.length === 0) return { success: true, failedCount: 0 };
 
       setIsProcessing(true);
@@ -233,12 +233,12 @@ export const useAttachmentManager = ({
 
         const results = await Promise.allSettled(
           pendingImages.map(async (file) => {
-            // targetOriginalIdが指定されている場合は、直接fetch APIを使用（新規作成時）
-            if (targetOriginalId && targetOriginalId !== displayId) {
+            // targetDisplayIdが指定されている場合は、直接fetch APIを使用（新規作成時）
+            if (targetDisplayId && targetDisplayId !== displayId) {
               const formData = new FormData();
               formData.append("file", file);
               formData.append("attachedTo", itemType);
-              formData.append("attachedDisplayId", targetOriginalId);
+              formData.append("attachedDisplayId", targetDisplayId);
 
               const token = await getToken();
               const response = await fetch(
@@ -298,12 +298,12 @@ export const useAttachmentManager = ({
           showToast("画像のアップロードが完了しました", "success", 3000);
         }
 
-        // キャッシュを更新（targetOriginalId使用時）
+        // キャッシュを更新（targetDisplayId使用時）
         if (failedCount === 0) {
           // 先にpendingImagesをクリア（重複表示防止）
           setPendingImages([]);
 
-          if (targetOriginalId) {
+          if (targetDisplayId) {
             const queryKey = [
               "attachments",
               teamId,

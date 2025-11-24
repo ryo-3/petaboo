@@ -33,8 +33,7 @@ export function getTeamTaskSelectFields() {
     id: teamTasks.id,
     teamId: teamTasks.teamId,
     userId: teamTasks.userId,
-    originalId: teamTasks.originalId, // 重要: originalIdフィールドを追加
-    displayId: teamTasks.displayId, // 🆕 displayIdフィールドを追加
+    displayId: teamTasks.displayId,
     uuid: teamTasks.uuid,
     title: teamTasks.title,
     description: teamTasks.description,
@@ -46,8 +45,8 @@ export function getTeamTaskSelectFields() {
     assigneeId: teamTasks.assigneeId,
     createdAt: teamTasks.createdAt,
     updatedAt: teamTasks.updatedAt,
-    createdBy: teamMembers.displayName, // チーム専用の表示名
-    avatarColor: teamMembers.avatarColor, // チーム専用のアバター色
+    createdBy: teamMembers.displayName,
+    avatarColor: teamMembers.avatarColor,
   };
 }
 
@@ -59,14 +58,13 @@ export function getTeamMemoSelectFields() {
     id: teamMemos.id,
     teamId: teamMemos.teamId,
     userId: teamMemos.userId,
-    originalId: teamMemos.originalId, // 重要: originalIdフィールドを追加
-    displayId: teamMemos.displayId, // 🆕 displayIdフィールドを追加
+    displayId: teamMemos.displayId,
     uuid: teamMemos.uuid,
     title: teamMemos.title,
     content: teamMemos.content,
     createdAt: teamMemos.createdAt,
     updatedAt: teamMemos.updatedAt,
-    createdBy: teamMembers.displayName, // 作成者の表示名
-    avatarColor: teamMembers.avatarColor, // 作成者のアバター色
+    createdBy: teamMembers.displayName,
+    avatarColor: teamMembers.avatarColor,
   };
 }

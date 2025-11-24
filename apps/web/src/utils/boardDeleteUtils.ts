@@ -65,15 +65,15 @@ export function shouldUsePermanentDelete(
  *
  * @example
  * // メモの完全削除
- * getItemOriginalId(123, "memo", true, boardMemos, boardDeletedItems)
+ * getItemDisplayId(123, "memo", true, boardMemos, boardDeletedItems)
  * // => boardDeletedItems.memos から id=123 を探してdisplayIdを返す
  *
  * @example
  * // タスクの通常削除
- * getItemOriginalId(456, "task", false, boardTasks, boardDeletedItems)
+ * getItemDisplayId(456, "task", false, boardTasks, boardDeletedItems)
  * // => boardTasks から id=456 を探してdisplayIdを返す
  */
-export function getItemOriginalId(
+export function getItemDisplayId(
   id: number,
   itemType: "memo" | "task",
   isPermanentDelete: boolean,

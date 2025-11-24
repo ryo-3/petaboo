@@ -1335,7 +1335,6 @@ export function createTeamBoardsAPI(app: AppType) {
         .values({
           boardId: parseInt(boardId),
           itemType: itemType,
-          originalId: displayId, // Phase 6で削除予定（暫定的にdisplayIdと同じ値）
           displayId: displayId,
         })
         .returning();

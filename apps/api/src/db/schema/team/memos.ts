@@ -4,8 +4,7 @@ export const teamMemos = sqliteTable("team_memos", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   teamId: integer("team_id").notNull(),
   userId: text("user_id").notNull(),
-  originalId: text("original_id").notNull(), // Phase 6で削除予定
-  displayId: text("display_id"), // チーム連番ID（例: "MORICREW-1"）
+  displayId: text("display_id").notNull(), // チーム連番ID（例: "1", "2", "3"）
   uuid: text("uuid"), // 将来用UUID（オプショナル）
   title: text("title").notNull(),
   content: text("content"),
@@ -18,8 +17,7 @@ export const teamDeletedMemos = sqliteTable("team_deleted_memos", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   teamId: integer("team_id").notNull(),
   userId: text("user_id").notNull(),
-  originalId: text("original_id").notNull(), // Phase 6で削除予定
-  displayId: text("display_id"), // チーム連番ID
+  displayId: text("display_id").notNull(), // チーム連番ID
   uuid: text("uuid"), // 将来用UUID（オプショナル）
   title: text("title").notNull(),
   content: text("content"),

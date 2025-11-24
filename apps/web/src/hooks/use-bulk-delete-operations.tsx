@@ -10,7 +10,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import React from "react";
 import {
   shouldUsePermanentDelete,
-  getItemOriginalId,
+  getItemDisplayId,
 } from "@/src/utils/boardDeleteUtils";
 
 interface UseBulkDeleteOperationsProps {
@@ -283,7 +283,7 @@ export function useBulkDeleteOperations({
         if (itemType === "memo") {
           if (isPermanentDelete) {
             // 完全削除: boardDeletedItemsから検索
-            const displayId = getItemOriginalId(
+            const displayId = getItemDisplayId(
               id,
               "memo",
               true,
@@ -299,7 +299,7 @@ export function useBulkDeleteOperations({
         } else {
           if (isPermanentDelete) {
             // 完全削除: boardDeletedItemsから検索
-            const displayId = getItemOriginalId(
+            const displayId = getItemDisplayId(
               id,
               "task",
               true,
@@ -430,7 +430,7 @@ export function useBulkDeleteOperations({
 
     const onApiCall = async (id: number) => {
       // IDからdisplayIdを取得（共通関数を使用）
-      const displayId = getItemOriginalId(
+      const displayId = getItemDisplayId(
         id,
         deletingItemType,
         false, // ボードから削除は通常削除扱い

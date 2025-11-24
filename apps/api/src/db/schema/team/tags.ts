@@ -22,8 +22,7 @@ export const teamTaggings = sqliteTable("team_taggings", {
     .notNull()
     .references(() => teamTags.id, { onDelete: "cascade" }),
   targetType: text("target_type").notNull(), // 'memo' | 'task' | 'board'
-  targetOriginalId: text("target_original_id").notNull(), // Phase 6で削除予定
-  targetDisplayId: text("target_display_id"), // チーム連番ID
+  targetDisplayId: text("target_display_id").notNull(), // チーム連番ID
   teamId: integer("team_id").notNull(), // パフォーマンス向上のため重複保存
   userId: text("user_id").notNull(), // 作成者
   createdAt: integer("created_at", { mode: "timestamp" })

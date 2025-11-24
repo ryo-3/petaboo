@@ -834,11 +834,8 @@ function BoardDetailScreen({
     true,
   );
 
-  // メモとタスクの添付ファイルを統合
-  const allAttachments = useMemo(
-    () => [...(allMemoAttachments || []), ...(allTaskAttachments || [])],
-    [allMemoAttachments, allTaskAttachments],
-  );
+  // メモとタスクの添付ファイルは混ぜない（displayIdが重複する可能性があるため）
+  // 各セクションで適切な方を使用する
 
   // チームモードかどうかでタグ付けデータを切り替え
   const allTaggings = teamMode && teamId ? teamTaggings : personalTaggings;
@@ -1401,7 +1398,7 @@ function BoardDetailScreen({
                                     (safeAllTaggings || []) as Tagging[]
                                   }
                                   allBoardItems={safeAllBoardItems}
-                                  allAttachments={allAttachments || []}
+                                  allAttachments={allMemoAttachments || []}
                                   selectedMemo={selectedMemo}
                                   boardId={boardId}
                                   onCreateNewMemo={handleCreateNewMemo}
@@ -1448,7 +1445,7 @@ function BoardDetailScreen({
                                     (safeAllTaggings || []) as Tagging[]
                                   }
                                   allBoardItems={safeAllBoardItems}
-                                  allAttachments={allAttachments || []}
+                                  allAttachments={allTaskAttachments || []}
                                   selectedTask={selectedTask}
                                   onCreateNewTask={handleCreateNewTask}
                                   onSetRightPanelMode={setRightPanelMode}
@@ -1762,7 +1759,7 @@ function BoardDetailScreen({
                                       (safeAllTaggings || []) as Tagging[]
                                     }
                                     allBoardItems={safeAllBoardItems}
-                                    allAttachments={allAttachments || []}
+                                    allAttachments={allTaskAttachments || []}
                                     selectedTask={selectedTask}
                                     onCreateNewTask={handleCreateNewTask}
                                     onSetRightPanelMode={setRightPanelMode}
@@ -1808,7 +1805,7 @@ function BoardDetailScreen({
                                       (safeAllTaggings || []) as Tagging[]
                                     }
                                     allBoardItems={safeAllBoardItems}
-                                    allAttachments={allAttachments || []}
+                                    allAttachments={allMemoAttachments || []}
                                     selectedMemo={selectedMemo}
                                     boardId={boardId}
                                     onCreateNewMemo={handleCreateNewMemo}
@@ -2036,7 +2033,7 @@ function BoardDetailScreen({
                                       (safeAllTaggings || []) as Tagging[]
                                     }
                                     allBoardItems={safeAllBoardItems}
-                                    allAttachments={allAttachments || []}
+                                    allAttachments={allTaskAttachments || []}
                                     selectedTask={selectedTask}
                                     onCreateNewTask={handleCreateNewTask}
                                     onSetRightPanelMode={setRightPanelMode}
@@ -2216,7 +2213,7 @@ function BoardDetailScreen({
                                   (safeAllTaggings || []) as Tagging[]
                                 }
                                 allBoardItems={safeAllBoardItems}
-                                allAttachments={allAttachments || []}
+                                allAttachments={allMemoAttachments || []}
                                 selectedMemo={selectedMemo}
                                 boardId={boardId}
                                 onCreateNewMemo={handleCreateNewMemo}
@@ -2272,7 +2269,7 @@ function BoardDetailScreen({
                                   (safeAllTaggings || []) as Tagging[]
                                 }
                                 allBoardItems={safeAllBoardItems}
-                                allAttachments={allAttachments || []}
+                                allAttachments={allTaskAttachments || []}
                                 selectedTask={selectedTask}
                                 onCreateNewTask={handleCreateNewTask}
                                 onSetRightPanelMode={setRightPanelMode}
@@ -2341,7 +2338,7 @@ function BoardDetailScreen({
                                     (safeAllTaggings || []) as Tagging[]
                                   }
                                   allBoardItems={safeAllBoardItems}
-                                  allAttachments={allAttachments || []}
+                                  allAttachments={allMemoAttachments || []}
                                   selectedMemo={selectedMemo}
                                   boardId={boardId}
                                   onCreateNewMemo={handleCreateNewMemo}
@@ -2405,7 +2402,7 @@ function BoardDetailScreen({
                                     (safeAllTaggings || []) as Tagging[]
                                   }
                                   allBoardItems={safeAllBoardItems}
-                                  allAttachments={allAttachments || []}
+                                  allAttachments={allTaskAttachments || []}
                                   selectedTask={selectedTask}
                                   onCreateNewTask={handleCreateNewTask}
                                   onSetRightPanelMode={setRightPanelMode}
@@ -2505,7 +2502,7 @@ function BoardDetailScreen({
                 allBoards={safeAllBoards}
                 allTaggings={(safeAllTaggings || []) as Tagging[]}
                 allBoardItems={safeAllBoardItems}
-                allAttachments={allAttachments || []}
+                allAttachments={allMemoAttachments || []}
                 selectedMemo={selectedMemo}
                 boardId={boardId}
                 onCreateNewMemo={handleCreateNewMemo}
@@ -2547,7 +2544,7 @@ function BoardDetailScreen({
                 allBoards={safeAllBoards}
                 allTaggings={(safeAllTaggings || []) as Tagging[]}
                 allBoardItems={safeAllBoardItems}
-                allAttachments={allAttachments || []}
+                allAttachments={allTaskAttachments || []}
                 selectedTask={selectedTask}
                 onCreateNewTask={handleCreateNewTask}
                 onSetRightPanelMode={setRightPanelMode}

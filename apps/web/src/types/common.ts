@@ -51,6 +51,8 @@ export interface BaseItemFields {
   id: number;
   /** 表示用連番ID（個人用・チーム用共通） */
   displayId: string;
+  /** ボード内での順序番号（ボード機能でのみ使用、itemTypeごとに1から連番） */
+  boardIndex?: number;
   /** UUID（将来の外部連携用） */
   uuid?: Uuid;
   /** 作成日時（Unix timestamp） */

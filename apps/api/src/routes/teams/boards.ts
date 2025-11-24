@@ -804,6 +804,17 @@ export function createTeamBoardsAPI(app: AppType) {
         })
         .filter((item) => item.content !== null); // contentがnullのアイテムを除外
 
+      // ボード内での順序番号を追加（itemTypeごとに1から連番）
+      let memoIndex = 1;
+      let taskIndex = 1;
+      formattedItems.forEach((item) => {
+        if (item.itemType === "memo" && item.content) {
+          item.content.boardIndex = memoIndex++;
+        } else if (item.itemType === "task" && item.content) {
+          item.content.boardIndex = taskIndex++;
+        }
+      });
+
       // メモ数・タスク数・コメント数を計算
       const memoCount = formattedItems.filter(
         (item) => item.itemType === "memo",

@@ -4,6 +4,8 @@
   "type": "module",
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250904.0",
+    "@types/better-sqlite3": "^7.6.13",
+    "better-sqlite3": "^12.4.6",
     "drizzle-kit": "^0.31.2",
     "drizzle-orm": "^0.44.2",
     "tsx": "^4.20.3",

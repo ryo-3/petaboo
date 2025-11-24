@@ -176,6 +176,34 @@
       "when": 1763905577728,
       "tag": "0024_free_killmonger",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "6",
+      "when": 1763993779026,
+      "tag": "0025_rename_board_original_id_to_display_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "6",
+      "when": 1763993879026,
+      "tag": "0026_rename_attachments_original_id_to_display_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "6",
+      "when": 1763995800000,
+      "tag": "0027_add_board_display_id_to_team_notifications",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "6",
+      "when": 1764043200000,
+      "tag": "0028_drop_original_id_columns_phase6",
+      "breakpoints": true
     }
   ]
 }

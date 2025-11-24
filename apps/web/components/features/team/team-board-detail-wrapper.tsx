@@ -214,10 +214,11 @@ export function TeamBoardDetailWrapper({
       // 既にメモが選択されている場合（新規作成含む）はスキップ
       if (selectedMemoRef.current?.displayId !== undefined) {
         // ただし、URLのmemoパラメータと異なる場合のみスキップ
+        const currentBoardIndex =
+          selectedMemoRef.current.boardIndex?.toString();
         if (
+          currentBoardIndex !== memoParam &&
           selectedMemoRef.current.displayId !== memoParam &&
-          selectedMemoRef.current.displayId !== memoParam &&
-          selectedMemoRef.current.displayId !== `memo-${memoParam}` &&
           selectedMemoRef.current.id?.toString() !== memoParam
         ) {
           return; // URL復元をスキップ（新規作成中など）
@@ -233,9 +234,8 @@ export function TeamBoardDetailWrapper({
         .map((item: any) => item.content)
         .find(
           (m: Memo) =>
+            m.boardIndex?.toString() === memoParam ||
             m.displayId === memoParam ||
-            m.displayId === memoParam ||
-            m.displayId === `memo-${memoParam}` ||
             m.id?.toString() === memoParam,
         );
 
@@ -249,10 +249,11 @@ export function TeamBoardDetailWrapper({
     if (taskParam) {
       // 既にタスクが選択されている場合（新規作成含む）はスキップ
       if (selectedTaskRef.current?.displayId !== undefined) {
+        const currentBoardIndex =
+          selectedTaskRef.current.boardIndex?.toString();
         if (
+          currentBoardIndex !== taskParam &&
           selectedTaskRef.current.displayId !== taskParam &&
-          selectedTaskRef.current.displayId !== taskParam &&
-          selectedTaskRef.current.displayId !== `task-${taskParam}` &&
           selectedTaskRef.current.id?.toString() !== taskParam
         ) {
           return; // URL復元をスキップ（新規作成中など）
@@ -268,9 +269,8 @@ export function TeamBoardDetailWrapper({
         .map((item: any) => item.content)
         .find(
           (t: Task) =>
+            t.boardIndex?.toString() === taskParam ||
             t.displayId === taskParam ||
-            t.displayId === taskParam ||
-            t.displayId === `task-${taskParam}` ||
             t.id?.toString() === taskParam,
         );
 
@@ -296,9 +296,9 @@ export function TeamBoardDetailWrapper({
     setSelectedTask(null);
     setSelectedMemo(memo);
 
-    // URLを更新（displayIdを使用）
+    // URLを更新（boardIndexを使用 - ボード内での連番）
     // 新規作成時 (displayId === "new") はURL更新をスキップ
-    const targetMemoId = memo?.displayId;
+    const targetMemoId = memo?.boardIndex?.toString() || memo?.displayId;
     if (memo && targetMemoId && targetMemoId !== "new") {
       router.replace(
         `/team/${customUrl}?tab=board&slug=${slug}&memo=${targetMemoId}`,
@@ -316,9 +316,9 @@ export function TeamBoardDetailWrapper({
     setSelectedMemo(null);
     setSelectedTask(task);
 
-    // URLを更新（displayIdを使用）
+    // URLを更新（boardIndexを使用 - ボード内での連番）
     // 新規作成時 (displayId === "new") はURL更新をスキップ
-    const targetTaskId = task?.displayId;
+    const targetTaskId = task?.boardIndex?.toString() || task?.displayId;
     if (task && targetTaskId && targetTaskId !== "new") {
       router.replace(
         `/team/${customUrl}?tab=board&slug=${slug}&task=${targetTaskId}`,

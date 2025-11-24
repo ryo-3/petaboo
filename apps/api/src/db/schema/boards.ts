@@ -30,6 +30,7 @@ export const boardItems = sqliteTable("board_items", {
     .references(() => boards.id, { onDelete: "cascade" }),
   itemType: text("item_type").notNull(), // 'memo' | 'task'
   displayId: text("display_id").notNull(), // メモ/タスクのdisplayId
+  boardIndex: integer("board_index").notNull().default(0), // ボード内の並び順
   deletedAt: integer("deleted_at", { mode: "timestamp" }),
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()

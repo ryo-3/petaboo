@@ -739,7 +739,7 @@ export function createTeamBoardsAPI(app: AppType) {
           ),
         )
         .where(eq(teamBoardItems.boardId, parseInt(boardId)))
-        .orderBy(teamBoardItems.createdAt);
+        .orderBy(teamBoardItems.boardIndex);
 
       // 各メモ・タスクのコメント数を取得
       const allComments = await db
@@ -804,14 +804,23 @@ export function createTeamBoardsAPI(app: AppType) {
         })
         .filter((item) => item.content !== null); // contentがnullのアイテムを除外
 
-      // ボード内での順序番号を追加（itemTypeごとに1から連番）
-      let memoIndex = 1;
-      let taskIndex = 1;
-      formattedItems.forEach((item) => {
-        if (item.itemType === "memo" && item.content) {
-          item.content.boardIndex = memoIndex++;
-        } else if (item.itemType === "task" && item.content) {
-          item.content.boardIndex = taskIndex++;
+      // itemTypeごとにpositionから連番を生成（メモ、タスクそれぞれ1から）
+      const memoItems = formattedItems
+        .filter((item) => item.itemType === "memo")
+        .sort((a, b) => a.boardIndex - b.boardIndex);
+      const taskItems = formattedItems
+        .filter((item) => item.itemType === "task")
+        .sort((a, b) => a.boardIndex - b.boardIndex);
+
+      memoItems.forEach((item) => {
+        if (item.content) {
+          item.content.boardIndex = item.boardIndex;
+        }
+      });
+
+      taskItems.forEach((item) => {
+        if (item.content) {
+          item.content.boardIndex = item.boardIndex;
         }
       });
 
@@ -1340,6 +1349,19 @@ export function createTeamBoardsAPI(app: AppType) {
         return c.json({ error: "アイテムは既にボードに追加されています" }, 400);
       }
 
+      // 既存の最大boardIndex取得
+      const maxBoardIndexResult = await db
+        .select({ maxIdx: sql<number>`MAX(board_index)` })
+        .from(teamBoardItems)
+        .where(
+          and(
+            eq(teamBoardItems.boardId, parseInt(boardId)),
+            eq(teamBoardItems.itemType, itemType),
+          ),
+        );
+
+      const nextBoardIndex = (maxBoardIndexResult[0]?.maxIdx || 0) + 1;
+
       // ボードアイテム追加
       const result = await db
         .insert(teamBoardItems)
@@ -1347,10 +1369,12 @@ export function createTeamBoardsAPI(app: AppType) {
           boardId: parseInt(boardId),
           itemType: itemType,
           displayId: displayId,
+          boardIndex: nextBoardIndex,
         })
         .returning();
 
-      return c.json(result[0], 201);
+      // boardIndexを返す
+      return c.json({ ...result[0], boardIndex: nextBoardIndex }, 201);
     } catch (error) {
       console.error("チームボードアイテム追加エラー:", error);
       return c.json({ error: "サーバーエラーが発生しました" }, 500);

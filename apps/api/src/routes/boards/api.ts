@@ -1,6 +1,6 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { getAuth } from "@hono/clerk-auth";
-import { eq, and, desc, isNull, isNotNull } from "drizzle-orm";
+import { eq, and, desc, isNull, isNotNull, sql } from "drizzle-orm";
 import {
   boards,
   boardItems,
@@ -924,7 +924,7 @@ export function createAPI(app: AppType) {
       .select()
       .from(boardItems)
       .where(and(eq(boardItems.boardId, boardId), isNull(boardItems.deletedAt)))
-      .orderBy(boardItems.createdAt);
+      .orderBy(boardItems.boardIndex);
 
     // アイテムの内容を取得
     const itemsWithContent = await Promise.all(
@@ -1345,10 +1345,24 @@ export function createAPI(app: AppType) {
           return c.json({ error: "Item already exists in board" }, 400);
         }
 
+        // 既存の最大boardIndex取得
+        const maxBoardIndexResult = await db
+          .select({ maxIdx: sql<number>`MAX(board_index)` })
+          .from(teamBoardItems)
+          .where(
+            and(
+              eq(teamBoardItems.boardId, boardId),
+              eq(teamBoardItems.itemType, itemType),
+            ),
+          );
+
+        const nextBoardIndex = (maxBoardIndexResult[0]?.maxIdx || 0) + 1;
+
         const newItem = {
           boardId,
           itemType,
           displayId,
+          boardIndex: nextBoardIndex,
           createdAt: new Date(),
         };
 
@@ -1366,7 +1380,8 @@ export function createAPI(app: AppType) {
           .where(eq(teamBoards.id, boardId));
 
         console.log("🟣 [API] チームボードアイテム追加完了 - 201を返却");
-        return c.json(result[0], 201);
+        // boardIndexとしてpositionを返す
+        return c.json({ ...result[0], boardIndex: nextPosition }, 201);
       } else {
         const existing = await db
           .select()
@@ -1385,10 +1400,24 @@ export function createAPI(app: AppType) {
           return c.json({ error: "Item already exists in board" }, 400);
         }
 
+        // 既存の最大boardIndex取得
+        const maxBoardIndexResult = await db
+          .select({ maxIdx: sql<number>`MAX(board_index)` })
+          .from(boardItems)
+          .where(
+            and(
+              eq(boardItems.boardId, boardId),
+              eq(boardItems.itemType, itemType),
+            ),
+          );
+
+        const nextBoardIndex = (maxBoardIndexResult[0]?.maxIdx || 0) + 1;
+
         const newItem: NewBoardItem = {
           boardId,
           itemType,
           displayId,
+          boardIndex: nextBoardIndex,
           createdAt: new Date(),
         };
 
@@ -1400,7 +1429,8 @@ export function createAPI(app: AppType) {
           .set({ updatedAt: new Date() })
           .where(eq(boards.id, boardId));
 
-        return c.json(result[0], 201);
+        // boardIndexとしてpositionを返す
+        return c.json({ ...result[0], boardIndex: nextPosition }, 201);
       }
     } catch (error) {
       return c.json(

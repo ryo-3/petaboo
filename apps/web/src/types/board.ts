@@ -46,6 +46,7 @@ export interface BoardItem {
   itemType: "memo" | "task";
   itemId: DisplayId;
   position: number;
+  boardIndex?: number; // ボード内での表示順（URL用）
   createdAt: number;
 }
 

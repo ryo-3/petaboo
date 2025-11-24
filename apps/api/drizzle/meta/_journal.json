@@ -204,6 +204,13 @@
       "when": 1764043200000,
       "tag": "0028_drop_original_id_columns_phase6",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "6",
+      "when": 1763994823396,
+      "tag": "0029_fixed_psynapse",
+      "breakpoints": true
     }
   ]
 }

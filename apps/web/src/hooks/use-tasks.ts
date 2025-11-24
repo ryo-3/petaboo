@@ -85,31 +85,17 @@ export function useCreateTask(options?: {
       }
     },
     onSuccess: (newTask) => {
-      if (boardId) {
-        queryClient.setQueryData(
-          ["team-boards", teamId?.toString(), boardId, "items"],
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (oldData: any) => {
-            if (oldData?.items) {
-              const newBoardItem = {
-                id: `task_${newTask.id}`,
-                boardId: boardId,
-                itemId: newTask.id.toString(),
-                itemType: "task" as const,
-                content: newTask,
-                createdAt: Math.floor(Date.now() / 1000),
-                updatedAt: Math.floor(Date.now() / 1000),
-                position: oldData.items.length + 1,
-              };
-
-              return {
-                ...oldData,
-                items: [...oldData.items, newBoardItem],
-              };
-            }
-            return oldData;
-          },
-        );
+      // ボードコンテキストの場合、ボードアイテムリストを再取得してboardIndexを反映
+      if (boardId && teamMode && teamId) {
+        console.log("🟡 [useCreateTask] ボードアイテムリスト再取得開始", {
+          teamId,
+          boardId,
+        });
+        // team-boardで始まる全てのクエリを無効化して再取得
+        queryClient.invalidateQueries({
+          queryKey: ["team-board", teamId],
+          refetchType: "active", // アクティブなクエリのみ再取得
+        });
       }
 
       // APIが不完全なデータしか返さないため、タスク一覧を無効化して再取得

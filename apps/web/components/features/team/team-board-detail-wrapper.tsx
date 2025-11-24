@@ -211,35 +211,36 @@ export function TeamBoardDetailWrapper({
 
     // memoパラメータがある場合、該当するメモを選択
     if (memoParam) {
-      // 既にメモが選択されている場合（新規作成含む）はスキップ
-      if (selectedMemoRef.current?.displayId !== undefined) {
-        // ただし、URLのmemoパラメータと異なる場合のみスキップ
-        const currentBoardIndex =
-          selectedMemoRef.current.boardIndex?.toString();
-        if (
-          currentBoardIndex !== memoParam &&
-          selectedMemoRef.current.displayId !== memoParam &&
-          selectedMemoRef.current.id?.toString() !== memoParam
-        ) {
-          return; // URL復元をスキップ（新規作成中など）
-        }
-      }
-
       const allItems = boardItems.items || [];
       const memoItems = allItems.filter(
         (item: any) => item.itemType === "memo",
       );
 
+      // URLパラメータはboardIndexを表すので、boardIndexだけで検索
       const targetMemo = memoItems
         .map((item: any) => item.content)
-        .find(
-          (m: Memo) =>
-            m.boardIndex?.toString() === memoParam ||
-            m.displayId === memoParam ||
-            m.id?.toString() === memoParam,
-        );
+        .find((m: Memo) => m.boardIndex?.toString() === memoParam);
+
+      // 既に正しいメモが選択されている場合はスキップ
+      if (targetMemo && selectedMemoRef.current) {
+        // boardIndexで比較（これが一番確実）
+        if (targetMemo.boardIndex === selectedMemoRef.current.boardIndex) {
+          console.log(
+            "🔵 [URL復元] 既に正しいメモが選択されているのでスキップ",
+            {
+              targetMemoBoardIndex: targetMemo.boardIndex,
+              selectedMemoBoardIndex: selectedMemoRef.current.boardIndex,
+            },
+          );
+          return;
+        }
+      }
 
       if (targetMemo && targetMemo.displayId !== selectedMemo?.displayId) {
+        console.log("🔵 [URL復元] メモを選択", {
+          targetMemoDisplayId: targetMemo.displayId,
+          targetMemoBoardIndex: targetMemo.boardIndex,
+        });
         setSelectedMemo(targetMemo);
         setSelectedTask(null);
       }
@@ -247,34 +248,36 @@ export function TeamBoardDetailWrapper({
 
     // taskパラメータがある場合、該当するタスクを選択
     if (taskParam) {
-      // 既にタスクが選択されている場合（新規作成含む）はスキップ
-      if (selectedTaskRef.current?.displayId !== undefined) {
-        const currentBoardIndex =
-          selectedTaskRef.current.boardIndex?.toString();
-        if (
-          currentBoardIndex !== taskParam &&
-          selectedTaskRef.current.displayId !== taskParam &&
-          selectedTaskRef.current.id?.toString() !== taskParam
-        ) {
-          return; // URL復元をスキップ（新規作成中など）
-        }
-      }
-
       const allItems = boardItems.items || [];
       const taskItems = allItems.filter(
         (item: any) => item.itemType === "task",
       );
 
+      // URLパラメータはboardIndexを表すので、boardIndexだけで検索
       const targetTask = taskItems
         .map((item: any) => item.content)
-        .find(
-          (t: Task) =>
-            t.boardIndex?.toString() === taskParam ||
-            t.displayId === taskParam ||
-            t.id?.toString() === taskParam,
-        );
+        .find((t: Task) => t.boardIndex?.toString() === taskParam);
+
+      // 既に正しいタスクが選択されている場合はスキップ
+      if (targetTask && selectedTaskRef.current) {
+        // boardIndexで比較（これが一番確実）
+        if (targetTask.boardIndex === selectedTaskRef.current.boardIndex) {
+          console.log(
+            "🔵 [URL復元] 既に正しいタスクが選択されているのでスキップ",
+            {
+              targetTaskBoardIndex: targetTask.boardIndex,
+              selectedTaskBoardIndex: selectedTaskRef.current.boardIndex,
+            },
+          );
+          return;
+        }
+      }
 
       if (targetTask && targetTask.displayId !== selectedTask?.displayId) {
+        console.log("🔵 [URL復元] タスクを選択", {
+          targetTaskDisplayId: targetTask.displayId,
+          targetTaskBoardIndex: targetTask.boardIndex,
+        });
         setSelectedTask(targetTask);
         setSelectedMemo(null);
       }
@@ -297,11 +300,11 @@ export function TeamBoardDetailWrapper({
     setSelectedMemo(memo);
 
     // URLを更新（boardIndexを使用 - ボード内での連番）
-    // 新規作成時 (displayId === "new") はURL更新をスキップ
-    const targetMemoId = memo?.boardIndex?.toString() || memo?.displayId;
-    if (memo && targetMemoId && targetMemoId !== "new") {
+    // 新規作成時 (displayId === "new") またはboardIndexが未設定の場合はURL更新をスキップ
+    if (memo && memo.boardIndex && memo.boardIndex > 0) {
+      // boardIndexが存在する場合のみURL更新
       router.replace(
-        `/team/${customUrl}?tab=board&slug=${slug}&memo=${targetMemoId}`,
+        `/team/${customUrl}?tab=board&slug=${slug}&memo=${memo.boardIndex}`,
         { scroll: false },
       );
     } else if (!memo) {
@@ -309,27 +312,42 @@ export function TeamBoardDetailWrapper({
         scroll: false,
       });
     }
-    // 新規作成時はURL更新をスキップ（現在のmemoパラメータを維持）
+    // 新規作成時またはboardIndex未設定時はURL更新をスキップ
   };
 
   const handleSelectTask = (task: Task | DeletedTask | null) => {
+    console.log("🟢 [handleSelectTask] 呼び出し", {
+      task: task
+        ? {
+            displayId: task.displayId,
+            boardIndex: task.boardIndex,
+            id: task.id,
+          }
+        : null,
+    });
     setSelectedMemo(null);
     setSelectedTask(task);
 
     // URLを更新（boardIndexを使用 - ボード内での連番）
-    // 新規作成時 (displayId === "new") はURL更新をスキップ
-    const targetTaskId = task?.boardIndex?.toString() || task?.displayId;
-    if (task && targetTaskId && targetTaskId !== "new") {
+    // 新規作成時 (displayId === "new") またはboardIndexが未設定の場合はURL更新をスキップ
+    if (task && task.boardIndex && task.boardIndex > 0) {
+      console.log(`🟢 [handleSelectTask] URL更新実行: task=${task.boardIndex}`);
+      // boardIndexが存在する場合のみURL更新
       router.replace(
-        `/team/${customUrl}?tab=board&slug=${slug}&task=${targetTaskId}`,
+        `/team/${customUrl}?tab=board&slug=${slug}&task=${task.boardIndex}`,
         { scroll: false },
       );
     } else if (!task) {
+      console.log("🟢 [handleSelectTask] タスク選択解除、URL更新");
       router.replace(`/team/${customUrl}?tab=board&slug=${slug}`, {
         scroll: false,
       });
+    } else {
+      console.log("🟢 [handleSelectTask] boardIndex未設定、URL更新スキップ", {
+        boardIndex: task.boardIndex,
+      });
     }
-    // 新規作成時はURL更新をスキップ（現在のtaskパラメータを維持）
+    // 新規作成時またはboardIndex未設定時はURL更新をスキップ
   };
 
   const handleSelectDeletedMemo = (memo: DeletedMemo | null) => {

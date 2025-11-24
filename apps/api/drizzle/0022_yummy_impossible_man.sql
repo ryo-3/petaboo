@@ -1,1 +1,0 @@
-ALTER TABLE `team_attachments` RENAME COLUMN "attached_original_id" TO "attached_display_id";

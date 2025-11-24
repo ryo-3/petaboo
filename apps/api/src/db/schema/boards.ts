@@ -29,7 +29,7 @@ export const boardItems = sqliteTable("board_items", {
     .notNull()
     .references(() => boards.id, { onDelete: "cascade" }),
   itemType: text("item_type").notNull(), // 'memo' | 'task'
-  originalId: text("original_id").notNull(), // メモ/タスクのoriginalId
+  displayId: text("display_id").notNull(), // メモ/タスクのdisplayId
   deletedAt: integer("deleted_at", { mode: "timestamp" }),
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()
@@ -39,7 +39,7 @@ export const boardItems = sqliteTable("board_items", {
 export const deletedBoards = sqliteTable("deleted_boards", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   userId: text("user_id").notNull(),
-  originalId: integer("original_id").notNull(), // 元のboardsテーブルのID
+  displayId: text("display_id").notNull(), // 元のboardsテーブルのdisplayId
   name: text("name").notNull(),
   slug: text("slug").notNull(),
   description: text("description"),

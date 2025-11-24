@@ -118,17 +118,14 @@ async function sendMentionNotificationToSlack(
       boardId = boardItems[0].boardId;
     }
   } else if (comment.targetType === "board") {
-    // ボードコメントの場合は直接targetDisplayIdから取得
+    // ボードコメントの場合は直接targetDisplayIdから取得（ボードのdisplayIdはIDの文字列化）
     const boards = await db
       .select()
       .from(teamBoards)
       .where(
         and(
           eq(teamBoards.teamId, teamId),
-          or(
-            eq(teamBoards.displayId, comment.targetDisplayId),
-            eq(teamBoards.id, Number.parseInt(comment.targetDisplayId) || 0),
-          ),
+          eq(teamBoards.id, Number.parseInt(comment.targetDisplayId) || 0),
         ),
       )
       .limit(1);
@@ -299,7 +296,6 @@ async function sendMentionNotificationToSlack(
         and(
           eq(teamBoards.teamId, teamId),
           or(
-            eq(teamBoards.displayId, targetDisplayId),
             eq(teamBoards.slug, targetDisplayId),
             eq(teamBoards.id, Number.parseInt(targetDisplayId) || 0),
           ),
@@ -553,15 +549,14 @@ export const postComment = async (c: any) => {
       .select({
         id: teamBoards.id,
         slug: teamBoards.slug,
-        displayId: teamBoards.displayId,
       })
       .from(teamBoards)
       .where(eq(teamBoards.id, boardId))
       .limit(1);
 
     if (boards.length > 0) {
-      boardDisplayId = boards[0].displayId;
-      boardOriginalId = boards[0].displayId; // Phase 6で削除予定（displayIdと同じ値）
+      boardDisplayId = String(boards[0].id);
+      boardOriginalId = String(boards[0].id);
     }
   } else if (targetType === "board") {
     // targetDisplayIdから取得
@@ -569,15 +564,15 @@ export const postComment = async (c: any) => {
     if (!Number.isNaN(boardIdNumeric)) {
       const boards = await db
         .select({
+          id: teamBoards.id,
           slug: teamBoards.slug,
-          displayId: teamBoards.displayId,
         })
         .from(teamBoards)
         .where(eq(teamBoards.id, boardIdNumeric))
         .limit(1);
       if (boards.length > 0) {
-        boardDisplayId = boards[0].displayId;
-        boardOriginalId = boards[0].displayId; // Phase 6で削除予定（displayIdと同じ値）
+        boardDisplayId = String(boards[0].id);
+        boardOriginalId = String(boards[0].id);
       } else {
         boardDisplayId = targetDisplayId;
         boardOriginalId = targetDisplayId; // Phase 6で削除予定（displayIdと同じ値）

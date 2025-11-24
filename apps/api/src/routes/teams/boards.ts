@@ -175,7 +175,7 @@ export function createTeamBoardsAPI(app: AppType) {
               and(
                 eq(teamComments.teamId, parseInt(teamId)),
                 eq(teamComments.targetType, "board"),
-                eq(teamComments.targetboard.id.toString()),
+                eq(teamComments.targetDisplayId, board.id.toString()),
               ),
             );
           commentCount += boardComments.length;
@@ -831,7 +831,7 @@ export function createTeamBoardsAPI(app: AppType) {
           and(
             eq(teamComments.teamId, parseInt(teamId)),
             eq(teamComments.targetType, "board"),
-            eq(teamComments.targetboard[0].id.toString()),
+            eq(teamComments.targetDisplayId, board[0].id.toString()),
           ),
         );
       commentCount += boardComments.length;
@@ -1106,7 +1106,7 @@ export function createTeamBoardsAPI(app: AppType) {
           and(
             eq(teamComments.teamId, parseInt(teamId)),
             eq(teamComments.targetType, "board"),
-            eq(teamComments.targetboard[0].id.toString()),
+            eq(teamComments.targetDisplayId, board[0].id.toString()),
           ),
         );
       commentCount += boardComments.length;
@@ -1335,6 +1335,7 @@ export function createTeamBoardsAPI(app: AppType) {
         .values({
           boardId: parseInt(boardId),
           itemType: itemType,
+          originalId: displayId, // Phase 6で削除予定（暫定的にdisplayIdと同じ値）
           displayId: displayId,
         })
         .returning();
@@ -1614,7 +1615,7 @@ export function createTeamBoardsAPI(app: AppType) {
           and(
             eq(teamComments.teamId, parseInt(teamId)),
             eq(teamComments.targetType, "board"),
-            eq(teamComments.targetboard[0].id.toString()),
+            eq(teamComments.targetDisplayId, board[0].id.toString()),
           ),
         );
 

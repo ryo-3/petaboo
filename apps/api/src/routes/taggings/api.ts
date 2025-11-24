@@ -11,7 +11,6 @@ const TaggingSchema = z.object({
   id: z.number(),
   tagId: z.number(),
   targetType: z.enum(["memo", "task", "board"]),
-  targetDisplayId: z.string(), // Phase 6で削除予定
   targetDisplayId: z.string(),
   userId: z.string(),
   createdAt: z.number(),
@@ -21,7 +20,6 @@ const TaggingWithTagSchema = z.object({
   id: z.number(),
   tagId: z.number(),
   targetType: z.enum(["memo", "task", "board"]),
-  targetDisplayId: z.string(), // Phase 6で削除予定
   targetDisplayId: z.string(),
   userId: z.string(),
   createdAt: z.number(),
@@ -36,7 +34,6 @@ const TeamTaggingWithTagSchema = z.object({
   id: z.number(),
   tagId: z.number(),
   targetType: z.enum(["memo", "task", "board"]),
-  targetDisplayId: z.string(), // Phase 6で削除予定
   targetDisplayId: z.string(),
   teamId: z.number(),
   userId: z.string(),
@@ -63,7 +60,6 @@ export function createAPI(app: AppType) {
     request: {
       query: z.object({
         targetType: z.enum(["memo", "task", "board"]).optional(),
-        targetDisplayId: z.string().optional(),
         targetDisplayId: z.string().optional(),
         tagId: z.string().optional(),
         includeTag: z.string().optional(),
@@ -100,14 +96,8 @@ export function createAPI(app: AppType) {
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const {
-      targetType,
-      targetDisplayId,
-      targetDisplayId,
-      tagId,
-      includeTag,
-      teamId,
-    } = c.req.valid("query");
+    const { targetType, targetDisplayId, tagId, includeTag, teamId } =
+      c.req.valid("query");
     const db = c.get("db");
 
     // チームIDが指定された場合はチームタグ付けを取得
@@ -139,7 +129,6 @@ export function createAPI(app: AppType) {
           id: teamTaggings.id,
           tagId: teamTaggings.tagId,
           targetType: teamTaggings.targetType,
-          targetDisplayId: teamTaggings.targetDisplayId, // Phase 6で削除予定
           targetDisplayId: teamTaggings.targetDisplayId,
           teamId: teamTaggings.teamId,
           userId: teamTaggings.userId,
@@ -373,7 +362,7 @@ export function createAPI(app: AppType) {
       const newTeamTagging = {
         tagId,
         targetType,
-        targetDisplayId: targetDisplayId, // Phase 6で削除予定（displayIdと同じ値）
+        targetOriginalId: targetDisplayId, // Phase 6で削除予定（暫定的にdisplayIdと同じ値）
         targetDisplayId,
         teamId: teamIdNum,
         userId: auth.userId,

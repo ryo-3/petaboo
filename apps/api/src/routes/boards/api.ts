@@ -21,14 +21,14 @@ import type {
 } from "../../db/schema/boards";
 import type { DatabaseType, Env, AppType } from "../../types/common";
 
-// ID→originalId変換ユーティリティ
+// ID→displayId変換ユーティリティ
 async function getOriginalId(
   itemId: string | number,
   itemType: "memo" | "task",
   userId: string,
   db: DatabaseType,
 ): Promise<string | null> {
-  // itemIdはIDの文字列版または数値版として受け取り、originalIdに変換する
+  // itemIdはIDの文字列版または数値版として受け取り、displayIdに変換する
   const numericId = typeof itemId === "string" ? parseInt(itemId) : itemId;
   if (isNaN(numericId)) {
     return null;
@@ -36,24 +36,24 @@ async function getOriginalId(
 
   if (itemType === "memo") {
     const memo = await db
-      .select({ id: memos.id, originalId: memos.originalId })
+      .select({ id: memos.id, displayId: memos.displayId })
       .from(memos)
       .where(and(eq(memos.id, numericId), eq(memos.userId, userId)))
       .limit(1);
     if (memo.length > 0) {
-      // originalIdがあればそれを返し、なければIDから生成
-      return memo[0].originalId || memo[0].id.toString();
+      // displayIdがあればそれを返し、なければIDから生成
+      return memo[0].displayId || memo[0].id.toString();
     }
     return null;
   } else {
     const task = await db
-      .select({ id: tasks.id, originalId: tasks.originalId })
+      .select({ id: tasks.id, displayId: tasks.displayId })
       .from(tasks)
       .where(and(eq(tasks.id, numericId), eq(tasks.userId, userId)))
       .limit(1);
     if (task.length > 0) {
-      // originalIdがあればそれを返し、なければIDから生成
-      return task[0].originalId || task[0].id.toString();
+      // displayIdがあればそれを返し、なければIDから生成
+      return task[0].displayId || task[0].id.toString();
     }
     return null;
   }
@@ -144,13 +144,13 @@ const BoardItemSchema = z.object({
   id: z.number(),
   boardId: z.number(),
   itemType: z.enum(["memo", "task"]),
-  originalId: z.string(),
+  displayId: z.string(),
   createdAt: z.number(),
 });
 
 const AddItemToBoardSchema = z.object({
   itemType: z.enum(["memo", "task"]),
-  itemId: z.string(), // originalIdを文字列として受け取る
+  itemId: z.string(), // displayIdを文字列として受け取る
 });
 
 export function createAPI(app: AppType) {
@@ -252,7 +252,7 @@ export function createAPI(app: AppType) {
               .from(memos)
               .where(
                 and(
-                  eq(memos.originalId, item.originalId),
+                  eq(memos.displayId, item.displayId),
                   eq(memos.userId, auth.userId),
                 ),
               )
@@ -275,7 +275,7 @@ export function createAPI(app: AppType) {
               .from(tasks)
               .where(
                 and(
-                  eq(tasks.originalId, item.originalId),
+                  eq(tasks.displayId, item.displayId),
                   eq(tasks.userId, auth.userId),
                 ),
               )
@@ -625,7 +625,7 @@ export function createAPI(app: AppType) {
     const deletedBoard: NewDeletedBoard = {
       id: board[0].id,
       userId: board[0].userId,
-      originalId: board[0].id,
+      displayId: board[0].id,
       name: board[0].name,
       slug: board[0].slug,
       description: board[0].description,
@@ -705,7 +705,7 @@ export function createAPI(app: AppType) {
       .from(deletedBoards)
       .where(
         and(
-          eq(deletedBoards.originalId, boardId),
+          eq(deletedBoards.displayId, boardId),
           eq(deletedBoards.userId, auth.userId),
         ),
       )
@@ -735,7 +735,7 @@ export function createAPI(app: AppType) {
     };
 
     const result = await db.insert(boards).values(restoredBoard).returning();
-    await db.delete(deletedBoards).where(eq(deletedBoards.originalId, boardId));
+    await db.delete(deletedBoards).where(eq(deletedBoards.displayId, boardId));
 
     return c.json(result[0]);
   });
@@ -936,20 +936,20 @@ export function createAPI(app: AppType) {
             .from(memos)
             .where(
               and(
-                eq(memos.originalId, item.originalId),
+                eq(memos.displayId, item.displayId),
                 eq(memos.userId, auth.userId),
               ),
             )
             .limit(1);
-          // IMPORTANT: originalIdを文字列型として確実に返す（Drizzleが数値に変換する場合があるため）
+          // IMPORTANT: displayIdを文字列型として確実に返す（Drizzleが数値に変換する場合があるため）
           content = memo[0]
-            ? { ...memo[0], originalId: String(memo[0].originalId) }
+            ? { ...memo[0], displayId: String(memo[0].displayId) }
             : null;
         } else {
           const task = await db
             .select({
               id: tasks.id,
-              originalId: tasks.originalId,
+              displayId: tasks.displayId,
               uuid: tasks.uuid,
               userId: tasks.userId,
               title: tasks.title,
@@ -965,25 +965,25 @@ export function createAPI(app: AppType) {
             .from(tasks)
             .where(
               and(
-                eq(tasks.originalId, item.originalId),
+                eq(tasks.displayId, item.displayId),
                 eq(tasks.userId, auth.userId),
               ),
             )
             .limit(1);
-          // IMPORTANT: originalIdを文字列型として確実に返す（Drizzleが数値に変換する場合があるため）
+          // IMPORTANT: displayIdを文字列型として確実に返す（Drizzleが数値に変換する場合があるため）
           content = task[0]
-            ? { ...task[0], originalId: String(task[0].originalId) }
+            ? { ...task[0], displayId: String(task[0].displayId) }
             : null;
         }
 
-        // IMPORTANT: contentのoriginalIdも必ず文字列として返す
+        // IMPORTANT: contentのdisplayIdも必ず文字列として返す
         const safeContent = content
           ? {
               ...content,
-              originalId:
-                typeof content.originalId === "string"
-                  ? content.originalId
-                  : String(content.originalId || content.id),
+              displayId:
+                typeof content.displayId === "string"
+                  ? content.displayId
+                  : String(content.displayId || content.id),
             }
           : null;
 
@@ -991,7 +991,7 @@ export function createAPI(app: AppType) {
           id: item.id,
           itemType: item.itemType,
           itemId: content?.id || 0, // フロントエンド互換性のため通常のIDを返す
-          originalId: item.originalId,
+          displayId: item.displayId,
           content: safeContent,
         };
       }),
@@ -1046,7 +1046,7 @@ export function createAPI(app: AppType) {
             .from(deletedMemos)
             .where(
               and(
-                eq(deletedMemos.originalId, item.originalId),
+                eq(deletedMemos.displayId, item.displayId),
                 eq(deletedMemos.userId, auth.userId),
               ),
             )
@@ -1059,7 +1059,7 @@ export function createAPI(app: AppType) {
             .from(deletedTasks)
             .where(
               and(
-                eq(deletedTasks.originalId, item.originalId),
+                eq(deletedTasks.displayId, item.displayId),
                 eq(deletedTasks.userId, auth.userId),
               ),
             )
@@ -1071,7 +1071,7 @@ export function createAPI(app: AppType) {
           id: item.id,
           itemType: item.itemType,
           itemId: content?.id || item.id, // content が null の場合は board_item の id を使用
-          originalId: item.originalId,
+          displayId: item.displayId,
           deletedAt:
             typeof item.deletedAt === "object"
               ? Math.floor(item.deletedAt.getTime() / 1000)
@@ -1207,32 +1207,32 @@ export function createAPI(app: AppType) {
       // チームボードの場合はteamIdを取得
       const teamId = isTeamBoard ? teamBoard[0].teamId : null;
 
-      // アイテムの存在確認と所有権確認、originalIdを取得
-      // itemIdが既にoriginalId形式（文字列）の場合はそのまま使い、数値の場合は変換
-      let originalId: string | null = null;
+      // アイテムの存在確認と所有権確認、displayIdを取得
+      // itemIdが既にdisplayId形式（文字列）の場合はそのまま使い、数値の場合は変換
+      let displayId: string | null = null;
 
       // チームボードの場合はチームアイテムから検索
       if (isTeamBoard && teamId) {
         if (itemType === "memo") {
-          // チームメモからoriginalIdを検索
+          // チームメモからdisplayIdを検索
           const teamMemoByOriginalId = await db
-            .select({ originalId: teamMemos.originalId })
+            .select({ displayId: teamMemos.displayId })
             .from(teamMemos)
             .where(
               and(
-                eq(teamMemos.originalId, itemId.toString()),
+                eq(teamMemos.displayId, itemId.toString()),
                 eq(teamMemos.teamId, teamId),
               ),
             )
             .limit(1);
           if (teamMemoByOriginalId.length > 0) {
-            originalId = teamMemoByOriginalId[0].originalId;
+            displayId = teamMemoByOriginalId[0].displayId;
           } else {
             // IDから検索
             const numericId = parseInt(itemId);
             if (!isNaN(numericId)) {
               const teamMemoById = await db
-                .select({ originalId: teamMemos.originalId })
+                .select({ displayId: teamMemos.displayId })
                 .from(teamMemos)
                 .where(
                   and(
@@ -1242,30 +1242,30 @@ export function createAPI(app: AppType) {
                 )
                 .limit(1);
               if (teamMemoById.length > 0) {
-                originalId = teamMemoById[0].originalId;
+                displayId = teamMemoById[0].displayId;
               }
             }
           }
         } else {
-          // チームタスクからoriginalIdを検索
+          // チームタスクからdisplayIdを検索
           const teamTaskByOriginalId = await db
-            .select({ originalId: teamTasks.originalId })
+            .select({ displayId: teamTasks.displayId })
             .from(teamTasks)
             .where(
               and(
-                eq(teamTasks.originalId, itemId.toString()),
+                eq(teamTasks.displayId, itemId.toString()),
                 eq(teamTasks.teamId, teamId),
               ),
             )
             .limit(1);
           if (teamTaskByOriginalId.length > 0) {
-            originalId = teamTaskByOriginalId[0].originalId;
+            displayId = teamTaskByOriginalId[0].displayId;
           } else {
             // IDから検索
             const numericId = parseInt(itemId);
             if (!isNaN(numericId)) {
               const teamTaskById = await db
-                .select({ originalId: teamTasks.originalId })
+                .select({ displayId: teamTasks.displayId })
                 .from(teamTasks)
                 .where(
                   and(
@@ -1275,51 +1275,51 @@ export function createAPI(app: AppType) {
                 )
                 .limit(1);
               if (teamTaskById.length > 0) {
-                originalId = teamTaskById[0].originalId;
+                displayId = teamTaskById[0].displayId;
               }
             }
           }
         }
       } else {
         // 個人ボードの場合は個人アイテムから検索
-        // まずitemIdをoriginalIdとして扱ってみる
+        // まずitemIdをdisplayIdとして扱ってみる
         if (itemType === "memo") {
           const memoByOriginalId = await db
-            .select({ originalId: memos.originalId })
+            .select({ displayId: memos.displayId })
             .from(memos)
             .where(
               and(
-                eq(memos.originalId, itemId.toString()),
+                eq(memos.displayId, itemId.toString()),
                 eq(memos.userId, auth.userId),
               ),
             )
             .limit(1);
           if (memoByOriginalId.length > 0) {
-            originalId = memoByOriginalId[0].originalId;
+            displayId = memoByOriginalId[0].displayId;
           }
         } else {
           const taskByOriginalId = await db
-            .select({ originalId: tasks.originalId })
+            .select({ displayId: tasks.displayId })
             .from(tasks)
             .where(
               and(
-                eq(tasks.originalId, itemId.toString()),
+                eq(tasks.displayId, itemId.toString()),
                 eq(tasks.userId, auth.userId),
               ),
             )
             .limit(1);
           if (taskByOriginalId.length > 0) {
-            originalId = taskByOriginalId[0].originalId;
+            displayId = taskByOriginalId[0].displayId;
           }
         }
 
-        // originalIdとして見つからなかった場合は、数値IDとして処理
-        if (!originalId) {
-          originalId = await getOriginalId(itemId, itemType, auth.userId, db);
+        // displayIdとして見つからなかった場合は、数値IDとして処理
+        if (!displayId) {
+          displayId = await getOriginalId(itemId, itemType, auth.userId, db);
         }
       }
 
-      if (!originalId) {
+      if (!displayId) {
         return c.json(
           { error: `${itemType === "memo" ? "Memo" : "Task"} not found` },
           404,
@@ -1335,7 +1335,7 @@ export function createAPI(app: AppType) {
             and(
               eq(teamBoardItems.boardId, boardId),
               eq(teamBoardItems.itemType, itemType),
-              eq(teamBoardItems.originalId, originalId),
+              eq(teamBoardItems.displayId, displayId),
               isNull(teamBoardItems.deletedAt),
             ),
           )
@@ -1348,7 +1348,7 @@ export function createAPI(app: AppType) {
         const newItem = {
           boardId,
           itemType,
-          originalId,
+          displayId,
           createdAt: new Date(),
         };
 
@@ -1375,7 +1375,7 @@ export function createAPI(app: AppType) {
             and(
               eq(boardItems.boardId, boardId),
               eq(boardItems.itemType, itemType),
-              eq(boardItems.originalId, originalId),
+              eq(boardItems.displayId, displayId),
               isNull(boardItems.deletedAt),
             ),
           )
@@ -1388,7 +1388,7 @@ export function createAPI(app: AppType) {
         const newItem: NewBoardItem = {
           boardId,
           itemType,
-          originalId,
+          displayId,
           createdAt: new Date(),
         };
 
@@ -1483,8 +1483,8 @@ export function createAPI(app: AppType) {
       return c.json({ error: "Board not found" }, 404);
     }
 
-    // itemIdをoriginalIdとして直接使用（文字列のまま）
-    const originalId = rawItemId;
+    // itemIdをdisplayIdとして直接使用（文字列のまま）
+    const displayId = rawItemId;
 
     // 削除前に存在確認
     const existingItem = await db
@@ -1494,7 +1494,7 @@ export function createAPI(app: AppType) {
         and(
           eq(boardItems.boardId, boardId),
           eq(boardItems.itemType, itemType),
-          eq(boardItems.originalId, originalId),
+          eq(boardItems.displayId, displayId),
         ),
       )
       .limit(1);
@@ -1510,7 +1510,7 @@ export function createAPI(app: AppType) {
         and(
           eq(boardItems.boardId, boardId),
           eq(boardItems.itemType, itemType),
-          eq(boardItems.originalId, originalId),
+          eq(boardItems.displayId, displayId),
         ),
       );
 
@@ -1574,8 +1574,8 @@ export function createAPI(app: AppType) {
     const { itemType, itemId } = c.req.valid("param");
     const db = c.get("db");
 
-    // itemIdをoriginalIdとして直接使用（フロント側から既にoriginalIdが渡されている）
-    const originalId = itemId;
+    // itemIdをdisplayIdとして直接使用（フロント側から既にdisplayIdが渡されている）
+    const displayId = itemId;
 
     // まずチームアイテムかどうかを確認
     const isTeamItem =
@@ -1583,12 +1583,12 @@ export function createAPI(app: AppType) {
         ? await db
             .select({ id: teamMemos.id })
             .from(teamMemos)
-            .where(eq(teamMemos.originalId, originalId))
+            .where(eq(teamMemos.displayId, displayId))
             .limit(1)
         : await db
             .select({ id: teamTasks.id })
             .from(teamTasks)
-            .where(eq(teamTasks.originalId, originalId))
+            .where(eq(teamTasks.displayId, displayId))
             .limit(1);
 
     if (isTeamItem.length > 0) {
@@ -1600,7 +1600,7 @@ export function createAPI(app: AppType) {
         .where(
           and(
             eq(teamBoardItems.itemType, itemType),
-            eq(teamBoardItems.originalId, originalId),
+            eq(teamBoardItems.displayId, displayId),
             isNull(teamBoardItems.deletedAt),
           ),
         )
@@ -1617,7 +1617,7 @@ export function createAPI(app: AppType) {
         .where(
           and(
             eq(boardItems.itemType, itemType),
-            eq(boardItems.originalId, originalId),
+            eq(boardItems.displayId, displayId),
             eq(boards.userId, auth.userId),
             isNull(boardItems.deletedAt),
           ),
@@ -1648,8 +1648,8 @@ export function createAPI(app: AppType) {
                 boardId: z.number(),
                 boardName: z.string(),
                 itemType: z.enum(["memo", "task"]),
-                itemId: z.string(), // originalId
-                originalId: z.string(),
+                itemId: z.string(), // displayId
+                displayId: z.string(),
                 addedAt: z.number(),
               }),
             ),
@@ -1717,8 +1717,8 @@ export function createAPI(app: AppType) {
             boardId: teamBoardItems.boardId,
             boardName: teamBoards.name,
             itemType: teamBoardItems.itemType,
-            itemId: teamBoardItems.originalId,
-            originalId: teamBoardItems.originalId,
+            itemId: teamBoardItems.displayId,
+            displayId: teamBoardItems.displayId,
             addedAt: teamBoardItems.createdAt,
           })
           .from(teamBoardItems)
@@ -1734,8 +1734,8 @@ export function createAPI(app: AppType) {
             boardId: boardItems.boardId,
             boardName: boards.name,
             itemType: boardItems.itemType,
-            itemId: boardItems.originalId, // itemIdの代わりにoriginalIdを使用
-            originalId: boardItems.originalId,
+            itemId: boardItems.displayId, // itemIdの代わりにdisplayIdを使用
+            displayId: boardItems.displayId,
             addedAt: boardItems.createdAt,
           })
           .from(boardItems)
@@ -1824,17 +1824,17 @@ export function createAPI(app: AppType) {
       return c.json({ error: "Board not found" }, 404);
     }
 
-    // itemIdからoriginalIdを取得（削除済みアイテムなので削除済みテーブルも確認）
-    let originalId: string | null = null;
+    // itemIdからdisplayIdを取得（削除済みアイテムなので削除済みテーブルも確認）
+    let displayId: string | null = null;
 
     // まず通常テーブルから確認
-    originalId = await getOriginalId(itemId, itemType, auth.userId, db);
+    displayId = await getOriginalId(itemId, itemType, auth.userId, db);
 
     // 通常テーブルにない場合は削除済みテーブルから確認
-    if (!originalId) {
+    if (!displayId) {
       if (itemType === "memo") {
         const deletedMemo = await db
-          .select({ originalId: deletedMemos.originalId })
+          .select({ displayId: deletedMemos.displayId })
           .from(deletedMemos)
           .where(
             and(
@@ -1843,10 +1843,10 @@ export function createAPI(app: AppType) {
             ),
           )
           .limit(1);
-        originalId = deletedMemo.length > 0 ? deletedMemo[0].originalId : null;
+        displayId = deletedMemo.length > 0 ? deletedMemo[0].displayId : null;
       } else {
         const deletedTask = await db
-          .select({ originalId: deletedTasks.originalId })
+          .select({ displayId: deletedTasks.displayId })
           .from(deletedTasks)
           .where(
             and(
@@ -1855,11 +1855,11 @@ export function createAPI(app: AppType) {
             ),
           )
           .limit(1);
-        originalId = deletedTask.length > 0 ? deletedTask[0].originalId : null;
+        displayId = deletedTask.length > 0 ? deletedTask[0].displayId : null;
       }
     }
 
-    if (!originalId) {
+    if (!displayId) {
       return c.json({ error: "Item not found" }, 404);
     }
 
@@ -1871,7 +1871,7 @@ export function createAPI(app: AppType) {
         and(
           eq(boardItems.boardId, boardId),
           eq(boardItems.itemType, itemType),
-          eq(boardItems.originalId, originalId),
+          eq(boardItems.displayId, displayId),
           isNotNull(boardItems.deletedAt), // 削除済みアイテムのみ
         ),
       );

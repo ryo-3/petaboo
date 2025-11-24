@@ -606,7 +606,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     // URLを更新
     const params = new URLSearchParams(searchParams.toString());
     if (memo) {
-      params.set("memo", memo.id.toString());
+      params.set("memo", memo.displayId);
       // メモ選択時は必ずmemosタブに
       params.set("tab", "memos");
       // タスクパラメータを削除
@@ -633,7 +633,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     // URLを更新
     const params = new URLSearchParams(searchParams.toString());
     if (task) {
-      params.set("task", task.id.toString());
+      params.set("task", task.displayId);
       // タスク選択時は必ずtasksタブに
       params.set("tab", "tasks");
       // メモパラメータを削除
@@ -660,7 +660,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     // URLを更新
     const params = new URLSearchParams(searchParams.toString());
     if (memo) {
-      params.set("memo", memo.id.toString());
+      params.set("memo", memo.displayId);
       params.set("tab", "memos");
       // タスクパラメータを削除
       params.delete("task");
@@ -683,7 +683,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     // URLを更新
     const params = new URLSearchParams(searchParams.toString());
     if (task) {
-      params.set("task", task.id.toString());
+      params.set("task", task.displayId);
       params.set("tab", "tasks");
       // メモパラメータを削除
       params.delete("memo");

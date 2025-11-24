@@ -7,8 +7,12 @@ import { boardItems } from "../../db/schema/boards";
 import { taggings } from "../../db/schema/tags";
 import { teamNotifications } from "../../db/schema/team/notifications";
 import { databaseMiddleware } from "../../middleware/database";
+import { generateOriginalId, generateUuid } from "../../utils/originalId";
 
-const app = new OpenAPIHono();
+const app = new OpenAPIHono<{
+  Bindings: { DB: D1Database };
+  Variables: { db: any };
+}>();
 
 // データベースミドルウェアを適用（最初に）
 app.use("*", databaseMiddleware);
@@ -19,7 +23,6 @@ app.use("*", clerkMiddleware());
 // 共通スキーマ定義
 const TaskSchema = z.object({
   id: z.number(),
-  displayId: z.string(),
   displayId: z.string(),
   title: z.string(),
   description: z.string().nullable(),
@@ -193,13 +196,13 @@ app.openapi(
         desc(tasks.createdAt),
       );
 
-    // IMPORTANT: originalIdを文字列型として確実に返す（Drizzleが数値に変換する場合があるため）
-    const tasksWithStringOriginalId = result.map((task) => ({
+    // IMPORTANT: displayIdを文字列型として確実に返す（Drizzleが数値に変換する場合があるため）
+    const tasksWithStringDisplayId = result.map((task) => ({
       ...task,
       displayId: String(task.displayId || task.id),
     }));
 
-    return c.json(tasksWithString200);
+    return c.json(tasksWithStringDisplayId);
   },
 );
 
@@ -280,7 +283,6 @@ app.openapi(
     const insertData = {
       userId: auth.userId,
       displayId: "", // 後で更新
-      displayId: "", // 後で更新（個人用はoriginalIdと同じ）
       uuid: generateUuid(), // UUID生成
       title,
       description,
@@ -297,13 +299,9 @@ app.openapi(
       .values(insertData)
       .returning({ id: tasks.id });
 
-    // displayId と displayId を生成して更新
+    // displayId を生成して更新
     const displayId = generateOriginalId(result[0].id);
-    const displayId = displayId; // 個人用は displayId と同じ
-    await db
-      .update(tasks)
-      .set({ displayId, displayId })
-      .where(eq(tasks.id, result[0].id));
+    await db.update(tasks).set({ displayId }).where(eq(tasks.id, result[0].id));
 
     // 作成されたタスクを取得して返す
     const newTask = await db
@@ -522,7 +520,7 @@ app.openapi(
         .where(
           and(
             eq(teamNotifications.targetType, "task"),
-            eq(teamNotifications.targettask.displayId),
+            eq(teamNotifications.targetDisplayId, task.displayId),
           ),
         );
 
@@ -804,8 +802,7 @@ app.openapi(
         .insert(tasks)
         .values({
           userId: auth.userId,
-          displayId: deletedTask.displayId, // 一旦削除前のoriginalIdで復元
-          displayId: deletedTask.displayId || deletedTask.displayId, // displayIdも復元（既存データ用フォールバック）
+          displayId: deletedTask.displayId, // displayIdを復元
           uuid: deletedTask.uuid, // UUIDも復元
           title: deletedTask.title,
           description: deletedTask.description,
@@ -951,7 +948,6 @@ app.openapi(
             .values({
               userId: auth.userId,
               displayId: "", // 後で更新
-              displayId: "", // 後で更新（個人用はoriginalIdと同じ）
               uuid: generateUuid(),
               title,
               description: description || null,
@@ -964,12 +960,11 @@ app.openapi(
             })
             .returning({ id: tasks.id });
 
-          // displayId と displayId を生成して更新
+          // displayId を生成して更新
           const displayId = generateOriginalId(result[0].id);
-          const displayId = displayId; // 個人用は displayId と同じ
           await db
             .update(tasks)
-            .set({ displayId, displayId })
+            .set({ displayId })
             .where(eq(tasks.id, result[0].id));
 
           imported++;

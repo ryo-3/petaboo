@@ -27,7 +27,7 @@ const TeamAttachmentSchema = z.object({
   userId: z.string(),
   attachedTo: z.enum(["memo", "task", "comment"]),
   attachedDisplayId: z.string(),
-  originalId: z.string(),
+  displayId: z.string(),
   fileName: z.string(),
   fileSize: z.number(),
   mimeType: z.string(),
@@ -118,7 +118,7 @@ export const getAttachments = async (c: any) => {
       )
       .orderBy(teamAttachments.createdAt);
   } else {
-    // 個人モード（originalIdを使用）
+    // 個人モード（displayIdを使用）
     results = await db
       .select()
       .from(attachments)
@@ -126,7 +126,7 @@ export const getAttachments = async (c: any) => {
         and(
           eq(attachments.userId, auth.userId),
           eq(attachments.attachedTo, attachedTo as "memo" | "task"),
-          eq(attachments.originalId, attachedDisplayId),
+          eq(attachments.displayId, attachedDisplayId),
           isNull(attachments.deletedAt),
         ),
       )
@@ -338,7 +338,7 @@ export const uploadAttachment = async (c: any) => {
         ),
       );
   } else {
-    // 個人モード（originalIdを使用）
+    // 個人モード（displayIdを使用）
     existingCount = await db
       .select({ count: sql<number>`count(*)` })
       .from(attachments)
@@ -346,7 +346,7 @@ export const uploadAttachment = async (c: any) => {
         and(
           eq(attachments.userId, auth.userId),
           eq(attachments.attachedTo, attachedTo as "memo" | "task"),
-          eq(attachments.originalId, attachedDisplayId),
+          eq(attachments.displayId, attachedDisplayId),
           isNull(attachments.deletedAt),
         ),
       );
@@ -388,7 +388,7 @@ export const uploadAttachment = async (c: any) => {
 
   // DB保存（URLはWorker経由アクセス用に後で生成）
   const createdAt = Date.now();
-  const originalId = `${createdAt}-${Math.random().toString(36).substring(2, 10)}`;
+  const displayId = `${createdAt}-${Math.random().toString(36).substring(2, 10)}`;
 
   let result;
   if (teamId) {
@@ -400,7 +400,8 @@ export const uploadAttachment = async (c: any) => {
         userId: auth.userId,
         attachedTo,
         attachedDisplayId,
-        originalId,
+        originalId: displayId, // Phase 6で削除予定（暫定的にdisplayIdと同じ値）
+        displayId,
         fileName: file.name,
         fileSize: file.size,
         mimeType: file.type,
@@ -411,14 +412,14 @@ export const uploadAttachment = async (c: any) => {
       })
       .returning();
   } else {
-    // 個人モード（originalIdを使用）
+    // 個人モード（displayIdを使用）
     result = await db
       .insert(attachments)
       .values({
         userId: auth.userId,
         attachedTo: attachedTo as "memo" | "task",
-        attachedId: 0, // originalIdで管理するためダミー
-        originalId: attachedDisplayId,
+        attachedId: 0, // displayIdで管理するためダミー
+        displayId: attachedDisplayId,
         fileName: file.name,
         fileSize: file.size,
         mimeType: file.type,

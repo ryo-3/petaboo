@@ -7,7 +7,7 @@ import { memos, deletedMemos } from "../../db/schema/memos";
 import { boardItems } from "../../db/schema/boards";
 import { taggings } from "../../db/schema/tags";
 import { teamNotifications } from "../../db/schema/team/notifications";
-import { generateDisplayId, migrate } from "../../utils/displayId";
+import { generateOriginalId, generateUuid } from "../../utils/originalId";
 
 const app = new OpenAPIHono<{
   Bindings: { DB: D1Database };
@@ -23,7 +23,6 @@ app.use("*", clerkMiddleware());
 // 共通スキーマ定義
 const MemoSchema = z.object({
   id: z.number(),
-  displayId: z.string(),
   displayId: z.string(),
   title: z.string(),
   content: z.string().nullable(),
@@ -199,7 +198,6 @@ app.openapi(
       .values({
         userId: auth.userId,
         displayId: "", // 後で更新
-        displayId: "", // 後で更新（個人用はoriginalIdと同じ）
         uuid: generateUuid(), // UUID生成
         title,
         content,
@@ -207,18 +205,16 @@ app.openapi(
       })
       .returning({ id: memos.id });
 
-    // displayId と displayId を生成して更新
+    // displayId を生成して更新
     const displayId = generateOriginalId(result[0].id);
-    const displayId = displayId; // 個人用は displayId と同じ
     await db
       .update(memos)
-      .set({ displayId, displayId, updatedAt: createdAt })
+      .set({ displayId, updatedAt: createdAt })
       .where(eq(memos.id, result[0].id));
 
     // 作成されたメモの完全なオブジェクトを返す
     const newMemo = {
       id: result[0].id,
-      displayId,
       displayId,
       title,
       content: content || "",
@@ -425,7 +421,7 @@ app.openapi(
         .where(
           and(
             eq(teamNotifications.targetType, "memo"),
-            eq(teamNotifications.targetnote.displayId),
+            eq(teamNotifications.targetDisplayId, note.displayId),
           ),
         );
 
@@ -698,8 +694,7 @@ app.openapi(
         .insert(memos)
         .values({
           userId: auth.userId,
-          displayId: deletedNote.displayId, // 一旦削除前のoriginalIdで復元
-          displayId: deletedNote.displayId || deletedNote.displayId, // displayIdも復元（既存データ用フォールバック）
+          displayId: deletedNote.displayId, // displayIdを復元
           uuid: deletedNote.uuid, // UUIDも復元
           title: deletedNote.title,
           content: deletedNote.content,
@@ -843,7 +838,6 @@ app.openapi(
             .values({
               userId: auth.userId,
               displayId: "", // 後で更新
-              displayId: "", // 後で更新（個人用はoriginalIdと同じ）
               uuid: generateUuid(),
               title,
               content: combinedContent,
@@ -851,12 +845,11 @@ app.openapi(
             })
             .returning({ id: memos.id });
 
-          // displayId と displayId を生成して更新
+          // displayId を生成して更新
           const displayId = generateOriginalId(result[0].id);
-          const displayId = displayId; // 個人用は displayId と同じ
           await db
             .update(memos)
-            .set({ displayId, displayId })
+            .set({ displayId })
             .where(eq(memos.id, result[0].id));
 
           imported++;

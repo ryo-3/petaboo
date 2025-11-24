@@ -7,7 +7,10 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594";
  * ユーザーログイン時に自動でusersテーブルに登録するフック
  * セッション中に1回のみ実行される
  */
-export function useEnsureUser() {
+export function useEnsureUser(): {
+  isEnsured: boolean;
+  user: ReturnType<typeof useUser>["user"];
+} {
   const { user, isLoaded } = useUser();
   const { getToken } = useAuth();
   const [hasEnsured, setHasEnsured] = useState(false);

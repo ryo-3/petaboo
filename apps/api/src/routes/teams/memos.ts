@@ -9,6 +9,7 @@ import { teamComments } from "../../db/schema/team/comments";
 import { teamAttachments } from "../../db/schema/team/attachments";
 import { users } from "../../db/schema/users";
 import { generateMemoDisplayId } from "../../utils/displayId";
+import { generateUuid } from "../../utils/originalId";
 import {
   getTeamMemoMemberJoin,
   getTeamMemoSelectFields,
@@ -28,8 +29,7 @@ const TeamMemoSchema = z.object({
   id: z.number(),
   teamId: z.number(),
   userId: z.string(),
-  originalId: z.string(),
-  displayId: z.string(), // 🆕 displayId追加
+  displayId: z.string(),
   uuid: z.string().nullable(),
   title: z.string(),
   content: z.string().nullable(),
@@ -122,7 +122,7 @@ app.openapi(
           SELECT COUNT(*)
           FROM ${teamComments}
           WHERE ${teamComments.targetType} = 'memo'
-            AND ${teamComments.targetOriginalId} = ${teamMemos.originalId}
+            AND ${teamComments.targetOriginalId} = ${teamMemos.displayId}
             AND ${teamComments.teamId} = ${teamMemos.teamId}
         )`.as("commentCount"),
       })
@@ -469,12 +469,16 @@ app.openapi(
 
     // D1はトランザクションをサポートしないため、順次実行
     try {
+      console.log(
+        `🗑️ [削除開始] id=${id} displayId="${memo.displayId}" originalId="${memo.originalId}"`,
+      );
+
       // 削除済みテーブルに挿入
       await db.insert(teamDeletedMemos).values({
         teamId,
         userId: memo.userId,
         originalId: memo.originalId,
-        displayId: memo.displayId, // 🆕 displayId追加
+        displayId: memo.displayId,
         uuid: memo.uuid,
         title: memo.title,
         content: memo.content,
@@ -483,11 +487,15 @@ app.openapi(
         deletedAt: Math.floor(Date.now() / 1000),
       });
 
+      console.log(
+        `💾 [削除テーブルに保存] displayId="${memo.displayId}"を保持`,
+      );
+
       // 元テーブルから削除
       await db.delete(teamMemos).where(eq(teamMemos.id, id));
 
       console.log(
-        `🗑️ チームメモ削除成功: id=${id}, teamId=${teamId}, title=${memo.title}`,
+        `✅ チームメモ削除成功: id=${id}, teamId=${teamId}, displayId="${memo.displayId}"`,
       );
     } catch (error) {
       console.error("チームメモ削除エラー:", error);
@@ -517,7 +525,6 @@ app.openapi(
               z.object({
                 id: z.number(),
                 teamId: z.number(),
-                originalId: z.string(),
                 displayId: z.string(),
                 uuid: z.string().nullable(),
                 title: z.string(),
@@ -577,9 +584,7 @@ app.openapi(
         .select({
           id: teamDeletedMemos.id,
           teamId: teamDeletedMemos.teamId,
-          originalId: teamDeletedMemos.originalId,
           displayId: teamDeletedMemos.displayId,
-          uuid: teamDeletedMemos.uuid,
           title: teamDeletedMemos.title,
           content: teamDeletedMemos.content,
           createdAt: teamDeletedMemos.createdAt,
@@ -600,7 +605,7 @@ app.openapi(
               and(
                 eq(teamComments.teamId, teamId),
                 eq(teamComments.targetType, "memo"),
-                eq(teamComments.targetmemo.originalId),
+                eq(teamComments.targetDisplayId, memo.displayId),
               ),
             );
 
@@ -736,13 +741,17 @@ app.openapi(
 
       // チームメモテーブルに復元
       const currentTimestamp = Math.floor(Date.now() / 1000);
+      console.log(
+        `🔄 [復元開始] displayId="${memoData.displayId}" originalId="${memoData.originalId}"`,
+      );
+
       const insertResult = await db
         .insert(teamMemos)
         .values({
           teamId: memoData.teamId,
           userId: auth.userId,
           originalId: memoData.originalId,
-          displayId: memoData.displayId, // 🆕 displayId追加
+          displayId: memoData.displayId,
           uuid: memoData.uuid,
           title: memoData.title,
           content: memoData.content,
@@ -751,6 +760,10 @@ app.openapi(
         })
         .returning({ id: teamMemos.id });
 
+      console.log(
+        `✅ [復元INSERT完了] 新しい内部id=${insertResult[0].id} (displayIdは"${memoData.displayId}"のまま)`,
+      );
+
       // 復元されたメモを作成者情報付きで取得
       const restoredMemo = await db
         .select(getTeamMemoSelectFields())
@@ -758,6 +771,10 @@ app.openapi(
         .leftJoin(teamMembers, getTeamMemoMemberJoin())
         .where(eq(teamMemos.id, insertResult[0].id))
         .get();
+
+      console.log(
+        `📤 [復元API応答] displayId="${restoredMemo?.displayId}" originalId="${restoredMemo?.originalId}"`,
+      );
 
       // 削除済みテーブルから削除
       await db
@@ -784,15 +801,15 @@ app.openapi(
   },
 );
 
-// DELETE /teams/:teamId/memos/deleted/:originalId（チーム削除済みメモの完全削除）
+// DELETE /teams/:teamId/memos/deleted/:displayId（チーム削除済みメモの完全削除）
 app.openapi(
   createRoute({
     method: "delete",
-    path: "/{teamId}/memos/deleted/{originalId}",
+    path: "/{teamId}/memos/deleted/{displayId}",
     request: {
       params: z.object({
         teamId: z.string().regex(/^\d+$/).transform(Number),
-        originalId: z.string(),
+        displayId: z.string(),
       }),
     },
     responses: {
@@ -845,7 +862,7 @@ app.openapi(
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const { teamId, originalId } = c.req.valid("param");
+    const { teamId, displayId } = c.req.valid("param");
 
     // チームメンバー確認
     const member = await checkTeamMember(teamId, auth.userId, db);
@@ -861,7 +878,7 @@ app.openapi(
           and(
             eq(teamComments.teamId, teamId),
             eq(teamComments.targetType, "memo"),
-            eq(teamComments.targetoriginalId),
+            eq(teamComments.targetDisplayId, displayId),
           ),
         );
 
@@ -872,17 +889,28 @@ app.openapi(
           and(
             eq(teamAttachments.teamId, teamId),
             eq(teamAttachments.attachedTo, "memo"),
-            eq(teamAttachments.attachedoriginalId),
+            eq(teamAttachments.attachedDisplayId, displayId),
           ),
         );
 
-      // 3. 削除済みメモを検索して完全削除
+      // 3. 紐づくタグを削除
+      await db
+        .delete(teamTaggings)
+        .where(
+          and(
+            eq(teamTaggings.teamId, teamId),
+            eq(teamTaggings.targetType, "memo"),
+            eq(teamTaggings.targetDisplayId, displayId),
+          ),
+        );
+
+      // 4. 削除済みメモを検索して完全削除
       const deletedResult = await db
         .delete(teamDeletedMemos)
         .where(
           and(
             eq(teamDeletedMemos.teamId, teamId),
-            eq(teamDeletedMemos.originalId, originalId),
+            eq(teamDeletedMemos.displayId, displayId),
           ),
         )
         .returning();
@@ -892,7 +920,7 @@ app.openapi(
       }
 
       console.log(
-        `🗑️ チームメモ完全削除成功: originalId=${originalId}, teamId=${teamId}`,
+        `🗑️ チームメモ完全削除成功: displayId=${displayId}, teamId=${teamId}`,
       );
 
       return c.json({ success: true });
@@ -963,11 +991,9 @@ app.openapi(getTeamMemoBoards, async (c) => {
 
     // メモの存在確認
     const memo = await db
-      .select({ originalId: teamMemos.originalId })
+      .select({ displayId: teamMemos.displayId })
       .from(teamMemos)
-      .where(
-        and(eq(teamMemos.originalId, memoId), eq(teamMemos.teamId, teamId)),
-      )
+      .where(and(eq(teamMemos.displayId, memoId), eq(teamMemos.teamId, teamId)))
       .limit(1);
 
     if (memo.length === 0) {
@@ -990,7 +1016,7 @@ app.openapi(getTeamMemoBoards, async (c) => {
         and(
           eq(teamBoardItems.boardId, teamBoards.id),
           eq(teamBoardItems.itemType, "memo"),
-          eq(teamBoardItems.originalId, memo[0].originalId),
+          eq(teamBoardItems.displayId, memo[0].displayId),
         ),
       )
       .where(eq(teamBoards.teamId, teamId));

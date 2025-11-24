@@ -8,7 +8,7 @@ export const attachments = sqliteTable("attachments", {
   userId: text("user_id").notNull(),
   attachedTo: text("attached_to", { enum: ["memo", "task"] }).notNull(),
   attachedId: integer("attached_id").notNull(), // memo/task の id
-  originalId: text("original_id").notNull(), // 削除・復元追跡用
+  displayId: text("display_id").notNull(), // 削除・復元追跡用（メモ/タスクのdisplayId）
   fileName: text("file_name").notNull(), // 元ファイル名
   fileSize: integer("file_size").notNull(), // バイト数
   mimeType: text("mime_type").notNull(), // image/jpeg, image/png等

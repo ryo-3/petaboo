@@ -10,6 +10,7 @@ import { teamComments } from "../../db/schema/team/comments";
 import { teamAttachments } from "../../db/schema/team/attachments";
 import { users } from "../../db/schema/users";
 import { generateTaskDisplayId } from "../../utils/displayId";
+import { generateUuid } from "../../utils/originalId";
 import {
   getTeamTaskMemberJoin,
   getTeamTaskSelectFields,
@@ -29,8 +30,7 @@ const TeamTaskSchema = z.object({
   id: z.number(),
   teamId: z.number(),
   userId: z.string(),
-  originalId: z.string(),
-  displayId: z.string(), // 🆕 displayId追加
+  displayId: z.string(),
   uuid: z.string().nullable(),
   title: z.string(),
   description: z.string().nullable(),
@@ -156,7 +156,7 @@ app.openapi(
           SELECT COUNT(*)
           FROM ${teamComments}
           WHERE ${teamComments.targetType} = 'task'
-            AND ${teamComments.targetOriginalId} = ${teamTasks.originalId}
+            AND ${teamComments.targetOriginalId} = ${teamTasks.displayId}
             AND ${teamComments.teamId} = ${teamTasks.teamId}
         )`.as("commentCount"),
       })
@@ -575,12 +575,16 @@ app.openapi(
 
     // D1はトランザクションをサポートしないため、順次実行
     try {
+      console.log(
+        `🗑️ [タスク削除開始] id=${id} displayId="${task.displayId}" originalId="${task.originalId}"`,
+      );
+
       // 削除済みテーブルに挿入
       await db.insert(teamDeletedTasks).values({
         teamId,
         userId: task.userId,
         originalId: task.originalId,
-        displayId: task.displayId, // 🆕 displayId追加
+        displayId: task.displayId,
         uuid: task.uuid,
         title: task.title,
         description: task.description,
@@ -594,6 +598,10 @@ app.openapi(
         updatedAt: task.updatedAt,
         deletedAt: Math.floor(Date.now() / 1000),
       });
+
+      console.log(
+        `💾 [削除テーブルに保存] displayId="${task.displayId}"を保持`,
+      );
 
       // 元テーブルから削除
       await db.delete(teamTasks).where(eq(teamTasks.id, id));
@@ -625,7 +633,6 @@ app.openapi(
               z.object({
                 id: z.number(),
                 teamId: z.number(),
-                originalId: z.string(),
                 displayId: z.string(),
                 uuid: z.string().nullable(),
                 title: z.string(),
@@ -683,7 +690,7 @@ app.openapi(
         .select({
           id: teamDeletedTasks.id,
           teamId: teamDeletedTasks.teamId,
-          originalId: teamDeletedTasks.originalId,
+          originalId: teamDeletedTasks.displayId,
           displayId: teamDeletedTasks.displayId,
           uuid: teamDeletedTasks.uuid,
           title: teamDeletedTasks.title,
@@ -712,7 +719,7 @@ app.openapi(
               and(
                 eq(teamComments.teamId, teamId),
                 eq(teamComments.targetType, "task"),
-                eq(teamComments.targettask.originalId),
+                eq(teamComments.targetDisplayId, task.displayId),
               ),
             );
 
@@ -733,15 +740,15 @@ app.openapi(
   },
 );
 
-// POST /teams/:teamId/tasks/deleted/:originalId/restore（チーム削除済みタスク復元）
+// POST /teams/:teamId/tasks/deleted/:displayId/restore（チーム削除済みタスク復元）
 app.openapi(
   createRoute({
     method: "post",
-    path: "/{teamId}/tasks/deleted/{originalId}/restore",
+    path: "/{teamId}/tasks/deleted/{displayId}/restore",
     request: {
       params: z.object({
         teamId: z.string().regex(/^\d+$/).transform(Number),
-        originalId: z.string(),
+        displayId: z.string(),
       }),
     },
     responses: {
@@ -794,7 +801,7 @@ app.openapi(
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const { teamId, originalId } = c.req.valid("param");
+    const { teamId, displayId } = c.req.valid("param");
 
     // チームメンバー確認
     const member = await checkTeamMember(db, teamId, auth.userId);
@@ -810,7 +817,7 @@ app.openapi(
         .where(
           and(
             eq(teamDeletedTasks.teamId, teamId),
-            eq(teamDeletedTasks.originalId, originalId),
+            eq(teamDeletedTasks.displayId, displayId),
           ),
         )
         .limit(1);
@@ -823,13 +830,17 @@ app.openapi(
 
       // チームタスクテーブルに復元
       const currentTimestamp = Math.floor(Date.now() / 1000);
+      console.log(
+        `🔄 [タスク復元開始] displayId="${taskData.displayId}" originalId="${taskData.originalId}"`,
+      );
+
       const insertResult = await db
         .insert(teamTasks)
         .values({
           teamId: taskData.teamId,
           userId: auth.userId,
           originalId: taskData.originalId,
-          displayId: taskData.displayId, // 🆕 displayId追加
+          displayId: taskData.displayId,
           uuid: taskData.uuid,
           title: taskData.title,
           description: taskData.description,
@@ -844,6 +855,10 @@ app.openapi(
         })
         .returning({ id: teamTasks.id });
 
+      console.log(
+        `✅ [タスク復元INSERT完了] 新しい内部id=${insertResult[0].id} (displayIdは"${taskData.displayId}"のまま)`,
+      );
+
       // 復元されたタスクを作成者情報付きで取得
       const restoredTask = await db
         .select(getTeamTaskSelectFields())
@@ -851,6 +866,10 @@ app.openapi(
         .leftJoin(teamMembers, getTeamTaskMemberJoin())
         .where(eq(teamTasks.id, insertResult[0].id))
         .get();
+
+      console.log(
+        `📤 [タスク復元API応答] displayId="${restoredTask?.displayId}" originalId="${restoredTask?.originalId}"`,
+      );
 
       // 削除済みテーブルから削除
       await db
@@ -865,15 +884,15 @@ app.openapi(
   },
 );
 
-// DELETE /teams/:teamId/tasks/deleted/:originalId（チーム削除済みタスクの完全削除）
+// DELETE /teams/:teamId/tasks/deleted/:displayId（チーム削除済みタスクの完全削除）
 app.openapi(
   createRoute({
     method: "delete",
-    path: "/{teamId}/tasks/deleted/{originalId}",
+    path: "/{teamId}/tasks/deleted/{displayId}",
     request: {
       params: z.object({
         teamId: z.string().regex(/^\d+$/).transform(Number),
-        originalId: z.string(),
+        displayId: z.string(),
       }),
     },
     responses: {
@@ -926,7 +945,7 @@ app.openapi(
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const { teamId, originalId } = c.req.valid("param");
+    const { teamId, displayId } = c.req.valid("param");
 
     // チームメンバー確認
     const member = await checkTeamMember(db, teamId, auth.userId);
@@ -942,7 +961,7 @@ app.openapi(
           and(
             eq(teamComments.teamId, teamId),
             eq(teamComments.targetType, "task"),
-            eq(teamComments.targetoriginalId),
+            eq(teamComments.targetDisplayId, displayId),
           ),
         );
 
@@ -953,17 +972,28 @@ app.openapi(
           and(
             eq(teamAttachments.teamId, teamId),
             eq(teamAttachments.attachedTo, "task"),
-            eq(teamAttachments.attachedoriginalId),
+            eq(teamAttachments.attachedDisplayId, displayId),
           ),
         );
 
-      // 3. 削除済みタスクを検索して完全削除
+      // 3. 紐づくタグを削除
+      await db
+        .delete(teamTaggings)
+        .where(
+          and(
+            eq(teamTaggings.teamId, teamId),
+            eq(teamTaggings.targetType, "task"),
+            eq(teamTaggings.targetDisplayId, displayId),
+          ),
+        );
+
+      // 4. 削除済みタスクを検索して完全削除
       const deletedResult = await db
         .delete(teamDeletedTasks)
         .where(
           and(
             eq(teamDeletedTasks.teamId, teamId),
-            eq(teamDeletedTasks.originalId, originalId),
+            eq(teamDeletedTasks.displayId, displayId),
           ),
         )
         .returning();
@@ -973,7 +1003,7 @@ app.openapi(
       }
 
       console.log(
-        `🗑️ チームタスク完全削除成功: originalId=${originalId}, teamId=${teamId}`,
+        `🗑️ チームタスク完全削除成功: displayId=${displayId}, teamId=${teamId}`,
       );
 
       return c.json({ success: true });

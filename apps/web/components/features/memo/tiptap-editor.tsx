@@ -168,6 +168,8 @@ export function TiptapEditor({
         hardBreak: {
           keepMarks: true,
         },
+        // StarterKitに含まれるlinkを無効化（カスタム設定を使用するため）
+        link: false,
       }),
       Link.configure({
         openOnClick: true,

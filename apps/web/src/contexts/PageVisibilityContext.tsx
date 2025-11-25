@@ -29,26 +29,11 @@ export function PageVisibilityProvider({ children }: { children: ReactNode }) {
     const handleVisibilityChange = () => {
       const visible = !document.hidden;
       setIsVisible(visible);
-
-      // const status = visible ? "アクティブ" : "バックグラウンド";
-      // const timestamp = new Date().toLocaleTimeString();
-      // console.log(`👁️ [${timestamp}] [Context] ページ状態変更: ${status}`);
-
-      // if (!visible) {
-      //   console.log(`⏸️ [${timestamp}] [Context] 全API停止: バックグラウンド`);
-      // } else {
-      //   console.log(`▶️ [${timestamp}] [Context] 全API再開: アクティブ`);
-      // }
     };
-
-    // 初期状態をログ出力
-    // const initialStatus = isVisible ? "アクティブ" : "バックグラウンド";
-    // console.log(`👁️ [Context初期化] ページ状態: ${initialStatus}`);
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      // console.log(`👁️ [Context終了] Page Visibility監視終了`);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [isVisible]);
@@ -60,14 +45,12 @@ export function PageVisibilityProvider({ children }: { children: ReactNode }) {
     const handleMouseEnter = () => {
       setIsMouseActive(true);
       clearTimeout(mouseInactiveTimer);
-      // console.log("🖱️ [Context] マウス復帰: ページ内");
     };
 
     const handleMouseLeave = () => {
       // 2秒後に非アクティブに設定
       mouseInactiveTimer = setTimeout(() => {
         setIsMouseActive(false);
-        // console.log("🖱️ [Context] マウス非アクティブ: 2秒経過");
       }, 2000);
     };
 
@@ -75,14 +58,12 @@ export function PageVisibilityProvider({ children }: { children: ReactNode }) {
     const handleMouseMove = () => {
       if (!isMouseActive) {
         setIsMouseActive(true);
-        // console.log("🖱️ [Context] マウス活動検知: アクティブ復帰");
       }
       clearTimeout(mouseInactiveTimer);
 
       // 10秒間マウス移動がなければ非アクティブに
       mouseInactiveTimer = setTimeout(() => {
         setIsMouseActive(false);
-        // console.log("🖱️ [Context] マウス非アクティブ: 10秒無操作");
       }, 10000);
     };
 

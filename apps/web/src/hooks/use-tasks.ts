@@ -87,10 +87,6 @@ export function useCreateTask(options?: {
     onSuccess: (newTask) => {
       // ボードコンテキストの場合、ボードアイテムリストを再取得してboardIndexを反映
       if (boardId && teamMode && teamId) {
-        console.log("🟡 [useCreateTask] ボードアイテムリスト再取得開始", {
-          teamId,
-          boardId,
-        });
         // team-boardで始まる全てのクエリを無効化して再取得
         queryClient.invalidateQueries({
           queryKey: ["team-board", teamId],

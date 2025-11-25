@@ -262,19 +262,6 @@ export function NavigationProvider({
     };
   }, []);
 
-  // デバッグ用: スクリーンモード変更をログ出力（無効化）
-  useEffect(() => {
-    // URL logging is disabled
-    // const currentTab = searchParams.get("tab");
-    // const teamName = pathname.startsWith("/team/") && pathname !== "/team" ? pathname.split("/")[2] : undefined;
-    // const internalPath = pathname;
-    // const queryString = searchParams.toString();
-    // const fullInternalUrl = queryString ? `${internalPath}?${queryString}` : internalPath;
-    // const actualDisplayUrl = window.location.href;
-    // const logInfo = [...];
-    // console.log(`🎯 [Navigation] ${logInfo} (${actualDisplayUrl})`);
-  }, [screenMode, pathname, searchParams, iconStates]);
-
   // TODO: 必要に応じて個別キャッシュ無効化を実装する
   // - メモ画面: 特定カテゴリや長時間経過時のみ無効化
   // - タスク画面: 特定カテゴリや長時間経過時のみ無効化

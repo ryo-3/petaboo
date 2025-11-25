@@ -39,12 +39,6 @@ export function useAttachments(
         ? `${API_URL}/attachments?teamId=${teamId}&attachedTo=${attachedTo}&attachedDisplayId=${attachedDisplayId}`
         : `${API_URL}/attachments?attachedTo=${attachedTo}&attachedDisplayId=${attachedDisplayId}`;
 
-      console.log("📎 [添付ファイル取得]", {
-        attachedTo,
-        attachedDisplayId,
-        url,
-      });
-
       const response = await fetch(url, {
         headers: {
           ...(token && { Authorization: `Bearer ${token}` }),
@@ -56,16 +50,6 @@ export function useAttachments(
       }
 
       const attachments = await response.json();
-      console.log("📎 [添付ファイル取得結果]", {
-        attachedTo,
-        attachedDisplayId,
-        count: attachments.length,
-        files: attachments.map((a: Attachment) => ({
-          id: a.id,
-          fileName: a.fileName,
-          attachedDisplayId: a.attachedDisplayId,
-        })),
-      });
 
       return attachments;
     },

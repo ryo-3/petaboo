@@ -23,12 +23,6 @@ export function useAllAttachments(
         ? `${API_URL}/attachments/all?teamId=${teamId}&attachedTo=${attachedTo}`
         : `${API_URL}/attachments/all?attachedTo=${attachedTo}`;
 
-      console.log("🗂️ [useAllAttachments] 全添付ファイル取得", {
-        attachedTo,
-        teamId,
-        url,
-      });
-
       const response = await fetch(url, {
         headers: {
           ...(token && { Authorization: `Bearer ${token}` }),
@@ -40,18 +34,6 @@ export function useAllAttachments(
       }
 
       const data = await response.json();
-
-      console.log("🗂️ [useAllAttachments] 全添付ファイル取得結果", {
-        attachedTo,
-        teamId,
-        count: data.length,
-        files: data.map((a: Attachment) => ({
-          id: a.id,
-          fileName: a.fileName,
-          attachedTo: a.attachedTo,
-          attachedDisplayId: a.attachedDisplayId,
-        })),
-      });
 
       return data;
     },

@@ -42,32 +42,12 @@ export const useAttachmentManager = ({
   // displayIdを取得（個人・チーム共通）
   const displayId = item?.displayId;
 
-  console.log("🖼️ [useAttachmentManager] 初期化", {
-    itemType,
-    displayId,
-    itemId: item?.id,
-    teamMode,
-    teamId,
-  });
-
   // 画像添付API
   const { data: attachments = [] } = useAttachments(
     teamMode ? teamId : undefined,
     itemType,
     displayId,
   );
-
-  console.log("🖼️ [useAttachmentManager] 添付ファイル取得完了", {
-    itemType,
-    displayId,
-    count: attachments.length,
-    files: attachments.map((a) => ({
-      id: a.id,
-      fileName: a.fileName,
-      attachedTo: a.attachedTo,
-      attachedDisplayId: a.attachedDisplayId,
-    })),
-  });
 
   const uploadMutation = useUploadAttachment(
     teamMode ? teamId : undefined,

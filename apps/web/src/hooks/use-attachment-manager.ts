@@ -241,16 +241,19 @@ export const useAttachmentManager = ({
               formData.append("attachedDisplayId", targetDisplayId);
 
               const token = await getToken();
-              const response = await fetch(
-                `${API_URL}/attachments/upload?teamId=${teamId}`,
-                {
-                  method: "POST",
-                  headers: {
-                    ...(token && { Authorization: `Bearer ${token}` }),
-                  },
-                  body: formData,
+              // 個人モードの場合はteamIdをクエリパラメータに含めない
+              const uploadUrl =
+                teamMode && teamId
+                  ? `${API_URL}/attachments/upload?teamId=${teamId}`
+                  : `${API_URL}/attachments/upload`;
+
+              const response = await fetch(uploadUrl, {
+                method: "POST",
+                headers: {
+                  ...(token && { Authorization: `Bearer ${token}` }),
                 },
-              );
+                body: formData,
+              });
 
               if (!response.ok) {
                 const error = await response.json();

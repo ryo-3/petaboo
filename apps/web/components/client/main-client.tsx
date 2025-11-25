@@ -134,8 +134,15 @@ function MainClient({
   useLayoutEffect(() => {
     if (pathname.startsWith("/boards/") || pathname.includes("/board/")) {
       // ボード詳細URLでは基本的にボードモードに設定
-      setScreenMode("board");
-      setCurrentMode("board");
+      // ただし、ユーザーがメモ/タスク画面を開いている場合は上書きしない
+      if (
+        screenMode !== "memo" &&
+        screenMode !== "task" &&
+        screenMode !== "create"
+      ) {
+        setScreenMode("board");
+        setCurrentMode("board");
+      }
       // チームボード詳細の場合は詳細表示フラグも設定
       if (pathname.includes("/board/")) {
         setShowingBoardDetail(true);

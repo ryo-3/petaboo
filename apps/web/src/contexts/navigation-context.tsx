@@ -117,9 +117,13 @@ export function NavigationProvider({
   // UI状態管理（Sidebarとの統一）
   const [showTeamList, setShowTeamList] = useState(false);
   const [showTeamCreate, setShowTeamCreate] = useState(false);
-  const [showingBoardDetail, setShowingBoardDetail] = useState(
+  const [showingBoardDetail, setShowingBoardDetailInternal] = useState(
     initialShowingBoardDetail,
   );
+
+  const setShowingBoardDetail = useCallback((show: boolean) => {
+    setShowingBoardDetailInternal(show);
+  }, []);
 
   // 個人モードの新規作成状態（モバイルフッター切り替え用）
   const [isCreatingMemo, setIsCreatingMemo] = useState(false);

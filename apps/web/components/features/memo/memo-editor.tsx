@@ -753,15 +753,7 @@ function MemoEditor({
 
   // 拡張された保存処理（削除済みの場合は実行しない）
   const handleSaveWithTags = useCallback(async () => {
-    console.log("🔵 handleSaveWithTags 開始", {
-      isDeleted,
-      memoId: memo?.id,
-      content: content.substring(0, 50),
-      pendingImagesCount: pendingImages.length,
-    });
-
     if (isDeleted) {
-      console.log("⚠️ 削除済みのため保存スキップ");
       return; // 削除済みの場合は保存しない
     }
 
@@ -781,19 +773,10 @@ function MemoEditor({
       const hasOnlyImages =
         isNewMemo && !textContent && pendingImages.length > 0;
 
-      console.log("📝 保存処理判定", {
-        isNewMemo,
-        hasOnlyImages,
-        contentLength: content.length,
-        textContent: textContent.substring(0, 50),
-      });
-
       let targetId: string | null = null;
       let createdMemo: Memo | null = null;
 
       if (hasOnlyImages) {
-        console.log("🖼️ 画像のみ保存モード開始", { teamMode, teamId });
-
         // 画像のみの場合は「無題」で新規作成
         const newMemoData = {
           title: " ", // 最低1文字必要なので半角スペース
@@ -802,10 +785,6 @@ function MemoEditor({
 
         if (teamMode && teamId) {
           // チームモード
-          console.log("📮 チームメモPOST準備", {
-            teamId,
-            url: `${API_URL}/teams/${teamId}/memos`,
-          });
           const token = await getToken();
 
           const url = `${API_URL}/teams/${teamId}/memos`;
@@ -819,33 +798,16 @@ function MemoEditor({
             body: JSON.stringify(newMemoData),
           });
 
-          console.log("📬 チームメモPOST完了", {
-            status: response.status,
-            ok: response.ok,
-          });
-
           if (!response.ok) {
             const errorText = await response.text();
-            console.error("❌ チームメモPOSTエラー", {
-              status: response.status,
-              errorText,
-            });
             throw new Error(
               `チームメモの作成に失敗しました: ${response.status} - ${errorText}`,
             );
           }
 
           const newMemo = (await response.json()) as Memo;
-          console.log("📦 APIレスポンス", { newMemo });
-
           targetId = newMemo.displayId;
           createdMemo = newMemo;
-
-          console.log("✅ チームメモ作成完了", {
-            memoId: newMemo.id,
-            displayId: newMemo.displayId,
-            targetId,
-          });
 
           // キャッシュ更新
           queryClient.invalidateQueries({
@@ -854,7 +816,6 @@ function MemoEditor({
         } else {
           // 個人モード
           const token = await getToken();
-
           const url = `${API_URL}/memos`;
 
           const response = await fetch(url, {
@@ -998,15 +959,7 @@ function MemoEditor({
 
       // 保存待ちの画像を一括アップロード（完了トーストはuploadPendingImagesが表示）
       if (hasUploads && targetId) {
-        console.log("📤 画像アップロード開始", {
-          targetId,
-          pendingImagesCount: pendingImages.length,
-          teamMode,
-          teamId,
-        });
         await uploadPendingImages(targetId);
-        console.log("✅ 画像アップロード完了");
-
         invalidateBoardCaches();
 
         // 一覧表示用の添付ファイルキャッシュを無効化（サムネイル即時表示のため）
@@ -1052,13 +1005,8 @@ function MemoEditor({
       }
 
       flushPendingSaveResult();
-      console.log("✅ handleSaveWithTags 完了");
     } catch (error) {
       console.error("❌ 保存に失敗しました:", error);
-      console.error("エラー詳細:", {
-        message: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-      });
     }
   }, [
     handleSave,

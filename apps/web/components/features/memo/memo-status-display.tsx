@@ -263,11 +263,15 @@ function MemoStatusDisplay({
         );
 
       // メモの添付ファイルを抽出（画像のみ）
-      const memoAttachments = safeAllAttachments.filter(
-        (attachment) =>
-          memoIdentifiers.includes(attachment.attachedDisplayId || "") &&
-          attachment.mimeType.startsWith("image/"),
-      );
+      const memoAttachments = safeAllAttachments.filter((attachment) => {
+        // attachedDisplayId または displayId を使用（API側の命名に対応）
+        const attachmentDisplayId =
+          attachment.attachedDisplayId || (attachment as any).displayId || "";
+        return (
+          memoIdentifiers.includes(attachmentDisplayId) &&
+          attachment.mimeType.startsWith("image/")
+        );
+      });
 
       map.set(memo.id, {
         tags: memoTags,

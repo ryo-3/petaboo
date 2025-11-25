@@ -1,6 +1,6 @@
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { eq, desc, and, sql, isNull, isNotNull } from "drizzle-orm";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { databaseMiddleware } from "../../middleware/database";
 import { teamMemos, teamDeletedMemos } from "../../db/schema/team/memos";
@@ -449,7 +449,13 @@ app.openapi(
     const memo = await db
       .select()
       .from(teamMemos)
-      .where(and(eq(teamMemos.id, id), eq(teamMemos.teamId, teamId)))
+      .where(
+        and(
+          eq(teamMemos.id, id),
+          eq(teamMemos.teamId, teamId),
+          isNull(teamMemos.deletedAt),
+        ),
+      )
       .get();
 
     console.log(`🔍 チームメモ検索結果:`, {
@@ -467,29 +473,17 @@ app.openapi(
       return c.json({ error: "Team memo not found" }, 404);
     }
 
-    // D1はトランザクションをサポートしないため、順次実行
     try {
       console.log(`🗑️ [削除開始] id=${id} displayId="${memo.displayId}"`);
 
-      // 削除済みテーブルに挿入
-      await db.insert(teamDeletedMemos).values({
-        teamId,
-        userId: memo.userId,
-        displayId: memo.displayId,
-        uuid: memo.uuid,
-        title: memo.title,
-        content: memo.content,
-        createdAt: memo.createdAt,
-        updatedAt: memo.updatedAt,
-        deletedAt: Math.floor(Date.now() / 1000),
-      });
-
-      console.log(
-        `💾 [削除テーブルに保存] displayId="${memo.displayId}"を保持`,
-      );
-
-      // 元テーブルから削除
-      await db.delete(teamMemos).where(eq(teamMemos.id, id));
+      // 論理削除（deleted_atを設定）
+      await db
+        .update(teamMemos)
+        .set({
+          deletedAt: Math.floor(Date.now() / 1000),
+          updatedAt: Math.floor(Date.now() / 1000),
+        })
+        .where(eq(teamMemos.id, id));
 
       console.log(
         `✅ チームメモ削除成功: id=${id}, teamId=${teamId}, displayId="${memo.displayId}"`,
@@ -579,18 +573,20 @@ app.openapi(
     try {
       const deletedMemos = await db
         .select({
-          id: teamDeletedMemos.id,
-          teamId: teamDeletedMemos.teamId,
-          displayId: teamDeletedMemos.displayId,
-          title: teamDeletedMemos.title,
-          content: teamDeletedMemos.content,
-          createdAt: teamDeletedMemos.createdAt,
-          updatedAt: teamDeletedMemos.updatedAt,
-          deletedAt: teamDeletedMemos.deletedAt,
+          id: teamMemos.id,
+          teamId: teamMemos.teamId,
+          displayId: teamMemos.displayId,
+          title: teamMemos.title,
+          content: teamMemos.content,
+          createdAt: teamMemos.createdAt,
+          updatedAt: teamMemos.updatedAt,
+          deletedAt: teamMemos.deletedAt,
         })
-        .from(teamDeletedMemos)
-        .where(eq(teamDeletedMemos.teamId, teamId))
-        .orderBy(desc(teamDeletedMemos.deletedAt));
+        .from(teamMemos)
+        .where(
+          and(eq(teamMemos.teamId, teamId), isNotNull(teamMemos.deletedAt)),
+        )
+        .orderBy(desc(teamMemos.deletedAt));
 
       // 各メモのコメント数を取得
       const result = await Promise.all(

@@ -1,10 +1,11 @@
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { eq, desc, and, sql, isNull, isNotNull } from "drizzle-orm";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { tasks, deletedTasks } from "../../db/schema/tasks";
 import { boardItems } from "../../db/schema/boards";
 import { taggings } from "../../db/schema/tags";
+import { attachments } from "../../db/schema/attachments";
 import { teamNotifications } from "../../db/schema/team/notifications";
 import { databaseMiddleware } from "../../middleware/database";
 import { generateOriginalId, generateUuid } from "../../utils/originalId";
@@ -181,7 +182,7 @@ app.openapi(
         updatedAt: tasks.updatedAt,
       })
       .from(tasks)
-      .where(eq(tasks.userId, auth.userId))
+      .where(and(eq(tasks.userId, auth.userId), isNull(tasks.deletedAt)))
       .orderBy(
         // 優先度順: high(3) > medium(2) > low(1)
         desc(
@@ -395,7 +396,13 @@ app.openapi(
     const result = await db
       .update(tasks)
       .set(updateData)
-      .where(and(eq(tasks.id, id), eq(tasks.userId, auth.userId)));
+      .where(
+        and(
+          eq(tasks.id, id),
+          eq(tasks.userId, auth.userId),
+          isNull(tasks.deletedAt),
+        ),
+      );
 
     if (result.changes === 0) {
       return c.json({ error: "Task not found" }, 404);
@@ -405,7 +412,13 @@ app.openapi(
     const updatedTask = await db
       .select()
       .from(tasks)
-      .where(and(eq(tasks.id, id), eq(tasks.userId, auth.userId)))
+      .where(
+        and(
+          eq(tasks.id, id),
+          eq(tasks.userId, auth.userId),
+          isNull(tasks.deletedAt),
+        ),
+      )
       .get();
 
     return c.json(updatedTask || { success: true }, 200);
@@ -470,38 +483,28 @@ app.openapi(
     const task = await db
       .select()
       .from(tasks)
-      .where(and(eq(tasks.id, id), eq(tasks.userId, auth.userId)))
+      .where(
+        and(
+          eq(tasks.id, id),
+          eq(tasks.userId, auth.userId),
+          isNull(tasks.deletedAt),
+        ),
+      )
       .get();
 
     if (!task) {
       return c.json({ error: "Task not found" }, 404);
     }
 
-    // D1はトランザクションをサポートしないため、安全な順次実行
     try {
-      // Step 1: 削除済みテーブルに安全にコピー
-      const insertResult = await db
-        .insert(deletedTasks)
-        .values({
-          userId: auth.userId,
-          displayId: task.displayId, // originalIdをそのままコピー
-          uuid: task.uuid, // UUIDもコピー
-          title: task.title,
-          description: task.description,
-          status: task.status,
-          priority: task.priority,
-          dueDate: task.dueDate,
-          categoryId: task.categoryId,
-          createdAt: task.createdAt,
-          updatedAt: task.updatedAt,
+      // Step 1: 論理削除（deleted_atを設定）
+      await db
+        .update(tasks)
+        .set({
           deletedAt: Math.floor(Date.now() / 1000),
+          updatedAt: Math.floor(Date.now() / 1000),
         })
-        .returning({ id: deletedTasks.id });
-
-      // Step 1.5: コピーが正常に完了したことを確認
-      if (!insertResult || insertResult.length === 0) {
-        throw new Error("削除済みテーブルへのコピーが失敗しました");
-      }
+        .where(eq(tasks.id, id));
 
       // Step 2: 関連するboard_itemsのdeletedAtを設定
       await db
@@ -514,7 +517,7 @@ app.openapi(
           ),
         );
 
-      // Step 2.5: 関連する通知を削除
+      // Step 3: 関連する通知を削除
       await db
         .delete(teamNotifications)
         .where(
@@ -523,30 +526,7 @@ app.openapi(
             eq(teamNotifications.targetDisplayId, task.displayId),
           ),
         );
-
-      // Step 3: コピー完了後に元テーブルから安全に削除
-      const deleteResult = await db.delete(tasks).where(eq(tasks.id, id));
-
-      // Step 3.5: 削除が正常に完了したことを確認
-      if (deleteResult.changes === 0) {
-        console.warn(
-          "元テーブルからの削除で対象が見つかりませんでしたが、コピーは完了済みです",
-        );
-      }
     } catch (error) {
-      // コピー段階でエラーが発生した場合、削除済みテーブルの重複データをクリーンアップ
-      try {
-        await db
-          .delete(deletedTasks)
-          .where(
-            and(
-              eq(deletedTasks.displayId, task.displayId),
-              eq(deletedTasks.userId, auth.userId),
-            ),
-          );
-      } catch (cleanupError) {
-        console.error("クリーンアップエラー:", cleanupError);
-      }
       return c.json({ error: "Failed to delete task" }, 500);
     }
 
@@ -610,21 +590,21 @@ app.openapi(
     try {
       const result = await db
         .select({
-          id: deletedTasks.id,
-          displayId: deletedTasks.displayId,
-          title: deletedTasks.title,
-          description: deletedTasks.description,
-          status: deletedTasks.status,
-          priority: deletedTasks.priority,
-          dueDate: deletedTasks.dueDate,
-          categoryId: deletedTasks.categoryId,
-          createdAt: deletedTasks.createdAt,
-          updatedAt: deletedTasks.updatedAt,
-          deletedAt: deletedTasks.deletedAt,
+          id: tasks.id,
+          displayId: tasks.displayId,
+          title: tasks.title,
+          description: tasks.description,
+          status: tasks.status,
+          priority: tasks.priority,
+          dueDate: tasks.dueDate,
+          categoryId: tasks.categoryId,
+          createdAt: tasks.createdAt,
+          updatedAt: tasks.updatedAt,
+          deletedAt: tasks.deletedAt,
         })
-        .from(deletedTasks)
-        .where(eq(deletedTasks.userId, auth.userId))
-        .orderBy(desc(deletedTasks.deletedAt));
+        .from(tasks)
+        .where(and(eq(tasks.userId, auth.userId), isNotNull(tasks.deletedAt)))
+        .orderBy(desc(tasks.deletedAt));
       return c.json(result);
     } catch (error) {
       return c.json({ error: "Internal server error" }, 500);
@@ -736,13 +716,14 @@ app.openapi(
 
         // 3. 関連するボードアイテムは削除しない（削除済みタブで表示するため保持）
 
-        // 4. タスクを削除
+        // 4. タスクを物理削除
         const deleteResult = tx
-          .delete(deletedTasks)
+          .delete(tasks)
           .where(
             and(
-              eq(deletedTasks.displayId, displayId),
-              eq(deletedTasks.userId, auth.userId),
+              eq(tasks.displayId, displayId),
+              eq(tasks.userId, auth.userId),
+              isNotNull(tasks.deletedAt), // 削除済み確認
             ),
           )
           .run();
@@ -819,11 +800,12 @@ app.openapi(
       // まず削除済みタスクを取得
       const deletedTask = await db
         .select()
-        .from(deletedTasks)
+        .from(tasks)
         .where(
           and(
-            eq(deletedTasks.displayId, displayId),
-            eq(deletedTasks.userId, auth.userId),
+            eq(tasks.displayId, displayId),
+            eq(tasks.userId, auth.userId),
+            isNotNull(tasks.deletedAt),
           ),
         )
         .get();
@@ -832,33 +814,20 @@ app.openapi(
         return c.json({ error: "Deleted task not found" }, 404);
       }
 
-      // D1はトランザクションをサポートしないため、順次実行
-      // 通常のタスクテーブルに復元
-      const result = await db
-        .insert(tasks)
-        .values({
-          userId: auth.userId,
-          displayId: deletedTask.displayId, // displayIdを復元
-          uuid: deletedTask.uuid, // UUIDも復元
-          title: deletedTask.title,
-          description: deletedTask.description,
-          status: deletedTask.status as "todo" | "in_progress" | "completed",
-          priority: deletedTask.priority as "low" | "medium" | "high",
-          dueDate: deletedTask.dueDate,
-          categoryId: deletedTask.categoryId,
-          createdAt: deletedTask.createdAt,
+      // 論理削除を解除（deleted_atをNULLに）
+      await db
+        .update(tasks)
+        .set({
+          deletedAt: null,
           updatedAt: Math.floor(Date.now() / 1000), // 復元時刻を更新
         })
-        .returning({ id: tasks.id });
+        .where(eq(tasks.id, deletedTask.id));
 
-      // displayIdは元の値を保持（新しいIDに更新しない）
-
-      // 関連するboard_itemsのdeletedAtをNULLに戻す（displayIdは元の値を保持）
+      // 関連するboard_itemsのdeletedAtをNULLに戻す
       await db
         .update(boardItems)
         .set({
           deletedAt: null,
-          // displayIdは元の値を保持
         })
         .where(
           and(
@@ -867,12 +836,7 @@ app.openapi(
           ),
         );
 
-      // 削除済みテーブルから削除
-      await db
-        .delete(deletedTasks)
-        .where(eq(deletedTasks.displayId, displayId));
-
-      return c.json({ success: true, id: result[0].id }, 200);
+      return c.json({ success: true, id: deletedTask.id }, 200);
     } catch (error) {
       return c.json({ error: "Internal server error" }, 500);
     }

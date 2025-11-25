@@ -14,6 +14,7 @@ export const tasks = sqliteTable("tasks", {
   boardCategoryId: integer("board_category_id"), // ボードカテゴリーID
   createdAt: integer("created_at").notNull(),
   updatedAt: integer("updated_at"),
+  deletedAt: integer("deleted_at"), // 論理削除用
 });
 
 export const deletedTasks = sqliteTable("deleted_tasks", {

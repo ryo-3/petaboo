@@ -1,11 +1,12 @@
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, isNull, isNotNull } from "drizzle-orm";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { databaseMiddleware } from "../../middleware/database";
 import { memos, deletedMemos } from "../../db/schema/memos";
 import { boardItems } from "../../db/schema/boards";
 import { taggings } from "../../db/schema/tags";
+import { attachments } from "../../db/schema/attachments";
 import { teamNotifications } from "../../db/schema/team/notifications";
 import { generateOriginalId, generateUuid } from "../../utils/originalId";
 
@@ -123,7 +124,7 @@ app.openapi(
         updatedAt: memos.updatedAt,
       })
       .from(memos)
-      .where(eq(memos.userId, auth.userId))
+      .where(and(eq(memos.userId, auth.userId), isNull(memos.deletedAt)))
       .orderBy(desc(memos.updatedAt), desc(memos.createdAt));
 
     return c.json(result, 200);
@@ -307,7 +308,13 @@ app.openapi(
         content,
         updatedAt: Math.floor(Date.now() / 1000),
       })
-      .where(and(eq(memos.id, id), eq(memos.userId, auth.userId)));
+      .where(
+        and(
+          eq(memos.id, id),
+          eq(memos.userId, auth.userId),
+          isNull(memos.deletedAt),
+        ),
+      );
 
     if (result.changes === 0) {
       return c.json({ error: "Note not found" }, 404);
@@ -375,34 +382,28 @@ app.openapi(
     const note = await db
       .select()
       .from(memos)
-      .where(and(eq(memos.id, id), eq(memos.userId, auth.userId)))
+      .where(
+        and(
+          eq(memos.id, id),
+          eq(memos.userId, auth.userId),
+          isNull(memos.deletedAt),
+        ),
+      )
       .get();
 
     if (!note) {
       return c.json({ error: "Note not found" }, 404);
     }
 
-    // D1はトランザクションをサポートしないため、安全な順次実行
     try {
-      // Step 1: 削除済みテーブルに安全にコピー
-      const insertResult = await db
-        .insert(deletedMemos)
-        .values({
-          userId: auth.userId,
-          displayId: note.displayId, // originalIdをそのままコピー
-          uuid: note.uuid, // UUIDもコピー
-          title: note.title,
-          content: note.content,
-          createdAt: note.createdAt,
-          updatedAt: note.updatedAt,
+      // Step 1: 論理削除（deleted_atを設定）
+      await db
+        .update(memos)
+        .set({
           deletedAt: Math.floor(Date.now() / 1000),
+          updatedAt: Math.floor(Date.now() / 1000),
         })
-        .returning({ id: deletedMemos.id });
-
-      // Step 1.5: コピーが正常に完了したことを確認
-      if (!insertResult || insertResult.length === 0) {
-        throw new Error("削除済みテーブルへのコピーが失敗しました");
-      }
+        .where(eq(memos.id, id));
 
       // Step 2: 関連するboard_itemsのdeletedAtを設定
       await db
@@ -415,7 +416,7 @@ app.openapi(
           ),
         );
 
-      // Step 2.5: 関連する通知を削除
+      // Step 3: 関連する通知を削除
       await db
         .delete(teamNotifications)
         .where(
@@ -424,28 +425,7 @@ app.openapi(
             eq(teamNotifications.targetDisplayId, note.displayId),
           ),
         );
-
-      // Step 3: コピー完了後に元テーブルから安全に削除
-      const deleteResult = await db.delete(memos).where(eq(memos.id, id));
-
-      // Step 3.5: 削除が正常に完了したことを確認
-      if (deleteResult.changes === 0) {
-        console.warn(
-          "元テーブルからの削除で対象が見つかりませんでしたが、コピーは完了済みです",
-        );
-      }
     } catch (error) {
-      // コピー段階でエラーが発生した場合、削除済みテーブルの重複データをクリーンアップ
-      try {
-        await db
-          .delete(deletedMemos)
-          .where(
-            and(
-              eq(deletedMemos.displayId, note.displayId),
-              eq(deletedMemos.userId, auth.userId),
-            ),
-          );
-      } catch (cleanupError) {}
       return c.json({ error: "Failed to delete memo" }, 500);
     }
 
@@ -506,17 +486,17 @@ app.openapi(
     try {
       const result = await db
         .select({
-          id: deletedMemos.id,
-          displayId: deletedMemos.displayId,
-          title: deletedMemos.title,
-          content: deletedMemos.content,
-          createdAt: deletedMemos.createdAt,
-          updatedAt: deletedMemos.updatedAt,
-          deletedAt: deletedMemos.deletedAt,
+          id: memos.id,
+          displayId: memos.displayId,
+          title: memos.title,
+          content: memos.content,
+          createdAt: memos.createdAt,
+          updatedAt: memos.updatedAt,
+          deletedAt: memos.deletedAt,
         })
-        .from(deletedMemos)
-        .where(eq(deletedMemos.userId, auth.userId))
-        .orderBy(desc(deletedMemos.deletedAt));
+        .from(memos)
+        .where(and(eq(memos.userId, auth.userId), isNotNull(memos.deletedAt)))
+        .orderBy(desc(memos.deletedAt));
       return c.json(result);
     } catch (error) {
       return c.json({ error: "Internal server error" }, 500);
@@ -628,13 +608,14 @@ app.openapi(
 
         // 3. 関連するボードアイテムは削除しない（削除済みタブで表示するため保持）
 
-        // 4. メモを削除
+        // 4. メモを物理削除
         const deleteResult = tx
-          .delete(deletedMemos)
+          .delete(memos)
           .where(
             and(
-              eq(deletedMemos.displayId, displayId),
-              eq(deletedMemos.userId, auth.userId),
+              eq(memos.displayId, displayId),
+              eq(memos.userId, auth.userId),
+              isNotNull(memos.deletedAt), // 削除済み確認
             ),
           )
           .run();
@@ -711,11 +692,12 @@ app.openapi(
       // まず削除済みメモを取得
       const deletedNote = await db
         .select()
-        .from(deletedMemos)
+        .from(memos)
         .where(
           and(
-            eq(deletedMemos.displayId, displayId),
-            eq(deletedMemos.userId, auth.userId),
+            eq(memos.displayId, displayId),
+            eq(memos.userId, auth.userId),
+            isNotNull(memos.deletedAt),
           ),
         )
         .get();
@@ -724,29 +706,20 @@ app.openapi(
         return c.json({ error: "Deleted note not found" }, 404);
       }
 
-      // D1はトランザクションをサポートしないため、順次実行
-      // 通常メモテーブルに復元
-      const result = await db
-        .insert(memos)
-        .values({
-          userId: auth.userId,
-          displayId: deletedNote.displayId, // displayIdを復元
-          uuid: deletedNote.uuid, // UUIDも復元
-          title: deletedNote.title,
-          content: deletedNote.content,
-          createdAt: deletedNote.createdAt,
+      // 論理削除を解除（deleted_atをNULLに）
+      await db
+        .update(memos)
+        .set({
+          deletedAt: null,
           updatedAt: Math.floor(Date.now() / 1000), // 復元時刻を更新
         })
-        .returning({ id: memos.id });
+        .where(eq(memos.id, deletedNote.id));
 
-      // displayIdは元の値を保持（新しいIDに更新しない）
-
-      // 関連するboard_itemsのdeletedAtをNULLに戻す（displayIdは元の値を保持）
+      // 関連するboard_itemsのdeletedAtをNULLに戻す
       await db
         .update(boardItems)
         .set({
           deletedAt: null,
-          // displayIdは元の値を保持
         })
         .where(
           and(
@@ -755,12 +728,7 @@ app.openapi(
           ),
         );
 
-      // 削除済みテーブルから削除
-      await db
-        .delete(deletedMemos)
-        .where(eq(deletedMemos.displayId, displayId));
-
-      return c.json({ success: true, id: result[0].id }, 200);
+      return c.json({ success: true, id: deletedNote.id }, 200);
     } catch (error) {
       return c.json({ error: "Internal server error" }, 500);
     }

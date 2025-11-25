@@ -10,6 +10,7 @@ export const memos = sqliteTable("memos", {
   categoryId: integer("category_id"),
   createdAt: integer("created_at").notNull(),
   updatedAt: integer("updated_at"),
+  deletedAt: integer("deleted_at"), // 論理削除用
 });
 
 export const deletedMemos = sqliteTable("deleted_memos", {

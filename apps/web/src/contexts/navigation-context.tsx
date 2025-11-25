@@ -100,10 +100,16 @@ export function NavigationProvider({
 
   // モード切り替え関数（useCallback で安定化）
   const setScreenMode = useCallback((mode: ScreenMode) => {
+    const stack = new Error().stack?.split("\n")[2]?.trim() || "unknown";
+    console.log("🔄 [NavigationContext] setScreenMode", {
+      to: mode,
+      from: stack,
+    });
     setScreenModeInternal(mode);
   }, []);
 
   const setCurrentMode = useCallback((mode: "memo" | "task" | "board") => {
+    console.log("🔄 [NavigationContext] setCurrentMode", { to: mode });
     setCurrentModeInternal(mode);
   }, []);
   const [isFromBoardDetail, setIsFromBoardDetail] = useState(false);

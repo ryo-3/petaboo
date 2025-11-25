@@ -171,17 +171,12 @@ function MainClient({
         setScreenMode("team"); // チーム一覧表示時はteamモードに設定
         sessionStorage.removeItem("showTeamListAfterCreation"); // フラグを削除
       } else {
-        // ルートページではホーム画面を表示
-        if (screenMode !== "home") {
-          setScreenMode("home");
-        }
+        // ルートページではホーム画面を表示（初回のみ）
+        // screenModeをチェックしないことで、ユーザーが手動で切り替えた場合は維持される
         if (isFromBoardDetail) {
-          // ボード詳細から戻った場合
+          // ボード詳細から戻った場合のみhomeに戻す
+          setScreenMode("home");
           setIsFromBoardDetail(false); // フラグをリセット
-        }
-        // ルートページではボード一覧表示
-        if (screenMode === "board") {
-          setShowingBoardDetail(false);
         }
       }
     }

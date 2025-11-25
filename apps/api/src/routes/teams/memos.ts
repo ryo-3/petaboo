@@ -850,6 +850,7 @@ app.openapi(
   async (c) => {
     const auth = getAuth(c);
     const db = c.get("db");
+    const env = c.env;
     if (!auth?.userId) {
       return c.json({ error: "Unauthorized" }, 401);
     }
@@ -874,7 +875,33 @@ app.openapi(
           ),
         );
 
-      // 2. 紐づく添付ファイルを削除
+      // 2. 紐づく添付ファイルを削除（R2からも削除）
+      const attachmentsToDelete = await db
+        .select()
+        .from(teamAttachments)
+        .where(
+          and(
+            eq(teamAttachments.teamId, teamId),
+            eq(teamAttachments.attachedTo, "memo"),
+            eq(teamAttachments.attachedDisplayId, displayId),
+          ),
+        );
+
+      // R2から実ファイルを削除
+      const r2Bucket = env.R2_BUCKET;
+      if (r2Bucket && attachmentsToDelete.length > 0) {
+        for (const attachment of attachmentsToDelete) {
+          try {
+            await r2Bucket.delete(attachment.r2Key);
+            console.log(`🗑️ [R2削除成功] ${attachment.r2Key}`);
+          } catch (error) {
+            console.error(`❌ [R2削除失敗] ${attachment.r2Key}`, error);
+            // R2削除失敗してもDB削除は続行
+          }
+        }
+      }
+
+      // DBから添付ファイルレコードを削除
       await db
         .delete(teamAttachments)
         .where(

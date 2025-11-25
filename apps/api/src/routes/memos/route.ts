@@ -577,8 +577,35 @@ app.openapi(
     }
 
     const { displayId } = c.req.valid("param");
+    const env = c.env;
 
     try {
+      // R2削除のため、トランザクション前に添付ファイル情報を取得
+      const attachmentsToDelete = await db
+        .select()
+        .from(attachments)
+        .where(
+          and(
+            eq(attachments.attachedTo, "memo"),
+            eq(attachments.attachedDisplayId, displayId),
+            eq(attachments.userId, auth.userId),
+          ),
+        );
+
+      // R2から実ファイルを削除
+      const r2Bucket = env.R2_BUCKET;
+      if (r2Bucket && attachmentsToDelete.length > 0) {
+        for (const attachment of attachmentsToDelete) {
+          try {
+            await r2Bucket.delete(attachment.r2Key);
+            console.log(`🗑️ [R2削除成功] ${attachment.r2Key}`);
+          } catch (error) {
+            console.error(`❌ [R2削除失敗] ${attachment.r2Key}`, error);
+            // R2削除失敗してもDB削除は続行
+          }
+        }
+      }
+
       const result = db.transaction((tx) => {
         // 1. タグ付けを削除（タグ本体は保持）
         tx.delete(taggings)
@@ -590,9 +617,19 @@ app.openapi(
           )
           .run();
 
-        // 2. 関連するボードアイテムは削除しない（削除済みタブで表示するため保持）
+        // 2. 添付ファイルを削除
+        tx.delete(attachments)
+          .where(
+            and(
+              eq(attachments.attachedTo, "memo"),
+              eq(attachments.attachedDisplayId, displayId),
+            ),
+          )
+          .run();
 
-        // 3. メモを削除
+        // 3. 関連するボードアイテムは削除しない（削除済みタブで表示するため保持）
+
+        // 4. メモを削除
         const deleteResult = tx
           .delete(deletedMemos)
           .where(

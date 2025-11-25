@@ -32,6 +32,21 @@ export default function AttachmentGallery({
   const [pendingUrls, setPendingUrls] = useState<string[]>([]);
   const loadedIdsRef = useRef<Set<number>>(new Set());
 
+  // 🔍 デバッグログ: AttachmentGalleryに渡されたprops
+  console.log("🖼️ [AttachmentGallery] props", {
+    attachmentsCount: attachments.length,
+    pendingImagesCount: pendingImages.length,
+    pendingImageNames: pendingImages.map((f) => f.name),
+    isUploading,
+    pendingUrlsCount: pendingUrls.length,
+    imageUrlsCount: Object.keys(imageUrls).length,
+    imageUrlsDetail: Object.entries(imageUrls).map(([id, url]) => ({
+      id,
+      url: url.substring(0, 60) + "...",
+      fullUrl: url,
+    })),
+  });
+
   // PDFや他のファイルを認証付きで開く
   const handleFileOpen = async (attachment: Attachment) => {
     try {
@@ -97,6 +112,11 @@ export default function AttachmentGallery({
     if (newAttachments.length > 0) {
       newAttachments.forEach(async (attachment) => {
         try {
+          console.log(`🔵 [AttachmentGallery] 画像fetch開始`, {
+            id: attachment.id,
+            url: attachment.url,
+          });
+
           const token = await getToken();
           const response = await fetch(attachment.url, {
             headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -109,11 +129,18 @@ export default function AttachmentGallery({
               status: response.status,
               statusText: response.statusText,
             });
-            throw new Error("画像の読み込みに失敗しました");
+            // fetch失敗時はloadedIdsに追加して再試行を防ぐ
+            loadedIds.add(attachment.id);
+            return;
           }
 
           const blob = await response.blob();
           const url = URL.createObjectURL(blob);
+
+          console.log(`✅ [AttachmentGallery] blobURL生成成功`, {
+            id: attachment.id,
+            blobUrl: url.substring(0, 50) + "...",
+          });
 
           setImageUrls((prev) => ({ ...prev, [attachment.id]: url }));
           loadedIds.add(attachment.id);
@@ -123,6 +150,8 @@ export default function AttachmentGallery({
             url: attachment.url,
             error,
           });
+          // エラー時もloadedIdsに追加して再試行を防ぐ
+          loadedIds.add(attachment.id);
         }
       });
     }
@@ -181,6 +210,16 @@ export default function AttachmentGallery({
           const isImage = attachment.mimeType.startsWith("image/");
           const isPdf = attachment.mimeType === "application/pdf";
           const isProcessing = isUploading || isDeleting;
+
+          // 🔍 デバッグログ: レンダリングされる画像URL
+          if (isImage && imageUrl) {
+            console.log(`🖼️ [AttachmentGallery] レンダリング`, {
+              attachmentId: attachment.id,
+              fileName: attachment.fileName,
+              imageUrl: imageUrl.substring(0, 60) + "...",
+              fullImageUrl: imageUrl,
+            });
+          }
 
           return (
             <div key={attachment.id} className="relative group">

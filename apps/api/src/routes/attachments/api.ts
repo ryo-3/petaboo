@@ -375,14 +375,25 @@ export const uploadAttachment = async (c: any) => {
     return c.json({ error: "R2 bucket not configured" }, 500);
   }
 
+  console.log("🔵 [R2アップロード開始]", {
+    r2Key,
+    fileName: file.name,
+    fileSize: file.size,
+    mimeType: file.type,
+    teamId,
+    attachedTo,
+    attachedDisplayId,
+  });
+
   try {
     await r2Bucket.put(r2Key, file.stream(), {
       httpMetadata: {
         contentType: file.type,
       },
     });
+    console.log("✅ [R2アップロード成功]", { r2Key });
   } catch (error) {
-    console.error("R2 upload failed:", error);
+    console.error("❌ [R2アップロード失敗]", { r2Key, error });
     return c.json({ error: "File upload failed" }, 500);
   }
 
@@ -430,12 +441,12 @@ export const uploadAttachment = async (c: any) => {
       .returning();
   }
 
-  // Worker経由アクセスURL生成
+  // Worker経由アクセスURL生成（キャッシュバスティング用にタイムスタンプ追加）
   const url = new URL(c.req.url);
   const apiBaseUrl = `${url.protocol}//${url.host}`;
   const endpoint = isImage ? "image" : "file";
   const prefix = teamId ? "" : "personal/";
-  const workerUrl = `${apiBaseUrl}/attachments/${prefix}${endpoint}/${result[0].id}`;
+  const workerUrl = `${apiBaseUrl}/attachments/${prefix}${endpoint}/${result[0].id}?v=${createdAt}`;
 
   // URLを更新
   if (teamId) {
@@ -449,6 +460,13 @@ export const uploadAttachment = async (c: any) => {
       .set({ url: workerUrl })
       .where(eq(attachments.id, result[0].id));
   }
+
+  console.log("✅ [DB保存完了]", {
+    id: result[0].id,
+    displayId,
+    workerUrl,
+    teamId: teamId || null,
+  });
 
   return c.json({ ...result[0], url: workerUrl, teamId: teamId || null }, 200);
 };
@@ -672,27 +690,43 @@ export const getImage = async (c: any) => {
     return c.json({ error: "R2 bucket not configured" }, 500);
   }
 
+  console.log("🔵 [getImage] R2取得開始", {
+    attachmentId: id,
+    r2Key: attachment.r2Key,
+    fileName: attachment.fileName,
+  });
+
   let object = await r2Bucket.get(attachment.r2Key);
 
   // 新形式で見つからない場合、旧形式を試す（後方互換性）
   // 新: user_xxx/images/memo/xxx.png → 旧: user_xxx/memo/xxx.png
   if (!object) {
     const oldKey = attachment.r2Key.replace(/\/images\//, "/");
+    console.log("⚠️ [getImage] 新形式で見つからず、旧形式を試行", { oldKey });
     if (oldKey !== attachment.r2Key) {
       object = await r2Bucket.get(oldKey);
     }
   }
 
   if (!object) {
+    console.error("❌ [getImage] R2に画像が存在しない", {
+      attachmentId: id,
+      r2Key: attachment.r2Key,
+    });
     return c.json({ error: "Image not found in storage" }, 404);
   }
+
+  console.log("✅ [getImage] R2から画像取得成功", {
+    attachmentId: id,
+    size: object.size,
+  });
 
   // 画像を返却
   const origin = c.req.header("Origin") || "https://petaboo.vercel.app";
   return new Response(object.body, {
     headers: {
       "Content-Type": attachment.mimeType,
-      "Cache-Control": "public, max-age=31536000", // 1年キャッシュ
+      "Cache-Control": "no-cache", // キャッシュ無効化（開発中）
       "Access-Control-Allow-Origin": origin,
       "Access-Control-Allow-Credentials": "true",
     },
@@ -811,7 +845,7 @@ export const getFile = async (c: any) => {
     headers: {
       "Content-Type": attachment.mimeType,
       "Content-Disposition": `inline; filename="${encodeURIComponent(attachment.fileName)}"`,
-      "Cache-Control": "public, max-age=31536000", // 1年キャッシュ
+      "Cache-Control": "no-cache", // キャッシュ無効化（開発中）
       "Access-Control-Allow-Origin": origin,
       "Access-Control-Allow-Credentials": "true",
     },
@@ -905,7 +939,7 @@ export const getPersonalImage = async (c: any) => {
   return new Response(object.body, {
     headers: {
       "Content-Type": attachment.mimeType,
-      "Cache-Control": "public, max-age=31536000",
+      "Cache-Control": "no-cache", // キャッシュ無効化（開発中）
       "Access-Control-Allow-Origin": origin,
       "Access-Control-Allow-Credentials": "true",
     },

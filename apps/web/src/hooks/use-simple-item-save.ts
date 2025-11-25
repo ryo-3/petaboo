@@ -213,12 +213,20 @@ export function useSimpleItemSave<T extends UnifiedItem>({
       return false;
     }
 
+    // Tiptapの空コンテンツ（<p></p>）と空文字列を同一視
+    const normalizeContent = (content: string) => {
+      const stripped = stripHtmlTags(content.trim());
+      return stripped || "";
+    };
+
     // メモの場合はcontentだけで判定（titleは送らないため）
     const textChanged =
       itemType === "memo"
-        ? currentContent !== initialContent.trim()
+        ? normalizeContent(currentContent) !==
+          normalizeContent(initialContent.trim())
         : currentTitle !== initialTitle.trim() ||
-          currentContent !== initialContent.trim();
+          normalizeContent(currentContent) !==
+            normalizeContent(initialContent.trim());
 
     // タスクの場合は優先度とステータスの変更もチェック
     let taskFieldsChanged = false;
@@ -911,6 +919,11 @@ export function useSimpleItemSave<T extends UnifiedItem>({
   ]);
 
   const hasUnsavedChanges = useMemo(() => {
+    // アイテム切り替え中または初期同期中は未保存変更なしとする
+    if (isItemTransition || isInitialSync) {
+      return false;
+    }
+
     const strippedTitle = stripHtmlTags(title);
     const strippedContent = stripHtmlTags(content);
     const isNewItem = !item || item.id === 0;
@@ -933,6 +946,8 @@ export function useSimpleItemSave<T extends UnifiedItem>({
     hasTagChanges,
     pendingImages.length,
     pendingDeletes.length,
+    isItemTransition,
+    isInitialSync,
   ]);
 
   return {

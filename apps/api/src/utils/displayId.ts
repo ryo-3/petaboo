@@ -1,7 +1,5 @@
-import { teamTasks } from "../db/schema/team/tasks";
-import { teamMemos } from "../db/schema/team/memos";
-import { teamDeletedTasks } from "../db/schema/team/deleted-tasks";
-import { teamDeletedMemos } from "../db/schema/team/deleted-memos";
+import { teamTasks, teamDeletedTasks } from "../db/schema/team/tasks";
+import { teamMemos, teamDeletedMemos } from "../db/schema/team/memos";
 import { eq, sql } from "drizzle-orm";
 import type { DB } from "../lib/db-d1";
 

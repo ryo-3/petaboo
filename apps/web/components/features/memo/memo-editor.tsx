@@ -935,6 +935,7 @@ function MemoEditor({
             if (latestMemo) {
               targetId =
                 (teamMode ? latestMemo.displayId : latestMemo.displayId) || "";
+
               if (localTags.length > 0) {
                 await updateTaggings(targetId);
                 setHasManualChanges(false);

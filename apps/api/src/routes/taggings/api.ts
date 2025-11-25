@@ -408,6 +408,7 @@ export function createAPI(app: AppType) {
     const newTagging: NewTagging = {
       tagId,
       targetType,
+      targetOriginalId: targetDisplayId, // target_original_id も設定
       targetDisplayId,
       userId: auth.userId,
       createdAt: new Date(),

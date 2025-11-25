@@ -1016,7 +1016,9 @@ function TaskEditor({
   }, [teamMode, task]);
 
   const handleSave = useCallback(async () => {
-    if (!title.trim() || isSaving || isDeleted) return;
+    if (!title.trim() || isSaving || isDeleted) {
+      return;
+    }
 
     // 保存前の状態を記録
     const wasNewTask = isNewTask;
@@ -1032,15 +1034,8 @@ function TaskEditor({
           : task.displayId
         : null;
 
-    // タグの変更がある場合は保存
-    if (hasTagChanges && task && task.id !== 0) {
-      const taskId =
-        (teamMode ? (task.displayId ?? task.displayId) : task.displayId) || "";
-      await updateTaggings(taskId);
-    } else if (
-      wasNewTask &&
-      (localTags.length > 0 || pendingImages.length > 0)
-    ) {
+    // 新規作成の場合、タグまたは画像がある場合は最新タスクを取得
+    if (wasNewTask && (localTags.length > 0 || pendingImages.length > 0)) {
       // 新規作成でタグまたは画像がある場合
       await new Promise((resolve) => setTimeout(resolve, 100));
 
@@ -1061,6 +1056,11 @@ function TaskEditor({
           }
         }
       }
+    } else if (hasTagChanges && task && task.id !== 0) {
+      // タグの変更がある場合は保存（既存タスク）
+      const taskId =
+        (teamMode ? (task.displayId ?? task.displayId) : task.displayId) || "";
+      await updateTaggings(taskId);
     }
 
     // 削除予定の画像を削除
@@ -1084,6 +1084,17 @@ function TaskEditor({
       queryClient.invalidateQueries({
         queryKey: ["all-attachments", teamId, "task"],
       });
+
+      // 個別タスクの添付ファイルキャッシュも無効化（エディター内表示のため）
+      if (teamMode && teamId) {
+        queryClient.invalidateQueries({
+          queryKey: ["attachments", teamId, "task", targetId],
+        });
+      } else {
+        queryClient.invalidateQueries({
+          queryKey: ["attachments", undefined, "task", targetId],
+        });
+      }
     }
 
     // 連続作成モードで新規タスクの場合、保存後にリセット
@@ -1584,7 +1595,7 @@ function TaskEditor({
         {/* スクロール可能なコンテンツ部分 */}
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden md:pt-0 pt-[130px]">
           <div
-            className={`relative h-full rounded-lg border border-transparent transition-colors ${
+            className={`relative h-full min-h-[500px] rounded-lg border border-transparent transition-colors ${
               isDragActive ? "border-dashed border-blue-400 bg-blue-50/40" : ""
             }`}
             onDragEnter={handleDragEnter}

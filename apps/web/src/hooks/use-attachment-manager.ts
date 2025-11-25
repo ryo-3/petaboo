@@ -129,6 +129,7 @@ export const useAttachmentManager = ({
 
       // バリデーション + 圧縮
       const result = await processFile(file);
+
       if (!result.success || !result.file) {
         return;
       }

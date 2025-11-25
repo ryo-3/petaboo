@@ -1230,6 +1230,7 @@ function TaskScreen({
       {/* 新規作成モード */}
       {taskScreenMode === "create" && (
         <TaskEditor
+          key="task-create"
           task={null}
           onClose={() => setTaskScreenMode("list")}
           onSelectTask={onSelectTask}
@@ -1264,6 +1265,7 @@ function TaskScreen({
       {/* 表示モード（既存タスク） */}
       {taskScreenMode === "view" && selectedTask && !selectedDeletedTask && (
         <TaskEditor
+          key={`task-view-${selectedTask.id}`}
           task={selectedTask}
           onClose={() => {
             if (teamMode) {
@@ -1302,6 +1304,7 @@ function TaskScreen({
       {/* 表示モード（削除済みタスク） */}
       {taskScreenMode === "view" && selectedDeletedTask && !selectedTask && (
         <TaskEditor
+          key={`task-deleted-${selectedDeletedTask.id}`}
           task={selectedDeletedTask}
           onClose={() => setTaskScreenMode("list")}
           taskEditorHasUnsavedChangesRef={taskEditorHasUnsavedChangesRef}

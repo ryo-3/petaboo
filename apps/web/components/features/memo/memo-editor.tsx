@@ -821,6 +821,14 @@ function MemoEditor({
             displayId: targetId,
           });
 
+          // 作成したメモをエディター状態に反映
+          lastSavedMemoRef.current = newMemo;
+          pendingSaveResultRef.current = {
+            savedMemo: newMemo,
+            wasEmpty: false,
+            isNewMemo: true,
+          };
+
           // キャッシュ更新
           queryClient.invalidateQueries({
             queryKey: ["team-memos", teamId],
@@ -853,6 +861,14 @@ function MemoEditor({
             memoId: newMemo.id,
             displayId: targetId,
           });
+
+          // 作成したメモをエディター状態に反映
+          lastSavedMemoRef.current = newMemo;
+          pendingSaveResultRef.current = {
+            savedMemo: newMemo,
+            wasEmpty: false,
+            isNewMemo: true,
+          };
 
           // ボード紐付け（選択されているもの）
           const boardsToAdd =
@@ -999,34 +1015,29 @@ function MemoEditor({
           queryKey: ["all-attachments", teamId, "memo"],
         });
 
-        // 画像のみ保存の場合、キャッシュを更新してメモ一覧に留まる
+        // 画像のみ保存の場合、キャッシュを更新
         if (hasOnlyImages) {
           console.log("🖼️ [画像保存] キャッシュ更新（画像のみ保存）");
           const queryKey =
             teamMode && teamId ? ["team-memos", teamId] : ["memos"];
           await queryClient.invalidateQueries({ queryKey });
           console.log("🖼️ [画像保存] キャッシュ更新完了");
-
-          // メモ一覧に留まるため、onSaveCompleteを呼ばない（pendingSaveResultRefを設定しない）
         }
       }
 
       console.log("🖼️ [画像保存] 画像保存処理完了（try-catchブロック終了前）");
 
-      // 画像のみ保存の場合は flushPendingSaveResult を呼ばない
+      // pendingSaveResultRefが設定されている場合はflushを呼ぶ
       console.log("🖼️ [画像保存] flushPendingSaveResult判定", {
         hasOnlyImages,
-        willFlush: !hasOnlyImages,
         hasPendingResult: !!pendingSaveResultRef.current,
       });
 
-      if (!hasOnlyImages) {
+      if (pendingSaveResultRef.current) {
         flushPendingSaveResult();
         console.log("🖼️ [画像保存] flushPendingSaveResult実行完了");
       } else {
-        console.log(
-          "🖼️ [画像保存] flushPendingSaveResultスキップ（メモ一覧に留まる）",
-        );
+        console.log("🖼️ [画像保存] pendingSaveResultRefなし、スキップ");
       }
     } catch (error) {
       console.error("❌ 保存に失敗しました:", error);
@@ -1475,7 +1486,7 @@ function MemoEditor({
         {/* スクロール可能なコンテンツ部分 */}
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
           <div
-            className={`relative h-full rounded-lg border border-transparent transition-colors ${
+            className={`relative h-full min-h-[500px] rounded-lg border border-transparent transition-colors ${
               isDragActive ? "border-dashed border-blue-400 bg-blue-50/40" : ""
             }`}
             onDragEnter={handleDragEnter}

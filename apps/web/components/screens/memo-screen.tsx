@@ -1128,6 +1128,7 @@ function MemoScreen({
       {/* 新規作成モード */}
       {memoScreenMode === "create" && (
         <MemoEditor
+          key="memo-create"
           memo={null}
           onClose={() => setMemoScreenMode("list")}
           onSaveComplete={handleSaveComplete}
@@ -1144,6 +1145,7 @@ function MemoScreen({
       {/* 表示モード（既存メモ） */}
       {memoScreenMode === "view" && selectedMemo && !selectedDeletedMemo && (
         <MemoEditor
+          key={`memo-view-${selectedMemo.id}`}
           memo={selectedMemo}
           onClose={() => {
             if (teamMode) {
@@ -1175,6 +1177,7 @@ function MemoScreen({
       {/* 表示モード（削除済みメモ） */}
       {memoScreenMode === "view" && selectedDeletedMemo && !selectedMemo && (
         <MemoEditor
+          key={`memo-deleted-${selectedDeletedMemo.id}`}
           memo={selectedDeletedMemo}
           onClose={() => {
             setMemoScreenMode("list");

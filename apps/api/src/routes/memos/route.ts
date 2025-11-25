@@ -598,7 +598,6 @@ app.openapi(
         for (const attachment of attachmentsToDelete) {
           try {
             await r2Bucket.delete(attachment.r2Key);
-            console.log(`🗑️ [R2削除成功] ${attachment.r2Key}`);
           } catch (error) {
             console.error(`❌ [R2削除失敗] ${attachment.r2Key}`, error);
             // R2削除失敗してもDB削除は続行

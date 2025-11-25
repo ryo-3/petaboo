@@ -27,7 +27,10 @@ export function useAuthenticatedImage(imageUrl: string | undefined) {
         });
 
         if (!response.ok) {
-          console.error("画像の読み込みに失敗しました:", response.status);
+          console.error("画像の読み込みに失敗しました:", {
+            status: response.status,
+            url: imageUrl,
+          });
           return;
         }
 

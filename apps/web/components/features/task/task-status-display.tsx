@@ -171,11 +171,15 @@ function TaskStatusDisplay({
         .filter(Boolean);
 
       // このタスクの添付ファイルを抽出（画像のみ）
-      const taskAttachments = allAttachments.filter(
-        (attachment) =>
-          identifiers.includes(attachment.attachedDisplayId || "") &&
-          attachment.mimeType.startsWith("image/"),
-      );
+      const taskAttachments = allAttachments.filter((attachment) => {
+        // attachedDisplayId または displayId を使用（API側の命名に対応）
+        const attachmentDisplayId =
+          attachment.attachedDisplayId || (attachment as any).displayId || "";
+        return (
+          identifiers.includes(attachmentDisplayId) &&
+          attachment.mimeType.startsWith("image/")
+        );
+      });
 
       return {
         task,
@@ -463,11 +467,15 @@ export function DeletedTaskDisplay({
       );
 
     // このタスクの添付ファイルを抽出（画像のみ）
-    const taskAttachments = allAttachments.filter(
-      (attachment) =>
-        taskIds.includes(attachment.attachedDisplayId || "") &&
-        attachment.mimeType.startsWith("image/"),
-    );
+    const taskAttachments = allAttachments.filter((attachment) => {
+      // attachedDisplayId または displayId を使用（API側の命名に対応）
+      const attachmentDisplayId =
+        attachment.attachedDisplayId || (attachment as any).displayId || "";
+      return (
+        taskIds.includes(attachmentDisplayId) &&
+        attachment.mimeType.startsWith("image/")
+      );
+    });
 
     /* eslint-disable react/prop-types */
     return (

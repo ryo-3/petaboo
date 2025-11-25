@@ -1153,20 +1153,13 @@ export function createAPI(app: AppType) {
 
   app.openapi(addItemToBoardRoute, async (c) => {
     try {
-      console.log("🟣 [API] ボードアイテム追加API呼び出し開始");
       const auth = getAuth(c);
       if (!auth?.userId) {
-        console.log("🟣 [API] 認証エラー: userId not found");
         return c.json({ error: "Unauthorized" }, 401);
       }
 
       const boardId = parseInt(c.req.param("id"));
       const body = await c.req.json();
-      console.log("🟣 [API] リクエストパラメータ:", {
-        boardId,
-        body,
-        userId: auth.userId,
-      });
 
       // Zodバリデーション
       const validationResult = AddItemToBoardSchema.safeParse(body);
@@ -1183,29 +1176,42 @@ export function createAPI(app: AppType) {
       const { itemType, itemId } = validationResult.data;
       const db = c.get("db");
 
-      // ボードの所有権確認（個人ボード）
-      const personalBoard = await db
-        .select()
-        .from(boards)
-        .where(and(eq(boards.id, boardId), eq(boards.userId, auth.userId)))
-        .limit(1);
+      // エンドポイントのパスでチーム/個人を判定
+      // /boards/{id}/items → 個人ボード
+      // /teams/{teamId}/boards/{id}/items → チームボード（チーム用ルートで処理）
+      const isTeamEndpoint = c.req.path.startsWith("/teams/");
 
-      // チームボード確認
-      const teamBoard = await db
-        .select()
-        .from(teamBoards)
-        .where(eq(teamBoards.id, boardId))
-        .limit(1);
+      let teamId: number | null = null;
+      let boardExists = false;
 
-      const isTeamBoard = teamBoard.length > 0;
-      const boardExists = personalBoard.length > 0 || isTeamBoard;
+      if (isTeamEndpoint) {
+        // チームボード確認
+        const teamBoard = await db
+          .select()
+          .from(teamBoards)
+          .where(eq(teamBoards.id, boardId))
+          .limit(1);
+
+        boardExists = teamBoard.length > 0;
+        if (boardExists) {
+          teamId = teamBoard[0].teamId;
+        }
+      } else {
+        // 個人ボードの所有権確認
+        const personalBoard = await db
+          .select()
+          .from(boards)
+          .where(and(eq(boards.id, boardId), eq(boards.userId, auth.userId)))
+          .limit(1);
+
+        boardExists = personalBoard.length > 0;
+      }
 
       if (!boardExists) {
         return c.json({ error: "Board not found" }, 404);
       }
 
-      // チームボードの場合はteamIdを取得
-      const teamId = isTeamBoard ? teamBoard[0].teamId : null;
+      const isTeamBoard = isTeamEndpoint && teamId !== null;
 
       // アイテムの存在確認と所有権確認、displayIdを取得
       // itemIdが既にdisplayId形式（文字列）の場合はそのまま使い、数値の場合は変換
@@ -1366,12 +1372,10 @@ export function createAPI(app: AppType) {
           createdAt: new Date(),
         };
 
-        console.log("🟣 [API] チームボードアイテム追加実行:", newItem);
         const result = await db
           .insert(teamBoardItems)
           .values(newItem)
           .returning();
-        console.log("🟣 [API] チームボードアイテム追加結果:", result[0]);
 
         // チームボードのupdatedAtを更新
         await db
@@ -1379,9 +1383,8 @@ export function createAPI(app: AppType) {
           .set({ updatedAt: new Date() })
           .where(eq(teamBoards.id, boardId));
 
-        console.log("🟣 [API] チームボードアイテム追加完了 - 201を返却");
         // boardIndexとしてpositionを返す
-        return c.json({ ...result[0], boardIndex: nextPosition }, 201);
+        return c.json({ ...result[0], boardIndex: nextBoardIndex }, 201);
       } else {
         const existing = await db
           .select()
@@ -1430,7 +1433,7 @@ export function createAPI(app: AppType) {
           .where(eq(boards.id, boardId));
 
         // boardIndexとしてpositionを返す
-        return c.json({ ...result[0], boardIndex: nextPosition }, 201);
+        return c.json({ ...result[0], boardIndex: nextBoardIndex }, 201);
       }
     } catch (error) {
       return c.json(

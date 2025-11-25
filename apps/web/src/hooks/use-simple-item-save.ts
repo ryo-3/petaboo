@@ -57,6 +57,7 @@ export function useSimpleItemSave<T extends UnifiedItem>({
   // propsとContextを統合（Contextを優先、後方互換性のためpropsも許容）
   const teamMode = isTeamMode || teamModeProp;
   const teamId = teamIdFromContext || teamIdProp;
+
   const [title, setTitle] = useState(() => item?.title || "");
   const [content, setContent] = useState(() => {
     if (itemType === "memo") {

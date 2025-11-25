@@ -86,19 +86,32 @@ export function useCreateTask(options?: {
     },
     onSuccess: (newTask) => {
       // ボードコンテキストの場合、ボードアイテムリストを再取得してboardIndexを反映
-      if (boardId && teamMode && teamId) {
-        // team-boardで始まる全てのクエリを無効化して再取得
-        queryClient.invalidateQueries({
-          queryKey: ["team-board", teamId],
-        });
-        // ボードアイテム一覧も無効化して強制再取得
-        queryClient.invalidateQueries({
-          queryKey: ["team-boards", teamId.toString(), boardId, "items"],
-        });
-        // 即座に再取得を実行
-        queryClient.refetchQueries({
-          queryKey: ["team-boards", teamId.toString(), boardId, "items"],
-        });
+      if (boardId) {
+        if (teamMode && teamId) {
+          // チームボード
+          // team-boardで始まる全てのクエリを無効化して再取得
+          queryClient.invalidateQueries({
+            queryKey: ["team-board", teamId],
+          });
+          // ボードアイテム一覧も無効化して強制再取得
+          queryClient.invalidateQueries({
+            queryKey: ["team-boards", teamId.toString(), boardId, "items"],
+          });
+          // 即座に再取得を実行
+          queryClient.refetchQueries({
+            queryKey: ["team-boards", teamId.toString(), boardId, "items"],
+          });
+        } else {
+          // 個人ボード
+          // ボードアイテム一覧を無効化して強制再取得
+          queryClient.invalidateQueries({
+            queryKey: ["boards", boardId, "items"],
+          });
+          // 即座に再取得を実行
+          queryClient.refetchQueries({
+            queryKey: ["boards", boardId, "items"],
+          });
+        }
       }
 
       // APIが不完全なデータしか返さないため、タスク一覧を無効化して再取得

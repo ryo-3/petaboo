@@ -856,7 +856,7 @@ function BoardDetailScreen({
   const totalNormalCount = allMemoItems.length + allTaskItems.length;
   const totalDeletedCount = deletedCount + deletedMemoCount;
   const shouldShowPanelControls =
-    teamMode && !rightPanelMode && (selectedMemo || selectedTask);
+    !rightPanelMode && !!(selectedMemo || selectedTask);
   const selectedItemType = selectedMemo ? "memo" : selectedTask ? "task" : null;
 
   const boardHeaderConfig = useMemo<HeaderControlPanelConfig | null>(() => {

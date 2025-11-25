@@ -210,16 +210,15 @@ function BoardDetailScreen({
   const selectedMemo = propSelectedMemo;
   const selectedTask = propSelectedTask;
 
-  // デスクトップ時のみ: アイテム選択時に一覧を非表示（モバイルでは未保存確認が動作しなくなるため除外）
-  useEffect(() => {
-    if (!isMobile && (selectedMemo || selectedTask)) {
-      // すでにfalseの場合は何もしない（不要な再レンダリングを防ぐ）
-      setShowListPanelInSelectedMode((prev) => {
-        if (prev === false) return prev;
-        return false;
-      });
-    }
-  }, [selectedMemo, selectedTask, isMobile]);
+  // 削除: アイテム選択時の一覧非表示を強制しない（ユーザーのlocalStorage設定を尊重）
+  // useEffect(() => {
+  //   if (!isMobile && (selectedMemo || selectedTask)) {
+  //     setShowListPanelInSelectedMode((prev) => {
+  //       if (prev === false) return prev;
+  //       return false;
+  //     });
+  //   }
+  // }, [selectedMemo, selectedTask, isMobile]);
 
   // 複数選択状態管理フック
   const {
@@ -694,7 +693,7 @@ function BoardDetailScreen({
   const totalNormalCount = allMemoItems.length + allTaskItems.length;
   const totalDeletedCount = deletedCount + deletedMemoCount;
   const shouldShowSelectedMode =
-    !rightPanelMode && (selectedMemo || selectedTask);
+    !rightPanelMode && !!(selectedMemo || selectedTask);
   const selectedItemType = selectedMemo ? "memo" : selectedTask ? "task" : null;
 
   // 選択モード時の一覧パネルトグルハンドラー

@@ -90,7 +90,14 @@ export function useCreateTask(options?: {
         // team-boardで始まる全てのクエリを無効化して再取得
         queryClient.invalidateQueries({
           queryKey: ["team-board", teamId],
-          refetchType: "active", // アクティブなクエリのみ再取得
+        });
+        // ボードアイテム一覧も無効化して強制再取得
+        queryClient.invalidateQueries({
+          queryKey: ["team-boards", teamId.toString(), boardId, "items"],
+        });
+        // 即座に再取得を実行
+        queryClient.refetchQueries({
+          queryKey: ["team-boards", teamId.toString(), boardId, "items"],
         });
       }
 

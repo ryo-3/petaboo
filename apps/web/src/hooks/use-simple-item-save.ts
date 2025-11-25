@@ -633,6 +633,39 @@ export function useSimpleItemSave<T extends UnifiedItem>({
                 queryKey: ["item-boards", itemType, createdItem.displayId],
               });
             }
+
+            // ボードアイテムリストを再取得してboardIndexを取得
+            if (initialBoardId) {
+              await queryClient.refetchQueries({
+                queryKey: teamMode
+                  ? ["team-boards", teamId?.toString(), initialBoardId, "items"]
+                  : ["boards", initialBoardId, "items"],
+              });
+
+              // 再取得したデータからboardIndex付きアイテムを取得
+              const boardItemsData = queryClient.getQueryData<{
+                items: Array<{
+                  itemType: string;
+                  content: T;
+                }>;
+              }>(
+                teamMode
+                  ? ["team-boards", teamId?.toString(), initialBoardId, "items"]
+                  : ["boards", initialBoardId, "items"],
+              );
+
+              // 作成したアイテムをboardIndexを含めて取得
+              if (boardItemsData?.items) {
+                const updatedItem = boardItemsData.items.find(
+                  (item) =>
+                    item.itemType === itemType &&
+                    item.content.displayId === createdItem.displayId,
+                );
+                if (updatedItem?.content) {
+                  createdItem = updatedItem.content;
+                }
+              }
+            }
           }
 
           onSaveComplete?.(createdItem, false, true);

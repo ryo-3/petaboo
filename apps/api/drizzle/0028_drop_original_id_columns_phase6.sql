@@ -29,6 +29,9 @@ ALTER TABLE team_taggings DROP COLUMN target_original_id;
 -- team_comments
 ALTER TABLE team_comments DROP COLUMN target_original_id;
 
+-- team_attachments
+ALTER TABLE team_attachments DROP COLUMN original_id;
+
 -- 確認用クエリ（実行後にカラムが存在しないことを確認）
 -- PRAGMA table_info(team_tasks);
 -- PRAGMA table_info(team_memos);
@@ -36,3 +39,4 @@ ALTER TABLE team_comments DROP COLUMN target_original_id;
 -- PRAGMA table_info(team_notifications);
 -- PRAGMA table_info(team_taggings);
 -- PRAGMA table_info(team_comments);
+-- PRAGMA table_info(team_attachments);

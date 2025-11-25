@@ -687,7 +687,6 @@ app.openapi(
         .select({
           id: teamDeletedTasks.id,
           teamId: teamDeletedTasks.teamId,
-          originalId: teamDeletedTasks.displayId,
           displayId: teamDeletedTasks.displayId,
           uuid: teamDeletedTasks.uuid,
           title: teamDeletedTasks.title,

@@ -400,7 +400,6 @@ export const uploadAttachment = async (c: any) => {
         userId: auth.userId,
         attachedTo,
         attachedDisplayId,
-        originalId: displayId, // Phase 6で削除予定（暫定的にdisplayIdと同じ値）
         displayId,
         fileName: file.name,
         fileSize: file.size,

@@ -766,9 +766,7 @@ app.openapi(
         .where(eq(teamMemos.id, insertResult[0].id))
         .get();
 
-      console.log(
-        `📤 [復元API応答] displayId="${restoredMemo?.displayId}" originalId="${restoredMemo?.originalId}"`,
-      );
+      console.log(`📤 [復元API応答] displayId="${restoredMemo?.displayId}"`);
 
       // 削除済みテーブルから削除
       await db

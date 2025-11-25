@@ -3,8 +3,6 @@ import { useRouter } from "next/navigation";
 import { useNavigation } from "@/src/contexts/navigation-context";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
-import { useQueryClient } from "@tanstack/react-query";
-import type { Attachment } from "@/src/hooks/use-attachments";
 
 interface UseMainClientHandlersProps {
   setSelectedMemo: (memo: Memo | null) => void;
@@ -37,7 +35,6 @@ export function useMainClientHandlers({
 }: UseMainClientHandlersProps) {
   const router = useRouter();
   const { setScreenMode, setCurrentMode } = useNavigation();
-  const queryClient = useQueryClient();
 
   // ==========================================
   // 共通ユーティリティ関数
@@ -90,47 +87,15 @@ export function useMainClientHandlers({
   const handleSelectMemo = useCallback(
     (memo: Memo | null) => {
       if (memo) {
-        console.log("🎯 [handleSelectMemo] メモ選択", {
-          memoId: memo.id,
-          displayId: memo.displayId,
-          title: memo.title,
-        });
-
-        // キャッシュから画像情報を取得（個人・チーム両対応）
-        const teamId = memo.teamId;
-        const attachmentQueryKey = [
-          "attachments",
-          teamId,
-          "memo",
-          memo.displayId,
-        ] as const;
-
-        const attachments =
-          queryClient.getQueryData<Attachment[]>(attachmentQueryKey);
-
-        console.log("🖼️ [handleSelectMemo] 画像情報", {
-          queryKey: attachmentQueryKey,
-          attachmentsCount: attachments?.length ?? 0,
-          attachments:
-            attachments?.map((a) => ({
-              id: a.id,
-              fileName: a.fileName,
-              displayId: a.displayId,
-              attachedDisplayId: a.attachedDisplayId,
-              url: a.url.substring(0, 50) + "...",
-            })) ?? [],
-        });
-
         setSelectedMemo(memo);
         setScreenMode("memo");
         // 選択されたメモまでスクロール
         scrollToSelectedItem(memo.id, "memo");
       } else {
-        console.log("🎯 [handleSelectMemo] メモ選択解除");
         setSelectedMemo(null);
       }
     },
-    [setSelectedMemo, setScreenMode, scrollToSelectedItem, queryClient],
+    [setSelectedMemo, setScreenMode, scrollToSelectedItem],
   );
 
   /** 削除済みメモ選択 - メモ画面に遷移 */

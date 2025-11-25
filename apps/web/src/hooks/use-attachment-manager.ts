@@ -68,24 +68,6 @@ export const useAttachmentManager = ({
   const attachmentsRef = useRef(attachments);
   const pendingDeletesRef = useRef(pendingDeletes);
 
-  // デバッグログ: 取得した画像情報
-  console.log("🖼️ [useAttachmentManager] 画像取得", {
-    teamMode,
-    teamId,
-    itemType,
-    displayId,
-    itemId: item?.id,
-    attachmentsCount: attachments.length,
-    pendingImagesCount: pendingImages.length,
-    pendingImageNames: pendingImages.map((f) => f.name),
-    attachments: attachments.map((a) => ({
-      id: a.id,
-      fileName: a.fileName,
-      teamId: a.teamId,
-      attachedDisplayId: a.attachedDisplayId,
-    })),
-  });
-
   // レンダリング時にrefを同期（useEffectを使わない）
   attachmentsRef.current = attachments;
   pendingDeletesRef.current = pendingDeletes;
@@ -249,35 +231,8 @@ export const useAttachmentManager = ({
           0,
         );
 
-        // 🔍 アップロード前のファイル情報をログ出力
-        console.log("🖼️ [uploadPendingImages] アップロード開始", {
-          teamMode,
-          teamId,
-          itemType,
-          targetDisplayId,
-          displayId,
-          filesCount: pendingImages.length,
-          files: pendingImages.map((f) => ({
-            name: f.name,
-            size: f.size,
-            type: f.type,
-          })),
-        });
-
         const results = await Promise.allSettled(
-          pendingImages.map(async (file, index) => {
-            console.log(
-              `🖼️ [uploadPendingImages] ファイル${index + 1}/${pendingImages.length} アップロード中`,
-              {
-                fileName: file.name,
-                fileSize: file.size,
-                fileType: file.type,
-                targetDisplayId,
-                teamMode,
-                teamId,
-              },
-            );
-
+          pendingImages.map(async (file) => {
             // targetDisplayIdが指定されている場合は、直接fetch APIを使用（新規作成時）
             if (targetDisplayId && targetDisplayId !== displayId) {
               const formData = new FormData();
@@ -292,12 +247,6 @@ export const useAttachmentManager = ({
                   ? `${API_URL}/attachments/upload?teamId=${teamId}`
                   : `${API_URL}/attachments/upload`;
 
-              console.log(`🖼️ [uploadPendingImages] POST ${uploadUrl}`, {
-                fileName: file.name,
-                attachedTo: itemType,
-                attachedDisplayId: targetDisplayId,
-              });
-
               const response = await fetch(uploadUrl, {
                 method: "POST",
                 headers: {
@@ -308,26 +257,12 @@ export const useAttachmentManager = ({
 
               if (!response.ok) {
                 const error = await response.json();
-                console.error("🖼️ [uploadPendingImages] アップロード失敗", {
-                  fileName: file.name,
-                  status: response.status,
-                  error,
-                });
                 throw new Error(
                   error.error || "画像のアップロードに失敗しました",
                 );
               }
 
               const result = await response.json();
-              console.log(
-                `🖼️ [uploadPendingImages] ファイル${index + 1} アップロード成功`,
-                {
-                  fileName: file.name,
-                  attachmentId: result.id,
-                  attachmentDisplayId: result.displayId,
-                  url: result.url,
-                },
-              );
               return result;
             }
             // 通常のアップロード（既存アイテム）
@@ -370,9 +305,7 @@ export const useAttachmentManager = ({
         // キャッシュを更新（targetDisplayId使用時）
         if (failedCount === 0) {
           // 先にpendingImagesをクリア（重複表示防止）
-          console.log("🖼️ [useAttachmentManager] pendingImagesクリア前");
           setPendingImages([]);
-          console.log("🖼️ [useAttachmentManager] pendingImagesクリア完了");
 
           if (targetDisplayId) {
             const queryKey = [
@@ -382,12 +315,8 @@ export const useAttachmentManager = ({
               displayId,
             ] as const;
 
-            console.log("🖼️ [useAttachmentManager] キャッシュinvalidate開始", {
-              queryKey,
-            });
             // pendingImagesクリア後にリフェッチ
             await queryClient.invalidateQueries({ queryKey });
-            console.log("🖼️ [useAttachmentManager] キャッシュinvalidate完了");
           }
         }
 

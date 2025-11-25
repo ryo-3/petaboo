@@ -15,8 +15,8 @@
     "dev": "> ../../api.log && wrangler dev --port 7594 2>&1 | ../../filter-logs.sh ../../api.log",
     "deploy": "wrangler deploy",
     "db:generate": "drizzle-kit generate",
-    "db:migration:local": "drizzle-kit push --config drizzle.config.local.ts",
-    "db:migration:prod": "drizzle-kit push",
+    "db:migration:local": "wrangler d1 migrations apply DB --local",
+    "db:migration:prod": "wrangler d1 migrations apply DB --remote",
     "db:studio:local": "drizzle-kit studio --port 8795 --config drizzle.config.local.ts",
     "db:studio:prpd": "drizzle-kit studio --port 8796",
     "db:reset:local": "rm -rf .wrangler && rm -rf ../../.wrangler"

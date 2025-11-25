@@ -211,6 +211,13 @@
       "when": 1763994823396,
       "tag": "0029_fixed_psynapse",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "6",
+      "when": 1764066264998,
+      "tag": "0030_secret_swarm",
+      "breakpoints": true
     }
   ]
 }

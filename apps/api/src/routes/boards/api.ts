@@ -38,7 +38,13 @@ async function getOriginalId(
     const memo = await db
       .select({ id: memos.id, displayId: memos.displayId })
       .from(memos)
-      .where(and(eq(memos.id, numericId), eq(memos.userId, userId)))
+      .where(
+        and(
+          eq(memos.id, numericId),
+          eq(memos.userId, userId),
+          isNull(memos.deletedAt),
+        ),
+      )
       .limit(1);
     if (memo.length > 0) {
       // displayIdがあればそれを返し、なければIDから生成
@@ -49,7 +55,13 @@ async function getOriginalId(
     const task = await db
       .select({ id: tasks.id, displayId: tasks.displayId })
       .from(tasks)
-      .where(and(eq(tasks.id, numericId), eq(tasks.userId, userId)))
+      .where(
+        and(
+          eq(tasks.id, numericId),
+          eq(tasks.userId, userId),
+          isNull(tasks.deletedAt),
+        ),
+      )
       .limit(1);
     if (task.length > 0) {
       // displayIdがあればそれを返し、なければIDから生成
@@ -254,6 +266,7 @@ export function createAPI(app: AppType) {
                 and(
                   eq(memos.displayId, item.displayId),
                   eq(memos.userId, auth.userId),
+                  isNull(memos.deletedAt),
                 ),
               )
               .limit(1);
@@ -277,6 +290,7 @@ export function createAPI(app: AppType) {
                 and(
                   eq(tasks.displayId, item.displayId),
                   eq(tasks.userId, auth.userId),
+                  isNull(tasks.deletedAt),
                 ),
               )
               .limit(1);
@@ -938,6 +952,7 @@ export function createAPI(app: AppType) {
               and(
                 eq(memos.displayId, item.displayId),
                 eq(memos.userId, auth.userId),
+                isNull(memos.deletedAt),
               ),
             )
             .limit(1);
@@ -967,6 +982,7 @@ export function createAPI(app: AppType) {
               and(
                 eq(tasks.displayId, item.displayId),
                 eq(tasks.userId, auth.userId),
+                isNull(tasks.deletedAt),
               ),
             )
             .limit(1);
@@ -1297,6 +1313,7 @@ export function createAPI(app: AppType) {
               and(
                 eq(memos.displayId, itemId.toString()),
                 eq(memos.userId, auth.userId),
+                isNull(memos.deletedAt),
               ),
             )
             .limit(1);
@@ -1311,6 +1328,7 @@ export function createAPI(app: AppType) {
               and(
                 eq(tasks.displayId, itemId.toString()),
                 eq(tasks.userId, auth.userId),
+                isNull(tasks.deletedAt),
               ),
             )
             .limit(1);

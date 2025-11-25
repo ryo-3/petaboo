@@ -1,6 +1,6 @@
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { eq, desc, and, sql, isNull, isNotNull } from "drizzle-orm";
 import { aliasedTable } from "drizzle-orm/alias";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { databaseMiddleware } from "../../middleware/database";
@@ -170,7 +170,7 @@ app.openapi(
           eq(teamTasks.teamId, assigneeMembers.teamId),
         ),
       )
-      .where(eq(teamTasks.teamId, teamId))
+      .where(and(eq(teamTasks.teamId, teamId), isNull(teamTasks.deletedAt)))
       .orderBy(
         // 優先度順: high(3) > medium(2) > low(1)
         desc(
@@ -566,42 +566,33 @@ app.openapi(
     const task = await db
       .select()
       .from(teamTasks)
-      .where(and(eq(teamTasks.id, id), eq(teamTasks.teamId, teamId)))
+      .where(
+        and(
+          eq(teamTasks.id, id),
+          eq(teamTasks.teamId, teamId),
+          isNull(teamTasks.deletedAt),
+        ),
+      )
       .get();
 
     if (!task) {
       return c.json({ error: "Team task not found" }, 404);
     }
 
-    // D1はトランザクションをサポートしないため、順次実行
+    // 論理削除
     try {
       console.log(`🗑️ [タスク削除開始] id=${id} displayId="${task.displayId}"`);
 
-      // 削除済みテーブルに挿入
-      await db.insert(teamDeletedTasks).values({
-        teamId,
-        userId: task.userId,
-        displayId: task.displayId,
-        uuid: task.uuid,
-        title: task.title,
-        description: task.description,
-        status: task.status,
-        priority: task.priority,
-        dueDate: task.dueDate,
-        categoryId: task.categoryId,
-        boardCategoryId: task.boardCategoryId,
-        assigneeId: task.assigneeId,
-        createdAt: task.createdAt,
-        updatedAt: task.updatedAt,
-        deletedAt: Math.floor(Date.now() / 1000),
-      });
+      // deleted_atを設定して論理削除
+      await db
+        .update(teamTasks)
+        .set({
+          deletedAt: Math.floor(Date.now() / 1000),
+          updatedAt: Math.floor(Date.now() / 1000),
+        })
+        .where(eq(teamTasks.id, id));
 
-      console.log(
-        `💾 [削除テーブルに保存] displayId="${task.displayId}"を保持`,
-      );
-
-      // 元テーブルから削除
-      await db.delete(teamTasks).where(eq(teamTasks.id, id));
+      console.log(`💾 [論理削除完了] displayId="${task.displayId}"を保持`);
     } catch (error) {
       console.error("チームタスク削除エラー:", error);
       return c.json({ error: "Failed to delete team task" }, 500);
@@ -685,25 +676,27 @@ app.openapi(
     try {
       const deletedTasks = await db
         .select({
-          id: teamDeletedTasks.id,
-          teamId: teamDeletedTasks.teamId,
-          displayId: teamDeletedTasks.displayId,
-          uuid: teamDeletedTasks.uuid,
-          title: teamDeletedTasks.title,
-          description: teamDeletedTasks.description,
-          status: teamDeletedTasks.status,
-          priority: teamDeletedTasks.priority,
-          dueDate: teamDeletedTasks.dueDate,
-          categoryId: teamDeletedTasks.categoryId,
-          boardCategoryId: teamDeletedTasks.boardCategoryId,
-          assigneeId: teamDeletedTasks.assigneeId,
-          createdAt: teamDeletedTasks.createdAt,
-          updatedAt: teamDeletedTasks.updatedAt,
-          deletedAt: teamDeletedTasks.deletedAt,
+          id: teamTasks.id,
+          teamId: teamTasks.teamId,
+          displayId: teamTasks.displayId,
+          uuid: teamTasks.uuid,
+          title: teamTasks.title,
+          description: teamTasks.description,
+          status: teamTasks.status,
+          priority: teamTasks.priority,
+          dueDate: teamTasks.dueDate,
+          categoryId: teamTasks.categoryId,
+          boardCategoryId: teamTasks.boardCategoryId,
+          assigneeId: teamTasks.assigneeId,
+          createdAt: teamTasks.createdAt,
+          updatedAt: teamTasks.updatedAt,
+          deletedAt: teamTasks.deletedAt,
         })
-        .from(teamDeletedTasks)
-        .where(eq(teamDeletedTasks.teamId, teamId))
-        .orderBy(desc(teamDeletedTasks.deletedAt));
+        .from(teamTasks)
+        .where(
+          and(eq(teamTasks.teamId, teamId), isNotNull(teamTasks.deletedAt)),
+        )
+        .orderBy(desc(teamTasks.deletedAt));
 
       // 各タスクのコメント数を取得
       const result = await Promise.all(
@@ -806,14 +799,15 @@ app.openapi(
     }
 
     try {
-      // 削除済みタスクを検索
+      // 削除済みタスクを検索（元テーブルから）
       const deletedTask = await db
         .select()
-        .from(teamDeletedTasks)
+        .from(teamTasks)
         .where(
           and(
-            eq(teamDeletedTasks.teamId, teamId),
-            eq(teamDeletedTasks.displayId, displayId),
+            eq(teamTasks.teamId, teamId),
+            eq(teamTasks.displayId, displayId),
+            isNotNull(teamTasks.deletedAt), // 削除済み確認
           ),
         )
         .limit(1);
@@ -824,32 +818,20 @@ app.openapi(
 
       const taskData = deletedTask[0];
 
-      // チームタスクテーブルに復元
+      // deleted_atをNULLにして復元
       const currentTimestamp = Math.floor(Date.now() / 1000);
       console.log(`🔄 [タスク復元開始] displayId="${taskData.displayId}"`);
 
-      const insertResult = await db
-        .insert(teamTasks)
-        .values({
-          teamId: taskData.teamId,
-          userId: auth.userId,
-          displayId: taskData.displayId,
-          uuid: taskData.uuid,
-          title: taskData.title,
-          description: taskData.description,
-          status: taskData.status,
-          priority: taskData.priority,
-          dueDate: taskData.dueDate,
-          categoryId: taskData.categoryId,
-          boardCategoryId: taskData.boardCategoryId,
-          assigneeId: taskData.assigneeId,
-          createdAt: taskData.createdAt,
+      await db
+        .update(teamTasks)
+        .set({
+          deletedAt: null,
           updatedAt: currentTimestamp,
         })
-        .returning({ id: teamTasks.id });
+        .where(eq(teamTasks.id, taskData.id));
 
       console.log(
-        `✅ [タスク復元INSERT完了] 新しい内部id=${insertResult[0].id} (displayIdは"${taskData.displayId}"のまま)`,
+        `✅ [タスク復元UPDATE完了] id=${taskData.id} (displayIdは"${taskData.displayId}"のまま)`,
       );
 
       // 復元されたタスクを作成者情報付きで取得
@@ -857,17 +839,12 @@ app.openapi(
         .select(getTeamTaskSelectFields())
         .from(teamTasks)
         .leftJoin(teamMembers, getTeamTaskMemberJoin())
-        .where(eq(teamTasks.id, insertResult[0].id))
+        .where(eq(teamTasks.id, taskData.id))
         .get();
 
       console.log(
         `📤 [タスク復元API応答] displayId="${restoredTask?.displayId}"`,
       );
-
-      // 削除済みテーブルから削除
-      await db
-        .delete(teamDeletedTasks)
-        .where(eq(teamDeletedTasks.id, taskData.id));
 
       return c.json(restoredTask);
     } catch (error) {
@@ -1006,13 +983,14 @@ app.openapi(
           ),
         );
 
-      // 4. 削除済みタスクを検索して完全削除
+      // 4. 削除済みタスクを検索して完全削除（元テーブルから物理削除）
       const deletedResult = await db
-        .delete(teamDeletedTasks)
+        .delete(teamTasks)
         .where(
           and(
-            eq(teamDeletedTasks.teamId, teamId),
-            eq(teamDeletedTasks.displayId, displayId),
+            eq(teamTasks.teamId, teamId),
+            eq(teamTasks.displayId, displayId),
+            isNotNull(teamTasks.deletedAt), // 削除済み確認
           ),
         )
         .returning();

@@ -129,7 +129,7 @@ app.openapi(
       })
       .from(teamMemos)
       .leftJoin(teamMembers, getTeamMemoMemberJoin())
-      .where(eq(teamMemos.teamId, teamId))
+      .where(and(eq(teamMemos.teamId, teamId), isNull(teamMemos.deletedAt)))
       .orderBy(desc(teamMemos.updatedAt), desc(teamMemos.createdAt));
 
     return c.json(result, 200);
@@ -700,14 +700,15 @@ app.openapi(
     );
 
     try {
-      // 削除済みメモを検索
+      // 削除済みメモを検索（元テーブルから）
       const deletedMemo = await db
         .select()
-        .from(teamDeletedMemos)
+        .from(teamMemos)
         .where(
           and(
-            eq(teamDeletedMemos.teamId, teamId),
-            eq(teamDeletedMemos.displayId, displayId),
+            eq(teamMemos.teamId, teamId),
+            eq(teamMemos.displayId, displayId),
+            isNotNull(teamMemos.deletedAt), // 削除済み確認
           ),
         )
         .limit(1);
@@ -732,26 +733,20 @@ app.openapi(
         userId: memoData.userId,
       });
 
-      // チームメモテーブルに復元
+      // deleted_atをNULLにして復元
       const currentTimestamp = Math.floor(Date.now() / 1000);
       console.log(`🔄 [復元開始] displayId="${memoData.displayId}"`);
 
-      const insertResult = await db
-        .insert(teamMemos)
-        .values({
-          teamId: memoData.teamId,
-          userId: auth.userId,
-          displayId: memoData.displayId,
-          uuid: memoData.uuid,
-          title: memoData.title,
-          content: memoData.content,
-          createdAt: memoData.createdAt,
+      await db
+        .update(teamMemos)
+        .set({
+          deletedAt: null,
           updatedAt: currentTimestamp,
         })
-        .returning({ id: teamMemos.id });
+        .where(eq(teamMemos.id, memoData.id));
 
       console.log(
-        `✅ [復元INSERT完了] 新しい内部id=${insertResult[0].id} (displayIdは"${memoData.displayId}"のまま)`,
+        `✅ [復元UPDATE完了] id=${memoData.id} (displayIdは"${memoData.displayId}"のまま)`,
       );
 
       // 復元されたメモを作成者情報付きで取得
@@ -759,18 +754,13 @@ app.openapi(
         .select(getTeamMemoSelectFields())
         .from(teamMemos)
         .leftJoin(teamMembers, getTeamMemoMemberJoin())
-        .where(eq(teamMemos.id, insertResult[0].id))
+        .where(eq(teamMemos.id, memoData.id))
         .get();
 
       console.log(`📤 [復元API応答] displayId="${restoredMemo?.displayId}"`);
 
-      // 削除済みテーブルから削除
-      await db
-        .delete(teamDeletedMemos)
-        .where(eq(teamDeletedMemos.id, memoData.id));
-
       console.log(
-        `✅ チームメモ復元成功: id=${insertResult[0].id}, title=${memoData.title}, teamId=${teamId}`,
+        `✅ チームメモ復元成功: id=${memoData.id}, title=${memoData.title}, teamId=${teamId}`,
       );
 
       return c.json(restoredMemo);
@@ -918,13 +908,14 @@ app.openapi(
           ),
         );
 
-      // 4. 削除済みメモを検索して完全削除
+      // 4. 削除済みメモを検索して完全削除（元テーブルから物理削除）
       const deletedResult = await db
-        .delete(teamDeletedMemos)
+        .delete(teamMemos)
         .where(
           and(
-            eq(teamDeletedMemos.teamId, teamId),
-            eq(teamDeletedMemos.displayId, displayId),
+            eq(teamMemos.teamId, teamId),
+            eq(teamMemos.displayId, displayId),
+            isNotNull(teamMemos.deletedAt), // 削除済み確認
           ),
         )
         .returning();
@@ -1007,7 +998,13 @@ app.openapi(getTeamMemoBoards, async (c) => {
     const memo = await db
       .select({ displayId: teamMemos.displayId })
       .from(teamMemos)
-      .where(and(eq(teamMemos.displayId, memoId), eq(teamMemos.teamId, teamId)))
+      .where(
+        and(
+          eq(teamMemos.displayId, memoId),
+          eq(teamMemos.teamId, teamId),
+          isNull(teamMemos.deletedAt),
+        ),
+      )
       .limit(1);
 
     if (memo.length === 0) {

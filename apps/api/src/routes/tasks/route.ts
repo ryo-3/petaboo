@@ -815,14 +815,14 @@ app.openapi(
         })
         .returning({ id: tasks.id });
 
-      // originalIdは元の値を保持（新しいIDに更新しない）
+      // displayIdは元の値を保持（新しいIDに更新しない）
 
-      // 関連するboard_itemsのdeletedAtをNULLに戻す（originalIdは元の値を保持）
+      // 関連するboard_itemsのdeletedAtをNULLに戻す（displayIdは元の値を保持）
       await db
         .update(boardItems)
         .set({
           deletedAt: null,
-          // originalIdは元の値（deletedTask.displayId）を保持
+          // displayIdは元の値を保持
         })
         .where(
           and(

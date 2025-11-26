@@ -3,7 +3,7 @@ import { z } from "zod";
 import { eq, desc, and, isNull, isNotNull } from "drizzle-orm";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { databaseMiddleware } from "../../middleware/database";
-import { memos, deletedMemos } from "../../db/schema/memos";
+import { memos } from "../../db/schema/memos";
 import { boardItems } from "../../db/schema/boards";
 import { taggings } from "../../db/schema/tags";
 import { attachments } from "../../db/schema/attachments";
@@ -567,7 +567,7 @@ app.openapi(
         .where(
           and(
             eq(attachments.attachedTo, "memo"),
-            eq(attachments.attachedDisplayId, displayId),
+            eq(attachments.displayId, displayId),
             eq(attachments.userId, auth.userId),
           ),
         );
@@ -585,43 +585,41 @@ app.openapi(
         }
       }
 
-      const result = db.transaction((tx) => {
-        // 1. タグ付けを削除（タグ本体は保持）
-        tx.delete(taggings)
-          .where(
-            and(
-              eq(taggings.targetType, "memo"),
-              eq(taggings.targetDisplayId, displayId),
-            ),
-          )
-          .run();
+      // 1. タグ付けを削除（タグ本体は保持）
+      await db
+        .delete(taggings)
+        .where(
+          and(
+            eq(taggings.targetType, "memo"),
+            eq(taggings.targetDisplayId, displayId),
+          ),
+        )
+        .run();
 
-        // 2. 添付ファイルを削除
-        tx.delete(attachments)
-          .where(
-            and(
-              eq(attachments.attachedTo, "memo"),
-              eq(attachments.attachedDisplayId, displayId),
-            ),
-          )
-          .run();
+      // 2. 添付ファイルを削除
+      await db
+        .delete(attachments)
+        .where(
+          and(
+            eq(attachments.attachedTo, "memo"),
+            eq(attachments.displayId, displayId),
+          ),
+        )
+        .run();
 
-        // 3. 関連するボードアイテムは削除しない（削除済みタブで表示するため保持）
+      // 3. 関連するボードアイテムは削除しない（削除済みタブで表示するため保持）
 
-        // 4. メモを物理削除
-        const deleteResult = tx
-          .delete(memos)
-          .where(
-            and(
-              eq(memos.displayId, displayId),
-              eq(memos.userId, auth.userId),
-              isNotNull(memos.deletedAt), // 削除済み確認
-            ),
-          )
-          .run();
-
-        return deleteResult;
-      });
+      // 4. メモを物理削除
+      const result = await db
+        .delete(memos)
+        .where(
+          and(
+            eq(memos.displayId, displayId),
+            eq(memos.userId, auth.userId),
+            isNotNull(memos.deletedAt), // 削除済み確認
+          ),
+        )
+        .run();
 
       if (result.changes === 0) {
         return c.json({ error: "Deleted note not found" }, 404);

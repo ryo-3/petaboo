@@ -4,7 +4,7 @@ import { eq, desc, and, sql, isNull, isNotNull } from "drizzle-orm";
 import { aliasedTable } from "drizzle-orm/alias";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { databaseMiddleware } from "../../middleware/database";
-import { teamTasks, teamDeletedTasks } from "../../db/schema/team/tasks";
+import { teamTasks } from "../../db/schema/team/tasks";
 import { teamMembers } from "../../db/schema/team/teams";
 import { teamComments } from "../../db/schema/team/comments";
 import { teamAttachments } from "../../db/schema/team/attachments";

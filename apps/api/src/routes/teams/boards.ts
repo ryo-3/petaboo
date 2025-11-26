@@ -9,8 +9,6 @@ import {
   teamBoardItems,
   teamMemos,
   teamTasks,
-  teamDeletedMemos,
-  teamDeletedTasks,
   teamComments,
 } from "../../db";
 import type {
@@ -1010,17 +1008,27 @@ export function createTeamBoardsAPI(app: AppType) {
         return c.json({ error: "ボードが見つかりません" }, 404);
       }
 
-      // チーム削除済みメモを取得
+      // チーム削除済みメモを取得（論理削除済み）
       const deletedMemos = await db
         .select()
-        .from(teamDeletedMemos)
-        .where(eq(teamDeletedMemos.teamId, parseInt(teamId)));
+        .from(teamMemos)
+        .where(
+          and(
+            eq(teamMemos.teamId, parseInt(teamId)),
+            isNotNull(teamMemos.deletedAt),
+          ),
+        );
 
-      // チーム削除済みタスクを取得
+      // チーム削除済みタスクを取得（論理削除済み）
       const deletedTasks = await db
         .select()
-        .from(teamDeletedTasks)
-        .where(eq(teamDeletedTasks.teamId, parseInt(teamId)));
+        .from(teamTasks)
+        .where(
+          and(
+            eq(teamTasks.teamId, parseInt(teamId)),
+            isNotNull(teamTasks.deletedAt),
+          ),
+        );
 
       // 各削除済みメモのコメント数を取得
       const deletedMemosWithCommentCount = await Promise.all(

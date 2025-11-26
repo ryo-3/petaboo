@@ -1,5 +1,5 @@
-import { teamTasks, teamDeletedTasks } from "../db/schema/team/tasks";
-import { teamMemos, teamDeletedMemos } from "../db/schema/team/memos";
+import { teamTasks } from "../db/schema/team/tasks";
+import { teamMemos } from "../db/schema/team/memos";
 import { eq, sql } from "drizzle-orm";
 import type { DB } from "../lib/db-d1";
 
@@ -13,7 +13,7 @@ export async function generateTaskDisplayId(
   db: DB,
   teamId: number,
 ): Promise<string> {
-  // 通常テーブルから最大値を取得
+  // 元テーブルから最大値を取得（削除済み含む）
   const maxActive = await db
     .select({
       max: sql<number | null>`MAX(CAST(display_id AS INTEGER))`,
@@ -22,17 +22,7 @@ export async function generateTaskDisplayId(
     .where(eq(teamTasks.teamId, teamId))
     .get();
 
-  // 削除済みテーブルからも最大値を取得
-  const maxDeleted = await db
-    .select({
-      max: sql<number | null>`MAX(CAST(display_id AS INTEGER))`,
-    })
-    .from(teamDeletedTasks)
-    .where(eq(teamDeletedTasks.teamId, teamId))
-    .get();
-
-  // 両方の最大値を比較して、大きい方を使用
-  const max = Math.max(maxActive?.max || 0, maxDeleted?.max || 0);
+  const max = maxActive?.max || 0;
   const nextSeq = max + 1;
   return nextSeq.toString();
 }
@@ -47,7 +37,7 @@ export async function generateMemoDisplayId(
   db: DB,
   teamId: number,
 ): Promise<string> {
-  // 通常テーブルから最大値を取得
+  // 元テーブルから最大値を取得（削除済み含む）
   const maxActive = await db
     .select({
       max: sql<number | null>`MAX(CAST(display_id AS INTEGER))`,
@@ -56,17 +46,7 @@ export async function generateMemoDisplayId(
     .where(eq(teamMemos.teamId, teamId))
     .get();
 
-  // 削除済みテーブルからも最大値を取得
-  const maxDeleted = await db
-    .select({
-      max: sql<number | null>`MAX(CAST(display_id AS INTEGER))`,
-    })
-    .from(teamDeletedMemos)
-    .where(eq(teamDeletedMemos.teamId, teamId))
-    .get();
-
-  // 両方の最大値を比較して、大きい方を使用
-  const max = Math.max(maxActive?.max || 0, maxDeleted?.max || 0);
+  const max = maxActive?.max || 0;
   const nextSeq = max + 1;
   return nextSeq.toString();
 }

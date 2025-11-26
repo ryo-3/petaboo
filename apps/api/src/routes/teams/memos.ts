@@ -3,7 +3,7 @@ import { z } from "zod";
 import { eq, desc, and, sql, isNull, isNotNull } from "drizzle-orm";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { databaseMiddleware } from "../../middleware/database";
-import { teamMemos, teamDeletedMemos } from "../../db/schema/team/memos";
+import { teamMemos } from "../../db/schema/team/memos";
 import { teamMembers } from "../../db/schema/team/teams";
 import { teamComments } from "../../db/schema/team/comments";
 import { teamAttachments } from "../../db/schema/team/attachments";

@@ -2,7 +2,7 @@ import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
 import { eq, desc, and, sql, isNull, isNotNull } from "drizzle-orm";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
-import { tasks, deletedTasks } from "../../db/schema/tasks";
+import { tasks } from "../../db/schema/tasks";
 import { boardItems } from "../../db/schema/boards";
 import { taggings } from "../../db/schema/tags";
 import { attachments } from "../../db/schema/attachments";
@@ -667,6 +667,11 @@ app.openapi(
     const env = c.env;
     const { displayId } = c.req.valid("param");
 
+    console.log("[完全削除] タスク完全削除開始:", {
+      displayId,
+      userId: auth.userId,
+    });
+
     try {
       // R2削除のため、トランザクション前に添付ファイル情報を取得
       const attachmentsToDelete = await db
@@ -675,10 +680,12 @@ app.openapi(
         .where(
           and(
             eq(attachments.attachedTo, "task"),
-            eq(attachments.attachedDisplayId, displayId),
+            eq(attachments.displayId, displayId),
             eq(attachments.userId, auth.userId),
           ),
         );
+
+      console.log("[完全削除] 添付ファイル数:", attachmentsToDelete.length);
 
       // R2から実ファイルを削除
       const r2Bucket = env.R2_BUCKET;
@@ -693,50 +700,53 @@ app.openapi(
         }
       }
 
-      const result = db.transaction((tx) => {
-        // 1. タグ付けを削除（タグ本体は保持）
-        tx.delete(taggings)
-          .where(
-            and(
-              eq(taggings.targetType, "task"),
-              eq(taggings.targetDisplayId, displayId),
-            ),
-          )
-          .run();
+      // 1. タグ付けを削除（タグ本体は保持）
+      await db
+        .delete(taggings)
+        .where(
+          and(
+            eq(taggings.targetType, "task"),
+            eq(taggings.targetDisplayId, displayId),
+          ),
+        )
+        .run();
 
-        // 2. 添付ファイルを削除
-        tx.delete(attachments)
-          .where(
-            and(
-              eq(attachments.attachedTo, "task"),
-              eq(attachments.attachedDisplayId, displayId),
-            ),
-          )
-          .run();
+      // 2. 添付ファイルを削除
+      await db
+        .delete(attachments)
+        .where(
+          and(
+            eq(attachments.attachedTo, "task"),
+            eq(attachments.displayId, displayId),
+          ),
+        )
+        .run();
 
-        // 3. 関連するボードアイテムは削除しない（削除済みタブで表示するため保持）
+      // 3. 関連するボードアイテムは削除しない（削除済みタブで表示するため保持）
 
-        // 4. タスクを物理削除
-        const deleteResult = tx
-          .delete(tasks)
-          .where(
-            and(
-              eq(tasks.displayId, displayId),
-              eq(tasks.userId, auth.userId),
-              isNotNull(tasks.deletedAt), // 削除済み確認
-            ),
-          )
-          .run();
+      // 4. タスクを物理削除
+      const result = await db
+        .delete(tasks)
+        .where(
+          and(
+            eq(tasks.displayId, displayId),
+            eq(tasks.userId, auth.userId),
+            isNotNull(tasks.deletedAt), // 削除済み確認
+          ),
+        )
+        .run();
 
-        return deleteResult;
-      });
+      console.log("[完全削除] トランザクション完了:", result.changes);
 
       if (result.changes === 0) {
+        console.log("[完全削除] エラー: タスクが見つからない");
         return c.json({ error: "Deleted task not found" }, 404);
       }
 
+      console.log("[完全削除] 成功");
       return c.json({ success: true }, 200);
     } catch (error) {
+      console.error("[完全削除] エラー:", error);
       return c.json({ error: "Internal server error" }, 500);
     }
   },

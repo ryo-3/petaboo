@@ -5,8 +5,8 @@ import { teamComments } from "../../db/schema/team/comments";
 import { teamMembers } from "../../db/schema/team/teams";
 import { teamSlackConfigs } from "../../db/schema/team/slack-configs";
 import { boardSlackConfigs } from "../../db/schema/team/board-slack-configs";
-import { teamMemos, teamDeletedMemos } from "../../db/schema/team/memos";
-import { teamTasks, teamDeletedTasks } from "../../db/schema/team/tasks";
+import { teamMemos } from "../../db/schema/team/memos";
+import { teamTasks } from "../../db/schema/team/tasks";
 import { teamBoards, teamBoardItems } from "../../db/schema/team/boards";
 import { teamNotifications } from "../../db/schema/team/notifications";
 import { teams } from "../../db/schema/team/teams";
@@ -942,19 +942,19 @@ export const getBoardItemComments = async (c: any) => {
         item.displayId,
     );
 
-  // 削除済みメモ・タスクのdisplayIdを取得
+  // 削除済みメモ・タスクのdisplayIdを取得（論理削除済みデータ）
   const deletedMemoDisplayIds: string[] = await db
-    .select({ displayId: teamDeletedMemos.displayId })
-    .from(teamDeletedMemos)
-    .where(eq(teamDeletedMemos.teamId, teamId))
+    .select({ displayId: teamMemos.displayId })
+    .from(teamMemos)
+    .where(and(eq(teamMemos.teamId, teamId), isNotNull(teamMemos.deletedAt)))
     .then((rows: { displayId: string }[]) =>
       rows.map((row: { displayId: string }) => row.displayId),
     );
 
   const deletedTaskDisplayIds: string[] = await db
-    .select({ displayId: teamDeletedTasks.displayId })
-    .from(teamDeletedTasks)
-    .where(eq(teamDeletedTasks.teamId, teamId))
+    .select({ displayId: teamTasks.displayId })
+    .from(teamTasks)
+    .where(and(eq(teamTasks.teamId, teamId), isNotNull(teamTasks.deletedAt)))
     .then((rows: { displayId: string }[]) =>
       rows.map((row: { displayId: string }) => row.displayId),
     );

@@ -2,8 +2,8 @@ import { createRoute, z } from "@hono/zod-openapi";
 import { getAuth } from "@hono/clerk-auth";
 import { eq, and, sql, desc, ne, gt } from "drizzle-orm";
 import { teams, teamMembers, teamInvitations, users } from "../../db";
-import { teamMemos, teamDeletedMemos } from "../../db/schema/team/memos";
-import { teamTasks, teamDeletedTasks } from "../../db/schema/team/tasks";
+import { teamMemos } from "../../db/schema/team/memos";
+import { teamTasks } from "../../db/schema/team/tasks";
 import { teamBoards, teamBoardItems } from "../../db/schema/team/boards";
 import { teamCategories } from "../../db/schema/team/categories";
 import { teamBoardCategories } from "../../db/schema/team/board-categories";
@@ -2753,15 +2753,7 @@ export async function deleteTeam(c: any) {
 
     // 3. チームコンテンツ関連
     await db.delete(teamMemos).where(eq(teamMemos.teamId, team.id)).run();
-    await db
-      .delete(teamDeletedMemos)
-      .where(eq(teamDeletedMemos.teamId, team.id))
-      .run();
     await db.delete(teamTasks).where(eq(teamTasks.teamId, team.id)).run();
-    await db
-      .delete(teamDeletedTasks)
-      .where(eq(teamDeletedTasks.teamId, team.id))
-      .run();
     await db
       .delete(teamCategories)
       .where(eq(teamCategories.teamId, team.id))

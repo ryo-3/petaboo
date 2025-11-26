@@ -7,8 +7,6 @@ import {
   tasks,
   memos,
   deletedBoards,
-  deletedMemos,
-  deletedTasks,
   teamBoards,
   teamBoardItems,
   teamMemos,
@@ -1051,32 +1049,34 @@ export function createAPI(app: AppType) {
       )
       .orderBy(boardItems.createdAt);
 
-    // アイテムの内容を削除済みテーブルから取得
+    // アイテムの内容を元テーブルから取得（論理削除済み）
     const deletedItemsWithContent = await Promise.all(
       deletedItems.map(async (item) => {
         let content;
         if (item.itemType === "memo") {
-          // 削除済みメモテーブルから取得
+          // 元テーブルから削除済みメモを取得
           const deletedMemo = await db
             .select()
-            .from(deletedMemos)
+            .from(memos)
             .where(
               and(
-                eq(deletedMemos.displayId, item.displayId),
-                eq(deletedMemos.userId, auth.userId),
+                eq(memos.displayId, item.displayId),
+                eq(memos.userId, auth.userId),
+                isNotNull(memos.deletedAt),
               ),
             )
             .limit(1);
           content = deletedMemo[0] || null;
         } else {
-          // 削除済みタスクテーブルから取得
+          // 元テーブルから削除済みタスクを取得
           const deletedTask = await db
             .select()
-            .from(deletedTasks)
+            .from(tasks)
             .where(
               and(
-                eq(deletedTasks.displayId, item.displayId),
-                eq(deletedTasks.userId, auth.userId),
+                eq(tasks.displayId, item.displayId),
+                eq(tasks.userId, auth.userId),
+                isNotNull(tasks.deletedAt),
               ),
             )
             .limit(1);
@@ -1878,31 +1878,33 @@ export function createAPI(app: AppType) {
     // itemIdからdisplayIdを取得（削除済みアイテムなので削除済みテーブルも確認）
     let displayId: string | null = null;
 
-    // まず通常テーブルから確認
+    // まず通常テーブルから確認（削除済み含め全て検索）
     displayId = await getOriginalId(itemId, itemType, auth.userId, db);
 
-    // 通常テーブルにない場合は削除済みテーブルから確認
+    // 通常テーブルにない場合は削除済みデータを検索
     if (!displayId) {
       if (itemType === "memo") {
         const deletedMemo = await db
-          .select({ displayId: deletedMemos.displayId })
-          .from(deletedMemos)
+          .select({ displayId: memos.displayId })
+          .from(memos)
           .where(
             and(
-              eq(deletedMemos.id, itemId),
-              eq(deletedMemos.userId, auth.userId),
+              eq(memos.id, itemId),
+              eq(memos.userId, auth.userId),
+              isNotNull(memos.deletedAt),
             ),
           )
           .limit(1);
         displayId = deletedMemo.length > 0 ? deletedMemo[0].displayId : null;
       } else {
         const deletedTask = await db
-          .select({ displayId: deletedTasks.displayId })
-          .from(deletedTasks)
+          .select({ displayId: tasks.displayId })
+          .from(tasks)
           .where(
             and(
-              eq(deletedTasks.id, itemId),
-              eq(deletedTasks.userId, auth.userId),
+              eq(tasks.id, itemId),
+              eq(tasks.userId, auth.userId),
+              isNotNull(tasks.deletedAt),
             ),
           )
           .limit(1);

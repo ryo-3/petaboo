@@ -475,11 +475,13 @@ export function DeletedMemoDisplay({
       );
 
     // このメモの添付ファイルを抽出（画像のみ）
-    const memoAttachments = allAttachments.filter(
-      (attachment) =>
-        memoIdentifiers.includes(attachment.attachedDisplayId || "") &&
-        attachment.mimeType.startsWith("image/"),
-    );
+    const memoAttachments = allAttachments.filter((attachment) => {
+      const attachmentDisplayId = attachment.attachedDisplayId || "";
+      return (
+        memoIdentifiers.includes(attachmentDisplayId) &&
+        attachment.mimeType.startsWith("image/")
+      );
+    });
 
     /* eslint-disable react/prop-types */
     return (

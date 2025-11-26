@@ -204,6 +204,23 @@ function TaskEditor({
   const isNewTask = !task || task.id === 0;
   const titleInputRef = useRef<HTMLInputElement>(null);
 
+  // 保存完了結果の遅延通知用（画像アップロード完了後に通知）
+  const pendingSaveResultRef = useRef<{
+    savedTask: Task;
+    isNewTask: boolean;
+    isContinuousMode: boolean;
+  } | null>(null);
+
+  const flushPendingSaveResult = useCallback(() => {
+    if (!pendingSaveResultRef.current) {
+      return;
+    }
+    const { savedTask, isNewTask, isContinuousMode } =
+      pendingSaveResultRef.current;
+    pendingSaveResultRef.current = null;
+    onSaveComplete?.(savedTask, isNewTask, isContinuousMode);
+  }, [onSaveComplete]);
+
   // セレクターのオプション
   const statusOptions = [
     {
@@ -706,7 +723,17 @@ function TaskEditor({
     itemType: "task",
     onSaveComplete: useCallback(
       (savedTask: Task, wasEmpty: boolean, isNewTask: boolean) => {
-        onSaveComplete?.(savedTask, isNewTask, continuousCreateMode);
+        // 連続作成モード時はすぐにコールバックを呼ぶ
+        if (isNewTask && !wasEmpty && continuousCreateMode) {
+          onSaveComplete?.(savedTask, isNewTask, continuousCreateMode);
+          return;
+        }
+        // 通常モードでは画像アップロード完了後に通知するため、refに保存
+        pendingSaveResultRef.current = {
+          savedTask,
+          isNewTask,
+          isContinuousMode: continuousCreateMode,
+        };
       },
       [onSaveComplete, continuousCreateMode],
     ),
@@ -1099,6 +1126,11 @@ function TaskEditor({
       }
     }
 
+    // 保存完了通知（画像アップロード完了後）
+    if (pendingSaveResultRef.current) {
+      flushPendingSaveResult();
+    }
+
     // 連続作成モードで新規タスクの場合、保存後にリセット
     if (continuousCreateMode && wasNewTask && hasContent) {
       setTimeout(() => {
@@ -1124,6 +1156,7 @@ function TaskEditor({
     queryClient,
     teamMode,
     teamId,
+    flushPendingSaveResult,
   ]);
 
   // Ctrl+Sショートカット（変更がある場合のみ実行）

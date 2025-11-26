@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useToast } from "@/src/contexts/toast-context";
 import type { Attachment } from "@/src/hooks/use-attachments";
@@ -148,9 +148,10 @@ export default function AttachmentGallery({
     );
 
     // pendingImagesから重複を除外
-    const filteredPendingImages = pendingImages.filter(
-      (file) => !existingFiles.has(`${file.name}-${file.size}`),
-    );
+    const filteredPendingImages = pendingImages.filter((file) => {
+      const fileKey = `${file.name}-${file.size}`;
+      return !existingFiles.has(fileKey);
+    });
 
     const urls = filteredPendingImages.map((file) => URL.createObjectURL(file));
     setPendingUrls(urls);

@@ -98,6 +98,7 @@ function ItemCard({
     preloadedAttachments && preloadedAttachments.length > 0
       ? preloadedAttachments[0]?.url
       : undefined;
+
   const { blobUrl: authenticatedImageUrl } =
     useAuthenticatedImage(firstImageUrl);
 

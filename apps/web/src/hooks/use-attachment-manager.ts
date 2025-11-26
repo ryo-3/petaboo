@@ -305,9 +305,6 @@ export const useAttachmentManager = ({
 
         // キャッシュを更新（targetDisplayId使用時）
         if (failedCount === 0) {
-          // 先にpendingImagesをクリア（重複表示防止）
-          setPendingImages([]);
-
           if (targetDisplayId) {
             const queryKey = [
               "attachments",
@@ -316,9 +313,12 @@ export const useAttachmentManager = ({
               displayId,
             ] as const;
 
-            // pendingImagesクリア後にリフェッチ
+            // リフェッチしてからpendingImagesをクリア（プレビュー表示維持）
             await queryClient.invalidateQueries({ queryKey });
           }
+
+          // リフェッチ後にpendingImagesをクリア（重複表示防止）
+          setPendingImages([]);
         }
 
         return { success: failedCount === 0, failedCount };

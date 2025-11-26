@@ -775,18 +775,9 @@ function MemoEditor({
       const hasOnlyImages =
         isNewMemo && !textContent && pendingImages.length > 0;
 
-      console.log("🖼️ [画像保存] 保存開始", {
-        isNewMemo,
-        textContent: textContent.substring(0, 50),
-        pendingImagesCount: pendingImages.length,
-        hasOnlyImages,
-        memoId: memo?.id,
-      });
-
       let targetId: string | null = null;
 
       if (hasOnlyImages) {
-        console.log("🖼️ [画像保存] 画像のみ保存処理開始");
         // 画像のみの場合は「無題」で新規作成
         const newMemoData = {
           title: " ", // 最低1文字必要なので半角スペース
@@ -794,7 +785,6 @@ function MemoEditor({
         };
 
         if (teamMode && teamId) {
-          console.log("🖼️ [画像保存] チームモードで新規メモ作成");
           // チームモード
           const token = await getToken();
 
@@ -818,10 +808,6 @@ function MemoEditor({
 
           const newMemo = (await response.json()) as Memo;
           targetId = newMemo.displayId;
-          console.log("🖼️ [画像保存] チームメモ作成完了", {
-            memoId: newMemo.id,
-            displayId: targetId,
-          });
 
           // 作成したメモをエディター状態に反映
           lastSavedMemoRef.current = newMemo;
@@ -836,7 +822,6 @@ function MemoEditor({
             queryKey: ["team-memos", teamId],
           });
         } else {
-          console.log("🖼️ [画像保存] 個人モードで新規メモ作成");
           // 個人モード
           const token = await getToken();
           const url = `${API_URL}/memos`;
@@ -859,10 +844,6 @@ function MemoEditor({
 
           const newMemo = (await response.json()) as Memo;
           targetId = newMemo.displayId || "";
-          console.log("🖼️ [画像保存] 個人メモ作成完了", {
-            memoId: newMemo.id,
-            displayId: targetId,
-          });
 
           // 作成したメモをエディター状態に反映
           lastSavedMemoRef.current = newMemo;
@@ -879,7 +860,6 @@ function MemoEditor({
               : initialBoardId
                 ? [initialBoardId]
                 : [];
-          console.log("🖼️ [画像保存] ボード紐付け", { boardsToAdd });
 
           for (const boardId of boardsToAdd) {
             try {
@@ -922,10 +902,8 @@ function MemoEditor({
           }
         }
       } else {
-        console.log("🖼️ [画像保存] 通常の保存処理（hasOnlyImages=false）");
         // 通常の保存処理
         await handleSave();
-        console.log("🖼️ [画像保存] handleSave完了");
 
         // 保存後の処理用のoriginalIdを取得
         targetId =
@@ -985,16 +963,8 @@ function MemoEditor({
       const hasDeletes = pendingDeletes.length > 0;
       const hasUploads = pendingImages.length > 0;
 
-      console.log("🖼️ [画像保存] 画像処理チェック", {
-        hasDeletes,
-        hasUploads,
-        targetId,
-      });
-
       if (hasDeletes) {
-        console.log("🖼️ [画像保存] 画像削除処理開始");
         await deletePendingAttachments();
-        console.log("🖼️ [画像保存] 画像削除処理完了");
 
         // 一覧表示用の添付ファイルキャッシュを無効化（削除の即時反映）
         queryClient.invalidateQueries({
@@ -1004,12 +974,7 @@ function MemoEditor({
 
       // 保存待ちの画像を一括アップロード（完了トーストはuploadPendingImagesが表示）
       if (hasUploads && targetId) {
-        console.log("🖼️ [画像保存] 画像アップロード開始", {
-          targetId,
-          imageCount: pendingImages.length,
-        });
         await uploadPendingImages(targetId);
-        console.log("🖼️ [画像保存] 画像アップロード完了");
         invalidateBoardCaches();
 
         // 一覧表示用の添付ファイルキャッシュを無効化（サムネイル即時表示のため）
@@ -1019,27 +984,15 @@ function MemoEditor({
 
         // 画像のみ保存の場合、キャッシュを更新
         if (hasOnlyImages) {
-          console.log("🖼️ [画像保存] キャッシュ更新（画像のみ保存）");
           const queryKey =
             teamMode && teamId ? ["team-memos", teamId] : ["memos"];
           await queryClient.invalidateQueries({ queryKey });
-          console.log("🖼️ [画像保存] キャッシュ更新完了");
         }
       }
 
-      console.log("🖼️ [画像保存] 画像保存処理完了（try-catchブロック終了前）");
-
       // pendingSaveResultRefが設定されている場合はflushを呼ぶ
-      console.log("🖼️ [画像保存] flushPendingSaveResult判定", {
-        hasOnlyImages,
-        hasPendingResult: !!pendingSaveResultRef.current,
-      });
-
       if (pendingSaveResultRef.current) {
         flushPendingSaveResult();
-        console.log("🖼️ [画像保存] flushPendingSaveResult実行完了");
-      } else {
-        console.log("🖼️ [画像保存] pendingSaveResultRefなし、スキップ");
       }
     } catch (error) {
       console.error("❌ 保存に失敗しました:", error);

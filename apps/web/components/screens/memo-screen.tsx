@@ -515,14 +515,6 @@ function MemoScreen({
   // 保存完了後の処理（超シンプル）
   const handleSaveComplete = useCallback(
     (savedMemo: Memo, wasEmpty: boolean, isNewMemo: boolean) => {
-      console.log("📝 [MemoScreen] handleSaveComplete呼び出し", {
-        savedMemoId: savedMemo.id,
-        wasEmpty,
-        isNewMemo,
-        currentScreenMode: memoScreenMode,
-        teamMode,
-      });
-
       // 保存完了時、未保存フラグを明示的にクリア（選択前に実行）
       if (teamDetailContext) {
         teamDetailContext.memoEditorHasUnsavedChangesRef.current = false;
@@ -530,17 +522,14 @@ function MemoScreen({
 
       if (wasEmpty) {
         // 空メモは削除して閉じる
-        console.log("📝 [MemoScreen] 空メモ削除 → list画面へ");
         onDeselectAndStayOnMemoList?.();
         setMemoScreenMode("list");
       } else if (isNewMemo) {
         // 新規作成後は、作成されたメモを選択して表示モードに切り替え
-        console.log("📝 [MemoScreen] 新規メモ作成完了 → view画面へ");
         handleSelectMemo(savedMemo);
         setMemoScreenMode("view");
       } else {
         // 既存メモ更新は選択状態更新
-        console.log("📝 [MemoScreen] 既存メモ更新 → 画面遷移なし");
         handleSelectMemo(savedMemo);
       }
     },

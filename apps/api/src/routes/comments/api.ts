@@ -1,5 +1,5 @@
 import { createRoute, z } from "@hono/zod-openapi";
-import { eq, asc, and, or, inArray, SQL } from "drizzle-orm";
+import { eq, asc, and, or, inArray, isNotNull, SQL } from "drizzle-orm";
 import { getAuth } from "@hono/clerk-auth";
 import { teamComments } from "../../db/schema/team/comments";
 import { teamMembers } from "../../db/schema/team/teams";

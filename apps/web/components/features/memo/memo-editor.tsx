@@ -145,7 +145,9 @@ function MemoEditor({
   const baseViewerRef = useRef<HTMLDivElement>(null);
 
   // 削除済みメモかどうかを判定
-  const isDeleted = memo ? "deletedAt" in memo : false;
+  const isDeleted = memo
+    ? "deletedAt" in memo && memo.deletedAt != null
+    : false;
   const deletedMemo = isDeleted ? (memo as DeletedMemo) : null;
 
   // 事前取得されたデータを使用（APIコール不要）

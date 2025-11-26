@@ -864,19 +864,11 @@ export const getPersonalImage = async (c: any) => {
   const db = c.get("db");
   const env = c.env;
 
-  console.log("[getPersonalImage] リクエスト受信", {
-    hasAuth: !!auth,
-    userId: auth?.userId,
-    path: c.req.path,
-  });
-
   if (!auth?.userId) {
-    console.log("[getPersonalImage] 認証エラー");
     return c.json({ error: "Unauthorized" }, 401);
   }
 
   const { id } = c.req.valid("param");
-  console.log("[getPersonalImage] 画像ID:", id);
 
   // 個人用添付ファイル取得（削除済みメモ・タスクの画像も表示可能にする）
   const results = await db
@@ -885,45 +877,29 @@ export const getPersonalImage = async (c: any) => {
     .where(eq(attachments.id, id))
     .limit(1);
 
-  console.log("[getPersonalImage] DB検索結果:", { count: results.length });
-
   if (results.length === 0) {
-    console.log("[getPersonalImage] 添付ファイルが見つかりません");
     return c.json({ error: "Attachment not found" }, 404);
   }
 
   const attachment = results[0];
-  console.log("[getPersonalImage] 添付ファイル情報:", {
-    id: attachment.id,
-    userId: attachment.userId,
-    r2Key: attachment.r2Key,
-  });
 
   // 所有者確認
   if (attachment.userId !== auth.userId) {
-    console.log("[getPersonalImage] 所有者不一致");
     return c.json({ error: "Forbidden" }, 403);
   }
 
   // R2から画像取得
   const r2Bucket = env.R2_BUCKET;
-  console.log("[getPersonalImage] R2バケット:", { hasR2: !!r2Bucket });
 
   if (!r2Bucket) {
-    console.log("[getPersonalImage] R2バケット未設定エラー");
     return c.json({ error: "R2 bucket not configured" }, 500);
   }
 
-  console.log("[getPersonalImage] R2から取得開始:", attachment.r2Key);
   const object = await r2Bucket.get(attachment.r2Key);
-  console.log("[getPersonalImage] R2取得結果:", { hasObject: !!object });
 
   if (!object) {
-    console.log("[getPersonalImage] R2に画像なし (404)");
     return c.json({ error: "Image not found in storage" }, 404);
   }
-
-  console.log("[getPersonalImage] 画像返却成功");
   // 画像を返却
   const origin = c.req.header("Origin") || "http://localhost:7593";
   return new Response(object.body, {

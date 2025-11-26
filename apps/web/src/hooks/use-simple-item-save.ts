@@ -341,13 +341,6 @@ export function useSimpleItemSave<T extends UnifiedItem>({
   const executeSave = useCallback(async () => {
     const isEmpty = !title.trim() && !content.trim();
 
-    console.log("💾 [useSimpleItemSave] executeSave開始", {
-      itemId: item?.id,
-      itemType,
-      isEmpty,
-      isNewItem: !item || item.id === 0,
-    });
-
     if (isSaving) {
       return;
     }
@@ -570,14 +563,6 @@ export function useSimpleItemSave<T extends UnifiedItem>({
           setInitialBoardCategoryId(boardCategoryId);
         }
 
-        console.log(
-          "💾 [useSimpleItemSave] onSaveComplete呼び出し（既存更新）",
-          {
-            itemId: updatedItem.id,
-            wasEmpty: false,
-            isNewItem: false,
-          },
-        );
         onSaveComplete?.(updatedItem, false, false);
       } else {
         // 新規アイテム作成（空の場合は何もしない）
@@ -692,14 +677,6 @@ export function useSimpleItemSave<T extends UnifiedItem>({
             }
           }
 
-          console.log(
-            "💾 [useSimpleItemSave] onSaveComplete呼び出し（新規作成）",
-            {
-              itemId: createdItem.id,
-              wasEmpty: false,
-              isNewItem: true,
-            },
-          );
           onSaveComplete?.(createdItem, false, true);
         } else {
           // 空の新規アイテムは単に閉じる
@@ -721,14 +698,6 @@ export function useSimpleItemSave<T extends UnifiedItem>({
                   priority: "medium" as const,
                   status: "todo" as const,
                 } as T);
-          console.log(
-            "💾 [useSimpleItemSave] onSaveComplete呼び出し（空メモ）",
-            {
-              itemId: (item || emptyItem).id,
-              wasEmpty: true,
-              isNewItem: true,
-            },
-          );
           onSaveComplete?.(item || emptyItem, true, true);
         }
       }

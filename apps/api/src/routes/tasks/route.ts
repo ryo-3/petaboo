@@ -667,11 +667,6 @@ app.openapi(
     const env = c.env;
     const { displayId } = c.req.valid("param");
 
-    console.log("[完全削除] タスク完全削除開始:", {
-      displayId,
-      userId: auth.userId,
-    });
-
     try {
       // R2削除のため、トランザクション前に添付ファイル情報を取得
       const attachmentsToDelete = await db
@@ -684,8 +679,6 @@ app.openapi(
             eq(attachments.userId, auth.userId),
           ),
         );
-
-      console.log("[完全削除] 添付ファイル数:", attachmentsToDelete.length);
 
       // R2から実ファイルを削除
       const r2Bucket = env.R2_BUCKET;
@@ -736,14 +729,10 @@ app.openapi(
         )
         .run();
 
-      console.log("[完全削除] トランザクション完了:", result.changes);
-
       if (result.changes === 0) {
-        console.log("[完全削除] エラー: タスクが見つからない");
         return c.json({ error: "Deleted task not found" }, 404);
       }
 
-      console.log("[完全削除] 成功");
       return c.json({ success: true }, 200);
     } catch (error) {
       console.error("[完全削除] エラー:", error);

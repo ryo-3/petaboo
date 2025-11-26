@@ -188,7 +188,9 @@ function TaskEditor({
   const { categories } = useBoardCategories(initialBoardId);
 
   // 削除済みタスクかどうかを判定
-  const isDeleted = task ? "deletedAt" in task : false;
+  const isDeleted = task
+    ? "deletedAt" in task && task.deletedAt != null
+    : false;
 
   // 書式設定ツールバーの表示状態
   const [toolbarVisible, setToolbarVisible] = useState(false);
@@ -700,7 +702,7 @@ function TaskEditor({
     handleCancelBoardChange,
     resetForm,
   } = useSimpleItemSave<Task>({
-    item: task && !("deletedAt" in task) ? (task as Task) : null,
+    item: task && !isDeleted ? (task as Task) : null,
     itemType: "task",
     onSaveComplete: useCallback(
       (savedTask: Task, wasEmpty: boolean, isNewTask: boolean) => {

@@ -145,47 +145,52 @@ app.openapi(
       return c.json({ error: "Not a team member" }, 403);
     }
 
-    // 担当者用のteamMembersテーブル別名
-    const assigneeMembers = aliasedTable(teamMembers, "assignee_members");
+    try {
+      // 担当者用のteamMembersテーブル別名
+      const assigneeMembers = aliasedTable(teamMembers, "assignee_members");
 
-    const result = await db
-      .select({
-        ...getTeamTaskSelectFields(),
-        assigneeName: assigneeMembers.displayName,
-        assigneeAvatarColor: assigneeMembers.avatarColor,
-        commentCount: sql<number>`(
+      const result = await db
+        .select({
+          ...getTeamTaskSelectFields(),
+          assigneeName: assigneeMembers.displayName,
+          assigneeAvatarColor: assigneeMembers.avatarColor,
+          commentCount: sql<number>`(
           SELECT COUNT(*)
           FROM ${teamComments}
           WHERE ${teamComments.targetType} = 'task'
             AND ${teamComments.targetDisplayId} = ${teamTasks.displayId}
             AND ${teamComments.teamId} = ${teamTasks.teamId}
         )`.as("commentCount"),
-      })
-      .from(teamTasks)
-      .leftJoin(teamMembers, getTeamTaskMemberJoin())
-      .leftJoin(
-        assigneeMembers,
-        and(
-          eq(teamTasks.assigneeId, assigneeMembers.userId),
-          eq(teamTasks.teamId, assigneeMembers.teamId),
-        ),
-      )
-      .where(and(eq(teamTasks.teamId, teamId), isNull(teamTasks.deletedAt)))
-      .orderBy(
-        // 優先度順: high(3) > medium(2) > low(1)
-        desc(
-          sql`CASE
+        })
+        .from(teamTasks)
+        .leftJoin(teamMembers, getTeamTaskMemberJoin())
+        .leftJoin(
+          assigneeMembers,
+          and(
+            eq(teamTasks.assigneeId, assigneeMembers.userId),
+            eq(teamTasks.teamId, assigneeMembers.teamId),
+          ),
+        )
+        .where(and(eq(teamTasks.teamId, teamId), isNull(teamTasks.deletedAt)))
+        .orderBy(
+          // 優先度順: high(3) > medium(2) > low(1)
+          desc(
+            sql`CASE
             WHEN ${teamTasks.priority} = 'high' THEN 3
             WHEN ${teamTasks.priority} = 'medium' THEN 2
             WHEN ${teamTasks.priority} = 'low' THEN 1
             ELSE 0
           END`,
-        ),
-        desc(teamTasks.updatedAt),
-        desc(teamTasks.createdAt),
-      );
+          ),
+          desc(teamTasks.updatedAt),
+          desc(teamTasks.createdAt),
+        );
 
-    return c.json(result, 200);
+      return c.json(result, 200);
+    } catch (error) {
+      console.error("❌ [チームタスク一覧取得エラー]", error);
+      return c.json({ error: "Internal server error" }, 500);
+    }
   },
 );
 

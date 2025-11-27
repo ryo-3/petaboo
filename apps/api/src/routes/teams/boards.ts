@@ -710,6 +710,7 @@ export function createTeamBoardsAPI(app: AppType) {
           and(
             eq(teamBoardItems.itemType, "memo"),
             eq(teamBoardItems.displayId, teamMemos.displayId),
+            isNull(teamMemos.deletedAt), // 削除済みメモを除外
           ),
         )
         .leftJoin(
@@ -717,6 +718,7 @@ export function createTeamBoardsAPI(app: AppType) {
           and(
             eq(teamBoardItems.itemType, "task"),
             eq(teamBoardItems.displayId, teamTasks.displayId),
+            isNull(teamTasks.deletedAt), // 削除済みタスクを除外
           ),
         )
         .leftJoin(

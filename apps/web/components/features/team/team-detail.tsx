@@ -277,12 +277,15 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   const getTabFromURL = () => {
     // パラメータの存在から自動判定（新形式）
     if (searchParams.has("board")) return "board";
-    if (searchParams.has("memos")) return "memos";
-    if (searchParams.has("tasks")) return "tasks";
+    if (searchParams.has("memo")) return "memos"; // memo（値あり/なし）→ memosタブ
+    if (searchParams.has("task")) return "tasks"; // task（値あり/なし）→ tasksタブ
     if (searchParams.has("boards")) return "boards";
     if (searchParams.has("search")) return "search";
     if (searchParams.has("team-list")) return "team-list";
     if (searchParams.has("team-settings")) return "team-settings";
+    // 旧形式の互換性（後で削除される）
+    if (searchParams.has("memos")) return "memos";
+    if (searchParams.has("tasks")) return "tasks";
 
     // 旧形式の互換性対応
     const tab = searchParams.get("tab");
@@ -367,9 +370,10 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
         return;
       } else if (tab === "memos") {
+        // 旧形式 ?tab=memos → 新形式 ?memo
         params.delete("tab");
         const baseParams = params.toString();
-        const newUrl = baseParams ? `?${baseParams}&memos` : "?memos";
+        const newUrl = baseParams ? `?${baseParams}&memo` : "?memo";
         router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
         return;
       } else if (tab === "boards") {
@@ -385,16 +389,16 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
         return;
       } else if (tab === "tasks") {
+        // 旧形式 ?tab=tasks → 新形式 ?task
         params.delete("tab");
         const baseParams = params.toString();
-        const newUrl = baseParams ? `?${baseParams}&tasks` : "?tasks";
+        const newUrl = baseParams ? `?${baseParams}&task` : "?task";
         router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
         return;
       } else if (tab === "overview") {
-        // overviewは廃止し、tasksにリダイレクト
+        // overviewは廃止しパラメータなしにリダイレクト
         params.delete("tab");
-        const baseParams = params.toString();
-        const newUrl = baseParams ? `?${baseParams}&tasks` : "?tasks";
+        const newUrl = params.toString() ? `?${params.toString()}` : "";
         router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
         return;
       } else if (tab === "team-list") {
@@ -414,11 +418,26 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       }
     }
 
-    // パラメータが全くない場合、overviewでなければデフォルトのtasksにリダイレクト
-    if (searchParams.toString() === "" && activeTab !== "overview") {
-      router.replace(`/team/${customUrl}?tasks`, { scroll: false });
+    // 旧形式の値なしパラメータ（?memos, ?tasks）を新形式（?memo, ?task）にリダイレクト
+    if (searchParams.has("memos") && !searchParams.get("memos")) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("memos");
+      const baseParams = params.toString();
+      const newUrl = baseParams ? `?${baseParams}&memo` : "?memo";
+      router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
       return;
     }
+    if (searchParams.has("tasks") && !searchParams.get("tasks")) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("tasks");
+      const baseParams = params.toString();
+      const newUrl = baseParams ? `?${baseParams}&task` : "?task";
+      router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
+      return;
+    }
+
+    // パラメータが全くない場合はデフォルトでoverview
+    // activeTabがoverviewの時はリダイレクトしない（無限ループ防止）
 
     const newTab = getTabFromURL();
     // URL同期確認のみ（状態更新は handleTabChange で即座に実行済み）
@@ -498,24 +517,23 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       params.delete("tab");
       params.delete("slug");
 
-      // 不要なタブパラメータを削除
-      params.delete("memos");
-      params.delete("tasks");
+      // 不要なタブパラメータを削除（新旧両形式）
+      params.delete("memos"); // 旧形式
+      params.delete("tasks"); // 旧形式
+      params.delete("memo"); // 新形式（タブ切り替え時は常に削除）
+      params.delete("task"); // 新形式（タブ切り替え時は常に削除）
       params.delete("boards");
       params.delete("board");
       params.delete("search");
       params.delete("team-list");
       params.delete("team-settings");
 
-      // タブ切り替え時に不要なパラメータを削除
-      // サイドバー経由の場合は、同じタブでもアイテムパラメータを強制削除
-      if (tab !== "memos" || options?.fromSidebar) {
-        params.delete("memo");
+      // タブ切り替え時に選択状態をクリア
+      if (tab !== "memos") {
         setSelectedMemo(null);
         setSelectedDeletedMemo(null);
       }
-      if (tab !== "tasks" || options?.fromSidebar) {
-        params.delete("task");
+      if (tab !== "tasks") {
         setSelectedTask(null);
         setSelectedDeletedTask(null);
       }
@@ -532,8 +550,9 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         params.set("board", options.slug);
         newUrl = params.toString() ? `?${params.toString()}` : "";
       } else if (tab === "memos") {
+        // メモ一覧は ?memo（値なし）
         const baseParams = params.toString();
-        newUrl = baseParams ? `?${baseParams}&memos` : "?memos";
+        newUrl = baseParams ? `?${baseParams}&memo` : "?memo";
       } else if (tab === "boards") {
         const baseParams = params.toString();
         newUrl = baseParams ? `?${baseParams}&boards` : "?boards";
@@ -541,9 +560,9 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         const baseParams = params.toString();
         newUrl = baseParams ? `?${baseParams}&search` : "?search";
       } else if (tab === "tasks") {
-        // タスク一覧は明示的にtasksパラメータを付与
+        // タスク一覧は ?task（値なし）
         const baseParams = params.toString();
-        newUrl = baseParams ? `?${baseParams}&tasks` : "?tasks";
+        newUrl = baseParams ? `?${baseParams}&task` : "?task";
       } else {
         // overview（ホーム）のみパラメータ不要
         newUrl = params.toString() ? `?${params.toString()}` : "";
@@ -714,22 +733,20 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     params.delete("slug");
     params.delete("board");
     params.delete("boards");
-    params.delete("memos");
-    params.delete("tasks");
+    params.delete("memos"); // 旧形式
+    params.delete("tasks"); // 旧形式
+    params.delete("task");
 
     if (memo) {
+      // メモ個別表示: ?memo=2
       params.set("memo", memo.displayId);
-      // タスクパラメータを削除
-      params.delete("task");
-      // メモ選択時は必ずmemosタブに（新形式）
-      const baseParams = params.toString();
-      const newUrl = baseParams ? `?${baseParams}&memos` : "?memos";
+      const newUrl = `?${params.toString()}`;
       router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
     } else {
+      // メモ一覧表示: ?memo（値なし）
       params.delete("memo");
-      // メモ一覧に戻る場合も明示的にmemosパラメータを付与
       const baseParams = params.toString();
-      const newUrl = baseParams ? `?${baseParams}&memos` : "?memos";
+      const newUrl = baseParams ? `?${baseParams}&memo` : "?memo";
       router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
     }
   };
@@ -751,22 +768,20 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     params.delete("slug");
     params.delete("board");
     params.delete("boards");
-    params.delete("memos");
-    params.delete("tasks");
+    params.delete("memos"); // 旧形式
+    params.delete("tasks"); // 旧形式
+    params.delete("memo");
 
     if (task) {
+      // タスク個別表示: ?task=123
       params.set("task", task.displayId);
-      // メモパラメータを削除
-      params.delete("memo");
-      // 個別タスク表示時もtasksパラメータを付与
-      const baseParams = params.toString();
-      const newUrl = baseParams ? `?${baseParams}&tasks` : "?tasks";
+      const newUrl = `?${params.toString()}`;
       router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
     } else {
+      // タスク一覧表示: ?task（値なし）
       params.delete("task");
-      // タスク一覧に戻る場合は明示的にtasksパラメータを付与
       const baseParams = params.toString();
-      const newUrl = baseParams ? `?${baseParams}&tasks` : "?tasks";
+      const newUrl = baseParams ? `?${baseParams}&task` : "?task";
       router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
     }
   };
@@ -788,22 +803,20 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     params.delete("slug");
     params.delete("board");
     params.delete("boards");
-    params.delete("memos");
-    params.delete("tasks");
+    params.delete("memos"); // 旧形式
+    params.delete("tasks"); // 旧形式
+    params.delete("task");
 
     if (memo) {
+      // 削除済みメモ個別表示: ?memo=2
       params.set("memo", memo.displayId);
-      // タスクパラメータを削除
-      params.delete("task");
-      // メモ選択時は必ずmemosタブに（新形式）
-      const baseParams = params.toString();
-      const newUrl = baseParams ? `?${baseParams}&memos` : "?memos";
+      const newUrl = `?${params.toString()}`;
       router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
     } else {
+      // メモ一覧表示: ?memo（値なし）
       params.delete("memo");
-      // メモ一覧に戻る場合も明示的にmemosパラメータを付与
       const baseParams = params.toString();
-      const newUrl = baseParams ? `?${baseParams}&memos` : "?memos";
+      const newUrl = baseParams ? `?${baseParams}&memo` : "?memo";
       router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
     }
   };
@@ -822,22 +835,20 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     params.delete("slug");
     params.delete("board");
     params.delete("boards");
-    params.delete("memos");
-    params.delete("tasks");
+    params.delete("memos"); // 旧形式
+    params.delete("tasks"); // 旧形式
+    params.delete("memo");
 
     if (task) {
+      // 削除済みタスク個別表示: ?task=123
       params.set("task", task.displayId);
-      // メモパラメータを削除
-      params.delete("memo");
-      // 個別タスク表示時もtasksパラメータを付与
-      const baseParams = params.toString();
-      const newUrl = baseParams ? `?${baseParams}&tasks` : "?tasks";
+      const newUrl = `?${params.toString()}`;
       router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
     } else {
+      // タスク一覧表示: ?task（値なし）
       params.delete("task");
-      // タスク一覧に戻る場合は明示的にtasksパラメータを付与
       const baseParams = params.toString();
-      const newUrl = baseParams ? `?${baseParams}&tasks` : "?tasks";
+      const newUrl = baseParams ? `?${baseParams}&task` : "?task";
       router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
     }
   };
@@ -1286,19 +1297,19 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                 selectedDeletedMemo={selectedDeletedMemo}
                 onSelectDeletedMemo={handleSelectDeletedMemo}
                 onClose={() => {
-                  // メモを閉じる時はmemoパラメータも削除してmemosタブに残る
+                  // メモを閉じる時はメモ一覧に戻る
                   const params = new URLSearchParams(searchParams.toString());
                   params.delete("memo");
                   params.delete("slug");
                   params.delete("tab");
                   params.delete("board");
                   params.delete("boards");
-                  params.delete("memos");
-                  params.delete("tasks");
+                  params.delete("memos"); // 旧形式
+                  params.delete("tasks"); // 旧形式
                   params.delete("task");
-                  // メモタブに残る（新形式）
+                  // メモ一覧表示: ?memo（値なし）
                   const baseParams = params.toString();
-                  const newUrl = baseParams ? `?${baseParams}&memos` : "?memos";
+                  const newUrl = baseParams ? `?${baseParams}&memo` : "?memo";
                   router.replace(`/team/${customUrl}${newUrl}`, {
                     scroll: false,
                   });
@@ -1306,19 +1317,19 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                   setSelectedDeletedMemo(null);
                 }}
                 onDeselectAndStayOnMemoList={() => {
-                  // メモを閉じてリスト表示に戻る（URLからもmemoパラメータを削除）
+                  // メモを閉じてリスト表示に戻る
                   const params = new URLSearchParams(searchParams.toString());
                   params.delete("memo");
                   params.delete("slug");
                   params.delete("tab");
                   params.delete("board");
                   params.delete("boards");
-                  params.delete("memos");
-                  params.delete("tasks");
+                  params.delete("memos"); // 旧形式
+                  params.delete("tasks"); // 旧形式
                   params.delete("task");
-                  // メモタブに残る（新形式）
+                  // メモ一覧表示: ?memo（値なし）
                   const baseParams = params.toString();
-                  const newUrl = baseParams ? `?${baseParams}&memos` : "?memos";
+                  const newUrl = baseParams ? `?${baseParams}&memo` : "?memo";
                   router.replace(`/team/${customUrl}${newUrl}`, {
                     scroll: false,
                   });
@@ -1345,18 +1356,19 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                 taskEditorHasUnsavedChangesRef={taskEditorHasUnsavedChangesRef}
                 taskEditorShowConfirmModalRef={taskEditorShowConfirmModalRef}
                 onClose={() => {
-                  // タスクを閉じる時はtaskパラメータも削除してtasksタブに残る
+                  // タスクを閉じる時はタスク一覧に戻る
                   const params = new URLSearchParams(searchParams.toString());
                   params.delete("task");
                   params.delete("slug");
                   params.delete("tab");
                   params.delete("board");
                   params.delete("boards");
-                  params.delete("memos");
-                  params.delete("tasks");
-                  // タスク一覧に戻る場合は明示的にtasksパラメータを付与
+                  params.delete("memos"); // 旧形式
+                  params.delete("tasks"); // 旧形式
+                  params.delete("memo");
+                  // タスク一覧表示: ?task（値なし）
                   const baseParams = params.toString();
-                  const newUrl = baseParams ? `?${baseParams}&tasks` : "?tasks";
+                  const newUrl = baseParams ? `?${baseParams}&task` : "?task";
                   router.replace(`/team/${customUrl}${newUrl}`, {
                     scroll: false,
                   });

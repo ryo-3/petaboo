@@ -165,10 +165,10 @@ export function NavigationProvider({
       let currentTab: string | null = null;
       if (searchParams.has("board")) {
         currentTab = "board";
-      } else if (searchParams.has("memos")) {
-        currentTab = "memos";
-      } else if (searchParams.has("tasks")) {
-        currentTab = "tasks";
+      } else if (searchParams.has("memo")) {
+        currentTab = "memos"; // 新形式: ?memo → memosタブ
+      } else if (searchParams.has("task")) {
+        currentTab = "tasks"; // 新形式: ?task → tasksタブ
       } else if (searchParams.has("boards")) {
         currentTab = "boards";
       } else if (searchParams.has("search")) {
@@ -177,6 +177,10 @@ export function NavigationProvider({
         currentTab = "team-list";
       } else if (searchParams.has("team-settings")) {
         currentTab = "team-settings";
+      } else if (searchParams.has("memos")) {
+        currentTab = "memos"; // 旧形式の互換性
+      } else if (searchParams.has("tasks")) {
+        currentTab = "tasks"; // 旧形式の互換性
       } else {
         // 旧形式のtabパラメータもチェック
         const tabParam = searchParams.get("tab");

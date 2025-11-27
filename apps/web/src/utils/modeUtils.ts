@@ -26,12 +26,15 @@ export function getModeFromUrl(
   if (pathname.startsWith("/team/") && pathname !== "/team") {
     // 新形式のパラメータをチェック
     if (searchParams.has("board")) return "board";
-    if (searchParams.has("memos")) return "memo";
-    if (searchParams.has("tasks")) return "task";
+    if (searchParams.has("memo")) return "memo"; // 新形式: ?memo（値あり/なし）
+    if (searchParams.has("task")) return "task"; // 新形式: ?task（値あり/なし）
     if (searchParams.has("boards")) return "board";
     if (searchParams.has("search")) return "search";
     if (searchParams.has("team-list")) return "team";
     if (searchParams.has("team-settings")) return "settings";
+    // 旧形式の互換性（後で削除される）
+    if (searchParams.has("memos")) return "memo";
+    if (searchParams.has("tasks")) return "task";
 
     // 旧形式のtabパラメータもチェック
     const tab = searchParams.get("tab");
@@ -95,12 +98,15 @@ export function getActiveTabFromUrl(
   if (pathname.startsWith("/team/") && pathname !== "/team") {
     // 新形式のパラメータから判定
     if (searchParams.has("board")) return "board";
-    if (searchParams.has("memos")) return "memos";
-    if (searchParams.has("tasks")) return "tasks";
+    if (searchParams.has("memo")) return "memos"; // 新形式: ?memo → memosタブ
+    if (searchParams.has("task")) return "tasks"; // 新形式: ?task → tasksタブ
     if (searchParams.has("boards")) return "boards";
     if (searchParams.has("search")) return "search";
     if (searchParams.has("team-list")) return "team-list";
     if (searchParams.has("team-settings")) return "team-settings";
+    // 旧形式の互換性（後で削除される）
+    if (searchParams.has("memos")) return "memos";
+    if (searchParams.has("tasks")) return "tasks";
 
     // 旧形式のtabパラメータもチェック
     const tab = searchParams.get("tab");

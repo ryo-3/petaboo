@@ -34,12 +34,11 @@ export function generateTeamShareUrl(params: TeamUrlParams): string {
   // 通常のチームページの場合
   const baseUrl = `${window.location.origin}/team/${teamName}`;
 
-  // 新形式: tabパラメータを削除し、適切なパラメータを設定
+  // 新形式: 個別アイテム表示はパラメータに値を設定
   if (tab === "tasks") {
     return `${baseUrl}?task=${itemId}`;
   } else if (tab === "memos") {
-    // 値なしパラメータ（memos）と値ありパラメータ（memo）を組み合わせ
-    return `${baseUrl}?memos&memo=${itemId}`;
+    return `${baseUrl}?memo=${itemId}`;
   }
 
   return baseUrl;

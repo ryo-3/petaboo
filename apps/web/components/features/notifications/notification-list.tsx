@@ -16,12 +16,14 @@ import type { Notification } from "@/lib/api/notifications";
 import { getNotificationUrl } from "@/src/utils/notificationUtils";
 
 // 通知タイプごとの移動先を定義
+// team-list, team-settings は旧形式を維持（tabパラメータ使用）
+// memos, boards は新形式に対応
 const NOTIFICATION_DESTINATIONS = {
-  team_requests: "team-list", // チーム申請管理タブ
+  team_requests: "team-list", // チーム申請管理タブ（旧形式維持）
   // 将来追加予定
   member_activity: "memos",
   board_activity: "boards",
-  team_settings: "team-settings",
+  team_settings: "team-settings", // 旧形式維持
 } as const;
 
 type NotificationType = keyof typeof NOTIFICATION_DESTINATIONS;
@@ -69,7 +71,17 @@ function NotificationList({
   const handleGoToDestination = () => {
     if (teamName) {
       const tab = getDestinationTab();
-      router.push(`/team/${teamName}?tab=${tab}`);
+      // team-list, team-settings は旧形式（tabパラメータ）を維持
+      // memos, boards は新形式に変換
+      let url = `/team/${teamName}`;
+      if (tab === "team-list" || tab === "team-settings") {
+        url += `?tab=${tab}`;
+      } else if (tab === "memos") {
+        url += `?memos`;
+      } else if (tab === "boards") {
+        url += `?boards`;
+      }
+      router.push(url);
     }
   };
 

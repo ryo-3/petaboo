@@ -24,6 +24,16 @@ export function getModeFromUrl(
 
   // チーム詳細ページ
   if (pathname.startsWith("/team/") && pathname !== "/team") {
+    // 新形式のパラメータをチェック
+    if (searchParams.has("board")) return "board";
+    if (searchParams.has("memos")) return "memo";
+    if (searchParams.has("tasks")) return "task";
+    if (searchParams.has("boards")) return "board";
+    if (searchParams.has("search")) return "search";
+    if (searchParams.has("team-list")) return "team";
+    if (searchParams.has("team-settings")) return "settings";
+
+    // 旧形式のtabパラメータもチェック
     const tab = searchParams.get("tab");
 
     switch (tab) {
@@ -83,10 +93,21 @@ export function getActiveTabFromUrl(
 ): string {
   // チーム詳細ページ
   if (pathname.startsWith("/team/") && pathname !== "/team") {
+    // 新形式のパラメータから判定
+    if (searchParams.has("board")) return "board";
+    if (searchParams.has("memos")) return "memos";
+    if (searchParams.has("tasks")) return "tasks";
+    if (searchParams.has("boards")) return "boards";
+    if (searchParams.has("search")) return "search";
+    if (searchParams.has("team-list")) return "team-list";
+    if (searchParams.has("team-settings")) return "team-settings";
+
+    // 旧形式のtabパラメータもチェック
     const tab = searchParams.get("tab");
     const validTabs = [
       "memos",
       "tasks",
+      "board",
       "boards",
       "team-list",
       "settings",

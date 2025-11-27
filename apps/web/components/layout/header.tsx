@@ -61,12 +61,12 @@ function Header() {
 
   // ページ種別の判定（useMemoで最適化・楽観的更新対応）
   const pageStates = useMemo(() => {
-    // チームボード詳細はクエリパラメータ形式に変更（/team/xxx?tab=board&slug=yyy）
+    // チームボード詳細はクエリパラメータ形式（新形式: ?board=xxx, 旧形式: ?tab=board&slug=yyy）
     const isTeamBoardPage =
       teamName &&
       pathname === `/team/${teamName}` &&
       currentTab === "board" &&
-      searchParams.get("slug") !== null;
+      (searchParams.get("slug") !== null || searchParams.get("board") !== null);
     const isPersonalPage = pathname === "/" || !teamName;
 
     // 個人ボード詳細ページ（/boards/[slug]）

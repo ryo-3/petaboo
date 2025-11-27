@@ -33,16 +33,16 @@ export function generateTeamShareUrl(params: TeamUrlParams): string {
 
   // 通常のチームページの場合
   const baseUrl = `${window.location.origin}/team/${teamName}`;
-  const queryParams = new URLSearchParams();
-  queryParams.set("tab", tab);
 
+  // 新形式: tabパラメータを削除し、適切なパラメータを設定
   if (tab === "tasks") {
-    queryParams.set("task", itemId.toString());
+    return `${baseUrl}?task=${itemId}`;
   } else if (tab === "memos") {
-    queryParams.set("memo", itemId.toString());
+    // 値なしパラメータ（memos）と値ありパラメータ（memo）を組み合わせ
+    return `${baseUrl}?memos&memo=${itemId}`;
   }
 
-  return `${baseUrl}?${queryParams.toString()}`;
+  return baseUrl;
 }
 
 /**

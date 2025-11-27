@@ -96,10 +96,12 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   const activeTab = getActiveTabFromUrl(pathname, searchParams);
 
   // チームボード詳細ページかどうかを判定（クエリパラメータベース）
+  // 新形式（board=xxx）と旧形式（tab=board&slug=xxx）の両方に対応
   const isTeamBoardDetailPage =
     pathname.startsWith("/team/") &&
-    searchParams.get("tab") === "board" &&
-    searchParams.get("slug") !== null;
+    (searchParams.get("board") !== null ||
+      (searchParams.get("tab") === "board" &&
+        searchParams.get("slug") !== null));
 
   // メモIDが変わったらタブをリセット
   useEffect(() => {
@@ -147,11 +149,12 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // ボード詳細タブの場合はslugを記憶
+    // 新形式（board=xxx）と旧形式（tab=board&slug=xxx）の両方に対応
     const tab = searchParams.get("tab");
-    const slug = searchParams.get("slug");
+    const boardSlug = searchParams.get("board") || searchParams.get("slug");
 
-    if (tab === "board" && slug) {
-      setLastBoardSlug(slug);
+    if ((tab === "board" || searchParams.get("board")) && boardSlug) {
+      setLastBoardSlug(boardSlug);
     }
 
     // URLから統一的にscreenModeを設定
@@ -352,7 +355,7 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
     setOptimisticMode(null);
 
     if (lastBoardSlug) {
-      const newUrl = `/team/${customUrl}?tab=board&slug=${lastBoardSlug}`;
+      const newUrl = `/team/${customUrl}?board=${lastBoardSlug}`;
       // シンプルに直接URLを指定
       router.replace(newUrl, { scroll: false });
     } else {

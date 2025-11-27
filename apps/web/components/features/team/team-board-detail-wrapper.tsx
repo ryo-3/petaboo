@@ -153,11 +153,11 @@ export function TeamBoardDetailWrapper({
     if (!boardData) return;
 
     if (/^\d+$/.test(slug) && boardData.slug && boardData.slug !== slug) {
-      router.replace(`/team/${customUrl}?tab=board&slug=${boardData.slug}`, {
+      router.replace(`/team/${customUrl}?board=${boardData.slug}`, {
         scroll: false,
       });
     } else if (!slug && boardData.slug) {
-      router.replace(`/team/${customUrl}?tab=board&slug=${boardData.slug}`, {
+      router.replace(`/team/${customUrl}?board=${boardData.slug}`, {
         scroll: false,
       });
     }
@@ -268,7 +268,7 @@ export function TeamBoardDetailWrapper({
     setSelectedTask(null);
 
     // URLからメモ/タスクIDを削除
-    router.replace(`/team/${customUrl}?tab=board&slug=${slug}`, {
+    router.replace(`/team/${customUrl}?board=${slug}`, {
       scroll: false,
     });
   };
@@ -282,11 +282,11 @@ export function TeamBoardDetailWrapper({
     if (memo && memo.boardIndex && memo.boardIndex > 0) {
       // boardIndexが存在する場合のみURL更新
       router.replace(
-        `/team/${customUrl}?tab=board&slug=${slug}&memo=${memo.boardIndex}`,
+        `/team/${customUrl}?board=${slug}&memo=${memo.boardIndex}`,
         { scroll: false },
       );
     } else if (!memo) {
-      router.replace(`/team/${customUrl}?tab=board&slug=${slug}`, {
+      router.replace(`/team/${customUrl}?board=${slug}`, {
         scroll: false,
       });
     }
@@ -302,11 +302,11 @@ export function TeamBoardDetailWrapper({
     if (task && task.boardIndex && task.boardIndex > 0) {
       // boardIndexが存在する場合のみURL更新
       router.replace(
-        `/team/${customUrl}?tab=board&slug=${slug}&task=${task.boardIndex}`,
+        `/team/${customUrl}?board=${slug}&task=${task.boardIndex}`,
         { scroll: false },
       );
     } else if (!task) {
-      router.replace(`/team/${customUrl}?tab=board&slug=${slug}`, {
+      router.replace(`/team/${customUrl}?board=${slug}`, {
         scroll: false,
       });
     }
@@ -321,7 +321,7 @@ export function TeamBoardDetailWrapper({
 
   // チームボード設定画面への遷移
   const handleSettings = () => {
-    router.push(`/team/${customUrl}?tab=board&slug=${slug}&settings=true`);
+    router.push(`/team/${customUrl}?board=${slug}&settings=true`);
   };
 
   // URLからの復元が必要な場合（URLパラメータあり＆選択なし）のみローディング表示

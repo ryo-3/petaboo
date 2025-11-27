@@ -1166,10 +1166,11 @@ function MemoEditor({
     // モバイル版チームモードの場合はイベント発火で閉じる
     const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
     if (isMobile && teamMode) {
-      // ボード詳細画面かどうかをURLから判断
+      // ボード詳細画面かどうかをURLから判断（新形式・旧形式両対応）
       const isFromBoardDetail =
         typeof window !== "undefined" &&
-        window.location.search.includes("tab=board");
+        (window.location.search.includes("board=") ||
+          window.location.search.includes("tab=board"));
       const backEventName = isFromBoardDetail
         ? "board-memo-back"
         : "team-back-to-memo-list";

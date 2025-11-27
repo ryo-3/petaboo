@@ -155,19 +155,44 @@ export function NavigationProvider({
 
   // Sidebarの詳細なiconStates計算ロジック（統一版・最適化・楽観的更新対応）
   const iconStates = useMemo((): IconStates => {
-    const currentTab = searchParams.get("tab");
-
     // URLパターンの早期判定
     const isTeamDetailPageUrl =
       pathname.startsWith("/team/") && pathname !== "/team";
 
     // チーム詳細ページのタブ判定（最適化・楽観的更新対応）
     if (isTeamDetailPageUrl) {
+      // 新形式・旧形式の両方に対応したタブ取得
+      let currentTab: string | null = null;
+      if (searchParams.has("board")) {
+        currentTab = "board";
+      } else if (searchParams.has("memos")) {
+        currentTab = "memos";
+      } else if (searchParams.has("tasks")) {
+        currentTab = "tasks";
+      } else if (searchParams.has("boards")) {
+        currentTab = "boards";
+      } else if (searchParams.has("search")) {
+        currentTab = "search";
+      } else if (searchParams.has("team-list")) {
+        currentTab = "team-list";
+      } else if (searchParams.has("team-settings")) {
+        currentTab = "team-settings";
+      } else {
+        // 旧形式のtabパラメータもチェック
+        const tabParam = searchParams.get("tab");
+        if (tabParam) {
+          currentTab = tabParam;
+        } else {
+          // パラメータがない場合はoverview（ホーム画面）
+          currentTab = "overview";
+        }
+      }
+
       // teamActiveTabがあればそれを優先、なければURLパラメータを使用（即座の反映）
       const activeTab = teamActiveTab || currentTab;
-      const currentSlug = searchParams.get("slug");
+      const currentSlug = searchParams.get("slug") || searchParams.get("board");
 
-      // チームボード詳細はクエリパラメータ形式（?tab=board&slug=xxx）
+      // チームボード詳細はクエリパラメータ形式（新形式: ?board=xxx, 旧形式: ?tab=board&slug=xxx）
       const isTeamBoardDetailPage =
         activeTab === "board" && currentSlug !== null;
       const isTeamSettingsTab = activeTab === "team-settings";

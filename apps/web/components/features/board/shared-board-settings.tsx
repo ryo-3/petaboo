@@ -124,7 +124,7 @@ export default function SharedBoardSettings({
       // slugが変更された場合はページをリダイレクト
       if (editSlug !== boardSlug) {
         const redirectPath = isTeamMode
-          ? `/team/${teamCustomUrl}?tab=board&slug=${editSlug}&settings=true`
+          ? `/team/${teamCustomUrl}?board=${editSlug}&settings=true`
           : `/boards/${editSlug}?settings=true`;
         router.push(redirectPath);
       }
@@ -174,9 +174,7 @@ export default function SharedBoardSettings({
       // 削除成功フラグをsessionStorageに保存（リダイレクト直前）
       sessionStorage.setItem("boardDeleted", "true");
       setIsDeleteDialogOpen(false);
-      const redirectPath = isTeamMode
-        ? `/team/${teamCustomUrl}?tab=boards`
-        : "/";
+      const redirectPath = isTeamMode ? `/team/${teamCustomUrl}?boards` : "/";
       router.push(redirectPath);
     } catch (error) {
       console.error("ボード削除に失敗しました:", error);
@@ -190,7 +188,7 @@ export default function SharedBoardSettings({
 
   const handleBack = () => {
     const backPath = isTeamMode
-      ? `/team/${teamCustomUrl}?tab=board&slug=${boardSlug}`
+      ? `/team/${teamCustomUrl}?board=${boardSlug}`
       : `/boards/${boardSlug}`;
     router.push(backPath);
   };
@@ -237,10 +235,7 @@ export default function SharedBoardSettings({
                 className="px-4 py-3"
               />
               <p className="text-xs text-gray-500 mt-1">
-                URL:{" "}
-                {isTeamMode
-                  ? `/team/${teamCustomUrl}?tab=board&slug=`
-                  : `/boards/`}
+                URL: {isTeamMode ? `/team/${teamCustomUrl}?board=` : `/boards/`}
                 <span className="font-mono font-semibold text-blue-600">
                   {editSlug}
                 </span>

@@ -1185,9 +1185,15 @@ function MemoEditor({
       return;
     }
 
-    if (isDeleted && onDelete) {
+    if (isDeleted && (onDelete || onDeleteAndSelectNext)) {
       // 削除済みメモの場合は完全削除（親コンポーネントに委任）
-      onDelete();
+      // onDeleteAndSelectNextがある場合は優先的に使用（内部でモーダル表示）
+      if (onDeleteAndSelectNext && memo) {
+        // use-deleted-memo-actionsのshowDeleteConfirmationを呼び出す
+        deletedMemoActions?.showDeleteConfirmation();
+      } else if (onDelete) {
+        onDelete();
+      }
     } else if (teamMode || (itemBoards && itemBoards.length > 0)) {
       // チームモードまたはボードに紐づいている場合はモーダル表示と同時に蓋を開く
       setIsAnimating(true);

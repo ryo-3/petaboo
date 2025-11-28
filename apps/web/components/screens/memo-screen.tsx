@@ -704,9 +704,6 @@ function MemoScreen({
       restoreItem: operations.restoreItem,
     });
 
-  // 削除済みメモの完全削除処理
-  const permanentDeleteMemo = usePermanentDeleteMemo({ teamMode, teamId });
-
   // タブ切り替え用の状態
   const [displayTab, setDisplayTab] = useState(activeTab);
 
@@ -1186,35 +1183,22 @@ function MemoScreen({
             onDeselectAndStayOnMemoList?.();
           }}
           onRestore={unifiedRestoreAndSelectNext}
-          onDelete={async () => {
-            if (selectedDeletedMemo && deletedMemos) {
+          onDeleteAndSelectNext={(deletedMemo) => {
+            if (deletedMemos) {
               const displayOrder = getMemoDisplayOrder();
               const nextItem = getNextItemAfterDeletion(
                 deletedMemos,
-                selectedDeletedMemo,
+                deletedMemo as DeletedMemo,
                 displayOrder,
               );
 
-              setIsRightLidOpen(true);
-
-              try {
-                await permanentDeleteMemo.mutateAsync(
-                  selectedDeletedMemo.displayId,
-                );
-              } catch (error) {
-                setIsRightLidOpen(false);
-                return;
-              }
-
-              if (nextItem && nextItem.id !== selectedDeletedMemo.id) {
+              if (nextItem && nextItem.id !== deletedMemo.id) {
                 onSelectDeletedMemo(nextItem);
                 setMemoScreenMode("view");
               } else {
                 setMemoScreenMode("list");
                 onDeselectAndStayOnMemoList?.();
               }
-
-              setIsRightLidOpen(false);
             }
           }}
           isLidOpen={isRightLidOpen}

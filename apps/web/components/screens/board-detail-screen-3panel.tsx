@@ -16,8 +16,9 @@ import { useViewSettings } from "@/src/contexts/view-settings-context";
 import { useHeaderControlPanel } from "@/src/contexts/header-control-panel-context";
 import { useTeamDetailSafe } from "@/src/contexts/team-detail-context";
 import { useTeamDetail } from "@/src/hooks/use-team-detail";
-import { useDeletedMemos, useDeleteMemo } from "@/src/hooks/use-memos";
-import { useDeleteTask, useDeletedTasks } from "@/src/hooks/use-tasks";
+import { useDeletedMemos } from "@/src/hooks/use-memos";
+import { useDeletedTasks } from "@/src/hooks/use-tasks";
+import { useUnifiedItemOperations } from "@/src/hooks/use-unified-item-operations";
 import {
   useBoards,
   useAddItemToBoard,
@@ -746,44 +747,47 @@ function BoardDetailScreen({
           : 2
         : columnCount;
 
-  // メモ削除フック
-  const deleteMemoMutation = useDeleteMemo({
-    teamMode,
+  // 統一操作フック
+  const memoOperations = useUnifiedItemOperations({
+    itemType: "memo",
+    context: teamMode ? "team" : "board-detail",
     teamId: teamId || undefined,
+    boardId,
   });
 
-  // タスク削除フック
-  const deleteTaskMutation = useDeleteTask({
-    teamMode,
+  const taskOperations = useUnifiedItemOperations({
+    itemType: "task",
+    context: teamMode ? "team" : "board-detail",
     teamId: teamId || undefined,
+    boardId,
   });
 
   // メモ削除と次選択を組み合わせたハンドラー
   const handleMemoDeleteWithNextSelection = useCallback(
     async (memoToDelete: Memo) => {
       try {
-        // 実際の削除API呼び出し
-        await deleteMemoMutation.mutateAsync(memoToDelete.id);
+        // 実際の削除API呼び出し（統一フック使用）
+        await memoOperations.deleteItem.mutateAsync(memoToDelete.id);
 
         // 削除完了後に次選択ロジックを実行
         handleMemoDeleteAndSelectNext(memoToDelete);
       } catch (error) {}
     },
-    [deleteMemoMutation, handleMemoDeleteAndSelectNext, teamMode, teamId],
+    [memoOperations, handleMemoDeleteAndSelectNext],
   );
 
   // タスク削除と次選択を組み合わせたハンドラー
   const handleTaskDeleteWithNextSelection = useCallback(
     async (taskToDelete: Task) => {
       try {
-        // 実際の削除API呼び出し
-        await deleteTaskMutation.mutateAsync(taskToDelete.id);
+        // 実際の削除API呼び出し（統一フック使用）
+        await taskOperations.deleteItem.mutateAsync(taskToDelete.id);
 
         // 削除完了後に次選択ロジックを実行
         handleTaskDeleteAndSelectNext(taskToDelete);
       } catch (error) {}
     },
-    [deleteTaskMutation, handleTaskDeleteAndSelectNext, teamMode, teamId],
+    [taskOperations, handleTaskDeleteAndSelectNext],
   );
 
   // ボードアイテムの計算とフィルタリング

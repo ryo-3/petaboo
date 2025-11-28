@@ -395,11 +395,31 @@ export function useDeleteMemo(options?: {
             );
           },
         });
-        // チームボード関連のキャッシュを強制再取得（統計が変わるため）
-        queryClient.refetchQueries({
-          queryKey: ["team-boards", teamId],
+        // チームボード関連のキャッシュを無効化・強制再取得（統計が変わるため）
+        // 全ステータス（normal, completed, deleted）のボードキャッシュを無効化
+        queryClient.invalidateQueries({
+          predicate: (query) => {
+            const key = query.queryKey as unknown[];
+            return key[0] === "team-boards" && key[1] === teamId;
+          },
         });
-        // ボードアイテムキャッシュを強制再取得（UIからも削除するため）
+        queryClient.refetchQueries({
+          predicate: (query) => {
+            const key = query.queryKey as unknown[];
+            return key[0] === "team-boards" && key[1] === teamId;
+          },
+        });
+        // ボードアイテムキャッシュを強制無効化・再取得（UIからも削除するため）
+        queryClient.invalidateQueries({
+          predicate: (query) => {
+            const key = query.queryKey as string[];
+            return (
+              key[0] === "team-boards" &&
+              key[1] === teamId.toString() &&
+              key[3] === "items"
+            );
+          },
+        });
         queryClient.refetchQueries({
           predicate: (query) => {
             const key = query.queryKey as string[];

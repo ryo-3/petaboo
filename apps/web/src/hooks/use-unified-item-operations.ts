@@ -227,17 +227,63 @@ export function useUnifiedItemOperations({
 
       // ボード関連キャッシュの更新
       if (context === "team" && teamId) {
-        queryClient.refetchQueries({
-          queryKey: ["team-boards", teamId],
+        // チームボード一覧（統計情報含む）を無効化・再取得
+        // 全ステータス（normal, completed, deleted）のボードキャッシュを無効化
+        queryClient.invalidateQueries({
+          predicate: (query) => {
+            const key = query.queryKey as unknown[];
+            return key[0] === "team-boards" && key[1] === teamId;
+          },
         });
+        queryClient.refetchQueries({
+          predicate: (query) => {
+            const key = query.queryKey as unknown[];
+            return key[0] === "team-boards" && key[1] === teamId;
+          },
+        });
+        // ボード詳細のアイテム一覧も無効化
         if (cacheKeys.boardItems) {
+          // 特定のボードが指定されている場合
+          queryClient.invalidateQueries({
+            queryKey: cacheKeys.boardItems,
+          });
           queryClient.refetchQueries({
             queryKey: cacheKeys.boardItems,
           });
+        } else {
+          // boardIdが指定されていない場合は、すべてのボードアイテムを無効化
+          queryClient.invalidateQueries({
+            predicate: (query) => {
+              const key = query.queryKey as unknown[];
+              return (
+                key[0] === "team-boards" &&
+                key[1] === teamId.toString() &&
+                key[3] === "items"
+              );
+            },
+          });
+          queryClient.refetchQueries({
+            predicate: (query) => {
+              const key = query.queryKey as unknown[];
+              return (
+                key[0] === "team-boards" &&
+                key[1] === teamId.toString() &&
+                key[3] === "items"
+              );
+            },
+          });
         }
       } else {
-        queryClient.refetchQueries({ queryKey: ["boards"] });
+        // 個人ボード一覧を無効化・再取得
+        queryClient.invalidateQueries({
+          queryKey: ["boards"],
+          exact: false,
+        });
+        queryClient.refetchQueries({ queryKey: ["boards"], exact: false });
         if (cacheKeys.boardItems) {
+          queryClient.invalidateQueries({
+            queryKey: cacheKeys.boardItems,
+          });
           queryClient.refetchQueries({
             queryKey: cacheKeys.boardItems,
           });
@@ -334,10 +380,51 @@ export function useUnifiedItemOperations({
 
       // ボード関連キャッシュの更新
       if (context === "team" && teamId) {
+        // チームボード一覧（統計情報含む）を無効化・再取得
+        // 全ステータス（normal, completed, deleted）のボードキャッシュを無効化
         queryClient.invalidateQueries({
-          queryKey: ["team-boards", teamId.toString()],
-          exact: false,
+          predicate: (query) => {
+            const key = query.queryKey as unknown[];
+            return key[0] === "team-boards" && key[1] === teamId;
+          },
         });
+        queryClient.refetchQueries({
+          predicate: (query) => {
+            const key = query.queryKey as unknown[];
+            return key[0] === "team-boards" && key[1] === teamId;
+          },
+        });
+        // ボード詳細のアイテム一覧も無効化
+        if (cacheKeys.boardItems) {
+          queryClient.invalidateQueries({
+            queryKey: cacheKeys.boardItems,
+          });
+          queryClient.refetchQueries({
+            queryKey: cacheKeys.boardItems,
+          });
+        } else {
+          // boardIdが指定されていない場合は、すべてのボードアイテムを無効化
+          queryClient.invalidateQueries({
+            predicate: (query) => {
+              const key = query.queryKey as unknown[];
+              return (
+                key[0] === "team-boards" &&
+                key[1] === teamId.toString() &&
+                key[3] === "items"
+              );
+            },
+          });
+          queryClient.refetchQueries({
+            predicate: (query) => {
+              const key = query.queryKey as unknown[];
+              return (
+                key[0] === "team-boards" &&
+                key[1] === teamId.toString() &&
+                key[3] === "items"
+              );
+            },
+          });
+        }
         if (cacheKeys.boardDeletedItems) {
           queryClient.invalidateQueries({
             queryKey: cacheKeys.boardDeletedItems,
@@ -347,7 +434,20 @@ export function useUnifiedItemOperations({
           });
         }
       } else {
-        queryClient.invalidateQueries({ queryKey: ["boards"], exact: false });
+        // 個人ボード一覧を無効化・再取得
+        queryClient.invalidateQueries({
+          queryKey: ["boards"],
+          exact: false,
+        });
+        queryClient.refetchQueries({ queryKey: ["boards"], exact: false });
+        if (cacheKeys.boardItems) {
+          queryClient.invalidateQueries({
+            queryKey: cacheKeys.boardItems,
+          });
+          queryClient.refetchQueries({
+            queryKey: cacheKeys.boardItems,
+          });
+        }
         if (cacheKeys.boardDeletedItems) {
           queryClient.invalidateQueries({
             queryKey: cacheKeys.boardDeletedItems,

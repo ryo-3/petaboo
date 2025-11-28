@@ -787,14 +787,16 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   };
 
   const handleSelectDeletedMemo = (memo: DeletedMemo | null) => {
-    // 通常メモの選択をクリア（削除済みメモを選択する場合）
-    if (memo && selectedMemo) {
+    // 状態を同時に更新（React 18のバッチ処理により、同期的に実行される）
+    if (memo) {
+      // 通常メモをクリアして削除済みメモを選択
       setSelectedMemo(null);
+      setSelectedDeletedMemo(memo);
+      setSelectedMemoId(memo.id);
+    } else {
+      setSelectedDeletedMemo(null);
+      setSelectedMemoId(null);
     }
-
-    // 状態を更新
-    setSelectedDeletedMemo(memo);
-    setSelectedMemoId(memo?.id ?? null);
 
     // URLを更新
     const params = new URLSearchParams(searchParams.toString());
@@ -825,8 +827,16 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     task: DeletedTask | null,
     _fromFullList?: boolean,
   ) => {
-    setSelectedDeletedTask(task);
-    setSelectedTaskId(task?.id ?? null);
+    // 状態を同時に更新（React 18のバッチ処理により、同期的に実行される）
+    if (task) {
+      // 通常タスクをクリアして削除済みタスクを選択
+      setSelectedTask(null);
+      setSelectedDeletedTask(task);
+      setSelectedTaskId(task.id);
+    } else {
+      setSelectedDeletedTask(null);
+      setSelectedTaskId(null);
+    }
 
     // URLを更新
     const params = new URLSearchParams(searchParams.toString());

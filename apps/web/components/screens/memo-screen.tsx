@@ -729,9 +729,12 @@ function MemoScreen({
         }
       }
       // initialMemoIdが変更され、かつselectedMemoがない場合のみ自動選択を実行
+      // ただし、削除済みタブの時は通常メモを自動選択しない（削除済みメモが選択される）
       else if (
         memos &&
         !selectedMemo &&
+        !selectedDeletedMemo && // 削除済みメモが選択されていない時のみ
+        activeTab === "normal" && // 通常タブの時のみ
         initialMemoId !== initialMemoIdRef.current
       ) {
         const targetMemo = memos.find((memo) => isTargetMemo(memo));
@@ -746,7 +749,14 @@ function MemoScreen({
         initialMemoIdRef.current = null;
       }
     }
-  }, [initialMemoId, memos, selectedMemo, handleSelectMemo]);
+  }, [
+    initialMemoId,
+    memos,
+    selectedMemo,
+    selectedDeletedMemo,
+    activeTab,
+    handleSelectMemo,
+  ]);
 
   // URLからの復元が必要な場合（URLパラメータあり＆選択なし＆リストロード中）のみローディング表示
   // リストがロード完了したら、useEffectで選択されるので待たない

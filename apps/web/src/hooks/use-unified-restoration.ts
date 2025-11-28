@@ -202,6 +202,7 @@ export function useUnifiedRestoration<T extends DeletedItem>({
         teamMode && selectedDeletedItem.displayId
           ? selectedDeletedItem.displayId
           : selectedDeletedItem.displayId;
+
       await restoreMutation.mutateAsync(itemId);
 
       // キャッシュ無効化（次選択はuseEffectで自動実行）
@@ -221,7 +222,7 @@ export function useUnifiedRestoration<T extends DeletedItem>({
         });
       }
     } catch (error: unknown) {
-      console.error("❌ 統一復元処理エラー:", error);
+      console.error("統一復元処理エラー:", error);
       console.error("エラー詳細:", {
         message: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,

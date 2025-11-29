@@ -38,7 +38,6 @@ export interface paths {
               avatarColor: string | null;
               /** @enum {string} */
               targetType: "memo" | "task" | "board";
-              targetOriginalId: string;
               targetDisplayId: string;
               content: string;
               mentions: string | null;
@@ -107,7 +106,6 @@ export interface paths {
               avatarColor: string | null;
               /** @enum {string} */
               targetType: "memo" | "task" | "board";
-              targetOriginalId: string;
               targetDisplayId: string;
               content: string;
               mentions: string | null;
@@ -204,7 +202,6 @@ export interface paths {
               avatarColor: string | null;
               /** @enum {string} */
               targetType: "memo" | "task" | "board";
-              targetOriginalId: string;
               targetDisplayId: string;
               content: string;
               mentions: string | null;
@@ -340,7 +337,6 @@ export interface paths {
               avatarColor: string | null;
               /** @enum {string} */
               targetType: "memo" | "task" | "board";
-              targetOriginalId: string;
               targetDisplayId: string;
               content: string;
               mentions: string | null;
@@ -3095,7 +3091,6 @@ export interface paths {
                   tagId: number;
                   /** @enum {string} */
                   targetType: "memo" | "task" | "board";
-                  targetOriginalId: string;
                   targetDisplayId: string;
                   userId: string;
                   createdAt: number;
@@ -3110,7 +3105,6 @@ export interface paths {
                   tagId: number;
                   /** @enum {string} */
                   targetType: "memo" | "task" | "board";
-                  targetOriginalId: string;
                   targetDisplayId: string;
                   teamId: number;
                   userId: string;
@@ -3169,7 +3163,6 @@ export interface paths {
               tagId: number;
               /** @enum {string} */
               targetType: "memo" | "task" | "board";
-              targetOriginalId: string;
               targetDisplayId: string;
               userId: string;
               createdAt: number;

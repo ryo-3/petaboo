@@ -615,22 +615,8 @@ function MemoEditor({
   const shareUrl = useMemo(() => {
     if (!teamMode || !memo || memo.id === 0) return null;
 
-    const teamName = extractTeamNameFromUrl();
-    if (!teamName) return null;
-
-    // URLにboardパラメータがある場合はboardIndexを使用、それ以外はdisplayIdを使用
-    const urlParams = new URLSearchParams(window.location.search);
-    const boardParam = urlParams.get("board");
-    const itemId =
-      boardParam && memo.boardIndex !== undefined
-        ? memo.boardIndex
-        : memo.displayId;
-
-    return generateTeamShareUrl({
-      teamName,
-      tab: "memos",
-      itemId,
-    });
+    // 現在のURLをそのまま返す
+    return window.location.href;
   }, [teamMode, memo]);
 
   // タグの差分を計算して一括更新する関数

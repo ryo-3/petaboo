@@ -1034,22 +1034,8 @@ function TaskEditor({
   const shareUrl = useMemo(() => {
     if (!teamMode || !task || task.id === 0) return null;
 
-    const teamName = extractTeamNameFromUrl();
-    if (!teamName) return null;
-
-    // URLにboardパラメータがある場合はboardIndexを使用、それ以外はdisplayIdを使用
-    const urlParams = new URLSearchParams(window.location.search);
-    const boardParam = urlParams.get("board");
-    const itemId =
-      boardParam && task.boardIndex !== undefined
-        ? task.boardIndex
-        : task.displayId;
-
-    return generateTeamShareUrl({
-      teamName,
-      tab: "tasks",
-      itemId,
-    });
+    // 現在のURLをそのまま返す
+    return window.location.href;
   }, [teamMode, task]);
 
   const handleSave = useCallback(async () => {

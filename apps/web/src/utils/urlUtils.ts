@@ -11,7 +11,7 @@ export interface TeamUrlParams {
 /**
  * チームのタスク/メモ共有URLを生成する
  * ボード詳細ページから呼ばれた場合はボード情報を保持
- * 現在のURLにboardパラメータがある場合も保持
+ * 通常のチームページではdisplayIdのみを使用
  */
 export function generateTeamShareUrl(params: TeamUrlParams): string {
   const { teamName, tab, itemId } = params;
@@ -35,20 +35,10 @@ export function generateTeamShareUrl(params: TeamUrlParams): string {
   // 通常のチームページの場合
   const baseUrl = `${window.location.origin}/team/${teamName}`;
 
-  // 現在のURLからboardパラメータを取得
-  const urlParams = new URLSearchParams(window.location.search);
-  const boardParam = urlParams.get("board");
-
   // 新形式: 個別アイテム表示はパラメータに値を設定
   if (tab === "tasks") {
-    if (boardParam) {
-      return `${baseUrl}?board=${boardParam}&task=${itemId}`;
-    }
     return `${baseUrl}?task=${itemId}`;
   } else if (tab === "memos") {
-    if (boardParam) {
-      return `${baseUrl}?board=${boardParam}&memo=${itemId}`;
-    }
     return `${baseUrl}?memo=${itemId}`;
   }
 

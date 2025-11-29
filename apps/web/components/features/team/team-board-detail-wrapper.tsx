@@ -130,12 +130,15 @@ export function TeamBoardDetailWrapper({
     cacheTime: 30 * 60 * 1000, // 30分間保持
   });
 
-  // ボード名をlayoutに通知
+  // ボード名と説明をlayoutに通知
   useEffect(() => {
     if (boardData) {
       window.dispatchEvent(
         new CustomEvent("team-board-name-change", {
-          detail: { boardName: boardData.name },
+          detail: {
+            boardName: boardData.name,
+            boardDescription: boardData.description || "",
+          },
         }),
       );
     }

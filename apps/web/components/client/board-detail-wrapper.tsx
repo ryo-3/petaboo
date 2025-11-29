@@ -48,12 +48,15 @@ export function BoardDetailWrapper({
   const currentBoardDescription =
     serverBoardDescription || boardFromSlug?.description;
 
-  // 個人側：ボード名をヘッダーに通知
+  // 個人側：ボード名と説明をヘッダーに通知
   useEffect(() => {
     if (!teamMode && currentBoardName) {
       window.dispatchEvent(
         new CustomEvent("team-board-name-change", {
-          detail: { boardName: currentBoardName },
+          detail: {
+            boardName: currentBoardName,
+            boardDescription: currentBoardDescription || "",
+          },
         }),
       );
     }
@@ -63,7 +66,7 @@ export function BoardDetailWrapper({
         window.dispatchEvent(new CustomEvent("team-clear-board-name"));
       }
     };
-  }, [currentBoardName, teamMode]);
+  }, [currentBoardName, currentBoardDescription, teamMode]);
 
   return useMemo(() => {
     const BoardComponent = USE_UNIFIED_BOARD_DETAIL

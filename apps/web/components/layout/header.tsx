@@ -53,8 +53,9 @@ function Header() {
     null,
   );
 
-  // ボード名の状態管理
+  // ボード名と説明の状態管理
   const [boardTitle, setBoardTitle] = useState<string | null>(null);
+  const [boardDescription, setBoardDescription] = useState<string | null>(null);
 
   // 通知ポップアップの状態管理
   const [isNotificationPopupOpen, setIsNotificationPopupOpen] = useState(false);
@@ -65,8 +66,8 @@ function Header() {
     const isTeamBoardPage =
       teamName &&
       pathname === `/team/${teamName}` &&
-      currentTab === "board" &&
-      (searchParams.get("slug") !== null || searchParams.get("board") !== null);
+      (searchParams.get("board") !== null ||
+        (currentTab === "board" && searchParams.get("slug") !== null));
     const isPersonalPage = pathname === "/" || !teamName;
 
     // 個人ボード詳細ページ（/boards/[slug]）
@@ -126,15 +127,17 @@ function Header() {
     isTeamBoardListPage,
   } = pageStates;
 
-  // チームボード名の変更イベントをリッスン
+  // チームボード名と説明の変更イベントをリッスン
   useEffect(() => {
     const handleBoardNameChange = (event: CustomEvent) => {
-      const { boardName } = event.detail;
+      const { boardName, boardDescription: description } = event.detail;
       setBoardTitle(boardName);
+      setBoardDescription(description || null);
     };
 
     const handleClearBoardName = () => {
       setBoardTitle(null);
+      setBoardDescription(null);
     };
 
     const handleTeamTabChange = (event: CustomEvent) => {
@@ -173,10 +176,11 @@ function Header() {
     };
   }, []);
 
-  // ボード詳細ページから離れる時はボードタイトルをクリア
+  // ボード詳細ページから離れる時はボードタイトルと説明をクリア
   useEffect(() => {
     if (!isTeamBoardPage && !isPersonalBoardDetailPage) {
       setBoardTitle(null);
+      setBoardDescription(null);
     }
   }, [isTeamBoardPage, isPersonalBoardDetailPage]);
 
@@ -373,17 +377,24 @@ function Header() {
                 </button>
               )}
             </div>
-            {!isTeamBoardPage &&
+            {/* ボード詳細の場合は説明を表示 */}
+            {(isTeamBoardPage || isPersonalBoardDetailPage) &&
+            boardDescription ? (
+              <span className="hidden md:inline text-sm text-gray-700 mt-0.5">
+                {boardDescription}
+              </span>
+            ) : !isTeamBoardPage &&
+              !isPersonalBoardDetailPage &&
               !isMemoListPage &&
               !isTaskListPage &&
               !isBoardListPage &&
               !isTeamMemoListPage &&
               !isTeamTaskListPage &&
-              !isTeamBoardListPage && (
-                <span className="hidden md:inline text-sm text-gray-600 mt-0.5">
-                  - 日々のメモやタスクをひとまとめに -
-                </span>
-              )}
+              !isTeamBoardListPage ? (
+              <span className="hidden md:inline text-sm text-gray-600 mt-0.5">
+                - 日々のメモやタスクをひとまとめに -
+              </span>
+            ) : null}
           </div>
         </div>
       </div>

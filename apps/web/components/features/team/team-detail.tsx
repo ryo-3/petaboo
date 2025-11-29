@@ -156,6 +156,16 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     string | null
   >(null);
 
+  // URLパラメータのboardを大文字に正規化
+  useEffect(() => {
+    const boardParam = searchParams.get("board");
+    if (boardParam && boardParam !== boardParam.toUpperCase()) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("board", boardParam.toUpperCase());
+      router.replace(`/team/${customUrl}?${params.toString()}`);
+    }
+  }, [searchParams, router, customUrl]);
+
   // selectedMemoの変更をContextに反映
   useEffect(() => {
     setSelectedMemoId(selectedMemo?.id ?? null);

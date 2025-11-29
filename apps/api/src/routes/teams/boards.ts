@@ -308,7 +308,7 @@ export function createTeamBoardsAPI(app: AppType) {
 
       const newBoard: NewTeamBoard = {
         name,
-        slug,
+        slug: slug.toUpperCase(), // 大文字に変換
         description: description || null,
         teamId: parseInt(teamId),
         userId: auth.userId,
@@ -344,8 +344,8 @@ export function createTeamBoardsAPI(app: AppType) {
               slug: z
                 .string()
                 .regex(
-                  /^[a-z0-9-]+$/,
-                  "Slug must contain only lowercase letters, numbers, and hyphens",
+                  /^[a-zA-Z0-9-]+$/,
+                  "Slug must contain only letters, numbers, and hyphens",
                 )
                 .min(1)
                 .max(50)
@@ -422,14 +422,14 @@ export function createTeamBoardsAPI(app: AppType) {
         return c.json({ error: "ボードが見つかりません" }, 404);
       }
 
-      // slugが指定されている場合は重複チェック
+      // slugが指定されている場合は重複チェック（大文字に正規化）
       if (slug) {
         const duplicateBoard = await db
           .select()
           .from(teamBoards)
           .where(
             and(
-              eq(teamBoards.slug, slug),
+              eq(teamBoards.slug, slug.toUpperCase()),
               eq(teamBoards.teamId, parseInt(teamId)),
             ),
           )
@@ -458,7 +458,7 @@ export function createTeamBoardsAPI(app: AppType) {
       }
 
       if (slug !== undefined) {
-        updateData.slug = slug;
+        updateData.slug = slug.toUpperCase(); // 大文字に変換
       }
 
       // ボード更新
@@ -550,14 +550,14 @@ export function createTeamBoardsAPI(app: AppType) {
         return c.json({ error: "チームメンバーではありません" }, 403);
       }
 
-      // ボード検索
+      // ボード検索（大文字に正規化）
       const board = await db
         .select()
         .from(teamBoards)
         .where(
           and(
             eq(teamBoards.teamId, parseInt(teamId)),
-            eq(teamBoards.slug, slug),
+            eq(teamBoards.slug, slug.toUpperCase()),
             eq(teamBoards.archived, false),
           ),
         )

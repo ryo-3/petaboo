@@ -84,8 +84,8 @@ export default function SharedBoardSettings({
   };
 
   const handleSlugChange = (value: string) => {
-    // 英数字とハイフンのみ許可、小文字に変換
-    const sanitized = value.toLowerCase().replace(/[^a-z0-9-]/g, "");
+    // 英数字とハイフンのみ許可、大文字に変換
+    const sanitized = value.toUpperCase().replace(/[^A-Z0-9-]/g, "");
     setEditSlug(sanitized);
     setHasChanges(
       editName !== initialBoardName ||
@@ -111,23 +111,47 @@ export default function SharedBoardSettings({
     }
 
     try {
+      const isSlugChanging = editSlug !== boardSlug;
+
+      // slug変更の場合は、mutation完了後に手動でキャッシュクリアとリダイレクト
       await updateMutation.mutateAsync({
         id: boardId,
         data: {
           name: editName.trim(),
           description: editDescription || undefined,
-          slug: editSlug !== boardSlug ? editSlug : undefined,
+          slug: isSlugChanging ? editSlug : undefined,
         },
       });
+
       setHasChanges(false);
 
-      // slugが変更された場合はページをリダイレクト
-      if (editSlug !== boardSlug) {
+      // slugが変更された場合は、onSuccessのキャッシュ無効化より先にリダイレクト
+      if (isSlugChanging) {
+        // リダイレクト前に全てのクエリを無効化してリフェッチを防ぐ
+        if (isTeamMode && teamId) {
+          // すべてのクエリをキャンセルして無効化
+          queryClient.cancelQueries();
+          // チームボード関連のキャッシュを完全削除
+          queryClient.removeQueries({
+            queryKey: ["team-boards", teamId],
+          });
+          queryClient.removeQueries({
+            queryKey: ["team-board", teamId],
+          });
+        } else {
+          queryClient.cancelQueries();
+          queryClient.removeQueries({
+            queryKey: ["boards"],
+          });
+        }
+
+        // 即座にリダイレクト
         const redirectPath = isTeamMode
           ? `/team/${teamCustomUrl}?board=${editSlug}&settings=true`
           : `/boards/${editSlug}?settings=true`;
-        router.push(redirectPath);
+        router.replace(redirectPath);
       }
+      // slug変更なしの場合は、useUpdateTeamBoardのonSuccessで自動的にキャッシュ無効化される
     } catch (error) {
       console.error("ボード更新に失敗しました:", error);
       showToast(
@@ -229,7 +253,7 @@ export default function SharedBoardSettings({
               <TextInputWithCounter
                 value={editSlug}
                 onChange={(value) => handleSlugChange(value)}
-                placeholder="例: my-project-board（英数字とハイフンのみ、50文字以内）"
+                placeholder="例: MY-PROJECT-BOARD（大文字英数字とハイフンのみ、50文字以内）"
                 maxLength={50}
                 label="スラッグ（URL用の識別子）"
                 className="px-4 py-3"

@@ -79,7 +79,7 @@ export function TeamBoardDetailWrapper({
 
       const fetchBoardBySlug = async (slugValue: string) => {
         const response = await fetch(
-          `${API_BASE_URL}/teams/${teamId}/boards/slug/${slugValue}`,
+          `${API_BASE_URL}/teams/${teamId}/boards/slug/${slugValue.toUpperCase()}`,
           fetchOptions,
         );
         if (!response.ok) {

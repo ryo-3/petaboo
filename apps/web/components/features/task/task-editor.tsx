@@ -1362,6 +1362,8 @@ function TaskEditor({
                     {shareUrl && (
                       <ShareUrlButton
                         url={shareUrl}
+                        title={title}
+                        content={description}
                         className=""
                         label="URLをコピー"
                       />

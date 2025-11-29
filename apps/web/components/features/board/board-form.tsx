@@ -20,14 +20,18 @@ export default function BoardForm({
   const [description, setDescription] = useState(
     initialData?.description || "",
   );
-  const [slug, setSlug] = useState("");
-  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
+  const [slug, setSlug] = useState(
+    initialData?.slug ? initialData.slug.toUpperCase() : "",
+  );
+  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(
+    !!initialData?.slug,
+  );
 
-  // slug生成用の関数
+  // slug生成用の関数（大文字に変換）
   const generateSlug = (text: string): string => {
     return text
       .trim()
-      .toLowerCase()
+      .toUpperCase() // 大文字に変換
       .replace(/[^\w\s-]/g, "") // 特殊文字除去
       .replace(/\s+/g, "-") // スペースをハイフンに
       .replace(/--+/g, "-") // 連続ハイフンを単一に
@@ -42,10 +46,10 @@ export default function BoardForm({
     }
   };
 
-  // slugを手動編集した時
+  // slugを手動編集した時（大文字に変換）
   const handleSlugChange = (value: string) => {
-    // 英数字とハイフンのみ許可
-    const sanitized = value.toLowerCase().replace(/[^a-z0-9-]/g, "");
+    // 英数字とハイフンのみ許可、大文字に変換
+    const sanitized = value.toUpperCase().replace(/[^A-Z0-9-]/g, "");
     setSlug(sanitized);
     setIsSlugManuallyEdited(true);
   };
@@ -87,7 +91,7 @@ export default function BoardForm({
             id="slug"
             value={slug}
             onChange={handleSlugChange}
-            placeholder="例: my-project-board（英数字とハイフンのみ、50文字以内）"
+            placeholder="例: MY-PROJECT-BOARD（大文字英数字とハイフンのみ、50文字以内）"
             maxLength={50}
             label="スラッグ（URL用の識別子）"
             required

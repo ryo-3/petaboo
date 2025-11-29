@@ -1335,6 +1335,8 @@ function MemoEditor({
                 {shareUrl && (
                   <ShareUrlButton
                     url={shareUrl}
+                    title={title}
+                    content={content}
                     className=""
                     label="URLをコピー"
                   />

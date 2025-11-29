@@ -1037,10 +1037,18 @@ function TaskEditor({
     const teamName = extractTeamNameFromUrl();
     if (!teamName) return null;
 
+    // URLにboardパラメータがある場合はboardIndexを使用、それ以外はdisplayIdを使用
+    const urlParams = new URLSearchParams(window.location.search);
+    const boardParam = urlParams.get("board");
+    const itemId =
+      boardParam && task.boardIndex !== undefined
+        ? task.boardIndex
+        : task.displayId;
+
     return generateTeamShareUrl({
       teamName,
       tab: "tasks",
-      itemId: task.id,
+      itemId,
     });
   }, [teamMode, task]);
 

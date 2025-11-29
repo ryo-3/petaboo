@@ -1,6 +1,6 @@
 "use client";
 
-import CopyIcon from "@/components/icons/copy-icon";
+import LinkIcon from "@/components/icons/link-icon";
 import Tooltip from "@/components/ui/base/tooltip";
 import { useState } from "react";
 
@@ -38,7 +38,7 @@ function ShareUrlButton({
           ${className}
         `}
       >
-        <CopyIcon className="w-5 h-5" />
+        <LinkIcon className="w-4 h-4" />
       </button>
     </Tooltip>
   );

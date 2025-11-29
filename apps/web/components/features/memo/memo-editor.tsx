@@ -618,10 +618,18 @@ function MemoEditor({
     const teamName = extractTeamNameFromUrl();
     if (!teamName) return null;
 
+    // URLにboardパラメータがある場合はboardIndexを使用、それ以外はdisplayIdを使用
+    const urlParams = new URLSearchParams(window.location.search);
+    const boardParam = urlParams.get("board");
+    const itemId =
+      boardParam && memo.boardIndex !== undefined
+        ? memo.boardIndex
+        : memo.displayId;
+
     return generateTeamShareUrl({
       teamName,
       tab: "memos",
-      itemId: memo.id,
+      itemId,
     });
   }, [teamMode, memo]);
 

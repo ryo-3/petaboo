@@ -1,8 +1,11 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useToast } from "@/src/contexts/toast-context";
 import type { Attachment } from "@/src/hooks/use-attachments";
 import ImagePreviewModal from "@/components/ui/modals/image-preview-modal";
+import Tooltip from "@/components/ui/base/tooltip";
+
+type CopyStatus = Record<string, "idle" | "copying" | "success" | "error">;
 
 interface AttachmentGalleryProps {
   attachments: Attachment[];
@@ -31,6 +34,64 @@ export default function AttachmentGallery({
   const [imageUrls, setImageUrls] = useState<Record<number, string>>({});
   const [pendingUrls, setPendingUrls] = useState<string[]>([]);
   const loadedIdsRef = useRef<Set<number>>(new Set());
+  const [copyStatus, setCopyStatus] = useState<CopyStatus>({});
+
+  // 画像コピー処理
+  const handleCopyImage = useCallback(
+    async (imageUrl: string, key: string) => {
+      if (copyStatus[key] === "copying") return;
+
+      setCopyStatus((prev) => ({ ...prev, [key]: "copying" }));
+      try {
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+
+        // PNGに変換（Clipboard APIはPNGのみ対応）
+        let pngBlob: Blob;
+        if (blob.type === "image/png") {
+          pngBlob = blob;
+        } else {
+          const canvas = document.createElement("canvas");
+          const img = new Image();
+          img.crossOrigin = "anonymous";
+          img.src = URL.createObjectURL(blob);
+          await img.decode();
+
+          canvas.width = img.width;
+          canvas.height = img.height;
+          canvas.getContext("2d")?.drawImage(img, 0, 0);
+
+          pngBlob = await new Promise<Blob>((resolve, reject) =>
+            canvas.toBlob(
+              (b) => (b ? resolve(b) : reject(new Error("変換失敗"))),
+              "image/png",
+            ),
+          );
+          URL.revokeObjectURL(img.src);
+        }
+
+        await navigator.clipboard.write([
+          new ClipboardItem({ "image/png": pngBlob }),
+        ]);
+
+        setCopyStatus((prev) => ({ ...prev, [key]: "success" }));
+        showToast("画像をコピーしました", "success");
+        setTimeout(
+          () => setCopyStatus((prev) => ({ ...prev, [key]: "idle" })),
+          2000,
+        );
+      } catch (err) {
+        console.error("画像コピー失敗:", err);
+        setCopyStatus((prev) => ({ ...prev, [key]: "error" }));
+        showToast("画像のコピーに失敗しました", "error");
+        setTimeout(
+          () => setCopyStatus((prev) => ({ ...prev, [key]: "idle" })),
+          2000,
+        );
+      }
+    },
+    [copyStatus, showToast],
+  );
 
   // PDFや他のファイルを認証付きで開く
   const handleFileOpen = async (attachment: Attachment) => {
@@ -264,51 +325,134 @@ export default function AttachmentGallery({
                     {isMarkedForDelete
                       ? // 削除予定の場合は復元ボタン
                         onRestore && (
-                          <button
-                            onClick={() => onRestore(attachment.id)}
-                            className="absolute top-1 right-1 bg-blue-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-blue-600"
-                            title="復元"
+                          <Tooltip
+                            text="復元"
+                            position="bottom"
+                            className="!absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
                           >
-                            <svg
-                              className="w-3 h-3"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
+                            <button
+                              onClick={() => onRestore(attachment.id)}
+                              className="bg-blue-500 text-white rounded-full p-1 hover:bg-blue-600"
                             >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                              />
-                            </svg>
-                          </button>
+                              <svg
+                                className="w-3 h-3"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                />
+                              </svg>
+                            </button>
+                          </Tooltip>
                         )
                       : // 通常時は削除ボタン
                         onDelete && (
-                          <button
-                            onClick={() => onDelete(attachment.id)}
-                            disabled={isDeleting}
-                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 disabled:opacity-50"
-                            title="削除"
+                          <Tooltip
+                            text="削除"
+                            position="bottom"
+                            className="!absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
                           >
-                            <svg
-                              className="w-3 h-3"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
+                            <button
+                              onClick={() => onDelete(attachment.id)}
+                              disabled={isDeleting}
+                              className="bg-red-500 text-white rounded-full p-1 hover:bg-red-600 disabled:opacity-50"
                             >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M6 18L18 6M6 6l12 12"
-                              />
-                            </svg>
-                          </button>
+                              <svg
+                                className="w-3 h-3"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M6 18L18 6M6 6l12 12"
+                                />
+                              </svg>
+                            </button>
+                          </Tooltip>
                         )}
                   </>
                 )}
+              {/* 画像コピーボタン（左下） */}
+              {isImage && imageUrl && !isProcessing && !isMarkedForDelete && (
+                <Tooltip
+                  text="画像をコピー"
+                  position="bottom"
+                  className="!absolute bottom-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCopyImage(imageUrl, `attachment-${attachment.id}`);
+                    }}
+                    disabled={
+                      copyStatus[`attachment-${attachment.id}`] === "copying"
+                    }
+                    className={`rounded-full p-1 ${
+                      copyStatus[`attachment-${attachment.id}`] === "success"
+                        ? "bg-green-500 text-white"
+                        : copyStatus[`attachment-${attachment.id}`] === "error"
+                          ? "bg-red-500 text-white"
+                          : "bg-white/90 text-gray-700 hover:bg-white"
+                    }`}
+                  >
+                    {copyStatus[`attachment-${attachment.id}`] === "copying" ? (
+                      <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24">
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          fill="none"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                        />
+                      </svg>
+                    ) : copyStatus[`attachment-${attachment.id}`] ===
+                      "success" ? (
+                      <svg
+                        className="w-3 h-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    ) : (
+                      <svg
+                        className="w-3 h-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                        />
+                      </svg>
+                    )}
+                  </button>
+                </Tooltip>
+              )}
             </div>
           );
         })}
@@ -395,25 +539,30 @@ export default function AttachmentGallery({
                 {isUploading ? "保存中..." : "未保存"}
               </div>
               {onDeletePending && !isUploading && (
-                <button
-                  onClick={() => onDeletePending(index)}
-                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                  title="削除"
+                <Tooltip
+                  text="削除"
+                  position="bottom"
+                  className="!absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
                 >
-                  <svg
-                    className="w-3 h-3"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+                  <button
+                    onClick={() => onDeletePending(index)}
+                    className="bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
+                    <svg
+                      className="w-3 h-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </Tooltip>
               )}
             </div>
           );

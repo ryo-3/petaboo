@@ -575,50 +575,47 @@ export const postComment = async (c: any) => {
     }
   }
 
-  // チーム全メンバーに通知を作成（投稿者以外）
-  const allMembers = await db
-    .select()
-    .from(teamMembers)
-    .where(eq(teamMembers.teamId, teamId));
+  // メンションされたユーザーにのみ通知を作成（投稿者自身は除外）
+  if (mentionedUserIds.length > 0) {
+    const notificationsToCreate = mentionedUserIds
+      .filter((userId: string) => userId !== auth.userId) // 投稿者自身を除外
+      .map((userId: string) => ({
+        teamId,
+        userId,
+        type: "comment",
+        sourceType: "comment",
+        sourceId: result[0].id,
+        targetType,
+        targetDisplayId,
+        boardDisplayId,
+        actorUserId: auth.userId,
+        message: `${member.displayName || "誰か"}さんがあなたをメンションしました`,
+        isRead: 0,
+        createdAt,
+      }));
 
-  const notificationsToCreate = allMembers
-    .filter((m: { userId: string }) => m.userId !== auth.userId) // 投稿者自身を除外
-    .map((m: { userId: string }) => ({
-      teamId,
-      userId: m.userId,
-      type: "comment",
-      sourceType: "comment",
-      sourceId: result[0].id,
-      targetType,
-      targetDisplayId,
-      boardDisplayId,
-      actorUserId: auth.userId,
-      message: `${member.displayName || "誰か"}さんがコメントしました`,
-      isRead: 0,
-      createdAt,
-    }));
+    // 通知を一括作成
+    if (notificationsToCreate.length > 0) {
+      await db.insert(teamNotifications).values(notificationsToCreate);
+    }
 
-  // 通知を一括作成
-  if (notificationsToCreate.length > 0) {
-    await db.insert(teamNotifications).values(notificationsToCreate);
-  }
+    // Slack通知送信（メンションがある場合のみ）
+    const commenterDisplayName = member.displayName || "Unknown";
 
-  // Slack通知送信（メンションの有無に関わらず送信）
-  const commenterDisplayName = member.displayName || "Unknown";
-
-  // Slack通知を送信（エラーは無視）
-  try {
-    await sendMentionNotificationToSlack(
-      teamId,
-      mentionedUserIds,
-      result[0],
-      commenterDisplayName,
-      db,
-      c.env,
-    );
-  } catch (error) {
-    console.error("❌ Slack notification failed:", error);
-    // エラーが発生してもコメント投稿は成功として扱う
+    // Slack通知を送信（エラーは無視）
+    try {
+      await sendMentionNotificationToSlack(
+        teamId,
+        mentionedUserIds,
+        result[0],
+        commenterDisplayName,
+        db,
+        c.env,
+      );
+    } catch (error) {
+      console.error("❌ Slack notification failed:", error);
+      // エラーが発生してもコメント投稿は成功として扱う
+    }
   }
 
   // アクティビティログを記録（対象タイトルを取得）

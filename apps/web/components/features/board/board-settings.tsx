@@ -13,6 +13,7 @@ interface BoardSettingsProps {
   initialBoardName: string;
   initialBoardDescription?: string | null;
   initialBoardCompleted: boolean;
+  onBack?: () => void;
 }
 
 export default function BoardSettings({
@@ -21,6 +22,7 @@ export default function BoardSettings({
   initialBoardName,
   initialBoardDescription,
   initialBoardCompleted,
+  onBack,
 }: BoardSettingsProps) {
   const toggleCompletion = useToggleBoardCompletion();
   const deleteBoard = useDeleteBoard();
@@ -34,6 +36,7 @@ export default function BoardSettings({
       initialBoardDescription={initialBoardDescription}
       initialBoardCompleted={initialBoardCompleted}
       isTeamMode={false}
+      onBack={onBack}
       updateMutation={updateBoard}
       toggleCompletionMutation={toggleCompletion}
       deleteMutation={deleteBoard}

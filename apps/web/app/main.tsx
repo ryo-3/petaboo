@@ -23,6 +23,9 @@ interface MainProps {
   teamId?: number;
   showAuthLoading?: boolean;
   isAuthenticated?: boolean;
+  // ボード設定画面表示用
+  showBoardSettings?: boolean;
+  initialBoardCompleted?: boolean;
 }
 
 function Main({
@@ -37,11 +40,14 @@ function Main({
   forceShowBoardDetail,
   teamMode,
   teamId,
+  showBoardSettings,
+  initialBoardCompleted,
 }: MainProps = {}) {
   return (
     <NavigationProvider
       initialCurrentMode={initialCurrentMode}
       initialScreenMode={initialScreenMode}
+      initialShowingBoardDetail={forceShowBoardDetail}
     >
       <MainClient
         initialBoardName={initialBoardName}
@@ -53,6 +59,8 @@ function Main({
         forceShowBoardDetail={forceShowBoardDetail}
         teamMode={teamMode}
         teamId={teamId}
+        showBoardSettings={showBoardSettings}
+        initialBoardCompleted={initialBoardCompleted}
       />
     </NavigationProvider>
   );

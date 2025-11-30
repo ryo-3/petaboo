@@ -63,6 +63,9 @@ interface MainContentAreaProps {
   handleBoardSelectMemo: (memo: Memo | null) => void;
   handleBoardSelectTask: (task: Task | DeletedTask | null) => void;
   handleBoardClearSelection: () => void;
+
+  // ボード設定
+  onBoardSettings?: () => void;
 }
 
 export function MainContentArea({
@@ -100,6 +103,7 @@ export function MainContentArea({
   teamId: _teamId,
   handleTeamCreate,
   handleTeamCreated,
+  onBoardSettings,
 }: MainContentAreaProps) {
   // NavigationContextから統一された状態を取得
   const { showTeamList, showTeamCreate, setShowTeamList, setScreenMode } =
@@ -213,6 +217,7 @@ export function MainContentArea({
               handleBoardSelectMemo={handleBoardSelectMemo}
               handleBoardSelectTask={handleBoardSelectTask}
               handleBoardClearSelection={handleBoardClearSelection}
+              onBoardSettings={onBoardSettings}
             />
           ) : (
             <BoardScreen

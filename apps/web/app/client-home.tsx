@@ -1,10 +1,30 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useAuth, SignIn, UserButton } from "@clerk/nextjs";
+import { useSearchParams } from "next/navigation";
 import Main from "./main";
 
 export default function ClientHome() {
   const { isLoaded, isSignedIn } = useAuth();
+  const searchParams = useSearchParams();
+
+  // URLパラメータからモードを取得
+  const modeParam = searchParams.get("mode") as
+    | "memo"
+    | "task"
+    | "board"
+    | null;
+
+  // 初回のみモードを記憶し、URLからパラメータを消す
+  const initialMode = useRef(modeParam);
+
+  useEffect(() => {
+    if (modeParam && isSignedIn) {
+      // URLからmodeパラメータを即座に消す（再レンダリングなし）
+      window.history.replaceState(null, "", "/");
+    }
+  }, [modeParam, isSignedIn]);
 
   // 認証状態が読み込まれていない間はローディング表示
   if (!isLoaded) {
@@ -17,7 +37,14 @@ export default function ClientHome() {
 
   // ログイン済みならメイン画面を表示
   if (isSignedIn) {
-    return <Main />;
+    // 初回のモードを使用（URLから消した後も維持）
+    const mode = initialMode.current;
+    return (
+      <Main
+        initialCurrentMode={mode || undefined}
+        initialScreenMode={mode || undefined}
+      />
+    );
   }
 
   // 未ログイン時はログインフォームを埋め込んだウェルカムページを表示

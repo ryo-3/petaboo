@@ -10,8 +10,9 @@ import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
 import { useNavigation } from "@/src/contexts/navigation-context";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useLayoutEffect, useRef, useState, useEffect } from "react";
+import BoardSettings from "@/components/features/board/board-settings";
 import { useToast } from "@/src/contexts/toast-context";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -25,6 +26,8 @@ interface MainClientProps {
   forceShowBoardDetail?: boolean;
   teamMode?: boolean;
   teamId?: number;
+  showBoardSettings?: boolean;
+  initialBoardCompleted?: boolean;
 }
 
 function MainClient({
@@ -37,6 +40,8 @@ function MainClient({
   forceShowBoardDetail = false,
   teamMode = false,
   teamId,
+  showBoardSettings = false,
+  initialBoardCompleted = false,
 }: MainClientProps) {
   // ==========================================
   // State管理
@@ -45,8 +50,14 @@ function MainClient({
   // ユーザー設定取得
   const { preferences } = useUserPreferences(1);
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
+
+  // ボード設定画面の表示状態（propsまたはURLパラメータから初期化）
+  const [isShowingBoardSettings, setIsShowingBoardSettings] = useState(
+    showBoardSettings || searchParams.get("settings") === "true",
+  );
 
   // コンテキストから状態を取得
   const {
@@ -230,20 +241,41 @@ function MainClient({
     setScreenMode("team");
   };
 
+  // ボード設定画面を開く（リロードなし）
+  const openBoardSettings = () => {
+    setIsShowingBoardSettings(true);
+    // URLに?settings=trueを追加（リロードなし）
+    const newUrl = `${pathname}?settings=true`;
+    window.history.replaceState(null, "", newUrl);
+  };
+
+  // ボード設定画面を閉じてURLからsettingsパラメータを消す
+  const closeBoardSettings = () => {
+    setIsShowingBoardSettings(false);
+    if (searchParams.get("settings") === "true") {
+      // URLからsettingsパラメータを消す
+      const newUrl = pathname;
+      window.history.replaceState(null, "", newUrl);
+    }
+  };
+
   // 他のハンドラーをラップしてチーム表示をリセット
   const wrappedHandleHome = () => {
+    closeBoardSettings();
     setShowTeamList(false);
     setShowTeamCreate(false);
     handleHome();
   };
 
   const wrappedHandleShowList = (mode: "memo" | "task" | "board") => {
+    closeBoardSettings();
     setShowTeamList(false);
     setShowTeamCreate(false);
     handleShowList(mode);
   };
 
   const wrappedHandleDashboard = () => {
+    closeBoardSettings();
     setShowTeamList(false);
     setShowTeamCreate(false);
     hasUserManuallyChanged.current = true; // ユーザーが手動で切り替えたことを記録
@@ -252,18 +284,23 @@ function MainClient({
   };
 
   const wrappedHandleBoardDetail = () => {
+    closeBoardSettings();
+    setShowTeamList(false);
+    setShowTeamCreate(false);
     hasUserManuallyChanged.current = true; // ユーザーが手動で切り替えたことを記録
     setShowingBoardDetail(true); // ボード詳細を表示
     handleBoardDetail();
   };
 
   const wrappedHandleSettings = () => {
+    closeBoardSettings();
     setShowTeamList(false);
     setShowTeamCreate(false);
     handleSettings();
   };
 
   const wrappedHandleSearch = () => {
+    closeBoardSettings();
     setShowTeamList(false);
     setShowTeamCreate(false);
     handleSearch();
@@ -381,42 +418,56 @@ function MainClient({
         boardSelectedItem={boardSelectedItem}
         handleBoardClearSelection={handleBoardClearSelection}
       >
-        <MainContentArea
-          screenMode={screenMode}
-          pathname={pathname}
-          currentMode={currentMode}
-          selectedMemo={selectedMemo}
-          selectedDeletedMemo={selectedDeletedMemo}
-          selectedTask={selectedTask}
-          selectedDeletedTask={selectedDeletedTask}
-          boardSelectedItem={boardSelectedItem}
-          setSelectedMemo={setSelectedMemo}
-          setSelectedDeletedMemo={setSelectedDeletedMemo}
-          setSelectedTask={setSelectedTask}
-          setSelectedDeletedTask={setSelectedDeletedTask}
-          setCurrentMode={setCurrentMode}
-          boardId={boardId}
-          boardFromSlug={boardFromSlug}
-          initialBoardName={initialBoardName}
-          serverBoardDescription={serverBoardDescription}
-          serverBoardTitle={serverBoardTitle}
-          showBoardHeader={showBoardHeader}
-          showingBoardDetail={showingBoardDetail}
-          boardScreenRef={boardScreenRef}
-          handleSelectMemo={handleSelectMemo}
-          handleSelectDeletedMemo={handleSelectDeletedMemo}
-          handleSelectTask={handleSelectTask}
-          handleSelectDeletedTask={handleSelectDeletedTask}
-          handleClose={handleClose}
-          handleShowList={handleShowList}
-          handleBoardSelectMemo={handleBoardSelectMemo}
-          handleBoardSelectTask={handleBoardSelectTask}
-          handleBoardClearSelection={handleBoardClearSelection}
-          teamMode={teamMode}
-          teamId={teamId}
-          handleTeamCreate={handleTeamCreate}
-          handleTeamCreated={handleTeamCreated}
-        />
+        {isShowingBoardSettings && boardId ? (
+          <div className="h-full pt-6 pl-6 pr-6 flex flex-col overflow-y-auto">
+            <BoardSettings
+              boardId={boardId}
+              boardSlug={currentBoardSlug || ""}
+              initialBoardName={initialBoardName || ""}
+              initialBoardDescription={serverBoardDescription}
+              initialBoardCompleted={initialBoardCompleted}
+              onBack={closeBoardSettings}
+            />
+          </div>
+        ) : (
+          <MainContentArea
+            screenMode={screenMode}
+            pathname={pathname}
+            currentMode={currentMode}
+            selectedMemo={selectedMemo}
+            selectedDeletedMemo={selectedDeletedMemo}
+            selectedTask={selectedTask}
+            selectedDeletedTask={selectedDeletedTask}
+            boardSelectedItem={boardSelectedItem}
+            setSelectedMemo={setSelectedMemo}
+            setSelectedDeletedMemo={setSelectedDeletedMemo}
+            setSelectedTask={setSelectedTask}
+            setSelectedDeletedTask={setSelectedDeletedTask}
+            setCurrentMode={setCurrentMode}
+            boardId={boardId}
+            boardFromSlug={boardFromSlug}
+            initialBoardName={initialBoardName}
+            serverBoardDescription={serverBoardDescription}
+            serverBoardTitle={serverBoardTitle}
+            showBoardHeader={showBoardHeader}
+            showingBoardDetail={showingBoardDetail}
+            boardScreenRef={boardScreenRef}
+            handleSelectMemo={handleSelectMemo}
+            handleSelectDeletedMemo={handleSelectDeletedMemo}
+            handleSelectTask={handleSelectTask}
+            handleSelectDeletedTask={handleSelectDeletedTask}
+            handleClose={handleClose}
+            handleShowList={handleShowList}
+            handleBoardSelectMemo={handleBoardSelectMemo}
+            handleBoardSelectTask={handleBoardSelectTask}
+            handleBoardClearSelection={handleBoardClearSelection}
+            teamMode={teamMode}
+            teamId={teamId}
+            handleTeamCreate={handleTeamCreate}
+            handleTeamCreated={handleTeamCreated}
+            onBoardSettings={openBoardSettings}
+          />
+        )}
       </MainClientDesktop>
     </main>
   );

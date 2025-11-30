@@ -22,6 +22,8 @@ interface SharedBoardSettingsProps {
   teamId?: number;
   // Display options
   hideBackButton?: boolean;
+  // Callbacks
+  onBack?: () => void;
   // Hook functions
   updateMutation: {
     mutateAsync: (data: { id: number; data: UpdateBoardData }) => Promise<any>;
@@ -47,6 +49,7 @@ export default function SharedBoardSettings({
   teamCustomUrl,
   teamId,
   hideBackButton = false,
+  onBack,
   updateMutation,
   toggleCompletionMutation,
   deleteMutation,
@@ -211,6 +214,12 @@ export default function SharedBoardSettings({
   };
 
   const handleBack = () => {
+    // onBackが渡されていればそれを使用（リロードなし）
+    if (onBack) {
+      onBack();
+      return;
+    }
+    // フォールバック: router.pushを使用
     const backPath = isTeamMode
       ? `/team/${teamCustomUrl}?board=${boardSlug}`
       : `/boards/${boardSlug}`;

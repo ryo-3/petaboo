@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import BoardSettings from "@/components/features/board/board-settings";
 import DesktopLayout from "@/components/layout/desktop-layout";
 import Header from "@/components/layout/header";
@@ -23,6 +24,7 @@ export default function BoardSettingsScreen({
   initialBoardDescription,
   initialBoardCompleted,
 }: BoardSettingsScreenProps) {
+  const router = useRouter();
   const { preferences } = useUserPreferences(1);
   const { currentMode, setCurrentMode } = useNavigation();
 
@@ -42,7 +44,16 @@ export default function BoardSettingsScreen({
     };
   }, [initialBoardName, initialBoardDescription]);
 
-  // 空のハンドラー（設定画面では使用しない）
+  // ナビゲーションハンドラー
+  const handleHome = () => router.push("/");
+  const handleShowFullList = () => router.push("/?mode=memo");
+  const handleShowTaskList = () => router.push("/?mode=task");
+  const handleSettings = () => router.push("/settings");
+  const handleSearch = () => router.push("/?search=true");
+  const handleDashboard = () => router.push("/?mode=board");
+  const handleBoardDetail = () => router.push(`/boards/${boardSlug}`);
+
+  // 使用しないハンドラー（設定画面では不要）
   const emptyHandler = () => {};
 
   return (
@@ -58,18 +69,19 @@ export default function BoardSettingsScreen({
             onSelectMemo={emptyHandler}
             onSelectTask={emptyHandler}
             onEditTask={emptyHandler}
-            onShowFullList={emptyHandler}
-            onShowTaskList={emptyHandler}
-            onHome={emptyHandler}
+            onShowFullList={handleShowFullList}
+            onShowTaskList={handleShowTaskList}
+            onHome={handleHome}
             onEditMemo={emptyHandler}
             onDeleteMemo={emptyHandler}
             selectedMemoId={undefined}
             selectedTaskId={undefined}
             currentMode={currentMode}
             onModeChange={setCurrentMode}
-            onSettings={emptyHandler}
-            onSearch={emptyHandler}
-            onDashboard={emptyHandler}
+            onSettings={handleSettings}
+            onSearch={handleSearch}
+            onDashboard={handleDashboard}
+            onBoardDetail={handleBoardDetail}
             currentBoardName={initialBoardName}
           />
         }

@@ -5,15 +5,22 @@ import type { BoardWithItems } from "@/src/types/board";
 
 interface BoardPageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ settings?: string }>;
 }
 
-export default async function BoardPage({ params }: BoardPageProps) {
+export default async function BoardPage({
+  params,
+  searchParams,
+}: BoardPageProps) {
   const { slug } = await params;
+  const { settings } = await searchParams;
+  const showSettings = settings === "true";
 
   let boardData: {
     id: number;
     name: string;
     description?: string | null;
+    completed?: boolean;
   } | null = null;
   let boardWithItems: BoardWithItems | null = null;
   const queryClient = new QueryClient();
@@ -81,6 +88,8 @@ export default async function BoardPage({ params }: BoardPageProps) {
           initialCurrentMode="board"
           initialScreenMode="board"
           forceShowBoardDetail={true}
+          showBoardSettings={showSettings}
+          initialBoardCompleted={boardData.completed ?? false}
         />
       </Hydrate>
     );

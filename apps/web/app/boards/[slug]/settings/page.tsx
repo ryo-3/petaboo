@@ -1,6 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
-import BoardSettingsScreen from "@/components/screens/board-settings-screen";
-import { NavigationProvider } from "@/src/contexts/navigation-context";
+import { redirect } from "next/navigation";
 
 interface BoardSettingsPageProps {
   params: Promise<{ slug: string }>;
@@ -11,51 +9,6 @@ export default async function BoardSettingsPage({
 }: BoardSettingsPageProps) {
   const { slug } = await params;
 
-  let boardData: {
-    id: number;
-    name: string;
-    description?: string | null;
-    completed: boolean;
-  } | null = null;
-
-  // サーバーサイドでボード情報を取得
-  try {
-    const { userId, getToken } = await auth();
-
-    if (userId) {
-      const token = await getToken();
-      // slugは大文字で検索するため変換
-      const response = await fetch(
-        `${process.env.API_URL || "http://localhost:7594"}/boards/slug/${slug.toUpperCase()}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            ...(token && { Authorization: `Bearer ${token}` }),
-          },
-        },
-      );
-
-      if (response.ok) {
-        boardData = await response.json();
-      }
-    }
-  } catch (error) {
-    console.error("Failed to fetch board:", error);
-  }
-
-  if (!boardData) {
-    return <div>Board not found</div>;
-  }
-
-  return (
-    <NavigationProvider initialCurrentMode="board" initialScreenMode="board">
-      <BoardSettingsScreen
-        boardId={boardData.id}
-        boardSlug={slug}
-        initialBoardName={boardData.name}
-        initialBoardDescription={boardData.description}
-        initialBoardCompleted={boardData.completed}
-      />
-    </NavigationProvider>
-  );
+  // 新形式のURLにリダイレクト
+  redirect(`/boards/${slug}?settings=true`);
 }

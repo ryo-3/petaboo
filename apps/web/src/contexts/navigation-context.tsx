@@ -232,6 +232,11 @@ export function NavigationProvider({
 
     // 個人ページの判定（screenModeベース・楽観的更新対応）
     const effectiveMode = optimisticMode || currentMode;
+    // 個人ボード詳細ページ（/boards/[slug]）
+    const isPersonalBoardPage =
+      pathname.startsWith("/boards/") && pathname !== "/boards";
+    // ボード詳細アクティブ: showingBoardDetailの状態を優先、
+    // ただしボードページ初回アクセス時（showingBoardDetailがまだ設定されてない場合）はURLで判断
     const boardDetailActive = effectiveMode === "board" && showingBoardDetail;
 
     // ホーム画面表示中は、currentModeに関わらずhomeアイコンのみ有効化

@@ -22,6 +22,7 @@ interface BoardDetailWrapperProps {
   handleBoardClearSelection: () => void;
   teamMode?: boolean;
   teamId?: number | null;
+  onBoardSettings?: () => void;
 }
 
 const USE_UNIFIED_BOARD_DETAIL = false;
@@ -39,6 +40,7 @@ export function BoardDetailWrapper({
   handleBoardClearSelection,
   teamMode = false,
   teamId = null,
+  onBoardSettings,
 }: BoardDetailWrapperProps) {
   const router = useRouter();
 
@@ -110,6 +112,7 @@ export function BoardDetailWrapper({
         initialBoardDescription={currentBoardDescription}
         showBoardHeader={showBoardHeader}
         serverInitialTitle={serverBoardTitle}
+        onSettings={onBoardSettings}
       />
     );
   }, [
@@ -127,6 +130,7 @@ export function BoardDetailWrapper({
     handleBoardClearSelection,
     teamMode,
     teamId,
+    onBoardSettings,
     router,
   ]);
 }

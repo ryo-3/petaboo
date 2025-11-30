@@ -24,8 +24,9 @@ export default async function BoardSettingsPage({
 
     if (userId) {
       const token = await getToken();
+      // slugは大文字で検索するため変換
       const response = await fetch(
-        `${process.env.API_URL || "http://localhost:7594"}/boards/slug/${slug}`,
+        `${process.env.API_URL || "http://localhost:7594"}/boards/slug/${slug.toUpperCase()}`,
         {
           headers: {
             "Content-Type": "application/json",

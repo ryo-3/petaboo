@@ -1,27 +1,44 @@
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import {
+  sqliteTable,
+  text,
+  integer,
+  uniqueIndex,
+} from "drizzle-orm/sqlite-core";
 import { sql } from "drizzle-orm";
 import { boardCategories } from "./board-categories";
 
-export const boards = sqliteTable("boards", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  name: text("name").notNull(),
-  slug: text("slug").notNull().unique(),
-  description: text("description"),
-  userId: text("user_id").notNull(),
-  boardCategoryId: integer("board_category_id").references(
-    () => boardCategories.id,
-    { onDelete: "set null" },
-  ),
-  archived: integer("archived", { mode: "boolean" }).notNull().default(false),
-  completed: integer("completed", { mode: "boolean" }).notNull().default(false),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .notNull()
-    .default(sql`(unixepoch())`),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
-    .notNull()
-    .default(sql`(unixepoch())`)
-    .$onUpdate(() => new Date()),
-});
+export const boards = sqliteTable(
+  "boards",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    name: text("name").notNull(),
+    slug: text("slug").notNull(), // グローバルユニークを削除
+    description: text("description"),
+    userId: text("user_id").notNull(),
+    boardCategoryId: integer("board_category_id").references(
+      () => boardCategories.id,
+      { onDelete: "set null" },
+    ),
+    archived: integer("archived", { mode: "boolean" }).notNull().default(false),
+    completed: integer("completed", { mode: "boolean" })
+      .notNull()
+      .default(false),
+    createdAt: integer("created_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
+    updatedAt: integer("updated_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`)
+      .$onUpdate(() => new Date()),
+  },
+  (table) => ({
+    // ユーザーごとにslugがユニーク
+    userSlugIdx: uniqueIndex("boards_user_slug_unique").on(
+      table.userId,
+      table.slug,
+    ),
+  }),
+);
 
 export const boardItems = sqliteTable("board_items", {
   id: integer("id").primaryKey({ autoIncrement: true }),

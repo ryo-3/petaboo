@@ -70,14 +70,17 @@ function Header() {
         (currentTab === "board" && searchParams.get("slug") !== null));
     const isPersonalPage = pathname === "/" || !teamName;
 
-    // 個人ボード詳細ページ（/boards/[slug]）
-    const isPersonalBoardDetailPage =
-      pathname.startsWith("/boards/") && !pathname.includes("/settings");
+    // 個人ボード詳細ページ（/boards/[slug] または /boards/[slug]/settings）
+    const isPersonalBoardDetailPage = pathname.startsWith("/boards/");
 
     // 個人ページのメモ/タスク/ボード一覧は iconStates で判定（楽観的更新対応）
-    const isMemoListPage = isPersonalPage && iconStates.memo;
-    const isTaskListPage = isPersonalPage && iconStates.task;
-    const isBoardListPage = isPersonalPage && iconStates.board;
+    // ボード詳細ページの場合は一覧ページではない
+    const isMemoListPage =
+      isPersonalPage && iconStates.memo && !isPersonalBoardDetailPage;
+    const isTaskListPage =
+      isPersonalPage && iconStates.task && !isPersonalBoardDetailPage;
+    const isBoardListPage =
+      isPersonalPage && iconStates.board && !isPersonalBoardDetailPage;
 
     // チーム側は楽観的タブ状態を優先（即座に切り替え）
     const effectiveTeamTab = optimisticTeamTab || teamActiveTab;

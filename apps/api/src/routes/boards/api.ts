@@ -73,16 +73,16 @@ async function getOriginalId(
 function generateSlug(name: string): string {
   // 日本語や特殊文字が含まれる場合は、ランダムな文字列を生成
   const cleaned = name
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "") // 英数字、スペース、ハイフン以外を除去
+    .toUpperCase() // チーム側と統一: 大文字に変換
+    .replace(/[^A-Z0-9\s-]/g, "") // 英数字（大文字）、スペース、ハイフン以外を除去
     .replace(/\s+/g, "-") // スペースをハイフンに変換
     .replace(/-+/g, "-") // 連続するハイフンを1つに
     .replace(/^-|-$/g, "") // 先頭と末尾のハイフンを除去
     .substring(0, 50); // 最大50文字に制限
 
-  // 空文字の場合はランダムな文字列を生成
+  // 空文字の場合はランダムな文字列を生成（大文字）
   if (cleaned.length === 0) {
-    return Math.random().toString(36).substring(2, 8);
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
   }
 
   return cleaned;
@@ -142,8 +142,8 @@ const UpdateBoardSchema = z.object({
   slug: z
     .string()
     .regex(
-      /^[a-z0-9-]+$/,
-      "Slug must contain only lowercase letters, numbers, and hyphens",
+      /^[A-Z0-9-]+$/,
+      "Slug must contain only uppercase letters, numbers, and hyphens",
     )
     .min(1)
     .max(50)
@@ -472,6 +472,9 @@ export function createAPI(app: AppType) {
 
     // slugが指定されている場合は重複チェック
     if (updateData.slug) {
+      // チーム側と統一: slugを大文字に変換
+      updateData.slug = updateData.slug.toUpperCase();
+
       const existingBoard = await db
         .select()
         .from(boards)
@@ -793,10 +796,13 @@ export function createAPI(app: AppType) {
     const { slug } = c.req.valid("param");
     const db = c.get("db");
 
+    // チーム側と統一: slugを大文字に変換して検索
+    const upperSlug = slug.toUpperCase();
+
     const board = await db
       .select()
       .from(boards)
-      .where(and(eq(boards.slug, slug), eq(boards.userId, auth.userId)))
+      .where(and(eq(boards.slug, upperSlug), eq(boards.userId, auth.userId)))
       .limit(1);
 
     if (board.length === 0) {

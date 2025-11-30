@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import BoardSettings from "@/components/features/board/board-settings";
 import DesktopLayout from "@/components/layout/desktop-layout";
 import Header from "@/components/layout/header";
@@ -24,6 +25,22 @@ export default function BoardSettingsScreen({
 }: BoardSettingsScreenProps) {
   const { preferences } = useUserPreferences(1);
   const { currentMode, setCurrentMode } = useNavigation();
+
+  // ヘッダーにボード名を伝える
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent("team-board-name-change", {
+        detail: {
+          boardName: initialBoardName,
+          boardDescription: initialBoardDescription,
+        },
+      }),
+    );
+
+    return () => {
+      window.dispatchEvent(new CustomEvent("team-clear-board-name"));
+    };
+  }, [initialBoardName, initialBoardDescription]);
 
   // 空のハンドラー（設定画面では使用しない）
   const emptyHandler = () => {};

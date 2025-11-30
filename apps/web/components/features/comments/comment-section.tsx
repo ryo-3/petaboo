@@ -509,7 +509,7 @@ export default function CommentSection({
             const formData = new FormData();
             formData.append("file", file);
             formData.append("attachedTo", "comment");
-            formData.append("attachedOriginalId", commentOriginalId);
+            formData.append("attachedDisplayId", commentOriginalId);
 
             const response = await fetch(
               `${process.env.NEXT_PUBLIC_API_URL}/attachments/upload?teamId=${teamId}`,

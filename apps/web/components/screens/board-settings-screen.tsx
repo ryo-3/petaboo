@@ -74,7 +74,7 @@ export default function BoardSettingsScreen({
           />
         }
       >
-        <div className="h-full pt-6 pl-6 pr-6 flex flex-col">
+        <div className="h-full pt-6 pl-6 pr-6 flex flex-col overflow-y-auto">
           <BoardSettings
             boardId={boardId}
             boardSlug={boardSlug}

@@ -118,19 +118,18 @@ function BoardDetailScreen({
 
   // 選択モード時の一覧パネル表示状態（localStorageから復元）
   const [showListPanelInSelectedMode, setShowListPanelInSelectedMode] =
-    useState(() => {
-      if (typeof window !== "undefined") {
-        const storageKey = teamMode
-          ? "team-board-detail-list-panel"
-          : "personal-board-detail-list-panel";
-        const saved = localStorage.getItem(storageKey);
-        if (saved !== null) {
-          const value = saved === "true";
-          return value;
-        }
-      }
-      return true;
-    });
+    useState(true);
+
+  // クライアントサイドでlocalStorageから復元（ハイドレーションエラー回避）
+  useEffect(() => {
+    const storageKey = teamMode
+      ? "team-board-detail-list-panel"
+      : "personal-board-detail-list-panel";
+    const saved = localStorage.getItem(storageKey);
+    if (saved !== null) {
+      setShowListPanelInSelectedMode(saved === "true");
+    }
+  }, [teamMode]);
 
   // 状態管理フック
   const {
@@ -448,49 +447,51 @@ function BoardDetailScreen({
     [key: string]: { left: number; right: number };
   };
 
-  // 選択時のパネル幅を取得（localStorageから復元）
-  const [panelSizesSelectedMap, setPanelSizesSelectedMap] =
-    useState<PanelSizesMap>(() => {
-      if (typeof window !== "undefined") {
-        const saved = localStorage.getItem(
-          "personal-board-panel-sizes-selected",
-        );
-        if (saved) {
-          try {
-            return JSON.parse(saved);
-          } catch {
-            // パース失敗時はデフォルト値を使用
-          }
-        }
-      }
-      return {
-        "2panel": { left: 35, right: 65 },
-        "list-only": { left: 100, right: 0 },
-        "detail-only": { left: 0, right: 100 },
-      };
-    });
+  // デフォルトのパネルサイズ
+  const defaultSelectedSizes: PanelSizesMap = {
+    "2panel": { left: 35, right: 65 },
+    "list-only": { left: 100, right: 0 },
+    "detail-only": { left: 0, right: 100 },
+  };
 
-  // 非選択時のパネル幅を取得（localStorageから復元）
+  const defaultUnselectedSizes: PanelSizesMap = {
+    "2panel": { left: 50, right: 50 },
+    "memo-only": { left: 100, right: 0 },
+    "task-only": { left: 0, right: 100 },
+  };
+
+  // 選択時のパネル幅（localStorageから復元）
+  const [panelSizesSelectedMap, setPanelSizesSelectedMap] =
+    useState<PanelSizesMap>(defaultSelectedSizes);
+
+  // 非選択時のパネル幅（localStorageから復元）
   const [panelSizesUnselectedMap, setPanelSizesUnselectedMap] =
-    useState<PanelSizesMap>(() => {
-      if (typeof window !== "undefined") {
-        const saved = localStorage.getItem(
-          "personal-board-panel-sizes-unselected",
-        );
-        if (saved) {
-          try {
-            return JSON.parse(saved);
-          } catch {
-            // パース失敗時はデフォルト値を使用
-          }
-        }
+    useState<PanelSizesMap>(defaultUnselectedSizes);
+
+  // クライアントサイドでlocalStorageから復元（ハイドレーションエラー回避）
+  useEffect(() => {
+    const savedSelected = localStorage.getItem(
+      "personal-board-panel-sizes-selected",
+    );
+    if (savedSelected) {
+      try {
+        setPanelSizesSelectedMap(JSON.parse(savedSelected));
+      } catch {
+        // パース失敗時はデフォルト値のまま
       }
-      return {
-        "2panel": { left: 50, right: 50 },
-        "memo-only": { left: 100, right: 0 },
-        "task-only": { left: 0, right: 100 },
-      };
-    });
+    }
+
+    const savedUnselected = localStorage.getItem(
+      "personal-board-panel-sizes-unselected",
+    );
+    if (savedUnselected) {
+      try {
+        setPanelSizesUnselectedMap(JSON.parse(savedUnselected));
+      } catch {
+        // パース失敗時はデフォルト値のまま
+      }
+    }
+  }, []);
 
   // 選択状態が変わったらマウントカウントをリセット
   useEffect(() => {

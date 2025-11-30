@@ -1064,47 +1064,53 @@ function BoardDetailScreen({
     [key: string]: { left: number; center: number; right: number };
   };
 
-  // 選択時のパネル幅を取得（localStorageから復元、組み合わせごとに保存）
-  const [panelSizesSelectedMap, setPanelSizesSelectedMap] =
-    useState<PanelSizesMap>(() => {
-      if (typeof window !== "undefined") {
-        const saved = localStorage.getItem("team-board-panel-sizes-selected");
-        if (saved) {
-          try {
-            return JSON.parse(saved);
-          } catch {
-            // パース失敗時はデフォルト値
-          }
-        }
-      }
-      return {
-        "3panel": { left: 25, center: 45, right: 30 },
-        "left-center": { left: 30, center: 70, right: 0 },
-        "left-right": { left: 30, center: 0, right: 70 },
-        "center-right": { left: 0, center: 40, right: 60 },
-      };
-    });
+  // デフォルトのパネルサイズ
+  const defaultSelectedSizes: PanelSizesMap = {
+    "3panel": { left: 25, center: 45, right: 30 },
+    "left-center": { left: 30, center: 70, right: 0 },
+    "left-right": { left: 30, center: 0, right: 70 },
+    "center-right": { left: 0, center: 40, right: 60 },
+  };
 
-  // 非選択時のパネル幅を取得（localStorageから復元、組み合わせごとに保存）
+  const defaultUnselectedSizes: PanelSizesMap = {
+    "3panel": { left: 33, center: 34, right: 33 },
+    "left-center": { left: 50, center: 50, right: 0 },
+    "left-right": { left: 40, center: 0, right: 60 },
+    "center-right": { left: 0, center: 50, right: 50 },
+  };
+
+  // 選択時のパネル幅（localStorageから復元）
+  const [panelSizesSelectedMap, setPanelSizesSelectedMap] =
+    useState<PanelSizesMap>(defaultSelectedSizes);
+
+  // 非選択時のパネル幅（localStorageから復元）
   const [panelSizesUnselectedMap, setPanelSizesUnselectedMap] =
-    useState<PanelSizesMap>(() => {
-      if (typeof window !== "undefined") {
-        const saved = localStorage.getItem("team-board-panel-sizes-unselected");
-        if (saved) {
-          try {
-            return JSON.parse(saved);
-          } catch {
-            // パース失敗時はデフォルト値
-          }
-        }
+    useState<PanelSizesMap>(defaultUnselectedSizes);
+
+  // クライアントサイドでlocalStorageから復元（ハイドレーションエラー回避）
+  useEffect(() => {
+    const savedSelected = localStorage.getItem(
+      "team-board-panel-sizes-selected",
+    );
+    if (savedSelected) {
+      try {
+        setPanelSizesSelectedMap(JSON.parse(savedSelected));
+      } catch {
+        // パース失敗時はデフォルト値のまま
       }
-      return {
-        "3panel": { left: 33, center: 34, right: 33 },
-        "left-center": { left: 50, center: 50, right: 0 },
-        "left-right": { left: 40, center: 0, right: 60 },
-        "center-right": { left: 0, center: 50, right: 50 },
-      };
-    });
+    }
+
+    const savedUnselected = localStorage.getItem(
+      "team-board-panel-sizes-unselected",
+    );
+    if (savedUnselected) {
+      try {
+        setPanelSizesUnselectedMap(JSON.parse(savedUnselected));
+      } catch {
+        // パース失敗時はデフォルト値のまま
+      }
+    }
+  }, []);
 
   // 選択状態が変わったらマウントカウントをリセット
   useEffect(() => {

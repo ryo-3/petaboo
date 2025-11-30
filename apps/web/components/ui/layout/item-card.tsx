@@ -253,14 +253,14 @@ function ItemCard({
 
             {/* コンテンツ */}
             {isMemo && (
-              <p
+              <div
                 className="text-xs text-gray-600 line-clamp-4"
                 dangerouslySetInnerHTML={{ __html: displayContent }}
               />
             )}
 
             {isTask && (
-              <p
+              <div
                 className="text-sm text-gray-600 line-clamp-3 break-words flex-1 overflow-hidden mb-2"
                 dangerouslySetInnerHTML={{
                   __html: taskDescription.replace(/[\r\n]/g, " ").trim(),

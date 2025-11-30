@@ -343,8 +343,8 @@ export default function SharedBoardSettings({
           </div>
         </div>
 
-        {/* Slack通知設定 */}
-        <BoardSlackSettings boardId={boardId} />
+        {/* Slack通知設定（チームモードのみ表示） */}
+        {isTeamMode && <BoardSlackSettings boardId={boardId} />}
 
         {/* 危険ゾーン */}
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">

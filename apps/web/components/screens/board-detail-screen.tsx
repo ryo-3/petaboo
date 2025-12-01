@@ -1046,6 +1046,7 @@ function BoardDetailScreen({
 
               return (
                 <ResizablePanelGroup
+                  id={`board-detail-selected-${panelGroupKey}`}
                   key={panelGroupKey}
                   direction="horizontal"
                   className="flex-1"
@@ -1066,7 +1067,7 @@ function BoardDetailScreen({
                           {rightPanelMode === "memo-list" ? (
                             <BoardMemoSection
                               rightPanelMode={rightPanelMode}
-                              showMemo={showMemo}
+                              showMemo={true}
                               allMemoItems={allMemoItems}
                               memoItems={memoItems}
                               activeMemoTab={activeMemoTab}
@@ -1107,7 +1108,7 @@ function BoardDetailScreen({
                               initialBoardId={boardId}
                               rightPanelMode={rightPanelMode}
                               showMemo={showMemo}
-                              showTask={showTask}
+                              showTask={true}
                               allTaskItems={allTaskItems}
                               taskItems={taskItems}
                               activeTaskTab={activeTaskTab}
@@ -1423,6 +1424,7 @@ function BoardDetailScreen({
               // デスクトップ時: ResizablePanelGroup で2パネル
               return (
                 <ResizablePanelGroup
+                  id={`board-detail-unselected-${combinationKey}`}
                   key={`unselected-${combinationKey}-${visiblePanels}`}
                   direction="horizontal"
                   className="flex-1"

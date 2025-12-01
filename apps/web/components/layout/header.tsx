@@ -96,11 +96,11 @@ function Header() {
     const isPersonalBoardDetailPage = pathname.startsWith("/boards/");
 
     // 個人ページのメモ/タスク/ボード一覧は iconStates で判定（楽観的更新対応）
-    // ボード詳細ページの場合は一覧ページではない
+    // ボード詳細ページでもiconStatesでメモ/タスクが選択されていればそれを優先
     const isMemoListPage =
-      isPersonalPage && iconStates.memo && !isPersonalBoardDetailPage;
+      (isPersonalPage || isPersonalBoardDetailPage) && iconStates.memo;
     const isTaskListPage =
-      isPersonalPage && iconStates.task && !isPersonalBoardDetailPage;
+      (isPersonalPage || isPersonalBoardDetailPage) && iconStates.task;
     const isBoardListPage =
       isPersonalPage && iconStates.board && !isPersonalBoardDetailPage;
 

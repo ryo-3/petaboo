@@ -270,8 +270,8 @@ export function TeamBoardDetailWrapper({
     setSelectedMemo(null);
     setSelectedTask(null);
 
-    // URLからメモ/タスクIDを削除
-    router.replace(`/team/${customUrl}?board=${slug}`, {
+    // URLからメモ/タスクIDを削除（新形式: ?SLUG）
+    router.replace(`/team/${customUrl}?${slug}`, {
       scroll: false,
     });
   };
@@ -283,13 +283,12 @@ export function TeamBoardDetailWrapper({
     // URLを更新（boardIndexを使用 - ボード内での連番）
     // 新規作成時 (displayId === "new") またはboardIndexが未設定の場合はURL更新をスキップ
     if (memo && memo.boardIndex && memo.boardIndex > 0) {
-      // boardIndexが存在する場合のみURL更新
-      router.replace(
-        `/team/${customUrl}?board=${slug}&memo=${memo.boardIndex}`,
-        { scroll: false },
-      );
+      // boardIndexが存在する場合のみURL更新（新形式: ?SLUG&memo=N）
+      router.replace(`/team/${customUrl}?${slug}&memo=${memo.boardIndex}`, {
+        scroll: false,
+      });
     } else if (!memo) {
-      router.replace(`/team/${customUrl}?board=${slug}`, {
+      router.replace(`/team/${customUrl}?${slug}`, {
         scroll: false,
       });
     }
@@ -303,13 +302,12 @@ export function TeamBoardDetailWrapper({
     // URLを更新（boardIndexを使用 - ボード内での連番）
     // 新規作成時 (displayId === "new") またはboardIndexが未設定の場合はURL更新をスキップ
     if (task && task.boardIndex && task.boardIndex > 0) {
-      // boardIndexが存在する場合のみURL更新
-      router.replace(
-        `/team/${customUrl}?board=${slug}&task=${task.boardIndex}`,
-        { scroll: false },
-      );
+      // boardIndexが存在する場合のみURL更新（新形式: ?SLUG&task=N）
+      router.replace(`/team/${customUrl}?${slug}&task=${task.boardIndex}`, {
+        scroll: false,
+      });
     } else if (!task) {
-      router.replace(`/team/${customUrl}?board=${slug}`, {
+      router.replace(`/team/${customUrl}?${slug}`, {
         scroll: false,
       });
     }

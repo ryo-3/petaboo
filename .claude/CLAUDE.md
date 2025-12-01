@@ -57,12 +57,22 @@
 
 ```
 PETABOO-XX: 簡潔な変更内容の説明
+
+https://petaboo.vercel.app/team/moricrew?PETABOO&task=XX
 ```
 
 **例：**
 
-- `PETABOO-19: 画像サムネイルにコピーボタンを追加`
-- `PETABOO-42: ボード設定画面のバグを修正`
+```
+PETABOO-22: チームコメントでメンションがない場合は通知を飛ばさないように変更
+
+https://petaboo.vercel.app/team/moricrew?PETABOO&task=22
+```
+
+**URLの付与ルール：**
+
+- ユーザーがURLを渡した場合は、必ずコミットメッセージ本文に含める
+- URLが渡されなかった場合は省略可
 
 **チケット番号がない場合：**
 

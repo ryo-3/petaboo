@@ -156,13 +156,48 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     string | null
   >(null);
 
-  // URLパラメータのboardを大文字に正規化
+  // URLパラメータのボードslugを大文字に正規化
   useEffect(() => {
+    // 新形式: 値が空のキーをボードslugとして扱う（?petaboo&task=22 → ?PETABOO&task=22）
+    for (const [key, value] of searchParams.entries()) {
+      if (
+        value === "" &&
+        ![
+          "boards",
+          "memo",
+          "task",
+          "search",
+          "team-list",
+          "team-settings",
+          "memos",
+          "tasks",
+        ].includes(key)
+      ) {
+        if (key !== key.toUpperCase()) {
+          const params = new URLSearchParams();
+          // 大文字化したslugを最初に追加
+          params.append(key.toUpperCase(), "");
+          // 他のパラメータを追加
+          for (const [k, v] of searchParams.entries()) {
+            if (k !== key) {
+              params.set(k, v);
+            }
+          }
+          router.replace(`/team/${customUrl}?${params.toString()}`, {
+            scroll: false,
+          });
+          return;
+        }
+      }
+    }
+    // 旧形式: board=xxx
     const boardParam = searchParams.get("board");
     if (boardParam && boardParam !== boardParam.toUpperCase()) {
       const params = new URLSearchParams(searchParams.toString());
       params.set("board", boardParam.toUpperCase());
-      router.replace(`/team/${customUrl}?${params.toString()}`);
+      router.replace(`/team/${customUrl}?${params.toString()}`, {
+        scroll: false,
+      });
     }
   }, [searchParams, router, customUrl]);
 
@@ -285,6 +320,24 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
   // URLのクエリパラメータからタブとアイテムIDを取得
   const getTabFromURL = () => {
+    // 新形式: 値が空のキーがあればボード詳細（?PETABOO&task=22 形式）
+    for (const [key, value] of searchParams.entries()) {
+      if (
+        value === "" &&
+        ![
+          "boards",
+          "memo",
+          "task",
+          "search",
+          "team-list",
+          "team-settings",
+          "memos",
+          "tasks",
+        ].includes(key)
+      ) {
+        return "board";
+      }
+    }
     // パラメータの存在から自動判定（新形式）
     if (searchParams.has("board")) return "board";
     if (searchParams.has("memo")) return "memos"; // memo（値あり/なし）→ memosタブ
@@ -328,7 +381,25 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   };
 
   const getBoardSlugFromURL = () => {
-    // 新形式（board=xxx）と旧形式（slug=xxx）の両方に対応
+    // 新形式: 値が空のキーをボードslugとして扱う（?PETABOO&task=22 形式）
+    for (const [key, value] of searchParams.entries()) {
+      if (
+        value === "" &&
+        ![
+          "boards",
+          "memo",
+          "task",
+          "search",
+          "team-list",
+          "team-settings",
+          "memos",
+          "tasks",
+        ].includes(key)
+      ) {
+        return key.toUpperCase();
+      }
+    }
+    // 旧形式（board=xxx, slug=xxx）との互換性
     return searchParams.get("board") || searchParams.get("slug");
   };
 
@@ -538,6 +609,27 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       params.delete("team-list");
       params.delete("team-settings");
 
+      // 新形式のボードslug（値が空のキー）を削除
+      const keysToDelete: string[] = [];
+      for (const [key, value] of params.entries()) {
+        if (
+          value === "" &&
+          ![
+            "boards",
+            "memo",
+            "task",
+            "search",
+            "team-list",
+            "team-settings",
+            "memos",
+            "tasks",
+          ].includes(key)
+        ) {
+          keysToDelete.push(key);
+        }
+      }
+      keysToDelete.forEach((key) => params.delete(key));
+
       // タブ切り替え時に選択状態をクリア
       if (tab !== "memos") {
         setSelectedMemo(null);
@@ -557,8 +649,11 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         const baseParams = params.toString();
         newUrl = baseParams ? `?${baseParams}&team-settings` : "?team-settings";
       } else if (tab === "board" && options?.slug) {
-        params.set("board", options.slug);
-        newUrl = params.toString() ? `?${params.toString()}` : "";
+        // 新形式: ?SLUG（board= を省略）
+        const baseParams = params.toString();
+        newUrl = baseParams
+          ? `?${options.slug.toUpperCase()}&${baseParams}`
+          : `?${options.slug.toUpperCase()}`;
       } else if (tab === "memos") {
         // メモ一覧は ?memo（値なし）
         const baseParams = params.toString();

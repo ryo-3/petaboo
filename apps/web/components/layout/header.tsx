@@ -62,12 +62,34 @@ function Header() {
 
   // ページ種別の判定（useMemoで最適化・楽観的更新対応）
   const pageStates = useMemo(() => {
-    // チームボード詳細はクエリパラメータ形式（新形式: ?board=xxx, 旧形式: ?tab=board&slug=yyy）
+    // 新形式: 値が空のキーをボードslugとして扱う（?PETABOO&task=22 形式）
+    const getBoardSlugFromParams = (): string | null => {
+      for (const [key, value] of searchParams.entries()) {
+        if (
+          value === "" &&
+          ![
+            "boards",
+            "memo",
+            "task",
+            "search",
+            "team-list",
+            "team-settings",
+            "memos",
+            "tasks",
+          ].includes(key)
+        ) {
+          return key.toUpperCase();
+        }
+      }
+      return searchParams.get("board") || searchParams.get("slug");
+    };
+    const boardSlugFromParams = getBoardSlugFromParams();
+
+    // チームボード詳細はクエリパラメータ形式（新形式: ?SLUG, 旧形式: ?board=xxx, レガシー: ?tab=board&slug=yyy）
     const isTeamBoardPage =
       teamName &&
       pathname === `/team/${teamName}` &&
-      (searchParams.get("board") !== null ||
-        (currentTab === "board" && searchParams.get("slug") !== null));
+      boardSlugFromParams !== null;
     const isPersonalPage = pathname === "/" || !teamName;
 
     // 個人ボード詳細ページ（/boards/[slug] または /boards/[slug]/settings）

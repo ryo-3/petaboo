@@ -322,9 +322,9 @@ export function TeamBoardDetailWrapper({
     setSelectedMemo(memo as unknown as Memo);
   };
 
-  // チームボード設定画面への遷移
+  // チームボード設定画面への遷移（新形式: ?SLUG&settings=true）
   const handleSettings = () => {
-    router.push(`/team/${customUrl}?board=${slug}&settings=true`);
+    router.push(`/team/${customUrl}?${slug.toUpperCase()}&settings=true`);
   };
 
   // URLからの復元が必要な場合（URLパラメータあり＆選択なし）のみローディング表示

@@ -148,9 +148,9 @@ export default function SharedBoardSettings({
           });
         }
 
-        // 即座にリダイレクト
+        // 即座にリダイレクト（チームは新形式: ?SLUG）
         const redirectPath = isTeamMode
-          ? `/team/${teamCustomUrl}?board=${editSlug}&settings=true`
+          ? `/team/${teamCustomUrl}?${editSlug}&settings=true`
           : `/boards/${editSlug}?settings=true`;
         router.replace(redirectPath);
       }
@@ -219,9 +219,9 @@ export default function SharedBoardSettings({
       onBack();
       return;
     }
-    // フォールバック: router.pushを使用
+    // フォールバック: router.pushを使用（チームは新形式: ?SLUG）
     const backPath = isTeamMode
-      ? `/team/${teamCustomUrl}?board=${boardSlug}`
+      ? `/team/${teamCustomUrl}?${boardSlug}`
       : `/boards/${boardSlug}`;
     router.push(backPath);
   };
@@ -268,7 +268,7 @@ export default function SharedBoardSettings({
                 className="px-4 py-3"
               />
               <p className="text-xs text-gray-500 mt-1">
-                URL: {isTeamMode ? `/team/${teamCustomUrl}?board=` : `/boards/`}
+                URL: {isTeamMode ? `/team/${teamCustomUrl}?` : `/boards/`}
                 <span className="font-mono font-semibold text-blue-600">
                   {editSlug}
                 </span>

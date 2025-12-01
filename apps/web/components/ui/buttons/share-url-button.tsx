@@ -37,7 +37,30 @@ function ShareUrlButton({
     try {
       // URLからboard、task、memoパラメータを抽出してBacklog形式を生成
       const urlObj = new URL(url);
-      const boardSlug = urlObj.searchParams.get("board");
+      // 新形式: 値が空のキーをボードslugとして扱う（?PETABOO&task=22 形式）
+      let boardSlug: string | null = null;
+      for (const [key, value] of urlObj.searchParams.entries()) {
+        if (
+          value === "" &&
+          ![
+            "boards",
+            "memo",
+            "task",
+            "search",
+            "team-list",
+            "team-settings",
+            "memos",
+            "tasks",
+          ].includes(key)
+        ) {
+          boardSlug = key.toUpperCase();
+          break;
+        }
+      }
+      // 旧形式のフォールバック
+      if (!boardSlug) {
+        boardSlug = urlObj.searchParams.get("board");
+      }
       const taskId = urlObj.searchParams.get("task");
       const memoId = urlObj.searchParams.get("memo");
 

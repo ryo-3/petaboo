@@ -96,12 +96,32 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   const activeTab = getActiveTabFromUrl(pathname, searchParams);
 
   // チームボード詳細ページかどうかを判定（クエリパラメータベース）
-  // 新形式（board=xxx）と旧形式（tab=board&slug=xxx）の両方に対応
+  // 新形式（?SLUG）、旧形式（board=xxx）、レガシー形式（tab=board&slug=xxx）に対応
+  const getBoardSlugFromParams = () => {
+    // 新形式: 値が空のキーをボードslugとして扱う（?PETABOO&task=22 形式）
+    for (const [key, value] of searchParams.entries()) {
+      if (
+        value === "" &&
+        ![
+          "boards",
+          "memo",
+          "task",
+          "search",
+          "team-list",
+          "team-settings",
+          "memos",
+          "tasks",
+        ].includes(key)
+      ) {
+        return key.toUpperCase();
+      }
+    }
+    // 旧形式
+    return searchParams.get("board") || searchParams.get("slug");
+  };
+  const boardSlugFromParams = getBoardSlugFromParams();
   const isTeamBoardDetailPage =
-    pathname.startsWith("/team/") &&
-    (searchParams.get("board") !== null ||
-      (searchParams.get("tab") === "board" &&
-        searchParams.get("slug") !== null));
+    pathname.startsWith("/team/") && boardSlugFromParams !== null;
 
   // メモIDが変わったらタブをリセット
   useEffect(() => {
@@ -149,11 +169,10 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // ボード詳細タブの場合はslugを記憶
-    // 新形式（board=xxx）と旧形式（tab=board&slug=xxx）の両方に対応
-    const tab = searchParams.get("tab");
-    const boardSlug = searchParams.get("board") || searchParams.get("slug");
+    // 新形式（?SLUG）、旧形式（board=xxx）、レガシー形式（tab=board&slug=xxx）に対応
+    const boardSlug = getBoardSlugFromParams();
 
-    if ((tab === "board" || searchParams.get("board")) && boardSlug) {
+    if (boardSlug) {
       setLastBoardSlug(boardSlug);
     }
 
@@ -355,7 +374,8 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
     setOptimisticMode(null);
 
     if (lastBoardSlug) {
-      const newUrl = `/team/${customUrl}?board=${lastBoardSlug}`;
+      // 新形式: ?SLUG（board= を省略）
+      const newUrl = `/team/${customUrl}?${lastBoardSlug}`;
       // シンプルに直接URLを指定
       router.replace(newUrl, { scroll: false });
     } else {

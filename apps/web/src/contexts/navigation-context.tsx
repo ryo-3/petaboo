@@ -161,9 +161,32 @@ export function NavigationProvider({
 
     // チーム詳細ページのタブ判定（最適化・楽観的更新対応）
     if (isTeamDetailPageUrl) {
+      // 新形式: 値が空のキーをボードslugとして扱う（?PETABOO&task=22 形式）
+      const getBoardSlugFromParams = (): string | null => {
+        for (const [key, value] of searchParams.entries()) {
+          if (
+            value === "" &&
+            ![
+              "boards",
+              "memo",
+              "task",
+              "search",
+              "team-list",
+              "team-settings",
+              "memos",
+              "tasks",
+            ].includes(key)
+          ) {
+            return key.toUpperCase();
+          }
+        }
+        return searchParams.get("board") || searchParams.get("slug");
+      };
+      const boardSlugFromParams = getBoardSlugFromParams();
+
       // 新形式・旧形式の両方に対応したタブ取得
       let currentTab: string | null = null;
-      if (searchParams.has("board")) {
+      if (boardSlugFromParams) {
         currentTab = "board";
       } else if (searchParams.has("memo")) {
         currentTab = "memos"; // 新形式: ?memo → memosタブ
@@ -194,11 +217,10 @@ export function NavigationProvider({
 
       // teamActiveTabがあればそれを優先、なければURLパラメータを使用（即座の反映）
       const activeTab = teamActiveTab || currentTab;
-      const currentSlug = searchParams.get("slug") || searchParams.get("board");
 
-      // チームボード詳細はクエリパラメータ形式（新形式: ?board=xxx, 旧形式: ?tab=board&slug=xxx）
+      // チームボード詳細はクエリパラメータ形式（新形式: ?SLUG, 旧形式: ?board=xxx, レガシー: ?tab=board&slug=xxx）
       const isTeamBoardDetailPage =
-        activeTab === "board" && currentSlug !== null;
+        activeTab === "board" && boardSlugFromParams !== null;
       const isTeamSettingsTab = activeTab === "team-settings";
 
       // 楽観的モードがある場合は即座に反映

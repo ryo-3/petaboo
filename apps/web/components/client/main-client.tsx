@@ -418,14 +418,18 @@ function MainClient({
         boardSelectedItem={boardSelectedItem}
         handleBoardClearSelection={handleBoardClearSelection}
       >
-        {isShowingBoardSettings && boardId ? (
+        {isShowingBoardSettings && (boardId || boardFromSlug?.id) ? (
           <div className="h-full pt-6 pl-6 pr-6 flex flex-col overflow-y-auto">
             <BoardSettings
-              boardId={boardId}
-              boardSlug={currentBoardSlug || ""}
-              initialBoardName={initialBoardName || ""}
-              initialBoardDescription={serverBoardDescription}
-              initialBoardCompleted={initialBoardCompleted}
+              boardId={boardId || boardFromSlug?.id || 0}
+              boardSlug={currentBoardSlug || boardFromSlug?.slug || ""}
+              initialBoardName={initialBoardName || boardFromSlug?.name || ""}
+              initialBoardDescription={
+                serverBoardDescription || boardFromSlug?.description
+              }
+              initialBoardCompleted={
+                initialBoardCompleted || boardFromSlug?.completed || false
+              }
               onBack={closeBoardSettings}
             />
           </div>

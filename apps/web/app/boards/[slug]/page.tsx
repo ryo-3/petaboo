@@ -102,6 +102,7 @@ export default async function BoardPage({
       boardSlug={slug}
       initialCurrentMode="board"
       initialScreenMode="board"
+      showBoardSettings={showSettings}
     />
   );
 }

@@ -171,7 +171,9 @@ export function TiptapEditor({
         // StarterKitに含まれるlinkを無効化（カスタム設定を使用するため）
         link: false,
       }),
-      Link.configure({
+      Link.extend({
+        inclusive: false,
+      }).configure({
         openOnClick: true,
         autolink: true,
         linkOnPaste: true,

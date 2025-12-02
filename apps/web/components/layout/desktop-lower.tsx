@@ -76,8 +76,7 @@ interface DesktopLowerProps {
   // 全データ事前取得（ちらつき解消）
   allTags?: Tag[];
   allBoards?: Board[];
-  allTaggings?: Tagging[];
-  allTeamTaggings?: Tagging[]; // チーム用タグ情報
+  allTaggings?: Tagging[]; // チームモードの場合は親でteamTaggingsに切り替え済み
   allBoardItems?: Array<{
     boardId: number;
     boardName: string;
@@ -126,7 +125,6 @@ function DesktopLower({
   allTags,
   allBoards,
   allTaggings,
-  allTeamTaggings = [],
   allBoardItems,
   allAttachments,
 }: DesktopLowerProps) {
@@ -217,7 +215,6 @@ function DesktopLower({
         teamId={teamId}
         allTags={allTags}
         allTaggings={allTaggings}
-        allTeamTaggings={allTeamTaggings}
         allBoardItems={allBoardItems}
         allAttachments={allAttachments}
       />

@@ -36,8 +36,7 @@ interface TaskStatusDisplayProps {
 
   // 全データ事前取得（ちらつき解消）
   allTags?: Tag[];
-  allTaggings?: Tagging[];
-  allTeamTaggings?: Tagging[]; // チーム用タグ情報
+  allTaggings?: Tagging[]; // チームモードの場合は親でteamTaggingsに切り替え済み
   allBoardItems?: Array<{
     boardId: number;
     boardName: string;
@@ -110,7 +109,6 @@ function TaskStatusDisplay({
   teamId: _teamId,
   initialBoardId,
   allTaggings = [],
-  allTeamTaggings = [],
   allBoardItems = [],
   allAttachments = [],
 }: TaskStatusDisplayProps) {
@@ -133,9 +131,9 @@ function TaskStatusDisplay({
         identifiers.push(displayId);
       }
 
-      // このタスクのタグを抽出（チームモード対応）
-      const taggingsToUse = teamMode ? allTeamTaggings : allTaggings;
-      const taskTaggings = taggingsToUse.filter(
+      // このタスクのタグを抽出
+      // 注: allTaggingsは親コンポーネントで既にチームモードに応じて切り替えられている
+      const taskTaggings = allTaggings.filter(
         (t: Tagging) =>
           t.targetType === "task" &&
           identifiers.some((id) => t.targetDisplayId === id),
@@ -189,7 +187,6 @@ function TaskStatusDisplay({
   }, [
     statusFilteredTasks,
     allTaggings,
-    allTeamTaggings,
     allBoardItems,
     allAttachments,
     teamMode,

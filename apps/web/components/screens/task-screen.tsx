@@ -935,10 +935,9 @@ function TaskScreen({
     };
   }, [teamMode, handleCreateNew]);
 
-  // 安全なデータ配布用
-  const safeAllTaggings = allTaggings || [];
+  // 安全なデータ配布用（チームモードに応じてタグ付け情報を切り替え）
+  const safeAllTaggings = teamMode ? allTeamTaggings || [] : allTaggings || [];
   const safeAllBoardItems = allBoardItems || [];
-  const safeAllTeamTaggings = allTeamTaggings || [];
 
   // 除外アイテムIDでフィルタリングされたタスク（displayIdで比較）
   const filteredTasks =
@@ -1125,7 +1124,6 @@ function TaskScreen({
           allTags={tags || []}
           allBoards={boards || []}
           allTaggings={safeAllTaggings}
-          allTeamTaggings={safeAllTeamTaggings}
           allBoardItems={safeAllBoardItems}
           allAttachments={allTaskAttachments || []}
           teamMode={teamMode}
@@ -1470,7 +1468,6 @@ function TaskScreen({
                 allTags={tags || []}
                 allBoards={boards || []}
                 allTaggings={safeAllTaggings}
-                allTeamTaggings={safeAllTeamTaggings}
                 allBoardItems={safeAllBoardItems}
                 allAttachments={allTaskAttachments || []}
                 teamMode={teamMode}

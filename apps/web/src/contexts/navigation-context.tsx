@@ -297,6 +297,10 @@ export function NavigationProvider({
     const isExclusiveScreen =
       screenMode === "search" || screenMode === "settings" || isTeamScreen;
 
+    // 楽観的モードが設定されている場合、ボード詳細をオフにする
+    // （メモ/タスク一覧に切り替える際に即座にボード詳細アイコンをオフにする）
+    const shouldHideBoardDetail = optimisticMode !== null;
+
     const result = {
       home: isHomeScreen,
       memo: !isHomeScreen && !isExclusiveScreen && effectiveMode === "memo",
@@ -306,7 +310,8 @@ export function NavigationProvider({
         !isExclusiveScreen &&
         effectiveMode === "board" &&
         !boardDetailActive,
-      boardDetail: !isExclusiveScreen && boardDetailActive,
+      boardDetail:
+        !isExclusiveScreen && boardDetailActive && !shouldHideBoardDetail,
       search: screenMode === "search",
       settings: screenMode === "settings",
       team: isTeamScreen,

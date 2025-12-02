@@ -81,11 +81,6 @@ const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(
         onBoardSelect(board);
       } else {
         // 親から onBoardSelect が渡されていない場合は独自処理（個人ボード画面など）
-        console.log("[BoardScreen] handleBoardSelect - personal mode", {
-          boardId: board.id,
-          boardSlug: board.slug,
-          boardName: board.name,
-        });
         // ヘッダーを即座に更新（遷移前にイベント発火）
         window.dispatchEvent(
           new CustomEvent("team-board-name-change", {
@@ -96,7 +91,6 @@ const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(
           }),
         );
         // ボード詳細表示フラグをtrueに（即座に画面切り替え）
-        console.log("[BoardScreen] calling setShowingBoardDetail(true)");
         setShowingBoardDetail(true);
         // クエリパラメータ形式で遷移（ページ遷移なし）
         router.push(`/?${board.slug.toUpperCase()}`);

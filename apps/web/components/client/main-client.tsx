@@ -219,6 +219,7 @@ function MainClient({
   ]); // ボード詳細表示フラグ
 
   // ボード詳細表示時に lastBoardSlug / lastBoardName / lastBoardId を記憶
+  // かつ、ヘッダーにボード名を通知（個人ボード詳細でもヘッダーが正しく表示されるように）
   useEffect(() => {
     const slug = boardSlugFromParams || currentBoardSlug;
     const name = initialBoardName || currentBoard?.name;
@@ -232,14 +233,30 @@ function MainClient({
     if (id) {
       setLastBoardId(id);
     }
+
+    // 個人ボード詳細ページの場合、ヘッダーにボード名を通知
+    // チーム側と同じイベントを使用することで、ヘッダーの表示ロジックを統一
+    if (showingBoardDetail && name && !teamMode) {
+      window.dispatchEvent(
+        new CustomEvent("team-board-name-change", {
+          detail: {
+            boardName: name,
+            boardDescription: currentBoard?.description || "",
+          },
+        }),
+      );
+    }
   }, [
     boardSlugFromParams,
     currentBoardSlug,
     initialBoardName,
     currentBoard?.name,
+    currentBoard?.description,
     boardId,
     boardFromSlug?.id,
     currentBoard?.id,
+    showingBoardDetail,
+    teamMode,
   ]);
 
   // URLパラメータからメモ/タスクを復元（初回ロード時のみ）
@@ -438,12 +455,6 @@ function MainClient({
   };
 
   const wrappedHandleBoardDetail = () => {
-    console.log("[BoardDetail] wrappedHandleBoardDetail called", {
-      lastBoardSlug,
-      lastBoardName,
-      lastBoardId,
-      showingBoardDetail,
-    });
     closeBoardSettings();
     setShowTeamList(false);
     setShowTeamCreate(false);
@@ -468,7 +479,6 @@ function MainClient({
     if (lastBoardSlug) {
       router.replace(`/?${lastBoardSlug}`, { scroll: false });
     }
-    console.log("[BoardDetail] After setShowingBoardDetail(true)");
   };
 
   const wrappedHandleSettings = () => {

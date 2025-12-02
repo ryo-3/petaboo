@@ -1523,6 +1523,15 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
             <div className="h-full">
               <BoardScreen
                 onBoardSelect={(board) => {
+                  // ヘッダーを即座に更新（遷移前にイベント発火）
+                  window.dispatchEvent(
+                    new CustomEvent("team-board-name-change", {
+                      detail: {
+                        boardName: board.name,
+                        boardDescription: board.description || "",
+                      },
+                    }),
+                  );
                   // ボード詳細タブに切り替え
                   handleTabChange("board", { slug: board.slug });
                 }}

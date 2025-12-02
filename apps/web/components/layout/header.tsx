@@ -26,6 +26,7 @@ import NotificationPopup from "@/components/features/notifications/notification-
 import type { Notification } from "@/lib/api/notifications";
 import { getNotificationUrl } from "@/src/utils/notificationUtils";
 import { useHeaderControlPanel } from "@/src/contexts/header-control-panel-context";
+import { useBoardBySlug } from "@/src/hooks/use-boards";
 
 function Header() {
   const { config } = useHeaderControlPanel();
@@ -60,33 +61,40 @@ function Header() {
   // 通知ポップアップの状態管理
   const [isNotificationPopupOpen, setIsNotificationPopupOpen] = useState(false);
 
+  // 新形式: 値が空のキーをボードslugとして扱う（?PETABOO&task=22 形式）
+  const boardSlugFromParams = useMemo((): string | null => {
+    for (const [key, value] of searchParams.entries()) {
+      if (
+        value === "" &&
+        ![
+          "boards",
+          "memo",
+          "task",
+          "search",
+          "team-list",
+          "team-settings",
+          "memos",
+          "tasks",
+          "mode",
+          "settings",
+        ].includes(key)
+      ) {
+        return key.toUpperCase();
+      }
+    }
+    return searchParams.get("board") || searchParams.get("slug");
+  }, [searchParams]);
+
+  // 個人ボード詳細ページの場合、URLからボード情報を直接取得
+  // これによりページリロード/直接アクセス時も即座にボード名を表示できる
+  const isPersonalBoardSlug =
+    pathname === "/" && !teamName && boardSlugFromParams;
+  const { data: boardFromSlug } = useBoardBySlug(
+    isPersonalBoardSlug ? boardSlugFromParams : null,
+  );
+
   // ページ種別の判定（useMemoで最適化・楽観的更新対応）
   const pageStates = useMemo(() => {
-    // 新形式: 値が空のキーをボードslugとして扱う（?PETABOO&task=22 形式）
-    const getBoardSlugFromParams = (): string | null => {
-      for (const [key, value] of searchParams.entries()) {
-        if (
-          value === "" &&
-          ![
-            "boards",
-            "memo",
-            "task",
-            "search",
-            "team-list",
-            "team-settings",
-            "memos",
-            "tasks",
-            "mode",
-            "settings",
-          ].includes(key)
-        ) {
-          return key.toUpperCase();
-        }
-      }
-      return searchParams.get("board") || searchParams.get("slug");
-    };
-    const boardSlugFromParams = getBoardSlugFromParams();
-
     // チームボード詳細はクエリパラメータ形式（新形式: ?SLUG, 旧形式: ?board=xxx, レガシー: ?tab=board&slug=yyy）
     const isTeamBoardPage =
       teamName &&
@@ -163,7 +171,8 @@ function Header() {
     const handleBoardNameChange = (event: CustomEvent) => {
       const { boardName, boardDescription: description } = event.detail;
       setBoardTitle(boardName);
-      setBoardDescription(description || null);
+      // 空文字も有効な値として扱う（nullやundefinedの場合のみnullにする）
+      setBoardDescription(description ?? null);
     };
 
     const handleClearBoardName = () => {
@@ -273,32 +282,72 @@ function Header() {
     markAsRead(notificationId);
   };
 
+  // ヘッダータイトルの計算
+  // 一覧ページ（メモ/タスク/ボード）は最優先で表示
+  // boardTitle（イベント経由）はボード詳細への遷移時のみ使用
+  const displayTitle = useMemo(() => {
+    // 一覧ページは最優先（ボード詳細から一覧に戻る際に即座に切り替え）
+    if (isBoardListPage || isTeamBoardListPage) {
+      return "ボード一覧";
+    }
+    if (isMemoListPage || isTeamMemoListPage) {
+      return "メモ一覧";
+    }
+    if (isTaskListPage || isTeamTaskListPage) {
+      return "タスク一覧";
+    }
+    // boardTitle（イベント経由）が設定されていればボード詳細として表示
+    if (boardTitle) {
+      return boardTitle;
+    }
+    // API経由でボード名を取得
+    if ((isTeamBoardPage || isPersonalBoardDetailPage) && boardFromSlug?.name) {
+      return boardFromSlug.name;
+    }
+    return "ぺたぼー";
+  }, [
+    isTeamBoardPage,
+    isPersonalBoardDetailPage,
+    boardTitle,
+    boardFromSlug?.name,
+    isBoardListPage,
+    isTeamBoardListPage,
+    isMemoListPage,
+    isTeamMemoListPage,
+    isTaskListPage,
+    isTeamTaskListPage,
+  ]);
+
   return (
     <header className="fixed top-0 left-0 right-0 h-12 md:h-16 border-b border-gray-200 bg-white flex items-center px-3 md:pl-[14px] md:pr-8 z-10">
       <div className="flex items-center gap-2 md:gap-5 flex-1">
         <div className="flex items-center gap-2 md:gap-4">
-          {/* ロゴ */}
+          {/* ロゴ - displayTitleと同じ優先順位で判定 */}
           <div
             className={`w-8 h-8 md:w-10 md:h-10 rounded-xl flex items-center justify-center shadow-sm ${
-              (isTeamBoardPage || isPersonalBoardDetailPage) && boardTitle
+              isBoardListPage || isTeamBoardListPage
                 ? "bg-light-Blue"
-                : isBoardListPage || isTeamBoardListPage
-                  ? "bg-light-Blue"
+                : isMemoListPage || isTeamMemoListPage
+                  ? "bg-Green"
                   : isTaskListPage || isTeamTaskListPage
                     ? "bg-DeepBlue"
-                    : isMemoListPage || isTeamMemoListPage
-                      ? "bg-Green"
+                    : boardTitle ||
+                        ((isTeamBoardPage || isPersonalBoardDetailPage) &&
+                          boardFromSlug?.name)
+                      ? "bg-light-Blue"
                       : "bg-Green"
             }`}
           >
-            {(isTeamBoardPage || isPersonalBoardDetailPage) && boardTitle ? (
-              <DashboardEditIcon className="w-6 h-6 text-white" />
-            ) : isBoardListPage || isTeamBoardListPage ? (
+            {isBoardListPage || isTeamBoardListPage ? (
               <DashboardEditIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
-            ) : isTaskListPage || isTeamTaskListPage ? (
-              <CheckCircleIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
             ) : isMemoListPage || isTeamMemoListPage ? (
               <EditIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
+            ) : isTaskListPage || isTeamTaskListPage ? (
+              <CheckCircleIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
+            ) : boardTitle ||
+              ((isTeamBoardPage || isPersonalBoardDetailPage) &&
+                boardFromSlug?.name) ? (
+              <DashboardEditIcon className="w-6 h-6 text-white" />
             ) : (
               <span className="text-white font-bold text-sm md:text-base">
                 ぺ
@@ -310,15 +359,7 @@ function Header() {
           <div className="flex items-center gap-1 md:gap-3">
             <div className="flex items-center gap-1 md:gap-3">
               <h1 className="text-sm md:text-xl font-bold text-gray-800 tracking-wide">
-                {(isTeamBoardPage || isPersonalBoardDetailPage) && boardTitle
-                  ? boardTitle
-                  : isBoardListPage || isTeamBoardListPage
-                    ? "ボード一覧"
-                    : isMemoListPage || isTeamMemoListPage
-                      ? "メモ一覧"
-                      : isTaskListPage || isTeamTaskListPage
-                        ? "タスク一覧"
-                        : "ぺたぼー"}
+                {displayTitle}
               </h1>
               {/* メモ一覧の新規追加ボタン */}
               {(isMemoListPage || isTeamMemoListPage) && (
@@ -408,14 +449,22 @@ function Header() {
                 </button>
               )}
             </div>
-            {/* ボード詳細の場合は説明を表示 */}
-            {(isTeamBoardPage || isPersonalBoardDetailPage) &&
-            boardDescription ? (
+            {/* ボード詳細の場合は説明を表示（displayTitleと同じ優先順位） */}
+            {!isBoardListPage &&
+            !isTeamBoardListPage &&
+            !isMemoListPage &&
+            !isTeamMemoListPage &&
+            !isTaskListPage &&
+            !isTeamTaskListPage &&
+            (boardDescription ||
+              ((isTeamBoardPage || isPersonalBoardDetailPage) &&
+                boardFromSlug?.description)) ? (
               <span className="hidden md:inline text-sm text-gray-700 mt-0.5">
-                {boardDescription}
+                {boardDescription || boardFromSlug?.description}
               </span>
             ) : !isTeamBoardPage &&
               !isPersonalBoardDetailPage &&
+              !boardTitle &&
               !isMemoListPage &&
               !isTaskListPage &&
               !isBoardListPage &&

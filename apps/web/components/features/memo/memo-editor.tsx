@@ -253,8 +253,7 @@ function MemoEditor({
     return allTeamTaggings.filter(
       (tagging) =>
         tagging.targetType === "memo" &&
-        (tagging.targetDisplayId === memoTargetId ||
-          tagging.targetOriginalId === memoTargetId),
+        tagging.targetDisplayId === memoTargetId,
     );
   }, [teamMode, allTeamTaggings, memoTargetId]);
 
@@ -402,9 +401,7 @@ function MemoEditor({
       .filter(
         (t) =>
           t.targetType === "memo" &&
-          targetIds.some(
-            (id) => t.targetOriginalId === id || t.targetDisplayId === id,
-          ),
+          targetIds.some((id) => t.targetDisplayId === id),
       )
       .map((t) => t.tag)
       .filter(Boolean) as Tag[];
@@ -684,7 +681,7 @@ function MemoEditor({
             (t) =>
               t.tagId === tagId &&
               t.targetType === "memo" &&
-              (t.targetOriginalId === memoId || t.targetDisplayId === memoId),
+              t.targetDisplayId === memoId,
           );
 
           if (taggingToDelete) {
@@ -700,7 +697,7 @@ function MemoEditor({
             (t) =>
               t.tagId === tagId &&
               t.targetType === "memo" &&
-              (t.targetOriginalId === memoId || t.targetDisplayId === memoId),
+              t.targetDisplayId === memoId,
           );
 
           if (!existingTagging) {

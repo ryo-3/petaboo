@@ -41,10 +41,7 @@ function MemoTagFilterWrapper({
     .filter(
       (tagging) =>
         tagging.targetType === "memo" &&
-        memoIds.some(
-          (id) =>
-            tagging.targetOriginalId === id || tagging.targetDisplayId === id,
-        ),
+        memoIds.some((id) => tagging.targetDisplayId === id),
     )
     .map((tagging) => tagging.tagId);
 

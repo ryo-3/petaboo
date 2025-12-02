@@ -172,11 +172,7 @@ function MemoStatusDisplay({
           .filter(
             (tagging) =>
               tagging.targetType === "memo" &&
-              memoIdentifiers.some(
-                (id) =>
-                  tagging.targetOriginalId === id ||
-                  tagging.targetDisplayId === id,
-              ),
+              memoIdentifiers.some((id) => tagging.targetDisplayId === id),
           )
           .map((tagging) => tagging.tagId);
 
@@ -237,9 +233,7 @@ function MemoStatusDisplay({
       const memoTaggings = safeAllTaggings.filter(
         (t) =>
           t.targetType === "memo" &&
-          memoIdentifiers.some(
-            (id) => t.targetOriginalId === id || t.targetDisplayId === id,
-          ),
+          memoIdentifiers.some((id) => t.targetDisplayId === id),
       );
       const memoTags = memoTaggings
         .map((t) => safeAllTags.find((tag) => tag.id === t.tagId))
@@ -452,9 +446,7 @@ export function DeletedMemoDisplay({
     const memoTaggings = allTaggings.filter(
       (t) =>
         t.targetType === "memo" &&
-        memoIdentifiers.some(
-          (id) => t.targetOriginalId === id || t.targetDisplayId === id,
-        ),
+        memoIdentifiers.some((id) => t.targetDisplayId === id),
     );
     const memoTags = memoTaggings
       .map((t) => allTags.find((tag) => tag.id === t.tagId))

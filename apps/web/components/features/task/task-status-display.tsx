@@ -138,9 +138,7 @@ function TaskStatusDisplay({
       const taskTaggings = taggingsToUse.filter(
         (t: Tagging) =>
           t.targetType === "task" &&
-          identifiers.some(
-            (id) => t.targetOriginalId === id || t.targetDisplayId === id,
-          ),
+          identifiers.some((id) => t.targetDisplayId === id),
       );
       const taskTags = taskTaggings
         .map((t: Tagging) => t.tag)
@@ -442,9 +440,7 @@ export function DeletedTaskDisplay({
     const taskTaggings = allTaggings.filter(
       (t: Tagging) =>
         t.targetType === "task" &&
-        taskIds.some(
-          (id) => t.targetOriginalId === id || t.targetDisplayId === id,
-        ),
+        taskIds.some((id) => t.targetDisplayId === id),
     );
     const taskTags = taskTaggings
       .map((t: Tagging) => t.tag)

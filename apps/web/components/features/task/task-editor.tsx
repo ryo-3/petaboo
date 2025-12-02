@@ -403,8 +403,7 @@ function TaskEditor({
     return allTeamTaggings.filter(
       (tagging) =>
         tagging.targetType === "task" &&
-        (tagging.targetDisplayId === teamOriginalId ||
-          tagging.targetOriginalId === teamOriginalId),
+        tagging.targetDisplayId === teamOriginalId,
     );
   }, [teamMode, allTeamTaggings, teamOriginalId]);
 
@@ -412,14 +411,14 @@ function TaskEditor({
   const currentTags = useMemo(() => {
     if (!task || task.id === 0) return [];
     // タスクの一意識別子を決定（displayIdが空の場合の特別処理）
-    let targetOriginalId = task.displayId || "";
+    let targetDisplayIdValue = task.displayId || "";
 
     // タスクID 142で displayId が空の場合は、既存タグとの整合性のため "5" を使用
     if (task.id === 142 && (!task.displayId || task.displayId === "")) {
-      targetOriginalId = "5";
+      targetDisplayIdValue = "5";
     }
 
-    const targetIds = [targetOriginalId, String(task.id)];
+    const targetIds = [targetDisplayIdValue, String(task.id)];
     if (teamMode && teamOriginalId) {
       targetIds.unshift(teamOriginalId);
     }
@@ -435,9 +434,7 @@ function TaskEditor({
       : liveTaggings ||
         preloadedTaggings.filter((t) =>
           targetIds.some(
-            (id) =>
-              t.targetType === "task" &&
-              (t.targetOriginalId === id || t.targetDisplayId === id),
+            (id) => t.targetType === "task" && t.targetDisplayId === id,
           ),
         );
 
@@ -445,9 +442,7 @@ function TaskEditor({
       .filter(
         (t) =>
           t.targetType === "task" &&
-          targetIds.some(
-            (id) => t.targetOriginalId === id || t.targetDisplayId === id,
-          ),
+          targetIds.some((id) => t.targetDisplayId === id),
       )
       .map((t) => t.tag)
       .filter(Boolean) as Tag[];
@@ -889,9 +884,7 @@ function TaskEditor({
         // 削除処理（preloadedTaggingsからタギングIDを見つける）
         for (const tagId of tagsToRemove) {
           const taggingToDelete = preloadedTaggings.find(
-            (t) =>
-              t.tagId === tagId &&
-              (t.targetOriginalId === taskId || t.targetDisplayId === taskId),
+            (t) => t.tagId === tagId && t.targetDisplayId === taskId,
           );
           if (taggingToDelete) {
             await deleteTaggingMutation.mutateAsync(taggingToDelete.id);
@@ -905,7 +898,7 @@ function TaskEditor({
             (t) =>
               t.tagId === tagId &&
               t.targetType === "task" &&
-              (t.targetOriginalId === taskId || t.targetDisplayId === taskId),
+              t.targetDisplayId === taskId,
           );
 
           if (!existingTagging) {

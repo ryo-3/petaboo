@@ -79,11 +79,7 @@ export default function TagManagementModal({
         const itemTaggings = allTaggings.filter(
           (tagging) =>
             tagging.targetType === itemType &&
-            identifiers.some(
-              (id) =>
-                tagging.targetOriginalId === id ||
-                tagging.targetDisplayId === id,
-            ),
+            identifiers.some((id) => tagging.targetDisplayId === id),
         );
 
         itemTaggings.forEach((tagging) => {

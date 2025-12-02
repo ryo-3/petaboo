@@ -15,7 +15,12 @@ export interface BoardScreenRef {
 }
 
 interface BoardScreenProps {
-  onBoardSelect?: (board: { id: number; slug: string }) => void;
+  onBoardSelect?: (board: {
+    id: number;
+    slug: string;
+    name: string;
+    description?: string | null;
+  }) => void;
 }
 
 const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(
@@ -62,21 +67,29 @@ const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(
       setShowCreateForm(true);
     };
 
-    const handleBoardSelect = (board: { id: number; slug: string }) => {
+    const handleBoardSelect = (board: {
+      id: number;
+      slug: string;
+      name: string;
+      description?: string | null;
+    }) => {
       // 親コンポーネントの処理を呼び出し
       if (onBoardSelect) {
         // 親から onBoardSelect が渡されている場合（TeamDetailなど）は親に処理を委譲
         onBoardSelect(board);
       } else {
         // 親から onBoardSelect が渡されていない場合は独自処理（個人ボード画面など）
-        const currentPath = window.location.pathname;
-        if (currentPath === `/boards/${board.slug}`) {
-          // 同じボードの場合はページをリロード
-          window.location.reload();
-        } else {
-          // 違うボードの場合は通常の遷移
-          router.push(`/boards/${board.slug}`);
-        }
+        // ヘッダーを即座に更新（遷移前にイベント発火）
+        window.dispatchEvent(
+          new CustomEvent("team-board-name-change", {
+            detail: {
+              boardName: board.name,
+              boardDescription: board.description || "",
+            },
+          }),
+        );
+        // クエリパラメータ形式で遷移（ページ遷移なし）
+        router.push(`/?${board.slug.toUpperCase()}`);
       }
     };
 

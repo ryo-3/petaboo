@@ -76,6 +76,8 @@ function Header() {
             "team-settings",
             "memos",
             "tasks",
+            "mode",
+            "settings",
           ].includes(key)
         ) {
           return key.toUpperCase();
@@ -92,8 +94,12 @@ function Header() {
       boardSlugFromParams !== null;
     const isPersonalPage = pathname === "/" || !teamName;
 
-    // 個人ボード詳細ページ（/boards/[slug] または /boards/[slug]/settings）
-    const isPersonalBoardDetailPage = pathname.startsWith("/boards/");
+    // 個人ボード詳細ページ
+    // 1. /boards/[slug] 形式（旧形式、リダイレクト対応）
+    // 2. /?SLUG 形式（新形式、クエリパラメータ）
+    const isPersonalBoardDetailPage =
+      pathname.startsWith("/boards/") ||
+      (pathname === "/" && !teamName && boardSlugFromParams !== null);
 
     // 個人ページのメモ/タスク/ボード一覧は iconStates で判定（楽観的更新対応）
     // ボード詳細ページでもiconStatesでメモ/タスクが選択されていればそれを優先

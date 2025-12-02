@@ -7,7 +7,12 @@ import BoardCard from "./board-card";
 import BoardForm from "./board-form";
 
 interface BoardListProps {
-  onBoardSelect?: (board: { id: number; slug: string }) => void;
+  onBoardSelect?: (board: {
+    id: number;
+    slug: string;
+    name: string;
+    description?: string | null;
+  }) => void;
   showCreateForm?: boolean;
   onCreateFormClose?: () => void;
   activeTab?: "normal" | "completed" | "deleted";

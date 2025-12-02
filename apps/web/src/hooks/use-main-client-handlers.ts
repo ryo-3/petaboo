@@ -216,11 +216,14 @@ export function useMainClientHandlers({
     setScreenMode("board");
     setCurrentMode("board");
     setShowingBoardDetail(false);
+    // URLからボードslugパラメータを削除（ボード一覧に戻る）
+    router.replace("/", { scroll: false });
   }, [
     clearAllSelections,
     setScreenMode,
     setCurrentMode,
     setShowingBoardDetail,
+    router,
   ]);
 
   /** ボード詳細に戻る */

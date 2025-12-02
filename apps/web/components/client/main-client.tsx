@@ -74,8 +74,25 @@ function MainClient({
   // refs
   const boardScreenRef = useRef<BoardScreenRef>(null);
 
-  // 現在のボードslug取得（プロパティまたはパスから）
+  // URLクエリパラメータからボードslugを取得（チーム側と同じ形式）
+  // ?TEST 形式（値が空のキー）をボードslugとして扱う
+  const getBoardSlugFromParams = (): string | null => {
+    for (const [key, value] of searchParams.entries()) {
+      if (
+        value === "" &&
+        !["mode", "search", "memo", "task", "settings"].includes(key)
+      ) {
+        return key.toUpperCase();
+      }
+    }
+    return null;
+  };
+
+  // 現在のボードslug取得
+  // 優先順位: 1. クエリパラメータ（?SLUG形式）, 2. props経由, 3. URL直接指定
+  const boardSlugFromParams = getBoardSlugFromParams();
   const currentBoardSlug =
+    boardSlugFromParams ||
     boardSlug ||
     (pathname.startsWith("/boards/") ? pathname.split("/")[2] : null);
 
@@ -120,14 +137,41 @@ function MainClient({
   const hasUserManuallyChanged = useRef(false);
 
   useEffect(() => {
+    // クエリパラメータでボードslugが指定された場合は常にボード詳細を表示
+    // これはURLナビゲーションなのでユーザーの手動切り替えフラグは無視
+    if (boardSlugFromParams) {
+      if (!showingBoardDetail) {
+        setShowingBoardDetail(true);
+      }
+      return;
+    }
+
+    // クエリパラメータがなくなった場合（ボード一覧に戻った場合）
+    // ボード詳細から戻るときは showingBoardDetail を false に
+    if (
+      !boardSlugFromParams &&
+      !boardSlug &&
+      !pathname.startsWith("/boards/") &&
+      showingBoardDetail
+    ) {
+      setShowingBoardDetail(false);
+      return;
+    }
+
     // ユーザーが手動で切り替えた場合は初期設定をスキップ
     if (hasUserManuallyChanged.current) return;
 
     // サーバーサイドから明示的に指示されている場合は詳細表示
     // または、ボード情報が渡されている場合、URLがボード詳細の場合は詳細表示
+    // boardSlug: props経由のボード指定
     const initialShowingBoardDetail =
       forceShowBoardDetail ||
-      Boolean(boardId || initialBoardName || pathname.startsWith("/boards/"));
+      Boolean(
+        boardId ||
+          initialBoardName ||
+          boardSlug ||
+          pathname.startsWith("/boards/"),
+      );
 
     if (initialShowingBoardDetail && !showingBoardDetail) {
       setShowingBoardDetail(true);
@@ -136,6 +180,8 @@ function MainClient({
     forceShowBoardDetail,
     boardId,
     initialBoardName,
+    boardSlug,
+    boardSlugFromParams,
     pathname,
     showingBoardDetail,
     setShowingBoardDetail,
@@ -143,7 +189,14 @@ function MainClient({
 
   // URLに基づいてscreenModeを設定（手動設定時は上書きしない）
   useLayoutEffect(() => {
-    if (pathname.startsWith("/boards/") || pathname.includes("/board/")) {
+    // ボード詳細: URL直接指定またはクエリパラメータ形式（?SLUG）
+    const isBoardDetailPage =
+      pathname.startsWith("/boards/") ||
+      pathname.includes("/board/") ||
+      boardSlugFromParams ||
+      boardSlug;
+
+    if (isBoardDetailPage) {
       // ボード詳細URLでは基本的にボードモードに設定
       // ただし、ユーザーがメモ/タスク画面を開いている場合は上書きしない
       if (
@@ -195,6 +248,8 @@ function MainClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     pathname,
+    boardSlug,
+    boardSlugFromParams,
     isFromBoardDetail,
     setScreenMode,
     setCurrentMode,

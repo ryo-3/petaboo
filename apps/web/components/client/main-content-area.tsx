@@ -204,26 +204,20 @@ export function MainContentArea({
 
       {/* ボード画面 */}
       {screenMode === "board" &&
-        (pathname.startsWith("/boards/") || boardId || initialBoardName ? (
-          showingBoardDetail ? (
-            <BoardDetailWrapper
-              boardId={boardId}
-              boardFromSlug={boardFromSlug}
-              initialBoardName={initialBoardName}
-              serverBoardDescription={serverBoardDescription}
-              serverBoardTitle={serverBoardTitle}
-              showBoardHeader={showBoardHeader}
-              boardSelectedItem={boardSelectedItem}
-              handleBoardSelectMemo={handleBoardSelectMemo}
-              handleBoardSelectTask={handleBoardSelectTask}
-              handleBoardClearSelection={handleBoardClearSelection}
-              onBoardSettings={onBoardSettings}
-            />
-          ) : (
-            <BoardScreen
-              ref={boardScreenRef as React.RefObject<BoardScreenRef>}
-            />
-          )
+        (showingBoardDetail ? (
+          <BoardDetailWrapper
+            boardId={boardId}
+            boardFromSlug={boardFromSlug}
+            initialBoardName={initialBoardName}
+            serverBoardDescription={serverBoardDescription}
+            serverBoardTitle={serverBoardTitle}
+            showBoardHeader={showBoardHeader}
+            boardSelectedItem={boardSelectedItem}
+            handleBoardSelectMemo={handleBoardSelectMemo}
+            handleBoardSelectTask={handleBoardSelectTask}
+            handleBoardClearSelection={handleBoardClearSelection}
+            onBoardSettings={onBoardSettings}
+          />
         ) : (
           <BoardScreen
             ref={boardScreenRef as React.RefObject<BoardScreenRef>}

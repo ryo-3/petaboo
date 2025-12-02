@@ -16,15 +16,32 @@ export default function ClientHome() {
     | "board"
     | null;
 
+  // URLクエリパラメータからボードslugを取得（チーム側と同じ形式）
+  // ?TEST 形式（値が空のキー）をボードslugとして扱う
+  const getBoardSlugFromURL = (): string | null => {
+    for (const [key, value] of searchParams.entries()) {
+      if (
+        value === "" &&
+        !["mode", "search", "memo", "task", "settings"].includes(key)
+      ) {
+        return key.toUpperCase();
+      }
+    }
+    return null;
+  };
+
+  const boardSlug = getBoardSlugFromURL();
+
   // 初回のみモードを記憶し、URLからパラメータを消す
   const initialMode = useRef(modeParam);
 
   useEffect(() => {
-    if (modeParam && isSignedIn) {
+    // ボードslugがある場合はURLを維持する（消さない）
+    if (modeParam && isSignedIn && !boardSlug) {
       // URLからmodeパラメータを即座に消す（再レンダリングなし）
       window.history.replaceState(null, "", "/");
     }
-  }, [modeParam, isSignedIn]);
+  }, [modeParam, isSignedIn, boardSlug]);
 
   // 認証状態が読み込まれていない間はローディング表示
   if (!isLoaded) {
@@ -36,13 +53,15 @@ export default function ClientHome() {
   }
 
   // ログイン済みならメイン画面を表示
+  // 常に同じMainコンポーネントを返す（URLが変わってもアンマウントしない）
+  // boardSlugはmain-client.tsx内でsearchParamsから直接取得する
   if (isSignedIn) {
     // 初回のモードを使用（URLから消した後も維持）
     const mode = initialMode.current;
     return (
       <Main
-        initialCurrentMode={mode || undefined}
-        initialScreenMode={mode || undefined}
+        initialCurrentMode={boardSlug ? "board" : mode || undefined}
+        initialScreenMode={boardSlug ? "board" : mode || undefined}
       />
     );
   }

@@ -36,6 +36,9 @@ FILTER_PATTERNS=(
   "POST http://localhost:7594/.*[^0-9]$"
   "PUT http://localhost:7594/.*[^0-9]$"
   "DELETE http://localhost:7594/.*[^0-9]$"
+  # Next.js ページリクエストログ（GET /?xxx 200 形式）
+  "GET /\?.* 200 in"
+  "GET / 200 in"
 )
 
 # パターンを正規表現として結合

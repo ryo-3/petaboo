@@ -109,6 +109,18 @@ export function MainContentArea({
   const { showTeamList, showTeamCreate, setShowTeamList, setScreenMode } =
     useNavigation();
 
+  // ボード詳細表示の判定（stateベース - URLは遅いので使わない）
+  // サイドバークリック時に即座に切り替わるようにする
+  const isPersonalBoardDetailPage = showingBoardDetail;
+
+  console.log("[MainContentArea] render", {
+    screenMode,
+    showingBoardDetail,
+    isPersonalBoardDetailPage,
+    boardId,
+    initialBoardName,
+  });
+
   // 🎯 統一フック（個人用）- 最上位で1つだけ作成
   const personalMemoOperations = useUnifiedItemOperations({
     itemType: "memo",
@@ -140,7 +152,7 @@ export function MainContentArea({
       {showTeamCreate && <TeamCreate onTeamCreated={handleTeamCreated} />}
 
       {/* メモ関連画面（一覧・表示・編集） */}
-      {screenMode === "memo" && (
+      {screenMode === "memo" && !isPersonalBoardDetailPage && (
         <MemoScreen
           selectedMemo={selectedMemo}
           selectedDeletedMemo={selectedDeletedMemo}
@@ -157,7 +169,7 @@ export function MainContentArea({
       )}
 
       {/* タスク関連画面（一覧・表示・編集） */}
-      {screenMode === "task" && (
+      {screenMode === "task" && !isPersonalBoardDetailPage && (
         <TaskScreen
           selectedTask={selectedTask}
           selectedDeletedTask={selectedDeletedTask}
@@ -202,27 +214,27 @@ export function MainContentArea({
       {/* 設定画面 */}
       {screenMode === "settings" && <SettingsScreen />}
 
-      {/* ボード画面 */}
-      {screenMode === "board" &&
-        (showingBoardDetail ? (
-          <BoardDetailWrapper
-            boardId={boardId}
-            boardFromSlug={boardFromSlug}
-            initialBoardName={initialBoardName}
-            serverBoardDescription={serverBoardDescription}
-            serverBoardTitle={serverBoardTitle}
-            showBoardHeader={showBoardHeader}
-            boardSelectedItem={boardSelectedItem}
-            handleBoardSelectMemo={handleBoardSelectMemo}
-            handleBoardSelectTask={handleBoardSelectTask}
-            handleBoardClearSelection={handleBoardClearSelection}
-            onBoardSettings={onBoardSettings}
-          />
-        ) : (
-          <BoardScreen
-            ref={boardScreenRef as React.RefObject<BoardScreenRef>}
-          />
-        ))}
+      {/* ボード詳細画面（URLベースで判定 - チーム側と同じ方式） */}
+      {isPersonalBoardDetailPage && (
+        <BoardDetailWrapper
+          boardId={boardId}
+          boardFromSlug={boardFromSlug}
+          initialBoardName={initialBoardName}
+          serverBoardDescription={serverBoardDescription}
+          serverBoardTitle={serverBoardTitle}
+          showBoardHeader={showBoardHeader}
+          boardSelectedItem={boardSelectedItem}
+          handleBoardSelectMemo={handleBoardSelectMemo}
+          handleBoardSelectTask={handleBoardSelectTask}
+          handleBoardClearSelection={handleBoardClearSelection}
+          onBoardSettings={onBoardSettings}
+        />
+      )}
+
+      {/* ボード一覧画面 */}
+      {screenMode === "board" && !isPersonalBoardDetailPage && (
+        <BoardScreen ref={boardScreenRef as React.RefObject<BoardScreenRef>} />
+      )}
     </>
   );
 }

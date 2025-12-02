@@ -10,20 +10,36 @@ export default function ClientHome() {
   const searchParams = useSearchParams();
 
   // URLパラメータからモードを取得
+  // 旧形式: ?mode=memo, 新形式: ?memo（値なし）
   const modeParam = searchParams.get("mode") as
     | "memo"
     | "task"
     | "board"
     | null;
 
+  // 新形式のモード取得（?memo, ?task, ?boards）
+  const getModeFromParams = (): "memo" | "task" | "board" | null => {
+    if (searchParams.has("memo")) return "memo";
+    if (searchParams.has("task")) return "task";
+    if (searchParams.has("boards")) return "board";
+    return null;
+  };
+  const newModeParam = getModeFromParams();
+
   // URLクエリパラメータからボードslugを取得（チーム側と同じ形式）
   // ?TEST 形式（値が空のキー）をボードslugとして扱う
   const getBoardSlugFromURL = (): string | null => {
+    // 除外するキー（モード指定やシステムパラメータ）
+    const excludeKeys = [
+      "mode",
+      "search",
+      "memo",
+      "task",
+      "boards",
+      "settings",
+    ];
     for (const [key, value] of searchParams.entries()) {
-      if (
-        value === "" &&
-        !["mode", "search", "memo", "task", "settings"].includes(key)
-      ) {
+      if (value === "" && !excludeKeys.includes(key)) {
         return key.toUpperCase();
       }
     }
@@ -32,16 +48,19 @@ export default function ClientHome() {
 
   const boardSlug = getBoardSlugFromURL();
 
-  // 初回のみモードを記憶し、URLからパラメータを消す
-  const initialMode = useRef(modeParam);
+  // 新形式または旧形式のモードを統合
+  const effectiveMode = newModeParam || modeParam;
+
+  // 初回のみモードを記憶
+  const initialMode = useRef(effectiveMode);
 
   useEffect(() => {
-    // ボードslugがある場合はURLを維持する（消さない）
-    if (modeParam && isSignedIn && !boardSlug) {
-      // URLからmodeパラメータを即座に消す（再レンダリングなし）
+    // 旧形式（?mode=xxx）の場合のみURLをクリア
+    // 新形式（?memo, ?task, ?boards）はURLを維持する
+    if (modeParam && !newModeParam && isSignedIn && !boardSlug) {
       window.history.replaceState(null, "", "/");
     }
-  }, [modeParam, isSignedIn, boardSlug]);
+  }, [modeParam, newModeParam, isSignedIn, boardSlug]);
 
   // 認証状態が読み込まれていない間はローディング表示
   if (!isLoaded) {

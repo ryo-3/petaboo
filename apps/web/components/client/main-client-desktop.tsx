@@ -38,6 +38,9 @@ interface MainClientDesktopProps {
     | { type: "task"; item: Task | DeletedTask }
     | null;
   handleBoardClearSelection: () => void;
+  // 最後に開いたボード（サイドバーのボード詳細アイコン用）
+  lastBoardSlug?: string;
+  lastBoardName?: string;
 }
 
 export function MainClientDesktop({
@@ -66,6 +69,8 @@ export function MainClientDesktop({
   showingBoardDetail,
   boardSelectedItem,
   handleBoardClearSelection,
+  lastBoardSlug,
+  lastBoardName,
 }: MainClientDesktopProps) {
   // NavigationContextから新規作成状態を取得（個人モード用）
   const { isCreatingMemo, isCreatingTask } = useNavigation();
@@ -177,7 +182,11 @@ export function MainClientDesktop({
                   onSearch={handleSearch}
                   onDashboard={handleDashboard}
                   onBoardDetail={handleBoardDetail}
-                  currentBoardName={initialBoardName || currentBoard?.name}
+                  currentBoardName={
+                    lastBoardSlug
+                      ? initialBoardName || currentBoard?.name || lastBoardName
+                      : undefined
+                  }
                   showingBoardDetail={showingBoardDetail}
                   onTeamList={handleTeamList}
                   onTeamCreate={handleTeamCreate}
@@ -205,7 +214,11 @@ export function MainClientDesktop({
               onSearch={handleSearch}
               onDashboard={handleDashboard}
               onBoardDetail={handleBoardDetail}
-              currentBoardName={initialBoardName || currentBoard?.name}
+              currentBoardName={
+                lastBoardSlug
+                  ? initialBoardName || currentBoard?.name || lastBoardName
+                  : undefined
+              }
               showingBoardDetail={showingBoardDetail}
               onTeamList={handleTeamList}
               onTeamCreate={handleTeamCreate}

@@ -254,12 +254,36 @@ export function NavigationProvider({
 
     // 個人ページの判定（screenModeベース・楽観的更新対応）
     const effectiveMode = optimisticMode || currentMode;
-    // 個人ボード詳細ページ（/boards/[slug]）
+
+    // 個人側のボードslugをURLから取得（チーム側と同じ形式）
+    const getPersonalBoardSlugFromParams = (): string | null => {
+      const excludeKeys = [
+        "mode",
+        "search",
+        "memo",
+        "task",
+        "boards",
+        "settings",
+      ];
+      for (const [key, value] of searchParams.entries()) {
+        if (value === "" && !excludeKeys.includes(key)) {
+          return key.toUpperCase();
+        }
+      }
+      return null;
+    };
+    const personalBoardSlugFromUrl = getPersonalBoardSlugFromParams();
+
+    // 個人ボード詳細ページ（/boards/[slug] または ?SLUG 形式）
     const isPersonalBoardPage =
       pathname.startsWith("/boards/") && pathname !== "/boards";
-    // ボード詳細アクティブ: showingBoardDetailの状態を優先、
-    // ただしボードページ初回アクセス時（showingBoardDetailがまだ設定されてない場合）はURLで判断
-    const boardDetailActive = effectiveMode === "board" && showingBoardDetail;
+
+    // ボード詳細アクティブ: showingBoardDetailを最優先（state変更は即座に反映される）
+    // URLベースの判定は補助的に使用
+    const boardDetailActive =
+      showingBoardDetail ||
+      personalBoardSlugFromUrl !== null ||
+      isPersonalBoardPage;
 
     // ホーム画面表示中は、currentModeに関わらずhomeアイコンのみ有効化
     const isHomeScreen = screenMode === "home" && !showTeamList;

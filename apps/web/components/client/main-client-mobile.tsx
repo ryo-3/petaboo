@@ -31,6 +31,9 @@ interface MainClientMobileProps {
   initialBoardName?: string;
   currentBoard?: Board | null;
   showingBoardDetail: boolean;
+  // 最後に開いたボード（サイドバーのボード詳細アイコン用）
+  lastBoardSlug?: string;
+  lastBoardName?: string;
 }
 
 export function MainClientMobile({
@@ -57,6 +60,8 @@ export function MainClientMobile({
   initialBoardName,
   currentBoard,
   showingBoardDetail,
+  lastBoardSlug,
+  lastBoardName,
 }: MainClientMobileProps) {
   // 新規作成状態を NavigationContext から取得（個人モード）
   const navigation = useNavigation();
@@ -159,7 +164,11 @@ export function MainClientMobile({
           onSettings={handleSettings}
           onDashboard={handleDashboard}
           onBoardDetail={handleBoardDetail}
-          currentBoardName={initialBoardName || currentBoard?.name}
+          currentBoardName={
+            lastBoardSlug
+              ? initialBoardName || currentBoard?.name || lastBoardName
+              : undefined
+          }
           showingBoardDetail={showingBoardDetail}
           onTeamList={handleTeamList}
           onTeamCreate={handleTeamCreate}

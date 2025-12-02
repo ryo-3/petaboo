@@ -453,7 +453,7 @@ function Sidebar({
             <Tooltip text={`${currentBoardName}詳細`} position="right">
               <button
                 onClick={() => {
-                  // ボード詳細に遷移（optimisticModeをクリアしてボード詳細アイコンを表示）
+                  // ボード詳細に遷移（URLベースで判定するのでoptimisticModeはクリア）
                   setOptimisticMode(null);
                   onBoardDetail?.();
                 }}

@@ -21,6 +21,8 @@ interface UseMainClientHandlersProps {
     | { type: "memo"; item: Memo | DeletedMemo }
     | { type: "task"; item: Task | DeletedTask }
     | null;
+  // 個人側のみURL更新（チーム側は別途処理）
+  teamMode?: boolean;
 }
 
 export function useMainClientHandlers({
@@ -32,6 +34,7 @@ export function useMainClientHandlers({
   setBoardSelectedItem,
   setShowingBoardDetail,
   boardSelectedItem,
+  teamMode = false,
 }: UseMainClientHandlersProps) {
   const router = useRouter();
   const { setScreenMode, setCurrentMode } = useNavigation();
@@ -86,16 +89,38 @@ export function useMainClientHandlers({
   /** メモ選択 - メモ画面に遷移 */
   const handleSelectMemo = useCallback(
     (memo: Memo | null) => {
+      // 他のアイテム選択をクリア（タスク選択中にメモ選択した場合など）
+      setSelectedTask(null);
+      setSelectedDeletedTask(null);
+      setSelectedDeletedMemo(null);
+
       if (memo) {
         setSelectedMemo(memo);
         setScreenMode("memo");
         // 選択されたメモまでスクロール
         scrollToSelectedItem(memo.id, "memo");
+        // URLを更新（個人側のみ、チーム側は別途処理）
+        if (!teamMode) {
+          router.replace(`/?memo=${memo.id}`, { scroll: false });
+        }
       } else {
         setSelectedMemo(null);
+        // URLからパラメータを削除（個人側のみ）→メモ一覧に戻る
+        if (!teamMode) {
+          router.replace("/?memo", { scroll: false });
+        }
       }
     },
-    [setSelectedMemo, setScreenMode, scrollToSelectedItem],
+    [
+      setSelectedMemo,
+      setSelectedTask,
+      setSelectedDeletedTask,
+      setSelectedDeletedMemo,
+      setScreenMode,
+      scrollToSelectedItem,
+      router,
+      teamMode,
+    ],
   );
 
   /** 削除済みメモ選択 - メモ画面に遷移 */
@@ -127,14 +152,37 @@ export function useMainClientHandlers({
   /** タスク選択 - タスク画面に遷移 */
   const handleSelectTask = useCallback(
     (task: Task | null) => {
+      // 他のアイテム選択をクリア（メモ選択中にタスク選択した場合など）
+      setSelectedMemo(null);
+      setSelectedDeletedMemo(null);
+      setSelectedDeletedTask(null);
+
       setSelectedTask(task);
       if (task) {
         setScreenMode("task");
         // 選択されたタスクまでスクロール
         scrollToSelectedItem(task.id, "task");
+        // URLを更新（個人側のみ、チーム側は別途処理）
+        if (!teamMode) {
+          router.replace(`/?task=${task.id}`, { scroll: false });
+        }
+      } else {
+        // URLからパラメータを削除（個人側のみ）→タスク一覧に戻る
+        if (!teamMode) {
+          router.replace("/?task", { scroll: false });
+        }
       }
     },
-    [setSelectedTask, setScreenMode, scrollToSelectedItem],
+    [
+      setSelectedTask,
+      setSelectedMemo,
+      setSelectedDeletedMemo,
+      setSelectedDeletedTask,
+      setScreenMode,
+      scrollToSelectedItem,
+      router,
+      teamMode,
+    ],
   );
 
   /** 削除済みタスク選択 - タスク画面に遷移 */
@@ -216,14 +264,17 @@ export function useMainClientHandlers({
     setScreenMode("board");
     setCurrentMode("board");
     setShowingBoardDetail(false);
-    // URLからボードslugパラメータを削除（ボード一覧に戻る）
-    router.replace("/", { scroll: false });
+    // URLを /?boards に更新（個人側のみ）
+    if (!teamMode) {
+      router.replace("/?boards", { scroll: false });
+    }
   }, [
     clearAllSelections,
     setScreenMode,
     setCurrentMode,
     setShowingBoardDetail,
     router,
+    teamMode,
   ]);
 
   /** ボード詳細に戻る */
@@ -267,8 +318,17 @@ export function useMainClientHandlers({
     (mode: "memo" | "task" | "board") => {
       clearAllSelections();
       setScreenMode(mode);
+      // URLを更新（個人側のみ）
+      if (!teamMode) {
+        const urlMap = {
+          memo: "/?memo",
+          task: "/?task",
+          board: "/?boards",
+        };
+        router.replace(urlMap[mode], { scroll: false });
+      }
     },
-    [clearAllSelections, setScreenMode],
+    [clearAllSelections, setScreenMode, router, teamMode],
   );
 
   // ==========================================

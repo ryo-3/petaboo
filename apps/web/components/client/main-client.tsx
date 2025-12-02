@@ -6,11 +6,13 @@ import { MainClientDesktop } from "./main-client-desktop";
 import { MainContentArea } from "./main-content-area";
 import { useBoardBySlug, useBoardWithItems } from "@/src/hooks/use-boards";
 import { useMainClientHandlers } from "@/src/hooks/use-main-client-handlers";
+import { useMemos } from "@/src/hooks/use-memos";
+import { useTasks } from "@/src/hooks/use-tasks";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
 import { useNavigation } from "@/src/contexts/navigation-context";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { useLayoutEffect, useRef, useState, useEffect } from "react";
 import BoardSettings from "@/components/features/board/board-settings";
 import { useToast } from "@/src/contexts/toast-context";
@@ -51,6 +53,7 @@ function MainClient({
   const { preferences } = useUserPreferences(1);
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
 
@@ -77,33 +80,33 @@ function MainClient({
   // URLクエリパラメータからボードslugを取得（チーム側と同じ形式）
   // ?TEST 形式（値が空のキー）をボードslugとして扱う
   const getBoardSlugFromParams = (): string | null => {
+    // 除外するキー（モード指定やシステムパラメータ）
+    const excludeKeys = [
+      "mode",
+      "search",
+      "memo",
+      "task",
+      "boards",
+      "settings",
+    ];
     for (const [key, value] of searchParams.entries()) {
-      if (
-        value === "" &&
-        !["mode", "search", "memo", "task", "settings"].includes(key)
-      ) {
+      if (value === "" && !excludeKeys.includes(key)) {
         return key.toUpperCase();
       }
     }
     return null;
   };
 
-  // 現在のボードslug取得
-  // 優先順位: 1. クエリパラメータ（?SLUG形式）, 2. props経由, 3. URL直接指定
+  // クエリパラメータからボードslugを取得
   const boardSlugFromParams = getBoardSlugFromParams();
-  const currentBoardSlug =
-    boardSlugFromParams ||
-    boardSlug ||
-    (pathname.startsWith("/boards/") ? pathname.split("/")[2] : null);
 
-  // サーバーサイドでボード情報が取得済みの場合は不要なAPI呼び出しを回避
-  const shouldFetchBoardFromSlug = !boardId && currentBoardSlug;
-  const { data: boardFromSlug } = useBoardBySlug(
-    shouldFetchBoardFromSlug ? currentBoardSlug : null,
-  );
-  const { data: currentBoard } = useBoardWithItems(
-    boardId || boardFromSlug?.id || null,
-  );
+  // メモ/タスク一覧を取得（URL復元用）
+  const { data: memos } = useMemos({ teamMode: false });
+  const { data: tasks } = useTasks({ teamMode: false });
+
+  // URLパラメータからメモ/タスクIDを取得
+  const memoIdFromParams = searchParams.get("memo");
+  const taskIdFromParams = searchParams.get("task");
 
   // 選択中アイテム管理
   const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null);
@@ -123,6 +126,15 @@ function MainClient({
   // UI状態管理
   const [showDeleted, setShowDeleted] = useState(false); // モバイル版削除済み表示フラグ
 
+  // 最後に開いたボードを記憶（サイドバーのボード詳細アイコン用）
+  const [lastBoardSlug, setLastBoardSlug] = useState<string | undefined>(
+    undefined,
+  );
+  const [lastBoardName, setLastBoardName] = useState<string | undefined>(
+    undefined,
+  );
+  const [lastBoardId, setLastBoardId] = useState<number | undefined>(undefined);
+
   // NavigationContextから統一された状態を取得
   const {
     showTeamList,
@@ -133,12 +145,33 @@ function MainClient({
     setShowingBoardDetail,
   } = useNavigation();
 
+  // 現在のボードslug取得
+  // 優先順位: 1. クエリパラメータ（?SLUG形式）, 2. props経由, 3. URL直接指定, 4. 最後に開いたボード（state優先）
+  const currentBoardSlug =
+    boardSlugFromParams ||
+    boardSlug ||
+    (pathname.startsWith("/boards/") ? pathname.split("/")[2] : null) ||
+    (showingBoardDetail ? lastBoardSlug : null);
+
+  // サーバーサイドでボード情報が取得済みの場合は不要なAPI呼び出しを回避
+  const shouldFetchBoardFromSlug = !boardId && currentBoardSlug;
+  const { data: boardFromSlug } = useBoardBySlug(
+    shouldFetchBoardFromSlug ? currentBoardSlug : null,
+  );
+  const { data: currentBoard } = useBoardWithItems(
+    boardId || boardFromSlug?.id || null,
+  );
+
   // 初期値設定（一度だけ実行、ユーザーの手動切り替えは除外）
   const hasUserManuallyChanged = useRef(false);
 
   useEffect(() => {
+    // ユーザーが手動で切り替えた場合（サイドバークリックなど）は
+    // useEffectでの状態変更をスキップ（state優先）
+    if (hasUserManuallyChanged.current) return;
+
     // クエリパラメータでボードslugが指定された場合は常にボード詳細を表示
-    // これはURLナビゲーションなのでユーザーの手動切り替えフラグは無視
+    // これはURLナビゲーション（直接アクセス・ブックマーク）の場合のみ
     if (boardSlugFromParams) {
       if (!showingBoardDetail) {
         setShowingBoardDetail(true);
@@ -148,6 +181,7 @@ function MainClient({
 
     // クエリパラメータがなくなった場合（ボード一覧に戻った場合）
     // ボード詳細から戻るときは showingBoardDetail を false に
+    // ※ユーザー手動切り替えでない場合のみ（上でチェック済み）
     if (
       !boardSlugFromParams &&
       !boardSlug &&
@@ -157,9 +191,6 @@ function MainClient({
       setShowingBoardDetail(false);
       return;
     }
-
-    // ユーザーが手動で切り替えた場合は初期設定をスキップ
-    if (hasUserManuallyChanged.current) return;
 
     // サーバーサイドから明示的に指示されている場合は詳細表示
     // または、ボード情報が渡されている場合、URLがボード詳細の場合は詳細表示
@@ -186,6 +217,69 @@ function MainClient({
     showingBoardDetail,
     setShowingBoardDetail,
   ]); // ボード詳細表示フラグ
+
+  // ボード詳細表示時に lastBoardSlug / lastBoardName / lastBoardId を記憶
+  useEffect(() => {
+    const slug = boardSlugFromParams || currentBoardSlug;
+    const name = initialBoardName || currentBoard?.name;
+    const id = boardId || boardFromSlug?.id || currentBoard?.id;
+    if (slug) {
+      setLastBoardSlug(slug);
+    }
+    if (name) {
+      setLastBoardName(name);
+    }
+    if (id) {
+      setLastBoardId(id);
+    }
+  }, [
+    boardSlugFromParams,
+    currentBoardSlug,
+    initialBoardName,
+    currentBoard?.name,
+    boardId,
+    boardFromSlug?.id,
+    currentBoard?.id,
+  ]);
+
+  // URLパラメータからメモ/タスクを復元（初回ロード時のみ）
+  const hasRestoredFromUrl = useRef(false);
+  useEffect(() => {
+    // 既に復元済み、またはユーザーが手動で切り替えた場合はスキップ
+    if (hasRestoredFromUrl.current || hasUserManuallyChanged.current) return;
+
+    // ボード詳細ページでは復元しない（ボード内の選択は別処理）
+    if (boardSlugFromParams) return;
+
+    // メモIDがURLにある場合
+    if (memoIdFromParams && memos && !selectedMemo) {
+      const memo = memos.find((m) => m.id === Number(memoIdFromParams));
+      if (memo) {
+        setSelectedMemo(memo);
+        setScreenMode("memo");
+        hasRestoredFromUrl.current = true;
+      }
+    }
+
+    // タスクIDがURLにある場合
+    if (taskIdFromParams && tasks && !selectedTask) {
+      const task = tasks.find((t) => t.id === Number(taskIdFromParams));
+      if (task) {
+        setSelectedTask(task);
+        setScreenMode("task");
+        hasRestoredFromUrl.current = true;
+      }
+    }
+  }, [
+    memoIdFromParams,
+    taskIdFromParams,
+    memos,
+    tasks,
+    selectedMemo,
+    selectedTask,
+    boardSlugFromParams,
+    setScreenMode,
+  ]);
 
   // URLに基づいてscreenModeを設定（手動設定時は上書きしない）
   useLayoutEffect(() => {
@@ -326,6 +420,11 @@ function MainClient({
     closeBoardSettings();
     setShowTeamList(false);
     setShowTeamCreate(false);
+    hasUserManuallyChanged.current = true; // ユーザーが手動で切り替えたことを記録
+    // メモ/タスク一覧に遷移する場合はボード詳細を閉じる
+    if (mode === "memo" || mode === "task") {
+      setShowingBoardDetail(false);
+    }
     handleShowList(mode);
   };
 
@@ -339,12 +438,37 @@ function MainClient({
   };
 
   const wrappedHandleBoardDetail = () => {
+    console.log("[BoardDetail] wrappedHandleBoardDetail called", {
+      lastBoardSlug,
+      lastBoardName,
+      lastBoardId,
+      showingBoardDetail,
+    });
     closeBoardSettings();
     setShowTeamList(false);
     setShowTeamCreate(false);
     hasUserManuallyChanged.current = true; // ユーザーが手動で切り替えたことを記録
-    setShowingBoardDetail(true); // ボード詳細を表示
-    handleBoardDetail();
+    // showingBoardDetailのみ設定（screenModeは変更しない）
+    // main-content-area.tsxでshowingBoardDetailを優先チェックするため、
+    // screenModeが何であってもボード詳細が表示される
+    setShowingBoardDetail(true);
+    setCurrentMode("board");
+    // ヘッダーを即座に更新（ボード名がある場合）
+    if (lastBoardName) {
+      window.dispatchEvent(
+        new CustomEvent("team-board-name-change", {
+          detail: {
+            boardName: lastBoardName,
+            boardDescription: "",
+          },
+        }),
+      );
+    }
+    // lastBoardSlugがある場合はそのボード詳細URLに遷移
+    if (lastBoardSlug) {
+      router.replace(`/?${lastBoardSlug}`, { scroll: false });
+    }
+    console.log("[BoardDetail] After setShowingBoardDetail(true)");
   };
 
   const wrappedHandleSettings = () => {
@@ -393,6 +517,7 @@ function MainClient({
     setBoardSelectedItem,
     setShowingBoardDetail,
     boardSelectedItem,
+    teamMode,
   });
 
   // ハンドラーをNavigationContextに設定
@@ -472,6 +597,8 @@ function MainClient({
         showingBoardDetail={showingBoardDetail}
         boardSelectedItem={boardSelectedItem}
         handleBoardClearSelection={handleBoardClearSelection}
+        lastBoardSlug={lastBoardSlug}
+        lastBoardName={lastBoardName}
       >
         {isShowingBoardSettings && (boardId || boardFromSlug?.id) ? (
           <div className="h-full pt-6 pl-6 pr-6 flex flex-col overflow-y-auto">
@@ -503,9 +630,15 @@ function MainClient({
             setSelectedTask={setSelectedTask}
             setSelectedDeletedTask={setSelectedDeletedTask}
             setCurrentMode={setCurrentMode}
-            boardId={boardId}
+            boardId={
+              boardId ||
+              boardFromSlug?.id ||
+              (showingBoardDetail ? lastBoardId : undefined)
+            }
             boardFromSlug={boardFromSlug}
-            initialBoardName={initialBoardName}
+            initialBoardName={
+              initialBoardName || boardFromSlug?.name || lastBoardName
+            }
             serverBoardDescription={serverBoardDescription}
             serverBoardTitle={serverBoardTitle}
             showBoardHeader={showBoardHeader}

@@ -58,6 +58,7 @@ export function BoardDetailWrapper({
           detail: {
             boardName: currentBoardName,
             boardDescription: currentBoardDescription || "",
+            boardSlug: boardFromSlug?.slug,
           },
         }),
       );
@@ -68,7 +69,12 @@ export function BoardDetailWrapper({
         window.dispatchEvent(new CustomEvent("team-clear-board-name"));
       }
     };
-  }, [currentBoardName, currentBoardDescription, teamMode]);
+  }, [
+    currentBoardName,
+    currentBoardDescription,
+    teamMode,
+    boardFromSlug?.slug,
+  ]);
 
   return useMemo(() => {
     const BoardComponent = USE_UNIFIED_BOARD_DETAIL

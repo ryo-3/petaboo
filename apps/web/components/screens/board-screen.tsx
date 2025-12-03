@@ -88,6 +88,7 @@ const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(
             detail: {
               boardName: board.name,
               boardDescription: board.description || "",
+              boardSlug: board.slug,
             },
           }),
         );

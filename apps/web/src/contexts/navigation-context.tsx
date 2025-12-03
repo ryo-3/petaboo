@@ -179,7 +179,7 @@ export function NavigationProvider({
             : "boards"
         : activeTab;
 
-      return {
+      const result = {
         home: !effectiveTab || effectiveTab === "overview",
         memo: effectiveTab === "memos" || optimisticMode === "memo",
         task: effectiveTab === "tasks" || optimisticMode === "task",
@@ -197,6 +197,15 @@ export function NavigationProvider({
           effectiveTab === "team-list" ||
           (!effectiveTab && screenMode === "team"),
       };
+      console.log("[iconStates] team page", {
+        activeTab,
+        effectiveTab,
+        optimisticMode,
+        isTeamBoardDetailPage,
+        boardSlugFromParams,
+        result,
+      });
+      return result;
     }
 
     // 個人ページの判定（screenModeベース・楽観的更新対応）
@@ -292,6 +301,13 @@ export function NavigationProvider({
           : optimisticMode === "task"
             ? "tasks"
             : "boards";
+
+      console.log("[optimisticMode clear check]", {
+        optimisticMode,
+        actualTab,
+        expectedTab,
+        willClear: actualTab === expectedTab,
+      });
 
       // 期待したタブに実際になった場合のみクリア
       if (actualTab === expectedTab) {

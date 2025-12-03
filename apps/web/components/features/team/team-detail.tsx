@@ -553,6 +553,11 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         | "search",
       options?: { slug?: string; fromSidebar?: boolean },
     ) => {
+      console.log("[handleTabChange] called", {
+        tab,
+        options,
+        currentUrl: window.location.href,
+      });
       // 🛡️ URL逆流防止: 期待値を記録
       pendingTabRef.current = tab;
 
@@ -655,7 +660,9 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         newUrl = params.toString() ? `?${params.toString()}` : "";
       }
 
-      router.replace(`/team/${customUrl}${newUrl}`, { scroll: false });
+      const finalUrl = `/team/${customUrl}${newUrl}`;
+      console.log("[handleTabChange] navigating to:", finalUrl);
+      router.replace(finalUrl, { scroll: false });
     },
     [router, customUrl, searchParams, setActiveTabContext, setOptimisticMode],
   );
@@ -1502,6 +1509,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                       detail: {
                         boardName: board.name,
                         boardDescription: board.description || "",
+                        boardSlug: board.slug,
                       },
                     }),
                   );

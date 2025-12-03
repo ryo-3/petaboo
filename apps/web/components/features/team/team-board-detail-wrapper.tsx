@@ -138,6 +138,7 @@ export function TeamBoardDetailWrapper({
           detail: {
             boardName: boardData.name,
             boardDescription: boardData.description || "",
+            boardSlug: boardData.slug,
           },
         }),
       );
@@ -240,6 +241,7 @@ export function TeamBoardDetailWrapper({
 
     // taskパラメータがある場合、該当するタスクを選択
     if (taskParam) {
+      console.log("[URL restore] taskParam:", taskParam);
       const allItems = boardItems.items || [];
       const taskItems = allItems.filter(
         (item: any) => item.itemType === "task",
@@ -250,10 +252,21 @@ export function TeamBoardDetailWrapper({
         .map((item: any) => item.content)
         .find((t: Task) => t.boardIndex?.toString() === taskParam);
 
+      console.log(
+        "[URL restore] targetTask:",
+        targetTask
+          ? {
+              displayId: targetTask.displayId,
+              boardIndex: targetTask.boardIndex,
+            }
+          : null,
+      );
+
       // 既に正しいタスクが選択されている場合はスキップ
       if (targetTask && selectedTaskRef.current) {
         // boardIndexで比較（これが一番確実）
         if (targetTask.boardIndex === selectedTaskRef.current.boardIndex) {
+          console.log("[URL restore] skipping - already selected");
           return;
         }
       }
@@ -296,6 +309,13 @@ export function TeamBoardDetailWrapper({
   };
 
   const handleSelectTask = (task: Task | DeletedTask | null) => {
+    console.log("[handleSelectTask] called", {
+      task: task
+        ? { displayId: task.displayId, boardIndex: task.boardIndex }
+        : null,
+      slug,
+      customUrl,
+    });
     setSelectedMemo(null);
     setSelectedTask(task);
 
@@ -303,11 +323,15 @@ export function TeamBoardDetailWrapper({
     // 新規作成時 (displayId === "new") またはboardIndexが未設定の場合はURL更新をスキップ
     if (task && task.boardIndex && task.boardIndex > 0) {
       // boardIndexが存在する場合のみURL更新（新形式: ?SLUG&task=N）
-      router.replace(`/team/${customUrl}?${slug}&task=${task.boardIndex}`, {
+      const newUrl = `/team/${customUrl}?${slug}&task=${task.boardIndex}`;
+      console.log("[handleSelectTask] updating URL to:", newUrl);
+      router.replace(newUrl, {
         scroll: false,
       });
     } else if (!task) {
-      router.replace(`/team/${customUrl}?${slug}`, {
+      const newUrl = `/team/${customUrl}?${slug}`;
+      console.log("[handleSelectTask] clearing selection, URL:", newUrl);
+      router.replace(newUrl, {
         scroll: false,
       });
     }

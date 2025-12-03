@@ -183,9 +183,21 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
 
     // チームボード名変更イベントをリッスン
     const handleTeamBoardNameChange = (event: CustomEvent) => {
-      const { boardName } = event.detail;
+      const { boardName, boardSlug } = event.detail;
+      console.log("[team-board-name-change] received", {
+        boardName,
+        boardSlug,
+      });
       setCurrentBoardName(boardName);
       setLastBoardName(boardName); // 最後のボード名として記憶
+      // boardSlugが渡された場合は記憶（ボード詳細アイコンからの遷移に必要）
+      if (boardSlug) {
+        console.log(
+          "[team-board-name-change] setting lastBoardSlug:",
+          boardSlug,
+        );
+        setLastBoardSlug(boardSlug);
+      }
     };
 
     // チームボード名クリアイベントをリッスン（楽観的更新用）
@@ -357,6 +369,13 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   };
 
   const handleBoardDetail = () => {
+    console.log("[handleBoardDetail] called", {
+      lastBoardSlug,
+      currentBoardName,
+      lastBoardName,
+      customUrl,
+    });
+
     // 🚀 楽観的更新をクリア（ボード詳細は特殊なタブなのでnull）
     setOptimisticMode(null);
 
@@ -365,8 +384,12 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
     // （URLが変わってからactiveTabが変わるため、画面切り替え後にクリアされる）
     if (lastBoardSlug) {
       const newUrl = `/team/${customUrl}?${lastBoardSlug}`;
+      console.log("[handleBoardDetail] navigating to:", newUrl);
       router.replace(newUrl, { scroll: false });
     } else {
+      console.log(
+        "[handleBoardDetail] no lastBoardSlug, falling back to board list",
+      );
       // ボード一覧タブに移動
       if (isTeamDetailPage) {
         window.dispatchEvent(

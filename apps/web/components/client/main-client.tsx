@@ -242,6 +242,7 @@ function MainClient({
           detail: {
             boardName: name,
             boardDescription: currentBoard?.description || "",
+            boardSlug: currentBoard?.slug || currentBoardSlug,
           },
         }),
       );
@@ -252,6 +253,7 @@ function MainClient({
     initialBoardName,
     currentBoard?.name,
     currentBoard?.description,
+    currentBoard?.slug,
     boardId,
     boardFromSlug?.id,
     currentBoard?.id,
@@ -473,6 +475,7 @@ function MainClient({
           detail: {
             boardName: lastBoardName,
             boardDescription: "",
+            boardSlug: lastBoardSlug,
           },
         }),
       );

@@ -35,6 +35,7 @@ export default function BoardSettingsScreen({
         detail: {
           boardName: initialBoardName,
           boardDescription: initialBoardDescription,
+          boardSlug: boardSlug,
         },
       }),
     );
@@ -42,7 +43,7 @@ export default function BoardSettingsScreen({
     return () => {
       window.dispatchEvent(new CustomEvent("team-clear-board-name"));
     };
-  }, [initialBoardName, initialBoardDescription]);
+  }, [initialBoardName, initialBoardDescription, boardSlug]);
 
   // ナビゲーションハンドラー
   const handleHome = () => router.push("/");

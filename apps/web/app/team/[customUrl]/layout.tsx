@@ -373,14 +373,12 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   const handleBoardDetail = () => {
     // 🚀 楽観的更新をクリア（ボード詳細は特殊なタブなのでnull）
     setOptimisticMode(null);
-    // ボード詳細に遷移する際に選択状態をクリア
-    setSelectedMemoId(null);
-    setSelectedTaskId(null);
 
+    // 🚀 画面遷移のみ実行
+    // 選択状態のクリアはteam-detail.tsxのactiveTab変化時に行う
+    // （URLが変わってからactiveTabが変わるため、画面切り替え後にクリアされる）
     if (lastBoardSlug) {
-      // 新形式: ?SLUG（board= を省略）
       const newUrl = `/team/${customUrl}?${lastBoardSlug}`;
-      // シンプルに直接URLを指定
       router.replace(newUrl, { scroll: false });
     } else {
       // ボード一覧タブに移動

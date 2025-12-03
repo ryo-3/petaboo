@@ -459,12 +459,8 @@ function MainClient({
     setShowTeamList(false);
     setShowTeamCreate(false);
     hasUserManuallyChanged.current = true; // ユーザーが手動で切り替えたことを記録
-    // ボード詳細に遷移する際に選択状態をクリア
-    setSelectedMemo(null);
-    setSelectedDeletedMemo(null);
-    setSelectedTask(null);
-    setSelectedDeletedTask(null);
-    setBoardSelectedItem(null);
+
+    // 🚀 画面遷移を先に行う（閉じるアニメーションを見せない）
     // showingBoardDetailのみ設定（screenModeは変更しない）
     // main-content-area.tsxでshowingBoardDetailを優先チェックするため、
     // screenModeが何であってもボード詳細が表示される
@@ -485,6 +481,15 @@ function MainClient({
     if (lastBoardSlug) {
       router.replace(`/?${lastBoardSlug}`, { scroll: false });
     }
+
+    // 🚀 選択状態のクリアは次のフレームで実行（画面遷移後）
+    requestAnimationFrame(() => {
+      setSelectedMemo(null);
+      setSelectedDeletedMemo(null);
+      setSelectedTask(null);
+      setSelectedDeletedTask(null);
+      setBoardSelectedItem(null);
+    });
   };
 
   const wrappedHandleSettings = () => {

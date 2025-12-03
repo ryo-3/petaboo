@@ -42,7 +42,7 @@ import {
   TrashIcon,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTeamDetail as useTeamDetailContext } from "@/src/contexts/team-detail-context";
 import { useNavigation } from "@/src/contexts/navigation-context";
 import { useAttachments } from "@/src/hooks/use-attachments";
@@ -414,6 +414,27 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     | "team-settings"
     | "search"
   >(getTabFromURL());
+
+  // activeTabの変化を監視
+  // 前のactiveTabを記憶して、タスク/メモ→ボード切り替え時に選択状態をクリア
+  const prevActiveTabRef = useRef(activeTab);
+  useEffect(() => {
+    const prevTab = prevActiveTabRef.current;
+
+    // タスク/メモ画面からボード画面に切り替わった時のみ、選択状態をクリア
+    // （画面切り替え後にクリアすることで閉じるアニメーションを見せない）
+    if (
+      (prevTab === "tasks" || prevTab === "memos") &&
+      (activeTab === "board" || activeTab === "boards")
+    ) {
+      setSelectedMemo(null);
+      setSelectedTask(null);
+      setSelectedDeletedMemo(null);
+      setSelectedDeletedTask(null);
+    }
+
+    prevActiveTabRef.current = activeTab;
+  }, [activeTab]);
 
   // モバイル用：通知/アクティビティの切り替え
   const [mobileOverviewTab, setMobileOverviewTab] = useState<

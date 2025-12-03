@@ -538,6 +538,9 @@ export function createAPI(app: AppType) {
       params: z.object({
         id: z.string(),
       }),
+      query: z.object({
+        teamId: z.string().regex(/^\d+$/).transform(Number).optional(),
+      }),
     },
     responses: {
       200: {
@@ -580,26 +583,58 @@ export function createAPI(app: AppType) {
     }
 
     const categoryId = parseInt(c.req.param("id"));
+    const { teamId } = c.req.valid("query");
     const db = c.get("db");
 
-    // カテゴリーの所有権確認
-    const category = await db
-      .select()
-      .from(boardCategories)
-      .where(
-        and(
-          eq(boardCategories.id, categoryId),
-          eq(boardCategories.userId, auth.userId),
-        ),
-      )
-      .limit(1);
+    if (teamId) {
+      // チームモード：メンバー確認
+      const member = await checkTeamMember(teamId, auth.userId, db);
+      if (!member) {
+        return c.json({ error: "Unauthorized" }, 401);
+      }
 
-    if (category.length === 0) {
-      return c.json({ error: "Board category not found" }, 404);
+      // カテゴリーの存在確認
+      const category = await db
+        .select()
+        .from(teamBoardCategories)
+        .where(
+          and(
+            eq(teamBoardCategories.id, categoryId),
+            eq(teamBoardCategories.teamId, teamId),
+          ),
+        )
+        .limit(1);
+
+      if (category.length === 0) {
+        return c.json({ error: "Board category not found" }, 404);
+      }
+
+      // チームカテゴリーを削除
+      await db
+        .delete(teamBoardCategories)
+        .where(eq(teamBoardCategories.id, categoryId));
+    } else {
+      // 個人モード：所有権確認
+      const category = await db
+        .select()
+        .from(boardCategories)
+        .where(
+          and(
+            eq(boardCategories.id, categoryId),
+            eq(boardCategories.userId, auth.userId),
+          ),
+        )
+        .limit(1);
+
+      if (category.length === 0) {
+        return c.json({ error: "Board category not found" }, 404);
+      }
+
+      // 個人カテゴリーを削除（関連するボードのboardCategoryIdはNULLになる）
+      await db
+        .delete(boardCategories)
+        .where(eq(boardCategories.id, categoryId));
     }
-
-    // カテゴリーを削除（関連するボードのboardCategoryIdはNULLになる）
-    await db.delete(boardCategories).where(eq(boardCategories.id, categoryId));
 
     return c.json({ success: true });
   });

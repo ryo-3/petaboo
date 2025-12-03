@@ -163,7 +163,10 @@ export function useBoardCategories(boardId?: number, teamId?: number) {
   const deleteCategory = useMutation({
     mutationFn: async (id: number): Promise<void> => {
       const token = await getToken();
-      const response = await fetch(`${API_BASE_URL}/board-categories/${id}`, {
+      let url = `${API_BASE_URL}/board-categories/${id}`;
+      if (teamId) url += `?teamId=${teamId}`;
+
+      const response = await fetch(url, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",

@@ -86,6 +86,16 @@ export default function HeaderControlPanel() {
   return (
     <>
       <div className="flex items-center gap-2 h-7">
+        {/* 選択モード切り替え（列数の左） */}
+        {onSelectionModeChange && (
+          <SelectionModeToggle
+            mode={selectionMode}
+            onModeChange={onSelectionModeChange}
+            buttonSize="size-7"
+            iconSize="size-4"
+          />
+        )}
+
         <div className="hidden md:block">
           <ColumnCountSelector
             columnCount={columnCount}
@@ -95,16 +105,6 @@ export default function HeaderControlPanel() {
             buttonSize="size-6"
           />
         </div>
-
-        {/* 選択モード切り替え */}
-        {onSelectionModeChange && (
-          <SelectionModeToggle
-            mode={selectionMode}
-            onModeChange={onSelectionModeChange}
-            buttonSize="size-7"
-            iconSize="size-4"
-          />
-        )}
 
         {/* コンテンツフィルター（boardモード または 選択モード時） */}
         {(currentMode === "board" || isSelectedMode) && onMemoToggle && (

@@ -29,7 +29,7 @@ function SelectionModeToggle({
         className={`bg-gray-100 rounded-lg ${buttonSize} flex items-center justify-center transition-colors ${
           mode === "check"
             ? "text-Green hover:text-Green/90"
-            : "text-gray-400 hover:text-gray-500"
+            : "text-gray-600 hover:text-gray-700"
         }`}
       >
         <svg className={iconSize} viewBox="0 0 24 24" fill="none">

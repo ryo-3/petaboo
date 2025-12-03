@@ -5,6 +5,7 @@ import { useBoardCategories } from "@/src/hooks/use-board-categories";
 import { BoardCategory } from "@/src/types/board-categories";
 import { Trash2, AlertTriangle } from "lucide-react";
 import CloseButton from "@/components/ui/buttons/close-button";
+import { useTeamContext } from "@/src/contexts/team-context";
 
 interface DeleteCategoryModalProps {
   isOpen: boolean;
@@ -19,7 +20,11 @@ export default function DeleteCategoryModal({
   category,
   onSuccess,
 }: DeleteCategoryModalProps) {
-  const { deleteCategory } = useBoardCategories();
+  const { teamId } = useTeamContext();
+  const { deleteCategory } = useBoardCategories(
+    category?.boardId,
+    teamId ?? undefined,
+  );
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {

@@ -669,7 +669,11 @@ function BoardDetailScreen({
 
   // チームモードかどうかでボード一覧を切り替え
   const allBoards = teamMode ? teamBoards : personalBoards;
-  const { categories } = useBoardCategories();
+  // ボードカテゴリーを取得（ボードID・チームIDを指定）
+  const { categories } = useBoardCategories(
+    boardId,
+    teamMode && teamId ? teamId : undefined,
+  );
 
   // BoardRightPanelのonCloseを安定化（memo化のため）
   const stableOnClose = useCallback(() => {
@@ -1126,6 +1130,7 @@ function BoardDetailScreen({
                               allTaggings={safeAllTaggings as Tagging[]}
                               allBoardItems={safeAllBoardItems}
                               allAttachments={allAttachments || []}
+                              allCategories={categories}
                               selectedTask={selectedTask}
                               onCreateNewTask={handleCreateNewTask}
                               onSetRightPanelMode={setRightPanelMode}
@@ -1168,6 +1173,7 @@ function BoardDetailScreen({
                               allTaggings={safeAllTaggings as Tagging[]}
                               allBoardItems={safeAllBoardItems}
                               allAttachments={allAttachments || []}
+                              allCategories={categories}
                               selectedTask={selectedTask}
                               onCreateNewTask={handleCreateNewTask}
                               onSetRightPanelMode={setRightPanelMode}

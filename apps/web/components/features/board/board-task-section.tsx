@@ -17,6 +17,7 @@ import { Task } from "@/src/types/task";
 import { useSortOptions } from "@/hooks/use-sort-options";
 import type { Tag, Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
+import type { BoardCategory } from "@/src/types/board-categories";
 import type { Attachment } from "@/src/hooks/use-attachments";
 import { useTeamContext } from "@/src/contexts/team-context";
 
@@ -79,6 +80,8 @@ interface BoardTaskSectionProps {
     addedAt: number;
   }>;
   allAttachments?: Attachment[];
+  // ボードカテゴリー（ボード詳細画面でのみ使用）
+  allCategories?: BoardCategory[];
 }
 
 import { useRef, useMemo, useState } from "react";
@@ -130,6 +133,7 @@ export default function BoardTaskSection({
   allTaggings = [],
   allBoardItems = [],
   allAttachments = [],
+  allCategories = [],
 }: BoardTaskSectionProps) {
   const { isTeamMode: teamMode, teamId: teamIdRaw } = useTeamContext();
   const teamId = teamIdRaw ?? undefined; // Hook互換性のため変換
@@ -426,6 +430,7 @@ export default function BoardTaskSection({
             allTaggings={allTaggings}
             allBoardItems={allBoardItems}
             allAttachments={allAttachments}
+            allCategories={allCategories}
           />
         ) : (
           <TaskStatusDisplay
@@ -457,6 +462,7 @@ export default function BoardTaskSection({
             allTaggings={allTaggings}
             allBoardItems={allBoardItems}
             allAttachments={allAttachments}
+            allCategories={allCategories}
             initialBoardId={initialBoardId}
             teamMode={teamMode}
             teamId={teamId}

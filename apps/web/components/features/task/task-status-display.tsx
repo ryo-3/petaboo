@@ -5,8 +5,9 @@ import ItemListDisplay from "@/components/ui/layout/item-list-display";
 import type { Task, DeletedTask } from "@/src/types/task";
 import type { Tag, Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
+import type { BoardCategory } from "@/src/types/board-categories";
 import type { Attachment } from "@/src/hooks/use-attachments";
-import { useMemo, useEffect } from "react";
+import { useMemo } from "react";
 
 interface TaskStatusDisplayProps {
   activeTab: "todo" | "in_progress" | "completed";
@@ -45,6 +46,8 @@ interface TaskStatusDisplayProps {
     addedAt: number;
   }>;
   allAttachments?: Attachment[];
+  // ボードカテゴリー（ボード詳細画面でのみ使用）
+  allCategories?: BoardCategory[];
 }
 
 interface DeletedTaskDisplayProps {
@@ -83,6 +86,8 @@ interface DeletedTaskDisplayProps {
     addedAt: number;
   }>;
   allAttachments?: Attachment[];
+  // ボードカテゴリー（ボード詳細画面でのみ使用）
+  allCategories?: BoardCategory[];
   // 全選択機能
   onSelectAll?: () => void;
   isAllSelected?: boolean;
@@ -111,6 +116,7 @@ function TaskStatusDisplay({
   allTaggings = [],
   allBoardItems = [],
   allAttachments = [],
+  allCategories = [],
 }: TaskStatusDisplayProps) {
   // ステータスでフィルター
   const statusFilteredTasks = tasks?.filter(
@@ -307,6 +313,11 @@ function TaskStatusDisplay({
     const taskBoards = taskWithData?.boards || [];
     const taskAttachments = taskWithData?.attachments || [];
 
+    // ボードカテゴリー名を取得（ボード詳細画面でのみ使用）
+    const boardCategoryName = task.boardCategoryId
+      ? allCategories.find((cat) => cat.id === task.boardCategoryId)?.name
+      : undefined;
+
     /* eslint-disable react/prop-types */
     const taskComponent = (
       <ItemCard
@@ -325,7 +336,7 @@ function TaskStatusDisplay({
         preloadedBoards={taskBoards}
         preloadedAttachments={taskAttachments}
         teamMode={teamMode}
-        initialBoardId={initialBoardId}
+        boardCategoryName={boardCategoryName}
       />
     );
 
@@ -383,6 +394,7 @@ export function DeletedTaskDisplay({
   allTaggings = [],
   allBoardItems = [],
   allAttachments = [],
+  allCategories = [],
   onSelectAll,
   isAllSelected,
 }: DeletedTaskDisplayProps) {
@@ -470,6 +482,11 @@ export function DeletedTaskDisplay({
       );
     });
 
+    // ボードカテゴリー名を取得（ボード詳細画面でのみ使用）
+    const boardCategoryName = task.boardCategoryId
+      ? allCategories.find((cat) => cat.id === task.boardCategoryId)?.name
+      : undefined;
+
     /* eslint-disable react/prop-types */
     return (
       <ItemCard
@@ -487,6 +504,7 @@ export function DeletedTaskDisplay({
         preloadedTags={taskTags}
         preloadedBoards={taskBoards}
         preloadedAttachments={taskAttachments}
+        boardCategoryName={boardCategoryName}
       />
     );
     /* eslint-enable react/prop-types */

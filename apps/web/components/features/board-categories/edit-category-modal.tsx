@@ -8,6 +8,7 @@ import DeleteCategoryModal from "./delete-category-modal";
 import CloseButton from "@/components/ui/buttons/close-button";
 import PenIcon from "@/components/icons/pen-icon";
 import TrashIcon from "@/components/icons/trash-icon";
+import { useTeamContext } from "@/src/contexts/team-context";
 
 interface EditCategoryModalProps {
   isOpen: boolean;
@@ -22,8 +23,10 @@ export default function EditCategoryModal({
   category,
   onSuccess,
 }: EditCategoryModalProps) {
+  const { teamId } = useTeamContext();
   const { updateCategory, deleteCategory, categories } = useBoardCategories(
     category?.boardId,
+    teamId ?? undefined,
   );
   const [name, setName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);

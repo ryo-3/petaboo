@@ -849,7 +849,11 @@ function BoardDetailScreen({
 
   // チームモードかどうかでボード一覧を切り替え
   const allBoards = teamMode ? teamBoards : personalBoards;
-  const { categories } = useBoardCategories();
+  // ボードカテゴリーを取得（ボードID・チームIDを指定）
+  const { categories } = useBoardCategories(
+    boardId,
+    teamMode && teamId ? teamId : undefined,
+  );
 
   const headerShowMemo = rightPanelMode === "task-list" ? false : showMemo;
   const headerShowTask = rightPanelMode === "memo-list" ? false : showTask;
@@ -1456,6 +1460,7 @@ function BoardDetailScreen({
                                   }
                                   allBoardItems={safeAllBoardItems}
                                   allAttachments={allTaskAttachments || []}
+                                  allCategories={categories}
                                   selectedTask={selectedTask}
                                   onCreateNewTask={handleCreateNewTask}
                                   onSetRightPanelMode={setRightPanelMode}
@@ -1770,6 +1775,7 @@ function BoardDetailScreen({
                                     }
                                     allBoardItems={safeAllBoardItems}
                                     allAttachments={allTaskAttachments || []}
+                                    allCategories={categories}
                                     selectedTask={selectedTask}
                                     onCreateNewTask={handleCreateNewTask}
                                     onSetRightPanelMode={setRightPanelMode}
@@ -2044,6 +2050,7 @@ function BoardDetailScreen({
                                     }
                                     allBoardItems={safeAllBoardItems}
                                     allAttachments={allTaskAttachments || []}
+                                    allCategories={categories}
                                     selectedTask={selectedTask}
                                     onCreateNewTask={handleCreateNewTask}
                                     onSetRightPanelMode={setRightPanelMode}
@@ -2280,6 +2287,7 @@ function BoardDetailScreen({
                                 }
                                 allBoardItems={safeAllBoardItems}
                                 allAttachments={allTaskAttachments || []}
+                                allCategories={categories}
                                 selectedTask={selectedTask}
                                 onCreateNewTask={handleCreateNewTask}
                                 onSetRightPanelMode={setRightPanelMode}
@@ -2413,6 +2421,7 @@ function BoardDetailScreen({
                                   }
                                   allBoardItems={safeAllBoardItems}
                                   allAttachments={allTaskAttachments || []}
+                                  allCategories={categories}
                                   selectedTask={selectedTask}
                                   onCreateNewTask={handleCreateNewTask}
                                   onSetRightPanelMode={setRightPanelMode}
@@ -2555,6 +2564,7 @@ function BoardDetailScreen({
                 allTaggings={(safeAllTaggings || []) as Tagging[]}
                 allBoardItems={safeAllBoardItems}
                 allAttachments={allTaskAttachments || []}
+                allCategories={categories}
                 selectedTask={selectedTask}
                 onCreateNewTask={handleCreateNewTask}
                 onSetRightPanelMode={setRightPanelMode}

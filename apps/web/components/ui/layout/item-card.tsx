@@ -41,6 +41,9 @@ interface ItemCardProps {
 
   // 初期選択ボードID
   initialBoardId?: number;
+
+  // ボードカテゴリー名（ボード詳細画面でのみ表示）
+  boardCategoryName?: string;
 }
 
 function ItemCard({
@@ -60,7 +63,7 @@ function ItemCard({
   preloadedBoards = [],
   preloadedAttachments = [],
   teamMode = false,
-  initialBoardId,
+  boardCategoryName,
 }: ItemCardProps) {
   const isDeleted = variant === "deleted";
   const isMemo = itemType === "memo";
@@ -197,6 +200,12 @@ function ItemCard({
                 >
                   {getPriorityText(task.priority)}
                 </span>
+                {/* ボードカテゴリー表示（ボード詳細画面でのみ） */}
+                {boardCategoryName && (
+                  <span className="text-sm text-indigo-600 font-semibold">
+                    #{boardCategoryName}
+                  </span>
+                )}
                 {/* 担当者表示（チームモードのみ） */}
                 {teamMode && hasAssignee && (
                   <div className="flex items-center gap-1">

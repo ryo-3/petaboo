@@ -23,6 +23,7 @@ interface MobileSelectorModalProps {
   setBoardCategoryId: (value: number | null) => void;
   categories: BoardCategory[];
   initialBoardId: number;
+  teamId?: number;
 
   // 期限
   dueDate: string;
@@ -43,6 +44,7 @@ export default function MobileSelectorModal({
   setBoardCategoryId,
   categories,
   initialBoardId,
+  teamId,
   dueDate,
   setDueDate,
   isDeleted,
@@ -115,6 +117,7 @@ export default function MobileSelectorModal({
               onChange={isDeleted ? () => {} : setBoardCategoryId}
               categories={categories}
               boardId={initialBoardId}
+              teamId={teamId}
               disabled={isDeleted}
               allowCreate={true}
             />

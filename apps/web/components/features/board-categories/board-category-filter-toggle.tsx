@@ -4,6 +4,7 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import FilterIcon from "@/components/icons/filter-icon";
 import Tooltip from "@/components/ui/base/tooltip";
 import { useBoardCategories } from "@/src/hooks/use-board-categories";
+import { useTeamContext } from "@/src/contexts/team-context";
 
 interface BoardCategoryFilterToggleProps {
   boardId: number;
@@ -20,7 +21,8 @@ export default function BoardCategoryFilterToggle({
   buttonSize = "size-6",
   iconSize = "size-4",
 }: BoardCategoryFilterToggleProps) {
-  const { categories } = useBoardCategories(boardId);
+  const { teamId } = useTeamContext();
+  const { categories } = useBoardCategories(boardId, teamId ?? undefined);
   const [showSelector, setShowSelector] = useState(false);
   const [showTooltip, setShowTooltip] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);

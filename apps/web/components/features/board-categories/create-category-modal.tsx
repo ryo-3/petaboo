@@ -54,11 +54,12 @@ export default function CreateCategoryModal({
 
     setIsSubmitting(true);
     try {
-      const newCategory = await createCategory({
+      const categoryData = {
         ...formData,
         name: formData.name.trim(),
         ...(teamId && { teamId }),
-      });
+      };
+      const newCategory = await createCategory(categoryData);
 
       // 成功時の処理
       onSuccess(newCategory.id);

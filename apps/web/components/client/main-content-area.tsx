@@ -115,14 +115,6 @@ export function MainContentArea({
   // サイドバークリック時に即座に切り替わるようにする
   const isPersonalBoardDetailPage = showingBoardDetail;
 
-  console.log("[MainContentArea] render", {
-    screenMode,
-    showingBoardDetail,
-    isPersonalBoardDetailPage,
-    boardId,
-    initialBoardName,
-  });
-
   // 🎯 統一フック（個人用）- 最上位で1つだけ作成
   const personalMemoOperations = useUnifiedItemOperations({
     itemType: "memo",

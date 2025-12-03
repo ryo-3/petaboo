@@ -185,7 +185,8 @@ function TaskEditor({
     : rawTask;
 
   const queryClient = useQueryClient();
-  const { categories } = useBoardCategories(initialBoardId);
+  // ボードカテゴリーを取得（チームモード時はteamIdを渡す）
+  const { categories } = useBoardCategories(initialBoardId, teamId);
 
   // 削除済みタスクかどうかを判定
   const isDeleted = task
@@ -1544,6 +1545,7 @@ function TaskEditor({
                       }
                       categories={categories}
                       boardId={initialBoardId}
+                      teamId={teamId}
                       disabled={isDeleted}
                       allowCreate={true}
                       hideChevron={true}
@@ -1586,6 +1588,7 @@ function TaskEditor({
               setBoardCategoryId={handleBoardCategoryChange || (() => {})}
               categories={categories}
               initialBoardId={initialBoardId!}
+              teamId={teamId}
               dueDate={dueDate}
               setDueDate={setDueDate}
               isDeleted={isDeleted}

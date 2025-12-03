@@ -1592,20 +1592,25 @@ function TaskEditor({
             />
 
             {/* 作成者・日付を表示（showDateAtBottom=trueかつツールバー非表示時のみ） */}
-            {task && task.id !== 0 && !toolbarVisible && showDateAtBottom && (
-              <div className="flex justify-end items-center gap-2 mr-2 mt-1 mb-1">
-                <CreatorAvatar
-                  createdBy={createdBy}
-                  avatarColor={createdByAvatarColor}
-                  teamMode={teamMode}
-                  size="md"
-                  className=""
-                />
-                <DateInfo
-                  item={task as Task}
-                  isEditing={!isDeleted}
-                  size="sm"
-                />
+            {/* 新規作成時でもMemoEditorと同様の余白を確保 */}
+            {!toolbarVisible && showDateAtBottom && (
+              <div className="flex justify-end items-center gap-2 mr-2 mt-1 mb-1 h-[20px]">
+                {task && task.id !== 0 && (
+                  <>
+                    <CreatorAvatar
+                      createdBy={createdBy}
+                      avatarColor={createdByAvatarColor}
+                      teamMode={teamMode}
+                      size="md"
+                      className=""
+                    />
+                    <DateInfo
+                      item={task as Task}
+                      isEditing={!isDeleted}
+                      size="sm"
+                    />
+                  </>
+                )}
               </div>
             )}
 

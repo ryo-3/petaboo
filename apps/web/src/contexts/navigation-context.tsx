@@ -12,6 +12,10 @@ import {
 import type { Memo } from "@/src/types/memo";
 import type { Task } from "@/src/types/task";
 import { usePathname, useSearchParams } from "next/navigation";
+import {
+  getTabFromParams,
+  getBoardSlugFromParams,
+} from "@/src/utils/teamUrlUtils";
 
 type ScreenMode =
   | "home"
@@ -146,9 +150,6 @@ export function NavigationProvider({
     "memo" | "task" | "board" | null
   >(null);
 
-  // チーム詳細ページの即座のタブ切り替え用（URL更新前の状態）
-  const [teamActiveTab, setTeamActiveTab] = useState<string | null>(null);
-
   const pathname = usePathname();
 
   const searchParams = useSearchParams();
@@ -159,64 +160,10 @@ export function NavigationProvider({
     const isTeamDetailPageUrl =
       pathname.startsWith("/team/") && pathname !== "/team";
 
-    // チーム詳細ページのタブ判定（最適化・楽観的更新対応）
+    // チーム詳細ページのタブ判定（共通ユーティリティを使用）
     if (isTeamDetailPageUrl) {
-      // 新形式: 値が空のキーをボードslugとして扱う（?PETABOO&task=22 形式）
-      const getBoardSlugFromParams = (): string | null => {
-        for (const [key, value] of searchParams.entries()) {
-          if (
-            value === "" &&
-            ![
-              "boards",
-              "memo",
-              "task",
-              "search",
-              "team-list",
-              "team-settings",
-              "memos",
-              "tasks",
-            ].includes(key)
-          ) {
-            return key.toUpperCase();
-          }
-        }
-        return searchParams.get("board") || searchParams.get("slug");
-      };
-      const boardSlugFromParams = getBoardSlugFromParams();
-
-      // 新形式・旧形式の両方に対応したタブ取得
-      let currentTab: string | null = null;
-      if (boardSlugFromParams) {
-        currentTab = "board";
-      } else if (searchParams.has("memo")) {
-        currentTab = "memos"; // 新形式: ?memo → memosタブ
-      } else if (searchParams.has("task")) {
-        currentTab = "tasks"; // 新形式: ?task → tasksタブ
-      } else if (searchParams.has("boards")) {
-        currentTab = "boards";
-      } else if (searchParams.has("search")) {
-        currentTab = "search";
-      } else if (searchParams.has("team-list")) {
-        currentTab = "team-list";
-      } else if (searchParams.has("team-settings")) {
-        currentTab = "team-settings";
-      } else if (searchParams.has("memos")) {
-        currentTab = "memos"; // 旧形式の互換性
-      } else if (searchParams.has("tasks")) {
-        currentTab = "tasks"; // 旧形式の互換性
-      } else {
-        // 旧形式のtabパラメータもチェック
-        const tabParam = searchParams.get("tab");
-        if (tabParam) {
-          currentTab = tabParam;
-        } else {
-          // パラメータがない場合はoverview（ホーム画面）
-          currentTab = "overview";
-        }
-      }
-
-      // teamActiveTabがあればそれを優先、なければURLパラメータを使用（即座の反映）
-      const activeTab = teamActiveTab || currentTab;
+      const boardSlugFromParams = getBoardSlugFromParams(searchParams);
+      const activeTab = getTabFromParams(searchParams);
 
       // チームボード詳細はクエリパラメータ形式（新形式: ?SLUG, 旧形式: ?board=xxx, レガシー: ?tab=board&slug=xxx）
       const isTeamBoardDetailPage =
@@ -327,29 +274,12 @@ export function NavigationProvider({
     showTeamCreate,
     showingBoardDetail,
     optimisticMode,
-    teamActiveTab,
   ]);
 
-  // URL変更時にoptimisticModeとteamActiveTabをクリア
+  // URL変更時にoptimisticModeをクリア
   useEffect(() => {
     setOptimisticMode(null);
-    setTeamActiveTab(null);
   }, [pathname, searchParams]);
-
-  // チーム詳細ページのタブ変更を即座に反映
-  useEffect(() => {
-    const handleTeamTabChange = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      const { activeTab } = customEvent.detail;
-      setTeamActiveTab(activeTab);
-    };
-
-    window.addEventListener("team-tab-change", handleTeamTabChange);
-
-    return () => {
-      window.removeEventListener("team-tab-change", handleTeamTabChange);
-    };
-  }, []);
 
   // TODO: 必要に応じて個別キャッシュ無効化を実装する
   // - メモ画面: 特定カテゴリや長時間経過時のみ無効化

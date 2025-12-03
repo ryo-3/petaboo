@@ -181,11 +181,6 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
     const newScreenMode = getModeFromUrl(pathname, searchParams);
     setScreenMode(newScreenMode);
 
-    // チーム詳細ページのタブ変更イベントをリッスン
-    const handleTeamTabChange = (event: CustomEvent) => {
-      // activeTabはURL経由で管理されるため、特に処理不要
-    };
-
     // チームボード名変更イベントをリッスン
     const handleTeamBoardNameChange = (event: CustomEvent) => {
       const { boardName } = event.detail;
@@ -221,11 +216,6 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
     };
 
     window.addEventListener(
-      "team-tab-change",
-      handleTeamTabChange as EventListener,
-    );
-
-    window.addEventListener(
       "team-board-name-change",
       handleTeamBoardNameChange as EventListener,
     );
@@ -251,10 +241,6 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
     );
 
     return () => {
-      window.removeEventListener(
-        "team-tab-change",
-        handleTeamTabChange as EventListener,
-      );
       window.removeEventListener(
         "team-board-name-change",
         handleTeamBoardNameChange as EventListener,

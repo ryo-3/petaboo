@@ -45,14 +45,9 @@ function Header() {
   // 個人ページの現在モードを取得（楽観的更新対応）
   const { currentMode, iconStates, screenMode } = useNavigation();
 
-  // チーム側のactiveTabを取得（即座に切り替えるため）
+  // チーム側のactiveTabを取得（Context経由で即座に切り替え）
   const teamDetailContext = useTeamDetailSafe();
   const teamActiveTab = teamDetailContext?.activeTab;
-
-  // 楽観的なチームタブ状態（イベントから即座に取得）
-  const [optimisticTeamTab, setOptimisticTeamTab] = useState<string | null>(
-    null,
-  );
 
   // ボード名と説明の状態管理
   const [boardTitle, setBoardTitle] = useState<string | null>(null);
@@ -118,8 +113,8 @@ function Header() {
     const isBoardListPage =
       isPersonalPage && iconStates.board && !isPersonalBoardDetailPage;
 
-    // チーム側は楽観的タブ状態を優先（即座に切り替え）
-    const effectiveTeamTab = optimisticTeamTab || teamActiveTab;
+    // チーム側はContext経由で即座に切り替え
+    const effectiveTeamTab = teamActiveTab;
     const isTeamMemoListPage =
       teamName &&
       pathname === `/team/${teamName}` &&
@@ -144,15 +139,7 @@ function Header() {
       isTaskListPage,
       isBoardListPage,
     };
-  }, [
-    pathname,
-    teamName,
-    teamActiveTab,
-    optimisticTeamTab,
-    iconStates,
-    currentTab,
-    searchParams,
-  ]);
+  }, [pathname, teamName, teamActiveTab, iconStates, currentTab, searchParams]);
 
   const {
     isTeamBoardPage,
@@ -180,11 +167,6 @@ function Header() {
       setBoardDescription(null);
     };
 
-    const handleTeamTabChange = (event: CustomEvent) => {
-      const { activeTab } = event.detail;
-      setOptimisticTeamTab(activeTab);
-    };
-
     window.addEventListener(
       "team-board-name-change",
       handleBoardNameChange as EventListener,
@@ -195,11 +177,6 @@ function Header() {
       handleClearBoardName as EventListener,
     );
 
-    window.addEventListener(
-      "team-tab-change",
-      handleTeamTabChange as EventListener,
-    );
-
     return () => {
       window.removeEventListener(
         "team-board-name-change",
@@ -208,10 +185,6 @@ function Header() {
       window.removeEventListener(
         "team-clear-board-name",
         handleClearBoardName as EventListener,
-      );
-      window.removeEventListener(
-        "team-tab-change",
-        handleTeamTabChange as EventListener,
       );
     };
   }, []);

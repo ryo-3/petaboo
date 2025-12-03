@@ -48,6 +48,13 @@ import { useNavigation } from "@/src/contexts/navigation-context";
 import { useAttachments } from "@/src/hooks/use-attachments";
 import { useTeamComments } from "@/src/hooks/use-team-comments";
 import { useToast } from "@/src/contexts/toast-context";
+import {
+  getTabFromParams,
+  getBoardSlugFromParams,
+  getMemoIdFromParams,
+  getTaskIdFromParams,
+  type TeamTab,
+} from "@/src/utils/teamUrlUtils";
 
 interface TeamDetailProps {
   customUrl: string;
@@ -129,6 +136,21 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     useState<DeletedMemo | null>(null);
   const [selectedDeletedTask, setSelectedDeletedTask] =
     useState<DeletedTask | null>(null);
+
+  // 🧹 選択状態クリアを統一
+  const clearSelections = useCallback(
+    (options: { memo?: boolean; task?: boolean; all?: boolean }) => {
+      if (options.all || options.memo) {
+        setSelectedMemo(null);
+        setSelectedDeletedMemo(null);
+      }
+      if (options.all || options.task) {
+        setSelectedTask(null);
+        setSelectedDeletedTask(null);
+      }
+    },
+    [],
+  );
 
   // TaskScreenの作成モード状態を監視
   const [isTaskCreateMode, setIsTaskCreateMode] = useState(false);
@@ -318,106 +340,20 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     );
   };
 
-  // URLのクエリパラメータからタブとアイテムIDを取得
-  const getTabFromURL = () => {
-    // 新形式: 値が空のキーがあればボード詳細（?PETABOO&task=22 形式）
-    for (const [key, value] of searchParams.entries()) {
-      if (
-        value === "" &&
-        ![
-          "boards",
-          "memo",
-          "task",
-          "search",
-          "team-list",
-          "team-settings",
-          "memos",
-          "tasks",
-        ].includes(key)
-      ) {
-        return "board";
-      }
-    }
-    // パラメータの存在から自動判定（新形式）
-    if (searchParams.has("board")) return "board";
-    if (searchParams.has("memo")) return "memos"; // memo（値あり/なし）→ memosタブ
-    if (searchParams.has("task")) return "tasks"; // task（値あり/なし）→ tasksタブ
-    if (searchParams.has("boards")) return "boards";
-    if (searchParams.has("search")) return "search";
-    if (searchParams.has("team-list")) return "team-list";
-    if (searchParams.has("team-settings")) return "team-settings";
-    // 旧形式の互換性（後で削除される）
-    if (searchParams.has("memos")) return "memos";
-    if (searchParams.has("tasks")) return "tasks";
-
-    // 旧形式の互換性対応
-    const tab = searchParams.get("tab");
-    if (tab === "settings") {
-      return "team-settings";
-    }
-
-    if (
-      tab === "memos" ||
-      tab === "tasks" ||
-      tab === "boards" ||
-      tab === "board" ||
-      tab === "team-list" ||
-      tab === "team-settings" ||
-      tab === "search"
-    ) {
-      return tab;
-    }
-
-    // デフォルトはoverview（ホーム画面）
-    return "overview";
-  };
-
-  const getMemoIdFromURL = () => {
-    return searchParams.get("memo");
-  };
-
-  const getTaskIdFromURL = () => {
-    return searchParams.get("task");
-  };
-
-  const getBoardSlugFromURL = () => {
-    // 新形式: 値が空のキーをボードslugとして扱う（?PETABOO&task=22 形式）
-    for (const [key, value] of searchParams.entries()) {
-      if (
-        value === "" &&
-        ![
-          "boards",
-          "memo",
-          "task",
-          "search",
-          "team-list",
-          "team-settings",
-          "memos",
-          "tasks",
-        ].includes(key)
-      ) {
-        return key.toUpperCase();
-      }
-    }
-    // 旧形式（board=xxx, slug=xxx）との互換性
-    return searchParams.get("board") || searchParams.get("slug");
-  };
+  // URLのクエリパラメータからタブとアイテムIDを取得（共通ユーティリティを使用）
+  const getTabFromURL = () => getTabFromParams(searchParams);
+  const getMemoIdFromURL = () => getMemoIdFromParams(searchParams);
+  const getTaskIdFromURL = () => getTaskIdFromParams(searchParams);
+  const getBoardSlugFromURL = () => getBoardSlugFromParams(searchParams);
 
   // タブ管理（URLと同期）
-  const [activeTab, setActiveTab] = useState<
-    | "overview"
-    | "memos"
-    | "tasks"
-    | "boards"
-    | "board"
-    | "team-list"
-    | "team-settings"
-    | "search"
-  >(getTabFromURL());
+  const [activeTab, setActiveTab] = useState<TeamTab>(getTabFromURL());
 
   // activeTabの変化を監視
   // 異なる画面グループ間の遷移時に選択状態をクリア
   const prevActiveTabRef = useRef(activeTab);
+  // 🛡️ URL逆流防止: handleTabChangeで設定した期待値を保持
+  const pendingTabRef = useRef<string | null>(null);
   useEffect(() => {
     const prevTab = prevActiveTabRef.current;
 
@@ -434,14 +370,11 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
     // タスク/メモ ⇔ ボード間の遷移時にクリア
     if ((prevIsTaskMemo && currIsBoard) || (prevIsBoard && currIsTaskMemo)) {
-      setSelectedMemo(null);
-      setSelectedTask(null);
-      setSelectedDeletedMemo(null);
-      setSelectedDeletedTask(null);
+      clearSelections({ all: true });
     }
 
     prevActiveTabRef.current = activeTab;
-  }, [activeTab]);
+  }, [activeTab, clearSelections]);
 
   // モバイル用：通知/アクティビティの切り替え
   const [mobileOverviewTab, setMobileOverviewTab] = useState<
@@ -560,10 +493,19 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     // activeTabがoverviewの時はリダイレクトしない（無限ループ防止）
 
     const newTab = getTabFromURL();
-    // URL同期確認のみ（状態更新は handleTabChange で即座に実行済み）
+
+    // 🛡️ URL逆流防止: pendingTabRef がある場合
+    if (pendingTabRef.current !== null) {
+      if (pendingTabRef.current === newTab) {
+        // URL更新完了 → フラグクリア
+        pendingTabRef.current = null;
+      }
+      // URL更新中は上書きしない（逆流防止）
+      return;
+    }
+
     // ブラウザの戻る/進むボタンでの変更時のみ状態を更新
     if (newTab !== activeTab) {
-      // ブラウザナビゲーション（戻る/進む）による変更の場合のみ更新
       setActiveTab(newTab);
       setActiveTabContext(newTab);
     }
@@ -611,6 +553,9 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         | "search",
       options?: { slug?: string; fromSidebar?: boolean },
     ) => {
+      // 🛡️ URL逆流防止: 期待値を記録
+      pendingTabRef.current = tab;
+
       // 🚀 楽観的更新：サイドバーアイコンを即座に切り替え
       if (tab === "memos") {
         setOptimisticMode("memo");
@@ -671,12 +616,10 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
       // タブ切り替え時に選択状態をクリア
       if (tab !== "memos") {
-        setSelectedMemo(null);
-        setSelectedDeletedMemo(null);
+        clearSelections({ memo: true });
       }
       if (tab !== "tasks") {
-        setSelectedTask(null);
-        setSelectedDeletedTask(null);
+        clearSelections({ task: true });
       }
 
       // タブに応じた新しいパラメータを設定（値なしパラメータは手動で追加）
@@ -716,15 +659,6 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     },
     [router, customUrl, searchParams, setActiveTabContext, setOptimisticMode],
   );
-
-  // activeTabが変更された時にlayoutに通知
-  useEffect(() => {
-    window.dispatchEvent(
-      new CustomEvent("team-tab-change", {
-        detail: { activeTab },
-      }),
-    );
-  }, [activeTab]);
 
   // ボード削除後のトースト表示（URLパラメータ変化を検知）
   useEffect(() => {
@@ -792,8 +726,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
     const handleBackToMemoList = (_event: CustomEvent) => {
       // メモの選択を解除してメモ一覧に戻る
-      setSelectedMemo(null);
-      setSelectedDeletedMemo(null);
+      clearSelections({ memo: true });
       setIsCreatingMemo(false);
       // handleTabChangeを使って即座にタブ切り替え（サイドバー経由フラグを付与）
       handleTabChange("memos", { fromSidebar: true });
@@ -801,9 +734,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
     const handleBackToTaskList = (_event: CustomEvent) => {
       // タスクの選択を解除してタスク一覧に戻る
-      setSelectedTask(null);
+      clearSelections({ task: true });
       setSelectedTaskId(null);
-      setSelectedDeletedTask(null);
       setIsCreatingTask(false);
       // handleTabChangeを使って即座にタブ切り替え（サイドバー経由フラグを付与）
       handleTabChange("tasks", { fromSidebar: true });

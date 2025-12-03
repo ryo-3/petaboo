@@ -85,7 +85,32 @@ export function useCreateTask(options?: {
       }
     },
     onSuccess: (newTask) => {
-      // ボードコンテキストの場合、ボードアイテムリストを再取得してboardIndexを反映
+      // 1. まず楽観的更新でUIを即座に反映（invalidateより先に実行）
+      if (teamMode && teamId) {
+        // チームタスク一覧に新しいタスクを楽観的に追加
+        queryClient.setQueryData<Task[]>(["team-tasks", teamId], (oldTasks) => {
+          if (!oldTasks) return [newTask];
+          // 重複チェック（displayIdで比較）
+          const exists = oldTasks.some(
+            (t) => t.displayId === newTask.displayId,
+          );
+          if (exists) return oldTasks;
+          return [...oldTasks, newTask];
+        });
+      } else {
+        // 個人タスクのキャッシュを楽観的に更新
+        queryClient.setQueryData<Task[]>(["tasks"], (oldTasks) => {
+          if (!oldTasks) return [newTask];
+          // 重複チェック（displayIdで比較）
+          const exists = oldTasks.some(
+            (t) => t.displayId === newTask.displayId,
+          );
+          if (exists) return oldTasks;
+          return [...oldTasks, newTask];
+        });
+      }
+
+      // 2. ボードコンテキストの場合、ボードアイテムリストを再取得してboardIndexを反映
       if (boardId) {
         if (teamMode && teamId) {
           // チームボード
@@ -114,27 +139,23 @@ export function useCreateTask(options?: {
         }
       }
 
-      // APIが不完全なデータしか返さないため、タスク一覧を無効化して再取得
+      // 3. バックグラウンドでタスク一覧を再取得（楽観的更新を上書きしないようにexactを使用）
+      // invalidateではなくrefetchQueriesを使用し、staleのままで再フェッチ
       if (teamMode && teamId) {
-        queryClient.invalidateQueries({ queryKey: ["team-tasks", teamId] });
-
-        // チームタスク一覧に新しいタスクを楽観的に追加
-        queryClient.setQueryData<Task[]>(["team-tasks", teamId], (oldTasks) => {
-          if (!oldTasks) return [newTask];
-          return [...oldTasks, newTask];
+        // 他のボードからのアイテムも含めた完全なリストを取得するためバックグラウンドrefetch
+        queryClient.refetchQueries({
+          queryKey: ["team-tasks", teamId],
+          exact: true,
         });
       } else {
-        queryClient.invalidateQueries({ queryKey: ["tasks"] });
-
-        // 個人タスクのキャッシュを更新
-        queryClient.setQueryData<Task[]>(["tasks"], (oldTasks) => {
-          if (!oldTasks) return [newTask];
-          return [...oldTasks, newTask];
-        });
+        queryClient.refetchQueries({ queryKey: ["tasks"], exact: true });
       }
 
-      // ボード統計の再計算のためボード一覧を無効化
+      // 4. ボード統計の再計算のためボード一覧を無効化
       queryClient.invalidateQueries({ queryKey: ["boards"] });
+      if (teamMode && teamId) {
+        queryClient.invalidateQueries({ queryKey: ["team-boards", teamId] });
+      }
     },
     onError: (error) => {
       console.error("タスク作成に失敗しました:", error);

@@ -110,10 +110,16 @@ export function useCreateMemo(options?: {
       }
     },
     onSuccess: (newMemo) => {
+      // 1. まず楽観的更新でUIを即座に反映
       if (teamMode && teamId) {
-        // チームメモのキャッシュを更新
+        // チームメモのキャッシュを更新（重複チェック付き）
         queryClient.setQueryData<Memo[]>(["team-memos", teamId], (oldMemos) => {
           if (!oldMemos) return [newMemo];
+          // 重複チェック（displayIdで比較）
+          const exists = oldMemos.some(
+            (m) => m.displayId === newMemo.displayId,
+          );
+          if (exists) return oldMemos;
           return [...oldMemos, newMemo];
         });
 
@@ -124,6 +130,15 @@ export function useCreateMemo(options?: {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (oldData: any) => {
               if (oldData?.items) {
+                // 重複チェック
+                const exists = oldData.items.some(
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  (item: any) =>
+                    item.itemType === "memo" &&
+                    item.content?.displayId === newMemo.displayId,
+                );
+                if (exists) return oldData;
+
                 const newBoardItem = {
                   id: `memo_${newMemo.id}`, // ボードアイテムID
                   boardId,
@@ -145,21 +160,33 @@ export function useCreateMemo(options?: {
           );
         }
 
-        // バックグラウンドでデータを再取得（楽観的更新の検証）
-        setTimeout(() => {
+        // 2. バックグラウンドでデータを再取得（楽観的更新の検証）
+        queryClient.refetchQueries({
+          queryKey: ["team-memos", teamId],
+          exact: true,
+        });
+        if (boardId) {
           queryClient.refetchQueries({
-            predicate: (query) => {
-              const key = query.queryKey as string[];
-              return key[0] === "team-boards" && key[1] === teamId.toString();
-            },
+            queryKey: ["team-boards", teamId.toString(), boardId, "items"],
           });
-        }, 1000);
+        }
+        // ボード一覧の統計も更新
+        queryClient.invalidateQueries({ queryKey: ["team-boards", teamId] });
       } else {
-        // 個人メモのキャッシュを更新
+        // 個人メモのキャッシュを更新（重複チェック付き）
         queryClient.setQueryData<Memo[]>(["memos"], (oldMemos) => {
           if (!oldMemos) return [newMemo];
+          // 重複チェック（displayIdで比較）
+          const exists = oldMemos.some(
+            (m) => m.displayId === newMemo.displayId,
+          );
+          if (exists) return oldMemos;
           return [...oldMemos, newMemo];
         });
+
+        // バックグラウンドでrefetch
+        queryClient.refetchQueries({ queryKey: ["memos"], exact: true });
+
         // ボード関連キャッシュを無効化
         queryClient.invalidateQueries({
           queryKey: ["boards"],

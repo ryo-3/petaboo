@@ -20,6 +20,7 @@ import {
   useTeamDetail as useTeamDetailContext,
 } from "@/src/contexts/team-detail-context";
 import { getModeFromUrl, getActiveTabFromUrl } from "@/src/utils/modeUtils";
+import { getBoardSlugFromParams } from "@/src/utils/teamUrlUtils";
 import { useTeamDetail } from "@/src/hooks/use-team-detail";
 
 function TeamLayoutContent({ children }: { children: React.ReactNode }) {
@@ -27,7 +28,7 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const params = useParams();
-  const { setScreenMode, setOptimisticMode } = useNavigation();
+  const { setScreenMode } = useNavigation();
   const {
     selectedMemoId,
     setSelectedMemoId,
@@ -97,30 +98,8 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   const activeTab = getActiveTabFromUrl(pathname, searchParams);
 
   // チームボード詳細ページかどうかを判定（クエリパラメータベース）
-  // 新形式（?SLUG）、旧形式（board=xxx）、レガシー形式（tab=board&slug=xxx）に対応
-  const getBoardSlugFromParams = () => {
-    // 新形式: 値が空のキーをボードslugとして扱う（?PETABOO&task=22 形式）
-    for (const [key, value] of searchParams.entries()) {
-      if (
-        value === "" &&
-        ![
-          "boards",
-          "memo",
-          "task",
-          "search",
-          "team-list",
-          "team-settings",
-          "memos",
-          "tasks",
-        ].includes(key)
-      ) {
-        return key.toUpperCase();
-      }
-    }
-    // 旧形式
-    return searchParams.get("board") || searchParams.get("slug");
-  };
-  const boardSlugFromParams = getBoardSlugFromParams();
+  // 形式: ?board=SLUG
+  const boardSlugFromParams = getBoardSlugFromParams(searchParams);
   const isTeamBoardDetailPage =
     pathname.startsWith("/team/") && boardSlugFromParams !== null;
 
@@ -170,8 +149,7 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // ボード詳細タブの場合はslugを記憶
-    // 新形式（?SLUG）、旧形式（board=xxx）、レガシー形式（tab=board&slug=xxx）に対応
-    const boardSlug = getBoardSlugFromParams();
+    const boardSlug = getBoardSlugFromParams(searchParams);
 
     if (boardSlug) {
       setLastBoardSlug(boardSlug);
@@ -376,16 +354,18 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
       customUrl,
     });
 
-    // 🚀 楽観的更新をクリア（ボード詳細は特殊なタブなのでnull）
-    setOptimisticMode(null);
-
-    // 🚀 画面遷移のみ実行
-    // 選択状態のクリアはteam-detail.tsxのactiveTab変化時に行う
-    // （URLが変わってからactiveTabが変わるため、画面切り替え後にクリアされる）
+    // 🚀 team-detail.tsx の handleTabChange 経由で遷移
+    // これにより pendingTabRef が正しく設定され、URL競合を防ぐ
     if (lastBoardSlug) {
-      const newUrl = `/team/${customUrl}?${lastBoardSlug}`;
-      console.log("[handleBoardDetail] navigating to:", newUrl);
-      router.replace(newUrl, { scroll: false });
+      console.log(
+        "[handleBoardDetail] dispatching team-mode-change with board slug:",
+        lastBoardSlug,
+      );
+      window.dispatchEvent(
+        new CustomEvent("team-mode-change", {
+          detail: { mode: "board", pathname, slug: lastBoardSlug },
+        }),
+      );
     } else {
       console.log(
         "[handleBoardDetail] no lastBoardSlug, falling back to board list",

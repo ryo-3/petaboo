@@ -196,16 +196,23 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         ].includes(key)
       ) {
         if (key !== key.toUpperCase()) {
-          const params = new URLSearchParams();
-          // 大文字化したslugを最初に追加
-          params.append(key.toUpperCase(), "");
-          // 他のパラメータを追加
+          // 値なしパラメータを正しく処理するため、URL文字列を手動構築
+          // URLSearchParams.append('KEY', '') は 'KEY=' となるため使用しない
+          const otherParams: string[] = [];
           for (const [k, v] of searchParams.entries()) {
             if (k !== key) {
-              params.set(k, v);
+              if (v === "") {
+                otherParams.push(k);
+              } else {
+                otherParams.push(`${k}=${encodeURIComponent(v)}`);
+              }
             }
           }
-          router.replace(`/team/${customUrl}?${params.toString()}`, {
+          const newUrl =
+            otherParams.length > 0
+              ? `?${key.toUpperCase()}&${otherParams.join("&")}`
+              : `?${key.toUpperCase()}`;
+          router.replace(`/team/${customUrl}${newUrl}`, {
             scroll: false,
           });
           return;
@@ -496,12 +503,22 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
     // 🛡️ URL逆流防止: pendingTabRef がある場合
     if (pendingTabRef.current !== null) {
+      console.log("[pendingTabRef check]", {
+        pendingTab: pendingTabRef.current,
+        newTab,
+        willClear: pendingTabRef.current === newTab,
+      });
       if (pendingTabRef.current === newTab) {
         // URL更新完了 → フラグクリア
         pendingTabRef.current = null;
+      } else if (pendingTabRef.current === "board" && newTab === "board") {
+        // ボード詳細への遷移リクエスト中に、実際にボード詳細URLになった場合のみクリア
+        pendingTabRef.current = null;
+      } else {
+        // URL更新中は上書きしない（逆流防止）
+        // ※ newTab が "board" でも pendingTabRef が "tasks" などの場合は return
+        return;
       }
-      // URL更新中は上書きしない（逆流防止）
-      return;
     }
 
     // ブラウザの戻る/進むボタンでの変更時のみ状態を更新
@@ -581,43 +598,40 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       setActiveTabContext(tab); // Context を更新（ヘッダー表示切り替え用）
 
       // URLを更新
-      const params = new URLSearchParams(searchParams.toString());
+      // ⚠️ Next.js の searchParams は値なしパラメータを "KEY=" に変換するため使用しない
+      // window.location.search から直接取得して処理する
 
-      // 旧形式のパラメータを削除
-      params.delete("tab");
-      params.delete("slug");
+      // 削除すべきキー一覧（タブ関連・ボードslug関連）
+      const keysToRemove = new Set([
+        "tab",
+        "slug",
+        "memos",
+        "tasks",
+        "memo",
+        "task",
+        "boards",
+        "board",
+        "search",
+        "team-list",
+        "team-settings",
+      ]);
 
-      // 不要なタブパラメータを削除（新旧両形式）
-      params.delete("memos"); // 旧形式
-      params.delete("tasks"); // 旧形式
-      params.delete("memo"); // 新形式（タブ切り替え時は常に削除）
-      params.delete("task"); // 新形式（タブ切り替え時は常に削除）
-      params.delete("boards");
-      params.delete("board");
-      params.delete("search");
-      params.delete("team-list");
-      params.delete("team-settings");
+      // 現在のURLから直接パラメータを取得（Next.js のsearchParamsを経由しない）
+      const currentParams = new URLSearchParams(window.location.search);
 
-      // 新形式のボードslug（値が空のキー）を削除
-      const keysToDelete: string[] = [];
-      for (const [key, value] of params.entries()) {
-        if (
-          value === "" &&
-          ![
-            "boards",
-            "memo",
-            "task",
-            "search",
-            "team-list",
-            "team-settings",
-            "memos",
-            "tasks",
-          ].includes(key)
-        ) {
-          keysToDelete.push(key);
-        }
+      // 残すべきパラメータを収集（タブ系・ボードslug系は除外）
+      const remainingParams: string[] = [];
+      for (const [key, value] of currentParams.entries()) {
+        // 削除対象のキーはスキップ
+        if (keysToRemove.has(key)) continue;
+
+        // 値なしパラメータ（ボードslugなど）もスキップ
+        if (value === "") continue;
+
+        // 値ありパラメータは残す
+        remainingParams.push(`${key}=${encodeURIComponent(value)}`);
       }
-      keysToDelete.forEach((key) => params.delete(key));
+      const baseParams = remainingParams.join("&");
 
       // タブ切り替え時に選択状態をクリア
       if (tab !== "memos") {
@@ -630,41 +644,40 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       // タブに応じた新しいパラメータを設定（値なしパラメータは手動で追加）
       let newUrl = "";
       if (tab === "team-list") {
-        const baseParams = params.toString();
         newUrl = baseParams ? `?${baseParams}&team-list` : "?team-list";
       } else if (tab === "team-settings") {
-        const baseParams = params.toString();
         newUrl = baseParams ? `?${baseParams}&team-settings` : "?team-settings";
       } else if (tab === "board" && options?.slug) {
-        // 新形式: ?SLUG（board= を省略）
-        const baseParams = params.toString();
+        // ボード詳細: ?board=SLUG
         newUrl = baseParams
-          ? `?${options.slug.toUpperCase()}&${baseParams}`
-          : `?${options.slug.toUpperCase()}`;
+          ? `?board=${options.slug.toUpperCase()}&${baseParams}`
+          : `?board=${options.slug.toUpperCase()}`;
       } else if (tab === "memos") {
         // メモ一覧は ?memo（値なし）
-        const baseParams = params.toString();
         newUrl = baseParams ? `?${baseParams}&memo` : "?memo";
       } else if (tab === "boards") {
-        const baseParams = params.toString();
         newUrl = baseParams ? `?${baseParams}&boards` : "?boards";
       } else if (tab === "search") {
-        const baseParams = params.toString();
         newUrl = baseParams ? `?${baseParams}&search` : "?search";
       } else if (tab === "tasks") {
         // タスク一覧は ?task（値なし）
-        const baseParams = params.toString();
         newUrl = baseParams ? `?${baseParams}&task` : "?task";
       } else {
         // overview（ホーム）のみパラメータ不要
-        newUrl = params.toString() ? `?${params.toString()}` : "";
+        newUrl = baseParams ? `?${baseParams}` : "";
       }
 
       const finalUrl = `/team/${customUrl}${newUrl}`;
       console.log("[handleTabChange] navigating to:", finalUrl);
       router.replace(finalUrl, { scroll: false });
     },
-    [router, customUrl, searchParams, setActiveTabContext, setOptimisticMode],
+    [
+      customUrl,
+      router,
+      setActiveTabContext,
+      setOptimisticMode,
+      clearSelections,
+    ],
   );
 
   // ボード削除後のトースト表示（URLパラメータ変化を検知）
@@ -690,7 +703,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   // サイドバーからのイベントをリッスン
   useEffect(() => {
     const handleTeamModeChange = (event: CustomEvent) => {
-      const { mode } = event.detail;
+      const { mode, slug } = event.detail;
+      console.log("[handleTeamModeChange] received", { mode, slug });
 
       if (mode === "overview") {
         handleTabChange("overview", { fromSidebar: true });
@@ -699,7 +713,12 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       } else if (mode === "task") {
         handleTabChange("tasks", { fromSidebar: true });
       } else if (mode === "board") {
-        handleTabChange("boards", { fromSidebar: true });
+        // slugがある場合はボード詳細、ない場合はボード一覧
+        if (slug) {
+          handleTabChange("board", { slug, fromSidebar: true });
+        } else {
+          handleTabChange("boards", { fromSidebar: true });
+        }
       } else if (mode === "team-list") {
         handleTabChange("team-list", { fromSidebar: true });
       } else if (mode === "team-settings") {

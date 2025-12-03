@@ -3,18 +3,6 @@
  * URL形式の変換・解析ロジックを一元管理
  */
 
-// 新形式で使用されるパラメータキー（これらは値なしパラメータとして扱われる）
-const RESERVED_KEYS = [
-  "boards",
-  "memo",
-  "task",
-  "search",
-  "team-list",
-  "team-settings",
-  "memos", // 旧形式互換
-  "tasks", // 旧形式互換
-] as const;
-
 export type TeamTab =
   | "overview"
   | "memos"
@@ -27,23 +15,14 @@ export type TeamTab =
 
 /**
  * URLパラメータからボードslugを取得
- * 新形式: ?PETABOO (値なしキー)
- * 旧形式: ?board=xxx または ?slug=xxx
+ * 形式: ?board=SLUG または ?slug=SLUG（旧形式互換）
  */
 export function getBoardSlugFromParams(
   searchParams: URLSearchParams,
 ): string | null {
-  // 新形式: 値が空のキー（予約語以外）をボードslugとして扱う
-  for (const [key, value] of searchParams.entries()) {
-    if (
-      value === "" &&
-      !RESERVED_KEYS.includes(key as (typeof RESERVED_KEYS)[number])
-    ) {
-      return key.toUpperCase();
-    }
-  }
-  // 旧形式
-  return searchParams.get("board") || searchParams.get("slug");
+  // board= パラメータから取得（slug= は旧形式互換）
+  const boardParam = searchParams.get("board") || searchParams.get("slug");
+  return boardParam ? boardParam.toUpperCase() : null;
 }
 
 /**

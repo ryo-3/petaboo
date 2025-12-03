@@ -17,6 +17,14 @@ import type { TeamMember } from "@/src/hooks/use-team-detail";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594";
 
+/// URL競合防止用: 現在のURLからボードslugを取得するヘルパー
+const getCurrentBoardSlugFromUrl = (): string | null => {
+  const currentSearchParams = new URLSearchParams(window.location.search);
+  const boardParam =
+    currentSearchParams.get("board") || currentSearchParams.get("slug");
+  return boardParam ? boardParam.toUpperCase() : null;
+};
+
 interface TeamBoardDetailWrapperProps {
   slug: string;
   teamId?: number;
@@ -283,27 +291,39 @@ export function TeamBoardDetailWrapper({
     setSelectedMemo(null);
     setSelectedTask(null);
 
-    // URLからメモ/タスクIDを削除（新形式: ?SLUG）
-    router.replace(`/team/${customUrl}?${slug}`, {
-      scroll: false,
-    });
+    // 🛡️ URL競合防止: 現在のURLがボード詳細でない場合はURL更新をスキップ
+    const currentBoardSlug = getCurrentBoardSlugFromUrl();
+    if (currentBoardSlug !== slug.toUpperCase()) {
+      return;
+    }
+
+    // URLからメモ/タスクIDを削除
+    router.replace(`/team/${customUrl}?board=${slug}`, { scroll: false });
   };
 
   const handleSelectMemo = (memo: Memo | DeletedMemo | null) => {
+    // 🛡️ URL競合防止: 現在のURLがボード詳細でない場合はURL更新をスキップ
+    const currentBoardSlug = getCurrentBoardSlugFromUrl();
+    const isStillOnBoardDetail = currentBoardSlug === slug.toUpperCase();
+
     setSelectedTask(null);
     setSelectedMemo(memo);
+
+    // ボード詳細ページにいない場合はURL更新をスキップ
+    if (!isStillOnBoardDetail) {
+      return;
+    }
 
     // URLを更新（boardIndexを使用 - ボード内での連番）
     // 新規作成時 (displayId === "new") またはboardIndexが未設定の場合はURL更新をスキップ
     if (memo && memo.boardIndex && memo.boardIndex > 0) {
-      // boardIndexが存在する場合のみURL更新（新形式: ?SLUG&memo=N）
-      router.replace(`/team/${customUrl}?${slug}&memo=${memo.boardIndex}`, {
-        scroll: false,
-      });
+      // boardIndexが存在する場合のみURL更新
+      router.replace(
+        `/team/${customUrl}?board=${slug}&memo=${memo.boardIndex}`,
+        { scroll: false },
+      );
     } else if (!memo) {
-      router.replace(`/team/${customUrl}?${slug}`, {
-        scroll: false,
-      });
+      router.replace(`/team/${customUrl}?board=${slug}`, { scroll: false });
     }
     // 新規作成時またはboardIndex未設定時はURL更新をスキップ
   };
@@ -315,25 +335,41 @@ export function TeamBoardDetailWrapper({
         : null,
       slug,
       customUrl,
+      currentUrl: window.location.href,
     });
+
+    // 🛡️ URL競合防止: 現在のURLがボード詳細でない場合はURL更新をスキップ
+    // （タブ切り替え中にこの関数が呼ばれた場合の対策）
+    const currentBoardSlug = getCurrentBoardSlugFromUrl();
+    const isStillOnBoardDetail = currentBoardSlug === slug.toUpperCase();
+    console.log("[handleSelectTask] board check", {
+      currentBoardSlug,
+      expectedSlug: slug.toUpperCase(),
+      isStillOnBoardDetail,
+    });
+
     setSelectedMemo(null);
     setSelectedTask(task);
+
+    // ボード詳細ページにいない場合はURL更新をスキップ
+    if (!isStillOnBoardDetail) {
+      console.log(
+        "[handleSelectTask] skipping URL update - not on board detail",
+      );
+      return;
+    }
 
     // URLを更新（boardIndexを使用 - ボード内での連番）
     // 新規作成時 (displayId === "new") またはboardIndexが未設定の場合はURL更新をスキップ
     if (task && task.boardIndex && task.boardIndex > 0) {
-      // boardIndexが存在する場合のみURL更新（新形式: ?SLUG&task=N）
-      const newUrl = `/team/${customUrl}?${slug}&task=${task.boardIndex}`;
+      // boardIndexが存在する場合のみURL更新
+      const newUrl = `/team/${customUrl}?board=${slug}&task=${task.boardIndex}`;
       console.log("[handleSelectTask] updating URL to:", newUrl);
-      router.replace(newUrl, {
-        scroll: false,
-      });
+      router.replace(newUrl, { scroll: false });
     } else if (!task) {
-      const newUrl = `/team/${customUrl}?${slug}`;
+      const newUrl = `/team/${customUrl}?board=${slug}`;
       console.log("[handleSelectTask] clearing selection, URL:", newUrl);
-      router.replace(newUrl, {
-        scroll: false,
-      });
+      router.replace(newUrl, { scroll: false });
     }
     // 新規作成時またはboardIndex未設定時はURL更新をスキップ
   };
@@ -344,9 +380,9 @@ export function TeamBoardDetailWrapper({
     setSelectedMemo(memo as unknown as Memo);
   };
 
-  // チームボード設定画面への遷移（新形式: ?SLUG&settings=true）
+  // チームボード設定画面への遷移
   const handleSettings = () => {
-    router.push(`/team/${customUrl}?${slug.toUpperCase()}&settings=true`);
+    router.push(`/team/${customUrl}?board=${slug.toUpperCase()}&settings=true`);
   };
 
   // URLからの復元が必要な場合（URLパラメータあり＆選択なし）のみローディング表示

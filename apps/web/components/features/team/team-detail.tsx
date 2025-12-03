@@ -416,17 +416,24 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   >(getTabFromURL());
 
   // activeTabの変化を監視
-  // 前のactiveTabを記憶して、タスク/メモ→ボード切り替え時に選択状態をクリア
+  // 異なる画面グループ間の遷移時に選択状態をクリア
   const prevActiveTabRef = useRef(activeTab);
   useEffect(() => {
     const prevTab = prevActiveTabRef.current;
 
-    // タスク/メモ画面からボード画面に切り替わった時のみ、選択状態をクリア
+    // 画面グループを定義
+    const isTaskMemoTab = (tab: string) => tab === "tasks" || tab === "memos";
+    const isBoardTab = (tab: string) => tab === "board" || tab === "boards";
+
+    // 異なるグループ間の遷移時に選択状態をクリア
     // （画面切り替え後にクリアすることで閉じるアニメーションを見せない）
-    if (
-      (prevTab === "tasks" || prevTab === "memos") &&
-      (activeTab === "board" || activeTab === "boards")
-    ) {
+    const prevIsTaskMemo = isTaskMemoTab(prevTab);
+    const prevIsBoard = isBoardTab(prevTab);
+    const currIsTaskMemo = isTaskMemoTab(activeTab);
+    const currIsBoard = isBoardTab(activeTab);
+
+    // タスク/メモ ⇔ ボード間の遷移時にクリア
+    if ((prevIsTaskMemo && currIsBoard) || (prevIsBoard && currIsTaskMemo)) {
       setSelectedMemo(null);
       setSelectedTask(null);
       setSelectedDeletedMemo(null);

@@ -208,6 +208,14 @@ export function useUpdateTask(options?: {
                 data.assigneeId !== undefined
                   ? (data.assigneeId ?? null)
                   : (task.assigneeId ?? null),
+              assigneeName:
+                updatedTask.assigneeName !== undefined
+                  ? updatedTask.assigneeName
+                  : (task.assigneeName ?? null),
+              assigneeAvatarColor:
+                updatedTask.assigneeAvatarColor !== undefined
+                  ? updatedTask.assigneeAvatarColor
+                  : (task.assigneeAvatarColor ?? null),
               categoryId:
                 data.categoryId !== undefined
                   ? (data.categoryId ?? null)
@@ -262,6 +270,14 @@ export function useUpdateTask(options?: {
                         data.assigneeId !== undefined
                           ? (data.assigneeId ?? null)
                           : (item.content.assigneeId ?? null),
+                      assigneeName:
+                        updatedTask.assigneeName !== undefined
+                          ? updatedTask.assigneeName
+                          : (item.content.assigneeName ?? null),
+                      assigneeAvatarColor:
+                        updatedTask.assigneeAvatarColor !== undefined
+                          ? updatedTask.assigneeAvatarColor
+                          : (item.content.assigneeAvatarColor ?? null),
                       categoryId:
                         data.categoryId !== undefined
                           ? (data.categoryId ?? null)

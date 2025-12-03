@@ -2,6 +2,9 @@ import { BoardWithStats } from "@/src/types/board";
 import { useState } from "react";
 import TrashIcon from "@/components/icons/trash-icon";
 import PenIcon from "@/components/icons/pen-icon";
+import MemoIcon from "@/components/icons/memo-icon";
+import TaskIcon from "@/components/icons/task-icon";
+import CommentIcon from "@/components/icons/comment-icon";
 import Tooltip from "@/components/ui/base/tooltip";
 import ConfirmationModal from "@/components/ui/modals/confirmation-modal";
 
@@ -71,12 +74,12 @@ export default function BoardCard({
     <>
       <div
         onClick={onSelect}
-        className={`bg-white rounded-lg border p-6 hover:shadow-md transition-all cursor-pointer relative mr-2 md:mr-0 ${
+        className={`bg-white rounded-lg border-2 p-5 hover:shadow-md transition-all cursor-pointer relative ${
           mode === "deleted"
-            ? "border-red-200 bg-red-50"
+            ? "border-red-300 bg-red-50"
             : isSelected
-              ? "border-blue-300 bg-blue-50 shadow-md"
-              : "border-gray-200"
+              ? "border-blue-400 bg-blue-50 shadow-md"
+              : "border-gray-300"
         }`}
       >
         {/* 選択状態の場合はペンアイコンを表示 */}
@@ -124,20 +127,20 @@ export default function BoardCard({
 
           <div className="flex items-center gap-4 mb-3">
             <div className="flex items-center gap-1 text-sm text-gray-600">
-              <span className="text-xs">メモ</span>
-              <span className="font-medium">{board.memoCount}</span>
+              <MemoIcon className="size-4" />
+              <span className="font-semibold">{board.memoCount}</span>
             </div>
             <div className="flex items-center gap-1 text-sm text-gray-600">
-              <span className="text-xs">タスク</span>
-              <span className="font-medium">{board.taskCount}</span>
+              <TaskIcon className="size-4" />
+              <span className="font-semibold">{board.taskCount}</span>
             </div>
             <div className="flex items-center gap-1 text-sm text-gray-600">
-              <span className="text-xs">コメント</span>
-              <span className="font-medium">{board.commentCount}</span>
+              <CommentIcon className="size-4" />
+              <span className="font-semibold">{board.commentCount}</span>
             </div>
           </div>
 
-          <div className="text-xs text-gray-500 flex gap-4">
+          <div className="text-sm text-gray-500 flex gap-4">
             <div>作成: {createdDateString}</div>
             {createdAt.getTime() !== updatedAt.getTime() && (
               <div>更新: {updatedDateString}</div>

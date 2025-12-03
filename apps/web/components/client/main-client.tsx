@@ -646,6 +646,7 @@ function MainClient({
               (showingBoardDetail ? lastBoardId : undefined)
             }
             boardFromSlug={boardFromSlug}
+            lastBoardSlug={lastBoardSlug}
             initialBoardName={
               initialBoardName || boardFromSlug?.name || lastBoardName
             }

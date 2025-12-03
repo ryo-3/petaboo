@@ -22,10 +22,11 @@ interface BoardScreenProps {
     name: string;
     description?: string | null;
   }) => void;
+  selectedBoardSlug?: string | null;
 }
 
 const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(
-  ({ onBoardSelect }, ref) => {
+  ({ onBoardSelect, selectedBoardSlug }, ref) => {
     const { isTeamMode: teamMode, teamId } = useTeamContext();
     const { setShowingBoardDetail } = useNavigation();
     const router = useRouter();
@@ -151,6 +152,7 @@ const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(
             onPermanentDeleteBoard={handlePermanentDeleteBoard}
             teamMode={teamMode}
             teamId={teamId}
+            selectedBoardSlug={selectedBoardSlug}
           />
 
           <MobileFabButton

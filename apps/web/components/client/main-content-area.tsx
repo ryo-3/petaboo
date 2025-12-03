@@ -40,6 +40,7 @@ interface MainContentAreaProps {
   // ボード関連
   boardId?: number;
   boardFromSlug: Board | null | undefined;
+  lastBoardSlug?: string;
   initialBoardName?: string;
   serverBoardDescription?: string | null;
   serverBoardTitle?: string;
@@ -84,6 +85,7 @@ export function MainContentArea({
   setCurrentMode,
   boardId,
   boardFromSlug,
+  lastBoardSlug,
   initialBoardName,
   serverBoardDescription,
   serverBoardTitle,
@@ -233,7 +235,10 @@ export function MainContentArea({
 
       {/* ボード一覧画面 */}
       {screenMode === "board" && !isPersonalBoardDetailPage && (
-        <BoardScreen ref={boardScreenRef as React.RefObject<BoardScreenRef>} />
+        <BoardScreen
+          ref={boardScreenRef as React.RefObject<BoardScreenRef>}
+          selectedBoardSlug={boardFromSlug?.slug || lastBoardSlug || null}
+        />
       )}
     </>
   );

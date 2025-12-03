@@ -2,7 +2,7 @@ import { useBoards, useCreateBoard } from "@/src/hooks/use-boards";
 import { useTeamBoards, useCreateTeamBoard } from "@/src/hooks/use-team-boards";
 import { CreateBoardData } from "@/src/types/board";
 import { useState } from "react";
-import { usePathname } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import BoardCard from "./board-card";
 import BoardForm from "./board-form";
 
@@ -19,6 +19,7 @@ interface BoardListProps {
   onPermanentDeleteBoard?: (boardId: number) => void;
   teamMode?: boolean;
   teamId?: number | null;
+  selectedBoardSlug?: string | null;
 }
 
 export default function BoardList({
@@ -29,10 +30,11 @@ export default function BoardList({
   onPermanentDeleteBoard,
   teamMode = false,
   teamId = null,
+  selectedBoardSlug = null,
 }: BoardListProps) {
   const [internalShowCreateForm, setInternalShowCreateForm] = useState(false);
   const showCreateForm = externalShowCreateForm ?? internalShowCreateForm;
-  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const {
     data: individualBoards,
@@ -51,10 +53,33 @@ export default function BoardList({
   const createIndividualBoard = useCreateBoard();
   const createTeamBoard = useCreateTeamBoard();
 
-  // 現在のURLから選択されているボードのslugを取得
-  const currentBoardSlug = pathname.startsWith("/boards/")
-    ? pathname.split("/")[2]
-    : null;
+  // 選択中のボードslugを決定
+  // 優先順位: 1. propsで渡されたselectedBoardSlug, 2. URLパラメータ
+  const getBoardSlugFromParams = (): string | null => {
+    // propsで渡されている場合はそちらを優先
+    if (selectedBoardSlug) return selectedBoardSlug;
+
+    // チーム側: ?board=xxx
+    const boardParam = searchParams.get("board") || searchParams.get("slug");
+    if (boardParam) return boardParam;
+
+    // 個人側: ?SLUG形式（値が空文字列のキー）
+    const excludeKeys = [
+      "mode",
+      "search",
+      "memo",
+      "task",
+      "boards",
+      "settings",
+    ];
+    for (const [key, value] of searchParams.entries()) {
+      if (value === "" && !excludeKeys.includes(key)) {
+        return key.toUpperCase();
+      }
+    }
+    return null;
+  };
+  const currentBoardSlug = getBoardSlugFromParams();
 
   const handleCreateBoard = async (data: CreateBoardData) => {
     try {
@@ -164,26 +189,21 @@ export default function BoardList({
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {boards
-            ?.sort((a, b) => {
-              // 選択中のボードを最初に表示
-              if (currentBoardSlug === a.slug) return -1;
-              if (currentBoardSlug === b.slug) return 1;
-              return 0; // その他は元の順序を保持
-            })
-            .map((board) => (
-              <BoardCard
-                key={board.id}
-                board={board}
-                onSelect={() => onBoardSelect?.(board)}
-                mode={activeTab}
-                onPermanentDelete={
-                  activeTab === "deleted" ? onPermanentDeleteBoard : undefined
-                }
-                isSelected={currentBoardSlug === board.slug}
-              />
-            ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+          {boards?.map((board) => (
+            <BoardCard
+              key={board.id}
+              board={board}
+              onSelect={() => onBoardSelect?.(board)}
+              mode={activeTab}
+              onPermanentDelete={
+                activeTab === "deleted" ? onPermanentDeleteBoard : undefined
+              }
+              isSelected={
+                currentBoardSlug?.toUpperCase() === board.slug?.toUpperCase()
+              }
+            />
+          ))}
         </div>
       )}
     </div>

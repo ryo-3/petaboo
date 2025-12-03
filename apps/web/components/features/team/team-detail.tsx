@@ -420,6 +420,17 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     "notifications" | "activity"
   >("notifications");
 
+  // 最後に開いたボードを記憶（ボード一覧で選択状態を維持するため）
+  const [lastBoardSlug, setLastBoardSlug] = useState<string | null>(null);
+
+  // ボード詳細を表示中の場合、lastBoardSlugを更新
+  useEffect(() => {
+    const boardSlug = getBoardSlugFromURL();
+    if (activeTab === "board" && boardSlug) {
+      setLastBoardSlug(boardSlug);
+    }
+  }, [activeTab, searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // 初回レンダリング時に Context を同期
   useEffect(() => {
     const initialTab = getTabFromURL();
@@ -1523,6 +1534,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
             <div className="h-full">
               <BoardScreen
                 onBoardSelect={(board) => {
+                  // 最後に開いたボードを記憶
+                  setLastBoardSlug(board.slug);
                   // ヘッダーを即座に更新（遷移前にイベント発火）
                   window.dispatchEvent(
                     new CustomEvent("team-board-name-change", {
@@ -1535,6 +1548,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                   // ボード詳細タブに切り替え
                   handleTabChange("board", { slug: board.slug });
                 }}
+                selectedBoardSlug={getBoardSlugFromURL() || lastBoardSlug}
               />
             </div>
           )}

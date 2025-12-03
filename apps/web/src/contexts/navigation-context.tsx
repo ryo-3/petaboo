@@ -276,10 +276,34 @@ export function NavigationProvider({
     optimisticMode,
   ]);
 
-  // URL変更時にoptimisticModeをクリア
+  // URL変更時にoptimisticModeをクリア（期待したタブになったときのみ）
   useEffect(() => {
-    setOptimisticMode(null);
-  }, [pathname, searchParams]);
+    if (optimisticMode === null) return;
+
+    // チーム詳細ページの場合、URLから実際のタブを取得して比較
+    const isTeamDetailPageUrl =
+      pathname.startsWith("/team/") && pathname !== "/team";
+
+    if (isTeamDetailPageUrl) {
+      const actualTab = getTabFromParams(searchParams);
+      const expectedTab =
+        optimisticMode === "memo"
+          ? "memos"
+          : optimisticMode === "task"
+            ? "tasks"
+            : "boards";
+
+      // 期待したタブに実際になった場合のみクリア
+      if (actualTab === expectedTab) {
+        setOptimisticMode(null);
+      }
+    } else {
+      // 個人ページの場合はcurrentModeで判定
+      if (currentMode === optimisticMode) {
+        setOptimisticMode(null);
+      }
+    }
+  }, [pathname, searchParams, optimisticMode, currentMode]);
 
   // TODO: 必要に応じて個別キャッシュ無効化を実装する
   // - メモ画面: 特定カテゴリや長時間経過時のみ無効化

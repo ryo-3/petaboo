@@ -32,6 +32,7 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
     selectedMemoId,
     setSelectedMemoId,
     selectedTaskId,
+    setSelectedTaskId,
     isCreatingMemo,
     isCreatingTask,
     imageCount,
@@ -372,6 +373,9 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   const handleBoardDetail = () => {
     // 🚀 楽観的更新をクリア（ボード詳細は特殊なタブなのでnull）
     setOptimisticMode(null);
+    // ボード詳細に遷移する際に選択状態をクリア
+    setSelectedMemoId(null);
+    setSelectedTaskId(null);
 
     if (lastBoardSlug) {
       // 新形式: ?SLUG（board= を省略）

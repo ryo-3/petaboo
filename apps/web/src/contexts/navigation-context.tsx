@@ -197,14 +197,6 @@ export function NavigationProvider({
           effectiveTab === "team-list" ||
           (!effectiveTab && screenMode === "team"),
       };
-      console.log("[iconStates] team page", {
-        activeTab,
-        effectiveTab,
-        optimisticMode,
-        isTeamBoardDetailPage,
-        boardSlugFromParams,
-        result,
-      });
       return result;
     }
 

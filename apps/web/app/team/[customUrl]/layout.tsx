@@ -163,18 +163,10 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
     // チームボード名変更イベントをリッスン
     const handleTeamBoardNameChange = (event: CustomEvent) => {
       const { boardName, boardSlug } = event.detail;
-      console.log("[team-board-name-change] received", {
-        boardName,
-        boardSlug,
-      });
       setCurrentBoardName(boardName);
       setLastBoardName(boardName); // 最後のボード名として記憶
       // boardSlugが渡された場合は記憶（ボード詳細アイコンからの遷移に必要）
       if (boardSlug) {
-        console.log(
-          "[team-board-name-change] setting lastBoardSlug:",
-          boardSlug,
-        );
         setLastBoardSlug(boardSlug);
       }
     };
@@ -348,29 +340,15 @@ function TeamLayoutContent({ children }: { children: React.ReactNode }) {
   };
 
   const handleBoardDetail = () => {
-    console.log("[handleBoardDetail] called", {
-      lastBoardSlug,
-      currentBoardName,
-      lastBoardName,
-      customUrl,
-    });
-
     // 🚀 team-detail.tsx の handleTabChange 経由で遷移
     // これにより pendingTabRef が正しく設定され、URL競合を防ぐ
     if (lastBoardSlug) {
-      console.log(
-        "[handleBoardDetail] dispatching team-mode-change with board slug:",
-        lastBoardSlug,
-      );
       window.dispatchEvent(
         new CustomEvent("team-mode-change", {
           detail: { mode: "board", pathname, slug: lastBoardSlug },
         }),
       );
     } else {
-      console.log(
-        "[handleBoardDetail] no lastBoardSlug, falling back to board list",
-      );
       // ボード一覧タブに移動
       if (isTeamDetailPage) {
         window.dispatchEvent(

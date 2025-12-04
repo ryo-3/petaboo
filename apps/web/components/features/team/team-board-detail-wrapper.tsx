@@ -249,7 +249,6 @@ export function TeamBoardDetailWrapper({
 
     // taskパラメータがある場合、該当するタスクを選択
     if (taskParam) {
-      console.log("[URL restore] taskParam:", taskParam);
       const allItems = boardItems.items || [];
       const taskItems = allItems.filter(
         (item: any) => item.itemType === "task",
@@ -260,21 +259,10 @@ export function TeamBoardDetailWrapper({
         .map((item: any) => item.content)
         .find((t: Task) => t.boardIndex?.toString() === taskParam);
 
-      console.log(
-        "[URL restore] targetTask:",
-        targetTask
-          ? {
-              displayId: targetTask.displayId,
-              boardIndex: targetTask.boardIndex,
-            }
-          : null,
-      );
-
       // 既に正しいタスクが選択されている場合はスキップ
       if (targetTask && selectedTaskRef.current) {
         // boardIndexで比較（これが一番確実）
         if (targetTask.boardIndex === selectedTaskRef.current.boardIndex) {
-          console.log("[URL restore] skipping - already selected");
           return;
         }
       }
@@ -329,33 +317,16 @@ export function TeamBoardDetailWrapper({
   };
 
   const handleSelectTask = (task: Task | DeletedTask | null) => {
-    console.log("[handleSelectTask] called", {
-      task: task
-        ? { displayId: task.displayId, boardIndex: task.boardIndex }
-        : null,
-      slug,
-      customUrl,
-      currentUrl: window.location.href,
-    });
-
     // 🛡️ URL競合防止: 現在のURLがボード詳細でない場合はURL更新をスキップ
     // （タブ切り替え中にこの関数が呼ばれた場合の対策）
     const currentBoardSlug = getCurrentBoardSlugFromUrl();
     const isStillOnBoardDetail = currentBoardSlug === slug.toUpperCase();
-    console.log("[handleSelectTask] board check", {
-      currentBoardSlug,
-      expectedSlug: slug.toUpperCase(),
-      isStillOnBoardDetail,
-    });
 
     setSelectedMemo(null);
     setSelectedTask(task);
 
     // ボード詳細ページにいない場合はURL更新をスキップ
     if (!isStillOnBoardDetail) {
-      console.log(
-        "[handleSelectTask] skipping URL update - not on board detail",
-      );
       return;
     }
 
@@ -364,11 +335,9 @@ export function TeamBoardDetailWrapper({
     if (task && task.boardIndex && task.boardIndex > 0) {
       // boardIndexが存在する場合のみURL更新
       const newUrl = `/team/${customUrl}?board=${slug}&task=${task.boardIndex}`;
-      console.log("[handleSelectTask] updating URL to:", newUrl);
       router.replace(newUrl, { scroll: false });
     } else if (!task) {
       const newUrl = `/team/${customUrl}?board=${slug}`;
-      console.log("[handleSelectTask] clearing selection, URL:", newUrl);
       router.replace(newUrl, { scroll: false });
     }
     // 新規作成時またはboardIndex未設定時はURL更新をスキップ

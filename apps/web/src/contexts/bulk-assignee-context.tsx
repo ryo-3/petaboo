@@ -9,6 +9,7 @@ import React, {
   ReactNode,
 } from "react";
 import { useParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTeamContext } from "./team-context";
 import { useUpdateTask } from "@/src/hooks/use-tasks";
 import { useTeamDetail } from "@/src/hooks/use-team-detail";
@@ -32,6 +33,7 @@ const BulkAssigneeContext = createContext<BulkAssigneeContextType | undefined>(
 
 export function BulkAssigneeProvider({ children }: { children: ReactNode }) {
   const params = useParams();
+  const queryClient = useQueryClient();
   const { isTeamMode: teamMode, teamId } = useTeamContext();
 
   // URLからcustomUrlを取得
@@ -143,6 +145,37 @@ export function BulkAssigneeProvider({ children }: { children: ReactNode }) {
         );
         await Promise.all(updatePromises);
 
+        // キャッシュを無効化して再取得（ボード詳細画面・タスク一覧での反映用）
+        if (teamMode && teamId) {
+          // チームボードアイテムキャッシュを無効化
+          // 1. useBoardWithItems用: ["team-boards", teamId, boardId, "items"]
+          await queryClient.invalidateQueries({
+            predicate: (query) => {
+              const key = query.queryKey;
+              return (
+                Array.isArray(key) &&
+                key[0] === "team-boards" &&
+                key[1] === teamId.toString()
+              );
+            },
+          });
+          // 2. team-board-detail-wrapper用: ["team-board-items", teamId, ...]
+          await queryClient.invalidateQueries({
+            predicate: (query) => {
+              const key = query.queryKey;
+              return (
+                Array.isArray(key) &&
+                key[0] === "team-board-items" &&
+                key[1] === teamId
+              );
+            },
+          });
+          // 3. チームタスク一覧キャッシュ
+          await queryClient.invalidateQueries({
+            queryKey: ["team-tasks", teamId],
+          });
+        }
+
         setIsOpen(false);
         onCompleteCallback?.();
       } catch (error) {
@@ -151,7 +184,15 @@ export function BulkAssigneeProvider({ children }: { children: ReactNode }) {
         setIsUpdating(false);
       }
     },
-    [checkedTaskIds, taskItems, updateTask, onCompleteCallback],
+    [
+      checkedTaskIds,
+      taskItems,
+      updateTask,
+      onCompleteCallback,
+      teamMode,
+      teamId,
+      queryClient,
+    ],
   );
 
   return (

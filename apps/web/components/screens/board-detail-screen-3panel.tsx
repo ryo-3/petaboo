@@ -819,6 +819,24 @@ function BoardDetailScreen({
     isMemoDeleting,
   });
 
+  // 選択中のタスクをboardWithItemsの最新データで同期（一括更新後の反映用）
+  useEffect(() => {
+    if (!selectedTask || !allTaskItems.length || !onSelectTask) return;
+
+    // 現在選択中のタスクを最新データから探す
+    const updatedTaskItem = allTaskItems.find(
+      (item) => (item.content as Task).id === selectedTask.id,
+    );
+
+    if (updatedTaskItem) {
+      const updatedTask = updatedTaskItem.content as Task;
+      // 担当者IDが変わった場合のみ更新（不要な再レンダリング防止）
+      if (updatedTask.assigneeId !== selectedTask.assigneeId) {
+        onSelectTask(updatedTask);
+      }
+    }
+  }, [allTaskItems, selectedTask, onSelectTask]);
+
   // 全データ事前取得（ちらつき解消）
   const { data: personalTaggings } = useAllTaggings({ enabled: !teamMode });
   const { data: teamTaggings } = useAllTeamTaggings(teamId || 0, {

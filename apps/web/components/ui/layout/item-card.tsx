@@ -174,7 +174,7 @@ function ItemCard({
               className={`flex items-center gap-2 min-w-0 ${selectionMode === "check" ? "pl-6" : ""}`}
             >
               <h3
-                className={`font-semibold text-base mb-1 truncate flex-1 ${
+                className={`font-semibold text-base mb-1 flex-1 break-words line-clamp-2 ${
                   title === "無題"
                     ? "text-gray-400"
                     : isDeleted

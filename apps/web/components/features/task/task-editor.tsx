@@ -203,7 +203,7 @@ function TaskEditor({
   // 事前取得されたデータを使用（APIコール不要）
   const boards = preloadedBoards;
   const isNewTask = !task || task.id === 0;
-  const titleInputRef = useRef<HTMLInputElement>(null);
+  const titleInputRef = useRef<HTMLTextAreaElement>(null);
 
   // 保存完了結果の遅延通知用（画像アップロード完了後に通知）
   const pendingSaveResultRef = useRef<{
@@ -1451,20 +1451,30 @@ function TaskEditor({
           <>
             {/* タイトル入力 */}
             <div className="flex items-center gap-1">
-              <input
+              <textarea
                 ref={titleInputRef}
-                type="text"
                 placeholder="タスクタイトルを入力..."
                 value={finalTitle}
-                onChange={(e) =>
-                  isDeleted ? undefined : handleTitleChange(e.target.value)
-                }
+                onChange={(e) => {
+                  if (isDeleted) return;
+                  // 改行を除去
+                  const value = e.target.value.replace(/[\r\n]/g, "");
+                  handleTitleChange(value);
+                }}
+                maxLength={80}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
                   }
                 }}
-                className="flex-1 mb-1 mt-1 text-[15px] md:text-lg font-medium border-b border-DeepBlue/80 outline-none focus:border-DeepBlue"
+                rows={1}
+                className="flex-1 mb-1 mt-1 text-[15px] md:text-lg font-medium border-b border-DeepBlue/80 outline-none focus:border-DeepBlue resize-none overflow-hidden"
+                style={
+                  {
+                    fieldSizing: "content",
+                    maxHeight: "3lh",
+                  } as React.CSSProperties
+                }
               />
             </div>
 

@@ -43,7 +43,7 @@ import { useTags } from "@/src/hooks/use-tags";
 import { useTeamTags } from "@/src/hooks/use-team-tags";
 import { useTaskDeleteWithNextSelection } from "@/src/hooks/use-memo-delete-with-next-selection";
 import TagManagementModal from "@/components/ui/tag-management/tag-management-modal";
-import BulkAssigneeModal from "@/components/ui/modals/bulk-assignee-modal";
+import { useBulkAssigneeSafe } from "@/src/contexts/bulk-assignee-context";
 import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
 import { useAllTeamTaggings } from "@/src/hooks/use-team-taggings";
 import { useAllAttachments } from "@/src/hooks/use-all-attachments";
@@ -362,9 +362,8 @@ function TaskScreen({
   const [isTagManagementModalOpen, setIsTagManagementModalOpen] =
     useState(false);
 
-  // 担当者一括設定モーダルの状態
-  const [isBulkAssigneeModalOpen, setIsBulkAssigneeModalOpen] = useState(false);
-  const [isBulkAssigneeUpdating, setIsBulkAssigneeUpdating] = useState(false);
+  // 担当者一括設定モーダル（Context経由）
+  const bulkAssigneeContext = useBulkAssigneeSafe();
 
   // 削除ボタンの参照
   const deleteButtonRef = useRef<HTMLButtonElement>(null);
@@ -582,54 +581,6 @@ function TaskScreen({
 
   const checkedDeletedTasks = checkedDeletedTasksLocal;
   const setCheckedDeletedTasks = setCheckedDeletedTasksLocal;
-
-  // 選択中タスクの現在の担当者を取得（全て同じ場合のみ値を返す）
-  const currentSelectedAssigneeId = useMemo(() => {
-    if (checkedTasks.size === 0 || !tasks) return undefined;
-
-    const selectedTasksArray = Array.from(checkedTasks)
-      .map((id) => tasks.find((t) => t.id === id))
-      .filter((t): t is Task => t !== undefined);
-
-    if (selectedTasksArray.length === 0) return undefined;
-
-    const firstTask = selectedTasksArray[0];
-    if (!firstTask) return undefined;
-    const firstAssignee = firstTask.assigneeId;
-    const allSame = selectedTasksArray.every(
-      (t) => t.assigneeId === firstAssignee,
-    );
-
-    return allSame ? firstAssignee : undefined;
-  }, [checkedTasks, tasks]);
-
-  // 担当者一括設定ハンドラー
-  const handleBulkAssigneeUpdate = useCallback(
-    async (assigneeId: string | null) => {
-      if (checkedTasks.size === 0) return;
-
-      setIsBulkAssigneeUpdating(true);
-      try {
-        // 選択されたタスクの担当者を一括更新
-        // assigneeIdがnullの場合は明示的にnullを送信（担当者解除）
-        const updatePromises = Array.from(checkedTasks).map((taskId) =>
-          updateTask.mutateAsync({
-            id: taskId,
-            data: { assigneeId: assigneeId },
-          }),
-        );
-        await Promise.all(updatePromises);
-        setIsBulkAssigneeModalOpen(false);
-        // 選択状態をクリア
-        setCheckedTasks(new Set());
-      } catch (error) {
-        console.error("担当者の一括設定に失敗しました:", error);
-      } finally {
-        setIsBulkAssigneeUpdating(false);
-      }
-    },
-    [checkedTasks, updateTask, setCheckedTasks],
-  );
 
   // タブクリア機能付きのトグルハンドラー
   const handleTaskToggleWithTabClear = (taskId: number) => {
@@ -1249,7 +1200,13 @@ function TaskScreen({
             // TODO: タブ移動処理
           }}
           onAssignee={() => {
-            setIsBulkAssigneeModalOpen(true);
+            if (bulkAssigneeContext && tasks) {
+              bulkAssigneeContext.openBulkAssigneeModal(
+                checkedTasks,
+                tasks.map((t) => ({ id: t.id, content: t })),
+                () => setCheckedTasks(new Set()),
+              );
+            }
           }}
           isTaskMode={true}
           teamMode={teamMode}
@@ -1599,18 +1556,7 @@ function TaskScreen({
           setCheckedTasks(new Set());
         }}
       />
-      {/* 担当者一括設定モーダル（チームモードのみ） */}
-      {teamMode && (
-        <BulkAssigneeModal
-          isOpen={isBulkAssigneeModalOpen}
-          onClose={() => setIsBulkAssigneeModalOpen(false)}
-          onConfirm={handleBulkAssigneeUpdate}
-          members={teamMembers}
-          selectedCount={checkedTasks.size}
-          isLoading={isBulkAssigneeUpdating}
-          currentAssigneeId={currentSelectedAssigneeId}
-        />
-      )}
+      {/* 担当者一括設定モーダルはBulkAssigneeProvider経由で表示 */}
     </div>
   );
 }

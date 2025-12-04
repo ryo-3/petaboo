@@ -19,6 +19,7 @@ import {
   TeamDetailProvider,
   useTeamDetail as useTeamDetailContext,
 } from "@/src/contexts/team-detail-context";
+import { BulkAssigneeProvider } from "@/src/contexts/bulk-assignee-context";
 import { getModeFromUrl, getActiveTabFromUrl } from "@/src/utils/modeUtils";
 import { getBoardSlugFromParams } from "@/src/utils/teamUrlUtils";
 import { useTeamDetail } from "@/src/hooks/use-team-detail";
@@ -541,9 +542,11 @@ function TeamDetailLayoutWrapper({ children }: { children: React.ReactNode }) {
         initialShowingBoardDetail={isTeamBoardDetailPage}
       >
         <TeamDetailProvider>
-          <Suspense fallback={<div>Loading...</div>}>
-            <TeamLayoutContent>{children}</TeamLayoutContent>
-          </Suspense>
+          <BulkAssigneeProvider>
+            <Suspense fallback={<div>Loading...</div>}>
+              <TeamLayoutContent>{children}</TeamLayoutContent>
+            </Suspense>
+          </BulkAssigneeProvider>
         </TeamDetailProvider>
       </NavigationProvider>
     </TeamProvider>

@@ -246,6 +246,7 @@ export default function AttachmentGallery({
                     <img
                       src={imageUrl}
                       alt={attachment.fileName}
+                      draggable={false}
                       className={`w-full md:w-32 h-auto md:h-32 md:object-cover rounded-lg ${
                         isProcessing
                           ? "opacity-50 cursor-default"
@@ -470,6 +471,7 @@ export default function AttachmentGallery({
                   <img
                     src={url}
                     alt={`保存待ち ${index + 1}`}
+                    draggable={false}
                     className={`w-full md:w-32 h-auto md:h-32 md:object-cover rounded-lg transition-opacity ${
                       isUploading
                         ? "opacity-50"

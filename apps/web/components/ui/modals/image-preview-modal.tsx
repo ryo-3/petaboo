@@ -109,6 +109,7 @@ export default function ImagePreviewModal({
         <img
           src={imageUrl}
           alt="拡大表示"
+          draggable={false}
           className="max-w-[95vw] max-h-[95vh] object-contain"
         />
 

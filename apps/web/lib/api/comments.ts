@@ -1,5 +1,49 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594";
 
+// 500系エラー・ネットワークエラー時のリトライ付きfetch
+const fetchWithRetry = async (
+  url: string,
+  options: RequestInit = {},
+  maxRetries = 2,
+  baseDelay = 1000,
+): Promise<Response> => {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, options);
+
+      if (response.ok || (response.status >= 400 && response.status < 500)) {
+        return response;
+      }
+
+      if (response.status >= 500 && attempt < maxRetries) {
+        const delay = Math.min(baseDelay * Math.pow(2, attempt), 10000);
+        console.warn(
+          `⚠️ API ${response.status}エラー、${delay}ms後にリトライ (${attempt + 1}/${maxRetries})`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+
+      return response;
+    } catch (error) {
+      lastError = error as Error;
+      if (attempt < maxRetries) {
+        const delay = Math.min(baseDelay * Math.pow(2, attempt), 10000);
+        console.warn(
+          `⚠️ ネットワークエラー、${delay}ms後にリトライ (${attempt + 1}/${maxRetries})`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  throw lastError || new Error("Max retries exceeded");
+};
+
 export interface TeamComment {
   id: number;
   teamId: number;
@@ -102,14 +146,17 @@ export async function createTeamComment(
   input: CreateCommentInput,
   token?: string,
 ): Promise<TeamComment> {
-  const response = await fetch(`${API_BASE_URL}/comments?teamId=${teamId}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
+  const response = await fetchWithRetry(
+    `${API_BASE_URL}/comments?teamId=${teamId}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: JSON.stringify(input),
     },
-    body: JSON.stringify(input),
-  });
+  );
 
   if (!response.ok) {
     throw new Error(`Failed to create comment: ${response.statusText}`);
@@ -124,14 +171,17 @@ export async function updateTeamComment(
   input: { content: string },
   token?: string,
 ): Promise<TeamComment> {
-  const response = await fetch(`${API_BASE_URL}/comments/${commentId}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
+  const response = await fetchWithRetry(
+    `${API_BASE_URL}/comments/${commentId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: JSON.stringify(input),
     },
-    body: JSON.stringify(input),
-  });
+  );
 
   if (!response.ok) {
     throw new Error(`Failed to update comment: ${response.statusText}`);

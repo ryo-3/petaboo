@@ -27,6 +27,66 @@ const createHeaders = (
   return headers;
 };
 
+// 500系エラー・ネットワークエラー時のリトライ設定
+interface RetryConfig {
+  maxRetries?: number; // 最大リトライ回数（デフォルト: 2）
+  baseDelay?: number; // 基本遅延時間ms（デフォルト: 1000）
+  retryOn5xx?: boolean; // 500系エラーでリトライするか（デフォルト: true）
+}
+
+// リトライ付きfetch関数
+const fetchWithRetry = async (
+  url: string,
+  options: RequestInit = {},
+  config: RetryConfig = {},
+): Promise<Response> => {
+  const { maxRetries = 2, baseDelay = 1000, retryOn5xx = true } = config;
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, options);
+
+      // 成功またはクライアントエラー（4xx）は即座に返す
+      if (response.ok || (response.status >= 400 && response.status < 500)) {
+        return response;
+      }
+
+      // 500系エラーの場合
+      if (response.status >= 500 && retryOn5xx) {
+        if (attempt < maxRetries) {
+          // 指数バックオフで待機
+          const delay = Math.min(baseDelay * Math.pow(2, attempt), 10000);
+          console.warn(
+            `⚠️ API ${response.status}エラー、${delay}ms後にリトライ (${attempt + 1}/${maxRetries})`,
+          );
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          continue;
+        }
+      }
+
+      // リトライ上限到達
+      return response;
+    } catch (error) {
+      // ネットワークエラー（TypeError: Failed to fetch）
+      lastError = error as Error;
+
+      if (attempt < maxRetries) {
+        const delay = Math.min(baseDelay * Math.pow(2, attempt), 10000);
+        console.warn(
+          `⚠️ ネットワークエラー、${delay}ms後にリトライ (${attempt + 1}/${maxRetries})`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+
+      throw error;
+    }
+  }
+
+  throw lastError || new Error("Max retries exceeded");
+};
+
 export const memosApi = {
   // GET /memos
   getMemos: async (token?: string) => {
@@ -70,11 +130,14 @@ export const memosApi = {
     data: CreateMemoData,
     token?: string,
   ) => {
-    const response = await fetch(`${API_BASE_URL}/teams/${teamId}/memos`, {
-      method: "POST",
-      headers: createHeaders(token),
-      body: JSON.stringify(data),
-    });
+    const response = await fetchWithRetry(
+      `${API_BASE_URL}/teams/${teamId}/memos`,
+      {
+        method: "POST",
+        headers: createHeaders(token),
+        body: JSON.stringify(data),
+      },
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -97,7 +160,7 @@ export const memosApi = {
     data: UpdateMemoData,
     token?: string,
   ) => {
-    const response = await fetch(
+    const response = await fetchWithRetry(
       `${API_BASE_URL}/teams/${teamId}/memos/${id}`,
       {
         method: "PUT",
@@ -139,7 +202,7 @@ export const memosApi = {
 
   // POST /memos
   createNote: async (data: CreateMemoData, token?: string) => {
-    const response = await fetch(`${API_BASE_URL}/memos`, {
+    const response = await fetchWithRetry(`${API_BASE_URL}/memos`, {
       method: "POST",
       headers: createHeaders(token),
       body: JSON.stringify(data),
@@ -153,7 +216,7 @@ export const memosApi = {
 
   // PUT /memos/:id
   updateNote: async (id: number, data: UpdateMemoData, token?: string) => {
-    const response = await fetch(`${API_BASE_URL}/memos/${id}`, {
+    const response = await fetchWithRetry(`${API_BASE_URL}/memos/${id}`, {
       method: "PUT",
       headers: createHeaders(token),
       body: JSON.stringify(data),
@@ -319,7 +382,7 @@ export const tasksApi = {
 
   // POST /tasks
   createTask: async (data: CreateTaskData, token?: string) => {
-    const response = await fetch(`${API_BASE_URL}/tasks`, {
+    const response = await fetchWithRetry(`${API_BASE_URL}/tasks`, {
       method: "POST",
       headers: createHeaders(token),
       body: JSON.stringify(data),
@@ -337,11 +400,14 @@ export const tasksApi = {
     data: CreateTaskData,
     token?: string,
   ) => {
-    const response = await fetch(`${API_BASE_URL}/teams/${teamId}/tasks`, {
-      method: "POST",
-      headers: createHeaders(token),
-      body: JSON.stringify(data),
-    });
+    const response = await fetchWithRetry(
+      `${API_BASE_URL}/teams/${teamId}/tasks`,
+      {
+        method: "POST",
+        headers: createHeaders(token),
+        body: JSON.stringify(data),
+      },
+    );
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -356,7 +422,7 @@ export const tasksApi = {
     data: UpdateTaskData,
     token?: string,
   ) => {
-    const response = await fetch(
+    const response = await fetchWithRetry(
       `${API_BASE_URL}/teams/${teamId}/tasks/${id}`,
       {
         method: "PUT",
@@ -389,7 +455,7 @@ export const tasksApi = {
 
   // PUT /tasks/:id
   updateTask: async (id: number, data: UpdateTaskData, token?: string) => {
-    const response = await fetch(`${API_BASE_URL}/tasks/${id}`, {
+    const response = await fetchWithRetry(`${API_BASE_URL}/tasks/${id}`, {
       method: "PUT",
       headers: createHeaders(token),
       body: JSON.stringify(data),

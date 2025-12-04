@@ -3,6 +3,7 @@ import { useAuth } from "@clerk/nextjs";
 // import { useToast } from "@/src/contexts/toast-context"; // 現在は未使用
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
+import type { BoardWithItems } from "@/src/types/board";
 import { memosApi } from "@/src/lib/api-client";
 import { tasksApi } from "@/src/lib/api-client";
 
@@ -98,6 +99,8 @@ const getCacheKeys = (
   boardId?: number,
 ) => {
   const isTeam = context === "team" && teamId;
+  // useBoardWithItemsはteamIdをstringで受け取るため、キャッシュキーもstringに統一
+  const teamIdStr = teamId?.toString();
 
   if (itemType === "memo") {
     return {
@@ -105,7 +108,7 @@ const getCacheKeys = (
       deletedItems: isTeam ? ["team-deleted-memos", teamId] : ["deletedMemos"],
       boardItems:
         isTeam && boardId
-          ? ["team-boards", teamId, boardId, "items"]
+          ? ["team-boards", teamIdStr, boardId, "items"]
           : boardId
             ? ["boards", boardId, "items"]
             : null,
@@ -122,7 +125,7 @@ const getCacheKeys = (
       deletedItems: isTeam ? ["team-deleted-tasks", teamId] : ["deleted-tasks"],
       boardItems:
         isTeam && boardId
-          ? ["team-boards", teamId, boardId, "items"]
+          ? ["team-boards", teamIdStr, boardId, "items"]
           : boardId
             ? ["boards", boardId, "items"]
             : null,
@@ -209,6 +212,22 @@ export function useUnifiedItemOperations({
         );
       }
 
+      // ボードアイテム一覧からも楽観的更新で即座に除去
+      if (cacheKeys.boardItems) {
+        queryClient.setQueryData<BoardWithItems>(
+          cacheKeys.boardItems,
+          (oldData) => {
+            if (!oldData) return oldData;
+            return {
+              ...oldData,
+              items: oldData.items.filter(
+                (item) => !(item.content && item.content.id === id),
+              ),
+            };
+          },
+        );
+      }
+
       // バックグラウンドで安全性のため無効化
       queryClient.invalidateQueries({
         predicate: (query) => {
@@ -274,12 +293,19 @@ export function useUnifiedItemOperations({
           });
         }
       } else {
-        // 個人ボード一覧を無効化・再取得
+        // 個人ボード一覧を無効化・再取得（slugクエリとboardId=nullは除外して404エラー回避）
         queryClient.invalidateQueries({
-          queryKey: ["boards"],
-          exact: false,
+          predicate: (query) => {
+            const key = query.queryKey as unknown[];
+            return key[0] === "boards" && key[1] !== "slug" && key[1] !== null;
+          },
         });
-        queryClient.refetchQueries({ queryKey: ["boards"], exact: false });
+        queryClient.refetchQueries({
+          predicate: (query) => {
+            const key = query.queryKey as unknown[];
+            return key[0] === "boards" && key[1] !== "slug" && key[1] !== null;
+          },
+        });
         if (cacheKeys.boardItems) {
           queryClient.invalidateQueries({
             queryKey: cacheKeys.boardItems,
@@ -376,7 +402,8 @@ export function useUnifiedItemOperations({
           );
         },
       });
-      queryClient.refetchQueries({ queryKey: cacheKeys.items });
+      // refetchQueriesではなくinvalidateQueriesを使用（クエリが存在しない場合のエラー回避）
+      queryClient.invalidateQueries({ queryKey: cacheKeys.items });
 
       // ボード関連キャッシュの更新
       if (context === "team" && teamId) {
@@ -434,12 +461,19 @@ export function useUnifiedItemOperations({
           });
         }
       } else {
-        // 個人ボード一覧を無効化・再取得
+        // 個人ボード一覧を無効化・再取得（slugクエリとboardId=nullは除外して404エラー回避）
         queryClient.invalidateQueries({
-          queryKey: ["boards"],
-          exact: false,
+          predicate: (query) => {
+            const key = query.queryKey as unknown[];
+            return key[0] === "boards" && key[1] !== "slug" && key[1] !== null;
+          },
         });
-        queryClient.refetchQueries({ queryKey: ["boards"], exact: false });
+        queryClient.refetchQueries({
+          predicate: (query) => {
+            const key = query.queryKey as unknown[];
+            return key[0] === "boards" && key[1] !== "slug" && key[1] !== null;
+          },
+        });
         if (cacheKeys.boardItems) {
           queryClient.invalidateQueries({
             queryKey: cacheKeys.boardItems,

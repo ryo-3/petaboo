@@ -430,8 +430,6 @@ function MainClient({
   // 他のハンドラーをラップしてチーム表示をリセット
   const wrappedHandleHome = () => {
     closeBoardSettings();
-    setShowTeamList(false);
-    setShowTeamCreate(false);
     handleHome();
   };
 

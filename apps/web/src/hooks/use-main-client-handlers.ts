@@ -40,7 +40,8 @@ export function useMainClientHandlers({
   currentBoardSlug,
 }: UseMainClientHandlersProps) {
   const router = useRouter();
-  const { setScreenMode, setCurrentMode } = useNavigation();
+  const { setScreenMode, setCurrentMode, setShowTeamList, setShowTeamCreate } =
+    useNavigation();
 
   // ==========================================
   // 共通ユーティリティ関数
@@ -245,9 +246,17 @@ export function useMainClientHandlers({
   /** ホーム画面に戻る */
   const handleHome = useCallback(() => {
     clearAllSelections();
+    setShowTeamList(false);
+    setShowTeamCreate(false);
     setScreenMode("home");
     setCurrentMode("memo"); // currentModeをデフォルトに戻す
-  }, [clearAllSelections, setScreenMode, setCurrentMode]);
+  }, [
+    clearAllSelections,
+    setScreenMode,
+    setCurrentMode,
+    setShowTeamList,
+    setShowTeamCreate,
+  ]);
 
   /** 設定画面に遷移 */
   const handleSettings = useCallback(() => {

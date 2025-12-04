@@ -173,6 +173,12 @@ function ItemCard({
             <div
               className={`flex items-center gap-2 min-w-0 ${selectionMode === "check" ? "pl-6" : ""}`}
             >
+              {/* ボードインデックス表示 */}
+              {item.boardIndex && (
+                <span className="text-xs text-muted-foreground flex-shrink-0">
+                  #{item.boardIndex}
+                </span>
+              )}
               <h3
                 className={`font-semibold text-base mb-1 flex-1 break-words line-clamp-2 ${
                   title === "無題"

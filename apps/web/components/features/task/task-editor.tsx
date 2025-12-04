@@ -1384,7 +1384,7 @@ function TaskEditor({
                     ).toLocaleDateString("ja-JP")}
                   </span>
                 )}
-                {/* ヘッダー右側にアバター・日付を表示（showDateAtBottom=falseの場合） */}
+                {/* ヘッダー右側にアバター・日付表示（showDateAtBottom=falseの場合） */}
                 {!showDateAtBottom && task && task.id !== 0 && (
                   <>
                     <CreatorAvatar
@@ -1604,12 +1604,21 @@ function TaskEditor({
               isDeleted={isDeleted}
             />
 
-            {/* 作成者・日付を表示（showDateAtBottom=trueかつツールバー非表示時のみ） */}
+            {/* 作成者・日付・ID表示（showDateAtBottom=trueかつツールバー非表示時のみ） */}
             {/* 新規作成時でもMemoEditorと同様の余白を確保 */}
             {!toolbarVisible && showDateAtBottom && (
-              <div className="flex justify-end items-center gap-2 mr-2 mt-1 mb-1 h-[20px]">
+              <div className="flex justify-between items-center mx-2 mt-1 mb-1 h-[20px]">
+                {/* 左側：ボードインデックス（boardIndexがある場合のみ表示） */}
+                {task && task.id !== 0 && task.boardIndex ? (
+                  <span className="text-xs text-muted-foreground select-all">
+                    #{task.boardIndex}
+                  </span>
+                ) : (
+                  <span />
+                )}
+                {/* 右側：作成者・日付 */}
                 {task && task.id !== 0 && (
-                  <>
+                  <div className="flex items-center gap-2">
                     <CreatorAvatar
                       createdBy={createdBy}
                       avatarColor={createdByAvatarColor}
@@ -1622,7 +1631,7 @@ function TaskEditor({
                       isEditing={!isDeleted}
                       size="sm"
                     />
-                  </>
+                  </div>
                 )}
               </div>
             )}

@@ -542,6 +542,7 @@ function MainClient({
     setShowingBoardDetail,
     boardSelectedItem,
     teamMode,
+    currentBoardSlug,
   });
 
   // ハンドラーをNavigationContextに設定

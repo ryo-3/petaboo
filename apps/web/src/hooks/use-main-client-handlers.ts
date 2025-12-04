@@ -23,6 +23,8 @@ interface UseMainClientHandlersProps {
     | null;
   // 個人側のみURL更新（チーム側は別途処理）
   teamMode?: boolean;
+  // ボード詳細内でのURL更新用
+  currentBoardSlug?: string | null;
 }
 
 export function useMainClientHandlers({
@@ -35,6 +37,7 @@ export function useMainClientHandlers({
   setShowingBoardDetail,
   boardSelectedItem,
   teamMode = false,
+  currentBoardSlug,
 }: UseMainClientHandlersProps) {
   const router = useRouter();
   const { setScreenMode, setCurrentMode } = useNavigation();
@@ -340,6 +343,10 @@ export function useMainClientHandlers({
     (memo: Memo | DeletedMemo | null) => {
       if (!memo) {
         setBoardSelectedItem(null);
+        // URLからメモパラメータを削除（個人側のみ）
+        if (!teamMode && currentBoardSlug) {
+          router.replace(`/?${currentBoardSlug}`, { scroll: false });
+        }
         return;
       }
 
@@ -365,8 +372,28 @@ export function useMainClientHandlers({
       // ボード詳細画面に遷移（既にboard画面の場合は何もしない）
       setScreenMode("board");
       setCurrentMode("board");
+
+      // URLを更新（個人側のみ、boardIndexを使用）
+      if (
+        !teamMode &&
+        currentBoardSlug &&
+        memo.boardIndex &&
+        memo.boardIndex > 0
+      ) {
+        router.replace(`/?${currentBoardSlug}&memo=${memo.boardIndex}`, {
+          scroll: false,
+        });
+      }
     },
-    [boardSelectedItem, setBoardSelectedItem, setScreenMode, setCurrentMode],
+    [
+      boardSelectedItem,
+      setBoardSelectedItem,
+      setScreenMode,
+      setCurrentMode,
+      teamMode,
+      currentBoardSlug,
+      router,
+    ],
   );
 
   /** ボード詳細でのタスク選択 */
@@ -374,6 +401,10 @@ export function useMainClientHandlers({
     (task: Task | DeletedTask | null) => {
       if (!task) {
         setBoardSelectedItem(null);
+        // URLからタスクパラメータを削除（個人側のみ）
+        if (!teamMode && currentBoardSlug) {
+          router.replace(`/?${currentBoardSlug}`, { scroll: false });
+        }
         return;
       }
 
@@ -397,8 +428,28 @@ export function useMainClientHandlers({
       // ボード詳細画面に遷移（既にboard画面の場合は何もしない）
       setScreenMode("board");
       setCurrentMode("board");
+
+      // URLを更新（個人側のみ、boardIndexを使用）
+      if (
+        !teamMode &&
+        currentBoardSlug &&
+        task.boardIndex &&
+        task.boardIndex > 0
+      ) {
+        router.replace(`/?${currentBoardSlug}&task=${task.boardIndex}`, {
+          scroll: false,
+        });
+      }
     },
-    [boardSelectedItem, setBoardSelectedItem, setScreenMode, setCurrentMode],
+    [
+      boardSelectedItem,
+      setBoardSelectedItem,
+      setScreenMode,
+      setCurrentMode,
+      teamMode,
+      currentBoardSlug,
+      router,
+    ],
   );
 
   /** ボード詳細での選択クリア */

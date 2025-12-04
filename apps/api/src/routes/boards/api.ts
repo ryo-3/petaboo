@@ -997,6 +997,7 @@ export function createAPI(app: AppType) {
         }
 
         // IMPORTANT: contentのdisplayIdも必ず文字列として返す
+        // boardIndexをcontentに含めてフロントエンドでURL更新に使用
         const safeContent = content
           ? {
               ...content,
@@ -1004,6 +1005,7 @@ export function createAPI(app: AppType) {
                 typeof content.displayId === "string"
                   ? content.displayId
                   : String(content.displayId || content.id),
+              boardIndex: item.boardIndex, // ボード内連番をcontentに追加
             }
           : null;
 
@@ -1012,6 +1014,7 @@ export function createAPI(app: AppType) {
           itemType: item.itemType,
           itemId: content?.id || 0, // フロントエンド互換性のため通常のIDを返す
           displayId: item.displayId,
+          boardIndex: item.boardIndex, // ボード内連番
           content: safeContent,
         };
       }),

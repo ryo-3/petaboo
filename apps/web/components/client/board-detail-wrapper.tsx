@@ -1,7 +1,8 @@
-import { useMemo, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useEffect, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import BoardDetailScreenLegacy from "@/components/screens/board-detail-screen";
 import BoardDetailScreenUnified from "@/components/screens/board-detail-screen-3panel";
+import { useBoardWithItems } from "@/src/hooks/use-boards";
 import type { Board } from "@/src/types/board";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
@@ -43,12 +44,73 @@ export function BoardDetailWrapper({
   onBoardSettings,
 }: BoardDetailWrapperProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // サーバーサイドからのボード情報がある場合は優先使用
   const currentBoardId = boardId || boardFromSlug?.id;
   const currentBoardName = initialBoardName || boardFromSlug?.name;
   const currentBoardDescription =
     serverBoardDescription || boardFromSlug?.description;
+
+  // URLパラメータからメモ/タスクのboardIndexを取得
+  const memoIndexParam = searchParams.get("memo");
+  const taskIndexParam = searchParams.get("task");
+
+  // ボードアイテムを取得（URL復元用）
+  // メモ/タスクパラメータがある場合のみフェッチ（不要なAPIコールを避ける）
+  const needsUrlRestore = !teamMode && (memoIndexParam || taskIndexParam);
+  const { data: boardWithItems } = useBoardWithItems(
+    needsUrlRestore && currentBoardId ? currentBoardId : null,
+  );
+
+  // URL復元済みフラグ
+  const hasRestoredFromUrl = useRef(false);
+
+  // URLパラメータからメモ/タスクを復元（個人側のみ、初回のみ）
+  useEffect(() => {
+    // チーム側は別処理、復元済みならスキップ
+    if (teamMode || hasRestoredFromUrl.current) return;
+    // ボードアイテムがまだロードされていない場合はスキップ
+    if (!boardWithItems?.items || boardWithItems.items.length === 0) return;
+    // 既に何か選択されている場合はスキップ
+    if (boardSelectedItem) return;
+
+    // メモのboardIndexがURLにある場合
+    if (memoIndexParam) {
+      const memoIndex = parseInt(memoIndexParam, 10);
+      const memoItem = boardWithItems.items.find(
+        (item) =>
+          item.itemType === "memo" && item.content.boardIndex === memoIndex,
+      );
+      if (memoItem) {
+        handleBoardSelectMemo(memoItem.content as Memo);
+        hasRestoredFromUrl.current = true;
+        return;
+      }
+    }
+
+    // タスクのboardIndexがURLにある場合
+    if (taskIndexParam) {
+      const taskIndex = parseInt(taskIndexParam, 10);
+      const taskItem = boardWithItems.items.find(
+        (item) =>
+          item.itemType === "task" && item.content.boardIndex === taskIndex,
+      );
+      if (taskItem) {
+        handleBoardSelectTask(taskItem.content as Task);
+        hasRestoredFromUrl.current = true;
+        return;
+      }
+    }
+  }, [
+    teamMode,
+    memoIndexParam,
+    taskIndexParam,
+    boardWithItems,
+    boardSelectedItem,
+    handleBoardSelectMemo,
+    handleBoardSelectTask,
+  ]);
 
   // 個人側：ボード名と説明をヘッダーに通知
   useEffect(() => {

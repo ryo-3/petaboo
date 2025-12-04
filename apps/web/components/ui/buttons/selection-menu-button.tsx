@@ -13,6 +13,11 @@ interface SelectionMenuButtonProps {
   onTagging?: () => void;
   onPin?: () => void;
   onTabMove?: () => void;
+  onAssignee?: () => void;
+  /** タスク画面かどうか（担当者設定はタスクのみ） */
+  isTaskMode?: boolean;
+  /** チームモードかどうか（担当者設定はチームのみ） */
+  teamMode?: boolean;
 }
 
 /**
@@ -27,6 +32,9 @@ export default function SelectionMenuButton({
   onTagging,
   onPin,
   onTabMove,
+  onAssignee,
+  isTaskMode = false,
+  teamMode = false,
 }: SelectionMenuButtonProps) {
   const buttonRef = useRef<HTMLElement>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -44,6 +52,31 @@ export default function SelectionMenuButton({
       icon: <TagIcon className="w-5 h-5" />,
       onClick: () => onTagging?.(),
     },
+    // 担当者設定（チームモード && タスク画面のみ）
+    ...(teamMode && isTaskMode && onAssignee
+      ? [
+          {
+            id: "assignee",
+            label: "担当者",
+            icon: (
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
+              </svg>
+            ),
+            onClick: () => onAssignee(),
+          },
+        ]
+      : []),
     {
       id: "export",
       label: "エクスポート",

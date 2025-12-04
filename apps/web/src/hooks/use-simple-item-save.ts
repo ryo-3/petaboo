@@ -336,7 +336,7 @@ export function useSimpleItemSave<T extends UnifiedItem>({
 
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [item?.id, itemType]);
+  }, [item?.id, itemType, (item as Task | undefined)?.assigneeId]);
 
   const executeSave = useCallback(async () => {
     const isEmpty = !title.trim() && !content.trim();

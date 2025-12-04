@@ -65,6 +65,8 @@ import AttachmentGallery from "@/components/features/attachments/attachment-gall
 import PhotoButton from "@/components/ui/buttons/photo-button";
 import { useAttachmentManager } from "@/src/hooks/use-attachment-manager";
 import type { TeamMember } from "@/src/hooks/use-team-detail";
+import { useUpdateTask } from "@/src/hooks/use-tasks";
+import BulkAssigneeModal from "@/components/ui/modals/bulk-assignee-modal";
 
 // ボード名ヘッダーコンポーネント
 function BoardNameHeader({
@@ -242,6 +244,10 @@ function BoardDetailScreen({
   const [tagSelectionMenuType, setTagSelectionMenuType] = useState<
     "memo" | "task"
   >("memo");
+
+  // 担当者一括設定モーダル状態
+  const [isBulkAssigneeModalOpen, setIsBulkAssigneeModalOpen] = useState(false);
+  const [isBulkAssigneeUpdating, setIsBulkAssigneeUpdating] = useState(false);
 
   // ボードに追加のAPI
   const addItemToBoard = useAddItemToBoard();
@@ -816,6 +822,9 @@ function BoardDetailScreen({
   });
 
   // 全データ事前取得（ちらつき解消）
+  // タスク更新用フック（担当者一括設定用）
+  const updateTask = useUpdateTask({ teamMode, teamId: teamId ?? undefined });
+
   const { data: personalTaggings } = useAllTaggings({ enabled: !teamMode });
   const { data: teamTaggings } = useAllTeamTaggings(teamId || 0, {
     enabled: teamMode,
@@ -1269,6 +1278,68 @@ function BoardDetailScreen({
     setIsTagAddModalOpen(true);
   }, []);
 
+  // 担当者一括設定のハンドラー
+  const handleAssigneeTask = useCallback(() => {
+    setIsBulkAssigneeModalOpen(true);
+  }, []);
+
+  // 選択中タスクの現在の担当者を取得（全て同じ場合のみ）
+  const currentSelectedAssigneeId = useMemo(() => {
+    if (checkedTasks.size === 0) return undefined;
+
+    const selectedTaskIds = Array.from(checkedTasks);
+    const selectedTaskItems = taskItems.filter((item) => {
+      const itemId = item.content?.id || item.itemId || item.id;
+      return selectedTaskIds.includes(itemId);
+    });
+
+    if (selectedTaskItems.length === 0) return undefined;
+
+    const firstAssignee = (selectedTaskItems[0]?.content as Task)?.assigneeId;
+    const allSame = selectedTaskItems.every(
+      (item) => (item.content as Task)?.assigneeId === firstAssignee,
+    );
+
+    return allSame ? firstAssignee : undefined;
+  }, [checkedTasks, taskItems]);
+
+  // 担当者一括設定ハンドラー
+  const handleBulkAssigneeUpdate = useCallback(
+    async (assigneeId: string | null) => {
+      if (checkedTasks.size === 0) return;
+
+      setIsBulkAssigneeUpdating(true);
+      try {
+        // 選択されたタスクのIDを取得（content.idを使用）
+        const taskIds = Array.from(checkedTasks).map((id) => {
+          if (typeof id === "number") return id;
+          // 文字列の場合はtaskItemsからcontent.idを探す
+          const item = taskItems.find(
+            (t) => t.itemId === id || t.content?.displayId === id,
+          );
+          return item?.content?.id || parseInt(String(id), 10);
+        });
+
+        // 選択されたタスクの担当者を一括更新
+        const updatePromises = taskIds.map((taskId) =>
+          updateTask.mutateAsync({
+            id: taskId,
+            data: { assigneeId: assigneeId },
+          }),
+        );
+        await Promise.all(updatePromises);
+        setIsBulkAssigneeModalOpen(false);
+        // 選択状態をクリア
+        setCheckedTasks(new Set());
+      } catch (error) {
+        console.error("担当者の一括設定に失敗しました:", error);
+      } finally {
+        setIsBulkAssigneeUpdating(false);
+      }
+    },
+    [checkedTasks, taskItems, updateTask, setCheckedTasks],
+  );
+
   // 拡張されたタブ変更ハンドラー（削除済タブでキャッシュ更新）
   const handleMemoTabChangeWithRefresh = async (tab: "normal" | "deleted") => {
     if (tab === "deleted") {
@@ -1482,6 +1553,7 @@ function BoardDetailScreen({
                                   deleteButtonRef={deleteButtonRef}
                                   onCheckedTasksChange={setCheckedTasks}
                                   onTagging={handleTaggingTask}
+                                  onAssignee={handleAssigneeTask}
                                 />
                               ) : null}
                             </div>
@@ -1801,6 +1873,7 @@ function BoardDetailScreen({
                                     deleteButtonRef={deleteButtonRef}
                                     onCheckedTasksChange={setCheckedTasks}
                                     onTagging={handleTaggingTask}
+                                    onAssignee={handleAssigneeTask}
                                   />
                                 ) : (
                                   /* デフォルトまたはメモ選択時: メモ一覧を表示 */
@@ -2076,6 +2149,7 @@ function BoardDetailScreen({
                                     deleteButtonRef={deleteButtonRef}
                                     onCheckedTasksChange={setCheckedTasks}
                                     onTagging={handleTaggingTask}
+                                    onAssignee={handleAssigneeTask}
                                   />
                                 )}
                               </div>
@@ -2307,6 +2381,7 @@ function BoardDetailScreen({
                                 deleteButtonRef={deleteButtonRef}
                                 onCheckedTasksChange={setCheckedTasks}
                                 onTagging={handleTaggingTask}
+                                onAssignee={handleAssigneeTask}
                               />
                               {/* モバイル: タスク追加FABボタン（削除済みタブ以外で表示） */}
                               <MobileFabButton
@@ -2443,6 +2518,7 @@ function BoardDetailScreen({
                                   deleteButtonRef={deleteButtonRef}
                                   onCheckedTasksChange={setCheckedTasks}
                                   onTagging={handleTaggingTask}
+                                  onAssignee={handleAssigneeTask}
                                 />
                               </div>
                             </ResizablePanel>
@@ -2582,6 +2658,7 @@ function BoardDetailScreen({
                 deleteButtonRef={deleteButtonRef}
                 onCheckedTasksChange={setCheckedTasks}
                 onTagging={handleTaggingTask}
+                onAssignee={handleAssigneeTask}
               />
             </>
           )}
@@ -2714,6 +2791,17 @@ function BoardDetailScreen({
             setCheckedTasks(new Set());
           }
         }}
+      />
+
+      {/* 担当者一括設定モーダル */}
+      <BulkAssigneeModal
+        isOpen={isBulkAssigneeModalOpen}
+        onClose={() => setIsBulkAssigneeModalOpen(false)}
+        onConfirm={handleBulkAssigneeUpdate}
+        members={teamMembers}
+        selectedCount={checkedTasks.size}
+        isLoading={isBulkAssigneeUpdating}
+        currentAssigneeId={currentSelectedAssigneeId}
       />
     </div>
   );

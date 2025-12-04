@@ -24,6 +24,7 @@ import {
   useDeletedTasks,
   useTasks,
   usePermanentDeleteTask,
+  useUpdateTask,
 } from "@/src/hooks/use-tasks";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import { useTeamContext } from "@/src/contexts/team-context";
@@ -42,6 +43,7 @@ import { useTags } from "@/src/hooks/use-tags";
 import { useTeamTags } from "@/src/hooks/use-team-tags";
 import { useTaskDeleteWithNextSelection } from "@/src/hooks/use-memo-delete-with-next-selection";
 import TagManagementModal from "@/components/ui/tag-management/tag-management-modal";
+import BulkAssigneeModal from "@/components/ui/modals/bulk-assignee-modal";
 import { useAllTaggings, useAllBoardItems } from "@/src/hooks/use-all-data";
 import { useAllTeamTaggings } from "@/src/hooks/use-team-taggings";
 import { useAllAttachments } from "@/src/hooks/use-all-attachments";
@@ -225,6 +227,12 @@ function TaskScreen({
 
   const { data: deletedTasks } = useDeletedTasks({ teamMode, teamId });
 
+  // キャッシュから最新のselectedTaskを取得（担当者変更などの反映用）
+  const latestSelectedTask = useMemo(() => {
+    if (!selectedTask || !tasks) return selectedTask;
+    return tasks.find((t) => t.id === selectedTask.id) ?? selectedTask;
+  }, [selectedTask, tasks]);
+
   const { preferences } = useUserPreferences(1);
 
   const { data: personalBoards } = useBoards("normal", !teamMode);
@@ -255,6 +263,9 @@ function TaskScreen({
 
   // 削除済みタスクの完全削除フック
   const permanentDeleteTask = usePermanentDeleteTask();
+
+  // タスク更新フック（担当者一括設定用）
+  const updateTask = useUpdateTask({ teamMode, teamId });
 
   // 全データ事前取得（ちらつき解消）
   const { data: allTaggings } = useAllTaggings();
@@ -350,6 +361,10 @@ function TaskScreen({
   // タグ管理モーダルの状態
   const [isTagManagementModalOpen, setIsTagManagementModalOpen] =
     useState(false);
+
+  // 担当者一括設定モーダルの状態
+  const [isBulkAssigneeModalOpen, setIsBulkAssigneeModalOpen] = useState(false);
+  const [isBulkAssigneeUpdating, setIsBulkAssigneeUpdating] = useState(false);
 
   // 削除ボタンの参照
   const deleteButtonRef = useRef<HTMLButtonElement>(null);
@@ -567,6 +582,54 @@ function TaskScreen({
 
   const checkedDeletedTasks = checkedDeletedTasksLocal;
   const setCheckedDeletedTasks = setCheckedDeletedTasksLocal;
+
+  // 選択中タスクの現在の担当者を取得（全て同じ場合のみ値を返す）
+  const currentSelectedAssigneeId = useMemo(() => {
+    if (checkedTasks.size === 0 || !tasks) return undefined;
+
+    const selectedTasksArray = Array.from(checkedTasks)
+      .map((id) => tasks.find((t) => t.id === id))
+      .filter((t): t is Task => t !== undefined);
+
+    if (selectedTasksArray.length === 0) return undefined;
+
+    const firstTask = selectedTasksArray[0];
+    if (!firstTask) return undefined;
+    const firstAssignee = firstTask.assigneeId;
+    const allSame = selectedTasksArray.every(
+      (t) => t.assigneeId === firstAssignee,
+    );
+
+    return allSame ? firstAssignee : undefined;
+  }, [checkedTasks, tasks]);
+
+  // 担当者一括設定ハンドラー
+  const handleBulkAssigneeUpdate = useCallback(
+    async (assigneeId: string | null) => {
+      if (checkedTasks.size === 0) return;
+
+      setIsBulkAssigneeUpdating(true);
+      try {
+        // 選択されたタスクの担当者を一括更新
+        // assigneeIdがnullの場合は明示的にnullを送信（担当者解除）
+        const updatePromises = Array.from(checkedTasks).map((taskId) =>
+          updateTask.mutateAsync({
+            id: taskId,
+            data: { assigneeId: assigneeId },
+          }),
+        );
+        await Promise.all(updatePromises);
+        setIsBulkAssigneeModalOpen(false);
+        // 選択状態をクリア
+        setCheckedTasks(new Set());
+      } catch (error) {
+        console.error("担当者の一括設定に失敗しました:", error);
+      } finally {
+        setIsBulkAssigneeUpdating(false);
+      }
+    },
+    [checkedTasks, updateTask, setCheckedTasks],
+  );
 
   // タブクリア機能付きのトグルハンドラー
   const handleTaskToggleWithTabClear = (taskId: number) => {
@@ -1110,7 +1173,7 @@ function TaskScreen({
           selectionMode={selectionMode}
           tasks={filteredTasks}
           deletedTasks={deletedTasks || []}
-          selectedTask={selectedTask}
+          selectedTask={latestSelectedTask}
           selectedDeletedTask={selectedDeletedTask}
           checkedTasks={checkedTasks}
           checkedDeletedTasks={checkedDeletedTasks}
@@ -1185,6 +1248,11 @@ function TaskScreen({
           onTabMove={() => {
             // TODO: タブ移動処理
           }}
+          onAssignee={() => {
+            setIsBulkAssigneeModalOpen(true);
+          }}
+          isTaskMode={true}
+          teamMode={teamMode}
           isVisible={
             activeTab !== "deleted" && checkedTasks.size > 0 && !isDeleting
           }
@@ -1261,44 +1329,46 @@ function TaskScreen({
         />
       )}
       {/* 表示モード（既存タスク） */}
-      {taskScreenMode === "view" && selectedTask && !selectedDeletedTask && (
-        <TaskEditor
-          key={`task-view-${selectedTask.id}`}
-          task={selectedTask}
-          onClose={() => {
-            if (teamMode) {
-              onClearSelection?.();
-            } else {
-              onSelectTask(null); // 個人モードでは選択を解除
+      {taskScreenMode === "view" &&
+        latestSelectedTask &&
+        !selectedDeletedTask && (
+          <TaskEditor
+            key={`task-view-${latestSelectedTask.id}`}
+            task={latestSelectedTask}
+            onClose={() => {
+              if (teamMode) {
+                onClearSelection?.();
+              } else {
+                onSelectTask(null); // 個人モードでは選択を解除
+              }
+              setTaskScreenMode("list");
+            }}
+            onSelectTask={onSelectTask}
+            onClosePanel={() => setTaskScreenMode("list")}
+            onDeleteAndSelectNext={handleTaskDeleteAndSelectNext}
+            createdBy={latestSelectedTask.createdBy}
+            createdByUserId={latestSelectedTask.userId}
+            createdByAvatarColor={latestSelectedTask.avatarColor}
+            customHeight="flex-1 min-h-0"
+            showDateAtBottom={true}
+            preloadedTags={tags || []}
+            preloadedBoards={boards || []}
+            preloadedTaggings={safeAllTaggings}
+            preloadedBoardItems={safeAllBoardItems}
+            preloadedItemBoards={itemBoards}
+            unifiedOperations={unifiedOperations}
+            taskEditorHasUnsavedChangesRef={
+              teamMode
+                ? taskEditorHasUnsavedChangesRef
+                : personalHasUnsavedChangesRef
             }
-            setTaskScreenMode("list");
-          }}
-          onSelectTask={onSelectTask}
-          onClosePanel={() => setTaskScreenMode("list")}
-          onDeleteAndSelectNext={handleTaskDeleteAndSelectNext}
-          createdBy={selectedTask.createdBy}
-          createdByUserId={selectedTask.userId}
-          createdByAvatarColor={selectedTask.avatarColor}
-          customHeight="flex-1 min-h-0"
-          showDateAtBottom={true}
-          preloadedTags={tags || []}
-          preloadedBoards={boards || []}
-          preloadedTaggings={safeAllTaggings}
-          preloadedBoardItems={safeAllBoardItems}
-          preloadedItemBoards={itemBoards}
-          unifiedOperations={unifiedOperations}
-          taskEditorHasUnsavedChangesRef={
-            teamMode
-              ? taskEditorHasUnsavedChangesRef
-              : personalHasUnsavedChangesRef
-          }
-          taskEditorShowConfirmModalRef={
-            teamMode
-              ? taskEditorShowConfirmModalRef
-              : personalShowConfirmModalRef
-          }
-        />
-      )}
+            taskEditorShowConfirmModalRef={
+              teamMode
+                ? taskEditorShowConfirmModalRef
+                : personalShowConfirmModalRef
+            }
+          />
+        )}
       {/* 表示モード（削除済みタスク） */}
       {taskScreenMode === "view" && selectedDeletedTask && !selectedTask && (
         <TaskEditor
@@ -1454,7 +1524,7 @@ function TaskScreen({
                 selectionMode={selectionMode}
                 tasks={filteredTasks}
                 deletedTasks={deletedTasks || []}
-                selectedTask={selectedTask}
+                selectedTask={latestSelectedTask}
                 selectedDeletedTask={selectedDeletedTask}
                 checkedTasks={checkedTasks}
                 checkedDeletedTasks={checkedDeletedTasks}
@@ -1496,7 +1566,7 @@ function TaskScreen({
         ) : (
           <div className="h-full overflow-y-auto overscroll-contain">
             <MobileAttachmentView
-              selectedTask={selectedTask || null}
+              selectedTask={latestSelectedTask || null}
               teamId={teamId}
             />
           </div>
@@ -1529,6 +1599,18 @@ function TaskScreen({
           setCheckedTasks(new Set());
         }}
       />
+      {/* 担当者一括設定モーダル（チームモードのみ） */}
+      {teamMode && (
+        <BulkAssigneeModal
+          isOpen={isBulkAssigneeModalOpen}
+          onClose={() => setIsBulkAssigneeModalOpen(false)}
+          onConfirm={handleBulkAssigneeUpdate}
+          members={teamMembers}
+          selectedCount={checkedTasks.size}
+          isLoading={isBulkAssigneeUpdating}
+          currentAssigneeId={currentSelectedAssigneeId}
+        />
+      )}
     </div>
   );
 }

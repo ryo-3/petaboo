@@ -66,6 +66,7 @@ interface BoardTaskSectionProps {
   onPin?: () => void;
   onTagging?: () => void;
   onTabMove?: () => void;
+  onAssignee?: () => void;
 
   // 全データ事前取得（ちらつき解消）
   allTags?: Tag[];
@@ -128,6 +129,7 @@ export default function BoardTaskSection({
   onPin,
   onTagging,
   onTabMove,
+  onAssignee,
   allTags = [],
   allBoards = [],
   allTaggings = [],
@@ -513,6 +515,9 @@ export default function BoardTaskSection({
         onPin={onPin}
         onTagging={onTagging}
         onTabMove={onTabMove}
+        onAssignee={onAssignee}
+        isTaskMode={true}
+        teamMode={teamMode}
         isVisible={
           activeTaskTab !== "deleted" && checkedTasks.size > 0 && !isDeleting
         }

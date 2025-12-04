@@ -20,6 +20,7 @@ export interface CreateCommentInput {
   targetDisplayId: string;
   boardId?: number; // メモ/タスクが所属するボードID
   content: string;
+  mentionedUserIds?: string[]; // フロントから送信されたメンションuserIds
 }
 
 // コメント一覧取得

@@ -41,6 +41,7 @@ const TeamCommentInputSchema = z.object({
     .string()
     .min(1)
     .max(1000, "コメントは1,000文字以内で入力してください"),
+  mentionedUserIds: z.array(z.string()).optional(), // フロントから送信されたメンションuserIds
 });
 
 // チームメンバー確認のヘルパー関数
@@ -54,8 +55,27 @@ async function checkTeamMember(teamId: number, userId: string, db: any) {
   return member.length > 0 ? member[0] : null;
 }
 
-// メンション解析のヘルパー関数
+// クライアントから送信されたuserIdsがチームメンバーか検証
+async function validateMentionedUserIds(
+  userIds: string[],
+  teamId: number,
+  db: any,
+): Promise<string[]> {
+  if (userIds.length === 0) return [];
+
+  const members = await db
+    .select({ userId: teamMembers.userId })
+    .from(teamMembers)
+    .where(
+      and(eq(teamMembers.teamId, teamId), inArray(teamMembers.userId, userIds)),
+    );
+
+  return members.map((m: { userId: string }) => m.userId);
+}
+
+// メンション解析のヘルパー関数（フォールバック用）
 // コメント本文から @displayName を抽出し、対応するuserIdの配列を返す
+// ※スペースを含む名前には対応していないため、フロントからmentionedUserIdsを送信することを推奨
 async function extractMentions(
   content: string,
   teamId: number,
@@ -515,10 +535,27 @@ export const postComment = async (c: any) => {
   // リクエストボディのバリデーション
   const body = c.req.valid("json");
 
-  const { targetType, targetDisplayId, boardId, content } = body;
+  const {
+    targetType,
+    targetDisplayId,
+    boardId,
+    content,
+    mentionedUserIds: clientMentionedUserIds,
+  } = body;
 
-  // メンション解析
-  const mentionedUserIds = await extractMentions(content, teamId, db);
+  // メンション解析（クライアントから送信されたものを優先、なければテキストから抽出）
+  let mentionedUserIds: string[];
+  if (clientMentionedUserIds && clientMentionedUserIds.length > 0) {
+    // クライアントから送信されたuserIdsを使用（チームメンバーかどうか検証）
+    mentionedUserIds = await validateMentionedUserIds(
+      clientMentionedUserIds,
+      teamId,
+      db,
+    );
+  } else {
+    // フォールバック: テキストから抽出
+    mentionedUserIds = await extractMentions(content, teamId, db);
+  }
   const mentionsJson =
     mentionedUserIds.length > 0 ? JSON.stringify(mentionedUserIds) : null;
 

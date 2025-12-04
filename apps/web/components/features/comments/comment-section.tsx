@@ -138,63 +138,144 @@ function renderLineWithMentions(
   currentUserId?: string,
   teamMembers: TeamMember[] = [],
 ): JSX.Element[] {
-  // インラインコードとメンションの両方に対応
-  const pattern = /(`[^`]+`)|(@[\p{L}\p{N}_]+)/gu;
-  const parts = line.split(pattern);
+  const elements: JSX.Element[] = [];
+  let remainingText = line;
+  let keyIndex = 0;
 
-  return parts
-    .flatMap((part, index) => {
-      if (!part) return [];
+  // 現在のユーザーのdisplayNameを取得
+  const currentUserMember = teamMembers.find(
+    (member) => member.userId === currentUserId,
+  );
+  const currentUserDisplayName = currentUserMember?.displayName || "";
 
-      // インラインコード判定
-      if (part.startsWith("`") && part.endsWith("`")) {
-        const codeContent = part.slice(1, -1);
-        return [
-          <code
-            key={`code-${index}`}
-            className="bg-gray-200 text-gray-800 px-1.5 py-0.5 rounded text-xs font-mono"
-          >
-            {codeContent}
-          </code>,
-        ];
+  // チームメンバーの名前リスト（長い順にソートして、部分一致の問題を回避）
+  const memberNames = teamMembers
+    .map((m) => m.displayName)
+    .filter((name): name is string => !!name)
+    .sort((a, b) => b.length - a.length);
+
+  while (remainingText.length > 0) {
+    // インラインコードを検索
+    const codeMatch = remainingText.match(/`[^`]+`/);
+    // @を検索（チームメンバー名との一致をチェック）
+    let mentionMatch: {
+      index: number;
+      name: string;
+      fullMatch: string;
+    } | null = null;
+
+    const atIndex = remainingText.indexOf("@");
+    if (atIndex !== -1) {
+      const afterAt = remainingText.slice(atIndex + 1);
+      // チームメンバー名と一致するか確認（長い名前から順にチェック）
+      for (const name of memberNames) {
+        if (afterAt.startsWith(name)) {
+          // 名前の後が空白、句読点、または文字列終端であることを確認
+          const charAfterName = afterAt[name.length];
+          if (!charAfterName || /[\s　,.!?。、！？\n]/.test(charAfterName)) {
+            mentionMatch = {
+              index: atIndex,
+              name: name,
+              fullMatch: `@${name}`,
+            };
+            break;
+          }
+        }
       }
+    }
 
-      // メンション判定
-      const mentionPattern = /^@[\p{L}\p{N}_]+$/u;
-      if (part.match(mentionPattern)) {
-        // メンション名から@を除いて比較
-        const mentionName = part.slice(1);
+    // 最も早く出現するパターンを見つける
+    const codeIndex = codeMatch?.index ?? Number.POSITIVE_INFINITY;
+    const mentionIndex = mentionMatch?.index ?? Number.POSITIVE_INFINITY;
 
-        // 現在のユーザーのdisplayNameを取得
-        const currentUserMember = teamMembers.find(
-          (member) => member.userId === currentUserId,
-        );
-        const currentUserDisplayName = currentUserMember?.displayName || "";
+    if (
+      codeIndex === Number.POSITIVE_INFINITY &&
+      mentionIndex === Number.POSITIVE_INFINITY
+    ) {
+      // パターンが見つからない場合、残りのテキストをURL検出してリンク化
+      const linkedParts = linkifyLine(remainingText);
+      linkedParts.forEach((linkedPart, linkedIndex) => {
+        if (typeof linkedPart === "string") {
+          elements.push(
+            <span key={`text-${keyIndex}-${linkedIndex}`}>{linkedPart}</span>,
+          );
+        } else {
+          elements.push(
+            <span key={`link-${keyIndex}-${linkedIndex}`}>{linkedPart}</span>,
+          );
+        }
+      });
+      break;
+    }
 
-        // 自分へのメンションかチェック
-        const isSelfMention = currentUserDisplayName === mentionName;
-
-        return [
-          <span
-            key={`mention-${index}`}
-            className={`font-medium ${isSelfMention ? "bg-blue-200 text-blue-800" : "bg-gray-200 text-gray-800"} px-1 rounded`}
-          >
-            {part}
-          </span>,
-        ];
+    if (codeIndex < mentionIndex) {
+      // インラインコードが先
+      if (codeIndex > 0) {
+        // コードの前のテキストをURL検出してリンク化
+        const beforeCode = remainingText.slice(0, codeIndex);
+        const linkedParts = linkifyLine(beforeCode);
+        linkedParts.forEach((linkedPart, linkedIndex) => {
+          if (typeof linkedPart === "string") {
+            elements.push(
+              <span key={`text-${keyIndex}-${linkedIndex}`}>{linkedPart}</span>,
+            );
+          } else {
+            elements.push(
+              <span key={`link-${keyIndex}-${linkedIndex}`}>{linkedPart}</span>,
+            );
+          }
+        });
+        keyIndex++;
       }
-
-      // 通常のテキスト: URLを検出してリンク化
-      const linkedParts = linkifyLine(part);
-      return linkedParts.map((linkedPart, linkedIndex) =>
-        typeof linkedPart === "string" ? (
-          <span key={`text-${index}-${linkedIndex}`}>{linkedPart}</span>
-        ) : (
-          <span key={`link-${index}-${linkedIndex}`}>{linkedPart}</span>
-        ),
+      // インラインコード
+      const codeContent = codeMatch![0].slice(1, -1);
+      elements.push(
+        <code
+          key={`code-${keyIndex}`}
+          className="bg-gray-200 text-gray-800 px-1.5 py-0.5 rounded text-xs font-mono"
+        >
+          {codeContent}
+        </code>,
       );
-    })
-    .filter((element): element is JSX.Element => element !== null);
+      keyIndex++;
+      remainingText = remainingText.slice(codeIndex + codeMatch![0].length);
+    } else {
+      // メンションが先
+      if (mentionIndex > 0) {
+        // メンションの前のテキストをURL検出してリンク化
+        const beforeMention = remainingText.slice(0, mentionIndex);
+        const linkedParts = linkifyLine(beforeMention);
+        linkedParts.forEach((linkedPart, linkedIndex) => {
+          if (typeof linkedPart === "string") {
+            elements.push(
+              <span key={`text-${keyIndex}-${linkedIndex}`}>{linkedPart}</span>,
+            );
+          } else {
+            elements.push(
+              <span key={`link-${keyIndex}-${linkedIndex}`}>{linkedPart}</span>,
+            );
+          }
+        });
+        keyIndex++;
+      }
+      // メンション
+      const isSelfMention = currentUserDisplayName === mentionMatch!.name;
+      elements.push(
+        <span
+          key={`mention-${keyIndex}`}
+          className={`font-medium ${isSelfMention ? "bg-blue-200 text-blue-800" : "bg-gray-200 text-gray-800"} px-1 rounded`}
+        >
+          {mentionMatch!.fullMatch}
+        </span>,
+      );
+      keyIndex++;
+      remainingText = remainingText.slice(
+        mentionIndex + mentionMatch!.fullMatch.length,
+      );
+    }
+  }
+
+  return elements;
 }
 
 interface CommentSectionProps {
@@ -239,6 +320,9 @@ export default function CommentSection({
   const [mentionQuery, setMentionQuery] = useState("");
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
   const [cursorPosition, setCursorPosition] = useState(0);
+
+  // メンションされたユーザーIDの管理
+  const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([]);
 
   // コメント表示範囲の状態
   const [commentScope, setCommentScope] = useState<"board" | "items">(() => {
@@ -382,6 +466,11 @@ export default function CommentSection({
       setNewComment(newText);
       setShowMentionSuggestions(false);
 
+      // メンションされたユーザーIDを追加（重複排除）
+      setMentionedUserIds((prev) =>
+        prev.includes(member.userId) ? prev : [...prev, member.userId],
+      );
+
       // フォーカスを戻す
       setTimeout(() => {
         textareaRef.current?.focus();
@@ -497,6 +586,8 @@ export default function CommentSection({
         targetDisplayId,
         boardId, // ボードIDを追加
         content: newComment.trim() || " ", // 画像のみの場合は空白を入れる
+        mentionedUserIds:
+          mentionedUserIds.length > 0 ? mentionedUserIds : undefined,
       });
 
       // 画像をアップロード（コメントIDをoriginalIdとして使用）
@@ -545,6 +636,7 @@ export default function CommentSection({
       }
 
       setNewComment("");
+      setMentionedUserIds([]); // メンションリストをリセット
       setShowMentionSuggestions(false);
 
       // テキストエリアの高さをリセット

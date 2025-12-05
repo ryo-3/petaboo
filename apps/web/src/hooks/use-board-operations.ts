@@ -406,18 +406,18 @@ export function useBoardOperations({
       editorSelector: "[data-memo-editor]",
     });
 
-  // 復元ハンドラー - 復元完了後に次選択するように修正
+  // 復元ハンドラー - ちらつき防止のため、復元前に次選択を実行
   const handleMemoRestoreAndSelectNext = useCallback(
     async (deletedMemo: DeletedMemo) => {
       try {
-        // 実際の復元APIを呼び出す
+        // PETABOO-54: 復元前に次のアイテムを計算して選択を切り替える（ちらつき防止）
+        rawHandleMemoRestoreAndSelectNext(deletedMemo);
+
+        // その後で復元APIを呼び出す
         await restoreMemoMutation.mutateAsync(deletedMemo.displayId);
 
         // 復元処理後に削除済みアイテム一覧を更新
         await refetchDeletedItems();
-
-        // 復元とキャッシュ更新が完了してから次選択を実行
-        rawHandleMemoRestoreAndSelectNext(deletedMemo);
       } catch {
         // エラーは useRestoreMemo の onError で処理される
       }
@@ -444,18 +444,18 @@ export function useBoardOperations({
       editorSelector: "[data-task-editor]",
     });
 
-  // タスク復元ハンドラー - 復元完了後に次選択するように修正
+  // タスク復元ハンドラー - ちらつき防止のため、復元前に次選択を実行
   const handleTaskRestoreAndSelectNext = useCallback(
     async (deletedTask: DeletedTask) => {
       try {
-        // 実際の復元APIを呼び出す
+        // PETABOO-54: 復元前に次のアイテムを計算して選択を切り替える（ちらつき防止）
+        rawHandleTaskRestoreAndSelectNext(deletedTask);
+
+        // その後で復元APIを呼び出す
         await restoreTaskMutation.mutateAsync(deletedTask.displayId);
 
         // 復元処理後に削除済みアイテム一覧を更新
         await refetchDeletedItems();
-
-        // 復元とキャッシュ更新が完了してから次選択を実行
-        rawHandleTaskRestoreAndSelectNext(deletedTask);
       } catch {
         // エラーは useRestoreTask の onError で処理される
       }

@@ -103,12 +103,32 @@ export function NavigationProvider({
   >(initialCurrentMode);
 
   // モード切り替え関数（useCallback で安定化）
+  // PETABOO-50: screenMode変更をログ出力
   const setScreenMode = useCallback((mode: ScreenMode) => {
-    setScreenModeInternal(mode);
+    setScreenModeInternal((prev) => {
+      if (prev !== mode) {
+        console.log("🔄 [NavigationContext] screenMode変更", {
+          from: prev,
+          to: mode,
+          stack: new Error().stack?.split("\n").slice(2, 5).join("\n"),
+        });
+      }
+      return mode;
+    });
   }, []);
 
+  // PETABOO-50: currentMode変更をログ出力
   const setCurrentMode = useCallback((mode: "memo" | "task" | "board") => {
-    setCurrentModeInternal(mode);
+    setCurrentModeInternal((prev) => {
+      if (prev !== mode) {
+        console.log("🔄 [NavigationContext] currentMode変更", {
+          from: prev,
+          to: mode,
+          stack: new Error().stack?.split("\n").slice(2, 5).join("\n"),
+        });
+      }
+      return mode;
+    });
   }, []);
   const [isFromBoardDetail, setIsFromBoardDetail] = useState(false);
   const [handleMainSelectMemo, setHandleMainSelectMemo] = useState<

@@ -21,9 +21,37 @@ export function useBoardState() {
   }, []);
 
   // タブ状態
-  const [activeTaskTab, setActiveTaskTab] = useState<
+  const [activeTaskTab, setActiveTaskTabInternal] = useState<
     "todo" | "in_progress" | "checking" | "completed" | "deleted"
   >("todo");
+
+  // PETABOO-55: タブ変更をログ出力するラッパー
+  const setActiveTaskTab = useCallback(
+    (
+      newTab:
+        | "todo"
+        | "in_progress"
+        | "checking"
+        | "completed"
+        | "deleted"
+        | ((
+            prev: "todo" | "in_progress" | "checking" | "completed" | "deleted",
+          ) => "todo" | "in_progress" | "checking" | "completed" | "deleted"),
+    ) => {
+      setActiveTaskTabInternal((prev) => {
+        const next = typeof newTab === "function" ? newTab(prev) : newTab;
+        if (prev !== next) {
+          console.log("🔄 [useBoardState] activeTaskTab変更", {
+            from: prev,
+            to: next,
+            stack: new Error().stack?.split("\n").slice(2, 6).join("\n"),
+          });
+        }
+        return next;
+      });
+    },
+    [],
+  );
   const [activeMemoTab, setActiveMemoTab] = useState<"normal" | "deleted">(
     "normal",
   );

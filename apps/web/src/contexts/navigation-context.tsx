@@ -218,6 +218,18 @@ export function NavigationProvider({
           (!effectiveTab && screenMode === "team"),
       };
 
+      // PETABOO-50: チームページのiconStates計算結果をログ出力
+      const activeIconKey = Object.entries(result).find(
+        ([, v]) => v === true,
+      )?.[0];
+      console.log("📍 [NavigationContext] チームiconStates", {
+        url: `${pathname}?${searchParams.toString()}`,
+        activeTab,
+        effectiveTab,
+        activeIcon: activeIconKey || "none",
+        optimisticMode,
+      });
+
       // PETABOO-50: チームページでhomeがtrueだが期待するタブがある場合に警告
       if (result.home && activeTab && activeTab !== "overview") {
         console.warn(
@@ -305,6 +317,19 @@ export function NavigationProvider({
       settings: screenMode === "settings",
       team: isTeamScreen,
     };
+
+    // PETABOO-50: 個人ページのiconStates計算結果をログ出力
+    const activeIconKey = Object.entries(result).find(
+      ([, v]) => v === true,
+    )?.[0];
+    console.log("📍 [NavigationContext] 個人iconStates", {
+      url: `${pathname}?${searchParams.toString()}`,
+      screenMode,
+      currentMode,
+      effectiveMode,
+      activeIcon: activeIconKey || "none",
+      optimisticMode,
+    });
 
     // PETABOO-50: iconStates計算結果をログ出力（個人ページのみ）
     if (result.home && screenMode !== "home") {

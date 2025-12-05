@@ -1,6 +1,15 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { getAuth } from "@hono/clerk-auth";
-import { eq, and, or, desc, isNull, isNotNull, sql } from "drizzle-orm";
+import {
+  eq,
+  and,
+  or,
+  desc,
+  isNull,
+  isNotNull,
+  sql,
+  innerJoin,
+} from "drizzle-orm";
 import { aliasedTable } from "drizzle-orm/alias";
 import {
   teams,
@@ -1010,10 +1019,28 @@ export function createTeamBoardsAPI(app: AppType) {
         return c.json({ error: "ボードが見つかりません" }, 404);
       }
 
-      // チーム削除済みメモを取得（論理削除済み）
+      // チーム削除済みメモを取得（論理削除済み、このボードに追加されていたもののみ）
       const deletedMemos = await db
-        .select()
+        .select({
+          id: teamMemos.id,
+          title: teamMemos.title,
+          content: teamMemos.content,
+          displayId: teamMemos.displayId,
+          teamId: teamMemos.teamId,
+          createdAt: teamMemos.createdAt,
+          updatedAt: teamMemos.updatedAt,
+          deletedAt: teamMemos.deletedAt,
+          boardIndex: teamBoardItems.boardIndex,
+        })
         .from(teamMemos)
+        .innerJoin(
+          teamBoardItems,
+          and(
+            eq(teamBoardItems.displayId, teamMemos.displayId),
+            eq(teamBoardItems.itemType, "memo"),
+            eq(teamBoardItems.boardId, parseInt(boardId)),
+          ),
+        )
         .where(
           and(
             eq(teamMemos.teamId, parseInt(teamId)),
@@ -1021,10 +1048,31 @@ export function createTeamBoardsAPI(app: AppType) {
           ),
         );
 
-      // チーム削除済みタスクを取得（論理削除済み）
+      // チーム削除済みタスクを取得（論理削除済み、このボードに追加されていたもののみ）
       const deletedTasks = await db
-        .select()
+        .select({
+          id: teamTasks.id,
+          title: teamTasks.title,
+          description: teamTasks.description,
+          status: teamTasks.status,
+          priority: teamTasks.priority,
+          dueDate: teamTasks.dueDate,
+          displayId: teamTasks.displayId,
+          teamId: teamTasks.teamId,
+          createdAt: teamTasks.createdAt,
+          updatedAt: teamTasks.updatedAt,
+          deletedAt: teamTasks.deletedAt,
+          boardIndex: teamBoardItems.boardIndex,
+        })
         .from(teamTasks)
+        .innerJoin(
+          teamBoardItems,
+          and(
+            eq(teamBoardItems.displayId, teamTasks.displayId),
+            eq(teamBoardItems.itemType, "task"),
+            eq(teamBoardItems.boardId, parseInt(boardId)),
+          ),
+        )
         .where(
           and(
             eq(teamTasks.teamId, parseInt(teamId)),
@@ -1068,7 +1116,7 @@ export function createTeamBoardsAPI(app: AppType) {
         }),
       );
 
-      // 削除済みアイテムを統合フォーマットに変換
+      // 削除済みアイテムを統合フォーマットに変換（boardIndex含む）
       const deletedItems = [
         ...deletedMemosWithCommentCount.map((memo) => ({
           id: memo.id,
@@ -1081,6 +1129,7 @@ export function createTeamBoardsAPI(app: AppType) {
             title: memo.title,
             content: memo.content,
             displayId: memo.displayId,
+            boardIndex: memo.boardIndex,
             createdAt: memo.createdAt,
             updatedAt: memo.updatedAt,
             deletedAt: memo.deletedAt,
@@ -1101,6 +1150,7 @@ export function createTeamBoardsAPI(app: AppType) {
             priority: task.priority,
             dueDate: task.dueDate,
             displayId: task.displayId,
+            boardIndex: task.boardIndex,
             createdAt: task.createdAt,
             updatedAt: task.updatedAt,
             deletedAt: task.deletedAt,

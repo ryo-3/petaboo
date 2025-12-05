@@ -1092,16 +1092,22 @@ export function createAPI(app: AppType) {
           content = deletedTask[0] || null;
         }
 
+        // contentにboardIndexを追加
+        const contentWithBoardIndex = content
+          ? { ...content, boardIndex: item.boardIndex }
+          : null;
+
         return {
           id: item.id,
           itemType: item.itemType,
           itemId: content?.id || item.id, // content が null の場合は board_item の id を使用
           displayId: item.displayId,
+          boardIndex: item.boardIndex, // ボード内連番
           deletedAt:
             typeof item.deletedAt === "object"
               ? Math.floor(item.deletedAt.getTime() / 1000)
               : item.deletedAt,
-          content,
+          content: contentWithBoardIndex,
         };
       }),
     );

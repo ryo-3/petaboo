@@ -87,16 +87,25 @@ export function useCreateTask(options?: {
     onSuccess: (newTask) => {
       // 1. まず楽観的更新でUIを即座に反映（invalidateより先に実行）
       if (teamMode && teamId) {
-        // チームタスク一覧に新しいタスクを楽観的に追加
-        queryClient.setQueryData<Task[]>(["team-tasks", teamId], (oldTasks) => {
-          if (!oldTasks) return [newTask];
-          // 重複チェック（displayIdで比較）
-          const exists = oldTasks.some(
-            (t) => t.displayId === newTask.displayId,
+        // チームタスク一覧に新しいタスクを楽観的に追加（キャッシュが存在する場合のみ）
+        const existingCache = queryClient.getQueryData<Task[]>([
+          "team-tasks",
+          teamId,
+        ]);
+        if (existingCache) {
+          queryClient.setQueryData<Task[]>(
+            ["team-tasks", teamId],
+            (oldTasks) => {
+              if (!oldTasks) return [newTask];
+              // 重複チェック（displayIdで比較）
+              const exists = oldTasks.some(
+                (t) => t.displayId === newTask.displayId,
+              );
+              if (exists) return oldTasks;
+              return [...oldTasks, newTask];
+            },
           );
-          if (exists) return oldTasks;
-          return [...oldTasks, newTask];
-        });
+        }
       } else {
         // 個人タスクのキャッシュを楽観的に更新
         queryClient.setQueryData<Task[]>(["tasks"], (oldTasks) => {
@@ -139,16 +148,14 @@ export function useCreateTask(options?: {
         }
       }
 
-      // 3. バックグラウンドでタスク一覧を再取得（楽観的更新を上書きしないようにexactを使用）
-      // invalidateではなくrefetchQueriesを使用し、staleのままで再フェッチ
+      // 3. バックグラウンドでタスク一覧を再取得
       if (teamMode && teamId) {
-        // 他のボードからのアイテムも含めた完全なリストを取得するためバックグラウンドrefetch
-        queryClient.refetchQueries({
+        queryClient.invalidateQueries({
           queryKey: ["team-tasks", teamId],
           exact: true,
         });
       } else {
-        queryClient.refetchQueries({ queryKey: ["tasks"], exact: true });
+        queryClient.invalidateQueries({ queryKey: ["tasks"], exact: true });
       }
 
       // 4. ボード統計の再計算のためボード一覧を無効化
@@ -699,7 +706,7 @@ export function useRestoreTask(options?: {
             );
           },
         });
-        queryClient.refetchQueries({ queryKey: ["team-tasks", teamId] });
+        queryClient.invalidateQueries({ queryKey: ["team-tasks", teamId] });
 
         // チームボード関連のキャッシュを無効化と強制再取得
         // 全ステータス（normal, completed, deleted）のボードキャッシュを無効化

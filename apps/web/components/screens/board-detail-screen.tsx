@@ -48,6 +48,8 @@ interface BoardDetailProps {
   selectedTask?: Task | DeletedTask | null;
   onSelectMemo?: (memo: Memo | DeletedMemo | null) => void;
   onSelectTask?: (task: Task | DeletedTask | null) => void;
+  onSelectDeletedMemo?: (memo: DeletedMemo | null) => void;
+  onSelectDeletedTask?: (task: DeletedTask | null) => void;
   onClearSelection?: () => void;
   onBack?: () => void;
   onSettings?: () => void;
@@ -65,6 +67,8 @@ function BoardDetailScreen({
   selectedTask: propSelectedTask,
   onSelectMemo,
   onSelectTask,
+  onSelectDeletedMemo,
+  onSelectDeletedTask,
   onClearSelection,
   onBack, // eslint-disable-line @typescript-eslint/no-unused-vars
   onSettings,

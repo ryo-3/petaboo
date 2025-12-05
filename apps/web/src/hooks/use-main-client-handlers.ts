@@ -139,8 +139,16 @@ export function useMainClientHandlers({
         // 削除済みメモは最後に設定
         setSelectedDeletedMemo(memo);
         setScreenMode("memo");
+        // URLを更新（個人側のみ、displayIdを使用）
+        if (!teamMode) {
+          router.replace(`/?memo=${memo.displayId}`, { scroll: false });
+        }
       } else {
         setSelectedDeletedMemo(null);
+        // URLからパラメータを削除（個人側のみ）
+        if (!teamMode) {
+          router.replace("/?memo", { scroll: false });
+        }
       }
     },
     [
@@ -150,6 +158,8 @@ export function useMainClientHandlers({
       setShowDeleted,
       setSelectedDeletedMemo,
       setScreenMode,
+      teamMode,
+      router,
     ],
   );
 
@@ -196,11 +206,25 @@ export function useMainClientHandlers({
         clearAllSelections();
         setSelectedDeletedTask(task);
         setScreenMode("task");
+        // URLを更新（個人側のみ、displayIdを使用）
+        if (!teamMode) {
+          router.replace(`/?task=${task.displayId}`, { scroll: false });
+        }
       } else {
         setSelectedDeletedTask(null);
+        // URLからパラメータを削除（個人側のみ）
+        if (!teamMode) {
+          router.replace("/?task", { scroll: false });
+        }
       }
     },
-    [clearAllSelections, setSelectedDeletedTask, setScreenMode],
+    [
+      clearAllSelections,
+      setSelectedDeletedTask,
+      setScreenMode,
+      teamMode,
+      router,
+    ],
   );
 
   // ==========================================

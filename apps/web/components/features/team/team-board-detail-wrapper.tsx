@@ -347,6 +347,28 @@ export function TeamBoardDetailWrapper({
     if (!memo) return;
     setSelectedTask(null);
     setSelectedMemo(memo as unknown as Memo);
+
+    // 削除済みメモ選択時もURL更新（boardIndexがある場合）
+    if (memo.boardIndex && memo.boardIndex > 0) {
+      router.replace(
+        `/team/${customUrl}?board=${slug}&memo=${memo.boardIndex}`,
+        { scroll: false },
+      );
+    }
+  };
+
+  const handleSelectDeletedTask = (task: DeletedTask | null) => {
+    if (!task) return;
+    setSelectedMemo(null);
+    setSelectedTask(task as unknown as Task);
+
+    // 削除済みタスク選択時もURL更新（boardIndexがある場合）
+    if (task.boardIndex && task.boardIndex > 0) {
+      router.replace(
+        `/team/${customUrl}?board=${slug}&task=${task.boardIndex}`,
+        { scroll: false },
+      );
+    }
   };
 
   // チームボード設定画面への遷移
@@ -407,6 +429,7 @@ export function TeamBoardDetailWrapper({
       onSelectMemo={handleSelectMemo}
       onSelectTask={handleSelectTask}
       onSelectDeletedMemo={handleSelectDeletedMemo}
+      onSelectDeletedTask={handleSelectDeletedTask}
       onClearSelection={handleClearSelection}
       onBack={onBack}
       onSettings={handleSettings}

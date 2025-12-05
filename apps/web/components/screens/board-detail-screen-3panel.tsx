@@ -169,6 +169,7 @@ interface BoardDetailProps {
   onSelectMemo?: (memo: Memo | DeletedMemo | null) => void;
   onSelectTask?: (task: Task | DeletedTask | null) => void;
   onSelectDeletedMemo?: (memo: DeletedMemo | null) => void;
+  onSelectDeletedTask?: (task: DeletedTask | null) => void;
   onClearSelection?: () => void;
   onBack?: () => void;
   onSettings?: () => void;
@@ -187,6 +188,7 @@ function BoardDetailScreen({
   onSelectMemo,
   onSelectTask,
   onSelectDeletedMemo,
+  onSelectDeletedTask,
   onClearSelection,
   onBack, // eslint-disable-line @typescript-eslint/no-unused-vars
   onSettings,
@@ -1570,7 +1572,16 @@ function BoardDetailScreen({
                                       }
                                     }}
                                     onDeleteAndSelectNext={(memo) => {
-                                      if ("id" in memo) {
+                                      if (
+                                        "deletedAt" in memo &&
+                                        memo.deletedAt
+                                      ) {
+                                        // 削除済みメモの完全削除後の次選択
+                                        handleDeletedMemoDeleteAndSelectNext(
+                                          memo as DeletedMemo,
+                                        );
+                                      } else {
+                                        // 通常メモの削除後の次選択
                                         handleMemoDeleteWithNextSelection(
                                           memo as Memo,
                                         );
@@ -1657,7 +1668,16 @@ function BoardDetailScreen({
                                       }
                                     }}
                                     onDeleteAndSelectNext={(task) => {
-                                      if ("id" in task) {
+                                      if (
+                                        "deletedAt" in task &&
+                                        task.deletedAt
+                                      ) {
+                                        // 削除済みタスクの完全削除後の次選択
+                                        handleDeletedTaskDeleteAndSelectNext(
+                                          task as DeletedTask,
+                                        );
+                                      } else {
+                                        // 通常タスクの削除後の次選択
                                         handleTaskDeleteWithNextSelection(
                                           task as Task,
                                         );
@@ -1961,11 +1981,19 @@ function BoardDetailScreen({
                                         }
                                       }}
                                       onDeleteAndSelectNext={(memo) => {
-                                        if ("id" in memo) {
+                                        if (
+                                          "deletedAt" in memo &&
+                                          memo.deletedAt
+                                        ) {
+                                          // 削除済みメモの完全削除後の次選択
+                                          handleDeletedMemoDeleteAndSelectNext(
+                                            memo as DeletedMemo,
+                                          );
+                                        } else {
+                                          // 通常メモの削除後の次選択
                                           handleMemoDeleteWithNextSelection(
                                             memo as Memo,
                                           );
-                                        } else {
                                         }
                                       }}
                                       onRestore={() => {
@@ -2034,11 +2062,19 @@ function BoardDetailScreen({
                                         }
                                       }}
                                       onDeleteAndSelectNext={(task) => {
-                                        if ("id" in task) {
+                                        if (
+                                          "deletedAt" in task &&
+                                          task.deletedAt
+                                        ) {
+                                          // 削除済みタスクの完全削除後の次選択
+                                          handleDeletedTaskDeleteAndSelectNext(
+                                            task as DeletedTask,
+                                          );
+                                        } else {
+                                          // 通常タスクの削除後の次選択
                                           handleTaskDeleteWithNextSelection(
                                             task as Task,
                                           );
-                                        } else {
                                         }
                                       }}
                                       onRestore={() => {

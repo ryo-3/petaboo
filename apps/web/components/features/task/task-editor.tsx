@@ -637,8 +637,14 @@ function TaskEditor({
   const deletedTaskActions = useDeletedTaskActions({
     task: isDeleted ? (task as DeletedTask) : null,
     onClose,
-    onDeleteAndSelectNext: () => {
-      if (onDelete) onDelete();
+    onDeleteAndSelectNext: (deletedTask: DeletedTask) => {
+      // 削除済みタスクの完全削除後、次選択を行う
+      if (onDeleteAndSelectNext) {
+        // DeletedTaskをTaskとしてキャスト（次選択処理で使用）
+        onDeleteAndSelectNext(deletedTask as unknown as Task);
+      } else if (onDelete) {
+        onDelete();
+      }
     },
     onRestoreAndSelectNext: undefined, // TaskScreenで処理するため無効化
     onAnimationChange: setIsAnimating,

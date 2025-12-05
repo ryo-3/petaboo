@@ -871,6 +871,7 @@ export function useBoardDeletedItems(boardId: number, teamId?: string | null) {
               updatedAt: item.content.updatedAt,
               deletedAt: item.deletedAt,
               commentCount: item.content.commentCount,
+              boardIndex: item.content.boardIndex,
             });
           } else if (item.itemType === "task" && item.content) {
             tasks.push({
@@ -887,6 +888,7 @@ export function useBoardDeletedItems(boardId: number, teamId?: string | null) {
               updatedAt: item.content.updatedAt,
               deletedAt: item.deletedAt,
               commentCount: item.content.commentCount,
+              boardIndex: item.content.boardIndex,
             });
           }
         }

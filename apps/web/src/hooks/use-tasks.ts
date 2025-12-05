@@ -32,10 +32,31 @@ export function useTasks(options?: { teamMode?: boolean; teamId?: number }) {
           token || undefined,
         );
         const data = await response.json();
+        // デバッグログ: チームタスク一覧
+        console.log("📋 [useTasks] チームタスク一覧取得", {
+          teamId,
+          count: (data as Task[]).length,
+          tasks: (data as Task[]).map((t) => ({
+            id: t.id,
+            displayId: t.displayId,
+            title: t.title?.slice(0, 20),
+            status: t.status,
+          })),
+        });
         return data as Task[];
       } else {
         const response = await tasksApi.getTasks(token || undefined);
         const data = await response.json();
+        // デバッグログ: 個人タスク一覧
+        console.log("📋 [useTasks] 個人タスク一覧取得", {
+          count: (data as Task[]).length,
+          tasks: (data as Task[]).map((t) => ({
+            id: t.id,
+            displayId: t.displayId,
+            title: t.title?.slice(0, 20),
+            status: t.status,
+          })),
+        });
         return data as Task[];
       }
     },

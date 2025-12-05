@@ -1774,11 +1774,15 @@ export function createAPI(app: AppType) {
           return c.json({ error: "Not a team member" }, 403);
         }
 
-        // チームボードのアイテムを取得
+        // チームボードのアイテムを取得（削除されたメモ/タスクを除外）
         const { teamBoards, teamBoardItems } = await import(
           "../../db/schema/team/boards"
         );
-        const allBoardItems = await db
+        const { teamMemos } = await import("../../db/schema/team/memos");
+        const { teamTasks } = await import("../../db/schema/team/tasks");
+
+        // メモの紐づき（削除されていないもののみ）
+        const memoItems = await db
           .select({
             boardId: teamBoardItems.boardId,
             boardName: teamBoards.name,
@@ -1789,8 +1793,62 @@ export function createAPI(app: AppType) {
           })
           .from(teamBoardItems)
           .innerJoin(teamBoards, eq(teamBoardItems.boardId, teamBoards.id))
-          .where(eq(teamBoards.teamId, teamId))
-          .orderBy(teamBoards.name, teamBoardItems.createdAt);
+          .innerJoin(
+            teamMemos,
+            and(
+              eq(teamBoardItems.displayId, teamMemos.displayId),
+              eq(teamBoards.teamId, teamMemos.teamId),
+            ),
+          )
+          .where(
+            and(
+              eq(teamBoards.teamId, teamId),
+              eq(teamBoardItems.itemType, "memo"),
+              isNull(teamMemos.deletedAt),
+            ),
+          );
+
+        // タスクの紐づき（削除されていないもののみ）
+        const taskItems = await db
+          .select({
+            boardId: teamBoardItems.boardId,
+            boardName: teamBoards.name,
+            itemType: teamBoardItems.itemType,
+            itemId: teamBoardItems.displayId,
+            displayId: teamBoardItems.displayId,
+            addedAt: teamBoardItems.createdAt,
+          })
+          .from(teamBoardItems)
+          .innerJoin(teamBoards, eq(teamBoardItems.boardId, teamBoards.id))
+          .innerJoin(
+            teamTasks,
+            and(
+              eq(teamBoardItems.displayId, teamTasks.displayId),
+              eq(teamBoards.teamId, teamTasks.teamId),
+            ),
+          )
+          .where(
+            and(
+              eq(teamBoards.teamId, teamId),
+              eq(teamBoardItems.itemType, "task"),
+              isNull(teamTasks.deletedAt),
+            ),
+          );
+
+        const allBoardItems = [...memoItems, ...taskItems].sort((a, b) => {
+          if (a.boardName !== b.boardName) {
+            return a.boardName.localeCompare(b.boardName);
+          }
+          return a.addedAt - b.addedAt;
+        });
+
+        // デバッグログ
+        console.log("📦 [all-items] チームボードアイテム（削除済み除外）", {
+          teamId,
+          count: allBoardItems.length,
+          memoCount: memoItems.length,
+          taskCount: taskItems.length,
+        });
 
         return c.json(allBoardItems);
       } else {

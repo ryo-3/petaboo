@@ -503,11 +503,6 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
     // 🛡️ URL逆流防止: pendingTabRef がある場合
     if (pendingTabRef.current !== null) {
-      console.log("[pendingTabRef check]", {
-        pendingTab: pendingTabRef.current,
-        newTab,
-        willClear: pendingTabRef.current === newTab,
-      });
       if (pendingTabRef.current === newTab) {
         // URL更新完了 → フラグクリア
         pendingTabRef.current = null;
@@ -570,11 +565,6 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
         | "search",
       options?: { slug?: string; fromSidebar?: boolean },
     ) => {
-      console.log("[handleTabChange] called", {
-        tab,
-        options,
-        currentUrl: window.location.href,
-      });
       // 🛡️ URL逆流防止: 期待値を記録
       pendingTabRef.current = tab;
 
@@ -668,7 +658,6 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       }
 
       const finalUrl = `/team/${customUrl}${newUrl}`;
-      console.log("[handleTabChange] navigating to:", finalUrl);
       router.replace(finalUrl, { scroll: false });
     },
     [
@@ -704,7 +693,6 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
   useEffect(() => {
     const handleTeamModeChange = (event: CustomEvent) => {
       const { mode, slug } = event.detail;
-      console.log("[handleTeamModeChange] received", { mode, slug });
 
       if (mode === "overview") {
         handleTabChange("overview", { fromSidebar: true });

@@ -299,13 +299,6 @@ export function NavigationProvider({
             ? "tasks"
             : "boards";
 
-      console.log("[optimisticMode clear check]", {
-        optimisticMode,
-        actualTab,
-        expectedTab,
-        willClear: actualTab === expectedTab,
-      });
-
       // 期待したタブに実際になった場合のみクリア
       if (actualTab === expectedTab) {
         setOptimisticMode(null);

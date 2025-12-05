@@ -6,9 +6,21 @@ import TrashIcon from "@/components/icons/trash-icon";
 
 interface DesktopUpperProps {
   currentMode: "memo" | "task" | "board";
-  activeTab: "normal" | "deleted" | "todo" | "in_progress" | "completed";
+  activeTab:
+    | "normal"
+    | "deleted"
+    | "todo"
+    | "in_progress"
+    | "checking"
+    | "completed";
   onTabChange: (
-    tab: "normal" | "deleted" | "todo" | "in_progress" | "completed",
+    tab:
+      | "normal"
+      | "deleted"
+      | "todo"
+      | "in_progress"
+      | "checking"
+      | "completed",
   ) => void;
   rightPanelMode: "hidden" | "view" | "create";
   marginBottom?: string;
@@ -19,6 +31,7 @@ interface DesktopUpperProps {
   deletedCount?: number;
   todoCount?: number;
   inProgressCount?: number;
+  checkingCount?: number;
   completedCount?: number;
   teamMode?: boolean;
   hideTabs?: boolean;
@@ -37,6 +50,7 @@ function DesktopUpper({
   deletedCount = 0,
   todoCount = 0,
   inProgressCount = 0,
+  checkingCount = 0,
   completedCount = 0,
   teamMode = false,
   hideTabs = false,
@@ -47,6 +61,7 @@ function DesktopUpper({
       return [
         { id: "todo", label: "未着手", count: todoCount },
         { id: "in_progress", label: "進行中", count: inProgressCount },
+        { id: "checking", label: "確認中", count: checkingCount },
         { id: "completed", label: "完了", count: completedCount },
         {
           id: "deleted",
@@ -84,6 +99,7 @@ function DesktopUpper({
     const colorMap = {
       todo: "bg-zinc-400",
       in_progress: "bg-Blue",
+      checking: "bg-orange-500",
       completed: "bg-Green",
       deleted: "bg-red-600",
       normal: "bg-zinc-500",
@@ -99,6 +115,7 @@ function DesktopUpper({
       const activeColors = {
         todo: "bg-zinc-200",
         in_progress: "bg-blue-100",
+        checking: "bg-orange-100",
         completed: "bg-Green/20",
         deleted: "bg-red-100",
         normal: "bg-gray-200",
@@ -109,6 +126,7 @@ function DesktopUpper({
     const hoverColors = {
       todo: "hover:bg-zinc-200",
       in_progress: "hover:bg-blue-100",
+      checking: "hover:bg-orange-100",
       completed: "hover:bg-Green/20",
       deleted: "hover:bg-red-100",
       normal: "hover:bg-gray-200",
@@ -177,6 +195,7 @@ function DesktopUpper({
                         | "deleted"
                         | "todo"
                         | "in_progress"
+                        | "checking"
                         | "completed",
                     )
                   }

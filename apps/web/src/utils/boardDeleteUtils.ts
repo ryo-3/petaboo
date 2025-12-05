@@ -39,7 +39,7 @@
 export function shouldUsePermanentDelete(
   itemType: "memo" | "task",
   activeMemoTab: "normal" | "deleted",
-  activeTaskTab: "todo" | "in_progress" | "completed" | "deleted",
+  activeTaskTab: "todo" | "in_progress" | "checking" | "completed" | "deleted",
 ): boolean {
   if (itemType === "memo") {
     return activeMemoTab === "deleted";

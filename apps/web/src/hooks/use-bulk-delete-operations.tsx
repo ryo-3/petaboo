@@ -21,11 +21,12 @@ interface UseBulkDeleteOperationsProps {
   setCheckedTasks: (value: Set<string | number>) => void;
   deleteButtonRef?: React.RefObject<HTMLButtonElement | null>;
   activeMemoTab: "normal" | "deleted";
-  activeTaskTab: "todo" | "in_progress" | "completed" | "deleted";
+  activeTaskTab: "todo" | "in_progress" | "checking" | "completed" | "deleted";
   checkedNormalMemos: Set<string | number>;
   checkedDeletedMemos: Set<string | number>;
   checkedTodoTasks: Set<string | number>;
   checkedInProgressTasks: Set<string | number>;
+  checkedCheckingTasks: Set<string | number>;
   checkedCompletedTasks: Set<string | number>;
   checkedDeletedTasks: Set<string | number>;
   teamMode?: boolean;

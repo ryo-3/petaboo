@@ -48,6 +48,7 @@ export type HeaderControlPanelConfig = {
   deletedCount?: number;
   todoCount?: number;
   inProgressCount?: number;
+  checkingCount?: number;
   completedCount?: number;
 
   // その他

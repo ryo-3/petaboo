@@ -3,7 +3,7 @@ import { BaseItemFields, TeamCreatorFields, DeletedItemFields } from "./common";
 export interface Task extends BaseItemFields, TeamCreatorFields {
   title: string;
   description: string | null;
-  status: "todo" | "in_progress" | "completed";
+  status: "todo" | "in_progress" | "checking" | "completed";
   priority: "low" | "medium" | "high";
   dueDate: number | null; // Unix timestamp
   categoryId: number | null;
@@ -37,7 +37,7 @@ export interface DeletedTask
 export interface CreateTaskData {
   title: string;
   description?: string;
-  status?: "todo" | "in_progress" | "completed";
+  status?: "todo" | "in_progress" | "checking" | "completed";
   priority?: "low" | "medium" | "high";
   dueDate?: number;
   categoryId?: number | null;
@@ -48,7 +48,7 @@ export interface CreateTaskData {
 export interface UpdateTaskData {
   title?: string;
   description?: string;
-  status?: "todo" | "in_progress" | "completed";
+  status?: "todo" | "in_progress" | "checking" | "completed";
   priority?: "low" | "medium" | "high";
   dueDate?: number;
   categoryId?: number | null;

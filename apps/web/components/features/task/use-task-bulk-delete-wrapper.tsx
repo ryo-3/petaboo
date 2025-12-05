@@ -6,7 +6,7 @@ import { useAuth } from "@clerk/nextjs";
 import { tasksApi } from "@/src/lib/api-client";
 
 interface UseTasksBulkDeleteProps {
-  activeTab: "todo" | "in_progress" | "completed" | "deleted";
+  activeTab: "todo" | "in_progress" | "checking" | "completed" | "deleted";
   checkedTasks: Set<number>;
   checkedDeletedTasks: Set<number>;
   setCheckedTasks: (tasks: Set<number>) => void;

@@ -518,6 +518,8 @@ function TaskScreen({
     setCheckedTodoTasks,
     checkedInProgressTasks,
     setCheckedInProgressTasks,
+    checkedCheckingTasks,
+    setCheckedCheckingTasks,
     checkedCompletedTasks,
     setCheckedCompletedTasks,
     checkedDeletedTasks: checkedDeletedTasksFromMultiSelection,
@@ -540,6 +542,8 @@ function TaskScreen({
         return checkedTodoTasks as Set<number>;
       case "in_progress":
         return checkedInProgressTasks as Set<number>;
+      case "checking":
+        return checkedCheckingTasks as Set<number>;
       case "completed":
         return checkedCompletedTasks as Set<number>;
       case "deleted":
@@ -557,6 +561,10 @@ function TaskScreen({
         >;
       case "in_progress":
         return setCheckedInProgressTasks as React.Dispatch<
+          React.SetStateAction<Set<number>>
+        >;
+      case "checking":
+        return setCheckedCheckingTasks as React.Dispatch<
           React.SetStateAction<Set<number>>
         >;
       case "completed":
@@ -593,6 +601,7 @@ function TaskScreen({
             currentSetter: setCheckedTodoTasks,
             otherSetters: [
               setCheckedInProgressTasks,
+              setCheckedCheckingTasks,
               setCheckedCompletedTasks,
               setCheckedDeletedTasks,
             ],
@@ -603,6 +612,18 @@ function TaskScreen({
             currentSetter: setCheckedInProgressTasks,
             otherSetters: [
               setCheckedTodoTasks,
+              setCheckedCheckingTasks,
+              setCheckedCompletedTasks,
+              setCheckedDeletedTasks,
+            ],
+          };
+        case "checking":
+          return {
+            currentChecked: checkedCheckingTasks,
+            currentSetter: setCheckedCheckingTasks,
+            otherSetters: [
+              setCheckedTodoTasks,
+              setCheckedInProgressTasks,
               setCheckedCompletedTasks,
               setCheckedDeletedTasks,
             ],
@@ -614,6 +635,7 @@ function TaskScreen({
             otherSetters: [
               setCheckedTodoTasks,
               setCheckedInProgressTasks,
+              setCheckedCheckingTasks,
               setCheckedDeletedTasks,
             ],
           };
@@ -624,6 +646,7 @@ function TaskScreen({
             otherSetters: [
               setCheckedTodoTasks,
               setCheckedInProgressTasks,
+              setCheckedCheckingTasks,
               setCheckedCompletedTasks,
             ],
           };
@@ -633,6 +656,7 @@ function TaskScreen({
             currentSetter: setCheckedTodoTasks,
             otherSetters: [
               setCheckedInProgressTasks,
+              setCheckedCheckingTasks,
               setCheckedCompletedTasks,
               setCheckedDeletedTasks,
             ],
@@ -772,6 +796,7 @@ function TaskScreen({
   const activeTabTyped = activeTab as
     | "todo"
     | "in_progress"
+    | "checking"
     | "completed"
     | "deleted";
 
@@ -963,7 +988,7 @@ function TaskScreen({
 
   const taskStatusCounts = useMemo(() => {
     if (!tasks) {
-      return { todo: 0, inProgress: 0, completed: 0 };
+      return { todo: 0, inProgress: 0, checking: 0, completed: 0 };
     }
     return tasks.reduce(
       (acc, task) => {
@@ -971,18 +996,21 @@ function TaskScreen({
           acc.todo += 1;
         } else if (task.status === "in_progress") {
           acc.inProgress += 1;
+        } else if (task.status === "checking") {
+          acc.checking += 1;
         } else if (task.status === "completed") {
           acc.completed += 1;
         }
         return acc;
       },
-      { todo: 0, inProgress: 0, completed: 0 },
+      { todo: 0, inProgress: 0, checking: 0, completed: 0 },
     );
   }, [tasks]);
 
   const {
     todo: todoCount,
     inProgress: inProgressCount,
+    checking: checkingCount,
     completed: completedCount,
   } = taskStatusCounts;
 
@@ -1005,6 +1033,7 @@ function TaskScreen({
     deletedTasksCount: deletedTasksCountValue,
     todoCount,
     inProgressCount,
+    checkingCount,
     completedCount,
     marginBottom: "",
     headerMarginBottom: "mb-1.5",
@@ -1027,6 +1056,7 @@ function TaskScreen({
       activeTab: activeTabTyped,
       todoCount,
       inProgressCount,
+      checkingCount,
       completedCount,
       deletedTasksCount: deletedTasksCountValue,
       hideAddButton: hideHeaderButtons,

@@ -14,7 +14,13 @@ import type { Attachment } from "@/src/hooks/use-attachments";
 
 interface DesktopLowerProps {
   currentMode: "memo" | "task";
-  activeTab: "normal" | "deleted" | "todo" | "in_progress" | "completed";
+  activeTab:
+    | "normal"
+    | "deleted"
+    | "todo"
+    | "in_progress"
+    | "checking"
+    | "completed";
   effectiveColumnCount: number;
   isLoading: boolean;
   error: Error | null;
@@ -185,10 +191,11 @@ function DesktopLower({
     );
   }
 
-  // タスクタブ（未着手、進行中、完了）
+  // タスクタブ（未着手、進行中、確認中、完了）
   if (
     (activeTab === "todo" ||
       activeTab === "in_progress" ||
+      activeTab === "checking" ||
       activeTab === "completed") &&
     currentMode === "task"
   ) {

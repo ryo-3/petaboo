@@ -29,9 +29,10 @@ interface BoardTaskSectionProps {
   showTask: boolean;
   allTaskItems: BoardItemWithContent[];
   taskItems: BoardItemWithContent[];
-  activeTaskTab: "todo" | "in_progress" | "completed" | "deleted";
+  activeTaskTab: "todo" | "in_progress" | "checking" | "completed" | "deleted";
   todoCount: number;
   inProgressCount: number;
+  checkingCount: number;
   completedCount: number;
   deletedCount: number;
   showTabText: boolean;
@@ -47,7 +48,7 @@ interface BoardTaskSectionProps {
   onCreateNewTask: () => void;
   onSetRightPanelMode: (mode: "task-list" | null) => void;
   onTaskTabChange: (
-    tab: "todo" | "in_progress" | "completed" | "deleted",
+    tab: "todo" | "in_progress" | "checking" | "completed" | "deleted",
   ) => void;
   onSelectTask: (task: Task | DeletedTask) => void;
   onTaskSelectionToggle: (taskId: string | number) => void;
@@ -103,6 +104,7 @@ export default function BoardTaskSection({
   activeTaskTab,
   todoCount,
   inProgressCount,
+  checkingCount,
   completedCount,
   deletedCount,
   showTabText,
@@ -355,6 +357,20 @@ export default function BoardTaskSection({
           {showTabText && <span>進行中</span>}
           <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full text-right">
             {inProgressCount}
+          </span>
+        </button>
+        <button
+          onClick={() => onTaskTabChange("checking")}
+          className={`flex items-center gap-1 md:gap-1.5 px-1.5 py-1 md:px-2 md:py-1.5 rounded-lg font-medium transition-colors text-gray-600 text-xs md:text-[13px] ${
+            activeTaskTab === "checking"
+              ? "bg-orange-100"
+              : "bg-gray-100 hover:bg-orange-100"
+          }`}
+        >
+          <div className="w-2.5 h-2.5 rounded-full bg-orange-500"></div>
+          {showTabText && <span>確認中</span>}
+          <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full text-right">
+            {checkingCount}
           </span>
         </button>
         <button

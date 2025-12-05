@@ -22,7 +22,7 @@ export function useBoardState() {
 
   // タブ状態
   const [activeTaskTab, setActiveTaskTab] = useState<
-    "todo" | "in_progress" | "completed" | "deleted"
+    "todo" | "in_progress" | "checking" | "completed" | "deleted"
   >("todo");
   const [activeMemoTab, setActiveMemoTab] = useState<"normal" | "deleted">(
     "normal",
@@ -258,7 +258,7 @@ export function useBoardState() {
 
   // タスクタブ切り替え時の処理
   const handleTaskTabChange = useCallback(
-    (newTab: "todo" | "in_progress" | "completed" | "deleted") => {
+    (newTab: "todo" | "in_progress" | "checking" | "completed" | "deleted") => {
       setActiveTaskTab(newTab);
       // 選択解除は行わない（タブ切り替えで選択状態は保持）
     },

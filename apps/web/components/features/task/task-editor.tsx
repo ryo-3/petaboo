@@ -235,6 +235,11 @@ function TaskEditor({
       color: getStatusEditorColor("in_progress"),
     },
     {
+      value: "checking",
+      label: getStatusText("checking"),
+      color: getStatusEditorColor("checking"),
+    },
+    {
       value: "completed",
       label: getStatusText("completed"),
       color: getStatusEditorColor("completed"),
@@ -799,7 +804,11 @@ function TaskEditor({
         status:
           finalStatus === "not_started"
             ? "todo"
-            : (finalStatus as "todo" | "in_progress" | "completed"),
+            : (finalStatus as
+                | "todo"
+                | "in_progress"
+                | "checking"
+                | "completed"),
         priority: finalPriority as "low" | "medium" | "high",
         categoryId: categoryId ?? null,
         boardCategoryId: boardCategoryId ?? null,
@@ -816,7 +825,11 @@ function TaskEditor({
         status:
           finalStatus === "not_started"
             ? "todo"
-            : (finalStatus as "todo" | "in_progress" | "completed"),
+            : (finalStatus as
+                | "todo"
+                | "in_progress"
+                | "checking"
+                | "completed"),
         priority: finalPriority as "low" | "medium" | "high",
         categoryId: categoryId ?? null,
         boardCategoryId: boardCategoryId ?? null,

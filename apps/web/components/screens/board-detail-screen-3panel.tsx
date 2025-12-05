@@ -457,6 +457,7 @@ function BoardDetailScreen({
     setCheckedDeletedMemos,
     checkedTodoTasks,
     checkedInProgressTasks,
+    checkedCheckingTasks,
     checkedCompletedTasks,
     checkedDeletedTasks,
   } = useMultiSelection({ activeMemoTab, activeTaskTab });
@@ -540,6 +541,7 @@ function BoardDetailScreen({
     checkedDeletedMemos,
     checkedTodoTasks,
     checkedInProgressTasks,
+    checkedCheckingTasks,
     checkedCompletedTasks,
     checkedDeletedTasks,
     teamMode,
@@ -806,6 +808,7 @@ function BoardDetailScreen({
     deletedMemoCount,
     todoCount,
     inProgressCount,
+    checkingCount,
     completedCount,
     deletedCount,
   } = useBoardItems({
@@ -1317,7 +1320,7 @@ function BoardDetailScreen({
   };
 
   const handleTaskTabChangeWithRefresh = async (
-    tab: "todo" | "in_progress" | "completed" | "deleted",
+    tab: "todo" | "in_progress" | "checking" | "completed" | "deleted",
   ) => {
     if (tab === "deleted") {
       await refetchDeletedItems();
@@ -1486,6 +1489,7 @@ function BoardDetailScreen({
                                   activeTaskTab={activeTaskTab}
                                   todoCount={todoCount}
                                   inProgressCount={inProgressCount}
+                                  checkingCount={checkingCount}
                                   completedCount={completedCount}
                                   deletedCount={deletedCount}
                                   showTabText={showTabText}
@@ -1820,6 +1824,7 @@ function BoardDetailScreen({
                                     activeTaskTab={activeTaskTab}
                                     todoCount={todoCount}
                                     inProgressCount={inProgressCount}
+                                    checkingCount={checkingCount}
                                     completedCount={completedCount}
                                     deletedCount={deletedCount}
                                     showTabText={showTabText}
@@ -2112,6 +2117,7 @@ function BoardDetailScreen({
                                     activeTaskTab={activeTaskTab}
                                     todoCount={todoCount}
                                     inProgressCount={inProgressCount}
+                                    checkingCount={checkingCount}
                                     completedCount={completedCount}
                                     deletedCount={deletedCount}
                                     showTabText={showTabText}
@@ -2350,6 +2356,7 @@ function BoardDetailScreen({
                                 activeTaskTab={activeTaskTab}
                                 todoCount={todoCount}
                                 inProgressCount={inProgressCount}
+                                checkingCount={checkingCount}
                                 completedCount={completedCount}
                                 deletedCount={deletedCount}
                                 showTabText={showTabText}
@@ -2485,6 +2492,7 @@ function BoardDetailScreen({
                                   activeTaskTab={activeTaskTab}
                                   todoCount={todoCount}
                                   inProgressCount={inProgressCount}
+                                  checkingCount={checkingCount}
                                   completedCount={completedCount}
                                   deletedCount={deletedCount}
                                   showTabText={showTabText}
@@ -2631,6 +2639,7 @@ function BoardDetailScreen({
                 activeTaskTab={activeTaskTab}
                 todoCount={todoCount}
                 inProgressCount={inProgressCount}
+                checkingCount={checkingCount}
                 completedCount={completedCount}
                 deletedCount={deletedCount}
                 showTabText={showTabText}

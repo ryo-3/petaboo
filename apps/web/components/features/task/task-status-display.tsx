@@ -10,7 +10,7 @@ import type { Attachment } from "@/src/hooks/use-attachments";
 import { useMemo } from "react";
 
 interface TaskStatusDisplayProps {
-  activeTab: "todo" | "in_progress" | "completed";
+  activeTab: "todo" | "in_progress" | "checking" | "completed";
   tasks: Task[] | undefined;
   effectiveColumnCount: number;
   selectionMode?: "select" | "check";

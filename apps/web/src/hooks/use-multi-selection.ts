@@ -56,6 +56,12 @@ interface MultiSelectionHookReturn {
       | Set<string | number>
       | ((prev: Set<string | number>) => Set<string | number>),
   ) => void;
+  checkedCheckingTasks: Set<string | number>;
+  setCheckedCheckingTasks: (
+    value:
+      | Set<string | number>
+      | ((prev: Set<string | number>) => Set<string | number>),
+  ) => void;
   checkedCompletedTasks: Set<string | number>;
   setCheckedCompletedTasks: (
     value:
@@ -98,6 +104,9 @@ export function useMultiSelection({
   const [checkedInProgressTasks, setCheckedInProgressTasks] = useState<
     Set<string | number>
   >(new Set());
+  const [checkedCheckingTasks, setCheckedCheckingTasks] = useState<
+    Set<string | number>
+  >(new Set());
   const [checkedCompletedTasks, setCheckedCompletedTasks] = useState<
     Set<string | number>
   >(new Set());
@@ -114,6 +123,8 @@ export function useMultiSelection({
         return checkedTodoTasks;
       case "in_progress":
         return checkedInProgressTasks;
+      case "checking":
+        return checkedCheckingTasks;
       case "completed":
         return checkedCompletedTasks;
       case "deleted":
@@ -132,6 +143,8 @@ export function useMultiSelection({
         return setCheckedTodoTasks;
       case "in_progress":
         return setCheckedInProgressTasks;
+      case "checking":
+        return setCheckedCheckingTasks;
       case "completed":
         return setCheckedCompletedTasks;
       case "deleted":
@@ -170,6 +183,8 @@ export function useMultiSelection({
           return setCheckedTodoTasks;
         case "in_progress":
           return setCheckedInProgressTasks;
+        case "checking":
+          return setCheckedCheckingTasks;
         case "completed":
           return setCheckedCompletedTasks;
         case "deleted":
@@ -199,6 +214,7 @@ export function useMultiSelection({
       setCheckedDeletedMemos(new Set());
       setCheckedTodoTasks(new Set());
       setCheckedInProgressTasks(new Set());
+      setCheckedCheckingTasks(new Set());
       setCheckedCompletedTasks(new Set());
       setCheckedDeletedTasks(new Set());
     }
@@ -228,6 +244,8 @@ export function useMultiSelection({
     setCheckedTodoTasks,
     checkedInProgressTasks,
     setCheckedInProgressTasks,
+    checkedCheckingTasks,
+    setCheckedCheckingTasks,
     checkedCompletedTasks,
     setCheckedCompletedTasks,
     checkedDeletedTasks,

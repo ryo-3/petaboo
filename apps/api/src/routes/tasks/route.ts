@@ -27,7 +27,7 @@ const TaskSchema = z.object({
   displayId: z.string(),
   title: z.string(),
   description: z.string().nullable(),
-  status: z.enum(["todo", "in_progress", "completed"]),
+  status: z.enum(["todo", "in_progress", "checking", "completed"]),
   priority: z.enum(["low", "medium", "high"]),
   dueDate: z.number().nullable(),
   categoryId: z.number().nullable(),
@@ -42,7 +42,9 @@ const TaskInputSchema = z.object({
     .string()
     .max(10000, "説明は10,000文字以内で入力してください")
     .optional(),
-  status: z.enum(["todo", "in_progress", "completed"]).default("todo"),
+  status: z
+    .enum(["todo", "in_progress", "checking", "completed"])
+    .default("todo"),
   priority: z.enum(["low", "medium", "high"]).default("medium"),
   dueDate: z.number().optional(),
   categoryId: z.number().optional(),
@@ -59,7 +61,7 @@ const TaskUpdateSchema = z.object({
     .string()
     .max(10000, "説明は10,000文字以内で入力してください")
     .optional(),
-  status: z.enum(["todo", "in_progress", "completed"]).optional(),
+  status: z.enum(["todo", "in_progress", "checking", "completed"]).optional(),
   priority: z.enum(["low", "medium", "high"]).optional(),
   dueDate: z.number().optional(),
   categoryId: z.number().optional(),
@@ -76,7 +78,7 @@ const ImportResultSchema = z.object({
 function parseCSV(csvText: string): {
   title: string;
   description?: string;
-  status?: "todo" | "in_progress" | "completed";
+  status?: "todo" | "in_progress" | "checking" | "completed";
   priority?: "low" | "medium" | "high";
 }[] {
   const lines = csvText.trim().split("\n");
@@ -88,7 +90,7 @@ function parseCSV(csvText: string): {
   const results: {
     title: string;
     description?: string;
-    status?: "todo" | "in_progress" | "completed";
+    status?: "todo" | "in_progress" | "checking" | "completed";
     priority?: "low" | "medium" | "high";
   }[] = [];
 
@@ -103,7 +105,7 @@ function parseCSV(csvText: string): {
       const taskData: {
         title: string;
         description?: string;
-        status?: "todo" | "in_progress" | "completed";
+        status?: "todo" | "in_progress" | "checking" | "completed";
         priority?: "low" | "medium" | "high";
       } = {
         title: values[0],
@@ -117,6 +119,7 @@ function parseCSV(csvText: string): {
       if (
         status === "todo" ||
         status === "in_progress" ||
+        status === "checking" ||
         status === "completed"
       ) {
         taskData.status = status;

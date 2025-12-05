@@ -3,6 +3,8 @@ export const getStatusColor = (status: string): string => {
   switch (status) {
     case "completed":
       return "bg-Green/70 text-gray-100 font-medium";
+    case "checking":
+      return "bg-orange-200 text-orange-800 font-medium";
     case "in_progress":
       return "bg-blue-200 text-gray-600 font-medium";
     default:
@@ -26,6 +28,8 @@ export const getStatusText = (status: string): string => {
   switch (status) {
     case "completed":
       return "完了";
+    case "checking":
+      return "確認中";
     case "in_progress":
       return "進行中";
     default:
@@ -71,6 +75,8 @@ export const getStatusEditorColor = (status: string): string => {
   switch (status) {
     case "completed":
       return "bg-Green"; // カスタムカラー
+    case "checking":
+      return "bg-orange-500";
     case "in_progress":
       return "bg-blue-600";
     default: // todo
@@ -101,6 +107,8 @@ export const getStatusColorForText = (status: string): string => {
   switch (status) {
     case "completed":
       return "text-green-600";
+    case "checking":
+      return "text-orange-600";
     case "in_progress":
       return "text-blue-600";
     default:

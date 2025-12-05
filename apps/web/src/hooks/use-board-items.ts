@@ -31,6 +31,7 @@ interface UseBoardItemsReturn {
   deletedMemoCount: number;
   todoCount: number;
   inProgressCount: number;
+  checkingCount: number;
   completedCount: number;
   deletedCount: number;
 }
@@ -199,6 +200,15 @@ export function useBoardItems({
     [allTaskItems],
   );
 
+  const checkingCount = useMemo(
+    () =>
+      allTaskItems.filter(
+        (item: BoardItemWithContent) =>
+          (item.content as Task).status === "checking",
+      ).length,
+    [allTaskItems],
+  );
+
   const completedCount = useMemo(
     () =>
       allTaskItems.filter(
@@ -232,6 +242,7 @@ export function useBoardItems({
     deletedMemoCount,
     todoCount,
     inProgressCount,
+    checkingCount,
     completedCount,
     deletedCount,
   };

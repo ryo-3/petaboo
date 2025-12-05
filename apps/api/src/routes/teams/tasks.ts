@@ -35,7 +35,7 @@ const TeamTaskSchema = z.object({
   uuid: z.string().nullable(),
   title: z.string(),
   description: z.string().nullable(),
-  status: z.enum(["todo", "in_progress", "completed"]),
+  status: z.enum(["todo", "in_progress", "checking", "completed"]),
   priority: z.enum(["low", "medium", "high"]),
   dueDate: z.number().nullable(),
   categoryId: z.number().nullable(),
@@ -56,7 +56,9 @@ const TeamTaskInputSchema = z.object({
     .string()
     .max(10000, "説明は10,000文字以内で入力してください")
     .optional(),
-  status: z.enum(["todo", "in_progress", "completed"]).default("todo"),
+  status: z
+    .enum(["todo", "in_progress", "checking", "completed"])
+    .default("todo"),
   priority: z.enum(["low", "medium", "high"]).default("medium"),
   dueDate: z.number().optional(),
   categoryId: z.number().optional(),
@@ -74,7 +76,7 @@ const TeamTaskUpdateSchema = z.object({
     .string()
     .max(10000, "説明は10,000文字以内で入力してください")
     .optional(),
-  status: z.enum(["todo", "in_progress", "completed"]).optional(),
+  status: z.enum(["todo", "in_progress", "checking", "completed"]).optional(),
   priority: z.enum(["low", "medium", "high"]).optional(),
   dueDate: z.number().optional(),
   categoryId: z.number().optional(),

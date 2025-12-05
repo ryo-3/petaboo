@@ -570,7 +570,8 @@ export function useAddItemToBoard(options?: {
       const itemId = newItem.itemId || data.itemId;
       const itemType = newItem.itemType || data.itemType;
 
-      // 特定のボードのアイテムキャッシュを無効化（新しいアイテムが追加されるため）
+      // 特定のボードのアイテムキャッシュのみ無効化（最小限に抑える）
+      // PETABOO-55: 過剰なinvalidateがレースコンディションを引き起こす可能性があるため削減
       if (teamMode && teamId) {
         queryClient.invalidateQueries({
           queryKey: ["team-boards", teamId, boardId, "items"],
@@ -580,18 +581,10 @@ export function useAddItemToBoard(options?: {
           queryKey: ["boards", boardId, "items"],
         });
       }
-      // アイテムのボード情報も無効化（displayIdベース） - 確実に更新
+      // アイテムのボード情報を無効化（該当アイテムのみ）
       queryClient.invalidateQueries({
         queryKey: ["item-boards", itemType, itemId],
       });
-      // 完全にキャッシュをクリア（"item-boards"で始まる全てのキャッシュをクリア）
-      queryClient.invalidateQueries({ queryKey: ["item-boards"] });
-      // ボード一覧の統計情報を更新（より細かい制御は困難なため無効化）
-      queryClient.invalidateQueries({ queryKey: ["boards"] });
-      // 全ボードアイテム情報も無効化（全データ事前取得で使用）
-      queryClient.invalidateQueries({ queryKey: ["boards", "all-items"] });
-      // 完全なキャッシュリフレッシュ（ボードアイテムすべて）
-      queryClient.refetchQueries({ queryKey: ["boards", "all-items"] });
     },
     onError: (error) => {
       const errorMessage = error.message || "";
@@ -674,7 +667,8 @@ export function useRemoveItemFromBoard() {
       throw new Error("Failed after retry");
     },
     onSuccess: (_, { boardId, itemId, itemType, teamId }) => {
-      // 特定のボードのアイテムキャッシュを無効化（アイテムが削除されるため）
+      // 特定のボードのアイテムキャッシュのみ無効化（最小限に抑える）
+      // PETABOO-55: 過剰なinvalidateがレースコンディションを引き起こす可能性があるため削減
       // 個人ボード用
       queryClient.invalidateQueries({ queryKey: ["boards", boardId, "items"] });
       // チームボード用（teamIdがある場合）
@@ -683,18 +677,10 @@ export function useRemoveItemFromBoard() {
           queryKey: ["team-boards", teamId.toString(), boardId, "items"],
         });
       }
-      // アイテムのボード情報も無効化 - 確実に更新
+      // アイテムのボード情報を無効化（該当アイテムのみ）
       queryClient.invalidateQueries({
         queryKey: ["item-boards", itemType, itemId],
       });
-      // 完全にキャッシュをクリア（"item-boards"で始まる全てのキャッシュをクリア）
-      queryClient.invalidateQueries({ queryKey: ["item-boards"] });
-      // ボード一覧の統計情報を更新（より細かい制御は困難なため無効化）
-      queryClient.invalidateQueries({ queryKey: ["boards"] });
-      // 全ボードアイテム情報も無効化（全データ事前取得で使用）
-      queryClient.invalidateQueries({ queryKey: ["boards", "all-items"] });
-      // 完全なキャッシュリフレッシュ（ボードアイテムすべて）
-      queryClient.refetchQueries({ queryKey: ["boards", "all-items"] });
     },
     onError: (error, variables) => {
       console.error("ボードからアイテムの削除に失敗しました:", {

@@ -447,7 +447,7 @@ export function useBulkDeleteOperations({
         teamId,
       });
 
-      // キャッシュを無効化
+      // PETABOO-55: 該当ボードのキャッシュのみ無効化（過剰なinvalidateを削減）
       queryClient.invalidateQueries({
         queryKey: ["boards", boardId, "items"],
       });
@@ -456,7 +456,6 @@ export function useBulkDeleteOperations({
           queryKey: ["team-boards", teamId.toString(), boardId, "items"],
         });
       }
-      queryClient.invalidateQueries({ queryKey: ["boards", "all-items"] });
     };
 
     // executeWithAnimationを使ってモーダル削除と同じ処理

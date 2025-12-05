@@ -160,18 +160,13 @@ export function useCreateMemo(options?: {
           );
         }
 
-        // 2. バックグラウンドでデータを再取得（楽観的更新の検証）
-        queryClient.refetchQueries({
-          queryKey: ["team-memos", teamId],
-          exact: true,
-        });
+        // PETABOO-55: 楽観的更新で十分なため、過剰なrefetch/invalidateを削減
+        // ボードIDが指定されている場合のみ、該当ボードのキャッシュを無効化
         if (boardId) {
-          queryClient.refetchQueries({
+          queryClient.invalidateQueries({
             queryKey: ["team-boards", teamId.toString(), boardId, "items"],
           });
         }
-        // ボード一覧の統計も更新
-        queryClient.invalidateQueries({ queryKey: ["team-boards", teamId] });
       } else {
         // 個人メモのキャッシュを更新（重複チェック付き）
         queryClient.setQueryData<Memo[]>(["memos"], (oldMemos) => {
@@ -184,20 +179,14 @@ export function useCreateMemo(options?: {
           return [...oldMemos, newMemo];
         });
 
-        // バックグラウンドでrefetch
-        queryClient.refetchQueries({ queryKey: ["memos"], exact: true });
-
-        // ボード関連キャッシュを無効化
-        queryClient.invalidateQueries({
-          queryKey: ["boards"],
-          exact: false,
-        });
+        // PETABOO-55: 楽観的更新で十分なため、過剰なrefetch/invalidateを削減
+        // ボードIDが指定されている場合のみ、該当ボードのキャッシュを無効化
+        if (boardId) {
+          queryClient.invalidateQueries({
+            queryKey: ["boards", boardId, "items"],
+          });
+        }
       }
-      // タグ付け関連キャッシュを無効化（タグ表示更新のため）
-      queryClient.invalidateQueries({
-        queryKey: ["taggings"],
-        exact: false,
-      });
     },
   });
 }

@@ -322,16 +322,8 @@ export function useUnifiedItemOperations({
         }
       }
 
-      // 全タグ付け情報を無効化
-      queryClient.invalidateQueries({ queryKey: ["taggings", "all"] });
-
-      // 全ボードアイテム情報を無効化（ボード紐づき表示用）
-      queryClient.invalidateQueries({ queryKey: ["boards", "all-items"] });
-      if (teamId) {
-        queryClient.invalidateQueries({
-          queryKey: ["boards", "all-items", teamId],
-        });
-      }
+      // PETABOO-55: 過剰なinvalidateを削減（全ボードアイテムの再取得は不要）
+      // 必要なボードキャッシュは上で個別に無効化済み
 
       // showToast(`${itemName}を削除しました`, "success"); // トースト通知は無効化
     },
@@ -537,16 +529,8 @@ export function useUnifiedItemOperations({
         }
       }
 
-      // 全タグ付け情報を無効化
-      queryClient.invalidateQueries({ queryKey: ["taggings", "all"] });
-
-      // 全ボードアイテム情報を無効化（ボード紐づき表示用）
-      queryClient.invalidateQueries({ queryKey: ["boards", "all-items"] });
-      if (teamId) {
-        queryClient.invalidateQueries({
-          queryKey: ["boards", "all-items", teamId],
-        });
-      }
+      // PETABOO-55: 過剰なinvalidateを削減（全ボードアイテムの再取得は不要）
+      // 必要なボードキャッシュは上で個別に無効化済み
 
       // showToast(`${itemName}を復元しました`, "success"); // トースト通知は無効化
     },

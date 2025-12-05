@@ -119,49 +119,20 @@ export function useCreateTask(options?: {
         });
       }
 
-      // 2. ボードコンテキストの場合、ボードアイテムリストを再取得してboardIndexを反映
+      // PETABOO-55: 過剰なinvalidate/refetchがレースコンディションを引き起こす可能性があるため削減
+      // 2. ボードコンテキストの場合、該当ボードのアイテムリストのみ無効化
       if (boardId) {
         if (teamMode && teamId) {
-          // チームボード
-          // team-boardで始まる全てのクエリを無効化して再取得
+          // チームボード - 該当ボードのみ
           queryClient.invalidateQueries({
-            queryKey: ["team-board", teamId],
-          });
-          // ボードアイテム一覧も無効化して強制再取得
-          queryClient.invalidateQueries({
-            queryKey: ["team-boards", teamId.toString(), boardId, "items"],
-          });
-          // 即座に再取得を実行
-          queryClient.refetchQueries({
             queryKey: ["team-boards", teamId.toString(), boardId, "items"],
           });
         } else {
-          // 個人ボード
-          // ボードアイテム一覧を無効化して強制再取得
+          // 個人ボード - 該当ボードのみ
           queryClient.invalidateQueries({
             queryKey: ["boards", boardId, "items"],
           });
-          // 即座に再取得を実行
-          queryClient.refetchQueries({
-            queryKey: ["boards", boardId, "items"],
-          });
         }
-      }
-
-      // 3. バックグラウンドでタスク一覧を再取得
-      if (teamMode && teamId) {
-        queryClient.invalidateQueries({
-          queryKey: ["team-tasks", teamId],
-          exact: true,
-        });
-      } else {
-        queryClient.invalidateQueries({ queryKey: ["tasks"], exact: true });
-      }
-
-      // 4. ボード統計の再計算のためボード一覧を無効化
-      queryClient.invalidateQueries({ queryKey: ["boards"] });
-      if (teamMode && teamId) {
-        queryClient.invalidateQueries({ queryKey: ["team-boards", teamId] });
       }
     },
     onError: (error) => {

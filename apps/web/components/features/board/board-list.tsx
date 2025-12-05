@@ -59,11 +59,11 @@ export default function BoardList({
     // propsで渡されている場合はそちらを優先
     if (selectedBoardSlug) return selectedBoardSlug;
 
-    // チーム側: ?board=xxx
+    // 新形式: ?board=SLUG（個人・チーム共通）
     const boardParam = searchParams.get("board") || searchParams.get("slug");
-    if (boardParam) return boardParam;
+    if (boardParam) return boardParam.toUpperCase();
 
-    // 個人側: ?SLUG形式（値が空文字列のキー）
+    // 旧形式との互換性: ?SLUG形式（値が空文字列のキー）
     const excludeKeys = [
       "mode",
       "search",

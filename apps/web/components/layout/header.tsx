@@ -56,8 +56,13 @@ function Header() {
   // 通知ポップアップの状態管理
   const [isNotificationPopupOpen, setIsNotificationPopupOpen] = useState(false);
 
-  // 新形式: 値が空のキーをボードslugとして扱う（?PETABOO&task=22 形式）
+  // 新形式: ?board=SLUG、旧形式との互換性: ?SLUG（値が空のキー）
   const boardSlugFromParams = useMemo((): string | null => {
+    // 新形式: ?board=SLUG を優先
+    const boardParam = searchParams.get("board") || searchParams.get("slug");
+    if (boardParam) return boardParam.toUpperCase();
+
+    // 旧形式との互換性: ?SLUG形式（値が空のキー）
     for (const [key, value] of searchParams.entries()) {
       if (
         value === "" &&
@@ -77,7 +82,7 @@ function Header() {
         return key.toUpperCase();
       }
     }
-    return searchParams.get("board") || searchParams.get("slug");
+    return null;
   }, [searchParams]);
 
   // 個人ボード詳細ページの場合、URLからボード情報を直接取得

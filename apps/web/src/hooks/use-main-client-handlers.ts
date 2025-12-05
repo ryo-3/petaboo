@@ -319,11 +319,18 @@ export function useMainClientHandlers({
     setScreenMode("board");
     setCurrentMode("board");
     setShowingBoardDetail(true);
+    // URLを更新（個人側のみ）
+    if (!teamMode && currentBoardSlug) {
+      router.replace(`/?board=${currentBoardSlug}`, { scroll: false });
+    }
   }, [
     clearAllSelections,
     setScreenMode,
     setCurrentMode,
     setShowingBoardDetail,
+    teamMode,
+    currentBoardSlug,
+    router,
   ]);
 
   /** 新規作成画面に遷移 */
@@ -378,7 +385,7 @@ export function useMainClientHandlers({
         setBoardSelectedItem(null);
         // URLからメモパラメータを削除（個人側のみ）
         if (!teamMode && currentBoardSlug) {
-          router.replace(`/?${currentBoardSlug}`, { scroll: false });
+          router.replace(`/?board=${currentBoardSlug}`, { scroll: false });
         }
         return;
       }
@@ -413,7 +420,7 @@ export function useMainClientHandlers({
         memo.boardIndex &&
         memo.boardIndex > 0
       ) {
-        router.replace(`/?${currentBoardSlug}&memo=${memo.boardIndex}`, {
+        router.replace(`/?board=${currentBoardSlug}&memo=${memo.boardIndex}`, {
           scroll: false,
         });
       }
@@ -436,7 +443,7 @@ export function useMainClientHandlers({
         setBoardSelectedItem(null);
         // URLからタスクパラメータを削除（個人側のみ）
         if (!teamMode && currentBoardSlug) {
-          router.replace(`/?${currentBoardSlug}`, { scroll: false });
+          router.replace(`/?board=${currentBoardSlug}`, { scroll: false });
         }
         return;
       }
@@ -469,7 +476,7 @@ export function useMainClientHandlers({
         task.boardIndex &&
         task.boardIndex > 0
       ) {
-        router.replace(`/?${currentBoardSlug}&task=${task.boardIndex}`, {
+        router.replace(`/?board=${currentBoardSlug}&task=${task.boardIndex}`, {
           scroll: false,
         });
       }

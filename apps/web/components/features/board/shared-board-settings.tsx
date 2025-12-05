@@ -219,10 +219,10 @@ export default function SharedBoardSettings({
       onBack();
       return;
     }
-    // フォールバック: router.pushを使用（チームは新形式: ?SLUG）
+    // フォールバック: router.pushを使用
     const backPath = isTeamMode
-      ? `/team/${teamCustomUrl}?${boardSlug}`
-      : `/boards/${boardSlug}`;
+      ? `/team/${teamCustomUrl}?board=${boardSlug}`
+      : `/?board=${boardSlug}`;
     router.push(backPath);
   };
 

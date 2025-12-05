@@ -83,6 +83,11 @@ export function getModeFromUrl(
     return "search";
   }
 
+  // 個人ボード詳細: ?board=SLUG
+  if (searchParams.has("board")) {
+    return "board";
+  }
+
   // デフォルト（ホーム）
   return "home";
 }

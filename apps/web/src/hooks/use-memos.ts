@@ -797,25 +797,14 @@ export function useRestoreMemo(options?: {
           });
         } else {
           // キャッシュがない場合は現在開いてるボード詳細を無効化
+          // refetchQueriesは使わない（Missing queryFnエラー対策）
           queryClient.invalidateQueries({
             predicate: (query) => {
               const key = query.queryKey as unknown[];
               return key[0] === "boards" && key[2] === "items";
             },
           });
-          queryClient.refetchQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return key[0] === "boards" && key[2] === "items";
-            },
-          });
           queryClient.invalidateQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return key[0] === "board-deleted-items";
-            },
-          });
-          queryClient.refetchQueries({
             predicate: (query) => {
               const key = query.queryKey as unknown[];
               return key[0] === "board-deleted-items";

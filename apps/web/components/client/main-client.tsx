@@ -77,10 +77,14 @@ function MainClient({
   // refs
   const boardScreenRef = useRef<BoardScreenRef>(null);
 
-  // URLクエリパラメータからボードslugを取得（チーム側と同じ形式）
-  // ?TEST 形式（値が空のキー）をボードslugとして扱う
+  // URLクエリパラメータからボードslugを取得
+  // 新形式: ?board=SLUG、旧形式との互換性: ?SLUG
   const getBoardSlugFromParams = (): string | null => {
-    // 除外するキー（モード指定やシステムパラメータ）
+    // 新形式: ?board=SLUG
+    const boardParam = searchParams.get("board");
+    if (boardParam) return boardParam.toUpperCase();
+
+    // 旧形式との互換性: ?SLUG形式（値が空のキー）
     const excludeKeys = [
       "mode",
       "search",
@@ -480,7 +484,7 @@ function MainClient({
     }
     // lastBoardSlugがある場合はそのボード詳細URLに遷移
     if (lastBoardSlug) {
-      router.replace(`/?${lastBoardSlug}`, { scroll: false });
+      router.replace(`/?board=${lastBoardSlug}`, { scroll: false });
     }
 
     // 🚀 選択状態のクリアは次のフレームで実行（画面遷移後）

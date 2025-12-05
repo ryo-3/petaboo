@@ -6,7 +6,7 @@ interface BoardPageProps {
 }
 
 /**
- * /boards/[slug] → /?SLUG へのリダイレクト
+ * /boards/[slug] → /?board=SLUG へのリダイレクト
  * 旧形式のURLから新形式（クエリパラメータ形式）へ転送
  * 既存のブックマークや共有リンクに対応
  */
@@ -17,11 +17,11 @@ export default async function BoardPage({
   const { slug } = await params;
   const { settings } = await searchParams;
 
-  // 設定画面の場合は ?SLUG&settings=true にリダイレクト
+  // 設定画面の場合は ?board=SLUG&settings=true にリダイレクト
   if (settings === "true") {
-    redirect(`/?${slug.toUpperCase()}&settings=true`);
+    redirect(`/?board=${slug.toUpperCase()}&settings=true`);
   }
 
-  // 通常のボード詳細は /?SLUG にリダイレクト
-  redirect(`/?${slug.toUpperCase()}`);
+  // 通常のボード詳細は ?board=SLUG にリダイレクト
+  redirect(`/?board=${slug.toUpperCase()}`);
 }

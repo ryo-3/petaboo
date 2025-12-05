@@ -203,8 +203,13 @@ export function NavigationProvider({
     // 個人ページの判定（screenModeベース・楽観的更新対応）
     const effectiveMode = optimisticMode || currentMode;
 
-    // 個人側のボードslugをURLから取得（チーム側と同じ形式）
+    // 個人側のボードslugをURLから取得（チーム側と同じ形式: ?board=SLUG）
     const getPersonalBoardSlugFromParams = (): string | null => {
+      // 新形式: ?board=SLUG
+      const boardParam = searchParams.get("board");
+      if (boardParam) return boardParam.toUpperCase();
+
+      // 旧形式との互換性: ?SLUG（値が空のキー）
       const excludeKeys = [
         "mode",
         "search",

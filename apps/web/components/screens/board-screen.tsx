@@ -95,7 +95,7 @@ const BoardScreen = forwardRef<BoardScreenRef, BoardScreenProps>(
         // ボード詳細表示フラグをtrueに（即座に画面切り替え）
         setShowingBoardDetail(true);
         // クエリパラメータ形式で遷移（ページ遷移なし）
-        router.push(`/?${board.slug.toUpperCase()}`);
+        router.push(`/?board=${board.slug.toUpperCase()}`);
       }
     };
 

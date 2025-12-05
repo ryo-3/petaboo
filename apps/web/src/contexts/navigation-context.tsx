@@ -217,6 +217,22 @@ export function NavigationProvider({
           effectiveTab === "team-list" ||
           (!effectiveTab && screenMode === "team"),
       };
+
+      // PETABOO-50: チームページでhomeがtrueだが期待するタブがある場合に警告
+      if (result.home && activeTab && activeTab !== "overview") {
+        console.warn(
+          "🔴 [NavigationContext] チームiconStates異常: homeがtrueだがactiveTabがある",
+          {
+            pathname,
+            activeTab,
+            effectiveTab,
+            optimisticMode,
+            searchParamsStr: searchParams.toString(),
+            result,
+          },
+        );
+      }
+
       return result;
     }
 

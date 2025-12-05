@@ -24,29 +24,10 @@ export function useMemos(options?: { teamMode?: boolean; teamId?: number }) {
           token || undefined,
         );
         const data = await response.json();
-        // デバッグログ: チームメモ一覧
-        console.log("📝 [useMemos] チームメモ一覧取得", {
-          teamId,
-          count: (data as Memo[]).length,
-          memos: (data as Memo[]).map((m) => ({
-            id: m.id,
-            displayId: m.displayId,
-            title: m.title?.slice(0, 20),
-          })),
-        });
         return data as Memo[];
       } else {
         const response = await memosApi.getMemos(token || undefined);
         const data = await response.json();
-        // デバッグログ: 個人メモ一覧
-        console.log("📝 [useMemos] 個人メモ一覧取得", {
-          count: (data as Memo[]).length,
-          memos: (data as Memo[]).map((m) => ({
-            id: m.id,
-            displayId: m.displayId,
-            title: m.title?.slice(0, 20),
-          })),
-        });
         return data as Memo[];
       }
     },

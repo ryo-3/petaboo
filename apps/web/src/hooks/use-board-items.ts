@@ -53,62 +53,22 @@ export function useBoardItems({
 }: UseBoardItemsProps): UseBoardItemsReturn {
   const prevDeleteStateRef = useRef(isMemoDeleting);
 
-  // デバッグログ: boardWithItemsの生データ
-  console.log("🔍 [useBoardItems] 生データ", {
-    boardId,
-    hasItems: !!boardWithItems?.items,
-    itemsLength: boardWithItems?.items?.length || 0,
-    rawItems: boardWithItems?.items?.slice(0, 5).map((item) => ({
-      itemType: item.itemType,
-      itemId: item.itemId,
-      hasContent: !!item.content,
-      contentType: item.content ? typeof item.content : "undefined",
-    })),
-  });
-
   // メモとタスクのアイテムを分離（読み込み中も空配列で処理）
   const allMemoItems = useMemo(() => {
     const memoItems =
       boardWithItems?.items?.filter(
         (item: BoardItemWithContent) => item.itemType === "memo",
       ) || [];
-
-    // デバッグログ: メモ一覧
-    console.log("📝 [useBoardItems] メモ一覧", {
-      boardId,
-      totalItems: boardWithItems?.items?.length || 0,
-      memoCount: memoItems.length,
-      memoList: memoItems.map((item) => ({
-        id: item.content?.id,
-        itemId: item.itemId,
-        title: (item.content as { title?: string })?.title?.slice(0, 20),
-      })),
-    });
-
     return memoItems;
-  }, [boardWithItems, boardId]);
+  }, [boardWithItems]);
 
   const allTaskItems = useMemo(() => {
     const taskItems =
       boardWithItems?.items?.filter(
         (item: BoardItemWithContent) => item.itemType === "task",
       ) || [];
-
-    // デバッグログ: タスク一覧
-    console.log("📋 [useBoardItems] タスク一覧", {
-      boardId,
-      totalItems: boardWithItems?.items?.length || 0,
-      taskCount: taskItems.length,
-      taskList: taskItems.map((item) => ({
-        id: item.content?.id,
-        itemId: item.itemId,
-        title: (item.content as { title?: string })?.title?.slice(0, 20),
-        status: (item.content as Task)?.status,
-      })),
-    });
-
     return taskItems;
-  }, [boardWithItems, boardId]);
+  }, [boardWithItems]);
 
   // アクティブタブに応じてメモをフィルタリング
   const memoItems = useMemo(() => {

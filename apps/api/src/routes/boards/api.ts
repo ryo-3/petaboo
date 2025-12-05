@@ -1842,14 +1842,6 @@ export function createAPI(app: AppType) {
           return a.addedAt - b.addedAt;
         });
 
-        // デバッグログ
-        console.log("📦 [all-items] チームボードアイテム（削除済み除外）", {
-          teamId,
-          count: allBoardItems.length,
-          memoCount: memoItems.length,
-          taskCount: taskItems.length,
-        });
-
         return c.json(allBoardItems);
       } else {
         // 個人モード：全ボードのアイテムを一括取得（物理削除なのでレコードが存在するものはすべて有効）

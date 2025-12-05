@@ -290,6 +290,22 @@ export function NavigationProvider({
       team: isTeamScreen,
     };
 
+    // PETABOO-50: iconStates計算結果をログ出力（個人ページのみ）
+    if (result.home && screenMode !== "home") {
+      console.warn(
+        "🔴 [NavigationContext] iconStates異常: homeがtrueだがscreenModeはhomeではない",
+        {
+          screenMode,
+          currentMode,
+          effectiveMode,
+          isHomeScreen,
+          showTeamList,
+          pathname,
+          result,
+        },
+      );
+    }
+
     return result;
   }, [
     screenMode,

@@ -435,41 +435,48 @@ export function useDeleteTask(options?: {
             );
           },
         });
-        // チームボード関連のキャッシュを無効化・強制再取得（統計が変わるため）
-        // 全ステータス（normal, completed, deleted）のボードキャッシュを無効化
-        queryClient.invalidateQueries({
-          predicate: (query) => {
-            const key = query.queryKey as unknown[];
-            return key[0] === "team-boards" && key[1] === teamId;
-          },
-        });
-        queryClient.refetchQueries({
-          predicate: (query) => {
-            const key = query.queryKey as unknown[];
-            return key[0] === "team-boards" && key[1] === teamId;
-          },
-        });
-        // ボードアイテムキャッシュを強制無効化・再取得（UIからも削除するため）
-        queryClient.invalidateQueries({
-          predicate: (query) => {
-            const key = query.queryKey as string[];
-            return (
-              key[0] === "team-boards" &&
-              key[1] === teamId.toString() &&
-              key[3] === "items"
-            );
-          },
-        });
-        queryClient.refetchQueries({
-          predicate: (query) => {
-            const key = query.queryKey as string[];
-            return (
-              key[0] === "team-boards" &&
-              key[1] === teamId.toString() &&
-              key[3] === "items"
-            );
-          },
-        });
+
+        // 紐づいているチームボードのアイテムキャッシュのみ無効化・再取得
+        const deletedTaskDisplayId = deletedTask?.displayId || id.toString();
+        const teamItemBoards = queryClient.getQueryData<{ id: number }[]>([
+          "team-item-boards",
+          teamId,
+          "task",
+          deletedTaskDisplayId,
+        ]);
+        if (teamItemBoards && teamItemBoards.length > 0) {
+          // キャッシュがある場合は紐づきボードのみ
+          teamItemBoards.forEach((board) => {
+            queryClient.invalidateQueries({
+              queryKey: ["team-boards", teamId.toString(), board.id, "items"],
+            });
+            queryClient.refetchQueries({
+              queryKey: ["team-boards", teamId.toString(), board.id, "items"],
+            });
+          });
+        } else {
+          // キャッシュがない場合は現在開いてるチームボード詳細を無効化
+          queryClient.invalidateQueries({
+            predicate: (query) => {
+              const key = query.queryKey as unknown[];
+              return (
+                key[0] === "team-boards" &&
+                key[1] === teamId.toString() &&
+                key[3] === "items"
+              );
+            },
+          });
+          queryClient.refetchQueries({
+            predicate: (query) => {
+              const key = query.queryKey as unknown[];
+              return (
+                key[0] === "team-boards" &&
+                key[1] === teamId.toString() &&
+                key[3] === "items"
+              );
+            },
+          });
+        }
       } else {
         // 個人タスク一覧から削除されたタスクを楽観的更新で即座に除去
         const deletedTask = queryClient
@@ -507,8 +514,39 @@ export function useDeleteTask(options?: {
 
         // 削除済み一覧もバックグラウンドで無効化（安全性のため）
         queryClient.invalidateQueries({ queryKey: ["deleted-tasks"] });
-        // ボード関連のキャッシュを強制再取得（統計が変わるため）
-        queryClient.refetchQueries({ queryKey: ["boards"] });
+
+        // 紐づいているボードのアイテムキャッシュのみ無効化・再取得
+        const deletedTaskDisplayId = deletedTask?.displayId || id.toString();
+        const itemBoards = queryClient.getQueryData<{ id: number }[]>([
+          "item-boards",
+          "task",
+          deletedTaskDisplayId,
+        ]);
+        if (itemBoards && itemBoards.length > 0) {
+          // キャッシュがある場合は紐づきボードのみ
+          itemBoards.forEach((board) => {
+            queryClient.invalidateQueries({
+              queryKey: ["boards", board.id, "items"],
+            });
+            queryClient.refetchQueries({
+              queryKey: ["boards", board.id, "items"],
+            });
+          });
+        } else {
+          // キャッシュがない場合は現在開いてるボード詳細を無効化
+          queryClient.invalidateQueries({
+            predicate: (query) => {
+              const key = query.queryKey as unknown[];
+              return key[0] === "boards" && key[2] === "items";
+            },
+          });
+          queryClient.refetchQueries({
+            predicate: (query) => {
+              const key = query.queryKey as unknown[];
+              return key[0] === "boards" && key[2] === "items";
+            },
+          });
+        }
       }
 
       // 全タグ付け情報を無効化（削除されたタスクに関連するタグ情報が変わる可能性があるため）
@@ -708,39 +746,78 @@ export function useRestoreTask(options?: {
         });
         queryClient.invalidateQueries({ queryKey: ["team-tasks", teamId] });
 
-        // チームボード関連のキャッシュを無効化と強制再取得
-        // 全ステータス（normal, completed, deleted）のボードキャッシュを無効化
-        queryClient.invalidateQueries({
-          predicate: (query) => {
-            const key = query.queryKey as unknown[];
-            return key[0] === "team-boards" && key[1] === teamId;
-          },
-        });
-        queryClient.refetchQueries({
-          predicate: (query) => {
-            const key = query.queryKey as unknown[];
-            return key[0] === "team-boards" && key[1] === teamId;
-          },
-        });
-        queryClient.invalidateQueries({
-          queryKey: ["team-board-deleted-items", teamId.toString()],
-          exact: false,
-        });
-        // 特定のボードの削除済みアイテムも明示的に無効化
-        if (boardId) {
+        // 紐づいているチームボードのアイテムキャッシュのみ無効化・再取得
+        const teamItemBoards = queryClient.getQueryData<{ id: number }[]>([
+          "team-item-boards",
+          teamId,
+          "task",
+          displayId,
+        ]);
+        if (teamItemBoards && teamItemBoards.length > 0) {
+          // キャッシュがある場合は紐づきボードのみ
+          teamItemBoards.forEach((board) => {
+            queryClient.invalidateQueries({
+              queryKey: ["team-boards", teamId.toString(), board.id, "items"],
+            });
+            queryClient.refetchQueries({
+              queryKey: ["team-boards", teamId.toString(), board.id, "items"],
+            });
+            queryClient.invalidateQueries({
+              queryKey: [
+                "team-board-deleted-items",
+                teamId.toString(),
+                board.id,
+              ],
+            });
+            queryClient.refetchQueries({
+              queryKey: [
+                "team-board-deleted-items",
+                teamId.toString(),
+                board.id,
+              ],
+            });
+          });
+        } else {
+          // キャッシュがない場合は現在開いてるチームボード詳細を無効化
           queryClient.invalidateQueries({
-            queryKey: ["team-board-deleted-items", teamId.toString(), boardId],
+            predicate: (query) => {
+              const key = query.queryKey as unknown[];
+              return (
+                key[0] === "team-boards" &&
+                key[1] === teamId.toString() &&
+                key[3] === "items"
+              );
+            },
           });
           queryClient.refetchQueries({
-            queryKey: ["team-board-deleted-items", teamId.toString(), boardId],
+            predicate: (query) => {
+              const key = query.queryKey as unknown[];
+              return (
+                key[0] === "team-boards" &&
+                key[1] === teamId.toString() &&
+                key[3] === "items"
+              );
+            },
+          });
+          queryClient.invalidateQueries({
+            predicate: (query) => {
+              const key = query.queryKey as unknown[];
+              return (
+                key[0] === "team-board-deleted-items" &&
+                key[1] === teamId.toString()
+              );
+            },
+          });
+          queryClient.refetchQueries({
+            predicate: (query) => {
+              const key = query.queryKey as unknown[];
+              return (
+                key[0] === "team-board-deleted-items" &&
+                key[1] === teamId.toString()
+              );
+            },
           });
         }
-
-        // ボードアイテムの強制再取得（復元したタスクが表示されるように）
-        queryClient.refetchQueries({
-          queryKey: ["team-boards", teamId.toString()],
-          exact: false,
-        });
       } else {
         // 個人削除済みタスク一覧から復元されたタスクを楽観的更新で即座に除去
         const deletedTask = queryClient
@@ -779,13 +856,55 @@ export function useRestoreTask(options?: {
         queryClient.invalidateQueries({ queryKey: ["deleted-tasks"] });
         queryClient.refetchQueries({ queryKey: ["tasks"] });
 
-        // ボード関連のキャッシュを無効化と強制再取得
-        queryClient.invalidateQueries({ queryKey: ["boards"], exact: false });
-        queryClient.invalidateQueries({
-          queryKey: ["board-deleted-items"],
-          exact: false,
-        });
-        queryClient.refetchQueries({ queryKey: ["boards"], exact: false });
+        // 紐づいているボードのアイテムキャッシュのみ無効化・再取得
+        const itemBoards = queryClient.getQueryData<{ id: number }[]>([
+          "item-boards",
+          "task",
+          displayId,
+        ]);
+        if (itemBoards && itemBoards.length > 0) {
+          // キャッシュがある場合は紐づきボードのみ
+          itemBoards.forEach((board) => {
+            queryClient.invalidateQueries({
+              queryKey: ["boards", board.id, "items"],
+            });
+            queryClient.refetchQueries({
+              queryKey: ["boards", board.id, "items"],
+            });
+            queryClient.invalidateQueries({
+              queryKey: ["board-deleted-items", board.id],
+            });
+            queryClient.refetchQueries({
+              queryKey: ["board-deleted-items", board.id],
+            });
+          });
+        } else {
+          // キャッシュがない場合は現在開いてるボード詳細を無効化
+          queryClient.invalidateQueries({
+            predicate: (query) => {
+              const key = query.queryKey as unknown[];
+              return key[0] === "boards" && key[2] === "items";
+            },
+          });
+          queryClient.refetchQueries({
+            predicate: (query) => {
+              const key = query.queryKey as unknown[];
+              return key[0] === "boards" && key[2] === "items";
+            },
+          });
+          queryClient.invalidateQueries({
+            predicate: (query) => {
+              const key = query.queryKey as unknown[];
+              return key[0] === "board-deleted-items";
+            },
+          });
+          queryClient.refetchQueries({
+            predicate: (query) => {
+              const key = query.queryKey as unknown[];
+              return key[0] === "board-deleted-items";
+            },
+          });
+        }
       }
       // 全タグ付け情報を無効化（復元されたタスクのタグ情報が変わる可能性があるため）
       queryClient.invalidateQueries({ queryKey: ["taggings", "all"] });

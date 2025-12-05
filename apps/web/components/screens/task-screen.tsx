@@ -947,8 +947,7 @@ function TaskScreen({
   // DOM削除確認（タスク一覧が変更されたときにチェック）
   useEffect(() => {
     checkDomDeletionAndSelectNext();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [tasks, checkDomDeletionAndSelectNext]);
 
   // タスク選択ハンドラー（アップロード中チェック・未保存チェック追加）
   const handleSelectTask = (task: Task) => {

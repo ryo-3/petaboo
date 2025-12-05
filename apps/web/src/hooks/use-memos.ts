@@ -623,21 +623,46 @@ export function useRestoreMemo(options?: {
     },
     onSuccess: (_, itemId) => {
       if (teamMode && teamId) {
-        // 削除済みメモキャッシュから復元されたメモを即座に除去（存在する場合のみ）
-        const existingData = queryClient.getQueryData([
+        // 削除済みメモキャッシュから復元対象のメモを取得
+        const deletedMemos = queryClient.getQueryData<DeletedMemo[]>([
           "team-deleted-memos",
           teamId,
         ]);
-        if (existingData) {
+        const restoredMemo = deletedMemos?.find(
+          (memo) => memo.displayId === itemId,
+        );
+
+        // 削除済みメモキャッシュから復元されたメモを即座に除去
+        if (deletedMemos) {
           queryClient.setQueryData(
             ["team-deleted-memos", teamId],
-            (oldDeletedMemos: { displayId: string }[] | undefined) => {
+            (oldDeletedMemos: DeletedMemo[] | undefined) => {
               if (!oldDeletedMemos) return [];
               return oldDeletedMemos.filter(
                 (memo) => memo.displayId !== itemId,
               );
             },
           );
+        }
+
+        // 復元したメモをメモ一覧キャッシュに追加（即時反映）
+        if (restoredMemo) {
+          queryClient.setQueryData<Memo[]>(
+            ["team-memos", teamId],
+            (oldMemos) => {
+              if (!oldMemos) return [restoredMemo as unknown as Memo];
+              // 重複チェック
+              const exists = oldMemos.some(
+                (m) => m.displayId === restoredMemo.displayId,
+              );
+              if (exists) return oldMemos;
+              return [...oldMemos, restoredMemo as unknown as Memo];
+            },
+          );
+          console.log("🔄 [useRestoreMemo] メモ一覧に追加", {
+            displayId: itemId,
+            memoId: restoredMemo.id,
+          });
         }
 
         // 特定のボードの削除済みアイテムからも除去（存在する場合のみ）
@@ -665,110 +690,27 @@ export function useRestoreMemo(options?: {
           }
         }
 
-        // チームメモ復元時のキャッシュ無効化と強制再取得
-        queryClient.invalidateQueries({ queryKey: ["team-memos", teamId] });
-        queryClient.refetchQueries({
-          predicate: (query) => {
-            const key = query.queryKey as string[];
-            return key[0] === "team-memos" && key[1] === teamId?.toString();
-          },
-        });
-        queryClient.invalidateQueries({
-          predicate: (query) => {
-            const key = query.queryKey as string[];
-            return (
-              key[0] === "team-deleted-memos" && key[1] === teamId?.toString()
-            );
-          },
-        });
-        // 存在するクエリのみ再取得
-        queryClient.refetchQueries({
-          predicate: (query) => {
-            const key = query.queryKey as string[];
-            return (
-              key[0] === "team-deleted-memos" && key[1] === teamId?.toString()
-            );
-          },
-        });
-        // 紐づいているチームボードのアイテムキャッシュのみ無効化・再取得
-        const teamItemBoards = queryClient.getQueryData<{ id: number }[]>([
-          "team-item-boards",
-          teamId,
-          "memo",
-          itemId,
-        ]);
-        if (teamItemBoards && teamItemBoards.length > 0) {
-          // キャッシュがある場合は紐づきボードのみ
-          teamItemBoards.forEach((board) => {
-            queryClient.invalidateQueries({
-              queryKey: ["team-boards", teamId.toString(), board.id, "items"],
-            });
-            queryClient.refetchQueries({
-              queryKey: ["team-boards", teamId.toString(), board.id, "items"],
-            });
-            queryClient.invalidateQueries({
-              queryKey: [
-                "team-board-deleted-items",
-                teamId.toString(),
-                board.id,
-              ],
-            });
-            queryClient.refetchQueries({
-              queryKey: [
-                "team-board-deleted-items",
-                teamId.toString(),
-                board.id,
-              ],
-            });
-          });
-        } else {
-          // キャッシュがない場合は現在開いてるチームボード詳細を無効化
+        // PETABOO-55: setQueryDataで直接更新済みなので、invalidate/refetchは不要
+        // ボード詳細のアイテム一覧のみ無効化（該当ボードのみ）
+        if (boardId) {
           queryClient.invalidateQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return (
-                key[0] === "team-boards" &&
-                key[1] === teamId.toString() &&
-                key[3] === "items"
-              );
-            },
-          });
-          queryClient.refetchQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return (
-                key[0] === "team-boards" &&
-                key[1] === teamId.toString() &&
-                key[3] === "items"
-              );
-            },
-          });
-          queryClient.invalidateQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return (
-                key[0] === "team-board-deleted-items" &&
-                key[1] === teamId.toString()
-              );
-            },
-          });
-          queryClient.refetchQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return (
-                key[0] === "team-board-deleted-items" &&
-                key[1] === teamId.toString()
-              );
-            },
+            queryKey: ["team-boards", teamId.toString(), boardId, "items"],
           });
         }
       } else {
-        // 削除済みメモキャッシュから復元されたメモを即座に除去（存在する場合のみ）
-        const existingData = queryClient.getQueryData(["deletedMemos"]);
-        if (existingData) {
+        // 削除済みメモキャッシュから復元対象のメモを取得
+        const deletedMemos = queryClient.getQueryData<DeletedMemo[]>([
+          "deletedMemos",
+        ]);
+        const restoredMemo = deletedMemos?.find(
+          (memo) => memo.displayId === itemId,
+        );
+
+        // 削除済みメモキャッシュから復元されたメモを即座に除去
+        if (deletedMemos) {
           queryClient.setQueryData(
             ["deletedMemos"],
-            (oldDeletedMemos: { displayId: string }[] | undefined) => {
+            (oldDeletedMemos: DeletedMemo[] | undefined) => {
               if (!oldDeletedMemos) return [];
               return oldDeletedMemos.filter(
                 (memo) => memo.displayId !== itemId,
@@ -777,51 +719,27 @@ export function useRestoreMemo(options?: {
           );
         }
 
-        // 個人メモ復元時のキャッシュ無効化
-        queryClient.invalidateQueries({ queryKey: ["memos"] });
-        queryClient.invalidateQueries({ queryKey: ["deletedMemos"] });
+        // 復元したメモをメモ一覧キャッシュに追加（即時反映）
+        if (restoredMemo) {
+          queryClient.setQueryData<Memo[]>(["memos"], (oldMemos) => {
+            if (!oldMemos) return [restoredMemo as unknown as Memo];
+            // 重複チェック
+            const exists = oldMemos.some(
+              (m) => m.displayId === restoredMemo.displayId,
+            );
+            if (exists) return oldMemos;
+            return [...oldMemos, restoredMemo as unknown as Memo];
+          });
+        }
 
-        // 紐づいているボードのアイテムキャッシュのみ無効化・再取得
-        const itemBoards = queryClient.getQueryData<{ id: number }[]>([
-          "item-boards",
-          "memo",
-          itemId,
-        ]);
-        if (itemBoards && itemBoards.length > 0) {
-          // キャッシュがある場合は紐づきボードのみ
-          itemBoards.forEach((board) => {
-            queryClient.invalidateQueries({
-              queryKey: ["boards", board.id, "items"],
-            });
-            queryClient.refetchQueries({
-              queryKey: ["boards", board.id, "items"],
-            });
-            queryClient.invalidateQueries({
-              queryKey: ["board-deleted-items", board.id],
-            });
-            queryClient.refetchQueries({
-              queryKey: ["board-deleted-items", board.id],
-            });
-          });
-        } else {
-          // キャッシュがない場合は現在開いてるボード詳細を無効化
-          // refetchQueriesは使わない（Missing queryFnエラー対策）
+        // PETABOO-55: setQueryDataで直接更新済みなので、invalidate/refetchは最小限に
+        // ボード詳細のアイテム一覧のみ無効化（該当ボードのみ）
+        if (boardId) {
           queryClient.invalidateQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return key[0] === "boards" && key[2] === "items";
-            },
-          });
-          queryClient.invalidateQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return key[0] === "board-deleted-items";
-            },
+            queryKey: ["boards", boardId, "items"],
           });
         }
       }
-      // 全タグ付け情報を無効化（復元されたメモのタグ情報が変わる可能性があるため）
-      queryClient.invalidateQueries({ queryKey: ["taggings", "all"] });
     },
   });
 }

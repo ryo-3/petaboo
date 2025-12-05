@@ -323,11 +323,8 @@ export function useUpdateTask(options?: {
         );
       }
 
-      // ボード関連キャッシュを無効化（一覧・統計・アイテムを含む）
-      queryClient.invalidateQueries({
-        queryKey: ["boards"],
-        exact: false,
-      });
+      // PETABOO-55: setQueryDataで楽観的更新済みなので、ボード全体の無効化は不要
+      // ボード詳細のアイテムキャッシュは上で既に更新済み
     },
     onError: (error) => {
       console.error("タスク更新に失敗しました:", error);
@@ -418,15 +415,7 @@ export function useDeleteTask(options?: {
           );
         }
 
-        // 削除済み一覧もバックグラウンドで無効化（安全性のため）
-        queryClient.invalidateQueries({
-          predicate: (query) => {
-            const key = query.queryKey as string[];
-            return (
-              key[0] === "team-deleted-tasks" && key[1] === teamId?.toString()
-            );
-          },
-        });
+        // PETABOO-55: setQueryDataで削除済み一覧に追加済みなので、invalidateは不要
 
         // 紐づいているチームボードのアイテムキャッシュのみ無効化・再取得
         const deletedTaskDisplayId = deletedTask?.displayId || id.toString();
@@ -504,8 +493,7 @@ export function useDeleteTask(options?: {
           );
         }
 
-        // 削除済み一覧もバックグラウンドで無効化（安全性のため）
-        queryClient.invalidateQueries({ queryKey: ["deleted-tasks"] });
+        // PETABOO-55: setQueryDataで削除済み一覧に追加済みなので、invalidateは不要
 
         // 紐づいているボードのアイテムキャッシュのみ無効化・再取得
         const deletedTaskDisplayId = deletedTask?.displayId || id.toString();
@@ -727,16 +715,13 @@ export function useRestoreTask(options?: {
           );
         }
 
-        // バックグラウンドで安全性のため無効化・再取得
-        queryClient.invalidateQueries({
-          predicate: (query) => {
-            const key = query.queryKey as string[];
-            return (
-              key[0] === "team-deleted-tasks" && key[1] === teamId?.toString()
-            );
-          },
+        // PETABOO-55: setQueryDataで直接更新済みなので、invalidate/refetchは不要
+        // タスク一覧キャッシュは上で既に更新済み
+
+        // ボード紐づき情報（all-items）を即座に再取得（タスク一覧のアイコン表示用）
+        queryClient.refetchQueries({
+          queryKey: ["boards", "all-items", teamId],
         });
-        queryClient.invalidateQueries({ queryKey: ["team-tasks", teamId] });
 
         // 紐づいているチームボードのアイテムキャッシュのみ無効化・再取得
         const teamItemBoards = queryClient.getQueryData<{ id: number }[]>([
@@ -844,9 +829,13 @@ export function useRestoreTask(options?: {
           });
         }
 
-        // バックグラウンドで安全性のため無効化・再取得
-        queryClient.invalidateQueries({ queryKey: ["deleted-tasks"] });
-        queryClient.refetchQueries({ queryKey: ["tasks"] });
+        // PETABOO-55: setQueryDataで直接更新済みなので、invalidate/refetchは不要
+        // タスク一覧キャッシュは上で既に更新済み
+
+        // ボード紐づき情報（all-items）を即座に再取得（タスク一覧のアイコン表示用）
+        queryClient.refetchQueries({
+          queryKey: ["boards", "all-items", undefined],
+        });
 
         // 紐づいているボードのアイテムキャッシュのみ無効化・再取得
         const itemBoards = queryClient.getQueryData<{ id: number }[]>([

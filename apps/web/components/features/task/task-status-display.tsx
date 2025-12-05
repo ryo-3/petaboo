@@ -128,14 +128,9 @@ function TaskStatusDisplay({
     if (!statusFilteredTasks) return [];
 
     return statusFilteredTasks.map((task) => {
-      // WORKAROUND: displayIdが数値の場合もあるため、文字列に変換
-      // さらに、idとoriginalIdの両方でマッチング（データ不整合対策）
-      const displayId = task.displayId || "";
-      const taskId = String(task.id);
-      const identifiers = [displayId, taskId];
-      if (teamMode && displayId) {
-        identifiers.push(displayId);
-      }
+      // displayIdのみでマッチング（task.idを含めると別タスクのdisplayIdと衝突する可能性あり）
+      const displayId = String(task.displayId || "");
+      const identifiers = [displayId];
 
       // このタスクのタグを抽出
       // 注: allTaggingsは親コンポーネントで既にチームモードに応じて切り替えられている

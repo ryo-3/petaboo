@@ -276,7 +276,8 @@ function MemoScreen({
     isLoading: boolean;
     error: Error | null;
   };
-  const { data: deletedMemos } = useDeletedMemos({ teamMode, teamId });
+  const { data: deletedMemos, isLoading: deletedMemosLoading } =
+    useDeletedMemos({ teamMode, teamId });
 
   const { preferences } = useUserPreferences(1);
 
@@ -709,6 +710,12 @@ function MemoScreen({
 
   // URL からの初期メモ選択（初回のみ）
   const initialMemoIdRef = useRef<string | null>(null);
+  // selectedMemo/selectedDeletedMemoをrefで追跡（useEffectの依存配列サイズ変動を防ぐ）
+  const selectedMemoRef = useRef(selectedMemo);
+  const selectedDeletedMemoRef = useRef(selectedDeletedMemo);
+  selectedMemoRef.current = selectedMemo;
+  selectedDeletedMemoRef.current = selectedDeletedMemo;
+
   useEffect(() => {
     if (initialMemoId) {
       const isTargetMemo = (memo: Memo | DeletedMemo) => {
@@ -719,25 +726,59 @@ function MemoScreen({
         ].filter(Boolean) as string[];
         return candidates.includes(initialMemoId);
       };
-      // selectedMemoがある場合、refを同期
-      if (selectedMemo && isTargetMemo(selectedMemo)) {
+      const currentSelectedMemo = selectedMemoRef.current;
+      const currentSelectedDeletedMemo = selectedDeletedMemoRef.current;
+
+      // selectedMemoまたはselectedDeletedMemoがある場合、refを同期＆タブ切り替え
+      if (currentSelectedMemo && isTargetMemo(currentSelectedMemo)) {
         if (initialMemoIdRef.current !== initialMemoId) {
           initialMemoIdRef.current = initialMemoId;
+          // 通常タブに切り替え
+          if (activeTab !== "normal") {
+            setActiveTab("normal");
+          }
+        }
+      } else if (
+        currentSelectedDeletedMemo &&
+        isTargetMemo(currentSelectedDeletedMemo)
+      ) {
+        if (initialMemoIdRef.current !== initialMemoId) {
+          initialMemoIdRef.current = initialMemoId;
+          // 削除済みタブに切り替え
+          if (activeTab !== "deleted") {
+            setActiveTab("deleted");
+          }
         }
       }
-      // initialMemoIdが変更され、かつselectedMemoがない場合のみ自動選択を実行
-      // ただし、削除済みタブの時は通常メモを自動選択しない（削除済みメモが選択される）
+      // initialMemoIdが変更され、かつ選択がない場合のみ自動選択を実行
       else if (
         memos &&
-        !selectedMemo &&
-        !selectedDeletedMemo && // 削除済みメモが選択されていない時のみ
-        activeTab === "normal" && // 通常タブの時のみ
+        !currentSelectedMemo &&
+        !currentSelectedDeletedMemo &&
         initialMemoId !== initialMemoIdRef.current
       ) {
+        // 通常メモから検索
         const targetMemo = memos.find((memo) => isTargetMemo(memo));
         if (targetMemo) {
           initialMemoIdRef.current = initialMemoId;
+          // 通常タブに切り替え
+          if (activeTab !== "normal") {
+            setActiveTab("normal");
+          }
           handleSelectMemo(targetMemo);
+        } else if (deletedMemos) {
+          // 削除済みメモから検索
+          const targetDeletedMemo = deletedMemos.find((memo) =>
+            isTargetMemo(memo),
+          );
+          if (targetDeletedMemo) {
+            initialMemoIdRef.current = initialMemoId;
+            // 削除済みタブに切り替え
+            if (activeTab !== "deleted") {
+              setActiveTab("deleted");
+            }
+            onSelectDeletedMemo(targetDeletedMemo);
+          }
         }
       }
     } else {
@@ -746,19 +787,16 @@ function MemoScreen({
         initialMemoIdRef.current = null;
       }
     }
-  }, [
-    initialMemoId,
-    memos,
-    selectedMemo,
-    selectedDeletedMemo,
-    activeTab,
-    handleSelectMemo,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialMemoId, memos, deletedMemos]);
 
   // URLからの復元が必要な場合（URLパラメータあり＆選択なし＆リストロード中）のみローディング表示
-  // リストがロード完了したら、useEffectで選択されるので待たない
+  // 通常メモと削除済みメモの両方のロード完了を待つ（チーム・個人両方対応）
   const needsUrlRestore =
-    teamMode && initialMemoId && !selectedMemo && memoLoading;
+    initialMemoId &&
+    !selectedMemo &&
+    !selectedDeletedMemo &&
+    (memoLoading || deletedMemosLoading);
   const isFullyLoaded = !needsUrlRestore;
 
   // memosが更新されたら削除完了を検知して次選択

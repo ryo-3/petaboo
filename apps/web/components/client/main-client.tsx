@@ -6,8 +6,6 @@ import { MainClientDesktop } from "./main-client-desktop";
 import { MainContentArea } from "./main-content-area";
 import { useBoardBySlug, useBoardWithItems } from "@/src/hooks/use-boards";
 import { useMainClientHandlers } from "@/src/hooks/use-main-client-handlers";
-import { useMemos } from "@/src/hooks/use-memos";
-import { useTasks } from "@/src/hooks/use-tasks";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
@@ -103,10 +101,6 @@ function MainClient({
 
   // クエリパラメータからボードslugを取得
   const boardSlugFromParams = getBoardSlugFromParams();
-
-  // メモ/タスク一覧を取得（URL復元用）
-  const { data: memos } = useMemos({ teamMode: false });
-  const { data: tasks } = useTasks({ teamMode: false });
 
   // URLパラメータからメモ/タスクIDを取得
   const memoIdFromParams = searchParams.get("memo");
@@ -265,41 +259,34 @@ function MainClient({
     teamMode,
   ]);
 
-  // URLパラメータからメモ/タスクを復元（初回ロード時のみ）
-  const hasRestoredFromUrl = useRef(false);
+  // URLパラメータからscreenModeを設定（詳細の復元はMemoScreen/TaskScreenに委譲）
+  const hasSetScreenModeFromUrl = useRef(false);
   useEffect(() => {
-    // 既に復元済み、またはユーザーが手動で切り替えた場合はスキップ
-    if (hasRestoredFromUrl.current || hasUserManuallyChanged.current) return;
+    // 既に設定済み、またはユーザーが手動で切り替えた場合はスキップ
+    if (hasSetScreenModeFromUrl.current || hasUserManuallyChanged.current)
+      return;
 
-    // ボード詳細ページでは復元しない（ボード内の選択は別処理）
+    // ボード詳細ページでは設定しない（ボード内の選択は別処理）
     if (boardSlugFromParams) return;
 
-    // メモIDがURLにある場合
-    if (memoIdFromParams && memos && !selectedMemo) {
-      const memo = memos.find((m) => m.id === Number(memoIdFromParams));
-      if (memo) {
-        setSelectedMemo(memo);
-        setScreenMode("memo");
-        hasRestoredFromUrl.current = true;
-      }
+    // メモIDがURLにある場合 → メモ画面を表示（詳細選択はMemoScreenで行う）
+    if (memoIdFromParams && !selectedMemo && !selectedDeletedMemo) {
+      setScreenMode("memo");
+      hasSetScreenModeFromUrl.current = true;
     }
 
-    // タスクIDがURLにある場合
-    if (taskIdFromParams && tasks && !selectedTask) {
-      const task = tasks.find((t) => t.id === Number(taskIdFromParams));
-      if (task) {
-        setSelectedTask(task);
-        setScreenMode("task");
-        hasRestoredFromUrl.current = true;
-      }
+    // タスクIDがURLにある場合 → タスク画面を表示（詳細選択はTaskScreenで行う）
+    if (taskIdFromParams && !selectedTask && !selectedDeletedTask) {
+      setScreenMode("task");
+      hasSetScreenModeFromUrl.current = true;
     }
   }, [
     memoIdFromParams,
     taskIdFromParams,
-    memos,
-    tasks,
     selectedMemo,
+    selectedDeletedMemo,
     selectedTask,
+    selectedDeletedTask,
     boardSlugFromParams,
     setScreenMode,
   ]);
@@ -647,6 +634,9 @@ function MainClient({
             screenMode={screenMode}
             pathname={pathname}
             currentMode={currentMode}
+            // ボード詳細ページではURL復元しない（ボード内の選択は別処理）
+            initialMemoId={boardSlugFromParams ? null : memoIdFromParams}
+            initialTaskId={boardSlugFromParams ? null : taskIdFromParams}
             selectedMemo={selectedMemo}
             selectedDeletedMemo={selectedDeletedMemo}
             selectedTask={selectedTask}

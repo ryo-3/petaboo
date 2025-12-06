@@ -225,7 +225,8 @@ function TaskScreen({
     error: Error | null;
   };
 
-  const { data: deletedTasks } = useDeletedTasks({ teamMode, teamId });
+  const { data: deletedTasks, isLoading: deletedTasksLoading } =
+    useDeletedTasks({ teamMode, teamId });
 
   // キャッシュから最新のselectedTaskを取得（担当者変更などの反映用）
   const latestSelectedTask = useMemo(() => {
@@ -315,6 +316,12 @@ function TaskScreen({
 
   // URL からの初期タスク選択（初回のみ）
   const initialTaskIdRef = useRef<string | null>(null);
+  // selectedTask/selectedDeletedTaskをrefで追跡（useEffectの依存配列サイズ変動を防ぐ）
+  const selectedTaskRef = useRef(selectedTask);
+  const selectedDeletedTaskRef = useRef(selectedDeletedTask);
+  selectedTaskRef.current = selectedTask;
+  selectedDeletedTaskRef.current = selectedDeletedTask;
+
   useEffect(() => {
     if (initialTaskId) {
       const isTargetTask = (task: Task | DeletedTask) => {
@@ -325,22 +332,59 @@ function TaskScreen({
         ].filter(Boolean) as string[];
         return ids.includes(initialTaskId);
       };
-      // selectedTaskがある場合、refを同期
-      if (selectedTask && isTargetTask(selectedTask)) {
+      const currentSelectedTask = selectedTaskRef.current;
+      const currentSelectedDeletedTask = selectedDeletedTaskRef.current;
+
+      // selectedTaskまたはselectedDeletedTaskがある場合、refを同期＆タブ切り替え
+      if (currentSelectedTask && isTargetTask(currentSelectedTask)) {
         if (initialTaskIdRef.current !== initialTaskId) {
           initialTaskIdRef.current = initialTaskId;
+          // タスクのステータスに応じてタブを自動切り替え
+          if (currentSelectedTask.status !== activeTab) {
+            setActiveTab(currentSelectedTask.status);
+          }
+        }
+      } else if (
+        currentSelectedDeletedTask &&
+        isTargetTask(currentSelectedDeletedTask)
+      ) {
+        if (initialTaskIdRef.current !== initialTaskId) {
+          initialTaskIdRef.current = initialTaskId;
+          // 削除済みタブに切り替え
+          if (activeTab !== "deleted") {
+            setActiveTab("deleted");
+          }
         }
       }
-      // initialTaskIdが変更され、かつselectedTaskがない場合のみ自動選択を実行
+      // initialTaskIdが変更され、かつ選択がない場合のみ自動選択を実行
       else if (
         tasks &&
-        !selectedTask &&
+        !currentSelectedTask &&
+        !currentSelectedDeletedTask &&
         initialTaskId !== initialTaskIdRef.current
       ) {
+        // 通常タスクから検索
         const targetTask = tasks.find((task) => isTargetTask(task));
         if (targetTask) {
           initialTaskIdRef.current = initialTaskId;
+          // タスクのステータスに応じてタブを自動切り替え
+          if (targetTask.status !== activeTab) {
+            setActiveTab(targetTask.status);
+          }
           onSelectTask(targetTask);
+        } else if (deletedTasks) {
+          // 削除済みタスクから検索
+          const targetDeletedTask = deletedTasks.find((task) =>
+            isTargetTask(task),
+          );
+          if (targetDeletedTask) {
+            initialTaskIdRef.current = initialTaskId;
+            // 削除済みタブに切り替え
+            if (activeTab !== "deleted") {
+              setActiveTab("deleted");
+            }
+            onSelectDeletedTask(targetDeletedTask);
+          }
         }
       }
     } else {
@@ -350,12 +394,15 @@ function TaskScreen({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialTaskId]);
+  }, [initialTaskId, tasks, deletedTasks]);
 
   // URLからの復元が必要な場合（URLパラメータあり＆選択なし＆リストロード中）のみローディング表示
-  // リストがロード完了したら、useEffectで選択されるので待たない
+  // 通常タスクと削除済みタスクの両方のロード完了を待つ（チーム・個人両方対応）
   const needsUrlRestore =
-    teamMode && initialTaskId && !selectedTask && taskLoading;
+    initialTaskId &&
+    !selectedTask &&
+    !selectedDeletedTask &&
+    (taskLoading || deletedTasksLoading);
   const isFullyLoaded = !needsUrlRestore;
 
   // タグ管理モーダルの状態
@@ -1438,7 +1485,7 @@ function TaskScreen({
       />
     ) : null;
 
-  // URLからの復元待ち（チームモードでinitialTaskIdありの場合のみ）
+  // URLからの復元待ち（initialTaskIdありの場合）
   if (!isFullyLoaded) {
     return (
       <div className="flex items-center justify-center h-full">

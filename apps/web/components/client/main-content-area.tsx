@@ -20,6 +20,10 @@ interface MainContentAreaProps {
   pathname: string;
   currentMode: "memo" | "task" | "board";
 
+  // URL復元用の初期ID
+  initialMemoId?: string | null;
+  initialTaskId?: string | null;
+
   // 選択状態
   selectedMemo: Memo | null;
   selectedDeletedMemo: DeletedMemo | null;
@@ -73,6 +77,8 @@ export function MainContentArea({
   screenMode,
   pathname,
   currentMode,
+  initialMemoId,
+  initialTaskId,
   selectedMemo,
   selectedDeletedMemo,
   selectedTask,
@@ -157,6 +163,8 @@ export function MainContentArea({
             setSelectedMemo(null);
             setSelectedDeletedMemo(null);
           }}
+          // URL復元用
+          initialMemoId={initialMemoId}
           // 統一フックを渡す
           unifiedOperations={personalMemoOperations}
         />
@@ -174,6 +182,8 @@ export function MainContentArea({
             setSelectedTask(null);
             setSelectedDeletedTask(null);
           }}
+          // URL復元用
+          initialTaskId={initialTaskId}
           // 統一フックを渡す
           unifiedOperations={personalTaskOperations}
         />

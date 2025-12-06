@@ -452,6 +452,23 @@ function TaskScreen({
     preferences || undefined,
   );
 
+  // 選択中のタスクのステータスが変わった場合、タブを自動切り替え
+  // （エディターでステータス変更→保存後にキャッシュ更新で発火）
+  useEffect(() => {
+    if (selectedTask && selectedTask.status) {
+      const taskStatus = selectedTask.status as
+        | "todo"
+        | "in_progress"
+        | "checking"
+        | "completed";
+      if (taskStatus && activeTab !== taskStatus && activeTab !== "deleted") {
+        setActiveTab(taskStatus);
+      }
+    }
+    // selectedTaskが変更された時のみ実行（activeTabを依存配列から除外してハイドレーションエラー回避）
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTask, setActiveTab]);
+
   // パネル表示状態管理（チームモード用）
   const getInitialPanelState = (
     key: "showListPanel" | "showDetailPanel" | "showCommentPanel",

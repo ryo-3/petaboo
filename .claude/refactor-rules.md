@@ -158,6 +158,17 @@ queryClient.invalidateQueries({
 8. エッジケース（null/undefined/エラー時）の挙動を確認
 9. 影響範囲を明示的にレポート
 
+### 📁 Planファイルの確認と整理
+
+10. `.claude/plans/` ディレクトリに関連するPlanファイルがあるか確認
+11. コミットメッセージのチケット番号（PETABOO-XX）と一致するPlanがあれば:
+    - Planの内容と実装が一致しているか確認
+    - 実装が完了している場合、Planを `.claude/fixed-plans/` に移動
+12. **Planの移動コマンド:**
+    ```bash
+    mv ".claude/plans/PETABOO-XX_タスク名.md" ".claude/fixed-plans/"
+    ```
+
 ## 🎯 レポート形式
 
 ```
@@ -188,6 +199,10 @@ queryClient.invalidateQueries({
 
 ✅ 問題なし
 - その他のファイル
+
+📁 Planファイル
+- PETABOO-32 のPlanが `.claude/plans/` に存在
+- 実装完了 → `.claude/fixed-plans/` に移動済み
 ```
 
 ## 💡 使用方法

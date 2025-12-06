@@ -1843,7 +1843,11 @@ function BoardDetailScreen({
                               maxSize={50}
                               className="rounded-lg bg-white flex flex-col min-h-0 border-r border-gray-200"
                             >
-                              <div className="flex flex-col h-full relative">
+                              <div
+                                className={`flex flex-col h-full relative ${
+                                  showMemo ? "" : "pl-4"
+                                }`}
+                              >
                                 {selectedTask ? (
                                   /* タスク選択時: タスク一覧を表示 */
                                   <BoardTaskSection

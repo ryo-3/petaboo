@@ -38,8 +38,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   CopyIcon,
   RefreshCcwIcon,
-  Settings as SettingsIcon,
   TrashIcon,
+  User as UserIcon,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -1022,16 +1022,16 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                   <span className="text-gray-600 font-medium">{team.name}</span>
                 )}
               </div>
-              {/* チーム設定ボタン（管理者のみ、招待パネル非表示時のみ） */}
-              {!showInvitePanel && team.role === "admin" && (
+              {/* 個人モードへ切り替えボタン（招待パネル非表示時のみ） */}
+              {!showInvitePanel && (
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => handleTabChange("team-settings")}
+                  onClick={() => router.push("/")}
                   className="flex items-center gap-2"
                 >
-                  <SettingsIcon className="w-4 h-4" />
-                  チーム設定
+                  <UserIcon className="w-4 h-4" />
+                  個人モードへ
                 </Button>
               )}
             </div>
@@ -1065,17 +1065,15 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                   <h2 className="text-lg font-bold text-gray-800">
                     {team.name}
                   </h2>
-                  {team.role === "admin" && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleTabChange("team-settings")}
-                      className="flex items-center gap-1"
-                    >
-                      <SettingsIcon className="w-4 h-4" />
-                      設定
-                    </Button>
-                  )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => router.push("/")}
+                    className="flex items-center gap-1"
+                  >
+                    <UserIcon className="w-4 h-4" />
+                    個人モードへ
+                  </Button>
                 </div>
               </div>
               {showInvitePanel ? (

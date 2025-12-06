@@ -291,6 +291,8 @@ function BoardDetailScreen({
     setShowListPanel,
     setShowDetailPanel,
     setShowCommentPanel,
+    setActiveTaskTab,
+    setActiveMemoTab,
   } = useBoardState();
 
   // ViewSettingsContextから取得した値を使用
@@ -324,6 +326,23 @@ function BoardDetailScreen({
   // propsから選択状態を使用（Fast Refresh対応）
   const selectedMemo = propSelectedMemo;
   const selectedTask = propSelectedTask;
+
+  // 削除済みアイテムが選択された場合、タブを自動で「削除済み」に切り替え
+  useEffect(() => {
+    if (selectedMemo && "deletedAt" in selectedMemo && selectedMemo.deletedAt) {
+      if (activeMemoTab !== "deleted") {
+        setActiveMemoTab("deleted");
+      }
+    }
+  }, [selectedMemo, activeMemoTab, setActiveMemoTab]);
+
+  useEffect(() => {
+    if (selectedTask && "deletedAt" in selectedTask && selectedTask.deletedAt) {
+      if (activeTaskTab !== "deleted") {
+        setActiveTaskTab("deleted");
+      }
+    }
+  }, [selectedTask, activeTaskTab, setActiveTaskTab]);
 
   // デスクトップ時: メモ/タスクが選択されたら詳細パネルを表示
   // モバイル時: 状態変更せず、レンダリング時に直接判定（ちらつき防止）

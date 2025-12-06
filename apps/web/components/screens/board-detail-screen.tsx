@@ -164,6 +164,8 @@ function BoardDetailScreen({
     setShowMemo,
     setShowTask,
     setShowComment,
+    setActiveTaskTab,
+    setActiveMemoTab,
   } = useBoardState();
 
   // モバイル時の初期化: メモのみ表示（isMobileがtrueになった時に1回だけ実行）
@@ -216,6 +218,23 @@ function BoardDetailScreen({
   // propsから選択状態を使用（Fast Refresh対応）
   const selectedMemo = propSelectedMemo;
   const selectedTask = propSelectedTask;
+
+  // 削除済みアイテムが選択された場合、タブを自動で「削除済み」に切り替え
+  useEffect(() => {
+    if (selectedMemo && "deletedAt" in selectedMemo && selectedMemo.deletedAt) {
+      if (activeMemoTab !== "deleted") {
+        setActiveMemoTab("deleted");
+      }
+    }
+  }, [selectedMemo, activeMemoTab, setActiveMemoTab]);
+
+  useEffect(() => {
+    if (selectedTask && "deletedAt" in selectedTask && selectedTask.deletedAt) {
+      if (activeTaskTab !== "deleted") {
+        setActiveTaskTab("deleted");
+      }
+    }
+  }, [selectedTask, activeTaskTab, setActiveTaskTab]);
 
   // 削除: アイテム選択時の一覧非表示を強制しない（ユーザーのlocalStorage設定を尊重）
   // useEffect(() => {

@@ -2,7 +2,10 @@ import { useMemo, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import BoardDetailScreenLegacy from "@/components/screens/board-detail-screen";
 import BoardDetailScreenUnified from "@/components/screens/board-detail-screen-3panel";
-import { useBoardWithItems } from "@/src/hooks/use-boards";
+import {
+  useBoardWithItems,
+  useBoardDeletedItems,
+} from "@/src/hooks/use-boards";
 import type { Board } from "@/src/types/board";
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
@@ -63,6 +66,11 @@ export function BoardDetailWrapper({
     needsUrlRestore && currentBoardId ? currentBoardId : null,
   );
 
+  // 削除済みアイテムも取得（URL復元で通常アイテムに見つからない場合用）
+  const { data: deletedBoardItems } = useBoardDeletedItems(
+    needsUrlRestore && currentBoardId ? currentBoardId : 0,
+  );
+
   // URL復元済みフラグ
   const hasRestoredFromUrl = useRef(false);
 
@@ -71,13 +79,14 @@ export function BoardDetailWrapper({
     // チーム側は別処理、復元済みならスキップ
     if (teamMode || hasRestoredFromUrl.current) return;
     // ボードアイテムがまだロードされていない場合はスキップ
-    if (!boardWithItems?.items || boardWithItems.items.length === 0) return;
+    if (!boardWithItems?.items) return;
     // 既に何か選択されている場合はスキップ
     if (boardSelectedItem) return;
 
     // メモのboardIndexがURLにある場合
     if (memoIndexParam) {
       const memoIndex = parseInt(memoIndexParam, 10);
+      // 通常アイテムから検索
       const memoItem = boardWithItems.items.find(
         (item) =>
           item.itemType === "memo" && item.content.boardIndex === memoIndex,
@@ -87,11 +96,23 @@ export function BoardDetailWrapper({
         hasRestoredFromUrl.current = true;
         return;
       }
+      // 削除済みアイテムから検索
+      if (deletedBoardItems?.memos) {
+        const deletedMemo = deletedBoardItems.memos.find(
+          (memo) => memo.boardIndex === memoIndex,
+        );
+        if (deletedMemo) {
+          handleBoardSelectMemo(deletedMemo as DeletedMemo);
+          hasRestoredFromUrl.current = true;
+          return;
+        }
+      }
     }
 
     // タスクのboardIndexがURLにある場合
     if (taskIndexParam) {
       const taskIndex = parseInt(taskIndexParam, 10);
+      // 通常アイテムから検索
       const taskItem = boardWithItems.items.find(
         (item) =>
           item.itemType === "task" && item.content.boardIndex === taskIndex,
@@ -101,12 +122,24 @@ export function BoardDetailWrapper({
         hasRestoredFromUrl.current = true;
         return;
       }
+      // 削除済みアイテムから検索
+      if (deletedBoardItems?.tasks) {
+        const deletedTask = deletedBoardItems.tasks.find(
+          (task) => task.boardIndex === taskIndex,
+        );
+        if (deletedTask) {
+          handleBoardSelectTask(deletedTask as DeletedTask);
+          hasRestoredFromUrl.current = true;
+          return;
+        }
+      }
     }
   }, [
     teamMode,
     memoIndexParam,
     taskIndexParam,
     boardWithItems,
+    deletedBoardItems,
     boardSelectedItem,
     handleBoardSelectMemo,
     handleBoardSelectTask,

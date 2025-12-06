@@ -203,6 +203,45 @@ export function TeamBoardDetailWrapper({
     staleTime: 5 * 60 * 1000,
   });
 
+  // 削除済みアイテムも取得（URL復元で通常アイテムに見つからない場合用）
+  const { data: deletedBoardItems } = useQuery({
+    queryKey: [
+      "team-board-deleted-items",
+      teamId,
+      boardData?.id,
+      memoParam,
+      taskParam,
+    ],
+    queryFn: async () => {
+      if (!teamId || !boardData?.id) return null;
+
+      const token = await getToken();
+      const response = await fetch(
+        `${API_BASE_URL}/teams/${teamId}/boards/${boardData.id}/deleted-items`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        },
+      );
+
+      if (!response.ok) {
+        return null; // エラーの場合はnullを返す（削除済みアイテムがないケースもある）
+      }
+
+      return response.json();
+    },
+    // URLパラメータがあり、通常アイテムで見つからなかった場合のみ取得
+    enabled:
+      !!teamId &&
+      !!boardData?.id &&
+      (!!memoParam || !!taskParam) &&
+      !!boardItems &&
+      !boardItemsLoading,
+    staleTime: 5 * 60 * 1000,
+  });
+
   // URLパラメータが削除された場合に選択状態をクリア
   useEffect(() => {
     if (!memoParam && !taskParam) {
@@ -229,9 +268,19 @@ export function TeamBoardDetailWrapper({
       );
 
       // URLパラメータはboardIndexを表すので、boardIndexだけで検索
-      const targetMemo = memoItems
+      let targetMemo = memoItems
         .map((item: any) => item.content)
         .find((m: Memo) => m.boardIndex?.toString() === memoParam);
+
+      // 通常アイテムで見つからない場合は削除済みアイテムから検索
+      if (!targetMemo && deletedBoardItems?.deletedItems) {
+        const deletedMemoItems = deletedBoardItems.deletedItems.filter(
+          (item: any) => item.itemType === "memo",
+        );
+        targetMemo = deletedMemoItems
+          .map((item: any) => item.content)
+          .find((m: DeletedMemo) => m.boardIndex?.toString() === memoParam);
+      }
 
       // 既に正しいメモが選択されている場合はスキップ
       if (targetMemo && selectedMemoRef.current) {
@@ -255,9 +304,19 @@ export function TeamBoardDetailWrapper({
       );
 
       // URLパラメータはboardIndexを表すので、boardIndexだけで検索
-      const targetTask = taskItems
+      let targetTask = taskItems
         .map((item: any) => item.content)
         .find((t: Task) => t.boardIndex?.toString() === taskParam);
+
+      // 通常アイテムで見つからない場合は削除済みアイテムから検索
+      if (!targetTask && deletedBoardItems?.deletedItems) {
+        const deletedTaskItems = deletedBoardItems.deletedItems.filter(
+          (item: any) => item.itemType === "task",
+        );
+        targetTask = deletedTaskItems
+          .map((item: any) => item.content)
+          .find((t: DeletedTask) => t.boardIndex?.toString() === taskParam);
+      }
 
       // 既に正しいタスクが選択されている場合はスキップ
       if (targetTask && selectedTaskRef.current) {
@@ -273,7 +332,7 @@ export function TeamBoardDetailWrapper({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [boardItems, memoParam, taskParam]);
+  }, [boardItems, deletedBoardItems, memoParam, taskParam]);
 
   const handleClearSelection = () => {
     setSelectedMemo(null);

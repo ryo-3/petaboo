@@ -885,7 +885,7 @@ export function useBoardDeletedItems(boardId: number, teamId?: string | null) {
       throw new Error("Failed after retry");
     },
     {
-      enabled: isLoaded,
+      enabled: isLoaded && boardId > 0,
       staleTime: 2 * 60 * 1000,
       cacheTime: 10 * 60 * 1000,
       refetchOnWindowFocus: false,

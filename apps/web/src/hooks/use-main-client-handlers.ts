@@ -286,13 +286,21 @@ export function useMainClientHandlers({
   const handleSettings = useCallback(() => {
     clearAllSelections();
     setScreenMode("settings");
-  }, [clearAllSelections, setScreenMode]);
+    // URLを /?settings に更新（個人側のみ）
+    if (!teamMode) {
+      router.replace("/?settings", { scroll: false });
+    }
+  }, [clearAllSelections, setScreenMode, router, teamMode]);
 
   /** 検索画面に遷移 */
   const handleSearch = useCallback(() => {
     clearAllSelections();
     setScreenMode("search");
-  }, [clearAllSelections, setScreenMode]);
+    // URLを /?search に更新（個人側のみ）
+    if (!teamMode) {
+      router.replace("/?search", { scroll: false });
+    }
+  }, [clearAllSelections, setScreenMode, router, teamMode]);
 
   /** ボード画面に遷移 */
   const handleDashboard = useCallback(() => {

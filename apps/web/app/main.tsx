@@ -17,6 +17,7 @@ interface MainProps {
     | "search"
     | "settings"
     | "board"
+    | "team"
     | "welcome";
   forceShowBoardDetail?: boolean;
   teamMode?: boolean;

@@ -71,12 +71,13 @@ function Header() {
           "memo",
           "task",
           "search",
+          "settings",
           "team-list",
+          "team-create",
           "team-settings",
           "memos",
           "tasks",
           "mode",
-          "settings",
         ].includes(key)
       ) {
         return key.toUpperCase();

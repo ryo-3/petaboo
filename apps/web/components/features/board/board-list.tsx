@@ -71,6 +71,8 @@ export default function BoardList({
       "task",
       "boards",
       "settings",
+      "team-list",
+      "team-create",
     ];
     for (const [key, value] of searchParams.entries()) {
       if (value === "" && !excludeKeys.includes(key)) {

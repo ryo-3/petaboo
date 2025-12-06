@@ -90,6 +90,8 @@ function MainClient({
       "task",
       "boards",
       "settings",
+      "team-list",
+      "team-create",
     ];
     for (const [key, value] of searchParams.entries()) {
       if (value === "" && !excludeKeys.includes(key)) {
@@ -378,11 +380,19 @@ function MainClient({
       // チーム一覧を閉じる場合は、元のホームに戻る
       setShowTeamList(false);
       setScreenMode("home");
+      // URLを更新（個人側のみ）
+      if (!teamMode) {
+        router.replace("/", { scroll: false });
+      }
     } else {
       // チーム一覧を開く場合は、他のモードをリセット
       setShowTeamList(true);
       setShowTeamCreate(false);
       setScreenMode("team"); // チーム一覧表示時はteamモードに設定
+      // URLを更新（個人側のみ）
+      if (!teamMode) {
+        router.replace("/?team-list", { scroll: false });
+      }
     }
   };
 
@@ -391,6 +401,10 @@ function MainClient({
     setShowTeamCreate(true);
     setShowTeamList(false);
     setScreenMode("team");
+    // URLを更新（個人側のみ）
+    if (!teamMode) {
+      router.replace("/?team-create", { scroll: false });
+    }
   };
 
   // チーム作成完了ハンドラー

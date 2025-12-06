@@ -139,8 +139,17 @@ export function NavigationProvider({
   >();
 
   // UI状態管理（Sidebarとの統一）
-  const [showTeamList, setShowTeamList] = useState(false);
-  const [showTeamCreate, setShowTeamCreate] = useState(false);
+  // URLからteam-list/team-createを検知して初期化
+  const [showTeamList, setShowTeamList] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const params = new URLSearchParams(window.location.search);
+    return params.has("team-list");
+  });
+  const [showTeamCreate, setShowTeamCreate] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const params = new URLSearchParams(window.location.search);
+    return params.has("team-create");
+  });
   const [showingBoardDetail, setShowingBoardDetailInternal] = useState(
     initialShowingBoardDetail,
   );
@@ -265,6 +274,8 @@ export function NavigationProvider({
         "task",
         "boards",
         "settings",
+        "team-list",
+        "team-create",
       ];
       for (const [key, value] of searchParams.entries()) {
         if (value === "" && !excludeKeys.includes(key)) {

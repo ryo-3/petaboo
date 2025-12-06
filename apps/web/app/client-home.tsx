@@ -17,11 +17,22 @@ export default function ClientHome() {
     | "board"
     | null;
 
-  // 新形式のモード取得（?memo, ?task, ?boards）
-  const getModeFromParams = (): "memo" | "task" | "board" | null => {
+  // 新形式のモード取得（?memo, ?task, ?boards, ?search, ?settings, ?team-list, ?team-create）
+  const getModeFromParams = ():
+    | "memo"
+    | "task"
+    | "board"
+    | "search"
+    | "settings"
+    | "team"
+    | null => {
     if (searchParams.has("memo")) return "memo";
     if (searchParams.has("task")) return "task";
     if (searchParams.has("boards")) return "board";
+    if (searchParams.has("search")) return "search";
+    if (searchParams.has("settings")) return "settings";
+    if (searchParams.has("team-list")) return "team";
+    if (searchParams.has("team-create")) return "team";
     return null;
   };
   const newModeParam = getModeFromParams();
@@ -41,6 +52,8 @@ export default function ClientHome() {
       "task",
       "boards",
       "settings",
+      "team-list",
+      "team-create",
     ];
     for (const [key, value] of searchParams.entries()) {
       if (value === "" && !excludeKeys.includes(key)) {
@@ -81,11 +94,16 @@ export default function ClientHome() {
   if (isSignedIn) {
     // 初回のモードを使用（URLから消した後も維持）
     const mode = initialMode.current;
+    // screenModeはsearch/settings/teamも含む
+    const screenMode = boardSlug ? "board" : mode || undefined;
+    // currentModeはmemo/task/boardのみ（search/settings/teamは除外してmemoにフォールバック）
+    const currentMode = boardSlug
+      ? "board"
+      : mode === "memo" || mode === "task" || mode === "board"
+        ? mode
+        : "memo";
     return (
-      <Main
-        initialCurrentMode={boardSlug ? "board" : mode || undefined}
-        initialScreenMode={boardSlug ? "board" : mode || undefined}
-      />
+      <Main initialCurrentMode={currentMode} initialScreenMode={screenMode} />
     );
   }
 

@@ -1844,20 +1844,67 @@ export function createAPI(app: AppType) {
 
         return c.json(allBoardItems);
       } else {
-        // 個人モード：全ボードのアイテムを一括取得（物理削除なのでレコードが存在するものはすべて有効）
-        const allBoardItems = await db
+        // 個人モード：全ボードのアイテムを一括取得（削除されていないメモ/タスクのみ）
+        // メモの紐づき（削除されていないもののみ）
+        const memoItems = await db
           .select({
             boardId: boardItems.boardId,
             boardName: boards.name,
             itemType: boardItems.itemType,
-            itemId: boardItems.displayId, // itemIdの代わりにdisplayIdを使用
+            itemId: boardItems.displayId,
             displayId: boardItems.displayId,
             addedAt: boardItems.createdAt,
           })
           .from(boardItems)
           .innerJoin(boards, eq(boardItems.boardId, boards.id))
-          .where(eq(boards.userId, auth.userId))
-          .orderBy(boards.name, boardItems.createdAt);
+          .innerJoin(
+            memos,
+            and(
+              eq(boardItems.displayId, memos.displayId),
+              eq(memos.userId, auth.userId),
+            ),
+          )
+          .where(
+            and(
+              eq(boards.userId, auth.userId),
+              eq(boardItems.itemType, "memo"),
+              isNull(memos.deletedAt),
+            ),
+          );
+
+        // タスクの紐づき（削除されていないもののみ）
+        const taskItems = await db
+          .select({
+            boardId: boardItems.boardId,
+            boardName: boards.name,
+            itemType: boardItems.itemType,
+            itemId: boardItems.displayId,
+            displayId: boardItems.displayId,
+            addedAt: boardItems.createdAt,
+          })
+          .from(boardItems)
+          .innerJoin(boards, eq(boardItems.boardId, boards.id))
+          .innerJoin(
+            tasks,
+            and(
+              eq(boardItems.displayId, tasks.displayId),
+              eq(tasks.userId, auth.userId),
+            ),
+          )
+          .where(
+            and(
+              eq(boards.userId, auth.userId),
+              eq(boardItems.itemType, "task"),
+              isNull(tasks.deletedAt),
+            ),
+          );
+
+        const allBoardItems = [...memoItems, ...taskItems].sort((a, b) => {
+          if (a.boardName !== b.boardName) {
+            return a.boardName.localeCompare(b.boardName);
+          }
+          return a.addedAt - b.addedAt;
+        });
 
         return c.json(allBoardItems);
       }

@@ -229,12 +229,25 @@ function BoardDetailScreen({
   }, [selectedMemo, activeMemoTab, setActiveMemoTab]);
 
   useEffect(() => {
-    if (selectedTask && "deletedAt" in selectedTask && selectedTask.deletedAt) {
-      if (activeTaskTab !== "deleted") {
+    if (selectedTask) {
+      // 削除済みタスクの場合
+      if ("deletedAt" in selectedTask && selectedTask.deletedAt) {
         setActiveTaskTab("deleted");
+      } else {
+        // 通常タスクの場合、ステータスに応じてタブを切り替え
+        const taskStatus = selectedTask.status as
+          | "todo"
+          | "in_progress"
+          | "checking"
+          | "completed";
+        if (taskStatus) {
+          setActiveTaskTab(taskStatus);
+        }
       }
     }
-  }, [selectedTask, activeTaskTab, setActiveTaskTab]);
+    // selectedTaskが変更された時のみ実行（activeTaskTabを依存配列から除外してハイドレーションエラー回避）
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTask, setActiveTaskTab]);
 
   // 削除: アイテム選択時の一覧非表示を強制しない（ユーザーのlocalStorage設定を尊重）
   // useEffect(() => {

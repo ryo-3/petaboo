@@ -8,8 +8,13 @@ import {
   useParams,
 } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
+import dynamic from "next/dynamic";
 import Header from "@/components/layout/header";
-import Sidebar from "@/components/layout/sidebar";
+
+// PETABOO-55: SSRハイドレーション問題を回避するため、Sidebarをクライアントサイドのみでレンダリング
+const Sidebar = dynamic(() => import("@/components/layout/sidebar"), {
+  ssr: false,
+});
 import {
   NavigationProvider,
   useNavigation,

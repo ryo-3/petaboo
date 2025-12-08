@@ -1482,7 +1482,7 @@ function TaskScreen({
             selectedTask.displayId || selectedTask.displayId || ""
           }
           teamId={teamId || 0}
-          title="コメント"
+          title={`#${selectedTask.displayId} ${selectedTask.title || "タイトルなし"}`}
           placeholder="コメントを入力..."
           teamMembers={teamMembers}
         />
@@ -1496,7 +1496,7 @@ function TaskScreen({
         targetType="task"
         targetDisplayId={selectedTask.displayId || selectedTask.displayId || ""}
         teamId={teamId || 0}
-        title="コメント"
+        title={`#${selectedTask.displayId} ${selectedTask.title || "タイトルなし"}`}
         placeholder="コメントを入力..."
         teamMembers={teamMembers}
       />

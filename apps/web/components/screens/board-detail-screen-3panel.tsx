@@ -66,6 +66,7 @@ import PhotoButton from "@/components/ui/buttons/photo-button";
 import { useAttachmentManager } from "@/src/hooks/use-attachment-manager";
 import type { TeamMember } from "@/src/hooks/use-team-detail";
 import { useBulkAssigneeSafe } from "@/src/contexts/bulk-assignee-context";
+import { extractFirstLine } from "@/src/utils/html";
 
 // ボード名ヘッダーコンポーネント
 function BoardNameHeader({
@@ -1644,7 +1645,7 @@ function BoardDetailScreen({
                                   <div className="h-full overflow-y-auto">
                                     {selectedMemo && (
                                       <CommentSection
-                                        title="コメント"
+                                        title={`#${selectedMemo.boardIndex ?? selectedMemo.displayId} ${selectedMemo.title || selectedMemo.content?.split("\n")[0]?.slice(0, 30) || "タイトルなし"}`}
                                         placeholder="コメントを入力..."
                                         targetType="memo"
                                         targetDisplayId={selectedMemo.displayId}
@@ -1744,7 +1745,7 @@ function BoardDetailScreen({
                                   <div className="h-full overflow-y-auto">
                                     {selectedTask && (
                                       <CommentSection
-                                        title="コメント"
+                                        title={`#${selectedTask.boardIndex ?? selectedTask.displayId} ${selectedTask.title || "タイトルなし"}`}
                                         placeholder="コメントを入力..."
                                         targetType="task"
                                         targetDisplayId={
@@ -1779,9 +1780,9 @@ function BoardDetailScreen({
                                 <CommentSection
                                   title={
                                     selectedMemo
-                                      ? "メモコメント"
+                                      ? `#${selectedMemo.boardIndex ?? selectedMemo.displayId} ${selectedMemo.title || extractFirstLine(selectedMemo.content, 30)}`
                                       : selectedTask
-                                        ? "タスクコメント"
+                                        ? `#${selectedTask.boardIndex ?? selectedTask.displayId} ${selectedTask.title || "タイトルなし"}`
                                         : "ボードコメント"
                                   }
                                   placeholder={
@@ -2219,9 +2220,9 @@ function BoardDetailScreen({
                               <CommentSection
                                 title={
                                   selectedMemo
-                                    ? "メモコメント"
+                                    ? `#${selectedMemo.boardIndex ?? selectedMemo.displayId} ${selectedMemo.title || extractFirstLine(selectedMemo.content, 30)}`
                                     : selectedTask
-                                      ? "タスクコメント"
+                                      ? `#${selectedTask.boardIndex ?? selectedTask.displayId} ${selectedTask.title || "タイトルなし"}`
                                       : "ボードコメント"
                                 }
                                 placeholder={
@@ -2595,27 +2596,6 @@ function BoardDetailScreen({
                                 targetDisplayId={boardId.toString()}
                                 boardId={boardId}
                                 teamMembers={teamMembers}
-                                onItemClick={(itemType, displayId) => {
-                                  if (itemType === "memo") {
-                                    const memo = boardMemos.find(
-                                      (m) =>
-                                        m.displayId === displayId ||
-                                        m.displayId === displayId,
-                                    );
-                                    if (memo) {
-                                      onSelectMemo?.(memo as Memo);
-                                    }
-                                  } else if (itemType === "task") {
-                                    const task = boardTasks.find(
-                                      (t) =>
-                                        t.displayId === displayId ||
-                                        t.displayId === displayId,
-                                    );
-                                    if (task) {
-                                      onSelectTask?.(task as Task);
-                                    }
-                                  }
-                                }}
                               />
                             )}
                           </ResizablePanel>

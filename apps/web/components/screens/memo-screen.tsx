@@ -59,6 +59,7 @@ import PhotoButton from "@/components/ui/buttons/photo-button";
 import { useAttachmentManager } from "@/src/hooks/use-attachment-manager";
 import type { TeamMember } from "@/src/hooks/use-team-detail";
 import type { HeaderControlPanelConfig } from "@/src/contexts/header-control-panel-context";
+import { extractFirstLine } from "@/src/utils/html";
 import MobileFabButton from "@/components/ui/buttons/mobile-fab-button";
 
 type MemoScreenMode = "list" | "view" | "create";
@@ -1272,7 +1273,7 @@ function MemoScreen({
             selectedMemo.displayId || selectedMemo.displayId || ""
           }
           teamId={teamId || 0}
-          title="コメント"
+          title={`#${selectedMemo.displayId} ${selectedMemo.title || extractFirstLine(selectedMemo.content, 30)}`}
           placeholder="コメントを入力..."
           teamMembers={teamMembers}
         />
@@ -1286,7 +1287,7 @@ function MemoScreen({
         targetType="memo"
         targetDisplayId={selectedMemo.displayId || selectedMemo.displayId || ""}
         teamId={teamId || 0}
-        title="コメント"
+        title={`#${selectedMemo.displayId} ${selectedMemo.title || extractFirstLine(selectedMemo.content, 30)}`}
         placeholder="コメントを入力..."
         teamMembers={teamMembers}
       />

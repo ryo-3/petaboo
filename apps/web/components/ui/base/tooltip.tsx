@@ -28,11 +28,6 @@ function Tooltip({
   const [isHovered, setIsHovered] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
 
-  // クリック時にツールチップを非表示にする
-  const handleClick = () => {
-    setIsHovered(false);
-  };
-
   useEffect(() => {
     if (isHovered && wrapperRef.current) {
       const rect = wrapperRef.current.getBoundingClientRect();
@@ -154,7 +149,6 @@ function Tooltip({
       className={`relative inline-block ${className}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={handleClick}
     >
       {children}
       {tooltipContent}

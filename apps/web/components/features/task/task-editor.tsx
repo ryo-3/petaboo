@@ -1045,11 +1045,11 @@ function TaskEditor({
 
   // チーム機能でのURL共有用
   const shareUrl = useMemo(() => {
-    if (!teamMode || !task || task.id === 0) return null;
+    if (!task || task.id === 0) return null;
 
     // 現在のURLをそのまま返す
     return window.location.href;
-  }, [teamMode, task]);
+  }, [task]);
 
   const handleSave = useCallback(async () => {
     if (!title.trim() || isSaving || isDeleted) {

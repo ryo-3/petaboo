@@ -610,11 +610,11 @@ function MemoEditor({
 
   // チーム機能でのURL共有用
   const shareUrl = useMemo(() => {
-    if (!teamMode || !memo || memo.id === 0) return null;
+    if (!memo || memo.id === 0) return null;
 
     // 現在のURLをそのまま返す
     return window.location.href;
-  }, [teamMode, memo]);
+  }, [memo]);
 
   // タグの差分を計算して一括更新する関数
   const updateTaggings = useCallback(
@@ -1332,7 +1332,6 @@ function MemoEditor({
                 {shareUrl && (
                   <ShareUrlButton
                     url={shareUrl}
-                    title={title}
                     content={content}
                     className=""
                     label="URLをコピー"
